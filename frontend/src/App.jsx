@@ -3967,6 +3967,9 @@ function Setup(props) {
   var setRootLinesOfBiz     = props.setRootLinesOfBiz     || function(){};
   var setRootBcbsAffiliated = props.setRootBcbsAffiliated || function(){};
   var setRootHasFEP         = props.setRootHasFEP         || function(){};
+  var setRootClaimsSystem   = props.setRootClaimsSystem   || function(){};
+  var setRootMailingVendor  = props.setRootMailingVendor  || function(){};
+  var setRootMemberPortal   = props.setRootMemberPortal   || function(){};
 
   var STEPS = ["Org Profile","Select Processes","Map Applications","Vendor Ecosystem","Core Infrastructure","Document Intake"];
 
