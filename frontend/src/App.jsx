@@ -181,19 +181,23 @@ var ORG_TEMPLATES = {
        streams:["Care Navigation","Health & Medical Management (HMM)","Provider Operations & Engagement"]},
     ],
     procs:[
-      {id:"claims",      name:"Claims (Medical & Dental)",  icon:"⚕",  score:64, crits:2, highs:1, trend:mkT(64), bizLine:"operations"},
-      {id:"enroll",      name:"Membership & Enrollment",    icon:"👤", score:74, crits:0, highs:2, trend:mkT(74), bizLine:"operations"},
-      {id:"govt_prog",   name:"Medicare Advantage",         icon:"🏛",  score:71, crits:1, highs:2, trend:mkT(71), bizLine:"govt"},
-      {id:"fep",         name:"Federal Employee Program",   icon:"🦅", score:78, crits:0, highs:1, trend:mkT(78), bizLine:"govt"},
-      {id:"fwa",         name:"Payment Integrity / FWA",    icon:"🔍", score:69, crits:1, highs:2, trend:mkT(69), bizLine:"govt"},
-      {id:"provider",    name:"Provider Operations",         icon:"🏥", score:83, crits:0, highs:1, trend:mkT(83), bizLine:"hmm"},
-      {id:"care_nav",    name:"Care Navigation",             icon:"💊", score:71, crits:1, highs:2, trend:mkT(71), bizLine:"hmm"},
-      {id:"hmm",         name:"Health & Medical Management", icon:"🩺", score:74, crits:1, highs:1, trend:mkT(74), bizLine:"hmm"},
-      {id:"commercial",  name:"Commercial Products",         icon:"💼", score:76, crits:0, highs:2, trend:mkT(76), bizLine:"commercial"},
-      {id:"service_ctr", name:"Service Center",              icon:"📞", score:66, crits:1, highs:2, trend:mkT(66), bizLine:"service"},
-      {id:"actuarial",   name:"Actuarial & Analytics",       icon:"📊", score:82, crits:0, highs:1, trend:mkT(82), bizLine:"data"},
-      {id:"compliance",  name:"Audit & Risk Management",     icon:"⚖",  score:85, crits:0, highs:1, trend:mkT(85), bizLine:"corp"},
-      {id:"it_sec",      name:"IT Security",                 icon:"🔐", score:61, crits:2, highs:4, trend:mkT(61), bizLine:"corp"},
+      // Tier 1 – Primary Crown Jewels (Compromise materially impacts enterprise survival)
+      {id:"claims",        name:"Claims Adjudication & Payment",              icon:"⚕",  score:64, crits:2, highs:1, trend:mkT(64), bizLine:"operations"},
+      {id:"enroll",        name:"Membership & Enrollment",                    icon:"👤", score:74, crits:0, highs:2, trend:mkT(74), bizLine:"operations"},
+      {id:"provider_net",  name:"Provider Network & Contracting Operations", icon:"🏥", score:83, crits:0, highs:1, trend:mkT(83), bizLine:"hmm"},
+      {id:"care_mgmt",     name:"Care Management / Medical Management",      icon:"💊", score:71, crits:1, highs:2, trend:mkT(71), bizLine:"hmm"},
+      {id:"fwa",           name:"Payment Integrity / Fraud, Waste & Abuse",   icon:"🔍", score:69, crits:1, highs:2, trend:mkT(69), bizLine:"govt"},
+      {id:"member_svc",    name:"Member Services / Contact Center",           icon:"📞", score:66, crits:1, highs:2, trend:mkT(66), bizLine:"service"},
+      {id:"actuarial",     name:"Actuarial / Underwriting & Financial Analytics", icon:"📊", score:82, crits:0, highs:1, trend:mkT(82), bizLine:"data"},
+      // Tier 2 – Strategic Crown Jewels (Material disruption but less existential)
+      {id:"govt_admin",    name:"Government Programs Administration",       icon:"🏛",  type:"section"},
+      {id:"govt_ma",       name:"Medicare Advantage",                         icon:"🏛",  score:71, crits:1, highs:2, trend:mkT(71), bizLine:"govt", parent:"govt_admin"},
+      {id:"govt_fep",      name:"Federal Employee Program (FEP)",             icon:"🦅",  score:78, crits:0, highs:1, trend:mkT(78), bizLine:"govt", parent:"govt_admin"},
+      {id:"govt_mcaid",    name:"Medicaid",                                   icon:"🏛",  score:71, crits:1, highs:2, trend:mkT(71), bizLine:"govt", parent:"govt_admin"},
+      {id:"pharmacy_pbm",  name:"Pharmacy / PBM Integrations",                icon:"💊", score:71, crits:1, highs:2, trend:mkT(71), bizLine:"hmm"},
+      {id:"compliance",    name:"Compliance & Regulatory Reporting",         icon:"⚖",  score:85, crits:0, highs:1, trend:mkT(85), bizLine:"corp"},
+      {id:"identity",      name:"Identity & Access Infrastructure",           icon:"🔐", score:61, crits:2, highs:4, trend:mkT(61), bizLine:"corp"},
+      {id:"data_platform", name:"Data & Analytics Platforms",                  icon:"📊", score:82, crits:0, highs:1, trend:mkT(82), bizLine:"data"},
     ],
     frameworks:["hipaa_sr","hipaa_pr","hipaa_bn","nist_csf","nist_800_53","cis_v8","iso_27001","soc2","naic_model","pci_dss","cms_422"],
     extraFrameworks:["BCBSA Plan Performance Program","FEHB/OPM Data Security (if FEP)"],
@@ -633,7 +637,7 @@ function calculateTotalExposure(procs, orgSize, metrics) {
 }
 
 // Legacy support - initialize with calculated values
-var EXP = {claims:340,enroll:85,provider:60,care:95,finance:210,member_svc:75,compliance:180,it_sec:450};
+var EXP = {claims:340,enroll:85,provider_net:60,care_mgmt:95,fwa:180,member_svc:75,actuarial:210,govt_ma:120,govt_fep:150,govt_mcaid:100,pharmacy_pbm:130,compliance:180,identity:450,data_platform:190};
 
 // --- CIS Controls -------------------------------------------------------------
 var CIS_N = {
@@ -1114,7 +1118,7 @@ var ORG_PROFILES_RICH = {
     keyRisks:["Multi-regulator exposure (CMS + SEC + DOI)","Cross-line PHI segregation","RADV + commercial breach combined","SEC 4-day window under active incident"]},
   "[ORG] Plan":{color:"#3B9EFF",
     regs:["HIPAA","NIST CSF 2.0","SOC 2","BCBSA Cybersecurity Standards","BlueCard Requirements","State DOI"],
-    mandatoryProcs:["claims","enroll","provider","care","member_svc","compliance","it_sec"],
+    mandatoryProcs:["claims","enroll","provider_net","care_mgmt","fwa","member_svc","actuarial","govt_ma","govt_fep","govt_mcaid","pharmacy_pbm","compliance","identity","data_platform"],
     expMethods:["phi_breach","fwa","bcbsa_penalties","doi_fines"],
     secRequired:false,cmsRequired:false,radvRisk:false,
     boardContext:"BCBSA cybersecurity standards are contractual — non-compliance risks Blue license loss. BlueCard participation creates cross-plan data exposure across all 36 BCBS plans.",
@@ -3737,6 +3741,233 @@ var LOB_VENDOR_PRESETS = {
 
 var CYBERRX_API = (typeof window!=='undefined'&&window.__CYBERRX_API)||import.meta.env.VITE_API_URL||'http://localhost:3001';
 
+// ── Org Profile Persistence Helpers ────────────────────────────────────────────────
+
+/**
+ * Save org profile to backend API
+ * @param {Object} orgData - Complete org profile data from SetupBot
+ * @returns {Promise<Object>} - Response with orgId and status
+ */
+function saveOrgProfile(orgData) {
+  if (!orgData || !orgData.orgName) {
+    return Promise.reject(new Error('Invalid org data: missing orgName'));
+  }
+
+  // Generate org ID from org name
+  var orgId = orgData.orgName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .substring(0, 50);
+
+  return fetch(CYBERRX_API + '/api/orgs/' + orgId, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(orgData)
+  })
+  .then(function(res) {
+    if (!res.ok) {
+      if (res.status === 404) {
+        throw new Error('Organization not found');
+      } else if (res.status === 400) {
+        return res.json().then(function(err) {
+          throw new Error(err.error || 'Invalid data');
+        });
+      } else {
+        throw new Error('Failed to save profile (HTTP ' + res.status + ')');
+      }
+    }
+    return res.json();
+  })
+  .then(function(data) {
+    // Save org ID to localStorage
+    try {
+      localStorage.setItem('cyberrx_org_id', orgId);
+    } catch(e) {
+      console.warn('Failed to save org ID to localStorage:', e.message);
+    }
+    return { orgId: orgId, data: data };
+  });
+}
+
+/**
+ * Load org profile from backend API
+ * @param {string} orgId - Organization ID
+ * @returns {Promise<Object>} - Org profile data
+ */
+function loadOrgProfile(orgId) {
+  if (!orgId) {
+    return Promise.reject(new Error('orgId is required'));
+  }
+
+  return fetch(CYBERRX_API + '/api/orgs/' + orgId, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    }
+  })
+  .then(function(res) {
+    if (!res.ok) {
+      if (res.status === 404) {
+        throw new Error('Organization not found');
+      }
+      throw new Error('Failed to load profile (HTTP ' + res.status + ')');
+    }
+    return res.json();
+  })
+  .then(function(data) {
+    return data.setup_json || {};
+  });
+}
+
+/**
+ * Check if org exists in backend
+ * @param {string} orgId - Organization ID
+ * @returns {Promise<boolean>} - True if org exists
+ */
+function orgExists(orgId) {
+  if (!orgId) {
+    return Promise.resolve(false);
+  }
+
+  return fetch(CYBERRX_API + '/api/orgs/' + orgId + '/exists', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    }
+  })
+  .then(function(res) {
+    if (!res.ok) {
+      return false;
+    }
+    return res.json();
+  })
+  .then(function(data) {
+    return data.exists || false;
+  })
+  .catch(function() {
+    return false;
+  });
+}
+
+// ── localStorage Backup Functions ─────────────────────────────────────────────────
+
+/**
+ * Save org data to localStorage as backup
+ * @param {Object} orgData - Complete org profile data
+ */
+function saveOrgToLocalStorage(orgData) {
+  try {
+    localStorage.setItem('cyberrx_org_backup', JSON.stringify(orgData));
+    if (orgData && orgData.orgName) {
+      var orgId = orgData.orgName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+        .substring(0, 50);
+      localStorage.setItem('cyberrx_org_id', orgId);
+    }
+    return true;
+  } catch(e) {
+    console.warn('Failed to save org backup to localStorage:', e.message);
+    return false;
+  }
+}
+
+/**
+ * Load org data from localStorage backup
+ * @returns {Object|null} - Org data or null if not found
+ */
+function loadOrgFromLocalStorage() {
+  try {
+    var backup = localStorage.getItem('cyberrx_org_backup');
+    if (backup) {
+      return JSON.parse(backup);
+    }
+    return null;
+  } catch(e) {
+    console.warn('Failed to load org backup from localStorage:', e.message);
+    return null;
+  }
+}
+
+/**
+ * Get saved org ID from localStorage
+ * @returns {string|null} - Org ID or null
+ */
+function getSavedOrgId() {
+  try {
+    return localStorage.getItem('cyberrx_org_id');
+  } catch(e) {
+    return null;
+  }
+}
+
+/**
+ * Clear org backup from localStorage
+ */
+function clearOrgBackup() {
+  try {
+    localStorage.removeItem('cyberrx_org_backup');
+    localStorage.removeItem('cyberrx_org_id');
+  } catch(e) {
+    console.warn('Failed to clear org backup:', e.message);
+  }
+}
+
+// ── Validation & Sanitization ─────────────────────────────────────────────────────
+
+/**
+ * Validate org data before saving
+ * @param {Object} data - Org data to validate
+ * @returns {Object} - { valid: boolean, errors: Array }
+ */
+function validateOrgDataBeforeSave(data) {
+  var errors = [];
+
+  if (!data) {
+    return { valid: false, errors: ['No data provided'] };
+  }
+
+  // Required fields
+  if (!data.orgName || !data.orgName.trim()) {
+    errors.push('Organization name is required');
+  }
+
+  if (!data.orgType || !data.orgType.trim()) {
+    errors.push('Organization type is required');
+  }
+
+  // Validate HQ state if provided
+  if (data.hqState && data.hqState.length > 2) {
+    errors.push('Invalid state code (use 2-letter abbreviation)');
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors: errors
+  };
+}
+
+/**
+ * Sanitize user input to prevent XSS
+ * @param {string} input - Input to sanitize
+ * @returns {string} - Sanitized input
+ */
+function sanitizeInput(input) {
+  if (typeof input !== 'string') {
+    return input;
+  }
+  return input
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;');
+}
+
 // ── Shared TTS helper - reads voice settings and speaks using appropriate provider ─────
 // Global tracker for currently playing audio elements
 window._cx_active_audios = window._cx_active_audios || [];
@@ -4481,7 +4712,7 @@ function Setup(props) {
               </div>
               <div style={{color:C.muted,fontSize:10,lineHeight:1.4}}>
                 {[null,null,
-                  "Select the business processes that are in scope for your risk assessment.",
+                  "The following business processes are preselected for your risk assessment based on your organization type.",
                   "Import your application inventory — CMDB, CSV, REST API, or manual entry.",
                   "Select the vendors in your ecosystem. Each one is a potential breach vector.",
                   "Connect CyberRx to your security tools via API, token, or connector.",
@@ -4512,56 +4743,57 @@ function Setup(props) {
                 if(a.hqState){setHqState(a.hqState);}
                 if(a.numStates){setNumStates(a.numStates);}
                 if(a.cmsContract){setCmsContract(a.cmsContract);}
-                var rmap={"Under $500M":"<$500M","$500M to $1B":"$500M-$1B",
-                  "$1B to $2.5B":"$1B-$2.5B","$2.5B to $5B":"$2.5B-$5B",
-                  "$5B to $10B":"$5B-$10B","Over $10B":">$10B"};
+                var rmap={"Under $500M":"<$500M","$500M to $2B":"$500M-$2B",
+                  "$2B to $10B":"$2B-$10B","$10B to $25B":"$10B-$25B",
+                  "$25B to $100B":"$25B-$100B","Over $100B":">$100B"};
                 if(a.revenue&&rmap[a.revenue]){setRevenue(rmap[a.revenue]);}
                 if(a.claimsAmt&&rmap[a.claimsAmt]){setClaimsAmt(rmap[a.claimsAmt]);}
-                var pmap={"Under 500 thousand":"<500K","500K to 1 million":"500K-1M",
-                  "1 to 2.5 million":"1M-2.5M","2.5 to 5 million":"2.5M-5M",
-                  "5 to 10 million":"5M-10M","Over 10 million":">10M"};
+                var pmap={"Under 250K":"<250K","250K to 1M":"250K-1M",
+                  "1M to 5M":"1M-5M","5M to 15M":"5M-15M",
+                  "15M to 50M":"15M-50M","Over 50M":">50M"};
                 if(a.phiRecs&&pmap[a.phiRecs]){setPhiRecs(pmap[a.phiRecs]);}
                 var mmap={"Under 100 thousand":"<100K","100K to 500K":"100K-500K",
                   "500K to 1 million":"500K-1M","1 to 2.5 million":"1M-2.5M",
                   "2.5 to 5 million":"2.5M-5M","Over 5 million":">5M"};
                 if(a.memberCount&&mmap[a.memberCount]){setMembers(mmap[a.memberCount]);}
-                var smap={"Under $250M":"$200M","$250M to $500M":"$375M",
-                  "$500M to $1B":"$750M","$1B to $2.5B":"$1.75B",
-                  "$2.5B to $5B":"$3.5B","Over $5B":"$7B"};
+                var smap={"Under $250M":"$200M","$250M to $750M":"$500M",
+                  "$750M to $2B":"$1.25B","$2B to $5B":"$3.5B",
+                  "$5B to $10B":"$7.5B","Over $10B":"$12B"};
                 if(a.surplus&&smap[a.surplus]){setSurplus(smap[a.surplus]);}
                 var rbcmap={"Below 200 percent (regulatory action)":"175",
                   "200 to 300 percent":"250","300 to 400 percent":"350",
                   "400 to 500 percent":"450","500 to 700 percent":"600",
                   "Over 700 percent":"750","Unknown":"420"};
                 if(a.rbcRatio&&rbcmap[a.rbcRatio]){setRbcRatioIn(rbcmap[a.rbcRatio]);}
-                var imap={"Under $50M":"$40M","$50M to $150M":"$100M",
-                  "$150M to $300M":"$225M","$300M to $600M":"$450M",
-                  "$600M to $1B":"$800M","Over $1B":"$1.5B","Unknown":""};
+                var imap={"Under $50M":"$40M","$50M to $250M":"$150M",
+                  "$250M to $1B":"$625M","$1B to $3B":"$2B",
+                  "$3B to $10B":"$6.5B","Over $10B":"$12B","Unknown":""};
                 if(a.ibnr&&imap[a.ibnr]){setIBNR(imap[a.ibnr]);}
                 if(a.insCarrier){setInsCarrierInput(a.insCarrier);}
-                var ilmap={"No cyber insurance":"0","Under $25M":"$25M",
-                  "$25M to $50M":"$50M","$50M to $100M":"$100M",
-                  "$100M to $250M":"$250M","Over $250M":"$300M"};
-                var ilNumMap={"No cyber insurance":0,"Under $25M":15e6,
-                  "$25M to $50M":37.5e6,"$50M to $100M":75e6,
-                  "$100M to $250M":175e6,"Over $250M":300e6};
+                var ilmap={"No cyber insurance":"0","Under $10M":"$10M",
+                  "$10M to $30M":"$10M-$30M","$30M to $75M":"$30M-$75M",
+                  "$75M to $200M":"$75M-$200M","Over $200M":">$200M"};
+                var ilNumMap={"No cyber insurance":0,"Under $10M":5e6,
+                  "$10M to $30M":20e6,"$30M to $75M":52.5e6,
+                  "$75M to $200M":137.5e6,"Over $200M":250e6};
                 if(a.insLimit&&ilmap[a.insLimit]){setCyberIns(ilmap[a.insLimit]);}
                 if(a.insLimit&&ilNumMap[a.insLimit]!=null&&props.setRootCyberInsLimit){
                   props.setRootCyberInsLimit(ilNumMap[a.insLimit]);
                 }
-                var idmap={"No insurance":"0","Under $1M":"$500K","$1M to $5M":"$2.5M",
-                  "$5M to $10M":"$7.5M","$10M to $25M":"$15M","Over $25M":"$30M"};
+                var idmap={"No insurance":"0","Under $250K":"$250K","$250K to $1M":"$625K",
+                  "$1M to $3M":"$2M","$3M to $10M":"$6.5M","Over $10M":"$15M"};
                 if(a.insDeduct&&idmap[a.insDeduct]){setInsDeduct(idmap[a.insDeduct]);}
-                var bmap={"Under $5M":"$3M","$5M to $15M":"$10M","$15M to $30M":"$22M",
-                  "$30M to $60M":"$45M","$60M to $100M":"$80M","Over $100M":"$125M"};
+                var bmap={"Under $25M":"$15M","$25M to $100M":"$60M",
+                  "$100M to $400M":"$250M","$400M to $1.5B":"$1B",
+                  "$1.5B to $5B":"$3.25B","Over $5B":"$7B"};
                 if(a.itBudget&&bmap[a.itBudget]){setItBudget(bmap[a.itBudget]);}
-                var emap={"Under 500":"250","500 to 1,500":"1000",
-                  "1,500 to 5,000":"3000","5,000 to 10,000":"7500",
-                  "10,000 to 25,000":"17500","Over 25,000":"30000"};
+                var emap={"Under 500":"250","500 to 2,500":"1500",
+                  "2,500 to 8,000":"5000","8,000 to 25,000":"16000",
+                  "25,000 to 100,000":"60000","Over 100,000":"125000"};
                 if(a.employees&&emap[a.employees]){setEmployees(emap[a.employees]);}
                 var epmap={"Under 1,000":"800","1,000 to 5,000":"3000",
-                  "5,000 to 15,000":"10000","15,000 to 30,000":"22000",
-                  "30,000 to 75,000":"50000","Over 75,000":"80000"};
+                  "5,000 to 20,000":"12000","20,000 to 75,000":"45000",
+                  "75,000 to 250,000":"160000","Over 250,000":"350000"};
                 if(a.endpoints&&epmap[a.endpoints]){setEndptCount(epmap[a.endpoints]);}
                 if(a.boardComm){setBoardCommInput(a.boardComm.indexOf("Dedicated")>=0?"yes":"no");}
                 var drmap={"Within the past 3 months":"2","3 to 6 months ago":"4",
@@ -4854,7 +5086,7 @@ function Setup(props) {
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
                 <SH label="Which business processes are in scope?"/>
                 <div style={{display:"flex",gap:8}}>
-                  <button onClick={function(){var s=new Set();var tmpl2=getOrgTemplate(orgType||'Other Payer');tmpl2.procs.forEach(function(p){s.add(p.id);});setSelProcs(s);}}
+                  <button onClick={function(){var s=new Set();var tmpl2=getOrgTemplate(orgType||'Other Payer');tmpl2.procs.forEach(function(p){if(p.type!=="section"){s.add(p.id);}});setSelProcs(s);}}
                     style={{background:"transparent",border:"none",color:C.acc,cursor:"pointer",fontSize:11,fontWeight:600}}>
                     Select all
                   </button>
@@ -4870,13 +5102,34 @@ function Setup(props) {
                   {(profile.mandatoryProcs||[]).map(function(id){var p=PROCS.find(function(x){return x.id===id;});return p?p.name:id;}).join(", ")}
                 </div>
               )}
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
                 {getOrgProcs(orgType||'Other Payer').map(function(p){
+                  // Section header
+                  if(p.type==="section"){
+                    return (
+                      <div key={p.id} style={{
+                        gridColumn:"1 / -1",
+                        padding:"8px 12px",
+                        background:C.acc+"08",
+                        border:"1px solid "+C.acc+"20",
+                        borderRadius:6,
+                        marginTop:8
+                      }}>
+                        <div style={{display:"flex",alignItems:"center",gap:8}}>
+                          <span style={{fontSize:16}}>{p.icon}</span>
+                          <span style={{color:C.acc,fontSize:11,fontWeight:700}}>{p.name}</span>
+                        </div>
+                      </div>
+                    );
+                  }
+                  // Child process (indented)
+                  var isChild=p.parent;
                   var on=selProcs.has(p.id);
                   var rec=profile&&(profile.mandatoryProcs||[]).includes(p.id);
                   return (
                     <div key={p.id} onClick={function(){toggleProc(p.id);}}
                       style={{display:"flex",gap:10,alignItems:"center",padding:"11px 13px",
+                        paddingLeft:isChild?"36px":"13px",
                         background:on?C.acc+"10":C.dim,borderRadius:8,cursor:"pointer",
                         border:"1.5px solid "+(on?C.acc:C.border)}}>
                       <span style={{fontSize:20}}>{p.icon}</span>
@@ -4897,7 +5150,7 @@ function Setup(props) {
                 })}
               </div>
               {selProcs.size>0&&(
-                <div style={{marginTop:10,color:C.muted,fontSize:11}}>{selProcs.size} of {getOrgProcs(orgType||'Other Payer').length} processes available</div>
+                <div style={{marginTop:10,color:C.muted,fontSize:11}}>{selProcs.size} of {getOrgProcs(orgType||'Other Payer').filter(function(p){return p.type!=="section";}).length} processes available</div>
               )}
             </Card>
             <div style={{display:"flex",justifyContent:"space-between"}}>
@@ -17087,6 +17340,8 @@ function SetupBot(props) {
   var _s4=useState('');   var input=_s4[0];   var setInput=_s4[1];
   var _s5=useState([]);   var suggest=_s5[0]; var setSuggest=_s5[1];
   var _s6=useState(false);var editMode=_s6[0];var setEditMode=_s6[1];
+  var _s7=useState(false);var saving=_s7[0];    var setSaving=_s7[1];
+  var _s8=useState(null); var saveError=_s8[0]; var setSaveError=_s8[1];
   var accRef    = useRef({});
   var doneRef   = useRef(false);
   var editIdxRef= useRef(null);
@@ -17305,47 +17560,46 @@ function SetupBot(props) {
      choices:['Yes, full FEP plan','Yes, FEP local option only','No']},
     {id:'revenue', type:'choice', group:'Scale',
      ask:"What is your approximate annual premium revenue?",
-     choices:['Under $500M','$500M to $1B','$1B to $2.5B','$2.5B to $5B','$5B to $10B','Over $10B']},
+     choices:['Under $500M','$500M to $2B','$2B to $10B','$10B to $25B','$25B to $100B','Over $100B']},
     {id:'memberCount',type:'choice',  group:'Scale',
      ask:'How many members are currently enrolled across all lines?',
      choices:['Under 100 thousand','100K to 500K','500K to 1 million',
               '1 to 2.5 million','2.5 to 5 million','Over 5 million']},
     {id:'phiRecs',    type:'choice',  group:'Scale',
      ask:'How many protected health information records does {orgName} hold?',
-     choices:['Under 500 thousand','500K to 1 million','1 to 2.5 million',
-              '2.5 to 5 million','5 to 10 million','Over 10 million']},
+     choices:['Under 250K','250K to 1M','1M to 5M','5M to 15M','15M to 50M','Over 50M']},
     {id:'claimsAmt',  type:'choice',  group:'Scale',
      ask:'What is the approximate annual dollar volume of claims {orgName} processes?',
-     choices:['Under $500M','$500M to $1B','$1B to $2.5B','$2.5B to $5B','$5B to $10B','Over $10B']},
+     choices:['Under $500M','$500M to $2B','$2B to $10B','$10B to $25B','$25B to $100B','Over $100B']},
     {id:'surplus',    type:'choice',  group:'Capital',
      ask:"What is your approximate statutory surplus?",
-     choices:['Under $250M','$250M to $500M','$500M to $1B','$1B to $2.5B','$2.5B to $5B','Over $5B']},
+     choices:['Under $250M','$250M to $750M','$750M to $2B','$2B to $5B','$5B to $10B','Over $10B']},
     {id:'rbcRatio',   type:'choice',  group:'Capital',
      ask:'What is your current risk-based capital ratio as a percentage of company action level? The regulatory minimum is 200 percent.',
      choices:['Below 200 percent','200 to 300 percent','300 to 400 percent',
               '400 to 500 percent','500 to 700 percent','Over 700 percent','Unknown']},
     {id:'ibnr',       type:'choice',  group:'Capital',
      ask:'What are your approximate incurred but not reported reserves?',
-     choices:['Under $50M','$50M to $150M','$150M to $300M','$300M to $600M',
-              '$600M to $1B','Over $1B','Unknown']},
+     choices:['Under $50M','$50M to $250M','$250M to $1B','$1B to $3B',
+              '$3B to $10B','Over $10B','Unknown']},
     {id:'insCarrier', type:'insurer',  group:'Insurance',
      ask:'Who is your cyber liability insurance carrier? Select from the list or type to search.'},
     {id:'insLimit',   type:'choice',  group:'Insurance',
      ask:'What is your total cyber policy limit?',
-     choices:['No cyber insurance','Under $25M','$25M to $50M','$50M to $100M',
-              '$100M to $250M','Over $250M']},
+     choices:['No cyber insurance','Under $10M','$10M to $30M','$30M to $75M',
+              '$75M to $200M','Over $200M']},
     {id:'insDeduct',  type:'choice',  group:'Insurance',
      ask:'What is your policy deductible or self-insured retention?',
-     choices:['No insurance','Under $1M','$1M to $5M','$5M to $10M','$10M to $25M','Over $25M']},
+     choices:['No insurance','Under $250K','$250K to $1M','$1M to $3M','$3M to $10M','Over $10M']},
     {id:'itBudget',   type:'choice',  group:'Budget',
      ask:'What is your annual information technology and cybersecurity budget combined?',
-     choices:['Under $5M','$5M to $15M','$15M to $30M','$30M to $60M','$60M to $100M','Over $100M']},
+     choices:['Under $25M','$25M to $100M','$100M to $400M','$400M to $1.5B','$1.5B to $5B','Over $5B']},
     {id:'employees',  type:'choice',  group:'Budget',
      ask:'How many full-time employees does {orgName} have?',
-     choices:['Under 500','500 to 1,500','1,500 to 5,000','5,000 to 10,000','10,000 to 25,000','Over 25,000']},
+     choices:['Under 500','500 to 2,500','2,500 to 8,000','8,000 to 25,000','25,000 to 100,000','Over 100,000']},
     {id:'endpoints',  type:'choice',  group:'Budget',
      ask:'Approximately how many managed endpoints and devices does {orgName} operate?',
-     choices:['Under 1,000','1,000 to 5,000','5,000 to 15,000','15,000 to 30,000','30,000 to 75,000','Over 75,000']},
+     choices:['Under 1,000','1,000 to 5,000','5,000 to 20,000','20,000 to 75,000','75,000 to 250,000','Over 250,000']},
     {id:'boardComm',  type:'choice',  group:'Governance',
      ask:'Does {orgName} have a dedicated board-level cybersecurity committee?',
      choices:['Dedicated board cyber committee','Full board oversees cyber risk',
@@ -17742,7 +17996,52 @@ function SetupBot(props) {
     if (window.speechSynthesis) { window.speechSynthesis.cancel(); }
     if (yes) {
       addMsg('user', 'Looks correct — continue');
-      onComplete(accRef.current);
+
+      // Save org profile
+      var orgData = accRef.current;
+
+      // Show saving indicator
+      setSaving(true);
+      setSaveError(null);
+      addMsg('bot', 'Saving your profile...');
+
+      // 1. Save to localStorage immediately (backup)
+      var backupSaved = saveOrgToLocalStorage(orgData);
+
+      // 2. Try to save to backend
+      saveOrgProfile(orgData)
+        .then(function(result) {
+          console.log('Org profile saved:', result.orgId);
+          setSaving(false);
+          addMsg('bot', 'Profile saved successfully! Continuing to dashboard...');
+
+          // Call onComplete after short delay
+          setTimeout(function() {
+            onComplete(orgData);
+          }, 800);
+        })
+        .catch(function(err) {
+          console.error('Failed to save org profile:', err.message);
+          setSaving(false);
+
+          // Check if we have localStorage backup
+          if (backupSaved) {
+            setSaveError('backend_unavailable');
+            addMsg('bot', 'Profile saved locally (backend unavailable). You can continue, but data may not persist across devices.');
+            setTimeout(function() {
+              onComplete(orgData);
+            }, 800);
+          } else {
+            setSaveError('save_failed');
+            addMsg('bot', 'Failed to save profile. Please try again.');
+            // Allow retry
+            setTimeout(function() {
+              doneRef.current = false;
+              setSaving(false);
+              setSaveError(null);
+            }, 2000);
+          }
+        });
     } else {
       doneRef.current = false;
       accRef.current  = {};
@@ -18162,6 +18461,54 @@ function SetupBot(props) {
           )}
         </div>
       )}
+
+      {/* Saving overlay */}
+      {saving && (
+        <div style={{position:'absolute',top:0,left:0,right:0,bottom:0,
+          background:'rgba(0,0,0,0.6)',display:'flex',alignItems:'center',
+          justifyContent:'center',zIndex:100}}>
+          <div style={{background:C.panel,border:'1px solid '+C.border,
+            borderRadius:12,padding:'24px 32px',textAlign:'center'}}>
+            <div style={{fontSize:24,marginBottom:12}}>⏳</div>
+            <div style={{color:C.text,fontSize:13,fontWeight:600,marginBottom:4}}>
+              Saving your profile...
+            </div>
+            <div style={{color:C.muted,fontSize:11}}>
+              Please wait while we secure your data
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error message overlay */}
+      {saveError && (
+        <div style={{position:'absolute',top:0,left:0,right:0,bottom:0,
+          background:'rgba(0,0,0,0.6)',display:'flex',alignItems:'center',
+          justifyContent:'center',zIndex:100}}>
+          <div style={{background:C.panel,border:'1px solid '+C.border,
+            borderRadius:12,padding:'24px 32px',textAlign:'center',maxWidth:320}}>
+            <div style={{fontSize:24,marginBottom:12}}>
+              {saveError === 'backend_unavailable' ? '⚠️' : '❌'}
+            </div>
+            <div style={{color:C.text,fontSize:13,fontWeight:600,marginBottom:4}}>
+              {saveError === 'backend_unavailable'
+                ? 'Backend Unavailable'
+                : 'Save Failed'}
+            </div>
+            <div style={{color:C.muted,fontSize:11,marginBottom:16}}>
+              {saveError === 'backend_unavailable'
+                ? 'Your profile is saved locally. You can continue, but data may not persist across devices.'
+                : 'Failed to save your profile. Please try again.'}
+            </div>
+            <button onClick={function(){setSaveError(null);}}
+              style={{background:C.acc,border:'none',color:'#fff',
+                borderRadius:8,padding:'8px 16px',cursor:'pointer',fontSize:12,fontWeight:700}}>
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
       <style>{'@keyframes cxdot{0%,60%,100%{transform:translateY(0);opacity:0.3}30%{transform:translateY(-6px);opacity:1}}'}</style>
     </div>
   );
@@ -23271,6 +23618,210 @@ function CyberRxApp() {
       .catch(function(){setCyberrxReachable(false);});
   },[]);
   useEffect(function(){ updateGlobalInfraSel(rootInfraSel); }, [rootInfraSel]);
+
+  // Load org profile from backend/localStorage on app mount
+  useEffect(function(){
+    // Only load if setup is not already done
+    if(setupDone) { return; }
+
+    var savedOrgId = getSavedOrgId();
+    if(!savedOrgId) { return; }
+
+    // Try to load from backend first
+    loadOrgProfile(savedOrgId)
+      .then(function(orgData){
+        // Restore all state variables from saved org data
+        if(orgData.orgName){
+          setOrgName(orgData.orgName);
+        }
+        if(orgData.orgType){
+          setOrgType(orgData.orgType);
+        }
+        if(orgData.revenue){
+          setRootRevenue(orgData.revenue);
+        }
+        if(orgData.surplus){
+          setRootSurplus(orgData.surplus);
+        }
+        if(orgData.ibnr){
+          setRootIBNR(orgData.ibnr);
+        }
+        if(orgData.itBudget){
+          setRootItBudget(orgData.itBudget);
+        }
+        if(orgData.phiRecords){
+          setRootPhiRecords(orgData.phiRecords);
+        }
+        if(orgData.endpoints){
+          setRootEndpoints(orgData.endpoints);
+        }
+        if(orgData.privAccts){
+          setRootPrivAccts(orgData.privAccts);
+        }
+        if(orgData.rbcRatio){
+          setRootRBCRatio(orgData.rbcRatio);
+        }
+        if(orgData.deductible){
+          setRootDeduct(orgData.deductible);
+        }
+        if(orgData.incidents){
+          setRootIncidents(orgData.incidents);
+        }
+        if(orgData.boardCyberComm){
+          setBoardCyberComm(orgData.boardCyberComm);
+        }
+        if(orgData.insCarrier){
+          setRootInsCarrier(orgData.insCarrier);
+        }
+        if(orgData.drTest){
+          setRootDRTest(orgData.drTest);
+        }
+        if(orgData.cyberInsLimit){
+          setRootCyberInsLimit(orgData.cyberInsLimit);
+        }
+        if(orgData.mfa){
+          setRootMFA(orgData.mfa);
+        }
+        if(orgData.edr){
+          setRootEDR(orgData.edr);
+        }
+        if(orgData.siemDays){
+          setRootSIEMdays(orgData.siemDays);
+        }
+        if(orgData.phishing){
+          setRootPhishing(orgData.phishing);
+        }
+        if(orgData.patch){
+          setRootPatch(orgData.patch);
+        }
+        if(orgData.linesOfBiz){
+          setRootLinesOfBiz(orgData.linesOfBiz);
+        }
+        if(orgData.bcbsAffiliated){
+          setRootBcbsAffiliated(orgData.bcbsAffiliated);
+        }
+        if(orgData.hasFEP){
+          setRootHasFEP(orgData.hasFEP);
+        }
+        if(orgData.vendorSel){
+          setRootVendorSel(orgData.vendorSel);
+        }
+        if(orgData.claimsSystem){
+          setRootClaimsSystem(orgData.claimsSystem);
+        }
+        if(orgData.mailingVendor){
+          setRootMailingVendor(orgData.mailingVendor);
+        }
+        if(orgData.memberPortal){
+          setRootMemberPortal(orgData.memberPortal);
+        }
+        if(orgData.infraSel){
+          setRootInfraSel(orgData.infraSel);
+        }
+
+        // Mark setup as complete
+        setSetupDone(true);
+        console.log('Org profile loaded from backend:', savedOrgId);
+      })
+      .catch(function(err){
+        console.warn('Failed to load org profile from backend:', err.message);
+
+        // Try localStorage fallback
+        var localData = loadOrgFromLocalStorage();
+        if(localData){
+          if(localData.orgName){
+            setOrgName(localData.orgName);
+          }
+          if(localData.orgType){
+            setOrgType(localData.orgType);
+          }
+          if(localData.revenue){
+            setRootRevenue(localData.revenue);
+          }
+          if(localData.surplus){
+            setRootSurplus(localData.surplus);
+          }
+          if(localData.ibnr){
+            setRootIBNR(localData.ibnr);
+          }
+          if(localData.itBudget){
+            setRootItBudget(localData.itBudget);
+          }
+          if(localData.phiRecords){
+            setRootPhiRecords(localData.phiRecords);
+          }
+          if(localData.endpoints){
+            setRootEndpoints(localData.endpoints);
+          }
+          if(localData.privAccts){
+            setRootPrivAccts(localData.privAccts);
+          }
+          if(localData.rbcRatio){
+            setRootRBCRatio(localData.rbcRatio);
+          }
+          if(localData.deductible){
+            setRootDeduct(localData.deductible);
+          }
+          if(localData.incidents){
+            setRootIncidents(localData.incidents);
+          }
+          if(localData.boardCyberComm){
+            setBoardCyberComm(localData.boardCyberComm);
+          }
+          if(localData.insCarrier){
+            setRootInsCarrier(localData.insCarrier);
+          }
+          if(localData.drTest){
+            setRootDRTest(localData.drTest);
+          }
+          if(localData.cyberInsLimit){
+            setRootCyberInsLimit(localData.cyberInsLimit);
+          }
+          if(localData.mfa){
+            setRootMFA(localData.mfa);
+          }
+          if(localData.edr){
+            setRootEDR(localData.edr);
+          }
+          if(localData.siemDays){
+            setRootSIEMdays(localData.siemDays);
+          }
+          if(localData.phishing){
+            setRootPhishing(localData.phishing);
+          }
+          if(localData.patch){
+            setRootPatch(localData.patch);
+          }
+          if(localData.linesOfBiz){
+            setRootLinesOfBiz(localData.linesOfBiz);
+          }
+          if(localData.bcbsAffiliated){
+            setRootBcbsAffiliated(localData.bcbsAffiliated);
+          }
+          if(localData.hasFEP){
+            setRootHasFEP(localData.hasFEP);
+          }
+          if(localData.vendorSel){
+            setRootVendorSel(localData.vendorSel);
+          }
+          if(localData.claimsSystem){
+            setRootClaimsSystem(localData.claimsSystem);
+          }
+          if(localData.mailingVendor){
+            setRootMailingVendor(localData.mailingVendor);
+          }
+          if(localData.memberPortal){
+            setRootMemberPortal(localData.memberPortal);
+          }
+          if(localData.infraSel){
+            setRootInfraSel(localData.infraSel);
+          }
+
+          setSetupDone(true);
+          console.log('Org profile loaded from localStorage');
+        }
+      });
+  }, []);
 
   function go(id, dlPayload) {
     // Navigation only — routing status set exclusively by sendRoute() or onRoute callback.

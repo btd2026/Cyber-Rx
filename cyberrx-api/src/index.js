@@ -60,6 +60,7 @@ app.get('/health', (req, res) => {
 app.use('/api/itsm',        require('./routes/itsm'));
 app.use('/api/tools',       require('./routes/tools'));
 app.use('/api/credentials', require('./routes/credentials'));
+app.use('/api/orgs',        require('./routes/orgs'));
 
 // 404
 app.use(function(req, res) {
