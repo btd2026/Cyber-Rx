@@ -17784,6 +17784,42 @@ function SetupBot(props) {
       {/* Header */}
       <div style={{background:'linear-gradient(135deg,'+C.acc+',#A78BFA)',
         padding:'11px 16px',display:'flex',alignItems:'center',gap:10}}>
+        {qIdx>0&&(
+          <button onClick={function(){
+            if(showStateSelector){
+              setShowStateSelector(false);
+              setSelectedStates([]);
+              setTyping(true);
+              setTimeout(function(){
+                setTyping(false);
+                var text='Let\'s try that again. ' + resolve(curQ.ask);
+                addMsg('bot', text);
+                speak(text);
+              }, 400);
+            }else if(qIdx>0){
+              var prev=qIdx-1;
+              setTyping(true);
+              setTimeout(function(){
+                setTyping(false);
+                var pq=QS[prev];
+                var text=resolve(pq.ask);
+                addMsg('bot', text);
+                speak(text);
+                setQIdx(prev);
+                // Remove the answer for the current question
+                if(accRef.current[curQ.id]){
+                  delete accRef.current[curQ.id];
+                  setAnswers(Object.assign({},accRef.current));
+                }
+              }, 400);
+            }
+          }}
+            style={{background:'rgba(255,255,255,0.15)',border:'1px solid rgba(255,255,255,0.3)',
+              color:'#fff',borderRadius:6,padding:'6px 10px',cursor:'pointer',fontSize:12,
+              display:'flex',alignItems:'center',gap:4,fontWeight:600}}>
+            ← Back
+          </button>
+        )}
         <div style={{width:34,height:34,borderRadius:'50%',flexShrink:0,
           background:'rgba(255,255,255,0.2)',display:'flex',alignItems:'center',
           justifyContent:'center',fontWeight:800,fontSize:14,color:'#fff'}}>
