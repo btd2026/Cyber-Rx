@@ -1,0 +1,25 @@
+{
+  "name": "cyberrx-api",
+  "version": "1.0.0",
+  "description": "CyberRx backend API proxy — ITSM routing, security tool sync, credentials vault",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test:health": "curl -s http://localhost:3001/health | node -e \"process.stdin.resume();process.stdin.setEncoding('utf8');process.stdin.on('data',d=>{const j=JSON.parse(d);console.log('Status:',j.status,'Version:',j.version);})\""
+  },
+  "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.600.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.0",
+    "express": "^4.19.0",
+    "pg": "^8.11.0",
+    "serverless-http": "^3.2.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
