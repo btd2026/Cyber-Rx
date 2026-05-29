@@ -4,7 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 
-// Dynamic CORS configuration for Railway deployment
+// Dynamic CORS configuration for Vercel + Render deployment
 const allowedOrigins = [
   'https://claude.ai',
   'https://www.anthropic.com',
@@ -13,9 +13,11 @@ const allowedOrigins = [
   'http://localhost:5173',
 ];
 
-// Add Railway frontend URL from environment if available
+// Add Vercel frontend URL from environment if available
 if (process.env.FRONTEND_URL) {
   allowedOrigins.push(process.env.FRONTEND_URL);
+  // Also add wildcard for subdomains
+  allowedOrigins.push(process.env.FRONTEND_URL.replace('https://', 'https://*.'));
 }
 
 app.use(cors({

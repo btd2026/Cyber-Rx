@@ -8,7 +8,8 @@ CyberRx is a comprehensive cybersecurity management platform designed for health
 
 - Node.js 20+ installed
 - Git installed
-- Railway account (https://railway.app/)
+- Vercel account (https://vercel.com/) - for frontend
+- Render account (https://render.com/) - for backend + database
 
 ### Local Development
 
@@ -56,74 +57,118 @@ CyberRx is a comprehensive cybersecurity management platform designed for health
    - API: http://localhost:3001
    - API Health: http://localhost:3001/health
 
-## 🚂 Railway Deployment
+## 🚀 Vercel + Render Deployment
+
+### Architecture Overview
+
+- **Frontend**: Vercel (React + Vite)
+- **Backend**: Render (Node.js + Express)
+- **Database**: Render PostgreSQL
 
 ### Step 1: Prepare GitHub Repository
 
-1. **Initialize Git and push to GitHub**
-   ```bash
-   git add .
-   git commit -m "Initial commit: CyberRx application"
-   git branch -M main
-   git remote add origin <your-github-repo-url>
-   git push -u origin main
-   ```
+The repository is already created at: https://github.com/btd2026/Cyber-Rx
 
-### Step 2: Deploy to Railway
+### Step 2: Deploy Backend to Render
 
-1. **Create Railway Project**
-   - Go to https://railway.app/
-   - Click "New Project" → "Deploy from GitHub repo"
-   - Select your CyberRx repository
+1. **Create Render Account**
+   - Go to https://render.com/
+   - Sign up/login with your GitHub account
 
-2. **Deploy Backend API Service**
-   - Railway will auto-detect the Node.js service in `cyberrx-api/`
-   - Click "Add Service" → "GitHub Repo"
-   - Select the same repository
-   - Railway will detect the API service automatically
+2. **Deploy Backend Service**
+   - Click "New" → "Web Service"
+   - Select your `Cyber-Rx` repository
+   - Set root directory to `cyberrx-api/`
+   - Configure:
+     - **Name**: cyberrx-api
+     - **Region**: Oregon (or closest to you)
+     - **Plan**: Free
+     - **Build Command**: `npm install`
+     - **Start Command**: `npm start`
    - Click "Deploy"
 
-3. **Add PostgreSQL Database**
-   - Click "Add Service" → "Database" → "Add PostgreSQL"
-   - Railway will provision a PostgreSQL database
-   - Copy the `DATABASE_URL` from the database service
+3. **Create PostgreSQL Database**
+   - Click "New" → "PostgreSQL"
+   - Configure:
+     - **Name**: cyberrx-db
+     - **Database**: cyberrx
+     - **User**: cyberrx_user
+     - **Region**: Same as backend
+     - **Plan**: Free
+   - Click "Create Database"
 
-4. **Configure Backend Environment Variables**
-   - Go to your API service → "Variables"
-   - Add the following variables:
+4. **Link Database to Backend**
+   - Go to your backend service → "Settings"
+   - Scroll to "Environment"
+   - Render automatically adds database variables:
+     - `DATABASE_URL`
+     - `PGHOST`
+     - `PGPORT`
+     - `PGDATABASE`
+     - `PGUSER`
+     - `PGPASSWORD`
+   - Add additional variables:
      ```bash
-     DATABASE_URL = <from Railway PostgreSQL service>
      NODE_ENV = production
      PORT = 3001
-     JWT_SECRET = <generate-a-secure-secret>
+     JWT_SECRET = <generate-secure-secret>
      VAULT_MODE = local
-     FRONTEND_URL = <your-frontend-railway-url>
+     FRONTEND_URL = https://your-vercel-app.vercel.app
      ```
+   - Click "Save Changes"
+   - Render will automatically restart your service
 
-5. **Deploy Frontend Service**
-   - Click "Add Service" → "GitHub Repo"
-   - Select the same repository
-   - Set root directory to `frontend/`
-   - Add environment variable:
+5. **Verify Backend Deployment**
+   - Check deployment logs in Render dashboard
+   - Test health endpoint: `https://cyberrx-api.onrender.com/health`
+   - You should see: `{"status":"ok","version":"1.0.0","ts":"..."}`
+
+### Step 3: Deploy Frontend to Vercel
+
+1. **Create Vercel Account**
+   - Go to https://vercel.com/
+   - Sign up/login with your GitHub account
+
+2. **Import Project**
+   - Click "Add New" → "Project"
+   - Select your `Cyber-Rx` repository
+   - Configure:
+     - **Framework Preset**: Vite
+     - **Root Directory**: `frontend/`
+     - **Build Command**: `npm run build`
+     - **Output Directory**: `dist`
+
+3. **Configure Environment Variables**
+   - In Vercel project settings → "Environment Variables"
+   - Add:
      ```bash
-     VITE_API_URL = <your-api-railway-url>
+     VITE_API_URL = https://cyberrx-api.onrender.com
      ```
+   - Or add as: `render-backend-url` for the vercel.json configuration
+
+4. **Deploy**
    - Click "Deploy"
+   - Vercel will build and deploy your frontend
+   - Get your Vercel URL: `https://your-project.vercel.app`
 
-6. **Configure Service Networking**
-   - Go to your frontend service → "Settings"
-   - Generate a custom domain or use the default Railway domain
-   - Update `VITE_API_URL` in frontend if needed
+5. **Update Backend CORS**
+   - Go back to Render backend service
+   - Update `FRONTEND_URL` environment variable:
+     ```bash
+     FRONTEND_URL = https://your-project.vercel.app
+     ```
+   - Render will restart the backend with updated CORS settings
 
-### Step 3: Post-Deployment Configuration
+### Step 4: Post-Deployment Configuration
 
 1. **Verify Services**
-   - Check API health: `<api-url>/health`
-   - Access frontend: `<frontend-url>`
-   - Test connectivity between services
+   - Frontend: `https://your-project.vercel.app`
+   - Backend Health: `https://cyberrx-api.onrender.com/health`
+   - Test API connectivity from frontend
 
 2. **Configure Security Tool Credentials** (Optional)
-   - Add tool credentials in API service environment variables:
+   - Go to Render backend service → "Environment"
+   - Add tool credentials:
      ```bash
      # ServiceNow
      SNOW_INSTANCE = your-instance
@@ -140,24 +185,34 @@ CyberRx is a comprehensive cybersecurity management platform designed for health
      CROWDSTRIKE_CLIENT_SECRET = your-client-secret
      ```
 
+3. **Configure Custom Domains** (Optional)
+   - **Vercel**: Add custom domain in project settings
+   - **Render**: Add custom domain in service settings (requires paid plan)
+
+### Step 5: Monitor Deployments
+
+- **Vercel**: Automatic deployments on git push
+- **Render**: Automatic deployments on git push
+- Both platforms provide real-time logs and health monitoring
+
 ## 📁 Project Structure
 
 ```
 Cyber-Rx/
-├── cyberrx-api/          # Backend API service
+├── cyberrx-api/          # Backend API service (Render)
 │   ├── src/
 │   │   ├── routes/       # API route handlers
 │   │   ├── utils/        # Database utilities
 │   │   └── index.js      # API entry point
 │   ├── package.json
-│   └── railway.json      # Railway configuration
+│   └── render.yaml       # Render configuration
 │
-├── frontend/             # Frontend React application
+├── frontend/             # Frontend React application (Vercel)
 │   ├── src/
 │   │   └── App.jsx       # Main React component
 │   ├── public/
 │   ├── package.json
-│   └── railway.json      # Railway configuration
+│   └── vercel.json       # Vercel configuration
 │
 ├── .gitignore
 └── README.md
@@ -180,7 +235,7 @@ Cyber-Rx/
 
 | Variable | Description | Required | Default |
 |----------|-------------|----------|---------|
-| `VITE_API_URL` | Backend API URL | Yes | http://localhost:3001 |
+| `VITE_API_URL` | Backend API URL (Render) | Yes | http://localhost:3001 |
 
 See [ENV_VARIABLES.md](./ENV_VARIABLES.md) for complete configuration reference.
 
@@ -191,7 +246,7 @@ CyberRx uses a microservices architecture:
 - **Frontend**: React + Vite + TailwindCSS
 - **Backend**: Node.js + Express.js
 - **Database**: PostgreSQL
-- **Deployment**: Railway (PaaS)
+- **Deployment**: Vercel (Frontend) + Render (Backend + Database)
 
 ## 🔒 Security Features
 
@@ -217,8 +272,8 @@ See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) for common issues and solutions.
 
 - [SETUP.md](./SETUP.md) - Detailed setup instructions
 - [ENV_VARIABLES.md](./ENV_VARIABLES.md) - Complete environment variable reference
-- [RAILWAY_DEPLOYMENT.md](./RAILWAY_DEPLOYMENT.md) - Railway-specific deployment guide
-- [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture documentation
+- [VERCEL_RENDER_DEPLOYMENT.md](./VERCEL_RENDER_DEPLOYMENT.md) - Vercel + Render deployment guide
+- [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) - Common issues and solutions
 
 ## 📝 License
 

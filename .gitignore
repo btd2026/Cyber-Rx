@@ -30,8 +30,16 @@ out/
 # Docker
 *.dockerignore
 
-# Railway specific
+# Platform specific
 railway-uploaded/
+.vercel/
+.render/
+
+# Vercel specific
+.vercel/
+
+# Render specific
+.render/
 
 # Testing
 coverage/
