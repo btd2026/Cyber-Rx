@@ -17130,6 +17130,18 @@ function SetupBot(props) {
         "Blue Cross Blue Shield of Wyoming","BCBS of Wyoming",
     "BlueCross BlueShield of South Carolina","BCBS of South Carolina",
     "BlueCross of Idaho","BlueCross BlueShield of Tennessee","BCBS of Tennessee",
+    "Blue Cross Blue Shield of California","BCBS of California",
+    "Blue Cross Blue Shield of Colorado","BCBS of Colorado",
+    "Blue Cross Blue Shield of Connecticut","BCBS of Connecticut",
+    "Blue Cross Blue Shield of Kentucky","BCBS of Kentucky",
+    "Blue Cross Blue Shield of Maine","BCBS of Maine",
+    "Blue Cross Blue Shield of Missouri","BCBS of Missouri",
+    "Blue Cross Blue Shield of New Hampshire","BCBS of New Hampshire",
+    "Blue Cross Blue Shield of Ohio","BCBS of Ohio",
+    "Blue Cross Blue Shield of Oregon","BCBS of Oregon","Regence BlueCross BlueShield of Oregon",
+    "Blue Cross Blue Shield of Utah","BCBS of Utah","Regence BlueCross BlueShield of Utah",
+    "Blue Cross Blue Shield of Virginia","BCBS of Virginia",
+    "Blue Cross Blue Shield of Wisconsin","BCBS of Wisconsin",
     "CareFirst BlueCross BlueShield","CareFirst BCBS","CareFirst of Maryland",
     "CareFirst BlueCross BlueShield of the National Capital Area",
     "Empire BlueCross BlueShield","Empire BCBS","Empire Blue Cross Blue Shield of New York",
@@ -17923,7 +17935,7 @@ function SetupBot(props) {
               {suggest.length>0&&(
                 <div style={{position:'absolute',bottom:'100%',left:0,right:52,
                   background:C.card,border:'1px solid '+C.acc+'40',
-                  borderRadius:8,marginBottom:3,overflow:'hidden',
+                  borderRadius:8,marginBottom:3,maxHeight:300,overflowY:'auto',
                   boxShadow:'0 -4px 16px rgba(0,0,0,0.12)',zIndex:10}}>
                   {suggest.map(function(s){
                     return (
