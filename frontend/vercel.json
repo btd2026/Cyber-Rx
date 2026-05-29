@@ -30,8 +30,5 @@
         }
       ]
     }
-  ],
-  "env": {
-    "VITE_API_URL": "@render-backend-url"
-  }
+  ]
 }
