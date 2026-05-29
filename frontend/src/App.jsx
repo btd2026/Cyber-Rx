@@ -17094,6 +17094,20 @@ function SetupBot(props) {
 
   var agentName = 'Briana';
 
+  var US_STATES = [
+    'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut',
+    'Delaware','District of Columbia','Florida','Georgia','Hawaii','Idaho','Illinois',
+    'Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts',
+    'Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada',
+    'New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota',
+    'Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina',
+    'South Dakota','Tennessee','Texas','Utah','Vermont','Virginia','Washington',
+    'West Virginia','Wisconsin','Wyoming'
+  ];
+
+  var _sStates=useState([]); var selectedStates=_sStates[0]; var setSelectedStates=_sStates[1];
+  var _sShowStates=useState(false); var showStateSelector=_sShowStates[0]; var setShowStateSelector=_sShowStates[1];
+
   var HEALTH_PLANS = [
     "Anthem Blue Cross Blue Shield","Anthem Blue Cross","Anthem Health Plans",
         "Blue Cross Blue Shield of Alabama","BCBS of Alabama",
@@ -17636,6 +17650,20 @@ function SetupBot(props) {
     addMsg('user', value);
     setInput('');
 
+    // Check if this is numStates and requires state selection
+    if (q.id === 'numStates' && value !== '1 state' && value !== 'All 50 states plus DC') {
+      setShowStateSelector(true);
+      setSelectedStates([]);
+      setTyping(true);
+      setTimeout(function(){
+        setTyping(false);
+        var stateText = 'Which specific states is ' + (answers.orgName || 'your organization') + ' licensed in? Please select all that apply.';
+        addMsg('bot', stateText);
+        speak(stateText);
+      }, 650);
+      return;
+    }
+
     // If we're in edit mode, advance through the group before returning to confirm
     if (editIdxRef.current !== null) {
       var lastEditIdx = editIdxRef.current;
@@ -18015,6 +18043,75 @@ function SetupBot(props) {
               <option value=''>Select your state...</option>
               {US_STATES.map(function(s){return <option key={s} value={s}>{s}</option>;})}
             </select>
+          )}
+
+          {/* State selector for numStates */}
+          {showStateSelector&&(
+            <div>
+              <div style={{display:'flex',flexWrap:'wrap',gap:5,marginBottom:12,maxHeight:200,overflowY:'auto'}}>
+                {US_STATES.map(function(state){
+                  var selected=selectedStates.indexOf(state)>=0;
+                  return (
+                    <button key={state}
+                      onClick={function(){
+                        var cur=selectedStates.slice();
+                        var idx=cur.indexOf(state);
+                        if(idx>=0){cur.splice(idx,1);}else{cur.push(state);}
+                        setSelectedStates(cur);
+                      }}
+                      style={{background:selected?C.acc+'20':C.card,
+                        border:'1px solid '+(selected?C.acc:C.acc+'40'),
+                        color:selected?C.acc:C.text,
+                        borderRadius:15,padding:'6px 12px',cursor:'pointer',fontSize:10,
+                        whiteSpace:'nowrap'}}>
+                      {selected?'✓ ':''}{state}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{display:'flex',gap:8,justifyContent:'center'}}>
+                <button onClick={function(){
+                  if(selectedStates.length>0){
+                    accRef.current=Object.assign({},accRef.current);
+                    accRef.current.selectedStates=selectedStates;
+                    setAnswers(Object.assign({},accRef.current));
+                    setShowStateSelector(false);
+                    addMsg('user', selectedStates.length + ' states selected: ' + selectedStates.slice(0,3).join(', ') + (selectedStates.length>3?'...':''));
+                    setTyping(true);
+                    setTimeout(function(){
+                      setTyping(false);
+                      var next=qIdx+1;
+                      var nq=QS[next];
+                      if(nq){
+                        var text=resolve(nq.ask);
+                        addMsg('bot', text);
+                        speak(text);
+                        setQIdx(next);
+                      }
+                    }, 650);
+                  }
+                }}
+                  style={{background:C.acc,border:'none',color:'#fff',borderRadius:8,
+                    padding:'8px 16px',cursor:'pointer',fontSize:11,fontWeight:700,
+                    opacity:selectedStates.length===0?0.4:1}}>
+                  Confirm {selectedStates.length} states
+                </button>
+                <button onClick={function(){
+                  setShowStateSelector(false);
+                  setTyping(true);
+                  setTimeout(function(){
+                    setTyping(false);
+                    var text='Let\'s try that again. ' + resolve(curQ.ask);
+                    addMsg('bot', text);
+                    speak(text);
+                  }, 400);
+                }}
+                  style={{background:C.card,border:'1px solid '+C.border,color:C.text,
+                    borderRadius:8,padding:'8px 16px',cursor:'pointer',fontSize:11}}>
+                  Cancel
+                </button>
+              </div>
+            </div>
           )}
 
           {/* Progress dots */}
