@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../utils/db');
+const { authenticateJWT } = require('../middleware/auth');
 
 // Helper: Generate org ID from org name
 function generateOrgId(name) {
@@ -19,7 +20,7 @@ function sanitize(str) {
 }
 
 // POST /api/orgs - Create/save org profile
-router.post('/', async (req, res) => {
+router.post('/', authenticateJWT, async (req, res) => {
   try {
     const { orgName, orgType, ...rest } = req.body;
 
@@ -78,7 +79,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/orgs/:id - Update existing org
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateJWT, async (req, res) => {
   try {
     const { id } = req.params;
     const { orgName, orgType, ...rest } = req.body;
@@ -157,7 +158,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // GET /api/orgs/:id - Retrieve org data
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateJWT, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -191,7 +192,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // GET /api/orgs/:id/exists - Check if org exists
-router.get('/:id/exists', async (req, res) => {
+router.get('/:id/exists', authenticateJWT, async (req, res) => {
   try {
     const { id } = req.params;
 

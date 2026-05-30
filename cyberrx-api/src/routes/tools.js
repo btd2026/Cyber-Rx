@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const vault = require('../utils/vault');
+const { authenticateJWT } = require('../middleware/auth');
 
 const DEMO_VALUES = {
   okta: 78, crowdstrike: 71, splunk: 14, knowbe4: 9.2,
@@ -15,7 +16,7 @@ const METRIC_KEYS = {
   workday: 'trainingPct',
 };
 
-router.post('/:tool/sync', async (req, res) => {
+router.post('/:tool/sync', authenticateJWT, async (req, res) => {
   const { tool } = req.params;
   const orgId = req.headers['x-org-id'] || 'demo';
   const metricKey = METRIC_KEYS[tool];

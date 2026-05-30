@@ -3,9 +3,10 @@ const express = require('express');
 const router = express.Router();
 const vault = require('../utils/vault');
 const db = require('../utils/db');
+const { authenticateJWT } = require('../middleware/auth');
 
 // POST /api/credentials/:tool — store encrypted credentials for org
-router.post('/:tool', async (req, res) => {
+router.post('/:tool', authenticateJWT, async (req, res) => {
   try {
     const { tool } = req.params;
     const orgId = req.headers['x-org-id'] || 'demo';
@@ -29,7 +30,7 @@ router.post('/:tool', async (req, res) => {
 });
 
 // GET /api/credentials/:tool/status — check if credentials exist (never return creds)
-router.get('/:tool/status', async (req, res) => {
+router.get('/:tool/status', authenticateJWT, async (req, res) => {
   try {
     const { tool } = req.params;
     const orgId = req.headers['x-org-id'] || 'demo';
@@ -41,7 +42,7 @@ router.get('/:tool/status', async (req, res) => {
 });
 
 // DELETE /api/credentials/:tool — remove credentials
-router.delete('/:tool', async (req, res) => {
+router.delete('/:tool', authenticateJWT, async (req, res) => {
   try {
     const { tool } = req.params;
     const orgId = req.headers['x-org-id'] || 'demo';
