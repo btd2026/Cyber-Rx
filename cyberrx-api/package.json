@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
+    "scheduler": "node src/scheduler.js",
     "test:health": "curl -s http://localhost:3001/health | node -e \"process.stdin.resume();process.stdin.setEncoding('utf8');process.stdin.on('data',d=>{const j=JSON.parse(d);console.log('Status:',j.status,'Version:',j.version);})\""
   },
   "dependencies": {
