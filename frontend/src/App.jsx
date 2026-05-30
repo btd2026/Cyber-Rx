@@ -8279,7 +8279,8 @@ function CISODash(props) {
                 {open && (
                   <div style={{padding:"10px 14px",borderTop:"1px solid "+SEV_C[f.sev]+"20",background:C.bg}}>
                     <p style={{color:C.text,fontSize:11,lineHeight:1.6,margin:"0 0 10px"}}>{orgText(f.wrong||"", orgName)}</p>
-                    <div style={{display:"flex",gap:6}}>
+                    <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                      <Btn onClick={function(){props.viewCorrelatedFinding(f.id);}} small style={{background:C.acc+"15",color:C.acc,border:"1px solid "+C.acc+"40"}}>View Executive Narrative →</Btn>
                       <Btn onClick={function(){setSingleF(f.id);}} small>View Details</Btn>
                       {f.act && <Btn onClick={function(){go("execution",{act:f.act});}} primary small>Execute {f.act} →</Btn>}
                     </div>
@@ -8486,7 +8487,8 @@ function CRODash(props) {
               <div style={{color:"#0FBB8080",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:4}}>Remediation Steps</div>
               <p style={{color:C.text,fontSize:12,lineHeight:1.8,margin:0,whiteSpace:"pre-line"}}>{orgText(f.fix||"", orgName)}</p>
             </div>
-            <div style={{display:"flex",gap:8}}>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              <Btn onClick={function(){props.viewCorrelatedFinding(f.id);}} style={{background:C.acc+"15",color:C.acc,border:"1px solid "+C.acc+"40"}}>View Executive Narrative →</Btn>
               <Btn onClick={function(){go("execution");}} primary>Route to Execution →</Btn>
               <Btn onClick={function(){setSelFinding(null);}}>Close</Btn>
             </div>
@@ -16321,6 +16323,8 @@ function DashNav(props) {
   var tabs=[
     {id:"hub",       label:"Command Center",  mod:"All Dashboards"},
     {id:"dashboard", label:"CISO",            mod:"Security"},
+    {id:"cio",       label:"CIO",             mod:"Technology"},
+    {id:"clo",       label:"CLO / Legal",     mod:"Legal"},
     {id:"bizlines",  label:"Business Lines",  mod:"Risk"},
     {id:"cro",       label:"CRO / Audit",     mod:"Compliance"},
     {id:"cfo",       label:"CFO",             mod:"Financial"},
@@ -16357,6 +16361,8 @@ function QuickNav(props) {
   var ALL_PAGES = [
     {group:"Dashboards",    items:[
       {id:"dashboard", label:"CISO Dashboard",    mod:"F08"},
+      {id:"cio",       label:"CIO Dashboard",     mod:"F08e"},
+      {id:"clo",       label:"CLO / Legal",       mod:"F08f"},
       {id:"cro",       label:"CRO / Audit",        mod:"F08b"},
       {id:"cfo",       label:"CFO Dashboard",      mod:"F08c"},
       {id:"boarddash", label:"Board Dashboard",    mod:"F08d"},

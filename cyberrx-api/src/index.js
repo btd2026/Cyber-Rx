@@ -2,6 +2,8 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const { authenticateJWT } = require('./middleware/auth');
+const { orgIsolation } = require('./middleware/org_isolation');
 const app = express();
 
 // CORS configuration - allowlist from environment
@@ -69,6 +71,9 @@ app.use('/api/itsm',             require('./routes/itsm'));
 app.use('/api/tools',            require('./routes/tools'));
 app.use('/api/credentials',      require('./routes/credentials'));
 app.use('/api/orgs',             require('./routes/orgs'));
+
+// M3: Authentication Routes (public - no auth required for signup/login)
+app.use('/api/auth',             require('./routes/auth'));
 
 // M1: Risk Correlation Engine Routes
 app.use('/api/business-processes', require('./routes/business-processes'));
