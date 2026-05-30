@@ -91,6 +91,9 @@ app.use('/api/controls',           require('./routes/controls'));
 app.use('/api/tasks',              require('./routes/tasks'));
 app.use('/api/evidence',           require('./routes/evidence'));
 
+// Vendor Continuous Monitoring Routes
+app.use('/api/vendor-monitoring',  require('./routes/vendor-monitoring'));
+
 // Seed management (admin routes - protect in production)
 app.use('/api/seeds',             require('./routes/seeds'));
 

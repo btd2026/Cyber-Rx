@@ -394,6 +394,68 @@ async function init() {
       CREATE INDEX IF NOT EXISTS evidence_finding ON evidence(related_finding_id);
       CREATE INDEX IF NOT EXISTS evidence_task ON evidence(related_task_id);
       CREATE INDEX IF NOT EXISTS evidence_validity_end ON evidence(validity_end);
+
+      -- Vendor Risk Signals Table (Phase 2: Vendor Continuous Monitoring)
+      CREATE TABLE IF NOT EXISTS vendor_risk_signals (
+        id                    TEXT PRIMARY KEY,
+        organization_id       TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        vendor_id             TEXT NOT NULL,
+        vendor_name           TEXT NOT NULL,
+        source_name           TEXT NOT NULL,
+        source_type           TEXT NOT NULL CHECK (source_type IN ('api', 'webhook', 'file_upload', 'manual', 'web_scrape')),
+        signal_category       TEXT NOT NULL CHECK (signal_category IN (
+          'External Attack Surface', 'Breach/Incident Intelligence',
+          'Dark Web/Credential Exposure', 'Regulatory Breach Disclosure',
+          'Compliance Evidence', 'Questionnaire/Attestation',
+          'Fourth-Party Risk', 'Policy Drift', 'Business Criticality'
+        )),
+        signal_name           TEXT NOT NULL,
+        severity              TEXT NOT NULL CHECK (severity IN ('Critical', 'High', 'Medium', 'Low', 'Info')),
+        confidence            INTEGER CHECK (confidence BETWEEN 0 AND 100),
+        observed_at           TIMESTAMPTZ NOT NULL,
+        status                TEXT NOT NULL CHECK (status IN ('active', 'mitigated', 'false_positive', 'under_review')),
+        evidence_url          TEXT,
+        description           TEXT,
+        recommended_action    TEXT,
+        mapped_frameworks     JSONB DEFAULT '[]',
+        mapped_policies       JSONB DEFAULT '[]',
+        raw_data              JSONB DEFAULT '{}',
+        created_at            TIMESTAMPTZ DEFAULT NOW(),
+        updated_at            TIMESTAMPTZ DEFAULT NOW()
+      );
+
+      -- Vendor Monitoring Connections Table
+      CREATE TABLE IF NOT EXISTS vendor_monitoring_connections (
+        id                    SERIAL PRIMARY KEY,
+        organization_id       TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        vendor_id             TEXT NOT NULL,
+        connector_type        TEXT NOT NULL,
+        status                TEXT DEFAULT 'disconnected' CHECK (status IN
+          ('connected', 'disconnected', 'error', 'syncing', 'manual_entry_required')),
+        credentials_ref       TEXT,
+        last_synced           TIMESTAMPTZ,
+        last_sync_status      TEXT,
+        error_message         TEXT,
+        sync_frequency        TEXT DEFAULT 'weekly',
+        manual_entry_data     JSONB DEFAULT '{}',
+        created_at            TIMESTAMPTZ DEFAULT NOW(),
+        updated_at            TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE (organization_id, vendor_id, connector_type)
+      );
+
+      -- Indexes for Vendor Risk Signals
+      CREATE INDEX IF NOT EXISTS vendor_risk_signals_org ON vendor_risk_signals(organization_id);
+      CREATE INDEX IF NOT EXISTS vendor_risk_signals_vendor ON vendor_risk_signals(vendor_id);
+      CREATE INDEX IF NOT EXISTS vendor_risk_signals_source ON vendor_risk_signals(source_name);
+      CREATE INDEX IF NOT EXISTS vendor_risk_signals_category ON vendor_risk_signals(signal_category);
+      CREATE INDEX IF NOT EXISTS vendor_risk_signals_severity ON vendor_risk_signals(severity);
+      CREATE INDEX IF NOT EXISTS vendor_risk_signals_observed ON vendor_risk_signals(observed_at DESC);
+      CREATE INDEX IF NOT EXISTS vendor_risk_signals_frameworks ON vendor_risk_signals USING GIN (mapped_frameworks);
+
+      -- Indexes for Vendor Monitoring Connections
+      CREATE INDEX IF NOT EXISTS vendor_monitoring_conn_org ON vendor_monitoring_connections(organization_id);
+      CREATE INDEX IF NOT EXISTS vendor_monitoring_conn_vendor ON vendor_monitoring_connections(vendor_id);
+      CREATE INDEX IF NOT EXISTS vendor_monitoring_conn_type ON vendor_monitoring_connections(connector_type);
     `);
     console.log('Database schema initialized');
   } catch (err) {

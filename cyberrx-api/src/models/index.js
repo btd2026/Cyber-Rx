@@ -18,6 +18,7 @@ const FinancialImpact = require('./FinancialImpact');
 const Control = require('./Control');
 const RemediationTask = require('./RemediationTask');
 const Evidence = require('./Evidence');
+const VendorRiskSignal = require('./VendorRiskSignal');
 
 module.exports = {
   BusinessProcess,
@@ -31,5 +32,6 @@ module.exports = {
   FinancialImpact,
   Control,
   RemediationTask,
-  Evidence
+  Evidence,
+  VendorRiskSignal
 };
