@@ -5087,7 +5087,7 @@ function Setup(props) {
                 if(a.orgType){
                   setOrgConfig({
                     type:a.orgType||"Other Payer",
-                    linesOfBiz:a.linesOfBiz?a.linesOfBiz.split(", "):[],
+                    linesOfBiz:a.linesOfBiz?(Array.isArray(a.linesOfBiz)?a.linesOfBiz:a.linesOfBiz.split(", ")):[],
                     bcbsAffiliated:a.bcbsAffiliated&&a.bcbsAffiliated.indexOf("Yes")===0,
                     hasFEP:a.hasFEP&&a.hasFEP.indexOf("Yes, full")===0,
                   });
@@ -18952,11 +18952,14 @@ function SetupBot(props) {
             <div>
               <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:8}}>
                 {(curQ.choices||[]).map(function(c){
-                  var picked=(answers[curQ.id]||[]).indexOf(c)>=0;
+                  var ansVal = answers[curQ.id];
+                  var ansArr = Array.isArray(ansVal)?ansVal:[];
+                  var picked=ansArr.indexOf(c)>=0;
                   return (
                     <button key={c}
                       onClick={function(){
-                        var cur=(accRef.current[curQ.id]||[]).slice();
+                        var curVal = accRef.current[curQ.id];
+                        var cur = Array.isArray(curVal)?curVal.slice():[];
                         var idx=cur.indexOf(c);
                         if(idx>=0){cur.splice(idx,1);}else{cur.push(c);}
                         accRef.current=Object.assign({},accRef.current);
@@ -18973,13 +18976,22 @@ function SetupBot(props) {
                 })}
               </div>
               <button onClick={function(){
-                var cur=accRef.current[curQ.id]||[];
+                var curVal = accRef.current[curQ.id];
+                var cur = Array.isArray(curVal)?curVal:[];
                 if(cur.length>0){pick(cur.join(', '));}
               }}
                 style={{background:C.acc,border:'none',color:'#fff',borderRadius:8,
                   padding:'9px 18px',cursor:'pointer',fontSize:12,fontWeight:700,
-                  opacity:(answers[curQ.id]||[]).length===0?0.4:1}}>
-                Continue with {(answers[curQ.id]||[]).length} selected
+                  opacity:function(){
+                    var ansVal = answers[curQ.id];
+                    var ansArr = Array.isArray(ansVal)?ansVal:[];
+                    return ansArr.length===0?0.4:1;
+                  }()}>
+                Continue with {function(){
+                  var ansVal = answers[curQ.id];
+                  var ansArr = Array.isArray(ansVal)?ansVal:[];
+                  return ansArr.length;
+                }()} selected
               </button>
             </div>
           )}
