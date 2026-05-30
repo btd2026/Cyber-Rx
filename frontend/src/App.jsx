@@ -18105,7 +18105,7 @@ function SetupBot(props) {
       var lower = val.toLowerCase();
       var exact = list.filter(function(x){ return x.toLowerCase().indexOf(lower)===0; });
       var fuzzy = list.filter(function(x){ return x.toLowerCase().indexOf(lower)>0 && exact.indexOf(x)<0; });
-      setSuggest(exact.concat(fuzzy).slice(0,7));
+      setSuggest(exact.concat(fuzzy)); // Show all matching options (removed 7-item limit)
     } else { setSuggest([]); }
   }
 
