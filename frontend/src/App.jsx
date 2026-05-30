@@ -1,4 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
+import CorrelatedFinding from "./pages/CorrelatedFinding";
+import CIODash from "./pages/CIODash";
+import CLODash from "./pages/CLODash";
+import AuditDash from "./pages/AuditDash";
+import ConnectorCard from "./components/ConnectorCard";
 
 // --- Theme --------------------------------------------------------------------
 var C = {
@@ -117,6 +122,9 @@ var NAV = [
   {id:"appmap",    label:"Application Map",      icon:"🗄", mod:"F01b"},
   {id:"hub",       label:"Command Center",      icon:"*", mod:"F08"},
   {id:"dashboard", label:"CISO Dashboard",      icon:"S", mod:"F08a"},
+  {id:"cio",       label:"CIO Dashboard",       icon:"I", mod:"F08e"},
+  {id:"clo",       label:"CLO Dashboard",       icon:"L", mod:"F08f"},
+  {id:"audit",      label:"Internal Audit",       icon:"A", mod:"F08g"},
   {id:"cro",       label:"CRO / Audit",         icon:"C", mod:"F08b"},
   {id:"cfo",       label:"CFO Dashboard",       icon:"F", mod:"F08c"},
   {id:"boarddash", label:"Board Dashboard",     icon:"B", mod:"F08d"},
@@ -182,22 +190,53 @@ var ORG_TEMPLATES = {
     ],
     procs:[
       // Tier 1 – Primary Crown Jewels (Compromise materially impacts enterprise survival)
-      {id:"claims",        name:"Claims Adjudication & Payment",              icon:"⚕",  score:64, crits:2, highs:1, trend:mkT(64), bizLine:"operations"},
-      {id:"enroll",        name:"Membership & Enrollment",                    icon:"👤", score:74, crits:0, highs:2, trend:mkT(74), bizLine:"operations"},
-      {id:"provider_net",  name:"Provider Network & Contracting Operations", icon:"🏥", score:83, crits:0, highs:1, trend:mkT(83), bizLine:"hmm"},
-      {id:"care_mgmt",     name:"Care Management / Medical Management",      icon:"💊", score:71, crits:1, highs:2, trend:mkT(71), bizLine:"hmm"},
-      {id:"fwa",           name:"Payment Integrity / Fraud, Waste & Abuse",   icon:"🔍", score:69, crits:1, highs:2, trend:mkT(69), bizLine:"govt"},
-      {id:"member_svc",    name:"Member Services / Contact Center",           icon:"📞", score:66, crits:1, highs:2, trend:mkT(66), bizLine:"service"},
-      {id:"actuarial",     name:"Actuarial / Underwriting & Financial Analytics", icon:"📊", score:82, crits:0, highs:1, trend:mkT(82), bizLine:"data"},
+      {type:"tier", id:"tier1", name:"Tier 1 – Primary Crown Jewels", description:"Compromise materially impacts enterprise survival"},
+      {id:"claims",        name:"Claims Adjudication & Payment",              icon:"⚕",  score:64, crits:2, highs:1, trend:mkT(64), bizLine:"operations",
+       subcomponents:["Medical claims","Dental claims","Pharmacy claims","Provider payment"],
+       why:["Revenue engine","PHI-rich","Financial loss","Regulatory impact","Ransomware blast radius"]},
+      {id:"enroll",        name:"Membership & Enrollment",                    icon:"👤", score:74, crits:0, highs:2, trend:mkT(74), bizLine:"operations",
+       subcomponents:["Eligibility","Enrollment","Member onboarding","Premium billing"],
+       why:["Revenue continuity","CMS obligations","Identity-rich"]},
+      {id:"provider_net",  name:"Provider Network & Contracting Operations", icon:"🏥", score:83, crits:0, highs:1, trend:mkT(83), bizLine:"hmm",
+       subcomponents:["Provider onboarding","Credentialing","Contract management","Provider servicing"],
+       why:["Provider disruption = claims disruption"]},
+      {id:"care_mgmt",     name:"Care Management / Medical Management",      icon:"💊", score:71, crits:1, highs:2, trend:mkT(71), bizLine:"hmm",
+       subcomponents:["Case management","Utilization management","Clinical authorizations"],
+       why:["Clinical sensitivity","High-risk PHI"]},
+      {id:"fwa",           name:"Payment Integrity / Fraud, Waste & Abuse",   icon:"🔍", score:69, crits:1, highs:2, trend:mkT(69), bizLine:"govt",
+       subcomponents:["Fraud analytics","Payment review","Overpayment detection"],
+       why:["High financial risk"]},
+      {id:"member_svc",    name:"Member Services / Contact Center",           icon:"📞", score:66, crits:1, highs:2, trend:mkT(66), bizLine:"service",
+       subcomponents:["Member portal","Service center","Identity verification"],
+       why:["Major fraud + reputation vector"]},
+      {id:"actuarial",     name:"Actuarial / Underwriting & Financial Analytics", icon:"📊", score:82, crits:0, highs:1, trend:mkT(82), bizLine:"data",
+       subcomponents:["Pricing","Reserving (IBNR)","Medical forecasting"],
+       why:["Financial reporting impact","Strategic sensitivity"]},
       // Tier 2 – Strategic Crown Jewels (Material disruption but less existential)
-      {id:"govt_admin",    name:"Government Programs Administration",       icon:"🏛",  type:"section"},
-      {id:"govt_ma",       name:"Medicare Advantage",                         icon:"🏛",  score:71, crits:1, highs:2, trend:mkT(71), bizLine:"govt", parent:"govt_admin"},
-      {id:"govt_fep",      name:"Federal Employee Program (FEP)",             icon:"🦅",  score:78, crits:0, highs:1, trend:mkT(78), bizLine:"govt", parent:"govt_admin"},
-      {id:"govt_mcaid",    name:"Medicaid",                                   icon:"🏛",  score:71, crits:1, highs:2, trend:mkT(71), bizLine:"govt", parent:"govt_admin"},
-      {id:"pharmacy_pbm",  name:"Pharmacy / PBM Integrations",                icon:"💊", score:71, crits:1, highs:2, trend:mkT(71), bizLine:"hmm"},
-      {id:"compliance",    name:"Compliance & Regulatory Reporting",         icon:"⚖",  score:85, crits:0, highs:1, trend:mkT(85), bizLine:"corp"},
-      {id:"identity",      name:"Identity & Access Infrastructure",           icon:"🔐", score:61, crits:2, highs:4, trend:mkT(61), bizLine:"corp"},
-      {id:"data_platform", name:"Data & Analytics Platforms",                  icon:"📊", score:82, crits:0, highs:1, trend:mkT(82), bizLine:"data"},
+      {type:"tier", id:"tier2", name:"Tier 2 – Strategic Crown Jewels", description:"Material disruption but less existential"},
+      {id:"govt_admin",    name:"Government Programs Administration",       icon:"🏛",  type:"section",
+       note:"These are business lines, not processes. Modeled as criticality multipliers for claims and other processes."},
+      {id:"govt_ma",       name:"Medicare Advantage",                         icon:"🏛",  score:71, crits:1, highs:2, trend:mkT(71), bizLine:"govt", parent:"govt_admin",
+       subcomponents:["CMS compliance","Star ratings","Risk adjustment"],
+       why:["Claims criticality multiplier","CMS scrutiny + penalties"]},
+      {id:"govt_fep",      name:"Federal Employee Program (FEP)",             icon:"🦅",  score:78, crits:0, highs:1, trend:mkT(78), bizLine:"govt", parent:"govt_admin",
+       subcomponents:["OPM requirements","FEHB compliance"],
+       why:["Claims criticality multiplier","Federal standards"]},
+      {id:"govt_mcaid",    name:"Medicaid",                                   icon:"🏛",  score:71, crits:1, highs:2, trend:mkT(71), bizLine:"govt", parent:"govt_admin",
+       subcomponents:["State compliance","CMS reporting"],
+       why:["Claims criticality multiplier","State + Federal scrutiny"]},
+      {id:"pharmacy_pbm",  name:"Pharmacy / PBM Integrations",                icon:"💊", score:71, crits:1, highs:2, trend:mkT(71), bizLine:"hmm",
+       subcomponents:["Pharmacy benefits","PBM data exchange","Formulary management"],
+       why:["High claims integration","Specialty pharmacy risk"]},
+      {id:"compliance",    name:"Compliance & Regulatory Reporting",         icon:"⚖",  score:85, crits:0, highs:1, trend:mkT(85), bizLine:"corp",
+       subcomponents:["CMS reporting","HHS OCR","State insurance","BCBSA requirements"],
+       why:["Multi-jurisdictional","High penalty exposure"]},
+      {id:"identity",      name:"Identity & Access Infrastructure",           icon:"🔐", score:61, crits:2, highs:4, trend:mkT(61), bizLine:"corp",
+       subcomponents:["MFA","IAM","Privileged access","Identity proofing"],
+       why:["Gateway to all systems","Blast radius amplification"]},
+      {id:"data_platform", name:"Data & Analytics Platforms",                  icon:"📊", score:82, crits:0, highs:1, trend:mkT(82), bizLine:"data",
+       subcomponents:["Data warehouse","Analytics platforms","BI tools","ML models"],
+       why:["PHI aggregation","Strategic decision support"]},
     ],
     frameworks:["hipaa_sr","hipaa_pr","hipaa_bn","nist_csf","nist_800_53","cis_v8","iso_27001","soc2","naic_model","pci_dss","cms_422"],
     extraFrameworks:["BCBSA Plan Performance Program","FEHB/OPM Data Security (if FEP)"],
@@ -674,18 +713,20 @@ var ALERTS = [
 
 
 // --- SEC Capabilities ---------------------------------------------------------
-var SEC_CAPABILITIES = {
+// CREDIBILITY FIX: This data should come from real tool integrations
+// TODO: Replace SEC_CAPABILITIES_DEMO with real connector data when available
+var SEC_CAPABILITIES_DEMO = {
   "Identity & Access": {
-    score:61, cmmiLevel:4, trend:"down",
-    tools:["Okta SSO","SailPoint IGA","Microsoft Entra ID","Azure AD"],
-    findings:["F-001","F-004","F-007","F-020"],
-    coverage:"78% MFA enforcement",
-    gap:"22% of accounts (service accts, vendor portals, [CLAIMS_SYSTEM] admin) use single-factor auth. 14 orphaned accounts from terminated employees remain active.",
+    score:0, cmmiLevel:0, trend:"pending",
+    tools:["Configure IdP (Okta, Azure AD, etc.)"],
+    findings:[],
+    coverage:"No connector configured",
+    gap:"Connect your Identity Provider to see MFA adoption, access reviews, and orphaned account data.",
     items:[
-      {label:"MFA Adoption",        val:78,  target:100, unit:"%", status:"gap",    detail:"Okta MFA enforced on 847/1,085 user accounts. [CLAIMS_SYSTEM] admin portal, 4 vendor portals, and 147 service accounts excluded."},
-      {label:"Access Reviews (Qtrly)",val:86, target:100, unit:"%", status:"gap",   detail:"Quarterly access certification completed for internal users. 12 vendor accounts excluded from Q4 2024 review."},
-      {label:"Orphaned Accounts",    val:14,  target:0,   unit:" accts", status:"critical", detail:"14 accounts for terminated employees remain active in NASCO, HealthEdge, and Oracle ERP environments."},
-      {label:"Provisioning SLA",     val:98,  target:100, unit:"%", status:"ok",    detail:"98% of access requests fulfilled within 2-business-day SLA via SailPoint IGA workflows."},
+      {label:"MFA Adoption",        val:0,  target:100, unit:"%", status:"pending",    detail:"Configure Okta/Azure AD connector to track MFA enforcement."},
+      {label:"Access Reviews",      val:0,  target:100, unit:"%", status:"pending",   detail:"Configure SailPoint/IGA connector for quarterly access reviews."},
+      {label:"Orphaned Accounts",    val:0,  target:0,   unit:" accts", status:"pending", detail:"Connect HRIS + IdP to detect post-termination access."},
+      {label:"Provisioning SLA",     val:0,  target:100, unit:"%", status:"pending",    detail:"Configure IGA connector to track access request fulfillment."},
     ],
   },
   "Privileged Access Management": {
@@ -715,16 +756,16 @@ var SEC_CAPABILITIES = {
     ],
   },
   "Vulnerability & Patch Management": {
-    score:63, cmmiLevel:3, trend:"stable",
-    tools:["Tenable.io","Tanium","ServiceNow ITSM"],
-    findings:["F-005","F-022"],
-    coverage:"1,204 assets scanned weekly — 97% scan coverage",
-    gap:"4 critical CVEs beyond 7-day SLA. Critical CVE SLA compliance at 63%. Legacy OS (18× Windows Server 2012 R2) cannot receive patches.",
+    score:0, cmmiLevel:0, trend:"pending",
+    tools:["Configure Vuln Scanner (Tenable, Qualys)"],
+    findings:[],
+    coverage:"No connector configured",
+    gap:"Connect your vulnerability scanner (Tenable, Qualys, Rapid7) to track CVE SLA compliance and patch coverage.",
     items:[
-      {label:"Scan Coverage",        val:97,  target:100, unit:"%", status:"ok",     detail:"Tenable.io authenticated weekly scans covering 1,204 of 1,241 known assets. 37 assets excluded by application owner approval (production systems requiring maintenance window)."},
-      {label:"Critical CVE SLA",     val:63,  target:95,  unit:"%", status:"high",   detail:"63% of critical CVEs remediated within 7-day SLA. 4 CVEs currently beyond SLA: CVE-2024-49138 (NASCO Windows), CVE-2024-38213, CVE-2024-26234, CVE-2024-21412."},
-      {label:"High CVE SLA (30d)",   val:79,  target:95,  unit:"%", status:"gap",    detail:"High severity CVEs remediated within 30 days: 79%. 23 high CVEs outstanding averaging 41 days since discovery."},
-      {label:"Patch Automation",     val:58,  target:85,  unit:"%", status:"gap",    detail:"58% of routine patches applied automatically via Tanium. Manual patching required for NASCO, Oracle ERP, and legacy applications."},
+      {label:"Scan Coverage",        val:0,  target:100, unit:"%", status:"pending",     detail:"Configure Tenable/Qualys connector to monitor asset scan coverage."},
+      {label:"Critical CVE SLA",     val:0,  target:95,  unit:"%", status:"pending",   detail:"Configure connector to track critical CVE remediation SLA compliance."},
+      {label:"High CVE SLA (30d)",   val:0,  target:95,  unit:"%", status:"pending",    detail:"Monitor high-severity CVE remediation within 30-day SLA."},
+      {label:"Patch Automation",     val:0,  target:85,  unit:"%", status:"pending",    detail:"Configure Tanium/SCCM connector to track patch automation coverage."},
     ],
   },
   "Email Security & Phishing Simulation": {
@@ -741,29 +782,29 @@ var SEC_CAPABILITIES = {
     ],
   },
   "Endpoint Detection & Response": {
-    score:69, cmmiLevel:3, trend:"stable",
-    tools:["CrowdStrike Falcon","CrowdStrike OverWatch","Microsoft Defender"],
-    findings:["F-005"],
-    coverage:"71% endpoint coverage — 23 NASCO servers and 8 Oracle nodes without sensors",
-    gap:"23 NASCO application servers unprotected. 8 sensors in Reduced Functionality Mode (Windows Server 2012). EDR gap creates blind spot on the highest-risk servers (NASCO handles [PHI_COUNT] member PHI and $11.5M/day in claims).",
+    score:0, cmmiLevel:0, trend:"pending",
+    tools:["Configure EDR (CrowdStrike, SentinelOne, Defender)"],
+    findings:[],
+    coverage:"No connector configured",
+    gap:"Connect your EDR solution (CrowdStrike, SentinelOne, Microsoft Defender) to monitor endpoint coverage and sensor health.",
     items:[
-      {label:"EDR Coverage",         val:71,  target:99,  unit:"%", status:"high",   detail:"CrowdStrike Falcon deployed on 847 of 1,193 managed endpoints. 23 NASCO servers and 8 Oracle DB nodes not covered. Deployment blocked by NASCO contractual constraints."},
-      {label:"RFM Sensors",          val:8,   target:0,   unit:" sensors", status:"gap", detail:"8 sensors in Reduced Functionality Mode due to Windows Server 2012 OS incompatibility. These servers require OS upgrade before full sensor capability."},
-      {label:"Threat Hunt Coverage", val:24,  target:24,  unit:" hr/day",  status:"ok", detail:"CrowdStrike OverWatch provides 24x7 proactive threat hunting. 0 critical threat hunt findings in Q3 2025. Expel SOC provides additional 24x7 monitoring coverage."},
-      {label:"Alert Fidelity",       val:87,  target:30,  unit:"% FP",     status:"gap", detail:"87% false positive rate in SIEM alerts from EDR telemetry. Tuning initiative in progress targeting <30% false positives by Q2 2026."},
+      {label:"EDR Coverage",         val:0,  target:99,  unit:"%", status:"pending",   detail:"Configure EDR connector to track endpoint sensor deployment."},
+      {label:"Reduced Mode Sensors",          val:0,   target:0,   unit:" sensors", status:"pending", detail:"Monitor sensors in reduced functionality mode due to OS compatibility."},
+      {label:"Threat Hunt Coverage", val:0,  target:24,  unit:" hr/day",  status:"pending", detail:"Verify 24x7 threat hunting coverage from your EDR provider."},
+      {label:"Alert Fidelity",       val:0,  target:30,  unit:"% FP",     status:"pending", detail:"Track and tune EDR alert false positive rates."},
     ],
   },
   "SIEM": {
-    score:55, cmmiLevel:2, trend:"down",
-    tools:["Splunk SIEM","Microsoft Sentinel","Palo Alto Cortex XDR"],
-    findings:["F-006"],
-    coverage:"847/850 log sources — 14-day retention (HIPAA requires 6 years)",
-    gap:"CRITICAL: 14-day log retention. HIPAA §164.530(j) requires 6-year retention. 3 systems not forwarding logs. MTTD 47hr vs 24hr target.",
+    score:0, cmmiLevel:0, trend:"pending",
+    tools:["Configure SIEM (Splunk, Sentinel, QRadar)"],
+    findings:[],
+    coverage:"No connector configured",
+    gap:"Connect your SIEM (Splunk, Sentinel, QRadar) to monitor log retention, MTTD, and detection use cases.",
     items:[
-      {label:"Log Source Coverage",  val:99.6,target:100, unit:"%", status:"ok",    detail:"847 of 850 in-scope systems forwarding logs to Splunk. 3 gaps: HealthEdge, UM Workbench, Salesforce Health Cloud. Onboarding scheduled Q1 2026."},
-      {label:"Log Retention",        val:14,  target:90,  unit:" days",    status:"critical", detail:"CRITICAL: Splunk hot storage retention is 14 days. HIPAA §164.530(j) requires 6-year audit log retention. AWS S3 SmartStore cold tier available but not configured."},
-      {label:"MTTD",                 val:47,  target:24,  unit:" hr",      status:"high",     detail:"Mean Time to Detect: 47 hours. Target: <24 hours. Primary driver: insufficient baseline data (14-day retention) and 87% false positive rate reducing analyst effectiveness."},
-      {label:"Use Case Coverage",    val:68,  target:90,  unit:"%", status:"gap",    detail:"68 of 100 planned SIEM detection use cases implemented. 32 use cases pending: cloud workload monitoring, API abuse detection, and PHI access anomalies."},
+      {label:"Log Source Coverage",  val:0,target:100, unit:"%", status:"pending",    detail:"Configure SIEM connector to track log source coverage."},
+      {label:"Log Retention",        val:0,  target:2190,  unit:" days",    status:"pending", detail:"Monitor SIEM log retention. HIPAA requires 6 years (2,190 days)."},
+      {label:"MTTD",                 val:0,  target:24,  unit:" hr",      status:"pending",     detail:"Track Mean Time To Detect (MTTD) for security incidents."},
+      {label:"Use Case Coverage",    val:0,  target:90,  unit:"%", status:"pending",    detail:"Monitor SIEM detection use case implementation coverage."},
     ],
   },
   "UEBA": {
@@ -793,16 +834,16 @@ var SEC_CAPABILITIES = {
     ],
   },
   "Data Loss Prevention": {
-    score:44, cmmiLevel:2, trend:"down",
-    tools:["Microsoft Purview DLP","Varonis Data Security","Proofpoint Email DLP"],
-    findings:["F-002","F-003","F-008-cierant"],
-    coverage:"44% PHI classification — [MAILING_VENDOR] SFTP unmonitored",
-    gap:"44% PHI data classification complete vs 80% target. [MAILING_VENDOR] SFTP PHI transfers not monitored by DLP. [CLAIMS_SYSTEM] SSN archive table stores SSNs unencrypted — not detected by current DLP policies.",
+    score:0, cmmiLevel:0, trend:"pending",
+    tools:["Configure DLP (Purview, Varonis, Forcepoint)"],
+    findings:[],
+    coverage:"No connector configured",
+    gap:"Connect your DLP solution (Microsoft Purview, Varonis, Forcepoint) to monitor PHI classification and data transfer monitoring.",
     items:[
-      {label:"PHI Classification",   val:44,  target:80,  unit:"%", status:"high",   detail:"Microsoft Purview has classified 44% of PHI data elements across 847 in-scope systems. Varonis supplementing for file share classification. Target 80% by Q2 2026."},
-      {label:"Email DLP Coverage",   val:94,  target:99,  unit:"%", status:"ok",     detail:"Proofpoint DLP scanning 94% of outbound email for PHI. 6% gap for encrypted email channels and approved bulk mail systems."},
-      {label:"SFTP DLP Coverage",    val:0,   target:100, unit:"%", status:"critical", detail:"CRITICAL: [MAILING_VENDOR] SFTP PHI transfers (340K member EOBs weekly) are completely unmonitored by DLP. Plaintext PHI files transferred without detection or encryption (F-003)."},
-      {label:"Endpoint DLP",         val:31,  target:80,  unit:"%", status:"gap",    detail:"Endpoint DLP policies via Microsoft Purview applied to 31% of managed endpoints. Priority deployments: Finance workstations, Claims Operations, and member services center."},
+      {label:"PHI Classification",   val:0,  target:80,  unit:"%", status:"pending",   detail:"Configure DLP connector to track PHI data element classification."},
+      {label:"Email DLP Coverage",   val:0,  target:99,  unit:"%", status:"pending",     detail:"Monitor outbound email scanning for PHI and sensitive data."},
+      {label:"SFTP/File Transfer DLP",    val:0,  target:100, unit:"%", status:"pending", detail:"Monitor DLP coverage for SFTP and file transfer protocols."},
+      {label:"Endpoint DLP",         val:0,  target:80,  unit:"%", status:"pending",    detail:"Track endpoint DLP policy coverage for workstations."},
     ],
   },
 };
@@ -1953,6 +1994,22 @@ var CMS_CONTROLS = [
 // ─── Healthcare Payer Ecosystem — Third-Party Vendor Map ──────────────────────
 // Based on [ORG] operating model: payer sits between members, providers, govt
 // Data flow: Provider → Clearinghouse → [ORG] (NASCO) → Vendors → Member
+
+// ─── Vendor Monitoring Connectors ─────────────────────────────────────────────
+var CONNECTORS = [
+  {id:"securityscorecard",name:"SecurityScorecard",purpose:"External security posture scoring",icon:"🛡️"},
+  {id:"bitsight",name:"BitSight",purpose:"Security ratings and vulnerability intelligence",icon:"📊"},
+  {id:"riskrecon",name:"RiskRecon",purpose:"Attack surface discovery and monitoring",icon:"🔍"},
+  {id:"blackkite",name:"Black Kite",purpose:"Ransomware susceptibility and financial stress",icon:"💸"},
+  {id:"recordedfuture",name:"Recorded Future",purpose:"Threat intelligence and risk indicators",icon:"🎯"},
+  {id:"cyware",name:"Cyware Clusters",purpose:"Threat intelligence exchange",icon:"🔗"},
+  {id:"guidepoint",name:"GuidePoint Intelligence",purpose:"Strategic threat intelligence",icon:"🧠"},
+  {id:"hhsocr",name:"HHS OCR Breach Portal",purpose:"Regulatory breach disclosure monitoring",icon:"⚖️"},
+  {id:"googlealerts",name:"Google Alerts",purpose:"News and incident monitoring",icon:"📰"},
+  {id:"compliance",name:"Compliance Evidence",purpose:"SOC 2 / HITRUST / ISO certificate parsing",icon:"📋"},
+  {id:"questionnaire",name:"Vendor Questionnaire",purpose:"Attestation and self-assessment collection",icon:"✍️"},
+  {id:"fourthparty",name:"Fourth-Party Monitor",purpose:"Supply chain subvendor monitoring",icon:"🔗"}
+];
 
 var VENDOR_TIERS = [
   // ── TIER 1: Claims, Clearinghouses & EDI ─────────────────────────────────
@@ -4323,6 +4380,10 @@ function Setup(props) {
   var _s30=useState(null);     var vendorExpand=_s30[0];var setVendorExpand=_s30[1];
   var _s31=useState("");       var vendorImport=_s31[0];var setVendorImport=_s31[1];
   var _s32=useState(false);    var vendorPulling=_s32[0];var setVendorPulling=_s32[1];
+  // Vendor monitoring state
+  var _s35=useState({});       var vendorConnections=_s35[0];  var setVendorConnections=_s35[1];
+  var _s36=useState(false);     var showConnectorSetup=_s36[0];  var setShowConnectorSetup=_s36[1];
+  var _s37=useState("");       var selectedVendorForConnectors=_s37[0];  var setSelectedVendorForConnectors=_s37[1];
   // Additional org profile fields for complete dashboard data
   var _s33=useState({
     "hipaa_sr":true,"hipaa_pr":true,"hipaa_bn":true,
@@ -5104,6 +5165,23 @@ function Setup(props) {
               )}
               <div style={{display:"flex",flexDirection:"column",gap:8}}>
                 {getOrgProcs(orgType||'Other Payer').map(function(p){
+                  // Tier header
+                  if(p.type==="tier"){
+                    return (
+                      <div key={p.id} style={{
+                        gridColumn:"1 / -1",
+                        padding:"10px 12px",
+                        background:linearGradient("to right",C.acc+"15",C.acc+"05"),
+                        borderLeft:"3px solid "+C.acc,
+                        borderRadius:6,
+                        marginTop:8,
+                        marginBottom:4
+                      }}>
+                        <div style={{color:C.acc,fontSize:11,fontWeight:700,marginBottom:2}}>{p.name}</div>
+                        <div style={{color:C.muted,fontSize:9}}>{p.description}</div>
+                      </div>
+                    );
+                  }
                   // Section header
                   if(p.type==="section"){
                     return (
@@ -5115,10 +5193,15 @@ function Setup(props) {
                         borderRadius:6,
                         marginTop:8
                       }}>
-                        <div style={{display:"flex",alignItems:"center",gap:8}}>
+                        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:p.note?4:0}}>
                           <span style={{fontSize:16}}>{p.icon}</span>
                           <span style={{color:C.acc,fontSize:11,fontWeight:700}}>{p.name}</span>
                         </div>
+                        {p.note&&(
+                          <div style={{color:C.muted,fontSize:9,marginLeft:24,lineHeight:1.3}}>
+                            {p.note}
+                          </div>
+                        )}
                       </div>
                     );
                   }
@@ -5135,10 +5218,28 @@ function Setup(props) {
                       <span style={{fontSize:20}}>{p.icon}</span>
                       <div style={{flex:1}}>
                         <div style={{color:on?C.acc:C.text,fontSize:12,fontWeight:on?700:400}}>{p.name}</div>
-                        <div style={{color:C.muted,fontSize:9,marginTop:1}}>
-                          {EXP[p.id]?"$"+EXP[p.id]+"M exposure":""}
-                          {rec?" · Recommended":""}
-                        </div>
+                        {(p.subcomponents||p.why)&&(
+                          <div style={{color:C.muted,fontSize:9,marginTop:1}}>
+                            {p.subcomponents&&p.subcomponents.length>0&&(
+                              <div style={{marginBottom:2}}>{p.subcomponents.join(" · ")}</div>
+                            )}
+                            {p.why&&p.why.length>0&&(
+                              <div style={{fontStyle:"italic",color:C.muted+"CC"}}>
+                                Why: {p.why.join(" · ")}
+                              </div>
+                            )}
+                            {EXP[p.id]&&!p.subcomponents&&(
+                              <div>${EXP[p.id]}M exposure{rec?" · Recommended":""}</div>
+                            )}
+                            {rec&&!p.subcomponents&&!p.why&&"Recommended"}
+                          </div>
+                        )}
+                        {!p.subcomponents&&!p.why&&(
+                          <div style={{color:C.muted,fontSize:9,marginTop:1}}>
+                            {EXP[p.id]?"$"+EXP[p.id]+"M exposure":""}
+                            {rec?" · Recommended":""}
+                          </div>
+                        )}
                       </div>
                       <div style={{width:18,height:18,borderRadius:4,flexShrink:0,
                         background:on?C.acc:C.bg,border:"1.5px solid "+(on?C.acc:C.border),
@@ -5753,6 +5854,129 @@ function Setup(props) {
               </span>
             ):null;
           })}
+        </div>
+      </div>
+    )}
+
+    {/* Connect Monitoring Sources - Only visible when vendors selected */}
+    {Object.keys(vendorSel).filter(function(k){return vendorSel[k];}).length>0&&(
+      <div style={{marginTop:16}}>
+        <div style={{background:C.panel,border:"1px solid "+C.border,borderRadius:10,overflow:"hidden"}}>
+          <div style={{padding:"12px 16px",borderBottom:"1px solid "+C.border,
+            display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div>
+              <div style={{color:C.text,fontSize:13,fontWeight:700}}>
+                Connect Monitoring Sources
+              </div>
+              <div style={{color:C.muted,fontSize:10}}>
+                Connect external monitoring services for continuous vendor risk intelligence
+              </div>
+            </div>
+            <button onClick={function(){setShowConnectorSetup(!showConnectorSetup);}}
+              style={{background:C.acc,border:"none",color:"#fff",
+                borderRadius:6,padding:"4px 12px",cursor:"pointer",
+                fontSize:10,fontWeight:600}}>
+              {showConnectorSetup?"Hide":"Setup"} Connectors
+            </button>
+          </div>
+
+          {showConnectorSetup&&(
+            <div style={{padding:"12px 16px"}}>
+              {/* Vendor selector */}
+              <div style={{marginBottom:12}}>
+                <select
+                  value={selectedVendorForConnectors||""}
+                  onChange={function(e){setSelectedVendorForConnectors(e.target.value);}}
+                  style={{padding:"6px 10px",borderRadius:6,border:"1px solid "+C.border,
+                    background:C.bg,color:C.text,fontSize:11,minWidth:"200px"}}
+                >
+                  <option value="">Select a vendor to configure connectors...</option>
+                  {VENDOR_TIERS.flatMap(function(t){return t.vendors||[];}).filter(function(v){
+                    return vendorSel[v.id];
+                  }).map(function(v){
+                    return <option key={v.id} value={v.id}>{v.name}</option>;
+                  })}
+                </select>
+              </div>
+
+              {/* Connector cards grid */}
+              {selectedVendorForConnectors&&(
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))",gap:10}}>
+                  {CONNECTORS.map(function(connector){
+                    var conn=vendorConnections[selectedVendorForConnectors+"_"+connector.id];
+                    return (
+                      <ConnectorCard
+                        key={connector.id}
+                        connector={connector}
+                        connection={conn}
+                        vendorId={selectedVendorForConnectors}
+                        onConnect={function(){
+                          var key = selectedVendorForConnectors+"_"+connector.id;
+                          setVendorConnections(function(prev){
+                            var newConnections = {...prev};
+                            newConnections[key] = {
+                              status:"connecting",
+                              lastSync:null,
+                              signalCount:0
+                            };
+                            return newConnections;
+                          });
+                          setTimeout(function(){
+                            setVendorConnections(function(prev){
+                              var newConnections = {...prev};
+                              newConnections[key] = {
+                                status:"connected",
+                                lastSync:new Date().toISOString(),
+                                signalCount:Math.floor(Math.random()*10)+1,
+                                riskContribution:Math.random()*0.5
+                              };
+                              return newConnections;
+                            });
+                          }, 1500);
+                        }}
+                        onTest={function(){
+                          alert("Testing connection to "+connector.name+" for vendor "+selectedVendorForConnectors+"...\n\nThis would make a real API call to test the connector connection.");
+                        }}
+                        onSync={function(){
+                          var key = selectedVendorForConnectors+"_"+connector.id;
+                          setVendorConnections(function(prev){
+                            var newConnections = {...prev};
+                            if(newConnections[key]){
+                              newConnections[key] = {
+                                ...newConnections[key],
+                                status:"syncing"
+                              };
+                            }
+                            return newConnections;
+                          });
+                          setTimeout(function(){
+                            setVendorConnections(function(prev){
+                              var newConnections = {...prev};
+                              if(newConnections[key]){
+                                newConnections[key] = {
+                                  ...newConnections[key],
+                                  status:"connected",
+                                  lastSync:new Date().toISOString(),
+                                  signalCount:(newConnections[key].signalCount||0)+Math.floor(Math.random()*5)
+                                };
+                              }
+                              return newConnections;
+                            });
+                          }, 2000);
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+
+              {!selectedVendorForConnectors&&(
+                <div style={{padding:"20px",textAlign:"center",color:C.muted,fontSize:11}}>
+                  Select a vendor above to view and configure monitoring connectors
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     )}
@@ -7413,66 +7637,66 @@ function CISODash(props) {
 
   // Build live capabilities from actual metrics
   var liveCaps = {
-    "Identity & Access": Object.assign({},SEC_CAPABILITIES["Identity & Access"],{
+    "Identity & Access": Object.assign({},SEC_CAPABILITIES_DEMO["Identity & Access"],{
       score:Math.round((aMFA*0.6)+(aPAM*0.2)+80*0.2),
       items:[
-        Object.assign({},SEC_CAPABILITIES["Identity & Access"].items[0],{val:aMFA,detail:"MFA enforced on "+Math.round(aMFA/100*aEndpts)+" of "+aEndpts+" managed accounts."}),
-        SEC_CAPABILITIES["Identity & Access"].items[1],
-        Object.assign({},SEC_CAPABILITIES["Identity & Access"].items[2],{val:Math.round(aPrivAccts*0.014),detail:Math.round(aPrivAccts*0.014)+" orphaned accounts estimated from "+aPrivAccts+" total privileged accounts."}),
-        SEC_CAPABILITIES["Identity & Access"].items[3],
+        Object.assign({},SEC_CAPABILITIES_DEMO["Identity & Access"].items[0],{val:aMFA,detail:"MFA enforced on "+Math.round(aMFA/100*aEndpts)+" of "+aEndpts+" managed accounts."}),
+        SEC_CAPABILITIES_DEMO["Identity & Access"].items[1],
+        Object.assign({},SEC_CAPABILITIES_DEMO["Identity & Access"].items[2],{val:Math.round(aPrivAccts*0.014),detail:Math.round(aPrivAccts*0.014)+" orphaned accounts estimated from "+aPrivAccts+" total privileged accounts."}),
+        SEC_CAPABILITIES_DEMO["Identity & Access"].items[3],
       ]
     }),
-    "Privileged Access Management": Object.assign({},SEC_CAPABILITIES["Privileged Access Management"],{
+    "Privileged Access Management": Object.assign({},SEC_CAPABILITIES_DEMO["Privileged Access Management"],{
       score:Math.round(aPAM*0.7+30*0.3),
       items:[
-        SEC_CAPABILITIES["Privileged Access Management"].items[0],
-        Object.assign({},SEC_CAPABILITIES["Privileged Access Management"].items[1],{val:aPAM,detail:Math.round(aPrivAccts*aPAM/100)+" of "+aPrivAccts+" privileged sessions recorded."}),
-        SEC_CAPABILITIES["Privileged Access Management"].items[2],
-        SEC_CAPABILITIES["Privileged Access Management"].items[3],
+        SEC_CAPABILITIES_DEMO["Privileged Access Management"].items[0],
+        Object.assign({},SEC_CAPABILITIES_DEMO["Privileged Access Management"].items[1],{val:aPAM,detail:Math.round(aPrivAccts*aPAM/100)+" of "+aPrivAccts+" privileged sessions recorded."}),
+        SEC_CAPABILITIES_DEMO["Privileged Access Management"].items[2],
+        SEC_CAPABILITIES_DEMO["Privileged Access Management"].items[3],
       ]
     }),
-    "Network Segmentation": SEC_CAPABILITIES["Network Segmentation"],
-    "Vulnerability & Patch Management": Object.assign({},SEC_CAPABILITIES["Vulnerability & Patch Management"],{
+    "Network Segmentation": SEC_CAPABILITIES_DEMO["Network Segmentation"],
+    "Vulnerability & Patch Management": Object.assign({},SEC_CAPABILITIES_DEMO["Vulnerability & Patch Management"],{
       score:Math.round(aPatch*0.6+80*0.4),
       items:[
-        SEC_CAPABILITIES["Vulnerability & Patch Management"].items[0],
-        Object.assign({},SEC_CAPABILITIES["Vulnerability & Patch Management"].items[1],{val:aPatch,detail:"Critical CVE SLA compliance: "+aPatch+"%. "+Math.round(aEndpts*0.004)+" endpoints estimated beyond SLA."}),
-        SEC_CAPABILITIES["Vulnerability & Patch Management"].items[2],
-        SEC_CAPABILITIES["Vulnerability & Patch Management"].items[3],
+        SEC_CAPABILITIES_DEMO["Vulnerability & Patch Management"].items[0],
+        Object.assign({},SEC_CAPABILITIES_DEMO["Vulnerability & Patch Management"].items[1],{val:aPatch,detail:"Critical CVE SLA compliance: "+aPatch+"%. "+Math.round(aEndpts*0.004)+" endpoints estimated beyond SLA."}),
+        SEC_CAPABILITIES_DEMO["Vulnerability & Patch Management"].items[2],
+        SEC_CAPABILITIES_DEMO["Vulnerability & Patch Management"].items[3],
       ]
     }),
-    "Email Security & Phishing Simulation": Object.assign({},SEC_CAPABILITIES["Email Security & Phishing Simulation"],{
+    "Email Security & Phishing Simulation": Object.assign({},SEC_CAPABILITIES_DEMO["Email Security & Phishing Simulation"],{
       score:Math.round(Math.max(0,100-aPhish*4)*0.4+aTraining*0.3+90*0.3),
       items:[
-        Object.assign({},SEC_CAPABILITIES["Email Security & Phishing Simulation"].items[0],{val:aPhish,detail:"Most recent simulation: "+aPhish+"% click rate. Industry benchmark: <3%."}),
-        Object.assign({},SEC_CAPABILITIES["Email Security & Phishing Simulation"].items[1],{val:aTraining,detail:aTraining+"% of "+aEndpts+" employees completed training. "+Math.round(aEndpts*(1-aTraining/100))+" overdue."}),
-        SEC_CAPABILITIES["Email Security & Phishing Simulation"].items[2],
-        SEC_CAPABILITIES["Email Security & Phishing Simulation"].items[3],
+        Object.assign({},SEC_CAPABILITIES_DEMO["Email Security & Phishing Simulation"].items[0],{val:aPhish,detail:"Most recent simulation: "+aPhish+"% click rate. Industry benchmark: <3%."}),
+        Object.assign({},SEC_CAPABILITIES_DEMO["Email Security & Phishing Simulation"].items[1],{val:aTraining,detail:aTraining+"% of "+aEndpts+" employees completed training. "+Math.round(aEndpts*(1-aTraining/100))+" overdue."}),
+        SEC_CAPABILITIES_DEMO["Email Security & Phishing Simulation"].items[2],
+        SEC_CAPABILITIES_DEMO["Email Security & Phishing Simulation"].items[3],
       ]
     }),
-    "Endpoint Detection & Response": Object.assign({},SEC_CAPABILITIES["Endpoint Detection & Response"],{
+    "Endpoint Detection & Response": Object.assign({},SEC_CAPABILITIES_DEMO["Endpoint Detection & Response"],{
       score:Math.round(aEDR*0.6+70*0.4),
       items:[
-        Object.assign({},SEC_CAPABILITIES["Endpoint Detection & Response"].items[0],{val:aEDR,detail:"EDR deployed on "+Math.round(aEndpts*aEDR/100)+" of "+aEndpts+" endpoints."}),
-        Object.assign({},SEC_CAPABILITIES["Endpoint Detection & Response"].items[1],{val:Math.round(aEndpts*(1-aEDR/100)*0.1),detail:Math.round(aEndpts*(1-aEDR/100))+" endpoints without coverage. ~"+Math.round(aEndpts*(1-aEDR/100)*0.1)+" estimated in reduced mode."}),
-        SEC_CAPABILITIES["Endpoint Detection & Response"].items[2],
-        SEC_CAPABILITIES["Endpoint Detection & Response"].items[3],
+        Object.assign({},SEC_CAPABILITIES_DEMO["Endpoint Detection & Response"].items[0],{val:aEDR,detail:"EDR deployed on "+Math.round(aEndpts*aEDR/100)+" of "+aEndpts+" endpoints."}),
+        Object.assign({},SEC_CAPABILITIES_DEMO["Endpoint Detection & Response"].items[1],{val:Math.round(aEndpts*(1-aEDR/100)*0.1),detail:Math.round(aEndpts*(1-aEDR/100))+" endpoints without coverage. ~"+Math.round(aEndpts*(1-aEDR/100)*0.1)+" estimated in reduced mode."}),
+        SEC_CAPABILITIES_DEMO["Endpoint Detection & Response"].items[2],
+        SEC_CAPABILITIES_DEMO["Endpoint Detection & Response"].items[3],
       ]
     }),
-    "SIEM": Object.assign({},SEC_CAPABILITIES["SIEM"],{
+    "SIEM": Object.assign({},SEC_CAPABILITIES_DEMO["SIEM"],{
       score:Math.round(Math.min(100,aSIEM/90*100)*0.5+90*0.5),
       items:[
-        SEC_CAPABILITIES["SIEM"].items[0],
-        Object.assign({},SEC_CAPABILITIES["SIEM"].items[1],{val:aSIEM,detail:"Current SIEM retention: "+aSIEM+" days. HIPAA §164.530(j) requires 6 years (2,190 days)."}),
-        Object.assign({},SEC_CAPABILITIES["SIEM"].items[2],{val:aMTTD,detail:"MTTD: "+aMTTD+" hours. Short retention window ("+aSIEM+" days) limits baseline and anomaly detection."}),
-        SEC_CAPABILITIES["SIEM"].items[3],
+        SEC_CAPABILITIES_DEMO["SIEM"].items[0],
+        Object.assign({},SEC_CAPABILITIES_DEMO["SIEM"].items[1],{val:aSIEM,detail:"Current SIEM retention: "+aSIEM+" days. HIPAA §164.530(j) requires 6 years (2,190 days)."}),
+        Object.assign({},SEC_CAPABILITIES_DEMO["SIEM"].items[2],{val:aMTTD,detail:"MTTD: "+aMTTD+" hours. Short retention window ("+aSIEM+" days) limits baseline and anomaly detection."}),
+        SEC_CAPABILITIES_DEMO["SIEM"].items[3],
       ]
     }),
-    "UEBA": Object.assign({},SEC_CAPABILITIES["UEBA"],{
+    "UEBA": Object.assign({},SEC_CAPABILITIES_DEMO["UEBA"],{
       score:Math.round(Math.min(100,aSIEM/90*100)*0.4+60*0.6),
     }),
-    "SOAR": SEC_CAPABILITIES["SOAR"],
-    "Data Loss Prevention": SEC_CAPABILITIES["Data Loss Prevention"],
+    "SOAR": SEC_CAPABILITIES_DEMO["SOAR"],
+    "Data Loss Prevention": SEC_CAPABILITIES_DEMO["Data Loss Prevention"],
   };
   var liveActs   = execActions||ACTIONS;
 
@@ -7700,6 +7924,31 @@ function CISODash(props) {
               <div style={{color:C.muted,fontSize:12}}>Composite score across 8 business processes and 18 CIS Controls</div>
             </div>
           </div>
+
+          {/* ── DEMO DATA WARNING ── */}
+          {(!props.mfaPct && !props.edrPct && !props.siemDays) && (
+            <div style={{
+              background: "#fff3cd",
+              border: "1px solid #ffc107",
+              borderRadius: 8,
+              padding: "12px 16px",
+              marginBottom: 16,
+              display: "flex",
+              gap: 12,
+              alignItems: "start"
+            }}>
+              <div style={{fontSize: 16, marginTop: 2}}>⚠️</div>
+              <div style={{flex: 1}}>
+                <div style={{color: "#856404", fontSize: 13, fontWeight: 700, marginBottom: 4}}>
+                  Demo Mode — Connect Your Security Tools
+                </div>
+                <div style={{color: "#856404", fontSize: 11, lineHeight: 1.4}}>
+                  The security capabilities below are showing placeholder data. To see your actual security posture from your tools, go to <strong>Setup → Connect Security Tools</strong> and configure your connectors (Okta, CrowdStrike, Tenable, etc.).
+                </div>
+              </div>
+            </div>
+          )}
+
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
             {Object.keys(liveCaps).map(function(cap){
               var c=liveCaps[cap];
@@ -8271,7 +8520,8 @@ function CISODash(props) {
                 {open && (
                   <div style={{padding:"10px 14px",borderTop:"1px solid "+SEV_C[f.sev]+"20",background:C.bg}}>
                     <p style={{color:C.text,fontSize:11,lineHeight:1.6,margin:"0 0 10px"}}>{orgText(f.wrong||"", orgName)}</p>
-                    <div style={{display:"flex",gap:6}}>
+                    <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                      <Btn onClick={function(){props.viewCorrelatedFinding(f.id);}} small style={{background:C.acc+"15",color:C.acc,border:"1px solid "+C.acc+"40"}}>View Executive Narrative →</Btn>
                       <Btn onClick={function(){setSingleF(f.id);}} small>View Details</Btn>
                       {f.act && <Btn onClick={function(){go("execution",{act:f.act});}} primary small>Execute {f.act} →</Btn>}
                     </div>
@@ -8478,7 +8728,8 @@ function CRODash(props) {
               <div style={{color:"#0FBB8080",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:4}}>Remediation Steps</div>
               <p style={{color:C.text,fontSize:12,lineHeight:1.8,margin:0,whiteSpace:"pre-line"}}>{orgText(f.fix||"", orgName)}</p>
             </div>
-            <div style={{display:"flex",gap:8}}>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              <Btn onClick={function(){props.viewCorrelatedFinding(f.id);}} style={{background:C.acc+"15",color:C.acc,border:"1px solid "+C.acc+"40"}}>View Executive Narrative →</Btn>
               <Btn onClick={function(){go("execution");}} primary>Route to Execution →</Btn>
               <Btn onClick={function(){setSelFinding(null);}}>Close</Btn>
             </div>
@@ -14275,7 +14526,7 @@ function BizLines(props) {
   var _s1=useState(null); var selStep=_s1[0]; var setSelStep=_s1[1];
 
   var liveProcs = (function(){
-    var lob = props.linesOfBiz || [];
+    var lob = Array.isArray(props.linesOfBiz) ? props.linesOfBiz : [];
     if (lob.length === 0) {
       // Re-score before returning
       var _bm = {mfaPct:props.mfaPct,edrPct:props.edrPct,patchPct:props.patchPct,
@@ -16313,6 +16564,8 @@ function DashNav(props) {
   var tabs=[
     {id:"hub",       label:"Command Center",  mod:"All Dashboards"},
     {id:"dashboard", label:"CISO",            mod:"Security"},
+    {id:"cio",       label:"CIO",             mod:"Technology"},
+    {id:"clo",       label:"CLO / Legal",     mod:"Legal"},
     {id:"bizlines",  label:"Business Lines",  mod:"Risk"},
     {id:"cro",       label:"CRO / Audit",     mod:"Compliance"},
     {id:"cfo",       label:"CFO",             mod:"Financial"},
@@ -16349,6 +16602,8 @@ function QuickNav(props) {
   var ALL_PAGES = [
     {group:"Dashboards",    items:[
       {id:"dashboard", label:"CISO Dashboard",    mod:"F08"},
+      {id:"cio",       label:"CIO Dashboard",     mod:"F08e"},
+      {id:"clo",       label:"CLO / Legal",       mod:"F08f"},
       {id:"cro",       label:"CRO / Audit",        mod:"F08b"},
       {id:"cfo",       label:"CFO Dashboard",      mod:"F08c"},
       {id:"boarddash", label:"Board Dashboard",    mod:"F08d"},
@@ -18064,7 +18319,7 @@ function SetupBot(props) {
       var lower = val.toLowerCase();
       var exact = list.filter(function(x){ return x.toLowerCase().indexOf(lower)===0; });
       var fuzzy = list.filter(function(x){ return x.toLowerCase().indexOf(lower)>0 && exact.indexOf(x)<0; });
-      setSuggest(exact.concat(fuzzy).slice(0,7));
+      setSuggest(exact.concat(fuzzy)); // Show all matching options (removed 7-item limit)
     } else { setSuggest([]); }
   }
 
@@ -23528,6 +23783,8 @@ function CyberRxApp() {
   var _s51=useState(""); var members=_s51[0]; var setMembers=_s51[1];
   var _s52=useState("home"); var page=_s52[0]; var setPage=_s52[1];
   var _s53=useState([]); var history=_s53[0]; var setHistory=_s53[1];
+  // Correlated Finding state - T-113
+  var _sCF=useState(null); var correlatedFindingId=_sCF[0]; var setCorrelatedFindingId=_sCF[1];
   var _s54=useState(null); var dl=_s54[0]; var setDl=_s54[1];
   var _s55b=useState(false); var setupDone=_s55b[0]; var setSetupDone=_s55b[1];
 
@@ -23841,13 +24098,22 @@ function CyberRxApp() {
     if (el) { el.scrollTop = 0; }
   }
 
+  // View correlated finding narrative - T-113
+  function viewCorrelatedFinding(findingId) {
+    setHistory(function(h){ return h.concat([page]); });
+    setCorrelatedFindingId(findingId);
+    setPage("correlated-finding");
+    var el = document.querySelector("[data-scroll='main']");
+    if (el) { el.scrollTop = 0; }
+  }
+
   // Shared page props
   var _sBA=useState(true); var brianaOn=_sBA[0]; var setBrianaOn=_sBA[1];
   var _sSM=useState({}); var syncMeta=_sSM[0]; var setSyncMeta=_sSM[1];
   var _sDR=useState({}); var docResults=_sDR[0]; var setDocResults=_sDR[1];
   var _sPF=useState({}); var appPolicyFiles=_sPF[0]; var setAppPolicyFiles=_sPF[1];
   var sharedProps = {
-    go:go, goBack:goBack, setRootRevenue:setRootRevenue,
+    go:go, goBack:goBack, viewCorrelatedFinding:viewCorrelatedFinding, setRootRevenue:setRootRevenue,
     orgName:orgName, orgType:orgType, members:members, email:email,
     execActions:execActions, setExecActions:setExecActions,
     revenue:rangeVal(REVENUE_RANGES,rootRevenue),
@@ -24005,6 +24271,20 @@ function CyberRxApp() {
     if (page==="execution") { return React.createElement(Execution, sharedProps); }
     if (page==="crownjewels") { return React.createElement(CrownJewelsModule, sharedProps); }
     if (page==="attackpaths")  { return React.createElement(AttackPathsModule, sharedProps); }
+    // M2: CIO and CLO Dashboards
+    if (page==="cio")        { return React.createElement(CIODash, sharedProps); }
+    if (page==="clo")        { return React.createElement(CLODash, sharedProps); }
+    // M3: Internal Audit Dashboard
+    if (page==="audit")       { return React.createElement(AuditDash, sharedProps); }
+    if (page==="correlated-finding") {
+      return React.createElement(CorrelatedFinding, {
+        findingId: correlatedFindingId,
+        goBack: goBack,
+        authToken: localStorage.getItem('authToken'),
+        orgId: localStorage.getItem('orgId'),
+        api_url: import.meta.env?.VITE_API_URL || 'https://cyberrx-api.onrender.com'
+      });
+    }
     return React.createElement(Home, sharedProps);
   }
 

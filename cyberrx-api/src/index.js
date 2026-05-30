@@ -2,6 +2,8 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const { authenticateJWT } = require('./middleware/auth');
+const { orgIsolation } = require('./middleware/org_isolation');
 const app = express();
 
 // CORS configuration - allowlist from environment
@@ -65,10 +67,35 @@ app.get('/health', (req, res) => {
 });
 
 // Route groups
-app.use('/api/itsm',        require('./routes/itsm'));
-app.use('/api/tools',       require('./routes/tools'));
-app.use('/api/credentials', require('./routes/credentials'));
-app.use('/api/orgs',        require('./routes/orgs'));
+app.use('/api/itsm',             require('./routes/itsm'));
+app.use('/api/tools',            require('./routes/tools'));
+app.use('/api/credentials',      require('./routes/credentials'));
+app.use('/api/orgs',             require('./routes/orgs'));
+
+// M3: Authentication Routes (public - no auth required for signup/login)
+app.use('/api/auth',             require('./routes/auth'));
+
+// M1: Risk Correlation Engine Routes
+app.use('/api/business-processes', require('./routes/business-processes'));
+app.use('/api/assets',            require('./routes/assets'));
+app.use('/api/data-objects',      require('./routes/data-objects'));
+app.use('/api/threat-scenarios',   require('./routes/threat-scenarios'));
+app.use('/api/legal-obligations',  require('./routes/legal-obligations'));
+app.use('/api/executive-owners',   require('./routes/executive-owners'));
+app.use('/api/risks',             require('./routes/risks'));
+app.use('/api/findings',           require('./routes/findings'));
+app.use('/api/correlation',        require('./routes/correlation'));
+
+// Core Workflow Entities: Controls, Remediation Tasks, Evidence
+app.use('/api/controls',           require('./routes/controls'));
+app.use('/api/tasks',              require('./routes/tasks'));
+app.use('/api/evidence',           require('./routes/evidence'));
+
+// Vendor Continuous Monitoring Routes
+app.use('/api/vendor-monitoring',  require('./routes/vendor-monitoring'));
+
+// Seed management (admin routes - protect in production)
+app.use('/api/seeds',             require('./routes/seeds'));
 
 // 404
 app.use(function(req, res) {
