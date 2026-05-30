@@ -351,7 +351,7 @@ const AuditDash = (props) => {
             borderBottom: '1px solid #e5e7eb'
           }}>
             <h2 style={{ fontSize: '1rem', fontWeight: '600', margin: 0 }}>
-              Controls Requiring Attention (Effectiveness < 60%)
+              Controls Requiring Attention (Effectiveness &lt; 60%)
             </h2>
           </div>
           <div style={{ padding: '1rem' }}>
