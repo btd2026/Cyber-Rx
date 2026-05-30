@@ -681,18 +681,20 @@ var ALERTS = [
 
 
 // --- SEC Capabilities ---------------------------------------------------------
-var SEC_CAPABILITIES = {
+// CREDIBILITY FIX: This data should come from real tool integrations
+// TODO: Replace SEC_CAPABILITIES_DEMO with real connector data when available
+var SEC_CAPABILITIES_DEMO = {
   "Identity & Access": {
-    score:61, cmmiLevel:4, trend:"down",
-    tools:["Okta SSO","SailPoint IGA","Microsoft Entra ID","Azure AD"],
-    findings:["F-001","F-004","F-007","F-020"],
-    coverage:"78% MFA enforcement",
-    gap:"22% of accounts (service accts, vendor portals, [CLAIMS_SYSTEM] admin) use single-factor auth. 14 orphaned accounts from terminated employees remain active.",
+    score:0, cmmiLevel:0, trend:"pending",
+    tools:["Configure IdP (Okta, Azure AD, etc.)"],
+    findings:[],
+    coverage:"No connector configured",
+    gap:"Connect your Identity Provider to see MFA adoption, access reviews, and orphaned account data.",
     items:[
-      {label:"MFA Adoption",        val:78,  target:100, unit:"%", status:"gap",    detail:"Okta MFA enforced on 847/1,085 user accounts. [CLAIMS_SYSTEM] admin portal, 4 vendor portals, and 147 service accounts excluded."},
-      {label:"Access Reviews (Qtrly)",val:86, target:100, unit:"%", status:"gap",   detail:"Quarterly access certification completed for internal users. 12 vendor accounts excluded from Q4 2024 review."},
-      {label:"Orphaned Accounts",    val:14,  target:0,   unit:" accts", status:"critical", detail:"14 accounts for terminated employees remain active in NASCO, HealthEdge, and Oracle ERP environments."},
-      {label:"Provisioning SLA",     val:98,  target:100, unit:"%", status:"ok",    detail:"98% of access requests fulfilled within 2-business-day SLA via SailPoint IGA workflows."},
+      {label:"MFA Adoption",        val:0,  target:100, unit:"%", status:"pending",    detail:"Configure Okta/Azure AD connector to track MFA enforcement."},
+      {label:"Access Reviews",      val:0,  target:100, unit:"%", status:"pending",   detail:"Configure SailPoint/IGA connector for quarterly access reviews."},
+      {label:"Orphaned Accounts",    val:0,  target:0,   unit:" accts", status:"pending", detail:"Connect HRIS + IdP to detect post-termination access."},
+      {label:"Provisioning SLA",     val:0,  target:100, unit:"%", status:"pending",    detail:"Configure IGA connector to track access request fulfillment."},
     ],
   },
   "Privileged Access Management": {
@@ -722,16 +724,16 @@ var SEC_CAPABILITIES = {
     ],
   },
   "Vulnerability & Patch Management": {
-    score:63, cmmiLevel:3, trend:"stable",
-    tools:["Tenable.io","Tanium","ServiceNow ITSM"],
-    findings:["F-005","F-022"],
-    coverage:"1,204 assets scanned weekly — 97% scan coverage",
-    gap:"4 critical CVEs beyond 7-day SLA. Critical CVE SLA compliance at 63%. Legacy OS (18× Windows Server 2012 R2) cannot receive patches.",
+    score:0, cmmiLevel:0, trend:"pending",
+    tools:["Configure Vuln Scanner (Tenable, Qualys)"],
+    findings:[],
+    coverage:"No connector configured",
+    gap:"Connect your vulnerability scanner (Tenable, Qualys, Rapid7) to track CVE SLA compliance and patch coverage.",
     items:[
-      {label:"Scan Coverage",        val:97,  target:100, unit:"%", status:"ok",     detail:"Tenable.io authenticated weekly scans covering 1,204 of 1,241 known assets. 37 assets excluded by application owner approval (production systems requiring maintenance window)."},
-      {label:"Critical CVE SLA",     val:63,  target:95,  unit:"%", status:"high",   detail:"63% of critical CVEs remediated within 7-day SLA. 4 CVEs currently beyond SLA: CVE-2024-49138 (NASCO Windows), CVE-2024-38213, CVE-2024-26234, CVE-2024-21412."},
-      {label:"High CVE SLA (30d)",   val:79,  target:95,  unit:"%", status:"gap",    detail:"High severity CVEs remediated within 30 days: 79%. 23 high CVEs outstanding averaging 41 days since discovery."},
-      {label:"Patch Automation",     val:58,  target:85,  unit:"%", status:"gap",    detail:"58% of routine patches applied automatically via Tanium. Manual patching required for NASCO, Oracle ERP, and legacy applications."},
+      {label:"Scan Coverage",        val:0,  target:100, unit:"%", status:"pending",     detail:"Configure Tenable/Qualys connector to monitor asset scan coverage."},
+      {label:"Critical CVE SLA",     val:0,  target:95,  unit:"%", status:"pending",   detail:"Configure connector to track critical CVE remediation SLA compliance."},
+      {label:"High CVE SLA (30d)",   val:0,  target:95,  unit:"%", status:"pending",    detail:"Monitor high-severity CVE remediation within 30-day SLA."},
+      {label:"Patch Automation",     val:0,  target:85,  unit:"%", status:"pending",    detail:"Configure Tanium/SCCM connector to track patch automation coverage."},
     ],
   },
   "Email Security & Phishing Simulation": {
@@ -748,29 +750,29 @@ var SEC_CAPABILITIES = {
     ],
   },
   "Endpoint Detection & Response": {
-    score:69, cmmiLevel:3, trend:"stable",
-    tools:["CrowdStrike Falcon","CrowdStrike OverWatch","Microsoft Defender"],
-    findings:["F-005"],
-    coverage:"71% endpoint coverage — 23 NASCO servers and 8 Oracle nodes without sensors",
-    gap:"23 NASCO application servers unprotected. 8 sensors in Reduced Functionality Mode (Windows Server 2012). EDR gap creates blind spot on the highest-risk servers (NASCO handles [PHI_COUNT] member PHI and $11.5M/day in claims).",
+    score:0, cmmiLevel:0, trend:"pending",
+    tools:["Configure EDR (CrowdStrike, SentinelOne, Defender)"],
+    findings:[],
+    coverage:"No connector configured",
+    gap:"Connect your EDR solution (CrowdStrike, SentinelOne, Microsoft Defender) to monitor endpoint coverage and sensor health.",
     items:[
-      {label:"EDR Coverage",         val:71,  target:99,  unit:"%", status:"high",   detail:"CrowdStrike Falcon deployed on 847 of 1,193 managed endpoints. 23 NASCO servers and 8 Oracle DB nodes not covered. Deployment blocked by NASCO contractual constraints."},
-      {label:"RFM Sensors",          val:8,   target:0,   unit:" sensors", status:"gap", detail:"8 sensors in Reduced Functionality Mode due to Windows Server 2012 OS incompatibility. These servers require OS upgrade before full sensor capability."},
-      {label:"Threat Hunt Coverage", val:24,  target:24,  unit:" hr/day",  status:"ok", detail:"CrowdStrike OverWatch provides 24x7 proactive threat hunting. 0 critical threat hunt findings in Q3 2025. Expel SOC provides additional 24x7 monitoring coverage."},
-      {label:"Alert Fidelity",       val:87,  target:30,  unit:"% FP",     status:"gap", detail:"87% false positive rate in SIEM alerts from EDR telemetry. Tuning initiative in progress targeting <30% false positives by Q2 2026."},
+      {label:"EDR Coverage",         val:0,  target:99,  unit:"%", status:"pending",   detail:"Configure EDR connector to track endpoint sensor deployment."},
+      {label:"Reduced Mode Sensors",          val:0,   target:0,   unit:" sensors", status:"pending", detail:"Monitor sensors in reduced functionality mode due to OS compatibility."},
+      {label:"Threat Hunt Coverage", val:0,  target:24,  unit:" hr/day",  status:"pending", detail:"Verify 24x7 threat hunting coverage from your EDR provider."},
+      {label:"Alert Fidelity",       val:0,  target:30,  unit:"% FP",     status:"pending", detail:"Track and tune EDR alert false positive rates."},
     ],
   },
   "SIEM": {
-    score:55, cmmiLevel:2, trend:"down",
-    tools:["Splunk SIEM","Microsoft Sentinel","Palo Alto Cortex XDR"],
-    findings:["F-006"],
-    coverage:"847/850 log sources — 14-day retention (HIPAA requires 6 years)",
-    gap:"CRITICAL: 14-day log retention. HIPAA §164.530(j) requires 6-year retention. 3 systems not forwarding logs. MTTD 47hr vs 24hr target.",
+    score:0, cmmiLevel:0, trend:"pending",
+    tools:["Configure SIEM (Splunk, Sentinel, QRadar)"],
+    findings:[],
+    coverage:"No connector configured",
+    gap:"Connect your SIEM (Splunk, Sentinel, QRadar) to monitor log retention, MTTD, and detection use cases.",
     items:[
-      {label:"Log Source Coverage",  val:99.6,target:100, unit:"%", status:"ok",    detail:"847 of 850 in-scope systems forwarding logs to Splunk. 3 gaps: HealthEdge, UM Workbench, Salesforce Health Cloud. Onboarding scheduled Q1 2026."},
-      {label:"Log Retention",        val:14,  target:90,  unit:" days",    status:"critical", detail:"CRITICAL: Splunk hot storage retention is 14 days. HIPAA §164.530(j) requires 6-year audit log retention. AWS S3 SmartStore cold tier available but not configured."},
-      {label:"MTTD",                 val:47,  target:24,  unit:" hr",      status:"high",     detail:"Mean Time to Detect: 47 hours. Target: <24 hours. Primary driver: insufficient baseline data (14-day retention) and 87% false positive rate reducing analyst effectiveness."},
-      {label:"Use Case Coverage",    val:68,  target:90,  unit:"%", status:"gap",    detail:"68 of 100 planned SIEM detection use cases implemented. 32 use cases pending: cloud workload monitoring, API abuse detection, and PHI access anomalies."},
+      {label:"Log Source Coverage",  val:0,target:100, unit:"%", status:"pending",    detail:"Configure SIEM connector to track log source coverage."},
+      {label:"Log Retention",        val:0,  target:2190,  unit:" days",    status:"pending", detail:"Monitor SIEM log retention. HIPAA requires 6 years (2,190 days)."},
+      {label:"MTTD",                 val:0,  target:24,  unit:" hr",      status:"pending",     detail:"Track Mean Time To Detect (MTTD) for security incidents."},
+      {label:"Use Case Coverage",    val:0,  target:90,  unit:"%", status:"pending",    detail:"Monitor SIEM detection use case implementation coverage."},
     ],
   },
   "UEBA": {
@@ -800,16 +802,16 @@ var SEC_CAPABILITIES = {
     ],
   },
   "Data Loss Prevention": {
-    score:44, cmmiLevel:2, trend:"down",
-    tools:["Microsoft Purview DLP","Varonis Data Security","Proofpoint Email DLP"],
-    findings:["F-002","F-003","F-008-cierant"],
-    coverage:"44% PHI classification — [MAILING_VENDOR] SFTP unmonitored",
-    gap:"44% PHI data classification complete vs 80% target. [MAILING_VENDOR] SFTP PHI transfers not monitored by DLP. [CLAIMS_SYSTEM] SSN archive table stores SSNs unencrypted — not detected by current DLP policies.",
+    score:0, cmmiLevel:0, trend:"pending",
+    tools:["Configure DLP (Purview, Varonis, Forcepoint)"],
+    findings:[],
+    coverage:"No connector configured",
+    gap:"Connect your DLP solution (Microsoft Purview, Varonis, Forcepoint) to monitor PHI classification and data transfer monitoring.",
     items:[
-      {label:"PHI Classification",   val:44,  target:80,  unit:"%", status:"high",   detail:"Microsoft Purview has classified 44% of PHI data elements across 847 in-scope systems. Varonis supplementing for file share classification. Target 80% by Q2 2026."},
-      {label:"Email DLP Coverage",   val:94,  target:99,  unit:"%", status:"ok",     detail:"Proofpoint DLP scanning 94% of outbound email for PHI. 6% gap for encrypted email channels and approved bulk mail systems."},
-      {label:"SFTP DLP Coverage",    val:0,   target:100, unit:"%", status:"critical", detail:"CRITICAL: [MAILING_VENDOR] SFTP PHI transfers (340K member EOBs weekly) are completely unmonitored by DLP. Plaintext PHI files transferred without detection or encryption (F-003)."},
-      {label:"Endpoint DLP",         val:31,  target:80,  unit:"%", status:"gap",    detail:"Endpoint DLP policies via Microsoft Purview applied to 31% of managed endpoints. Priority deployments: Finance workstations, Claims Operations, and member services center."},
+      {label:"PHI Classification",   val:0,  target:80,  unit:"%", status:"pending",   detail:"Configure DLP connector to track PHI data element classification."},
+      {label:"Email DLP Coverage",   val:0,  target:99,  unit:"%", status:"pending",     detail:"Monitor outbound email scanning for PHI and sensitive data."},
+      {label:"SFTP/File Transfer DLP",    val:0,  target:100, unit:"%", status:"pending", detail:"Monitor DLP coverage for SFTP and file transfer protocols."},
+      {label:"Endpoint DLP",         val:0,  target:80,  unit:"%", status:"pending",    detail:"Track endpoint DLP policy coverage for workstations."},
     ],
   },
 };
@@ -7420,66 +7422,66 @@ function CISODash(props) {
 
   // Build live capabilities from actual metrics
   var liveCaps = {
-    "Identity & Access": Object.assign({},SEC_CAPABILITIES["Identity & Access"],{
+    "Identity & Access": Object.assign({},SEC_CAPABILITIES_DEMO["Identity & Access"],{
       score:Math.round((aMFA*0.6)+(aPAM*0.2)+80*0.2),
       items:[
-        Object.assign({},SEC_CAPABILITIES["Identity & Access"].items[0],{val:aMFA,detail:"MFA enforced on "+Math.round(aMFA/100*aEndpts)+" of "+aEndpts+" managed accounts."}),
-        SEC_CAPABILITIES["Identity & Access"].items[1],
-        Object.assign({},SEC_CAPABILITIES["Identity & Access"].items[2],{val:Math.round(aPrivAccts*0.014),detail:Math.round(aPrivAccts*0.014)+" orphaned accounts estimated from "+aPrivAccts+" total privileged accounts."}),
-        SEC_CAPABILITIES["Identity & Access"].items[3],
+        Object.assign({},SEC_CAPABILITIES_DEMO["Identity & Access"].items[0],{val:aMFA,detail:"MFA enforced on "+Math.round(aMFA/100*aEndpts)+" of "+aEndpts+" managed accounts."}),
+        SEC_CAPABILITIES_DEMO["Identity & Access"].items[1],
+        Object.assign({},SEC_CAPABILITIES_DEMO["Identity & Access"].items[2],{val:Math.round(aPrivAccts*0.014),detail:Math.round(aPrivAccts*0.014)+" orphaned accounts estimated from "+aPrivAccts+" total privileged accounts."}),
+        SEC_CAPABILITIES_DEMO["Identity & Access"].items[3],
       ]
     }),
-    "Privileged Access Management": Object.assign({},SEC_CAPABILITIES["Privileged Access Management"],{
+    "Privileged Access Management": Object.assign({},SEC_CAPABILITIES_DEMO["Privileged Access Management"],{
       score:Math.round(aPAM*0.7+30*0.3),
       items:[
-        SEC_CAPABILITIES["Privileged Access Management"].items[0],
-        Object.assign({},SEC_CAPABILITIES["Privileged Access Management"].items[1],{val:aPAM,detail:Math.round(aPrivAccts*aPAM/100)+" of "+aPrivAccts+" privileged sessions recorded."}),
-        SEC_CAPABILITIES["Privileged Access Management"].items[2],
-        SEC_CAPABILITIES["Privileged Access Management"].items[3],
+        SEC_CAPABILITIES_DEMO["Privileged Access Management"].items[0],
+        Object.assign({},SEC_CAPABILITIES_DEMO["Privileged Access Management"].items[1],{val:aPAM,detail:Math.round(aPrivAccts*aPAM/100)+" of "+aPrivAccts+" privileged sessions recorded."}),
+        SEC_CAPABILITIES_DEMO["Privileged Access Management"].items[2],
+        SEC_CAPABILITIES_DEMO["Privileged Access Management"].items[3],
       ]
     }),
-    "Network Segmentation": SEC_CAPABILITIES["Network Segmentation"],
-    "Vulnerability & Patch Management": Object.assign({},SEC_CAPABILITIES["Vulnerability & Patch Management"],{
+    "Network Segmentation": SEC_CAPABILITIES_DEMO["Network Segmentation"],
+    "Vulnerability & Patch Management": Object.assign({},SEC_CAPABILITIES_DEMO["Vulnerability & Patch Management"],{
       score:Math.round(aPatch*0.6+80*0.4),
       items:[
-        SEC_CAPABILITIES["Vulnerability & Patch Management"].items[0],
-        Object.assign({},SEC_CAPABILITIES["Vulnerability & Patch Management"].items[1],{val:aPatch,detail:"Critical CVE SLA compliance: "+aPatch+"%. "+Math.round(aEndpts*0.004)+" endpoints estimated beyond SLA."}),
-        SEC_CAPABILITIES["Vulnerability & Patch Management"].items[2],
-        SEC_CAPABILITIES["Vulnerability & Patch Management"].items[3],
+        SEC_CAPABILITIES_DEMO["Vulnerability & Patch Management"].items[0],
+        Object.assign({},SEC_CAPABILITIES_DEMO["Vulnerability & Patch Management"].items[1],{val:aPatch,detail:"Critical CVE SLA compliance: "+aPatch+"%. "+Math.round(aEndpts*0.004)+" endpoints estimated beyond SLA."}),
+        SEC_CAPABILITIES_DEMO["Vulnerability & Patch Management"].items[2],
+        SEC_CAPABILITIES_DEMO["Vulnerability & Patch Management"].items[3],
       ]
     }),
-    "Email Security & Phishing Simulation": Object.assign({},SEC_CAPABILITIES["Email Security & Phishing Simulation"],{
+    "Email Security & Phishing Simulation": Object.assign({},SEC_CAPABILITIES_DEMO["Email Security & Phishing Simulation"],{
       score:Math.round(Math.max(0,100-aPhish*4)*0.4+aTraining*0.3+90*0.3),
       items:[
-        Object.assign({},SEC_CAPABILITIES["Email Security & Phishing Simulation"].items[0],{val:aPhish,detail:"Most recent simulation: "+aPhish+"% click rate. Industry benchmark: <3%."}),
-        Object.assign({},SEC_CAPABILITIES["Email Security & Phishing Simulation"].items[1],{val:aTraining,detail:aTraining+"% of "+aEndpts+" employees completed training. "+Math.round(aEndpts*(1-aTraining/100))+" overdue."}),
-        SEC_CAPABILITIES["Email Security & Phishing Simulation"].items[2],
-        SEC_CAPABILITIES["Email Security & Phishing Simulation"].items[3],
+        Object.assign({},SEC_CAPABILITIES_DEMO["Email Security & Phishing Simulation"].items[0],{val:aPhish,detail:"Most recent simulation: "+aPhish+"% click rate. Industry benchmark: <3%."}),
+        Object.assign({},SEC_CAPABILITIES_DEMO["Email Security & Phishing Simulation"].items[1],{val:aTraining,detail:aTraining+"% of "+aEndpts+" employees completed training. "+Math.round(aEndpts*(1-aTraining/100))+" overdue."}),
+        SEC_CAPABILITIES_DEMO["Email Security & Phishing Simulation"].items[2],
+        SEC_CAPABILITIES_DEMO["Email Security & Phishing Simulation"].items[3],
       ]
     }),
-    "Endpoint Detection & Response": Object.assign({},SEC_CAPABILITIES["Endpoint Detection & Response"],{
+    "Endpoint Detection & Response": Object.assign({},SEC_CAPABILITIES_DEMO["Endpoint Detection & Response"],{
       score:Math.round(aEDR*0.6+70*0.4),
       items:[
-        Object.assign({},SEC_CAPABILITIES["Endpoint Detection & Response"].items[0],{val:aEDR,detail:"EDR deployed on "+Math.round(aEndpts*aEDR/100)+" of "+aEndpts+" endpoints."}),
-        Object.assign({},SEC_CAPABILITIES["Endpoint Detection & Response"].items[1],{val:Math.round(aEndpts*(1-aEDR/100)*0.1),detail:Math.round(aEndpts*(1-aEDR/100))+" endpoints without coverage. ~"+Math.round(aEndpts*(1-aEDR/100)*0.1)+" estimated in reduced mode."}),
-        SEC_CAPABILITIES["Endpoint Detection & Response"].items[2],
-        SEC_CAPABILITIES["Endpoint Detection & Response"].items[3],
+        Object.assign({},SEC_CAPABILITIES_DEMO["Endpoint Detection & Response"].items[0],{val:aEDR,detail:"EDR deployed on "+Math.round(aEndpts*aEDR/100)+" of "+aEndpts+" endpoints."}),
+        Object.assign({},SEC_CAPABILITIES_DEMO["Endpoint Detection & Response"].items[1],{val:Math.round(aEndpts*(1-aEDR/100)*0.1),detail:Math.round(aEndpts*(1-aEDR/100))+" endpoints without coverage. ~"+Math.round(aEndpts*(1-aEDR/100)*0.1)+" estimated in reduced mode."}),
+        SEC_CAPABILITIES_DEMO["Endpoint Detection & Response"].items[2],
+        SEC_CAPABILITIES_DEMO["Endpoint Detection & Response"].items[3],
       ]
     }),
-    "SIEM": Object.assign({},SEC_CAPABILITIES["SIEM"],{
+    "SIEM": Object.assign({},SEC_CAPABILITIES_DEMO["SIEM"],{
       score:Math.round(Math.min(100,aSIEM/90*100)*0.5+90*0.5),
       items:[
-        SEC_CAPABILITIES["SIEM"].items[0],
-        Object.assign({},SEC_CAPABILITIES["SIEM"].items[1],{val:aSIEM,detail:"Current SIEM retention: "+aSIEM+" days. HIPAA §164.530(j) requires 6 years (2,190 days)."}),
-        Object.assign({},SEC_CAPABILITIES["SIEM"].items[2],{val:aMTTD,detail:"MTTD: "+aMTTD+" hours. Short retention window ("+aSIEM+" days) limits baseline and anomaly detection."}),
-        SEC_CAPABILITIES["SIEM"].items[3],
+        SEC_CAPABILITIES_DEMO["SIEM"].items[0],
+        Object.assign({},SEC_CAPABILITIES_DEMO["SIEM"].items[1],{val:aSIEM,detail:"Current SIEM retention: "+aSIEM+" days. HIPAA §164.530(j) requires 6 years (2,190 days)."}),
+        Object.assign({},SEC_CAPABILITIES_DEMO["SIEM"].items[2],{val:aMTTD,detail:"MTTD: "+aMTTD+" hours. Short retention window ("+aSIEM+" days) limits baseline and anomaly detection."}),
+        SEC_CAPABILITIES_DEMO["SIEM"].items[3],
       ]
     }),
-    "UEBA": Object.assign({},SEC_CAPABILITIES["UEBA"],{
+    "UEBA": Object.assign({},SEC_CAPABILITIES_DEMO["UEBA"],{
       score:Math.round(Math.min(100,aSIEM/90*100)*0.4+60*0.6),
     }),
-    "SOAR": SEC_CAPABILITIES["SOAR"],
-    "Data Loss Prevention": SEC_CAPABILITIES["Data Loss Prevention"],
+    "SOAR": SEC_CAPABILITIES_DEMO["SOAR"],
+    "Data Loss Prevention": SEC_CAPABILITIES_DEMO["Data Loss Prevention"],
   };
   var liveActs   = execActions||ACTIONS;
 
@@ -7708,6 +7710,31 @@ function CISODash(props) {
               <div style={{color:C.muted,fontSize:12}}>Composite score across 8 business processes and 18 CIS Controls</div>
             </div>
           </div>
+
+          {/* ── DEMO DATA WARNING ── */}
+          {(!props.mfaPct && !props.edrPct && !props.siemDays) && (
+            <div style={{
+              background: "#fff3cd",
+              border: "1px solid #ffc107",
+              borderRadius: 8,
+              padding: "12px 16px",
+              marginBottom: 16,
+              display: "flex",
+              gap: 12,
+              alignItems: "start"
+            }}>
+              <div style={{fontSize: 16, marginTop: 2}}>⚠️</div>
+              <div style={{flex: 1}}>
+                <div style={{color: "#856404", fontSize: 13, fontWeight: 700, marginBottom: 4}}>
+                  Demo Mode — Connect Your Security Tools
+                </div>
+                <div style={{color: "#856404", fontSize: 11, lineHeight: 1.4}}>
+                  The security capabilities below are showing placeholder data. To see your actual security posture from your tools, go to <strong>Setup → Connect Security Tools</strong> and configure your connectors (Okta, CrowdStrike, Tenable, etc.).
+                </div>
+              </div>
+            </div>
+          )}
+
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
             {Object.keys(liveCaps).map(function(cap){
               var c=liveCaps[cap];
