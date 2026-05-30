@@ -19145,11 +19145,14 @@ function SetupBot(props) {
             <div>
               <div style={{display:'flex',flexWrap:'wrap',gap:5,marginBottom:12,maxHeight:200,overflowY:'auto'}}>
                 {(STATE_REGULATIONS[selectedStates[stateRegIdx]]||['HIPAA (Federal)']).map(function(reg){
-                  var selected = (stateRegs[selectedStates[stateRegIdx]]||[]).indexOf(reg) >= 0;
+                  var currentRegs = stateRegs[selectedStates[stateRegIdx]];
+                  var regsArray = Array.isArray(currentRegs)?currentRegs:[];
+                  var selected = regsArray.indexOf(reg) >= 0;
                   return (
                     <button key={reg}
                       onClick={function(){
-                        var cur = stateRegs[selectedStates[stateRegIdx]] || [];
+                        var curVal = stateRegs[selectedStates[stateRegIdx]];
+                        var cur = Array.isArray(curVal)?curVal.slice():[];
                         var idx = cur.indexOf(reg);
                         if(idx >= 0) {cur.splice(idx,1);} else {cur.push(reg);}
                         var updated = {};
@@ -19168,7 +19171,8 @@ function SetupBot(props) {
               </div>
               <div style={{display:'flex',gap:8,justifyContent:'center'}}>
                 <button onClick={function(){
-                  var currentRegs = stateRegs[selectedStates[stateRegIdx]]||[];
+                  var currentRegsVal = stateRegs[selectedStates[stateRegIdx]];
+                  var currentRegs = Array.isArray(currentRegsVal)?currentRegsVal:[];
                   if (currentRegs.length === 0) {
                     addMsg('bot', 'Please select at least one regulation for ' + selectedStates[stateRegIdx] + ' before proceeding.');
                     speak('Please select at least one regulation before proceeding.');
@@ -19210,7 +19214,10 @@ function SetupBot(props) {
                 }}
                   style={{background:C.acc,border:'none',color:'#fff',borderRadius:8,
                     padding:'8px 16px',cursor:'pointer',fontSize:11,fontWeight:700}}>
-                  Confirm {stateRegs[selectedStates[stateRegIdx]]?.length || 0} regulations for {selectedStates[stateRegIdx]}
+                  Confirm {(function(){
+                    var regs = stateRegs[selectedStates[stateRegIdx]];
+                    return (Array.isArray(regs)?regs:[]).length;
+                  }())} regulations for {selectedStates[stateRegIdx]}
                 </button>
                 <button onClick={function(){
                   setShowStateRegs(false);
