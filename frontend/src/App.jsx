@@ -5171,7 +5171,7 @@ function Setup(props) {
                       <div key={p.id} style={{
                         gridColumn:"1 / -1",
                         padding:"10px 12px",
-                        background:linearGradient("to right",C.acc+"15",C.acc+"05"),
+                        background:C.acc+"10",
                         borderLeft:"3px solid "+C.acc,
                         borderRadius:6,
                         marginTop:8,
