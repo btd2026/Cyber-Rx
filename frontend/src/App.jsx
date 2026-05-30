@@ -7491,7 +7491,6 @@ function CISODash(props) {
   return (
     <div>
       <DashNav current="dashboard" go={go}/>
-      <BrianaBar pageKey="dashboard" orgName={props.orgName||""} brianaOn={props.brianaOn!==false} setBrianaOn={props.setBrianaOn||function(){}}/>
 
       {/* ── Editable Metrics Panel ── */}
       {showMetricsPanel&&(
