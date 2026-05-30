@@ -18233,11 +18233,9 @@ function SetupBot(props) {
     if (q.id === 'orgName') {
       var extractedState = extractStateFromOrgName(value);
       if (extractedState) {
-        setTimeout(function(){
-          setSelectedStates([extractedState]);
-          accRef.current.selectedStates = [extractedState];
-          setAnswers(Object.assign({}, accRef.current));
-        }, 100);
+        setSelectedStates([extractedState]);
+        accRef.current.selectedStates = [extractedState];
+        setAnswers(Object.assign({}, accRef.current));
       }
     }
 
