@@ -190,6 +190,7 @@ var ORG_TEMPLATES = {
     ],
     procs:[
       // Tier 1 – Primary Crown Jewels (Compromise materially impacts enterprise survival)
+      {type:"tier", id:"tier1", name:"Tier 1 – Primary Crown Jewels", description:"Compromise materially impacts enterprise survival"},
       {id:"claims",        name:"Claims Adjudication & Payment",              icon:"⚕",  score:64, crits:2, highs:1, trend:mkT(64), bizLine:"operations"},
       {id:"enroll",        name:"Membership & Enrollment",                    icon:"👤", score:74, crits:0, highs:2, trend:mkT(74), bizLine:"operations"},
       {id:"provider_net",  name:"Provider Network & Contracting Operations", icon:"🏥", score:83, crits:0, highs:1, trend:mkT(83), bizLine:"hmm"},
@@ -198,6 +199,7 @@ var ORG_TEMPLATES = {
       {id:"member_svc",    name:"Member Services / Contact Center",           icon:"📞", score:66, crits:1, highs:2, trend:mkT(66), bizLine:"service"},
       {id:"actuarial",     name:"Actuarial / Underwriting & Financial Analytics", icon:"📊", score:82, crits:0, highs:1, trend:mkT(82), bizLine:"data"},
       // Tier 2 – Strategic Crown Jewels (Material disruption but less existential)
+      {type:"tier", id:"tier2", name:"Tier 2 – Strategic Crown Jewels", description:"Material disruption but less existential"},
       {id:"govt_admin",    name:"Government Programs Administration",       icon:"🏛",  type:"section"},
       {id:"govt_ma",       name:"Medicare Advantage",                         icon:"🏛",  score:71, crits:1, highs:2, trend:mkT(71), bizLine:"govt", parent:"govt_admin"},
       {id:"govt_fep",      name:"Federal Employee Program (FEP)",             icon:"🦅",  score:78, crits:0, highs:1, trend:mkT(78), bizLine:"govt", parent:"govt_admin"},
@@ -5134,6 +5136,23 @@ function Setup(props) {
               )}
               <div style={{display:"flex",flexDirection:"column",gap:8}}>
                 {getOrgProcs(orgType||'Other Payer').map(function(p){
+                  // Tier header
+                  if(p.type==="tier"){
+                    return (
+                      <div key={p.id} style={{
+                        gridColumn:"1 / -1",
+                        padding:"10px 12px",
+                        background:linearGradient("to right",C.acc+"15",C.acc+"05"),
+                        borderLeft:"3px solid "+C.acc,
+                        borderRadius:6,
+                        marginTop:8,
+                        marginBottom:4
+                      }}>
+                        <div style={{color:C.acc,fontSize:11,fontWeight:700,marginBottom:2}}>{p.name}</div>
+                        <div style={{color:C.muted,fontSize:9}}>{p.description}</div>
+                      </div>
+                    );
+                  }
                   // Section header
                   if(p.type==="section"){
                     return (
