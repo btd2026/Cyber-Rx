@@ -17836,6 +17836,11 @@ function SetupBot(props) {
   var _sStates=useState([]); var selectedStates=_sStates[0]; var setSelectedStates=_sStates[1];
   var _sShowStates=useState(false); var showStateSelector=_sShowStates[0]; var setShowStateSelector=_sShowStates[1];
 
+  // State-by-state regulation selection
+  var _sStateRegIdx=useState(0); var stateRegIdx=_sStateRegIdx[0]; var setStateRegIdx=_sStateRegIdx[1];
+  var _sStateRegs=useState([]); var stateRegs=_sStateRegs[0]; var setStateRegs=_sStateRegs[1];
+  var _sShowStateRegs=useState(false); var showStateRegs=_sShowStateRegs[0]; var setShowStateRegs=_sShowStateRegs[1];
+
   var HEALTH_PLANS = [
     "Anthem Blue Cross Blue Shield","Anthem Blue Cross","Anthem Health Plans",
         "Blue Cross Blue Shield of Alabama","BCBS of Alabama",
@@ -18074,6 +18079,61 @@ function SetupBot(props) {
     'Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee',
     'Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming',
     'District of Columbia'];
+
+  // State-specific cyber regulations mapping
+  var STATE_REGULATIONS = {
+    'California': ['CMIA (California Medical Information Act)', 'CCPA/CPRA (Consumer Privacy Act)', 'Breach Notification Law', 'DMHC/CDI Expectations'],
+    'New York': ['NYDFS 23 NYCRR 500 (if insurer regulated)', 'SHIELD Act'],
+    'Massachusetts': ['201 CMR 17.00 (Written Information Security Program)'],
+    'Texas': ['Texas Medical Records Privacy Act', 'More stringent than HIPAA'],
+    'Washington': ['My Health My Data Act'],
+    'Colorado': ['Colorado Privacy Act', 'Insurer Cyber Requirements'],
+    'Illinois': ['BIPA (Biometric Information Privacy Act)', 'Personal Information Protection Act'],
+    'Virginia': ['CDPA (Consumer Data Protection Act)', 'Insurance Cybersecurity Model'],
+    'Connecticut': ['Insurance Data Security Law'],
+    'South Carolina': ['Insurance Data Security Act'],
+    'Alabama': ['HIPAA (Federal)'],
+    'Alaska': ['HIPAA (Federal)'],
+    'Arizona': ['HIPAA (Federal)'],
+    'Arkansas': ['HIPAA (Federal)'],
+    'Delaware': ['HIPAA (Federal)'],
+    'Florida': ['HIPAA (Federal)'],
+    'Georgia': ['HIPAA (Federal)'],
+    'Hawaii': ['HIPAA (Federal)'],
+    'Idaho': ['HIPAA (Federal)'],
+    'Indiana': ['HIPAA (Federal)'],
+    'Iowa': ['HIPAA (Federal)'],
+    'Kansas': ['HIPAA (Federal)'],
+    'Kentucky': ['HIPAA (Federal)'],
+    'Louisiana': ['HIPAA (Federal)'],
+    'Maine': ['HIPAA (Federal)'],
+    'Maryland': ['HIPAA (Federal)'],
+    'Michigan': ['HIPAA (Federal)'],
+    'Minnesota': ['HIPAA (Federal)'],
+    'Mississippi': ['HIPAA (Federal)'],
+    'Missouri': ['HIPAA (Federal)'],
+    'Montana': ['HIPAA (Federal)'],
+    'Nebraska': ['HIPAA (Federal)'],
+    'Nevada': ['HIPAA (Federal)'],
+    'New Hampshire': ['HIPAA (Federal)'],
+    'New Jersey': ['HIPAA (Federal)'],
+    'New Mexico': ['HIPAA (Federal)'],
+    'North Carolina': ['HIPAA (Federal)'],
+    'North Dakota': ['HIPAA (Federal)'],
+    'Ohio': ['HIPAA (Federal)'],
+    'Oklahoma': ['HIPAA (Federal)'],
+    'Oregon': ['HIPAA (Federal)'],
+    'Pennsylvania': ['HIPAA (Federal)'],
+    'Rhode Island': ['HIPAA (Federal)'],
+    'South Dakota': ['HIPAA (Federal)'],
+    'Tennessee': ['HIPAA (Federal)'],
+    'Utah': ['HIPAA (Federal)'],
+    'Vermont': ['HIPAA (Federal)'],
+    'West Virginia': ['HIPAA (Federal)'],
+    'Wisconsin': ['HIPAA (Federal)'],
+    'Wyoming': ['HIPAA (Federal)'],
+    'District of Columbia': ['HIPAA (Federal)']
+  };
 
   var QS = [
     {id:'orgName',    type:'text',    group:'Identity',
@@ -18466,44 +18526,26 @@ function SetupBot(props) {
       }
     }
 
-    // Check if this is numStates - skip state selector UI and auto-generate states
+    // Check if this is numStates - show state selector with HQ state pre-selected
     if (q.id === 'numStates') {
-      var autoStates = [];
-      if (value === '1 state') {
-        // Use HQ state if available
-        autoStates = [answers.hqState || 'California'];
-      } else if (value === 'All 50 states plus DC') {
-        autoStates = US_STATES.slice();
-      } else {
-        // Auto-select states based on range (sample states for demo)
-        if (value === '2 to 5 states') {
-          autoStates = [answers.hqState || 'California', 'Texas', 'New York', 'Florida'].slice(0, 4);
-        } else if (value === '6 to 15 states') {
-          autoStates = [answers.hqState || 'California', 'Texas', 'New York', 'Florida', 'Illinois', 'Ohio', 'Pennsylvania', 'Georgia', 'North Carolina'].slice(0, 8);
-        } else if (value === '16 to 30 states') {
-          autoStates = US_STATES.slice(0, 20);
-        } else if (value === '31 to 50 states') {
-          autoStates = US_STATES.slice(0, 40);
-        }
-      }
-
-      accRef.current.selectedStates = autoStates;
+      setShowStateSelector(true);
+      // Pre-select HQ state if available
+      var hqState = answers.hqState;
+      var initialState = hqState ? [hqState] : [];
+      setSelectedStates(initialState);
+      accRef.current.selectedStates = initialState;
       setAnswers(Object.assign({}, accRef.current));
 
-      // Briefly show what was auto-selected then proceed
-      addMsg('bot', 'Auto-selected ' + autoStates.length + ' states based on your choice (' + value + ').');
       setTyping(true);
       setTimeout(function(){
         setTyping(false);
-        var next=qIdx+1;
-        var nq=QS[next];
-        if(nq){
-          var text=resolve(nq.ask);
-          addMsg('bot', text);
-          speak(text);
-          setQIdx(next);
+        var stateText = 'Which specific states is ' + (answers.orgName || 'your organization') + ' licensed in? Please select all that apply.';
+        if (hqState) {
+          stateText += ' (Note: ' + hqState + ' is pre-selected as your primary domicile state)';
         }
-      }, 1200);
+        addMsg('bot', stateText);
+        speak(stateText);
+      }, 650);
       return;
     }
 
@@ -19032,16 +19074,21 @@ function SetupBot(props) {
                         setShowStateSelector(false);
                         addMsg('user', selectedStates.length + ' states selected: ' + selectedStates.slice(0,3).join(', ') + (selectedStates.length>3?'...':''));
                         setTyping(true);
+
+                        // Start state-by-state regulation selection
+                        setStateRegIdx(0);
+                        var regs = [];
+                        selectedStates.forEach(function(s){ regs[s] = []; });
+                        setStateRegs(regs);
+
                         setTimeout(function(){
                           setTyping(false);
-                          var next=qIdx+1;
-                          var nq=QS[next];
-                          if(nq){
-                            var text=resolve(nq.ask);
-                            addMsg('bot', text);
-                            speak(text);
-                            setQIdx(next);
-                          }
+                          // Start with first state's regulations
+                          var firstState = selectedStates[0];
+                          var stateRegs = STATE_REGULATIONS[firstState] || ['HIPAA (Federal)'];
+                          addMsg('bot', 'Great! Now let\'s configure compliance for ' + firstState + '. Which of these key healthcare cyber regulations applies? Select all that comply.');
+                          speak('Great! Now let\'s configure compliance for ' + firstState + '. Which of these key healthcare cyber regulations applies? Select all that comply.');
+                          setShowStateRegs(true);
                         }, 650);
                       } else {
                         // Show error message
@@ -19077,6 +19124,103 @@ function SetupBot(props) {
                     borderRadius:8,padding:'8px 16px',cursor:'pointer',fontSize:11}}>
                   Cancel
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* State-by-state regulation selector */}
+          {showStateRegs && (
+            <div>
+              <div style={{display:'flex',flexWrap:'wrap',gap:5,marginBottom:12,maxHeight:200,overflowY:'auto'}}>
+                {(STATE_REGULATIONS[selectedStates[stateRegIdx]]||['HIPAA (Federal)']).map(function(reg){
+                  var selected = (stateRegs[selectedStates[stateRegIdx]]||[]).indexOf(reg) >= 0;
+                  return (
+                    <button key={reg}
+                      onClick={function(){
+                        var cur = stateRegs[selectedStates[stateRegIdx]] || [];
+                        var idx = cur.indexOf(reg);
+                        if(idx >= 0) {cur.splice(idx,1);} else {cur.push(reg);}
+                        var updated = {};
+                        updated[selectedStates[stateRegIdx]] = cur;
+                        setStateRegs(Object.assign({},stateRegs,updated));
+                      }}
+                      style={{background:selected?C.acc+'20':C.card,
+                        border:'1px solid '+(selected?C.acc:C.acc+'40'),
+                        color:selected?C.acc:C.text,
+                        borderRadius:15,padding:'6px 12px',cursor:'pointer',fontSize:10,
+                        whiteSpace:'nowrap'}}>
+                      {selected?'✓ ':''}{reg}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{display:'flex',gap:8,justifyContent:'center'}}>
+                <button onClick={function(){
+                  var currentRegs = stateRegs[selectedStates[stateRegIdx]]||[];
+                  if (currentRegs.length === 0) {
+                    addMsg('bot', 'Please select at least one regulation for ' + selectedStates[stateRegIdx] + ' before proceeding.');
+                    speak('Please select at least one regulation before proceeding.');
+                    return;
+                  }
+
+                  // Move to next state or finish
+                  if (stateRegIdx < selectedStates.length - 1) {
+                    var nextIdx = stateRegIdx + 1;
+                    var nextState = selectedStates[nextIdx];
+                    var nextRegs = STATE_REGULATIONS[nextState] || ['HIPAA (Federal)'];
+                    setStateRegIdx(nextIdx);
+                    addMsg('user', currentRegs.length + ' regulations selected for ' + selectedStates[stateRegIdx]);
+                    setTyping(true);
+                    setTimeout(function(){
+                      setTyping(false);
+                      addMsg('bot', 'Excellent! Now for ' + nextState + '. Which of these key healthcare cyber regulations applies?');
+                      speak('Excellent! Now for ' + nextState + '. Which of these key healthcare cyber regulations applies?');
+                    }, 1200);
+                  } else {
+                    // All states done - proceed to next question
+                    accRef.current.stateRegulations = stateRegs;
+                    setAnswers(Object.assign({},accRef.current));
+                    setShowStateRegs(false);
+                    addMsg('user', 'Completed state-specific regulation configuration');
+                    setTyping(true);
+                    setTimeout(function(){
+                      setTyping(false);
+                      var next=qIdx+1;
+                      var nq=QS[next];
+                      if(nq){
+                        var text=resolve(nq.ask);
+                        addMsg('bot', text);
+                        speak(text);
+                        setQIdx(next);
+                      }
+                    }, 650);
+                  }
+                }}
+                  style={{background:C.acc,border:'none',color:'#fff',borderRadius:8,
+                    padding:'8px 16px',cursor:'pointer',fontSize:11,fontWeight:700}}>
+                  Confirm {stateRegs[selectedStates[stateRegIdx]]?.length || 0} regulations for {selectedStates[stateRegIdx]}
+                </button>
+                <button onClick={function(){
+                  setShowStateRegs(false);
+                  setTyping(true);
+                  setTimeout(function(){
+                    setTyping(false);
+                    var text='Let\'s try that again. Which of these key healthcare cyber regulations applies for ' + selectedStates[stateRegIdx] + '?';
+                    addMsg('bot', text);
+                    speak(text);
+                  }, 400);
+                }}
+                  style={{background:C.card,border:'1px solid '+C.border,color:C.text,
+                    borderRadius:8,padding:'8px 16px',cursor:'pointer',fontSize:11}}>
+                  Cancel
+                </button>
+              </div>
+              <div style={{display:'flex',gap:3,justifyContent:'center',marginTop:9}}>
+                {selectedStates.map(function(s,i){
+                  return <div key={i} style={{height:4,borderRadius:2,transition:'all 0.25s',
+                    width:i===stateRegIdx?16:4,
+                    background:i<stateRegIdx?C.acc:i===stateRegIdx?'linear-gradient(90deg,'+C.acc+',#A78BFA)':C.border}}/>;
+                })}
               </div>
             </div>
           )}
