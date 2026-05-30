@@ -19077,7 +19077,7 @@ function SetupBot(props) {
 
                         // Start state-by-state regulation selection
                         setStateRegIdx(0);
-                        var regs = [];
+                        var regs = {};
                         selectedStates.forEach(function(s){ regs[s] = []; });
                         setStateRegs(regs);
 

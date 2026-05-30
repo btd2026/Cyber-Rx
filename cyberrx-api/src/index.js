@@ -24,15 +24,15 @@ if (process.env.CORS_ALLOWLIST) {
   const originsFromEnv = process.env.CORS_ALLOWLIST.split(',').map(url => url.trim());
   allowedOrigins.push(...originsFromEnv);
 }
-// Add Vercel production URLs for frontend
-else {
-  allowedOrigins.push(
-    'https://cyber-rx-frontend.vercel.app',
-    'https://frontend-mu-drab-93.vercel.app'
-  );
+// Always add Vercel production URLs for frontend
+if (!allowedOrigins.includes('https://cyber-rx-frontend.vercel.app')) {
+  allowedOrigins.push('https://cyber-rx-frontend.vercel.app');
+}
+if (!allowedOrigins.includes('https://frontend-mu-drab-93.vercel.app')) {
+  allowedOrigins.push('https://frontend-mu-drab-93.vercel.app');
 }
 // Fallback: add FRONTEND_URL if CORS_ALLOWLIST not set
-else if (process.env.FRONTEND_URL) {
+else if (process.env.FRONTEND_URL && !allowedOrigins.includes(process.env.FRONTEND_URL)) {
   allowedOrigins.push(process.env.FRONTEND_URL);
 }
 
