@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import CorrelatedFinding from "./pages/CorrelatedFinding";
 
 // --- Theme --------------------------------------------------------------------
 var C = {
@@ -23529,6 +23530,8 @@ function CyberRxApp() {
   var _s51=useState(""); var members=_s51[0]; var setMembers=_s51[1];
   var _s52=useState("home"); var page=_s52[0]; var setPage=_s52[1];
   var _s53=useState([]); var history=_s53[0]; var setHistory=_s53[1];
+  // Correlated Finding state - T-113
+  var _sCF=useState(null); var correlatedFindingId=_sCF[0]; var setCorrelatedFindingId=_sCF[1];
   var _s54=useState(null); var dl=_s54[0]; var setDl=_s54[1];
   var _s55b=useState(false); var setupDone=_s55b[0]; var setSetupDone=_s55b[1];
 
@@ -23842,13 +23845,22 @@ function CyberRxApp() {
     if (el) { el.scrollTop = 0; }
   }
 
+  // View correlated finding narrative - T-113
+  function viewCorrelatedFinding(findingId) {
+    setHistory(function(h){ return h.concat([page]); });
+    setCorrelatedFindingId(findingId);
+    setPage("correlated-finding");
+    var el = document.querySelector("[data-scroll='main']");
+    if (el) { el.scrollTop = 0; }
+  }
+
   // Shared page props
   var _sBA=useState(true); var brianaOn=_sBA[0]; var setBrianaOn=_sBA[1];
   var _sSM=useState({}); var syncMeta=_sSM[0]; var setSyncMeta=_sSM[1];
   var _sDR=useState({}); var docResults=_sDR[0]; var setDocResults=_sDR[1];
   var _sPF=useState({}); var appPolicyFiles=_sPF[0]; var setAppPolicyFiles=_sPF[1];
   var sharedProps = {
-    go:go, goBack:goBack, setRootRevenue:setRootRevenue,
+    go:go, goBack:goBack, viewCorrelatedFinding:viewCorrelatedFinding, setRootRevenue:setRootRevenue,
     orgName:orgName, orgType:orgType, members:members, email:email,
     execActions:execActions, setExecActions:setExecActions,
     revenue:rangeVal(REVENUE_RANGES,rootRevenue),
@@ -24006,6 +24018,15 @@ function CyberRxApp() {
     if (page==="execution") { return React.createElement(Execution, sharedProps); }
     if (page==="crownjewels") { return React.createElement(CrownJewelsModule, sharedProps); }
     if (page==="attackpaths")  { return React.createElement(AttackPathsModule, sharedProps); }
+    if (page==="correlated-finding") {
+      return React.createElement(CorrelatedFinding, {
+        findingId: correlatedFindingId,
+        goBack: goBack,
+        authToken: localStorage.getItem('authToken'),
+        orgId: localStorage.getItem('orgId'),
+        api_url: import.meta.env?.VITE_API_URL || 'https://cyberrx-api.onrender.com'
+      });
+    }
     return React.createElement(Home, sharedProps);
   }
 

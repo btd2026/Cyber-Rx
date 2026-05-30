@@ -81,6 +81,9 @@ app.use('/api/risks',             require('./routes/risks'));
 app.use('/api/findings',           require('./routes/findings'));
 app.use('/api/correlation',        require('./routes/correlation'));
 
+// Seed management (admin routes - protect in production)
+app.use('/api/seeds',             require('./routes/seeds'));
+
 // 404
 app.use(function(req, res) {
   res.status(404).json({ error: 'Not found', path: req.path });
