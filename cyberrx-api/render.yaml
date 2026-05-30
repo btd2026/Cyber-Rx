@@ -15,7 +15,9 @@ services:
       - key: PORT
         value: 3001
       - key: FRONTEND_URL
-        value: https://your-vercel-app.vercel.app
+        value: https://cyber-rx-frontend.vercel.app
+      - key: CORS_ALLOWLIST
+        value: https://cyber-rx-frontend.vercel.app,https://frontend-mu-drab-93.vercel.app,http://localhost:5173,http://localhost:3000,http://localhost:3001
       - key: DATABASE_URL
         fromDatabase:
           name: cyberrx-db

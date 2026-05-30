@@ -24,6 +24,13 @@ if (process.env.CORS_ALLOWLIST) {
   const originsFromEnv = process.env.CORS_ALLOWLIST.split(',').map(url => url.trim());
   allowedOrigins.push(...originsFromEnv);
 }
+// Add Vercel production URLs for frontend
+else {
+  allowedOrigins.push(
+    'https://cyber-rx-frontend.vercel.app',
+    'https://frontend-mu-drab-93.vercel.app'
+  );
+}
 // Fallback: add FRONTEND_URL if CORS_ALLOWLIST not set
 else if (process.env.FRONTEND_URL) {
   allowedOrigins.push(process.env.FRONTEND_URL);
