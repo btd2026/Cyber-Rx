@@ -65,10 +65,18 @@ app.get('/health', (req, res) => {
 });
 
 // Route groups
-app.use('/api/itsm',        require('./routes/itsm'));
-app.use('/api/tools',       require('./routes/tools'));
-app.use('/api/credentials', require('./routes/credentials'));
-app.use('/api/orgs',        require('./routes/orgs'));
+app.use('/api/itsm',             require('./routes/itsm'));
+app.use('/api/tools',            require('./routes/tools'));
+app.use('/api/credentials',      require('./routes/credentials'));
+app.use('/api/orgs',             require('./routes/orgs'));
+
+// M1: Risk Correlation Engine Routes
+app.use('/api/business-processes', require('./routes/business-processes'));
+app.use('/api/assets',            require('./routes/assets'));
+app.use('/api/data-objects',      require('./routes/data-objects'));
+app.use('/api/threat-scenarios',   require('./routes/threat-scenarios'));
+app.use('/api/legal-obligations',  require('./routes/legal-obligations'));
+app.use('/api/executive-owners',   require('./routes/executive-owners'));
 
 // 404
 app.use(function(req, res) {
