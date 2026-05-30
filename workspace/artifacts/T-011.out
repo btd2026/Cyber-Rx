@@ -1,0 +1,216 @@
+# T-011 Output: Risk + Finding Correlation Linkage
+
+**Task ID**: T-011
+**Milestone**: M1 - Risk Correlation Engine
+**Status**: COMPLETE
+**Branch**: task/T-011-risk-finding
+**Commit**: feat(model): correlation linkage on Risk and Finding
+
+---
+
+## Summary
+
+Successfully expanded Risk and Finding entities with full correlation linkage as specified in the data model. The correlation engine now has the complete data model to connect technical findings to executive narratives.
+
+### Risk Entity Expansion
+Added correlation fields to link risks to:
+- Business processes (businessProcessId[])
+- Data objects (dataObjectIds[])
+- Threat scenarios (threatScenarioId)
+- Framework mappings (frameworkMappings[])
+- Financial exposure (financialExposure, costToRemediate)
+- Legal obligations (legalObligationId[])
+- Owners (executiveOwner, remediationOwner, evidenceOwner)
+- Audit evidence (auditEvidenceRequired, auditTestIds[])
+
+### Finding Entity Expansion
+Added correlation fields to link findings to:
+- Risk ID (riskId)
+- Asset ID (assetId)
+- Application ID (applicationId)
+- Business process ID (businessProcessId)
+- Repeat detection (isRepeat, originalFindingId, repeatCount)
+
+---
+
+## Files Created
+
+### Models (cyberrx-api/src/models/)
+- `/Users/briandibassinga/Github/Cyber-Rx/cyberrx-api/src/models/Risk.js`
+- `/Users/briandibassinga/Github/Cyber-Rx/cyberrx-api/src/models/Finding.js`
+
+### Routes (cyberrx-api/src/routes/)
+- `/Users/briandibassinga/Github/Cyber-Rx/cyberrx-api/src/routes/risks.js`
+- `/Users/briandibassinga/Github/Cyber-Rx/cyberrx-api/src/routes/findings.js`
+
+### Database Schema
+- Updated: `/Users/briandibassinga/Github/Cyber-Rx/cyberrx-api/src/utils/db.js`
+- Added risks and findings tables with comprehensive indexes
+
+---
+
+## Database Schema
+
+### risks
+```sql
+CREATE TABLE risks (
+  id                  TEXT PRIMARY KEY,
+  title               TEXT NOT NULL,
+  severity            TEXT NOT NULL CHECK (severity IN ('Critical', 'High', 'Medium', 'Low')),
+  status              TEXT NOT NULL CHECK (status IN ('open', 'mitigating', 'accepted', 'closed')),
+  organization_id     TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+  description         TEXT,
+  likelihood          TEXT,
+  finding_id          TEXT,
+  asset_id            TEXT,
+  application_id      TEXT,
+  vendor_id           TEXT,
+  business_process_ids JSONB DEFAULT '[]',
+  data_object_ids     JSONB DEFAULT '[]',
+  threat_scenario_id  TEXT,
+  framework_mappings  JSONB DEFAULT '[]',
+  financial_exposure  NUMERIC,
+  cost_to_remediate   NUMERIC,
+  legal_obligation_ids JSONB DEFAULT '[]',
+  regulatory_citation TEXT,
+  executive_owner     TEXT,
+  remediation_owner   TEXT,
+  evidence_owner      TEXT,
+  audit_evidence_required TEXT,
+  audit_test_ids      JSONB DEFAULT '[]',
+  created_at          TIMESTAMPTZ DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+### findings
+```sql
+CREATE TABLE findings (
+  id                  TEXT PRIMARY KEY,
+  title               TEXT NOT NULL,
+  description         TEXT,
+  severity            TEXT NOT NULL CHECK (severity IN ('Critical', 'High', 'Medium', 'Low', 'Info')),
+  status              TEXT NOT NULL CHECK (status IN ('open', 'in_progress', 'resolved', 'closed', 'false_positive', 'risk_accepted')),
+  organization_id     TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+  discovered_date     TIMESTAMPTZ NOT NULL,
+  risk_id             TEXT,
+  asset_id            TEXT,
+  application_id      TEXT,
+  business_process_id TEXT,
+  is_repeat           BOOLEAN DEFAULT false,
+  original_finding_id TEXT,
+  repeat_count        INTEGER DEFAULT 0,
+  remediation_plan    TEXT,
+  target_date         TIMESTAMPTZ,
+  owner               TEXT,
+  source              TEXT,
+  source_ref          TEXT,
+  tool                TEXT,
+  metadata            JSONB,
+  created_at          TIMESTAMPTZ DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+---
+
+## API Endpoints
+
+### Risks (cyberrx-api/src/routes/risks.js)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /api/risks | Create risk with correlation linkage |
+| GET | /api/risks | List risks (filterable by severity, status, businessProcessId) |
+| GET | /api/risks/high-exposure | Get risks with high financial exposure |
+| GET | /api/risks/by-business-process/:id | Get risks for a business process |
+| GET | /api/risks/by-asset/:id | Get risks for an asset |
+| GET | /api/risks/:id | Get specific risk |
+| PUT | /api/risks/:id | Update risk |
+| DELETE | /api/risks/:id | Delete risk |
+
+### Findings (cyberrx-api/src/routes/findings.js)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /api/findings | Create finding with auto repeat detection |
+| GET | /api/findings | List findings (filterable by severity, status, asset, etc.) |
+| GET | /api/findings/statistics | Get finding statistics |
+| GET | /api/findings/repeats | Get repeat findings |
+| GET | /api/findings/by-risk/:id | Get findings for a risk |
+| GET | /api/findings/by-asset/:id | Get findings for an asset |
+| GET | /api/findings/:id | Get specific finding |
+| PUT | /api/findings/:id | Update finding |
+| POST | /api/findings/:id/mark-repeat | Manually mark as repeat |
+| DELETE | /api/findings/:id | Delete finding |
+
+---
+
+## Correlation Linkage Implemented
+
+### Risk Entity Fields
+- **businessProcessIds**: JSONB array linking to business processes
+- **dataObjectIds**: JSONB array linking to data objects (PHI/PII/PCI)
+- **threatScenarioId**: Link to threat scenario (ransomware, phishing, etc.)
+- **frameworkMappings**: JSONB array for NIST, HIPAA, CIS references
+- **financialExposure**: Numeric financial impact
+- **costToRemediate**: Numeric remediation cost
+- **legalObligationIds**: JSONB array linking to legal obligations
+- **regulatoryCitation**: Free-text regulatory citation
+- **executiveOwner**: Executive role/user responsible
+- **remediationOwner**: Remediation owner
+- **evidenceOwner**: Evidence owner
+- **auditEvidenceRequired**: Audit evidence requirements text
+- **auditTestIds**: JSONB array linking to audit tests
+
+### Finding Entity Fields
+- **riskId**: Link to risk record
+- **assetId**: Link to affected asset
+- **applicationId**: Link to affected application
+- **businessProcessId**: Link to affected business process
+- **isRepeat**: Boolean for repeat detection
+- **originalFindingId**: Original finding when repeat
+- **repeatCount**: Count of repeats
+- **remediationPlan**: Remediation plan text
+- **targetDate**: Target resolution date
+- **owner**: Finding owner
+- **source**: Finding source (scanner, manual)
+- **sourceRef**: Source reference ID
+- **tool**: Tool that generated finding
+- **metadata**: Additional metadata JSONB
+
+---
+
+## Repeat Detection
+
+The Finding model includes automatic repeat detection:
+1. On finding creation, checks for similar existing findings
+2. Similarity based on title, asset, and tool
+3. Auto-marks as repeat with incremented count if match found
+4. Manual endpoint to mark as repeat
+
+---
+
+## Acceptance Criteria
+
+- [x] Risk carries businessProcessId[], dataObjectIds[], threatScenarioId
+- [x] Risk carries frameworkMappings[], financialExposure, legalObligationId[]
+- [x] Risk carries executiveOwner, remediationOwner, evidenceOwner
+- [x] Risk carries auditEvidenceRequired, auditTestIds[]
+- [x] Finding links to riskId, assetId, businessProcessId
+- [x] Finding supports repeat detection fields (isRepeat, originalFindingId, repeatCount)
+- [x] Migrations run cleanly and preserve existing data
+- [x] All entities properly reference orgs(id) with ON DELETE CASCADE
+- [x] GIN indexes on JSONB arrays for efficient queries
+- [x] All endpoints are JWT-authenticated and org-scoped
+
+---
+
+## Next Steps
+
+T-011 is complete. Proceed to T-012: Build the correlation engine logic.
+
+T-012 will implement the service layer that:
+1. Takes a technical finding as input
+2. Correlates it with business processes, data objects, threat scenarios
+3. Calculates financial exposure
+4. Maps to frameworks and legal obligations
+5. Returns the executive narrative with owners and audit evidence requirements

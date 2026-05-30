@@ -12,6 +12,8 @@ const DataObject = require('./DataObject');
 const ThreatScenario = require('./ThreatScenario');
 const LegalObligation = require('./LegalObligation');
 const ExecutiveOwner = require('./ExecutiveOwner');
+const Risk = require('./Risk');
+const Finding = require('./Finding');
 
 module.exports = {
   BusinessProcess,
@@ -19,5 +21,7 @@ module.exports = {
   DataObject,
   ThreatScenario,
   LegalObligation,
-  ExecutiveOwner
+  ExecutiveOwner,
+  Risk,
+  Finding
 };

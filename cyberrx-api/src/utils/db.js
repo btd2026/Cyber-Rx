@@ -190,6 +190,85 @@ async function init() {
       CREATE INDEX IF NOT EXISTS executive_owners_org ON executive_owners(organization_id);
       CREATE INDEX IF NOT EXISTS executive_owners_role ON executive_owners(role_id);
       CREATE INDEX IF NOT EXISTS executive_owners_user ON executive_owners(user_id);
+
+      -- M1 T-011: Risk and Finding entities with correlation linkage
+
+      CREATE TABLE IF NOT EXISTS risks (
+        id                  TEXT PRIMARY KEY,
+        title               TEXT NOT NULL,
+        severity            TEXT NOT NULL CHECK (severity IN ('Critical', 'High', 'Medium', 'Low')),
+        status              TEXT NOT NULL CHECK (status IN ('open', 'mitigating', 'accepted', 'closed')),
+        organization_id     TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        description         TEXT,
+        likelihood          TEXT,
+        finding_id          TEXT,
+        asset_id            TEXT,
+        application_id      TEXT,
+        vendor_id           TEXT,
+        business_process_ids JSONB DEFAULT '[]',
+        data_object_ids     JSONB DEFAULT '[]',
+        threat_scenario_id  TEXT,
+        framework_mappings  JSONB DEFAULT '[]',
+        financial_exposure  NUMERIC,
+        cost_to_remediate   NUMERIC,
+        legal_obligation_ids JSONB DEFAULT '[]',
+        regulatory_citation TEXT,
+        executive_owner     TEXT,
+        remediation_owner   TEXT,
+        evidence_owner      TEXT,
+        audit_evidence_required TEXT,
+        audit_test_ids      JSONB DEFAULT '[]',
+        created_at          TIMESTAMPTZ DEFAULT NOW(),
+        updated_at          TIMESTAMPTZ DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS findings (
+        id                  TEXT PRIMARY KEY,
+        title               TEXT NOT NULL,
+        description         TEXT,
+        severity            TEXT NOT NULL CHECK (severity IN ('Critical', 'High', 'Medium', 'Low', 'Info')),
+        status              TEXT NOT NULL CHECK (status IN ('open', 'in_progress', 'resolved', 'closed', 'false_positive', 'risk_accepted')),
+        organization_id     TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        discovered_date     TIMESTAMPTZ NOT NULL,
+        risk_id             TEXT,
+        asset_id            TEXT,
+        application_id      TEXT,
+        business_process_id TEXT,
+        is_repeat           BOOLEAN DEFAULT false,
+        original_finding_id TEXT,
+        repeat_count        INTEGER DEFAULT 0,
+        remediation_plan    TEXT,
+        target_date         TIMESTAMPTZ,
+        owner               TEXT,
+        source              TEXT,
+        source_ref          TEXT,
+        tool                TEXT,
+        metadata            JSONB,
+        created_at          TIMESTAMPTZ DEFAULT NOW(),
+        updated_at          TIMESTAMPTZ DEFAULT NOW()
+      );
+
+      -- Indexes for Risk and Finding
+
+      CREATE INDEX IF NOT EXISTS risks_org ON risks(organization_id);
+      CREATE INDEX IF NOT EXISTS risks_severity ON risks(severity);
+      CREATE INDEX IF NOT EXISTS risks_status ON risks(status);
+      CREATE INDEX IF NOT EXISTS risks_asset ON risks(asset_id);
+      CREATE INDEX IF NOT EXISTS risks_threat_scenario ON risks(threat_scenario_id);
+      CREATE INDEX IF NOT EXISTS risks_executive_owner ON risks(executive_owner);
+      CREATE INDEX IF NOT EXISTS risks_business_processes ON risks USING GIN (business_process_ids);
+      CREATE INDEX IF NOT EXISTS risks_data_objects ON risks USING GIN (data_object_ids);
+      CREATE INDEX IF NOT EXISTS risks_legal_obligations ON risks USING GIN (legal_obligation_ids);
+
+      CREATE INDEX IF NOT EXISTS findings_org ON findings(organization_id);
+      CREATE INDEX IF NOT EXISTS findings_severity ON findings(severity);
+      CREATE INDEX IF NOT EXISTS findings_status ON findings(status);
+      CREATE INDEX IF NOT EXISTS findings_discovered ON findings(discovered_date DESC);
+      CREATE INDEX IF NOT EXISTS findings_risk ON findings(risk_id);
+      CREATE INDEX IF NOT EXISTS findings_asset ON findings(asset_id);
+      CREATE INDEX IF NOT EXISTS findings_business_process ON findings(business_process_id);
+      CREATE INDEX IF NOT EXISTS findings_is_repeat ON findings(is_repeat);
+      CREATE INDEX IF NOT EXISTS findings_tool ON findings(tool);
     `);
     console.log('Database schema initialized');
   } catch (err) {
