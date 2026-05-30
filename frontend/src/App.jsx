@@ -18983,7 +18983,7 @@ function SetupBot(props) {
               </button>
             </div>
           )}
-          {curQ.type==='choice'&&(
+          {curQ.type==='choice' && !showStateSelector && !showStateRegs && (
             <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
               {(curQ.choices||[]).map(function(c){
                 return (
