@@ -14475,7 +14475,7 @@ function BizLines(props) {
   var _s1=useState(null); var selStep=_s1[0]; var setSelStep=_s1[1];
 
   var liveProcs = (function(){
-    var lob = props.linesOfBiz || [];
+    var lob = Array.isArray(props.linesOfBiz) ? props.linesOfBiz : [];
     if (lob.length === 0) {
       // Re-score before returning
       var _bm = {mfaPct:props.mfaPct,edrPct:props.edrPct,patchPct:props.patchPct,
