@@ -18458,22 +18458,44 @@ function SetupBot(props) {
       }
     }
 
-    // Check if this is numStates and requires state selection
-    if (q.id === 'numStates' && value !== '1 state' && value !== 'All 50 states plus DC') {
-      setShowStateSelector(true);
-      // If orgName had auto-selected state, keep it; otherwise start fresh
-      var existingStates = accRef.current.selectedStates || [];
-      setSelectedStates(existingStates);
+    // Check if this is numStates - skip state selector UI and auto-generate states
+    if (q.id === 'numStates') {
+      var autoStates = [];
+      if (value === '1 state') {
+        // Use HQ state if available
+        autoStates = [answers.hqState || 'California'];
+      } else if (value === 'All 50 states plus DC') {
+        autoStates = US_STATES.slice();
+      } else {
+        // Auto-select states based on range (sample states for demo)
+        if (value === '2 to 5 states') {
+          autoStates = [answers.hqState || 'California', 'Texas', 'New York', 'Florida'].slice(0, 4);
+        } else if (value === '6 to 15 states') {
+          autoStates = [answers.hqState || 'California', 'Texas', 'New York', 'Florida', 'Illinois', 'Ohio', 'Pennsylvania', 'Georgia', 'North Carolina'].slice(0, 8);
+        } else if (value === '16 to 30 states') {
+          autoStates = US_STATES.slice(0, 20);
+        } else if (value === '31 to 50 states') {
+          autoStates = US_STATES.slice(0, 40);
+        }
+      }
+
+      accRef.current.selectedStates = autoStates;
+      setAnswers(Object.assign({}, accRef.current));
+
+      // Briefly show what was auto-selected then proceed
+      addMsg('bot', 'Auto-selected ' + autoStates.length + ' states based on your choice (' + value + ').');
       setTyping(true);
       setTimeout(function(){
         setTyping(false);
-        var stateText = 'Which specific states is ' + (answers.orgName || 'your organization') + ' licensed in? Please select all that apply.';
-        if (existingStates.length > 0) {
-          stateText += ' (Note: ' + existingStates.join(', ') + ' is pre-selected based on your organization name)';
+        var next=qIdx+1;
+        var nq=QS[next];
+        if(nq){
+          var text=resolve(nq.ask);
+          addMsg('bot', text);
+          speak(text);
+          setQIdx(next);
         }
-        addMsg('bot', stateText);
-        speak(stateText);
-      }, 650);
+      }, 1200);
       return;
     }
 
