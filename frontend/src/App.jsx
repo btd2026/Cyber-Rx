@@ -191,23 +191,52 @@ var ORG_TEMPLATES = {
     procs:[
       // Tier 1 – Primary Crown Jewels (Compromise materially impacts enterprise survival)
       {type:"tier", id:"tier1", name:"Tier 1 – Primary Crown Jewels", description:"Compromise materially impacts enterprise survival"},
-      {id:"claims",        name:"Claims Adjudication & Payment",              icon:"⚕",  score:64, crits:2, highs:1, trend:mkT(64), bizLine:"operations"},
-      {id:"enroll",        name:"Membership & Enrollment",                    icon:"👤", score:74, crits:0, highs:2, trend:mkT(74), bizLine:"operations"},
-      {id:"provider_net",  name:"Provider Network & Contracting Operations", icon:"🏥", score:83, crits:0, highs:1, trend:mkT(83), bizLine:"hmm"},
-      {id:"care_mgmt",     name:"Care Management / Medical Management",      icon:"💊", score:71, crits:1, highs:2, trend:mkT(71), bizLine:"hmm"},
-      {id:"fwa",           name:"Payment Integrity / Fraud, Waste & Abuse",   icon:"🔍", score:69, crits:1, highs:2, trend:mkT(69), bizLine:"govt"},
-      {id:"member_svc",    name:"Member Services / Contact Center",           icon:"📞", score:66, crits:1, highs:2, trend:mkT(66), bizLine:"service"},
-      {id:"actuarial",     name:"Actuarial / Underwriting & Financial Analytics", icon:"📊", score:82, crits:0, highs:1, trend:mkT(82), bizLine:"data"},
+      {id:"claims",        name:"Claims Adjudication & Payment",              icon:"⚕",  score:64, crits:2, highs:1, trend:mkT(64), bizLine:"operations",
+       subcomponents:["Medical claims","Dental claims","Pharmacy claims","Provider payment"],
+       why:["Revenue engine","PHI-rich","Financial loss","Regulatory impact","Ransomware blast radius"]},
+      {id:"enroll",        name:"Membership & Enrollment",                    icon:"👤", score:74, crits:0, highs:2, trend:mkT(74), bizLine:"operations",
+       subcomponents:["Eligibility","Enrollment","Member onboarding","Premium billing"],
+       why:["Revenue continuity","CMS obligations","Identity-rich"]},
+      {id:"provider_net",  name:"Provider Network & Contracting Operations", icon:"🏥", score:83, crits:0, highs:1, trend:mkT(83), bizLine:"hmm",
+       subcomponents:["Provider onboarding","Credentialing","Contract management","Provider servicing"],
+       why:["Provider disruption = claims disruption"]},
+      {id:"care_mgmt",     name:"Care Management / Medical Management",      icon:"💊", score:71, crits:1, highs:2, trend:mkT(71), bizLine:"hmm",
+       subcomponents:["Case management","Utilization management","Clinical authorizations"],
+       why:["Clinical sensitivity","High-risk PHI"]},
+      {id:"fwa",           name:"Payment Integrity / Fraud, Waste & Abuse",   icon:"🔍", score:69, crits:1, highs:2, trend:mkT(69), bizLine:"govt",
+       subcomponents:["Fraud analytics","Payment review","Overpayment detection"],
+       why:["High financial risk"]},
+      {id:"member_svc",    name:"Member Services / Contact Center",           icon:"📞", score:66, crits:1, highs:2, trend:mkT(66), bizLine:"service",
+       subcomponents:["Member portal","Service center","Identity verification"],
+       why:["Major fraud + reputation vector"]},
+      {id:"actuarial",     name:"Actuarial / Underwriting & Financial Analytics", icon:"📊", score:82, crits:0, highs:1, trend:mkT(82), bizLine:"data",
+       subcomponents:["Pricing","Reserving (IBNR)","Medical forecasting"],
+       why:["Financial reporting impact","Strategic sensitivity"]},
       // Tier 2 – Strategic Crown Jewels (Material disruption but less existential)
       {type:"tier", id:"tier2", name:"Tier 2 – Strategic Crown Jewels", description:"Material disruption but less existential"},
-      {id:"govt_admin",    name:"Government Programs Administration",       icon:"🏛",  type:"section"},
-      {id:"govt_ma",       name:"Medicare Advantage",                         icon:"🏛",  score:71, crits:1, highs:2, trend:mkT(71), bizLine:"govt", parent:"govt_admin"},
-      {id:"govt_fep",      name:"Federal Employee Program (FEP)",             icon:"🦅",  score:78, crits:0, highs:1, trend:mkT(78), bizLine:"govt", parent:"govt_admin"},
-      {id:"govt_mcaid",    name:"Medicaid",                                   icon:"🏛",  score:71, crits:1, highs:2, trend:mkT(71), bizLine:"govt", parent:"govt_admin"},
-      {id:"pharmacy_pbm",  name:"Pharmacy / PBM Integrations",                icon:"💊", score:71, crits:1, highs:2, trend:mkT(71), bizLine:"hmm"},
-      {id:"compliance",    name:"Compliance & Regulatory Reporting",         icon:"⚖",  score:85, crits:0, highs:1, trend:mkT(85), bizLine:"corp"},
-      {id:"identity",      name:"Identity & Access Infrastructure",           icon:"🔐", score:61, crits:2, highs:4, trend:mkT(61), bizLine:"corp"},
-      {id:"data_platform", name:"Data & Analytics Platforms",                  icon:"📊", score:82, crits:0, highs:1, trend:mkT(82), bizLine:"data"},
+      {id:"govt_admin",    name:"Government Programs Administration",       icon:"🏛",  type:"section",
+       note:"These are business lines, not processes. Modeled as criticality multipliers for claims and other processes."},
+      {id:"govt_ma",       name:"Medicare Advantage",                         icon:"🏛",  score:71, crits:1, highs:2, trend:mkT(71), bizLine:"govt", parent:"govt_admin",
+       subcomponents:["CMS compliance","Star ratings","Risk adjustment"],
+       why:["Claims criticality multiplier","CMS scrutiny + penalties"]},
+      {id:"govt_fep",      name:"Federal Employee Program (FEP)",             icon:"🦅",  score:78, crits:0, highs:1, trend:mkT(78), bizLine:"govt", parent:"govt_admin",
+       subcomponents:["OPM requirements","FEHB compliance"],
+       why:["Claims criticality multiplier","Federal standards"]},
+      {id:"govt_mcaid",    name:"Medicaid",                                   icon:"🏛",  score:71, crits:1, highs:2, trend:mkT(71), bizLine:"govt", parent:"govt_admin",
+       subcomponents:["State compliance","CMS reporting"],
+       why:["Claims criticality multiplier","State + Federal scrutiny"]},
+      {id:"pharmacy_pbm",  name:"Pharmacy / PBM Integrations",                icon:"💊", score:71, crits:1, highs:2, trend:mkT(71), bizLine:"hmm",
+       subcomponents:["Pharmacy benefits","PBM data exchange","Formulary management"],
+       why:["High claims integration","Specialty pharmacy risk"]},
+      {id:"compliance",    name:"Compliance & Regulatory Reporting",         icon:"⚖",  score:85, crits:0, highs:1, trend:mkT(85), bizLine:"corp",
+       subcomponents:["CMS reporting","HHS OCR","State insurance","BCBSA requirements"],
+       why:["Multi-jurisdictional","High penalty exposure"]},
+      {id:"identity",      name:"Identity & Access Infrastructure",           icon:"🔐", score:61, crits:2, highs:4, trend:mkT(61), bizLine:"corp",
+       subcomponents:["MFA","IAM","Privileged access","Identity proofing"],
+       why:["Gateway to all systems","Blast radius amplification"]},
+      {id:"data_platform", name:"Data & Analytics Platforms",                  icon:"📊", score:82, crits:0, highs:1, trend:mkT(82), bizLine:"data",
+       subcomponents:["Data warehouse","Analytics platforms","BI tools","ML models"],
+       why:["PHI aggregation","Strategic decision support"]},
     ],
     frameworks:["hipaa_sr","hipaa_pr","hipaa_bn","nist_csf","nist_800_53","cis_v8","iso_27001","soc2","naic_model","pci_dss","cms_422"],
     extraFrameworks:["BCBSA Plan Performance Program","FEHB/OPM Data Security (if FEP)"],
@@ -5164,10 +5193,15 @@ function Setup(props) {
                         borderRadius:6,
                         marginTop:8
                       }}>
-                        <div style={{display:"flex",alignItems:"center",gap:8}}>
+                        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:p.note?4:0}}>
                           <span style={{fontSize:16}}>{p.icon}</span>
                           <span style={{color:C.acc,fontSize:11,fontWeight:700}}>{p.name}</span>
                         </div>
+                        {p.note&&(
+                          <div style={{color:C.muted,fontSize:9,marginLeft:24,lineHeight:1.3}}>
+                            {p.note}
+                          </div>
+                        )}
                       </div>
                     );
                   }
@@ -5184,10 +5218,28 @@ function Setup(props) {
                       <span style={{fontSize:20}}>{p.icon}</span>
                       <div style={{flex:1}}>
                         <div style={{color:on?C.acc:C.text,fontSize:12,fontWeight:on?700:400}}>{p.name}</div>
-                        <div style={{color:C.muted,fontSize:9,marginTop:1}}>
-                          {EXP[p.id]?"$"+EXP[p.id]+"M exposure":""}
-                          {rec?" · Recommended":""}
-                        </div>
+                        {(p.subcomponents||p.why)&&(
+                          <div style={{color:C.muted,fontSize:9,marginTop:1}}>
+                            {p.subcomponents&&p.subcomponents.length>0&&(
+                              <div style={{marginBottom:2}}>{p.subcomponents.join(" · ")}</div>
+                            )}
+                            {p.why&&p.why.length>0&&(
+                              <div style={{fontStyle:"italic",color:C.muted+"CC"}}>
+                                Why: {p.why.join(" · ")}
+                              </div>
+                            )}
+                            {EXP[p.id]&&!p.subcomponents&&(
+                              <div>${EXP[p.id]}M exposure{rec?" · Recommended":""}</div>
+                            )}
+                            {rec&&!p.subcomponents&&!p.why&&"Recommended"}
+                          </div>
+                        )}
+                        {!p.subcomponents&&!p.why&&(
+                          <div style={{color:C.muted,fontSize:9,marginTop:1}}>
+                            {EXP[p.id]?"$"+EXP[p.id]+"M exposure":""}
+                            {rec?" · Recommended":""}
+                          </div>
+                        )}
                       </div>
                       <div style={{width:18,height:18,borderRadius:4,flexShrink:0,
                         background:on?C.acc:C.bg,border:"1.5px solid "+(on?C.acc:C.border),
