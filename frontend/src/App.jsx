@@ -3677,6 +3677,225 @@ function Login(props) {
   );
 }
 
+
+// --- Demo Request ---------------------------------------------------------
+function DemoRequest(props) {
+  var onBack = props.onBack;
+  var _sName=useState(""); var name=_sName[0]; var setName=_sName[1];
+  var _sEmail=useState(""); var email=_sEmail[0]; var setEmail=_sEmail[1];
+  var _sOrgType=useState(""); var orgType=_sOrgType[0]; var setOrgType=_sOrgType[1];
+  var _sJobTitle=useState(""); var jobTitle=_sJobTitle[0]; var setJobTitle=_sJobTitle[1];
+  var _sMessage=useState(""); var message=_sMessage[0]; var setMessage=_sMessage[1];
+  var _sSubmitting=useState(false); var submitting=_sSubmitting[0]; var setSubmitting=_sSubmitting[1];
+  var _sError=useState(""); var error=_sError[0]; var setError=_sError[1];
+
+  // Validate corporate email (reject personal email domains)
+  function isValidCorporateEmail(email) {
+    if (!email || !email.includes('@')) return false;
+    var domain = email.split('@')[1].toLowerCase();
+    var personalDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com', 'icloud.com', 'protonmail.com', 'mail.com', 'live.com', 'msn.com'];
+    return !personalDomains.includes(domain);
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    setError("");
+
+    // Validation
+    if (!name.trim()) {
+      setError("Please enter your name");
+      return;
+    }
+    if (!email.trim() || !isValidCorporateEmail(email)) {
+      setError("Please enter a valid corporate email address (personal emails like Gmail are not accepted)");
+      return;
+    }
+    if (!orgType) {
+      setError("Please select your organization type");
+      return;
+    }
+    if (!jobTitle.trim()) {
+      setError("Please enter your job title");
+      return;
+    }
+    if (!message.trim()) {
+      setError("Please tell us about your interest");
+      return;
+    }
+
+    setSubmitting(true);
+
+    // Create email body
+    var subject = encodeURIComponent("CyberRx Demo Request - " + name);
+    var body = encodeURIComponent(
+      "Name: " + name + "\n" +
+      "Email: " + email + "\n" +
+      "Organization Type: " + orgType + "\n" +
+      "Job Title: " + jobTitle + "\n\n" +
+      "Message:\n" + message + "\n\n" +
+      "---\n" +
+      "Sent from CyberRx Healthcare Payer Edition"
+    );
+
+    // Open email client
+    window.location.href = "mailto:contact@dtnkshield.com?subject=" + subject + "&body=" + body;
+
+    // Reset form after short delay
+    setTimeout(function(){
+      setSubmitting(false);
+      setName("");
+      setEmail("");
+      setOrgType("");
+      setJobTitle("");
+      setMessage("");
+    }, 2000);
+  }
+
+  return (
+    <div style={{minHeight:"100vh", background:C.bg, display:"flex", alignItems:"center", justifyContent:"center", padding:"20px"}}>
+      <div style={{background:C.card, border:"1px solid "+C.border, borderRadius:16, padding:"40px", width:"100%", maxWidth:540, boxShadow:"0 8px 32px rgba(0,0,0,0.08)"}}>
+        {/* Header */}
+        <div style={{display:"flex", alignItems:"center", gap:10, marginBottom:24}}>
+          <div style={{width:38, height:38, borderRadius:11, background:"linear-gradient(135deg,#00C4A0,#0090F0)", display:"flex", alignItems:"center", justifyContent:"center"}}>
+            <span style={{color:"#000", fontWeight:900, fontSize:16}}>Rx</span>
+          </div>
+          <div>
+            <span style={{color:C.text, fontWeight:800, fontSize:18}}>CyberRx</span>
+            <div style={{color:C.muted, fontSize:11}}>Request a Demo</div>
+          </div>
+        </div>
+
+        <p style={{color:C.muted, fontSize:13, lineHeight:1.6, margin:"0 0 24px"}}>
+          Tell us about your organization and we'll reach out to schedule a personalized demo of our healthcare payer cyber risk platform.
+        </p>
+
+        {/* Error message */}
+        {error && (
+          <div style={{background:"#EF454510", border:"1px solid #EF454530", borderRadius:8, padding:"10px 14px", marginBottom:20}}>
+            <div style={{color:"#EF4545", fontSize:12, fontWeight:600, marginBottom:2}}>⚠️ {error}</div>
+          </div>
+        )}
+
+        {/* Form */}
+        <form onSubmit={handleSubmit}>
+          <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16}}>
+            <div>
+              <label style={{color:C.text, fontSize:12, fontWeight:700, display:"block", marginBottom:6}}>
+                Full Name *
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={function(e){ setName(e.target.value); setError(""); }}
+                placeholder="John Smith"
+                disabled={submitting}
+                style={{width:"100%", background:C.bg, border:"1px solid "+C.border, borderRadius:8, padding:"10px 12px", fontSize:13, color:C.text, outline:"none"}}
+                required
+              />
+            </div>
+            <div>
+              <label style={{color:C.text, fontSize:12, fontWeight:700, display:"block", marginBottom:6}}>
+                Corporate Email * <span style={{color:C.muted, fontSize:10, fontWeight:400}}>(no Gmail, Yahoo)</span>
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={function(e){ setEmail(e.target.value); setError(""); }}
+                placeholder="john@healthplan.org"
+                disabled={submitting}
+                style={{width:"100%", background:C.bg, border:"1px solid "+C.border, borderRadius:8, padding:"10px 12px", fontSize:13, color:C.text, outline:"none"}}
+                required
+              />
+            </div>
+          </div>
+
+          <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16}}>
+            <div>
+              <label style={{color:C.text, fontSize:12, fontWeight:700, display:"block", marginBottom:6}}>
+                Organization Type *
+              </label>
+              <select
+                value={orgType}
+                onChange={function(e){ setOrgType(e.target.value); setError(""); }}
+                disabled={submitting}
+                style={{width:"100%", background:C.bg, border:"1px solid "+C.border, borderRadius:8, padding:"10px 12px", fontSize:13, color:C.text, outline:"none"}}
+                required
+              >
+                <option value="">Select type...</option>
+                <option value="Commercial Health Plan">Commercial Health Plan</option>
+                <option value="Medicare Advantage (MAO)">Medicare Advantage (MAO)</option>
+                <option value="Medicaid Managed Care">Medicaid Managed Care</option>
+                <option value="Dual Eligible Plan">Dual Eligible (SNP)</option>
+                <option value="BCBS Plan">BCBS Association</option>
+                <option value="Provider Sponsored Health Plan">Provider-Sponsored Health Plan</option>
+                <option value="TPA / Third-Party Administrator">TPA / Third-Party Administrator</option>
+              </select>
+            </div>
+            <div>
+              <label style={{color:C.text, fontSize:12, fontWeight:700, display:"block", marginBottom:6}}>
+                Job Title *
+              </label>
+              <input
+                type="text"
+                value={jobTitle}
+                onChange={function(e){ setJobTitle(e.target.value); setError(""); }}
+                placeholder="CISO, CIO, VP, Director..."
+                disabled={submitting}
+                style={{width:"100%", background:C.bg, border:"1px solid "+C.border, borderRadius:8, padding:"10px 12px", fontSize:13, color:C.text, outline:"none"}}
+                required
+              />
+            </div>
+          </div>
+
+          <div style={{marginBottom:20}}>
+            <label style={{color:C.text, fontSize:12, fontWeight:700, display:"block", marginBottom:6}}>
+              Tell us about your interest *
+            </label>
+            <textarea
+              value={message}
+              onChange={function(e){ setMessage(e.target.value); setError(""); }}
+              placeholder="What challenges are you trying to solve? What would you like to see in the demo?"
+              disabled={submitting}
+              rows={4}
+              style={{width:"100%", background:C.bg, border:"1px solid "+C.border, borderRadius:8, padding:"10px 12px", fontSize:13, color:C.text, outline:"none", resize:"vertical", fontFamily:"inherit"}}
+              required
+            />
+          </div>
+
+          {/* Submit button */}
+          <button
+            type="submit"
+            disabled={submitting}
+            style={{width:"100%", background:C.acc, border:"none", color:"#fff", borderRadius:10, padding:"14px", cursor:"pointer", fontSize:15, fontWeight:700, boxShadow:"0 4px 20px "+C.acc+"40", transition:"all 0.2s"}}
+          >
+            {submitting ? "Opening Email Client..." : "Submit Demo Request →"}
+          </button>
+        </form>
+
+        {/* Info */}
+        <div style={{marginTop:20, paddingTop:20, borderTop:"1px solid "+C.border}}>
+          <div style={{display:"flex", gap:6, alignItems:"flex-start"}}>
+            <span style={{fontSize:14}}>ℹ️</span>
+            <div style={{color:C.muted, fontSize:11, lineHeight:1.5}}>
+              This will open your email client with a pre-formatted message to <strong>contact@dtnkshield.com</strong>.
+              Our team will respond within 1 business day to schedule your personalized demo.
+            </div>
+          </div>
+        </div>
+
+        {/* Back button */}
+        <button
+          onClick={onBack}
+          type="button"
+          style={{width:"100%", background:"transparent", border:"none", color:C.muted, cursor:"pointer", fontSize:12, marginTop:16}}
+        >
+          ← Back to home
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // --- MFA ----------------------------------------------------------------------
 function MFA(props) {
   var onDone, email; onDone=props.onDone; email=props.email;
@@ -24331,8 +24550,13 @@ function CyberRxApp() {
   // Phase router
   if (phase==="landing") {
     return React.createElement(Landing, {
-      onStart:function(){ setPhase("login"); },
+      onStart:function(){ setPhase("demo-request"); },
       onSignIn:function(){ setPhase("login"); },
+    });
+  }
+  if (phase==="demo-request") {
+    return React.createElement(DemoRequest, {
+      onBack:function(){ setPhase("landing"); },
     });
   }
   if (phase==="login") {
