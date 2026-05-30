@@ -17776,6 +17776,77 @@ function SetupBot(props) {
     'ROSI':              'return on security investment',
   };
 
+  // Helper function to extract state from BCBS organization name
+  function extractStateFromOrgName(orgName) {
+    if (!orgName) return null;
+
+    var orgNameLower = orgName.toLowerCase();
+
+    // Map of state keywords to full state names
+    var stateMap = {
+      'alabama': 'Alabama',
+      'alaska': 'Alaska',
+      'arizona': 'Arizona',
+      'arkansas': 'Arkansas',
+      'california': 'California',
+      'colorado': 'Colorado',
+      'connecticut': 'Connecticut',
+      'delaware': 'Delaware',
+      'florida': 'Florida',
+      'georgia': 'Georgia',
+      'hawaii': 'Hawaii',
+      'idaho': 'Idaho',
+      'illinois': 'Illinois',
+      'indiana': 'Indiana',
+      'iowa': 'Iowa',
+      'kansas': 'Kansas',
+      'kentucky': 'Kentucky',
+      'louisiana': 'Louisiana',
+      'maine': 'Maine',
+      'maryland': 'Maryland',
+      'massachusetts': 'Massachusetts',
+      'michigan': 'Michigan',
+      'minnesota': 'Minnesota',
+      'mississippi': 'Mississippi',
+      'missouri': 'Missouri',
+      'montana': 'Montana',
+      'nebraska': 'Nebraska',
+      'nevada': 'Nevada',
+      'new hampshire': 'New Hampshire',
+      'new jersey': 'New Jersey',
+      'new mexico': 'New Mexico',
+      'new york': 'New York',
+      'north carolina': 'North Carolina',
+      'north dakota': 'North Dakota',
+      'ohio': 'Ohio',
+      'oklahoma': 'Oklahoma',
+      'oregon': 'Oregon',
+      'pennsylvania': 'Pennsylvania',
+      'rhode island': 'Rhode Island',
+      'south carolina': 'South Carolina',
+      'south dakota': 'South Dakota',
+      'tennessee': 'Tennessee',
+      'texas': 'Texas',
+      'utah': 'Utah',
+      'vermont': 'Vermont',
+      'virginia': 'Virginia',
+      'washington': 'Washington',
+      'west virginia': 'West Virginia',
+      'wisconsin': 'Wisconsin',
+      'wyoming': 'Wyoming',
+      'district of columbia': 'District of Columbia'
+    };
+
+    // Check if organization name contains any state name
+    for (var stateKey in stateMap) {
+      if (orgNameLower.indexOf(stateKey) !== -1) {
+        return stateMap[stateKey];
+      }
+    }
+
+    return null;
+  }
+
   var US_STATES = ['Alabama','Alaska','Arizona','Arkansas','California','Colorado',
     'Connecticut','Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana',
     'Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan',
@@ -18158,14 +18229,31 @@ function SetupBot(props) {
     addMsg('user', value);
     setInput('');
 
+    // Auto-select state if orgName contains a state name (BCBS organizations)
+    if (q.id === 'orgName') {
+      var extractedState = extractStateFromOrgName(value);
+      if (extractedState) {
+        setTimeout(function(){
+          setSelectedStates([extractedState]);
+          accRef.current.selectedStates = [extractedState];
+          setAnswers(Object.assign({}, accRef.current));
+        }, 100);
+      }
+    }
+
     // Check if this is numStates and requires state selection
     if (q.id === 'numStates' && value !== '1 state' && value !== 'All 50 states plus DC') {
       setShowStateSelector(true);
-      setSelectedStates([]);
+      // If orgName had auto-selected state, keep it; otherwise start fresh
+      var existingStates = accRef.current.selectedStates || [];
+      setSelectedStates(existingStates);
       setTyping(true);
       setTimeout(function(){
         setTyping(false);
         var stateText = 'Which specific states is ' + (answers.orgName || 'your organization') + ' licensed in? Please select all that apply.';
+        if (existingStates.length > 0) {
+          stateText += ' (Note: ' + existingStates.join(', ') + ' is pre-selected based on your organization name)';
+        }
         addMsg('bot', stateText);
         speak(stateText);
       }, 650);
@@ -18659,32 +18747,75 @@ function SetupBot(props) {
                 })}
               </div>
               <div style={{display:'flex',gap:8,justifyContent:'center'}}>
-                <button onClick={function(){
-                  if(selectedStates.length>0){
-                    accRef.current=Object.assign({},accRef.current);
-                    accRef.current.selectedStates=selectedStates;
-                    setAnswers(Object.assign({},accRef.current));
-                    setShowStateSelector(false);
-                    addMsg('user', selectedStates.length + ' states selected: ' + selectedStates.slice(0,3).join(', ') + (selectedStates.length>3?'...':''));
-                    setTyping(true);
-                    setTimeout(function(){
-                      setTyping(false);
-                      var next=qIdx+1;
-                      var nq=QS[next];
-                      if(nq){
-                        var text=resolve(nq.ask);
-                        addMsg('bot', text);
-                        speak(text);
-                        setQIdx(next);
-                      }
-                    }, 650);
+                {function(){
+                  var numStatesSelection = answers.numStates;
+                  var minStates = 0;
+                  var maxStates = 51;
+                  var isValid = false;
+
+                  if (numStatesSelection === '1 state') {
+                    minStates = 1;
+                    maxStates = 1;
+                  } else if (numStatesSelection === '2 to 5 states') {
+                    minStates = 2;
+                    maxStates = 5;
+                  } else if (numStatesSelection === '6 to 15 states') {
+                    minStates = 6;
+                    maxStates = 15;
+                  } else if (numStatesSelection === '16 to 30 states') {
+                    minStates = 16;
+                    maxStates = 30;
+                  } else if (numStatesSelection === '31 to 50 states') {
+                    minStates = 31;
+                    maxStates = 50;
+                  } else if (numStatesSelection === 'All 50 states plus DC') {
+                    minStates = 51;
+                    maxStates = 51;
                   }
-                }}
-                  style={{background:C.acc,border:'none',color:'#fff',borderRadius:8,
-                    padding:'8px 16px',cursor:'pointer',fontSize:11,fontWeight:700,
-                    opacity:selectedStates.length===0?0.4:1}}>
-                  Confirm {selectedStates.length} states
-                </button>
+
+                  isValid = selectedStates.length >= minStates && selectedStates.length <= maxStates;
+                  var rangeText = minStates === maxStates ? minStates + ' state' : minStates + '-' + maxStates + ' states';
+
+                  return (
+                    <button onClick={function(){
+                      if (isValid) {
+                        accRef.current=Object.assign({},accRef.current);
+                        accRef.current.selectedStates=selectedStates;
+                        setAnswers(Object.assign({},accRef.current));
+                        setShowStateSelector(false);
+                        addMsg('user', selectedStates.length + ' states selected: ' + selectedStates.slice(0,3).join(', ') + (selectedStates.length>3?'...':''));
+                        setTyping(true);
+                        setTimeout(function(){
+                          setTyping(false);
+                          var next=qIdx+1;
+                          var nq=QS[next];
+                          if(nq){
+                            var text=resolve(nq.ask);
+                            addMsg('bot', text);
+                            speak(text);
+                            setQIdx(next);
+                          }
+                        }, 650);
+                      } else {
+                        // Show error message
+                        var errorMsg = 'Please select ';
+                        if (minStates === maxStates) {
+                          errorMsg += minStates + ' state';
+                        } else {
+                          errorMsg += 'between ' + minStates + ' and ' + maxStates + ' states';
+                        }
+                        errorMsg += ' to proceed with "' + numStatesSelection + '". You currently have ' + selectedStates.length + ' selected.';
+                        addMsg('bot', errorMsg);
+                        speak(errorMsg);
+                      }
+                    }}
+                      style={{background:C.acc,border:'none',color:'#fff',borderRadius:8,
+                        padding:'8px 16px',cursor:'pointer',fontSize:11,fontWeight:700,
+                        opacity:!isValid?0.4:1}}>
+                      Confirm {selectedStates.length} states {isValid ? '(' + rangeText + ')' : '(need ' + rangeText + ')'}
+                    </button>
+                  );
+                }()}
                 <button onClick={function(){
                   setShowStateSelector(false);
                   setTyping(true);
