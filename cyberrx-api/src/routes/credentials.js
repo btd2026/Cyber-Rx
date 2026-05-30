@@ -3,12 +3,14 @@ const express = require('express');
 const router = express.Router();
 const vault = require('../utils/vault');
 const db = require('../utils/db');
+const { authenticateJWT } = require('../middleware/auth');
 
 // POST /api/credentials/:tool — store encrypted credentials for org
-router.post('/:tool', async (req, res) => {
+router.post('/:tool', authenticateJWT, async (req, res) => {
   try {
     const { tool } = req.params;
-    const orgId = req.headers['x-org-id'] || 'demo';
+    // Use orgId from JWT instead of client-supplied header
+    const orgId = req.orgId || 'demo';
     const creds = req.body;
     if (!creds || !Object.keys(creds).length) {
       return res.status(400).json({ error: 'No credentials provided' });
@@ -29,10 +31,11 @@ router.post('/:tool', async (req, res) => {
 });
 
 // GET /api/credentials/:tool/status — check if credentials exist (never return creds)
-router.get('/:tool/status', async (req, res) => {
+router.get('/:tool/status', authenticateJWT, async (req, res) => {
   try {
     const { tool } = req.params;
-    const orgId = req.headers['x-org-id'] || 'demo';
+    // Use orgId from JWT instead of client-supplied header
+    const orgId = req.orgId || 'demo';
     const creds = await vault.get(orgId, tool);
     res.json({ tool, orgId, connected: !!creds, ts: new Date().toISOString() });
   } catch (err) {
@@ -41,10 +44,11 @@ router.get('/:tool/status', async (req, res) => {
 });
 
 // DELETE /api/credentials/:tool — remove credentials
-router.delete('/:tool', async (req, res) => {
+router.delete('/:tool', authenticateJWT, async (req, res) => {
   try {
     const { tool } = req.params;
-    const orgId = req.headers['x-org-id'] || 'demo';
+    // Use orgId from JWT instead of client-supplied header
+    const orgId = req.orgId || 'demo';
     await vault.delete(orgId, tool);
     await db.query(
       `UPDATE tool_connections SET status='disconnected' WHERE org_id=$1 AND tool_key=$2`,

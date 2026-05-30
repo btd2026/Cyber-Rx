@@ -4,20 +4,27 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 
-// Dynamic CORS configuration for Vercel + Render deployment
-const allowedOrigins = [
-  'https://claude.ai',
-  'https://www.anthropic.com',
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'http://localhost:5173',
-];
+// CORS configuration - allowlist from environment
+// Build allowlist from CORS_ALLOWLIST env var (comma-separated) or FRONTEND_URL
+const allowedOrigins = [];
 
-// Add Vercel frontend URL from environment if available
-if (process.env.FRONTEND_URL) {
+// Add localhost URLs for development
+if (process.env.NODE_ENV === 'development') {
+  allowedOrigins.push(
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:5173'
+  );
+}
+
+// Add from CORS_ALLOWLIST if provided (recommended for production)
+if (process.env.CORS_ALLOWLIST) {
+  const originsFromEnv = process.env.CORS_ALLOWLIST.split(',').map(url => url.trim());
+  allowedOrigins.push(...originsFromEnv);
+}
+// Fallback: add FRONTEND_URL if CORS_ALLOWLIST not set
+else if (process.env.FRONTEND_URL) {
   allowedOrigins.push(process.env.FRONTEND_URL);
-  // Also add wildcard for subdomains
-  allowedOrigins.push(process.env.FRONTEND_URL.replace('https://', 'https://*.'));
 }
 
 app.use(cors({
@@ -25,10 +32,11 @@ app.use(cors({
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+    // Check if origin is in allowlist
+    if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      callback(null, true); // For now, allow all - tighten in production
+      callback(new Error('CORS not allowed for origin: ' + origin));
     }
   },
   credentials: true,

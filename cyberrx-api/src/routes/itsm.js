@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const vault = require('../utils/vault');
+const { authenticateJWT } = require('../middleware/auth');
 
 const DEMO_TICKET = () => ({
   ticket_id: 'DEMO-' + Date.now(),
@@ -10,10 +11,11 @@ const DEMO_TICKET = () => ({
   ts: new Date().toISOString(),
 });
 
-router.post('/:system/ticket', async (req, res) => {
+router.post('/:system/ticket', authenticateJWT, async (req, res) => {
   try {
     const { system } = req.params;
-    const orgId = req.headers['x-org-id'] || 'demo';
+    // Use orgId from JWT instead of client-supplied header
+    const orgId = req.orgId || 'demo';
     const { title = 'CyberRx Security Finding', desc = '', actId = '', finding = null } = req.body;
     const creds = await vault.get(orgId, system);
 

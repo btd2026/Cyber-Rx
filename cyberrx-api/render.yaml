@@ -41,6 +41,44 @@ services:
           name: cyberrx-db
           property: password
 
+  # Background Worker - Metrics Scheduler
+  - type: worker
+    name: cyberrx-scheduler
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install
+    startCommand: npm run scheduler
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: API_BASE
+        value: https://cyberrx-api.onrender.com
+      - key: DATABASE_URL
+        fromDatabase:
+          name: cyberrx-db
+          property: connectionString
+      - key: PGHOST
+        fromDatabase:
+          name: cyberrx-db
+          property: host
+      - key: PGPORT
+        fromDatabase:
+          name: cyberrx-db
+          property: port
+      - key: PGDATABASE
+        fromDatabase:
+          name: cyberrx-db
+          property: database
+      - key: PGUSER
+        fromDatabase:
+          name: cyberrx-db
+          property: user
+      - key: PGPASSWORD
+        fromDatabase:
+          name: cyberrx-db
+          property: password
+
 databases:
   - name: cyberrx-db
     databaseName: cyberrx
