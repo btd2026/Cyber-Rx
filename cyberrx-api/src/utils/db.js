@@ -269,6 +269,30 @@ async function init() {
       CREATE INDEX IF NOT EXISTS findings_business_process ON findings(business_process_id);
       CREATE INDEX IF NOT EXISTS findings_is_repeat ON findings(is_repeat);
       CREATE INDEX IF NOT EXISTS findings_tool ON findings(tool);
+
+      -- M1 T-012: Financial Impact entity (CFO model)
+
+      CREATE TABLE IF NOT EXISTS financial_impacts (
+        id                  TEXT PRIMARY KEY,
+        risk_id             TEXT NOT NULL UNIQUE,
+        organization_id     TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        scenario_id         TEXT,
+        breach_response_cost NUMERIC DEFAULT 0,
+        regulatory_fine     NUMERIC DEFAULT 0,
+        business_interruption NUMERIC DEFAULT 0,
+        fraud_loss          NUMERIC DEFAULT 0,
+        reputational_loss   NUMERIC DEFAULT 0,
+        legal_cost          NUMERIC DEFAULT 0,
+        recovery_cost       NUMERIC DEFAULT 0,
+        total_gross         NUMERIC DEFAULT 0,
+        insurance_coverage  NUMERIC DEFAULT 0,
+        net_exposure        NUMERIC DEFAULT 0,
+        created_at          TIMESTAMPTZ DEFAULT NOW(),
+        updated_at          TIMESTAMPTZ DEFAULT NOW()
+      );
+
+      CREATE INDEX IF NOT EXISTS financial_impacts_org ON financial_impacts(organization_id);
+      CREATE INDEX IF NOT EXISTS financial_impacts_risk ON financial_impacts(risk_id);
     `);
     console.log('Database schema initialized');
   } catch (err) {

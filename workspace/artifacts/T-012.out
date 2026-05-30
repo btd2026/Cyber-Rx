@@ -1,0 +1,290 @@
+# T-012 Output: Risk Correlation Engine Service
+
+**Task ID**: T-012
+**Milestone**: M1 - Risk Correlation Engine
+**Status**: COMPLETE
+**Branch**: task/T-012-correlation-engine
+**Commit**: feat: risk correlation engine service + API
+
+---
+
+## Summary
+
+Successfully implemented the correlation engine service that takes a technical finding and produces the executive narrative. The engine correlates:
+
+1. **Business Process** - Tier and criticality context
+2. **Data Objects** - PHI/PII/PCI classification and sensitivity
+3. **Threat Scenario** - Ransomware, phishing, insider, supply chain, misconfig
+4. **Financial Impact** - Breach costs, regulatory fines, business interruption, net exposure
+5. **Framework Mappings** - NIST, HIPAA, CIS control references
+6. **Legal Obligations** - Notification timelines, penalties, applicability
+7. **Owners** - Executive, remediation, evidence, and business process owners
+8. **Audit Evidence** - Evidence requirements and test IDs
+
+The output matches the assessment's example narrative shape:
+- CVE on NASCO -> Claims Adjudication (Tier 1 Primary) -> $2.5M exposure -> HIPAA/NIST/CIS refs -> 60-day notification
+
+---
+
+## Files Created
+
+### Models (cyberrx-api/src/models/)
+- `/Users/briandibassinga/Github/Cyber-Rx/cyberrx-api/src/models/FinancialImpact.js` - CFO model for financial impact tracking
+
+### Services (cyberrx-api/src/services/)
+- `/Users/briandibassinga/Github/Cyber-Rx/cyberrx-api/src/services/CorrelationEngine.js` - Core correlation logic
+
+### Routes (cyberrx-api/src/routes/)
+- `/Users/briandibassinga/Github/Cyber-Rx/cyberrx-api/src/routes/correlation.js` - Correlation engine API
+
+### Database Schema
+- Updated: `/Users/briandibassinga/Github/Cyber-Rx/cyberrx-api/src/utils/db.js`
+- Added financial_impacts table
+
+---
+
+## Correlation Engine Logic
+
+### Input: Finding ID
+The engine takes a finding ID and organization ID as input.
+
+### Correlation Flow:
+
+1. **Fetch Finding** - Get the finding with asset/application/businessProcess context
+
+2. **Fetch Risk** - Get related risk if linked
+
+3. **Correlate Business Process**
+   - From Finding.businessProcessId
+   - From Risk.businessProcessIds[]
+   - From Asset.businessProcessIds[] (via finding asset)
+
+4. **Correlate Data Objects**
+   - From Risk.dataObjectIds[]
+   - From BusinessProcess.createsDataObjects[]
+   - From DataObject.findByAssetId()
+
+5. **Correlate Threat Scenario**
+   - From Risk.threatScenarioId
+
+6. **Correlate Financial Impact**
+   - From FinancialImpact.findByRiskId()
+   - Or estimate from Risk.financialExposure with breakdown by threat type
+
+7. **Get Framework Mappings**
+   - From Risk.frameworkMappings[] (NIST PR.PS-1, HIPAA 164.308(a)(5), CIS Control 7)
+
+8. **Correlate Legal Obligations**
+   - From Risk.legalObligationIds[]
+   - Or auto-include HIPAA obligations for PHI data
+
+9. **Get Owners**
+   - Executive from Risk.executiveOwner or by role lookup
+   - Remediation from Risk.remediationOwner
+   - Evidence from Risk.evidenceOwner
+   - Business Process from BusinessProcess.owner
+
+10. **Get Audit Evidence**
+    - Required flag from Risk.auditEvidenceRequired
+    - Test IDs from Risk.auditTestIds[]
+
+### Output: Executive Narrative
+
+```json
+{
+  "finding": {
+    "id": "find_123",
+    "title": "CVE-2023-1234 on NASCO server",
+    "severity": "Critical",
+    "status": "open",
+    "discoveredDate": "2024-01-15T10:00:00Z",
+    "source": "Tenable"
+  },
+  "executiveNarrative": {
+    "summary": "CVE-2023-1234 on NASCO server affecting Claims Adjudication (Primary tier) involving PHI with potential for ransomware",
+    "businessProcess": {
+      "id": "bp_456",
+      "name": "Claims Adjudication",
+      "tier": "Primary",
+      "criticality": "Critical",
+      "owner": "CIO"
+    },
+    "dataInvolvement": [
+      {
+        "type": "PHI",
+        "sensitivity": "Critical",
+        "classification": "Protected Health Information"
+      }
+    ],
+    "threat": {
+      "type": "ransomware",
+      "name": "Ransomware Attack on Claims Processing",
+      "probability": 75,
+      "impact": "Critical",
+      "mitreTechnique": ["T1486"]
+    },
+    "financialExposure": {
+      "totalGrossExposure": 2500000,
+      "netExposure": 2250000,
+      "insuranceCoverage": 250000,
+      "breakdown": {
+        "breachResponseCost": 1000000,
+        "regulatoryFines": 500000,
+        "businessInterruption": 875000,
+        "fraudLoss": 0,
+        "reputationalLoss": 375000,
+        "legalCosts": 250000,
+        "recoveryCost": 0
+      }
+    },
+    "regulatory": {
+      "frameworks": ["NIST PR.PS-1", "HIPAA 164.308(a)(5)", "CIS Control 7"],
+      "obligations": [
+        {
+          "name": "HIPAA Breach Notification",
+          "source": "HIPAA",
+          "notificationTimeline": "60 days",
+          "citation": "45 CFR 164.400-414",
+          "maxPenalty": 75000
+        }
+      ],
+      "urgentNotifications": [
+        {
+          "obligation": "HIPAA Breach Notification",
+          "timeline": "60 days"
+        }
+      ]
+    },
+    "ownership": {
+      "executive": {
+        "roleId": "CISO",
+        "name": "John Smith",
+        "email": "john.smith@example.com"
+      },
+      "remediationOwner": "IT Security Team",
+      "evidenceOwner": "Compliance Team",
+      "businessProcessOwner": "CIO"
+    },
+    "auditEvidence": {
+      "required": true,
+      "description": "Evidence of patch verification and vulnerability scan",
+      "testIds": ["audit_test_123"]
+    }
+  },
+  "correlation": {
+    "riskId": "risk_789",
+    "assetId": "asset_456",
+    "applicationId": null,
+    "businessProcessId": "bp_456",
+    "threatScenarioId": "ts_123"
+  }
+}
+```
+
+---
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /api/correlation/narrative/:findingId | Generate executive narrative for a single finding |
+| POST | /api/correlation/batch | Batch correlate up to 50 findings |
+| GET | /api/correlation/summary | Get organization risk summary |
+
+### Organization Risk Summary
+
+The `/api/correlation/summary` endpoint returns:
+- Total risks, open risks, critical risks counts
+- Repeat findings count
+- Total financial exposure (gross and net)
+- Top 10 risks
+- Top 5 repeat findings
+- High-value data objects (PHI/PII with Critical/High sensitivity)
+- High-probability threat scenarios (>=70%)
+- Executive roster grouped by role
+
+---
+
+## Database Schema
+
+### financial_impacts
+```sql
+CREATE TABLE financial_impacts (
+  id                  TEXT PRIMARY KEY,
+  risk_id             TEXT NOT NULL UNIQUE,
+  organization_id     TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+  scenario_id         TEXT,
+  breach_response_cost NUMERIC DEFAULT 0,
+  regulatory_fine     NUMERIC DEFAULT 0,
+  business_interruption NUMERIC DEFAULT 0,
+  fraud_loss          NUMERIC DEFAULT 0,
+  reputational_loss   NUMERIC DEFAULT 0,
+  legal_cost          NUMERIC DEFAULT 0,
+  recovery_cost       NUMERIC DEFAULT 0,
+  total_gross         NUMERIC DEFAULT 0,
+  insurance_coverage  NUMERIC DEFAULT 0,
+  net_exposure        NUMERIC DEFAULT 0,
+  created_at          TIMESTAMPTZ DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+---
+
+## Financial Impact Estimation
+
+When financial impact doesn't exist for a risk, the engine estimates based on:
+1. Base exposure from Risk.financialExposure
+2. Component breakdown adjusted by threat scenario type:
+
+| Threat Type | Adjustments |
+|-------------|-------------|
+| Ransomware | +40% breach response, +35% business interruption |
+| Phishing | +30% fraud loss |
+| Supply Chain | +40% business interruption, +25% regulatory fines |
+| Default | 30% response, 20% fines, 25% interruption, 15% reputation, 10% legal |
+
+---
+
+## Acceptance Criteria
+
+- [x] Given a finding, the engine returns: business process, data type, threat scenario, financial exposure, framework refs, legal obligations, owners, audit evidence requirement
+- [x] Output matches the assessment's example narrative shape
+- [x] Exposed via an authenticated, org-scoped API endpoint
+- [x] Batch correlation endpoint for multiple findings
+- [x] Organization risk summary endpoint
+- [x] Financial impact entity with CFO model (breach costs, fines, net exposure)
+- [x] Auto-estimation of financial breakdown when not explicitly set
+- [x] Proper correlation through all linkage paths (finding->risk->business process, etc.)
+
+---
+
+## M1 Milestone Complete
+
+All three tasks of M1 (Risk Correlation Engine) are now complete:
+
+- [x] **T-010**: Implement core correlation entities (BusinessProcess, Asset, DataObject, ThreatScenario, LegalObligation, ExecutiveOwner)
+- [x] **T-011**: Expand Risk + Finding entities for correlation
+- [x] **T-012**: Build the correlation engine logic
+
+The Risk Correlation Engine is production-ready and provides:
+1. Complete data model with 9 entities
+2. Full CRUD APIs for all entities
+3. Correlation engine that transforms technical findings into executive narratives
+4. Financial impact tracking and estimation
+5. Legal obligation mapping with notification timelines
+6. Executive ownership and accountability tracking
+7. Audit evidence requirements
+
+---
+
+## Next Steps
+
+M1 is complete. Ready to proceed to M2 or merge to main.
+
+Potential M2 milestones could include:
+- Integration with vulnerability scanners
+- Automated risk scoring
+- Executive dashboard
+- Regulatory report generation
+- Vendor risk correlation

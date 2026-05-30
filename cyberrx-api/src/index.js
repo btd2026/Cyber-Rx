@@ -79,6 +79,7 @@ app.use('/api/legal-obligations',  require('./routes/legal-obligations'));
 app.use('/api/executive-owners',   require('./routes/executive-owners'));
 app.use('/api/risks',             require('./routes/risks'));
 app.use('/api/findings',           require('./routes/findings'));
+app.use('/api/correlation',        require('./routes/correlation'));
 
 // 404
 app.use(function(req, res) {
