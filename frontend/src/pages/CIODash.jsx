@@ -142,10 +142,10 @@ const CIODash = (props) => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: '700', margin: 0, color: '#111827' }}>
-              CIO Dashboard
+              Technology Risk Protection Dashboard
             </h1>
             <p style={{ color: '#6b7280', marginTop: '0.5rem', marginBottom: 0 }}>
-              Technology Asset Inventory & Remediation Tracking
+              YOUR part of cyber responsibility — Technology Asset Inventory & Remediation Tracking
             </p>
           </div>
           {goBack && (

@@ -135,10 +135,10 @@ const CLODash = (props) => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: '700', margin: 0, color: '#111827' }}>
-              CLO Dashboard
+              Legal & Regulatory Exposure Dashboard
             </h1>
             <p style={{ color: '#6b7280', marginTop: '0.5rem', marginBottom: 0 }}>
-              Legal Exposure & Regulatory Compliance
+              YOUR part of cyber responsibility — Legal Exposure & Regulatory Compliance
             </p>
           </div>
           {goBack && (

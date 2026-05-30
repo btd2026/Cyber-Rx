@@ -117,26 +117,26 @@ function nameFromEmail(e) {
 // --- NAV ----------------------------------------------------------------------
 var NAV = [
   {id:"home",      label:"Home",                icon:"🏠", mod:""},
-  {id:"setup",     label:"Org Profile & Setup", icon:"🏢", mod:"F02"},
+  {id:"crownjewels", label:"Crown Jewels (Business Processes)", icon:"💎", mod:"F-CJ"},
   {id:"bizlines",  label:"Business Lines",       icon:"🗺", mod:"F01"},
   {id:"appmap",    label:"Application Map",      icon:"🗄", mod:"F01b"},
+  {id:"vendormap", label:"Vendor Ecosystem Map", icon:"🌐", mod:"F03b"},
+  {id:"attackpaths",  label:"Attack Path Analyzer",   icon:"⚔",  mod:"F-TI"},
   {id:"hub",       label:"Command Center",      icon:"*", mod:"F08"},
   {id:"dashboard", label:"CISO Dashboard",      icon:"S", mod:"F08a"},
   {id:"cio",       label:"CIO Dashboard",       icon:"I", mod:"F08e"},
   {id:"clo",       label:"CLO Dashboard",       icon:"L", mod:"F08f"},
-  {id:"audit",      label:"Internal Audit",       icon:"A", mod:"F08g"},
   {id:"cro",       label:"CRO / Audit",         icon:"C", mod:"F08b"},
   {id:"cfo",       label:"CFO Dashboard",       icon:"F", mod:"F08c"},
   {id:"boarddash", label:"Board Dashboard",     icon:"B", mod:"F08d"},
+  {id:"audit",      label:"Internal Audit",       icon:"A", mod:"F08g"},
+  {id:"execution", label:"Execution Layer",     icon:"⚡", mod:"F09"},
+  {id:"setup",     label:"Setup & Frameworks", icon:"🏢", mod:"F02"},
   {id:"controls",  label:"Control Validation",  icon:"✓",  mod:"F04"},
   {id:"assets",    label:"Claim Lifecycle",     icon:"🔗", mod:"F03"},
-  {id:"vendormap", label:"Vendor Ecosystem Map", icon:"🌐", mod:"F03b"},
   {id:"scoring",   label:"Risk Scoring + MITRE",icon:"📈", mod:"F05"},
   {id:"evidence",  label:"Evidence Repository", icon:"📁", mod:"F06"},
   {id:"board",     label:"Board Risk Report",   icon:"📋", mod:"F07"},
-  {id:"execution", label:"Execution Layer",     icon:"⚡", mod:"F09"},
-  {id:"crownjewels", label:"Crown Jewels Discovery", icon:"💎", mod:"F-CJ"},
-  {id:"attackpaths",  label:"Attack Path Analyzer",   icon:"⚔",  mod:"F-TI"},
 ];
 
 // --- Score colours ------------------------------------------------------------
@@ -3243,14 +3243,14 @@ var METRIC_DETAILS = {
   },
   "Security Awareness Training": {
     finding:"F-023", cis:"CIS 14", nist:"AT-2",
-    why:"71% of employees completed the annual security awareness training (KnowBe4). The 29% gap — 412 employees — is concentrated in Claims Operations (38% incomplete) and the Finance department (31% incomplete). Two mandatory trainings have no completion tracking, and the LMS doesn't integrate with HR for automated enrollment on onboarding.",
+    why:"71% of employees completed the continuous security awareness training (KnowBe4). The 29% gap — 412 employees — is concentrated in Claims Operations (38% incomplete) and the Finance department (31% incomplete). Two mandatory trainings have no completion tracking, and the LMS doesn't integrate with HR for automated enrollment on onboarding.",
     evidence:[
       {status:"gap",  text:"Claims Operations: 38% incomplete (156 of 410 employees)"},
       {status:"gap",  text:"Finance Department: 31% incomplete (84 of 271 employees)"},
       {status:"gap",  text:"HIPAA Workforce Security training: no LMS completion tracking"},
       {status:"gap",  text:"New hire training: 14-day delay between start date and LMS enrollment"},
-      {status:"pass", text:"KnowBe4: 71% annual completion (1,024 of 1,441 employees)"},
-      {status:"pass", text:"Phishing simulation: running quarterly via Proofpoint"},
+      {status:"pass", text:"KnowBe4: 71% continuous completion (1,024 of 1,441 employees)"},
+      {status:"pass", text:"Phishing simulation: running real-time via Proofpoint"},
     ],
     impact:"Untrained employees are 3× more likely to fall for phishing (Verizon DBIR). HIPAA §164.308(a)(5) requires security awareness training for ALL workforce members — current gap is a regulatory finding.",
     remediation:{act:"ACT-024", auto:false, steps:["Mandatory training deadline: 30 days for Claims Ops and Finance","Integrate KnowBe4 with Workday HCM for auto-enrollment","Add HIPAA training completion tracking to LMS","Executive escalation for managers with >20% non-completion"]},
@@ -7935,6 +7935,30 @@ function CISODash(props) {
     <div>
       <DashNav current="dashboard" go={go}/>
 
+      {/* CISO Header - Executive Cyber Responsibility */}
+      <div style={{padding:"16px 20px",background:"linear-gradient(135deg,#3B9EFF14,"+C.panel+")",
+        border:"1px solid #3B9EFF30",borderRadius:14,marginBottom:14}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+          <div>
+            <div style={{color:"#3B9EFF",fontSize:10,fontWeight:700,textTransform:"uppercase",
+              letterSpacing:"0.1em",marginBottom:4}}>CHIEF INFORMATION SECURITY OFFICER</div>
+            <h1 style={{color:C.text,fontSize:20,fontWeight:800,margin:"0 0 4px"}}>
+              Control Effectiveness Dashboard
+            </h1>
+            <div style={{color:C.muted,fontSize:11}}>
+              YOUR part of cyber responsibility
+            </div>
+          </div>
+          <div style={{textAlign:"right"}}>
+            <div style={{color:cmmi(overallScore).color,fontSize:28,fontWeight:800,fontFamily:"monospace"}}>
+              {overallScore}
+            </div>
+            <CmmiBadge score={overallScore} size="sm"/>
+            <div style={{color:C.muted,fontSize:9,marginTop:2}}>Overall Security Posture</div>
+          </div>
+        </div>
+      </div>
+
       {/* ── Editable Metrics Panel ── */}
       {showMetricsPanel&&(
         <div style={{background:C.card,border:"1px solid "+C.acc+"30",
@@ -8970,6 +8994,38 @@ function CRODash(props) {
         <DashNav current="cro" go={go}/>
       <BrianaBar pageKey="cro" orgName={props.orgName||""} brianaOn={props.brianaOn!==false} setBrianaOn={props.setBrianaOn||function(){}}/>
 
+        {/* CRO Header - Executive Cyber Responsibility */}
+        <div style={{padding:"16px 20px",background:"linear-gradient(135deg,#A78BFA14,"+C.panel+")",
+          border:"1px solid #A78BFA30",borderRadius:14,marginBottom:14}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+            <div>
+              <div style={{color:"#A78BFA",fontSize:10,fontWeight:700,textTransform:"uppercase",
+                letterSpacing:"0.1em",marginBottom:4}}>CHIEF RISK OFFICER</div>
+              <h1 style={{color:C.text,fontSize:20,fontWeight:800,margin:"0 0 4px"}}>
+                Enterprise Risk Dashboard
+              </h1>
+              <div style={{color:C.muted,fontSize:11}}>
+                YOUR part of cyber responsibility
+              </div>
+            </div>
+            <div style={{textAlign:"right"}}>
+              <div style={{color:"#A78BFA",fontSize:28,fontWeight:800,fontFamily:"monospace"}}>
+                {calculateOverallScore({
+                  mfaPct:props.mfaPct,edrPct:props.edrPct,siemDays:props.siemDays,
+                  phishingPct:props.phishingPct,patchPct:props.patchPct,mttdHrs:props.mttdHrs,
+                  mttrHrs:props.mttrHrs,trainingPct:props.trainingPct,pamPct:props.pamPct
+                })}
+              </div>
+              <CmmiBadge score={calculateOverallScore({
+                mfaPct:props.mfaPct,edrPct:props.edrPct,siemDays:props.siemDays,
+                phishingPct:props.phishingPct,patchPct:props.patchPct,mttdHrs:props.mttdHrs,
+                mttrHrs:props.mttrHrs,trainingPct:props.trainingPct,pamPct:props.pamPct
+              })} size="sm"/>
+              <div style={{color:C.muted,fontSize:9,marginTop:2}}>Overall Risk Posture</div>
+            </div>
+          </div>
+        </div>
+
         {/* Org-specific additional frameworks */}
       {(props.orgType==="BCBS Plan"||props.bcbsAffiliated)&&(
         <div style={{background:"#3B9EFF08",border:"1px solid #3B9EFF25",
@@ -9958,10 +10014,10 @@ function CFODash(props) {
         {/* Page header */}
         <div style={{marginBottom:14}}>
           <h2 style={{color:C.text,fontSize:18,fontWeight:800,margin:"0 0 3px"}}>
-            CFO Cyber Risk Dashboard
+            Financial Impact & Capital Protection Dashboard
           </h2>
           <div style={{color:C.muted,fontSize:12}}>
-            Financial impact, capital adequacy, insurance gaps, and security ROI — board-ready view
+            YOUR part of cyber responsibility — Financial impact, capital adequacy, insurance gaps, and security ROI — board-ready view
           </div>
         </div>
 
@@ -10505,12 +10561,12 @@ function BoardDash(props) {
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
             <div>
               <div style={{color:"#3B9EFF",fontSize:10,fontWeight:700,textTransform:"uppercase",
-                letterSpacing:"0.1em",marginBottom:4}}>BOARD OF DIRECTORS — CYBER RISK BRIEFING</div>
+                letterSpacing:"0.1em",marginBottom:4}}>BOARD OF DIRECTORS</div>
               <h1 style={{color:C.text,fontSize:20,fontWeight:800,margin:"0 0 4px"}}>
-                Cybersecurity Risk Report
+                Strategic Oversight Dashboard
               </h1>
               <div style={{color:C.muted,fontSize:11}}>
-                Prepared for Board Risk Committee · Q1 2026 ·
+                YOUR part of cyber responsibility · Prepared for Board Risk Committee · Q1 2026 ·
                 <span style={{color:"#EF4545",fontWeight:700}}> CONFIDENTIAL</span>
               </div>
             </div>
@@ -11816,8 +11872,8 @@ hipaa: {
         desc:"Risk management plan exists but 4 of 19 identified high risks have been open for more than 90 days without documented remediation plans. SailPoint deprovisioning gap (F-007) and [MAILING_VENDOR] encryption gap (F-003) both remain open beyond their original target remediation dates.",
         evidence:["Risk register shows 4 overdue items (>90 days)","SailPoint auto-deprovisioning not enabled — 14 orphaned accounts","[MAILING_VENDOR] SFTP encryption remediation delayed to Q3 2025"]},
        {ref:"§164.308(a)(2)",     name:"Assigned Security Responsibility",  status:"Compliant", score:90,  finding:null,
-        desc:"Chief Information Security Officer (CISO) formally designated as HIPAA Security Officer. Role documented in organizational charter. CISO reports directly to CEO and presents quarterly to Board Risk Committee. PHO (Privacy & HIPAA Officer) role also established within Legal.",
-        evidence:["CISO appointment letter on file","Organizational chart updated Q4 2024","Board Risk Committee meeting minutes — CISO quarterly attendance confirmed"]},
+        desc:"Chief Information Security Officer (CISO) formally designated as HIPAA Security Officer. Role documented in organizational charter. CISO reports directly to CEO and provides real-time updates to Board Risk Committee. PHO (Privacy & HIPAA Officer) role also established within Legal.",
+        evidence:["CISO appointment letter on file","Organizational chart updated Q4 2024","Board Risk Committee meeting minutes — CISO real-time reporting confirmed"]},
        {ref:"§164.308(a)(3)(i)",  name:"Workforce Authorization",           status:"Gap",       score:63,  finding:"F-007",
         desc:"Access authorization procedures documented in SailPoint IGA. Role-based access controls defined for 847 accounts. Gap: 14 orphaned accounts from terminated employees still have active access. 4 vendor service accounts lack documented business justification for current access levels.",
         evidence:["SailPoint IGA access certification Q4 2024 — completed","14 orphaned terminated-employee accounts identified (F-007)","4 vendor accounts: undocumented access justification"]},
@@ -11938,8 +11994,8 @@ soc2: {
         desc:"Identity proofing: HR verification completed before system account creation. Background check: required for all PHI-access roles. Manager approval: documented in ServiceNow ticket. Training completion verification: required before PHI system access granted.",
         evidence:["New hire process: HR verification 100%","Background checks: all PHI-access roles","Manager approval workflow: ServiceNow — documented","Training prerequisite: verified before PHI access — 100%"]},
        {ref:"CC6.3", name:"Authorized Access — Least Privilege",  status:"Compliant", score:72, finding:null,
-        desc:"Role-based access controls: 127 roles defined in SailPoint. Least privilege principle: documented in access control policy. SOD conflicts: 4 identified in quarterly review — 2 remediated in audit period, 2 accepted with compensating controls. Annual role review: completed Q3 2025.",
-        evidence:["127 RBAC roles defined in SailPoint","SOD conflicts: 4 identified, 2 remediated, 2 accepted","Annual role review: Q3 2025 — completed","Least privilege policy: published and enforced for 76% of roles"]},
+        desc:"Role-based access controls: 127 roles defined in SailPoint. Least privilege principle: documented in access control policy. SOD conflicts: 4 identified in real-time review — 2 remediated in audit period, 2 accepted with compensating controls. Continuous role review: completed Q3 2025.",
+        evidence:["127 RBAC roles defined in SailPoint","SOD conflicts: 4 identified, 2 remediated, 2 accepted","Continuous role review: Q3 2025 — completed","Least privilege policy: published and enforced for 76% of roles"]},
        {ref:"CC6.6", name:"Logical Access Security Measures",     status:"Gap", score:63, finding:"F-021",
         desc:"MFA: 78% coverage. Zero Trust architecture: 35% implementation (ZTNA roadmap in progress). Network segmentation: 3 flat network zones identified without microsegmentation (F-021) — claims processing, member services, and analytics environments share network access. Remote access: all users require VPN + MFA.",
         evidence:["MFA: 78% coverage — Okta dashboard","Zero Trust roadmap: approved Q2 2025 — 35% implemented","Network zones: 3 flat zones identified — F-021 open","VPN + MFA remote access: enforced — 100% compliance"]},
@@ -17519,21 +17575,21 @@ function WelcomePage(props) {
           <div style={{width:6,height:6,borderRadius:"50%",background:C.acc,
             boxShadow:"0 0 8px "+C.acc}}/>
           <span style={{color:C.acc,fontSize:11,fontWeight:700,letterSpacing:"0.09em"}}>
-            HEALTHCARE PAYER CYBER RISK INTELLIGENCE
+            EXECUTIVE CYBER RESPONSIBILITY PLATFORM
           </span>
         </div>
         <h1 style={{color:C.text,fontSize:46,fontWeight:900,lineHeight:1.08,
           margin:"0 0 18px",letterSpacing:"-0.02em"}}>
-          Turn your security data into<br/>
+          Translate cyber technical data into<br/>
           <span style={{background:"linear-gradient(90deg,"+C.acc+",#A78BFA)",
             WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",
-            backgroundClip:"text"}}>decisions that protect your plan.</span>
+            backgroundClip:"text"}}>business impact so executives can protect their organization.</span>
         </h1>
         <p style={{color:C.muted,fontSize:15,lineHeight:1.75,margin:"0 0 28px",
           maxWidth:540,marginLeft:"auto",marginRight:"auto"}}>
-          CyberRx connects your security environment, maps every risk to the business
-          process it threatens, and delivers evidence-based reports your CISO, CFO,
-          CRO, and Board can act on — in one platform.
+          CyberRx translates security findings into executive narratives showing business process impact,
+          financial exposure, regulatory obligations, and ownership — so C-level leaders can make informed
+          decisions about their cyber responsibilities in one platform.
         </p>
       </div>
 
@@ -18982,16 +19038,17 @@ function SetupBot(props) {
               }}
                 style={{background:C.acc,border:'none',color:'#fff',borderRadius:8,
                   padding:'9px 18px',cursor:'pointer',fontSize:12,fontWeight:700,
-                  opacity:function(){
+                  opacity:(function(){
                     var ansVal = answers[curQ.id];
                     var ansArr = Array.isArray(ansVal)?ansVal:[];
                     return ansArr.length===0?0.4:1;
-                  }()}>
-                Continue with {function(){
+                  })()}}
+                >
+                Continue with {(function(){
                   var ansVal = answers[curQ.id];
                   var ansArr = Array.isArray(ansVal)?ansVal:[];
                   return ansArr.length;
-                }()} selected
+                }())}
               </button>
             </div>
           )}
