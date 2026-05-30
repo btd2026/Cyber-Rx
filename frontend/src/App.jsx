@@ -3,6 +3,7 @@ import CorrelatedFinding from "./pages/CorrelatedFinding";
 import CIODash from "./pages/CIODash";
 import CLODash from "./pages/CLODash";
 import AuditDash from "./pages/AuditDash";
+import ConnectorCard from "./components/ConnectorCard";
 
 // --- Theme --------------------------------------------------------------------
 var C = {
@@ -1962,6 +1963,22 @@ var CMS_CONTROLS = [
 // ─── Healthcare Payer Ecosystem — Third-Party Vendor Map ──────────────────────
 // Based on [ORG] operating model: payer sits between members, providers, govt
 // Data flow: Provider → Clearinghouse → [ORG] (NASCO) → Vendors → Member
+
+// ─── Vendor Monitoring Connectors ─────────────────────────────────────────────
+var CONNECTORS = [
+  {id:"securityscorecard",name:"SecurityScorecard",purpose:"External security posture scoring",icon:"🛡️"},
+  {id:"bitsight",name:"BitSight",purpose:"Security ratings and vulnerability intelligence",icon:"📊"},
+  {id:"riskrecon",name:"RiskRecon",purpose:"Attack surface discovery and monitoring",icon:"🔍"},
+  {id:"blackkite",name:"Black Kite",purpose:"Ransomware susceptibility and financial stress",icon:"💸"},
+  {id:"recordedfuture",name:"Recorded Future",purpose:"Threat intelligence and risk indicators",icon:"🎯"},
+  {id:"cyware",name:"Cyware Clusters",purpose:"Threat intelligence exchange",icon:"🔗"},
+  {id:"guidepoint",name:"GuidePoint Intelligence",purpose:"Strategic threat intelligence",icon:"🧠"},
+  {id:"hhsocr",name:"HHS OCR Breach Portal",purpose:"Regulatory breach disclosure monitoring",icon:"⚖️"},
+  {id:"googlealerts",name:"Google Alerts",purpose:"News and incident monitoring",icon:"📰"},
+  {id:"compliance",name:"Compliance Evidence",purpose:"SOC 2 / HITRUST / ISO certificate parsing",icon:"📋"},
+  {id:"questionnaire",name:"Vendor Questionnaire",purpose:"Attestation and self-assessment collection",icon:"✍️"},
+  {id:"fourthparty",name:"Fourth-Party Monitor",purpose:"Supply chain subvendor monitoring",icon:"🔗"}
+];
 
 var VENDOR_TIERS = [
   // ── TIER 1: Claims, Clearinghouses & EDI ─────────────────────────────────
@@ -4332,6 +4349,10 @@ function Setup(props) {
   var _s30=useState(null);     var vendorExpand=_s30[0];var setVendorExpand=_s30[1];
   var _s31=useState("");       var vendorImport=_s31[0];var setVendorImport=_s31[1];
   var _s32=useState(false);    var vendorPulling=_s32[0];var setVendorPulling=_s32[1];
+  // Vendor monitoring state
+  var _s35=useState({});       var vendorConnections=_s35[0];  var setVendorConnections=_s35[1];
+  var _s36=useState(false);     var showConnectorSetup=_s36[0];  var setShowConnectorSetup=_s36[1];
+  var _s37=useState("");       var selectedVendorForConnectors=_s37[0];  var setSelectedVendorForConnectors=_s37[1];
   // Additional org profile fields for complete dashboard data
   var _s33=useState({
     "hipaa_sr":true,"hipaa_pr":true,"hipaa_bn":true,
@@ -5762,6 +5783,129 @@ function Setup(props) {
               </span>
             ):null;
           })}
+        </div>
+      </div>
+    )}
+
+    {/* Connect Monitoring Sources - Only visible when vendors selected */}
+    {Object.keys(vendorSel).filter(function(k){return vendorSel[k];}).length>0&&(
+      <div style={{marginTop:16}}>
+        <div style={{background:C.panel,border:"1px solid "+C.border,borderRadius:10,overflow:"hidden"}}>
+          <div style={{padding:"12px 16px",borderBottom:"1px solid "+C.border,
+            display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div>
+              <div style={{color:C.text,fontSize:13,fontWeight:700}}>
+                Connect Monitoring Sources
+              </div>
+              <div style={{color:C.muted,fontSize:10}}>
+                Connect external monitoring services for continuous vendor risk intelligence
+              </div>
+            </div>
+            <button onClick={function(){setShowConnectorSetup(!showConnectorSetup);}}
+              style={{background:C.acc,border:"none",color:"#fff",
+                borderRadius:6,padding:"4px 12px",cursor:"pointer",
+                fontSize:10,fontWeight:600}}>
+              {showConnectorSetup?"Hide":"Setup"} Connectors
+            </button>
+          </div>
+
+          {showConnectorSetup&&(
+            <div style={{padding:"12px 16px"}}>
+              {/* Vendor selector */}
+              <div style={{marginBottom:12}}>
+                <select
+                  value={selectedVendorForConnectors||""}
+                  onChange={function(e){setSelectedVendorForConnectors(e.target.value);}}
+                  style={{padding:"6px 10px",borderRadius:6,border:"1px solid "+C.border,
+                    background:C.bg,color:C.text,fontSize:11,minWidth:"200px"}}
+                >
+                  <option value="">Select a vendor to configure connectors...</option>
+                  {VENDOR_TIERS.flatMap(function(t){return t.vendors||[];}).filter(function(v){
+                    return vendorSel[v.id];
+                  }).map(function(v){
+                    return <option key={v.id} value={v.id}>{v.name}</option>;
+                  })}
+                </select>
+              </div>
+
+              {/* Connector cards grid */}
+              {selectedVendorForConnectors&&(
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))",gap:10}}>
+                  {CONNECTORS.map(function(connector){
+                    var conn=vendorConnections[selectedVendorForConnectors+"_"+connector.id];
+                    return (
+                      <ConnectorCard
+                        key={connector.id}
+                        connector={connector}
+                        connection={conn}
+                        vendorId={selectedVendorForConnectors}
+                        onConnect={function(){
+                          var key = selectedVendorForConnectors+"_"+connector.id;
+                          setVendorConnections(function(prev){
+                            var newConnections = {...prev};
+                            newConnections[key] = {
+                              status:"connecting",
+                              lastSync:null,
+                              signalCount:0
+                            };
+                            return newConnections;
+                          });
+                          setTimeout(function(){
+                            setVendorConnections(function(prev){
+                              var newConnections = {...prev};
+                              newConnections[key] = {
+                                status:"connected",
+                                lastSync:new Date().toISOString(),
+                                signalCount:Math.floor(Math.random()*10)+1,
+                                riskContribution:Math.random()*0.5
+                              };
+                              return newConnections;
+                            });
+                          }, 1500);
+                        }}
+                        onTest={function(){
+                          alert("Testing connection to "+connector.name+" for vendor "+selectedVendorForConnectors+"...\n\nThis would make a real API call to test the connector connection.");
+                        }}
+                        onSync={function(){
+                          var key = selectedVendorForConnectors+"_"+connector.id;
+                          setVendorConnections(function(prev){
+                            var newConnections = {...prev};
+                            if(newConnections[key]){
+                              newConnections[key] = {
+                                ...newConnections[key],
+                                status:"syncing"
+                              };
+                            }
+                            return newConnections;
+                          });
+                          setTimeout(function(){
+                            setVendorConnections(function(prev){
+                              var newConnections = {...prev};
+                              if(newConnections[key]){
+                                newConnections[key] = {
+                                  ...newConnections[key],
+                                  status:"connected",
+                                  lastSync:new Date().toISOString(),
+                                  signalCount:(newConnections[key].signalCount||0)+Math.floor(Math.random()*5)
+                                };
+                              }
+                              return newConnections;
+                            });
+                          }, 2000);
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+
+              {!selectedVendorForConnectors&&(
+                <div style={{padding:"20px",textAlign:"center",color:C.muted,fontSize:11}}>
+                  Select a vendor above to view and configure monitoring connectors
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     )}
