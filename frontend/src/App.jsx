@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import CorrelatedFinding from "./pages/CorrelatedFinding";
 import CIODash from "./pages/CIODash";
 import CLODash from "./pages/CLODash";
+import AuditDash from "./pages/AuditDash";
 
 // --- Theme --------------------------------------------------------------------
 var C = {
@@ -122,6 +123,7 @@ var NAV = [
   {id:"dashboard", label:"CISO Dashboard",      icon:"S", mod:"F08a"},
   {id:"cio",       label:"CIO Dashboard",       icon:"I", mod:"F08e"},
   {id:"clo",       label:"CLO Dashboard",       icon:"L", mod:"F08f"},
+  {id:"audit",      label:"Internal Audit",       icon:"A", mod:"F08g"},
   {id:"cro",       label:"CRO / Audit",         icon:"C", mod:"F08b"},
   {id:"cfo",       label:"CFO Dashboard",       icon:"F", mod:"F08c"},
   {id:"boarddash", label:"Board Dashboard",     icon:"B", mod:"F08d"},
@@ -24025,6 +24027,8 @@ function CyberRxApp() {
     // M2: CIO and CLO Dashboards
     if (page==="cio")        { return React.createElement(CIODash, sharedProps); }
     if (page==="clo")        { return React.createElement(CLODash, sharedProps); }
+    // M3: Internal Audit Dashboard
+    if (page==="audit")       { return React.createElement(AuditDash, sharedProps); }
     if (page==="correlated-finding") {
       return React.createElement(CorrelatedFinding, {
         findingId: correlatedFindingId,
