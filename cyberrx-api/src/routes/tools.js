@@ -18,7 +18,8 @@ const METRIC_KEYS = {
 
 router.post('/:tool/sync', authenticateJWT, async (req, res) => {
   const { tool } = req.params;
-  const orgId = req.headers['x-org-id'] || 'demo';
+  // Use orgId from JWT instead of client-supplied header
+  const orgId = req.orgId || 'demo';
   const metricKey = METRIC_KEYS[tool];
 
   const demoResp = (reason) => ({

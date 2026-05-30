@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../utils/db');
-const { authenticateJWT } = require('../middleware/auth');
+const { authenticateJWT, requireOrgAccess } = require('../middleware/auth');
 
 // Helper: Generate org ID from org name
 function generateOrgId(name) {
@@ -19,7 +19,7 @@ function sanitize(str) {
   return str.replace(/[<>]/g, '');
 }
 
-// POST /api/orgs - Create/save org profile
+// POST /api/orgs - Create/save org profile (bound to authenticated org)
 router.post('/', authenticateJWT, async (req, res) => {
   try {
     const { orgName, orgType, ...rest } = req.body;
@@ -32,7 +32,15 @@ router.post('/', authenticateJWT, async (req, res) => {
       return res.status(400).json({ error: 'Organization type is required' });
     }
 
-    const orgId = generateOrgId(orgName);
+    // Use orgId from JWT - user can only create org for their authenticated identity
+    const orgId = req.orgId;
+
+    if (!orgId) {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Organization identity not found in authentication token'
+      });
+    }
 
     // Check if org already exists
     const existing = await db.query(
@@ -78,8 +86,8 @@ router.post('/', authenticateJWT, async (req, res) => {
   }
 });
 
-// PUT /api/orgs/:id - Update existing org
-router.put('/:id', authenticateJWT, async (req, res) => {
+// PUT /api/orgs/:id - Update existing org (org-isolated)
+router.put('/:id', authenticateJWT, requireOrgAccess, async (req, res) => {
   try {
     const { id } = req.params;
     const { orgName, orgType, ...rest } = req.body;
@@ -157,8 +165,8 @@ router.put('/:id', authenticateJWT, async (req, res) => {
   }
 });
 
-// GET /api/orgs/:id - Retrieve org data
-router.get('/:id', authenticateJWT, async (req, res) => {
+// GET /api/orgs/:id - Retrieve org data (org-isolated)
+router.get('/:id', authenticateJWT, requireOrgAccess, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -191,8 +199,8 @@ router.get('/:id', authenticateJWT, async (req, res) => {
   }
 });
 
-// GET /api/orgs/:id/exists - Check if org exists
-router.get('/:id/exists', authenticateJWT, async (req, res) => {
+// GET /api/orgs/:id/exists - Check if org exists (org-isolated)
+router.get('/:id/exists', authenticateJWT, requireOrgAccess, async (req, res) => {
   try {
     const { id } = req.params;
 

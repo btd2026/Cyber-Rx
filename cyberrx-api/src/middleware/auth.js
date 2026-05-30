@@ -120,4 +120,43 @@ function optionalJWT(req, res, next) {
   next();
 }
 
-module.exports = { authenticateJWT, optionalJWT };
+/**
+ * Organization Authorization Middleware
+ *
+ * Ensures the authenticated user can only access their own organization's data.
+ * Compares req.orgId (from JWT) against the requested orgId parameter.
+ * Returns 403 Forbidden if attempting to access another org's data.
+ *
+ * Usage: Apply after authenticateJWT on routes with :id parameters
+ * Expected: req.orgId from JWT middleware, req.params.id from route
+ */
+function requireOrgAccess(req, res, next) {
+  const userOrgId = req.orgId;
+  const requestedOrgId = req.params.id || req.body.orgId;
+
+  if (!userOrgId) {
+    return res.status(401).json({
+      error: 'Unauthorized',
+      message: 'Organization identity not found in authentication token'
+    });
+  }
+
+  if (requestedOrgId && requestedOrgId !== userOrgId) {
+    console.warn(JSON.stringify({
+      ts: new Date().toISOString(),
+      event: 'org_access_blocked',
+      userId: req.userId,
+      userOrgId,
+      requestedOrgId,
+      path: req.path
+    }));
+    return res.status(403).json({
+      error: 'Forbidden',
+      message: 'You do not have permission to access this organization\'s data'
+    });
+  }
+
+  next();
+}
+
+module.exports = { authenticateJWT, optionalJWT, requireOrgAccess };
