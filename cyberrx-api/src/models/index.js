@@ -15,6 +15,9 @@ const ExecutiveOwner = require('./ExecutiveOwner');
 const Risk = require('./Risk');
 const Finding = require('./Finding');
 const FinancialImpact = require('./FinancialImpact');
+const Control = require('./Control');
+const RemediationTask = require('./RemediationTask');
+const Evidence = require('./Evidence');
 
 module.exports = {
   BusinessProcess,
@@ -25,5 +28,8 @@ module.exports = {
   ExecutiveOwner,
   Risk,
   Finding,
-  FinancialImpact
+  FinancialImpact,
+  Control,
+  RemediationTask,
+  Evidence
 };

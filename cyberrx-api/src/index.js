@@ -86,6 +86,11 @@ app.use('/api/risks',             require('./routes/risks'));
 app.use('/api/findings',           require('./routes/findings'));
 app.use('/api/correlation',        require('./routes/correlation'));
 
+// Core Workflow Entities: Controls, Remediation Tasks, Evidence
+app.use('/api/controls',           require('./routes/controls'));
+app.use('/api/tasks',              require('./routes/tasks'));
+app.use('/api/evidence',           require('./routes/evidence'));
+
 // Seed management (admin routes - protect in production)
 app.use('/api/seeds',             require('./routes/seeds'));
 

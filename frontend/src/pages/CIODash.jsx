@@ -54,18 +54,25 @@ const CIODash = (props) => {
           setAssets(assetsData.data || assetsData || []);
         }
 
-        // Fetch risks for remediation backlog
-        const risksRes = await fetch(`${apiUrl}/api/risks?status=open&org_id=${organizationId}`, {
+        // Fetch tasks for remediation backlog (NEW - uses Task entity)
+        const tasksRes = await fetch(`${apiUrl}/api/tasks?org_id=${organizationId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'X-Org-Id': organizationId
           }
         });
-        if (risksRes.ok) {
-          const risksData = await risksRes.json();
-          const backlog = (risksData.data || risksData || [])
-            .filter(r => r.cost_to_remediate && r.cost_to_remediate > 0)
-            .sort((a, b) => (b.financial_exposure || 0) - (a.financial_exposure || 0));
+        if (tasksRes.ok) {
+          const tasksData = await tasksRes.json();
+          const backlog = (tasksData.data || tasksData || [])
+            .filter(t => t.status !== 'Completed' && t.status !== 'Verified' && t.status !== 'Cancelled')
+            .sort((a, b) => {
+              // Sort by priority first, then target date
+              const priorityOrder = { Critical: 1, High: 2, Medium: 3, Low: 4 };
+              const aPriority = priorityOrder[a.priority] || 3;
+              const bPriority = priorityOrder[b.priority] || 3;
+              if (aPriority !== bPriority) return aPriority - bPriority;
+              return new Date(a.target_date || '9999-12-31') - new Date(b.target_date || '9999-12-31');
+            });
           setRemediationBacklog(backlog);
         }
 
@@ -353,11 +360,31 @@ const CIODash = (props) => {
       }}>
         <div style={{
           padding: '1rem',
-          borderBottom: '1px solid #e5e7eb'
+          borderBottom: '1px solid #e5e7eb',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
         }}>
           <h2 style={{ fontSize: '1rem', fontWeight: '600', margin: 0 }}>
             Remediation Backlog
           </h2>
+          <button
+            onClick={() => {
+              // Navigate to execution page
+              if (props.go) props.go('execution');
+            }}
+            style={{
+              padding: '0.375rem 0.75rem',
+              backgroundColor: '#2563eb',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '0.75rem'
+            }}
+          >
+            View All Tasks
+          </button>
         </div>
         <div style={{ padding: '1rem' }}>
           {remediationBacklog.length === 0 ? (
@@ -366,36 +393,62 @@ const CIODash = (props) => {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {remediationBacklog.map((risk) => (
-                <div key={risk.id} style={{
+              {remediationBacklog.map((task) => (
+                <div key={task.id} style={{
                   padding: '0.75rem',
                   border: '1px solid #e5e7eb',
                   borderRadius: '6px',
                   display: 'flex',
                   justifyContent: 'space-between',
-                  alignItems: 'center'
+                  alignItems: 'center',
+                  borderLeft: task.priority === 'Critical' ? '4px solid #dc2626' :
+                               task.priority === 'High' ? '4px solid #ea580c' :
+                               task.priority === 'Medium' ? '4px solid #ca8a04' : '4px solid #16a34a'
                 }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: '500', color: '#111827', fontSize: '0.875rem' }}>
-                      {risk.title}
+                      {task.title}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
-                      Owner: {risk.remediation_owner || risk.executive_owner || 'Unassigned'}
+                      Assigned: {task.assigned_to || task.assigned_team || 'Unassigned'}
+                      {task.target_date && ` • Due: ${new Date(task.target_date).toLocaleDateString()}`}
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Cost to Fix</div>
-                      <div style={{ fontWeight: '600', color: '#374151' }}>
-                        ${(risk.cost_to_remediate || 0).toLocaleString()}
-                      </div>
+                    <div style={{
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '4px',
+                      fontSize: '0.7rem',
+                      fontWeight: '600',
+                      backgroundColor: task.priority === 'Critical' ? '#dc262615' :
+                                     task.priority === 'High' ? '#ea580c15' :
+                                     task.priority === 'Medium' ? '#ca8a0415' : '#16a34a15',
+                      color: task.priority === 'Critical' ? '#dc2626' :
+                             task.priority === 'High' ? '#ea580c' :
+                             task.priority === 'Medium' ? '#ca8a04' : '#16a34a'
+                    }}>
+                      {task.priority}
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Financial Exposure</div>
-                      <div style={{ fontWeight: '600', color: '#dc2626' }}>
-                        ${(risk.financial_exposure || 0).toLocaleString()}
-                      </div>
+                    <div style={{
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '4px',
+                      fontSize: '0.7rem',
+                      fontWeight: '600',
+                      backgroundColor: task.status === 'Pending' ? '#dc262615' :
+                                     task.status === 'In Progress' ? '#ca8a0415' : '#16a34a15',
+                      color: task.status === 'Pending' ? '#dc2626' :
+                             task.status === 'In Progress' ? '#ca8a04' : '#16a34a'
+                    }}>
+                      {task.status}
                     </div>
+                    {task.estimated_cost && (
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Est. Cost</div>
+                        <div style={{ fontWeight: '600', color: '#374151' }}>
+                          ${task.estimated_cost.toLocaleString()}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

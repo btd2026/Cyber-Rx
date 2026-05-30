@@ -19,7 +19,9 @@ const AuditDash = (props) => {
   const [loading, setLoading] = useState(true);
   const [controls, setControls] = useState([]);
   const [findings, setFindings] = useState([]);
-  const [tests, setTests] = useState([]);
+  const [evidence, setEvidence] = useState([]);
+  const [controlStats, setControlStats] = useState(null);
+  const [evidenceStats, setEvidenceStats] = useState(null);
   const [selectedControl, setSelectedControl] = useState(null);
   const [showRepeatFindings, setShowRepeatFindings] = useState(false);
 
@@ -31,8 +33,8 @@ const AuditDash = (props) => {
         const organizationId = orgId || localStorage.getItem('orgId');
         const apiUrl = api_url || import.meta.env?.VITE_API_URL || 'https://cyberrx-api.onrender.com';
 
-        // Fetch risks (controls)
-        const controlsRes = await fetch(`${apiUrl}/api/risks?org_id=${organizationId}`, {
+        // Fetch controls (NEW - uses Control entity)
+        const controlsRes = await fetch(`${apiUrl}/api/controls?org_id=${organizationId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'X-Org-Id': organizationId
@@ -41,6 +43,30 @@ const AuditDash = (props) => {
         if (controlsRes.ok) {
           const controlsData = await controlsRes.json();
           setControls(controlsData.data || controlsData || []);
+        }
+
+        // Fetch control statistics
+        const statsRes = await fetch(`${apiUrl}/api/controls/statistics?org_id=${organizationId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'X-Org-Id': organizationId
+          }
+        });
+        if (statsRes.ok) {
+          const statsData = await statsRes.json();
+          setControlStats(statsData.data || statsData || {});
+        }
+
+        // Fetch evidence statistics (NEW)
+        const evidenceStatsRes = await fetch(`${apiUrl}/api/evidence/statistics?org_id=${organizationId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'X-Org-Id': organizationId
+          }
+        });
+        if (evidenceStatsRes.ok) {
+          const evidenceStatsData = await evidenceStatsRes.json();
+          setEvidenceStats(evidenceStatsData.data || evidenceStatsData || {});
         }
 
         // Fetch findings
@@ -135,6 +161,238 @@ const AuditDash = (props) => {
           )}
         </div>
       </div>
+
+      {/* KPI Strip */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: '1rem',
+        marginBottom: '2rem'
+      }}>
+        <div style={{
+          backgroundColor: '#ffffff',
+          padding: '1rem',
+          borderRadius: '8px',
+          border: '1px solid #e5e7eb'
+        }}>
+          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+            Total Findings
+          </div>
+          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111827' }}>
+            {findings.length}
+          </div>
+        </div>
+        <div style={{
+          backgroundColor: '#ffffff',
+          padding: '1rem',
+          borderRadius: '8px',
+          border: '1px solid #e5e7eb'
+        }}>
+          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+            Critical Findings
+          </div>
+          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#dc2626' }}>
+            {criticalFindings.length}
+          </div>
+        </div>
+        <div style={{
+          backgroundColor: '#ffffff',
+          padding: '1rem',
+          borderRadius: '8px',
+          border: '1px solid #e5e7eb'
+        }}>
+          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+            Repeat Findings
+          </div>
+          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#ea580c' }}>
+            {repeatFindings.length}
+          </div>
+        </div>
+        <div style={{
+          backgroundColor: '#ffffff',
+          padding: '1rem',
+          borderRadius: '8px',
+          border: '1px solid #e5e7eb'
+        }}>
+          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+            Controls Tracked
+          </div>
+          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111827' }}>
+            {controlStats?.total || controls.length || 0}
+          </div>
+        </div>
+      </div>
+
+      {/* Control Effectiveness Summary */}
+      {controlStats && (
+        <div style={{
+          backgroundColor: '#ffffff',
+          borderRadius: '8px',
+          marginBottom: '2rem',
+          border: '1px solid #e5e7eb'
+        }}>
+          <div style={{
+            padding: '1rem',
+            borderBottom: '1px solid #e5e7eb'
+          }}>
+            <h2 style={{ fontSize: '1rem', fontWeight: '600', margin: 0 }}>
+              Control Effectiveness Summary
+            </h2>
+          </div>
+          <div style={{ padding: '1rem' }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '1rem'
+            }}>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Implemented</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#16a34a' }}>
+                  {controlStats.implemented || 0}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Partial</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#ca8a04' }}>
+                  {controlStats.partial || 0}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Critical Tier</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#dc2626' }}>
+                  {controlStats.criticalCount || 0}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Avg Effectiveness</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#2563eb' }}>
+                  {controlStats.avgEffectiveness ? Math.round(controlStats.avgEffectiveness) : 0}%
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Evidence Summary */}
+      {evidenceStats && (
+        <div style={{
+          backgroundColor: '#ffffff',
+          borderRadius: '8px',
+          marginBottom: '2rem',
+          border: '1px solid #e5e7eb'
+        }}>
+          <div style={{
+            padding: '1rem',
+            borderBottom: '1px solid #e5e7eb'
+          }}>
+            <h2 style={{ fontSize: '1rem', fontWeight: '600', margin: 0 }}>
+              Evidence Repository
+            </h2>
+          </div>
+          <div style={{ padding: '1rem' }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '1rem'
+            }}>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Total Evidence</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#111827' }}>
+                  {evidenceStats.total || 0}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Valid</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#16a34a' }}>
+                  {evidenceStats.valid || 0}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Expired</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#dc2626' }}>
+                  {evidenceStats.expired || 0}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>With Files</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#2563eb' }}>
+                  {evidenceStats.withFiles || 0}
+                </div>
+              </div>
+            </div>
+            {evidenceStats.expired > 0 && (
+              <div style={{
+                marginTop: '1rem',
+                padding: '0.75rem',
+                backgroundColor: '#dc262610',
+                border: '1px solid #dc262620',
+                borderRadius: '6px',
+                fontSize: '0.875rem',
+                color: '#dc2626'
+              }}>
+                ⚠️ {evidenceStats.expired} evidence items have expired and need refresh
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Low Effectiveness Controls */}
+      {controls.filter(c => c.effectiveness_score !== null && c.effectiveness_score < 60).length > 0 && (
+        <div style={{
+          backgroundColor: '#ffffff',
+          borderRadius: '8px',
+          marginBottom: '2rem',
+          border: '1px solid #e5e7eb'
+        }}>
+          <div style={{
+            padding: '1rem',
+            borderBottom: '1px solid #e5e7eb'
+          }}>
+            <h2 style={{ fontSize: '1rem', fontWeight: '600', margin: 0 }}>
+              Controls Requiring Attention (Effectiveness < 60%)
+            </h2>
+          </div>
+          <div style={{ padding: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {controls
+                .filter(c => c.effectiveness_score !== null && c.effectiveness_score < 60)
+                .sort((a, b) => a.effectiveness_score - b.effectiveness_score)
+                .map(control => (
+                  <div key={control.id} style={{
+                    padding: '0.75rem',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '6px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    borderLeft: `4px solid ${control.effectiveness_score < 40 ? '#dc2626' : '#ca8a04'}`
+                  }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: '500', color: '#111827', fontSize: '0.875rem' }}>
+                        {control.title}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                        {control.control_id} • {control.framework} • {control.tier}
+                      </div>
+                    </div>
+                    <div style={{
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '4px',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      backgroundColor: '#dc262615',
+                      color: '#dc2626'
+                    }}>
+                      {control.effectiveness_score}%
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* KPI Strip */}
       <div style={{

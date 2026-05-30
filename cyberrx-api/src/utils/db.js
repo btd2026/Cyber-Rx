@@ -293,6 +293,107 @@ async function init() {
 
       CREATE INDEX IF NOT EXISTS financial_impacts_org ON financial_impacts(organization_id);
       CREATE INDEX IF NOT EXISTS financial_impacts_risk ON financial_impacts(risk_id);
+
+      -- Core Workflow Entities: Controls, Remediation Tasks, Evidence
+
+      CREATE TABLE IF NOT EXISTS controls (
+        id                    TEXT PRIMARY KEY,
+        organization_id       TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        control_id            TEXT NOT NULL,
+        framework             TEXT NOT NULL CHECK (framework IN ('NIST-CSF', 'CIS-v8', 'HIPAA', 'SOC2', 'ISO-27001', 'Other')),
+        title                 TEXT NOT NULL,
+        description           TEXT,
+        implementation_status TEXT NOT NULL CHECK (implementation_status IN ('Implemented', 'Partial', 'Planned', 'None')),
+        effectiveness_score   INTEGER CHECK (effectiveness_score BETWEEN 0 AND 100),
+        owner                 TEXT,
+        owner_department      TEXT,
+        related_risk_ids      JSONB DEFAULT '[]',
+        related_finding_ids   JSONB DEFAULT '[]',
+        last_tested_date      DATE,
+        next_review_date      DATE,
+        test_evidence         JSONB DEFAULT '[]',
+        control_type          TEXT CHECK (control_type IN ('Preventive', 'Detective', 'Corrective', 'Compensating')),
+        tier                  TEXT CHECK (tier IN ('Tier 1', 'Tier 2', 'Tier 3')),
+        created_at            TIMESTAMPTZ DEFAULT NOW(),
+        updated_at            TIMESTAMPTZ DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS remediation_tasks (
+        id                    TEXT PRIMARY KEY,
+        organization_id       TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        title                 TEXT NOT NULL,
+        description           TEXT,
+        source_finding_id     TEXT REFERENCES findings(id) ON DELETE SET NULL,
+        source_risk_id        TEXT REFERENCES risks(id) ON DELETE SET NULL,
+        related_control_id    TEXT REFERENCES controls(id) ON DELETE SET NULL,
+        assigned_to           TEXT,
+        assigned_team         TEXT,
+        priority              TEXT CHECK (priority IN ('Critical', 'High', 'Medium', 'Low')),
+        status                TEXT NOT NULL CHECK (status IN ('Pending', 'In Progress', 'Completed', 'Verified', 'Cancelled')),
+        target_date           DATE,
+        completed_date        DATE,
+        estimated_cost        NUMERIC(12,2),
+        actual_cost           NUMERIC(12,2),
+        evidence_attachments  JSONB DEFAULT '[]',
+        verification_status   TEXT,
+        blocker_reason        TEXT,
+        created_at            TIMESTAMPTZ DEFAULT NOW(),
+        updated_at            TIMESTAMPTZ DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS evidence (
+        id                    TEXT PRIMARY KEY,
+        organization_id       TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        title                 TEXT NOT NULL,
+        description           TEXT,
+        evidence_type         TEXT CHECK (evidence_type IN ('Document', 'Screenshot', 'Config', 'Log', 'Interview', 'Test')),
+        file_url             TEXT,
+        file_name             TEXT,
+        file_size             INTEGER,
+        upload_date           TIMESTAMPTZ DEFAULT NOW(),
+        uploaded_by           TEXT,
+        related_finding_id    TEXT REFERENCES findings(id) ON DELETE SET NULL,
+        related_control_id    TEXT REFERENCES controls(id) ON DELETE SET NULL,
+        related_task_id       TEXT REFERENCES remediation_tasks(id) ON DELETE SET NULL,
+        evidence_date         DATE,
+        validity_start        DATE,
+        validity_end          DATE,
+        status                TEXT CHECK (status IN ('Valid', 'Expired', 'Rejected', 'Pending')),
+        review_date           DATE,
+        reviewed_by           TEXT,
+        created_at            TIMESTAMPTZ DEFAULT NOW()
+      );
+
+      -- Indexes for Controls
+
+      CREATE INDEX IF NOT EXISTS controls_org ON controls(organization_id);
+      CREATE INDEX IF NOT EXISTS controls_framework ON controls(framework);
+      CREATE INDEX IF NOT EXISTS controls_effectiveness ON controls(effectiveness_score);
+      CREATE INDEX IF NOT EXISTS controls_status ON controls(implementation_status);
+      CREATE INDEX IF NOT EXISTS controls_tier ON controls(tier);
+      CREATE INDEX IF NOT EXISTS controls_risk_ids ON controls USING GIN (related_risk_ids);
+      CREATE INDEX IF NOT EXISTS controls_finding_ids ON controls USING GIN (related_finding_ids);
+
+      -- Indexes for Remediation Tasks
+
+      CREATE INDEX IF NOT EXISTS tasks_org ON remediation_tasks(organization_id);
+      CREATE INDEX IF NOT EXISTS tasks_status ON remediation_tasks(status);
+      CREATE INDEX IF NOT EXISTS tasks_assigned_to ON remediation_tasks(assigned_to);
+      CREATE INDEX IF NOT EXISTS tasks_priority ON remediation_tasks(priority);
+      CREATE INDEX IF NOT EXISTS tasks_target_date ON remediation_tasks(target_date);
+      CREATE INDEX IF NOT EXISTS tasks_finding ON remediation_tasks(source_finding_id);
+      CREATE INDEX IF NOT EXISTS tasks_risk ON remediation_tasks(source_risk_id);
+      CREATE INDEX IF NOT EXISTS tasks_control ON remediation_tasks(related_control_id);
+
+      -- Indexes for Evidence
+
+      CREATE INDEX IF NOT EXISTS evidence_org ON evidence(organization_id);
+      CREATE INDEX IF NOT EXISTS evidence_status ON evidence(status);
+      CREATE INDEX IF NOT EXISTS evidence_type ON evidence(evidence_type);
+      CREATE INDEX IF NOT EXISTS evidence_control ON evidence(related_control_id);
+      CREATE INDEX IF NOT EXISTS evidence_finding ON evidence(related_finding_id);
+      CREATE INDEX IF NOT EXISTS evidence_task ON evidence(related_task_id);
+      CREATE INDEX IF NOT EXISTS evidence_validity_end ON evidence(validity_end);
     `);
     console.log('Database schema initialized');
   } catch (err) {
