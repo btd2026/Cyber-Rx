@@ -152,11 +152,63 @@ function mkT(b) {
   });
 }
 // ─── Org Templates — Multi-payer configurable architecture ─────────────────
-var ORG_CONFIG = { type:"generic", linesOfBiz:[], bcbsAffiliated:false, hasFEP:false };
+var ORG_CONFIG = { type:"generic" };
 
 function setOrgConfig(cfg) {
   Object.assign(ORG_CONFIG, cfg);
 }
+
+// ── Crown Jewel Business Processes (shared across all org types) ─────────────
+var CROWN_JEWEL_PROCS = [
+  // Tier 1 – Primary Crown Jewels (Compromise materially impacts enterprise survival)
+  {type:"tier", id:"tier1", name:"Tier 1 – Primary Crown Jewels", description:"Compromise materially impacts enterprise survival"},
+  {id:"claims",        name:"Claims Adjudication & Payment",              icon:"⚕",  score:64, crits:2, highs:1, trend:mkT(64),
+   subcomponents:["Medical claims","Dental claims","Pharmacy claims","Provider payment"],
+   why:["Revenue engine","PHI-rich","Financial loss","Regulatory impact","Ransomware blast radius"]},
+  {id:"enroll",        name:"Membership & Enrollment",                    icon:"👤", score:74, crits:0, highs:2, trend:mkT(74),
+   subcomponents:["Eligibility","Enrollment","Member onboarding","Premium billing"],
+   why:["Revenue continuity","CMS obligations","Identity-rich"]},
+  {id:"provider_net",  name:"Provider Network & Contracting Operations", icon:"🏥", score:83, crits:0, highs:1, trend:mkT(83),
+   subcomponents:["Provider onboarding","Credentialing","Contract management","Provider servicing"],
+   why:["Provider disruption = claims disruption"]},
+  {id:"care_mgmt",     name:"Care Management / Medical Management",      icon:"💊", score:71, crits:1, highs:2, trend:mkT(71),
+   subcomponents:["Case management","Utilization management","Clinical authorizations"],
+   why:["Clinical sensitivity","High-risk PHI"]},
+  {id:"fwa",           name:"Payment Integrity / Fraud, Waste & Abuse",   icon:"🔍", score:69, crits:1, highs:2, trend:mkT(69),
+   subcomponents:["Fraud analytics","Payment review","Overpayment detection"],
+   why:["High financial risk"]},
+  {id:"member_svc",    name:"Member Services / Contact Center",           icon:"📞", score:66, crits:1, highs:2, trend:mkT(66),
+   subcomponents:["Member portal","Service center","Identity verification"],
+   why:["Major fraud + reputation vector"]},
+  {id:"actuarial",     name:"Actuarial / Underwriting & Financial Analytics", icon:"📊", score:82, crits:0, highs:1, trend:mkT(82),
+   subcomponents:["Pricing","Reserving (IBNR)","Medical forecasting"],
+   why:["Financial reporting impact","Strategic sensitivity"]},
+  // Tier 2 – Strategic Crown Jewels (Material disruption but less existential)
+  {type:"tier", id:"tier2", name:"Tier 2 – Strategic Crown Jewels", description:"Material disruption but less existential"},
+  {type:"section", id:"govt_admin_section", name:"Government Programs Administration", icon:"🏛",
+   note:"These are business lines, not processes. Modeled as criticality multipliers for claims and other processes."},
+  {id:"govt_ma",       name:"Medicare Advantage",                         icon:"🏛",  score:71, crits:1, highs:2, trend:mkT(71), parent:"govt_admin_section",
+   subcomponents:["CMS compliance","Star ratings","Risk adjustment"],
+   why:["Claims criticality multiplier","CMS scrutiny + penalties"]},
+  {id:"govt_fep",      name:"Federal Employee Program (FEP)",             icon:"🦅",  score:78, crits:0, highs:1, trend:mkT(78), parent:"govt_admin_section",
+   subcomponents:["OPM requirements","FEHB compliance"],
+   why:["Claims criticality multiplier","Federal standards"]},
+  {id:"govt_mcaid",    name:"Medicaid",                                   icon:"🏛",  score:71, crits:1, highs:2, trend:mkT(71), parent:"govt_admin_section",
+   subcomponents:["State compliance","CMS reporting"],
+   why:["Claims criticality multiplier","State + Federal scrutiny"]},
+  {id:"pharmacy_pbm",  name:"Pharmacy / PBM Integrations",                icon:"💊", score:71, crits:1, highs:2, trend:mkT(71),
+   subcomponents:["Pharmacy benefits","PBM data exchange","Formulary management"],
+   why:["High claims integration","Specialty pharmacy risk"]},
+  {id:"compliance",    name:"Compliance & Regulatory Reporting",         icon:"⚖",  score:85, crits:0, highs:1, trend:mkT(85),
+   subcomponents:["CMS reporting","HHS OCR","State insurance","BCBSA requirements"],
+   why:["Multi-jurisdictional","High penalty exposure"]},
+  {id:"identity",      name:"Identity & Access Infrastructure",           icon:"🔐", score:61, crits:2, highs:4, trend:mkT(61),
+   subcomponents:["MFA","IAM","Privileged access","Identity proofing"],
+   why:["Gateway to all systems","Blast radius amplification"]},
+  {id:"data_platform", name:"Data & Analytics Platforms",                  icon:"📊", score:82, crits:0, highs:1, trend:mkT(82),
+   subcomponents:["Data warehouse","Analytics platforms","BI tools","ML models"],
+   why:["PHI aggregation","Strategic decision support"]},
+];
 
 var ORG_TEMPLATES = {
 
@@ -188,56 +240,7 @@ var ORG_TEMPLATES = {
        desc:"Health and medical management, care navigation, and provider operations",
        streams:["Care Navigation","Health & Medical Management (HMM)","Provider Operations & Engagement"]},
     ],
-    procs:[
-      // Tier 1 – Primary Crown Jewels (Compromise materially impacts enterprise survival)
-      {type:"tier", id:"tier1", name:"Tier 1 – Primary Crown Jewels", description:"Compromise materially impacts enterprise survival"},
-      {id:"claims",        name:"Claims Adjudication & Payment",              icon:"⚕",  score:64, crits:2, highs:1, trend:mkT(64), bizLine:"operations",
-       subcomponents:["Medical claims","Dental claims","Pharmacy claims","Provider payment"],
-       why:["Revenue engine","PHI-rich","Financial loss","Regulatory impact","Ransomware blast radius"]},
-      {id:"enroll",        name:"Membership & Enrollment",                    icon:"👤", score:74, crits:0, highs:2, trend:mkT(74), bizLine:"operations",
-       subcomponents:["Eligibility","Enrollment","Member onboarding","Premium billing"],
-       why:["Revenue continuity","CMS obligations","Identity-rich"]},
-      {id:"provider_net",  name:"Provider Network & Contracting Operations", icon:"🏥", score:83, crits:0, highs:1, trend:mkT(83), bizLine:"hmm",
-       subcomponents:["Provider onboarding","Credentialing","Contract management","Provider servicing"],
-       why:["Provider disruption = claims disruption"]},
-      {id:"care_mgmt",     name:"Care Management / Medical Management",      icon:"💊", score:71, crits:1, highs:2, trend:mkT(71), bizLine:"hmm",
-       subcomponents:["Case management","Utilization management","Clinical authorizations"],
-       why:["Clinical sensitivity","High-risk PHI"]},
-      {id:"fwa",           name:"Payment Integrity / Fraud, Waste & Abuse",   icon:"🔍", score:69, crits:1, highs:2, trend:mkT(69), bizLine:"govt",
-       subcomponents:["Fraud analytics","Payment review","Overpayment detection"],
-       why:["High financial risk"]},
-      {id:"member_svc",    name:"Member Services / Contact Center",           icon:"📞", score:66, crits:1, highs:2, trend:mkT(66), bizLine:"service",
-       subcomponents:["Member portal","Service center","Identity verification"],
-       why:["Major fraud + reputation vector"]},
-      {id:"actuarial",     name:"Actuarial / Underwriting & Financial Analytics", icon:"📊", score:82, crits:0, highs:1, trend:mkT(82), bizLine:"data",
-       subcomponents:["Pricing","Reserving (IBNR)","Medical forecasting"],
-       why:["Financial reporting impact","Strategic sensitivity"]},
-      // Tier 2 – Strategic Crown Jewels (Material disruption but less existential)
-      {type:"tier", id:"tier2", name:"Tier 2 – Strategic Crown Jewels", description:"Material disruption but less existential"},
-      {id:"govt_admin",    name:"Government Programs Administration",       icon:"🏛",  type:"section",
-       note:"These are business lines, not processes. Modeled as criticality multipliers for claims and other processes."},
-      {id:"govt_ma",       name:"Medicare Advantage",                         icon:"🏛",  score:71, crits:1, highs:2, trend:mkT(71), bizLine:"govt", parent:"govt_admin",
-       subcomponents:["CMS compliance","Star ratings","Risk adjustment"],
-       why:["Claims criticality multiplier","CMS scrutiny + penalties"]},
-      {id:"govt_fep",      name:"Federal Employee Program (FEP)",             icon:"🦅",  score:78, crits:0, highs:1, trend:mkT(78), bizLine:"govt", parent:"govt_admin",
-       subcomponents:["OPM requirements","FEHB compliance"],
-       why:["Claims criticality multiplier","Federal standards"]},
-      {id:"govt_mcaid",    name:"Medicaid",                                   icon:"🏛",  score:71, crits:1, highs:2, trend:mkT(71), bizLine:"govt", parent:"govt_admin",
-       subcomponents:["State compliance","CMS reporting"],
-       why:["Claims criticality multiplier","State + Federal scrutiny"]},
-      {id:"pharmacy_pbm",  name:"Pharmacy / PBM Integrations",                icon:"💊", score:71, crits:1, highs:2, trend:mkT(71), bizLine:"hmm",
-       subcomponents:["Pharmacy benefits","PBM data exchange","Formulary management"],
-       why:["High claims integration","Specialty pharmacy risk"]},
-      {id:"compliance",    name:"Compliance & Regulatory Reporting",         icon:"⚖",  score:85, crits:0, highs:1, trend:mkT(85), bizLine:"corp",
-       subcomponents:["CMS reporting","HHS OCR","State insurance","BCBSA requirements"],
-       why:["Multi-jurisdictional","High penalty exposure"]},
-      {id:"identity",      name:"Identity & Access Infrastructure",           icon:"🔐", score:61, crits:2, highs:4, trend:mkT(61), bizLine:"corp",
-       subcomponents:["MFA","IAM","Privileged access","Identity proofing"],
-       why:["Gateway to all systems","Blast radius amplification"]},
-      {id:"data_platform", name:"Data & Analytics Platforms",                  icon:"📊", score:82, crits:0, highs:1, trend:mkT(82), bizLine:"data",
-       subcomponents:["Data warehouse","Analytics platforms","BI tools","ML models"],
-       why:["PHI aggregation","Strategic decision support"]},
-    ],
+    procs:CROWN_JEWEL_PROCS,
     frameworks:["hipaa_sr","hipaa_pr","hipaa_bn","nist_csf","nist_800_53","cis_v8","iso_27001","soc2","naic_model","pci_dss","cms_422"],
     extraFrameworks:["BCBSA Plan Performance Program","FEHB/OPM Data Security (if FEP)"],
   },
@@ -261,17 +264,7 @@ var ORG_TEMPLATES = {
        desc:"Finance, legal, compliance, and corporate services",
        streams:["Finance & Actuarial","Legal & Compliance","Human Resources","IT & Technology"]},
     ],
-    procs:[
-      {id:"claims",     name:"Claims Processing",      icon:"⚕",  score:64, crits:2, highs:1, trend:mkT(64), bizLine:"operations"},
-      {id:"enroll",     name:"Member Enrollment",       icon:"👤", score:74, crits:0, highs:2, trend:mkT(74), bizLine:"operations"},
-      {id:"um",         name:"Utilization Management",  icon:"💊", score:71, crits:1, highs:2, trend:mkT(71), bizLine:"operations"},
-      {id:"govt_prog",  name:"Medicare Advantage",      icon:"🏛",  score:68, crits:1, highs:2, trend:mkT(68), bizLine:"govt"},
-      {id:"provider",   name:"Provider Network",        icon:"🏥", score:83, crits:0, highs:1, trend:mkT(83), bizLine:"network"},
-      {id:"member_svc", name:"Customer Service",        icon:"📞", score:66, crits:1, highs:2, trend:mkT(66), bizLine:"operations"},
-      {id:"finance",    name:"Finance & Actuarial",     icon:"💰", score:79, crits:0, highs:1, trend:mkT(79), bizLine:"corp"},
-      {id:"compliance", name:"Compliance & Audit",      icon:"⚖",  score:85, crits:0, highs:1, trend:mkT(85), bizLine:"corp"},
-      {id:"it_sec",     name:"IT Security",             icon:"🔐", score:61, crits:2, highs:4, trend:mkT(61), bizLine:"corp"},
-    ],
+    procs:CROWN_JEWEL_PROCS,
     frameworks:["hipaa_sr","hipaa_pr","hipaa_bn","nist_csf","nist_800_53","cis_v8","iso_27001","soc2","naic_model","pci_dss","cms_422"],
     extraFrameworks:[],
   },
@@ -292,16 +285,7 @@ var ORG_TEMPLATES = {
        desc:"Finance, compliance, and risk management",
        streams:["Finance & Actuarial","Compliance & Audit","RADV / Risk Adjustment","Legal"]},
     ],
-    procs:[
-      {id:"claims",    name:"Claims Adjudication",    icon:"⚕",  score:64, crits:2, highs:1, trend:mkT(64), bizLine:"operations"},
-      {id:"enroll",    name:"Enrollment & Disenroll", icon:"👤", score:74, crits:0, highs:2, trend:mkT(74), bizLine:"operations"},
-      {id:"care",      name:"Care Management",         icon:"💊", score:71, crits:1, highs:2, trend:mkT(71), bizLine:"clinical"},
-      {id:"stars",     name:"STAR Quality Programs",   icon:"⭐", score:79, crits:0, highs:1, trend:mkT(79), bizLine:"clinical"},
-      {id:"radv",      name:"Risk Adjustment / RADV",  icon:"📋", score:76, crits:0, highs:2, trend:mkT(76), bizLine:"corp"},
-      {id:"member_svc",name:"Member Services",         icon:"📞", score:66, crits:1, highs:2, trend:mkT(66), bizLine:"operations"},
-      {id:"compliance",name:"Compliance & Audit",      icon:"⚖",  score:85, crits:0, highs:1, trend:mkT(85), bizLine:"corp"},
-      {id:"it_sec",    name:"IT Security",             icon:"🔐", score:61, crits:2, highs:4, trend:mkT(61), bizLine:"corp"},
-    ],
+    procs:CROWN_JEWEL_PROCS,
     frameworks:["hipaa_sr","hipaa_pr","hipaa_bn","nist_csf","nist_800_53","cis_v8","soc2","naic_model","cms_422"],
     extraFrameworks:["CMS STAR Rating Program","RADV Audit Requirements","CMS Part D Requirements"],
   },
@@ -331,19 +315,7 @@ var ORG_TEMPLATES = {
        desc:"Finance, technology, legal, and enterprise functions",
        streams:["Finance & Actuarial","Information Technology","Legal & Compliance","Human Resources","Enterprise Analytics"]},
     ],
-    procs:[
-      {id:"claims",     name:"Claims Processing",          icon:"⚕",  score:64, crits:2, highs:1, trend:mkT(64), bizLine:"commercial"},
-      {id:"enroll",     name:"Enrollment & Billing",        icon:"👤", score:74, crits:0, highs:2, trend:mkT(74), bizLine:"commercial"},
-      {id:"pharmacy",   name:"PBM & Pharmacy Operations",   icon:"💊", score:72, crits:1, highs:2, trend:mkT(72), bizLine:"pharmacy"},
-      {id:"govt_prog",  name:"Medicare Advantage",          icon:"🏛",  score:68, crits:1, highs:2, trend:mkT(68), bizLine:"govt"},
-      {id:"medicaid",   name:"Medicaid / CHIP",             icon:"🏥", score:71, crits:1, highs:2, trend:mkT(71), bizLine:"govt"},
-      {id:"behavioral", name:"Behavioral Health",           icon:"🧠", score:74, crits:1, highs:1, trend:mkT(74), bizLine:"behavioral"},
-      {id:"provider",   name:"Value-Based Care / Clinics",  icon:"🩺", score:77, crits:0, highs:2, trend:mkT(77), bizLine:"provider_services"},
-      {id:"member_svc", name:"Member & Customer Service",   icon:"📞", score:66, crits:1, highs:2, trend:mkT(66), bizLine:"commercial"},
-      {id:"finance",    name:"Finance & Actuarial",         icon:"💰", score:79, crits:0, highs:1, trend:mkT(79), bizLine:"corp"},
-      {id:"compliance", name:"Legal & Compliance",          icon:"⚖",  score:85, crits:0, highs:1, trend:mkT(85), bizLine:"corp"},
-      {id:"it_sec",     name:"IT Security",                 icon:"🔐", score:61, crits:2, highs:4, trend:mkT(61), bizLine:"corp"},
-    ],
+    procs:CROWN_JEWEL_PROCS,
     frameworks:["hipaa_sr","hipaa_pr","hipaa_bn","nist_csf","nist_800_53","cis_v8","iso_27001","soc2","naic_model","pci_dss","cms_422"],
     extraFrameworks:["42 CFR Part 2 (Behavioral Health)","URAC PBM Accreditation","NCQA Accreditation"],
   },
@@ -364,17 +336,7 @@ var ORG_TEMPLATES = {
        desc:"Finance, legal, and compliance under state contract",
        streams:["Finance & Actuarial","Legal & Compliance","Quality & HEDIS","Audit & Risk Management"]},
     ],
-    procs:[
-      {id:"claims",     name:"Claims Adjudication",     icon:"⚕",  score:64, crits:2, highs:1, trend:mkT(64), bizLine:"operations"},
-      {id:"enroll",     name:"Enrollment / Disenroll",  icon:"👤", score:74, crits:0, highs:2, trend:mkT(74), bizLine:"operations"},
-      {id:"care_coord", name:"Care Coordination",       icon:"💊", score:71, crits:1, highs:2, trend:mkT(71), bizLine:"clinical"},
-      {id:"ltss",       name:"LTSS Operations",         icon:"🏠", score:72, crits:1, highs:1, trend:mkT(72), bizLine:"medicaid"},
-      {id:"behavioral", name:"Behavioral Health",       icon:"🧠", score:68, crits:1, highs:2, trend:mkT(68), bizLine:"clinical"},
-      {id:"member_svc", name:"Member Services",         icon:"📞", score:66, crits:1, highs:2, trend:mkT(66), bizLine:"operations"},
-      {id:"quality",    name:"Quality & HEDIS",         icon:"⭐", score:81, crits:0, highs:1, trend:mkT(81), bizLine:"corp"},
-      {id:"compliance", name:"State Compliance",        icon:"⚖",  score:84, crits:0, highs:1, trend:mkT(84), bizLine:"corp"},
-      {id:"it_sec",     name:"IT Security",             icon:"🔐", score:61, crits:2, highs:4, trend:mkT(61), bizLine:"corp"},
-    ],
+    procs:CROWN_JEWEL_PROCS,
     frameworks:["hipaa_sr","hipaa_pr","hipaa_bn","nist_csf","nist_800_53","cis_v8","soc2","naic_model","cms_422"],
     extraFrameworks:["State Medicaid Agency Requirements","42 CFR Part 438 (Medicaid MCO)","42 CFR Part 2 (Behavioral Health)","NCQA Medicaid Accreditation"],
   },
@@ -392,13 +354,7 @@ var ORG_TEMPLATES = {
        desc:"Corporate and administrative functions",
        streams:["Finance","Compliance","Information Technology"]},
     ],
-    procs:[
-      {id:"claims",    name:"Claims Processing",  icon:"⚕",  score:64, crits:2, highs:1, trend:mkT(64), bizLine:"operations"},
-      {id:"enroll",    name:"Member Enrollment",  icon:"👤", score:74, crits:0, highs:2, trend:mkT(74), bizLine:"operations"},
-      {id:"member_svc",name:"Member Services",   icon:"📞", score:66, crits:1, highs:2, trend:mkT(66), bizLine:"operations"},
-      {id:"compliance",name:"Compliance & Audit",icon:"⚖",  score:85, crits:0, highs:1, trend:mkT(85), bizLine:"corp"},
-      {id:"it_sec",    name:"IT Security",        icon:"🔐", score:61, crits:2, highs:4, trend:mkT(61), bizLine:"corp"},
-    ],
+    procs:CROWN_JEWEL_PROCS,
     frameworks:["hipaa_sr","hipaa_pr","hipaa_bn","nist_csf","nist_800_53","cis_v8","soc2","naic_model"],
     extraFrameworks:[],
   },
@@ -418,14 +374,7 @@ var ORG_TEMPLATES = {
        desc:"Finance, compliance, and IT",
        streams:["Finance","Legal & Compliance","Information Technology"]},
     ],
-    procs:[
-      {id:"claims",    name:"Claims Processing",  icon:"⚕",  score:64, crits:2, highs:1, trend:mkT(64), bizLine:"operations"},
-      {id:"enroll",    name:"Enrollment",          icon:"👤", score:74, crits:0, highs:2, trend:mkT(74), bizLine:"operations"},
-      {id:"care",      name:"Care Management",     icon:"💊", score:71, crits:1, highs:2, trend:mkT(71), bizLine:"operations"},
-      {id:"member_svc",name:"Member Services",     icon:"📞", score:66, crits:1, highs:2, trend:mkT(66), bizLine:"operations"},
-      {id:"compliance",name:"Compliance & Audit",  icon:"⚖",  score:85, crits:0, highs:1, trend:mkT(85), bizLine:"corp"},
-      {id:"it_sec",    name:"IT Security",         icon:"🔐", score:61, crits:2, highs:4, trend:mkT(61), bizLine:"corp"},
-    ],
+    procs:CROWN_JEWEL_PROCS,
     frameworks:["hipaa_sr","hipaa_pr","hipaa_bn","nist_csf","nist_800_53","cis_v8","soc2","naic_model","pci_dss"],
     extraFrameworks:["State Insurance Department Requirements"],
   },
@@ -1124,18 +1073,17 @@ var INCIDENT_RANGES    = [["None",0],["1 (>3 yrs ago)",1],["1 (1-3 yrs ago)",2],
 var CLAIMS_RANGES   = [["Under $250M",125e6],["$250M-$500M",375e6],["$500M-$1B",750e6],["$1B-$2.5B",1750e6],["$2.5B-$5B",3750e6],["$5B-$15B",10000e6],["Over $15B",20000e6]];
 var CMS_RANGES      = [["Not applicable",0],["Under $100M",50e6],["$100M-$500M",300e6],["$500M-$1B",750e6],["$1B-$5B",3000e6],["$5B-$15B",10000e6],["Over $15B",20000e6]];
 var INSURANCE_RANGES= [["No coverage",0],["Under $10M",5e6],["$10M-$25M",17e6],["$25M-$50M",37e6],["$50M-$100M",75e6],["$100M-$250M",175e6],["Over $250M",300e6]];
-var STATES_RANGES   = [["1 state",1],["2-5 states",3],["6-10 states",8],["11-20 states",15],["21-35 states",28],["36-50 states",43],["All 50 states + DC",51]];
 
 // ─── Org Types & Profiles ─────────────────────────────────────────────────────
 var ORG_TYPES = ["Commercial Health Plan","Medicare Advantage","Medicaid Managed Care","Multi-line Payer","[ORG] Plan","Regional Health Plan","Employer Self-insured"];
 
 var ORG_PROFILES_RICH = {
   "Commercial Health Plan":{color:"#3B9EFF",
-    regs:["HIPAA Security Rule","NIST CSF 2.0","SOC 2 Type II","State DOI Regulations"],
+    regs:["HIPAA Security Rule","NIST CSF 2.0","SOC 2 Type II"],
     mandatoryProcs:["claims","enroll","provider","care","member_svc","compliance","it_sec"],
     expMethods:["phi_breach","fwa","doi_fines"],secRequired:false,cmsRequired:false,radvRisk:false,
-    boardContext:"Primary regulatory exposure is HIPAA and state DOI oversight.",
-    keyRisks:["Member PHI breach","State DOI audit","Claims fraud","Employer contract risk"]},
+    boardContext:"Primary regulatory exposure is HIPAA and state oversight.",
+    keyRisks:["Member PHI breach","Claims fraud","Employer contract risk"]},
   "Medicare Advantage":{color:"#A78BFA",
     regs:["HIPAA Security Rule","NIST CSF 2.0","CMS Star Ratings","CMS RADV Audit","SEC Cyber Disclosure"],
     mandatoryProcs:["claims","enroll","provider","care","finance","compliance","it_sec"],
@@ -1144,33 +1092,33 @@ var ORG_PROFILES_RICH = {
     boardContext:"CMS oversight creates significant additional exposure. RADV audit findings can require repayment of risk-adjusted premiums. SEC disclosure required within 4 business days of a material incident.",
     keyRisks:["CMS RADV audit — premium repayment","Star Ratings degradation","CMS contract termination","SEC 4-day material disclosure"]},
   "Medicaid Managed Care":{color:"#34D399",
-    regs:["HIPAA Security Rule","NIST CSF 2.0","CMS Medicaid Regs","State DOI (Multi-state)"],
+    regs:["HIPAA Security Rule","NIST CSF 2.0","CMS Medicaid Regs"],
     mandatoryProcs:["claims","enroll","provider","care","compliance","it_sec"],
-    expMethods:["phi_breach","fwa","cms_sanctions","doi_fines_multi"],
+    expMethods:["phi_breach","fwa","cms_sanctions"],
     secRequired:false,cmsRequired:true,radvRisk:false,
-    boardContext:"Multi-state DOI oversight and CMS managed care rules (42 CFR Part 438). State contracts can be terminated for security incidents.",
-    keyRisks:["Multi-state DOI fines","CMS 438 data security","State contract termination","MMIS/EDI integrity"]},
+    boardContext:"CMS managed care rules (42 CFR Part 438). State contracts can be terminated for security incidents.",
+    keyRisks:["CMS 438 data security","State contract termination","MMIS/EDI integrity"]},
   "Multi-line Payer":{color:"#F5A623",
-    regs:["HIPAA","NIST CSF 2.0","SOC 2","CMS Star Ratings","CMS RADV","SEC Cyber Disclosure","State DOI (Multi-state)"],
+    regs:["HIPAA","NIST CSF 2.0","SOC 2","CMS Star Ratings","CMS RADV","SEC Cyber Disclosure"],
     mandatoryProcs:["claims","enroll","provider","care","finance","member_svc","compliance","it_sec"],
-    expMethods:["phi_breach","fwa","cms_sanctions","radv_recovery","sec_materiality","doi_fines_multi"],
+    expMethods:["phi_breach","fwa","cms_sanctions","radv_recovery","sec_materiality"],
     secRequired:true,cmsRequired:true,radvRisk:true,
     boardContext:"Operating across Commercial, Medicare Advantage, and Medicaid — you face the full regulatory spectrum simultaneously. SEC material incident disclosure is mandatory.",
     keyRisks:["Multi-regulator exposure (CMS + SEC + DOI)","Cross-line PHI segregation","RADV + commercial breach combined","SEC 4-day window under active incident"]},
   "[ORG] Plan":{color:"#3B9EFF",
-    regs:["HIPAA","NIST CSF 2.0","SOC 2","BCBSA Cybersecurity Standards","BlueCard Requirements","State DOI"],
+    regs:["HIPAA","NIST CSF 2.0","SOC 2","BCBSA Cybersecurity Standards","BlueCard Requirements"],
     mandatoryProcs:["claims","enroll","provider_net","care_mgmt","fwa","member_svc","actuarial","govt_ma","govt_fep","govt_mcaid","pharmacy_pbm","compliance","identity","data_platform"],
-    expMethods:["phi_breach","fwa","bcbsa_penalties","doi_fines"],
+    expMethods:["phi_breach","fwa","bcbsa_penalties"],
     secRequired:false,cmsRequired:false,radvRisk:false,
     boardContext:"BCBSA cybersecurity standards are contractual — non-compliance risks Blue license loss. BlueCard participation creates cross-plan data exposure across all 36 BCBS plans.",
     keyRisks:["BCBSA license revocation","BlueCard cross-plan PHI (107M members)","FEP OPM audit","National account spillage"]},
   "Regional Health Plan":{color:"#0FBB80",
-    regs:["HIPAA Security Rule","NIST CSF 2.0","SOC 2","State DOI Regulations"],
+    regs:["HIPAA Security Rule","NIST CSF 2.0","SOC 2"],
     mandatoryProcs:["claims","enroll","provider","member_svc","compliance","it_sec"],
-    expMethods:["phi_breach","fwa","doi_fines"],
+    expMethods:["phi_breach","fwa"],
     secRequired:false,cmsRequired:false,radvRisk:false,
-    boardContext:"Primary oversight is your state DOI. Cybersecurity incidents trigger state regulatory action and reputational risk within your service area.",
-    keyRisks:["State DOI enforcement","PHI breach in service area","Single-state regulatory concentration"]},
+    boardContext:"Regional market operations create concentration risk in service area.",
+    keyRisks:["PHI breach in service area","Single-state concentration"]},
   "Employer Self-insured":{color:"#F472B6",
     regs:["HIPAA Security Rule","ERISA","SOC 2","State Privacy Laws","DOL Cybersecurity"],
     mandatoryProcs:["claims","enroll","member_svc","compliance","it_sec"],
@@ -1315,18 +1263,7 @@ function calcExposure(orgType, orgName, mem, rev, claimsNum, cmsNum, statesNum, 
     });
   }
 
-  // ── 8. State DOI Fines ──────────────────────────────────────────
-  if (statesNum > 0) {
-    var doiFine = Math.round(statesNum * 2.5);
-    rows.push({
-      cat:"Regulatory",
-      label:(statesNum>1?"Multi-State ":"")+"DOI Regulatory Fines",
-      exp:doiFine,
-      formula:statesNum+" state"+(statesNum>1?"s":"")+" \xd7 $2.5M avg per state (NAIC model law, state breach notification laws)"
-    });
-  }
-
-  // ── 9. CMS Sanctions ────────────────────────────────────────────
+  // ── 8. CMS Sanctions ────────────────────────────────────────────
   if (cmsNum > 0 && methods.includes("cms_sanctions")) {
     var cmsFine = Math.round(cmsNum * 0.10 / 1e6);
     rows.push({
@@ -1337,7 +1274,7 @@ function calcExposure(orgType, orgName, mem, rev, claimsNum, cmsNum, statesNum, 
     });
   }
 
-  // ── 10. RADV Risk ───────────────────────────────────────────────
+  // ── 9. RADV Risk ───────────────────────────────────────────────
   if (cmsNum > 0 && methods.includes("radv_recovery")) {
     var radvExp = Math.round(cmsNum * 0.02 / 1e6);
     rows.push({
@@ -2867,75 +2804,6 @@ var US_STATES = [
   {code:"WI",name:"Wisconsin"},{code:"WY",name:"Wyoming"},{code:"DC",name:"Washington DC"},
 ];
 
-// ─── State → applicable healthcare/insurance regulations ─────────────────────
-// Keys match FRAMEWORKS_CATALOG ids
-var STATE_REGULATIONS_MAP = {
-  AL:{frameworks:["naic_model","doi_state"],                                    note:"NAIC Model Law enacted. AL DOI cybersecurity requirements."},
-  AK:{frameworks:["doi_state"],                                                 note:"AK DOI cybersecurity guidance for insurers."},
-  AZ:{frameworks:["naic_model","doi_state"],                                    note:"AZ enacted NAIC Insurance Data Security Model Law (2018)."},
-  AR:{frameworks:["doi_state"],                                                 note:"AR Insurance Department cybersecurity requirements."},
-  CA:{frameworks:["ccpa","naic_model","doi_state"],                             note:"CCPA/CPRA (most comprehensive US privacy law) + CA DOI. CCPA health data exclusion limited under CPRA."},
-  CO:{frameworks:["state_privacy","naic_model","doi_state"],                    note:"Colorado Privacy Act (CPA) + NAIC Model + CO DOI cyber requirements."},
-  CT:{frameworks:["state_privacy","naic_model","doi_state"],                    note:"CT Data Privacy Act (CTDPA) + NAIC Model (enacted 2022) + CT Insurance Dept."},
-  DE:{frameworks:["naic_model","doi_state"],                                    note:"DE enacted NAIC Model. DE DOI cybersecurity notice requirements."},
-  FL:{frameworks:["naic_model","doi_state"],                                    note:"FL enacted NAIC Model (2022). FL DOI market conduct requirements."},
-  GA:{frameworks:["naic_model","doi_state"],                                    note:"GA enacted NAIC Model. GA OCI cybersecurity examination authority."},
-  HI:{frameworks:["doi_state"],                                                 note:"HI Insurance Division cybersecurity guidance."},
-  ID:{frameworks:["naic_model","doi_state"],                                    note:"ID enacted NAIC Model (2021). ID DOI requirements."},
-  IL:{frameworks:["naic_model","doi_state"],                                    note:"IL enacted NAIC Model. IL DOI market conduct + cybersecurity."},
-  IN:{frameworks:["naic_model","doi_state"],                                    note:"IN enacted NAIC Model. IN DOI cybersecurity examination."},
-  IA:{frameworks:["naic_model","doi_state"],                                    note:"IA enacted NAIC Model. Iowa Insurance Division requirements."},
-  KS:{frameworks:["doi_state"],                                                 note:"KS Insurance Department cybersecurity requirements."},
-  KY:{frameworks:["naic_model","doi_state"],                                    note:"KY enacted NAIC Model. KY DOI requirements."},
-  LA:{frameworks:["naic_model","doi_state"],                                    note:"LA enacted NAIC Model. Louisiana DOI cybersecurity."},
-  ME:{frameworks:["naic_model","doi_state"],                                    note:"ME enacted NAIC Model. Maine Bureau of Insurance requirements."},
-  MD:{frameworks:["naic_model","doi_state"],                                    note:"MD enacted NAIC Model. MD Insurance Administration cybersecurity."},
-  MA:{frameworks:["mass_201","naic_model","doi_state"],                         note:"Massachusetts 201 CMR 17 (strongest state WISP requirement) + NAIC Model + MA DOI market conduct exams."},
-  MI:{frameworks:["naic_model","doi_state"],                                    note:"MI enacted NAIC Model. Michigan DIFS cybersecurity requirements."},
-  MN:{frameworks:["naic_model","doi_state"],                                    note:"MN enacted NAIC Model. MN Commerce Dept insurance cybersecurity."},
-  MS:{frameworks:["naic_model","doi_state"],                                    note:"MS enacted NAIC Model. Mississippi Insurance Dept."},
-  MO:{frameworks:["doi_state"],                                                 note:"MO DOI cybersecurity requirements. NAIC Model pending."},
-  MT:{frameworks:["naic_model","doi_state"],                                    note:"MT enacted NAIC Model. Montana Insurance Commissioner."},
-  NE:{frameworks:["naic_model","doi_state"],                                    note:"NE enacted NAIC Model. Nebraska Dept of Insurance."},
-  NV:{frameworks:["naic_model","doi_state","state_privacy"],                    note:"NV enacted NAIC Model + NV Privacy of Information Act."},
-  NH:{frameworks:["naic_model","doi_state"],                                    note:"NH enacted NAIC Model. NH Insurance Dept cybersecurity."},
-  NJ:{frameworks:["naic_model","doi_state"],                                    note:"NJ enacted NAIC Model. NJ DOI cybersecurity examination."},
-  NM:{frameworks:["doi_state"],                                                 note:"NM Office of Superintendent of Insurance requirements."},
-  NY:{frameworks:["ny_shield","naic_model","doi_state"],                        note:"NY SHIELD Act + DFS Part 500 (one of the strictest: annual pen test, CISO, encryption required) + NY DOI."},
-  NC:{frameworks:["naic_model","doi_state"],                                    note:"NC enacted NAIC Model. NC DOI cybersecurity requirements."},
-  ND:{frameworks:["naic_model","doi_state"],                                    note:"ND enacted NAIC Model. ND Insurance Dept."},
-  OH:{frameworks:["naic_model","doi_state"],                                    note:"OH enacted NAIC Model. Ohio DOI market conduct."},
-  OK:{frameworks:["naic_model","doi_state"],                                    note:"OK enacted NAIC Model. Oklahoma Insurance Dept."},
-  OR:{frameworks:["state_privacy","doi_state"],                                 note:"Oregon Consumer Privacy Act (2024) + OR DOI requirements."},
-  PA:{frameworks:["naic_model","doi_state"],                                    note:"PA enacted NAIC Model. PA Insurance Dept."},
-  RI:{frameworks:["naic_model","doi_state"],                                    note:"RI enacted NAIC Model. Rhode Island DOI cybersecurity."},
-  SC:{frameworks:["naic_model","doi_state"],                                    note:"SC enacted NAIC Model. SC DOI cybersecurity."},
-  SD:{frameworks:["naic_model","doi_state"],                                    note:"SD enacted NAIC Model. SD Division of Insurance."},
-  TN:{frameworks:["naic_model","doi_state"],                                    note:"TN enacted NAIC Model. TN DOI requirements."},
-  TX:{frameworks:["naic_model","doi_state"],                                    note:"TX enacted NAIC Model. Texas DOI cybersecurity examination."},
-  UT:{frameworks:["state_privacy","naic_model","doi_state"],                    note:"Utah Consumer Privacy Act (2023) + NAIC Model + UT Insurance Dept."},
-  VT:{frameworks:["doi_state"],                                                 note:"VT Dept of Financial Regulation cybersecurity requirements."},
-  VA:{frameworks:["state_privacy","naic_model","doi_state"],                    note:"Virginia Consumer Data Protection Act (VCDPA) + NAIC Model + VA SCC Bureau of Insurance."},
-  WA:{frameworks:["naic_model","doi_state"],                                    note:"WA enacted NAIC Model. WA Office of Insurance Commissioner."},
-  WV:{frameworks:["naic_model","doi_state"],                                    note:"WV enacted NAIC Model. WV Insurance Commission."},
-  WI:{frameworks:["naic_model","doi_state"],                                    note:"WI enacted NAIC Model. WI OCI cybersecurity."},
-  WY:{frameworks:["naic_model","doi_state"],                                    note:"WY enacted NAIC Model. WY Insurance Dept."},
-  DC:{frameworks:["ny_shield","doi_state"],                                     note:"DC follows NY-equivalent standards + DC Dept of Insurance Securities and Banking."},
-};
-
-// Helper: get all state frameworks from selected state codes
-function getStateFrameworks(stateCodes) {
-  var fwSet = {};
-  stateCodes.forEach(function(code) {
-    var stateRegs = STATE_REGULATIONS_MAP[code];
-    if (stateRegs) {
-      stateRegs.frameworks.forEach(function(fw) { fwSet[fw] = true; });
-    }
-  });
-  return fwSet;
-}
-
-
 var FRAMEWORKS_CATALOG = [
   // ── Cybersecurity ──────────────────────────────────────────────────────────
   {id:"nist_csf",   label:"NIST CSF 2.0",                 cat:"Cybersecurity",  req:false,
@@ -3002,12 +2870,6 @@ var FRAMEWORKS_CATALOG = [
   // ── State / DOI ───────────────────────────────────────────────────────────
   {id:"naic_model", label:"NAIC Insurance Data Security Model Law (Section 3, 4, 5)",cat:"State Regulatory",req:false,
    desc:"NAIC Model Law enacted in 20+ states. Requires licensed insurers to: (1) develop an information security program, (2) investigate cybersecurity events, (3) notify the commissioner within 72 hours of a cybersecurity event, and (4) conduct annual certification of compliance. Key requirements: written information security program (WISP), risk assessment, oversight of third-party service providers, incident response plan, and annual board reporting. Non-compliance triggers state DOI enforcement action and license risk."},
-  {id:"mass_201",   label:"Massachusetts 201 CMR 17.00 — Written Information Security Program",cat:"State Regulatory",req:false,
-   desc:"Massachusetts 201 CMR 17.00 is one of the strongest state data security laws. It requires every entity that owns or licenses personal information of MA residents to implement a comprehensive Written Information Security Program (WISP). Requirements include: employee training, third-party vendor contracts with security requirements, encryption of personal data in transit and at rest, access controls, and incident response procedures. Penalties: MA AG can seek up to $5,000 per violation. As a MA-domiciled insurer, [ORG] has heightened obligations — the AG has actively pursued health insurers for 201 CMR 17 violations. The WISP must be reviewed and updated annually and made available to employees."},
-  {id:"ny_shield",  label:"NY SHIELD Act + DFS Part 500 (Annual Pen Test Required)",cat:"State Regulatory",req:false,
-   desc:"New York has two overlapping cybersecurity regimes for insurers: (1) NY SHIELD Act (2019) — requires reasonable cybersecurity safeguards for any entity with NY resident data, with specific technical, administrative, and physical safeguards. (2) DFS Part 500 (23 NYCRR 500) — one of the strictest state cybersecurity regulations. Requires: CISO, annual penetration testing, biannual vulnerability assessments, multi-factor authentication, encryption, 72-hour incident notification to DFS, and annual certification of compliance. DFS Part 500 amendments effective 2023 added enhanced requirements for larger covered entities. Non-compliance: DFS has imposed multi-million dollar penalties (First American Title Insurance: $1M, Carnival Corp: $5M, Robinhood: $30M)."},
-  {id:"doi_state",  label:"State DOI Cybersecurity Regulations (Market Conduct)",cat:"State Regulatory",req:false,
-   desc:"State Department of Insurance market conduct examination requirements including cybersecurity controls. DOI examiners review: access controls, encryption, incident response procedures, vendor management, and business continuity. DOI market conduct exams occur every 3-5 years and can result in fines, corrective action plans, or license conditions. States with active cybersecurity exam programs include: MA, NY, TX, FL, CA, IL, PA, OH, GA, NC. Non-compliance findings are public record."},
 ];
 
 
@@ -4216,11 +4078,6 @@ function validateOrgDataBeforeSave(data) {
     errors.push('Organization type is required');
   }
 
-  // Validate HQ state if provided
-  if (data.hqState && data.hqState.length > 2) {
-    errors.push('Invalid state code (use 2-letter abbreviation)');
-  }
-
   return {
     valid: errors.length === 0,
     errors: errors
@@ -4498,7 +4355,6 @@ function Setup(props) {
   var _initialStep=(props.dl&&props.dl.step)?props.dl.step:1;
   var _s0=useState(_initialStep); var step=_s0[0];        var setStep=_s0[1];
   var _s1=useState("");        var employees=_s1[0];   var setEmployees=_s1[1];
-  var _s2=useState("");        var hqState=_s2[0];     var setHqState=_s2[1];
   var _s3=useState("");        var revenue=_s3[0];       var _setRevRaw=_s3[1];
   function setRevenue(v){ _setRevRaw(v); setRootRevenue(v); }
   var _s3b=useState("");       var surplus=_s3b[0];     var _setSurpRaw=_s3b[1];
@@ -4529,7 +4385,6 @@ function Setup(props) {
   var _s3h=useState(""); var insDeduct=_s3h[0];   var setInsDeduct=_s3h[1];
   var _s3i=useState(""); var priorInc=_s3i[0];    var setPriorInc=_s3i[1];
   var _s4=useState("");        var claimsAmt=_s4[0];   var setClaimsAmt=_s4[1];
-  var _s5=useState("");        var numStates=_s5[0];   var setNumStates=_s5[1];
   var _s6=useState("");        var cmsContract=_s6[0]; var setCmsContract=_s6[1];
   var _s7=useState("");        var cyberIns=_s7[0];    var setCyberIns=_s7[1];
   var _s7b=useState("");       var providers=_s7b[0];  var setProviders=_s7b[1];
@@ -4625,7 +4480,6 @@ function Setup(props) {
     rangeVal(REVENUE_RANGES,  revenue),
     rangeVal(CLAIMS_RANGES,   claimsAmt),
     rangeVal(CMS_RANGES,      cmsContract),
-    rangeVal(STATES_RANGES,   numStates),
     rangeVal(INSURANCE_RANGES,cyberIns),
     rangeVal(PROVIDER_RANGES, providers),
     rangeVal(DOWNTIME_RANGES, downtimeDays),
@@ -5013,15 +4867,6 @@ function Setup(props) {
               <div style={{height:540}}><SetupBot orgName={orgName} setRootClaimsSystem={setRootClaimsSystem} setRootMailingVendor={setRootMailingVendor} setRootMemberPortal={setRootMemberPortal} onComplete={function(a){
                 if(a.orgName){setOrgName(a.orgName);}
                 if(a.orgType){setOrgType(a.orgType);}
-                // Lines of business / regulatory affiliations
-                if(a.linesOfBiz){
-                  var lobArr=Array.isArray(a.linesOfBiz)?a.linesOfBiz:a.linesOfBiz.split(", ");
-                  setRootLinesOfBiz(lobArr.filter(Boolean));
-                }
-                if(a.bcbsAffiliated){setRootBcbsAffiliated(a.bcbsAffiliated.indexOf("Yes")===0);}
-                if(a.hasFEP){setRootHasFEP(a.hasFEP.indexOf("Yes, full")===0);}
-                if(a.hqState){setHqState(a.hqState);}
-                if(a.numStates){setNumStates(a.numStates);}
                 if(a.cmsContract){setCmsContract(a.cmsContract);}
                 var rmap={"Under $500M":"<$500M","$500M to $2B":"$500M-$2B",
                   "$2B to $10B":"$2B-$10B","$10B to $25B":"$10B-$25B",
@@ -5083,13 +4928,10 @@ function Setup(props) {
                 var incmap={"None":"0","1 minor incident":"1","1 significant incident":"1",
                   "2 to 3 incidents":"2","4 or more incidents":"4","Prefer not to say":"0"};
                 if(a.incidents&&incmap[a.incidents]){setPriorInc(incmap[a.incidents]);}
-                // Load org template based on type + affiliations
+                // Load org template based on type
                 if(a.orgType){
                   setOrgConfig({
                     type:a.orgType||"Other Payer",
-                    linesOfBiz:a.linesOfBiz?(Array.isArray(a.linesOfBiz)?a.linesOfBiz:a.linesOfBiz.split(", ")):[],
-                    bcbsAffiliated:a.bcbsAffiliated&&a.bcbsAffiliated.indexOf("Yes")===0,
-                    hasFEP:a.hasFEP&&a.hasFEP.indexOf("Yes, full")===0,
                   });
                   // Pre-select all processes for the org's template
                   var tmpl = getOrgTemplate(a.orgType||"Other Payer");
@@ -5177,8 +5019,6 @@ function Setup(props) {
               {[
                   {label:"Members / Enrollees",             val:members,      set:setMembers,      ranges:MEMBER_RANGES,   tip:"PHI breach cost driver ($164/record)"},
                   {label:"Employees",                        val:employees,    set:setEmployees,    ranges:EMPLOYEE_RANGES, tip:"Workforce security, insider threat scope"},
-                  {label:"HQ State",                         val:hqState,      set:setHqState,      ranges:null,states:true,tip:"Primary state regulatory jurisdiction"},
-                  {label:"States of Operation",              val:numStates,    set:setNumStates,    ranges:STATES_RANGES,   tip:"Number of states — then select specific states below for auto-regulation"},
                   {label:"Annual Premium Revenue",           val:revenue,      set:setRevenue,      ranges:REVENUE_RANGES,  tip:"Revenue loss and SEC materiality baseline"},
                   {label:"Annual Claims Processed",          val:claimsAmt,    set:setClaimsAmt,    ranges:CLAIMS_RANGES,   tip:"FWA exposure and claims disruption cost"},
                   {label:"CMS Contract Value (MA/Medicaid)", val:cmsContract,  set:setCmsContract,  ranges:CMS_RANGES,      tip:"Sanctions and RADV recovery exposure"},
@@ -8964,7 +8804,7 @@ function CRODash(props) {
               <p style={{color:C.text,fontSize:12,lineHeight:1.7,margin:0}}>{orgText(f.wrong||"", orgName)}</p>
             </div>
             <div style={{marginBottom:10}}>
-              <div style={{color:"#EF454580",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:4}}>Business / Regulatory Risk</div>
+              <div style={{color:"#EF454580",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:4}}>Business Risk</div>
               <p style={{color:C.text,fontSize:12,lineHeight:1.7,margin:0}}>{orgText(f.risk||"", orgName)}</p>
             </div>
             <div style={{background:C.bg,borderRadius:8,padding:"10px 12px",marginBottom:12}}>
@@ -9027,7 +8867,7 @@ function CRODash(props) {
         </div>
 
         {/* Org-specific additional frameworks */}
-      {(props.orgType==="BCBS Plan"||props.bcbsAffiliated)&&(
+      {props.orgType==="BCBS Plan"&&(
         <div style={{background:"#3B9EFF08",border:"1px solid #3B9EFF25",
           borderRadius:8,padding:"9px 14px",marginBottom:10,
           display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
@@ -9035,8 +8875,8 @@ function CRODash(props) {
             BCBS Plan — Additional Requirements:
           </span>
           {["BCBSA Plan Performance Program","NAIC Model Law",
-            (props.orgType==="BCBS Plan"?"State DOI Requirements":""),
-          ].filter(Boolean).map(function(f){
+            "State DOI Requirements",
+          ].map(function(f){
             return (
               <span key={f} style={{color:"#3B9EFF",fontSize:9,fontWeight:600,
                 background:"#3B9EFF14",borderRadius:3,padding:"2px 7px"}}>
@@ -9082,76 +8922,6 @@ function CRODash(props) {
           })}
         </div>
       )}
-
-      {/* FEP / FEHB banner */}
-      {props.hasFEP&&(
-        <div style={{background:"#8B5CF608",border:"1px solid #8B5CF625",
-          borderRadius:8,padding:"9px 14px",marginBottom:10,
-          display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-          <span style={{color:"#8B5CF6",fontSize:11,fontWeight:700}}>
-            Federal Employee Program — OPM / FEHB Requirements:
-          </span>
-          {["FEHB Handbook Chapter 10","OPM Cybersecurity Audit","FEP Data Privacy Standards",
-            "Carrier Letter Obligations","BCBSA FEP Cyber Standards","45 CFR Part 164"].map(function(f){
-            return (
-              <span key={f} style={{color:"#8B5CF6",fontSize:9,fontWeight:600,
-                background:"#8B5CF614",borderRadius:3,padding:"2px 7px"}}>{f}</span>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Lines of Business framework chips */}
-      {props.linesOfBiz&&props.linesOfBiz.length>0&&(function(){
-        var LOB_FRAMEWORKS = {
-          "Medicare Advantage (Part C)":  {label:"Medicare Advantage",color:"#0891B2",
-            chips:["CMS §422","Stars/HEDIS","RADV/HCC","CMS HPMS","MA Bid Requirements"]},
-          "Medicare Part D":              {label:"Part D",color:"#0891B2",
-            chips:["CMS §423","Formulary Requirements","PDE Reporting"]},
-          "Medicaid / CHIP":              {label:"Medicaid",color:"#0FBB80",
-            chips:["42 CFR §438","State Contract","EPSDT","FMAP Reporting"]},
-          "Dual Eligible (DSNP)":         {label:"D-SNP",color:"#F59E0B",
-            chips:["DSNP Model of Care","CMS §422.107","LTSS Coordination"]},
-          "Federal Employee Program (FEP)":{label:"FEP",color:"#8B5CF6",
-            chips:["FEHB Handbook","OPM Audit","FEP Contract §2.3"]},
-          "Long-Term Services & Supports": {label:"LTSS",color:"#EC4899",
-            chips:["Medicaid HCBS Waiver","LTSS Managed Care","CMS §4305"]},
-          "Behavioral Health":             {label:"BH",color:"#A78BFA",
-            chips:["42 CFR Part 2","Mental Health Parity","MHPAEA Compliance"]},
-          "Marketplace / ACA":             {label:"Marketplace",color:"#3B9EFF",
-            chips:["ACA §1557","HHS Non-Discrimination","QHP Certification","MLR Reporting"]},
-        };
-        var activeLOBs = props.linesOfBiz.filter(function(l){ return !!LOB_FRAMEWORKS[l]; });
-        if (activeLOBs.length===0) return null;
-        return (
-          <div style={{background:C.card,border:"1px solid "+C.border,
-            borderRadius:8,padding:"10px 14px",marginBottom:10}}>
-            <div style={{color:C.muted,fontSize:10,fontWeight:700,
-              textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:8}}>
-              Active Lines of Business — Applicable Frameworks
-            </div>
-            <div style={{display:"flex",flexDirection:"column",gap:6}}>
-              {activeLOBs.map(function(lob){
-                var cfg = LOB_FRAMEWORKS[lob];
-                return (
-                  <div key={lob} style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
-                    <span style={{color:cfg.color,fontSize:10,fontWeight:700,
-                      background:cfg.color+"18",borderRadius:4,padding:"2px 9px",
-                      minWidth:90,textAlign:"center"}}>{cfg.label}</span>
-                    {cfg.chips.map(function(c){
-                      return (
-                        <span key={c} style={{color:cfg.color,fontSize:9,fontWeight:600,
-                          background:cfg.color+"10",border:"1px solid "+cfg.color+"30",
-                          borderRadius:3,padding:"2px 7px"}}>{c}</span>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })()}
 
       {/* CRO Summary Strip — clickable stats with methodology */}
         {!selReport&&(
@@ -9876,9 +9646,7 @@ function CFODash(props) {
   var interruptM    = Math.round(revB*0.0137/1e6 + 55);      // claims + CMS sanctions
   var legalM        = Math.round((props.insDeductible||0)/1e6 + 50 + (incHist>1?15:0));
   var recoveryM     = Math.round(itB*0.037/1e6);             // 3.7% of IT budget
-  // FEP-specific OPM exposure (if hasFEP is set)
-  var fepM = props.hasFEP ? Math.round((revB*0.08)/1e6) : 0;  // FEP ~8% of rev: OPM sanctions + FEP breach notification
-  var grossExp      = (breachRespM+regulatoryM+fraudM+reputM+interruptM+legalM+recoveryM+fepM)*1e6;
+  var grossExp      = (breachRespM+regulatoryM+fraudM+reputM+interruptM+legalM+recoveryM)*1e6;
   var insLimit    = props.insLimit || 50e6;
   var netExp      = grossExp - insLimit;
   var capitalRisk = (function(){
@@ -10626,8 +10394,6 @@ function BoardDash(props) {
                  context:"$50M policy covers only $70M of $1.54B exposure — 97% uninsured gap"},
                 {label:"RBC Post-Breach",       val:"374%",           color:"#F5A623", icon:"🏦", onClick:function(){setBTab("financial");},
                  context:"Above 200% minimum but catastrophic event drops to ~178% — triggers supervision"},
-                {label:"Days to Regulatory Risk",val:"Now",           color:"#EF4545", icon:"⚖", onClick:function(){setBTab("regulatory");},
-                 context:"[MAILING_VENDOR] gap: 47 days open. OCR investigation risk if breach occurs today."},
                 {label:"Security Posture Trend", val:"Stable",        color:"#3B9EFF", icon:"📈",
                  context:"Score unchanged at 73 for 2 quarters. Recommend board-level remediation targets."},
               ].map(function(k){
@@ -10727,9 +10493,6 @@ function BoardDash(props) {
               {title:"CMS Contract Risk ($"+Math.round((props.revenue||4200e6)*0.67/1e6)+"M)",  icon:"🏛", color:"#EF4545",
                narrative:"[ORG]'s government program revenue requires CMS cybersecurity attestation. Current gaps — MFA coverage at "+aMFA+"%, unencrypted PHI transmission (F-003), and expired BAAs (F-017) — directly jeopardize attestation under 42 CFR 422.504(i). CMS intermediate sanctions including enrollment suspension are explicitly available under §422.750. Failure to remediate critical findings before the next CMS audit creates material revenue-at-risk.",
                likelihood:"High", impact:"Catastrophic", trend:"Increasing"},
-              {title:"Regulatory License Risk",            icon:"🏛", color:"#EF4545",
-               narrative:"State Department of Insurance market conduct examination authority includes cybersecurity. [ORG]'s combination of unencrypted PHI (F-003), MFA gaps (F-001), SIEM retention failures (F-006), and expired BAAs (F-017) creates a pattern that could trigger a DOI enforcement action or corrective action plan if a breach occurs and is publicly attributed to known, unmitigated vulnerabilities. DOI findings are public record and affect license renewal.",
-               likelihood:"Medium", impact:"Catastrophic", trend:"Stable"},
               {title:"Change Healthcare Parallel Risk",    icon:"🔗", color:"#F5A623",
                narrative:"The February 2024 Change Healthcare ransomware attack caused 6 weeks of payment disruption for nearly all US health plans, including BCBS affiliates. [ORG] processes EDI claims through Change Healthcare and Availity. A repeat attack — or an attack on NASCO directly — would halt $11.5M/day in claims adjudication. Current DR plan for NASCO has not been full-tested in 12+ months, and the manual fallback process for 45,000+ daily claims is not operationally proven.",
                likelihood:"Medium", impact:"Severe", trend:"Increasing"},
@@ -10816,10 +10579,6 @@ function BoardDash(props) {
                 {[
                   {reg:"OCR / HIPAA",      exposure:"$20–60M",   probability:"Medium-High", trigger:"PHI breach + willful neglect finding"},
                   {reg:"CMS §422",         exposure:"$2.8B",     probability:"Medium",     trigger:"Cyber attestation failure or MA audit"},
-                  ...(props.hasFEP?[{reg:"OPM / FEHB",exposure:"$15–40M",probability:"Medium",trigger:"FEP member breach + carrier letter obligation failure"}]:[]),
-                  ...((props.bcbsAffiliated)?[{reg:"BCBSA Performance",exposure:"$5–25M",probability:"Low-Medium",trigger:"Plan Performance Program cybersecurity deficiency"}]:[]),
-                  ...((props.linesOfBiz||[]).includes("Medicaid / CHIP")?[{reg:"State Medicaid Agency",exposure:"$10–50M",probability:"Medium",trigger:"42 CFR §438 cybersecurity audit or contract violation"}]:[]),
-                  ...((props.linesOfBiz||[]).includes("Marketplace / ACA")?[{reg:"HHS / ACA §1557",exposure:"$5–15M",probability:"Low",trigger:"Non-discrimination or data security violation in marketplace operations"}]:[]),
                   {reg:"SEC (if public)",  exposure:"Material",  probability:"Low-Med",    trigger:"Material incident not disclosed in 4 days"},
                   {reg:"Mass AG / DOI",    exposure:"$5–18M",    probability:"Medium",     trigger:"Breach of MA 201 CMR 17 requirements"},
                   {reg:"BCBSA",            exposure:"License",   probability:"Low",        trigger:"Documented standard non-compliance post-breach"},
@@ -14800,41 +14559,12 @@ function BizLines(props) {
   var _s0=useState(null); var selProc=_s0[0]; var setSelProc=_s0[1];
   var _s1=useState(null); var selStep=_s1[0]; var setSelStep=_s1[1];
 
-  var liveProcs = (function(){
-    var lob = Array.isArray(props.linesOfBiz) ? props.linesOfBiz : [];
-    if (lob.length === 0) {
-      // Re-score before returning
-      var _bm = {mfaPct:props.mfaPct,edrPct:props.edrPct,patchPct:props.patchPct,
-                 trainingPct:props.trainingPct,pamPct:props.pamPct,vulnSLApct:props.vulnSLApct,
-                 siemDays:props.siemDays,phishingPct:props.phishingPct,mttdHrs:props.mttdHrs,mttrHrs:props.mttrHrs};
-      return PROCS.map(function(p){var pF=FINDINGS.filter(function(f){return f.procId===p.id;});return Object.assign({},p,{score:calculateProcessScore(p,_bm),crits:pF.filter(function(f){return f.sev==="Critical";}).length,highs:pF.filter(function(f){return f.sev==="High";}).length});});
-    }
-    // Map each LOB answer to the PROCS IDs it involves
-    var LOB_PROC_MAP = {
-      "Commercial / Employer-Sponsored": ["claims","enroll","provider","care","finance","member_svc"],
-      "Medicare Advantage (Part C)":     ["claims","enroll","provider","care","finance","member_svc","compliance"],
-      "Medicare Part D":                 ["claims","finance","member_svc"],
-      "Medicaid / CHIP":                 ["claims","enroll","provider","care","compliance"],
-      "Dual Eligible (DSNP)":            ["claims","care","compliance","member_svc"],
-      "Federal Employee Program (FEP)":  ["enroll","claims","finance","compliance"],
-      "Long-Term Services & Supports":   ["care","member_svc","compliance"],
-      "Behavioral Health":               ["care","member_svc"],
-      "Dental & Vision":                 ["claims","provider"],
-      "Pharmacy / PBM":                  ["claims","finance"],
-      "Marketplace / ACA":               ["enroll","claims","compliance"],
-      "Medicare Supplement":             ["claims","enroll","finance"],
-    };
-    var relevant = {};
-    lob.forEach(function(l){
-      var ids = LOB_PROC_MAP[l] || [];
-      ids.forEach(function(id){ relevant[id]=true; });
-    });
-    var filtered = PROCS.filter(function(p){ return relevant[p.id]; });
-    return filtered.length > 0 ? filtered : PROCS;
-  })();
+  // Re-score processes before returning
+  var _bm = {mfaPct:props.mfaPct,edrPct:props.edrPct,patchPct:props.patchPct,
+             trainingPct:props.trainingPct,pamPct:props.pamPct,vulnSLApct:props.vulnSLApct,
+             siemDays:props.siemDays,phishingPct:props.phishingPct,mttdHrs:props.mttdHrs,mttrHrs:props.mttrHrs};
+  var liveProcs = PROCS.map(function(p){var pF=FINDINGS.filter(function(f){return f.procId===p.id;});return Object.assign({},p,{score:calculateProcessScore(p,_bm),crits:pF.filter(function(f){return f.sev==="Critical";}).length,highs:pF.filter(function(f){return f.sev==="High";}).length});});
   var liveFind  = FINDINGS;
-  // Whether BizLines is filtered by LOB
-  var lobFiltered = (props.linesOfBiz||[]).length > 0 && liveProcs.length < PROCS.length;
 
   // ── LEVEL 3: Step detail ─────────────────────────────────────────────────
   if (selProc && selStep !== null) {
@@ -15160,18 +14890,6 @@ function BizLines(props) {
             <div style={{color:C.muted,fontSize:12}}>
               Click any business line to view its lifecycle, findings, and compliance controls
             </div>
-            {lobFiltered&&(
-              <div style={{marginTop:5,display:"flex",alignItems:"center",gap:6}}>
-                <span style={{color:C.acc,fontSize:10,fontWeight:700,
-                  background:C.acc+"12",borderRadius:10,padding:"2px 10px",
-                  border:"1px solid "+C.acc+"25"}}>
-                  ↓ Showing {liveProcs.length} of {PROCS.length} processes for your lines of business
-                </span>
-                <span style={{color:C.muted,fontSize:9}}>
-                  {(props.linesOfBiz||[]).join(" · ")}
-                </span>
-              </div>
-            )}
           </div>
           <div style={{display:"flex",gap:6}}>
             <Btn onClick={function(){go("dashboard");}} small>CISO Dashboard</Btn>
@@ -17892,11 +17610,6 @@ function SetupBot(props) {
   var _sStates=useState([]); var selectedStates=_sStates[0]; var setSelectedStates=_sStates[1];
   var _sShowStates=useState(false); var showStateSelector=_sShowStates[0]; var setShowStateSelector=_sShowStates[1];
 
-  // State-by-state regulation selection
-  var _sStateRegIdx=useState(0); var stateRegIdx=_sStateRegIdx[0]; var setStateRegIdx=_sStateRegIdx[1];
-  var _sStateRegs=useState([]); var stateRegs=_sStateRegs[0]; var setStateRegs=_sStateRegs[1];
-  var _sShowStateRegs=useState(false); var showStateRegs=_sShowStateRegs[0]; var setShowStateRegs=_sShowStateRegs[1];
-
   var HEALTH_PLANS = [
     "Anthem Blue Cross Blue Shield","Anthem Blue Cross","Anthem Health Plans",
         "Blue Cross Blue Shield of Alabama","BCBS of Alabama",
@@ -18137,60 +17850,6 @@ function SetupBot(props) {
     'District of Columbia'];
 
   // State-specific cyber regulations mapping
-  var STATE_REGULATIONS = {
-    'California': ['CMIA (California Medical Information Act)', 'CCPA/CPRA (Consumer Privacy Act)', 'Breach Notification Law', 'DMHC/CDI Expectations'],
-    'New York': ['NYDFS 23 NYCRR 500 (if insurer regulated)', 'SHIELD Act'],
-    'Massachusetts': ['201 CMR 17.00 (Written Information Security Program)'],
-    'Texas': ['Texas Medical Records Privacy Act', 'More stringent than HIPAA'],
-    'Washington': ['My Health My Data Act'],
-    'Colorado': ['Colorado Privacy Act', 'Insurer Cyber Requirements'],
-    'Illinois': ['BIPA (Biometric Information Privacy Act)', 'Personal Information Protection Act'],
-    'Virginia': ['CDPA (Consumer Data Protection Act)', 'Insurance Cybersecurity Model'],
-    'Connecticut': ['Insurance Data Security Law'],
-    'South Carolina': ['Insurance Data Security Act'],
-    'Alabama': ['HIPAA (Federal)'],
-    'Alaska': ['HIPAA (Federal)'],
-    'Arizona': ['HIPAA (Federal)'],
-    'Arkansas': ['HIPAA (Federal)'],
-    'Delaware': ['HIPAA (Federal)'],
-    'Florida': ['HIPAA (Federal)'],
-    'Georgia': ['HIPAA (Federal)'],
-    'Hawaii': ['HIPAA (Federal)'],
-    'Idaho': ['HIPAA (Federal)'],
-    'Indiana': ['HIPAA (Federal)'],
-    'Iowa': ['HIPAA (Federal)'],
-    'Kansas': ['HIPAA (Federal)'],
-    'Kentucky': ['HIPAA (Federal)'],
-    'Louisiana': ['HIPAA (Federal)'],
-    'Maine': ['HIPAA (Federal)'],
-    'Maryland': ['HIPAA (Federal)'],
-    'Michigan': ['HIPAA (Federal)'],
-    'Minnesota': ['HIPAA (Federal)'],
-    'Mississippi': ['HIPAA (Federal)'],
-    'Missouri': ['HIPAA (Federal)'],
-    'Montana': ['HIPAA (Federal)'],
-    'Nebraska': ['HIPAA (Federal)'],
-    'Nevada': ['HIPAA (Federal)'],
-    'New Hampshire': ['HIPAA (Federal)'],
-    'New Jersey': ['HIPAA (Federal)'],
-    'New Mexico': ['HIPAA (Federal)'],
-    'North Carolina': ['HIPAA (Federal)'],
-    'North Dakota': ['HIPAA (Federal)'],
-    'Ohio': ['HIPAA (Federal)'],
-    'Oklahoma': ['HIPAA (Federal)'],
-    'Oregon': ['HIPAA (Federal)'],
-    'Pennsylvania': ['HIPAA (Federal)'],
-    'Rhode Island': ['HIPAA (Federal)'],
-    'South Dakota': ['HIPAA (Federal)'],
-    'Tennessee': ['HIPAA (Federal)'],
-    'Utah': ['HIPAA (Federal)'],
-    'Vermont': ['HIPAA (Federal)'],
-    'West Virginia': ['HIPAA (Federal)'],
-    'Wisconsin': ['HIPAA (Federal)'],
-    'Wyoming': ['HIPAA (Federal)'],
-    'District of Columbia': ['HIPAA (Federal)']
-  };
-
   var QS = [
     {id:'orgName',    type:'text',    group:'Identity',
      ask:"Hi! I'm "+agentName+", your CyberRx setup guide. I'll have your organization configured in just a couple of minutes.\n\nFirst, what is the full legal name of your organization?",
@@ -18200,32 +17859,6 @@ function SetupBot(props) {
      choices:['BCBS Plan','Commercial Health Plan','Medicare Advantage Plan',
               'Medicaid Managed Care','Multi-line Health Insurer',
               'Regional Health Plan','Other Payer']},
-    {id:'hqState',    type:'dropdown',group:'Identity',
-     ask:'Which state is your primary domicile for insurance licensure?'},
-    {id:'numStates',  type:'choice',  group:'Identity',
-     ask:'How many states is {orgName} licensed to operate in?',
-     choices:['1 state','2 to 5 states','6 to 15 states','16 to 30 states','31 to 50 states','All 50 states plus DC']},
-    {id:'stateRegulations', type:'multiline', group:'Identity',
-     ask:'Which state-specific cyber regulations does {orgName} need to comply with? Select all that apply based on your licensed states.',
-     choices:['California (CMIA, CCPA/CPRA)','New York (NYDFS 23 NYCRR 500, SHIELD Act)',
-              'Massachusetts (201 CMR 17.00)','Texas (Medical Records Privacy Act)',
-              'Washington (My Health My Data Act)','Colorado (Privacy Act + insurer requirements)',
-              'Illinois (BIPA + Personal Information Protection)','Virginia (CDPA + insurance cyber model)',
-              'Connecticut (Insurance Data Security Law)','South Carolina (Insurance Data Security Act)',
-              'Federal Only (HIPAA, HITECH, ACA Requirements)']},
-    {id:'linesOfBiz', type:'multiline', group:'Lines of Business',
-     ask:'Which lines of business does {orgName} operate? Select all that apply.',
-     choices:['Commercial / Employer-Sponsored','Medicare Advantage (Part C)',
-              'Medicare Part D','Medicaid / CHIP','Dual Eligible (DSNP)',
-              'Federal Employee Program (FEP)','Long-Term Services & Supports',
-              'Behavioral Health','Dental & Vision','Pharmacy / PBM',
-              'Marketplace / ACA','Medicare Supplement']},
-    {id:'bcbsAffiliated', type:'choice', group:'Lines of Business',
-     ask:'Is {orgName} affiliated with the Blue Cross Blue Shield Association?',
-     choices:['Yes, Licensed BCBS Plan','Yes, BlueCard Host Plan only','No']},
-    {id:'hasFEP', type:'choice', group:'Lines of Business',
-     ask:'Does {orgName} administer the Federal Employee Program under the FEHB contract?',
-     choices:['Yes, full FEP plan','Yes, FEP local option only','No']},
     {id:'revenue', type:'choice', group:'Scale',
      ask:"What is your approximate annual premium revenue?",
      choices:['Under $500M','$500M to $2B','$2B to $10B','$10B to $25B','$25B to $100B','Over $100B']},
@@ -18511,12 +18144,8 @@ function SetupBot(props) {
     var a = accRef.current;
     return 'Here is your organization profile. You can edit any section before we continue.\n\n'
       + '\uD83C\uDFE5  Identity\n'
-      + '  • Org Template: ' + (a.orgType||'') + '\n'
-      + '  • Lines of Business: ' + ((a.linesOfBiz||'').substring(0,60)) + '\n'
       + '  • Organization: '   + (a.orgName   ||'') + '\n'
-      + '  • Type: '           + (a.orgType   ||'') + '\n'
-      + '  • HQ State: '       + (a.hqState   ||'') + '\n'
-      + '  • Licensed States: '+ (a.numStates ||'') + '\n\n'
+      + '  • Type: '           + (a.orgType   ||'') + '\n\n'
       + '\uD83D\uDCCA  Scale & Membership\n'
       + '  • Revenue: '        + (a.revenue   ||'') + '\n'
       + '  • Members: '        + (a.memberCount||'') + '\n'
@@ -18580,29 +18209,6 @@ function SetupBot(props) {
         accRef.current.selectedStates = [extractedState];
         setAnswers(Object.assign({}, accRef.current));
       }
-    }
-
-    // Check if this is numStates - show state selector with HQ state pre-selected
-    if (q.id === 'numStates') {
-      setShowStateSelector(true);
-      // Pre-select HQ state if available
-      var hqState = answers.hqState;
-      var initialState = hqState ? [hqState] : [];
-      setSelectedStates(initialState);
-      accRef.current.selectedStates = initialState;
-      setAnswers(Object.assign({}, accRef.current));
-
-      setTyping(true);
-      setTimeout(function(){
-        setTyping(false);
-        var stateText = 'Which specific states is ' + (answers.orgName || 'your organization') + ' licensed in? Please select all that apply.';
-        if (hqState) {
-          stateText += ' (Note: ' + hqState + ' is pre-selected as your primary domicile state)';
-        }
-        addMsg('bot', stateText);
-        speak(stateText);
-      }, 650);
-      return;
     }
 
     // If we're in edit mode, advance through the group before returning to confirm
@@ -19052,7 +18658,7 @@ function SetupBot(props) {
               </button>
             </div>
           )}
-          {curQ.type==='choice' && !showStateSelector && !showStateRegs && (
+          {curQ.type==='choice' && !showStateSelector && (
             <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
               {(curQ.choices||[]).map(function(c){
                 return (
@@ -19078,227 +18684,6 @@ function SetupBot(props) {
               <option value=''>Select your state...</option>
               {US_STATES.map(function(s){return <option key={s} value={s}>{s}</option>;})}
             </select>
-          )}
-
-          {/* State selector for numStates */}
-          {showStateSelector&&(
-            <div>
-              <div style={{display:'flex',flexWrap:'wrap',gap:5,marginBottom:12,maxHeight:200,overflowY:'auto'}}>
-                {US_STATES.map(function(state){
-                  var selected=selectedStates.indexOf(state)>=0;
-                  return (
-                    <button key={state}
-                      onClick={function(){
-                        var cur=selectedStates.slice();
-                        var idx=cur.indexOf(state);
-                        if(idx>=0){cur.splice(idx,1);}else{cur.push(state);}
-                        setSelectedStates(cur);
-                      }}
-                      style={{background:selected?C.acc+'20':C.card,
-                        border:'1px solid '+(selected?C.acc:C.acc+'40'),
-                        color:selected?C.acc:C.text,
-                        borderRadius:15,padding:'6px 12px',cursor:'pointer',fontSize:10,
-                        whiteSpace:'nowrap'}}>
-                      {selected?'✓ ':''}{state}
-                    </button>
-                  );
-                })}
-              </div>
-              <div style={{display:'flex',gap:8,justifyContent:'center'}}>
-                {function(){
-                  var numStatesSelection = answers.numStates;
-                  var minStates = 0;
-                  var maxStates = 51;
-                  var isValid = false;
-
-                  if (numStatesSelection === '1 state') {
-                    minStates = 1;
-                    maxStates = 1;
-                  } else if (numStatesSelection === '2 to 5 states') {
-                    minStates = 2;
-                    maxStates = 5;
-                  } else if (numStatesSelection === '6 to 15 states') {
-                    minStates = 6;
-                    maxStates = 15;
-                  } else if (numStatesSelection === '16 to 30 states') {
-                    minStates = 16;
-                    maxStates = 30;
-                  } else if (numStatesSelection === '31 to 50 states') {
-                    minStates = 31;
-                    maxStates = 50;
-                  } else if (numStatesSelection === 'All 50 states plus DC') {
-                    minStates = 51;
-                    maxStates = 51;
-                  }
-
-                  isValid = selectedStates.length >= minStates && selectedStates.length <= maxStates;
-                  var rangeText = minStates === maxStates ? minStates + ' state' : minStates + '-' + maxStates + ' states';
-
-                  return (
-                    <button onClick={function(){
-                      if (isValid) {
-                        accRef.current=Object.assign({},accRef.current);
-                        accRef.current.selectedStates=selectedStates;
-                        setAnswers(Object.assign({},accRef.current));
-                        setShowStateSelector(false);
-                        addMsg('user', selectedStates.length + ' states selected: ' + selectedStates.slice(0,3).join(', ') + (selectedStates.length>3?'...':''));
-                        setTyping(true);
-
-                        // Start state-by-state regulation selection
-                        setStateRegIdx(0);
-                        var regs = {};
-                        selectedStates.forEach(function(s){ regs[s] = []; });
-                        setStateRegs(regs);
-
-                        setTimeout(function(){
-                          setTyping(false);
-                          // Start with first state's regulations
-                          var firstState = selectedStates[0];
-                          var stateRegs = STATE_REGULATIONS[firstState] || ['HIPAA (Federal)'];
-                          addMsg('bot', 'Great! Now let\'s configure compliance for ' + firstState + '. Which of these key healthcare cyber regulations applies? Select all that comply.');
-                          speak('Great! Now let\'s configure compliance for ' + firstState + '. Which of these key healthcare cyber regulations applies? Select all that comply.');
-                          setShowStateRegs(true);
-                        }, 650);
-                      } else {
-                        // Show error message
-                        var errorMsg = 'Please select ';
-                        if (minStates === maxStates) {
-                          errorMsg += minStates + ' state';
-                        } else {
-                          errorMsg += 'between ' + minStates + ' and ' + maxStates + ' states';
-                        }
-                        errorMsg += ' to proceed with "' + numStatesSelection + '". You currently have ' + selectedStates.length + ' selected.';
-                        addMsg('bot', errorMsg);
-                        speak(errorMsg);
-                      }
-                    }}
-                      style={{background:C.acc,border:'none',color:'#fff',borderRadius:8,
-                        padding:'8px 16px',cursor:'pointer',fontSize:11,fontWeight:700,
-                        opacity:!isValid?0.4:1}}>
-                      Confirm {selectedStates.length} states {isValid ? '(' + rangeText + ')' : '(need ' + rangeText + ')'}
-                    </button>
-                  );
-                }()}
-                <button onClick={function(){
-                  setShowStateSelector(false);
-                  setTyping(true);
-                  setTimeout(function(){
-                    setTyping(false);
-                    var text='Let\'s try that again. ' + resolve(curQ.ask);
-                    addMsg('bot', text);
-                    speak(text);
-                  }, 400);
-                }}
-                  style={{background:C.card,border:'1px solid '+C.border,color:C.text,
-                    borderRadius:8,padding:'8px 16px',cursor:'pointer',fontSize:11}}>
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* State-by-state regulation selector */}
-          {showStateRegs && (
-            <div>
-              <div style={{display:'flex',flexWrap:'wrap',gap:5,marginBottom:12,maxHeight:200,overflowY:'auto'}}>
-                {(STATE_REGULATIONS[selectedStates[stateRegIdx]]||['HIPAA (Federal)']).map(function(reg){
-                  var currentRegs = stateRegs[selectedStates[stateRegIdx]];
-                  var regsArray = Array.isArray(currentRegs)?currentRegs:[];
-                  var selected = regsArray.indexOf(reg) >= 0;
-                  return (
-                    <button key={reg}
-                      onClick={function(){
-                        var curVal = stateRegs[selectedStates[stateRegIdx]];
-                        var cur = Array.isArray(curVal)?curVal.slice():[];
-                        var idx = cur.indexOf(reg);
-                        if(idx >= 0) {cur.splice(idx,1);} else {cur.push(reg);}
-                        var updated = {};
-                        updated[selectedStates[stateRegIdx]] = cur;
-                        setStateRegs(Object.assign({},stateRegs,updated));
-                      }}
-                      style={{background:selected?C.acc+'20':C.card,
-                        border:'1px solid '+(selected?C.acc:C.acc+'40'),
-                        color:selected?C.acc:C.text,
-                        borderRadius:15,padding:'6px 12px',cursor:'pointer',fontSize:10,
-                        whiteSpace:'nowrap'}}>
-                      {selected?'✓ ':''}{reg}
-                    </button>
-                  );
-                })}
-              </div>
-              <div style={{display:'flex',gap:8,justifyContent:'center'}}>
-                <button onClick={function(){
-                  var currentRegsVal = stateRegs[selectedStates[stateRegIdx]];
-                  var currentRegs = Array.isArray(currentRegsVal)?currentRegsVal:[];
-                  if (currentRegs.length === 0) {
-                    addMsg('bot', 'Please select at least one regulation for ' + selectedStates[stateRegIdx] + ' before proceeding.');
-                    speak('Please select at least one regulation before proceeding.');
-                    return;
-                  }
-
-                  // Move to next state or finish
-                  if (stateRegIdx < selectedStates.length - 1) {
-                    var nextIdx = stateRegIdx + 1;
-                    var nextState = selectedStates[nextIdx];
-                    var nextRegs = STATE_REGULATIONS[nextState] || ['HIPAA (Federal)'];
-                    setStateRegIdx(nextIdx);
-                    addMsg('user', currentRegs.length + ' regulations selected for ' + selectedStates[stateRegIdx]);
-                    setTyping(true);
-                    setTimeout(function(){
-                      setTyping(false);
-                      addMsg('bot', 'Excellent! Now for ' + nextState + '. Which of these key healthcare cyber regulations applies?');
-                      speak('Excellent! Now for ' + nextState + '. Which of these key healthcare cyber regulations applies?');
-                    }, 1200);
-                  } else {
-                    // All states done - proceed to next question
-                    accRef.current.stateRegulations = stateRegs;
-                    setAnswers(Object.assign({},accRef.current));
-                    setShowStateRegs(false);
-                    addMsg('user', 'Completed state-specific regulation configuration');
-                    setTyping(true);
-                    setTimeout(function(){
-                      setTyping(false);
-                      var next=qIdx+1;
-                      var nq=QS[next];
-                      if(nq){
-                        var text=resolve(nq.ask);
-                        addMsg('bot', text);
-                        speak(text);
-                        setQIdx(next);
-                      }
-                    }, 650);
-                  }
-                }}
-                  style={{background:C.acc,border:'none',color:'#fff',borderRadius:8,
-                    padding:'8px 16px',cursor:'pointer',fontSize:11,fontWeight:700}}>
-                  Confirm {(function(){
-                    var regs = stateRegs[selectedStates[stateRegIdx]];
-                    return (Array.isArray(regs)?regs:[]).length;
-                  }())} regulations for {selectedStates[stateRegIdx]}
-                </button>
-                <button onClick={function(){
-                  setShowStateRegs(false);
-                  setTyping(true);
-                  setTimeout(function(){
-                    setTyping(false);
-                    var text='Let\'s try that again. Which of these key healthcare cyber regulations applies for ' + selectedStates[stateRegIdx] + '?';
-                    addMsg('bot', text);
-                    speak(text);
-                  }, 400);
-                }}
-                  style={{background:C.card,border:'1px solid '+C.border,color:C.text,
-                    borderRadius:8,padding:'8px 16px',cursor:'pointer',fontSize:11}}>
-                  Cancel
-                </button>
-              </div>
-              <div style={{display:'flex',gap:3,justifyContent:'center',marginTop:9}}>
-                {selectedStates.map(function(s,i){
-                  return <div key={i} style={{height:4,borderRadius:2,transition:'all 0.25s',
-                    width:i===stateRegIdx?16:4,
-                    background:i<stateRegIdx?C.acc:i===stateRegIdx?'linear-gradient(90deg,'+C.acc+',#A78BFA)':C.border}}/>;
-                })}
-              </div>
-            </div>
           )}
 
           {/* Progress dots */}
@@ -20019,29 +19404,6 @@ function BusinessMapDash(props) {
                 borderRadius:8,padding:"8px 16px",textAlign:"center"}}>
                 <div style={{color:riskColor(selAppData.risk),fontSize:11,
                   fontWeight:800}}>{selAppData.risk} Risk</div>
-              </div>
-            </div>
-
-            {/* Regulatory status grid */}
-            <div style={{marginBottom:16}}>
-              <div style={{color:C.muted,fontSize:10,fontWeight:700,
-                textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:8}}>
-                Regulatory Compliance Status
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
-                {Object.keys(selAppData.regs).map(function(reg){
-                  var status = selAppData.regs[reg];
-                  var bs = regBadge(status);
-                  var labels = {hipaa:"HIPAA",nist:"NIST",pci:"PCI DSS",cms:"CMS"};
-                  return (
-                    <div key={reg} style={{background:bs.bg,border:"1px solid "+bs.fg+"30",
-                      borderRadius:8,padding:"10px 12px",textAlign:"center"}}>
-                      <div style={{color:C.muted,fontSize:9,fontWeight:700,
-                        textTransform:"uppercase",marginBottom:4}}>{labels[reg]}</div>
-                      <div style={{color:bs.fg,fontSize:13,fontWeight:800}}>{status}</div>
-                    </div>
-                  );
-                })}
               </div>
             </div>
 
@@ -24548,15 +23910,6 @@ function CyberRxApp() {
         if(orgData.patch){
           setRootPatch(orgData.patch);
         }
-        if(orgData.linesOfBiz){
-          setRootLinesOfBiz(orgData.linesOfBiz);
-        }
-        if(orgData.bcbsAffiliated){
-          setRootBcbsAffiliated(orgData.bcbsAffiliated);
-        }
-        if(orgData.hasFEP){
-          setRootHasFEP(orgData.hasFEP);
-        }
         if(orgData.vendorSel){
           setRootVendorSel(orgData.vendorSel);
         }
@@ -24645,15 +23998,6 @@ function CyberRxApp() {
           }
           if(localData.patch){
             setRootPatch(localData.patch);
-          }
-          if(localData.linesOfBiz){
-            setRootLinesOfBiz(localData.linesOfBiz);
-          }
-          if(localData.bcbsAffiliated){
-            setRootBcbsAffiliated(localData.bcbsAffiliated);
-          }
-          if(localData.hasFEP){
-            setRootHasFEP(localData.hasFEP);
           }
           if(localData.vendorSel){
             setRootVendorSel(localData.vendorSel);
@@ -24792,7 +24136,6 @@ function CyberRxApp() {
     syncMeta:syncMeta, setSyncMeta:setSyncMeta,
     rootInfraSel:rootInfraSel, setRootInfraSel:setRootInfraSel,
     rootRouteStatus:rootRouteStatus, setRootRouteStatus:setRootRouteStatus,
-    linesOfBiz:rootLinesOfBiz, bcbsAffiliated:rootBcbsAffiliated, hasFEP:rootHasFEP,
     docResults:docResults, setDocResults:setDocResults,
     appPolicyFiles:appPolicyFiles, setAppPolicyFiles:setAppPolicyFiles,
   };
