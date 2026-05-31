@@ -114,29 +114,59 @@ function nameFromEmail(e) {
 }
 
 // --- NAV ----------------------------------------------------------------------
-var NAV = [
-  {id:"home",      label:"Home",                icon:"🏠", mod:""},
-  {id:"crownjewels", label:"Crown Jewels (Business Processes)", icon:"💎", mod:"F-CJ"},
-  {id:"bizlines",  label:"Business Lines",       icon:"🗺", mod:"F01"},
-  {id:"appmap",    label:"Application Map",      icon:"🗄", mod:"F01b"},
-  {id:"vendormap", label:"Vendor Ecosystem Map", icon:"🌐", mod:"F03b"},
-  {id:"attackpaths",  label:"Attack Path Analyzer",   icon:"⚔",  mod:"F-TI"},
-  {id:"hub",       label:"Command Center",      icon:"*", mod:"F08"},
-  {id:"dashboard", label:"CISO Dashboard",      icon:"S", mod:"F08a"},
-  {id:"cio",       label:"CIO Dashboard",       icon:"I", mod:"F08e"},
-  {id:"clo",       label:"CLO Dashboard",       icon:"L", mod:"F08f"},
-  {id:"cro",       label:"CRO / Audit",         icon:"C", mod:"F08b"},
-  {id:"cfo",       label:"CFO Dashboard",       icon:"F", mod:"F08c"},
-  {id:"boarddash", label:"Board Dashboard",     icon:"B", mod:"F08d"},
-  {id:"audit",      label:"Internal Audit",       icon:"A", mod:"F08g"},
-  {id:"execution", label:"Execution Layer",     icon:"⚡", mod:"F09"},
-  {id:"setup",     label:"Setup & Frameworks", icon:"🏢", mod:"F02"},
-  {id:"controls",  label:"Control Validation",  icon:"✓",  mod:"F04"},
-  {id:"assets",    label:"Claim Lifecycle",     icon:"🔗", mod:"F03"},
-  {id:"scoring",   label:"Risk Scoring + MITRE",icon:"📈", mod:"F05"},
-  {id:"evidence",  label:"Evidence Repository", icon:"📁", mod:"F06"},
-  {id:"board",     label:"Board Risk Report",   icon:"📋", mod:"F07"},
+var NAV_GROUPS = [
+  {
+    label: "Strategic",
+    items: [
+      {id:"home",      label:"Home",                icon:"🏠", mod:""},
+      {id:"hub",       label:"Command Center",      icon:"✦", mod:"F08"},
+    ]
+  },
+  {
+    label: "Business Context",
+    items: [
+      {id:"crownjewels", label:"Crown Jewels",      icon:"💎", mod:"F-CJ"},
+      {id:"bizlines",  label:"Business Lines",       icon:"🗺", mod:"F01"},
+      {id:"appmap",    label:"Application Map",      icon:"🗄", mod:"F01b"},
+      {id:"vendormap", label:"Vendor Ecosystem",     icon:"🌐", mod:"F03b"},
+    ]
+  },
+  {
+    label: "Threat Analysis",
+    items: [
+      {id:"attackpaths",  label:"Attack Path Analyzer",   icon:"⚔",  mod:"F-TI"},
+    ]
+  },
+  {
+    label: "Executives",
+    items: [
+      {id:"dashboard", label:"CISO Dashboard",      icon:"S", mod:"F08a"},
+      {id:"cio",       label:"CIO Dashboard",       icon:"I", mod:"F08e"},
+      {id:"clo",       label:"CLO Dashboard",       icon:"L", mod:"F08f"},
+      {id:"cro",       label:"CRO / Audit",         icon:"C", mod:"F08b"},
+      {id:"cfo",       label:"CFO Dashboard",       icon:"F", mod:"F08c"},
+      {id:"boarddash", label:"Board Dashboard",     icon:"B", mod:"F08d"},
+      {id:"audit",      label:"Internal Audit",       icon:"A", mod:"F08g"},
+    ]
+  },
+  {
+    label: "Operations",
+    items: [
+      {id:"execution", label:"Execution Layer",     icon:"⚡", mod:"F09"},
+      {id:"setup",     label:"Setup & Frameworks", icon:"🏢", mod:"F02"},
+      {id:"controls",  label:"Control Validation",  icon:"✓",  mod:"F04"},
+      {id:"assets",    label:"Claim Lifecycle",     icon:"🔗", mod:"F03"},
+      {id:"scoring",   label:"Risk Scoring + MITRE",icon:"📈", mod:"F05"},
+      {id:"evidence",  label:"Evidence Repository", icon:"📁", mod:"F06"},
+      {id:"board",     label:"Board Risk Report",   icon:"📋", mod:"F07"},
+    ]
+  },
 ];
+
+// Flatten for backwards compatibility
+var NAV = NAV_GROUPS.reduce(function(acc, group) {
+  return acc.concat(group.items);
+}, []);
 
 // --- Score colours ------------------------------------------------------------
 var SEV_C = {Critical:"#EF4545", High:"#F5A623", Medium:"#3B9EFF", Low:"#0FBB80"};
@@ -17039,23 +17069,43 @@ function Shell(props) {
           )}
         </div>
         <div style={{flex:1, padding:"8px 0"}}>
-          {NAV.map(function(n){
-            var active = page===n.id;
+          {NAV_GROUPS.map(function(group){
             return (
-              <div key={n.id} onClick={function(){go(n.id);}}
-                style={{display:"flex", alignItems:"center", gap:9,
-                  padding:"8px 14px", cursor:"pointer",
-                  background:active?C.acc+"12":"transparent",
-                  borderLeft:"3px solid "+(active?C.acc:"transparent"),
-                  margin:"1px 0"}}>
-                <span style={{fontSize:13, lineHeight:1}}>{n.icon}</span>
-                <div>
-                  <div style={{color:active?C.acc:C.muted,
-                    fontSize:11, fontWeight:active?700:400}}>{n.label}</div>
-                  {n.mod && (
-                    <div style={{color:active?C.acc+"80":C.dim, fontSize:8}}>{n.mod}</div>
-                  )}
+              <div key={group.label}>
+                {/* Section header */}
+                <div style={{padding:"12px 14px 4px", color:C.muted, fontSize:9, fontWeight:700, letterSpacing:"0.5px", textTransform:"uppercase"}}>
+                  {group.label}
                 </div>
+                {/* Group items */}
+                {group.items.map(function(n){
+                  var active = page===n.id;
+                  return (
+                    <div key={n.id} onClick={function(){go(n.id);}}
+                      style={{display:"flex", alignItems:"center", gap:9,
+                        padding:"8px 14px", cursor:"pointer",
+                        background:active?C.acc+"12":"transparent",
+                        borderLeft:"3px solid "+(active?C.acc:"transparent"),
+                        margin:"1px 0"}}
+                      onMouseEnter={function(e){
+                        if(!active) {
+                          e.currentTarget.style.background = C.acc+"08";
+                          e.currentTarget.style.color = C.acc;
+                        }
+                      }}
+                      onMouseLeave={function(e){
+                        if(!active) {
+                          e.currentTarget.style.background = "transparent";
+                          e.currentTarget.style.color = C.muted;
+                        }
+                      }}>
+                      <span style={{fontSize:13, lineHeight:1}}>{n.icon}</span>
+                      <div>
+                        <div style={{color:active?C.acc:C.muted,
+                          fontSize:11, fontWeight:active?700:400}}>{n.label}</div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             );
           })}
