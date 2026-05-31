@@ -11,7 +11,7 @@
 import React, { useMemo } from 'react';
 import StatusIcon from '../atoms/StatusIcon';
 
-const ConnectorHealthWidget = ({ vendors = [], statistics }) => {
+const ConnectorHealthWidget = ({ vendors = [], statistics, mobile = false }) => {
   // Calculate connector status counts
   const statusCounts = useMemo(() => {
     const counts = {
@@ -145,9 +145,9 @@ const ConnectorHealthWidget = ({ vendors = [], statistics }) => {
       {/* Status Cards */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
-        gap: 12,
-        marginBottom: 16
+        gridTemplateColumns: mobile ? 'repeat(2, 1fr)' : 'repeat(2, 1fr)',
+        gap: mobile ? 8 : 12,
+        marginBottom: mobile ? 12 : 16
       }}>
         {statusConfig.map((status) => {
           const count = statusCounts[status.key];

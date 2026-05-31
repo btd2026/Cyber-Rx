@@ -161,6 +161,7 @@ app.get('/health', (req, res) => {
 app.use('/api/itsm',             [apiPostLimiter, apiPutLimiter], require('./routes/itsm'));
 app.use('/api/tools',            [apiGetLimiter, apiPostLimiter], require('./routes/tools'));
 app.use('/api/credentials',      [apiGetLimiter, apiPostLimiter, apiDeleteLimiter], require('./routes/credentials'));
+app.use('/api/credentials',      [apiGetLimiter, apiPostLimiter], require('./routes/credentialRotation'));
 app.use('/api/orgs',             [apiGetLimiter, apiPostLimiter], require('./routes/orgs'));
 
 // M3: Authentication Routes (public - no auth required for signup/login)
@@ -194,6 +195,9 @@ app.use('/api/vendor-monitoring',  [apiGetLimiter, apiPostLimiter], require('./r
 
 // Vendor Sync Status API with rate limiting
 app.use('/api/vendors',            [apiGetLimiter], require('./routes/syncStatus'));
+
+// PDF Report Generation with rate limiting
+app.use('/api/reports',            [apiPostLimiter], require('./routes/reports'));
 
 // Seed management (admin routes - protect in production) with rate limiting
 app.use('/api/seeds',             [apiGetLimiter, apiPostLimiter, apiDeleteLimiter], require('./routes/seeds'));

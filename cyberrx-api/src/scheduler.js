@@ -7,6 +7,8 @@ const logger = require('./utils/logger');
 const { queue, addJob, JobTypes } = require('./workers/queue');
 const { getSyncInterval, getTierPriority, getEnabledConnectors } = require('./utils/syncConfig');
 const Vendor = require('./models/Vendor');
+const CredentialRotationService = require('./services/CredentialRotationService');
+const AlertService = require('./services/AlertService');
 
 // Existing tool sync schedule (legacy metric sync)
 const SYNC_SCHEDULE = {
@@ -270,6 +272,70 @@ async function stopVendorSyncs() {
 }
 
 /**
+ * Check credential rotation for all organizations
+ * Runs daily at 9 AM
+ */
+async function checkCredentialRotations() {
+  try {
+    await db.init();
+    logger.info('[scheduler] Starting credential rotation check');
+
+    const rotationService = new CredentialRotationService();
+    const alertService = new AlertService();
+
+    // Get all organizations
+    const orgs = await db.query('SELECT id FROM orgs');
+
+    logger.info(`[scheduler] Checking credentials for ${orgs.length} organizations`);
+
+    for (const org of orgs) {
+      try {
+        // Check credentials for rotation
+        const alerts = await rotationService.checkCredentialRotation(org.id);
+
+        if (alerts.length > 0) {
+          logger.info(`[scheduler] Found ${alerts.length} credentials needing rotation for org ${org.id}`);
+
+          // Send alerts for credentials needing rotation
+          for (const alert of alerts) {
+            try {
+              // Check severity - only send alerts for Medium or higher
+              if (alert.severity !== 'Low') {
+                await alertService.sendAlert(alert);
+                logger.info('[scheduler] Credential rotation alert sent', {
+                  organizationId: org.id,
+                  connectorType: alert.connectorType,
+                  severity: alert.severity
+                });
+              }
+            } catch (alertError) {
+              logger.error('[scheduler] Failed to send credential rotation alert', {
+                error: alertError.message,
+                organizationId: org.id,
+                connectorType: alert.connectorType
+              });
+            }
+          }
+        } else {
+          logger.info(`[scheduler] No credentials need rotation for org ${org.id}`);
+        }
+      } catch (orgError) {
+        logger.error(`[scheduler] Failed to check credentials for org ${org.id}:`, {
+          error: orgError.message
+        });
+      }
+    }
+
+    logger.info('[scheduler] Credential rotation check completed');
+  } catch (error) {
+    logger.error('[scheduler] Fatal error in credential rotation check:', {
+      error: error.message,
+      stack: error.stack
+    });
+  }
+}
+
+/**
  * Main scheduler initialization
  */
 async function runScheduler() {
@@ -310,6 +376,17 @@ async function runScheduler() {
   // Start vendor sync scheduling
   logger.info('[scheduler] Starting vendor sync scheduling');
   await scheduleVendorSyncs();
+
+  // Start credential rotation check - runs daily at 9 AM
+  logger.info('[scheduler] Starting credential rotation check');
+  const rotationTask = cron.schedule('0 9 * * *', checkCredentialRotations, {
+    scheduled: true,
+    timezone: process.env.TZ || 'UTC'
+  });
+  logger.info('[scheduler] Credential rotation check scheduled for 9 AM daily');
+
+  // Run credential rotation check immediately on startup
+  await checkCredentialRotations();
 
   logger.info('[scheduler] All scheduler components started');
 }
