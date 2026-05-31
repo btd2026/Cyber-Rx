@@ -9,7 +9,7 @@
 
 import React, { useMemo } from 'react';
 
-const RiskDistributionWidget = ({ vendors = [] }) => {
+const RiskDistributionWidget = ({ vendors = [], mobile = false }) => {
   // Calculate risk distribution
   const distribution = useMemo(() => {
     const counts = {
@@ -142,9 +142,9 @@ const RiskDistributionWidget = ({ vendors = [] }) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 16
+        marginBottom: mobile ? 12 : 16
       }}>
-        <svg width={200} height={200} viewBox="0 0 200 200">
+        <svg width={mobile ? 150 : 200} height={mobile ? 150 : 200} viewBox="0 0 200 200">
           {segments.map((segment, index) => (
             <path
               key={segment.key}
@@ -174,8 +174,8 @@ const RiskDistributionWidget = ({ vendors = [] }) => {
       {/* Legend */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
-        gap: 8
+        gridTemplateColumns: mobile ? 'repeat(1, 1fr)' : 'repeat(2, 1fr)',
+        gap: mobile ? 6 : 8
       }}>
         {segments.map((segment) => (
           <div

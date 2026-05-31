@@ -11,7 +11,7 @@
 
 import React from 'react';
 
-const RecentAlertsWidget = ({ alerts = [], onAcknowledge, orgId }) => {
+const RecentAlertsWidget = ({ alerts = [], onAcknowledge, orgId, mobile = false }) => {
   // Severity configuration
   const severityConfig = {
     critical: {
@@ -106,8 +106,8 @@ const RecentAlertsWidget = ({ alerts = [], onAcknowledge, orgId }) => {
       backgroundColor: '#FFFFFF',
       borderRadius: 8,
       border: '1px solid #E5E7EB',
-      padding: 16,
-      maxHeight: 400,
+      padding: mobile ? 12 : 16,
+      maxHeight: mobile ? 300 : 400,
       display: 'flex',
       flexDirection: 'column'
     }}>
