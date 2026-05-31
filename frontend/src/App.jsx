@@ -4314,6 +4314,99 @@ var CONN_OPTIONS = [
   {id:"manual",    label:"Manual Upload",    icon:"📄", note:"CSV / file export"},
 ];
 
+// ── Tool-specific connection method support ─────────────────────────────────
+// Based on comprehensive security tool integration research
+// Maps each tool to the connection methods it actually supports
+var TOOL_CONNECTION_METHODS = {
+  // IAM Tools - All support REST API, some have agents/special connectors
+  "Okta":                    ["api","agent","manual"],
+  "SailPoint IGA":           ["api","agent","manual"],
+  "Saviynt":                 ["api","agent","manual"],
+  "CyberArk PAM":            ["api","agent","manual"],
+  "Microsoft Entra ID":      ["api","agent","manual"],
+  "Ping Identity":           ["api","agent","manual"],
+  "ForgeRock":               ["api","agent","manual"],
+  "BeyondTrust":             ["api","agent","manual"],
+  "HashiCorp Vault":         ["api","agent","manual"],
+  "Delinea":                 ["api","agent","manual"],
+
+  // EDR Tools - All have agents, support syslog/CEF, REST APIs available
+  "CrowdStrike Falcon":      ["api","agent","syslog","manual"],
+  "SentinelOne":             ["api","agent","syslog","manual"],
+  "Microsoft Defender":      ["api","agent","syslog","manual"],
+  "Carbon Black":           ["api","agent","syslog","manual"],
+  "Tanium":                 ["api","agent","syslog","manual"],
+  "Trend Micro":            ["api","agent","syslog","manual"],
+  "Sophos":                 ["api","agent","syslog","manual"],
+  "Trellix":                ["api","agent","syslog","manual"],
+
+  // SIEM Tools - All support log forwarding, most have webhooks
+  "Splunk SIEM":             ["api","syslog","webhook","manual"],
+  "Microsoft Sentinel":      ["api","syslog","webhook","manual"],
+  "IBM QRadar":             ["api","syslog","manual"],
+  "LogRhythm":              ["api","syslog","manual"],
+  "Sumo Logic":             ["api","syslog","manual"],
+  "Securonix":              ["api","syslog","manual"],
+  "Exabeam":                ["api","syslog","webhook","manual"],
+  "Chronicle":              ["api","syslog","manual"], // Only raw logs export, not detections
+
+  // Network Security - Support syslog/CEF, REST APIs available
+  "Palo Alto NGFW":         ["api","syslog","manual"],
+  "Cisco Firepower":        ["api","syslog","manual"],
+  "Fortinet FortiGate":     ["api","syslog","manual"],
+  "Check Point":            ["api","syslog","manual"],
+  "Zscaler ZIA":            ["api","agent","syslog","manual"], // NSS/LSS for Web/Firewall logs
+  "Juniper SRX":            ["api","syslog","manual"],
+  "F5 BIG-IP":             ["api","syslog","manual"],
+  "Imperva WAF":           ["api","syslog","manual"],
+  "Zscaler ZPA":            ["api","syslog","manual"], // LSS for streaming
+
+  // GRC & Compliance - Primarily REST API, some have webhook/event support
+  "ServiceNow GRC":         ["api","webhook","manual"],
+  "OneTrust":               ["api","manual"],
+  "RSA Archer":             ["api","manual"],
+  "MetricStream":          ["api","manual"],
+  "LogicGate":              ["api","manual"],
+  "AuditBoard":             ["api","manual"],
+  "Hyperproof":             ["api","manual"],
+  "Vanta":                  ["api","manual"],
+
+  // ITSM & Ticketing - REST API primary, some webhook support
+  "ServiceNow":             ["api","webhook","manual"],
+  "Jira Service Management":["api","manual"],
+  "BMC Remedy":             ["api","manual"],
+  "Freshservice":           ["api","manual"],
+  "Cherwell":               ["api","manual"],
+
+  // Cloud Security - REST API, some have webhook support
+  "Prisma Cloud":           ["api","manual"],
+  "Wiz":                    ["api","manual"],
+  "Orca Security":          ["api","webhook","manual"],
+  "Lacework":               ["api","manual"],
+  "Aqua Security":          ["api","manual"],
+  "Tenable.io":             ["api","manual"],
+  "Qualys":                 ["api","manual"],
+
+  // Email & Web Security - REST API, SIEM integration via log forwarding
+  "Proofpoint":             ["api","syslog","manual"],
+  "Mimecast":               ["api","syslog","manual"],
+  "Abnormal Security":      ["api","manual"],
+  "Cisco Umbrella":         ["api","manual"],
+  "Zscaler ZPA":            ["api","syslog","manual"],
+  "Menlo Security":         ["api","manual"],
+};
+
+// Helper function to get available connection methods for a tool
+function getToolConnectionMethods(toolName) {
+  return TOOL_CONNECTION_METHODS[toolName] || ["api","manual"]; // Default fallback
+}
+
+// Helper function to check if a tool supports a specific connection method
+function toolSupportsMethod(toolName, methodId) {
+  var methods = getToolConnectionMethods(toolName);
+  return methods.indexOf(methodId) !== -1;
+}
+
 
 function Setup(props) {
   var orgName, setOrgName, orgType, setOrgType, members, setMembers, onDone, goBack;
@@ -6128,7 +6221,12 @@ function Setup(props) {
                       var key=group.cat+":"+tool;
                       var isOn=!!infraSel[key];
                       var isRec=!!(computeInfraPresets&&getRecommendedKeys(selProcs)[key]);
-                      var method=infraConn[key]||"api";
+                      // Get tool's supported methods and ensure current method is valid
+                      var supportedMethods = getToolConnectionMethods(tool);
+                      var currentMethod = infraConn[key];
+                      var method = (currentMethod && supportedMethods.indexOf(currentMethod) !== -1)
+                        ? currentMethod
+                        : supportedMethods[0]; // Default to first supported method
                       var creds=infraCreds[key]||{};
                       return (
                         <div key={tool} style={{border:"1.5px solid "+(isOn?group.color+"60":C.border),
@@ -6151,7 +6249,12 @@ function Setup(props) {
                                 onChange={function(e){setInfraConn(function(c){return Object.assign({},c,mk(key,e.target.value));});}}
                                 style={{width:"100%",background:"transparent",border:"none",color:group.color,
                                   fontSize:9,outline:"none",cursor:"pointer",fontWeight:700,marginBottom:method?4:0}}>
-                                {CONN_OPTIONS.map(function(c){return <option key={c.id} value={c.id}>{c.icon+" "+c.label}</option>;})}
+                                {CONN_OPTIONS.filter(function(c){
+                                  // Filter options based on tool's supported connection methods
+                                  return toolSupportsMethod(tool, c.id);
+                                }).map(function(c){
+                                  return <option key={c.id} value={c.id}>{c.icon+" "+c.label}</option>;
+                                })}
                               </select>
                               {method==="api"&&(
                                 <div>
