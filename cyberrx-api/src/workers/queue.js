@@ -15,6 +15,7 @@ const logger = require('../utils/logger');
  * - SYNC_VENDOR: Sync all connectors for one vendor
  * - SYNC_CONNECTOR: Sync one connector for all vendors
  * - ASSESSMENT: Full vendor risk assessment
+ * - SEND_ALERT: Send vendor monitoring alert (email/Slack)
  *
  * Environment Variables:
  * - REDIS_URL: Redis connection URL (fallback: localhost:6379)
@@ -27,7 +28,8 @@ const logger = require('../utils/logger');
 const JobTypes = {
   SYNC_VENDOR: 'sync_vendor',
   SYNC_CONNECTOR: 'sync_connector',
-  ASSESSMENT: 'assessment'
+  ASSESSMENT: 'assessment',
+  SEND_ALERT: 'SEND_ALERT'
 };
 
 // Queue configuration
