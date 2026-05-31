@@ -15,6 +15,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import RiskDistributionWidget from '../components/dashboard/RiskDistributionWidget';
 import ConnectorHealthWidget from '../components/dashboard/ConnectorHealthWidget';
 import RecentAlertsWidget from '../components/dashboard/RecentAlertsWidget';
+import VendorTrendChart from '../components/dashboard/VendorTrendChart';
 import StatusIcon from '../components/atoms/StatusIcon';
 
 const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => {
@@ -432,6 +433,18 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
           alerts={alerts}
           onAcknowledge={acknowledgeAlert}
           orgId={orgId}
+        />
+      </div>
+
+      {/* Trend Chart Section */}
+      <div style={{ marginBottom: 24 }}>
+        <VendorTrendChart
+          vendors={vendors}
+          api_url={api_url}
+          authToken={authToken}
+          orgId={orgId}
+          timeRange="12M"
+          showAnnotations={true}
         />
       </div>
 
