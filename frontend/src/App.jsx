@@ -6339,20 +6339,237 @@ function Setup(props) {
                                 </div>
                               )}
                               {method==="agent"&&(
-                                <input placeholder="Agent Token"
-                                  value={creds.agentToken||""}
-                                  onChange={function(e){setInfraCredField(key,"agentToken",e.target.value);}}
-                                  style={{width:"100%",background:C.bg,border:"1px solid "+C.border,borderRadius:4,
-                                    padding:"3px 7px",fontSize:9,color:C.text,outline:"none",boxSizing:"border-box"}}/>
+                                <div>
+                                  <div style={{color:group.color,fontSize:8,fontWeight:600,marginBottom:1,marginTop:2}}>
+                                    Agent Registration Token
+                                  </div>
+                                  <input placeholder="Enter agent token from vendor portal"
+                                    value={creds.agentToken||""}
+                                    onChange={function(e){setInfraCredField(key,"agentToken",e.target.value);}}
+                                    style={{width:"100%",background:C.bg,border:"1px solid "+C.border,borderRadius:4,
+                                      padding:"3px 7px",fontSize:9,color:C.text,outline:"none",boxSizing:"border-box",marginBottom:8}}/>
+                                  <div style={{fontSize:8,color:C.muted,lineHeight:1.4,background:C.bg+"80",padding:"4px 6px",borderRadius:4}}>
+                                    <div style={{fontWeight:600,marginBottom:2}}>📥 Agent Setup</div>
+                                    <div>1. Download agent from vendor console</div>
+                                    <div>2. Install on your log/event servers</div>
+                                    <div>3. Register with token above</div>
+                                  </div>
+                                </div>
                               )}
                               {method==="syslog"&&(
-                                <div style={{display:"flex",gap:4}}>
-                                  <input placeholder="Host" value={creds.host||""}
-                                    onChange={function(e){setInfraCredField(key,"host",e.target.value);}}
-                                    style={{flex:2,background:C.bg,border:"1px solid "+C.border,borderRadius:4,padding:"3px 7px",fontSize:9,color:C.text,outline:"none"}}/>
-                                  <input placeholder="Port" value={creds.port||"514"}
-                                    onChange={function(e){setInfraCredField(key,"port",e.target.value);}}
-                                    style={{flex:1,background:C.bg,border:"1px solid "+C.border,borderRadius:4,padding:"3px 7px",fontSize:9,color:C.text,outline:"none"}}/>
+                                <div>
+                                  <div style={{display:"flex",gap:4,marginBottom:3}}>
+                                    <div style={{flex:2}}>
+                                      <div style={{color:group.color,fontSize:8,fontWeight:600,marginBottom:1}}>Syslog Host</div>
+                                      <input placeholder="syslog.example.com" value={creds.host||""}
+                                        onChange={function(e){setInfraCredField(key,"host",e.target.value);}}
+                                        style={{width:"100%",background:C.bg,border:"1px solid "+C.border,borderRadius:4,padding:"3px 7px",fontSize:9,color:C.text,outline:"none"}}/>
+                                    </div>
+                                    <div style={{flex:1}}>
+                                      <div style={{color:group.color,fontSize:8,fontWeight:600,marginBottom:1}}>Port</div>
+                                      <input placeholder="514" value={creds.port||""}
+                                        onChange={function(e){setInfraCredField(key,"port",e.target.value);}}
+                                        style={{width:"100%",background:C.bg,border:"1px solid "+C.border,borderRadius:4,padding:"3px 7px",fontSize:9,color:C.text,outline:"none"}}/>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <div style={{color:group.color,fontSize:8,fontWeight:600,marginBottom:1}}>Format</div>
+                                    <select value={creds.format||"cef"}
+                                      onChange={function(e){setInfraCredField(key,"format",e.target.value);}}
+                                      style={{width:"100%",background:C.bg,border:"1px solid "+C.border,borderRadius:4,padding:"3px 7px",fontSize:9,color:C.text,outline:"none"}}>
+                                      <option value="cef">CEF (Common Event Format)</option>
+                                      <option value="leef">LEEF (Log Event Extended Format)</option>
+                                      <option value="syslog">RFC 5424 Syslog</option>
+                                      <option value="json">JSON</option>
+                                    </select>
+                                  </div>
+                                </div>
+                              )}
+                              {method==="webhook"&&(
+                                <div>
+                                  <div style={{color:group.color,fontSize:8,fontWeight:600,marginBottom:1,marginTop:2}}>
+                                    Webhook URL
+                                  </div>
+                                  <input placeholder="https://your-siem.com/webhook/cyberrx"
+                                    value={creds.webhookUrl||""}
+                                    onChange={function(e){setInfraCredField(key,"webhookUrl",e.target.value);}}
+                                    style={{width:"100%",background:C.bg,border:"1px solid "+C.border,borderRadius:4,
+                                      padding:"3px 7px",fontSize:9,color:C.text,outline:"none",boxSizing:"border-box",marginBottom:3}}/>
+                                  <div style={{display:"flex",gap:4}}>
+                                    <div style={{flex:1}}>
+                                      <div style={{color:group.color,fontSize:8,fontWeight:600,marginBottom:1}}>Auth Header (optional)</div>
+                                      <input placeholder="Bearer xxx" value={creds.authHeader||""}
+                                        onChange={function(e){setInfraCredField(key,"authHeader",e.target.value);}}
+                                        style={{width:"100%",background:C.bg,border:"1px solid "+C.border,borderRadius:4,padding:"3px 7px",fontSize:9,color:C.text,outline:"none"}}/>
+                                    </div>
+                                    <div style={{flex:1}}>
+                                      <div style={{color:group.color,fontSize:8,fontWeight:600,marginBottom:1}}>Event Types</div>
+                                      <select value={creds.eventTypes||"all"}
+                                        onChange={function(e){setInfraCredField(key,"eventTypes",e.target.value);}}
+                                        style={{width:"100%",background:C.bg,border:"1px solid "+C.border,borderRadius:4,padding:"3px 7px",fontSize:9,color:C.text,outline:"none"}}>
+                                        <option value="all">All Events</option>
+                                        <option value="alerts">Alerts Only</option>
+                                        <option value="findings">Findings Only</option>
+                                        <option value="changes">Config Changes</option>
+                                      </select>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                              {method==="database"&&(
+                                <div>
+                                  <div style={{display:"flex",gap:4,marginBottom:3}}>
+                                    <div style={{flex:2}}>
+                                      <div style={{color:group.color,fontSize:8,fontWeight:600,marginBottom:1}}>Database Host</div>
+                                      <input placeholder="db.example.com" value={creds.dbHost||""}
+                                        onChange={function(e){setInfraCredField(key,"dbHost",e.target.value);}}
+                                        style={{width:"100%",background:C.bg,border:"1px solid "+C.border,borderRadius:4,padding:"3px 7px",fontSize:9,color:C.text,outline:"none"}}/>
+                                    </div>
+                                    <div style={{flex:1}}>
+                                      <div style={{color:group.color,fontSize:8,fontWeight:600,marginBottom:1}}>Port</div>
+                                      <input placeholder="5432" value={creds.dbPort||""}
+                                        onChange={function(e){setInfraCredField(key,"dbPort",e.target.value);}}
+                                        style={{width:"100%",background:C.bg,border:"1px solid "+C.border,borderRadius:4,padding:"3px 7px",fontSize:9,color:C.text,outline:"none"}}/>
+                                    </div>
+                                  </div>
+                                  <div style={{marginBottom:3}}>
+                                    <div style={{color:group.color,fontSize:8,fontWeight:600,marginBottom:1}}>Database Name</div>
+                                    <input placeholder="production_db" value={creds.dbName||""}
+                                      onChange={function(e){setInfraCredField(key,"dbName",e.target.value);}}
+                                      style={{width:"100%",background:C.bg,border:"1px solid "+C.border,borderRadius:4,padding:"3px 7px",fontSize:9,color:C.text,outline:"none"}}/>
+                                  </div>
+                                  <div style={{display:"flex",gap:4}}>
+                                    <div style={{flex:1}}>
+                                      <div style={{color:group.color,fontSize:8,fontWeight:600,marginBottom:1}}>Username</div>
+                                      <input placeholder="readonly_user" value={creds.dbUser||""}
+                                        onChange={function(e){setInfraCredField(key,"dbUser",e.target.value);}}
+                                        style={{width:"100%",background:C.bg,border:"1px solid "+C.border,borderRadius:4,padding:"3px 7px",fontSize:9,color:C.text,outline:"none"}}/>
+                                    </div>
+                                    <div style={{flex:1}}>
+                                      <div style={{color:group.color,fontSize:8,fontWeight:600,marginBottom:1}}>Password</div>
+                                      <input placeholder="••••••••" type="password" value={creds.dbPass||""}
+                                        onChange={function(e){setInfraCredField(key,"dbPass",e.target.value);}}
+                                        style={{width:"100%",background:C.bg,border:"1px solid "+C.border,borderRadius:4,padding:"3px 7px",fontSize:9,color:C.text,outline:"none"}}/>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                              {method==="manual"&&(
+                                <div>
+                                  <div style={{fontSize:8,color:C.muted,lineHeight:1.4,background:C.bg+"80",padding:"6px 8px",borderRadius:4,marginBottom:8}}>
+                                    <div style={{fontWeight:600,marginBottom:3,marginTop:2}}>📄 Manual Data Entry Options</div>
+                                    <div style={{marginBottom:2}}>Choose how you want to provide data:</div>
+                                  </div>
+                                  <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                                    <label style={{display:"flex",gap:6,alignItems:"flex-start",cursor:"pointer",padding:4,background:C.bg,border:"1px solid "+C.border,borderRadius:4}}>
+                                      <input type="radio" name={"manualMode_"+key} value="upload"
+                                        checked={creds.manualMode==="upload"}
+                                        onChange={function(e){setInfraCredField(key,"manualMode",e.target.value);}}
+                                        style={{marginTop:2}}/>
+                                      <div style={{flex:1}}>
+                                        <div style={{color:C.text,fontSize:9,fontWeight:600}}>📁 Upload Export File</div>
+                                        <div style={{color:C.muted,fontSize:7}}>CSV/XLSX export from vendor console</div>
+                                      </div>
+                                    </label>
+                                    {creds.manualMode==="upload"&&(
+                                      <div style={{marginLeft:20,marginTop:2}}>
+                                        <input type="file" accept=".csv,.xlsx,.xls"
+                                          onChange={function(e){
+                                            var file=e.target.files[0];
+                                            if(file){setInfraCredField(key,"file",file.name);}
+                                          }}
+                                          style={{fontSize:9,color:C.text}}/>
+                                        <div style={{fontSize:7,color:C.muted,marginTop:2}}>Supported: CSV, XLSX (max 10MB)</div>
+                                      </div>
+                                    )}
+                                    <label style={{display:"flex",gap:6,alignItems:"flex-start",cursor:"pointer",padding:4,background:C.bg,border:"1px solid "+C.border,borderRadius:4}}>
+                                      <input type="radio" name={"manualMode_"+key} value="metrics"
+                                        checked={creds.manualMode==="metrics"}
+                                        onChange={function(e){setInfraCredField(key,"manualMode",e.target.value);}}
+                                        style={{marginTop:2}}/>
+                                      <div style={{flex:1}}>
+                                        <div style={{color:C.text,fontSize:9,fontWeight:600}}>✏️ Enter Key Metrics</div>
+                                        <div style={{color:C.muted,fontSize:7}}>Manual entry of compliance scores & counts</div>
+                                      </div>
+                                    </label>
+                                    {creds.manualMode==="metrics"&&(
+                                      <div style={{marginLeft:20,display:"flex",flexDirection:"column",gap:2}}>
+                                        <div style={{display:"flex",gap:4}}>
+                                          <div style={{flex:1}}>
+                                            <div style={{color:group.color,fontSize:8,fontWeight:600,marginBottom:1}}>Compliance Score (%)</div>
+                                            <input placeholder="85" type="number" min="0" max="100" value={creds.complianceScore||""}
+                                              onChange={function(e){setInfraCredField(key,"complianceScore",e.target.value);}}
+                                              style={{width:"100%",background:C.bg,border:"1px solid "+C.border,borderRadius:4,padding:"3px 7px",fontSize:9,color:C.text,outline:"none"}}/>
+                                          </div>
+                                          <div style={{flex:1}}>
+                                            <div style={{color:group.color,fontSize:8,fontWeight:600,marginBottom:1}}>Open Findings</div>
+                                            <input placeholder="23" type="number" min="0" value={creds.openFindings||""}
+                                              onChange={function(e){setInfraCredField(key,"openFindings",e.target.value);}}
+                                              style={{width:"100%",background:C.bg,border:"1px solid "+C.border,borderRadius:4,padding:"3px 7px",fontSize:9,color:C.text,outline:"none"}}/>
+                                          </div>
+                                        </div>
+                                        <div>
+                                          <div style={{color:group.color,fontSize:8,fontWeight:600,marginBottom:1}}>Last Updated</div>
+                                          <input type="date" value={creds.lastUpdated||""}
+                                            onChange={function(e){setInfraCredField(key,"lastUpdated",e.target.value);}}
+                                            style={{width:"100%",background:C.bg,border:"1px solid "+C.border,borderRadius:4,padding:"3px 7px",fontSize:9,color:C.text,outline:"none"}}/>
+                                        </div>
+                                      </div>
+                                    )}
+                                    <label style={{display:"flex",gap:6,alignItems:"flex-start",cursor:"pointer",padding:4,background:C.bg,border:"1px solid "+C.border,borderRadius:4}}>
+                                      <input type="radio" name={"manualMode_"+key} value="scheduled"
+                                        checked={creds.manualMode==="scheduled"}
+                                        onChange={function(e){setInfraCredField(key,"manualMode",e.target.value);}}
+                                        style={{marginTop:2}}/>
+                                      <div style={{flex:1}}>
+                                        <div style={{color:C.text,fontSize:9,fontWeight:600}}>🔄 Scheduled Export</div>
+                                        <div style={{color:C.muted,fontSize:7}}>Vendor will send scheduled exports (SFTP, email)</div>
+                                      </div>
+                                    </label>
+                                    {creds.manualMode==="scheduled"&&(
+                                      <div style={{marginLeft:20,display:"flex",flexDirection:"column",gap:2}}>
+                                        <div style={{display:"flex",gap:4}}>
+                                          <div style={{flex:1}}>
+                                            <div style={{color:group.color,fontSize:8,fontWeight:600,marginBottom:1}}>Delivery Method</div>
+                                            <select value={creds.deliveryMethod||"sftp"}
+                                              onChange={function(e){setInfraCredField(key,"deliveryMethod",e.target.value);}}
+                                              style={{width:"100%",background:C.bg,border:"1px solid "+C.border,borderRadius:4,padding:"3px 7px",fontSize:9,color:C.text,outline:"none"}}>
+                                              <option value="sftp">SFTP</option>
+                                              <option value="email">Email</option>
+                                              <option value="api">API Push</option>
+                                            </select>
+                                          </div>
+                                          <div style={{flex:1}}>
+                                            <div style={{color:group.color,fontSize:8,fontWeight:600,marginBottom:1}}>Frequency</div>
+                                            <select value={creds.frequency||"weekly"}
+                                              onChange={function(e){setInfraCredField(key,"frequency",e.target.value);}}
+                                              style={{width:"100%",background:C.bg,border:"1px solid "+C.border,borderRadius:4,padding:"3px 7px",fontSize:9,color:C.text,outline:"none"}}>
+                                              <option value="daily">Daily</option>
+                                              <option value="weekly">Weekly</option>
+                                              <option value="monthly">Monthly</option>
+                                              <option value="quarterly">Quarterly</option>
+                                            </select>
+                                          </div>
+                                        </div>
+                                        {creds.deliveryMethod==="sftp"&&(
+                                          <div>
+                                            <div style={{color:group.color,fontSize:8,fontWeight:600,marginBottom:1}}>SFTP Location</div>
+                                            <input placeholder="sftp://vendor.com/exports/" value={creds.sftpLocation||""}
+                                              onChange={function(e){setInfraCredField(key,"sftpLocation",e.target.value);}}
+                                              style={{width:"100%",background:C.bg,border:"1px solid "+C.border,borderRadius:4,padding:"3px 7px",fontSize:9,color:C.text,outline:"none"}}/>
+                                          </div>
+                                        )}
+                                        {creds.deliveryMethod==="email"&&(
+                                          <div>
+                                            <div style={{color:group.color,fontSize:8,fontWeight:600,marginBottom:1}}>Email Recipient</div>
+                                            <input placeholder="reports@company.com" type="email" value={creds.emailRecipient||""}
+                                              onChange={function(e){setInfraCredField(key,"emailRecipient",e.target.value);}}
+                                              style={{width:"100%",background:C.bg,border:"1px solid "+C.border,borderRadius:4,padding:"3px 7px",fontSize:9,color:C.text,outline:"none"}}/>
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               )}
                             </div>
