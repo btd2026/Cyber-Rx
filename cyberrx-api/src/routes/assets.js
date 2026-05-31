@@ -1,7 +1,7 @@
 'use strict';
 const express = require('express');
 const router = express.Router();
-const { Asset } = require('../models');
+const ServiceFactory = require('../domains/ServiceFactory');
 const { authenticateJWT } = require('../middleware/auth');
 
 /**
@@ -11,62 +11,20 @@ const { authenticateJWT } = require('../middleware/auth');
  * All routes are authenticated and org-scoped
  */
 
-// Generate UUID helper
-function generateId() {
-  return `asset_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-}
-
 /**
  * POST /api/assets - Create a new asset
  */
 router.post('/', authenticateJWT, async (req, res) => {
   try {
-    const {
-      name,
-      type,
-      hostname,
-      ipAddress,
-      owner,
-      description,
-      businessProcessIds,
-      applicationIds,
-      dataClassification,
-      cloudProvider,
-      location
-    } = req.body;
-
-    // Validation
-    if (!name || !name.trim()) {
-      return res.status(400).json({ error: 'Asset name is required' });
-    }
-    const validTypes = ['server', 'endpoint', 'database', 'cloud', 'API', 'app'];
-    if (!type || !validTypes.includes(type)) {
-      return res.status(400).json({ error: `Type must be one of: ${validTypes.join(', ')}` });
-    }
-
-    const id = generateId();
-    const organizationId = req.orgId;
-
-    const asset = await Asset.create({
-      id,
-      name: name.trim(),
-      type,
-      organizationId,
-      hostname: hostname?.trim() || null,
-      ipAddress: ipAddress?.trim() || null,
-      owner: owner?.trim() || null,
-      description,
-      businessProcessIds: businessProcessIds || [],
-      applicationIds: applicationIds || [],
-      dataClassification: dataClassification || [],
-      cloudProvider,
-      location
-    });
-
+    const service = ServiceFactory.getService('operational');
+    const asset = await service.createAsset(req.orgId, req.body);
     res.status(201).json(asset);
   } catch (err) {
-    console.error('Create asset error:', err.message);
-    res.status(500).json({ error: 'Failed to create asset', message: err.message });
+    const statusCode = err.statusCode || 500;
+    res.status(statusCode).json({ 
+      error: err.message || 'Failed to create asset',
+      message: err.message 
+    });
   }
 });
 
@@ -75,19 +33,25 @@ router.post('/', authenticateJWT, async (req, res) => {
  */
 router.get('/', authenticateJWT, async (req, res) => {
   try {
-    const organizationId = req.orgId;
-    const { type } = req.query;
-
-    const assets = await Asset.findByOrganization(organizationId, { type });
-
+    const service = ServiceFactory.getService('operational');
+    const filters = {
+      type: req.query.type,
+      businessProcessId: req.query.businessProcessId,
+      dataClassification: req.query.dataClassification
+    };
+    const assets = await service.getAssets(req.orgId, filters);
+    
     res.json({
-      organizationId,
+      organizationId: req.orgId,
       count: assets.length,
       data: assets
     });
   } catch (err) {
-    console.error('List assets error:', err.message);
-    res.status(500).json({ error: 'Failed to list assets' });
+    const statusCode = err.statusCode || 500;
+    res.status(statusCode).json({ 
+      error: err.message || 'Failed to list assets',
+      message: err.message 
+    });
   }
 });
 
@@ -96,23 +60,15 @@ router.get('/', authenticateJWT, async (req, res) => {
  */
 router.get('/:id', authenticateJWT, async (req, res) => {
   try {
-    const { id } = req.params;
-
-    const asset = await Asset.findById(id);
-
-    if (!asset) {
-      return res.status(404).json({ error: 'Asset not found', id });
-    }
-
-    // Verify org access
-    if (asset.organizationId !== req.orgId) {
-      return res.status(403).json({ error: 'Forbidden', message: 'You do not have access to this asset' });
-    }
-
+    const service = ServiceFactory.getService('operational');
+    const asset = await service.getAssetById(req.params.id, req.orgId);
     res.json(asset);
   } catch (err) {
-    console.error('Get asset error:', err.message);
-    res.status(500).json({ error: 'Failed to retrieve asset' });
+    const statusCode = err.statusCode || 500;
+    res.status(statusCode).json({ 
+      error: err.message || 'Failed to retrieve asset',
+      message: err.message 
+    });
   }
 });
 
@@ -121,48 +77,15 @@ router.get('/:id', authenticateJWT, async (req, res) => {
  */
 router.put('/:id', authenticateJWT, async (req, res) => {
   try {
-    const { id } = req.params;
-    const {
-      name,
-      type,
-      hostname,
-      ipAddress,
-      owner,
-      description,
-      businessProcessIds,
-      applicationIds,
-      dataClassification,
-      cloudProvider,
-      location
-    } = req.body;
-
-    // Verify ownership first
-    const existing = await Asset.findById(id);
-    if (!existing) {
-      return res.status(404).json({ error: 'Asset not found', id });
-    }
-    if (existing.organizationId !== req.orgId) {
-      return res.status(403).json({ error: 'Forbidden', message: 'You do not have access to this asset' });
-    }
-
-    const updated = await Asset.update(id, {
-      name,
-      type,
-      hostname,
-      ipAddress,
-      owner,
-      description,
-      businessProcessIds,
-      applicationIds,
-      dataClassification,
-      cloudProvider,
-      location
-    });
-
+    const service = ServiceFactory.getService('operational');
+    const updated = await service.updateAsset(req.params.id, req.orgId, req.body);
     res.json(updated);
   } catch (err) {
-    console.error('Update asset error:', err.message);
-    res.status(500).json({ error: 'Failed to update asset' });
+    const statusCode = err.statusCode || 500;
+    res.status(statusCode).json({ 
+      error: err.message || 'Failed to update asset',
+      message: err.message 
+    });
   }
 });
 
@@ -171,23 +94,15 @@ router.put('/:id', authenticateJWT, async (req, res) => {
  */
 router.delete('/:id', authenticateJWT, async (req, res) => {
   try {
-    const { id } = req.params;
-
-    // Verify ownership first
-    const existing = await Asset.findById(id);
-    if (!existing) {
-      return res.status(404).json({ error: 'Asset not found', id });
-    }
-    if (existing.organizationId !== req.orgId) {
-      return res.status(403).json({ error: 'Forbidden', message: 'You do not have access to this asset' });
-    }
-
-    await Asset.delete(id);
-
-    res.json({ message: 'Asset deleted successfully', id });
+    const service = ServiceFactory.getService('operational');
+    const result = await service.deleteAsset(req.params.id, req.orgId);
+    res.json(result);
   } catch (err) {
-    console.error('Delete asset error:', err.message);
-    res.status(500).json({ error: 'Failed to delete asset' });
+    const statusCode = err.statusCode || 500;
+    res.status(statusCode).json({ 
+      error: err.message || 'Failed to delete asset',
+      message: err.message 
+    });
   }
 });
 

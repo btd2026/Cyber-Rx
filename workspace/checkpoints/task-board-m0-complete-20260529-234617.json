@@ -1,0 +1,205 @@
+{
+  "project": "CyberRx Production-Readiness",
+  "context_rules": "No task may load src/App.jsx in full or the full assessment doc. Use appjsx-index.json line ranges and assessment-chunks/ only.",
+  "tasks": [
+    {
+      "task_id": "T-000",
+      "milestone": "M0 - Security + Cartography",
+      "title": "Code Cartography: index App.jsx pages",
+      "depends_on": [],
+      "objective": "Produce workspace/context/appjsx-index.json mapping each of the 18 pages to its line range, shared state/hooks, and imports, WITHOUT loading the whole file.",
+      "context_manifest": {
+        "code_files": ["src/App.jsx (STRUCTURAL SCAN ONLY: grep for component/function/route boundaries, read in bounded chunks via sed/offset; never hold the full file in context)"],
+        "doc_chunks": ["workspace/context/assessment-chunks/appendix-current-state.md"],
+        "forbidden_context": ["src/App.jsx (full file in context at once)", "entire assessment doc"],
+        "token_budget": 14000
+      },
+      "expected_output": {
+        "location": "workspace/context/appjsx-index.json",
+        "summary_back_to_manager": "Index of 18 pages with line ranges + shared state."
+      },
+      "acceptance_criteria": [
+        "All 18 pages listed with start/end line numbers",
+        "Each entry lists the shared state/hooks it reads and its imports",
+        "No step required loading the entire file into a single context"
+      ],
+      "max_retries": 2,
+      "status": "completed"
+    },
+    {
+      "task_id": "T-001",
+      "milestone": "M0 - Security + Cartography",
+      "title": "Enforce JWT on all API endpoints",
+      "depends_on": [],
+      "objective": "Add JWT verification middleware and apply it to every Express route that returns or mutates org data.",
+      "context_manifest": {
+        "code_files": ["backend/ (route + middleware files only)"],
+        "doc_chunks": ["workspace/context/assessment-chunks/section3-security-gaps.md"],
+        "forbidden_context": ["src/App.jsx", "entire assessment doc", "frontend code"],
+        "token_budget": 12000
+      },
+      "expected_output": {
+        "location": "workspace/artifacts/T-001.out",
+        "git": { "branch": "task/T-001-jwt-enforce", "commit_msg": "feat(security): enforce JWT on all API endpoints" },
+        "summary_back_to_manager": "JWT middleware added + applied to N routes; pointer to diff."
+      },
+      "acceptance_criteria": [
+        "Every data-returning/mutating endpoint rejects requests without a valid JWT (401)",
+        "A valid token resolves to an authenticated identity used for org binding",
+        "No endpoint left unauthenticated except explicit public health checks"
+      ],
+      "max_retries": 2,
+      "status": "validated"
+    },
+    {
+      "task_id": "T-002",
+      "milestone": "M0 - Security + Cartography",
+      "title": "Tighten CORS to production allowlist",
+      "depends_on": [],
+      "objective": "Replace allow-all CORS with an env-driven allowlist; remove the 'tighten in production' TODO.",
+      "context_manifest": {
+        "code_files": ["backend/ (server/cors config only)"],
+        "doc_chunks": ["workspace/context/assessment-chunks/section3-security-gaps.md"],
+        "forbidden_context": ["src/App.jsx", "entire assessment doc"],
+        "token_budget": 8000
+      },
+      "expected_output": {
+        "location": "workspace/artifacts/T-002.out",
+        "git": { "branch": "task/T-002-cors", "commit_msg": "fix(security): restrict CORS to allowlist" },
+        "summary_back_to_manager": "CORS limited to env allowlist; TODO removed; pointer to diff."
+      },
+      "acceptance_criteria": [
+        "CORS rejects origins not in the configured allowlist",
+        "Allowlist is configurable via environment, not hard-coded",
+        "The 'allow all - tighten in production' comment/behavior is gone"
+      ],
+      "max_retries": 2,
+      "status": "validated"
+    },
+    {
+      "task_id": "T-003",
+      "milestone": "M0 - Security + Cartography",
+      "title": "Implement real org isolation",
+      "depends_on": ["T-001"],
+      "objective": "Bind org isolation to the authenticated JWT identity (not just a request header) so a user can only access their own org's data.",
+      "context_manifest": {
+        "code_files": ["backend/ (auth + data-access layer only)"],
+        "doc_chunks": ["workspace/context/assessment-chunks/section3-security-gaps.md"],
+        "forbidden_context": ["src/App.jsx", "entire assessment doc"],
+        "token_budget": 12000
+      },
+      "expected_output": {
+        "location": "workspace/artifacts/T-003.out",
+        "git": { "branch": "task/T-003-org-isolation", "commit_msg": "feat(security): bind org isolation to auth identity" },
+        "summary_back_to_manager": "Org scoping derived from token identity; cross-org access blocked."
+      },
+      "acceptance_criteria": [
+        "Org is resolved from the authenticated identity, not a client-supplied header alone",
+        "A request for another org's data is rejected (403)",
+        "All org-scoped queries are filtered by the authenticated org"
+      ],
+      "max_retries": 2,
+      "status": "validated"
+    },
+    {
+      "task_id": "T-004",
+      "milestone": "M0 - Security + Cartography",
+      "title": "Resolve background scheduler status",
+      "depends_on": [],
+      "objective": "Decide and implement: either deploy scheduler.js as a Render Background Worker (add render.yaml entry) or remove the dead code. Document the decision.",
+      "context_manifest": {
+        "code_files": ["backend/scheduler.js", "render.yaml"],
+        "doc_chunks": ["workspace/context/assessment-chunks/appendix-current-state.md"],
+        "forbidden_context": ["src/App.jsx", "entire assessment doc"],
+        "token_budget": 8000
+      },
+      "expected_output": {
+        "location": "workspace/artifacts/T-004.out",
+        "git": { "branch": "task/T-004-scheduler", "commit_msg": "chore: resolve background scheduler deployment" },
+        "summary_back_to_manager": "Scheduler either wired as a worker or removed; decision documented."
+      },
+      "acceptance_criteria": [
+        "Either render.yaml defines the background worker OR scheduler.js and its references are removed",
+        "No dead/unreferenced scheduler code remains if the remove path was chosen",
+        "Decision and rationale recorded in the output file"
+      ],
+      "max_retries": 2,
+      "status": "validated"
+    },
+    {
+      "task_id": "T-010",
+      "milestone": "M1 - Risk Correlation Engine",
+      "title": "Implement core correlation data-model entities",
+      "depends_on": [],
+      "objective": "Add BusinessProcess, Asset, DataObject, ThreatScenario, LegalObligation, ExecutiveOwner per the spec, with the documented key relationships and migrations.",
+      "context_manifest": {
+        "code_files": ["backend/ (models/schema + migrations only)"],
+        "doc_chunks": ["workspace/context/assessment-chunks/datamodel-core-entities.md", "workspace/context/assessment-chunks/datamodel-relationships.md"],
+        "forbidden_context": ["src/App.jsx", "entire assessment doc", "dashboard UI code"],
+        "token_budget": 14000
+      },
+      "expected_output": {
+        "location": "workspace/artifacts/T-010.out",
+        "git": { "branch": "task/T-010-correlation-model", "commit_msg": "feat(model): add correlation engine entities" },
+        "summary_back_to_manager": "6 entities + migrations added; relationships wired; pointer to diff."
+      },
+      "acceptance_criteria": [
+        "All six entities exist with the fields named in the data-model spec",
+        "Key relationships hold: Finding->Risk->BusinessProcess->FinancialImpact and BusinessProcess->Application->Asset",
+        "Migrations run cleanly against the existing PostgreSQL schema without breaking the 5 current tables"
+      ],
+      "max_retries": 2,
+      "status": "pending"
+    },
+    {
+      "task_id": "T-011",
+      "milestone": "M1 - Risk Correlation Engine",
+      "title": "Expand Risk + Finding entities for correlation",
+      "depends_on": ["T-010"],
+      "objective": "Extend Risk and Finding to carry business-process, data-object, threat-scenario, framework, financial, legal, and ownership linkage.",
+      "context_manifest": {
+        "code_files": ["backend/ (Risk + Finding models/migrations only)"],
+        "doc_chunks": ["workspace/context/assessment-chunks/datamodel-Risk.md", "workspace/context/assessment-chunks/datamodel-Finding.md", "workspace/context/assessment-chunks/datamodel-relationships.md"],
+        "forbidden_context": ["src/App.jsx", "entire assessment doc"],
+        "token_budget": 12000
+      },
+      "expected_output": {
+        "location": "workspace/artifacts/T-011.out",
+        "git": { "branch": "task/T-011-risk-finding", "commit_msg": "feat(model): correlation linkage on Risk and Finding" },
+        "summary_back_to_manager": "Risk/Finding extended with linkage fields + migrations."
+      },
+      "acceptance_criteria": [
+        "Risk carries businessProcessId[], dataObjectIds[], threatScenarioId, frameworkMappings[], financialExposure, legalObligationId[], executiveOwner",
+        "Finding links to riskId/assetId/businessProcessId and supports repeat detection fields",
+        "Migrations run cleanly and preserve existing data"
+      ],
+      "max_retries": 2,
+      "status": "pending"
+    },
+    {
+      "task_id": "T-012",
+      "milestone": "M1 - Risk Correlation Engine",
+      "title": "Build the correlation engine logic",
+      "depends_on": ["T-011"],
+      "objective": "Implement the service that takes a technical finding and produces the executive narrative (process, data, threat, $ exposure, framework refs, legal obligations, owners, audit evidence).",
+      "context_manifest": {
+        "code_files": ["backend/ (services layer only)"],
+        "doc_chunks": ["workspace/context/assessment-chunks/section3-backlog.md", "workspace/context/assessment-chunks/datamodel-relationships.md"],
+        "forbidden_context": ["src/App.jsx", "entire assessment doc"],
+        "token_budget": 14000
+      },
+      "expected_output": {
+        "location": "workspace/artifacts/T-012.out",
+        "git": { "branch": "task/T-012-correlation-engine", "commit_msg": "feat: risk correlation engine service + API" },
+        "summary_back_to_manager": "Engine endpoint returns full executive narrative for a finding."
+      },
+      "acceptance_criteria": [
+        "Given a finding, the engine returns: business process, data type, threat scenario, financial exposure, framework refs, legal obligations, owners, audit evidence requirement",
+        "Output matches the assessment's example narrative shape (e.g. CVE on NASCO -> Claims Adjudication -> $ exposure -> HIPAA/NIST/CIS refs)",
+        "Exposed via an authenticated, org-scoped API endpoint"
+      ],
+      "max_retries": 2,
+      "status": "pending"
+    }
+  ]
+}

@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const { LegalObligation } = require('../models');
 const { authenticateJWT } = require('../middleware/auth');
+const { requirePermission } = require('../middleware/rbac');
 
 /**
  * Legal Obligations API Routes
@@ -19,7 +20,7 @@ function generateId() {
 /**
  * POST /api/legal-obligations - Create a new legal obligation
  */
-router.post('/', authenticateJWT, async (req, res) => {
+router.post('/', authenticateJWT, requirePermission('legal.obligations.create'), async (req, res) => {
   try {
     const {
       name,
@@ -69,7 +70,7 @@ router.post('/', authenticateJWT, async (req, res) => {
 /**
  * GET /api/legal-obligations - List all legal obligations for the org
  */
-router.get('/', authenticateJWT, async (req, res) => {
+router.get('/', authenticateJWT, requirePermission('legal.obligations.view'), async (req, res) => {
   try {
     const organizationId = req.orgId;
     const { source } = req.query;
@@ -90,7 +91,7 @@ router.get('/', authenticateJWT, async (req, res) => {
 /**
  * GET /api/legal-obligations/urgent - Get obligations with urgent notification requirements
  */
-router.get('/urgent', authenticateJWT, async (req, res) => {
+router.get('/urgent', authenticateJWT, requirePermission('legal.obligations.view'), async (req, res) => {
   try {
     const organizationId = req.orgId;
 
@@ -110,7 +111,7 @@ router.get('/urgent', authenticateJWT, async (req, res) => {
 /**
  * GET /api/legal-obligations/hipaa - Get HIPAA obligations
  */
-router.get('/hipaa', authenticateJWT, async (req, res) => {
+router.get('/hipaa', authenticateJWT, requirePermission('legal.obligations.view'), async (req, res) => {
   try {
     const organizationId = req.orgId;
 
@@ -130,7 +131,7 @@ router.get('/hipaa', authenticateJWT, async (req, res) => {
 /**
  * GET /api/legal-obligations/:id - Get a specific legal obligation
  */
-router.get('/:id', authenticateJWT, async (req, res) => {
+router.get('/:id', authenticateJWT, requirePermission('legal.obligations.view'), async (req, res) => {
   try {
     const { id } = req.params;
 

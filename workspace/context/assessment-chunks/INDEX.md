@@ -1,0 +1,42 @@
+# Assessment Chunks Index
+
+Each worker loads ONLY the chunk(s) its task manifest names.
+
+- `00-executive-summary.md`
+- `appendix-current-state.md`
+- `datamodel-Application.md`
+- `datamodel-Asset.md`
+- `datamodel-AuditTest.md`
+- `datamodel-BusinessProcess.md`
+- `datamodel-Control.md`
+- `datamodel-DataObject.md`
+- `datamodel-Evidence.md`
+- `datamodel-Exception.md`
+- `datamodel-ExecutiveOwner.md`
+- `datamodel-FinancialImpact.md`
+- `datamodel-Finding.md`
+- `datamodel-Framework.md`
+- `datamodel-LegalObligation.md`
+- `datamodel-Organization.md`
+- `datamodel-RemediationTask.md`
+- `datamodel-Risk.md`
+- `datamodel-ThreatScenario.md`
+- `datamodel-Vendor.md`
+- `datamodel-core-entities.md`
+- `datamodel-relationships.md`
+- `section1-coverage.md`
+- `section2-gap-analysis.md`
+- `section3-backlog.md`
+- `section3-security-gaps.md`
+- `section4-user-stories.md`
+- `section5-datamodel.md`
+- `section6-dashboards.md`
+- `section7-mvp-scope.md`
+- `section8-risks.md`
+- `section9-final-recommendation.md`
+- `userstory-Auditor.md`
+- `userstory-CFO.md`
+- `userstory-CIO.md`
+- `userstory-CISO.md`
+- `userstory-CLO.md`
+- `userstory-CRO.md`

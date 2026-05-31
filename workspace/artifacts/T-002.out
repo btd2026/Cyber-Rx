@@ -1,0 +1,157 @@
+# T-002 Output: Tighten CORS to Production Allowlist
+
+## Summary
+Replaced allow-all CORS with environment-driven allowlist. Removed the 'tighten in production' TODO and implemented proper origin validation that rejects requests from unallowed origins with an error.
+
+## Changes Made
+
+### Files Modified
+1. `cyberrx-api/src/index.js` - CORS configuration logic
+2. `cyberrx-api/.env.example` - Environment variable documentation
+
+### Key Changes
+
+#### Before (INSECURE - allow all):
+```javascript
+// Line 31 had this security hole:
+callback(null, true); // For now, allow all - tighten in production
+```
+
+#### After (SECURE - allowlist enforcement):
+```javascript
+// Line 39 now rejects unknown origins:
+callback(new Error('CORS not allowed for origin: ' + origin));
+```
+
+#### CORS Allowlist Configuration
+- **Development mode**: Automatically allows localhost URLs (3000, 3001, 5173)
+- **Production mode**: Requires CORS_ALLOWLIST environment variable
+  - Format: Comma-separated list of origins
+  - Example: `CORS_ALLOWLIST=https://app.vercel.app,https://anthropic.com`
+- **Fallback**: If CORS_ALLOWLIST not set, uses FRONTEND_URL (backward compatibility)
+
+## Acceptance Criteria Status
+
+✓ **CORS rejects origins not in configured allowlist**
+  - Line 39: `callback(new Error('CORS not allowed for origin: ' + origin))`
+  - No more allow-all fallback
+
+✓ **Allowlist configurable via environment**
+  - New env var: `CORS_ALLOWLIST` (recommended for production)
+  - Fallback: `FRONTEND_URL` (backward compatible)
+  - Documented in `.env.example`
+
+✓ **'allow all - tighten in production' comment/behavior removed**
+  - Line 31 comment deleted
+  - Hardcoded production origins (claude.ai, anthropic.com) removed from default array
+  - Now requires explicit configuration via environment variables
+
+## Git Information
+
+**Branch**: `task/T-002-cors`
+**Commit**: `6ed9ef6`
+**Commit Message**: `fix(security): restrict CORS to allowlist`
+
+## Full Diff
+
+```diff
+diff --git a/cyberrx-api/.env.example b/cyberrx-api/.env.example
+index f7de587..c762d58 100644
+--- a/cyberrx-api/.env.example
++++ b/cyberrx-api/.env.example
+@@ -19,8 +19,11 @@ JWT_SECRET=change-this-in-production-min-32-chars
+ NODE_ENV=production
+ PORT=3001
+
+-# Frontend URL (Vercel deployment)
+-FRONTEND_URL=https://your-vercel-app.vercel.app
++# CORS Configuration
++# Option 1: Use CORS_ALLOWLIST (recommended for production) - comma-separated list of allowed origins
++CORS_ALLOWLIST=https://your-vercel-app.vercel.app,https://www.anthropic.com,https://claude.ai
++# Option 2: Use FRONTEND_URL as single origin (fallback if CORS_ALLOWLIST not set)
++# FRONTEND_URL=https://your-vercel-app.vercel.app
+
+ # ── Security Tool Credentials (add the ones you have) ──────────────────────
+
+diff --git a/cyberrx-api/src/index.js b/cyberrx-api/src/index.js
+index f58e499..bd5f344 100644
+--- a/cyberrx-api/src/index.js
++++ b/cyberrx-api/src/index.js
+@@ -4,20 +4,27 @@ const express = require('express');
+ const cors = require('cors');
+ const app = express();
+
+-// Dynamic CORS configuration for Vercel + Render deployment
+-const allowedOrigins = [
+-  'https://claude.ai',
+-  'https://www.anthropic.com',
+-  'http://localhost:3000',
+-  'http://localhost:3001',
+-  'http://localhost:5173',
+-];
++// CORS configuration - allowlist from environment
++// Build allowlist from CORS_ALLOWLIST env var (comma-separated) or FRONTEND_URL
++const allowedOrigins = [];
+
+-// Add Vercel frontend URL from environment if available
+-if (process.env.FRONTEND_URL) {
++// Add localhost URLs for development
++if (process.env.NODE_ENV === 'development') {
++  allowedOrigins.push(
++    'http://localhost:3000',
++    'http://localhost:3001',
++    'http://localhost:5173'
++  );
++}
++
++// Add from CORS_ALLOWLIST if provided (recommended for production)
++if (process.env.CORS_ALLOWLIST) {
++  const originsFromEnv = process.env.CORS_ALLOWLIST.split(',').map(url => url.trim());
++  allowedOrigins.push(...originsFromEnv);
++}
++// Fallback: add FRONTEND_URL if CORS_ALLOWLIST not set
++else if (process.env.FRONTEND_URL) {
+   allowedOrigins.push(process.env.FRONTEND_URL);
+-  // Also add wildcard for subdomains
+-  allowedOrigins.push(process.env.FRONTEND_URL.replace('https://', 'https://*.'));
+}
+
+ app.use(cors({
+@@ -25,10 +32,11 @@ app.use(cors({
+     // Allow requests with no origin (like mobile apps or curl requests)
+     if (!origin) return callback(null, true);
+
+-    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
++    // Check if origin is in allowlist
++    if (allowedOrigins.indexOf(origin) !== -1) {
+       callback(null, true);
+     } else {
+-      callback(null, true); // For now, allow all - tighten in production
++      callback(new Error('CORS not allowed for origin: ' + origin));
+     }
+   },
+   credentials: true,
+```
+
+## Testing Recommendations
+
+1. **Verify rejection works**: Test with a disallowed origin (should see CORS error)
+2. **Verify allowlist works**: Set CORS_ALLOWLIST and test with allowed origins
+3. **Verify development mode**: Test localhost access works without env vars
+4. **Verify production safety**: Test that unknown origins are rejected in production mode
+
+## Security Impact
+
+This change closes a critical security gap identified in the assessment. Previously, ALL origins were allowed in production (line 31: `callback(null, true)`). Now, only explicitly configured origins can access the API, preventing cross-origin attacks from malicious websites.
+
+## Migration Notes for Deployment
+
+When deploying to production (Render/Railway/Vercel), ensure you set:
+```bash
+CORS_ALLOWLIST=https://your-frontend-domain.com,https://www.anthropic.com
+```
+
+Or for single origin:
+```bash
+FRONTEND_URL=https://your-frontend-domain.com
+```

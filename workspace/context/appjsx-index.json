@@ -1,0 +1,4089 @@
+{
+  "schema_version": "2.0",
+  "metadata": {
+    "generated_by": "T-000 (Code Cartography)",
+    "regeneration_note": "Replaces seed index. Adds schema_version, anchor_signatures, exact line_ranges, concrete local_state/props_used/cross_refs, split_risk classification, full coverage including post-export region (lines 24021-24559), and missing components (SetupBot, BrianaBar, CyberRxApp, Atk*, Cjd*, Exposure*).",
+    "file_path": "frontend/src/App.jsx",
+    "total_lines": 24559,
+    "file_sha256": "022c02a5bba6dc2b0793ac745a5e7957215cc198c852d7a2af137901faf02959",
+    "git_head": "8253d6aa2ec1aede3503228585ef6f97602f6b59",
+    "generated_at": "2026-05-30T03:57:12Z",
+    "extractor": "scripts/build_appjsx_index.py",
+    "rules": [
+      "Components are listed in source order.",
+      "line_range is [start, end] inclusive, 1-indexed.",
+      "A worker MUST verify anchor_signature matches before trusting range.",
+      "split_risk is a HEURISTIC, not a guarantee \u2014 re-evaluate during M6 planning.",
+      "cross_refs include both component references and top-level constant references."
+    ]
+  },
+  "navigation": {
+    "nav_line_range": [
+      113,
+      132
+    ],
+    "pages": {
+      "home": {
+        "label": "Home",
+        "icon": "\ud83c\udfe0",
+        "mod": ""
+      },
+      "setup": {
+        "label": "Org Profile & Setup",
+        "icon": "\ud83c\udfe2",
+        "mod": "F02"
+      },
+      "bizlines": {
+        "label": "Business Lines",
+        "icon": "\ud83d\uddfa",
+        "mod": "F01"
+      },
+      "appmap": {
+        "label": "Application Map",
+        "icon": "\ud83d\uddc4",
+        "mod": "F01b"
+      },
+      "hub": {
+        "label": "Command Center",
+        "icon": "*",
+        "mod": "F08"
+      },
+      "dashboard": {
+        "label": "CISO Dashboard",
+        "icon": "S",
+        "mod": "F08a"
+      },
+      "cro": {
+        "label": "CRO / Audit",
+        "icon": "C",
+        "mod": "F08b"
+      },
+      "cfo": {
+        "label": "CFO Dashboard",
+        "icon": "F",
+        "mod": "F08c"
+      },
+      "boarddash": {
+        "label": "Board Dashboard",
+        "icon": "B",
+        "mod": "F08d"
+      },
+      "controls": {
+        "label": "Control Validation",
+        "icon": "\u2713",
+        "mod": "F04"
+      },
+      "assets": {
+        "label": "Claim Lifecycle",
+        "icon": "\ud83d\udd17",
+        "mod": "F03"
+      },
+      "vendormap": {
+        "label": "Vendor Ecosystem Map",
+        "icon": "\ud83c\udf10",
+        "mod": "F03b"
+      },
+      "scoring": {
+        "label": "Risk Scoring + MITRE",
+        "icon": "\ud83d\udcc8",
+        "mod": "F05"
+      },
+      "evidence": {
+        "label": "Evidence Repository",
+        "icon": "\ud83d\udcc1",
+        "mod": "F06"
+      },
+      "board": {
+        "label": "Board Risk Report",
+        "icon": "\ud83d\udccb",
+        "mod": "F07"
+      },
+      "execution": {
+        "label": "Execution Layer",
+        "icon": "\u26a1",
+        "mod": "F09"
+      },
+      "crownjewels": {
+        "label": "Crown Jewels Discovery",
+        "icon": "\ud83d\udc8e",
+        "mod": "F-CJ"
+      },
+      "attackpaths": {
+        "label": "Attack Path Analyzer",
+        "icon": "\u2694",
+        "mod": "F-TI"
+      }
+    }
+  },
+  "shared_state_root": {
+    "component": "CyberRxApp",
+    "useState_line_range": [
+      23525,
+      23849
+    ],
+    "useState_count": 52,
+    "function_range": [
+      23524,
+      24021
+    ]
+  },
+  "export_default": {
+    "name": "CyberRxApp",
+    "line": 24019,
+    "note": "Note: export sits at line 24019, but ExposureColumnChart and ExposureModelCard (both consumed by CFODash) are declared AFTER the export (lines 24198 and 24344). Hoisting makes this work, but the M6 split must preserve this ordering or move declarations above export."
+  },
+  "constants": [
+    {
+      "name": "C",
+      "line_range": [
+        4,
+        12
+      ],
+      "loc": 9,
+      "anchor_signature": "var C = {"
+    },
+    {
+      "name": "CMMI_LEVELS",
+      "line_range": [
+        13,
+        39
+      ],
+      "loc": 27,
+      "anchor_signature": "var CMMI_LEVELS = ["
+    },
+    {
+      "name": "NAV",
+      "line_range": [
+        113,
+        134
+      ],
+      "loc": 22,
+      "anchor_signature": "var NAV = ["
+    },
+    {
+      "name": "SEV_C",
+      "line_range": [
+        135,
+        135
+      ],
+      "loc": 1,
+      "anchor_signature": "var SEV_C = {Critical:\"#EF4545\", High:\"#F5A623\", Medium:\"#3B9EFF\", Low:\"#0FBB80\""
+    },
+    {
+      "name": "SEV_B",
+      "line_range": [
+        136,
+        136
+      ],
+      "loc": 1,
+      "anchor_signature": "var SEV_B = {Critical:\"#EF454512\", High:\"#F5A62312\", Medium:\"#3B9EFF12\", Low:\"#0"
+    },
+    {
+      "name": "ST_C",
+      "line_range": [
+        137,
+        137
+      ],
+      "loc": 1,
+      "anchor_signature": "var ST_C  = {pending_approval:\"#F5A623\", approved:\"#3B9EFF\", routed:\"#A78BFA\", c"
+    },
+    {
+      "name": "RISK_C",
+      "line_range": [
+        138,
+        146
+      ],
+      "loc": 9,
+      "anchor_signature": "var RISK_C = {High:\"#EF4545\", Med:\"#F5A623\", Low:\"#0FBB80\"};"
+    },
+    {
+      "name": "ORG_CONFIG",
+      "line_range": [
+        147,
+        152
+      ],
+      "loc": 6,
+      "anchor_signature": "var ORG_CONFIG = { type:\"generic\", linesOfBiz:[], bcbsAffiliated:false, hasFEP:f"
+    },
+    {
+      "name": "ORG_TEMPLATES",
+      "line_range": [
+        153,
+        406
+      ],
+      "loc": 254,
+      "anchor_signature": "var ORG_TEMPLATES = {"
+    },
+    {
+      "name": "PROCS",
+      "line_range": [
+        407,
+        639
+      ],
+      "loc": 233,
+      "anchor_signature": "var PROCS = ["
+    },
+    {
+      "name": "EXP",
+      "line_range": [
+        640,
+        642
+      ],
+      "loc": 3,
+      "anchor_signature": "var EXP = {claims:340,enroll:85,provider_net:60,care_mgmt:95,fwa:180,member_svc:"
+    },
+    {
+      "name": "CIS_N",
+      "line_range": [
+        643,
+        653
+      ],
+      "loc": 11,
+      "anchor_signature": "var CIS_N = {"
+    },
+    {
+      "name": "CIS",
+      "line_range": [
+        654,
+        656
+      ],
+      "loc": 3,
+      "anchor_signature": "var CIS = {1:72,2:68,3:55,4:63,5:78,6:61,7:70,8:74,9:82,10:69,11:85,12:77,13:66,"
+    },
+    {
+      "name": "REGS",
+      "line_range": [
+        657,
+        666
+      ],
+      "loc": 10,
+      "anchor_signature": "var REGS = ["
+    },
+    {
+      "name": "ALERTS",
+      "line_range": [
+        667,
+        676
+      ],
+      "loc": 10,
+      "anchor_signature": "var ALERTS = ["
+    },
+    {
+      "name": "SEC_CAPABILITIES",
+      "line_range": [
+        677,
+        811
+      ],
+      "loc": 135,
+      "anchor_signature": "var SEC_CAPABILITIES = {"
+    },
+    {
+      "name": "FINDING_OPENED",
+      "line_range": [
+        812,
+        846
+      ],
+      "loc": 35,
+      "anchor_signature": "var FINDING_OPENED = {"
+    },
+    {
+      "name": "FINDINGS",
+      "line_range": [
+        847,
+        995
+      ],
+      "loc": 149,
+      "anchor_signature": "var FINDINGS = ["
+    },
+    {
+      "name": "ACTIONS",
+      "line_range": [
+        996,
+        1034
+      ],
+      "loc": 39,
+      "anchor_signature": "var ACTIONS = ["
+    },
+    {
+      "name": "INSURER_HINTS",
+      "line_range": [
+        1035,
+        1042
+      ],
+      "loc": 8,
+      "anchor_signature": "var INSURER_HINTS = ["
+    },
+    {
+      "name": "ORG_PROFILES",
+      "line_range": [
+        1043,
+        1050
+      ],
+      "loc": 8,
+      "anchor_signature": "var ORG_PROFILES = {"
+    },
+    {
+      "name": "DEMO_ORG_ID",
+      "line_range": [
+        1051,
+        1051
+      ],
+      "loc": 1,
+      "anchor_signature": "var DEMO_ORG_ID   = \"meridian-demo-2026\";"
+    },
+    {
+      "name": "DEMO_ORG_NAME",
+      "line_range": [
+        1052,
+        1053
+      ],
+      "loc": 2,
+      "anchor_signature": "var DEMO_ORG_NAME = \"Meridian Health Plan (Demo)\";"
+    },
+    {
+      "name": "ELOGS",
+      "line_range": [
+        1054,
+        1067
+      ],
+      "loc": 14,
+      "anchor_signature": "var ELOGS = {"
+    },
+    {
+      "name": "US_STATES",
+      "line_range": [
+        1068,
+        1070
+      ],
+      "loc": 3,
+      "anchor_signature": "var US_STATES = [\"Alabama\",\"Alaska\",\"Arizona\",\"Arkansas\",\"California\",\"Colorado\""
+    },
+    {
+      "name": "MEMBER_RANGES",
+      "line_range": [
+        1071,
+        1071
+      ],
+      "loc": 1,
+      "anchor_signature": "var MEMBER_RANGES   = [[\"Under 100,000\",75000],[\"100,000-500,000\",300000],[\"500,"
+    },
+    {
+      "name": "EMPLOYEE_RANGES",
+      "line_range": [
+        1072,
+        1072
+      ],
+      "loc": 1,
+      "anchor_signature": "var EMPLOYEE_RANGES = [[\"Under 500\",250],[\"500-2,000\",1250],[\"2,000-5,000\",3500]"
+    },
+    {
+      "name": "REVENUE_RANGES",
+      "line_range": [
+        1073,
+        1073
+      ],
+      "loc": 1,
+      "anchor_signature": "var REVENUE_RANGES  = [[\"Under $500M\",250e6],[\"$500M-$1B\",750e6],[\"$1B-$2.5B\",17"
+    },
+    {
+      "name": "SURPLUS_RANGES",
+      "line_range": [
+        1074,
+        1074
+      ],
+      "loc": 1,
+      "anchor_signature": "var SURPLUS_RANGES  = [[\"Under $500M\",250e6],[\"$500M-$1B\",750e6],[\"$1B-$2B\",1500"
+    },
+    {
+      "name": "IBNR_RANGES",
+      "line_range": [
+        1075,
+        1075
+      ],
+      "loc": 1,
+      "anchor_signature": "var IBNR_RANGES     = [[\"Under $250M\",150e6],[\"$250M-$500M\",375e6],[\"$500M-$1B\","
+    },
+    {
+      "name": "IT_BUDGET_RANGES",
+      "line_range": [
+        1076,
+        1076
+      ],
+      "loc": 1,
+      "anchor_signature": "var IT_BUDGET_RANGES= [[\"Under $50M\",35e6],[\"$50M-$100M\",75e6],[\"$100M-$200M\",15"
+    },
+    {
+      "name": "PHI_RECORDS_RANGES",
+      "line_range": [
+        1077,
+        1077
+      ],
+      "loc": 1,
+      "anchor_signature": "var PHI_RECORDS_RANGES = [[\"Under 100K\",50000],[\"100K-500K\",300000],[\"500K-1M\",7"
+    },
+    {
+      "name": "ENDPOINT_RANGES",
+      "line_range": [
+        1078,
+        1078
+      ],
+      "loc": 1,
+      "anchor_signature": "var ENDPOINT_RANGES    = [[\"Under 500\",250],[\"500-1K\",750],[\"1K-2K\",1500],[\"2K-5"
+    },
+    {
+      "name": "PRIV_ACCT_RANGES",
+      "line_range": [
+        1079,
+        1079
+      ],
+      "loc": 1,
+      "anchor_signature": "var PRIV_ACCT_RANGES   = [[\"Under 50\",25],[\"50-100\",75],[\"100-250\",175],[\"250-50"
+    },
+    {
+      "name": "RBC_RATIO_RANGES",
+      "line_range": [
+        1080,
+        1080
+      ],
+      "loc": 1,
+      "anchor_signature": "var RBC_RATIO_RANGES   = [[\"Below 200%\",150],[\"200-250%\",225],[\"250-300%\",275],["
+    },
+    {
+      "name": "DEDUCTIBLE_RANGES",
+      "line_range": [
+        1081,
+        1081
+      ],
+      "loc": 1,
+      "anchor_signature": "var DEDUCTIBLE_RANGES  = [[\"$0\",0],[\"$100K\",100000],[\"$250K\",250000],[\"$500K\",50"
+    },
+    {
+      "name": "INCIDENT_RANGES",
+      "line_range": [
+        1082,
+        1082
+      ],
+      "loc": 1,
+      "anchor_signature": "var INCIDENT_RANGES    = [[\"None\",0],[\"1 (>3 yrs ago)\",1],[\"1 (1-3 yrs ago)\",2],"
+    },
+    {
+      "name": "CLAIMS_RANGES",
+      "line_range": [
+        1083,
+        1083
+      ],
+      "loc": 1,
+      "anchor_signature": "var CLAIMS_RANGES   = [[\"Under $250M\",125e6],[\"$250M-$500M\",375e6],[\"$500M-$1B\","
+    },
+    {
+      "name": "CMS_RANGES",
+      "line_range": [
+        1084,
+        1084
+      ],
+      "loc": 1,
+      "anchor_signature": "var CMS_RANGES      = [[\"Not applicable\",0],[\"Under $100M\",50e6],[\"$100M-$500M\","
+    },
+    {
+      "name": "INSURANCE_RANGES",
+      "line_range": [
+        1085,
+        1085
+      ],
+      "loc": 1,
+      "anchor_signature": "var INSURANCE_RANGES= [[\"No coverage\",0],[\"Under $10M\",5e6],[\"$10M-$25M\",17e6],["
+    },
+    {
+      "name": "STATES_RANGES",
+      "line_range": [
+        1086,
+        1088
+      ],
+      "loc": 3,
+      "anchor_signature": "var STATES_RANGES   = [[\"1 state\",1],[\"2-5 states\",3],[\"6-10 states\",8],[\"11-20 "
+    },
+    {
+      "name": "ORG_TYPES",
+      "line_range": [
+        1089,
+        1090
+      ],
+      "loc": 2,
+      "anchor_signature": "var ORG_TYPES = [\"Commercial Health Plan\",\"Medicare Advantage\",\"Medicaid Managed"
+    },
+    {
+      "name": "ORG_PROFILES_RICH",
+      "line_range": [
+        1091,
+        1142
+      ],
+      "loc": 52,
+      "anchor_signature": "var ORG_PROFILES_RICH = {"
+    },
+    {
+      "name": "INSURER_HINTS_RICH",
+      "line_range": [
+        1143,
+        1178
+      ],
+      "loc": 36,
+      "anchor_signature": "var INSURER_HINTS_RICH = ["
+    },
+    {
+      "name": "PROVIDER_RANGES",
+      "line_range": [
+        1179,
+        1179
+      ],
+      "loc": 1,
+      "anchor_signature": "var PROVIDER_RANGES   = [[\"Under 5,000\",2500],[\"5,000-20,000\",12500],[\"20,000-50"
+    },
+    {
+      "name": "DOWNTIME_RANGES",
+      "line_range": [
+        1180,
+        1180
+      ],
+      "loc": 1,
+      "anchor_signature": "var DOWNTIME_RANGES   = [[\"1-3 days\",2],[\"4-7 days\",5],[\"1-2 weeks\",10],[\"2-4 we"
+    },
+    {
+      "name": "IT_BUDGET_RANGES",
+      "line_range": [
+        1181,
+        1181
+      ],
+      "loc": 1,
+      "anchor_signature": "var IT_BUDGET_RANGES  = [[\"Under $10M\",5e6],[\"$10M-$25M\",17e6],[\"$25M-$50M\",37e6"
+    },
+    {
+      "name": "CHURN_RANGES",
+      "line_range": [
+        1182,
+        1182
+      ],
+      "loc": 1,
+      "anchor_signature": "var CHURN_RANGES      = [[\"1-2%\",0.015],[\"3-5%\",0.04],[\"6-10%\",0.08],[\"11-20%\",0"
+    },
+    {
+      "name": "RANSOM_RANGES",
+      "line_range": [
+        1183,
+        1183
+      ],
+      "loc": 1,
+      "anchor_signature": "var RANSOM_RANGES     = [[\"No coverage\",0],[\"Under $1M\",0.5e6],[\"$1M-$5M\",3e6],["
+    },
+    {
+      "name": "PREMIUM_RANGES",
+      "line_range": [
+        1184,
+        1408
+      ],
+      "loc": 225,
+      "anchor_signature": "var PREMIUM_RANGES    = [[\"Under $100/mo\",75],[\"$100-$300/mo\",200],[\"$300-$600/m"
+    },
+    {
+      "name": "BIZ_APP_CATALOG",
+      "line_range": [
+        1409,
+        1513
+      ],
+      "loc": 105,
+      "anchor_signature": "var BIZ_APP_CATALOG = {"
+    },
+    {
+      "name": "COMPLIANCE_DOMAINS",
+      "line_range": [
+        1514,
+        1686
+      ],
+      "loc": 173,
+      "anchor_signature": "var COMPLIANCE_DOMAINS = {"
+    },
+    {
+      "name": "NIST_POLICY_MAP",
+      "line_range": [
+        1687,
+        1708
+      ],
+      "loc": 22,
+      "anchor_signature": "var NIST_POLICY_MAP = {"
+    },
+    {
+      "name": "POLICY_CATALOG",
+      "line_range": [
+        1709,
+        1769
+      ],
+      "loc": 61,
+      "anchor_signature": "var POLICY_CATALOG = ["
+    },
+    {
+      "name": "NIST_CTRL_DESC",
+      "line_range": [
+        1770,
+        1884
+      ],
+      "loc": 115,
+      "anchor_signature": "var NIST_CTRL_DESC = {"
+    },
+    {
+      "name": "HIPAA_CONTROLS",
+      "line_range": [
+        1885,
+        1904
+      ],
+      "loc": 20,
+      "anchor_signature": "var HIPAA_CONTROLS = ["
+    },
+    {
+      "name": "SOC2_CONTROLS",
+      "line_range": [
+        1905,
+        1932
+      ],
+      "loc": 28,
+      "anchor_signature": "var SOC2_CONTROLS = ["
+    },
+    {
+      "name": "CMS_CONTROLS",
+      "line_range": [
+        1933,
+        1956
+      ],
+      "loc": 24,
+      "anchor_signature": "var CMS_CONTROLS = ["
+    },
+    {
+      "name": "VENDOR_TIERS",
+      "line_range": [
+        1957,
+        2367
+      ],
+      "loc": 411,
+      "anchor_signature": "var VENDOR_TIERS = ["
+    },
+    {
+      "name": "VENDOR_PRESETS",
+      "line_range": [
+        2368,
+        2484
+      ],
+      "loc": 117,
+      "anchor_signature": "var VENDOR_PRESETS = {"
+    },
+    {
+      "name": "CLAIM_LIFECYCLE",
+      "line_range": [
+        2485,
+        2520
+      ],
+      "loc": 36,
+      "anchor_signature": "var CLAIM_LIFECYCLE = ["
+    },
+    {
+      "name": "ALL_LIFECYCLES",
+      "line_range": [
+        2521,
+        2792
+      ],
+      "loc": 272,
+      "anchor_signature": "var ALL_LIFECYCLES = {"
+    },
+    {
+      "name": "US_STATES",
+      "line_range": [
+        2793,
+        2814
+      ],
+      "loc": 22,
+      "anchor_signature": "var US_STATES = ["
+    },
+    {
+      "name": "STATE_REGULATIONS_MAP",
+      "line_range": [
+        2815,
+        2881
+      ],
+      "loc": 67,
+      "anchor_signature": "var STATE_REGULATIONS_MAP = {"
+    },
+    {
+      "name": "FRAMEWORKS_CATALOG",
+      "line_range": [
+        2882,
+        2957
+      ],
+      "loc": 76,
+      "anchor_signature": "var FRAMEWORKS_CATALOG = ["
+    },
+    {
+      "name": "_globalInfraSel",
+      "line_range": [
+        2958,
+        2963
+      ],
+      "loc": 6,
+      "anchor_signature": "var _globalInfraSel = {};"
+    },
+    {
+      "name": "ITSM_SYSTEMS",
+      "line_range": [
+        2964,
+        3098
+      ],
+      "loc": 135,
+      "anchor_signature": "var ITSM_SYSTEMS = {"
+    },
+    {
+      "name": "ROUTES",
+      "line_range": [
+        3099,
+        3104
+      ],
+      "loc": 6,
+      "anchor_signature": "var ROUTES = buildRoutes(_globalInfraSel);"
+    },
+    {
+      "name": "METRIC_DETAILS",
+      "line_range": [
+        3105,
+        3260
+      ],
+      "loc": 156,
+      "anchor_signature": "var METRIC_DETAILS = {"
+    },
+    {
+      "name": "SEC_TOOL_CATALOG",
+      "line_range": [
+        3683,
+        3701
+      ],
+      "loc": 19,
+      "anchor_signature": "var SEC_TOOL_CATALOG = ["
+    },
+    {
+      "name": "LOB_INFRA_PRESETS",
+      "line_range": [
+        3702,
+        3718
+      ],
+      "loc": 17,
+      "anchor_signature": "var LOB_INFRA_PRESETS = {"
+    },
+    {
+      "name": "LOB_VENDOR_PRESETS",
+      "line_range": [
+        3719,
+        3741
+      ],
+      "loc": 23,
+      "anchor_signature": "var LOB_VENDOR_PRESETS = {"
+    },
+    {
+      "name": "CYBERRX_API",
+      "line_range": [
+        3742,
+        4122
+      ],
+      "loc": 381,
+      "anchor_signature": "var CYBERRX_API = (typeof window!=='undefined'&&window.__CYBERRX_API)||import.me"
+    },
+    {
+      "name": "CONNECTION_CONTROLS",
+      "line_range": [
+        4123,
+        4175
+      ],
+      "loc": 53,
+      "anchor_signature": "var CONNECTION_CONTROLS = {"
+    },
+    {
+      "name": "CONN_OPTIONS",
+      "line_range": [
+        4176,
+        4185
+      ],
+      "loc": 10,
+      "anchor_signature": "var CONN_OPTIONS = ["
+    },
+    {
+      "name": "DOC_REQUIREMENTS",
+      "line_range": [
+        6311,
+        6421
+      ],
+      "loc": 111,
+      "anchor_signature": "var DOC_REQUIREMENTS = {"
+    },
+    {
+      "name": "DOC_VALIDATION_ATTRS",
+      "line_range": [
+        6422,
+        6449
+      ],
+      "loc": 28,
+      "anchor_signature": "var DOC_VALIDATION_ATTRS = {"
+    },
+    {
+      "name": "COMPLIANCE_REPORTS",
+      "line_range": [
+        11320,
+        12149
+      ],
+      "loc": 830,
+      "anchor_signature": "var COMPLIANCE_REPORTS = {"
+    },
+    {
+      "name": "MITRE_TACTICS",
+      "line_range": [
+        12678,
+        12691
+      ],
+      "loc": 14,
+      "anchor_signature": "var MITRE_TACTICS = ["
+    },
+    {
+      "name": "MITRE_SCENARIOS",
+      "line_range": [
+        12692,
+        12850
+      ],
+      "loc": 159,
+      "anchor_signature": "var MITRE_SCENARIOS = ["
+    },
+    {
+      "name": "SYNC_STEPS",
+      "line_range": [
+        16291,
+        16311
+      ],
+      "loc": 21,
+      "anchor_signature": "var SYNC_STEPS = ["
+    },
+    {
+      "name": "MOCK_RESPONSES",
+      "line_range": [
+        19631,
+        19735
+      ],
+      "loc": 105,
+      "anchor_signature": "var MOCK_RESPONSES = {"
+    },
+    {
+      "name": "CIS_SCORES",
+      "line_range": [
+        19736,
+        19744
+      ],
+      "loc": 9,
+      "anchor_signature": "var CIS_SCORES = {"
+    },
+    {
+      "name": "TOOLS",
+      "line_range": [
+        19745,
+        19752
+      ],
+      "loc": 8,
+      "anchor_signature": "var TOOLS = ["
+    },
+    {
+      "name": "SEV_CONFIG",
+      "line_range": [
+        19753,
+        19760
+      ],
+      "loc": 8,
+      "anchor_signature": "var SEV_CONFIG = {"
+    },
+    {
+      "name": "ADAPTER_TAB",
+      "line_range": [
+        19761,
+        19762
+      ],
+      "loc": 2,
+      "anchor_signature": "var ADAPTER_TAB = {CONFIG:0, RAW:1, NORMALIZED:2, MAPPING:3};"
+    },
+    {
+      "name": "_cx_briana_sid",
+      "line_range": [
+        20794,
+        20795
+      ],
+      "loc": 2,
+      "anchor_signature": "var _cx_briana_sid = 0;   // incremented to cancel pending TTS chunks"
+    },
+    {
+      "name": "MK",
+      "line_range": [
+        21601,
+        21608
+      ],
+      "loc": 8,
+      "anchor_signature": "var MK = {"
+    },
+    {
+      "name": "MOD_CH",
+      "line_range": [
+        21609,
+        21619
+      ],
+      "loc": 11,
+      "anchor_signature": "var MOD_CH = {"
+    },
+    {
+      "name": "ATK_NW",
+      "line_range": [
+        21620,
+        21622
+      ],
+      "loc": 3,
+      "anchor_signature": "var ATK_NW = 175; var ATK_NH = 102;"
+    },
+    {
+      "name": "ATK_NODES",
+      "line_range": [
+        21623,
+        21694
+      ],
+      "loc": 72,
+      "anchor_signature": "var ATK_NODES = ["
+    },
+    {
+      "name": "ATK_EDGES",
+      "line_range": [
+        21695,
+        21705
+      ],
+      "loc": 11,
+      "anchor_signature": "var ATK_EDGES = ["
+    },
+    {
+      "name": "ATK_CJW",
+      "line_range": [
+        21706,
+        21706
+      ],
+      "loc": 1,
+      "anchor_signature": "var ATK_CJW = 126; var ATK_CJH = 54;"
+    },
+    {
+      "name": "ATK_CJS",
+      "line_range": [
+        21707,
+        21712
+      ],
+      "loc": 6,
+      "anchor_signature": "var ATK_CJS = ["
+    },
+    {
+      "name": "ATK_CJE",
+      "line_range": [
+        21713,
+        21718
+      ],
+      "loc": 6,
+      "anchor_signature": "var ATK_CJE = ["
+    },
+    {
+      "name": "CJD_TOOLS",
+      "line_range": [
+        21719,
+        21739
+      ],
+      "loc": 21,
+      "anchor_signature": "var CJD_TOOLS = ["
+    },
+    {
+      "name": "CJD_ASSETS",
+      "line_range": [
+        21740,
+        21786
+      ],
+      "loc": 47,
+      "anchor_signature": "var CJD_ASSETS = ["
+    },
+    {
+      "name": "CJD_MAP_NODES",
+      "line_range": [
+        21787,
+        21796
+      ],
+      "loc": 10,
+      "anchor_signature": "var CJD_MAP_NODES = ["
+    },
+    {
+      "name": "CJD_MAP_EDGES",
+      "line_range": [
+        21797,
+        21852
+      ],
+      "loc": 56,
+      "anchor_signature": "var CJD_MAP_EDGES = ["
+    },
+    {
+      "name": "ATK_COLS",
+      "line_range": [
+        22050,
+        22057
+      ],
+      "loc": 8,
+      "anchor_signature": "var ATK_COLS = ["
+    },
+    {
+      "name": "ATK_CANVAS_W",
+      "line_range": [
+        22058,
+        22058
+      ],
+      "loc": 1,
+      "anchor_signature": "var ATK_CANVAS_W = 1668; var ATK_CANVAS_H = 754;"
+    },
+    {
+      "name": "ATK_COL_W",
+      "line_range": [
+        22059,
+        22060
+      ],
+      "loc": 2,
+      "anchor_signature": "var ATK_COL_W = 244;"
+    },
+    {
+      "name": "EXPOSURE_HIERARCHY",
+      "line_range": [
+        24022,
+        24180
+      ],
+      "loc": 159,
+      "anchor_signature": "var EXPOSURE_HIERARCHY = ["
+    },
+    {
+      "name": "EXPOSURE_BASELINES",
+      "line_range": [
+        24181,
+        24197
+      ],
+      "loc": 17,
+      "anchor_signature": "var EXPOSURE_BASELINES = {"
+    }
+  ],
+  "components": [
+    {
+      "name": "CmmiBadge",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        40,
+        53
+      ],
+      "loc": 14,
+      "function_definition_line": 40,
+      "anchor_signature": "function CmmiBadge(props) {",
+      "local_state": [],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "score",
+        "size"
+      ],
+      "cross_refs": [
+        "CmmiBadge"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "CmmiBar",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        54,
+        112
+      ],
+      "loc": 59,
+      "function_definition_line": 54,
+      "anchor_signature": "function CmmiBar(props) {",
+      "local_state": [],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "score",
+        "width"
+      ],
+      "cross_refs": [
+        "CMMI_LEVELS",
+        "CmmiBar",
+        "NAV"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "InfoModal",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        3261,
+        3315
+      ],
+      "loc": 55,
+      "function_definition_line": 3261,
+      "anchor_signature": "function InfoModal(props) {",
+      "local_state": [],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "children",
+        "methodology",
+        "onClose",
+        "open",
+        "sources",
+        "title",
+        "value"
+      ],
+      "cross_refs": [
+        "C",
+        "InfoModal"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "JustifiedStat",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        3316,
+        3334
+      ],
+      "loc": 19,
+      "function_definition_line": 3316,
+      "anchor_signature": "function JustifiedStat(props) {",
+      "local_state": [
+        "js"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "children",
+        "color",
+        "displayValue",
+        "label",
+        "methodology",
+        "sources"
+      ],
+      "cross_refs": [
+        "C",
+        "InfoModal",
+        "JustifiedStat"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "Btn",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        3335,
+        3350
+      ],
+      "loc": 16,
+      "function_definition_line": 3335,
+      "anchor_signature": "function Btn(props) {",
+      "local_state": [],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "children",
+        "disabled",
+        "onClick",
+        "primary",
+        "small"
+      ],
+      "cross_refs": [
+        "Btn",
+        "C"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "Card",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        3351,
+        3361
+      ],
+      "loc": 11,
+      "function_definition_line": 3351,
+      "anchor_signature": "function Card(props) {",
+      "local_state": [],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "children",
+        "style"
+      ],
+      "cross_refs": [
+        "C",
+        "Card"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "SH",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        3362,
+        3371
+      ],
+      "loc": 10,
+      "function_definition_line": 3362,
+      "anchor_signature": "function SH(props) {",
+      "local_state": [],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "label"
+      ],
+      "cross_refs": [
+        "C",
+        "SH"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "StatCard",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        3372,
+        3390
+      ],
+      "loc": 19,
+      "function_definition_line": 3372,
+      "anchor_signature": "function StatCard(props) {",
+      "local_state": [],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "color",
+        "label",
+        "onClick",
+        "sub",
+        "value"
+      ],
+      "cross_refs": [
+        "C",
+        "StatCard"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "Input",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        3391,
+        3402
+      ],
+      "loc": 12,
+      "function_definition_line": 3391,
+      "anchor_signature": "function Input(props) {",
+      "local_state": [],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "label",
+        "onChange",
+        "placeholder",
+        "type",
+        "value"
+      ],
+      "cross_refs": [
+        "C",
+        "Input"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "Spark",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        3403,
+        3421
+      ],
+      "loc": 19,
+      "function_definition_line": 3403,
+      "anchor_signature": "function Spark(props) {",
+      "local_state": [],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "clr",
+        "data"
+      ],
+      "cross_refs": [
+        "Spark"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "DrilldownModal",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        3422,
+        3441
+      ],
+      "loc": 20,
+      "function_definition_line": 3422,
+      "anchor_signature": "function DrilldownModal(props) {",
+      "local_state": [],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "children",
+        "onClose",
+        "title"
+      ],
+      "cross_refs": [
+        "C",
+        "DrilldownModal"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "NonDemoPlaceholder",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        3442,
+        3465
+      ],
+      "loc": 24,
+      "function_definition_line": 3442,
+      "anchor_signature": "function NonDemoPlaceholder(props) {",
+      "local_state": [],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "go",
+        "orgName",
+        "page"
+      ],
+      "cross_refs": [
+        "Btn",
+        "C",
+        "Landing",
+        "NonDemoPlaceholder",
+        "Setup"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "CisTag",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        3466,
+        3479
+      ],
+      "loc": 14,
+      "function_definition_line": 3466,
+      "anchor_signature": "function CisTag(props) {",
+      "local_state": [],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "cid"
+      ],
+      "cross_refs": [
+        "CIS",
+        "CIS_N",
+        "CisTag"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "Landing",
+      "role": "page",
+      "nav_id": "landing",
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": "phase==='landing'",
+      "line_range": [
+        3480,
+        3576
+      ],
+      "loc": 97,
+      "function_definition_line": 3480,
+      "anchor_signature": "function Landing(props) {",
+      "local_state": [],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "onSignIn",
+        "onStart"
+      ],
+      "cross_refs": [
+        "C",
+        "Landing",
+        "NAV"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "Login",
+      "role": "page",
+      "nav_id": "login",
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": "phase==='login'",
+      "line_range": [
+        3577,
+        3623
+      ],
+      "loc": 47,
+      "function_definition_line": 3577,
+      "anchor_signature": "function Login(props) {",
+      "local_state": [],
+      "refs": [
+        "emailRef",
+        "passRef"
+      ],
+      "use_effect_count": 0,
+      "props_used": [
+        "onBack",
+        "onSignIn"
+      ],
+      "cross_refs": [
+        "C",
+        "Input",
+        "Login",
+        "MFA",
+        "QuickVoicePicker"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "MFA",
+      "role": "page",
+      "nav_id": "mfa",
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": "phase==='mfa'",
+      "line_range": [
+        3624,
+        3682
+      ],
+      "loc": 59,
+      "function_definition_line": 3624,
+      "anchor_signature": "function MFA(props) {",
+      "local_state": [],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "email",
+        "onDone"
+      ],
+      "cross_refs": [
+        "C",
+        "MFA",
+        "Setup"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "Setup",
+      "role": "page",
+      "nav_id": "setup",
+      "nav_label": "Org Profile & Setup",
+      "nav_icon": "\ud83c\udfe2",
+      "nav_mod": "F02",
+      "routed_by": "phase==='app' && page==='setup'",
+      "line_range": [
+        4186,
+        6067
+      ],
+      "loc": 1882,
+      "function_definition_line": 4186,
+      "anchor_signature": "function Setup(props) {",
+      "local_state": [
+        "s0",
+        "s1",
+        "s10",
+        "s11",
+        "s12",
+        "s13",
+        "s14",
+        "s15",
+        "s16",
+        "s17",
+        "s18",
+        "s19",
+        "s2",
+        "s20",
+        "s21",
+        "s22",
+        "s23",
+        "s24",
+        "s25",
+        "s26",
+        "s27",
+        "s28",
+        "s29",
+        "s3",
+        "s30",
+        "s31",
+        "s32",
+        "s33",
+        "s34",
+        "s34b",
+        "s34c",
+        "s34d",
+        "s3b",
+        "s3c",
+        "s3d",
+        "s3e",
+        "s3f",
+        "s3g",
+        "s3h",
+        "s3i",
+        "s4",
+        "s5",
+        "s6",
+        "s7",
+        "s7b",
+        "s7c",
+        "s7d",
+        "s7e",
+        "s7f",
+        "s7g",
+        "s7h",
+        "s7j",
+        "s7k",
+        "s7l",
+        "s7m",
+        "s7n",
+        "s7o",
+        "s7p",
+        "s7q",
+        "s8",
+        "s8a",
+        "s8b",
+        "s8c",
+        "s8d",
+        "s8e",
+        "s8f",
+        "s8g",
+        "s8h",
+        "s8i",
+        "s8j",
+        "s8k",
+        "s8l",
+        "s8m",
+        "s8n",
+        "s8o",
+        "s8p",
+        "s9",
+        "sb"
+      ],
+      "refs": [],
+      "use_effect_count": 6,
+      "props_used": [
+        "dl",
+        "goBack",
+        "members",
+        "onDone",
+        "orgName",
+        "orgType",
+        "setAppPolicyFiles",
+        "setDocResults",
+        "setMembers",
+        "setOrgName",
+        "setOrgType",
+        "setRootBcbsAffiliated",
+        "setRootClaimsSystem",
+        "setRootCyberInsLimit",
+        "setRootHasFEP",
+        "setRootIBNR",
+        "setRootInfraSel",
+        "setRootItBudget",
+        "setRootLinesOfBiz",
+        "setRootMailingVendor",
+        "setRootMemberPortal",
+        "setRootRevenue",
+        "setRootSurplus",
+        "setRootVendorSel",
+        "setSyncMeta"
+      ],
+      "cross_refs": [
+        "Assets",
+        "Btn",
+        "C",
+        "CHURN_RANGES",
+        "CIS",
+        "CLAIMS_RANGES",
+        "CMS_RANGES",
+        "CONN_OPTIONS",
+        "Card",
+        "Controls",
+        "DEDUCTIBLE_RANGES",
+        "DOWNTIME_RANGES",
+        "DocValidationAgent",
+        "EMPLOYEE_RANGES",
+        "ENDPOINT_RANGES",
+        "EXP",
+        "IBNR_RANGES",
+        "INCIDENT_RANGES",
+        "INSURANCE_RANGES",
+        "INSURER_HINTS_RICH",
+        "ITSM_SYSTEMS",
+        "IT_BUDGET_RANGES",
+        "LOB_INFRA_PRESETS",
+        "LOB_VENDOR_PRESETS",
+        "MEMBER_RANGES",
+        "MFA",
+        "ORG_TYPES",
+        "PHI_RECORDS_RANGES",
+        "PREMIUM_RANGES",
+        "PRIV_ACCT_RANGES",
+        "PROCS",
+        "PROVIDER_RANGES",
+        "RANSOM_RANGES",
+        "RBC_RATIO_RANGES",
+        "REVENUE_RANGES",
+        "SEC_TOOL_CATALOG",
+        "SH",
+        "STATES_RANGES",
+        "SURPLUS_RANGES",
+        "Setup",
+        "SetupBot",
+        "US_STATES",
+        "VENDOR_TIERS",
+        "VendorEcosystem"
+      ],
+      "split_risk": "HIGH"
+    },
+    {
+      "name": "Home",
+      "role": "page",
+      "nav_id": "home",
+      "nav_label": "Home",
+      "nav_icon": "\ud83c\udfe0",
+      "nav_mod": "",
+      "routed_by": "page==='home'",
+      "line_range": [
+        6068,
+        6310
+      ],
+      "loc": 243,
+      "function_definition_line": 6068,
+      "anchor_signature": "function Home(props) {",
+      "local_state": [],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "email",
+        "go",
+        "orgName",
+        "orgType"
+      ],
+      "cross_refs": [
+        "Board",
+        "Btn",
+        "C",
+        "CIS",
+        "Controls",
+        "Evidence",
+        "Execution",
+        "Home",
+        "MFA",
+        "NAV",
+        "Scoring",
+        "Setup"
+      ],
+      "split_risk": "MEDIUM"
+    },
+    {
+      "name": "DocValidationAgent",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        6450,
+        6938
+      ],
+      "loc": 489,
+      "function_definition_line": 6450,
+      "anchor_signature": "function DocValidationAgent(props) {",
+      "local_state": [
+        "s0",
+        "s1",
+        "s2",
+        "s3"
+      ],
+      "refs": [],
+      "use_effect_count": 1,
+      "props_used": [
+        "onBack",
+        "onLaunch",
+        "orgName",
+        "policyFiles",
+        "selFW",
+        "setPolicyFile"
+      ],
+      "cross_refs": [
+        "Btn",
+        "C",
+        "CIS",
+        "Controls",
+        "DOC_REQUIREMENTS",
+        "DOC_VALIDATION_ATTRS",
+        "DocValidationAgent",
+        "Setup"
+      ],
+      "split_risk": "MEDIUM"
+    },
+    {
+      "name": "MetricDetailModal",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        6939,
+        7325
+      ],
+      "loc": 387,
+      "function_definition_line": 6939,
+      "anchor_signature": "function MetricDetailModal(props) {",
+      "local_state": [
+        "s0",
+        "s1",
+        "s2"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "execActions",
+        "go",
+        "metric",
+        "onClose",
+        "onRoute",
+        "onRouteAct",
+        "orgName",
+        "orgTextExtras"
+      ],
+      "cross_refs": [
+        "C",
+        "Evidence",
+        "Execution",
+        "FINDINGS",
+        "ITSM_SYSTEMS",
+        "METRIC_DETAILS",
+        "MetricDetailModal",
+        "ROUTES",
+        "SEV_B",
+        "SEV_C",
+        "_globalInfraSel"
+      ],
+      "split_risk": "MEDIUM"
+    },
+    {
+      "name": "CISODash",
+      "role": "page",
+      "nav_id": "dashboard",
+      "nav_label": "CISO Dashboard",
+      "nav_icon": "S",
+      "nav_mod": "F08a",
+      "routed_by": "page==='dashboard'",
+      "line_range": [
+        7326,
+        8407
+      ],
+      "loc": 1082,
+      "function_definition_line": 7326,
+      "anchor_signature": "function CISODash(props) {",
+      "local_state": [
+        "mEdit",
+        "s0",
+        "s1",
+        "s2",
+        "s3",
+        "s4",
+        "s5",
+        "s6",
+        "s_cap",
+        "smPnl"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "brianaOn",
+        "cyberrxReachable",
+        "edrPct",
+        "endpoints",
+        "execActions",
+        "go",
+        "memberCount",
+        "mfaPct",
+        "mttdHrs",
+        "mttrHrs",
+        "orgName",
+        "orgTextExtras",
+        "pamPct",
+        "patchPct",
+        "phiRecords",
+        "phishingPct",
+        "privAccts",
+        "revenue",
+        "setBrianaOn",
+        "setExecActions",
+        "setRootEDR",
+        "setRootMFA",
+        "setRootMTTD",
+        "setRootMTTR",
+        "setRootPAMPct",
+        "setRootPatch",
+        "setRootPhishing",
+        "setRootRouteStatus",
+        "setRootSIEMdays",
+        "setRootTraining",
+        "setRootVulnSLA",
+        "siemDays",
+        "syncMeta",
+        "trainingPct",
+        "vulnSLApct"
+      ],
+      "cross_refs": [
+        "ACTIONS",
+        "ALERTS",
+        "BrianaBar",
+        "Btn",
+        "C",
+        "CIS",
+        "CISODash",
+        "CYBERRX_API",
+        "Card",
+        "CmmiBadge",
+        "CmmiBar",
+        "Controls",
+        "DashNav",
+        "DrilldownModal",
+        "EXP",
+        "Execution",
+        "FINDINGS",
+        "ITSM_SYSTEMS",
+        "JustifiedStat",
+        "METRIC_DETAILS",
+        "MFA",
+        "MetricDetailModal",
+        "PROCS",
+        "SEC_CAPABILITIES",
+        "SEV_B",
+        "SEV_C",
+        "SH",
+        "Scoring",
+        "Setup",
+        "Spark"
+      ],
+      "split_risk": "HIGH"
+    },
+    {
+      "name": "CRODash",
+      "role": "page",
+      "nav_id": "cro",
+      "nav_label": "CRO / Audit",
+      "nav_icon": "C",
+      "nav_mod": "F08b",
+      "routed_by": "page==='cro'",
+      "line_range": [
+        8408,
+        9320
+      ],
+      "loc": 913,
+      "function_definition_line": 8408,
+      "anchor_signature": "function CRODash(props) {",
+      "local_state": [
+        "openStat",
+        "s0",
+        "s1",
+        "s2",
+        "s3",
+        "s4",
+        "s5",
+        "sGC"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "bcbsAffiliated",
+        "brianaOn",
+        "edrPct",
+        "go",
+        "hasFEP",
+        "linesOfBiz",
+        "mfaPct",
+        "mttdHrs",
+        "mttrHrs",
+        "orgName",
+        "orgType",
+        "pamPct",
+        "patchPct",
+        "phiRecords",
+        "setBrianaOn",
+        "siemDays",
+        "surplus",
+        "trainingPct",
+        "vulnSLApct"
+      ],
+      "cross_refs": [
+        "BrianaBar",
+        "Btn",
+        "C",
+        "CIS",
+        "CIS_N",
+        "CMS_CONTROLS",
+        "COMPLIANCE_REPORTS",
+        "CRODash",
+        "Card",
+        "ComplianceReport",
+        "Controls",
+        "DashNav",
+        "Evidence",
+        "Execution",
+        "FINDINGS",
+        "FINDING_OPENED",
+        "HIPAA_CONTROLS",
+        "InfoModal",
+        "PROCS",
+        "SEV_B",
+        "SEV_C",
+        "SH",
+        "SOC2_CONTROLS",
+        "Setup"
+      ],
+      "split_risk": "MEDIUM"
+    },
+    {
+      "name": "CFODash",
+      "role": "page",
+      "nav_id": "cfo",
+      "nav_label": "CFO Dashboard",
+      "nav_icon": "F",
+      "nav_mod": "F08c",
+      "routed_by": "page==='cfo'",
+      "line_range": [
+        9321,
+        9976
+      ],
+      "loc": 656,
+      "function_definition_line": 9321,
+      "anchor_signature": "function CFODash(props) {",
+      "local_state": [
+        "cf0",
+        "cf1",
+        "cf2"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "brianaOn",
+        "execActions",
+        "go",
+        "hasFEP",
+        "ibnr",
+        "incidentHistory",
+        "insDeductible",
+        "insLimit",
+        "itBudget",
+        "orgName",
+        "orgTextExtras",
+        "phiRecords",
+        "rbcRatioCurrent",
+        "revenue",
+        "setBrianaOn",
+        "setExecActions",
+        "surplus"
+      ],
+      "cross_refs": [
+        "Board",
+        "BrianaBar",
+        "C",
+        "CFODash",
+        "Card",
+        "DashNav",
+        "ExposureModelCard",
+        "MFA",
+        "MetricDetailModal",
+        "SH",
+        "Setup"
+      ],
+      "split_risk": "HIGH"
+    },
+    {
+      "name": "BoardDash",
+      "role": "page",
+      "nav_id": "boarddash",
+      "nav_label": "Board Dashboard",
+      "nav_icon": "B",
+      "nav_mod": "F08d",
+      "routed_by": "page==='boarddash'",
+      "line_range": [
+        9977,
+        10621
+      ],
+      "loc": 645,
+      "function_definition_line": 9977,
+      "anchor_signature": "function BoardDash(props) {",
+      "local_state": [
+        "s0",
+        "s1"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "bcbsAffiliated",
+        "boardCyberComm",
+        "brianaOn",
+        "drTestMonths",
+        "edrPct",
+        "execActions",
+        "go",
+        "hasFEP",
+        "ibnr",
+        "insCarrier",
+        "insDeductible",
+        "insLimit",
+        "itBudget",
+        "linesOfBiz",
+        "mfaPct",
+        "mttdHrs",
+        "mttrHrs",
+        "orgName",
+        "pamPct",
+        "patchPct",
+        "phiRecords",
+        "phishingPct",
+        "revenue",
+        "setBrianaOn",
+        "siemDays",
+        "surplus",
+        "trainingPct"
+      ],
+      "cross_refs": [
+        "ACTIONS",
+        "Board",
+        "BoardDash",
+        "BrianaBar",
+        "C",
+        "CFODash",
+        "Card",
+        "CmmiBadge",
+        "DashNav",
+        "FINDINGS",
+        "MFA",
+        "SH",
+        "Setup"
+      ],
+      "split_risk": "MEDIUM"
+    },
+    {
+      "name": "Controls",
+      "role": "page",
+      "nav_id": "controls",
+      "nav_label": "Control Validation",
+      "nav_icon": "\u2713",
+      "nav_mod": "F04",
+      "routed_by": "page==='controls'",
+      "line_range": [
+        10622,
+        10730
+      ],
+      "loc": 109,
+      "function_definition_line": 10622,
+      "anchor_signature": "function Controls(props) {",
+      "local_state": [
+        "s20",
+        "s21",
+        "s22",
+        "s23"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "brianaOn",
+        "go",
+        "goBack",
+        "orgName",
+        "setBrianaOn"
+      ],
+      "cross_refs": [
+        "BrianaBar",
+        "Btn",
+        "C",
+        "CIS",
+        "CIS_N",
+        "Card",
+        "Controls",
+        "DashNav",
+        "Evidence",
+        "NonDemoPlaceholder"
+      ],
+      "split_risk": "MEDIUM"
+    },
+    {
+      "name": "AppMap",
+      "role": "page",
+      "nav_id": "appmap",
+      "nav_label": "Application Map",
+      "nav_icon": "\ud83d\uddc4",
+      "nav_mod": "F01b",
+      "routed_by": "page==='appmap'",
+      "line_range": [
+        10731,
+        10912
+      ],
+      "loc": 182,
+      "function_definition_line": 10731,
+      "anchor_signature": "function AppMap(props) {",
+      "local_state": [
+        "s0",
+        "s1",
+        "s2"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "brianaOn",
+        "go",
+        "orgName",
+        "setBrianaOn"
+      ],
+      "cross_refs": [
+        "AppMap",
+        "BIZ_APP_CATALOG",
+        "BrianaBar",
+        "Btn",
+        "C",
+        "Card",
+        "DashNav",
+        "FINDINGS",
+        "PROCS",
+        "SEV_B",
+        "SEV_C",
+        "SH"
+      ],
+      "split_risk": "MEDIUM"
+    },
+    {
+      "name": "VendorEcosystem",
+      "role": "page",
+      "nav_id": "vendormap",
+      "nav_label": "Vendor Ecosystem Map",
+      "nav_icon": "\ud83c\udf10",
+      "nav_mod": "F03b",
+      "routed_by": "page==='vendormap'",
+      "line_range": [
+        10913,
+        11180
+      ],
+      "loc": 268,
+      "function_definition_line": 10913,
+      "anchor_signature": "function VendorEcosystem(props) {",
+      "local_state": [
+        "s0",
+        "s1"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "brianaOn",
+        "go",
+        "orgName",
+        "orgTextExtras",
+        "rootVendorSel",
+        "setBrianaOn"
+      ],
+      "cross_refs": [
+        "Assets",
+        "BrianaBar",
+        "Btn",
+        "C",
+        "Card",
+        "DashNav",
+        "Execution",
+        "FINDINGS",
+        "PROCS",
+        "SEV_B",
+        "SEV_C",
+        "Setup",
+        "VENDOR_TIERS",
+        "VendorEcosystem"
+      ],
+      "split_risk": "MEDIUM"
+    },
+    {
+      "name": "ClaimLifecycle",
+      "role": "page",
+      "nav_id": "assets",
+      "nav_label": "Claim Lifecycle",
+      "nav_icon": "\ud83d\udd17",
+      "nav_mod": "F03",
+      "routed_by": "page==='assets'",
+      "line_range": [
+        11181,
+        11319
+      ],
+      "loc": 139,
+      "function_definition_line": 11181,
+      "anchor_signature": "function ClaimLifecycle(props) {",
+      "local_state": [
+        "s0"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "go"
+      ],
+      "cross_refs": [
+        "Btn",
+        "C",
+        "CLAIM_LIFECYCLE",
+        "Card",
+        "ClaimLifecycle",
+        "SH"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "ComplianceReport",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        12150,
+        12677
+      ],
+      "loc": 528,
+      "function_definition_line": 12150,
+      "anchor_signature": "function ComplianceReport(props) {",
+      "local_state": [
+        "s0",
+        "s1",
+        "s2"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "edrPct",
+        "go",
+        "mfaPct",
+        "mttdHrs",
+        "mttrHrs",
+        "onBack",
+        "orgName",
+        "orgTextExtras",
+        "pamPct",
+        "patchPct",
+        "report",
+        "rootInfraSel",
+        "siemDays",
+        "syncMeta",
+        "trainingPct",
+        "vulnSLApct"
+      ],
+      "cross_refs": [
+        "Btn",
+        "C",
+        "Card",
+        "CmmiBadge",
+        "CmmiBar",
+        "ComplianceReport",
+        "Controls",
+        "Evidence",
+        "Execution",
+        "FINDINGS",
+        "SEV_B",
+        "SEV_C",
+        "_globalInfraSel"
+      ],
+      "split_risk": "MEDIUM"
+    },
+    {
+      "name": "MitreTab",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        12851,
+        13193
+      ],
+      "loc": 343,
+      "function_definition_line": 12851,
+      "anchor_signature": "function MitreTab(props) {",
+      "local_state": [
+        "s0",
+        "s1",
+        "s2"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "go",
+        "orgName",
+        "orgTextExtras"
+      ],
+      "cross_refs": [
+        "Btn",
+        "C",
+        "Execution",
+        "FINDINGS",
+        "MITRE_SCENARIOS",
+        "MITRE_TACTICS",
+        "MitreTab",
+        "PROCS",
+        "SEV_B",
+        "SEV_C"
+      ],
+      "split_risk": "MEDIUM"
+    },
+    {
+      "name": "ProcessControlMap",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        13194,
+        13466
+      ],
+      "loc": 273,
+      "function_definition_line": 13194,
+      "anchor_signature": "function ProcessControlMap(props) {",
+      "local_state": [
+        "s0",
+        "s1",
+        "s2"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "go"
+      ],
+      "cross_refs": [
+        "Btn",
+        "C",
+        "CIS",
+        "Card",
+        "CmmiBadge",
+        "FINDINGS",
+        "PROCS",
+        "ProcessControlMap",
+        "SEV_B",
+        "SEV_C"
+      ],
+      "split_risk": "MEDIUM"
+    },
+    {
+      "name": "DashHub",
+      "role": "page",
+      "nav_id": "hub",
+      "nav_label": "Command Center",
+      "nav_icon": "*",
+      "nav_mod": "F08",
+      "routed_by": "page==='hub'",
+      "line_range": [
+        13467,
+        14263
+      ],
+      "loc": 797,
+      "function_definition_line": 13467,
+      "anchor_signature": "function DashHub(props) {",
+      "local_state": [
+        "s0",
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "brianaOn",
+        "edrPct",
+        "execActions",
+        "go",
+        "ibnr",
+        "incidentHistory",
+        "insDeductible",
+        "itBudget",
+        "mfaPct",
+        "mttdHrs",
+        "mttrHrs",
+        "orgName",
+        "orgTextExtras",
+        "orgType",
+        "pamPct",
+        "patchPct",
+        "phiRecords",
+        "phishingPct",
+        "rbcRatioCurrent",
+        "revenue",
+        "setBrianaOn",
+        "siemDays",
+        "surplus",
+        "syncMeta",
+        "trainingPct",
+        "vulnSLApct"
+      ],
+      "cross_refs": [
+        "ACTIONS",
+        "BizLines",
+        "Board",
+        "BoardDash",
+        "BrianaBar",
+        "Btn",
+        "C",
+        "CFODash",
+        "CISODash",
+        "CRODash",
+        "Card",
+        "CmmiBadge",
+        "CmmiBar",
+        "CrownJewelMap",
+        "DashHub",
+        "DashNav",
+        "Execution",
+        "FINDINGS",
+        "MFA",
+        "MITRE_SCENARIOS",
+        "MitreTab",
+        "PROCS",
+        "ProcessControlMap",
+        "REGS",
+        "SH",
+        "Scoring",
+        "VendorEcosystem"
+      ],
+      "split_risk": "HIGH"
+    },
+    {
+      "name": "BizLines",
+      "role": "page",
+      "nav_id": "bizlines",
+      "nav_label": "Business Lines",
+      "nav_icon": "\ud83d\uddfa",
+      "nav_mod": "F01",
+      "routed_by": "page==='bizlines'",
+      "line_range": [
+        14264,
+        14738
+      ],
+      "loc": 475,
+      "function_definition_line": 14264,
+      "anchor_signature": "function BizLines(props) {",
+      "local_state": [
+        "s0",
+        "s1"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "brianaOn",
+        "edrPct",
+        "endpoints",
+        "go",
+        "goBack",
+        "linesOfBiz",
+        "mfaPct",
+        "mttdHrs",
+        "mttrHrs",
+        "orgName",
+        "orgTextExtras",
+        "pamPct",
+        "patchPct",
+        "phiRecords",
+        "phishingPct",
+        "revenue",
+        "setBrianaOn",
+        "siemDays",
+        "surplus",
+        "trainingPct",
+        "vulnSLApct"
+      ],
+      "cross_refs": [
+        "ALL_LIFECYCLES",
+        "BizLines",
+        "Board",
+        "BrianaBar",
+        "Btn",
+        "C",
+        "Card",
+        "CmmiBadge",
+        "Controls",
+        "DashNav",
+        "EXP",
+        "FINDINGS",
+        "PROCS",
+        "SEV_B",
+        "SEV_C",
+        "Spark"
+      ],
+      "split_risk": "MEDIUM"
+    },
+    {
+      "name": "Assets",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        14739,
+        14980
+      ],
+      "loc": 242,
+      "function_definition_line": 14739,
+      "anchor_signature": "function Assets(props) {",
+      "local_state": [
+        "s0"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "go"
+      ],
+      "cross_refs": [
+        "Assets",
+        "Btn",
+        "C",
+        "Card",
+        "FINDINGS",
+        "MFA",
+        "Scoring"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "Scoring",
+      "role": "page",
+      "nav_id": "scoring",
+      "nav_label": "Risk Scoring + MITRE",
+      "nav_icon": "\ud83d\udcc8",
+      "nav_mod": "F05",
+      "routed_by": "page==='scoring'",
+      "line_range": [
+        14981,
+        15078
+      ],
+      "loc": 98,
+      "function_definition_line": 14981,
+      "anchor_signature": "function Scoring(props) {",
+      "local_state": [
+        "s34"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "brianaOn",
+        "go",
+        "goBack",
+        "orgName",
+        "setBrianaOn"
+      ],
+      "cross_refs": [
+        "Board",
+        "BrianaBar",
+        "Btn",
+        "C",
+        "CIS",
+        "CIS_N",
+        "Card",
+        "Controls",
+        "Evidence",
+        "NonDemoPlaceholder",
+        "SH",
+        "Scoring"
+      ],
+      "split_risk": "MEDIUM"
+    },
+    {
+      "name": "Evidence",
+      "role": "page",
+      "nav_id": "evidence",
+      "nav_label": "Evidence Repository",
+      "nav_icon": "\ud83d\udcc1",
+      "nav_mod": "F06",
+      "routed_by": "page==='evidence'",
+      "line_range": [
+        15079,
+        15327
+      ],
+      "loc": 249,
+      "function_definition_line": 15079,
+      "anchor_signature": "function Evidence(props) {",
+      "local_state": [
+        "s0",
+        "s1",
+        "s2",
+        "s3"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "_bcbsPreset",
+        "go",
+        "goBack",
+        "orgName",
+        "orgTextExtras"
+      ],
+      "cross_refs": [
+        "Btn",
+        "C",
+        "CIS",
+        "Card",
+        "Evidence",
+        "FINDINGS",
+        "MFA",
+        "SH"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "Board",
+      "role": "page",
+      "nav_id": "board",
+      "nav_label": "Board Risk Report",
+      "nav_icon": "\ud83d\udccb",
+      "nav_mod": "F07",
+      "routed_by": "page==='board'",
+      "line_range": [
+        15328,
+        15491
+      ],
+      "loc": 164,
+      "function_definition_line": 15328,
+      "anchor_signature": "function Board(props) {",
+      "local_state": [
+        "s35",
+        "s36",
+        "s37"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "edrPct",
+        "go",
+        "goBack",
+        "mfaPct",
+        "orgName",
+        "orgType",
+        "pamPct",
+        "patchPct",
+        "trainingPct",
+        "vulnSLApct"
+      ],
+      "cross_refs": [
+        "Board",
+        "Btn",
+        "C",
+        "Card",
+        "EXP",
+        "Evidence",
+        "FINDINGS",
+        "NonDemoPlaceholder",
+        "PROCS",
+        "Scoring"
+      ],
+      "split_risk": "MEDIUM"
+    },
+    {
+      "name": "Execution",
+      "role": "page",
+      "nav_id": "execution",
+      "nav_label": "Execution Layer",
+      "nav_icon": "\u26a1",
+      "nav_mod": "F09",
+      "routed_by": "page==='execution'",
+      "line_range": [
+        15492,
+        16290
+      ],
+      "loc": 799,
+      "function_definition_line": 15492,
+      "anchor_signature": "function Execution(props) {",
+      "local_state": [
+        "s38",
+        "s39",
+        "s40",
+        "s41",
+        "s43",
+        "s44",
+        "s45",
+        "s46"
+      ],
+      "refs": [],
+      "use_effect_count": 4,
+      "props_used": [
+        "brianaOn",
+        "cyberrxReachable",
+        "dl",
+        "execActions",
+        "go",
+        "goBack",
+        "orgName",
+        "orgTextExtras",
+        "rootInfraSel",
+        "rootRouteStatus",
+        "setBrianaOn",
+        "setExecActions",
+        "setRootRouteStatus"
+      ],
+      "cross_refs": [
+        "ACTIONS",
+        "BrianaBar",
+        "Btn",
+        "C",
+        "CIS",
+        "CYBERRX_API",
+        "DashNav",
+        "DrilldownModal",
+        "ELOGS",
+        "Execution",
+        "FINDINGS",
+        "ITSM_SYSTEMS",
+        "ROUTES",
+        "SEV_B",
+        "SEV_C",
+        "Setup",
+        "StatCard",
+        "_globalInfraSel"
+      ],
+      "split_risk": "HIGH"
+    },
+    {
+      "name": "DashNav",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        16312,
+        16345
+      ],
+      "loc": 34,
+      "function_definition_line": 16312,
+      "anchor_signature": "function DashNav(props) {",
+      "local_state": [],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "current",
+        "go"
+      ],
+      "cross_refs": [
+        "Board",
+        "C",
+        "DashNav",
+        "Execution"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "QuickNav",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        16346,
+        16461
+      ],
+      "loc": 116,
+      "function_definition_line": 16346,
+      "anchor_signature": "function QuickNav(props) {",
+      "local_state": [
+        "s0"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "currentPage",
+        "go",
+        "history"
+      ],
+      "cross_refs": [
+        "Board",
+        "C",
+        "Controls",
+        "Evidence",
+        "Execution",
+        "Home",
+        "QuickNav",
+        "Scoring",
+        "Setup"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "Shell",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        16462,
+        16673
+      ],
+      "loc": 212,
+      "function_definition_line": 16462,
+      "anchor_signature": "function Shell(props) {",
+      "local_state": [],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "children",
+        "email",
+        "go",
+        "goBack",
+        "history",
+        "lastSync",
+        "orgName",
+        "orgType",
+        "page",
+        "runSync",
+        "syncPct",
+        "syncStatus"
+      ],
+      "cross_refs": [
+        "Board",
+        "BrianaBar",
+        "Btn",
+        "C",
+        "Controls",
+        "CyberRxApp",
+        "DEMO_ORG_NAME",
+        "Evidence",
+        "NAV",
+        "QuickNav",
+        "QuickVoicePicker",
+        "Scoring",
+        "Setup",
+        "Shell"
+      ],
+      "split_risk": "MEDIUM"
+    },
+    {
+      "name": "QuickVoicePicker",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        16674,
+        16995
+      ],
+      "loc": 322,
+      "function_definition_line": 16674,
+      "anchor_signature": "function QuickVoicePicker() {",
+      "local_state": [
+        "sav",
+        "sbv",
+        "sek",
+        "serr",
+        "sok",
+        "sp",
+        "sprev",
+        "svm",
+        "svp"
+      ],
+      "refs": [],
+      "use_effect_count": 2,
+      "props_used": [],
+      "cross_refs": [
+        "C",
+        "QuickVoicePicker"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "WelcomePage",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": "phase==='welcome'",
+      "line_range": [
+        16996,
+        17332
+      ],
+      "loc": 337,
+      "function_definition_line": 16996,
+      "anchor_signature": "function WelcomePage(props) {",
+      "local_state": [],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "onGoToDashboard",
+        "onStartSetup",
+        "orgName",
+        "setupDone"
+      ],
+      "cross_refs": [
+        "Board",
+        "C",
+        "CIS",
+        "Card",
+        "Controls",
+        "Evidence",
+        "MFA",
+        "NAV",
+        "QuickVoicePicker",
+        "WelcomePage"
+      ],
+      "split_risk": "MEDIUM"
+    },
+    {
+      "name": "SetupBot",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        17333,
+        18518
+      ],
+      "loc": 1186,
+      "function_definition_line": 17333,
+      "anchor_signature": "function SetupBot(props) {",
+      "local_state": [
+        "s0",
+        "s1",
+        "s2",
+        "s3",
+        "s4",
+        "s5",
+        "s6",
+        "s7",
+        "s8",
+        "sShowStates",
+        "sStates"
+      ],
+      "refs": [
+        "accRef",
+        "doneRef",
+        "editIdxRef",
+        "scrollRef"
+      ],
+      "use_effect_count": 2,
+      "props_used": [
+        "onComplete"
+      ],
+      "cross_refs": [
+        "Board",
+        "C",
+        "Input",
+        "MFA",
+        "Setup",
+        "SetupBot",
+        "US_STATES"
+      ],
+      "split_risk": "MEDIUM"
+    },
+    {
+      "name": "DocDash",
+      "role": "page",
+      "nav_id": "docdash",
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": "page==='docdash'",
+      "line_range": [
+        18519,
+        18882
+      ],
+      "loc": 364,
+      "function_definition_line": 18519,
+      "anchor_signature": "function DocDash(props) {",
+      "local_state": [
+        "s0",
+        "s1"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "brianaOn",
+        "docResults",
+        "go",
+        "orgName",
+        "selFW",
+        "setBrianaOn"
+      ],
+      "cross_refs": [
+        "BrianaBar",
+        "BusinessMapDash",
+        "C",
+        "CIS",
+        "Controls",
+        "DOC_REQUIREMENTS",
+        "DashNav",
+        "DocDash",
+        "Setup"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "BusinessMapDash",
+      "role": "page",
+      "nav_id": "bizmap",
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": "page==='bizmap'",
+      "line_range": [
+        18883,
+        19630
+      ],
+      "loc": 748,
+      "function_definition_line": 18883,
+      "anchor_signature": "function BusinessMapDash(props) {",
+      "local_state": [
+        "s0",
+        "s1",
+        "s2"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "brianaOn",
+        "edrPct",
+        "go",
+        "mfaPct",
+        "orgName",
+        "orgType",
+        "pamPct",
+        "patchPct",
+        "setBrianaOn",
+        "trainingPct",
+        "vulnSLApct"
+      ],
+      "cross_refs": [
+        "BrianaBar",
+        "BusinessMapDash",
+        "C",
+        "Controls",
+        "DashNav",
+        "Execution",
+        "FINDINGS",
+        "MFA",
+        "Setup"
+      ],
+      "split_risk": "MEDIUM"
+    },
+    {
+      "name": "CyberRxAPIAdapter",
+      "role": "page",
+      "nav_id": "apiadapter",
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": "page==='apiadapter'",
+      "line_range": [
+        19763,
+        20254
+      ],
+      "loc": 492,
+      "function_definition_line": 19763,
+      "anchor_signature": "function CyberRxAPIAdapter(props) {",
+      "local_state": [
+        "s0",
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "go"
+      ],
+      "cross_refs": [
+        "ADAPTER_TAB",
+        "C",
+        "CIS",
+        "CIS_SCORES",
+        "CyberRxAPIAdapter",
+        "FINDINGS",
+        "ITSM_SYSTEMS",
+        "MOCK_RESPONSES",
+        "ProcessFlowDash",
+        "SEV_CONFIG",
+        "Setup",
+        "TOOLS",
+        "_globalInfraSel"
+      ],
+      "split_risk": "MEDIUM"
+    },
+    {
+      "name": "ProcessFlowDash",
+      "role": "page",
+      "nav_id": "processflow",
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": "page==='processflow'",
+      "line_range": [
+        20255,
+        20793
+      ],
+      "loc": 539,
+      "function_definition_line": 20255,
+      "anchor_signature": "function ProcessFlowDash(props) {",
+      "local_state": [
+        "s0",
+        "s1"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "brianaOn",
+        "go",
+        "orgName",
+        "rootInfraSel",
+        "setBrianaOn"
+      ],
+      "cross_refs": [
+        "BrianaBar",
+        "C",
+        "DashNav",
+        "Evidence",
+        "FINDINGS",
+        "ProcessFlowDash",
+        "_globalInfraSel"
+      ],
+      "split_risk": "MEDIUM"
+    },
+    {
+      "name": "BrianaBar",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        20796,
+        21600
+      ],
+      "loc": 805,
+      "function_definition_line": 20796,
+      "anchor_signature": "function BrianaBar(props) {",
+      "local_state": [
+        "s0",
+        "s2",
+        "s3",
+        "sABV",
+        "sBV",
+        "sDis",
+        "sEK",
+        "sTK",
+        "sVM",
+        "sVP"
+      ],
+      "refs": [],
+      "use_effect_count": 2,
+      "props_used": [
+        "brianaOn",
+        "extra",
+        "orgName",
+        "pageKey",
+        "setBrianaOn"
+      ],
+      "cross_refs": [
+        "Assets",
+        "BrianaBar",
+        "C",
+        "CIS",
+        "Controls",
+        "MFA",
+        "QuickVoicePicker",
+        "_cx_briana_sid",
+        "_globalInfraSel"
+      ],
+      "split_risk": "MEDIUM"
+    },
+    {
+      "name": "ModHBar",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        21853,
+        21860
+      ],
+      "loc": 8,
+      "function_definition_line": 21853,
+      "anchor_signature": "function ModHBar(props) {",
+      "local_state": [],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "h",
+        "score"
+      ],
+      "cross_refs": [
+        "MK",
+        "ModHBar"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "ModBadge",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        21861,
+        21871
+      ],
+      "loc": 11,
+      "function_definition_line": 21861,
+      "anchor_signature": "function ModBadge(props) {",
+      "local_state": [],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "color",
+        "label"
+      ],
+      "cross_refs": [
+        "MK",
+        "ModBadge"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "AtkNodeBox",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        21872,
+        21911
+      ],
+      "loc": 40,
+      "function_definition_line": 21872,
+      "anchor_signature": "function AtkNodeBox(props) {",
+      "local_state": [],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "dim",
+        "lit",
+        "node",
+        "onClick",
+        "sel"
+      ],
+      "cross_refs": [
+        "ATK_NW",
+        "AtkNodeBox",
+        "MK",
+        "MOD_CH",
+        "ModHBar"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "AtkCJNode",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        21912,
+        21926
+      ],
+      "loc": 15,
+      "function_definition_line": 21912,
+      "anchor_signature": "function AtkCJNode(props) {",
+      "local_state": [],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "active",
+        "cj",
+        "onClick"
+      ],
+      "cross_refs": [
+        "ATK_CJW",
+        "AtkCJNode"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "AtkEdgeLayer",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        21927,
+        21991
+      ],
+      "loc": 65,
+      "function_definition_line": 21927,
+      "anchor_signature": "function AtkEdgeLayer(props) {",
+      "local_state": [],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "activeCJ",
+        "anc",
+        "selNode"
+      ],
+      "cross_refs": [
+        "ATK_CJE",
+        "ATK_CJS",
+        "ATK_EDGES",
+        "ATK_NODES",
+        "ATK_NW",
+        "AtkEdgeLayer",
+        "C"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "AtkDetailPanel",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        21992,
+        22049
+      ],
+      "loc": 58,
+      "function_definition_line": 21992,
+      "anchor_signature": "function AtkDetailPanel(props) {",
+      "local_state": [],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "node",
+        "onClose"
+      ],
+      "cross_refs": [
+        "AtkDetailPanel",
+        "MK",
+        "MOD_CH",
+        "ModBadge",
+        "ModHBar"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "AttackPathsModule",
+      "role": "page",
+      "nav_id": "attackpaths",
+      "nav_label": "Attack Path Analyzer",
+      "nav_icon": "\u2694",
+      "nav_mod": "F-TI",
+      "routed_by": "page==='attackpaths'",
+      "line_range": [
+        22061,
+        22187
+      ],
+      "loc": 127,
+      "function_definition_line": 22061,
+      "anchor_signature": "function AttackPathsModule(props) {",
+      "local_state": [
+        "s0",
+        "s1"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "brianaOn",
+        "orgName",
+        "setBrianaOn"
+      ],
+      "cross_refs": [
+        "ATK_CANVAS_W",
+        "ATK_CJS",
+        "ATK_COLS",
+        "ATK_COL_W",
+        "ATK_NODES",
+        "AtkCJNode",
+        "AtkDetailPanel",
+        "AtkEdgeLayer",
+        "AtkNodeBox",
+        "AttackPathsModule",
+        "BrianaBar",
+        "CIS",
+        "MK"
+      ],
+      "split_risk": "MEDIUM"
+    },
+    {
+      "name": "CjdToolCard",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        22188,
+        22228
+      ],
+      "loc": 41,
+      "function_definition_line": 22188,
+      "anchor_signature": "function CjdToolCard(props) {",
+      "local_state": [],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "onScan",
+        "scanned",
+        "scanning",
+        "tool"
+      ],
+      "cross_refs": [
+        "C",
+        "CjdToolCard"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "CjdDiscoverTab",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        22229,
+        22258
+      ],
+      "loc": 30,
+      "function_definition_line": 22229,
+      "anchor_signature": "function CjdDiscoverTab(props) {",
+      "local_state": [],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "discoveredIds",
+        "onScan",
+        "scanned",
+        "scanning"
+      ],
+      "cross_refs": [
+        "C",
+        "CJD_TOOLS",
+        "CjdDiscoverTab",
+        "CjdToolCard"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "CjdClassifyTab",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        22259,
+        22339
+      ],
+      "loc": 81,
+      "function_definition_line": 22259,
+      "anchor_signature": "function CjdClassifyTab(props) {",
+      "local_state": [
+        "s0"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "discoveredIds"
+      ],
+      "cross_refs": [
+        "C",
+        "CJD_ASSETS",
+        "CjdClassifyTab"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "CjdMapTab",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        22340,
+        22456
+      ],
+      "loc": 117,
+      "function_definition_line": 22340,
+      "anchor_signature": "function CjdMapTab(props) {",
+      "local_state": [
+        "s0"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [],
+      "cross_refs": [
+        "C",
+        "CJD_MAP_EDGES",
+        "CJD_MAP_NODES",
+        "CjdMapTab",
+        "MK"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "CjdFindingsTab",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        22457,
+        22576
+      ],
+      "loc": 120,
+      "function_definition_line": 22457,
+      "anchor_signature": "function CjdFindingsTab(props) {",
+      "local_state": [
+        "s0"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "discoveredIds"
+      ],
+      "cross_refs": [
+        "C",
+        "CJD_ASSETS",
+        "CjdFindingsTab",
+        "FINDINGS"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "CrownJewelsModule",
+      "role": "page",
+      "nav_id": "crownjewels",
+      "nav_label": "Crown Jewels Discovery",
+      "nav_icon": "\ud83d\udc8e",
+      "nav_mod": "F-CJ",
+      "routed_by": "page==='crownjewels'",
+      "line_range": [
+        22577,
+        22683
+      ],
+      "loc": 107,
+      "function_definition_line": 22577,
+      "anchor_signature": "function CrownJewelsModule(props) {",
+      "local_state": [
+        "s0",
+        "s1",
+        "s2"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "brianaOn",
+        "orgName",
+        "setBrianaOn"
+      ],
+      "cross_refs": [
+        "Assets",
+        "BrianaBar",
+        "C",
+        "CJD_ASSETS",
+        "CJD_TOOLS",
+        "CjdClassifyTab",
+        "CjdDiscoverTab",
+        "CjdFindingsTab",
+        "CjdMapTab",
+        "CrownJewelsModule"
+      ],
+      "split_risk": "HIGH"
+    },
+    {
+      "name": "CrownJewelMap",
+      "role": "page",
+      "nav_id": "crown",
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": "page==='crown'",
+      "line_range": [
+        22684,
+        23523
+      ],
+      "loc": 840,
+      "function_definition_line": 22684,
+      "anchor_signature": "function CrownJewelMap(props) {",
+      "local_state": [
+        "cf",
+        "ct",
+        "ep",
+        "sc",
+        "se",
+        "sn",
+        "sp"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "edrPct",
+        "go",
+        "mfaPct",
+        "mttdHrs",
+        "mttrHrs",
+        "orgName",
+        "orgTextExtras",
+        "pamPct",
+        "patchPct",
+        "siemDays",
+        "trainingPct",
+        "vulnSLApct"
+      ],
+      "cross_refs": [
+        "BIZ_APP_CATALOG",
+        "Board",
+        "C",
+        "CONNECTION_CONTROLS",
+        "Controls",
+        "CrownJewelMap",
+        "DashNav",
+        "Execution",
+        "FINDINGS",
+        "MFA",
+        "SEV_C"
+      ],
+      "split_risk": "MEDIUM"
+    },
+    {
+      "name": "CyberRxApp",
+      "role": "root",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": "root component (default export)",
+      "line_range": [
+        23524,
+        24021
+      ],
+      "loc": 498,
+      "function_definition_line": 23524,
+      "anchor_signature": "function CyberRxApp() {",
+      "local_state": [
+        "s47",
+        "s48",
+        "s49",
+        "s50",
+        "s51",
+        "s52",
+        "s53",
+        "s54",
+        "s55b",
+        "s56",
+        "s57",
+        "s58",
+        "s59",
+        "s60",
+        "s61",
+        "s62",
+        "s63",
+        "s64",
+        "s65",
+        "s66",
+        "s67",
+        "s68",
+        "s69",
+        "s70",
+        "s71",
+        "s72",
+        "s73",
+        "s74",
+        "s75",
+        "s76",
+        "s77",
+        "s78",
+        "s79",
+        "s80",
+        "s81",
+        "s82",
+        "s83",
+        "sBA",
+        "sBCBS",
+        "sCIL",
+        "sCR",
+        "sCS",
+        "sDR",
+        "sFEP",
+        "sIS",
+        "sLOB",
+        "sMP",
+        "sMV",
+        "sPF",
+        "sRS",
+        "sSM",
+        "sVS"
+      ],
+      "refs": [],
+      "use_effect_count": 4,
+      "props_used": [],
+      "cross_refs": [
+        "ACTIONS",
+        "AppMap",
+        "AttackPathsModule",
+        "BizLines",
+        "Board",
+        "BoardDash",
+        "BusinessMapDash",
+        "CFODash",
+        "CISODash",
+        "CRODash",
+        "CYBERRX_API",
+        "ClaimLifecycle",
+        "Controls",
+        "CrownJewelMap",
+        "CrownJewelsModule",
+        "CyberRxAPIAdapter",
+        "CyberRxApp",
+        "DEDUCTIBLE_RANGES",
+        "DashHub",
+        "DocDash",
+        "ENDPOINT_RANGES",
+        "Evidence",
+        "Execution",
+        "Home",
+        "IBNR_RANGES",
+        "INCIDENT_RANGES",
+        "IT_BUDGET_RANGES",
+        "Landing",
+        "Login",
+        "MFA",
+        "PHI_RECORDS_RANGES",
+        "PRIV_ACCT_RANGES",
+        "ProcessFlowDash",
+        "RBC_RATIO_RANGES",
+        "REVENUE_RANGES",
+        "SURPLUS_RANGES",
+        "SYNC_STEPS",
+        "Scoring",
+        "Setup",
+        "Shell",
+        "VendorEcosystem",
+        "WelcomePage"
+      ],
+      "split_risk": "HIGH"
+    },
+    {
+      "name": "ExposureColumnChart",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        24198,
+        24343
+      ],
+      "loc": 146,
+      "function_definition_line": 24198,
+      "anchor_signature": "function ExposureColumnChart(props) {",
+      "local_state": [],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "ibnr",
+        "itBudget",
+        "onSelect",
+        "selectedId",
+        "surplus"
+      ],
+      "cross_refs": [
+        "C",
+        "EXPOSURE_BASELINES",
+        "EXPOSURE_HIERARCHY",
+        "ExposureColumnChart"
+      ],
+      "split_risk": "LOW"
+    },
+    {
+      "name": "ExposureModelCard",
+      "role": "utility",
+      "nav_id": null,
+      "nav_label": null,
+      "nav_icon": null,
+      "nav_mod": null,
+      "routed_by": null,
+      "line_range": [
+        24344,
+        24559
+      ],
+      "loc": 216,
+      "function_definition_line": 24344,
+      "anchor_signature": "function ExposureModelCard(props) {",
+      "local_state": [
+        "s0",
+        "s1"
+      ],
+      "refs": [],
+      "use_effect_count": 0,
+      "props_used": [
+        "go",
+        "grossExpM",
+        "ibnr",
+        "itBudget",
+        "phiRecords",
+        "revenue",
+        "surplus"
+      ],
+      "cross_refs": [
+        "Board",
+        "Btn",
+        "C",
+        "CFODash",
+        "Card",
+        "Controls",
+        "EXPOSURE_BASELINES",
+        "EXPOSURE_HIERARCHY",
+        "Execution",
+        "ExposureColumnChart",
+        "ExposureModelCard",
+        "SH"
+      ],
+      "split_risk": "MEDIUM"
+    }
+  ],
+  "coverage": {
+    "total_lines": 24559,
+    "covered_lines": 24556,
+    "uncovered_ranges": [
+      [
+        1,
+        3
+      ]
+    ],
+    "uncovered_note": "Uncovered ranges are pre-definition header regions (imports, top-level comments) \u2014 safe to ignore for the M6 split."
+  },
+  "split_planning": {
+    "recommended_order": [
+      "ModHBar",
+      "SH",
+      "Card",
+      "ModBadge",
+      "Input",
+      "CmmiBadge",
+      "CisTag",
+      "AtkCJNode",
+      "Btn",
+      "JustifiedStat",
+      "StatCard",
+      "Spark",
+      "DrilldownModal",
+      "NonDemoPlaceholder",
+      "CjdDiscoverTab",
+      "DashNav",
+      "AtkNodeBox",
+      "CjdToolCard",
+      "Login",
+      "InfoModal",
+      "AtkDetailPanel",
+      "CmmiBar",
+      "MFA",
+      "AtkEdgeLayer",
+      "CjdClassifyTab",
+      "Landing",
+      "QuickNav",
+      "CjdMapTab",
+      "CjdFindingsTab",
+      "ClaimLifecycle",
+      "ExposureColumnChart",
+      "Assets",
+      "Evidence",
+      "QuickVoicePicker",
+      "DocDash",
+      "Scoring",
+      "Controls",
+      "AttackPathsModule",
+      "Board",
+      "AppMap",
+      "Shell",
+      "ExposureModelCard",
+      "Home",
+      "VendorEcosystem",
+      "ProcessControlMap",
+      "WelcomePage",
+      "MitreTab",
+      "MetricDetailModal",
+      "BizLines",
+      "DocValidationAgent",
+      "CyberRxAPIAdapter",
+      "ComplianceReport",
+      "ProcessFlowDash",
+      "BoardDash",
+      "BusinessMapDash",
+      "BrianaBar",
+      "CrownJewelMap",
+      "CRODash",
+      "SetupBot",
+      "CrownJewelsModule",
+      "CFODash",
+      "DashHub",
+      "Execution",
+      "CISODash",
+      "Setup"
+    ],
+    "extract_first": [
+      "ModHBar",
+      "SH",
+      "Card",
+      "ModBadge",
+      "Input",
+      "CmmiBadge",
+      "CisTag",
+      "AtkCJNode"
+    ],
+    "extract_last": [
+      "CFODash",
+      "DashHub",
+      "Execution",
+      "CISODash",
+      "Setup"
+    ],
+    "do_not_extract_yet": [
+      "Setup",
+      "CISODash",
+      "CFODash",
+      "DashHub",
+      "Execution",
+      "CrownJewelsModule",
+      "CyberRxApp"
+    ],
+    "method": "Components are ordered LOW \u2192 MEDIUM \u2192 HIGH split-risk, then by LOC asc. Start at extract_first; finish at extract_last; CyberRxApp stays in App.jsx until everything else has been moved."
+  },
+  "deprecations_vs_seed": [
+    "Seed metadata.total_lines was 24559 but timestamp dated 2025-01-19 \u2014 both replaced.",
+    "Seed listed SetupBot only as a utility with line=17333 \u2014 now has full range [17333, 18518].",
+    "Seed omitted CyberRxApp (root component) \u2014 included.",
+    "Seed omitted BrianaBar (20796), Atk* (21853-22059), Cjd* (22188-22576), ExposureColumnChart (24198), ExposureModelCard (24344) \u2014 included.",
+    "Seed's local_state and shared_state_used were placeholder strings \u2014 replaced with extracted arrays.",
+    "Seed had no anchor_signature, no schema_version, no SHA-256, no cross_refs \u2014 added."
+  ]
+}

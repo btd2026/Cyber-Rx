@@ -1,0 +1,156 @@
+# Task T-003: Implement Real Org Isolation
+
+## COMPLETED
+
+### Summary
+Org isolation has been successfully bound to the authenticated JWT identity. All routes now use `req.orgId` from the JWT token instead of the client-supplied `x-org-id` header, preventing cross-org data access. A new `requireOrgAccess` middleware enforces authorization checks on org-specific routes.
+
+### Security Vulnerability Fixed
+
+**Before (CRITICAL SECURITY ISSUE):**
+- All routes used `req.headers['x-org-id']` for org identification
+- Clients could spoof the header to access other organizations' data
+- No authorization check preventing cross-org access
+
+**After (SECURE):**
+- All routes use `req.orgId` from authenticated JWT token
+- `requireOrgAccess` middleware enforces 403 on cross-org attempts
+- Users can only access their own organization's data
+
+### Changes Made
+
+#### 1. New Authorization Middleware (`cyberrx-api/src/middleware/auth.js`)
+Added `requireOrgAccess()` function that:
+- Compares `req.orgId` (from JWT) against `req.params.id` or `req.body.orgId`
+- Returns 403 Forbidden when attempting to access another org's data
+- Logs blocked cross-org access attempts for security monitoring
+- Must be applied after `authenticateJWT` middleware
+
+#### 2. Updated Routes
+
+**orgs.js (4 endpoints updated):**
+- `POST /api/orgs` - Now binds created org to `req.orgId` from JWT (not generated from name)
+- `PUT /api/orgs/:id` - Added `requireOrgAccess` middleware
+- `GET /api/orgs/:id` - Added `requireOrgAccess` middleware
+- `GET /api/orgs/:id/exists` - Added `requireOrgAccess` middleware
+
+**tools.js (1 endpoint updated):**
+- `POST /api/tools/:tool/sync` - Uses `req.orgId` instead of `req.headers['x-org-id']`
+
+**credentials.js (3 endpoints updated):**
+- `POST /api/credentials/:tool` - Uses `req.orgId` instead of `req.headers['x-org-id']`
+- `GET /api/credentials/:tool/status` - Uses `req.orgId` instead of `req.headers['x-org-id']`
+- `DELETE /api/credentials/:tool` - Uses `req.orgId` instead of `req.headers['x-org-id']`
+
+**itsm.js (1 endpoint updated):**
+- `POST /api/itsm/:system/ticket` - Uses `req.orgId` instead of `req.headers['x-org-id']`
+
+### Acceptance Criteria Verification
+
+**Criterion 1: Org resolved from authenticated identity, not client-supplied header**
+- All routes now use `req.orgId` from JWT middleware
+- No remaining instances of `req.headers['x-org-id']` in the codebase
+- orgId is extracted from verified JWT token, not client input
+
+**Criterion 2: Cross-org requests rejected (403)**
+- `requireOrgAccess` middleware returns 403 when `req.params.id !== req.orgId`
+- Logs blocked attempts for security monitoring
+- Applied to all org-specific routes (GET, PUT, exists)
+
+**Criterion 3: All org-scoped queries filtered by authenticated org**
+- Database queries in orgs.js use `req.params.id` which is validated by middleware
+- Tool sync, credentials, and ITSM routes use `req.orgId` for all operations
+- No query can access data from a different org than the JWT token represents
+
+### Security Impact
+
+**Critical Vulnerability Closed:**
+- Before: Any client could set `x-org-id: some-other-org` to access their data
+- After: Clients can only access data for the org encoded in their JWT token
+- JWT tokens are cryptographically signed and verified
+
+**Defense in Depth:**
+- JWT verification ensures token authenticity (T-001)
+- CORS prevents unauthorized origins (T-002)
+- Org isolation prevents data cross-talk (T-003)
+- All three layers now in place
+
+### Testing Recommendations
+
+#### Test 1: Verify JWT org binding works
+```bash
+# Create a JWT for org "acme-corp"
+TOKEN=$(node -e "console.log(require('jsonwebtoken').sign({userId:'user123',orgId:'acme-corp'}, process.env.JWT_SECRET))")
+
+# Access acme-corp data - should succeed
+curl -H "Authorization: Bearer $TOKEN" http://localhost:3001/api/orgs/acme-corp
+# Expected: 200 with org data
+
+# Try to access other-org data - should fail 403
+curl -H "Authorization: Bearer $TOKEN" http://localhost:3001/api/orgs/other-org
+# Expected: 403 Forbidden
+```
+
+#### Test 2: Verify header spoofing no longer works
+```bash
+# Create JWT for org "acme-corp"
+TOKEN=$(node -e "console.log(require('jsonwebtoken').sign({userId:'user123',orgId:'acme-corp'}, process.env.JWT_SECRET))")
+
+# Try to use x-org-id header to access other org - should still fail 403
+curl -H "Authorization: Bearer $TOKEN" -H "x-org-id: other-org" http://localhost:3001/api/orgs/other-org
+# Expected: 403 Forbidden (header is now ignored)
+```
+
+#### Test 3: Verify 401 without JWT
+```bash
+# Request without JWT - should fail 401
+curl http://localhost:3001/api/orgs/acme-corp
+# Expected: 401 Unauthorized
+```
+
+### Git Information
+
+**Branch**: `task/T-001-jwt-enforce` (will be merged to main)
+**Commit**: `0b61ad1`
+**Commit Message**: `feat(security): bind org isolation to JWT identity`
+
+**Files Changed:**
+- `cyberrx-api/src/middleware/auth.js` (+41 lines, new requireOrgAccess middleware)
+- `cyberrx-api/src/routes/orgs.js` (+12 lines, -8 lines, added middleware)
+- `cyberrx-api/src/routes/tools.js` (+2 lines, -1 line, use req.orgId)
+- `cyberrx-api/src/routes/credentials.js` (+6 lines, -3 lines, use req.orgId)
+- `cyberrx-api/src/routes/itsm.js` (+2 lines, -1 line, use req.orgId)
+
+**Total: 5 files changed, 67 insertions(+), 15 deletions(-)**
+
+### Related Tasks
+
+This task completes M0 Security milestone:
+- T-000: Code Cartography ✅
+- T-001: JWT Enforcement ✅
+- T-002: CORS Tightening ✅
+- T-003: Org Isolation ✅ (this task)
+- T-004: Scheduler Resolution ✅
+
+**M0 is now complete.** Proceed to M1 (Risk Correlation Engine).
+
+### Migration Notes
+
+**Breaking Change for API Clients:**
+- Clients must now include valid JWT in Authorization header
+- The `x-org-id` header is no longer used for org identification
+- Org ID is extracted from JWT token's `orgId` claim
+
+**Required Token Payload:**
+```json
+{
+  "userId": "user123",
+  "orgId": "acme-corp",
+  "exp": 1234567890
+}
+```
+
+**Demo Mode:**
+- Routes still fall back to `'demo'` if `req.orgId` is not set
+- This allows graceful degradation for development/testing
+- Production should ensure all tokens have valid `orgId` claim

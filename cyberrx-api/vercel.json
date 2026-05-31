@@ -1,0 +1,9 @@
+{
+  "experimentalServices": {
+    "cyberrx-api": {
+      "type": "web",
+      "routePrefix": "/",
+      "buildCommand": "npm install"
+    }
+  }
+}

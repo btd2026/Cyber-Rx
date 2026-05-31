@@ -3,14 +3,10 @@
 const express = require('express');
 const router = express.Router();
 const RemediationTask = require('../models/RemediationTask');
+const { authenticateJWT } = require('../middleware/auth');
 
-// Middleware to extract org ID from header
-const extractOrgId = (req, res, next) => {
-  req.orgId = req.headers['x-org-id'] || req.query.org_id;
-  next();
-};
-
-router.use(extractOrgId);
+// Apply authentication to all routes
+router.use(authenticateJWT);
 
 /**
  * GET /api/tasks
@@ -18,12 +14,8 @@ router.use(extractOrgId);
  */
 router.get('/', async (req, res) => {
   try {
-    const { org_id } = req.headers;
+    const organizationId = req.orgId;
     const { status, assigned_to, priority, overdue } = req.query;
-
-    if (!org_id) {
-      return res.status(400).json({ error: 'Organization ID required' });
-    }
 
     const filters = {};
     if (status) filters.status = status;
@@ -31,7 +23,7 @@ router.get('/', async (req, res) => {
     if (priority) filters.priority = priority;
     if (overdue === 'true') filters.overdue = true;
 
-    const tasks = await RemediationTask.findByOrganization(org_id, filters);
+    const tasks = await RemediationTask.findByOrganization(organizationId, filters);
     res.json({ data: tasks, total: tasks.length });
   } catch (error) {
     console.error('Error fetching tasks:', error);
@@ -45,13 +37,8 @@ router.get('/', async (req, res) => {
  */
 router.post('/', async (req, res) => {
   try {
-    const { org_id } = req.headers;
-
-    if (!org_id) {
-      return res.status(400).json({ error: 'Organization ID required' });
-    }
-
-    const taskData = { ...req.body, organizationId: org_id };
+    const organizationId = req.orgId;
+    const taskData = { ...req.body, organizationId };
     const task = await RemediationTask.create(taskData);
 
     res.status(201).json({ data: task });
@@ -67,13 +54,8 @@ router.post('/', async (req, res) => {
  */
 router.get('/statistics', async (req, res) => {
   try {
-    const { org_id } = req.headers;
-
-    if (!org_id) {
-      return res.status(400).json({ error: 'Organization ID required' });
-    }
-
-    const stats = await RemediationTask.getStatistics(org_id);
+    const organizationId = req.orgId;
+    const stats = await RemediationTask.getStatistics(organizationId);
     res.json({ data: stats });
   } catch (error) {
     console.error('Error fetching task statistics:', error);
@@ -87,13 +69,8 @@ router.get('/statistics', async (req, res) => {
  */
 router.get('/overdue', async (req, res) => {
   try {
-    const { org_id } = req.headers;
-
-    if (!org_id) {
-      return res.status(400).json({ error: 'Organization ID required' });
-    }
-
-    const tasks = await RemediationTask.findOverdue(org_id);
+    const organizationId = req.orgId;
+    const tasks = await RemediationTask.findOverdue(organizationId);
     res.json({ data: tasks, total: tasks.length });
   } catch (error) {
     console.error('Error fetching overdue tasks:', error);

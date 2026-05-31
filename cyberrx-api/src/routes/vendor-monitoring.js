@@ -5,6 +5,10 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const VendorRiskSignal = require('../models/VendorRiskSignal');
 const ContinuousMonitoringService = require('../services/ContinuousMonitoringService');
+const { authenticateJWT } = require('../middleware/auth');
+
+// Apply authentication to all routes
+router.use(authenticateJWT);
 
 // Import all connectors
 const SecurityScorecardConnector = require('../connectors/SecurityScorecardConnector');
@@ -42,7 +46,7 @@ const CONNECTORS = {
  */
 router.get('/signals', async (req, res) => {
   try {
-    const { organizationId } = req;
+    const organizationId = req.orgId;
     const { vendorId, sourceName, signalCategory, severity, status, limit } = req.query;
 
     const signals = await VendorRiskSignal.findByOrganization(organizationId, {
@@ -85,7 +89,7 @@ router.get('/signals/:id', async (req, res) => {
     }
 
     // Verify organization access
-    if (signal.organizationId !== req.organizationId) {
+    if (signal.organizationId !== req.orgId) {
       return res.status(403).json({
         success: false,
         error: 'Access denied'

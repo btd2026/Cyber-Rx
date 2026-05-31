@@ -1,0 +1,2580 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-05-30T04:08:56Z",
+  "generated_by": "Decomposer (manual run)",
+  "git_head": "f8c8ab934039345ccdef1a2b4d06f466914c9e80",
+  "appjsx_index_sha256": "63d1cc21ef9ca19e8528ee3fb5963e8aac0677853a5cf17c634061a917a94d2c",
+  "source_of_truth": "COVERAGE_ASSESSMENT.md",
+  "execution_prompt": "PRODUCTION_PROMPT.md",
+  "metadata": {
+    "schema_version": "1.0",
+    "generated_at": "2026-05-30T04:08:56Z",
+    "generated_by": "Decomposer (manual run)",
+    "git_head": "f8c8ab934039345ccdef1a2b4d06f466914c9e80",
+    "appjsx_index_sha256": "63d1cc21ef9ca19e8528ee3fb5963e8aac0677853a5cf17c634061a917a94d2c",
+    "source_of_truth": "COVERAGE_ASSESSMENT.md",
+    "execution_prompt": "PRODUCTION_PROMPT.md",
+    "month": 6,
+    "title": "Polish + MVP Handoff",
+    "weeks": [
+      21,
+      24
+    ],
+    "assessment_section": "\u00a73 #8, \u00a79 Month 6",
+    "production_prompt_clause": "Sequence step 5"
+  },
+  "goal": "Move every extractable component out of App.jsx, ship exportable Board reports, write the docs, and stand up the SOC2-readiness checklist. By month-end App.jsx is a router shell.",
+  "definition_of_done": [
+    "App.jsx contains only: imports, NAV, the root CyberRxApp component, and JSX route routing.",
+    "All LOW + MEDIUM split-risk components live in frontend/src/components/.",
+    "All four executive dashboards (CISO, CRO, CFO, Board) export a one-page PDF.",
+    "OpenAPI spec generated; data-model docs and onboarding guide live in docs/.",
+    "SOC2 readiness checklist exists and has owners per row."
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "ACC-06-01",
+      "criterion": "After each extraction, anchor_signature still matches the live App.jsx line (or has been removed entirely if extraction is complete)",
+      "validator": "scripts/validate_appjsx_index.py"
+    },
+    {
+      "id": "ACC-06-02",
+      "criterion": "After extraction, the BCBS demo flow renders identically (visual diff <1% pixel delta on key pages)",
+      "validator": "visual_regression"
+    },
+    {
+      "id": "ACC-06-03",
+      "criterion": "App.jsx final LOC \u2264 1,500",
+      "validator": "loc_gate"
+    },
+    {
+      "id": "ACC-06-04",
+      "criterion": "GET /api/exports/board/:dashboard.pdf returns a PDF for CISO, CRO, CFO, Board",
+      "validator": "artifact_check"
+    },
+    {
+      "id": "ACC-06-05",
+      "criterion": "GET /api/exports/board/:dashboard.xlsx returns an XLSX for CISO, CRO, CFO, Board",
+      "validator": "artifact_check"
+    },
+    {
+      "id": "ACC-06-06",
+      "criterion": "docs/api/openapi.yaml validates with redocly + matches deployed routes (CI check)",
+      "validator": "openapi_check"
+    },
+    {
+      "id": "ACC-06-07",
+      "criterion": "docs/data-model.md covers every entity from Month 1-2 + Month 4-5; each entity has fields + relationships + sample JSON",
+      "validator": "manual_review"
+    },
+    {
+      "id": "ACC-06-08",
+      "criterion": "docs/onboarding.md gets a new dev to a green local + deployed env in <30 min",
+      "validator": "dogfood_test"
+    },
+    {
+      "id": "ACC-06-09",
+      "criterion": "docs/soc2-readiness.md lists CC1.1-CC9.2 with: in scope/out, evidence, owner, gap, target date",
+      "validator": "manual_review"
+    },
+    {
+      "id": "ACC-06-10",
+      "criterion": "scripts/validate_appjsx_index.py runs on every PR to App.jsx (CI gate)",
+      "validator": "ci_check"
+    }
+  ],
+  "context_manifest": {
+    "must_read": [
+      {
+        "path": "COVERAGE_ASSESSMENT.md",
+        "section": "\u00a79 Month 6"
+      },
+      {
+        "path": "workspace/context/appjsx-index.json",
+        "reason": "Drives the split order; the recommended_order list is authoritative for this month"
+      },
+      {
+        "path": "workspace/context/README.md",
+        "reason": "Worker usage pattern for verifying anchor_signature before extraction"
+      },
+      {
+        "path": "scripts/validate_appjsx_index.py",
+        "reason": "Gate run on every PR"
+      }
+    ],
+    "should_not_read": [
+      "frontend/src/App.jsx in full"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "T-601",
+      "title": "Extract ModHBar \u2192 frontend/src/components/ModHBar.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              21853,
+              21860
+            ],
+            "anchor": "function ModHBar(props) {",
+            "component": "ModHBar",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/ModHBar.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-601-extract-ModHBar",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function ModHBar(props) {",
+      "line_range_at_plan_time": [
+        21853,
+        21860
+      ],
+      "loc": 8,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-602",
+      "title": "Extract SH \u2192 frontend/src/components/SH.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              3362,
+              3371
+            ],
+            "anchor": "function SH(props) {",
+            "component": "SH",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/SH.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-602-extract-SH",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function SH(props) {",
+      "line_range_at_plan_time": [
+        3362,
+        3371
+      ],
+      "loc": 10,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-603",
+      "title": "Extract Card \u2192 frontend/src/components/Card.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              3351,
+              3361
+            ],
+            "anchor": "function Card(props) {",
+            "component": "Card",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/Card.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-603-extract-Card",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function Card(props) {",
+      "line_range_at_plan_time": [
+        3351,
+        3361
+      ],
+      "loc": 11,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-604",
+      "title": "Extract ModBadge \u2192 frontend/src/components/ModBadge.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              21861,
+              21871
+            ],
+            "anchor": "function ModBadge(props) {",
+            "component": "ModBadge",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/ModBadge.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-604-extract-ModBadge",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function ModBadge(props) {",
+      "line_range_at_plan_time": [
+        21861,
+        21871
+      ],
+      "loc": 11,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-605",
+      "title": "Extract Input \u2192 frontend/src/components/Input.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              3391,
+              3402
+            ],
+            "anchor": "function Input(props) {",
+            "component": "Input",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/Input.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-605-extract-Input",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function Input(props) {",
+      "line_range_at_plan_time": [
+        3391,
+        3402
+      ],
+      "loc": 12,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-606",
+      "title": "Extract CmmiBadge \u2192 frontend/src/components/CmmiBadge.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              40,
+              53
+            ],
+            "anchor": "function CmmiBadge(props) {",
+            "component": "CmmiBadge",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/CmmiBadge.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-606-extract-CmmiBadge",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function CmmiBadge(props) {",
+      "line_range_at_plan_time": [
+        40,
+        53
+      ],
+      "loc": 14,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-607",
+      "title": "Extract CisTag \u2192 frontend/src/components/CisTag.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              3466,
+              3479
+            ],
+            "anchor": "function CisTag(props) {",
+            "component": "CisTag",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/CisTag.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-607-extract-CisTag",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function CisTag(props) {",
+      "line_range_at_plan_time": [
+        3466,
+        3479
+      ],
+      "loc": 14,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-608",
+      "title": "Extract AtkCJNode \u2192 frontend/src/components/AtkCJNode.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              21912,
+              21926
+            ],
+            "anchor": "function AtkCJNode(props) {",
+            "component": "AtkCJNode",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/AtkCJNode.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-608-extract-AtkCJNode",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function AtkCJNode(props) {",
+      "line_range_at_plan_time": [
+        21912,
+        21926
+      ],
+      "loc": 15,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-609",
+      "title": "Extract Btn \u2192 frontend/src/components/Btn.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              3335,
+              3350
+            ],
+            "anchor": "function Btn(props) {",
+            "component": "Btn",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/Btn.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-609-extract-Btn",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function Btn(props) {",
+      "line_range_at_plan_time": [
+        3335,
+        3350
+      ],
+      "loc": 16,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-610",
+      "title": "Extract JustifiedStat \u2192 frontend/src/components/JustifiedStat.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              3316,
+              3334
+            ],
+            "anchor": "function JustifiedStat(props) {",
+            "component": "JustifiedStat",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/JustifiedStat.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-610-extract-JustifiedStat",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function JustifiedStat(props) {",
+      "line_range_at_plan_time": [
+        3316,
+        3334
+      ],
+      "loc": 19,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-611",
+      "title": "Extract StatCard \u2192 frontend/src/components/StatCard.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              3372,
+              3390
+            ],
+            "anchor": "function StatCard(props) {",
+            "component": "StatCard",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/StatCard.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-611-extract-StatCard",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function StatCard(props) {",
+      "line_range_at_plan_time": [
+        3372,
+        3390
+      ],
+      "loc": 19,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-612",
+      "title": "Extract Spark \u2192 frontend/src/components/Spark.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              3403,
+              3421
+            ],
+            "anchor": "function Spark(props) {",
+            "component": "Spark",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/Spark.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-612-extract-Spark",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function Spark(props) {",
+      "line_range_at_plan_time": [
+        3403,
+        3421
+      ],
+      "loc": 19,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-613",
+      "title": "Extract DrilldownModal \u2192 frontend/src/components/DrilldownModal.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              3422,
+              3441
+            ],
+            "anchor": "function DrilldownModal(props) {",
+            "component": "DrilldownModal",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/DrilldownModal.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-613-extract-DrilldownModal",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function DrilldownModal(props) {",
+      "line_range_at_plan_time": [
+        3422,
+        3441
+      ],
+      "loc": 20,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-614",
+      "title": "Extract NonDemoPlaceholder \u2192 frontend/src/components/NonDemoPlaceholder.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              3442,
+              3465
+            ],
+            "anchor": "function NonDemoPlaceholder(props) {",
+            "component": "NonDemoPlaceholder",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/NonDemoPlaceholder.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-614-extract-NonDemoPlaceholder",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function NonDemoPlaceholder(props) {",
+      "line_range_at_plan_time": [
+        3442,
+        3465
+      ],
+      "loc": 24,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-615",
+      "title": "Extract CjdDiscoverTab \u2192 frontend/src/components/CjdDiscoverTab.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              22229,
+              22258
+            ],
+            "anchor": "function CjdDiscoverTab(props) {",
+            "component": "CjdDiscoverTab",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/CjdDiscoverTab.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-615-extract-CjdDiscoverTab",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function CjdDiscoverTab(props) {",
+      "line_range_at_plan_time": [
+        22229,
+        22258
+      ],
+      "loc": 30,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-616",
+      "title": "Extract DashNav \u2192 frontend/src/components/DashNav.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              16312,
+              16345
+            ],
+            "anchor": "function DashNav(props) {",
+            "component": "DashNav",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/DashNav.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-616-extract-DashNav",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function DashNav(props) {",
+      "line_range_at_plan_time": [
+        16312,
+        16345
+      ],
+      "loc": 34,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-617",
+      "title": "Extract AtkNodeBox \u2192 frontend/src/components/AtkNodeBox.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              21872,
+              21911
+            ],
+            "anchor": "function AtkNodeBox(props) {",
+            "component": "AtkNodeBox",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/AtkNodeBox.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-617-extract-AtkNodeBox",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function AtkNodeBox(props) {",
+      "line_range_at_plan_time": [
+        21872,
+        21911
+      ],
+      "loc": 40,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-618",
+      "title": "Extract CjdToolCard \u2192 frontend/src/components/CjdToolCard.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              22188,
+              22228
+            ],
+            "anchor": "function CjdToolCard(props) {",
+            "component": "CjdToolCard",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/CjdToolCard.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-618-extract-CjdToolCard",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function CjdToolCard(props) {",
+      "line_range_at_plan_time": [
+        22188,
+        22228
+      ],
+      "loc": 41,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-619",
+      "title": "Extract Login \u2192 frontend/src/components/Login.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              3577,
+              3623
+            ],
+            "anchor": "function Login(props) {",
+            "component": "Login",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/Login.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-619-extract-Login",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function Login(props) {",
+      "line_range_at_plan_time": [
+        3577,
+        3623
+      ],
+      "loc": 47,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-620",
+      "title": "Extract InfoModal \u2192 frontend/src/components/InfoModal.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              3261,
+              3315
+            ],
+            "anchor": "function InfoModal(props) {",
+            "component": "InfoModal",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/InfoModal.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-620-extract-InfoModal",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function InfoModal(props) {",
+      "line_range_at_plan_time": [
+        3261,
+        3315
+      ],
+      "loc": 55,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-621",
+      "title": "Extract AtkDetailPanel \u2192 frontend/src/components/AtkDetailPanel.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              21992,
+              22049
+            ],
+            "anchor": "function AtkDetailPanel(props) {",
+            "component": "AtkDetailPanel",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/AtkDetailPanel.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-621-extract-AtkDetailPanel",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function AtkDetailPanel(props) {",
+      "line_range_at_plan_time": [
+        21992,
+        22049
+      ],
+      "loc": 58,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-622",
+      "title": "Extract CmmiBar \u2192 frontend/src/components/CmmiBar.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              54,
+              112
+            ],
+            "anchor": "function CmmiBar(props) {",
+            "component": "CmmiBar",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/CmmiBar.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-622-extract-CmmiBar",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function CmmiBar(props) {",
+      "line_range_at_plan_time": [
+        54,
+        112
+      ],
+      "loc": 59,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-623",
+      "title": "Extract MFA \u2192 frontend/src/components/MFA.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              3624,
+              3682
+            ],
+            "anchor": "function MFA(props) {",
+            "component": "MFA",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/MFA.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-623-extract-MFA",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function MFA(props) {",
+      "line_range_at_plan_time": [
+        3624,
+        3682
+      ],
+      "loc": 59,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-624",
+      "title": "Extract AtkEdgeLayer \u2192 frontend/src/components/AtkEdgeLayer.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              21927,
+              21991
+            ],
+            "anchor": "function AtkEdgeLayer(props) {",
+            "component": "AtkEdgeLayer",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/AtkEdgeLayer.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-624-extract-AtkEdgeLayer",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function AtkEdgeLayer(props) {",
+      "line_range_at_plan_time": [
+        21927,
+        21991
+      ],
+      "loc": 65,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-625",
+      "title": "Extract CjdClassifyTab \u2192 frontend/src/components/CjdClassifyTab.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              22259,
+              22339
+            ],
+            "anchor": "function CjdClassifyTab(props) {",
+            "component": "CjdClassifyTab",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/CjdClassifyTab.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-625-extract-CjdClassifyTab",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function CjdClassifyTab(props) {",
+      "line_range_at_plan_time": [
+        22259,
+        22339
+      ],
+      "loc": 81,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-626",
+      "title": "Extract Landing \u2192 frontend/src/components/Landing.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              3480,
+              3576
+            ],
+            "anchor": "function Landing(props) {",
+            "component": "Landing",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/Landing.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-626-extract-Landing",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function Landing(props) {",
+      "line_range_at_plan_time": [
+        3480,
+        3576
+      ],
+      "loc": 97,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-627",
+      "title": "Extract QuickNav \u2192 frontend/src/components/QuickNav.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              16346,
+              16461
+            ],
+            "anchor": "function QuickNav(props) {",
+            "component": "QuickNav",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/QuickNav.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-627-extract-QuickNav",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function QuickNav(props) {",
+      "line_range_at_plan_time": [
+        16346,
+        16461
+      ],
+      "loc": 116,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-628",
+      "title": "Extract CjdMapTab \u2192 frontend/src/components/CjdMapTab.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              22340,
+              22456
+            ],
+            "anchor": "function CjdMapTab(props) {",
+            "component": "CjdMapTab",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/CjdMapTab.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-628-extract-CjdMapTab",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function CjdMapTab(props) {",
+      "line_range_at_plan_time": [
+        22340,
+        22456
+      ],
+      "loc": 117,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-629",
+      "title": "Extract CjdFindingsTab \u2192 frontend/src/components/CjdFindingsTab.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              22457,
+              22576
+            ],
+            "anchor": "function CjdFindingsTab(props) {",
+            "component": "CjdFindingsTab",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/CjdFindingsTab.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-629-extract-CjdFindingsTab",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function CjdFindingsTab(props) {",
+      "line_range_at_plan_time": [
+        22457,
+        22576
+      ],
+      "loc": 120,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-630",
+      "title": "Extract ClaimLifecycle \u2192 frontend/src/components/ClaimLifecycle.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              11181,
+              11319
+            ],
+            "anchor": "function ClaimLifecycle(props) {",
+            "component": "ClaimLifecycle",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/ClaimLifecycle.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-630-extract-ClaimLifecycle",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function ClaimLifecycle(props) {",
+      "line_range_at_plan_time": [
+        11181,
+        11319
+      ],
+      "loc": 139,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-631",
+      "title": "Extract ExposureColumnChart \u2192 frontend/src/components/ExposureColumnChart.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              24198,
+              24343
+            ],
+            "anchor": "function ExposureColumnChart(props) {",
+            "component": "ExposureColumnChart",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/ExposureColumnChart.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-631-extract-ExposureColumnChart",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function ExposureColumnChart(props) {",
+      "line_range_at_plan_time": [
+        24198,
+        24343
+      ],
+      "loc": 146,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-632",
+      "title": "Extract Assets \u2192 frontend/src/components/Assets.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              14739,
+              14980
+            ],
+            "anchor": "function Assets(props) {",
+            "component": "Assets",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/Assets.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-632-extract-Assets",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function Assets(props) {",
+      "line_range_at_plan_time": [
+        14739,
+        14980
+      ],
+      "loc": 242,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-633",
+      "title": "Extract Evidence \u2192 frontend/src/components/Evidence.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              15079,
+              15327
+            ],
+            "anchor": "function Evidence(props) {",
+            "component": "Evidence",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/Evidence.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-633-extract-Evidence",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function Evidence(props) {",
+      "line_range_at_plan_time": [
+        15079,
+        15327
+      ],
+      "loc": 249,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-634",
+      "title": "Extract QuickVoicePicker \u2192 frontend/src/components/QuickVoicePicker.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              16674,
+              16995
+            ],
+            "anchor": "function QuickVoicePicker() {",
+            "component": "QuickVoicePicker",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/QuickVoicePicker.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-634-extract-QuickVoicePicker",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function QuickVoicePicker() {",
+      "line_range_at_plan_time": [
+        16674,
+        16995
+      ],
+      "loc": 322,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-635",
+      "title": "Extract DocDash \u2192 frontend/src/components/DocDash.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              18519,
+              18882
+            ],
+            "anchor": "function DocDash(props) {",
+            "component": "DocDash",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/DocDash.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-635-extract-DocDash",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "anchor": "function DocDash(props) {",
+      "line_range_at_plan_time": [
+        18519,
+        18882
+      ],
+      "loc": 364,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-636",
+      "title": "Extract Scoring \u2192 frontend/src/components/Scoring.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              14981,
+              15078
+            ],
+            "anchor": "function Scoring(props) {",
+            "component": "Scoring",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/Scoring.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-636-extract-Scoring",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "anchor": "function Scoring(props) {",
+      "line_range_at_plan_time": [
+        14981,
+        15078
+      ],
+      "loc": 98,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-637",
+      "title": "Extract Controls \u2192 frontend/src/components/Controls.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              10622,
+              10730
+            ],
+            "anchor": "function Controls(props) {",
+            "component": "Controls",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/Controls.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-637-extract-Controls",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "anchor": "function Controls(props) {",
+      "line_range_at_plan_time": [
+        10622,
+        10730
+      ],
+      "loc": 109,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-638",
+      "title": "Extract AttackPathsModule \u2192 frontend/src/components/AttackPathsModule.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              22061,
+              22187
+            ],
+            "anchor": "function AttackPathsModule(props) {",
+            "component": "AttackPathsModule",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/AttackPathsModule.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-638-extract-AttackPathsModule",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "anchor": "function AttackPathsModule(props) {",
+      "line_range_at_plan_time": [
+        22061,
+        22187
+      ],
+      "loc": 127,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-639",
+      "title": "Extract Board \u2192 frontend/src/components/Board.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              15328,
+              15491
+            ],
+            "anchor": "function Board(props) {",
+            "component": "Board",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/Board.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-639-extract-Board",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "anchor": "function Board(props) {",
+      "line_range_at_plan_time": [
+        15328,
+        15491
+      ],
+      "loc": 164,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-640",
+      "title": "Extract AppMap \u2192 frontend/src/components/AppMap.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              10731,
+              10912
+            ],
+            "anchor": "function AppMap(props) {",
+            "component": "AppMap",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/AppMap.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-640-extract-AppMap",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "anchor": "function AppMap(props) {",
+      "line_range_at_plan_time": [
+        10731,
+        10912
+      ],
+      "loc": 182,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-641",
+      "title": "Extract Shell \u2192 frontend/src/components/Shell.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              16462,
+              16673
+            ],
+            "anchor": "function Shell(props) {",
+            "component": "Shell",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/Shell.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-641-extract-Shell",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "anchor": "function Shell(props) {",
+      "line_range_at_plan_time": [
+        16462,
+        16673
+      ],
+      "loc": 212,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-642",
+      "title": "Extract ExposureModelCard \u2192 frontend/src/components/ExposureModelCard.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              24344,
+              24559
+            ],
+            "anchor": "function ExposureModelCard(props) {",
+            "component": "ExposureModelCard",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/ExposureModelCard.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-642-extract-ExposureModelCard",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "anchor": "function ExposureModelCard(props) {",
+      "line_range_at_plan_time": [
+        24344,
+        24559
+      ],
+      "loc": 216,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-643",
+      "title": "Extract Home \u2192 frontend/src/components/Home.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              6068,
+              6310
+            ],
+            "anchor": "function Home(props) {",
+            "component": "Home",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/Home.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-643-extract-Home",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "anchor": "function Home(props) {",
+      "line_range_at_plan_time": [
+        6068,
+        6310
+      ],
+      "loc": 243,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-644",
+      "title": "Extract VendorEcosystem \u2192 frontend/src/components/VendorEcosystem.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              10913,
+              11180
+            ],
+            "anchor": "function VendorEcosystem(props) {",
+            "component": "VendorEcosystem",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/VendorEcosystem.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-644-extract-VendorEcosystem",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "anchor": "function VendorEcosystem(props) {",
+      "line_range_at_plan_time": [
+        10913,
+        11180
+      ],
+      "loc": 268,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-645",
+      "title": "Extract ProcessControlMap \u2192 frontend/src/components/ProcessControlMap.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              13194,
+              13466
+            ],
+            "anchor": "function ProcessControlMap(props) {",
+            "component": "ProcessControlMap",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/ProcessControlMap.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-645-extract-ProcessControlMap",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "anchor": "function ProcessControlMap(props) {",
+      "line_range_at_plan_time": [
+        13194,
+        13466
+      ],
+      "loc": 273,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-646",
+      "title": "Extract WelcomePage \u2192 frontend/src/components/WelcomePage.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              16996,
+              17332
+            ],
+            "anchor": "function WelcomePage(props) {",
+            "component": "WelcomePage",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/WelcomePage.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-646-extract-WelcomePage",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "anchor": "function WelcomePage(props) {",
+      "line_range_at_plan_time": [
+        16996,
+        17332
+      ],
+      "loc": 337,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-647",
+      "title": "Extract MitreTab \u2192 frontend/src/components/MitreTab.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              12851,
+              13193
+            ],
+            "anchor": "function MitreTab(props) {",
+            "component": "MitreTab",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/MitreTab.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-647-extract-MitreTab",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "anchor": "function MitreTab(props) {",
+      "line_range_at_plan_time": [
+        12851,
+        13193
+      ],
+      "loc": 343,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-648",
+      "title": "Extract MetricDetailModal \u2192 frontend/src/components/MetricDetailModal.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              6939,
+              7325
+            ],
+            "anchor": "function MetricDetailModal(props) {",
+            "component": "MetricDetailModal",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/MetricDetailModal.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-648-extract-MetricDetailModal",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "anchor": "function MetricDetailModal(props) {",
+      "line_range_at_plan_time": [
+        6939,
+        7325
+      ],
+      "loc": 387,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-649",
+      "title": "Extract BizLines \u2192 frontend/src/components/BizLines.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              14264,
+              14738
+            ],
+            "anchor": "function BizLines(props) {",
+            "component": "BizLines",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/BizLines.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-649-extract-BizLines",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "anchor": "function BizLines(props) {",
+      "line_range_at_plan_time": [
+        14264,
+        14738
+      ],
+      "loc": 475,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-650",
+      "title": "Extract DocValidationAgent \u2192 frontend/src/components/DocValidationAgent.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              6450,
+              6938
+            ],
+            "anchor": "function DocValidationAgent(props) {",
+            "component": "DocValidationAgent",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/DocValidationAgent.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-650-extract-DocValidationAgent",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "anchor": "function DocValidationAgent(props) {",
+      "line_range_at_plan_time": [
+        6450,
+        6938
+      ],
+      "loc": 489,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-651",
+      "title": "Extract CyberRxAPIAdapter \u2192 frontend/src/components/CyberRxAPIAdapter.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              19763,
+              20254
+            ],
+            "anchor": "function CyberRxAPIAdapter(props) {",
+            "component": "CyberRxAPIAdapter",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/CyberRxAPIAdapter.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-651-extract-CyberRxAPIAdapter",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "anchor": "function CyberRxAPIAdapter(props) {",
+      "line_range_at_plan_time": [
+        19763,
+        20254
+      ],
+      "loc": 492,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-652",
+      "title": "Extract ComplianceReport \u2192 frontend/src/components/ComplianceReport.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              12150,
+              12677
+            ],
+            "anchor": "function ComplianceReport(props) {",
+            "component": "ComplianceReport",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/ComplianceReport.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-652-extract-ComplianceReport",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "anchor": "function ComplianceReport(props) {",
+      "line_range_at_plan_time": [
+        12150,
+        12677
+      ],
+      "loc": 528,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-653",
+      "title": "Extract ProcessFlowDash \u2192 frontend/src/components/ProcessFlowDash.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              20255,
+              20793
+            ],
+            "anchor": "function ProcessFlowDash(props) {",
+            "component": "ProcessFlowDash",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/ProcessFlowDash.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-653-extract-ProcessFlowDash",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "anchor": "function ProcessFlowDash(props) {",
+      "line_range_at_plan_time": [
+        20255,
+        20793
+      ],
+      "loc": 539,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-654",
+      "title": "Extract BoardDash \u2192 frontend/src/components/BoardDash.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              9977,
+              10621
+            ],
+            "anchor": "function BoardDash(props) {",
+            "component": "BoardDash",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/BoardDash.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-654-extract-BoardDash",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "anchor": "function BoardDash(props) {",
+      "line_range_at_plan_time": [
+        9977,
+        10621
+      ],
+      "loc": 645,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-655",
+      "title": "Extract BusinessMapDash \u2192 frontend/src/components/BusinessMapDash.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              18883,
+              19630
+            ],
+            "anchor": "function BusinessMapDash(props) {",
+            "component": "BusinessMapDash",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/BusinessMapDash.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-655-extract-BusinessMapDash",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "anchor": "function BusinessMapDash(props) {",
+      "line_range_at_plan_time": [
+        18883,
+        19630
+      ],
+      "loc": 748,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-656",
+      "title": "Extract BrianaBar \u2192 frontend/src/components/BrianaBar.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              20796,
+              21600
+            ],
+            "anchor": "function BrianaBar(props) {",
+            "component": "BrianaBar",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/BrianaBar.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-656-extract-BrianaBar",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "anchor": "function BrianaBar(props) {",
+      "line_range_at_plan_time": [
+        20796,
+        21600
+      ],
+      "loc": 805,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-657",
+      "title": "Extract CrownJewelMap \u2192 frontend/src/components/CrownJewelMap.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              22684,
+              23523
+            ],
+            "anchor": "function CrownJewelMap(props) {",
+            "component": "CrownJewelMap",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/CrownJewelMap.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-657-extract-CrownJewelMap",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "anchor": "function CrownJewelMap(props) {",
+      "line_range_at_plan_time": [
+        22684,
+        23523
+      ],
+      "loc": 840,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-658",
+      "title": "Extract CRODash \u2192 frontend/src/components/CRODash.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              8408,
+              9320
+            ],
+            "anchor": "function CRODash(props) {",
+            "component": "CRODash",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/CRODash.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-658-extract-CRODash",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "anchor": "function CRODash(props) {",
+      "line_range_at_plan_time": [
+        8408,
+        9320
+      ],
+      "loc": 913,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-659",
+      "title": "Extract SetupBot \u2192 frontend/src/components/SetupBot.jsx",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              17333,
+              18518
+            ],
+            "anchor": "function SetupBot(props) {",
+            "component": "SetupBot",
+            "reason": "Lift this slice into its own file; preserve all behavior"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/components/SetupBot.jsx",
+        "frontend/src/App.jsx (remove extracted block)"
+      ],
+      "git_branch": "task/T-659-extract-SetupBot",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "anchor": "function SetupBot(props) {",
+      "line_range_at_plan_time": [
+        17333,
+        18518
+      ],
+      "loc": 1186,
+      "acceptance": [
+        "ACC-06-01",
+        "ACC-06-02"
+      ]
+    },
+    {
+      "id": "T-690",
+      "title": "Final App.jsx slim-down to router-shell + final ACC-06-03 LOC gate",
+      "depends_on": [
+        "T-601",
+        "T-602",
+        "T-603",
+        "T-604",
+        "T-605",
+        "T-606",
+        "T-607",
+        "T-608",
+        "T-609",
+        "T-610",
+        "T-611",
+        "T-612",
+        "T-613",
+        "T-614",
+        "T-615",
+        "T-616",
+        "T-617",
+        "T-618",
+        "T-619",
+        "T-620",
+        "T-621",
+        "T-622",
+        "T-623",
+        "T-624",
+        "T-625",
+        "T-626",
+        "T-627",
+        "T-628",
+        "T-629",
+        "T-630",
+        "T-631",
+        "T-632",
+        "T-633",
+        "T-634",
+        "T-635",
+        "T-636",
+        "T-637",
+        "T-638",
+        "T-639",
+        "T-640",
+        "T-641",
+        "T-642",
+        "T-643",
+        "T-644",
+        "T-645",
+        "T-646",
+        "T-647",
+        "T-648",
+        "T-649",
+        "T-650",
+        "T-651",
+        "T-652",
+        "T-653",
+        "T-654",
+        "T-655",
+        "T-656",
+        "T-657",
+        "T-658",
+        "T-659"
+      ],
+      "blocks": [
+        "T-691"
+      ],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "frontend/src/App.jsx"
+      ],
+      "git_branch": "task/T-690-appjsx-shell",
+      "estimated_effort": "2d",
+      "risk": "HIGH",
+      "acceptance": [
+        "ACC-06-03"
+      ]
+    },
+    {
+      "id": "T-691",
+      "title": "Wire scripts/validate_appjsx_index.py into CI on every App.jsx PR",
+      "depends_on": [
+        "T-690"
+      ],
+      "blocks": [],
+      "owner_role": "worker",
+      "artifact_paths": [
+        ".github/workflows/appjsx-validate.yml"
+      ],
+      "git_branch": "task/T-691-ci-validation",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "acceptance": [
+        "ACC-06-10"
+      ]
+    },
+    {
+      "id": "T-692",
+      "title": "Board PDF exporter (CISO/CRO/CFO/Board)",
+      "depends_on": [],
+      "blocks": [
+        "T-693"
+      ],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/src/routes/exports.js",
+        "cyberrx-api/src/services/pdf_export.js"
+      ],
+      "git_branch": "task/T-692-board-pdf",
+      "estimated_effort": "2d",
+      "risk": "MEDIUM",
+      "acceptance": [
+        "ACC-06-04"
+      ]
+    },
+    {
+      "id": "T-693",
+      "title": "Board XLSX exporter",
+      "depends_on": [
+        "T-692"
+      ],
+      "blocks": [],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/src/services/xlsx_export.js"
+      ],
+      "git_branch": "task/T-693-board-xlsx",
+      "estimated_effort": "1d",
+      "risk": "LOW",
+      "acceptance": [
+        "ACC-06-05"
+      ]
+    },
+    {
+      "id": "T-694",
+      "title": "OpenAPI spec generation + CI check",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "docs/api/openapi.yaml",
+        ".github/workflows/openapi-check.yml"
+      ],
+      "git_branch": "task/T-694-openapi",
+      "estimated_effort": "1.5d",
+      "risk": "LOW",
+      "acceptance": [
+        "ACC-06-06"
+      ]
+    },
+    {
+      "id": "T-695",
+      "title": "Data-model docs (entities + relationships + sample JSON)",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "docs/data-model.md"
+      ],
+      "git_branch": "task/T-695-data-model-docs",
+      "estimated_effort": "1d",
+      "risk": "LOW",
+      "acceptance": [
+        "ACC-06-07"
+      ]
+    },
+    {
+      "id": "T-696",
+      "title": "Onboarding guide (local + deployed env in <30 min)",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "docs/onboarding.md"
+      ],
+      "git_branch": "task/T-696-onboarding",
+      "estimated_effort": "1d",
+      "risk": "LOW",
+      "acceptance": [
+        "ACC-06-08"
+      ]
+    },
+    {
+      "id": "T-697",
+      "title": "SOC2 readiness checklist (CC1.1-CC9.2 + owners + gaps)",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "docs/soc2-readiness.md"
+      ],
+      "git_branch": "task/T-697-soc2-readiness",
+      "estimated_effort": "2d",
+      "risk": "MEDIUM",
+      "acceptance": [
+        "ACC-06-09"
+      ]
+    }
+  ],
+  "validator_team_checks": {
+    "acceptance": "Every ACC-06-* has either a CI gate or a documented dogfood test.",
+    "security": "Exports apply the same JWT + org-isolation middleware introduced in Month 4.",
+    "no_regression": "Visual regression suite from T-115 stays green throughout the extraction parade.",
+    "integration": "Demo flow run before and after each extraction PR; diff must be <1% pixel delta."
+  },
+  "risks": [
+    {
+      "risk": "App.jsx extractions cause subtle re-render or hook-order regressions",
+      "mitigation": "Strict before/after visual-regression CI; per-extraction PRs"
+    },
+    {
+      "risk": "Export jobs OOM on Render free tier",
+      "mitigation": "Stream PDFs; cap row counts; bump plan if needed before launch"
+    },
+    {
+      "risk": "SOC2 readiness reveals undocumented prod access paths",
+      "mitigation": "Time-boxed evidence-gathering sweep; raise gaps to assessment \u00a79 backlog"
+    }
+  ],
+  "out_of_scope": [
+    "HIGH-split-risk components (Setup, CISODash, CFODash, DashHub, Execution, CrownJewelsModule, CyberRxApp) \u2014 they stay in App.jsx until Phase 2",
+    "AI executive summaries (Phase 2)",
+    "Predictive breach likelihood model (Phase 3)"
+  ],
+  "stop_conditions": [
+    "Any extraction that fails ACC-06-01 (anchor mismatch) \u2014 must regenerate the index first",
+    "Bumping App.jsx LOC after T-690 \u2014 once it's a shell, additions need a separate plan"
+  ]
+}

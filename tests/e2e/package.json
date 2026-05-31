@@ -1,0 +1,19 @@
+{
+  "name": "cyberrx-e2e-tests",
+  "version": "1.0.0",
+  "description": "End-to-end tests for CyberRx",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:api": "playwright test --grep @api",
+    "test:ui": "playwright test --grep @ui",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@types/node": "^20.0.0",
+    "dotenv": "^16.4.0"
+  }
+}

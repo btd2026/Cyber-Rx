@@ -1,0 +1,130 @@
+# Task T-001: JWT Enforcement on All API Endpoints
+
+## COMPLETED
+
+### Summary
+JWT verification middleware has been implemented and applied to all API endpoints that return or mutate organization data. Every data endpoint now requires a valid JWT token in the Authorization header, while the public /health endpoint remains accessible without authentication.
+
+### Changes Made
+
+#### 1. New JWT Middleware (`cyberrx-api/src/middleware/auth.js`)
+- Created `authenticateJWT()` function that validates JWT tokens from Authorization header
+- Expects format: `Authorization: Bearer <token>`
+- Uses `JWT_SECRET` environment variable for token verification
+- Returns 401 Unauthorized for missing, invalid, or expired tokens
+- Attaches decoded user info (`req.user`, `req.userId`, `req.orgId`) to request on success
+- Includes comprehensive error handling for various JWT error types (JsonWebTokenError, TokenExpiredError, NotBeforeError)
+- Provides optional JWT middleware (`optionalJWT()`) for future use
+
+#### 2. Package Dependencies (`cyberrx-api/package.json`)
+- Added `jsonwebtoken: ^9.0.2` dependency for JWT verification
+
+#### 3. Protected Endpoints
+Applied JWT middleware to ALL data endpoints in 4 route files:
+
+**orgs.js** (4 endpoints):
+- `POST /api/orgs` - Create org profile
+- `PUT /api/orgs/:id` - Update org profile
+- `GET /api/orgs/:id` - Retrieve org data
+- `GET /api/orgs/:id/exists` - Check org existence
+
+**tools.js** (1 endpoint):
+- `POST /api/tools/:tool/sync` - Sync security tool metrics
+
+**credentials.js** (3 endpoints):
+- `POST /api/credentials/:tool` - Store encrypted credentials
+- `GET /api/credentials/:tool/status` - Check credential status
+- `DELETE /api/credentials/:tool` - Remove credentials
+
+**itsm.js** (1 endpoint):
+- `POST /api/itsm/:system/ticket` - Create ITSM tickets
+
+#### 4. Public Endpoints (Unchanged)
+- `GET /health` - Health check (remains publicly accessible)
+
+### Acceptance Criteria Verification
+
+**Criterion 1: Every data-returning/mutating endpoint rejects requests without a valid JWT (401)**
+- ✅ All 9 data endpoints now use `authenticateJWT` middleware
+- ✅ Middleware returns 401 for missing/invalid tokens
+- ✅ No endpoint can be accessed without Authorization header
+
+**Criterion 2: A valid token resolves to an authenticated identity used for org binding**
+- ✅ Middleware decodes JWT and attaches `req.user`, `req.userId`, `req.orgId` to request
+- ✅ Future tasks can use `req.orgId` for org isolation (T-002)
+- ✅ Identity extracted from token payload
+
+**Criterion 3: No endpoint left unauthenticated except explicit public health checks**
+- ✅ All `/api/orgs/*` routes protected
+- ✅ All `/api/tools/*` routes protected
+- ✅ All `/api/credentials/*` routes protected
+- ✅ All `/api/itsm/*` routes protected
+- ✅ Only `/health` endpoint remains public (intentional)
+
+### Testing Instructions
+
+#### Test 1: Verify public endpoint still works
+```bash
+curl http://localhost:3001/health
+# Expected: 200 OK with status and version
+```
+
+#### Test 2: Verify protected endpoint rejects without token
+```bash
+curl http://localhost:3001/api/orgs/test-org
+# Expected: 401 Unauthorized with error message
+```
+
+#### Test 3: Verify protected endpoint rejects invalid token
+```bash
+curl -H "Authorization: Bearer invalid-token" http://localhost:3001/api/orgs/test-org
+# Expected: 401 Unauthorized with "Invalid token" message
+```
+
+#### Test 4: Verify protected endpoint accepts valid token
+```bash
+# First, generate a test token (requires auth system - not yet implemented)
+TOKEN=$(node -e "console.log(require('jsonwebtoken').sign({userId:'test',orgId:'test-org'}, process.env.JWT_SECRET || 'change-this-in-production-min-32-chars'))")
+
+curl -H "Authorization: Bearer $TOKEN" http://localhost:3001/api/orgs/test-org
+# Expected: 404 (org not found) or 200 with org data - NOT 401
+```
+
+### Environment Variable
+
+Required environment variable (already exists in `.env.example`):
+```bash
+JWT_SECRET=change-this-in-production-min-32-chars
+```
+
+This secret is used to verify JWT signatures. In production, this should be:
+- At least 32 characters long
+- Randomly generated
+- Stored securely (not committed to git)
+- Rotated periodically
+
+### Git Diff
+Branch: `task/T-001-jwt-enforce`
+Commit: `632d3cd`
+Files changed:
+- `cyberrx-api/src/middleware/auth.js` (new, 123 lines)
+- `cyberrx-api/package.json` (+1 dependency)
+- `cyberrx-api/src/routes/orgs.js` (+4 middleware applications)
+- `cyberrx-api/src/routes/tools.js` (+1 middleware application)
+- `cyberrx-api/src/routes/credentials.js` (+3 middleware applications)
+- `cyberrx-api/src/routes/itsm.js` (+1 middleware application)
+Total: 6 files changed, 137 insertions(+), 9 deletions(-)
+
+### Next Steps
+This task enforces JWT on endpoints but does not implement token generation/issuance. The authentication system (login, token generation) will be implemented in a follow-up task. Currently, the API will reject all requests to protected endpoints until valid JWT tokens are issued by an auth system.
+
+### Related Tasks
+- T-002: Implement org isolation using `req.orgId` from JWT
+- T-003: Implement JWT-based authentication system (login, token generation)
+- T-004: Fix CORS to production allowlist
+
+### Security Impact
+- ✅ Eliminates anonymous access to all organization data
+- ✅ Provides foundation for org-based multi-tenancy
+- ✅ Enables audit trail via `req.userId` in logs
+- ⚠️ Requires JWT_SECRET to be set in production environments

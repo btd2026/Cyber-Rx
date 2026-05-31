@@ -5,14 +5,10 @@ const router = express.Router();
 const Evidence = require('../models/Evidence');
 const fs = require('fs').promises;
 const path = require('path');
+const { authenticateJWT } = require('../middleware/auth');
 
-// Middleware to extract org ID from header
-const extractOrgId = (req, res, next) => {
-  req.orgId = req.headers['x-org-id'] || req.query.org_id;
-  next();
-};
-
-router.use(extractOrgId);
+// Apply authentication to all routes
+router.use(authenticateJWT);
 
 /**
  * GET /api/evidence
@@ -20,18 +16,14 @@ router.use(extractOrgId);
  */
 router.get('/', async (req, res) => {
   try {
-    const { org_id } = req.headers;
+    const organizationId = req.orgId;
     const { status, evidence_type } = req.query;
-
-    if (!org_id) {
-      return res.status(400).json({ error: 'Organization ID required' });
-    }
 
     const filters = {};
     if (status) filters.status = status;
     if (evidence_type) filters.evidenceType = evidence_type;
 
-    const evidenceList = await Evidence.findByOrganization(org_id, filters);
+    const evidenceList = await Evidence.findByOrganization(organizationId, filters);
     res.json({ data: evidenceList, total: evidenceList.length });
   } catch (error) {
     console.error('Error fetching evidence:', error);
@@ -48,11 +40,7 @@ router.get('/', async (req, res) => {
  */
 router.post('/', async (req, res) => {
   try {
-    const { org_id } = req.headers;
-
-    if (!org_id) {
-      return res.status(400).json({ error: 'Organization ID required' });
-    }
+    const organizationId = req.orgId;
 
     // Check if file is included in request
     let file = null;
@@ -69,7 +57,7 @@ router.post('/', async (req, res) => {
 
     const evidenceData = {
       ...req.body,
-      organizationId: org_id,
+      organizationId,
       ...(req.body.evidenceType && { evidenceType: req.body.evidenceType }),
       ...(req.body.uploadedBy && { uploadedBy: req.body.uploadedBy })
     };
@@ -93,13 +81,8 @@ router.post('/', async (req, res) => {
  */
 router.post('/metadata', async (req, res) => {
   try {
-    const { org_id } = req.headers;
-
-    if (!org_id) {
-      return res.status(400).json({ error: 'Organization ID required' });
-    }
-
-    const evidenceData = { ...req.body, organizationId: org_id };
+    const organizationId = req.orgId;
+    const evidenceData = { ...req.body, organizationId };
     const evidence = await Evidence.createMetadataOnly(evidenceData);
     res.status(201).json({ data: evidence });
   } catch (error) {

@@ -1,0 +1,342 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-05-30T04:08:56Z",
+  "generated_by": "Decomposer (manual run)",
+  "git_head": "f8c8ab934039345ccdef1a2b4d06f466914c9e80",
+  "appjsx_index_sha256": "63d1cc21ef9ca19e8528ee3fb5963e8aac0677853a5cf17c634061a917a94d2c",
+  "source_of_truth": "COVERAGE_ASSESSMENT.md",
+  "execution_prompt": "PRODUCTION_PROMPT.md",
+  "metadata": {
+    "schema_version": "1.0",
+    "generated_at": "2026-05-30T04:08:56Z",
+    "generated_by": "Decomposer (manual run)",
+    "git_head": "f8c8ab934039345ccdef1a2b4d06f466914c9e80",
+    "appjsx_index_sha256": "63d1cc21ef9ca19e8528ee3fb5963e8aac0677853a5cf17c634061a917a94d2c",
+    "source_of_truth": "COVERAGE_ASSESSMENT.md",
+    "execution_prompt": "PRODUCTION_PROMPT.md",
+    "month": 5,
+    "title": "Exception Workflow + Evidence Validation",
+    "weeks": [
+      17,
+      20
+    ],
+    "assessment_section": "\u00a73 #6-#7, \u00a79 Month 5",
+    "production_prompt_clause": "Sequence step 4"
+  },
+  "goal": "Make risk acceptance and continuous control validation real: approval chain CISO\u2192CRO\u2192CLO\u2192Board with time-bound expiry, and evidence-vs-attestation drift for MFA + 4 other controls.",
+  "definition_of_done": [
+    "Exception entity exists with state machine: pending \u2192 approved \u2192 expired (or denied).",
+    "Approval chain enforces order: CISO ack \u2192 CRO ack \u2192 CLO ack \u2192 Board ack; skipping \u2192 400.",
+    "Time-bound expiry: cron job moves approved exceptions past expiryDate \u2192 expired daily.",
+    "Drift detection: when external validation diverges from attestation >5% on MFA, EDR, patch%, MTTR, phishing% \u2192 drift flag raised + risk re-scored.",
+    "Audit evidence repository links evidence files to controls and audit tests."
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "ACC-05-01",
+      "criterion": "Exception schema: id, controlId, riskId, requestedBy, justification, approvalChain[], status, expiryDate, conditions[]",
+      "validator": "schema_check"
+    },
+    {
+      "id": "ACC-05-02",
+      "criterion": "Request form posts to POST /api/exceptions; validation rejects empty justification + missing expiry",
+      "validator": "crud_test"
+    },
+    {
+      "id": "ACC-05-03",
+      "criterion": "Approval chain enforces CISO \u2192 CRO \u2192 CLO \u2192 Board order via state transitions",
+      "validator": "state_machine_test"
+    },
+    {
+      "id": "ACC-05-04",
+      "criterion": "Approver role check: a CLO cannot ack as a CRO; returns 403",
+      "validator": "security_test"
+    },
+    {
+      "id": "ACC-05-05",
+      "criterion": "Auto-expiry cron job processes expired exceptions daily; idempotent",
+      "validator": "cron_test"
+    },
+    {
+      "id": "ACC-05-06",
+      "criterion": "Exception tracking dashboard at /exceptions: queue view, status, days-to-expiry",
+      "validator": "visual_check"
+    },
+    {
+      "id": "ACC-05-07",
+      "criterion": "Risk register integration: an approved exception annotates the related Risk with status='accepted' + expiryDate",
+      "validator": "data_check"
+    },
+    {
+      "id": "ACC-05-08",
+      "criterion": "Drift detection runs for MFA, EDR, patch%, MTTR, phishing% on a daily schedule",
+      "validator": "scheduler_test"
+    },
+    {
+      "id": "ACC-05-09",
+      "criterion": "Drift threshold (>5% absolute divergence) raises a drift_flag and lowers the control_effectiveness_score",
+      "validator": "logic_check"
+    },
+    {
+      "id": "ACC-05-10",
+      "criterion": "Audit evidence repository: POST /api/audit/evidence/:controlId attaches files; auditor view lists evidence per control",
+      "validator": "crud_test"
+    },
+    {
+      "id": "ACC-05-11",
+      "criterion": "Management assertion validation: control test result flips to 'unsubstantiated' when evidence is missing or drifted",
+      "validator": "logic_check"
+    }
+  ],
+  "context_manifest": {
+    "must_read": [
+      {
+        "path": "COVERAGE_ASSESSMENT.md",
+        "section": "\u00a73 #7 Exception Workflow"
+      },
+      {
+        "path": "COVERAGE_ASSESSMENT.md",
+        "section": "\u00a79 Month 5"
+      },
+      {
+        "path": "frontend/src/App.jsx",
+        "line_range": [
+          8408,
+          9320
+        ],
+        "anchor": "function CRODash(props) {",
+        "component": "CRODash",
+        "reason": "Risk register is rendered here; exception status badge adds onto its rows"
+      },
+      {
+        "path": "cyberrx-api/src/scheduler.js",
+        "reason": "Existing scheduler pattern for daily/weekly metric syncs; drift detection runs the same way"
+      },
+      {
+        "path": "cyberrx-api/src/routes/tools.js",
+        "reason": "Real-tool sync values (Okta MFA, CrowdStrike EDR, Tenable patch, etc.) \u2014 drift compares these to attested values"
+      }
+    ],
+    "should_not_read": [
+      "frontend/src/App.jsx in full"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "T-401",
+      "title": "Migration: Exception entity",
+      "depends_on": [],
+      "blocks": [
+        "T-402",
+        "T-403"
+      ],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/migrations/0014_exception.sql",
+        "cyberrx-api/migrations/0014_exception.down.sql"
+      ],
+      "git_branch": "task/T-401-exception-schema",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "acceptance": [
+        "ACC-05-01"
+      ]
+    },
+    {
+      "id": "T-402",
+      "title": "POST /api/exceptions (validation, persistence) + GET list",
+      "depends_on": [
+        "T-401"
+      ],
+      "blocks": [
+        "T-403",
+        "T-405"
+      ],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/src/routes/exceptions.js",
+        "cyberrx-api/src/services/exceptions.js"
+      ],
+      "git_branch": "task/T-402-exception-crud",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "acceptance": [
+        "ACC-05-02"
+      ]
+    },
+    {
+      "id": "T-403",
+      "title": "Approval chain state machine: CISO \u2192 CRO \u2192 CLO \u2192 Board with role enforcement",
+      "depends_on": [
+        "T-402"
+      ],
+      "blocks": [
+        "T-404",
+        "T-407"
+      ],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/src/services/approval_chain.js",
+        "cyberrx-api/tests/unit/approval_chain.spec.js"
+      ],
+      "git_branch": "task/T-403-approval-chain",
+      "estimated_effort": "2d",
+      "risk": "HIGH",
+      "acceptance": [
+        "ACC-05-03",
+        "ACC-05-04"
+      ]
+    },
+    {
+      "id": "T-404",
+      "title": "Daily cron: auto-expire exceptions past expiryDate",
+      "depends_on": [
+        "T-403"
+      ],
+      "blocks": [],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/src/scheduler/exception_expiry.js"
+      ],
+      "git_branch": "task/T-404-exception-expiry",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "acceptance": [
+        "ACC-05-05"
+      ]
+    },
+    {
+      "id": "T-405",
+      "title": "Exception tracking dashboard at /exceptions",
+      "depends_on": [
+        "T-402"
+      ],
+      "blocks": [],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "frontend/src/pages/Exceptions.jsx",
+        "frontend/src/App.jsx (NAV)"
+      ],
+      "git_branch": "task/T-405-exception-dash",
+      "estimated_effort": "1.5d",
+      "risk": "LOW",
+      "acceptance": [
+        "ACC-05-06"
+      ]
+    },
+    {
+      "id": "T-406",
+      "title": "Drift detection service: daily compare external sync to attested values for MFA/EDR/patch/MTTR/phishing",
+      "depends_on": [],
+      "blocks": [
+        "T-407"
+      ],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "cyberrx-api/src/routes/tools.js",
+            "reason": "Sync values for these 5 metrics already implemented"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "cyberrx-api/src/services/drift_detection.js",
+        "cyberrx-api/src/scheduler/drift_cron.js"
+      ],
+      "git_branch": "task/T-406-drift-detection",
+      "estimated_effort": "2d",
+      "risk": "HIGH",
+      "acceptance": [
+        "ACC-05-08",
+        "ACC-05-09"
+      ]
+    },
+    {
+      "id": "T-407",
+      "title": "Re-score Risk and annotate with exception state when applicable",
+      "depends_on": [
+        "T-403",
+        "T-406"
+      ],
+      "blocks": [],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/src/services/risk_rescore.js"
+      ],
+      "git_branch": "task/T-407-risk-rescore",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "acceptance": [
+        "ACC-05-07"
+      ]
+    },
+    {
+      "id": "T-408",
+      "title": "Audit evidence repository: link evidence to controls; auditor view",
+      "depends_on": [],
+      "blocks": [
+        "T-409"
+      ],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/src/routes/audit_evidence.js",
+        "frontend/src/pages/AuditDash.jsx"
+      ],
+      "git_branch": "task/T-408-audit-evidence-repo",
+      "estimated_effort": "2d",
+      "risk": "MEDIUM",
+      "acceptance": [
+        "ACC-05-10"
+      ]
+    },
+    {
+      "id": "T-409",
+      "title": "Management assertion validation: 'unsubstantiated' when evidence missing/drifted",
+      "depends_on": [
+        "T-408",
+        "T-406"
+      ],
+      "blocks": [],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/src/services/assertion_validation.js"
+      ],
+      "git_branch": "task/T-409-assertion-validation",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "acceptance": [
+        "ACC-05-11"
+      ]
+    }
+  ],
+  "validator_team_checks": {
+    "acceptance": "Every ACC-05-* has an automated test in artifact_paths.",
+    "security": "Approval-chain bypass attempts return 403; exception creation requires authenticated session.",
+    "no_regression": "Risk register continues to render unchanged for risks without exceptions.",
+    "integration": "End-to-end: create exception \u2192 CISO ack \u2192 CRO ack \u2192 CLO ack \u2192 Board ack \u2192 status='approved'; cron after expiry \u2192 status='expired'."
+  },
+  "risks": [
+    {
+      "risk": "Board ack lacks an authentication path",
+      "mitigation": "Board user role added in Month 4 auth; board ack via signed email link as backup, with audit log"
+    },
+    {
+      "risk": "Drift detection false-positives erode trust in metrics",
+      "mitigation": "Hysteresis: require 3 consecutive days >5% before flagging; per-metric tuning"
+    },
+    {
+      "risk": "Time-bound expiry silently re-opens risks",
+      "mitigation": "Email notification 14/7/1 days before expiry to all approvers"
+    }
+  ],
+  "out_of_scope": [
+    "AI-generated executive summaries (Phase 2)",
+    "App.jsx split (Month 6)",
+    "Board PDF reports (Month 6)"
+  ],
+  "stop_conditions": [
+    "Any change that allows an exception to skip an approver without explicit Board override + audit log.",
+    "Disabling drift detection in prod for any reason \u2014 must be PR'd and reviewed."
+  ]
+}

@@ -71,7 +71,12 @@ async function runAllSeeds() {
     '2026_06_01_crown_jewels.sql',
     '2026_06_02_demo_assets.sql',
     '2026_06_03_legal_obligations.sql',
-    '2026_06_04_threat_scenarios.sql'
+    '2026_06_04_threat_scenarios.sql',
+    '2026_06_06_bcbs_organizations.sql',
+    '2026_06_07_bcbs_vendor_assets.sql',
+    '2026_06_08_bcbs_connector_states.sql',
+    '2026_06_09_bcbs_evidence_records.sql',
+    '2026_06_10_bcbs_correlation_data.sql'
   ];
 
   const results = {
@@ -161,10 +166,46 @@ async function initCorrelationEngineDemo() {
   };
 }
 
+/**
+ * Initialize BCBS state-specific demo data
+ * @param {Array<string>} states - Array of states to seed (e.g., ['mass', 'texas', 'virginia'])
+ * @returns {Promise<Object>} Results with org IDs and status
+ */
+async function initBCBSStateDemos(states = ['mass', 'texas', 'virginia']) {
+  const results = {};
+
+  for (const state of states) {
+    const orgId = `bcbs-${state}-001`;
+
+    // Run BCBS-specific seeds
+    try {
+      await runSeedFile('2026_06_06_bcbs_organizations.sql');
+      await runSeedFile('2026_06_07_bcbs_vendor_assets.sql');
+      await runSeedFile('2026_06_08_bcbs_connector_states.sql');
+      await runSeedFile('2026_06_09_bcbs_evidence_records.sql');
+      await runSeedFile('2026_06_10_bcbs_correlation_data.sql');
+
+      results[state] = {
+        orgId,
+        status: 'seeded'
+      };
+    } catch (err) {
+      results[state] = {
+        orgId,
+        status: 'error',
+        error: err.message
+      };
+    }
+  }
+
+  return results;
+}
+
 module.exports = {
   runSeedFile,
   runAllSeeds,
   checkDemoTenant,
   ensureDemoTenant,
-  initCorrelationEngineDemo
+  initCorrelationEngineDemo,
+  initBCBSStateDemos
 };

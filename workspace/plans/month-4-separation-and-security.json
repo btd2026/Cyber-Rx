@@ -1,0 +1,430 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-05-30T04:08:56Z",
+  "generated_by": "Decomposer (manual run)",
+  "git_head": "f8c8ab934039345ccdef1a2b4d06f466914c9e80",
+  "appjsx_index_sha256": "63d1cc21ef9ca19e8528ee3fb5963e8aac0677853a5cf17c634061a917a94d2c",
+  "source_of_truth": "COVERAGE_ASSESSMENT.md",
+  "execution_prompt": "PRODUCTION_PROMPT.md",
+  "metadata": {
+    "schema_version": "1.0",
+    "generated_at": "2026-05-30T04:08:56Z",
+    "generated_by": "Decomposer (manual run)",
+    "git_head": "f8c8ab934039345ccdef1a2b4d06f466914c9e80",
+    "appjsx_index_sha256": "63d1cc21ef9ca19e8528ee3fb5963e8aac0677853a5cf17c634061a917a94d2c",
+    "source_of_truth": "COVERAGE_ASSESSMENT.md",
+    "execution_prompt": "PRODUCTION_PROMPT.md",
+    "month": 4,
+    "title": "Separation & Security",
+    "weeks": [
+      13,
+      16
+    ],
+    "assessment_section": "\u00a73 #1, #5, #6, \u00a78 Risks (Critical), \u00a79 Month 4",
+    "production_prompt_clause": "Sequence step 3"
+  },
+  "goal": "Make the platform sellable: enforce auth, isolate orgs, split Internal Audit from CRO, and prove continuous evidence ingestion on 5 controls.",
+  "definition_of_done": [
+    "Every API route enforces JWT and X-Org-Id is validated against the JWT identity.",
+    "CORS allowlist comes from FRONTEND_URL env-var; the `// allow all - tighten in production` comment is gone.",
+    "Cross-org access returns 403; same-org returns 200 \u2014 verified by automated test.",
+    "/audit route exists; Internal Audit view is no longer combined with CRO.",
+    "Document ingestion accepts a SOC2 report and auto-extracts 5 controls (mapped to NIST CSF).",
+    "Control drift detection compares attestation vs external validation for MFA (worked example)."
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "ACC-04-01",
+      "criterion": "Every /api/* route except /health rejects requests without a valid JWT",
+      "validator": "security_test"
+    },
+    {
+      "id": "ACC-04-02",
+      "criterion": "X-Org-Id header must match the orgId claim in the JWT; mismatch = 403",
+      "validator": "security_test"
+    },
+    {
+      "id": "ACC-04-03",
+      "criterion": "CORS allowlist is built from FRONTEND_URL only (and localhost in NODE_ENV=development)",
+      "validator": "static_analysis"
+    },
+    {
+      "id": "ACC-04-04",
+      "criterion": "POST /api/auth/login returns a JWT given valid credentials; rate-limited to 5/min/IP",
+      "validator": "auth_test"
+    },
+    {
+      "id": "ACC-04-05",
+      "criterion": "POST /api/auth/signup creates a user scoped to an org (no cross-org signup)",
+      "validator": "auth_test"
+    },
+    {
+      "id": "ACC-04-06",
+      "criterion": "/audit route renders an Internal Audit dashboard with audit-universe map",
+      "validator": "visual_check"
+    },
+    {
+      "id": "ACC-04-07",
+      "criterion": "Audit dashboard shows control testing UI: test plan, procedure, evidence, result",
+      "validator": "visual_check"
+    },
+    {
+      "id": "ACC-04-08",
+      "criterion": "Audit findings management supports issue log, severity, MAP, target, status",
+      "validator": "crud_test"
+    },
+    {
+      "id": "ACC-04-09",
+      "criterion": "Repeat-finding detection flags same control + same deficiency across audit years",
+      "validator": "logic_check"
+    },
+    {
+      "id": "ACC-04-10",
+      "criterion": "POST /api/evidence accepts a PDF, OCRs it, extracts and links 5 named controls to NIST CSF refs (PR.AA-2, PR.DS-1, DE.CM-1, RS.AN-1, ID.AM-1)",
+      "validator": "integration_test"
+    },
+    {
+      "id": "ACC-04-11",
+      "criterion": "Control drift detection: when attested MFA% diverges from Okta API by >5%, drift flagged",
+      "validator": "integration_test"
+    },
+    {
+      "id": "ACC-04-12",
+      "criterion": "Multi-tenant secret isolation: Org A's tool credentials are unreadable to Org B (AWS Secrets Manager or scoped env namespace)",
+      "validator": "security_test"
+    }
+  ],
+  "context_manifest": {
+    "must_read": [
+      {
+        "path": "COVERAGE_ASSESSMENT.md",
+        "section": "\u00a73 #1 Fix Critical Security Gaps"
+      },
+      {
+        "path": "COVERAGE_ASSESSMENT.md",
+        "section": "\u00a74 Internal Auditor user story"
+      },
+      {
+        "path": "COVERAGE_ASSESSMENT.md",
+        "section": "\u00a79 Month 4"
+      },
+      {
+        "path": "cyberrx-api/src/index.js",
+        "reason": "Current CORS + middleware layout; auth middleware slots in here"
+      },
+      {
+        "path": "cyberrx-api/src/routes/itsm.js",
+        "reason": "Pattern for an org-scoped route; all routes adopt the new auth gate"
+      },
+      {
+        "path": "cyberrx-api/src/routes/tools.js",
+        "reason": "Same"
+      },
+      {
+        "path": "cyberrx-api/src/routes/credentials.js",
+        "reason": "Same; vault writes must be org-isolated"
+      },
+      {
+        "path": "cyberrx-api/src/utils/vault.js",
+        "reason": "Local mode is single-tenant; multi-tenant requires AWS Secrets Manager path"
+      },
+      {
+        "path": "cyberrx-api/src/utils/db.js",
+        "reason": "users table is here but no signup/login endpoints exist"
+      },
+      {
+        "path": "frontend/src/App.jsx",
+        "line_range": [
+          8408,
+          9320
+        ],
+        "anchor": "function CRODash(props) {",
+        "component": "CRODash",
+        "reason": "Audit content lives mixed inside here; we will copy/extract \u2014 NOT delete \u2014 to /audit"
+      },
+      {
+        "path": "frontend/src/App.jsx",
+        "line_range": [
+          15079,
+          15327
+        ],
+        "anchor": "function Evidence(props) {",
+        "component": "Evidence",
+        "reason": "Evidence Repository page already exists as a placeholder; reuse its UI shell"
+      }
+    ],
+    "should_not_read": [
+      "frontend/src/App.jsx in full"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "T-301",
+      "title": "JWT middleware: reject requests without a valid token on /api/*",
+      "depends_on": [],
+      "blocks": [
+        "T-302",
+        "T-303",
+        "T-304",
+        "T-305",
+        "T-306"
+      ],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/src/middleware/auth.js",
+        "cyberrx-api/src/index.js"
+      ],
+      "git_branch": "task/T-301-jwt-middleware",
+      "estimated_effort": "1d",
+      "risk": "HIGH",
+      "acceptance": [
+        "ACC-04-01"
+      ]
+    },
+    {
+      "id": "T-302",
+      "title": "Org-isolation middleware: bind X-Org-Id to JWT claim",
+      "depends_on": [
+        "T-301"
+      ],
+      "blocks": [],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/src/middleware/org_isolation.js"
+      ],
+      "git_branch": "task/T-302-org-isolation",
+      "estimated_effort": "0.5d",
+      "risk": "HIGH",
+      "acceptance": [
+        "ACC-04-02"
+      ]
+    },
+    {
+      "id": "T-303",
+      "title": "Harden CORS to FRONTEND_URL allowlist; remove TODO comment",
+      "depends_on": [],
+      "blocks": [],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/src/index.js"
+      ],
+      "git_branch": "task/T-303-cors-allowlist",
+      "estimated_effort": "0.5d",
+      "risk": "MEDIUM",
+      "acceptance": [
+        "ACC-04-03"
+      ]
+    },
+    {
+      "id": "T-304",
+      "title": "POST /api/auth/login (rate-limited) + JWT issuance",
+      "depends_on": [
+        "T-301"
+      ],
+      "blocks": [
+        "T-305"
+      ],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/src/routes/auth.js",
+        "cyberrx-api/src/services/auth.js"
+      ],
+      "git_branch": "task/T-304-login",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "acceptance": [
+        "ACC-04-04"
+      ]
+    },
+    {
+      "id": "T-305",
+      "title": "POST /api/auth/signup \u2014 org-scoped, no cross-org creation",
+      "depends_on": [
+        "T-304"
+      ],
+      "blocks": [],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/src/routes/auth.js"
+      ],
+      "git_branch": "task/T-305-signup",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "acceptance": [
+        "ACC-04-05"
+      ]
+    },
+    {
+      "id": "T-306",
+      "title": "NAV: add 'Internal Audit' page (F08g); copy audit chunks out of CRODash",
+      "depends_on": [
+        "T-301"
+      ],
+      "blocks": [
+        "T-307",
+        "T-308",
+        "T-309"
+      ],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              8408,
+              9320
+            ],
+            "anchor": "function CRODash(props) {",
+            "component": "CRODash",
+            "reason": "Find and lift the audit-only sections; keep CRO unchanged"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/pages/AuditDash.jsx",
+        "frontend/src/App.jsx (NAV)"
+      ],
+      "git_branch": "task/T-306-audit-split",
+      "estimated_effort": "2d",
+      "risk": "MEDIUM",
+      "acceptance": [
+        "ACC-04-06"
+      ]
+    },
+    {
+      "id": "T-307",
+      "title": "Audit dashboard: control testing UI (plan/procedure/evidence/result)",
+      "depends_on": [
+        "T-306"
+      ],
+      "blocks": [],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "frontend/src/pages/AuditDash.jsx"
+      ],
+      "git_branch": "task/T-307-control-testing",
+      "estimated_effort": "2d",
+      "risk": "MEDIUM",
+      "acceptance": [
+        "ACC-04-07"
+      ]
+    },
+    {
+      "id": "T-308",
+      "title": "Findings management table + repeat-finding detection",
+      "depends_on": [
+        "T-307"
+      ],
+      "blocks": [],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "frontend/src/pages/AuditDash.jsx",
+        "cyberrx-api/src/services/repeat_findings.js"
+      ],
+      "git_branch": "task/T-308-findings-mgmt",
+      "estimated_effort": "1.5d",
+      "risk": "MEDIUM",
+      "acceptance": [
+        "ACC-04-08",
+        "ACC-04-09"
+      ]
+    },
+    {
+      "id": "T-309",
+      "title": "Evidence ingestion API: POST /api/evidence (PDF \u2192 OCR \u2192 control extraction for 5 NIST CSF controls)",
+      "depends_on": [
+        "T-301"
+      ],
+      "blocks": [
+        "T-310"
+      ],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/src/routes/evidence.js",
+        "cyberrx-api/src/services/ocr.js",
+        "cyberrx-api/src/services/control_extraction.js"
+      ],
+      "git_branch": "task/T-309-evidence-ingestion",
+      "estimated_effort": "3d",
+      "risk": "HIGH",
+      "acceptance": [
+        "ACC-04-10"
+      ]
+    },
+    {
+      "id": "T-310",
+      "title": "Control drift detection: compare attested MFA% vs Okta /api/v1/users sample",
+      "depends_on": [
+        "T-309"
+      ],
+      "blocks": [],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/src/services/drift_detection.js",
+        "cyberrx-api/tests/integration/mfa_drift.spec.js"
+      ],
+      "git_branch": "task/T-310-drift-mfa",
+      "estimated_effort": "1.5d",
+      "risk": "MEDIUM",
+      "acceptance": [
+        "ACC-04-11"
+      ]
+    },
+    {
+      "id": "T-311",
+      "title": "Multi-tenant secret isolation via AWS Secrets Manager scoped per orgId",
+      "depends_on": [
+        "T-302"
+      ],
+      "blocks": [],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "cyberrx-api/src/utils/vault.js",
+            "reason": "VAULT_MODE='aws' path already drafted; finish it"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "cyberrx-api/src/utils/vault.js",
+        "docs/runbooks/secrets-manager-rotation.md"
+      ],
+      "git_branch": "task/T-311-tenant-secret-isolation",
+      "estimated_effort": "2d",
+      "risk": "HIGH",
+      "acceptance": [
+        "ACC-04-12"
+      ]
+    }
+  ],
+  "validator_team_checks": {
+    "acceptance": "Every ACC-04-* has an automated test in artifact_paths.",
+    "security": "Pen-test sweep on Month-4 branches; OWASP top-10 baseline pass.",
+    "no_regression": "BCBS demo flow green at every PR. CRODash content unchanged after audit split.",
+    "integration": "End-to-end: signup \u2192 login \u2192 JWT \u2192 CRUD on findings \u2192 cross-org access denied."
+  },
+  "risks": [
+    {
+      "risk": "Hidden internal callers depend on the all-origins CORS",
+      "mitigation": "Audit caller list before merge; staged rollout"
+    },
+    {
+      "risk": "JWT rollout breaks the BCBS demo flow",
+      "mitigation": "Demo tenant gets a long-lived demo JWT in dev mode; documented"
+    },
+    {
+      "risk": "Evidence OCR + AI control extraction accuracy is unbounded",
+      "mitigation": "Hand-validate 50-document corpus; require >85% precision before ACC-04-10 closes"
+    }
+  ],
+  "out_of_scope": [
+    "Exception workflow (Month 5)",
+    "SOC2 certification readiness (Month 6)",
+    "Splitting App.jsx (Month 6)"
+  ],
+  "stop_conditions": [
+    "Disabling auth in any environment to 'temporarily' unblock work.",
+    "Any pivot that puts customer PHI in env vars instead of Secrets Manager."
+  ]
+}

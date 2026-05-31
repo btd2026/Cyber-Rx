@@ -14,45 +14,14 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { query } = require('../utils/db');
-
-// Rate limiting (simple in-memory implementation)
-const loginAttempts = new Map();
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
-const MAX_LOGIN_ATTEMPTS = 5;
-
-/**
- * Rate limiting middleware for login endpoint
- */
-function checkRateLimit(req, res, next) {
-  const ip = req.ip || req.connection.remoteAddress;
-  const now = Date.now();
-
-  // Clean old attempts
-  for (const [key, attempts] of loginAttempts.entries()) {
-    if (now - attempts.timestamp > RATE_LIMIT_WINDOW) {
-      loginAttempts.delete(key);
-    }
-  }
-
-  // Check current IP
-  const attempts = loginAttempts.get(ip);
-  if (attempts && attempts.count >= MAX_LOGIN_ATTEMPTS) {
-    const retryAfter = Math.ceil((attempts.timestamp + RATE_LIMIT_WINDOW - now) / 1000);
-    return res.set('Retry-After', retryAfter).status(429).json({
-      error: 'Too many login attempts. Please try again later.',
-      retryAfter: `${retryAfter} seconds`
-    });
-  }
-
-  next();
-}
+const { authLoginLimiter, authSignupLimiter } = require('../middleware/rateLimit');
 
 /**
  * POST /api/auth/login
  * Authenticate user and issue JWT token
- * Rate-limited to 5 attempts per IP per minute
+ * Rate-limited to 5 attempts per IP per minute (Redis-backed)
  */
-router.post('/login', checkRateLimit, async (req, res) => {
+router.post('/login', authLoginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -65,12 +34,6 @@ router.post('/login', checkRateLimit, async (req, res) => {
     const user = users[0];
 
     if (!user) {
-      // Record failed attempt
-      const ip = req.ip || req.connection.remoteAddress;
-      const attempts = loginAttempts.get(ip) || { count: 0, timestamp: Date.now() };
-      attempts.count++;
-      loginAttempts.set(ip, attempts);
-
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -80,17 +43,8 @@ router.post('/login', checkRateLimit, async (req, res) => {
                            (await bcrypt.compare(password, user.password || ''));
 
     if (!passwordMatch) {
-      const ip = req.ip || req.connection.remoteAddress;
-      const attempts = loginAttempts.get(ip) || { count: 0, timestamp: Date.now() };
-      attempts.count++;
-      loginAttempts.set(ip, attempts);
-
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-
-    // Clear successful login attempts
-    const ip = req.ip || req.connection.remoteAddress;
-    loginAttempts.delete(ip);
 
     // Get organization details
     const orgs = await query('SELECT * FROM orgs WHERE id = $1', [user.org_id]);
@@ -136,8 +90,9 @@ router.post('/login', checkRateLimit, async (req, res) => {
  * POST /api/auth/signup
  * Create a new user scoped to an organization
  * No cross-org signup allowed - must have valid org_id
+ * Rate-limited to 3 attempts per IP per minute (Redis-backed)
  */
-router.post('/signup', async (req, res) => {
+router.post('/signup', authSignupLimiter, async (req, res) => {
   try {
     const { email, password, role, orgId, name } = req.body;
 

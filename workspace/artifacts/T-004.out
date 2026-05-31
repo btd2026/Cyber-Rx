@@ -1,0 +1,85 @@
+# T-004: Background Scheduler Resolution
+
+## Decision: DEPLOY as Render Background Worker
+
+The scheduler.js has been successfully wired up as a Render Background Worker.
+
+## Rationale
+
+### Why Deploy (Not Remove)
+
+1. **Core Business Value**: The scheduler automates collection of critical security metrics (MFA, EDR, patching, phishing, training) which is central to CyberRx's value proposition.
+
+2. **Endpoints Are Implemented**: The sync endpoints (`/api/tools/{tool}/sync`) are fully implemented in `cyberrx-api/src/routes/tools.js` with real API integrations for:
+   - Okta (MFA percentage)
+   - CrowdStrike (EDR coverage)
+   - Splunk (SIEM log retention)
+   - KnowBe4 (phishing click rate)
+   - Tenable (patch compliance)
+   - ServiceNow (MTTR)
+   - CyberArk (PAM coverage)
+   - Workday (security training completion)
+
+3. **Upstream Dependency**: The Risk Correlation Engine (Milestone M1, tasks T-010/T-011/T-012) requires fresh metrics data to function properly.
+
+4. **Graceful Degradation**: The scheduler is designed with fallback demo values when credentials aren't available, making it safe to run even during initial deployment.
+
+5. **Production Architecture Fit**: Background workers are the standard pattern for recurring tasks in microservice architectures. Render's free tier supports this use case.
+
+### Implementation Details
+
+**Files Modified:**
+1. `cyberrx-api/render.yaml` - Added background worker entry
+2. `cyberrx-api/package.json` - Added `npm run scheduler` script
+
+**Render Configuration:**
+- Service Type: Background Worker
+- Name: cyberrx-scheduler
+- Start Command: `npm run scheduler` (executes `node src/scheduler.js`)
+- Schedule: Every 15 minutes (hardcoded in scheduler.js)
+- API Base: Points to production API (`https://cyberrx-api.onrender.com`)
+- Database: Uses shared cyberrx-db connection
+
+**Scheduler Behavior:**
+- Runs immediately on startup, then every 15 minutes
+- Checks each org's configured tools against their last sync timestamp
+- Triggers sync only if the configured interval has elapsed:
+  - Okta, CrowdStrike, Tenable: 24 hours
+  - Splunk, ServiceNow, CyberArk: 168 hours (7 days)
+  - KnowBe4, Workday: 720 hours (30 days)
+- Stores results in the `metrics` table with source tagging
+
+## Deployment Impact
+
+### Positive Effects
+- Automated metric collection reduces manual dashboard updates
+- Consistent data refresh for executive dashboards
+- Enables the Risk Correlation Engine to function with real data
+- Supports the healthcare compliance monitoring use case
+
+### Considerations
+- Scheduler assumes credential vault is functional (currently in local mode per appendix)
+- Should be monitored after T-003 (org isolation) to ensure proper org scoping
+- May contribute to Render free tier CPU time limits (needs monitoring)
+
+## Testing Recommendations
+
+1. **Local Testing**: Run `npm run scheduler` locally to verify it connects to the database and API
+2. **Deploy Testing**: After Render deployment, check Render logs for scheduler startup and sync attempts
+3. **Database Verification**: Query the `metrics` table to confirm new rows are being inserted
+4. **API Verification**: Call `/api/tools/{tool}/sync` manually to test individual tool integrations
+
+## Related Tasks
+
+This task unblocks:
+- **T-010/T-011/T-012** (Risk Correlation Engine) - requires fresh metrics data
+- **T-003** (Org Isolation) - scheduler respects org_id, but needs proper auth binding
+
+## Git Commit
+
+Branch: `task/T-004-scheduler`
+Commit: `chore: resolve background scheduler deployment`
+
+Files changed:
+- cyberrx-api/render.yaml (added background worker entry)
+- cyberrx-api/package.json (added scheduler script)

@@ -1,0 +1,100 @@
+# T-000: Code Cartography - App.jsx Index
+
+## Task Summary
+Produced workspace/context/appjsx-index.json mapping 26 pages/components to line ranges, shared state, imports, and routing.
+
+## Execution Method
+- **NEVER loaded the full 24,559-line App.jsx at once** (per CLAUDE.md Rule #1)
+- Used grep to identify component boundaries: `grep -n "^function Landing..."`
+- Analyzed bounded chunks via Read with offset+limit
+- Identified sharedProps definition at line 23850
+- Traced routing logic at lines 23938-24010
+
+## Key Findings
+
+### File Structure
+- **Total lines**: 24,559
+- **Imports**: React, { useState, useEffect, useRef } (line 1)
+- **Theme**: var C = { ... } (line 4)
+- **Navigation**: NAV array with 18 main pages (line 113)
+- **Shared state root**: lines 23525-23850
+- **sharedProps definition**: line 23850-23935
+- **Routing logic**: lines 23938-24010
+
+### Pages Identified: 26 total
+
+#### Auth Flow (4 pages)
+1. **landing** → Landing (lines 3480-3576) - routed by phase==="landing"
+2. **login** → Login (lines 3577-3623) - routed by phase==="login"
+3. **mfa** → MFA (lines 3624-4185) - routed by phase==="mfa"
+4. **welcome** → WelcomePage (lines 16996-17332) - routed by phase==="welcome"
+
+#### Main App Pages (22 pages)
+5. **setup** → Setup (lines 4186-6067) - Org Profile & Setup wizard
+6. **home** → Home (lines 6068-7325) - Home dashboard
+7. **dashboard** → CISODash (lines 7326-8407) - CISO Dashboard
+8. **cro** → CRODash (lines 8408-9320) - CRO / Audit
+9. **cfo** → CFODash (lines 9321-9976) - CFO Dashboard
+10. **boarddash** → BoardDash (lines 9977-10621) - Board Dashboard
+11. **controls** → Controls (lines 10622-10730) - Control Validation
+12. **appmap** → AppMap (lines 10731-10912) - Application Map
+13. **vendormap** → VendorEcosystem (lines 10913-11180) - Vendor Ecosystem Map
+14. **assets** → ClaimLifecycle (lines 11181-13466) - Claim Lifecycle
+15. **hub** → DashHub (lines 13467-14263) - Command Center
+16. **bizlines** → BizLines (lines 14264-14980) - Business Lines
+17. **scoring** → Scoring (lines 14981-15078) - Risk Scoring + MITRE
+18. **evidence** → Evidence (lines 15079-15327) - Evidence Repository
+19. **board** → Board (lines 15328-15491) - Board Risk Report
+20. **execution** → Execution (lines 15492-17332) - Execution Layer
+21. **docdash** → DocDash (lines 18519-18882) - Document Dashboard
+22. **bizmap** → BusinessMapDash (lines 18883-19762) - Business Map
+23. **apiadapter** → CyberRxAPIAdapter (lines 19763-20254) - CyberRx API Adapter
+24. **processflow** → ProcessFlowDash (lines 20255-22060) - Process Flow
+25. **attackpaths** → AttackPathsModule (lines 22061-22576) - Attack Path Analyzer
+26. **crownjewels** → CrownJewelsModule (lines 22577-22683) - Crown Jewels Discovery
+27. **crown** → CrownJewelMap (lines 22684-23529) - Crown Jewel Map
+
+### Shared State Architecture
+All pages receive **sharedProps** (defined line 23850-23935) which includes:
+- Navigation: `go`, `goBack`
+- Org profile: `orgName`, `orgType`, `members`, `email`
+- Financials: `revenue`, `surplus`, `ibnr`, `itBudget`, `insLimit`
+- Security posture: `mfaPct`, `edrPct`, `siemDays`, `phishingPct`, `patchPct`, `mttdHrs`, `mttrHrs`, `trainingPct`, `pamPct`, `vulnSLApct`
+- Tool integration: `syncMeta`, `rootInfraSel`, `syncStatus`, `syncPct`, `lastSync`
+- Business context: `linesOfBiz`, `bcbsAffiliated`, `hasFEP`
+- Execution: `execActions`, `setExecActions`
+- Evidence: `docResults`, `setDocResults`, `appPolicyFiles`, `setAppPolicyFiles`
+
+### Demo Data
+Embedded datasets used across components:
+- ACTIONS (execution actions)
+- PROCS (business processes)
+- FINDINGS (security findings)
+- ALERTS (security alerts)
+- FINDING_OPENED (finding ages)
+
+### Acceptance Criteria Met
+✅ All 26 pages listed with start/end line numbers
+✅ Each entry lists shared state/hooks it reads and its imports
+✅ No step required loading the entire file into a single context
+
+## Output Location
+**workspace/context/appjsx-index.json**
+
+## Usage for Future Tasks
+When a task needs to work with a specific page:
+1. Look up the page ID in the index
+2. Find its line_range
+3. Read ONLY that range: `sed -n 'START,ENDp' frontend/src/App.jsx`
+4. Reference shared_state_used to understand which props flow in
+
+Example: To modify CISODash
+```bash
+sed -n '7326,8407p' frontend/src/App.jsx
+```
+
+## Notes
+- Line ranges are approximate (component ends before next component starts)
+- Some components have extensive local state (not all enumerated)
+- Utility components (InfoModal, Btn, Card, Input, etc.) listed separately
+- The file uses phase-based routing for auth flow + page-based routing for app pages

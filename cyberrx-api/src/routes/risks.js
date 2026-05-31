@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const { Risk } = require('../models');
 const { authenticateJWT } = require('../middleware/auth');
+const { requirePermission, requireAnyPermission } = require('../middleware/rbac');
 
 /**
  * Risks API Routes
@@ -19,7 +20,7 @@ function generateId() {
 /**
  * POST /api/risks - Create a new risk
  */
-router.post('/', authenticateJWT, async (req, res) => {
+router.post('/', authenticateJWT, requireAnyPermission(['security.risks.create', 'risk.register.create']), async (req, res) => {
   try {
     const {
       title,
@@ -99,7 +100,7 @@ router.post('/', authenticateJWT, async (req, res) => {
 /**
  * GET /api/risks - List all risks for the org
  */
-router.get('/', authenticateJWT, async (req, res) => {
+router.get('/', authenticateJWT, requirePermission('security.risks.view'), async (req, res) => {
   try {
     const organizationId = req.orgId;
     const { severity, status, businessProcessId } = req.query;
@@ -128,7 +129,7 @@ router.get('/', authenticateJWT, async (req, res) => {
 /**
  * GET /api/risks/high-exposure - Get risks with high financial exposure
  */
-router.get('/high-exposure', authenticateJWT, async (req, res) => {
+router.get('/high-exposure', authenticateJWT, requirePermission('financial.exposure.view'), async (req, res) => {
   try {
     const organizationId = req.orgId;
     const { minExposure } = req.query;
@@ -152,7 +153,7 @@ router.get('/high-exposure', authenticateJWT, async (req, res) => {
 /**
  * GET /api/risks/by-business-process/:id - Get risks by business process ID
  */
-router.get('/by-business-process/:id', authenticateJWT, async (req, res) => {
+router.get('/by-business-process/:id', authenticateJWT, requirePermission('security.risks.view'), async (req, res) => {
   try {
     const { id } = req.params;
     const organizationId = req.orgId;
@@ -174,7 +175,7 @@ router.get('/by-business-process/:id', authenticateJWT, async (req, res) => {
 /**
  * GET /api/risks/by-asset/:id - Get risks by asset ID
  */
-router.get('/by-asset/:id', authenticateJWT, async (req, res) => {
+router.get('/by-asset/:id', authenticateJWT, requirePermission('security.risks.view'), async (req, res) => {
   try {
     const { id } = req.params;
     const organizationId = req.orgId;
@@ -196,7 +197,7 @@ router.get('/by-asset/:id', authenticateJWT, async (req, res) => {
 /**
  * GET /api/risks/:id - Get a specific risk
  */
-router.get('/:id', authenticateJWT, async (req, res) => {
+router.get('/:id', authenticateJWT, requirePermission('security.risks.view'), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -221,7 +222,7 @@ router.get('/:id', authenticateJWT, async (req, res) => {
 /**
  * PUT /api/risks/:id - Update a risk
  */
-router.put('/:id', authenticateJWT, async (req, res) => {
+router.put('/:id', authenticateJWT, requireAnyPermission(['security.risks.update', 'risk.register.update']), async (req, res) => {
   try {
     const { id } = req.params;
     const {
@@ -293,7 +294,7 @@ router.put('/:id', authenticateJWT, async (req, res) => {
 /**
  * DELETE /api/risks/:id - Delete a risk
  */
-router.delete('/:id', authenticateJWT, async (req, res) => {
+router.delete('/:id', authenticateJWT, requireAnyPermission(['security.risks.delete', 'risk.register.delete']), async (req, res) => {
   try {
     const { id } = req.params;
 

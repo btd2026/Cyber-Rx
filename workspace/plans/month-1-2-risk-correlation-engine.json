@@ -1,0 +1,577 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-05-30T04:08:56Z",
+  "generated_by": "Decomposer (manual run)",
+  "git_head": "f8c8ab934039345ccdef1a2b4d06f466914c9e80",
+  "appjsx_index_sha256": "63d1cc21ef9ca19e8528ee3fb5963e8aac0677853a5cf17c634061a917a94d2c",
+  "source_of_truth": "COVERAGE_ASSESSMENT.md",
+  "execution_prompt": "PRODUCTION_PROMPT.md",
+  "metadata": {
+    "schema_version": "1.0",
+    "generated_at": "2026-05-30T04:08:56Z",
+    "generated_by": "Decomposer (manual run)",
+    "git_head": "f8c8ab934039345ccdef1a2b4d06f466914c9e80",
+    "appjsx_index_sha256": "63d1cc21ef9ca19e8528ee3fb5963e8aac0677853a5cf17c634061a917a94d2c",
+    "source_of_truth": "COVERAGE_ASSESSMENT.md",
+    "execution_prompt": "PRODUCTION_PROMPT.md",
+    "month": "1-2",
+    "title": "Risk Correlation Engine",
+    "weeks": [
+      1,
+      8
+    ],
+    "assessment_section": "\u00a73 #2, \u00a75 (data model), \u00a79 Month 1-2",
+    "production_prompt_clause": "Sequence step 1"
+  },
+  "goal": "Stand up the data model + engine that turns a technical finding into an executive narrative with business-impact, framework citations, legal obligations, and owner assignment, exactly as shown in the assessment's Final Recommendation screenshot.",
+  "definition_of_done": [
+    "Six new entities exist with migrations + rollbacks: BusinessProcess, Asset, DataObject, ThreatScenario, LegalObligation, ExecutiveOwner.",
+    "Ten Tier-1 Crown Jewel BusinessProcess records are seeded for the BCBS demo tenant.",
+    "POST /api/correlate accepts a findingId and returns the executive narrative in <300 ms p50 for the seeded data set.",
+    "A 'Correlated Finding' route renders the narrative in <3 clicks from any executive dashboard.",
+    "A healthcare CIO/CISO test viewer can answer 'what is this, who owns it, what's next?' in <30 seconds on the F-001 NASCO worked example."
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "ACC-12-01",
+      "criterion": "BusinessProcess table includes id, name, tier, owner_role, supportedBy[], createsDataObjects[], governedByControls[]",
+      "validator": "schema_check"
+    },
+    {
+      "id": "ACC-12-02",
+      "criterion": "Asset table includes hostname/ip, type, applicationId[], dataClassification[], owner",
+      "validator": "schema_check"
+    },
+    {
+      "id": "ACC-12-03",
+      "criterion": "DataObject supports types PHI/PII/PCI/Financial/Legal/Confidential with sensitivity + recordCount",
+      "validator": "schema_check"
+    },
+    {
+      "id": "ACC-12-04",
+      "criterion": "ThreatScenario references mitreTechnique[] and probability/impactLevel",
+      "validator": "schema_check"
+    },
+    {
+      "id": "ACC-12-05",
+      "criterion": "LegalObligation stores source (HIPAA/CMS/State/NAIC/Contract), citation, notificationTimeline, applicability[]",
+      "validator": "schema_check"
+    },
+    {
+      "id": "ACC-12-06",
+      "criterion": "ExecutiveOwner assigns a roleId per scope (processes[], controls[], risks[])",
+      "validator": "schema_check"
+    },
+    {
+      "id": "ACC-12-07",
+      "criterion": "10 Tier-1 Crown Jewel processes seeded for demo tenant (Claims Adjudication, Enrollment, Provider Network, Care Mgmt, Payment Integrity, Member Services, Actuarial, Government Programs, Pharmacy/PBM, Compliance & Regulatory)",
+      "validator": "seed_integrity_check"
+    },
+    {
+      "id": "ACC-12-08",
+      "criterion": "Sample LegalObligation seeds include OCR \u00a7164.400 (60-day notification), CMS 42 CFR \u00a7422.306(c)(1) (5-day), state DOI notification timelines",
+      "validator": "seed_integrity_check"
+    },
+    {
+      "id": "ACC-12-09",
+      "criterion": "POST /api/correlate accepts {findingId} and returns {findingId, businessProcess[], dataObjects[], threatScenario, frameworks[], legalObligations[], owner{remediation, oversight, legal}, auditEvidenceRequired}",
+      "validator": "integration_test"
+    },
+    {
+      "id": "ACC-12-10",
+      "criterion": "Endpoint p50 latency <300 ms over 100 trials on seeded data",
+      "validator": "perf_test"
+    },
+    {
+      "id": "ACC-12-11",
+      "criterion": "Authenticated as a different org \u2192 403; authenticated as same org \u2192 200",
+      "validator": "security_test"
+    },
+    {
+      "id": "ACC-12-12",
+      "criterion": "Frontend route /correlated/:findingId renders the narrative matching the assessment's F-001 screenshot field-for-field",
+      "validator": "visual_diff"
+    },
+    {
+      "id": "ACC-12-13",
+      "criterion": "From CISODash, CFODash, CRODash a row click opens the narrative in <3 clicks",
+      "validator": "e2e_test"
+    },
+    {
+      "id": "ACC-12-14",
+      "criterion": "Healthcare CISO usability test: \u22654/5 testers identify owner + next step in <30s on the NASCO worked example",
+      "validator": "user_test"
+    }
+  ],
+  "context_manifest": {
+    "must_read": [
+      {
+        "path": "COVERAGE_ASSESSMENT.md",
+        "section": "\u00a75 Recommended Data Model"
+      },
+      {
+        "path": "COVERAGE_ASSESSMENT.md",
+        "section": "\u00a79 Final Recommendation (NASCO screenshot)"
+      },
+      {
+        "path": "cyberrx-api/src/utils/db.js",
+        "reason": "Existing schema initializer; new entities slot in alongside it"
+      },
+      {
+        "path": "cyberrx-api/src/routes/itsm.js",
+        "reason": "Pattern for org-scoped routes; correlate endpoint follows same auth pattern"
+      },
+      {
+        "path": "frontend/src/App.jsx",
+        "line_range": [
+          7326,
+          8407
+        ],
+        "anchor": "function CISODash(props) {",
+        "component": "CISODash",
+        "reason": "Findings render here today; correlate-button needs to attach to this row template"
+      },
+      {
+        "path": "frontend/src/App.jsx",
+        "line_range": [
+          9321,
+          9976
+        ],
+        "anchor": "function CFODash(props) {",
+        "component": "CFODash",
+        "reason": "Financial exposure here today; engine output reuses revenue/surplus/ibnr inputs"
+      },
+      {
+        "path": "frontend/src/App.jsx",
+        "line_range": [
+          8408,
+          9320
+        ],
+        "anchor": "function CRODash(props) {",
+        "component": "CRODash",
+        "reason": "Risk view consumes the same engine output"
+      },
+      {
+        "path": "frontend/src/App.jsx",
+        "line_range": [
+          6939,
+          7325
+        ],
+        "anchor": "function MetricDetailModal(props) {",
+        "component": "MetricDetailModal",
+        "reason": "Click-through modal that the new correlation modal will replace or extend"
+      }
+    ],
+    "should_not_read": [
+      "frontend/src/App.jsx in full \u2014 use line ranges from workspace/context/appjsx-index.json"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "T-101",
+      "title": "Migration: BusinessProcess entity",
+      "depends_on": [],
+      "blocks": [
+        "T-108",
+        "T-112"
+      ],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/migrations/0006_business_process.sql",
+        "cyberrx-api/migrations/0006_business_process.down.sql"
+      ],
+      "git_branch": "task/T-101-business-process",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "acceptance": [
+        "ACC-12-01"
+      ]
+    },
+    {
+      "id": "T-102",
+      "title": "Migration: Asset entity",
+      "depends_on": [],
+      "blocks": [
+        "T-109",
+        "T-112"
+      ],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/migrations/0007_asset.sql",
+        "cyberrx-api/migrations/0007_asset.down.sql"
+      ],
+      "git_branch": "task/T-102-asset",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "acceptance": [
+        "ACC-12-02"
+      ]
+    },
+    {
+      "id": "T-103",
+      "title": "Migration: DataObject entity",
+      "depends_on": [],
+      "blocks": [
+        "T-112"
+      ],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/migrations/0008_data_object.sql",
+        "cyberrx-api/migrations/0008_data_object.down.sql"
+      ],
+      "git_branch": "task/T-103-data-object",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "acceptance": [
+        "ACC-12-03"
+      ]
+    },
+    {
+      "id": "T-104",
+      "title": "Migration: ThreatScenario entity",
+      "depends_on": [],
+      "blocks": [
+        "T-111",
+        "T-112"
+      ],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/migrations/0009_threat_scenario.sql",
+        "cyberrx-api/migrations/0009_threat_scenario.down.sql"
+      ],
+      "git_branch": "task/T-104-threat-scenario",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "acceptance": [
+        "ACC-12-04"
+      ]
+    },
+    {
+      "id": "T-105",
+      "title": "Migration: LegalObligation entity",
+      "depends_on": [],
+      "blocks": [
+        "T-110",
+        "T-112"
+      ],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/migrations/0010_legal_obligation.sql",
+        "cyberrx-api/migrations/0010_legal_obligation.down.sql"
+      ],
+      "git_branch": "task/T-105-legal-obligation",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "acceptance": [
+        "ACC-12-05"
+      ]
+    },
+    {
+      "id": "T-106",
+      "title": "Migration: ExecutiveOwner entity",
+      "depends_on": [],
+      "blocks": [
+        "T-112"
+      ],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/migrations/0011_executive_owner.sql",
+        "cyberrx-api/migrations/0011_executive_owner.down.sql"
+      ],
+      "git_branch": "task/T-106-executive-owner",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "acceptance": [
+        "ACC-12-06"
+      ]
+    },
+    {
+      "id": "T-107",
+      "title": "Extend Risk + Finding with FK columns (businessProcessId[], dataObjectIds[], threatScenarioId, legalObligationId[], executiveOwnerId)",
+      "depends_on": [
+        "T-101",
+        "T-102",
+        "T-103",
+        "T-104",
+        "T-105",
+        "T-106"
+      ],
+      "blocks": [
+        "T-112"
+      ],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/migrations/0012_risk_finding_correlation_columns.sql"
+      ],
+      "git_branch": "task/T-107-risk-finding-correlation-cols",
+      "estimated_effort": "0.5d",
+      "risk": "MEDIUM",
+      "acceptance": [
+        "ACC-12-01",
+        "ACC-12-02",
+        "ACC-12-03",
+        "ACC-12-04",
+        "ACC-12-05",
+        "ACC-12-06"
+      ]
+    },
+    {
+      "id": "T-108",
+      "title": "Seed: 10 Tier-1 Crown Jewel BusinessProcess records (BCBS demo tenant)",
+      "depends_on": [
+        "T-101"
+      ],
+      "blocks": [
+        "T-112"
+      ],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/seeds/2026_06_01_crown_jewels.sql"
+      ],
+      "git_branch": "task/T-108-seed-crown-jewels",
+      "estimated_effort": "1d",
+      "risk": "LOW",
+      "acceptance": [
+        "ACC-12-07"
+      ]
+    },
+    {
+      "id": "T-109",
+      "title": "Seed: NASCO + HealthEdge + Genesys assets (3 worked-example systems)",
+      "depends_on": [
+        "T-102"
+      ],
+      "blocks": [
+        "T-112",
+        "T-114"
+      ],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/seeds/2026_06_02_demo_assets.sql"
+      ],
+      "git_branch": "task/T-109-seed-demo-assets",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "acceptance": []
+    },
+    {
+      "id": "T-110",
+      "title": "Seed: LegalObligation rows for HIPAA/CMS/state notification regimes",
+      "depends_on": [
+        "T-105"
+      ],
+      "blocks": [
+        "T-112"
+      ],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/seeds/2026_06_03_legal_obligations.sql"
+      ],
+      "git_branch": "task/T-110-seed-legal-obligations",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "acceptance": [
+        "ACC-12-08"
+      ]
+    },
+    {
+      "id": "T-111",
+      "title": "Seed: ThreatScenario library mapped to MITRE ATT&CK (use MITRE_SCENARIOS @ App.jsx 12,692-12,850)",
+      "depends_on": [
+        "T-104"
+      ],
+      "blocks": [
+        "T-112"
+      ],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              12851,
+              13193
+            ],
+            "anchor": "function MitreTab(props) {",
+            "component": "MitreTab",
+            "reason": "MITRE_SCENARIOS is parsed and rendered here today"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "cyberrx-api/seeds/2026_06_04_threat_scenarios.sql"
+      ],
+      "git_branch": "task/T-111-seed-threat-scenarios",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "acceptance": []
+    },
+    {
+      "id": "T-112",
+      "title": "Build correlation engine: POST /api/correlate {findingId} \u2192 narrative JSON",
+      "depends_on": [
+        "T-107",
+        "T-108",
+        "T-109",
+        "T-110",
+        "T-111"
+      ],
+      "blocks": [
+        "T-113",
+        "T-114",
+        "T-115"
+      ],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/src/routes/correlate.js",
+        "cyberrx-api/src/services/correlate.js"
+      ],
+      "git_branch": "task/T-112-correlation-engine",
+      "estimated_effort": "3d",
+      "risk": "HIGH",
+      "acceptance": [
+        "ACC-12-09",
+        "ACC-12-10",
+        "ACC-12-11"
+      ]
+    },
+    {
+      "id": "T-113",
+      "title": "Frontend route + component: /correlated/:findingId narrative view (matches NASCO screenshot)",
+      "depends_on": [
+        "T-112"
+      ],
+      "blocks": [
+        "T-114"
+      ],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              6939,
+              7325
+            ],
+            "anchor": "function MetricDetailModal(props) {",
+            "component": "MetricDetailModal",
+            "reason": "Pattern to follow for click-through modal"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/pages/CorrelatedFinding.jsx"
+      ],
+      "git_branch": "task/T-113-correlated-finding-ui",
+      "estimated_effort": "2d",
+      "risk": "MEDIUM",
+      "acceptance": [
+        "ACC-12-12"
+      ]
+    },
+    {
+      "id": "T-114",
+      "title": "Wire CISODash + CFODash + CRODash to open correlation narrative on row click",
+      "depends_on": [
+        "T-113"
+      ],
+      "blocks": [
+        "T-115"
+      ],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              7326,
+              8407
+            ],
+            "anchor": "function CISODash(props) {",
+            "component": "CISODash",
+            "reason": "Add onRowClick \u2192 /correlated/:id"
+          },
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              9321,
+              9976
+            ],
+            "anchor": "function CFODash(props) {",
+            "component": "CFODash",
+            "reason": "Same"
+          },
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              8408,
+              9320
+            ],
+            "anchor": "function CRODash(props) {",
+            "component": "CRODash",
+            "reason": "Same"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/App.jsx (CISODash, CFODash, CRODash row-click handlers)"
+      ],
+      "git_branch": "task/T-114-wire-dashboards",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "acceptance": [
+        "ACC-12-13"
+      ]
+    },
+    {
+      "id": "T-115",
+      "title": "Validation: NASCO F-001 worked-example end-to-end test + healthcare CISO usability check (n\u22655)",
+      "depends_on": [
+        "T-114"
+      ],
+      "blocks": [],
+      "owner_role": "validator",
+      "artifact_paths": [
+        "cyberrx-api/tests/e2e/nasco_f001.spec.js",
+        "docs/user-testing/2026-07-correlation-usability.md"
+      ],
+      "git_branch": "task/T-115-validation",
+      "estimated_effort": "2d",
+      "risk": "MEDIUM",
+      "acceptance": [
+        "ACC-12-14"
+      ]
+    }
+  ],
+  "validator_team_checks": {
+    "acceptance": "Every ACC-12-* listed in this plan is covered by a test in the artifact_paths.",
+    "security": "T-112 enforces JWT + X-Org-Id binding. No findingId from another org returns 200.",
+    "no_regression": "Existing CISO, CFO, CRO, Board dashboards render the same data; only an extra column/button is added.",
+    "integration": "Smoke test: seed reset \u2192 POST /api/correlate for NASCO F-001 \u2192 expect canonical narrative JSON snapshot."
+  },
+  "risks": [
+    {
+      "risk": "ThreatScenario probability/impact numbers feel made-up to a healthcare CIO",
+      "mitigation": "Cite Verizon DBIR + HHS OCR breach statistics in seeds; document source per row"
+    },
+    {
+      "risk": "LegalObligation seed accidentally publishes wrong notification timelines",
+      "mitigation": "Outside-counsel review checkpoint before T-115 closes"
+    },
+    {
+      "risk": "Correlation engine becomes slow with realistic data volumes",
+      "mitigation": "Indexes on (findingId), (orgId, businessProcessId); perf gate in ACC-12-10"
+    }
+  ],
+  "out_of_scope": [
+    "CIO/CLO dashboards (Month 3)",
+    "Evidence collection / control drift (Month 4-5)",
+    "Splitting App.jsx (Month 6)",
+    "AI-generated executive summaries (Phase 2 of assessment)"
+  ],
+  "stop_conditions": [
+    "Changes to LegalObligation copy that could be construed as legal advice \u2014 require outside-counsel sign-off.",
+    "Any new endpoint that does not enforce JWT (per PRODUCTION_PROMPT.md Quality bars).",
+    "Touching the BCBS demo tenant data outside of additive seed migrations."
+  ]
+}

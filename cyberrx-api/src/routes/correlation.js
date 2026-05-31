@@ -1,8 +1,9 @@
 'use strict';
 const express = require('express');
 const router = express.Router();
-const CorrelationEngine = require('../services/CorrelationEngine');
+const CorrelationEngineOptimized = require('../services/CorrelationEngineOptimized');
 const { authenticateJWT } = require('../middleware/auth');
+const logger = require('../utils/logger');
 
 /**
  * Correlation Engine API Routes
@@ -19,14 +20,14 @@ router.post('/narrative/:findingId', authenticateJWT, async (req, res) => {
     const { findingId } = req.params;
     const organizationId = req.orgId;
 
-    const narrative = await CorrelationEngine.generateExecutiveNarrative(
+    const narrative = await CorrelationEngineOptimized.generateExecutiveNarrative(
       findingId,
       organizationId
     );
 
     res.json(narrative);
   } catch (err) {
-    console.error('Generate narrative error:', err.message);
+    logger.error('Generate narrative error:', err.message);
     if (err.message === 'Finding not found') {
       return res.status(404).json({ error: 'Finding not found' });
     }
@@ -38,7 +39,7 @@ router.post('/narrative/:findingId', authenticateJWT, async (req, res) => {
 });
 
 /**
- * POST /api/correlation/batch - Batch correlate multiple findings
+ * POST /api/correlation/batch - Batch correlate multiple findings (optimized parallel processing)
  */
 router.post('/batch', authenticateJWT, async (req, res) => {
   try {
@@ -53,15 +54,19 @@ router.post('/batch', authenticateJWT, async (req, res) => {
       return res.status(400).json({ error: 'Maximum 50 findings per batch' });
     }
 
-    const narratives = await CorrelationEngine.batchCorrelate(findingIds, organizationId);
+    const startTime = Date.now();
+    const narratives = await CorrelationEngineOptimized.batchCorrelate(findingIds, organizationId);
+    const duration = Date.now() - startTime;
 
     res.json({
       organizationId,
       count: narratives.length,
+      durationMs: duration,
+      avgPerFinding: Math.round(duration / findingIds.length),
       data: narratives
     });
   } catch (err) {
-    console.error('Batch correlate error:', err.message);
+    logger.error('Batch correlate error:', err.message);
     res.status(500).json({ error: 'Failed to batch correlate findings', message: err.message });
   }
 });
@@ -73,12 +78,64 @@ router.get('/summary', authenticateJWT, async (req, res) => {
   try {
     const organizationId = req.orgId;
 
-    const summary = await CorrelationEngine.getOrganizationRiskSummary(organizationId);
+    const summary = await CorrelationEngineOptimized.getOrganizationRiskSummary(organizationId);
 
     res.json(summary);
   } catch (err) {
-    console.error('Get summary error:', err.message);
+    logger.error('Get summary error:', err.message);
     res.status(500).json({ error: 'Failed to retrieve organization risk summary', message: err.message });
+  }
+});
+
+/**
+ * GET /api/correlation/performance - Get correlation performance metrics
+ */
+router.get('/performance', authenticateJWT, async (req, res) => {
+  try {
+    const organizationId = req.orgId;
+
+    const metrics = CorrelationEngineOptimized.getPerformanceMetrics();
+    const cacheStats = await CorrelationEngineOptimized.getCacheStats();
+
+    res.json({
+      organizationId,
+      metrics,
+      cacheStats,
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    logger.error('Get performance metrics error:', err.message);
+    res.status(500).json({ error: 'Failed to retrieve performance metrics', message: err.message });
+  }
+});
+
+/**
+ * POST /api/correlation/invalidate/:findingId - Invalidate correlation cache for a finding
+ */
+router.post('/invalidate/:findingId', authenticateJWT, async (req, res) => {
+  try {
+    const { findingId } = req.params;
+    const organizationId = req.orgId;
+
+    // Verify finding belongs to organization
+    const finding = await Finding.findById(findingId);
+    if (!finding) {
+      return res.status(404).json({ error: 'Finding not found' });
+    }
+    if (finding.organizationId !== organizationId) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    await CorrelationEngineOptimized.invalidateCache(findingId);
+
+    res.json({
+      message: 'Cache invalidated',
+      findingId,
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    logger.error('Invalidate cache error:', err.message);
+    res.status(500).json({ error: 'Failed to invalidate cache', message: err.message });
   }
 });
 

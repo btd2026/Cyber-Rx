@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const { Finding } = require('../models');
 const { authenticateJWT } = require('../middleware/auth');
+const { requirePermission, requireAnyPermission, requireAllPermissions } = require('../middleware/rbac');
 
 /**
  * Findings API Routes
@@ -20,7 +21,7 @@ function generateId() {
 /**
  * POST /api/findings - Create a new finding
  */
-router.post('/', authenticateJWT, async (req, res) => {
+router.post('/', authenticateJWT, requirePermission('security.findings.create'), async (req, res) => {
   try {
     const {
       title,
@@ -127,7 +128,7 @@ router.post('/', authenticateJWT, async (req, res) => {
 /**
  * GET /api/findings - List all findings for the org
  */
-router.get('/', authenticateJWT, async (req, res) => {
+router.get('/', authenticateJWT, requirePermission('security.findings.view'), async (req, res) => {
   try {
     const organizationId = req.orgId;
     const { severity, status, assetId, businessProcessId, isRepeat } = req.query;
@@ -154,7 +155,7 @@ router.get('/', authenticateJWT, async (req, res) => {
 /**
  * GET /api/findings/statistics - Get finding statistics
  */
-router.get('/statistics', authenticateJWT, async (req, res) => {
+router.get('/statistics', authenticateJWT, requirePermission('security.findings.view'), async (req, res) => {
   try {
     const organizationId = req.orgId;
 
@@ -173,7 +174,7 @@ router.get('/statistics', authenticateJWT, async (req, res) => {
 /**
  * GET /api/findings/repeats - Get repeat findings
  */
-router.get('/repeats', authenticateJWT, async (req, res) => {
+router.get('/repeats', authenticateJWT, requirePermission('security.findings.view'), async (req, res) => {
   try {
     const organizationId = req.orgId;
 
@@ -193,7 +194,7 @@ router.get('/repeats', authenticateJWT, async (req, res) => {
 /**
  * GET /api/findings/by-risk/:id - Get findings by risk ID
  */
-router.get('/by-risk/:id', authenticateJWT, async (req, res) => {
+router.get('/by-risk/:id', authenticateJWT, requirePermission('security.findings.view'), async (req, res) => {
   try {
     const { id } = req.params;
     const organizationId = req.orgId;
@@ -215,7 +216,7 @@ router.get('/by-risk/:id', authenticateJWT, async (req, res) => {
 /**
  * GET /api/findings/by-asset/:id - Get findings by asset ID
  */
-router.get('/by-asset/:id', authenticateJWT, async (req, res) => {
+router.get('/by-asset/:id', authenticateJWT, requirePermission('security.findings.view'), async (req, res) => {
   try {
     const { id } = req.params;
     const organizationId = req.orgId;
@@ -237,7 +238,7 @@ router.get('/by-asset/:id', authenticateJWT, async (req, res) => {
 /**
  * GET /api/findings/:id - Get a specific finding
  */
-router.get('/:id', authenticateJWT, async (req, res) => {
+router.get('/:id', authenticateJWT, requirePermission('security.findings.view'), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -262,7 +263,7 @@ router.get('/:id', authenticateJWT, async (req, res) => {
 /**
  * PUT /api/findings/:id - Update a finding
  */
-router.put('/:id', authenticateJWT, async (req, res) => {
+router.put('/:id', authenticateJWT, requirePermission('security.findings.update'), async (req, res) => {
   try {
     const { id } = req.params;
     const {
@@ -364,7 +365,7 @@ router.post('/:id/mark-repeat', authenticateJWT, async (req, res) => {
 /**
  * DELETE /api/findings/:id - Delete a finding
  */
-router.delete('/:id', authenticateJWT, async (req, res) => {
+router.delete('/:id', authenticateJWT, requirePermission('security.findings.delete'), async (req, res) => {
   try {
     const { id } = req.params;
 

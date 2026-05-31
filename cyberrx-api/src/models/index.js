@@ -8,6 +8,7 @@
 
 const BusinessProcess = require('./BusinessProcess');
 const Asset = require('./Asset');
+const Vendor = require('./Vendor');
 const DataObject = require('./DataObject');
 const ThreatScenario = require('./ThreatScenario');
 const LegalObligation = require('./LegalObligation');
@@ -19,10 +20,12 @@ const Control = require('./Control');
 const RemediationTask = require('./RemediationTask');
 const Evidence = require('./Evidence');
 const VendorRiskSignal = require('./VendorRiskSignal');
+const Narrative = require('./Narrative');
 
 module.exports = {
   BusinessProcess,
   Asset,
+  Vendor,
   DataObject,
   ThreatScenario,
   LegalObligation,
@@ -33,5 +36,6 @@ module.exports = {
   Control,
   RemediationTask,
   Evidence,
-  VendorRiskSignal
+  VendorRiskSignal,
+  Narrative
 };

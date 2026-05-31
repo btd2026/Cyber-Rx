@@ -1,0 +1,492 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-05-30T04:08:56Z",
+  "generated_by": "Decomposer (manual run)",
+  "git_head": "f8c8ab934039345ccdef1a2b4d06f466914c9e80",
+  "appjsx_index_sha256": "63d1cc21ef9ca19e8528ee3fb5963e8aac0677853a5cf17c634061a917a94d2c",
+  "source_of_truth": "COVERAGE_ASSESSMENT.md",
+  "execution_prompt": "PRODUCTION_PROMPT.md",
+  "metadata": {
+    "schema_version": "1.0",
+    "generated_at": "2026-05-30T04:08:56Z",
+    "generated_by": "Decomposer (manual run)",
+    "git_head": "f8c8ab934039345ccdef1a2b4d06f466914c9e80",
+    "appjsx_index_sha256": "63d1cc21ef9ca19e8528ee3fb5963e8aac0677853a5cf17c634061a917a94d2c",
+    "source_of_truth": "COVERAGE_ASSESSMENT.md",
+    "execution_prompt": "PRODUCTION_PROMPT.md",
+    "month": 3,
+    "title": "CIO + CLO Dashboards",
+    "weeks": [
+      9,
+      12
+    ],
+    "assessment_section": "\u00a73 #3-#4, \u00a74 (CIO + CLO user stories), \u00a79 Month 3",
+    "production_prompt_clause": "Sequence step 2"
+  },
+  "goal": "Ship the two missing executive dashboards (CIO, CLO) both backed by the Risk Correlation Engine, matching the user stories in \u00a74 of the assessment.",
+  "definition_of_done": [
+    "NAV adds 'CIO Dashboard' and 'CLO Dashboard' entries; mods F08e, F08f.",
+    "Every CIO acceptance criterion (assessment \u00a74 CIO) renders against demo data.",
+    "Every CLO acceptance criterion (assessment \u00a74 CLO) renders against demo data.",
+    "Both dashboards consume from POST /api/correlate; neither hard-codes findings.",
+    "'Technology Risk Summary' export produces a PDF the CIO can hand to the Board.",
+    "Breach Notification Workflow correctly computes notification windows for \u22653 US states using LegalObligation seeds."
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "ACC-03-01",
+      "criterion": "CIO dashboard shows assets with crown-jewel flag, business process, criticality, data class, vulns, patch status, support status",
+      "validator": "visual_check"
+    },
+    {
+      "id": "ACC-03-02",
+      "criterion": "Remediation backlog ranks by business impact, lists owner + cost-to-fix + ETA",
+      "validator": "logic_check"
+    },
+    {
+      "id": "ACC-03-03",
+      "criterion": "Crown-jewel-only filter persists across reloads (URL query param)",
+      "validator": "e2e_test"
+    },
+    {
+      "id": "ACC-03-04",
+      "criterion": "Unsupported/EoL tech section pulls supported=false from Asset table",
+      "validator": "data_check"
+    },
+    {
+      "id": "ACC-03-05",
+      "criterion": "Technology Risk Summary PDF export contains: top 5 risks, asset table, remediation backlog, owner",
+      "validator": "artifact_check"
+    },
+    {
+      "id": "ACC-03-06",
+      "criterion": "CLO dashboard shows OCR + state DOI + CMS exposure broken out by category",
+      "validator": "visual_check"
+    },
+    {
+      "id": "ACC-03-07",
+      "criterion": "Regulatory obligation tracker lists HIPAA/CMS/state laws sorted by applicability to org type",
+      "validator": "logic_check"
+    },
+    {
+      "id": "ACC-03-08",
+      "criterion": "Breach notification workflow: pick state + data type \u2192 returns timeline + pre-populated draft (CA, NY, MA at minimum)",
+      "validator": "e2e_test"
+    },
+    {
+      "id": "ACC-03-09",
+      "criterion": "Contract risk register supports CRUD on vendor contract terms (security clauses, audit rights, liability caps)",
+      "validator": "crud_test"
+    },
+    {
+      "id": "ACC-03-10",
+      "criterion": "Policy exception view flags exceptions whose justification language matches 'regulatory non-compliance' patterns",
+      "validator": "nlp_check"
+    },
+    {
+      "id": "ACC-03-11",
+      "criterion": "Both dashboards' findings rows open the correlation narrative (re-use T-113 route)",
+      "validator": "integration_test"
+    },
+    {
+      "id": "ACC-03-12",
+      "criterion": "Demo tenant: every CIO/CLO row references at least one BusinessProcess + one LegalObligation seeded in Month 1-2",
+      "validator": "fk_integrity_check"
+    }
+  ],
+  "context_manifest": {
+    "must_read": [
+      {
+        "path": "COVERAGE_ASSESSMENT.md",
+        "section": "\u00a74 CIO user story"
+      },
+      {
+        "path": "COVERAGE_ASSESSMENT.md",
+        "section": "\u00a74 CLO / General Counsel user story"
+      },
+      {
+        "path": "frontend/src/App.jsx",
+        "line_range": [
+          7326,
+          8407
+        ],
+        "anchor": "function CISODash(props) {",
+        "component": "CISODash",
+        "reason": "Layout/styling pattern to match"
+      },
+      {
+        "path": "frontend/src/App.jsx",
+        "line_range": [
+          9321,
+          9976
+        ],
+        "anchor": "function CFODash(props) {",
+        "component": "CFODash",
+        "reason": "Same; copy the KPI strip + drilldown idiom"
+      },
+      {
+        "path": "frontend/src/App.jsx",
+        "line_range": [
+          10913,
+          11180
+        ],
+        "anchor": "function VendorEcosystem(props) {",
+        "component": "VendorEcosystem",
+        "reason": "Crown-jewel filter pattern exists here; reuse"
+      },
+      {
+        "path": "frontend/src/App.jsx",
+        "line_range": [
+          10731,
+          10912
+        ],
+        "anchor": "function AppMap(props) {",
+        "component": "AppMap",
+        "reason": "Asset rendering pattern; CIO asset inventory follows this"
+      },
+      {
+        "path": "frontend/src/App.jsx",
+        "line_range": [
+          6939,
+          7325
+        ],
+        "anchor": "function MetricDetailModal(props) {",
+        "component": "MetricDetailModal",
+        "reason": "Click-through to correlation narrative reuses this modal shell"
+      }
+    ],
+    "should_not_read": [
+      "frontend/src/App.jsx in full"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "T-201",
+      "title": "Add NAV entries: CIODash (F08e), CLODash (F08f); update routing in CyberRxApp",
+      "depends_on": [],
+      "blocks": [
+        "T-202",
+        "T-209"
+      ],
+      "owner_role": "worker",
+      "context_manifest": {
+        "must_read": [
+          {
+            "path": "frontend/src/App.jsx",
+            "line_range": [
+              23524,
+              24021
+            ],
+            "anchor": "function CyberRxApp() {",
+            "component": "CyberRxApp",
+            "reason": "Page routing happens in renderPage() here"
+          }
+        ]
+      },
+      "artifact_paths": [
+        "frontend/src/App.jsx (NAV + CyberRxApp.renderPage)"
+      ],
+      "git_branch": "task/T-201-nav-entries",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "acceptance": []
+    },
+    {
+      "id": "T-202",
+      "title": "CIODash shell + KPI strip",
+      "depends_on": [
+        "T-201"
+      ],
+      "blocks": [
+        "T-203",
+        "T-207"
+      ],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "frontend/src/pages/CIODash.jsx"
+      ],
+      "git_branch": "task/T-202-ciodash-shell",
+      "estimated_effort": "1d",
+      "risk": "LOW",
+      "acceptance": []
+    },
+    {
+      "id": "T-203",
+      "title": "CIODash asset inventory table",
+      "depends_on": [
+        "T-202"
+      ],
+      "blocks": [
+        "T-205"
+      ],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "frontend/src/pages/CIODash.jsx"
+      ],
+      "git_branch": "task/T-203-asset-table",
+      "estimated_effort": "1d",
+      "risk": "LOW",
+      "acceptance": [
+        "ACC-03-01"
+      ]
+    },
+    {
+      "id": "T-204",
+      "title": "Crown-jewel filter (URL-persisted)",
+      "depends_on": [
+        "T-203"
+      ],
+      "blocks": [],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "frontend/src/pages/CIODash.jsx"
+      ],
+      "git_branch": "task/T-204-cj-filter",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "acceptance": [
+        "ACC-03-03"
+      ]
+    },
+    {
+      "id": "T-205",
+      "title": "Unsupported/EoL tech panel (consumes Asset.supported flag)",
+      "depends_on": [
+        "T-203"
+      ],
+      "blocks": [],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "frontend/src/pages/CIODash.jsx"
+      ],
+      "git_branch": "task/T-205-eol-tech",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "acceptance": [
+        "ACC-03-04"
+      ]
+    },
+    {
+      "id": "T-206",
+      "title": "Backup/recovery readiness scoring widget (CIODash)",
+      "depends_on": [
+        "T-202"
+      ],
+      "blocks": [],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "frontend/src/pages/CIODash.jsx"
+      ],
+      "git_branch": "task/T-206-backup-readiness",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "acceptance": []
+    },
+    {
+      "id": "T-207",
+      "title": "CIODash remediation backlog table (cost-to-fix, owner, ETA)",
+      "depends_on": [
+        "T-202"
+      ],
+      "blocks": [
+        "T-208"
+      ],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "frontend/src/pages/CIODash.jsx"
+      ],
+      "git_branch": "task/T-207-remediation-backlog",
+      "estimated_effort": "1.5d",
+      "risk": "MEDIUM",
+      "acceptance": [
+        "ACC-03-02"
+      ]
+    },
+    {
+      "id": "T-208",
+      "title": "Technology Risk Summary PDF export endpoint + button",
+      "depends_on": [
+        "T-207"
+      ],
+      "blocks": [],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "cyberrx-api/src/routes/exports.js",
+        "frontend/src/pages/CIODash.jsx"
+      ],
+      "git_branch": "task/T-208-tech-risk-pdf",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "acceptance": [
+        "ACC-03-05"
+      ]
+    },
+    {
+      "id": "T-209",
+      "title": "CLODash shell + KPI strip",
+      "depends_on": [
+        "T-201"
+      ],
+      "blocks": [
+        "T-210",
+        "T-211",
+        "T-212",
+        "T-213",
+        "T-214"
+      ],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "frontend/src/pages/CLODash.jsx"
+      ],
+      "git_branch": "task/T-209-clodash-shell",
+      "estimated_effort": "1d",
+      "risk": "LOW",
+      "acceptance": []
+    },
+    {
+      "id": "T-210",
+      "title": "Legal cyber exposure overview (OCR/CMS/state DOI categories)",
+      "depends_on": [
+        "T-209"
+      ],
+      "blocks": [],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "frontend/src/pages/CLODash.jsx"
+      ],
+      "git_branch": "task/T-210-legal-exposure",
+      "estimated_effort": "1d",
+      "risk": "LOW",
+      "acceptance": [
+        "ACC-03-06"
+      ]
+    },
+    {
+      "id": "T-211",
+      "title": "Regulatory obligation tracker (consumes LegalObligation seeds from T-110)",
+      "depends_on": [
+        "T-209"
+      ],
+      "blocks": [
+        "T-212"
+      ],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "frontend/src/pages/CLODash.jsx"
+      ],
+      "git_branch": "task/T-211-reg-obligation",
+      "estimated_effort": "1d",
+      "risk": "LOW",
+      "acceptance": [
+        "ACC-03-07"
+      ]
+    },
+    {
+      "id": "T-212",
+      "title": "Breach notification workflow + pre-populated drafts (CA, NY, MA)",
+      "depends_on": [
+        "T-211"
+      ],
+      "blocks": [],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "frontend/src/pages/CLODash.jsx",
+        "cyberrx-api/src/services/breach_notification.js"
+      ],
+      "git_branch": "task/T-212-breach-notification",
+      "estimated_effort": "2d",
+      "risk": "HIGH",
+      "acceptance": [
+        "ACC-03-08"
+      ]
+    },
+    {
+      "id": "T-213",
+      "title": "Contract risk register CRUD",
+      "depends_on": [
+        "T-209"
+      ],
+      "blocks": [],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "frontend/src/pages/CLODash.jsx",
+        "cyberrx-api/src/routes/contracts.js",
+        "cyberrx-api/migrations/0013_contract.sql"
+      ],
+      "git_branch": "task/T-213-contract-register",
+      "estimated_effort": "2d",
+      "risk": "MEDIUM",
+      "acceptance": [
+        "ACC-03-09"
+      ]
+    },
+    {
+      "id": "T-214",
+      "title": "Policy exceptions with legal impact flagging",
+      "depends_on": [
+        "T-209"
+      ],
+      "blocks": [],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "frontend/src/pages/CLODash.jsx"
+      ],
+      "git_branch": "task/T-214-policy-exceptions",
+      "estimated_effort": "1d",
+      "risk": "MEDIUM",
+      "acceptance": [
+        "ACC-03-10"
+      ]
+    },
+    {
+      "id": "T-215",
+      "title": "Wire CIO + CLO finding rows to /correlated/:findingId",
+      "depends_on": [
+        "T-203",
+        "T-210"
+      ],
+      "blocks": [],
+      "owner_role": "worker",
+      "artifact_paths": [
+        "frontend/src/pages/CIODash.jsx",
+        "frontend/src/pages/CLODash.jsx"
+      ],
+      "git_branch": "task/T-215-wire-correlation",
+      "estimated_effort": "0.5d",
+      "risk": "LOW",
+      "acceptance": [
+        "ACC-03-11",
+        "ACC-03-12"
+      ]
+    }
+  ],
+  "validator_team_checks": {
+    "acceptance": "Both user-story checklists from \u00a74 covered.",
+    "security": "New routes (T-208, T-212, T-213) enforce JWT + org-id binding.",
+    "no_regression": "Existing 4 dashboards untouched (T-201's NAV additions are append-only).",
+    "integration": "End-to-end test loads CIO dash \u2192 opens correlation narrative \u2192 returns to dash."
+  },
+  "risks": [
+    {
+      "risk": "Breach notification draft language is read as legal advice",
+      "mitigation": "PRODUCTION_PROMPT stop-condition #2; outside counsel review before T-212 merges"
+    },
+    {
+      "risk": "PDF export performance under realistic asset counts",
+      "mitigation": "Stream PDF generation; cap at 1000 assets per export; warn beyond"
+    },
+    {
+      "risk": "CLODash duplicates functionality of CRODash compliance grids",
+      "mitigation": "Compliance Officer review session before T-209 ships"
+    }
+  ],
+  "out_of_scope": [
+    "Internal Audit standalone view (Month 4)",
+    "Exception approval workflow (Month 5)",
+    "Splitting App.jsx (Month 6) \u2014 CIODash/CLODash MAY ship as new files; legacy stays in App.jsx"
+  ],
+  "stop_conditions": [
+    "Any breach notification draft text shipping to prod without outside-counsel sign-off.",
+    "Adding regulatory-coverage claims (e.g. 'HIPAA-certified') without sign-off."
+  ]
+}

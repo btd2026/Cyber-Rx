@@ -3,14 +3,10 @@
 const express = require('express');
 const router = express.Router();
 const Control = require('../models/Control');
+const { authenticateJWT } = require('../middleware/auth');
 
-// Middleware to extract org ID from header
-const extractOrgId = (req, res, next) => {
-  req.orgId = req.headers['x-org-id'] || req.query.org_id;
-  next();
-};
-
-router.use(extractOrgId);
+// Apply authentication to all routes
+router.use(authenticateJWT);
 
 /**
  * GET /api/controls
@@ -18,12 +14,8 @@ router.use(extractOrgId);
  */
 router.get('/', async (req, res) => {
   try {
-    const { org_id } = req.headers;
+    const organizationId = req.orgId;
     const { framework, min_effectiveness, implementation_status, tier } = req.query;
-
-    if (!org_id) {
-      return res.status(400).json({ error: 'Organization ID required' });
-    }
 
     const filters = {};
     if (framework) filters.framework = framework;
@@ -31,7 +23,7 @@ router.get('/', async (req, res) => {
     if (implementation_status) filters.implementationStatus = implementation_status;
     if (tier) filters.tier = tier;
 
-    const controls = await Control.findByOrganization(org_id, filters);
+    const controls = await Control.findByOrganization(organizationId, filters);
     res.json({ data: controls, total: controls.length });
   } catch (error) {
     console.error('Error fetching controls:', error);
@@ -45,13 +37,8 @@ router.get('/', async (req, res) => {
  */
 router.post('/', async (req, res) => {
   try {
-    const { org_id } = req.headers;
-
-    if (!org_id) {
-      return res.status(400).json({ error: 'Organization ID required' });
-    }
-
-    const controlData = { ...req.body, organizationId: org_id };
+    const organizationId = req.orgId;
+    const controlData = { ...req.body, organizationId };
     const control = await Control.create(controlData);
 
     res.status(201).json({ data: control });
@@ -67,13 +54,8 @@ router.post('/', async (req, res) => {
  */
 router.get('/statistics', async (req, res) => {
   try {
-    const { org_id } = req.headers;
-
-    if (!org_id) {
-      return res.status(400).json({ error: 'Organization ID required' });
-    }
-
-    const stats = await Control.getStatistics(org_id);
+    const organizationId = req.orgId;
+    const stats = await Control.getStatistics(organizationId);
     res.json({ data: stats });
   } catch (error) {
     console.error('Error fetching control statistics:', error);
