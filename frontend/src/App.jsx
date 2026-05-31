@@ -5219,7 +5219,7 @@ function Setup(props) {
                   {(profile.mandatoryProcs||[]).map(function(id){var p=PROCS.find(function(x){return x.id===id;});return p?p.name:id;}).join(", ")}
                 </div>
               )}
-              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              <div style={{display:"grid",gridTemplateColumns:"1fr",gap:8}}>
                 {getOrgProcs(orgType||'Other Payer').map(function(p){
                   // Tier header
                   if(p.type==="tier"){
@@ -5266,43 +5266,56 @@ function Setup(props) {
                   var on=selProcs.has(p.id);
                   var rec=profile&&(profile.mandatoryProcs||[]).includes(p.id);
                   return (
-                    <div key={p.id} onClick={function(){toggleProc(p.id);}}
-                      style={{display:"flex",gap:10,alignItems:"center",padding:"11px 13px",
-                        paddingLeft:isChild?"36px":"13px",
-                        background:on?C.acc+"10":C.dim,borderRadius:8,cursor:"pointer",
-                        border:"1.5px solid "+(on?C.acc:C.border)}}>
-                      <span style={{fontSize:20}}>{p.icon}</span>
-                      <div style={{flex:1}}>
-                        <div style={{color:on?C.acc:C.text,fontSize:12,fontWeight:on?700:400}}>{p.name}</div>
-                        {(p.subcomponents||p.why)&&(
-                          <div style={{color:C.muted,fontSize:9,marginTop:1}}>
-                            {p.subcomponents&&p.subcomponents.length>0&&(
-                              <div style={{marginBottom:2}}>{p.subcomponents.join(" · ")}</div>
-                            )}
-                            {p.why&&p.why.length>0&&(
-                              <div style={{fontStyle:"italic",color:C.muted+"CC"}}>
-                                Why: {p.why.join(" · ")}
+                    (function(){
+                      var processBox = (
+                        <div onClick={function(){toggleProc(p.id);}}
+                          style={{display:"flex",gap:10,alignItems:"center",padding:"11px 13px",
+                            background:on?C.acc+"10":C.dim,borderRadius:8,cursor:"pointer",
+                            border:"1.5px solid "+(on?C.acc:C.border),flex:1}}>
+                          <span style={{fontSize:20}}>{p.icon}</span>
+                          <div style={{flex:1}}>
+                            <div style={{color:on?C.acc:C.text,fontSize:12,fontWeight:on?700:400}}>{p.name}</div>
+                            {(p.subcomponents||p.why)&&(
+                              <div style={{color:C.muted,fontSize:9,marginTop:1}}>
+                                {p.subcomponents&&p.subcomponents.length>0&&(
+                                  <div style={{marginBottom:2}}>{p.subcomponents.join(" · ")}</div>
+                                )}
+                                {p.why&&p.why.length>0&&(
+                                  <div style={{fontStyle:"italic",color:C.muted+"CC"}}>
+                                    Why: {p.why.join(" · ")}
+                                  </div>
+                                )}
+                                {EXP[p.id]&&!p.subcomponents&&(
+                                  <div>${EXP[p.id]}M exposure{rec?" · Recommended":""}</div>
+                                )}
+                                {rec&&!p.subcomponents&&!p.why&&"Recommended"}
                               </div>
                             )}
-                            {EXP[p.id]&&!p.subcomponents&&(
-                              <div>${EXP[p.id]}M exposure{rec?" · Recommended":""}</div>
+                            {!p.subcomponents&&!p.why&&(
+                              <div style={{color:C.muted,fontSize:9,marginTop:1}}>
+                                {EXP[p.id]?"$"+EXP[p.id]+"M exposure":""}
+                                {rec?" · Recommended":""}
+                              </div>
                             )}
-                            {rec&&!p.subcomponents&&!p.why&&"Recommended"}
                           </div>
-                        )}
-                        {!p.subcomponents&&!p.why&&(
-                          <div style={{color:C.muted,fontSize:9,marginTop:1}}>
-                            {EXP[p.id]?"$"+EXP[p.id]+"M exposure":""}
-                            {rec?" · Recommended":""}
+                          <div style={{width:18,height:18,borderRadius:4,flexShrink:0,
+                            background:on?C.acc:C.bg,border:"1.5px solid "+(on?C.acc:C.border),
+                            display:"flex",alignItems:"center",justifyContent:"center"}}>
+                            {on&&<span style={{color:"#fff",fontSize:10,fontWeight:800}}>✓</span>}
                           </div>
-                        )}
-                      </div>
-                      <div style={{width:18,height:18,borderRadius:4,flexShrink:0,
-                        background:on?C.acc:C.bg,border:"1.5px solid "+(on?C.acc:C.border),
-                        display:"flex",alignItems:"center",justifyContent:"center"}}>
-                        {on&&<span style={{color:"#fff",fontSize:10,fontWeight:800}}>✓</span>}
-                      </div>
-                    </div>
+                        </div>
+                      );
+                      // Wrap child processes with spacer for indentation
+                      if(isChild){
+                        return (
+                          <div key={p.id} style={{display:"flex",alignItems:"flex-start",gap:0}}>
+                            <div style={{width:40,flexShrink:0}}></div>
+                            {processBox}
+                          </div>
+                        );
+                      }
+                      return processBox;
+                    })()
                   );
                 })}
               </div>
