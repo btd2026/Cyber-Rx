@@ -3,11 +3,14 @@
  *
  * Displays a single connector service with status, actions, and metadata.
  * Shows connection status, last sync time, signal count, and action buttons.
+ * Integrates with ConnectorCredentialModal for credential configuration.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
+import ConnectorCredentialModal from './ConnectorCredentialModal';
 
-const ConnectorCard = ({ connector, connection, onConnect, onTest, onSync }) => {
+const ConnectorCard = ({ connector, connection, onConnect, onTest, onSync, api_url, authToken, orgId }) => {
+  const [showCredentialModal, setShowCredentialModal] = useState(false);
   const status = connection?.status || 'not_connected';
   const lastSync = connection?.lastSync;
   const signalCount = connection?.signalCount || 0;
@@ -127,7 +130,7 @@ const ConnectorCard = ({ connector, connection, onConnect, onTest, onSync }) => 
       <div style={{ display: 'flex', gap: 6 }}>
         {status === 'not_connected' ? (
           <button
-            onClick={onConnect}
+            onClick={() => setShowCredentialModal(true)}
             style={{
               flex: 1,
               backgroundColor: '#2563EB',
@@ -208,6 +211,22 @@ const ConnectorCard = ({ connector, connection, onConnect, onTest, onSync }) => 
           ⚠️ Manual entry required - web scraping blocked
         </div>
       )}
+
+      {/* Credential configuration modal */}
+      <ConnectorCredentialModal
+        isOpen={showCredentialModal}
+        onClose={() => setShowCredentialModal(false)}
+        connector={connector}
+        api_url={api_url}
+        authToken={authToken}
+        orgId={orgId}
+        onSuccess={(connectorId, syncFrequency) => {
+          // Trigger parent callback to refresh connection status
+          if (onConnect) {
+            onConnect(connectorId, syncFrequency);
+          }
+        }}
+      />
     </div>
   );
 };
