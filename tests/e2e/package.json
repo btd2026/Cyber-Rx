@@ -1,7 +1,8 @@
 {
   "name": "cyberrx-e2e-tests",
   "version": "1.0.0",
-  "description": "End-to-end tests for CyberRx",
+  "description": "End-to-end tests for CyberRx vendor monitoring system",
+  "private": true,
   "scripts": {
     "test": "playwright test",
     "test:headed": "playwright test --headed",
@@ -9,11 +10,30 @@
     "test:smoke": "playwright test --grep @smoke",
     "test:api": "playwright test --grep @api",
     "test:ui": "playwright test --grep @ui",
-    "report": "playwright show-report"
+    "test:mobile": "playwright test --grep @mobile",
+    "test:vendor": "playwright test vendor-onboarding",
+    "test:alerts": "playwright test alert-management",
+    "test:dashboard": "playwright test dashboard-exploration",
+    "test:credentials": "playwright test credential-rotation",
+    "test:all": "playwright test",
+    "test:chromium": "playwright test --project=chromium",
+    "test:firefox": "playwright test --project=firefox",
+    "test:webkit": "playwright test --project=webkit",
+    "test:mobile-chrome": "playwright test --project='Mobile Chrome'",
+    "test:mobile-safari": "playwright test --project='Mobile Safari'",
+    "test:ci": "CI=true playwright test",
+    "report": "playwright show-report",
+    "report:json": "playwright test --reporter=json",
+    "install:browsers": "playwright install --with-deps",
+    "clean": "rm -rf playwright-report test-results"
   },
   "devDependencies": {
-    "@playwright/test": "^1.40.0",
+    "@playwright/test": "^1.60.0",
     "@types/node": "^20.0.0",
     "dotenv": "^16.4.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
   }
 }
