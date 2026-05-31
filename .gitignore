@@ -1,57 +1,84 @@
-# Dependencies
+# CyberRx .gitignore
+
+# ============================================
+# ENVIRONMENT & SECRETS
+# ============================================
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
+.env.development
+*.pem
+*.key
+*.crt
+secrets/
+credentials/
+
+# ============================================
+# DEPENDENCIES
+# ============================================
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 package-lock.json
 yarn.lock
+pnpm-lock.yaml
 
-# Build outputs
+# ============================================
+# BUILD OUTPUT
+# ============================================
 dist/
 build/
-*.log
 .next/
 out/
+.nuxt/
+.vite/
+.cache/
 
-# Environment variables
-.env
-.env.local
-.env.*.local
-.env.production
+# ============================================
+# TESTING
+# ============================================
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+*.lcov
+junit.xml
 
-# IDE and editor files
+# ============================================
+# DOCKER
+# ============================================
+.docker/
+
+# ============================================
+# TERRAFORM
+# ============================================
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform!/*.tfvars
+terraform/crash.logs
+crash.logs
+*.tfbackup
+
+# ============================================
+# IDE & EDITORS
+# ============================================
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 .DS_Store
+Thumbs.db
+*.code-workspace
 
-# Docker
-*.dockerignore
-
-# Platform specific
-railway-uploaded/
-.vercel/
-.render/
-
-# Vercel specific
-.vercel/
-
-# Render specific
-.render/
-
-# Testing
-coverage/
-.nyc_output/
-
-# Misc
-*.pid
-*.seed
-*.pid.lock
-.cache/
-
-# Logs
+# ============================================
+# LOGS
+# ============================================
 logs/
 *.log
 npm-debug.log*
@@ -59,7 +86,23 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
-# OS generated files
+# ============================================
+# TEMPORARY FILES
+# ============================================
+tmp/
+temp/
+*.tmp
+.cache/
+.parcel-cache/
+
+# ============================================
+# VERCEL
+# ============================================
+.vercel
+
+# ============================================
+# OPERATING SYSTEM FILES
+# ============================================
 .DS_Store
 .DS_Store?
 ._*
@@ -68,22 +111,24 @@ lerna-debug.log*
 ehthumbs.db
 Thumbs.db
 
-# Backup files
-*_backup/
-*.bak
+# ============================================
+# BACKUP FILES
+# ============================================
 *.backup
+*.bak
+*.old
+*~
 
-# Temporary files
-tmp/
-temp/
-*.tmp
+# ============================================
+# DATABASE
+# ============================================
+*.sql.gz
+*.dump
+*.db
 
-# AWS
-.aws-sam/
-
-# Serverless
-.serverless/
-
-# Build artifacts
-*.tgz
-*.tar.gz
+# ============================================
+# MONITORING & METRICS
+# ============================================
+prometheus/data/
+grafana/data/
+*.prom
