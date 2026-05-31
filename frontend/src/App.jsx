@@ -6551,7 +6551,7 @@ function Setup(props) {
                                             </select>
                                           </div>
                                         </div>
-                                        {creds.deliveryMethod==="sftp"&&(
+                                        {(creds.deliveryMethod==="sftp"||!creds.deliveryMethod)&&(
                                           <div>
                                             <div style={{color:group.color,fontSize:8,fontWeight:600,marginBottom:1}}>SFTP Location</div>
                                             <input placeholder="sftp://vendor.com/exports/" value={creds.sftpLocation||""}
