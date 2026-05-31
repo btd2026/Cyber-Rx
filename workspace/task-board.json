@@ -1,534 +1,499 @@
 {
-  "project": "CyberRx Strategic Refocusing",
-  "context_rules": "No task may load src/App.jsx in full or the full assessment doc. Use appjsx-index.json line ranges and assessment-chunks/ only.",
+  "sprint": "Third-Party Cyber Intelligence - MVP",
+  "sprintNumber": 1,
+  "startDate": "2025-01-31",
+  "targetMVPDate": "2025-03-31",
+  "overallProgress": {
+    "percentComplete": 0,
+    "tasksCompleted": 0,
+    "tasksTotal": 25
+  },
   "tasks": [
     {
-      "task_id": "T-STRAT-001",
-      "milestone": "M-STRAT - Strategic Refocusing",
-      "title": "Collapse compliance grids into single score card",
-      "depends_on": [],
-      "objective": "Remove Vanta/Drata-style compliance grid overemphasis. Replace separate SOC2, NIST, HIPAA, CMS, CIS, GDPR grids with single 'Regulatory Compliance Score' card on CISO dashboard.",
-      "business_outcome": "CISO sees 'Compliance Status' as input, not output. Emphasis on control effectiveness.",
-      "context_manifest": {
-        "code_files": ["frontend/src/App.jsx (CISODash compliance grid sections, lines ~198-305)"],
-        "doc_chunks": [],
-        "forbidden_context": ["src/App.jsx in full"],
-        "token_budget": 8000
-      },
-      "expected_output": {
-        "location": "workspace/artifacts/T-STRAT-001.out",
-        "git": { "branch": "task/t-strat-001-compliance-grids", "commit_msg": "refactor: collapse compliance grids to single score" },
-        "summary_back_to_manager": "Compliance grids collapsed. Single score card created. Grid data preserved in backend."
-      },
-      "acceptance_criteria": [
-        "CISO dashboard shows single 'Regulatory Compliance Score: 89%' card",
-        "Separate SOC2, NIST, HIPAA, CMS, CIS, GDPR grid components removed from UI",
-        "Drill-down available: click score → see framework breakdown",
-        "No backend data changes (all framework mappings preserved)",
-        "Compliance score added to KPI strip"
-      ],
-      "success_metrics": [
-        "CISO dashboard emphasizes control effectiveness, not compliance checklists",
-        "Framework details accessible via drill-down (not primary view)",
-        "UI load time improved (fewer components to render)"
-      ],
-      "task_type": "grc_removal",
-      "max_retries": 1,
-      "recurrence": "one-time",
+      "id": "T-001",
+      "title": "Create Credential Entry Modal Component",
+      "description": "Build React modal for entering connector credentials (API keys, OAuth tokens). Dynamic form based on connector type. Test connection button. Mask credentials after save.",
+      "status": "pending",
+      "priority": "critical",
+      "sprint": 1,
+      "category": "frontend",
+      "estimatedHours": 16,
+      "dependencies": [],
+      "assignedTo": null,
+      "branch": "feature/T-001-credential-modal",
+      "deliverables": [
+        "frontend/src/components/ConnectorCredentialModal.jsx",
+        "Component tests",
+        "Storybook documentation"
+      ]
+    },
+    {
+      "id": "T-002",
+      "title": "Implement Credential Validation API",
+      "description": "Add endpoint to validate credentials against vendor APIs before saving. Test connection with SecurityScorecard, BitSight, RiskRecon APIs.",
+      "status": "pending",
+      "priority": "critical",
+      "sprint": 1,
+      "category": "backend",
+      "estimatedHours": 12,
+      "dependencies": [],
+      "assignedTo": null,
+      "branch": "feature/T-002-credential-validation",
+      "deliverables": [
+        "cyberrx-api/src/routes/credentials.js enhancement",
+        "Validation service module",
+        "API tests"
+      ]
+    },
+    {
+      "id": "T-003",
+      "title": "Update Connector Card Status States",
+      "description": "Enhance ConnectorCard component to show all connection states: Not Connected, Connecting, Connected, Failed, Syncing, Sync Failed. Add last sync timestamp.",
+      "status": "pending",
+      "priority": "high",
+      "sprint": 1,
+      "category": "frontend",
+      "estimatedHours": 8,
+      "dependencies": ["T-001"],
+      "assignedTo": null,
+      "branch": "feature/T-003-connector-card-states",
+      "deliverables": [
+        "frontend/src/components/ConnectorCard.jsx enhancement",
+        "Status indicator animations"
+      ]
+    },
+    {
+      "id": "T-004",
+      "title": "Implement SecurityScorecard Connector",
+      "description": "Replace mock data with real API calls. Fetch overall score, network security, patching cadence, endpoint protection, hacker chatter, leaked credentials. Normalize to signal schema.",
+      "status": "pending",
+      "priority": "critical",
+      "sprint": 2,
+      "category": "backend",
+      "estimatedHours": 24,
+      "dependencies": ["T-002"],
+      "assignedTo": null,
+      "branch": "feature/T-004-securityscorecard-connector",
+      "deliverables": [
+        "cyberrx-api/src/connectors/SecurityScorecardConnector.js implementation",
+        "API integration tests",
+        "Rate limiting logic"
+      ]
+    },
+    {
+      "id": "T-005",
+      "title": "Set Up BullMQ Job Queue",
+      "description": "Install and configure BullMQ with Redis. Create job queue for vendor sync operations. Implement job types: sync_vendor, sync_connector, assessment.",
+      "status": "pending",
+      "priority": "high",
+      "sprint": 3,
+      "category": "backend",
+      "estimatedHours": 16,
+      "dependencies": [],
+      "assignedTo": null,
+      "branch": "feature/T-005-bullmq-setup",
+      "deliverables": [
+        "cyberrx-api/src/workers/vendorSyncWorker.js",
+        "cyberrx-api/src/workers/workerProcess.js",
+        "Job queue configuration"
+      ]
+    },
+    {
+      "id": "T-006",
+      "title": "Implement Background Sync Worker",
+      "description": "Create separate worker process for async vendor sync. Implement retry logic with exponential backoff (1min, 5min, 30min, 2hrs, 6hrs). Track sync job status in database.",
+      "status": "pending",
+      "priority": "high",
+      "sprint": 3,
+      "category": "backend",
+      "estimatedHours": 20,
+      "dependencies": ["T-005"],
+      "assignedTo": null,
+      "branch": "feature/T-006-sync-worker",
+      "deliverables": [
+        "Worker process implementation",
+        "Retry logic",
+        "Job status tracking"
+      ]
+    },
+    {
+      "id": "T-007",
+      "title": "Wire Vendor Sync to Scheduler",
+      "description": "Integrate vendor sync into existing scheduler.js. Add sync frequencies based on vendor tier (Critical: daily, High: weekly, Medium/Low: monthly). Queue jobs instead of inline execution.",
+      "status": "pending",
+      "priority": "high",
+      "sprint": 3,
+      "category": "backend",
+      "estimatedHours": 12,
+      "dependencies": ["T-006"],
+      "assignedTo": null,
+      "branch": "feature/T-007-scheduler-integration",
+      "deliverables": [
+        "cyberrx-api/src/scheduler.js enhancement",
+        "Sync configuration"
+      ]
+    },
+    {
+      "id": "T-008",
+      "title": "Implement BitSight Connector",
+      "description": "Replace mock data with real BitSight API. Normalize BitSight score (250-900) to severity. Fetch grade, compromise history, vulnerability findings.",
+      "status": "pending",
+      "priority": "high",
+      "sprint": 4,
+      "category": "backend",
+      "estimatedHours": 20,
+      "dependencies": ["T-002"],
+      "assignedTo": null,
+      "branch": "feature/T-008-bitsight-connector",
+      "deliverables": [
+        "cyberrx-api/src/connectors/BitSightConnector.js implementation",
+        "Score normalization logic",
+        "API tests"
+      ]
+    },
+    {
+      "id": "T-009",
+      "title": "Implement RiskRecon Connector",
+      "description": "Replace mock data with real RiskRecon API. Normalize RiskRecon grade (A+-F) to severity. Fetch attack surface findings, exposure severity.",
+      "status": "pending",
+      "priority": "high",
+      "sprint": 4,
+      "category": "backend",
+      "estimatedHours": 20,
+      "dependencies": ["T-002"],
+      "assignedTo": null,
+      "branch": "feature/T-009-riskrecon-connector",
+      "deliverables": [
+        "cyberrx-api/src/connectors/RiskReconConnector.js implementation",
+        "Grade normalization logic",
+        "API tests"
+      ]
+    },
+    {
+      "id": "T-010",
+      "title": "Build Alert Service",
+      "description": "Implement AlertService.js for notifications. Configure SendGrid for email alerts. Set up Slack webhooks. Create alert rules: Critical signal (immediate), Risk score +20 (1hr), Sync failure (daily digest).",
+      "status": "pending",
+      "priority": "high",
+      "sprint": 5,
+      "category": "backend",
+      "estimatedHours": 24,
+      "dependencies": [],
+      "assignedTo": null,
+      "branch": "feature/T-010-alert-service",
+      "deliverables": [
+        "cyberrx-api/src/services/AlertService.js",
+        "SendGrid integration",
+        "Slack webhook integration",
+        "Alert rule engine"
+      ]
+    },
+    {
+      "id": "T-011",
+      "title": "Create Vendor Portfolio Dashboard",
+      "description": "Build executive dashboard showing all vendors with risk scores. Sortable columns, search, filter by tier. Show top 10 high-risk vendors. Connector health summary.",
+      "status": "pending",
+      "priority": "high",
+      "sprint": 5,
+      "category": "frontend",
+      "estimatedHours": 24,
+      "dependencies": [],
+      "assignedTo": null,
+      "branch": "feature/T-011-portfolio-dashboard",
+      "deliverables": [
+        "frontend/src/pages/ExecutiveDashboard.jsx",
+        "frontend/src/components/VendorPortfolioDashboard.jsx",
+        "Vendor table with sorting/filtering"
+      ]
+    },
+    {
+      "id": "T-012",
+      "title": "Build Risk Trend Charts",
+      "description": "Add Chart.js or Recharts integration. Display risk score trends over 12 months. Compare multiple vendors. Annotate significant events.",
+      "status": "pending",
+      "priority": "medium",
+      "sprint": 5,
+      "category": "frontend",
+      "estimatedHours": 16,
+      "dependencies": ["T-011"],
+      "assignedTo": null,
+      "branch": "feature/T-012-trend-charts",
+      "deliverables": [
+        "frontend/src/components/VendorTrendChart.jsx",
+        "Trend data API endpoint",
+        "Chart annotations"
+      ]
+    },
+    {
+      "id": "T-013",
+      "title": "Create Sync Status API",
+      "description": "Add endpoints to track sync job progress. GET /api/vendors/:vendorId/sync-status/:jobId. Return status, progress, error_message.",
+      "status": "pending",
+      "priority": "medium",
+      "sprint": 3,
+      "category": "backend",
+      "estimatedHours": 8,
+      "dependencies": ["T-006"],
+      "assignedTo": null,
+      "branch": "feature/T-013-sync-status-api",
+      "deliverables": [
+        "cyberrx-api/src/routes/vendorSync.js",
+        "Job status query API",
+        "Progress tracking"
+      ]
+    },
+    {
+      "id": "T-014",
+      "title": "Add Vendor Sync Routes",
+      "description": "Implement POST /api/vendors/:vendorId/sync endpoint. Queue background job. Return job_id for tracking.",
+      "status": "pending",
+      "priority": "medium",
+      "sprint": 3,
+      "category": "backend",
+      "estimatedHours": 8,
+      "dependencies": ["T-005"],
+      "assignedTo": null,
+      "branch": "feature/T-014-sync-routes",
+      "deliverables": [
+        "cyberrx-api/src/routes/vendorSync.js",
+        "Job queuing logic",
+        "API documentation"
+      ]
+    },
+    {
+      "id": "T-015",
+      "title": "Implement OAuth Flow for SecurityScorecard",
+      "description": "Add OAuth authentication option for SecurityScorecard (if supported). Handle OAuth callback, token storage, token refresh.",
+      "status": "pending",
+      "priority": "medium",
+      "sprint": 2,
+      "category": "backend",
+      "estimatedHours": 16,
+      "dependencies": ["T-002"],
+      "assignedTo": null,
+      "branch": "feature/T-015-oauth-flow",
+      "deliverables": [
+        "OAuth flow implementation",
+        "Token management",
+        "OAuth tests"
+      ]
+    },
+    {
+      "id": "T-016",
+      "title": "Create Signal Correlation Logic",
+      "description": "Implement signal correlation across multiple providers. Handle conflicting data (one High, one Low). Identify consistent high-risk findings.",
+      "status": "pending",
+      "priority": "high",
+      "sprint": 4,
+      "category": "backend",
+      "estimatedHours": 16,
+      "dependencies": ["T-004", "T-008", "T-009"],
+      "assignedTo": null,
+      "branch": "feature/T-016-signal-correlation",
+      "deliverables": [
+        "Correlation service",
+        "Conflict resolution logic",
+        "Composite scoring"
+      ]
+    },
+    {
+      "id": "T-017",
+      "title": "Add Sync Frequency Selector",
+      "description": "Add dropdown in credential modal for sync frequency. Options: Real-time (webhook), Hourly, Daily, Weekly. Default based on vendor tier.",
+      "status": "pending",
+      "priority": "medium",
+      "sprint": 1,
+      "category": "frontend",
+      "estimatedHours": 8,
+      "dependencies": ["T-001"],
+      "assignedTo": null,
+      "branch": "feature/T-017-sync-frequency",
+      "deliverables": [
+        "Frequency selector component",
+        "Default frequency logic",
+        "Storage in vault"
+      ]
+    },
+    {
+      "id": "T-018",
+      "title": "Create Alert Notification Center",
+      "description": "Build UI component for viewing alerts. Alert list with severity filters. Acknowledge alerts. Alert history.",
+      "status": "pending",
+      "priority": "medium",
+      "sprint": 5,
+      "category": "frontend",
+      "estimatedHours": 16,
+      "dependencies": ["T-010"],
+      "assignedTo": null,
+      "branch": "feature/T-018-alert-center",
+      "deliverables": [
+        "frontend/src/components/AlertNotificationCenter.jsx",
+        "Alert list component",
+        "Alert acknowledgment"
+      ]
+    },
+    {
+      "id": "T-019",
+      "title": "Implement PDF Report Export",
+      "description": "Add 'Download Report' button to executive dashboard. Generate PDF with vendor portfolio, risk trends, top risks. Use PDFKit or similar.",
+      "status": "pending",
+      "priority": "low",
+      "sprint": 5,
+      "category": "backend",
+      "estimatedHours": 16,
+      "dependencies": ["T-011"],
+      "assignedTo": null,
+      "branch": "feature/T-019-pdf-export",
+      "deliverables": [
+        "PDF generation service",
+        "Report template",
+        "Export endpoint"
+      ]
+    },
+    {
+      "id": "T-020",
+      "title": "Make Dashboards Mobile Responsive",
+      "description": "Optimize executive dashboard and vendor portfolio for mobile devices. Responsive layout, touch interactions, mobile-specific features.",
+      "status": "pending",
+      "priority": "medium",
+      "sprint": 5,
+      "category": "frontend",
+      "estimatedHours": 16,
+      "dependencies": ["T-011"],
+      "assignedTo": null,
+      "branch": "feature/T-020-mobile-responsive",
+      "deliverables": [
+        "Mobile-responsive layouts",
+        "Touch-optimized interactions",
+        "Mobile testing"
+      ]
+    },
+    {
+      "id": "T-021",
+      "title": "Create Vendor Sync Jobs Table",
+      "description": "Add database table for tracking sync jobs. Fields: id, organization_id, vendor_id, connector_type, status, started_at, completed_at, error_message, retry_count.",
+      "status": "pending",
+      "priority": "high",
+      "sprint": 3,
+      "category": "database",
+      "estimatedHours": 4,
+      "dependencies": [],
+      "assignedTo": null,
+      "branch": "feature/T-021-sync-jobs-table",
+      "deliverables": [
+        "Migration file",
+        "Table indexes",
+        "Database documentation"
+      ]
+    },
+    {
+      "id": "T-022",
+      "title": "Create Vendor Alerts Table",
+      "description": "Add database table for alert history. Fields: id, organization_id, vendor_id, alert_type, severity, message, sent_at. Unique constraint on (org, vendor, type, sent_at).",
+      "status": "pending",
+      "priority": "high",
+      "sprint": 5,
+      "category": "database",
+      "estimatedHours": 4,
+      "dependencies": [],
+      "assignedTo": null,
+      "branch": "feature/T-022-alerts-table",
+      "deliverables": [
+        "Migration file",
+        "Table indexes",
+        "Database documentation"
+      ]
+    },
+    {
+      "id": "T-023",
+      "title": "Add Credential Access Logging",
+      "description": "Log credential view/modify operations. Store in audit_logs table. Track who, what, when. Add RBAC - only admins can view credentials.",
+      "status": "pending",
+      "priority": "medium",
+      "sprint": 1,
+      "category": "security",
+      "estimatedHours": 12,
+      "dependencies": ["T-002"],
+      "assignedTo": null,
+      "branch": "feature/T-023-credential-logging",
+      "deliverables": [
+        "Audit logging middleware",
+        "RBAC implementation",
+        "Access control tests"
+      ]
+    },
+    {
+      "id": "T-024",
+      "title": "Implement Credential Rotation Alerts",
+      "description": "Alert on credentials older than 90 days. Support versioned credentials (v1, v2, v3). Rotation workflow UI.",
+      "status": "pending",
+      "priority": "low",
+      "sprint": 5,
+      "category": "security",
+      "estimatedHours": 16,
+      "dependencies": ["T-002"],
+      "assignedTo": null,
+      "branch": "feature/T-024-credential-rotation",
+      "deliverables": [
+        "Rotation alert logic",
+        "Credential versioning",
+        "Rotation workflow"
+      ]
+    },
+    {
+      "id": "T-025",
+      "title": "Write Integration Tests",
+      "description": "End-to-end tests for vendor monitoring flow. Test credential entry, connection, sync, alerting. Use Playwright or Cypress.",
+      "status": "pending",
+      "priority": "medium",
+      "sprint": 5,
+      "category": "testing",
+      "estimatedHours": 24,
+      "dependencies": ["T-004", "T-010", "T-011"],
+      "assignedTo": null,
+      "branch": "feature/T-025-integration-tests",
+      "deliverables": [
+        "E2E test suite",
+        "Test scenarios",
+        "CI integration"
+      ]
+    }
+  ],
+  "sprints": [
+    {
+      "number": 1,
+      "name": "Credential Infrastructure",
+      "goal": "Users can securely configure vendor monitoring credentials",
+      "tasks": ["T-001", "T-002", "T-003", "T-017", "T-023"],
+      "status": "in_progress"
+    },
+    {
+      "number": 2,
+      "name": "SecurityScorecard Integration",
+      "goal": "Real security posture data from SecurityScorecard",
+      "tasks": ["T-004", "T-015"],
       "status": "pending"
     },
     {
-      "task_id": "T-STRAT-002",
-      "milestone": "M-STRAT - Strategic Refocusing",
-      "title": "Remove framework browse UI (frameworks are plumbing, not product)",
-      "depends_on": [],
-      "objective": "Remove browseable NIST 800-53 Rev 5, CIS v8, HIPAA Security Rule control catalogs. Keep framework selection in Setup wizard only.",
-      "business_outcome": "Frameworks positioned as plumbing, not product UI. Emphasis on business impact.",
-      "context_manifest": {
-        "code_files": ["frontend/src/App.jsx (Framework catalog browse routes)"],
-        "doc_chunks": [],
-        "forbidden_context": ["src/App.jsx in full"],
-        "token_budget": 6000
-      },
-      "expected_output": {
-        "location": "workspace/artifacts/T-STRAT-002.out",
-        "git": { "branch": "task/t-strat-002-framework-browse", "commit_msg": "refactor: remove framework browse UI" },
-        "summary_back_to_manager": "Framework browse routes removed. Frameworks available in Setup only."
-      },
-      "acceptance_criteria": [
-        "No '/frameworks' route exists",
-        "No framework catalog navigation entry",
-        "Framework selection still available in Setup wizard",
-        "All framework data preserved in backend (no data deletion)",
-        "Framework details accessible via drill-down from compliance score"
-      ],
-      "success_metrics": [
-        "Navigation complexity reduced (fewer top-level routes)",
-        "Setup wizard emphasizes framework selection (not casual browsing)",
-        "Backend framework data intact (no breaking changes)"
-      ],
-      "task_type": "grc_removal",
-      "max_retries": 1,
-      "recurrence": "one-time",
+      "number": 3,
+      "name": "Background Sync",
+      "goal": "Vendor data syncs automatically overnight",
+      "tasks": ["T-005", "T-006", "T-007", "T-013", "T-014", "T-021"],
       "status": "pending"
     },
     {
-      "task_id": "T-STRAT-003",
-      "milestone": "M-STRAT - Strategic Refocusing",
-      "title": "Remove policy library UI (Archer territory, not product wedge)",
-      "depends_on": [],
-      "objective": "Delete policy document catalog, upload, categorization UI. Policies are inputs, not the product's job to manage.",
-      "business_outcome": "CyberRx analyzes cyber data, doesn't manage documents. Focus on control effectiveness.",
-      "context_manifest": {
-        "code_files": ["frontend/src/App.jsx (Evidence Repository policy sections)"],
-        "doc_chunks": [],
-        "forbidden_context": ["src/App.jsx in full"],
-        "token_budget": 6000
-      },
-      "expected_output": {
-        "location": "workspace/artifacts/T-STRAT-003.out",
-        "git": { "branch": "task/t-strat-003-policy-libraries", "commit_msg": "refactor: remove policy library UI" },
-        "summary_back_to_manager": "Policy library UI removed. Evidence repo repositioned as control effectiveness proof."
-      },
-      "acceptance_criteria": [
-        "No '/policies' route exists",
-        "Policy upload, categorization, browse UI removed",
-        "Evidence Repository repositioned as 'Control Effectiveness Proof Repository'",
-        "Evidence reorganized by control effectiveness → business impact, not framework → document",
-        "Policy data model deleted (not valuable for MVP)"
-      ],
-      "success_metrics": [
-        "Evidence repository emphasizes control effectiveness (not document management)",
-        "UI complexity reduced (removed commodity features)",
-        "Clearer positioning: 'Control effectiveness platform' not 'document manager'"
-      ],
-      "task_type": "grc_removal",
-      "max_retries": 1,
-      "recurrence": "one-time",
+      "number": 4,
+      "name": "Multi-Source Integration",
+      "goal": "Multiple data sources for comprehensive risk view",
+      "tasks": ["T-008", "T-009", "T-016"],
       "status": "pending"
     },
     {
-      "task_id": "T-STRAT-004",
-      "milestone": "M-STRAT - Strategic Refocusing",
-      "title": "Replace generic risk heatmap with Business Process Risk Register",
-      "depends_on": [],
-      "objective": "Remove traditional likelihood × impact risk matrix. Replace with ranked Business Process Risk Register sorted by Business Impact × Control Effectiveness.",
-      "business_outcome": "CRO sees business-specific risks, not generic heatmaps. Emphasis on Crown Jewels.",
-      "context_manifest": {
-        "code_files": ["frontend/src/App.jsx (CRO Dashboard heatmap sections)"],
-        "doc_chunks": [],
-        "forbidden_context": ["src/App.jsx in full"],
-        "token_budget": 8000
-      },
-      "expected_output": {
-        "location": "workspace/artifacts/T-STRAT-004.out",
-        "git": { "branch": "task/t-strat-004-risk-heatmap", "commit_msg": "refactor: replace heatmap with business process risk register" },
-        "summary_back_to_manager": "Heatmap removed. Business Process Risk Register created."
-      },
-      "acceptance_criteria": [
-        "Generic likelihood × impact heatmap visualization removed",
-        "New view: 'Business Process Risk Register' (ranked list)",
-        "Sort order: Business Impact × Control Effectiveness (not Likelihood × Impact)",
-        "Crown Jewel processes at top of list",
-        "Color coding: Green (<$10M), Yellow ($10-50M), Red (>$50M)",
-        "Risk scoring data model preserved (visualization change only)"
-      ],
-      "success_metrics": [
-        "CRO can see Crown Jewel risks at top of list (not buried in generic heatmap)",
-        "Color coding emphasizes financial exposure (not abstract risk levels)",
-        "Risk register sorted by business impact (C-level mental model)"
-      ],
-      "task_type": "grc_removal",
-      "max_retries": 1,
-      "recurrence": "one-time",
+      "number": 5,
+      "name": "Alerting & Executive Dashboard",
+      "goal": "Notifications and portfolio-wide visibility",
+      "tasks": ["T-010", "T-011", "T-012", "T-018", "T-019", "T-020", "T-022", "T-024", "T-025"],
       "status": "pending"
-    },
-    {
-      "task_id": "T-STRAT-005",
-      "milestone": "M-STRAT - Strategic Refocusing",
-      "title": "Update messaging: 'Executive Cyber Responsibility Platform'",
-      "depends_on": ["T-STRAT-001", "T-STRAT-002", "T-STRAT-003", "T-STRAT-004"],
-      "objective": "Update landing page, dashboard headers, and navigation to emphasize 'Executive Cyber Responsibility Platform' positioning.",
-      "business_outcome": "Clear positioning as Executive Cyber Responsibility Platform, not GRC tool.",
-      "context_manifest": {
-        "code_files": ["frontend/src/App.jsx (Landing, dashboard headers, navigation)"],
-        "doc_chunks": [],
-        "forbidden_context": ["src/App.jsx in full"],
-        "token_budget": 10000
-      },
-      "expected_output": {
-        "location": "workspace/artifacts/T-STRAT-005.out",
-        "git": { "branch": "task/t-strat-005-messaging", "commit_msg": "refactor: update messaging to Executive Cyber Responsibility Platform" },
-        "summary_back_to_manager": "Messaging updated. Landing, dashboards, navigation repositioned."
-      },
-      "acceptance_criteria": [
-        "Landing page headline: 'Executive Cyber Responsibility Platform for Healthcare Payers'",
-        "Landing page subheadline: 'Translate cyber technical data into business impact'",
-        "CISO Dashboard header: 'Control Effectiveness Dashboard - YOUR part of cyber responsibility'",
-        "CIO Dashboard header: 'Technology Risk Protection Dashboard - YOUR part of cyber responsibility'",
-        "CLO Dashboard header: 'Legal & Regulatory Exposure Dashboard - YOUR part of cyber responsibility'",
-        "CFO Dashboard header: 'Financial Impact & Capital Protection Dashboard - YOUR part of cyber responsibility'",
-        "CRO Dashboard header: 'Enterprise Risk Dashboard - YOUR part of cyber responsibility'",
-        "Board Dashboard header: 'Strategic Oversight Dashboard - YOUR part of cyber responsibility'",
-        "Navigation emphasizes 'Business Processes' (Crown Jewels) as top-level",
-        "Correlation engine featured as hero (first click in demo)"
-      ],
-      "success_metrics": [
-        "Landing page clearly positions CyberRx as Executive Cyber Responsibility Platform",
-        "Dashboard headers emphasize 'YOUR part of cyber responsibility' (persona-specific)",
-        "Correlation engine is hero feature (first click in demo)",
-        "No GRC tool language ('compliance automation', 'checklist management', etc.)"
-      ],
-      "task_type": "strategic",
-      "max_retries": 1,
-      "recurrence": "one-time",
-      "status": "pending"
-    },
-    {
-      "task_id": "T-STRAT-006",
-      "milestone": "M-STRAT - Strategic Refocusing",
-      "title": "Reorganize navigation: Business Processes (Crown Jewels) to top-level",
-      "depends_on": ["T-STRAT-005"],
-      "objective": "Elevate 'Business Processes' to top-level navigation. Group executive dashboards. Bury compliance in Setup only.",
-      "business_outcome": "Navigation organized by business process (Crown Jewels), not framework. Right mental model for executives.",
-      "context_manifest": {
-        "code_files": ["frontend/src/App.jsx (Navigation structure)"],
-        "doc_chunks": [],
-        "forbidden_context": ["src/App.jsx in full"],
-        "token_budget": 10000
-      },
-      "expected_output": {
-        "location": "workspace/artifacts/T-STRAT-006.out",
-        "git": { "branch": "task/t-strat-006-navigation", "commit_msg": "refactor: reorganize navigation with Crown Jewels first" },
-        "summary_back_to_manager": "Navigation reorganized. Business Processes elevated. Compliance buried."
-      },
-      "acceptance_criteria": [
-        "New navigation structure: Home → Business Processes → Executive Dashboards → Command Center → Setup",
-        "Business Processes expanded: Claims & Payment, Membership, Provider Ops, Care Mgmt, Payment Integrity, Member Services, Actuarial, Identity, PHI Platforms, Government Programs",
-        "Executive Dashboards grouped: CISO, CIO, CLO, CFO, CRO, Audit, Board",
-        "Compliance removed from primary navigation (available in Setup only)",
-        "Attack Paths hidden from navigation (great feature, wrong focus for MVP)",
-        "Evidence repositioned as 'Control Effectiveness Proof' in Command Center"
-      ],
-      "success_metrics": [
-        "Business Processes (Crown Jewels) is top-level navigation (first thing executives see)",
-        "Navigation organized by business process (C-level mental model)",
-        "Compliance buried in Setup (frameworks are plumbing, not product)",
-        "Executive dashboards grouped (clear persona separation)"
-      ],
-      "task_type": "strategic",
-      "max_retries": 2,
-      "recurrence": "one-time",
-      "status": "pending"
-    },
-    {
-      "task_id": "T-STRAT-007",
-      "milestone": "M-STRAT - Strategic Refocusing",
-      "title": "Global text replacement: 'annual' → 'continuous', 'quarterly' → 'real-time'",
-      "depends_on": [],
-      "objective": "Remove all annual assessment timelanguage. Emphasize continuous cyber assurance, not annual compliance reviews.",
-      "business_outcome": "Positioned as continuous assurance platform, not annual compliance tool (Vanta/Drata differentiation).",
-      "context_manifest": {
-        "code_files": ["frontend/src/App.jsx (all text content)", "cyberrx-api/src/**/*.js (all response messages)"],
-        "doc_chunks": [],
-        "forbidden_context": ["src/App.jsx in full"],
-        "token_budget": 8000
-      },
-      "expected_output": {
-        "location": "workspace/artifacts/T-STRAT-007.out",
-        "git": { "branch": "task/t-strat-007-continuous-language", "commit_msg": "refactor: replace annual language with continuous" },
-        "summary_back_to_manager": "Annual language replaced. Continuous assurance emphasized."
-      },
-      "acceptance_criteria": [
-        "Global search: 0 instances of 'annual compliance review' in UI",
-        "Global search: 0 instances of 'quarterly assessment' in UI",
-        "Replaced with: 'continuous monitoring', 'real-time updates', 'last updated: X hours ago'",
-        "Documentation updated to emphasize continuous assurance",
-        "Dashboard timestamps show 'last updated: 2 hours ago' not 'last reviewed: Q3 2025'"
-      ],
-      "success_metrics": [
-        "No annual timelanguage in UI (differentiation vs. Vanta/Drata)",
-        "Continuous assurance messaging prominent",
-        "Timestamps emphasize real-time (not periodic reviews)"
-      ],
-      "task_type": "strategic",
-      "max_retries": 1,
-      "recurrence": "one-time",
-      "status": "pending"
-    },
-    {
-      "task_id": "T-000",
-      "milestone": "M0 - Security + Cartography",
-      "title": "Code Cartography: index App.jsx pages",
-      "depends_on": [],
-      "objective": "Produce workspace/context/appjsx-index.json mapping each of the 18 pages to its line range, shared state/hooks, and imports, WITHOUT loading the whole file.",
-      "context_manifest": {
-        "code_files": ["src/App.jsx (STRUCTURAL SCAN ONLY: grep for component/function/route boundaries, read in bounded chunks via sed/offset; never hold the full file in context)"],
-        "doc_chunks": ["workspace/context/assessment-chunks/appendix-current-state.md"],
-        "forbidden_context": ["src/App.jsx (full file in context at once)", "entire assessment doc"],
-        "token_budget": 14000
-      },
-      "expected_output": {
-        "location": "workspace/context/appjsx-index.json",
-        "summary_back_to_manager": "Index of 18 pages with line ranges + shared state."
-      },
-      "acceptance_criteria": [
-        "All 18 pages listed with start/end line numbers",
-        "Each entry lists the shared state/hooks it reads and its imports",
-        "No step required loading the entire file into a single context"
-      ],
-      "max_retries": 2,
-      "status": "completed"
-    },
-    {
-      "task_id": "T-001",
-      "milestone": "M0 - Security + Cartography",
-      "title": "Enforce JWT on all API endpoints",
-      "depends_on": [],
-      "objective": "Add JWT verification middleware and apply it to every Express route that returns or mutates org data.",
-      "context_manifest": {
-        "code_files": ["backend/ (route + middleware files only)"],
-        "doc_chunks": ["workspace/context/assessment-chunks/section3-security-gaps.md"],
-        "forbidden_context": ["src/App.jsx", "entire assessment doc", "frontend code"],
-        "token_budget": 12000
-      },
-      "expected_output": {
-        "location": "workspace/artifacts/T-001.out",
-        "git": { "branch": "task/T-001-jwt-enforce", "commit_msg": "feat(security): enforce JWT on all API endpoints" },
-        "summary_back_to_manager": "JWT middleware added + applied to N routes; pointer to diff."
-      },
-      "acceptance_criteria": [
-        "Every data-returning/mutating endpoint rejects requests without a valid JWT (401)",
-        "A valid token resolves to an authenticated identity used for org binding",
-        "No endpoint left unauthenticated except explicit public health checks"
-      ],
-      "max_retries": 2,
-      "status": "validated"
-    },
-    {
-      "task_id": "T-002",
-      "milestone": "M0 - Security + Cartography",
-      "title": "Tighten CORS to production allowlist",
-      "depends_on": [],
-      "objective": "Replace allow-all CORS with an env-driven allowlist; remove the 'tighten in production' TODO.",
-      "context_manifest": {
-        "code_files": ["backend/ (server/cors config only)"],
-        "doc_chunks": ["workspace/context/assessment-chunks/section3-security-gaps.md"],
-        "forbidden_context": ["src/App.jsx", "entire assessment doc"],
-        "token_budget": 8000
-      },
-      "expected_output": {
-        "location": "workspace/artifacts/T-002.out",
-        "git": { "branch": "task/T-002-cors", "commit_msg": "fix(security): restrict CORS to allowlist" },
-        "summary_back_to_manager": "CORS limited to env allowlist; TODO removed; pointer to diff."
-      },
-      "acceptance_criteria": [
-        "CORS rejects origins not in the configured allowlist",
-        "Allowlist is configurable via environment, not hard-coded",
-        "The 'allow all - tighten in production' comment/behavior is gone"
-      ],
-      "max_retries": 2,
-      "status": "validated"
-    },
-    {
-      "task_id": "T-003",
-      "milestone": "M0 - Security + Cartography",
-      "title": "Implement real org isolation",
-      "depends_on": ["T-001"],
-      "objective": "Bind org isolation to the authenticated JWT identity (not just a request header) so a user can only access their own org's data.",
-      "context_manifest": {
-        "code_files": ["backend/ (auth + data-access layer only)"],
-        "doc_chunks": ["workspace/context/assessment-chunks/section3-security-gaps.md"],
-        "forbidden_context": ["src/App.jsx", "entire assessment doc"],
-        "token_budget": 12000
-      },
-      "expected_output": {
-        "location": "workspace/artifacts/T-003.out",
-        "git": { "branch": "task/T-003-org-isolation", "commit_msg": "feat(security): bind org isolation to auth identity" },
-        "summary_back_to_manager": "Org scoping derived from token identity; cross-org access blocked."
-      },
-      "acceptance_criteria": [
-        "Org is resolved from the authenticated identity, not a client-supplied header alone",
-        "A request for another org's data is rejected (403)",
-        "All org-scoped queries are filtered by the authenticated org"
-      ],
-      "max_retries": 2,
-      "status": "validated"
-    },
-    {
-      "task_id": "T-004",
-      "milestone": "M0 - Security + Cartography",
-      "title": "Resolve background scheduler status",
-      "depends_on": [],
-      "objective": "Decide and implement: either deploy scheduler.js as a Render Background Worker (add render.yaml entry) or remove the dead code. Document the decision.",
-      "context_manifest": {
-        "code_files": ["backend/scheduler.js", "render.yaml"],
-        "doc_chunks": ["workspace/context/assessment-chunks/appendix-current-state.md"],
-        "forbidden_context": ["src/App.jsx", "entire assessment doc"],
-        "token_budget": 8000
-      },
-      "expected_output": {
-        "location": "workspace/artifacts/T-004.out",
-        "git": { "branch": "task/T-004-scheduler", "commit_msg": "chore: resolve background scheduler deployment" },
-        "summary_back_to_manager": "Scheduler either wired as a worker or removed; decision documented."
-      },
-      "acceptance_criteria": [
-        "Either render.yaml defines the background worker OR scheduler.js and its references are removed",
-        "No dead/unreferenced scheduler code remains if the remove path was chosen",
-        "Decision and rationale recorded in the output file"
-      ],
-      "max_retries": 2,
-      "status": "validated"
-    },
-    {
-      "task_id": "T-010",
-      "milestone": "M1 - Risk Correlation Engine",
-      "title": "Implement core correlation data-model entities",
-      "depends_on": [],
-      "objective": "Add BusinessProcess, Asset, DataObject, ThreatScenario, LegalObligation, ExecutiveOwner per the spec, with the documented key relationships and migrations.",
-      "context_manifest": {
-        "code_files": ["backend/ (models/schema + migrations only)"],
-        "doc_chunks": ["workspace/context/assessment-chunks/datamodel-core-entities.md", "workspace/context/assessment-chunks/datamodel-relationships.md"],
-        "forbidden_context": ["src/App.jsx", "entire assessment doc", "dashboard UI code"],
-        "token_budget": 14000
-      },
-      "expected_output": {
-        "location": "workspace/artifacts/T-010.out",
-        "git": { "branch": "task/T-010-correlation-model", "commit_msg": "feat(model): add correlation engine entities" },
-        "summary_back_to_manager": "6 entities + migrations added; relationships wired; pointer to diff."
-      },
-      "acceptance_criteria": [
-        "All six entities exist with the fields named in the data-model spec",
-        "Key relationships hold: Finding->Risk->BusinessProcess->FinancialImpact and BusinessProcess->Application->Asset",
-        "Migrations run cleanly against the existing PostgreSQL schema without breaking the 5 current tables"
-      ],
-      "max_retries": 2,
-      "status": "completed"
-    },
-    {
-      "task_id": "T-011",
-      "milestone": "M1 - Risk Correlation Engine",
-      "title": "Expand Risk + Finding entities for correlation",
-      "depends_on": ["T-010"],
-      "objective": "Extend Risk and Finding to carry business-process, data-object, threat-scenario, framework, financial, legal, and ownership linkage.",
-      "context_manifest": {
-        "code_files": ["backend/ (Risk + Finding models/migrations only)"],
-        "doc_chunks": ["workspace/context/assessment-chunks/datamodel-Risk.md", "workspace/context/assessment-chunks/datamodel-Finding.md", "workspace/context/assessment-chunks/datamodel-relationships.md"],
-        "forbidden_context": ["src/App.jsx", "entire assessment doc"],
-        "token_budget": 12000
-      },
-      "expected_output": {
-        "location": "workspace/artifacts/T-011.out",
-        "git": { "branch": "task/T-011-risk-finding", "commit_msg": "feat(model): correlation linkage on Risk and Finding" },
-        "summary_back_to_manager": "Risk/Finding extended with linkage fields + migrations."
-      },
-      "acceptance_criteria": [
-        "Risk carries businessProcessId[], dataObjectIds[], threatScenarioId, frameworkMappings[], financialExposure, legalObligationId[], executiveOwner",
-        "Finding links to riskId/assetId/businessProcessId and supports repeat detection fields",
-        "Migrations run cleanly and preserve existing data"
-      ],
-      "max_retries": 2,
-      "status": "completed"
-    },
-    {
-      "task_id": "T-012",
-      "milestone": "M1 - Risk Correlation Engine",
-      "title": "Build the correlation engine logic",
-      "depends_on": ["T-011"],
-      "objective": "Implement the service that takes a technical finding and produces the executive narrative (process, data, threat, $ exposure, framework refs, legal obligations, owners, audit evidence).",
-      "context_manifest": {
-        "code_files": ["backend/ (services layer only)"],
-        "doc_chunks": ["workspace/context/assessment-chunks/section3-backlog.md", "workspace/context/assessment-chunks/datamodel-relationships.md"],
-        "forbidden_context": ["src/App.jsx", "entire assessment doc"],
-        "token_budget": 14000
-      },
-      "expected_output": {
-        "location": "workspace/artifacts/T-012.out",
-        "git": { "branch": "task/T-012-correlation-engine", "commit_msg": "feat: risk correlation engine service + API" },
-        "summary_back_to_manager": "Engine endpoint returns full executive narrative for a finding."
-      },
-      "acceptance_criteria": [
-        "Given a finding, the engine returns: business process, data type, threat scenario, financial exposure, framework refs, legal obligations, owners, audit evidence requirement",
-        "Output matches the assessment's example narrative shape (e.g. CVE on NASCO -> Claims Adjudication -> $ exposure -> HIPAA/NIST/CIS refs)",
-        "Exposed via an authenticated, org-scoped API endpoint"
-      ],
-      "max_retries": 2,
-      "status": "completed"
-    },
-    {
-      "task_id": "T-113",
-      "milestone": "M1 - Risk Correlation Engine",
-      "title": "Frontend route + component: /correlated/:findingId narrative view",
-      "depends_on": ["T-012"],
-      "objective": "Create the CorrelatedFinding page component that renders the executive narrative matching the NASCO screenshot field-for-field.",
-      "context_manifest": {
-        "code_files": ["frontend/src/pages/CorrelatedFinding.jsx"],
-        "doc_chunks": ["workspace/context/assessment-chunks/datamodel-relationships.md"],
-        "forbidden_context": ["src/App.jsx in full"],
-        "token_budget": 12000
-      },
-      "expected_output": {
-        "location": "frontend/src/pages/CorrelatedFinding.jsx",
-        "summary_back_to_manager": "CorrelatedFinding page component created with executive narrative display matching NASCO screenshot."
-      },
-      "acceptance_criteria": [
-        "CorrelatedFinding component renders executive narrative for a findingId",
-        "Displays business process, data involvement, threat scenario, financial exposure, regulatory obligations, and ownership",
-        "Handles loading, error, and empty states",
-        "Includes print/export functionality"
-      ],
-      "max_retries": 2,
-      "status": "completed"
-    },
-    {
-      "task_id": "T-114",
-      "milestone": "M1 - Risk Correlation Engine",
-      "title": "Wire CISODash + CRODash to open correlation narrative",
-      "depends_on": ["T-113"],
-      "objective": "Add 'View Executive Narrative' buttons to findings tables in CISODash and CRODash that navigate to the correlated finding view.",
-      "context_manifest": {
-        "code_files": ["frontend/src/App.jsx (CISODash, CRODash findings sections)"],
-        "doc_chunks": [],
-        "forbidden_context": ["src/App.jsx in full"],
-        "token_budget": 8000
-      },
-      "expected_output": {
-        "location": "frontend/src/App.jsx",
-        "summary_back_to_manager": "Added correlation buttons to findings tables in CISODash and CRODash."
-      },
-      "acceptance_criteria": [
-        "CISODash findings table has 'View Executive Narrative' button",
-        "CRODash finding detail modal has 'View Executive Narrative' button",
-        "Buttons navigate to /correlated/:findingId route",
-        "Navigation works in <3 clicks from any finding"
-      ],
-      "max_retries": 2,
-      "status": "completed"
-    },
-    {
-      "task_id": "T-115",
-      "milestone": "M1 - Risk Correlation Engine",
-      "title": "Validation: end-to-end test + usability check",
-      "depends_on": ["T-114"],
-      "objective": "Validate the complete correlation flow from finding click to executive narrative display.",
-      "context_manifest": {
-        "code_files": ["frontend/src/pages/CorrelatedFinding.jsx", "cyberrx-api/src/routes/correlation.js"],
-        "doc_chunks": [],
-        "forbidden_context": [],
-        "token_budget": 8000
-      },
-      "expected_output": {
-        "location": "workspace/artifacts/T-115.out",
-        "summary_back_to_manager": "Validation complete: correlation flow works end-to-end."
-      },
-      "acceptance_criteria": [
-        "Frontend builds without errors",
-        "Correlation API endpoint is accessible and returns proper data",
-        "Navigation from dashboards to correlation view works",
-        "Executive narrative renders with all required fields"
-      ],
-      "max_retries": 2,
-      "status": "validated"
     }
   ]
 }
