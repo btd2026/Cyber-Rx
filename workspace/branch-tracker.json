@@ -1,0 +1,41 @@
+{
+  "sprint": 1,
+  "sprintName": "Credential Infrastructure",
+  "startDate": "2025-01-31",
+  "branches": {
+    "feature/sprint-1-credential-infrastructure": {
+      "status": "active",
+      "purpose": "Main integration branch for Sprint 1",
+      "tasks": []
+    },
+    "feature/T-001-credential-modal": {
+      "status": "active",
+      "task": "T-001",
+      "purpose": "Credential entry modal component",
+      "agent": "frontend-architect",
+      "createdAt": "2025-01-31T10:00:00Z"
+    },
+    "feature/T-002-credential-validation": {
+      "status": "active",
+      "task": "T-002",
+      "purpose": "Credential validation API endpoint",
+      "agent": "backend-database-integration",
+      "createdAt": "2025-01-31T10:00:00Z"
+    },
+    "feature/T-003-connector-card-states": {
+      "status": "pending",
+      "task": "T-003",
+      "purpose": "Update connector card with status states",
+      "agent": "frontend-architect",
+      "dependsOn": "T-001"
+    },
+    "feature/T-021-sync-jobs-table": {
+      "status": "active",
+      "task": "T-021",
+      "purpose": "Database migration for sync jobs table",
+      "agent": "backend-database-integration",
+      "createdAt": "2025-01-31T10:00:00Z"
+    }
+  },
+  "commits": []
+}
