@@ -21,6 +21,7 @@ const RemediationTask = require('./RemediationTask');
 const Evidence = require('./Evidence');
 const VendorRiskSignal = require('./VendorRiskSignal');
 const Narrative = require('./Narrative');
+const VendorAlert = require('./VendorAlert');
 
 module.exports = {
   BusinessProcess,
@@ -37,5 +38,6 @@ module.exports = {
   RemediationTask,
   Evidence,
   VendorRiskSignal,
-  Narrative
+  Narrative,
+  VendorAlert
 };
