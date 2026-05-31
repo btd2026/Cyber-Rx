@@ -3,7 +3,6 @@ import CorrelatedFinding from "./pages/CorrelatedFinding";
 import CIODash from "./pages/CIODash";
 import CLODash from "./pages/CLODash";
 import AuditDash from "./pages/AuditDash";
-import ConnectorCard from "./components/ConnectorCard";
 
 // --- Theme --------------------------------------------------------------------
 var C = {
@@ -4456,8 +4455,6 @@ function Setup(props) {
   var _s32=useState(false);    var vendorPulling=_s32[0];var setVendorPulling=_s32[1];
   // Vendor monitoring state
   var _s35=useState({});       var vendorConnections=_s35[0];  var setVendorConnections=_s35[1];
-  var _s36=useState(false);     var showConnectorSetup=_s36[0];  var setShowConnectorSetup=_s36[1];
-  var _s37=useState("");       var selectedVendorForConnectors=_s37[0];  var setSelectedVendorForConnectors=_s37[1];
   // Additional org profile fields for complete dashboard data
   var _s33=useState({
     "hipaa_sr":true,"hipaa_pr":true,"hipaa_bn":true,
@@ -5834,57 +5831,125 @@ function Setup(props) {
                           })}
                         </div>
                       )}
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:6}}>
-                        <div>
-                          <div style={{color:C.muted,fontSize:9,fontWeight:600,marginBottom:2}}>API Endpoint / URL</div>
-                          <input value={creds.url||""}
-                            onChange={function(e){
-                              setVendorCreds(function(d){
-                                var ex=d[vendor.id]||{};
-                                return Object.assign({},d,mk(vendor.id,Object.assign({},ex,{url:e.target.value})));
-                              });
-                            }}
-                            placeholder={"https://"+vendor.id+".api.com/v1"}
-                            style={{width:"100%",background:C.bg,border:"1px solid "+(creds.url?tierGroup.color+"40":C.border),
-                              borderRadius:5,padding:"5px 8px",fontSize:9,color:C.text,
-                              outline:"none",boxSizing:"border-box"}}/>
+                      {/* Connector Configuration */}
+                      <div style={{marginTop:12}}>
+                        <div style={{color:C.muted,fontSize:10,fontWeight:600,marginBottom:8}}>
+                          Connect monitoring sources for {vendor.name}
                         </div>
-                        <div>
-                          <div style={{color:C.muted,fontSize:9,fontWeight:600,marginBottom:2}}>API Key / Token</div>
-                          <input type="password" value={creds.apiKey||""}
-                            onChange={function(e){
-                              setVendorCreds(function(d){
-                                var ex=d[vendor.id]||{};
-                                return Object.assign({},d,mk(vendor.id,Object.assign({},ex,{apiKey:e.target.value})));
-                              });
-                            }}
-                            placeholder="Bearer token or API key"
-                            style={{width:"100%",background:C.bg,border:"1px solid "+(creds.apiKey?tierGroup.color+"40":C.border),
-                              borderRadius:5,padding:"5px 8px",fontSize:9,color:C.text,
-                              outline:"none",boxSizing:"border-box"}}/>
+                        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))",gap:6}}>
+                          {CONNECTORS.map(function(connector){
+                            var connKey = vendor.id+"_"+connector.id;
+                            var conn = vendorConnections[connKey];
+                            var isConnected = conn && conn.status === "connected";
+                            var isConnecting = conn && conn.status === "connecting";
+                            return (
+                              <div key={connector.id} style={{
+                                border:"1px solid "+(isConnected ? "#0891B2" : "#E5E7EB"),
+                                borderRadius:6,
+                                padding:8,
+                                backgroundColor:"#fff",
+                                transition:"border-color 0.2s"
+                              }}>
+                                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
+                                  <span style={{fontSize:14,lineHeight:1}}>{connector.icon}</span>
+                                  <div style={{flex:1,minWidth:0}}>
+                                    <div style={{
+                                      color:"#111827",
+                                      fontSize:10,
+                                      fontWeight:700
+                                    }}>{connector.name}</div>
+                                    <div style={{
+                                      color:"#6B7280",
+                                      fontSize:8,
+                                      lineHeight:1.3
+                                    }}>{connector.purpose}</div>
+                                  </div>
+                                  <div style={{display:"flex",alignItems:"center",gap:3}}>
+                                    <div style={{
+                                      width:6,
+                                      height:6,
+                                      borderRadius:"50%",
+                                      backgroundColor:isConnected ? "#0FBB80" : isConnecting ? "#F5A623" : "#888"
+                                    }}/>
+                                    <span style={{
+                                      color:isConnected ? "#0FBB80" : isConnecting ? "#F5A623" : "#888",
+                                      fontSize:7,
+                                      fontWeight:600
+                                    }}>{isConnected ? "Connected" : isConnecting ? "Connecting..." : "Not Connected"}</span>
+                                  </div>
+                                </div>
+                                <div style={{display:"flex",gap:4}}>
+                                  {!isConnected && !isConnecting && (
+                                    <button
+                                      onClick={function(){
+                                        setVendorConnections(function(prev){
+                                          var newConnections = {...prev};
+                                          newConnections[connKey] = {
+                                            status:"connecting",
+                                            lastSync:null,
+                                            signalCount:0
+                                          };
+                                          return newConnections;
+                                        });
+                                        setTimeout(function(){
+                                          setVendorConnections(function(prev){
+                                            var newConnections = {...prev};
+                                            newConnections[connKey] = {
+                                              status:"connected",
+                                              lastSync:new Date().toISOString(),
+                                              signalCount:Math.floor(Math.random()*10)+1,
+                                              riskContribution:Math.random()*0.5
+                                            };
+                                            return newConnections;
+                                          });
+                                        }, 1500);
+                                      }}
+                                      style={{
+                                        flex:1,
+                                        backgroundColor:"#2565EB",
+                                        border:"none",
+                                        color:"#fff",
+                                        borderRadius:4,
+                                        padding:"3px 6px",
+                                        cursor:"pointer",
+                                        fontSize:8,
+                                        fontWeight:600,
+                                        transition:"background-color 0.2s"
+                                      }}
+                                    >Connect</button>
+                                  )}
+                                  {isConnected && (
+                                    <button
+                                      onClick={function(){
+                                        setVendorConnections(function(prev){
+                                          var newConnections = {...prev};
+                                          delete newConnections[connKey];
+                                          return newConnections;
+                                        });
+                                      }}
+                                      style={{
+                                        flex:1,
+                                        backgroundColor:"#EF4545",
+                                        border:"none",
+                                        color:"#fff",
+                                        borderRadius:4,
+                                        padding:"3px 6px",
+                                        cursor:"pointer",
+                                        fontSize:8,
+                                        fontWeight:600
+                                      }}
+                                    >Disconnect</button>
+                                  )}
+                                </div>
+                                {conn && conn.lastSync && (
+                                  <div style={{marginTop:4,fontSize:7,color:C.muted}}>
+                                    {new Date(conn.lastSync).toLocaleDateString()} · {conn.signalCount} sigs
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
-                      </div>
-                      <div style={{display:"flex",gap:8,alignItems:"center"}}>
-                        <button onClick={function(){
-                            if(!creds.url&&!creds.apiKey){return;}
-                            setVendorCreds(function(d){
-                              var ex=d[vendor.id]||{};
-                              return Object.assign({},d,mk(vendor.id,Object.assign({},ex,{status:"testing"})));
-                            });
-                            setTimeout(function(){
-                              setVendorCreds(function(d){
-                                var ex=d[vendor.id]||{};
-                                return Object.assign({},d,mk(vendor.id,Object.assign({},ex,{status:"connected"})));
-                              });
-                            },1500);
-                          }}
-                          style={{background:creds.url||creds.apiKey?tierGroup.color:"#888",
-                            border:"none",color:"#fff",borderRadius:5,
-                            padding:"4px 12px",cursor:"pointer",fontSize:9,fontWeight:700}}>
-                          Test Connection
-                        </button>
-                        {creds.status==="testing"&&<span style={{color:tierGroup.color,fontSize:9}}>Testing...</span>}
-                        {creds.status==="connected"&&<span style={{color:"#0FBB80",fontSize:9}}>✓ Connected</span>}
                       </div>
                     </div>
                   )}
@@ -5913,129 +5978,6 @@ function Setup(props) {
               </span>
             ):null;
           })}
-        </div>
-      </div>
-    )}
-
-    {/* Connect Monitoring Sources - Only visible when vendors selected */}
-    {Object.keys(vendorSel).filter(function(k){return vendorSel[k];}).length>0&&(
-      <div style={{marginTop:16}}>
-        <div style={{background:C.panel,border:"1px solid "+C.border,borderRadius:10,overflow:"hidden"}}>
-          <div style={{padding:"12px 16px",borderBottom:"1px solid "+C.border,
-            display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <div>
-              <div style={{color:C.text,fontSize:13,fontWeight:700}}>
-                Connect Monitoring Sources
-              </div>
-              <div style={{color:C.muted,fontSize:10}}>
-                Connect external monitoring services for continuous vendor risk intelligence
-              </div>
-            </div>
-            <button onClick={function(){setShowConnectorSetup(!showConnectorSetup);}}
-              style={{background:C.acc,border:"none",color:"#fff",
-                borderRadius:6,padding:"4px 12px",cursor:"pointer",
-                fontSize:10,fontWeight:600}}>
-              {showConnectorSetup?"Hide":"Setup"} Connectors
-            </button>
-          </div>
-
-          {showConnectorSetup&&(
-            <div style={{padding:"12px 16px"}}>
-              {/* Vendor selector */}
-              <div style={{marginBottom:12}}>
-                <select
-                  value={selectedVendorForConnectors||""}
-                  onChange={function(e){setSelectedVendorForConnectors(e.target.value);}}
-                  style={{padding:"6px 10px",borderRadius:6,border:"1px solid "+C.border,
-                    background:C.bg,color:C.text,fontSize:11,minWidth:"200px"}}
-                >
-                  <option value="">Select a vendor to configure connectors...</option>
-                  {VENDOR_TIERS.flatMap(function(t){return t.vendors||[];}).filter(function(v){
-                    return vendorSel[v.id];
-                  }).map(function(v){
-                    return <option key={v.id} value={v.id}>{v.name}</option>;
-                  })}
-                </select>
-              </div>
-
-              {/* Connector cards grid */}
-              {selectedVendorForConnectors&&(
-                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))",gap:10}}>
-                  {CONNECTORS.map(function(connector){
-                    var conn=vendorConnections[selectedVendorForConnectors+"_"+connector.id];
-                    return (
-                      <ConnectorCard
-                        key={connector.id}
-                        connector={connector}
-                        connection={conn}
-                        vendorId={selectedVendorForConnectors}
-                        onConnect={function(){
-                          var key = selectedVendorForConnectors+"_"+connector.id;
-                          setVendorConnections(function(prev){
-                            var newConnections = {...prev};
-                            newConnections[key] = {
-                              status:"connecting",
-                              lastSync:null,
-                              signalCount:0
-                            };
-                            return newConnections;
-                          });
-                          setTimeout(function(){
-                            setVendorConnections(function(prev){
-                              var newConnections = {...prev};
-                              newConnections[key] = {
-                                status:"connected",
-                                lastSync:new Date().toISOString(),
-                                signalCount:Math.floor(Math.random()*10)+1,
-                                riskContribution:Math.random()*0.5
-                              };
-                              return newConnections;
-                            });
-                          }, 1500);
-                        }}
-                        onTest={function(){
-                          alert("Testing connection to "+connector.name+" for vendor "+selectedVendorForConnectors+"...\n\nThis would make a real API call to test the connector connection.");
-                        }}
-                        onSync={function(){
-                          var key = selectedVendorForConnectors+"_"+connector.id;
-                          setVendorConnections(function(prev){
-                            var newConnections = {...prev};
-                            if(newConnections[key]){
-                              newConnections[key] = {
-                                ...newConnections[key],
-                                status:"syncing"
-                              };
-                            }
-                            return newConnections;
-                          });
-                          setTimeout(function(){
-                            setVendorConnections(function(prev){
-                              var newConnections = {...prev};
-                              if(newConnections[key]){
-                                newConnections[key] = {
-                                  ...newConnections[key],
-                                  status:"connected",
-                                  lastSync:new Date().toISOString(),
-                                  signalCount:(newConnections[key].signalCount||0)+Math.floor(Math.random()*5)
-                                };
-                              }
-                              return newConnections;
-                            });
-                          }, 2000);
-                        }}
-                      />
-                    );
-                  })}
-                </div>
-              )}
-
-              {!selectedVendorForConnectors&&(
-                <div style={{padding:"20px",textAlign:"center",color:C.muted,fontSize:11}}>
-                  Select a vendor above to view and configure monitoring connectors
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </div>
     )}
