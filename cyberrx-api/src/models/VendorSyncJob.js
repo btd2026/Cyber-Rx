@@ -255,6 +255,77 @@ class VendorSyncJob {
   }
 
   /**
+   * Update job progress
+   * @param {string} id - Job ID
+   * @param {number} progress - Progress percentage (0-100)
+   * @param {Object} [metadata] - Additional metadata to merge
+   * @returns {Promise<Object>} Updated job record
+   */
+  static async updateProgress(id, progress, metadata = {}) {
+    const validatedProgress = Math.min(100, Math.max(0, progress));
+
+    const result = await query(
+      `UPDATE vendor_sync_jobs
+       SET metadata = COALESCE(metadata, '{}'::jsonb) || $2,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $1
+       RETURNING *`,
+      [id, JSON.stringify({ ...metadata, progress: validatedProgress })]
+    );
+
+    return this._transformFromDb(result[0]);
+  }
+
+  /**
+   * Update job metadata
+   * @param {string} id - Job ID
+   * @param {Object} metadata - Metadata to merge into existing metadata
+   * @returns {Promise<Object>} Updated job record
+   */
+  static async updateMetadata(id, metadata) {
+    const result = await query(
+      `UPDATE vendor_sync_jobs
+       SET metadata = COALESCE(metadata, '{}'::jsonb) || $2,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $1
+       RETURNING *`,
+      [id, JSON.stringify(metadata)]
+    );
+
+    return this._transformFromDb(result[0]);
+  }
+
+  /**
+   * Get count of jobs for an organization
+   * @param {string} organizationId - Organization ID
+   * @param {Object} [options] - Query options
+   * @param {string} [options.status] - Filter by status
+   * @param {string} [options.vendorId] - Filter by vendor
+   * @returns {Promise<number>} Count of jobs
+   */
+  static async countByOrganization(organizationId, options = {}) {
+    const { status = null, vendorId = null } = options;
+
+    let sql = 'SELECT COUNT(*) as count FROM vendor_sync_jobs WHERE organization_id = $1';
+    const params = [organizationId];
+    let paramCount = 2;
+
+    if (status) {
+      sql += ` AND status = $${paramCount}`;
+      params.push(status);
+      paramCount++;
+    }
+
+    if (vendorId) {
+      sql += ` AND vendor_id = $${paramCount}`;
+      params.push(vendorId);
+    }
+
+    const result = await query(sql, params);
+    return parseInt(result[0].count);
+  }
+
+  /**
    * Transform database row to camelCase model
    * @private
    */
@@ -271,6 +342,7 @@ class VendorSyncJob {
       completedAt: row.completed_at,
       errorMessage: row.error_message,
       retryCount: row.retry_count,
+      metadata: row.metadata || {},
       createdAt: row.created_at,
       updatedAt: row.updated_at
     };

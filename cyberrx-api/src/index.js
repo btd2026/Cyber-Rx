@@ -192,6 +192,9 @@ app.use('/api/evidence',           [apiGetLimiter, apiPostLimiter, apiDeleteLimi
 // Vendor Continuous Monitoring Routes with rate limiting
 app.use('/api/vendor-monitoring',  [apiGetLimiter, apiPostLimiter], require('./routes/vendor-monitoring'));
 
+// Vendor Sync Status API with rate limiting
+app.use('/api/vendors',            [apiGetLimiter], require('./routes/syncStatus'));
+
 // Seed management (admin routes - protect in production) with rate limiting
 app.use('/api/seeds',             [apiGetLimiter, apiPostLimiter, apiDeleteLimiter], require('./routes/seeds'));
 
