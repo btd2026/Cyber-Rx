@@ -157,7 +157,6 @@ var NAV_GROUPS = [
       {id:"controls",  label:"Control Validation",  icon:"✓",  mod:"F04"},
       {id:"assets",    label:"Claim Lifecycle",     icon:"🔗", mod:"F03"},
       {id:"scoring",   label:"Risk Scoring + MITRE",icon:"📈", mod:"F05"},
-      {id:"evidence",  label:"Evidence Repository", icon:"📁", mod:"F06"},
       {id:"board",     label:"Board Risk Report",   icon:"📋", mod:"F07"},
     ]
   },
@@ -4457,7 +4456,7 @@ function Setup(props) {
   var setRootMailingVendor  = props.setRootMailingVendor  || function(){};
   var setRootMemberPortal   = props.setRootMemberPortal   || function(){};
 
-  var STEPS = ["Org Profile","Select Processes","Map Applications","Vendor Ecosystem","Core Infrastructure","Document Intake"];
+  var STEPS = ["Org Profile","Select Processes","Map Applications","Vendor Ecosystem","Core Infrastructure"];
 
   var LSTEPS = [
     "Encrypting configuration…",
@@ -4495,9 +4494,7 @@ function Setup(props) {
   var _s8i=useState(""); var pamInput=_s8i[0];       var setPamInput=_s8i[1];
   var _s8j=useState(""); var vulnInput=_s8j[0];      var setVulnInput=_s8j[1];
   var _s8k=useState(""); var insCarrierInput=_s8k[0];var setInsCarrierInput=_s8k[1];
-  var _s8l=useState(""); var drTestInput=_s8l[0];    var setDrTestInput=_s8l[1];
-  var _s8m=useState("no"); var boardCommInput=_s8m[0]; var setBoardCommInput=_s8m[1];
-  var _s8n=useState("no"); var hasCISOInput=_s8n[0];   var setHasCISOInput=_s8n[1];
+  var _s8l=useState("no"); var hasCISOInput=_s8l[0];   var setHasCISOInput=_s8l[1];
   var _s8o=useState("no"); var hasIRPInput=_s8o[0];    var setHasIRPInput=_s8o[1];
   var _s8p=useState("no"); var tabletopInput=_s8p[0];  var setTabletopInput=_s8p[1];
   var _s3d=useState(""); var phiRecs=_s3d[0];     var setPhiRecs=_s3d[1];
@@ -5040,11 +5037,6 @@ function Setup(props) {
                   "5,000 to 20,000":"12000","20,000 to 75,000":"45000",
                   "75,000 to 250,000":"160000","Over 250,000":"350000"};
                 if(a.endpoints&&epmap[a.endpoints]){setEndptCount(epmap[a.endpoints]);}
-                if(a.boardComm){setBoardCommInput(a.boardComm.indexOf("Dedicated")>=0?"yes":"no");}
-                var drmap={"Within the past 3 months":"2","3 to 6 months ago":"4",
-                  "6 to 12 months ago":"9","1 to 2 years ago":"18",
-                  "Over 2 years ago":"30","Never conducted":"99"};
-                if(a.drTest&&drmap[a.drTest]){setDrTestInput(drmap[a.drTest]);}
                 var incmap={"None":"0","1 minor incident":"1","1 significant incident":"1",
                   "2 to 3 incidents":"2","4 or more incidents":"4","Prefer not to say":"0"};
                 if(a.incidents&&incmap[a.incidents]){setPriorInc(incmap[a.incidents]);}
@@ -10574,7 +10566,6 @@ function CFODash(props) {
 // ─── Board Dashboard — Fortune 100 CISO Board Presentation ───────────────────
 function BoardDash(props) {
   var go = props.go; var execActions = props.execActions;
-  var boardCyberComm = props.boardCyberComm === "yes";
   var aMFA = (props.mfaPct!==null&&props.mfaPct!==undefined)?props.mfaPct:78;
   var hasDRTest      = props.drTestMonths && props.drTestMonths !== "Never tested";
   var hasCISORole    = true;
@@ -11256,7 +11247,6 @@ function Controls(props) {
           <Btn onClick={run} disabled={running} primary>
             {running ? ("Running… "+checked+"/18") : "▶ Run All Controls"}
           </Btn>
-          <Btn onClick={function(){go("evidence");}} small>Evidence F06</Btn>
           <Btn onClick={function(){go("execution",{act:"ACT-009"});}} small>Actions F09</Btn>
         </div>
       </div>
@@ -15623,255 +15613,6 @@ function Scoring(props) {
   );
 }
 
-// --- Evidence (F06) -----------------------------------------------------------
-function Evidence(props) {
-  var go = props.go; var goBack = props.goBack;
-  var orgName = props.orgName||""; var orgExtras = props.orgTextExtras||{};
-  var _s0=useState(null);  var selItem=_s0[0]; var setSelItem=_s0[1];
-  var _s1=useState(false); var showUpload=_s1[0]; var setShowUpload=_s1[1];
-  var _s2=useState([]);    var uploaded=_s2[0]; var setUploaded=_s2[1];
-  var _s3=useState("");    var filterFw=_s3[0]; var setFilterFw=_s3[1];
-
-  var FW = [
-    {id:"hipaa", name:"HIPAA Security Rule",     score:74, covered:11, total:15, color:"#F5A623"},
-    {id:"soc2",  name:"SOC 2 Type II",           score:78, covered:14, total:18, color:"#F5A623"},
-    {id:"nistcsf",name:"NIST CSF 2.0",           score:68, covered:10, total:15, color:"#EF4545"},
-    {id:"cms",   name:"CMS \u00A7422/438",      score:81, covered:13, total:16, color:"#F5A623"},
-  ];
-
-  var BASE_ITEMS = [
-    {id:"EVD-001",ctrl:"\u00A7164.308(a)(1)(ii)(A)",fw:"hipaa",title:"MFA enforcement policy — F-001 remediation",sys:"Okta",status:"current",   date:"Mar 2025",desc:"Policy document confirming MFA enforcement across all clinical systems. Covers F-001 privileged account gap."},
-    {id:"EVD-002",ctrl:"CIS-10",                     fw:"soc2", title:"CrowdStrike EDR deployment log — 23 servers",sys:"CrowdStrike",status:"current",date:"Mar 2025",desc:"EDR deployment completion report for 23 previously unprotected servers. F-005 partial remediation."},
-    {id:"EVD-003",ctrl:"CC6.1",                      fw:"soc2", title:"SailPoint access certification report Q1 2025",sys:"SailPoint",status:"current",date:"Feb 2025",desc:"Quarterly access review completing 94% of certification campaigns. F-007 supporting evidence."},
-    {id:"EVD-004",ctrl:"AU-11",                      fw:"nistcsf",title:"Splunk SIEM 90-day retention configuration",sys:"Splunk",status:"stale",date:"Jan 2025",desc:"Configuration screenshot showing 14-day retention. F-006 open finding — retention below required minimum."},
-    {id:"EVD-005",ctrl:"\u00A7164.308(b)(1)",       fw:"hipaa",title:"Inovalon BAA renewal documentation",sys:"Compliance",status:"current",date:"Mar 2025",desc:"Executed BAA with Inovalon dated March 2025. Previously expired F-016 item — now remediated."},
-    {id:"EVD-006",ctrl:"\u00A7164.308(a)(5)",       fw:"hipaa",title:"Security awareness training completion report",sys:"KnowBe4",status:"stale",date:"Dec 2024",desc:"Training completion at 71% as of Q4 2024. F-023 open — 412 employees overdue."},
-    {id:"EVD-007",ctrl:"GV.SC-07",                   fw:"nistcsf",title:"Vendor risk assessment — Tier 1 vendors",sys:"Vendor Mgmt",status:"current",date:"Feb 2025",desc:"Annual risk assessment completed for 3 of 6 Tier 1 vendors. 4 still overdue — F-016 related."},
-  ];
-
-  var ITEMS = BASE_ITEMS.concat(uploaded);
-
-  // Upload modal
-  if (showUpload) {
-    return (
-      <div style={{maxWidth:560,margin:"0 auto",padding:20}}>
-        <Card>
-          <SH label="Upload Evidence File"/>
-          <p style={{color:C.muted,fontSize:11,marginBottom:14}}>
-            Link a policy document, screenshot, or report to a compliance control.
-            Files are associated with your org and displayed in the evidence view.
-          </p>
-          {[
-            {label:"Document Title",    type:"text",   ph:"e.g. MFA Policy v3.2",               key:"title"},
-            {label:"Compliance Control",type:"text",   ph:"e.g. \u00A7164.308(a)(1) or CC6.1", key:"ctrl"},
-            {label:"Framework",         type:"select", opts:FW.map(function(f){return f.id;}),  key:"fw"},
-            {label:"Source System",     type:"text",   ph:"e.g. Okta, Splunk, CrowdStrike",     key:"sys"},
-            {label:"Description",       type:"textarea",ph:"What does this evidence demonstrate?",key:"desc"},
-          ].map(function(fld,i){
-            return (
-              <div key={i} style={{marginBottom:10}}>
-                <div style={{color:C.muted,fontSize:10,fontWeight:600,marginBottom:3}}>{fld.label}</div>
-                {fld.type==="select"?(
-                  <select id={"ev-"+fld.key}
-                    style={{width:"100%",background:C.bg,border:"1px solid "+C.border,
-                      borderRadius:6,padding:"5px 8px",fontSize:11,color:C.text}}>
-                    {fld.opts.map(function(o){return <option key={o} value={o}>{o.toUpperCase()}</option>;})}
-                  </select>
-                ):fld.type==="textarea"?(
-                  <textarea id={"ev-"+fld.key} rows={3} placeholder={fld.ph}
-                    style={{width:"100%",background:C.bg,border:"1px solid "+C.border,
-                      borderRadius:6,padding:"6px 8px",fontSize:11,color:C.text,
-                      resize:"vertical",boxSizing:"border-box",fontFamily:"inherit"}}/>
-                ):(
-                  <input id={"ev-"+fld.key} type="text" placeholder={fld.ph}
-                    style={{width:"100%",background:C.bg,border:"1px solid "+C.border,
-                      borderRadius:6,padding:"5px 8px",fontSize:11,color:C.text,
-                      outline:"none",boxSizing:"border-box"}}/>
-                )}
-              </div>
-            );
-          })}
-          <div style={{display:"flex",gap:8,marginTop:14}}>
-            <Btn onClick={function(){
-              var newId = "EVD-"+String(100+uploaded.length+8).padStart(3,"0");
-              var getV = function(k){var el=document.getElementById("ev-"+k);return el?el.value:"";};
-              var entry = {
-                id:newId, title:getV("title"), ctrl:getV("ctrl"), fw:getV("fw"),
-                sys:getV("sys"), desc:getV("desc"), status:"current",
-                date:new Date().toLocaleDateString("en-US",{month:"short",year:"numeric"}),
-              };
-              if(entry.title){
-                setUploaded(function(p){return p.concat([entry]);});
-                setShowUpload(false);
-              }
-            }} primary>Save Evidence Record</Btn>
-            <Btn onClick={function(){setShowUpload(false);}}>Cancel</Btn>
-          </div>
-        </Card>
-        <p style={{color:C.muted,fontSize:10,textAlign:"center",marginTop:8}}>
-          Note: In production this would upload to S3/Azure Blob via presigned URL.
-          Records are stored in session only in this demo.
-        </p>
-      </div>
-    );
-  }
-
-  // Item detail view
-  if (selItem) {
-    var linked = FINDINGS.find(function(f){
-      return selItem.ctrl && (f.id===selItem.ctrl || (selItem.desc&&selItem.desc.includes(f.id)));
-    });
-    return (
-      <div style={{maxWidth:700}}>
-        <div style={{display:"flex",gap:8,marginBottom:14}}>
-          <Btn onClick={function(){setSelItem(null);}}>← Evidence Repository</Btn>
-          {linked&&linked.act&&(
-            <Btn onClick={function(){go("execution",{act:linked.act});}} primary small>Open Remediation Action →</Btn>
-          )}
-        </div>
-        <Card>
-          <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:14}}>
-            <div style={{flex:1}}>
-              <div style={{color:C.text,fontSize:16,fontWeight:800,marginBottom:4}}>{selItem.title}</div>
-              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-                <span style={{background:C.dim,borderRadius:4,padding:"2px 8px",fontSize:10,color:C.muted,fontWeight:600}}>Control: {selItem.ctrl}</span>
-                <span style={{background:C.dim,borderRadius:4,padding:"2px 8px",fontSize:10,color:C.muted,fontWeight:600}}>{(selItem.fw||"").toUpperCase()}</span>
-                <span style={{background:C.dim,borderRadius:4,padding:"2px 8px",fontSize:10,color:C.muted,fontWeight:600}}>Source: {selItem.sys}</span>
-                <span style={{background:C.dim,borderRadius:4,padding:"2px 8px",fontSize:10,color:C.muted,fontWeight:600}}>Added: {selItem.date}</span>
-                <span style={{background:selItem.status==="current"?"#0FBB8020":"#F5A62320",
-                  borderRadius:4,padding:"2px 8px",fontSize:10,fontWeight:700,
-                  color:selItem.status==="current"?"#0FBB80":"#F5A623"}}>
-                  {selItem.status==="current"?"\u2713 Current":"\u26A0 Stale — review needed"}
-                </span>
-              </div>
-            </div>
-          </div>
-          <div style={{background:C.dim,borderRadius:8,padding:"12px 14px",marginBottom:14}}>
-            <div style={{color:C.muted,fontSize:10,fontWeight:600,marginBottom:4}}>Description</div>
-            <p style={{color:C.text,fontSize:12,lineHeight:1.7,margin:0}}>{selItem.desc||"No description provided."}</p>
-          </div>
-          {linked&&(
-            <div style={{background:"#EF454508",border:"1px solid #EF454525",borderRadius:8,padding:"12px 14px"}}>
-              <div style={{color:"#EF4545",fontSize:10,fontWeight:700,marginBottom:4}}>Linked Finding</div>
-              <div style={{color:C.text,fontSize:12,fontWeight:700}}>{linked.id}: {orgText(linked.title||"",orgName,orgExtras)}</div>
-              <div style={{color:C.muted,fontSize:11,marginTop:3}}>{linked.sev} · {linked.sys}</div>
-            </div>
-          )}
-        </Card>
-      </div>
-    );
-  }
-
-  // Main list view
-  var displayItems = filterFw ? ITEMS.filter(function(i){return i.fw===filterFw;}) : ITEMS;
-
-  return (
-    <div>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-        <h2 style={{color:C.text,fontSize:18,fontWeight:800,margin:0}}>Evidence Repository</h2>
-        <div style={{display:"flex",gap:8}}>
-          <Btn onClick={function(){go("controls");}} small>\u2190 Validation</Btn>
-          <Btn onClick={function(){setShowUpload(true);}} primary>+ Add Evidence</Btn>
-          <Btn onClick={function(){go("execution",{act:"ACT-009"});}} small>Actions F09</Btn>
-        </div>
-      </div>
-
-      {/* Framework coverage summary */}
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:10,marginBottom:14}}>
-        {FW.map(function(f){
-          var fw_count = ITEMS.filter(function(i){return i.fw===f.id;}).length;
-          return (
-            <div key={f.id}
-              onClick={function(){setFilterFw(filterFw===f.id?null:f.id);}}
-              style={{background:filterFw===f.id?f.color+"18":C.card,border:"1.5px solid "+(filterFw===f.id?f.color:C.border),
-                borderRadius:8,padding:"10px 12px",cursor:"pointer",transition:"all 0.15s"}}>
-              <div style={{color:C.text,fontSize:10,fontWeight:700,marginBottom:4}}>{f.name}</div>
-              <div style={{display:"flex",gap:6,alignItems:"center"}}>
-                <div style={{flex:1,height:4,background:C.dim,borderRadius:2,overflow:"hidden"}}>
-                  <div style={{width:f.score+"%",height:"100%",background:f.color}}/>
-                </div>
-                <span style={{color:f.color,fontSize:10,fontWeight:700,fontFamily:"monospace"}}>{f.score}</span>
-              </div>
-              <div style={{color:C.muted,fontSize:9,marginTop:4}}>{fw_count} evidence items</div>
-            </div>
-          );
-        })}
-      </div>
-
-      {filterFw&&(
-        <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:10}}>
-          <span style={{color:C.muted,fontSize:11}}>Filtered: {(FW.find(function(f){return f.id===filterFw;})||{}).name}</span>
-          <button onClick={function(){setFilterFw(null);}}
-            style={{background:"transparent",border:"1px solid "+C.border,color:C.muted,
-              borderRadius:4,padding:"1px 8px",cursor:"pointer",fontSize:10}}>\u00D7 Clear</button>
-        </div>
-      )}
-
-      {/* Evidence items */}
-      <Card>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-          <SH label={"Evidence Items ("+(displayItems.length)+")"}/>
-          <span style={{color:C.muted,fontSize:10}}>{uploaded.length>0?"Including "+uploaded.length+" uploaded this session":""}</span>
-        </div>
-        {displayItems.map(function(item){
-          var linked = FINDINGS.find(function(f){
-            return item.ctrl&&(f.id===item.ctrl||(item.desc&&item.desc.includes(f.id)));
-          });
-          return (
-            <div key={item.id}
-              onClick={function(){setSelItem(item);}}
-              style={{display:"flex",gap:10,alignItems:"center",padding:"10px 0",
-                borderBottom:"1px solid "+C.dim,cursor:"pointer"}}>
-              <div style={{flex:1}}>
-                <div style={{color:C.text,fontSize:11,fontWeight:600,marginBottom:2}}>{item.title}</div>
-                <div style={{display:"flex",gap:8}}>
-                  <span style={{color:C.muted,fontSize:9}}>{item.sys}</span>
-                  <span style={{color:C.muted,fontSize:9}}>\u00B7</span>
-                  <span style={{color:C.muted,fontSize:9,fontFamily:"monospace"}}>{item.ctrl}</span>
-                  <span style={{color:C.muted,fontSize:9}}>\u00B7</span>
-                  <span style={{color:C.muted,fontSize:9}}>{item.date}</span>
-                  {linked&&<span style={{color:"#EF4545",fontSize:9,fontWeight:700}}>{linked.id}</span>}
-                </div>
-              </div>
-              <span style={{color:item.status==="current"?"#0FBB80":"#F5A623",
-                fontSize:9,fontWeight:700,background:(item.status==="current"?"#0FBB80":"#F5A623")+"14",
-                borderRadius:4,padding:"2px 7px",flexShrink:0}}>
-                {item.status==="current"?"\u2713 Current":"\u26A0 Stale"}
-              </span>
-              <span style={{color:C.muted,fontSize:11}}>\u25B6</span>
-            </div>
-          );
-        })}
-        {displayItems.length===0&&(
-          <div style={{color:C.muted,fontSize:11,textAlign:"center",padding:"20px 0"}}>
-            No evidence items for this framework yet. Click "+ Add Evidence" to upload.
-          </div>
-        )}
-      </Card>
-
-      {/* BCBS Demo Preset Card */}
-      <div style={{background:"linear-gradient(135deg,#1E3A5F,#0891B2)",borderRadius:12,
-        padding:"16px 20px",marginTop:12,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <div>
-          <div style={{color:"#ffffff",fontSize:14,fontWeight:800,marginBottom:4}}>
-            ⚡ BCBS Demo Mode
-          </div>
-          <div style={{color:"rgba(255,255,255,0.75)",fontSize:11}}>
-            Load realistic Blue Cross Blue Shield demo data in one click — ready for executive presentation
-          </div>
-        </div>
-        <button onClick={function(){props._bcbsPreset&&props._bcbsPreset();}}
-          style={{background:"#ffffff",border:"none",color:"#1E3A5F",borderRadius:8,
-            padding:"8px 18px",cursor:"pointer",fontSize:12,fontWeight:800,flexShrink:0,marginLeft:16}}>
-          Load BCBS Demo
-        </button>
-      </div>
-
-    </div>
-  );
-}
-
-
 
 function Board(props) {
   var go, goBack, orgType, orgName; go=props.go; goBack=props.goBack; orgType=props.orgType; orgName=props.orgName;
@@ -15938,7 +15679,6 @@ function Board(props) {
         <div style={{display:"flex", gap:8}}>
           <Btn onClick={function(){go("dashboard");}} small>← Dashboard</Btn>
           <Btn onClick={function(){go("scoring");}} small>Scoring F05</Btn>
-          <Btn onClick={function(){go("evidence");}} small>Evidence F06</Btn>
         </div>
       </div>
 
@@ -17024,21 +16764,17 @@ function Shell(props) {
                 {label:"CFO View",        id:"cfo",        primary:false},
                 {label:"Board View",      id:"boarddash",  primary:true}],
     cro:       [{label:"CISO",            id:"dashboard",  primary:false},
-                {label:"Evidence",        id:"evidence",   primary:true}],
+                {label:"Board",           id:"board",      primary:true}],
     cfo:       [{label:"CISO",            id:"dashboard",  primary:false},
                 {label:"Board",           id:"boarddash",  primary:true}],
     boarddash: [{label:"CISO",            id:"dashboard",  primary:false},
                 {label:"Full Report",     id:"board",      primary:true}],
-    controls:  [{label:"Evidence",        id:"evidence",   primary:false},
-                {label:"Actions F09",     id:"execution",  primary:true}],
+    controls:  [{label:"Actions F09",     id:"execution",  primary:true}],
     assets:    [{label:"Risk Scoring",    id:"scoring",    primary:true}],
     scoring:   [{label:"Board Report",    id:"board",      primary:true},
                 {label:"F04 Controls",    id:"controls",   primary:false},
                 {label:"F09 Actions",     id:"execution",  primary:false}],
-    evidence:  [{label:"Board Report",    id:"board",      primary:true},
-                {label:"Actions F09",     id:"execution",  primary:false}],
-    board:     [{label:"Scoring F05",     id:"scoring",    primary:false},
-                {label:"Evidence F06",    id:"evidence",   primary:false}],
+    board:     [{label:"Scoring F05",     id:"scoring",    primary:false}],
     execution: [],
   };
 
@@ -18226,14 +17962,6 @@ function SetupBot(props) {
     {id:'endpoints',  type:'choice',  group:'Budget',
      ask:'Approximately how many managed endpoints and devices does {orgName} operate?',
      choices:['Under 1,000','1,000 to 5,000','5,000 to 20,000','20,000 to 75,000','75,000 to 250,000','Over 250,000']},
-    {id:'boardComm',  type:'choice',  group:'Governance',
-     ask:'Does {orgName} have a dedicated board-level cybersecurity committee?',
-     choices:['Dedicated board cyber committee','Full board oversees cyber risk',
-              'Audit committee handles cyber','Risk committee handles cyber','No formal governance']},
-    {id:'drTest',     type:'choice',  group:'Governance',
-     ask:'When was your most recent disaster recovery or tabletop exercise?',
-     choices:['Within the past 3 months','3 to 6 months ago','6 to 12 months ago',
-              '1 to 2 years ago','Over 2 years ago','Never conducted']},
     {id:'incidents',  type:'choice',  group:'Governance',
      ask:'Any reportable cybersecurity incidents in the past 3 years?',
      choices:['None','1 minor incident','1 significant incident',
@@ -18489,8 +18217,6 @@ function SetupBot(props) {
       + '  • Employees: '      + (a.employees ||'') + '\n'
       + '  • Endpoints: '      + (a.endpoints ||'') + '\n\n'
       + '\uD83C\uDFDB️  Governance\n'
-      + '  • Board Oversight: '+ (a.boardComm ||'') + '\n'
-      + '  • Last DR Test: '   + (a.drTest    ||'') + '\n'
       + '  • Prior Incidents: '+ (a.incidents ||'') + '\n'
       + '  • CMS Contracts: '  + (a.cmsContract||'') + '\n';
   }
@@ -24214,9 +23940,6 @@ function CyberRxApp() {
         if(orgData.insCarrier){
           setRootInsCarrier(orgData.insCarrier);
         }
-        if(orgData.drTest){
-          setRootDRTest(orgData.drTest);
-        }
         if(orgData.cyberInsLimit){
           setRootCyberInsLimit(orgData.cyberInsLimit);
         }
@@ -24302,9 +24025,6 @@ function CyberRxApp() {
           }
           if(localData.insCarrier){
             setRootInsCarrier(localData.insCarrier);
-          }
-          if(localData.drTest){
-            setRootDRTest(localData.drTest);
           }
           if(localData.cyberInsLimit){
             setRootCyberInsLimit(localData.cyberInsLimit);
@@ -24419,7 +24139,6 @@ function CyberRxApp() {
     rootMailingVendor:rootMailingVendor, setRootMailingVendor:setRootMailingVendor,
     rootMemberPortal:rootMemberPortal,  setRootMemberPortal:setRootMemberPortal,
     incidentHistory:rangeVal(INCIDENT_RANGES,rootIncidents),
-    boardCyberComm:boardCyberComm,
     insCarrier:rootInsCarrier,
     drTestMonths:rootDRTest,
     // Dynamic org text substitutions
@@ -24532,7 +24251,6 @@ function CyberRxApp() {
     if (page==="assets")    { return React.createElement(ClaimLifecycle, sharedProps); }
     if (page==="vendormap") { return React.createElement(VendorEcosystem, sharedProps); }
     if (page==="scoring")   { return React.createElement(Scoring,   sharedProps); }
-    if (page==="evidence")  { return React.createElement(Evidence,  sharedProps); }
     if (page==="board")     { return React.createElement(Board,     sharedProps); }
     if (page==="bizmap")      { return React.createElement(BusinessMapDash, sharedProps); }
     if (page==="apiadapter")  { return React.createElement(CyberRxAPIAdapter, sharedProps); }
