@@ -1,10 +1,10 @@
 'use strict';
 const express = require('express');
 const router = express.Router();
-const { BusinessProcessService } = require('../domains/operational/services/BusinessProcessService');
-const { BusinessProcessController } = require('../domains/operational/controllers/BusinessProcessController');
+const BusinessProcessService = require('../domains/operational/services/BusinessProcessService');
+const BusinessProcessController = require('../domains/operational/controllers/BusinessProcessController');
 const { authenticateJWT } = require('../middleware/auth');
-const { models } = require('../models');
+const models = require('../models');
 
 /**
  * Business Processes API Routes

@@ -39,8 +39,8 @@ if (process.env.REDIS_URL || process.env.REDIS_HOST) {
       console.warn('Redis connection failed, falling back to memory sessions:', err.message);
     });
 
-    const ConnectRedis = require('connect-redis');
-    RedisStore = ConnectRedis(session);
+    const { RedisStore: RedisStoreClass } = require('connect-redis');
+    RedisStore = new RedisStoreClass({ client: redisClient });
   } catch (err) {
     console.warn('Failed to initialize Redis session store:', err.message);
   }
@@ -51,7 +51,7 @@ if (process.env.REDIS_URL || process.env.REDIS_HOST) {
  */
 const sessionMiddleware = session({
   // Use Redis store if available, otherwise use memory store (development only)
-  store: RedisStore ? new RedisStore({ client: redisClient }) : undefined,
+  store: RedisStore || undefined,
 
   // Session secret
   secret: process.env.SESSION_SECRET || 'cyberrx-session-secret-dev',
