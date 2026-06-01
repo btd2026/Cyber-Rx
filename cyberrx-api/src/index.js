@@ -196,6 +196,9 @@ app.use('/api/vendor-monitoring',  [apiGetLimiter, apiPostLimiter], require('./r
 // Vendor Sync Status API with rate limiting
 app.use('/api/vendors',            [apiGetLimiter], require('./routes/syncStatus'));
 
+// Vendor Sync API with rate limiting (POST endpoints for triggering syncs)
+app.use('/api/vendors',            [apiGetLimiter, apiPostLimiter], require('./routes/vendorSync'));
+
 // PDF Report Generation with rate limiting
 app.use('/api/reports',            [apiPostLimiter], require('./routes/reports'));
 

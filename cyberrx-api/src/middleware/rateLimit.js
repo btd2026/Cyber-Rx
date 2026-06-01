@@ -327,6 +327,19 @@ function createCustomLimiter(options) {
   });
 }
 
+/**
+ * Vendor sync rate limiter
+ * Limits sync operations to prevent abuse
+ */
+const vendorSyncLimiter = createCustomLimiter({
+  prefix: 'rl:vendor:sync',
+  points: 10, // 10 requests
+  duration: 60, // per 1 minute
+  blockDuration: 60, // Block for 1 minute
+  keyBy: 'user', // Rate limit per user (organization)
+  keyPrefix: 'vendor-sync'
+});
+
 // Initialize rate limiters on module load
 initRateLimiters();
 
@@ -351,6 +364,7 @@ module.exports = {
   apiPostLimiter,
   apiPutLimiter,
   apiDeleteLimiter,
+  vendorSyncLimiter,
   userStandardLimiter,
   ipStrictLimiter,
   ipStandardLimiter,
