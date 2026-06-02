@@ -1097,7 +1097,6 @@ var ENDPOINT_RANGES    = [["Under 500",250],["500-1K",750],["1K-2K",1500],["2K-5
 var PRIV_ACCT_RANGES   = [["Under 50",25],["50-100",75],["100-250",175],["250-500",375],["500-1K",750],["1K-2K",1500],["Over 2K",3000]];
 var RBC_RATIO_RANGES   = [["Below 200%",150],["200-250%",225],["250-300%",275],["300-400%",350],["400-500%",450],["500-600%",550],["Over 600%",650]];
 var DEDUCTIBLE_RANGES  = [["$0",0],["$100K",100000],["$250K",250000],["$500K",500000],["$1M",1000000],["$2.5M",2500000],["$5M+",7500000]];
-var INCIDENT_RANGES    = [["None",0],["1 (>3 yrs ago)",1],["1 (1-3 yrs ago)",2],["2-3 (any time)",3],["4+ incidents",4]];
 var CLAIMS_RANGES   = [["Under $250M",125e6],["$250M-$500M",375e6],["$500M-$1B",750e6],["$1B-$2.5B",1750e6],["$2.5B-$5B",3750e6],["$5B-$15B",10000e6],["Over $15B",20000e6]];
 var CMS_RANGES      = [["Not applicable",0],["Under $100M",50e6],["$100M-$500M",300e6],["$500M-$1B",750e6],["$1B-$5B",3000e6],["$5B-$15B",10000e6],["Over $15B",20000e6]];
 var INSURANCE_RANGES= [["No coverage",0],["Under $10M",5e6],["$10M-$25M",17e6],["$25M-$50M",37e6],["$50M-$100M",75e6],["$100M-$250M",175e6],["Over $250M",300e6]];
@@ -4502,7 +4501,6 @@ function Setup(props) {
   var _s3f=useState(""); var privAcctCnt=_s3f[0]; var setPrivAcctCnt=_s3f[1];
   var _s3g=useState(""); var rbcRatioIn=_s3g[0];  var setRbcRatioIn=_s3g[1];
   var _s3h=useState(""); var insDeduct=_s3h[0];   var setInsDeduct=_s3h[1];
-  var _s3i=useState(""); var priorInc=_s3i[0];    var setPriorInc=_s3i[1];
   var _s4=useState("");        var claimsAmt=_s4[0];   var setClaimsAmt=_s4[1];
   var _s6=useState("");        var cmsContract=_s6[0]; var setCmsContract=_s6[1];
   var _s7=useState("");        var cyberIns=_s7[0];    var setCyberIns=_s7[1];
@@ -5037,9 +5035,6 @@ function Setup(props) {
                   "5,000 to 20,000":"12000","20,000 to 75,000":"45000",
                   "75,000 to 250,000":"160000","Over 250,000":"350000"};
                 if(a.endpoints&&epmap[a.endpoints]){setEndptCount(epmap[a.endpoints]);}
-                var incmap={"None":"0","1 minor incident":"1","1 significant incident":"1",
-                  "2 to 3 incidents":"2","4 or more incidents":"4","Prefer not to say":"0"};
-                if(a.incidents&&incmap[a.incidents]){setPriorInc(incmap[a.incidents]);}
                 // Load org template based on type
                 if(a.orgType){
                   setOrgConfig({
@@ -5148,7 +5143,6 @@ function Setup(props) {
                   {label:"Privileged Account Count",       val:privAcctCnt,  set:setPrivAcctCnt,  ranges:PRIV_ACCT_RANGES,   tip:"Accounts with admin/elevated access — primary PAM scope and insider threat exposure"},
                   {label:"Current RBC Ratio",              val:rbcRatioIn,   set:setRbcRatioIn,   ranges:RBC_RATIO_RANGES,   tip:"Current Risk-Based Capital ratio — regulatory minimum 200%, board must track cyber impact"},
                   {label:"Cyber Insurance Deductible",     val:insDeduct,    set:setInsDeduct,    ranges:DEDUCTIBLE_RANGES,  tip:"Self-retention amount before cyber insurance triggers — affects net exposure calculation"},
-                  {label:"Prior Cyber Incidents",          val:priorInc,     set:setPriorInc,     ranges:INCIDENT_RANGES,    tip:"History of material cyber incidents — affects regulatory risk multiplier and insurance premium"},
                 ].map(function(f){
                   return (
                     <div key={f.label}>
@@ -9931,7 +9925,6 @@ function CFODash(props) {
   var insLimit  = props.insLimit || 50e6;                // from Setup cyber insurance limit
   var deductible = props.insDeductible || 0;
   var rbcCurrent = props.rbcRatioCurrent || 420;
-  var incHist   = props.incidentHistory || 0;
 
   // Exposure calculated from org data
   var phiNotifCost  = phiRecs * 35;                          // $35/record OCR standard
@@ -9941,7 +9934,7 @@ function CFODash(props) {
   var fraudM        = Math.round(revB*0.03/1e6 + phiRecs*22/1e6); // 3% FWA + PHI dark web
   var reputM        = Math.round(revB*0.04/1e6);             // 4% rev churn impact
   var interruptM    = Math.round(revB*0.0137/1e6 + 55);      // claims + CMS sanctions
-  var legalM        = Math.round((props.insDeductible||0)/1e6 + 50 + (incHist>1?15:0));
+  var legalM        = Math.round((props.insDeductible||0)/1e6 + 50);
   var recoveryM     = Math.round(itB*0.037/1e6);             // 3.7% of IT budget
   var grossExp      = (breachRespM+regulatoryM+fraudM+reputM+interruptM+legalM+recoveryM)*1e6;
   var insLimit    = props.insLimit || 50e6;
@@ -9952,8 +9945,7 @@ function CFODash(props) {
     var regCap = surplusB * 0.138;                    // 13.8% surplus regulatory scenario
     var opsCap = revB * 0.017;                        // 1.7% revenue operations disruption
     var legalCap = (props.insDeductible||0) + 50e6;  // legal + base exposure
-    var incCap = incHist > 1 ? revB * 0.025 : 0;    // repeat-incident uplift
-    return Math.round(base + regCap + opsCap + legalCap + incCap);
+    return Math.round(base + regCap + opsCap + legalCap);
   })();   // vs surplus
   var claimsRisk  = 217e6;                       // vs IBNR
   var itRisk      = 11e6;                        // vs IT budget
@@ -14176,7 +14168,7 @@ function DashHub(props) {
           <span style={{color:C.muted}}>/</span>
           <span style={{color:C.text,fontSize:11,fontWeight:700}}>CFO Dashboard</span>
         </div>
-        <CFODash go={go} orgName={props.orgName||""} brianaOn={props.brianaOn!==false} setBrianaOn={props.setBrianaOn||function(){}} revenue={props.revenue} surplus={props.surplus} ibnr={props.ibnr} itBudget={props.itBudget} phiRecords={props.phiRecords} rbcRatioCurrent={props.rbcRatioCurrent} insDeductible={props.insDeductible} incidentHistory={props.incidentHistory}/>
+        <CFODash go={go} orgName={props.orgName||""} brianaOn={props.brianaOn!==false} setBrianaOn={props.setBrianaOn||function(){}} revenue={props.revenue} surplus={props.surplus} ibnr={props.ibnr} itBudget={props.itBudget} phiRecords={props.phiRecords} rbcRatioCurrent={props.rbcRatioCurrent} insDeductible={props.insDeductible}/>
       </div>
     );
   }
@@ -17962,10 +17954,6 @@ function SetupBot(props) {
     {id:'endpoints',  type:'choice',  group:'Budget',
      ask:'Approximately how many managed endpoints and devices does {orgName} operate?',
      choices:['Under 1,000','1,000 to 5,000','5,000 to 20,000','20,000 to 75,000','75,000 to 250,000','Over 250,000']},
-    {id:'incidents',  type:'choice',  group:'Governance',
-     ask:'Any reportable cybersecurity incidents in the past 3 years?',
-     choices:['None','1 minor incident','1 significant incident',
-              '2 to 3 incidents','4 or more incidents','Prefer not to say']},
     {id:'cmsContract',type:'choice',  group:'Governance',
      ask:'Does {orgName} hold any Medicare Advantage or Part D contracts?',
      choices:['Yes, Medicare Advantage only','Yes, Part D only','Yes, both MA and Part D',
@@ -18217,7 +18205,6 @@ function SetupBot(props) {
       + '  • Employees: '      + (a.employees ||'') + '\n'
       + '  • Endpoints: '      + (a.endpoints ||'') + '\n\n'
       + '\uD83C\uDFDB️  Governance\n'
-      + '  • Prior Incidents: '+ (a.incidents ||'') + '\n'
       + '  • CMS Contracts: '  + (a.cmsContract||'') + '\n';
   }
 
@@ -22928,7 +22915,6 @@ function loadBCBSDemoPreset(setters) {
   setters.setRootPhiRecords("2,400,000 \u2013 5,000,000");
   setters.setRootItBudget("$300M \u2013 $500M");
   setters.setRootDeduct("$1M");
-  setters.setRootIncidents("1 (1-3 yrs ago)");
   setters.setRootMFA("78");       setters.setRootEDR("71");
   setters.setRootSIEMdays("14");  setters.setRootPhishing("9.2");
   setters.setRootPatch("63");     setters.setRootMTTD("47");
@@ -23824,7 +23810,6 @@ function CyberRxApp() {
   var _s67=useState(""); var rootPrivAccts=_s67[0];  var setRootPrivAccts=_s67[1];
   var _s68=useState(""); var rootRBCRatio=_s68[0];   var setRootRBCRatio=_s68[1];
   var _s69=useState(""); var rootDeduct=_s69[0];     var setRootDeduct=_s69[1];
-  var _s70=useState(""); var rootIncidents=_s70[0];  var setRootIncidents=_s70[1];
   var _s71=useState("no"); var boardCyberComm=_s71[0]; var setBoardCyberComm=_s71[1];
   var _s72=useState(""); var rootInsCarrier=_s72[0]; var setRootInsCarrier=_s72[1];
   var _s73=useState(""); var rootDRTest=_s73[0];     var setRootDRTest=_s73[1];
@@ -23931,9 +23916,6 @@ function CyberRxApp() {
         if(orgData.deductible){
           setRootDeduct(orgData.deductible);
         }
-        if(orgData.incidents){
-          setRootIncidents(orgData.incidents);
-        }
         if(orgData.boardCyberComm){
           setBoardCyberComm(orgData.boardCyberComm);
         }
@@ -24016,9 +23998,6 @@ function CyberRxApp() {
           }
           if(localData.deductible){
             setRootDeduct(localData.deductible);
-          }
-          if(localData.incidents){
-            setRootIncidents(localData.incidents);
           }
           if(localData.boardCyberComm){
             setBoardCyberComm(localData.boardCyberComm);
@@ -24121,7 +24100,7 @@ function CyberRxApp() {
       setOrgName:setOrgName,
       setRootRevenue:setRootRevenue,setRootSurplus:setRootSurplus,
       setRootPhiRecords:setRootPhiRecords,setRootItBudget:setRootItBudget,
-      setRootDeduct:setRootDeduct,setRootIncidents:setRootIncidents,
+      setRootDeduct:setRootDeduct,
       setRootMFA:setRootMFA,setRootEDR:setRootEDR,
       setRootSIEMdays:setRootSIEMdays,setRootPhishing:setRootPhishing,
       setRootPatch:setRootPatch,setRootMTTD:setRootMTTD,
@@ -24138,7 +24117,6 @@ function CyberRxApp() {
     rootClaimsSystem:rootClaimsSystem, setRootClaimsSystem:setRootClaimsSystem,
     rootMailingVendor:rootMailingVendor, setRootMailingVendor:setRootMailingVendor,
     rootMemberPortal:rootMemberPortal,  setRootMemberPortal:setRootMemberPortal,
-    incidentHistory:rangeVal(INCIDENT_RANGES,rootIncidents),
     insCarrier:rootInsCarrier,
     drTestMonths:rootDRTest,
     // Dynamic org text substitutions
