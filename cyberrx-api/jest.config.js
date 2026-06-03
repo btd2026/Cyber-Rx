@@ -21,5 +21,23 @@ module.exports = {
   ],
   setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
   testTimeout: 10000,
-  verbose: true
+  verbose: true,
+  transform: {
+    '^.+\\.js$': 'babel-jest'
+  },
+  transformIgnorePatterns: [
+    'node_modules/(?!(uuid|@aws-sdk|node-jose)/)'
+  ],
+  projects: [
+    {
+      displayName: 'unit',
+      testMatch: ['<rootDir>/tests/unit/**/*.test.js'],
+      setupFilesAfterEnv: [] // No database setup for unit tests
+    },
+    {
+      displayName: 'integration',
+      testMatch: ['<rootDir>/tests/integration/**/*.test.js'],
+      setupFilesAfterEnv: ['<rootDir>/tests/setup.js']
+    }
+  ]
 };
