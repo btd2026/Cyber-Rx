@@ -4,37 +4,9 @@ const logger = require('../config/logger');
 const db = require('../utils/db');
 
 /**
- * Basic health check endpoint
- * Returns minimal status information
+ * Internal function to perform readiness checks
  */
-router.get('/', (req, res) => {
-  res.json({
-    status: 'ok',
-    version: process.env.npm_package_version || '1.0.0',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
-  });
-});
-
-/**
- * Liveness probe
- * Indicates if the service is running
- * Kubernetes uses this to restart containers that are deadlocked
- */
-router.get('/live', (req, res) => {
-  // Simply return 200 if we're alive
-  res.status(200).json({
-    status: 'alive',
-    timestamp: new Date().toISOString()
-  });
-});
-
-/**
- * Readiness probe
- * Indicates if the service is ready to accept traffic
- * Checks critical dependencies
- */
-router.get('/ready', async (req, res) => {
+async function performReadinessCheck() {
   const checks = {
     database: false,
     redis: false
@@ -50,39 +22,156 @@ router.get('/ready', async (req, res) => {
   } catch (error) {
     ready = false;
     errors.database = error.message;
-    logger.error('Database health check failed', { error: error.message });
+    logger.error('Database readiness check failed', { error: error.message });
   }
 
   // Check Redis connectivity (if configured)
   if (process.env.REDIS_URL) {
     try {
       const Redis = require('ioredis');
-      const redis = new Redis(process.env.REDIS_URL);
+      const redis = new Redis(process.env.REDIS_URL, {
+        connectTimeout: 500,
+        maxRetriesPerRequest: 0
+      });
       await redis.ping();
       await redis.quit();
       checks.redis = true;
     } catch (error) {
       ready = false;
       errors.redis = error.message;
-      logger.error('Redis health check failed', { error: error.message });
+      logger.error('Redis readiness check failed', { error: error.message });
     }
   } else {
-    // Redis is optional
     checks.redis = true;
   }
 
-  if (ready) {
-    res.status(200).json({
-      status: 'ready',
-      timestamp: new Date().toISOString(),
-      checks
-    });
+  return {
+    ready,
+    checks,
+    errors
+  };
+}
+
+/**
+ * Basic health check endpoint
+ * Returns comprehensive status information with critical service checks
+ * MUST respond within 1 second
+ */
+router.get('/', async (req, res) => {
+  const startTime = Date.now();
+  const healthStatus = {
+    status: 'healthy',
+    version: process.env.npm_package_version || '1.0.0',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    checks: {}
+  };
+
+  let overallHealthy = true;
+  const errors = {};
+
+  // Database health check
+  try {
+    const dbStart = Date.now();
+    await db.query('SELECT 1');
+    const dbDuration = Date.now() - dbStart;
+    healthStatus.checks.database = {
+      status: 'healthy',
+      latency_ms: dbDuration,
+      connected: true
+    };
+  } catch (error) {
+    overallHealthy = false;
+    healthStatus.checks.database = {
+      status: 'unhealthy',
+      connected: false,
+      error: error.message
+    };
+    errors.database = error.message;
+    logger.error('Health check: Database failed', { error: error.message });
+  }
+
+  // Redis health check (if configured)
+  if (process.env.REDIS_URL) {
+    try {
+      const redisStart = Date.now();
+      const Redis = require('ioredis');
+      const redis = new Redis(process.env.REDIS_URL, {
+        connectTimeout: 1000,
+        maxRetriesPerRequest: 0
+      });
+      await redis.ping();
+      const redisDuration = Date.now() - redisStart;
+      await redis.quit();
+      healthStatus.checks.redis = {
+        status: 'healthy',
+        latency_ms: redisDuration,
+        connected: true
+      };
+    } catch (error) {
+      overallHealthy = false;
+      healthStatus.checks.redis = {
+        status: 'unhealthy',
+        connected: false,
+        error: error.message
+      };
+      errors.redis = error.message;
+      logger.error('Health check: Redis failed', { error: error.message });
+    }
   } else {
+    healthStatus.checks.redis = {
+      status: 'not_configured',
+      connected: false,
+      message: 'Redis is optional and not configured'
+    };
+  }
+
+  healthStatus.status = overallHealthy ? 'healthy' : 'unhealthy';
+  healthStatus.duration_ms = Date.now() - startTime;
+
+  const statusCode = overallHealthy ? 200 : 503;
+  res.status(statusCode).json(healthStatus);
+});
+
+/**
+ * Liveness probe
+ * Indicates if the service is running
+ * Kubernetes uses this to restart containers that are deadlocked
+ */
+router.get('/live', (req, res) => {
+  res.status(200).json({
+    status: 'alive',
+    timestamp: new Date().toISOString()
+  });
+});
+
+/**
+ * Readiness probe
+ * Indicates if the service is ready to accept traffic
+ * Checks critical dependencies with 1-second timeout enforcement
+ */
+router.get('/ready', async (req, res) => {
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Health check timeout after 1000ms')), 1000);
+  });
+
+  try {
+    const healthPromise = performReadinessCheck();
+    const result = await Promise.race([healthPromise, timeoutPromise]);
+    const statusCode = result.ready ? 200 : 503;
+    res.status(statusCode).json({
+      status: result.ready ? 'ready' : 'not_ready',
+      timestamp: new Date().toISOString(),
+      checks: result.checks,
+      errors: Object.keys(result.errors).length > 0 ? result.errors : undefined
+    });
+  } catch (error) {
+    logger.error('Readiness check failed or timed out', { error: error.message });
     res.status(503).json({
       status: 'not_ready',
       timestamp: new Date().toISOString(),
-      checks,
-      errors
+      error: error.message,
+      checks: { database: false, redis: false }
     });
   }
 });
