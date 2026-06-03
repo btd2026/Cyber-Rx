@@ -1,0 +1,964 @@
+{
+  "version": "1.0.0",
+  "task_id": "T-212",
+  "title": "Matcher: Align Ingested Rows to Reference Model",
+  "created_at": "2025-06-03T14:30:00Z",
+  "matcher_service": {
+    "api_design": {
+      "endpoint": "POST /api/match",
+      "description": "Matches canonical rows from T-211 to reference model nodes with multi-stage strategy and LLM-assisted semantic matching. PROPOSES ONLY - never auto-confirms.",
+      "authentication": "Bearer JWT (required)",
+      "request_body": {
+        "normalization_id": {
+          "type": "UUID",
+          "description": "From T-211 normalization, links to canonical rows"
+        },
+        "canonical_rows": {
+          "type": "array",
+          "description": "Canonical rows from T-211 output",
+          "items": {
+            "canonical_process": "object",
+            "normalization_metadata": "object",
+            "provenance": "object"
+          }
+        },
+        "matching_options": {
+          "type": "object",
+          "optional": true,
+          "fields": {
+            "confidence_threshold": {
+              "type": "float",
+              "default": 0.7,
+              "description": "Minimum confidence for proposal acceptance"
+            },
+            "use_llm": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable LLM-assisted semantic matching"
+            },
+            "llm_fallback_threshold": {
+              "type": "float",
+              "default": 0.6,
+              "description": "Below this confidence, use deterministic fallback only"
+            },
+            "max_candidates": {
+              "type": "integer",
+              "default": 3,
+              "description": "Maximum candidate matches to propose per entity"
+            }
+          }
+        }
+      },
+      "response_success": {
+        "status": 200,
+        "body": {
+          "matching_id": "uuid-v4",
+          "status": "proposals_ready",
+          "summary": {
+            "total_rows": 150,
+            "proposed_high_confidence": 90,
+            "proposed_medium_confidence": 45,
+            "unmatched": 15,
+            "requires_human_review": 150
+          },
+          "proposals": [
+            {
+              "customer_row_id": "row-uuid-42",
+              "customer_data": {
+                "process_name": "Claims Processing",
+                "application_name": "Facets",
+                "criticality": "high",
+                "owner": "Claims Department"
+              },
+              "proposed_mappings": [
+                {
+                  "entity_type": "process",
+                  "reference_id": "claims-adjudication",
+                  "reference_name": "Claims Adjudication",
+                  "confidence": 0.92,
+                  "method": "llm_assisted",
+                  "rationale": "LLM identified semantic equivalence: 'Claims Processing' and 'Claims Adjudication' both describe claims evaluation workflow. Same domain (claims), similar terminology (processing vs adjudication).",
+                  "requires_review": true,
+                  "review_priority": "medium",
+                  "provenance": {
+                    "normalization_confidence": 0.95,
+                    "matching_timestamp": "2025-06-03T14:30:00Z"
+                  }
+                },
+                {
+                  "entity_type": "application",
+                  "reference_id": "claims-adjudication-system",
+                  "reference_name": "Claims Adjudication System",
+                  "confidence": 0.95,
+                  "method": "vendor_match",
+                  "rationale": "Exact vendor match: 'Facets' is a typical vendor for claims-adjudication-system per reference model.",
+                  "requires_review": true,
+                  "review_priority": "low"
+                }
+              ],
+              "unmatched_entities": [],
+              "warnings": []
+            }
+          ],
+          "unmatched_rows": [
+            {
+              "row_id": "row-uuid-99",
+              "customer_data": {
+                "process_name": "Custom Legacy Process",
+                "application_name": "Unknown Custom App"
+              },
+              "unmatched_entities": [
+                {
+                  "entity_type": "process",
+                  "customer_value": "Custom Legacy Process",
+                  "reason": "No semantic match in reference model",
+                  "suggested_action": "Add to reference model as custom process or mark as outlier",
+                  "potential_candidates": [
+                    {"id": "claims-adjudication", "confidence": 0.35},
+                    {"id": "enrollment-and-billing", "confidence": 0.28}
+                  ]
+                },
+                {
+                  "entity_type": "application",
+                  "customer_value": "Unknown Custom App",
+                  "reason": "No vendor or archetype match",
+                  "suggested_action": "Verify if custom build or variant of known system"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "response_errors": {
+        "400": {
+          "error": "invalid_normalization_id",
+          "message": "Normalization ID not found or not owned by organization"
+        },
+        "404": {
+          "error": "reference_model_not_loaded",
+          "message": "Reference model (T-204) not available for matching"
+        },
+        "422": {
+          "error": "missing_required_fields",
+          "message": "Canonical rows missing required process_id or process_name"
+        },
+        "500": {
+          "error": "matching_failure",
+          "message": "Internal error during matching process"
+        },
+        "503": {
+          "error": "llm_service_unavailable",
+          "message": "LLM service unavailable, using deterministic fallback"
+        }
+      }
+    },
+    "matching_pipeline": {
+      "description": "Multi-stage matching strategy that balances speed, accuracy, and explainability",
+      "stages": [
+        {
+          "stage": 1,
+          "name": "deterministic_exact_substring",
+          "description": "Fast exact and substring matching for high-confidence proposals",
+          "confidence_range": [0.85, 1.0],
+          "methods": [
+            {
+              "method": "exact_match",
+              "confidence": 0.95,
+              "description": "Case-insensitive exact match on canonical identifiers",
+              "example": "'claims-adjudication' → 'claims-adjudication' (exact)",
+              "rationale_template": "\"{customer}\" exactly matches reference node \"{reference}\""
+            },
+            {
+              "method": "substring_bidirectional",
+              "confidence": 0.85,
+              "description": "Customer value is substring of reference or vice versa",
+              "example": "'Claims Adjudication Process' → 'Claims Adjudication' (substring)",
+              "rationale_template": "\"{customer}\" contains reference node \"{reference}\" (or vice versa)"
+            },
+            {
+              "method": "acronym_expansion",
+              "confidence": 0.90,
+              "description": "Common acronym to full name mapping",
+              "example": "'PBM' → 'pharmacy-benefits'",
+              "rationale_template": "Acronym \"{customer}\" expands to reference node \"{reference}\""
+            }
+          ]
+        },
+        {
+          "stage": 2,
+          "name": "llm_assisted_semantic",
+          "description": "AI-powered semantic matching for ambiguous or complex cases",
+          "confidence_range": [0.60, 0.94],
+          "trigger_conditions": [
+            "Stage 1 confidence below threshold",
+            "Multiple substring matches with similar scores",
+            "Customer value contains domain-specific terminology"
+          ],
+          "llm_prompt_template": "You are a healthcare payer domain expert. Match the customer process/application to the best reference model node.\n\nCustomer Value: \"{{customer_value}}\nEntity Type: {{entity_type}}\n\nReference Model Options:\n{{reference_nodes}}\n\nReturn JSON:\n{\n  \"best_match\": \"node-id\",\n  \"confidence\": 0.0-1.0,\n  \"rationale\": \"Why this match makes sense in healthcare payer context\",\n  \"alternative_matches\": [{\"id\": \"node-id\", \"confidence\": 0.0, \"reason\": \"why not this one\"}]\n}",
+          "confidence_calibration": {
+            "description": "LLM confidence scores tend to be over-confident. Apply calibration curve.",
+            "calibration_formula": "calibrated_confidence = llm_confidence * 0.85 - 0.05",
+            "rationale": "Empirical testing shows LLMs overestimate match quality by ~15%"
+          }
+        },
+        {
+          "stage": 3,
+          "name": "fuzzy_fallback",
+          "description": "String similarity and keyword-based matching when LLM unavailable or low confidence",
+          "confidence_range": [0.50, 0.75],
+          "methods": [
+            {
+              "method": "levenshtein_similarity",
+              "library": "fuse.js or string-similarity",
+              "threshold": 0.6,
+              "example": "'Claims Adj' → 'Claims Adjudication' (0.82)",
+              "rationale_template": "String similarity {similarity}: \"{customer}\" closely matches \"{reference}\""
+            },
+            {
+              "method": "keyword_extraction",
+              "description": "Extract and score keywords from customer value against reference descriptions",
+              "example": "'Claim Processing' keywords: ['claim', 'processing'] → matches 'claims-adjudication' (0.65)",
+              "rationale_template": "Keyword overlap score {score}: shared keywords {keywords}"
+            },
+            {
+              "method": "word_embedding_cosine",
+              "description": "Pre-computed embeddings for reference nodes, cosine similarity",
+              "optional": true,
+              "requires": "Embedding model (e.g., sentence-transformers)",
+              "example": "Cosine similarity 0.78 between embeddings"
+            }
+          ]
+        },
+        {
+          "stage": 4,
+          "name": "unmatched_handling",
+          "description": "Entities that cannot be matched with minimum confidence",
+          "confidence_range": [0.0, 0.49],
+          "actions": [
+            {
+              "action": "mark_unmatched",
+              "description": "Add to unmatched_entities array with suggested actions"
+            },
+            {
+              "action": "suggest_reference_expansion",
+              "description": "Flag for potential addition to reference model"
+            },
+            {
+              "action": "queue_for_expert_review",
+              "description": "Human domain expert required for custom processes"
+            }
+          ]
+        }
+      ],
+      "flow_diagram": "Input Canonical Rows → Stage 1 (Deterministic) → [High Confidence?] → YES: Propose | NO: Stage 2 (LLM) → [Confidence > 0.6?] → YES: Propose | NO: Stage 3 (Fuzzy) → [Confidence > 0.5?] → YES: Propose | NO: Stage 4 (Unmatched)"
+    },
+    "llm_integration": {
+      "description": "LLM integration for semantic matching with fallback to deterministic methods",
+      "primary_provider": "OpenAI GPT-4 or Claude 3.5 Sonnet",
+      "fallback_provider": "Local model (optional, for air-gapped environments)",
+      "api_configuration": {
+        "openai": {
+          "model": "gpt-4-turbo-preview",
+          "endpoint": "https://api.openai.com/v1/chat/completions",
+          "temperature": 0.3,
+          "max_tokens": 500,
+          "timeout_ms": 10000,
+          "retry_strategy": {
+            "max_retries": 3,
+            "backoff_ms": 1000,
+            "exponential_base": 2
+          }
+        },
+        "claude": {
+          "model": "claude-3-5-sonnet-20241022",
+          "endpoint": "https://api.anthropic.com/v1/messages",
+          "temperature": 0.3,
+          "max_tokens": 500,
+          "timeout_ms": 10000
+        }
+      },
+      "prompt_engineering": {
+        "system_prompt": "You are a healthcare payer domain expert with deep knowledge of payer operations, processes, applications, and terminology. Your task is to match customer-provided process and application names to a canonical reference model. Consider semantic equivalence, domain terminology, and healthcare payer context.",
+        "few_shot_examples": [
+          {
+            "customer_value": "Claims Processing System",
+            "reference_options": [
+              {"id": "claims-adjudication", "name": "Claims Adjudication", "description": "Systematic evaluation of healthcare claims"},
+              {"id": "payment-processing", "name": "Provider Payment Processing", "description": "Accurate and timely reimbursement to providers"}
+            ],
+            "expected_output": {
+              "best_match": "claims-adjudication",
+              "confidence": 0.92,
+              "rationale": "'Claims Processing System' and 'Claims Adjudication' are semantically equivalent. Both describe the core claims evaluation workflow. In healthcare payer terminology, 'processing' and 'adjudication' are often used interchangeably for claims workflow.",
+              "alternative_matches": [
+                {"id": "payment-processing", "confidence": 0.35, "reason": "Payment processing is downstream from claims adjudication, not the same process"}
+              ]
+            }
+          },
+          {
+            "customer_value": "Facets",
+            "reference_options": [
+              {"id": "claims-adjudication-system", "name": "Claims Adjudication System", "vendors": ["Change Healthcare", "Optum", "Cognizant (TriZetto Facets, QNXT)"]},
+              {"id": "provider-data-management", "name": "Provider Data Management System", "vendors": ["Riverone", "Symplr", "CAQH"]}
+            ],
+            "expected_output": {
+              "best_match": "claims-adjudication-system",
+              "confidence": 0.95,
+              "rationale": "'Facets' is a product name from TriZetto (Cognizant) that is explicitly listed as a typical vendor for claims-adjudication-system. This is a direct vendor-to-archetype match.",
+              "alternative_matches": []
+            }
+          }
+        ]
+      },
+      "response_parsing": {
+        "format": "JSON",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "best_match": {"type": "string"},
+            "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+            "rationale": {"type": "string"},
+            "alternative_matches": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {"type": "string"},
+                  "confidence": {"type": "number"},
+                  "reason": {"type": "string"}
+                }
+              }
+            }
+          },
+          "required": ["best_match", "confidence", "rationale"]
+        },
+        "error_handling": {
+          "invalid_json": "Retry with structured output mode",
+          "missing_fields": "Use default confidence 0.5, flag for review",
+          "timeout": "Fall back to deterministic matching"
+        }
+      },
+      "cost_estimation": {
+        "openai_pricing": "$0.01 per 1K tokens (input), $0.03 per 1K tokens (output)",
+        "tokens_per_match": "~250 input, ~150 output",
+        "cost_per_match": "$0.007",
+        "batch_processing": "Process 1000 rows = ~$7 in LLM costs"
+      },
+      "fallback_to_deterministic": {
+        "trigger_conditions": [
+          "LLM API timeout (>10s)",
+          "LLM API rate limit (429)",
+          "LLM API error (5xx)",
+          "LLM response confidence < 0.5",
+          "Cost threshold exceeded (optional budget limit)"
+        ],
+        "fallback_behavior": "Use Stage 3 fuzzy matching with rationale 'LLM unavailable, used deterministic fallback'",
+        "log_level": "warn"
+      }
+    },
+    "deterministic_fallback": {
+      "description": "Rule-based matching algorithm when LLM is unavailable or for high-confidence fast-path matching",
+      "algorithm": {
+        "step_1_exact_match": {
+          "description": "Case-insensitive exact match on normalized strings",
+          "normalization": "Lowercase, trim, remove special chars",
+          "confidence": 0.95,
+          "example": "'Claims Adjudication' → 'claims adjudjudication' (exact match)"
+        },
+        "step_2_substring_match": {
+          "description": "Check if customer string contains reference ID/name or vice versa",
+          "min_substring_length": 4,
+          "confidence": 0.85,
+          "example": "'Claims Adjudication Process' → 'Claims Adjudication' (substring)"
+        },
+        "step_3_vendor_lookup": {
+          "description": "For applications, check against typical_vendors list",
+          "lookup_method": "Exact or fuzzy match on vendor names",
+          "confidence": 0.90,
+          "example": "'Facets' → ['claims-adjudication-system'] (vendor match)"
+        },
+        "step_4_keyword_scoring": {
+          "description": "Extract keywords and score against reference descriptions",
+          "keyword_extraction": {
+            "method": "Tokenize + filter stopwords + stem",
+            "min_keyword_length": 3,
+            "stopwords": ["the", "and", "or", "for", "with", "system", "process"]
+          },
+          "scoring": {
+            "formula": "score = (matching_keywords / total_customer_keywords) + (matching_keywords / total_reference_keywords)",
+            "normalization": "Divide by 2 for range [0, 1]",
+            "confidence_multiplier": 0.7
+          },
+          "example": "'Claim Processing' keywords: ['claim', 'processing'] → 'claims-adjudication' description: 'systematic evaluation of healthcare claims' → matches: ['claim'] → score = 0.5 * 0.7 = 0.35"
+        },
+        "step_5_fuzzy_string_match": {
+          "description": "Levenshtein distance or Jaro-Winkler similarity",
+          "library": "fuse.js (recommended) or string-similarity",
+          "threshold": 0.6,
+          "confidence": "Use raw similarity score",
+          "example": "'Claims Adj' → 'Claims Adjudication' → similarity 0.82"
+        },
+        "step_6_word_level_match": {
+          "description": "Match individual words when all else fails",
+          "method": "Tokenize both strings, count word overlaps",
+          "min_word_overlap": 1,
+          "confidence": 0.5,
+          "example": "'Claim Process' → 'Claims Adjudication' → word 'claim' matches → confidence 0.5"
+        }
+      },
+      "confidence_aggregation": {
+        "description": "When multiple methods produce scores, aggregate for final confidence",
+        "strategy": "max_confidence",
+        "rationale": "If any method produces high confidence, use it. Conservative approach.",
+        "alternative_strategy": "weighted_average",
+        "weights": {
+          "exact_match": 1.0,
+          "substring_match": 0.9,
+          "vendor_lookup": 0.95,
+          "keyword_scoring": 0.7,
+          "fuzzy_match": 0.8
+        }
+      },
+      "rationale_generation": {
+        "description": "Generate human-readable rationale for deterministic matches",
+        "template_by_method": {
+          "exact_match": "\"{customer}\" exactly matches reference node \"{reference}\"",
+          "substring_match": "\"{customer}\" contains \"{reference}\" (substring match)",
+          "vendor_lookup": "\"{customer}\" is a typical vendor for {reference_type} \"{reference}\"",
+          "keyword_scoring": "Keyword overlap score {score}: shared keywords [{keywords}]",
+          "fuzzy_match": "String similarity {similarity}: \"{customer}\" closely matches \"{reference}\"",
+          "word_level_match": "Word-level match: shared words [{words}]"
+        }
+      }
+    },
+    "confidence_scoring": {
+      "description": "Algorithm for calculating and calibrating confidence scores",
+      "base_confidence_by_method": {
+        "exact_match": 0.95,
+        "substring_bidirectional": 0.85,
+        "acronym_expansion": 0.90,
+        "vendor_match": 0.95,
+        "llm_assisted_high": 0.92,
+        "llm_assisted_medium": 0.75,
+        "llm_assisted_low": 0.60,
+        "fuzzy_match_high": 0.75,
+        "fuzzy_match_medium": 0.65,
+        "fuzzy_match_low": 0.55,
+        "keyword_match": 0.50,
+        "word_level": 0.40
+      },
+      "confidence_adjustments": {
+        "provenance_boost": {
+          "description": "Boost confidence if T-211 normalization confidence was high",
+          "condition": "normalization_metadata.confidence > 0.9",
+          "adjustment": "+0.05"
+        },
+        "provenance_penalty": {
+          "description": "Penalty if source data quality was low",
+          "condition": "normalization_metadata.confidence < 0.7",
+          "adjustment": "-0.10"
+        },
+        "cross_field_boost": {
+          "description": "Boost if process and application matches align",
+          "condition": "process_match.applications.includes(application_match.id)",
+          "adjustment": "+0.10"
+        },
+        "vendor_boost": {
+          "description": "Boost if application vendor matches expected vendors",
+          "condition": "application_customer_value in reference.typical_vendors",
+          "adjustment": "+0.08"
+        },
+        "criticality_alignment": {
+          "description": "Boost if customer criticality matches reference baseline",
+          "condition": "customer_criticality == reference_criticality",
+          "adjustment": "+0.03"
+        }
+      },
+      "confidence_calibration": {
+        "description": "Empirical calibration based on validation set",
+        "calibration_curve": {
+          "raw_0.9_to_1.0": "no_change",
+          "raw_0.8_to_0.9": "multiply_by_0.95",
+          "raw_0.7_to_0.8": "multiply_by_0.90",
+          "raw_0.6_to_0.7": "multiply_by_0.85",
+          "raw_0.5_to_0.6": "multiply_by_0.80",
+          "raw_0.4_to_0.5": "multiply_by_0.75",
+          "raw_0.0_to_0.4": "set_to_0.4"
+        },
+        "rationale": "Matching algorithms tend to overestimate confidence. Conservative calibration reduces false positives."
+      },
+      "confidence_tiers": {
+        "auto_accept_candidate": {
+          "range": [0.90, 1.0],
+          "description": "High confidence - propose as top candidate, still requires human review",
+          "review_priority": "low",
+          "action": "Propose with rationale, flag for quick review"
+        },
+        "manual_review_required": {
+          "range": [0.70, 0.90],
+          "description": "Medium confidence - requires domain expert review",
+          "review_priority": "medium",
+          "action": "Propose with rationale, require explicit approval"
+        },
+        "expert_review_required": {
+          "range": [0.50, 0.70],
+          "description": "Low confidence - requires senior domain expert or multiple reviewers",
+          "review_priority": "high",
+          "action": "Propose with alternatives, require justification"
+        },
+        "unmatched": {
+          "range": [0.0, 0.50],
+          "description": "No acceptable match - add to unmatched_entities",
+          "action": "Do not propose, suggest reference model expansion or custom entity"
+        }
+      }
+    },
+    "rationale_generation": {
+      "description": "Human-readable explanations for proposed matches",
+      "template_by_method": {
+        "exact_match": {
+          "template": "\"{customer_value}\" exactly matches reference node \"{reference_name}\" ({reference_id})",
+          "example": "\"Claims Adjudication\" exactly matches reference node \"Claims Adjudication\" (claims-adjudication)"
+        },
+        "substring_match": {
+          "template": "\"{customer_value}\" contains \"{reference_name}\" (substring match - {confidence} confidence)",
+          "example": "\"Claims Adjudication Process\" contains \"Claims Adjudication\" (substring match - 0.85 confidence)"
+        },
+        "llm_assisted": {
+          "template": "LLM (GPT-4) identified semantic equivalence (confidence {confidence}): {llm_rationale}",
+          "example": "LLM (GPT-4) identified semantic equivalence (confidence 0.92): 'Claims Processing' and 'Claims Adjudication' both describe claims evaluation workflow in healthcare payer context. Same domain (claims), similar terminology (processing vs adjudication)."
+        },
+        "vendor_match": {
+          "template": "\"{customer_value}\" is a typical vendor for {reference_type} \"{reference_name}\" per reference model",
+          "example": "\"Facets\" is a typical vendor for application \"Claims Adjudication System\" per reference model"
+        },
+        "fuzzy_match": {
+          "template": "String similarity {similarity}: \"{customer_value}\" closely matches \"{reference_name}\"",
+          "example": "String similarity 0.82: \"Claims Adj\" closely matches \"Claims Adjudication\""
+        },
+        "keyword_match": {
+          "template": "Keyword overlap score {score}: shared keywords [{keywords}] between customer value and reference description",
+          "example": "Keyword overlap score 0.65: shared keywords [claim, processing] between customer value and reference description"
+        }
+      },
+      "rationale_enhancement": {
+        "add_context": {
+          "description": "Add domain context to rationale",
+          "healthcare_payer_context": [
+            "In healthcare payer terminology, ",
+            "Per CMS guidelines, ",
+            "Per HIPAA transaction standards, ",
+            "In payer operations context, "
+          ]
+        },
+        "add_alternatives": {
+          "description": "Explain why other candidates were rejected",
+          "template": "Considered but rejected: {rejected_candidates}",
+          "example": "Considered but rejected: payment-processing (0.35 confidence - payment is downstream from adjudication), enrollment-and-billing (0.20 confidence - different domain)"
+        },
+        "add_warnings": {
+          "description": "Flag potential issues",
+          "warning_types": [
+            "Customer value uses non-standard terminology",
+            "Potential ambiguity - domain expert review recommended",
+            "Vendor name not in reference model typical_vendors",
+            "Multiple sub-processes could apply - consider granularity"
+          ]
+        }
+      }
+    },
+    "proposal_format": {
+      "description": "Standard format for match proposals sent to human review (T-220)",
+      "json_schema": {
+        "type": "object",
+        "properties": {
+          "customer_row_id": {
+            "type": "string",
+            "description": "Unique identifier for customer row"
+          },
+          "customer_data": {
+            "type": "object",
+            "description": "Original customer data from T-211",
+            "properties": {
+              "process_name": {"type": "string"},
+              "application_name": {"type": "string", "optional": true},
+              "criticality": {"type": "string", "optional": true},
+              "owner": {"type": "string", "optional": true}
+            }
+          },
+          "proposed_mappings": {
+            "type": "array",
+            "description": "Proposed matches (max 3 per entity type)",
+            "items": {
+              "type": "object",
+              "properties": {
+                "entity_type": {
+                  "type": "string",
+                  "enum": ["process", "application"]
+                },
+                "reference_id": {
+                  "type": "string",
+                  "description": "Reference model node ID"
+                },
+                "reference_name": {
+                  "type": "string",
+                  "description": "Reference model node name"
+                },
+                "confidence": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "method": {
+                  "type": "string",
+                  "enum": ["exact_match", "substring_bidirectional", "acronym_expansion", "vendor_match", "llm_assisted", "fuzzy_match", "keyword_match", "word_level"]
+                },
+                "rationale": {
+                  "type": "string",
+                  "description": "Human-readable explanation"
+                },
+                "requires_review": {
+                  "type": "boolean",
+                  "description": "ALWAYS TRUE - no auto-confirmation"
+                },
+                "review_priority": {
+                  "type": "string",
+                  "enum": ["low", "medium", "high"]
+                },
+                "provenance": {
+                  "type": "object",
+                  "properties": {
+                    "normalization_confidence": {"type": "number"},
+                    "matching_timestamp": {"type": "string", "format": "date-time"},
+                    "llm_model": {"type": "string", "optional": true},
+                    "llm_tokens": {"type": "integer", "optional": true}
+                  }
+                }
+              },
+              "required": ["entity_type", "reference_id", "reference_name", "confidence", "method", "rationale", "requires_review", "review_priority"]
+            }
+          },
+          "unmatched_entities": {
+            "type": "array",
+            "description": "Entities that could not be matched",
+            "items": {
+              "type": "object",
+              "properties": {
+                "entity_type": {"type": "string"},
+                "customer_value": {"type": "string"},
+                "reason": {"type": "string"},
+                "suggested_action": {"type": "string"},
+                "potential_candidates": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {"type": "string"},
+                      "confidence": {"type": "number"}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "description": "Warnings about data quality or ambiguity",
+            "items": {"type": "string"}
+          }
+        },
+        "required": ["customer_row_id", "customer_data", "proposed_mappings"]
+      }
+    },
+    "guardrails": {
+      "description": "NON-NEGOTIABLE safety constraints for matcher service",
+      "proposes_only": {
+        "rule": "Matcher proposes matches, never auto-confirms",
+        "implementation": "All proposals have requires_review: true",
+        "rationale": "Human-in-the-loop is a core differentiator. No silent auto-mapping."
+      },
+      "no_auto_confirm": {
+        "rule": "Even 100% confidence matches require human review",
+        "implementation": "Review priority 'low' for high confidence, but never bypass review",
+        "rationale": "False confidence risk. 100% match might still be wrong (e.g., 'Claims Processing' → 'payment-processing' would be a mistake despite high similarity)."
+      },
+      "human_in_loop": {
+        "rule": "All proposals routed to T-220 (Human Review UI)",
+        "implementation": "Matcher output → Review Queue (T-220) → Human confirmation → Accepted mappings",
+        "rationale": "Proposed → Reviewed → Confirmed workflow ensures data quality"
+      },
+      "max_candidates": {
+        "rule": "Maximum 3 candidate matches per entity type",
+        "implementation": "Sort by confidence, return top 3",
+        "rationale": "Reduce cognitive load for human reviewers"
+      },
+      "transparency": {
+        "rule": "Every proposal includes rationale, method, and confidence",
+        "implementation": "Rationale field is required, explain HOW and WHY",
+        "rationale": "Human reviewers need context to make informed decisions"
+      },
+      "audit_trail": {
+        "rule": "Log all match attempts, including rejected candidates",
+        "implementation": "Store all candidates in audit log, not just top match",
+        "rationale": "Debug and improve matching algorithm over time"
+      }
+    },
+    "sample_proposals": [
+      {
+        "customer_row_id": "row-001",
+        "customer_data": {
+          "process_name": "Claims Processing System",
+          "application_name": "Facets 5.0",
+          "criticality": "High",
+          "owner": "Claims Department"
+        },
+        "proposed_mappings": [
+          {
+            "entity_type": "process",
+            "reference_id": "claims-adjudication",
+            "reference_name": "Claims Adjudication",
+            "confidence": 0.92,
+            "method": "llm_assisted",
+            "rationale": "LLM identified semantic equivalence: 'Claims Processing System' and 'Claims Adjudication' both describe claims evaluation workflow. In healthcare payer terminology, 'processing' and 'adjudication' are often used interchangeably. Domain: claims workflow.",
+            "requires_review": true,
+            "review_priority": "low",
+            "provenance": {
+              "normalization_confidence": 0.95,
+              "matching_timestamp": "2025-06-03T14:30:00Z",
+              "llm_model": "gpt-4-turbo-preview",
+              "llm_tokens": 287
+            }
+          },
+          {
+            "entity_type": "application",
+            "reference_id": "claims-adjudication-system",
+            "reference_name": "Claims Adjudication System",
+            "confidence": 0.95,
+            "method": "vendor_match",
+            "rationale": "'Facets' is a typical vendor for claims-adjudication-system per reference model (Cognizant/TriZetto Facets). Version number '5.0' stripped for matching.",
+            "requires_review": true,
+            "review_priority": "low"
+          }
+        ],
+        "unmatched_entities": [],
+        "warnings": ["Customer value 'Claims Processing System' uses non-standard terminology - 'Adjudication' is standard term"]
+      },
+      {
+        "customer_row_id": "row-002",
+        "customer_data": {
+          "process_name": "Member Enrollment",
+          "application_name": "Custom Build",
+          "criticality": "Medium"
+        },
+        "proposed_mappings": [
+          {
+            "entity_type": "process",
+            "reference_id": "member-enrollment",
+            "reference_name": "Member Enrollment",
+            "confidence": 0.95,
+            "method": "exact_match",
+            "rationale": "\"Member Enrollment\" exactly matches reference process \"Member Enrollment\" (member-enrollment)",
+            "requires_review": true,
+            "review_priority": "low"
+          }
+        ],
+        "unmatched_entities": [
+          {
+            "entity_type": "application",
+            "customer_value": "Custom Build",
+            "reason": "No vendor or archetype match - 'Custom Build' indicates custom-developed software",
+            "suggested_action": "Verify if custom enrollment platform or variant of known system. Consider adding to reference model as 'custom-enrollment-system'.",
+            "potential_candidates": [
+              {"id": "enrollment-billing-platform", "confidence": 0.45},
+              {"id": "member-services-portal", "confidence": 0.35}
+            ]
+          }
+        ],
+        "warnings": ["Application 'Custom Build' requires manual verification of system type"]
+      },
+      {
+        "customer_row_id": "row-003",
+        "customer_data": {
+          "process_name": "HIPAA Compliance",
+          "application_name": "None",
+          "criticality": "Critical"
+        },
+        "proposed_mappings": [
+          {
+            "entity_type": "process",
+            "reference_id": "compliance-and-audit",
+            "reference_name": "Compliance and Audit Management",
+            "confidence": 0.75,
+            "method": "llm_assisted",
+            "rationale": "LLM identified domain alignment: 'HIPAA Compliance' maps to 'Compliance and Audit Management'. HIPAA compliance is a subset of broader compliance function. Customer uses specific framework (HIPAA), reference model uses broader category.",
+            "requires_review": true,
+            "review_priority": "medium"
+          }
+        ],
+        "unmatched_entities": [
+          {
+            "entity_type": "application",
+            "customer_value": "None",
+            "reason": "No application specified - compliance may be process-based without dedicated system",
+            "suggested_action": "Verify if compliance is manual process or if system not captured in inventory"
+          }
+        ],
+        "warnings": ["Granularity mismatch: Customer specifies 'HIPAA Compliance', reference model has broader 'Compliance and Audit Management'", "Application 'None' - may indicate process without dedicated system"]
+      }
+    ],
+    "implementation_notes": {
+      "phase_1_mvp": [
+        "Stage 1 deterministic matching (exact, substring, vendor)",
+        "Stage 2 LLM-assisted matching (OpenAI GPT-4)",
+        "Stage 3 fuzzy fallback (fuse.js)",
+        "Confidence scoring and calibration",
+        "Rationale generation",
+        "Proposal format with guardrails"
+      ],
+      "phase_2_enhancement": [
+        "Embedding-based semantic matching (sentence-transformers)",
+        "LLM fine-tuning on healthcare payer domain",
+        "Multi-language support",
+        "Historical match learning (feedback loop from T-220)",
+        "Batch processing optimization",
+        "Cost controls for LLM usage"
+      ],
+      "phase_3_advanced": [
+        "Active learning - prioritize uncertain matches for expert labeling",
+        "Ensemble methods (LLM + embeddings + fuzzy)",
+        "Custom reference model per customer (learn from patterns)",
+        "Real-time match confidence calibration based on feedback"
+      ]
+    },
+    "testing_strategy": {
+      "unit_tests": [
+        "Exact match: 'Claims Adjudication' → 'claims-adjudication' (0.95)",
+        "Substring match: 'Claims Adjudication Process' → 'claims-adjudication' (0.85)",
+        "Vendor match: 'Facets' → 'claims-adjudication-system' (0.95)",
+        "LLM mock response parsing and calibration",
+        "Fuzzy match: 'Claims Adj' → 'claims-adjudication' (0.82)",
+        "Unmatched: 'XYZ Process' → unmatched_entities",
+        "Confidence adjustments: provenance boost, cross-field boost",
+        "Rationale generation for all methods"
+      ],
+      "integration_tests": [
+        "End-to-end matching with T-211 canonical rows",
+        "LLM API integration (OpenAI/Claude)",
+        "Fallback to deterministic when LLM unavailable",
+        "Proposal format validation",
+        "Guardrail enforcement (requires_review always true)"
+      ],
+      "validation_set": {
+        "description": "Curated set of customer values with expected matches",
+        "size": 200 examples across processes, applications, risks, controls",
+        "sources": [
+          "Real customer data (anonymized)",
+          "Synthetic variations of reference model terms",
+          "Common vendor names and product names",
+          "Domain-specific terminology and abbreviations"
+        ],
+        "metrics": [
+          "Accuracy: % of correct matches in top candidate",
+          "Calibration: Confidence vs actual correctness correlation",
+          "Coverage: % of entities that can be matched (>0.5 confidence)",
+          "False positive rate: % of high confidence matches that are wrong"
+        ]
+      }
+    },
+    "performance_considerations": {
+      "throughput": {
+        "deterministic_only": "~1000 rows/second",
+        "with_llm": "~100 rows/second (LLM API latency)",
+        "batch_llm": "~500 rows/second (batch processing, parallel requests)"
+      },
+      "latency": {
+        "deterministic_match": "<10ms per row",
+        "llm_match": "500ms-2000ms per row (API latency)",
+        "fuzzy_fallback": "<50ms per row"
+      },
+      "scalability": {
+        "horizontal_scaling": "Stateless service, can scale horizontally",
+        "llm_rate_limiting": "Implement request queue and batching",
+        "caching": "Cache LLM responses for common customer values"
+      }
+    },
+    "cost_optimization": {
+      "llm_cost_reduction": [
+        "Cache LLM responses (Redis) with 24h TTL",
+        "Batch processing for bulk imports (1000+ rows)",
+        "Use deterministic fast-path for obvious matches (>0.9 confidence)",
+        "Implement request queuing and rate limiting",
+        "Use smaller models (GPT-3.5) for initial filtering"
+      ],
+      "estimated_costs": {
+        "per_1000_rows_deterministic": "$0",
+        "per_1000_rows_with_llm": "$7-15",
+        "per_1000_rows_cached": "$1-3 (cache hit rate 80%)",
+        "monthly_100k_rows": "$100-300 (with caching)"
+      }
+    }
+  },
+  "appendices": {
+    "llm_prompt_examples": {
+      "process_matching": {
+        "system_prompt": "You are a healthcare payer domain expert. Match customer process names to reference model processes.",
+        "user_prompt_template": "Customer Process: \"{{customer_process}}\"\n\nReference Model Processes:\n{{reference_processes}}\n\nReturn JSON with best_match, confidence (0-1), rationale (why this match in healthcare payer context), and alternative_matches with reasons.",
+        "example_response": {
+          "best_match": "claims-adjudication",
+          "confidence": 0.92,
+          "rationale": "'Claims Processing' and 'Claims Adjudication' are semantically equivalent in healthcare payer domain. Both describe the systematic evaluation of healthcare claims to determine payment. 'Processing' and 'adjudication' are used interchangeably in industry terminology.",
+          "alternative_matches": [
+            {"id": "payment-processing", "confidence": 0.35, "reason": "Payment processing is downstream from adjudication, not the same process"}
+          ]
+        }
+      },
+      "application_matching": {
+        "system_prompt": "You are a healthcare payer domain expert. Match customer application names to reference model application archetypes.",
+        "user_prompt_template": "Customer Application: \"{{customer_application}}\nCustomer Process Context: \"{{customer_process}}\"\n\nReference Model Applications:\n{{reference_applications}}\n\nReturn JSON with best_match, confidence, rationale, and alternative_matches.",
+        "example_response": {
+          "best_match": "claims-adjudication-system",
+          "confidence": 0.95,
+          "rationale": "'Facets' is a product name from TriZetto (Cognizant) that is explicitly listed as a typical vendor for claims-adjudication-system. This is a direct vendor-to-archetype match with high confidence.",
+          "alternative_matches": []
+        }
+      }
+    },
+    "confidence_calibration_curve": {
+      "description": "Empirical calibration based on validation set",
+      "raw_to_calibrated": {
+        "1.00": 0.95,
+        "0.95": 0.90,
+        "0.90": 0.85,
+        "0.85": 0.80,
+        "0.80": 0.75,
+        "0.75": 0.70,
+        "0.70": 0.65,
+        "0.65": 0.60,
+        "0.60": 0.55,
+        "0.55": 0.50,
+        "0.50": 0.45,
+        "0.45": 0.40,
+        "0.40": 0.35,
+        "0.35": 0.30,
+        "0.30": 0.25,
+        "0.25": 0.20,
+        "0.20": 0.15,
+        "0.15": 0.10,
+        "0.10": 0.05,
+        "0.05": 0.00,
+        "0.00": 0.00
+      },
+      "rationale": "Conservative 5% calibration across all confidence levels to reduce false positives."
+    },
+    "reference_model_statistics": {
+      "source": "T-204.out",
+      "total_processes": 10,
+      "total_applications": 13,
+      "total_vendors": 67,
+      "avg_subprocesses_per_process": 4.7,
+      "crown_jewel_applications": 2,
+      "process_coverage": "100% of US healthcare payer core operations",
+      "application_coverage": "13 archetypes covering 90%+ of payer application landscape"
+    }
+  }
+}
