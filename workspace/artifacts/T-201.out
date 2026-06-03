@@ -1,0 +1,550 @@
+{
+  "version": "1.0-draft",
+  "status": "expert-review-pending",
+  "generated": "2025-06-03",
+  "description": "Application Archetypes for Healthcare Payer Processes - Reference Catalog",
+  "metadata": {
+    "note": "This is a reference model of typical application archetypes found in healthcare payer organizations. Mappings represent industry patterns, not universal rules. Vendor examples are for illustration only.",
+    "confidence": "high",
+    "review_status": "pending_payer_domain_expert_validation"
+  },
+  "application_archetypes": [
+    {
+      "id": "claims-adjudication-system",
+      "name": "Claims Adjudication System",
+      "description": "Core system that processes medical claims through business rules to determine payment eligibility and amounts. The heartbeat of payer operations.",
+      "supported_processes": [
+        "claims-adjudication",
+        "payment-processing",
+        "claims-auto-adjudication",
+        "claims-manual-review"
+      ],
+      "typical_vendors": [
+        "Change Healthcare (formerly McKesson)",
+        "Optum (UnitedHealth Group)",
+        "Cognizant (TriZetto Facets, QNXT)",
+        "Guidewire (for property/casualty extending to health)",
+        "HealthEdge (HealthRules)",
+        "MCS (icare, e-Maxx)",
+        "Edifecs (claims processing suite)"
+      ],
+      "criticality": "crown-jewel",
+      "typical_risks": [
+        "Outage halts all claims processing - revenue impact",
+        "Data breach exposes massive PHI datasets",
+        "Adjudication logic errors cause payment leaks or denials",
+        "System latency creates provider payment backlogs"
+      ],
+      "x12_transactions": ["837", "835"],
+      "typical_users": ["Claims Analysts", "Payment Operations", "Claims Managers"]
+    },
+    {
+      "id": "edi-gateway-x12-translator",
+      "name": "EDI Gateway / X12 Translator",
+      "description": "Translates X12 EDI transactions between payer systems and providers/partners. The nervous system of payer data exchange.",
+      "supported_processes": [
+        "claims-intake",
+        "enrollment-billing",
+        "eligibility-verification",
+        "prior-auth-requests",
+        "claim-status-inquiry",
+        "payment-remittance"
+      ],
+      "typical_vendors": [
+        "Change Healthcare",
+        "Optum",
+        "Edifecs",
+        "MuleSoft (for HIPAA-compliant API gateway)",
+        "Cleo (EDI integration)",
+        "IBM Sterling (B2B integration)",
+        "Axway (B2B/EDI)",
+        "Innovate (Healthcare-specific EDI)"
+      ],
+      "criticality": "crown-jewel",
+      "typical_risks": [
+        "Gateway outage halts ALL external data exchange",
+        "Change Healthcare-style single-point-of-failure cascade",
+        "Translation errors cause claim rejections",
+        "Compliance failures for HIPAA transaction standards",
+        "Rogue partner DDoS impacts entire payer"
+      ],
+      "x12_transactions": ["837", "835", "270", "271", "276", "277", "278", "834", "820"],
+      "typical_users": ["EDI Operations", "Integration Engineers", "Provider Network Teams"]
+    },
+    {
+      "id": "enrollment-billing-platform",
+      "name": "Enrollment & Premium Billing Platform",
+      "description": "Manages member enrollment, plan selection, and premium billing/collections. Member lifecycle foundation.",
+      "supported_processes": [
+        "member-enrollment",
+        "plan-selection",
+        "premium-billing",
+        "payment-collection",
+        "member-eligibility"
+      ],
+      "typical_vendors": [
+        "Change Healthcare",
+        "Optum",
+        "TriZetto (enrollment modules)",
+        "SSM Health (enrollment platforms)",
+        "GetInsured (ACA marketplace integration)",
+        "MaxIT (enrollment systems)",
+        "Accenture (custom enrollment implementations)"
+      ],
+      "criticality": "high",
+      "typical_risks": [
+        "Enrollment errors cause member coverage gaps",
+        "Billing failures create revenue leakage",
+        "Data breach exposes member financial + health data",
+        "System lag during open enrollment periods"
+      ],
+      "x12_transactions": ["834"],
+      "typical_users": ["Member Services", "Billing Operations", "Enrollment Teams"]
+    },
+    {
+      "id": "provider-data-management",
+      "name": "Provider Data Management System",
+      "description": "Maintains provider network data, credentials, contract terms, and directory information. Provider governance backbone.",
+      "supported_processes": [
+        "provider-onboarding",
+        "provider-credentialing",
+        "provider-contract-management",
+        "provider-network-management",
+        "provider-directory-maintenance"
+      ],
+      "typical_vendors": [
+        "Riverone (provider data platforms)",
+        "Symplr (provider credentialing)",
+        "CAQH (provider data exchange)",
+        "Availity (provider networks)",
+        "Optum (provider data services)",
+        "McKesson (provider directory solutions)",
+        "Change Healthcare (provider data)"
+      ],
+      "criticality": "high",
+      "typical_risks": [
+        "Inaccurate provider data causes claim routing errors",
+        "Credentialing failures create compliance violations",
+        "Directory inaccuracies cause member access issues",
+        "Network adequacy reporting failures"
+      ],
+      "x12_transactions": [],
+      "typical_users": ["Provider Relations", "Network Management", "Credentialing Teams"]
+    },
+    {
+      "id": "prior-authorization-system",
+      "name": "Prior Authorization System",
+      "description": "Manages medical necessity review, approval workflows, and auth tracking for high-cost services and procedures.",
+      "supported_processes": [
+        "prior-auth-requests",
+        "medical-necessity-review",
+        "auth-decision",
+        "auth-tracking",
+        "utilization-management"
+      ],
+      "typical_vendors": [
+        "Change Healthcare",
+        "Optum",
+        "MCG (guidelines + auth platforms)",
+        "InterQual (guidelines integrated into systems)",
+        "Cotiviti (utilization management)",
+        "DxC (prior auth platforms)",
+        "NaviHealth (utilization review)"
+      ],
+      "criticality": "high",
+      "typical_risks": [
+        "Auth delays cause patient care postponements",
+        "Denial errors create medical/legal exposure",
+        "System backlogs create provider friction",
+        "Inconsistent auth decisions create fairness concerns"
+      ],
+      "x12_transactions": ["278"],
+      "typical_users": ["Utilization Management Nurses", "Medical Directors", "Provider Services"]
+    },
+    {
+      "id": "care-management-platform",
+      "name": "Care Management Platform",
+      "description": "Supports case management, disease management, and care coordination for high-risk members. Population health foundation.",
+      "supported_processes": [
+        "case-management",
+        "disease-management",
+        "care-coordination",
+        "member-outreach",
+        "care-plan-management"
+      ],
+      "typical_vendors": [
+        "CareCentrix (care management platforms)",
+        "SignallHealth (analytics-driven care)",
+        "Wellframe (care management mobile)",
+        "CipherHealth (patient engagement)",
+        "Optum (care management solutions)",
+        "Antidote (clinical engagement)",
+        "Pulse (CCM platforms)"
+      ],
+      "criticality": "medium",
+      "typical_risks": [
+        "Care coordination failures impact member outcomes",
+        "Data breach exposes sensitive care conditions",
+        "System inefficiencies reduce nurse productivity",
+        "Care plan errors create medical safety issues"
+      ],
+      "x12_transactions": [],
+      "typical_users": ["Case Managers", "Care Coordinators", "Nurses", "Social Workers"]
+    },
+    {
+      "id": "member-services-portal",
+      "name": "Member Services Portal",
+      "description": "Web and mobile self-service for members to check eligibility, benefits, claims status, ID cards, and find providers.",
+      "supported_processes": [
+        "member-self-service",
+        "eligibility-inquiry",
+        "benefits-inquiry",
+        "claims-status-check",
+        "id-card-requests",
+        "provider-directory-search"
+      ],
+      "typical_vendors": [
+        "Change Healthcare",
+        "Optum",
+        "Salesforce Health Cloud (member portals)",
+        "Adobe Experience Manager (member portals)",
+        "Sitecore (member experience platforms)",
+        "IBM (member engagement solutions)",
+        "Accenture (member portal implementations)"
+      ],
+      "criticality": "medium",
+      "typical_risks": [
+        "Outage drives member call center spikes",
+        "Data breach exposes member PHI to public web",
+        "Inaccurate information causes member frustration",
+        "Accessibility failures create compliance issues"
+      ],
+      "x12_transactions": [],
+      "typical_users": ["Members (public-facing)", "Member Services Reps (back-office view)"]
+    },
+    {
+      "id": "payment-remittance-system",
+      "name": "Payment & Remittance System",
+      "description": "Generates provider payments, electronic funds transfer (EFT), and remittance advice (ERA/EOB). Financial disbursement engine.",
+      "supported_processes": [
+        "provider-payments",
+        "remittance-generation",
+        "payment-reconciliation",
+        "payment-dispute-resolution"
+      ],
+      "typical_vendors": [
+        "Change Healthcare",
+        "Optum",
+        "WEX (healthcare payment platforms)",
+        "InstaMed (J.P. Morgan - provider payments)",
+        "PayPal (healthcare payments)",
+        "Fiserv (healthcare disbursements)",
+        "Stripe (healthcare payment processing)",
+        "Flywire (provider payment platforms)"
+      ],
+      "criticality": "high",
+      "typical_risks": [
+        "Payment failures create provider network dissatisfaction",
+        "Overpayment/underpayment creates financial leakage",
+        "System outage causes payment backlogs",
+        "Fraud vulnerabilities in payment processing"
+      ],
+      "x12_transactions": ["835", "820"],
+      "typical_users": ["Provider Payment Operations", "Finance", "Provider Relations"]
+    },
+    {
+      "id": "analytics-data-warehouse",
+      "name": "Analytics & Data Warehouse",
+      "description": "Enterprise data warehouse for HEDIS, quality metrics, financial reporting, population health analytics, and executive dashboards.",
+      "supported_processes": [
+        "hedis-reporting",
+        "quality-metrics",
+        "financial-reporting",
+        "population-health-analytics",
+        "executive-dashboards",
+        "regulatory-reporting"
+      ],
+      "typical_vendors": [
+        "Snowflake (healthcare data warehouse)",
+        "Databricks (healthcare analytics)",
+        "Microsoft Azure (Synapse Analytics for healthcare)",
+        "Google Cloud (Healthcare Analytics Engine)",
+        "Amazon Web Services (Healthcare Lake)",
+        "Oracle (healthcare data platforms)",
+        "IBM (Watson Health Analytics)",
+        "Tableau (healthcare dashboards)",
+        "Qlik (healthcare BI)",
+        "Looker (healthcare analytics)"
+      ],
+      "criticality": "high",
+      "typical_risks": [
+        "Inaccurate reporting creates regulatory penalties",
+        "Data quality issues create wrong strategic decisions",
+        "Performance issues cause reporting delays",
+        "Unauthorized access exposes comprehensive member data"
+      ],
+      "x12_transactions": [],
+      "typical_users": ["Data Analysts", "Actuaries", "Quality Teams", "Executives"]
+    },
+    {
+      "id": "pbm-system",
+      "name": "Pharmacy Benefit Manager (PBM) System",
+      "description": "Manages pharmacy claims, formulary, e-prescribing, prior auth for medications, and drug utilization review.",
+      "supported_processes": [
+        "pharmacy-claims-adjudication",
+        "e-prescribing",
+        "formulary-management",
+        "drug-utilization-review",
+        "medication-prior-auth",
+        "pharmacy-network-management"
+      ],
+      "typical_vendors": [
+        "Express Scripts (Evernorth)",
+        "CVS Caremark",
+        "Optum Rx",
+        "Prime Therapeutics",
+        "Humana Pharmacy Solutions",
+        "MedImpact",
+        "Catamaran (now part of UnitedHealth)",
+        "Abarca (PBM platform)",
+        "Rx Savings Solutions (formulary optimization)"
+      ],
+      "criticality": "high",
+      "typical_risks": [
+        "Pharmacy claims outage blocks member medication access",
+        "Formulary errors create coverage gaps",
+        "Drug interaction failures create patient safety issues",
+        "Fraud in pharmacy claims processing"
+      ],
+      "x12_transactions": ["837", "835"],
+      "typical_users": ["Pharmacy Teams", "Pharmacists", "Clinical Pharmacists", "Formulary Managers"]
+    },
+    {
+      "id": "fraud-detection-system",
+      "name": "Fraud, Waste & Abuse (FWA) Detection System",
+      "description": "AI/ML-based platform to detect suspicious claims patterns, provider fraud, member misuse, and billing anomalies.",
+      "supported_processes": [
+        "fraud-detection",
+        "waste-identification",
+        "abuse-monitoring",
+        "special-investigation-unit-siu-support",
+        "payment-suspension"
+      ],
+      "typical_vendors": [
+        "Change Healthcare (FWA analytics)",
+        "Optum (analytics and fraud detection)",
+        "Cotiviti (payment accuracy + fraud)",
+        "IBM (Fraud Analytics for healthcare)",
+        "SAS (Fraud Framework for healthcare)",
+        "FICO (healthcare fraud detection)",
+        "Palantir (fraud analytics platforms)",
+        "Appriss (opioid detection/analytics)"
+      ],
+      "criticality": "medium",
+      "typical_risks": [
+        "False positives create provider friction",
+        "False negatives allow fraudulent payments",
+        "System latency delays fraud identification",
+        "Bias in fraud models creates fairness issues"
+      ],
+      "x12_transactions": [],
+      "typical_users": ["Special Investigation Units (SIU)", "Fraud Analysts", "Compliance Teams"]
+    },
+    {
+      "id": "customer-relationship-management",
+      "name": "Customer Relationship Management (CRM) System",
+      "description": "Manages member interactions, call center operations, case tickets, and member communications history.",
+      "supported_processes": [
+        "call-center-operations",
+        "member-interaction-tracking",
+        "case-ticket-management",
+        "member-communications",
+        "grievance-resolution"
+      ],
+      "typical_vendors": [
+        "Salesforce Health Cloud",
+        "Microsoft Dynamics 365 (healthcare CRM)",
+        "ServiceNow (customer service management)",
+        "Oracle CX (healthcare CRM)",
+        "SAP (healthcare customer experience)",
+        "Genesys (contact center platforms)",
+        "Nice (contact center analytics)"
+      ],
+      "criticality": "medium",
+      "typical_risks": [
+        "System failures paralyze call center operations",
+        "Data breach exposes member interaction history",
+        "Inefficient workflows increase handle times",
+        "Poor member experience increases dissatisfaction"
+      ],
+      "x12_transactions": [],
+      "typical_users": ["Member Services Reps", "Call Center Agents", "Member Advocates"]
+    }
+  ],
+  "process_app_edge_mapping": {
+    "description": "Matrix showing which application archetypes typically support which business processes. Edges represent typical (not universal) patterns.",
+    "mappings": [
+      {
+        "process": "claims-adjudication",
+        "primary_app": "claims-adjudication-system",
+        "supporting_apps": ["edi-gateway-x12-translator", "fraud-detection-system", "payment-remittance-system"],
+        "criticality": "crown-jewel"
+      },
+      {
+        "process": "payment-processing",
+        "primary_app": "payment-remittance-system",
+        "supporting_apps": ["claims-adjudication-system", "edi-gateway-x12-translator"],
+        "criticality": "high"
+      },
+      {
+        "process": "member-enrollment",
+        "primary_app": "enrollment-billing-platform",
+        "supporting_apps": ["edi-gateway-x12-translator", "customer-relationship-management"],
+        "criticality": "high"
+      },
+      {
+        "process": "premium-billing",
+        "primary_app": "enrollment-billing-platform",
+        "supporting_apps": ["edi-gateway-x12-translator", "analytics-data-warehouse"],
+        "criticality": "high"
+      },
+      {
+        "process": "eligibility-verification",
+        "primary_app": "edi-gateway-x12-translator",
+        "supporting_apps": ["member-services-portal", "claims-adjudication-system"],
+        "criticality": "high"
+      },
+      {
+        "process": "prior-auth-requests",
+        "primary_app": "prior-authorization-system",
+        "supporting_apps": ["edi-gateway-x12-translator", "care-management-platform", "member-services-portal"],
+        "criticality": "high"
+      },
+      {
+        "process": "care-management",
+        "primary_app": "care-management-platform",
+        "supporting_apps": ["customer-relationship-management", "analytics-data-warehouse"],
+        "criticality": "medium"
+      },
+      {
+        "process": "provider-onboarding",
+        "primary_app": "provider-data-management",
+        "supporting_apps": ["edi-gateway-x12-translator", "customer-relationship-management"],
+        "criticality": "high"
+      },
+      {
+        "process": "provider-credentialing",
+        "primary_app": "provider-data-management",
+        "supporting_apps": ["edi-gateway-x12-translator", "customer-relationship-management"],
+        "criticality": "high"
+      },
+      {
+        "process": "pharmacy-claims-adjudication",
+        "primary_app": "pbm-system",
+        "supporting_apps": ["edi-gateway-x12-translator", "fraud-detection-system"],
+        "criticality": "high"
+      },
+      {
+        "process": "hedis-reporting",
+        "primary_app": "analytics-data-warehouse",
+        "supporting_apps": ["claims-adjudication-system", "care-management-platform"],
+        "criticality": "medium"
+      },
+      {
+        "process": "fraud-detection",
+        "primary_app": "fraud-detection-system",
+        "supporting_apps": ["claims-adjudication-system", "analytics-data-warehouse"],
+        "criticality": "medium"
+      },
+      {
+        "process": "call-center-operations",
+        "primary_app": "customer-relationship-management",
+        "supporting_apps": ["member-services-portal", "analytics-data-warehouse"],
+        "criticality": "medium"
+      },
+      {
+        "process": "claims-intake",
+        "primary_app": "edi-gateway-x12-translator",
+        "supporting_apps": ["claims-adjudication-system", "member-services-portal"],
+        "criticality": "high"
+      },
+      {
+        "process": "claim-status-inquiry",
+        "primary_app": "edi-gateway-x12-translator",
+        "supporting_apps": ["claims-adjudication-system", "member-services-portal"],
+        "criticality": "high"
+      }
+    ]
+  },
+  "crown_jewel_applications": {
+    "description": "Applications whose failure immediately halts core business operations. These systems represent the highest concentration of risk.",
+    "applications": [
+      {
+        "app_id": "claims-adjudication-system",
+        "rationale": "Direct revenue engine. Outage = zero claims processed = immediate financial impact",
+        "downtime_impact": "Revenue stops, provider payments halt, member access to care disrupted"
+      },
+      {
+        "app_id": "edi-gateway-x12-translator",
+        "rationale": "Single point of failure for all external data exchange. Change Healthcare outage demonstrated cascading impact",
+        "downtime_impact": "All EDI transactions stop, claims intake halts, eligibility checks fail, payments stall"
+      }
+    ]
+  },
+  "vendor_landscape": {
+    "description": "Key vendors operating across multiple application archetypes. Vertical integration risk analysis.",
+    "major_vendors": [
+      {
+        "vendor": "Change Healthcare (UnitedHealth Group)",
+        "archetypes": ["claims-adjudication-system", "edi-gateway-x12-translator", "enrollment-billing-platform", "payment-remittance-system", "prior-authorization-system", "member-services-portal"],
+        "concentration_risk": "high",
+        "note": "Single vendor represents multiple crown-jewel systems. February 2024 outage demonstrated systemic risk to payer operations."
+      },
+      {
+        "vendor": "Optum (UnitedHealth Group)",
+        "archetypes": ["claims-adjudication-system", "edi-gateway-x12-translator", "provider-data-management", "care-management-platform", "analytics-data-warehouse"],
+        "concentration_risk": "high",
+        "note": "Vertical integration across payer operations, provider services, and analytics creates data aggregation concerns."
+      },
+      {
+        "vendor": "Edifecs",
+        "archetypes": ["edi-gateway-x12-translator", "claims-adjudication-system"],
+        "concentration_risk": "medium",
+        "note": "Strong EDI gateway presence with expanding claims processing capabilities."
+      },
+      {
+        "vendor": "Cognizant (TriZetto)",
+        "archetypes": ["claims-adjudication-system", "enrollment-billing-platform"],
+        "concentration_risk": "medium",
+        "note": "Legacy payer core systems (Facets, QNXT) have large installed base."
+      }
+    ]
+  },
+  "appendix": {
+    "x12_transaction_reference": {
+      "837": "Health Care Claim: Professional/Institutional/Dental (Claims submission)",
+      "835": "Health Care Claim Payment/Advice (Remittance)",
+      "270": "Health Care Eligibility Benefit Inquiry (Eligibility check - request)",
+      "271": "Health Care Eligibility Benefit Response (Eligibility check - response)",
+      "276": "Health Care Claim Status Request (Claim status inquiry)",
+      "277": "Health Care Claim Status Notification (Claim status response)",
+      "278": "Health Care Services Review Request/Response (Prior auth)",
+      "834": "Benefit Enrollment and Maintenance (Enrollment data)",
+      "820": "Payment Order/Remittance Advice (Premium or payment)"
+    },
+    "methodology_notes": [
+      "Archetypes derived from typical payer org structures, not universal standards",
+      "Vendor examples represent major market players, not exhaustive landscape",
+      "Crown jewel designation based on business criticality (revenue + regulatory + member impact)",
+      "Criticality assessment: crown-jewel > high > medium. 'crown-jewel' = immediate revenue impact on failure",
+      "Process-app edges represent typical patterns, not rigid rules. Smaller payers may consolidate apps",
+      "Vendor concentration risk analysis considers 2024 Change Healthcare outage as case study"
+    ],
+    "next_steps": [
+      "Validate with payer domain experts (CIOs, CTOs, application architects)",
+      "Cross-reference with T-200 process taxonomy when complete",
+      "Map to specific payer org structures (small, mid, large, Medicaid, Medicare, Blues)",
+      "Add third-party risk assessment per vendor/archetype"
+    ]
+  }
+}
