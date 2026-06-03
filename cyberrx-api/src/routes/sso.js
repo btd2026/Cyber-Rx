@@ -24,6 +24,7 @@ const { passport, generateJWT, getFrontendRedirect } = require('../config/passpo
 const speakeasy = require('speakeasy');
 const QRCode = require('qrcode');
 const { query } = require('../utils/db');
+const { authenticateJWT } = require('../middleware/auth');
 
 /**
  * ============================================================================
@@ -214,18 +215,14 @@ router.get('/azure/callback',
  * POST /sso/mfa/enable
  * Enable MFA for the current authenticated user
  *
- * Body:
- * - userId: Current user ID (from JWT)
+ * Requires JWT authentication
  *
  * Returns QR code URL for TOTP app setup
  */
-router.post('/mfa/enable', async (req, res) => {
+router.post('/mfa/enable', authenticateJWT, async (req, res) => {
   try {
-    const { userId } = req.body;
-
-    if (!userId) {
-      return res.status(400).json({ error: 'User ID required' });
-    }
+    // Use userId from JWT instead of request body
+    const userId = req.userId;
 
     // Get user info
     const users = await query('SELECT * FROM users WHERE id = $1', [userId]);
@@ -274,18 +271,20 @@ router.post('/mfa/enable', async (req, res) => {
  * POST /sso/mfa/verify
  * Verify MFA token during login
  *
+ * Requires JWT authentication
+ *
  * Body:
- * - userId: User ID
  * - token: 6-digit TOTP token
  *
  * Validates token and completes login flow
  */
-router.post('/mfa/verify', async (req, res) => {
+router.post('/mfa/verify', authenticateJWT, async (req, res) => {
   try {
-    const { userId, token } = req.body;
+    const { token } = req.body;
+    const userId = req.userId;
 
-    if (!userId || !token) {
-      return res.status(400).json({ error: 'User ID and token required' });
+    if (!token) {
+      return res.status(400).json({ error: 'MFA token required' });
     }
 
     // Get user info
@@ -356,21 +355,16 @@ router.post('/mfa/verify', async (req, res) => {
  * GET /sso/mfa/qrcode
  * Get MFA QR code for authenticated user
  *
+ * Requires JWT authentication
+ *
  * Returns QR code for TOTP app setup
  */
-router.get('/mfa/qrcode', async (req, res) => {
+router.get('/mfa/qrcode', authenticateJWT, async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
+    // Get user info from JWT
+    const userId = req.userId;
 
-    const jwt = require('jsonwebtoken');
-    const token = authHeader.substring(7);
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'cyberrx-dev-secret');
-
-    // Get user info
-    const users = await query('SELECT * FROM users WHERE id = $1', [decoded.userId]);
+    const users = await query('SELECT * FROM users WHERE id = $1', [userId]);
     const user = users[0];
 
     if (!user) {
@@ -399,31 +393,25 @@ router.get('/mfa/qrcode', async (req, res) => {
  * POST /sso/mfa/disable
  * Disable MFA for authenticated user
  *
+ * Requires JWT authentication
+ *
  * Body:
  * - password: User's password (required for security)
  *
  * Disables MFA and removes secret
  */
-router.post('/mfa/disable', async (req, res) => {
+router.post('/mfa/disable', authenticateJWT, async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const jwt = require('jsonwebtoken');
     const bcrypt = require('bcrypt');
-    const token = authHeader.substring(7);
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'cyberrx-dev-secret');
-
     const { password } = req.body;
+    const userId = req.userId;
 
     if (!password) {
       return res.status(400).json({ error: 'Password required to disable MFA' });
     }
 
     // Get user info
-    const users = await query('SELECT * FROM users WHERE id = $1', [decoded.userId]);
+    const users = await query('SELECT * FROM users WHERE id = $1', [userId]);
     const user = users[0];
 
     if (!user) {
