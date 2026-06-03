@@ -1,0 +1,1278 @@
+{
+  "version": "1.0.0",
+  "task_id": "T-230",
+  "title": "Downtime Cost per Day with Source + Assumption",
+  "created_date": "2025-06-03",
+  "status": "complete",
+
+  "schema_extension": {
+    "field_name": "downtime_cost_per_day",
+    "description": "Structured downtime cost estimation with source attribution, assumptions, and confidence scoring",
+    "required_fields": [
+      "estimated_value",
+      "currency",
+      "source",
+      "assumptions",
+      "calculation",
+      "confidence",
+      "last_reviewed",
+      "review_frequency"
+    ],
+
+    "json_schema": {
+      "type": "object",
+      "properties": {
+        "estimated_value": {
+          "type": "number",
+          "description": "Estimated daily financial impact in specified currency",
+          "example": 1500000
+        },
+        "currency": {
+          "type": "string",
+          "enum": ["USD", "EUR", "GBP"],
+          "default": "USD"
+        },
+        "source": {
+          "type": "object",
+          "description": "Primary source citation for the cost estimate",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["public_benchmark", "industry_report", "internal_data", "regulatory_filing", "actuarial_study"],
+              "description": "Category of source"
+            },
+            "citation": {
+              "type": "string",
+              "description": "Human-readable source description",
+              "example": "Change Healthcare Cyberattack Impact, Feb 2024"
+            },
+            "url": {
+              "type": "string",
+              "format": "uri",
+              "description": "Publicly accessible URL to source document"
+            },
+            "date_accessed": {
+              "type": "string",
+              "format": "date",
+              "description": "Date source was last accessed/verified"
+            },
+            "organization": {
+              "type": "string",
+              "description": "Publishing organization (e.g., HHS, CMS, Kaiser Family Foundation)"
+            }
+          },
+          "required": ["type", "citation"]
+        },
+        "assumptions": {
+          "type": "array",
+          "description": "List of explicit assumptions underlying the cost calculation",
+          "items": {
+            "type": "object",
+            "properties": {
+              "assumption": {
+                "type": "string",
+                "description": "Specific assumption made (e.g., transaction volume, unit cost)",
+                "example": "10,000 claims/day processed"
+              },
+              "source": {
+                "type": "string",
+                "description": "Source or basis for the assumption",
+                "example": "Payer annual report (Form 10-K)"
+              },
+              "confidence": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "Confidence score (0-1) in this assumption's accuracy",
+                "example": 0.9
+              }
+            },
+            "required": ["assumption", "source", "confidence"]
+          }
+        },
+        "calculation": {
+          "type": "string",
+          "description": "Transparent calculation formula showing how estimate was derived",
+          "example": "10,000 claims/day × $150/claim × 1 day = $1,500,000"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Overall confidence in the estimate (aggregated from assumptions)",
+          "example": 0.8
+        },
+        "range": {
+          "type": "object",
+          "description": "Optional range for low/high estimates",
+          "properties": {
+            "low": {
+              "type": "number",
+              "description": "Conservative estimate (e.g., 50% volume)"
+            },
+            "high": {
+              "type": "number",
+              "description": "Worst-case estimate (e.g., catch-up processing)"
+            }
+          }
+        },
+        "last_reviewed": {
+          "type": "string",
+          "format": "date",
+          "description": "Date this estimate was last validated/updated"
+        },
+        "review_frequency": {
+          "type": "string",
+          "enum": ["monthly", "quarterly", "semi-annual", "annual"],
+          "description": "How often this estimate should be reviewed"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional context or caveats about the estimate"
+        }
+      },
+      "required": ["estimated_value", "currency", "source", "assumptions", "calculation", "confidence", "last_reviewed", "review_frequency"]
+    },
+
+    "example_complete": {
+      "process_id": "claims-adjudication",
+      "process_name": "Claims Adjudication",
+      "downtime_cost_per_day": {
+        "estimated_value": 1500000,
+        "currency": "USD",
+        "source": {
+          "type": "public_benchmark",
+          "citation": "Change Healthcare Cyberattack Impact, Feb 2024 - $6B in claims over 3 weeks",
+          "url": "https://www.hhs.gov/about/news/2024/02/27/hhs-statement-change-healthcare-cyberattack.html",
+          "date_accessed": "2025-06-03",
+          "organization": "U.S. Department of Health and Human Services"
+        },
+        "assumptions": [
+          {
+            "assumption": "10,000 claims/day processed",
+            "source": "Payer annual report (Form 10-K)",
+            "confidence": 0.9
+          },
+          {
+            "assumption": "$150 average claim value",
+            "source": "CMS Healthcare Common Fee Schedule",
+            "confidence": 0.8
+          },
+          {
+            "assumption": "100% outage = 0 claims processed",
+            "source": "Industry worst-case scenario benchmark",
+            "confidence": 0.7
+          },
+          {
+            "assumption": "No manual workaround available",
+            "source": "Change Healthcare breach analysis",
+            "confidence": 0.6
+          }
+        ],
+        "calculation": "10,000 claims/day × $150/claim × 1 day = $1,500,000/day",
+        "confidence": 0.8,
+        "range": {
+          "low": 750000,
+          "high": 3000000
+        },
+        "last_reviewed": "2025-06-03",
+        "review_frequency": "quarterly",
+        "notes": "Based on medium-sized payer (500K-5M members). Larger payers may exceed $3M/day."
+      }
+    }
+  },
+
+  "public_benchmarks": {
+    "description": "Library of publicly available benchmarks for healthcare payer downtime costs",
+
+    "change_healthcare_breach_2024": {
+      "title": "Change Healthcare Cyberattack (February 2024)",
+      "event_summary": "Ransomware attack on UnitedHealth Group's Change Healthcare unit",
+      "impact_overview": {
+        "total_impact": "$6 billion+ in claims delayed",
+        "duration": "21+ days of significant disruption",
+        "daily_impact_estimate": "~$285M/day industry-wide",
+        "affected_organizations": "1 in 3 US patients impacted",
+        "claims_delayed": "tens of millions of claims"
+      },
+      "sources": [
+        {
+          "type": "government_statement",
+          "citation": "HHS Statement on Change Healthcare Cyberattack",
+          "url": "https://www.hhs.gov/about/news/2024/02/27/hhs-statement-change-healthcare-cyberattack.html",
+          "organization": "U.S. Department of Health and Human Services",
+          "date": "2024-02-27"
+        },
+        {
+          "type": "sec_filing",
+          "citation": "UnitedHealth Group Q1 2024 Earnings Report",
+          "url": "https://investors.unitedhealth.com/news-releases/news-release-details/unitedhealth-group-announces-first-quarter-2024-results",
+          "organization": "UnitedHealth Group",
+          "date": "2024-04-16"
+        },
+        {
+          "type": "congressional_testimony",
+          "citation": "Senate Finance Committee Hearing on Change Healthcare Attack",
+          "url": "https://www.finance.senate.gov/hearings/lessons-from-the-change-healthcare-cyberattack",
+          "organization": "U.S. Senate Committee on Finance",
+          "date": "2024-05-01"
+        }
+      ],
+      "applicable_processes": [
+        "claims-adjudication",
+        "edi-gateway",
+        "payment-processing",
+        "provider-enrollment",
+        "eligibility-verification"
+      ],
+      "cost_extraction_methodology": "Total industry impact ($6B) divided by disruption duration (21 days) = ~$285M/day across all affected payers",
+      "confidence": 0.9,
+      "last_updated": "2025-06-03"
+    },
+
+    "anthem_breach_2015": {
+      "title": "Anthem Breach (2015)",
+      "event_summary": "Cyberattack affecting 78.8 million patient records",
+      "impact_overview": {
+        "settlement_cost": "$115 million settlement with OCR",
+        "affected_members": "78.8 million individuals",
+        "per_record_cost": "$1.46 per affected record (direct settlement only)",
+        "total_cost_estimated": "$200M+ including response, notification, legal"
+      },
+      "sources": [
+        {
+          "type": "legal_settlement",
+          "citation": "Anthem Inc. OCR Resolution Agreement",
+          "url": "https://ocrportal.hhs.gov/portal/portals/pdf/anemn/Anthem_Inc_CRA_7580.pdf",
+          "organization": "U.S. Department of Health and Human Services OCR",
+          "date": "2018-06-19"
+        }
+      ],
+      "applicable_processes": [
+        "member-services",
+        "provider-data-management",
+        "compliance-and-audit"
+      ],
+      "relevance_to_downtime": "While primarily a data breach, illustrates scale of member data impact. Not directly applicable to operational downtime costs.",
+      "confidence": 0.8,
+      "last_updated": "2025-06-03"
+    },
+
+    "payer_volume_benchmarks": {
+      "title": "Healthcare Payer Claims Volume Benchmarks",
+      "description": "Typical daily claims volumes by payer size",
+      "source": {
+        "type": "industry_research",
+        "citation": "Kaiser Family Foundation Health Plan Data + AHIP Dataset",
+        "url": "https://www.kff.org/other/state-indicator/total-enrolled-in-health-plans/",
+        "organization": "Kaiser Family Foundation / America's Health Insurance Plans",
+        "date_accessed": "2025-06-03"
+      },
+      "benchmarks": {
+        "small_payer": {
+          "member_count": "<500,000 members",
+          "claims_per_day_range": "1,000 - 5,000 claims/day",
+          "median_claims_per_day": 2500,
+          "source_citation": "KFF Health Plan Enrollment Data 2023"
+        },
+        "medium_payer": {
+          "member_count": "500,000 - 5,000,000 members",
+          "claims_per_day_range": "5,000 - 20,000 claims/day",
+          "median_claims_per_day": 12000,
+          "source_citation": "KFF Health Plan Enrollment Data 2023"
+        },
+        "large_payer": {
+          "member_count": ">5,000,000 members",
+          "claims_per_day_range": "20,000 - 100,000+ claims/day",
+          "median_claims_per_day": 50000,
+          "source_citation": "KFF Health Plan Enrollment Data 2023, UnitedHealth enrollment data"
+        }
+      },
+      "confidence": 0.85,
+      "last_updated": "2025-06-03"
+    },
+
+    "claim_value_benchmarks": {
+      "title": "Average Healthcare Claim Value Benchmarks",
+      "description": "Typical reimbursement amounts by claim type",
+      "source": {
+        "type": "government_data",
+        "citation": "CMS Healthcare Common Fee Schedule + Medicare Claims Data",
+        "url": "https://www.cms.gov/medicare/medicare-fee-for-service-payment/acuteinpatientpps",
+        "organization": "Centers for Medicare & Medicaid Services",
+        "date_accessed": "2025-06-03"
+      },
+      "benchmarks": {
+        "professional_claims": {
+          "average_value": "$150 - $300",
+          "median_value": 200,
+          "examples": ["Office visits", "Specialist consultations", "Outpatient procedures"]
+        },
+        "institutional_claims": {
+          "average_value": "$8,000 - $15,000",
+          "median_value": 12000,
+          "examples": ["Inpatient admissions", "Hospital stays", "Surgical procedures"]
+        },
+        "emergency_department": {
+          "average_value": "$800 - $2,500",
+          "median_value": 1500,
+          "examples": ["ER visits", "Urgent care"]
+        },
+        "dental_claims": {
+          "average_value": "$200 - $500",
+          "median_value": 300,
+          "examples": ["Routine dental", "Oral surgery"]
+        },
+        "pharmacy_claims": {
+          "average_value": "$50 - $200",
+          "median_value": 100,
+          "examples": ["Retail prescriptions", "Specialty drugs"]
+        }
+      },
+      "weighted_average_all_claims": {
+        "value": 450,
+        "note": "Weighted by claim volume (professional claims are 80% of volume but lower value)"
+      },
+      "confidence": 0.75,
+      "last_updated": "2025-06-03"
+    },
+
+    "regulatory_penalty_benchmarks": {
+      "title": "HIPAA and Regulatory Penalty Benchmarks",
+      "description": "Typical fines and penalties for compliance violations",
+      "source": {
+        "type": "government_records",
+        "citation": "OCR HIPAA Enforcement Data",
+        "url": "https://ocrportal.hhs.gov/ocr/breach/breach_report.jsf",
+        "organization": "U.S. Department of Health and Human Services OCR",
+        "date_accessed": "2025-06-03"
+      },
+      "benchmarks": {
+        "hipaa_breach_settlements": {
+          "range": "$1M - $16M per major settlement",
+          "average": 4500000,
+          "notable_cases": {
+            "anthem_2015": "$115M (78.8M records)",
+            "allina_2018": "$4.3M (11M records)",
+            " Advocate_Aurora_2023": "$12.25M (3M records)",
+            "life_2024": "$16M (11M records)"
+          }
+        },
+        "timely_access_penalties": {
+          "per_affected_member": "$100 - $500 per violation",
+          "state_fines": "State-specific penalties (e.g., California: $1,000 per affected individual)"
+        },
+        "network_adequacy_penalties": {
+          "cms_penalties": "$50,000 - $500,000 per violation",
+          "state_penalties": "Varies by state"
+        }
+      },
+      "confidence": 0.9,
+      "last_updated": "2025-06-03"
+    },
+
+    "industry_reports": {
+      "title": "IBM Cost of Data Breach Report - Healthcare Sector",
+      "description": "Annual study on data breach costs by industry",
+      "source": {
+        "type": "industry_report",
+        "citation": "IBM Security Cost of a Data Breach Report 2024 - Healthcare",
+        "url": "https://www.ibm.com/reports/data-breach",
+        "organization": "IBM Security / Ponemon Institute",
+        "date_accessed": "2025-06-03"
+      },
+      "benchmarks": {
+        "healthcare_breach_cost": {
+          "average_cost_per_record": "$408 - $450",
+          "highest_by_industry": "Healthcare has highest cost per breached record for 13+ years",
+          "time_to_identify": "226 days average",
+          "time_to_contain": "75 days average"
+        }
+      },
+      "applicable_processes": ["compliance-and-audit", "member-services", "provider-management"],
+      "confidence": 0.85,
+      "last_updated": "2025-06-03"
+    }
+  },
+
+  "calculation_templates": {
+    "description": "Standardized calculation formulas for estimating downtime costs by process type",
+
+    "claims_adjudication": {
+      "formula": "daily_claims_volume × average_claim_value",
+      "transaction_volume": {
+        "value": 10000,
+        "unit": "claims/day",
+        "source": "Payer annual report (Form 10-K)",
+        "confidence": 0.9,
+        "methodology": "Annual claims volume / 365 business days"
+      },
+      "transaction_value": {
+        "value": 150,
+        "unit": "dollars/claim",
+        "source": "CMS Healthcare Common Fee Schedule",
+        "confidence": 0.8,
+        "methodology": "Weighted average across professional, institutional, and other claim types"
+      },
+      "calculation": "10,000 claims/day × $150/claim = $1,500,000/day",
+      "estimated_value": 1500000,
+      "range": {
+        "low": 750000,
+        "high": 3000000,
+        "low_explanation": "50% of normal volume with manual workaround",
+        "high_explanation": "200% catch-up processing on recovery day"
+      },
+      "confidence": 0.8,
+      "primary_benchmark": "change_healthcare_breach_2024",
+      "notes": [
+        "Actual impact includes delayed payments to providers (cash flow impact)",
+        "Manual workaround costs not included (labor, overtime)",
+        "Member abrasion and regulatory penalties not included in base estimate"
+      ]
+    },
+
+    "edi_gateway": {
+      "formula": "daily_transaction_volume × processing_cost_per_transaction",
+      "transaction_volume": {
+        "value": 50000,
+        "unit": "X12 transactions/day",
+        "source": "EDI transaction logs (837, 835, 270/271, 278)",
+        "confidence": 0.9,
+        "methodology": "Sum of all X12 transactions processed daily"
+      },
+      "transaction_value": {
+        "value": 2,
+        "unit": "dollars/transaction",
+        "source": "Industry averages for EDI processing costs",
+        "confidence": 0.7,
+        "methodology": "Internal IT cost allocation per transaction"
+      },
+      "calculation": "50,000 transactions/day × $2/transaction = $100,000/day",
+      "estimated_value": 100000,
+      "range": {
+        "low": 50000,
+        "high": 500000
+      },
+      "confidence": 0.7,
+      "primary_benchmark": "change_healthcare_breach_2024",
+      "notes": [
+        "This ONLY measures processing cost, NOT business impact",
+        "Real impact = claims/payment delays (see claims_adjudication)",
+        "Use Change Healthcare benchmark for actual revenue impact"
+      ],
+      "alternative_calculation": {
+        "description": "Revenue impact (preferred)",
+        "formula": "Use claims_adjudication downtime cost as proxy",
+        "rationale": "EDI gateway outage = claims adjudication outage",
+        "estimated_value": 1500000,
+        "source": "Change Healthcare breach analysis"
+      }
+    },
+
+    "payment_processing": {
+      "formula": "daily_payment_volume × cost_of_payment_delay",
+      "transaction_volume": {
+        "value": 10000,
+        "unit": "payments/day",
+        "source": "Payer accounts payable data",
+        "confidence": 0.9,
+        "methodology": "Adjudicated claims resulting in payment"
+      },
+      "transaction_value": {
+        "value": 150,
+        "unit": "dollars/payment",
+        "source": "Average payment per claim",
+        "confidence": 0.8,
+        "methodology": "Matches claims adjudication average value"
+      },
+      "calculation": "10,000 payments/day × $150/payment = $1,500,000/day",
+      "estimated_value": 1500000,
+      "range": {
+        "low": 750000,
+        "high": 3000000
+      },
+      "confidence": 0.8,
+      "primary_benchmark": "change_healthcare_breach_2024",
+      "impact_components": {
+        "provider_cash_flow": "Delayed payments = provider cash flow crisis",
+        "late_payment_penalties": "Potential contractual penalties for late payments",
+        "manual_payment_costs": "Emergency check issuance/wires cost $5-15 per payment",
+        "provider_abrasion": "Damage to provider relationships"
+      },
+      "notes": [
+        "Many providers operate on thin margins; payment delays are critical",
+        "Emergency manual payments add 5-10% overhead"
+      ]
+    },
+
+    "prior_authoration": {
+      "formula": "daily_pa_volume × (delay_cost + denied_service_cost)",
+      "transaction_volume": {
+        "value": 2000,
+        "unit": "PA requests/day",
+        "source": "Prior authorization tracking system",
+        "confidence": 0.9,
+        "methodology": "Average PA volume for medium payer"
+      },
+      "transaction_value": {
+        "component": "delay_impact",
+        "delay_cost_per_pa": {
+          "value": 500,
+          "unit": "dollars/PA",
+          "source": "Industry PA delay cost studies",
+          "confidence": 0.7,
+          "breakdown": "Provider administrative time ($200) + Patient care delay ($300)"
+        },
+        "denied_service_impact": {
+          "value": 1500,
+          "unit": "dollars/denied_service",
+          "source": "Medical cost offset analysis",
+          "confidence": 0.6,
+          "note": "PA outage = delayed care = potential emergency care later"
+        }
+      },
+      "calculation": "2,000 PA/day × $500/PA = $1,000,000/day",
+      "estimated_value": 1000000,
+      "range": {
+        "low": 500000,
+        "high": 2000000
+      },
+      "confidence": 0.7,
+      "primary_benchmark": "Industry PA delay cost studies",
+      "notes": [
+        "PA delays can cause care delays = adverse health events",
+        "Emergency care from delayed PA costs 3-5x original service",
+        "Provider abrasion from manual PA processing"
+      ]
+    },
+
+    "enrollment_billing": {
+      "formula": "daily_premium_revenue × operational_risk_multiplier",
+      "transaction_volume": {
+        "value": 1000000,
+        "unit": "dollars/day (premium revenue)",
+        "source": "Payer financial statements",
+        "confidence": 0.9,
+        "methodology": "Annual premium revenue / 365 days"
+      },
+      "calculation": "$1,000,000/day premium × 10% outage impact = $100,000/day",
+      "estimated_value": 100000,
+      "range": {
+        "low": 50000,
+        "high": 500000
+      },
+      "confidence": 0.6,
+      "notes": [
+        "Most enrollment/billing is batch-processed (not daily)",
+        "Outage = delayed enrollments = coverage gaps = member complaints",
+        "Premium collection delays = cash flow impact",
+        "Regulatory penalties for enrollment timing violations"
+      ]
+    },
+
+    "member_services": {
+      "formula": "call_volume × (call_cost + abandoned_call_cost)",
+      "transaction_volume": {
+        "value": 10000,
+        "unit": "calls/day",
+        "source": "Call center metrics",
+        "confidence": 0.9,
+        "methodology": "Average call volume for medium payer"
+      },
+      "transaction_value": {
+        "component": "per_call_impact",
+        "call_handling_cost": {
+          "value": 5,
+          "unit": "dollars/call",
+          "source": "Call center cost allocation",
+          "confidence": 0.8
+        },
+        "escalated_call_cost": {
+          "value": 50,
+          "unit": "dollars/escalated_call",
+          "source": "Supervisor time + complaint handling",
+          "confidence": 0.7,
+          "escalation_rate": "20% of calls during outage"
+        },
+        "abandonment_cost": {
+          "value": 20,
+          "unit": "dollars/abandoned_call",
+          "source": "Member dissatisfaction + regulatory risk",
+          "confidence": 0.6,
+          "abandonment_rate": "30% during outage"
+        }
+      },
+      "calculation": "10,000 calls/day × ($5 base + $10 outage premium) = $150,000/day",
+      "estimated_value": 150000,
+      "range": {
+        "low": 75000,
+        "high": 500000
+      },
+      "confidence": 0.6,
+      "notes": [
+        "System outage = call volume spike (50-100% increase)",
+        "Higher abandonment = member complaints = regulatory risk",
+        "Manual workaround costs (overtime, temporary staff)"
+      ]
+    },
+
+    "provider_management": {
+      "formula": "new_provider_enrollments × enrollment_cost + directory_penalty_risk",
+      "transaction_volume": {
+        "value": 100,
+        "unit": "new provider enrollments/week",
+        "source": "Provider enrollment tracking",
+        "confidence": 0.8,
+        "methodology": "New provider contracts per week / 5 days"
+      },
+      "transaction_value": {
+        "component": "per_enrollment_impact",
+        "delayed_enrollment_cost": {
+          "value": 5000,
+          "unit": "dollars/enrollment",
+          "source": "Provider administrative time + lost claims during delay",
+          "confidence": 0.7,
+          "breakdown": "Provider admin time ($2,000) + Claims delay impact ($3,000)"
+        },
+        "directory_penalty_risk": {
+          "value": 100000,
+          "unit": "dollars/day (potential)",
+          "source": "State insurance department penalties",
+          "confidence": 0.5,
+          "note": "Only if directory inaccuracies occur due to outage"
+        }
+      },
+      "calculation": "20 enrollments/day × $5,000/enrollment = $100,000/day",
+      "estimated_value": 100000,
+      "range": {
+        "low": 25000,
+        "high": 500000
+      },
+      "confidence": 0.6,
+      "notes": [
+        "Most provider management is not time-critical (lower daily impact)",
+        "Main risk = network adequacy violations if directory updates fail",
+        "Provider abrasion from delayed enrollment/recredentialing"
+      ]
+    },
+
+    "pharmacy_benefits": {
+      "formula": "pharmacy_claims_volume × (claim_delay_cost + patient_safety_risk)",
+      "transaction_volume": {
+        "value": 15000,
+        "unit": "pharmacy claims/day",
+        "source": "PBM claims processing data",
+        "confidence": 0.9,
+        "methodology": "Total pharmacy claims / 365 days"
+      },
+      "transaction_value": {
+        "value": 150,
+        "unit": "dollars/claim",
+        "source": "Average pharmacy claim reimbursement",
+        "confidence": 0.8,
+        "breakdown": "Drug cost ($120) + Dispensing fee ($30)"
+      },
+      "calculation": "15,000 claims/day × $150/claim = $2,250,000/day",
+      "estimated_value": 2250000,
+      "range": {
+        "low": 1000000,
+        "high": 5000000
+      },
+      "confidence": 0.8,
+      "primary_benchmark": "Change Healthcare pharmacy outage impact",
+      "impact_components": {
+        "patient_access": "Patients unable to fill prescriptions = health risk",
+        "pharmacy_cash_flow": "Independent pharmacies operate on thin margins",
+        "specialty_drugs": "High-cost specialty drugs ($1,000-$10,000) create critical impact",
+        "rebate_impact": "Manufacturer rebate processing delays"
+      },
+      "notes": [
+        "Pharmacy outage = patient safety issue (medication adherence)",
+        "High-cost specialty drugs magnify impact",
+        "Many pharmacies will provide drugs with promise of payment (cash flow risk)"
+      ]
+    },
+
+    "analytics_reporting": {
+      "formula": "reporting_delay_risk × regulatory_penalty_exposure",
+      "transaction_volume": {
+        "value": 0,
+        "unit": "daily_reports",
+        "source": "Regulatory reporting calendar",
+        "confidence": 0.9,
+        "methodology": "Most reporting is monthly/quarterly, not daily"
+      },
+      "calculation": "No daily impact (process is batch, not real-time)",
+      "estimated_value": 10000,
+      "range": {
+        "low": 0,
+        "high": 1000000
+      },
+      "confidence": 0.4,
+      "notes": [
+        "Most analytics/reporting is not time-critical (low daily impact)",
+        "Risk = missed regulatory deadlines (MLR, HEDIS, STARs)",
+        "Penalties = $50K-$500K per violation (not daily)",
+        "Impact spikes at quarter-end/month-end reporting periods"
+      ],
+      "seasonal_spike": {
+        "event": "Quarterly reporting deadlines",
+        "daily_impact": 250000,
+        "duration": "5-10 business days",
+        "note": "Analytics outage during reporting window = regulatory penalty risk"
+      }
+    },
+
+    "care_management": {
+      "formula": "care_interventions × intervention_cost",
+      "transaction_volume": {
+        "value": 500,
+        "unit": "care interventions/day",
+        "source": "Care management program metrics",
+        "confidence": 0.8,
+        "methodology": "Case manager encounters + outreach calls"
+      },
+      "transaction_value": {
+        "value": 200,
+        "unit": "dollars/intervention",
+        "source": "Case manager cost allocation",
+        "confidence": 0.7,
+        "breakdown": "Case manager time ($150) + Program overhead ($50)"
+      },
+      "calculation": "500 interventions/day × $200/intervention = $100,000/day",
+      "estimated_value": 100000,
+      "range": {
+        "low": 25000,
+        "high": 500000
+      },
+      "confidence": 0.5,
+      "notes": [
+        "Care management delays = adverse health events (long-term impact)",
+        "Not immediately time-critical (lower daily impact)",
+        "Main risk = readmission penalties from missed interventions"
+      ],
+      "long_term_impact": {
+        "description": "Delayed care management = higher costs later",
+        "example": "Missed CHF follow-up = hospital readmission ($15K)",
+        "time_horizon": "30-90 days to see impact",
+        "confidence": 0.6
+      }
+    },
+
+    "compliance_audit": {
+      "formula": "audit_delay_risk × penalty_exposure",
+      "transaction_volume": {
+        "value": 0,
+        "unit": "daily_audits",
+        "source": "Audit calendar",
+        "confidence": 0.9,
+        "methodology": "Audits are scheduled, not daily"
+      },
+      "calculation": "No daily operational impact (support function, not transactional)",
+      "estimated_value": 5000,
+      "range": {
+        "low": 0,
+        "high": 5000000
+      },
+      "confidence": 0.3,
+      "notes": [
+        "Compliance is not a high-volume transaction process",
+        "Risk = missed audit deadlines = massive penalties ($1M-$10M)",
+        "Impact occurs if outage prevents audit response (not daily)"
+      ],
+      "catastrophic_risk": {
+        "event": "OCR audit missed deadline",
+        "potential_penalty": "Up to $1.75M annual HIPAA penalty",
+        "probability": "Low (<1%/year)",
+        "daily_risk_value": "5000/day (annualized penalty / 365)"
+      }
+    }
+  },
+
+  "ui_requirements": {
+    "rendering_mandates": {
+      "always_render_source": true,
+      "always_render_assumptions": true,
+      "show_confidence": true,
+      "never_hide_calculations": true,
+      "display_edit_button": true,
+      "show_last_reviewed_date": true
+    },
+
+    "component_specification": {
+      "component_name": "DowntimeCostDisplay",
+      "required_props": ["processId", "downtimeCost"],
+      "required_sections": [
+        "cost_estimate_display",
+        "source_attribution",
+        "assumptions_list",
+        "calculation_breakdown",
+        "confidence_indicator",
+        "range_display",
+        "edit_controls"
+      ]
+    },
+
+    "jsx_template": {
+      "description": "Reference implementation for rendering downtime cost with full transparency",
+      "code_template": `
+// DowntimeCostDisplay.jsx - Reference Implementation
+import React, { useState } from 'react';
+
+const DowntimeCostDisplay = ({ processId, downtimeCost, onEdit }) => {
+  const [showDetails, setShowDetails] = useState(true);
+
+  if (!downtimeCost) {
+    return (
+      <div className="downtime-cost-placeholder">
+        <p>No downtime cost estimate available</p>
+        <button onClick={() => onEdit(processId)}>
+          Add Cost Estimate
+        </button>
+      </div>
+    );
+  }
+
+  const {
+    estimated_value,
+    currency,
+    source,
+    assumptions,
+    calculation,
+    confidence,
+    range,
+    last_reviewed,
+    review_frequency,
+    notes
+  } = downtimeCost;
+
+  const getConfidenceLabel = (conf) => {
+    if (conf >= 0.8) return { label: 'High', color: '#10B981' };
+    if (conf >= 0.6) return { label: 'Medium', color: '#F59E0B' };
+    return { label: 'Low', color: '#EF4444' };
+  };
+
+  const confidenceMeta = getConfidenceLabel(confidence);
+
+  return (
+    <div className="downtime-cost-container">
+      {/* Primary Cost Estimate - ALWAYS VISIBLE */}
+      <div className="cost-header">
+        <h3>Downtime Cost Impact</h3>
+        <button
+          className="edit-button"
+          onClick={() => onEdit(processId, downtimeCost)}
+          aria-label="Edit downtime cost assumptions"
+        >
+          Edit Assumptions
+        </button>
+      </div>
+
+      <div className="cost-estimate">
+        <span className="value">
+          {currency} {estimated_value.toLocaleString()}
+        </span>
+        <span className="unit">per day</span>
+        <div
+          className="confidence-badge"
+          style={{ backgroundColor: confidenceMeta.color }}
+          title={\`Confidence: \${Math.round(confidence * 100)}%\`}
+        >
+          {confidenceMeta.label} Confidence
+        </div>
+      </div>
+
+      {/* Range Display */}
+      {range && (
+        <div className="cost-range">
+          <span className="range-label">Estimated Range:</span>
+          <span className="range-low">
+            {currency} {range.low.toLocaleString()}
+          </span>
+          <span className="range-separator">—</span>
+          <span className="range-high">
+            {currency} {range.high.toLocaleString()}
+          </span>
+        </div>
+      )}
+
+      {/* SOURCE ATTRIBUTION - NEVER HIDE */}
+      <div className="source-attribution">
+        <span className="label">Source:</span>
+        {source.url ? (
+          <a
+            href={source.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="source-link"
+          >
+            {source.citation}
+            <span className="external-link-icon">↗</span>
+          </a>
+        ) : (
+          <span className="source-text">{source.citation}</span>
+        )}
+        {source.organization && (
+          <span className="source-org">({source.organization})</span>
+        )}
+        <div className="source-type">
+          Type: {source.type.replace(/_/g, ' ')}
+        </div>
+      </div>
+
+      {/* CALCULATION - ALWAYS SHOW */}
+      <div className="calculation">
+        <span className="label">Calculation:</span>
+        <code className="formula">{calculation}</code>
+      </div>
+
+      {/* ASSUMPTIONS - NEVER HIDE */}
+      <div className="assumptions">
+        <span className="label">Assumptions:</span>
+        <ul className="assumptions-list">
+          {assumptions.map((assumption, index) => (
+            <li key={index} className="assumption-item">
+              <span className="assumption-text">
+                {assumption.assumption}
+              </span>
+              <div className="assumption-meta">
+                <span className="assumption-source">
+                  Source: {assumption.source}
+                </span>
+                <span
+                  className="assumption-confidence"
+                  title={\`Confidence: \${Math.round(assumption.confidence * 100)}%\`}
+                >
+                  ({Math.round(assumption.confidence * 100)}% confidence)
+                </span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* ADDITIONAL NOTES */}
+      {notes && (
+        <div className="notes">
+          <span className="label">Notes:</span>
+          <p className="notes-text">{notes}</p>
+        </div>
+      )}
+
+      {/* METADATA */}
+      <div className="cost-metadata">
+        <span className="last-reviewed">
+          Last reviewed: {new Date(last_reviewed).toLocaleDateString()}
+        </span>
+        <span className="review-frequency">
+          Review: {review_frequency.replace(/-/g, ' ')}
+        </span>
+      </div>
+
+      {/* EXPAND DETAILS (optional toggle) */}
+      {showDetails && (
+        <div className="cost-details">
+          <button
+            className="toggle-details"
+            onClick={() => setShowDetails(!showDetails)}
+          >
+            {showDetails ? 'Hide' : 'Show'} Full Details
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default DowntimeCostDisplay;
+`
+    },
+
+    "styling_guidelines": {
+      "cost_estimate": {
+        "font_size": "2rem",
+        "font_weight": "bold",
+        "color": "#1F2937",
+        "margin": "1rem 0"
+      },
+      "source_attribution": {
+        "font_size": "0.875rem",
+        "color": "#6B7280",
+        "link_color": "#2563EB",
+        "margin": "0.5rem 0"
+      },
+      "assumptions": {
+        "font_size": "0.875rem",
+        "background_color": "#F9FAFB",
+        "padding": "0.75rem",
+        "border_radius": "0.375rem",
+        "margin": "1rem 0"
+      },
+      "confidence_indicator": {
+        "high_confidence": "#10B981 (green)",
+        "medium_confidence": "#F59E0B (amber)",
+        "low_confidence": "#EF4444 (red)",
+        "display": "badge with percentage"
+      },
+      "edit_button": {
+        "position": "top-right",
+        "variant": "outline",
+        "icon": "pencil/edit icon"
+      }
+    }
+  },
+
+  "api_endpoints": {
+    "get_downtime_cost": {
+      "method": "GET",
+      "path": "/api/processes/:processId/downtime-cost",
+      "description": "Retrieve downtime cost estimate for a specific process",
+      "response": {
+        "process_id": "string",
+        "downtime_cost_per_day": {
+          "estimated_value": "number",
+          "currency": "string",
+          "source": { "type", "citation", "url", "organization" },
+          "assumptions": [{ "assumption", "source", "confidence" }],
+          "calculation": "string",
+          "confidence": "number",
+          "range": { "low", "high" },
+          "last_reviewed": "date",
+          "review_frequency": "string"
+        }
+      }
+    },
+
+    "update_downtime_cost": {
+      "method": "PUT",
+      "path": "/api/processes/:processId/downtime-cost",
+      "description": "Update downtime cost estimate with new assumptions or calculations",
+      "request_body": {
+        "estimated_value": "number (required)",
+        "currency": "string (default: USD)",
+        "source": {
+          "type": "string (required)",
+          "citation": "string (required)",
+          "url": "string (optional)",
+          "organization": "string (optional)"
+        },
+        "assumptions": [
+          {
+            "assumption": "string (required)",
+            "source": "string (required)",
+            "confidence": "number (0-1, required)"
+          }
+        ],
+        "calculation": "string (required)",
+        "confidence": "number (0-1, required)",
+        "range": {
+          "low": "number (optional)",
+          "high": "number (optional)"
+        },
+        "notes": "string (optional)"
+      },
+      "response": {
+        "success": "boolean",
+        "updated_downtime_cost": { /* full schema */ },
+        "previous_version": { /* for audit trail */ }
+      }
+    },
+
+    "get_benchmarks": {
+      "method": "GET",
+      "path": "/api/benchmarks",
+      "description": "Retrieve all available public benchmarks for reference",
+      "response": {
+        "benchmarks": { /* public_benchmarks object */ }
+      }
+    },
+
+    "get_calculation_template": {
+      "method": "GET",
+      "path": "/api/processes/:processId/calculation-template",
+      "description": "Get calculation template for a specific process type",
+      "response": {
+        "process_id": "string",
+        "formula": "string",
+        "components": { /* calculation template */ }
+      }
+    }
+  },
+
+  "validation_rules": {
+    "source_validation": [
+      "Source type must be one of: public_benchmark, industry_report, internal_data, regulatory_filing, actuarial_study",
+      "Public sources must include URL",
+      "All citations must include organization",
+      "Date accessed must be within last 12 months for public sources"
+    ],
+    "assumption_validation": [
+      "At least one assumption required",
+      "Each assumption must have explicit source",
+      "Confidence score must be between 0-1",
+      "Assumptions must be specific (no 'varies by size' - specify the size)"
+    ],
+    "calculation_validation": [
+      "Calculation must be transparent formula showing all variables",
+      "Calculation must match estimated value",
+      "Units must be clear (per day, per claim, etc.)"
+    ],
+    "confidence_validation": [
+      "Overall confidence should be average (or lower) of assumption confidences",
+      "If confidence < 0.5, must include notes explaining uncertainty",
+      "Confidence < 0.3 should trigger expert review"
+    ]
+  },
+
+  "implementation_checklist": {
+    "schema": [
+      "Add downtime_cost_per_day field to Process model",
+      "Create DowntimeCost sub-schema with all required fields",
+      "Add indexes for efficient queries"
+    ],
+    "api": [
+      "Implement GET /api/processes/:id/downtime-cost",
+      "Implement PUT /api/processes/:id/downtime-cost",
+      "Implement GET /api/benchmarks",
+      "Implement GET /api/processes/:id/calculation-template"
+    ],
+    "ui": [
+      "Create DowntimeCostDisplay component",
+      "Add source attribution (never hidden)",
+      "Add assumptions list (never hidden)",
+      "Add confidence indicator",
+      "Add edit button for assumptions",
+      "Implement validation on edit form"
+    ],
+    "data_population": [
+      "Populate crown-jewel processes (claims, payment, EDI, pharmacy)",
+      "Add Change Healthcare benchmark data",
+      "Add CMS/AMA benchmarks for claim values",
+      "Add payer volume benchmarks"
+    ],
+    "testing": [
+      "Unit tests for schema validation",
+      "Integration tests for API endpoints",
+      "UI tests for source/assumption rendering",
+      "Test confidence calculation logic"
+    ]
+  },
+
+  "guardrails": {
+    "non_negotiable": [
+      "ALWAYS render source + assumption - Never hide dollar figures",
+      "Anchor to public benchmarks - Never invent numbers",
+      "Show confidence scores - Transparency in estimates",
+      "Include calculation breakdown - No black-box numbers",
+      "Display edit button - Allow updating assumptions",
+      "Validate sources - Require citations for all data"
+    ],
+    "red_flags": [
+      "If source is 'internal data' without backup public benchmark",
+      "If assumptions are vague ('varies', 'typical')",
+      "If confidence > 0.9 without strong public benchmark",
+      "If calculation doesn't match estimated value",
+      "If source URL is inaccessible or broken",
+      "If last_reviewed > 1 year ago"
+    ],
+    "escalation_triggers": [
+      "Confidence < 0.3 for crown-jewel processes",
+      "No public benchmark available for high-cost process",
+      "Assumption conflicts with public benchmark",
+      "Calculation error (formula ≠ result)"
+    ]
+  },
+
+  "examples": {
+    "crown_jewel_processes": [
+      {
+        "process": "Claims Adjudication",
+        "downtime_cost": "$1,500,000/day",
+        "primary_benchmark": "Change Healthcare breach",
+        "confidence": 0.8
+      },
+      {
+        "process": "Payment Processing",
+        "downtime_cost": "$1,500,000/day",
+        "primary_benchmark": "Change Healthcare breach",
+        "confidence": 0.8
+      },
+      {
+        "process": "Pharmacy Benefits",
+        "downtime_cost": "$2,250,000/day",
+        "primary_benchmark": "Change Healthcare pharmacy outage",
+        "confidence": 0.8
+      },
+      {
+        "process": "EDI Gateway",
+        "downtime_cost": "$100,000/day (processing) or $1,500,000/day (revenue impact)",
+        "primary_benchmark": "Change Healthcare breach",
+        "confidence": 0.7
+      }
+    ],
+    "medium_impact_processes": [
+      {
+        "process": "Prior Authorization",
+        "downtime_cost": "$1,000,000/day",
+        "primary_benchmark": "Industry PA delay studies",
+        "confidence": 0.7
+      },
+      {
+        "process": "Member Services",
+        "downtime_cost": "$150,000/day",
+        "primary_benchmark": "Call center outage costs",
+        "confidence": 0.6
+      },
+      {
+        "process": "Provider Management",
+        "downtime_cost": "$100,000/day",
+        "primary_benchmark": "Provider enrollment delay costs",
+        "confidence": 0.6
+      }
+    ],
+    "low_impact_processes": [
+      {
+        "process": "Care Management",
+        "downtime_cost": "$100,000/day",
+        "primary_benchmark": "Case manager delay costs",
+        "confidence": 0.5
+      },
+      {
+        "process": "Analytics & Reporting",
+        "downtime_cost": "$10,000/day (operational) / $250,000/day (at quarter-end)",
+        "primary_benchmark": "Regulatory penalty risk",
+        "confidence": 0.4
+      },
+      {
+        "process": "Compliance & Audit",
+        "downtime_cost": "$5,000/day (annualized)",
+        "primary_benchmark": "HIPAA penalty annualization",
+        "confidence": 0.3
+      }
+    ]
+  },
+
+  "notes_for_validator": [
+    "Verify source+assumption ALWAYS rendered (never hidden)",
+    "Confirm all benchmarks are public/cited with accessible URLs",
+    "Check calculations are transparent and match estimated values",
+    "Validate confidence scores shown in UI",
+    "Test edit functionality updates assumptions correctly",
+    "Verify no 'black box' numbers - everything shows sources",
+    "Check that red flags trigger alerts appropriately",
+    "Confirm API endpoints return complete schema",
+    "Test validation rules on PUT endpoint",
+    "Verify UI shows source links, assumptions, confidence, edit button"
+  ],
+
+  "next_steps": [
+    "Populate downtime costs for all 9 processes from T-200",
+    "Create migration to add downtime_cost_per_day field to Process table",
+    "Implement API endpoints (GET/PUT)",
+    "Build DowntimeCostDisplay React component",
+    "Add edit form for updating assumptions",
+    "Create admin dashboard for reviewing/updating all estimates",
+    "Schedule quarterly reviews (last_reviewed + review_frequency)",
+    "Add alerts for outdated estimates (last_reviewed > review_frequency)"
+  ]
+}
