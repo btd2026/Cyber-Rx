@@ -1,0 +1,9 @@
+Process Name	Application Name	Criticality	Owner	Description	Business Impact
+Claims Processing	Facets	High	Claims Director	Processes medical claims for provider payment	Revenue halting
+EDI Gateway	Change Healthcare X12	Crown Jewel	IT Director	X12 translation hub for all payer transactions	Revenue halting
+Provider Data Management	Manual spreadsheets	Medium	Provider Network	Manages provider credentials and network	data quality risks
+Member Services	Qnxt	High	Member Services	Member self-service portal and enrollment	Member satisfaction
+Payment Processing	Facets	Payments	High	Finance	Provider remittance and payment processing	Revenue delay
+Prior Authorization	Manual workflow	Medium	Care Management	Pre-service medical necessity determination	Regulatory exposure
+Care Management	None	Low	Care Management	Case management and care coordination	Quality impact
+Analytics & Reporting	Qnxt	Medium	Data Analytics	HEDIS reporting and business intelligence	Regulatory reporting

@@ -1,0 +1,6 @@
+Application Name	Vendor	Type	Description	Owner	Hosting
+Facets	Change Healthcare	Claims System	Core claims adjudication platform	Claims Director	On-premise
+Change Healthcare X12	Change Healthcare	EDI Gateway	X12 translator for 837, 835, 270/271	IT Director	Cloud (SaaS)
+Qnxt	Cognizant	Member Platform	Enrollment, billing, and member self-service	Member Services	On-premise
+Manual spreadsheets	None	General Purpose	Provider data tracking in Excel	Provider Network	Local file shares
+Manual workflow	None	General Purpose	Prior authorization phone/fax process	Care Management	Hybrid (phone/fax)
