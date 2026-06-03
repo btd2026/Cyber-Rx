@@ -3968,6 +3968,7 @@ function loadOrgProfile(orgId) {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + localStorage.getItem('authToken')
     }
   })
   .then(function(res) {
@@ -3998,6 +3999,7 @@ function orgExists(orgId) {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + localStorage.getItem('authToken')
     }
   })
   .then(function(res) {
