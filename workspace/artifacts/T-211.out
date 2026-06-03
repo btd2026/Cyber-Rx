@@ -1,0 +1,886 @@
+{
+  "version": "1.0.0",
+  "task_id": "T-211",
+  "title": "Normalizer to Canonical Schema",
+  "created_at": "2025-06-03T10:30:00Z",
+  "normalization_service": {
+    "api_design": {
+      "endpoint": "POST /api/normalize",
+      "description": "Transforms raw ingested rows to canonical schema with fuzzy matching and confidence scoring",
+      "authentication": "Bearer JWT (required)",
+      "request_body": {
+        "ingest_id": {
+          "type": "UUID",
+          "description": "From T-210 file ingest, links to provenance"
+        },
+        "raw_rows": {
+          "type": "array",
+          "description": "Raw parsed rows from T-210 output",
+          "items": {
+            "source_data": "object",
+            "provenance": "object"
+          }
+        },
+        "normalization_options": {
+          "type": "object",
+          "optional": true,
+          "fields": {
+            "confidence_threshold": {
+              "type": "float",
+              "default": 0.7,
+              "description": "Minimum confidence for auto-accept"
+            },
+            "fuzzy_match_threshold": {
+              "type": "float",
+              "default": 0.6,
+              "description": "Minimum similarity for fuzzy matching"
+            },
+            "skip_manual_review": {
+              "type": "boolean",
+              "default": false,
+              "description": "Auto-reject low confidence matches instead of queueing"
+            }
+          }
+        }
+      },
+      "response_success": {
+        "status": 200,
+        "body": {
+          "normalization_id": "uuid-v4",
+          "status": "completed",
+          "summary": {
+            "total_rows": 150,
+            "normalized_high_confidence": 120,
+            "normalized_medium_confidence": 25,
+            "queued_for_review": 5,
+            "failed": 0
+          },
+          "canonical_rows": [
+            {
+              "canonical_process": {
+                "process_id": "claims-adjudication",
+                "process_name": "Claims Adjudication",
+                "sub_process": "claims-auto-adjudication",
+                "criticality": "high",
+                "applications": ["facets", "q nxt"],
+                "owner": "Claims Department",
+                "description": "Automated claims processing"
+              },
+              "confidence": 0.95,
+              "normalization_method": "exact_match",
+              "provenance": {
+                "ingest_id": "ingest-uuid-1",
+                "source_row_id": 15,
+                "original_values": {
+                  "process_name": "Claims Adjudication",
+                  "application_name": "Facets",
+                  "criticality": "High"
+                }
+              }
+            }
+          ],
+          "review_queue": [
+            {
+              "row_id": "row-uuid",
+              "reason": "low_confidence",
+              "confidence": 0.45,
+              "suggested_mapping": {
+                "process_name": "Unknown Process",
+                "potential_matches": [
+                  {"name": "claims-adjudication", "confidence": 0.45},
+                  {"name": "payment-processing", "confidence": 0.38}
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "response_errors": {
+        "400": {
+          "error": "invalid_ingest_id",
+          "message": "Ingest ID not found or not owned by organization"
+        },
+        "422": {
+          "error": "missing_required_fields",
+          "message": "Raw rows missing fields that cannot be inferred"
+        },
+        "500": {
+          "error": "normalization_failure",
+          "message": "Internal error during normalization process"
+        }
+      }
+    },
+    "servicenow_heuristics": {
+      "description": "ServiceNow CMDB exports have predictable field patterns. Use these mappings for header detection.",
+      "detection_signals": [
+        {
+          "signal": "sys_class_name_present",
+          "check": "headers include 'sys_class_name'",
+          "confidence": 0.9,
+          "indicates": "ServiceNow CMDB export"
+        },
+        {
+          "signal": "sys_id_present",
+          "check": "headers include 'sys_id'",
+          "confidence": 0.85,
+          "indicates": "ServiceNow export"
+        },
+        {
+          "signal": "u_prefix_fields",
+          "check": "multiple headers start with 'u_'",
+          "confidence": 0.8,
+          "indicates": "ServiceNow custom fields"
+        }
+      ],
+      "field_mappings": {
+        "process_name": {
+          "source_fields": [
+            "u_business_process",
+            "u_process_name",
+            "name",
+            "u_process",
+            "business_process"
+          ],
+          "priority": ["exact_match", "u_prefix", "name_fallback"],
+          "examples": {
+            "u_business_process": "Claims Management",
+            "name": "Claims Adjudication Process",
+            "u_process_name": "Claims Processing"
+          }
+        },
+        "application_name": {
+          "source_fields": [
+            "name",
+            "short_description",
+            "u_app_name",
+            "u_application",
+            "u_software_name"
+          ],
+          "priority": ["short_description", "u_prefix", "name"],
+          "examples": {
+            "short_description": "Facets Claims System",
+            "name": "Facets",
+            "u_app_name": "Facets 5.0"
+          }
+        },
+        "criticality": {
+          "source_fields": [
+            "u_criticality",
+            "priority",
+            "u_impact",
+            "u_priority",
+            "criticality"
+          ],
+          "priority": ["u_criticality", "priority", "u_impact"],
+          "value_normalization": {
+            "high": ["1", "critical", "high", "1 - Critical"],
+            "medium": ["2", "moderate", "medium", "2 - Moderate"],
+            "low": ["3", "low", "3 - Low"]
+          },
+          "examples": {
+            "u_criticality": "1",
+            "priority": "high",
+            "u_impact": "critical"
+          }
+        },
+        "owner": {
+          "source_fields": [
+            "owner",
+            "u_owner_group",
+            "owned_by",
+            "u_owner",
+            "u_business_owner"
+          ],
+          "priority": ["owner", "u_owner_group", "owned_by"],
+          "examples": {
+            "owner": "Claims Department",
+            "u_owner_group": "Claims Operations",
+            "owned_by": "Jane Doe"
+          }
+        },
+        "description": {
+          "source_fields": [
+            "short_description",
+            "description",
+            "u_notes",
+            "u_description",
+            "u_business_purpose"
+          ],
+          "priority": ["short_description", "description", "u_notes"],
+          "examples": {
+            "short_description": "Automated claims processing system",
+            "description": "Core claims adjudication platform",
+            "u_notes": "Claims processing"
+          }
+        },
+        "sub_process": {
+          "source_fields": [
+            "u_sub_process",
+            "u_subprocess",
+            "u_process_category",
+            "category"
+          ],
+          "priority": ["u_sub_process", "u_subprocess", "category"],
+          "examples": {
+            "u_sub_process": "Auto-adjudication",
+            "category": "Claims Processing"
+          }
+        }
+      },
+      "special_handling": {
+        "cmdb_ci_app_detection": {
+          "condition": "sys_class_name === 'cmdb_ci_app'",
+          "action": "Prioritize application_name mapping over process_name",
+          "rationale": "CMDB app records focus on application details"
+        },
+        "custom_field_detection": {
+          "condition": "Field starts with 'u_' and not in standard mappings",
+          "action": "Store as metadata.custom_fields, tag for review",
+          "example": "u_region → metadata.custom_fields.region"
+        }
+      }
+    },
+    "excel_heuristics": {
+      "description": "Excel exports vary widely. Use pattern matching + fuzzy header detection.",
+      "detection_signals": [
+        {
+          "signal": "multi_sheet_structure",
+          "check": "multiple sheets with 'Process', 'Application', 'Risk' in names",
+          "confidence": 0.85,
+          "indicates": "Structured Excel workbook"
+        },
+        {
+          "signal": "merged_header_cells",
+          "check": "first 3 rows have merged cells",
+          "confidence": 0.75,
+          "indicates": "Corporate Excel template"
+        },
+        {
+          "signal": "inconsistent_casing",
+          "check": "headers have mixed case patterns (Process Name, APPLICATION, app_name)",
+          "confidence": 0.7,
+          "indicates": "Manual Excel export"
+        }
+      ],
+      "pattern_matching": {
+        "process_name_patterns": [
+          { "pattern": /^(.*[Pp]rocess.*)$/, "weight": 1.0 },
+          { "pattern": /^(.*[Bb]usiness\s+[Pp]rocess.*)$/, "weight": 1.0 },
+          { "pattern": /^(.*[Ww]orkflow.*)$/, "weight": 0.8 },
+          { "pattern": /^(.*[Ff]unction.*)$/, "weight": 0.7 },
+          { "pattern": /^(Name|Process|Business\s+Process)$/, "weight": 0.9 }
+        ],
+        "application_name_patterns": [
+          { "pattern": /^(.*[Aa]pp.*)$/, "weight": 1.0 },
+          { "pattern": /^(.*[Ss]ystem.*)$/, "weight": 1.0 },
+          { "pattern": /^(.*[Tt]ool.*)$/, "weight": 0.9 },
+          { "pattern": /^(.*[Ss]oftware.*)$/, "weight": 0.9 },
+          { "pattern": /^(.*[Pp]latform.*)$/, "weight": 0.8 }
+        ],
+        "criticality_patterns": [
+          { "pattern": /^(.*[Cc]ritical.*)$/, "weight": 1.0 },
+          { "pattern": /^(.*[Pp]riority.*)$/, "weight": 1.0 },
+          { "pattern": /^(.*[Tt]ier.*)$/, "weight": 1.0 },
+          { "pattern": /^(.*[Ii]mportance.*)$/, "weight": 0.9 },
+          { "pattern": /^(.*[Rr]isk.*)$/, "weight": 0.8 }
+        ],
+        "owner_patterns": [
+          { "pattern": /^(.*[Oo]wner.*)$/, "weight": 1.0 },
+          { "pattern": /^(.*[Dd]epartment.*)$/, "weight": 0.9 },
+          { "pattern": /^(.*[Bb]usiness\s+[Uu]nit.*)$/, "weight": 0.8 }
+        ],
+        "description_patterns": [
+          { "pattern": /^(.*[Dd]esc.*)$/, "weight": 1.0 },
+          { "pattern": /^(.*[Nn]otes.*)$/, "weight": 0.9 },
+          { "pattern": /^(.*[Pp]urpose.*)$/, "weight": 0.8 },
+          { "pattern": /^(.*[Dd]etails.*)$/, "weight": 0.8 }
+        ]
+      },
+      "excel_specific_normalization": {
+        "merged_cells": {
+          "detection": "Excel parser flags merged regions",
+          "handling": "Use top-left cell value, log merged cell warning",
+          "example": "Rows 1-3 merged 'Process Name' → use 'Process Name'"
+        },
+        "multi_sheet": {
+          "detection": "Sheets named 'Processes', 'Applications', 'Risks'",
+          "handling": "Process each sheet independently, merge on common identifier",
+          "merge_strategy": "Join on 'Process ID' or 'Application Name'"
+        },
+        "whitespace_normalization": {
+          "detection": "Leading/trailing spaces in >50% of cells",
+          "handling": "Trim all values, log whitespace_warning flag",
+          "example": "'  Claims Adjudication  ' → 'Claims Adjudication'"
+        },
+        "case_normalization": {
+          "detection": "Inconsistent casing (PROCESS, process, Process)",
+          "handling": "Normalize to title case for display, preserve original for audit",
+          "example": "'CLAIMS ADJUDICATION' → 'Claims Adjudication' (display)"
+        }
+      }
+    },
+    "fuzzy_matching": {
+      "description": "Library and logic for matching messy values to canonical reference models",
+      "library": {
+        "recommended": "fuse.js",
+        "version": "^7.0.0",
+        "npm": "npm install fuse.js",
+        "alternatives": [
+          "string-similarity (simpler, Levenshtein-only)",
+          "natural (NLP-focused, overkill)",
+          "didyoumean (typo-correction focus)"
+        ],
+        "rationale": "Fuse.js provides fuzzy search, scoring, and thresholding. Battle-tested, handles large datasets efficiently."
+      },
+      "process_matching": {
+        "canonical_reference": "T-200.out → processes[].name + sub_processes[].name",
+        "matching_strategy": {
+          "step_1_exact_match": {
+            "description": "Case-insensitive exact match",
+            "confidence": 1.0,
+            "example": "'Claims Adjudication' → 'claims-adjudication' (exact)"
+          },
+          "step_2_substring_match": {
+            "description": "Canonical name is substring of input or vice versa",
+            "confidence": 0.9,
+            "example": "'Claims Adjudication Process' → 'Claims Adjudication' (substring)"
+          },
+          "step_3_fuzzy_match": {
+            "description": "Fuse.js with threshold 0.6",
+            "confidence": "varies (0.6-0.85)",
+            "config": {
+              "includeScore": true,
+              "threshold": 0.6,
+              "keys": ["name", "id", "description"],
+              "distance": "levenshtein"
+            },
+            "example": "'Claims Adj' → 'Claims Adjudication' (confidence: 0.82)"
+          },
+          "step_4_word_level_match": {
+            "description": "Match on key words when fuzzy fails",
+            "confidence": 0.5,
+            "example": "'Claim Processing' → 'Claims Adjudication' (word-level: claim)"
+          }
+        },
+        "fallback_handling": {
+          "condition": "All match attempts below threshold 0.6",
+          "action": "Return 'unknown-process-{hash}', queue for review",
+          "example": "'XYZ Process' → 'unknown-process-a3f5', review_queue: true"
+        }
+      },
+      "application_matching": {
+        "canonical_reference": "T-201.out → application_archetypes[].name + typical_vendors[]",
+        "matching_strategy": {
+          "step_1_vendor_match": {
+            "description": "Match against T-201 vendor list",
+            "confidence": 0.9,
+            "example": "'Facets' → 'facets' (vendor match)"
+          },
+          "step_2_archetype_match": {
+            "description": "Match against archetype names",
+            "confidence": 0.85,
+            "example": "'Claims System' → 'claims-adjudication-system'"
+          },
+          "step_3_fuzzy_match": {
+            "description": "Fuse.js with threshold 0.6",
+            "confidence": "varies (0.6-0.85)",
+            "example": "'Claims App' → 'claims-adjudication-system' (confidence: 0.75)"
+          }
+        },
+        "normalization_rules": {
+          "vendor_normalization": {
+            "description": "Normalize vendor names to canonical form",
+            "examples": [
+              "'TriZetto Facets' → 'facets'",
+              "'QNXT' → 'q nxt'",
+              "'Change Healthcare' → 'change-healthcare'",
+              "'Optum' → 'optum'"
+            ]
+          },
+          "version_stripping": {
+            "description": "Remove version numbers for matching",
+            "example": "'Facets 5.0' → 'facets' (match), store version separately"
+          },
+          "acronym_expansion": {
+            "description": "Expand common acronyms",
+            "examples": [
+              "'PBM' → 'pharmacy-benefits-system'",
+              "'CRM' → 'customer-relationship-management'",
+              "'EDI' → 'edi-gateway-x12-translator'"
+            ]
+          }
+        }
+      },
+      "criticality_matching": {
+        "description": "Normalize various criticality scales to canonical {high, medium, low}",
+        "mapping_rules": {
+          "high": [
+            "high", "1", "critical", "crown jewel", "crown-jewel", "tier 1", "tier-1",
+            "priority 1", "priority-1", "yes", "true", "urgent", "very high"
+          ],
+          "medium": [
+            "medium", "2", "moderate", "tier 2", "tier-2", "priority 2", "priority-2",
+            "normal", "standard", "regular"
+          ],
+          "low": [
+            "low", "3", "minor", "tier 3", "tier-3", "priority 3", "priority-3",
+            "no", "false", "optional", "nice-to-have"
+          ]
+        },
+        "fuzzy_handling": {
+          "condition": "Value doesn't match any mapping",
+          "action": "Use Fuse.js against [high, medium, low], default to 'unknown' if confidence < 0.7",
+          "example": "'HIGH PRIORITY' → 'high' (fuzzy match, confidence: 0.95)"
+        }
+      }
+    },
+    "confidence_scoring": {
+      "description": "Algorithm for calculating confidence scores on normalized fields",
+      "scoring_algorithm": {
+        "base_confidence": {
+          "exact_match": 1.0,
+          "substring_match": 0.9,
+          "fuzzy_match_high": 0.85,
+          "fuzzy_match_medium": 0.75,
+          "fuzzy_match_low": 0.65,
+          "word_level_match": 0.5,
+          "no_match": 0.0
+        },
+        "field_weight_factors": {
+          "provenance_confidence": {
+            "description": "From T-210 schema inference confidence",
+            "weight": 0.2,
+            "formula": "confidence *= provenance.confidence"
+          },
+          "data_quality_signals": {
+            "description": "Adjust based on data quality",
+            "adjustments": [
+              {"signal": "empty_value", "adjustment": -0.3},
+              {"signal": "whitespace_warning", "adjustment": -0.1},
+              {"signal": "merged_cells", "adjustment": -0.05},
+              {"signal": "type_coercion", "adjustment": -0.15}
+            ]
+          },
+          "cross_field_validation": {
+            "description": "Boost if fields align",
+            "boosts": [
+              {"condition": "process + app match canonical edge", "boost": 0.1},
+              {"condition": "criticality matches process baseline", "boost": 0.05},
+              {"condition": "owner follows expected format", "boost": 0.05}
+            ]
+          }
+        }
+      },
+      "row_level_confidence": {
+        "description": "Aggregate confidence across all fields",
+        "calculation": "row_confidence = average(field_confidences) * field_coverage_factor",
+        "field_coverage_factor": {
+          "all_required_present": 1.0,
+          "one_required_missing": 0.8,
+          "multiple_required_missing": 0.6
+        },
+        "confidence_tiers": {
+          "high": { "range": [0.85, 1.0], "action": "auto_accept" },
+          "medium": { "range": [0.70, 0.85], "action": "auto_accept_flag_review" },
+          "low": { "range": [0.50, 0.70], "action": "manual_review" },
+          "rejected": { "range": [0.0, 0.50], "action": "reject_or_fix" }
+        }
+      },
+      "example_scoring": {
+        "example_1_high_confidence": {
+          "input": {
+            "process_name": "Claims Adjudication",
+            "application_name": "Facets",
+            "criticality": "High",
+            "owner": "Claims Department"
+          },
+          "scoring": {
+            "process_name": {"match": "exact", "confidence": 1.0},
+            "application_name": {"match": "vendor", "confidence": 0.95},
+            "criticality": {"match": "exact", "confidence": 1.0},
+            "owner": {"match": "no_validation", "confidence": 0.7}
+          },
+          "row_confidence": 0.91,
+          "action": "auto_accept"
+        },
+        "example_2_medium_confidence": {
+          "input": {
+            "process_name": "Claims Processing",
+            "application_name": "Facets 5.0",
+            "criticality": "1"
+          },
+          "scoring": {
+            "process_name": {"match": "substring", "confidence": 0.9},
+            "application_name": {"match": "vendor_version_stripped", "confidence": 0.9},
+            "criticality": {"match": "mapped", "confidence": 0.95},
+            "owner": {"match": "missing", "confidence": 0.0}
+          },
+          "row_confidence": 0.74,
+          "action": "auto_accept_flag_review"
+        },
+        "example_3_low_confidence": {
+          "input": {
+            "process_name": "Claims Process",
+            "application_name": "Some App",
+            "criticality": "urgent"
+          },
+          "scoring": {
+            "process_name": {"match": "word_level", "confidence": 0.5},
+            "application_name": {"match": "no_match", "confidence": 0.0},
+            "criticality": {"match": "fuzzy_mapped", "confidence": 0.7},
+            "owner": {"match": "missing", "confidence": 0.0}
+          },
+          "row_confidence": 0.55,
+          "action": "manual_review"
+        }
+      }
+    },
+    "canonical_schema": {
+      "description": "Target format for normalized rows. Reference T-200 (processes) and T-201 (applications).",
+      "canonical_process": {
+        "process_id": {
+          "type": "string",
+          "description": "Canonical process ID from T-200",
+          "example": "claims-adjudication",
+          "source": "T-200.processes[].id"
+        },
+        "process_name": {
+          "type": "string",
+          "description": "Canonical process name from T-200",
+          "example": "Claims Adjudication",
+          "source": "T-200.processes[].name"
+        },
+        "sub_process": {
+          "type": "string",
+          "description": "Sub-process ID if granular",
+          "example": "claims-auto-adjudication",
+          "source": "T-200.processes[].sub_processes[].id",
+          "optional": true
+        },
+        "criticality": {
+          "type": "enum",
+          "values": ["high", "medium", "low"],
+          "description": "Normalized criticality",
+          "example": "high"
+        },
+        "applications": {
+          "type": "array",
+          "description": "Array of application IDs from T-201",
+          "example": ["facets", "q nxt"],
+          "source": "T-201.application_archetypes[].id"
+        },
+        "owner": {
+          "type": "string",
+          "description": "Process owner (normalized to department)",
+          "example": "Claims Department",
+          "optional": true
+        },
+        "description": {
+          "type": "string",
+          "description": "Process description",
+          "example": "Automated claims processing",
+          "optional": true
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Additional fields not in canonical schema",
+          "optional": true,
+          "properties": {
+            "custom_fields": "object",
+            "original_criticality": "string",
+            "department": "string",
+            "risk_score": "string",
+            "compliance_flags": "array"
+          }
+        }
+      },
+      "complete_canonical_record": {
+        "canonical_process": {
+          "process_id": "claims-adjudication",
+          "process_name": "Claims Adjudication",
+          "sub_process": "claims-auto-adjudication",
+          "criticality": "high",
+          "applications": ["facets", "q nxt"],
+          "owner": "Claims Department",
+          "description": "Automated claims processing"
+        },
+        "normalization_metadata": {
+          "confidence": 0.95,
+          "normalization_method": "exact_match",
+          "field_confidences": {
+            "process_name": 1.0,
+            "application_name": 0.95,
+            "criticality": 1.0,
+            "owner": 0.8,
+            "description": 0.7
+          },
+          "warnings": [],
+          "suggested_review": false
+        },
+        "provenance": {
+          "ingest_id": "ingest-uuid-1",
+          "source_row_id": 15,
+          "source_sheet": "Sheet1",
+          "original_values": {
+            "process_name": "Claims Adjudication",
+            "application_name": "Facets",
+            "criticality": "High",
+            "owner": "Claims Dept",
+            "description": "Auto-claims"
+          }
+        }
+      },
+      "edge_cases": {
+        "missing_process_name": {
+          "condition": "process_name not present or empty",
+          "action": "Reject row, require manual entry",
+          "example": "Cannot normalize without process identifier"
+        },
+        "unknown_process": {
+          "condition": "Fuzzy match fails for process_name",
+          "action": "Create 'unknown-process-{hash}', queue for review",
+          "example": "process_id: 'unknown-process-a3f5', review_queue: true"
+        },
+        "multi_process_mapping": {
+          "condition": "Row contains multiple processes (comma-separated)",
+          "action": "Split into multiple canonical records",
+          "example": "'Claims Adjudication, Payment Processing' → 2 rows"
+        },
+        "application_list": {
+          "condition": "Multiple applications in one field",
+          "action": "Split on delimiters, match each app",
+          "example": "'Facets, QNXT' → ['facets', 'q nxt']"
+        },
+        "nested_structure": {
+          "condition": "Excel with parent-child process rows",
+          "action": "Detect hierarchy, create sub_process records",
+          "example": "Parent: 'Claims', Child: 'Adjudication' → process_id: 'claims-adjudication'"
+        }
+      }
+    },
+    "integration": {
+      "input": {
+        "source": "T-210 output (raw rows with provenance)",
+        "format": {
+          "raw_rows": [
+            {
+              "source_data": {
+                "Process Name": "Claims Adjudication",
+                "App Name": "Facets",
+                "Criticality": "High"
+              },
+              "provenance": {
+                "ingest_id": "ingest-uuid-1",
+                "source_row_id": 15,
+                "confidence": 0.95,
+                "field_mappings": {
+                  "process_name": "Process Name",
+                  "application_name": "App Name"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "output": {
+        "destination": "T-212 (Matcher) input",
+        "format": {
+          "canonical_rows": [
+            {
+              "canonical_process": {
+                "process_id": "claims-adjudication",
+                "process_name": "Claims Adjudication",
+                "criticality": "high",
+                "applications": ["facets"]
+              },
+              "normalization_metadata": {
+                "confidence": 0.95,
+                "normalization_method": "exact_match"
+              },
+              "provenance": {
+                "ingest_id": "ingest-uuid-1",
+                "source_row_id": 15,
+                "original_values": {
+                  "process_name": "Claims Adjudication",
+                  "application_name": "Facets"
+                }
+              }
+            }
+          ],
+          "review_queue": [
+            {
+              "row_id": "row-uuid",
+              "reason": "low_confidence",
+              "confidence": 0.45,
+              "suggested_mapping": {
+                "process_name": "Unknown Process",
+                "potential_matches": [
+                  {"name": "claims-adjudication", "confidence": 0.45}
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "data_flow": [
+        "T-210: File Ingest → Raw rows with provenance",
+        "T-211: Normalizer → Canonical schema + confidence scores",
+        "T-212: Matcher → Match canonical processes to applications",
+        "T-213: Correlation Engine → Generate correlation scores"
+      ]
+    },
+    "error_handling": {
+      "normalization_errors": {
+        "missing_canonical_reference": {
+          "severity": "error",
+          "message": "Canonical reference model not loaded (T-200/T-201)",
+          "action": "Fail normalization, check reference data files",
+          "http_status": 500
+        },
+        "fuzzy_match_library_failure": {
+          "severity": "error",
+          "message": "Fuse.js initialization failed",
+          "action": "Fallback to exact match only, log error",
+          "http_status": 500
+        },
+        "low_confidence_batch": {
+          "severity": "warn",
+          "message": ">50% of rows have low confidence",
+          "action": "Continue processing, flag for manual review",
+          "http_status": 200
+        },
+        "circular_reference": {
+          "severity": "error",
+          "message": "Circular reference in application mapping",
+          "action": "Skip row, log circular reference",
+          "http_status": 200
+        }
+      },
+      "validation_errors": {
+        "invalid_confidence_threshold": {
+          "severity": "error",
+          "message": "Confidence threshold must be between 0 and 1",
+          "action": "Reject request",
+          "http_status": 400
+        },
+        "missing_ingest_id": {
+          "severity": "error",
+          "message": "ingest_id is required",
+          "action": "Reject request",
+          "http_status": 400
+        },
+        "empty_raw_rows": {
+          "severity": "error",
+          "message": "raw_rows array is empty",
+          "action": "Reject request",
+          "http_status": 400
+        }
+      }
+    },
+    "implementation_notes": {
+      "phase_1_mvp": [
+        "ServiceNow field mappings (top 5 fields)",
+        "Excel header pattern matching (basic regex)",
+        "Fuzzy matching with Fuse.js (process + app)",
+        "Confidence scoring (weighted average)",
+        "Review queue generation"
+      ],
+      "phase_2_enhancement": [
+        "Multi-sheet Excel handling",
+        "Merged cell detection",
+        "Custom field extraction to metadata",
+        "Cross-field validation boosts",
+        "Version number extraction from apps"
+      ],
+      "phase_3_advanced": [
+        "ML-based confidence scoring",
+        "Hierarchical process detection",
+        "Multi-language support",
+        "Historical mapping learning",
+        "Auto-suggestion based on past corrections"
+      ]
+    },
+    "testing_strategy": {
+      "unit_tests": [
+        "ServiceNow field mapping with 20+ header variations",
+        "Excel pattern matching (merged cells, multi-sheet)",
+        "Fuzzy matching accuracy (test with 50+ messy values)",
+        "Confidence scoring calculation",
+        "Edge case handling (missing fields, unknown processes)"
+      ],
+      "integration_tests": [
+        "End-to-end normalization with T-210 output",
+        "ServiceNow export from real instance",
+        "Excel exports from 3+ different payer templates",
+        "Verify canonical schema matches T-200/T-201"
+      ],
+      "test_data": {
+        "servicenow_exports": [
+          "test/servicenow_cmdb_export.csv",
+          "test/servicenow_custom_fields.csv"
+        ],
+        "excel_exports": [
+          "test/excel_standard_template.xlsx",
+          "test/excel_messy_headers.xlsx",
+          "test/excel_multi_sheet.xlsx",
+          "test/excel_merged_cells.xlsx"
+        ],
+        "edge_cases": [
+          "test/unknown_process.csv",
+          "test/multi_process_row.csv",
+          "test/empty_criticality.csv"
+        ]
+      }
+    }
+  },
+  "appendices": {
+    "canonical_process_reference": {
+      "source": "T-200.out",
+      "total_processes": 9,
+      "total_sub_processes": 56,
+      "process_list": [
+        "claims-adjudication",
+        "enrollment-and-billing",
+        "provider-management",
+        "prior-authorization",
+        "care-management",
+        "member-services",
+        "payment-processing",
+        "pharmacy-benefits",
+        "analytics-and-reporting",
+        "compliance-and-audit"
+      ]
+    },
+    "canonical_application_reference": {
+      "source": "T-201.out",
+      "total_archetypes": 12,
+      "application_list": [
+        "claims-adjudication-system",
+        "edi-gateway-x12-translator",
+        "enrollment-billing-platform",
+        "provider-data-management",
+        "prior-authorization-system",
+        "care-management-platform",
+        "member-services-portal",
+        "payment-remittance-system",
+        "analytics-data-warehouse",
+        "pbm-system",
+        "fraud-detection-system",
+        "customer-relationship-management"
+      ]
+    },
+    "confidence_threshold_guidance": {
+      "production_recommended": {
+        "auto_accept_threshold": 0.85,
+        "manual_review_threshold": 0.70,
+        "reject_threshold": 0.50
+      },
+      "testing_recommended": {
+        "auto_accept_threshold": 0.95,
+        "manual_review_threshold": 0.85,
+        "reject_threshold": 0.70
+      },
+      "rationale": "Higher thresholds in testing ensure data quality. Lower thresholds in production reduce manual review burden."
+    }
+  }
+}
