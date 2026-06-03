@@ -17639,6 +17639,7 @@ function SetupBot(props) {
   var _s3=useState([]);   var msgs=_s3[0];    var setMsgs=_s3[1];
   var _s4=useState('');   var input=_s4[0];   var setInput=_s4[1];
   var _s5=useState([]);   var suggest=_s5[0]; var setSuggest=_s5[1];
+  var _s5b=useState(-1);  var selectedIdx=_s5b[0]; var setSelectedIdx=_s5b[1];
   var _s6=useState(false);var editMode=_s6[0];var setEditMode=_s6[1];
   var _s7=useState(false);var saving=_s7[0];    var setSaving=_s7[1];
   var _s8=useState(null); var saveError=_s8[0]; var setSaveError=_s8[1];
@@ -18397,7 +18398,8 @@ function SetupBot(props) {
       var exact = list.filter(function(x){ return x.toLowerCase().indexOf(lower)===0; });
       var fuzzy = list.filter(function(x){ return x.toLowerCase().indexOf(lower)>0 && exact.indexOf(x)<0; });
       setSuggest(exact.concat(fuzzy)); // Show all matching options (removed 7-item limit)
-    } else { setSuggest([]); }
+      setSelectedIdx(-1); // Reset selection when suggestions change
+    } else { setSuggest([]); setSelectedIdx(-1); }
   }
 
   var curQ   = QS[qIdx] || {};
@@ -18569,11 +18571,33 @@ function SetupBot(props) {
               <div style={{display:'flex',gap:7,marginBottom:7}}>
                 <input value={input} autoFocus
                   onChange={function(e){onInputChange(e.target.value,CYBER_INSURERS);}}
-                  onKeyDown={function(e){if(e.key==='Enter'&&input.trim()){pick(input.trim());setSuggest([]);}}}
+                  onKeyDown={function(e){
+                    if(e.key==='ArrowDown'){
+                      e.preventDefault();
+                      setSelectedIdx(function(prev){ return prev < suggest.length-1 ? prev+1 : prev; });
+                    }else if(e.key==='ArrowUp'){
+                      e.preventDefault();
+                      setSelectedIdx(function(prev){ return prev > 0 ? prev-1 : -1; });
+                    }else if(e.key==='Enter'){
+                      if(selectedIdx>=0 && suggest[selectedIdx]){
+                        pick(suggest[selectedIdx]); setSuggest([]); setSelectedIdx(-1); setInput('');
+                      }else if(input.trim()){
+                        pick(input.trim()); setSuggest([]);
+                      }
+                    }else if(e.key==='Escape'){
+                      setSuggest([]); setSelectedIdx(-1);
+                    }
+                  }}
                   placeholder='Type to search carriers...'
                   style={{flex:1,background:C.card,border:'1px solid '+C.acc+'40',
                     borderRadius:8,padding:'8px 12px',color:C.text,fontSize:12,outline:'none'}}/>
-                <button onClick={function(){if(input.trim()){pick(input.trim());setSuggest([]);}}}
+                <button onClick={function(){
+                    if(selectedIdx>=0 && suggest[selectedIdx]){
+                      pick(suggest[selectedIdx]); setSuggest([]); setSelectedIdx(-1); setInput('');
+                    }else if(input.trim()){
+                      pick(input.trim()); setSuggest([]);
+                    }
+                  }}
                   style={{background:C.acc,border:'none',color:'#fff',borderRadius:8,
                     padding:'8px 14px',cursor:'pointer',fontSize:12,fontWeight:700}}>
                   Select
@@ -18582,13 +18606,15 @@ function SetupBot(props) {
               {suggest.length>0&&(
                 <div style={{background:C.card,border:'1px solid '+C.acc+'30',
                   borderRadius:8,overflow:'hidden',marginBottom:7}}>
-                  {suggest.map(function(s){
+                  {suggest.map(function(s, idx){
+                    var isSelected = idx === selectedIdx;
                     return (
                       <div key={s}
-                        onClick={function(){pick(s);setSuggest([]);setInput('');}}
+                        onClick={function(){pick(s);setSuggest([]);setInput('');setSelectedIdx(-1);}}
                         style={{padding:'8px 12px',cursor:'pointer',fontSize:11,color:C.text,
-                          borderBottom:'1px solid '+C.border}}
-                        onMouseEnter={function(e){e.currentTarget.style.background=C.acc+'14';}}
+                          borderBottom:'1px solid '+C.border,
+                          background: isSelected ? C.acc+'14' : 'transparent'}}
+                        onMouseEnter={function(e){e.currentTarget.style.background=C.acc+'14';setSelectedIdx(idx);}}
                         onMouseLeave={function(e){e.currentTarget.style.background='transparent';}}>
                         {s}
                       </div>
@@ -18616,11 +18642,33 @@ function SetupBot(props) {
               <div style={{display:'flex',gap:7}}>
                 <input value={input} autoFocus
                   onChange={function(e){onInputChange(e.target.value,HEALTH_PLANS);}}
-                  onKeyDown={function(e){if(e.key==='Enter'&&input.trim()){pick(input.trim());setSuggest([]);}}}
+                  onKeyDown={function(e){
+                    if(e.key==='ArrowDown'){
+                      e.preventDefault();
+                      setSelectedIdx(function(prev){ return prev < suggest.length-1 ? prev+1 : prev; });
+                    }else if(e.key==='ArrowUp'){
+                      e.preventDefault();
+                      setSelectedIdx(function(prev){ return prev > 0 ? prev-1 : -1; });
+                    }else if(e.key==='Enter'){
+                      if(selectedIdx>=0 && suggest[selectedIdx]){
+                        pick(suggest[selectedIdx]); setSuggest([]); setSelectedIdx(-1); setInput('');
+                      }else if(input.trim()){
+                        pick(input.trim()); setSuggest([]);
+                      }
+                    }else if(e.key==='Escape'){
+                      setSuggest([]); setSelectedIdx(-1);
+                    }
+                  }}
                   placeholder={curQ.placeholder||'Type your answer...'}
                   style={{flex:1,background:C.card,border:'1px solid '+C.acc+'40',
                     borderRadius:8,padding:'9px 12px',color:C.text,fontSize:12,outline:'none'}}/>
-                <button onClick={function(){if(input.trim()){pick(input.trim());setSuggest([]);}}}
+                <button onClick={function(){
+                    if(selectedIdx>=0 && suggest[selectedIdx]){
+                      pick(suggest[selectedIdx]); setSuggest([]); setSelectedIdx(-1); setInput('');
+                    }else if(input.trim()){
+                      pick(input.trim()); setSuggest([]);
+                    }
+                  }}
                   style={{background:C.acc,border:'none',color:'#fff',borderRadius:8,
                     padding:'9px 16px',cursor:'pointer',fontSize:12,fontWeight:700}}>
                   Next
@@ -18631,13 +18679,15 @@ function SetupBot(props) {
                   background:C.card,border:'1px solid '+C.acc+'40',
                   borderRadius:8,marginBottom:3,maxHeight:300,overflowY:'auto',
                   boxShadow:'0 -4px 16px rgba(0,0,0,0.12)',zIndex:10}}>
-                  {suggest.map(function(s){
+                  {suggest.map(function(s, idx){
+                    var isSelected = idx === selectedIdx;
                     return (
-                      <div key={s} onClick={function(){pick(s);setSuggest([]);setInput('');}}
+                      <div key={s} onClick={function(){pick(s);setSuggest([]);setInput('');setSelectedIdx(-1);}}
                         style={{padding:'8px 12px',cursor:'pointer',fontSize:11,color:C.text,
-                          borderBottom:'1px solid '+C.border+' '}}
-                        onMouseEnter={function(e){e.currentTarget.style.background=C.acc+'12';}}
-                        onMouseLeave={function(e){e.currentTarget.style.background='transparent';}}>
+                          borderBottom:'1px solid '+C.border,
+                          background: isSelected ? C.acc+'12' : 'transparent'}}
+                        onMouseEnter={function(e){e.currentTarget.style.background=C.acc+'12';setSelectedIdx(idx);}}
+                        onMouseLeave={function(e){if(idx!==selectedIdx){e.currentTarget.style.background='transparent';}}}>
                         {s}
                       </div>
                     );
