@@ -1,0 +1,487 @@
+{
+  "version": "1.0.0",
+  "task_id": "T-210",
+  "title": "File Ingest for Process List + App Inventory",
+  "created_at": "2025-06-03T10:00:00Z",
+  "api_design": {
+    "endpoint": "POST /api/ingest/file",
+    "content_type": "multipart/form-data",
+    "authentication": "Bearer JWT (required)",
+    "request_body": {
+      "file": {
+        "type": "File",
+        "description": "process_list.xlsx or app_inventory.csv",
+        "max_size": "50MB",
+        "allowed_types": [".xlsx", ".xls", ".csv"]
+      },
+      "organization_id": {
+        "type": "UUID",
+        "required": true,
+        "description": "Organization context for the upload"
+      },
+      "file_type": {
+        "type": "enum",
+        "values": ["process_list", "app_inventory"],
+        "required": true
+      },
+      "source_description": {
+        "type": "string",
+        "max_length": 500,
+        "required": false,
+        "description": "Human-readable description of data source"
+      },
+      "replace_existing": {
+        "type": "boolean",
+        "default": false,
+        "description": "If true, archive existing data of this type"
+      }
+    },
+    "response_success": {
+      "status": 200,
+      "body": {
+        "ingest_id": "uuid-v4",
+        "status": "processing",
+        "rows_detected": 150,
+        "provenance_token": "random_token_for_audit",
+        "estimated_completion": "2025-06-03T10:02:00Z",
+        "message": "File upload accepted. Processing started."
+      }
+    },
+    "response_errors": {
+      "400": {
+        "error": "invalid_file_type",
+        "message": "Only .xlsx, .xls, .csv files are supported"
+      },
+      "401": {
+        "error": "unauthorized",
+        "message": "Valid JWT token required"
+      },
+      "413": {
+        "error": "file_too_large",
+        "message": "Maximum file size is 50MB"
+      },
+      "422": {
+        "error": "invalid_schema",
+        "message": "Could not map required fields. Missing: process_name, application_name"
+      }
+    },
+    "async_processing": {
+      "description": "Files larger than 1000 rows trigger async processing",
+      "webhook_callback": "Optional webhook URL for completion notification",
+      "polling_endpoint": "GET /api/ingest/status/{ingest_id}"
+    }
+  },
+  "parser_logic": {
+    "csv_parser": {
+      "library": "papaparse",
+      "rationale": "Browser and Node.js compatible, handles large files streaming, robust encoding detection",
+      "implementation_pseudocode": {
+        "step_1_stream": "stream file in chunks to avoid memory overflow",
+        "step_2_encoding": "auto-detect UTF-8, Latin-1, Windows-1252",
+        "step_3_parse": "parse line-by-line with Papa.parse(config)",
+        "step_4_validate": "validate each row against inferred schema"
+      }
+    },
+    "xlsx_parser": {
+      "library": "exceljs",
+      "rationale": "Better than SheetJS for streaming large files, preserves cell formatting, handles merged cells",
+      "implementation_pseudocode": {
+        "step_1_sheets": "detect all sheets, pick first non-empty or user-specified",
+        "step_2_stream": "use workbook.csv.reader for streaming large files",
+        "step_3_headers": "read row 1 as headers, fallback to row 2-10 if empty",
+        "step_4_rows": "iterate rows, skip completely empty rows"
+      }
+    },
+    "schema_inference": {
+      "algorithm": "fuzzy_header_matching",
+      "confidence_threshold": 0.7,
+      "canonical_field_mappings": {
+        "process_name": [
+          "Process Name", "proc_name", "Business Process", "Process", "Name",
+          "Process Name", "ProcessName", "Proc Name", "Business Process Name",
+          "Process ID", "Process_ID", "Proc_ID", "process", "PROC_NAME"
+        ],
+        "application_name": [
+          "App Name", "Application", "System", "Tool", "Software",
+          "Application Name", "AppName", "App_Name", "Application Name",
+          "System Name", "SystemName", "Tool Name", "Software Name",
+          "app", "application", "system", "APP_NAME"
+        ],
+        "criticality": [
+          "Criticality", "Tier", "Importance", "Priority", "Crown Jewel",
+          "Critical", "Priority Level", "Tier Level", "Risk Level",
+          "criticality", "tier", "priority", "CRITICALITY"
+        ],
+        "owner": [
+          "Owner", "Process Owner", "Business Owner", "Owner Dept",
+          "Owner Name", "Process Owner Name", "Owner Department",
+          "owner", "process_owner", "OWNER"
+        ],
+        "description": [
+          "Description", "Desc", "Purpose", "Notes", "Details",
+          "Description", "Process Description", "Description",
+          "Notes", "Details", "Business Purpose", "DESCRIPTION"
+        ],
+        "department": [
+          "Department", "Dept", "Business Unit", "BU", "Division",
+          "Dept Name", "Department Name", "department", "DEPARTMENT"
+        ],
+        "risk_score": [
+          "Risk Score", "Risk", "Risk Rating", "Score", "Risk Level",
+          "risk_score", "risk", "RISK_SCORE"
+        ],
+        "compliance_flag": [
+          "HIPAA", "Compliance", "Regulated", "PHI", "Sensitive Data",
+          "hipaa", "compliance", "regulated", "COMPLIANCE_FLAG"
+        ]
+      },
+      "matching_function": {
+        "algorithm": "levenshtein_distance + case_normalization + substring_match",
+        "example": "'Proc_Name' matches 'process_name' with 0.9 confidence",
+        "fallback": "If no match above threshold, mark as 'unknown_field_{index}'"
+      }
+    },
+    "data_normalization": {
+      "criticality_mapping": {
+        "high": ["high", "1", "critical", "tier 1", "crown jewel", "yes"],
+        "medium": ["medium", "2", "moderate", "tier 2"],
+        "low": ["low", "3", "low", "tier 3", "no"]
+      },
+      "boolean_normalization": {
+        "true_values": ["yes", "y", "true", "1", "x", "checked", "on"],
+        "false_values": ["no", "n", "false", "0", "", "unchecked", "off"]
+      },
+      "date_normalization": {
+        "formats": ["ISO 8601", "MM/DD/YYYY", "DD/MM/YYYY", "YYYY-MM-DD"],
+        "output_format": "ISO 8601 UTC"
+      }
+    },
+    "validation_rules": {
+      "process_list": {
+        "required_fields": ["process_name"],
+        "optional_fields": ["application_name", "criticality", "owner", "description", "department"],
+        "field_validators": {
+          "process_name": { "type": "string", "min_length": 1, "max_length": 255 },
+          "application_name": { "type": "string", "max_length": 255 },
+          "criticality": { "type": "enum", "values": ["high", "medium", "low"] }
+        }
+      },
+      "app_inventory": {
+        "required_fields": ["application_name"],
+        "optional_fields": ["process_name", "criticality", "owner", "description", "version", "vendor"],
+        "field_validators": {
+          "application_name": { "type": "string", "min_length": 1, "max_length": 255 },
+          "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+" }
+        }
+      }
+    }
+  },
+  "provenance_schema": {
+    "description": "Every canonical row MUST preserve full audit trail to source",
+    "provenance_object": {
+      "ingest_id": {
+        "type": "UUID",
+        "description": "Unique ID for this upload batch"
+      },
+      "source_file": {
+        "type": "string",
+        "description": "Original filename"
+      },
+      "source_row_id": {
+        "type": "integer",
+        "description": "1-based row index in source file (header = row 0)"
+      },
+      "source_sheet": {
+        "type": "string",
+        "description": "Sheet name for XLSX, null for CSV"
+      },
+      "source_data_hash": {
+        "type": "string",
+        "description": "SHA-256 of raw source row for verification"
+      },
+      "ingested_at": {
+        "type": "datetime ISO 8601",
+        "description": "Timestamp of processing"
+      },
+      "ingested_by": {
+        "type": "UUID",
+        "description": "User ID who uploaded"
+      },
+      "confidence": {
+        "type": "float",
+        "range": [0, 1],
+        "description": "Schema inference confidence score"
+      },
+      "field_mappings": {
+        "type": "object",
+        "description": "Map canonical_field → source_header",
+        "example": {
+          "process_name": "Process Name",
+          "application_name": "App Name"
+        }
+      },
+      "warnings": {
+        "type": "array",
+        "description": "Normalization warnings (missing fields, type coercion)",
+        "items": {
+          "field": "string",
+          "message": "string",
+          "severity": "warn|error"
+        }
+      }
+    },
+    "storage_strategy": {
+      "canonical_table": "processes / applications",
+      "provenance_table": "provenance_records",
+      "relationship": "canonical.provenance_id → provenance.id",
+      "retention": "Provenance records immutable, retained 7 years"
+    },
+    "example_complete_record": {
+      "canonical_row": {
+        "id": "proc-uuid-1",
+        "process_name": "Claims Adjudication",
+        "application_name": "Facets",
+        "criticality": "high",
+        "owner": "Jane Doe",
+        "description": "Auto-adjudication of medical claims"
+      },
+      "provenance": {
+        "id": "prov-uuid-1",
+        "ingest_id": "ingest-uuid-1",
+        "source_file": "process_list.xlsx",
+        "source_row_id": 15,
+        "source_sheet": "Sheet1",
+        "source_data_hash": "sha256:a1b2c3d4...",
+        "ingested_at": "2025-06-03T10:00:00Z",
+        "ingested_by": "user-uuid-1",
+        "confidence": 0.95,
+        "field_mappings": {
+          "process_name": "Process Name",
+          "application_name": "App Name",
+          "criticality": "Criticality",
+          "owner": "Owner",
+          "description": "Description"
+        },
+        "warnings": []
+      }
+    }
+  },
+  "library_recommendations": {
+    "xlsx_parsing": {
+      "library": "exceljs",
+      "version": "^4.4.0",
+      "npm": "npm install exceljs",
+      "alternatives": ["xlsx (SheetJS) - faster, less feature-rich"],
+      "key_features": [
+        "Streaming reader for large files",
+        "Preserves cell formatting",
+        "Handles merged cells correctly",
+        "Works in Node.js and browser"
+      ]
+    },
+    "csv_parsing": {
+      "library": "papaparse",
+      "version": "^5.4.1",
+      "npm": "npm install papaparse",
+      "alternatives": ["csv-parse - faster, less user-friendly"],
+      "key_features": [
+        "Auto-detect delimiters (comma, tab, pipe)",
+        "Encoding detection (UTF-8, Latin-1)",
+        "Streaming for large files",
+        "Robust error recovery"
+      ]
+    },
+    "fuzzy_matching": {
+      "library": "fast-levenshtein",
+      "version": "^1.1.6",
+      "npm": "npm install fast-levenshtein",
+      "purpose": "Calculate string similarity for header matching"
+    },
+    "validation": {
+      "library": "joi",
+      "version": "^17.11.0",
+      "npm": "npm install joi",
+      "alternatives": ["zod - TypeScript-first, smaller bundle"],
+      "rationale": "Mature, excellent error messages, works at runtime"
+    },
+    "file_upload": {
+      "library": "multer",
+      "version": "^1.4.5-lts.1",
+      "npm": "npm install multer",
+      "purpose": "Handle multipart/form-data in Express",
+      "configuration": {
+        "storage": "memoryStorage or diskStorage",
+        "limits": { "fileSize": 52428800 },
+        "fileFilter": "Allow only .xlsx, .xls, .csv"
+      }
+    }
+  },
+  "error_handling": {
+    "file_level_errors": {
+      "file_too_large": {
+        "http_status": 413,
+        "message": "File exceeds 50MB limit",
+        "action": "Reject upload, suggest chunking or data sampling"
+      },
+      "invalid_file_type": {
+        "http_status": 400,
+        "message": "Unsupported file format. Only .xlsx, .xls, .csv allowed",
+        "action": "Reject upload"
+      },
+      "corrupt_file": {
+        "http_status": 422,
+        "message": "File is corrupted or unreadable",
+        "action": "Reject upload, log corruption details"
+      },
+      "empty_file": {
+        "http_status": 422,
+        "message": "File contains no data rows",
+        "action": "Reject upload"
+      },
+      "encoding_failure": {
+        "http_status": 422,
+        "message": "Could not detect file encoding",
+        "action": "Try UTF-8, Latin-1, Windows-1252 sequentially"
+      }
+    },
+    "row_level_errors": {
+      "missing_required_field": {
+        "severity": "warn",
+        "action": "Skip row, log warning, include in error summary",
+        "example": "Row 15 missing required field 'process_name'"
+      },
+      "invalid_enum_value": {
+        "severity": "warn",
+        "action": "Default to 'unknown', log warning",
+        "example": "Row 20 criticality 'urgent' not recognized, defaulted to 'unknown'"
+      },
+      "type_coercion_failure": {
+        "severity": "warn",
+        "action": "Store as string, log warning",
+        "example": "Row 25 date value 'N/A' stored as string"
+      },
+      "completely_empty_row": {
+        "severity": "info",
+        "action": "Skip silently, increment empty_row counter"
+      }
+    },
+    "schema_inference_errors": {
+      "no_headers_detected": {
+        "http_status": 422,
+        "message": "Could not detect headers in first 10 rows",
+        "action": "Reject upload, request file with headers"
+      },
+      "low_confidence_mapping": {
+        "severity": "warn",
+        "threshold": "< 0.5 confidence on required fields",
+        "action": "Continue processing, flag for manual review"
+      },
+      "ambiguous_mapping": {
+        "severity": "warn",
+        "example": "Column 'Name' could map to 'process_name' or 'application_name'",
+        "action": "Pick highest confidence, log alternative"
+      }
+    },
+    "error_response_format": {
+      "errors": [
+        {
+          "row": 15,
+          "severity": "warn",
+          "field": "criticality",
+          "message": "Value 'urgent' not recognized, defaulted to 'unknown'",
+          "action_taken": "stored_as_unknown"
+        }
+      ],
+      "summary": {
+        "total_rows": 150,
+        "successful_rows": 145,
+        "warned_rows": 3,
+        "skipped_rows": 2,
+        "error_rows": 0
+      }
+    }
+  },
+  "implementation_priority": {
+    "phase_1_mvp": [
+      "CSV parser with papaparse",
+      "XLSX parser with exceljs",
+      "Basic schema inference (exact match only)",
+      "Provenance table creation",
+      "POST /api/ingest/file endpoint"
+    ],
+    "phase_2_robustness": [
+      "Fuzzy header matching",
+      "Multi-encoding support",
+      "Comprehensive error handling",
+      "Async processing for large files"
+    ],
+    "phase_3_enhancement": [
+      "Webhook callbacks",
+      "Data preview UI",
+      "Manual mapping override",
+      "Bulk operation history"
+    ]
+  },
+  "security_considerations": {
+    "file_validation": [
+      "Magic byte verification to prevent file type spoofing",
+      "Scan uploaded files for malware (ClamAV)",
+      "Sanitize filenames to prevent path traversal"
+    ],
+    "rate_limiting": {
+      "endpoint": "POST /api/ingest/file",
+      "limit": "10 uploads per minute per org",
+      "rationale": "Prevent abuse, protect processing resources"
+    },
+    "isolation": {
+      "tenant_id": "All data scoped to organization_id",
+      "user_tracking": "Audit trail of who uploaded what"
+    },
+    "pii_handling": {
+      "detection": "Flag columns potentially containing PII (SSN, DOB, etc.)",
+      "retention": "Provenance records retain raw data for 7 years per audit policy",
+      "access": "Only users with process:list permissions can view"
+    }
+  },
+  "testing_strategy": {
+    "unit_tests": [
+      "Schema inference with 20+ header variations",
+      "Provenance object creation",
+      "Error handling for edge cases"
+    ],
+    "integration_tests": [
+      "Upload test files (good CSV, messy XLSX, corrupt file)",
+      "Verify database records with correct provenance",
+      "Test async processing flow"
+    ],
+    "test_data": {
+      "files": [
+        "test/process_list_good.xlsx",
+        "test/process_list_messy_headers.csv",
+        "test/process_list_missing_required.csv",
+        "test/app_inventory_multisheet.xlsx",
+        "test/corrupt_file.xls"
+      ]
+    }
+  },
+  "next_steps": {
+    "backend": [
+      "Create database migration for provenance table",
+      "Implement Express endpoint with multer",
+      "Write parser modules (csv-parser.js, xlsx-parser.js)",
+      "Add schema inference service",
+      "Create background job processor for async uploads"
+    ],
+    "frontend": [
+      "File upload component with drag-drop",
+      "Progress indicator for processing",
+      "Error summary display",
+      "Data preview before commit"
+    ],
+    "documentation": [
+      "API documentation with examples",
+      "User guide for file format requirements",
+      "Troubleshooting guide for common errors"
+    ]
+  }
+}
