@@ -47,7 +47,8 @@ const productionOrigins = [
 const developmentOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
-  'http://localhost:5173'
+  'http://localhost:5173',
+  'http://localhost:5174'
 ];
 
 // Add origins based on environment
@@ -198,6 +199,9 @@ app.use('/api/vendors',            [apiGetLimiter], require('./routes/syncStatus
 
 // Vendor Sync API with rate limiting (POST endpoints for triggering syncs)
 app.use('/api/vendors',            [apiGetLimiter, apiPostLimiter], require('./routes/vendorSync'));
+
+// Audit Trail API with rate limiting
+app.use('/api/audit-trail',        [apiGetLimiter], require('./routes/audit-trail'));
 
 // PDF Report Generation with rate limiting
 app.use('/api/reports',            [apiPostLimiter], require('./routes/reports'));
