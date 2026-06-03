@@ -1,5 +1,17 @@
 'use strict';
 require('dotenv').config();
+const { validateEnv } = require('./config/env-validation');
+
+// CRITICAL: Validate environment variables before starting the application
+// This ensures all required secrets and configuration are present
+try {
+  validateEnv();
+} catch (error) {
+  console.error('FATAL: Environment validation failed:', error.message);
+  console.error('Application cannot start. Please check your environment configuration.');
+  process.exit(1); // Fail fast - don't start with missing critical variables
+}
+
 const express = require('express');
 const cors = require('cors');
 const { authenticateJWT } = require('./middleware/auth');
