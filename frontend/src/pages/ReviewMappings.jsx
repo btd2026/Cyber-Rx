@@ -285,7 +285,7 @@ const ReviewMappings = ({ matchId, goBack }) => {
           <span className="stat-value">{filteredProposals.length}</span>
         </div>
         <div className="stat-item high">
-          <span className="stat-label">High (>90%):</span>
+          <span className="stat-label">High (&gt;90%):</span>
           <span className="stat-value">{stats.highConf}</span>
         </div>
         <div className="stat-item medium">
@@ -293,7 +293,7 @@ const ReviewMappings = ({ matchId, goBack }) => {
           <span className="stat-value">{stats.mediumConf}</span>
         </div>
         <div className="stat-item low">
-          <span className="stat-label">Low (<70%):</span>
+          <span className="stat-label">Low (&lt;70%):</span>
           <span className="stat-value">{stats.lowConf}</span>
         </div>
         <div className="stat-item">

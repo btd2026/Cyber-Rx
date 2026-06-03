@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import CorrelatedFinding from "./pages/CorrelatedFinding";
 import CIODash from "./pages/CIODash";
 import CLODash from "./pages/CLODash";
@@ -129,38 +130,31 @@ var NAV_GROUPS = [
     label: "Business Context",
     items: [
       {id:"crownjewels", label:"Crown Jewels",      icon:"💎", mod:"F-CJ"},
-      {id:"bizlines",  label:"Business Lines",       icon:"🗺", mod:"F01"},
       {id:"appmap",    label:"Application Map",      icon:"🗄", mod:"F01b"},
-      {id:"vendormap", label:"Vendor Ecosystem",     icon:"🌐", mod:"F03b"},
     ]
   },
   {
-    label: "Threat Analysis",
+    label: "Vendor Ecosystem",
     items: [
-      {id:"attackpaths",  label:"Attack Path Analyzer",   icon:"⚔",  mod:"F-TI"},
+      {id:"vendormap", label:"Vendor Ecosystem",     icon:"🌐", mod:"F03b"},
     ]
   },
   {
     label: "Executives",
     items: [
-      {id:"dashboard", label:"CISO Dashboard",      icon:"S", mod:"F08a"},
+      {id:"dashboard", label:"CISO Dashboard",      icon:"S", mod:"F08a", subtabs:["attackpaths"]},
       {id:"cio",       label:"CIO Dashboard",       icon:"I", mod:"F08e"},
-      {id:"clo",       label:"CLO Dashboard",       icon:"L", mod:"F08f"},
       {id:"cro",       label:"CRO / Audit",         icon:"C", mod:"F08b"},
       {id:"cfo",       label:"CFO Dashboard",       icon:"F", mod:"F08c"},
       {id:"boarddash", label:"Board Dashboard",     icon:"B", mod:"F08d"},
-      {id:"audit",      label:"Internal Audit",       icon:"A", mod:"F08g"},
     ]
   },
   {
     label: "Operations",
     items: [
-      {id:"execution", label:"Execution Layer",     icon:"⚡", mod:"F09"},
       {id:"setup",     label:"Setup & Frameworks", icon:"🏢", mod:"F02"},
       {id:"controls",  label:"Control Validation",  icon:"✓",  mod:"F04"},
-      {id:"assets",    label:"Claim Lifecycle",     icon:"🔗", mod:"F03"},
       {id:"scoring",   label:"Risk Scoring + MITRE",icon:"📈", mod:"F05"},
-      {id:"board",     label:"Board Risk Report",   icon:"📋", mod:"F07"},
     ]
   },
 ];
@@ -11400,6 +11394,8 @@ function AppMap(props) {
           <div style={{color:C.muted,fontSize:12}}>All business applications mapped to processes, risks, and connection methods</div>
         </div>
         <div style={{display:"flex",gap:6}}>
+          <Btn onClick={function(){go("review-mappings");}} small style={{background:"#0FBB80",borderColor:"#0FBB80"}}>✓ Review Mappings</Btn>
+          <Btn onClick={function(){go("process-graph");}} small style={{background:"#3B9EFF",borderColor:"#3B9EFF"}}>⊟ Process Graph</Btn>
           <Btn onClick={function(){go("bizlines");}} small>Business Lines</Btn>
           <Btn onClick={function(){go("setup",{step:5});}} small>Configure →</Btn>
         </div>
@@ -14102,16 +14098,18 @@ function DashHub(props) {
   var overallCmmi  = cmmi(overallScore);
 
   var tabs = [
-    {id:"overview",  label:"Overview",       sub:"All Dashboards Combined"},
-    {id:"ciso",      label:"CISO",           sub:"Security Operations"},
-    {id:"bizlines",  label:"Business Lines", sub:"Risk by Process"},
-    {id:"cro",       label:"CRO / Audit",    sub:"Compliance"},
-    {id:"cfo",       label:"CFO",            sub:"Financial Exposure"},
-    {id:"board",     label:"Board",          sub:"Executive View"},
-    {id:"vendormap", label:"Vendor Map",     sub:"Ecosystem Risk"},
-    {id:"procmap",   label:"Risk Map",       sub:"Process to Control"},
-    {id:"mitre",     label:"MITRE ATT&CK",   sub:"Attack Path Analysis"},
-    {id:"crown",     label:"Crown Jewel Map", sub:"Process → App → Control health"},
+    {id:"overview",    label:"Overview",       sub:"All Dashboards Combined"},
+    {id:"ciso",        label:"CISO",           sub:"Security Operations"},
+    {id:"bizlines",    label:"Business Lines", sub:"Risk by Process"},
+    {id:"cro",         label:"CRO / Audit",    sub:"Compliance"},
+    {id:"cfo",         label:"CFO",            sub:"Financial Exposure"},
+    {id:"board",       label:"Board",          sub:"Executive View"},
+    {id:"vendormap",   label:"Vendor Map",     sub:"Ecosystem Risk"},
+    {id:"procmap",     label:"Risk Map",       sub:"Process to Control"},
+    {id:"mitre",       label:"MITRE ATT&CK",   sub:"Attack Path Analysis"},
+    {id:"crown",       label:"Crown Jewel Map", sub:"Process → App → Control health"},
+    {id:"gap-analysis",label:"Gap Analysis",  sub:"Model-Based Detection"},
+    {id:"restructure", label:"Restructure",    sub:"Before/After Transformation"},
   ];
 
   // ── Render sub-dashboards directly inline ────────────────────────
@@ -14248,6 +14246,106 @@ function DashHub(props) {
           <span style={{color:C.text,fontSize:11,fontWeight:700}}>MITRE ATT&CK — Attack Path Analysis</span>
         </div>
         <MitreTab go={go} brianaOn={props.brianaOn!==false} setBrianaOn={props.setBrianaOn||function(){}}/>
+      </div>
+    );
+  }
+  if (activeTab==="gap-analysis") {
+    return (
+      <div>
+        <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:12}}>
+          <button onClick={function(){setActiveTab("overview");}}
+            style={{background:"transparent",border:"none",color:C.acc,cursor:"pointer",fontSize:11,fontWeight:700}}>
+            ← Command Center
+          </button>
+          <span style={{color:C.muted}}>/</span>
+          <span style={{color:C.text,fontSize:11,fontWeight:700}}>Gap Analysis</span>
+        </div>
+        <div style={{maxWidth:960,margin:"0 auto",padding:"24px"}}>
+          <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:12,padding:32,textAlign:"center"}}>
+            <div style={{fontSize:40,marginBottom:16}}>🔍</div>
+            <h2 style={{color:C.text,fontSize:18,fontWeight:800,margin:"0 0 8px"}}>Gap Analysis</h2>
+            <p style={{color:C.muted,fontSize:13,lineHeight:1.6,marginBottom:20}}>
+              Model-based gap detection compares your confirmed mappings against the Healthcare Payer Reference Model
+              to identify missing processes, applications, and crown-jewel systems.
+            </p>
+            <div style={{background:C.bg,border:"1px solid "+C.border,borderRadius:8,padding:16,marginBottom:16}}>
+              <div style={{color:C.muted,fontSize:11,fontWeight:700,textTransform:"uppercase",marginBottom:8}}>Detection Method</div>
+              <div style={{color:C.text,fontSize:12,lineHeight:1.5}}>
+                Compares reference model expectations (T-204) against confirmed mappings (T-220) to identify gaps.
+                No network scanning required — security-friendly analysis.
+              </div>
+            </div>
+            <div style={{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap"}}>
+              <span style={{background:"#EF454520",color:"#EF4545",fontSize:10,fontWeight:700,borderRadius:4,padding:"3px 10px"}}>
+                Critical: Crown-Jewel Systems Missing
+              </span>
+              <span style={{background:"#F5A62320",color:"#F5A623",fontSize:10,fontWeight:700,borderRadius:4,padding:"3px 10px"}}>
+                High: Standard Payer Systems Missing
+              </span>
+              <span style={{background:"#A78BFA20",color:"#A78BFA",fontSize:10,fontWeight:700,borderRadius:4,padding:"3px 10px"}}>
+                Medium: Best-Practice Enhancements
+              </span>
+            </div>
+            <div style={{marginTop:20,padding:12,background:"#0FBB8010",border:"1px solid #0FBB8030",borderRadius:8}}>
+              <div style={{color:"#0FBB80",fontSize:11}}>
+                ✅ Gap detection engine designed (T-222) — Implementation pending confirmed mappings
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  if (activeTab==="restructure") {
+    return (
+      <div>
+        <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:12}}>
+          <button onClick={function(){setActiveTab("overview");}}
+            style={{background:"transparent",border:"none",color:C.acc,cursor:"pointer",fontSize:11,fontWeight:700}}>
+            ← Command Center
+          </button>
+          <span style={{color:C.muted}}>/</span>
+          <span style={{color:C.text,fontSize:11,fontWeight:700}}>Restructure View</span>
+        </div>
+        <div style={{maxWidth:1200,margin:"0 auto",padding:"16px 24px"}}>
+          <button onClick={function(){go("restructure-view");}}
+            style={{display:"flex",gap:6,alignItems:"center",background:C.card,border:"1px solid "+C.border,
+              borderRadius:8,padding:12,marginBottom:16,cursor:"pointer",color:C.text,fontSize:12}}>
+            <span style={{fontSize:16}}>🔄</span>
+            <div>
+              <div style={{fontWeight:700,marginBottom:2}}>Open Full Restructure View</div>
+              <div style={{color:C.muted,fontSize:11}}>Before/after transformation from flat Excel to hierarchical tree</div>
+            </div>
+          </button>
+          <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:12,padding:24}}>
+            <h3 style={{color:C.text,fontSize:16,fontWeight:800,margin:"0 0 12px"}}>Restructure Preview</h3>
+            <p style={{color:C.muted,fontSize:13,lineHeight:1.6,marginBottom:16}}>
+              The Restructure View shows the transformation from flat Excel spreadsheets to a hierarchical process tree structure.
+              This visualization demonstrates how AI-powered mapping organizes scattered data into a coherent taxonomy.
+            </p>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
+              <div style={{background:C.bg,borderRadius:8,padding:16}}>
+                <div style={{color:C.muted,fontSize:10,fontWeight:700,marginBottom:8}}>BEFORE: Flat Excel</div>
+                <div style={{color:C.text,fontSize:11,lineHeight:1.6}}>
+                  <div>• Claims Process</div>
+                  <div>• Enrollment Process</div>
+                  <div>• Provider Process</div>
+                  <div style={{color:C.muted,marginTop:8}}>(Scattered rows, no hierarchy)</div>
+                </div>
+              </div>
+              <div style={{background:C.bg,borderRadius:8,padding:16}}>
+                <div style={{color:C.muted,fontSize:10,fontWeight:700,marginBottom:8}}>AFTER: Hierarchical Tree</div>
+                <div style={{color:C.text,fontSize:11,lineHeight:1.6}}>
+                  <div style={{fontWeight:600}}>Claims Adjudication</div>
+                  <div style={{paddingLeft:16}}>• Claim Intake</div>
+                  <div style={{paddingLeft:16}}>• Adjudication Engine</div>
+                  <div style={{paddingLeft:16}}>• Payment Processing</div>
+                  <div style={{color:C.muted,marginTop:8}}>(Organized taxonomy)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -16598,17 +16696,10 @@ function DashNav(props) {
     {id:"hub",       label:"Command Center",  mod:"All Dashboards"},
     {id:"dashboard", label:"CISO",            mod:"Security"},
     {id:"cio",       label:"CIO",             mod:"Technology"},
-    {id:"clo",       label:"CLO / Legal",     mod:"Legal"},
-    {id:"bizlines",  label:"Business Lines",  mod:"Risk"},
     {id:"cro",       label:"CRO / Audit",     mod:"Compliance"},
     {id:"cfo",       label:"CFO",             mod:"Financial"},
     {id:"boarddash", label:"Board",           mod:"Executive"},
-    {id:"bizmap",     label:"Business Map",     mod:"Intelligence"},
-    {id:"apiadapter", label:"API Adapter",      mod:"Intelligence"},
-    {id:"processflow",label:"Process Map",      mod:"Intelligence"},
-    {id:"docdash",   label:"Documents",        mod:"Compliance"},
-    {id:"crown",     label:"Crown Jewel Map", mod:"Intelligence"},
-    {id:"execution", label:"Execution",       mod:"Actions"},
+    {id:"vendormap", label:"Vendor Ecosystem",mod:"Ecosystem Risk"},
   ];
   return (
     <div style={{display:"flex",gap:0,marginBottom:16,borderBottom:"1px solid "+C.border}}>
@@ -24342,7 +24433,26 @@ function CyberRxApp() {
   }, renderPage());
 }
 
-export default CyberRxApp;
+// Wrap app with QueryClientProvider for React Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
+
+function AppWithProviders() {
+  return React.createElement(
+    QueryClientProvider,
+    { client: queryClient },
+    React.createElement(CyberRxApp)
+  );
+}
+
+export default AppWithProviders;
 
 // ─── CFO Exposure Model — hierarchical data ───────────────────────────────────
 var EXPOSURE_HIERARCHY = [
