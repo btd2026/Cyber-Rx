@@ -1,0 +1,945 @@
+{
+  "version": "1.0-draft",
+  "status": "expert-review-pending",
+  "metadata": {
+    "created_date": "2025-01-31",
+    "purpose": "Risk catalog for healthcare-payer crown-jewel processes",
+    "disclaimer": "This is a draft risk catalog pending expert review. Do not use for production risk management without certified domain expert validation.",
+    "scope": "US Healthcare Payer Operations - Crown-Jewel Process Risks"
+  },
+  "risk_categories": {
+    "operational": {
+      "description": "System failures, performance issues, data corruption, process breakdowns",
+      "typical_impact": "Service disruption, revenue loss, operational inefficiency"
+    },
+    "security": {
+      "description": "Data breaches, unauthorized access, ransomware, phishing, insider threats",
+      "typical_impact": "HIPAA violations, regulatory fines, reputational damage, legal liability"
+    },
+    "compliance": {
+      "description": "HIPAA violations, regulatory penalties, audit failures, accreditation loss",
+      "typical_impact": "Fines, sanctions, contract termination, corporate integrity agreements"
+    },
+    "strategic": {
+      "description": "Vendor lock-in, talent gaps, technical debt, competitive disadvantage",
+      "typical_impact": "Long-term viability, market position, innovation capacity"
+    }
+  },
+  "impact_levels": {
+    "critical": "Immediate threat to business operations, regulatory compliance, or financial viability",
+    "high": "Significant impact on operations, revenue, or regulatory standing",
+    "medium": "Moderate impact with workarounds available",
+    "low": "Minimal impact with established mitigation procedures"
+  },
+  "likelihood_levels": {
+    "frequent": "Expected to occur multiple times per year",
+    "likely": "Expected to occur at least once per year",
+    "possible": "May occur once every 2-3 years",
+    "unlikely": "Rare event, less than once every 3 years"
+  },
+  "risks_by_process": {
+    "claims-adjudication": [
+      {
+        "id": "claims-outage",
+        "title": "Claims Adjudication System Outage",
+        "description": "Complete system downtime halts all claims processing",
+        "category": "operational",
+        "likelihood": "possible",
+        "impact": "critical",
+        "business_impact": "Revenue stops, provider payments delayed, member services disrupted, regulatory violations for timely processing",
+        "mitigation_strategies": [
+          "High-availability architecture with automatic failover",
+          "Disaster recovery site with <4 hour RTO",
+          "Vendor SLA with financial penalties",
+          "Manual fallback processing procedures",
+          "Queue-based processing with replay capability"
+        ],
+        "estimated_downtime_cost_per_day": "$1M+",
+        "regulatory_exposure": "CMS timely processing requirements, state prompt payment laws"
+      },
+      {
+        "id": "claims-data-corruption",
+        "title": "Claims Database Corruption",
+        "description": "Database integrity failure corrupts claims records",
+        "category": "operational",
+        "likelihood": "unlikely",
+        "impact": "critical",
+        "business_impact": "Incorrect payments, lost claims, regulatory reporting errors, legal liability",
+        "mitigation_strategies": [
+          "Immutable audit trails",
+          "Database replication with integrity checks",
+          "Automated backup verification",
+          "Transaction logging with rollback capability",
+          "Data integrity validation scripts"
+        ],
+        "estimated_downtime_cost_per_day": "$2M+",
+        "regulatory_exposure": "HIPAA data integrity, CMS audit requirements"
+      },
+      {
+        "id": "claims-ransomware",
+        "title": "Claims Adjudication Ransomware Attack",
+        "description": "Malicious encryption of claims processing systems",
+        "category": "security",
+        "likelihood": "possible",
+        "impact": "critical",
+        "business_impact": "Complete operational halt, PHI breach notification, regulatory fines, reputational damage",
+        "mitigation_strategies": [
+          "Segmented network architecture",
+          "Immutable backups with offline storage",
+          "Endpoint detection and response (EDR)",
+          "Zero-trust access controls",
+          "Cyber insurance coverage",
+          "Incident response plan with tabletop exercises"
+        ],
+        "estimated_downtime_cost_per_day": "$3M+",
+        "regulatory_exposure": "HIPAA breach notification ($50K+ per violation), CMS enforcement"
+      },
+      {
+        "id": "claims-fraud-engineering-access",
+        "title": "Fraudulent Claims Processing via Insider Access",
+        "description": "Authorized user manipulates claims processing for fraudulent payments",
+        "category": "security",
+        "likelihood": "possible",
+        "impact": "high",
+        "business_impact": "Direct financial loss, regulatory violations, reputational damage",
+        "mitigation_strategies": [
+          "Role-based access control (RBAC) with least privilege",
+          "Separation of duties for high-value transactions",
+          "Behavioral analytics for anomaly detection",
+          "Mandatory vacation rotation",
+          "Comprehensive audit logging with review"
+        ],
+        "estimated_incident_cost": "$100K - $5M+",
+        "regulatory_exposure": "HIPAA, False Claims Act, state insurance fraud investigations"
+      },
+      {
+        "id": "claims-config-error",
+        "title": "Adjudication Rules Configuration Error",
+        "description": "Incorrect business logic in claims adjudication rules",
+        "category": "operational",
+        "likelihood": "likely",
+        "impact": "high",
+        "business_impact": "Massive overpayments or underpayments, provider abrasion, regulatory penalties",
+        "mitigation_strategies": [
+          "Staged configuration deployment with testing",
+          "Automated regression testing suite",
+          "Business rule versioning with rollback",
+          "Claims impact analysis before deployment",
+          "Monitoring dashboards for payment accuracy"
+        ],
+        "estimated_incident_cost": "$500K - $10M+",
+        "regulatory_exposure": "CMS payment accuracy requirements, state prompt pay laws"
+      },
+      {
+        "id": "claims-phishing-credential-theft",
+        "title": "Claims System Credential Theft via Phishing",
+        "description": "Employee credentials compromised through phishing campaign",
+        "category": "security",
+        "likelihood": "frequent",
+        "impact": "high",
+        "business_impact": "Unauthorized system access, PHI breach, fraudulent claims processing",
+        "mitigation_strategies": [
+          "Multi-factor authentication (MFA) enforcement",
+          "Security awareness training",
+          "Phishing simulation exercises",
+          "Conditional access policies",
+          "Session monitoring and anomaly detection"
+        ],
+        "estimated_incident_cost": "$250K - $2M+",
+        "regulatory_exposure": "HIPAA breach notification, CMS enforcement"
+      }
+    ],
+    "edi-gateway": [
+      {
+        "id": "edi-outage",
+        "title": "EDI Gateway Complete Outage",
+        "description": "X12 translation failure blocks all provider/payer data exchange",
+        "category": "operational",
+        "likelihood": "possible",
+        "impact": "critical",
+        "business_impact": "Cannot receive 837 claims, send 835 payments, verify eligibility (270/271), process prior auth (278)",
+        "mitigation_strategies": [
+          "Redundant gateway with automatic failover",
+          "Manual processing procedures for critical transactions",
+          "Direct API fallbacks where available",
+          "Partner alternative clearinghouse",
+          "Queue-based processing with persistence"
+        ],
+        "estimated_downtime_cost_per_day": "$500K+",
+        "regulatory_exposure": "HIPAA transaction requirements, CMS electronic submissions"
+      },
+      {
+        "id": "edi-vendor-lock-in",
+        "title": "EDI Clearinghouse Vendor Lock-In",
+        "description": "Single EDI vendor creates dependency with migration barriers",
+        "category": "strategic",
+        "likelihood": "likely",
+        "impact": "high",
+        "business_impact": "Price gouging, inability to negotiate terms, innovation constraints",
+        "mitigation_strategies": [
+          "Multi-vendor strategy with load balancing",
+          "Standard transaction formats (X12, NCPDP)",
+          "Internal EDI translation capability",
+          "Exit planning with documented migration procedures",
+          "Regular vendor evaluation and RFP processes"
+        ],
+        "estimated_annual_cost_excess": "$1M+",
+        "regulatory_exposure": "HIPAA transaction standards"
+      },
+      {
+        "id": "edi-man-in-middle",
+        "title": "EDI Transaction Interception (Man-in-Middle)",
+        "description": "Attacker intercepts and modifies EDI transactions in transit",
+        "category": "security",
+        "likelihood": "unlikely",
+        "impact": "critical",
+        "business_impact": "PHI exposure, fraudulent claims, payment diversion, regulatory violations",
+        "mitigation_strategies": [
+          "End-to-end encryption for all EDI transactions",
+          "Digital signatures for transaction verification",
+          "Certificate management with pinning",
+          "Transaction integrity checking",
+          "Network segmentation and monitoring"
+        ],
+        "estimated_incident_cost": "$1M - $10M+",
+        "regulatory_exposure": "HIPAA security rule, CMS transaction integrity requirements"
+      },
+      {
+        "id": "edi-format-migration-failure",
+        "title": "EDI Format Version Migration Failure",
+        "description": "Failed upgrade to new X12 version breaks partner communications",
+        "category": "operational",
+        "likelihood": "possible",
+        "impact": "high",
+        "business_impact": "Transaction failures with partners, reprocessing backlog, compliance violations",
+        "mitigation_strategies": [
+          "Staged migration with parallel processing",
+          "Comprehensive partner testing program",
+          "Version compatibility matrix",
+          "Rollback capability to previous version",
+          "Extended support for legacy versions during transition"
+        ],
+        "estimated_incident_cost": "$250K - $1M+",
+        "regulatory_exposure": "HIPAA transaction standards, CMS version mandates"
+      }
+    ],
+    "enrollment-and-billing": [
+      {
+        "id": "enrollment-system-outage",
+        "title": "Enrollment System Outage During Open Enrollment",
+        "description": "System downtime during peak enrollment periods",
+        "category": "operational",
+        "likelihood": "possible",
+        "impact": "critical",
+        "business_impact": "Failed member signups, revenue loss, regulatory violations for timely enrollment",
+        "mitigation_strategies": [
+          "Load testing for peak capacity",
+          "Horizontal auto-scaling infrastructure",
+          "Graceful degradation modes",
+          "Offline enrollment capture with later processing",
+          "Extended customer service hours with manual enrollment"
+        ],
+        "estimated_downtime_cost_per_day": "$750K+",
+        "regulatory_exposure": "CMS open enrollment requirements, state prompt enrollment laws"
+      },
+      {
+        "id": "billing-data-breach",
+        "title": "Premium Billing System Data Breach",
+        "description": "Unauthorized access to member payment and billing information",
+        "category": "security",
+        "likelihood": "possible",
+        "impact": "high",
+        "business_impact": "PHI breach, payment card data exposure, regulatory fines, class action lawsuits",
+        "mitigation_strategies": [
+          "Tokenization of payment card data",
+          "Encryption of billing data at rest and in transit",
+          "Access logging and monitoring",
+          "PCI DSS compliance for card data",
+          "Breach response plan with legal counsel"
+        ],
+        "estimated_incident_cost": "$500K - $5M+",
+        "regulatory_exposure": "HIPAA ($50K+ per violation), PCI DSS fines, state breach laws"
+      },
+      {
+        "id": "cobra-administration-error",
+        "title": "COBRA Administration Compliance Error",
+        "description": "Failure to properly administer COBRA continuation coverage",
+        "category": "compliance",
+        "likelihood": "likely",
+        "impact": "high",
+        "business_impact": "IRS penalties ($100/day per beneficiary), legal liability, regulatory fines",
+        "mitigation_strategies": [
+          "Automated COBRA administration system",
+          "Compliance checklists and procedures",
+          "Regular compliance audits",
+          "Staff training on COBRA requirements",
+          "Legal review of notices and timelines"
+        ],
+        "estimated_annual_penalty_exposure": "$100K - $500K+",
+        "regulatory_exposure": "IRS COBRA penalties, ERISA violations, DOL enforcement"
+      },
+      {
+        "id": "id-card-production-failure",
+        "title": "Member ID Card Production Failure",
+        "description": "ID card generation or mailing system failure",
+        "category": "operational",
+        "likelihood": "possible",
+        "impact": "medium",
+        "business_impact": "Member cannot access services, provider verification issues, temporary card costs",
+        "mitigation_strategies": [
+          "Multiple ID card vendors",
+          "Digital ID card capability in member portal",
+          "Overnight card production for urgent cases",
+          "Provider education on temporary ID verification",
+          "Member portal instant access option"
+        ],
+        "estimated_incident_cost": "$50K - $200K+",
+        "regulatory_exposure": "State ID card requirements, timely access to services"
+      },
+      {
+        "id": "premium-leakage",
+        "title": "Premium Revenue Leakage",
+        "description": "Systematic failure to collect all owed premiums",
+        "category": "operational",
+        "likelihood": "likely",
+        "impact": "high",
+        "business_impact": "Direct revenue loss, cash flow impact, financial reporting inaccuracies",
+        "mitigation_strategies": [
+          "Automated premium reconciliation",
+          "Exception reporting for uncollected premiums",
+          "Collection workflow automation",
+          "Financial reporting controls",
+          "Regular premium audits"
+        ],
+        "estimated_annual_revenue_loss": "$1M - $10M+",
+        "regulatory_exposure": "MLR calculations, financial statement accuracy"
+      }
+    ],
+    "provider-management": [
+      {
+        "id": "provider-directory-inaccuracy",
+        "title": "Provider Directory Inaccuracy Enforcement",
+        "description": "Systematic inaccuracies in provider network directories",
+        "category": "compliance",
+        "likelihood": "likely",
+        "impact": "high",
+        "business_impact": "Federal fines ($25K - $100K per violation), member abrasion, provider frustration",
+        "mitigation_strategies": [
+          "Automated directory validation with provider verification",
+          "Quarterly provider attestation process",
+          "Member feedback loop with rapid correction",
+          "API-based directory updates with real-time sync",
+          "Machine learning for anomaly detection"
+        ],
+        "estimated_annual_fine_exposure": "$100K - $5M+",
+        "regulatory_exposure": "CMS provider directory regulations, state network adequacy laws"
+      },
+      {
+        "id": "credentialing-lapse",
+        "title": "Provider Credentialing Lapse",
+        "description": "Failure to verify or maintain provider credentials",
+        "category": "compliance",
+        "likelihood": "possible",
+        "impact": "high",
+        "business_impact": "Payments to non-credentialed providers, regulatory fines, legal liability, network adequacy violations",
+        "mitigation_strategies": [
+          "Automated credentialing tracking with alerts",
+          "Primary source verification integration",
+          "Credentialing workflow with mandatory fields",
+          "Separation of credentialing and payment functions",
+          "Regular credentialing audits"
+        ],
+        "estimated_incident_cost": "$250K - $2M+",
+        "regulatory_exposure": "NCQA standards, state credentialing requirements, CMS validation"
+      },
+      {
+        "id": "provider-data-breach",
+        "title": "Provider Data System Breach",
+        "description": "Unauthorized access to provider PII and financial information",
+        "category": "security",
+        "likelihood": "possible",
+        "impact": "high",
+        "business_impact": "PHI breach, provider payment information exposure, regulatory fines, reputational damage",
+        "mitigation_strategies": [
+          "Zero-trust network architecture",
+          "Encryption of provider data at rest and in transit",
+          "Provider portal with MFA and SSO",
+          "Comprehensive access logging",
+          "Third-party risk assessment for vendor access"
+        ],
+        "estimated_incident_cost": "$500K - $3M+",
+        "regulatory_exposure": "HIPAA breach notification ($50K+ per violation), state data breach laws"
+      },
+      {
+        "id": "network-adequacy-violation",
+        "title": "Network Adequacy Compliance Violation",
+        "description": "Failure to maintain sufficient provider access per regulatory standards",
+        "category": "compliance",
+        "likelihood": "possible",
+        "impact": "high",
+        "business_impact": "CMS enforcement actions, plan termination, state market withdrawal, member attrition",
+        "mitigation_strategies": [
+          "Automated network adequacy monitoring",
+          "Provider recruitment programs",
+          "Geographic access analysis",
+          "Time/distance calculation engines",
+          "Regulatory reporting dashboards"
+        ],
+        "estimated_incident_cost": "$1M - $10M+",
+        "regulatory_exposure": "CMS network adequacy standards, state access requirements, accreditation"
+      },
+      {
+        "id": "provider-contract-error",
+        "title": "Provider Fee Schedule Contracting Error",
+        "description": "Incorrect fee schedule loaded into payment system",
+        "category": "operational",
+        "likelihood": "possible",
+        "impact": "high",
+        "business_impact": "Systematic overpayments or underpayments, provider abrasion, contract disputes",
+        "mitigation_strategies": [
+          "Contract-to-fee schedule validation workflows",
+          "Automated fee schedule testing against contracts",
+          "Fee schedule versioning with approval workflows",
+          "Payment anomaly detection",
+          "Regular contract-to-payment audits"
+        ],
+        "estimated_incident_cost": "$500K - $5M+",
+        "regulatory_exposure": "Provider contract law, fair payment requirements"
+      }
+    ],
+    "prior-authorization": [
+      {
+        "id": "pa-delay-care-outcome",
+        "title": "Prior Authorization Delay Causing Adverse Health Outcome",
+        "description": "Lengthy PA process contributes to member health decline",
+        "category": "compliance",
+        "likelihood": "possible",
+        "impact": "critical",
+        "business_impact": "Legal liability, regulatory sanctions, reputational damage, CMS enforcement",
+        "mitigation_strategies": [
+          "Expedited PA pathways for urgent conditions",
+          "Clinical decision support systems",
+          "Provider-to-payer direct PA submission",
+          "Automated approval for low-risk services",
+          "PA turnaround time monitoring with escalation"
+        ],
+        "estimated_incident_cost": "$1M - $10M+",
+        "regulatory_exposure": "CMS PA timelines, state prompt PA laws, accreditation standards"
+      },
+      {
+        "id": "pa-system-outage",
+        "title": "Prior Authorization System Outage",
+        "description": "PA processing system downtime blocks service authorization",
+        "category": "operational",
+        "likelihood": "possible",
+        "impact": "high",
+        "business_impact": "Care delays, provider abrasion, member dissatisfaction, potential health outcomes",
+        "mitigation_strategies": [
+          "High-availability PA system with redundancy",
+          "Manual PA fax processing as fallback",
+          "Emergency PA procedures for urgent care",
+          "Provider portal with offline PA capability",
+          "Queue-based PA processing"
+        ],
+        "estimated_downtime_cost_per_day": "$250K+",
+        "regulatory_exposure": "CMS timely PA requirements, state prompt PA laws"
+      },
+      {
+        "id": "pa-clinical-error",
+        "title": "Prior Authorization Clinical Decision Error",
+        "description": "Incorrect clinical judgment in PA denial or approval",
+        "category": "compliance",
+        "likelihood": "possible",
+        "impact": "high",
+        "business_impact": "Medical necessity disputes, appeals processing costs, regulatory scrutiny, legal liability",
+        "mitigation_strategies": [
+          "Board-certified physician review for complex cases",
+          "Standardized clinical criteria with evidence-based guidelines",
+          "Second opinion processes for denials",
+          "Continuous clinical training",
+          "PA decision audit with quality review"
+        ],
+        "estimated_incident_cost": "$250K - $2M+",
+        "regulatory_exposure": "CMS medical necessity standards, state utilization management laws"
+      },
+      {
+        "id": "pa-data-breach",
+        "title": "Prior Authorization Clinical Information Breach",
+        "description": "Unauthorized access to detailed clinical information in PA requests",
+        "category": "security",
+        "likelihood": "unlikely",
+        "impact": "high",
+        "business_impact": "PHI breach, clinical information exposure, regulatory fines, legal liability",
+        "mitigation_strategies": [
+          "Encryption of clinical data at rest and in transit",
+          "Role-based access with clinical justification",
+          "Comprehensive access logging",
+          "Data minimization (only necessary clinical info)",
+          "Provider portal with secure messaging"
+        ],
+        "estimated_incident_cost": "$500K - $3M+",
+        "regulatory_exposure": "HIPAA breach notification ($50K+ per violation), state data breach laws"
+      }
+    ],
+    "payment-processing": [
+      {
+        "id": "payment-outage",
+        "title": "Provider Payment System Outage",
+        "description": "Complete payment processing system downtime",
+        "category": "operational",
+        "likelihood": "possible",
+        "impact": "critical",
+        "business_impact": "Provider payment delays, state prompt payment penalties, provider network abrasion, contract violations",
+        "mitigation_strategies": [
+          "High-availability payment infrastructure",
+          "Manual check processing procedures",
+          "Expedited payment runs post-recovery",
+          "Provider communication plan",
+          "Payment processing calendar with buffer days"
+        ],
+        "estimated_downtime_cost_per_day": "$750K+",
+        "regulatory_exposure": "State prompt payment laws (interest penalties), CMS timeliness requirements"
+      },
+      {
+        "id": "payment-fraud",
+        "title": "Provider Payment Fraud via ACH Manipulation",
+        "description": "Fraudulent diversion of provider payments via banking details manipulation",
+        "category": "security",
+        "likelihood": "possible",
+        "impact": "high",
+        "business_impact": "Direct financial loss, provider payment disputes, regulatory violations",
+        "mitigation_strategies": [
+          "Banking detail verification with provider",
+          "Positive pay for ACH transactions",
+          "ACH debit block filters",
+          "Dual authorization for payment file changes",
+          "Payment reconciliation with anomaly detection"
+        ],
+        "estimated_incident_cost": "$250K - $2M+",
+        "regulatory_exposure": "ACH network rules, state payment regulations"
+      },
+      {
+        "id": "overpayment-processing-error",
+        "title": "Systematic Overpayment Due to Processing Error",
+        "description": "Recurring overpayment due to configuration or logic error",
+        "category": "operational",
+        "likelihood": "possible",
+        "impact": "high",
+        "business_impact": "Direct financial loss, recovery costs, provider abrasion, MLR impact",
+        "mitigation_strategies": [
+          "Payment accuracy monitoring with statistical process control",
+          "Automated recovery identification",
+          "Overpayment prevention edits",
+          "Regular payment audits",
+          "Overpayment recovery workflow with provider appeals"
+        ],
+        "estimated_annual_loss": "$1M - $10M+",
+        "regulatory_exposure": "CMS payment accuracy requirements, MLR calculations"
+      },
+      {
+        "id": "payment-data-corruption",
+        "title": "Payment Remittance Data Corruption",
+        "description": "Corruption of payment data or remittance advice files",
+        "category": "operational",
+        "likelihood": "unlikely",
+        "impact": "high",
+        "business_impact": "Incorrect payments, reconciliation failures, provider disputes, regulatory reporting errors",
+        "mitigation_strategies": [
+          "Immutable audit trails for payment data",
+          "Payment file validation before transmission",
+          "Automated reconciliation with claims",
+          "Digital signatures for payment files",
+          "Payment data replication with integrity checks"
+        ],
+        "estimated_incident_cost": "$500K - $3M+",
+        "regulatory_exposure": "CMS payment reconciliation requirements, state payment reporting"
+      }
+    ],
+    "member-services": [
+      {
+        "id": "member-data-breach-call-center",
+        "title": "Member Services Data Breach via Call Center",
+        "description": "Unauthorized access to member PHI through call center systems",
+        "category": "security",
+        "likelihood": "possible",
+        "impact": "high",
+        "business_impact": "PHI breach, regulatory fines, class action lawsuits, reputational damage",
+        "mitigation_strategies": [
+          "Multi-factor authentication for call center agents",
+          "Data access logging with review",
+          "Screen masking for sensitive data",
+          "Call recording with quality monitoring",
+          "Regular security awareness training"
+        ],
+        "estimated_incident_cost": "$500K - $5M+",
+        "regulatory_exposure": "HIPAA breach notification ($50K+ per violation), state data breach laws"
+      },
+      {
+        "id": "grievance-processing-failure",
+        "title": "Grievance and Appeals Processing Failure",
+        "description": "Systematic failure to process member appeals per regulatory timelines",
+        "category": "compliance",
+        "likelihood": "possible",
+        "impact": "high",
+        "business_impact": "Regulatory fines, CMS enforcement, legal liability, member abrasion",
+        "mitigation_strategies": [
+          "Automated appeals workflow with deadline tracking",
+          "Escalation procedures for urgent appeals",
+          "Appeals turnaround time monitoring",
+          "Regular compliance audits",
+          "Staff training on regulatory timelines"
+        ],
+        "estimated_annual_fine_exposure": "$250K - $1M+",
+        "regulatory_exposure": "CMS appeals requirements (21-180 days depending on level), state appeals laws"
+      },
+      {
+        "id": "member-portal-outage",
+        "title": "Member Portal and Mobile App Outage",
+        "description": "Extended downtime of member-facing digital channels",
+        "category": "operational",
+        "likelihood": "possible",
+        "impact": "medium",
+        "business_impact": "Call center spike, member dissatisfaction, increased service costs",
+        "mitigation_strategies": [
+          "Cloud-based infrastructure with auto-scaling",
+          "Blue-green deployment to minimize downtime",
+          "Graceful degradation modes",
+          "Cached read-only mode during outages",
+          "Call center surge capacity plan"
+        ],
+        "estimated_downtime_cost_per_day": "$100K+",
+        "regulatory_exposure": "State digital access requirements, member service standards"
+      },
+      {
+        "id": "social-engineering-member-data",
+        "title": "Social Engineering Attack Compromising Member Data",
+        "description": "Attackers manipulate member services staff to reveal PHI",
+        "category": "security",
+        "likelihood": "frequent",
+        "impact": "medium",
+        "business_impact": "PHI exposure, regulatory violations, reputational damage",
+        "mitigation_strategies": [
+          "Comprehensive social engineering training",
+          "Verification procedures before disclosing information",
+          "Call center scripts with security protocols",
+          "Reporting mechanisms for suspicious calls",
+          "Regular security awareness refreshers"
+        ],
+        "estimated_incident_cost": "$100K - $500K+",
+        "regulatory_exposure": "HIPAA training requirements, breach notification"
+      }
+    ],
+    "pharmacy-benefits": [
+      {
+        "id": "pharmacy-adjudication-outage",
+        "title": "Pharmacy Claims Adjudication Outage",
+        "description": "System downtime preventing prescription drug claim processing",
+        "category": "operational",
+        "likelihood": "possible",
+        "impact": "critical",
+        "business_impact": "Members cannot fill prescriptions, patient safety risk, regulatory violations",
+        "mitigation_strategies": [
+          "High-availability pharmacy system with redundancy",
+          "Real-time replication to DR site",
+          "Emergency pay-at-counter procedures",
+          "Manual claim reprocessing",
+          "Pharmacy network communication plan"
+        ],
+        "estimated_downtime_cost_per_day": "$500K+",
+        "regulatory_exposure": "CMS Part D formulary access requirements, patient safety standards"
+      },
+      {
+        "id": "pharmacy-data-breach",
+        "title": "Pharmacy Claims Data Breach",
+        "description": "Unauthorized access to prescription drug claims and member medication history",
+        "category": "security",
+        "likelihood": "possible",
+        "impact": "high",
+        "business_impact": "PHI breach, medication history exposure, regulatory fines, legal liability",
+        "mitigation_strategies": [
+          "Encryption of pharmacy data at rest and in transit",
+          "Role-based access with clinical justification",
+          "Comprehensive access logging",
+          "PBM security assessments and certifications",
+          "Breach response plan with specialized legal counsel"
+        ],
+        "estimated_incident_cost": "$500K - $3M+",
+        "regulatory_exposure": "HIPAA breach notification ($50K+ per violation), state pharmacy data laws"
+      },
+      {
+        "id": "formulary-error",
+        "title": "Formulary Configuration Error",
+        "description": "Incorrect drug formulary or tier assignment affects coverage",
+        "category": "operational",
+        "likelihood": "possible",
+        "impact": "high",
+        "business_impact": "Member access issues, regulatory violations, excessive costs or gaps in coverage",
+        "mitigation_strategies": [
+          "Staged formulary updates with testing",
+          "Automated formulary validation against drug database",
+          "Formulary versioning with rollback capability",
+          "Member impact analysis before deployment",
+          "Pharmacist review of formulary changes"
+        ],
+        "estimated_incident_cost": "$250K - $2M+",
+        "regulatory_exposure": "CMS Part D formulary requirements, state pharmacy benefit laws"
+      },
+      {
+        "id": "specialty-pharmacy-fraud",
+        "title": "Specialty Pharmacy Fraud",
+        "description": "Fraudulent claims for high-cost specialty medications",
+        "category": "security",
+        "likelihood": "possible",
+        "impact": "high",
+        "business_impact": "Direct financial loss, regulatory violations, patient safety risks",
+        "mitigation_strategies": [
+          "Specialty pharmacy accreditation requirements",
+          "Claims editing for specialty medications",
+          "Prior authorization for high-cost drugs",
+          "Pharmacy benefit fraud analytics",
+          "Investigation team with pharmacy expertise"
+        ],
+        "estimated_annual_loss": "$1M - $10M+",
+        "regulatory_exposure": "CMS Part D fraud and abuse requirements, state pharmacy fraud laws"
+      },
+      {
+        "id": "drug-safety-edit-failure",
+        "title": "Drug Safety Interaction Edit Failure",
+        "description": "System fails to detect dangerous drug-drug interactions",
+        "category": "operational",
+        "likelihood": "unlikely",
+        "impact": "critical",
+        "business_impact": "Patient harm or death, legal liability, regulatory sanctions, reputational damage",
+        "mitigation_strategies": [
+          "Comprehensive drug interaction database with regular updates",
+          "Redundant safety edit systems",
+          "Testing against known interaction scenarios",
+          "Pharmacist review for complex medication regimens",
+          "Adverse event monitoring and response"
+        ],
+        "estimated_incident_cost": "$1M - $10M+",
+        "regulatory_exposure": "CMS medication therapy management requirements, patient safety standards"
+      }
+    ],
+    "analytics-and-reporting": [
+      {
+        "id": "hedis-reporting-error",
+        "title": "HEDIS Quality Measure Reporting Error",
+        "description": "Inaccurate HEDIS measure calculation and reporting",
+        "category": "compliance",
+        "likelihood": "possible",
+        "impact": "high",
+        "business_impact": "Lower STARs ratings, reduced CMS reimbursement, accreditation issues",
+        "mitigation_strategies": [
+          "Automated HEDIS calculation with validation",
+          "Independent audit of HEDIS calculations",
+          "Data quality checks for measure denominators",
+          "NCQA-certified reporting tools",
+          "Regular HEDIS accuracy assessments"
+        ],
+        "estimated_annual_revenue_impact": "$1M - $10M+",
+        "regulatory_exposure": "CMS STARs ratings (affecting Medicare Advantage payments), NCQA accreditation"
+      },
+      {
+        "id": "mlr-calculation-error",
+        "title": "Medical Loss Ratio (MLR) Calculation Error",
+        "description": "Inaccurate MLR calculation leading to regulatory rebates or fines",
+        "category": "compliance",
+        "likelihood": "possible",
+        "impact": "high",
+        "business_impact": "CMS rebates (up to millions), regulatory fines, financial restatement",
+        "mitigation_strategies": [
+          "Automated MLR calculation with audit trails",
+          "Quarterly MLR forecasting and monitoring",
+          "Independent MLR audit before filing",
+          "Expense categorization controls",
+          "Regulatory reporting review"
+        ],
+        "estimated_annual_exposure": "$1M - $20M+",
+        "regulatory_exposure": "ACA MLR requirements (80% minimum for individual/small group, 85% for large group)"
+      },
+      {
+        "id": "risk-adjustment-coding-error",
+        "title": "Risk Adjustment Documentation and Coding Error",
+        "description": "Incomplete or inaccurate risk adjustment coding affecting Medicare payments",
+        "category": "compliance",
+        "likelihood": "likely",
+        "impact": "high",
+        "business_impact": "Reduced Medicare reimbursement, regulatory scrutiny, financial impact",
+        "mitigation_strategies": [
+          "Automated coding gap identification",
+          "Provider outreach for missing documentation",
+          "Coder training and certification",
+          "Risk adjustment data quality audits",
+          "HCC (Hierarchical Condition Category) validation"
+        ],
+        "estimated_annual_revenue_impact": "$2M - $20M+",
+        "regulatory_exposure": "CMS Medicare Advantage risk adjustment payment methodology, RAF audits"
+      },
+      {
+        "id": "analytics-data-warehouse-corruption",
+        "title": "Analytics Data Warehouse Corruption",
+        "description": "Data quality issues in analytics platform affecting all reporting",
+        "category": "operational",
+        "likelihood": "unlikely",
+        "impact": "high",
+        "business_impact": "Inaccurate reporting across all measures, flawed business intelligence, regulatory errors",
+        "mitigation_strategies": [
+          "Data quality monitoring with alerts",
+          "Automated data validation scripts",
+          "Warehouse replication for recovery",
+          "Source data immutability",
+          "Regular data accuracy audits"
+        ],
+        "estimated_incident_cost": "$500K - $3M+",
+        "regulatory_exposure": "Multiple regulatory reporting dependencies (HEDIS, MLR, STARs, etc.)"
+      }
+    ],
+    "compliance-and-audit": [
+      {
+        "id": "hipaa-breach-unencrypted-phI",
+        "title": "HIPAA Breach from Unencrypted PHI",
+        "description": "PHI breach due to lack of encryption at rest or in transit",
+        "category": "security",
+        "likelihood": "possible",
+        "impact": "critical",
+        "business_impact": "HIPAA fines ($50K+ per violation), breach notification costs, legal liability, reputational damage",
+        "mitigation_strategies": [
+          "Encryption of all PHI at rest and in transit (AES-256)",
+          "Regular encryption certification and testing",
+          "Comprehensive PHI inventory",
+          "Breach risk assessment with mitigation",
+          "Incident response plan with tabletop exercises"
+        ],
+        "estimated_incident_cost": "$1M - $10M+",
+        "regulatory_exposure": "HIPAA Security Rule ($50K-$1.6M per violation category), state breach notification laws"
+      },
+      {
+        "id": "cms-audit-failure",
+        "title": "CMS Medicare/Medicaid Audit Failure",
+        "description": "Failed CMS audit leading to sanctions or contract termination",
+        "category": "compliance",
+        "likelihood": "possible",
+        "impact": "critical",
+        "business_impact": "CMS contract termination, Corporate Integrity Agreement, repayment of claims, financial penalties",
+        "mitigation_strategies": [
+          "Continuous compliance monitoring program",
+          "Mock CMS audits with gap remediation",
+          "Dedicated CMS compliance team",
+          "Comprehensive documentation and evidence retention",
+          "Corrective action plan development"
+        ],
+        "estimated_incident_cost": "$10M - $100M+",
+        "regulatory_exposure": "CMS contract termination, CIA (5-10 years), False Claims Act penalties"
+      },
+      {
+        "id": "fraud-waste-abate-detection-failure",
+        "title": "Fraud, Waste, and Abuse Detection Failure",
+        "description": "Inadequate FWA detection leading to regulatory enforcement",
+        "category": "compliance",
+        "likelihood": "possible",
+        "impact": "high",
+        "business_impact": "CMS enforcement, OIG investigations, corporate integrity agreements, reputational damage",
+        "mitigation_strategies": [
+          "Advanced FWA analytics with machine learning",
+          "Dedicated SIU (Special Investigations Unit)",
+          "Provider and member FWA reporting hotlines",
+          "Regular FWA risk assessments",
+          "Comprehensive FWA training program"
+        ],
+        "estimated_annual_exposure": "$1M - $20M+",
+        "regulatory_exposure": "CMS FWA requirements, OIG workplans, False Claims Act"
+      },
+      {
+        "id": "accreditation-loss",
+        "title": "NCQA or Other Accreditation Loss",
+        "description": "Failure to maintain accreditation status",
+        "category": "compliance",
+        "likelihood": "possible",
+        "impact": "high",
+        "business_impact": "HHS market ineligibility, state contract termination, competitive disadvantage, revenue loss",
+        "mitigation_strategies": [
+          "Dedicated accreditation team",
+          "Continuous gap monitoring against standards",
+          "Mock accreditation surveys",
+          "Corrective action plan tracking",
+          "Executive sponsorship of accreditation programs"
+        ],
+        "estimated_annual_revenue_impact": "$5M - $50M+",
+        "regulatory_exposure": "NCQA accreditation for HHS, state accreditation requirements, CMS STARs ratings"
+      },
+      {
+        "id": "state-compliance-violation",
+        "title": "Multi-State Compliance Variation Violation",
+        "description": "Failure to comply with state-specific regulatory requirements",
+        "category": "compliance",
+        "likelihood": "likely",
+        "impact": "high",
+        "business_impact": "State market withdrawal, fines per violation, administrative burden, reputational damage",
+        "mitigation_strategies": [
+          "State-specific compliance matrix and tracking",
+          "Legal counsel in each operating state",
+          "State compliance monitoring program",
+          "Regular state compliance audits",
+          "State-specific training for affected staff"
+        ],
+        "estimated_annual_exposure": "$500K - $5M+",
+        "regulatory_exposure": "State DOI regulations, state prompt pay laws, state network adequacy standards"
+      }
+    ]
+  },
+  "summary_statistics": {
+    "total_processes_documented": 10,
+    "total_risks_documented": 58,
+    "risks_by_category": {
+      "operational": 19,
+      "security": 18,
+      "compliance": 18,
+      "strategic": 3
+    },
+    "risks_by_impact": {
+      "critical": 14,
+      "high": 40,
+      "medium": 4,
+      "low": 0
+    },
+    "crown_jewel_processes_risk_count": {
+      "claims-adjudication": 6,
+      "edi-gateway": 4,
+      "enrollment-and-billing": 5,
+      "provider-management": 5,
+      "prior-authorization": 4,
+      "payment-processing": 4,
+      "member-services": 4,
+      "pharmacy-benefits": 5,
+      "analytics-and-reporting": 4,
+      "compliance-and-audit": 5
+    }
+  },
+  "next_steps": {
+    "expert_review": {
+      "required_experts": [
+        "Healthcare payer operations leaders",
+        "HIPAA compliance officers",
+        "CMS regulatory specialists",
+        "Healthcare cyber security experts",
+        "Provider network management executives"
+      ],
+      "review_focus": [
+        "Validate risk likelihood and impact assessments",
+        "Confirm mitigation strategies are industry-standard",
+        "Verify downtime cost estimates are reasonable",
+        "Ensure regulatory exposure citations are accurate",
+        "Add any missing process-specific risks"
+      ]
+    },
+    "integration_with_cyber_rx": {
+      "risk_mitigation_product_mapping": [
+        "Identify CyberRx use cases that detect these risks",
+        "Map correlation rules to risk indicators",
+        "Create remediation playbooks for high-impact risks",
+        "Design monitoring dashboards for crown-jewel processes"
+      ]
+    }
+  }
+}
