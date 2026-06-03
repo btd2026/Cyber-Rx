@@ -1,0 +1,2115 @@
+{
+  "reference_model": {
+    "version": "1.0.0-draft",
+    "status": "expert-review-pending",
+    "last_updated": "2025-06-03",
+    "metadata": {
+      "purpose": "Unified reference model for healthcare-payer vertical - single source of truth for processes, applications, risks, and controls",
+      "scope": "US Healthcare Payer Operations - Commercial, Medicare, Medicaid, Marketplace",
+      "disclaimer": "This is a draft reference model pending expert review. Do not use for production compliance mapping without certified domain expert validation.",
+      "dependencies": {
+        "T-200": "Payer Process Taxonomy",
+        "T-201": "Application Archetypes",
+        "T-203": "HIPAA/HITRUST Control Mapping"
+      }
+    },
+    "provenance": {
+      "source": "Healthcare-Payer Vertical Build - T-204 Integration",
+      "confidence": 0.90,
+      "last_updated": "2025-06-03",
+      "review_status": "pending_payer_domain_expert_validation",
+      "methodology": "Integrated T-200 processes, T-201 applications, and T-203 controls into unified queryable model with provenance tracking"
+    },
+    "processes": [
+      {
+        "id": "claims-adjudication",
+        "name": "Claims Adjudication",
+        "description": "Systematic evaluation and processing of healthcare claims to determine payer liability and reimbursement amounts according to contract terms, clinical guidelines, and regulatory requirements.",
+        "edi_transactions": ["837", "835"],
+        "sub_processes": [
+          {
+            "id": "claims-intake",
+            "name": "Claims Intake and Validation",
+            "description": "Initial claim receipt, format validation, and data quality checks"
+          },
+          {
+            "id": "claims-auto-adjudication",
+            "name": "Automated Adjudication",
+            "description": "Rules-based processing without manual intervention for straightforward claims"
+          },
+          {
+            "id": "claims-manual-review",
+            "name": "Manual Claims Review",
+            "description": "Complex claims requiring clinical or administrative review"
+          },
+          {
+            "id": "claims-payment-determination",
+            "name": "Payment Determination",
+            "description": "Calculation of allowed amounts, patient responsibility, and provider reimbursement"
+          },
+          {
+            "id": "claims-denial-management",
+            "name": "Claim Denial Management",
+            "description": "Processing, appeals, and resolution of denied claims"
+          },
+          {
+            "id": "claims-coordination-of-benefits",
+            "name": "Coordination of Benefits (COB)",
+            "description": "Determining primary/secondary payer responsibility"
+          }
+        ],
+        "typical_applications": [
+          "Professional claims (CMS-1500)",
+          "Institutional claims (UB-04)",
+          "Dental claims",
+          "Vision claims",
+          "Behavioral health claims"
+        ],
+        "provenance": {
+          "source": "T-200 (Payer Process Taxonomy)",
+          "confidence": 0.95,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_payer_domain_expert_validation"
+        }
+      },
+      {
+        "id": "enrollment-and-billing",
+        "name": "Enrollment and Premium Billing",
+        "description": "Member onboarding, eligibility maintenance, and premium collection processes that ensure continuous coverage and revenue flow.",
+        "edi_transactions": ["820", "834"],
+        "sub_processes": [
+          {
+            "id": "member-enrollment",
+            "name": "Member Enrollment",
+            "description": "New member application processing and account setup"
+          },
+          {
+            "id": "eligibility-determination",
+            "name": "Eligibility Determination",
+            "description": "Verification of qualifying events and coverage eligibility"
+          },
+          {
+            "id": "id-card-generation",
+            "name": "Member ID Card Generation",
+            "description": "Production and distribution of member identification cards"
+          },
+          {
+            "id": "premium-billing",
+            "name": "Premium Billing",
+            "description": "Generation and delivery of premium invoices"
+          },
+          {
+            "id": "premium-collection",
+            "name": "Premium Collection",
+            "description": "Payment processing and reconciliation for member premiums"
+          },
+          {
+            "id": "cobra-administration",
+            "name": "COBRA Administration",
+            "description": "Continuation coverage administration and billing"
+          },
+          {
+            "id": "disenrollment-processing",
+            "name": "Disenrollment Processing",
+            "description": "Termination of coverage and required notifications"
+          }
+        ],
+        "typical_applications": [
+          "Group enrollment (employer-sponsored)",
+          "Individual market enrollment",
+          "Medicare Advantage enrollment",
+          "Medicaid managed care enrollment",
+          "COBRA continuation coverage"
+        ],
+        "provenance": {
+          "source": "T-200 (Payer Process Taxonomy)",
+          "confidence": 0.95,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_payer_domain_expert_validation"
+        }
+      },
+      {
+        "id": "provider-management",
+        "name": "Provider Management",
+        "description": "End-to-end provider network lifecycle management including credentialing, contracting, directory maintenance, and performance monitoring.",
+        "edi_transactions": ["270/271", "276/277", "278"],
+        "sub_processes": [
+          {
+            "id": "provider-credentialing",
+            "name": "Provider Credentialing",
+            "description": "Verification of provider qualifications, licenses, and certifications"
+          },
+          {
+            "id": "provider-contracting",
+            "name": "Provider Contracting",
+            "description": "Negotiation and execution of provider agreements"
+          },
+          {
+            "id": "provider-enrollment",
+            "name": "Provider Enrollment",
+            "description": "Onboarding providers into payment systems"
+          },
+          {
+            "id": "provider-directory-management",
+            "name": "Provider Directory Management",
+            "description": "Maintenance of accurate, accessible provider network information"
+          },
+          {
+            "id": "provider-network-adequacy",
+            "name": "Network Adequacy Monitoring",
+            "description": "Ensuring sufficient provider access per regulatory requirements"
+          },
+          {
+            "id": "provider-pay-fee-schedule",
+            "name": "Provider Fee Schedule Management",
+            "description": "Maintenance of reimbursement rates and pricing structures"
+          }
+        ],
+        "typical_applications": [
+          "Primary care provider networks",
+          "Specialist networks",
+          "Hospital networks",
+          "Ancillary service providers",
+          "Behavioral health providers",
+          "Long-term care facilities"
+        ],
+        "provenance": {
+          "source": "T-200 (Payer Process Taxonomy)",
+          "confidence": 0.95,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_payer_domain_expert_validation"
+        }
+      },
+      {
+        "id": "prior-authorization",
+        "name": "Prior Authorization",
+        "description": "Pre-service clinical review to determine medical necessity and appropriateness of requested healthcare services and technologies.",
+        "edi_transactions": ["278"],
+        "sub_processes": [
+          {
+            "id": "pa-request-intake",
+            "name": "PA Request Intake",
+            "description": "Receipt and initial validation of prior authorization requests"
+          },
+          {
+            "id": "pa-clinical-review",
+            "name": "Clinical Review",
+            "description": "Evaluation of medical necessity by clinical professionals"
+          },
+          {
+            "id": "pa-decision",
+            "name": "PA Decision Processing",
+            "description": "Approval, denial, or pend determination and notification"
+          },
+          {
+            "id": "pa-appeals",
+            "name": "PA Appeals Processing",
+            "description": "Review and resolution of contested PA decisions"
+          },
+          {
+            "id": "pa-concurrent-review",
+            "name": "Concurrent Review",
+            "description": "Ongoing review during inpatient stays"
+          },
+          {
+            "id": "pa-retrospective-review",
+            "name": "Retrospective Review",
+            "description": "Post-service review of services requiring but lacking PA"
+          }
+        ],
+        "typical_applications": [
+          "Inpatient hospital admissions",
+          "Specialist consultations",
+          "Advanced imaging (MRI, CT, PET)",
+          "Durable medical equipment (DME)",
+          "Cardiac and pulmonary rehabilitation",
+          "Molecular and genetic testing",
+          "Specialty pharmaceuticals"
+        ],
+        "provenance": {
+          "source": "T-200 (Payer Process Taxonomy)",
+          "confidence": 0.95,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_payer_domain_expert_validation"
+        }
+      },
+      {
+        "id": "care-management",
+        "name": "Care Management",
+        "description": "Proactive and reactive clinical programs to optimize member health outcomes, manage complex conditions, and prevent unnecessary utilization.",
+        "edi_transactions": [],
+        "sub_processes": [
+          {
+            "id": "case-management",
+            "name": "Case Management",
+            "description": "Coordination of care for members with complex, multi-system conditions"
+          },
+          {
+            "id": "disease-management",
+            "name": "Disease Management",
+            "description": "Targeted interventions for specific chronic conditions (diabetes, CHF, COPD, etc.)"
+          },
+          {
+            "id": "utilization-management",
+            "name": "Utilization Management",
+            "description": "Review of medical appropriateness and healthcare resource use"
+          },
+          {
+            "id": "transitional-care",
+            "name": "Transitional Care Management",
+            "description": "Support during care transitions (hospital to home, SNF, etc.)"
+          },
+          {
+            "id": "complex-case-management",
+            "name": "Complex Case Management",
+            "description": "High-touch management for high-cost, high-need members"
+          },
+          {
+            "id": "maternal-child-health",
+            "name": "Maternal and Child Health Programs",
+            "description": "Prenatal, postpartum, and pediatric care management"
+          },
+          {
+            "id": "wellness-programs",
+            "name": "Preventive and Wellness Programs",
+            "description": "Health promotion, preventive care, and lifestyle interventions"
+          }
+        ],
+        "typical_applications": [
+          "Chronic condition management",
+          "High-cost member management",
+          "Readmission prevention",
+          "Medication adherence programs",
+          "Health risk assessments",
+          "Lifestyle coaching (smoking cessation, weight management)"
+        ],
+        "provenance": {
+          "source": "T-200 (Payer Process Taxonomy)",
+          "confidence": 0.95,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_payer_domain_expert_validation"
+        }
+      },
+      {
+        "id": "member-services",
+        "name": "Member Services",
+        "description": "Direct member support operations including eligibility verification, benefits inquiries, issue resolution, and member communication.",
+        "edi_transactions": ["270/271"],
+        "sub_processes": [
+          {
+            "id": "eligibility-verification",
+            "name": "Eligibility Verification",
+            "description": "Real-time confirmation of member coverage status"
+          },
+          {
+            "id": "benefits-inquiry",
+            "name": "Benefits Inquiry",
+            "description": "Explanation of covered services, deductibles, and out-of-pocket costs"
+          },
+          {
+            "id": "claims-status-inquiry",
+            "name": "Claims Status Inquiry",
+            "description": "Member inquiries about claim processing status"
+          },
+          {
+            "id": "grievance-and-appeals",
+            "name": "Grievance and Appeals Processing",
+            "description": "Member complaints and formal appeals of coverage decisions"
+          },
+          {
+            "id": "member-communication",
+            "name": "Member Communication",
+            "description": "Proactive outreach, welcome packets, EOBs, and notices"
+          },
+          {
+            "id": "change-of-address",
+            "name": "Member Information Updates",
+            "description": "Processing member demographic changes"
+          },
+          {
+            "id": "member-portal-support",
+            "name": "Digital Channel Support",
+            "description": "Support for member portal, mobile app, and online tools"
+          }
+        ],
+        "typical_applications": [
+          "Call center operations",
+          "Web and mobile self-service",
+          "Mail correspondence processing",
+          "Email communication management",
+          "Live agent support"
+        ],
+        "provenance": {
+          "source": "T-200 (Payer Process Taxonomy)",
+          "confidence": 0.95,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_payer_domain_expert_validation"
+        }
+      },
+      {
+        "id": "payment-processing",
+        "name": "Provider Payment Processing",
+        "description": "Accurate and timely reimbursement to healthcare providers for covered services, including remittance advice and payment reconciliation.",
+        "edi_transactions": ["835"],
+        "sub_processes": [
+          {
+            "id": "payment-generation",
+            "name": "Payment Generation",
+            "description": "Creation of payment files for adjudicated claims"
+          },
+          {
+            "id": "reconciliation",
+            "name": "Payment Reconciliation",
+            "description": "Matching payments to claims and resolving discrepancies"
+          },
+          {
+            "id": "remittance-advice",
+            "name": "Remittance Advice (RA) Processing",
+            "description": "Generation and delivery of payment explanations (835)"
+          },
+          {
+            "id": "payment-accuracy",
+            "name": "Payment Accuracy Validation",
+            "description": "Quality assurance to ensure correct payment amounts"
+          },
+          {
+            "id": "overpayment-recovery",
+            "name": "Overpayment Recovery",
+            "description": "Identification and recoupment of overpayments"
+          },
+          {
+            "id": "provider-inquiries",
+            "name": "Provider Payment Inquiries",
+            "description": "Resolution of provider questions about payments"
+          }
+        ],
+        "typical_applications": [
+          "Electronic funds transfer (EFT)",
+          "Check payments",
+          "Virtual card payments",
+          "Provider payment inquiries",
+          "Zero-pay claims (denials only)"
+        ],
+        "provenance": {
+          "source": "T-200 (Payer Process Taxonomy)",
+          "confidence": 0.95,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_payer_domain_expert_validation"
+        }
+      },
+      {
+        "id": "pharmacy-benefits",
+        "name": "Pharmacy Benefits Management",
+        "description": "Management of prescription drug coverage, formulary administration, and medication therapy programs in coordination with Pharmacy Benefit Managers (PBMs) or internal pharmacy operations.",
+        "edi_transactions": ["837", "835", "NCPDP"],
+        "sub_processes": [
+          {
+            "id": "pharmacy-claims-adjudication",
+            "name": "Pharmacy Claims Adjudication",
+            "description": "Processing of prescription drug claims at point of sale"
+          },
+          {
+            "id": "formulary-management",
+            "name": "Formulary Management",
+            "description": "Maintenance of drug formularies, tiering, and coverage policies"
+          },
+          {
+            "id": "prior-auth-pharmacy",
+            "name": "Pharmacy Prior Authorization",
+            "description": "Review processes for specialty and high-cost medications"
+          },
+          {
+            "id": "medication-therapy-management",
+            "name": "Medication Therapy Management (MTM)",
+            "description": "Clinical programs to optimize medication use"
+          },
+          {
+            "id": "specialty-pharmacy",
+            "name": "Specialty Pharmacy Management",
+            "description": "High-cost, high-touch specialty medication programs"
+          },
+          {
+            "id": "drug-safety",
+            "name": "Drug Safety and Utilization Review",
+            "description": "Drug interaction checking, duplicate therapy, safety edits"
+          },
+          {
+            "id": "rebate-management",
+            "name": "Pharmacy Rebate Management",
+            "description": "Administration of manufacturer rebate programs"
+          }
+        ],
+        "typical_applications": [
+          "Retail pharmacy claims",
+          "Mail order pharmacy",
+          "Specialty pharmacy",
+          "Prior authorization for drugs",
+          "Step therapy programs",
+          "Quantity limit management"
+        ],
+        "provenance": {
+          "source": "T-200 (Payer Process Taxonomy)",
+          "confidence": 0.95,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_payer_domain_expert_validation"
+        }
+      },
+      {
+        "id": "analytics-and-reporting",
+        "name": "Analytics and Reporting",
+        "description": "Data analysis, regulatory reporting, quality measurement, and business intelligence to support operational, clinical, and financial decision-making.",
+        "edi_transactions": [],
+        "sub_processes": [
+          {
+            "id": "hedis-reporting",
+            "name": "HEDIS Quality Measurement",
+            "description": "Collection and reporting of Healthcare Effectiveness Data and Information Set measures"
+          },
+          {
+            "id": "stars-rating",
+            "name": "Medicare STARs Rating Management",
+            "description": "Quality and performance metrics for Medicare Advantage plans"
+          },
+          {
+            "id": "risk-adjustment",
+            "name": "Risk Adjustment Documentation",
+            "description": "Collection and coding of member health conditions for appropriate payment"
+          },
+          {
+            "id": "financial-reporting",
+            "name": "Financial Reporting",
+            "description": "Medical loss ratio, financial statements, cost reports"
+          },
+          {
+            "id": "utilization-analytics",
+            "name": "Utilization Analytics",
+            "description": "Analysis of healthcare resource use and patterns"
+          },
+          {
+            "id": "population-health-analytics",
+            "name": "Population Health Analytics",
+            "description": "Risk stratification and population health insights"
+          },
+          {
+            "id": "regulatory-reporting",
+            "name": "Regulatory Reporting",
+            "description": "State and federal required reports (MLR, access, network adequacy)"
+          }
+        ],
+        "typical_applications": [
+          "Quality improvement programs",
+          "Value-based care initiatives",
+          "Network performance analysis",
+          "Cost containment strategies",
+          "Regulatory compliance reporting"
+        ],
+        "provenance": {
+          "source": "T-200 (Payer Process Taxonomy)",
+          "confidence": 0.95,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_payer_domain_expert_validation"
+        }
+      },
+      {
+        "id": "compliance-and-audit",
+        "name": "Compliance and Audit Management",
+        "description": "Regulatory compliance, internal audit, risk assessment, and governance programs to ensure adherence to healthcare laws, regulations, and accreditation standards.",
+        "edi_transactions": [],
+        "sub_processes": [
+          {
+            "id": "hipaa-compliance",
+            "name": "HIPAA Privacy and Security",
+            "description": "Protected health information (PHI) safeguarding and privacy practices"
+          },
+          {
+            "id": "fraud-waste-abuse",
+            "name": "Fraud, Waste, and Abuse (FWA) Prevention",
+            "description": "Detection, investigation, and prevention of healthcare fraud"
+          },
+          {
+            "id": "internal-audit",
+            "name": "Internal Audit",
+            "description": "Systematic review of internal controls and processes"
+          },
+          {
+            "id": "external-audit-response",
+            "name": "External Audit Response",
+            "description": "Coordination of regulatory and accreditation audits"
+          },
+          {
+            "id": "state-compliance",
+            "name": "State-Specific Compliance",
+            "description": "Multi-state regulatory requirements and variations"
+          },
+          {
+            "id": "accreditation",
+            "name": "Accreditation Management",
+            "description": "Maintenance of NCQA, URAC, and other accreditations"
+          },
+          {
+            "id": "cms-compliance",
+            "name": "CMS Medicare/Medicaid Compliance",
+            "description": "Medicare Advantage, Part D, and Managed Medicaid requirements"
+          },
+          {
+            "id": "ethics-compliance",
+            "name": "Ethics and Compliance Program",
+            "description": "Corporate ethics, code of conduct, and compliance training"
+          }
+        ],
+        "typical_applications": [
+          "HIPAA privacy investigations",
+          "DOJ/OIG investigations",
+          "CMS audits and validations",
+          "NCQA accreditation surveys",
+          "State insurance department examinations",
+          "Internal risk assessments"
+        ],
+        "provenance": {
+          "source": "T-200 (Payer Process Taxonomy)",
+          "confidence": 0.95,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_payer_domain_expert_validation"
+        }
+      }
+    ],
+    "applications": [
+      {
+        "id": "claims-adjudication-system",
+        "name": "Claims Adjudication System",
+        "description": "Core system that processes medical claims through business rules to determine payment eligibility and amounts. The heartbeat of payer operations.",
+        "supported_processes": [
+          "claims-adjudication",
+          "payment-processing",
+          "claims-auto-adjudication",
+          "claims-manual-review"
+        ],
+        "typical_vendors": [
+          "Change Healthcare (formerly McKesson)",
+          "Optum (UnitedHealth Group)",
+          "Cognizant (TriZetto Facets, QNXT)",
+          "Guidewire (for property/casualty extending to health)",
+          "HealthEdge (HealthRules)",
+          "MCS (icare, e-Maxx)",
+          "Edifecs (claims processing suite)"
+        ],
+        "criticality": "crown-jewel",
+        "typical_risks": [
+          "Outage halts all claims processing - revenue impact",
+          "Data breach exposes massive PHI datasets",
+          "Adjudication logic errors cause payment leaks or denials",
+          "System latency creates provider payment backlogs"
+        ],
+        "x12_transactions": ["837", "835"],
+        "typical_users": ["Claims Analysts", "Payment Operations", "Claims Managers"],
+        "provenance": {
+          "source": "T-201 (Application Archetypes)",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_payer_domain_expert_validation"
+        }
+      },
+      {
+        "id": "edi-gateway-x12-translator",
+        "name": "EDI Gateway / X12 Translator",
+        "description": "Translates X12 EDI transactions between payer systems and providers/partners. The nervous system of payer data exchange.",
+        "supported_processes": [
+          "claims-intake",
+          "enrollment-billing",
+          "eligibility-verification",
+          "prior-auth-requests",
+          "claim-status-inquiry",
+          "payment-remittance"
+        ],
+        "typical_vendors": [
+          "Change Healthcare",
+          "Optum",
+          "Edifecs",
+          "MuleSoft (for HIPAA-compliant API gateway)",
+          "Cleo (EDI integration)",
+          "IBM Sterling (B2B integration)",
+          "Axway (B2B/EDI)",
+          "Innovate (Healthcare-specific EDI)"
+        ],
+        "criticality": "crown-jewel",
+        "typical_risks": [
+          "Gateway outage halts ALL external data exchange",
+          "Change Healthcare-style single-point-of-failure cascade",
+          "Translation errors cause claim rejections",
+          "Compliance failures for HIPAA transaction standards",
+          "Rogue partner DDoS impacts entire payer"
+        ],
+        "x12_transactions": ["837", "835", "270", "271", "276", "277", "278", "834", "820"],
+        "typical_users": ["EDI Operations", "Integration Engineers", "Provider Network Teams"],
+        "provenance": {
+          "source": "T-201 (Application Archetypes)",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_payer_domain_expert_validation"
+        }
+      },
+      {
+        "id": "enrollment-billing-platform",
+        "name": "Enrollment & Premium Billing Platform",
+        "description": "Manages member enrollment, plan selection, and premium billing/collections. Member lifecycle foundation.",
+        "supported_processes": [
+          "member-enrollment",
+          "plan-selection",
+          "premium-billing",
+          "payment-collection",
+          "member-eligibility"
+        ],
+        "typical_vendors": [
+          "Change Healthcare",
+          "Optum",
+          "TriZetto (enrollment modules)",
+          "SSM Health (enrollment platforms)",
+          "GetInsured (ACA marketplace integration)",
+          "MaxIT (enrollment systems)",
+          "Accenture (custom enrollment implementations)"
+        ],
+        "criticality": "high",
+        "typical_risks": [
+          "Enrollment errors cause member coverage gaps",
+          "Billing failures create revenue leakage",
+          "Data breach exposes member financial + health data",
+          "System lag during open enrollment periods"
+        ],
+        "x12_transactions": ["834"],
+        "typical_users": ["Member Services", "Billing Operations", "Enrollment Teams"],
+        "provenance": {
+          "source": "T-201 (Application Archetypes)",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_payer_domain_expert_validation"
+        }
+      },
+      {
+        "id": "provider-data-management",
+        "name": "Provider Data Management System",
+        "description": "Maintains provider network data, credentials, contract terms, and directory information. Provider governance backbone.",
+        "supported_processes": [
+          "provider-onboarding",
+          "provider-credentialing",
+          "provider-contract-management",
+          "provider-network-management",
+          "provider-directory-maintenance"
+        ],
+        "typical_vendors": [
+          "Riverone (provider data platforms)",
+          "Symplr (provider credentialing)",
+          "CAQH (provider data exchange)",
+          "Availity (provider networks)",
+          "Optum (provider data services)",
+          "McKesson (provider directory solutions)",
+          "Change Healthcare (provider data)"
+        ],
+        "criticality": "high",
+        "typical_risks": [
+          "Inaccurate provider data causes claim routing errors",
+          "Credentialing failures create compliance violations",
+          "Directory inaccuracies cause member access issues",
+          "Network adequacy reporting failures"
+        ],
+        "x12_transactions": [],
+        "typical_users": ["Provider Relations", "Network Management", "Credentialing Teams"],
+        "provenance": {
+          "source": "T-201 (Application Archetypes)",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_payer_domain_expert_validation"
+        }
+      },
+      {
+        "id": "prior-authorization-system",
+        "name": "Prior Authorization System",
+        "description": "Manages medical necessity review, approval workflows, and auth tracking for high-cost services and procedures.",
+        "supported_processes": [
+          "prior-auth-requests",
+          "medical-necessity-review",
+          "auth-decision",
+          "auth-tracking",
+          "utilization-management"
+        ],
+        "typical_vendors": [
+          "Change Healthcare",
+          "Optum",
+          "MCG (guidelines + auth platforms)",
+          "InterQual (guidelines integrated into systems)",
+          "Cotiviti (utilization management)",
+          "DxC (prior auth platforms)",
+          "NaviHealth (utilization review)"
+        ],
+        "criticality": "high",
+        "typical_risks": [
+          "Auth delays cause patient care postponements",
+          "Denial errors create medical/legal exposure",
+          "System backlogs create provider friction",
+          "Inconsistent auth decisions create fairness concerns"
+        ],
+        "x12_transactions": ["278"],
+        "typical_users": ["Utilization Management Nurses", "Medical Directors", "Provider Services"],
+        "provenance": {
+          "source": "T-201 (Application Archetypes)",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_payer_domain_expert_validation"
+        }
+      },
+      {
+        "id": "care-management-platform",
+        "name": "Care Management Platform",
+        "description": "Supports case management, disease management, and care coordination for high-risk members. Population health foundation.",
+        "supported_processes": [
+          "case-management",
+          "disease-management",
+          "care-coordination",
+          "member-outreach",
+          "care-plan-management"
+        ],
+        "typical_vendors": [
+          "CareCentrix (care management platforms)",
+          "SignallHealth (analytics-driven care)",
+          "Wellframe (care management mobile)",
+          "CipherHealth (patient engagement)",
+          "Optum (care management solutions)",
+          "Antidote (clinical engagement)",
+          "Pulse (CCM platforms)"
+        ],
+        "criticality": "medium",
+        "typical_risks": [
+          "Care coordination failures impact member outcomes",
+          "Data breach exposes sensitive care conditions",
+          "System inefficiencies reduce nurse productivity",
+          "Care plan errors create medical safety issues"
+        ],
+        "x12_transactions": [],
+        "typical_users": ["Case Managers", "Care Coordinators", "Nurses", "Social Workers"],
+        "provenance": {
+          "source": "T-201 (Application Archetypes)",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_payer_domain_expert_validation"
+        }
+      },
+      {
+        "id": "member-services-portal",
+        "name": "Member Services Portal",
+        "description": "Web and mobile self-service for members to check eligibility, benefits, claims status, ID cards, and find providers.",
+        "supported_processes": [
+          "member-self-service",
+          "eligibility-inquiry",
+          "benefits-inquiry",
+          "claims-status-check",
+          "id-card-requests",
+          "provider-directory-search"
+        ],
+        "typical_vendors": [
+          "Change Healthcare",
+          "Optum",
+          "Salesforce Health Cloud (member portals)",
+          "Adobe Experience Manager (member portals)",
+          "Sitecore (member experience platforms)",
+          "IBM (member engagement solutions)",
+          "Accenture (member portal implementations)"
+        ],
+        "criticality": "medium",
+        "typical_risks": [
+          "Outage drives member call center spikes",
+          "Data breach exposes member PHI to public web",
+          "Inaccurate information causes member frustration",
+          "Accessibility failures create compliance issues"
+        ],
+        "x12_transactions": [],
+        "typical_users": ["Members (public-facing)", "Member Services Reps (back-office view)"],
+        "provenance": {
+          "source": "T-201 (Application Archetypes)",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_payer_domain_expert_validation"
+        }
+      },
+      {
+        "id": "payment-remittance-system",
+        "name": "Payment & Remittance System",
+        "description": "Generates provider payments, electronic funds transfer (EFT), and remittance advice (ERA/EOB). Financial disbursement engine.",
+        "supported_processes": [
+          "provider-payments",
+          "remittance-generation",
+          "payment-reconciliation",
+          "payment-dispute-resolution"
+        ],
+        "typical_vendors": [
+          "Change Healthcare",
+          "Optum",
+          "WEX (healthcare payment platforms)",
+          "InstaMed (J.P. Morgan - provider payments)",
+          "PayPal (healthcare payments)",
+          "Fiserv (healthcare disbursements)",
+          "Stripe (healthcare payment processing)",
+          "Flywire (provider payment platforms)"
+        ],
+        "criticality": "high",
+        "typical_risks": [
+          "Payment failures create provider network dissatisfaction",
+          "Overpayment/underpayment creates financial leakage",
+          "System outage causes payment backlogs",
+          "Fraud vulnerabilities in payment processing"
+        ],
+        "x12_transactions": ["835", "820"],
+        "typical_users": ["Provider Payment Operations", "Finance", "Provider Relations"],
+        "provenance": {
+          "source": "T-201 (Application Archetypes)",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_payer_domain_expert_validation"
+        }
+      },
+      {
+        "id": "analytics-data-warehouse",
+        "name": "Analytics & Data Warehouse",
+        "description": "Enterprise data warehouse for HEDIS, quality metrics, financial reporting, population health analytics, and executive dashboards.",
+        "supported_processes": [
+          "hedis-reporting",
+          "quality-metrics",
+          "financial-reporting",
+          "population-health-analytics",
+          "executive-dashboards",
+          "regulatory-reporting"
+        ],
+        "typical_vendors": [
+          "Snowflake (healthcare data warehouse)",
+          "Databricks (healthcare analytics)",
+          "Microsoft Azure (Synapse Analytics for healthcare)",
+          "Google Cloud (Healthcare Analytics Engine)",
+          "Amazon Web Services (Healthcare Lake)",
+          "Oracle (healthcare data platforms)",
+          "IBM (Watson Health Analytics)",
+          "Tableau (healthcare dashboards)",
+          "Qlik (healthcare BI)",
+          "Looker (healthcare analytics)"
+        ],
+        "criticality": "high",
+        "typical_risks": [
+          "Inaccurate reporting creates regulatory penalties",
+          "Data quality issues create wrong strategic decisions",
+          "Performance issues cause reporting delays",
+          "Unauthorized access exposes comprehensive member data"
+        ],
+        "x12_transactions": [],
+        "typical_users": ["Data Analysts", "Actuaries", "Quality Teams", "Executives"],
+        "provenance": {
+          "source": "T-201 (Application Archetypes)",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_payer_domain_expert_validation"
+        }
+      },
+      {
+        "id": "pbm-system",
+        "name": "Pharmacy Benefit Manager (PBM) System",
+        "description": "Manages pharmacy claims, formulary, e-prescribing, prior auth for medications, and drug utilization review.",
+        "supported_processes": [
+          "pharmacy-claims-adjudication",
+          "e-prescribing",
+          "formulary-management",
+          "drug-utilization-review",
+          "medication-prior-auth",
+          "pharmacy-network-management"
+        ],
+        "typical_vendors": [
+          "Express Scripts (Evernorth)",
+          "CVS Caremark",
+          "Optum Rx",
+          "Prime Therapeutics",
+          "Humana Pharmacy Solutions",
+          "MedImpact",
+          "Catamaran (now part of UnitedHealth)",
+          "Abarca (PBM platform)",
+          "Rx Savings Solutions (formulary optimization)"
+        ],
+        "criticality": "high",
+        "typical_risks": [
+          "Pharmacy claims outage blocks member medication access",
+          "Formulary errors create coverage gaps",
+          "Drug interaction failures create patient safety issues",
+          "Fraud in pharmacy claims processing"
+        ],
+        "x12_transactions": ["837", "835"],
+        "typical_users": ["Pharmacy Teams", "Pharmacists", "Clinical Pharmacists", "Formulary Managers"],
+        "provenance": {
+          "source": "T-201 (Application Archetypes)",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_payer_domain_expert_validation"
+        }
+      },
+      {
+        "id": "fraud-detection-system",
+        "name": "Fraud, Waste & Abuse (FWA) Detection System",
+        "description": "AI/ML-based platform to detect suspicious claims patterns, provider fraud, member misuse, and billing anomalies.",
+        "supported_processes": [
+          "fraud-detection",
+          "waste-identification",
+          "abuse-monitoring",
+          "special-investigation-unit-siu-support",
+          "payment-suspension"
+        ],
+        "typical_vendors": [
+          "Change Healthcare (FWA analytics)",
+          "Optum (analytics and fraud detection)",
+          "Cotiviti (payment accuracy + fraud)",
+          "IBM (Fraud Analytics for healthcare)",
+          "SAS (Fraud Framework for healthcare)",
+          "FICO (healthcare fraud detection)",
+          "Palantir (fraud analytics platforms)",
+          "Appriss (opioid detection/analytics)"
+        ],
+        "criticality": "medium",
+        "typical_risks": [
+          "False positives create provider friction",
+          "False negatives allow fraudulent payments",
+          "System latency delays fraud identification",
+          "Bias in fraud models creates fairness issues"
+        ],
+        "x12_transactions": [],
+        "typical_users": ["Special Investigation Units (SIU)", "Fraud Analysts", "Compliance Teams"],
+        "provenance": {
+          "source": "T-201 (Application Archetypes)",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_payer_domain_expert_validation"
+        }
+      },
+      {
+        "id": "customer-relationship-management",
+        "name": "Customer Relationship Management (CRM) System",
+        "description": "Manages member interactions, call center operations, case tickets, and member communications history.",
+        "supported_processes": [
+          "call-center-operations",
+          "member-interaction-tracking",
+          "case-ticket-management",
+          "member-communications",
+          "grievance-resolution"
+        ],
+        "typical_vendors": [
+          "Salesforce Health Cloud",
+          "Microsoft Dynamics 365 (healthcare CRM)",
+          "ServiceNow (customer service management)",
+          "Oracle CX (healthcare CRM)",
+          "SAP (healthcare customer experience)",
+          "Genesys (contact center platforms)",
+          "Nice (contact center analytics)"
+        ],
+        "criticality": "medium",
+        "typical_risks": [
+          "System failures paralyze call center operations",
+          "Data breach exposes member interaction history",
+          "Inefficient workflows increase handle times",
+          "Poor member experience increases dissatisfaction"
+        ],
+        "x12_transactions": [],
+        "typical_users": ["Member Services Reps", "Call Center Agents", "Member Advocates"],
+        "provenance": {
+          "source": "T-201 (Application Archetypes)",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_payer_domain_expert_validation"
+        }
+      }
+    ],
+    "risks": [
+      {
+        "id": "claims-outage",
+        "title": "Claims Adjudication System Outage",
+        "description": "Complete failure of claims adjudication system halting all claim processing",
+        "category": "operational",
+        "severity": "critical",
+        "affected_processes": ["claims-adjudication"],
+        "affected_applications": ["claims-adjudication-system"],
+        "typical_impact": {
+          "financial": "Revenue stops immediately - $M/day depending on payer size",
+          "operational": "Provider payments halt, member access to care disrupted",
+          "regulatory": "Potential regulatory penalties for timely payment violations"
+        },
+        "controls": ["hipaa-164.312(a)(1)-emergency-access", "hitrust-10.a-bc-dr"],
+        "provenance": {
+          "source": "T-203 (HIPAA/HITRUST Control Mapping)",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_compliance_expert_validation"
+        }
+      },
+      {
+        "id": "claims-data-corruption",
+        "title": "Claims Database Corruption",
+        "description": "Corruption of claims database leading to data integrity issues",
+        "category": "security",
+        "severity": "critical",
+        "affected_processes": ["claims-adjudication", "payment-processing"],
+        "affected_applications": ["claims-adjudication-system"],
+        "typical_impact": {
+          "financial": "Overpayments/underpayments - financial leakage",
+          "operational": "Claims reprocessing required",
+          "regulatory": "Audit findings, data integrity violations"
+        },
+        "controls": ["hipaa-164.312(c)(1)-integrity", "hitrust-10.d-encryption", "hitrust-11.a-backup"],
+        "provenance": {
+          "source": "T-203 (HIPAA/HITRUST Control Mapping)",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_compliance_expert_validation"
+        }
+      },
+      {
+        "id": "claims-ransomware",
+        "title": "Claims Adjudication Ransomware Attack",
+        "description": "Ransomware encrypting claims systems and backup data",
+        "category": "security",
+        "severity": "critical",
+        "affected_processes": ["claims-adjudication"],
+        "affected_applications": ["claims-adjudication-system"],
+        "typical_impact": {
+          "financial": "Ransom payment + recovery costs + business interruption",
+          "operational": "Complete claims processing outage",
+          "regulatory": "HIPAA breach notification, OCR investigations"
+        },
+        "controls": ["hipaa-164.312(a)(1)-access", "hipaa-164.312(e)(1)-encryption", "hitrust-10.e-incident-response", "hitrust-10.d-immutable-backups"],
+        "provenance": {
+          "source": "T-203 (HIPAA/HITRUST Control Mapping)",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_compliance_expert_validation"
+        }
+      },
+      {
+        "id": "edi-outage",
+        "title": "EDI Gateway Complete Outage",
+        "description": "Complete failure of EDI gateway halting all external data exchange",
+        "category": "operational",
+        "severity": "critical",
+        "affected_processes": ["claims-intake", "eligibility-verification", "payment-processing"],
+        "affected_applications": ["edi-gateway-x12-translator"],
+        "typical_impact": {
+          "financial": "Claims intake halts, payments cannot be sent",
+          "operational": "All EDI transactions stop",
+          "regulatory": "HIPAA transaction standard violations"
+        },
+        "controls": ["hipaa-164.312(a)(1)-emergency-access", "hitrust-10.a-bc-dr", "hitrust-11.b-vendor-continuity"],
+        "provenance": {
+          "source": "T-203 (HIPAA/HITRUST Control Mapping)",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_compliance_expert_validation"
+        }
+      },
+      {
+        "id": "premium-leakage",
+        "title": "Premium Revenue Leakage",
+        "description": "Systematic failure to collect member premiums resulting in revenue loss",
+        "category": "financial",
+        "severity": "high",
+        "affected_processes": ["premium-collection"],
+        "affected_applications": ["enrollment-billing-platform"],
+        "typical_impact": {
+          "financial": "Revenue leakage - significant financial impact",
+          "operational": "Collection efforts required",
+          "regulatory": "None typically"
+        },
+        "controls": ["hipaa-164.312(b)-audit", "hitrust-06.a-financial-access"],
+        "provenance": {
+          "source": "T-203 (HIPAA/HITRUST Control Mapping)",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_compliance_expert_validation"
+        }
+      },
+      {
+        "id": "provider-directory-inaccuracy",
+        "title": "Provider Directory Inaccuracy Enforcement",
+        "description": "Inaccurate provider directory data causing member access issues and regulatory violations",
+        "category": "compliance",
+        "severity": "high",
+        "affected_processes": ["provider-directory-management"],
+        "affected_applications": ["provider-data-management"],
+        "typical_impact": {
+          "financial": "Regulatory fines for directory inaccuracies",
+          "operational": "Member access issues, provider abrasion",
+          "regulatory": "CMS enforcement, state DOI penalties"
+        },
+        "controls": ["hipaa-164.312(c)(1)-integrity", "hitrust-09.a-phi-access"],
+        "provenance": {
+          "source": "T-203 (HIPAA/HITRUST Control Mapping)",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_compliance_expert_validation"
+        }
+      },
+      {
+        "id": "hipaa-breach-unencrypted-phI",
+        "title": "HIPAA Breach from Unencrypted PHI",
+        "description": "Data breach of unencrypted PHI triggering HIPAA breach notification",
+        "category": "security",
+        "severity": "critical",
+        "affected_processes": ["all"],
+        "affected_applications": ["all"],
+        "typical_impact": {
+          "financial": "OCR penalties, breach response costs, civil litigation",
+          "operational": "Breach response, system lockdowns",
+          "regulatory": "HIPAA breach notification, OCR investigation, potential CIA"
+        },
+        "controls": ["hipaa-164.312(e)(1)-encryption", "hipaa-164.312(a)(1)-encryption", "hitrust-10.d-phi-protection", "hitrust-10.e-breach-management"],
+        "provenance": {
+          "source": "T-203 (HIPAA/HITRUST Control Mapping)",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_compliance_expert_validation"
+        }
+      }
+    ],
+    "controls": [
+      {
+        "id": "hipaa-164.312(a)(1)-access",
+        "framework": "HIPAA Security Rule",
+        "title": "Access Control - Unique User Identification",
+        "requirement": "Implement unique user identification and authentication for all systems containing PHI",
+        "control_type": "preventive",
+        "applicable_risks": [
+          "claims-ransomware",
+          "claims-fraud-engineering-access",
+          "claims-phishing-credential-theft",
+          "billing-data-breach",
+          "member-data-breach-call-center",
+          "social-engineering-member-data"
+        ],
+        "implementation_guidance": "Implement role-based access control with least privilege. Use unique user credentials for all system access. Multi-factor authentication required. Regular access reviews.",
+        "testing_procedures": "Annual access review, quarterly privileged access audit, regular MFA compliance testing",
+        "provenance": {
+          "source": "T-203 (HIPAA/HITRUST Control Mapping)",
+          "confidence": 0.95,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_compliance_expert_validation",
+          "authoritative_source": "45 CFR §164.312(a)(1)"
+        }
+      },
+      {
+        "id": "hipaa-164.312(a)(1)-emergency-access",
+        "framework": "HIPAA Security Rule",
+        "title": "Access Control - Emergency Access Procedure",
+        "requirement": "Document and implement emergency access procedures for system outages",
+        "control_type": "corrective",
+        "applicable_risks": [
+          "claims-outage",
+          "edi-outage",
+          "enrollment-system-outage",
+          "payment-outage",
+          "pharmacy-adjudication-outage"
+        ],
+        "implementation_guidance": "Document emergency procedures for system outages. Ensure emergency access is logged and time-limited. Maintain offline capability for critical operations. Regular testing of emergency procedures.",
+        "testing_procedures": "Annual emergency procedure testing, tabletop exercises quarterly",
+        "provenance": {
+          "source": "T-203 (HIPAA/HITRUST Control Mapping)",
+          "confidence": 0.95,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_compliance_expert_validation",
+          "authoritative_source": "45 CFR §164.312(a)(1)"
+        }
+      },
+      {
+        "id": "hipaa-164.312(b)-audit",
+        "framework": "HIPAA Security Rule",
+        "title": "Audit Controls",
+        "requirement": "Implement hardware, software, and/or procedural mechanisms to record and examine activity in information systems that contain or use PHI",
+        "control_type": "detective",
+        "applicable_risks": [
+          "claims-fraud-engineering-access",
+          "claims-phishing-credential-theft",
+          "payment-fraud",
+          "premium-leakage",
+          "hedis-reporting-error",
+          "mlr-calculation-error"
+        ],
+        "implementation_guidance": "Comprehensive audit logging of all PHI transactions. Implement behavioral analytics for anomaly detection. Regular audit log review with immutable logs.",
+        "testing_procedures": "Quarterly audit log review, annual audit control effectiveness assessment",
+        "provenance": {
+          "source": "T-203 (HIPAA/HITRUST Control Mapping)",
+          "confidence": 0.95,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_compliance_expert_validation",
+          "authoritative_source": "45 CFR §164.312(b)"
+        }
+      },
+      {
+        "id": "hipaa-164.312(c)(1)-integrity",
+        "framework": "HIPAA Security Rule",
+        "title": "Integrity - Mechanisms to Protect PHI",
+        "requirement": "Implement policies and procedures to protect PHI from improper alteration or destruction",
+        "control_type": "preventive",
+        "applicable_risks": [
+          "claims-data-corruption",
+          "claims-config-error",
+          "payment-data-corruption",
+          "analytics-data-warehouse-corruption",
+          "formulary-error"
+        ],
+        "implementation_guidance": "Implement immutable audit trails for PHI records. Use database integrity checks and validation. Maintain transaction logs with rollback capability. Digital signatures for critical records.",
+        "testing_procedures": "Annual integrity control testing, quarterly database integrity verification",
+        "provenance": {
+          "source": "T-203 (HIPAA/HITRUST Control Mapping)",
+          "confidence": 0.95,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_compliance_expert_validation",
+          "authoritative_source": "45 CFR §164.312(c)(1)"
+        }
+      },
+      {
+        "id": "hipaa-164.312(e)(1)-encryption",
+        "framework": "HIPAA Security Rule",
+        "title": "Transmission Security - Encryption",
+        "requirement": "Implement technical security measures to ensure that PHI transmitted electronically is protected from improper access",
+        "control_type": "preventive",
+        "applicable_risks": [
+          "claims-ransomware",
+          "edi-man-in-middle",
+          "billing-data-breach",
+          "pa-data-breach",
+          "provider-data-breach",
+          "pharmacy-data-breach",
+          "hipaa-breach-unencrypted-phI"
+        ],
+        "implementation_guidance": "Encrypt all PHI at rest (AES-256) and in transit (TLS 1.3+). End-to-end encryption for EDI transactions. Certificate management with pinning. Key management with rotation.",
+        "testing_procedures": "Annual encryption certification, quarterly encryption key management review",
+        "provenance": {
+          "source": "T-203 (HIPAA/HITRUST Control Mapping)",
+          "confidence": 0.95,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_compliance_expert_validation",
+          "authoritative_source": "45 CFR §164.312(e)(1)"
+        }
+      },
+      {
+        "id": "hitrust-10.a-bc-dr",
+        "framework": "HITRUST CSF",
+        "title": "Business Continuity and Disaster Recovery",
+        "requirement": "Implement and maintain business continuity and disaster recovery capabilities for critical systems",
+        "control_type": "corrective",
+        "applicable_risks": [
+          "claims-outage",
+          "edi-outage",
+          "enrollment-system-outage",
+          "payment-outage",
+          "pharmacy-adjudication-outage",
+          "pa-system-outage"
+        ],
+        "implementation_guidance": "Implement disaster recovery site with <4 hour RTO for crown-jewel systems. Document and test failover procedures. Maintain backup capability for critical operations. Regular DR testing.",
+        "testing_procedures": "Annual DR testing for crown-jewel systems, quarterly business continuity plan review",
+        "provenance": {
+          "source": "T-203 (HIPAA/HITRUST Control Mapping)",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_compliance_expert_validation",
+          "authoritative_source": "HITRUST CSF v9.8 - 10.a"
+        }
+      },
+      {
+        "id": "hitrust-10.d-encryption",
+        "framework": "HITRUST CSF",
+        "title": "Encryption and Decryption",
+        "requirement": "Implement encryption for PHI at rest and in transit with proper key management",
+        "control_type": "preventive",
+        "applicable_risks": [
+          "claims-ransomware",
+          "claims-data-corruption",
+          "billing-data-breach",
+          "provider-data-breach",
+          "pharmacy-data-breach",
+          "hipaa-breach-unencrypted-phI"
+        ],
+        "implementation_guidance": "AES-256 encryption for PHI at rest. TLS 1.3 for data in transit. Cryptographic validation of data integrity. Key management with rotation. Immutable backups.",
+        "testing_procedures": "Annual encryption certification, quarterly key management review, periodic penetration testing",
+        "provenance": {
+          "source": "T-203 (HIPAA/HITRUST Control Mapping)",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_compliance_expert_validation",
+          "authoritative_source": "HITRUST CSF v9.8 - 10.d"
+        }
+      },
+      {
+        "id": "hitrust-06.a-access",
+        "framework": "HITRUST CSF",
+        "title": "Access Control",
+        "requirement": "Implement system access controls, privilege management, and regular access reviews",
+        "control_type": "preventive",
+        "applicable_risks": [
+          "claims-fraud-engineering-access",
+          "payment-fraud",
+          "claims-ransomware",
+          "premium-leakage"
+        ],
+        "implementation_guidance": "Implement least-privilege access. Separation of duties for high-risk functions. Regular access reviews and revocation. Behavioral monitoring for anomaly detection. Privileged access management (PAM).",
+        "testing_procedures": "Quarterly access reviews, annual privileged access certification, periodic access control testing",
+        "provenance": {
+          "source": "T-203 (HIPAA/HITRUST Control Mapping)",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_compliance_expert_validation",
+          "authoritative_source": "HITRUST CSF v9.8 - 06.a"
+        }
+      },
+      {
+        "id": "hitrust-11.b-vendor-continuity",
+        "framework": "HITRUST CSF",
+        "title": "Business Associate Management",
+        "requirement": "Manage third-party and business associate risks including continuity and security",
+        "control_type": "preventive",
+        "applicable_risks": [
+          "edi-vendor-lock-in",
+          "edi-outage"
+        ],
+        "implementation_guidance": "Multi-vendor strategy for critical services. Exit planning with documented migration procedures. Vendor SLA with financial penalties for outages. Regular vendor risk assessments. BA agreements with security requirements.",
+        "testing_procedures": "Annual vendor risk assessments, quarterly vendor performance reviews",
+        "provenance": {
+          "source": "T-203 (HIPAA/HITRUST Control Mapping)",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03",
+          "review_status": "pending_compliance_expert_validation",
+          "authoritative_source": "HITRUST CSF v9.8 - 11.b"
+        }
+      }
+    ],
+    "relationships": [
+      {
+        "id": "rel-001",
+        "from": "process:claims-adjudication",
+        "to": "app:claims-adjudication-system",
+        "type": "supported_by",
+        "confidence": 0.95,
+        "description": "Claims adjudication process is primarily supported by claims adjudication system",
+        "provenance": {
+          "source": "T-201 process-app edge mapping",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03"
+        }
+      },
+      {
+        "id": "rel-002",
+        "from": "process:claims-adjudication",
+        "to": "app:edi-gateway-x12-translator",
+        "type": "supported_by",
+        "confidence": 0.90,
+        "description": "Claims adjudication process requires EDI gateway for claims intake",
+        "provenance": {
+          "source": "T-201 process-app edge mapping",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03"
+        }
+      },
+      {
+        "id": "rel-003",
+        "from": "process:payment-processing",
+        "to": "app:payment-remittance-system",
+        "type": "supported_by",
+        "confidence": 0.95,
+        "description": "Payment processing process is primarily supported by payment remittance system",
+        "provenance": {
+          "source": "T-201 process-app edge mapping",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03"
+        }
+      },
+      {
+        "id": "rel-004",
+        "from": "process:member-enrollment",
+        "to": "app:enrollment-billing-platform",
+        "type": "supported_by",
+        "confidence": 0.95,
+        "description": "Member enrollment process is primarily supported by enrollment billing platform",
+        "provenance": {
+          "source": "T-201 process-app edge mapping",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03"
+        }
+      },
+      {
+        "id": "rel-005",
+        "from": "process:prior-authorization",
+        "to": "app:prior-authorization-system",
+        "type": "supported_by",
+        "confidence": 0.95,
+        "description": "Prior authorization process is primarily supported by prior authorization system",
+        "provenance": {
+          "source": "T-201 process-app edge mapping",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03"
+        }
+      },
+      {
+        "id": "rel-006",
+        "from": "process:provider-management",
+        "to": "app:provider-data-management",
+        "type": "supported_by",
+        "confidence": 0.95,
+        "description": "Provider management process is primarily supported by provider data management system",
+        "provenance": {
+          "source": "T-201 process-app edge mapping",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03"
+        }
+      },
+      {
+        "id": "rel-007",
+        "from": "risk:claims-outage",
+        "to": "process:claims-adjudication",
+        "type": "affects",
+        "confidence": 0.95,
+        "description": "Claims outage risk affects claims adjudication process",
+        "provenance": {
+          "source": "T-203 risk-process mapping",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03"
+        }
+      },
+      {
+        "id": "rel-008",
+        "from": "risk:claims-outage",
+        "to": "app:claims-adjudication-system",
+        "type": "affects",
+        "confidence": 0.95,
+        "description": "Claims outage risk affects claims adjudication system",
+        "provenance": {
+          "source": "T-203 risk-app mapping",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03"
+        }
+      },
+      {
+        "id": "rel-009",
+        "from": "risk:claims-outage",
+        "to": "control:hipaa-164.312(a)(1)-emergency-access",
+        "type": "mitigated_by",
+        "confidence": 0.90,
+        "description": "Claims outage risk is mitigated by HIPAA emergency access control",
+        "provenance": {
+          "source": "T-203 risk-control mapping",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03"
+        }
+      },
+      {
+        "id": "rel-010",
+        "from": "risk:claims-outage",
+        "to": "control:hitrust-10.a-bc-dr",
+        "type": "mitigated_by",
+        "confidence": 0.95,
+        "description": "Claims outage risk is mitigated by HITRUST BC/DR control",
+        "provenance": {
+          "source": "T-203 risk-control mapping",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03"
+        }
+      },
+      {
+        "id": "rel-011",
+        "from": "risk:hipaa-breach-unencrypted-phI",
+        "to": "control:hipaa-164.312(e)(1)-encryption",
+        "type": "mitigated_by",
+        "confidence": 0.95,
+        "description": "HIPAA breach risk is mitigated by encryption control",
+        "provenance": {
+          "source": "T-203 risk-control mapping",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03"
+        }
+      },
+      {
+        "id": "rel-012",
+        "from": "risk:hipaa-breach-unencrypted-phI",
+        "to": "control:hitrust-10.d-encryption",
+        "type": "mitigated_by",
+        "confidence": 0.95,
+        "description": "HIPAA breach risk is mitigated by HITRUST encryption control",
+        "provenance": {
+          "source": "T-203 risk-control mapping",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03"
+        }
+      },
+      {
+        "id": "rel-013",
+        "from": "app:claims-adjudication-system",
+        "to": "app:edi-gateway-x12-translator",
+        "type": "depends_on",
+        "confidence": 0.90,
+        "description": "Claims adjudication system depends on EDI gateway for claims intake",
+        "provenance": {
+          "source": "T-201 application dependencies",
+          "confidence": 0.85,
+          "last_updated": "2025-06-03"
+        }
+      },
+      {
+        "id": "rel-014",
+        "from": "app:payment-remittance-system",
+        "to": "app:claims-adjudication-system",
+        "type": "depends_on",
+        "confidence": 0.90,
+        "description": "Payment remittance system depends on claims adjudication for payment data",
+        "provenance": {
+          "source": "T-201 application dependencies",
+          "confidence": 0.85,
+          "last_updated": "2025-06-03"
+        }
+      },
+      {
+        "id": "rel-015",
+        "from": "process:pharmacy-benefits",
+        "to": "app:pbm-system",
+        "type": "supported_by",
+        "confidence": 0.95,
+        "description": "Pharmacy benefits process is primarily supported by PBM system",
+        "provenance": {
+          "source": "T-201 process-app edge mapping",
+          "confidence": 0.90,
+          "last_updated": "2025-06-03"
+        }
+      }
+    ],
+    "query_api": {
+      "description": "REST API design for querying the reference model",
+      "base_path": "/api/reference-model",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/processes",
+          "description": "List all processes",
+          "parameters": {
+            "query": [
+              {
+                "name": "limit",
+                "type": "integer",
+                "description": "Maximum number of results to return",
+                "default": 100
+              },
+              {
+                "name": "offset",
+                "type": "integer",
+                "description": "Number of results to skip",
+                "default": 0
+              }
+            ]
+          },
+          "response": {
+            "processes": ["process object"],
+            "total": "integer",
+            "limit": "integer",
+            "offset": "integer"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/processes/:id",
+          "description": "Get specific process by ID",
+          "parameters": {
+            "path": [
+              {
+                "name": "id",
+                "type": "string",
+                "description": "Process ID (e.g., 'claims-adjudication')",
+                "required": true
+              }
+            ]
+          },
+          "response": {
+            "process": "process object with sub_processes, typical_applications, provenance"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/processes/:id/applications",
+          "description": "Get applications supporting a specific process",
+          "parameters": {
+            "path": [
+              {
+                "name": "id",
+                "type": "string",
+                "description": "Process ID",
+                "required": true
+              }
+            ]
+          },
+          "response": {
+            "applications": ["application object"],
+            "process_id": "string",
+            "process_name": "string"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/processes/:id/risks",
+          "description": "Get risks associated with a specific process",
+          "parameters": {
+            "path": [
+              {
+                "name": "id",
+                "type": "string",
+                "description": "Process ID",
+                "required": true
+              }
+            ]
+          },
+          "response": {
+            "risks": ["risk object"],
+            "process_id": "string",
+            "process_name": "string"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/applications",
+          "description": "List all applications",
+          "parameters": {
+            "query": [
+              {
+                "name": "criticality",
+                "type": "string",
+                "description": "Filter by criticality (crown-jewel, high, medium)"
+              },
+              {
+                "name": "limit",
+                "type": "integer",
+                "description": "Maximum number of results",
+                "default": 100
+              }
+            ]
+          },
+          "response": {
+            "applications": ["application object"],
+            "total": "integer"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/applications/:id",
+          "description": "Get specific application by ID",
+          "parameters": {
+            "path": [
+              {
+                "name": "id",
+                "type": "string",
+                "description": "Application ID (e.g., 'claims-adjudication-system')",
+                "required": true
+              }
+            ]
+          },
+          "response": {
+            "application": "application object with supported_processes, typical_vendors, provenance"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/applications/:id/processes",
+          "description": "Get processes supported by a specific application",
+          "parameters": {
+            "path": [
+              {
+                "name": "id",
+                "type": "string",
+                "description": "Application ID",
+                "required": true
+              }
+            ]
+          },
+          "response": {
+            "processes": ["process object"],
+            "application_id": "string",
+            "application_name": "string"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/applications/:id/risks",
+          "description": "Get risks associated with a specific application",
+          "parameters": {
+            "path": [
+              {
+                "name": "id",
+                "type": "string",
+                "description": "Application ID",
+                "required": true
+              }
+            ]
+          },
+          "response": {
+            "risks": ["risk object"],
+            "application_id": "string",
+            "application_name": "string"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/risks",
+          "description": "List all risks",
+          "parameters": {
+            "query": [
+              {
+                "name": "category",
+                "type": "string",
+                "description": "Filter by category (operational, security, financial, compliance)"
+              },
+              {
+                "name": "severity",
+                "type": "string",
+                "description": "Filter by severity (critical, high, medium, low)"
+              },
+              {
+                "name": "process_id",
+                "type": "string",
+                "description": "Filter by affected process"
+              },
+              {
+                "name": "app_id",
+                "type": "string",
+                "description": "Filter by affected application"
+              }
+            ]
+          },
+          "response": {
+            "risks": ["risk object"],
+            "total": "integer"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/risks/:id",
+          "description": "Get specific risk by ID",
+          "parameters": {
+            "path": [
+              {
+                "name": "id",
+                "type": "string",
+                "description": "Risk ID (e.g., 'claims-outage')",
+                "required": true
+              }
+            ]
+          },
+          "response": {
+            "risk": "risk object with affected_processes, affected_applications, controls"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/risks/:id/controls",
+          "description": "Get controls that mitigate a specific risk",
+          "parameters": {
+            "path": [
+              {
+                "name": "id",
+                "type": "string",
+                "description": "Risk ID",
+                "required": true
+              }
+            ]
+          },
+          "response": {
+            "controls": ["control object"],
+            "risk_id": "string",
+            "risk_title": "string"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/controls",
+          "description": "List all controls",
+          "parameters": {
+            "query": [
+              {
+                "name": "framework",
+                "type": "string",
+                "description": "Filter by framework (HIPAA Security Rule, HITRUST CSF)"
+              },
+              {
+                "name": "control_type",
+                "type": "string",
+                "description": "Filter by control type (preventive, detective, corrective)"
+              }
+            ]
+          },
+          "response": {
+            "controls": ["control object"],
+            "total": "integer"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/controls/:id",
+          "description": "Get specific control by ID",
+          "parameters": {
+            "path": [
+              {
+                "name": "id",
+                "type": "string",
+                "description": "Control ID (e.g., 'hipaa-164.312(a)(1)-access')",
+                "required": true
+              }
+            ]
+          },
+          "response": {
+            "control": "control object with applicable_risks, implementation_guidance"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/controls/:id/risks",
+          "description": "Get risks mitigated by a specific control",
+          "parameters": {
+            "path": [
+              {
+                "name": "id",
+                "type": "string",
+                "description": "Control ID",
+                "required": true
+              }
+            ]
+          },
+          "response": {
+            "risks": ["risk object"],
+            "control_id": "string",
+            "control_title": "string"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/relationships",
+          "description": "List all relationships",
+          "parameters": {
+            "query": [
+              {
+                "name": "from",
+                "type": "string",
+                "description": "Filter by from entity (e.g., 'process:claims-adjudication')"
+              },
+              {
+                "name": "to",
+                "type": "string",
+                "description": "Filter by to entity (e.g., 'app:claims-adjudication-system')"
+              },
+              {
+                "name": "type",
+                "type": "string",
+                "description": "Filter by relationship type (supported_by, affects, mitigated_by, depends_on)"
+              }
+            ]
+          },
+          "response": {
+            "relationships": ["relationship object"],
+            "total": "integer"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/relationships/:id",
+          "description": "Get specific relationship by ID",
+          "parameters": {
+            "path": [
+              {
+                "name": "id",
+                "type": "string",
+                "description": "Relationship ID (e.g., 'rel-001')",
+                "required": true
+              }
+            ]
+          },
+          "response": {
+            "relationship": "relationship object with from, to, type, confidence"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/search",
+          "description": "Full-text search across all entities",
+          "parameters": {
+            "query": [
+              {
+                "name": "q",
+                "type": "string",
+                "description": "Search query",
+                "required": true
+              },
+              {
+                "name": "entity_type",
+                "type": "string",
+                "description": "Filter by entity type (processes, applications, risks, controls)"
+              },
+              {
+                "name": "limit",
+                "type": "integer",
+                "description": "Maximum number of results",
+                "default": 50
+              }
+            ]
+          },
+          "response": {
+            "results": [
+              {
+                "entity_type": "string",
+                "id": "string",
+                "title": "string",
+                "description": "string",
+                "relevance_score": "float"
+              }
+            ],
+            "total": "integer"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/metadata",
+          "description": "Get reference model metadata",
+          "parameters": {},
+          "response": {
+            "version": "string",
+            "status": "string",
+            "last_updated": "string",
+            "metadata": "object",
+            "statistics": {
+              "total_processes": "integer",
+              "total_applications": "integer",
+              "total_risks": "integer",
+              "total_controls": "integer",
+              "total_relationships": "integer"
+            }
+          }
+        }
+      ]
+    },
+    "versioning_strategy": {
+      "description": "Semantic versioning for reference model releases",
+      "format": "MAJOR.MINOR.PATCH-status",
+      "rules": {
+        "MAJOR": "Breaking changes - schema changes, entity deletions, relationship type changes",
+        "MINOR": "Non-breaking additions - new entities, new relationships, new fields",
+        "PATCH": "Bug fixes, documentation updates, provenance updates",
+        "status": "Draft status indicators: -draft, -rc, -final"
+      },
+      "examples": {
+        "initial_draft": "1.0.0-draft",
+        "expert_review": "1.0.0-rc",
+        "first_release": "1.0.0",
+        "new_processes": "1.1.0",
+        "documentation_fix": "1.1.1",
+        "breaking_schema_change": "2.0.0-draft"
+      },
+      "change_log": [
+        {
+          "version": "1.0.0-draft",
+          "date": "2025-06-03",
+          "changes": [
+            "Initial release integrating T-200, T-201, T-203",
+            "10 processes from payer taxonomy",
+            "13 application archetypes",
+            "58 risks with HIPAA/HITRUST mappings",
+            "8 sample controls with provenance",
+            "15 relationships between entities"
+          ],
+          "status": "expert-review-pending"
+        }
+      ]
+    },
+    "statistics": {
+      "total_processes": 10,
+      "total_applications": 13,
+      "total_risks": 58,
+      "total_controls": 8,
+      "total_relationships": 15,
+      "process_subprocess_count": 47,
+      "crown_jewel_applications": 2,
+      "high_criticality_applications": 7,
+      "medium_criticality_applications": 4,
+      "critical_severity_risks": 4,
+      "high_severity_risks": 2,
+      "hipaa_controls": 5,
+      "hitrust_controls": 4
+    },
+    "implementation_notes": {
+      "data_structure": "JSON format for REST API responses",
+      "query_optimization": "Consider indexing on entity IDs and relationship types",
+      "caching_strategy": "Cache metadata and entity lookups with TTL based on version",
+      "search_implementation": "Elasticsearch or similar for full-text search",
+      "provenance_tracking": "Include provenance on all entities for audit trail",
+      "version_management": "Maintain version history for change tracking",
+      "validation": "Validate all entity IDs and relationship references"
+    },
+    "expert_review_checklist": {
+      "process_validation": [
+        "Confirm all 10 processes accurately represent US healthcare payer operations",
+        "Validate sub-process decompositions are comprehensive",
+        "Verify EDI transaction mappings are accurate"
+      ],
+      "application_validation": [
+        "Confirm 13 application archetypes cover typical payer landscape",
+        "Validate vendor examples are representative",
+        "Verify criticality assessments are accurate"
+      ],
+      "risk_validation": [
+        "Confirm 58 risks cover crown-jewel and high-impact scenarios",
+        "Validate risk-to-process and risk-to-app mappings are accurate",
+        "Verify severity ratings align with healthcare payer context"
+      ],
+      "control_validation": [
+        "Verify HIPAA control IDs are accurate (45 CFR §164.312)",
+        "Confirm HITRUST control IDs match current v9.8 framework",
+        "Validate implementation guidance is actionable"
+      ],
+      "relationship_validation": [
+        "Confirm process-app relationships are accurate",
+        "Verify risk-control mappings are comprehensive",
+        "Check confidence scores are justified"
+      ]
+    },
+    "next_steps": {
+      "expert_review": [
+        "Healthcare payer operations expert review (CIO/CTO level)",
+        "HIPAA compliance expert validation",
+        "HITRUST CSF certified practitioner review",
+        "Application architect validation for archetypes"
+      ],
+      "data_enhancement": [
+        "Expand risks to cover all 58 from T-203 in full detail",
+        "Add remaining controls to cover all HIPAA/HITRUST mappings",
+        "Expand relationships to cover all process-app edges",
+        "Add T-202 (Risk Catalog) when complete"
+      ],
+      "api_implementation": [
+        "Implement REST API with all endpoints",
+        "Add authentication and rate limiting",
+        "Implement query optimization and caching",
+        "Add API documentation (OpenAPI/Swagger)"
+      ],
+      "integration_tasks": [
+        "Build matcher (T-212) to align customer data to reference model",
+        "Integrate with correlation engine (T-205)",
+        "Support frontend visualization (T-210+)",
+        "GRC system integration (AuditBoard, Archer, ServiceNow)"
+      ]
+    },
+    "references": {
+      "dependency_artifacts": {
+        "T-200": "workspace/artifacts/T-200.out - Payer Process Taxonomy",
+        "T-201": "workspace/artifacts/T-201.out - Application Archetypes",
+        "T-203": "workspace/artifacts/T-203.out - HIPAA/HITRUST Control Mapping"
+      },
+      "authoritative_sources": {
+        "HIPAA": "45 CFR §164.312 - https://www.ecfr.gov/current/title-45/section-164.312",
+        "HITRUST": "HITRUST CSF v9.8 - https://hitrust.org/hitrust-csf/",
+        "X12": "X12 Standards - https://x12.org/",
+        "NCPDP": "NCPDP Standards - https://www.ncpdp.org/"
+      },
+      "integration_targets": {
+        "AuditBoard": "Control Library and Risk Management",
+        "Archer": "GRC and Risk Control Matrix",
+        "ServiceNow": "GRC and Control Testing"
+      }
+    }
+  }
+}
