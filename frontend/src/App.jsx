@@ -3,6 +3,7 @@ import CorrelatedFinding from "./pages/CorrelatedFinding";
 import CIODash from "./pages/CIODash";
 import CLODash from "./pages/CLODash";
 import AuditDash from "./pages/AuditDash";
+import ReviewMappings from "./pages/ReviewMappings";
 
 // --- Theme --------------------------------------------------------------------
 var C = {
@@ -23832,6 +23833,8 @@ function CyberRxApp() {
   var _s53=useState([]); var history=_s53[0]; var setHistory=_s53[1];
   // Correlated Finding state - T-113
   var _sCF=useState(null); var correlatedFindingId=_sCF[0]; var setCorrelatedFindingId=_sCF[1];
+  // Review Mappings state - T-220
+  var _sRM=useState(null); var reviewMappingsMatchId=_sRM[0]; var setReviewMappingsMatchId=_sRM[1];
   var _s54=useState(null); var dl=_s54[0]; var setDl=_s54[1];
   var _s55b=useState(false); var setupDone=_s55b[0]; var setSetupDone=_s55b[1];
 
@@ -24300,6 +24303,13 @@ function CyberRxApp() {
         authToken: localStorage.getItem('authToken'),
         orgId: localStorage.getItem('orgId'),
         api_url: import.meta.env?.VITE_API_URL || 'https://cyberrx-api.onrender.com'
+      });
+    }
+    // Healthcare Payer Vertical: Match Review UI
+    if (page==="review-mappings") {
+      return React.createElement(ReviewMappings, {
+        matchId: reviewMappingsMatchId,
+        goBack: goBack
       });
     }
     return React.createElement(Home, sharedProps);
