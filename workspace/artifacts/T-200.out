@@ -1,0 +1,592 @@
+{
+  "version": "1.0-draft",
+  "status": "expert-review-pending",
+  "metadata": {
+    "created_date": "2025-01-31",
+    "purpose": "Canonical reference model for healthcare-payer process classification",
+    "disclaimer": "This is a draft taxonomy pending expert review. Do not use for production compliance mapping without certified domain expert validation.",
+    "scope": "US Healthcare Payer Operations - Commercial, Medicare, Medicaid, Marketplace"
+  },
+  "processes": [
+    {
+      "id": "claims-adjudication",
+      "name": "Claims Adjudication",
+      "description": "Systematic evaluation and processing of healthcare claims to determine payer liability and reimbursement amounts according to contract terms, clinical guidelines, and regulatory requirements.",
+      "edi_transactions": ["837", "835"],
+      "sub_processes": [
+        {
+          "id": "claims-intake",
+          "name": "Claims Intake and Validation",
+          "description": "Initial claim receipt, format validation, and data quality checks"
+        },
+        {
+          "id": "claims-auto-adjudication",
+          "name": "Automated Adjudication",
+          "description": "Rules-based processing without manual intervention for straightforward claims"
+        },
+        {
+          "id": "claims-manual-review",
+          "name": "Manual Claims Review",
+          "description": "Complex claims requiring clinical or administrative review"
+        },
+        {
+          "id": "claims-payment-determination",
+          "name": "Payment Determination",
+          "description": "Calculation of allowed amounts, patient responsibility, and provider reimbursement"
+        },
+        {
+          "id": "claims-denial-management",
+          "name": "Claim Denial Management",
+          "description": "Processing, appeals, and resolution of denied claims"
+        },
+        {
+          "id": "claims-coordination-of-benefits",
+          "name": "Coordination of Benefits (COB)",
+          "description": "Determining primary/secondary payer responsibility"
+        }
+      ],
+      "typical_applications": [
+        "Professional claims (CMS-1500)",
+        "Institutional claims (UB-04)",
+        "Dental claims",
+        "Vision claims",
+        "Behavioral health claims"
+      ],
+      "typical_risks": [
+        "Overpayment due to incorrect adjudication",
+        "Regulatory penalties for improper claim processing",
+        "Provider abrasion from slow payments",
+        "Member complaints from improper denials",
+        "Fraud, waste, and abuse (FWA) exposure"
+      ]
+    },
+    {
+      "id": "enrollment-and-billing",
+      "name": "Enrollment and Premium Billing",
+      "description": "Member onboarding, eligibility maintenance, and premium collection processes that ensure continuous coverage and revenue flow.",
+      "edi_transactions": ["820", "834"],
+      "sub_processes": [
+        {
+          "id": "member-enrollment",
+          "name": "Member Enrollment",
+          "description": "New member application processing and account setup"
+        },
+        {
+          "id": "eligibility-determination",
+          "name": "Eligibility Determination",
+          "description": "Verification of qualifying events and coverage eligibility"
+        },
+        {
+          "id": "id-card-generation",
+          "name": "Member ID Card Generation",
+          "description": "Production and distribution of member identification cards"
+        },
+        {
+          "id": "premium-billing",
+          "name": "Premium Billing",
+          "description": "Generation and delivery of premium invoices"
+        },
+        {
+          "id": "premium-collection",
+          "name": "Premium Collection",
+          "description": "Payment processing and reconciliation for member premiums"
+        },
+        {
+          "id": "cobra-administration",
+          "name": "COBRA Administration",
+          "description": "Continuation coverage administration and billing"
+        },
+        {
+          "id": " disenrollment-processing",
+          "name": "Disenrollment Processing",
+          "description": "Termination of coverage and required notifications"
+        }
+      ],
+      "typical_applications": [
+        "Group enrollment (employer-sponsored)",
+        "Individual market enrollment",
+        "Medicare Advantage enrollment",
+        "Medicaid managed care enrollment",
+        "COBRA continuation coverage"
+      ],
+      "typical_risks": [
+        "Regulatory fines for enrollment timing violations",
+        "Coverage gaps from processing delays",
+        "Revenue loss from premium leakage",
+        "Member dissatisfaction from billing errors",
+        "HIPAA violations for data mishandling"
+      ]
+    },
+    {
+      "id": "provider-management",
+      "name": "Provider Management",
+      "description": "End-to-end provider network lifecycle management including credentialing, contracting, directory maintenance, and performance monitoring.",
+      "edi_transactions": ["270/271", "276/277", "278"],
+      "sub_processes": [
+        {
+          "id": "provider-credentialing",
+          "name": "Provider Credentialing",
+          "description": "Verification of provider qualifications, licenses, and certifications"
+        },
+        {
+          "id": "provider-contracting",
+          "name": "Provider Contracting",
+          "description": "Negotiation and execution of provider agreements"
+        },
+        {
+          "id": "provider-enrollment",
+          "name": "Provider Enrollment",
+          "description": "Onboarding providers into payment systems"
+        },
+        {
+          "id": "provider-directory-management",
+          "name": "Provider Directory Management",
+          "description": "Maintenance of accurate, accessible provider network information"
+        },
+        {
+          "id": "provider-network-adequacy",
+          "name": "Network Adequacy Monitoring",
+          "description": "Ensuring sufficient provider access per regulatory requirements"
+        },
+        {
+          "id": "provider-pay-fee-schedule",
+          "name": "Provider Fee Schedule Management",
+          "description": "Maintenance of reimbursement rates and pricing structures"
+        }
+      ],
+      "typical_applications": [
+        "Primary care provider networks",
+        "Specialist networks",
+        "Hospital networks",
+        "Ancillary service providers",
+        "Behavioral health providers",
+        "Long-term care facilities"
+      ],
+      "typical_risks": [
+        "Regulatory penalties for directory inaccuracies",
+        "Network adequacy violations",
+        "Overpayments to non-credentialed providers",
+        "Provider abrasion from payment issues",
+        "Legal liability for credentialing lapses"
+      ]
+    },
+    {
+      "id": "prior-authorization",
+      "name": "Prior Authorization",
+      "description": "Pre-service clinical review to determine medical necessity and appropriateness of requested healthcare services and technologies.",
+      "edi_transactions": ["278"],
+      "sub_processes": [
+        {
+          "id": "pa-request-intake",
+          "name": "PA Request Intake",
+          "description": "Receipt and initial validation of prior authorization requests"
+        },
+        {
+          "id": "pa-clinical-review",
+          "name": "Clinical Review",
+          "description": "Evaluation of medical necessity by clinical professionals"
+        },
+        {
+          "id": "pa-decision",
+          "name": "PA Decision Processing",
+          "description": "Approval, denial, or pend determination and notification"
+        },
+        {
+          "id": "pa-appeals",
+          "name": "PA Appeals Processing",
+          "description": "Review and resolution of contested PA decisions"
+        },
+        {
+          "id": "pa-concurrent-review",
+          "name": "Concurrent Review",
+          "description": "Ongoing review during inpatient stays"
+        },
+        {
+          "id": "pa-retrospective-review",
+          "name": "Retrospective Review",
+          "description": "Post-service review of services requiring but lacking PA"
+        }
+      ],
+      "typical_applications": [
+        "Inpatient hospital admissions",
+        "Specialist consultations",
+        "Advanced imaging (MRI, CT, PET)",
+        "Durable medical equipment (DME)",
+        "Cardiac and pulmonary rehabilitation",
+        "Molecular and genetic testing",
+        "Specialty pharmaceuticals"
+      ],
+      "typical_risks": [
+        "Care delays from lengthy PA processes",
+        "Regulatory penalties for improper denials",
+        "Legal exposure for inappropriate decisions",
+        "Provider abrasion from administrative burden",
+        "Negative member health outcomes"
+      ]
+    },
+    {
+      "id": "care-management",
+      "name": "Care Management",
+      "description": "Proactive and reactive clinical programs to optimize member health outcomes, manage complex conditions, and prevent unnecessary utilization.",
+      "edi_transactions": [],
+      "sub_processes": [
+        {
+          "id": "case-management",
+          "name": "Case Management",
+          "description": "Coordination of care for members with complex, multi-system conditions"
+        },
+        {
+          "id": "disease-management",
+          "name": "Disease Management",
+          "description": "Targeted interventions for specific chronic conditions (diabetes, CHF, COPD, etc.)"
+        },
+        {
+          "id": "utilization-management",
+          "name": "Utilization Management",
+          "description": "Review of medical appropriateness and healthcare resource use"
+        },
+        {
+          "id": "transitional-care",
+          "name": "Transitional Care Management",
+          "description": "Support during care transitions (hospital to home, SNF, etc.)"
+        },
+        {
+          "id": "complex-case-management",
+          "name": "Complex Case Management",
+          "description": "High-touch management for high-cost, high-need members"
+        },
+        {
+          "id": "maternal-child-health",
+          "name": "Maternal and Child Health Programs",
+          "description": "Prenatal, postpartum, and pediatric care management"
+        },
+        {
+          "id": "wellness-programs",
+          "name": "Preventive and Wellness Programs",
+          "description": "Health promotion, preventive care, and lifestyle interventions"
+        }
+      ],
+      "typical_applications": [
+        "Chronic condition management",
+        "High-cost member management",
+        "Readmission prevention",
+        "Medication adherence programs",
+        "Health risk assessments",
+        "Lifestyle coaching (smoking cessation, weight management)"
+      ],
+      "typical_risks": [
+        "Gaps in care leading to adverse events",
+        "Readmission penalties",
+        "Poor quality scores (HEDIS, STARs)",
+        "Missed preventive care opportunities",
+        "Member dissatisfaction"
+      ]
+    },
+    {
+      "id": "member-services",
+      "name": "Member Services",
+      "description": "Direct member support operations including eligibility verification, benefits inquiries, issue resolution, and member communication.",
+      "edi_transactions": ["270/271"],
+      "sub_processes": [
+        {
+          "id": "eligibility-verification",
+          "name": "Eligibility Verification",
+          "description": "Real-time confirmation of member coverage status"
+        },
+        {
+          "id": "benefits-inquiry",
+          "name": "Benefits Inquiry",
+          "description": "Explanation of covered services, deductibles, and out-of-pocket costs"
+        },
+        {
+          "id": "claims-status-inquiry",
+          "name": "Claims Status Inquiry",
+          "description": "Member inquiries about claim processing status"
+        },
+        {
+          "id": "grievance-and-appeals",
+          "name": "Grievance and Appeals Processing",
+          "description": "Member complaints and formal appeals of coverage decisions"
+        },
+        {
+          "id": "member-communication",
+          "name": "Member Communication",
+          "description": "Proactive outreach, welcome packets, EOBs, and notices"
+        },
+        {
+          "id": "change-of-address",
+          "name": "Member Information Updates",
+          "description": "Processing member demographic changes"
+        },
+        {
+          "id": "member-portal-support",
+          "name": "Digital Channel Support",
+          "description": "Support for member portal, mobile app, and online tools"
+        }
+      ],
+      "typical_applications": [
+        "Call center operations",
+        "Web and mobile self-service",
+        "Mail correspondence processing",
+        "Email communication management",
+        "Live agent support"
+      ],
+      "typical_risks": [
+        "Regulatory violations from improper appeals handling",
+        "Member dissatisfaction from poor service",
+        "HIPAA violations in communications",
+        "Missed timely notice requirements",
+        "Agent knowledge gaps and inconsistent information"
+      ]
+    },
+    {
+      "id": "payment-processing",
+      "name": "Provider Payment Processing",
+      "description": "Accurate and timely reimbursement to healthcare providers for covered services, including remittance advice and payment reconciliation.",
+      "edi_transactions": ["835"],
+      "sub_processes": [
+        {
+          "id": "payment-generation",
+          "name": "Payment Generation",
+          "description": "Creation of payment files for adjudicated claims"
+        },
+        {
+          "id": "reconciliation",
+          "name": "Payment Reconciliation",
+          "description": "Matching payments to claims and resolving discrepancies"
+        },
+        {
+          "id": "remittance-advice",
+          "name": "Remittance Advice (RA) Processing",
+          "description": "Generation and delivery of payment explanations (835)"
+        },
+        {
+          "id": "payment-accuracy",
+          "name": "Payment Accuracy Validation",
+          "description": "Quality assurance to ensure correct payment amounts"
+        },
+        {
+          "id": "overpayment-recovery",
+          "name": "Overpayment Recovery",
+          "description": "Identification and recoupment of overpayments"
+        },
+        {
+          "id": "provider-inquiries",
+          "name": "Provider Payment Inquiries",
+          "description": "Resolution of provider questions about payments"
+        }
+      ],
+      "typical_applications": [
+        "Electronic funds transfer (EFT)",
+        "Check payments",
+        "Virtual card payments",
+        "Provider payment inquiries",
+        "Zero-pay claims (denials only)"
+      ],
+      "typical_risks": [
+        "Provider abrasion from payment errors",
+        "Regulatory penalties for untimely payment",
+        "Overpayment leakage",
+        "Fraud in payment processing",
+        "Reputation damage from payment issues"
+      ]
+    },
+    {
+      "id": "pharmacy-benefits",
+      "name": "Pharmacy Benefits Management",
+      "description": "Management of prescription drug coverage, formulary administration, and medication therapy programs in coordination with Pharmacy Benefit Managers (PBMs) or internal pharmacy operations.",
+      "edi_transactions": ["837", "835", "NCPDP"],
+      "sub_processes": [
+        {
+          "id": "pharmacy-claims-adjudication",
+          "name": "Pharmacy Claims Adjudication",
+          "description": "Processing of prescription drug claims at point of sale"
+        },
+        {
+          "id": "formulary-management",
+          "name": "Formulary Management",
+          "description": "Maintenance of drug formularies, tiering, and coverage policies"
+        },
+        {
+          "id": "prior-auth-pharmacy",
+          "name": "Pharmacy Prior Authorization",
+          "description": "Review processes for specialty and high-cost medications"
+        },
+        {
+          "id": "medication-therapy-management",
+          "name": "Medication Therapy Management (MTM)",
+          "description": "Clinical programs to optimize medication use"
+        },
+        {
+          "id": "specialty-pharmacy",
+          "name": "Specialty Pharmacy Management",
+          "description": "High-cost, high-touch specialty medication programs"
+        },
+        {
+          "id": "drug-safety",
+          "name": "Drug Safety and Utilization Review",
+          "description": "Drug interaction checking, duplicate therapy, safety edits"
+        },
+        {
+          "id": "rebate-management",
+          "name": "Pharmacy Rebate Management",
+          "description": "Administration of manufacturer rebate programs"
+        }
+      ],
+      "typical_applications": [
+        "Retail pharmacy claims",
+        "Mail order pharmacy",
+        "Specialty pharmacy",
+        "Prior authorization for drugs",
+        "Step therapy programs",
+        "Quantity limit management"
+      ],
+      "typical_risks": [
+        "Patient safety from drug interactions",
+        "Regulatory penalties for improper drug coverage",
+        "High costs from specialty medications",
+        "Member non-adherence",
+        "Fraud in pharmacy claims"
+      ]
+    },
+    {
+      "id": "analytics-and-reporting",
+      "name": "Analytics and Reporting",
+      "description": "Data analysis, regulatory reporting, quality measurement, and business intelligence to support operational, clinical, and financial decision-making.",
+      "edi_transactions": [],
+      "sub_processes": [
+        {
+          "id": "hedis-reporting",
+          "name": "HEDIS Quality Measurement",
+          "description": "Collection and reporting of Healthcare Effectiveness Data and Information Set measures"
+        },
+        {
+          "id": "stars-rating",
+          "name": "Medicare STARs Rating Management",
+          "description": "Quality and performance metrics for Medicare Advantage plans"
+        },
+        {
+          "id": "risk-adjustment",
+          "name": "Risk Adjustment Documentation",
+          "description": "Collection and coding of member health conditions for appropriate payment"
+        },
+        {
+          "id": "financial-reporting",
+          "name": "Financial Reporting",
+          "description": "Medical loss ratio, financial statements, cost reports"
+        },
+        {
+          "id": "utilization-analytics",
+          "name": "Utilization Analytics",
+          "description": "Analysis of healthcare resource use and patterns"
+        },
+        {
+          "id": "population-health-analytics",
+          "name": "Population Health Analytics",
+          "description": "Risk stratification and population health insights"
+        },
+        {
+          "id": "regulatory-reporting",
+          "name": "Regulatory Reporting",
+          "description": "State and federal required reports (MLR, access, network adequacy)"
+        }
+      ],
+      "typical_applications": [
+        "Quality improvement programs",
+        "Value-based care initiatives",
+        "Network performance analysis",
+        "Cost containment strategies",
+        "Regulatory compliance reporting"
+      ],
+      "typical_risks": [
+        "Regulatory penalties for inaccurate reporting",
+        "Lower reimbursement from poor quality scores",
+        "Financial penalties for MLR violations",
+        "Strategic decisions based on flawed data",
+        "Audit findings from reporting errors"
+      ]
+    },
+    {
+      "id": "compliance-and-audit",
+      "name": "Compliance and Audit Management",
+      "description": "Regulatory compliance, internal audit, risk assessment, and governance programs to ensure adherence to healthcare laws, regulations, and accreditation standards.",
+      "edi_transactions": [],
+      "sub_processes": [
+        {
+          "id": "hipaa-compliance",
+          "name": "HIPAA Privacy and Security",
+          "description": "Protected health information (PHI) safeguarding and privacy practices"
+        },
+        {
+          "id": "fraud-waste-abuse",
+          "name": "Fraud, Waste, and Abuse (FWA) Prevention",
+          "description": "Detection, investigation, and prevention of healthcare fraud"
+        },
+        {
+          "id": "internal-audit",
+          "name": "Internal Audit",
+          "description": "Systematic review of internal controls and processes"
+        },
+        {
+          "id": "external-audit-response",
+          "name": "External Audit Response",
+          "description": "Coordination of regulatory and accreditation audits"
+        },
+        {
+          "id": "state-compliance",
+          "name": "State-Specific Compliance",
+          "description": "Multi-state regulatory requirements and variations"
+        },
+        {
+          "id": "accreditation",
+          "name": "Accreditation Management",
+          "description": "Maintenance of NCQA, URAC, and other accreditations"
+        },
+        {
+          "id": "cms-compliance",
+          "name": "CMS Medicare/Medicaid Compliance",
+          "description": "Medicare Advantage, Part D, and Managed Medicaid requirements"
+        },
+        {
+          "id": "ethics-compliance",
+          "name": "Ethics and Compliance Program",
+          "description": "Corporate ethics, code of conduct, and compliance training"
+        }
+      ],
+      "typical_applications": [
+        "HIPAA privacy investigations",
+        "DOJ/OIG investigations",
+        "CMS audits and validations",
+        "NCQA accreditation surveys",
+        "State insurance department examinations",
+        "Internal risk assessments"
+      ],
+      "typical_risks": [
+        "Massive regulatory fines and penalties",
+        "Corporate integrity agreements (CIA)",
+        "Loss of Medicare/Medicaid contracts",
+        "Reputational damage from compliance failures",
+        "Individual criminal liability"
+      ]
+    }
+  ],
+  "appendices": {
+    "edi_transaction_reference": {
+      "837": "Health Care Claim: Professional/Institutional - Claim submission from providers to payer",
+      "835": "Health Care Claim Payment/Advice - Remittance advice from payer to provider",
+      "270/271": "Eligibility, Coverage, or Benefit Status - Inquiry and response",
+      "276/277": "Health Care Claim Status - Claim status inquiry and response",
+      "278": "Health Care Services Review - Prior authorization requests and responses",
+      "820": "Payment Order/Remittance Advice - Premium billing and payment",
+      "834": "Benefit Enrollment and Maintenance - Enrollment data",
+      "NCPDP": "National Council for Prescription Drug Programs - Pharmacy claims standard"
+    },
+    "accreditation_bodies": {
+      "NCQA": "National Committee for Quality Assurance",
+      "URAC": "Utilization Review Accreditation Commission",
+      "CMS": "Centers for Medicare & Medicaid Services",
+      "HITRUST": "Health Information Trust Alliance",
+      "State DOI": "State Departments of Insurance"
+    }
+  }
+}
