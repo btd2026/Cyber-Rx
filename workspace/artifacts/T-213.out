@@ -1,0 +1,668 @@
+{
+  "version": "1.0.0",
+  "task_id": "T-213",
+  "title": "Match API + Synthetic Payer Fixtures",
+  "created_at": "2025-06-03T16:00:00Z",
+  "api_endpoints": {
+    "POST /api/match/processes": {
+      "description": "Match canonical customer processes to reference model using T-212 matcher",
+      "authentication": "Bearer JWT (required)",
+      "request_body": {
+        "canonical_rows": {
+          "type": "array",
+          "description": "Canonical process rows from T-211 normalization",
+          "items": {
+            "row_id": "string (UUID)",
+            "process_name": "string",
+            "application_name": "string (optional)",
+            "criticality": "string (optional)",
+            "owner": "string (optional)",
+            "description": "string (optional)",
+            "provenance": {
+              "normalization_confidence": "float (0-1)",
+              "source": "string"
+            }
+          }
+        },
+        "match_options": {
+          "type": "object",
+          "optional": true,
+          "properties": {
+            "use_llm": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable LLM-assisted semantic matching"
+            },
+            "confidence_threshold": {
+              "type": "float",
+              "default": 0.7,
+              "description": "Minimum confidence for proposal acceptance"
+            },
+            "max_candidates": {
+              "type": "integer",
+              "default": 3,
+              "description": "Maximum candidate matches per entity"
+            },
+            "payer_context": {
+              "type": "string",
+              "optional": true,
+              "description": "Payer ID for context-aware matching (Commercial, Medicare, Medicaid)"
+            }
+          }
+        }
+      },
+      "response_success": {
+        "status": 200,
+        "body": {
+          "match_id": "uuid-v4",
+          "status": "complete",
+          "created_at": "ISO 8601 timestamp",
+          "summary": {
+            "total_rows": 150,
+            "matched": 135,
+            "unmatched": 15,
+            "requires_review": 150,
+            "high_confidence": 90,
+            "medium_confidence": 45,
+            "low_confidence": 15
+          },
+          "proposals": [
+            {
+              "row_id": "row-uuid-001",
+              "customer_data": {
+                "process_name": "Claims Processing",
+                "application_name": "Facets",
+                "criticality": "high"
+              },
+              "proposed_mappings": [
+                {
+                  "entity_type": "process",
+                  "reference_id": "claims-adjudication",
+                  "reference_name": "Claims Adjudication",
+                  "confidence": 0.92,
+                  "method": "llm_assisted",
+                  "rationale": "LLM identified semantic equivalence: 'Claims Processing' and 'Claims Adjudication' both describe claims evaluation workflow. Same domain (claims), similar terminology.",
+                  "requires_review": true,
+                  "review_priority": "medium",
+                  "provenance": {
+                    "normalization_confidence": 0.95,
+                    "matching_timestamp": "2025-06-03T16:00:00Z"
+                  }
+                },
+                {
+                  "entity_type": "application",
+                  "reference_id": "claims-adjudication-system",
+                  "reference_name": "Claims Adjudication System",
+                  "confidence": 0.95,
+                  "method": "vendor_match",
+                  "rationale": "Exact vendor match: 'Facets' is a typical vendor for claims-adjudication-system per reference model.",
+                  "requires_review": true,
+                  "review_priority": "low"
+                }
+              ],
+              "unmatched_entities": [],
+              "warnings": []
+            }
+          ],
+          "unmatched_rows": [
+            {
+              "row_id": "row-uuid-099",
+              "customer_data": {
+                "process_name": "Custom Legacy Process",
+                "application_name": "Unknown App"
+              },
+              "unmatched_entities": [
+                {
+                  "entity_type": "process",
+                  "customer_value": "Custom Legacy Process",
+                  "reason": "No semantic match in reference model",
+                  "suggested_action": "Add to reference model as custom process or mark as outlier",
+                  "potential_candidates": [
+                    {"id": "claims-adjudication", "confidence": 0.35},
+                    {"id": "enrollment-and-billing", "confidence": 0.28}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "response_errors": {
+        "400": {"error": "invalid_request", "message": "Missing required fields in request body"},
+        "401": {"error": "unauthorized", "message": "Invalid or missing JWT token"},
+        "404": {"error": "reference_model_not_loaded", "message": "Reference model (T-204) not available"},
+        "422": {"error": "validation_error", "message": "Canonical rows missing required process_id or process_name"},
+        "500": {"error": "matching_failure", "message": "Internal error during matching process"},
+        "503": {"error": "llm_service_unavailable", "message": "LLM service unavailable, using deterministic fallback"}
+      }
+    },
+    "GET /api/match/:match_id": {
+      "description": "Retrieve match results by ID",
+      "authentication": "Bearer JWT (required)",
+      "parameters": {
+        "path": [
+          {
+            "name": "match_id",
+            "type": "UUID",
+            "required": true,
+            "description": "Match ID from POST /api/match/processes response"
+          }
+        ]
+      },
+      "response_success": {
+        "status": 200,
+        "body": {
+          "match_id": "uuid-v4",
+          "created_at": "2025-06-03T16:00:00Z",
+          "status": "complete",
+          "proposals": [...],
+          "summary": {...}
+        }
+      },
+      "response_errors": {
+        "401": {"error": "unauthorized", "message": "Invalid or missing JWT token"},
+        "404": {"error": "match_not_found", "message": "Match ID not found or expired"}
+      }
+    },
+    "GET /api/match/status/:match_id": {
+      "description": "Check processing status for long-running matches",
+      "authentication": "Bearer JWT (required)",
+      "response_success": {
+        "status": 200,
+        "body": {
+          "match_id": "uuid-v4",
+          "status": "processing|complete|failed",
+          "progress": {
+            "total": 150,
+            "processed": 75,
+            "percentage": 50
+          },
+          "estimated_completion": "2025-06-03T16:05:00Z"
+        }
+      }
+    }
+  },
+  "reference_model_query_endpoints": {
+    "description": "Query endpoints for reference model (T-204) - design documented, implementation deferred",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/api/reference-model/processes",
+        "description": "List all processes from reference model",
+        "response": {"processes": [...], "total": 10}
+      },
+      {
+        "method": "GET",
+        "path": "/api/reference-model/processes/:id",
+        "description": "Get specific process by ID",
+        "response": {"process": {...}}
+      },
+      {
+        "method": "GET",
+        "path": "/api/reference-model/applications",
+        "description": "List all applications from reference model",
+        "parameters": {"criticality": "crown-jewel|high|medium"},
+        "response": {"applications": [...], "total": 13}
+      },
+      {
+        "method": "GET",
+        "path": "/api/reference-model/applications/:id",
+        "description": "Get specific application by ID",
+        "response": {"application": {...}}
+      },
+      {
+        "method": "GET",
+        "path": "/api/reference-model/risks",
+        "description": "List all risks with filtering",
+        "parameters": {"severity": "critical|high|medium|low", "category": "operational|security|financial|compliance"},
+        "response": {"risks": [...], "total": 58}
+      },
+      {
+        "method": "GET",
+        "path": "/api/reference-model/risks?process_id=:process_id",
+        "description": "Get risks for specific process",
+        "response": {"risks": [...], "process_id": "claims-adjudication"}
+      },
+      {
+        "method": "GET",
+        "path": "/api/reference-model/controls",
+        "description": "List all controls",
+        "parameters": {"framework": "HIPAA Security Rule|HITRUST CSF"},
+        "response": {"controls": [...], "total": 8}
+      },
+      {
+        "method": "GET",
+        "path": "/api/reference-model/search?q=:query",
+        "description": "Full-text search across all entities",
+        "response": {"results": [...], "total": 50}
+      }
+    ]
+  },
+  "synthetic_fixtures": {
+    "description": "Sample payer data for development and testing",
+    "synthetic_payer_1": {
+      "payer_id": "synthetic-payer-1",
+      "payer_name": "Acme Health Plan",
+      "payer_type": "Commercial",
+      "market_segment": "Mid-market (100K-500K members)",
+      "processes": [
+        {
+          "process_name": "Claims Adjudication",
+          "application_name": "Facets 5.0",
+          "criticality": "crown-jewel",
+          "owner": "Claims Department",
+          "description": "Core claims processing system"
+        },
+        {
+          "process_name": "EDI Gateway",
+          "application_name": "Change Healthcare X12",
+          "criticality": "crown-jewel",
+          "owner": "IT Infrastructure",
+          "description": "X12 translation hub for claims and eligibility"
+        },
+        {
+          "process_name": "Member Enrollment",
+          "application_name": "Qnxt",
+          "criticality": "high",
+          "owner": "Member Services",
+          "description": "New member onboarding and account setup"
+        },
+        {
+          "process_name": "Premium Billing",
+          "application_name": "Qnxt Billing Module",
+          "criticality": "high",
+          "owner": "Finance",
+          "description": "Premium invoice generation and collection"
+        },
+        {
+          "process_name": "Provider Network Management",
+          "application_name": "Riverone",
+          "criticality": "high",
+          "owner": "Provider Network",
+          "description": "Provider credentialing and directory maintenance"
+        },
+        {
+          "process_name": "Prior Authorization",
+          "application_name": "MCG InterQual",
+          "criticality": "high",
+          "owner": "Utilization Management",
+          "description": "Medical necessity review for high-cost services"
+        },
+        {
+          "process_name": "Provider Payments",
+          "application_name": "InstaMed",
+          "criticality": "high",
+          "owner": "Finance",
+          "description": "Electronic funds transfer to providers"
+        },
+        {
+          "process_name": "Member Portal",
+          "application_name": "Salesforce Health Cloud",
+          "criticality": "medium",
+          "owner": "Member Services",
+          "description": "Web self-service for members"
+        },
+        {
+          "process_name": "Pharmacy Claims",
+          "application_name": "Express Scripts",
+          "criticality": "high",
+          "owner": "Pharmacy Benefits",
+          "description": "PBM for prescription drug coverage"
+        },
+        {
+          "process_name": "Care Management",
+          "application_name": "CareCentrix",
+          "criticality": "medium",
+          "owner": "Clinical Programs",
+          "description": "Case management for complex conditions"
+        },
+        {
+          "process_name": "HEDIS Reporting",
+          "application_name": "Tableau",
+          "criticality": "medium",
+          "owner": "Quality Improvement",
+          "description": "Quality measure collection and reporting"
+        },
+        {
+          "process_name": "Fraud Detection",
+          "application_name": "Cotiviti",
+          "criticality": "medium",
+          "owner": "Special Investigations Unit",
+          "description": "AI-based claims fraud detection"
+        },
+        {
+          "process_name": "Compliance Management",
+          "application_name": "ServiceNow GRC",
+          "criticality": "high",
+          "owner": "Compliance",
+          "description": "HIPAA and regulatory compliance tracking"
+        },
+        {
+          "process_name": "Call Center",
+          "application_name": "Genesys",
+          "criticality": "medium",
+          "owner": "Member Services",
+          "description": "Member inquiry handling and support"
+        },
+        {
+          "process_name": "Analytics Warehouse",
+          "application_name": "Snowflake",
+          "criticality": "high",
+          "owner": "Data Analytics",
+          "description": "Enterprise data warehouse for reporting"
+        }
+      ]
+    },
+    "synthetic_payer_2": {
+      "payer_id": "synthetic-payer-2",
+      "payer_name": "Blue Cross Blue Shield Regional",
+      "payer_type": "Commercial + Medicare Advantage",
+      "market_segment": "Large (500K-1M members)",
+      "processes": [
+        {
+          "process_name": "Claims Processing System",
+          "application_name": "Optum Claims Adjudication",
+          "criticality": "crown-jewel",
+          "owner": "Claims Operations",
+          "description": "Primary claims adjudication platform"
+        },
+        {
+          "process_name": "X12 EDI Translator",
+          "application_name": "Edifecs",
+          "criticality": "crown-jewel",
+          "owner": "Enterprise Integration",
+          "description": "HIPAA transaction processing"
+        },
+        {
+          "process_name": "Medicare Enrollment",
+          "application_name": "GetInsured",
+          "criticality": "high",
+          "owner": "Medicare Operations",
+          "description": "MA and Part D enrollment processing"
+        },
+        {
+          "process_name": "Premium Collection",
+          "application_name": "Custom Billing System",
+          "criticality": "high",
+          "owner": "Revenue Cycle",
+          "description": "Member premium payment processing"
+        },
+        {
+          "process_name": "Provider Data Management",
+          "application_name": "CAQH ProView",
+          "criticality": "high",
+          "owner": "Provider Network",
+          "description": "Provider credentialing and data maintenance"
+        },
+        {
+          "process_name": "Utilization Review",
+          "application_name": "Change Healthcare UM",
+          "criticality": "high",
+          "owner": "Clinical Services",
+          "description": "Prior authorization and concurrent review"
+        },
+        {
+          "process_name": "Provider Remittance",
+          "application_name": "WEX Health",
+          "criticality": "high",
+          "owner": "Provider Payments",
+          "description": "ERA generation and provider payments"
+        },
+        {
+          "process_name": "Member Self-Service",
+          "application_name": "Adobe Experience Manager",
+          "criticality": "medium",
+          "owner": "Digital Experience",
+          "description": "Member web portal and mobile app"
+        },
+        {
+          "process_name": "Pharmacy Benefit Management",
+          "application_name": "Optum Rx",
+          "criticality": "high",
+          "owner": "Pharmacy Services",
+          "description": "Internal PBM operations"
+        },
+        {
+          "process_name": "Disease Management",
+          "application_name": "SignallHealth",
+          "criticality": "medium",
+          "owner": "Population Health",
+          "description": "Chronic condition management programs"
+        },
+        {
+          "process_name": "Medicare STARs",
+          "application_name": "Qlik Sense",
+          "criticality": "high",
+          "owner": "Quality Analytics",
+          "description": "Medicare quality rating performance tracking"
+        },
+        {
+          "process_name": "Special Investigation Unit",
+          "application_name": "IBM Fraud Analytics",
+          "criticality": "medium",
+          "owner": "Corporate Compliance",
+          "description": "Healthcare fraud detection and investigation"
+        },
+        {
+          "process_name": "HIPAA Compliance",
+          "application_name": "Archer",
+          "criticality": "high",
+          "owner": "Corporate Compliance",
+          "description": "Privacy and security compliance management"
+        },
+        {
+          "process_name": "Customer Service",
+          "application_name": "Nice CXOne",
+          "criticality": "medium",
+          "owner": "Member Services",
+          "description": "Call center and member communication"
+        },
+        {
+          "process_name": "Enterprise Data Warehouse",
+          "application_name": "Microsoft Azure Synapse",
+          "criticality": "high",
+          "owner": "Enterprise Data",
+          "description": "Analytics and BI platform"
+        }
+      ]
+    }
+  },
+  "demo_swap_mechanism": {
+    "description": "Support local file override for customer demos",
+    "folder_structure": {
+      "demo": {
+        "customers": {
+          "acme-health-plan": {
+            "processes.json": "Custom demo data for Acme Health Plan",
+            "applications.json": "Custom application inventory for demo"
+          },
+          "blue-cross-blue-shield": {
+            "processes.json": "Custom demo data for BCBS",
+            "applications.json": "Custom application inventory for demo"
+          }
+        }
+      },
+      "fixtures": {
+        "synthetic-payer-1-processes.json": "Synthetic payer 1 fixture data",
+        "synthetic-payer-1-applications.json": "Synthetic payer 1 applications",
+        "synthetic-payer-2-processes.json": "Synthetic payer 2 fixture data",
+        "synthetic-payer-2-applications.json": "Synthetic payer 2 applications"
+      }
+    },
+    "loading_logic": {
+      "description": "Priority order for loading payer data",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Check local demo folder",
+          "path": "demo/customers/{payer_id}/processes.json",
+          "priority": "highest",
+          "use_case": "Customer-specific demo data override"
+        },
+        {
+          "step": 2,
+          "action": "Fall back to synthetic fixtures",
+          "path": "fixtures/synthetic-{payer_id}-processes.json",
+          "priority": "default",
+          "use_case": "Development and testing"
+        },
+        {
+          "step": 3,
+          "action": "Return empty dataset error",
+          "error": "No fixture data found for payer_id: {payer_id}",
+          "priority": "fallback"
+        }
+      ]
+    },
+    "implementation_example": {
+      "language": "JavaScript/Node.js",
+      "code": "const loadPayerData = (payerId) => {\n  // 1. Check local demo folder first\n  const demoPath = path.join(__dirname, '../../demo/customers', payerId, 'processes.json');\n  if (fs.existsSync(demoPath)) {\n    console.log(`Loading demo data for ${payerId} from ${demoPath}`);\n    return JSON.parse(fs.readFileSync(demoPath, 'utf8'));\n  }\n  \n  // 2. Fall back to synthetic fixtures\n  const fixturePath = path.join(__dirname, '../../fixtures', `synthetic-${payerId}-processes.json`);\n  if (fs.existsSync(fixturePath)) {\n    console.log(`Loading fixture data for ${payerId} from ${fixturePath}`);\n    return JSON.parse(fs.readFileSync(fixturePath, 'utf8'));\n  }\n  \n  // 3. No data found\n  throw new Error(`No fixture data found for payer_id: ${payerId}`);\n};"
+    }
+  },
+  "integration_points": {
+    "t_211_normalization": {
+      "description": "Receives canonical rows from T-211 normalization",
+      "input_format": "T-211 canonical JSON output",
+      "mapping": "Direct pass-through of canonical_rows array"
+    },
+    "t_212_matcher": {
+      "description": "Wraps T-212 matcher service",
+      "implementation": "Internal service call or embedded logic",
+      "proposal_format": "Matches T-212 proposal format exactly"
+    },
+    "t_204_reference_model": {
+      "description": "Queries reference model for matching candidates",
+      "endpoints": "GET /api/reference-model/processes, /applications",
+      "caching": "Cache reference model in memory for performance"
+    },
+    "t_220_frontend": {
+      "description": "Frontend (T-220) consumes match API",
+      "response_format": "Proposals format for review UI",
+      "async": "Support both sync (small datasets) and async (large datasets)"
+    }
+  },
+  "implementation_notes": {
+    "phase_1_mvp": [
+      "Implement POST /api/match/processes endpoint",
+      "Create synthetic fixtures for 2 payers with 15 processes each",
+      "Implement demo swap mechanism with local file override",
+      "Add GET /api/match/:match_id for result retrieval",
+      "Document reference model query endpoints (defer implementation)"
+    ],
+    "phase_2_enhancement": [
+      "Add async processing for large datasets (>1000 rows)",
+      "Implement status endpoint for long-running matches",
+      "Add batch processing support",
+      "Implement caching for reference model queries",
+      "Add metrics and monitoring"
+    ],
+    "phase_3_advanced": [
+      "Implement real-time streaming of match results",
+      "Add WebSocket support for live updates",
+      "Implement match result export (CSV, JSON)",
+      "Add match result versioning and audit trail",
+      "Implement A/B testing for matching algorithms"
+    ]
+  },
+  "testing_strategy": {
+    "unit_tests": [
+      "POST /api/match/processes with valid canonical rows",
+      "POST /api/match/processes with invalid data (400 error)",
+      "POST /api/match/processes with missing JWT (401 error)",
+      "GET /api/match/:match_id with valid match_id",
+      "GET /api/match/:match_id with invalid match_id (404 error)",
+      "Demo swap mechanism loads local data when present",
+      "Demo swap mechanism falls back to fixtures when no local data",
+      "Synthetic fixtures match T-212 proposal format"
+    ],
+    "integration_tests": [
+      "End-to-end match with T-211 canonical rows",
+      "Match with T-212 matcher service integration",
+      "Reference model query integration (T-204)",
+      "Frontend (T-220) consumes match API response",
+      "Async processing for large datasets"
+    ],
+    "fixture_tests": [
+      "Synthetic payer 1 fixture loads successfully",
+      "Synthetic payer 2 fixture loads successfully",
+      "Fixtures contain all required fields",
+      "Fixtures use realistic healthcare payer terminology",
+      "Demo override swaps data correctly"
+    ]
+  },
+  "security_considerations": {
+    "authentication": {
+      "method": "JWT Bearer token",
+      "required": "All endpoints",
+      "authorization": "Organizational scope enforced"
+    },
+    "data_protection": {
+      "phi": "Synthetic fixtures contain no real PHI",
+      "demo_data": "Customer demo data must be anonymized",
+      "logging": "No customer data in logs"
+    },
+    "rate_limiting": {
+      "default": "100 requests per minute per org",
+      "burst": "Allow burst for demo scenarios",
+      "large_datasets": "Queue for async processing"
+    }
+  },
+  "performance_considerations": {
+    "throughput": {
+      "small_datasets": "<100 rows - synchronous processing",
+      "medium_datasets": "100-1000 rows - sync with timeout extension",
+      "large_datasets": ">1000 rows - async with polling"
+    },
+    "caching": {
+      "reference_model": "Cache in memory with TTL",
+      "llm_responses": "Cache LLM responses with 24h TTL",
+      "match_results": "Cache results for 1 hour"
+    },
+    "scalability": {
+      "horizontal": "Stateless service, can scale horizontally",
+      "llm_rate_limits": "Implement request queue for LLM API",
+      "database": "Store match results for retrieval"
+    }
+  },
+  "validation_criteria": {
+    "api_design": [
+      "POST /api/match/processes accepts canonical_rows from T-211",
+      "Response format matches T-212 proposal format exactly",
+      "Error responses include proper HTTP status codes",
+      "JWT authentication required on all endpoints"
+    ],
+    "synthetic_fixtures": [
+      "2 synthetic payers with 15 processes each",
+      "Realistic healthcare payer terminology",
+      "All required fields present (process_name, application_name, criticality)",
+      "Vendor names match T-201 application archetypes"
+    ],
+    "demo_swap_mechanism": [
+      "Local demo folder checked first",
+      "Falls back to fixtures when no local data",
+      "Clear error when no data found",
+      "Simple file-based implementation"
+    ],
+    "reference_model_queries": [
+      "All query endpoints documented",
+      "Endpoint paths align with T-204 reference model",
+      "Response formats documented",
+      "Implementation deferred with clear note"
+    ]
+  },
+  "deliverables_summary": {
+    "completed": [
+      "Match API endpoint design (POST /api/match/processes)",
+      "Match result retrieval (GET /api/match/:match_id)",
+      "Synthetic payer fixtures (2 payers, 15 processes each)",
+      "Demo swap mechanism with local override",
+      "Reference model query endpoints documented"
+    ],
+    "deferred": [
+      "Reference model query endpoint implementation",
+      "Async processing for large datasets",
+      "WebSocket support for real-time updates",
+      "Match result export functionality"
+    ]
+  }
+}
