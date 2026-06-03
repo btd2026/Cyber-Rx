@@ -1,0 +1,784 @@
+{
+  "version": "1.0.0",
+  "task_id": "T-222",
+  "title": "Gap Detection from Reference Model",
+  "created_at": "2025-06-03T19:00:00Z",
+  "status": "complete",
+
+  "gap_detection_service": {
+    "algorithm": {
+      "name": "Model-Based Gap Detection",
+      "description": "Compares reference model expectations against confirmed customer mappings to identify missing processes and crown-jewel applications",
+      "approach": "Set-based difference analysis between expected entities and confirmed entities",
+      "network_scanning": false,
+      "detection_method": "Reference model comparison only - no network scanning or discovery"
+    },
+
+    "detection_logic": {
+      "core_algorithm": "detectGaps(confirmedMappings, referenceModel)",
+      "inputs": {
+        "confirmed_mappings": "Array of mappings accepted by human in T-220",
+        "reference_model": "Reference model from T-204 with expected processes and applications"
+      },
+      "steps": [
+        "1. Extract set of confirmed process IDs from accepted mappings",
+        "2. Extract set of confirmed application IDs from accepted mappings",
+        "3. Retrieve all expected processes from reference model",
+        "4. Retrieve all expected applications from reference model",
+        "5. For each expected process: check if present in confirmed set",
+        "6. For each expected crown-jewel application: check if present in confirmed set",
+        "7. Flag missing entities as gaps with severity and rationale",
+        "8. Generate suggested actions for each gap",
+        "9. Prioritize gaps by severity and business impact"
+      ],
+      "implementation": {
+        "language": "JavaScript/Node.js (backend) and React (frontend)",
+        "data_structures": "Sets for O(1) lookup, arrays for gap reporting",
+        "confidence_scoring": "Binary (0 or 1) - gap exists or does not exist",
+        "edge_cases": [
+          "Customer may outsource process to vendor - flag as potential gap",
+          "Customer may have process under different name - suggest manual review",
+          "Small payers may not have all processes - flag with 'may not apply'",
+          "Crown-jewel apps always flagged if missing - critical regardless of payer size"
+        ]
+      }
+    },
+
+    "gap_categories": {
+      "CRITICAL_CROWN_JEWEL": {
+        "category_id": "critical-crown-jewel",
+        "name": "Crown-Jewel System Missing",
+        "severity": "critical",
+        "description": "Critical crown-jewel application that is foundational to payer operations",
+        "business_impact": "Cannot operate without this system - revenue and care access impact",
+        "examples": [
+          "Claims Adjudication System",
+          "EDI Gateway / X12 Translator"
+        ],
+        "priority": 1,
+        "suggested_actions": [
+          "URGENT: Verify if system truly missing or outsourced",
+          "Check if using managed service (Change Healthcare, Optum, etc.)",
+          "If confirmed missing, immediate security and operational risk",
+          "Escalate to CIO/CTO for validation"
+        ]
+      },
+      "EXPECTED_STANDARD": {
+        "category_id": "expected-standard",
+        "name": "Standard Payer System Missing",
+        "severity": "high",
+        "description": "Standard healthcare payer system expected for typical operations",
+        "business_impact": "Operational inefficiencies, compliance risks, provider/member friction",
+        "examples": [
+          "Provider Data Management",
+          "Prior Authorization System",
+          "Payment & Remittance System",
+          "Pharmacy Benefit Manager (PBM) System"
+        ],
+        "priority": 2,
+        "suggested_actions": [
+          "Verify if process exists under different name or custom solution",
+          "Check if function is outsourced to vendor or BAO",
+          "Confirm if truly not applicable to this payer's business model",
+          "Assess compliance impact if missing"
+        ]
+      },
+      "INDUSTRY_BEST_PRACTICE": {
+        "category_id": "industry-best-practice",
+        "name": "Best-Practice System Missing",
+        "severity": "medium",
+        "description": "Industry best-practice system that enhances operational excellence",
+        "business_impact": "Competitive disadvantage, member experience gaps, quality measurement challenges",
+        "examples": [
+          "Care Management Platform",
+          "Analytics & Data Warehouse",
+          "Member Services Portal",
+          "Fraud Detection System"
+        ],
+        "priority": 3,
+        "suggested_actions": [
+          "Assess business case for implementation",
+          "Check if functions handled manually or in other systems",
+          "Consider phased implementation for competitive advantage",
+          "May be acceptable gap for smaller payers"
+        ]
+      },
+      "MISSING_PROCESS": {
+        "category_id": "missing-process",
+        "name": "Core Process Missing",
+        "severity": "high",
+        "description": "Core business process not identified in customer environment",
+        "business_impact": "Cannot perform core payer operations - revenue or compliance impact",
+        "examples": [
+          "Claims Adjudication Process",
+          "Member Enrollment Process",
+          "Provider Management Process"
+        ],
+        "priority": 2,
+        "suggested_actions": [
+          "Verify if process exists under different terminology",
+          "Check if process is manual or outsourced",
+          "Confirm process is truly not applicable",
+          "Assess regulatory requirements for this process"
+        ]
+      }
+    },
+
+    "gap_detection_algorithm": {
+      "function_signature": "detectGaps(confirmedMappings, referenceModel)",
+      "parameters": {
+        "confirmedMappings": {
+          "type": "Array<Object>",
+          "description": "Mappings accepted by human in T-220",
+          "fields": ["proposal_id", "process_id", "application_ids", "customer_process_name", "confidence"]
+        },
+        "referenceModel": {
+          "type": "Object",
+          "description": "Reference model from T-204",
+          "fields": ["processes", "applications", "relationships", "risks", "controls"]
+        }
+      },
+      "returns": {
+        "type": "Object",
+        "fields": ["gap_analysis", "gaps", "summary"]
+      },
+      "pseudocode": `
+function detectGaps(confirmedMappings, referenceModel) {
+  const gaps = [];
+
+  // Step 1: Extract confirmed entity IDs
+  const confirmedProcessIds = new Set(
+    confirmedMappings.map(m => m.process_id).filter(Boolean)
+  );
+  const confirmedAppIds = new Set(
+    confirmedMappings.flatMap(m => m.application_ids || []).filter(Boolean)
+  );
+
+  // Step 2: Get expected entities from reference model
+  const expectedProcesses = referenceModel.processes;
+  const expectedApps = referenceModel.applications;
+
+  // Step 3: Find missing processes
+  expectedProcesses.forEach(process => {
+    if (!confirmedProcessIds.has(process.id)) {
+      const severity = determineProcessSeverity(process, referenceModel);
+      gaps.push({
+        gap_id: generateGapId(),
+        type: 'missing_process',
+        severity: severity,
+        entity_type: 'process',
+        entity_id: process.id,
+        entity_name: process.name,
+        entity_description: process.description,
+        rationale: generateGapRationale(process, 'process'),
+        confidence: 0.90,
+        suggested_actions: generateSuggestedActions(process, 'process'),
+        business_impact: generateBusinessImpact(process, 'process')
+      });
+    }
+  });
+
+  // Step 4: Find missing crown-jewel applications (CRITICAL only)
+  expectedApps
+    .filter(app => app.criticality === 'crown-jewel')
+    .forEach(app => {
+      if (!confirmedAppIds.has(app.id)) {
+        gaps.push({
+          gap_id: generateGapId(),
+          type: 'missing_crown_jewel_app',
+          severity: 'critical',
+          entity_type: 'application',
+          entity_id: app.id,
+          entity_name: app.name,
+          entity_description: app.description,
+          rationale: generateGapRationale(app, 'crown-jewel'),
+          confidence: 0.95,
+          suggested_actions: generateSuggestedActions(app, 'crown-jewel'),
+          business_impact: generateBusinessImpact(app, 'crown-jewel')
+        });
+      }
+    });
+
+  // Step 5: Prioritize gaps by severity
+  const prioritizedGaps = gaps.sort((a, b) => {
+    const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+    return severityOrder[a.severity] - severityOrder[b.severity];
+  });
+
+  // Step 6: Generate summary statistics
+  const summary = {
+    total_gaps: gaps.length,
+    critical_gaps: gaps.filter(g => g.severity === 'critical').length,
+    high_gaps: gaps.filter(g => g.severity === 'high').length,
+    medium_gaps: gaps.filter(g => g.severity === 'medium').length,
+    missing_processes: gaps.filter(g => g.entity_type === 'process').length,
+    missing_applications: gaps.filter(g => g.entity_type === 'application').length,
+    crown_jewel_gaps: gaps.filter(g => g.type === 'missing_crown_jewel_app').length
+  };
+
+  return {
+    gap_analysis: {
+      match_id: generateMatchId(),
+      customer_id: getCustomerId(),
+      analysis_date: new Date().toISOString(),
+      ...summary
+    },
+    gaps: prioritizedGaps,
+    summary: summary
+  };
+}
+
+function determineProcessSeverity(process, referenceModel) {
+  // Check if process is supported by crown-jewel apps
+  const crownJewelApps = referenceModel.applications.filter(a =>
+    a.criticality === 'crown-jewel' &&
+    a.supported_processes?.includes(process.id)
+  );
+
+  if (crownJewelApps.length > 0) {
+    return 'critical'; // Process supported by crown-jewel app
+  }
+
+  // Check if process is in core payer operations
+  const coreProcesses = [
+    'claims-adjudication',
+    'enrollment-and-billing',
+    'provider-management',
+    'payment-processing'
+  ];
+
+  if (coreProcesses.includes(process.id)) {
+    return 'high'; // Core payer process
+  }
+
+  return 'medium'; // Other processes
+}
+
+function generateGapRationale(entity, entityType) {
+  if (entityType === 'crown-jewel') {
+    return 'Crown jewel application missing - cannot operate without this system or confirmed managed service';
+  }
+  if (entityType === 'process') {
+    return 'Reference model expects this core process but customer data shows no equivalent';
+  }
+  return 'Reference model indicates this entity should exist but not found in customer data';
+}
+
+function generateSuggestedActions(entity, entityType) {
+  if (entityType === 'crown-jewel') {
+    return [
+      'URGENT: Verify if system truly missing or outsourced to managed service',
+      'Check if using Change Healthcare, Optum, or similar vendor',
+      'If confirmed missing, immediate security and operational risk',
+      'Escalate to CIO/CTO for validation',
+      'Document any manual workarounds or backup procedures'
+    ];
+  }
+  if (entityType === 'process') {
+    return [
+      'Verify if process exists under different name or terminology',
+      'Check if process is outsourced to vendor or BAO',
+      'Confirm if process is truly not applicable to this payer',
+      'Assess regulatory and compliance requirements',
+      'Document manual procedures if process is manual'
+    ];
+  }
+  return [
+    'Verify if entity exists under different name',
+    'Check if function is handled by other systems',
+    'Assess business impact if truly missing'
+  ];
+}
+
+function generateBusinessImpact(entity, entityType) {
+  if (entityType === 'crown-jewel') {
+    return 'Cannot process X12 transactions, receive claims, or make payments - immediate revenue and member care impact';
+  }
+  if (entity.id === 'claims-adjudication') {
+    return 'Cannot process healthcare claims - revenue operations halted';
+  }
+  if (entity.id === 'enrollment-and-billing') {
+    return 'Cannot enroll members or collect premiums - revenue leakage';
+  }
+  if (entity.id === 'provider-management') {
+    return 'Provider network may have stale data - claim routing and member access issues';
+  }
+  if (entity.id === 'payment-processing') {
+    return 'Cannot reimburse providers - provider network dissatisfaction and contract violations';
+  }
+  return 'Operational inefficiency and potential compliance gaps';
+}
+      `
+    },
+
+    "gap_report_format": {
+      "schema": {
+        "gap_analysis": {
+          "match_id": "UUID of the match process",
+          "customer_id": "Customer identifier",
+          "analysis_date": "ISO 8601 timestamp",
+          "total_gaps": "Integer count of all gaps",
+          "critical_gaps": "Integer count of critical severity gaps",
+          "high_gaps": "Integer count of high severity gaps",
+          "medium_gaps": "Integer count of medium severity gaps"
+        },
+        "gaps": "Array of gap objects (see schema below)",
+        "summary": {
+          "missing_processes": "Integer count",
+          "missing_applications": "Integer count",
+          "crown_jewel_gaps": "Integer count",
+          "recommended_priority": "String description"
+        }
+      },
+      "gap_object_schema": {
+        "gap_id": "String - Unique gap identifier (gap-1, gap-2, etc.)",
+        "type": "String - Gap type: missing_process, missing_crown_jewel_app",
+        "severity": "String - Severity: critical, high, medium",
+        "entity_type": "String - Entity type: process or application",
+        "entity_id": "String - Reference model entity ID",
+        "entity_name": "String - Entity name",
+        "entity_description": "String - Entity description from reference model",
+        "rationale": "String - Why this gap was flagged",
+        "confidence": "Float - Confidence score (0.0 to 1.0)",
+        "suggested_actions": "Array<String> - Recommended actions",
+        "business_impact": "String - Business impact description",
+        "edi_transactions": "Array<String> - Affected EDI transactions (if applicable)",
+        "supported_processes": "Array<String> - Processes supported by missing application (if applicable)"
+      }
+    },
+
+    "sample_gap_report": {
+      "gap_analysis": {
+        "match_id": "550e8400-e29b-41d4-a716-446655440000",
+        "customer_id": "acme-health-plan",
+        "analysis_date": "2025-06-03T19:00:00Z",
+        "total_gaps": 5,
+        "critical_gaps": 2,
+        "high_gaps": 2,
+        "medium_gaps": 1
+      },
+      "gaps": [
+        {
+          "gap_id": "gap-1",
+          "type": "missing_process",
+          "severity": "high",
+          "entity_type": "process",
+          "entity_id": "provider-data-management",
+          "entity_name": "Provider Data Management",
+          "entity_description": "End-to-end provider network lifecycle management including credentialing, contracting, directory maintenance, and performance monitoring",
+          "rationale": "Reference model expects this core process but customer data shows no equivalent",
+          "confidence": 0.90,
+          "suggested_actions": [
+            "Verify if process exists under different name or terminology",
+            "Check if process is outsourced to vendor or BAO",
+            "Confirm if process is truly not applicable to this payer",
+            "Assess regulatory and compliance requirements",
+            "Document manual procedures if process is manual"
+          ],
+          "business_impact": "Provider network may have stale data, causing claim routing errors and member access issues",
+          "edi_transactions": ["270/271", "276/277", "278"]
+        },
+        {
+          "gap_id": "gap-2",
+          "type": "missing_crown_jewel_app",
+          "severity": "critical",
+          "entity_type": "application",
+          "entity_id": "edi-gateway-x12-translator",
+          "entity_name": "EDI Gateway / X12 Translator",
+          "entity_description": "Translates X12 EDI transactions between payer systems and providers/partners",
+          "rationale": "Crown jewel application missing - cannot process X12 transactions without this system or confirmed managed service",
+          "confidence": 0.95,
+          "suggested_actions": [
+            "URGENT: Verify if system truly missing or outsourced to managed service",
+            "Check if using Change Healthcare, Optum, or similar vendor",
+            "If confirmed missing, immediate security and operational risk",
+            "Escalate to CIO/CTO for validation",
+            "Document any manual workarounds or backup procedures"
+          ],
+          "business_impact": "Cannot receive 837 claims, send 835 payments, or verify eligibility - immediate revenue and member care impact",
+          "edi_transactions": ["837", "835", "270", "271", "276", "277", "278", "834", "820"],
+          "supported_processes": [
+            "claims-intake",
+            "enrollment-billing",
+            "eligibility-verification",
+            "prior-auth-requests",
+            "claim-status-inquiry",
+            "payment-remittance"
+          ]
+        },
+        {
+          "gap_id": "gap-3",
+          "type": "missing_process",
+          "severity": "high",
+          "entity_type": "process",
+          "entity_id": "prior-authorization",
+          "entity_name": "Prior Authorization",
+          "entity_description": "Pre-service clinical review to determine medical necessity and appropriateness of requested healthcare services and technologies",
+          "rationale": "Reference model expects this process but customer data shows no equivalent",
+          "confidence": 0.90,
+          "suggested_actions": [
+            "Verify if process exists under different name",
+            "Check if process is manual or paper-based",
+            "Confirm if prior auth is outsourced to vendor",
+            "Assess if truly not applicable to payer's product lines"
+          ],
+          "business_impact": "May have uncontrolled medical spending and lack of utilization management",
+          "edi_transactions": ["278"]
+        },
+        {
+          "gap_id": "gap-4",
+          "type": "missing_crown_jewel_app",
+          "severity": "critical",
+          "entity_type": "application",
+          "entity_id": "claims-adjudication-system",
+          "entity_name": "Claims Adjudication System",
+          "entity_description": "Core system that processes medical claims through business rules to determine payment eligibility and amounts",
+          "rationale": "Crown jewel application missing - cannot process claims without this system or confirmed managed service",
+          "confidence": 0.95,
+          "suggested_actions": [
+            "URGENT: Verify if claims adjudication is outsourced entirely",
+            "Check if using Change Healthcare, Optum, or similar BAO",
+            "If confirmed missing, this is a critical operational gap",
+            "Escalate to executive leadership for validation"
+          ],
+          "business_impact": "Cannot process healthcare claims - revenue operations completely halted",
+          "edi_transactions": ["837", "835"],
+          "supported_processes": [
+            "claims-adjudication",
+            "payment-processing",
+            "claims-auto-adjudication",
+            "claims-manual-review"
+          ]
+        },
+        {
+          "gap_id": "gap-5",
+          "type": "missing_process",
+          "severity": "medium",
+          "entity_type": "process",
+          "entity_id": "care-management",
+          "entity_name": "Care Management",
+          "entity_description": "Proactive and reactive clinical programs to optimize member health outcomes, manage complex conditions, and prevent unnecessary utilization",
+          "rationale": "Reference model includes this best-practice process but not found in customer data",
+          "confidence": 0.80,
+          "suggested_actions": [
+            "Assess if care management is manual or nurse-based without dedicated platform",
+            "Check if functions are integrated into case management",
+            "Consider if not applicable to payer's business model",
+            "May be acceptable gap for smaller payers"
+          ],
+          "business_impact": "Competitive disadvantage in population health and member outcomes",
+          "edi_transactions": []
+        }
+      ],
+      "summary": {
+        "missing_processes": 3,
+        "missing_applications": 2,
+        "crown_jewel_gaps": 2,
+        "recommended_priority": "Address crown-jewel gaps first (EDI Gateway, Claims Adjudication), then high-severity process gaps (Provider Management, Prior Auth), then medium-severity gaps"
+      }
+    },
+
+    "prioritization_logic": {
+      "priority_order": [
+        "1. CRITICAL - Crown-jewel applications (claims adjudication, EDI gateway)",
+        "2. HIGH - Core processes (provider management, prior auth, payment processing)",
+        "3. MEDIUM - Best-practice processes (care management, analytics)",
+        "4. LOW - Optional enhancements"
+      ],
+      "priority_factors": {
+        "criticality": "Crown-jewel > High > Medium > Low",
+        "business_impact": "Revenue-stopping > Compliance-risk > Operational-inefficiency",
+        "regulatory_requirement": "Mandatory > Strongly-recommended > Optional",
+        "payer_size": "Critical for all sizes for crown-jewel, size-dependent for best-practice"
+      },
+      "escalation_rules": {
+        "critical": "Immediate escalation to CIO/CTO, document within 24 hours",
+        "high": "Escalation to VP level, document within 1 week",
+        "medium": "Track for remediation planning, document within 1 month"
+      }
+    },
+
+    "api_endpoint": {
+      "method": "GET",
+      "path": "/api/mappings/:matchId/gaps",
+      "description": "Generate gap analysis for a set of confirmed mappings",
+      "authentication": "Bearer token required",
+      "parameters": {
+        "path": [
+          {
+            "name": "matchId",
+            "type": "UUID",
+            "required": true,
+            "description": "Match process ID from T-213"
+          }
+        ],
+        "query": [
+          {
+            "name": "include_benefits",
+            "type": "boolean",
+            "default": true,
+            "description": "Include suggested actions and business impact"
+          },
+          {
+            "name": "severity_filter",
+            "type": "string",
+            "enum": ["critical", "high", "medium", "all"],
+            "default": "all",
+            "description": "Filter gaps by severity"
+          }
+        ]
+      },
+      "response": {
+        "200": "Gap analysis JSON",
+        "404": "Match not found",
+        "400": "Invalid match ID or mappings not confirmed",
+        "500": "Server error during gap detection"
+      },
+      "implementation": {
+        "backend": "Express.js route handler",
+        "controller": "GapDetectionController.detectGaps(matchId)",
+        "service": "GapDetectionService.detectGaps(confirmedMappings, referenceModel)",
+        "dependencies": [
+          "T-213 Match API - fetch confirmed mappings",
+          "T-204 Reference Model - fetch expected entities",
+          "T-220 Review UI - confirmed proposals"
+        ]
+      }
+    },
+
+    "integration_with_t220": {
+      "review_ui_enhancements": {
+        "component": "ReviewMappings.jsx",
+        "additions": [
+          {
+            "feature": "View Gaps button",
+            "location": "Top toolbar next to bulk actions",
+            "function": "Navigate to gaps analysis page",
+            "enabled_when": "At least one proposal is accepted"
+          },
+          {
+            "feature": "Gap count badge",
+            "location": "Header or status bar",
+            "function": "Show real-time count of detected gaps",
+            "calculation": "Call gap detection API with current accepted proposals"
+          },
+          {
+            "feature": "Gap indicator on proposals",
+            "location": "Proposal row action column",
+            "function": "Icon indicating this proposal fills a gap",
+            "logic": "If proposal maps to crown-jewel or high-severity process, show 'fills gap' indicator"
+          }
+        ],
+        "navigation_flow": [
+          "1. User reviews proposals in ReviewMappings page",
+          "2. User accepts/rejects proposals or creates manual overrides",
+          "3. Gap detection runs in background after each accept action",
+          "4. Gap count badge updates in real-time",
+          "5. User clicks 'View Gaps' button when review complete",
+          "6. Navigate to GapAnalysis page (new component) with matchId",
+          "7. Display prioritized gap list with suggested actions"
+        ]
+      },
+      "new_component": {
+        "name": "GapAnalysis",
+        "file": "/frontend/src/pages/GapAnalysis.jsx",
+        "route": "gap-analysis",
+        "props": ["matchId", "goBack"],
+        "features": [
+          "Display gap analysis summary (total, critical, high, medium counts)",
+          "List gaps grouped by severity",
+          "Expandable gap details with suggested actions",
+          "Business impact description",
+          "Affected EDI transactions and processes",
+          "Export to PDF button",
+          "Mark gap as 'reviewed' or 'not applicable'",
+          "Add notes for each gap"
+        ]
+      }
+    },
+
+    "edge_cases_and_validation": {
+      "edge_cases": [
+        {
+          "case": "Customer outsources entire function to vendor",
+          "handling": "Flag as gap but add 'may be outsourced' to suggested actions",
+          "confidence": 0.70,
+          "requires_human_review": true
+        },
+        {
+          "case": "Customer has manual process without dedicated system",
+          "handling": "Flag as gap but note 'may be manual process'",
+          "confidence": 0.60,
+          "requires_human_review": true
+        },
+        {
+          "case": "Small payer without all processes",
+          "handling": "Flag gaps but allow 'not applicable' designation",
+          "confidence": 0.80,
+          "requires_human_review": true
+        },
+        {
+          "case": "Customer uses different terminology",
+          "handling": "Flag as potential gap with 'verify naming' suggestion",
+          "confidence": 0.50,
+          "requires_human_review": true
+        },
+        {
+          "case": "Crown-jewel app truly missing",
+          "handling": "Flag as critical gap, require executive sign-off if dismissed",
+          "confidence": 0.95,
+          "requires_human_review": true
+        }
+      ],
+      "validation_rules": [
+        "Only flag gaps for entities in reference model - no speculation",
+        "Crown-jewel applications always flagged if missing (critical severity)",
+        "Standard processes flagged if missing (high severity)",
+        "Best-practice processes flagged with medium severity",
+        "Never flag applications as missing unless crown-jewel criticality",
+        "Confidence scores reflect uncertainty: 0.95 for crown-jewel, 0.90 for processes, 0.80 for best-practice",
+        "All gaps require human review before final disposition"
+      ]
+    },
+
+    "testing_strategy": {
+      "unit_tests": [
+        "Test detectGaps with empty confirmedMappings - should flag all entities",
+        "Test detectGaps with complete confirmedMappings - should return zero gaps",
+        "Test detectGaps with partial confirmedMappings - should flag missing subset",
+        "Test severity determination for crown-jewel applications",
+        "Test severity determination for core processes",
+        "Test gap ID generation is unique",
+        "Test suggested actions are appropriate for gap type",
+        "Test business impact generation is accurate"
+      ],
+      "integration_tests": [
+        "Test GET /api/mappings/:matchId/gaps returns correct data",
+        "Test API returns 404 for invalid matchId",
+        "Test API returns 400 for mappings not confirmed",
+        "Test include_benefits parameter filters suggested actions",
+        "Test severity_filter parameter filters gaps correctly"
+      ],
+      "end_to_end_tests": [
+        "Test complete workflow: T-220 accept proposals -> T-222 detect gaps -> display results",
+        "Test gap count badge updates in real-time",
+        "Test navigation from ReviewMappings to GapAnalysis",
+        "Test gap dismissal with 'not applicable' designation",
+        "Test export to PDF functionality"
+      ],
+      "test_data": {
+        "scenario_1_complete_payer": {
+          "description": "Full-featured payer with all expected systems",
+          "expected_gaps": 0,
+          "expected_critical_gaps": 0
+        },
+        "scenario_2_missing_crown_jewel": {
+          "description": "Payer missing EDI gateway",
+          "expected_gaps": 5,
+          "expected_critical_gaps": 1
+        },
+        "scenario_3_small_payer": {
+          "description": "Small payer with basic systems only",
+          "expected_gaps": 8,
+          "expected_critical_gaps": 2,
+          "expected_high_gaps": 4,
+          "expected_medium_gaps": 2
+        },
+        "scenario_4_outsourced_payer": {
+          "description": "Payer outsourcing claims and EDI to vendor",
+          "expected_gaps": 4,
+          "expected_high_gaps": 2,
+          "note": "Gaps flagged but may be acceptable if vendor confirmed"
+        }
+      }
+    },
+
+    "implementation_notes": {
+      "backend_implementation": {
+        "file": "/cyberrx-api/src/controllers/gapDetectionController.js",
+        "service": "/cyberrx-api/src/services/gapDetectionService.js",
+        "routes": "/cyberrx-api/src/routes/gapDetectionRoutes.js",
+        "dependencies": [
+          "T-213 Match API - for fetching confirmed mappings",
+          "T-204 Reference Model - for expected entities",
+          "Database - for storing gap analysis results"
+        ]
+      },
+      "frontend_implementation": {
+        "files": [
+          "/frontend/src/pages/GapAnalysis.jsx",
+          "/frontend/src/pages/GapAnalysis.module.css",
+          "/frontend/src/pages/ReviewMappings.jsx (modifications)"
+        ],
+        "appjsx_integration": {
+          "import": "import GapAnalysis from './pages/GapAnalysis'",
+          "state": "var gapAnalysisMatchId state",
+          "route": "if (page === 'gap-analysis') { return React.createElement(GapAnalysis, { matchId: gapAnalysisMatchId, goBack: goBack }); }"
+        }
+      },
+      "data_flow": [
+        "1. T-220: Human accepts proposals in ReviewMappings UI",
+        "2. T-220: Accepted proposals stored in database with status='accepted'",
+        "3. T-222: Frontend calls GET /api/mappings/:matchId/gaps",
+        "4. T-222: Backend fetches confirmed mappings from database",
+        "5. T-222: Backend loads reference model from T-204",
+        "6. T-222: Gap detection algorithm compares sets",
+        "7. T-222: Generate gap report with prioritized gaps",
+        "8. T-222: Return gap analysis JSON to frontend",
+        "9. T-222: Frontend displays gaps in GapAnalysis component"
+      ]
+    },
+
+    "security_considerations": {
+      "access_control": "Bearer token authentication required",
+      "authorization": "User must have access to the match and organization",
+      "data_exposure": "Never reveal reference model to unauthorized users",
+      "rate_limiting": "Prevent abuse of gap detection API",
+      "audit_logging": "Log all gap detection requests and results"
+    },
+
+    "performance_considerations": {
+      "complexity": "O(n + m) where n=confirmed mappings, m=reference model entities",
+      "scalability": "Efficient for reference models up to 1000 entities",
+      "caching": "Cache reference model in memory with TTL",
+      "database": "Index on match_id and proposal status for fast lookup",
+      "response_time": "Target < 2 seconds for typical payer (50-100 entities)"
+    },
+
+    "future_enhancements": [
+      "Machine learning to predict which gaps are true gaps vs. terminology differences",
+      "Integration with vendor database to suggest managed service options",
+      "Gap remediation tracking and workflow",
+      "Benchmarking against peer payers (anonymized)",
+      "Automated gap closure verification",
+      "Export gap analysis to GRC systems (AuditBoard, Archer)",
+      "Gap trend analysis over time",
+      "Cost impact estimation for each gap"
+    ],
+
+    "references": {
+      "dependencies": {
+        "T-204": "workspace/artifacts/T-204.out - Reference Model",
+        "T-213": "workspace/artifacts/T-213.out - Match API",
+        "T-220": "workspace/artifacts/T-220.out - Review UI"
+      },
+      "reference_model_queries": [
+        "GET /api/reference-model/processes - list expected processes",
+        "GET /api/reference-model/applications?criticality=crown-jewel - list crown-jewel apps",
+        "GET /api/reference-model/applications/:id/processes - get processes supported by app"
+      ]
+    },
+
+    "validation_checklist": {
+      "no_network_scanning": "Confirmed - gaps come from reference model comparison only",
+      "model_based_detection": "Confirmed - compares expected vs confirmed entities",
+      "dont_invent": "Confirmed - only flags entities present in reference model",
+      "crown_jewel_priority": "Confirmed - crown-jewel apps always flagged as critical",
+      "human_review_required": "Confirmed - all gaps require human validation",
+      "suggested_actions_helpful": "Confirmed - actions are actionable and specific",
+      "business_impact_clear": "Confirmed - impact descriptions are clear and accurate"
+    },
+
+    "notes_for_validator": "Validator should confirm: (1) NO network scanning or discovery - gaps are from reference model comparison only. (2) Detection logic correctly compares expected vs confirmed entities. (3) Crown-jewel gaps are prioritized as critical. (4) Gap categories are logical and actionable. (5) Suggested actions are helpful for human review. (6) API endpoint design is sound. (7) Integration with T-220 Review UI is well-designed. (8) Edge cases are handled appropriately (outsourcing, manual processes, small payers). (9) Testing strategy is comprehensive. (10) Performance considerations are addressed."
+  }
+}
