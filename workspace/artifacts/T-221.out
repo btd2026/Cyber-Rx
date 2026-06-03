@@ -1,0 +1,240 @@
+# T-221: Interactive Graph Render - Implementation Output
+
+## Task Summary
+Built interactive graph visualization for processes/sub-processes/apps with filtering and exploration capabilities.
+
+## Implementation Details
+
+### 1. Component Created
+**File:** `/Users/briandibassinga/Github/Cyber-Rx/frontend/src/pages/ProcessGraph.jsx`
+
+**Features:**
+- Interactive graph visualization using Cytoscape.js (react-cytoscapejs)
+- Process filtering by business process (dropdown filter)
+- Click-to-explore node details panel
+- Color-coded nodes by type:
+  - Blue: Business Processes
+  - Purple: Sub-processes
+  - Green: Applications
+- Zoom and pan capabilities
+- Confidence-based visualization
+- Responsive design for mobile/tablet/desktop
+- Highlight connected nodes and edges on click
+
+### 2. Styling
+**File:** `/Users/briandibassinga/Github/Cyber-Rx/frontend/src/pages/ProcessGraph.module.css`
+
+**Components:**
+- Full-height container with header and graph area
+- Legend showing node type colors
+- Slide-in node details panel (right side on desktop, bottom sheet on mobile)
+- Responsive breakpoints for tablet (1024px) and mobile (768px)
+- Print styles for documentation
+
+### 3. Dependencies Installed
+```bash
+cd frontend
+npm install cytoscape react-cytoscapejs
+```
+
+**Packages:**
+- `cytoscape@^3.30.3` - Core graph library
+- `react-cytoscapejs@^2.0.0` - React wrapper
+
+### 4. App.jsx Integration
+**File:** `/Users/briandibassinga/Github/Cyber-Rx/frontend/src/App.jsx`
+
+**Changes:**
+- Line 7: Added import for ProcessGraph component
+- Line 23839: Added state variable `processGraphMatchId` and setter
+- Line 24315-24320: Added routing logic for `page==="process-graph"`
+
+**Navigation:**
+Set `page="process-graph"` and `processGraphMatchId=<matchId>` to render the graph view.
+
+### 5. API Integration (Expected Backend Endpoint)
+
+**Endpoint:** `GET /api/mappings/:matchId/graph`
+
+**Expected Response Format:**
+```json
+{
+  "processes": [
+    {
+      "process_id": "claims-adjudication",
+      "process_name": "Claims Adjudication",
+      "confidence": 0.95,
+      "applications": [
+        {
+          "application_id": "facets",
+          "application_name": "Facets",
+          "vendor": "Change Healthcare",
+          "confidence": 0.95
+        }
+      ],
+      "sub_processes": [
+        {
+          "sub_process_id": "claims-auto-adjudication",
+          "sub_process_name": "Automated Adjudication"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### 6. Graph Layout Configuration
+
+**Algorithm:** COSE (Compound Spring Embedder)
+- Organic, force-directed layout
+- Node repulsion: 8000
+- Ideal edge length: 100
+- Gravity: 1
+- Animation duration: 500ms
+
+**Interactions:**
+- Click node: Show details panel + highlight connected elements
+- Click background: Clear selection and details panel
+- Zoom: 0.3x to 3x
+- Pan: Enabled
+
+### 7. Node Details Panel
+
+**Display Information:**
+- Name
+- Type (with color-coded badge)
+- Confidence (with visual progress bar)
+- Vendor (for applications)
+- Parent Process (for sub-processes)
+- Connection description
+
+**Behavior:**
+- Fixed position on desktop (right side, vertically centered)
+- Bottom sheet on mobile (slides up from bottom)
+- Close button clears selection and removes highlights
+
+### 8. Filtering
+
+**Process Filter Dropdown:**
+- "All Processes" (default)
+- Individual business processes from graph data
+- Dynamically populated from API response
+
+**Filter Behavior:**
+- Filters displayed nodes and edges
+- Re-runs layout animation when filter changes
+- Maintains zoom/pan state
+
+## Usage Example
+
+```jsx
+// Navigate to process graph
+setPage("process-graph");
+setProcessGraphMatchId("match-123");
+
+// The component will:
+// 1. Fetch graph data from /api/mappings/match-123/graph
+// 2. Render interactive graph
+// 3. Allow user to filter by process
+// 4. Enable click-to-explore interactions
+```
+
+## Integration with T-220 (Review Mappings)
+
+The ProcessGraph component is designed to be accessed AFTER the user confirms mappings in T-220 (ReviewMappings).
+
+**Suggested Workflow:**
+1. User reviews and confirms mappings in ReviewMappings UI
+2. Add "View Graph" button in ReviewMappings header
+3. On click, navigate to process-graph with same matchId
+4. User explores confirmed mappings as interactive graph
+5. Graph visualization reinforces understanding of process-app relationships
+
+**Example Integration (to be added to ReviewMappings.jsx):**
+```jsx
+<button
+  className="btn-secondary"
+  onClick={() => {
+    setPage("process-graph");
+    setProcessGraphMatchId(matchId);
+  }}
+>
+  View Graph
+</button>
+```
+
+## Testing Checklist
+
+- [ ] Graph renders with mock data
+- [ ] Process filter dropdown shows all processes
+- [ ] Filter changes update graph correctly
+- [ ] Clicking node shows details panel
+- [ ] Connected nodes/edges highlight on click
+- [ ] Clicking background clears selection
+- [ ] Zoom and pan work smoothly
+- [ ] Node details panel displays all fields
+- [ ] Responsive design works on tablet (1024px)
+- [ ] Responsive design works on mobile (768px)
+- [ ] Close button in details panel works
+- [ ] Loading state displays correctly
+- [ ] Error state displays correctly
+- [ ] API integration works with backend endpoint
+
+## Git Information
+
+**Branch:** `task/T-221-graph-render`
+**Commit:** "feat: Build interactive process graph (T-221)"
+
+**Files Changed:**
+- `frontend/src/pages/ProcessGraph.jsx` (new)
+- `frontend/src/pages/ProcessGraph.module.css` (new)
+- `frontend/src/App.jsx` (3 edits)
+- `frontend/package.json` (dependencies added)
+
+## Dependencies Met
+
+- ✅ T-220 (Review UI) - Confirmed mappings become graph nodes
+- ✅ T-204 (Reference Model) - Process/app relationships structure
+- ✅ appjsx-index.json - Used for precise line range editing
+
+## Notes for Validator
+
+1. **Cytoscape.js Usage:**
+   - Used react-cytoscapejs wrapper for React integration
+   - COSE layout for organic, force-directed graph
+   - Proper element normalization with `CytoscapeComponent.normalizeElements()`
+
+2. **Filter Functionality:**
+   - Filters by business process ID
+   - Re-builds elements array on filter change
+   - useMemo for performance optimization
+
+3. **Node Details Display:**
+   - Slide-in panel on right side (desktop)
+   - Bottom sheet on mobile
+   - Shows all relevant metadata
+
+4. **App.jsx Integration:**
+   - Added import at line 7
+   - Added state variable at line 23839
+   - Added routing logic at line 24315-24320
+   - Used precise line ranges per context rules
+
+5. **Accessibility:**
+   - Semantic HTML structure
+   - ARIA labels on interactive elements
+   - Keyboard navigation support (via Cytoscape)
+   - High contrast colors
+
+6. **Performance:**
+   - useMemo for elements array computation
+   - Efficient re-renders with React Query caching
+   - Debounced API calls (60s refetch interval)
+
+## Next Steps
+
+1. Backend team to implement `/api/mappings/:matchId/graph` endpoint
+2. Add "View Graph" button to ReviewMappings UI (T-220)
+3. Test with real confirmed mappings data
+4. Adjust graph layout parameters if needed
+5. Consider adding export/graph image capture feature
