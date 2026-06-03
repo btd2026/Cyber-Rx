@@ -1,0 +1,229 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main, staging]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+  AWS_REGION: 'us-east-1'
+
+jobs:
+  # ============================================
+  # DEPLOY FRONTEND TO VERCEL
+  # ============================================
+  deploy-frontend:
+    name: Deploy Frontend
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+      url: ${{ steps.deploy.outputs.url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Build Frontend
+        working-directory: ./frontend
+        run: npm run build
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+
+      - name: Deploy to Vercel (Production)
+        if: github.ref == 'refs/heads/main'
+        id: deploy-prod
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ./frontend
+          vercel-args: '--prod'
+
+      - name: Deploy to Vercel (Staging)
+        if: github.ref != 'refs/heads/main'
+        id: deploy-staging
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ./frontend
+
+      - name: Set deployment URL
+        id: deploy
+        run: |
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "url=${{ steps.deploy-prod.outputs.preview-url }}" >> $GITHUB_OUTPUT
+          else
+            echo "url=${{ steps.deploy-staging.outputs.preview-url }}" >> $GITHUB_OUTPUT
+          fi
+
+  # ============================================
+  # DEPLOY BACKEND TO RENDER
+  # ============================================
+  deploy-backend:
+    name: Deploy Backend
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+      url: ${{ secrets.API_URL }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: cyberrx-api/package-lock.json
+
+      - name: Install Backend Dependencies
+        working-directory: ./cyberrx-api
+        run: npm ci
+
+      - name: Run Backend Tests
+        working-directory: ./cyberrx-api
+        run: npm test
+
+      - name: Build Backend
+        working-directory: ./cyberrx-api
+        run: npm run build
+
+      - name: Deploy to Render (Production)
+        if: github.ref == 'refs/heads/main'
+        uses: johnbeyerlee/render-action@v2.0.0
+        with:
+          service-id: ${{ secrets.RENDER_SERVICE_ID }}
+          api-key: ${{ secrets.RENDER_API_KEY }}
+          deploy-context: production
+
+      - name: Deploy to Render (Staging)
+        if: github.ref != 'refs/heads/main'
+        uses: johnbeyerlee/render-action@v2.0.0
+        with:
+          service-id: ${{ secrets.RENDER_STAGING_SERVICE_ID }}
+          api-key: ${{ secrets.RENDER_API_KEY }}
+          deploy-context: staging
+
+      - name: Wait for deployment to be ready
+        run: |
+          echo "Waiting for deployment to stabilize..."
+          sleep 30
+
+      - name: Run Backend Health Check
+        run: |
+          curl -f ${{ secrets.API_URL }}/health || exit 1
+
+  # ============================================
+  # POST-DEPLOYMENT SMOKE TESTS
+  # ============================================
+  post-deploy-smoke-tests:
+    name: Post-Deployment Smoke Tests
+    runs-on: ubuntu-latest
+    needs: [deploy-frontend, deploy-backend]
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install E2E Dependencies
+        working-directory: ./tests/e2e
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        working-directory: ./tests/e2e
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Frontend Smoke Tests
+        working-directory: ./tests/e2e
+        run: npx playwright test --grep "@smoke" --project=chromium
+        env:
+          BASE_URL: ${{ needs.deploy-frontend.outputs.url }}
+          API_URL: ${{ secrets.API_URL }}
+
+  # ============================================
+  # DEPLOYMENT NOTIFICATION
+  # ============================================
+  notify:
+    name: Notify Deployment Status
+    needs: [deploy-frontend, deploy-backend, post-deploy-smoke-tests]
+    runs-on: ubuntu-latest
+    if: always() && github.event_name == 'push'
+
+    steps:
+      - name: Determine deployment status
+        id: status
+        run: |
+          if [ "${{ needs.post-deploy-smoke-tests.result }}" == "success" ]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "emoji=✅" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "emoji=❌" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Notify Slack
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          payload: |
+            {
+              "text": "${{ steps.status.outputs.emoji }} Deployment ${{ steps.status.outputs.status }} for ${{ github.ref }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*CyberRx Deployment ${{ steps.status.outputs.status }}* ${{ steps.status.outputs.emoji }}\n*Branch:* ${{ github.ref }}\n*Commit:* ${{ github.sha }}\n*Author:* ${{ github.actor }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Trigger PagerDuty on Critical Failure
+        if: ${{ needs.post-deploy-smoke-tests.result == 'failure' && github.ref == 'refs/heads/main' }}
+        run: |
+          curl -X POST \
+            "${{ secrets.PAGERDUTY_API_URL }}" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Token token=${{ secrets.PAGERDUTY_API_TOKEN }}" \
+            -d '{
+              "routing_key": "${{ secrets.PAGERDUTY_ROUTING_KEY }}",
+              "event_action": "trigger",
+              "payload": {
+                "summary": "CyberRx Production Deployment Failed",
+                "severity": "critical",
+                "source": "github-actions",
+                "custom_details": {
+                  "branch": "${{ github.ref }}",
+                  "commit": "${{ github.sha }}",
+                  "author": "${{ github.actor }}"
+                }
+              }
+            }'
