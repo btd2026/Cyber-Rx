@@ -5,6 +5,7 @@ import CLODash from "./pages/CLODash";
 import AuditDash from "./pages/AuditDash";
 import ReviewMappings from "./pages/ReviewMappings";
 import ProcessGraph from "./pages/ProcessGraph";
+import RestructureView from "./pages/RestructureView";
 
 // --- Theme --------------------------------------------------------------------
 var C = {
@@ -23838,6 +23839,8 @@ function CyberRxApp() {
   var _sRM=useState(null); var reviewMappingsMatchId=_sRM[0]; var setReviewMappingsMatchId=_sRM[1];
   // Process Graph state - T-221
   var _sPG=useState(null); var processGraphMatchId=_sPG[0]; var setProcessGraphMatchId=_sPG[1];
+  // Restructure View state - T-223
+  var _sRS=useState(null); var restructureMatchId=_sRS[0]; var setRestructureMatchId=_sRS[1];
   var _s54=useState(null); var dl=_s54[0]; var setDl=_s54[1];
   var _s55b=useState(false); var setupDone=_s55b[0]; var setSetupDone=_s55b[1];
 
@@ -24319,6 +24322,13 @@ function CyberRxApp() {
     if (page==="process-graph") {
       return React.createElement(ProcessGraph, {
         matchId: processGraphMatchId,
+        goBack: goBack
+      });
+    }
+    // Healthcare Payer Vertical: Restructure View - T-223
+    if (page==="restructure-view") {
+      return React.createElement(RestructureView, {
+        matchId: restructureMatchId,
         goBack: goBack
       });
     }
