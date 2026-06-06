@@ -1,0 +1,69 @@
+# Risk Normalization Engine Configuration Schema
+# Version: 1.0.0
+
+# Kafka Configuration
+kafka:
+  bootstrap_servers: "localhost:9092"
+  input_topic: "raw-security-events"
+  output_topic: "enriched-risk-objects"
+  consumer_group: "normalization-engine"
+  auto_offset_reset: "earliest"
+  enable_auto_commit: true
+
+# TimescaleDB Configuration
+timescaledb:
+  host: "localhost"
+  port: 5432
+  database: "cyberrx"
+  user: "cyberrx"
+  password: "${TIMESCALEDB_PASSWORD}"  # Load from environment
+  pool_size: 10
+  query_timeout: 30
+
+# PHI Stripping Configuration
+phi_stripping:
+  enabled: true
+  spacy_model: "en_core_web_sm"
+  use_nlp: true
+  log_stripping: true
+
+# Business Process Graph Configuration
+business_process:
+  cache_ttl_seconds: 3600  # 1 hour
+  cache_max_size: 10000
+
+# Blast Radius Analyzer Configuration
+blast_radius:
+  max_depth: 10
+  bfs_timeout_seconds: 30
+
+# Regulatory Mapping Configuration
+regulatory_mapping:
+  hipaa_enabled: true
+  cms_enabled: true
+  notification_timeline_days:
+    hipaa_breach: 60
+    cms_10743: 60
+    cms_mlr: 90
+
+# Validation Configuration
+validation:
+  strict_mode: true
+  warn_on_unknown_fields: true
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "json"
+  file: null  # Log to stdout by default
+
+# Metrics Configuration
+metrics:
+  enabled: true
+  port: 9090
+
+# Health Check Configuration
+health_check:
+  kafka_interval_seconds: 30
+  database_interval_seconds: 30
+  timeout_seconds: 5
