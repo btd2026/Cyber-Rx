@@ -1,0 +1,966 @@
+{
+  "version": "1.0",
+  "last_updated": "2025-06-05",
+  "status": "ACTIVE",
+  "current_phase": "Phase 0",
+  "project": "CyberRX Multi-Agent AI Platform for Health Plans",
+  "phases": {
+    "Phase 0": {
+      "name": "Foundation & Architecture Setup",
+      "weeks": "1-2",
+      "objective": "Establish core infrastructure, development environment, and architectural patterns",
+      "status": "NOT_STARTED",
+      "tasks": [
+        {
+          "id": "T-FOUND-001",
+          "title": "Repository Structure & Development Environment",
+          "owner": "Senior Backend Engineer",
+          "status": "pending",
+          "priority": "CRITICAL",
+          "weeks": "1-2",
+          "dependencies": [],
+          "deliverables": [
+            "Monorepo structure with /infrastructure, /services, /frontend, /libraries, /docs",
+            "Docker compose for local development",
+            "GitHub Actions workflow templates",
+            "Contributing guidelines",
+            "README for entire repository"
+          ],
+          "success_criteria": [
+            "Developer can run entire stack locally with one command",
+            "CI/CD runs on every PR",
+            "Clear contribution documentation"
+          ],
+          "validation_required": ["Acceptance", "Security", "No-Regression", "Integration"],
+          "blocked_by": [],
+          "blocks": ["T-FOUND-002", "T-FOUND-003"],
+          "estimated_hours": 40
+        },
+        {
+          "id": "T-FOUND-002",
+          "title": "Cloud Infrastructure Foundation",
+          "owner": "Senior Backend Engineer + Security Engineer",
+          "status": "pending",
+          "priority": "CRITICAL",
+          "weeks": "1-2",
+          "dependencies": ["T-FOUND-001"],
+          "deliverables": [
+            "Terraform modules for AKS/EKS cluster with network policies",
+            "Terraform modules for Event Hubs/Kafka deployment",
+            "Terraform modules for TimescaleDB with pgvector extension",
+            "Terraform modules for Key Vault integration (BYOK)",
+            "Network isolation documentation",
+            "Tenant provisioning runbooks"
+          ],
+          "success_criteria": [
+            "New tenant can be provisioned via automated script",
+            "Tenant data cannot leak between namespaces",
+            "All data encrypted with customer-managed keys",
+            "Event streaming handles 10,000 events/second minimum"
+          ],
+          "validation_required": ["Acceptance", "Security", "Integration"],
+          "blocked_by": ["T-FOUND-001"],
+          "blocks": ["T-FOUND-003"],
+          "estimated_hours": 80
+        },
+        {
+          "id": "T-FOUND-003",
+          "title": "Core Data Models & Schema Design",
+          "owner": "Senior Backend Engineer",
+          "status": "pending",
+          "priority": "CRITICAL",
+          "weeks": "1-2",
+          "dependencies": ["T-FOUND-002"],
+          "deliverables": [
+            "RiskObject schema definition (TypeScript + Python)",
+            "FinancialImpact schema definition",
+            "Business process graph data structure",
+            "Agent state persistence schema",
+            "Event bus message schemas (Avro/JSON Schema)",
+            "Database migration scripts",
+            "API contract documentation (OpenAPI)"
+          ],
+          "success_criteria": [
+            "All schemas defined with types",
+            "Migration scripts tested on local database",
+            "Event schemas registered in schema registry",
+            "API documentation generated from types"
+          ],
+          "validation_required": ["Acceptance", "No-Regression", "Integration"],
+          "blocked_by": ["T-FOUND-002"],
+          "blocks": ["T-MVP-005", "T-MVP-006"],
+          "estimated_hours": 60
+        },
+        {
+          "id": "T-FOUND-004",
+          "title": "Authentication & Authorization Foundation",
+          "owner": "Security Engineer",
+          "status": "pending",
+          "priority": "CRITICAL",
+          "weeks": "1-2",
+          "dependencies": ["T-FOUND-003"],
+          "deliverables": [
+            "Authentication service (FastAPI) with standalone auth",
+            "Password hashing and validation service (bcrypt/argon2)",
+            "MFA implementation (TOTP)",
+            "RBAC policy definitions for 6 executive roles",
+            "Agent-to-data authorization matrix",
+            "JWT token management service",
+            "Audit logging service",
+            "Security baseline documentation"
+          ],
+          "success_criteria": [
+            "Users can authenticate with username/password + MFA",
+            "JWT tokens issued and validated correctly",
+            "Agents can only access their designated data",
+            "All access attempts logged",
+            "Password security meets NIST standards",
+            "Security baseline passes initial review"
+          ],
+          "validation_required": ["Acceptance", "Security", "Integration"],
+          "blocked_by": ["T-FOUND-003"],
+          "blocks": ["T-MVP-007"],
+          "estimated_hours": 80
+        }
+      ]
+    },
+    "Phase 1": {
+      "name": "MVP - Three Agents, Four Sources",
+      "weeks": "3-16",
+      "objective": "Build production-ready MVP for single customer with CFO, CISO, and Board agents",
+      "status": "NOT_STARTED",
+      "tasks": [
+        {
+          "id": "T-MVP-001",
+          "title": "SIEM Connector (Splunk)",
+          "owner": "Senior Backend Engineer",
+          "status": "pending",
+          "priority": "HIGH",
+          "weeks": "3-4",
+          "dependencies": ["T-FOUND-004"],
+          "deliverables": [
+            "Splunk API client",
+            "Event normalization logic (Splunk schema to RiskObject)",
+            "Continuous polling service",
+            "Rate limiting and error handling",
+            "Health check endpoints",
+            "Configuration schema"
+          ],
+          "success_criteria": [
+            "Connects to Splunk instance via API",
+            "Pulls security events continuously",
+            "Normalizes to RiskObject schema",
+            "Handles Splunk API rate limits",
+            "Publishes to event bus"
+          ],
+          "validation_required": ["Acceptance", "Security", "Integration"],
+          "blocked_by": ["T-FOUND-004"],
+          "blocks": ["T-MVP-005"],
+          "estimated_hours": 80
+        },
+        {
+          "id": "T-MVP-002",
+          "title": "EDR Connector (CrowdStrike)",
+          "owner": "Senior Backend Engineer",
+          "status": "pending",
+          "priority": "HIGH",
+          "weeks": "4-5",
+          "dependencies": ["T-FOUND-004"],
+          "deliverables": [
+            "CrowdStrike Falcon API client",
+            "Detection normalization logic",
+            "Real-time alert streaming",
+            "Host enrichment service",
+            "Process tree mapping"
+          ],
+          "success_criteria": [
+            "Connects to CrowdStrike Falcon API",
+            "Streams detections in real-time",
+            "Enriches with host and process context",
+            "Normalizes to RiskObject schema"
+          ],
+          "validation_required": ["Acceptance", "Security", "Integration"],
+          "blocked_by": ["T-FOUND-004"],
+          "blocks": ["T-MVP-005"],
+          "estimated_hours": 80
+        },
+        {
+          "id": "T-MVP-003",
+          "title": "IAM Connector (Azure AD)",
+          "owner": "Senior Backend Engineer",
+          "status": "pending",
+          "priority": "HIGH",
+          "weeks": "5-6",
+          "dependencies": ["T-FOUND-004"],
+          "deliverables": [
+            "Microsoft Graph API client",
+            "Sign-in event normalization",
+            "MFA failure tracking",
+            "Privilege change monitoring"
+          ],
+          "success_criteria": [
+            "Connects to Azure AD via Graph API",
+            "Tracks sign-in events and failures",
+            "Monitors privilege changes",
+            "Normalizes to RiskObject schema"
+          ],
+          "validation_required": ["Acceptance", "Security", "Integration"],
+          "blocked_by": ["T-FOUND-004"],
+          "blocks": ["T-MVP-005"],
+          "estimated_hours": 60
+        },
+        {
+          "id": "T-MVP-004",
+          "title": "Claims Adjudication Connector (Nasco)",
+          "owner": "Senior Backend Engineer",
+          "status": "pending",
+          "priority": "HIGH",
+          "weeks": "6-7",
+          "dependencies": ["T-FOUND-004"],
+          "deliverables": [
+            "Nasco API client or SQL connector",
+            "Claims event normalization (Nasco schema to RiskObject)",
+            "Business process mapper (claims to payer operations)",
+            "Financial preprocessor (claims costs for exposure)",
+            "Nasco data model documentation"
+          ],
+          "success_criteria": [
+            "Connects to Nasco system via supported interface",
+            "Reads claims events continuously",
+            "Maps claims events to business processes",
+            "Preprocesses claims costs for financial modeling",
+            "Normalizes to RiskObject schema",
+            "Handles Nasco-specific error scenarios"
+          ],
+          "validation_required": ["Acceptance", "Security", "Integration"],
+          "blocked_by": ["T-FOUND-004"],
+          "blocks": ["T-MVP-005"],
+          "estimated_hours": 80
+        },
+        {
+          "id": "T-MVP-005",
+          "title": "Risk Normalization Engine",
+          "owner": "Senior Backend Engineer",
+          "status": "pending",
+          "priority": "CRITICAL",
+          "weeks": "7-9",
+          "dependencies": ["T-MVP-001", "T-MVP-002", "T-MVP-003", "T-MVP-004", "T-FOUND-003"],
+          "deliverables": [
+            "Core normalization engine",
+            "Business process graph service",
+            "PHI stripping service",
+            "Blast radius analyzer",
+            "Regulatory trigger mapper",
+            "RiskObject validator"
+          ],
+          "success_criteria": [
+            "Enriches raw events to RiskObjects",
+            "Maps to business processes",
+            "PHI stripped before LLM calls",
+            "Calculates blast radius",
+            "Maps regulatory triggers",
+            "Validates all RiskObjects"
+          ],
+          "validation_required": ["Acceptance", "Security", "No-Regression", "Integration"],
+          "blocked_by": ["T-MVP-001", "T-MVP-002", "T-MVP-003", "T-MVP-004"],
+          "blocks": ["T-MVP-006"],
+          "estimated_hours": 120
+        },
+        {
+          "id": "T-MVP-006",
+          "title": "Financial Modeling Engine",
+          "owner": "Senior Backend Engineer",
+          "status": "pending",
+          "priority": "CRITICAL",
+          "weeks": "9-11",
+          "dependencies": ["T-MVP-005", "T-FOUND-003"],
+          "deliverables": [
+            "Calculation engine (Python/pandas)",
+            "MLR impact calculator",
+            "Stop-loss exposure calculator",
+            "Reserve at risk calculator",
+            "Methodology trail generator",
+            "Actuarial export parser (CSV/SQL)",
+            "Batch job scheduler for financial updates"
+          ],
+          "success_criteria": [
+            "Calculates dollar exposure deterministically",
+            "Produces MLR impact estimates",
+            "Calculates stop-loss exposure",
+            "Generates audit methodology trails",
+            "No LLM in calculation path",
+            "Processes actuarial exports on scheduled basis"
+          ],
+          "validation_required": ["Acceptance", "Security", "No-Regression", "Integration"],
+          "blocked_by": ["T-MVP-005"],
+          "blocks": ["T-MVP-007"],
+          "estimated_hours": 120
+        },
+        {
+          "id": "T-MVP-007",
+          "title": "Agent Runtime Foundation",
+          "owner": "AI/ML Engineer",
+          "status": "pending",
+          "priority": "CRITICAL",
+          "weeks": "11-12",
+          "dependencies": ["T-MVP-006", "T-FOUND-004"],
+          "deliverables": [
+            "Agent runtime container",
+            "Context manager service",
+            "LLM inference client (Claude Sonnet/Haiku)",
+            "Prompt template system",
+            "Output formatter",
+            "LLM data boundary validator (no PHI check)"
+          ],
+          "success_criteria": [
+            "Maintains persistent agent state",
+            "Calls Claude Sonnet API",
+            "Manages prompt templates",
+            "Formats structured outputs",
+            "Validates no PHI in LLM context"
+          ],
+          "validation_required": ["Acceptance", "Security", "Integration"],
+          "blocked_by": ["T-MVP-006"],
+          "blocks": ["T-MVP-008", "T-MVP-009", "T-MVP-010"],
+          "estimated_hours": 80
+        },
+        {
+          "id": "T-MVP-008",
+          "title": "CFO Agent Implementation",
+          "owner": "AI/ML Engineer",
+          "status": "pending",
+          "priority": "HIGH",
+          "weeks": "12-13",
+          "dependencies": ["T-MVP-007"],
+          "deliverables": [
+            "CFO context manager",
+            "CFO prompt templates",
+            "Dollar exposure briefing generator",
+            "Trend analyzer",
+            "Board-ready summary formatter"
+          ],
+          "success_criteria": [
+            "Generates CFO-specific briefings",
+            "Presents dollar exposure with methodology trails",
+            "Tracks trends over time",
+            "Produces board-ready summaries"
+          ],
+          "validation_required": ["Acceptance", "Security", "Integration"],
+          "blocked_by": ["T-MVP-007"],
+          "blocks": ["T-MVP-011"],
+          "estimated_hours": 80
+        },
+        {
+          "id": "T-MVP-009",
+          "title": "CISO Agent Implementation",
+          "owner": "AI/ML Engineer",
+          "status": "pending",
+          "priority": "HIGH",
+          "weeks": "13-14",
+          "dependencies": ["T-MVP-007"],
+          "deliverables": [
+            "CISO context manager",
+            "CISO prompt templates",
+            "Attack pathway analyzer",
+            "Blast radius visualizer",
+            "Unified executive action plan generator",
+            "Public threat feed parsers (CISA KEV, NIST, Epss)",
+            "Abstract threat feed interface"
+          ],
+          "success_criteria": [
+            "Generates CISO-specific briefings",
+            "Analyzes attack pathways",
+            "Visualizes blast radius",
+            "Coordinates with other agents' views",
+            "Enriches with public threat intelligence",
+            "Identifies known exploited vulnerabilities"
+          ],
+          "validation_required": ["Acceptance", "Security", "Integration"],
+          "blocked_by": ["T-MVP-007"],
+          "blocks": ["T-MVP-012"],
+          "estimated_hours": 100
+        },
+        {
+          "id": "T-MVP-010",
+          "title": "Board Agent Implementation",
+          "owner": "AI/ML Engineer",
+          "status": "pending",
+          "priority": "HIGH",
+          "weeks": "14-15",
+          "dependencies": ["T-MVP-007"],
+          "deliverables": [
+            "Board context manager",
+            "Board prompt templates",
+            "Synthesis engine (consumes other agents' outputs)",
+            "Three-question governance brief generator",
+            "ROI and trajectory analyzer"
+          ],
+          "success_criteria": [
+            "Synthesizes all agents' outputs",
+            "Generates three-question governance brief",
+            "Analyzes ROI and trajectory",
+            "Produces board-ready reports"
+          ],
+          "validation_required": ["Acceptance", "Security", "Integration"],
+          "blocked_by": ["T-MVP-007"],
+          "blocks": ["T-MVP-013"],
+          "estimated_hours": 80
+        },
+        {
+          "id": "T-MVP-011",
+          "title": "Frontend - CFO Dashboard",
+          "owner": "Frontend Engineer",
+          "status": "pending",
+          "priority": "HIGH",
+          "weeks": "12-13",
+          "dependencies": ["T-MVP-008"],
+          "deliverables": [
+            "CFO dashboard component",
+            "Dollar exposure display",
+            "Trend charts",
+            "Methodology trail viewer",
+            "On-demand query interface"
+          ],
+          "success_criteria": [
+            "Shows dollar exposure with breakdown",
+            "Displays trends over time",
+            "Shows methodology trails",
+            "Handles on-demand queries"
+          ],
+          "validation_required": ["Acceptance", "Security", "Integration"],
+          "blocked_by": ["T-MVP-008"],
+          "blocks": [],
+          "estimated_hours": 80
+        },
+        {
+          "id": "T-MVP-012",
+          "title": "Frontend - CISO Dashboard",
+          "owner": "Frontend Engineer",
+          "status": "pending",
+          "priority": "HIGH",
+          "weeks": "13-14",
+          "dependencies": ["T-MVP-009"],
+          "deliverables": [
+            "CISO dashboard component",
+            "Attack pathway visualizations",
+            "Blast radius diagrams",
+            "Risk object explorer",
+            "Coordination view"
+          ],
+          "success_criteria": [
+            "Shows attack pathways clearly",
+            "Displays blast radius chains",
+            "Explores risk objects",
+            "Shows cross-agent coordination"
+          ],
+          "validation_required": ["Acceptance", "Security", "Integration"],
+          "blocked_by": ["T-MVP-009"],
+          "blocks": [],
+          "estimated_hours": 100
+        },
+        {
+          "id": "T-MVP-013",
+          "title": "Frontend - Board Dashboard",
+          "owner": "Frontend Engineer",
+          "status": "pending",
+          "priority": "HIGH",
+          "weeks": "14-15",
+          "dependencies": ["T-MVP-010"],
+          "deliverables": [
+            "Board dashboard component",
+            "Governance brief display",
+            "Synthesis view",
+            "ROI/trajectory charts",
+            "PDF exporter"
+          ],
+          "success_criteria": [
+            "Shows three-question governance brief",
+            "Synthesizes all agents' outputs",
+            "Displays ROI and trajectory",
+            "Exports board-ready PDFs"
+          ],
+          "validation_required": ["Acceptance", "Security", "Integration"],
+          "blocked_by": ["T-MVP-010"],
+          "blocks": [],
+          "estimated_hours": 80
+        },
+        {
+          "id": "T-MVP-014",
+          "title": "Alerting & Notification System",
+          "owner": "Senior Backend Engineer",
+          "status": "pending",
+          "priority": "MEDIUM",
+          "weeks": "15-16",
+          "dependencies": ["T-MVP-010"],
+          "deliverables": [
+            "Threshold breach detector",
+            "Alert router",
+            "Email service",
+            "Slack/Teams integration",
+            "Alert feed API"
+          ],
+          "success_criteria": [
+            "Detects threshold breaches",
+            "Routes alerts to correct roles",
+            "Sends email notifications",
+            "Pushes to Slack/Teams",
+            "Provides alert feed API"
+          ],
+          "validation_required": ["Acceptance", "Security", "Integration"],
+          "blocked_by": ["T-MVP-010"],
+          "blocks": [],
+          "estimated_hours": 80
+        },
+        {
+          "id": "T-MVP-015",
+          "title": "HIPAA Compliance & SOC 2 Scope",
+          "owner": "Security Engineer",
+          "status": "pending",
+          "priority": "CRITICAL",
+          "weeks": "15-16",
+          "dependencies": ["T-MVP-010"],
+          "deliverables": [
+            "PHI stripping service validation",
+            "Audit trail system",
+            "Security monitoring dashboards",
+            "Compliance documentation",
+            "SOC 2 preparation checklist"
+          ],
+          "success_criteria": [
+            "PHI stripped before LLM calls (validated)",
+            "All access audited",
+            "Security monitored continuously",
+            "Compliance documentation complete",
+            "Ready for SOC 2 Type II audit"
+          ],
+          "validation_required": ["Acceptance", "Security"],
+          "blocked_by": ["T-MVP-010"],
+          "blocks": [],
+          "estimated_hours": 80
+        }
+      ]
+    },
+    "Phase 2": {
+      "name": "Pilot Deployment & Customer Onboarding",
+      "weeks": "17-20",
+      "objective": "Deploy MVP to pilot customer, validate core value proposition",
+      "status": "NOT_STARTED",
+      "tasks": [
+        {
+          "id": "T-PILOT-001",
+          "title": "Pilot Customer Environment Setup",
+          "owner": "Senior Backend Engineer",
+          "status": "pending",
+          "priority": "CRITICAL",
+          "weeks": "17",
+          "dependencies": ["T-MVP-015"],
+          "deliverables": [
+            "Provisioned tenant infrastructure",
+            "Deployed services to customer cloud",
+            "Validated connectors in customer environment",
+            "Customer-specific configuration",
+            "Isolation validation report"
+          ],
+          "success_criteria": [
+            "All services running in customer tenant",
+            "Connectors pulling data successfully",
+            "Data isolation validated",
+            "Customer parameters configured"
+          ],
+          "validation_required": ["Acceptance", "Security", "Integration"],
+          "blocked_by": ["T-MVP-015"],
+          "blocks": ["T-PILOT-002"],
+          "estimated_hours": 80
+        },
+        {
+          "id": "T-PILOT-002",
+          "title": "Business Process Graph Construction",
+          "owner": "Senior Backend Engineer + Product Manager",
+          "status": "pending",
+          "priority": "CRITICAL",
+          "weeks": "17-18",
+          "dependencies": ["T-PILOT-001"],
+          "deliverables": [
+            "Business process graph",
+            "System-to-process mappings",
+            "Dependency chains",
+            "Financial values per process",
+            "Customer validation"
+          ],
+          "success_criteria": [
+            "Graph covers all critical systems",
+            "Processes mapped correctly",
+            "Dependencies validated",
+            "Financial values accurate"
+          ],
+          "validation_required": ["Acceptance", "Integration"],
+          "blocked_by": ["T-PILOT-001"],
+          "blocks": ["T-PILOT-003"],
+          "estimated_hours": 80
+        },
+        {
+          "id": "T-PILOT-003",
+          "title": "Financial Parameters & Threshold Configuration",
+          "owner": "Senior Backend Engineer + Product Manager",
+          "status": "pending",
+          "priority": "CRITICAL",
+          "weeks": "18-19",
+          "dependencies": ["T-PILOT-002"],
+          "deliverables": [
+            "MLR target configuration",
+            "Stop-loss parameters",
+            "Reserve positions",
+            "Premium revenue mapping",
+            "Risk appetite thresholds"
+          ],
+          "success_criteria": [
+            "All financial parameters loaded",
+            "Thresholds configured with CRO",
+            "Validated against customer data"
+          ],
+          "validation_required": ["Acceptance", "Integration"],
+          "blocked_by": ["T-PILOT-002"],
+          "blocks": ["T-PILOT-004"],
+          "estimated_hours": 60
+        },
+        {
+          "id": "T-PILOT-004",
+          "title": "Agent Calibration & Executive Onboarding",
+          "owner": "Product Manager + AI/ML Engineer",
+          "status": "pending",
+          "priority": "HIGH",
+          "weeks": "19-20",
+          "dependencies": ["T-PILOT-003"],
+          "deliverables": [
+            "Activated agents",
+            "Calibrated thresholds",
+            "Validated outputs",
+            "First live briefing delivered"
+          ],
+          "success_criteria": [
+            "All agents running",
+            "Executives satisfied with outputs",
+            "Thresholds properly calibrated",
+            "First briefing delivered successfully"
+          ],
+          "validation_required": ["Acceptance"],
+          "blocked_by": ["T-PILOT-003"],
+          "blocks": ["T-PILOT-005"],
+          "estimated_hours": 80
+        },
+        {
+          "id": "T-PILOT-005",
+          "title": "MVP Success Criterion Validation",
+          "owner": "Product Manager + All Engineers",
+          "status": "pending",
+          "priority": "CRITICAL",
+          "weeks": "20",
+          "dependencies": ["T-PILOT-004"],
+          "deliverables": [
+            "Board meeting performance documented",
+            "CISO validation recorded",
+            "Methodology trail validated",
+            "Roadmap feedback compiled"
+          ],
+          "success_criteria": [
+            "CFO successfully defends figures in board meeting",
+            "CISO confirms accuracy",
+            "Methodology trail holds up to scrutiny",
+            "Clear feedback for next phase"
+          ],
+          "validation_required": ["Acceptance"],
+          "blocked_by": ["T-PILOT-004"],
+          "blocks": ["T-PROD-001"],
+          "estimated_hours": 40
+        }
+      ]
+    },
+    "Phase 3": {
+      "name": "Production Readiness & Scale",
+      "weeks": "21-28",
+      "objective": "Harden platform, add remaining agents, multi-tenant deployment",
+      "status": "NOT_STARTED",
+      "tasks": [
+        {
+          "id": "T-PROD-001",
+          "title": "CRO Agent Implementation",
+          "owner": "AI/ML Engineer",
+          "status": "pending",
+          "priority": "MEDIUM",
+          "weeks": "21-22",
+          "dependencies": ["T-PILOT-005"],
+          "deliverables": [
+            "CRO context manager",
+            "Appetite status dashboard",
+            "Breach escalation tracker",
+            "CMS regulatory limit monitor",
+            "Board appetite parameter visualizations"
+          ],
+          "success_criteria": [
+            "Generates appetite status",
+            "Tracks escalations with owners",
+            "Monitors CMS limits",
+            "Visualizes board parameters"
+          ],
+          "validation_required": ["Acceptance", "Security", "Integration"],
+          "blocked_by": ["T-PILOT-005"],
+          "blocks": [],
+          "estimated_hours": 80
+        },
+        {
+          "id": "T-PROD-002",
+          "title": "CLO Agent Implementation",
+          "owner": "AI/ML Engineer",
+          "status": "pending",
+          "priority": "MEDIUM",
+          "weeks": "22-23",
+          "dependencies": ["T-PILOT-005"],
+          "deliverables": [
+            "CLO context manager",
+            "Regulatory obligation mapper",
+            "Notification timeline tracker",
+            "Vendor BAA status monitor",
+            "State DOI requirement checker"
+          ],
+          "success_criteria": [
+            "Maps regulatory obligations",
+            "Tracks notification timelines",
+            "Monitors BAA status",
+            "Checks state requirements"
+          ],
+          "validation_required": ["Acceptance", "Security", "Integration"],
+          "blocked_by": ["T-PILOT-005"],
+          "blocks": [],
+          "estimated_hours": 80
+        },
+        {
+          "id": "T-PROD-003",
+          "title": "CIO Agent Implementation",
+          "owner": "AI/ML Engineer",
+          "status": "pending",
+          "priority": "MEDIUM",
+          "weeks": "23-24",
+          "dependencies": ["T-PILOT-005"],
+          "deliverables": [
+            "CIO context manager",
+            "Operational impact analyzer",
+            "Technology decision risk queue",
+            "System dependency mapper",
+            "Business process impact reports"
+          ],
+          "success_criteria": [
+            "Analyzes operational impact",
+            "Prioritizes technology decisions",
+            "Maps system dependencies",
+            "Generates impact reports"
+          ],
+          "validation_required": ["Acceptance", "Security", "Integration"],
+          "blocked_by": ["T-PILOT-005"],
+          "blocks": [],
+          "estimated_hours": 80
+        },
+        {
+          "id": "T-PROD-004",
+          "title": "Additional Data Source Connectors",
+          "owner": "Senior Backend Engineer",
+          "status": "pending",
+          "priority": "MEDIUM",
+          "weeks": "24-26",
+          "dependencies": ["T-PILOT-005"],
+          "deliverables": [
+            "PBM interface connector",
+            "Vendor security assessment connector",
+            "Clearinghouse connector",
+            "Actuarial data warehouse connector",
+            "Regulatory feed connector (CMS, state DOI)"
+          ],
+          "success_criteria": [
+            "All connectors running",
+            "Normalizing data correctly",
+            "Publishing to event bus"
+          ],
+          "validation_required": ["Acceptance", "Security", "Integration"],
+          "blocked_by": ["T-PILOT-005"],
+          "blocks": [],
+          "estimated_hours": 160
+        },
+        {
+          "id": "T-PROD-005",
+          "title": "Advanced Agent Coordination",
+          "owner": "AI/ML Engineer",
+          "status": "pending",
+          "priority": "MEDIUM",
+          "weeks": "26-27",
+          "dependencies": ["T-PROD-001", "T-PROD-002", "T-PROD-003"],
+          "deliverables": [
+            "Agent coordination service",
+            "Cross-agent access controls",
+            "Unified executive action plan generator",
+            "Trend analysis service",
+            "Conflict detection/resolution"
+          ],
+          "success_criteria": [
+            "CISO can read all agents",
+            "Coordination protocol working",
+            "Unified plans generated",
+            "Trends analyzed across agents",
+            "Conflicts detected and resolved"
+          ],
+          "validation_required": ["Acceptance", "Security", "Integration"],
+          "blocked_by": ["T-PROD-001", "T-PROD-002", "T-PROD-003"],
+          "blocks": [],
+          "estimated_hours": 80
+        },
+        {
+          "id": "T-PROD-005A",
+          "title": "Licensed Threat Intelligence Feed Integration (Optional)",
+          "owner": "Senior Backend Engineer + AI/ML Engineer",
+          "status": "pending",
+          "priority": "LOW",
+          "weeks": "26-27",
+          "dependencies": ["T-PILOT-005"],
+          "deliverables": [
+            "Licensed feed API client (CrowdStrike/Recorded Future/Mandiant)",
+            "Healthcare-specific threat actor profiles",
+            "Enhanced CVE exploitation intelligence",
+            "Real-time threat actor TTP tracking",
+            "Cost/benefit analysis report",
+            "Upgrade recommendation"
+          ],
+          "success_criteria": [
+            "Abstract interface supports swap from public to licensed feed",
+            "Healthcare-specific threat intelligence integrated",
+            "Real-time actor profiling operational",
+            "CISO briefings enhanced with active threat actor context",
+            "Cost justified by customer demand"
+          ],
+          "validation_required": ["Acceptance", "Security", "Integration"],
+          "blocked_by": ["T-PILOT-005"],
+          "blocks": [],
+          "estimated_hours": 80,
+          "notes": "OPTIONAL - Triggered by customer demand. Skip if public feeds sufficient."
+        },
+        {
+          "id": "T-PROD-006",
+          "title": "Multi-Tenant Architecture",
+          "owner": "Senior Backend Engineer + Security Engineer",
+          "status": "pending",
+          "priority": "CRITICAL",
+          "weeks": "27-28",
+          "dependencies": ["T-PROD-005"],
+          "deliverables": [
+            "Tenant provisioning service",
+            "Tenant management UI",
+            "Per-tenant monitoring",
+            "Upgrade orchestration",
+            "Migration tools"
+          ],
+          "success_criteria": [
+            "New tenant provisioned automatically",
+            "Management UI working",
+            "Monitoring isolated per tenant",
+            "Upgrades orchestrated safely",
+            "Migration tools validated"
+          ],
+          "validation_required": ["Acceptance", "Security", "Integration"],
+          "blocked_by": ["T-PROD-005"],
+          "blocks": [],
+          "estimated_hours": 120
+        },
+        {
+          "id": "T-PROD-007",
+          "title": "Production Hardening & Observability",
+          "owner": "Senior Backend Engineer + Security Engineer",
+          "status": "pending",
+          "priority": "CRITICAL",
+          "weeks": "27-28",
+          "dependencies": ["T-PROD-006"],
+          "deliverables": [
+            "OpenTelemetry instrumentation",
+            "Monitoring dashboards",
+            "Alerting rules",
+            "DR procedures",
+            "SOC 2 Type II audit completion"
+          ],
+          "success_criteria": [
+            "All services instrumented",
+            "Monitoring comprehensive",
+            "Alerting reliable",
+            "DR tested",
+            "SOC 2 certified"
+          ],
+          "validation_required": ["Acceptance", "Security", "No-Regression", "Integration"],
+          "blocked_by": ["T-PROD-006"],
+          "blocks": [],
+          "estimated_hours": 120
+        }
+      ]
+    }
+  },
+  "metadata": {
+    "total_tasks": 36,
+    "phase_0_tasks": 4,
+    "phase_1_tasks": 15,
+    "phase_2_tasks": 5,
+    "phase_3_tasks": 8,
+    "critical_priority": 14,
+    "high_priority": 13,
+    "medium_priority": 7,
+    "low_priority": 1,
+    "total_estimated_hours": 3144,
+    "agents_required": {
+      "Senior Backend Engineer": 2,
+      "AI/ML Engineer": 1,
+      "Security Engineer": 1,
+      "Frontend Engineer": 1,
+      "Product Manager": 1
+    },
+    "validators_required": [
+      "Acceptance Validator",
+      "Security Validator",
+      "No-Regression Validator",
+      "Integration Validator"
+    ]
+  },
+  "ready_to_start": [
+    "T-FOUND-001"
+  ],
+  "architecture_decisions": {
+    "actuarial_access": "Batch exports from data warehouse",
+    "claims_platform": "Nasco",
+    "llm_data_boundary": "No PHI in LLM calls - confirmed",
+    "authentication": "Standalone credentials (username/password + MFA)",
+    "threat_intelligence": "Public feeds (CISA KEV, NIST, Epss) - upgrade to licensed in Phase 3"
+  },
+  "quality_gates": {
+    "phase_0": [
+      "Development environment running locally",
+      "Cloud infrastructure provisioned",
+      "Core data models defined",
+      "Authentication working"
+    ],
+    "phase_1": [
+      "All four connectors pulling data",
+      "Risk normalization enriching events",
+      "Financial modeling calculating exposure",
+      "Three agents generating briefings",
+      "Three dashboards displaying outputs",
+      "Pilot customer deployed"
+    ],
+    "phase_2": [
+      "Business process graph built",
+      "Financial parameters loaded",
+      "All agents calibrated",
+      "First briefing delivered",
+      "CFO validates board readiness"
+    ],
+    "phase_3": [
+      "All six agents implemented",
+      "All data sources connected",
+      "Multi-tenant architecture operational",
+      "SOC 2 Type II certified",
+      "Production ready for scale"
+    ]
+  },
+  "notes": "CyberRX Multi-Agent AI Platform - Initialized for agent team execution. All 5 architecture questions resolved. Ready to begin Phase 0."
+}
