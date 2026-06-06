@@ -22,6 +22,8 @@ const Evidence = require('./Evidence');
 const VendorRiskSignal = require('./VendorRiskSignal');
 const Narrative = require('./Narrative');
 const VendorAlert = require('./VendorAlert');
+const ExecutiveAlert = require('./ExecutiveAlert');
+const AlertConfig = require('./AlertConfig');
 
 module.exports = {
   BusinessProcess,
@@ -39,5 +41,7 @@ module.exports = {
   Evidence,
   VendorRiskSignal,
   Narrative,
-  VendorAlert
+  VendorAlert,
+  ExecutiveAlert,
+  AlertConfig
 };

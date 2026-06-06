@@ -200,6 +200,9 @@ app.use('/api/vendors',            [apiGetLimiter], require('./routes/syncStatus
 // Vendor Sync API with rate limiting (POST endpoints for triggering syncs)
 app.use('/api/vendors',            [apiGetLimiter, apiPostLimiter], require('./routes/vendorSync'));
 
+// T-MVP-014: Alerting & Notification System API with rate limiting
+app.use('/api/alerting',           [apiGetLimiter, apiPostLimiter, apiPutLimiter], require('./routes/alerting'));
+
 // Audit Trail API with rate limiting
 app.use('/api/audit-trail',        [apiGetLimiter], require('./routes/audit-trail'));
 

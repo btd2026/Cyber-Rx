@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2025-06-06 14:00",
+  "last_updated": "2025-06-06 15:30",
   "status": "ACTIVE",
   "current_phase": "Phase 1",
   "project": "CyberRX Multi-Agent AI Platform for Health Plans",
@@ -503,10 +503,13 @@
           "id": "T-MVP-014",
           "title": "Alerting & Notification System",
           "owner": "Senior Backend Engineer",
-          "status": "pending",
+          "status": "ready",
           "priority": "MEDIUM",
           "weeks": "15-16",
           "dependencies": ["T-MVP-010"],
+          "dependencies_met": true,
+          "assigned_date": "2025-06-06",
+          "prompt": "/workspace/prompts/T-MVP-014-task-prompt.md",
           "deliverables": [
             "Threshold breach detector",
             "Alert router",
@@ -530,10 +533,13 @@
           "id": "T-MVP-015",
           "title": "HIPAA Compliance & SOC 2 Scope",
           "owner": "Security Engineer",
-          "status": "pending",
+          "status": "ready",
           "priority": "CRITICAL",
           "weeks": "15-16",
           "dependencies": ["T-MVP-010"],
+          "dependencies_met": true,
+          "assigned_date": "2025-06-06",
+          "prompt": "/workspace/prompts/T-MVP-015-task-prompt.md",
           "deliverables": [
             "PHI stripping service validation",
             "Audit trail system",
@@ -940,7 +946,9 @@
   "ready_to_start": [
     "T-MVP-011",
     "T-MVP-012",
-    "T-MVP-013"
+    "T-MVP-013",
+    "T-MVP-014",
+    "T-MVP-015"
   ],
   "architecture_decisions": {
     "actuarial_access": "Batch exports from data warehouse",
