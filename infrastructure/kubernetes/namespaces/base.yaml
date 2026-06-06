@@ -1,0 +1,130 @@
+# Base Namespaces for CyberRX Platform
+---
+# Platform System Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cyberrx-system
+  labels:
+    name: cyberrx-system
+    platform: cyberrx
+    type: system
+    managed-by: terraform
+  annotations:
+    description: "Platform core services - API gateway, authentication, internal services"
+    contact: "platform-team@cyberrx.com"
+---
+# Observability/Monitoring Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cyberrx-monitoring
+  labels:
+    name: cyberrx-monitoring
+    platform: cyberrx
+    type: observability
+    managed-by: terraform
+  annotations:
+    description: "Observability stack - Prometheus, Grafana, AlertManager"
+    contact: "platform-team@cyberrx.com"
+---
+# Tenant Namespace Template (DO NOT APPLY DIRECTLY)
+# This is a template for tenant namespace creation
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tenant-${CUSTOMER_ID}
+  labels:
+    name: tenant-${CUSTOMER_ID}
+    platform: cyberrx
+    type: tenant
+    customer-id: ${CUSTOMER_ID}
+    tier: ${TIER}
+    managed-by: terraform
+  annotations:
+    description: "Tenant namespace for ${CUSTOMER_NAME}"
+    contact: "${CUSTOMER_CONTACT}"
+    provisioned-on: "${PROVISIONING_DATE}"
+    tier: "${TIER}"
+---
+# Network Policies for Base Namespaces
+---
+# Default deny all ingress/egress for tenant namespaces
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: cyberrx-system
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+---
+# Allow cyberrx-system namespace internal communication
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-internal-traffic
+  namespace: cyberrx-system
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: cyberrx-system
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: cyberrx-system
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: cyberrx-monitoring
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+    ports:
+    - protocol: TCP
+      port: 443  # Azure/AWS API access
+---
+# Allow monitoring namespace internal communication
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-monitoring-traffic
+  namespace: cyberrx-monitoring
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          platform: cyberrx
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          platform: cyberrx
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+    ports:
+    - protocol: TCP
+      port: 443

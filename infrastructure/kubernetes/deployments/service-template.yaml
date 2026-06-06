@@ -1,0 +1,238 @@
+# Service Deployment Template
+# Variables: ${SERVICE_NAME}, ${NAMESPACE}, ${REPLICA_COUNT}, ${IMAGE}, ${PORT}, ${CPU_LIMIT}, ${MEMORY_LIMIT}, ${CPU_REQUEST}, ${MEMORY_REQUEST}, ${TIER}, ${TOLERATIONS}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${SERVICE_NAME}
+  namespace: ${NAMESPACE}
+  labels:
+    app: ${SERVICE_NAME}
+    tier: ${TIER}
+    platform: cyberrx
+    managed-by: terraform
+spec:
+  replicas: ${REPLICA_COUNT}
+  selector:
+    matchLabels:
+      app: ${SERVICE_NAME}
+  template:
+    metadata:
+      labels:
+        app: ${SERVICE_NAME}
+        tier: ${TIER}
+        platform: cyberrx
+        version: ${VERSION}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "${PORT}"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: ${SERVICE_ACCOUNT_NAME:-default}
+      # Node affinity based on tier
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: workload
+                operator: In
+                values:
+                - ${TIER}-tier
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - ${SERVICE_NAME}
+              topologyKey: kubernetes.io/hostname
+      # Tolerations for tier-specific nodes
+      tolerations:
+      - key: workload
+        operator: Equal
+        value: ${TIER}-tier
+        effect: NoSchedule
+      # Security context
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: ${RUN_AS_USER:-1000}
+        fsGroup: ${FS_GROUP:-1000}
+        seccompProfile:
+          type: RuntimeDefault
+      # Containers
+      containers:
+      - name: ${SERVICE_NAME}
+        image: ${IMAGE}:${IMAGE_TAG}
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: ${PORT}
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: ${SERVICE_NAME}-config
+        - secretRef:
+            name: ${SERVICE_NAME}-secrets
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: SERVICE_NAME
+          value: ${SERVICE_NAME}
+        # Resource limits
+        resources:
+          limits:
+            cpu: "${CPU_LIMIT}"
+            memory: "${MEMORY_LIMIT}"
+          requests:
+            cpu: "${CPU_REQUEST}"
+            memory: "${MEMORY_REQUEST}"
+        # Liveness probe
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: ${PORT}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        # Readiness probe
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: ${PORT}
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        # Startup probe
+        startupProbe:
+          httpGet:
+            path: /health
+            port: ${PORT}
+          initialDelaySeconds: 0
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 30
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: cache
+          mountPath: /app/cache
+        # Security context
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: cache
+        emptyDir:
+          sizeLimit: ${CACHE_SIZE_LIMIT:-100Mi}
+---
+# Service (ClusterIP for internal services)
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${SERVICE_NAME}
+  namespace: ${NAMESPACE}
+  labels:
+    app: ${SERVICE_NAME}
+    platform: cyberrx
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: ${SERVICE_PORT:-80}
+    targetPort: ${PORT}
+    protocol: TCP
+  selector:
+    app: ${SERVICE_NAME}
+---
+# HorizontalPodAutoscaler
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ${SERVICE_NAME}-hpa
+  namespace: ${NAMESPACE}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ${SERVICE_NAME}
+  minReplicas: ${MIN_REPLICAS:-1}
+  maxReplicas: ${MAX_REPLICAS:-10}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: ${CPU_TARGET:-70}
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: ${MEMORY_TARGET:-80}
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: ${SCALE_UP_STABILIZATION:-60}
+      policies:
+      - type: Percent
+        value: ${SCALE_UP_PERCENT:-50}
+        periodSeconds: ${SCALE_UP_PERIOD:-60}
+    scaleDown:
+      stabilizationWindowSeconds: ${SCALE_DOWN_STABILIZATION:-300}
+      policies:
+      - type: Percent
+        value: ${SCALE_DOWN_PERCENT:-10}
+        periodSeconds: ${SCALE_DOWN_PERIOD:-60}
+---
+# PodDisruptionBudget
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ${SERVICE_NAME}-pdb
+  namespace: ${NAMESPACE}
+spec:
+  minAvailable: ${MIN_AVAILABLE:-1}
+  selector:
+    matchLabels:
+      app: ${SERVICE_NAME}
+---
+# ServiceMonitor for Prometheus
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ${SERVICE_NAME}
+  namespace: ${NAMESPACE}
+  labels:
+    app: ${SERVICE_NAME}
+    platform: cyberrx
+spec:
+  selector:
+    matchLabels:
+      app: ${SERVICE_NAME}
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: ${SCRAPE_INTERVAL:-30s}
+    scheme: http

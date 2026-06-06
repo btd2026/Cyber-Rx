@@ -1,0 +1,111 @@
+# Network Policies - Allow Internal Traffic
+# These policies allow controlled internal communication
+
+---
+# Allow DNS Resolution (Critical for All Namespaces)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns-access
+  annotations:
+    description: "Allow DNS resolution for all pods"
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+---
+# Allow Namespace Internal Traffic
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-namespace-internal
+  annotations:
+    description: "Allow traffic between pods in the same namespace"
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          namespace: ${CURRENT_NAMESPACE}
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          namespace: ${CURRENT_NAMESPACE}
+---
+# Allow Traffic from System Namespace (Platform Services)
+apiVersion: networking.k8s.io/v1
+kind:NetworkPolicy
+metadata:
+  name: allow-from-system-namespace
+  annotations:
+    description: "Allow traffic from platform system namespace"
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: cyberrx-system
+---
+# Allow Traffic to Monitoring Namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-to-monitoring-namespace
+  annotations:
+    description: "Allow traffic to monitoring namespace for metrics/logs"
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: cyberrx-monitoring
+---
+# Explicit Deny Cross-Tenant Traffic (Critical Security Policy)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-cross-tenant-traffic
+  annotations:
+    description: "CRITICAL: Deny all traffic between tenant namespaces"
+    security-level: "critical"
+    tenant-isolation: "enforced"
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          type: tenant
+    ports:
+    - protocol: TCP
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          type: tenant
+    ports:
+    - protocol: TCP

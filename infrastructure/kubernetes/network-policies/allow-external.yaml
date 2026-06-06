@@ -1,0 +1,136 @@
+# Network Policies - Allow External Traffic
+# These policies allow controlled external communication
+
+---
+# Allow HTTPS to Azure/AWS Services
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-azure-aws-services
+  annotations:
+    description: "Allow HTTPS traffic to Azure/AWS API endpoints"
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+    ports:
+    - protocol: TCP
+      port: 443
+---
+# Allow Threat Intelligence Feeds (CISA, NIST, EPSS)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-threat-intel-feeds
+  annotations:
+    description: "Allow access to public threat intelligence feeds"
+spec:
+  podSelector:
+    matchLabels:
+      workload: threat-intel
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80
+---
+# Allow Database Private Endpoint Access
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-database-access
+  annotations:
+    description: "Allow traffic to PostgreSQL database via private endpoint"
+spec:
+  podSelector:
+    matchLabels:
+      access: database
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - ipBlock:
+        cidr: ${DATABASE_PRIVATE_IP}/32
+    ports:
+    - protocol: TCP
+      port: 5432
+---
+# Allow Event Hubs/Kafka Access
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-event-hubs-access
+  annotations:
+    description: "Allow traffic to Event Hubs via private endpoint"
+spec:
+  podSelector:
+    matchLabels:
+      access: event-hubs
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - ipBlock:
+        cidr: ${EVENTHUBS_PRIVATE_IP}/32
+    ports:
+    - protocol: TCP
+      port: 9093
+---
+# Allow Key Vault Access
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-key-vault-access
+  annotations:
+    description: "Allow traffic to Key Vault via private endpoint"
+spec:
+  podSelector:
+    matchLabels:
+      access: key-vault
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - ipBlock:
+        cidr: ${KEYVAULT_PRIVATE_IP}/32
+    ports:
+    - protocol: TCP
+      port: 443
+---
+# Allow Ingress Controller Traffic
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-traffic
+  annotations:
+    description: "Allow traffic from ingress controller to services"
+spec:
+  podSelector:
+    matchLabels:
+      exposed: "true"
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80

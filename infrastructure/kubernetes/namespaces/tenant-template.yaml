@@ -1,0 +1,210 @@
+# Tenant Namespace Template
+# Variables: ${CUSTOMER_ID}, ${CUSTOMER_NAME}, ${TIER}, ${CUSTOMER_CONTACT}, ${DB_NAME}, ${KEY_VAUD_ID}
+---
+# Tenant Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tenant-${CUSTOMER_ID}
+  labels:
+    name: tenant-${CUSTOMER_ID}
+    platform: cyberrx
+    type: tenant
+    customer-id: ${CUSTOMER_ID}
+    tier: ${TIER}
+    managed-by: terraform
+    tenant-isolation: strict
+  annotations:
+    description: "Tenant namespace for ${CUSTOMER_NAME}"
+    contact: "${CUSTOMER_CONTACT}"
+    provisioned-on: "${PROVISIONING_DATE}"
+    tier: "${TIER}"
+    database: "${DB_NAME}"
+    key-vault-id: "${KEY_VAULT_ID}"
+    tenant-isolation-level: "infrastructure"
+---
+# Resource Quota for Tenant Namespace
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: tenant-resource-quota
+  namespace: tenant-${CUSTOMER_ID}
+spec:
+  hard:
+    requests.cpu: "${CPU_REQUEST_LIMIT}"
+    requests.memory: "${MEMORY_REQUEST_LIMIT}"
+    limits.cpu: "${CPU_LIMIT}"
+    limits.memory: "${MEMORY_LIMIT}"
+    persistentvolumeclaims: "${PVC_LIMIT}"
+    services: "${SERVICE_LIMIT}"
+    secrets: "${SECRET_LIMIT}"
+    configmaps: "${CONFIGMAP_LIMIT}"
+---
+# Limit Range for Tenant Namespace
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: tenant-limit-range
+  namespace: tenant-${CUSTOMER_ID}
+spec:
+  limits:
+  - type: Container
+    default:
+      cpu: "${DEFAULT_CPU}"
+      memory: "${DEFAULT_MEMORY}"
+    defaultRequest:
+      cpu: "${DEFAULT_CPU_REQUEST}"
+      memory: "${DEFAULT_MEMORY_REQUEST}"
+    max:
+      cpu: "${MAX_CPU}"
+      memory: "${MAX_MEMORY}"
+    min:
+      cpu: "${MIN_CPU}"
+      memory: "${MIN_MEMORY}"
+---
+# Network Policy - Default Deny All (Tenant Isolation)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: tenant-${CUSTOMER_ID}
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+---
+# Network Policy - Allow Tenant Internal Traffic Only
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-tenant-internal-only
+  namespace: tenant-${CUSTOMER_ID}
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow traffic from within same namespace
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          customer-id: ${CUSTOMER_ID}
+  # Allow traffic from cyberrx-system (platform services)
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: cyberrx-system
+  egress:
+  # Allow traffic to same namespace
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          customer-id: ${CUSTOMER_ID}
+  # Allow traffic to cyberrx-system
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: cyberrx-system
+  # Allow traffic to cyberrx-monitoring
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: cyberrx-monitoring
+  # Allow traffic to own database (via private endpoint)
+  - to:
+    - ipBlock:
+        cidr: "${DATABASE_PRIVATE_IP}/32"
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow traffic to Azure Event Hubs (private endpoint)
+  - to:
+    - ipBlock:
+        cidr: "${EVENTHUBS_PRIVATE_IP}/32"
+    ports:
+    - protocol: TCP
+      port: 9093
+  # Allow traffic to Key Vault (private endpoint)
+  - to:
+    - ipBlock:
+        cidr: "${KEYVAULT_PRIVATE_IP}/32"
+    ports:
+    - protocol: TCP
+      port: 443
+  # Allow external API calls (CISA, NIST, etc.)
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+    ports:
+    - protocol: TCP
+      port: 443
+---
+# Pod Security Policy for Tenant
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tenant-workload-sa
+  namespace: tenant-${CUSTOMER_ID}
+---
+# Role for Tenant Workloads
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: tenant-workload-role
+  namespace: tenant-${CUSTOMER_ID}
+rules:
+- apiGroups: [""]
+  resources: ["secrets", "configmaps"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["pods", "services"]
+  verbs: ["get", "list", "watch", "create", "update", "delete"]
+---
+# Role Binding for Tenant Workloads
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tenant-workload-rolebinding
+  namespace: tenant-${CUSTOMER_ID}
+subjects:
+- kind: ServiceAccount
+  name: tenant-workload-sa
+  namespace: tenant-${CUSTOMER_ID}
+roleRef:
+  kind: Role
+  name: tenant-workload-role
+  apiGroup: rbac.authorization.k8s.io
+---
+# Network Policy - Deny Cross-Tenant Traffic (Critical for Isolation)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-cross-tenant-traffic
+  namespace: tenant-${CUSTOMER_ID}
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Deny traffic from other tenant namespaces
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          type: tenant
+    ports:
+    - protocol: TCP
+  egress:
+  # Deny traffic to other tenant namespaces
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          type: tenant
+    ports:
+    - protocol: TCP
