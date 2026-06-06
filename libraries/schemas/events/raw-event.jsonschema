@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://cyberrx.com/schemas/events/raw-event.json",
+  "title": "RawEvent",
+  "description": "Raw event from connectors before normalization to RiskObject",
+  "type": "object",
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique event identifier (UUID)"
+    },
+    "source": {
+      "type": "string",
+      "description": "Connector that produced this event (e.g., 'splunk', 'crowdstrike')",
+      "examples": ["splunk", "crowdstrike", "servicenow", "qualys"]
+    },
+    "source_event_id": {
+      "type": "string",
+      "description": "Original event ID from source system"
+    },
+    "event_type": {
+      "type": "string",
+      "description": "Type of event (e.g., 'security_alert', 'vulnerability', 'claim_event')",
+      "examples": ["security_alert", "vulnerability", "compliance_violation", "operational_incident"]
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when event occurred"
+    },
+    "raw_data": {
+      "type": "object",
+      "description": "Raw event data from source system",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "customer_id": {
+      "type": "string",
+      "description": "Customer identifier for tenant isolation"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "required": ["event_id", "source", "source_event_id", "event_type", "timestamp", "raw_data", "customer_id"],
+  "additionalProperties": false
+}
