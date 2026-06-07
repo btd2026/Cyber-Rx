@@ -456,6 +456,51 @@ async function init() {
       CREATE INDEX IF NOT EXISTS vendor_monitoring_conn_org ON vendor_monitoring_connections(organization_id);
       CREATE INDEX IF NOT EXISTS vendor_monitoring_conn_vendor ON vendor_monitoring_connections(vendor_id);
       CREATE INDEX IF NOT EXISTS vendor_monitoring_conn_type ON vendor_monitoring_connections(connector_type);
+
+      -- T-PILOT-001: Tenant Management Tables
+      CREATE TABLE IF NOT EXISTS tenants (
+        id              TEXT PRIMARY KEY,
+        customer_id     TEXT UNIQUE NOT NULL,
+        customer_name   TEXT NOT NULL,
+        subdomain       TEXT UNIQUE NOT NULL,
+        region          TEXT NOT NULL,
+        tier            TEXT NOT NULL CHECK (tier IN ('pilot', 'standard', 'premium')),
+        status          TEXT NOT NULL CHECK (status IN ('provisioning', 'active', 'suspended', 'failed')),
+        metadata        JSONB DEFAULT '{}',
+        created_at      TIMESTAMPTZ DEFAULT NOW(),
+        updated_at      TIMESTAMPTZ DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS infrastructure_components (
+        id              SERIAL PRIMARY KEY,
+        tenant_id       TEXT REFERENCES tenants(id) ON DELETE CASCADE,
+        component_type  TEXT NOT NULL,
+        component_name  TEXT NOT NULL,
+        status          TEXT NOT NULL CHECK (status IN ('provisioning', 'active', 'error', 'rollback')),
+        metadata        JSONB DEFAULT '{}',
+        created_at      TIMESTAMPTZ DEFAULT NOW(),
+        updated_at      TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE (tenant_id, component_type, component_name)
+      );
+
+      CREATE TABLE IF NOT EXISTS tenant_context_audit (
+        id              SERIAL PRIMARY KEY,
+        session_id      TEXT NOT NULL,
+        tenant_id       TEXT NOT NULL,
+        set_by          TEXT NOT NULL,
+        set_at          TIMESTAMPTZ DEFAULT NOW(),
+        cleared_at      TIMESTAMPTZ,
+        operation_count INTEGER DEFAULT 0
+      );
+
+      -- Indexes for tenant management
+      CREATE INDEX IF NOT EXISTS tenants_customer_id ON tenants(customer_id);
+      CREATE INDEX IF NOT EXISTS tenants_subdomain ON tenants(subdomain);
+      CREATE INDEX IF NOT EXISTS tenants_status ON tenants(status);
+      CREATE INDEX IF NOT EXISTS infrastructure_components_tenant ON infrastructure_components(tenant_id);
+      CREATE INDEX IF NOT EXISTS infrastructure_components_type ON infrastructure_components(component_type);
+      CREATE INDEX IF NOT EXISTS tenant_context_audit_session ON tenant_context_audit(session_id);
+      CREATE INDEX IF NOT EXISTS tenant_context_audit_tenant ON tenant_context_audit(tenant_id);
     `);
     console.log('Database schema initialized');
   } catch (err) {
