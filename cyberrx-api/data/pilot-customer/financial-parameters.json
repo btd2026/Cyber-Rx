@@ -1,0 +1,1056 @@
+{
+  "mlr_target_configurations": [
+    {
+      "organization_id": "pilot-customer-org",
+      "market_segment": "individual",
+      "mlr_target_percentage": 80.0,
+      "cms_minimum_percentage": 80.0,
+      "premium_revenue_baseline": 850000000,
+      "claims_cost_baseline": 680000000,
+      "quality_supplement_amount": 25000000,
+      "rebate_threshold_percentage": 80.0,
+      "mlr_impact_threshold_percentage": 2.0,
+      "tax_year": 2025,
+      "reporting_quarter": "annual",
+      "methodology": "ACA MLR calculation methodology with quality adjustment",
+      "assumptions": [
+        "Premium revenue based on enrolled member count",
+        "Claims cost includes medical, pharmacy, and supplemental benefits",
+        "Quality spending subtractible from numerator per CMS guidelines",
+        "Rebate threshold aligned with ACA requirements"
+      ]
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "market_segment": "group",
+      "mlr_target_percentage": 85.0,
+      "cms_minimum_percentage": 85.0,
+      "premium_revenue_baseline": 1300000000,
+      "claims_cost_baseline": 1105000000,
+      "quality_supplement_amount": 40000000,
+      "rebate_threshold_percentage": 85.0,
+      "mlr_impact_threshold_percentage": 2.0,
+      "tax_year": 2025,
+      "reporting_quarter": "annual",
+      "methodology": "ACA MLR calculation methodology for group market",
+      "assumptions": [
+        "Group market higher MLR target per ACA",
+        "Claims include medical, pharmacy, behavioral health",
+        "Quality spending aligned with CMS definition"
+      ]
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "market_segment": "medicare",
+      "mlr_target_percentage": 85.0,
+      "cms_minimum_percentage": 85.0,
+      "premium_revenue_baseline": 600000000,
+      "claims_cost_baseline": 510000000,
+      "quality_supplement_amount": 15000000,
+      "rebate_threshold_percentage": 85.0,
+      "mlr_impact_threshold_percentage": 2.0,
+      "tax_year": 2025,
+      "reporting_quarter": "annual",
+      "methodology": "Medicare Advantage MLR methodology",
+      "assumptions": [
+        "MA bid rate determines revenue baseline",
+        "CMS star quality bonus included",
+        "Medical expense ratio includes Part A/B and Part D"
+      ]
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "market_segment": "medicaid",
+      "mlr_target_percentage": 85.0,
+      "cms_minimum_percentage": 85.0,
+      "premium_revenue_baseline": 400000000,
+      "claims_cost_baseline": 340000000,
+      "quality_supplement_amount": 10000000,
+      "rebate_threshold_percentage": 85.0,
+      "mlr_impact_threshold_percentage": 2.0,
+      "tax_year": 2025,
+      "reporting_quarter": "annual",
+      "methodology": "Medicaid managed care MLR methodology",
+      "assumptions": [
+        "Capitation rate determines revenue",
+        "State-specific MLR requirements",
+        "Quality improvement activities included"
+      ]
+    }
+  ],
+  "stop_loss_parameters": [
+    {
+      "organization_id": "pilot-customer-org",
+      "line_of_business": "Individual",
+      "specific_attachment_point": 100000,
+      "specific_deductible": 0,
+      "aggregate_attachment_point": 125000000,
+      "aggregate_deductible": 0,
+      "aggregate_limit": 150000000,
+      "per_occurrence_limit": 1000000,
+      "current_aggregate_position": 45000000,
+      "carrier_name": "StopLoss Reinsurance Co.",
+      "carrier_contact_email": "claims@stoplossre.com",
+      "policy_number": "SL-IND-2025-001",
+      "policy_effective_date": "2025-01-01T00:00:00Z",
+      "policy_expiry_date": "2025-12-31T23:59:59Z",
+      "reinsurance_treaty": {
+        "treaty_type": "quota_share",
+        "retention_percentage": 20.0,
+        "ceded_percentage": 80.0,
+        "layers": [
+          {
+            "layer": "first",
+            "attachment": 100000,
+            "limit": 1000000,
+            "percentage": 100.0
+          },
+          {
+            "layer": "excess",
+            "attachment": 1100000,
+            "limit": 5000000,
+            "percentage": 50.0
+          }
+        ]
+      },
+      "laser_items": [],
+      "exhaustion_scenarios": [
+        {
+          "scenario": "catastrophic_event",
+          "description": "Multiple large claims exceeding aggregate",
+          "probability": 0.01,
+          "exhaustion_year": 2025
+        }
+      ],
+      "contract_document_reference": "CONTRACT-SL-IND-2025"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "line_of_business": "Group",
+      "specific_attachment_point": 250000,
+      "specific_deductible": 0,
+      "aggregate_attachment_point": 180000000,
+      "aggregate_deductible": 0,
+      "aggregate_limit": 200000000,
+      "per_occurrence_limit": 2000000,
+      "current_aggregate_position": 65000000,
+      "carrier_name": "StopLoss Reinsurance Co.",
+      "carrier_contact_email": "claims@stoplossre.com",
+      "policy_number": "SL-GRP-2025-001",
+      "policy_effective_date": "2025-01-01T00:00:00Z",
+      "policy_expiry_date": "2025-12-31T23:59:59Z",
+      "reinsurance_treaty": {
+        "treaty_type": "excess_of_loss",
+        "retention_percentage": 25.0,
+        "ceded_percentage": 75.0,
+        "layers": [
+          {
+            "layer": "first",
+            "attachment": 250000,
+            "limit": 2000000,
+            "percentage": 100.0
+          }
+        ]
+      },
+      "laser_items": [],
+      "exhaustion_scenarios": [],
+      "contract_document_reference": "CONTRACT-SL-GRP-2025"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "line_of_business": "Medicare",
+      "specific_attachment_point": 75000,
+      "specific_deductible": 0,
+      "aggregate_attachment_point": 90000000,
+      "aggregate_deductible": 0,
+      "aggregate_limit": 100000000,
+      "per_occurrence_limit": 1000000,
+      "current_aggregate_position": 32000000,
+      "carrier_name": "MA StopLoss Partners",
+      "carrier_contact_email": "claims@mareinsurance.com",
+      "policy_number": "SL-MA-2025-001",
+      "policy_effective_date": "2025-01-01T00:00:00Z",
+      "policy_expiry_date": "2025-12-31T23:59:59Z",
+      "reinsurance_treaty": {
+        "treaty_type": "excess_of_loss",
+        "retention_percentage": 15.0,
+        "ceded_percentage": 85.0,
+        "layers": []
+      },
+      "laser_items": [
+        {
+          "member_id": "LASER-001",
+          "condition": "End-stage renal disease",
+          "exclusion_amount": 500000
+        }
+      ],
+      "exhaustion_scenarios": [],
+      "contract_document_reference": "CONTRACT-SL-MA-2025"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "line_of_business": "Medicaid",
+      "specific_attachment_point": 50000,
+      "specific_deductible": 0,
+      "aggregate_attachment_point": 60000000,
+      "aggregate_deductible": 0,
+      "aggregate_limit": 75000000,
+      "per_occurrence_limit": 750000,
+      "current_aggregate_position": 22000000,
+      "carrier_name": "Medicaid Risk Solutions",
+      "carrier_contact_email": "claims@medrisk.com",
+      "policy_number": "SL-MCD-2025-001",
+      "policy_effective_date": "2025-01-01T00:00:00Z",
+      "policy_expiry_date": "2025-12-31T23:59:59Z",
+      "reinsurance_treaty": {
+        "treaty_type": "quota_share",
+        "retention_percentage": 20.0,
+        "ceded_percentage": 80.0,
+        "layers": []
+      },
+      "laser_items": [],
+      "exhaustion_scenarios": [],
+      "contract_document_reference": "CONTRACT-SL-MCD-2025"
+    }
+  ],
+  "reserve_positions": [
+    {
+      "organization_id": "pilot-customer-org",
+      "line_of_business": "Individual",
+      "reserve_type": "ibnr",
+      "reserve_balance": 45000000,
+      "reserve_at_risk": 22500000,
+      "reserve_depletion_rate": 2.5,
+      "adequacy_percentage": 95.0,
+      "actuarial_assumptions": {
+        "claim_reporting_lag_days": 45,
+        "claim_payment_pattern": [0.15, 0.30, 0.25, 0.15, 0.10, 0.05],
+        "inflation_rate": 0.06
+      },
+      "reserve_impact_model": {
+        "sensitivity_to_claims_volume": 0.85,
+        "sensitivity_to_pricing": 0.15
+      },
+      "validation_date": "2025-06-01",
+      "validated_by_actuary": "actuary@pilot-customer.com"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "line_of_business": "Individual",
+      "reserve_type": "case_reserve",
+      "reserve_balance": 32000000,
+      "reserve_at_risk": 16000000,
+      "reserve_depletion_rate": 3.0,
+      "adequacy_percentage": 100.0,
+      "actuarial_assumptions": {
+        "claim_payment_lag_days": 30,
+        "claim_payment_pattern": [0.25, 0.35, 0.20, 0.12, 0.08],
+        "inflation_rate": 0.05
+      },
+      "reserve_impact_model": {
+        "sensitivity_to_claim_severity": 0.70,
+        "sensitivity_to_utilization": 0.30
+      },
+      "validation_date": "2025-06-01",
+      "validated_by_actuary": "actuary@pilot-customer.com"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "line_of_business": "Group",
+      "reserve_type": "ibnr",
+      "reserve_balance": 68000000,
+      "reserve_at_risk": 34000000,
+      "reserve_depletion_rate": 2.0,
+      "adequacy_percentage": 105.0,
+      "actuarial_assumptions": {
+        "claim_reporting_lag_days": 60,
+        "claim_payment_pattern": [0.12, 0.28, 0.27, 0.18, 0.10, 0.05],
+        "inflation_rate": 0.07
+      },
+      "reserve_impact_model": {
+        "sensitivity_to_group_size": 0.60,
+        "sensitivity_to_claim_cost": 0.40
+      },
+      "validation_date": "2025-06-01",
+      "validated_by_actuary": "actuary@pilot-customer.com"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "line_of_business": "Group",
+      "reserve_type": "case_reserve",
+      "reserve_balance": 52000000,
+      "reserve_at_risk": 26000000,
+      "reserve_depletion_rate": 2.5,
+      "adequacy_percentage": 102.0,
+      "actuarial_assumptions": {
+        "claim_payment_lag_days": 45,
+        "claim_payment_pattern": [0.20, 0.32, 0.23, 0.15, 0.10],
+        "inflation_rate": 0.06
+      },
+      "reserve_impact_model": {
+        "sensitivity_to_large_claims": 0.55,
+        "sensitivity_to_utilization": 0.45
+      },
+      "validation_date": "2025-06-01",
+      "validated_by_actuary": "actuary@pilot-customer.com"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "line_of_business": "Medicare",
+      "reserve_type": "ibnr",
+      "reserve_balance": 28000000,
+      "reserve_at_risk": 14000000,
+      "reserve_depletion_rate": 2.2,
+      "adequacy_percentage": 98.0,
+      "actuarial_assumptions": {
+        "claim_reporting_lag_days": 30,
+        "claim_payment_pattern": [0.18, 0.30, 0.26, 0.16, 0.10],
+        "inflation_rate": 0.05
+      },
+      "reserve_impact_model": {
+        "sensitivity_to_medicare_advantage_rate": 0.75,
+        "sensitivity_to_star_rating": 0.25
+      },
+      "validation_date": "2025-06-01",
+      "validated_by_actuary": "actuary@pilot-customer.com"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "line_of_business": "Medicare",
+      "reserve_type": "case_reserve",
+      "reserve_balance": 19000000,
+      "reserve_at_risk": 9500000,
+      "reserve_depletion_rate": 2.8,
+      "adequacy_percentage": 100.0,
+      "actuarial_assumptions": {
+        "claim_payment_lag_days": 35,
+        "claim_payment_pattern": [0.22, 0.33, 0.22, 0.13, 0.10],
+        "inflation_rate": 0.05
+      },
+      "reserve_impact_model": {
+        "sensitivity_to_part_d_costs": 0.60,
+        "sensitivity_to_part_ab_costs": 0.40
+      },
+      "validation_date": "2025-06-01",
+      "validated_by_actuary": "actuary@pilot-customer.com"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "line_of_business": "Medicaid",
+      "reserve_type": "ibnr",
+      "reserve_balance": 18000000,
+      "reserve_at_risk": 9000000,
+      "reserve_depletion_rate": 2.0,
+      "adequacy_percentage": 100.0,
+      "actuarial_assumptions": {
+        "claim_reporting_lag_days": 40,
+        "claim_payment_pattern": [0.15, 0.28, 0.27, 0.18, 0.12],
+        "inflation_rate": 0.04
+      },
+      "reserve_impact_model": {
+        "sensitivity_to_state_rate_changes": 0.70,
+        "sensitivity_to_enrollment": 0.30
+      },
+      "validation_date": "2025-06-01",
+      "validated_by_actuary": "actuary@pilot-customer.com"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "line_of_business": "Medicaid",
+      "reserve_type": "case_reserve",
+      "reserve_balance": 14000000,
+      "reserve_at_risk": 7000000,
+      "reserve_depletion_rate": 2.5,
+      "adequacy_percentage": 98.0,
+      "actuarial_assumptions": {
+        "claim_payment_lag_days": 45,
+        "claim_payment_pattern": [0.18, 0.30, 0.25, 0.15, 0.12],
+        "inflation_rate": 0.04
+      },
+      "reserve_impact_model": {
+        "sensitivity_to_managed_care_rate": 0.65,
+        "sensitivity_to_utilization": 0.35
+      },
+      "validation_date": "2025-06-01",
+      "validated_by_actuary": "actuary@pilot-customer.com"
+    }
+  ],
+  "premium_revenue_mappings": [
+    {
+      "organization_id": "pilot-customer-org",
+      "business_process_id": "member-enrollment",
+      "line_of_business": "Individual",
+      "state_code": "CA",
+      "monthly_premium_revenue": 35416666,
+      "quarterly_premium_revenue": 106250000,
+      "annual_premium_revenue": 425000000,
+      "member_count": 85000,
+      "premium_per_member_month": 417,
+      "revenue_at_risk_percentage": 15.0,
+      "revenue_at_risk_amount": 63750000,
+      "seasonality_factor": 1.0,
+      "revenue_trend": "stable",
+      "gl_account_reference": "GL-8500-001"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "business_process_id": "claims-adjudication",
+      "line_of_business": "Individual",
+      "state_code": "CA",
+      "monthly_premium_revenue": 35416666,
+      "quarterly_premium_revenue": 106250000,
+      "annual_premium_revenue": 425000000,
+      "member_count": 85000,
+      "premium_per_member_month": 417,
+      "revenue_at_risk_percentage": 20.0,
+      "revenue_at_risk_amount": 85000000,
+      "seasonality_factor": 1.0,
+      "revenue_trend": "stable",
+      "gl_account_reference": "GL-8500-001"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "business_process_id": "member-enrollment",
+      "line_of_business": "Group",
+      "state_code": "TX",
+      "monthly_premium_revenue": 54166666,
+      "quarterly_premium_revenue": 162500000,
+      "annual_premium_revenue": 650000000,
+      "member_count": 130000,
+      "premium_per_member_month": 417,
+      "revenue_at_risk_percentage": 12.0,
+      "revenue_at_risk_amount": 78000000,
+      "seasonality_factor": 1.0,
+      "revenue_trend": "increasing",
+      "gl_account_reference": "GL-8500-002"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "business_process_id": "claims-adjudication",
+      "line_of_business": "Group",
+      "state_code": "TX",
+      "monthly_premium_revenue": 54166666,
+      "quarterly_premium_revenue": 162500000,
+      "annual_premium_revenue": 650000000,
+      "member_count": 130000,
+      "premium_per_member_month": 417,
+      "revenue_at_risk_percentage": 18.0,
+      "revenue_at_risk_amount": 117000000,
+      "seasonality_factor": 1.0,
+      "revenue_trend": "increasing",
+      "gl_account_reference": "GL-8500-002"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "business_process_id": "member-enrollment",
+      "line_of_business": "Medicare",
+      "state_code": "FL",
+      "monthly_premium_revenue": 25000000,
+      "quarterly_premium_revenue": 75000000,
+      "annual_premium_revenue": 300000000,
+      "member_count": 60000,
+      "premium_per_member_month": 417,
+      "revenue_at_risk_percentage": 10.0,
+      "revenue_at_risk_amount": 30000000,
+      "seasonality_factor": 1.0,
+      "revenue_trend": "stable",
+      "gl_account_reference": "GL-8500-003"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "business_process_id": "claims-adjudication",
+      "line_of_business": "Medicare",
+      "state_code": "FL",
+      "monthly_premium_revenue": 25000000,
+      "quarterly_premium_revenue": 75000000,
+      "annual_premium_revenue": 300000000,
+      "member_count": 60000,
+      "premium_per_member_month": 417,
+      "revenue_at_risk_percentage": 15.0,
+      "revenue_at_risk_amount": 45000000,
+      "seasonality_factor": 1.0,
+      "revenue_trend": "stable",
+      "gl_account_reference": "GL-8500-003"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "business_process_id": "member-enrollment",
+      "line_of_business": "Medicaid",
+      "state_code": "NY",
+      "monthly_premium_revenue": 16666666,
+      "quarterly_premium_revenue": 50000000,
+      "annual_premium_revenue": 200000000,
+      "member_count": 40000,
+      "premium_per_member_month": 417,
+      "revenue_at_risk_percentage": 8.0,
+      "revenue_at_risk_amount": 16000000,
+      "seasonality_factor": 1.0,
+      "revenue_trend": "stable",
+      "gl_account_reference": "GL-8500-004"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "business_process_id": "claims-adjudication",
+      "line_of_business": "Medicaid",
+      "state_code": "NY",
+      "monthly_premium_revenue": 16666666,
+      "quarterly_premium_revenue": 50000000,
+      "annual_premium_revenue": 200000000,
+      "member_count": 40000,
+      "premium_per_member_month": 417,
+      "revenue_at_risk_percentage": 12.0,
+      "revenue_at_risk_amount": 24000000,
+      "seasonality_factor": 1.0,
+      "revenue_trend": "stable",
+      "gl_account_reference": "GL-8500-004"
+    }
+  ],
+  "risk_appetite_thresholds": [
+    {
+      "organization_id": "pilot-customer-org",
+      "threshold_level": "board",
+      "threshold_category": "single_event_exposure",
+      "threshold_metric": "max_dollar_exposure",
+      "threshold_value": 10000000,
+      "threshold_unit": "USD",
+      "warning_threshold_percentage": 80.0,
+      "critical_threshold_percentage": 90.0,
+      "escalation_trigger": "Exceeds $10M single event exposure",
+      "notification_recipients": [
+        "board@pilot-customer.com",
+        "cro@pilot-customer.com",
+        "cfo@pilot-customer.com"
+      ],
+      "approval_document_reference": "BOARD-RISK-APPETITE-2025",
+      "approved_by_board": "board-chair@pilot-customer.com",
+      "approved_date": "2025-01-15",
+      "review_frequency": "quarterly",
+      "next_review_date": "2025-07-15"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "threshold_level": "board",
+      "threshold_category": "annual_aggregate_exposure",
+      "threshold_metric": "max_annual_exposure",
+      "threshold_value": 50000000,
+      "threshold_unit": "USD",
+      "warning_threshold_percentage": 80.0,
+      "critical_threshold_percentage": 90.0,
+      "escalation_trigger": "Exceeds $50M annual aggregate exposure",
+      "notification_recipients": [
+        "board@pilot-customer.com",
+        "cro@pilot-customer.com",
+        "cfo@pilot-customer.com"
+      ],
+      "approval_document_reference": "BOARD-RISK-APPETITE-2025",
+      "approved_by_board": "board-chair@pilot-customer.com",
+      "approved_date": "2025-01-15",
+      "review_frequency": "annually",
+      "next_review_date": "2026-01-15"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "threshold_level": "board",
+      "threshold_category": "mlr_impact",
+      "threshold_metric": "max_mlr_impact_percentage",
+      "threshold_value": 2.0,
+      "threshold_unit": "percentage_points",
+      "warning_threshold_percentage": 80.0,
+      "critical_threshold_percentage": 90.0,
+      "escalation_trigger": "MLR impact exceeds 2 percentage points",
+      "notification_recipients": [
+        "board@pilot-customer.com",
+        "cfo@pilot-customer.com",
+        "actuary@pilot-customer.com"
+      ],
+      "approval_document_reference": "BOARD-RISK-APPETITE-2025",
+      "approved_by_board": "board-chair@pilot-customer.com",
+      "approved_date": "2025-01-15",
+      "review_frequency": "quarterly",
+      "next_review_date": "2025-07-15"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "threshold_level": "board",
+      "threshold_category": "regulatory_fine",
+      "threshold_metric": "max_regulatory_fine",
+      "threshold_value": 100000,
+      "threshold_unit": "USD",
+      "warning_threshold_percentage": 80.0,
+      "critical_threshold_percentage": 90.0,
+      "escalation_trigger": "Regulatory fine exceeds $100K",
+      "notification_recipients": [
+        "board@pilot-customer.com",
+        "cro@pilot-customer.com",
+        "compliance@pilot-customer.com"
+      ],
+      "approval_document_reference": "BOARD-RISK-APPETITE-2025",
+      "approved_by_board": "board-chair@pilot-customer.com",
+      "approved_date": "2025-01-15",
+      "review_frequency": "annually",
+      "next_review_date": "2026-01-15"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "threshold_level": "cro",
+      "threshold_category": "daily_exposure",
+      "threshold_metric": "max_daily_exposure",
+      "threshold_value": 1000000,
+      "threshold_unit": "USD",
+      "warning_threshold_percentage": 80.0,
+      "critical_threshold_percentage": 90.0,
+      "escalation_trigger": "Daily exposure exceeds $1M",
+      "notification_recipients": [
+        "cro@pilot-customer.com",
+        "ciso@pilot-customer.com",
+        "risk-team@pilot-customer.com"
+      ],
+      "approval_document_reference": "CRO-RISK-APPETITE-2025",
+      "approved_by_board": "cro@pilot-customer.com",
+      "approved_date": "2025-02-01",
+      "review_frequency": "monthly",
+      "next_review_date": "2025-07-01"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "threshold_level": "cro",
+      "threshold_category": "weekly_exposure",
+      "threshold_metric": "max_weekly_exposure",
+      "threshold_value": 5000000,
+      "threshold_unit": "USD",
+      "warning_threshold_percentage": 80.0,
+      "critical_threshold_percentage": 90.0,
+      "escalation_trigger": "Weekly exposure exceeds $5M",
+      "notification_recipients": [
+        "cro@pilot-customer.com",
+        "ciso@pilot-customer.com",
+        "risk-team@pilot-customer.com"
+      ],
+      "approval_document_reference": "CRO-RISK-APPETITE-2025",
+      "approved_by_board": "cro@pilot-customer.com",
+      "approved_date": "2025-02-01",
+      "review_frequency": "monthly",
+      "next_review_date": "2025-07-01"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "threshold_level": "ciso",
+      "threshold_category": "blast_radius",
+      "threshold_metric": "max_critical_processes_affected",
+      "threshold_value": 3,
+      "threshold_unit": "count",
+      "warning_threshold_percentage": 66.0,
+      "critical_threshold_percentage": 100.0,
+      "escalation_trigger": "More than 2 critical processes affected",
+      "notification_recipients": [
+        "ciso@pilot-customer.com",
+        "cro@pilot-customer.com",
+        "security-ops@pilot-customer.com"
+      ],
+      "approval_document_reference": "CISO-RISK-APPETITE-2025",
+      "approved_by_board": "ciso@pilot-customer.com",
+      "approved_date": "2025-02-15",
+      "review_frequency": "quarterly",
+      "next_review_date": "2025-08-15"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "threshold_level": "ciso",
+      "threshold_category": "compliance_violation",
+      "threshold_metric": "max_compliance_violations_per_day",
+      "threshold_value": 5,
+      "threshold_unit": "count",
+      "warning_threshold_percentage": 80.0,
+      "critical_threshold_percentage": 100.0,
+      "escalation_trigger": "More than 4 compliance violations in a day",
+      "notification_recipients": [
+        "ciso@pilot-customer.com",
+        "compliance@pilot-customer.com",
+        "cro@pilot-customer.com"
+      ],
+      "approval_document_reference": "CISO-RISK-APPETITE-2025",
+      "approved_by_board": "ciso@pilot-customer.com",
+      "approved_date": "2025-02-15",
+      "review_frequency": "monthly",
+      "next_review_date": "2025-07-15"
+    }
+  ],
+  "alert_threshold_configurations": [
+    {
+      "organization_id": "pilot-customer-org",
+      "alert_type": "dollar_exposure",
+      "alert_condition": {
+        "metric": "total_exposure",
+        "time_horizon": "immediate"
+      },
+      "alert_threshold_value": 1000000,
+      "alert_severity": "critical",
+      "comparison_operator": ">",
+      "hysteresis_percentage": 5.0,
+      "cooldown_period_minutes": 60,
+      "notification_channels": [
+        "email",
+        "slack",
+        "pagerduty"
+      ],
+      "escalation_rules": [
+        {
+          "condition": "no_ack_within_15min",
+          "action": "escalate_to_cro"
+        }
+      ],
+      "suppression_rules": [],
+      "is_active": true
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "alert_type": "mlr_impact",
+      "alert_condition": {
+        "metric": "mlr_impact_percentage",
+        "market_segment": "all"
+      },
+      "alert_threshold_value": 1.5,
+      "alert_severity": "warning",
+      "comparison_operator": ">",
+      "hysteresis_percentage": 5.0,
+      "cooldown_period_minutes": 120,
+      "notification_channels": [
+        "email",
+        "slack"
+      ],
+      "escalation_rules": [
+        {
+          "condition": "no_ack_within_30min",
+          "action": "escalate_to_cfo"
+        }
+      ],
+      "suppression_rules": [],
+      "is_active": true
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "alert_type": "stop_loss_position",
+      "alert_condition": {
+        "metric": "aggregate_utilization",
+        "line_of_business": "all"
+      },
+      "alert_threshold_value": 80.0,
+      "alert_severity": "warning",
+      "comparison_operator": ">",
+      "hysteresis_percentage": 5.0,
+      "cooldown_period_minutes": 240,
+      "notification_channels": [
+        "email",
+        "slack"
+      ],
+      "escalation_rules": [
+        {
+          "condition": "no_ack_within_1hour",
+          "action": "escalate_to_cfo"
+        }
+      ],
+      "suppression_rules": [],
+      "is_active": true
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "alert_type": "reserve_adequacy",
+      "alert_condition": {
+        "metric": "adequacy_percentage",
+        "reserve_type": "all"
+      },
+      "alert_threshold_value": 95.0,
+      "alert_severity": "warning",
+      "comparison_operator": "<",
+      "hysteresis_percentage": 2.0,
+      "cooldown_period_minutes": 180,
+      "notification_channels": [
+        "email",
+        "slack"
+      ],
+      "escalation_rules": [
+        {
+          "condition": "no_ack_within_1hour",
+          "action": "escalate_to_actuary"
+        }
+      ],
+      "suppression_rules": [],
+      "is_active": true
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "alert_type": "compliance_violation",
+      "alert_condition": {
+        "metric": "cms_limit_proximity",
+        "limit_type": "mlr"
+      },
+      "alert_threshold_value": 90.0,
+      "alert_severity": "critical",
+      "comparison_operator": ">",
+      "hysteresis_percentage": 2.0,
+      "cooldown_period_minutes": 60,
+      "notification_channels": [
+        "email",
+        "slack",
+        "pagerduty"
+      ],
+      "escalation_rules": [
+        {
+          "condition": "no_ack_within_15min",
+          "action": "escalate_to_cro"
+        }
+      ],
+      "suppression_rules": [],
+      "is_active": true
+    }
+  ],
+  "scenario_analysis_configurations": [
+    {
+      "organization_id": "pilot-customer-org",
+      "scenario_name": "Ransomware - Claims System",
+      "scenario_type": "ransomware",
+      "scenario_description": "Ransomware attack on claims adjudication system causing 5-day outage",
+      "impact_parameters": {
+        "affected_systems": [
+          "claims-platform",
+          "payment-system",
+          "nasco-interface"
+        ],
+        "business_processes_affected": [
+          "claims-adjudication",
+          "provider-payments",
+          "member-services"
+        ],
+        "duration_days": 5,
+        "data_breach": true,
+        "records_exposed": 50000
+      },
+      "financial_assumptions": {
+        "business_interruption_cost_per_day": 500000,
+        "data_breach_cost_per_record": 150,
+        "ransom_payment": 0,
+        "forensic_investigation": 100000,
+        "legal_fees": 75000,
+        "regulatory_fines": 250000,
+        "notification_costs": 50000,
+        "credit_monitoring": 75000,
+        "public_relations": 50000
+      },
+      "probability_distribution": "triangular",
+      "monte_carlo_iterations": 10000,
+      "sensitivity_variables": [
+        "duration_days",
+        "records_exposed",
+        "business_interruption_cost_per_day"
+      ],
+      "stress_test_factors": [
+        {
+          "factor": "duration_days",
+          "multiplier": 2.0
+        },
+        {
+          "factor": "records_exposed",
+          "multiplier": 3.0
+        }
+      ],
+      "output_metrics": [
+        "total_loss",
+        "mlr_impact",
+        "stop_loss_impact",
+        "reserve_impact",
+        "premium_revenue_risk"
+      ],
+      "created_by": "risk-analyst@pilot-customer.com"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "scenario_name": "Data Breach - Member Portal",
+      "scenario_type": "data_breach",
+      "scenario_description": "PHI exposure from member portal vulnerability affecting 100,000 members",
+      "impact_parameters": {
+        "affected_systems": [
+          "member-portal",
+          "eligibility-engine",
+          "document-generation"
+        ],
+        "business_processes_affected": [
+          "member-enrollment",
+          "member-services",
+          "eligibility-verification"
+        ],
+        "duration_days": 2,
+        "data_breach": true,
+        "records_exposed": 100000
+      },
+      "financial_assumptions": {
+        "business_interruption_cost_per_day": 200000,
+        "data_breach_cost_per_record": 165,
+        "ransom_payment": 0,
+        "forensic_investigation": 150000,
+        "legal_fees": 100000,
+        "regulatory_fines": 500000,
+        "notification_costs": 100000,
+        "credit_monitoring": 150000,
+        "public_relations": 75000
+      },
+      "probability_distribution": "pert",
+      "monte_carlo_iterations": 10000,
+      "sensitivity_variables": [
+        "records_exposed",
+        "data_breach_cost_per_record",
+        "regulatory_fines"
+      ],
+      "stress_test_factors": [
+        {
+          "factor": "records_exposed",
+          "multiplier": 5.0
+        },
+        {
+          "factor": "regulatory_fines",
+          "multiplier": 2.0
+        }
+      ],
+      "output_metrics": [
+        "total_loss",
+        "regulatory_fine_impact",
+        "premium_revenue_risk",
+        "member_attrition"
+      ],
+      "created_by": "risk-analyst@pilot-customer.com"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "scenario_name": "System Outage - Enrollment Platform",
+      "scenario_type": "system_outage",
+      "scenario_description": "Extended outage of enrollment platform during open enrollment",
+      "impact_parameters": {
+        "affected_systems": [
+          "enrollment-platform",
+          "eligibility-engine",
+          "id-card-generation"
+        ],
+        "business_processes_affected": [
+          "member-enrollment",
+          "eligibility-verification"
+        ],
+        "duration_days": 3,
+        "data_breach": false,
+        "records_exposed": 0
+      },
+      "financial_assumptions": {
+        "business_interruption_cost_per_day": 300000,
+        "enrollment_loss_per_day": 200000,
+        "member_attrition_rate": 0.02,
+        "reputational_damage": 100000
+      },
+      "probability_distribution": "normal",
+      "monte_carlo_iterations": 10000,
+      "sensitivity_variables": [
+        "duration_days",
+        "enrollment_loss_per_day",
+        "member_attrition_rate"
+      ],
+      "stress_test_factors": [
+        {
+          "factor": "duration_days",
+          "multiplier": 3.0
+        }
+      ],
+      "output_metrics": [
+        "total_loss",
+        "premium_revenue_impact",
+        "member_count_impact"
+      ],
+      "created_by": "risk-analyst@pilot-customer.com"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "scenario_name": "Third-Party Failure - PBM",
+      "scenario_type": "third_party_failure",
+      "scenario_description": "Pharmacy benefits manager outage affecting prescription processing",
+      "impact_parameters": {
+        "affected_systems": [
+          "pbm-interface",
+          "formulary-engine"
+        ],
+        "business_processes_affected": [
+          "pharmacy-benefits",
+          "claims-adjudication"
+        ],
+        "duration_days": 4,
+        "data_breach": false,
+        "records_exposed": 0
+      },
+      "financial_assumptions": {
+        "business_interruption_cost_per_day": 250000,
+        "manual_processing_cost_per_day": 100000,
+        "member_dissatisfaction_cost": 50000,
+        "contract_penalties": 500000
+      },
+      "probability_distribution": "uniform",
+      "monte_carlo_iterations": 10000,
+      "sensitivity_variables": [
+        "duration_days",
+        "contract_penalties"
+      ],
+      "stress_test_factors": [
+        {
+          "factor": "duration_days",
+          "multiplier": 2.0
+        }
+      ],
+      "output_metrics": [
+        "total_loss",
+        "operational_impact",
+        "contract_liability"
+      ],
+      "created_by": "risk-analyst@pilot-customer.com"
+    },
+    {
+      "organization_id": "pilot-customer-org",
+      "scenario_name": "Regulatory Fine - HIPAA Violation",
+      "scenario_type": "regulatory_fine",
+      "scenario_description": "HIPAA violation resulting from inadequate access controls",
+      "impact_parameters": {
+        "affected_systems": [
+          "claims-platform",
+          "member-portal"
+        ],
+        "business_processes_affected": [
+          "claims-adjudication",
+          "member-services"
+        ],
+        "duration_days": 0,
+        "data_breach": true,
+        "records_exposed": 25000
+      },
+      "financial_assumptions": {
+        "civil_penalties": 1500000,
+        "corrective_action_plan": 250000,
+        "legal_fees": 200000,
+        "audit_costs": 100000,
+        "business_interruption_cost_per_day": 100000,
+        "remediation_duration_days": 30
+      },
+      "probability_distribution": "normal",
+      "monte_carlo_iterations": 10000,
+      "sensitivity_variables": [
+        "civil_penalties",
+        "corrective_action_plan",
+        "remediation_duration_days"
+      ],
+      "stress_test_factors": [
+        {
+          "factor": "civil_penalties",
+          "multiplier": 2.0
+        }
+      ],
+      "output_metrics": [
+        "total_loss",
+        "regulatory_fine_impact",
+        "compliance_cost"
+      ],
+      "created_by": "risk-analyst@pilot-customer.com"
+    }
+  ]
+}
