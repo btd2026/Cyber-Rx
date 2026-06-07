@@ -24,6 +24,14 @@ const Narrative = require('./Narrative');
 const VendorAlert = require('./VendorAlert');
 const ExecutiveAlert = require('./ExecutiveAlert');
 const AlertConfig = require('./AlertConfig');
+const BusinessProcessGraph = require('./BusinessProcessGraph');
+const ProcessDependency = require('./ProcessDependency');
+const ProcessFinancialValue = require('./ProcessFinancialValue');
+const SystemProcessMapping = require('./SystemProcessMapping');
+const ProcessValidationWorkflow = require('./ProcessValidationWorkflow');
+const ProcessImpactAnalysis = require('./ProcessImpactAnalysis');
+const ProcessCatalog = require('./ProcessCatalog');
+const GraphVisualizationExport = require('./GraphVisualizationExport');
 
 module.exports = {
   BusinessProcess,
@@ -43,5 +51,13 @@ module.exports = {
   Narrative,
   VendorAlert,
   ExecutiveAlert,
-  AlertConfig
+  AlertConfig,
+  BusinessProcessGraph,
+  ProcessDependency,
+  ProcessFinancialValue,
+  SystemProcessMapping,
+  ProcessValidationWorkflow,
+  ProcessImpactAnalysis,
+  ProcessCatalog,
+  GraphVisualizationExport
 };

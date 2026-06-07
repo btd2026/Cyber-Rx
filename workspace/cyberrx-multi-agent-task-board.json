@@ -575,11 +575,15 @@
           "id": "T-PILOT-001",
           "title": "Pilot Customer Environment Setup",
           "owner": "Senior Backend Engineer",
-          "status": "ready",
+          "status": "complete",
           "priority": "CRITICAL",
           "weeks": "17",
           "dependencies": ["T-MVP-015"],
           "dependencies_met": true,
+          "assigned_date": "2025-06-06",
+          "completed_date": "2025-06-06",
+          "branch": "task/T-PILOT-001-pilot-environment",
+          "artifact": "workspace/artifacts/T-PILOT-001-IMPLEMENTATION-SUMMARY.md",
           "prompt": "/workspace/prompts/T-PILOT-001-task-prompt.md",
           "deliverables": [
             "Provisioned tenant infrastructure",
@@ -603,10 +607,12 @@
           "id": "T-PILOT-002",
           "title": "Business Process Graph Construction",
           "owner": "Senior Backend Engineer + Product Manager",
-          "status": "pending",
+          "status": "ready",
           "priority": "CRITICAL",
           "weeks": "17-18",
           "dependencies": ["T-PILOT-001"],
+          "dependencies_met": true,
+          "prompt": "/workspace/prompts/T-PILOT-002-task-prompt.md",
           "deliverables": [
             "Business process graph",
             "System-to-process mappings",
@@ -949,7 +955,7 @@
       "Integration Validator"
     ]
   },
-  "ready_to_start": ["T-PILOT-001"],
+  "ready_to_start": ["T-PILOT-002"],
   "architecture_decisions": {
     "actuarial_access": "Batch exports from data warehouse",
     "claims_platform": "Nasco",

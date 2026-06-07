@@ -1,0 +1,369 @@
+{
+  "businessProcesses": [
+    {
+      "processId": "member-enrollment",
+      "name": "Member Enrollment",
+      "description": "Process for enrolling new members into health plans",
+      "processType": "core",
+      "tier": "crown_jewel",
+      "category": "Enrollment",
+      "criticalSystems": ["enrollment-platform", "eligibility-engine", "document-generation"],
+      "dataObjects": ["member-records", "enrollment-data"],
+      "owner": "Chief Enrollment Officer",
+      "ownerDepartment": "Enrollment Operations",
+      "businessCriticalityScore": 1.0,
+      "discoveryMethod": "stakeholder-workshop"
+    },
+    {
+      "processId": "claims-adjudication",
+      "name": "Claims Adjudication",
+      "description": "Process for adjudicating and paying healthcare claims",
+      "processType": "core",
+      "tier": "crown_jewel",
+      "category": "Claims",
+      "criticalSystems": ["nasco", "claims-platform", "payment-system"],
+      "dataObjects": ["claims-data", "payment-records"],
+      "owner": "Chief Claims Officer",
+      "ownerDepartment": "Claims Operations",
+      "businessCriticalityScore": 1.0,
+      "discoveryMethod": "stakeholder-workshop"
+    },
+    {
+      "processId": "provider-network-management",
+      "name": "Provider Network Management",
+      "description": "Process for managing provider network and credentialing",
+      "processType": "core",
+      "tier": "critical",
+      "category": "Provider Network",
+      "criticalSystems": ["provider-database", "credentialing-system", "network-analysis"],
+      "dataObjects": ["provider-records", "credentialing-data"],
+      "owner": "Chief Network Officer",
+      "ownerDepartment": "Network Management",
+      "businessCriticalityScore": 0.9,
+      "discoveryMethod": "stakeholder-workshop"
+    },
+    {
+      "processId": "member-services",
+      "name": "Member Services",
+      "description": "Process for supporting member inquiries and grievances",
+      "processType": "core",
+      "tier": "critical",
+      "category": "Member Support",
+      "criticalSystems": ["crm", "member-portal", "telephony"],
+      "dataObjects": ["member-interactions", "grievance-records"],
+      "owner": "Chief Member Experience Officer",
+      "ownerDepartment": "Member Services",
+      "businessCriticalityScore": 0.8,
+      "discoveryMethod": "stakeholder-workshop"
+    },
+    {
+      "processId": "pharmacy-benefits",
+      "name": "Pharmacy Benefits",
+      "description": "Process for managing pharmacy benefits and PBM adjudication",
+      "processType": "core",
+      "tier": "important",
+      "category": "Pharmacy",
+      "criticalSystems": ["pbm-interface", "formulary-engine"],
+      "dataObjects": ["pharmacy-claims", "formulary-data"],
+      "owner": "Chief Pharmacy Officer",
+      "ownerDepartment": "Pharmacy Benefits",
+      "businessCriticalityScore": 0.7,
+      "discoveryMethod": "stakeholder-workshop"
+    },
+    {
+      "processId": "compliance-reporting",
+      "name": "Compliance & Reporting",
+      "description": "Process for regulatory compliance and reporting",
+      "processType": "supporting",
+      "tier": "critical",
+      "category": "Compliance",
+      "criticalSystems": ["reporting-warehouse", "regulatory-feeds"],
+      "dataObjects": ["compliance-reports", "regulatory-filings"],
+      "owner": "Chief Compliance Officer",
+      "ownerDepartment": "Compliance",
+      "businessCriticalityScore": 0.9,
+      "discoveryMethod": "stakeholder-workshop"
+    },
+    {
+      "processId": "financial-operations",
+      "name": "Financial Operations",
+      "description": "Process for premium billing, reconciliation, and treasury",
+      "processType": "enabling",
+      "tier": "critical",
+      "category": "Finance",
+      "criticalSystems": ["billing-system", "erp", "bank-interfaces"],
+      "dataObjects": ["billing-records", "reconciliation-data"],
+      "owner": "CFO",
+      "ownerDepartment": "Finance",
+      "businessCriticalityScore": 0.9,
+      "discoveryMethod": "stakeholder-workshop"
+    }
+  ],
+  "dependencies": [
+    {
+      "sourceProcessId": "member-enrollment",
+      "targetProcessId": "eligibility-engine",
+      "dependencyType": "enables",
+      "criticality": "high"
+    },
+    {
+      "sourceProcessId": "eligibility-engine",
+      "targetProcessId": "claims-adjudication",
+      "dependencyType": "depends_on",
+      "criticality": "critical"
+    },
+    {
+      "sourceProcessId": "claims-adjudication",
+      "targetProcessId": "payment-system",
+      "dependencyType": "triggers",
+      "criticality": "critical"
+    },
+    {
+      "sourceProcessId": "provider-network-management",
+      "targetProcessId": "claims-adjudication",
+      "dependencyType": "enables",
+      "criticality": "high"
+    },
+    {
+      "sourceProcessId": "member-services",
+      "targetProcessId": "grievance-resolution",
+      "dependencyType": "triggers",
+      "criticality": "medium"
+    },
+    {
+      "sourceProcessId": "pharmacy-benefits",
+      "targetProcessId": "claims-adjudication",
+      "dependencyType": "impacts",
+      "criticality": "medium"
+    },
+    {
+      "sourceProcessId": "compliance-reporting",
+      "targetProcessId": "claims-adjudication",
+      "dependencyType": "impacts",
+      "criticality": "critical"
+    },
+    {
+      "sourceProcessId": "financial-operations",
+      "targetProcessId": "claims-adjudication",
+      "dependencyType": "enables",
+      "criticality": "critical"
+    }
+  ],
+  "financialValues": [
+    {
+      "processId": "member-enrollment",
+      "annualPremiumRevenue": 500000000,
+      "mlrImpactPercentage": 0.8,
+      "stopLossExposure": 10000000,
+      "reservesAtRisk": 25000000,
+      "regulatoryFinePotential": 5000000,
+      "downtimeCostPerDay": 2500000,
+      "downtimeCostPerHour": 104167,
+      "revenueAtRisk": 500000000,
+      "methodology": "Based on annual premium revenue and MLR calculations",
+      "assumptions": [
+        "80% of premium revenue attributed to enrollment",
+        "MLR impact calculated at 80% of process value",
+        "Stop-loss exposure based on worst-case scenario",
+        "Regulatory fines based on HIPAA and CMS penalties"
+      ],
+      "confidenceScore": 0.85
+    },
+    {
+      "processId": "claims-adjudication",
+      "annualPremiumRevenue": 1000000000,
+      "mlrImpactPercentage": 0.9,
+      "stopLossExposure": 25000000,
+      "reservesAtRisk": 50000000,
+      "regulatoryFinePotential": 10000000,
+      "downtimeCostPerDay": 5000000,
+      "downtimeCostPerHour": 208333,
+      "revenueAtRisk": 1000000000,
+      "methodology": "Based on claims volume and payment processing",
+      "assumptions": [
+        "90% of premium revenue flows through claims",
+        "Payment delays impact member satisfaction and regulatory compliance",
+        "Regulatory fines based on prompt payment laws"
+      ],
+      "confidenceScore": 0.9
+    },
+    {
+      "processId": "provider-network-management",
+      "annualPremiumRevenue": 300000000,
+      "mlrImpactPercentage": 0.6,
+      "stopLossExposure": 5000000,
+      "reservesAtRisk": 10000000,
+      "regulatoryFinePotential": 2000000,
+      "downtimeCostPerDay": 1000000,
+      "downtimeCostPerHour": 41667,
+      "revenueAtRisk": 300000000,
+      "methodology": "Based on network adequacy and provider payments",
+      "assumptions": [
+        "60% of premium revenue depends on provider network",
+        "Network inadequacy can result in regulatory penalties"
+      ],
+      "confidenceScore": 0.8
+    },
+    {
+      "processId": "member-services",
+      "annualPremiumRevenue": 200000000,
+      "mlrImpactPercentage": 0.4,
+      "stopLossExposure": 3000000,
+      "reservesAtRisk": 5000000,
+      "regulatoryFinePotential": 1000000,
+      "downtimeCostPerDay": 500000,
+      "downtimeCostPerHour": 20833,
+      "revenueAtRisk": 200000000,
+      "methodology": "Based on member retention and satisfaction",
+      "assumptions": [
+        "Member service issues impact retention and regulatory compliance",
+        "Grievance resolution timelines are regulatory requirements"
+      ],
+      "confidenceScore": 0.75
+    },
+    {
+      "processId": "pharmacy-benefits",
+      "annualPremiumRevenue": 150000000,
+      "mlrImpactPercentage": 0.5,
+      "stopLossExposure": 2000000,
+      "reservesAtRisk": 4000000,
+      "regulatoryFinePotential": 500000,
+      "downtimeCostPerDay": 400000,
+      "downtimeCostPerHour": 16667,
+      "revenueAtRisk": 150000000,
+      "methodology": "Based on PBM contract values and formulary management",
+      "assumptions": [
+        "Pharmacy benefits represent 15% of total premium",
+        "PBM adjudication delays impact member care"
+      ],
+      "confidenceScore": 0.7
+    },
+    {
+      "processId": "compliance-reporting",
+      "annualPremiumRevenue": 0,
+      "mlrImpactPercentage": 0.2,
+      "stopLossExposure": 0,
+      "reservesAtRisk": 0,
+      "regulatoryFinePotential": 50000000,
+      "downtimeCostPerDay": 1000000,
+      "downtimeCostPerHour": 41667,
+      "revenueAtRisk": 1000000000,
+      "methodology": "Based on regulatory penalties and audit costs",
+      "assumptions": [
+        "Compliance failures can result in penalties up to $50M",
+        "All revenue at risk due to potential sanctions"
+      ],
+      "confidenceScore": 0.95
+    },
+    {
+      "processId": "financial-operations",
+      "annualPremiumRevenue": 1000000000,
+      "mlrImpactPercentage": 0.3,
+      "stopLossExposure": 10000000,
+      "reservesAtRisk": 20000000,
+      "regulatoryFinePotential": 5000000,
+      "downtimeCostPerDay": 2000000,
+      "downtimeCostPerHour": 83333,
+      "revenueAtRisk": 1000000000,
+      "methodology": "Based on premium collection and treasury management",
+      "assumptions": [
+        "All premium revenue flows through financial operations",
+        "Payment delays impact provider relationships and regulatory compliance"
+      ],
+      "confidenceScore": 0.85
+    }
+  ],
+  "systemMappings": [
+    {
+      "systemId": "enrollment-platform",
+      "processId": "member-enrollment",
+      "mappingType": "primary",
+      "criticalityScore": 1.0,
+      "coverageStatus": "instrumented"
+    },
+    {
+      "systemId": "eligibility-engine",
+      "processId": "member-enrollment",
+      "mappingType": "primary",
+      "criticalityScore": 0.9,
+      "coverageStatus": "instrumented"
+    },
+    {
+      "systemId": "nasco",
+      "processId": "claims-adjudication",
+      "mappingType": "primary",
+      "criticalityScore": 1.0,
+      "coverageStatus": "instrumented"
+    },
+    {
+      "systemId": "claims-platform",
+      "processId": "claims-adjudication",
+      "mappingType": "primary",
+      "criticalityScore": 0.9,
+      "coverageStatus": "instrumented"
+    },
+    {
+      "systemId": "payment-system",
+      "processId": "claims-adjudication",
+      "mappingType": "secondary",
+      "criticalityScore": 0.8,
+      "coverageStatus": "instrumented"
+    },
+    {
+      "systemId": "provider-database",
+      "processId": "provider-network-management",
+      "mappingType": "primary",
+      "criticalityScore": 0.9,
+      "coverageStatus": "instrumented"
+    },
+    {
+      "systemId": "credentialing-system",
+      "processId": "provider-network-management",
+      "mappingType": "primary",
+      "criticalityScore": 0.8,
+      "coverageStatus": "partial"
+    },
+    {
+      "systemId": "crm",
+      "processId": "member-services",
+      "mappingType": "primary",
+      "criticalityScore": 0.8,
+      "coverageStatus": "instrumented"
+    },
+    {
+      "systemId": "member-portal",
+      "processId": "member-services",
+      "mappingType": "secondary",
+      "criticalityScore": 0.7,
+      "coverageStatus": "instrumented"
+    },
+    {
+      "systemId": "pbm-interface",
+      "processId": "pharmacy-benefits",
+      "mappingType": "primary",
+      "criticalityScore": 0.9,
+      "coverageStatus": "instrumented"
+    },
+    {
+      "systemId": "reporting-warehouse",
+      "processId": "compliance-reporting",
+      "mappingType": "primary",
+      "criticalityScore": 0.9,
+      "coverageStatus": "instrumented"
+    },
+    {
+      "systemId": "billing-system",
+      "processId": "financial-operations",
+      "mappingType": "primary",
+      "criticalityScore": 0.9,
+      "coverageStatus": "instrumented"
+    },
+    {
+      "systemId": "erp",
+      "processId": "financial-operations",
+      "mappingType": "secondary",
+      "criticalityScore": 0.7,
+      "coverageStatus": "partial"
+    }
+  ]
+}
