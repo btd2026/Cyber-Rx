@@ -92,6 +92,37 @@ router.post('/refresh', optionalJWT, async (req, res) => {
   }
 });
 
+// Suggested questions the executive can ask their agent.
+router.get('/questions/:role', optionalJWT, async (req, res) => {
+  const role = req.params.role;
+  if (!ExecutiveAgentService.isValidRole(role)) {
+    return res.status(400).json({ error: 'Invalid role', validRoles: ExecutiveAgentService.ROLE_KEYS });
+  }
+  res.json({ role, questions: ExecutiveAgentService.getSuggestedQuestions(role) });
+});
+
+// Interactive Q&A: the executive asks a question; the agent returns a summary
+// plus the relevant supporting details, grounded in live org data.
+router.post('/ask/:role', optionalJWT, async (req, res) => {
+  const orgId = resolveOrg(req, res);
+  if (!orgId) return;
+  try {
+    const role = req.params.role;
+    if (!ExecutiveAgentService.isValidRole(role)) {
+      return res.status(400).json({ error: 'Invalid role', validRoles: ExecutiveAgentService.ROLE_KEYS });
+    }
+    const question = req.body && req.body.question;
+    if (!question || !String(question).trim()) {
+      return res.status(400).json({ error: 'question is required' });
+    }
+    const answer = await ExecutiveAgentService.answerQuestion(role, orgId, question);
+    res.json({ ...answer, aiEnabled: ExecutiveAgentService.aiEnabled() });
+  } catch (err) {
+    logger.error('Agent ask error', { error: err.message });
+    res.status(500).json({ error: 'Failed to answer question', message: err.message });
+  }
+});
+
 router.post('/refresh/:role', optionalJWT, async (req, res) => {
   const orgId = resolveOrg(req, res);
   if (!orgId) return;

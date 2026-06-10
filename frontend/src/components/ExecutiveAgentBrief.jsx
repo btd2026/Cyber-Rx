@@ -50,8 +50,48 @@ export default function ExecutiveAgentBrief(props) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  // Interactive Q&A
+  const [suggested, setSuggested] = useState([]);
+  const [question, setQuestion] = useState('');
+  const [conversation, setConversation] = useState([]); // {q, summary, details, source}
+  const [asking, setAsking] = useState(false);
 
   const { token, organizationId, apiUrl } = resolveCtx(props);
+
+  const authHeaders = useCallback(() => {
+    const h = { 'X-Org-Id': organizationId };
+    if (token) h['Authorization'] = `Bearer ${token}`;
+    return h;
+  }, [token, organizationId]);
+
+  const ask = useCallback(
+    async (q) => {
+      const text = String(q || '').trim();
+      if (!text || asking) return;
+      setAsking(true);
+      setConversation((c) => [...c, { q: text, pending: true }]);
+      setQuestion('');
+      try {
+        const res = await fetch(`${apiUrl}/api/agents/ask/${role}?org_id=${encodeURIComponent(organizationId)}`, {
+          method: 'POST',
+          headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: text }),
+        });
+        if (!res.ok) throw new Error(`Agent unavailable (${res.status})`);
+        const data = await res.json();
+        setConversation((c) => c.map((m, i) => (i === c.length - 1
+          ? { q: text, summary: data.summary, details: data.details || [], source: data.source }
+          : m)));
+      } catch (e) {
+        setConversation((c) => c.map((m, i) => (i === c.length - 1
+          ? { q: text, summary: `Could not get an answer: ${e.message}`, details: [], error: true }
+          : m)));
+      } finally {
+        setAsking(false);
+      }
+    },
+    [role, organizationId, apiUrl, authHeaders, asking]
+  );
 
   const load = useCallback(
     async (refresh) => {
@@ -83,6 +123,13 @@ export default function ExecutiveAgentBrief(props) {
   useEffect(() => {
     load(false);
   }, [load]);
+
+  useEffect(() => {
+    fetch(`${apiUrl}/api/agents/questions/${role}`, { headers: authHeaders() })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d && Array.isArray(d.questions)) setSuggested(d.questions); })
+      .catch(() => {});
+  }, [role, apiUrl, authHeaders]);
 
   const wrap = {
     background: 'linear-gradient(135deg, #11141c 0%, #161b27 100%)',
@@ -205,6 +252,64 @@ export default function ExecutiveAgentBrief(props) {
           {refreshing ? 'Re-reading stack…' : '↻ Refresh brief'}
         </button>
       </div>
+
+      {/* Interactive Q&A — ask the agent */}
+      <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px solid #232b3a' }}>
+        <div style={{ ...sectionLabel, marginBottom: 10 }}>Ask your {role} agent</div>
+
+        {/* Conversation */}
+        {conversation.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 12 }}>
+            {conversation.map((m, i) => (
+              <div key={i}>
+                <div style={{ fontSize: 13, color: '#9bc0ff', fontWeight: 600, marginBottom: 6 }}>
+                  <span style={{ color: '#6f7a8d', fontWeight: 400 }}>You asked: </span>{m.q}
+                </div>
+                {m.pending ? (
+                  <div style={{ fontSize: 13, color: '#8b95a8', fontStyle: 'italic' }}>● Agent is analyzing the data…</div>
+                ) : (
+                  <div style={{ background: '#0e1118', border: '1px solid #232b3a', borderRadius: 10, padding: '12px 14px' }}>
+                    <div style={{ fontSize: 14, color: m.error ? '#ff9a8c' : '#e6ecf5', lineHeight: 1.5 }}>{m.summary}</div>
+                    {Array.isArray(m.details) && m.details.length > 0 && (
+                      <>
+                        <div style={{ ...sectionLabel, marginTop: 10, marginBottom: 6 }}>Relevant details</div>
+                        <ul style={{ margin: 0, paddingLeft: 18 }}>
+                          {m.details.map((d, j) => (
+                            <li key={j} style={{ fontSize: 13, color: '#cdd6e6', marginBottom: 5, lineHeight: 1.45 }}>{d}</li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Suggested questions */}
+        {suggested.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+            {suggested.map((sq, i) => (
+              <button key={i} onClick={() => ask(sq)} disabled={asking} style={chipStyle}>{sq}</button>
+            ))}
+          </div>
+        )}
+
+        {/* Input */}
+        <form onSubmit={(e) => { e.preventDefault(); ask(question); }} style={{ display: 'flex', gap: 8 }}>
+          <input
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder={`Ask the ${role} agent anything…`}
+            disabled={asking}
+            style={{ flex: 1, background: '#0e1118', border: '1px solid #2f3a4d', borderRadius: 8, padding: '9px 12px', color: '#e6ecf5', fontSize: 13, outline: 'none' }}
+          />
+          <button type="submit" disabled={asking || !question.trim()} style={{ ...btnStyle, opacity: asking || !question.trim() ? 0.5 : 1 }}>
+            {asking ? 'Asking…' : 'Ask →'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
@@ -217,4 +322,9 @@ const sectionLabel = {
 const btnStyle = {
   background: '#1a2436', color: '#9bc0ff', border: '1px solid #2f4a7a',
   borderRadius: 8, padding: '6px 12px', fontSize: 12, cursor: 'pointer', fontWeight: 600,
+};
+
+const chipStyle = {
+  background: '#141a26', color: '#aebbd4', border: '1px solid #2a3346',
+  borderRadius: 16, padding: '5px 11px', fontSize: 12, cursor: 'pointer', textAlign: 'left',
 };
