@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import CorrelatedFinding from "./pages/CorrelatedFinding";
 import CIODash from "./pages/CIODash";
 import CLODash from "./pages/CLODash";
+import AdminDatabase from "./pages/AdminDatabase";
 import ExecutiveAgentBrief from "./components/ExecutiveAgentBrief";
 import AuditDash from "./pages/AuditDash";
 import ReviewMappings from "./pages/ReviewMappings";
@@ -24075,7 +24076,11 @@ function CyberRxApp() {
   var _s49=useState(""); var orgName=_s49[0]; var setOrgName=_s49[1];
   var _s50=useState(""); var orgType=_s50[0]; var setOrgType=_s50[1];
   var _s51=useState(""); var members=_s51[0]; var setMembers=_s51[1];
-  var _s52=useState("home"); var page=_s52[0]; var setPage=_s52[1];
+  // Hidden admin page: visiting /admin-database directly opens the DB editor
+  // (no nav links anywhere; backend requires the admin key regardless).
+  var _s52=useState(function(){
+    return (typeof window!=='undefined' && window.location.pathname==='/admin-database') ? 'admindb' : 'home';
+  }); var page=_s52[0]; var setPage=_s52[1];
   var _s53=useState([]); var history=_s53[0]; var setHistory=_s53[1];
   // Correlated Finding state - T-113
   var _sCF=useState(null); var correlatedFindingId=_sCF[0]; var setCorrelatedFindingId=_sCF[1];
@@ -24468,6 +24473,12 @@ function CyberRxApp() {
     docResults:docResults, setDocResults:setDocResults,
     appPolicyFiles:appPolicyFiles, setAppPolicyFiles:setAppPolicyFiles,
   };
+
+  // Hidden admin database page (/admin-database): bypasses the phase router
+  // entirely. Protected server-side by the admin key, not by obscurity.
+  if (page==="admindb") {
+    return React.createElement(AdminDatabase, {});
+  }
 
   // Phase router
   if (phase==="landing") {
