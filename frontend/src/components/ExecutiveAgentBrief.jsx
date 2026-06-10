@@ -69,7 +69,8 @@ export default function ExecutiveAgentBrief(props) {
       const text = String(q || '').trim();
       if (!text || asking) return;
       setAsking(true);
-      setConversation((c) => [...c, { q: text, pending: true }]);
+      // Only the most recent Q&A is shown — replace any previous one.
+      setConversation([{ q: text, pending: true }]);
       setQuestion('');
       try {
         const res = await fetch(`${apiUrl}/api/agents/ask/${role}?org_id=${encodeURIComponent(organizationId)}`, {
@@ -79,13 +80,15 @@ export default function ExecutiveAgentBrief(props) {
         });
         if (!res.ok) throw new Error(`Agent unavailable (${res.status})`);
         const data = await res.json();
-        setConversation((c) => c.map((m, i) => (i === c.length - 1
-          ? { q: text, summary: data.summary, details: data.details || [], source: data.source }
-          : m)));
+        setConversation([{
+          q: text,
+          matchedQuestion: data.matchedQuestion,
+          summary: data.summary,
+          details: data.details || [],
+          source: data.source,
+        }]);
       } catch (e) {
-        setConversation((c) => c.map((m, i) => (i === c.length - 1
-          ? { q: text, summary: `Could not get an answer: ${e.message}`, details: [], error: true }
-          : m)));
+        setConversation([{ q: text, summary: `Could not get an answer: ${e.message}`, details: [], error: true }]);
       } finally {
         setAsking(false);
       }
@@ -267,8 +270,24 @@ export default function ExecutiveAgentBrief(props) {
                 </div>
                 {m.pending ? (
                   <div style={{ fontSize: 13, color: '#8b95a8', fontStyle: 'italic' }}>● Agent is analyzing the data…</div>
+                ) : m.source === 'out_of_scope' ? (
+                  <div style={{ background: '#241d0e', border: '1px solid #4a3a16', borderRadius: 10, padding: '12px 14px' }}>
+                    <div style={{ fontSize: 14, color: '#ffce5c', lineHeight: 1.5 }}>{m.summary}</div>
+                    {Array.isArray(m.details) && m.details.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+                        {m.details.map((d, j) => (
+                          <button key={j} onClick={() => ask(d)} disabled={asking} style={chipStyle}>{d}</button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <div style={{ background: '#0e1118', border: '1px solid #232b3a', borderRadius: 10, padding: '12px 14px' }}>
+                    {m.matchedQuestion && m.matchedQuestion !== m.q && (
+                      <div style={{ fontSize: 11, color: '#7aa2ff', marginBottom: 8 }}>
+                        Interpreted as: “{m.matchedQuestion}”
+                      </div>
+                    )}
                     <div style={{ fontSize: 14, color: m.error ? '#ff9a8c' : '#e6ecf5', lineHeight: 1.5 }}>{m.summary}</div>
                     {Array.isArray(m.details) && m.details.length > 0 && (
                       <>

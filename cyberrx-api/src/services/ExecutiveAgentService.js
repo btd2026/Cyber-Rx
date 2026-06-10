@@ -153,6 +153,57 @@ function getSuggestedQuestions(role) {
   return SUGGESTED_QUESTIONS[role] || [];
 }
 
+// Short description of each agent's scope, used in the out-of-scope reply.
+const FOCUS = {
+  CFO: 'financial exposure, insurance coverage, cost to remediate, and security ROI',
+  CRO: 'risk appetite, threshold breaches, open risks, and key risk indicators',
+  CLO: 'regulatory obligations, breach-notification timelines, penalties, and vendor/legal exposure',
+  CIO: 'systems at risk, vulnerabilities, end-of-life technology, control effectiveness, and remediation',
+  CISO: 'attack pathways, security posture, control effectiveness, and critical findings',
+  Board: 'overall financial exposure, risk posture, insurance adequacy, and cyber investment',
+};
+
+const STOPWORDS = new Set([
+  'the', 'a', 'an', 'our', 'we', 'are', 'is', 'of', 'to', 'in', 'on', 'for', 'and', 'or',
+  'what', 'which', 'how', 'do', 'does', 'my', 'i', 'right', 'now', 'that', 'this', 'at', 'be',
+  'it', 'us', 'their', 'they', 'from', 'with', 'have', 'has', 'should', 'would', 'could', 'will',
+  'can', 'if', 'about', 'more', 'most', 'vs', 'than', 'within', 'any', 'all', 'me', 'you', 'your',
+  'tell', 'show', 'give', 'whats', 'much', 'many', 'there',
+]);
+
+function tokenize(s) {
+  return String(s || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => (w.length > 3 && w.endsWith('s') ? w.slice(0, -1) : w)) // crude singularize
+    .filter((w) => !STOPWORDS.has(w));
+}
+
+/**
+ * Match a free-text question to the agent's question library. Returns the best
+ * library question and whether it's a confident match.
+ */
+function matchQuestion(role, question) {
+  const qTok = tokenize(question);
+  if (!qTok.length) return { matched: false, score: 0, question: null };
+  const candidates = [ROLES[role].question, ...(SUGGESTED_QUESTIONS[role] || [])];
+  let best = { matched: false, score: 0, question: null, overlap: 0 };
+  for (const cand of candidates) {
+    const cset = new Set(tokenize(cand));
+    const overlap = qTok.filter((t) => cset.has(t)).length;
+    const score = overlap / qTok.length; // fraction of the user's words covered
+    if (overlap > best.overlap || (overlap === best.overlap && score > best.score)) {
+      best = { matched: false, score, question: cand, overlap };
+    }
+  }
+  // Confident match: 2+ shared content words, or one strong word covering >= half the query.
+  if (best.overlap >= 2 || (best.overlap >= 1 && best.score >= 0.5)) best.matched = true;
+  return best;
+}
+
+
 function isValidRole(role) {
   return ROLE_KEYS.includes(role);
 }
@@ -788,15 +839,39 @@ function deterministicAnswer(role, ctx, question) {
   return { summary, details: details.filter(Boolean), source: 'deterministic' };
 }
 
-/** Answer an executive's free-text question for a role, grounded in live org data. */
+/** Answer an executive's free-text question for a role, grounded in live org data.
+ *  The question is first matched to the agent's question library; anything that
+ *  doesn't match is gracefully declined as out of scope. */
 async function answerQuestion(role, orgId, question) {
   if (!isValidRole(role)) throw new Error('Invalid role');
   const q = String(question || '').trim();
   if (!q) throw new Error('Question is required');
+
+  const m = matchQuestion(role, q);
+  if (!m.matched) {
+    return {
+      role,
+      question: q,
+      matched: false,
+      source: 'out_of_scope',
+      answeredAt: new Date().toISOString(),
+      summary: `I'm not trained to answer that one in this view. As the ${role} agent I focus on ${FOCUS[role] || 'this executive\'s risk picture'}. Pick one of the questions I can answer below.`,
+      details: getSuggestedQuestions(role),
+    };
+  }
+
+  // Answer the matched library question (it carries the right keywords/intent).
   const ctx = await gatherContext(orgId);
-  let answer = await aiAnswer(role, ctx, q);
-  if (!answer) answer = deterministicAnswer(role, ctx, q);
-  return { role, question: q, answeredAt: new Date().toISOString(), ...answer };
+  let answer = await aiAnswer(role, ctx, m.question);
+  if (!answer) answer = deterministicAnswer(role, ctx, m.question);
+  return {
+    role,
+    question: q,
+    matched: true,
+    matchedQuestion: m.question,
+    answeredAt: new Date().toISOString(),
+    ...answer,
+  };
 }
 
 module.exports = {
