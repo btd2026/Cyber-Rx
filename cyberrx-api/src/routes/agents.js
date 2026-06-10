@@ -98,7 +98,12 @@ router.get('/questions/:role', optionalJWT, async (req, res) => {
   if (!ExecutiveAgentService.isValidRole(role)) {
     return res.status(400).json({ error: 'Invalid role', validRoles: ExecutiveAgentService.ROLE_KEYS });
   }
-  res.json({ role, questions: ExecutiveAgentService.getSuggestedQuestions(role) });
+  res.json({
+    role,
+    question: ExecutiveAgentService.ROLES[role].question,
+    deliverable: ExecutiveAgentService.ROLES[role].deliverable,
+    questions: ExecutiveAgentService.getSuggestedQuestions(role),
+  });
 });
 
 // Interactive Q&A: the executive asks a question; the agent returns a summary

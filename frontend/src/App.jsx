@@ -8159,6 +8159,24 @@ function CISODash(props) {
   var _s4=useState(false);  var procFilter=_s4[0];var setProcFilter=_s4[1];
   var _s5=useState(null);   var selMetric=_s5[0];var setSelMetric=_s5[1];
   var _s6=useState(null);   var drillView=_s6[0];var setDrillView=_s6[1];
+  // Agent-driven view: the tab opens with just the agent; asking a question
+  // selects the tailored dashboard to render below it.
+  var _av=useState(null);   var agentView=_av[0]; var setAgentView=_av[1];
+  var _aq=useState("");      var agentQ=_aq[0];    var setAgentQ=_aq[1];
+
+  // Route a matched agent answer to the tailored view that answers it.
+  function applyAgentAnswer(ans){
+    if(!ans||!ans.matched||ans.source==="out_of_scope") return;
+    var q=String(ans.matchedQuestion||ans.question||"").toLowerCase();
+    setAgentQ(ans.matchedQuestion||ans.question||"");
+    if(/finding/.test(q))                         { setDrillView(null); setAgentView("findings"); return; }
+    if(/(exposure|financial|cost|dollar|\$)/.test(q)){ setDrillView(null); setAgentView("exposure"); return; }
+    if(/(pathway|attack|threat|process)/.test(q)) { setAgentView(null); setDrillView("atrisk"); return; }
+    if(/(remediat|prioriti)/.test(q))             { setAgentView(null); setDrillView("atrisk"); return; }
+    if(/(control|effective|capab|maturity)/.test(q)){ setDrillView(null); setAgentView("controls"); return; }
+    setDrillView(null); setAgentView("posture"); // overall posture / default
+  }
+  function clearAgentView(){ setAgentView(null); setDrillView(null); setAgentQ(""); }
 
   var shown = sevF==="All" ? liveFind : liveFind.filter(function(f){return f.sev===sevF;});
   var atRiskProcs = liveProcs.filter(function(p){return p.score<80;});
@@ -8167,14 +8185,15 @@ function CISODash(props) {
     <div>
       <DashNav current="dashboard" go={go}/>
 
-      {/* AI agent brief - continuous, role-specific executive intelligence */}
+      {/* AI agent brief - the tab opens here; asking a question builds the dashboard below */}
       <div style={{padding:"14px 20px 0"}}>
-        <ExecutiveAgentBrief role="CISO" />
+        <ExecutiveAgentBrief role="CISO" entry onAnswer={applyAgentAnswer} />
       </div>
 
-      {/* CISO Header - Executive Cyber Responsibility */}
+      {/* CISO Header — shown only once a question has surfaced a view */}
+      {(drillView||agentView)&&(
       <div style={{padding:"16px 20px",background:"linear-gradient(135deg,#3B9EFF14,"+C.panel+")",
-        border:"1px solid #3B9EFF30",borderRadius:14,marginBottom:14}}>
+        border:"1px solid #3B9EFF30",borderRadius:14,margin:"14px 0"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
           <div>
             <div style={{color:"#3B9EFF",fontSize:10,fontWeight:700,textTransform:"uppercase",
@@ -8183,18 +8202,26 @@ function CISODash(props) {
               Control Effectiveness Dashboard
             </h1>
             <div style={{color:C.muted,fontSize:11}}>
-              YOUR part of cyber responsibility
+              {agentQ?("Answering: “"+agentQ+"”"):"YOUR part of cyber responsibility"}
             </div>
           </div>
-          <div style={{textAlign:"right"}}>
-            <div style={{color:cmmi(overallScore).color,fontSize:28,fontWeight:800,fontFamily:"monospace"}}>
-              {overallScore}
+          <div style={{display:"flex",gap:14,alignItems:"flex-start"}}>
+            <div style={{textAlign:"right"}}>
+              <div style={{color:cmmi(overallScore).color,fontSize:28,fontWeight:800,fontFamily:"monospace"}}>
+                {overallScore}
+              </div>
+              <CmmiBadge score={overallScore} size="sm"/>
+              <div style={{color:C.muted,fontSize:9,marginTop:2}}>Overall Security Posture</div>
             </div>
-            <CmmiBadge score={overallScore} size="sm"/>
-            <div style={{color:C.muted,fontSize:9,marginTop:2}}>Overall Security Posture</div>
+            <button onClick={clearAgentView}
+              style={{background:"transparent",border:"1px solid "+C.border,color:C.muted,
+                borderRadius:7,padding:"5px 10px",cursor:"pointer",fontSize:11,whiteSpace:"nowrap"}}>
+              ← Ask another
+            </button>
           </div>
         </div>
       </div>
+      )}
 
       {/* ── Editable Metrics Panel ── */}
       {showMetricsPanel&&(
@@ -8796,11 +8823,12 @@ function CISODash(props) {
         </div>
       )}
 
-      {/* Main dashboard — hidden when drill view active */}
-      {!drillView&&(
+      {/* Tailored dashboard — rendered only after the agent answers a question */}
+      {!drillView&&agentView&&(
         <div>
           <BrianaBar pageKey="ciso" orgName={orgName||""} brianaOn={props.brianaOn!==false} setBrianaOn={props.setBrianaOn||function(){}}/>
       {/* Business-framed KPI cards */}
+      {(agentView==="posture"||agentView==="exposure")&&(
       <div style={{padding:"8px 14px",background:"linear-gradient(135deg,#3B9EFF10,transparent)",
         border:"1px solid #3B9EFF20",borderRadius:8,marginBottom:10}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:1}}>
@@ -8821,7 +8849,9 @@ function CISODash(props) {
           </strong>.
         </div>
       </div>
+      )}
 
+      {(agentView==="posture"||agentView==="exposure")&&(
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:14}}>
         <div onClick={function(){setDrillView("risk");}}
           style={{background:C.card,border:"1px solid "+hc(overallScore)+"30",borderRadius:10,
@@ -8865,6 +8895,7 @@ function CISODash(props) {
           </div>
         </div>
       </div>
+      )}
 
       {/* Active filter banner */}
       {(sevF!=="All" || procFilter) && (
@@ -8913,6 +8944,7 @@ function CISODash(props) {
       })()}
 
           {/* ── Top 10 CISO Metrics ── */}
+          {(agentView==="posture"||agentView==="controls")&&(
           <Card style={{marginBottom:14}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
               <SH label="Top 10 Cybersecurity Metrics"/>
@@ -8964,7 +8996,9 @@ function CISODash(props) {
               })}
             </div>
           </Card>
+          )}
 
+      {(agentView==="findings")&&(
       <div style={{display:"grid",gridTemplateColumns:"3fr 2fr",gap:14,marginBottom:14}}>
         <Card>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
@@ -9036,8 +9070,10 @@ function CISODash(props) {
           </Card>
         </div>
       </div>
+      )}
 
       {/* Process grid — filtered if procFilter active */}
+      {(agentView==="controls"||agentView==="posture")&&(
       <Card style={{marginBottom:10}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
               <SH label="Security Capabilities"/>
@@ -9126,7 +9162,8 @@ function CISODash(props) {
               })}
             </div>
           </Card>
-    
+          )}
+
         </div>
       )}
     </div>
