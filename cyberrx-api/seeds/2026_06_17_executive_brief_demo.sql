@@ -162,3 +162,64 @@ VALUES
   ('as-legacy',  'Legacy Imaging Store',        'server',   'blue-cross-blue-shield-of-massachusetts', 'img-eol-02',     'Infrastructure', 'Unsupported document imaging (RHEL 6)',
    '["bp-claims"]',   '["PHI"]',        'On-Prem', 'Quincy DC',  'Medium',   'Tier 3', false, '2024-06-30',   2, 4, 38)
 ON CONFLICT (id) DO NOTHING;
+
+-- ===========================================================================
+-- METRIC INPUTS — the editable "database of mock numbers" driving dashboards
+-- Edit value to change what the dashboards display. ON CONFLICT DO NOTHING so
+-- that edits made via the API/SQL are preserved across re-seeds.
+-- ===========================================================================
+
+-- Shared coefficients / assumptions (apply to every org's formulas) ---------
+INSERT INTO metric_inputs (org_id, key, value, category, label, unit) VALUES
+  ('_defaults','phi_notif_per_record',      35,        'coefficient','PHI breach notification cost per record','$/record'),
+  ('_defaults','breach_fixed',              62000000,  'coefficient','Fixed breach response costs (OCR/forensics/PR/credit)','$'),
+  ('_defaults','breach_classaction_per_record', 60,    'coefficient','Class-action exposure per record','$/record'),
+  ('_defaults','breach_classaction_cap',    250000000, 'coefficient','Class-action exposure cap','$'),
+  ('_defaults','regulatory_surplus_pct',    0.138,     'coefficient','Regulatory fine scenario as % of surplus','ratio'),
+  ('_defaults','fwa_rev_pct',               0.03,      'coefficient','Fraud/waste/abuse loss as % of revenue','ratio'),
+  ('_defaults','phi_darkweb_per_record',    22,        'coefficient','Dark-web/fraud value per PHI record','$/record'),
+  ('_defaults','reput_rev_pct',             0.04,      'coefficient','Reputational churn loss as % of revenue','ratio'),
+  ('_defaults','interrupt_rev_pct',         0.0137,    'coefficient','Business interruption as % of revenue','ratio'),
+  ('_defaults','interrupt_fixed',           55000000,  'coefficient','Fixed interruption/CMS sanction cost','$'),
+  ('_defaults','legal_fixed',               50000000,  'coefficient','Base legal exposure','$'),
+  ('_defaults','recovery_it_pct',           0.037,     'coefficient','IT recovery cost as % of IT budget','ratio'),
+  ('_defaults','ponemon_per_record',        429,       'coefficient','Per-record breach cost (IBM/Ponemon)','$/record'),
+  ('_defaults','ops_rev_pct',               0.017,     'coefficient','Operations disruption as % of revenue','ratio'),
+  ('_defaults','capital_legal_base',        50000000,  'coefficient','Capital-at-risk legal base','$'),
+  ('_defaults','security_spend_pct_of_it',  0.6,       'coefficient','Security spend as % of IT budget','ratio'),
+  ('_defaults','avoided_loss',              380000000, 'coefficient','Annual avoided loss (ROSI model)','$'),
+  ('_defaults','annual_loss_exp',           115000000, 'coefficient','Annual expected loss','$'),
+  ('_defaults','prob_significant_breach',   0.23,      'coefficient','Annual probability of significant PHI breach','ratio'),
+  ('_defaults','prob_catastrophic',         0.08,      'coefficient','Annual probability of catastrophic event','ratio'),
+  ('_defaults','catastrophic_multiplier',   3.4,       'coefficient','Catastrophic loss multiplier vs stress','x'),
+  ('_defaults','catastrophic_ibnr_pct',     0.145,     'coefficient','Catastrophic IBNR add as % of IBNR','ratio'),
+  ('_defaults','rbc_min',                   200,       'coefficient','RBC regulatory minimum','%'),
+  ('_defaults','rbc_warning',               250,       'coefficient','RBC warning threshold','%'),
+  ('_defaults','claims_risk',               217000000, 'coefficient','Claims-at-risk (vs IBNR)','$'),
+  ('_defaults','it_risk',                   11000000,  'coefficient','IT recovery risk (vs IT budget)','$')
+ON CONFLICT (org_id, key) DO NOTHING;
+
+-- BCBS-MA inputs — setup-quiz responses captured as numbers -----------------
+INSERT INTO metric_inputs (org_id, key, value, category, label, unit) VALUES
+  ('blue-cross-blue-shield-of-massachusetts','revenue',          10000000000,'setup','Annual revenue','$'),
+  ('blue-cross-blue-shield-of-massachusetts','surplus',          2500000000, 'setup','Statutory surplus','$'),
+  ('blue-cross-blue-shield-of-massachusetts','ibnr',             1500000000, 'setup','IBNR reserves','$'),
+  ('blue-cross-blue-shield-of-massachusetts','it_budget',        300000000,  'setup','Annual IT budget','$'),
+  ('blue-cross-blue-shield-of-massachusetts','phi_records',      3000000,    'setup','PHI records held','records'),
+  ('blue-cross-blue-shield-of-massachusetts','member_count',     2900000,    'setup','Members covered','members'),
+  ('blue-cross-blue-shield-of-massachusetts','ins_limit',        50000000,   'setup','Cyber insurance limit','$'),
+  ('blue-cross-blue-shield-of-massachusetts','ins_deductible',   0,          'setup','Cyber insurance deductible','$'),
+  ('blue-cross-blue-shield-of-massachusetts','rbc_ratio_current',420,        'setup','Current RBC ratio','%'),
+  ('blue-cross-blue-shield-of-massachusetts','mfa_pct',          78,         'posture','MFA coverage','%'),
+  ('blue-cross-blue-shield-of-massachusetts','edr_pct',          71,         'posture','EDR coverage','%'),
+  ('blue-cross-blue-shield-of-massachusetts','siem_days',        14,         'posture','SIEM retention','days'),
+  ('blue-cross-blue-shield-of-massachusetts','phishing_pct',     9.2,        'posture','Phishing failure rate','%'),
+  ('blue-cross-blue-shield-of-massachusetts','patch_pct',        63,         'posture','Patch SLA compliance','%'),
+  ('blue-cross-blue-shield-of-massachusetts','mttd_hrs',         47,         'posture','Mean time to detect','hours'),
+  ('blue-cross-blue-shield-of-massachusetts','mttr_hrs',         6.8,        'posture','Mean time to respond','hours'),
+  ('blue-cross-blue-shield-of-massachusetts','training_pct',     82,         'posture','Security training completion','%'),
+  ('blue-cross-blue-shield-of-massachusetts','pam_pct',          64,         'posture','PAM coverage','%'),
+  ('blue-cross-blue-shield-of-massachusetts','vuln_sla_pct',     71,         'posture','Vulnerability SLA compliance','%'),
+  ('blue-cross-blue-shield-of-massachusetts','endpoints',        18000,      'setup','Managed endpoints','count'),
+  ('blue-cross-blue-shield-of-massachusetts','priv_accts',       850,        'setup','Privileged accounts','count')
+ON CONFLICT (org_id, key) DO NOTHING;
