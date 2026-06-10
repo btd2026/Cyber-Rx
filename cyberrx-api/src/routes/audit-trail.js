@@ -10,7 +10,7 @@
 const express = require('express');
 const router = express.Router();
 const ProvenanceTrail = require('../models/ProvenanceTrail');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateJWT: authenticateToken } = require('../middleware/auth');
 
 /**
  * GET /api/audit-trail
