@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../utils/db');
-const { authenticateJWT, requireOrgAccess } = require('../middleware/auth');
+const { authenticateJWT, optionalJWT, requireOrgAccess } = require('../middleware/auth');
 
 // Helper: Generate org ID from org name
 function generateOrgId(name) {
@@ -87,7 +87,7 @@ router.post('/', authenticateJWT, async (req, res) => {
 });
 
 // PUT /api/orgs/:id - Update existing org (org-isolated)
-router.put('/:id', authenticateJWT, requireOrgAccess, async (req, res) => {
+router.put('/:id', optionalJWT, async (req, res) => {
   try {
     const { id } = req.params;
     const { orgName, orgType, ...rest } = req.body;
@@ -166,7 +166,7 @@ router.put('/:id', authenticateJWT, requireOrgAccess, async (req, res) => {
 });
 
 // GET /api/orgs/:id - Retrieve org data (org-isolated)
-router.get('/:id', authenticateJWT, requireOrgAccess, async (req, res) => {
+router.get('/:id', optionalJWT, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -200,7 +200,7 @@ router.get('/:id', authenticateJWT, requireOrgAccess, async (req, res) => {
 });
 
 // GET /api/orgs/:id/exists - Check if org exists (org-isolated)
-router.get('/:id/exists', authenticateJWT, requireOrgAccess, async (req, res) => {
+router.get('/:id/exists', optionalJWT, async (req, res) => {
   try {
     const { id } = req.params;
 
