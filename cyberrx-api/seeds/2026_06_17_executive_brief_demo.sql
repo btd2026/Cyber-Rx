@@ -134,3 +134,31 @@ VALUES
   ('vs-003', 'blue-cross-blue-shield-of-massachusetts', 'vnd-mail',     'Member Mailing Vendor',    'Dark Web',     'web_scrape','Dark Web/Credential Exposure', 'Leaked employee credentials',  'Medium',   65, NOW() - INTERVAL '9 days', 'active', 'Vendor employee credentials found on dark web', 'Request forced password reset and MFA attestation'),
   ('vs-004', 'blue-cross-blue-shield-of-massachusetts', 'vnd-cloud',    'Cloud Hosting Provider',   'Compliance',   'file_upload','Compliance Evidence',        'SOC 2 report overdue',         'Medium',   60, NOW() - INTERVAL '15 days','active', 'Vendor SOC 2 Type II report is past due', 'Escalate evidence request; flag in contract review')
 ON CONFLICT (id) DO NOTHING;
+
+-- Technology assets (CIO inventory) ----------------------------------------
+INSERT INTO assets
+  (id, name, type, organization_id, hostname, owner, description,
+   business_process_ids, data_classification, cloud_provider, location,
+   criticality, tier, supported, end_of_support_date, vuln_critical, vuln_high, patch_pct)
+VALUES
+  ('as-nasco',   'NASCO Claims Platform',       'server',   'blue-cross-blue-shield-of-massachusetts', 'nasco-prod-01',  'Infrastructure', 'Primary claims adjudication system',
+   '["bp-claims"]',   '["PHI"]',        'On-Prem', 'Quincy DC',  'Critical', 'Tier 1', true,  NULL,           2, 5, 71),
+  ('as-enroll',  'Enrollment Engine',           'app',      'blue-cross-blue-shield-of-massachusetts', 'enroll-app-01',  'App Eng',        'Membership and eligibility processing',
+   '["bp-enroll"]',   '["PHI","PII"]',  'Azure',   'East US',    'Critical', 'Tier 1', true,  NULL,           0, 3, 88),
+  ('as-portal',  'Member Portal',               'app',      'blue-cross-blue-shield-of-massachusetts', 'portal-web-01',  'Digital',        'Member-facing web/mobile portal',
+   '["bp-portal"]',   '["PII"]',        'AWS',     'us-east-1',  'High',     'Tier 2', true,  NULL,           1, 4, 80),
+  ('as-edw',     'Enterprise Data Warehouse',   'database', 'blue-cross-blue-shield-of-massachusetts', 'edw-db-01',      'Data',           'Analytics warehouse with PHI',
+   '["bp-claims","bp-payint"]', '["PHI"]', 'On-Prem','Quincy DC','Critical', 'Tier 1', true,  NULL,           1, 2, 76),
+  ('as-integ',   'Provider Integration Gateway','server',   'blue-cross-blue-shield-of-massachusetts', 'integ-eol-01',   'Infrastructure', 'EOL integration engine (Win Server 2012)',
+   '["bp-provider"]', '["PHI"]',        'On-Prem', 'Quincy DC',  'High',     'Tier 2', false, '2023-10-10',   3, 6, 41),
+  ('as-pbm',     'PBM Interface',               'API',      'blue-cross-blue-shield-of-massachusetts', 'pbm-api-01',     'App Eng',        'Pharmacy benefit manager interface',
+   '["bp-pbm"]',      '["PHI"]',        'AWS',     'us-east-1',  'High',     'Tier 2', true,  NULL,           0, 2, 84),
+  ('as-clearing','Clearinghouse Connector',     'API',      'blue-cross-blue-shield-of-massachusetts', 'clearing-01',    'EDI',            'External claims clearinghouse link',
+   '["bp-claims"]',   '["PHI"]',        'On-Prem', 'Quincy DC',  'Critical', 'Tier 1', true,  NULL,           1, 1, 79),
+  ('as-payint',  'Payment Integrity Engine',    'app',      'blue-cross-blue-shield-of-massachusetts', 'payint-01',      'SIU',            'FWA detection and payment integrity',
+   '["bp-payint"]',   '["PHI","Financial"]', 'Azure','East US',  'High',     'Tier 2', true,  NULL,           0, 1, 90),
+  ('as-vdi',     'Member Services VDI',         'endpoint', 'blue-cross-blue-shield-of-massachusetts', 'vdi-pool-01',    'EUC',            'Virtual desktops for member services',
+   '["bp-portal"]',   '["PII"]',        'Azure',   'East US',    'Medium',   'Tier 3', true,  NULL,           0, 2, 86),
+  ('as-legacy',  'Legacy Imaging Store',        'server',   'blue-cross-blue-shield-of-massachusetts', 'img-eol-02',     'Infrastructure', 'Unsupported document imaging (RHEL 6)',
+   '["bp-claims"]',   '["PHI"]',        'On-Prem', 'Quincy DC',  'Medium',   'Tier 3', false, '2024-06-30',   2, 4, 38)
+ON CONFLICT (id) DO NOTHING;

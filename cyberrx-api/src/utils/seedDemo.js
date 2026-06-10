@@ -40,14 +40,12 @@ async function seedExecutiveDemo({ force = false, orgId = DEMO_ORG_ID } = {}) {
   // Ensure tables exist before seeding.
   await db.init();
 
-  const already = await orgHasData(orgId);
-  if (already && !force) {
-    logger.info('[seedDemo] Org already has data, skipping SQL load', { orgId });
-  } else {
-    const sql = fs.readFileSync(SEED_FILE, 'utf8');
-    await db.pool.query(sql); // multi-statement simple query
-    logger.info('[seedDemo] Demo dataset loaded', { orgId, file: path.basename(SEED_FILE) });
-  }
+  // The SQL is fully idempotent (ON CONFLICT DO NOTHING), so always run it —
+  // this lets newly-added rows (e.g. assets) land on DBs that were seeded
+  // before those rows existed.
+  const sql = fs.readFileSync(SEED_FILE, 'utf8');
+  await db.pool.query(sql); // multi-statement simple query
+  logger.info('[seedDemo] Demo dataset loaded', { orgId, file: path.basename(SEED_FILE) });
 
   // Regenerate briefs so they reflect the (now populated) data rather than any
   // previously-cached zero state.
