@@ -138,7 +138,7 @@ app.use(cors({
   },
   credentials: true, // Allow cookies and authentication headers
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Org-ID'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Org-ID', 'X-Admin-Key'],
   maxAge: 86400 // Cache preflight response for 24 hours
 }));
 app.use(express.json({ limit: '1mb' }));
