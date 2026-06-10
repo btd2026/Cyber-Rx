@@ -243,6 +243,9 @@ app.use('/api/cio',               [apiGetLimiter], require('./routes/cio'));
 // Metrics engine - editable mock numbers + formula-driven dashboard figures
 app.use('/api/metrics',           [apiGetLimiter, apiPutLimiter], require('./routes/metrics'));
 
+// Simulated live-source tool databases (org-isolated; admin override)
+app.use('/api/sources',           [apiGetLimiter, apiPostLimiter], require('./routes/sources'));
+
 // Seed management (admin routes - protect in production) with rate limiting
 app.use('/api/seeds',             [apiGetLimiter, apiPostLimiter, apiDeleteLimiter], require('./routes/seeds'));
 
