@@ -249,6 +249,9 @@ app.use('/api/sources',           [apiGetLimiter, apiPostLimiter], require('./ro
 // Admin database viewer/editor (admin-only; backs the hidden /admin-database page)
 app.use('/api/admin/db',          [apiGetLimiter, apiPostLimiter, apiPutLimiter, apiDeleteLimiter], require('./routes/adminDb'));
 
+// Sample application catalog import (Setup step 3 "Use Sample Data")
+app.use('/api/sample-catalog',    [apiPostLimiter], require('./routes/sampleCatalog'));
+
 // Seed management (admin routes - protect in production) with rate limiting
 app.use('/api/seeds',             [apiGetLimiter, apiPostLimiter, apiDeleteLimiter], require('./routes/seeds'));
 
