@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const { LegalObligation } = require('../models');
-const { authenticateJWT } = require('../middleware/auth');
+const { authenticateJWT, optionalJWT, demoOrg } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/rbac');
 
 /**
@@ -70,7 +70,7 @@ router.post('/', authenticateJWT, requirePermission('legal.obligations.create'),
 /**
  * GET /api/legal-obligations - List all legal obligations for the org
  */
-router.get('/', authenticateJWT, requirePermission('legal.obligations.view'), async (req, res) => {
+router.get('/', optionalJWT, demoOrg, async (req, res) => {
   try {
     const organizationId = req.orgId;
     const { source } = req.query;

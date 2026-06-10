@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const { Finding } = require('../models');
-const { authenticateJWT } = require('../middleware/auth');
+const { authenticateJWT, optionalJWT, demoOrg } = require('../middleware/auth');
 const { requirePermission, requireAnyPermission, requireAllPermissions } = require('../middleware/rbac');
 
 /**
@@ -128,7 +128,7 @@ router.post('/', authenticateJWT, requirePermission('security.findings.create'),
 /**
  * GET /api/findings - List all findings for the org
  */
-router.get('/', authenticateJWT, requirePermission('security.findings.view'), async (req, res) => {
+router.get('/', optionalJWT, demoOrg, async (req, res) => {
   try {
     const organizationId = req.orgId;
     const { severity, status, assetId, businessProcessId, isRepeat } = req.query;

@@ -1,6 +1,6 @@
 'use strict';
 
-const { db } = require('../utils/db');
+const db = require('../utils/db');
 
 /**
  * RemediationTask Entity
@@ -72,7 +72,7 @@ class RemediationTask {
     ];
 
     try {
-      const result = await db.query(query, values);
+      const result = await db.pool.query(query, values);
       return this._mapFromDb(result.rows[0]);
     } catch (error) {
       throw new Error(`Failed to create remediation task: ${error.message}`);
@@ -87,7 +87,7 @@ class RemediationTask {
   static async findById(id) {
     const query = 'SELECT * FROM remediation_tasks WHERE id = $1';
     try {
-      const result = await db.query(query, [id]);
+      const result = await db.pool.query(query, [id]);
       return result.rows.length > 0 ? this._mapFromDb(result.rows[0]) : null;
     } catch (error) {
       throw new Error(`Failed to find task: ${error.message}`);
@@ -139,7 +139,7 @@ class RemediationTask {
     `;
 
     try {
-      const result = await db.query(query, values);
+      const result = await db.pool.query(query, values);
       return result.rows.map(row => this._mapFromDb(row));
     } catch (error) {
       throw new Error(`Failed to find tasks: ${error.message}`);
@@ -173,7 +173,7 @@ class RemediationTask {
   static async findByFinding(findingId) {
     const query = 'SELECT * FROM remediation_tasks WHERE source_finding_id = $1 ORDER BY created_at DESC';
     try {
-      const result = await db.query(query, [findingId]);
+      const result = await db.pool.query(query, [findingId]);
       return result.rows.map(row => this._mapFromDb(row));
     } catch (error) {
       throw new Error(`Failed to find tasks for finding: ${error.message}`);
@@ -188,7 +188,7 @@ class RemediationTask {
   static async findByRisk(riskId) {
     const query = 'SELECT * FROM remediation_tasks WHERE source_risk_id = $1 ORDER BY created_at DESC';
     try {
-      const result = await db.query(query, [riskId]);
+      const result = await db.pool.query(query, [riskId]);
       return result.rows.map(row => this._mapFromDb(row));
     } catch (error) {
       throw new Error(`Failed to find tasks for risk: ${error.message}`);
@@ -242,7 +242,7 @@ class RemediationTask {
     `;
 
     try {
-      const result = await db.query(query, values);
+      const result = await db.pool.query(query, values);
       if (result.rows.length === 0) {
         throw new Error('Task not found');
       }
@@ -291,7 +291,7 @@ class RemediationTask {
   static async delete(id) {
     const query = 'DELETE FROM remediation_tasks WHERE id = $1 RETURNING id';
     try {
-      const result = await db.query(query, [id]);
+      const result = await db.pool.query(query, [id]);
       return result.rows.length > 0;
     } catch (error) {
       throw new Error(`Failed to delete task: ${error.message}`);
@@ -322,7 +322,7 @@ class RemediationTask {
     `;
 
     try {
-      const result = await db.query(query, [organizationId]);
+      const result = await db.pool.query(query, [organizationId]);
       const row = result.rows[0];
       return {
         total: parseInt(row.total),

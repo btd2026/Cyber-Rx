@@ -3,10 +3,11 @@
 const express = require('express');
 const router = express.Router();
 const RemediationTask = require('../models/RemediationTask');
-const { authenticateJWT } = require('../middleware/auth');
+const { optionalJWT, demoOrg } = require('../middleware/auth');
 
-// Apply authentication to all routes
-router.use(authenticateJWT);
+// Demo posture: resolve org from JWT or X-Org-Id/org_id so the dashboards work
+// without a login (consistent with the rest of the app).
+router.use(optionalJWT, demoOrg);
 
 /**
  * GET /api/tasks
