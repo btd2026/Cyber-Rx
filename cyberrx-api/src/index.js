@@ -240,6 +240,9 @@ app.use('/api/agents',            [apiGetLimiter, apiPostLimiter], require('./ro
 // CIO technology-risk overview (aggregated dashboard payload)
 app.use('/api/cio',               [apiGetLimiter], require('./routes/cio'));
 
+// Metrics engine - editable mock numbers + formula-driven dashboard figures
+app.use('/api/metrics',           [apiGetLimiter, apiPutLimiter], require('./routes/metrics'));
+
 // Seed management (admin routes - protect in production) with rate limiting
 app.use('/api/seeds',             [apiGetLimiter, apiPostLimiter, apiDeleteLimiter], require('./routes/seeds'));
 

@@ -9922,6 +9922,18 @@ function CFODash(props) {
   var _cf0=useState(null); var cfMetric=_cf0[0]; var setCfMetric=_cf0[1];
   var _cf1=useState(null); var cfDrill=_cf1[0];  var setCfDrill=_cf1[1];
   var _cf2=useState("overview"); var cfTab=_cf2[0]; var setCfTab=_cf2[1];
+  // DB-driven figures from the metrics engine (formulas over editable mock numbers)
+  var _cfm=useState(null); var cfoM=_cfm[0]; var setCfoM=_cfm[1];
+  useEffect(function(){
+    var org = (typeof localStorage!=='undefined' && (localStorage.getItem('cyberrx_org_id')||localStorage.getItem('orgId'))) || '';
+    if(!org) return;
+    var tok = (typeof localStorage!=='undefined' && localStorage.getItem('authToken'))||'';
+    var headers={'X-Org-Id':org}; if(tok) headers['Authorization']='Bearer '+tok;
+    fetch(CYBERRX_API+'/api/metrics/cfo?org_id='+encodeURIComponent(org),{headers:headers})
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(d){ if(d&&d.metrics) setCfoM(d.metrics); })
+      .catch(function(){});
+  }, []);
 
   // Derived financials — from org setup with fallbacks
   var surplusB  = surplus  > 0 ? surplus   : 2500e6;
@@ -9979,6 +9991,26 @@ function CFODash(props) {
   var stressLoss      = breachResp + regulatoryM*1e6 + 30e6;   // breach + regulatory + legal
   var catastrophicLoss= stressLoss * 3.4 + ibnrB * 0.145;     // worst case: ransomware + supply chain
   var expectedLoss    = (stressLoss*0.23 + catastrophicLoss*0.08);  // probability-weighted
+
+  // ── DB-driven override: when the metrics engine has computed figures from
+  // the editable mock-number database, use them so every number shown here
+  // originates from a formula pulling from the database. ────────────────────
+  if (cfoM) {
+    grossExp = cfoM.grossExp; netExp = cfoM.netExp;
+    capitalRisk = cfoM.capitalRisk; claimsRisk = cfoM.claimsRisk; itRisk = cfoM.itRisk;
+    capitalPct = cfoM.capitalPct; claimsPct = cfoM.claimsPct; itPct = cfoM.itPct;
+    rbcRatioPre = cfoM.rbcRatioPre; rbcImpact = cfoM.rbcImpact; rbcRatioPost = cfoM.rbcRatioPost;
+    rbcStatus = cfoM.rbcStatus;
+    rbcColor = rbcStatus==="critical" ? "#EF4545" : rbcStatus==="warning" ? "#F5A623" : "#0FBB80";
+    securitySpend = cfoM.securitySpend; rosi = cfoM.rosi; annualLossExp = cfoM.annualLossExp;
+    breachRespM=cfoM.breachRespM; regulatoryM=cfoM.regulatoryM; fraudM=cfoM.fraudM;
+    reputM=cfoM.reputM; interruptM=cfoM.interruptM; legalM=cfoM.legalM; recoveryM=cfoM.recoveryM;
+    var _sc=cfoM.scenarios||[]; var _scL=function(id){var x=_sc.filter(function(z){return z.id===id;})[0];return x?x.loss:null;};
+    if(_scL('stress')!=null) stressLoss=_scL('stress');
+    if(_scL('catastrophic')!=null) catastrophicLoss=_scL('catastrophic');
+    if(_scL('expected')!=null) expectedLoss=_scL('expected');
+  }
+
   var scenarios = [
     {id:"expected",     label:"Expected Annual Loss",   prob:100, loss:expectedLoss,      color:"#3B9EFF",
      desc:"Probability-weighted annual loss: stress scenario ($"+Math.round(stressLoss/1e6)+"M × 23%) + catastrophic ($"+Math.round(catastrophicLoss/1e6)+"M × 8%). Includes FWA, partial claims disruption, and minor incidents throughout the year."},

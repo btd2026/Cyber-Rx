@@ -496,6 +496,22 @@ async function init() {
       CREATE INDEX IF NOT EXISTS executive_briefs_org ON executive_briefs(organization_id);
       CREATE INDEX IF NOT EXISTS executive_briefs_role ON executive_briefs(role);
       CREATE INDEX IF NOT EXISTS executive_briefs_generated ON executive_briefs(generated_at DESC);
+
+      -- Editable "database of mock numbers" that drives every dashboard figure.
+      -- org_id '_defaults' holds shared coefficients/assumptions; per-org rows
+      -- hold setup-quiz responses and org-specific values. Edit value to change
+      -- what the dashboards display.
+      CREATE TABLE IF NOT EXISTS metric_inputs (
+        org_id      TEXT NOT NULL,
+        key         TEXT NOT NULL,
+        value       NUMERIC NOT NULL,
+        category    TEXT,
+        label       TEXT,
+        unit        TEXT,
+        updated_at  TIMESTAMPTZ DEFAULT NOW(),
+        PRIMARY KEY (org_id, key)
+      );
+      CREATE INDEX IF NOT EXISTS metric_inputs_org ON metric_inputs(org_id);
     `);
     console.log('Database schema initialized');
   } catch (err) {
