@@ -30,7 +30,7 @@ const AuditDash = (props) => {
       try {
         setLoading(true);
         const token = authToken || localStorage.getItem('authToken');
-        const organizationId = orgId || localStorage.getItem('orgId');
+        const organizationId = orgId || localStorage.getItem('cyberrx_org_id') || localStorage.getItem('orgId');
         const apiUrl = api_url || import.meta.env?.VITE_API_URL || 'https://cyberrx-api.onrender.com';
 
         // Fetch controls (NEW - uses Control entity)

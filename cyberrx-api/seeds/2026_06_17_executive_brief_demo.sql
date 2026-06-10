@@ -223,3 +223,14 @@ INSERT INTO metric_inputs (org_id, key, value, category, label, unit) VALUES
   ('blue-cross-blue-shield-of-massachusetts','endpoints',        18000,      'setup','Managed endpoints','count'),
   ('blue-cross-blue-shield-of-massachusetts','priv_accts',       850,        'setup','Privileged accounts','count')
 ON CONFLICT (org_id, key) DO NOTHING;
+
+-- Audit evidence (for the Internal Audit dashboard) -------------------------
+INSERT INTO evidence (id, organization_id, title, evidence_type, related_control_id, related_finding_id, evidence_date, validity_start, validity_end, status, uploaded_by) VALUES
+  ('ev-001','blue-cross-blue-shield-of-massachusetts','MFA enforcement screenshot (Okta)','Screenshot','ct-001',NULL, CURRENT_DATE - 20, CURRENT_DATE - 20, CURRENT_DATE + 160,'Valid','IAM Team'),
+  ('ev-002','blue-cross-blue-shield-of-massachusetts','SIEM retention configuration export','Config','ct-003',NULL, CURRENT_DATE - 35, CURRENT_DATE - 35, CURRENT_DATE + 145,'Valid','SecOps'),
+  ('ev-003','blue-cross-blue-shield-of-massachusetts','Encryption-at-rest attestation','Document','ct-004',NULL, CURRENT_DATE - 60, CURRENT_DATE - 60, CURRENT_DATE + 120,'Valid','Infrastructure'),
+  ('ev-004','blue-cross-blue-shield-of-massachusetts','Quarterly access review log','Log','ct-001',NULL, CURRENT_DATE - 120, CURRENT_DATE - 120, CURRENT_DATE - 10,'Expired','IAM Team'),
+  ('ev-005','blue-cross-blue-shield-of-massachusetts','Penetration test report (NASCO)','Document',NULL,'fd-001', CURRENT_DATE - 15, CURRENT_DATE - 15, CURRENT_DATE + 350,'Valid','External Auditor'),
+  ('ev-006','blue-cross-blue-shield-of-massachusetts','Backup restore test results','Test','ct-006',NULL, CURRENT_DATE - 45, CURRENT_DATE - 45, CURRENT_DATE + 135,'Valid','Infrastructure'),
+  ('ev-007','blue-cross-blue-shield-of-massachusetts','Security awareness completion report','Document','ct-009',NULL, CURRENT_DATE - 25, CURRENT_DATE - 25, CURRENT_DATE + 155,'Valid','HR / Security')
+ON CONFLICT (id) DO NOTHING;

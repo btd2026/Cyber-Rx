@@ -2,7 +2,7 @@
 
 const fs = require('fs').promises;
 const path = require('path');
-const { db } = require('../utils/db');
+const db = require('../utils/db');
 
 /**
  * Evidence Entity
@@ -113,7 +113,7 @@ class Evidence {
     ];
 
     try {
-      const result = await db.query(query, values);
+      const result = await db.pool.query(query, values);
       return this._mapFromDb(result.rows[0]);
     } catch (error) {
       // Clean up file if DB insert fails
@@ -145,7 +145,7 @@ class Evidence {
   static async findById(id) {
     const query = 'SELECT * FROM evidence WHERE id = $1';
     try {
-      const result = await db.query(query, [id]);
+      const result = await db.pool.query(query, [id]);
       return result.rows.length > 0 ? this._mapFromDb(result.rows[0]) : null;
     } catch (error) {
       throw new Error(`Failed to find evidence: ${error.message}`);
@@ -180,7 +180,7 @@ class Evidence {
     `;
 
     try {
-      const result = await db.query(query, values);
+      const result = await db.pool.query(query, values);
       return result.rows.map(row => this._mapFromDb(row));
     } catch (error) {
       throw new Error(`Failed to find evidence: ${error.message}`);
@@ -199,7 +199,7 @@ class Evidence {
       ORDER BY created_at DESC
     `;
     try {
-      const result = await db.query(query, [controlId]);
+      const result = await db.pool.query(query, [controlId]);
       return result.rows.map(row => this._mapFromDb(row));
     } catch (error) {
       throw new Error(`Failed to find evidence for control: ${error.message}`);
@@ -218,7 +218,7 @@ class Evidence {
       ORDER BY created_at DESC
     `;
     try {
-      const result = await db.query(query, [findingId]);
+      const result = await db.pool.query(query, [findingId]);
       return result.rows.map(row => this._mapFromDb(row));
     } catch (error) {
       throw new Error(`Failed to find evidence for finding: ${error.message}`);
@@ -237,7 +237,7 @@ class Evidence {
       ORDER BY created_at DESC
     `;
     try {
-      const result = await db.query(query, [taskId]);
+      const result = await db.pool.query(query, [taskId]);
       return result.rows.map(row => this._mapFromDb(row));
     } catch (error) {
       throw new Error(`Failed to find evidence for task: ${error.message}`);
@@ -259,7 +259,7 @@ class Evidence {
       ORDER BY validity_end ASC
     `;
     try {
-      const result = await db.query(query, [organizationId]);
+      const result = await db.pool.query(query, [organizationId]);
       return result.rows.map(row => this._mapFromDb(row));
     } catch (error) {
       throw new Error(`Failed to find expired evidence: ${error.message}`);
@@ -305,7 +305,7 @@ class Evidence {
     `;
 
     try {
-      const result = await db.query(query, values);
+      const result = await db.pool.query(query, values);
       if (result.rows.length === 0) {
         throw new Error('Evidence not found');
       }
@@ -337,7 +337,7 @@ class Evidence {
 
     const query = 'DELETE FROM evidence WHERE id = $1 RETURNING id';
     try {
-      const result = await db.query(query, [id]);
+      const result = await db.pool.query(query, [id]);
       return result.rows.length > 0;
     } catch (error) {
       throw new Error(`Failed to delete evidence: ${error.message}`);
@@ -376,7 +376,7 @@ class Evidence {
     `;
 
     try {
-      const result = await db.query(query, [organizationId]);
+      const result = await db.pool.query(query, [organizationId]);
       const row = result.rows[0];
       return {
         total: parseInt(row.total),

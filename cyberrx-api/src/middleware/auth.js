@@ -159,4 +159,16 @@ function requireOrgAccess(req, res, next) {
   next();
 }
 
-module.exports = { authenticateJWT, optionalJWT, requireOrgAccess };
+/**
+ * demoOrg — resolve the organization for read endpoints when no JWT is present
+ * (the app's demo/localStorage posture). Sets req.orgId from the JWT if present,
+ * otherwise from the X-Org-Id header or org_id query param. Apply AFTER optionalJWT.
+ */
+function demoOrg(req, res, next) {
+  if (!req.orgId) {
+    req.orgId = req.headers['x-org-id'] || req.query.org_id || req.query.orgId;
+  }
+  next();
+}
+
+module.exports = { authenticateJWT, optionalJWT, requireOrgAccess, demoOrg };

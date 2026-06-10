@@ -75,8 +75,8 @@ in code.
 - [x] CISO dashboard (App.jsx) — `/api/metrics/ciso` posture inputs drive score/process/exposure
 - [x] Board dashboard (App.jsx) — `/api/metrics/board` drives exposure breakdown + posture + crit risks
 - [~] CRO dashboard (App.jsx) — setup inputs (phiRecs, surplus) wired; compliance-grid scores are control-library data, not setup mock numbers
-- [ ] CLO dashboard (page)
-- [ ] Audit dashboard (page)
+- [x] CLO dashboard (page) — `/api/legal-obligations` (demo posture) drives obligations/exposure from DB
+- [x] Audit dashboard (page) — `/api/controls`, `/api/controls/statistics`, `/api/evidence`, `/api/findings` (demo posture) drive controls/evidence/findings from DB
 - [x] CIO dashboard already data-driven (`/api/cio/overview`)
 
 ### Phase 5 — Editability proof & docs
@@ -97,4 +97,9 @@ in code.
   - Board: exposure breakdown, posture score, critical-risk count, insurance limit all from `/api/metrics/board`.
   - Proven editable across roles: mfa_pct 78→98 raised CISO posture 74→78; revenue edit flows to CFO + Board.
   - 4 of 6 exec dashboards now DB-driven (CFO, CISO, Board, CIO); CRO partial.
-- **Next:** CLO + Audit pages; move CFO insurance/peer tables into `metric_inputs`; publish input-key reference for editors.
+- 2026-06-10 (cont.): **CLO + Audit pages wired (all 6 exec dashboards now DB-driven).**
+  - Relaxed the read endpoints (`legal-obligations`, `controls`, `evidence`, `findings`, `tasks`) to demo posture (GET only / read), keeping writes protected.
+  - Fixed a latent bug: `Control`, `Evidence`, `RemediationTask` models destructured a non-existent `{ db }` export and used `db.query` (which returns rows) where they expected `pool.query` (returns `{rows}`) — these endpoints had been 500/401-masked all along. Now use `db.pool.query`.
+  - Seeded 7 audit evidence rows. Fixed org-id localStorage key in CLO/Audit pages.
+  - Verified: controls=10, evidence=7, findings=5, obligations=6 all served without a JWT.
+- **Next (optional polish):** move CFO insurance/peer tables into `metric_inputs`; publish an input-key reference doc for editors.

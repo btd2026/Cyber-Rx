@@ -1,6 +1,6 @@
 'use strict';
 
-const { db } = require('../utils/db');
+const db = require('../utils/db');
 
 /**
  * Control Entity
@@ -69,7 +69,7 @@ class Control {
     ];
 
     try {
-      const result = await db.query(query, values);
+      const result = await db.pool.query(query, values);
       return this._mapFromDb(result.rows[0]);
     } catch (error) {
       throw new Error(`Failed to create control: ${error.message}`);
@@ -84,7 +84,7 @@ class Control {
   static async findById(id) {
     const query = 'SELECT * FROM controls WHERE id = $1';
     try {
-      const result = await db.query(query, [id]);
+      const result = await db.pool.query(query, [id]);
       return result.rows.length > 0 ? this._mapFromDb(result.rows[0]) : null;
     } catch (error) {
       throw new Error(`Failed to find control: ${error.message}`);
@@ -129,7 +129,7 @@ class Control {
     `;
 
     try {
-      const result = await db.query(query, values);
+      const result = await db.pool.query(query, values);
       return result.rows.map(row => this._mapFromDb(row));
     } catch (error) {
       throw new Error(`Failed to find controls: ${error.message}`);
@@ -213,7 +213,7 @@ class Control {
     `;
 
     try {
-      const result = await db.query(query, values);
+      const result = await db.pool.query(query, values);
       if (result.rows.length === 0) {
         throw new Error('Control not found');
       }
@@ -231,7 +231,7 @@ class Control {
   static async delete(id) {
     const query = 'DELETE FROM controls WHERE id = $1 RETURNING id';
     try {
-      const result = await db.query(query, [id]);
+      const result = await db.pool.query(query, [id]);
       return result.rows.length > 0;
     } catch (error) {
       throw new Error(`Failed to delete control: ${error.message}`);
@@ -297,7 +297,7 @@ class Control {
     `;
 
     try {
-      const result = await db.query(query, [organizationId]);
+      const result = await db.pool.query(query, [organizationId]);
       const row = result.rows[0];
       return {
         total: parseInt(row.total),

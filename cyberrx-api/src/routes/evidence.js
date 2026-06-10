@@ -5,10 +5,11 @@ const router = express.Router();
 const Evidence = require('../models/Evidence');
 const fs = require('fs').promises;
 const path = require('path');
-const { authenticateJWT } = require('../middleware/auth');
+const { optionalJWT, demoOrg } = require('../middleware/auth');
 
-// Apply authentication to all routes
-router.use(authenticateJWT);
+// Demo posture: resolve org from JWT or X-Org-Id/org_id so the dashboards work
+// without a login (consistent with the rest of the app).
+router.use(optionalJWT, demoOrg);
 
 /**
  * GET /api/evidence
