@@ -18,20 +18,69 @@ const logger = require('../utils/logger');
 
 // Map setup-quiz (orgs.setup_json) field names -> metric_inputs keys, so the
 // actual quiz responses override the seeded defaults when they are numeric.
+// Includes both the canonical field names and the SetupBot chat's answer keys
+// (phiRecs, insDeduct, rbcRatio).
 const SETUP_FIELD_MAP = {
   revenue: 'revenue', surplus: 'surplus', ibnr: 'ibnr',
   itBudget: 'it_budget', it_budget: 'it_budget',
-  phiRecords: 'phi_records', phi_records: 'phi_records',
+  phiRecords: 'phi_records', phi_records: 'phi_records', phiRecs: 'phi_records',
   memberCount: 'member_count', members: 'member_count',
   insLimit: 'ins_limit', cyberInsLimit: 'ins_limit',
-  insDeductible: 'ins_deductible',
-  rbcRatioCurrent: 'rbc_ratio_current',
+  insDeductible: 'ins_deductible', insDeduct: 'ins_deductible',
+  rbcRatioCurrent: 'rbc_ratio_current', rbcRatio: 'rbc_ratio_current',
   mfaPct: 'mfa_pct', edrPct: 'edr_pct', siemDays: 'siem_days',
   phishingPct: 'phishing_pct', patchPct: 'patch_pct',
   mttdHrs: 'mttd_hrs', mttrHrs: 'mttr_hrs',
   trainingPct: 'training_pct', pamPct: 'pam_pct', vulnSLApct: 'vuln_sla_pct',
   endpoints: 'endpoints', privAccts: 'priv_accts',
 };
+
+// ---------------------------------------------------------------------------
+// Setup-answer parsing. The setup chat stores answers as range labels like
+// "$2B to $10B", "Under $500M", "1 to 2.5 million", "400 to 500 percent".
+// Convert those to usable numbers (range -> midpoint, Under X -> X/2,
+// Over X -> X). Anything unparseable returns NaN and is SKIPPED, so a label
+// like "Unknown" can never overwrite a good seeded value.
+// ---------------------------------------------------------------------------
+const SUFFIX = { k: 1e3, m: 1e6, b: 1e9, thousand: 1e3, million: 1e6, billion: 1e9 };
+
+function parseToken(tok) {
+  const m = String(tok).trim().toLowerCase().replace(/[$,]/g, '')
+    .match(/^(\d+(?:\.\d+)?)\s*(k|m|b|thousand|million|billion)?$/);
+  if (!m) return NaN;
+  return parseFloat(m[1]) * (SUFFIX[m[2]] || 1);
+}
+
+function parseSetupNumber(v) {
+  if (typeof v === 'number') return Number.isFinite(v) ? v : NaN;
+  if (v == null) return NaN;
+  let s = String(v).trim();
+  if (!s) return NaN;
+  // Plain numerics (with commas): "3,000,000"
+  if (/^[\d.,]+$/.test(s)) {
+    const x = Number(s.replace(/,/g, ''));
+    return Number.isFinite(x) ? x : NaN;
+  }
+  s = s.toLowerCase().replace(/\(.*?\)/g, '').replace(/\bpercent\b/g, '').trim();
+  if (/^(no\b|none\b)/.test(s)) return 0; // e.g. "No cyber insurance"
+  // Range "X to Y" / "X - Y" -> midpoint; a bare left side inherits the right
+  // side's magnitude suffix ("1 to 2.5 million" -> 1M..2.5M).
+  let m = s.match(/^(?:between\s+)?(.+?)\s*(?:\bto\b|[-–])\s*(.+)$/);
+  if (m) {
+    let a = parseToken(m[1]);
+    const b = parseToken(m[2]);
+    if (Number.isFinite(a) && Number.isFinite(b) && a < b / 1000) {
+      const sm = m[2].toLowerCase().match(/(k|m|b|thousand|million|billion)\s*$/);
+      if (sm) a *= SUFFIX[sm[1]];
+    }
+    if (Number.isFinite(a) && Number.isFinite(b) && b >= a) return (a + b) / 2;
+  }
+  m = s.match(/^(?:under|below|less than)\s+(.+)$/);
+  if (m) { const x = parseToken(m[1]); return Number.isFinite(x) ? x / 2 : NaN; }
+  m = s.match(/^(?:over|above|more than)\s+(.+?)\+?$/);
+  if (m) { const x = parseToken(m[1]); return Number.isFinite(x) ? x : NaN; }
+  return parseToken(s);
+}
 
 function num(v) {
   if (v == null) return NaN;
@@ -59,12 +108,13 @@ async function loadInputs(orgId) {
   rows.filter((r) => r.org_id === '_defaults').forEach((r) => { inputs[r.key] = Number(r.value); });
   rows.filter((r) => r.org_id === orgId).forEach((r) => { inputs[r.key] = Number(r.value); });
 
-  // Overlay setup-quiz responses (only when numeric) so actual answers win.
+  // Overlay setup-quiz responses so actual answers win. Range labels like
+  // "$2B to $10B" are converted to midpoints; unparseable values are skipped.
   const orgRows = await safeRows(`SELECT setup_json FROM orgs WHERE id=$1`, [orgId]);
   const setup = (orgRows[0] && orgRows[0].setup_json) || {};
   Object.entries(SETUP_FIELD_MAP).forEach(([field, key]) => {
     if (setup[field] !== undefined) {
-      const v = num(setup[field]);
+      const v = parseSetupNumber(setup[field]);
       if (Number.isFinite(v)) inputs[key] = v;
     }
   });
@@ -243,5 +293,5 @@ async function computeRole(role, orgId) {
 
 module.exports = {
   loadInputs, loadAggregates, computeCFO, computeCISO, computeCRO, computeBoard,
-  computeRole, postureScore, cmmiLevel, SETUP_FIELD_MAP,
+  computeRole, postureScore, cmmiLevel, SETUP_FIELD_MAP, parseSetupNumber,
 };
