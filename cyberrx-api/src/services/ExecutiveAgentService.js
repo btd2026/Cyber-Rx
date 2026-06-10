@@ -97,6 +97,62 @@ const ROLES = {
 
 const ROLE_KEYS = Object.keys(ROLES);
 
+// Relevant questions each executive can ask their agent (surfaced as prompts).
+const SUGGESTED_QUESTIONS = {
+  CFO: [
+    'What is our total cyber financial exposure right now?',
+    'How much of our exposure is covered by insurance?',
+    'Which risks carry the largest dollar exposure?',
+    'What would a significant PHI breach cost us?',
+    'What is the ROI on our security spending?',
+    'How does cyber risk affect our RBC capital position?',
+  ],
+  CRO: [
+    'Are we operating within the board-approved risk appetite?',
+    'Which risks are breaching our thresholds?',
+    'Which open risks still lack an assigned owner?',
+    'What is our aggregate quantified risk exposure?',
+    'How many critical and high risks are open?',
+    'Which KRIs are currently out of tolerance?',
+  ],
+  CLO: [
+    'What regulatory obligations are triggered by our active risks?',
+    'If we had a breach tomorrow, who must we notify and by when?',
+    'What is our maximum regulatory penalty exposure?',
+    'Which vendors create the most contractual or legal risk?',
+    'Which risks carry HIPAA or CMS obligations?',
+    'What is our overall legal risk level?',
+  ],
+  CIO: [
+    'Which systems are most at risk right now?',
+    'What technology is end-of-life or unsupported?',
+    'Where are our worst unpatched vulnerabilities?',
+    'Which remediation tasks are overdue?',
+    'Are our security investments reducing operational risk?',
+    'Which crown-jewel processes are exposed?',
+  ],
+  CISO: [
+    'Which attack pathways threaten our critical processes?',
+    'What is our overall security posture?',
+    'Which controls are least effective?',
+    'What are our top open critical findings?',
+    'Where should we prioritize remediation?',
+    'What is the financial exposure of our top threats?',
+  ],
+  Board: [
+    'Are we at risk right now?',
+    'Is our cyber risk posture improving?',
+    'Are we spending the right amount on cybersecurity?',
+    'What is our net financial exposure?',
+    'Are we within the risk appetite we approved?',
+    'Is our cyber insurance adequate?',
+  ],
+};
+
+function getSuggestedQuestions(role) {
+  return SUGGESTED_QUESTIONS[role] || [];
+}
+
 function isValidRole(role) {
   return ROLE_KEYS.includes(role);
 }
@@ -610,9 +666,144 @@ async function getAllBriefs(orgId, { refresh = false } = {}) {
   return out;
 }
 
+// ---------------------------------------------------------------------------
+// Interactive Q&A — the executive asks their agent a question; the agent
+// returns a short summary plus the relevant supporting details.
+// ---------------------------------------------------------------------------
+const ANSWER_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    summary: { type: 'string' },
+    details: { type: 'array', items: { type: 'string' } },
+  },
+  required: ['summary', 'details'],
+};
+
+async function aiAnswer(role, ctx, question) {
+  const client = getAnthropicClient();
+  if (!client) return null;
+  const def = ROLES[role];
+  const system =
+    `${def.persona}\n\n` +
+    'You are this executive\'s dedicated CyberRX agent. Answer their question using ONLY the provided live context. ' +
+    'Be specific and quantitative; quantify in dollars where the data supports it. Never invent numbers. ' +
+    'Respond with: (1) a concise 2-3 sentence executive summary that directly answers the question, and ' +
+    '(2) a list of the most relevant supporting details (each a concrete fact or figure drawn from the context). ' +
+    'If the context does not contain the answer, say so plainly in the summary and return an empty details list.';
+  const user =
+    `Executive role: ${role}\n` +
+    `Question: "${question}"\n\n` +
+    `Live primary-source context (JSON):\n` +
+    '```json\n' + JSON.stringify(ctx, null, 2) + '\n```';
+  try {
+    const resp = await client.messages.create({
+      model: MODEL,
+      max_tokens: 2000,
+      thinking: { type: 'adaptive' },
+      system,
+      messages: [{ role: 'user', content: user }],
+      output_config: { format: { type: 'json_schema', schema: ANSWER_SCHEMA } },
+    });
+    const textBlock = (resp.content || []).find((b) => b.type === 'text');
+    if (!textBlock) return null;
+    const parsed = JSON.parse(textBlock.text);
+    return {
+      summary: parsed.summary,
+      details: Array.isArray(parsed.details) ? parsed.details : [],
+      source: 'ai',
+    };
+  } catch (err) {
+    logger.warn('AI answer failed, falling back to deterministic', { role, error: err.message });
+    return null;
+  }
+}
+
+// Deterministic answer: route the question to the relevant slice of context by
+// keyword and produce a summary + supporting detail lines. Works with no API key.
+function deterministicAnswer(role, ctx, question) {
+  const q = String(question || '').toLowerCase();
+  const f = ctx.financial, r = ctx.risks, l = ctx.legal, c = ctx.controls,
+        p = ctx.processes, rm = ctx.remediation, fi = ctx.findings, t = ctx.threats, v = ctx.vendors;
+  const has = (...words) => words.some((w) => q.includes(w));
+  let summary = '';
+  let details = [];
+
+  if (has('insurance', 'covered', 'coverage', 'insured')) {
+    summary = `Insurance covers about ${f.coverageRatio}% of the ${usd(f.grossExposure)} gross exposure — ${usd(f.insuranceCoverage)} of cover against ${usd(f.netExposure)} net exposure.`;
+    details = [
+      `Gross exposure: ${usd(f.grossExposure)}`,
+      `Insurance coverage: ${usd(f.insuranceCoverage)} (${f.coverageRatio}%)`,
+      `Net (uninsured) exposure: ${usd(f.netExposure)}`,
+    ];
+  } else if (has('roi', 'spend', 'invest', 'budget')) {
+    summary = `Estimated cost to remediate the open risk book is ${usd(f.costToRemediate)} against ${usd(f.grossExposure)} of gross exposure.`;
+    details = r.top.filter((x) => x.financialExposure > 0).slice(0, 4).map((x) => `${x.title}: ${usd(x.financialExposure)} exposure (${x.severity})`);
+  } else if (has('financial', 'exposure', 'cost', 'dollar', 'money', 'capital', 'rbc')) {
+    summary = `Total quantified cyber exposure is ${usd(f.grossExposure)} gross / ${usd(f.netExposure)} net across ${r.openCount} open risks (${r.critical} critical).`;
+    details = r.top.slice(0, 5).map((x) => `${x.title}: ${usd(x.financialExposure)} (${x.severity}, owner ${x.owner || 'unassigned'})`);
+  } else if (has('legal', 'regulat', 'hipaa', 'cms', 'notify', 'notification', 'penalt', 'obligation', 'breach law')) {
+    summary = `${l.triggered.length} of ${l.total} tracked obligations are triggered by active risks.`;
+    details = l.triggered.map((x) => `${x.source}: ${x.name}${x.notificationTimeline ? ` — notify within ${x.notificationTimeline}` : ''}${x.maxPenalty ? ` (max penalty ${usd(x.maxPenalty)})` : ''}`);
+    if (!details.length) details = ctx.legal.triggered.length ? [] : ['No obligations are currently triggered by open risks.'];
+  } else if (has('vendor', 'third party', 'third-party', 'supply')) {
+    summary = `${v.activeSignals} active vendor risk signal(s) are being tracked.`;
+    details = Object.entries(v.signalsBySeverity || {}).map(([sev, n]) => `${n} ${sev}-severity vendor signal(s)`);
+    if (!details.length) details = ['No active vendor risk signals.'];
+  } else if (has('threat', 'attack', 'pathway', 'ransomware', 'phishing')) {
+    summary = `${t.length} active threat pathway(s) are mapped to the environment.`;
+    details = t.slice(0, 6).map((x) => `${x.name} (${x.type}) — ${x.probability}% likelihood, ${x.impact} impact`);
+  } else if (has('control', 'posture', 'effective', 'maturity')) {
+    summary = `Controls average ${c.avgEffectiveness}% effectiveness — ${c.implemented} of ${c.total} fully implemented, ${c.notImplemented} not implemented.`;
+    details = [
+      `Average control effectiveness: ${c.avgEffectiveness}%`,
+      `Implemented: ${c.implemented} / ${c.total}`,
+      `Not implemented: ${c.notImplemented}`,
+      `Repeat findings: ${fi.repeat}`,
+    ];
+  } else if (has('patch', 'vuln', 'eol', 'end-of-life', 'end of life', 'system', 'asset', 'overdue', 'remediat', 'operational')) {
+    summary = `${p.atRisk.length} critical system(s)/process(es) carry open risk and ${rm.overdue} remediation task(s) are overdue.`;
+    details = p.atRisk.slice(0, 5).map((x) => `${x.name} (${x.criticality}, ${x.tier}) — owner ${x.owner}`);
+    if (fi.openCritical.length) details = details.concat(fi.openCritical.slice(0, 3).map((x) => `Open critical finding: ${x.title}`));
+  } else if (has('appetite', 'threshold', 'owner', 'tolerance', 'kri')) {
+    summary = r.critical > 0
+      ? `${r.critical} critical risk(s) are breaching board appetite; ${r.openCount} risks are open in total.`
+      : `Operating within board appetite — no critical risks open (${r.openCount} open in total).`;
+    details = r.top.filter((x) => x.severity === 'Critical' || x.severity === 'High').slice(0, 5)
+      .map((x) => `${x.title} — ${x.severity}, owner ${x.owner || 'unassigned'}`);
+  } else if (has('improv', 'trend', 'getting better', 'better', 'worse')) {
+    summary = `Posture snapshot: ${r.critical} critical risks open, controls at ${c.avgEffectiveness}% effectiveness, ${rm.overdue} overdue remediation task(s).`;
+    details = [
+      `Open risks: ${r.openCount} (${r.critical} critical, ${r.high} high)`,
+      `Control effectiveness: ${c.avgEffectiveness}%`,
+      `Overdue remediation tasks: ${rm.overdue}`,
+      `Repeat findings: ${fi.repeat}`,
+    ];
+  } else {
+    // Generic: lead with exposure + top risks.
+    summary = `Across the environment there are ${r.openCount} open risks (${r.critical} critical) carrying ${usd(f.grossExposure)} of quantified exposure; controls average ${c.avgEffectiveness}% effectiveness.`;
+    details = r.top.slice(0, 5).map((x) => `${x.title}: ${usd(x.financialExposure)} (${x.severity})`);
+  }
+
+  return { summary, details: details.filter(Boolean), source: 'deterministic' };
+}
+
+/** Answer an executive's free-text question for a role, grounded in live org data. */
+async function answerQuestion(role, orgId, question) {
+  if (!isValidRole(role)) throw new Error('Invalid role');
+  const q = String(question || '').trim();
+  if (!q) throw new Error('Question is required');
+  const ctx = await gatherContext(orgId);
+  let answer = await aiAnswer(role, ctx, q);
+  if (!answer) answer = deterministicAnswer(role, ctx, q);
+  return { role, question: q, answeredAt: new Date().toISOString(), ...answer };
+}
+
 module.exports = {
   ROLES,
   ROLE_KEYS,
+  SUGGESTED_QUESTIONS,
+  getSuggestedQuestions,
   isValidRole,
   aiEnabled,
   gatherContext,
@@ -620,4 +811,5 @@ module.exports = {
   generateAll,
   getBrief,
   getAllBriefs,
+  answerQuestion,
 };
