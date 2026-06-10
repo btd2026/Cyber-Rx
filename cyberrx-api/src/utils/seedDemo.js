@@ -21,9 +21,15 @@ const ExecutiveAgentService = require('../services/ExecutiveAgentService');
 const SimulatedToolService = require('../services/SimulatedToolService');
 
 const DEMO_ORG_ID = 'blue-cross-blue-shield-of-massachusetts';
+const DEMO_ORG_IDS = [
+  'blue-cross-blue-shield-of-massachusetts',
+  'cigna-healthcare',
+  'meridian-health-plan-demo',
+];
 const SEED_FILES = [
   path.join(__dirname, '..', '..', 'seeds', '2026_06_17_executive_brief_demo.sql'),
   path.join(__dirname, '..', '..', 'seeds', '2026_06_18_simulated_tool_sources.sql'),
+  path.join(__dirname, '..', '..', 'seeds', '2026_06_19_multi_org_demo.sql'),
 ];
 
 async function orgHasData(orgId) {
@@ -59,17 +65,20 @@ async function seedExecutiveDemo({ force = false, orgId = DEMO_ORG_ID } = {}) {
   const synced = await SimulatedToolService.syncAll();
   logger.info('[seedDemo] Simulated tool metrics synced', { orgs: Object.keys(synced) });
 
-  // Regenerate briefs so they reflect the (now populated) data rather than any
-  // previously-cached zero state.
-  try {
-    await db.query('DELETE FROM executive_briefs WHERE organization_id=$1', [orgId]);
-  } catch (err) {
-    logger.warn('[seedDemo] Could not clear existing briefs', { error: err.message });
+  // Regenerate briefs for every demo org so each shows its own real numbers.
+  let briefs = [];
+  for (const id of DEMO_ORG_IDS) {
+    try {
+      await db.query('DELETE FROM executive_briefs WHERE organization_id=$1', [id]);
+    } catch (err) {
+      logger.warn('[seedDemo] Could not clear existing briefs', { orgId: id, error: err.message });
+    }
+    const b = await ExecutiveAgentService.generateAll(id);
+    if (id === orgId) briefs = b;
+    logger.info('[seedDemo] Executive briefs regenerated', {
+      orgId: id, count: b.length, mode: ExecutiveAgentService.aiEnabled() ? 'ai' : 'deterministic',
+    });
   }
-  const briefs = await ExecutiveAgentService.generateAll(orgId);
-  logger.info('[seedDemo] Executive briefs regenerated', {
-    orgId, count: briefs.length, mode: ExecutiveAgentService.aiEnabled() ? 'ai' : 'deterministic',
-  });
   return briefs;
 }
 
