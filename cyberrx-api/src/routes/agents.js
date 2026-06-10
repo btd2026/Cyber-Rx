@@ -11,16 +11,33 @@
  *   POST /api/agents/refresh             - regenerate all briefs now
  *   POST /api/agents/refresh/:role       - regenerate one persona's brief now
  *
- * All routes are authenticated and org-scoped (req.orgId from JWT).
+ * Org scoping: uses the JWT org when present, otherwise falls back to the
+ * X-Org-Id header or org_id query param (the platform's demo/localStorage
+ * posture, consistent with the rest of the dashboards).
  */
 
 const express = require('express');
 const router = express.Router();
 const ExecutiveAgentService = require('../services/ExecutiveAgentService');
-const { authenticateJWT } = require('../middleware/auth');
+const { optionalJWT } = require('../middleware/auth');
 const logger = require('../utils/logger');
 
-router.get('/status', authenticateJWT, async (req, res) => {
+// Resolve the organization for the request. Returns null (and sends 400) when
+// no org can be determined.
+function resolveOrg(req, res) {
+  const orgId =
+    req.orgId ||
+    req.headers['x-org-id'] ||
+    req.query.org_id ||
+    req.query.orgId;
+  if (!orgId) {
+    res.status(400).json({ error: 'Organization not specified', message: 'Provide a JWT, X-Org-Id header, or org_id query parameter.' });
+    return null;
+  }
+  return orgId;
+}
+
+router.get('/status', optionalJWT, async (req, res) => {
   res.json({
     aiEnabled: ExecutiveAgentService.aiEnabled(),
     model: ExecutiveAgentService.aiEnabled() ? (process.env.ANTHROPIC_MODEL || 'claude-opus-4-8') : null,
@@ -33,10 +50,12 @@ router.get('/status', authenticateJWT, async (req, res) => {
   });
 });
 
-router.get('/briefs', authenticateJWT, async (req, res) => {
+router.get('/briefs', optionalJWT, async (req, res) => {
+  const orgId = resolveOrg(req, res);
+  if (!orgId) return;
   try {
     const refresh = req.query.refresh === '1' || req.query.refresh === 'true';
-    const briefs = await ExecutiveAgentService.getAllBriefs(req.orgId, { refresh });
+    const briefs = await ExecutiveAgentService.getAllBriefs(orgId, { refresh });
     res.json({ briefs, aiEnabled: ExecutiveAgentService.aiEnabled() });
   } catch (err) {
     logger.error('Get executive briefs error', { error: err.message });
@@ -44,14 +63,16 @@ router.get('/briefs', authenticateJWT, async (req, res) => {
   }
 });
 
-router.get('/briefs/:role', authenticateJWT, async (req, res) => {
+router.get('/briefs/:role', optionalJWT, async (req, res) => {
+  const orgId = resolveOrg(req, res);
+  if (!orgId) return;
   try {
     const role = req.params.role;
     if (!ExecutiveAgentService.isValidRole(role)) {
       return res.status(400).json({ error: 'Invalid role', validRoles: ExecutiveAgentService.ROLE_KEYS });
     }
     const refresh = req.query.refresh === '1' || req.query.refresh === 'true';
-    const brief = await ExecutiveAgentService.getBrief(role, req.orgId, { refresh });
+    const brief = await ExecutiveAgentService.getBrief(role, orgId, { refresh });
     res.json(brief);
   } catch (err) {
     logger.error('Get executive brief error', { error: err.message });
@@ -59,9 +80,11 @@ router.get('/briefs/:role', authenticateJWT, async (req, res) => {
   }
 });
 
-router.post('/refresh', authenticateJWT, async (req, res) => {
+router.post('/refresh', optionalJWT, async (req, res) => {
+  const orgId = resolveOrg(req, res);
+  if (!orgId) return;
   try {
-    const briefs = await ExecutiveAgentService.generateAll(req.orgId);
+    const briefs = await ExecutiveAgentService.generateAll(orgId);
     res.json({ refreshed: briefs.length, briefs, aiEnabled: ExecutiveAgentService.aiEnabled() });
   } catch (err) {
     logger.error('Refresh executive briefs error', { error: err.message });
@@ -69,13 +92,15 @@ router.post('/refresh', authenticateJWT, async (req, res) => {
   }
 });
 
-router.post('/refresh/:role', authenticateJWT, async (req, res) => {
+router.post('/refresh/:role', optionalJWT, async (req, res) => {
+  const orgId = resolveOrg(req, res);
+  if (!orgId) return;
   try {
     const role = req.params.role;
     if (!ExecutiveAgentService.isValidRole(role)) {
       return res.status(400).json({ error: 'Invalid role', validRoles: ExecutiveAgentService.ROLE_KEYS });
     }
-    const brief = await ExecutiveAgentService.generateBrief(role, req.orgId);
+    const brief = await ExecutiveAgentService.generateBrief(role, orgId);
     res.json(brief);
   } catch (err) {
     logger.error('Refresh executive brief error', { error: err.message });

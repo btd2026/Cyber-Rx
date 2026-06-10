@@ -31,8 +31,10 @@ const PRIORITY_COLORS = {
 };
 
 function resolveCtx(props) {
-  const token = props.authToken || (typeof localStorage !== 'undefined' && localStorage.getItem('authToken')) || '';
-  const organizationId = props.orgId || (typeof localStorage !== 'undefined' && localStorage.getItem('orgId')) || '';
+  const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
+  const token = props.authToken || ls('authToken') || '';
+  // The app stores the active org id under 'cyberrx_org_id' (see App.jsx).
+  const organizationId = props.orgId || ls('cyberrx_org_id') || ls('orgId') || '';
   const apiUrl =
     props.api_url ||
     props.apiUrl ||
@@ -56,9 +58,14 @@ export default function ExecutiveAgentBrief(props) {
       try {
         refresh ? setRefreshing(true) : setLoading(true);
         setError(null);
-        const headers = { 'Authorization': `Bearer ${token}`, 'X-Org-Id': organizationId };
-        const url = `${apiUrl}/api/agents/briefs/${role}${refresh ? '?refresh=1' : ''}`;
-        const res = await fetch(refresh ? url : url, { method: refresh ? 'GET' : 'GET', headers });
+        const headers = { 'X-Org-Id': organizationId };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const params = new URLSearchParams();
+        if (organizationId) params.set('org_id', organizationId);
+        if (refresh) params.set('refresh', '1');
+        const qs = params.toString();
+        const url = `${apiUrl}/api/agents/briefs/${role}${qs ? `?${qs}` : ''}`;
+        const res = await fetch(url, { method: 'GET', headers });
         if (!res.ok) throw new Error(`Agent unavailable (${res.status})`);
         const data = await res.json();
         setBrief(data);
