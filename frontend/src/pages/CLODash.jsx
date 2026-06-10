@@ -13,6 +13,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import ExecutiveAgentBrief from '../components/ExecutiveAgentBrief';
 
 const CLODash = (props) => {
   const { goBack, authToken, orgId, api_url } = props;
@@ -158,6 +159,9 @@ const CLODash = (props) => {
           )}
         </div>
       </div>
+
+      {/* AI agent brief - continuous, role-specific executive intelligence */}
+      <ExecutiveAgentBrief role="CLO" authToken={authToken} orgId={orgId} api_url={api_url} />
 
       {/* KPI Strip */}
       <div style={{

@@ -456,6 +456,30 @@ async function init() {
       CREATE INDEX IF NOT EXISTS vendor_monitoring_conn_org ON vendor_monitoring_connections(organization_id);
       CREATE INDEX IF NOT EXISTS vendor_monitoring_conn_vendor ON vendor_monitoring_connections(vendor_id);
       CREATE INDEX IF NOT EXISTS vendor_monitoring_conn_type ON vendor_monitoring_connections(connector_type);
+
+      -- Executive Agent Briefs (AI agent layer: continuous role-specific intelligence)
+      CREATE TABLE IF NOT EXISTS executive_briefs (
+        id                TEXT PRIMARY KEY,
+        organization_id   TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        role              TEXT NOT NULL CHECK (role IN ('CFO', 'CRO', 'CLO', 'CIO', 'CISO', 'Board')),
+        question          TEXT NOT NULL,
+        deliverable       TEXT NOT NULL,
+        headline          TEXT,
+        status            TEXT CHECK (status IN ('green', 'amber', 'red')),
+        summary           TEXT,
+        metrics           JSONB DEFAULT '[]',
+        highlights        JSONB DEFAULT '[]',
+        actions           JSONB DEFAULT '[]',
+        source            TEXT DEFAULT 'deterministic',
+        context_snapshot  JSONB DEFAULT '{}',
+        generated_at      TIMESTAMPTZ DEFAULT NOW(),
+        updated_at        TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE (organization_id, role)
+      );
+
+      CREATE INDEX IF NOT EXISTS executive_briefs_org ON executive_briefs(organization_id);
+      CREATE INDEX IF NOT EXISTS executive_briefs_role ON executive_briefs(role);
+      CREATE INDEX IF NOT EXISTS executive_briefs_generated ON executive_briefs(generated_at DESC);
     `);
     console.log('Database schema initialized');
   } catch (err) {

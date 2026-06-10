@@ -9,6 +9,27 @@ const { getSyncInterval, getTierPriority, getEnabledConnectors } = require('./ut
 const Vendor = require('./models/Vendor');
 const CredentialRotationService = require('./services/CredentialRotationService');
 const AlertService = require('./services/AlertService');
+const ExecutiveAgentService = require('./services/ExecutiveAgentService');
+
+// Continuous executive agent layer: regenerate role-specific briefs for every org.
+async function refreshExecutiveBriefs() {
+  try {
+    const orgs = await db.query('SELECT id FROM orgs');
+    for (const { id } of orgs) {
+      try {
+        await ExecutiveAgentService.generateAll(id);
+      } catch (err) {
+        logger.warn('[scheduler] Executive brief refresh failed for org', { orgId: id, error: err.message });
+      }
+    }
+    logger.info('[scheduler] Executive agent briefs refreshed', {
+      orgs: orgs.length,
+      mode: ExecutiveAgentService.aiEnabled() ? 'ai' : 'deterministic',
+    });
+  } catch (err) {
+    logger.warn('[scheduler] Executive brief refresh skipped', { error: err.message });
+  }
+}
 
 // Existing tool sync schedule (legacy metric sync)
 const SYNC_SCHEDULE = {
@@ -387,6 +408,16 @@ async function runScheduler() {
 
   // Run credential rotation check immediately on startup
   await checkCredentialRotations();
+
+  // Continuous executive agent briefs - "your intelligence should be automated too"
+  const briefCron = process.env.BRIEF_REFRESH_CRON || '*/15 * * * *';
+  logger.info('[scheduler] Starting executive agent brief refresh', { schedule: briefCron });
+  cron.schedule(briefCron, refreshExecutiveBriefs, {
+    scheduled: true,
+    timezone: process.env.TZ || 'UTC'
+  });
+  // Generate an initial set on startup so dashboards have live briefs immediately
+  await refreshExecutiveBriefs();
 
   logger.info('[scheduler] All scheduler components started');
 }
