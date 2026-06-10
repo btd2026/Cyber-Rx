@@ -38,9 +38,15 @@ if (process.env.SENTRY_DSN) {
 const allowedOrigins = [];
 
 // Production Vercel URLs (always allowed in production)
+// Entries may contain '*' wildcards (e.g. Vercel preview deployments whose
+// subdomain hash changes on every deploy).
 const productionOrigins = [
   'https://cyber-rx-frontend.vercel.app',
-  'https://frontend-mu-drab-93.vercel.app'
+  'https://frontend-mu-drab-93.vercel.app',
+  // Vercel preview/branch deployments for this project (hash changes per deploy)
+  'https://cyber-rx-frontend-*.vercel.app',
+  'https://cyber-rx-*-btd2026s-projects.vercel.app',
+  'https://*-btd2026s-projects.vercel.app'
 ];
 
 // Development URLs (only in development mode)
@@ -77,10 +83,31 @@ if (process.env.NODE_ENV === 'development') {
   }
 }
 
+// Split the allowlist into exact origins and wildcard patterns. Any entry
+// containing '*' is compiled to a RegExp (e.g. Vercel preview deployments).
+const exactOrigins = [];
+const originPatterns = [];
+for (const entry of allowedOrigins) {
+  if (entry.includes('*')) {
+    const re = new RegExp(
+      '^' + entry.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^.]*') + '$'
+    );
+    originPatterns.push(re);
+  } else {
+    exactOrigins.push(entry);
+  }
+}
+
+function isOriginAllowed(origin) {
+  if (exactOrigins.indexOf(origin) !== -1) return true;
+  return originPatterns.some((re) => re.test(origin));
+}
+
 // Log CORS configuration on startup
 logger.info('CORS configured', {
   environment: process.env.NODE_ENV || 'development',
-  allowedOrigins,
+  exactOrigins,
+  patterns: originPatterns.map((re) => re.source),
   originCount: allowedOrigins.length
 });
 
@@ -95,15 +122,16 @@ app.use(cors({
       return callback(null, true);
     }
 
-    // Check if origin is in allowlist
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    // Check if origin is in allowlist (exact match or wildcard pattern)
+    if (isOriginAllowed(origin)) {
       callback(null, true);
     } else {
       console.warn(JSON.stringify({
         ts: new Date().toISOString(),
         event: 'cors_blocked',
         origin,
-        allowedOrigins
+        exactOrigins,
+        patterns: originPatterns.map((re) => re.source)
       }));
       callback(new Error('CORS not allowed for origin: ' + origin));
     }
