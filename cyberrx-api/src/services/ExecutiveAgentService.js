@@ -28,6 +28,27 @@
 const crypto = require('crypto');
 const db = require('../utils/db');
 const logger = require('../utils/logger');
+const MetricsEngine = require('./MetricsEngine');
+
+/**
+ * Posture-aware status (green | amber | red), shared by all six personas so the
+ * banner reflects the real severity gap between orgs — not just a raw count.
+ * Composite "concern" score (higher = worse):
+ *   critical risks, overdue remediation, net exposure as a share of capital,
+ *   insurance-coverage gap, and control-effectiveness gap.
+ */
+function computeStatus(ctx) {
+  const f = ctx.financial, r = ctx.risks, c = ctx.controls, rm = ctx.remediation;
+  let s = 0;
+  s += (r.critical || 0) * 8;                                  // each critical risk
+  s += (rm.overdue || 0) * 4;                                  // each overdue task
+  s += Math.min(30, f.capitalAtRiskPct || 0);                 // net exposure vs surplus (capped)
+  if (f.coverageRatio < 50) s += (50 - f.coverageRatio) * 0.3; // under-insurance gap
+  if (c.avgEffectiveness < 75) s += (75 - c.avgEffectiveness) * 0.3; // control gap
+  if (s >= 65) return 'red';
+  if (s >= 35) return 'amber';
+  return 'green';
+}
 
 const MODEL = process.env.ANTHROPIC_MODEL || 'claude-opus-4-8';
 
@@ -331,6 +352,15 @@ async function gatherContext(orgId) {
   const grossExposure = n(fin.gross) || n(riskExp.exposure);
   const netExposure = n(fin.net) || Math.max(0, grossExposure - n(fin.insured));
 
+  // Statutory surplus (the capital that absorbs cyber losses) — lets us express
+  // net exposure as a share of capital, the key cross-org severity signal.
+  let surplus = 0;
+  try {
+    const inputs = await MetricsEngine.loadInputs(orgId);
+    surplus = n(inputs && inputs.surplus);
+  } catch (_) {}
+  const capitalAtRiskPct = surplus > 0 ? Math.round((netExposure / surplus) * 1000) / 10 : 0;
+
   return {
     financial: {
       grossExposure,
@@ -338,6 +368,8 @@ async function gatherContext(orgId) {
       insuranceCoverage: n(fin.insured),
       costToRemediate: n(riskExp.remediate),
       coverageRatio: grossExposure > 0 ? Math.round((n(fin.insured) / grossExposure) * 100) : 0,
+      surplus,
+      capitalAtRiskPct,
     },
     risks: {
       bySeverity: sevMap,
@@ -406,9 +438,7 @@ function deterministicBrief(role, ctx) {
   const def = ROLES[role];
   const { financial: f, risks: r, legal: l, controls: c, processes: p, remediation: rm, findings: fi, threats: t, vendors: v } = ctx;
 
-  let status = 'green';
-  if (r.critical > 0 || rm.overdue > 0 || (f.coverageRatio > 0 && f.coverageRatio < 50)) status = 'amber';
-  if (r.critical >= 3 || l.triggered.length >= 3) status = 'red';
+  const status = computeStatus(ctx);
 
   let headline = '';
   let summary = '';
@@ -602,7 +632,7 @@ async function aiBrief(role, ctx) {
       question: def.question,
       deliverable: def.deliverable,
       headline: parsed.headline,
-      status: parsed.status,
+      status: computeStatus(ctx), // posture-aware, consistent across orgs & personas
       summary: parsed.summary,
       metrics: Array.isArray(parsed.metrics) ? parsed.metrics : [],
       highlights: Array.isArray(parsed.highlights) ? parsed.highlights : [],
