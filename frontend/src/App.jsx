@@ -7917,6 +7917,18 @@ function CISODash(props) {
   var totalToolSlots = Object.keys(TOOL_SYNC).length;
   var _smPnl=useState(false); var showMetricsPanel=_smPnl[0]; var setShowMetricsPanel=_smPnl[1];
   var _mEdit=useState({}); var metricEdits=_mEdit[0]; var setMetricEdits=_mEdit[1];
+  // DB-driven figures from the metrics engine (formulas over editable mock numbers)
+  var _cisom=useState(null); var cisoM=_cisom[0]; var setCisoM=_cisom[1];
+  useEffect(function(){
+    var org = (typeof localStorage!=='undefined' && (localStorage.getItem('cyberrx_org_id')||localStorage.getItem('orgId'))) || '';
+    if(!org) return;
+    var tok = (typeof localStorage!=='undefined' && localStorage.getItem('authToken'))||'';
+    var headers={'X-Org-Id':org}; if(tok) headers['Authorization']='Bearer '+tok;
+    fetch(CYBERRX_API+'/api/metrics/ciso?org_id='+encodeURIComponent(org),{headers:headers})
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(d){ if(d&&d.metrics) setCisoM(d.metrics); })
+      .catch(function(){});
+  }, []);
   var orgName=props.orgName;
   var orgExtras = props.orgTextExtras || {};
   // Security posture actuals from setup (with demo fallbacks)
@@ -7933,6 +7945,26 @@ function CISODash(props) {
   var aEndpts=props.endpoints||1193;
   var aPrivAccts=props.privAccts||643;
   var aPhiRec=props.phiRecords||3000000;
+
+  // ── DB-driven override: pull posture inputs from the metrics engine so the
+  // dashboard's own formulas recompute from the editable mock-number database. ─
+  var cisoRevenue=props.revenue||1750000000; var cisoMembers=props.memberCount||3000000;
+  if (cisoM && cisoM.kpis) {
+    var kp=cisoM.kpis;
+    if(kp.mfaPct!=null) aMFA=kp.mfaPct;
+    if(kp.edrPct!=null) aEDR=kp.edrPct;
+    if(kp.siemDays!=null) aSIEM=kp.siemDays;
+    if(kp.phishingPct!=null) aPhish=kp.phishingPct;
+    if(kp.patchPct!=null) aPatch=kp.patchPct;
+    if(kp.mttdHrs!=null) aMTTD=kp.mttdHrs;
+    if(kp.mttrHrs!=null) aMTTR=kp.mttrHrs;
+    if(kp.trainingPct!=null) aTraining=kp.trainingPct;
+    if(kp.pamPct!=null) aPAM=kp.pamPct;
+    if(kp.vulnSlaPct!=null) aVuln=kp.vulnSlaPct;
+    if(cisoM.phiRecords!=null) aPhiRec=cisoM.phiRecords;
+    if(cisoM.revenue!=null) cisoRevenue=cisoM.revenue;
+    if(cisoM.memberCount!=null) cisoMembers=cisoM.memberCount;
+  }
 
   // AUDITABLE: Overall score using standardized formula
   var overallScore = calculateOverallScore({
@@ -7970,8 +8002,8 @@ function CISODash(props) {
 
   // AUDITABLE: Calculate total exposure based on org size, process scores, and findings
   var totalExposure = calculateTotalExposure(liveProcs, {
-    revenue: props.revenue || 1750000000,
-    members: props.memberCount || 3000000,
+    revenue: cisoRevenue,
+    members: cisoMembers,
     phiRecords: aPhiRec
   }, {
     mfaPct: aMFA,
@@ -9039,6 +9071,22 @@ function CRODash(props) {
   var orgName = props.orgName||"Your Organization";
   var surplus = props.surplus||2500e6;
   var selFW   = {};
+  // DB-driven figures from the metrics engine (formulas over editable mock numbers)
+  var _crom=useState(null); var croM=_crom[0]; var setCroM=_crom[1];
+  useEffect(function(){
+    var org = (typeof localStorage!=='undefined' && (localStorage.getItem('cyberrx_org_id')||localStorage.getItem('orgId'))) || '';
+    if(!org) return;
+    var tok = (typeof localStorage!=='undefined' && localStorage.getItem('authToken'))||'';
+    var headers={'X-Org-Id':org}; if(tok) headers['Authorization']='Bearer '+tok;
+    fetch(CYBERRX_API+'/api/metrics/cro?org_id='+encodeURIComponent(org),{headers:headers})
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(d){ if(d&&d.metrics) setCroM(d.metrics); })
+      .catch(function(){});
+  }, []);
+  if (croM) {
+    if(croM.phiRecords!=null) phiRecs = croM.phiRecords;
+    if(croM.surplus!=null) surplus = croM.surplus;
+  }
 
   // Single state for which strip stat card is open (avoids hook-in-map violation)
   var _openStat=useState(null); var openStat=_openStat[0]; var setOpenStat=_openStat[1];
@@ -10620,6 +10668,17 @@ function BoardDash(props) {
   var grossExp      = (breachRespM + regulatoryM + fraudM + reputM + interruptM + legalM + recoveryM) * 1e6;
   var _s0=useState(null); var selSection=_s0[0]; var setSelSection=_s0[1];
   var _s1=useState("overview"); var bTab=_s1[0]; var setBTab=_s1[1];
+  var _bm=useState(null); var boardM=_bm[0]; var setBoardM=_bm[1];
+  useEffect(function(){
+    var org = (typeof localStorage!=='undefined' && (localStorage.getItem('cyberrx_org_id')||localStorage.getItem('orgId'))) || '';
+    if(!org) return;
+    var tok = (typeof localStorage!=='undefined' && localStorage.getItem('authToken'))||'';
+    var headers={'X-Org-Id':org}; if(tok) headers['Authorization']='Bearer '+tok;
+    fetch(CYBERRX_API+'/api/metrics/board?org_id='+encodeURIComponent(org),{headers:headers})
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(d){ if(d&&d.metrics) setBoardM(d.metrics); })
+      .catch(function(){});
+  }, []);
   var liveFind = FINDINGS; var liveActs = execActions||ACTIONS;
   var crits = liveFind.filter(function(f){return f.sev==="Critical";}).length;
 
@@ -10635,6 +10694,21 @@ function BoardDash(props) {
     trainingPct: props.trainingPct,
     pamPct: props.pamPct
   });
+
+  // ── DB-driven override: every Board figure from the metrics engine ─────────
+  if (boardM) {
+    if(boardM.grossExposure!=null) grossExp = boardM.grossExposure;
+    if(boardM.postureScore!=null) overallScore = boardM.postureScore;
+    if(boardM.criticalRisks!=null) crits = boardM.criticalRisks;
+    if(boardM.insLimitM!=null) insLimit = boardM.insLimitM;
+    if(boardM.breachRespM!=null) breachRespM = boardM.breachRespM;
+    if(boardM.regulatoryM!=null) regulatoryM = boardM.regulatoryM;
+    if(boardM.fraudM!=null) fraudM = boardM.fraudM;
+    if(boardM.reputM!=null) reputM = boardM.reputM;
+    if(boardM.interruptM!=null) interruptM = boardM.interruptM;
+    if(boardM.legalM!=null) legalM = boardM.legalM;
+    if(boardM.recoveryM!=null) recoveryM = boardM.recoveryM;
+  }
 
   var BOARD_TABS = [
     {id:"overview",    label:"Board Overview"},

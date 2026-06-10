@@ -71,13 +71,13 @@ in code.
 - [x] CIO already served by `/api/cio/overview` (fold inputs in) 
 
 ### Phase 4 — Wire dashboards to computed numbers
-- [x] CFO dashboard (App.jsx) — replace prop+hardcoded math with `/api/metrics/cfo`
-- [ ] CISO dashboard (App.jsx)
-- [ ] CRO dashboard (App.jsx)
-- [ ] Board dashboard (App.jsx)
+- [x] CFO dashboard (App.jsx) — `/api/metrics/cfo` drives exposure/RBC/ROSI/scenarios
+- [x] CISO dashboard (App.jsx) — `/api/metrics/ciso` posture inputs drive score/process/exposure
+- [x] Board dashboard (App.jsx) — `/api/metrics/board` drives exposure breakdown + posture + crit risks
+- [~] CRO dashboard (App.jsx) — setup inputs (phiRecs, surplus) wired; compliance-grid scores are control-library data, not setup mock numbers
 - [ ] CLO dashboard (page)
 - [ ] Audit dashboard (page)
-- [x] CIO dashboard already data-driven
+- [x] CIO dashboard already data-driven (`/api/cio/overview`)
 
 ### Phase 5 — Editability proof & docs
 - [x] Demonstrate: edit a `metric_inputs` value → endpoint output changes
@@ -92,4 +92,9 @@ in code.
   - `MetricsEngine` formula library + 6 passing unit tests.
   - CFO dashboard (App.jsx) now renders engine figures (gross/net exposure, RBC, ROSI, capital/claims/IT risk, scenarios) from the DB.
   - Proven editable: PUT revenue 10B→20B raised CFO gross exposure $1,711M→$2,548M.
-- **Next:** wire CISO, CRO, Board (App.jsx) + CLO, Audit (pages) to their `/api/metrics/*` endpoints; move CFO insurance/peer tables to inputs; document input keys for editors.
+- 2026-06-10 (cont.): **CISO + Board fully wired; CRO setup inputs wired.**
+  - CISO: posture inputs (MFA/EDR/patch/phishing/training/PAM/vuln + revenue/members/PHI) now come from the DB and drive the dashboard's own score/process/exposure formulas.
+  - Board: exposure breakdown, posture score, critical-risk count, insurance limit all from `/api/metrics/board`.
+  - Proven editable across roles: mfa_pct 78→98 raised CISO posture 74→78; revenue edit flows to CFO + Board.
+  - 4 of 6 exec dashboards now DB-driven (CFO, CISO, Board, CIO); CRO partial.
+- **Next:** CLO + Audit pages; move CFO insurance/peer tables into `metric_inputs`; publish input-key reference for editors.
