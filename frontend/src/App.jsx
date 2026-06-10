@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import CorrelatedFinding from "./pages/CorrelatedFinding";
 import CIODash from "./pages/CIODash";
 import CLODash from "./pages/CLODash";
+import ExecutiveAgentBrief from "./components/ExecutiveAgentBrief";
 import AuditDash from "./pages/AuditDash";
 import ReviewMappings from "./pages/ReviewMappings";
 import ProcessGraph from "./pages/ProcessGraph";
@@ -8065,6 +8066,11 @@ function CISODash(props) {
     <div>
       <DashNav current="dashboard" go={go}/>
 
+      {/* AI agent brief - continuous, role-specific executive intelligence */}
+      <div style={{padding:"14px 20px 0"}}>
+        <ExecutiveAgentBrief role="CISO" />
+      </div>
+
       {/* CISO Header - Executive Cyber Responsibility */}
       <div style={{padding:"16px 20px",background:"linear-gradient(135deg,#3B9EFF14,"+C.panel+")",
         border:"1px solid #3B9EFF30",borderRadius:14,marginBottom:14}}>
@@ -9400,6 +9406,8 @@ function CRODash(props) {
     <div>
       <DashNav current="cro" go={go}/>
       <BrianaBar pageKey="cro" orgName={props.orgName||""} brianaOn={props.brianaOn!==false} setBrianaOn={props.setBrianaOn||function(){}}/>
+      {/* AI agent brief - continuous, role-specific executive intelligence */}
+      <ExecutiveAgentBrief role="CRO" />
       <div style={{marginBottom:14}}>
         <h2 style={{color:C.text,fontSize:18,fontWeight:800,margin:"0 0 4px"}}>CRO / Audit Dashboard</h2>
         <div style={{color:C.muted,fontSize:12}}>Click any framework to drill into domains, controls, and evidence reviewed.</div>
@@ -10034,6 +10042,9 @@ function CFODash(props) {
       <DashNav current="cfo" go={go}/>
       <BrianaBar pageKey="cfo" orgName={props.orgName||""} brianaOn={props.brianaOn!==false} setBrianaOn={props.setBrianaOn||function(){}}/>
 
+      {/* AI agent brief - continuous, role-specific executive intelligence */}
+      <ExecutiveAgentBrief role="CFO" />
+
       {/* CFO Drill views */}
       {cfDrill&&(
         <div>
@@ -10607,6 +10618,9 @@ function BoardDash(props) {
     <div>
       <DashNav current="boarddash" go={go}/>
       <BrianaBar pageKey="boarddash" orgName={props.orgName||""} brianaOn={props.brianaOn!==false} setBrianaOn={props.setBrianaOn||function(){}}/>
+
+      {/* AI agent brief - continuous, role-specific executive intelligence */}
+      <ExecutiveAgentBrief role="Board" />
 
       {!selSection&&(
       <div>
