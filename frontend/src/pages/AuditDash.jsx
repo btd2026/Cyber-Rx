@@ -12,6 +12,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import DashNav from '../components/DashNav';
 
 const AuditDash = (props) => {
   const { goBack, authToken, orgId, api_url } = props;
@@ -129,6 +130,7 @@ const AuditDash = (props) => {
 
   return (
     <div style={{ padding: '2rem', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+      <DashNav current="cro" go={props.go} />
       {/* Header */}
       <div style={{
         marginBottom: '2rem',
