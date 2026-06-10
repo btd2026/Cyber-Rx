@@ -72,3 +72,36 @@ describe('MetricsEngine posture', () => {
     expect(hi).toBeGreaterThan(lo);
   });
 });
+
+describe('MetricsEngine.parseSetupNumber (setup-quiz range labels)', () => {
+  const p = MetricsEngine.parseSetupNumber;
+
+  it('parses the chat range labels to midpoints', () => {
+    expect(p('$2B to $10B')).toBe(6e9);
+    expect(p('$500M to $2B')).toBe(1.25e9);
+    expect(p('1 to 2.5 million')).toBe(1.75e6);
+    expect(p('250K to 1M')).toBe(625e3);
+    expect(p('400 to 500 percent')).toBe(450);
+    expect(p('$10M to $30M')).toBe(20e6);
+  });
+
+  it('parses Under/Over bounds', () => {
+    expect(p('Under $500M')).toBe(250e6);
+    expect(p('Over $100B')).toBe(100e9);
+    expect(p('Under 100 thousand')).toBe(50e3);
+    expect(p('Over 700 percent')).toBe(700);
+  });
+
+  it('handles plain values, "No ..." and unparseable labels', () => {
+    expect(p(3000000)).toBe(3000000);
+    expect(p('3,000,000')).toBe(3000000);
+    expect(p('$10M')).toBe(10e6);
+    expect(p('No cyber insurance')).toBe(0);
+    expect(Number.isNaN(p('Unknown'))).toBe(true);
+    expect(Number.isNaN(p(''))).toBe(true);
+  });
+
+  it('strips parentheticals: "Below 200 percent (regulatory action)"', () => {
+    expect(p('Below 200 percent (regulatory action)')).toBe(100);
+  });
+});

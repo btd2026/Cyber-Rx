@@ -4519,16 +4519,47 @@ function Setup(props) {
   var _s7o=useState("");       var connName=_s7o[0];   var setConnName=_s7o[1];
   var _s7p=useState("");       var connToken=_s7p[0];  var setConnToken=_s7p[1];
   var _s7q=useState("");       var connEndpoint=_s7q[0];var setConnEndpoint=_s7q[1];
-  var _s8=useState(new Set()); var selProcs=_s8[0];    var setSelProcs=_s8[1];
-  var _s9=useState("");        var appSel=_s9[0];      var setAppSel=_s9[1];
-  var _s10=useState({});       var appConn=_s10[0];    var setAppConn=_s10[1];
+  // Steps 2-5 hydrate from the saved org profile (orgs.setup_json) so
+  // selections survive a refresh; see the persistence effect below.
+  var _saved = props.savedSetup || {};
+  var _s8=useState(function(){ return new Set(Array.isArray(_saved.selProcs)?_saved.selProcs:[]); });
+                               var selProcs=_s8[0];    var setSelProcs=_s8[1];
+  var _s9=useState(_saved.appSel||"");        var appSel=_s9[0];      var setAppSel=_s9[1];
+  var _s10=useState(_saved.appConn||{});      var appConn=_s10[0];    var setAppConn=_s10[1];
   var _s11=useState("sample"); var appTab=_s11[0];     var setAppTab=_s11[1];
   var _s12=useState(null);     var uploadName=_s12[0]; var setUploadName=_s12[1];
-  var _s13=useState({});       var infraSel=_s13[0];   var setInfraSel=_s13[1];
+  var _s13=useState(_saved.infraSel||{});     var infraSel=_s13[0];   var setInfraSel=_s13[1];
   // Sync vendorSel up to root so VendorEcosystem dashboard can filter
   useEffect(function(){
     if (props.setRootVendorSel) { props.setRootVendorSel(vendorSel); }
   }, [vendorSel]);
+
+  // Persist steps 2-5 selections to the org profile (orgs.setup_json) so they
+  // survive refresh. Debounced; credentials (infraCreds) are intentionally
+  // NEVER stored here. The backend merges fields, so this never clobbers the
+  // step-1 chat answers.
+  var persistTimerRef = useRef(null);
+  useEffect(function(){
+    if (!orgName) { return; }
+    var hasData = selProcs.size > 0 || appSel || Object.keys(appConn).length > 0 ||
+      Object.keys(vendorSel).length > 0 || Object.keys(infraSel).length > 0;
+    if (!hasData) { return; }
+    if (persistTimerRef.current) { clearTimeout(persistTimerRef.current); }
+    persistTimerRef.current = setTimeout(function(){
+      saveOrgProfile({
+        orgName: orgName,
+        selProcs: Array.from(selProcs),
+        appSel: appSel,
+        appConn: appConn,
+        vendorSel: vendorSel,
+        infraSel: infraSel,
+        infraConn: infraConn,
+      }).catch(function(err){
+        console.warn('Setup step persistence failed (will retry on next change):', err.message);
+      });
+    }, 1200);
+    return function(){ if (persistTimerRef.current) { clearTimeout(persistTimerRef.current); } };
+  }, [selProcs, appSel, appConn, vendorSel, infraSel, infraConn, orgName]);
 
     useEffect(function(){
     if(step!==4)return;
@@ -4551,7 +4582,7 @@ function Setup(props) {
   useEffect(function(){
     if (props.setRootInfraSel) { props.setRootInfraSel(infraSel); }
   }, [infraSel]);
-  var _s14=useState({});       var infraConn=_s14[0];  var setInfraConn=_s14[1];
+  var _s14=useState(_saved.infraConn||{}); var infraConn=_s14[0];  var setInfraConn=_s14[1];
   var _s15=useState({});       var infraCreds=_s15[0]; var setInfraCreds=_s15[1];
   var _s16=useState({});       var policyFiles=_s16[0];var setPolicyFiles=_s16[1];
   // Launch
@@ -4566,7 +4597,7 @@ function Setup(props) {
   var _s25=useState(0);        var parseStep=_s25[0];  var setParseStep=_s25[1];
   var _s26=useState({});       var appCreds=_s26[0];   var setAppCreds=_s26[1];
   var _s27=useState(null);     var expandedApp=_s27[0];var setExpandedApp=_s27[1];
-  var _s28=useState({});       var vendorSel=_s28[0];  var setVendorSel=_s28[1];
+  var _s28=useState(_saved.vendorSel||{}); var vendorSel=_s28[0];  var setVendorSel=_s28[1];
   var _s29=useState({});       var vendorCreds=_s29[0];var setVendorCreds=_s29[1];
   var _s30=useState(null);     var vendorExpand=_s30[0];var setVendorExpand=_s30[1];
   var _s31=useState("");       var vendorImport=_s31[0];var setVendorImport=_s31[1];
@@ -24091,6 +24122,8 @@ function CyberRxApp() {
   var _sMP=useState(""); var rootMemberPortal=_sMP[0];  var setRootMemberPortal=_sMP[1];
   var _sCIL=useState(0); var rootCyberInsLimit=_sCIL[0]; var setRootCyberInsLimit=_sCIL[1];
   var _sVS=useState({}); var rootVendorSel=_sVS[0];   var setRootVendorSel=_sVS[1];
+  // Full saved org profile (setup_json) so the Setup wizard can rehydrate steps 2-5
+  var _sSS=useState(null); var savedSetup=_sSS[0];    var setSavedSetup=_sSS[1];
   // Security posture actuals (collected in Step 8)
   var _s74=useState(""); var rootMFA=_s74[0];        var setRootMFA=_s74[1];
   var _s75=useState(""); var rootEDR=_s75[0];        var setRootEDR=_s75[1];
@@ -24155,6 +24188,7 @@ function CyberRxApp() {
     loadOrgProfile(savedOrgId)
       .then(function(orgData){
         // Restore all state variables from saved org data
+        setSavedSetup(orgData); // full profile for Setup wizard rehydration (steps 2-5)
         if(orgData.orgName){
           setOrgName(orgData.orgName);
         }
@@ -24238,6 +24272,7 @@ function CyberRxApp() {
         // Try localStorage fallback
         var localData = loadOrgFromLocalStorage();
         if(localData){
+          setSavedSetup(localData); // full profile for Setup wizard rehydration (steps 2-5)
           if(localData.orgName){
             setOrgName(localData.orgName);
           }
@@ -24472,6 +24507,7 @@ function CyberRxApp() {
 
   if (phase==="app" && page==="setup") {
     return React.createElement(Setup, {
+      savedSetup:savedSetup,
       orgName:orgName, setOrgName:setOrgName,
       orgType:orgType, setOrgType:setOrgType,
       members:members, setMembers:setMembers,
