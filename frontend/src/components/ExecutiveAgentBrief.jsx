@@ -44,7 +44,7 @@ function resolveCtx(props) {
 }
 
 export default function ExecutiveAgentBrief(props) {
-  const { role } = props;
+  const { role, entry, onAnswer } = props;
   const [brief, setBrief] = useState(null);
   const [aiEnabled, setAiEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -52,6 +52,7 @@ export default function ExecutiveAgentBrief(props) {
   const [error, setError] = useState(null);
   // Interactive Q&A
   const [suggested, setSuggested] = useState([]);
+  const [roleQuestion, setRoleQuestion] = useState('');
   const [question, setQuestion] = useState('');
   const [conversation, setConversation] = useState([]); // {q, summary, details, source}
   const [asking, setAsking] = useState(false);
@@ -87,13 +88,15 @@ export default function ExecutiveAgentBrief(props) {
           details: data.details || [],
           source: data.source,
         }]);
+        // Let a parent dashboard render the view tailored to this answer.
+        if (typeof onAnswer === 'function') onAnswer(data);
       } catch (e) {
         setConversation([{ q: text, summary: `Could not get an answer: ${e.message}`, details: [], error: true }]);
       } finally {
         setAsking(false);
       }
     },
-    [role, organizationId, apiUrl, authHeaders, asking]
+    [role, organizationId, apiUrl, authHeaders, asking, onAnswer]
   );
 
   const load = useCallback(
@@ -124,13 +127,19 @@ export default function ExecutiveAgentBrief(props) {
   );
 
   useEffect(() => {
+    // In entry mode the tab opens with just the agent — no preloaded brief.
+    if (entry) { setLoading(false); return; }
     load(false);
-  }, [load]);
+  }, [load, entry]);
 
   useEffect(() => {
     fetch(`${apiUrl}/api/agents/questions/${role}`, { headers: authHeaders() })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (d && Array.isArray(d.questions)) setSuggested(d.questions); })
+      .then((d) => {
+        if (!d) return;
+        if (Array.isArray(d.questions)) setSuggested(d.questions);
+        if (d.question) setRoleQuestion(d.question);
+      })
       .catch(() => {});
   }, [role, apiUrl, authHeaders]);
 
@@ -143,6 +152,107 @@ export default function ExecutiveAgentBrief(props) {
     color: '#e6ecf5',
     boxShadow: '0 6px 24px rgba(0,0,0,0.25)',
   };
+
+  // Shared Q&A block (suggested chips, conversation, and ask input) — used by
+  // both the entry panel and the full brief.
+  const renderConversation = () => (
+    conversation.length > 0 && (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 12 }}>
+        {conversation.map((m, i) => (
+          <div key={i}>
+            <div style={{ fontSize: 13, color: '#9bc0ff', fontWeight: 600, marginBottom: 6 }}>
+              <span style={{ color: '#6f7a8d', fontWeight: 400 }}>You asked: </span>{m.q}
+            </div>
+            {m.pending ? (
+              <div style={{ fontSize: 13, color: '#8b95a8', fontStyle: 'italic' }}>● Agent is analyzing the data…</div>
+            ) : m.source === 'out_of_scope' ? (
+              <div style={{ background: '#241d0e', border: '1px solid #4a3a16', borderRadius: 10, padding: '12px 14px' }}>
+                <div style={{ fontSize: 14, color: '#ffce5c', lineHeight: 1.5 }}>{m.summary}</div>
+                {Array.isArray(m.details) && m.details.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+                    {m.details.map((d, j) => (
+                      <button key={j} onClick={() => ask(d)} disabled={asking} style={chipStyle}>{d}</button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div style={{ background: '#0e1118', border: '1px solid #232b3a', borderRadius: 10, padding: '12px 14px' }}>
+                {m.matchedQuestion && m.matchedQuestion !== m.q && (
+                  <div style={{ fontSize: 11, color: '#7aa2ff', marginBottom: 8 }}>
+                    Interpreted as: “{m.matchedQuestion}”
+                  </div>
+                )}
+                <div style={{ fontSize: 14, color: m.error ? '#ff9a8c' : '#e6ecf5', lineHeight: 1.5 }}>{m.summary}</div>
+                {Array.isArray(m.details) && m.details.length > 0 && (
+                  <>
+                    <div style={{ ...sectionLabel, marginTop: 10, marginBottom: 6 }}>Relevant details</div>
+                    <ul style={{ margin: 0, paddingLeft: 18 }}>
+                      {m.details.map((d, j) => (
+                        <li key={j} style={{ fontSize: 13, color: '#cdd6e6', marginBottom: 5, lineHeight: 1.45 }}>{d}</li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    )
+  );
+
+  const renderSuggested = () => (
+    suggested.length > 0 && (
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+        {suggested.map((sq, i) => (
+          <button key={i} onClick={() => ask(sq)} disabled={asking} style={chipStyle}>{sq}</button>
+        ))}
+      </div>
+    )
+  );
+
+  const renderInput = () => (
+    <form onSubmit={(e) => { e.preventDefault(); ask(question); }} style={{ display: 'flex', gap: 8 }}>
+      <input
+        value={question}
+        onChange={(e) => setQuestion(e.target.value)}
+        placeholder={`Ask the ${role} agent anything…`}
+        disabled={asking}
+        style={{ flex: 1, background: '#0e1118', border: '1px solid #2f3a4d', borderRadius: 8, padding: '9px 12px', color: '#e6ecf5', fontSize: 13, outline: 'none' }}
+      />
+      <button type="submit" disabled={asking || !question.trim()} style={{ ...btnStyle, opacity: asking || !question.trim() ? 0.5 : 1 }}>
+        {asking ? 'Asking…' : 'Ask →'}
+      </button>
+    </form>
+  );
+
+  // Entry mode: the tab opens with ONLY the agent and a few suggested questions —
+  // no preloaded brief. Asking a question drives the tailored dashboard (via onAnswer).
+  if (entry) {
+    return (
+      <div style={wrap} data-testid={`agent-brief-${role}`}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2, color: '#7aa2ff', textTransform: 'uppercase' }}>
+            {role} Agent
+          </span>
+          <span style={{
+            fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20,
+            background: '#23262e', color: '#9aa3b2', border: '1px solid #333a47',
+          }}>◆ continuous · live data</span>
+        </div>
+        <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.35, marginBottom: 4 }}>
+          {roleQuestion ? `“${roleQuestion}”` : `Ask your ${role} agent`}
+        </div>
+        <div style={{ fontSize: 13, color: '#9aa6bc', marginBottom: 16, lineHeight: 1.5 }}>
+          Ask a question and I’ll pull the live answer from your security stack — then build the dashboard behind it.
+        </div>
+        {renderConversation()}
+        {renderSuggested()}
+        {renderInput()}
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -259,75 +369,9 @@ export default function ExecutiveAgentBrief(props) {
       {/* Interactive Q&A — ask the agent */}
       <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px solid #232b3a' }}>
         <div style={{ ...sectionLabel, marginBottom: 10 }}>Ask your {role} agent</div>
-
-        {/* Conversation */}
-        {conversation.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 12 }}>
-            {conversation.map((m, i) => (
-              <div key={i}>
-                <div style={{ fontSize: 13, color: '#9bc0ff', fontWeight: 600, marginBottom: 6 }}>
-                  <span style={{ color: '#6f7a8d', fontWeight: 400 }}>You asked: </span>{m.q}
-                </div>
-                {m.pending ? (
-                  <div style={{ fontSize: 13, color: '#8b95a8', fontStyle: 'italic' }}>● Agent is analyzing the data…</div>
-                ) : m.source === 'out_of_scope' ? (
-                  <div style={{ background: '#241d0e', border: '1px solid #4a3a16', borderRadius: 10, padding: '12px 14px' }}>
-                    <div style={{ fontSize: 14, color: '#ffce5c', lineHeight: 1.5 }}>{m.summary}</div>
-                    {Array.isArray(m.details) && m.details.length > 0 && (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
-                        {m.details.map((d, j) => (
-                          <button key={j} onClick={() => ask(d)} disabled={asking} style={chipStyle}>{d}</button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div style={{ background: '#0e1118', border: '1px solid #232b3a', borderRadius: 10, padding: '12px 14px' }}>
-                    {m.matchedQuestion && m.matchedQuestion !== m.q && (
-                      <div style={{ fontSize: 11, color: '#7aa2ff', marginBottom: 8 }}>
-                        Interpreted as: “{m.matchedQuestion}”
-                      </div>
-                    )}
-                    <div style={{ fontSize: 14, color: m.error ? '#ff9a8c' : '#e6ecf5', lineHeight: 1.5 }}>{m.summary}</div>
-                    {Array.isArray(m.details) && m.details.length > 0 && (
-                      <>
-                        <div style={{ ...sectionLabel, marginTop: 10, marginBottom: 6 }}>Relevant details</div>
-                        <ul style={{ margin: 0, paddingLeft: 18 }}>
-                          {m.details.map((d, j) => (
-                            <li key={j} style={{ fontSize: 13, color: '#cdd6e6', marginBottom: 5, lineHeight: 1.45 }}>{d}</li>
-                          ))}
-                        </ul>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Suggested questions */}
-        {suggested.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
-            {suggested.map((sq, i) => (
-              <button key={i} onClick={() => ask(sq)} disabled={asking} style={chipStyle}>{sq}</button>
-            ))}
-          </div>
-        )}
-
-        {/* Input */}
-        <form onSubmit={(e) => { e.preventDefault(); ask(question); }} style={{ display: 'flex', gap: 8 }}>
-          <input
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            placeholder={`Ask the ${role} agent anything…`}
-            disabled={asking}
-            style={{ flex: 1, background: '#0e1118', border: '1px solid #2f3a4d', borderRadius: 8, padding: '9px 12px', color: '#e6ecf5', fontSize: 13, outline: 'none' }}
-          />
-          <button type="submit" disabled={asking || !question.trim()} style={{ ...btnStyle, opacity: asking || !question.trim() ? 0.5 : 1 }}>
-            {asking ? 'Asking…' : 'Ask →'}
-          </button>
-        </form>
+        {renderConversation()}
+        {renderSuggested()}
+        {renderInput()}
       </div>
     </div>
   );
