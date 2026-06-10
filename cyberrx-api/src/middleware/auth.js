@@ -171,4 +171,22 @@ function demoOrg(req, res, next) {
   next();
 }
 
-module.exports = { authenticateJWT, optionalJWT, requireOrgAccess, demoOrg };
+/**
+ * isAdmin — true when the request carries a JWT with role 'admin' or an
+ * X-Admin-Key header matching the ADMIN_API_KEY env var.
+ */
+function isAdmin(req) {
+  if (req.user && req.user.role === 'admin') return true;
+  const key = process.env.ADMIN_API_KEY;
+  return !!(key && req.headers['x-admin-key'] === key);
+}
+
+/** requireAdmin — 403 unless isAdmin. Apply after optionalJWT. */
+function requireAdmin(req, res, next) {
+  if (!isAdmin(req)) {
+    return res.status(403).json({ error: 'Forbidden', message: 'Admin access required.' });
+  }
+  next();
+}
+
+module.exports = { authenticateJWT, optionalJWT, requireOrgAccess, demoOrg, isAdmin, requireAdmin };

@@ -246,6 +246,9 @@ app.use('/api/metrics',           [apiGetLimiter, apiPutLimiter], require('./rou
 // Simulated live-source tool databases (org-isolated; admin override)
 app.use('/api/sources',           [apiGetLimiter, apiPostLimiter], require('./routes/sources'));
 
+// Admin database viewer/editor (admin-only; backs the hidden /admin-database page)
+app.use('/api/admin/db',          [apiGetLimiter, apiPostLimiter, apiPutLimiter, apiDeleteLimiter], require('./routes/adminDb'));
+
 // Seed management (admin routes - protect in production) with rate limiting
 app.use('/api/seeds',             [apiGetLimiter, apiPostLimiter, apiDeleteLimiter], require('./routes/seeds'));
 
