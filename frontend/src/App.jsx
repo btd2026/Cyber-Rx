@@ -415,6 +415,28 @@ function getOrgProcs(orgType) {
   return getOrgTemplate(orgType).procs;
 }
 
+// Government-program processes only apply when the org actually holds those
+// contracts (answered in the setup chat's cmsContract question).
+var GOVT_PROC_IDS = ["govt_ma", "govt_fep", "govt_mcaid"];
+function computeSuggestedProcs(mandatory, opts) {
+  opts = opts || {};
+  var cms = String(opts.cmsContract || "").toLowerCase();
+  var holdsAny = /^yes/.test(cms);
+  var hasMA = /medicare advantage|both/.test(cms);
+  var hasMcaid = /medicaid/.test(cms);
+  return (mandatory || []).filter(function (id) {
+    if (id === "govt_ma") return hasMA;
+    if (id === "govt_mcaid") return hasMcaid;
+    if (id === "govt_fep") return holdsAny || opts.hasFEP === true;
+    return true;
+  });
+}
+
+// Real selectable processes (exclude tier headers and section dividers).
+function realOrgProcs(orgType) {
+  return getOrgProcs(orgType).filter(function (p) { return p.type !== "tier" && p.type !== "section"; });
+}
+
 function getOrgBizLines(orgType) {
   return getOrgTemplate(orgType).bizLines;
 }
@@ -4638,12 +4660,11 @@ function Setup(props) {
     isPublic
   );
 
-  // Auto-suggest processes when org type set
+  // Auto-suggest processes when org type set — only the suggested (mandatory,
+  // contract-adapted) set, matching the "Suggested for" banner.
   useEffect(function() {
     if (orgType && profile && profile.mandatoryProcs && selProcs.size === 0) {
-      var s = new Set();
-      profile.mandatoryProcs.forEach(function(id){ s.add(id); });
-      setSelProcs(s);
+      setSelProcs(new Set(computeSuggestedProcs(profile.mandatoryProcs, { cmsContract: cmsContract })));
     }
   }, [orgType]);
 
@@ -5073,10 +5094,12 @@ function Setup(props) {
                   setOrgConfig({
                     type:a.orgType||"Other Payer",
                   });
-                  // Pre-select all processes for the org's template
-                  var tmpl = getOrgTemplate(a.orgType||"Other Payer");
-                  var procIds = new Set(tmpl.procs.map(function(p){ return p.id; }));
-                  setSelProcs(procIds);
+                  // Pre-select the SUGGESTED processes (mandatory set, adapted
+                  // to the government contracts they actually hold) — matches
+                  // the "Suggested for" banner on the Select Processes step.
+                  var prof = getOrgProfile(a.orgType||"Other Payer", a.orgName).base;
+                  var suggested = computeSuggestedProcs(prof && prof.mandatoryProcs, { cmsContract: a.cmsContract });
+                  setSelProcs(new Set(suggested));
                 }
                 // System names from setup
                 if(a.claimsPlatform){setRootClaimsSystem(a.claimsPlatform);}
@@ -5345,7 +5368,7 @@ function Setup(props) {
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
                 <SH label="Which business processes are in scope?"/>
                 <div style={{display:"flex",gap:8}}>
-                  <button onClick={function(){var s=new Set();var tmpl2=getOrgTemplate(orgType||'Other Payer');tmpl2.procs.forEach(function(p){if(p.type!=="section"){s.add(p.id);}});setSelProcs(s);}}
+                  <button onClick={function(){setSelProcs(new Set(realOrgProcs(orgType||'Other Payer').map(function(p){return p.id;})));}}
                     style={{background:"transparent",border:"none",color:C.acc,cursor:"pointer",fontSize:11,fontWeight:600}}>
                     Select all
                   </button>
@@ -5358,7 +5381,7 @@ function Setup(props) {
               {profile&&profile.mandatoryProcs&&(
                 <div style={{padding:"7px 12px",background:C.acc+"10",border:"1px solid "+C.acc+"25",borderRadius:7,marginBottom:12,fontSize:11,color:C.muted}}>
                   <strong style={{color:C.acc}}>Suggested for {orgType}:</strong>{" "}
-                  {(profile.mandatoryProcs||[]).map(function(id){var p=PROCS.find(function(x){return x.id===id;});return p?p.name:id;}).join(", ")}
+                  {computeSuggestedProcs(profile.mandatoryProcs, {cmsContract:cmsContract}).map(function(id){var p=PROCS.find(function(x){return x.id===id;});return p?p.name:id;}).join(", ")}
                 </div>
               )}
               <div style={{display:"grid",gridTemplateColumns:"1fr",gap:8}}>
@@ -5462,7 +5485,7 @@ function Setup(props) {
                 })}
               </div>
               {selProcs.size>0&&(
-                <div style={{marginTop:10,color:C.muted,fontSize:11}}>{selProcs.size} of {getOrgProcs(orgType||'Other Payer').filter(function(p){return p.type!=="section";}).length} processes available</div>
+                <div style={{marginTop:10,color:C.muted,fontSize:11}}>{selProcs.size} of {realOrgProcs(orgType||'Other Payer').length} processes selected</div>
               )}
             </Card>
             <div style={{display:"flex",justifyContent:"space-between"}}>
@@ -6674,25 +6697,10 @@ function Setup(props) {
             </div>
             <div style={{display:"flex",justifyContent:"space-between"}}>
               <Btn onClick={function(){setStep(4);}}>← Back</Btn>
-              <Btn onClick={function(){setStep(6);}} primary>Next: Selicies & Standards →</Btn>
+              <Btn onClick={function(){launch();}} primary>Complete Setup →</Btn>
             </div>
           </div>
         )}
-
-        {/* ══ STEP 7: Policies & Standards ═════════════════════════════ */}
-        
-                
-        {step===6&&(
-          <DocValidationAgent
-            policyFiles={policyFiles}
-            setPolicyFile={function(id,file){ setPolicyFile(id,file); setAppPolicyFiles(function(p){ var n=Object.assign({},p); n[id]=file; return n; }); }}
-            selFW={selFW}
-            onBack={function(){setStep(5);}}
-            onSaveResults={setDocResults}
-            onLaunch={launch}
-          />
-        )}
-
 
       </div>
     </div>
@@ -6717,7 +6725,7 @@ function Home(props) {
             <h1 style={{color:C.text,fontSize:19,fontWeight:800,margin:"0 0 2px",
               letterSpacing:"-0.02em"}}>Welcome, {displayName} &#x1F44B;</h1>
             <div style={{color:C.muted,fontSize:12}}>
-              {orgName?orgName+" · CyberRx Platform":"Complete your 7-step setup to activate your live risk posture"}
+              {orgName?orgName+" · CyberRx Platform":"Complete your 5-step setup to activate your live risk posture"}
             </div>
           </div>
           {!setupDone&&(
@@ -6741,7 +6749,7 @@ function Home(props) {
                 Your risk posture is not yet active
               </div>
               <div style={{color:C.muted,fontSize:12}}>
-                Complete the 7-step setup to see live dashboards, framework reports, and financial exposure.
+                Complete the 5-step setup to see live dashboards, framework reports, and financial exposure.
               </div>
             </div>
             <Btn onClick={function(){go("setup");}} primary>Start Setup &#x2192;</Btn>
@@ -17224,7 +17232,7 @@ function Shell(props) {
             <span style={{color:C.muted, fontSize:11}}>
               {"— Viewing sample data for "}
               <strong style={{color:"#F5A623"}}>{DEMO_ORG_NAME}</strong>
-              {". Complete your 7-step setup to activate your live risk posture."}
+              {". Complete your 5-step setup to activate your live risk posture."}
             </span>
           </div>
           <button onClick={function(){go("setup");}}
@@ -17880,7 +17888,7 @@ function WelcomePage(props) {
           margin:"0 0 32px",maxWidth:440}}>
           {setupDone?
             "Navigate to your live dashboards. All your data is saved.":
-            "Complete the 7-step setup and your CISO, CFO, CRO, and Board dashboards populate automatically from your actual data."
+            "Complete the 5-step setup and your CISO, CFO, CRO, and Board dashboards populate automatically from your actual data."
           }
         </p>
         <button onClick={setupDone?onGoToDashboard:onStartSetup}
@@ -19383,8 +19391,7 @@ function DocDash(props) {
                 <div style={{color:C.muted,fontSize:11,lineHeight:1.6,
                   background:C.dim,borderRadius:7,padding:"12px",marginBottom:10}}>
                   This document has not been analyzed yet.
-                  Upload the document in Document Intake (Setup Step 6)
-                  to run the AI compliance validation.
+                  Upload it from the Evidence Repository to run the AI compliance validation.
                 </div>
               )}
 
