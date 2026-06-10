@@ -99,9 +99,25 @@ async function init() {
         data_classification JSONB DEFAULT '[]',
         cloud_provider TEXT,
         location      TEXT,
+        criticality   TEXT,
+        tier          TEXT,
+        supported     BOOLEAN DEFAULT true,
+        end_of_support_date DATE,
+        vuln_critical INTEGER DEFAULT 0,
+        vuln_high     INTEGER DEFAULT 0,
+        patch_pct     INTEGER,
         created_at    TIMESTAMPTZ DEFAULT NOW(),
         updated_at    TIMESTAMPTZ DEFAULT NOW()
       );
+
+      -- CIO technology-risk fields on assets (idempotent for existing DBs)
+      ALTER TABLE assets ADD COLUMN IF NOT EXISTS criticality TEXT;
+      ALTER TABLE assets ADD COLUMN IF NOT EXISTS tier TEXT;
+      ALTER TABLE assets ADD COLUMN IF NOT EXISTS supported BOOLEAN DEFAULT true;
+      ALTER TABLE assets ADD COLUMN IF NOT EXISTS end_of_support_date DATE;
+      ALTER TABLE assets ADD COLUMN IF NOT EXISTS vuln_critical INTEGER DEFAULT 0;
+      ALTER TABLE assets ADD COLUMN IF NOT EXISTS vuln_high INTEGER DEFAULT 0;
+      ALTER TABLE assets ADD COLUMN IF NOT EXISTS patch_pct INTEGER;
 
       CREATE TABLE IF NOT EXISTS data_objects (
         id            TEXT PRIMARY KEY,

@@ -237,6 +237,9 @@ app.use('/api/reports',            [apiPostLimiter], require('./routes/reports')
 // Executive AI Agent layer - continuous role-specific executive briefs
 app.use('/api/agents',            [apiGetLimiter, apiPostLimiter], require('./routes/agents'));
 
+// CIO technology-risk overview (aggregated dashboard payload)
+app.use('/api/cio',               [apiGetLimiter], require('./routes/cio'));
+
 // Seed management (admin routes - protect in production) with rate limiting
 app.use('/api/seeds',             [apiGetLimiter, apiPostLimiter, apiDeleteLimiter], require('./routes/seeds'));
 
