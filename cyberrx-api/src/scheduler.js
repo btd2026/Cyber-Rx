@@ -13,6 +13,14 @@ const ExecutiveAgentService = require('./services/ExecutiveAgentService');
 
 // Continuous executive agent layer: regenerate role-specific briefs for every org.
 async function refreshExecutiveBriefs() {
+  // First re-sync posture metrics from the simulated live-source tables so the
+  // briefs and dashboards reflect any changes made to the source data.
+  try {
+    const SimulatedToolService = require('./services/SimulatedToolService');
+    await SimulatedToolService.syncAll();
+  } catch (err) {
+    logger.warn('[scheduler] Simulated source sync skipped', { error: err.message });
+  }
   try {
     const orgs = await db.query('SELECT id FROM orgs');
     for (const { id } of orgs) {

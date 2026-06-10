@@ -512,6 +512,72 @@ async function init() {
         PRIMARY KEY (org_id, key)
       );
       CREATE INDEX IF NOT EXISTS metric_inputs_org ON metric_inputs(org_id);
+
+      -- Simulated live-source tool databases (demo). One table per security
+      -- tool, mirroring the records the real connector reads from each vendor
+      -- API (Okta, CrowdStrike, Splunk, KnowBe4, Tenable, ServiceNow,
+      -- CyberArk, Workday). Org-scoped; see routes/sources.js for isolation.
+      CREATE TABLE IF NOT EXISTS sim_okta_users (
+        org_id TEXT NOT NULL, user_id TEXT NOT NULL, email TEXT,
+        status TEXT DEFAULT 'ACTIVE', last_login TIMESTAMPTZ,
+        PRIMARY KEY (org_id, user_id)
+      );
+      CREATE TABLE IF NOT EXISTS sim_okta_factors (
+        org_id TEXT NOT NULL, user_id TEXT NOT NULL, factor_id TEXT NOT NULL,
+        factor_type TEXT, status TEXT DEFAULT 'ACTIVE',
+        PRIMARY KEY (org_id, factor_id)
+      );
+      CREATE TABLE IF NOT EXISTS sim_crowdstrike_devices (
+        org_id TEXT NOT NULL, device_id TEXT NOT NULL, hostname TEXT,
+        platform TEXT, status TEXT, last_seen TIMESTAMPTZ,
+        PRIMARY KEY (org_id, device_id)
+      );
+      CREATE TABLE IF NOT EXISTS sim_splunk_indexes (
+        org_id TEXT NOT NULL, index_name TEXT NOT NULL,
+        frozen_time_period_in_secs BIGINT, current_db_size_mb INTEGER,
+        PRIMARY KEY (org_id, index_name)
+      );
+      CREATE TABLE IF NOT EXISTS sim_knowbe4_campaigns (
+        org_id TEXT NOT NULL, campaign_id INTEGER NOT NULL, name TEXT,
+        status TEXT DEFAULT 'Closed', started_at TIMESTAMPTZ,
+        recipient_count INTEGER, clicked_count INTEGER,
+        PRIMARY KEY (org_id, campaign_id)
+      );
+      CREATE TABLE IF NOT EXISTS sim_tenable_assets (
+        org_id TEXT NOT NULL, asset_id TEXT NOT NULL, hostname TEXT, ipv4 TEXT,
+        PRIMARY KEY (org_id, asset_id)
+      );
+      CREATE TABLE IF NOT EXISTS sim_tenable_vulns (
+        org_id TEXT NOT NULL, vuln_id TEXT NOT NULL, asset_id TEXT, cve TEXT,
+        severity TEXT, state TEXT, past_sla BOOLEAN DEFAULT false, first_seen TIMESTAMPTZ,
+        PRIMARY KEY (org_id, vuln_id)
+      );
+      CREATE TABLE IF NOT EXISTS sim_servicenow_incidents (
+        org_id TEXT NOT NULL, number TEXT NOT NULL, priority INTEGER,
+        occurred_at TIMESTAMPTZ, sys_created_on TIMESTAMPTZ, resolved_at TIMESTAMPTZ,
+        short_description TEXT,
+        PRIMARY KEY (org_id, number)
+      );
+      CREATE TABLE IF NOT EXISTS sim_cyberark_accounts (
+        org_id TEXT NOT NULL, account_id TEXT NOT NULL, account_name TEXT,
+        platform TEXT, privileged BOOLEAN DEFAULT true, vaulted BOOLEAN DEFAULT false,
+        PRIMARY KEY (org_id, account_id)
+      );
+      CREATE TABLE IF NOT EXISTS sim_workday_workers (
+        org_id TEXT NOT NULL, worker_id TEXT NOT NULL, department TEXT,
+        training_completed BOOLEAN DEFAULT false, completed_date DATE,
+        PRIMARY KEY (org_id, worker_id)
+      );
+      CREATE INDEX IF NOT EXISTS sim_okta_users_org ON sim_okta_users(org_id);
+      CREATE INDEX IF NOT EXISTS sim_okta_factors_org_user ON sim_okta_factors(org_id, user_id);
+      CREATE INDEX IF NOT EXISTS sim_cs_devices_org ON sim_crowdstrike_devices(org_id);
+      CREATE INDEX IF NOT EXISTS sim_splunk_idx_org ON sim_splunk_indexes(org_id);
+      CREATE INDEX IF NOT EXISTS sim_kb4_org ON sim_knowbe4_campaigns(org_id);
+      CREATE INDEX IF NOT EXISTS sim_tenable_assets_org ON sim_tenable_assets(org_id);
+      CREATE INDEX IF NOT EXISTS sim_tenable_vulns_org ON sim_tenable_vulns(org_id);
+      CREATE INDEX IF NOT EXISTS sim_snow_org ON sim_servicenow_incidents(org_id);
+      CREATE INDEX IF NOT EXISTS sim_cyberark_org ON sim_cyberark_accounts(org_id);
+      CREATE INDEX IF NOT EXISTS sim_workday_org ON sim_workday_workers(org_id);
     `);
     console.log('Database schema initialized');
   } catch (err) {

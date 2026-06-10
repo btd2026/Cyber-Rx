@@ -2,7 +2,8 @@
 const express = require('express');
 const router = express.Router();
 const vault = require('../utils/vault');
-const { authenticateJWT } = require('../middleware/auth');
+const { optionalJWT, demoOrg } = require('../middleware/auth');
+const SimulatedToolService = require('../services/SimulatedToolService');
 
 const DEMO_VALUES = {
   okta: 78, crowdstrike: 71, splunk: 14, knowbe4: 9.2,
@@ -16,24 +17,42 @@ const METRIC_KEYS = {
   workday: 'trainingPct',
 };
 
-router.post('/:tool/sync', authenticateJWT, async (req, res) => {
+router.post('/:tool/sync', optionalJWT, demoOrg, async (req, res) => {
   const { tool } = req.params;
-  // Use orgId from JWT instead of client-supplied header
   const orgId = req.orgId || 'demo';
   const metricKey = METRIC_KEYS[tool];
 
-  const demoResp = (reason) => ({
-    metric_key: metricKey || tool,
-    value: DEMO_VALUES[tool] || 0,
-    source: tool,
-    ts: new Date().toISOString(),
-    demo: true,
-    reason,
-  });
+  // Fallback chain when no live credentials are configured:
+  //   1. the org's simulated source database (per-org realistic data)
+  //   2. static demo constants (last resort)
+  const demoResp = async (reason) => {
+    try {
+      const sim = await SimulatedToolService.computeTool(tool, orgId);
+      if (sim && sim.length) {
+        return {
+          metric_key: sim[0].metricKey,
+          value: sim[0].value,
+          source: tool,
+          ts: new Date().toISOString(),
+          demo: false,
+          simulated: true,
+          basis: sim[0].basis,
+        };
+      }
+    } catch (_) {}
+    return {
+      metric_key: metricKey || tool,
+      value: DEMO_VALUES[tool] || 0,
+      source: tool,
+      ts: new Date().toISOString(),
+      demo: true,
+      reason,
+    };
+  };
 
   try {
     const creds = await vault.get(orgId, tool);
-    if (!creds) return res.json(demoResp('no_credentials'));
+    if (!creds) return res.json(await demoResp('no_credentials'));
 
     let value;
 
@@ -50,7 +69,7 @@ router.post('/:tool/sync', authenticateJWT, async (req, res) => {
         const nextMatch = link.match(/<([^>]+)>;\s*rel="next"/);
         url = nextMatch ? nextMatch[1] : null;
       }
-      if (!allUsers.length) return res.json(demoResp('no_users'));
+      if (!allUsers.length) return res.json(await demoResp('no_users'));
       let mfaCount = 0;
       const sample = allUsers.slice(0, 200); // cap at 200 for performance
       await Promise.all(sample.map(async (u) => {
@@ -104,7 +123,7 @@ router.post('/:tool/sync', authenticateJWT, async (req, res) => {
         { headers: { 'Authorization': 'Bearer ' + creds.apiKey } }
       );
       const campaigns = await r.json();
-      if (!Array.isArray(campaigns) || !campaigns.length) return res.json(demoResp('no_campaigns'));
+      if (!Array.isArray(campaigns) || !campaigns.length) return res.json(await demoResp('no_campaigns'));
       const cr = await fetch(
         `https://us.api.knowbe4.com/v1/phishing/campaigns/${campaigns[0].campaign_id}/results/all_clicks_by_date`,
         { headers: { 'Authorization': 'Bearer ' + creds.apiKey } }
@@ -134,7 +153,7 @@ router.post('/:tool/sync', authenticateJWT, async (req, res) => {
       );
       const data = await r.json();
       const records = data.result || [];
-      if (!records.length) return res.json(demoResp('no_incidents'));
+      if (!records.length) return res.json(await demoResp('no_incidents'));
       const hrs = records.map(inc => {
         const created = new Date(inc.sys_created_on);
         const resolved = new Date(inc.resolved_at);
@@ -143,13 +162,13 @@ router.post('/:tool/sync', authenticateJWT, async (req, res) => {
       value = hrs.length ? parseFloat((hrs.reduce((a,b)=>a+b,0)/hrs.length).toFixed(1)) : DEMO_VALUES.servicenow;
 
     } else {
-      return res.json(demoResp('unsupported_tool'));
+      return res.json(await demoResp('unsupported_tool'));
     }
 
     res.json({ metric_key: metricKey, value, source: tool, ts: new Date().toISOString(), demo: false });
   } catch (err) {
     console.error(`Tool sync error [${tool}]:`, err.message);
-    res.json(demoResp('error:' + err.message));
+    res.json(await demoResp('error:' + err.message));
   }
 });
 

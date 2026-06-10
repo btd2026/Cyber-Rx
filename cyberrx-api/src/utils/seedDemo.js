@@ -18,9 +18,13 @@ const path = require('path');
 const db = require('./db');
 const logger = require('./logger');
 const ExecutiveAgentService = require('../services/ExecutiveAgentService');
+const SimulatedToolService = require('../services/SimulatedToolService');
 
 const DEMO_ORG_ID = 'blue-cross-blue-shield-of-massachusetts';
-const SEED_FILE = path.join(__dirname, '..', '..', 'seeds', '2026_06_17_executive_brief_demo.sql');
+const SEED_FILES = [
+  path.join(__dirname, '..', '..', 'seeds', '2026_06_17_executive_brief_demo.sql'),
+  path.join(__dirname, '..', '..', 'seeds', '2026_06_18_simulated_tool_sources.sql'),
+];
 
 async function orgHasData(orgId) {
   try {
@@ -43,9 +47,17 @@ async function seedExecutiveDemo({ force = false, orgId = DEMO_ORG_ID } = {}) {
   // The SQL is fully idempotent (ON CONFLICT DO NOTHING), so always run it —
   // this lets newly-added rows (e.g. assets) land on DBs that were seeded
   // before those rows existed.
-  const sql = fs.readFileSync(SEED_FILE, 'utf8');
-  await db.pool.query(sql); // multi-statement simple query
-  logger.info('[seedDemo] Demo dataset loaded', { orgId, file: path.basename(SEED_FILE) });
+  for (const file of SEED_FILES) {
+    const sql = fs.readFileSync(file, 'utf8');
+    await db.pool.query(sql); // multi-statement simple query
+    logger.info('[seedDemo] Demo dataset loaded', { file: path.basename(file) });
+  }
+
+  // Sync posture metrics from the simulated live-source tables into
+  // metric_inputs for every org that has source data — this is what makes
+  // each org's MFA/EDR/phishing/etc. unique and DB-driven.
+  const synced = await SimulatedToolService.syncAll();
+  logger.info('[seedDemo] Simulated tool metrics synced', { orgs: Object.keys(synced) });
 
   // Regenerate briefs so they reflect the (now populated) data rather than any
   // previously-cached zero state.
