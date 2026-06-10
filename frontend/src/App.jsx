@@ -4528,6 +4528,7 @@ function Setup(props) {
   var _s9=useState(_saved.appSel||"");        var appSel=_s9[0];      var setAppSel=_s9[1];
   var _s10=useState(_saved.appConn||{});      var appConn=_s10[0];    var setAppConn=_s10[1];
   var _s11=useState("sample"); var appTab=_s11[0];     var setAppTab=_s11[1];
+  var _s11b=useState(null);    var sampleResult=_s11b[0]; var setSampleResult=_s11b[1];
   var _s12=useState(null);     var uploadName=_s12[0]; var setUploadName=_s12[1];
   var _s13=useState(_saved.infraSel||{});     var infraSel=_s13[0];   var setInfraSel=_s13[1];
   // Sync vendorSel up to root so VendorEcosystem dashboard can filter
@@ -5662,7 +5663,29 @@ function Setup(props) {
                     {["Commercial Health Plan","Medicare Advantage Plan","Medicaid Managed Care","[ORG] Plan"].map(function(profile){
                       return (
                         <button key={profile}
-                          onClick={function(){setAppSel(profile);setCmdbConn("success");}}
+                          onClick={function(){
+                            setAppSel(profile);
+                            setSampleResult(null);
+                            // Real import: seed the org-scoped application catalog so
+                            // the CIO dashboard and agents reflect it immediately.
+                            var slug=(orgName||"")
+                              .toLowerCase().replace(/[^a-z0-9]+/g,"-")
+                              .replace(/^-|-$/g,"").substring(0,50)
+                              || (typeof localStorage!=="undefined"&&localStorage.getItem("cyberrx_org_id"))||"";
+                            if(!slug){ setCmdbConn("success"); return; }
+                            setCmdbConn("importing");
+                            fetch(CYBERRX_API+"/api/sample-catalog",{
+                              method:"POST",
+                              headers:{"Content-Type":"application/json","X-Org-Id":slug},
+                              body:JSON.stringify({profile:profile})
+                            })
+                              .then(function(r){ if(!r.ok){throw new Error("HTTP "+r.status);} return r.json(); })
+                              .then(function(d){ setSampleResult(d); setCmdbConn("success"); })
+                              .catch(function(err){
+                                console.warn("Sample catalog import failed:",err.message);
+                                setCmdbConn("success"); // degrade gracefully (UI-only)
+                              });
+                          }}
                           style={{background:appSel===profile?C.acc:C.dim,
                             border:"1.5px solid "+(appSel===profile?C.acc:C.border),
                             color:appSel===profile?"#fff":C.text,borderRadius:7,
@@ -5672,14 +5695,20 @@ function Setup(props) {
                       );
                     })}
                   </div>
-                  {appSel&&(
+                  {appSel&&cmdbConn==="importing"&&(
+                    <div style={{color:C.muted,fontSize:10}}>&#x231B; Importing {appSel} catalog into your organization…</div>
+                  )}
+                  {appSel&&cmdbConn==="success"&&(
                     <div style={{background:C.acc+"08",border:"1px solid "+C.acc+"25",borderRadius:8,padding:"10px 14px"}}>
                       <div style={{color:C.acc,fontSize:10,fontWeight:700,marginBottom:4}}>
-                        &#x2713; {appSel} profile loaded — AI will map these applications to your business processes
+                        &#x2713; {appSel} profile loaded{sampleResult
+                          ? " — "+sampleResult.assets+" applications imported and mapped to "+sampleResult.processes+" business processes"
+                          : " — AI will map these applications to your business processes"}
                       </div>
                       <div style={{color:C.muted,fontSize:9}}>
                         Claims adjudication · Enrollment · Prior authorization · Member portal · Provider portal ·
                         EDI clearinghouse · Analytics · Finance · Contact center · Care management
+                        {sampleResult ? " — view them on the CIO dashboard asset inventory." : ""}
                       </div>
                     </div>
                   )}
