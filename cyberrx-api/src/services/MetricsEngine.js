@@ -186,6 +186,7 @@ function computeCISO(I, agg) {
     controlsTotal: agg.controlsTotal,
     openRisks: agg.openRisks, criticalRisks: agg.critical, highRisks: agg.high,
     quantifiedExposure: agg.finGross || agg.riskExposure,
+    revenue: I.revenue, memberCount: I.member_count, phiRecords: I.phi_records,
     kpis: {
       mfaPct: I.mfa_pct, edrPct: I.edr_pct, siemDays: I.siem_days, phishingPct: I.phishing_pct,
       patchPct: I.patch_pct, mttdHrs: I.mttd_hrs, mttrHrs: I.mttr_hrs,
@@ -203,6 +204,7 @@ function computeCRO(I, agg) {
     openRisks: agg.openRisks, criticalRisks: agg.critical, highRisks: agg.high, mediumRisks: agg.medium,
     quantifiedExposure: agg.finGross || agg.riskExposure,
     netExposure: agg.finNet,
+    surplus: I.surplus, phiRecords: I.phi_records, revenue: I.revenue,
     kris: [
       { kri: 'Critical risks open', value: agg.critical, threshold: 0, breached: agg.critical > 0 },
       { kri: 'Patch SLA compliance', value: I.patch_pct, threshold: 90, breached: I.patch_pct < 90, unit: '%' },
@@ -219,6 +221,10 @@ function computeBoard(I, agg, cfo) {
     netExposure: cfo.netExp, grossExposure: cfo.grossExp, insuredPct,
     postureScore: postureScore(I), controlEffectiveness: agg.controlEffectiveness,
     criticalRisks: agg.critical, rosi: cfo.rosi, rbcRatioPost: cfo.rbcRatioPost, rbcStatus: cfo.rbcStatus,
+    // CFO breakdown so the Board financial tab is DB-driven from one call
+    breachRespM: cfo.breachRespM, regulatoryM: cfo.regulatoryM, fraudM: cfo.fraudM,
+    reputM: cfo.reputM, interruptM: cfo.interruptM, legalM: cfo.legalM, recoveryM: cfo.recoveryM,
+    insLimitM: Math.round(cfo.insLimit / 1e6),
   };
 }
 
