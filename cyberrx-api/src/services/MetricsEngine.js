@@ -214,14 +214,29 @@ function computeCFO(I) {
 }
 
 // --- CISO -------------------------------------------------------------------
+// Overall security posture score. IDENTICAL to the frontend's auditable
+// calculateOverallScore (App.jsx) so the CISO header and the Board dashboard
+// report the same number: 9 weighted components, with SIEM/MTTD/MTTR
+// normalized against their targets (90 days, 24 hr, 4 hr).
 function postureScore(I) {
-  const phishResist = Math.max(0, 100 - I.phishing_pct);
-  const w = [
-    [I.mfa_pct, 0.18], [I.edr_pct, 0.18], [I.patch_pct, 0.14], [phishResist, 0.12],
-    [I.training_pct, 0.12], [I.pam_pct, 0.13], [I.vuln_sla_pct, 0.13],
-  ];
-  const score = w.reduce((s, [v, wt]) => s + (Number.isFinite(v) ? v : 0) * wt, 0);
-  return r0(score);
+  const f = (v, d) => (Number.isFinite(v) ? v : d);
+  const mfa = f(I.mfa_pct, 0), edr = f(I.edr_pct, 0), siem = f(I.siem_days, 0);
+  const phish = f(I.phishing_pct, 0), patch = f(I.patch_pct, 0);
+  const mttd = f(I.mttd_hrs, 0), mttr = f(I.mttr_hrs, 0);
+  const train = f(I.training_pct, 0), pam = f(I.pam_pct, 0);
+
+  const score =
+    (mfa * 0.15) +                                       // MFA: 15%
+    (edr * 0.15) +                                       // EDR: 15%
+    (Math.min(100, (siem / 90) * 100) * 0.12) +          // SIEM: 12% (90-day target)
+    (Math.max(0, 100 - phish * 5) * 0.13) +              // Phishing: 13% (inverted, 3% target)
+    (patch * 0.15) +                                     // Patch: 15%
+    (Math.max(0, 100 - (mttd - 24) * 2) * 0.08) +        // MTTD: 8% (24-hr target)
+    (Math.max(0, 100 - (mttr - 4) * 10) * 0.07) +        // MTTR: 7% (4-hr target)
+    (train * 0.07) +                                     // Training: 7%
+    (pam * 0.08);                                        // PAM: 8%
+
+  return Math.min(100, Math.max(0, r0(score)));
 }
 function cmmiLevel(score) {
   if (score >= 80) return 5; if (score >= 60) return 4; if (score >= 40) return 3; if (score >= 20) return 2; return 1;
