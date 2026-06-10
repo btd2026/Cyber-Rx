@@ -273,6 +273,16 @@ app.use(function(err, req, res, next) {
 const db = require('./utils/db');
 db.init()
   .then(() => logger.info('Database initialized'))
+  .then(() => {
+    // Optional: load the executive-brief demo dataset on startup. Gated by an
+    // env flag so it never runs unintentionally; idempotent and safe to re-run.
+    if (process.env.SEED_DEMO_DATA === 'true') {
+      const { seedExecutiveDemo } = require('./utils/seedDemo');
+      return seedExecutiveDemo({ force: process.env.SEED_DEMO_FORCE === 'true' })
+        .then(() => logger.info('Demo data seeded on startup'))
+        .catch(err => logger.warn('Demo seed on startup failed', { error: err.message }));
+    }
+  })
   .catch(err => logger.warn('Database initialization warning', { error: err.message }));
 
 const PORT = process.env.PORT || 3001;
