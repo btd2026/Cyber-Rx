@@ -4926,6 +4926,12 @@ function Setup(props) {
       var narration = step === 4
         ? getVendorPresetNarration(orgType, orgName)
         : STEP_NARRATION[step];
+      // ticket #04 — Briana greets only once per session; strip re-introductions
+      // on subsequent screens so transitions feel continuous.
+      if (narration && typeof window !== 'undefined' && window._cx_briana_greeted) {
+        narration = narration.replace(/^\s*(hi|hello|hey)[^.!]*[.!]\s*/i, '');
+      }
+      if (typeof window !== 'undefined') { window._cx_briana_greeted = true; }
       if (narration) {
         var t = setTimeout(function(){ brianaSpeak(narration); }, 500);
         return function(){
@@ -18378,6 +18384,7 @@ function SetupBot(props) {
   var doneRef   = useRef(false);
   var editIdxRef= useRef(null);
   var scrollRef = useRef(null);
+  var startRef  = useRef(null); // ticket #21 — questionnaire start timestamp
 
   var agentName = 'Briana';
 
@@ -18476,28 +18483,6 @@ function SetupBot(props) {
   ]
   var CYBER_INSURERS = [
     "AIG / American International Group","Beazley Group",
-    "Chubb Limited","CNA Financial",
-    "Coalition Inc.","Corvus Insurance",
-    "At-Bay","Cowbell Cyber",
-    "Everest Insurance","Hiscox",
-    "Lloyd's of London","Munich Re",
-    "Nationwide Insurance",
-    "Philadelphia Insurance Companies","QBE Insurance",
-    "Starr Companies","Swiss Re",
-    "The Hartford","Tokio Marine HCC",
-    "Travelers Companies",
-    "W.R. Berkley Corporation","XL Catlin",
-    "Zurich Insurance Group",
-    "Berkshire Hathaway Specialty",
-    "Markel Corporation","Axis Capital",
-    "Fairfax Financial",
-    "Hanover Insurance Group",
-    "Intact Insurance Specialty Solutions",
-    "No cyber insurance",
-  ];
-
-  var CYBER_INSURERS = [
-    "AIG / American International Group","Beazley Group",
     "Chubb Limited","CNA Financial","Coalition Inc.",
     "Corvus Insurance","At-Bay","Cowbell Cyber",
     "Everest Insurance","Hiscox","Lloyd's of London",
@@ -18511,6 +18496,9 @@ function SetupBot(props) {
     "Axis Capital","Fairfax Financial",
     "Hanover Insurance Group",
     "Intact Insurance Specialty Solutions",
+    // Ticket #03 — added per product owner notes (verbatim).
+    "Aspen","AWAC","Arch UK / Axis UKI / Sompo","AXA XL","Nationwide",
+    "Markel Starr","Canopius Emerging Markets","Vantage","AmTrust",
     "No cyber insurance",
   ];
 
@@ -18644,48 +18632,44 @@ function SetupBot(props) {
      choices:['BCBS Plan','Commercial Health Plan','Medicare Advantage Plan',
               'Medicaid Managed Care','Multi-line Health Insurer',
               'Regional Health Plan','Other Payer']},
-    {id:'revenue', type:'choice', group:'Scale',
+    {id:'revenue', type:'number', group:'Scale',
      ask:"What is your approximate annual premium revenue?",
-     choices:['Under $500M','$500M to $2B','$2B to $10B','$10B to $25B','$25B to $100B','Over $100B']},
-    {id:'memberCount',type:'choice',  group:'Scale',
+     placeholder:'e.g. 4200000000', hint:'Enter exact dollars (e.g. 4200000000 for $4.2B)'},
+    {id:'memberCount',type:'number',  group:'Scale',
      ask:'How many members are currently enrolled across all lines?',
-     choices:['Under 100 thousand','100K to 500K','500K to 1 million',
-              '1 to 2.5 million','2.5 to 5 million','Over 5 million']},
-    {id:'phiRecs',    type:'choice',  group:'Scale',
+     placeholder:'e.g. 3000000', hint:'Enter the exact number of members'},
+    {id:'phiRecs',    type:'number',  group:'Scale',
      ask:'How many protected health information records does {orgName} hold?',
-     choices:['Under 250K','250K to 1M','1M to 5M','5M to 15M','15M to 50M','Over 50M']},
-    {id:'claimsAmt',  type:'choice',  group:'Scale',
+     placeholder:'e.g. 3000000', hint:'Enter the exact number of PHI records'},
+    {id:'claimsAmt',  type:'number',  group:'Scale',
      ask:'What is the approximate annual dollar volume of claims {orgName} processes?',
-     choices:['Under $500M','$500M to $2B','$2B to $10B','$10B to $25B','$25B to $100B','Over $100B']},
-    {id:'surplus',    type:'choice',  group:'Capital',
+     placeholder:'e.g. 8000000000', hint:'Enter exact dollars'},
+    {id:'surplus',    type:'number',  group:'Capital',
      ask:"What is your approximate statutory surplus?",
-     choices:['Under $250M','$250M to $750M','$750M to $2B','$2B to $5B','$5B to $10B','Over $10B']},
-    {id:'rbcRatio',   type:'choice',  group:'Capital',
+     placeholder:'e.g. 2500000000', hint:'Enter exact dollars'},
+    {id:'rbcRatio',   type:'number',  group:'Capital',
      ask:'What is your current risk-based capital ratio as a percentage of company action level? The regulatory minimum is 200 percent.',
-     choices:['Below 200 percent','200 to 300 percent','300 to 400 percent',
-              '400 to 500 percent','500 to 700 percent','Over 700 percent','Unknown']},
-    {id:'ibnr',       type:'choice',  group:'Capital',
+     placeholder:'e.g. 420', hint:'Enter the percentage (e.g. 420 for 420%); leave blank if unknown'},
+    {id:'ibnr',       type:'number',  group:'Capital',
      ask:'What are your approximate incurred but not reported reserves?',
-     choices:['Under $50M','$50M to $250M','$250M to $1B','$1B to $3B',
-              '$3B to $10B','Over $10B','Unknown']},
+     placeholder:'e.g. 1500000000', hint:'Enter exact dollars; leave blank if unknown'},
     {id:'insCarrier', type:'insurer',  group:'Insurance',
      ask:'Who is your cyber liability insurance carrier? Select from the list or type to search.'},
-    {id:'insLimit',   type:'choice',  group:'Insurance',
+    {id:'insLimit',   type:'number',  group:'Insurance',
      ask:'What is your total cyber policy limit?',
-     choices:['No cyber insurance','Under $10M','$10M to $30M','$30M to $75M',
-              '$75M to $200M','Over $200M']},
-    {id:'insDeduct',  type:'choice',  group:'Insurance',
+     placeholder:'e.g. 50000000', hint:'Enter exact dollars; enter 0 if you have no cyber insurance'},
+    {id:'insDeduct',  type:'number',  group:'Insurance',
      ask:'What is your policy deductible or self-insured retention?',
-     choices:['No insurance','Under $250K','$250K to $1M','$1M to $3M','$3M to $10M','Over $10M']},
-    {id:'itBudget',   type:'choice',  group:'Budget',
+     placeholder:'e.g. 1000000', hint:'Enter exact dollars; enter 0 if not applicable'},
+    {id:'itBudget',   type:'number',  group:'Budget',
      ask:'What is your annual information technology and cybersecurity budget combined?',
-     choices:['Under $25M','$25M to $100M','$100M to $400M','$400M to $1.5B','$1.5B to $5B','Over $5B']},
-    {id:'employees',  type:'choice',  group:'Budget',
+     placeholder:'e.g. 300000000', hint:'Enter exact dollars'},
+    {id:'employees',  type:'number',  group:'Budget',
      ask:'How many full-time employees does {orgName} have?',
-     choices:['Under 500','500 to 2,500','2,500 to 8,000','8,000 to 25,000','25,000 to 100,000','Over 100,000']},
-    {id:'endpoints',  type:'choice',  group:'Budget',
+     placeholder:'e.g. 8000', hint:'Enter the exact number of full-time employees'},
+    {id:'endpoints',  type:'number',  group:'Budget',
      ask:'Approximately how many managed endpoints and devices does {orgName} operate?',
-     choices:['Under 1,000','1,000 to 5,000','5,000 to 20,000','20,000 to 75,000','75,000 to 250,000','Over 250,000']},
+     placeholder:'e.g. 12000', hint:'Enter the exact number of managed devices'},
     {id:'cmsContract',type:'choice',  group:'Governance',
      ask:'Does {orgName} hold any Medicare Advantage or Part D contracts?',
      choices:['Yes, Medicare Advantage only','Yes, Part D only','Yes, both MA and Part D',
@@ -19042,8 +19026,11 @@ function SetupBot(props) {
     setTyping(true);
     var t = setTimeout(function(){
       setTyping(false);
+      if (startRef.current == null) { startRef.current = Date.now(); } // ticket #21
       addMsg('bot', QS[0].ask);
       speak(QS[0].ask);
+      // ticket #04 — record that Briana has greeted; later steps stay context-continuous.
+      if (typeof window !== 'undefined') { window._cx_briana_greeted = true; }
     }, 800);
     return function(){
       clearTimeout(t);
@@ -19152,6 +19139,15 @@ function SetupBot(props) {
     if (window.speechSynthesis) { window.speechSynthesis.cancel(); }
     if (yes) {
       addMsg('user', 'Looks correct — continue');
+
+      // ticket #21 — report how long the questionnaire took.
+      if (startRef.current) {
+        var secs = Math.max(1, Math.round((Date.now() - startRef.current) / 1000));
+        var mm = Math.floor(secs / 60), ss = secs % 60;
+        var elapsed = mm > 0 ? (mm + ' min ' + ss + ' sec') : (ss + ' sec');
+        accRef.current = Object.assign({}, accRef.current, { setupElapsedSeconds: secs });
+        addMsg('bot', 'Nicely done — you completed setup in ' + elapsed + '.');
+      }
 
       // Save org profile
       var orgData = accRef.current;
@@ -19473,6 +19469,22 @@ function SetupBot(props) {
                   );
                 })}
               </div>
+            </div>
+          )}
+          {curQ.type==='number'&&(
+            <div>
+              <div style={{display:'flex',gap:7}}>
+                <input value={input} autoFocus inputMode='decimal'
+                  onChange={function(e){ setInput(e.target.value.replace(/[^0-9.]/g,'')); }}
+                  onKeyDown={function(e){ if(e.key==='Enter'&&input.trim()){ pick(input.trim()); setInput(''); } }}
+                  placeholder={curQ.placeholder||'Enter a number'}
+                  style={{flex:1,background:C.card,border:'1px solid '+C.acc+'40',
+                    borderRadius:8,padding:'9px 12px',color:C.text,fontSize:12,outline:'none'}}/>
+                <button onClick={function(){ if(input.trim()){ pick(input.trim()); setInput(''); } }}
+                  style={{background:C.acc,border:'none',color:'#fff',borderRadius:8,
+                    padding:'9px 16px',cursor:'pointer',fontSize:12,fontWeight:700}}>Next</button>
+              </div>
+              {curQ.hint&&<div style={{color:C.muted,fontSize:10,marginTop:4}}>{curQ.hint}</div>}
             </div>
           )}
           {curQ.type==='text'&&(
