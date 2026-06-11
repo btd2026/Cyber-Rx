@@ -236,9 +236,8 @@ var CROWN_JEWEL_PROCS = [
   {id:"compliance",    name:"Compliance & Regulatory Reporting",         icon:"⚖",  score:85, crits:0, highs:1, trend:mkT(85),
    subcomponents:["CMS reporting","HHS OCR","State insurance","BCBSA requirements"],
    why:["Multi-jurisdictional","High penalty exposure"]},
-  {id:"identity",      name:"Identity & Access Infrastructure",           icon:"🔐", score:61, crits:2, highs:4, trend:mkT(61),
-   subcomponents:["MFA","IAM","Privileged access","Identity proofing"],
-   why:["Gateway to all systems","Blast radius amplification"]},
+  // Identity & Access is security infrastructure, not a business process — it is
+  // assessed as a Security Capability, not a crown-jewel process (Papa 0.a).
   {id:"data_platform", name:"Data & Analytics Platforms",                  icon:"📊", score:82, crits:0, highs:1, trend:mkT(82),
    subcomponents:["Data warehouse","Analytics platforms","BI tools","ML models"],
    why:["PHI aggregation","Strategic decision support"]},
@@ -1190,7 +1189,7 @@ var ORG_PROFILES_RICH = {
     keyRisks:["Multi-regulator exposure (CMS + SEC + DOI)","Cross-line PHI segregation","RADV + commercial breach combined","SEC 4-day window under active incident"]},
   "[ORG] Plan":{color:"#3B9EFF",
     regs:["HIPAA","NIST CSF 2.0","SOC 2","BCBSA Cybersecurity Standards","BlueCard Requirements"],
-    mandatoryProcs:["claims","enroll","provider_net","care_mgmt","fwa","member_svc","actuarial","govt_ma","govt_fep","govt_mcaid","pharmacy_pbm","compliance","identity","data_platform"],
+    mandatoryProcs:["claims","enroll","provider_net","care_mgmt","fwa","member_svc","actuarial","govt_ma","govt_fep","govt_mcaid","pharmacy_pbm","compliance","data_platform"],
     expMethods:["phi_breach","fwa","bcbsa_penalties"],
     secRequired:false,cmsRequired:false,radvRisk:false,
     boardContext:"BCBSA cybersecurity standards are contractual — non-compliance risks Blue license loss. BlueCard participation creates cross-plan data exposure across all 36 BCBS plans.",
@@ -2526,8 +2525,22 @@ var VENDOR_PRESETS = {
 };
 
 // Get all vendor IDs pre-selected for an org type
+// Papa 1.a — chat org-type labels don't all match VENDOR_PRESETS keys
+// (e.g. "BCBS Plan", "Medicare Advantage Plan", "Multi-line Health Insurer").
+// Normalize so vendors are pre-selected for every org type.
+var VENDOR_ORGTYPE_ALIAS = {
+  "BCBS Plan": "Multi-line Payer",
+  "Medicare Advantage Plan": "Medicare Advantage",
+  "Multi-line Health Insurer": "Multi-line Payer",
+  "Other Payer": "Commercial Health Plan",
+};
+function normVendorOrgType(orgType) {
+  if (!orgType) { return orgType; }
+  if (VENDOR_PRESETS[orgType]) { return orgType; }
+  return VENDOR_ORGTYPE_ALIAS[orgType] || orgType;
+}
 function getVendorPreset(orgType) {
-  var preset = VENDOR_PRESETS[orgType];
+  var preset = VENDOR_PRESETS[normVendorOrgType(orgType)];
   if (!preset) { return {}; }
   var sel = {};
   ["core","pbm","um","provider","member","finance","govt","analytics","mailing"].forEach(function(cat) {
@@ -2541,7 +2554,7 @@ function getVendorPreset(orgType) {
 // Human-readable summary of what was pre-selected and why (for Briana narration)
 function getVendorPresetNarration(orgType, orgName) {
   var name = orgName || "your organization";
-  var preset = VENDOR_PRESETS[orgType];
+  var preset = VENDOR_PRESETS[normVendorOrgType(orgType)];
   if (!preset) {
     return "Here's your vendor ecosystem. Select every third-party vendor that touches your data or operations. I've left this blank since I don't have enough context about your organization type yet. Start with your clearinghouse, then your pharmacy benefit manager, then utilization management.";
   }
@@ -4671,6 +4684,15 @@ function Setup(props) {
   var _s29=useState({});       var vendorCreds=_s29[0];var setVendorCreds=_s29[1];
   var _s30=useState(null);     var vendorExpand=_s30[0];var setVendorExpand=_s30[1];
   var _s31=useState("");       var vendorImport=_s31[0];var setVendorImport=_s31[1];
+  // Papa 2.a — vendor assessment document uploads collected during setup.
+  var _vdu=useState([]);       var vendorDocUploads=_vdu[0]; var setVendorDocUploads=_vdu[1];
+  var _vdv=useState("");       var vdVendorName=_vdv[0];     var setVdVendorName=_vdv[1];
+  var _vdt=useState("soc2");   var vdDocType=_vdt[0];        var setVdDocType=_vdt[1];
+  var VENDOR_DOC_TYPES = [["soc2","SOC 2 Type II report"],["hitrust","HITRUST CSF certification"],
+    ["iso27001","ISO 27001 certificate"],["pentest","Penetration test report"],["vulnscan","Vulnerability scan results"],
+    ["baa","HIPAA BAA"],["irplan","Incident response plan"],["bcdr","BC/DR plan"],["subprocessors","Subprocessor list"],
+    ["cyberinsurance","Cyber insurance certificate"],["netdiagram","Network architecture diagram"],
+    ["sig_caiq","SIG / CAIQ questionnaire"],["pci_aoc","PCI DSS AOC"]];
   var _s32=useState(false);    var vendorPulling=_s32[0];var setVendorPulling=_s32[1];
   // Vendor monitoring state
   var _s35=useState({});       var vendorConnections=_s35[0];  var setVendorConnections=_s35[1];
@@ -4920,6 +4942,19 @@ function Setup(props) {
         console.warn('Security baseline save failed:', err.message);
       });
     }
+    // Papa 2.a — send any uploaded vendor documents to Saraqael for review.
+    try {
+      var orgId = (typeof localStorage!=='undefined' && (localStorage.getItem('cyberrx_org_id')||localStorage.getItem('orgId')))||'';
+      if (orgId && vendorDocUploads.length) {
+        vendorDocUploads.forEach(function(u){
+          var vid = 'vendor_'+u.vendorName.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
+          fetch(CYBERRX_API+'/api/vendor-assessment/documents?org_id='+encodeURIComponent(orgId), {
+            method:'POST', headers:{'Content-Type':'application/json','X-Org-Id':orgId},
+            body:JSON.stringify({vendorId:vid, vendorName:u.vendorName, docType:u.docType, fileName:u.fileName}),
+          }).catch(function(){});
+        });
+      }
+    } catch (e) {}
     setLaunching(true); setPct(0); setLIdx(0);
     LSTEPS.forEach(function(_,i){
       setTimeout(function(){ setLIdx(i); setPct(Math.round((i+1)/LSTEPS.length*100)); }, i*550);
@@ -5846,25 +5881,54 @@ function Setup(props) {
 
         {step===4&&(
   <div>
-    {/* Papa #8 — third-party assessment documents to collect per vendor.
-        Saraqael reviews each and feeds scoring/findings to the dashboards. */}
+    {/* Papa 2.a/#8 — upload third-party assessment documents here; Saraqael
+        reviews each and feeds scoring/findings to the dashboards. */}
     <div style={{background:C.faint,border:"1px solid "+C.acc+"25",borderRadius:10,padding:"12px 16px",marginBottom:14}}>
-      <div style={{color:C.acc,fontSize:11,fontWeight:700,marginBottom:6}}>
-        📄 Assessment documents to collect from each critical vendor
+      <div style={{color:C.acc,fontSize:11,fontWeight:700,marginBottom:8}}>
+        📄 Upload vendor assessment documents for review
       </div>
-      <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-        {["SOC 2 Type II report","HITRUST CSF certification","ISO 27001 certificate","Penetration test report",
-          "Vulnerability scan results","HIPAA BAA","Incident response plan","BC/DR plan","Subprocessor list",
-          "Cyber insurance certificate","Network architecture diagram","SIG / CAIQ questionnaire","PCI DSS AOC"].map(function(d){
-          return (
-            <span key={d} style={{color:C.text,fontSize:9.5,background:C.dim,borderRadius:4,padding:"3px 8px"}}>{d}</span>
-          );
-        })}
+      <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+        <input value={vdVendorName} onChange={function(e){setVdVendorName(e.target.value);}}
+          placeholder="Vendor name (e.g. Cotiviti)"
+          style={{background:C.card,border:"1px solid "+C.border,borderRadius:6,padding:"7px 10px",
+            color:C.text,fontSize:11,outline:"none",minWidth:170}}/>
+        <select value={vdDocType} onChange={function(e){setVdDocType(e.target.value);}}
+          style={{background:C.card,border:"1px solid "+C.border,borderRadius:6,padding:"7px 10px",
+            color:C.text,fontSize:11,outline:"none"}}>
+          {VENDOR_DOC_TYPES.map(function(t){return <option key={t[0]} value={t[0]}>{t[1]}</option>;})}
+        </select>
+        <label style={{background:vdVendorName.trim()?C.acc:C.dim,color:"#fff",borderRadius:6,
+          padding:"7px 12px",fontSize:11,fontWeight:700,cursor:vdVendorName.trim()?"pointer":"default",opacity:vdVendorName.trim()?1:0.5}}>
+          ⬆ Choose file
+          <input type="file" style={{display:"none"}} disabled={!vdVendorName.trim()}
+            onChange={function(e){
+              var f=e.target.files&&e.target.files[0];
+              if(f&&vdVendorName.trim()){
+                var label=(VENDOR_DOC_TYPES.find(function(x){return x[0]===vdDocType;})||[])[1]||vdDocType;
+                setVendorDocUploads(function(p){return p.concat([{vendorName:vdVendorName.trim(),docType:vdDocType,docLabel:label,fileName:f.name}]);});
+              }
+              e.target.value="";
+            }}/>
+        </label>
       </div>
-      <div style={{color:C.muted,fontSize:10,marginTop:7,lineHeight:1.5}}>
-        Upload these on the CRO tab → <strong style={{color:C.text}}>Vendor Assurance (Saraqael)</strong>. Saraqael validates
-        each document, cross-checks them against each other, and feeds risk-rated findings and scores into the vendor
-        risk signals on the CISO and CRO dashboards.
+      {vendorDocUploads.length>0&&(
+        <div style={{marginTop:10}}>
+          {vendorDocUploads.map(function(u,i){
+            return (
+              <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",
+                background:C.card,border:"1px solid "+C.border,borderRadius:6,padding:"6px 10px",marginBottom:4}}>
+                <span style={{color:C.text,fontSize:11}}><strong>{u.vendorName}</strong> · {u.docLabel} <span style={{color:C.muted}}>· {u.fileName}</span></span>
+                <button onClick={function(){setVendorDocUploads(function(p){return p.filter(function(_,j){return j!==i;});});}}
+                  style={{background:"transparent",border:"none",color:C.muted,cursor:"pointer",fontSize:13}}>×</button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      <div style={{color:C.muted,fontSize:10,marginTop:8,lineHeight:1.5}}>
+        Collect: SOC 2 Type II, HITRUST, ISO 27001, pentest, vulnerability scans, HIPAA BAA, IR plan, BC/DR,
+        subprocessor list, cyber insurance, network diagram, SIG/CAIQ, PCI AOC. On completing setup, <strong style={{color:C.text}}>Saraqael</strong> validates
+        each document, cross-checks them, and posts risk-rated findings to the CISO and CRO dashboards (also editable later under Vendor Assurance).
       </div>
     </div>
     {/* Import/API bar */}
@@ -9338,17 +9402,9 @@ function CISODash(props) {
                 return (
                   <div key={capName}
                     onClick={function(){
+                      // Papa 4.a — removed the Briana voice-over here (it spoke
+                      // over the weakest domain and wrongly called DLP=0 "performing well").
                       setSelCap(selCap===capName?null:capName);
-                      var c2=liveCaps[capName];
-                      if(window.speechSynthesis&&c2){
-                        window.speechSynthesis.cancel();
-                        var topItem=(c2.items||[]).find(function(i){return i.status==="critical"||i.status==="gap"||i.status==="high";});
-                        var gapCount=(c2.items||[]).filter(function(i){return i.status==="critical"||i.status==="gap"||i.status==="high";}).length;
-                        var txt=capName+". Score: "+c2.score+" out of 100. ";
-                        if(topItem){txt+="Primary gap: "+topItem.label+". "+topItem.detail+" ";}
-                        txt+=gapCount>0?(gapCount+" open finding"+(gapCount!==1?"s":"")+". Expand the card to route remediation."):("This area is performing well. Monitor for drift.");
-                        speakWithSavedVoice(txt);
-                      }
                     }}
                     style={{background:selCap===capName?cm.color+"18":C.bg,
                       border:"1.5px solid "+(selCap===capName?cm.color:cm.color+"35"),
