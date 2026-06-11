@@ -1,30 +1,33 @@
 /**
  * NistCsfScorecard
  * ----------------
- * The live NIST CSF 2.0 maturity scorecard: 6 functions × 22 categories,
- * computed by /api/csf/assessment from real system data.
+ * The live NIST CSF 2.0 maturity assessment, redesigned around maturity
+ * lanes rather than the classic chip grid:
  *
- * Visual language is deliberately enterprise: a muted, desaturated tier
- * palette, hairline borders, uppercase letter-spaced labels, and uniform
- * deep-slate function headers — no saturated chips or icon glyphs.
+ *   · Each of the six functions is a horizontal lane on a shared 1.00–4.00
+ *     track with the four tier zones and the 3.0 threshold marked — the same
+ *     visual language as the systemwide standings.
+ *   · Every category is a marker positioned at its exact maturity, so weak
+ *     spots literally sit to the left. Marker shape encodes sourcing:
+ *     filled = automatic from systems, half = hybrid, hollow = intake evidence.
+ *   · Unassessed categories queue at the lane's edge; clicking any marker
+ *     opens detail with live sources and inline evidence collection.
  *
- * Each category row shows its maturity (1.00–4.00) and an AUTO / HYBRID /
- * MANUAL sourcing tag, with click-through detail: live sources, evidence
- * status, and inline answer collection for manual controls.
+ * Data: GET /api/csf/assessment · POST /api/csf/evidence.
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
 
-// Muted, desaturated tier palette (board-deck hues, enterprise restraint).
+const INK = '#0f172a';
+const INK_2 = '#475569';
+const INK_3 = '#94a3b8';
+const HAIRLINE = '#e2e8f0';
 const TIER_COLORS = { 1: '#9E3B32', 2: '#B07C2E', 3: '#6E7F49', 4: '#31604B' };
 const TIER_NAMES = { 1: 'Partial', 2: 'Risk Informed', 3: 'Repeatable', 4: 'Adaptive' };
 const NA_COLOR = '#8B95A3';
-const INK = '#0f172a';        // primary text
-const INK_2 = '#475569';      // secondary text
-const INK_3 = '#94a3b8';      // muted text
-const HAIRLINE = '#e2e8f0';
-const HEADER_BG = '#1c2a3a';  // uniform function header
-const PANEL_BG = '#0f1b2d';   // overall tile
+const PANEL_BG = '#0f1b2d';
+const THRESHOLD = 3.0;
+const TRACK_MIN = 1, TRACK_MAX = 4;
 
 const MODE_TAGS = {
   auto: { label: 'AUTO', title: 'Pulled automatically from connected systems' },
@@ -40,6 +43,31 @@ function resolveCtx(props) {
     (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) ||
     'http://localhost:3001';
   return { token, organizationId, apiUrl };
+}
+
+const pct = (v) => ((Math.max(TRACK_MIN, Math.min(TRACK_MAX, v)) - TRACK_MIN) / (TRACK_MAX - TRACK_MIN)) * 100;
+const tierColor = (c) => (c.maturity == null ? NA_COLOR : TIER_COLORS[c.tier] || NA_COLOR);
+
+// Category marker: shape encodes sourcing mode.
+function Marker({ cat, active, onClick, row }) {
+  const color = tierColor(cat);
+  const base = {
+    position: 'absolute', left: `calc(${pct(cat.maturity)}% - 7px)`, top: 8 + row * 26,
+    width: 14, height: 14, borderRadius: '50%', cursor: 'pointer',
+    boxShadow: active ? `0 0 0 3px ${color}40` : 'none', transition: 'box-shadow 0.12s',
+  };
+  const fill =
+    cat.mode === 'auto' ? { background: color, border: `2px solid ${color}` } :
+    cat.mode === 'partial' ? { background: `linear-gradient(90deg, ${color} 50%, #fff 50%)`, border: `2px solid ${color}` } :
+    { background: '#fff', border: `2px solid ${color}` };
+  return (
+    <div onClick={onClick} title={`${cat.id} — ${cat.name} · ${cat.maturity.toFixed(2)}`} style={{ ...base, ...fill }}>
+      <span style={{
+        position: 'absolute', top: 15, left: '50%', transform: 'translateX(-50%)',
+        fontSize: 8, fontWeight: 600, color: active ? INK : INK_3, letterSpacing: '0.03em', whiteSpace: 'nowrap',
+      }}>{cat.id}</span>
+    </div>
+  );
 }
 
 export default function NistCsfScorecard(props) {
@@ -89,8 +117,21 @@ export default function NistCsfScorecard(props) {
   }
 
   const fmt = (m) => (m == null ? '—' : m.toFixed(2));
-  const tierColor = (c) => (c.maturity == null ? NA_COLOR : TIER_COLORS[c.tier] || NA_COLOR);
-  const selCat = sel && data.functions.flatMap((f) => f.categories).find((c) => c.id === sel);
+  const allCats = data.functions.flatMap((f) => f.categories);
+  const selCat = sel && allCats.find((c) => c.id === sel);
+  const evidenceTotal = allCats.reduce((s, c) => s + c.evidence.length, 0);
+  const evidenceAnswered = allCats.reduce((s, c) => s + c.evidence.filter((e) => e.answered).length, 0);
+
+  // Lane rows: stagger markers vertically when scores are close enough to collide.
+  const laneRows = (cats) => {
+    const placed = [];
+    return cats.map((c) => {
+      let row = 0;
+      while (placed.some((p) => p.row === row && Math.abs(pct(p.v) - pct(c.maturity)) < 7)) row += 1;
+      placed.push({ row, v: c.maturity });
+      return { cat: c, row: Math.min(row, 2) };
+    });
+  };
 
   return (
     <div style={{ background: '#fff', border: `1px solid ${HAIRLINE}`, borderRadius: 6, padding: '28px 32px' }}>
@@ -101,12 +142,12 @@ export default function NistCsfScorecard(props) {
             Current-State Assessment · NIST Cybersecurity Framework 2.0
           </div>
           <h2 style={{ margin: 0, fontSize: 21, fontWeight: 600, color: INK, letterSpacing: '-0.01em' }}>
-            Cyber Maturity Scores
+            Cyber Maturity Profile
           </h2>
-          <div style={{ color: INK_2, fontSize: 12, marginTop: 6, maxWidth: 640, lineHeight: 1.55 }}>
-            Maturity across the six functions and {data.totalCategories} categories. {data.autoCount} categories are scored
-            automatically from connected systems, {data.partialCount} blend a live signal with intake evidence,
-            and {data.manualCount} are scored from intake evidence.
+          <div style={{ color: INK_2, fontSize: 12, marginTop: 6, maxWidth: 620, lineHeight: 1.55 }}>
+            Each function is a lane on the shared 1.00–4.00 maturity track; every category sits at its exact
+            score, so weak spots read left. Marker fill shows sourcing — filled from connected systems,
+            half-filled hybrid, hollow from intake evidence.
             {data.lastToolSync && <> Last tool synchronization {new Date(data.lastToolSync).toLocaleString()}.</>}
           </div>
         </div>
@@ -120,56 +161,82 @@ export default function NistCsfScorecard(props) {
               <span>{data.overall.label || 'Not assessed'}</span>
             </span>
           </div>
-          <div style={{ color: INK_3, fontSize: 10, marginTop: 6, letterSpacing: '0.02em' }}>
-            {data.assessedCategories} of {data.totalCategories} categories assessed
+          <div style={{ color: INK_3, fontSize: 10, marginTop: 6 }}>
+            {data.assessedCategories} of {data.totalCategories} categories assessed · intake evidence {evidenceAnswered}/{evidenceTotal}
           </div>
         </div>
       </div>
 
-      {/* 6-function matrix */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 14, marginTop: 22 }}>
-        {data.functions.map((f) => (
-          <div key={f.id}>
-            {/* Function header */}
-            <div style={{ display: 'flex', alignItems: 'stretch', marginBottom: 10, borderRadius: 3, overflow: 'hidden' }}>
-              <span style={{ background: f.maturity == null ? NA_COLOR : TIER_COLORS[f.tier], color: '#fff', fontWeight: 600, fontVariantNumeric: 'tabular-nums', fontSize: 13, padding: '9px 10px', display: 'flex', alignItems: 'center' }}>
-                {fmt(f.maturity)}
-              </span>
-              <span style={{ background: HEADER_BG, color: '#f1f5f9', fontWeight: 600, fontSize: 12, letterSpacing: '0.04em', padding: '9px 11px', flex: 1, display: 'flex', alignItems: 'center' }}>
-                {f.name}
-              </span>
-            </div>
-            {/* Category rows */}
-            {f.categories.map((c) => {
-              const tc = tierColor(c);
-              const active = sel === c.id;
-              return (
-                <div key={c.id} onClick={() => setSel(active ? null : c.id)}
-                  title={`${c.id} — ${MODE_TAGS[c.mode] ? MODE_TAGS[c.mode].title : c.mode}`}
-                  style={{
-                    display: 'flex', alignItems: 'stretch', marginBottom: 6, cursor: 'pointer',
-                    border: `1px solid ${active ? tc : HAIRLINE}`, borderRadius: 3, overflow: 'hidden',
-                    background: '#fff', transition: 'border-color 0.12s',
-                  }}>
-                  <span style={{ background: tc, color: '#fff', fontWeight: 600, fontVariantNumeric: 'tabular-nums', fontSize: 11, padding: '8px 0', minWidth: 42, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {c.maturity == null ? '—' : c.maturity.toFixed(2)}
-                  </span>
-                  <span style={{ color: INK_2, fontSize: 10.5, fontWeight: 500, padding: '6px 8px', flex: 1, lineHeight: 1.3, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3 }}>
-                    <span style={{ color: INK }}>{c.name}</span>
-                    <span style={{ fontSize: 8, fontWeight: 600, color: INK_3, letterSpacing: '0.1em' }}>
-                      {MODE_TAGS[c.mode] ? MODE_TAGS[c.mode].label : ''}{c.maturity == null ? ' · NOT ASSESSED' : ''}
-                    </span>
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        ))}
+      {/* Track scale header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 20, padding: '14px 0 2px' }}>
+        <div style={{ width: 170, flexShrink: 0 }} />
+        <div style={{ flex: 1, position: 'relative', height: 16 }}>
+          {[1, 1.5, 2, 2.5, 3, 3.5, 4].map((t) => (
+            <span key={t} style={{ position: 'absolute', left: `calc(${pct(t)}% - 10px)`, fontSize: 9, color: t === THRESHOLD ? INK_2 : INK_3, fontWeight: t === THRESHOLD ? 600 : 400, fontVariantNumeric: 'tabular-nums' }}>
+              {t.toFixed(2)}
+            </span>
+          ))}
+        </div>
+        <div style={{ width: 120, flexShrink: 0 }} />
       </div>
+
+      {/* Function lanes */}
+      {data.functions.map((f) => {
+        const assessed = f.categories.filter((c) => c.maturity != null);
+        const na = f.categories.filter((c) => c.maturity == null);
+        const rows = laneRows(assessed);
+        const laneH = 36 + (rows.length ? Math.max(...rows.map((r) => r.row)) * 26 : 0) + 14;
+        return (
+          <div key={f.id} style={{ display: 'flex', alignItems: 'stretch', gap: 20, borderTop: `1px solid #f1f5f9` }}>
+            {/* Function rail */}
+            <div style={{ width: 170, flexShrink: 0, padding: '12px 0' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                <span style={{ fontSize: 17, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: f.maturity == null ? NA_COLOR : TIER_COLORS[f.tier] }}>
+                  {fmt(f.maturity)}
+                </span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: INK }}>{f.name}</span>
+              </div>
+              <div style={{ fontSize: 9.5, color: INK_3, marginTop: 3, letterSpacing: '0.02em' }}>
+                {f.label || 'Not assessed'} · {f.assessedCount}/{f.categoryCount} categories
+              </div>
+            </div>
+            {/* Lane track */}
+            <div style={{ flex: 1, position: 'relative', minHeight: laneH }}>
+              {/* Tier zones */}
+              <div style={{ position: 'absolute', top: 10, left: 0, right: 0, bottom: 14, display: 'flex', borderRadius: 3, overflow: 'hidden' }}>
+                {[{ f: 1, t: 1.75, k: 1 }, { f: 1.75, t: 2.5, k: 2 }, { f: 2.5, t: 3.25, k: 3 }, { f: 3.25, t: 4, k: 4 }].map((z) => (
+                  <div key={z.k} style={{ width: `${pct(z.t) - pct(z.f)}%`, background: TIER_COLORS[z.k], opacity: 0.07 }} />
+                ))}
+              </div>
+              {/* Threshold */}
+              <div style={{ position: 'absolute', top: 4, bottom: 8, left: `${pct(THRESHOLD)}%`, borderLeft: `2px dashed ${INK_3}66` }} />
+              {/* Markers */}
+              {rows.map(({ cat, row }) => (
+                <Marker key={cat.id} cat={cat} row={row} active={sel === cat.id}
+                  onClick={() => setSel(sel === cat.id ? null : cat.id)} />
+              ))}
+            </div>
+            {/* Not-assessed queue */}
+            <div style={{ width: 120, flexShrink: 0, padding: '12px 0', display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start', justifyContent: 'center' }}>
+              {na.map((c) => (
+                <button key={c.id} onClick={() => setSel(sel === c.id ? null : c.id)}
+                  title={`${c.name} — not assessed; click to provide evidence`}
+                  style={{
+                    background: sel === c.id ? '#f1f5f9' : 'transparent', border: `1px dashed ${INK_3}88`,
+                    color: INK_2, borderRadius: 3, padding: '2px 8px', fontSize: 9, fontWeight: 600,
+                    letterSpacing: '0.04em', cursor: 'pointer',
+                  }}>
+                  {c.id} —
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      })}
 
       {/* Category detail / evidence collection */}
       {selCat && (
-        <div style={{ marginTop: 20, border: `1px solid ${HAIRLINE}`, borderTop: `2px solid ${tierColor(selCat)}`, borderRadius: 4, padding: '18px 20px', background: '#fafbfc' }}>
+        <div style={{ marginTop: 18, border: `1px solid ${HAIRLINE}`, borderTop: `2px solid ${tierColor(selCat)}`, borderRadius: 4, padding: '18px 20px', background: '#fafbfc' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
               <div style={{ fontSize: 10, fontWeight: 600, color: INK_3, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 4 }}>
@@ -216,8 +283,8 @@ export default function NistCsfScorecard(props) {
         </div>
       )}
 
-      {/* Key */}
-      <div style={{ display: 'flex', gap: 18, alignItems: 'center', marginTop: 22, paddingTop: 14, borderTop: `1px solid ${HAIRLINE}`, flexWrap: 'wrap' }}>
+      {/* Legend */}
+      <div style={{ display: 'flex', gap: 18, alignItems: 'center', marginTop: 20, paddingTop: 14, borderTop: `1px solid ${HAIRLINE}`, flexWrap: 'wrap' }}>
         <span style={{ fontSize: 9, fontWeight: 600, color: INK_3, textTransform: 'uppercase', letterSpacing: '0.14em' }}>Maturity Tiers</span>
         {[1, 2, 3, 4].map((t) => (
           <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 11, color: INK_2 }}>
@@ -225,12 +292,11 @@ export default function NistCsfScorecard(props) {
             {t} · {TIER_NAMES[t]}
           </span>
         ))}
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 11, color: INK_2 }}>
-          <span style={{ width: 10, height: 10, background: NA_COLOR, borderRadius: 2, display: 'inline-block' }} />
-          Not assessed
-        </span>
-        <span style={{ fontSize: 10.5, color: INK_3, marginLeft: 'auto' }}>
-          AUTO — connected systems · HYBRID — system + evidence · MANUAL — intake evidence
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 16, fontSize: 10.5, color: INK_2, marginLeft: 'auto' }}>
+          <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: INK_2, verticalAlign: -1, marginRight: 5 }} />automatic</span>
+          <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: `linear-gradient(90deg, ${INK_2} 50%, #fff 50%)`, border: `1.5px solid ${INK_2}`, verticalAlign: -1, marginRight: 5 }} />hybrid</span>
+          <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: '#fff', border: `1.5px solid ${INK_2}`, verticalAlign: -1, marginRight: 5 }} />intake evidence</span>
+          <span style={{ color: INK_3 }}>┊ 3.00 threshold</span>
         </span>
       </div>
     </div>
