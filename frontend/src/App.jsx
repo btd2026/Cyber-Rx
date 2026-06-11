@@ -9804,10 +9804,22 @@ function CRODash(props) {
     ["cis","CIS"],["iso27001","ISO 27001"],["naic","NAIC"],["cms","CMS"],["pci","PCI"],["gdpr","GDPR"],
     ["csf_rankings","Peer Comparison"],["vendor_assurance","Vendor Assurance"],["remediation","Remediation"],
   ];
+  // Papa — only the org's selected reporting frameworks show by default; the
+  // rest stay available behind "All frameworks" (the app reports on all).
+  var _selFw = (function(){ try { return JSON.parse(localStorage.getItem('cyberrx_frameworks')||'[]'); } catch(e){ return []; } })();
+  var _fwAll = useState(false); var showAllFw=_fwAll[0]; var setShowAllFw=_fwAll[1];
   function fwTabs(active) {
+    var nonFw = ["csf_rankings","vendor_assurance","remediation"];
+    var visible = CRO_FW_TABS.filter(function(t){
+      if (nonFw.indexOf(t[0])>=0) return true;                 // always show these
+      if (showAllFw || _selFw.length===0) return true;         // show all when none selected / toggled
+      if (t[0]===active) return true;                          // keep the active tab visible
+      return _selFw.indexOf(t[0])>=0;                          // otherwise only selected frameworks
+    });
+    var hiddenCount = CRO_FW_TABS.length - visible.length;
     return (
-      <div style={{display:"flex",gap:0,borderBottom:"1px solid "+C.border,marginBottom:14,overflowX:"auto"}}>
-        {CRO_FW_TABS.map(function(t){
+      <div style={{display:"flex",gap:0,borderBottom:"1px solid "+C.border,marginBottom:14,overflowX:"auto",alignItems:"center"}}>
+        {visible.map(function(t){
           var isActive = active===t[0];
           return (
             <button key={t[0]} onClick={function(){setSelFramework(t[0]);}}
@@ -9819,6 +9831,13 @@ function CRODash(props) {
             </button>
           );
         })}
+        {(hiddenCount>0||showAllFw)&&_selFw.length>0&&(
+          <button onClick={function(){setShowAllFw(!showAllFw);}}
+            style={{marginLeft:"auto",background:"transparent",border:"none",color:C.acc,cursor:"pointer",
+              fontSize:10,fontWeight:600,whiteSpace:"nowrap",padding:"8px 10px"}}>
+            {showAllFw?"Show selected only":"All frameworks (+"+hiddenCount+")"}
+          </button>
+        )}
       </div>
     );
   }
@@ -18489,6 +18508,7 @@ function SetupBot(props) {
   // Papa #3/#5 — pending follow-up after an answer: doc upload-or-skip, or a
   // free-text follow-up (e.g. who the IR retainer is with).
   var _pa=useState(null); var pendingAsk=_pa[0]; var setPendingAsk=_pa[1];
+  var _ms=useState([]); var multiSel=_ms[0]; var setMultiSel=_ms[1]; // framework multi-select
   var CSF_DOC_PROMPTS = {
     csf_gv_po_policy:   {doc:'information security policy',    positive:['Yes — board-approved and current','Yes, but over a year old']},
     csf_gv_rm_appetite: {doc:'risk appetite statement',         positive:['Yes — board-approved','In draft']},
@@ -18787,6 +18807,12 @@ function SetupBot(props) {
      ask:'Does {orgName} hold any Medicare Advantage or Part D contracts?',
      choices:['Yes, Medicare Advantage only','Yes, Part D only','Yes, both MA and Part D',
               'Yes, plus Medicaid managed care','No CMS contracts']},
+    // Papa — which frameworks the org reports against. Selected frameworks show
+    // on the CRO dashboard; the app can still report on all of them.
+    {id:'reportingFrameworks', type:'multichoice', group:'Governance',
+     ask:'Which compliance frameworks does {orgName} report against or want to track? Select all that apply — you can always view the others later.',
+     choices:['NIST CSF 2.0','HIPAA Security Rule','SOC 2','NIST SP 800-53','CIS Controls v8',
+              'ISO 27001','NAIC Model Law','CMS 42 CFR §422','PCI DSS','GDPR']},
     // ── CSF evidence interview ─────────────────────────────────────────────
     // These ten answers score the NIST CSF 2.0 categories that can't be read
     // from connected systems (the ✍ manual categories on the CSF scorecard).
@@ -19165,7 +19191,7 @@ function SetupBot(props) {
     accRef.current[q.id] = value;
     setAnswers(Object.assign({}, accRef.current));
     setSuggest([]);
-    addMsg('user', value);
+    addMsg('user', Array.isArray(value) ? value.join(', ') : value);
     setInput('');
 
     // Auto-select state if orgName contains a state name (BCBS organizations)
@@ -19344,6 +19370,16 @@ function SetupBot(props) {
 
           // Persist the CSF evidence interview answers — they score the
           // manual NIST CSF 2.0 categories on the live scorecard.
+          // Papa — persist the org's selected reporting frameworks so the CRO
+          // dashboard shows only those (the app can still report on all).
+          try {
+            var FW_LABEL_TO_ID = {'NIST CSF 2.0':'nistcsf','HIPAA Security Rule':'hipaa','SOC 2':'soc2',
+              'NIST SP 800-53':'nist_800_53','CIS Controls v8':'cis','ISO 27001':'iso27001',
+              'NAIC Model Law':'naic','CMS 42 CFR §422':'cms','PCI DSS':'pci','GDPR':'gdpr'};
+            var fwIds = (orgData.reportingFrameworks||[]).map(function(l){return FW_LABEL_TO_ID[l];}).filter(Boolean);
+            if (fwIds.length) { localStorage.setItem('cyberrx_frameworks', JSON.stringify(fwIds)); }
+          } catch (e) {}
+
           try {
             var csfItems = csfEvidenceItems(orgData);
             if (csfItems.length && result.orgId) {
@@ -19830,6 +19866,34 @@ function SetupBot(props) {
                   </button>
                 );
               })}
+            </div>
+          )}
+
+          {/* Papa — framework multi-select */}
+          {curQ.type==='multichoice'&&(
+            <div>
+              <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:8}}>
+                {(curQ.choices||[]).map(function(opt){
+                  var on = multiSel.indexOf(opt)>=0;
+                  return (
+                    <button key={opt} onClick={function(){
+                        setMultiSel(function(prev){ return on ? prev.filter(function(x){return x!==opt;}) : prev.concat([opt]); });
+                      }}
+                      style={{background:on?C.acc:'transparent',color:on?'#fff':C.text,
+                        border:'1px solid '+(on?C.acc:C.border),borderRadius:16,padding:'6px 12px',
+                        cursor:'pointer',fontSize:11,fontWeight:on?700:500}}>
+                      {on?'✓ ':''}{opt}
+                    </button>
+                  );
+                })}
+              </div>
+              <button onClick={function(){ pick(multiSel.slice()); setMultiSel([]); }}
+                disabled={multiSel.length===0}
+                style={{background:multiSel.length?C.acc:C.dim,border:'none',color:'#fff',borderRadius:8,
+                  padding:'8px 18px',cursor:multiSel.length?'pointer':'default',fontSize:12,fontWeight:700,
+                  opacity:multiSel.length?1:0.5}}>
+                Done ({multiSel.length} selected) →
+              </button>
             </div>
           )}
 
