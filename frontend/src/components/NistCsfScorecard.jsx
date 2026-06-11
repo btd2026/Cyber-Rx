@@ -17,6 +17,12 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import CsfRankings from './CsfRankings';
+
+// Ticket #05 — NIST CSF maturity (1.00–4.00) ↔ CMMI level (0–5) crosswalk,
+// shown alongside the tier so both scales are visible.
+const CMMI_NAMES = ['Not Performed', 'Performed Informally', 'Planned & Tracked', 'Well Defined', 'Quantitatively Controlled', 'Continuously Improving'];
+function cmmiLevel(maturity) { return maturity == null ? null : Math.max(0, Math.min(5, Math.round(((maturity - 1) / 3) * 5))); }
 
 const INK = '#0f172a';
 const INK_2 = '#475569';
@@ -76,6 +82,7 @@ export default function NistCsfScorecard(props) {
   const [error, setError] = useState(null);
   const [sel, setSel] = useState(null); // selected category id
   const [saving, setSaving] = useState(false);
+  const [view, setView] = useState('individual'); // #16 — individual ↔ systemwide
   const { token, organizationId, apiUrl } = resolveCtx(props);
 
   const headers = useCallback(() => {
@@ -134,6 +141,20 @@ export default function NistCsfScorecard(props) {
   };
 
   return (
+    <div>
+      {/* #16 — Individual ↔ Systemwide toggle embedded at the top */}
+      <div style={{ display: 'flex', gap: 0, marginBottom: 12, border: `1px solid ${HAIRLINE}`, borderRadius: 5, overflow: 'hidden', width: 'fit-content' }}>
+        {[['individual', 'Individual'], ['systemwide', 'Systemwide ranking']].map(([v, label]) => (
+          <button key={v} onClick={() => setView(v)} style={{
+            background: view === v ? PANEL_BG : '#fff', color: view === v ? '#fff' : INK_2,
+            border: 'none', padding: '7px 18px', fontSize: 11, fontWeight: 600, cursor: 'pointer',
+            letterSpacing: '0.04em',
+          }}>{label}</button>
+        ))}
+      </div>
+      {view === 'systemwide' ? (
+        <CsfRankings authToken={token} orgId={organizationId} api_url={apiUrl} />
+      ) : (
     <div style={{ background: '#fff', border: `1px solid ${HAIRLINE}`, borderRadius: 6, padding: '28px 32px' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingBottom: 18, borderBottom: `1px solid ${HAIRLINE}` }}>
@@ -157,11 +178,14 @@ export default function NistCsfScorecard(props) {
               {fmt(data.overall.maturity)}
             </span>
             <span style={{ color: '#e2e8f0', fontWeight: 500, fontSize: 12, padding: '10px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: 1.35 }}>
-              <span style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 9, color: '#8fa3bd' }}>Overall Average</span>
-              <span>{data.overall.label || 'Not assessed'}</span>
+              <span style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 9, color: '#8fa3bd' }}>Tier · CMMI</span>
+              <span>{data.overall.tier ? `Tier ${data.overall.tier}` : 'Not assessed'}{cmmiLevel(data.overall.maturity) != null ? ` · CMMI ${cmmiLevel(data.overall.maturity)}` : ''}</span>
             </span>
           </div>
           <div style={{ color: INK_3, fontSize: 10, marginTop: 6 }}>
+            {data.overall.label || 'Not assessed'}{cmmiLevel(data.overall.maturity) != null ? ` · CMMI L${cmmiLevel(data.overall.maturity)} ${CMMI_NAMES[cmmiLevel(data.overall.maturity)]}` : ''}
+          </div>
+          <div style={{ color: INK_3, fontSize: 10, marginTop: 2 }}>
             {data.assessedCategories} of {data.totalCategories} categories assessed · intake evidence {evidenceAnswered}/{evidenceTotal}
           </div>
         </div>
@@ -299,6 +323,8 @@ export default function NistCsfScorecard(props) {
           <span style={{ color: INK_3 }}>┊ 3.00 threshold</span>
         </span>
       </div>
+    </div>
+      )}
     </div>
   );
 }

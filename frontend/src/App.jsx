@@ -10,6 +10,7 @@ import CsfRankings from "./components/CsfRankings";
 import FrameworkScorecard from "./components/FrameworkScorecard";
 import VendorAssessmentPanel from "./components/VendorAssessmentPanel";
 import AttackPathDiagram from "./components/AttackPathDiagram";
+import FrameworkScoreStrip from "./components/FrameworkScoreStrip";
 import AuditDash from "./pages/AuditDash";
 import ReviewMappings from "./pages/ReviewMappings";
 import ProcessGraph from "./pages/ProcessGraph";
@@ -240,6 +241,14 @@ var CROWN_JEWEL_PROCS = [
   {id:"data_platform", name:"Data & Analytics Platforms",                  icon:"📊", score:82, crits:0, highs:1, trend:mkT(82),
    subcomponents:["Data warehouse","Analytics platforms","BI tools","ML models"],
    why:["PHI aggregation","Strategic decision support"]},
+  // Ticket #06 — complete the standard health-insurance process taxonomy
+  // (HFMA / AHIP / CAQH CORE) with the remaining selectable processes.
+  {id:"prior_auth",    name:"Prior Authorization & Utilization Management", icon:"📝", score:70, crits:1, highs:2, trend:mkT(70),
+   subcomponents:["Prior authorization","Concurrent review","Appeals & grievances","Medical necessity"],
+   why:["Clinical PHI","CMS turnaround mandates","Member impact"]},
+  {id:"premium_billing",name:"Premium Billing & Collections",              icon:"💳", score:77, crits:0, highs:1, trend:mkT(77),
+   subcomponents:["Premium invoicing","Payment processing","Reconciliation","Delinquency management"],
+   why:["Revenue continuity","Payment-card and bank data","Financial reporting"]},
 ];
 
 var ORG_TEMPLATES = {
@@ -1986,20 +1995,24 @@ var CMS_CONTROLS = [
 // Data flow: Provider → Clearinghouse → [ORG] (NASCO) → Vendors → Member
 
 // ─── Vendor Monitoring Connectors ─────────────────────────────────────────────
+// Ticket #07 — fee status per monitoring source (cached indicator; "asOf" date
+// shown so it's clearly not a hard-coded price). fee: Free | Paid | Freemium |
+// Contact for Pricing. estCost is a public-list monthly range where available.
 var CONNECTORS = [
-  {id:"securityscorecard",name:"SecurityScorecard",purpose:"External security posture scoring",icon:"🛡️"},
-  {id:"bitsight",name:"BitSight",purpose:"Security ratings and vulnerability intelligence",icon:"📊"},
-  {id:"riskrecon",name:"RiskRecon",purpose:"Attack surface discovery and monitoring",icon:"🔍"},
-  {id:"blackkite",name:"Black Kite",purpose:"Ransomware susceptibility and financial stress",icon:"💸"},
-  {id:"recordedfuture",name:"Recorded Future",purpose:"Threat intelligence and risk indicators",icon:"🎯"},
-  {id:"cyware",name:"Cyware Clusters",purpose:"Threat intelligence exchange",icon:"🔗"},
-  {id:"guidepoint",name:"GuidePoint Intelligence",purpose:"Strategic threat intelligence",icon:"🧠"},
-  {id:"hhsocr",name:"HHS OCR Breach Portal",purpose:"Regulatory breach disclosure monitoring",icon:"⚖️"},
-  {id:"googlealerts",name:"Google Alerts",purpose:"News and incident monitoring",icon:"📰"},
-  {id:"compliance",name:"Compliance Evidence",purpose:"SOC 2 / HITRUST / ISO certificate parsing",icon:"📋"},
-  {id:"questionnaire",name:"Vendor Questionnaire",purpose:"Attestation and self-assessment collection",icon:"✍️"},
-  {id:"fourthparty",name:"Fourth-Party Monitor",purpose:"Supply chain subvendor monitoring",icon:"🔗"}
+  {id:"securityscorecard",name:"SecurityScorecard",purpose:"External security posture scoring",icon:"🛡️",fee:"Paid",estCost:"$16K–$45K/yr",pricingUrl:"https://securityscorecard.com/pricing",feeAsOf:"2026-06"},
+  {id:"bitsight",name:"BitSight",purpose:"Security ratings and vulnerability intelligence",icon:"📊",fee:"Paid",estCost:"Contact for quote",pricingUrl:"https://www.bitsight.com",feeAsOf:"2026-06"},
+  {id:"riskrecon",name:"RiskRecon",purpose:"Attack surface discovery and monitoring",icon:"🔍",fee:"Paid",estCost:"Contact for quote",pricingUrl:"https://www.riskrecon.com",feeAsOf:"2026-06"},
+  {id:"blackkite",name:"Black Kite",purpose:"Ransomware susceptibility and financial stress",icon:"💸",fee:"Paid",estCost:"Contact for quote",pricingUrl:"https://blackkite.com",feeAsOf:"2026-06"},
+  {id:"recordedfuture",name:"Recorded Future",purpose:"Threat intelligence and risk indicators",icon:"🎯",fee:"Paid",estCost:"$50K+/yr",pricingUrl:"https://www.recordedfuture.com",feeAsOf:"2026-06"},
+  {id:"cyware",name:"Cyware Clusters",purpose:"Threat intelligence exchange",icon:"🔗",fee:"Freemium",estCost:"Free community tier",pricingUrl:"https://cyware.com",feeAsOf:"2026-06"},
+  {id:"guidepoint",name:"GuidePoint Intelligence",purpose:"Strategic threat intelligence",icon:"🧠",fee:"Contact for Pricing",estCost:null,pricingUrl:"https://www.guidepointsecurity.com",feeAsOf:"2026-06"},
+  {id:"hhsocr",name:"HHS OCR Breach Portal",purpose:"Regulatory breach disclosure monitoring",icon:"⚖️",fee:"Free",estCost:"Public data",pricingUrl:"https://ocrportal.hhs.gov",feeAsOf:"2026-06"},
+  {id:"googlealerts",name:"Google Alerts",purpose:"News and incident monitoring",icon:"📰",fee:"Free",estCost:"Free",pricingUrl:"https://www.google.com/alerts",feeAsOf:"2026-06"},
+  {id:"compliance",name:"Compliance Evidence",purpose:"SOC 2 / HITRUST / ISO certificate parsing",icon:"📋",fee:"Free",estCost:"Included",pricingUrl:null,feeAsOf:"2026-06"},
+  {id:"questionnaire",name:"Vendor Questionnaire",purpose:"Attestation and self-assessment collection",icon:"✍️",fee:"Free",estCost:"Included",pricingUrl:null,feeAsOf:"2026-06"},
+  {id:"fourthparty",name:"Fourth-Party Monitor",purpose:"Supply chain subvendor monitoring",icon:"🔗",fee:"Freemium",estCost:"Free tier + paid depth",pricingUrl:null,feeAsOf:"2026-06"}
 ];
+var FEE_COLORS = {"Free":"#0FBB80","Freemium":"#3B9EFF","Paid":"#F5A623","Contact for Pricing":"#94A3B8"};
 
 var VENDOR_TIERS = [
   // ── TIER 1: Claims, Clearinghouses & EDI ─────────────────────────────────
@@ -4159,21 +4172,26 @@ function sanitizeInput(input) {
 // ── Shared TTS helper - reads voice settings and speaks using appropriate provider ─────
 // Global tracker for currently playing audio elements
 window._cx_active_audios = window._cx_active_audios || [];
+window._cx_speak_gen = window._cx_speak_gen || 0;
+
+// Ticket #12 — single global stop for ALL audio/speech. Increments a generation
+// token so any pending (setTimeout-scheduled) utterance from a previous narration
+// aborts instead of resuming on top of a new one (the "Command Center voice
+// repeats on click" bug). Returns the new generation; schedulers compare against
+// it before speaking.
+window._cx_stopAllSpeech = function() {
+  try { if (window.speechSynthesis) { window.speechSynthesis.cancel(); } } catch (e) {}
+  (window._cx_active_audios || []).forEach(function(audio){
+    try { audio.pause(); audio.currentTime = 0; } catch (e) {}
+  });
+  window._cx_active_audios = [];
+  window._cx_speak_gen = (window._cx_speak_gen || 0) + 1;
+  return window._cx_speak_gen;
+};
 
 function speakWithSavedVoice(text) {
-  // Cancel any ongoing speech and audio
-  if (window.speechSynthesis) { window.speechSynthesis.cancel(); }
-
-  // Stop all previously playing audio elements
-  if (window._cx_active_audios && window._cx_active_audios.length > 0) {
-    window._cx_active_audios.forEach(function(audio){
-      try {
-        audio.pause();
-        audio.currentTime = 0;
-      } catch(e) {}
-    });
-    window._cx_active_audios = [];
-  }
+  // Stop anything currently playing and invalidate pending utterances.
+  var _gen = window._cx_stopAllSpeech();
 
   // Read voice settings from localStorage
   var LS = window.localStorage || { getItem:function(){return null;} };
@@ -4304,6 +4322,8 @@ function speakWithSavedVoice(text) {
   }
 
   if (pref) { u.voice = pref; }
+  // Abort if a newer narration started while we were resolving voices.
+  if (window._cx_speak_gen !== _gen) { return; }
   window.speechSynthesis.speak(u);
 }
 
@@ -4926,6 +4946,12 @@ function Setup(props) {
       var narration = step === 4
         ? getVendorPresetNarration(orgType, orgName)
         : STEP_NARRATION[step];
+      // ticket #04 — Briana greets only once per session; strip re-introductions
+      // on subsequent screens so transitions feel continuous.
+      if (narration && typeof window !== 'undefined' && window._cx_briana_greeted) {
+        narration = narration.replace(/^\s*(hi|hello|hey)[^.!]*[.!]\s*/i, '');
+      }
+      if (typeof window !== 'undefined') { window._cx_briana_greeted = true; }
       if (narration) {
         var t = setTimeout(function(){ brianaSpeak(narration); }, 500);
         return function(){
@@ -6085,16 +6111,21 @@ function Setup(props) {
                                 <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
                                   <span style={{fontSize:14,lineHeight:1}}>{connector.icon}</span>
                                   <div style={{flex:1,minWidth:0}}>
-                                    <div style={{
-                                      color:"#111827",
-                                      fontSize:10,
-                                      fontWeight:700
-                                    }}>{connector.name}</div>
+                                    <div style={{display:"flex",alignItems:"center",gap:4}}>
+                                      <span style={{color:"#111827",fontSize:10,fontWeight:700}}>{connector.name}</span>
+                                      {connector.fee&&(
+                                        <span title={"Fee status as of "+(connector.feeAsOf||"")+(connector.estCost?(" · "+connector.estCost):"")+(connector.pricingUrl?(" · "+connector.pricingUrl):"")}
+                                          style={{fontSize:7,fontWeight:700,color:FEE_COLORS[connector.fee]||"#94A3B8",
+                                            background:(FEE_COLORS[connector.fee]||"#94A3B8")+"1a",borderRadius:3,padding:"1px 5px",whiteSpace:"nowrap"}}>
+                                          {connector.fee}
+                                        </span>
+                                      )}
+                                    </div>
                                     <div style={{
                                       color:"#6B7280",
                                       fontSize:8,
                                       lineHeight:1.3
-                                    }}>{connector.purpose}</div>
+                                    }}>{connector.purpose}{connector.estCost&&connector.fee!=="Free"?(" · "+connector.estCost):""}</div>
                                   </div>
                                   <div style={{display:"flex",alignItems:"center",gap:3}}>
                                     <div style={{
@@ -9125,9 +9156,17 @@ function CISODash(props) {
                              : m.unit==="hr"  ? Math.max(0,100-Math.round((m.val/m.target-1)*100))
                              : Math.min(100, Math.round(m.val/m.target*100));
                 var color    = onTarget?"#0FBB80":m.sev==="Critical"?"#EF4545":m.sev==="High"?"#F5A623":"#3B9EFF";
+                // ticket #13 — data provenance per metric (which tool/source).
+                var METRIC_SRC = {"MFA Adoption Rate":"Okta / Entra ID","Phishing Click Rate":"KnowBe4","Patch Compliance (Critical)":"Tenable","EDR Coverage":"CrowdStrike","Mean Time to Detect":"Splunk SIEM","Mean Time to Respond":"ServiceNow ITSM","Security Awareness Training":"LMS / Workday","Privileged Account Review":"CyberArk PAM","Vulnerability Remediation SLA":"Tenable","SIEM Log Retention":"Splunk SIEM"};
+                var srcTool = METRIC_SRC[m.label]||"connected tool";
+                var srcMode = (cisoM&&cisoM.kpis) ? "live" : "setup baseline";
                 return (
                   <div key={m.label}
-                    onClick={function(){setSelMetric({label:m.label,val:m.val,unit:m.unit,target:m.target,color:color,note:m.note});}}
+                    onClick={function(){
+                      // ticket #14 — voice-over with full detail: value, source, context.
+                      speakWithSavedVoice(m.label+" is "+m.val+m.unit+", against a target of "+m.target+m.unit+". "+m.note+". Source: "+srcTool+", "+srcMode+".");
+                      setSelMetric({label:m.label,val:m.val,unit:m.unit,target:m.target,color:color,note:m.note,source:srcTool,sourceMode:srcMode});
+                    }}
                     style={{background:C.bg,borderRadius:8,padding:"10px 12px",cursor:"pointer",
                       border:"1px solid "+(onTarget?"#0FBB8020":color+"25"),
                       transition:"box-shadow 0.15s"}}
@@ -9147,6 +9186,9 @@ function CISODash(props) {
                     <div style={{display:"flex",justifyContent:"space-between"}}>
                       <span style={{color:C.muted,fontSize:9,lineHeight:1.3,flex:1}}>{m.note}</span>
                       <span style={{color:C.muted,fontSize:9,flexShrink:0,marginLeft:6}}>target: {m.target}{m.unit}</span>
+                    </div>
+                    <div style={{color:C.muted,fontSize:8,marginTop:3,opacity:0.85}} title={"Data source: "+srcTool+" ("+srcMode+")"}>
+                      ◈ source: {srcTool} · {srcMode}
                     </div>
                   </div>
                 );
@@ -9734,9 +9776,10 @@ function CRODash(props) {
     return (
       <div>
         <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:14}}>
-          <button onClick={function(){setSelFramework(null);}}
+          {/* #17 — back returns to the individual NIST framework, not the question dashboard */}
+          <button onClick={function(){setSelFramework("nistcsf");}}
             style={{background:"transparent",border:"none",color:C.muted,cursor:"pointer",fontSize:11}}>
-            ← Back
+            ← NIST CSF 2.0
           </button>
           <span style={{color:C.muted}}>/</span>
           <span style={{color:C.text,fontSize:11,fontWeight:700}}>Systemwide NIST CSF v2.0 Outcomes</span>
@@ -9758,12 +9801,6 @@ function CRODash(props) {
           </button>
           <span style={{color:C.muted}}>/</span>
           <span style={{color:C.text,fontSize:11,fontWeight:700}}>NIST CSF 2.0 — Live Assessment</span>
-          <button onClick={function(){setSelFramework("csf_rankings");}}
-            style={{marginLeft:"auto",background:"transparent",border:"1px solid "+C.border,color:C.text,
-              borderRadius:4,padding:"5px 12px",cursor:"pointer",fontSize:10,fontWeight:600,
-              letterSpacing:"0.06em",textTransform:"uppercase"}}>
-            Systemwide Rankings →
-          </button>
         </div>
         <NistCsfScorecard/>
       </div>
@@ -9888,8 +9925,9 @@ function CRODash(props) {
       })()}
       <div style={{marginBottom:14}}>
         <h2 style={{color:C.text,fontSize:16,fontWeight:800,margin:"0 0 4px"}}>Governance & framework evidence</h2>
-        <div style={{color:C.muted,fontSize:12}}>Click any framework to drill into domains, controls, and evidence reviewed.</div>
+        <div style={{color:C.muted,fontSize:12}}>Live scores for every active framework — click a card or framework to open its scorecard.</div>
       </div>
+      <FrameworkScoreStrip onOpen={function(id){setSelFramework(id);}}/>
 
       {/* ── NIST CSF framework cards ── */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:18}}>
@@ -18378,6 +18416,7 @@ function SetupBot(props) {
   var doneRef   = useRef(false);
   var editIdxRef= useRef(null);
   var scrollRef = useRef(null);
+  var startRef  = useRef(null); // ticket #21 — questionnaire start timestamp
 
   var agentName = 'Briana';
 
@@ -18476,28 +18515,6 @@ function SetupBot(props) {
   ]
   var CYBER_INSURERS = [
     "AIG / American International Group","Beazley Group",
-    "Chubb Limited","CNA Financial",
-    "Coalition Inc.","Corvus Insurance",
-    "At-Bay","Cowbell Cyber",
-    "Everest Insurance","Hiscox",
-    "Lloyd's of London","Munich Re",
-    "Nationwide Insurance",
-    "Philadelphia Insurance Companies","QBE Insurance",
-    "Starr Companies","Swiss Re",
-    "The Hartford","Tokio Marine HCC",
-    "Travelers Companies",
-    "W.R. Berkley Corporation","XL Catlin",
-    "Zurich Insurance Group",
-    "Berkshire Hathaway Specialty",
-    "Markel Corporation","Axis Capital",
-    "Fairfax Financial",
-    "Hanover Insurance Group",
-    "Intact Insurance Specialty Solutions",
-    "No cyber insurance",
-  ];
-
-  var CYBER_INSURERS = [
-    "AIG / American International Group","Beazley Group",
     "Chubb Limited","CNA Financial","Coalition Inc.",
     "Corvus Insurance","At-Bay","Cowbell Cyber",
     "Everest Insurance","Hiscox","Lloyd's of London",
@@ -18511,6 +18528,9 @@ function SetupBot(props) {
     "Axis Capital","Fairfax Financial",
     "Hanover Insurance Group",
     "Intact Insurance Specialty Solutions",
+    // Ticket #03 — added per product owner notes (verbatim).
+    "Aspen","AWAC","Arch UK / Axis UKI / Sompo","AXA XL","Nationwide",
+    "Markel Starr","Canopius Emerging Markets","Vantage","AmTrust",
     "No cyber insurance",
   ];
 
@@ -18644,48 +18664,44 @@ function SetupBot(props) {
      choices:['BCBS Plan','Commercial Health Plan','Medicare Advantage Plan',
               'Medicaid Managed Care','Multi-line Health Insurer',
               'Regional Health Plan','Other Payer']},
-    {id:'revenue', type:'choice', group:'Scale',
+    {id:'revenue', type:'number', group:'Scale',
      ask:"What is your approximate annual premium revenue?",
-     choices:['Under $500M','$500M to $2B','$2B to $10B','$10B to $25B','$25B to $100B','Over $100B']},
-    {id:'memberCount',type:'choice',  group:'Scale',
+     placeholder:'e.g. 4200000000', hint:'Enter exact dollars (e.g. 4200000000 for $4.2B)'},
+    {id:'memberCount',type:'number',  group:'Scale',
      ask:'How many members are currently enrolled across all lines?',
-     choices:['Under 100 thousand','100K to 500K','500K to 1 million',
-              '1 to 2.5 million','2.5 to 5 million','Over 5 million']},
-    {id:'phiRecs',    type:'choice',  group:'Scale',
+     placeholder:'e.g. 3000000', hint:'Enter the exact number of members'},
+    {id:'phiRecs',    type:'number',  group:'Scale',
      ask:'How many protected health information records does {orgName} hold?',
-     choices:['Under 250K','250K to 1M','1M to 5M','5M to 15M','15M to 50M','Over 50M']},
-    {id:'claimsAmt',  type:'choice',  group:'Scale',
+     placeholder:'e.g. 3000000', hint:'Enter the exact number of PHI records'},
+    {id:'claimsAmt',  type:'number',  group:'Scale',
      ask:'What is the approximate annual dollar volume of claims {orgName} processes?',
-     choices:['Under $500M','$500M to $2B','$2B to $10B','$10B to $25B','$25B to $100B','Over $100B']},
-    {id:'surplus',    type:'choice',  group:'Capital',
+     placeholder:'e.g. 8000000000', hint:'Enter exact dollars'},
+    {id:'surplus',    type:'number',  group:'Capital',
      ask:"What is your approximate statutory surplus?",
-     choices:['Under $250M','$250M to $750M','$750M to $2B','$2B to $5B','$5B to $10B','Over $10B']},
-    {id:'rbcRatio',   type:'choice',  group:'Capital',
+     placeholder:'e.g. 2500000000', hint:'Enter exact dollars'},
+    {id:'rbcRatio',   type:'number',  group:'Capital',
      ask:'What is your current risk-based capital ratio as a percentage of company action level? The regulatory minimum is 200 percent.',
-     choices:['Below 200 percent','200 to 300 percent','300 to 400 percent',
-              '400 to 500 percent','500 to 700 percent','Over 700 percent','Unknown']},
-    {id:'ibnr',       type:'choice',  group:'Capital',
+     placeholder:'e.g. 420', hint:'Enter the percentage (e.g. 420 for 420%); leave blank if unknown'},
+    {id:'ibnr',       type:'number',  group:'Capital',
      ask:'What are your approximate incurred but not reported reserves?',
-     choices:['Under $50M','$50M to $250M','$250M to $1B','$1B to $3B',
-              '$3B to $10B','Over $10B','Unknown']},
+     placeholder:'e.g. 1500000000', hint:'Enter exact dollars; leave blank if unknown'},
     {id:'insCarrier', type:'insurer',  group:'Insurance',
      ask:'Who is your cyber liability insurance carrier? Select from the list or type to search.'},
-    {id:'insLimit',   type:'choice',  group:'Insurance',
+    {id:'insLimit',   type:'number',  group:'Insurance',
      ask:'What is your total cyber policy limit?',
-     choices:['No cyber insurance','Under $10M','$10M to $30M','$30M to $75M',
-              '$75M to $200M','Over $200M']},
-    {id:'insDeduct',  type:'choice',  group:'Insurance',
+     placeholder:'e.g. 50000000', hint:'Enter exact dollars; enter 0 if you have no cyber insurance'},
+    {id:'insDeduct',  type:'number',  group:'Insurance',
      ask:'What is your policy deductible or self-insured retention?',
-     choices:['No insurance','Under $250K','$250K to $1M','$1M to $3M','$3M to $10M','Over $10M']},
-    {id:'itBudget',   type:'choice',  group:'Budget',
+     placeholder:'e.g. 1000000', hint:'Enter exact dollars; enter 0 if not applicable'},
+    {id:'itBudget',   type:'number',  group:'Budget',
      ask:'What is your annual information technology and cybersecurity budget combined?',
-     choices:['Under $25M','$25M to $100M','$100M to $400M','$400M to $1.5B','$1.5B to $5B','Over $5B']},
-    {id:'employees',  type:'choice',  group:'Budget',
+     placeholder:'e.g. 300000000', hint:'Enter exact dollars'},
+    {id:'employees',  type:'number',  group:'Budget',
      ask:'How many full-time employees does {orgName} have?',
-     choices:['Under 500','500 to 2,500','2,500 to 8,000','8,000 to 25,000','25,000 to 100,000','Over 100,000']},
-    {id:'endpoints',  type:'choice',  group:'Budget',
+     placeholder:'e.g. 8000', hint:'Enter the exact number of full-time employees'},
+    {id:'endpoints',  type:'number',  group:'Budget',
      ask:'Approximately how many managed endpoints and devices does {orgName} operate?',
-     choices:['Under 1,000','1,000 to 5,000','5,000 to 20,000','20,000 to 75,000','75,000 to 250,000','Over 250,000']},
+     placeholder:'e.g. 12000', hint:'Enter the exact number of managed devices'},
     {id:'cmsContract',type:'choice',  group:'Governance',
      ask:'Does {orgName} hold any Medicare Advantage or Part D contracts?',
      choices:['Yes, Medicare Advantage only','Yes, Part D only','Yes, both MA and Part D',
@@ -18787,17 +18803,10 @@ function SetupBot(props) {
   }
 
   function speak(rawText) {
-    // Cancel all ongoing speech and audio before starting
-    if (window.speechSynthesis) { window.speechSynthesis.cancel(); }
-    if (window._cx_active_audios && window._cx_active_audios.length > 0) {
-      window._cx_active_audios.forEach(function(audio){
-        try {
-          audio.pause();
-          audio.currentTime = 0;
-        } catch(e) {}
-      });
-      window._cx_active_audios = [];
-    }
+    // Ticket #12 — stop everything and take a generation token so the chunk
+    // scheduler below aborts if a newer narration starts mid-playback.
+    var _spkGen = (window._cx_stopAllSpeech ? window._cx_stopAllSpeech()
+      : (window.speechSynthesis && window.speechSynthesis.cancel(), window._cx_speak_gen));
 
     var PRON = {
       'Aetna':'Aytna','Cigna':'Signah','Humana':'Hyoomana',
@@ -18978,6 +18987,8 @@ function SetupBot(props) {
 
     var idx=0;
     function next(){
+      // Abort if a newer narration superseded this one (ticket #12).
+      if(window._cx_speak_gen!==_spkGen){clearInterval(ka);return;}
       if(idx>=chunks.length||!window.speechSynthesis){clearInterval(ka);return;}
       var chunk=chunks[idx];
       var u=new window.SpeechSynthesisUtterance(chunk.text);
@@ -19042,8 +19053,11 @@ function SetupBot(props) {
     setTyping(true);
     var t = setTimeout(function(){
       setTyping(false);
+      if (startRef.current == null) { startRef.current = Date.now(); } // ticket #21
       addMsg('bot', QS[0].ask);
       speak(QS[0].ask);
+      // ticket #04 — record that Briana has greeted; later steps stay context-continuous.
+      if (typeof window !== 'undefined') { window._cx_briana_greeted = true; }
     }, 800);
     return function(){
       clearTimeout(t);
@@ -19152,6 +19166,15 @@ function SetupBot(props) {
     if (window.speechSynthesis) { window.speechSynthesis.cancel(); }
     if (yes) {
       addMsg('user', 'Looks correct — continue');
+
+      // ticket #21 — report how long the questionnaire took.
+      if (startRef.current) {
+        var secs = Math.max(1, Math.round((Date.now() - startRef.current) / 1000));
+        var mm = Math.floor(secs / 60), ss = secs % 60;
+        var elapsed = mm > 0 ? (mm + ' min ' + ss + ' sec') : (ss + ' sec');
+        accRef.current = Object.assign({}, accRef.current, { setupElapsedSeconds: secs });
+        addMsg('bot', 'Nicely done — you completed setup in ' + elapsed + '.');
+      }
 
       // Save org profile
       var orgData = accRef.current;
@@ -19473,6 +19496,22 @@ function SetupBot(props) {
                   );
                 })}
               </div>
+            </div>
+          )}
+          {curQ.type==='number'&&(
+            <div>
+              <div style={{display:'flex',gap:7}}>
+                <input value={input} autoFocus inputMode='decimal'
+                  onChange={function(e){ setInput(e.target.value.replace(/[^0-9.]/g,'')); }}
+                  onKeyDown={function(e){ if(e.key==='Enter'&&input.trim()){ pick(input.trim()); setInput(''); } }}
+                  placeholder={curQ.placeholder||'Enter a number'}
+                  style={{flex:1,background:C.card,border:'1px solid '+C.acc+'40',
+                    borderRadius:8,padding:'9px 12px',color:C.text,fontSize:12,outline:'none'}}/>
+                <button onClick={function(){ if(input.trim()){ pick(input.trim()); setInput(''); } }}
+                  style={{background:C.acc,border:'none',color:'#fff',borderRadius:8,
+                    padding:'9px 16px',cursor:'pointer',fontSize:12,fontWeight:700}}>Next</button>
+              </div>
+              {curQ.hint&&<div style={{color:C.muted,fontSize:10,marginTop:4}}>{curQ.hint}</div>}
             </div>
           )}
           {curQ.type==='text'&&(
