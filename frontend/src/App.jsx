@@ -6,6 +6,7 @@ import CLODash from "./pages/CLODash";
 import AdminDatabase from "./pages/AdminDatabase";
 import ExecutiveAgentBrief from "./components/ExecutiveAgentBrief";
 import NistCsfScorecard from "./components/NistCsfScorecard";
+import CsfRankings from "./components/CsfRankings";
 import AuditDash from "./pages/AuditDash";
 import ReviewMappings from "./pages/ReviewMappings";
 import ProcessGraph from "./pages/ProcessGraph";
@@ -9687,6 +9688,23 @@ function CRODash(props) {
     );
   }
 
+  if (selFramework === "csf_rankings") {
+    // Systemwide view: every organization's scorecard, ranked and plotted.
+    return (
+      <div>
+        <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:14}}>
+          <button onClick={function(){setSelFramework(null);}}
+            style={{background:"transparent",border:"none",color:C.muted,cursor:"pointer",fontSize:11}}>
+            ← Back
+          </button>
+          <span style={{color:C.muted}}>/</span>
+          <span style={{color:C.text,fontSize:11,fontWeight:700}}>Systemwide NIST CSF v2.0 Outcomes</span>
+        </div>
+        <CsfRankings/>
+      </div>
+    );
+  }
+
   if (selFramework === "nistcsf") {
     // NIST CSF 2.0 is the live assessment — computed from connected systems
     // and intake evidence, not the hardcoded narrative the other drills use.
@@ -9699,6 +9717,12 @@ function CRODash(props) {
           </button>
           <span style={{color:C.muted}}>/</span>
           <span style={{color:C.text,fontSize:11,fontWeight:700}}>NIST CSF 2.0 — Live Assessment</span>
+          <button onClick={function(){setSelFramework("csf_rankings");}}
+            style={{marginLeft:"auto",background:"transparent",border:"1px solid "+C.border,color:C.text,
+              borderRadius:4,padding:"5px 12px",cursor:"pointer",fontSize:10,fontWeight:600,
+              letterSpacing:"0.06em",textTransform:"uppercase"}}>
+            Systemwide Rankings →
+          </button>
         </div>
         <NistCsfScorecard/>
       </div>
@@ -9755,8 +9779,14 @@ function CRODash(props) {
       {/* AI agent brief - the tab opens here; a question reveals the governance body */}
       <ExecutiveAgentBrief role="CRO" entry onAnswer={applyAgentAnswer} />
 
-      {/* Direct access to the live CSF scorecard — no question required */}
-      <div style={{display:"flex",justifyContent:"flex-end",margin:"10px 0"}}>
+      {/* Direct access to the live CSF scorecard + systemwide rankings */}
+      <div style={{display:"flex",justifyContent:"flex-end",gap:8,margin:"10px 0"}}>
+        <button onClick={function(){setSelFramework("csf_rankings");}}
+          style={{background:"transparent",border:"1px solid "+C.border,color:C.text,
+            borderRadius:4,padding:"7px 16px",cursor:"pointer",fontSize:11,fontWeight:600,
+            letterSpacing:"0.06em",textTransform:"uppercase"}}>
+          Systemwide Rankings →
+        </button>
         <button onClick={function(){setSelFramework("nistcsf");}}
           style={{background:"transparent",border:"1px solid "+C.border,color:C.text,
             borderRadius:4,padding:"7px 16px",cursor:"pointer",fontSize:11,fontWeight:600,

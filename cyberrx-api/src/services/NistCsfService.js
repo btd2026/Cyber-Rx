@@ -319,6 +319,70 @@ const FUNCTIONS = [
 ];
 
 // ---------------------------------------------------------------------------
+// Inherent risk (1.0–5.0): how much is at stake for this org, independent of
+// controls — scaled from PHI records held, premium revenue, and membership.
+// Log interpolation between small-plan and national-carrier anchors.
+// ---------------------------------------------------------------------------
+function logInterp(value, lo, hi) {
+  const v = Number(value);
+  if (!Number.isFinite(v) || v <= 0) return null;
+  const t = (Math.log10(v) - Math.log10(lo)) / (Math.log10(hi) - Math.log10(lo));
+  return Math.max(1, Math.min(5, 1 + t * 4));
+}
+
+function computeInherentRisk(I) {
+  const parts = [
+    { w: 0.4, v: logInterp(I.phi_records, 1e5, 5e7) },   // 100K → 50M PHI records
+    { w: 0.3, v: logInterp(I.revenue, 1e8, 1e11) },      // $100M → $100B revenue
+    { w: 0.3, v: logInterp(I.member_count, 5e4, 1e7) },  // 50K → 10M members
+  ].filter((p) => p.v != null);
+  if (!parts.length) return null;
+  const wsum = parts.reduce((s, p) => s + p.w, 0);
+  return Math.round((parts.reduce((s, p) => s + p.v * p.w, 0) / wsum) * 100) / 100;
+}
+
+// Compact label for chart points: "Blue Cross Blue Shield of Massachusetts"
+// → BCBSM, "Cigna Healthcare" → CH. Editable later via the admin DB page.
+function deriveAbbrev(name) {
+  const words = String(name || '').replace(/[^a-zA-Z\s]/g, ' ').split(/\s+/)
+    .filter((w) => w && !['of', 'the', 'and', 'demo'].includes(w.toLowerCase()));
+  if (!words.length) return '—';
+  if (words.length === 1) return words[0].slice(0, 6).toUpperCase();
+  return words.map((w) => w[0]).join('').slice(0, 8).toUpperCase();
+}
+
+async function persistScorecard(orgId, assessment) {
+  try {
+    const orgRows = await safeRows(`SELECT name FROM orgs WHERE id=$1`, [orgId]);
+    const name = (orgRows[0] || {}).name || orgId;
+    const fns = {};
+    assessment.functions.forEach((f) => { fns[f.id] = f.maturity; });
+    await db.query(
+      `INSERT INTO csf_scorecards
+         (id, organization_id, org_name, abbrev, overall, tier, tier_label, inherent_risk,
+          functions, assessed_categories, total_categories, generated_at, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,NOW(),NOW())
+       ON CONFLICT (organization_id) DO UPDATE SET
+         org_name=EXCLUDED.org_name,
+         abbrev=COALESCE(csf_scorecards.abbrev, EXCLUDED.abbrev),
+         overall=EXCLUDED.overall, tier=EXCLUDED.tier, tier_label=EXCLUDED.tier_label,
+         inherent_risk=EXCLUDED.inherent_risk, functions=EXCLUDED.functions,
+         assessed_categories=EXCLUDED.assessed_categories,
+         total_categories=EXCLUDED.total_categories,
+         generated_at=NOW(), updated_at=NOW()`,
+      [
+        `csfsc_${orgId}`, orgId, name, deriveAbbrev(name),
+        assessment.overall.maturity, assessment.overall.tier || null, assessment.overall.label || null,
+        assessment.inherentRisk, JSON.stringify(fns),
+        assessment.assessedCategories, assessment.totalCategories,
+      ]
+    );
+  } catch (err) {
+    logger.warn('Failed to persist CSF scorecard snapshot', { orgId, error: err.message });
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 async function getAssessment(orgId) {
@@ -369,12 +433,13 @@ async function getAssessment(orgId) {
     ? Math.round((allAssessed.reduce((s, c) => s + c.maturity, 0) / allAssessed.length) * 100) / 100
     : null;
 
-  return {
+  const assessment = {
     framework: 'NIST CSF 2.0',
     organizationId: orgId,
     generatedAt: new Date().toISOString(),
     lastToolSync: ctx.lastSync,
     overall: { maturity: overall, ...tierOf(overall) },
+    inherentRisk: computeInherentRisk(ctx.I),
     assessedCategories: allAssessed.length,
     totalCategories: categories.length,
     autoCount: categories.filter((c) => c.mode === 'auto').length,
@@ -382,6 +447,43 @@ async function getAssessment(orgId) {
     manualCount: categories.filter((c) => c.mode === 'manual').length,
     functions,
   };
+
+  // Keep the systemwide rankings store current.
+  await persistScorecard(orgId, assessment);
+
+  return assessment;
+}
+
+/**
+ * Systemwide rankings: every organization's latest scorecard.
+ * With refresh=true (or when the store is empty) every org's assessment is
+ * recomputed from its live data first.
+ */
+async function getRankings({ refresh = false } = {}) {
+  let rows = await safeRows(`SELECT * FROM csf_scorecards ORDER BY overall DESC NULLS LAST`);
+  if (refresh || !rows.length) {
+    const orgs = await safeRows(`SELECT id FROM orgs WHERE id <> '_defaults' LIMIT 50`);
+    for (const o of orgs) {
+      try { await getAssessment(o.id); } catch (err) {
+        logger.warn('Rankings recompute failed for org', { orgId: o.id, error: err.message });
+      }
+    }
+    rows = await safeRows(`SELECT * FROM csf_scorecards ORDER BY overall DESC NULLS LAST`);
+  }
+  return rows.map((r, i) => ({
+    rank: r.overall == null ? null : i + 1,
+    organizationId: r.organization_id,
+    name: r.org_name,
+    abbrev: r.abbrev,
+    overall: r.overall == null ? null : Number(r.overall),
+    tier: r.tier,
+    tierLabel: r.tier_label,
+    inherentRisk: r.inherent_risk == null ? null : Number(r.inherent_risk),
+    functions: typeof r.functions === 'string' ? JSON.parse(r.functions || '{}') : (r.functions || {}),
+    assessedCategories: r.assessed_categories,
+    totalCategories: r.total_categories,
+    generatedAt: r.generated_at,
+  }));
 }
 
 function getQuestions() {
@@ -414,4 +516,4 @@ async function saveEvidence(orgId, items) {
   return saved;
 }
 
-module.exports = { getAssessment, getQuestions, saveEvidence, CATEGORIES, EVIDENCE_QUESTIONS };
+module.exports = { getAssessment, getRankings, getQuestions, saveEvidence, CATEGORIES, EVIDENCE_QUESTIONS };

@@ -510,6 +510,25 @@ async function init() {
       );
       CREATE INDEX IF NOT EXISTS csf_evidence_org ON csf_evidence(organization_id);
 
+      -- Latest NIST CSF 2.0 scorecard per organization (systemwide rankings).
+      -- Upserted every time an assessment is computed.
+      CREATE TABLE IF NOT EXISTS csf_scorecards (
+        id                  TEXT PRIMARY KEY,
+        organization_id     TEXT NOT NULL UNIQUE,
+        org_name            TEXT,
+        abbrev              TEXT,
+        overall             NUMERIC,
+        tier                INTEGER,
+        tier_label          TEXT,
+        inherent_risk       NUMERIC,
+        functions           JSONB DEFAULT '{}',
+        assessed_categories INTEGER,
+        total_categories    INTEGER,
+        generated_at        TIMESTAMPTZ DEFAULT NOW(),
+        updated_at          TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS csf_scorecards_overall ON csf_scorecards(overall DESC);
+
       -- Editable "database of mock numbers" that drives every dashboard figure.
       -- org_id '_defaults' holds shared coefficients/assumptions; per-org rows
       -- hold setup-quiz responses and org-specific values. Edit value to change
