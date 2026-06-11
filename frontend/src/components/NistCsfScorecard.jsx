@@ -212,6 +212,9 @@ const ANSWER_OPTIONS = {
   rs_co_notify: ['yes', 'partial', 'no'],
   rc_rp_drtest: ['within-12mo', 'over-12mo', 'never'],
   rc_co_comms: ['yes', 'no'],
+  id_am_inventory: ['complete', 'partial', 'none'],
+  id_ra_assessment: ['annual', 'occasional', 'never'],
+  rs_mi_process: ['formal', 'ad-hoc', 'none'],
 };
 function answerOptions(key) { return ANSWER_OPTIONS[key]; }
 

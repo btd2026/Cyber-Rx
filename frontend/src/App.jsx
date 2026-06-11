@@ -4854,6 +4854,27 @@ function Setup(props) {
 
   function launch(docRes) {
     if (docRes) { setDocResults(docRes); }
+    // Persist the security posture baseline into the org profile (setup_json)
+    // using the metrics-engine field names, so the dashboards and the NIST CSF
+    // automatic categories score from setup data immediately — connectors
+    // override these once they sync.
+    var baseline = {
+      mfaPct: mfaInput, edrPct: edrInput, siemDays: siemInput,
+      phishingPct: phishInput, patchPct: patchInput, mttdHrs: mttdInput,
+      mttrHrs: mttrInput, trainingPct: trainingInput, pamPct: pamInput,
+      vulnSLApct: vulnInput,
+    };
+    var payload = { orgName: orgName };
+    var anyMetric = false;
+    Object.keys(baseline).forEach(function(k){
+      var v = parseFloat(baseline[k]);
+      if (!isNaN(v)) { payload[k] = v; anyMetric = true; }
+    });
+    if (anyMetric) {
+      saveOrgProfile(payload).catch(function(err){
+        console.warn('Security baseline save failed:', err.message);
+      });
+    }
     setLaunching(true); setPct(0); setLIdx(0);
     LSTEPS.forEach(function(_,i){
       setTimeout(function(){ setLIdx(i); setPct(Math.round((i+1)/LSTEPS.length*100)); }, i*550);
@@ -6682,6 +6703,45 @@ function Setup(props) {
                 </Card>
               );
             })}
+            {/* ── Security posture baseline — feeds the automatic NIST CSF categories ── */}
+            <Card style={{marginBottom:14}}>
+              <SH label="Security Posture Baseline"/>
+              <div style={{color:C.muted,fontSize:11,marginBottom:10,lineHeight:1.5}}>
+                These ten numbers score the <strong style={{color:C.text}}>automatic</strong> categories of your live NIST CSF 2.0
+                assessment from day one. Enter current values from your tools — once a connector above syncs, it takes over
+                automatically. Leave blank anything you don't know.
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:8}}>
+                {[
+                  {label:"MFA Enrollment",            unit:"%",   val:mfaInput,      set:setMfaInput,      hint:"e.g. 78",  csf:"PR.AA"},
+                  {label:"PAM / Privileged Session Coverage", unit:"%", val:pamInput, set:setPamInput,      hint:"e.g. 43",  csf:"PR.AA"},
+                  {label:"Security Training Completion",unit:"%", val:trainingInput, set:setTrainingInput, hint:"e.g. 71",  csf:"PR.AT"},
+                  {label:"Phishing Simulation Click Rate",unit:"%",val:phishInput,   set:setPhishInput,    hint:"e.g. 9.2", csf:"PR.AT"},
+                  {label:"Critical Patch Compliance",  unit:"%",   val:patchInput,    set:setPatchInput,    hint:"e.g. 63",  csf:"PR.PS"},
+                  {label:"Vulnerability Remediation SLA",unit:"%", val:vulnInput,     set:setVulnInput,     hint:"e.g. 63",  csf:"PR.PS"},
+                  {label:"EDR Coverage",               unit:"%",   val:edrInput,      set:setEdrInput,      hint:"e.g. 71",  csf:"PR.PS / DE.CM"},
+                  {label:"SIEM Log Retention",         unit:"days",val:siemInput,     set:setSiemInput,     hint:"e.g. 14",  csf:"DE.CM"},
+                  {label:"Mean Time to Detect",        unit:"hrs", val:mttdInput,     set:setMttdInput,     hint:"e.g. 47",  csf:"DE.CM / DE.AE"},
+                  {label:"Mean Time to Respond",       unit:"hrs", val:mttrInput,     set:setMttrInput,     hint:"e.g. 6.8", csf:"RS.MA / DE.AE"},
+                ].map(function(m){
+                  return (
+                    <div key={m.label} style={{background:C.bg,border:"1px solid "+C.border,borderRadius:8,padding:"8px 11px"}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                        <span style={{color:C.text,fontSize:10,fontWeight:700}}>{m.label}</span>
+                        <span style={{color:C.acc,fontSize:8,fontWeight:700,background:C.faint,borderRadius:3,padding:"1px 6px"}}>⚙ {m.csf}</span>
+                      </div>
+                      <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                        <input value={m.val} placeholder={m.hint} inputMode="decimal"
+                          onChange={function(e){m.set(e.target.value);}}
+                          style={{flex:1,background:C.card,border:"1px solid "+C.border,borderRadius:6,
+                            padding:"5px 9px",color:C.text,fontSize:12,outline:"none"}}/>
+                        <span style={{color:C.muted,fontSize:9,flexShrink:0}}>{m.unit}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
             {/* Architecture reminder */}
             <div style={{padding:"10px 14px",background:C.faint,border:"1px solid "+C.acc+"20",borderRadius:8,marginBottom:14}}>
               <div style={{color:C.acc,fontWeight:700,fontSize:11,marginBottom:4}}>How CyberRx maps your data</div>
@@ -9694,6 +9754,15 @@ function CRODash(props) {
       <BrianaBar pageKey="cro" orgName={props.orgName||""} brianaOn={props.brianaOn!==false} setBrianaOn={props.setBrianaOn||function(){}}/>
       {/* AI agent brief - the tab opens here; a question reveals the governance body */}
       <ExecutiveAgentBrief role="CRO" entry onAnswer={applyAgentAnswer} />
+
+      {/* Direct access to the live CSF scorecard — no question required */}
+      <div style={{display:"flex",justifyContent:"flex-end",margin:"10px 0"}}>
+        <button onClick={function(){setSelFramework("nistcsf");}}
+          style={{background:"#3B9EFF14",border:"1px solid #3B9EFF40",color:"#3B9EFF",
+            borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:700}}>
+          ◫ NIST CSF 2.0 Live Scorecard →
+        </button>
+      </div>
 
       {croView&&(<div>
       {(function(){
@@ -18555,6 +18624,33 @@ function SetupBot(props) {
     {id:'csf_rc_co_comms', type:'choice', group:'Security Evidence',
      ask:'Is there a recovery communication plan covering members, regulators, and media?',
      choices:['Yes','No']},
+    {id:'csf_gv_oc_context', type:'choice', group:'Security Evidence',
+     ask:'Is your organizational context documented — mission, stakeholder expectations, and the regulatory landscape that applies to {orgName}?',
+     choices:['Yes — fully documented','Partially documented','Not documented']},
+    {id:'csf_gv_rm_appetite', type:'choice', group:'Security Evidence',
+     ask:'Is there a board-approved cyber risk appetite statement?',
+     choices:['Yes — board-approved','In draft','No']},
+    {id:'csf_gv_sc_vendors', type:'choice', group:'Security Evidence',
+     ask:'Do you conduct security assessments of your critical vendors?',
+     choices:['All critical vendors assessed','Some vendors assessed','No vendor assessments']},
+    {id:'csf_de_ae_soc', type:'choice', group:'Security Evidence',
+     ask:'What is your security-operations monitoring coverage?',
+     choices:['24x7 (in-house or managed SOC)','Business hours only','No dedicated monitoring']},
+    {id:'csf_rs_ma_irplan', type:'choice', group:'Security Evidence',
+     ask:'Do you have a documented incident response plan, and was a tabletop exercise run in the last 12 months?',
+     choices:['Plan documented and tabletop run','Plan documented, no recent tabletop','No documented plan']},
+    {id:'csf_rs_co_notify', type:'choice', group:'Security Evidence',
+     ask:'Are breach-notification procedures documented for OCR, CMS, and state attorneys general?',
+     choices:['Yes — all documented','Partially documented','Not documented']},
+    {id:'csf_id_am_inventory', type:'choice', group:'Security Evidence',
+     ask:'Does {orgName} maintain a complete asset inventory (CMDB) covering hardware, software, and cloud?',
+     choices:['Complete inventory','Partial inventory','No inventory']},
+    {id:'csf_id_ra_assessment', type:'choice', group:'Security Evidence',
+     ask:'Do you conduct a formal cyber risk assessment, such as NIST SP 800-30?',
+     choices:['Yes — annually','Occasionally','Never']},
+    {id:'csf_rs_mi_process', type:'choice', group:'Security Evidence',
+     ask:'Last one! Is there a formal remediation process with tracked owners and due dates?',
+     choices:['Formal process with tracking','Ad hoc','No process']},
     {id:'confirm',    type:'confirm', group:'Review', ask:null},
   ];
 
@@ -18571,6 +18667,15 @@ function SetupBot(props) {
     csf_rs_an_forensics:  {key:'rs_an_forensics',  map:{'In-house forensics team':'in-house','External retainer (IR firm)':'retainer','None':'none'}},
     csf_rc_rp_drtest:     {key:'rc_rp_drtest',     map:{'Within the last 12 months':'within-12mo','More than a year ago':'over-12mo','Never tested':'never'}},
     csf_rc_co_comms:      {key:'rc_co_comms',      map:{'Yes':'yes','No':'no'}},
+    csf_gv_oc_context:    {key:'gv_oc_context',    map:{'Yes — fully documented':'yes','Partially documented':'partial','Not documented':'no'}},
+    csf_gv_rm_appetite:   {key:'gv_rm_appetite',   map:{'Yes — board-approved':'yes','In draft':'draft','No':'no'}},
+    csf_gv_sc_vendors:    {key:'gv_sc_vendors',    map:{'All critical vendors assessed':'all','Some vendors assessed':'some','No vendor assessments':'none'}},
+    csf_de_ae_soc:        {key:'de_ae_soc',        map:{'24x7 (in-house or managed SOC)':'24x7','Business hours only':'business-hours','No dedicated monitoring':'none'}},
+    csf_rs_ma_irplan:     {key:'rs_ma_irplan',     map:{'Plan documented and tabletop run':'plan-and-tabletop','Plan documented, no recent tabletop':'plan-only','No documented plan':'none'}},
+    csf_rs_co_notify:     {key:'rs_co_notify',     map:{'Yes — all documented':'yes','Partially documented':'partial','Not documented':'no'}},
+    csf_id_am_inventory:  {key:'id_am_inventory',  map:{'Complete inventory':'complete','Partial inventory':'partial','No inventory':'none'}},
+    csf_id_ra_assessment: {key:'id_ra_assessment', map:{'Yes — annually':'annual','Occasionally':'occasional','Never':'never'}},
+    csf_rs_mi_process:    {key:'rs_mi_process',    map:{'Formal process with tracking':'formal','Ad hoc':'ad-hoc','No process':'none'}},
   };
   function csfEvidenceItems(orgData) {
     var items = [];

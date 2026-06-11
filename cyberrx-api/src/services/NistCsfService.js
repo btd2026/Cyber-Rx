@@ -79,6 +79,17 @@ const EVIDENCE_QUESTIONS = [
   { key: 'rc_co_comms',     category: 'RC.CO', doc: 'Recovery communication plan',
     question: 'Is there a recovery communication plan covering members, regulators, and media?',
     options: { yes: 90, no: 10 } },
+  // Intake fallbacks for the platform-data categories, so a brand-new org gets
+  // a fully populated scorecard at setup; live data takes over as it lands.
+  { key: 'id_am_inventory', category: 'ID.AM', doc: 'CMDB export / asset inventory',
+    question: 'Do you maintain a complete asset inventory (CMDB) covering hardware, software, and cloud?',
+    options: { complete: 90, partial: 55, none: 10 } },
+  { key: 'id_ra_assessment', category: 'ID.RA', doc: 'Annual risk assessment report',
+    question: 'Do you conduct a formal cyber risk assessment (e.g. NIST SP 800-30)?',
+    options: { annual: 90, occasional: 55, never: 10 } },
+  { key: 'rs_mi_process',   category: 'RS.MI', doc: 'Remediation SLA policy',
+    question: 'Is there a formal remediation process with tracked owners and due dates?',
+    options: { formal: 90, 'ad-hoc': 50, none: 10 } },
 ];
 
 const TIERS = [
@@ -211,19 +222,19 @@ const CATEGORIES = [
 
   // ── IDENTIFY ──────────────────────────────────────────────────────────────
   { id: 'ID.AM', fn: 'ID', name: 'Asset Management', mode: 'auto',
-    sources: ['Asset inventory / CMDB (live)'], evidenceKeys: [],
+    sources: ['Asset inventory / CMDB (live)', 'Intake fallback: id_am_inventory'], evidenceKeys: ['id_am_inventory'],
     score: (c) => {
       const t = n(c.assets.total);
-      if (!t) return null;
+      if (!t) return answerScore(c, 'id_am_inventory'); // intake fallback until assets land
       const supported = (t - n(c.assets.eol)) / t;        // share not end-of-life
       const clean = n(c.assets.clean) / t;                // share with no crit/high vulns
       return clamp(supported * 50 + clean * 25 + n(c.assets.avg_patch) * 0.25);
     } },
   { id: 'ID.RA', fn: 'ID', name: 'Risk Assessment', mode: 'auto',
-    sources: ['Risk register (live)', 'Findings (live)'], evidenceKeys: [],
+    sources: ['Risk register (live)', 'Intake fallback: id_ra_assessment'], evidenceKeys: ['id_ra_assessment'],
     score: (c) => {
       const t = n(c.risks.total);
-      if (!t) return null;
+      if (!t) return answerScore(c, 'id_ra_assessment'); // intake fallback until risks land
       return clamp(35 + (n(c.risks.quantified) / t) * 35 + (n(c.risks.owned) / t) * 30);
     } },
   { id: 'ID.IM', fn: 'ID', name: 'Improvement', mode: 'manual',
@@ -282,10 +293,10 @@ const CATEGORIES = [
       answerScore(c, 'rs_co_notify'),
     ]) },
   { id: 'RS.MI', fn: 'RS', name: 'Incident Mitigation', mode: 'auto',
-    sources: ['Remediation tasks (live)'], evidenceKeys: [],
+    sources: ['Remediation tasks (live)', 'Intake fallback: rs_mi_process'], evidenceKeys: ['rs_mi_process'],
     score: (c) => {
       const open = n(c.tasks.open);
-      if (!open && !n(c.tasks.overdue)) return null;
+      if (!open && !n(c.tasks.overdue)) return answerScore(c, 'rs_mi_process'); // intake fallback
       return clamp(100 - (open ? (n(c.tasks.overdue) / open) * 80 : 0));
     } },
 
