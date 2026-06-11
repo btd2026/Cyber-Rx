@@ -9292,6 +9292,35 @@ function CRODash(props) {
 
   var frameworks = ['hipaa','nistcsf','nist_800_53','cis','naic','iso27001','soc2','cms','pci','gdpr'];
 
+  // Agent-driven view: the tab opens with just the agent; a question reveals the body.
+  var _crav=useState(null); var croView=_crav[0]; var setCroView=_crav[1];
+  var _craq=useState("");    var croQ=_craq[0];    var setCroQ=_craq[1];
+  function applyAgentAnswer(ans){
+    if(!ans||!ans.matched||ans.source==="out_of_scope") return;
+    var q=String(ans.matchedQuestion||ans.question||"").toLowerCase();
+    setCroQ(ans.matchedQuestion||ans.question||"");
+    var v = /owner|unassigned/.test(q)                 ? "owners"
+          : /exposure|aggregate|quantif/.test(q)       ? "exposure"
+          : /appetite|threshold|breach|tolerance|kri/.test(q) ? "appetite"
+          : "appetite"; // critical/high counts / default
+    setCroView(v);
+  }
+  function clearCroView(){ setCroView(null); setCroQ(""); }
+  function croViewMeta(view){
+    var crits=FINDINGS.filter(function(f){return f.sev==="Critical";}).length;
+    var highs=FINDINGS.filter(function(f){return f.sev==="High";}).length;
+    var sc=calculateOverallScore({mfaPct:props.mfaPct,edrPct:props.edrPct,siemDays:props.siemDays,
+      phishingPct:props.phishingPct,patchPct:props.patchPct,mttdHrs:props.mttdHrs,mttrHrs:props.mttrHrs,
+      trainingPct:props.trainingPct,pamPct:props.pamPct});
+    var grossM=285+346+259+78+340;
+    if(view==="exposure") return {title:"Aggregate Risk Exposure",num:"$"+(grossM/1000).toFixed(2)+"B",unit:"",color:"#EF4545",
+      label:"Quantified exposure across active risks",sub:Math.round(grossM*1e6/(surplus||2500e6)*100)+"% of statutory surplus · posture "+sc+"/100"};
+    if(view==="owners") return {title:"Open Risks",num:String(FINDINGS.length),unit:"",color:"#F5A623",
+      label:"Open findings tracked against appetite",sub:crits+" critical · "+highs+" high — each needs an assigned owner & decision"};
+    return {title:"Risk Appetite Status",num:String(crits),unit:"",color:crits>0?"#EF4545":"#0FBB80",
+      label:crits>0?"Critical risks breaching board appetite":"Within board-approved appetite",sub:crits+" critical · "+highs+" high open · posture "+sc+"/100"};
+  }
+
   function ScoreBar(score, color) {
     return (
       <div style={{display:"flex",gap:8,alignItems:"center"}}>
@@ -9644,10 +9673,34 @@ function CRODash(props) {
     <div>
       <DashNav current="cro" go={go}/>
       <BrianaBar pageKey="cro" orgName={props.orgName||""} brianaOn={props.brianaOn!==false} setBrianaOn={props.setBrianaOn||function(){}}/>
-      {/* AI agent brief - continuous, role-specific executive intelligence */}
-      <ExecutiveAgentBrief role="CRO" />
+      {/* AI agent brief - the tab opens here; a question reveals the governance body */}
+      <ExecutiveAgentBrief role="CRO" entry onAnswer={applyAgentAnswer} />
+
+      {croView&&(<div>
+      {(function(){
+        var h=croViewMeta(croView);
+        return (
+          <div style={{display:"flex",gap:18,alignItems:"center",background:C.card,
+            border:"1.5px solid "+h.color+"35",borderLeft:"5px solid "+h.color,borderRadius:12,
+            padding:"16px 20px",margin:"14px 0"}}>
+            <div style={{color:h.color,fontSize:40,fontWeight:800,fontFamily:"monospace",lineHeight:1,flexShrink:0}}>
+              {h.num}<span style={{color:C.muted,fontSize:15,fontWeight:600}}>{h.unit}</span>
+            </div>
+            <div style={{flex:1}}>
+              <div style={{color:"#A78BFA",fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:2}}>Chief Risk Officer — {h.title}</div>
+              <div style={{color:C.text,fontSize:14,fontWeight:800,marginBottom:2}}>{h.label}</div>
+              <div style={{color:C.muted,fontSize:11,lineHeight:1.5}}>{croQ?("Answering: “"+croQ+"” · "):""}{h.sub}</div>
+            </div>
+            <button onClick={clearCroView}
+              style={{background:"transparent",border:"1px solid "+C.border,color:C.muted,
+                borderRadius:7,padding:"5px 10px",cursor:"pointer",fontSize:11,whiteSpace:"nowrap",flexShrink:0}}>
+              ← Ask another
+            </button>
+          </div>
+        );
+      })()}
       <div style={{marginBottom:14}}>
-        <h2 style={{color:C.text,fontSize:18,fontWeight:800,margin:"0 0 4px"}}>CRO / Audit Dashboard</h2>
+        <h2 style={{color:C.text,fontSize:16,fontWeight:800,margin:"0 0 4px"}}>Governance & framework evidence</h2>
         <div style={{color:C.muted,fontSize:12}}>Click any framework to drill into domains, controls, and evidence reviewed.</div>
       </div>
 
@@ -10143,6 +10196,7 @@ function CRODash(props) {
         })()}
 
       </div>
+      </div>)}
 
     </div>
   );
