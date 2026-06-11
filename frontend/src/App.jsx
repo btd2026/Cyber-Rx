@@ -249,6 +249,26 @@ var CROWN_JEWEL_PROCS = [
   {id:"premium_billing",name:"Premium Billing & Collections",              icon:"💳", score:77, crits:0, highs:1, trend:mkT(77),
    subcomponents:["Premium invoicing","Payment processing","Reconciliation","Delinquency management"],
    why:["Revenue continuity","Payment-card and bank data","Financial reporting"]},
+  // Papa #7 — provider-side processes (for payers with delivery operations or
+  // integrated payer-provider organizations). Standard provider taxonomy:
+  // HFMA revenue cycle, ONC/HIM, and ambulatory operations references.
+  {type:"section", id:"provider_section", name:"Provider Operations (integrated payer-provider)", icon:"🩺",
+   note:"Select these only if the organization also delivers care (owned clinics, medical groups, or an integrated delivery system)."},
+  {id:"patient_access", name:"Patient Access & Scheduling",                 icon:"📅", score:75, crits:0, highs:1, trend:mkT(75), parent:"provider_section",
+   subcomponents:["Registration","Scheduling","Insurance verification","Referrals"],
+   why:["Patient PHI at intake","Care disruption if down"]},
+  {id:"clinical_ops",   name:"Clinical Care Delivery & EHR Operations",     icon:"🏥", score:68, crits:1, highs:2, trend:mkT(68), parent:"provider_section",
+   subcomponents:["EHR (Epic/Cerner)","CPOE & clinical documentation","e-Prescribing","Clinical decision support"],
+   why:["Patient-safety impact","Ransomware downtime risk","Highest-sensitivity PHI"]},
+  {id:"revenue_cycle",  name:"Provider Revenue Cycle Management",           icon:"🧾", score:73, crits:0, highs:2, trend:mkT(73), parent:"provider_section",
+   subcomponents:["Charge capture","Coding (ICD-10/CPT)","Claims submission","Denials & collections"],
+   why:["Cash-flow continuity","Fraud exposure"]},
+  {id:"him_records",    name:"Health Information Management",               icon:"🗂", score:79, crits:0, highs:1, trend:mkT(79), parent:"provider_section",
+   subcomponents:["Medical records","Release of information","Retention & disposition","Audit trails"],
+   why:["HIPAA designated record set","Legal hold obligations"]},
+  {id:"telehealth",     name:"Telehealth & Remote Care",                    icon:"📱", score:72, crits:0, highs:1, trend:mkT(72), parent:"provider_section",
+   subcomponents:["Virtual visits","Remote patient monitoring","Patient messaging"],
+   why:["Internet-facing PHI","Third-party platform risk"]},
 ];
 
 var ORG_TEMPLATES = {
@@ -5825,6 +5845,27 @@ function Setup(props) {
 
         {step===4&&(
   <div>
+    {/* Papa #8 — third-party assessment documents to collect per vendor.
+        Saraqael reviews each and feeds scoring/findings to the dashboards. */}
+    <div style={{background:C.faint,border:"1px solid "+C.acc+"25",borderRadius:10,padding:"12px 16px",marginBottom:14}}>
+      <div style={{color:C.acc,fontSize:11,fontWeight:700,marginBottom:6}}>
+        📄 Assessment documents to collect from each critical vendor
+      </div>
+      <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+        {["SOC 2 Type II report","HITRUST CSF certification","ISO 27001 certificate","Penetration test report",
+          "Vulnerability scan results","HIPAA BAA","Incident response plan","BC/DR plan","Subprocessor list",
+          "Cyber insurance certificate","Network architecture diagram","SIG / CAIQ questionnaire","PCI DSS AOC"].map(function(d){
+          return (
+            <span key={d} style={{color:C.text,fontSize:9.5,background:C.dim,borderRadius:4,padding:"3px 8px"}}>{d}</span>
+          );
+        })}
+      </div>
+      <div style={{color:C.muted,fontSize:10,marginTop:7,lineHeight:1.5}}>
+        Upload these on the CRO tab → <strong style={{color:C.text}}>Vendor Assurance (Saraqael)</strong>. Saraqael validates
+        each document, cross-checks them against each other, and feeds risk-rated findings and scores into the vendor
+        risk signals on the CISO and CRO dashboards.
+      </div>
+    </div>
     {/* Import/API bar */}
     <div style={{background:C.panel,border:"1px solid "+C.border,borderRadius:10,marginBottom:14,overflow:"hidden"}}>
       <div style={{padding:"12px 16px",borderBottom:"1px solid "+C.border}}>
@@ -8306,7 +8347,7 @@ function CISODash(props) {
 
       {/* AI agent brief - the tab opens here; asking a question builds the dashboard below */}
       <div style={{padding:"14px 20px 0"}}>
-        <ExecutiveAgentBrief role="CISO" entry onAnswer={applyAgentAnswer} />
+        <ExecutiveAgentBrief role="CISO" entry onAnswer={applyAgentAnswer} onGeneral={function(){setDrillView(null);setAgentView("posture");setAgentQ("General dashboard");}} />
         <div style={{display:"flex",justifyContent:"flex-end",marginTop:8}}>
           <button onClick={function(){setDrillView(null);setAgentView("attackpath");setAgentQ("Show the attack path");}}
             style={{background:"transparent",border:"1px solid "+C.border,color:C.text,
@@ -9876,7 +9917,7 @@ function CRODash(props) {
       <DashNav current="cro" go={go}/>
       <BrianaBar pageKey="cro" orgName={props.orgName||""} brianaOn={props.brianaOn!==false} setBrianaOn={props.setBrianaOn||function(){}}/>
       {/* AI agent brief - the tab opens here; a question reveals the governance body */}
-      <ExecutiveAgentBrief role="CRO" entry onAnswer={applyAgentAnswer} />
+      <ExecutiveAgentBrief role="CRO" entry onAnswer={applyAgentAnswer} onGeneral={function(){setCroQ("General dashboard");setCroView("appetite");}} />
 
       {/* Direct access to the live CSF scorecard + systemwide rankings */}
       <div style={{display:"flex",justifyContent:"flex-end",gap:8,margin:"10px 0"}}>
@@ -10625,7 +10666,7 @@ function CFODash(props) {
       <BrianaBar pageKey="cfo" orgName={props.orgName||""} brianaOn={props.brianaOn!==false} setBrianaOn={props.setBrianaOn||function(){}}/>
 
       {/* AI agent brief - the tab opens here; a question selects the tab below */}
-      <ExecutiveAgentBrief role="CFO" entry onAnswer={applyAgentAnswer} />
+      <ExecutiveAgentBrief role="CFO" entry onAnswer={applyAgentAnswer} onGeneral={function(){setCfQ("General dashboard");setCfTab("overview");setCfView("overview");}} />
 
       {/* CFO Drill views */}
       {cfDrill&&(
@@ -11269,7 +11310,7 @@ function BoardDash(props) {
       <BrianaBar pageKey="boarddash" orgName={props.orgName||""} brianaOn={props.brianaOn!==false} setBrianaOn={props.setBrianaOn||function(){}}/>
 
       {/* AI agent brief - the tab opens here; a question selects the tab below */}
-      <ExecutiveAgentBrief role="Board" entry onAnswer={applyAgentAnswer} />
+      <ExecutiveAgentBrief role="Board" entry onAnswer={applyAgentAnswer} onGeneral={function(){setBQ("General dashboard");setBTab("overview");setBView("overview");}} />
 
       {!selSection&&bView&&(
       <div>
@@ -18417,6 +18458,18 @@ function SetupBot(props) {
   var editIdxRef= useRef(null);
   var scrollRef = useRef(null);
   var startRef  = useRef(null); // ticket #21 — questionnaire start timestamp
+  // Papa #3/#5 — pending follow-up after an answer: doc upload-or-skip, or a
+  // free-text follow-up (e.g. who the IR retainer is with).
+  var _pa=useState(null); var pendingAsk=_pa[0]; var setPendingAsk=_pa[1];
+  var CSF_DOC_PROMPTS = {
+    csf_gv_po_policy:   {doc:'information security policy',    positive:['Yes — board-approved and current','Yes, but over a year old']},
+    csf_gv_rm_appetite: {doc:'risk appetite statement',         positive:['Yes — board-approved','In draft']},
+    csf_rs_ma_irplan:   {doc:'incident response plan',          positive:['Plan documented and tabletop run','Plan documented, no recent tabletop']},
+    csf_rs_co_notify:   {doc:'breach-notification procedures',  positive:['Yes — all documented','Partially documented']},
+    csf_rc_rp_drtest:   {doc:'latest disaster-recovery test report', positive:['Within the last 12 months','More than a year ago']},
+    csf_rc_co_comms:    {doc:'recovery communication plan',     positive:['Yes']},
+    csf_gv_oc_context:  {doc:'organizational context document', positive:['Yes — fully documented']},
+  };
 
   var agentName = 'Briana';
 
@@ -18732,7 +18785,7 @@ function SetupBot(props) {
      choices:['Backups tested and systems redundant','Backups only — untested or no redundancy','Neither']},
     {id:'csf_rs_an_forensics', type:'choice', group:'Security Evidence',
      ask:'What incident analysis or forensics capability does {orgName} have?',
-     choices:['In-house forensics team','External retainer (IR firm)','None']},
+     choices:['In-house forensics team','External retainer (IR firm)','Both in-house and external','None']},
     {id:'csf_rc_rp_drtest', type:'choice', group:'Security Evidence',
      ask:'When was your last full disaster-recovery test?',
      choices:['Within the last 12 months','More than a year ago','Never tested']},
@@ -18779,7 +18832,7 @@ function SetupBot(props) {
     csf_pr_ds_encryption: {key:'pr_ds_encryption', map:{'Fully encrypted at rest and in transit':'fully','Partially encrypted':'partially','Not encrypted':'no'}},
     csf_pr_ds_dlp:        {key:'pr_ds_dlp',        map:{'Yes — DLP deployed':'yes','Partial deployment':'partial','No DLP':'no'}},
     csf_pr_ir_resilience: {key:'pr_ir_resilience', map:{'Backups tested and systems redundant':'both','Backups only — untested or no redundancy':'backups-only','Neither':'neither'}},
-    csf_rs_an_forensics:  {key:'rs_an_forensics',  map:{'In-house forensics team':'in-house','External retainer (IR firm)':'retainer','None':'none'}},
+    csf_rs_an_forensics:  {key:'rs_an_forensics',  map:{'In-house forensics team':'in-house','External retainer (IR firm)':'retainer','Both in-house and external':'both','None':'none'}},
     csf_rc_rp_drtest:     {key:'rc_rp_drtest',     map:{'Within the last 12 months':'within-12mo','More than a year ago':'over-12mo','Never tested':'never'}},
     csf_rc_co_comms:      {key:'rc_co_comms',      map:{'Yes':'yes','No':'no'}},
     csf_gv_oc_context:    {key:'gv_oc_context',    map:{'Yes — fully documented':'yes','Partially documented':'partial','Not documented':'no'}},
@@ -18797,7 +18850,16 @@ function SetupBot(props) {
     Object.keys(CSF_EVIDENCE_MAP).forEach(function(qid){
       var m = CSF_EVIDENCE_MAP[qid];
       var ans = m.map[orgData[qid]];
-      if (ans) { items.push({ key: m.key, answer: ans }); }
+      if (ans) {
+        var item = { key: m.key, answer: ans };
+        // Papa #3 — attach the uploaded document name when one was provided.
+        if (orgData[qid + '_doc']) { item.docName = orgData[qid + '_doc']; }
+        // Papa #5 — record who the external IR retainer is with.
+        if (qid === 'csf_rs_an_forensics' && orgData.csf_rs_an_forensics_firm) {
+          item.docName = 'IR retainer: ' + orgData.csf_rs_an_forensics_firm;
+        }
+        items.push(item);
+      }
     });
     return items;
   }
@@ -19119,7 +19181,37 @@ function SetupBot(props) {
       return;
     }
 
-    var next = qIdx + 1;
+    // Papa #3 — when a doc-backed answer indicates a document exists, offer to
+    // upload it now or skip and upload later, before moving on.
+    var docPrompt = CSF_DOC_PROMPTS[q.id];
+    if (docPrompt && docPrompt.positive.indexOf(value) >= 0) {
+      setPendingAsk({ kind: 'upload', qid: q.id, doc: docPrompt.doc });
+      setTyping(true);
+      setTimeout(function(){
+        setTyping(false);
+        var msg = 'Great — do you want to upload your ' + docPrompt.doc + ' now? You can also skip and upload it later on the CSF scorecard.';
+        addMsg('bot', msg); speak(msg);
+      }, 500);
+      return;
+    }
+    // Papa #5 — external forensics: ask who the retainer is with.
+    if (q.id === 'csf_rs_an_forensics' && /external/i.test(value)) {
+      setPendingAsk({ kind: 'text', qid: 'csf_rs_an_forensics_firm', ask: 'Who is your incident-response retainer with?' });
+      setTyping(true);
+      setTimeout(function(){
+        setTyping(false);
+        var msg2 = 'Who is your incident-response retainer with? (e.g. Mandiant, CrowdStrike Services, Unit 42)';
+        addMsg('bot', msg2); speak(msg2);
+      }, 500);
+      return;
+    }
+
+    advanceFrom(qIdx);
+  }
+
+  // Advance the chat to the question after `fromIdx`.
+  function advanceFrom(fromIdx) {
+    var next = fromIdx + 1;
     setTyping(true);
     setTimeout(function(){
       setTyping(false);
@@ -19130,6 +19222,36 @@ function SetupBot(props) {
       speak(nq.type === 'confirm' ? 'Here is your complete profile. You can edit any section or confirm to continue.' : text);
       setQIdx(next);
     }, 650);
+  }
+
+  // Resolve a pending upload / follow-up and continue the flow.
+  function resolvePending(value) {
+    var p = pendingAsk;
+    if (!p) { return; }
+    if (p.kind === 'upload') {
+      if (value) {
+        accRef.current = Object.assign({}, accRef.current);
+        accRef.current[p.qid + '_doc'] = value;
+        setAnswers(Object.assign({}, accRef.current));
+        addMsg('user', 'Uploaded: ' + value);
+        addMsg('bot', 'Got it — ' + value + ' is on file and will be reviewed against NIST CSF requirements.');
+      } else {
+        addMsg('user', 'Skip — upload later');
+        addMsg('bot', 'No problem. You can upload it anytime from the CSF scorecard.');
+      }
+    } else {
+      if (value) {
+        accRef.current = Object.assign({}, accRef.current);
+        accRef.current[p.qid] = value;
+        setAnswers(Object.assign({}, accRef.current));
+        addMsg('user', value);
+      } else {
+        addMsg('user', 'Skip');
+      }
+    }
+    setPendingAsk(null);
+    setInput('');
+    advanceFrom(qIdx);
   }
 
   function startEdit(groupName) {
@@ -19201,6 +19323,23 @@ function SetupBot(props) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-Org-Id': result.orgId },
                 body: JSON.stringify({ items: csfItems }),
+              }).then(function(){
+                // Papa #4 — Zadkiel reviews the intake documents/answers against
+                // NIST CSF requirements and reports back in the chat.
+                return fetch(CYBERRX_API + '/api/csf/document-review?org_id=' + encodeURIComponent(result.orgId), {
+                  headers: { 'X-Org-Id': result.orgId },
+                });
+              }).then(function(r){ return r && r.ok ? r.json() : null; })
+              .then(function(rev){
+                if (!rev) { return; }
+                var top = (rev.recommendations || []).slice(0, 3)
+                  .map(function(x){ return '• [' + x.category + '] ' + x.recommendation; }).join('\n');
+                addMsg('bot', 'Zadkiel reviewed your security evidence against NIST CSF 2.0: '
+                  + rev.answered + ' of ' + rev.total + ' items answered, ' + rev.documentsOnFile
+                  + ' document(s) on file' + (rev.overallScore != null ? ', readiness ' + rev.overallScore + '%' : '')
+                  + '. ' + (rev.gaps + rev.partials) + ' item(s) need attention.'
+                  + (top ? '\n\nTop recommendations:\n' + top : '')
+                  + '\n\nThe full review and remaining uploads are on your NIST CSF scorecard.');
               }).catch(function(){});
             }
           } catch (e) {}
@@ -19208,10 +19347,10 @@ function SetupBot(props) {
           setSaving(false);
           addMsg('bot', 'Profile saved successfully! Continuing to dashboard...');
 
-          // Call onComplete after short delay
+          // Leave time for Zadkiel's document-review summary to land in the chat.
           setTimeout(function() {
             onComplete(orgData);
-          }, 800);
+          }, 3200);
         })
         .catch(function(err) {
           console.error('Failed to save org profile:', err.message);
@@ -19263,7 +19402,8 @@ function SetupBot(props) {
     } else { setSuggest([]); setSelectedIdx(-1); }
   }
 
-  var curQ   = QS[qIdx] || {};
+  // When a pending follow-up is active it replaces the normal input controls.
+  var curQ   = pendingAsk ? { type: 'pending' } : (QS[qIdx] || {});
   var isDone = doneRef.current;
   var pct    = Math.round((qIdx / (QS.length-1)) * 100);
 
@@ -19496,6 +19636,32 @@ function SetupBot(props) {
                   );
                 })}
               </div>
+            </div>
+          )}
+          {curQ.type==='pending'&&pendingAsk&&pendingAsk.kind==='upload'&&(
+            <div style={{display:'flex',gap:7,alignItems:'center'}}>
+              <label style={{flex:1,background:C.card,border:'1px dashed '+C.acc+'60',borderRadius:8,
+                padding:'9px 12px',color:C.acc,fontSize:12,cursor:'pointer',textAlign:'center',fontWeight:600}}>
+                ⬆ Upload {pendingAsk.doc}
+                <input type='file' style={{display:'none'}}
+                  onChange={function(e){ var f=e.target.files&&e.target.files[0]; if(f){ resolvePending(f.name); } }}/>
+              </label>
+              <button onClick={function(){ resolvePending(null); }}
+                style={{background:'transparent',border:'1px solid '+C.border,color:C.muted,borderRadius:8,
+                  padding:'9px 14px',cursor:'pointer',fontSize:12}}>Skip — upload later</button>
+            </div>
+          )}
+          {curQ.type==='pending'&&pendingAsk&&pendingAsk.kind==='text'&&(
+            <div style={{display:'flex',gap:7}}>
+              <input value={input} autoFocus
+                onChange={function(e){ setInput(e.target.value); }}
+                onKeyDown={function(e){ if(e.key==='Enter'&&input.trim()){ resolvePending(input.trim()); } }}
+                placeholder={pendingAsk.ask}
+                style={{flex:1,background:C.card,border:'1px solid '+C.acc+'40',
+                  borderRadius:8,padding:'9px 12px',color:C.text,fontSize:12,outline:'none'}}/>
+              <button onClick={function(){ resolvePending(input.trim()||null); }}
+                style={{background:C.acc,border:'none',color:'#fff',borderRadius:8,
+                  padding:'9px 16px',cursor:'pointer',fontSize:12,fontWeight:700}}>Next</button>
             </div>
           )}
           {curQ.type==='number'&&(
