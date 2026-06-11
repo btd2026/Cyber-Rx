@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import AttackPathGraph from './AttackPathGraph';
 
 const INK = '#0f172a', INK_2 = '#475569', INK_3 = '#94a3b8', HAIRLINE = '#e2e8f0';
 const LAYER_TONE = { process: '#1f5fa8', app: '#4f9fd8', device: '#3e7a34', network: '#7c6f3a', threat: '#9E3B32' };
@@ -30,6 +31,7 @@ export default function AttackPathDiagram(props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [active, setActive] = useState(null); // node id being traced
+  const [mode, setMode] = useState('graph'); // Papa #10 — 'graph' (animated) | 'lanes'
   const wrapRef = useRef(null);
   const [width, setWidth] = useState(1040);
   const { token, organizationId, apiUrl } = resolveCtx(props);
@@ -108,6 +110,15 @@ export default function AttackPathDiagram(props) {
         <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 20, fontSize: 11, color: INK_2 }}>
           <div style={{ fontSize: 19, fontWeight: 600, color: SEV.Critical, fontVariantNumeric: 'tabular-nums' }}>{usd(data.totalExposure)}</div>
           <div style={{ fontSize: 10, color: INK_3 }}>exposure across {data.counts.processes} processes · {data.counts.threats} threats</div>
+          {/* Papa #10 — animated graph ↔ lanes toggle */}
+          <div style={{ display: 'inline-flex', marginTop: 8, border: `1px solid ${HAIRLINE}`, borderRadius: 4, overflow: 'hidden' }}>
+            {[['graph', '◉ Threat graph'], ['lanes', '☰ Lanes']].map(([v, label]) => (
+              <button key={v} onClick={() => setMode(v)} style={{
+                background: mode === v ? '#0f1b2d' : '#fff', color: mode === v ? '#fff' : INK_2,
+                border: 'none', padding: '5px 12px', fontSize: 10.5, fontWeight: 600, cursor: 'pointer',
+              }}>{label}</button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -115,6 +126,10 @@ export default function AttackPathDiagram(props) {
         <div style={{ padding: '40px 0', color: INK_3, fontSize: 13 }}>
           No business processes or threats are mapped for this organization yet. Complete setup (process selection,
           application mapping) and the attack path will populate from your data.
+        </div>
+      ) : mode === 'graph' ? (
+        <div style={{ marginTop: 12 }}>
+          <AttackPathGraph graph={data} />
         </div>
       ) : (
         <div ref={wrapRef} style={{ position: 'relative', marginTop: 8, overflowX: 'auto' }}>

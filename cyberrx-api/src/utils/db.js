@@ -547,6 +547,27 @@ async function init() {
         updated_at      TIMESTAMPTZ DEFAULT NOW()
       );
       CREATE INDEX IF NOT EXISTS vendor_documents_org ON vendor_documents(organization_id);
+
+      -- Remediation path (Papa #12): every finding opens a ticket with
+      -- high-level recommendations in the org's ticketing system (Jira /
+      -- ServiceNow / demo). One row per finding->ticket, deduped by source_ref.
+      CREATE TABLE IF NOT EXISTS remediation_tickets (
+        id              TEXT PRIMARY KEY,
+        organization_id TEXT NOT NULL,
+        source          TEXT NOT NULL,
+        source_ref      TEXT NOT NULL,
+        title           TEXT NOT NULL,
+        recommendation  TEXT,
+        severity        TEXT,
+        system          TEXT NOT NULL,
+        ticket_id       TEXT,
+        ticket_url      TEXT,
+        status          TEXT DEFAULT 'open',
+        created_at      TIMESTAMPTZ DEFAULT NOW(),
+        updated_at      TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE (organization_id, source_ref)
+      );
+      CREATE INDEX IF NOT EXISTS remediation_tickets_org ON remediation_tickets(organization_id);
       CREATE INDEX IF NOT EXISTS vendor_documents_vendor ON vendor_documents(vendor_id);
 
       -- Editable "database of mock numbers" that drives every dashboard figure.

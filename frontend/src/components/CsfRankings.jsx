@@ -147,7 +147,7 @@ export default function CsfRankings(props) {
         <h2 style={{ margin: '0 0 10px', fontSize: 20, fontWeight: 600, color: INK }}>Compare against your peers</h2>
         <div style={{ color: INK_2, fontSize: 13, maxWidth: 520, margin: '0 auto 18px', lineHeight: 1.6 }}>
           Share your framework scores <strong>anonymously</strong> (no organization name or identifying details) to the
-          central benchmarking hub and unlock the systemwide ranking. Your full assessment and detailed dashboards
+          central benchmarking hub and unlock the peer comparison. Your full assessment and detailed dashboards
           remain completely private regardless of this choice.
         </div>
         <button onClick={enableBenchmarking} style={{ ...ghostBtn, background: '#0f1b2d', color: '#fff', border: 'none', padding: '9px 20px', fontSize: 12 }}>
@@ -157,7 +157,7 @@ export default function CsfRankings(props) {
     );
   }
 
-  if (loading) return <div style={{ padding: 28, color: INK_3, fontSize: 13 }}>Loading systemwide standings…</div>;
+  if (loading) return <div style={{ padding: 28, color: INK_3, fontSize: 13 }}>Loading peer standings…</div>;
   if (error || !rows) {
     return (
       <div style={{ padding: 28, color: '#9E3B32', fontSize: 13 }}>
@@ -225,7 +225,7 @@ export default function CsfRankings(props) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingBottom: 16, borderBottom: `1px solid ${HAIRLINE}` }}>
         <div>
           <div style={{ fontSize: 10, fontWeight: 600, color: INK_3, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 6 }}>
-            Systemwide Cybersecurity · NIST CSF v2.0 Outcomes
+            Peer Comparison · NIST CSF v2.0 Outcomes
           </div>
           <h2 style={{ margin: 0, fontSize: 21, fontWeight: 600, color: INK, letterSpacing: '-0.01em' }}>
             Risk-Adjusted Standings

@@ -46,7 +46,7 @@ async function buildGraph(orgId) {
   const [procRows, assetRows, riskRows, threatRows] = await Promise.all([
     rows(`SELECT id, name, tier, criticality, supported_by_systems FROM business_processes WHERE organization_id=$1`, [orgId]),
     rows(`SELECT id, name, type, business_process_ids, criticality, tier, ip_address, location, cloud_provider,
-                 vuln_critical, vuln_high, patch_pct, supported, end_of_support_date
+                 vuln_critical, vuln_high, patch_pct, supported, end_of_support_date, data_classification
             FROM assets WHERE organization_id=$1`, [orgId]),
     rows(`SELECT id, title, severity, financial_exposure, business_process_ids, threat_scenario_id
             FROM risks WHERE organization_id=$1 AND status IN ('open','mitigating')`, [orgId]),
@@ -71,9 +71,14 @@ async function buildGraph(orgId) {
   const apps = [], devices = [];
   assetRows.forEach((a) => {
     const procs = arr(a.business_process_ids);
+    const nameStr = String(a.name || '').toLowerCase();
+    const dc = arr(a.data_classification).map((x) => String(x).toLowerCase());
     const node = { id: a.id, label: a.name, procs, criticality: a.criticality || 'Medium',
       vulnCritical: n(a.vuln_critical), vulnHigh: n(a.vuln_high), patchPct: a.patch_pct == null ? null : n(a.patch_pct),
-      supported: a.supported !== false, eol: a.end_of_support_date || null };
+      supported: a.supported !== false, eol: a.end_of_support_date || null,
+      // Papa #10 — threat-graph callout flags
+      internetExposed: a.type === 'API' || /portal|gateway|edge|remote|public|sftp|vpn|web|exchange|clearinghouse/.test(nameStr),
+      sensitiveData: dc.some((x) => /phi|pii|pci|sensitive|ssn/.test(x)) || /phi|claims|member|warehouse|database/.test(nameStr) };
     if (APP_TYPES.has(a.type)) { node.layer = 'app'; apps.push(node); }
     else { node.layer = 'device'; node.assetType = a.type; node.zone = networkZone(a); devices.push(node); }
   });
