@@ -240,6 +240,9 @@ app.use('/api/agents',            [apiGetLimiter, apiPostLimiter], require('./ro
 // CIO technology-risk overview (aggregated dashboard payload)
 app.use('/api/cio',               [apiGetLimiter], require('./routes/cio'));
 
+// CISO attack-path graph (process → app → device → network → threat)
+app.use('/api/attack-path',       [apiGetLimiter], require('./routes/attackPath'));
+
 // Metrics engine - editable mock numbers + formula-driven dashboard figures
 app.use('/api/metrics',           [apiGetLimiter, apiPutLimiter], require('./routes/metrics'));
 

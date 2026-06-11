@@ -9,6 +9,7 @@ import NistCsfScorecard from "./components/NistCsfScorecard";
 import CsfRankings from "./components/CsfRankings";
 import FrameworkScorecard from "./components/FrameworkScorecard";
 import VendorAssessmentPanel from "./components/VendorAssessmentPanel";
+import AttackPathDiagram from "./components/AttackPathDiagram";
 import AuditDash from "./pages/AuditDash";
 import ReviewMappings from "./pages/ReviewMappings";
 import ProcessGraph from "./pages/ProcessGraph";
@@ -8235,7 +8236,8 @@ function CISODash(props) {
     setAgentQ(ans.matchedQuestion||ans.question||"");
     if(/finding/.test(q))                         { setDrillView(null); setAgentView("findings"); setSevF(/critical/.test(q)?"Critical":"All"); return; }
     if(/(exposure|financial|cost|dollar|\$)/.test(q)){ setDrillView(null); setAgentView("exposure"); return; }
-    if(/(pathway|attack|threat|process)/.test(q)) { setAgentView(null); setDrillView("atrisk"); return; }
+    if(/(attack path|pathway|diagram|kill chain|how.*reach|trace)/.test(q)) { setDrillView(null); setAgentView("attackpath"); return; }
+    if(/(attack|threat|process)/.test(q))         { setAgentView(null); setDrillView("atrisk"); return; }
     if(/(remediat|prioriti)/.test(q))             { setAgentView(null); setDrillView("atrisk"); return; }
     if(/(control|effective|capab|maturity)/.test(q)){ setDrillView(null); setAgentView("controls"); return; }
     setDrillView(null); setAgentView("posture"); // overall posture / default
@@ -8274,10 +8276,30 @@ function CISODash(props) {
       {/* AI agent brief - the tab opens here; asking a question builds the dashboard below */}
       <div style={{padding:"14px 20px 0"}}>
         <ExecutiveAgentBrief role="CISO" entry onAnswer={applyAgentAnswer} />
+        <div style={{display:"flex",justifyContent:"flex-end",marginTop:8}}>
+          <button onClick={function(){setDrillView(null);setAgentView("attackpath");setAgentQ("Show the attack path");}}
+            style={{background:"transparent",border:"1px solid "+C.border,color:C.text,
+              borderRadius:4,padding:"7px 16px",cursor:"pointer",fontSize:11,fontWeight:600,
+              letterSpacing:"0.06em",textTransform:"uppercase"}}>
+            Attack Path Diagram →
+          </button>
+        </div>
       </div>
 
+      {/* Interactive attack-path diagram (process → app → device → network → threat) */}
+      {!drillView&&agentView==="attackpath"&&(
+        <div style={{padding:"0 20px 20px"}}>
+          <div style={{display:"flex",justifyContent:"flex-end",marginBottom:8}}>
+            <button onClick={clearAgentView}
+              style={{background:"transparent",border:"1px solid "+C.border,color:C.muted,
+                borderRadius:7,padding:"5px 10px",cursor:"pointer",fontSize:11}}>← Ask another</button>
+          </div>
+          <AttackPathDiagram/>
+        </div>
+      )}
+
       {/* CISO Header — shown only once a question has surfaced a view; mirrors the view */}
-      {(drillView||agentView)&&(function(){
+      {(drillView||(agentView&&agentView!=="attackpath"))&&(function(){
       var hm=cisoViewMeta();
       return (
       <div style={{padding:"16px 20px",background:"linear-gradient(135deg,"+hm.color+"14,"+C.panel+")",
@@ -8912,7 +8934,7 @@ function CISODash(props) {
       )}
 
       {/* Tailored dashboard — rendered only after the agent answers a question */}
-      {!drillView&&agentView&&(
+      {!drillView&&agentView&&agentView!=="attackpath"&&(
         <div>
           <BrianaBar pageKey="ciso" orgName={orgName||""} brianaOn={props.brianaOn!==false} setBrianaOn={props.setBrianaOn||function(){}}/>
 
