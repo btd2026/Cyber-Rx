@@ -101,91 +101,169 @@ const ctl = (ref, name, signals) => ({ ref, name, signals });
 // ---------------------------------------------------------------------------
 const FRAMEWORKS = {
   hipaa: {
-    label: 'HIPAA Security Rule', standard: '45 CFR §§164.302–318',
+    label: 'HIPAA Security Rule', standard: '45 CFR Part 160 & 164 (Security + Breach Notification)',
     sections: [
       { id: 'admin', name: 'Administrative Safeguards §164.308', controls: [
-        ctl('§164.308(a)(1)', 'Security Management & Risk Analysis', ['riskAssess', 'policy']),
+        ctl('§164.308(a)(1)', 'Security Management Process & Risk Analysis', ['riskAssess', 'policy']),
         ctl('§164.308(a)(2)', 'Assigned Security Responsibility', ['roles']),
-        ctl('§164.308(a)(3)', 'Workforce Security', ['pam', 'training']),
+        ctl('§164.308(a)(3)', 'Workforce Security', ['pam', 'roles']),
+        ctl('§164.308(a)(4)', 'Information Access Management', ['pam', 'mfa']),
         ctl('§164.308(a)(5)', 'Security Awareness & Training', ['training', 'phishing']),
         ctl('§164.308(a)(6)', 'Security Incident Procedures', ['irplan', 'mttr']),
         ctl('§164.308(a)(7)', 'Contingency Plan', ['drTest', 'resilience']),
-        ctl('§164.308(b)(1)', 'Business Associate Agreements', ['vendor']),
+        ctl('§164.308(a)(8)', 'Evaluation', ['riskAssess', 'oversight']),
+        ctl('§164.308(b)(1)', 'Business Associate Contracts', ['vendor']),
       ] },
       { id: 'physical', name: 'Physical Safeguards §164.310', controls: [
         ctl('§164.310(a)(1)', 'Facility Access Controls', ['inventory']),
+        ctl('§164.310(b)', 'Workstation Use', ['policy']),
+        ctl('§164.310(c)', 'Workstation Security', ['edr', 'inventory']),
         ctl('§164.310(d)(1)', 'Device & Media Controls', ['inventory', 'encryption']),
       ] },
       { id: 'technical', name: 'Technical Safeguards §164.312', controls: [
         ctl('§164.312(a)(1)', 'Access Control', ['mfa', 'pam']),
         ctl('§164.312(b)', 'Audit Controls', ['siem']),
         ctl('§164.312(c)(1)', 'Integrity', ['encryption', 'edr']),
+        ctl('§164.312(d)', 'Person or Entity Authentication', ['mfa']),
         ctl('§164.312(e)(1)', 'Transmission Security', ['encryption']),
       ] },
+      { id: 'org', name: 'Organizational & Policies §164.314 / §164.316', controls: [
+        ctl('§164.314(a)', 'Business Associate Arrangements', ['vendor']),
+        ctl('§164.316(a)', 'Policies & Procedures', ['policy']),
+        ctl('§164.316(b)', 'Documentation & Retention', ['policy', 'siem']),
+      ] },
       { id: 'breach', name: 'Breach Notification §164.400–414', controls: [
-        ctl('§164.404', '60-Day Individual Notification', ['notify']),
+        ctl('§164.404', 'Individual Notification (60 days)', ['notify']),
+        ctl('§164.406', 'Media Notification', ['notify', 'recoveryComms']),
         ctl('§164.408', 'HHS/OCR Notification', ['notify', 'irplan']),
+        ctl('§164.410', 'Business Associate Notification', ['vendor', 'notify']),
       ] },
     ],
   },
   nist_800_53: {
-    label: 'NIST SP 800-53 Rev 5', standard: 'Security & Privacy Controls (moderate baseline)',
+    label: 'NIST SP 800-53 Rev 5', standard: 'Security & Privacy Controls — all 20 control families (moderate baseline)',
     sections: [
-      { id: 'ac', name: 'Access Control & Identification (AC, IA)', controls: [
+      { id: 'AC', name: 'AC — Access Control', controls: [
         ctl('AC-2', 'Account Management', ['pam']),
         ctl('AC-3', 'Access Enforcement', ['mfa', 'pam']),
-        ctl('IA-2', 'Multi-Factor Authentication', ['mfa']),
+        ctl('AC-6', 'Least Privilege', ['pam']),
+        ctl('AC-17', 'Remote Access', ['mfa', 'encryption']),
       ] },
-      { id: 'at_au', name: 'Awareness & Audit (AT, AU)', controls: [
+      { id: 'AT', name: 'AT — Awareness & Training', controls: [
         ctl('AT-2', 'Literacy Training & Awareness', ['training', 'phishing']),
+        ctl('AT-3', 'Role-Based Training', ['training']),
+      ] },
+      { id: 'AU', name: 'AU — Audit & Accountability', controls: [
         ctl('AU-6', 'Audit Record Review & Analysis', ['siem', 'soc']),
         ctl('AU-11', 'Audit Record Retention', ['siem']),
+        ctl('AU-12', 'Audit Record Generation', ['siem', 'edr']),
       ] },
-      { id: 'cm_si', name: 'Configuration & System Integrity (CM, SI)', controls: [
+      { id: 'CA', name: 'CA — Assessment, Authorization & Monitoring', controls: [
+        ctl('CA-2', 'Control Assessments', ['riskAssess']),
+        ctl('CA-7', 'Continuous Monitoring', ['mttd', 'soc']),
+        ctl('CA-8', 'Penetration Testing', ['vulnSla', 'riskAssess']),
+      ] },
+      { id: 'CM', name: 'CM — Configuration Management', controls: [
+        ctl('CM-2', 'Baseline Configuration', ['patch']),
+        ctl('CM-6', 'Configuration Settings', ['patch']),
         ctl('CM-8', 'System Component Inventory', ['inventory']),
+      ] },
+      { id: 'CP', name: 'CP — Contingency Planning', controls: [
+        ctl('CP-4', 'Contingency Plan Testing', ['drTest']),
+        ctl('CP-9', 'System Backup', ['resilience']),
+        ctl('CP-10', 'System Recovery & Reconstitution', ['drTest', 'resilience']),
+      ] },
+      { id: 'IA', name: 'IA — Identification & Authentication', controls: [
+        ctl('IA-2', 'Identification & Authentication (Org Users)', ['mfa']),
+        ctl('IA-5', 'Authenticator Management', ['mfa', 'pam']),
+      ] },
+      { id: 'IR', name: 'IR — Incident Response', controls: [
+        ctl('IR-4', 'Incident Handling', ['irplan', 'mttr', 'forensics']),
+        ctl('IR-6', 'Incident Reporting', ['notify']),
+        ctl('IR-8', 'Incident Response Plan', ['irplan']),
+      ] },
+      { id: 'MA', name: 'MA — Maintenance', controls: [
+        ctl('MA-2', 'Controlled Maintenance', ['patch']),
+        ctl('MA-4', 'Nonlocal Maintenance', ['mfa', 'encryption']),
+      ] },
+      { id: 'MP', name: 'MP — Media Protection', controls: [
+        ctl('MP-4', 'Media Storage', ['encryption']),
+        ctl('MP-6', 'Media Sanitization', ['inventory', 'encryption']),
+      ] },
+      { id: 'PE', name: 'PE — Physical & Environmental Protection', controls: [
+        ctl('PE-2', 'Physical Access Authorizations', ['inventory']),
+        ctl('PE-3', 'Physical Access Control', ['inventory']),
+      ] },
+      { id: 'PL', name: 'PL — Planning', controls: [
+        ctl('PL-2', 'System Security & Privacy Plans', ['policy']),
+        ctl('PL-8', 'Security & Privacy Architectures', ['policy', 'context']),
+      ] },
+      { id: 'PM', name: 'PM — Program Management', controls: [
+        ctl('PM-2', 'Information Security Program Leadership', ['roles']),
+        ctl('PM-4', 'Plan of Action & Milestones Process', ['remediation']),
+        ctl('PM-9', 'Risk Management Strategy', ['appetite', 'riskAssess']),
+        ctl('PM-14', 'Testing, Training & Monitoring', ['training', 'soc']),
+      ] },
+      { id: 'PS', name: 'PS — Personnel Security', controls: [
+        ctl('PS-3', 'Personnel Screening', ['roles']),
+        ctl('PS-4', 'Personnel Termination', ['pam']),
+      ] },
+      { id: 'PT', name: 'PT — PII Processing & Transparency', controls: [
+        ctl('PT-2', 'Authority to Process PII', ['policy', 'context']),
+        ctl('PT-5', 'Privacy Notice', ['policy']),
+      ] },
+      { id: 'RA', name: 'RA — Risk Assessment', controls: [
+        ctl('RA-3', 'Risk Assessment', ['riskAssess']),
+        ctl('RA-5', 'Vulnerability Monitoring & Scanning', ['vulnSla', 'patch']),
+        ctl('RA-7', 'Risk Response', ['remediation']),
+      ] },
+      { id: 'SA', name: 'SA — System & Services Acquisition', controls: [
+        ctl('SA-4', 'Acquisition Process', ['vendor']),
+        ctl('SA-9', 'External System Services', ['vendor']),
+      ] },
+      { id: 'SC', name: 'SC — System & Communications Protection', controls: [
+        ctl('SC-7', 'Boundary Protection', ['edr', 'soc']),
+        ctl('SC-8', 'Transmission Confidentiality & Integrity', ['encryption']),
+        ctl('SC-28', 'Protection of Information at Rest', ['encryption', 'dlp']),
+      ] },
+      { id: 'SI', name: 'SI — System & Information Integrity', controls: [
         ctl('SI-2', 'Flaw Remediation', ['patch', 'vulnSla']),
         ctl('SI-3', 'Malicious Code Protection', ['edr']),
         ctl('SI-4', 'System Monitoring', ['mttd', 'soc']),
+        ctl('SI-7', 'Software, Firmware & Information Integrity', ['edr', 'patch']),
       ] },
-      { id: 'cp_ir', name: 'Contingency & Incident Response (CP, IR)', controls: [
-        ctl('CP-4', 'Contingency Plan Testing', ['drTest']),
-        ctl('CP-9', 'System Backup', ['resilience']),
-        ctl('IR-4', 'Incident Handling', ['irplan', 'mttr', 'forensics']),
-        ctl('IR-8', 'Incident Response Plan', ['irplan']),
-      ] },
-      { id: 'ra_sr', name: 'Risk Assessment & Supply Chain (RA, SR)', controls: [
-        ctl('RA-3', 'Risk Assessment', ['riskAssess']),
-        ctl('RA-5', 'Vulnerability Monitoring & Scanning', ['vulnSla']),
+      { id: 'SR', name: 'SR — Supply Chain Risk Management', controls: [
+        ctl('SR-3', 'Supply Chain Controls & Processes', ['vendor']),
         ctl('SR-6', 'Supplier Assessments & Reviews', ['vendor']),
-      ] },
-      { id: 'sc', name: 'System & Communications Protection (SC)', controls: [
-        ctl('SC-8', 'Transmission Confidentiality', ['encryption']),
-        ctl('SC-28', 'Protection of Information at Rest', ['encryption', 'dlp']),
       ] },
     ],
   },
   cis: {
-    label: 'CIS Controls v8', standard: 'Implementation Group 2',
+    label: 'CIS Controls v8', standard: 'All 18 controls (Implementation Group 2)',
     sections: [
-      { id: 'basic', name: 'Basic Cyber Hygiene (1–7)', controls: [
-        ctl('CIS-1', 'Inventory of Enterprise Assets', ['inventory']),
+      { id: 'g1', name: 'Controls 1–6 — Basic Cyber Hygiene', controls: [
+        ctl('CIS-1', 'Inventory & Control of Enterprise Assets', ['inventory']),
+        ctl('CIS-2', 'Inventory & Control of Software Assets', ['inventory', 'patch']),
         ctl('CIS-3', 'Data Protection', ['encryption', 'dlp']),
-        ctl('CIS-4', 'Secure Configuration', ['patch']),
+        ctl('CIS-4', 'Secure Configuration of Assets & Software', ['patch']),
         ctl('CIS-5', 'Account Management', ['pam']),
-        ctl('CIS-6', 'Access Control Management', ['mfa']),
-        ctl('CIS-7', 'Continuous Vulnerability Management', ['vulnSla', 'patch']),
+        ctl('CIS-6', 'Access Control Management', ['mfa', 'pam']),
       ] },
-      { id: 'foundational', name: 'Foundational (8–13)', controls: [
+      { id: 'g2', name: 'Controls 7–12 — Foundational', controls: [
+        ctl('CIS-7', 'Continuous Vulnerability Management', ['vulnSla', 'patch']),
         ctl('CIS-8', 'Audit Log Management', ['siem']),
-        ctl('CIS-9', 'Email & Browser Protections', ['phishing']),
+        ctl('CIS-9', 'Email & Web Browser Protections', ['phishing']),
         ctl('CIS-10', 'Malware Defenses', ['edr']),
         ctl('CIS-11', 'Data Recovery', ['drTest', 'resilience']),
-        ctl('CIS-13', 'Network Monitoring & Defense', ['mttd', 'soc']),
+        ctl('CIS-12', 'Network Infrastructure Management', ['patch', 'soc']),
       ] },
-      { id: 'organizational', name: 'Organizational (14–18)', controls: [
+      { id: 'g3', name: 'Controls 13–18 — Organizational', controls: [
+        ctl('CIS-13', 'Network Monitoring & Defense', ['mttd', 'soc']),
         ctl('CIS-14', 'Security Awareness & Skills Training', ['training', 'phishing']),
         ctl('CIS-15', 'Service Provider Management', ['vendor']),
+        ctl('CIS-16', 'Application Software Security', ['vulnSla', 'patch']),
         ctl('CIS-17', 'Incident Response Management', ['irplan', 'mttr', 'forensics']),
+        ctl('CIS-18', 'Penetration Testing', ['vulnSla', 'riskAssess']),
       ] },
     ],
   },
@@ -194,65 +272,107 @@ const FRAMEWORKS = {
     sections: [
       { id: 's4', name: 'Section 4 — Information Security Program', controls: [
         ctl('§4.A', 'Written Information Security Program', ['policy']),
+        ctl('§4.B', 'Objectives of the Program', ['policy', 'context']),
         ctl('§4.C', 'Risk Assessment', ['riskAssess', 'appetite']),
-        ctl('§4.D(2)', 'Access Controls & MFA', ['mfa', 'pam']),
+        ctl('§4.D(1)', 'Access Controls', ['mfa', 'pam']),
+        ctl('§4.D(2)', 'Multi-Factor Authentication', ['mfa']),
+        ctl('§4.D(3)', 'Asset Inventory & Classification', ['inventory']),
         ctl('§4.D(4)', 'Encryption of Nonpublic Information', ['encryption']),
+        ctl('§4.D(5)', 'Secure Development Practices', ['vulnSla']),
+        ctl('§4.D(8)', 'Monitoring & Detection', ['mttd', 'soc']),
         ctl('§4.D(9)', 'Audit Trails', ['siem']),
+        ctl('§4.D(11)', 'Incident Response Plan', ['irplan']),
         ctl('§4.E', 'Board Oversight', ['oversight', 'roles']),
         ctl('§4.F', 'Third-Party Service Provider Oversight', ['vendor']),
+        ctl('§4.G', 'Program Adjustments', ['riskAssess']),
+        ctl('§4.H', 'Incident Response Plan Maintenance', ['irplan', 'drTest']),
       ] },
-      { id: 's5', name: 'Sections 5–6 — Event Investigation & Notification', controls: [
+      { id: 's5_6', name: 'Sections 5–6 — Investigation & Notification', controls: [
         ctl('§5', 'Investigation of Cybersecurity Events', ['forensics', 'irplan']),
-        ctl('§6', '72-Hour Commissioner Notification', ['notify']),
+        ctl('§6.A', '72-Hour Commissioner Notification', ['notify']),
+        ctl('§6.B', 'Notification to Consumers', ['notify', 'recoveryComms']),
       ] },
     ],
   },
   iso27001: {
-    label: 'ISO/IEC 27001:2022', standard: 'Annex A control themes',
+    label: 'ISO/IEC 27001:2022', standard: 'Annex A — all four control themes',
     sections: [
       { id: 'a5', name: 'A.5 Organizational Controls', controls: [
         ctl('A.5.1', 'Policies for Information Security', ['policy']),
-        ctl('A.5.2', 'Roles & Responsibilities', ['roles', 'oversight']),
-        ctl('A.5.19', 'Supplier Relationships', ['vendor']),
-        ctl('A.5.24', 'Incident Management Planning', ['irplan']),
-        ctl('A.5.29', 'ICT Continuity', ['drTest', 'resilience']),
+        ctl('A.5.2', 'Information Security Roles & Responsibilities', ['roles']),
+        ctl('A.5.7', 'Threat Intelligence', ['soc']),
+        ctl('A.5.9', 'Inventory of Information & Assets', ['inventory']),
+        ctl('A.5.12', 'Classification of Information', ['dlp', 'inventory']),
+        ctl('A.5.15', 'Access Control', ['mfa', 'pam']),
+        ctl('A.5.19', 'Information Security in Supplier Relationships', ['vendor']),
+        ctl('A.5.24', 'Incident Management Planning & Preparation', ['irplan']),
+        ctl('A.5.29', 'Information Security During Disruption', ['drTest', 'resilience']),
+        ctl('A.5.30', 'ICT Readiness for Business Continuity', ['drTest']),
       ] },
       { id: 'a6', name: 'A.6 People Controls', controls: [
         ctl('A.6.3', 'Awareness, Education & Training', ['training', 'phishing']),
-        ctl('A.6.8', 'Event Reporting', ['lessons', 'soc']),
+        ctl('A.6.6', 'Confidentiality / NDAs', ['policy']),
+        ctl('A.6.8', 'Information Security Event Reporting', ['lessons', 'soc']),
+      ] },
+      { id: 'a7', name: 'A.7 Physical Controls', controls: [
+        ctl('A.7.1', 'Physical Security Perimeters', ['inventory']),
+        ctl('A.7.2', 'Physical Entry', ['inventory']),
+        ctl('A.7.10', 'Storage Media', ['encryption']),
+        ctl('A.7.14', 'Secure Disposal / Reuse of Equipment', ['inventory', 'encryption']),
       ] },
       { id: 'a8', name: 'A.8 Technological Controls', controls: [
         ctl('A.8.2', 'Privileged Access Rights', ['pam']),
         ctl('A.8.5', 'Secure Authentication', ['mfa']),
         ctl('A.8.7', 'Protection Against Malware', ['edr']),
-        ctl('A.8.8', 'Technical Vulnerability Management', ['vulnSla', 'patch']),
+        ctl('A.8.8', 'Management of Technical Vulnerabilities', ['vulnSla', 'patch']),
         ctl('A.8.12', 'Data Leakage Prevention', ['dlp']),
-        ctl('A.8.15', 'Logging & Monitoring', ['siem', 'mttd']),
+        ctl('A.8.13', 'Information Backup', ['resilience', 'drTest']),
+        ctl('A.8.15', 'Logging', ['siem']),
+        ctl('A.8.16', 'Monitoring Activities', ['mttd', 'soc']),
         ctl('A.8.24', 'Use of Cryptography', ['encryption']),
+        ctl('A.8.25', 'Secure Development Life Cycle', ['vulnSla']),
       ] },
     ],
   },
   soc2: {
-    label: 'SOC 2 Type II', standard: 'AICPA Trust Services Criteria',
+    label: 'SOC 2 Type II', standard: 'AICPA Trust Services Criteria (all categories)',
     sections: [
-      { id: 'cc1_3', name: 'Control Environment & Risk (CC1–CC3)', controls: [
-        ctl('CC1.2', 'Board Oversight', ['oversight']),
-        ctl('CC1.3', 'Structures & Reporting Lines', ['roles']),
-        ctl('CC3.2', 'Risk Identification & Analysis', ['riskAssess']),
+      { id: 'cc1', name: 'CC1 — Control Environment', controls: [
+        ctl('CC1.2', 'Board Independence & Oversight', ['oversight']),
+        ctl('CC1.3', 'Structures, Reporting Lines & Authorities', ['roles']),
+        ctl('CC1.4', 'Commitment to Competence', ['training']),
       ] },
-      { id: 'cc6', name: 'Logical & Physical Access (CC6)', controls: [
-        ctl('CC6.1', 'Access Security & Encryption', ['mfa', 'encryption']),
+      { id: 'cc2_3', name: 'CC2–CC3 — Communication & Risk Assessment', controls: [
+        ctl('CC2.1', 'Information Quality', ['siem']),
+        ctl('CC3.2', 'Risk Identification & Analysis', ['riskAssess']),
+        ctl('CC3.4', 'Vendor & Business Partner Risk', ['vendor']),
+      ] },
+      { id: 'cc4_5', name: 'CC4–CC5 — Monitoring & Control Activities', controls: [
+        ctl('CC4.1', 'Ongoing & Separate Evaluations', ['soc', 'riskAssess']),
+        ctl('CC5.2', 'Technology General Controls', ['patch', 'mfa']),
+      ] },
+      { id: 'cc6', name: 'CC6 — Logical & Physical Access', controls: [
+        ctl('CC6.1', 'Logical Access Security & Encryption', ['mfa', 'encryption']),
         ctl('CC6.2', 'User Provisioning & Privileged Access', ['pam']),
+        ctl('CC6.6', 'Boundary Protection', ['edr', 'soc']),
+        ctl('CC6.7', 'Data Transmission & Movement', ['encryption', 'dlp']),
         ctl('CC6.8', 'Malware Prevention & Detection', ['edr']),
       ] },
-      { id: 'cc7', name: 'System Operations (CC7)', controls: [
+      { id: 'cc7', name: 'CC7 — System Operations', controls: [
         ctl('CC7.1', 'Vulnerability Detection & Monitoring', ['vulnSla', 'siem']),
-        ctl('CC7.3', 'Security Event Evaluation', ['mttd', 'soc']),
+        ctl('CC7.2', 'Anomaly & Security Event Monitoring', ['mttd', 'soc']),
+        ctl('CC7.3', 'Security Incident Evaluation', ['irplan']),
         ctl('CC7.4', 'Incident Response Program', ['irplan', 'mttr']),
+        ctl('CC7.5', 'Recovery from Incidents', ['drTest', 'resilience']),
       ] },
-      { id: 'a_c', name: 'Availability & Confidentiality (A1, C1)', controls: [
+      { id: 'cc8_9', name: 'CC8–CC9 — Change Management & Risk Mitigation', controls: [
+        ctl('CC8.1', 'Change Management', ['patch']),
+        ctl('CC9.2', 'Vendor & Business Partner Management', ['vendor']),
+      ] },
+      { id: 'aci', name: 'Availability / Confidentiality / Privacy', controls: [
         ctl('A1.2', 'Recovery Infrastructure & Backups', ['resilience', 'drTest']),
         ctl('C1.1', 'Confidential Information Protection', ['encryption', 'dlp']),
+        ctl('P4.0', 'Privacy — Use, Retention & Disposal', ['policy', 'dlp']),
       ] },
     ],
   },
@@ -263,39 +383,46 @@ const FRAMEWORKS = {
         ctl('§422.118', 'Beneficiary Data Safeguards', ['encryption', 'dlp']),
         ctl('§422.504(b)', 'Access Controls for CMS Data', ['mfa', 'pam']),
         ctl('§422.504(d)', 'Records Retention & Audit', ['siem']),
+        ctl('§422.504(a)', 'Encryption of Member Data', ['encryption']),
       ] },
       { id: 'program', name: 'Program Integrity & Oversight', controls: [
         ctl('§422.503(b)', 'Compliance Program', ['policy', 'roles', 'training']),
-        ctl('§422.504(i)', 'First Tier/Downstream Entity (FDR) Oversight', ['vendor']),
+        ctl('§422.504(i)', 'First-Tier/Downstream Entity (FDR) Oversight', ['vendor']),
         ctl('§422.516', 'Risk Program & Reporting', ['riskAssess', 'oversight']),
+        ctl('§422.504(h)', 'FDR Monitoring & Auditing', ['vendor', 'soc']),
       ] },
       { id: 'incident', name: 'Incident & Continuity', controls: [
         ctl('Part D §423.504', '1-Business-Day Incident Reporting', ['notify', 'irplan']),
         ctl('§422.504(o)', 'Business Continuity Plan', ['drTest', 'resilience']),
+        ctl('§422.504(g)', 'Breach Notification to CMS', ['notify']),
       ] },
     ],
   },
   pci: {
-    label: 'PCI DSS v4.0', standard: 'Payment Card Industry Data Security Standard',
+    label: 'PCI DSS v4.0', standard: 'All 12 requirements',
     sections: [
-      { id: 'protect', name: 'Protect Account Data (Req 3–4)', controls: [
+      { id: 'network', name: 'Build & Maintain a Secure Network (1–2)', controls: [
+        ctl('Req 1', 'Install & Maintain Network Security Controls', ['edr', 'soc']),
+        ctl('Req 2', 'Apply Secure Configurations', ['patch']),
+      ] },
+      { id: 'protect', name: 'Protect Account Data (3–4)', controls: [
         ctl('Req 3', 'Protect Stored Account Data', ['encryption', 'dlp']),
         ctl('Req 4', 'Strong Cryptography in Transmission', ['encryption']),
       ] },
-      { id: 'vuln', name: 'Vulnerability Management (Req 5–6)', controls: [
+      { id: 'vuln', name: 'Vulnerability Management (5–6)', controls: [
         ctl('Req 5', 'Protect Against Malicious Software', ['edr']),
-        ctl('Req 6', 'Secure Systems & Software', ['patch', 'vulnSla']),
+        ctl('Req 6', 'Develop & Maintain Secure Systems', ['patch', 'vulnSla']),
       ] },
-      { id: 'access', name: 'Access Control (Req 7–9)', controls: [
+      { id: 'access', name: 'Access Control (7–9)', controls: [
         ctl('Req 7', 'Restrict Access by Need-to-Know', ['pam']),
         ctl('Req 8', 'Identify Users & Authenticate (MFA)', ['mfa']),
         ctl('Req 9', 'Restrict Physical Access', ['inventory']),
       ] },
-      { id: 'monitor', name: 'Monitor & Test (Req 10–11)', controls: [
+      { id: 'monitor', name: 'Monitor & Test (10–11)', controls: [
         ctl('Req 10', 'Log & Monitor All Access', ['siem', 'mttd']),
-        ctl('Req 11', 'Test Security Regularly', ['vulnSla', 'riskAssess']),
+        ctl('Req 11', 'Test Security of Systems Regularly', ['vulnSla', 'riskAssess']),
       ] },
-      { id: 'policy', name: 'Security Policy (Req 12)', controls: [
+      { id: 'policy', name: 'Maintain an Information Security Policy (12)', controls: [
         ctl('Req 12.1', 'Information Security Policy', ['policy']),
         ctl('Req 12.6', 'Security Awareness Education', ['training', 'phishing']),
         ctl('Req 12.8', 'Third-Party Service Providers', ['vendor']),
@@ -304,27 +431,30 @@ const FRAMEWORKS = {
     ],
   },
   gdpr: {
-    label: 'GDPR / Privacy', standard: 'EU 2016/679 (privacy-security articles)',
+    label: 'GDPR / Privacy', standard: 'EU 2016/679 — security & accountability articles',
     sections: [
-      { id: 'accountability', name: 'Accountability & Governance (Art 5, 24, 30)', controls: [
+      { id: 'principles', name: 'Principles & Accountability (Art 5, 24, 30)', controls: [
+        ctl('Art 5(1)(f)', 'Integrity & Confidentiality', ['encryption', 'edr']),
         ctl('Art 5(2)', 'Accountability Principle', ['policy', 'oversight']),
+        ctl('Art 24', 'Responsibility of the Controller', ['policy', 'roles']),
         ctl('Art 30', 'Records of Processing Activities', ['inventory']),
-        ctl('Art 35', 'Data Protection Impact Assessments', ['riskAssess']),
       ] },
-      { id: 'security', name: 'Security of Processing (Art 25, 32)', controls: [
-        ctl('Art 25', 'Data Protection by Design', ['dlp', 'encryption']),
-        ctl('Art 32(1)(a)', 'Encryption of Personal Data', ['encryption']),
-        ctl('Art 32(1)(b)', 'Confidentiality & Access Control', ['mfa', 'pam']),
+      { id: 'security', name: 'Security of Processing (Art 25, 32, 35)', controls: [
+        ctl('Art 25', 'Data Protection by Design & Default', ['dlp', 'encryption']),
+        ctl('Art 32(1)(a)', 'Pseudonymisation & Encryption', ['encryption']),
+        ctl('Art 32(1)(b)', 'Confidentiality, Integrity & Availability', ['mfa', 'pam']),
         ctl('Art 32(1)(c)', 'Restore Availability After Incident', ['resilience', 'drTest']),
+        ctl('Art 32(1)(d)', 'Process for Testing & Evaluating', ['siem', 'mttd']),
+        ctl('Art 35', 'Data Protection Impact Assessment', ['riskAssess']),
       ] },
-      { id: 'breach', name: 'Breach & Processors (Art 28, 33–34)', controls: [
+      { id: 'processors', name: 'Processors & Breach (Art 28, 33–34)', controls: [
         ctl('Art 28', 'Processor Obligations', ['vendor']),
         ctl('Art 33', '72-Hour Supervisory Notification', ['notify', 'irplan']),
         ctl('Art 34', 'Communication to Data Subjects', ['recoveryComms', 'notify']),
       ] },
-      { id: 'people', name: 'People & Detection', controls: [
-        ctl('Art 39', 'Staff Awareness (DPO Duties)', ['training', 'phishing']),
-        ctl('Art 32(1)(d)', 'Testing & Evaluation', ['siem', 'mttd']),
+      { id: 'people', name: 'Governance & Awareness (Art 37–39)', controls: [
+        ctl('Art 37', 'Designation of a DPO', ['roles']),
+        ctl('Art 39', 'Tasks of the DPO / Staff Awareness', ['training', 'phishing']),
       ] },
     ],
   },
