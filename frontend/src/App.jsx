@@ -8169,14 +8169,14 @@ function CISODash(props) {
     if(!ans||!ans.matched||ans.source==="out_of_scope") return;
     var q=String(ans.matchedQuestion||ans.question||"").toLowerCase();
     setAgentQ(ans.matchedQuestion||ans.question||"");
-    if(/finding/.test(q))                         { setDrillView(null); setAgentView("findings"); return; }
+    if(/finding/.test(q))                         { setDrillView(null); setAgentView("findings"); setSevF(/critical/.test(q)?"Critical":"All"); return; }
     if(/(exposure|financial|cost|dollar|\$)/.test(q)){ setDrillView(null); setAgentView("exposure"); return; }
     if(/(pathway|attack|threat|process)/.test(q)) { setAgentView(null); setDrillView("atrisk"); return; }
     if(/(remediat|prioriti)/.test(q))             { setAgentView(null); setDrillView("atrisk"); return; }
     if(/(control|effective|capab|maturity)/.test(q)){ setDrillView(null); setAgentView("controls"); return; }
     setDrillView(null); setAgentView("posture"); // overall posture / default
   }
-  function clearAgentView(){ setAgentView(null); setDrillView(null); setAgentQ(""); }
+  function clearAgentView(){ setAgentView(null); setDrillView(null); setAgentQ(""); setSevF("All"); }
 
   var shown = sevF==="All" ? liveFind : liveFind.filter(function(f){return f.sev===sevF;});
   var atRiskProcs = liveProcs.filter(function(p){return p.score<80;});
@@ -8827,6 +8827,38 @@ function CISODash(props) {
       {!drillView&&agentView&&(
         <div>
           <BrianaBar pageKey="ciso" orgName={orgName||""} brianaOn={props.brianaOn!==false} setBrianaOn={props.setBrianaOn||function(){}}/>
+
+      {/* Answer hero — the figure that answers the question, sized to lead the view */}
+      {(function(){
+        var critN = liveFind.filter(function(f){return f.sev==="Critical";}).length;
+        var capsSorted = Object.keys(liveCaps).sort(function(a,b){return liveCaps[a].score-liveCaps[b].score;});
+        var weakest = capsSorted[0];
+        var h = agentView==="posture" ? {num:String(overallScore),unit:"/100",color:cmmi(overallScore).color,
+              label:"Overall Security Posture",
+              sub:cmmi(overallScore).short+" — "+cmmi(overallScore).name+" · $"+(totalExposure/1000).toFixed(2)+"B modeled exposure at current posture"}
+          : agentView==="exposure" ? {num:"$"+(totalExposure/1000).toFixed(2)+"B",unit:"",color:"#EF4545",
+              label:"Modeled Financial Exposure at Current Posture",
+              sub:critN+" critical findings · "+atRiskProcs.length+" at-risk business processes · posture score "+overallScore+"/100"}
+          : agentView==="findings" ? {num:String(sevF==="Critical"?critN:shown.length),unit:"",color:"#EF4545",
+              label:(sevF==="Critical"?"Open Critical Findings":"Open Findings"),
+              sub:"Avg $285M+ exposure per critical event · click any finding to expand and route it"}
+          : {num:String(liveCaps[weakest]?liveCaps[weakest].score:0),unit:"/100",color:hc(liveCaps[weakest]?liveCaps[weakest].score:0),
+              label:"Weakest Control Domain — "+weakest,
+              sub:"Bottom three: "+capsSorted.slice(0,3).map(function(k){return k+" ("+liveCaps[k].score+")";}).join(" · ")};
+        return (
+          <div style={{display:"flex",gap:18,alignItems:"center",background:C.card,
+            border:"1.5px solid "+h.color+"35",borderLeft:"5px solid "+h.color,borderRadius:12,
+            padding:"18px 22px",marginBottom:14}}>
+            <div style={{color:h.color,fontSize:44,fontWeight:800,fontFamily:"monospace",lineHeight:1,flexShrink:0}}>
+              {h.num}<span style={{color:C.muted,fontSize:16,fontWeight:600}}>{h.unit}</span>
+            </div>
+            <div style={{flex:1}}>
+              <div style={{color:C.text,fontSize:15,fontWeight:800,marginBottom:3}}>{h.label}</div>
+              <div style={{color:C.muted,fontSize:11,lineHeight:1.5}}>{h.sub}</div>
+            </div>
+          </div>
+        );
+      })()}
       {/* Business-framed KPI cards */}
       {(agentView==="posture"||agentView==="exposure")&&(
       <div style={{padding:"8px 14px",background:"linear-gradient(135deg,#3B9EFF10,transparent)",
@@ -8849,6 +8881,35 @@ function CISODash(props) {
           </strong>.
         </div>
       </div>
+      )}
+
+      {/* Exposure view — where the dollars sit, largest first */}
+      {agentView==="exposure"&&(
+        <Card style={{marginBottom:14}}>
+          <SH label="Exposure by Business Process — largest first"/>
+          {(function(){
+            var rows=liveProcs.slice().sort(function(a,b){return (EXP[b.id]||0)-(EXP[a.id]||0);}).slice(0,6);
+            var mx=Math.max.apply(null,rows.map(function(p){return EXP[p.id]||0;}).concat([1]));
+            return rows.map(function(p){
+              var clr=p.score<70?"#EF4545":p.score<80?"#F5A623":"#3B9EFF";
+              return (
+                <div key={p.id} style={{display:"flex",gap:10,alignItems:"center",marginBottom:8}}>
+                  <span style={{fontSize:16,flexShrink:0}}>{p.icon}</span>
+                  <span style={{color:C.text,fontSize:11,fontWeight:600,width:180,flexShrink:0}}>{p.name}</span>
+                  <div style={{flex:1,height:14,background:C.dim,borderRadius:7,overflow:"hidden"}}>
+                    <div style={{width:Math.max(2,Math.round((EXP[p.id]||0)/mx*100))+"%",height:"100%",background:clr,borderRadius:7}}/>
+                  </div>
+                  <span style={{color:clr,fontSize:12,fontWeight:800,fontFamily:"monospace",width:72,textAlign:"right",flexShrink:0}}>
+                    {fmtExp((EXP[p.id]||0)/1000)}
+                  </span>
+                  <span style={{color:cmmi(p.score).color,fontSize:10,fontWeight:700,fontFamily:"monospace",width:44,textAlign:"right",flexShrink:0}}>
+                    {p.score}/100
+                  </span>
+                </div>
+              );
+            });
+          })()}
+        </Card>
       )}
 
       {(agentView==="posture"||agentView==="exposure")&&(
@@ -8944,7 +9005,7 @@ function CISODash(props) {
       })()}
 
           {/* ── Top 10 CISO Metrics ── */}
-          {(agentView==="posture"||agentView==="controls")&&(
+          {agentView==="posture"&&(
           <Card style={{marginBottom:14}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
               <SH label="Top 10 Cybersecurity Metrics"/>
@@ -8998,8 +9059,9 @@ function CISODash(props) {
           </Card>
           )}
 
+      {/* Findings view — full-width list so the answer dominates; alerts as a strip below */}
       {(agentView==="findings")&&(
-      <div style={{display:"grid",gridTemplateColumns:"3fr 2fr",gap:14,marginBottom:14}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr",gap:14,marginBottom:14}}>
         <Card>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
             <SH label={"Findings"+(sevF!=="All"?" — "+sevF+" only":"")}/>
@@ -9053,20 +9115,22 @@ function CISODash(props) {
           )}
         </Card>
         <div>
-          
           <Card>
             <SH label="Live Alerts"/>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
             {liveAlerts.slice(0,3).map(function(a,i){
               return (
-                <div key={i} style={{display:"flex",gap:7,alignItems:"flex-start",padding:"6px 0",borderBottom:"1px solid "+C.dim}}>
+                <div key={i} style={{display:"flex",gap:7,alignItems:"flex-start",padding:"8px 10px",
+                  background:C.bg,borderRadius:8,border:"1px solid "+SEV_C[a.sev]+"30"}}>
                   <div style={{width:7,height:7,borderRadius:"50%",background:SEV_C[a.sev],flexShrink:0,marginTop:3}}/>
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{color:C.text,fontSize:10,lineHeight:1.4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.msg}</div>
-                    <div style={{color:C.muted,fontSize:9,marginTop:1}}>{a.sys} · {a.time}</div>
+                    <div style={{color:C.text,fontSize:10,lineHeight:1.4}}>{a.msg}</div>
+                    <div style={{color:C.muted,fontSize:9,marginTop:2}}>{a.sys} · {a.time}</div>
                   </div>
                 </div>
               );
             })}
+            </div>
           </Card>
         </div>
       </div>
@@ -9076,12 +9140,15 @@ function CISODash(props) {
       {(agentView==="controls"||agentView==="posture")&&(
       <Card style={{marginBottom:10}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-              <SH label="Security Capabilities"/>
+              <SH label={agentView==="controls"?"Security Capabilities — weakest first":"Security Capabilities"}/>
               <span style={{color:C.muted,fontSize:9}}>Click to drill in</span>
             </div>
-            {/* 5+5 grid */}
-            <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:6}}>
-              {Object.keys(liveCaps).map(function(capName){
+            {/* controls view: 3-wide enlarged cards sorted worst-first; otherwise the 5+5 grid */}
+            <div style={{display:"grid",gridTemplateColumns:agentView==="controls"?"repeat(3,1fr)":"repeat(5,1fr)",
+              gap:agentView==="controls"?10:6}}>
+              {(agentView==="controls"
+                ?Object.keys(liveCaps).sort(function(a,b){return liveCaps[a].score-liveCaps[b].score;})
+                :Object.keys(liveCaps)).map(function(capName){
                 var c       = liveCaps[capName];
                 var cm      = cmmi(c.score);
                 var hasCrit = (c.items||[]).some(function(i){return i.status==="critical";});
@@ -9113,7 +9180,7 @@ function CISODash(props) {
                       background:cm.color,borderRadius:"10px 10px 0 0"}}/>
 
                     {/* Score big */}
-                    <div style={{color:cm.color,fontSize:22,fontWeight:800,
+                    <div style={{color:cm.color,fontSize:agentView==="controls"?32:22,fontWeight:800,
                       fontFamily:"monospace",lineHeight:1,marginBottom:2}}>
                       {c.score}
                     </div>
@@ -9145,6 +9212,13 @@ function CISODash(props) {
                     <div style={{color:C.muted,fontSize:8,lineHeight:1.2}}>
                       {(c.tools||[""])[0].split(" ").slice(0,2).join(" ")}
                     </div>
+
+                    {/* Key gap — surfaced when controls are the question */}
+                    {agentView==="controls"&&c.gap&&(
+                      <div style={{color:"#EF4545",fontSize:9,lineHeight:1.4,marginTop:6}}>
+                        {String(c.gap).length>150?String(c.gap).slice(0,150)+"…":c.gap}
+                      </div>
+                    )}
 
                     {/* Status dot */}
                     {hasCrit&&(
