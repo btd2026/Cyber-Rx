@@ -5,6 +5,7 @@ import CIODash from "./pages/CIODash";
 import CLODash from "./pages/CLODash";
 import AdminDatabase from "./pages/AdminDatabase";
 import ExecutiveAgentBrief from "./components/ExecutiveAgentBrief";
+import NistCsfScorecard from "./components/NistCsfScorecard";
 import AuditDash from "./pages/AuditDash";
 import ReviewMappings from "./pages/ReviewMappings";
 import ProcessGraph from "./pages/ProcessGraph";
@@ -9626,6 +9627,24 @@ function CRODash(props) {
     );
   }
 
+  if (selFramework === "nistcsf") {
+    // NIST CSF 2.0 is the live assessment — computed from connected systems
+    // and intake evidence, not the hardcoded narrative the other drills use.
+    return (
+      <div>
+        <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:14}}>
+          <button onClick={function(){setSelFramework(null);}}
+            style={{background:"transparent",border:"none",color:C.muted,cursor:"pointer",fontSize:11}}>
+            ← All Frameworks
+          </button>
+          <span style={{color:C.muted}}>/</span>
+          <span style={{color:C.text,fontSize:11,fontWeight:700}}>NIST CSF 2.0 — Live Assessment</span>
+        </div>
+        <NistCsfScorecard/>
+      </div>
+    );
+  }
+
   if (selFramework) {
     var fw3=COMPLIANCE_REPORTS[selFramework];
     if (!fw3) { setSelFramework(null); return null; }
@@ -9742,7 +9761,11 @@ function CRODash(props) {
             {id:"gdpr",        label:"GDPR / Privacy",            color:"#34D399"},
           ].map(function(r){
             return (
-              <button key={r.id} onClick={function(){setSelReport(r.id);}}
+              <button key={r.id} onClick={function(){
+                  // NIST CSF goes to the live computed assessment, not the static report.
+                  if(r.id==="nistcsf"){setSelFramework("nistcsf");return;}
+                  setSelReport(r.id);
+                }}
                 style={{background:r.color+"10",border:"1px solid "+r.color+"40",
                   color:r.color,borderRadius:7,padding:"5px 12px",cursor:"pointer",
                   fontSize:10,fontWeight:700}}>
@@ -18499,8 +18522,65 @@ function SetupBot(props) {
      ask:'Does {orgName} hold any Medicare Advantage or Part D contracts?',
      choices:['Yes, Medicare Advantage only','Yes, Part D only','Yes, both MA and Part D',
               'Yes, plus Medicaid managed care','No CMS contracts']},
+    // ── CSF evidence interview ─────────────────────────────────────────────
+    // These ten answers score the NIST CSF 2.0 categories that can't be read
+    // from connected systems (the ✍ manual categories on the CSF scorecard).
+    {id:'csf_gv_rr_roles', type:'choice', group:'Security Evidence',
+     ask:"Now a few quick security-program questions — these feed your live NIST CSF 2.0 assessment.\n\nDoes {orgName} have a named security leader (CISO) with documented roles and authorities?",
+     choices:['Yes — named CISO, documented authority','Security lead exists but informal','No designated security leader']},
+    {id:'csf_gv_po_policy', type:'choice', group:'Security Evidence',
+     ask:'Is there a board-approved information security policy reviewed in the last 12 months?',
+     choices:['Yes — board-approved and current','Yes, but over a year old','No formal policy']},
+    {id:'csf_gv_ov_board', type:'choice', group:'Security Evidence',
+     ask:'How often does cybersecurity report to the board?',
+     choices:['Quarterly','Twice a year','Annually','Never']},
+    {id:'csf_id_im_pir', type:'choice', group:'Security Evidence',
+     ask:'After security incidents, do post-incident reviews feed a lessons-learned process?',
+     choices:['Always — formal lessons-learned','Sometimes','Never']},
+    {id:'csf_pr_ds_encryption', type:'choice', group:'Security Evidence',
+     ask:'Is protected health information encrypted at rest and in transit across your systems?',
+     choices:['Fully encrypted at rest and in transit','Partially encrypted','Not encrypted']},
+    {id:'csf_pr_ds_dlp', type:'choice', group:'Security Evidence',
+     ask:'Is Data Loss Prevention deployed for protected health information?',
+     choices:['Yes — DLP deployed','Partial deployment','No DLP']},
+    {id:'csf_pr_ir_resilience', type:'choice', group:'Security Evidence',
+     ask:'Are your backups tested and critical systems redundant?',
+     choices:['Backups tested and systems redundant','Backups only — untested or no redundancy','Neither']},
+    {id:'csf_rs_an_forensics', type:'choice', group:'Security Evidence',
+     ask:'What incident analysis or forensics capability does {orgName} have?',
+     choices:['In-house forensics team','External retainer (IR firm)','None']},
+    {id:'csf_rc_rp_drtest', type:'choice', group:'Security Evidence',
+     ask:'When was your last full disaster-recovery test?',
+     choices:['Within the last 12 months','More than a year ago','Never tested']},
+    {id:'csf_rc_co_comms', type:'choice', group:'Security Evidence',
+     ask:'Is there a recovery communication plan covering members, regulators, and media?',
+     choices:['Yes','No']},
     {id:'confirm',    type:'confirm', group:'Review', ask:null},
   ];
+
+  // Map the chat's human-readable choices to the CSF evidence option keys the
+  // backend scores (POST /api/csf/evidence).
+  var CSF_EVIDENCE_MAP = {
+    csf_gv_rr_roles:      {key:'gv_rr_roles',      map:{'Yes — named CISO, documented authority':'yes','Security lead exists but informal':'informal','No designated security leader':'no'}},
+    csf_gv_po_policy:     {key:'gv_po_policy',     map:{'Yes — board-approved and current':'yes','Yes, but over a year old':'outdated','No formal policy':'no'}},
+    csf_gv_ov_board:      {key:'gv_ov_board',      map:{'Quarterly':'quarterly','Twice a year':'semiannual','Annually':'annual','Never':'never'}},
+    csf_id_im_pir:        {key:'id_im_pir',        map:{'Always — formal lessons-learned':'always','Sometimes':'sometimes','Never':'never'}},
+    csf_pr_ds_encryption: {key:'pr_ds_encryption', map:{'Fully encrypted at rest and in transit':'fully','Partially encrypted':'partially','Not encrypted':'no'}},
+    csf_pr_ds_dlp:        {key:'pr_ds_dlp',        map:{'Yes — DLP deployed':'yes','Partial deployment':'partial','No DLP':'no'}},
+    csf_pr_ir_resilience: {key:'pr_ir_resilience', map:{'Backups tested and systems redundant':'both','Backups only — untested or no redundancy':'backups-only','Neither':'neither'}},
+    csf_rs_an_forensics:  {key:'rs_an_forensics',  map:{'In-house forensics team':'in-house','External retainer (IR firm)':'retainer','None':'none'}},
+    csf_rc_rp_drtest:     {key:'rc_rp_drtest',     map:{'Within the last 12 months':'within-12mo','More than a year ago':'over-12mo','Never tested':'never'}},
+    csf_rc_co_comms:      {key:'rc_co_comms',      map:{'Yes':'yes','No':'no'}},
+  };
+  function csfEvidenceItems(orgData) {
+    var items = [];
+    Object.keys(CSF_EVIDENCE_MAP).forEach(function(qid){
+      var m = CSF_EVIDENCE_MAP[qid];
+      var ans = m.map[orgData[qid]];
+      if (ans) { items.push({ key: m.key, answer: ans }); }
+    });
+    return items;
+  }
 
   function speak(rawText) {
     // Cancel all ongoing speech and audio before starting
@@ -18884,6 +18964,20 @@ function SetupBot(props) {
       saveOrgProfile(orgData)
         .then(function(result) {
           console.log('Org profile saved:', result.orgId);
+
+          // Persist the CSF evidence interview answers — they score the
+          // manual NIST CSF 2.0 categories on the live scorecard.
+          try {
+            var csfItems = csfEvidenceItems(orgData);
+            if (csfItems.length && result.orgId) {
+              fetch(CYBERRX_API + '/api/csf/evidence?org_id=' + encodeURIComponent(result.orgId), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Org-Id': result.orgId },
+                body: JSON.stringify({ items: csfItems }),
+              }).catch(function(){});
+            }
+          } catch (e) {}
+
           setSaving(false);
           addMsg('bot', 'Profile saved successfully! Continuing to dashboard...');
 

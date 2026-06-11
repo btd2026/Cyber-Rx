@@ -497,6 +497,19 @@ async function init() {
       CREATE INDEX IF NOT EXISTS executive_briefs_role ON executive_briefs(role);
       CREATE INDEX IF NOT EXISTS executive_briefs_generated ON executive_briefs(generated_at DESC);
 
+      -- NIST CSF 2.0 manual-control evidence collected during intake (answers
+      -- to the CSF evidence interview, plus optional document references).
+      CREATE TABLE IF NOT EXISTS csf_evidence (
+        id              TEXT PRIMARY KEY,
+        organization_id TEXT NOT NULL,
+        question_key    TEXT NOT NULL,
+        answer          TEXT,
+        doc_name        TEXT,
+        updated_at      TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE (organization_id, question_key)
+      );
+      CREATE INDEX IF NOT EXISTS csf_evidence_org ON csf_evidence(organization_id);
+
       -- Editable "database of mock numbers" that drives every dashboard figure.
       -- org_id '_defaults' holds shared coefficients/assumptions; per-org rows
       -- hold setup-quiz responses and org-specific values. Edit value to change
