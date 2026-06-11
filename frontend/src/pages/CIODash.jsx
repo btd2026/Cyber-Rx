@@ -53,6 +53,23 @@ const CIODash = (props) => {
   const [crownJewelFilter, setCrownJewelFilter] = useState(
     () => new URLSearchParams(window.location.search).get('crown_jewel') === 'true'
   );
+  // Agent-driven view: page opens with just the agent; a question reveals the
+  // section(s) that answer it.
+  const [cioView, setCioView] = useState(null);
+  const [cioQ, setCioQ] = useState('');
+  const applyAgentAnswer = useCallback((ans) => {
+    if (!ans || !ans.matched || ans.source === 'out_of_scope') return;
+    const q = String(ans.matchedQuestion || ans.question || '').toLowerCase();
+    setCioQ(ans.matchedQuestion || ans.question || '');
+    const v = /end.?of.?life|unsupported|eol/.test(q) ? 'eol'
+      : /patch|vuln|cve/.test(q) ? 'vulns'
+      : /overdue|remediat|backlog|task/.test(q) ? 'remediation'
+      : /investment|reducing|roi|tool/.test(q) ? 'investments'
+      : /crown|process|exposed/.test(q) ? 'crownjewel'
+      : 'systems';
+    setCioView(v);
+  }, []);
+  const clearCioView = useCallback(() => { setCioView(null); setCioQ(''); }, []);
 
   const ctx = useCallback(() => {
     const token = authToken || localStorage.getItem('authToken') || '';
@@ -98,6 +115,17 @@ const CIODash = (props) => {
 
   const gradeColor = { Critical: '#dc2626', Elevated: '#ea580c', Moderate: '#ca8a04', Healthy: '#16a34a' }[risk.grade] || '#6b7280';
 
+  // Which sections answer the current question, and the figure that leads the view.
+  const show = (...vs) => vs.includes(cioView);
+  const procExposure = processesAtRisk.reduce((s, p) => s + (Number(p.exposure) || 0), 0);
+  const cioViewMeta = () => {
+    if (cioView === 'eol') return { title: 'End-of-Life Technology', num: String(eol.length), unit: '', color: '#ca8a04', label: 'Unsupported systems in the estate', sub: `${eol.filter((a) => a.criticality === 'Critical').length} on crown-jewel processes` };
+    if (cioView === 'vulns') return { title: 'Vulnerability & Patch Posture', num: String(k.criticalVulns ?? 0), unit: '', color: '#dc2626', label: 'Critical vulnerabilities open', sub: `${k.highVulns ?? 0} high · ${patch.avgPatch ?? 0}% avg patch SLA` };
+    if (cioView === 'remediation') return { title: 'Remediation Backlog', num: String(k.overdueTasks ?? 0), unit: '', color: (k.overdueTasks ?? 0) > 0 ? '#dc2626' : '#16a34a', label: 'Overdue remediation tasks', sub: `${k.openTasks ?? 0} open · ${fmtUSD(backlog.reduce((s, t) => s + (Number(t.estimatedCost) || 0), 0))} estimated cost` };
+    if (cioView === 'investments') return { title: 'Investments vs Operational Risk', num: String(risk.score), unit: '/100', color: gradeColor, label: `Technology risk score — ${risk.grade}`, sub: `${k.controlEffectiveness ?? 0}% control effectiveness across the estate` };
+    return { title: cioView === 'crownjewel' ? 'Crown-Jewel Processes Exposed' : 'Systems Most At Risk', num: String(processesAtRisk.length), unit: '', color: '#dc2626', label: 'Crown-jewel processes carrying open risk', sub: `${fmtUSD(procExposure)} exposure · ${k.criticalRisks ?? 0} critical risks` };
+  };
+
   const Kpi = ({ label, value, color, sub }) => (
     <div style={{ ...card, padding: '1rem' }}>
       <div style={{ fontSize: '0.7rem', color: '#6b7280', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{label}</div>
@@ -124,8 +152,8 @@ const CIODash = (props) => {
         </div>
       </div>
 
-      {/* AI agent brief */}
-      <ExecutiveAgentBrief role="CIO" authToken={authToken} orgId={orgId} api_url={api_url} />
+      {/* AI agent brief — page opens here; a question reveals the relevant section(s) */}
+      <ExecutiveAgentBrief role="CIO" entry onAnswer={applyAgentAnswer} authToken={authToken} orgId={orgId} api_url={api_url} />
 
       {error && (
         <div style={{ ...card, padding: '1rem', marginBottom: '1.5rem', borderColor: '#fecaca', backgroundColor: '#fef2f2', color: '#991b1b', fontSize: '0.85rem' }}>
@@ -133,7 +161,26 @@ const CIODash = (props) => {
         </div>
       )}
 
+      {/* Answer hero — mirrors the asked question */}
+      {cioView && (() => {
+        const h = cioViewMeta();
+        return (
+          <div style={{ ...card, padding: '1.25rem 1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1.25rem', borderLeft: `5px solid ${h.color}` }}>
+            <div style={{ fontSize: '2.5rem', fontWeight: 800, color: h.color, lineHeight: 1, flexShrink: 0 }}>
+              {h.num}<span style={{ fontSize: '1rem', color: '#9ca3af', fontWeight: 600 }}>{h.unit}</span>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '0.7rem', color: '#2563eb', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>Chief Information Officer — {h.title}</div>
+              <div style={{ fontSize: '1rem', fontWeight: 700, color: '#111827' }}>{h.label}</div>
+              <div style={{ fontSize: '0.78rem', color: '#6b7280', marginTop: 2 }}>{cioQ ? `Answering: “${cioQ}” · ` : ''}{h.sub}</div>
+            </div>
+            <button onClick={clearCioView} style={{ padding: '0.5rem 0.85rem', backgroundColor: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db', borderRadius: 6, cursor: 'pointer', fontSize: '0.8rem', whiteSpace: 'nowrap', flexShrink: 0 }}>← Ask another</button>
+          </div>
+        );
+      })()}
+
       {/* Technology Risk Score banner */}
+      {show('investments') && (
       <div style={{ ...card, padding: '1.25rem 1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderLeft: `5px solid ${gradeColor}` }}>
         <div>
           <div style={{ fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Technology Risk Score</div>
@@ -152,8 +199,10 @@ const CIODash = (props) => {
           </div>
         </div>
       </div>
+      )}
 
       {/* KPI Strip */}
+      {show('investments') && (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
         <Kpi label="Total Assets" value={k.totalAssets ?? 0} />
         <Kpi label="Crown Jewels" value={k.crownJewels ?? 0} color="#dc2626" />
@@ -164,8 +213,10 @@ const CIODash = (props) => {
         <Kpi label="Control Effectiveness" value={`${k.controlEffectiveness ?? 0}%`} color={(k.controlEffectiveness ?? 0) >= 75 ? '#16a34a' : '#ca8a04'} />
         <Kpi label="Overdue Tasks" value={k.overdueTasks ?? 0} color={(k.overdueTasks ?? 0) > 0 ? '#dc2626' : '#16a34a'} sub={`${k.openTasks ?? 0} open`} />
       </div>
+      )}
 
       {/* Systems / Business Processes at risk */}
+      {show('systems', 'crownjewel') && (
       <section style={{ ...card, marginBottom: '1.5rem' }}>
         <div style={sectionHead}><h2 style={h2}>Crown-Jewel Systems at Risk</h2><span style={{ fontSize: '0.75rem', color: '#6b7280' }}>{processesAtRisk.length} processes with open risk</span></div>
         <div style={{ padding: '1rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '0.75rem' }}>
@@ -185,9 +236,12 @@ const CIODash = (props) => {
           ))}
         </div>
       </section>
+      )}
 
       {/* Two-column: Vulnerability posture + Control effectiveness */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+      {show('vulns', 'investments') && (
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+        {show('vulns') && (
         <section style={card}>
           <div style={sectionHead}><h2 style={h2}>Vulnerability & Patch Posture</h2></div>
           <div style={{ padding: '1rem' }}>
@@ -215,7 +269,9 @@ const CIODash = (props) => {
             {(vulns.topAssets || []).length === 0 && <div style={{ color: '#6b7280', fontSize: '0.8rem' }}>No outstanding vulnerabilities.</div>}
           </div>
         </section>
+        )}
 
+        {show('investments') && (
         <section style={card}>
           <div style={sectionHead}><h2 style={h2}>Control Effectiveness</h2><span style={{ fontSize: '0.75rem', color: '#6b7280' }}>{controlPosture.implemented}/{controlPosture.total} implemented</span></div>
           <div style={{ padding: '1rem' }}>
@@ -238,9 +294,12 @@ const CIODash = (props) => {
             ))}
           </div>
         </section>
+        )}
       </div>
+      )}
 
       {/* Asset Inventory */}
+      {show('systems', 'crownjewel', 'vulns') && (
       <section style={{ ...card, marginBottom: '1.5rem' }}>
         <div style={sectionHead}>
           <h2 style={h2}>Asset Inventory</h2>
@@ -288,9 +347,12 @@ const CIODash = (props) => {
           </table>
         </div>
       </section>
+      )}
 
       {/* End-of-Life technology + Attack pathways */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+      {show('eol', 'systems', 'crownjewel') && (
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+        {show('eol') && (
         <section style={card}>
           <div style={sectionHead}><h2 style={h2}>End-of-Life / Unsupported Technology</h2><span style={{ fontSize: '0.75rem', color: eol.length ? '#dc2626' : '#16a34a' }}>{eol.length} system(s)</span></div>
           <div style={{ padding: '1rem' }}>
@@ -309,7 +371,9 @@ const CIODash = (props) => {
             ))}
           </div>
         </section>
+        )}
 
+        {show('systems', 'crownjewel') && (
         <section style={card}>
           <div style={sectionHead}><h2 style={h2}>Attack Pathways → Systems</h2></div>
           <div style={{ padding: '1rem' }}>
@@ -327,9 +391,12 @@ const CIODash = (props) => {
             ))}
           </div>
         </section>
+        )}
       </div>
+      )}
 
       {/* Remediation Backlog */}
+      {show('remediation') && (
       <section style={{ ...card, marginBottom: '1.5rem' }}>
         <div style={sectionHead}>
           <h2 style={h2}>Remediation Backlog</h2>
@@ -367,12 +434,15 @@ const CIODash = (props) => {
           )}
         </div>
       </section>
+      )}
 
       {/* Footer */}
+      {cioView && (
       <div style={{ ...card, padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>Technology Risk Summary — Board-ready export</div>
         <button onClick={() => window.print()} style={{ padding: '0.5rem 1rem', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: '0.85rem' }}>Export PDF</button>
       </div>
+      )}
     </div>
   );
 };
