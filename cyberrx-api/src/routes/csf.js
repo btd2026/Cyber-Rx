@@ -42,6 +42,19 @@ router.get('/questions', optionalJWT, async (req, res) => {
   res.json({ questions: NistCsfService.getQuestions() });
 });
 
+// Systemwide rankings — every organization's latest scorecard (the
+// association/board view; not org-scoped). ?refresh=1 recomputes all.
+router.get('/rankings', optionalJWT, async (req, res) => {
+  try {
+    const refresh = req.query.refresh === '1' || req.query.refresh === 'true';
+    const rankings = await NistCsfService.getRankings({ refresh });
+    res.json({ rankings, count: rankings.length, generatedAt: new Date().toISOString() });
+  } catch (err) {
+    logger.error('CSF rankings error', { error: err.message });
+    res.status(500).json({ error: 'Failed to load CSF rankings', message: err.message });
+  }
+});
+
 router.post('/evidence', optionalJWT, async (req, res) => {
   const orgId = resolveOrg(req, res);
   if (!orgId) return;
