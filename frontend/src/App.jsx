@@ -241,6 +241,14 @@ var CROWN_JEWEL_PROCS = [
   {id:"data_platform", name:"Data & Analytics Platforms",                  icon:"📊", score:82, crits:0, highs:1, trend:mkT(82),
    subcomponents:["Data warehouse","Analytics platforms","BI tools","ML models"],
    why:["PHI aggregation","Strategic decision support"]},
+  // Ticket #06 — complete the standard health-insurance process taxonomy
+  // (HFMA / AHIP / CAQH CORE) with the remaining selectable processes.
+  {id:"prior_auth",    name:"Prior Authorization & Utilization Management", icon:"📝", score:70, crits:1, highs:2, trend:mkT(70),
+   subcomponents:["Prior authorization","Concurrent review","Appeals & grievances","Medical necessity"],
+   why:["Clinical PHI","CMS turnaround mandates","Member impact"]},
+  {id:"premium_billing",name:"Premium Billing & Collections",              icon:"💳", score:77, crits:0, highs:1, trend:mkT(77),
+   subcomponents:["Premium invoicing","Payment processing","Reconciliation","Delinquency management"],
+   why:["Revenue continuity","Payment-card and bank data","Financial reporting"]},
 ];
 
 var ORG_TEMPLATES = {
@@ -9148,9 +9156,17 @@ function CISODash(props) {
                              : m.unit==="hr"  ? Math.max(0,100-Math.round((m.val/m.target-1)*100))
                              : Math.min(100, Math.round(m.val/m.target*100));
                 var color    = onTarget?"#0FBB80":m.sev==="Critical"?"#EF4545":m.sev==="High"?"#F5A623":"#3B9EFF";
+                // ticket #13 — data provenance per metric (which tool/source).
+                var METRIC_SRC = {"MFA Adoption Rate":"Okta / Entra ID","Phishing Click Rate":"KnowBe4","Patch Compliance (Critical)":"Tenable","EDR Coverage":"CrowdStrike","Mean Time to Detect":"Splunk SIEM","Mean Time to Respond":"ServiceNow ITSM","Security Awareness Training":"LMS / Workday","Privileged Account Review":"CyberArk PAM","Vulnerability Remediation SLA":"Tenable","SIEM Log Retention":"Splunk SIEM"};
+                var srcTool = METRIC_SRC[m.label]||"connected tool";
+                var srcMode = (cisoM&&cisoM.kpis) ? "live" : "setup baseline";
                 return (
                   <div key={m.label}
-                    onClick={function(){setSelMetric({label:m.label,val:m.val,unit:m.unit,target:m.target,color:color,note:m.note});}}
+                    onClick={function(){
+                      // ticket #14 — voice-over with full detail: value, source, context.
+                      speakWithSavedVoice(m.label+" is "+m.val+m.unit+", against a target of "+m.target+m.unit+". "+m.note+". Source: "+srcTool+", "+srcMode+".");
+                      setSelMetric({label:m.label,val:m.val,unit:m.unit,target:m.target,color:color,note:m.note,source:srcTool,sourceMode:srcMode});
+                    }}
                     style={{background:C.bg,borderRadius:8,padding:"10px 12px",cursor:"pointer",
                       border:"1px solid "+(onTarget?"#0FBB8020":color+"25"),
                       transition:"box-shadow 0.15s"}}
@@ -9170,6 +9186,9 @@ function CISODash(props) {
                     <div style={{display:"flex",justifyContent:"space-between"}}>
                       <span style={{color:C.muted,fontSize:9,lineHeight:1.3,flex:1}}>{m.note}</span>
                       <span style={{color:C.muted,fontSize:9,flexShrink:0,marginLeft:6}}>target: {m.target}{m.unit}</span>
+                    </div>
+                    <div style={{color:C.muted,fontSize:8,marginTop:3,opacity:0.85}} title={"Data source: "+srcTool+" ("+srcMode+")"}>
+                      ◈ source: {srcTool} · {srcMode}
                     </div>
                   </div>
                 );
