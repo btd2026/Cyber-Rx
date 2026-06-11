@@ -8,6 +8,7 @@ import ExecutiveAgentBrief from "./components/ExecutiveAgentBrief";
 import NistCsfScorecard from "./components/NistCsfScorecard";
 import CsfRankings from "./components/CsfRankings";
 import FrameworkScorecard from "./components/FrameworkScorecard";
+import VendorAssessmentPanel from "./components/VendorAssessmentPanel";
 import AuditDash from "./pages/AuditDash";
 import ReviewMappings from "./pages/ReviewMappings";
 import ProcessGraph from "./pages/ProcessGraph";
@@ -9689,6 +9690,23 @@ function CRODash(props) {
     );
   }
 
+  if (selFramework === "vendor_assurance") {
+    // Saraqael — vendor document assessment agent.
+    return (
+      <div>
+        <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:14}}>
+          <button onClick={function(){setSelFramework(null);}}
+            style={{background:"transparent",border:"none",color:C.muted,cursor:"pointer",fontSize:11}}>
+            ← Back
+          </button>
+          <span style={{color:C.muted}}>/</span>
+          <span style={{color:C.text,fontSize:11,fontWeight:700}}>Vendor Assurance — Saraqael</span>
+        </div>
+        <VendorAssessmentPanel/>
+      </div>
+    );
+  }
+
   if (selFramework === "csf_rankings") {
     // Systemwide view: every organization's scorecard, ranked and plotted.
     return (
@@ -9803,6 +9821,12 @@ function CRODash(props) {
 
       {/* Direct access to the live CSF scorecard + systemwide rankings */}
       <div style={{display:"flex",justifyContent:"flex-end",gap:8,margin:"10px 0"}}>
+        <button onClick={function(){setSelFramework("vendor_assurance");}}
+          style={{background:"transparent",border:"1px solid "+C.border,color:C.text,
+            borderRadius:4,padding:"7px 16px",cursor:"pointer",fontSize:11,fontWeight:600,
+            letterSpacing:"0.06em",textTransform:"uppercase"}}>
+          Vendor Assurance (Saraqael) →
+        </button>
         <button onClick={function(){setSelFramework("csf_rankings");}}
           style={{background:"transparent",border:"1px solid "+C.border,color:C.text,
             borderRadius:4,padding:"7px 16px",cursor:"pointer",fontSize:11,fontWeight:600,

@@ -246,6 +246,9 @@ app.use('/api/metrics',           [apiGetLimiter, apiPutLimiter], require('./rou
 // NIST CSF 2.0 live assessment (auto/partial/manual categories + evidence intake)
 app.use('/api/csf',               [apiGetLimiter, apiPostLimiter], require('./routes/csf'));
 
+// Saraqael — vendor document assessment agent (every doc type + cross-validation)
+app.use('/api/vendor-assessment', [apiGetLimiter, apiPostLimiter], require('./routes/vendorAssessment'));
+
 // Simulated live-source tool databases (org-isolated; admin override)
 app.use('/api/sources',           [apiGetLimiter, apiPostLimiter], require('./routes/sources'));
 
