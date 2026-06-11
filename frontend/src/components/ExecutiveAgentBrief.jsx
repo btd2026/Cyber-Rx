@@ -30,6 +30,19 @@ const PRIORITY_COLORS = {
   Low: '#8fb3ff',
 };
 
+// Ticket #10 — angel name + distinct voice profile per persona (persists across
+// sessions; never re-randomized). Ticket #09 — capability description shown on
+// open instead of a bold pre-formed question.
+const AGENT_PERSONAS = {
+  CISO:  { name: 'Michael',  voice: 'en-US-male-firm',     can: 'I map attack pathways to your critical processes, score your security posture, surface your weakest controls and top critical findings, and quantify what each threat could cost.' },
+  CFO:   { name: 'Gabriele', voice: 'en-US-female-warm',   can: 'I translate cyber risk into dollars — gross and net financial exposure, insurance adequacy, capital and RBC impact, and the return on your security spend.' },
+  CRO:   { name: 'Raphael',  voice: 'en-GB-male-measured',  can: 'I score every risk against your board-approved appetite, flag threshold breaches and unassigned owners, and aggregate your quantified exposure.' },
+  CLO:   { name: 'Uriel',    voice: 'en-US-male-calm',      can: 'I track which regulatory obligations are triggered, who you must notify and by when, your maximum penalty exposure, and which vendors carry the most legal risk.' },
+  CIO:   { name: 'Camael',   voice: 'en-US-female-clear',   can: 'I show which systems are most at risk, what technology is end-of-life, your worst unpatched vulnerabilities, overdue remediation, and whether your investments are reducing operational risk.' },
+  Board: { name: 'Sariel',   voice: 'en-GB-female-formal',  can: 'I answer three questions plainly: are we at risk right now, is our posture improving, and are we spending the right amount — with net exposure and insurance adequacy.' },
+};
+function personaFor(role) { return AGENT_PERSONAS[role] || { name: `${role} Agent`, voice: 'en-US-neutral', can: 'I answer your role-specific questions from live data.' }; }
+
 function resolveCtx(props) {
   const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
   const token = props.authToken || ls('authToken') || '';
@@ -183,16 +196,22 @@ export default function ExecutiveAgentBrief(props) {
                     Interpreted as: “{m.matchedQuestion}”
                   </div>
                 )}
-                <div style={{ fontSize: 14, color: m.error ? '#ff9a8c' : '#e6ecf5', lineHeight: 1.5 }}>{m.summary}</div>
+                {/* #11 — answer in full sentences first, then the supporting evidence */}
+                <div style={{ fontSize: 14, color: m.error ? '#ff9a8c' : '#e6ecf5', lineHeight: 1.55 }}>{m.summary}</div>
                 {Array.isArray(m.details) && m.details.length > 0 && (
                   <>
-                    <div style={{ ...sectionLabel, marginTop: 10, marginBottom: 6 }}>Relevant details</div>
+                    <div style={{ ...sectionLabel, marginTop: 10, marginBottom: 6 }}>Supporting evidence</div>
                     <ul style={{ margin: 0, paddingLeft: 18 }}>
                       {m.details.map((d, j) => (
                         <li key={j} style={{ fontSize: 13, color: '#cdd6e6', marginBottom: 5, lineHeight: 1.45 }}>{d}</li>
                       ))}
                     </ul>
                   </>
+                )}
+                {!m.error && (
+                  <div style={{ fontSize: 12, color: '#8b95a8', marginTop: 10, fontStyle: 'italic' }}>
+                    Want me to break this down further or explain the methodology? Just ask.
+                  </div>
                 )}
               </div>
             )}
@@ -230,22 +249,25 @@ export default function ExecutiveAgentBrief(props) {
   // Entry mode: the tab opens with ONLY the agent and a few suggested questions —
   // no preloaded brief. Asking a question drives the tailored dashboard (via onAnswer).
   if (entry) {
+    const persona = personaFor(role);
     return (
       <div style={wrap} data-testid={`agent-brief-${role}`}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2, color: '#7aa2ff', textTransform: 'uppercase' }}>
-            {role} Agent
+            {persona.name} · {role} Agent
           </span>
           <span style={{
             fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20,
             background: '#23262e', color: '#9aa3b2', border: '1px solid #333a47',
           }}>◆ continuous · live data</span>
         </div>
-        <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.35, marginBottom: 4 }}>
-          {roleQuestion ? `“${roleQuestion}”` : `Ask your ${role} agent`}
+        {/* #09 — open with a natural-language capability explanation, not a bold question */}
+        <div style={{ fontSize: 14, color: '#dbe3f2', lineHeight: 1.6, marginBottom: 6 }}>
+          I’m {persona.name}, your {role} agent. {persona.can}
         </div>
-        <div style={{ fontSize: 13, color: '#9aa6bc', marginBottom: 16, lineHeight: 1.5 }}>
-          Ask a question and I’ll pull the live answer from your security stack — then build the dashboard behind it.
+        <div style={{ fontSize: 12.5, color: '#9aa6bc', marginBottom: 14, lineHeight: 1.5 }}>
+          Ask me anything in your own words — I’ll answer directly from your live data and build the supporting view.
+          {suggested.length > 0 && ' For example, you could ask:'}
         </div>
         {renderConversation()}
         {renderSuggested()}
