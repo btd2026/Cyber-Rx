@@ -26,8 +26,29 @@ function resolveCtx(props) {
   return { token, organizationId, apiUrl };
 }
 
+// Small clickable finding badge (control failure) anchored at a node.
+function FindingBadge({ x, y, refs, onPick }) {
+  return (
+    <g>
+      {refs.slice(0, 3).map((ref, i) => (
+        <g key={ref} style={{ cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); onPick(ref); }}>
+          <title>{`${ref} — control failure (click for detail & remediation)`}</title>
+          <rect x={x + i * 30} y={y} width={26} height={15} rx={3} fill="#C0392B" />
+          <text x={x + i * 30 + 13} y={y + 11} textAnchor="middle" fontSize="9" fontWeight="700" fill="#fff">{ref}</text>
+        </g>
+      ))}
+      {refs.length > 3 && (
+        <text x={x + 3 * 30 + 2} y={y + 11} fontSize="9" fontWeight="700" fill="#C0392B">+{refs.length - 3}</text>
+      )}
+    </g>
+  );
+}
+
 export default function AttackPathGraph(props) {
-  const { graph } = props; // /api/attack-path payload supplied by the parent
+  const { graph, onFinding } = props; // /api/attack-path payload supplied by the parent
+  const findingByRef = {};
+  (graph && graph.findings || []).forEach((f) => { findingByRef[f.ref] = f; });
+  const pickFinding = (ref) => { if (onFinding && findingByRef[ref]) onFinding(findingByRef[ref]); };
   const [fnTiers, setFnTiers] = useState({}); // CSF function id -> tier (1-4)
   const { token, organizationId, apiUrl } = resolveCtx(props);
 
@@ -128,6 +149,7 @@ export default function AttackPathGraph(props) {
                 </text>
                 {cl.hub.internetExposed && <Callout x={cl.cx + layout.HUB_R + 6} y={cl.cy - layout.HUB_R} text="Internet exposed" color={EXPOSED} />}
                 {cl.hub.sensitiveData && <Callout x={cl.cx + layout.HUB_R + 6} y={cl.cy + layout.HUB_R - 4} text="Sensitive data" color={SENSITIVE} />}
+                {cl.hub.findingRefs && <FindingBadge x={cl.cx - 26} y={cl.cy - layout.HUB_R - 22} refs={cl.hub.findingRefs} onPick={pickFinding} />}
               </g>
               {/* Satellites */}
               {cl.sats.map((s, si) => {
@@ -149,6 +171,7 @@ export default function AttackPathGraph(props) {
                     </text>
                     {s.node.sensitiveData && s.node.layer !== 'device' && <Callout x={s.x + layout.SAT_R + 3} y={s.y - layout.SAT_R} text="Sensitive data" color={SENSITIVE} />}
                     {s.node.internetExposed && !s.node.sensitiveData && s.node.layer !== 'device' && <Callout x={s.x + layout.SAT_R + 3} y={s.y - layout.SAT_R} text="Internet exposed" color={EXPOSED} />}
+                    {s.node.findingRefs && <FindingBadge x={s.x - 13} y={s.y - layout.SAT_R - 18} refs={s.node.findingRefs} onPick={pickFinding} />}
                   </g>
                 );
               })}

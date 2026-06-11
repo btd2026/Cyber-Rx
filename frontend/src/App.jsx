@@ -8371,10 +8371,12 @@ function CISODash(props) {
     if(!ans||!ans.matched||ans.source==="out_of_scope") return;
     var q=String(ans.matchedQuestion||ans.question||"").toLowerCase();
     setAgentQ(ans.matchedQuestion||ans.question||"");
+    // Attack-pathway questions show the attack path FIRST — even when the
+    // question also mentions cost (e.g. "...and what does each one cost us?").
+    if(/(attack path|pathway|attack|kill chain|diagram|how.*reach|trace)/.test(q)) { setDrillView(null); setAgentView("attackpath"); return; }
     if(/finding/.test(q))                         { setDrillView(null); setAgentView("findings"); setSevF(/critical/.test(q)?"Critical":"All"); return; }
     if(/(exposure|financial|cost|dollar|\$)/.test(q)){ setDrillView(null); setAgentView("exposure"); return; }
-    if(/(attack path|pathway|diagram|kill chain|how.*reach|trace)/.test(q)) { setDrillView(null); setAgentView("attackpath"); return; }
-    if(/(attack|threat|process)/.test(q))         { setAgentView(null); setDrillView("atrisk"); return; }
+    if(/(threat|process)/.test(q))                { setAgentView(null); setDrillView("atrisk"); return; }
     if(/(remediat|prioriti)/.test(q))             { setAgentView(null); setDrillView("atrisk"); return; }
     if(/(control|effective|capab|maturity)/.test(q)){ setDrillView(null); setAgentView("controls"); return; }
     setDrillView(null); setAgentView("posture"); // overall posture / default
@@ -9092,12 +9094,39 @@ function CISODash(props) {
           </div>
         );
       })()}
-      {/* Business-framed KPI cards */}
-      {(agentView==="posture"||agentView==="exposure")&&(
+      {/* CISO exec summary — text changes with the question/view selected (Papa) */}
+      {agentView&&(function(){
+        var critN=liveFind.filter(function(f){return f.sev==="Critical";}).length;
+        var atRiskN=liveProcs.filter(function(p){return p.score<80;}).length;
+        var capsSorted=Object.keys(liveCaps).sort(function(a,b){return liveCaps[a].score-liveCaps[b].score;});
+        var weakest=capsSorted[0];
+        var body;
+        if(agentView==="attackpath"){
+          body=(<span>{liveFind.length} control failures expose {atRiskN} at-risk business process(es) to active threats.
+            Trace each pathway below; click a finding (F-xxx) to see the failed control and route it to remediation.
+            Highest-impact path: [MAILING_VENDOR] SFTP gap (F-003) — unencrypted PHI to a clearinghouse.</span>);
+        } else if(agentView==="findings"){
+          body=(<span><strong style={{color:"#EF4545"}}>{critN} critical</strong> and {liveFind.filter(function(f){return f.sev==="High";}).length} high
+            findings are open across {atRiskN} at-risk process(es). Each critical finding is a material breach risk —
+            expand any finding to route it to your ticketing system.</span>);
+        } else if(agentView==="controls"){
+          body=(<span>Weakest control domain is <strong style={{color:hc(liveCaps[weakest].score)}}>{weakest} ({liveCaps[weakest].score}/100)</strong>.
+            Bottom three: {capsSorted.slice(0,3).map(function(k){return k+" ("+liveCaps[k].score+")";}).join(", ")}. Raising these
+            lifts the overall posture score the most.</span>);
+        } else if(agentView==="exposure"){
+          body=(<span>Modeled cyber exposure is <strong style={{color:"#EF4545"}}>${(totalExposure/1000).toFixed(2)}B</strong> at the current
+            posture (score {overallScore}/100), concentrated in {atRiskN} at-risk business process(es). Largest single exposure:
+            claims platform. RBC impact in catastrophic scenario: <strong style={{color:"#F5A623"}}>{Math.round((285+346+259+78+340)/2500*100)}% of surplus</strong>.</span>);
+        } else {
+          body=(<span>Current security posture (Score: <strong style={{color:cmmi(overallScore).color}}>{overallScore}</strong>/100) leaves <strong style={{color:"#EF4545"}}>${Math.round(aPhiRec*164/1e6+200)}M+ in modeled exposure</strong> across
+            {" "}{atRiskN} at-risk business processes. Top priority: [MAILING_VENDOR] SFTP gap (F-003) — $285M breach exposure for 340K members.
+            RBC capital impact in catastrophic scenario: <strong style={{color:"#F5A623"}}>{Math.round((285+346+259+78+340)/2500*100)}% of statutory surplus</strong>.</span>);
+        }
+        return (
       <div style={{padding:"8px 14px",background:"linear-gradient(135deg,#3B9EFF10,transparent)",
         border:"1px solid #3B9EFF20",borderRadius:8,marginBottom:10}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:1}}>
-          <div style={{color:"#3B9EFF",fontSize:10,fontWeight:700}}>CISO EXECUTIVE SUMMARY</div>
+          <div style={{color:"#3B9EFF",fontSize:10,fontWeight:700}}>CISO EXECUTIVE SUMMARY{agentQ?(" · "+agentQ):""}</div>
           <JustifiedStat label="Security Score Methodology"
             displayValue={overallScore+"/100"}
             methodology={"Composite score weighted across 9 security capability inputs: MFA (15%), EDR (15%), SIEM retention (12%), Phishing resistance (13%), Patch compliance (15%), MTTD (8%), MTTR (7%), Training (7%), PAM (8%). Enter actual values in Setup Step 8 for org-specific scoring."}
@@ -9105,16 +9134,10 @@ function CISODash(props) {
             <span style={{color:C.acc,fontSize:9,cursor:"pointer"}}>ⓘ score methodology</span>
           </JustifiedStat>
         </div>
-        <div style={{color:C.muted,fontSize:11}}>
-          Current security posture (Score: <strong style={{color:cmmi(overallScore).color}}>{overallScore}</strong>/100) leaves <strong style={{color:"#EF4545"}}>${Math.round(aPhiRec*164/1e6+200)}M+ in modeled exposure</strong> across
-          {" "}{liveProcs.filter(function(p){return p.score<80;}).length} at-risk business processes.
-          Top priority: [MAILING_VENDOR] SFTP gap (F-003) — $285M breach exposure for 340K members.
-          RBC capital impact in catastrophic scenario: <strong style={{color:"#F5A623"}}>
-            {Math.round((285+346+259+78+340)/2500*100)}% of statutory surplus
-          </strong>.
-        </div>
+        <div style={{color:C.muted,fontSize:11}}>{body}</div>
       </div>
-      )}
+        );
+      })()}
 
       {/* Exposure view — where the dollars sit, largest first */}
       {agentView==="exposure"&&(

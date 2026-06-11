@@ -43,7 +43,7 @@ function networkZone(a) {
 }
 
 async function buildGraph(orgId) {
-  const [procRows, assetRows, riskRows, threatRows] = await Promise.all([
+  const [procRows, assetRows, riskRows, threatRows, findingRows] = await Promise.all([
     rows(`SELECT id, name, tier, criticality, supported_by_systems FROM business_processes WHERE organization_id=$1`, [orgId]),
     rows(`SELECT id, name, type, business_process_ids, criticality, tier, ip_address, location, cloud_provider,
                  vuln_critical, vuln_high, patch_pct, supported, end_of_support_date, data_classification
@@ -52,6 +52,10 @@ async function buildGraph(orgId) {
             FROM risks WHERE organization_id=$1 AND status IN ('open','mitigating')`, [orgId]),
     rows(`SELECT id, name, type, probability, impact_level, mitre_tactic, exploited_risks
             FROM threat_scenarios WHERE organization_id=$1`, [orgId]),
+    rows(`SELECT id, title, severity, status, description, asset_id, application_id, business_process_id, risk_id, remediation_plan
+            FROM findings WHERE organization_id=$1 AND status IN ('open','in_progress')
+            ORDER BY CASE severity WHEN 'Critical' THEN 0 WHEN 'High' THEN 1 WHEN 'Medium' THEN 2 ELSE 3 END
+            LIMIT 40`, [orgId]),
   ]);
 
   // ── Process layer ─────────────────────────────────────────────────────────
@@ -118,6 +122,36 @@ async function buildGraph(orgId) {
   if (!devices.length) apps.forEach((a) => networks.forEach((nw) => link(a, nw)));
   if (!networks.length) (devices.length ? devices : apps).forEach((s) => threats.forEach((t) => link(s, t)));
 
+  // ── Findings layer: each open finding is a failed control on the path. ─────
+  // Attach to the node it relates to (asset → app/device; process; else best
+  // name match; else the highest-impact threat) and give it a stable F-ref.
+  const nodeById = {};
+  [...processes, ...apps, ...devices].forEach((nd) => { nodeById[nd.id] = nd; });
+  const findings = (findingRows || []).map((f, i) => {
+    let nodeId = null;
+    if (f.asset_id && nodeById[f.asset_id]) nodeId = f.asset_id;
+    else if (f.application_id && nodeById[f.application_id]) nodeId = f.application_id;
+    else if (f.business_process_id && nodeById[f.business_process_id]) nodeId = f.business_process_id;
+    if (!nodeId) {
+      const ftitle = String(f.title || '').toLowerCase();
+      const match = [...devices, ...apps].find((nd) => {
+        const lbl = String(nd.label || '').toLowerCase().split(/[\s/]+/).filter((w) => w.length > 3);
+        return lbl.some((w) => ftitle.includes(w));
+      });
+      nodeId = match ? match.id : (devices[0] ? devices[0].id : (threats[0] ? threats[0].id : null));
+    }
+    return {
+      ref: `F${i + 1}`, id: f.id, title: f.title, severity: f.severity, status: f.status,
+      description: f.description || '', remediation: f.remediation_plan || '', nodeId,
+    };
+  });
+  // Index findings onto their nodes.
+  const findingsByNode = {};
+  findings.forEach((f) => { if (f.nodeId) { (findingsByNode[f.nodeId] = findingsByNode[f.nodeId] || []).push(f.ref); } });
+  [...processes, ...apps, ...devices, ...threats].forEach((nd) => {
+    if (findingsByNode[nd.id]) nd.findingRefs = findingsByNode[nd.id];
+  });
+
   const layers = [
     { id: 'process', label: 'Business Process', nodes: processes },
     { id: 'app', label: 'Application', nodes: apps },
@@ -128,8 +162,8 @@ async function buildGraph(orgId) {
 
   return {
     organizationId: orgId, generatedAt: new Date().toISOString(),
-    layers, edges,
-    counts: { processes: processes.length, apps: apps.length, devices: devices.length, networks: networks.length, threats: threats.length, edges: edges.length },
+    layers, edges, findings,
+    counts: { processes: processes.length, apps: apps.length, devices: devices.length, networks: networks.length, threats: threats.length, edges: edges.length, findings: findings.length },
     totalExposure: Math.round(Object.values(procExposure).reduce((s, v) => s + v, 0)),
   };
 }
