@@ -144,7 +144,7 @@ export default function NistCsfScorecard(props) {
     <div>
       {/* #16 — Individual ↔ Systemwide toggle embedded at the top */}
       <div style={{ display: 'flex', gap: 0, marginBottom: 12, border: `1px solid ${HAIRLINE}`, borderRadius: 5, overflow: 'hidden', width: 'fit-content' }}>
-        {[['individual', 'Individual'], ['systemwide', 'Systemwide ranking']].map(([v, label]) => (
+        {[['individual', 'Individual'], ['systemwide', 'Peer comparison']].map(([v, label]) => (
           <button key={v} onClick={() => setView(v)} style={{
             background: view === v ? PANEL_BG : '#fff', color: view === v ? '#fff' : INK_2,
             border: 'none', padding: '7px 18px', fontSize: 11, fontWeight: 600, cursor: 'pointer',

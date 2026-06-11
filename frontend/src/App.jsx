@@ -11,6 +11,7 @@ import FrameworkScorecard from "./components/FrameworkScorecard";
 import VendorAssessmentPanel from "./components/VendorAssessmentPanel";
 import AttackPathDiagram from "./components/AttackPathDiagram";
 import FrameworkScoreStrip from "./components/FrameworkScoreStrip";
+import RemediationPanel from "./components/RemediationPanel";
 import AuditDash from "./pages/AuditDash";
 import ReviewMappings from "./pages/ReviewMappings";
 import ProcessGraph from "./pages/ProcessGraph";
@@ -8353,7 +8354,7 @@ function CISODash(props) {
             style={{background:"transparent",border:"1px solid "+C.border,color:C.text,
               borderRadius:4,padding:"7px 16px",cursor:"pointer",fontSize:11,fontWeight:600,
               letterSpacing:"0.06em",textTransform:"uppercase"}}>
-            Attack Path Diagram →
+            ◉ Attack Path — Live Threat Graph →
           </button>
         </div>
       </div>
@@ -9795,6 +9796,48 @@ function CRODash(props) {
     );
   }
 
+  // Papa #11 — persistent framework tabs on the CRO dashboard: one per
+  // framework, plus Peer Comparison (formerly "Systemwide"), Vendor Assurance,
+  // and the Remediation path.
+  var CRO_FW_TABS = [
+    ["nistcsf","NIST CSF"],["hipaa","HIPAA"],["soc2","SOC 2"],["nist_800_53","800-53"],
+    ["cis","CIS"],["iso27001","ISO 27001"],["naic","NAIC"],["cms","CMS"],["pci","PCI"],["gdpr","GDPR"],
+    ["csf_rankings","Peer Comparison"],["vendor_assurance","Vendor Assurance"],["remediation","Remediation"],
+  ];
+  function fwTabs(active) {
+    return (
+      <div style={{display:"flex",gap:0,borderBottom:"1px solid "+C.border,marginBottom:14,overflowX:"auto"}}>
+        {CRO_FW_TABS.map(function(t){
+          var isActive = active===t[0];
+          return (
+            <button key={t[0]} onClick={function(){setSelFramework(t[0]);}}
+              style={{background:"transparent",border:"none",
+                borderBottom:"2px solid "+(isActive?C.acc:"transparent"),
+                color:isActive?C.acc:C.muted,padding:"8px 13px",cursor:"pointer",
+                fontSize:11,fontWeight:isActive?700:400,marginBottom:-1,whiteSpace:"nowrap"}}>
+              {t[1]}
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
+  if (selFramework === "remediation") {
+    return (
+      <div>
+        <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:8}}>
+          <button onClick={function(){setSelFramework(null);}}
+            style={{background:"transparent",border:"none",color:C.muted,cursor:"pointer",fontSize:11}}>
+            ← CRO Dashboard
+          </button>
+        </div>
+        {fwTabs("remediation")}
+        <RemediationPanel/>
+      </div>
+    );
+  }
+
   if (selFramework === "vendor_assurance") {
     // Saraqael — vendor document assessment agent.
     return (
@@ -9807,6 +9850,7 @@ function CRODash(props) {
           <span style={{color:C.muted}}>/</span>
           <span style={{color:C.text,fontSize:11,fontWeight:700}}>Vendor Assurance — Saraqael</span>
         </div>
+        {fwTabs("vendor_assurance")}
         <VendorAssessmentPanel/>
       </div>
     );
@@ -9823,8 +9867,9 @@ function CRODash(props) {
             ← NIST CSF 2.0
           </button>
           <span style={{color:C.muted}}>/</span>
-          <span style={{color:C.text,fontSize:11,fontWeight:700}}>Systemwide NIST CSF v2.0 Outcomes</span>
+          <span style={{color:C.text,fontSize:11,fontWeight:700}}>Peer Comparison — NIST CSF v2.0</span>
         </div>
+        {fwTabs("csf_rankings")}
         <CsfRankings/>
       </div>
     );
@@ -9843,6 +9888,7 @@ function CRODash(props) {
           <span style={{color:C.muted}}>/</span>
           <span style={{color:C.text,fontSize:11,fontWeight:700}}>NIST CSF 2.0 — Live Assessment</span>
         </div>
+        {fwTabs("nistcsf")}
         <NistCsfScorecard/>
       </div>
     );
@@ -9862,6 +9908,7 @@ function CRODash(props) {
           <span style={{color:C.muted}}>/</span>
           <span style={{color:C.text,fontSize:11,fontWeight:700}}>{fwLabel} — Live Assessment</span>
         </div>
+        {fwTabs(selFramework)}
         <FrameworkScorecard frameworkId={selFramework}/>
       </div>
     );
@@ -9919,27 +9966,8 @@ function CRODash(props) {
       {/* AI agent brief - the tab opens here; a question reveals the governance body */}
       <ExecutiveAgentBrief role="CRO" entry onAnswer={applyAgentAnswer} onGeneral={function(){setCroQ("General dashboard");setCroView("appetite");}} />
 
-      {/* Direct access to the live CSF scorecard + systemwide rankings */}
-      <div style={{display:"flex",justifyContent:"flex-end",gap:8,margin:"10px 0"}}>
-        <button onClick={function(){setSelFramework("vendor_assurance");}}
-          style={{background:"transparent",border:"1px solid "+C.border,color:C.text,
-            borderRadius:4,padding:"7px 16px",cursor:"pointer",fontSize:11,fontWeight:600,
-            letterSpacing:"0.06em",textTransform:"uppercase"}}>
-          Vendor Assurance (Saraqael) →
-        </button>
-        <button onClick={function(){setSelFramework("csf_rankings");}}
-          style={{background:"transparent",border:"1px solid "+C.border,color:C.text,
-            borderRadius:4,padding:"7px 16px",cursor:"pointer",fontSize:11,fontWeight:600,
-            letterSpacing:"0.06em",textTransform:"uppercase"}}>
-          Systemwide Rankings →
-        </button>
-        <button onClick={function(){setSelFramework("nistcsf");}}
-          style={{background:"transparent",border:"1px solid "+C.border,color:C.text,
-            borderRadius:4,padding:"7px 16px",cursor:"pointer",fontSize:11,fontWeight:600,
-            letterSpacing:"0.06em",textTransform:"uppercase"}}>
-          NIST CSF 2.0 Scorecard →
-        </button>
-      </div>
+      {/* Papa #11 — framework tabs (every framework Briana lists), Peer Comparison, Vendor Assurance, Remediation */}
+      <div style={{margin:"10px 0 0"}}>{fwTabs(null)}</div>
 
       {croView&&(<div>
       {(function(){

@@ -252,6 +252,9 @@ app.use('/api/csf',               [apiGetLimiter, apiPostLimiter], require('./ro
 // Saraqael — vendor document assessment agent (every doc type + cross-validation)
 app.use('/api/vendor-assessment', [apiGetLimiter, apiPostLimiter], require('./routes/vendorAssessment'));
 
+// Remediation path — findings auto-open tickets with recommendations (Jira/SNOW/demo)
+app.use('/api/remediation',       [apiGetLimiter, apiPostLimiter], require('./routes/remediation'));
+
 // Simulated live-source tool databases (org-isolated; admin override)
 app.use('/api/sources',           [apiGetLimiter, apiPostLimiter], require('./routes/sources'));
 

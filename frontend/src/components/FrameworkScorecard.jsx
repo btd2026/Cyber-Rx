@@ -21,6 +21,7 @@ const HAIRLINE = '#e2e8f0';
 const PANEL_BG = '#0f1b2d';
 const STATUS_COLORS = { Compliant: '#31604B', Partial: '#B07C2E', Gap: '#9E3B32', 'Not assessed': '#8B95A3' };
 const THRESHOLD = 75;
+const TARGET = 90; // Papa #11 — proposed target per control
 
 const MODE_TAGS = {
   auto: { label: 'AUTO', title: 'Scored entirely from connected systems' },
@@ -150,6 +151,29 @@ export default function FrameworkScorecard(props) {
                 </div>
                 {active && (
                   <div style={{ margin: '4px 0 10px 110px', border: `1px solid ${HAIRLINE}`, borderRadius: 4, background: '#fafbfc', padding: '10px 14px' }}>
+                    {/* Papa #11 — current vs proposed target, and what's needed to get there */}
+                    <div style={{ display: 'flex', gap: 22, marginBottom: 10, paddingBottom: 8, borderBottom: `1px solid ${HAIRLINE}` }}>
+                      <span style={{ fontSize: 11.5, color: INK_2 }}>Current: <strong style={{ color: sc(c.status), fontVariantNumeric: 'tabular-nums' }}>{c.score == null ? 'Not assessed' : `${c.score}%`}</strong></span>
+                      <span style={{ fontSize: 11.5, color: INK_2 }}>Proposed target: <strong style={{ color: INK, fontVariantNumeric: 'tabular-nums' }}>{TARGET}%</strong></span>
+                      <span style={{ fontSize: 11.5, color: INK_2 }}>Gap: <strong style={{ color: c.score != null && c.score >= TARGET ? '#31604B' : '#9E3B32', fontVariantNumeric: 'tabular-nums' }}>{c.score == null ? '—' : Math.max(0, TARGET - c.score) + ' pts'}</strong></span>
+                    </div>
+                    {(() => {
+                      const needs = c.sources.filter((s) => s.value == null || s.value < TARGET);
+                      return needs.length > 0 && (
+                        <div style={{ marginBottom: 10 }}>
+                          <div style={{ fontSize: 9, fontWeight: 600, color: INK_3, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 5 }}>
+                            What's needed to reach {TARGET}%
+                          </div>
+                          {needs.map((s) => (
+                            <div key={s.key} style={{ fontSize: 11.5, color: INK_2, padding: '2px 0' }}>
+                              · {s.value == null
+                                ? `Provide ${s.label} (no data yet — connect the tool or answer the intake question)`
+                                : `Raise ${s.label} from ${s.value}% toward ${TARGET}%+`}
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
                     <div style={{ fontSize: 9, fontWeight: 600, color: INK_3, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 6 }}>
                       Score derivation
                     </div>
