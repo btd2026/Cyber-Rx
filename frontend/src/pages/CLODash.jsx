@@ -26,6 +26,10 @@ const CLODash = (props) => {
   const [selectedState, setSelectedState] = useState('');
   const [selectedDataType, setSelectedDataType] = useState('');
   const [breachTimeline, setBreachTimeline] = useState(null);
+  // Agent-driven view: page opens with just the agent; a question reveals the
+  // section(s) that answer it.
+  const [cloView, setCloView] = useState(null);
+  const [cloQ, setCloQ] = useState('');
 
   // State breach notification timelines
   const stateTimelines = {
@@ -126,6 +130,31 @@ const CLODash = (props) => {
     return legalImpactPatterns.some(pattern => justification.includes(pattern));
   };
 
+  // Route a matched agent answer to the section(s) that answer it.
+  const applyAgentAnswer = (ans) => {
+    if (!ans || !ans.matched || ans.source === 'out_of_scope') return;
+    const q = String(ans.matchedQuestion || ans.question || '').toLowerCase();
+    setCloQ(ans.matchedQuestion || ans.question || '');
+    const v = /notify|notification|by when|breach tomorrow/.test(q) ? 'notify'
+      : /vendor|contract/.test(q) ? 'vendors'
+      : /penalt/.test(q) ? 'penalty'
+      : /obligation|trigger|hipaa|cms|regulat/.test(q) ? 'obligations'
+      : 'overall';
+    setCloView(v);
+  };
+  const clearCloView = () => { setCloView(null); setCloQ(''); };
+  const show = (...vs) => vs.includes(cloView);
+  const hipaaCmsCount = legalObligations.filter((o) => /hipaa|cms/i.test(String(o.source || '') + String(o.name || ''))).length;
+  const penaltySum = legalObligations.reduce((s, o) => s + (Number(o.max_penalty_amount) || 0), 0);
+  const fmtUSD = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${(x / 1e3).toFixed(0)}K`; return `$${x}`; };
+  const cloViewMeta = () => {
+    if (cloView === 'notify') return { title: 'Breach Notification Clock', num: '60', unit: ' days', color: '#dc2626', label: 'HIPAA breach-notification deadline', sub: 'CMS Part D fastest at 1 business day · most states 30 days from discovery' };
+    if (cloView === 'vendors') return { title: 'Contract & Vendor Risk', num: String(contractRisks.length), unit: '', color: '#ea580c', label: 'Contracts in the risk register', sub: contractRisks.length === 0 ? 'No contracts tracked yet — add entries to assess legal risk' : 'Vendor agreements carrying contractual/legal risk' };
+    if (cloView === 'penalty') return { title: 'Regulatory Penalty Exposure', num: penaltySum > 0 ? fmtUSD(penaltySum) : String(legalObligations.length), unit: '', color: '#dc2626', label: penaltySum > 0 ? 'Maximum modeled penalty exposure' : 'Obligations with penalty exposure', sub: `${hipaaCmsCount} HIPAA/CMS obligations across ${legalObligations.length} tracked` };
+    if (cloView === 'obligations') return { title: 'Regulatory Obligations', num: String(legalObligations.length), unit: '', color: '#2563eb', label: 'Obligations tracked across sources', sub: `${hipaaCmsCount} carry HIPAA or CMS requirements` };
+    return { title: 'Overall Legal Risk', num: String(legalObligations.length), unit: '', color: '#ca8a04', label: 'Legal & regulatory obligations in scope', sub: `${hipaaCmsCount} HIPAA/CMS · ${Object.keys(obligationsBySource).filter((s) => s === 'State').length} state regimes` };
+  };
+
   return (
     <div style={{ padding: '2rem', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
       <DashNav current="clo" go={props.go} />
@@ -162,10 +191,29 @@ const CLODash = (props) => {
         </div>
       </div>
 
-      {/* AI agent brief - continuous, role-specific executive intelligence */}
-      <ExecutiveAgentBrief role="CLO" authToken={authToken} orgId={orgId} api_url={api_url} />
+      {/* AI agent brief — page opens here; a question reveals the relevant section(s) */}
+      <ExecutiveAgentBrief role="CLO" entry onAnswer={applyAgentAnswer} authToken={authToken} orgId={orgId} api_url={api_url} />
+
+      {/* Answer hero — mirrors the asked question */}
+      {cloView && (() => {
+        const h = cloViewMeta();
+        return (
+          <div style={{ backgroundColor: '#fff', borderRadius: 8, border: '1px solid #e5e7eb', padding: '1.25rem 1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1.25rem', borderLeft: `5px solid ${h.color}` }}>
+            <div style={{ fontSize: '2.5rem', fontWeight: 800, color: h.color, lineHeight: 1, flexShrink: 0 }}>
+              {h.num}<span style={{ fontSize: '1rem', color: '#9ca3af', fontWeight: 600 }}>{h.unit}</span>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '0.7rem', color: '#2563eb', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>Chief Legal Officer — {h.title}</div>
+              <div style={{ fontSize: '1rem', fontWeight: 700, color: '#111827' }}>{h.label}</div>
+              <div style={{ fontSize: '0.78rem', color: '#6b7280', marginTop: 2 }}>{cloQ ? `Answering: “${cloQ}” · ` : ''}{h.sub}</div>
+            </div>
+            <button onClick={clearCloView} style={{ padding: '0.5rem 0.85rem', backgroundColor: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db', borderRadius: 6, cursor: 'pointer', fontSize: '0.8rem', whiteSpace: 'nowrap', flexShrink: 0 }}>← Ask another</button>
+          </div>
+        );
+      })()}
 
       {/* KPI Strip */}
+      {show('overall', 'penalty') && (
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(4, 1fr)',
@@ -225,8 +273,10 @@ const CLODash = (props) => {
           </div>
         </div>
       </div>
+      )}
 
       {/* Breach Notification Workflow */}
+      {show('notify') && (
       <section style={{
         backgroundColor: '#ffffff',
         borderRadius: '8px',
@@ -319,8 +369,10 @@ const CLODash = (props) => {
           )}
         </div>
       </section>
+      )}
 
       {/* Legal Obligations by Source */}
+      {show('obligations', 'penalty', 'overall') && (
       <section style={{
         backgroundColor: '#ffffff',
         borderRadius: '8px',
@@ -392,8 +444,10 @@ const CLODash = (props) => {
           ))}
         </div>
       </section>
+      )}
 
       {/* Contract Risk Register */}
+      {show('vendors') && (
       <section style={{
         backgroundColor: '#ffffff',
         borderRadius: '8px',
@@ -467,8 +521,10 @@ const CLODash = (props) => {
           )}
         </div>
       </section>
+      )}
 
       {/* Policy Exceptions */}
+      {show('overall') && (
       <section style={{
         backgroundColor: '#ffffff',
         borderRadius: '8px',
@@ -525,6 +581,7 @@ const CLODash = (props) => {
           )}
         </div>
       </section>
+      )}
     </div>
   );
 };
