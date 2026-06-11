@@ -7,6 +7,7 @@ import AdminDatabase from "./pages/AdminDatabase";
 import ExecutiveAgentBrief from "./components/ExecutiveAgentBrief";
 import NistCsfScorecard from "./components/NistCsfScorecard";
 import CsfRankings from "./components/CsfRankings";
+import FrameworkScorecard from "./components/FrameworkScorecard";
 import AuditDash from "./pages/AuditDash";
 import ReviewMappings from "./pages/ReviewMappings";
 import ProcessGraph from "./pages/ProcessGraph";
@@ -9730,6 +9731,26 @@ function CRODash(props) {
   }
 
   if (selFramework) {
+    // Every other framework now renders its LIVE scorecard — the same signal
+    // registry as the CSF profile, mapped to that framework's controls.
+    var fwLabel=(COMPLIANCE_REPORTS[selFramework]||{}).label||selFramework;
+    return (
+      <div>
+        <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:14}}>
+          <button onClick={function(){setSelFramework(null);}}
+            style={{background:"transparent",border:"none",color:C.muted,cursor:"pointer",fontSize:11}}>
+            ← All Frameworks
+          </button>
+          <span style={{color:C.muted}}>/</span>
+          <span style={{color:C.text,fontSize:11,fontWeight:700}}>{fwLabel} — Live Assessment</span>
+        </div>
+        <FrameworkScorecard frameworkId={selFramework}/>
+      </div>
+    );
+  }
+
+  /* Legacy hardcoded framework drill (replaced by live scorecards above).
+  if (selFramework) {
     var fw3=COMPLIANCE_REPORTS[selFramework];
     if (!fw3) { setSelFramework(null); return null; }
     var fwAvg=Math.round((fw3.sections||[]).reduce(function(s,d){return s+d.score;},0)/((fw3.sections||[]).length||1));
@@ -9770,6 +9791,7 @@ function CRODash(props) {
       </div>
     );
   }
+  */
 
   // ── TOP LEVEL: all frameworks + control grids ─────────────────
   return (

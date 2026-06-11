@@ -516,4 +516,4 @@ async function saveEvidence(orgId, items) {
   return saved;
 }
 
-module.exports = { getAssessment, getRankings, getQuestions, saveEvidence, CATEGORIES, EVIDENCE_QUESTIONS };
+module.exports = { getAssessment, getRankings, getQuestions, saveEvidence, gatherContext, CATEGORIES, EVIDENCE_QUESTIONS };
