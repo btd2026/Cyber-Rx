@@ -529,6 +529,26 @@ async function init() {
       );
       CREATE INDEX IF NOT EXISTS csf_scorecards_overall ON csf_scorecards(overall DESC);
 
+      -- Vendor documents reviewed by the Saraqael vendor-assessment agent, with
+      -- the extracted assurance data and per-document findings it produced.
+      CREATE TABLE IF NOT EXISTS vendor_documents (
+        id              TEXT PRIMARY KEY,
+        organization_id TEXT NOT NULL,
+        vendor_id       TEXT NOT NULL,
+        vendor_name     TEXT NOT NULL,
+        doc_type        TEXT NOT NULL,
+        file_name       TEXT,
+        status          TEXT DEFAULT 'assessed',
+        risk_rating     TEXT,
+        extracted       JSONB DEFAULT '{}',
+        findings        JSONB DEFAULT '[]',
+        content_excerpt TEXT,
+        assessed_at     TIMESTAMPTZ DEFAULT NOW(),
+        updated_at      TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS vendor_documents_org ON vendor_documents(organization_id);
+      CREATE INDEX IF NOT EXISTS vendor_documents_vendor ON vendor_documents(vendor_id);
+
       -- Editable "database of mock numbers" that drives every dashboard figure.
       -- org_id '_defaults' holds shared coefficients/assumptions; per-org rows
       -- hold setup-quiz responses and org-specific values. Edit value to change
