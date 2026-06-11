@@ -32,9 +32,31 @@ export default function AttackPathDiagram(props) {
   const [error, setError] = useState(null);
   const [active, setActive] = useState(null); // node id being traced
   const [mode, setMode] = useState('graph'); // Papa #10 — 'graph' (animated) | 'lanes'
+  const [selFinding, setSelFinding] = useState(null); // Papa — clicked control failure
+  const [ticket, setTicket] = useState(null);   // ticket for the selected finding
+  const [ticketBusy, setTicketBusy] = useState(false);
   const wrapRef = useRef(null);
   const [width, setWidth] = useState(1040);
   const { token, organizationId, apiUrl } = resolveCtx(props);
+
+  const remHeaders = () => { const h = { 'X-Org-Id': organizationId, 'Content-Type': 'application/json' }; if (token) h['Authorization'] = `Bearer ${token}`; return h; };
+  const openFinding = (f) => {
+    setSelFinding(f); setTicket(null);
+    const ref = `finding:${f.id || f.ref}`;
+    fetch(`${apiUrl}/api/remediation/ticket?org_id=${encodeURIComponent(organizationId)}&sourceRef=${encodeURIComponent(ref)}`, { headers: remHeaders() })
+      .then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) setTicket(d.ticket); }).catch(() => {});
+  };
+  const sendToTicketing = async (f) => {
+    setTicketBusy(true);
+    try {
+      const res = await fetch(`${apiUrl}/api/remediation/ticket?org_id=${encodeURIComponent(organizationId)}`, {
+        method: 'POST', headers: remHeaders(),
+        body: JSON.stringify({ sourceRef: `finding:${f.id || f.ref}`, source: 'Attack-path control failure',
+          title: `${f.ref} — ${f.title}`, recommendation: f.remediation || 'Remediate the failed control.', severity: f.severity, system: 'demo' }),
+      });
+      if (res.ok) setTicket(await res.json());
+    } catch (_) {} finally { setTicketBusy(false); }
+  };
 
   useEffect(() => {
     const h = { 'X-Org-Id': organizationId };
@@ -129,7 +151,42 @@ export default function AttackPathDiagram(props) {
         </div>
       ) : mode === 'graph' ? (
         <div style={{ marginTop: 12 }}>
-          <AttackPathGraph graph={data} />
+          <AttackPathGraph graph={data} authToken={token} orgId={organizationId} api_url={apiUrl} onFinding={openFinding} />
+          {selFinding && (
+            <div style={{ marginTop: 12, border: `1px solid ${HAIRLINE}`, borderTop: `3px solid ${SEV[selFinding.severity] || '#9E3B32'}`, borderRadius: 4, background: '#fafbfc', padding: '14px 16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: INK_3, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 4 }}>
+                    {selFinding.ref} · Control failure
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: INK }}>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: '#fff', background: SEV[selFinding.severity] || '#9E3B32', borderRadius: 2, padding: '2px 7px', marginRight: 8, textTransform: 'uppercase' }}>{selFinding.severity}</span>
+                    {selFinding.title}
+                  </div>
+                  {selFinding.description && <div style={{ fontSize: 12, color: INK_2, marginTop: 6, lineHeight: 1.5 }}>{selFinding.description}</div>}
+                  {selFinding.remediation && <div style={{ fontSize: 11.5, color: INK_2, marginTop: 6, fontStyle: 'italic' }}>→ {selFinding.remediation}</div>}
+                </div>
+                <button onClick={() => { setSelFinding(null); setTicket(null); }} style={{ background: '#fff', border: '1px solid #cbd5e1', color: '#334155', borderRadius: 3, padding: '4px 12px', fontSize: 11, cursor: 'pointer', fontWeight: 500 }}>Close</button>
+              </div>
+              <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${HAIRLINE}`, display: 'flex', gap: 12, alignItems: 'center' }}>
+                {ticket && ticket.ticketId ? (
+                  <span style={{ fontSize: 12, color: INK_2 }}>
+                    Ticket <strong style={{ color: INK }}>{ticket.ticketId}</strong>
+                    <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: ticket.status === 'closed' ? '#31604B' : ticket.status === 'in_progress' ? '#B07C2E' : '#2563eb', border: `1px solid currentColor`, borderRadius: 3, padding: '2px 8px' }}>
+                      {ticket.status === 'open' ? 'Processing' : ticket.status === 'in_progress' ? 'In progress' : ticket.status === 'closed' ? 'Closed' : ticket.status}
+                    </span>
+                    <span style={{ fontSize: 10, color: INK_3, marginLeft: 8 }}>· {ticket.system}</span>
+                    {ticket.url && <a href={ticket.url} target="_blank" rel="noreferrer" style={{ marginLeft: 8, fontSize: 11, color: '#2563eb' }}>open</a>}
+                  </span>
+                ) : (
+                  <button onClick={() => sendToTicketing(selFinding)} disabled={ticketBusy}
+                    style={{ background: '#0f1b2d', color: '#fff', border: 'none', borderRadius: 3, padding: '8px 16px', fontSize: 11.5, fontWeight: 600, cursor: 'pointer', opacity: ticketBusy ? 0.6 : 1 }}>
+                    {ticketBusy ? 'Opening ticket…' : '→ Send to ticketing for remediation'}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div ref={wrapRef} style={{ position: 'relative', marginTop: 8, overflowX: 'auto' }}>

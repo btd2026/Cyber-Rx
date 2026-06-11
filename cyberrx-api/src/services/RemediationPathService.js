@@ -131,6 +131,36 @@ async function runSweep(orgId, system = 'demo') {
   return { swept: findings.length, alreadyTicketed: findings.length - created.length, created };
 }
 
+/** Open (or return existing) a ticket for a single finding by source_ref. */
+async function ticketOne(orgId, { sourceRef, source, title, recommendation, severity, system = 'demo' }) {
+  const existing = await db.query(
+    `SELECT * FROM remediation_tickets WHERE organization_id=$1 AND source_ref=$2`, [orgId, sourceRef]);
+  if (existing.length) {
+    const r = existing[0];
+    return { existed: true, id: r.id, ticketId: r.ticket_id, url: r.ticket_url, status: r.status, system: r.system };
+  }
+  const description = `${title}\n\nRecommended remediation (high level):\n${recommendation || 'Investigate and remediate this finding.'}\n\nOpened from the CyberRx attack-path. Source: ${source || 'Finding'}.`;
+  const t = await createTicket(orgId, system, { title, description, severity });
+  const id = uid('rt');
+  await db.query(
+    `INSERT INTO remediation_tickets
+       (id, organization_id, source, source_ref, title, recommendation, severity, system, ticket_id, ticket_url, status, created_at, updated_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'open',NOW(),NOW())
+     ON CONFLICT (organization_id, source_ref) DO NOTHING`,
+    [id, orgId, source || 'Attack-path finding', sourceRef, title, recommendation || '', severity,
+     t.demo ? 'demo' : system, t.ticketId, t.url]);
+  return { existed: false, id, ticketId: t.ticketId, url: t.url, status: 'open', system: t.demo ? 'demo' : system };
+}
+
+/** Look up a ticket by source_ref (e.g. an attack-path finding). */
+async function getTicketByRef(orgId, sourceRef) {
+  const rows = await db.query(
+    `SELECT * FROM remediation_tickets WHERE organization_id=$1 AND source_ref=$2`, [orgId, sourceRef]);
+  if (!rows.length) return null;
+  const r = rows[0];
+  return { id: r.id, ticketId: r.ticket_id, url: r.ticket_url, status: r.status, system: r.system, title: r.title, createdAt: r.created_at };
+}
+
 async function listTickets(orgId) {
   const rows = await db.query(
     `SELECT * FROM remediation_tickets WHERE organization_id=$1 ORDER BY created_at DESC LIMIT 200`, [orgId]);
@@ -141,4 +171,4 @@ async function listTickets(orgId) {
   }));
 }
 
-module.exports = { runSweep, listTickets, gatherFindings };
+module.exports = { runSweep, listTickets, ticketOne, getTicketByRef, gatherFindings };

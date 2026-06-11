@@ -34,4 +34,22 @@ router.post('/sweep', optionalJWT, async (req, res) => {
   } catch (err) { logger.error('Remediation sweep error', { error: err.message }); res.status(500).json({ error: err.message }); }
 });
 
+// Single-finding ticket — open (or fetch) a ticket for one attack-path finding.
+router.post('/ticket', optionalJWT, async (req, res) => {
+  const orgId = resolveOrg(req, res);
+  if (!orgId) return;
+  try {
+    const b = req.body || {};
+    if (!b.sourceRef || !b.title) return res.status(400).json({ error: 'sourceRef and title are required' });
+    res.json(await RemediationPathService.ticketOne(orgId, b));
+  } catch (err) { logger.error('Remediation ticketOne error', { error: err.message }); res.status(500).json({ error: err.message }); }
+});
+
+router.get('/ticket', optionalJWT, async (req, res) => {
+  const orgId = resolveOrg(req, res);
+  if (!orgId) return;
+  try { res.json({ ticket: await RemediationPathService.getTicketByRef(orgId, req.query.sourceRef) }); }
+  catch (err) { logger.error('Remediation getTicket error', { error: err.message }); res.status(500).json({ error: err.message }); }
+});
+
 module.exports = router;
