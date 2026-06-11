@@ -10160,6 +10160,9 @@ function CFODash(props) {
   var _cf0=useState(null); var cfMetric=_cf0[0]; var setCfMetric=_cf0[1];
   var _cf1=useState(null); var cfDrill=_cf1[0];  var setCfDrill=_cf1[1];
   var _cf2=useState("overview"); var cfTab=_cf2[0]; var setCfTab=_cf2[1];
+  // Agent-driven view: tab opens with just the agent; a question selects the tab.
+  var _cfav=useState(null); var cfView=_cfav[0]; var setCfView=_cfav[1];
+  var _cfaq=useState("");    var cfQ=_cfaq[0];    var setCfQ=_cfaq[1];
   // DB-driven figures from the metrics engine (formulas over editable mock numbers)
   var _cfm=useState(null); var cfoM=_cfm[0]; var setCfoM=_cfm[1];
   useEffect(function(){
@@ -10290,6 +10293,32 @@ function CFODash(props) {
     {id:"exposure",   label:"Exposure Model"},
   ];
 
+  // Route a matched agent answer to the tab that answers it, and reveal the dashboard.
+  function applyAgentAnswer(ans){
+    if(!ans||!ans.matched||ans.source==="out_of_scope") return;
+    var q=String(ans.matchedQuestion||ans.question||"").toLowerCase();
+    setCfQ(ans.matchedQuestion||ans.question||"");
+    var tab = /insurance|covered|insured|adequate/.test(q) ? "insurance"
+            : /roi|spend|invest|budget/.test(q)            ? "rosi"
+            : /rbc|capital|surplus/.test(q)                ? "rbc"
+            : /phi|breach|record|scenario/.test(q)         ? "scenarios"
+            : "overview"; // total/aggregate/largest exposure
+    setCfTab(tab); setCfView(tab);
+  }
+  function clearCfView(){ setCfView(null); setCfQ(""); }
+  function cfoViewMeta(view){
+    if(view==="insurance") return {title:"Insurance Adequacy",num:"$"+Math.round((grossExp-insLimit)/1e6)+"M",unit:"",color:"#F5A623",
+      label:"Uninsured exposure (gap)",sub:"$"+Math.round(insLimit/1e6)+"M cover against $"+Math.round(grossExp/1e6)+"M gross exposure"};
+    if(view==="rosi") return {title:"Security ROI",num:rosi+"%",unit:"",color:"#0FBB80",
+      label:"Return on security investment",sub:"$"+fmtExp(avoidedLoss/1e6)+" avoided loss on $"+fmtExp(securitySpend/1e6)+" spend"};
+    if(view==="rbc") return {title:"RBC & Capital",num:rbcRatioPost+"%",unit:"",color:rbcColor,
+      label:"RBC ratio after a catastrophic event",sub:capitalPct+"% of $"+fmtExp(surplusB/1e6)+" surplus at risk · 200% regulatory minimum"};
+    if(view==="scenarios") return {title:"Scenario Analysis",num:fmtExp(expectedLoss/1e6),unit:"",color:"#A78BFA",
+      label:"Probability-weighted annual loss",sub:"Catastrophic case "+fmtExp(catastrophicLoss/1e6)+" · stress case "+fmtExp(stressLoss/1e6)};
+    return {title:"Financial Exposure",num:"$"+Math.round(grossExp/1e6)+"M",unit:"",color:"#EF4545",
+      label:"Gross cyber financial exposure",sub:"$"+Math.round(netExp/1e6)+"M net after $"+Math.round(insLimit/1e6)+"M insurance"};
+  }
+
   return (
     <div>
       {cfMetric&&<MetricDetailModal metric={cfMetric}
@@ -10312,8 +10341,8 @@ function CFODash(props) {
       <DashNav current="cfo" go={go}/>
       <BrianaBar pageKey="cfo" orgName={props.orgName||""} brianaOn={props.brianaOn!==false} setBrianaOn={props.setBrianaOn||function(){}}/>
 
-      {/* AI agent brief - continuous, role-specific executive intelligence */}
-      <ExecutiveAgentBrief role="CFO" />
+      {/* AI agent brief - the tab opens here; a question selects the tab below */}
+      <ExecutiveAgentBrief role="CFO" entry onAnswer={applyAgentAnswer} />
 
       {/* CFO Drill views */}
       {cfDrill&&(
@@ -10346,17 +10375,31 @@ function CFODash(props) {
         </div>
       )}
 
-      {!cfDrill&&(
+      {!cfDrill&&cfView&&(
       <div>
-        {/* Page header */}
-        <div style={{marginBottom:14}}>
-          <h2 style={{color:C.text,fontSize:18,fontWeight:800,margin:"0 0 3px"}}>
-            Financial Impact & Capital Protection Dashboard
-          </h2>
-          <div style={{color:C.muted,fontSize:12}}>
-            YOUR part of cyber responsibility — Financial impact, capital adequacy, insurance gaps, and security ROI — board-ready view
-          </div>
-        </div>
+        {/* Answer hero + question header — mirrors the asked question */}
+        {(function(){
+          var h=cfoViewMeta(cfView);
+          return (
+            <div style={{display:"flex",gap:18,alignItems:"center",background:C.card,
+              border:"1.5px solid "+h.color+"35",borderLeft:"5px solid "+h.color,borderRadius:12,
+              padding:"16px 20px",marginBottom:14}}>
+              <div style={{color:h.color,fontSize:40,fontWeight:800,fontFamily:"monospace",lineHeight:1,flexShrink:0}}>
+                {h.num}<span style={{color:C.muted,fontSize:15,fontWeight:600}}>{h.unit}</span>
+              </div>
+              <div style={{flex:1}}>
+                <div style={{color:"#A78BFA",fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:2}}>Chief Financial Officer — {h.title}</div>
+                <div style={{color:C.text,fontSize:14,fontWeight:800,marginBottom:2}}>{h.label}</div>
+                <div style={{color:C.muted,fontSize:11,lineHeight:1.5}}>{cfQ?("Answering: “"+cfQ+"” · "):""}{h.sub}</div>
+              </div>
+              <button onClick={clearCfView}
+                style={{background:"transparent",border:"1px solid "+C.border,color:C.muted,
+                  borderRadius:7,padding:"5px 10px",cursor:"pointer",fontSize:11,whiteSpace:"nowrap",flexShrink:0}}>
+                ← Ask another
+              </button>
+            </div>
+          );
+        })()}
 
         {/* Top KPI strip */}
         <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:8,marginBottom:14}}>
@@ -10858,6 +10901,9 @@ function BoardDash(props) {
   var grossExp      = (breachRespM + regulatoryM + fraudM + reputM + interruptM + legalM + recoveryM) * 1e6;
   var _s0=useState(null); var selSection=_s0[0]; var setSelSection=_s0[1];
   var _s1=useState("overview"); var bTab=_s1[0]; var setBTab=_s1[1];
+  // Agent-driven view: tab opens with just the agent; a question selects the tab.
+  var _bav=useState(null); var bView=_bav[0]; var setBView=_bav[1];
+  var _baq=useState("");    var bQ=_baq[0];    var setBQ=_baq[1];
   var _bm=useState(null); var boardM=_bm[0]; var setBoardM=_bm[1];
   useEffect(function(){
     var org = (typeof localStorage!=='undefined' && (localStorage.getItem('cyberrx_org_id')||localStorage.getItem('orgId'))) || '';
@@ -10910,40 +10956,74 @@ function BoardDash(props) {
     {id:"governance",  label:"Governance & Attestation"},
   ];
 
+  // Route a matched agent answer to the tab that answers it, and reveal the dashboard.
+  function applyAgentAnswer(ans){
+    if(!ans||!ans.matched||ans.source==="out_of_scope") return;
+    var q=String(ans.matchedQuestion||ans.question||"").toLowerCase();
+    setBQ(ans.matchedQuestion||ans.question||"");
+    var tab = /insurance|adequate/.test(q)              ? "financial"
+            : /exposure|financial|net|spend|invest/.test(q) ? "financial"
+            : /appetite|strateg/.test(q)               ? "strategic"
+            : /improv|trend|better|roadmap/.test(q)    ? "roadmap"
+            : "overview"; // at risk right now / default
+    setBTab(tab); setBView(tab);
+  }
+  function clearBView(){ setBView(null); setBQ(""); }
+  function boardViewMeta(view){
+    if(view==="financial") return {title:"Financial Exposure",num:"$"+Math.round(grossExp/1e6)+"M",unit:"",color:"#EF4545",
+      label:"Gross cyber exposure",sub:"Posture "+overallScore+"/100 · "+crits+" critical findings"};
+    if(view==="strategic") return {title:"Strategic Risk & Appetite",num:String(crits),unit:"",color:crits>0?"#EF4545":"#0FBB80",
+      label:"Critical risks vs board appetite",sub:crits>0?"Appetite breach — board attention required":"Within approved risk appetite"};
+    if(view==="roadmap") return {title:"Posture Trajectory",num:String(overallScore),unit:"/100",color:cmmi(overallScore).color,
+      label:"Current maturity on the 3-year path",sub:cmmi(overallScore).short+" — "+cmmi(overallScore).name,score:overallScore};
+    return {title:"Are We At Risk?",num:String(overallScore),unit:"/100",color:cmmi(overallScore).color,
+      label:"Overall security posture",sub:crits+" critical findings · $"+Math.round(grossExp/1e6)+"M gross exposure",score:overallScore};
+  }
+
   return (
     <div>
       <DashNav current="boarddash" go={go}/>
       <BrianaBar pageKey="boarddash" orgName={props.orgName||""} brianaOn={props.brianaOn!==false} setBrianaOn={props.setBrianaOn||function(){}}/>
 
-      {/* AI agent brief - continuous, role-specific executive intelligence */}
-      <ExecutiveAgentBrief role="Board" />
+      {/* AI agent brief - the tab opens here; a question selects the tab below */}
+      <ExecutiveAgentBrief role="Board" entry onAnswer={applyAgentAnswer} />
 
-      {!selSection&&(
+      {!selSection&&bView&&(
       <div>
-        {/* Board header */}
-        <div style={{padding:"16px 20px",background:"linear-gradient(135deg,#3B9EFF14,"+C.panel+")",
-          border:"1px solid #3B9EFF30",borderRadius:14,marginBottom:14}}>
+        {/* Board header — mirrors the asked question */}
+        {(function(){
+          var h=boardViewMeta(bView);
+          return (
+        <div style={{padding:"16px 20px",background:"linear-gradient(135deg,"+h.color+"14,"+C.panel+")",
+          border:"1px solid "+h.color+"40",borderRadius:14,marginBottom:14}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
             <div>
               <div style={{color:"#3B9EFF",fontSize:10,fontWeight:700,textTransform:"uppercase",
-                letterSpacing:"0.1em",marginBottom:4}}>BOARD OF DIRECTORS</div>
+                letterSpacing:"0.1em",marginBottom:4}}>BOARD OF DIRECTORS — {h.title}</div>
               <h1 style={{color:C.text,fontSize:20,fontWeight:800,margin:"0 0 4px"}}>
-                Strategic Oversight Dashboard
+                {h.label}
               </h1>
               <div style={{color:C.muted,fontSize:11}}>
-                YOUR part of cyber responsibility · Prepared for Board Risk Committee · Q1 2026 ·
-                <span style={{color:"#EF4545",fontWeight:700}}> CONFIDENTIAL</span>
+                {bQ?("Answering: “"+bQ+"” · "):""}{h.sub}
               </div>
             </div>
-            <div style={{textAlign:"right"}}>
-              <div style={{color:cmmi(overallScore).color,fontSize:28,fontWeight:800,fontFamily:"monospace"}}>
-                {overallScore}
+            <div style={{display:"flex",gap:14,alignItems:"flex-start"}}>
+              <div style={{textAlign:"right"}}>
+                <div style={{color:h.color,fontSize:28,fontWeight:800,fontFamily:"monospace"}}>
+                  {h.num}<span style={{color:C.muted,fontSize:13,fontWeight:600}}>{h.unit}</span>
+                </div>
+                {h.score!=null&&<CmmiBadge score={h.score} size="sm"/>}
               </div>
-              <CmmiBadge score={overallScore} size="sm"/>
-              <div style={{color:C.muted,fontSize:9,marginTop:2}}>Overall Security Posture</div>
+              <button onClick={clearBView}
+                style={{background:"transparent",border:"1px solid "+C.border,color:C.muted,
+                  borderRadius:7,padding:"5px 10px",cursor:"pointer",fontSize:11,whiteSpace:"nowrap"}}>
+                ← Ask another
+              </button>
             </div>
           </div>
         </div>
+          );
+        })()}
 
         {/* Tab navigation */}
         <div style={{display:"flex",gap:0,borderBottom:"1px solid "+C.border,marginBottom:14,overflowX:"auto"}}>
