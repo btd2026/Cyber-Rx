@@ -10,6 +10,7 @@ import CsfRankings from "./components/CsfRankings";
 import FrameworkScorecard from "./components/FrameworkScorecard";
 import VendorAssessmentPanel from "./components/VendorAssessmentPanel";
 import AttackPathDiagram from "./components/AttackPathDiagram";
+import FrameworkScoreStrip from "./components/FrameworkScoreStrip";
 import AuditDash from "./pages/AuditDash";
 import ReviewMappings from "./pages/ReviewMappings";
 import ProcessGraph from "./pages/ProcessGraph";
@@ -9740,9 +9741,10 @@ function CRODash(props) {
     return (
       <div>
         <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:14}}>
-          <button onClick={function(){setSelFramework(null);}}
+          {/* #17 — back returns to the individual NIST framework, not the question dashboard */}
+          <button onClick={function(){setSelFramework("nistcsf");}}
             style={{background:"transparent",border:"none",color:C.muted,cursor:"pointer",fontSize:11}}>
-            ← Back
+            ← NIST CSF 2.0
           </button>
           <span style={{color:C.muted}}>/</span>
           <span style={{color:C.text,fontSize:11,fontWeight:700}}>Systemwide NIST CSF v2.0 Outcomes</span>
@@ -9764,12 +9766,6 @@ function CRODash(props) {
           </button>
           <span style={{color:C.muted}}>/</span>
           <span style={{color:C.text,fontSize:11,fontWeight:700}}>NIST CSF 2.0 — Live Assessment</span>
-          <button onClick={function(){setSelFramework("csf_rankings");}}
-            style={{marginLeft:"auto",background:"transparent",border:"1px solid "+C.border,color:C.text,
-              borderRadius:4,padding:"5px 12px",cursor:"pointer",fontSize:10,fontWeight:600,
-              letterSpacing:"0.06em",textTransform:"uppercase"}}>
-            Systemwide Rankings →
-          </button>
         </div>
         <NistCsfScorecard/>
       </div>
@@ -9894,8 +9890,9 @@ function CRODash(props) {
       })()}
       <div style={{marginBottom:14}}>
         <h2 style={{color:C.text,fontSize:16,fontWeight:800,margin:"0 0 4px"}}>Governance & framework evidence</h2>
-        <div style={{color:C.muted,fontSize:12}}>Click any framework to drill into domains, controls, and evidence reviewed.</div>
+        <div style={{color:C.muted,fontSize:12}}>Live scores for every active framework — click a card or framework to open its scorecard.</div>
       </div>
+      <FrameworkScoreStrip onOpen={function(id){setSelFramework(id);}}/>
 
       {/* ── NIST CSF framework cards ── */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:18}}>
