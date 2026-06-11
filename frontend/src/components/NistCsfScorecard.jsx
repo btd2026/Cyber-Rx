@@ -2,18 +2,35 @@
  * NistCsfScorecard
  * ----------------
  * The live NIST CSF 2.0 maturity scorecard: 6 functions × 22 categories,
- * tier-colored like the board deck, computed by /api/csf/assessment from
- * real system data.
+ * computed by /api/csf/assessment from real system data.
  *
- * Each category chip shows its maturity (1.00–4.00), an ⚙/✍ badge for
- * automatic vs manual sourcing, and click-through detail: live sources,
- * evidence status, and inline answer collection for manual controls.
+ * Visual language is deliberately enterprise: a muted, desaturated tier
+ * palette, hairline borders, uppercase letter-spaced labels, and uniform
+ * deep-slate function headers — no saturated chips or icon glyphs.
+ *
+ * Each category row shows its maturity (1.00–4.00) and an AUTO / HYBRID /
+ * MANUAL sourcing tag, with click-through detail: live sources, evidence
+ * status, and inline answer collection for manual controls.
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
 
-const TIER_COLORS = { 1: '#c0392b', 2: '#e67e22', 3: '#8aa832', 4: '#2d6a2f' };
-const FN_COLORS = { GV: '#3e7a34', ID: '#1f3864', PR: '#1f5fa8', DE: '#4f9fd8', RS: '#595959', RC: '#3b3b3b' };
+// Muted, desaturated tier palette (board-deck hues, enterprise restraint).
+const TIER_COLORS = { 1: '#9E3B32', 2: '#B07C2E', 3: '#6E7F49', 4: '#31604B' };
+const TIER_NAMES = { 1: 'Partial', 2: 'Risk Informed', 3: 'Repeatable', 4: 'Adaptive' };
+const NA_COLOR = '#8B95A3';
+const INK = '#0f172a';        // primary text
+const INK_2 = '#475569';      // secondary text
+const INK_3 = '#94a3b8';      // muted text
+const HAIRLINE = '#e2e8f0';
+const HEADER_BG = '#1c2a3a';  // uniform function header
+const PANEL_BG = '#0f1b2d';   // overall tile
+
+const MODE_TAGS = {
+  auto: { label: 'AUTO', title: 'Pulled automatically from connected systems' },
+  partial: { label: 'HYBRID', title: 'Live system signal blended with intake evidence' },
+  manual: { label: 'MANUAL', title: 'Scored from intake evidence (answers and documents)' },
+};
 
 function resolveCtx(props) {
   const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
@@ -61,115 +78,132 @@ export default function NistCsfScorecard(props) {
     } catch (_) {} finally { setSaving(false); }
   };
 
-  if (loading) return <div style={{ padding: 24, color: '#6b7280' }}>Computing live CSF 2.0 assessment…</div>;
+  if (loading) return <div style={{ padding: 28, color: INK_3, fontSize: 13 }}>Computing live CSF 2.0 assessment…</div>;
   if (error || !data) {
     return (
-      <div style={{ padding: 24, color: '#991b1b' }}>
+      <div style={{ padding: 28, color: '#9E3B32', fontSize: 13 }}>
         Could not compute the CSF assessment: {error || 'no data'}
-        <button onClick={load} style={btn}>Retry</button>
+        <button onClick={load} style={{ ...ghostBtn, marginLeft: 12 }}>Retry</button>
       </div>
     );
   }
 
   const fmt = (m) => (m == null ? '—' : m.toFixed(2));
-  const tierColor = (c) => (c.maturity == null ? '#9ca3af' : TIER_COLORS[c.tier] || '#9ca3af');
+  const tierColor = (c) => (c.maturity == null ? NA_COLOR : TIER_COLORS[c.tier] || NA_COLOR);
   const selCat = sel && data.functions.flatMap((f) => f.categories).find((c) => c.id === sel);
 
   return (
-    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '22px 24px' }}>
+    <div style={{ background: '#fff', border: `1px solid ${HAIRLINE}`, borderRadius: 6, padding: '28px 32px' }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingBottom: 18, borderBottom: `1px solid ${HAIRLINE}` }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#111827' }}>NIST CSF 2.0 Cyber Maturity Scores</h2>
-          <div style={{ color: '#6b7280', fontSize: 12, marginTop: 4 }}>
-            Current-state maturity across the six NIST CSF 2.0 functions and {data.totalCategories} categories —
-            {' '}{data.autoCount} scored automatically from connected systems, {data.partialCount} blended, {data.manualCount} from intake evidence.
-            {data.lastToolSync && <> Last tool sync {new Date(data.lastToolSync).toLocaleString()}.</>}
+          <div style={{ fontSize: 10, fontWeight: 600, color: INK_3, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 6 }}>
+            Current-State Assessment · NIST Cybersecurity Framework 2.0
+          </div>
+          <h2 style={{ margin: 0, fontSize: 21, fontWeight: 600, color: INK, letterSpacing: '-0.01em' }}>
+            Cyber Maturity Scores
+          </h2>
+          <div style={{ color: INK_2, fontSize: 12, marginTop: 6, maxWidth: 640, lineHeight: 1.55 }}>
+            Maturity across the six functions and {data.totalCategories} categories. {data.autoCount} categories are scored
+            automatically from connected systems, {data.partialCount} blend a live signal with intake evidence,
+            and {data.manualCount} are scored from intake evidence.
+            {data.lastToolSync && <> Last tool synchronization {new Date(data.lastToolSync).toLocaleString()}.</>}
           </div>
         </div>
-        <div style={{ textAlign: 'right', flexShrink: 0 }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: '#111827', borderRadius: 8, padding: '8px 14px' }}>
-            <span style={{ background: data.overall.maturity == null ? '#9ca3af' : TIER_COLORS[data.overall.tier], color: '#fff', fontWeight: 800, fontSize: 20, fontFamily: 'monospace', borderRadius: 6, padding: '4px 10px' }}>
+        <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 24 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'stretch', background: PANEL_BG, borderRadius: 4, overflow: 'hidden' }}>
+            <span style={{ background: data.overall.maturity == null ? NA_COLOR : TIER_COLORS[data.overall.tier], color: '#fff', fontWeight: 600, fontSize: 19, fontVariantNumeric: 'tabular-nums', padding: '10px 14px', display: 'flex', alignItems: 'center' }}>
               {fmt(data.overall.maturity)}
             </span>
-            <span style={{ color: '#fff', fontWeight: 700, fontSize: 13 }}>Overall Avg Score</span>
+            <span style={{ color: '#e2e8f0', fontWeight: 500, fontSize: 12, padding: '10px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: 1.35 }}>
+              <span style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 9, color: '#8fa3bd' }}>Overall Average</span>
+              <span>{data.overall.label || 'Not assessed'}</span>
+            </span>
           </div>
-          <div style={{ color: '#6b7280', fontSize: 10, marginTop: 4 }}>
-            {data.assessedCategories}/{data.totalCategories} categories assessed{data.overall.label ? ` · ${data.overall.label}` : ''}
+          <div style={{ color: INK_3, fontSize: 10, marginTop: 6, letterSpacing: '0.02em' }}>
+            {data.assessedCategories} of {data.totalCategories} categories assessed
           </div>
         </div>
       </div>
 
       {/* 6-function matrix */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 12, marginTop: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 14, marginTop: 22 }}>
         {data.functions.map((f) => (
           <div key={f.id}>
-            {/* Function header tile */}
-            <div style={{ display: 'flex', alignItems: 'stretch', marginBottom: 8 }}>
-              <span style={{ background: f.maturity == null ? '#9ca3af' : TIER_COLORS[f.tier], color: '#fff', fontWeight: 800, fontFamily: 'monospace', fontSize: 15, padding: '8px 9px', borderRadius: '6px 0 0 6px' }}>
+            {/* Function header */}
+            <div style={{ display: 'flex', alignItems: 'stretch', marginBottom: 10, borderRadius: 3, overflow: 'hidden' }}>
+              <span style={{ background: f.maturity == null ? NA_COLOR : TIER_COLORS[f.tier], color: '#fff', fontWeight: 600, fontVariantNumeric: 'tabular-nums', fontSize: 13, padding: '9px 10px', display: 'flex', alignItems: 'center' }}>
                 {fmt(f.maturity)}
               </span>
-              <span style={{ background: FN_COLORS[f.id], color: '#fff', fontWeight: 800, fontSize: 13, padding: '8px 10px', flex: 1, borderRadius: '0 6px 6px 0', display: 'flex', alignItems: 'center' }}>
+              <span style={{ background: HEADER_BG, color: '#f1f5f9', fontWeight: 600, fontSize: 12, letterSpacing: '0.04em', padding: '9px 11px', flex: 1, display: 'flex', alignItems: 'center' }}>
                 {f.name}
               </span>
             </div>
-            {/* Category chips */}
-            {f.categories.map((c) => (
-              <div key={c.id} onClick={() => setSel(sel === c.id ? null : c.id)}
-                title={`${c.id} — ${c.mode === 'auto' ? 'pulled automatically from systems' : c.mode === 'partial' ? 'live signal + intake evidence' : 'intake evidence'}`}
-                style={{ display: 'flex', alignItems: 'stretch', marginBottom: 6, cursor: 'pointer', outline: sel === c.id ? `2px solid ${tierColor(c)}` : 'none', borderRadius: 5 }}>
-                <span style={{ background: tierColor(c), color: '#fff', fontWeight: 800, fontFamily: 'monospace', fontSize: 11, padding: '7px 6px', minWidth: 38, textAlign: 'center', borderRadius: '5px 0 0 5px' }}>
-                  {c.maturity == null ? 'N/A' : c.maturity.toFixed(2)}
-                </span>
-                <span style={{ background: '#f3f4f6', color: '#374151', fontSize: 10, fontWeight: 600, padding: '5px 7px', flex: 1, borderRadius: '0 5px 5px 0', lineHeight: 1.25, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
-                  <span>{c.name}</span>
-                  <span style={{ fontSize: 10, flexShrink: 0 }} aria-label={c.mode}>
-                    {c.mode === 'auto' ? '⚙' : c.mode === 'partial' ? '⚙✍' : '✍'}
+            {/* Category rows */}
+            {f.categories.map((c) => {
+              const tc = tierColor(c);
+              const active = sel === c.id;
+              return (
+                <div key={c.id} onClick={() => setSel(active ? null : c.id)}
+                  title={`${c.id} — ${MODE_TAGS[c.mode] ? MODE_TAGS[c.mode].title : c.mode}`}
+                  style={{
+                    display: 'flex', alignItems: 'stretch', marginBottom: 6, cursor: 'pointer',
+                    border: `1px solid ${active ? tc : HAIRLINE}`, borderRadius: 3, overflow: 'hidden',
+                    background: '#fff', transition: 'border-color 0.12s',
+                  }}>
+                  <span style={{ background: tc, color: '#fff', fontWeight: 600, fontVariantNumeric: 'tabular-nums', fontSize: 11, padding: '8px 0', minWidth: 42, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {c.maturity == null ? '—' : c.maturity.toFixed(2)}
                   </span>
-                </span>
-              </div>
-            ))}
+                  <span style={{ color: INK_2, fontSize: 10.5, fontWeight: 500, padding: '6px 8px', flex: 1, lineHeight: 1.3, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3 }}>
+                    <span style={{ color: INK }}>{c.name}</span>
+                    <span style={{ fontSize: 8, fontWeight: 600, color: INK_3, letterSpacing: '0.1em' }}>
+                      {MODE_TAGS[c.mode] ? MODE_TAGS[c.mode].label : ''}{c.maturity == null ? ' · NOT ASSESSED' : ''}
+                    </span>
+                  </span>
+                </div>
+              );
+            })}
           </div>
         ))}
       </div>
 
       {/* Category detail / evidence collection */}
       {selCat && (
-        <div style={{ marginTop: 14, border: `1px solid ${tierColor(selCat)}55`, borderLeft: `4px solid ${tierColor(selCat)}`, borderRadius: 8, padding: '14px 16px', background: '#fafafa' }}>
+        <div style={{ marginTop: 20, border: `1px solid ${HAIRLINE}`, borderTop: `2px solid ${tierColor(selCat)}`, borderRadius: 4, padding: '18px 20px', background: '#fafbfc' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <div style={{ fontWeight: 800, color: '#111827', fontSize: 14 }}>
-                {selCat.id} — {selCat.name}
-                <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, color: tierColor(selCat) }}>
-                  {selCat.maturity == null ? 'NOT ASSESSED' : `${selCat.maturity.toFixed(2)} · ${selCat.label}`}
+              <div style={{ fontSize: 10, fontWeight: 600, color: INK_3, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 4 }}>
+                {selCat.id} · {MODE_TAGS[selCat.mode] ? MODE_TAGS[selCat.mode].label : selCat.mode}
+              </div>
+              <div style={{ fontWeight: 600, color: INK, fontSize: 15 }}>
+                {selCat.name}
+                <span style={{ marginLeft: 12, fontSize: 12, fontWeight: 600, color: tierColor(selCat), fontVariantNumeric: 'tabular-nums' }}>
+                  {selCat.maturity == null ? 'Not assessed' : `${selCat.maturity.toFixed(2)} — ${selCat.label}`}
                 </span>
               </div>
-              <div style={{ color: '#6b7280', fontSize: 11, marginTop: 3 }}>
-                {selCat.mode === 'auto' ? '⚙ Pulled automatically from connected systems — no manual input needed.'
-                  : selCat.mode === 'partial' ? '⚙✍ Blends a live system signal with intake evidence.'
-                  : '✍ Scored from intake evidence (answers and documents).'}
+              <div style={{ color: INK_2, fontSize: 11.5, marginTop: 6, lineHeight: 1.5 }}>
+                {MODE_TAGS[selCat.mode] ? MODE_TAGS[selCat.mode].title : ''}.
                 {' '}Sources: {selCat.sources.join(' · ')}
               </div>
             </div>
-            <button onClick={() => setSel(null)} style={btn}>Close</button>
+            <button onClick={() => setSel(null)} style={ghostBtn}>Close</button>
           </div>
           {selCat.evidence.length > 0 && (
-            <div style={{ marginTop: 10 }}>
+            <div style={{ marginTop: 14 }}>
               {selCat.evidence.map((e) => (
-                <div key={e.key} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 6, padding: '9px 12px', marginBottom: 6 }}>
-                  <div style={{ fontSize: 12, color: '#111827', fontWeight: 600 }}>{e.question}</div>
-                  <div style={{ fontSize: 10, color: '#9ca3af', margin: '2px 0 6px' }}>
+                <div key={e.key} style={{ background: '#fff', border: `1px solid ${HAIRLINE}`, borderRadius: 4, padding: '12px 14px', marginBottom: 8 }}>
+                  <div style={{ fontSize: 12.5, color: INK, fontWeight: 500 }}>{e.question}</div>
+                  <div style={{ fontSize: 10.5, color: INK_3, margin: '4px 0 8px' }}>
                     Suggested evidence: {e.suggestedDoc}{e.docName ? ` — on file: ${e.docName}` : ''}
                   </div>
                   {e.answered ? (
-                    <span style={{ fontSize: 11, fontWeight: 700, color: '#166534', background: '#dcfce7', borderRadius: 4, padding: '2px 8px' }}>
-                      Answered: {e.answer}
+                    <span style={{ fontSize: 10, fontWeight: 600, color: '#31604B', border: '1px solid #31604B40', borderRadius: 3, padding: '3px 10px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                      Answered · {e.answer}
                     </span>
                   ) : (
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                       {(answerOptions(e.key) || []).map((opt) => (
-                        <button key={opt} disabled={saving} onClick={() => answerEvidence(e.key, opt)}
-                          style={{ ...btn, background: '#eef2ff', borderColor: '#c7d2fe', color: '#3730a3' }}>
+                        <button key={opt} disabled={saving} onClick={() => answerEvidence(e.key, opt)} style={ghostBtn}>
                           {opt}
                         </button>
                       ))}
@@ -183,12 +217,21 @@ export default function NistCsfScorecard(props) {
       )}
 
       {/* Key */}
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 16, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-        <span style={{ fontSize: 11, fontWeight: 700, color: '#374151' }}>Key:</span>
-        {[[1, '1 - Partial'], [2, '2 - Risk Informed'], [3, '3 - Repeatable'], [4, '4 - Adaptive']].map(([t, label]) => (
-          <span key={t} style={{ background: TIER_COLORS[t], color: '#fff', fontSize: 10, fontWeight: 700, borderRadius: 4, padding: '3px 10px' }}>{label}</span>
+      <div style={{ display: 'flex', gap: 18, alignItems: 'center', marginTop: 22, paddingTop: 14, borderTop: `1px solid ${HAIRLINE}`, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 9, fontWeight: 600, color: INK_3, textTransform: 'uppercase', letterSpacing: '0.14em' }}>Maturity Tiers</span>
+        {[1, 2, 3, 4].map((t) => (
+          <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 11, color: INK_2 }}>
+            <span style={{ width: 10, height: 10, background: TIER_COLORS[t], borderRadius: 2, display: 'inline-block' }} />
+            {t} · {TIER_NAMES[t]}
+          </span>
         ))}
-        <span style={{ fontSize: 10, color: '#6b7280', marginLeft: 6 }}>⚙ automatic from systems · ✍ intake evidence · N/A not yet assessed</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 11, color: INK_2 }}>
+          <span style={{ width: 10, height: 10, background: NA_COLOR, borderRadius: 2, display: 'inline-block' }} />
+          Not assessed
+        </span>
+        <span style={{ fontSize: 10.5, color: INK_3, marginLeft: 'auto' }}>
+          AUTO — connected systems · HYBRID — system + evidence · MANUAL — intake evidence
+        </span>
       </div>
     </div>
   );
@@ -218,7 +261,7 @@ const ANSWER_OPTIONS = {
 };
 function answerOptions(key) { return ANSWER_OPTIONS[key]; }
 
-const btn = {
-  background: '#f3f4f6', border: '1px solid #d1d5db', color: '#374151',
-  borderRadius: 6, padding: '4px 10px', fontSize: 11, cursor: 'pointer', fontWeight: 600,
+const ghostBtn = {
+  background: '#fff', border: '1px solid #cbd5e1', color: '#334155',
+  borderRadius: 3, padding: '5px 12px', fontSize: 11, cursor: 'pointer', fontWeight: 500,
 };
