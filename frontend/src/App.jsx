@@ -1987,20 +1987,24 @@ var CMS_CONTROLS = [
 // Data flow: Provider → Clearinghouse → [ORG] (NASCO) → Vendors → Member
 
 // ─── Vendor Monitoring Connectors ─────────────────────────────────────────────
+// Ticket #07 — fee status per monitoring source (cached indicator; "asOf" date
+// shown so it's clearly not a hard-coded price). fee: Free | Paid | Freemium |
+// Contact for Pricing. estCost is a public-list monthly range where available.
 var CONNECTORS = [
-  {id:"securityscorecard",name:"SecurityScorecard",purpose:"External security posture scoring",icon:"🛡️"},
-  {id:"bitsight",name:"BitSight",purpose:"Security ratings and vulnerability intelligence",icon:"📊"},
-  {id:"riskrecon",name:"RiskRecon",purpose:"Attack surface discovery and monitoring",icon:"🔍"},
-  {id:"blackkite",name:"Black Kite",purpose:"Ransomware susceptibility and financial stress",icon:"💸"},
-  {id:"recordedfuture",name:"Recorded Future",purpose:"Threat intelligence and risk indicators",icon:"🎯"},
-  {id:"cyware",name:"Cyware Clusters",purpose:"Threat intelligence exchange",icon:"🔗"},
-  {id:"guidepoint",name:"GuidePoint Intelligence",purpose:"Strategic threat intelligence",icon:"🧠"},
-  {id:"hhsocr",name:"HHS OCR Breach Portal",purpose:"Regulatory breach disclosure monitoring",icon:"⚖️"},
-  {id:"googlealerts",name:"Google Alerts",purpose:"News and incident monitoring",icon:"📰"},
-  {id:"compliance",name:"Compliance Evidence",purpose:"SOC 2 / HITRUST / ISO certificate parsing",icon:"📋"},
-  {id:"questionnaire",name:"Vendor Questionnaire",purpose:"Attestation and self-assessment collection",icon:"✍️"},
-  {id:"fourthparty",name:"Fourth-Party Monitor",purpose:"Supply chain subvendor monitoring",icon:"🔗"}
+  {id:"securityscorecard",name:"SecurityScorecard",purpose:"External security posture scoring",icon:"🛡️",fee:"Paid",estCost:"$16K–$45K/yr",pricingUrl:"https://securityscorecard.com/pricing",feeAsOf:"2026-06"},
+  {id:"bitsight",name:"BitSight",purpose:"Security ratings and vulnerability intelligence",icon:"📊",fee:"Paid",estCost:"Contact for quote",pricingUrl:"https://www.bitsight.com",feeAsOf:"2026-06"},
+  {id:"riskrecon",name:"RiskRecon",purpose:"Attack surface discovery and monitoring",icon:"🔍",fee:"Paid",estCost:"Contact for quote",pricingUrl:"https://www.riskrecon.com",feeAsOf:"2026-06"},
+  {id:"blackkite",name:"Black Kite",purpose:"Ransomware susceptibility and financial stress",icon:"💸",fee:"Paid",estCost:"Contact for quote",pricingUrl:"https://blackkite.com",feeAsOf:"2026-06"},
+  {id:"recordedfuture",name:"Recorded Future",purpose:"Threat intelligence and risk indicators",icon:"🎯",fee:"Paid",estCost:"$50K+/yr",pricingUrl:"https://www.recordedfuture.com",feeAsOf:"2026-06"},
+  {id:"cyware",name:"Cyware Clusters",purpose:"Threat intelligence exchange",icon:"🔗",fee:"Freemium",estCost:"Free community tier",pricingUrl:"https://cyware.com",feeAsOf:"2026-06"},
+  {id:"guidepoint",name:"GuidePoint Intelligence",purpose:"Strategic threat intelligence",icon:"🧠",fee:"Contact for Pricing",estCost:null,pricingUrl:"https://www.guidepointsecurity.com",feeAsOf:"2026-06"},
+  {id:"hhsocr",name:"HHS OCR Breach Portal",purpose:"Regulatory breach disclosure monitoring",icon:"⚖️",fee:"Free",estCost:"Public data",pricingUrl:"https://ocrportal.hhs.gov",feeAsOf:"2026-06"},
+  {id:"googlealerts",name:"Google Alerts",purpose:"News and incident monitoring",icon:"📰",fee:"Free",estCost:"Free",pricingUrl:"https://www.google.com/alerts",feeAsOf:"2026-06"},
+  {id:"compliance",name:"Compliance Evidence",purpose:"SOC 2 / HITRUST / ISO certificate parsing",icon:"📋",fee:"Free",estCost:"Included",pricingUrl:null,feeAsOf:"2026-06"},
+  {id:"questionnaire",name:"Vendor Questionnaire",purpose:"Attestation and self-assessment collection",icon:"✍️",fee:"Free",estCost:"Included",pricingUrl:null,feeAsOf:"2026-06"},
+  {id:"fourthparty",name:"Fourth-Party Monitor",purpose:"Supply chain subvendor monitoring",icon:"🔗",fee:"Freemium",estCost:"Free tier + paid depth",pricingUrl:null,feeAsOf:"2026-06"}
 ];
+var FEE_COLORS = {"Free":"#0FBB80","Freemium":"#3B9EFF","Paid":"#F5A623","Contact for Pricing":"#94A3B8"};
 
 var VENDOR_TIERS = [
   // ── TIER 1: Claims, Clearinghouses & EDI ─────────────────────────────────
@@ -4160,21 +4164,26 @@ function sanitizeInput(input) {
 // ── Shared TTS helper - reads voice settings and speaks using appropriate provider ─────
 // Global tracker for currently playing audio elements
 window._cx_active_audios = window._cx_active_audios || [];
+window._cx_speak_gen = window._cx_speak_gen || 0;
+
+// Ticket #12 — single global stop for ALL audio/speech. Increments a generation
+// token so any pending (setTimeout-scheduled) utterance from a previous narration
+// aborts instead of resuming on top of a new one (the "Command Center voice
+// repeats on click" bug). Returns the new generation; schedulers compare against
+// it before speaking.
+window._cx_stopAllSpeech = function() {
+  try { if (window.speechSynthesis) { window.speechSynthesis.cancel(); } } catch (e) {}
+  (window._cx_active_audios || []).forEach(function(audio){
+    try { audio.pause(); audio.currentTime = 0; } catch (e) {}
+  });
+  window._cx_active_audios = [];
+  window._cx_speak_gen = (window._cx_speak_gen || 0) + 1;
+  return window._cx_speak_gen;
+};
 
 function speakWithSavedVoice(text) {
-  // Cancel any ongoing speech and audio
-  if (window.speechSynthesis) { window.speechSynthesis.cancel(); }
-
-  // Stop all previously playing audio elements
-  if (window._cx_active_audios && window._cx_active_audios.length > 0) {
-    window._cx_active_audios.forEach(function(audio){
-      try {
-        audio.pause();
-        audio.currentTime = 0;
-      } catch(e) {}
-    });
-    window._cx_active_audios = [];
-  }
+  // Stop anything currently playing and invalidate pending utterances.
+  var _gen = window._cx_stopAllSpeech();
 
   // Read voice settings from localStorage
   var LS = window.localStorage || { getItem:function(){return null;} };
@@ -4305,6 +4314,8 @@ function speakWithSavedVoice(text) {
   }
 
   if (pref) { u.voice = pref; }
+  // Abort if a newer narration started while we were resolving voices.
+  if (window._cx_speak_gen !== _gen) { return; }
   window.speechSynthesis.speak(u);
 }
 
@@ -6092,16 +6103,21 @@ function Setup(props) {
                                 <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
                                   <span style={{fontSize:14,lineHeight:1}}>{connector.icon}</span>
                                   <div style={{flex:1,minWidth:0}}>
-                                    <div style={{
-                                      color:"#111827",
-                                      fontSize:10,
-                                      fontWeight:700
-                                    }}>{connector.name}</div>
+                                    <div style={{display:"flex",alignItems:"center",gap:4}}>
+                                      <span style={{color:"#111827",fontSize:10,fontWeight:700}}>{connector.name}</span>
+                                      {connector.fee&&(
+                                        <span title={"Fee status as of "+(connector.feeAsOf||"")+(connector.estCost?(" · "+connector.estCost):"")+(connector.pricingUrl?(" · "+connector.pricingUrl):"")}
+                                          style={{fontSize:7,fontWeight:700,color:FEE_COLORS[connector.fee]||"#94A3B8",
+                                            background:(FEE_COLORS[connector.fee]||"#94A3B8")+"1a",borderRadius:3,padding:"1px 5px",whiteSpace:"nowrap"}}>
+                                          {connector.fee}
+                                        </span>
+                                      )}
+                                    </div>
                                     <div style={{
                                       color:"#6B7280",
                                       fontSize:8,
                                       lineHeight:1.3
-                                    }}>{connector.purpose}</div>
+                                    }}>{connector.purpose}{connector.estCost&&connector.fee!=="Free"?(" · "+connector.estCost):""}</div>
                                   </div>
                                   <div style={{display:"flex",alignItems:"center",gap:3}}>
                                     <div style={{
@@ -18768,17 +18784,10 @@ function SetupBot(props) {
   }
 
   function speak(rawText) {
-    // Cancel all ongoing speech and audio before starting
-    if (window.speechSynthesis) { window.speechSynthesis.cancel(); }
-    if (window._cx_active_audios && window._cx_active_audios.length > 0) {
-      window._cx_active_audios.forEach(function(audio){
-        try {
-          audio.pause();
-          audio.currentTime = 0;
-        } catch(e) {}
-      });
-      window._cx_active_audios = [];
-    }
+    // Ticket #12 — stop everything and take a generation token so the chunk
+    // scheduler below aborts if a newer narration starts mid-playback.
+    var _spkGen = (window._cx_stopAllSpeech ? window._cx_stopAllSpeech()
+      : (window.speechSynthesis && window.speechSynthesis.cancel(), window._cx_speak_gen));
 
     var PRON = {
       'Aetna':'Aytna','Cigna':'Signah','Humana':'Hyoomana',
@@ -18959,6 +18968,8 @@ function SetupBot(props) {
 
     var idx=0;
     function next(){
+      // Abort if a newer narration superseded this one (ticket #12).
+      if(window._cx_speak_gen!==_spkGen){clearInterval(ka);return;}
       if(idx>=chunks.length||!window.speechSynthesis){clearInterval(ka);return;}
       var chunk=chunks[idx];
       var u=new window.SpeechSynthesisUtterance(chunk.text);

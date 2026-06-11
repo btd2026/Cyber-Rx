@@ -107,11 +107,16 @@ function Fingerprint({ functions }) {
   );
 }
 
+// Ticket #18 — voluntary, anonymized score-sharing opt-in unlocks peer benchmarking.
+const OPTIN_KEY = 'cx_benchmark_optin';
+const isOptedIn = () => { try { return localStorage.getItem(OPTIN_KEY) === 'true'; } catch (_) { return false; } };
+
 export default function CsfRankings(props) {
   const [rows, setRows] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const [optedIn, setOptedIn] = useState(isOptedIn());
   const { token, organizationId, apiUrl } = resolveCtx(props);
 
   const load = useCallback((refresh) => {
@@ -126,7 +131,31 @@ export default function CsfRankings(props) {
       .finally(() => { setLoading(false); setRefreshing(false); });
   }, [apiUrl, organizationId, token]);
 
-  useEffect(() => { load(false); }, [load]);
+  useEffect(() => { if (optedIn) load(false); else setLoading(false); }, [load, optedIn]);
+
+  const enableBenchmarking = () => {
+    try { localStorage.setItem(OPTIN_KEY, 'true'); } catch (_) {}
+    setOptedIn(true);
+  };
+
+  // #18 — until the org voluntarily opts in to anonymized score sharing, the
+  // peer-benchmarking view is locked. Their own detailed assessment stays private.
+  if (!optedIn) {
+    return (
+      <div style={{ background: '#fff', border: `1px solid ${HAIRLINE}`, borderRadius: 6, padding: '40px 32px', textAlign: 'center' }}>
+        <div style={{ fontSize: 10, fontWeight: 600, color: INK_3, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 8 }}>Peer Benchmarking · Opt-in required</div>
+        <h2 style={{ margin: '0 0 10px', fontSize: 20, fontWeight: 600, color: INK }}>Compare against your peers</h2>
+        <div style={{ color: INK_2, fontSize: 13, maxWidth: 520, margin: '0 auto 18px', lineHeight: 1.6 }}>
+          Share your framework scores <strong>anonymously</strong> (no organization name or identifying details) to the
+          central benchmarking hub and unlock the systemwide ranking. Your full assessment and detailed dashboards
+          remain completely private regardless of this choice.
+        </div>
+        <button onClick={enableBenchmarking} style={{ ...ghostBtn, background: '#0f1b2d', color: '#fff', border: 'none', padding: '9px 20px', fontSize: 12 }}>
+          Share anonymized scores & enable benchmarking
+        </button>
+      </div>
+    );
+  }
 
   if (loading) return <div style={{ padding: 28, color: INK_3, fontSize: 13 }}>Loading systemwide standings…</div>;
   if (error || !rows) {
