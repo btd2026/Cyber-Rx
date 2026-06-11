@@ -9758,9 +9758,10 @@ function CRODash(props) {
       {/* Direct access to the live CSF scorecard — no question required */}
       <div style={{display:"flex",justifyContent:"flex-end",margin:"10px 0"}}>
         <button onClick={function(){setSelFramework("nistcsf");}}
-          style={{background:"#3B9EFF14",border:"1px solid #3B9EFF40",color:"#3B9EFF",
-            borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:700}}>
-          ◫ NIST CSF 2.0 Live Scorecard →
+          style={{background:"transparent",border:"1px solid "+C.border,color:C.text,
+            borderRadius:4,padding:"7px 16px",cursor:"pointer",fontSize:11,fontWeight:600,
+            letterSpacing:"0.06em",textTransform:"uppercase"}}>
+          NIST CSF 2.0 Scorecard →
         </button>
       </div>
 
