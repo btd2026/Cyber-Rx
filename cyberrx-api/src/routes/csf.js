@@ -14,6 +14,7 @@
 const express = require('express');
 const router = express.Router();
 const NistCsfService = require('../services/NistCsfService');
+const FrameworkScoreService = require('../services/FrameworkScoreService');
 const { optionalJWT } = require('../middleware/auth');
 const logger = require('../utils/logger');
 
@@ -52,6 +53,26 @@ router.get('/rankings', optionalJWT, async (req, res) => {
   } catch (err) {
     logger.error('CSF rankings error', { error: err.message });
     res.status(500).json({ error: 'Failed to load CSF rankings', message: err.message });
+  }
+});
+
+// Other-framework live scorecards (HIPAA, 800-53, CIS, NAIC, ISO, SOC 2,
+// CMS, PCI, GDPR) — same live signals, mapped to each framework's controls.
+router.get('/frameworks', optionalJWT, async (req, res) => {
+  res.json({ frameworks: FrameworkScoreService.listFrameworks() });
+});
+
+router.get('/frameworks/:id', optionalJWT, async (req, res) => {
+  const orgId = resolveOrg(req, res);
+  if (!orgId) return;
+  if (!FrameworkScoreService.FRAMEWORK_IDS.includes(req.params.id)) {
+    return res.status(400).json({ error: 'Unknown framework', valid: FrameworkScoreService.FRAMEWORK_IDS });
+  }
+  try {
+    res.json(await FrameworkScoreService.getFrameworkAssessment(orgId, req.params.id));
+  } catch (err) {
+    logger.error('Framework assessment error', { framework: req.params.id, error: err.message });
+    res.status(500).json({ error: 'Failed to compute framework assessment', message: err.message });
   }
 });
 
