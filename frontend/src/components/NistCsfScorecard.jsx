@@ -343,7 +343,7 @@ const ANSWER_OPTIONS = {
   pr_ir_resilience: ['both', 'backups-only', 'neither'],
   de_ae_soc: ['24x7', 'business-hours', 'none'],
   rs_ma_irplan: ['plan-and-tabletop', 'plan-only', 'none'],
-  rs_an_forensics: ['in-house', 'retainer', 'none'],
+  rs_an_forensics: ['both', 'in-house', 'retainer', 'none'],
   rs_co_notify: ['yes', 'partial', 'no'],
   rc_rp_drtest: ['within-12mo', 'over-12mo', 'never'],
   rc_co_comms: ['yes', 'no'],

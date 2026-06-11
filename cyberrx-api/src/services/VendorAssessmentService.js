@@ -211,6 +211,47 @@ const DOC_TYPES = {
       return f;
     },
   },
+  hitrust: {
+    label: 'HITRUST CSF Certification', issuer: 'HITRUST Alliance',
+    fields: ['certType', 'issueDate', 'expiryDate', 'scopeStatement', 'capCount'],
+    validate: ({ fields, now }) => {
+      const f = [];
+      const t = norm(fields.certType);
+      if (t && /(e1|i1)/.test(t)) f.push(finding('Low', 'HITRUST e1/i1 — limited assurance', 'An e1/i1 is a lighter assessment than the r2 validated certification.', ['CSF:GV.SC', 'HIPAA:§164.308'], 'Prefer an r2 validated certification for vendors handling PHI at scale.', { certType: fields.certType }));
+      const exp = parseDate(fields.expiryDate);
+      if (exp) { const days = daysBetween(exp, now); if (days < 0) f.push(finding('High', 'HITRUST certification expired', `Expired ${Math.abs(days)} days ago.`, ['CSF:GV.SC'], 'Obtain the current certification letter.', { expiryDate: fields.expiryDate })); else if (days < 90) f.push(finding('Medium', 'HITRUST certification expiring soon', `Expires in ${days} days.`, ['CSF:GV.SC'], 'Request the recertification evidence.', {})); }
+      else f.push(finding('Medium', 'HITRUST validity dates not found', 'Cannot confirm the certification is current (r2 is valid 2 years with an interim review).', ['CSF:GV.SC'], 'Confirm issue/expiry dates and interim assessment status.', {}));
+      if (!fields.scopeStatement) f.push(finding('Medium', 'HITRUST scope statement missing', 'The certified scope may not cover the services we use.', ['CSF:GV.SC'], 'Confirm scope covers the platforms processing our data.', {}));
+      const caps = Number(fields.capCount) || 0;
+      if (caps > 0) f.push(finding(caps >= 5 ? 'High' : 'Medium', `${caps} corrective action plan(s) open`, 'Open CAPs indicate controls that did not meet the HITRUST threshold.', ['CSF:GV.SC'], 'Review each CAP for impact on our data and track to closure.', { capCount: caps }));
+      return f;
+    },
+  },
+  sig_caiq: {
+    label: 'SIG / CAIQ Security Questionnaire', issuer: 'Shared Assessments / CSA',
+    fields: ['questionnaireType', 'completedDate', 'noAnswers', 'naAnswers', 'attestedBy'],
+    validate: ({ fields, now }) => {
+      const f = [];
+      const d = parseDate(fields.completedDate);
+      if (d && daysBetween(now, d) > 365) f.push(finding('Medium', 'Questionnaire response is stale', `Completed ${daysBetween(now, d)} days ago.`, ['CSF:GV.SC'], 'Request an annual refresh.', {}));
+      const no = Number(fields.noAnswers) || 0;
+      if (no > 0) f.push(finding(no >= 10 ? 'High' : 'Medium', `${no} "No" answer(s) in the questionnaire`, 'Each "No" is a control the vendor does not operate.', ['CSF:GV.SC', 'SOC2:CC'], 'Review the "No" answers for controls relevant to our data and require compensating controls.', { noAnswers: no }));
+      if (!fields.attestedBy) f.push(finding('Low', 'No attesting officer identified', 'Self-assessments should be attested by a named security officer.', ['CSF:GV.SC'], 'Obtain an attestation signature.', {}));
+      return f;
+    },
+  },
+  pci_aoc: {
+    label: 'PCI DSS Attestation of Compliance', issuer: 'QSA / merchant self-attestation',
+    fields: ['aocType', 'assessmentDate', 'qsaFirm', 'complianceStatus'],
+    validate: ({ fields, now }) => {
+      const f = [];
+      if (norm(fields.complianceStatus) && !/compliant|in place/.test(norm(fields.complianceStatus))) f.push(finding('High', 'PCI AOC reports non-compliance', `Status: "${fields.complianceStatus}".`, ['CSF:PR.DS'], 'Require a remediation plan and re-assessment before processing card data.', { complianceStatus: fields.complianceStatus }));
+      const d = parseDate(fields.assessmentDate);
+      if (d && daysBetween(now, d) > 365) f.push(finding('Medium', 'PCI assessment is stale', `Assessed ${daysBetween(now, d)} days ago (annual requirement).`, ['CSF:PR.DS'], 'Obtain the current-year AOC.', {}));
+      if (norm(fields.aocType).includes('saq') && !fields.qsaFirm) f.push(finding('Low', 'Self-assessed (SAQ) without QSA', 'A self-assessment carries less assurance than a QSA-led RoC.', ['CSF:GV.SC'], 'Consider requiring a QSA assessment for high card volumes.', {}));
+      return f;
+    },
+  },
   netdiagram: {
     label: 'Network Architecture Diagram', issuer: 'Vendor architecture',
     fields: ['tenancy', 'ourDataIsolated', 'thirdPartyConnections', 'inScopeRanges'],
@@ -338,7 +379,7 @@ async function crossValidate(orgId, vendorId, vendorName) {
 
   // 5. Missing required documents (vendor handling PHI without a BAA, etc.).
   if (!byType.baa) findings.push(finding('High', 'No BAA on file', 'No Business Associate Agreement has been assessed for this vendor; required before exchanging PHI.', ['HIPAA:§164.314', 'CSF:GV.SC'], 'Obtain and execute a compliant BAA.', {}));
-  if (!byType.soc2 && !byType.iso27001) findings.push(finding('Medium', 'No independent assurance report', 'Neither a SOC 2 nor an ISO 27001 certificate is on file.', ['CSF:GV.SC', 'SOC2:CC'], 'Obtain a SOC 2 Type II or ISO 27001 certificate.', {}));
+  if (!byType.soc2 && !byType.iso27001 && !byType.hitrust) findings.push(finding('Medium', 'No independent assurance report', 'No SOC 2, ISO 27001, or HITRUST certification is on file.', ['CSF:GV.SC', 'SOC2:CC'], 'Obtain a SOC 2 Type II, ISO 27001, or HITRUST certification.', {}));
 
   await feedSignals(orgId, vendorId, vendorName, 'Saraqael cross-validation', findings, 'Fourth-Party Risk');
   return findings;

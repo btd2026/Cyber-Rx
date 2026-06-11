@@ -265,12 +265,19 @@ export default function ExecutiveAgentBrief(props) {
         <div style={{ fontSize: 14, color: '#dbe3f2', lineHeight: 1.6, marginBottom: 6 }}>
           I’m {persona.name}, your {role} agent. {persona.can}
         </div>
-        <div style={{ fontSize: 12.5, color: '#9aa6bc', marginBottom: 14, lineHeight: 1.5 }}>
-          Ask me anything in your own words — I’ll answer directly from your live data and build the supporting view.
-          {suggested.length > 0 && ' For example, you could ask:'}
+        <div style={{ fontSize: 12.5, color: '#9aa6bc', marginBottom: 12, lineHeight: 1.5 }}>
+          You can view your general dashboard, or ask me a question and I’ll answer it directly and build the view
+          tailored to it.{suggested.length > 0 && ' For example, you could ask:'}
         </div>
         {renderConversation()}
         {renderSuggested()}
+        {typeof props.onGeneral === 'function' && (
+          <div style={{ marginBottom: 10 }}>
+            <button onClick={() => props.onGeneral()} style={{ ...btnStyle, padding: '7px 14px' }}>
+              ▦ View general dashboard
+            </button>
+          </div>
+        )}
         {renderInput()}
       </div>
     );

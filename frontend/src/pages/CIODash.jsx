@@ -153,7 +153,7 @@ const CIODash = (props) => {
       </div>
 
       {/* AI agent brief — page opens here; a question reveals the relevant section(s) */}
-      <ExecutiveAgentBrief role="CIO" entry onAnswer={applyAgentAnswer} authToken={authToken} orgId={orgId} api_url={api_url} />
+      <ExecutiveAgentBrief role="CIO" entry onAnswer={applyAgentAnswer} onGeneral={() => { setCioQ('General dashboard'); setCioView('systems'); }} authToken={authToken} orgId={orgId} api_url={api_url} />
 
       {error && (
         <div style={{ ...card, padding: '1rem', marginBottom: '1.5rem', borderColor: '#fecaca', backgroundColor: '#fef2f2', color: '#991b1b', fontSize: '0.85rem' }}>

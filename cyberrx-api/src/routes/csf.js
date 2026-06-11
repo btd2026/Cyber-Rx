@@ -76,6 +76,19 @@ router.get('/frameworks/:id', optionalJWT, async (req, res) => {
   }
 });
 
+// Zadkiel — post-intake NIST CSF document review: score, findings, and
+// recommendations for every evidence item and uploaded document.
+router.get('/document-review', optionalJWT, async (req, res) => {
+  const orgId = resolveOrg(req, res);
+  if (!orgId) return;
+  try {
+    res.json(await NistCsfService.reviewDocuments(orgId));
+  } catch (err) {
+    logger.error('CSF document review error', { error: err.message });
+    res.status(500).json({ error: 'Failed to review documents', message: err.message });
+  }
+});
+
 router.post('/evidence', optionalJWT, async (req, res) => {
   const orgId = resolveOrg(req, res);
   if (!orgId) return;

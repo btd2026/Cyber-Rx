@@ -69,7 +69,7 @@ const EVIDENCE_QUESTIONS = [
     options: { 'plan-and-tabletop': 95, 'plan-only': 60, none: 10 } },
   { key: 'rs_an_forensics', category: 'RS.AN', doc: 'Forensics retainer / IR runbooks',
     question: 'What incident analysis / forensics capability do you have?',
-    options: { 'in-house': 90, retainer: 70, none: 10 } },
+    options: { both: 95, 'in-house': 90, retainer: 70, none: 10 } },
   { key: 'rs_co_notify',    category: 'RS.CO', doc: 'Breach notification procedures',
     question: 'Are breach-notification procedures documented (OCR, CMS, state AGs)?',
     options: { yes: 90, partial: 55, no: 10 } },
@@ -486,6 +486,80 @@ async function getRankings({ refresh = false } = {}) {
   }));
 }
 
+// ---------------------------------------------------------------------------
+// Zadkiel — the NIST CSF document review agent (runs after intake).
+// Reviews every evidence item (answer + any uploaded document) against the
+// CSF category's requirements and returns a score, findings, and concrete
+// recommendations to address the gaps.
+// ---------------------------------------------------------------------------
+const REVIEW_GUIDANCE = {
+  gv_po_policy:     { req: 'GV.PO requires a board-approved information security policy reviewed at least annually.', fix: 'Update the policy, route it to the board for approval, and set an annual review date.' },
+  gv_rm_appetite:   { req: 'GV.RM requires a board-approved cyber risk appetite statement guiding risk decisions.', fix: 'Finalize the appetite statement and obtain board sign-off.' },
+  gv_rr_roles:      { req: 'GV.RR requires a named security leader with documented roles and authorities.', fix: 'Charter the CISO role formally and document security responsibilities.' },
+  gv_ov_board:      { req: 'GV.OV expects at least quarterly cybersecurity reporting to the board.', fix: 'Establish a recurring quarterly board security briefing.' },
+  gv_oc_context:    { req: 'GV.OC requires documented mission, stakeholder, and regulatory context.', fix: 'Document organizational context and the applicable regulatory landscape.' },
+  gv_sc_vendors:    { req: 'GV.SC requires security assessments of all critical vendors.', fix: 'Extend vendor security assessments to every critical vendor (see Vendor Assurance).' },
+  id_am_inventory:  { req: 'ID.AM requires a complete asset inventory across hardware, software, and cloud.', fix: 'Complete the CMDB; import the application catalog in Setup Step 3.' },
+  id_ra_assessment: { req: 'ID.RA requires a formal, recurring cyber risk assessment (e.g. NIST SP 800-30).', fix: 'Schedule an annual NIST SP 800-30 risk assessment.' },
+  id_im_pir:        { req: 'ID.IM requires post-incident reviews feeding a lessons-learned process.', fix: 'Make post-incident reviews mandatory for P1/P2 incidents.' },
+  pr_ds_encryption: { req: 'PR.DS requires PHI encrypted at rest and in transit.', fix: 'Close the encryption gaps — prioritize systems holding PHI at rest.' },
+  pr_ds_dlp:        { req: 'PR.DS expects Data Loss Prevention for PHI.', fix: 'Deploy DLP coverage for PHI repositories and egress channels.' },
+  pr_ir_resilience: { req: 'PR.IR requires tested backups and redundancy for critical systems.', fix: 'Test backup restoration and add redundancy for crown-jewel systems.' },
+  de_ae_soc:        { req: 'DE.AE expects continuous (24x7) security-operations monitoring.', fix: 'Extend monitoring to 24x7 — in-house or via a managed SOC.' },
+  rs_ma_irplan:     { req: 'RS.MA requires a documented IR plan exercised at least annually.', fix: 'Run a tabletop exercise within the next 12 months and document results.' },
+  rs_an_forensics:  { req: 'RS.AN requires incident analysis / forensics capability.', fix: 'Establish an IR retainer or in-house forensics capability.' },
+  rs_co_notify:     { req: 'RS.CO requires documented breach-notification procedures (OCR, CMS, state AGs).', fix: 'Document notification procedures with timelines per regulator.' },
+  rs_mi_process:    { req: 'RS.MI requires a formal remediation process with tracked owners and due dates.', fix: 'Stand up tracked remediation with owners and SLAs.' },
+  rc_rp_drtest:     { req: 'RC.RP requires a full disaster-recovery test at least annually.', fix: 'Schedule and document a full DR test.' },
+  rc_co_comms:      { req: 'RC.CO requires a recovery communication plan for members, regulators, and media.', fix: 'Draft and approve a recovery communication plan.' },
+};
+
+async function reviewDocuments(orgId) {
+  const rows = await safeRows(
+    `SELECT question_key, answer, doc_name FROM csf_evidence WHERE organization_id=$1`, [orgId]);
+  const byKey = {};
+  rows.forEach((r) => { byKey[r.question_key] = r; });
+
+  const reviews = EVIDENCE_QUESTIONS.map((q) => {
+    const ev = byKey[q.key] || {};
+    const guidance = REVIEW_GUIDANCE[q.key] || { req: '', fix: 'Provide this evidence.' };
+    const score = ev.answer != null && ev.answer in q.options ? q.options[ev.answer] : null;
+    const findings = [];
+    const recommendations = [];
+    if (score == null) {
+      findings.push('No answer provided during intake — the category cannot be assessed.');
+      recommendations.push(`Answer this item (and upload the ${q.doc}) on the CSF scorecard. ${guidance.fix}`);
+    } else {
+      if (score < 50) { findings.push(`Current state does not meet the requirement. ${guidance.req}`); recommendations.push(guidance.fix); }
+      else if (score < 75) { findings.push(`Partially meets the requirement. ${guidance.req}`); recommendations.push(guidance.fix); }
+      if (!ev.doc_name && score >= 50) {
+        findings.push(`Attested but no supporting document on file (expected: ${q.doc}).`);
+        recommendations.push(`Upload the ${q.doc} so the attestation is evidence-backed.`);
+      }
+    }
+    return {
+      key: q.key, category: q.category, question: q.question,
+      answer: ev.answer || null, document: ev.doc_name || null,
+      score, status: score == null ? 'Not assessed' : score >= 75 ? 'Meets' : score >= 50 ? 'Partial' : 'Gap',
+      requirement: guidance.req, findings, recommendations,
+    };
+  });
+
+  const actionable = reviews.filter((r) => r.recommendations.length);
+  const scored = reviews.filter((r) => r.score != null);
+  return {
+    agent: 'Zadkiel', framework: 'NIST CSF 2.0', organizationId: orgId,
+    reviewedAt: new Date().toISOString(),
+    documentsOnFile: reviews.filter((r) => r.document).length,
+    answered: scored.length, total: reviews.length,
+    overallScore: scored.length ? Math.round(scored.reduce((s, r) => s + r.score, 0) / scored.length) : null,
+    gaps: reviews.filter((r) => r.status === 'Gap').length,
+    partials: reviews.filter((r) => r.status === 'Partial').length,
+    recommendations: actionable.flatMap((r) => r.recommendations.map((rec) => ({ category: r.category, recommendation: rec }))),
+    reviews,
+  };
+}
+
 function getQuestions() {
   return EVIDENCE_QUESTIONS.map((q) => ({
     key: q.key, category: q.category, question: q.question,
@@ -516,4 +590,4 @@ async function saveEvidence(orgId, items) {
   return saved;
 }
 
-module.exports = { getAssessment, getRankings, getQuestions, saveEvidence, gatherContext, CATEGORIES, EVIDENCE_QUESTIONS };
+module.exports = { getAssessment, getRankings, getQuestions, saveEvidence, reviewDocuments, gatherContext, CATEGORIES, EVIDENCE_QUESTIONS };

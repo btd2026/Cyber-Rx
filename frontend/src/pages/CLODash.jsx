@@ -192,7 +192,7 @@ const CLODash = (props) => {
       </div>
 
       {/* AI agent brief — page opens here; a question reveals the relevant section(s) */}
-      <ExecutiveAgentBrief role="CLO" entry onAnswer={applyAgentAnswer} authToken={authToken} orgId={orgId} api_url={api_url} />
+      <ExecutiveAgentBrief role="CLO" entry onAnswer={applyAgentAnswer} onGeneral={() => { setCloQ('General dashboard'); setCloView('overall'); }} authToken={authToken} orgId={orgId} api_url={api_url} />
 
       {/* Answer hero — mirrors the asked question */}
       {cloView && (() => {
