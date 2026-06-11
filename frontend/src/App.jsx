@@ -8181,6 +8181,28 @@ function CISODash(props) {
   var shown = sevF==="All" ? liveFind : liveFind.filter(function(f){return f.sev===sevF;});
   var atRiskProcs = liveProcs.filter(function(p){return p.score<80;});
 
+  // The figure that answers the current question — drives BOTH the header
+  // readout and the answer hero so they stay in lockstep with the view.
+  function cisoViewMeta(){
+    var critN=liveFind.filter(function(f){return f.sev==="Critical";}).length;
+    var capsSorted=Object.keys(liveCaps).sort(function(a,b){return liveCaps[a].score-liveCaps[b].score;});
+    var weakest=capsSorted[0]; var weakScore=liveCaps[weakest]?liveCaps[weakest].score:0;
+    if(drillView==="atrisk") return {title:"At-Risk Business Processes",num:String(atRiskProcs.length)+"/"+liveProcs.length,unit:"",color:"#F5A623",
+      label:"Business lines scoring below 80",sub:fmtExp(atRiskProcs.reduce(function(s,p){return s+(EXP[p.id]||0);},0)/1000)+" total process exposure"};
+    if(drillView==="critical") return {title:"Critical Findings",num:String(critN),unit:"",color:"#EF4545",
+      label:"Open critical-severity findings",sub:"Each = material breach risk · avg $285M+ per event"};
+    if(drillView==="risk") return {title:"Overall Risk Score",num:String(overallScore),unit:"/100",color:cmmi(overallScore).color,
+      label:"Composite security posture",sub:cmmi(overallScore).short+" — "+cmmi(overallScore).name,score:overallScore};
+    if(agentView==="exposure") return {title:"Financial Exposure",num:"$"+(totalExposure/1000).toFixed(2)+"B",unit:"",color:"#EF4545",
+      label:"Modeled exposure at current posture",sub:critN+" critical findings · "+atRiskProcs.length+" at-risk business processes · posture "+overallScore+"/100"};
+    if(agentView==="findings") return {title:(sevF==="Critical"?"Critical Findings":"Open Findings"),num:String(sevF==="Critical"?critN:shown.length),unit:"",color:"#EF4545",
+      label:(sevF==="Critical"?"Open critical findings":"Open findings"),sub:"Avg $285M+ exposure per critical event · click any finding to expand and route it"};
+    if(agentView==="controls") return {title:"Control Effectiveness",num:String(weakScore),unit:"/100",color:hc(weakScore),
+      label:"Weakest domain — "+weakest,sub:"Bottom three: "+capsSorted.slice(0,3).map(function(k){return k+" ("+liveCaps[k].score+")";}).join(" · "),score:weakScore};
+    return {title:"Security Posture",num:String(overallScore),unit:"/100",color:cmmi(overallScore).color,
+      label:"Overall Security Posture",sub:cmmi(overallScore).short+" — "+cmmi(overallScore).name+" · $"+(totalExposure/1000).toFixed(2)+"B modeled exposure at current posture",score:overallScore};
+  }
+
   return (
     <div>
       <DashNav current="dashboard" go={go}/>
@@ -8190,16 +8212,18 @@ function CISODash(props) {
         <ExecutiveAgentBrief role="CISO" entry onAnswer={applyAgentAnswer} />
       </div>
 
-      {/* CISO Header — shown only once a question has surfaced a view */}
-      {(drillView||agentView)&&(
-      <div style={{padding:"16px 20px",background:"linear-gradient(135deg,#3B9EFF14,"+C.panel+")",
-        border:"1px solid #3B9EFF30",borderRadius:14,margin:"14px 0"}}>
+      {/* CISO Header — shown only once a question has surfaced a view; mirrors the view */}
+      {(drillView||agentView)&&(function(){
+      var hm=cisoViewMeta();
+      return (
+      <div style={{padding:"16px 20px",background:"linear-gradient(135deg,"+hm.color+"14,"+C.panel+")",
+        border:"1px solid "+hm.color+"40",borderRadius:14,margin:"14px 0"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
           <div>
             <div style={{color:"#3B9EFF",fontSize:10,fontWeight:700,textTransform:"uppercase",
               letterSpacing:"0.1em",marginBottom:4}}>CHIEF INFORMATION SECURITY OFFICER</div>
             <h1 style={{color:C.text,fontSize:20,fontWeight:800,margin:"0 0 4px"}}>
-              Control Effectiveness Dashboard
+              {hm.title}
             </h1>
             <div style={{color:C.muted,fontSize:11}}>
               {agentQ?("Answering: “"+agentQ+"”"):"YOUR part of cyber responsibility"}
@@ -8207,11 +8231,11 @@ function CISODash(props) {
           </div>
           <div style={{display:"flex",gap:14,alignItems:"flex-start"}}>
             <div style={{textAlign:"right"}}>
-              <div style={{color:cmmi(overallScore).color,fontSize:28,fontWeight:800,fontFamily:"monospace"}}>
-                {overallScore}
+              <div style={{color:hm.color,fontSize:28,fontWeight:800,fontFamily:"monospace"}}>
+                {hm.num}<span style={{color:C.muted,fontSize:13,fontWeight:600}}>{hm.unit}</span>
               </div>
-              <CmmiBadge score={overallScore} size="sm"/>
-              <div style={{color:C.muted,fontSize:9,marginTop:2}}>Overall Security Posture</div>
+              {hm.score!=null&&<CmmiBadge score={hm.score} size="sm"/>}
+              <div style={{color:C.muted,fontSize:9,marginTop:2}}>{hm.label}</div>
             </div>
             <button onClick={clearAgentView}
               style={{background:"transparent",border:"1px solid "+C.border,color:C.muted,
@@ -8221,7 +8245,7 @@ function CISODash(props) {
           </div>
         </div>
       </div>
-      )}
+      );})()}
 
       {/* ── Editable Metrics Panel ── */}
       {showMetricsPanel&&(
@@ -8830,21 +8854,7 @@ function CISODash(props) {
 
       {/* Answer hero — the figure that answers the question, sized to lead the view */}
       {(function(){
-        var critN = liveFind.filter(function(f){return f.sev==="Critical";}).length;
-        var capsSorted = Object.keys(liveCaps).sort(function(a,b){return liveCaps[a].score-liveCaps[b].score;});
-        var weakest = capsSorted[0];
-        var h = agentView==="posture" ? {num:String(overallScore),unit:"/100",color:cmmi(overallScore).color,
-              label:"Overall Security Posture",
-              sub:cmmi(overallScore).short+" — "+cmmi(overallScore).name+" · $"+(totalExposure/1000).toFixed(2)+"B modeled exposure at current posture"}
-          : agentView==="exposure" ? {num:"$"+(totalExposure/1000).toFixed(2)+"B",unit:"",color:"#EF4545",
-              label:"Modeled Financial Exposure at Current Posture",
-              sub:critN+" critical findings · "+atRiskProcs.length+" at-risk business processes · posture score "+overallScore+"/100"}
-          : agentView==="findings" ? {num:String(sevF==="Critical"?critN:shown.length),unit:"",color:"#EF4545",
-              label:(sevF==="Critical"?"Open Critical Findings":"Open Findings"),
-              sub:"Avg $285M+ exposure per critical event · click any finding to expand and route it"}
-          : {num:String(liveCaps[weakest]?liveCaps[weakest].score:0),unit:"/100",color:hc(liveCaps[weakest]?liveCaps[weakest].score:0),
-              label:"Weakest Control Domain — "+weakest,
-              sub:"Bottom three: "+capsSorted.slice(0,3).map(function(k){return k+" ("+liveCaps[k].score+")";}).join(" · ")};
+        var h = cisoViewMeta();
         return (
           <div style={{display:"flex",gap:18,alignItems:"center",background:C.card,
             border:"1.5px solid "+h.color+"35",borderLeft:"5px solid "+h.color,borderRadius:12,
