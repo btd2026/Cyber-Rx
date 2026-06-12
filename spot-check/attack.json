@@ -1,0 +1,112 @@
+[
+  {
+    "technique": "T1482",
+    "technique_name": "Domain Trust Discovery",
+    "deprecated": false,
+    "control": "SA-8",
+    "control_title": "Security and Privacy Engineering Principles",
+    "meta": {
+      "version_skew": false,
+      "attack_version": "16.1"
+    }
+  },
+  {
+    "technique": "T1556.006",
+    "technique_name": "Multi-Factor Authentication",
+    "deprecated": false,
+    "control": "IA-2",
+    "control_title": "Identification and Authentication (Organizational Users)",
+    "meta": {
+      "version_skew": false,
+      "attack_version": "16.1"
+    }
+  },
+  {
+    "technique": "T1059.009",
+    "technique_name": "Cloud API",
+    "deprecated": false,
+    "control": "SI-4",
+    "control_title": "System Monitoring",
+    "meta": {
+      "version_skew": false,
+      "attack_version": "16.1"
+    }
+  },
+  {
+    "technique": "T1570",
+    "technique_name": "Lateral Tool Transfer",
+    "deprecated": false,
+    "control": "CM-7",
+    "control_title": "Least Functionality",
+    "meta": {
+      "version_skew": false,
+      "attack_version": "16.1"
+    }
+  },
+  {
+    "technique": "T1036.005",
+    "technique_name": "Match Legitimate Resource Name or Location",
+    "deprecated": false,
+    "control": "AC-6",
+    "control_title": "Least Privilege",
+    "meta": {
+      "version_skew": false,
+      "attack_version": "16.1"
+    }
+  },
+  {
+    "technique": "T1059.005",
+    "technique_name": "Visual Basic",
+    "deprecated": false,
+    "control": "CM-2",
+    "control_title": "Baseline Configuration",
+    "meta": {
+      "version_skew": false,
+      "attack_version": "16.1"
+    }
+  },
+  {
+    "technique": "T1491.001",
+    "technique_name": "Internal Defacement",
+    "deprecated": false,
+    "control": "SI-4",
+    "control_title": "System Monitoring",
+    "meta": {
+      "version_skew": false,
+      "attack_version": "16.1"
+    }
+  },
+  {
+    "technique": "T1104",
+    "technique_name": "Multi-Stage Channels",
+    "deprecated": false,
+    "control": "CA-7",
+    "control_title": "Continuous Monitoring",
+    "meta": {
+      "version_skew": false,
+      "attack_version": "16.1"
+    }
+  },
+  {
+    "technique": "T1213.004",
+    "technique_name": "Customer Relationship Management Software",
+    "deprecated": false,
+    "control": "IA-4",
+    "control_title": "Identifier Management",
+    "meta": {
+      "version_skew": false,
+      "attack_version": "16.1"
+    }
+  },
+  {
+    "technique": "T1048.003",
+    "technique_name": "Exfiltration Over Unencrypted Non-C2 Protocol",
+    "deprecated": false,
+    "control": "AC-6",
+    "control_title": "Least Privilege",
+    "meta": {
+      "version_skew": false,
+      "attack_version": "16.1"
+    }
+  }
+]
