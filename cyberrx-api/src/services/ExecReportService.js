@@ -124,15 +124,16 @@ async function cisoPack(orgId, { baseline = 'moderate' } = {}) {
   };
 }
 
-// CIS Controls v8.1 Implementation-Group attainment: of the safeguards in each
-// IG tier, how many have a passing mapped check this run.
+// CIS Controls v8.1 — coverage across the 18 Controls (categories). For each
+// CIS Control, of its safeguards, how many have a passing mapped check this run.
 async function cisProgress(orgId, runId) {
   const has = await db.query(`SELECT COUNT(*)::int n FROM framework_requirements WHERE framework_id='cis_v8_1'`);
   if (!has[0] || !has[0].n) {
     return { status: 'pending', note: 'CIS v8.1 workbook not yet ingested (resources/cis/).' };
   }
+  // safeguards (family = parent CIS Control number), with run coverage
   const rows = await db.query(`
-    SELECT r.requirement_id, r.baselines,
+    SELECT r.requirement_id, r.family, r.parent_id,
       EXISTS (
         SELECT 1 FROM requirement_mappings m JOIN check_results cr
           ON cr.check_id=m.check_id AND cr.run_id=$1 AND cr.org_id=$2 AND cr.status IN ('pass','partial')
@@ -140,12 +141,21 @@ async function cisProgress(orgId, runId) {
       ) AS covered
     FROM framework_requirements r
     WHERE r.framework_id='cis_v8_1' AND r.meta->>'kind'='safeguard'`, [runId, orgId]);
-  const igs = ['ig1', 'ig2', 'ig3'].map((ig) => {
-    const inTier = rows.filter((r) => r.baselines && r.baselines[ig]);
-    const covered = inTier.filter((r) => r.covered).length;
-    return { ig: ig.toUpperCase(), total: inTier.length, covered, attainmentPct: inTier.length ? Math.round((covered / inTier.length) * 100) : 0 };
+  // the 18 CIS Controls (titles)
+  const ctrlRows = await db.query(`
+    SELECT requirement_id, title FROM framework_requirements
+    WHERE framework_id='cis_v8_1' AND meta->>'kind'='control' ORDER BY (requirement_id)::int NULLS LAST, requirement_id`);
+  const controls = ctrlRows.map((c) => {
+    const sgs = rows.filter((r) => String(r.parent_id) === String(c.requirement_id) || String(r.family) === String(c.requirement_id));
+    const covered = sgs.filter((r) => r.covered).length;
+    const pct = sgs.length ? Math.round((covered / sgs.length) * 100) : 0;
+    return {
+      number: c.requirement_id, name: c.title,
+      safeguards: sgs.length, covered, attainmentPct: pct,
+      status: pct >= 80 ? 'Strong' : pct >= 50 ? 'Moderate' : pct >= 25 ? 'Weak' : 'Gap',
+    };
   });
-  return { status: 'ingested', version: '8.1.2', safeguards: rows.length, implementationGroups: igs };
+  return { status: 'ingested', version: '8.1.2', safeguards: rows.length, totalControls: controls.length, controls };
 }
 
 function recommend(signal, tool) {

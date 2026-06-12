@@ -193,23 +193,14 @@ const EVIDENCE_SOURCES = [
   { id: 'bitsight', name: 'BitSight', domain: 'Third-Party Risk', metric: 'Vendor ratings', live: false },
 ];
 
-// The 15 CISO questions (executive answers are generated in the service).
+// The 5 questions a CISO must answer to run the program (each consolidates
+// several underlying themes). Executive answers are generated in the service.
 const QUESTIONS = [
-  { id: 'q1', n: 1, q: 'Are we more or less secure than last period?' },
-  { id: 'q2', n: 2, q: 'Which security domains are improving or deteriorating?' },
-  { id: 'q3', n: 3, q: 'Which control areas are creating the most risk?' },
-  { id: 'q4', n: 4, q: 'What are the top security gaps requiring CISO attention?' },
-  { id: 'q5', n: 5, q: 'Are we within our internal security thresholds?' },
-  { id: 'q6', n: 6, q: 'What needs action now?' },
-  { id: 'q7', n: 7, q: 'What is our current security posture?' },
-  { id: 'q8', n: 8, q: 'Which attack pathways threaten our critical processes?' },
-  { id: 'q9', n: 9, q: 'What could materially disrupt security operations or critical business processes right now?' },
-  { id: 'q10', n: 10, q: 'What risk are we unknowingly accepting?' },
-  { id: 'q11', n: 11, q: 'If attackers targeted us today, where would they most likely succeed?' },
-  { id: 'q12', n: 12, q: 'Are our security investments reducing measurable risk?' },
-  { id: 'q13', n: 13, q: 'How prepared are we for a major cyber event?' },
-  { id: 'q14', n: 14, q: 'What risks are emerging faster than we are adapting?' },
-  { id: 'q15', n: 15, q: 'Where do we trail peer security maturity?' },
+  { id: 'q1', n: 1, q: 'What is our security posture and how is it trending?' },
+  { id: 'q2', n: 2, q: 'Where is our greatest risk and what must we act on now?' },
+  { id: 'q3', n: 3, q: 'If we were attacked today, where would we be hit — and are we ready?' },
+  { id: 'q4', n: 4, q: 'Are we within our risk thresholds, and what are we silently accepting?' },
+  { id: 'q5', n: 5, q: 'Are our security investments reducing risk, and where do we trail?' },
 ];
 
 module.exports = {

@@ -389,39 +389,61 @@ function Processes({ procs }) {
 /* ---------------- Attack Pathways ---------------- */
 function Pathways({ paths, sel, setSel }) {
   const p = paths[sel] || paths[0];
+  // Build a labelled kill-chain: each step gets a stage label + the control that breaks it.
+  const steps = p.narrative.split('→').map((s) => s.trim()).filter(Boolean);
+  const stageLabel = ['Initial access', 'Foothold', 'Privilege escalation', 'Lateral movement', 'Impact', 'Impact'];
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', gap: 18 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '230px 1fr', gap: 18 }}>
+      {/* path picker */}
       <div>
+        <div style={{ fontSize: 10, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Critical processes at risk</div>
         {paths.map((x, i) => (
-          <button key={x.id} onClick={() => setSel(i)} style={{ display: 'block', width: '100%', textAlign: 'left', background: i === sel ? PANEL : '#fff', border: `1px solid ${i === sel ? INK : HAIR}`, borderRadius: 6, padding: '10px 12px', marginBottom: 6, cursor: 'pointer' }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: INK }}>{x.process}</div>
-            <div style={{ fontSize: 10, color: '#C0392B', marginTop: 2 }}>Weakest: {x.weakestControl}</div>
+          <button key={x.id} onClick={() => setSel(i)} style={{ display: 'block', width: '100%', textAlign: 'left', background: i === sel ? INK : '#fff', color: i === sel ? '#fff' : INK, border: `1px solid ${i === sel ? INK : HAIR}`, borderRadius: 8, padding: '10px 12px', marginBottom: 6, cursor: 'pointer' }}>
+            <div style={{ fontSize: 12.5, fontWeight: 700 }}>{x.process}</div>
+            <div style={{ fontSize: 10, color: i === sel ? '#ffb4a8' : '#C0392B', marginTop: 2 }}>Weakest link: {x.weakestControl}</div>
           </button>
         ))}
       </div>
-      <div style={{ border: `1px solid ${HAIR}`, borderRadius: 7, padding: '16px 18px' }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>{p.process}</div>
-        {/* chain */}
-        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 4, margin: '12px 0' }}>
-          {p.narrative.split('→').map((step, i, arr) => (
-            <React.Fragment key={i}>
-              <span style={{ fontSize: 11, fontWeight: 600, color: i === arr.length - 1 ? '#fff' : INK, background: i === arr.length - 1 ? '#C0392B' : PANEL, border: `1px solid ${i === arr.length - 1 ? '#C0392B' : HAIR}`, borderRadius: 5, padding: '5px 9px' }}>{step.trim()}</span>
-              {i < arr.length - 1 && <span style={{ color: '#E8631A', fontWeight: 800 }}>→</span>}
-            </React.Fragment>
-          ))}
-        </div>
-        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 12 }}>
-          {p.mitreStages.map((s) => <span key={s} style={{ fontSize: 9.5, fontWeight: 600, color: '#7c3aed', border: '1px solid #c4b5fd', borderRadius: 3, padding: '1px 6px' }}>{s}</span>)}
-        </div>
-        {[['Initial access', p.initialAccess], ['Identity escalation', p.escalation], ['Lateral movement', p.lateral], ['Target', p.target], ['Business impact', p.businessImpact], ['Weakest control', p.weakestControl]].map(([k, v]) => (
-          <div key={k} style={{ display: 'flex', gap: 10, fontSize: 11.5, marginBottom: 4 }}>
-            <span style={{ width: 130, color: INK3, flexShrink: 0 }}>{k}</span><span style={{ color: INK, fontWeight: k === 'Weakest control' ? 700 : 400 }}>{v}</span>
+
+      <div>
+        {/* What the CISO needs to know — plain English */}
+        <div style={{ background: '#fff7f5', border: '1px solid #f3c9bf', borderRadius: 9, padding: '14px 16px', marginBottom: 14 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#C0392B', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>What you need to know</div>
+          <div style={{ fontSize: 14, color: INK, lineHeight: 1.55 }}>
+            An attacker reaches <strong>{p.process}</strong> by starting with <strong>{p.initialAccess.toLowerCase()}</strong>, then exploiting <strong>{p.weakestControl}</strong> to move toward <strong>{p.target}</strong>. If it succeeds: <strong style={{ color: '#C0392B' }}>{p.businessImpact}</strong>
           </div>
-        ))}
-        <div style={{ background: '#f0f7f2', border: '1px solid #cce8d6', borderRadius: 6, padding: '10px 12px', marginTop: 10 }}>
-          <div style={{ fontSize: 9.5, fontWeight: 700, color: '#1f8a4c', textTransform: 'uppercase' }}>Controls that break the chain</div>
-          <div style={{ fontSize: 11.5, color: INK, marginTop: 4 }}>{p.breakingControls.join(' · ')}</div>
-          <div style={{ fontSize: 11.5, color: INK, marginTop: 6 }}><strong>Mitigation:</strong> {p.mitigation}</div>
+          <div style={{ fontSize: 13, color: INK, marginTop: 8, background: '#f0f7f2', border: '1px solid #cce8d6', borderRadius: 7, padding: '9px 12px' }}>
+            <strong style={{ color: '#1f8a4c' }}>Fix this one thing first:</strong> {p.breakingControls[0]}.
+          </div>
+        </div>
+
+        {/* Labelled kill-chain (vertical, readable) */}
+        <div style={{ border: `1px solid ${HAIR}`, borderRadius: 9, padding: '14px 16px' }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>How the attack unfolds</div>
+          {steps.map((step, i) => {
+            const last = i === steps.length - 1;
+            return (
+              <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: i < steps.length - 1 ? 0 : 0 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <div style={{ width: 26, height: 26, borderRadius: 13, background: last ? '#C0392B' : INK, color: '#fff', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{i + 1}</div>
+                  {i < steps.length - 1 && <div style={{ width: 2, height: 22, background: '#E8631A' }} />}
+                </div>
+                <div style={{ paddingBottom: i < steps.length - 1 ? 10 : 0 }}>
+                  <div style={{ fontSize: 9.5, fontWeight: 700, color: last ? '#C0392B' : '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{stageLabel[Math.min(i, stageLabel.length - 1)]}{last ? ' — business impact' : ''}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: INK }}>{step}</div>
+                </div>
+              </div>
+            );
+          })}
+          {/* MITRE + target facts */}
+          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', margin: '12px 0 10px' }}>
+            {p.mitreStages.map((s) => <span key={s} style={{ fontSize: 9.5, fontWeight: 600, color: '#7c3aed', border: '1px solid #c4b5fd', borderRadius: 3, padding: '1px 6px' }}>{s}</span>)}
+          </div>
+          <div style={{ background: '#f0f7f2', border: '1px solid #cce8d6', borderRadius: 7, padding: '10px 12px' }}>
+            <div style={{ fontSize: 9.5, fontWeight: 700, color: '#1f8a4c', textTransform: 'uppercase' }}>Controls that break the chain</div>
+            <div style={{ fontSize: 12, color: INK, marginTop: 4 }}>{p.breakingControls.join(' · ')}</div>
+            <div style={{ fontSize: 12, color: INK, marginTop: 6 }}><strong>Mitigation:</strong> {p.mitigation}</div>
+          </div>
         </div>
       </div>
     </div>
