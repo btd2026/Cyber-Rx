@@ -9140,7 +9140,7 @@ function CISODash(props) {
           deep-dive views (posture dashboard, AI controls, four-lens, attack
           path) render their own components without this hero/exec-summary or any
           Command Center guide. */}
-      {!drillView&&agentView&&!["attackpath","posturedash","aicontrols","execreport","answer"].includes(agentView)&&(
+      {false&&(
         <div>
 
       {/* Answer hero — the figure that answers the question, sized to lead the view */}
@@ -17629,7 +17629,6 @@ function getMidnightEST() {
 function DashNav(props) {
   var current=props.current; var go=props.go;
   var tabs=[
-    {id:"hub",       label:"Command Center",  mod:"All Dashboards"},
     {id:"dashboard", label:"CISO",            mod:"Security"},
     {id:"cio",       label:"CIO",             mod:"Technology"},
     {id:"cro",       label:"CRO / Audit",     mod:"Compliance"},
@@ -25445,7 +25444,10 @@ function CyberRxApp() {
   }
 
   // Shared page props
-  var _sBA=useState(true); var brianaOn=_sBA[0]; var setBrianaOn=_sBA[1];
+  // Agent voice on/off — persisted so muting on any page mutes everywhere.
+  var _sBA=useState(function(){ try{ return !(typeof window!=='undefined' && window.localStorage.getItem('cx_briana_off')==='1'); }catch(e){ return true; } });
+  var brianaOn=_sBA[0]; var _setBA=_sBA[1];
+  var setBrianaOn=function(v){ try{ if(typeof window!=='undefined') window.localStorage.setItem('cx_briana_off', v?'0':'1'); }catch(e){} _setBA(v); };
   var _sSM=useState({}); var syncMeta=_sSM[0]; var setSyncMeta=_sSM[1];
   var _sDR=useState({}); var docResults=_sDR[0]; var setDocResults=_sDR[1];
   var _sPF=useState({}); var appPolicyFiles=_sPF[0]; var setAppPolicyFiles=_sPF[1];
@@ -25571,7 +25573,7 @@ function CyberRxApp() {
       orgName:orgName,
       setupDone:setupDone,
       onStartSetup:function(){ setPhase("app"); setPage("setup"); },
-      onGoToDashboard:function(){ setPhase("app"); setPage("hub"); },
+      onGoToDashboard:function(){ setPhase("app"); setPage("dashboard"); },
     });
   }
 
