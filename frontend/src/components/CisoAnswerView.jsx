@@ -35,6 +35,14 @@ export default function CisoAnswerView({ a, issues, onIssueClick }) {
       {/* answer */}
       <p style={{ fontSize: 17, color: INK, lineHeight: 1.55, margin: 0, fontWeight: 500 }}>{a.answer}</p>
 
+      {/* SME explanation — the agent explains it for a non-technical CISO */}
+      {a.explanation && (
+        <div style={{ marginTop: 12, background: '#eef4fb', border: '1px solid #cfe0f3', borderRadius: 8, padding: '12px 14px' }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#1d4ed8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Michael explains</div>
+          <div style={{ fontSize: 13.5, color: INK, lineHeight: 1.6 }}>{a.explanation}</div>
+        </div>
+      )}
+
       {/* meta row — status + confidence + owner + target (no posture score) */}
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', marginTop: 16, paddingTop: 16, borderTop: `1px solid ${HAIR}` }}>
         <Pill text={a.status} color={status} />

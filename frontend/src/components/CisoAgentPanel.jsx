@@ -12,8 +12,9 @@
  * entities used for drill-down (mock today, live-API replaceable).
  */
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import CisoAnswerView from './CisoAnswerView';
+import { useAgentVoice, VoiceControls } from './agentVoice';
 
 const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e8edf3', PANEL = '#f8fafc';
 const C = { Strong: '#1f8a4c', Moderate: '#B07C2E', Weak: '#A85B2E', Critical: '#C0392B' };
@@ -27,25 +28,6 @@ function ctx(props) {
     (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) ||
     ((typeof window !== 'undefined' && /localhost|127\.0\.0\.1/.test(window.location.hostname)) ? 'http://localhost:3001' : 'https://cyberrx-api.onrender.com');
   return { token, orgId, api };
-}
-
-// Michael — the CISO agent voice (male, natural where available).
-function pickMichaelVoice() {
-  if (typeof window === 'undefined' || !window.speechSynthesis) return null;
-  const vs = window.speechSynthesis.getVoices() || [];
-  const prefer = ['Microsoft Guy Online (Natural)', 'Google US English', 'Daniel', 'Microsoft David', 'Alex'];
-  for (const name of prefer) { const v = vs.find((x) => x.name === name); if (v) return v; }
-  return vs.find((v) => /en/i.test(v.lang) && /male|guy|daniel|david|alex|mark|ryan/i.test(v.name)) || vs.find((v) => /en/i.test(v.lang)) || null;
-}
-function answerToSpeech(a) {
-  if (!a) return '';
-  return [
-    a.answer,
-    `Status: ${a.status}. Confidence: ${a.confidence}.`,
-    `Why it matters. ${a.whyItMatters}`,
-    `Recommended action. ${a.recommendedAction}`,
-    `Owner ${a.owner}, target ${a.targetDate}.`,
-  ].join(' ');
 }
 
 // Match a called-out issue string to a dashboard entity for drill-down.
@@ -68,8 +50,7 @@ export default function CisoAgentPanel(props) {
   const [error, setError] = useState(null);
   const [activeId, setActiveId] = useState(null);
   const [issue, setIssue] = useState(null);
-  const [speaking, setSpeaking] = useState(false);
-  const voiceOn = useRef(true);
+  const voice = useAgentVoice();
   const { token, orgId, api } = ctx(props);
 
   useEffect(() => {
@@ -77,7 +58,6 @@ export default function CisoAgentPanel(props) {
     fetch(`${api}/api/ciso/dashboard?org_id=${encodeURIComponent(orgId)}`, { headers: h })
       .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(setD).catch((e) => setError(e.message));
-    return () => { if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel(); };
   }, [api, orgId, token]);
 
   const active = useMemo(() => (d && activeId ? d.questions.find((q) => q.id === activeId) : null), [d, activeId]);
@@ -86,21 +66,11 @@ export default function CisoAgentPanel(props) {
     return (active.riskDrivers || []).map((label) => ({ label, entity: matchEntity(d, label) }));
   }, [d, active]);
 
-  const speak = (a) => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(answerToSpeech(a));
-    const v = pickMichaelVoice(); if (v) u.voice = v;
-    u.rate = 1.04; u.pitch = 1.0;
-    u.onend = () => setSpeaking(false); u.onerror = () => setSpeaking(false);
-    setSpeaking(true); window.speechSynthesis.speak(u);
-  };
-  const stopSpeak = () => { if (window.speechSynthesis) window.speechSynthesis.cancel(); setSpeaking(false); };
   const selectQuestion = (q) => {
-    stopSpeak(); setIssue(null);
+    voice.stop(); setIssue(null);
     const on = q.id === activeId;
     setActiveId(on ? null : q.id);
-    if (!on && voiceOn.current) setTimeout(() => speak(q), 120);
+    if (!on) setTimeout(() => voice.speak(q.narration), 120); // voice TEACHES, not reads the screen
   };
 
   if (error) return <div style={{ padding: 24, color: '#C0392B', fontSize: 13 }}>Could not load the CISO agent: {error}</div>;
@@ -113,18 +83,7 @@ export default function CisoAgentPanel(props) {
         <div style={{ fontSize: 11, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.12em' }}>
           Michael · CISO Agent — ask a question
         </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          {active && (
-            <button onClick={() => (speaking ? stopSpeak() : speak(active))}
-              style={{ background: speaking ? '#C0392B' : INK, color: '#fff', border: 'none', borderRadius: 16, padding: '5px 13px', fontSize: 11.5, fontWeight: 600, cursor: 'pointer' }}>
-              {speaking ? '■ Stop' : '▶ Hear Michael'}
-            </button>
-          )}
-          <label style={{ fontSize: 11, color: INK2, display: 'inline-flex', alignItems: 'center', gap: 5, cursor: 'pointer' }}>
-            <input type="checkbox" defaultChecked onChange={(e) => { voiceOn.current = e.target.checked; if (!e.target.checked) stopSpeak(); }} />
-            Auto voice
-          </label>
-        </div>
+        <VoiceControls voice={voice} onReplay={() => active && voice.speak(active.narration)} label="Hear Michael" />
       </div>
 
       {/* Questions — fixed 5; active one highlighted */}
@@ -158,14 +117,15 @@ export default function CisoAgentPanel(props) {
         )}
       </div>
 
-      {issue && <IssueDrawer item={issue} onClose={() => setIssue(null)} />}
+      {issue && <IssueDrawer item={issue} voice={voice} onClose={() => { voice.stop(); setIssue(null); }} />}
     </div>
   );
 }
 
 /* ---- drill-down detail: leads with WHAT/WHY, traces to SOURCE, ends with ACTION ---- */
-function IssueDrawer({ item, onClose }) {
+function IssueDrawer({ item, onClose, voice }) {
   const { kind, e } = item;
+  useEffect(() => { if (voice && e && e.narration) { const t = setTimeout(() => voice.speak(e.narration), 150); return () => clearTimeout(t); } }, []); // eslint-disable-line
   let title = '', tag = '', sev = INK, what = '', why = '', source = '', process = '', action = '';
   if (kind === 'control') {
     title = e.name; tag = `${e.csf} · ${e.cis}`; sev = e.riskContribution >= 80 ? SEV.Critical : SEV.High;
@@ -215,8 +175,18 @@ function IssueDrawer({ item, onClose }) {
             <h3 style={{ margin: '4px 0 2px', fontSize: 15.5, fontWeight: 700, color: INK }}>{title}</h3>
             <div style={{ fontSize: 11.5, color: INK2 }}>{tag}</div>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, color: INK3, cursor: 'pointer' }}>✕</button>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {voice && e.narration && <VoiceControls voice={voice} onReplay={() => voice.speak(e.narration)} label="Explain" />}
+            <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, color: INK3, cursor: 'pointer' }}>✕</button>
+          </div>
         </div>
+        {/* SME explanation — the agent explains in plain English */}
+        {e.explanation && (
+          <div style={{ marginTop: 14, background: '#eef4fb', border: '1px solid #cfe0f3', borderRadius: 8, padding: '12px 14px' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#1d4ed8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Michael explains</div>
+            <div style={{ fontSize: 13, color: INK, lineHeight: 1.6 }}>{e.explanation}</div>
+          </div>
+        )}
         <div style={{ marginTop: 16 }}>
           <Row k="What it is" v={what} />
           <Row k="Why it matters" v={why} />
