@@ -84,11 +84,16 @@ const CIODash = (props) => {
     setError(null);
     const headers = { 'X-Org-Id': organizationId };
     if (token) headers['Authorization'] = `Bearer ${token}`;
-    fetch(`${apiUrl}/api/cio/overview?org_id=${encodeURIComponent(organizationId)}`, { headers })
+    // Don't let a slow/unreachable backend hang the page forever (the agent
+    // and the rest of the dashboard render regardless).
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 12000);
+    fetch(`${apiUrl}/api/cio/overview?org_id=${encodeURIComponent(organizationId)}`, { headers, signal: ctrl.signal })
       .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((d) => setData(d))
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
+      .catch((e) => setError(e.name === 'AbortError' ? 'Technology-risk data timed out' : e.message))
+      .finally(() => { clearTimeout(timer); setLoading(false); });
+    return () => { clearTimeout(timer); ctrl.abort(); };
   }, [ctx]);
 
   useEffect(() => {
@@ -97,10 +102,8 @@ const CIODash = (props) => {
     window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
   }, [crownJewelFilter]);
 
-  if (loading) {
-    return <div style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>Loading CIO Dashboard…</div>;
-  }
-
+  // Note: we no longer block the whole page on the data fetch — the agent panel
+  // and dashboard render immediately; live data fills in when it arrives.
   const k = (data && data.kpis) || {};
   const risk = (data && data.techRiskScore) || { score: 0, grade: 'Healthy' };
   const assets = (data && data.assets) || [];
@@ -154,6 +157,10 @@ const CIODash = (props) => {
 
       {/* AI agent brief — page opens here; a question reveals the relevant section(s) */}
       <ExecutiveAgentBrief role="CIO" entry onAnswer={applyAgentAnswer} onGeneral={() => { setCioQ('General dashboard'); setCioView('systems'); }} authToken={authToken} orgId={orgId} api_url={api_url} />
+
+      {loading && !error && (
+        <div style={{ fontSize: '0.78rem', color: '#9ca3af', margin: '0.5rem 0 1rem' }}>● Loading live technology-risk data…</div>
+      )}
 
       {error && (
         <div style={{ ...card, padding: '1rem', marginBottom: '1.5rem', borderColor: '#fecaca', backgroundColor: '#fef2f2', color: '#991b1b', fontSize: '0.85rem' }}>
