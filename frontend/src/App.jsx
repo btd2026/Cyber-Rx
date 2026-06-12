@@ -9173,10 +9173,11 @@ function CISODash(props) {
         </div>
       )}
 
-      {/* Tailored dashboard — rendered only after the agent answers a question */}
+      {/* Tailored dashboard — rendered only after the agent answers a question.
+          No Briana voice-over on the CISO tab (the Command Center narration is
+          unrelated here, and the CISO agent has its own answers). */}
       {!drillView&&agentView&&agentView!=="attackpath"&&(
         <div>
-          <BrianaBar pageKey="ciso" orgName={orgName||""} brianaOn={props.brianaOn!==false} setBrianaOn={props.setBrianaOn||function(){}}/>
 
       {/* Answer hero — the figure that answers the question, sized to lead the view */}
       {(function(){
