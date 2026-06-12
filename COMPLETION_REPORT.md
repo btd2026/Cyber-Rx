@@ -41,7 +41,14 @@ CSF GV0 ID67 PR20 DE29 RS100 overall **43**.
 - **B2** (`2af1689`): CSF⇄800-53 **provisional** (no CPRT CSF informative-refs export):
   444 derived control→check mappings, **662 crosswalks** (provenance 'derived',
   provisional=true). Spot-check `spot-check/csf_80053.json`. Upgrade path in `FOLLOW_UPS.md`.
-- **B3**: ⛔ **NOT DONE** — CIS v8.1 workbook missing. No CIS rows ingested.
+- **B3** (`5a1f703`): ✅ **DONE** — licensed CIS Controls **v8.1.2** ingested via a
+  dependency-free pure-Node xlsx reader. 18 controls, 153 safeguards; IG attainment
+  matches official counts exactly (**IG1 56 / IG2 130 / IG3 153**). Safeguard IDs numbered
+  by position (float-collision safe). Verbatim text gated by `VERBATIM_CIS` (default off).
+  228 safeguard→check mappings; 54 uncovered safeguards classified (new-check vs rubric)
+  in FOLLOW_UPS; 576 provisional CIS↔CSF crosswalks (official CIS→CSF/ATT&CK workbooks not
+  supplied — ingestion path wired). Spot-check `spot-check/cis.json`. CISO pack now shows
+  live IG1/2/3 attainment (BCBS-MA: 57% / 45% / 41%).
 - **B4** (`bc1e92c`): ATT&CK v19.1 — 15 tactics, 858 techniques (161 deprecated honored),
   268 mitigations; **5,314 CTID crosswalks** (provenance 'CTID', attack_version 16.1);
   176 flagged `meta.version_skew` (v16.1→v19.1 gap), 0 orphan controls, 1 orphan
