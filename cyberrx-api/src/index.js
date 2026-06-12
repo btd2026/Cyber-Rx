@@ -270,6 +270,10 @@ app.use('/api/sample-catalog',    [apiPostLimiter], require('./routes/sampleCata
 // Seed management (admin routes - protect in production) with rate limiting
 app.use('/api/seeds',             [apiGetLimiter, apiPostLimiter, apiDeleteLimiter], require('./routes/seeds'));
 
+// Generalized framework engine: catalog, validation runs, score history,
+// ATT&CK coverage (four-lens executive reporting layer).
+app.use('/api/frameworks',        [apiGetLimiter, apiPostLimiter], require('./routes/frameworks'));
+
 // 404
 app.use(function(req, res) {
   res.status(404).json({ error: 'Not found', path: req.path });
