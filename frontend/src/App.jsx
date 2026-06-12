@@ -6,6 +6,7 @@ import CLODash from "./pages/CLODash";
 import AdminDatabase from "./pages/AdminDatabase";
 import ExecutiveAgentBrief from "./components/ExecutiveAgentBrief";
 import NistCsfScorecard from "./components/NistCsfScorecard";
+import CsfControlLibrary from "./components/CsfControlLibrary";
 import CsfRankings from "./components/CsfRankings";
 import FrameworkScorecard from "./components/FrameworkScorecard";
 import VendorAssessmentPanel from "./components/VendorAssessmentPanel";
@@ -10030,9 +10031,32 @@ function CRODash(props) {
           </button>
           <span style={{color:C.muted}}>/</span>
           <span style={{color:C.text,fontSize:11,fontWeight:700}}>NIST CSF 2.0 — Live Assessment</span>
+          <button onClick={function(){setSelFramework("csf_library");}}
+            style={{marginLeft:"auto",background:C.acc,border:"none",color:"#fff",cursor:"pointer",
+              fontSize:11,fontWeight:600,borderRadius:5,padding:"6px 12px",whiteSpace:"nowrap"}}>
+            ▤ Control Library — all 106 controls & tool APIs →
+          </button>
         </div>
         {fwTabs("nistcsf")}
         <NistCsfScorecard/>
+      </div>
+    );
+  }
+
+  if (selFramework === "csf_library") {
+    // Full NIST CSF 2.0 control library: every subcategory, automated-vs-manual
+    // testability, the tools that can evidence each, and per-tool JSON APIs.
+    return (
+      <div>
+        <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:14}}>
+          <button onClick={function(){setSelFramework("nistcsf");}}
+            style={{background:"transparent",border:"none",color:C.muted,cursor:"pointer",fontSize:11}}>
+            ← NIST CSF 2.0
+          </button>
+          <span style={{color:C.muted}}>/</span>
+          <span style={{color:C.text,fontSize:11,fontWeight:700}}>Control Library — Tooling & Evidence Coverage</span>
+        </div>
+        <CsfControlLibrary/>
       </div>
     );
   }
