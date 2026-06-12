@@ -29,12 +29,39 @@ const fs = require('fs');
 const path = require('path');
 const db = require('../utils/db');
 const { readSheet, sheetNames } = require('./xlsx');
+const { CIS_CHECKS } = require('../data/cisCheckCandidates');
 
 const RES = path.join(__dirname, '../../../resources');
 const CIS = path.join(RES, 'cis');
 const SPOT = path.join(__dirname, '../../../spot-check');
 const ROOT = path.join(__dirname, '../../..');
 const VERBATIM = process.env.VERBATIM_CIS === 'true';
+
+const cisCheckId = (c) => `${c.tool}.${c.signal}`;
+const CIS_BY_SG = Object.fromEntries(CIS_CHECKS.map((c) => [c.sg, c]));
+
+// Seed the 35 CIS-specific automated checks + mock-fixture defaults so the
+// safeguards that share no existing telemetry signal still produce honest
+// pass/partial/fail results in the validation runner (source 'simulated' until
+// a live tool connection exists). Idempotent.
+async function ensureCisChecks() {
+  for (const c of CIS_CHECKS) {
+    await db.query(`
+      INSERT INTO checks (id, tool_id, name, method, path, signal, extract, kind, default_params)
+      VALUES ($1,$2,$3,'GET',$4,$5,'value','telemetry',$6)
+      ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, signal=EXCLUDED.signal,
+        default_params=EXCLUDED.default_params`,
+      [cisCheckId(c), c.tool, c.name, `/cis/${c.sg}`, c.signal,
+        JSON.stringify({ threshold: c.threshold, direction: c.direction })]);
+    // Mock-fixture default ('_defaults'); a per-org value or live connector overrides it.
+    await db.query(`
+      INSERT INTO metric_inputs (org_id, key, value, category, label, unit)
+      VALUES ('_defaults',$1,$2,'cis',$3,'%')
+      ON CONFLICT (org_id, key) DO NOTHING`,
+      [c.signal, c.fixture, c.name]);
+  }
+  return CIS_CHECKS.length;
+}
 
 function findWorkbook() {
   if (!fs.existsSync(CIS)) return null;
@@ -81,6 +108,8 @@ async function load() {
     INSERT INTO frameworks (id, name, version, provenance) VALUES
       ('cis_v8_1','CIS Critical Security Controls','8.1.2','CIS')
     ON CONFLICT (id) DO UPDATE SET version=EXCLUDED.version, provenance=EXCLUDED.provenance`);
+
+  const cisChecks = await ensureCisChecks();
 
   const rows = controlsSheet(file);
   const header = rows[0].map((h) => (h || '').trim());
@@ -145,6 +174,19 @@ async function load() {
           `Mapped via safeguard text → ${sig} telemetry${params ? ' (params ' + JSON.stringify(params) + ')' : ''}.`]);
       mapped++; any = true;
     }
+
+    // Direct CIS-candidate check: a purpose-built automated check for safeguards
+    // that share no existing telemetry signal (see data/cisCheckCandidates.js).
+    const direct = CIS_BY_SG[id];
+    if (direct) {
+      await db.query(`
+        INSERT INTO requirement_mappings (framework_id, requirement_id, check_id, coverage, parameters, justification, provenance)
+        VALUES ('cis_v8_1',$1,$2,$3,$4,$5,'CIS')
+        ON CONFLICT (framework_id, requirement_id, check_id) DO UPDATE SET coverage=EXCLUDED.coverage`,
+        [id, cisCheckId(direct), direct.coverage, params ? JSON.stringify(params) : null,
+          `Automated CIS check via ${direct.tool} → ${direct.signal} (pass ${direct.direction} ${direct.threshold}).`]);
+      mapped++; any = true;
+    }
     if (!any) uncovered.push({ id, title, asset_class: r[cAsset] || null,
       classification: /backup|recover|data|encrypt|dispose|retention|classif/i.test(text) ? 'rubric-based' : 'new-check candidate' });
   }
@@ -168,7 +210,7 @@ async function load() {
   fs.writeFileSync(path.join(SPOT, 'cis.json'), JSON.stringify(sample, null, 2));
 
   return { workbook: path.basename(file), controls, safeguards, igCount, mappings: mapped,
-    uncovered: uncovered.length, provisionalCsfCrosswalks: provXwalk, official: xwalkOfficial, verbatim: VERBATIM };
+    cisChecks, uncovered: uncovered.length, provisionalCsfCrosswalks: provXwalk, official: xwalkOfficial, verbatim: VERBATIM };
 }
 
 // Derive provisional CIS<->CSF crosswalks where a CIS safeguard and a CSF
