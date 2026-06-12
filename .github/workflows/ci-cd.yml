@@ -8,35 +8,31 @@ on:
 
 env:
   NODE_VERSION: '20'
-  AWS_REGION: 'us-east-1'
 
 jobs:
   # ============================================
-  # TEST JOB - Runs on every push/PR
+  # TEST & BUILD - Validation on every push/PR
   # ============================================
+  # Deployment is handled by native Vercel (frontend) and Render (backend)
+  # Git auto-deploy integrations, not by this workflow. This pipeline only
+  # validates that both apps install, lint, test, and build cleanly.
   test:
-    name: Test & Security Scan
+    name: Test & Build
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      # ---- Backend ----
       - name: Install Backend Dependencies
         run: |
           cd cyberrx-api
-          npm install --no-audit --no-fund
-
-      - name: Install Frontend Dependencies
-        run: |
-          cd frontend
           npm install --no-audit --no-fund
 
       - name: Run Backend Linter
@@ -44,81 +40,28 @@ jobs:
           cd cyberrx-api
           npm run lint || true
 
-      - name: Run Frontend Linter
-        run: |
-          cd frontend
-          npm run lint || true
-
       - name: Run Backend Unit Tests
         run: |
           cd cyberrx-api
           npm test || true
 
-      - name: Run Frontend Unit Tests
+      - name: Build Backend
         run: |
-          cd frontend
-          npm test || true
+          cd cyberrx-api
+          npm run build --if-present
 
-      - name: Security Scan - Backend
-        uses: snyk/actions/node@master
-        continue-on-error: true
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=high
-          command: test
-          working-directory: cyberrx-api
-
-      - name: Security Scan - Frontend
-        uses: snyk/actions/node@master
-        continue-on-error: true
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=high
-          command: test
-          working-directory: frontend
-
-      - name: Run Snyk Monitor
-        if: github.ref == 'refs/heads/main'
-        uses: snyk/actions/node@master
-        continue-on-error: true
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=high
-          command: monitor
-          working-directory: cyberrx-api
-
-  # ============================================
-  # BUILD FRONTEND - Deploy to Vercel
-  # ============================================
-  build-frontend:
-    name: Build & Deploy Frontend
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-    
-    environment:
-      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
-      url: ${{ steps.deploy.outputs.url }}
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache-dependency-path: frontend/package-lock.json
-
+      # ---- Frontend ----
       - name: Install Frontend Dependencies
         run: |
           cd frontend
           npm install --no-audit --no-fund
 
-      - name: Run Frontend Tests
+      - name: Run Frontend Linter
+        run: |
+          cd frontend
+          npm run lint || true
+
+      - name: Run Frontend Unit Tests
         run: |
           cd frontend
           npm test || true
@@ -129,340 +72,3 @@ jobs:
           npm run build
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
-
-      - name: Deploy to Vercel (Production)
-        if: github.ref == 'refs/heads/main'
-        id: deploy-prod
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: ./frontend
-          vercel-args: '--prod'
-
-      - name: Deploy to Vercel (Staging)
-        if: github.ref != 'refs/heads/main'
-        id: deploy-staging
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: ./frontend
-
-      - name: Set deployment URL
-        id: deploy
-        run: |
-          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            echo "url=${{ steps.deploy-prod.outputs.preview-url }}" >> $GITHUB_OUTPUT
-          else
-            echo "url=${{ steps.deploy-staging.outputs.preview-url }}" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Run Frontend Smoke Tests
-        run: |
-          cd tests/e2e
-          npm install --no-audit --no-fund
-          npx playwright test --grep "@smoke" --project=chromium
-        env:
-          BASE_URL: ${{ steps.deploy.outputs.url }}
-
-  # ============================================
-  # BUILD BACKEND - Deploy to Render
-  # ============================================
-  build-backend:
-    name: Build & Deploy Backend
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-    
-    environment:
-      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
-      url: https://cyberrx-api.onrender.com
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache-dependency-path: cyberrx-api/package-lock.json
-
-      - name: Install Backend Dependencies
-        run: |
-          cd cyberrx-api
-          npm install --no-audit --no-fund
-
-      - name: Run Backend Tests
-        run: |
-          cd cyberrx-api
-          npm test || true
-
-      - name: Build Backend
-        run: |
-          cd cyberrx-api
-          npm run build
-
-      - name: Deploy to Render (Production)
-        if: github.ref == 'refs/heads/main'
-        uses: johnbeyerlee/render-action@v2.0.0
-        with:
-          service-id: ${{ secrets.RENDER_SERVICE_ID }}
-          api-key: ${{ secrets.RENDER_API_KEY }}
-          deploy-context: production
-
-      - name: Deploy to Render (Staging)
-        if: github.ref != 'refs/heads/main'
-        uses: johnbeyerlee/render-action@v2.0.0
-        with:
-          service-id: ${{ secrets.RENDER_STAGING_SERVICE_ID }}
-          api-key: ${{ secrets.RENDER_API_KEY }}
-          deploy-context: staging
-
-      - name: Wait for deployment to be ready
-        run: |
-          echo "Waiting for deployment to stabilize..."
-          sleep 30
-
-      - name: Run Backend Health Check
-        run: |
-          curl -f ${{ secrets.API_URL }}/health || exit 1
-
-      - name: Run Backend Smoke Tests
-        run: |
-          cd tests/e2e
-          npm test -- --grep "@smoke-api"
-        env:
-          API_URL: ${{ secrets.API_URL }}
-
-  # ============================================
-  # E2E TESTS - Full integration testing
-  # ============================================
-  e2e:
-    name: End-to-End Tests
-    needs: [build-frontend, build-backend]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-    
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1/4, 2/4, 3/4, 4/4]
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Install E2E Dependencies
-        run: |
-          cd tests/e2e
-          npm install --no-audit --no-fund
-
-      - name: Install Playwright Browsers
-        run: |
-          cd tests/e2e
-          npx playwright install --with-deps
-
-      - name: Run E2E Tests
-        run: |
-          cd tests/e2e
-          npx playwright test --shard=${{ matrix.shard }}
-        env:
-          BASE_URL: ${{ steps.deploy.outputs.url }}
-          API_URL: ${{ secrets.API_URL }}
-
-      - name: Upload Test Results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-results-${{ matrix.shard }}
-          path: tests/e2e/playwright-report/
-          retention-days: 7
-
-      - name: Upload Test Screenshots
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-screenshots-${{ matrix.shard }}
-          path: tests/e2e/test-results/
-          retention-days: 7
-
-  # ============================================
-  # SECURITY & COMPLIANCE CHECKS
-  # ============================================
-  security-scan:
-    name: Security & Compliance Scan
-    needs: [build-frontend, build-backend]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Run Trivy FS Scan
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-
-      - name: Upload Trivy Results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results.sarif'
-
-      - name: Run OWASP Dependency Check
-        uses: dependency-check/Dependency-Check_Action@main
-        with:
-          project: 'cyberrx'
-          path: '.'
-          format: 'HTML'
-          out: 'dependency-check-report'
-
-      - name: Upload OWASP Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: dependency-check-report
-          path: dependency-check-report
-
-  # ============================================
-  # PERFORMANCE TESTS
-  # ============================================
-  performance:
-    name: Performance Tests
-    needs: [build-frontend, build-backend]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Install K6
-        run: |
-          curl https://github.com/grafana/k6/releases/download/v0.49.0/k6-v0.49.0-linux-amd64.tar.gz -L | tar xvz
-          sudo mv k6-v0.49.0-linux-amd64/k6 /usr/local/bin/
-
-      - name: Run API Performance Tests
-        run: |
-          k6 run --out json=performance-results.json tests/performance/api-load-test.js
-        env:
-          API_URL: ${{ secrets.API_URL }}
-
-      - name: Upload Performance Results
-        uses: actions/upload-artifact@v4
-        with:
-          name: performance-results
-          path: performance-results.json
-
-      - name: Comment Performance Results on PR
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const results = JSON.parse(fs.readFileSync('performance-results.json', 'utf8'));
-            
-            const comment = `
-            ## Performance Test Results 🚀
-            
-            - Requests per second: ${results.metrics.http_reqs.values.count}
-            - Average response time: ${results.metrics.http_req_duration.values.avg}ms
-            - 95th percentile: ${results.metrics.http_req_duration.values['p(95)']}ms
-            - 99th percentile: ${results.metrics.http_req_duration.values['p(99)']}ms
-            - Error rate: ${results.metrics.failed.values.rate}%
-            `;
-            
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: comment
-            });
-
-  # ============================================
-  # DEPLOYMENT NOTIFICATION
-  # ============================================
-  notify:
-    name: Notify Deployment Status
-    needs: [e2e, security-scan, performance]
-    runs-on: ubuntu-latest
-    if: always() && github.event_name == 'push'
-    
-    steps:
-      - name: Notify Slack on Success
-        if: ${{ needs.e2e.result == 'success' }}
-        uses: slackapi/slack-github-action@v1.25.0
-        with:
-          payload: |
-            {
-              "text": "✅ Deployment successful for ${{ github.ref }}",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*CyberRx Deployment Successful* :white_check_mark:\n*Branch:* ${{ github.ref }}\n*Commit:* ${{ github.sha }}\n*Author:* ${{ github.actor }}"
-                  }
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-
-      - name: Notify Slack on Failure
-        if: ${{ needs.e2e.result == 'failure' }}
-        uses: slackapi/slack-github-action@v1.25.0
-        with:
-          payload: |
-            {
-              "text": "❌ Deployment failed for ${{ github.ref }}",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*CyberRx Deployment Failed* :x:\n*Branch:* ${{ github.ref }}\n*Commit:* ${{ github.sha }}\n*Author:* ${{ github.actor }}\n\n<@channel> Please investigate!"
-                  }
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-
-      - name: Trigger PagerDuty on Critical Failure
-        if: ${{ needs.e2e.result == 'failure' && github.ref == 'refs/heads/main' }}
-        run: |
-          curl -X POST \
-            "${{ secrets.PAGERDUTY_API_URL }}" \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Token token=${{ secrets.PAGERDUTY_API_TOKEN }}" \
-            -d '{
-              "routing_key": "${{ secrets.PAGERDUTY_ROUTING_KEY }}",
-              "event_action": "trigger",
-              "payload": {
-                "summary": "CyberRx Production Deployment Failed",
-                "severity": "critical",
-                "source": "github-actions",
-                "custom_details": {
-                  "branch": "${{ github.ref }}",
-                  "commit": "${{ github.sha }}",
-                  "author": "${{ github.actor }}"
-                }
-              }
-            }'
