@@ -8534,40 +8534,7 @@ function CISODash(props) {
         </div>
       )}
 
-      {/* CISO Header — shown only once a question has surfaced a view; mirrors the view */}
-      {(drillView||(agentView&&agentView!=="attackpath"&&agentView!=="domains"&&agentView!=="aicontrols"))&&(function(){
-      var hm=cisoViewMeta();
-      return (
-      <div style={{padding:"16px 20px",background:"linear-gradient(135deg,"+hm.color+"14,"+C.panel+")",
-        border:"1px solid "+hm.color+"40",borderRadius:14,margin:"14px 0"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-          <div>
-            <div style={{color:"#3B9EFF",fontSize:10,fontWeight:700,textTransform:"uppercase",
-              letterSpacing:"0.1em",marginBottom:4}}>CHIEF INFORMATION SECURITY OFFICER</div>
-            <h1 style={{color:C.text,fontSize:20,fontWeight:800,margin:"0 0 4px"}}>
-              {hm.title}
-            </h1>
-            <div style={{color:C.muted,fontSize:11}}>
-              {agentQ?("Answering: “"+agentQ+"”"):"YOUR part of cyber responsibility"}
-            </div>
-          </div>
-          <div style={{display:"flex",gap:14,alignItems:"flex-start"}}>
-            <div style={{textAlign:"right"}}>
-              <div style={{color:hm.color,fontSize:28,fontWeight:800,fontFamily:"monospace"}}>
-                {hm.num}<span style={{color:C.muted,fontSize:13,fontWeight:600}}>{hm.unit}</span>
-              </div>
-              {hm.score!=null&&<CmmiBadge score={hm.score} size="sm"/>}
-              <div style={{color:C.muted,fontSize:9,marginTop:2}}>{hm.label}</div>
-            </div>
-            <button onClick={clearAgentView}
-              style={{background:"transparent",border:"1px solid "+C.border,color:C.muted,
-                borderRadius:7,padding:"5px 10px",cursor:"pointer",fontSize:11,whiteSpace:"nowrap"}}>
-              ← Ask another
-            </button>
-          </div>
-        </div>
-      </div>
-      );})()}
+      {/* Legacy CISO header removed — the clean views carry their own headers. */}
 
       {/* ── Editable Metrics Panel ── */}
       {showMetricsPanel&&(

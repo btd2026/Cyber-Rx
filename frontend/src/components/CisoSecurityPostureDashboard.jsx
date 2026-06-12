@@ -136,12 +136,11 @@ export default function CisoSecurityPostureDashboard(props) {
       </div>
 
       <div style={{ background: '#fff', borderRadius: '0 0 8px 8px', padding: '18px 22px' }}>
-        {/* Standalone tab intro + agent voice (Michael explains the page) */}
+        {/* Compact standalone intro — short on screen; the voice tells the rest */}
         {d.tabNarration && d.tabNarration[tab] && (
-          <div style={{ display: 'flex', gap: 14, justifyContent: 'space-between', alignItems: 'flex-start', background: '#eef4fb', border: '1px solid #cfe0f3', borderRadius: 8, padding: '12px 15px', marginBottom: 16 }}>
-            <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: '#1d4ed8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Michael explains this view</div>
-              <div style={{ fontSize: 12.5, color: INK, lineHeight: 1.55 }}>{d.tabNarration[tab]}</div>
+          <div style={{ display: 'flex', gap: 14, justifyContent: 'space-between', alignItems: 'center', background: '#eef4fb', border: '1px solid #cfe0f3', borderRadius: 8, padding: '10px 15px', marginBottom: 16 }}>
+            <div style={{ fontSize: 12.5, color: INK, lineHeight: 1.5 }}>
+              <strong style={{ color: '#1d4ed8' }}>Michael:</strong> {d.tabNarration[tab].split('. ')[0]}.
             </div>
             <div style={{ flexShrink: 0 }}>
               <VoiceControls voice={voice} onReplay={() => voice.speak(d.tabNarration[tab])} label="Explain" />
