@@ -38,8 +38,8 @@ const PRIORITY_COLORS = {
 const AGENT_PERSONAS = {
   CISO:  { name: 'Michael',  gender: 'male',   pitch: 1.0,  rate: 1.05, lang: 'en-US',
     prefer: ['Microsoft Guy Online (Natural)', 'Google US English', 'Daniel', 'Alex', 'Microsoft David'],
-    greet: "Hey, great to see you! I'm Michael, your CISO agent —",
-    can: "and I live for this stuff. I'll map your attack pathways to the processes that matter, score your posture, call out your weakest controls, and tell you exactly what each threat could cost. Where should we dig in first?" },
+    greet: "Hi, I'm Michael, your CISO agent.",
+    can: "Ask me any of the executive security questions below and I'll give you a clear, decision-ready answer — our current posture and how it's trending, where risk is concentrated, what needs action now, and exactly who owns it and by when, with the evidence behind every answer." },
   CFO:   { name: 'Gabriele', gender: 'female', pitch: 1.08, rate: 1.06, lang: 'en-US',
     prefer: ['Microsoft Aria Online (Natural)', 'Google US English', 'Samantha', 'Microsoft Jenny Online (Natural)'],
     greet: "Hi there, so glad you stopped by! I'm Gabriele, your CFO agent —",

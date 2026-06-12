@@ -16,6 +16,7 @@ import AiSecurityControls from "./components/AiSecurityControls";
 import CisoExecReport from "./components/CisoExecReport";
 import CroBoardReport from "./components/CroBoardReport";
 import CisoSecurityPostureDashboard from "./components/CisoSecurityPostureDashboard";
+import CisoAnswerView from "./components/CisoAnswerView";
 import FrameworkScoreStrip from "./components/FrameworkScoreStrip";
 import RemediationPanel from "./components/RemediationPanel";
 import AuditDash from "./pages/AuditDash";
@@ -8371,6 +8372,7 @@ function CISODash(props) {
   // selects the tailored dashboard to render below it.
   var _av=useState(null);   var agentView=_av[0]; var setAgentView=_av[1];
   var _aq=useState("");      var agentQ=_aq[0];    var setAgentQ=_aq[1];
+  var _ca=useState(null);   var cisoAnswer=_ca[0];var setCisoAnswer=_ca[1];
   var _pe=useState(null);    var postureEmphasis=_pe[0]; var setPostureEmphasis=_pe[1];
 
   // Route a matched agent answer to the tailored view that answers it.
@@ -8380,12 +8382,12 @@ function CISODash(props) {
     setAgentQ(ans.matchedQuestion||ans.question||"");
     // Attack-pathway questions show the attack path FIRST — even when the
     // question also mentions cost (e.g. "...and what does each one cost us?").
+    // Explicit request for the full exploratory dashboard.
+    if(/posture dashboard|full dashboard|all (the )?components|explore (the )?dashboard/.test(q)) { setDrillView(null); setCisoAnswer(null); setAgentView("posturedash"); return; }
+    // Any CISO question that produced a decision-ready executive answer renders
+    // as a single clean answer — not the whole multi-component dashboard.
+    if(ans.executive){ setDrillView(null); setCisoAnswer(ans.executive); setAgentView("answer"); return; }
     if(/four.?lens|800.?53|att&?ck|attack coverage|baseline|exec.*report|posture pack/.test(q)) { setDrillView(null); setAgentView("execreport"); return; }
-    // The dedicated CISO Security Posture Dashboard answers the executive
-    // decision questions (materially disrupt, unknowingly accepting, targeted
-    // today, investments reducing risk, major cyber event, emerging faster,
-    // peer maturity, posture dashboard).
-    if(/posture dashboard|materially disrupt|unknowingly accept|targeted us today|where would they most likely|investments? reducing|measurable risk|major cyber event|how prepared are we|emerging faster|trail peer|peer (security )?maturity|more or less secure|last period|domains? .*(improving|deteriorat)|control areas?.*risk|top security gaps?|within our.*threshold|needs action now|current.*posture/.test(q)) { setDrillView(null); setAgentView("posturedash"); return; }
     if(/\bai\b|gen.?ai|claude|copilot|llm/.test(q))            { setDrillView(null); setAgentView("aicontrols"); return; }
     if(/(attack path|pathway|attack|kill chain|diagram|how.*reach|trace)/.test(q)) { setDrillView(null); setAgentView("attackpath"); return; }
     // CISO posture-domain questions → the 8-domain posture view, emphasis per question.
@@ -8501,6 +8503,15 @@ function CISODash(props) {
                 borderRadius:7,padding:"5px 10px",cursor:"pointer",fontSize:11}}>← Ask another</button>
           </div>
           <CisoPostureDomains emphasis={postureEmphasis}/>
+        </div>
+      )}
+
+      {/* Clean single-answer view for a CISO question (the agent's explanation) */}
+      {!drillView&&agentView==="answer"&&cisoAnswer&&(
+        <div style={{padding:"4px 20px 24px"}}>
+          <CisoAnswerView a={cisoAnswer}
+            onBack={clearAgentView}
+            onOpenDashboard={function(){setAgentView("posturedash");}}/>
         </div>
       )}
 
