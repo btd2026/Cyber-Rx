@@ -33,27 +33,55 @@ const PRIORITY_COLORS = {
 // Ticket #10 — angel name + distinct voice profile per persona (persists across
 // sessions; never re-randomized). Ticket #09 — capability description shown on
 // open instead of a bold pre-formed question.
+// Each persona has a warm, human, enthusiastic greeting + a prefer-list of
+// good natural browser voices so they sound lively, not robotic.
 const AGENT_PERSONAS = {
-  CISO:  { name: 'Michael',  gender: 'male',   pitch: 0.82, rate: 0.96, lang: 'en-US', can: 'I map attack pathways to your critical processes, score your security posture, surface your weakest controls and top critical findings, and quantify what each threat could cost.' },
-  CFO:   { name: 'Gabriele', gender: 'female', pitch: 1.06, rate: 1.0,  lang: 'en-US', can: 'I translate cyber risk into dollars — gross and net financial exposure, insurance adequacy, capital and RBC impact, and the return on your security spend.' },
-  CRO:   { name: 'Raphael',  gender: 'male',   pitch: 1.0,  rate: 0.98, lang: 'en-GB', can: 'I score every risk against your board-approved risk appetite, flag threshold breaches and unassigned owners, and aggregate your quantified exposure.' },
-  CLO:   { name: 'Uriel',    gender: 'male',   pitch: 0.9,  rate: 0.93, lang: 'en-US', can: 'I track which regulatory obligations are triggered, who you must notify and by when, your maximum penalty exposure, and which vendors carry the most legal risk.' },
-  CIO:   { name: 'Camael',   gender: 'female', pitch: 1.12, rate: 1.02, lang: 'en-US', can: 'I show which systems are most at risk, what technology is end-of-life, your worst unpatched vulnerabilities, overdue remediation, and whether your investments are reducing operational risk.' },
-  Board: { name: 'Sariel',   gender: 'female', pitch: 0.96, rate: 0.95, lang: 'en-GB', can: 'I answer three questions plainly: are we at risk right now, is our posture improving, and are we spending the right amount — with net exposure and insurance adequacy.' },
+  CISO:  { name: 'Michael',  gender: 'male',   pitch: 1.0,  rate: 1.05, lang: 'en-US',
+    prefer: ['Microsoft Guy Online (Natural)', 'Google US English', 'Daniel', 'Alex', 'Microsoft David'],
+    greet: "Hey, great to see you! I'm Michael, your CISO agent —",
+    can: "and I live for this stuff. I'll map your attack pathways to the processes that matter, score your posture, call out your weakest controls, and tell you exactly what each threat could cost. Where should we dig in first?" },
+  CFO:   { name: 'Gabriele', gender: 'female', pitch: 1.08, rate: 1.06, lang: 'en-US',
+    prefer: ['Microsoft Aria Online (Natural)', 'Google US English', 'Samantha', 'Microsoft Jenny Online (Natural)'],
+    greet: "Hi there, so glad you stopped by! I'm Gabriele, your CFO agent —",
+    can: "and I turn cyber risk into real dollars: your exposure, insurance adequacy, capital and RBC impact, and the return on every security dollar you spend. What would you like to see?" },
+  CRO:   { name: 'Raphael',  gender: 'male',   pitch: 1.02, rate: 1.04, lang: 'en-GB',
+    prefer: ['Microsoft Ryan Online (Natural)', 'Daniel', 'Google UK English Male', 'Arthur'],
+    greet: "Welcome! Raphael here, your risk agent —",
+    can: "and I'm genuinely excited to help. I score every risk against your board's appetite, flag breaches and unowned risks the moment they appear, and total up your real exposure. Shall we take a look?" },
+  CLO:   { name: 'Uriel',    gender: 'male',   pitch: 0.98, rate: 1.0,  lang: 'en-US',
+    prefer: ['Microsoft Guy Online (Natural)', 'Alex', 'Daniel', 'Microsoft David'],
+    greet: "Good to have you — I'm Uriel, your legal agent,",
+    can: "and I keep this clear and calm. I track which obligations are triggered, who you must notify and by when, your penalty exposure, and which vendors carry the most legal risk. How can I help?" },
+  CIO:   { name: 'Camael',   gender: 'female', pitch: 1.12, rate: 1.07, lang: 'en-US',
+    prefer: ['Microsoft Aria Online (Natural)', 'Google US English', 'Samantha', 'Microsoft Jenny Online (Natural)'],
+    greet: "Hi! Camael here, your technology agent — love that you're here!",
+    can: "I'll show you which systems are most at risk, what's end-of-life, your worst unpatched vulnerabilities, what's overdue, and whether your investments are actually reducing risk. Ready when you are!" },
+  Board: { name: 'Sariel',   gender: 'female', pitch: 1.0,  rate: 1.0,  lang: 'en-GB',
+    prefer: ['Microsoft Sonia Online (Natural)', 'Google UK English Female', 'Kate', 'Serena'],
+    greet: "Welcome. I'm Sariel, your board agent,",
+    can: "and I'll keep it plain and confident: are we at risk right now, are we improving, and are we spending the right amount — with your net exposure and insurance adequacy. Where shall we begin?" },
 };
-function personaFor(role) { return AGENT_PERSONAS[role] || { name: role + ' Agent', gender: 'male', pitch: 1, rate: 1, lang: 'en-US', can: 'I answer your role-specific questions from live data.' }; }
+function personaFor(role) { return AGENT_PERSONAS[role] || { name: role + ' Agent', gender: 'male', pitch: 1, rate: 1.03, lang: 'en-US', prefer: [], greet: `Hi! I'm your ${role} agent,`, can: 'and I answer your questions from live data. What would you like to know?' }; }
+function introText(persona) { return `${persona.greet} ${persona.can}`; }
 
-const FEMALE_HINT = /female|aria|jenny|samantha|zira|susan|catherine|fiona|tessa|serena|moira|karen|victoria|allison|ava|nicky/i;
+const FEMALE_HINT = /female|aria|jenny|sonia|zira|susan|catherine|fiona|tessa|serena|moira|karen|victoria|allison|ava|nicky|samantha|kate/i;
 const MALE_HINT = /male|alex|daniel|david|fred|guy|mark|oliver|james|george|arthur|tom|ryan|aaron/i;
 function pickVoice(persona) {
   try {
     const vs = window.speechSynthesis.getVoices() || [];
     if (!vs.length) return null;
+    // 1) explicit preferred natural voices, 2) gender+lang match, 3) any lang match.
+    for (const name of (persona.prefer || [])) {
+      const hit = vs.find((v) => (v.name || '').toLowerCase().includes(name.toLowerCase()));
+      if (hit) return hit;
+    }
     const langPref = vs.filter((v) => (v.lang || '').toLowerCase().startsWith(persona.lang.toLowerCase().slice(0, 2)));
     const pool = langPref.length ? langPref : vs;
     const want = persona.gender === 'female' ? FEMALE_HINT : MALE_HINT;
     const avoid = persona.gender === 'female' ? MALE_HINT : FEMALE_HINT;
-    return pool.find((v) => want.test(v.name)) || pool.find((v) => !avoid.test(v.name)) || pool[0] || null;
+    return pool.find((v) => /natural|online|google/i.test(v.name) && want.test(v.name)) ||
+           pool.find((v) => want.test(v.name)) ||
+           pool.find((v) => !avoid.test(v.name)) || pool[0] || null;
   } catch (_) { return null; }
 }
 function speakAs(persona, text) {
@@ -63,6 +91,7 @@ function speakAs(persona, text) {
     const u = new window.SpeechSynthesisUtterance(text);
     const v = pickVoice(persona);
     if (v) u.voice = v;
+    // Slightly brisk + natural pitch reads as enthusiastic rather than flat.
     u.pitch = persona.pitch; u.rate = persona.rate; u.volume = 1;
     window.speechSynthesis.speak(u);
   } catch (_) {}
@@ -187,7 +216,7 @@ export default function ExecutiveAgentBrief(props) {
     window._cx_agent_spoke = window._cx_agent_spoke || {};
     if (window._cx_agent_spoke[role]) return;
     const persona = personaFor(role);
-    const text = `I'm ${persona.name}, your ${role} agent. ${persona.can}`;
+    const text = introText(persona);
     const go = () => { window._cx_agent_spoke[role] = true; speakAs(persona, text); };
     // Voices may load asynchronously on first paint.
     if ((window.speechSynthesis.getVoices() || []).length) {
@@ -294,7 +323,7 @@ export default function ExecutiveAgentBrief(props) {
   // no preloaded brief. Asking a question drives the tailored dashboard (via onAnswer).
   if (entry) {
     const persona = personaFor(role);
-    const introText = `I'm ${persona.name}, your ${role} agent. ${persona.can}`;
+    const spoken = introText(persona);
     return (
       <div style={wrap} data-testid={`agent-brief-${role}`}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
@@ -306,14 +335,14 @@ export default function ExecutiveAgentBrief(props) {
             background: '#23262e', color: '#9aa3b2', border: '1px solid #333a47',
           }}>◆ continuous · live data</span>
           {/* Papa 3.a — each agent speaks its intro in a distinct voice */}
-          <button onClick={() => speakAs(persona, introText)} title={`Hear ${persona.name}`}
+          <button onClick={() => speakAs(persona, spoken)} title={`Hear ${persona.name}`}
             style={{ marginLeft: 'auto', background: '#1a2436', color: '#9bc0ff', border: '1px solid #2f4a7a', borderRadius: 16, padding: '3px 10px', fontSize: 11, cursor: 'pointer', fontWeight: 600 }}>
             🔊 {persona.name}
           </button>
         </div>
-        {/* #09 — open with a natural-language capability explanation, not a bold question */}
+        {/* #09 — open with a warm, natural capability explanation, not a bold question */}
         <div style={{ fontSize: 14, color: '#dbe3f2', lineHeight: 1.6, marginBottom: 6 }}>
-          I’m {persona.name}, your {role} agent. {persona.can}
+          {spoken}
         </div>
         <div style={{ fontSize: 12.5, color: '#9aa6bc', marginBottom: 12, lineHeight: 1.5 }}>
           You can view your general dashboard, or ask me a question and I’ll answer it directly and build the view

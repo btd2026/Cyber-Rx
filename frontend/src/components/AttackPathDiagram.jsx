@@ -150,40 +150,57 @@ export default function AttackPathDiagram(props) {
           application mapping) and the attack path will populate from your data.
         </div>
       ) : mode === 'graph' ? (
-        <div style={{ marginTop: 12 }}>
-          <AttackPathGraph graph={data} authToken={token} orgId={organizationId} api_url={apiUrl} onFinding={openFinding} />
+        <div style={{ marginTop: 12, display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <AttackPathGraph graph={data} authToken={token} orgId={organizationId} api_url={apiUrl} onFinding={openFinding} />
+          </div>
+          {/* Wiz-style right-hand detail panel */}
           {selFinding && (
-            <div style={{ marginTop: 12, border: `1px solid ${HAIRLINE}`, borderTop: `3px solid ${SEV[selFinding.severity] || '#9E3B32'}`, borderRadius: 4, background: '#fafbfc', padding: '14px 16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: INK_3, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 4 }}>
-                    {selFinding.ref} · Control failure
-                  </div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: INK }}>
-                    <span style={{ fontSize: 9, fontWeight: 700, color: '#fff', background: SEV[selFinding.severity] || '#9E3B32', borderRadius: 2, padding: '2px 7px', marginRight: 8, textTransform: 'uppercase' }}>{selFinding.severity}</span>
-                    {selFinding.title}
-                  </div>
-                  {selFinding.description && <div style={{ fontSize: 12, color: INK_2, marginTop: 6, lineHeight: 1.5 }}>{selFinding.description}</div>}
-                  {selFinding.remediation && <div style={{ fontSize: 11.5, color: INK_2, marginTop: 6, fontStyle: 'italic' }}>→ {selFinding.remediation}</div>}
+            <div style={{ width: 340, flexShrink: 0, border: `1px solid ${HAIRLINE}`, borderRadius: 8, background: '#fff', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}>
+              <div style={{ padding: '14px 16px', borderBottom: `1px solid ${HAIRLINE}`, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: `${SEV[selFinding.severity] || '#9E3B32'}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <span style={{ color: SEV[selFinding.severity] || '#9E3B32', fontSize: 15 }}>⚠</span>
                 </div>
-                <button onClick={() => { setSelFinding(null); setTicket(null); }} style={{ background: '#fff', border: '1px solid #cbd5e1', color: '#334155', borderRadius: 3, padding: '4px 12px', fontSize: 11, cursor: 'pointer', fontWeight: 500 }}>Close</button>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: INK, lineHeight: 1.3 }}>{selFinding.title}</div>
+                  <div style={{ fontSize: 10.5, color: INK_3, marginTop: 2 }}>{selFinding.ref} · Finding</div>
+                </div>
+                <button onClick={() => { setSelFinding(null); setTicket(null); }} style={{ background: 'transparent', border: 'none', color: INK_3, cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>×</button>
               </div>
-              <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${HAIRLINE}`, display: 'flex', gap: 12, alignItems: 'center' }}>
-                {ticket && ticket.ticketId ? (
-                  <span style={{ fontSize: 12, color: INK_2 }}>
-                    Ticket <strong style={{ color: INK }}>{ticket.ticketId}</strong>
-                    <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: ticket.status === 'closed' ? '#31604B' : ticket.status === 'in_progress' ? '#B07C2E' : '#2563eb', border: `1px solid currentColor`, borderRadius: 3, padding: '2px 8px' }}>
-                      {ticket.status === 'open' ? 'Processing' : ticket.status === 'in_progress' ? 'In progress' : ticket.status === 'closed' ? 'Closed' : ticket.status}
-                    </span>
-                    <span style={{ fontSize: 10, color: INK_3, marginLeft: 8 }}>· {ticket.system}</span>
-                    {ticket.url && <a href={ticket.url} target="_blank" rel="noreferrer" style={{ marginLeft: 8, fontSize: 11, color: '#2563eb' }}>open</a>}
-                  </span>
-                ) : (
-                  <button onClick={() => sendToTicketing(selFinding)} disabled={ticketBusy}
-                    style={{ background: '#0f1b2d', color: '#fff', border: 'none', borderRadius: 3, padding: '8px 16px', fontSize: 11.5, fontWeight: 600, cursor: 'pointer', opacity: ticketBusy ? 0.6 : 1 }}>
-                    {ticketBusy ? 'Opening ticket…' : '→ Send to ticketing for remediation'}
-                  </button>
-                )}
+              <div style={{ padding: '12px 16px' }}>
+                {[
+                  ['Severity', <span key="s"><span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 2, background: SEV[selFinding.severity] || '#9E3B32', marginRight: 5 }} />{selFinding.severity}</span>],
+                  ['MITRE ATT&CK', selFinding.mitre ? `${selFinding.mitre.techniqueId} · ${selFinding.mitre.technique}` : '—'],
+                  ['ATT&CK Tactic', selFinding.mitre ? selFinding.mitre.tactic : '—'],
+                  ['CIS Control', selFinding.cis ? `${selFinding.cis.id} · ${selFinding.cis.name}` : '—'],
+                  ['Affected system', selFinding.system || '—'],
+                  ['Source', selFinding.source || '—'],
+                ].map(([k, v]) => (
+                  <div key={k} style={{ display: 'flex', padding: '6px 0', borderBottom: `1px solid #f1f5f9`, fontSize: 12 }}>
+                    <span style={{ width: 116, flexShrink: 0, color: INK_3 }}>{k}</span>
+                    <span style={{ color: INK, fontWeight: 500 }}>{v}</span>
+                  </div>
+                ))}
+                {selFinding.description && <div style={{ fontSize: 11.5, color: INK_2, marginTop: 10, lineHeight: 1.5 }}>{selFinding.description}</div>}
+                {selFinding.remediation && <div style={{ fontSize: 11.5, color: INK_2, marginTop: 8, lineHeight: 1.5, fontStyle: 'italic' }}>→ {selFinding.remediation}</div>}
+
+                <div style={{ marginTop: 14 }}>
+                  {ticket && ticket.ticketId ? (
+                    <div style={{ fontSize: 12, color: INK_2, background: '#f8fafc', border: `1px solid ${HAIRLINE}`, borderRadius: 4, padding: '10px 12px' }}>
+                      Ticket <strong style={{ color: INK }}>{ticket.ticketId}</strong>
+                      <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: ticket.status === 'closed' ? '#31604B' : ticket.status === 'in_progress' ? '#B07C2E' : '#2563eb', border: `1px solid currentColor`, borderRadius: 3, padding: '2px 8px' }}>
+                        {ticket.status === 'open' ? 'Processing' : ticket.status === 'in_progress' ? 'In progress' : ticket.status === 'closed' ? 'Closed' : ticket.status}
+                      </span>
+                      <span style={{ fontSize: 10, color: INK_3, marginLeft: 8 }}>· {ticket.system}</span>
+                      {ticket.url && <a href={ticket.url} target="_blank" rel="noreferrer" style={{ marginLeft: 8, fontSize: 11, color: '#2563eb' }}>open</a>}
+                    </div>
+                  ) : (
+                    <button onClick={() => sendToTicketing(selFinding)} disabled={ticketBusy}
+                      style={{ width: '100%', background: '#1c64f2', color: '#fff', border: 'none', borderRadius: 4, padding: '10px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', opacity: ticketBusy ? 0.6 : 1 }}>
+                      {ticketBusy ? 'Opening ticket…' : 'Send to ticketing for remediation →'}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           )}

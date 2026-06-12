@@ -30,6 +30,35 @@ function arr(v) { if (Array.isArray(v)) return v; if (typeof v === 'string') { t
 const sevRank = { Critical: 0, High: 1, Medium: 2, Low: 3 };
 const APP_TYPES = new Set(['app', 'API']);
 
+// Map a finding (by keyword) to a MITRE ATT&CK technique + tactic and the CIS
+// Control that governs it. Threat-platform style: each control failure is an
+// ATT&CK technique an attacker could use, tied to a CIS safeguard.
+const ATTACK_MAP = [
+  { kw: /mfa|multi.?factor|credential|password|auth|account|privileg|orphan|terminat/i,
+    mitre: { tactic: 'Credential Access / Initial Access', techniqueId: 'T1078', technique: 'Valid Accounts' }, cis: { id: 'CIS 6', name: 'Access Control Management' } },
+  { kw: /phish|social eng|business email|bec|spoof/i,
+    mitre: { tactic: 'Initial Access', techniqueId: 'T1566', technique: 'Phishing' }, cis: { id: 'CIS 9', name: 'Email & Web Browser Protections' } },
+  { kw: /cve|patch|vuln|exploit|unpatched|outdated|end.?of.?life|legacy/i,
+    mitre: { tactic: 'Initial Access', techniqueId: 'T1190', technique: 'Exploit Public-Facing Application' }, cis: { id: 'CIS 7', name: 'Continuous Vulnerability Management' } },
+  { kw: /encrypt|unencrypted|tls|ssl|plaintext|cleartext|ssn|phi|data.?at.?rest|dlp|leak/i,
+    mitre: { tactic: 'Collection / Exfiltration', techniqueId: 'T1530', technique: 'Data from Information Repositories' }, cis: { id: 'CIS 3', name: 'Data Protection' } },
+  { kw: /log|siem|retention|audit|monitor|detect|mttd/i,
+    mitre: { tactic: 'Defense Evasion', techniqueId: 'T1562', technique: 'Impair Defenses' }, cis: { id: 'CIS 8', name: 'Audit Log Management' } },
+  { kw: /edr|malware|antivirus|endpoint|ransom/i,
+    mitre: { tactic: 'Impact', techniqueId: 'T1486', technique: 'Data Encrypted for Impact' }, cis: { id: 'CIS 10', name: 'Malware Defenses' } },
+  { kw: /vendor|third.?party|subprocessor|supply|baa|clearinghouse|sftp/i,
+    mitre: { tactic: 'Initial Access', techniqueId: 'T1199', technique: 'Trusted Relationship' }, cis: { id: 'CIS 15', name: 'Service Provider Management' } },
+  { kw: /firewall|segment|network|exposed|internet|remote|vpn|rdp|port|misconfig/i,
+    mitre: { tactic: 'Initial Access', techniqueId: 'T1133', technique: 'External Remote Services' }, cis: { id: 'CIS 12', name: 'Network Infrastructure Management' } },
+  { kw: /backup|recover|dr |disaster|continuity|resilien/i,
+    mitre: { tactic: 'Impact', techniqueId: 'T1490', technique: 'Inhibit System Recovery' }, cis: { id: 'CIS 11', name: 'Data Recovery' } },
+];
+function deriveAttack(text) {
+  const s = String(text || '');
+  const hit = ATTACK_MAP.find((m) => m.kw.test(s));
+  return hit || { mitre: { tactic: 'Initial Access', techniqueId: 'T1190', technique: 'Exploit Public-Facing Application' }, cis: { id: 'CIS 18', name: 'Penetration Testing' } };
+}
+
 // Derive a network zone label for a device.
 function networkZone(a) {
   if (a.cloud_provider) return `${a.cloud_provider}${a.location ? ` · ${a.location}` : ''}`;
@@ -52,7 +81,7 @@ async function buildGraph(orgId) {
             FROM risks WHERE organization_id=$1 AND status IN ('open','mitigating')`, [orgId]),
     rows(`SELECT id, name, type, probability, impact_level, mitre_tactic, exploited_risks
             FROM threat_scenarios WHERE organization_id=$1`, [orgId]),
-    rows(`SELECT id, title, severity, status, description, asset_id, application_id, business_process_id, risk_id, remediation_plan
+    rows(`SELECT id, title, severity, status, description, asset_id, application_id, business_process_id, risk_id, remediation_plan, tool, source
             FROM findings WHERE organization_id=$1 AND status IN ('open','in_progress')
             ORDER BY CASE severity WHEN 'Critical' THEN 0 WHEN 'High' THEN 1 WHEN 'Medium' THEN 2 ELSE 3 END
             LIMIT 40`, [orgId]),
@@ -140,9 +169,16 @@ async function buildGraph(orgId) {
       });
       nodeId = match ? match.id : (devices[0] ? devices[0].id : (threats[0] ? threats[0].id : null));
     }
+    const node = nodeById[nodeId] || {};
+    const atk = deriveAttack(`${f.title} ${f.description || ''}`);
     return {
       ref: `F${i + 1}`, id: f.id, title: f.title, severity: f.severity, status: f.status,
       description: f.description || '', remediation: f.remediation_plan || '', nodeId,
+      // Wiz-style enrichment: ATT&CK technique, CIS control, detecting source, system.
+      mitre: atk.mitre, cis: atk.cis,
+      source: f.tool || f.source || 'CyberRx Scan',
+      system: node.label || null,
+      systemLayer: node.layer || null,
     };
   });
   // Index findings onto their nodes.
