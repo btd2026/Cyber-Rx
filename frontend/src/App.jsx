@@ -11,6 +11,7 @@ import FrameworkScorecard from "./components/FrameworkScorecard";
 import VendorAssessmentPanel from "./components/VendorAssessmentPanel";
 import AttackPathDiagram from "./components/AttackPathDiagram";
 import CisoPostureDomains from "./components/CisoPostureDomains";
+import AiSecurityControls from "./components/AiSecurityControls";
 import FrameworkScoreStrip from "./components/FrameworkScoreStrip";
 import RemediationPanel from "./components/RemediationPanel";
 import AuditDash from "./pages/AuditDash";
@@ -8375,6 +8376,7 @@ function CISODash(props) {
     setAgentQ(ans.matchedQuestion||ans.question||"");
     // Attack-pathway questions show the attack path FIRST — even when the
     // question also mentions cost (e.g. "...and what does each one cost us?").
+    if(/\bai\b|gen.?ai|claude|copilot|llm/.test(q))            { setDrillView(null); setAgentView("aicontrols"); return; }
     if(/(attack path|pathway|attack|kill chain|diagram|how.*reach|trace)/.test(q)) { setDrillView(null); setAgentView("attackpath"); return; }
     // CISO posture-domain questions → the 8-domain posture view, emphasis per question.
     if(/last period|more or less secure/.test(q))            { setDrillView(null); setPostureEmphasis("trend");      setAgentView("domains"); return; }
@@ -8424,8 +8426,14 @@ function CISODash(props) {
 
       {/* AI agent brief - the tab opens here; asking a question builds the dashboard below */}
       <div style={{padding:"14px 20px 0"}}>
-        <ExecutiveAgentBrief role="CISO" entry onAnswer={applyAgentAnswer} onGeneral={function(){setDrillView(null);setAgentView("posture");setAgentQ("General dashboard");}} />
-        <div style={{display:"flex",justifyContent:"flex-end",marginTop:8}}>
+        <ExecutiveAgentBrief role="CISO" entry onAnswer={applyAgentAnswer} onGeneral={function(){setDrillView(null);setPostureEmphasis(null);setAgentView("domains");setAgentQ("Current security posture");}} />
+        <div style={{display:"flex",justifyContent:"flex-end",gap:8,marginTop:8}}>
+          <button onClick={function(){setDrillView(null);setAgentView("aicontrols");setAgentQ("AI security controls");}}
+            style={{background:"transparent",border:"1px solid "+C.border,color:C.text,
+              borderRadius:4,padding:"7px 16px",cursor:"pointer",fontSize:11,fontWeight:600,
+              letterSpacing:"0.06em",textTransform:"uppercase"}}>
+            ✦ AI Security Controls →
+          </button>
           <button onClick={function(){setDrillView(null);setAgentView("attackpath");setAgentQ("Show the attack path");}}
             style={{background:"transparent",border:"1px solid "+C.border,color:C.text,
               borderRadius:4,padding:"7px 16px",cursor:"pointer",fontSize:11,fontWeight:600,
@@ -8447,6 +8455,18 @@ function CISODash(props) {
         </div>
       )}
 
+      {/* AI & GenAI security controls (Claude Code / coding assistants) */}
+      {!drillView&&agentView==="aicontrols"&&(
+        <div style={{padding:"0 20px 20px"}}>
+          <div style={{display:"flex",justifyContent:"flex-end",marginBottom:8}}>
+            <button onClick={clearAgentView}
+              style={{background:"transparent",border:"1px solid "+C.border,color:C.muted,
+                borderRadius:7,padding:"5px 10px",cursor:"pointer",fontSize:11}}>← Ask another</button>
+          </div>
+          <AiSecurityControls/>
+        </div>
+      )}
+
       {/* CISO posture across the 8 posture domains (Papa) */}
       {!drillView&&agentView==="domains"&&(
         <div style={{padding:"0 20px 20px"}}>
@@ -8463,7 +8483,7 @@ function CISODash(props) {
       )}
 
       {/* CISO Header — shown only once a question has surfaced a view; mirrors the view */}
-      {(drillView||(agentView&&agentView!=="attackpath"&&agentView!=="domains"))&&(function(){
+      {(drillView||(agentView&&agentView!=="attackpath"&&agentView!=="domains"&&agentView!=="aicontrols"))&&(function(){
       var hm=cisoViewMeta();
       return (
       <div style={{padding:"16px 20px",background:"linear-gradient(135deg,"+hm.color+"14,"+C.panel+")",
