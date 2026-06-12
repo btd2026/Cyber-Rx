@@ -12,7 +12,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 const API =
   (typeof window !== 'undefined' && window.__CYBERRX_API) ||
   (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) ||
-  'http://localhost:3001';
+  ((typeof window!=='undefined' && /localhost|127\.0\.0\.1/.test(window.location.hostname)) ? 'http://localhost:3001' : 'https://cyberrx-api.onrender.com');
 
 const S = {
   page: { minHeight: '100vh', background: '#0e1118', color: '#e6ecf5', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', padding: '24px 28px' },
