@@ -270,6 +270,10 @@ app.use('/api/sample-catalog',    [apiPostLimiter], require('./routes/sampleCata
 // Seed management (admin routes - protect in production) with rate limiting
 app.use('/api/seeds',             [apiGetLimiter, apiPostLimiter, apiDeleteLimiter], require('./routes/seeds'));
 
+// Generalized framework engine: catalog, validation runs, score history,
+// ATT&CK coverage (four-lens executive reporting layer).
+app.use('/api/frameworks',        [apiGetLimiter, apiPostLimiter], require('./routes/frameworks'));
+
 // 404
 app.use(function(req, res) {
   res.status(404).json({ error: 'Not found', path: req.path });
@@ -311,6 +315,15 @@ db.init()
       return seedExecutiveDemo({ force: process.env.SEED_DEMO_FORCE === 'true' })
         .then(() => logger.info('Demo data seeded on startup'))
         .catch(err => logger.warn('Demo seed on startup failed', { error: err.message }));
+    }
+  })
+  .then(() => {
+    // Four-lens engine hydration (CSF/800-53/ATT&CK). Guarded + idempotent;
+    // heavy content is parsed at most once per database. Never blocks startup.
+    if (process.env.ENGINE_BOOTSTRAP !== 'false') {
+      return require('./ingest/bootstrap').bootstrap()
+        .then((s) => logger.info('Engine bootstrap complete', { steps: Object.keys(s) }))
+        .catch(err => logger.warn('Engine bootstrap failed', { error: err.message }));
     }
   })
   .catch(err => logger.warn('Database initialization warning', { error: err.message }));

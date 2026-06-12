@@ -1,0 +1,112 @@
+[
+  {
+    "technique": "T1072",
+    "technique_name": "Software Deployment Tools",
+    "deprecated": false,
+    "control": "SI-7",
+    "control_title": "Software, Firmware, and Information Integrity",
+    "meta": {
+      "version_skew": false,
+      "attack_version": "16.1"
+    }
+  },
+  {
+    "technique": "T1136.002",
+    "technique_name": "Domain Account",
+    "deprecated": false,
+    "control": "CM-5",
+    "control_title": "Access Restrictions for Change",
+    "meta": {
+      "version_skew": false,
+      "attack_version": "16.1"
+    }
+  },
+  {
+    "technique": "T1218.012",
+    "technique_name": "Verclsid",
+    "deprecated": false,
+    "control": "SI-7",
+    "control_title": "Software, Firmware, and Information Integrity",
+    "meta": {
+      "version_skew": false,
+      "attack_version": "16.1"
+    }
+  },
+  {
+    "technique": "T1056.003",
+    "technique_name": "Web Portal Capture",
+    "deprecated": false,
+    "control": "AC-6",
+    "control_title": "Least Privilege",
+    "meta": {
+      "version_skew": false,
+      "attack_version": "16.1"
+    }
+  },
+  {
+    "technique": "T1557.002",
+    "technique_name": "ARP Cache Poisoning",
+    "deprecated": false,
+    "control": "SC-8",
+    "control_title": "Transmission Confidentiality and Integrity",
+    "meta": {
+      "version_skew": false,
+      "attack_version": "16.1"
+    }
+  },
+  {
+    "technique": "T1556.001",
+    "technique_name": "Domain Controller Authentication",
+    "deprecated": false,
+    "control": "IA-5",
+    "control_title": "Authenticator Management",
+    "meta": {
+      "version_skew": false,
+      "attack_version": "16.1"
+    }
+  },
+  {
+    "technique": "T1053",
+    "technique_name": "Scheduled Task/Job",
+    "deprecated": false,
+    "control": "AC-2",
+    "control_title": "Account Management",
+    "meta": {
+      "version_skew": false,
+      "attack_version": "16.1"
+    }
+  },
+  {
+    "technique": "T1114",
+    "technique_name": "Email Collection",
+    "deprecated": false,
+    "control": "SC-37",
+    "control_title": "Out-of-band Channels",
+    "meta": {
+      "version_skew": false,
+      "attack_version": "16.1"
+    }
+  },
+  {
+    "technique": "T1204",
+    "technique_name": "User Execution",
+    "deprecated": false,
+    "control": "SC-44",
+    "control_title": "Detonation Chambers",
+    "meta": {
+      "version_skew": false,
+      "attack_version": "16.1"
+    }
+  },
+  {
+    "technique": "T1564.004",
+    "technique_name": "NTFS File Attributes",
+    "deprecated": false,
+    "control": "CA-7",
+    "control_title": "Continuous Monitoring",
+    "meta": {
+      "version_skew": false,
+      "attack_version": "16.1"
+    }
+  }
+]

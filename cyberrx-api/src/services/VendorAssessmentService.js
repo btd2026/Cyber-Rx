@@ -269,6 +269,103 @@ const DOC_TYPES = {
 const DOC_TYPE_IDS = Object.keys(DOC_TYPES);
 
 // ---------------------------------------------------------------------------
+// Deterministic text extraction (no AI). Pulls the fields each document type
+// expects from the document text using dates, counts, and keyword presence.
+// Honest by design: a field is only populated when the text supports it.
+function heuristicExtract(docType, text) {
+  const t = text.replace(/\s+/g, ' ');
+  const low = t.toLowerCase();
+  const has = (re) => re.test(low);
+  const isoDate = (re) => { const m = t.match(re); if (!m) return null; const d = new Date(m[1]); return Number.isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10); };
+  const anyDate = () => { const m = t.match(/\b(20\d{2}-\d{2}-\d{2}|[A-Z][a-z]+ \d{1,2},? 20\d{2})\b/); if (!m) return null; const d = new Date(m[1]); return Number.isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10); };
+  const num = (re) => { const m = low.match(re); return m ? Number(m[1]) : null; };
+  const f = {};
+  switch (docType) {
+    case 'soc2':
+      if (has(/type\s*ii|type\s*2/)) f.reportType = 'Type II'; else if (has(/type\s*i|type\s*1/)) f.reportType = 'Type I';
+      { const m = t.match(/(?:audited|issued|prepared) by ([A-Z][\w&., ]+?(?:LLP|LLC|CPA|Inc\.?))/); if (m) f.auditFirm = m[1].trim(); }
+      { const p = t.match(/(20\d{2}-\d{2}-\d{2}).{0,40}?(20\d{2}-\d{2}-\d{2})/); if (p) { f.periodStart = p[1]; f.periodEnd = p[2]; } }
+      f.trustCriteria = ['security', 'availability', 'confidentiality', 'processing integrity', 'privacy'].filter((c) => low.includes(c));
+      if (has(/exception|deviation|qualified opinion/)) f.exceptions = [(t.match(/(exception[^.]{0,120}\.)/i) || [, 'Exceptions noted'])[1]];
+      if (has(/scope|system description|boundaries/)) f.scopeSystems = 'Stated';
+      break;
+    case 'hitrust':
+      if (has(/\br2\b|validated/)) f.certType = 'r2'; else if (has(/\bi1\b/)) f.certType = 'i1'; else if (has(/\be1\b/)) f.certType = 'e1';
+      f.issueDate = isoDate(/issued?\D{0,12}(20\d{2}-\d{2}-\d{2})/) || null;
+      f.expiryDate = isoDate(/expir\w*\D{0,12}(20\d{2}-\d{2}-\d{2})/) || null;
+      if (has(/scope|covered (services|systems)|certification scope/)) f.scopeStatement = 'Stated';
+      f.capCount = num(/(\d+)\s+(?:corrective action|cap)/);
+      break;
+    case 'iso27001':
+      { const m = t.match(/(?:certificate (?:no|number)\.?\s*[:#]?\s*)([A-Z0-9\-\/]+)/i); if (m) f.certNumber = m[1]; }
+      if (has(/ukas|anab|accredited/)) f.certBody = (t.match(/(UKAS|ANAB|[A-Z][\w ]+accredit\w+)/) || [, 'Accredited body'])[1];
+      f.issueDate = isoDate(/issued?\D{0,12}(20\d{2}-\d{2}-\d{2})/);
+      f.expiryDate = isoDate(/(?:expir|valid until)\w*\D{0,12}(20\d{2}-\d{2}-\d{2})/);
+      if (has(/scope|statement of applicability|soa/)) f.scopeStatement = 'Stated';
+      break;
+    case 'pentest':
+      f.testDate = isoDate(/(?:test(?:ed|ing)?|conducted|performed)\D{0,15}(20\d{2}-\d{2}-\d{2})/) || anyDate();
+      if (has(/owasp|ptes|nist 800-115|osstmm/)) f.methodology = (low.match(/owasp|ptes|nist 800-115|osstmm/) || [])[0];
+      f.criticalFindings = num(/(\d+)\s+critical/);
+      f.highFindings = num(/(\d+)\s+high/);
+      if (has(/remediat|resolved|closed|fixed|retest/)) f.remediationStatus = (t.match(/(remediat[^.]{0,80}|retest[^.]{0,80})/i) || [, 'Remediation noted'])[1];
+      if (has(/scope|ip range|in-scope/)) f.scopeIpRanges = ['stated'];
+      break;
+    case 'baa':
+      if (has(/permitted use|uses and disclosure/)) f.permittedUses = 'present';
+      if (has(/safeguard/)) f.safeguards = 'present';
+      if (has(/breach notification|notify.{0,20}breach/)) f.breachNotification = 'present';
+      if (has(/subcontractor|flow-down|164\.308\(b\)/)) f.subcontractors = 'present';
+      if (has(/return.{0,15}destruct|destruction of phi/)) f.returnDestruction = 'present';
+      f.signedDate = anyDate();
+      break;
+    case 'irplan':
+      ['detection', 'containment', 'eradication', 'recovery'].forEach((k) => { if (low.includes(k)) f[k] = 'present'; });
+      if (has(/notification|notify|timeline/)) f.notificationTimeline = 'present';
+      // only a date in the *context* of testing counts as lastTested
+      if (has(/never tested|no exercise|not been tested/)) f.lastTested = 'never';
+      else { const m = t.match(/(?:tabletop|exercise|last tested|validated)[^.]{0,60}?\b(20\d{2}(?:-\d{2}-\d{2})?)\b/i); if (m) f.lastTested = m[1]; }
+      if (has(/annual|quarterly|biannual/)) f.testingCadence = (low.match(/annual|quarterly|biannual/) || [])[0];
+      break;
+    case 'bcdr':
+      f.rto = num(/rto\D{0,10}(\d+)/);
+      f.rpo = num(/rpo\D{0,10}(\d+)/);
+      f.lastTestDate = isoDate(/(?:dr test|last test|failover).{0,30}?(20\d{2}-\d{2}-\d{2})/) || anyDate();
+      if (has(/successful|passed|met/)) f.testResult = 'pass'; else if (has(/failed|exceeded|missed/)) f.testResult = 'issues';
+      f.coversOurSystems = has(/single data center|single-region|not cover/) ? 'partial' : (has(/cover/) ? 'yes' : null);
+      break;
+    case 'cyberinsurance':
+      f.policyType = has(/cyber/) ? 'cyber liability' : (has(/general liability/) ? 'general liability' : null);
+      { const m = t.match(/\$\s?([\d,]+(?:\.\d+)?)\s?(million|m|k)?/i); if (m) { let v = Number(m[1].replace(/,/g, '')); if (/million|m/i.test(m[2] || '')) v *= 1e6; if (/k/i.test(m[2] || '')) v *= 1e3; f.coverageAmount = v; } }
+      f.expiryDate = isoDate(/(?:expir|through|until)\w*\D{0,12}(20\d{2}-\d{2}-\d{2})/) || anyDate();
+      if (has(/named insured|insured:/)) f.namedInsured = 'stated';
+      break;
+    case 'pci_aoc':
+      if (has(/compliant|in place/)) f.complianceStatus = 'Compliant'; else if (has(/non-compliant|not in place/)) f.complianceStatus = 'Non-compliant';
+      f.assessmentDate = anyDate();
+      if (has(/saq/)) f.aocType = 'SAQ'; else if (has(/roc|report on compliance/)) f.aocType = 'ROC';
+      { const m = t.match(/QSA[:\s]+([A-Z][\w&., ]+)/); if (m) f.qsaFirm = m[1].trim(); }
+      break;
+    case 'sig_caiq':
+      if (has(/caiq/)) f.questionnaireType = 'CAIQ'; else if (has(/\bsig\b/)) f.questionnaireType = 'SIG';
+      f.completedDate = anyDate();
+      f.noAnswers = num(/(\d+)\s+(?:"?no"?|negative)\s+answer/);
+      if (has(/attest|signed by|officer/)) f.attestedBy = 'stated';
+      break;
+    case 'vulnscan':
+      f.scanDate = anyDate();
+      f.criticalCves = num(/(\d+)\s+critical/);
+      f.highCves = num(/(\d+)\s+high/);
+      f.oldestOpenDays = num(/oldest\D{0,15}(\d+)\s+days/);
+      f.slaCompliance = num(/sla\D{0,15}(\d+)\s?%/);
+      break;
+    default: break;
+  }
+  // drop null/empty so completeness reflects only what the text supported
+  Object.keys(f).forEach((k) => { const v = f[k]; if (v == null || v === '' || (Array.isArray(v) && !v.length)) delete f[k]; });
+  return f;
+}
+
 // AI extraction: parse raw document text into the structured fields a type
 // expects. Falls back to the provided structured fields when no key.
 // ---------------------------------------------------------------------------
@@ -277,9 +374,14 @@ async function extractFields(docType, payload) {
   const provided = payload.fields && typeof payload.fields === 'object' ? payload.fields : {};
   const text = payload.text || payload.content;
   const client = getClient();
-  if (!client || !text || Object.keys(provided).length) {
-    return { fields: provided, source: Object.keys(provided).length ? 'structured' : 'empty' };
+  if (Object.keys(provided).length) return { fields: provided, source: 'structured' };
+  if (!client) {
+    // No AI key: read the document text with deterministic heuristics so the
+    // agent still reviews actual content and scores completeness/accuracy.
+    if (text) { const f = heuristicExtract(docType, String(text)); if (Object.keys(f).length) return { fields: f, source: 'heuristic' }; }
+    return { fields: provided, source: 'empty' };
   }
+  if (!text) return { fields: provided, source: 'empty' };
   try {
     const schema = { type: 'object', additionalProperties: true, properties: {} };
     def.fields.forEach((k) => { schema.properties[k] = {}; });
@@ -300,6 +402,22 @@ async function extractFields(docType, payload) {
 // ---------------------------------------------------------------------------
 // Assess a single document.
 // ---------------------------------------------------------------------------
+// Score a reviewed document on completeness (did we get the elements the type
+// requires?) and accuracy/validity (did those elements pass — current, clean
+// opinion, no exceptions?). Overall is a blend; status is a plain label.
+function scoreDocument(docType, fields, findings, textLen) {
+  const expected = DOC_TYPES[docType].fields || [];
+  const found = expected.filter((k) => { const v = fields[k]; return v != null && v !== '' && !(Array.isArray(v) && v.length === 0); });
+  const completeness = expected.length ? Math.round((found.length / expected.length) * 100) : (textLen ? 60 : 0);
+  // accuracy: start at 100, subtract validity penalties from non-informational findings
+  const penalty = findings.reduce((s, f) => s + (f.severity === 'Informational' ? 0 : (RATING_SCORE[f.severity] || 0)), 0);
+  const accuracy = Math.max(0, 100 - penalty);
+  const overall = Math.round(completeness * 0.4 + accuracy * 0.6);
+  const status = overall >= 85 ? 'Strong' : overall >= 65 ? 'Adequate' : overall >= 40 ? 'Weak' : 'Inadequate';
+  return { completeness, accuracy, overall, status, elementsFound: found.length, elementsExpected: expected.length,
+    missingElements: expected.filter((k) => !found.includes(k)), textReviewed: !!textLen };
+}
+
 async function assessDocument(orgId, { vendorId, vendorName, docType, fileName, fields, text, content }) {
   if (!DOC_TYPES[docType]) throw new Error(`Unknown document type: ${docType}`);
   const now = new Date();
@@ -308,18 +426,21 @@ async function assessDocument(orgId, { vendorId, vendorName, docType, fileName, 
   try { findings = DOC_TYPES[docType].validate({ fields: ext.fields || {}, now }) || []; }
   catch (err) { logger.warn('Saraqael validator error', { docType, error: err.message }); }
   const rating = worstRating(findings);
+  const score = scoreDocument(docType, ext.fields || {}, findings, (text || '').length);
   const id = uid('vdoc');
   const excerpt = (text || content) ? String(text || content).slice(0, 600) : null;
 
   await db.query(
-    `INSERT INTO vendor_documents (id, organization_id, vendor_id, vendor_name, doc_type, file_name, status, risk_rating, extracted, findings, content_excerpt, assessed_at, updated_at)
-     VALUES ($1,$2,$3,$4,$5,$6,'assessed',$7,$8,$9,$10,NOW(),NOW())`,
-    [id, orgId, vendorId, vendorName, docType, fileName || null, rating, JSON.stringify(ext.fields || {}), JSON.stringify(findings), excerpt]
+    `INSERT INTO vendor_documents (id, organization_id, vendor_id, vendor_name, doc_type, file_name, status, risk_rating, extracted, findings, content_excerpt, completeness, accuracy, doc_score, doc_status, assessed_at, updated_at)
+     VALUES ($1,$2,$3,$4,$5,$6,'assessed',$7,$8,$9,$10,$11,$12,$13,$14,NOW(),NOW())`,
+    [id, orgId, vendorId, vendorName, docType, fileName || null, rating, JSON.stringify(ext.fields || {}), JSON.stringify(findings), excerpt,
+      score.completeness, score.accuracy, score.overall, score.status]
   );
 
   await feedSignals(orgId, vendorId, vendorName, DOC_TYPES[docType].label, findings);
 
-  return { id, vendorId, vendorName, docType, docLabel: DOC_TYPES[docType].label, fileName: fileName || null, riskRating: rating, extracted: ext.fields || {}, extractionSource: ext.source, findings, assessedAt: now.toISOString(), aiEnabled: aiEnabled() };
+  return { id, vendorId, vendorName, docType, docLabel: DOC_TYPES[docType].label, fileName: fileName || null, riskRating: rating,
+    extracted: ext.fields || {}, extractionSource: ext.source, findings, score, assessedAt: now.toISOString(), aiEnabled: aiEnabled() };
 }
 
 // ---------------------------------------------------------------------------
@@ -417,6 +538,10 @@ async function getVendorSummary(orgId, vendorId) {
     id: d.id, docType: d.doc_type, docLabel: (DOC_TYPES[d.doc_type] || {}).label || d.doc_type,
     fileName: d.file_name, riskRating: d.risk_rating, extracted: parse(d.extracted || '{}'),
     findings: parse(d.findings || '[]'), assessedAt: d.assessed_at,
+    completeness: d.completeness != null ? Number(d.completeness) : null,
+    accuracy: d.accuracy != null ? Number(d.accuracy) : null,
+    score: d.doc_score != null ? Number(d.doc_score) : null,
+    status: d.doc_status || null,
   }));
   const allFindings = documents.flatMap((d) => d.findings.map((f) => ({ ...f, docType: d.docType })));
   const counts = RATINGS.reduce((m, r) => { m[r] = allFindings.filter((f) => f.severity === r).length; return m; }, {});
@@ -425,8 +550,16 @@ async function getVendorSummary(orgId, vendorId) {
   const score = Math.max(0, 100 - penalty);
   const present = documents.map((d) => d.docType);
   const missing = DOC_TYPE_IDS.filter((t) => !present.includes(t));
+  // Vendor assurance score: mean of per-document overall scores (accuracy +
+  // completeness), so unreviewed/weak documents pull the posture down.
+  const scored = documents.filter((d) => d.score != null);
+  const assuranceScore = scored.length ? Math.round(scored.reduce((s, d) => s + d.score, 0) / scored.length) : null;
+  const avgCompleteness = scored.length ? Math.round(scored.reduce((s, d) => s + (d.completeness || 0), 0) / scored.length) : null;
+  const avgAccuracy = scored.length ? Math.round(scored.reduce((s, d) => s + (d.accuracy || 0), 0) / scored.length) : null;
+  const postureBand = assuranceScore == null ? 'Not assessed' : assuranceScore >= 85 ? 'Strong' : assuranceScore >= 65 ? 'Adequate' : assuranceScore >= 40 ? 'Weak' : 'Inadequate';
   return {
     vendorId, documentRiskScore: score,
+    assuranceScore, avgCompleteness, avgAccuracy, postureBand,
     overallRating: counts.Critical ? 'Critical' : counts.High ? 'High' : counts.Medium ? 'Medium' : documents.length ? 'Low' : 'Not assessed',
     documentCount: documents.length, findingCounts: counts,
     documentsOnFile: present, documentsMissing: missing,

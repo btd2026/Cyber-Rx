@@ -6,12 +6,16 @@ import CLODash from "./pages/CLODash";
 import AdminDatabase from "./pages/AdminDatabase";
 import ExecutiveAgentBrief from "./components/ExecutiveAgentBrief";
 import NistCsfScorecard from "./components/NistCsfScorecard";
+import CsfControlLibrary from "./components/CsfControlLibrary";
 import CsfRankings from "./components/CsfRankings";
 import FrameworkScorecard from "./components/FrameworkScorecard";
 import VendorAssessmentPanel from "./components/VendorAssessmentPanel";
 import AttackPathDiagram from "./components/AttackPathDiagram";
 import CisoPostureDomains from "./components/CisoPostureDomains";
 import AiSecurityControls from "./components/AiSecurityControls";
+import CisoExecReport from "./components/CisoExecReport";
+import CroBoardReport from "./components/CroBoardReport";
+import CisoSecurityPostureDashboard from "./components/CisoSecurityPostureDashboard";
 import FrameworkScoreStrip from "./components/FrameworkScoreStrip";
 import RemediationPanel from "./components/RemediationPanel";
 import AuditDash from "./pages/AuditDash";
@@ -8376,6 +8380,12 @@ function CISODash(props) {
     setAgentQ(ans.matchedQuestion||ans.question||"");
     // Attack-pathway questions show the attack path FIRST — even when the
     // question also mentions cost (e.g. "...and what does each one cost us?").
+    if(/four.?lens|800.?53|att&?ck|attack coverage|baseline|exec.*report|posture pack/.test(q)) { setDrillView(null); setAgentView("execreport"); return; }
+    // The dedicated CISO Security Posture Dashboard answers the executive
+    // decision questions (materially disrupt, unknowingly accepting, targeted
+    // today, investments reducing risk, major cyber event, emerging faster,
+    // peer maturity, posture dashboard).
+    if(/posture dashboard|materially disrupt|unknowingly accept|targeted us today|where would they most likely|investments? reducing|measurable risk|major cyber event|how prepared are we|emerging faster|trail peer|peer (security )?maturity/.test(q)) { setDrillView(null); setAgentView("posturedash"); return; }
     if(/\bai\b|gen.?ai|claude|copilot|llm/.test(q))            { setDrillView(null); setAgentView("aicontrols"); return; }
     if(/(attack path|pathway|attack|kill chain|diagram|how.*reach|trace)/.test(q)) { setDrillView(null); setAgentView("attackpath"); return; }
     // CISO posture-domain questions → the 8-domain posture view, emphasis per question.
@@ -8428,6 +8438,12 @@ function CISODash(props) {
       <div style={{padding:"14px 20px 0"}}>
         <ExecutiveAgentBrief role="CISO" entry onAnswer={applyAgentAnswer} onGeneral={function(){setDrillView(null);setPostureEmphasis(null);setAgentView("domains");setAgentQ("Current security posture");}} />
         <div style={{display:"flex",justifyContent:"flex-end",gap:8,marginTop:8}}>
+          <button onClick={function(){setDrillView(null);setAgentView("posturedash");setAgentQ("CISO security posture dashboard");}}
+            style={{background:C.text,border:"1px solid "+C.text,color:"#fff",
+              borderRadius:4,padding:"7px 16px",cursor:"pointer",fontSize:11,fontWeight:700,
+              letterSpacing:"0.06em",textTransform:"uppercase"}}>
+            ◆ Security Posture Dashboard →
+          </button>
           <button onClick={function(){setDrillView(null);setAgentView("aicontrols");setAgentQ("AI security controls");}}
             style={{background:"transparent",border:"1px solid "+C.border,color:C.text,
               borderRadius:4,padding:"7px 16px",cursor:"pointer",fontSize:11,fontWeight:600,
@@ -8439,6 +8455,12 @@ function CISODash(props) {
               borderRadius:4,padding:"7px 16px",cursor:"pointer",fontSize:11,fontWeight:600,
               letterSpacing:"0.06em",textTransform:"uppercase"}}>
             ◉ Attack Path — Live Threat Graph →
+          </button>
+          <button onClick={function(){setDrillView(null);setAgentView("execreport");setAgentQ("Four-lens posture");}}
+            style={{background:C.acc,border:"1px solid "+C.acc,color:"#fff",
+              borderRadius:4,padding:"7px 16px",cursor:"pointer",fontSize:11,fontWeight:600,
+              letterSpacing:"0.06em",textTransform:"uppercase"}}>
+            ▣ Four-Lens Posture (CSF · 800-53 · ATT&CK) →
           </button>
         </div>
       </div>
@@ -8479,6 +8501,30 @@ function CISODash(props) {
                 borderRadius:7,padding:"5px 10px",cursor:"pointer",fontSize:11}}>← Ask another</button>
           </div>
           <CisoPostureDomains emphasis={postureEmphasis}/>
+        </div>
+      )}
+
+      {/* Dedicated CISO Security Posture Dashboard (CISO persona only) */}
+      {!drillView&&agentView==="posturedash"&&(
+        <div style={{padding:"0 20px 20px"}}>
+          <div style={{display:"flex",justifyContent:"flex-end",marginBottom:8}}>
+            <button onClick={clearAgentView}
+              style={{background:"transparent",border:"1px solid "+C.border,color:C.muted,
+                borderRadius:7,padding:"5px 10px",cursor:"pointer",fontSize:11}}>← Ask another</button>
+          </div>
+          <CisoSecurityPostureDashboard/>
+        </div>
+      )}
+
+      {/* Four-lens executive posture pack (CSF / 800-53 / ATT&CK / CIS) */}
+      {!drillView&&agentView==="execreport"&&(
+        <div style={{padding:"0 20px 20px"}}>
+          <div style={{display:"flex",justifyContent:"flex-end",marginBottom:8}}>
+            <button onClick={clearAgentView}
+              style={{background:"transparent",border:"1px solid "+C.border,color:C.muted,
+                borderRadius:7,padding:"5px 10px",cursor:"pointer",fontSize:11}}>← Ask another</button>
+          </div>
+          <CisoExecReport/>
         </div>
       )}
 
@@ -10030,9 +10076,32 @@ function CRODash(props) {
           </button>
           <span style={{color:C.muted}}>/</span>
           <span style={{color:C.text,fontSize:11,fontWeight:700}}>NIST CSF 2.0 — Live Assessment</span>
+          <button onClick={function(){setSelFramework("csf_library");}}
+            style={{marginLeft:"auto",background:C.acc,border:"none",color:"#fff",cursor:"pointer",
+              fontSize:11,fontWeight:600,borderRadius:5,padding:"6px 12px",whiteSpace:"nowrap"}}>
+            ▤ Control Library — all 106 controls & tool APIs →
+          </button>
         </div>
         {fwTabs("nistcsf")}
         <NistCsfScorecard/>
+      </div>
+    );
+  }
+
+  if (selFramework === "csf_library") {
+    // Full NIST CSF 2.0 control library: every subcategory, automated-vs-manual
+    // testability, the tools that can evidence each, and per-tool JSON APIs.
+    return (
+      <div>
+        <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:14}}>
+          <button onClick={function(){setSelFramework("nistcsf");}}
+            style={{background:"transparent",border:"none",color:C.muted,cursor:"pointer",fontSize:11}}>
+            ← NIST CSF 2.0
+          </button>
+          <span style={{color:C.muted}}>/</span>
+          <span style={{color:C.text,fontSize:11,fontWeight:700}}>Control Library — Tooling & Evidence Coverage</span>
+        </div>
+        <CsfControlLibrary/>
       </div>
     );
   }
@@ -11479,6 +11548,11 @@ function BoardDash(props) {
     <div>
       <DashNav current="boarddash" go={go}/>
       <BrianaBar pageKey="boarddash" orgName={props.orgName||""} brianaOn={props.brianaOn!==false} setBrianaOn={props.setBrianaOn||function(){}}/>
+
+      {/* Four-lens enterprise posture in board/business language (computed) */}
+      <div style={{padding:"0 20px",marginBottom:14}}>
+        <CroBoardReport orgName={props.orgName||""}/>
+      </div>
 
       {/* AI agent brief - the tab opens here; a question selects the tab below */}
       <ExecutiveAgentBrief role="Board" entry onAnswer={applyAgentAnswer} onGeneral={function(){setBQ("General dashboard");setBTab("overview");setBView("overview");}} />

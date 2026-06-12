@@ -15,6 +15,7 @@ const express = require('express');
 const router = express.Router();
 const NistCsfService = require('../services/NistCsfService');
 const FrameworkScoreService = require('../services/FrameworkScoreService');
+const CsfControlLibraryService = require('../services/CsfControlLibraryService');
 const { optionalJWT } = require('../middleware/auth');
 const logger = require('../utils/logger');
 
@@ -53,6 +54,20 @@ router.get('/rankings', optionalJWT, async (req, res) => {
   } catch (err) {
     logger.error('CSF rankings error', { error: err.message });
     res.status(500).json({ error: 'Failed to load CSF rankings', message: err.message });
+  }
+});
+
+// Control library — every NIST CSF 2.0 subcategory, whether it is testable
+// automatically (tool API) or manually (evidence at setup), the tools that can
+// evidence each control, and the specific JSON API call per tool.
+router.get('/control-library', optionalJWT, async (req, res) => {
+  const orgId = resolveOrg(req, res);
+  if (!orgId) return;
+  try {
+    res.json(await CsfControlLibraryService.getLibrary(orgId));
+  } catch (err) {
+    logger.error('CSF control library error', { error: err.message });
+    res.status(500).json({ error: 'Failed to load control library', message: err.message });
   }
 });
 

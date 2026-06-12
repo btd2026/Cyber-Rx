@@ -1,0 +1,132 @@
+[
+  {
+    "requirement_id": "PL-11",
+    "family": "PL",
+    "title": "Baseline Tailoring",
+    "text_excerpt": "Tailor the selected control baseline by applying specified tailoring actions.",
+    "baselines": {
+      "low": true,
+      "high": true,
+      "moderate": true
+    },
+    "objective_count": 1,
+    "has_cprt": true
+  },
+  {
+    "requirement_id": "AC-12",
+    "family": "AC",
+    "title": "Session Termination",
+    "text_excerpt": "Automatically terminate a user session after [ac-12_odp].",
+    "baselines": {
+      "low": false,
+      "high": true,
+      "moderate": true
+    },
+    "objective_count": 1,
+    "has_cprt": true
+  },
+  {
+    "requirement_id": "IA-5(18)",
+    "family": "IA",
+    "title": "Password Managers",
+    "text_excerpt": "Employ [ia-05.18_odp.01] to generate and manage passwords; and Protect the passwords using [ia-05.18_odp.02].",
+    "baselines": {
+      "low": false,
+      "high": false,
+      "moderate": false
+    },
+    "objective_count": 1,
+    "has_cprt": true
+  },
+  {
+    "requirement_id": "SC-36(1)",
+    "family": "SC",
+    "title": "Polling Techniques",
+    "text_excerpt": "Employ polling techniques to identify potential faults, errors, or compromises to the following processing and storage components: [sc-36.01_odp.01] ; and Take the following action",
+    "baselines": {
+      "low": false,
+      "high": false,
+      "moderate": false
+    },
+    "objective_count": 1,
+    "has_cprt": true
+  },
+  {
+    "requirement_id": "SA-9(8)",
+    "family": "SA",
+    "title": "Processing and Storage Location — U.S. Jurisdiction",
+    "text_excerpt": "Restrict the geographic location of information processing and data storage to facilities located within in the legal jurisdictional boundary of the United States.",
+    "baselines": {
+      "low": false,
+      "high": false,
+      "moderate": false
+    },
+    "objective_count": 1,
+    "has_cprt": true
+  },
+  {
+    "requirement_id": "RA-5(3)",
+    "family": "RA",
+    "title": "Breadth and Depth of Coverage",
+    "text_excerpt": "Define the breadth and depth of vulnerability scanning coverage.",
+    "baselines": {
+      "low": false,
+      "high": false,
+      "moderate": false
+    },
+    "objective_count": 1,
+    "has_cprt": true
+  },
+  {
+    "requirement_id": "SC-8(4)",
+    "family": "SC",
+    "title": "Conceal or Randomize Communications",
+    "text_excerpt": "Implement cryptographic mechanisms to conceal or randomize communication patterns unless otherwise protected by [sc-08.04_odp].",
+    "baselines": {
+      "low": false,
+      "high": false,
+      "moderate": false
+    },
+    "objective_count": 1,
+    "has_cprt": true
+  },
+  {
+    "requirement_id": "CM-6",
+    "family": "CM",
+    "title": "Configuration Settings",
+    "text_excerpt": "Establish and document configuration settings for components employed within the system that reflect the most restrictive mode consistent with operational requirements using [cm-06",
+    "baselines": {
+      "low": true,
+      "high": true,
+      "moderate": true
+    },
+    "objective_count": 1,
+    "has_cprt": true
+  },
+  {
+    "requirement_id": "PM-30(1)",
+    "family": "PM",
+    "title": "Suppliers of Critical or Mission-essential Items",
+    "text_excerpt": "Identify, prioritize, and assess suppliers of critical or mission-essential technologies, products, and services.",
+    "baselines": {
+      "low": false,
+      "high": false,
+      "moderate": false
+    },
+    "objective_count": 1,
+    "has_cprt": true
+  },
+  {
+    "requirement_id": "AU-9(6)",
+    "family": "AU",
+    "title": "Read-only Access",
+    "text_excerpt": "Authorize read-only access to audit information to [au-09.06_odp].",
+    "baselines": {
+      "low": false,
+      "high": false,
+      "moderate": false
+    },
+    "objective_count": 1,
+    "has_cprt": true
+  }
+]

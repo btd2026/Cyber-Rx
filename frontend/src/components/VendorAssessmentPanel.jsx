@@ -34,6 +34,7 @@ export default function VendorAssessmentPanel(props) {
   const [fileName, setFileName] = useState('');
   const [fields, setFields] = useState({});
   const [rawText, setRawText] = useState('');
+  const [fileB64, setFileB64] = useState('');
   const [summary, setSummary] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -69,10 +70,10 @@ export default function VendorAssessmentPanel(props) {
       Object.entries(fields).forEach(([k, v]) => { if (v !== '' && v != null) cleaned[k] = v; });
       const res = await fetch(`${apiUrl}/api/vendor-assessment/documents?org_id=${encodeURIComponent(organizationId)}`, {
         method: 'POST', headers: headers(),
-        body: JSON.stringify({ vendorId, vendorName, docType, fileName: fileName || `${docType}.pdf`, fields: cleaned, text: rawText || undefined }),
+        body: JSON.stringify({ vendorId, vendorName, docType, fileName: fileName || `${docType}.pdf`, fields: cleaned, text: rawText || undefined, contentBase64: fileB64 || undefined }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      setFields({}); setRawText(''); setFileName('');
+      setFields({}); setRawText(''); setFileName(''); setFileB64('');
       loadSummary(vendorId);
     } catch (e) { setError(e.message); } finally { setBusy(false); }
   };
@@ -97,7 +98,18 @@ export default function VendorAssessmentPanel(props) {
           </div>
         </div>
         {summary && (
-          <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 24 }}>
+          <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 24, display: 'flex', gap: 8 }}>
+            {summary.assuranceScore != null && (
+              <div style={{ display: 'inline-flex', alignItems: 'stretch', background: PANEL_BG, borderRadius: 4, overflow: 'hidden' }}>
+                <span style={{ background: summary.assuranceScore >= 85 ? '#1f8a4c' : summary.assuranceScore >= 65 ? '#B07C2E' : summary.assuranceScore >= 40 ? '#A85B2E' : '#C0392B', color: '#fff', fontWeight: 600, fontSize: 19, fontVariantNumeric: 'tabular-nums', padding: '10px 14px' }}>
+                  {summary.assuranceScore}
+                </span>
+                <span style={{ color: '#e2e8f0', fontWeight: 500, fontSize: 12, padding: '10px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: 1.35 }}>
+                  <span style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 9, color: '#8fa3bd' }}>Assurance Score</span>
+                  <span>{summary.postureBand} · C{summary.avgCompleteness}/A{summary.avgAccuracy}</span>
+                </span>
+              </div>
+            )}
             <div style={{ display: 'inline-flex', alignItems: 'stretch', background: PANEL_BG, borderRadius: 4, overflow: 'hidden' }}>
               <span style={{ background: RATING[summary.overallRating] || INK_3, color: '#fff', fontWeight: 600, fontSize: 19, fontVariantNumeric: 'tabular-nums', padding: '10px 14px' }}>
                 {summary.documentRiskScore}
@@ -123,8 +135,19 @@ export default function VendorAssessmentPanel(props) {
             {docTypes.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
           </select>
           {activeType && <div style={{ fontSize: 10.5, color: INK_3, margin: '2px 0 8px' }}>Issuing authority: {activeType.issuer}</div>}
-          <label style={lbl}>File name (optional)</label>
-          <input value={fileName} onChange={(e) => setFileName(e.target.value)} placeholder={`${docType}.pdf`} style={inp} />
+          <label style={lbl}>Upload document (PDF) — the agent reads the file</label>
+          <input type="file" accept=".pdf,.txt,.md,.json" style={{ ...inp, padding: '6px' }}
+            onChange={(e) => {
+              const file = e.target.files && e.target.files[0];
+              if (!file) { setFileB64(''); return; }
+              setFileName(file.name);
+              const reader = new FileReader();
+              reader.onload = () => { const r = reader.result || ''; setFileB64(String(r).split(',').pop() || ''); };
+              reader.readAsDataURL(file);
+            }} />
+          <div style={{ fontSize: 10, color: INK_3, margin: '2px 0 8px' }}>
+            Upload the file and Saraqael extracts the elements and scores accuracy + completeness. Structured fields below are optional overrides.
+          </div>
 
           {activeType && activeType.fields.map((k) => {
             const kind = fieldKind(k);
@@ -177,6 +200,19 @@ export default function VendorAssessmentPanel(props) {
                     <div style={{ fontSize: 13, fontWeight: 600, color: INK }}>{d.docLabel}<span style={{ color: INK_3, fontWeight: 400, fontSize: 11, marginLeft: 8 }}>{d.fileName}</span></div>
                     <span style={{ fontSize: 9.5, fontWeight: 600, color: RATING[d.riskRating], textTransform: 'uppercase', letterSpacing: '0.08em' }}>{d.riskRating}</span>
                   </div>
+                  {d.score != null && (
+                    <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginTop: 8 }}>
+                      <div style={{ fontSize: 20, fontWeight: 700, color: d.score >= 85 ? '#1f8a4c' : d.score >= 65 ? '#B07C2E' : d.score >= 40 ? '#A85B2E' : '#C0392B', lineHeight: 1 }}>
+                        {d.score}<span style={{ fontSize: 9, color: INK_3, fontWeight: 600, marginLeft: 3 }}>{d.status}</span>
+                      </div>
+                      {[['Completeness', d.completeness], ['Accuracy', d.accuracy]].map(([lab, v]) => (
+                        <div key={lab} style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: INK_3, textTransform: 'uppercase', letterSpacing: '0.06em' }}><span>{lab}</span><span>{v == null ? '—' : v + '%'}</span></div>
+                          <div style={{ height: 5, background: '#eef2f6', borderRadius: 3, marginTop: 2 }}><div style={{ width: `${v || 0}%`, height: '100%', background: (v || 0) >= 80 ? '#1f8a4c' : (v || 0) >= 50 ? '#B07C2E' : '#C0392B', borderRadius: 3 }} /></div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   {d.findings.map((f) => (
                     <div key={f.id} style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid #f1f5f9` }}>
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>

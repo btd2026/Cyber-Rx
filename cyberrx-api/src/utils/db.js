@@ -547,6 +547,11 @@ async function init() {
         updated_at      TIMESTAMPTZ DEFAULT NOW()
       );
       CREATE INDEX IF NOT EXISTS vendor_documents_org ON vendor_documents(organization_id);
+      -- Per-document review scores (accuracy + completeness). Additive columns.
+      ALTER TABLE vendor_documents ADD COLUMN IF NOT EXISTS completeness NUMERIC;
+      ALTER TABLE vendor_documents ADD COLUMN IF NOT EXISTS accuracy     NUMERIC;
+      ALTER TABLE vendor_documents ADD COLUMN IF NOT EXISTS doc_score    NUMERIC;
+      ALTER TABLE vendor_documents ADD COLUMN IF NOT EXISTS doc_status   TEXT;
 
       -- Remediation path (Papa #12): every finding opens a ticket with
       -- high-level recommendations in the org's ticketing system (Jira /
@@ -662,6 +667,187 @@ async function init() {
       CREATE INDEX IF NOT EXISTS sim_snow_org ON sim_servicenow_incidents(org_id);
       CREATE INDEX IF NOT EXISTS sim_cyberark_org ON sim_cyberark_accounts(org_id);
       CREATE INDEX IF NOT EXISTS sim_workday_org ON sim_workday_workers(org_id);
+
+      -- ================= Four-lens posture engine (exec reporting) ==========
+      -- Generalized framework catalog (Phase 7). Catalog tables are GLOBAL
+      -- (no org_id): NIST CSF 2.0, SP 800-53 r5.2.0, CIS v8.1, ATT&CK.
+      CREATE TABLE IF NOT EXISTS frameworks (
+        id          TEXT PRIMARY KEY,          -- 'nist_csf_2', 'nist_800_53_r5', 'cis_v8_1', 'attack_enterprise'
+        name        TEXT NOT NULL,
+        version     TEXT,
+        provenance  TEXT,                      -- 'NIST OSCAL', 'NIST CPRT', 'CIS', 'MITRE'
+        ingested_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE TABLE IF NOT EXISTS framework_requirements (
+        framework_id  TEXT NOT NULL REFERENCES frameworks(id),
+        requirement_id TEXT NOT NULL,          -- native ID: 'PR.AA-01', 'AC-2', 'AC-2(3)', '5.3'
+        parent_id     TEXT,                    -- enhancement -> base control, safeguard -> control
+        family        TEXT,                    -- 800-53 family / CSF function / CIS control #
+        title         TEXT,
+        text          TEXT,                    -- outcome/statement (paraphrase unless verbatim allowed)
+        text_verbatim TEXT,                    -- gated by VERBATIM_CIS for CIS content
+        assessment    JSONB,                   -- 800-53A objectives + examine/interview/test methods
+        baselines     JSONB,                   -- {low,moderate,high} for 800-53; {ig1,ig2,ig3} for CIS
+        withdrawn     BOOLEAN DEFAULT false,
+        meta          JSONB,
+        PRIMARY KEY (framework_id, requirement_id)
+      );
+      CREATE INDEX IF NOT EXISTS fw_req_family ON framework_requirements(framework_id, family);
+
+      -- Requirement <-> automated check mappings (coverage + parameters + justification)
+      CREATE TABLE IF NOT EXISTS requirement_mappings (
+        framework_id  TEXT NOT NULL,
+        requirement_id TEXT NOT NULL,
+        check_id      TEXT NOT NULL,
+        coverage      TEXT DEFAULT 'partial',  -- 'full' | 'partial'
+        parameters    JSONB,                   -- extracted params (45-day dormancy, cadences)
+        justification TEXT,
+        provenance    TEXT,                    -- 'curated' | 'CIS' | 'derived'
+        provisional   BOOLEAN DEFAULT false,
+        PRIMARY KEY (framework_id, requirement_id, check_id)
+      );
+      -- Framework <-> framework crosswalks (CSF<->800-53, CIS<->CSF, relationship preserved)
+      CREATE TABLE IF NOT EXISTS requirement_crosswalks (
+        from_framework TEXT NOT NULL, from_id TEXT NOT NULL,
+        to_framework   TEXT NOT NULL, to_id   TEXT NOT NULL,
+        relationship   TEXT,                   -- equivalent | subset | superset | related
+        provenance     TEXT NOT NULL,          -- 'NIST CPRT' | 'CIS' | 'CTID' | 'derived'
+        provisional    BOOLEAN DEFAULT false,
+        meta           JSONB,
+        PRIMARY KEY (from_framework, from_id, to_framework, to_id)
+      );
+      CREATE INDEX IF NOT EXISTS xwalk_to ON requirement_crosswalks(to_framework, to_id);
+
+      -- Parameterized automated checks (catalog; execution is org-scoped)
+      CREATE TABLE IF NOT EXISTS checks (
+        id          TEXT PRIMARY KEY,          -- 'okta.mfa_coverage'
+        tool_id     TEXT NOT NULL,             -- securityToolCatalog id
+        name        TEXT NOT NULL,
+        method      TEXT, path TEXT,           -- the JSON API call
+        signal      TEXT,                      -- metric_inputs key it evaluates, when applicable
+        extract     TEXT,                      -- how the response becomes evidence
+        kind        TEXT DEFAULT 'telemetry',  -- telemetry | config | inventory
+        default_params JSONB                   -- e.g. {"threshold": 95, "dormancy_days": 45}
+      );
+      CREATE TABLE IF NOT EXISTS check_parameters (
+        org_id   TEXT NOT NULL,
+        check_id TEXT NOT NULL,
+        params   JSONB NOT NULL,
+        updated_at TIMESTAMPTZ DEFAULT NOW(),
+        PRIMARY KEY (org_id, check_id)
+      );
+
+      -- Validation runs: every reported number traces to one of these.
+      CREATE TABLE IF NOT EXISTS validation_runs (
+        id          SERIAL PRIMARY KEY,
+        org_id      TEXT NOT NULL,
+        trigger     TEXT DEFAULT 'manual',     -- manual | sync | scheduled
+        started_at  TIMESTAMPTZ DEFAULT NOW(),
+        finished_at TIMESTAMPTZ,
+        checks_total INTEGER DEFAULT 0, checks_passed INTEGER DEFAULT 0,
+        checks_failed INTEGER DEFAULT 0, checks_skipped INTEGER DEFAULT 0,
+        notes       TEXT
+      );
+      CREATE INDEX IF NOT EXISTS vruns_org ON validation_runs(org_id, started_at DESC);
+      CREATE TABLE IF NOT EXISTS check_results (
+        id          SERIAL PRIMARY KEY,
+        run_id      INTEGER NOT NULL REFERENCES validation_runs(id),
+        org_id      TEXT NOT NULL,
+        check_id    TEXT NOT NULL,
+        status      TEXT NOT NULL,             -- pass | fail | partial | skipped
+        observed    NUMERIC,                   -- observed signal value
+        expected    TEXT,                      -- threshold expression, e.g. '>=95'
+        params      JSONB,                     -- effective parameters used
+        source      TEXT,                      -- 'live' | 'simulated' | 'attested'
+        evidence    JSONB,                     -- raw extract for click-through
+        created_at  TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS chkres_run ON check_results(run_id);
+      CREATE INDEX IF NOT EXISTS chkres_org_check ON check_results(org_id, check_id, created_at DESC);
+
+      -- Persisted evidence-agent reviews (traceable from reports)
+      CREATE TABLE IF NOT EXISTS evidence_reviews (
+        id          SERIAL PRIMARY KEY,
+        org_id      TEXT NOT NULL,
+        run_id      INTEGER,
+        question_key TEXT,
+        score       NUMERIC,
+        finding     TEXT,
+        recommendation TEXT,
+        created_at  TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS evrev_org ON evidence_reviews(org_id, created_at DESC);
+
+      -- Score history at every rollup grain (framework / family / requirement)
+      CREATE TABLE IF NOT EXISTS score_history (
+        id          SERIAL PRIMARY KEY,
+        org_id      TEXT NOT NULL,
+        framework_id TEXT NOT NULL,
+        scope       TEXT NOT NULL,             -- 'overall' | family/function id | requirement id
+        score       NUMERIC NOT NULL,
+        run_id      INTEGER,
+        computed_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS scorehist ON score_history(org_id, framework_id, scope, computed_at DESC);
+
+      -- ATT&CK content (global) + per-org technique coverage (STEP C)
+      CREATE TABLE IF NOT EXISTS attack_tactics (
+        id TEXT PRIMARY KEY, name TEXT, shortname TEXT, ordinal INTEGER
+      );
+      CREATE TABLE IF NOT EXISTS attack_techniques (
+        id          TEXT PRIMARY KEY,          -- 'T1110' / 'T1110.001'
+        name        TEXT NOT NULL,
+        tactics     TEXT[],                    -- kill-chain shortnames
+        is_subtechnique BOOLEAN DEFAULT false,
+        parent_id   TEXT,
+        deprecated  BOOLEAN DEFAULT false,
+        revoked     BOOLEAN DEFAULT false,
+        attack_version TEXT,
+        description TEXT
+      );
+      CREATE INDEX IF NOT EXISTS attack_tech_parent ON attack_techniques(parent_id);
+      CREATE TABLE IF NOT EXISTS attack_mitigations (
+        id TEXT PRIMARY KEY, name TEXT, description TEXT, deprecated BOOLEAN DEFAULT false
+      );
+      CREATE TABLE IF NOT EXISTS technique_coverage (
+        org_id       TEXT NOT NULL,
+        technique_id TEXT NOT NULL,
+        status       TEXT NOT NULL,            -- prevent | detect | none
+        confidence   TEXT DEFAULT 'low',       -- high | medium | low
+        source_check TEXT,                     -- evidencing check id
+        run_id       INTEGER,
+        supporting   JSONB,                    -- CTID-derived supporting controls
+        computed_at  TIMESTAMPTZ DEFAULT NOW(),
+        PRIMARY KEY (org_id, technique_id)
+      );
+
+      -- ============= CISO Security Posture Dashboard (CISO persona only) =====
+      -- Polymorphic store for the 14 dashboard entities (SecurityDomain,
+      -- SecurityMetric, ControlArea, ControlRisk, Threshold, CISOQuestion,
+      -- ExecutiveAnswer, SecurityAction, CriticalBusinessProcess, AttackPathway,
+      -- CyberReadinessItem, SecurityInvestment, HiddenRisk, EvidenceSource).
+      -- Mock seed today; a live integration replaces a row of the same shape.
+      CREATE TABLE IF NOT EXISTS ciso_entities (
+        org_id      TEXT NOT NULL,
+        entity_type TEXT NOT NULL,
+        entity_id   TEXT NOT NULL,
+        ordinal     INTEGER,
+        data        JSONB NOT NULL,
+        updated_at  TIMESTAMPTZ DEFAULT NOW(),
+        PRIMARY KEY (org_id, entity_type, entity_id)
+      );
+      CREATE INDEX IF NOT EXISTS ciso_entities_type ON ciso_entities(org_id, entity_type);
+      -- Posture history for the period-over-period trend.
+      CREATE TABLE IF NOT EXISTS ciso_dashboard_snapshots (
+        id          SERIAL PRIMARY KEY,
+        org_id      TEXT NOT NULL,
+        period      TEXT,
+        overall     NUMERIC,
+        previous    NUMERIC,
+        delta       NUMERIC,
+        captured_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS ciso_dash_snap ON ciso_dashboard_snapshots(org_id, captured_at DESC);
     `);
     console.log('Database schema initialized');
   } catch (err) {

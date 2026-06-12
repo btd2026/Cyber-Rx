@@ -1,0 +1,92 @@
+[
+  {
+    "csf": "DE.AE-06",
+    "csf_title": "Adverse Event Analysis",
+    "ctrl": "AU-6(3)",
+    "ctrl_title": "Correlate Audit Record Repositories",
+    "meta": {
+      "shared_checks": 1
+    }
+  },
+  {
+    "csf": "DE.CM-03",
+    "csf_title": "Continuous Monitoring",
+    "ctrl": "SI-4(21)",
+    "ctrl_title": "Probationary Periods",
+    "meta": {
+      "shared_checks": 2
+    }
+  },
+  {
+    "csf": "PR.AA-03",
+    "csf_title": "Identity Management, Authentication & Access Control",
+    "ctrl": "AC-7",
+    "ctrl_title": "Unsuccessful Logon Attempts",
+    "meta": {
+      "shared_checks": 3
+    }
+  },
+  {
+    "csf": "DE.CM-03",
+    "csf_title": "Continuous Monitoring",
+    "ctrl": "SI-4(7)",
+    "ctrl_title": "Automated Response to Suspicious Events",
+    "meta": {
+      "shared_checks": 2
+    }
+  },
+  {
+    "csf": "PR.AT-01",
+    "csf_title": "Awareness & Training",
+    "ctrl": "AT-3(1)",
+    "ctrl_title": "Environmental Controls",
+    "meta": {
+      "shared_checks": 2
+    }
+  },
+  {
+    "csf": "ID.RA-05",
+    "csf_title": "Risk Assessment",
+    "ctrl": "RA-5(3)",
+    "ctrl_title": "Breadth and Depth of Coverage",
+    "meta": {
+      "shared_checks": 3
+    }
+  },
+  {
+    "csf": "ID.RA-05",
+    "csf_title": "Risk Assessment",
+    "ctrl": "RA-5(5)",
+    "ctrl_title": "Privileged Access",
+    "meta": {
+      "shared_checks": 3
+    }
+  },
+  {
+    "csf": "PR.AA-05",
+    "csf_title": "Identity Management, Authentication & Access Control",
+    "ctrl": "AC-3(10)",
+    "ctrl_title": "Audited Override of Access Control Mechanisms",
+    "meta": {
+      "shared_checks": 2
+    }
+  },
+  {
+    "csf": "DE.CM-01",
+    "csf_title": "Continuous Monitoring",
+    "ctrl": "SI-4(12)",
+    "ctrl_title": "Automated Organization-generated Alerts",
+    "meta": {
+      "shared_checks": 1
+    }
+  },
+  {
+    "csf": "DE.AE-02",
+    "csf_title": "Adverse Event Analysis",
+    "ctrl": "AU-6(7)",
+    "ctrl_title": "Permitted Actions",
+    "meta": {
+      "shared_checks": 1
+    }
+  }
+]
