@@ -74,7 +74,7 @@ const CIODash = (props) => {
   const ctx = useCallback(() => {
     const token = authToken || localStorage.getItem('authToken') || '';
     const organizationId = orgId || localStorage.getItem('cyberrx_org_id') || localStorage.getItem('orgId') || '';
-    const apiUrl = api_url || import.meta.env?.VITE_API_URL || 'http://localhost:3001';
+    const apiUrl = api_url || import.meta.env?.VITE_API_URL || ((typeof window!=='undefined' && /localhost|127\.0\.0\.1/.test(window.location.hostname)) ? 'http://localhost:3001' : 'https://cyberrx-api.onrender.com');
     return { token, organizationId, apiUrl };
   }, [authToken, orgId, api_url]);
 

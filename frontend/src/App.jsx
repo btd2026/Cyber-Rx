@@ -3977,7 +3977,7 @@ var LOB_VENDOR_PRESETS = {
   it_sec:    ["edifecs","interoperability","inovalon"],
 };
 
-var CYBERRX_API = (typeof window!=='undefined'&&window.__CYBERRX_API)||import.meta.env.VITE_API_URL||'http://localhost:3001';
+var CYBERRX_API = (typeof window!=='undefined'&&window.__CYBERRX_API)||import.meta.env.VITE_API_URL||((typeof window!=='undefined' && /localhost|127\.0\.0\.1/.test(window.location.hostname)) ? 'http://localhost:3001' : 'https://cyberrx-api.onrender.com');
 
 // ── Org Profile Persistence Helpers ────────────────────────────────────────────────
 

@@ -35,7 +35,7 @@ function resolveCtx(props) {
   const organizationId = props.orgId || ls('cyberrx_org_id') || ls('orgId') || '';
   const apiUrl = props.api_url || props.apiUrl ||
     (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) ||
-    'http://localhost:3001';
+    ((typeof window!=='undefined' && /localhost|127\.0\.0\.1/.test(window.location.hostname)) ? 'http://localhost:3001' : 'https://cyberrx-api.onrender.com');
   return { token, organizationId, apiUrl };
 }
 

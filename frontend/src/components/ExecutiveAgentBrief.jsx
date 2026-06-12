@@ -106,7 +106,7 @@ function resolveCtx(props) {
     props.api_url ||
     props.apiUrl ||
     (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) ||
-    'http://localhost:3001';
+    ((typeof window!=='undefined' && /localhost|127\.0\.0\.1/.test(window.location.hostname)) ? 'http://localhost:3001' : 'https://cyberrx-api.onrender.com');
   return { token, organizationId, apiUrl };
 }
 
