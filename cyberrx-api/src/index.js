@@ -243,6 +243,9 @@ app.use('/api/cio',               [apiGetLimiter], require('./routes/cio'));
 // CISO attack-path graph (process → app → device → network → threat)
 app.use('/api/attack-path',       [apiGetLimiter], require('./routes/attackPath'));
 
+// CISO security posture across the eight posture domains
+app.use('/api/ciso',              [apiGetLimiter], require('./routes/ciso'));
+
 // Metrics engine - editable mock numbers + formula-driven dashboard figures
 app.use('/api/metrics',           [apiGetLimiter, apiPutLimiter], require('./routes/metrics'));
 
