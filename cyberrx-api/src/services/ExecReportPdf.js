@@ -75,7 +75,11 @@ function stream(res, audience, orgId, pack) {
         .fillColor(MUTE).fontSize(9).text(`   ${q.observed ?? ''} vs ${q.expected ?? ''}  [${q.csf || ''}]`);
       doc.fontSize(9).fillColor(INK).text(`→ ${q.recommendation}`);
     });
-    if (pack.cis && pack.cis.status === 'pending') {
+    if (pack.cis && pack.cis.status === 'ingested') {
+      h2(doc, `CIS Controls v${pack.cis.version} — Implementation Group progress`);
+      pack.cis.implementationGroups.forEach((g) => kv(doc, `  ${g.ig}:`, `${g.attainmentPct}% (${g.covered}/${g.total} safeguards evidenced)`,
+        g.attainmentPct >= 80 ? GREEN : g.attainmentPct >= 50 ? AMBER : RED));
+    } else if (pack.cis && pack.cis.status === 'pending') {
       h2(doc, 'CIS Controls v8.1'); doc.fontSize(9).fillColor(MUTE).text(pack.cis.note);
     }
   }

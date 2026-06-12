@@ -43,6 +43,12 @@ async function bootstrap() {
     else steps.attack = 'present';
   } catch (e) { logger.warn('bootstrap: ATT&CK ingest failed', { error: e.message }); }
 
+  try {
+    const hasCis = await count(`SELECT COUNT(*)::int n FROM framework_requirements WHERE framework_id='cis_v8_1'`);
+    if (hasCis < 100) steps.cis = await require('./loadCis').load();
+    else steps.cis = 'present';
+  } catch (e) { logger.warn('bootstrap: CIS ingest failed', { error: e.message }); }
+
   return steps;
 }
 

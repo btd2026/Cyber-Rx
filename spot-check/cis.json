@@ -1,0 +1,122 @@
+[
+  {
+    "requirement_id": "17.7",
+    "title": "Conduct Routine Incident Response Exercises",
+    "baselines": {
+      "ig1": false,
+      "ig2": true,
+      "ig3": true
+    },
+    "asset_class": "Users",
+    "fn": "Recover",
+    "checks": 2
+  },
+  {
+    "requirement_id": "12.2",
+    "title": "Establish and Maintain a Secure Network Architecture",
+    "baselines": {
+      "ig1": false,
+      "ig2": true,
+      "ig3": true
+    },
+    "asset_class": "Network",
+    "fn": "Protect",
+    "checks": 0
+  },
+  {
+    "requirement_id": "14.7",
+    "title": "Train Workforce on How to Identify and Report if Their Enterprise Assets are Missing Security Updates",
+    "baselines": {
+      "ig1": true,
+      "ig2": true,
+      "ig3": true
+    },
+    "asset_class": "Users",
+    "fn": "Protect",
+    "checks": 3
+  },
+  {
+    "requirement_id": "4.2",
+    "title": "Establish and Maintain a Secure Configuration Process for Network Infrastructure",
+    "baselines": {
+      "ig1": true,
+      "ig2": true,
+      "ig3": true
+    },
+    "asset_class": "Documentation",
+    "fn": "Govern",
+    "checks": 0
+  },
+  {
+    "requirement_id": "18.2",
+    "title": "Perform Periodic External Penetration Tests",
+    "baselines": {
+      "ig1": false,
+      "ig2": true,
+      "ig3": true
+    },
+    "asset_class": "Network",
+    "fn": "Detect",
+    "checks": 3
+  },
+  {
+    "requirement_id": "8.9",
+    "title": "Centralize Audit Logs",
+    "baselines": {
+      "ig1": false,
+      "ig2": true,
+      "ig3": true
+    },
+    "asset_class": "Data",
+    "fn": "Detect",
+    "checks": 2
+  },
+  {
+    "requirement_id": "15.2",
+    "title": "Establish and Maintain a Service Provider Management Policy",
+    "baselines": {
+      "ig1": false,
+      "ig2": true,
+      "ig3": true
+    },
+    "asset_class": "Documentation",
+    "fn": "Govern",
+    "checks": 2
+  },
+  {
+    "requirement_id": "18.5",
+    "title": "Perform Periodic Internal Penetration Tests",
+    "baselines": {
+      "ig1": false,
+      "ig2": false,
+      "ig3": true
+    },
+    "asset_class": "Network",
+    "fn": "Detect",
+    "checks": 3
+  },
+  {
+    "requirement_id": "8.11",
+    "title": "Conduct Audit Log Reviews",
+    "baselines": {
+      "ig1": false,
+      "ig2": true,
+      "ig3": true
+    },
+    "asset_class": "Data",
+    "fn": "Detect",
+    "checks": 1
+  },
+  {
+    "requirement_id": "13.7",
+    "title": "Deploy a Host-Based Intrusion Prevention Solution",
+    "baselines": {
+      "ig1": false,
+      "ig2": false,
+      "ig3": true
+    },
+    "asset_class": "Devices",
+    "fn": "Protect",
+    "checks": 3
+  }
+]

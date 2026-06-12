@@ -116,12 +116,36 @@ async function cisoPack(orgId, { baseline = 'moderate' } = {}) {
     nist80053: { overall: ctrl.overall != null ? ctrl.overall : null, families,
       baseline: { name: baseCol, total: baseTotal, covered: baseCovered,
         coveragePct: baseTotal ? Math.round((baseCovered / baseTotal) * 100) : 0 } },
-    cis: { status: 'pending', note: 'CIS v8.1 ingestion (B3) is blocked pending the licensed workbook in resources/cis/.' },
+    cis: await cisProgress(orgId, runId),
     attack: { summary: attackSummary, heat },
     failingQueue: queue,
     trends: { csf: trendCsf.reverse(), nist80053: trendCtrl.reverse() },
     runMeta: latest.run,
   };
+}
+
+// CIS Controls v8.1 Implementation-Group attainment: of the safeguards in each
+// IG tier, how many have a passing mapped check this run.
+async function cisProgress(orgId, runId) {
+  const has = await db.query(`SELECT COUNT(*)::int n FROM framework_requirements WHERE framework_id='cis_v8_1'`);
+  if (!has[0] || !has[0].n) {
+    return { status: 'pending', note: 'CIS v8.1 workbook not yet ingested (resources/cis/).' };
+  }
+  const rows = await db.query(`
+    SELECT r.requirement_id, r.baselines,
+      EXISTS (
+        SELECT 1 FROM requirement_mappings m JOIN check_results cr
+          ON cr.check_id=m.check_id AND cr.run_id=$1 AND cr.org_id=$2 AND cr.status IN ('pass','partial')
+        WHERE m.framework_id='cis_v8_1' AND m.requirement_id=r.requirement_id
+      ) AS covered
+    FROM framework_requirements r
+    WHERE r.framework_id='cis_v8_1' AND r.meta->>'kind'='safeguard'`, [runId, orgId]);
+  const igs = ['ig1', 'ig2', 'ig3'].map((ig) => {
+    const inTier = rows.filter((r) => r.baselines && r.baselines[ig]);
+    const covered = inTier.filter((r) => r.covered).length;
+    return { ig: ig.toUpperCase(), total: inTier.length, covered, attainmentPct: inTier.length ? Math.round((covered / inTier.length) * 100) : 0 };
+  });
+  return { status: 'ingested', version: '8.1.2', safeguards: rows.length, implementationGroups: igs };
 }
 
 function recommend(signal, tool) {

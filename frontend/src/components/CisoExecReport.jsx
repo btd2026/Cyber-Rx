@@ -155,6 +155,26 @@ export default function CisoExecReport(props) {
         <div><div style={{ fontSize: 11, color: INK3 }}>CSF overall trend</div><Spark points={data.trends.csf} /></div>
         <div><div style={{ fontSize: 11, color: INK3 }}>800-53 overall trend</div><Spark points={data.trends.nist80053} /></div>
       </div>
+      {data.cis && data.cis.status === 'ingested' && (
+        <>
+          <h3 style={{ fontSize: 13, color: INK, margin: '20px 0 8px' }}>CIS Controls v{data.cis.version} — Implementation Group progress <span style={{ color: INK3, fontWeight: 400 }}>({data.cis.safeguards} safeguards)</span></h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
+            {data.cis.implementationGroups.map((g) => {
+              const col = g.attainmentPct >= 80 ? GREEN : g.attainmentPct >= 50 ? AMBER : RED;
+              return (
+                <div key={g.ig} style={{ border: `1px solid ${HAIR}`, borderRadius: 6, padding: '12px 14px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <span style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>{g.ig}</span>
+                    <span style={{ fontSize: 20, fontWeight: 700, color: col }}>{g.attainmentPct}%</span>
+                  </div>
+                  <div style={{ height: 6, background: '#eef2f6', borderRadius: 3, margin: '7px 0 5px' }}><div style={{ width: `${g.attainmentPct}%`, height: '100%', background: col, borderRadius: 3 }} /></div>
+                  <div style={{ fontSize: 10.5, color: INK3 }}>{g.covered} of {g.total} safeguards evidenced</div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
       {data.cis && data.cis.status === 'pending' && (
         <div style={{ marginTop: 14, background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 6, padding: '8px 12px', fontSize: 11.5, color: '#92400e' }}>
           <strong>CIS Controls v8.1 (IG1/2/3):</strong> {data.cis.note}

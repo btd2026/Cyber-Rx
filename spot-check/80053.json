@@ -1,78 +1,13 @@
 [
   {
-    "requirement_id": "AU-12(2)",
-    "family": "AU",
-    "title": "Standardized Formats",
-    "text_excerpt": "Produce a system-wide (logical or physical) audit trail composed of audit records in a standardized format.",
-    "baselines": {
-      "low": false,
-      "high": false,
-      "moderate": false
-    },
-    "objective_count": 1,
-    "has_cprt": true
-  },
-  {
-    "requirement_id": "SA-10(6)",
-    "family": "SA",
-    "title": "Trusted Distribution",
-    "text_excerpt": "Require the developer of the system, system component, or system service to execute procedures for ensuring that security-relevant hardware, software, and firmware updates distribu",
-    "baselines": {
-      "low": false,
-      "high": false,
-      "moderate": false
-    },
-    "objective_count": 1,
-    "has_cprt": true
-  },
-  {
-    "requirement_id": "PM-5",
-    "family": "PM",
-    "title": "System Inventory",
-    "text_excerpt": "Develop and update [pm-05_odp] an inventory of organizational systems.",
-    "baselines": {
-      "low": false,
-      "high": false,
-      "moderate": false
-    },
-    "objective_count": 1,
-    "has_cprt": true
-  },
-  {
-    "requirement_id": "PE-15",
-    "family": "PE",
-    "title": "Water Damage Protection",
-    "text_excerpt": "Protect the system from damage resulting from water leakage by providing master shutoff or isolation valves that are accessible, working properly, and known to key personnel.",
+    "requirement_id": "PL-11",
+    "family": "PL",
+    "title": "Baseline Tailoring",
+    "text_excerpt": "Tailor the selected control baseline by applying specified tailoring actions.",
     "baselines": {
       "low": true,
       "high": true,
       "moderate": true
-    },
-    "objective_count": 1,
-    "has_cprt": true
-  },
-  {
-    "requirement_id": "PE-19",
-    "family": "PE",
-    "title": "Information Leakage",
-    "text_excerpt": "Protect the system from information leakage due to electromagnetic signals emanations.",
-    "baselines": {
-      "low": false,
-      "high": false,
-      "moderate": false
-    },
-    "objective_count": 1,
-    "has_cprt": true
-  },
-  {
-    "requirement_id": "IR-6(2)",
-    "family": "IR",
-    "title": "Vulnerabilities Related to Incidents",
-    "text_excerpt": "Report system vulnerabilities associated with reported incidents to [ir-06.02_odp].",
-    "baselines": {
-      "low": false,
-      "high": false,
-      "moderate": false
     },
     "objective_count": 1,
     "has_cprt": true
@@ -91,23 +26,10 @@
     "has_cprt": true
   },
   {
-    "requirement_id": "MP-4",
-    "family": "MP",
-    "title": "Media Storage",
-    "text_excerpt": "Physically control and securely store [mp-4_prm_1] within [mp-4_prm_2] ; and Protect system media types defined in MP-4a until the media are destroyed or sanitized using approved e",
-    "baselines": {
-      "low": false,
-      "high": true,
-      "moderate": true
-    },
-    "objective_count": 1,
-    "has_cprt": true
-  },
-  {
-    "requirement_id": "PE-3(5)",
-    "family": "PE",
-    "title": "Tamper Protection",
-    "text_excerpt": "Employ [pe-03.05_odp.01] to [pe-03.05_odp.02] physical tampering or alteration of [pe-03.05_odp.03] within the system.",
+    "requirement_id": "IA-5(18)",
+    "family": "IA",
+    "title": "Password Managers",
+    "text_excerpt": "Employ [ia-05.18_odp.01] to generate and manage passwords; and Protect the passwords using [ia-05.18_odp.02].",
     "baselines": {
       "low": false,
       "high": false,
@@ -117,10 +39,88 @@
     "has_cprt": true
   },
   {
-    "requirement_id": "RA-3(3)",
+    "requirement_id": "SC-36(1)",
+    "family": "SC",
+    "title": "Polling Techniques",
+    "text_excerpt": "Employ polling techniques to identify potential faults, errors, or compromises to the following processing and storage components: [sc-36.01_odp.01] ; and Take the following action",
+    "baselines": {
+      "low": false,
+      "high": false,
+      "moderate": false
+    },
+    "objective_count": 1,
+    "has_cprt": true
+  },
+  {
+    "requirement_id": "SA-9(8)",
+    "family": "SA",
+    "title": "Processing and Storage Location — U.S. Jurisdiction",
+    "text_excerpt": "Restrict the geographic location of information processing and data storage to facilities located within in the legal jurisdictional boundary of the United States.",
+    "baselines": {
+      "low": false,
+      "high": false,
+      "moderate": false
+    },
+    "objective_count": 1,
+    "has_cprt": true
+  },
+  {
+    "requirement_id": "RA-5(3)",
     "family": "RA",
-    "title": "Dynamic Threat Awareness",
-    "text_excerpt": "Determine the current cyber threat environment on an ongoing basis using [ra-03.03_odp].",
+    "title": "Breadth and Depth of Coverage",
+    "text_excerpt": "Define the breadth and depth of vulnerability scanning coverage.",
+    "baselines": {
+      "low": false,
+      "high": false,
+      "moderate": false
+    },
+    "objective_count": 1,
+    "has_cprt": true
+  },
+  {
+    "requirement_id": "SC-8(4)",
+    "family": "SC",
+    "title": "Conceal or Randomize Communications",
+    "text_excerpt": "Implement cryptographic mechanisms to conceal or randomize communication patterns unless otherwise protected by [sc-08.04_odp].",
+    "baselines": {
+      "low": false,
+      "high": false,
+      "moderate": false
+    },
+    "objective_count": 1,
+    "has_cprt": true
+  },
+  {
+    "requirement_id": "CM-6",
+    "family": "CM",
+    "title": "Configuration Settings",
+    "text_excerpt": "Establish and document configuration settings for components employed within the system that reflect the most restrictive mode consistent with operational requirements using [cm-06",
+    "baselines": {
+      "low": true,
+      "high": true,
+      "moderate": true
+    },
+    "objective_count": 1,
+    "has_cprt": true
+  },
+  {
+    "requirement_id": "PM-30(1)",
+    "family": "PM",
+    "title": "Suppliers of Critical or Mission-essential Items",
+    "text_excerpt": "Identify, prioritize, and assess suppliers of critical or mission-essential technologies, products, and services.",
+    "baselines": {
+      "low": false,
+      "high": false,
+      "moderate": false
+    },
+    "objective_count": 1,
+    "has_cprt": true
+  },
+  {
+    "requirement_id": "AU-9(6)",
+    "family": "AU",
+    "title": "Read-only Access",
+    "text_excerpt": "Authorize read-only access to audit information to [au-09.06_odp].",
     "baselines": {
       "low": false,
       "high": false,
