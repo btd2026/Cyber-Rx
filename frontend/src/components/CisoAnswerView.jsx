@@ -1,93 +1,101 @@
 /**
- * CisoAnswerView — clean, focused CISO agent answer
- * -------------------------------------------------
- * Renders one executive answer professionally: the plain-English answer, then
- * What changed / Why it matters / Evidence / Recommended action / Owner / Target.
- * No posture score, no dashboard chrome. The issues the answer calls out are
- * shown as clickable chips (onIssueClick) so the CISO can drill into any of them.
+ * CisoAnswerView — clean, scannable CISO agent answer
+ * ---------------------------------------------------
+ * Leads with the answer and the decision, keeps the SME explanation to one tight
+ * paragraph, shows evidence compactly, and tucks secondary detail behind a
+ * "More detail" toggle so the page is appealing and easy to follow — not text
+ * heavy. The spoken narration is never shown on screen (it is voice only).
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 
 const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e8edf3';
 const C = { Strong: '#1f8a4c', Moderate: '#B07C2E', Weak: '#A85B2E', Critical: '#C0392B' };
 const conf = (c) => (c === 'High' ? '#1f8a4c' : c === 'Medium' ? '#B07C2E' : '#94a3b8');
 
-const Pill = ({ text, color }) => (
-  <span style={{ fontSize: 10, fontWeight: 700, color: '#fff', background: color, borderRadius: 5, padding: '3px 10px', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{text}</span>
+const Chip = ({ label, value, color }) => (
+  <span style={{ fontSize: 11.5, color: INK2 }}>{label} <strong style={{ color: color || INK }}>{value}</strong></span>
 );
 
-function Section({ label, children }) {
-  return (
-    <div style={{ marginTop: 18 }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 13.5, color: INK, lineHeight: 1.6 }}>{children}</div>
-    </div>
-  );
-}
-
 export default function CisoAnswerView({ a, issues, onIssueClick }) {
+  const [more, setMore] = useState(false);
   if (!a) return null;
   const status = C[a.status] || INK3;
 
   return (
-    <div style={{ background: '#fff', border: `1px solid ${HAIR}`, borderTop: `4px solid ${status}`, borderRadius: 10, padding: '24px 28px', boxShadow: '0 1px 3px rgba(15,23,42,0.05)' }}>
-      {/* answer */}
-      <p style={{ fontSize: 17, color: INK, lineHeight: 1.55, margin: 0, fontWeight: 500 }}>{a.answer}</p>
+    <div style={{ background: '#fff', border: `1px solid ${HAIR}`, borderTop: `4px solid ${status}`, borderRadius: 10, padding: '22px 26px', boxShadow: '0 1px 3px rgba(15,23,42,0.05)' }}>
+      {/* answer headline */}
+      <p style={{ fontSize: 18, color: INK, lineHeight: 1.5, margin: 0, fontWeight: 600 }}>{a.answer}</p>
 
-      {/* SME explanation — the agent explains it for a non-technical CISO */}
+      {/* meta chips */}
+      <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap', marginTop: 12 }}>
+        <span style={{ fontSize: 10, fontWeight: 700, color: '#fff', background: status, borderRadius: 5, padding: '3px 10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{a.status}</span>
+        <Chip label="Confidence" value={a.confidence} color={conf(a.confidence)} />
+        <Chip label="Owner" value={a.owner} />
+        <Chip label="By" value={a.targetDate} />
+      </div>
+
+      {/* the decision — most prominent */}
+      <div style={{ marginTop: 16, background: '#f0f7f2', border: '1px solid #cce8d6', borderRadius: 9, padding: '14px 16px' }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: '#1f8a4c', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>Do this</div>
+        <div style={{ fontSize: 15, color: INK, lineHeight: 1.5, fontWeight: 500 }}>{a.recommendedAction}</div>
+      </div>
+
+      {/* SME explanation — one tight paragraph */}
       {a.explanation && (
-        <div style={{ marginTop: 12, background: '#eef4fb', border: '1px solid #cfe0f3', borderRadius: 8, padding: '12px 14px' }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: '#1d4ed8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Michael explains</div>
-          <div style={{ fontSize: 13.5, color: INK, lineHeight: 1.6 }}>{a.explanation}</div>
+        <div style={{ marginTop: 14, display: 'flex', gap: 10 }}>
+          <div style={{ width: 3, borderRadius: 2, background: '#1d4ed8', flexShrink: 0 }} />
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#1d4ed8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 3 }}>Michael explains</div>
+            <div style={{ fontSize: 13.5, color: INK, lineHeight: 1.6 }}>{a.explanation}</div>
+          </div>
         </div>
       )}
 
-      {/* meta row — status + confidence + owner + target (no posture score) */}
-      <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', marginTop: 16, paddingTop: 16, borderTop: `1px solid ${HAIR}` }}>
-        <Pill text={a.status} color={status} />
-        <span style={{ fontSize: 12, color: INK2 }}>Confidence <strong style={{ color: conf(a.confidence) }}>{a.confidence}</strong></span>
-        <span style={{ fontSize: 12, color: INK2 }}>Owner <strong style={{ color: INK }}>{a.owner}</strong></span>
-        <span style={{ fontSize: 12, color: INK2 }}>Target <strong style={{ color: INK }}>{a.targetDate}</strong></span>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 32px' }}>
-        <Section label="What changed">{a.whatChanged}</Section>
-        <Section label="Why it matters">{a.whyItMatters}</Section>
-      </div>
-
-      <Section label="Evidence">
-        <ul style={{ margin: 0, paddingLeft: 18 }}>
-          {(a.evidence || []).slice(0, 5).map((e, i) => <li key={i} style={{ marginBottom: 4 }}>{e}</li>)}
-        </ul>
-      </Section>
-
-      {a.businessImpact && <Section label="Business / process impact">{a.businessImpact}</Section>}
-
-      {/* clickable issues called out in the answer */}
+      {/* issues — clickable */}
       {issues && issues.length > 0 && (
-        <Section label="Issues called out — click any for detail">
+        <div style={{ marginTop: 16 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>The risks behind this — click for detail</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
             {issues.map((it, i) => (
-              <button key={i} onClick={() => onIssueClick && onIssueClick(it.entity)}
-                style={{ background: '#fff', border: `1px solid ${it.entity ? '#c7d2e0' : HAIR}`, color: it.entity ? '#1d4ed8' : INK2, borderRadius: 16, padding: '5px 12px', fontSize: 12, fontWeight: 600, cursor: it.entity ? 'pointer' : 'default', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                {it.label}{it.entity && <span style={{ fontSize: 10, color: '#94a3b8' }}>→</span>}
+              <button key={i} onClick={() => it.entity && onIssueClick && onIssueClick(it.entity)}
+                style={{ background: it.entity ? '#eef4fb' : '#fff', border: `1px solid ${it.entity ? '#cfe0f3' : HAIR}`, color: it.entity ? '#1d4ed8' : INK2, borderRadius: 16, padding: '6px 13px', fontSize: 12.5, fontWeight: 600, cursor: it.entity ? 'pointer' : 'default', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                {it.label}{it.entity && <span style={{ fontSize: 11 }}>→</span>}
               </button>
             ))}
           </div>
-        </Section>
+        </div>
       )}
 
-      {/* recommended action */}
-      <div style={{ marginTop: 18, background: '#f0f7f2', border: '1px solid #cce8d6', borderRadius: 8, padding: '14px 16px' }}>
-        <div style={{ fontSize: 10, fontWeight: 700, color: '#1f8a4c', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>Recommended action</div>
-        <div style={{ fontSize: 14, color: INK, lineHeight: 1.55 }}>{a.recommendedAction}</div>
-        <div style={{ fontSize: 11.5, color: INK2, marginTop: 8 }}>Owner: <strong>{a.owner}</strong> · Target: <strong>{a.targetDate}</strong></div>
-      </div>
+      {/* secondary detail — collapsed by default to keep it scannable */}
+      <button onClick={() => setMore(!more)} style={{ marginTop: 16, background: 'transparent', border: 'none', color: '#1d4ed8', fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: 0 }}>
+        {more ? '▾ Hide detail' : '▸ More detail & evidence'}
+      </button>
+      {more && (
+        <div style={{ marginTop: 12, borderTop: `1px solid ${HAIR}`, paddingTop: 14, display: 'grid', gap: 12 }}>
+          {a.whatChanged && <Detail label="What changed" text={a.whatChanged} />}
+          {a.whyItMatters && <Detail label="Why it matters" text={a.whyItMatters} />}
+          {a.businessImpact && <Detail label="Business / process impact" text={a.businessImpact} />}
+          {a.evidence && a.evidence.length > 0 && (
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Evidence</div>
+              <ul style={{ margin: 0, paddingLeft: 18 }}>
+                {a.evidence.map((e, i) => <li key={i} style={{ fontSize: 12.5, color: INK, marginBottom: 3, lineHeight: 1.5 }}>{e}</li>)}
+              </ul>
+            </div>
+          )}
+          <div style={{ fontSize: 10.5, color: INK3 }}>Data sources: {(a.dataSources || []).join(', ')}{a.lastRefreshed ? ` · Refreshed ${new Date(a.lastRefreshed).toLocaleString()}` : ''}</div>
+        </div>
+      )}
+    </div>
+  );
+}
 
-      <div style={{ fontSize: 10.5, color: INK3, marginTop: 14 }}>
-        Data sources: {(a.dataSources || []).join(', ')}{a.lastRefreshed ? ` · Refreshed ${new Date(a.lastRefreshed).toLocaleString()}` : ''}
-      </div>
+function Detail({ label, text }) {
+  return (
+    <div>
+      <div style={{ fontSize: 10, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 3 }}>{label}</div>
+      <div style={{ fontSize: 12.5, color: INK, lineHeight: 1.55 }}>{text}</div>
     </div>
   );
 }
