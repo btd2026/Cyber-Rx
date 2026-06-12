@@ -139,7 +139,6 @@ var NAV_GROUPS = [
     label: "Strategic",
     items: [
       {id:"home",      label:"Home",                icon:"🏠", mod:""},
-      {id:"hub",       label:"Command Center",      icon:"✦", mod:"F08"},
     ]
   },
   {
@@ -7133,7 +7132,6 @@ function Home(props) {
             textTransform:"uppercase",marginBottom:10}}>All modules</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
             {[
-              {id:"hub",      icon:"🏠",label:"Command Center",   desc:"Live risk posture across all 8 business processes."},
               {id:"bizlines", icon:"🏥",label:"Business Lines",   desc:"Process-by-process: claims, enrollment, care, finance."},
               {id:"vendormap",icon:"🌐",label:"Vendor Ecosystem", desc:"60+ named vendors across 13 healthcare-specific tiers."},
               {id:"execution",icon:"⚡",label:"Execution",        desc:"Route findings to SOAR, ServiceNow, Jira, or manual workflow."},
@@ -18639,7 +18637,7 @@ function WelcomePage(props) {
             padding:"16px 52px",cursor:"pointer",fontSize:16,fontWeight:800,
             boxShadow:"0 4px 28px "+C.acc+"50",letterSpacing:"-0.01em"}}>
           {setupDone?
-            "Go to Command Center →":
+            "Go to CISO Dashboard →":
             "Start Your Assessment →"
           }
         </button>
@@ -21412,10 +21410,10 @@ function CyberRxAPIAdapter(props) {
         padding:"12px 24px",display:"flex",alignItems:"center",
         justifyContent:"space-between"}}>
         <div style={{display:"flex",gap:12,alignItems:"center"}}>
-          <button onClick={function(){go("hub");}}
+          <button onClick={function(){go("dashboard");}}
             style={{background:"transparent",border:"none",color:C.acc,
               cursor:"pointer",fontSize:11,fontWeight:700}}>
-            &#x2190; Command Center
+            &#x2190; CISO Dashboard
           </button>
           <span style={{color:C.border}}>|</span>
           <div>
@@ -25589,7 +25587,7 @@ function CyberRxApp() {
       dl:dl,
       setRootCyberInsLimit:setRootCyberInsLimit,
       setRootVendorSel:setRootVendorSel,
-      onDone:function(){ setSetupDone(true); go("hub"); },
+      onDone:function(){ setSetupDone(true); go("dashboard"); },
       goBack:goBack,
     });
   }
@@ -25597,7 +25595,7 @@ function CyberRxApp() {
   // App shell + page router
   function renderPage() {
     if (page==="home")      { return React.createElement(Home,      sharedProps); }
-    if (page==="hub")       { return React.createElement(DashHub,   sharedProps); }
+    if (page==="hub")       { return React.createElement(CISODash,  sharedProps); }
     if (page==="bizlines")  { return React.createElement(BizLines,  sharedProps); }
     if (page==="appmap")    { return React.createElement(AppMap,    sharedProps); }
     if (page==="dashboard") { return React.createElement(CISODash,  sharedProps); }
