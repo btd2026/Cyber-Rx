@@ -66,6 +66,17 @@ export default function CisoAgentPanel(props) {
     return (active.riskDrivers || []).map((label) => ({ label, entity: matchEntity(d, label) }));
   }, [d, active]);
 
+  const intro = "Hi, I'm Michael, your CISO agent. This is your security command surface. Pick one of the five questions below and I'll give you a clear, decision-ready answer about your organization's posture — what's changed, why it matters, and exactly what to do, with the evidence behind it. Or use the tabs above to go deeper: Security Posture for the full dashboard, AI Controls for your AI and GenAI risk, Attack Path to see how an attacker would reach your critical processes, and Four-Lens to see compliance against NIST CSF, 800-53, and CIS. I'll explain anything you click. Where would you like to start?";
+
+  // Michael introduces himself once when the CISO tab opens (respects mute).
+  useEffect(() => {
+    if (!d) return;
+    if (typeof window !== 'undefined' && window._cx_ciso_intro_done) return;
+    if (typeof window !== 'undefined') window._cx_ciso_intro_done = true;
+    const t = setTimeout(() => voice.speak(intro), 350);
+    return () => clearTimeout(t);
+  }, [d]); // eslint-disable-line
+
   const selectQuestion = (q) => {
     voice.stop(); setIssue(null);
     const on = q.id === activeId;
@@ -83,7 +94,16 @@ export default function CisoAgentPanel(props) {
         <div style={{ fontSize: 11, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.12em' }}>
           Michael · CISO Agent — ask a question
         </div>
-        <VoiceControls voice={voice} onReplay={() => active && voice.speak(active.narration)} label="Hear Michael" />
+        <VoiceControls voice={voice} onReplay={() => voice.speak(active ? active.narration : intro)} label="Hear Michael" />
+      </div>
+
+      {/* Agent self-introduction — what's possible on the CISO tab */}
+      <div style={{ display: 'flex', gap: 12, background: '#0f1b2d', color: '#e6ecf5', borderRadius: 10, padding: '14px 18px', marginBottom: 14 }}>
+        <div style={{ width: 34, height: 34, borderRadius: 17, background: '#1e3a5f', color: '#9bc0ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, flexShrink: 0 }}>M</div>
+        <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>
+          <strong style={{ color: '#9bc0ff' }}>Michael — your CISO agent.</strong> Pick a question below for a decision-ready answer about your posture, or use the tabs above to go deeper:
+          <strong> Security Posture</strong> (full dashboard), <strong>AI Controls</strong>, <strong>Attack Path</strong>, and <strong>Four-Lens</strong> (NIST CSF · 800-53 · CIS · ATT&CK). I'll explain anything you click.
+        </div>
       </div>
 
       {/* Questions — fixed 5; active one highlighted */}
