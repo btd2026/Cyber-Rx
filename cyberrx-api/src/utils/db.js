@@ -547,6 +547,11 @@ async function init() {
         updated_at      TIMESTAMPTZ DEFAULT NOW()
       );
       CREATE INDEX IF NOT EXISTS vendor_documents_org ON vendor_documents(organization_id);
+      -- Per-document review scores (accuracy + completeness). Additive columns.
+      ALTER TABLE vendor_documents ADD COLUMN IF NOT EXISTS completeness NUMERIC;
+      ALTER TABLE vendor_documents ADD COLUMN IF NOT EXISTS accuracy     NUMERIC;
+      ALTER TABLE vendor_documents ADD COLUMN IF NOT EXISTS doc_score    NUMERIC;
+      ALTER TABLE vendor_documents ADD COLUMN IF NOT EXISTS doc_status   TEXT;
 
       -- Remediation path (Papa #12): every finding opens a ticket with
       -- high-level recommendations in the org's ticketing system (Jira /

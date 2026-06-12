@@ -14,6 +14,7 @@
 const express = require('express');
 const router = express.Router();
 const Saraqael = require('../services/VendorAssessmentService');
+const { extractText } = require('../utils/extractText');
 const { optionalJWT } = require('../middleware/auth');
 const logger = require('../utils/logger');
 
@@ -37,6 +38,13 @@ router.post('/documents', optionalJWT, async (req, res) => {
     }
     if (!Saraqael.DOC_TYPE_IDS.includes(b.docType)) {
       return res.status(400).json({ error: 'Unknown docType', valid: Saraqael.DOC_TYPE_IDS });
+    }
+    // Read the actual uploaded file (PDF/text) so the agent reviews real
+    // content. If only a filename or structured fields were sent, those are
+    // used and the review notes that no text was available.
+    if (!b.text && (b.contentBase64 || b.content)) {
+      try { b.text = extractText({ contentBase64: b.contentBase64, content: b.content, fileName: b.fileName }); }
+      catch (e) { logger.warn('vendor doc text extraction failed', { error: e.message }); }
     }
     const result = await Saraqael.assessDocument(orgId, b);
     // Cross-validate after each new document so inconsistencies surface immediately.
