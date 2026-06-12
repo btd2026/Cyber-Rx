@@ -47,6 +47,7 @@ export default function CisoExecReport(props) {
   const [error, setError] = useState(null);
   const [baseline, setBaseline] = useState('moderate');
   const [tech, setTech] = useState(null);
+  const [lens, setLens] = useState('csf');
   const { token, orgId, api } = ctx(props);
 
   useEffect(() => {
@@ -72,7 +73,7 @@ export default function CisoExecReport(props) {
         <div>
           <div style={{ fontSize: 10, fontWeight: 600, color: INK3, textTransform: 'uppercase', letterSpacing: '0.14em' }}>CISO · Security Posture Pack</div>
           <h2 style={{ margin: '6px 0 0', fontSize: 21, fontWeight: 600, color: INK }}>Four-lens operational posture</h2>
-          <div style={{ fontSize: 11.5, color: INK2, marginTop: 5 }}>Four independent frameworks, one view — each panel below is a separate lens on the same security program. Computed from validation run #{data.runId}.</div>
+          <div style={{ fontSize: 11.5, color: INK2, marginTop: 5 }}>Four independent frameworks on the same program — pick a lens below. Computed from validation run #{data.runId}.</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <a href={pdfUrl} style={{ background: INK, color: '#fff', fontSize: 11.5, fontWeight: 600, borderRadius: 5, padding: '8px 14px', textDecoration: 'none' }}>⤓ PDF report</a>
@@ -80,7 +81,15 @@ export default function CisoExecReport(props) {
         </div>
       </div>
 
+      {/* lens selector — one framework box at a time */}
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', margin: '4px 0 4px' }}>
+        {[['csf', 'NIST CSF 2.0', '#2563eb'], ['n80053', 'NIST 800-53 r5', '#7c3aed'], ['attack', 'MITRE ATT&CK', '#C0392B'], ['cis', 'CIS Controls v8.1', '#1f8a4c'], ['ops', 'Operational', INK3]].map(([k, l, c]) => (
+          <button key={k} onClick={() => setLens(k)} style={{ background: lens === k ? c : '#fff', color: lens === k ? '#fff' : INK2, border: `1px solid ${lens === k ? c : HAIR}`, borderRadius: 7, padding: '7px 14px', fontSize: 12, fontWeight: lens === k ? 700 : 500, cursor: 'pointer' }}>{l}</button>
+        ))}
+      </div>
+
       {/* ===== Lens 1 — NIST CSF 2.0 ===== */}
+      {lens === 'csf' && (
       <Lens n={1} title="NIST CSF 2.0 — Function scores" accent="#2563eb"
         sub="The six core functions of the Cybersecurity Framework. This is the board-level shape of the program."
         right={<Pillbox text={`Overall ${data.csf.overall ?? '—'}`} color="#2563eb" />}>
@@ -88,8 +97,10 @@ export default function CisoExecReport(props) {
           {data.csf.functions.map((f) => <ScoreChip key={f.id} label={f.name} score={f.score} status={f.status} />)}
         </div>
       </Lens>
+      )}
 
       {/* ===== Lens 2 — NIST 800-53 r5 ===== */}
+      {lens === 'n80053' && (
       <Lens n={2} title="NIST SP 800-53 r5 — Control-family compliance" accent="#7c3aed"
         sub="Coverage of the control families in your chosen baseline. Families are grouped weakest-first."
         right={(
@@ -111,8 +122,10 @@ export default function CisoExecReport(props) {
           ))}
         </div>
       </Lens>
+      )}
 
       {/* ===== Lens 3 — MITRE ATT&CK ===== */}
+      {lens === 'attack' && (
       <Lens n={3} title="MITRE ATT&CK — Coverage by tactic" accent="#C0392B"
         sub="How well your controls prevent or detect real adversary techniques, grouped by attack tactic."
         right={<Pillbox text={`${data.attack.summary.covered}/${data.attack.summary.total} covered`} color="#C0392B" />}>
@@ -148,9 +161,10 @@ export default function CisoExecReport(props) {
           ))}
         </div>
       </Lens>
+      )}
 
       {/* ===== Lens 4 — CIS Controls (grouped by status) ===== */}
-      {data.cis && data.cis.status === 'ingested' && (
+      {lens === 'cis' && data.cis && data.cis.status === 'ingested' && (
         <Lens n={4} title={`CIS Controls v${data.cis.version} — the 18 Controls`} accent="#1f8a4c"
           sub={`${data.cis.safeguards} safeguards across 18 controls, grouped by how well each is evidenced.`}>
           {['Gap', 'Weak', 'Moderate', 'Strong'].map((band) => {
@@ -178,7 +192,8 @@ export default function CisoExecReport(props) {
         </Lens>
       )}
 
-      {/* Operational footer: failing queue + trends */}
+      {/* Operational */}
+      {lens === 'ops' && (
       <Lens n="·" title="Operational — failing checks & trend" accent={INK3}
         sub="The specific checks that need action, and how the two scored frameworks are trending.">
         {data.failingQueue.length > 0 ? (
@@ -200,6 +215,7 @@ export default function CisoExecReport(props) {
           <div><div style={{ fontSize: 11, color: INK3 }}>800-53 overall trend</div><Spark points={data.trends.nist80053} /></div>
         </div>
       </Lens>
+      )}
 
       {data.cis && data.cis.status === 'pending' && (
         <div style={{ marginTop: 14, background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 6, padding: '8px 12px', fontSize: 11.5, color: '#92400e' }}>

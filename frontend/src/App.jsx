@@ -8442,7 +8442,6 @@ function CISODash(props) {
           {[["",  "Questions"],
             ["posturedash","Security Posture"],
             ["aicontrols","AI Controls"],
-            ["attackpath","Attack Path"],
             ["execreport","Four-Lens (CSF · 800-53 · CIS · ATT&CK)"]].map(function(t){
             var key=t[0]; var lbl=t[1];
             var on=(key===""? (!agentView) : agentView===key);
@@ -8518,7 +8517,7 @@ function CISODash(props) {
               style={{background:"transparent",border:"1px solid "+C.border,color:C.muted,
                 borderRadius:7,padding:"5px 10px",cursor:"pointer",fontSize:11}}>← Ask another</button>
           </div>
-          <CisoSecurityPostureDashboard focusQuestion={agentQ}/>
+          <CisoSecurityPostureDashboard focusQuestion={agentQ} attackGraph={<AttackPathDiagram/>}/>
         </div>
       )}
 
