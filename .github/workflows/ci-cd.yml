@@ -32,12 +32,12 @@ jobs:
       - name: Install Backend Dependencies
         run: |
           cd cyberrx-api
-          npm ci
+          npm install --no-audit --no-fund
 
       - name: Install Frontend Dependencies
         run: |
           cd frontend
-          npm ci
+          npm install --no-audit --no-fund
 
       - name: Run Backend Linter
         run: |
@@ -116,7 +116,7 @@ jobs:
       - name: Install Frontend Dependencies
         run: |
           cd frontend
-          npm ci
+          npm install --no-audit --no-fund
 
       - name: Run Frontend Tests
         run: |
@@ -163,7 +163,7 @@ jobs:
       - name: Run Frontend Smoke Tests
         run: |
           cd tests/e2e
-          npm ci
+          npm install --no-audit --no-fund
           npx playwright test --grep "@smoke" --project=chromium
         env:
           BASE_URL: ${{ steps.deploy.outputs.url }}
@@ -194,7 +194,7 @@ jobs:
       - name: Install Backend Dependencies
         run: |
           cd cyberrx-api
-          npm ci
+          npm install --no-audit --no-fund
 
       - name: Run Backend Tests
         run: |
@@ -264,7 +264,7 @@ jobs:
       - name: Install E2E Dependencies
         run: |
           cd tests/e2e
-          npm ci
+          npm install --no-audit --no-fund
 
       - name: Install Playwright Browsers
         run: |
