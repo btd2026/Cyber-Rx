@@ -1,0 +1,92 @@
+[
+  {
+    "csf": "PR.AT-02",
+    "csf_title": "Awareness & Training",
+    "ctrl": "AT-2",
+    "ctrl_title": "Literacy Training and Awareness",
+    "meta": {
+      "shared_checks": 2
+    }
+  },
+  {
+    "csf": "DE.CM-09",
+    "csf_title": "Continuous Monitoring",
+    "ctrl": "SI-3(6)",
+    "ctrl_title": "Testing and Verification",
+    "meta": {
+      "shared_checks": 2
+    }
+  },
+  {
+    "csf": "ID.RA-05",
+    "csf_title": "Risk Assessment",
+    "ctrl": "SI-2(3)",
+    "ctrl_title": "Time to Remediate Flaws and Benchmarks for Corrective Actions",
+    "meta": {
+      "shared_checks": 3
+    }
+  },
+  {
+    "csf": "PR.PS-04",
+    "csf_title": "Platform Security",
+    "ctrl": "CA-7",
+    "ctrl_title": "Continuous Monitoring",
+    "meta": {
+      "shared_checks": 1
+    }
+  },
+  {
+    "csf": "DE.CM-01",
+    "csf_title": "Continuous Monitoring",
+    "ctrl": "SI-4(7)",
+    "ctrl_title": "Automated Response to Suspicious Events",
+    "meta": {
+      "shared_checks": 1
+    }
+  },
+  {
+    "csf": "DE.AE-06",
+    "csf_title": "Adverse Event Analysis",
+    "ctrl": "IR-4(15)",
+    "ctrl_title": "Public Relations and Reputation Repair",
+    "meta": {
+      "shared_checks": 1
+    }
+  },
+  {
+    "csf": "ID.AM-05",
+    "csf_title": "Asset Management",
+    "ctrl": "CM-8(7)",
+    "ctrl_title": "Centralized Repository",
+    "meta": {
+      "shared_checks": 1
+    }
+  },
+  {
+    "csf": "DE.AE-08",
+    "csf_title": "Adverse Event Analysis",
+    "ctrl": "IR-4(10)",
+    "ctrl_title": "Supply Chain Coordination",
+    "meta": {
+      "shared_checks": 1
+    }
+  },
+  {
+    "csf": "PR.AA-03",
+    "csf_title": "Identity Management, Authentication & Access Control",
+    "ctrl": "AC-7(2)",
+    "ctrl_title": "Purge or Wipe Mobile Device",
+    "meta": {
+      "shared_checks": 3
+    }
+  },
+  {
+    "csf": "PR.PS-04",
+    "csf_title": "Platform Security",
+    "ctrl": "AU-12(1)",
+    "ctrl_title": "System-wide and Time-correlated Audit Trail",
+    "meta": {
+      "shared_checks": 1
+    }
+  }
+]
