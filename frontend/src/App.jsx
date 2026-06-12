@@ -10,6 +10,7 @@ import CsfRankings from "./components/CsfRankings";
 import FrameworkScorecard from "./components/FrameworkScorecard";
 import VendorAssessmentPanel from "./components/VendorAssessmentPanel";
 import AttackPathDiagram from "./components/AttackPathDiagram";
+import CisoPostureDomains from "./components/CisoPostureDomains";
 import FrameworkScoreStrip from "./components/FrameworkScoreStrip";
 import RemediationPanel from "./components/RemediationPanel";
 import AuditDash from "./pages/AuditDash";
@@ -8365,6 +8366,7 @@ function CISODash(props) {
   // selects the tailored dashboard to render below it.
   var _av=useState(null);   var agentView=_av[0]; var setAgentView=_av[1];
   var _aq=useState("");      var agentQ=_aq[0];    var setAgentQ=_aq[1];
+  var _pe=useState(null);    var postureEmphasis=_pe[0]; var setPostureEmphasis=_pe[1];
 
   // Route a matched agent answer to the tailored view that answers it.
   function applyAgentAnswer(ans){
@@ -8374,12 +8376,20 @@ function CISODash(props) {
     // Attack-pathway questions show the attack path FIRST — even when the
     // question also mentions cost (e.g. "...and what does each one cost us?").
     if(/(attack path|pathway|attack|kill chain|diagram|how.*reach|trace)/.test(q)) { setDrillView(null); setAgentView("attackpath"); return; }
+    // CISO posture-domain questions → the 8-domain posture view, emphasis per question.
+    if(/last period|more or less secure/.test(q))            { setDrillView(null); setPostureEmphasis("trend");      setAgentView("domains"); return; }
+    if(/improving or deteriorat|domains?.*(improving|deteriorat)/.test(q)) { setDrillView(null); setPostureEmphasis("trend"); setAgentView("domains"); return; }
+    if(/control areas?.*risk|creating the most risk/.test(q)) { setDrillView(null); setPostureEmphasis("risk");      setAgentView("domains"); return; }
+    if(/top security gaps?|requiring ciso/.test(q))          { setDrillView(null); setPostureEmphasis("gaps");      setAgentView("domains"); return; }
+    if(/within our.*threshold|internal security threshold/.test(q)) { setDrillView(null); setPostureEmphasis("thresholds"); setAgentView("domains"); return; }
+    if(/needs action now|action now/.test(q))               { setDrillView(null); setPostureEmphasis("actions");   setAgentView("domains"); return; }
+    if(/current.*posture|overall.*posture|posture/.test(q)) { setDrillView(null); setPostureEmphasis(null);        setAgentView("domains"); return; }
     if(/finding/.test(q))                         { setDrillView(null); setAgentView("findings"); setSevF(/critical/.test(q)?"Critical":"All"); return; }
     if(/(exposure|financial|cost|dollar|\$)/.test(q)){ setDrillView(null); setAgentView("exposure"); return; }
     if(/(threat|process)/.test(q))                { setAgentView(null); setDrillView("atrisk"); return; }
     if(/(remediat|prioriti)/.test(q))             { setAgentView(null); setDrillView("atrisk"); return; }
     if(/(control|effective|capab|maturity)/.test(q)){ setDrillView(null); setAgentView("controls"); return; }
-    setDrillView(null); setAgentView("posture"); // overall posture / default
+    setDrillView(null); setPostureEmphasis(null); setAgentView("domains"); // default → posture domains
   }
   function clearAgentView(){ setAgentView(null); setDrillView(null); setAgentQ(""); setSevF("All"); }
 
@@ -8437,8 +8447,23 @@ function CISODash(props) {
         </div>
       )}
 
+      {/* CISO posture across the 8 posture domains (Papa) */}
+      {!drillView&&agentView==="domains"&&(
+        <div style={{padding:"0 20px 20px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+            <div style={{color:C.text,fontSize:13,fontWeight:700}}>
+              CISO Security Posture — 8 domains{agentQ?(" · "+agentQ):""}
+            </div>
+            <button onClick={clearAgentView}
+              style={{background:"transparent",border:"1px solid "+C.border,color:C.muted,
+                borderRadius:7,padding:"5px 10px",cursor:"pointer",fontSize:11}}>← Ask another</button>
+          </div>
+          <CisoPostureDomains emphasis={postureEmphasis}/>
+        </div>
+      )}
+
       {/* CISO Header — shown only once a question has surfaced a view; mirrors the view */}
-      {(drillView||(agentView&&agentView!=="attackpath"))&&(function(){
+      {(drillView||(agentView&&agentView!=="attackpath"&&agentView!=="domains"))&&(function(){
       var hm=cisoViewMeta();
       return (
       <div style={{padding:"16px 20px",background:"linear-gradient(135deg,"+hm.color+"14,"+C.panel+")",

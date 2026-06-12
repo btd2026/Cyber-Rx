@@ -153,12 +153,14 @@ const SUGGESTED_QUESTIONS = {
     'Which crown-jewel processes are exposed?',
   ],
   CISO: [
+    'Are we more or less secure than last period?',
+    'Which security domains are improving or deteriorating?',
+    'Which control areas are creating the most risk?',
+    'What are the top security gaps requiring CISO attention?',
+    'Are we within our internal security thresholds?',
+    'What needs action now?',
+    'What is our current security posture?',
     'Which attack pathways threaten our critical processes?',
-    'What is our overall security posture?',
-    'Which controls are least effective?',
-    'What are our top open critical findings?',
-    'Where should we prioritize remediation?',
-    'What is the financial exposure of our top threats?',
   ],
   Board: [
     'Are we at risk right now?',
@@ -872,6 +874,50 @@ function deterministicAnswer(role, ctx, question) {
 /** Answer an executive's free-text question for a role, grounded in live org data.
  *  The question is first matched to the agent's question library; anything that
  *  doesn't match is gracefully declined as out of scope. */
+const TREND_WORD = { improving: 'improving', deteriorating: 'deteriorating', stable: 'holding steady', new: 'newly assessed' };
+const TREND_ARROW = { improving: '▲', deteriorating: '▼', stable: '▬', new: '◆' };
+
+// Answer a CISO posture question from CisoPostureService. Returns null for
+// questions that aren't posture-related (so they fall through to the default).
+async function cisoPostureAnswer(matchedQuestion, orgId) {
+  const q = String(matchedQuestion || '').toLowerCase();
+  const isPosture = /(last period|more or less secure|domains? (are )?(improving|deteriorat)|control areas?.*risk|top security gaps?|within our.*threshold|needs action now|current.*posture)/.test(q);
+  if (!isPosture) return null;
+  let p;
+  try { p = await require('./CisoPostureService').getPosture(orgId, { persist: false }); }
+  catch (_) { return null; }
+  const byScore = [...p.domains].sort((a, b) => a.score - b.score);
+
+  if (/last period|more or less secure/.test(q)) {
+    const t = p.overall.trend;
+    return { source: 'deterministic',
+      summary: `Overall posture is ${p.overall.score}/100 (${p.overall.status}) and ${TREND_WORD[t]}${p.overall.delta ? ` (${p.overall.delta > 0 ? '+' : ''}${p.overall.delta} vs last period)` : ''}. ${byScore.filter(d => d.trend === 'deteriorating').length} domain(s) deteriorated and ${byScore.filter(d => d.trend === 'improving').length} improved.`,
+      details: p.domains.map((d) => `${TREND_ARROW[d.trend]} ${d.name}: ${d.score}/100 (${d.trend}${d.delta ? `, ${d.delta > 0 ? '+' : ''}${d.delta}` : ''})`) };
+  }
+  if (/improving|deteriorat/.test(q)) {
+    const dets = [...p.domains].sort((a, b) => a.delta - b.delta).map((d) => `${TREND_ARROW[d.trend]} ${d.name}: ${d.score}/100 — ${d.trend}${d.delta ? ` (${d.delta > 0 ? '+' : ''}${d.delta})` : ''}`);
+    return { source: 'deterministic', summary: `Tracking trend across all 8 posture domains. Deteriorating: ${p.domains.filter(d => d.trend === 'deteriorating').map(d => d.name).join(', ') || 'none'}. Improving: ${p.domains.filter(d => d.trend === 'improving').map(d => d.name).join(', ') || 'none'}.`, details: dets };
+  }
+  if (/control areas?.*risk/.test(q)) {
+    return { source: 'deterministic', summary: `The domains creating the most risk are ${byScore.slice(0, 3).map(d => `${d.name} (${d.score}/100)`).join(', ')}.`,
+      details: byScore.slice(0, 5).map((d) => `${d.name}: ${d.score}/100 (${d.status}) — top driver: ${d.drivers[0]}`) };
+  }
+  if (/top security gaps?|needs action now/.test(q)) {
+    const gaps = p.domains.filter((d) => d.status !== 'green').sort((a, b) => a.score - b.score);
+    return { source: 'deterministic', summary: `${gaps.length} domain(s) need CISO attention. The most urgent: ${gaps.slice(0, 3).map(d => d.name).join(', ')}.`,
+      details: gaps.slice(0, 6).map((d) => `${d.name} (${d.score}/100): ${d.recommendedAction}`) };
+  }
+  if (/within our.*threshold/.test(q)) {
+    const breaches = p.domains.flatMap((d) => d.metricsOutsideThreshold.map((m) => `${d.name} — ${m.name}: ${m.value}${m.unit ? ' ' + m.unit : ''} (target ${m.higher ? '≥' : '≤'}${m.target}${m.unit ? ' ' + m.unit : ''})`));
+    return { source: 'deterministic', summary: `${breaches.length} metric(s) are outside your internal security thresholds across ${p.domains.filter(d => d.metricsOutsideThreshold.length).length} domain(s).`,
+      details: breaches.slice(0, 10) };
+  }
+  // Current posture — explain what's evaluated, then the domain scores.
+  return { source: 'deterministic',
+    summary: `Your current security posture is ${p.overall.score}/100 (${p.overall.status}). I evaluate it across eight domains — Identity & Access, Vulnerability & Patch, Endpoint & Workload, Cloud & Infrastructure, Detection & Response, Data Protection, Control Effectiveness, and Third-Party Exposure — each scored 0–100 from the live metrics behind it (MFA/PAM coverage, critical & known-exploited vulnerabilities, EDR coverage, cloud misconfigurations, MTTD/MTTR and log coverage, encryption & DLP, control pass-rate, and vendor security findings).`,
+    details: p.domains.map((d) => `${d.name}: ${d.score}/100 (${d.status}, ${d.trend}) — drivers: ${d.drivers.join('; ')}`) };
+}
+
 async function answerQuestion(role, orgId, question) {
   if (!isValidRole(role)) throw new Error('Invalid role');
   const q = String(question || '').trim();
@@ -888,6 +934,13 @@ async function answerQuestion(role, orgId, question) {
       summary: `I'm not trained to answer that one in this view. As the ${role} agent I focus on ${FOCUS[role] || 'this executive\'s risk picture'}. Pick one of the questions I can answer below.`,
       details: getSuggestedQuestions(role),
     };
+  }
+
+  // CISO posture questions are answered from the eight-domain posture engine,
+  // and the "current posture" question explains exactly what's evaluated.
+  if (role === 'CISO') {
+    const ciso = await cisoPostureAnswer(m.question, orgId);
+    if (ciso) return { role, question: q, matched: true, matchedQuestion: m.question, answeredAt: new Date().toISOString(), ...ciso };
   }
 
   // Answer the matched library question (it carries the right keywords/intent).

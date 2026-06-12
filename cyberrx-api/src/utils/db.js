@@ -568,6 +568,17 @@ async function init() {
         UNIQUE (organization_id, source_ref)
       );
       CREATE INDEX IF NOT EXISTS remediation_tickets_org ON remediation_tickets(organization_id);
+
+      -- CISO posture-domain snapshots — one row per (org, domain) per capture,
+      -- so the dashboard can show whether each domain is improving/deteriorating.
+      CREATE TABLE IF NOT EXISTS ciso_posture_snapshots (
+        id           TEXT PRIMARY KEY,
+        org_id       TEXT NOT NULL,
+        domain_id    TEXT NOT NULL,
+        score        NUMERIC,
+        captured_at  TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS ciso_posture_snap ON ciso_posture_snapshots(org_id, domain_id, captured_at DESC);
       CREATE INDEX IF NOT EXISTS vendor_documents_vendor ON vendor_documents(vendor_id);
 
       -- Editable "database of mock numbers" that drives every dashboard figure.
