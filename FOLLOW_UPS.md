@@ -82,3 +82,22 @@ Safeguards with no automated-check coverage: **54** (35 new-check candidates, 19
 - 16.10 Apply Secure Design Principles in Application Architectures
 
 No CIS→NIST CSF or CIS→ATT&CK mapping workbook supplied — CIS↔CSF crosswalks are derived/provisional. Add those workbooks to resources/cis/ to ingest official crosswalks.
+
+## Optional mappings — status
+
+- **CIS↔ATT&CK / CSF↔ATT&CK (derived)**: 15,937 + 3,591 provisional crosswalks
+  derived via shared checks (technique→CTID 800-53 controls→checks ∩ safeguard/
+  subcategory→checks), provenance='derived', shared_checks in meta. Queryable at
+  `GET /api/frameworks/crosswalks?to=attack_enterprise`. Supplying the licensed
+  CIS↔ATT&CK mapping workbook (resources/cis/) upgrades CIS rows to OFFICIAL.
+- **CPRT CSF 2.0 informative references (official CSF↔800-53)**: loader is built
+  (`src/ingest/loadCsfRefs.js`, wired into bootstrap) but the export could not be
+  fetched from this environment — `csrc.nist.gov` is NOT in the network egress
+  allowlist (only raw.githubusercontent.com was open), and NIST publishes no
+  GitHub mirror of the CPRT CSF export. Two ways to unblock:
+    1. Add `csrc.nist.gov` to the Claude Code environment's network allowlist and
+       ask the cloud session to re-fetch; or
+    2. Download from https://csrc.nist.gov/projects/cprt (CSF 2.0 → export JSON)
+       on a workstation and push/upload it to `resources/nist/` (any filename
+       containing 'csf', .json). Bootstrap ingests it automatically and flips the
+       662 derived CSF↔800-53 rows to provenance='NIST CPRT', provisional=false.

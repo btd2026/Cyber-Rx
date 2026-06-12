@@ -49,6 +49,20 @@ async function bootstrap() {
     else steps.cis = 'present';
   } catch (e) { logger.warn('bootstrap: CIS ingest failed', { error: e.message }); }
 
+  try {
+    // OFFICIAL CSF<->800-53 references, when the CPRT export is supplied.
+    const hasOfficial = await count(`SELECT COUNT(*)::int n FROM requirement_crosswalks WHERE provenance='NIST CPRT'`);
+    if (!hasOfficial) steps.csfRefs = await require('./loadCsfRefs').load();
+    else steps.csfRefs = 'present';
+  } catch (e) { logger.warn('bootstrap: CSF refs ingest failed', { error: e.message }); }
+
+  try {
+    // Derived CIS/CSF -> ATT&CK crosswalks (provisional; cheap to recompute).
+    const hasDerived = await count(`SELECT COUNT(*)::int n FROM requirement_crosswalks WHERE to_framework='attack_enterprise' AND provenance='derived'`);
+    if (!hasDerived) steps.attackXwalks = await require('./deriveAttackXwalks').derive();
+    else steps.attackXwalks = 'present';
+  } catch (e) { logger.warn('bootstrap: attack xwalk derivation failed', { error: e.message }); }
+
   return steps;
 }
 
