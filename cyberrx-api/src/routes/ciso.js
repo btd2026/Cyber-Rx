@@ -4,6 +4,8 @@ const router = express.Router();
 const CisoPostureService = require('../services/CisoPostureService');
 const AiControlsService = require('../services/AiControlsService');
 const CisoDashboardService = require('../services/CisoDashboardService');
+const ExecReportService = require('../services/ExecReportService');
+const CisoReportBuilder = require('../services/CisoReportBuilder');
 const { optionalJWT } = require('../middleware/auth');
 const logger = require('../utils/logger');
 
@@ -30,5 +32,33 @@ router.get('/dashboard', optionalJWT, async (req, res) => {
   const orgId = org(req, res); if (!orgId) return;
   try { res.json(await CisoDashboardService.getDashboard(orgId)); }
   catch (err) { logger.error('CISO dashboard error', { error: err.message }); res.status(500).json({ error: 'Failed to build CISO dashboard', message: err.message }); }
+});
+
+// Professional executive exports — board-ready PDF and PowerPoint of the full
+// CISO posture (summary, domains, risks, actions, attack paths, readiness).
+router.get('/report.pdf', optionalJWT, async (req, res) => {
+  const orgId = org(req, res); if (!orgId) return;
+  try {
+    const [d, fw] = await Promise.all([
+      CisoDashboardService.getDashboard(orgId),
+      ExecReportService.cisoPack(orgId, { baseline: req.query.baseline }).catch(() => null),
+    ]);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="cyberrx-ciso-posture-report.pdf"`);
+    CisoReportBuilder.buildPdf(res, d, fw);
+  } catch (err) { logger.error('CISO pdf error', { error: err.message }); res.status(500).json({ error: 'Failed to build PDF', message: err.message }); }
+});
+router.get('/report.pptx', optionalJWT, async (req, res) => {
+  const orgId = org(req, res); if (!orgId) return;
+  try {
+    const [d, fw] = await Promise.all([
+      CisoDashboardService.getDashboard(orgId),
+      ExecReportService.cisoPack(orgId, { baseline: req.query.baseline }).catch(() => null),
+    ]);
+    const buf = await CisoReportBuilder.buildPptxBuffer(d, fw);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
+    res.setHeader('Content-Disposition', `attachment; filename="cyberrx-ciso-posture-deck.pptx"`);
+    res.end(buf);
+  } catch (err) { logger.error('CISO pptx error', { error: err.message }); res.status(500).json({ error: 'Failed to build PPTX', message: err.message }); }
 });
 module.exports = router;
