@@ -62,7 +62,8 @@ export default function CisoExecReport(props) {
   if (error) return <div style={{ padding: 20, color: RED, fontSize: 13 }}>Could not load CISO pack: {error}</div>;
   if (!data) return <div style={{ padding: 20, color: INK3, fontSize: 13 }}>Computing security posture from latest validation run…</div>;
 
-  const exportUrl = `${api}/api/frameworks/exec/ciso/export.pdf?org_id=${encodeURIComponent(orgId)}&baseline=${baseline}`;
+  const pdfUrl = `${api}/api/ciso/report.pdf?org_id=${encodeURIComponent(orgId)}&baseline=${baseline}`;
+  const pptxUrl = `${api}/api/ciso/report.pptx?org_id=${encodeURIComponent(orgId)}&baseline=${baseline}`;
   const cisCol = (p) => (p >= 80 ? GREEN : p >= 50 ? AMBER : RED);
 
   return (
@@ -73,7 +74,10 @@ export default function CisoExecReport(props) {
           <h2 style={{ margin: '6px 0 0', fontSize: 21, fontWeight: 600, color: INK }}>Four-lens operational posture</h2>
           <div style={{ fontSize: 11.5, color: INK2, marginTop: 5 }}>Four independent frameworks, one view — each panel below is a separate lens on the same security program. Computed from validation run #{data.runId}.</div>
         </div>
-        <a href={exportUrl} style={{ background: INK, color: '#fff', fontSize: 11.5, fontWeight: 600, borderRadius: 5, padding: '8px 14px', textDecoration: 'none' }}>⤓ Export CISO pack (PDF)</a>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <a href={pdfUrl} style={{ background: INK, color: '#fff', fontSize: 11.5, fontWeight: 600, borderRadius: 5, padding: '8px 14px', textDecoration: 'none' }}>⤓ PDF report</a>
+          <a href={pptxUrl} style={{ background: '#fff', color: INK, border: `1px solid ${HAIR}`, fontSize: 11.5, fontWeight: 600, borderRadius: 5, padding: '8px 14px', textDecoration: 'none' }}>⤓ PowerPoint</a>
+        </div>
       </div>
 
       {/* ===== Lens 1 — NIST CSF 2.0 ===== */}

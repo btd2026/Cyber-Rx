@@ -40,6 +40,7 @@
     "passport-saml": "^3.2.4",
     "pdfkit": "^0.18.0",
     "pg": "^8.11.0",
+    "pptxgenjs": "^4.0.1",
     "qrcode": "^1.5.4",
     "rate-limiter-flexible": "^11.1.0",
     "redis": "^6.0.0",
