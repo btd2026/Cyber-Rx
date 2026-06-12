@@ -58,6 +58,17 @@ export default function CisoSecurityPostureDashboard(props) {
       .then(setD).catch((e) => setError(e.message));
   }, [api, orgId, token]);
 
+  // When arrived from the CISO agent with a question, open the Q&A tab and the
+  // matching answer's evidence drawer so the agent's answer is front-and-center.
+  useEffect(() => {
+    if (!d || !props.focusQuestion) return;
+    const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    const t = norm(props.focusQuestion);
+    const a = d.questions.find((x) => norm(x.question) === t)
+      || d.questions.find((x) => norm(x.question).includes(t) || t.includes(norm(x.question)));
+    if (a) { setTab('qa'); setDrawer(a); }
+  }, [d, props.focusQuestion]);
+
   if (error) return <div style={{ padding: 24, color: '#C0392B', fontSize: 13 }}>Could not load CISO dashboard: {error}</div>;
   if (!d) return <div style={{ padding: 24, color: INK3, fontSize: 13 }}>Composing CISO security posture…</div>;
 
