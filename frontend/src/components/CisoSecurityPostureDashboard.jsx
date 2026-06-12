@@ -156,7 +156,7 @@ export default function CisoSecurityPostureDashboard(props) {
         {tab === 'thresholds' && <Thresholds board={d.thresholds} />}
         {tab === 'actions' && <Actions queue={d.actionQueue} attention={d.attentionItems} />}
         {tab === 'processes' && <Processes procs={d.businessProcesses} />}
-        {tab === 'paths' && <Pathways paths={d.attackPathways} sel={pathSel} setSel={setPathSel} />}
+        {tab === 'paths' && <PathsTab paths={d.attackPathways} sel={pathSel} setSel={setPathSel} attackGraph={props.attackGraph} />}
         {tab === 'readiness' && <Readiness readiness={d.readiness} investments={d.investments} peers={d.peerMaturity} emerging={d.emergingRisks} />}
         {tab === 'hidden' && <Hidden risks={d.hiddenRisks} />}
         <div style={{ fontSize: 10.5, color: INK3, marginTop: 16, borderTop: `1px solid ${HAIR}`, paddingTop: 10 }}>
@@ -409,6 +409,22 @@ function Processes({ procs }) {
 }
 
 /* ---------------- Attack Pathways ---------------- */
+// Attack Path tab — two views: the narrative analysis and the live threat graph.
+function PathsTab({ paths, sel, setSel, attackGraph }) {
+  const [view, setView] = useState('analysis');
+  return (
+    <div>
+      <div style={{ display: 'inline-flex', gap: 0, border: `1px solid ${HAIR}`, borderRadius: 8, overflow: 'hidden', marginBottom: 14 }}>
+        {[['analysis', 'Pathway analysis'], ['graph', 'Live threat graph']].map(([k, l]) => (
+          <button key={k} onClick={() => setView(k)} style={{ background: view === k ? INK : '#fff', color: view === k ? '#fff' : INK2, border: 'none', padding: '7px 16px', fontSize: 12, fontWeight: view === k ? 700 : 500, cursor: 'pointer' }}>{l}</button>
+        ))}
+      </div>
+      {view === 'analysis' ? <Pathways paths={paths} sel={sel} setSel={setSel} />
+        : (attackGraph || <div style={{ fontSize: 12, color: INK3 }}>Live threat graph unavailable.</div>)}
+    </div>
+  );
+}
+
 function Pathways({ paths, sel, setSel }) {
   const p = paths[sel] || paths[0];
   // Build a labelled kill-chain: each step gets a stage label + the control that breaks it.
