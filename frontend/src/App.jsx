@@ -8385,7 +8385,7 @@ function CISODash(props) {
     // decision questions (materially disrupt, unknowingly accepting, targeted
     // today, investments reducing risk, major cyber event, emerging faster,
     // peer maturity, posture dashboard).
-    if(/posture dashboard|materially disrupt|unknowingly accept|targeted us today|where would they most likely|investments? reducing|measurable risk|major cyber event|how prepared are we|emerging faster|trail peer|peer (security )?maturity/.test(q)) { setDrillView(null); setAgentView("posturedash"); return; }
+    if(/posture dashboard|materially disrupt|unknowingly accept|targeted us today|where would they most likely|investments? reducing|measurable risk|major cyber event|how prepared are we|emerging faster|trail peer|peer (security )?maturity|more or less secure|last period|domains? .*(improving|deteriorat)|control areas?.*risk|top security gaps?|within our.*threshold|needs action now|current.*posture/.test(q)) { setDrillView(null); setAgentView("posturedash"); return; }
     if(/\bai\b|gen.?ai|claude|copilot|llm/.test(q))            { setDrillView(null); setAgentView("aicontrols"); return; }
     if(/(attack path|pathway|attack|kill chain|diagram|how.*reach|trace)/.test(q)) { setDrillView(null); setAgentView("attackpath"); return; }
     // CISO posture-domain questions → the 8-domain posture view, emphasis per question.
@@ -8512,7 +8512,7 @@ function CISODash(props) {
               style={{background:"transparent",border:"1px solid "+C.border,color:C.muted,
                 borderRadius:7,padding:"5px 10px",cursor:"pointer",fontSize:11}}>← Ask another</button>
           </div>
-          <CisoSecurityPostureDashboard/>
+          <CisoSecurityPostureDashboard focusQuestion={agentQ}/>
         </div>
       )}
 

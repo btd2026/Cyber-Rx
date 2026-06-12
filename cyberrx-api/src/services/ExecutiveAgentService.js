@@ -161,6 +161,13 @@ const SUGGESTED_QUESTIONS = {
     'What needs action now?',
     'What is our current security posture?',
     'Which attack pathways threaten our critical processes?',
+    'What could materially disrupt security operations or critical business processes right now?',
+    'What risk are we unknowingly accepting?',
+    'If attackers targeted us today, where would they most likely succeed?',
+    'Are our security investments reducing measurable risk?',
+    'How prepared are we for a major cyber event?',
+    'What risks are emerging faster than we are adapting?',
+    'Where do we trail peer security maturity?',
   ],
   Board: [
     'Are we at risk right now?',
@@ -918,6 +925,32 @@ async function cisoPostureAnswer(matchedQuestion, orgId) {
     details: p.domains.map((d) => `${d.name}: ${d.score}/100 (${d.status}, ${d.trend}) — drivers: ${d.drivers.join('; ')}`) };
 }
 
+// Answer any of the 15 CISO questions with a decision-ready executive answer
+// drawn from the CISO Security Posture Dashboard (Answer / Confidence / Status /
+// What changed / Why it matters / Evidence / Recommended / Owner / Target).
+async function cisoDashboardAnswer(matchedQuestion, orgId) {
+  let dash;
+  try { dash = await require('./CisoDashboardService').getDashboard(orgId); } catch (_) { return null; }
+  const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  const target = norm(matchedQuestion);
+  const a = dash.questions.find((x) => norm(x.question) === target)
+    || dash.questions.find((x) => norm(x.question).includes(target) || target.includes(norm(x.question)));
+  if (!a) return null;
+  const details = [
+    `Status: ${a.status}  ·  Confidence: ${a.confidence}`,
+    `What changed: ${a.whatChanged}`,
+    `Why it matters: ${a.whyItMatters}`,
+    ...(a.evidence || []).map((e) => `Evidence: ${e}`),
+    `Business/process impact: ${a.businessImpact}`,
+    `Key risk drivers: ${(a.riskDrivers || []).join(' · ')}`,
+    `Recommended action: ${a.recommendedAction}`,
+    `Owner: ${a.owner}  ·  Target date: ${a.targetDate}`,
+    `Data sources: ${(a.dataSources || []).join(', ')}  ·  Last refreshed: ${new Date(a.lastRefreshed).toLocaleString()}`,
+  ];
+  // `executive` carries the full structured answer for the UI's evidence drawer.
+  return { source: 'ciso_dashboard', summary: a.answer, details, executive: a };
+}
+
 async function answerQuestion(role, orgId, question) {
   if (!isValidRole(role)) throw new Error('Invalid role');
   const q = String(question || '').trim();
@@ -939,6 +972,10 @@ async function answerQuestion(role, orgId, question) {
   // CISO posture questions are answered from the eight-domain posture engine,
   // and the "current posture" question explains exactly what's evaluated.
   if (role === 'CISO') {
+    // Prefer the decision-ready dashboard answer (covers all 15 CISO questions);
+    // fall back to the 8-domain posture answer for legacy phrasings.
+    const dash = await cisoDashboardAnswer(m.question, orgId);
+    if (dash) return { role, question: q, matched: true, matchedQuestion: m.question, answeredAt: new Date().toISOString(), ...dash };
     const ciso = await cisoPostureAnswer(m.question, orgId);
     if (ciso) return { role, question: q, matched: true, matchedQuestion: m.question, answeredAt: new Date().toISOString(), ...ciso };
   }
