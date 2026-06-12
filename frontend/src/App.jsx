@@ -16,7 +16,7 @@ import AiSecurityControls from "./components/AiSecurityControls";
 import CisoExecReport from "./components/CisoExecReport";
 import CroBoardReport from "./components/CroBoardReport";
 import CisoSecurityPostureDashboard from "./components/CisoSecurityPostureDashboard";
-import CisoAnswerView from "./components/CisoAnswerView";
+import CisoAgentPanel from "./components/CisoAgentPanel";
 import FrameworkScoreStrip from "./components/FrameworkScoreStrip";
 import RemediationPanel from "./components/RemediationPanel";
 import AuditDash from "./pages/AuditDash";
@@ -8436,10 +8436,10 @@ function CISODash(props) {
     <div>
       <DashNav current="dashboard" go={go}/>
 
-      {/* AI agent brief - the tab opens here; asking a question builds the dashboard below */}
+      {/* CISO persona — secondary nav to the deep-dive views (the landing is the
+          clean CISO agent Q&A panel below; no agent intro / voice on this page) */}
       <div style={{padding:"14px 20px 0"}}>
-        <ExecutiveAgentBrief role="CISO" entry onAnswer={applyAgentAnswer} onGeneral={function(){setDrillView(null);setPostureEmphasis(null);setAgentView("domains");setAgentQ("Current security posture");}} />
-        <div style={{display:"flex",justifyContent:"flex-end",gap:8,marginTop:8}}>
+        <div style={{display:"flex",justifyContent:"flex-end",gap:8,marginTop:0}}>
           <button onClick={function(){setDrillView(null);setAgentView("posturedash");setAgentQ("CISO security posture dashboard");}}
             style={{background:C.text,border:"1px solid "+C.text,color:"#fff",
               borderRadius:4,padding:"7px 16px",cursor:"pointer",fontSize:11,fontWeight:700,
@@ -8466,6 +8466,14 @@ function CISODash(props) {
           </button>
         </div>
       </div>
+
+      {/* Default CISO landing: clean agent Q&A — questions stay listed, the
+          active one highlights, the answer renders below, no intro / no score */}
+      {!drillView&&!agentView&&(
+        <div style={{padding:"6px 20px 26px"}}>
+          <CisoAgentPanel/>
+        </div>
+      )}
 
       {/* Interactive attack-path diagram (process → app → device → network → threat) */}
       {!drillView&&agentView==="attackpath"&&(
@@ -8503,15 +8511,6 @@ function CISODash(props) {
                 borderRadius:7,padding:"5px 10px",cursor:"pointer",fontSize:11}}>← Ask another</button>
           </div>
           <CisoPostureDomains emphasis={postureEmphasis}/>
-        </div>
-      )}
-
-      {/* Clean single-answer view for a CISO question (the agent's explanation) */}
-      {!drillView&&agentView==="answer"&&cisoAnswer&&(
-        <div style={{padding:"4px 20px 24px"}}>
-          <CisoAnswerView a={cisoAnswer}
-            onBack={clearAgentView}
-            onOpenDashboard={function(){setAgentView("posturedash");}}/>
         </div>
       )}
 
