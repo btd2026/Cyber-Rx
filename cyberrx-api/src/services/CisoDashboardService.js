@@ -21,6 +21,7 @@
 const db = require('../utils/db');
 const logger = require('../utils/logger');
 const D = require('../data/cisoDashboard');
+const N = require('./cisoNarration');
 
 const round = (n) => Math.round(n);
 function scoreBand(s) { return s >= 80 ? 'Strong' : s >= 60 ? 'Moderate' : s >= 40 ? 'Weak' : 'Critical'; }
@@ -226,6 +227,20 @@ async function getDashboard(orgId) {
   const answers = buildAnswers(model, posture, matrix, ranks, board, queue, readiness, invest, refreshed);
   await persistSnapshot(orgId, posture);
 
+  // Enrich with SME explanations + voice narration (the agent acts as an
+  // expert who explains, and the voice teaches rather than reads the screen).
+  const nmodel = { domainMatrix: matrix, controlRisk: ranks, attackPathways: model.pathways, thresholds: board };
+  answers.forEach((a) => { const e = N.answerNarration(a.n, nmodel, posture); a.explanation = e.explanation; a.narration = e.narration; });
+  ranks.forEach((c) => { const e = N.entityNarration('control', c); c.explanation = e.explanation; c.narration = e.narration; });
+  board.rows.forEach((t) => { const e = N.entityNarration('threshold', t); t.explanation = e.explanation; t.narration = e.narration; });
+  model.pathways.forEach((p) => { const e = N.entityNarration('pathway', p); p.explanation = e.explanation; p.narration = e.narration; });
+  model.processes.forEach((p) => { const e = N.entityNarration('process', p); p.explanation = e.explanation; p.narration = e.narration; });
+  matrix.forEach((d) => { const e = N.entityNarration('domain', d); d.explanation = e.explanation; d.narration = e.narration; });
+  model.hidden.forEach((h) => { const e = N.entityNarration('hidden', h); h.explanation = e.explanation; h.narration = e.narration; });
+  const tabs = ['qa', 'domains', 'controls', 'thresholds', 'actions', 'processes', 'paths', 'readiness', 'hidden'];
+  const tabNarration = {};
+  tabs.forEach((t) => { tabNarration[t] = N.tabNarration(t, nmodel, posture, board, readiness); });
+
   return {
     persona: 'CISO', organizationId: orgId, generatedAt: refreshed,
     overallPosture: posture,
@@ -243,6 +258,7 @@ async function getDashboard(orgId) {
     emergingRisks: model.emerging,
     evidenceSources: model.sources,
     questions: answers,
+    tabNarration,
   };
 }
 

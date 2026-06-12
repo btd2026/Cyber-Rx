@@ -14,6 +14,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useAgentVoice, VoiceControls } from './agentVoice';
 
 const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e2e8f0', PANEL = '#f8fafc', NAVY = '#0f1b2d';
 const C = { Strong: '#1f8a4c', Moderate: '#B07C2E', Weak: '#A85B2E', Critical: '#C0392B', 'Not assessed': '#94a3b8' };
@@ -47,6 +48,7 @@ export default function CisoSecurityPostureDashboard(props) {
   const [d, setD] = useState(null);
   const [error, setError] = useState(null);
   const [tab, setTab] = useState('qa');
+  const voice = useAgentVoice();
   const [drawer, setDrawer] = useState(null);   // an executive answer
   const [pathSel, setPathSel] = useState(0);
   const { token, orgId, api } = ctx(props);
@@ -68,6 +70,12 @@ export default function CisoSecurityPostureDashboard(props) {
       || d.questions.find((x) => norm(x.question).includes(t) || t.includes(norm(x.question)));
     if (a) { setTab('qa'); setDrawer(a); }
   }, [d, props.focusQuestion]);
+
+  // Auto-narrate the active tab (Michael explains the page). Respects mute.
+  useEffect(() => {
+    if (d && d.tabNarration && d.tabNarration[tab]) voice.speak(d.tabNarration[tab]);
+    return () => voice.stop();
+  }, [d, tab]); // eslint-disable-line
 
   if (error) return <div style={{ padding: 24, color: '#C0392B', fontSize: 13 }}>Could not load CISO dashboard: {error}</div>;
   if (!d) return <div style={{ padding: 24, color: INK3, fontSize: 13 }}>Composing CISO security posture…</div>;
@@ -128,6 +136,18 @@ export default function CisoSecurityPostureDashboard(props) {
       </div>
 
       <div style={{ background: '#fff', borderRadius: '0 0 8px 8px', padding: '18px 22px' }}>
+        {/* Standalone tab intro + agent voice (Michael explains the page) */}
+        {d.tabNarration && d.tabNarration[tab] && (
+          <div style={{ display: 'flex', gap: 14, justifyContent: 'space-between', alignItems: 'flex-start', background: '#eef4fb', border: '1px solid #cfe0f3', borderRadius: 8, padding: '12px 15px', marginBottom: 16 }}>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#1d4ed8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Michael explains this view</div>
+              <div style={{ fontSize: 12.5, color: INK, lineHeight: 1.55 }}>{d.tabNarration[tab]}</div>
+            </div>
+            <div style={{ flexShrink: 0 }}>
+              <VoiceControls voice={voice} onReplay={() => voice.speak(d.tabNarration[tab])} label="Explain" />
+            </div>
+          </div>
+        )}
         {tab === 'qa' && <ExecQA questions={d.questions} onEvidence={setDrawer} />}
         {tab === 'domains' && <Domains matrix={d.domainMatrix} />}
         {tab === 'controls' && <Controls rows={d.controlRisk} />}
