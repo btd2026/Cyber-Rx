@@ -820,6 +820,34 @@ async function init() {
         computed_at  TIMESTAMPTZ DEFAULT NOW(),
         PRIMARY KEY (org_id, technique_id)
       );
+
+      -- ============= CISO Security Posture Dashboard (CISO persona only) =====
+      -- Polymorphic store for the 14 dashboard entities (SecurityDomain,
+      -- SecurityMetric, ControlArea, ControlRisk, Threshold, CISOQuestion,
+      -- ExecutiveAnswer, SecurityAction, CriticalBusinessProcess, AttackPathway,
+      -- CyberReadinessItem, SecurityInvestment, HiddenRisk, EvidenceSource).
+      -- Mock seed today; a live integration replaces a row of the same shape.
+      CREATE TABLE IF NOT EXISTS ciso_entities (
+        org_id      TEXT NOT NULL,
+        entity_type TEXT NOT NULL,
+        entity_id   TEXT NOT NULL,
+        ordinal     INTEGER,
+        data        JSONB NOT NULL,
+        updated_at  TIMESTAMPTZ DEFAULT NOW(),
+        PRIMARY KEY (org_id, entity_type, entity_id)
+      );
+      CREATE INDEX IF NOT EXISTS ciso_entities_type ON ciso_entities(org_id, entity_type);
+      -- Posture history for the period-over-period trend.
+      CREATE TABLE IF NOT EXISTS ciso_dashboard_snapshots (
+        id          SERIAL PRIMARY KEY,
+        org_id      TEXT NOT NULL,
+        period      TEXT,
+        overall     NUMERIC,
+        previous    NUMERIC,
+        delta       NUMERIC,
+        captured_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS ciso_dash_snap ON ciso_dashboard_snapshots(org_id, captured_at DESC);
     `);
     console.log('Database schema initialized');
   } catch (err) {

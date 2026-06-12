@@ -63,6 +63,13 @@ async function bootstrap() {
     else steps.attackXwalks = 'present';
   } catch (e) { logger.warn('bootstrap: attack xwalk derivation failed', { error: e.message }); }
 
+  try {
+    // CISO dashboard entities (schema-backed demo; service falls back to module).
+    const hasCiso = await count(`SELECT COUNT(*)::int n FROM ciso_entities`);
+    if (hasCiso < 10) steps.cisoDashboard = await require('./seedCisoDashboard').seed();
+    else steps.cisoDashboard = 'present';
+  } catch (e) { logger.warn('bootstrap: CISO dashboard seed failed', { error: e.message }); }
+
   return steps;
 }
 

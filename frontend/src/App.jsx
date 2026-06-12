@@ -15,6 +15,7 @@ import CisoPostureDomains from "./components/CisoPostureDomains";
 import AiSecurityControls from "./components/AiSecurityControls";
 import CisoExecReport from "./components/CisoExecReport";
 import CroBoardReport from "./components/CroBoardReport";
+import CisoSecurityPostureDashboard from "./components/CisoSecurityPostureDashboard";
 import FrameworkScoreStrip from "./components/FrameworkScoreStrip";
 import RemediationPanel from "./components/RemediationPanel";
 import AuditDash from "./pages/AuditDash";
@@ -8380,6 +8381,11 @@ function CISODash(props) {
     // Attack-pathway questions show the attack path FIRST — even when the
     // question also mentions cost (e.g. "...and what does each one cost us?").
     if(/four.?lens|800.?53|att&?ck|attack coverage|baseline|exec.*report|posture pack/.test(q)) { setDrillView(null); setAgentView("execreport"); return; }
+    // The dedicated CISO Security Posture Dashboard answers the executive
+    // decision questions (materially disrupt, unknowingly accepting, targeted
+    // today, investments reducing risk, major cyber event, emerging faster,
+    // peer maturity, posture dashboard).
+    if(/posture dashboard|materially disrupt|unknowingly accept|targeted us today|where would they most likely|investments? reducing|measurable risk|major cyber event|how prepared are we|emerging faster|trail peer|peer (security )?maturity/.test(q)) { setDrillView(null); setAgentView("posturedash"); return; }
     if(/\bai\b|gen.?ai|claude|copilot|llm/.test(q))            { setDrillView(null); setAgentView("aicontrols"); return; }
     if(/(attack path|pathway|attack|kill chain|diagram|how.*reach|trace)/.test(q)) { setDrillView(null); setAgentView("attackpath"); return; }
     // CISO posture-domain questions → the 8-domain posture view, emphasis per question.
@@ -8432,6 +8438,12 @@ function CISODash(props) {
       <div style={{padding:"14px 20px 0"}}>
         <ExecutiveAgentBrief role="CISO" entry onAnswer={applyAgentAnswer} onGeneral={function(){setDrillView(null);setPostureEmphasis(null);setAgentView("domains");setAgentQ("Current security posture");}} />
         <div style={{display:"flex",justifyContent:"flex-end",gap:8,marginTop:8}}>
+          <button onClick={function(){setDrillView(null);setAgentView("posturedash");setAgentQ("CISO security posture dashboard");}}
+            style={{background:C.text,border:"1px solid "+C.text,color:"#fff",
+              borderRadius:4,padding:"7px 16px",cursor:"pointer",fontSize:11,fontWeight:700,
+              letterSpacing:"0.06em",textTransform:"uppercase"}}>
+            ◆ Security Posture Dashboard →
+          </button>
           <button onClick={function(){setDrillView(null);setAgentView("aicontrols");setAgentQ("AI security controls");}}
             style={{background:"transparent",border:"1px solid "+C.border,color:C.text,
               borderRadius:4,padding:"7px 16px",cursor:"pointer",fontSize:11,fontWeight:600,
@@ -8489,6 +8501,18 @@ function CISODash(props) {
                 borderRadius:7,padding:"5px 10px",cursor:"pointer",fontSize:11}}>← Ask another</button>
           </div>
           <CisoPostureDomains emphasis={postureEmphasis}/>
+        </div>
+      )}
+
+      {/* Dedicated CISO Security Posture Dashboard (CISO persona only) */}
+      {!drillView&&agentView==="posturedash"&&(
+        <div style={{padding:"0 20px 20px"}}>
+          <div style={{display:"flex",justifyContent:"flex-end",marginBottom:8}}>
+            <button onClick={clearAgentView}
+              style={{background:"transparent",border:"1px solid "+C.border,color:C.muted,
+                borderRadius:7,padding:"5px 10px",cursor:"pointer",fontSize:11}}>← Ask another</button>
+          </div>
+          <CisoSecurityPostureDashboard/>
         </div>
       )}
 
