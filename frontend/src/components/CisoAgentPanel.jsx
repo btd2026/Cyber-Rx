@@ -66,7 +66,7 @@ export default function CisoAgentPanel(props) {
     return (active.riskDrivers || []).map((label) => ({ label, entity: matchEntity(d, label) }));
   }, [d, active]);
 
-  const intro = "Hi, I'm Michael, your CISO agent. This is your security command surface. Pick one of the five questions below and I'll give you a clear, decision-ready answer about your organization's posture — what's changed, why it matters, and exactly what to do, with the evidence behind it. Or use the tabs above to go deeper: Security Posture for the full dashboard, AI Controls for your AI and GenAI risk, Attack Path to see how an attacker would reach your critical processes, and Four-Lens to see compliance against NIST CSF, 800-53, and CIS. I'll explain anything you click. Where would you like to start?";
+  const intro = "Hi, I'm Michael, your CISO agent. This is your security command surface. Select a question and I'll answer it right here — with the evidence, the recommended action, the owner, and a target date. Click any issue in my answer to trace it back to its source. Or use the tabs above to go deeper: Security Posture for the full dashboard, AI Controls for your AI and GenAI risk, Attack Path to see how an attacker would reach your critical processes, and Four-Lens to see compliance against NIST CSF, 800-53, and CIS. I'll explain anything you click. Where would you like to start?";
 
   // Michael introduces himself once when the CISO tab opens (respects mute).
   useEffect(() => {
@@ -126,16 +126,12 @@ export default function CisoAgentPanel(props) {
         })}
       </div>
 
-      {/* Answer — directly below */}
-      <div style={{ marginTop: 18 }}>
-        {!active ? (
-          <div style={{ border: `1px dashed ${HAIR}`, borderRadius: 10, padding: '28px', textAlign: 'center', color: INK3, fontSize: 13, background: PANEL }}>
-            Select a question and Michael will answer it here — with the evidence, the recommended action, the owner, and a target date. Click any issue in the answer to trace it to its source.
-          </div>
-        ) : (
+      {/* Answer — directly below (Michael narrates the prompt; nothing shown until a question is picked) */}
+      {active && (
+        <div style={{ marginTop: 18 }}>
           <CisoAnswerView a={active} issues={issues} onIssueClick={setIssue} />
-        )}
-      </div>
+        </div>
+      )}
 
       {issue && <IssueDrawer item={issue} voice={voice} onClose={() => { voice.stop(); setIssue(null); }} />}
     </div>
