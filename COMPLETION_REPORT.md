@@ -82,16 +82,25 @@ build clean (`✓ built`); API boots; no server-only imports in client code.
 always; parses 800-53/ATT&CK at most once per DB; never blocks startup. Re-run confirmed
 idempotent (`nist80053: present, attack: present`).
 
-## ASSUMPTIONS (full list in `IMPLEMENTATION_MAP.md` §3)
+## CIS B3 new-check follow-through
+The 35 CIS v8.1.2 safeguards that matched no existing telemetry signal now have
+purpose-built automated checks (`src/data/cisCheckCandidates.js`, seeded by `loadCis`):
+**35 checks + 35 mock-fixture defaults + 35 requirement_mappings**. A validation run
+evaluates them to honest pass/partial/fail (verified: 13 pass / 17 partial / 5 fail,
+`source=simulated`) and rolls CIS up to a computed score. Uncovered safeguards dropped
+**54 → 19** (the 19 rubric-based, evidence-document driven, await the assessment rubrics).
+
+## ASSUMPTIONS (standalone `ASSUMPTIONS.md`; full table also in `IMPLEMENTATION_MAP.md` §3)
 Multi-org (org_id carried on org-scoped tables; catalog/content tables global);
 additive idempotent DDL substitutes for the spec's SQLite backup; `resources/` = `content/`;
 checks without live credentials run against `sim_*` fixtures; CIS verbatim behind
 `VERBATIM_CIS` (default false); ATT&CK v19.1 vs CTID v16.1 skew pinned by provenance.
 
 ## FOLLOW_UPS (see `FOLLOW_UPS.md`)
-1. **CIS v8.1 (B3) — BLOCKED**: add the licensed workbook (+ CIS↔CSF, CIS↔ATT&CK
-   mappings) to `resources/cis/`, then run the B3 loader (to be added) for IG1/2/3
-   progress and CIS crosswalks. CISO pack shows a "pending" notice until then.
+1. **CIS v8.1 (B3) — DONE** (workbook present): 18 controls / 153 safeguards / IG1-2-3,
+   228 keyword + 35 candidate-check mappings, 19 rubric-based safeguards remain (need the
+   46 assessment rubrics). Optional: add CIS↔CSF / CIS↔ATT&CK mapping workbooks to
+   `resources/cis/` to upgrade those crosswalks from derived → official.
 2. **CSF⇄800-53 provisional**: supply the CPRT CSF 2.0 informative-references export to
    upgrade 662 crosswalks from 'derived'/provisional to 'NIST CPRT'/official.
 3. **Spot-checks awaiting human review**: `spot-check/80053.json`, `csf_80053.json`, `attack.json`.

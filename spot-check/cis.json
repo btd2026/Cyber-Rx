@@ -1,31 +1,7 @@
 [
   {
-    "requirement_id": "17.7",
-    "title": "Conduct Routine Incident Response Exercises",
-    "baselines": {
-      "ig1": false,
-      "ig2": true,
-      "ig3": true
-    },
-    "asset_class": "Users",
-    "fn": "Recover",
-    "checks": 2
-  },
-  {
-    "requirement_id": "12.2",
-    "title": "Establish and Maintain a Secure Network Architecture",
-    "baselines": {
-      "ig1": false,
-      "ig2": true,
-      "ig3": true
-    },
-    "asset_class": "Network",
-    "fn": "Protect",
-    "checks": 0
-  },
-  {
-    "requirement_id": "14.7",
-    "title": "Train Workforce on How to Identify and Report if Their Enterprise Assets are Missing Security Updates",
+    "requirement_id": "5.3",
+    "title": "Disable Dormant Accounts",
     "baselines": {
       "ig1": true,
       "ig2": true,
@@ -33,90 +9,114 @@
     },
     "asset_class": "Users",
     "fn": "Protect",
-    "checks": 3
-  },
-  {
-    "requirement_id": "4.2",
-    "title": "Establish and Maintain a Secure Configuration Process for Network Infrastructure",
-    "baselines": {
-      "ig1": true,
-      "ig2": true,
-      "ig3": true
-    },
-    "asset_class": "Documentation",
-    "fn": "Govern",
-    "checks": 0
-  },
-  {
-    "requirement_id": "18.2",
-    "title": "Perform Periodic External Penetration Tests",
-    "baselines": {
-      "ig1": false,
-      "ig2": true,
-      "ig3": true
-    },
-    "asset_class": "Network",
-    "fn": "Detect",
-    "checks": 3
-  },
-  {
-    "requirement_id": "8.9",
-    "title": "Centralize Audit Logs",
-    "baselines": {
-      "ig1": false,
-      "ig2": true,
-      "ig3": true
-    },
-    "asset_class": "Data",
-    "fn": "Detect",
-    "checks": 2
-  },
-  {
-    "requirement_id": "15.2",
-    "title": "Establish and Maintain a Service Provider Management Policy",
-    "baselines": {
-      "ig1": false,
-      "ig2": true,
-      "ig3": true
-    },
-    "asset_class": "Documentation",
-    "fn": "Govern",
-    "checks": 2
-  },
-  {
-    "requirement_id": "18.5",
-    "title": "Perform Periodic Internal Penetration Tests",
-    "baselines": {
-      "ig1": false,
-      "ig2": false,
-      "ig3": true
-    },
-    "asset_class": "Network",
-    "fn": "Detect",
-    "checks": 3
-  },
-  {
-    "requirement_id": "8.11",
-    "title": "Conduct Audit Log Reviews",
-    "baselines": {
-      "ig1": false,
-      "ig2": true,
-      "ig3": true
-    },
-    "asset_class": "Data",
-    "fn": "Detect",
     "checks": 1
   },
   {
-    "requirement_id": "13.7",
-    "title": "Deploy a Host-Based Intrusion Prevention Solution",
+    "requirement_id": "16.1",
+    "title": "Establish and Maintain a Secure Application Development Process",
     "baselines": {
       "ig1": false,
-      "ig2": false,
+      "ig2": true,
+      "ig3": true
+    },
+    "asset_class": "Documentation",
+    "fn": "Govern",
+    "checks": 7
+  },
+  {
+    "requirement_id": "2.3",
+    "title": "Address Unauthorized Software",
+    "baselines": {
+      "ig1": true,
+      "ig2": true,
+      "ig3": true
+    },
+    "asset_class": "Software",
+    "fn": "Respond",
+    "checks": 1
+  },
+  {
+    "requirement_id": "14.9",
+    "title": "Conduct Role-Specific Security Awareness and Skills Training",
+    "baselines": {
+      "ig1": false,
+      "ig2": true,
+      "ig3": true
+    },
+    "asset_class": "Users",
+    "fn": "Protect",
+    "checks": 5
+  },
+  {
+    "requirement_id": "9.1",
+    "title": "Ensure Use of Only Fully Supported Browsers and Email Clients",
+    "baselines": {
+      "ig1": true,
+      "ig2": true,
+      "ig3": true
+    },
+    "asset_class": "Software",
+    "fn": "Protect",
+    "checks": 2
+  },
+  {
+    "requirement_id": "3.6",
+    "title": "Encrypt Data on End-User Devices",
+    "baselines": {
+      "ig1": true,
+      "ig2": true,
+      "ig3": true
+    },
+    "asset_class": "Data",
+    "fn": "Protect",
+    "checks": 0
+  },
+  {
+    "requirement_id": "14.8",
+    "title": "Train Workforce on the Dangers of Connecting to and Transmitting Enterprise Data Over Insecure Networks",
+    "baselines": {
+      "ig1": true,
+      "ig2": true,
+      "ig3": true
+    },
+    "asset_class": "Users",
+    "fn": "Protect",
+    "checks": 2
+  },
+  {
+    "requirement_id": "1.2",
+    "title": "Address Unauthorized Assets",
+    "baselines": {
+      "ig1": true,
+      "ig2": true,
+      "ig3": true
+    },
+    "asset_class": "Devices",
+    "fn": "Respond",
+    "checks": 1
+  },
+  {
+    "requirement_id": "16.3",
+    "title": "Perform Root Cause Analysis on Security Vulnerabilities",
+    "baselines": {
+      "ig1": false,
+      "ig2": true,
+      "ig3": true
+    },
+    "asset_class": "Software",
+    "fn": "Detect",
+    "checks": 3
+  },
+  {
+    "requirement_id": "4.8",
+    "title": "Uninstall or Disable Unnecessary Services on Enterprise Assets and Software",
+    "baselines": {
+      "ig1": false,
+      "ig2": true,
       "ig3": true
     },
     "asset_class": "Devices",
     "fn": "Protect",
-    "checks": 3
+    "checks": 1
   }
 ]
