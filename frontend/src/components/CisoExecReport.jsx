@@ -157,18 +157,18 @@ export default function CisoExecReport(props) {
       </div>
       {data.cis && data.cis.status === 'ingested' && (
         <>
-          <h3 style={{ fontSize: 13, color: INK, margin: '20px 0 8px' }}>CIS Controls v{data.cis.version} — Implementation Group progress <span style={{ color: INK3, fontWeight: 400 }}>({data.cis.safeguards} safeguards)</span></h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
-            {data.cis.implementationGroups.map((g) => {
-              const col = g.attainmentPct >= 80 ? GREEN : g.attainmentPct >= 50 ? AMBER : RED;
+          <h3 style={{ fontSize: 13, color: INK, margin: '20px 0 8px' }}>CIS Controls v{data.cis.version} — the 18 Controls <span style={{ color: INK3, fontWeight: 400 }}>({data.cis.safeguards} safeguards)</span></h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px,1fr))', gap: 8 }}>
+            {(data.cis.controls || []).map((c) => {
+              const col = c.attainmentPct >= 80 ? GREEN : c.attainmentPct >= 50 ? AMBER : RED;
               return (
-                <div key={g.ig} style={{ border: `1px solid ${HAIR}`, borderRadius: 6, padding: '12px 14px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                    <span style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>{g.ig}</span>
-                    <span style={{ fontSize: 20, fontWeight: 700, color: col }}>{g.attainmentPct}%</span>
+                <div key={c.number} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${col}`, borderRadius: 6, padding: '10px 12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: INK }}><span style={{ color: INK3 }}>{c.number}.</span> {c.name}</span>
+                    <span style={{ fontSize: 16, fontWeight: 700, color: col, fontVariantNumeric: 'tabular-nums' }}>{c.attainmentPct}%</span>
                   </div>
-                  <div style={{ height: 6, background: '#eef2f6', borderRadius: 3, margin: '7px 0 5px' }}><div style={{ width: `${g.attainmentPct}%`, height: '100%', background: col, borderRadius: 3 }} /></div>
-                  <div style={{ fontSize: 10.5, color: INK3 }}>{g.covered} of {g.total} safeguards evidenced</div>
+                  <div style={{ height: 5, background: '#eef2f6', borderRadius: 3, margin: '6px 0 4px' }}><div style={{ width: `${c.attainmentPct}%`, height: '100%', background: col, borderRadius: 3 }} /></div>
+                  <div style={{ fontSize: 10, color: INK3 }}>{c.covered}/{c.safeguards} safeguards evidenced · {c.status}</div>
                 </div>
               );
             })}

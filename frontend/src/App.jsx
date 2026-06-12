@@ -8436,34 +8436,30 @@ function CISODash(props) {
     <div>
       <DashNav current="dashboard" go={go}/>
 
-      {/* CISO persona — secondary nav to the deep-dive views (the landing is the
-          clean CISO agent Q&A panel below; no agent intro / voice on this page) */}
+      {/* CISO secondary nav — only the tab in use is highlighted */}
       <div style={{padding:"14px 20px 0"}}>
-        <div style={{display:"flex",justifyContent:"flex-end",gap:8,marginTop:0}}>
-          <button onClick={function(){setDrillView(null);setAgentView("posturedash");setAgentQ("CISO security posture dashboard");}}
-            style={{background:C.text,border:"1px solid "+C.text,color:"#fff",
-              borderRadius:4,padding:"7px 16px",cursor:"pointer",fontSize:11,fontWeight:700,
-              letterSpacing:"0.06em",textTransform:"uppercase"}}>
-            ◆ Security Posture Dashboard →
-          </button>
-          <button onClick={function(){setDrillView(null);setAgentView("aicontrols");setAgentQ("AI security controls");}}
-            style={{background:"transparent",border:"1px solid "+C.border,color:C.text,
-              borderRadius:4,padding:"7px 16px",cursor:"pointer",fontSize:11,fontWeight:600,
-              letterSpacing:"0.06em",textTransform:"uppercase"}}>
-            ✦ AI Security Controls →
-          </button>
-          <button onClick={function(){setDrillView(null);setAgentView("attackpath");setAgentQ("Show the attack path");}}
-            style={{background:"transparent",border:"1px solid "+C.border,color:C.text,
-              borderRadius:4,padding:"7px 16px",cursor:"pointer",fontSize:11,fontWeight:600,
-              letterSpacing:"0.06em",textTransform:"uppercase"}}>
-            ◉ Attack Path — Live Threat Graph →
-          </button>
-          <button onClick={function(){setDrillView(null);setAgentView("execreport");setAgentQ("Four-lens posture");}}
-            style={{background:C.acc,border:"1px solid "+C.acc,color:"#fff",
-              borderRadius:4,padding:"7px 16px",cursor:"pointer",fontSize:11,fontWeight:600,
-              letterSpacing:"0.06em",textTransform:"uppercase"}}>
-            ▣ Four-Lens Posture (CSF · 800-53 · ATT&CK) →
-          </button>
+        <div style={{display:"flex",gap:4,borderBottom:"1px solid "+C.border}}>
+          {[["",  "Questions"],
+            ["posturedash","Security Posture"],
+            ["aicontrols","AI Controls"],
+            ["attackpath","Attack Path"],
+            ["execreport","Four-Lens (CSF · 800-53 · CIS · ATT&CK)"]].map(function(t){
+            var key=t[0]; var lbl=t[1];
+            var on=(key===""? (!agentView) : agentView===key);
+            return (
+              <button key={key||"q"} onClick={function(){
+                  setDrillView(null);
+                  if(key===""){ setAgentView(null); setAgentQ(""); }
+                  else { setAgentView(key); setAgentQ(key==="posturedash"?"CISO security posture dashboard":key==="aicontrols"?"AI security controls":key==="attackpath"?"Show the attack path":"Four-lens posture"); }
+                }}
+                style={{background:"transparent",border:"none",
+                  borderBottom:"3px solid "+(on?C.acc:"transparent"),
+                  color:on?C.acc:C.muted,padding:"9px 14px",cursor:"pointer",
+                  fontSize:12,fontWeight:on?700:500,marginBottom:-1,whiteSpace:"nowrap"}}>
+                {lbl}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -9173,10 +9169,11 @@ function CISODash(props) {
         </div>
       )}
 
-      {/* Tailored dashboard — rendered only after the agent answers a question.
-          No Briana voice-over on the CISO tab (the Command Center narration is
-          unrelated here, and the CISO agent has its own answers). */}
-      {!drillView&&agentView&&agentView!=="attackpath"&&(
+      {/* Legacy tailored dashboard — only for the older agentViews. The clean
+          deep-dive views (posture dashboard, AI controls, four-lens, attack
+          path) render their own components without this hero/exec-summary or any
+          Command Center guide. */}
+      {!drillView&&agentView&&!["attackpath","posturedash","aicontrols","execreport","answer"].includes(agentView)&&(
         <div>
 
       {/* Answer hero — the figure that answers the question, sized to lead the view */}
