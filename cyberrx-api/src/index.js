@@ -317,6 +317,15 @@ db.init()
         .catch(err => logger.warn('Demo seed on startup failed', { error: err.message }));
     }
   })
+  .then(() => {
+    // Four-lens engine hydration (CSF/800-53/ATT&CK). Guarded + idempotent;
+    // heavy content is parsed at most once per database. Never blocks startup.
+    if (process.env.ENGINE_BOOTSTRAP !== 'false') {
+      return require('./ingest/bootstrap').bootstrap()
+        .then((s) => logger.info('Engine bootstrap complete', { steps: Object.keys(s) }))
+        .catch(err => logger.warn('Engine bootstrap failed', { error: err.message }));
+    }
+  })
   .catch(err => logger.warn('Database initialization warning', { error: err.message }));
 
 const PORT = process.env.PORT || 3001;

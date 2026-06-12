@@ -1,0 +1,54 @@
+'use strict';
+
+/**
+ * ingest/bootstrap.js
+ * -------------------
+ * Idempotent, guarded boot-time hydration of the four-lens engine:
+ *   - seedEngine() always (cheap): CSF 2.0 lens, checks, mappings.
+ *   - load80053 + loadCsf80053 only if the 800-53 catalog is not yet present.
+ *   - loadAttack only if ATT&CK techniques are not yet present.
+ *
+ * Heavy content (OSCAL/STIX) is parsed at most once per database. Failures are
+ * logged and swallowed so they never block API startup. Run automatically from
+ * index.js when ENGINE_BOOTSTRAP !== 'false', or manually:
+ *     node src/ingest/bootstrap.js
+ */
+
+const realDb = require('../utils/db');
+const logger = require('../utils/logger');
+
+async function count(sql, params = []) {
+  try { const r = await realDb.query(sql, params); return Number(r[0] ? (r[0].n || r[0].count || 0) : 0); }
+  catch (_) { return 0; }
+}
+
+async function bootstrap() {
+  const steps = {};
+  try {
+    const { seedEngine } = require('./seedEngine');
+    steps.engine = await seedEngine();
+  } catch (e) { logger.warn('bootstrap: seedEngine failed', { error: e.message }); }
+
+  try {
+    const has80053 = await count(`SELECT COUNT(*)::int n FROM framework_requirements WHERE framework_id='nist_800_53_r5'`);
+    if (has80053 < 100) {
+      steps.nist80053 = await require('./load80053').load();
+      steps.csf80053 = await require('./loadCsf80053').load();
+    } else { steps.nist80053 = 'present'; }
+  } catch (e) { logger.warn('bootstrap: 800-53 ingest failed', { error: e.message }); }
+
+  try {
+    const hasAttack = await count(`SELECT COUNT(*)::int n FROM attack_techniques`);
+    if (hasAttack < 100) steps.attack = await require('./loadAttack').load();
+    else steps.attack = 'present';
+  } catch (e) { logger.warn('bootstrap: ATT&CK ingest failed', { error: e.message }); }
+
+  return steps;
+}
+
+module.exports = { bootstrap };
+
+if (require.main === module) {
+  realDb.init().then(bootstrap).then((s) => { console.log('bootstrap:', JSON.stringify(s)); process.exit(0); })
+    .catch((e) => { console.error(e); process.exit(1); });
+}
