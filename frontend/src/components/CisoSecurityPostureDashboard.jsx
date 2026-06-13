@@ -145,19 +145,16 @@ export default function CisoSecurityPostureDashboard(props) {
       </div>
 
       <div style={{ background: '#fff', borderRadius: '0 0 8px 8px', padding: '18px 22px' }}>
-        {/* Compact standalone intro — short on screen; the voice tells the rest */}
+        {/* Voice-only narration: Michael speaks the page (autoplay on tab open,
+            see the effect above). No on-screen transcript — just a discreet
+            mute/replay control so the CISO can stop or hear it again. */}
         {tab !== 'qa' && d.tabNarration && d.tabNarration[tab] && (
-          <div style={{ display: 'flex', gap: 14, justifyContent: 'space-between', alignItems: 'center', background: '#eef4fb', border: '1px solid #cfe0f3', borderRadius: 8, padding: '10px 15px', marginBottom: 16 }}>
-            <div style={{ fontSize: 12.5, color: INK, lineHeight: 1.5 }}>
-              <strong style={{ color: '#1d4ed8' }}>Michael:</strong> {d.tabNarration[tab].split('. ')[0]}.
-            </div>
-            <div style={{ flexShrink: 0 }}>
-              <VoiceControls voice={voice} onReplay={() => voice.speak(d.tabNarration[tab])} label="Explain" />
-            </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+            <VoiceControls voice={voice} onReplay={() => voice.speak(d.tabNarration[tab])} label="Replay" />
           </div>
         )}
         {tab === 'qa' && <CisoAgentPanel />}
-        {tab === 'domains' && <Domains matrix={d.domainMatrix} />}
+        {tab === 'domains' && <Domains matrix={d.domainMatrix} controlRisk={d.controlRisk} thresholds={d.thresholds} />}
         {tab === 'controls' && <Controls rows={d.controlRisk} />}
         {tab === 'thresholds' && <Thresholds board={d.thresholds} />}
         {tab === 'actions' && <Actions queue={d.actionQueue} attention={d.attentionItems} />}
@@ -243,29 +240,115 @@ function EvidenceDrawer({ a, onClose }) {
 }
 
 /* ---------------- Domain Health Matrix ---------------- */
-function Domains({ matrix }) {
+// Plain-English meaning of each domain + which control-risk areas and thresholds
+// roll up into it. Lets a domain card expand into a real mini-dashboard sourced
+// from data already in the payload (controlRisk + thresholds) — no extra fetch.
+const DOMAIN_DETAIL = {
+  iam: { blurb: 'Who can access what, and whether that access is right-sized. Compromised identity is the #1 way attackers get in — this domain governs MFA, privileged accounts, and joiner/mover/leaver hygiene.', controls: ['priv_access', 'mfa', 'access_recert', 'jml'], thresholds: ['mfa_cov', 'priv_review', 'orphan_accts'] },
+  detection: { blurb: 'How fast you see an attack and how fast you contain it. Covers SIEM log coverage, detection engineering against MITRE ATT&CK, endpoint detection, alert triage, and incident-response readiness. Attacker dwell time is the risk this domain controls.', controls: ['logging', 'detection_eng', 'edr', 'email_sec', 'ir_readiness'], thresholds: ['triage_sla', 'mttd', 'mttr', 'edr_cov', 'log_cov'] },
+  vuln: { blurb: 'Whether known weaknesses get fixed before they are exploited. Internet-facing and KEV-listed critical vulnerabilities are the ones adversaries weaponize first.', controls: ['vuln_remediation', 'patch'], thresholds: ['crit_vuln_age', 'inet_crit_age'] },
+  cloud: { blurb: 'Whether your cloud estate is configured safely. Public exposure and misconfiguration are the leading causes of cloud data loss.', controls: ['cloud_config'], thresholds: ['cloud_misconfig'] },
+  data: { blurb: 'Whether sensitive data (PHI) is encrypted and prevented from leaving. Egress through cloud and SaaS is the fastest-growing gap.', controls: ['dlp'], thresholds: ['dlp_incidents'] },
+  thirdparty: { blurb: 'Risk inherited from vendors with access to your systems and data. Supply-chain compromise is a top industry trend.', controls: ['third_party_access'], thresholds: ['vendor_findings'] },
+  recovery: { blurb: 'Whether you can actually recover from ransomware. Backups that succeed but were never restore-tested are a false sense of safety.', controls: ['backup_restore', 'ir_readiness'], thresholds: ['backup_success', 'restore_test'] },
+  governance: { blurb: 'Policy currency, exception management, and oversight — what keeps the program defensible and audit-ready.', controls: ['access_recert'], thresholds: [] },
+  appsec: { blurb: 'Security of the software you build and run — SAST/SCA coverage on member-facing applications.', controls: ['appsec_testing'], thresholds: [] },
+  network: { blurb: 'Segmentation that limits how far an attacker can move once inside. Flat legacy zones enable lateral movement.', controls: ['net_seg'], thresholds: [] },
+  endpoint: { blurb: 'Coverage and prevention posture on workstations and servers via EDR.', controls: ['edr'], thresholds: ['edr_cov'] },
+  awareness: { blurb: 'Workforce resilience to phishing and social engineering — training completion and click-rate.', controls: ['awareness', 'email_sec'], thresholds: [] },
+};
+
+function Domains({ matrix, controlRisk = [], thresholds = {} }) {
+  const [open, setOpen] = useState(null);
+  const ctrlById = Object.fromEntries((controlRisk || []).map((c) => [c.id, c]));
+  const thrById = Object.fromEntries(((thresholds && thresholds.rows) || []).map((t) => [t.id, t]));
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 10 }}>
-      {matrix.map((m) => (
-        <div key={m.id} style={{ border: `1px solid ${HAIR}`, borderRadius: 7, padding: '13px 15px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <span style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>{m.name}{m.weight > 0 && <span style={{ fontSize: 9.5, color: INK3, fontWeight: 500 }}> · {m.weight}%</span>}</span>
-            <Pill text={m.status} color={C[m.status]} />
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 10 }}>
+      {matrix.map((m) => {
+        const det = DOMAIN_DETAIL[m.id] || { blurb: '', controls: [], thresholds: [] };
+        const ctrls = det.controls.map((id) => ctrlById[id]).filter(Boolean).sort((a, b) => b.riskContribution - a.riskContribution);
+        const thrs = det.thresholds.map((id) => thrById[id]).filter(Boolean);
+        const breached = thrs.filter((t) => t.status === 'Breach');
+        const expanded = open === m.id;
+        // Recommended next move: act on the worst breached threshold, else the highest-risk control.
+        const nextMove = (breached[0] && breached[0].action) || (ctrls[0] && ctrls[0].action)
+          || (m.topDeteriorating ? `Address ${m.topDeteriorating.metric}.` : null);
+        return (
+          <div key={m.id} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${C[m.status]}`, borderRadius: 7, padding: '13px 15px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <span style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>{m.name}{m.weight > 0 && <span style={{ fontSize: 9.5, color: INK3, fontWeight: 500 }}> · {m.weight}%</span>}</span>
+              <Pill text={m.status} color={C[m.status]} />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, margin: '6px 0' }}>
+              <span style={{ fontSize: 24, fontWeight: 800, color: sc(m.current) }}>{m.current}</span>
+              <span style={{ fontSize: 11, color: INK3 }}>was {m.previous}</span>
+              <Trend d={m.delta} />
+              <span style={{ marginLeft: 'auto', fontSize: 10, color: m.trend === 'improving' ? '#1f8a4c' : m.trend === 'deteriorating' ? '#C0392B' : INK3, fontWeight: 600, textTransform: 'capitalize' }}>{m.trend}</span>
+            </div>
+            <Bar value={m.current} />
+            <div style={{ fontSize: 10.5, color: INK2, marginTop: 8, lineHeight: 1.5 }}>
+              <div>▲ <span style={{ color: '#1f8a4c' }}>{m.topImproving.metric} (+{m.topImproving.delta})</span></div>
+              <div>▼ <span style={{ color: '#C0392B' }}>{m.topDeteriorating.metric} ({m.topDeteriorating.delta})</span></div>
+            </div>
+            {/* quick status line: breached metrics + risk contributors at a glance */}
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+              {breached.length > 0 && <span style={{ fontSize: 9.5, fontWeight: 700, color: '#C0392B', background: '#fdecea', borderRadius: 4, padding: '2px 7px' }}>{breached.length} metric{breached.length > 1 ? 's' : ''} breached</span>}
+              {ctrls.length > 0 && <span style={{ fontSize: 9.5, fontWeight: 700, color: INK2, background: PANEL, border: `1px solid ${HAIR}`, borderRadius: 4, padding: '2px 7px' }}>{ctrls.length} risk area{ctrls.length > 1 ? 's' : ''}</span>}
+            </div>
+            <button onClick={() => setOpen(expanded ? null : m.id)}
+              style={{ marginTop: 9, background: 'transparent', border: 'none', color: '#2563eb', fontSize: 10.5, fontWeight: 700, cursor: 'pointer', padding: 0 }}>
+              {expanded ? '▲ Hide detail' : '▼ What this means & what to do'}
+            </button>
+
+            {expanded && (
+              <div style={{ marginTop: 9, borderTop: `1px solid ${HAIR}`, paddingTop: 10 }}>
+                {det.blurb && <div style={{ fontSize: 11.5, color: INK2, lineHeight: 1.55, marginBottom: 10 }}>{det.blurb}</div>}
+
+                {thrs.length > 0 && (
+                  <div style={{ marginBottom: 10 }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Key metrics vs. target</div>
+                    {thrs.map((t) => {
+                      const breach = t.status === 'Breach';
+                      return (
+                        <div key={t.id} style={{ display: 'flex', alignItems: 'baseline', gap: 8, padding: '3px 0', fontSize: 11, borderBottom: '1px solid #f8fafc' }}>
+                          <span style={{ flex: 1, color: INK2 }}>{t.name}</span>
+                          <span style={{ fontWeight: 700, color: breach ? SEV[t.breachSeverity] : '#1f8a4c', fontVariantNumeric: 'tabular-nums' }}>{t.current}{t.unit === '%' ? '%' : ` ${t.unit}`}</span>
+                          <span style={{ color: INK3, fontSize: 10 }}>/ {t.threshold}</span>
+                          <Pill text={breach ? t.breachSeverity : 'Within'} color={breach ? SEV[t.breachSeverity] : '#1f8a4c'} />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {ctrls.length > 0 && (
+                  <div style={{ marginBottom: 10 }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Top risk contributors</div>
+                    {ctrls.slice(0, 4).map((c) => (
+                      <div key={c.id} style={{ padding: '4px 0', borderBottom: '1px solid #f8fafc' }}>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                          <span style={{ flex: 1, fontSize: 11.5, fontWeight: 600, color: INK }}>{c.name}</span>
+                          <span style={{ fontSize: 9.5, color: INK3 }}>{c.likelihood}×{c.impact}</span>
+                          <span style={{ fontSize: 11.5, fontWeight: 800, color: c.riskContribution >= 80 ? '#C0392B' : '#A85B2E', fontVariantNumeric: 'tabular-nums', width: 24, textAlign: 'right' }}>{c.riskContribution}</span>
+                        </div>
+                        <div style={{ fontSize: 10.5, color: '#1f8a4c', marginTop: 1 }}>→ {c.action}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {nextMove && (
+                  <div style={{ background: '#f0f7f2', border: '1px solid #cce8d6', borderRadius: 6, padding: '8px 11px' }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: '#1f8a4c', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Recommended next move</div>
+                    <div style={{ fontSize: 11.5, color: INK }}>{nextMove}</div>
+                  </div>
+                )}
+              </div>
+            )}
+            <div style={{ fontSize: 9.5, color: INK3, marginTop: 8 }}>Source: {m.source}</div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, margin: '6px 0' }}>
-            <span style={{ fontSize: 24, fontWeight: 800, color: sc(m.current) }}>{m.current}</span>
-            <span style={{ fontSize: 11, color: INK3 }}>was {m.previous}</span>
-            <Trend d={m.delta} />
-            <span style={{ marginLeft: 'auto', fontSize: 10, color: m.trend === 'improving' ? '#1f8a4c' : m.trend === 'deteriorating' ? '#C0392B' : INK3, fontWeight: 600, textTransform: 'capitalize' }}>{m.trend}</span>
-          </div>
-          <Bar value={m.current} />
-          <div style={{ fontSize: 10.5, color: INK2, marginTop: 8, lineHeight: 1.5 }}>
-            <div>▲ <span style={{ color: '#1f8a4c' }}>{m.topImproving.metric} (+{m.topImproving.delta})</span></div>
-            <div>▼ <span style={{ color: '#C0392B' }}>{m.topDeteriorating.metric} ({m.topDeteriorating.delta})</span></div>
-          </div>
-          <div style={{ fontSize: 9.5, color: INK3, marginTop: 6 }}>Source: {m.source}</div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
