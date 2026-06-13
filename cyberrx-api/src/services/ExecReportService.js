@@ -23,6 +23,22 @@ const AttackCoverageService = require('./AttackCoverageService');
 
 const CSF_FUNCTIONS = { GV: 'Govern', ID: 'Identify', PR: 'Protect', DE: 'Detect', RS: 'Respond', RC: 'Recover' };
 
+// The complete set of NIST SP 800-53 Rev 5 control families (all 20). The
+// catalog loads every family into framework_requirements, but a family only
+// earns a computed score when it has a mapped check that ran this period — so
+// the Four-Lens view must seed from this full list and mark the rest as
+// not-assessed rather than dropping them.
+const NIST_80053_FAMILIES = {
+  AC: 'Access Control', AT: 'Awareness & Training', AU: 'Audit & Accountability',
+  CA: 'Assessment, Authorization & Monitoring', CM: 'Configuration Management',
+  CP: 'Contingency Planning', IA: 'Identification & Authentication', IR: 'Incident Response',
+  MA: 'Maintenance', MP: 'Media Protection', PE: 'Physical & Environmental Protection',
+  PL: 'Planning', PM: 'Program Management', PS: 'Personnel Security',
+  PT: 'PII Processing & Transparency', RA: 'Risk Assessment', SA: 'System & Services Acquisition',
+  SC: 'System & Communications Protection', SI: 'System & Information Integrity',
+  SR: 'Supply Chain Risk Management',
+};
+
 function tierOf(score) {
   if (score >= 85) return { tier: 4, label: 'Adaptive' };
   if (score >= 65) return { tier: 3, label: 'Repeatable' };
@@ -54,10 +70,25 @@ async function cisoPack(orgId, { baseline = 'moderate' } = {}) {
     id, name, score: csf[id] != null ? csf[id] : null, status: csf[id] != null ? statusOf(csf[id]) : 'n/a',
   }));
 
-  // 800-53 family compliance (computed score per family) + baseline coverage
-  const families = Object.entries(ctrl).filter(([k]) => /^[A-Z]{2}$/.test(k))
-    .map(([family, score]) => ({ family, score, status: statusOf(score) }))
-    .sort((a, b) => a.score - b.score);
+  // 800-53 family compliance: always emit all 20 control families. A family
+  // with a computed score this run shows it (weakest-first); families with no
+  // mapped check that ran are surfaced as "not assessed" rather than omitted.
+  const families = Object.keys(NIST_80053_FAMILIES)
+    .map((family) => {
+      const score = ctrl[family];
+      const assessed = score != null;
+      return {
+        family, name: NIST_80053_FAMILIES[family],
+        score: assessed ? score : null,
+        status: assessed ? statusOf(score) : 'na',
+        assessed,
+      };
+    })
+    .sort((a, b) => {
+      if (a.assessed !== b.assessed) return a.assessed ? -1 : 1; // assessed first
+      if (!a.assessed) return a.family.localeCompare(b.family);   // then alpha
+      return a.score - b.score;                                   // weakest-first
+    });
 
   // Baseline coverage: of controls in the selected baseline, how many have >=1
   // passing mapped check this run.

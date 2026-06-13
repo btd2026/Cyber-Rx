@@ -141,10 +141,11 @@ export default function CisoExecReport(props) {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px,1fr))', gap: 7 }}>
           {data.nist80053.families.slice(0, 20).map((f) => (
-            <div key={f.family} onClick={() => setDrill({ framework: 'n80053', group: f.family, title: `800-53 · ${f.family} family` })} title="Click to drill into controls"
-              style={{ border: `1px solid ${HAIR}`, background: '#fff', borderRadius: 6, padding: '7px 10px', cursor: 'pointer' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontWeight: 700, fontSize: 11.5, color: INK }}>{f.family}</span><span style={{ fontWeight: 700, fontSize: 11.5, color: cstat(f.status) }}>{f.score}</span></div>
-              <div style={{ height: 4, background: '#eef2f6', borderRadius: 2, marginTop: 5 }}><div style={{ width: `${f.score}%`, height: '100%', background: cstat(f.status), borderRadius: 2 }} /></div>
+            <div key={f.family} onClick={() => setDrill({ framework: 'n80053', group: f.family, title: `800-53 · ${f.family} family${f.name ? ' — ' + f.name : ''}` })}
+              title={`${f.name || f.family} — ${f.score == null ? 'not assessed (no automated check this period); click to drill into controls' : 'click to drill into controls'}`}
+              style={{ border: `1px solid ${HAIR}`, background: '#fff', borderRadius: 6, padding: '7px 10px', cursor: 'pointer', opacity: f.score == null ? 0.7 : 1 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontWeight: 700, fontSize: 11.5, color: INK }}>{f.family}</span><span style={{ fontWeight: 700, fontSize: 11.5, color: cstat(f.status) }}>{f.score == null ? 'n/a' : f.score}</span></div>
+              <div style={{ height: 4, background: '#eef2f6', borderRadius: 2, marginTop: 5 }}><div style={{ width: `${f.score == null ? 0 : f.score}%`, height: '100%', background: cstat(f.status), borderRadius: 2 }} /></div>
             </div>
           ))}
         </div>

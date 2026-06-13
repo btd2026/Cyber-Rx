@@ -65,7 +65,7 @@ function stream(res, audience, orgId, pack) {
     pack.csf.functions.forEach((f) => kv(doc, `  ${f.name}:`, f.score == null ? 'n/a' : `${f.score}/100`, colorFor(f.status)));
     h2(doc, `NIST 800-53 — ${pack.nist80053.baseline.name} baseline`);
     kv(doc, 'Baseline coverage:', `${pack.nist80053.baseline.coveragePct}% (${pack.nist80053.baseline.covered}/${pack.nist80053.baseline.total})`);
-    kv(doc, 'Weakest families:', pack.nist80053.families.slice(0, 6).map((f) => `${f.family} ${f.score}`).join('  '));
+    kv(doc, 'Weakest families:', pack.nist80053.families.filter((f) => f.score != null).slice(0, 6).map((f) => `${f.family} ${f.score}`).join('  '));
     h2(doc, 'MITRE ATT&CK coverage');
     const a = pack.attack.summary;
     kv(doc, 'Techniques covered:', `${a.covered}/${a.total}  (prevent ${a.prevent}, detect ${a.detect}, none ${a.none})`);
