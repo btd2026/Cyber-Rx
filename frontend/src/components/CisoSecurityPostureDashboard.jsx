@@ -356,8 +356,20 @@ function Domains({ matrix, controlRisk = [], thresholds = {} }) {
 /* ---------------- Control Risk Contribution ---------------- */
 function Controls({ rows }) {
   const [open, setOpen] = useState(null);
+  const total = rows.length;
+  const high = rows.filter((c) => c.riskContribution >= 80).length;
+  const sum = rows.reduce((s, c) => s + c.riskContribution, 0) || 1;
+  const top3 = rows.slice(0, 3).reduce((s, c) => s + c.riskContribution, 0);
+  const concentration = Math.round((top3 / sum) * 100);
   return (
     <div style={{ display: 'grid', gap: 6 }}>
+      {/* Concentration summary — where the risk actually sits, and where to start */}
+      <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'baseline', background: '#fbfcfe', border: `1px solid ${HAIR}`, borderRadius: 6, padding: '9px 13px', marginBottom: 4, fontSize: 11.5, color: INK2 }}>
+        <span><strong style={{ color: INK, fontSize: 13 }}>{total}</strong> control areas ranked by risk</span>
+        <span><strong style={{ color: '#C0392B' }}>{high}</strong> in the high band (≥80)</span>
+        <span>Top 3 drive <strong style={{ color: INK }}>{concentration}%</strong> of total risk</span>
+        {rows[0] && <span style={{ marginLeft: 'auto', color: '#1f8a4c', fontWeight: 600 }}>Start here → {rows[0].action}</span>}
+      </div>
       {rows.map((c) => (
         <div key={c.id} style={{ border: `1px solid ${HAIR}`, borderRadius: 6, overflow: 'hidden' }}>
           <button onClick={() => setOpen(open === c.id ? null : c.id)} style={{ width: '100%', textAlign: 'left', background: open === c.id ? PANEL : '#fff', border: 'none', cursor: 'pointer', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -387,13 +399,27 @@ function Controls({ rows }) {
 
 /* ---------------- Thresholds ---------------- */
 function Thresholds({ board }) {
+  // Breaches first, worst severity first, so the appetite violations lead.
+  const sevOrder = { Critical: 0, High: 1, Medium: 2, Low: 3 };
+  const sorted = [...board.rows].sort((a, b) => {
+    const ab = a.status === 'Breach', bb = b.status === 'Breach';
+    if (ab !== bb) return ab ? -1 : 1;
+    if (ab && bb) return (sevOrder[a.breachSeverity] ?? 9) - (sevOrder[b.breachSeverity] ?? 9);
+    return 0;
+  });
+  // Distance to the limit, in the threshold's own unit.
+  const gap = (t) => {
+    const over = t.direction === 'lte' ? t.current - t.limit : t.limit - t.current;
+    const u = t.unit === '%' ? '%' : ` ${t.unit}`;
+    return t.status === 'Breach' ? `${Math.abs(over)}${u} past limit` : `${Math.abs(over)}${u} of headroom`;
+  };
   return (
     <div>
       <div style={{ fontSize: 12, color: INK2, marginBottom: 12 }}>
-        <strong style={{ color: board.breaches ? '#C0392B' : '#1f8a4c' }}>{board.breaches} of {board.total}</strong> thresholds breached ({board.critical} critical). Breaches are risk-appetite violations.
+        <strong style={{ color: board.breaches ? '#C0392B' : '#1f8a4c' }}>{board.breaches} of {board.total}</strong> thresholds breached ({board.critical} critical). Breaches are risk-appetite violations — they lead the list below.
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 8 }}>
-        {board.rows.map((t) => {
+        {sorted.map((t) => {
           const breach = t.status === 'Breach';
           return (
             <div key={t.id} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${breach ? SEV[t.breachSeverity] : '#1f8a4c'}`, borderRadius: 6, padding: '10px 13px' }}>
@@ -406,6 +432,7 @@ function Thresholds({ board }) {
                 <span style={{ fontSize: 11, color: INK3 }}>{t.unit !== '%' ? t.unit + ' · ' : ''}threshold {t.threshold}</span>
                 <span style={{ marginLeft: 'auto', fontSize: 10, color: t.trend === 'improving' ? '#1f8a4c' : t.trend === 'worsening' ? '#C0392B' : INK3, textTransform: 'capitalize' }}>{t.trend}</span>
               </div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: breach ? SEV[t.breachSeverity] : '#1f8a4c' }}>{gap(t)}</div>
               {breach && <div style={{ fontSize: 10.5, color: INK2, marginTop: 4 }}>→ {t.action}</div>}
               <div style={{ fontSize: 9.5, color: INK3, marginTop: 4 }}>{t.policyRef}</div>
             </div>
