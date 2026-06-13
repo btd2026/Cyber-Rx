@@ -55,7 +55,6 @@ export default function CisoSecurityPostureDashboard(props) {
   const [tab, setTab] = useState('qa');
   const voice = useAgentVoice();
   const [drawer, setDrawer] = useState(null);   // an executive answer
-  const [pathSel, setPathSel] = useState(0);
   const { token, orgId, api } = ctx(props);
 
   useEffect(() => {
@@ -163,7 +162,7 @@ export default function CisoSecurityPostureDashboard(props) {
         {tab === 'thresholds' && <Thresholds board={d.thresholds} />}
         {tab === 'actions' && <Actions queue={d.actionQueue} attention={d.attentionItems} />}
         {tab === 'processes' && <Processes procs={d.businessProcesses} />}
-        {tab === 'paths' && <PathsTab paths={d.attackPathways} sel={pathSel} setSel={setPathSel} attackGraph={props.attackGraph} />}
+        {tab === 'paths' && <PathsTab attackGraph={props.attackGraph} />}
         {tab === 'readiness' && <Readiness readiness={d.readiness} investments={d.investments} peers={d.peerMaturity} emerging={d.emergingRisks} />}
         {tab === 'hidden' && <Hidden risks={d.hiddenRisks} />}
         <div style={{ fontSize: 10.5, color: INK3, marginTop: 16, borderTop: `1px solid ${HAIR}`, paddingTop: 10 }}>
@@ -446,83 +445,9 @@ function Processes({ procs }) {
 }
 
 /* ---------------- Attack Pathways ---------------- */
-// Attack Path tab — two views: the narrative analysis and the live threat graph.
-function PathsTab({ paths, sel, setSel, attackGraph }) {
-  const [view, setView] = useState('analysis');
-  return (
-    <div>
-      <div style={{ display: 'inline-flex', gap: 0, border: `1px solid ${HAIR}`, borderRadius: 8, overflow: 'hidden', marginBottom: 14 }}>
-        {[['analysis', 'Pathway analysis'], ['graph', 'Live threat graph']].map(([k, l]) => (
-          <button key={k} onClick={() => setView(k)} style={{ background: view === k ? INK : '#fff', color: view === k ? '#fff' : INK2, border: 'none', padding: '7px 16px', fontSize: 12, fontWeight: view === k ? 700 : 500, cursor: 'pointer' }}>{l}</button>
-        ))}
-      </div>
-      {view === 'analysis' ? <Pathways paths={paths} sel={sel} setSel={setSel} />
-        : (attackGraph || <div style={{ fontSize: 12, color: INK3 }}>Live threat graph unavailable.</div>)}
-    </div>
-  );
-}
-
-function Pathways({ paths, sel, setSel }) {
-  const p = paths[sel] || paths[0];
-  // Build a labelled kill-chain: each step gets a stage label + the control that breaks it.
-  const steps = p.narrative.split('→').map((s) => s.trim()).filter(Boolean);
-  const stageLabel = ['Initial access', 'Foothold', 'Privilege escalation', 'Lateral movement', 'Impact', 'Impact'];
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: '230px 1fr', gap: 18 }}>
-      {/* path picker */}
-      <div>
-        <div style={{ fontSize: 10, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Critical processes at risk</div>
-        {paths.map((x, i) => (
-          <button key={x.id} onClick={() => setSel(i)} style={{ display: 'block', width: '100%', textAlign: 'left', background: i === sel ? INK : '#fff', color: i === sel ? '#fff' : INK, border: `1px solid ${i === sel ? INK : HAIR}`, borderRadius: 8, padding: '10px 12px', marginBottom: 6, cursor: 'pointer' }}>
-            <div style={{ fontSize: 12.5, fontWeight: 700 }}>{x.process}</div>
-            <div style={{ fontSize: 10, color: i === sel ? '#ffb4a8' : '#C0392B', marginTop: 2 }}>Weakest link: {x.weakestControl}</div>
-          </button>
-        ))}
-      </div>
-
-      <div>
-        {/* What the CISO needs to know — plain English */}
-        <div style={{ background: '#fff7f5', border: '1px solid #f3c9bf', borderRadius: 9, padding: '14px 16px', marginBottom: 14 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: '#C0392B', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>What you need to know</div>
-          <div style={{ fontSize: 14, color: INK, lineHeight: 1.55 }}>
-            An attacker reaches <strong>{p.process}</strong> by starting with <strong>{p.initialAccess.toLowerCase()}</strong>, then exploiting <strong>{p.weakestControl}</strong> to move toward <strong>{p.target}</strong>. If it succeeds: <strong style={{ color: '#C0392B' }}>{p.businessImpact}</strong>
-          </div>
-          <div style={{ fontSize: 13, color: INK, marginTop: 8, background: '#f0f7f2', border: '1px solid #cce8d6', borderRadius: 7, padding: '9px 12px' }}>
-            <strong style={{ color: '#1f8a4c' }}>Fix this one thing first:</strong> {p.breakingControls[0]}.
-          </div>
-        </div>
-
-        {/* Labelled kill-chain (vertical, readable) */}
-        <div style={{ border: `1px solid ${HAIR}`, borderRadius: 9, padding: '14px 16px' }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>How the attack unfolds</div>
-          {steps.map((step, i) => {
-            const last = i === steps.length - 1;
-            return (
-              <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: i < steps.length - 1 ? 0 : 0 }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <div style={{ width: 26, height: 26, borderRadius: 13, background: last ? '#C0392B' : INK, color: '#fff', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{i + 1}</div>
-                  {i < steps.length - 1 && <div style={{ width: 2, height: 22, background: '#E8631A' }} />}
-                </div>
-                <div style={{ paddingBottom: i < steps.length - 1 ? 10 : 0 }}>
-                  <div style={{ fontSize: 9.5, fontWeight: 700, color: last ? '#C0392B' : '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{stageLabel[Math.min(i, stageLabel.length - 1)]}{last ? ' — business impact' : ''}</div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: INK }}>{step}</div>
-                </div>
-              </div>
-            );
-          })}
-          {/* MITRE + target facts */}
-          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', margin: '12px 0 10px' }}>
-            {p.mitreStages.map((s) => <span key={s} style={{ fontSize: 9.5, fontWeight: 600, color: '#7c3aed', border: '1px solid #c4b5fd', borderRadius: 3, padding: '1px 6px' }}>{s}</span>)}
-          </div>
-          <div style={{ background: '#f0f7f2', border: '1px solid #cce8d6', borderRadius: 7, padding: '10px 12px' }}>
-            <div style={{ fontSize: 9.5, fontWeight: 700, color: '#1f8a4c', textTransform: 'uppercase' }}>Controls that break the chain</div>
-            <div style={{ fontSize: 12, color: INK, marginTop: 4 }}>{p.breakingControls.join(' · ')}</div>
-            <div style={{ fontSize: 12, color: INK, marginTop: 6 }}><strong>Mitigation:</strong> {p.mitigation}</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+// Attack Path tab — the Azure-style security graph is the attack-pathway view.
+function PathsTab({ attackGraph }) {
+  return <div>{attackGraph || <div style={{ fontSize: 12, color: INK3 }}>Live threat graph unavailable.</div>}</div>;
 }
 
 /* ---------------- Readiness + Investment + Peers + Emerging ---------------- */
