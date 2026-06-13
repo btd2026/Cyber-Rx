@@ -18,31 +18,36 @@
 const pct = (n) => `${n}%`;
 
 // ---------------- executive answers (by question number) -------------------
+// The spoken narration is a ~30-second VERDICT: it states plainly whether the
+// current situation is good or bad and the two or three reasons why — it never
+// reads the on-screen text. The `explanation` is the short supporting paragraph
+// shown on screen.
 function answerNarration(n, m, posture) {
   const worstDomain = [...m.domainMatrix].sort((a, b) => a.current - b.current)[0];
   const topCtrl = m.controlRisk[0];
   const worstPath = m.attackPathways[0];
   const breaches = m.thresholds.rows.filter((r) => r.status === 'Breach');
+  const readiness = m.readiness || { overall: 0, rating: 'Weak' };
   switch (n) {
     case 1: return {
       explanation: `Your posture score is a single 0–100 health number, weighted across eight security domains and built from live data in your tools — not a self-assessment. ${posture.current} sits in the "${band(posture.current)}" band: core protections work but meaningful gaps remain. The ${posture.delta >= 0 ? 'rise' : 'drop'} of ${Math.abs(posture.delta)} point(s) is driven mostly by ${worstDomain.name}, your weakest area.`,
-      narration: `Let me put this in context. Think of your posture score the way a doctor thinks of a vital sign — one number that tells you whether the organization is getting healthier or sicker against cyber threats. It is weighted, so the domains that can hurt you most, identity and detection, count the most. A ${posture.current} means you are reasonably protected but not where a health plan handling member data should be. What I want you to take away is the direction: we are ${posture.delta >= 0 ? 'trending up' : 'slipping'}, and the area dragging us down is ${worstDomain.name}. That is where your next dollar and your next conversation should go.`,
+      narration: `Here is my read: this is a ${posture.current >= 75 ? 'green light' : posture.current >= 55 ? 'yellow light, not green' : 'red flag'}. A ${posture.current} out of 100 means your core protections are working, but for a health plan holding member data it is ${posture.current >= 75 ? 'about where it should be' : 'short of where you need to be'}. What matters more than the number is the direction — we are ${posture.delta >= 0 ? 'trending up' : 'slipping'}, and the anchor dragging you down is ${worstDomain.name}. The concern is simple: if ${worstDomain.name} keeps sliding, the whole score follows it. That is where I would put attention and the next dollar first.`,
     };
     case 2: return {
       explanation: `These control areas top the risk ranking because they combine high likelihood of attack with severe impact and a wide blast radius. ${topCtrl.name} leads: it governs the keys to your most sensitive systems, and attackers specifically hunt for it. The "act now" items are sequenced so the highest risk-reduction-per-effort comes first.`,
-      narration: `Here is why these rise to the top, in plain terms. We score every control on three things: how likely an attacker is to use it, how badly it would hurt if they did, and how far the damage would spread. ${topCtrl.name} is number one because it controls privileged access — essentially the master keys to your claims and member-data systems. Ransomware crews target exactly this. The actions I am recommending are not a wish list; they are ordered so the first one removes the most risk for the least effort. If you only do one thing this week, do the top action.`,
+      narration: `This one concerns me, and here is why. Your risk is not spread evenly — it is concentrated, and ${topCtrl.name} is the single biggest exposure. That is bad because it controls privileged access, the master keys attackers hunt for first, and ransomware crews target it directly. The situation is manageable, but only if you act in order: the top action removes the most risk for the least effort. Left alone, this is the gap most likely to turn into a real breach. If you do one thing this week, do the first action.`,
     };
     case 3: return {
       explanation: `Attackers rarely break in through one big hole — they chain small weaknesses together. Today the most likely chain runs through ${worstPath.process}, starting with ${worstPath.initialAccess.toLowerCase()} and pivoting on ${worstPath.weakestControl}. Readiness measures whether, if that happened, you could detect, contain, and recover quickly.`,
-      narration: `Let me walk you through how a real attack would unfold, because it is rarely a single event. An attacker starts small — usually by tricking a person — then quietly moves from one weak control to the next until they reach something valuable. Right now the path of least resistance leads to ${worstPath.process}, and the link that lets them escalate is ${worstPath.weakestControl}. The second half of this answer is readiness: even a strong wall fails sometimes, so the question is whether you could spot the intruder, shut the door, and recover your operations fast. That is where our restore testing and tabletop gaps worry me most.`,
+      narration: `Honestly, this is the area I would lose sleep over. You are exposed because an attacker does not need one big hole — they chain small ones, and right now that chain runs straight to ${worstPath.process} through ${worstPath.weakestControl}. What makes it worse is readiness: at ${readiness.overall} out of 100, even if we detect them, our ability to contain and recover quickly is shaky — restore testing and tabletop exercises are the weak spots. The good news is that one fix breaks the chain. Closing that weakest link is the highest-leverage move you can make right now.`,
     };
     case 4: return {
       explanation: `A threshold is a line your own policy and risk appetite say you should not cross — like patching internet-facing critical flaws within seven days. ${breaches.length} of these lines are currently crossed. Just as important, several real risks are being carried without anyone formally signing off on accepting them, which is a governance gap as much as a technical one.`,
-      narration: `Two ideas here, and both matter to the board. First, thresholds: these are lines you and your policy already agreed not to cross — for example, fixing an exposed critical vulnerability within seven days. We are over the line in ${breaches.length} places, and each one is an open window an attacker can use. Second, and this is the subtle one: there are risks the organization is living with that nobody formally decided to accept. In governance terms, accepting risk is a decision that should be made on purpose, in writing, by the right person. When it happens silently, the board is exposed to something it never approved. I would get those documented or fixed.`,
+      narration: `This is a clear red flag, and the board needs to hear it plainly. ${breaches.length} of your own policy lines are crossed — each one an open window you already agreed to keep shut. But the part that worries me more is governance: there are risks the organization is carrying that nobody formally decided to accept. Accepting risk should be a deliberate, written decision by the right person. When it happens silently, the board is exposed to something it never approved — and that is exactly the kind of thing that surfaces after an incident. I would get these documented or fixed.`,
     };
     case 5: return {
       explanation: `This answers the board's hardest question: is the money working? We track each major initiative's risk score before and after, so reductions are measured, not assumed. We also benchmark against peers and watch which threats are accelerating faster than our defenses — so you can fund what moves the needle.`,
-      narration: `This is the question your board and CFO care about most: is the security spend actually buying down risk, or just buying activity? I measure it honestly — each initiative has a risk score before and after, so when I say risk dropped, there is a number behind it. The biggest returns are coming from identity and endpoint work. Two cautions, though. We trail our peers in a couple of domains, which raises both breach odds and regulator scrutiny. And a few threats — shadow AI tools and identity-based ransomware — are moving faster than our controls. I would steer the next investment toward closing those gaps.`,
+      narration: `This is mostly good news, with two cautions. The spend is genuinely working — risk is down by a measured amount, not just on paper, and the biggest wins are in identity and endpoint. So the program is buying real risk reduction, which is the answer your board and CFO want. The cautions: you trail your peers in a couple of domains, which raises both breach odds and regulator scrutiny, and a few threats — shadow AI tools and identity-based ransomware — are moving faster than our defenses. I would steer the next dollar squarely at closing those two gaps.`,
     };
     default: return { explanation: '', narration: '' };
   }
@@ -77,6 +82,20 @@ function entityNarration(kind, e) {
     explanation: `This is a risk the organization is carrying without a formal decision to accept it. It hides because ${e.whyHidden.toLowerCase()}. The evidence: ${e.evidence}. The danger is governance as much as technical — the board is exposed to something it never approved.`,
     narration: `This one matters for a reason that is easy to miss. ${e.risk}. It stays hidden because ${e.whyHidden.toLowerCase()}. Here is how we know: ${e.evidence}. The real problem is not just technical — it is that nobody formally decided to accept this risk. Good governance means risk is accepted on purpose, in writing, by the right person. My recommendation: ${e.escalation}.`,
   };
+  if (kind === 'investment') {
+    const reduction = (e.baselineRisk || 0) - (e.currentRisk || 0);
+    return {
+      explanation: `${e.name} is a ${e.spend} investment in ${e.riskArea}. It has cut measured risk from ${e.baselineRisk} to ${e.currentRisk} (a ${reduction}-point drop), with roughly ${e.futureReduction} more points available once ${e.blockers ? e.blockers.toLowerCase() : 'the remaining rollout'} is resolved.`,
+      narration: `Here is the honest read on ${e.name}. The money is working — risk in ${e.riskArea} dropped from ${e.baselineRisk} to ${e.currentRisk}, and that is a measured number, not a guess. What is holding back the rest of the return is ${e.blockers ? e.blockers.toLowerCase() : 'the remaining rollout'}. So this is a good-news item with an unlock attached. My recommendation: ${e.decision}.`,
+    };
+  }
+  if (kind === 'emerging') {
+    const gap = e.velocity === 'High' && e.ourAdaptation !== 'High';
+    return {
+      explanation: `${e.risk} is moving at ${String(e.velocity).toLowerCase()} velocity while our adaptation is ${String(e.ourAdaptation).toLowerCase()}. ${e.note}. When a threat outpaces our defenses, exposure grows on its own — even if nothing else changes.`,
+      narration: `Let me flag why ${e.risk} concerns me. It is accelerating ${e.velocity === 'High' ? 'fast' : 'steadily'}, and our ability to keep up is ${String(e.ourAdaptation).toLowerCase()}. ${e.note}. ${gap ? 'That gap is the problem — it widens by itself, because the threat does not wait for our roadmap. This is one to get ahead of now rather than react to later.' : 'We are roughly keeping pace, but it is worth watching so the gap does not open up.'}`,
+    };
+  }
   return { explanation: '', narration: '' };
 }
 
