@@ -90,7 +90,7 @@ export default function CisoSecurityPostureDashboard(props) {
   const refreshed = new Date(d.generatedAt).toLocaleString();
 
   const TABS = [
-    ['qa', `Executive Q&A · ${d.questions.length}`], ['domains', 'Domain Health'], ['controls', 'Control Risk'],
+    ['qa', 'Current State'], ['domains', 'Domain Health'], ['controls', 'Control Risk'],
     ['thresholds', `Thresholds · ${d.thresholds.breaches} breached`], ['actions', 'Action Now'],
     ['processes', 'Process Protection'], ['paths', 'Attack Pathways'], ['readiness', 'Readiness & Investment'],
     ['hidden', `Hidden Risk · ${d.hiddenRisks.length}`],

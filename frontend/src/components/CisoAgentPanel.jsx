@@ -68,7 +68,7 @@ export default function CisoAgentPanel(props) {
     return (active.riskDrivers || []).map((label) => ({ label, entity: matchEntity(d, label) }));
   }, [d, active]);
 
-  const intro = "Hi, I'm Michael, your CISO agent. This is your security command surface. Select a question and I'll answer it right here — with the evidence, the recommended action, the owner, and a target date. Click any issue in my answer to trace it back to its source. Or use the tabs above to go deeper: Security Posture for the full dashboard, AI Controls for your AI and GenAI risk, Attack Path to see how an attacker would reach your critical processes, and Four-Lens to see compliance against NIST CSF, 800-53, and CIS. I'll explain anything you click. Where would you like to start?";
+  const intro = "Hi, I'm Michael, your CISO agent. These are the five key questions every CISO should be able to answer at any time — how strong our posture is, where risk is concentrated, how we'd hold up if attacked today, whether we're inside our own risk thresholds, and whether our security investments are paying off. Each question shows a short summary of where we stand. Click a question and I'll give you the full details — the evidence, the recommended action, the owner, and a target date. Click any risk in my answer to trace it back to its source. Where would you like to start?";
 
   // Michael introduces himself once when the CISO tab opens (respects mute).
   useEffect(() => {
@@ -94,7 +94,7 @@ export default function CisoAgentPanel(props) {
       {/* Header — agent + voice control (Michael), no Command Center guide */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.12em' }}>
-          Michael · CISO Agent — ask a question
+          Michael · CISO Agent — current state
         </div>
         <VoiceControls voice={voice} onReplay={() => voice.speak(active ? active.narration : intro)} label="Hear Michael" />
       </div>
@@ -103,37 +103,40 @@ export default function CisoAgentPanel(props) {
       <div style={{ display: 'flex', gap: 12, background: '#0f1b2d', color: '#e6ecf5', borderRadius: 10, padding: '14px 18px', marginBottom: 14 }}>
         <div style={{ width: 34, height: 34, borderRadius: 17, background: '#1e3a5f', color: '#9bc0ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, flexShrink: 0 }}>M</div>
         <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>
-          <strong style={{ color: '#9bc0ff' }}>Michael — your CISO agent.</strong> Pick a question below for a decision-ready answer about your posture, or use the tabs above to go deeper:
-          <strong> Security Posture</strong> (full dashboard), <strong>AI Controls</strong>, <strong>Attack Path</strong>, and <strong>Four-Lens</strong> (NIST CSF · 800-53 · CIS · ATT&CK). I'll explain anything you click.
+          <strong style={{ color: '#9bc0ff' }}>Michael — your CISO agent.</strong> These are the <strong>5 key questions every CISO should be able to answer at any time</strong>. Each one shows a quick summary of where you stand right now — <strong>click a question</strong> for the full details: the answer, the evidence behind it, the recommended action, and who owns it.
         </div>
       </div>
 
-      {/* Questions — fixed 5; active one highlighted */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+      {/* The 5 key questions — each shows a summary; click a question for the
+          full details (which open inline directly beneath it). */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
         {d.questions.map((q) => {
           const on = q.id === activeId;
           return (
-            <button key={q.id} onClick={() => selectQuestion(q)}
-              style={{
-                textAlign: 'left', background: on ? INK : '#fff', color: on ? '#fff' : INK,
-                border: `1px solid ${on ? INK : HAIR}`, borderRadius: 10, padding: '12px 15px',
-                fontSize: 14, fontWeight: on ? 700 : 500, cursor: 'pointer', lineHeight: 1.4,
-                boxShadow: on ? '0 2px 10px rgba(15,23,42,0.18)' : 'none', transition: 'all .12s',
-                display: 'flex', alignItems: 'center', gap: 10,
-              }}>
-              <span style={{ width: 22, height: 22, borderRadius: 11, background: on ? '#1e3a5f' : PANEL, color: on ? '#9bc0ff' : INK3, fontSize: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{q.n}</span>
-              {q.question}
-            </button>
+            <div key={q.id}>
+              <button onClick={() => selectQuestion(q)}
+                style={{
+                  width: '100%', textAlign: 'left', background: on ? INK : '#fff', color: on ? '#fff' : INK,
+                  border: `1px solid ${on ? INK : HAIR}`, borderRadius: 10, padding: '12px 15px', cursor: 'pointer',
+                  boxShadow: on ? '0 2px 10px rgba(15,23,42,0.18)' : 'none', transition: 'all .12s',
+                }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ width: 22, height: 22, borderRadius: 11, background: on ? '#1e3a5f' : PANEL, color: on ? '#9bc0ff' : INK3, fontSize: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{q.n}</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.4 }}>{q.question}</span>
+                  <span style={{ marginLeft: 'auto', flexShrink: 0, fontSize: 11, fontWeight: 600, color: on ? '#9bc0ff' : INK3 }}>{on ? 'Hide details ▲' : 'View details ▾'}</span>
+                </div>
+                {/* one-line summary of where we stand on this question */}
+                <div style={{ fontSize: 12.5, lineHeight: 1.5, marginTop: 7, paddingLeft: 32, color: on ? '#cdd8e6' : INK2 }}>{q.answer}</div>
+              </button>
+              {on && active && (
+                <div style={{ marginTop: 10, marginBottom: 4 }}>
+                  <CisoAnswerView a={active} issues={issues} onIssueClick={setIssue} />
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
-
-      {/* Answer — directly below (Michael narrates the prompt; nothing shown until a question is picked) */}
-      {active && (
-        <div style={{ marginTop: 18 }}>
-          <CisoAnswerView a={active} issues={issues} onIssueClick={setIssue} />
-        </div>
-      )}
 
       {issue && <IssueDrawer item={issue} voice={voice} onClose={() => { voice.stop(); setIssue(null); }} />}
     </div>
