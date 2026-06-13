@@ -10,7 +10,6 @@ import React from 'react';
 const C = { border: '#e2e8f0', acc: '#0891b2', text: '#0f172a', muted: '#64748b' };
 
 const TABS = [
-  { id: 'hub',       label: 'Command Center',   mod: 'All Dashboards' },
   { id: 'dashboard', label: 'CISO',             mod: 'Security' },
   { id: 'cio',       label: 'CIO',              mod: 'Technology' },
   { id: 'cro',       label: 'CRO / Audit',      mod: 'Compliance' },
