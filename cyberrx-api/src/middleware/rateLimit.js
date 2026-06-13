@@ -201,14 +201,22 @@ function getUserId(req) {
 
 /**
  * Rate limiting middleware factory
- * Creates middleware with specified limiter and key generator
+ * Creates middleware with specified limiter and key generator.
+ *
+ * `limiterRef` may be a limiter instance OR a key into `limiters` (e.g.
+ * 'authLogin'). Keys are resolved lazily, per request — the predefined
+ * middleware below is created before initRateLimiters() runs, so capturing the
+ * (still-null) instance up front would permanently disable rate limiting.
  */
-function createRateLimitMiddleware(limiter, options = {}) {
+function createRateLimitMiddleware(limiterRef, options = {}) {
   return async (req, res, next) => {
     // Check if rate limiting is enabled
     if (process.env.RATE_LIMIT_ENABLED === 'false') {
       return next();
     }
+
+    // Resolve the limiter at request time (handles deferred initialization).
+    const limiter = typeof limiterRef === 'string' ? limiters[limiterRef] : limiterRef;
 
     // Ensure limiter is initialized
     if (!limiter) {
@@ -270,50 +278,50 @@ function createRateLimitMiddleware(limiter, options = {}) {
  */
 
 // Authentication endpoints (strict IP-based limiting)
-const authLoginLimiter = createRateLimitMiddleware(limiters.authLogin, {
+const authLoginLimiter = createRateLimitMiddleware('authLogin', {
   keyBy: 'ip',
   keyPrefix: 'login'
 });
 
-const authSignupLimiter = createRateLimitMiddleware(limiters.authSignup, {
+const authSignupLimiter = createRateLimitMiddleware('authSignup', {
   keyBy: 'ip',
   keyPrefix: 'signup'
 });
 
 // API endpoints (method-based limiting)
-const apiGetLimiter = createRateLimitMiddleware(limiters.apiGet, {
+const apiGetLimiter = createRateLimitMiddleware('apiGet', {
   keyBy: 'user',
   keyPrefix: 'get'
 });
 
-const apiPostLimiter = createRateLimitMiddleware(limiters.apiPost, {
+const apiPostLimiter = createRateLimitMiddleware('apiPost', {
   keyBy: 'user',
   keyPrefix: 'post'
 });
 
-const apiPutLimiter = createRateLimitMiddleware(limiters.apiPut, {
+const apiPutLimiter = createRateLimitMiddleware('apiPut', {
   keyBy: 'user',
   keyPrefix: 'put'
 });
 
-const apiDeleteLimiter = createRateLimitMiddleware(limiters.apiDelete, {
+const apiDeleteLimiter = createRateLimitMiddleware('apiDelete', {
   keyBy: 'user',
   keyPrefix: 'delete'
 });
 
 // Per-user rate limiting
-const userStandardLimiter = createRateLimitMiddleware(limiters.userStandard, {
+const userStandardLimiter = createRateLimitMiddleware('userStandard', {
   keyBy: 'user',
   keyPrefix: 'user'
 });
 
 // Per-IP rate limiting
-const ipStrictLimiter = createRateLimitMiddleware(limiters.ipStrict, {
+const ipStrictLimiter = createRateLimitMiddleware('ipStrict', {
   keyBy: 'ip',
   keyPrefix: 'ip-strict'
 });
 
-const ipStandardLimiter = createRateLimitMiddleware(limiters.ipStandard, {
+const ipStandardLimiter = createRateLimitMiddleware('ipStandard', {
   keyBy: 'ip',
   keyPrefix: 'ip-standard'
 });
