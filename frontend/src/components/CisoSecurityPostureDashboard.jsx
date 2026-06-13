@@ -15,6 +15,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
+import TicketControl from './TicketControl';
+
+const STATUS_SEV = { Strong: 'Low', Moderate: 'Medium', Weak: 'High', Critical: 'Critical' };
+const numSev = (n) => (n >= 5 ? 'Critical' : n >= 4 ? 'High' : n >= 3 ? 'Medium' : 'Low');
 
 const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e2e8f0', PANEL = '#f8fafc', NAVY = '#0f1b2d';
 const C = { Strong: '#1f8a4c', Moderate: '#B07C2E', Weak: '#A85B2E', Critical: '#C0392B', 'Not assessed': '#94a3b8' };
@@ -222,6 +226,11 @@ function EvidenceDrawer({ a, onClose }) {
           <div style={{ fontSize: 9.5, fontWeight: 700, color: '#1f8a4c', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Recommended action</div>
           <div style={{ fontSize: 12.5, color: INK, marginTop: 3 }}>{a.recommendedAction}</div>
         </div>
+        <Row label="Remediation — open & track a ticket">
+          <TicketControl sourceRef={`ciso:${a.id}`} title={`[CISO] ${a.question}`}
+            recommendation={a.recommendedAction} severity={STATUS_SEV[a.status] || 'Medium'}
+            owner={a.owner} dueDate={a.targetDate} />
+        </Row>
         <div style={{ display: 'flex', gap: 16, fontSize: 11.5, color: INK2, flexWrap: 'wrap' }}>
           <span>Owner <strong>{a.owner}</strong></span><span>Target <strong>{a.targetDate}</strong></span>
         </div>
@@ -323,13 +332,33 @@ function Thresholds({ board }) {
 }
 
 /* ---------------- Action-Now Queue + Attention ---------------- */
+// "Take action" surface for an item: explicit next step + the means to act —
+// open/track a ticket, email the owner, or copy an escalation note.
+function TakeAction({ sourceRef, title, action, owner, escalationPath, severity, dueDate, process }) {
+  const [copied, setCopied] = useState(false);
+  const note = `ESCALATION — ${title}\nRequested action: ${action}\nOwner: ${owner}\nEscalation path: ${escalationPath || 'CISO'}\nProtects: ${process || '—'}\nTarget: ${dueDate || 'ASAP'}\n— Raised from the CyberRx CISO dashboard.`;
+  const mailto = `mailto:?subject=${encodeURIComponent(`[Escalation] ${title}`)}&body=${encodeURIComponent(note)}`;
+  const copy = () => { try { navigator.clipboard.writeText(note); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch (_) {} };
+  return (
+    <div style={{ marginTop: 9, borderTop: `1px dashed ${HAIR}`, paddingTop: 9 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: '#C0392B', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Action required from you</div>
+      <div style={{ fontSize: 12, color: INK, lineHeight: 1.5, marginBottom: 8 }}>{action} <span style={{ color: INK3 }}>· route: {escalationPath || 'CISO'}</span></div>
+      <TicketControl sourceRef={sourceRef} title={`[Escalation] ${title}`} recommendation={action} severity={severity} owner={owner} dueDate={dueDate} />
+      <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+        <a href={mailto} style={{ background: '#fff', border: `1px solid ${HAIR}`, borderRadius: 6, padding: '5px 11px', fontSize: 11, fontWeight: 600, color: INK, textDecoration: 'none' }}>✉ Email owner</a>
+        <button onClick={copy} style={{ background: '#fff', border: `1px solid ${HAIR}`, borderRadius: 6, padding: '5px 11px', fontSize: 11, fontWeight: 600, color: INK, cursor: 'pointer' }}>{copied ? '✓ Copied' : '⧉ Copy escalation note'}</button>
+      </div>
+    </div>
+  );
+}
+
 function Actions({ queue, attention }) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 18 }}>
       <div>
-        <div style={{ fontSize: 11, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Action-Now Queue <span style={{ fontWeight: 400, textTransform: 'none' }}>(severity × urgency × impact × threat × confidence)</span></div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Action-Now Queue <span style={{ fontWeight: 400, textTransform: 'none' }}>(ranked by severity × urgency × impact × threat × confidence)</span></div>
         {queue.map((a) => (
-          <div key={a.id} style={{ border: `1px solid ${HAIR}`, borderRadius: 6, padding: '10px 13px', marginBottom: 7 }}>
+          <div key={a.id} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${a.escalation ? '#C0392B' : numSev(a.severity) === 'High' ? '#A85B2E' : '#B07C2E'}`, borderRadius: 6, padding: '11px 13px', marginBottom: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontSize: 14, fontWeight: 800, color: a.rank <= 2 ? '#C0392B' : INK3, width: 24 }}>#{a.rank}</span>
               <span style={{ flex: 1, fontSize: 12.5, fontWeight: 700, color: INK }}>{a.action}</span>
@@ -342,20 +371,25 @@ function Actions({ queue, attention }) {
               <span>Due <strong style={{ color: INK2 }}>{a.dueDate}</strong></span>
               {a.automation !== 'n/a' && <span>⚙ {a.automation}</span>}
             </div>
+            {/* Every action can be ticketed; escalations get the full take-action surface. */}
+            {a.escalation
+              ? <TakeAction sourceRef={`act:${a.id}`} title={a.action} action={`Authorize and assign: ${a.action}`} owner={a.owner} escalationPath="CISO → executive sponsor" severity={numSev(a.severity)} dueDate={a.dueDate} process={a.process} />
+              : <div style={{ marginTop: 9 }}><TicketControl sourceRef={`act:${a.id}`} title={`[Action] ${a.action}`} recommendation={a.action} severity={numSev(a.severity)} owner={a.owner} dueDate={a.dueDate} /></div>}
           </div>
         ))}
       </div>
       <div>
-        <div style={{ fontSize: 11, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Top CISO Attention Items</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Top CISO Attention Items <span style={{ fontWeight: 400, textTransform: 'none' }}>(need your decision)</span></div>
         {attention.map((a) => (
-          <div key={a.id} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${SEV[a.severity]}`, borderRadius: 6, padding: '10px 13px', marginBottom: 7 }}>
+          <div key={a.id} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${SEV[a.severity]}`, borderRadius: 6, padding: '10px 13px', marginBottom: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
               <span style={{ fontSize: 12, fontWeight: 700, color: INK, lineHeight: 1.3 }}>{a.title}</span>
               <Pill text={a.severity} color={SEV[a.severity]} />
             </div>
             <div style={{ fontSize: 11, color: INK2, marginTop: 5 }}>{a.businessImpact}</div>
-            <div style={{ fontSize: 10.5, color: '#1f8a4c', fontWeight: 600, marginTop: 5 }}>→ {a.decision}</div>
+            <div style={{ fontSize: 10.5, color: '#1f8a4c', fontWeight: 600, marginTop: 5 }}>→ Decision needed: {a.decision}</div>
             <div style={{ fontSize: 10, color: INK3, marginTop: 4 }}>{a.owner} · {a.targetDate} · {a.escalationPath}{a.blockers ? ` · blocker: ${a.blockers}` : ''}</div>
+            <TakeAction sourceRef={`attn:${a.id}`} title={a.title} action={a.decision} owner={a.owner} escalationPath={a.escalationPath} severity={a.severity} dueDate={a.targetDate} process={a.process} />
           </div>
         ))}
       </div>

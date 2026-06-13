@@ -573,6 +573,10 @@ async function init() {
         UNIQUE (organization_id, source_ref)
       );
       CREATE INDEX IF NOT EXISTS remediation_tickets_org ON remediation_tickets(organization_id);
+      -- additive columns for the CISO remediation feedback loop (idempotent)
+      ALTER TABLE remediation_tickets ADD COLUMN IF NOT EXISTS due_date TIMESTAMPTZ;
+      ALTER TABLE remediation_tickets ADD COLUMN IF NOT EXISTS last_synced_at TIMESTAMPTZ;
+      ALTER TABLE remediation_tickets ADD COLUMN IF NOT EXISTS owner TEXT;
 
       -- CISO posture-domain snapshots — one row per (org, domain) per capture,
       -- so the dashboard can show whether each domain is improving/deteriorating.
