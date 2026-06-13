@@ -8,11 +8,22 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useAgentVoice, VoiceControls } from './agentVoice';
 
 const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e2e8f0', PANEL = '#f8fafc';
 const GREEN = '#1f8a4c', AMBER = '#B07C2E', RED = '#C0392B';
 const cstat = (s) => (s === 'green' ? GREEN : s === 'amber' ? AMBER : s === 'red' ? RED : INK3);
 const cov = { prevent: GREEN, detect: AMBER, none: '#e5e9f0' };
+
+// Agent voice — an intro for the dashboard and one explanation per lens.
+const INTRO = "This is your Four-Lens view. The same security program, seen through four independent frameworks — NIST CSF 2.0, NIST 800-53, MITRE ATT&CK, and CIS Controls. Pick a lens with the buttons, and click any function, family, control, or tactic to dig in: you'll see the subcategory scores, exactly what was tested and the result, and where there's a finding, the recommendation to fix it.";
+const LENS_VOICE = {
+  csf: "NIST CSF 2.0 is the board-level shape of your program — six functions from Govern through Recover. Click any function to open its subcategories, see which were tested, the score, and any findings with recommendations.",
+  n80053: "NIST 800-53 is the detailed control catalog behind your chosen baseline. Each family rolls up its controls. Click a family to see the individual controls, what was checked, and where you fall short of the baseline.",
+  attack: "MITRE ATT&CK shows whether you can actually prevent or detect real adversary techniques, grouped by tactic. Click a tactic to see each technique and whether you have prevention, detection, or nothing — with a recommendation where there's a gap.",
+  cis: "CIS Controls version 8.1 is the prioritized, practical checklist — eighteen controls made of safeguards. Click a control to see each safeguard, whether it's evidenced by an automated check, and what to fix.",
+  ops: "This is the operational view: the specific checks failing right now, each with a recommendation, plus how your two scored frameworks are trending over time.",
+};
 
 function ctx(props) {
   const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
@@ -24,11 +35,13 @@ function ctx(props) {
   return { token, orgId, api };
 }
 
-function ScoreChip({ label, score, status }) {
+function ScoreChip({ label, score, status, onClick }) {
   return (
-    <div style={{ border: `1px solid ${HAIR}`, borderTop: `3px solid ${cstat(status)}`, borderRadius: 6, padding: '9px 12px', textAlign: 'center', minWidth: 92 }}>
+    <div onClick={onClick} title={onClick ? 'Click to drill into subcategories' : undefined}
+      style={{ border: `1px solid ${HAIR}`, borderTop: `3px solid ${cstat(status)}`, borderRadius: 6, padding: '9px 12px', textAlign: 'center', minWidth: 92, cursor: onClick ? 'pointer' : 'default', transition: 'box-shadow .12s' }}>
       <div style={{ fontSize: 22, fontWeight: 700, color: cstat(status), lineHeight: 1 }}>{score == null ? '—' : score}</div>
       <div style={{ fontSize: 9.5, color: INK3, textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 4 }}>{label}</div>
+      {onClick && <div style={{ fontSize: 9, color: '#2563eb', marginTop: 4, fontWeight: 600 }}>dig in →</div>}
     </div>
   );
 }
@@ -48,6 +61,8 @@ export default function CisoExecReport(props) {
   const [baseline, setBaseline] = useState('moderate');
   const [tech, setTech] = useState(null);
   const [lens, setLens] = useState('csf');
+  const [drill, setDrill] = useState(null); // { framework, group, title }
+  const voice = useAgentVoice();
   const { token, orgId, api } = ctx(props);
 
   useEffect(() => {
@@ -57,6 +72,16 @@ export default function CisoExecReport(props) {
       .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(setData).catch((e) => setError(e.message));
   }, [api, orgId, token, baseline]);
+
+  // Michael introduces the dashboard once, then explains each lens as it opens.
+  useEffect(() => {
+    if (!data) return;
+    if (typeof window !== 'undefined' && !window._cx_fourlens_intro) { window._cx_fourlens_intro = true; voice.speak(INTRO); }
+  }, [data]); // eslint-disable-line
+  useEffect(() => {
+    if (data && LENS_VOICE[lens]) voice.speak(LENS_VOICE[lens]);
+    return () => voice.stop();
+  }, [lens]); // eslint-disable-line
 
   const maxHeat = useMemo(() => (data ? Math.max(1, ...data.attack.heat.map((t) => t.total)) : 1), [data]);
 
@@ -75,7 +100,8 @@ export default function CisoExecReport(props) {
           <h2 style={{ margin: '6px 0 0', fontSize: 21, fontWeight: 600, color: INK }}>Four-lens operational posture</h2>
           <div style={{ fontSize: 11.5, color: INK2, marginTop: 5 }}>Four independent frameworks on the same program — pick a lens below. Computed from validation run #{data.runId}.</div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <VoiceControls voice={voice} onReplay={() => voice.speak(LENS_VOICE[lens] || INTRO)} label="Hear Michael" />
           <a href={pdfUrl} style={{ background: INK, color: '#fff', fontSize: 11.5, fontWeight: 600, borderRadius: 5, padding: '8px 14px', textDecoration: 'none' }}>⤓ PDF report</a>
           <a href={pptxUrl} style={{ background: '#fff', color: INK, border: `1px solid ${HAIR}`, fontSize: 11.5, fontWeight: 600, borderRadius: 5, padding: '8px 14px', textDecoration: 'none' }}>⤓ PowerPoint</a>
         </div>
@@ -94,7 +120,7 @@ export default function CisoExecReport(props) {
         sub="The six core functions of the Cybersecurity Framework. This is the board-level shape of the program."
         right={<Pillbox text={`Overall ${data.csf.overall ?? '—'}`} color="#2563eb" />}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 8 }}>
-          {data.csf.functions.map((f) => <ScoreChip key={f.id} label={f.name} score={f.score} status={f.status} />)}
+          {data.csf.functions.map((f) => <ScoreChip key={f.id} label={f.name} score={f.score} status={f.status} onClick={() => setDrill({ framework: 'csf', group: f.id, title: `CSF · ${f.name}` })} />)}
         </div>
       </Lens>
       )}
@@ -115,7 +141,8 @@ export default function CisoExecReport(props) {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px,1fr))', gap: 7 }}>
           {data.nist80053.families.slice(0, 20).map((f) => (
-            <div key={f.family} style={{ border: `1px solid ${HAIR}`, background: '#fff', borderRadius: 6, padding: '7px 10px' }}>
+            <div key={f.family} onClick={() => setDrill({ framework: 'n80053', group: f.family, title: `800-53 · ${f.family} family` })} title="Click to drill into controls"
+              style={{ border: `1px solid ${HAIR}`, background: '#fff', borderRadius: 6, padding: '7px 10px', cursor: 'pointer' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontWeight: 700, fontSize: 11.5, color: INK }}>{f.family}</span><span style={{ fontWeight: 700, fontSize: 11.5, color: cstat(f.status) }}>{f.score}</span></div>
               <div style={{ height: 4, background: '#eef2f6', borderRadius: 2, marginTop: 5 }}><div style={{ width: `${f.score}%`, height: '100%', background: cstat(f.status), borderRadius: 2 }} /></div>
             </div>
@@ -132,7 +159,8 @@ export default function CisoExecReport(props) {
         <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 6 }}>
           {data.attack.heat.map((t) => (
             <div key={t.shortname} style={{ minWidth: 124, flex: '0 0 auto', border: `1px solid ${HAIR}`, background: '#fff', borderRadius: 6, padding: '8px 9px' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: INK, marginBottom: 5, height: 26, lineHeight: 1.2 }}>{t.tactic}</div>
+              <div onClick={() => setDrill({ framework: 'attack', group: t.shortname, title: `ATT&CK · ${t.tactic}` })} title="Click to drill into techniques"
+                style={{ fontSize: 10, fontWeight: 700, color: '#2563eb', marginBottom: 5, height: 26, lineHeight: 1.2, cursor: 'pointer' }}>{t.tactic} ↗</div>
               <div style={{ display: 'flex', height: 8, borderRadius: 3, overflow: 'hidden', border: `1px solid ${HAIR}`, marginBottom: 5 }}>
                 {['prevent', 'detect', 'none'].map((k) => t[k] > 0 && <div key={k} title={`${k}: ${t[k]}`} style={{ flex: t[k], background: cov[k] }} />)}
               </div>
@@ -176,7 +204,8 @@ export default function CisoExecReport(props) {
                 <div style={{ fontSize: 10.5, fontWeight: 700, color: bandCol, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>{band} · {group.length}</div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(248px,1fr))', gap: 8 }}>
                   {group.map((c) => (
-                    <div key={c.number} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${cisCol(c.attainmentPct)}`, background: '#fff', borderRadius: 6, padding: '10px 12px' }}>
+                    <div key={c.number} onClick={() => setDrill({ framework: 'cis', group: String(c.number), title: `CIS ${c.number} — ${c.name}` })} title="Click to drill into safeguards"
+                      style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${cisCol(c.attainmentPct)}`, background: '#fff', borderRadius: 6, padding: '10px 12px', cursor: 'pointer' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
                         <span style={{ fontSize: 12, fontWeight: 700, color: INK }}><span style={{ color: INK3 }}>{c.number}.</span> {c.name}</span>
                         <span style={{ fontSize: 16, fontWeight: 700, color: cisCol(c.attainmentPct), fontVariantNumeric: 'tabular-nums' }}>{c.attainmentPct}%</span>
@@ -222,6 +251,85 @@ export default function CisoExecReport(props) {
           <strong>CIS Controls v8.1:</strong> {data.cis.note}
         </div>
       )}
+
+      {drill && <DrillDrawer drill={drill} api={api} orgId={orgId} token={token} onClose={() => setDrill(null)} />}
+    </div>
+  );
+}
+
+/* ---- Drill-down drawer: subcategories with score, what was done, findings, recs ---- */
+function DrillDrawer({ drill, api, orgId, token, onClose }) {
+  const [d, setD] = useState(null);
+  const [error, setError] = useState(null);
+  const [open, setOpen] = useState(null);
+  useEffect(() => {
+    const h = { 'X-Org-Id': orgId }; if (token) h.Authorization = `Bearer ${token}`;
+    setD(null);
+    fetch(`${api}/api/frameworks/exec/drilldown?org_id=${encodeURIComponent(orgId)}&framework=${drill.framework}&group=${encodeURIComponent(drill.group)}`, { headers: h })
+      .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(setD).catch((e) => setError(e.message));
+  }, [api, orgId, token, drill]);
+  const sChip = (s, score) => (
+    <span style={{ fontSize: 12, fontWeight: 700, color: cstat(s), fontVariantNumeric: 'tabular-nums' }}>{score == null ? (s === 'red' ? 'gap' : '—') : `${score}`}</span>
+  );
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,27,45,0.45)', zIndex: 60, display: 'flex', justifyContent: 'flex-end' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: 'min(560px,95vw)', height: '100%', background: '#fff', boxShadow: '-8px 0 24px rgba(0,0,0,0.2)', overflowY: 'auto' }}>
+        <div style={{ position: 'sticky', top: 0, background: '#fbfcfe', borderBottom: `1px solid ${HAIR}`, padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+          <div>
+            <div style={{ fontSize: 10, color: INK3, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Drill-down</div>
+            <h3 style={{ margin: '4px 0 0', fontSize: 15.5, fontWeight: 700, color: INK }}>{drill.title}</h3>
+            {d && <div style={{ fontSize: 11, color: INK2, marginTop: 2 }}>{d.count} {drill.framework === 'attack' ? 'techniques' : 'subcategories'} · run #{d.runId || '—'}</div>}
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, color: INK3, cursor: 'pointer' }}>✕</button>
+        </div>
+        <div style={{ padding: '14px 20px 26px' }}>
+          {error && <div style={{ color: RED, fontSize: 12 }}>{error}</div>}
+          {!d && !error && <div style={{ color: INK3, fontSize: 12 }}>Loading subcategory detail…</div>}
+          {d && d.requirements.map((r) => {
+            const isOpen = open === r.id;
+            return (
+              <div key={r.id} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${cstat(r.status)}`, borderRadius: 7, marginBottom: 8, overflow: 'hidden' }}>
+                <button onClick={() => setOpen(isOpen ? null : r.id)} style={{ width: '100%', textAlign: 'left', background: isOpen ? PANEL : '#fff', border: 'none', cursor: 'pointer', padding: '10px 13px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ flex: 1, fontSize: 12.5, color: INK }}><strong style={{ color: INK3, fontWeight: 700 }}>{r.id}</strong> {r.title}</span>
+                  {r.findings.length > 0 && <span style={{ fontSize: 9.5, fontWeight: 700, color: '#fff', background: RED, borderRadius: 4, padding: '2px 7px' }}>{r.findings.length} finding{r.findings.length > 1 ? 's' : ''}</span>}
+                  {sChip(r.status, r.score)}
+                  <span style={{ color: INK3, fontSize: 11 }}>{isOpen ? '▾' : '▸'}</span>
+                </button>
+                {isOpen && (
+                  <div style={{ padding: '4px 14px 14px', background: PANEL, fontSize: 12, color: INK }}>
+                    <div style={{ color: INK2, lineHeight: 1.55, marginBottom: 8 }}>{r.summary}</div>
+                    {r.checks.length > 0 && (
+                      <div style={{ marginBottom: 8 }}>
+                        <div style={{ fontSize: 9.5, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>What was done</div>
+                        {r.checks.map((c) => (
+                          <div key={c.id} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 4 }}>
+                            <span style={{ width: 8, height: 8, borderRadius: 4, marginTop: 4, flexShrink: 0, background: c.status === 'pass' ? GREEN : c.status === 'partial' ? AMBER : c.status === 'fail' ? RED : INK3 }} />
+                            <span style={{ lineHeight: 1.5, color: INK2 }}>{c.did}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {r.findings.length > 0 && (
+                      <div style={{ background: '#fdecea', border: '1px solid #f3c9bf', borderRadius: 6, padding: '8px 11px', marginBottom: 8 }}>
+                        <div style={{ fontSize: 9.5, fontWeight: 700, color: RED, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Findings</div>
+                        {r.findings.map((f, i) => <div key={i} style={{ fontSize: 11.5, color: INK, lineHeight: 1.5, marginBottom: 2 }}>• {f}</div>)}
+                      </div>
+                    )}
+                    {r.recommendations.length > 0 && (
+                      <div style={{ background: '#f0f7f2', border: '1px solid #cce8d6', borderRadius: 6, padding: '8px 11px' }}>
+                        <div style={{ fontSize: 9.5, fontWeight: 700, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Recommendations</div>
+                        {r.recommendations.map((rec, i) => <div key={i} style={{ fontSize: 11.5, color: INK, lineHeight: 1.5, marginBottom: 2 }}>→ {rec}</div>)}
+                      </div>
+                    )}
+                    {!r.findings.length && r.tested && <div style={{ fontSize: 11.5, color: GREEN }}>✓ Operating within target — no findings.</div>}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }

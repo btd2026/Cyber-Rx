@@ -11,6 +11,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useAgentVoice, VoiceControls } from './agentVoice';
 
 const INK = '#0f172a', INK_2 = '#475569', INK_3 = '#94a3b8', HAIRLINE = '#e2e8f0';
 const STATUS = { Operating: '#1f8a4c', Partial: '#B07C2E', Weak: '#A85B2E', Gap: '#C0392B', 'Not assessed': '#94a3b8' };
@@ -25,9 +26,12 @@ function resolveCtx(props) {
   return { token, organizationId, apiUrl };
 }
 
+const AI_INTRO = "This is your AI and GenAI controls view. It shows how well the safeguards around AI coding assistants — like Claude Code and Copilot — and generative-AI use are actually operating, each mapped to the OWASP LLM Top 10 and the NIST AI Risk Management Framework. The score at the top is the overall health of these controls; the cards below show where the gaps are and what to do about each one. The fastest-moving risk here is data leaking into AI tools without controls, so watch the data-protection items closely.";
+
 export default function AiSecurityControls(props) {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
+  const voice = useAgentVoice();
   const { token, organizationId, apiUrl } = resolveCtx(props);
 
   useEffect(() => {
@@ -37,6 +41,12 @@ export default function AiSecurityControls(props) {
       .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(setData).catch((e) => setError(e.message));
   }, [apiUrl, organizationId, token]);
+
+  useEffect(() => {
+    if (!data) return;
+    if (typeof window !== 'undefined' && !window._cx_ai_intro) { window._cx_ai_intro = true; voice.speak(AI_INTRO); }
+    return () => voice.stop();
+  }, [data]); // eslint-disable-line
 
   if (error) return <div style={{ padding: 20, color: '#C0392B', fontSize: 13 }}>Could not load AI controls: {error}</div>;
   if (!data) return <div style={{ padding: 20, color: INK_3, fontSize: 13 }}>Assessing AI security controls…</div>;
@@ -61,6 +71,14 @@ export default function AiSecurityControls(props) {
             <span>{data.controlsOperating}/{data.totalControls} operating · {data.controlsWithGaps} gap(s)</span>
           </span>
         </div>
+      </div>
+
+      {/* Dashboard intro + agent voice (mutable) */}
+      <div style={{ display: 'flex', gap: 14, justifyContent: 'space-between', alignItems: 'center', background: '#eef4fb', border: '1px solid #cfe0f3', borderRadius: 8, padding: '10px 15px', marginTop: 16 }}>
+        <div style={{ fontSize: 12.5, color: INK, lineHeight: 1.5 }}>
+          <strong style={{ color: '#1d4ed8' }}>What this shows:</strong> how well your AI/GenAI safeguards (Claude Code, Copilot, generative-AI use) are operating — each mapped to OWASP LLM Top 10 and NIST AI RMF, with the action to close each gap.
+        </div>
+        <div style={{ flexShrink: 0 }}><VoiceControls voice={voice} onReplay={() => voice.speak(AI_INTRO)} label="Hear Michael" /></div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginTop: 16 }}>
