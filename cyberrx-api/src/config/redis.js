@@ -29,67 +29,43 @@ let connectionAttempts = 0;
 const MAX_RECONNECT_DELAY = 30000; // 30 seconds max
 
 /**
- * Parse Redis URL into connection config
- * Supports both redis:// and rediss:// (TLS) protocols
+ * Reconnection backoff. Gives up after a few attempts so an unreachable Redis
+ * doesn't loop forever — the app then runs on the in-memory fallback.
  */
-function parseRedisUrl(url) {
-  try {
-    const parsed = new URL(url);
-
-    return {
-      host: parsed.hostname || 'localhost',
-      port: parseInt(parsed.port) || 6379,
-      password: parsed.password || undefined,
-      db: (parsed.pathname && parsed.pathname !== '/')
-        ? parseInt(parsed.pathname.substring(1))
-        : 0,
-      tls: parsed.protocol === 'rediss:'
-    };
-  } catch (err) {
-    console.error('Invalid REDIS_URL:', url);
-    return null;
+function reconnectStrategy(retries) {
+  if (retries > 5) {
+    console.warn('Redis unreachable after 5 attempts — using in-memory fallback');
+    return new Error('Redis reconnection failed');
   }
+  return Math.min(Math.exp(retries) * 50 + Math.random() * 100, MAX_RECONNECT_DELAY);
 }
 
 /**
- * Get Redis connection configuration from environment
+ * Get Redis connection configuration from environment.
+ * Returns null when Redis is not configured (no REDIS_URL / REDIS_HOST), so the
+ * app skips connecting entirely instead of hammering localhost:6379.
  */
 function getRedisConfig() {
-  // If REDIS_URL is provided, use it
+  // If REDIS_URL is provided, hand it to node-redis directly (it parses
+  // redis:// and rediss:// itself) and attach our reconnect policy.
   if (process.env.REDIS_URL) {
-    const config = parseRedisUrl(process.env.REDIS_URL);
-    if (config) {
-      return config;
-    }
+    return { url: process.env.REDIS_URL, socket: { reconnectStrategy } };
   }
 
-  // Otherwise, use individual environment variables
+  // Otherwise only connect when a host is explicitly configured.
+  if (!process.env.REDIS_HOST) {
+    return null;
+  }
+
   return {
     socket: {
-      host: process.env.REDIS_HOST || 'localhost',
+      host: process.env.REDIS_HOST,
       port: parseInt(process.env.REDIS_PORT) || 6379,
-      reconnectStrategy: (retries) => {
-        // Exponential backoff with jitter
-        const delay = Math.min(
-          Math.exp(retries) * 50 + Math.random() * 100,
-          MAX_RECONNECT_DELAY
-        );
-
-        console.warn(`Redis reconnect attempt ${retries}, retrying in ${delay}ms`);
-
-        // Stop retrying after 10 attempts
-        if (retries > 10) {
-          console.error('Redis reconnection failed after 10 attempts');
-          return new Error('Redis reconnection failed');
-        }
-
-        return delay;
-      }
+      tls: process.env.REDIS_TLS === 'true' ? {} : undefined,
+      reconnectStrategy
     },
     password: process.env.REDIS_PASSWORD || undefined,
-    database: parseInt(process.env.REDIS_DB) || 0,
-    // Enable TLS if REDIS_TLS is set to true
-    tls: process.env.REDIS_TLS === 'true' ? {} : undefined
+    database: parseInt(process.env.REDIS_DB) || 0
   };
 }
 
@@ -101,25 +77,33 @@ async function initRedisClient() {
     return client;
   }
 
-  try {
-    const config = getRedisConfig();
+  const config = getRedisConfig();
+  if (!config) {
+    console.log('Redis not configured — using in-memory fallback for rate limiting and caching');
+    return null;
+  }
 
+  try {
     console.log(JSON.stringify({
       ts: new Date().toISOString(),
       event: 'redis_init',
-      host: config.socket?.host || config.host,
-      port: config.socket?.port || config.port,
-      db: config.database || config.db,
-      tls: !!config.tls
+      host: config.url ? '(from REDIS_URL)' : config.socket?.host,
+      port: config.url ? undefined : config.socket?.port,
+      tls: config.url ? config.url.startsWith('rediss:') : !!config.socket?.tls
     }));
 
     // Create Redis client
     client = redis.createClient(config);
 
+    // Log the first error only — the reconnect strategy bounds the retries, so
+    // we avoid filling the logs with repeated identical Redis errors.
+    let errorLogged = false;
+
     // Handle connection events
     client.on('connect', () => {
       isConnected = true;
       connectionAttempts = 0;
+      errorLogged = false;
       console.log(JSON.stringify({
         ts: new Date().toISOString(),
         event: 'redis_connected'
@@ -137,21 +121,14 @@ async function initRedisClient() {
 
     client.on('error', (err) => {
       isConnected = false;
-      console.error('Redis client error:', err.message);
-
-      if (err.message.includes('ECONNREFUSED')) {
-        console.error('Redis connection refused - rate limiting will fall back to in-memory');
+      if (!errorLogged) {
+        errorLogged = true;
+        console.error('Redis client error (rate limiting will fall back to in-memory):', err.message);
       }
-    });
-
-    client.on('reconnecting', () => {
-      connectionAttempts++;
-      console.warn(`Redis reconnection attempt ${connectionAttempts}`);
     });
 
     client.on('end', () => {
       isConnected = false;
-      console.warn('Redis connection ended');
     });
 
     // Connect to Redis
