@@ -16,6 +16,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
 import TicketControl from './TicketControl';
+import CisoAgentPanel from './CisoAgentPanel';
 
 const STATUS_SEV = { Strong: 'Low', Moderate: 'Medium', Weak: 'High', Critical: 'Critical' };
 const numSev = (n) => (n >= 5 ? 'Critical' : n >= 4 ? 'High' : n >= 3 ? 'Medium' : 'Low');
@@ -76,7 +77,9 @@ export default function CisoSecurityPostureDashboard(props) {
   }, [d, props.focusQuestion]);
 
   // Auto-narrate the active tab (Michael explains the page). Respects mute.
+  // The 'qa' tab hosts CisoAgentPanel, which does its own intro — skip here.
   useEffect(() => {
+    if (tab === 'qa') return;
     if (d && d.tabNarration && d.tabNarration[tab]) voice.speak(d.tabNarration[tab]);
     return () => voice.stop();
   }, [d, tab]); // eslint-disable-line
@@ -88,7 +91,7 @@ export default function CisoSecurityPostureDashboard(props) {
   const refreshed = new Date(d.generatedAt).toLocaleString();
 
   const TABS = [
-    ['qa', `Executive Q&A · 15`], ['domains', 'Domain Health'], ['controls', 'Control Risk'],
+    ['qa', `Executive Q&A · ${d.questions.length}`], ['domains', 'Domain Health'], ['controls', 'Control Risk'],
     ['thresholds', `Thresholds · ${d.thresholds.breaches} breached`], ['actions', 'Action Now'],
     ['processes', 'Process Protection'], ['paths', 'Attack Pathways'], ['readiness', 'Readiness & Investment'],
     ['hidden', `Hidden Risk · ${d.hiddenRisks.length}`],
@@ -144,7 +147,7 @@ export default function CisoSecurityPostureDashboard(props) {
 
       <div style={{ background: '#fff', borderRadius: '0 0 8px 8px', padding: '18px 22px' }}>
         {/* Compact standalone intro — short on screen; the voice tells the rest */}
-        {d.tabNarration && d.tabNarration[tab] && (
+        {tab !== 'qa' && d.tabNarration && d.tabNarration[tab] && (
           <div style={{ display: 'flex', gap: 14, justifyContent: 'space-between', alignItems: 'center', background: '#eef4fb', border: '1px solid #cfe0f3', borderRadius: 8, padding: '10px 15px', marginBottom: 16 }}>
             <div style={{ fontSize: 12.5, color: INK, lineHeight: 1.5 }}>
               <strong style={{ color: '#1d4ed8' }}>Michael:</strong> {d.tabNarration[tab].split('. ')[0]}.
@@ -154,7 +157,7 @@ export default function CisoSecurityPostureDashboard(props) {
             </div>
           </div>
         )}
-        {tab === 'qa' && <ExecQA questions={d.questions} onEvidence={setDrawer} />}
+        {tab === 'qa' && <CisoAgentPanel />}
         {tab === 'domains' && <Domains matrix={d.domainMatrix} />}
         {tab === 'controls' && <Controls rows={d.controlRisk} />}
         {tab === 'thresholds' && <Thresholds board={d.thresholds} />}
