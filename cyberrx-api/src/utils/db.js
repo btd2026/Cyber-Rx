@@ -578,6 +578,51 @@ async function init() {
       ALTER TABLE remediation_tickets ADD COLUMN IF NOT EXISTS last_synced_at TIMESTAMPTZ;
       ALTER TABLE remediation_tickets ADD COLUMN IF NOT EXISTS owner TEXT;
 
+      -- ===== Organization Intake — document request & review pipeline =====
+      -- Canonical "thing we ask for" (requested at most once per org).
+      CREATE TABLE IF NOT EXISTS document_type (
+        id          TEXT PRIMARY KEY,
+        name        TEXT NOT NULL,
+        description TEXT,
+        category    TEXT,                      -- Policy | Standard | Procedure | Plan | Record
+        created_at  TIMESTAMPTZ DEFAULT NOW()
+      );
+      -- Many-to-many: a document_type evidences many controls (the dedup + fan-out).
+      CREATE TABLE IF NOT EXISTS document_control_map (
+        document_type_id    TEXT NOT NULL REFERENCES document_type(id),
+        framework_id        TEXT NOT NULL,
+        requirement_id      TEXT NOT NULL,
+        expected_requirement TEXT,             -- what THIS control expects from the doc
+        PRIMARY KEY (document_type_id, framework_id, requirement_id)
+      );
+      CREATE INDEX IF NOT EXISTS document_control_map_ctrl ON document_control_map(framework_id, requirement_id);
+      -- One upload per (org, document_type).
+      CREATE TABLE IF NOT EXISTS document_upload (
+        id               TEXT PRIMARY KEY,
+        org_id           TEXT NOT NULL,
+        document_type_id TEXT NOT NULL REFERENCES document_type(id),
+        file_name        TEXT,
+        normalized_text  TEXT,
+        format           TEXT,
+        status           TEXT DEFAULT 'requested',  -- requested|uploaded|normalized|reviewed|failed
+        error            TEXT,
+        uploaded_at      TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE (org_id, document_type_id)
+      );
+      -- One row per (upload, control) — the fan-out of a single document's review.
+      CREATE TABLE IF NOT EXISTS control_assessment (
+        id                 SERIAL PRIMARY KEY,
+        org_id             TEXT NOT NULL,
+        document_upload_id TEXT NOT NULL REFERENCES document_upload(id),
+        framework_id       TEXT NOT NULL,
+        requirement_id     TEXT NOT NULL,
+        status             TEXT NOT NULL,         -- met | partially met | not met
+        finding            TEXT,
+        evidence_excerpt   TEXT,
+        reviewed_at        TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS control_assessment_org ON control_assessment(org_id, framework_id, requirement_id);
+
       -- CISO posture-domain snapshots — one row per (org, domain) per capture,
       -- so the dashboard can show whether each domain is improving/deteriorating.
       CREATE TABLE IF NOT EXISTS ciso_posture_snapshots (
