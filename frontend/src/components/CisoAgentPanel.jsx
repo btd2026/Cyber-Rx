@@ -42,6 +42,8 @@ function matchEntity(d, text) {
   if ((e = d.businessProcesses.find((p) => hit(p.name)))) return { kind: 'process', e };
   if ((e = d.domainMatrix.find((x) => hit(x.name)))) return { kind: 'domain', e };
   if ((e = (d.hiddenRisks || []).find((h) => hit(h.risk)))) return { kind: 'hidden', e };
+  if ((e = (d.investments || []).find((x) => hit(x.name)))) return { kind: 'investment', e };
+  if ((e = (d.emergingRisks || []).find((x) => hit(x.risk)))) return { kind: 'emerging', e };
   return null;
 }
 
@@ -175,46 +177,64 @@ function IssueDrawer({ item, onClose, voice }) {
     why = `Why it's hidden: ${e.whyHidden}.`;
     source = e.evidence; process = e.process;
     action = `${e.escalation}. Formal acceptance: ${e.formalAcceptance === false ? 'none on record' : e.formalAcceptance === 'expired' ? 'expired' : 'on record'}.`;
+  } else if (kind === 'investment') {
+    const reduction = (e.baselineRisk || 0) - (e.currentRisk || 0);
+    title = e.name; tag = `${e.riskArea} · ${e.spend}`; sev = e.blockers ? SEV.Medium : '#1f8a4c';
+    what = `Measured risk cut from ${e.baselineRisk} to ${e.currentRisk} (−${reduction}); about ${e.futureReduction} more points available.`;
+    why = e.blockers ? `Remaining return is blocked by: ${e.blockers}.` : 'On track — no blocker on record.';
+    source = 'Investment-to-risk-reduction tracking';
+    action = e.decision;
+  } else if (kind === 'emerging') {
+    title = e.risk; tag = `Velocity ${e.velocity} · our adaptation ${e.ourAdaptation}`;
+    sev = (e.velocity === 'High' && e.ourAdaptation !== 'High') ? SEV.High : SEV.Medium;
+    what = e.note;
+    why = `This threat is moving ${String(e.velocity).toLowerCase()} while our adaptation is ${String(e.ourAdaptation).toLowerCase()} — the gap widens over time.`;
+    source = 'Emerging-risk register';
+    action = `Close the ${String(e.ourAdaptation).toLowerCase()}-adaptation gap before this is exploited.`;
   }
   const Row = ({ k, v }) => v ? (
-    <div style={{ marginBottom: 14 }}>
+    <div style={{ background: PANEL, border: `1px solid ${HAIR}`, borderRadius: 8, padding: '11px 13px' }}>
       <div style={{ fontSize: 10, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{k}</div>
       <div style={{ fontSize: 13, color: INK, lineHeight: 1.55 }}>{v}</div>
     </div>
   ) : null;
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,27,45,0.45)', zIndex: 60, display: 'flex', justifyContent: 'flex-end' }}>
-      <div onClick={(ev) => ev.stopPropagation()} style={{ width: 'min(480px,92vw)', height: '100%', background: '#fff', boxShadow: '-8px 0 24px rgba(0,0,0,0.2)', overflowY: 'auto', padding: '22px 24px', borderTop: `4px solid ${sev}` }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, paddingBottom: 14, borderBottom: `1px solid ${HAIR}` }}>
-          <div>
+      <div onClick={(ev) => ev.stopPropagation()} style={{ width: 'min(500px,94vw)', height: '100%', background: '#fff', boxShadow: '-8px 0 24px rgba(0,0,0,0.2)', overflowY: 'auto', borderTop: `4px solid ${sev}` }}>
+        {/* header band */}
+        <div style={{ padding: '20px 24px 16px', borderBottom: `1px solid ${HAIR}`, background: PANEL }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
             <div style={{ fontSize: 10, color: INK3, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Issue detail</div>
-            <h3 style={{ margin: '4px 0 2px', fontSize: 15.5, fontWeight: 700, color: INK }}>{title}</h3>
-            <div style={{ fontSize: 11.5, color: INK2 }}>{tag}</div>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, color: INK3, cursor: 'pointer', lineHeight: 1, marginTop: -4 }}>✕</button>
           </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <h3 style={{ margin: '6px 0 8px', fontSize: 16, fontWeight: 800, color: INK, lineHeight: 1.35 }}>{title}</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', background: sev, borderRadius: 5, padding: '3px 10px' }}>{tag}</span>
             {voice && e.narration && <VoiceControls voice={voice} onReplay={() => voice.speak(e.narration)} label="Explain" />}
-            <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, color: INK3, cursor: 'pointer' }}>✕</button>
           </div>
         </div>
-        {/* SME explanation — the agent explains in plain English */}
-        {e.explanation && (
-          <div style={{ marginTop: 14, background: '#eef4fb', border: '1px solid #cfe0f3', borderRadius: 8, padding: '12px 14px' }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#1d4ed8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Michael explains</div>
-            <div style={{ fontSize: 13, color: INK, lineHeight: 1.6 }}>{e.explanation}</div>
+
+        <div style={{ padding: '18px 24px 26px' }}>
+          {/* SME explanation — the agent explains in plain English */}
+          {e.explanation && (
+            <div style={{ background: '#eef4fb', border: '1px solid #cfe0f3', borderRadius: 9, padding: '13px 15px', marginBottom: 16 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#1d4ed8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Michael explains</div>
+              <div style={{ fontSize: 13, color: INK, lineHeight: 1.6 }}>{e.explanation}</div>
+            </div>
+          )}
+          <div style={{ display: 'grid', gap: 10 }}>
+            <Row k="What it is" v={what} />
+            <Row k="Why it matters" v={why} />
+            <Row k="Evidence / source — how we know" v={source} />
+            <Row k="Affected business process" v={process} />
           </div>
-        )}
-        <div style={{ marginTop: 16 }}>
-          <Row k="What it is" v={what} />
-          <Row k="Why it matters" v={why} />
-          <Row k="Evidence / source — how we know" v={source} />
-          <Row k="Affected business process" v={process} />
+          {action && (
+            <div style={{ marginTop: 16, background: '#f0f7f2', border: '1px solid #cce8d6', borderRadius: 9, padding: '13px 15px' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#1f8a4c', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Recommended action</div>
+              <div style={{ fontSize: 13, color: INK, lineHeight: 1.55 }}>{action}</div>
+            </div>
+          )}
         </div>
-        {action && (
-          <div style={{ background: '#f0f7f2', border: '1px solid #cce8d6', borderRadius: 8, padding: '12px 14px' }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#1f8a4c', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Recommended action</div>
-            <div style={{ fontSize: 13, color: INK, lineHeight: 1.55 }}>{action}</div>
-          </div>
-        )}
       </div>
     </div>
   );

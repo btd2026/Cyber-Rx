@@ -173,7 +173,7 @@ function buildAnswers(model, posture, matrix, ranks, board, queue, readiness, in
         `Lowest-protected process: ${worstProc.name} (${worstProc.protectionLevel}/100)`,
         ...[...readiness.items].sort((a, b) => a.score - b.score).slice(0, 2).map((r) => `Readiness gap: ${r.name} (${r.score})`)],
       businessImpact: worstPath.businessImpact,
-      riskDrivers: [worstPath.weakestControl, ...worstPath.breakingControls.slice(0, 2)],
+      riskDrivers: [worstPath.weakestControl, worstProc.name, worstPath.process],
       recommendedAction: `Break the top attack chain: ${worstPath.breakingControls[0]}. ${worstPath.mitigation}.`,
       owner: 'CISO', targetDate: '2026-07-15',
       dataSources: ['Attack Pathways', 'MITRE ATT&CK', 'Cyber-Event Readiness', 'Business Process Protection'], component: 'pathways',
@@ -229,7 +229,7 @@ async function getDashboard(orgId) {
 
   // Enrich with SME explanations + voice narration (the agent acts as an
   // expert who explains, and the voice teaches rather than reads the screen).
-  const nmodel = { domainMatrix: matrix, controlRisk: ranks, attackPathways: model.pathways, thresholds: board };
+  const nmodel = { domainMatrix: matrix, controlRisk: ranks, attackPathways: model.pathways, thresholds: board, readiness };
   answers.forEach((a) => { const e = N.answerNarration(a.n, nmodel, posture); a.explanation = e.explanation; a.narration = e.narration; });
   ranks.forEach((c) => { const e = N.entityNarration('control', c); c.explanation = e.explanation; c.narration = e.narration; });
   board.rows.forEach((t) => { const e = N.entityNarration('threshold', t); t.explanation = e.explanation; t.narration = e.narration; });
@@ -237,6 +237,8 @@ async function getDashboard(orgId) {
   model.processes.forEach((p) => { const e = N.entityNarration('process', p); p.explanation = e.explanation; p.narration = e.narration; });
   matrix.forEach((d) => { const e = N.entityNarration('domain', d); d.explanation = e.explanation; d.narration = e.narration; });
   model.hidden.forEach((h) => { const e = N.entityNarration('hidden', h); h.explanation = e.explanation; h.narration = e.narration; });
+  invest.forEach((iv) => { const e = N.entityNarration('investment', iv); iv.explanation = e.explanation; iv.narration = e.narration; });
+  model.emerging.forEach((em) => { const e = N.entityNarration('emerging', em); em.explanation = e.explanation; em.narration = e.narration; });
   const tabs = ['qa', 'domains', 'controls', 'thresholds', 'actions', 'processes', 'paths', 'readiness', 'hidden'];
   const tabNarration = {};
   tabs.forEach((t) => { tabNarration[t] = N.tabNarration(t, nmodel, posture, board, readiness); });
