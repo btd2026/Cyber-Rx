@@ -30,6 +30,9 @@ const { getRedisClient, isRedisAvailable } = require('../config/redis');
 // In-memory fallback storage (used when Redis unavailable)
 const memoryStore = new Map();
 
+// Log the in-memory fallback once, not once per limiter created.
+let warnedInMemory = false;
+
 // Rate limiter instances
 const limiters = {
   // Authentication endpoints (strict limits)
@@ -68,8 +71,11 @@ function createRateLimiter(options) {
       ...options
     });
   } else {
-    // Fallback to in-memory rate limiter
-    console.warn('Redis unavailable, using in-memory rate limiting');
+    // Fallback to in-memory rate limiter (logged once across all limiters).
+    if (!warnedInMemory) {
+      warnedInMemory = true;
+      console.warn('Redis unavailable, using in-memory rate limiting');
+    }
 
     return new RateLimiterMemory({
       points: options.points || 100,
