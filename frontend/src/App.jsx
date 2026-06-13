@@ -8437,17 +8437,15 @@ function CISODash(props) {
       {/* CISO secondary nav — only the tab in use is highlighted */}
       <div style={{padding:"14px 20px 0"}}>
         <div style={{display:"flex",gap:4,borderBottom:"1px solid "+C.border}}>
-          {[["",  "Questions"],
-            ["posturedash","Security Posture"],
+          {[["posturedash","Security Posture"],
             ["aicontrols","AI Controls"],
             ["execreport","Four-Lens (CSF · 800-53 · CIS · ATT&CK)"]].map(function(t){
             var key=t[0]; var lbl=t[1];
-            var on=(key===""? (!agentView) : agentView===key);
+            var on=(key==="posturedash" ? (agentView==="posturedash"||!agentView) : agentView===key);
             return (
               <button key={key||"q"} onClick={function(){
                   setDrillView(null);
-                  if(key===""){ setAgentView(null); setAgentQ(""); }
-                  else { setAgentView(key); setAgentQ(key==="posturedash"?"CISO security posture dashboard":key==="aicontrols"?"AI security controls":key==="attackpath"?"Show the attack path":"Four-lens posture"); }
+                  setAgentView(key); setAgentQ(key==="posturedash"?"CISO security posture dashboard":key==="aicontrols"?"AI security controls":key==="attackpath"?"Show the attack path":"Four-lens posture");
                 }}
                 style={{background:"transparent",border:"none",
                   borderBottom:"3px solid "+(on?C.acc:"transparent"),
@@ -8459,14 +8457,6 @@ function CISODash(props) {
           })}
         </div>
       </div>
-
-      {/* Default CISO landing: clean agent Q&A — questions stay listed, the
-          active one highlights, the answer renders below, no intro / no score */}
-      {!drillView&&!agentView&&(
-        <div style={{padding:"6px 20px 26px"}}>
-          <CisoAgentPanel/>
-        </div>
-      )}
 
       {/* Interactive attack-path diagram (process → app → device → network → threat) */}
       {!drillView&&agentView==="attackpath"&&(
@@ -8507,14 +8497,10 @@ function CISODash(props) {
         </div>
       )}
 
-      {/* Dedicated CISO Security Posture Dashboard (CISO persona only) */}
-      {!drillView&&agentView==="posturedash"&&(
-        <div style={{padding:"0 20px 20px"}}>
-          <div style={{display:"flex",justifyContent:"flex-end",marginBottom:8}}>
-            <button onClick={clearAgentView}
-              style={{background:"transparent",border:"1px solid "+C.border,color:C.muted,
-                borderRadius:7,padding:"5px 10px",cursor:"pointer",fontSize:11}}>← Ask another</button>
-          </div>
+      {/* Dedicated CISO Security Posture Dashboard (default landing; hosts the
+          Executive Q&A as its first sub-tab — the standalone Questions tab is merged in) */}
+      {!drillView&&(agentView==="posturedash"||!agentView)&&(
+        <div style={{padding:"12px 20px 20px"}}>
           <CisoSecurityPostureDashboard focusQuestion={agentQ} attackGraph={<AttackPathDiagram/>}/>
         </div>
       )}
