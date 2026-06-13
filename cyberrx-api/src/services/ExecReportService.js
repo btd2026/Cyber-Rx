@@ -267,4 +267,101 @@ function businessImpacts(csf) {
   return out;
 }
 
-module.exports = { cisoPack, croPack };
+// -------------------------------------------------------------- Drill-down (D1+)
+// Dig into one framework node: a CSF function, an 800-53 family, a CIS Control,
+// or an ATT&CK tactic -> its subcategories/requirements with computed scores,
+// what was done (the checks + their results), findings, and recommendations.
+const FW_ID = { csf: 'nist_csf_2', n80053: 'nist_800_53_r5', cis: 'cis_v8_1' };
+
+function parseEvidence(e) { try { return typeof e === 'string' ? JSON.parse(e) : (e || {}); } catch (_) { return {}; } }
+
+function describeCheck(ch) {
+  const tool = ch.tool_id || 'the tool';
+  if (!ch.status || ch.status === 'skipped') return `Not yet measured — needs a live ${tool} connection.`;
+  const verb = ch.status === 'pass' ? 'met the target' : ch.status === 'partial' ? 'partially met the target' : 'missed the target';
+  return `Checked via ${tool}${ch.signal ? ` (${ch.signal})` : ''}: observed ${ch.observed != null ? ch.observed : 'n/a'} against target ${ch.expected != null ? ch.expected : 'n/a'} — ${verb}.`;
+}
+
+async function frameworkDrilldown(orgId, framework, group) {
+  if (framework === 'attack') return attackDrilldown(orgId, group);
+  const fwId = FW_ID[framework];
+  if (!fwId) throw new Error('Unknown framework');
+  const latest = await ensureRun(orgId);
+  const runId = latest.run && latest.run.id;
+
+  const where = framework === 'cis'
+    ? `framework_id=$1 AND parent_id=$2 AND meta->>'kind'='safeguard'`
+    : `framework_id=$1 AND family=$2`;
+  const reqs = await db.query(
+    `SELECT requirement_id, title, text FROM framework_requirements
+       WHERE ${where} AND COALESCE(withdrawn,false)=false ORDER BY requirement_id`, [fwId, group]);
+
+  const scoreRows = await db.query(
+    `SELECT scope, score FROM score_history WHERE org_id=$1 AND framework_id=$2 AND run_id=$3`, [orgId, fwId, runId]);
+  const scoreBy = {}; scoreRows.forEach((s) => { scoreBy[s.scope] = Number(s.score); });
+
+  const requirements = [];
+  for (const r of reqs) {
+    const checks = await db.query(`
+      SELECT m.check_id, c.name, c.tool_id, c.signal, m.coverage,
+             cr.status, cr.observed, cr.expected, cr.evidence, cr.source
+      FROM requirement_mappings m
+      JOIN checks c ON c.id=m.check_id
+      LEFT JOIN check_results cr ON cr.check_id=m.check_id AND cr.run_id=$3 AND cr.org_id=$2
+      WHERE m.framework_id=$1 AND m.requirement_id=$4
+      ORDER BY c.name`, [fwId, orgId, runId, r.requirement_id]);
+    const mapped = checks.map((ch) => ({
+      id: ch.check_id, name: ch.name, tool: ch.tool_id, coverage: ch.coverage,
+      status: ch.status || 'skipped', observed: ch.observed, expected: ch.expected,
+      source: ch.source, evidence: parseEvidence(ch.evidence),
+      did: describeCheck(ch),
+      recommendation: (ch.status === 'fail' || ch.status === 'partial') ? recommend(ch.signal, ch.tool_id) : null,
+    }));
+    const tested = mapped.filter((m) => m.status !== 'skipped');
+    const pass = tested.filter((m) => m.status === 'pass').length;
+    const partial = tested.filter((m) => m.status === 'partial').length;
+    const failing = tested.filter((m) => m.status === 'fail');
+    const score = scoreBy[r.requirement_id];
+    const findings = failing.concat(mapped.filter((m) => m.status === 'partial')).map((m) =>
+      `${m.name}: ${m.status === 'fail' ? 'failing' : 'partial'} — observed ${m.observed != null ? m.observed : 'n/a'} vs target ${m.expected != null ? m.expected : 'n/a'} (${m.tool}).`);
+    const summary = !mapped.length
+      ? 'No automated check maps to this item yet — it is assessed by attestation or rubric.'
+      : !tested.length
+        ? `${mapped.length} check(s) map here but none has live data yet (awaiting tool connections).`
+        : `${tested.length} automated check(s) ran: ${pass} passed, ${partial} partial, ${failing.length} failing.${score != null ? ` Subcategory score ${score}/100.` : ''}`;
+    requirements.push({
+      id: r.requirement_id, title: r.title, text: r.text,
+      score: score != null ? score : null, status: score == null ? 'n/a' : statusOf(score),
+      tested: tested.length > 0, summary, checks: mapped, findings,
+      recommendations: [...new Set(mapped.filter((m) => m.recommendation).map((m) => m.recommendation))],
+    });
+  }
+  return { framework, frameworkId: fwId, group, runId, count: requirements.length, requirements };
+}
+
+// ATT&CK drill-down: a tactic -> its techniques with prevent/detect/none coverage.
+async function attackDrilldown(orgId, tactic) {
+  const rows = await db.query(`
+    SELECT t.id, t.name, COALESCE(c.status,'none') AS status, c.confidence, c.source_check
+    FROM attack_techniques t
+    LEFT JOIN technique_coverage c ON c.technique_id=t.id AND c.org_id=$1
+    WHERE COALESCE(t.deprecated,false)=false AND COALESCE(t.revoked,false)=false
+      AND t.is_subtechnique=false AND $2 = ANY(t.tactics)
+    ORDER BY t.id`, [orgId, tactic]);
+  const requirements = rows.map((t) => {
+    const covered = t.status === 'prevent' || t.status === 'detect';
+    return {
+      id: t.id, title: t.name, score: null, status: t.status === 'prevent' ? 'green' : t.status === 'detect' ? 'amber' : 'red',
+      tested: covered,
+      summary: covered
+        ? `Coverage: ${t.status} (${t.confidence || 'low'} confidence)${t.source_check ? `, evidenced by check ${t.source_check}` : ''}.`
+        : 'No prevention or detection currently maps to this technique.',
+      checks: t.source_check ? [{ id: t.source_check, name: t.source_check, tool: 'coverage', status: t.status === 'none' ? 'fail' : 'pass', did: `Technique coverage computed as ${t.status}.` }] : [],
+      findings: covered ? [] : [`${t.id} ${t.name}: no prevent/detect coverage mapped.`],
+      recommendations: covered ? [] : ['Build or enable a detection/prevention control for this technique (SIEM correlation, EDR policy, or network control).'],
+    };
+  });
+  return { framework: 'attack', group: tactic, count: requirements.length, requirements };
+}
+
+module.exports = { cisoPack, croPack, frameworkDrilldown };
