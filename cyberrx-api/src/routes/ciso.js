@@ -6,10 +6,21 @@ const AiControlsService = require('../services/AiControlsService');
 const CisoDashboardService = require('../services/CisoDashboardService');
 const ExecReportService = require('../services/ExecReportService');
 const CisoReportBuilder = require('../services/CisoReportBuilder');
+const MetricsEngine = require('../services/MetricsEngine');
+const db = require('../utils/db');
 const { optionalJWT } = require('../middleware/auth');
 const logger = require('../utils/logger');
 
 function org(req, res) { const id = req.orgId || req.headers['x-org-id'] || req.query.org_id || req.query.orgId; if (!id) { res.status(400).json({ error: 'Organization not specified' }); return null; } return id; }
+
+// Org context for the consultant report: client name + the setup metrics used to
+// write organization-specific (non-generic) risk statements.
+async function loadOrgCtx(orgId) {
+  let name = String(orgId), inputs = {};
+  try { const rows = await db.query('SELECT name FROM orgs WHERE id=$1', [orgId]); if (rows[0] && rows[0].name) name = rows[0].name; } catch (_) {}
+  try { inputs = await MetricsEngine.loadInputs(orgId); } catch (_) {}
+  return { name, inputs };
+}
 
 router.get('/posture', optionalJWT, async (req, res) => {
   const orgId = org(req, res); if (!orgId) return;
@@ -39,23 +50,25 @@ router.get('/dashboard', optionalJWT, async (req, res) => {
 router.get('/report.pdf', optionalJWT, async (req, res) => {
   const orgId = org(req, res); if (!orgId) return;
   try {
-    const [d, fw] = await Promise.all([
+    const [d, fw, octx] = await Promise.all([
       CisoDashboardService.getDashboard(orgId),
       ExecReportService.cisoPack(orgId, { baseline: req.query.baseline }).catch(() => null),
+      loadOrgCtx(orgId),
     ]);
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="cyberrx-ciso-posture-report.pdf"`);
-    CisoReportBuilder.buildPdf(res, d, fw);
+    res.setHeader('Content-Disposition', `attachment; filename="dtnk-shield-${String(octx.name).replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-posture-assessment.pdf"`);
+    CisoReportBuilder.buildPdf(res, d, fw, octx);
   } catch (err) { logger.error('CISO pdf error', { error: err.message }); res.status(500).json({ error: 'Failed to build PDF', message: err.message }); }
 });
 router.get('/report.pptx', optionalJWT, async (req, res) => {
   const orgId = org(req, res); if (!orgId) return;
   try {
-    const [d, fw] = await Promise.all([
+    const [d, fw, octx] = await Promise.all([
       CisoDashboardService.getDashboard(orgId),
       ExecReportService.cisoPack(orgId, { baseline: req.query.baseline }).catch(() => null),
+      loadOrgCtx(orgId),
     ]);
-    const buf = await CisoReportBuilder.buildPptxBuffer(d, fw);
+    const buf = await CisoReportBuilder.buildPptxBuffer(d, fw, octx);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
     res.setHeader('Content-Disposition', `attachment; filename="cyberrx-ciso-posture-deck.pptx"`);
     res.end(buf);
