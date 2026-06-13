@@ -131,34 +131,84 @@ async function runSweep(orgId, system = 'demo') {
   return { swept: findings.length, alreadyTicketed: findings.length - created.length, created };
 }
 
-/** Open (or return existing) a ticket for a single finding by source_ref. */
-async function ticketOne(orgId, { sourceRef, source, title, recommendation, severity, system = 'demo' }) {
-  const existing = await db.query(
-    `SELECT * FROM remediation_tickets WHERE organization_id=$1 AND source_ref=$2`, [orgId, sourceRef]);
-  if (existing.length) {
-    const r = existing[0];
-    return { existed: true, id: r.id, ticketId: r.ticket_id, url: r.ticket_url, status: r.status, system: r.system };
-  }
-  const description = `${title}\n\nRecommended remediation (high level):\n${recommendation || 'Investigate and remediate this finding.'}\n\nOpened from the CyberRx attack-path. Source: ${source || 'Finding'}.`;
-  const t = await createTicket(orgId, system, { title, description, severity });
-  const id = uid('rt');
-  await db.query(
-    `INSERT INTO remediation_tickets
-       (id, organization_id, source, source_ref, title, recommendation, severity, system, ticket_id, ticket_url, status, created_at, updated_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'open',NOW(),NOW())
-     ON CONFLICT (organization_id, source_ref) DO NOTHING`,
-    [id, orgId, source || 'Attack-path finding', sourceRef, title, recommendation || '', severity,
-     t.demo ? 'demo' : system, t.ticketId, t.url]);
-  return { existed: false, id, ticketId: t.ticketId, url: t.url, status: 'open', system: t.demo ? 'demo' : system };
+const DAY = 86400000;
+const DEFAULT_SLA_DAYS = { Critical: 7, High: 14, Medium: 30, Low: 45 };
+
+// Enrich a ticket row with the day-math the CISO feedback loop needs: how many
+// days it has been open, the due date, days remaining, and whether it is past
+// due or approaching past-due (within 10 days). `approaching` powers the alert.
+function enrich(r) {
+  if (!r) return null;
+  const now = Date.now();
+  const created = r.created_at ? new Date(r.created_at).getTime() : now;
+  const due = r.due_date ? new Date(r.due_date).getTime() : null;
+  const daysOpen = Math.max(0, Math.floor((now - created) / DAY));
+  const daysToDue = due != null ? Math.ceil((due - now) / DAY) : null;
+  const pastDue = daysToDue != null && daysToDue < 0 && r.status !== 'resolved';
+  const approaching = daysToDue != null && daysToDue >= 0 && daysToDue <= 10 && r.status !== 'resolved';
+  return {
+    id: r.id, sourceRef: r.source_ref, title: r.title, recommendation: r.recommendation,
+    severity: r.severity, owner: r.owner, system: r.system, ticketId: r.ticket_id, url: r.ticket_url,
+    status: r.status, createdAt: r.created_at, dueDate: r.due_date, lastSyncedAt: r.last_synced_at || r.updated_at,
+    daysOpen, daysToDue, pastDue, approaching,
+  };
 }
 
-/** Look up a ticket by source_ref (e.g. an attack-path finding). */
-async function getTicketByRef(orgId, sourceRef) {
+/** Open (or return existing) a ticket for a single finding by source_ref. */
+async function ticketOne(orgId, { sourceRef, source, title, recommendation, severity, owner, dueDate, system = 'demo' }) {
+  const existing = await db.query(
+    `SELECT * FROM remediation_tickets WHERE organization_id=$1 AND source_ref=$2`, [orgId, sourceRef]);
+  if (existing.length) return { existed: true, ...enrich(existing[0]) };
+
+  const description = `${title}\n\nRecommended remediation (high level):\n${recommendation || 'Investigate and remediate this finding.'}\n\nOpened from the CyberRx CISO dashboard. Source: ${source || 'Finding'}.`;
+  const t = await createTicket(orgId, system, { title, description, severity });
+  const id = uid('rt');
+  // Default SLA from severity when the caller didn't pass an explicit due date.
+  const due = dueDate ? new Date(dueDate) : new Date(Date.now() + (DEFAULT_SLA_DAYS[severity] || 30) * DAY);
+  await db.query(
+    `INSERT INTO remediation_tickets
+       (id, organization_id, source, source_ref, title, recommendation, severity, system, ticket_id, ticket_url, status, owner, due_date, created_at, updated_at, last_synced_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'open',$11,$12,NOW(),NOW(),NOW())
+     ON CONFLICT (organization_id, source_ref) DO NOTHING`,
+    [id, orgId, source || 'CISO remediation', sourceRef, title, recommendation || '', severity,
+     t.demo ? 'demo' : system, t.ticketId, t.url, owner || null, due.toISOString()]);
+  const [row] = await db.query(
+    `SELECT * FROM remediation_tickets WHERE organization_id=$1 AND source_ref=$2`, [orgId, sourceRef]);
+  return { existed: false, ...enrich(row) };
+}
+
+/**
+ * Refresh a ticket's status from the ticketing system. With live credentials
+ * this would query Jira/ServiceNow; in demo mode it advances the lifecycle by
+ * elapsed time (open -> in_progress -> resolved) so the CISO sees a moving
+ * feedback loop. Always stamps last_synced_at so the CISO can refresh anytime.
+ */
+async function refreshStatus(orgId, sourceRef) {
   const rows = await db.query(
     `SELECT * FROM remediation_tickets WHERE organization_id=$1 AND source_ref=$2`, [orgId, sourceRef]);
   if (!rows.length) return null;
   const r = rows[0];
-  return { id: r.id, ticketId: r.ticket_id, url: r.ticket_url, status: r.status, system: r.system, title: r.title, createdAt: r.created_at };
+  let status = r.status;
+  if (status !== 'resolved') {
+    const daysOpen = Math.max(0, Math.floor((Date.now() - new Date(r.created_at).getTime()) / DAY));
+    const due = r.due_date ? new Date(r.due_date).getTime() : null;
+    if (due && Date.now() >= due) status = 'resolved';
+    else if (daysOpen >= 2) status = 'in_progress';
+    else status = 'open';
+  }
+  await db.query(
+    `UPDATE remediation_tickets SET status=$3, last_synced_at=NOW(), updated_at=NOW()
+       WHERE organization_id=$1 AND source_ref=$2`, [orgId, sourceRef, status]);
+  const [updated] = await db.query(
+    `SELECT * FROM remediation_tickets WHERE organization_id=$1 AND source_ref=$2`, [orgId, sourceRef]);
+  return enrich(updated);
+}
+
+/** Look up a ticket by source_ref (e.g. an attack-path finding), enriched. */
+async function getTicketByRef(orgId, sourceRef) {
+  const rows = await db.query(
+    `SELECT * FROM remediation_tickets WHERE organization_id=$1 AND source_ref=$2`, [orgId, sourceRef]);
+  return rows.length ? enrich(rows[0]) : null;
 }
 
 async function listTickets(orgId) {
@@ -171,4 +221,4 @@ async function listTickets(orgId) {
   }));
 }
 
-module.exports = { runSweep, listTickets, ticketOne, getTicketByRef, gatherFindings };
+module.exports = { runSweep, listTickets, ticketOne, getTicketByRef, refreshStatus, gatherFindings };

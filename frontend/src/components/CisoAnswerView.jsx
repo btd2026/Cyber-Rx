@@ -10,10 +10,12 @@
  */
 
 import React, { useState } from 'react';
+import TicketControl from './TicketControl';
 
 const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e8edf3', PANEL = '#f8fafc';
 const C = { Strong: '#1f8a4c', Moderate: '#B07C2E', Weak: '#A85B2E', Critical: '#C0392B' };
 const VERDICT = { Strong: 'Healthy', Moderate: 'Needs attention', Weak: 'At risk', Critical: 'Urgent' };
+const SEV = { Strong: 'Low', Moderate: 'Medium', Weak: 'High', Critical: 'Critical' };
 const conf = (c) => (c === 'High' ? '#1f8a4c' : c === 'Medium' ? '#B07C2E' : '#94a3b8');
 
 const SectionLabel = ({ children, color }) => (
@@ -59,6 +61,14 @@ export default function CisoAnswerView({ a, issues, onIssueClick }) {
         <div style={{ marginTop: 16, background: '#f0f7f2', border: '1px solid #cce8d6', borderRadius: 10, padding: '14px 16px' }}>
           <SectionLabel color="#1f8a4c">Do this</SectionLabel>
           <div style={{ fontSize: 15, color: INK, lineHeight: 1.5, fontWeight: 500 }}>{a.recommendedAction}</div>
+        </div>
+
+        {/* remediation ticket + status feedback loop */}
+        <div style={{ marginTop: 14 }}>
+          <SectionLabel>Remediation — open & track a ticket</SectionLabel>
+          <TicketControl sourceRef={`ciso:${a.id}`} title={`[CISO] ${a.question}`}
+            recommendation={a.recommendedAction} severity={SEV[a.status] || 'Medium'}
+            owner={a.owner} dueDate={a.targetDate} />
         </div>
 
         {/* evidence that supports the answer — surfaced, not buried */}

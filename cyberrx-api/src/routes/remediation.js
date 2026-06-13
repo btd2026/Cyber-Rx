@@ -52,4 +52,15 @@ router.get('/ticket', optionalJWT, async (req, res) => {
   catch (err) { logger.error('Remediation getTicket error', { error: err.message }); res.status(500).json({ error: err.message }); }
 });
 
+// Refresh a ticket's status from the ticketing system (CISO can call anytime).
+router.post('/ticket/refresh', optionalJWT, async (req, res) => {
+  const orgId = resolveOrg(req, res);
+  if (!orgId) return;
+  try {
+    const sourceRef = (req.body && req.body.sourceRef) || req.query.sourceRef;
+    if (!sourceRef) return res.status(400).json({ error: 'sourceRef is required' });
+    res.json({ ticket: await RemediationPathService.refreshStatus(orgId, sourceRef) });
+  } catch (err) { logger.error('Remediation refresh error', { error: err.message }); res.status(500).json({ error: err.message }); }
+});
+
 module.exports = router;
