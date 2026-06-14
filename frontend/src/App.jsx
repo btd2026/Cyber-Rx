@@ -19073,11 +19073,11 @@ function SetupBot(props) {
      ask:'Is there a board-approved cyber risk appetite statement?',
      choices:['Yes — board-approved','In draft','No']},
     {id:'csf_gv_sc_vendors', type:'choice', group:'Security Evidence',
-     ask:'Do you conduct security assessments of your critical vendors?',
-     choices:['All critical vendors assessed','Some vendors assessed','No vendor assessments']},
+     ask:'Which tier of critical vendors do you security-assess?',
+     choices:['Tier 1 only','Tier 1 & 2','Tier 1, 2 & 3','All vendors','None']},
     {id:'csf_de_ae_soc', type:'choice', group:'Security Evidence',
      ask:'What is your security-operations monitoring coverage?',
-     choices:['24x7 (in-house or managed SOC)','Business hours only','No dedicated monitoring']},
+     choices:['24x7 in-house SOC','24x7 managed (MDR/MSSP)','Extended hours (e.g. 16x5)','Business hours (8x5)','On-demand / ad-hoc','No dedicated monitoring']},
     {id:'csf_rs_ma_irplan', type:'choice', group:'Security Evidence',
      ask:'Do you have a documented incident response plan, and was a tabletop exercise run in the last 12 months?',
      choices:['Plan documented and tabletop run','Plan documented, no recent tabletop','No documented plan']},
@@ -19111,8 +19111,8 @@ function SetupBot(props) {
     csf_rc_co_comms:      {key:'rc_co_comms',      map:{'Yes':'yes','No':'no'}},
     csf_gv_oc_context:    {key:'gv_oc_context',    map:{'Yes — fully documented':'yes','Partially documented':'partial','Not documented':'no'}},
     csf_gv_rm_appetite:   {key:'gv_rm_appetite',   map:{'Yes — board-approved':'yes','In draft':'draft','No':'no'}},
-    csf_gv_sc_vendors:    {key:'gv_sc_vendors',    map:{'All critical vendors assessed':'all','Some vendors assessed':'some','No vendor assessments':'none'}},
-    csf_de_ae_soc:        {key:'de_ae_soc',        map:{'24x7 (in-house or managed SOC)':'24x7','Business hours only':'business-hours','No dedicated monitoring':'none'}},
+    csf_gv_sc_vendors:    {key:'gv_sc_vendors',    map:{'Tier 1 only':'some','Tier 1 & 2':'some','Tier 1, 2 & 3':'all','All vendors':'all','None':'none'}},
+    csf_de_ae_soc:        {key:'de_ae_soc',        map:{'24x7 in-house SOC':'24x7','24x7 managed (MDR/MSSP)':'24x7','Extended hours (e.g. 16x5)':'business-hours','Business hours (8x5)':'business-hours','On-demand / ad-hoc':'business-hours','No dedicated monitoring':'none'}},
     csf_rs_ma_irplan:     {key:'rs_ma_irplan',     map:{'Plan documented and tabletop run':'plan-and-tabletop','Plan documented, no recent tabletop':'plan-only','No documented plan':'none'}},
     csf_rs_co_notify:     {key:'rs_co_notify',     map:{'Yes — all documented':'yes','Partially documented':'partial','Not documented':'no'}},
     csf_id_am_inventory:  {key:'id_am_inventory',  map:{'Complete inventory':'complete','Partial inventory':'partial','No inventory':'none'}},
@@ -19479,31 +19479,9 @@ function SetupBot(props) {
       return;
     }
 
-    // Papa #3 — when a doc-backed answer indicates a document exists, offer to
-    // upload it now or skip and upload later, before moving on.
-    var docPrompt = CSF_DOC_PROMPTS[q.id];
-    if (docPrompt && docPrompt.positive.indexOf(value) >= 0) {
-      setPendingAsk({ kind: 'upload', qid: q.id, doc: docPrompt.doc });
-      setTyping(true);
-      setTimeout(function(){
-        setTyping(false);
-        var msg = 'Great — do you want to upload your ' + docPrompt.doc + ' now? You can also skip and upload it later on the CSF scorecard.';
-        addMsg('bot', msg); speak(msg);
-      }, 500);
-      return;
-    }
-    // Papa #5 — external forensics: ask who the retainer is with.
-    if (q.id === 'csf_rs_an_forensics' && /external/i.test(value)) {
-      setPendingAsk({ kind: 'text', qid: 'csf_rs_an_forensics_firm', ask: 'Who is your incident-response retainer with?' });
-      setTyping(true);
-      setTimeout(function(){
-        setTyping(false);
-        var msg2 = 'Who is your incident-response retainer with? (e.g. Mandiant, CrowdStrike Services, Unit 42)';
-        addMsg('bot', msg2); speak(msg2);
-      }, 500);
-      return;
-    }
-
+    // Documents are NOT uploaded during setup — every required document is
+    // collected in the Document Request phase of the intake. (We no longer
+    // prompt for inline uploads or unused free-text follow-ups here.)
     advanceFrom(qIdx);
   }
 
