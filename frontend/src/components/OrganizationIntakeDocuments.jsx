@@ -10,7 +10,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e2e8f0', PANEL = '#f8fafc', ACC = '#0891b2';
+const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e2e8f0', PANEL = '#f8fafc', ACC = '#0891b2', AMBER = '#B07C2E';
 const STATUS_COLOR = { 'met': '#1f8a4c', 'partially met': '#B07C2E', 'not met': '#C0392B' };
 const UP_COLOR = { requested: '#94a3b8', uploaded: '#2563eb', normalized: '#2563eb', reviewed: '#1f8a4c', failed: '#C0392B' };
 
@@ -34,6 +34,7 @@ const fileToBase64 = (file) => new Promise((resolve, reject) => {
 export default function OrganizationIntakeDocuments(props) {
   const { orgId, token, api } = resolveCtx(props);
   const [docs, setDocs] = useState(null);
+  const [pilot, setPilot] = useState(false);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState({});       // documentTypeId -> true while uploading/reviewing
   const [open, setOpen] = useState({});        // documentTypeId -> show controls / results
@@ -49,7 +50,7 @@ export default function OrganizationIntakeDocuments(props) {
     if (!orgId) { setError('No organization selected yet — finish the profile step first.'); return; }
     fetch(`${api}/api/intake/document-checklist?org_id=${encodeURIComponent(orgId)}`, { headers: headers() })
       .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then((d) => { setDocs(d.documents || []); setError(null); })
+      .then((d) => { setDocs(d.documents || []); setPilot(!!d.pilot); setError(null); })
       .catch((e) => setError(e.message));
   }, [api, orgId, headers]);
 
@@ -79,6 +80,28 @@ export default function OrganizationIntakeDocuments(props) {
       if (out.upload_id) { setOpen((o) => ({ ...o, [doc.id]: true })); loadResults(out.upload_id); }
     } catch (e) {
       setError(`Upload failed for ${doc.name}: ${e.message}`);
+    } finally {
+      setBusy((b) => ({ ...b, [doc.id]: false }));
+    }
+  };
+
+  // PILOT/TEST: fetch a generated sample document and run it through the pipeline.
+  const useSample = async (doc) => {
+    setBusy((b) => ({ ...b, [doc.id]: true }));
+    try {
+      const s = await fetch(`${api}/api/intake/sample/${encodeURIComponent(doc.id)}?org_id=${encodeURIComponent(orgId)}`, { headers: headers() });
+      if (!s.ok) throw new Error(`HTTP ${s.status}`);
+      const sample = await s.json();
+      const r = await fetch(`${api}/api/intake/documents`, {
+        method: 'POST', headers: { ...headers(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ org_id: orgId, document_type_id: doc.id, file_name: sample.fileName, text: sample.text }),
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const out = await r.json();
+      loadChecklist();
+      if (out.upload_id) { setOpen((o) => ({ ...o, [doc.id]: true })); loadResults(out.upload_id); }
+    } catch (e) {
+      setError(`Sample failed for ${doc.name}: ${e.message}`);
     } finally {
       setBusy((b) => ({ ...b, [doc.id]: false }));
     }
@@ -166,6 +189,12 @@ export default function OrganizationIntakeDocuments(props) {
                   <input type="file" accept=".pdf,.docx,.xlsx,.txt,.md,.csv" disabled={isBusy} style={{ display: 'none' }}
                     onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ''; upload(doc, f); }} />
                 </label>
+                {pilot && (
+                  <button onClick={() => useSample(doc)} disabled={isBusy} title="Generate a sample document and run the pipeline (test fixture)"
+                    style={{ background: '#fdf6e9', border: '1px solid #f0dcae', borderRadius: 6, padding: '6px 11px', fontSize: 11, fontWeight: 600, color: AMBER, cursor: 'pointer' }}>
+                    ⚙ Use sample (test)
+                  </button>
+                )}
                 {doc.upload_id && status === 'reviewed' && (
                   <button onClick={() => { setOpen((o) => ({ ...o, [doc.id]: true })); loadResults(doc.upload_id); rereview(doc); }} disabled={isBusy}
                     style={{ background: 'transparent', border: `1px solid ${HAIR}`, borderRadius: 6, padding: '6px 11px', fontSize: 11, fontWeight: 600, color: INK2, cursor: 'pointer' }}>

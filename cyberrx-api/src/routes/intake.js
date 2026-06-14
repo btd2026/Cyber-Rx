@@ -16,6 +16,7 @@ const db = require('../utils/db');
 const logger = require('../utils/logger');
 const { normalize } = require('../services/DocumentNormalizer');
 const pipeline = require('../services/DocumentPipelineService');
+const SampleDoc = require('../services/SampleDocService');
 
 function orgOf(req) {
   return req.query.org_id || (req.body && req.body.org_id) || req.headers['x-org-id'] || '';
@@ -49,7 +50,7 @@ router.get('/document-checklist', async (req, res) => {
       ${frameworkFilter}
       GROUP BY dt.id, u.id, u.status, u.file_name, u.uploaded_at
       ORDER BY dt.category NULLS LAST, dt.name`, params);
-    res.json({ org_id: orgId, count: rows.length, documents: rows });
+    res.json({ org_id: orgId, count: rows.length, documents: rows, pilot: SampleDoc.isPilot() });
   } catch (e) {
     logger.warn('intake checklist failed', { error: e.message });
     res.status(500).json({ error: e.message });
@@ -117,6 +118,17 @@ router.get('/documents/:id/assessments', async (req, res) => {
     res.json({ org_id: orgId, upload_id: req.params.id, count: rows.length, assessments: rows });
   } catch (e) {
     res.status(500).json({ error: e.message });
+  }
+});
+
+// PILOT/TEST: generate a representative sample document for a document_type so
+// the full pipeline can be exercised end-to-end. Gated by PILOT_SAMPLE_DOCS.
+router.get('/sample/:documentTypeId', async (req, res) => {
+  if (!SampleDoc.isPilot()) return res.status(404).json({ error: 'pilot sample generation is disabled' });
+  try { res.json(await SampleDoc.generateForType(req.params.documentTypeId)); }
+  catch (e) {
+    const code = /unknown document_type/.test(e.message) ? 404 : 500;
+    res.status(code).json({ error: e.message });
   }
 });
 
