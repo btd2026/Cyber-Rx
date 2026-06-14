@@ -787,6 +787,7 @@ async function init() {
       -- Additive columns on existing tables (idempotent).
       ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS business_function_id TEXT;
       ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS rto TEXT;
+      ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS crit_tier INTEGER; -- numeric criticality tier (1-4) from intake
       ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS capability_id TEXT;
       ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS criticality_profile_id TEXT;
       -- NOTE: framework_requirements.assessment_type is added near the end of this

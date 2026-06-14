@@ -35,6 +35,21 @@ router.post('/app-process/confirm', optionalJWT, async (req, res) => {
   catch (e) { logger.warn('app-process confirm failed', { error: e.message }); res.status(500).json({ error: e.message }); }
 });
 
+// Auto-map every application to the process(es) it supports (LLM, many-to-many),
+// then return the visual graph. Result feeds all downstream calculations.
+router.post('/app-process/auto', optionalJWT, async (req, res) => {
+  const orgId = org(req, res); if (!orgId) return;
+  try { res.json(await Crosswalk.autoMapAppsToProcesses(orgId)); }
+  catch (e) { logger.warn('app-process auto-map failed', { error: e.message }); res.status(500).json({ error: e.message }); }
+});
+
+// Process → supporting-applications graph for the visual mapping.
+router.get('/app-process/graph', optionalJWT, async (req, res) => {
+  const orgId = org(req, res); if (!orgId) return;
+  try { res.json(await Crosswalk.appProcessGraph(orgId)); }
+  catch (e) { logger.warn('app-process graph failed', { error: e.message }); res.status(500).json({ error: e.message }); }
+});
+
 router.get('/process-capability/suggestions', optionalJWT, async (req, res) => {
   const orgId = org(req, res); if (!orgId) return;
   try { res.json({ items: await Crosswalk.suggestProcessCapability(orgId) }); }

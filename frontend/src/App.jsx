@@ -19,7 +19,7 @@ import CisoSecurityPostureDashboard from "./components/CisoSecurityPostureDashbo
 import CisoAgentPanel from "./components/CisoAgentPanel";
 import OrganizationIntakeDocuments from "./components/OrganizationIntakeDocuments";
 import IngestionUploader from "./components/IngestionUploader";
-import CrosswalkPanel from "./components/CrosswalkPanel";
+import AppProcessMap from "./components/AppProcessMap";
 import CfoExposurePanel from "./components/CfoExposurePanel";
 import PersonaDashboard from "./components/PersonaDashboard";
 import ControlAssessment from "./components/ControlAssessment";
@@ -4853,6 +4853,20 @@ function Setup(props) {
     };
     reader.readAsDataURL(file);
   }
+  // Persist the validated process tree (included items, with Tier/RTO) to the
+  // server so the application→process mapping and downstream calculations use it.
+  function saveProcessesToServer(){
+    var list=[];
+    (procTree||[]).forEach(function(f){(f.processes||[]).forEach(function(p){
+      if(p.include&&String(p.name||"").trim()) list.push({name:p.name,tier:p.tier||null,rto:p.rto||null,function:f.function});
+    });});
+    if(!list.length) return;
+    fetch(CYBERRX_API+"/api/intake/save-processes",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","X-Org-Id":(typeof localStorage!=="undefined"&&localStorage.getItem("cyberrx_org_id"))||""},
+      body:JSON.stringify({processes:list})
+    }).catch(function(){});
+  }
   // Selected processes = the included top-level processes in the validated tree.
   function syncSelFromTree(tree){
     var ids=[];
@@ -5817,7 +5831,7 @@ function Setup(props) {
             </Card>
             <div style={{display:"flex",justifyContent:"space-between"}}>
               <Btn onClick={function(){setStep(2);}}>← Back</Btn>
-              <Btn onClick={function(){setStep(3);}} primary disabled={selProcs.size===0}>Next: Map Applications →</Btn>
+              <Btn onClick={function(){saveProcessesToServer();setStep(3);}} primary disabled={selProcs.size===0}>Next: Map Applications →</Btn>
             </div>
           </div>
         )}
@@ -6095,9 +6109,11 @@ function Setup(props) {
 
             {/* CMDB-file import removed here — applications are imported via the
                 connect-CMDB options and CSV/Excel upload above; no duplicate. */}
+            {/* After the inventory is uploaded, CyberRX uses the LLM to map every
+                application to the process(es) it supports (many-to-many) and shows
+                the visual mapping. This drives all downstream calculations. */}
             <Card style={{marginTop:14}}>
-              <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:8}}>Crosswalk — map applications to processes</div>
-              <CrosswalkPanel />
+              <AppProcessMap />
             </Card>
 
             <div style={{display:"flex",justifyContent:"space-between"}}>
