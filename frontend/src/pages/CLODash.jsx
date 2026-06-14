@@ -158,8 +158,7 @@ const CLODash = (props) => {
 
   return (
     <div style={{ padding: '2rem', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
-      <DashNav current="clo" go={props.go} />
-      <AuditLineagePanel authToken={authToken} orgId={orgId} api_url={api_url} />
+      {!props.embedded && <DashNav current="clo" go={props.go} />}
       {/* Header */}
       <div style={{
         marginBottom: '2rem',

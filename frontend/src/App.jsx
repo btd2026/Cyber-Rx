@@ -21,6 +21,7 @@ import OrganizationIntakeDocuments from "./components/OrganizationIntakeDocument
 import IngestionUploader from "./components/IngestionUploader";
 import CrosswalkPanel from "./components/CrosswalkPanel";
 import CfoExposurePanel from "./components/CfoExposurePanel";
+import PersonaDashboard from "./components/PersonaDashboard";
 import FrameworkScoreStrip from "./components/FrameworkScoreStrip";
 import RemediationPanel from "./components/RemediationPanel";
 import AuditDash from "./pages/AuditDash";
@@ -159,19 +160,20 @@ var NAV_GROUPS = [
     ]
   },
   {
-    label: "Executives",
+    label: "Executive Dashboards",
     items: [
-      {id:"dashboard", label:"CISO Dashboard",      icon:"S", mod:"F08a", subtabs:["attackpaths"]},
-      {id:"cio",       label:"CIO Dashboard",       icon:"I", mod:"F08e"},
-      {id:"cro",       label:"CRO / Audit",         icon:"C", mod:"F08b"},
-      {id:"cfo",       label:"CFO Dashboard",       icon:"F", mod:"F08c"},
-      {id:"boarddash", label:"Board Dashboard",     icon:"B", mod:"F08d"},
+      {id:"dashboard", label:"CISO",      icon:"S", mod:"F08a", subtabs:["attackpaths"]},
+      {id:"cio",       label:"CIO",       icon:"I", mod:"F08e"},
+      {id:"cro",       label:"CRO / Audit", icon:"C", mod:"F08b"},
+      {id:"cfo",       label:"CFO",       icon:"F", mod:"F08c"},
+      {id:"clo",       label:"CLO",       icon:"L", mod:"F08f"},
+      {id:"boarddash", label:"Board",     icon:"B", mod:"F08d"},
     ]
   },
   {
     label: "Operations",
     items: [
-      {id:"setup",     label:"Setup & Frameworks", icon:"🏢", mod:"F02"},
+      {id:"setup",     label:"Organization Intake", icon:"🏢", mod:"F02"},
       {id:"controls",  label:"Control Validation",  icon:"✓",  mod:"F04"},
       {id:"scoring",   label:"Risk Scoring + MITRE",icon:"📈", mod:"F05"},
     ]
@@ -9727,7 +9729,7 @@ function CRODash(props) {
     if (!rpt) { setSelReport(null); return null; }
     return (
       <div>
-        <DashNav current="cro" go={go}/>
+        {!props.embedded && <DashNav current="cro" go={go}/>}
       <BrianaBar pageKey="cro" orgName={props.orgName||""} brianaOn={props.brianaOn!==false} setBrianaOn={props.setBrianaOn||function(){}}/>
 
         {/* CRO Header - Executive Cyber Responsibility */}
@@ -10166,7 +10168,7 @@ function CRODash(props) {
   // ── TOP LEVEL: all frameworks + control grids ─────────────────
   return (
     <div>
-      <DashNav current="cro" go={go}/>
+      {!props.embedded && <DashNav current="cro" go={go}/>}
       <BrianaBar pageKey="cro" orgName={props.orgName||""} brianaOn={props.brianaOn!==false} setBrianaOn={props.setBrianaOn||function(){}}/>
       {/* AI agent brief - the tab opens here; a question reveals the governance body */}
       <ExecutiveAgentBrief role="CRO" entry onAnswer={applyAgentAnswer} onGeneral={function(){setCroQ("General dashboard");setCroView("appetite");}} />
@@ -10895,8 +10897,7 @@ function CFODash(props) {
             }
           }}
         />}
-      <DashNav current="cfo" go={go}/>
-      <CfoExposurePanel />
+      {!props.embedded && <DashNav current="cfo" go={go}/>}
       <BrianaBar pageKey="cfo" orgName={props.orgName||""} brianaOn={props.brianaOn!==false} setBrianaOn={props.setBrianaOn||function(){}}/>
 
       {/* AI agent brief - the tab opens here; a question selects the tab below */}
@@ -11540,7 +11541,7 @@ function BoardDash(props) {
 
   return (
     <div>
-      <DashNav current="boarddash" go={go}/>
+      {!props.embedded && <DashNav current="boarddash" go={go}/>}
       <BrianaBar pageKey="boarddash" orgName={props.orgName||""} brianaOn={props.brianaOn!==false} setBrianaOn={props.setBrianaOn||function(){}}/>
 
       {/* Four-lens enterprise posture in board/business language (computed) */}
@@ -25653,9 +25654,9 @@ function CyberRxApp() {
     if (page==="bizlines")  { return React.createElement(BizLines,  sharedProps); }
     if (page==="appmap")    { return React.createElement(AppMap,    sharedProps); }
     if (page==="dashboard") { return React.createElement(CISODash,  sharedProps); }
-    if (page==="cro")       { return React.createElement(CRODash,   sharedProps); }
-    if (page==="cfo")       { return React.createElement(CFODash,   sharedProps); }
-    if (page==="boarddash") { return React.createElement(BoardDash, sharedProps); }
+    if (page==="cro")       { return React.createElement(PersonaDashboard, Object.assign({}, sharedProps, {role:"CRO",   overview: React.createElement(CRODash,   Object.assign({}, sharedProps, {embedded:true}))})); }
+    if (page==="cfo")       { return React.createElement(PersonaDashboard, Object.assign({}, sharedProps, {role:"CFO",   overview: React.createElement(CFODash,   Object.assign({}, sharedProps, {embedded:true}))})); }
+    if (page==="boarddash") { return React.createElement(PersonaDashboard, Object.assign({}, sharedProps, {role:"Board", overview: React.createElement(BoardDash, Object.assign({}, sharedProps, {embedded:true}))})); }
     if (page==="controls")  { return React.createElement(Controls,  sharedProps); }
     if (page==="assets")    { return React.createElement(ClaimLifecycle, sharedProps); }
     if (page==="vendormap") { return React.createElement(VendorEcosystem, sharedProps); }
@@ -25670,8 +25671,8 @@ function CyberRxApp() {
     if (page==="crownjewels") { return React.createElement(CrownJewelsModule, sharedProps); }
     if (page==="attackpaths")  { return React.createElement(AttackPathsModule, sharedProps); }
     // M2: CIO and CLO Dashboards
-    if (page==="cio")        { return React.createElement(CIODash, sharedProps); }
-    if (page==="clo")        { return React.createElement(CLODash, sharedProps); }
+    if (page==="cio")        { return React.createElement(PersonaDashboard, Object.assign({}, sharedProps, {role:"CIO", overview: React.createElement(CIODash, Object.assign({}, sharedProps, {embedded:true}))})); }
+    if (page==="clo")        { return React.createElement(PersonaDashboard, Object.assign({}, sharedProps, {role:"CLO", overview: React.createElement(CLODash, Object.assign({}, sharedProps, {embedded:true}))})); }
     // M3: Internal Audit Dashboard
     if (page==="audit")       { return React.createElement(AuditDash, sharedProps); }
     if (page==="correlated-finding") {
