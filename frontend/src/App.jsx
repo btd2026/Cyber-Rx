@@ -3402,6 +3402,24 @@ function SH(props) {
   );
 }
 
+// WhyBanner — shown at the top of every Organization Intake section to explain,
+// up front, why we collect this information and what it is used for.
+function WhyBanner(props) {
+  var title, children; title=props.title; children=props.children;
+  return (
+    <div style={{background:C.acc+"0D", border:"1px solid "+C.acc+"33", borderLeft:"3px solid "+C.acc,
+      borderRadius:9, padding:"11px 14px", marginBottom:14}}>
+      <div style={{display:"flex", alignItems:"center", gap:7, marginBottom:4}}>
+        <span style={{fontSize:13}}>ℹ️</span>
+        <span style={{color:C.acc, fontSize:11, fontWeight:800, textTransform:"uppercase", letterSpacing:"0.08em"}}>
+          Why we collect this — {title}
+        </span>
+      </div>
+      <div style={{color:C.muted, fontSize:11, lineHeight:1.55}}>{children}</div>
+    </div>
+  );
+}
+
 function StatCard(props) {
   var label, value, color, sub, onClick; label=props.label; value=props.value; color=props.color; sub=props.sub; onClick=props.onClick;
   return (
@@ -5284,7 +5302,9 @@ function Setup(props) {
                 setShowBot(false); setStep(2);
               }}/></div>
             ):(
-            <div><Card style={{marginBottom:14}}>
+            <div><WhyBanner title="Organization Profile">
+              We use your sector, size, revenue, geographies and regulatory obligations to <strong>size your financial risk exposure</strong>, select which frameworks and rules apply to you, and tailor the assessment. Public data is pre-filled where available so you only correct what's wrong — nothing here is used to rank you, only to scope the work.
+            </WhyBanner><Card style={{marginBottom:14}}>
               <SH label="Organization Profile"/>
               {/* Org Name */}
               <div style={{marginBottom:14}}>
@@ -5540,6 +5560,9 @@ function Setup(props) {
         
         {step===2&&(
           <div>
+            <WhyBanner title="Business Processes">
+              Cyber risk only matters in terms of the business it threatens. We capture your processes and their recovery-time objectives so we can <strong>rank crown jewels, compute blast radius, and scope the assessment to what actually runs your organization</strong> — prioritized by RTO. Upload your process inventory and validate what we extract; we don't guess.
+            </WhyBanner>
             {/* Upload-driven process discovery — nothing is preloaded. */}
             <Card style={{marginBottom:14}}>
               <SH label="Upload your process inventory / BIA — we'll extract it"/>
@@ -5747,6 +5770,9 @@ function Setup(props) {
         
         {step===3&&(
           <div>
+            <WhyBanner title="Application Inventory">
+              Linking each application to the process it supports lets us <strong>inherit business criticality, compute your true de-duplicated app count, and trace every finding to its business impact</strong>. Import once (CMDB, CSV/Excel, or API) and we map the rest — this is the backbone of the function → process → application → control chain.
+            </WhyBanner>
             <div style={{marginBottom:14}}>
               <div style={{color:C.text,fontSize:14,fontWeight:800,marginBottom:3}}>
                 Map Applications to Business Processes
@@ -6028,6 +6054,9 @@ function Setup(props) {
 
         {step===4&&(
   <div>
+    <WhyBanner title="Vendor Ecosystem">
+      Every third party that touches your data is a potential breach path. We capture your vendors to <strong>map PHI data flows, link required Business Associate Agreements, quantify supply-chain exposure, and validate the assessment documents</strong> (SOC 2, HITRUST, pen tests) each vendor provides — feeding the CISO and CRO dashboards.
+    </WhyBanner>
     {/* Papa 2.a/#8 — vendor assessment documents are now uploaded INSIDE each
         vendor row (expand a selected vendor → "Assessment documents"). Saraqael
         validates each, cross-checks them, and posts risk-rated findings to the
@@ -6515,6 +6544,9 @@ function Setup(props) {
         {/* ══ STEP 6: Core Infrastructure ══════════════════════════════ */}
         {step===5&&(
           <div>
+            <WhyBanner title="Core Infrastructure">
+              Connecting your security tools lets CyberRx <strong>pull evidence automatically and score controls from live data instead of self-attestation</strong>. Connections are read-only and credentials are stored in a secrets vault — we only collect what's needed to verify each control.
+            </WhyBanner>
             <div style={{background:C.acc+"08",border:"1px solid "+C.acc+"25",
               borderRadius:9,padding:"12px 16px",marginBottom:14}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
@@ -7060,6 +7092,9 @@ function Setup(props) {
         {/* ══ STEP 6: Document Request ════════════════════════════════ */}
         {step===6&&(
           <div>
+            <WhyBanner title="Document Request">
+              Documents are the <strong>proof behind every manual control</strong>. Each requested item maps to specific NIST CSF 2.0, NIST 800-53 r5, and CIS requirements; we review each one to back your scores with real evidence rather than taking answers on faith. Upload only what applies — anything missing is simply scored as needing evidence.
+            </WhyBanner>
             <OrganizationIntakeDocuments orgId={(typeof localStorage!=="undefined"&&(localStorage.getItem("cyberrx_org_id")||localStorage.getItem("orgId")))||""} />
             <div style={{display:"flex",justifyContent:"space-between",marginTop:18}}>
               <Btn onClick={function(){setStep(5);}}>← Back</Btn>
