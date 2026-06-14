@@ -264,6 +264,9 @@ app.use('/api/crosswalk',         [apiGetLimiter, apiPostLimiter], require('./ro
 // Unified assessment engine — merge automated + document evidence per control
 app.use('/api/assessment',        [apiGetLimiter, apiPostLimiter, apiPutLimiter], require('./routes/assessment'));
 
+// Business-impact-weighted risk outputs (crown jewels, blast radius, gaps, ATT&CK)
+app.use('/api/risk',              [apiGetLimiter], require('./routes/risk-outputs'));
+
 // Saraqael — vendor document assessment agent (every doc type + cross-validation)
 app.use('/api/vendor-assessment', [apiGetLimiter, apiPostLimiter], require('./routes/vendorAssessment'));
 
