@@ -255,6 +255,9 @@ app.use('/api/csf',               [apiGetLimiter, apiPostLimiter], require('./ro
 // Organization Intake — document request checklist + upload/review pipeline
 app.use('/api/intake',            [apiGetLimiter, apiPostLimiter], require('./routes/intake'));
 
+// Generic schema-agnostic ingestion (process inventory / CMDB) — files + APIs
+app.use('/api/ingestion',         [apiGetLimiter, apiPostLimiter], require('./routes/ingestion'));
+
 // Saraqael — vendor document assessment agent (every doc type + cross-validation)
 app.use('/api/vendor-assessment', [apiGetLimiter, apiPostLimiter], require('./routes/vendorAssessment'));
 
