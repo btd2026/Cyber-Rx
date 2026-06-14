@@ -17,6 +17,7 @@ const logger = require('../utils/logger');
 const { normalize } = require('../services/DocumentNormalizer');
 const pipeline = require('../services/DocumentPipelineService');
 const SampleDoc = require('../services/SampleDocService');
+const ProcessExtraction = require('../services/ProcessExtractionService');
 
 function orgOf(req) {
   return req.query.org_id || (req.body && req.body.org_id) || req.headers['x-org-id'] || '';
@@ -117,6 +118,26 @@ router.get('/documents/:id/assessments', async (req, res) => {
       ORDER BY ca.framework_id, ca.requirement_id`, [orgId, req.params.id]);
     res.json({ org_id: orgId, upload_id: req.params.id, count: rows.length, assessments: rows });
   } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Extract the business-function -> process hierarchy (with RTO priority) from an
+// uploaded process / BIA document. Returns a structure the wizard renders as a
+// validation checklist; nothing is persisted here (the user validates first).
+router.post('/extract-processes', async (req, res) => {
+  const { file_name, contentBase64, text } = req.body || {};
+  if (!contentBase64 && !text) return res.status(400).json({ error: 'provide contentBase64 or text' });
+  try {
+    const input = contentBase64 ? Buffer.from(contentBase64, 'base64') : text;
+    const norm = normalize(input, file_name || 'process.txt');
+    const result = await ProcessExtraction.extract(norm.text);
+    if (!result.count) {
+      return res.json({ ...result, note: 'No processes could be extracted from this document. Try a process inventory or BIA with named processes and RTOs.' });
+    }
+    res.json(result);
+  } catch (e) {
+    logger.warn('process extraction failed', { error: e.message });
     res.status(500).json({ error: e.message });
   }
 });

@@ -4627,6 +4627,11 @@ function Setup(props) {
   var _saved = props.savedSetup || {};
   var _s8=useState(function(){ return new Set(Array.isArray(_saved.selProcs)?_saved.selProcs:[]); });
                                var selProcs=_s8[0];    var setSelProcs=_s8[1];
+  // Processes extracted (LLM) from the user's uploaded process / BIA document.
+  var _epx=useState(Array.isArray(_saved.extractedProcs)?_saved.extractedProcs:[]);
+                               var extractedProcs=_epx[0]; var setExtractedProcs=_epx[1];
+  var _epb=useState(false);    var extracting=_epb[0];     var setExtracting=_epb[1];
+  var _epm=useState(null);     var extractMeta=_epm[0];    var setExtractMeta=_epm[1];
   var _s9=useState(_saved.appSel||"");        var appSel=_s9[0];      var setAppSel=_s9[1];
   var _s10=useState(_saved.appConn||{});      var appConn=_s10[0];    var setAppConn=_s10[1];
   var _s11=useState("sample"); var appTab=_s11[0];     var setAppTab=_s11[1];
@@ -4653,6 +4658,7 @@ function Setup(props) {
       saveOrgProfile({
         orgName: orgName,
         selProcs: Array.from(selProcs),
+        extractedProcs: extractedProcs,
         appSel: appSel,
         appConn: appConn,
         vendorSel: vendorSel,
@@ -4663,7 +4669,7 @@ function Setup(props) {
       });
     }, 1200);
     return function(){ if (persistTimerRef.current) { clearTimeout(persistTimerRef.current); } };
-  }, [selProcs, appSel, appConn, vendorSel, infraSel, infraConn, orgName]);
+  }, [selProcs, extractedProcs, appSel, appConn, vendorSel, infraSel, infraConn, orgName]);
 
     useEffect(function(){
     if(step!==4)return;
@@ -4707,8 +4713,8 @@ function Setup(props) {
   var _s31=useState("");       var vendorImport=_s31[0];var setVendorImport=_s31[1];
   // Papa 2.a — vendor assessment document uploads collected during setup.
   var _vdu=useState([]);       var vendorDocUploads=_vdu[0]; var setVendorDocUploads=_vdu[1];
-  var _vdv=useState("");       var vdVendorName=_vdv[0];     var setVdVendorName=_vdv[1];
-  var _vdt=useState("soc2");   var vdDocType=_vdt[0];        var setVdDocType=_vdt[1];
+  // Per-vendor selected document type (the upload now lives inside each vendor row).
+  var _vdtv=useState({});      var vdTypeByVendor=_vdtv[0];  var setVdTypeByVendor=_vdtv[1];
   var VENDOR_DOC_TYPES = [["soc2","SOC 2 Type II report"],["hitrust","HITRUST CSF certification"],
     ["iso27001","ISO 27001 certificate"],["pentest","Penetration test report"],["vulnscan","Vulnerability scan results"],
     ["baa","HIPAA BAA"],["irplan","Incident response plan"],["bcdr","BC/DR plan"],["subprocessors","Subprocessor list"],
@@ -4749,19 +4755,62 @@ function Setup(props) {
     isPublic
   );
 
-  // Auto-suggest processes when org type set — only the suggested (mandatory,
-  // contract-adapted) set, matching the "Suggested for" banner.
-  useEffect(function() {
-    if (orgType && profile && profile.mandatoryProcs && selProcs.size === 0) {
-      setSelProcs(new Set(computeSuggestedProcs(profile.mandatoryProcs, { cmsContract: cmsContract })));
-    }
-  }, [orgType]);
+  // Processes are no longer preloaded from a fixed taxonomy. The user uploads
+  // their process / BIA document and the LLM extracts business functions,
+  // processes, and RTO-based priority; they then validate and uncheck what is
+  // out of scope. (See the Process step's "Upload process document" flow.)
 
   // Step 4 now uses CMDB import - app selection is automatic
 
   // ── Helpers ─────────────────────────────────────────────────────
   function toggleProc(id) {
     setSelProcs(function(s){ var n=new Set(s); n.has(id)?n.delete(id):n.add(id); return n; });
+  }
+
+  // Map an extracted process name to a canonical PROCS id (keeps downstream
+  // vendor / exposure logic working); falls back to the extracted slug id.
+  function matchCanonicalProc(name){
+    var n=String(name||"").toLowerCase();
+    var rules=[
+      ["claims",["claim"]],
+      ["enroll",["enroll","eligib","membership"]],
+      ["provider",["provider","credential","network"]],
+      ["care",["care manage","utilization","prior auth","authorization","pharmacy","formulary","clinical"]],
+      ["finance",["finance","account","billing","premium","actuar","underwrit"]],
+      ["member_svc",["member service","member portal","contact center","call center","customer"]],
+      ["compliance",["complian","audit","fraud","regulatory","fwa"]],
+      ["it_sec",["it operation","security","edi","clearinghouse","analytic","data &"]],
+    ];
+    for(var i=0;i<rules.length;i++){for(var j=0;j<rules[i][1].length;j++){if(n.indexOf(rules[i][1][j])>=0)return rules[i][0];}}
+    return null;
+  }
+
+  // Upload a process / BIA document → LLM extracts functions/processes/RTO →
+  // pre-select all, grouped & sorted by RTO priority for the user to validate.
+  function extractProcessesFromFile(file){
+    if(!file) return;
+    setExtracting(true); setExtractMeta(null);
+    var reader=new FileReader();
+    reader.onload=function(){
+      var b64=String(reader.result||"").split(",").pop();
+      fetch(CYBERRX_API+"/api/intake/extract-processes",{
+        method:"POST",
+        headers:{"Content-Type":"application/json",
+          "X-Org-Id":(typeof localStorage!=="undefined"&&localStorage.getItem("cyberrx_org_id"))||""},
+        body:JSON.stringify({file_name:file.name,contentBase64:b64})
+      })
+        .then(function(r){return r.json();})
+        .then(function(d){
+          var flat=(d&&d.flat)||[];
+          flat=flat.map(function(p){return Object.assign({},p,{pid:matchCanonicalProc(p.name)||p.id});});
+          setExtractedProcs(flat);
+          setSelProcs(new Set(flat.map(function(p){return p.pid;})));  // pre-select all; user unchecks
+          setExtractMeta({engine:(d&&d.engine)||"none",count:flat.length,note:d&&d.note});
+        })
+        .catch(function(err){ setExtractMeta({error:err.message}); })
+        .finally(function(){ setExtracting(false); });
+    };
+    reader.readAsDataURL(file);
   }
   function toggleApp(pid, appName) {
     setAppSel(function(s){
@@ -5223,12 +5272,8 @@ function Setup(props) {
                   setOrgConfig({
                     type:a.orgType||"Other Payer",
                   });
-                  // Pre-select the SUGGESTED processes (mandatory set, adapted
-                  // to the government contracts they actually hold) — matches
-                  // the "Suggested for" banner on the Select Processes step.
-                  var prof = getOrgProfile(a.orgType||"Other Payer", a.orgName).base;
-                  var suggested = computeSuggestedProcs(prof && prof.mandatoryProcs, { cmsContract: a.cmsContract });
-                  setSelProcs(new Set(suggested));
+                  // Processes are NOT preloaded — the user uploads their process /
+                  // BIA document on the Process step and the LLM extracts them.
                 }
                 // System names from setup
                 if(a.claimsPlatform){setRootClaimsSystem(a.claimsPlatform);}
@@ -5493,11 +5538,45 @@ function Setup(props) {
         
         {step===2&&(
           <div>
+            {/* Upload-driven process discovery — nothing is preloaded. */}
+            <Card style={{marginBottom:14}}>
+              <SH label="Upload your process inventory / BIA — we'll extract it"/>
+              <div style={{color:C.muted,fontSize:11,lineHeight:1.6,marginBottom:10}}>
+                Upload your process inventory or Business Impact Analysis (PDF, Word, Excel, or CSV).
+                CyberRx extracts your business functions and processes, groups them, and ranks them by
+                RTO priority. You then validate the result and uncheck anything out of scope — nothing
+                is preloaded or assumed.
+              </div>
+              <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
+                <label style={{background:C.acc,color:"#fff",borderRadius:7,padding:"8px 14px",fontSize:12,
+                  fontWeight:700,cursor:extracting?"default":"pointer",opacity:extracting?0.6:1}}>
+                  {extracting?"Extracting…":"⬆ Upload process document"}
+                  <input type="file" style={{display:"none"}} disabled={extracting}
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt"
+                    onChange={function(e){var f=e.target.files&&e.target.files[0];extractProcessesFromFile(f);e.target.value="";}}/>
+                </label>
+                {extractMeta&&!extractMeta.error&&extractMeta.count>0&&(
+                  <span style={{color:"#0FBB80",fontSize:11,fontWeight:600}}>
+                    ✓ {extractMeta.count} processes extracted{extractMeta.engine==="llm"?" by AI":""} — validate below
+                  </span>
+                )}
+                {extractMeta&&!extractMeta.error&&extractMeta.count===0&&(
+                  <span style={{color:"#F5A623",fontSize:11}}>{extractMeta.note||"No processes found — try a clearer process inventory, or select manually below."}</span>
+                )}
+                {extractMeta&&extractMeta.error&&(
+                  <span style={{color:"#EF4545",fontSize:11}}>Extraction failed: {extractMeta.error}</span>
+                )}
+              </div>
+            </Card>
+
             <Card style={{marginBottom:14}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-                <SH label="Which business processes are in scope?"/>
+                <SH label={extractedProcs.length>0?"Validate the extracted processes":"Which business processes are in scope?"}/>
                 <div style={{display:"flex",gap:8}}>
-                  <button onClick={function(){setSelProcs(new Set(realOrgProcs(orgType||'Other Payer').map(function(p){return p.id;})));}}
+                  <button onClick={function(){
+                      if(extractedProcs.length>0){setSelProcs(new Set(extractedProcs.map(function(p){return p.pid;})));}
+                      else{setSelProcs(new Set(realOrgProcs(orgType||'Other Payer').map(function(p){return p.id;})));}
+                    }}
                     style={{background:"transparent",border:"none",color:C.acc,cursor:"pointer",fontSize:11,fontWeight:600}}>
                     Select all
                   </button>
@@ -5507,12 +5586,49 @@ function Setup(props) {
                   </button>
                 </div>
               </div>
-              {profile&&profile.mandatoryProcs&&(
-                <div style={{padding:"7px 12px",background:C.acc+"10",border:"1px solid "+C.acc+"25",borderRadius:7,marginBottom:12,fontSize:11,color:C.muted}}>
-                  <strong style={{color:C.acc}}>Suggested for {orgType}:</strong>{" "}
-                  {computeSuggestedProcs(profile.mandatoryProcs, {cmsContract:cmsContract}).map(function(id){var p=PROCS.find(function(x){return x.id===id;});return p?p.name:id;}).join(", ")}
+              {extractedProcs.length>0 ? (
+                <div style={{display:"grid",gridTemplateColumns:"1fr",gap:8}}>
+                  {(function(){
+                    // Group extracted processes by function; order by tightest RTO.
+                    var byFn={}; var order=[];
+                    extractedProcs.forEach(function(p){ if(!byFn[p.function]){byFn[p.function]=[];order.push(p.function);} byFn[p.function].push(p); });
+                    var rank=function(m){return m==null?Number.POSITIVE_INFINITY:m;};
+                    order.sort(function(a,b){ return rank(Math.min.apply(null,byFn[a].map(function(x){return rank(x.rtoMinutes);})))-rank(Math.min.apply(null,byFn[b].map(function(x){return rank(x.rtoMinutes);}))); });
+                    var tcolor=function(t){return t===1?"#EF4545":t===2?"#F5A623":t===3?"#3B9EFF":C.muted;};
+                    return order.map(function(fn){
+                      var procs=byFn[fn].slice().sort(function(a,b){return rank(a.rtoMinutes)-rank(b.rtoMinutes);});
+                      return (
+                        <div key={fn}>
+                          <div style={{color:C.acc,fontSize:11,fontWeight:700,margin:"6px 0 4px",textTransform:"uppercase",letterSpacing:"0.06em"}}>{fn}</div>
+                          {procs.map(function(p){
+                            var on=selProcs.has(p.pid);
+                            return (
+                              <div key={p.id} onClick={function(){toggleProc(p.pid);}}
+                                style={{display:"flex",gap:10,alignItems:"center",padding:"10px 12px",marginBottom:6,
+                                  background:on?C.acc+"10":C.dim,borderRadius:8,cursor:"pointer",
+                                  border:"1.5px solid "+(on?C.acc:C.border)}}>
+                                <div style={{width:18,height:18,borderRadius:4,flexShrink:0,
+                                  background:on?C.acc:C.bg,border:"1.5px solid "+(on?C.acc:C.border),
+                                  display:"flex",alignItems:"center",justifyContent:"center"}}>
+                                  {on&&<span style={{color:"#fff",fontSize:10,fontWeight:800}}>✓</span>}
+                                </div>
+                                <div style={{flex:1}}>
+                                  <div style={{color:on?C.acc:C.text,fontSize:12,fontWeight:on?700:500}}>{p.name}</div>
+                                </div>
+                                {p.tier&&(
+                                  <span style={{fontSize:8,fontWeight:800,color:"#fff",background:tcolor(p.tier),
+                                    borderRadius:4,padding:"2px 7px"}}>TIER {p.tier}</span>
+                                )}
+                                <span style={{color:C.muted,fontSize:10,minWidth:54,textAlign:"right"}}>RTO {p.rto||"—"}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    });
+                  })()}
                 </div>
-              )}
+              ) : (
               <div style={{display:"grid",gridTemplateColumns:"1fr",gap:8}}>
                 {getOrgProcs(orgType||'Other Payer').map(function(p){
                   // Tier header
@@ -5613,13 +5729,11 @@ function Setup(props) {
                   );
                 })}
               </div>
+              )}
               {selProcs.size>0&&(
-                <div style={{marginTop:10,color:C.muted,fontSize:11}}>{selProcs.size} of {realOrgProcs(orgType||'Other Payer').length} processes selected</div>
+                <div style={{marginTop:10,color:C.muted,fontSize:11}}>{selProcs.size} process{selProcs.size===1?"":"es"} selected for the assessment</div>
               )}
             </Card>
-            <div style={{marginTop:14}}>
-              <IngestionUploader sourceKind="process_inventory" label="Or upload a process inventory / BIA (optional)" />
-            </div>
             <div style={{display:"flex",justifyContent:"space-between"}}>
               <Btn onClick={function(){setStep(2);}}>← Back</Btn>
               <Btn onClick={function(){setStep(3);}} primary disabled={selProcs.size===0}>Next: Map Applications →</Btn>
@@ -5895,9 +6009,8 @@ function Setup(props) {
               </Card>
             )}
 
-            <div style={{marginTop:14}}>
-              <IngestionUploader sourceKind="cmdb" label="Import applications from a CMDB (file)" />
-            </div>
+            {/* CMDB-file import removed here — applications are imported via the
+                connect-CMDB options and CSV/Excel upload above; no duplicate. */}
             <Card style={{marginTop:14}}>
               <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:8}}>Crosswalk — map applications to processes</div>
               <CrosswalkPanel />
@@ -5913,56 +6026,10 @@ function Setup(props) {
 
         {step===4&&(
   <div>
-    {/* Papa 2.a/#8 — upload third-party assessment documents here; Saraqael
-        reviews each and feeds scoring/findings to the dashboards. */}
-    <div style={{background:C.faint,border:"1px solid "+C.acc+"25",borderRadius:10,padding:"12px 16px",marginBottom:14}}>
-      <div style={{color:C.acc,fontSize:11,fontWeight:700,marginBottom:8}}>
-        📄 Upload vendor assessment documents for review
-      </div>
-      <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-        <input value={vdVendorName} onChange={function(e){setVdVendorName(e.target.value);}}
-          placeholder="Vendor name (e.g. Cotiviti)"
-          style={{background:C.card,border:"1px solid "+C.border,borderRadius:6,padding:"7px 10px",
-            color:C.text,fontSize:11,outline:"none",minWidth:170}}/>
-        <select value={vdDocType} onChange={function(e){setVdDocType(e.target.value);}}
-          style={{background:C.card,border:"1px solid "+C.border,borderRadius:6,padding:"7px 10px",
-            color:C.text,fontSize:11,outline:"none"}}>
-          {VENDOR_DOC_TYPES.map(function(t){return <option key={t[0]} value={t[0]}>{t[1]}</option>;})}
-        </select>
-        <label style={{background:vdVendorName.trim()?C.acc:C.dim,color:"#fff",borderRadius:6,
-          padding:"7px 12px",fontSize:11,fontWeight:700,cursor:vdVendorName.trim()?"pointer":"default",opacity:vdVendorName.trim()?1:0.5}}>
-          ⬆ Choose file
-          <input type="file" style={{display:"none"}} disabled={!vdVendorName.trim()}
-            onChange={function(e){
-              var f=e.target.files&&e.target.files[0];
-              if(f&&vdVendorName.trim()){
-                var label=(VENDOR_DOC_TYPES.find(function(x){return x[0]===vdDocType;})||[])[1]||vdDocType;
-                setVendorDocUploads(function(p){return p.concat([{vendorName:vdVendorName.trim(),docType:vdDocType,docLabel:label,fileName:f.name}]);});
-              }
-              e.target.value="";
-            }}/>
-        </label>
-      </div>
-      {vendorDocUploads.length>0&&(
-        <div style={{marginTop:10}}>
-          {vendorDocUploads.map(function(u,i){
-            return (
-              <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",
-                background:C.card,border:"1px solid "+C.border,borderRadius:6,padding:"6px 10px",marginBottom:4}}>
-                <span style={{color:C.text,fontSize:11}}><strong>{u.vendorName}</strong> · {u.docLabel} <span style={{color:C.muted}}>· {u.fileName}</span></span>
-                <button onClick={function(){setVendorDocUploads(function(p){return p.filter(function(_,j){return j!==i;});});}}
-                  style={{background:"transparent",border:"none",color:C.muted,cursor:"pointer",fontSize:13}}>×</button>
-              </div>
-            );
-          })}
-        </div>
-      )}
-      <div style={{color:C.muted,fontSize:10,marginTop:8,lineHeight:1.5}}>
-        Collect: SOC 2 Type II, HITRUST, ISO 27001, pentest, vulnerability scans, HIPAA BAA, IR plan, BC/DR,
-        subprocessor list, cyber insurance, network diagram, SIG/CAIQ, PCI AOC. On completing setup, <strong style={{color:C.text}}>Saraqael</strong> validates
-        each document, cross-checks them, and posts risk-rated findings to the CISO and CRO dashboards (also editable later under Vendor Assurance).
-      </div>
-    </div>
+    {/* Papa 2.a/#8 — vendor assessment documents are now uploaded INSIDE each
+        vendor row (expand a selected vendor → "Assessment documents"). Saraqael
+        validates each, cross-checks them, and posts risk-rated findings to the
+        CISO and CRO dashboards (also editable later under Vendor Assurance). */}
     {/* Import/API bar */}
     <div style={{background:C.panel,border:"1px solid "+C.border,borderRadius:10,marginBottom:14,overflow:"hidden"}}>
       <div style={{padding:"12px 16px",borderBottom:"1px solid "+C.border}}>
@@ -6352,6 +6419,58 @@ function Setup(props) {
                           })}
                         </div>
                       </div>
+                      {/* Assessment documents for THIS vendor */}
+                      {(function(){
+                        var vdt = vdTypeByVendor[vendor.id] || "soc2";
+                        var mine = vendorDocUploads.filter(function(u){return u.vendorName===vendor.name;});
+                        return (
+                          <div style={{marginTop:12}}>
+                            <div style={{color:C.muted,fontSize:10,fontWeight:600,marginBottom:6}}>
+                              Assessment documents for {vendor.name}
+                            </div>
+                            <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
+                              <select value={vdt} onChange={function(e){var v=e.target.value;setVdTypeByVendor(function(p){return Object.assign({},p,mk(vendor.id,v));});}}
+                                style={{background:C.card,border:"1px solid "+C.border,borderRadius:6,padding:"6px 9px",
+                                  color:C.text,fontSize:10,outline:"none"}}>
+                                {VENDOR_DOC_TYPES.map(function(t){return <option key={t[0]} value={t[0]}>{t[1]}</option>;})}
+                              </select>
+                              <label style={{background:C.acc,color:"#fff",borderRadius:6,
+                                padding:"6px 11px",fontSize:10,fontWeight:700,cursor:"pointer"}}>
+                                ⬆ Choose file
+                                <input type="file" style={{display:"none"}}
+                                  onChange={function(e){
+                                    var f=e.target.files&&e.target.files[0];
+                                    if(f){
+                                      var label=(VENDOR_DOC_TYPES.find(function(x){return x[0]===vdt;})||[])[1]||vdt;
+                                      setVendorDocUploads(function(p){return p.concat([{vendorName:vendor.name,docType:vdt,docLabel:label,fileName:f.name}]);});
+                                    }
+                                    e.target.value="";
+                                  }}/>
+                              </label>
+                            </div>
+                            {mine.length>0&&(
+                              <div style={{marginTop:8}}>
+                                {mine.map(function(u){
+                                  var gi=vendorDocUploads.indexOf(u);
+                                  return (
+                                    <div key={gi} style={{display:"flex",justifyContent:"space-between",alignItems:"center",
+                                      background:C.card,border:"1px solid "+C.border,borderRadius:6,padding:"5px 9px",marginBottom:4}}>
+                                      <span style={{color:C.text,fontSize:10}}>{u.docLabel} <span style={{color:C.muted}}>· {u.fileName}</span></span>
+                                      <button onClick={function(){setVendorDocUploads(function(p){return p.filter(function(_,j){return j!==gi;});});}}
+                                        style={{background:"transparent",border:"none",color:C.muted,cursor:"pointer",fontSize:13}}>×</button>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                            <div style={{color:C.muted,fontSize:8,marginTop:6,lineHeight:1.5}}>
+                              SOC 2 Type II · HITRUST · ISO 27001 · pentest · vuln scans · HIPAA BAA · IR plan · BC/DR ·
+                              subprocessor list · cyber insurance · network diagram · SIG/CAIQ · PCI AOC. Saraqael validates
+                              and cross-checks each, posting risk-rated findings to the CISO and CRO dashboards.
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>
@@ -19087,9 +19206,11 @@ function SetupBot(props) {
     {id:'csf_id_am_inventory', type:'choice', group:'Security Evidence',
      ask:'Does {orgName} maintain a complete asset inventory (CMDB) covering hardware, software, and cloud?',
      choices:['Complete inventory','Partial inventory','No inventory']},
-    {id:'csf_id_ra_assessment', type:'choice', group:'Security Evidence',
-     ask:'Do you conduct a formal cyber risk assessment, such as NIST SP 800-30?',
-     choices:['Yes — annually','Occasionally','Never']},
+    // NOTE: the "do you conduct a formal risk assessment (NIST SP 800-30)?"
+    // question was removed — CyberRX IS the risk assessment (CSF 2.0 / 800-53),
+    // so self-reporting it is redundant. The org's existing risk-assessment
+    // report is instead requested as evidence in the Document Request phase
+    // (ID.RA / RA-family controls) and scored from the document, not self-rank.
     {id:'csf_rs_mi_process', type:'choice', group:'Security Evidence',
      ask:'Last one! Is there a formal remediation process with tracked owners and due dates?',
      choices:['Formal process with tracking','Ad hoc','No process']},
@@ -19116,7 +19237,6 @@ function SetupBot(props) {
     csf_rs_ma_irplan:     {key:'rs_ma_irplan',     map:{'Plan documented and tabletop run':'plan-and-tabletop','Plan documented, no recent tabletop':'plan-only','No documented plan':'none'}},
     csf_rs_co_notify:     {key:'rs_co_notify',     map:{'Yes — all documented':'yes','Partially documented':'partial','Not documented':'no'}},
     csf_id_am_inventory:  {key:'id_am_inventory',  map:{'Complete inventory':'complete','Partial inventory':'partial','No inventory':'none'}},
-    csf_id_ra_assessment: {key:'id_ra_assessment', map:{'Yes — annually':'annual','Occasionally':'occasional','Never':'never'}},
     csf_rs_mi_process:    {key:'rs_mi_process',    map:{'Formal process with tracking':'formal','Ad hoc':'ad-hoc','No process':'none'}},
   };
   function csfEvidenceItems(orgData) {
