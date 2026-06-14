@@ -1,0 +1,138 @@
+[
+  {
+    "Object": "control_test_result",
+    "Field": "framework",
+    "Type": "string",
+    "Required": "yes",
+    "Description": "Framework tab source",
+    "Example": "NIST CSF 2.0"
+  },
+  {
+    "Object": "control_test_result",
+    "Field": "control_id",
+    "Type": "string",
+    "Required": "yes",
+    "Description": "Control/technique identifier",
+    "Example": "PR.AA-02"
+  },
+  {
+    "Object": "control_test_result",
+    "Field": "tool",
+    "Type": "string",
+    "Required": "yes",
+    "Description": "Tool producing evidence",
+    "Example": "Okta"
+  },
+  {
+    "Object": "control_test_result",
+    "Field": "test_name",
+    "Type": "string",
+    "Required": "yes",
+    "Description": "Specific test being run",
+    "Example": "Privileged MFA coverage"
+  },
+  {
+    "Object": "control_test_result",
+    "Field": "result",
+    "Type": "enum",
+    "Required": "yes",
+    "Description": "pass/fail/partial/no_evidence",
+    "Example": "fail"
+  },
+  {
+    "Object": "control_test_result",
+    "Field": "score",
+    "Type": "number",
+    "Required": "yes",
+    "Description": "0 to 5 score",
+    "Example": "4.2"
+  },
+  {
+    "Object": "control_test_result",
+    "Field": "confidence",
+    "Type": "number",
+    "Required": "yes",
+    "Description": "0 to 100 evidence confidence",
+    "Example": "94"
+  },
+  {
+    "Object": "control_test_result",
+    "Field": "asset_or_user",
+    "Type": "string",
+    "Required": "no",
+    "Description": "Affected asset/user/entity",
+    "Example": "admin@example.com"
+  },
+  {
+    "Object": "control_test_result",
+    "Field": "severity",
+    "Type": "enum",
+    "Required": "no",
+    "Description": "critical/high/medium/low/info",
+    "Example": "high"
+  },
+  {
+    "Object": "control_test_result",
+    "Field": "evidence_timestamp",
+    "Type": "datetime",
+    "Required": "yes",
+    "Description": "When evidence was collected",
+    "Example": "2026-06-14T12:00:00Z"
+  },
+  {
+    "Object": "control_test_result",
+    "Field": "evidence_uri",
+    "Type": "string",
+    "Required": "no",
+    "Description": "Tool URL/API reference/ticket",
+    "Example": "servicenow://incident/INC001"
+  },
+  {
+    "Object": "connector",
+    "Field": "category",
+    "Type": "string",
+    "Required": "yes",
+    "Description": "Connector category",
+    "Example": "IAM"
+  },
+  {
+    "Object": "connector",
+    "Field": "tool_name",
+    "Type": "string",
+    "Required": "yes",
+    "Description": "Vendor/product name",
+    "Example": "Okta"
+  },
+  {
+    "Object": "connector",
+    "Field": "auth_type",
+    "Type": "string",
+    "Required": "yes",
+    "Description": "OAuth2/API Key/Token/Basic",
+    "Example": "OAuth2"
+  },
+  {
+    "Object": "connector",
+    "Field": "required_fields",
+    "Type": "array",
+    "Required": "yes",
+    "Description": "Fields user must provide",
+    "Example": "tenant_url, client_id, secret_ref"
+  },
+  {
+    "Object": "connector",
+    "Field": "health_check",
+    "Type": "string",
+    "Required": "yes",
+    "Description": "Endpoint/query used to verify connection",
+    "Example": "GET /api/v1/users?limit=1"
+  },
+  {
+    "Object": "connector",
+    "Field": "enabled_controls",
+    "Type": "array",
+    "Required": "yes",
+    "Description": "Rows from framework tabs enabled by connector",
+    "Example": "PR.AA-01, PR.AA-02"
+  }
+]

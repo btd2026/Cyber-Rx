@@ -24,6 +24,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import ExecutiveAgentBrief from '../components/ExecutiveAgentBrief';
 import DashNav from '../components/DashNav';
+import ResolutionPanel from '../components/ResolutionPanel';
 
 const fmtUSD = (v) => {
   const x = Number(v) || 0;
@@ -139,7 +140,7 @@ const CIODash = (props) => {
 
   return (
     <div style={{ padding: '2rem', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
-      <DashNav current="cio" go={props.go} />
+      {!props.embedded && <DashNav current="cio" go={props.go} />}
       {/* Header */}
       <div style={{ marginBottom: '2rem', borderBottom: '1px solid #e5e7eb', paddingBottom: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

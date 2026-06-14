@@ -14,6 +14,7 @@ const TABS = [
   { id: 'cio',       label: 'CIO',              mod: 'Technology' },
   { id: 'cro',       label: 'CRO / Audit',      mod: 'Compliance' },
   { id: 'cfo',       label: 'CFO',              mod: 'Financial' },
+  { id: 'clo',       label: 'CLO',              mod: 'Legal' },
   { id: 'boarddash', label: 'Board',            mod: 'Executive' },
   { id: 'vendormap', label: 'Vendor Ecosystem', mod: 'Ecosystem Risk' },
 ];

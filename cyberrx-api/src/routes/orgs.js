@@ -3,6 +3,21 @@ const express = require('express');
 const router = express.Router();
 const db = require('../utils/db');
 const { authenticateJWT, optionalJWT, requireOrgAccess } = require('../middleware/auth');
+const PublicEnrichmentService = require('../services/PublicEnrichmentService');
+
+// POST /api/orgs/enrich - best-effort public-data prefill (revenue, employees,
+// members) for an org name. Returns estimates the user can overwrite; never
+// fabricates (empty when no AI key).
+const enrichHandler = async (req, res) => {
+  try {
+    const b = req.body || {};
+    const name = b.name || b.orgName || req.query.name;
+    if (!name) return res.status(400).json({ error: 'name is required' });
+    res.json(await PublicEnrichmentService.enrich(name, b.domain));
+  } catch (err) { res.status(500).json({ error: err.message }); }
+};
+router.post('/enrich', optionalJWT, enrichHandler);
+router.get('/enrich', optionalJWT, enrichHandler);
 
 // Helper: Generate org ID from org name
 function generateOrgId(name) {

@@ -39,6 +39,22 @@ async function refreshExecutiveBriefs() {
   }
 }
 
+// Continuous assessment: re-run the unified assessment engine for every org so
+// scores/gaps refresh on a cadence ("posture measured continuously, not after").
+async function refreshAssessments() {
+  try {
+    const AssessmentEngine = require('./services/AssessmentEngine');
+    const orgs = await db.query('SELECT id FROM orgs');
+    for (const { id } of orgs) {
+      try { await AssessmentEngine.run(id); }
+      catch (err) { logger.warn('[scheduler] Assessment refresh failed for org', { orgId: id, error: err.message }); }
+    }
+    logger.info('[scheduler] Unified assessments refreshed', { orgs: orgs.length });
+  } catch (err) {
+    logger.warn('[scheduler] Assessment refresh skipped', { error: err.message });
+  }
+}
+
 // Existing tool sync schedule (legacy metric sync)
 const SYNC_SCHEDULE = {
   okta:        { metric: 'mfaPct',      intervalHrs: 24 },
@@ -427,6 +443,12 @@ async function runScheduler() {
   // Generate an initial set on startup so dashboards have live briefs immediately
   await refreshExecutiveBriefs();
 
+  // Continuous unified assessment refresh.
+  const assessCron = process.env.ASSESSMENT_REFRESH_CRON || '0 */6 * * *';
+  logger.info('[scheduler] Starting unified assessment refresh', { schedule: assessCron });
+  cron.schedule(assessCron, refreshAssessments, { scheduled: true, timezone: process.env.TZ || 'UTC' });
+  await refreshAssessments();
+
   logger.info('[scheduler] All scheduler components started');
 }
 
@@ -450,7 +472,8 @@ module.exports = {
   scheduleManualSync,
   getScheduledTasks,
   stopVendorSyncs,
-  syncOrg
+  syncOrg,
+  refreshAssessments
 };
 
 // Start scheduler if run directly

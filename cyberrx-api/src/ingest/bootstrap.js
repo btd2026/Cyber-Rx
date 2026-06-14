@@ -82,6 +82,22 @@ async function bootstrap() {
     steps.referenceModel = await require('./seedReferenceModel').seed();
   } catch (e) { logger.warn('bootstrap: reference model seed failed', { error: e.message }); }
 
+  try {
+    // Control Assessment Engine: private connector/tool catalog (cae_*).
+    // Creates the schema and seeds from src/data/cae CSVs; idempotent.
+    steps.caeConnectors = await require('../cae/seedConnectors').seed();
+  } catch (e) { logger.warn('bootstrap: cae connector seed failed', { error: e.message }); }
+
+  try {
+    // CAE control database (105 rows) + control→tool map (alias resolution).
+    steps.caeControls = await require('../cae/seedControls').seed();
+  } catch (e) { logger.warn('bootstrap: cae control seed failed', { error: e.message }); }
+
+  try {
+    // CAE scoring model + evidence schema config.
+    steps.caeScoring = await require('../cae/seedScoringModel').seed();
+  } catch (e) { logger.warn('bootstrap: cae scoring seed failed', { error: e.message }); }
+
   return steps;
 }
 

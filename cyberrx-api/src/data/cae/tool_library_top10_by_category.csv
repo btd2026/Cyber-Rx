@@ -1,0 +1,161 @@
+Category,Rank,Tool,Library_Status,Implementation_Note
+IAM / Identity,1,Okta,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+IAM / Identity,2,Microsoft Entra ID,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+IAM / Identity,3,SailPoint IdentityNow,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+IAM / Identity,4,CyberArk,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+IAM / Identity,5,Delinea,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+IAM / Identity,6,ForgeRock,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+IAM / Identity,7,Ping Identity,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+IAM / Identity,8,Duo,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+IAM / Identity,9,OneLogin,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+IAM / Identity,10,JumpCloud,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+SIEM / Logging,1,Splunk,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+SIEM / Logging,2,Microsoft Sentinel,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+SIEM / Logging,3,IBM QRadar,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+SIEM / Logging,4,Google Chronicle,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+SIEM / Logging,5,Elastic Security,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+SIEM / Logging,6,LogRhythm,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+SIEM / Logging,7,Sumo Logic,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+SIEM / Logging,8,Devo,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+SIEM / Logging,9,Exabeam,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+SIEM / Logging,10,Rapid7 InsightIDR,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+EDR / XDR,1,CrowdStrike Falcon,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+EDR / XDR,2,Microsoft Defender XDR,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+EDR / XDR,3,Palo Alto Cortex XDR,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+EDR / XDR,4,SentinelOne Singularity,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+EDR / XDR,5,Trend Vision One,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+EDR / XDR,6,Sophos Intercept X,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+EDR / XDR,7,VMware Carbon Black,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+EDR / XDR,8,Trellix XDR,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+EDR / XDR,9,Elastic Defend,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+EDR / XDR,10,Cisco Secure Endpoint,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Network Firewall / SASE,1,Palo Alto Panorama/NGFW,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Network Firewall / SASE,2,Fortinet FortiManager/FortiGate,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Network Firewall / SASE,3,Cisco Secure Firewall,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Network Firewall / SASE,4,Check Point,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Network Firewall / SASE,5,Zscaler,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Network Firewall / SASE,6,Cloudflare Zero Trust,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Network Firewall / SASE,7,Akamai Guardicore,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Network Firewall / SASE,8,F5 BIG-IP,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Network Firewall / SASE,9,Netskope,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Network Firewall / SASE,10,Prisma Access,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Vulnerability Management,1,Tenable,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Vulnerability Management,2,Qualys VMDR,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Vulnerability Management,3,Rapid7 InsightVM,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Vulnerability Management,4,CrowdStrike Exposure Management,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Vulnerability Management,5,Tanium,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Vulnerability Management,6,Orca Security,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Vulnerability Management,7,Wiz,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Vulnerability Management,8,Prisma Cloud,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Vulnerability Management,9,Microsoft Defender Vulnerability Management,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Vulnerability Management,10,Nessus,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Cloud / CNAPP,1,Prisma Cloud,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Cloud / CNAPP,2,Wiz,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Cloud / CNAPP,3,Orca Security,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Cloud / CNAPP,4,Microsoft Defender for Cloud,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Cloud / CNAPP,5,AWS Security Hub,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Cloud / CNAPP,6,Google Security Command Center,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Cloud / CNAPP,7,Lacework,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Cloud / CNAPP,8,Check Point CloudGuard,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Cloud / CNAPP,9,Aqua Security,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Cloud / CNAPP,10,Sysdig Secure,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+DLP / Data Security,1,Microsoft Purview,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+DLP / Data Security,2,Symantec DLP,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+DLP / Data Security,3,Digital Guardian,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+DLP / Data Security,4,Varonis,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+DLP / Data Security,5,Forcepoint DLP,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+DLP / Data Security,6,Proofpoint DLP,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+DLP / Data Security,7,Netskope DLP,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+DLP / Data Security,8,Google Cloud DLP,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+DLP / Data Security,9,BigID,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+DLP / Data Security,10,Cyera,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+SOAR / Incident Response,1,Cortex XSOAR,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+SOAR / Incident Response,2,Splunk SOAR,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+SOAR / Incident Response,3,ServiceNow SecOps,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+SOAR / Incident Response,4,Tines,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+SOAR / Incident Response,5,Swimlane,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+SOAR / Incident Response,6,Torq,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+SOAR / Incident Response,7,IBM Resilient,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+SOAR / Incident Response,8,Rapid7 InsightConnect,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+SOAR / Incident Response,9,Microsoft Sentinel Automation,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+SOAR / Incident Response,10,Chronicle SOAR,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+ITSM / CMDB / GRC,1,ServiceNow,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+ITSM / CMDB / GRC,2,Jira Service Management,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+ITSM / CMDB / GRC,3,BMC Helix,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+ITSM / CMDB / GRC,4,Archer,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+ITSM / CMDB / GRC,5,OneTrust,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+ITSM / CMDB / GRC,6,MetricStream,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+ITSM / CMDB / GRC,7,Diligent,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+ITSM / CMDB / GRC,8,AuditBoard,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+ITSM / CMDB / GRC,9,LogicGate,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+ITSM / CMDB / GRC,10,Freshservice,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Email Security,1,Proofpoint,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Email Security,2,Mimecast,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Email Security,3,Microsoft Defender for Office 365,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Email Security,4,Abnormal Security,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Email Security,5,Zix/AppRiver,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Email Security,6,Cisco Secure Email,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Email Security,7,Google Workspace Security,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Email Security,8,Barracuda,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Email Security,9,Avanan,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Email Security,10,Cloudflare Area 1,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+PAM / Secrets,1,CyberArk,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+PAM / Secrets,2,Delinea,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+PAM / Secrets,3,BeyondTrust,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+PAM / Secrets,4,HashiCorp Vault,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+PAM / Secrets,5,AWS Secrets Manager,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+PAM / Secrets,6,Azure Key Vault,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+PAM / Secrets,7,Google Secret Manager,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+PAM / Secrets,8,Akeyless,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+PAM / Secrets,9,1Password Business,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+PAM / Secrets,10,Keeper Security,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Security Awareness,1,KnowBe4,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Security Awareness,2,Hoxhunt,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Security Awareness,3,Cofense,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Security Awareness,4,Proofpoint Security Awareness,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Security Awareness,5,Mimecast Awareness,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Security Awareness,6,Infosec IQ,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Security Awareness,7,Terranova,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Security Awareness,8,Ninjio,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Security Awareness,9,Living Security,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Security Awareness,10,SoSafe,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Backup / Recovery,1,Rubrik,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Backup / Recovery,2,Cohesity,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Backup / Recovery,3,Veeam,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Backup / Recovery,4,Commvault,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Backup / Recovery,5,Zerto,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Backup / Recovery,6,Druva,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Backup / Recovery,7,Acronis,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Backup / Recovery,8,AWS Backup,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Backup / Recovery,9,Azure Backup,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Backup / Recovery,10,Google Backup and DR,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Threat Intel,1,Recorded Future,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Threat Intel,2,Anomali,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Threat Intel,3,Mandiant Advantage,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Threat Intel,4,GuidePoint Intel,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Threat Intel,5,VirusTotal,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Threat Intel,6,CrowdStrike Intelligence,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Threat Intel,7,Palo Alto Unit 42,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Threat Intel,8,Microsoft Defender TI,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Threat Intel,9,Intel 471,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+Threat Intel,10,Flashpoint,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+AppSec / DevSecOps,1,Checkmarx,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+AppSec / DevSecOps,2,Veracode,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+AppSec / DevSecOps,3,Snyk,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+AppSec / DevSecOps,4,SonarQube,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+AppSec / DevSecOps,5,GitHub Advanced Security,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+AppSec / DevSecOps,6,GitLab Security,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+AppSec / DevSecOps,7,Aqua Security,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+AppSec / DevSecOps,8,Prisma Cloud Compute,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+AppSec / DevSecOps,9,Black Duck,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+AppSec / DevSecOps,10,Mend.io,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+MDM / Endpoint Management,1,Microsoft Intune,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+MDM / Endpoint Management,2,Jamf Pro,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+MDM / Endpoint Management,3,VMware Workspace ONE,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+MDM / Endpoint Management,4,Kandji,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+MDM / Endpoint Management,5,Ivanti Neurons,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+MDM / Endpoint Management,6,ManageEngine Endpoint Central,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+MDM / Endpoint Management,7,Cisco Meraki Systems Manager,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+MDM / Endpoint Management,8,Hexnode,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+MDM / Endpoint Management,9,Mosyle,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
+MDM / Endpoint Management,10,Tanium,Connector candidate,Use category connector pattern; vendor-specific endpoint template required
