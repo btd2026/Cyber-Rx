@@ -22,6 +22,7 @@ import IngestionUploader from "./components/IngestionUploader";
 import CrosswalkPanel from "./components/CrosswalkPanel";
 import CfoExposurePanel from "./components/CfoExposurePanel";
 import PersonaDashboard from "./components/PersonaDashboard";
+import ControlAssessment from "./components/ControlAssessment";
 import FrameworkScoreStrip from "./components/FrameworkScoreStrip";
 import RemediationPanel from "./components/RemediationPanel";
 import AuditDash from "./pages/AuditDash";
@@ -174,6 +175,7 @@ var NAV_GROUPS = [
     label: "Operations",
     items: [
       {id:"setup",     label:"Organization Intake", icon:"🏢", mod:"F02"},
+      {id:"cae",       label:"Control Assessment",  icon:"🔌", mod:"F04b"},
       {id:"controls",  label:"Control Validation",  icon:"✓",  mod:"F04"},
       {id:"scoring",   label:"Risk Scoring + MITRE",icon:"📈", mod:"F05"},
     ]
@@ -25799,6 +25801,7 @@ function CyberRxApp() {
     if (page==="cfo")       { return React.createElement(PersonaDashboard, Object.assign({}, sharedProps, {role:"CFO",   overview: React.createElement(CFODash,   Object.assign({}, sharedProps, {embedded:true}))})); }
     if (page==="boarddash") { return React.createElement(PersonaDashboard, Object.assign({}, sharedProps, {role:"Board", overview: React.createElement(BoardDash, Object.assign({}, sharedProps, {embedded:true}))})); }
     if (page==="controls")  { return React.createElement(Controls,  sharedProps); }
+    if (page==="cae")       { return React.createElement(ControlAssessment, sharedProps); }
     if (page==="assets")    { return React.createElement(ClaimLifecycle, sharedProps); }
     if (page==="vendormap") { return React.createElement(VendorEcosystem, sharedProps); }
     if (page==="scoring")   { return React.createElement(Scoring,   sharedProps); }
