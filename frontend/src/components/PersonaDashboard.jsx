@@ -26,12 +26,13 @@ const sc = (s) => C[band(s)];
 
 // Per-role framing + the extra tabs (beyond the common ones).
 const ROLES = {
-  CIO: { navId: 'cio', tag: 'CIO · Technology Risk', lead: 'One trustworthy picture across your systems — inventory reconciled, posture tied to audit readiness.', panels: [{ id: 'systems', label: 'Systems & Inventory', el: (p) => <ResolutionPanel {...p} /> }] },
-  CFO: { navId: 'cfo', tag: 'CFO · Financial Exposure', lead: 'What our security dollars buy down — cyber risk in business-weighted dollars against today’s assessment.', panels: [{ id: 'exposure', label: 'Exposure ($)', el: (p) => <CfoExposurePanel {...p} /> }] },
-  CRO: { navId: 'cro', tag: 'CRO · Operational Resilience', lead: 'Cyber tied to operational resilience and risk appetite — RTO bridge and dependency blast-radius.', panels: [{ id: 'boardpack', label: 'Board Pack', el: (p) => <CroBoardReport {...p} /> }] },
-  CLO: { navId: 'clo', tag: 'CLO · Oversight & Compliance', lead: 'Provable oversight — one assessment across CSF / 800-53 / CIS with full, audit-ready control lineage.', panels: [{ id: 'lineage', label: 'Audit Lineage', el: (p) => <AuditLineagePanel {...p} /> }] },
-  Board: { navId: 'boarddash', tag: 'Board · Executive Risk', lead: 'Enterprise cyber risk in business terms — posture, exposure, and resilience at a glance.', panels: [{ id: 'boardpack', label: 'Board Pack', el: (p) => <CroBoardReport {...p} /> }] },
+  CIO: { navId: 'cio', tag: 'CIO · Technology Risk', title: 'Executive Technology Risk', lead: 'One trustworthy picture across your systems — inventory reconciled, posture tied to audit readiness.', panels: [{ id: 'systems', label: 'Systems & Inventory', el: (p) => <ResolutionPanel {...p} /> }] },
+  CFO: { navId: 'cfo', tag: 'CFO · Financial Exposure', title: 'Executive Financial Exposure', lead: 'What our security dollars buy down — cyber risk in business-weighted dollars against today’s assessment.', panels: [{ id: 'exposure', label: 'Exposure ($)', el: (p) => <CfoExposurePanel {...p} /> }] },
+  CRO: { navId: 'cro', tag: 'CRO · Operational Resilience', title: 'Executive Risk & Resilience', lead: 'Cyber tied to operational resilience and risk appetite — RTO bridge and dependency blast-radius.', panels: [{ id: 'boardpack', label: 'Board Pack', el: (p) => <CroBoardReport {...p} /> }] },
+  CLO: { navId: 'clo', tag: 'CLO · Oversight & Compliance', title: 'Executive Oversight & Compliance', lead: 'Provable oversight — one assessment across CSF / 800-53 / CIS with full, audit-ready control lineage.', panels: [{ id: 'lineage', label: 'Audit Lineage', el: (p) => <AuditLineagePanel {...p} /> }] },
+  Board: { navId: 'boarddash', tag: 'Board · Executive Risk', title: 'Enterprise Cyber Risk', lead: 'Enterprise cyber risk in business terms — posture, exposure, and resilience at a glance.', panels: [{ id: 'boardpack', label: 'Board Pack', el: (p) => <CroBoardReport {...p} /> }] },
 };
+const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
 
 function ctx(props) {
   const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
@@ -50,13 +51,17 @@ export default function PersonaDashboard(props) {
   const panelProps = { authToken: token, orgId, api_url: api };
   const [tab, setTab] = useState('brief');
   const [d, setD] = useState(null);
+  const [kq, setKq] = useState(null);
+  const [openCard, setOpenCard] = useState(null);
   const voice = useAgentVoice();
 
   useEffect(() => {
     const h = { 'X-Org-Id': orgId }; if (token) h.Authorization = `Bearer ${token}`;
     fetch(`${api}/api/ciso/dashboard?org_id=${encodeURIComponent(orgId)}`, { headers: h })
       .then((r) => (r.ok ? r.json() : null)).then(setD).catch(() => {});
-  }, [api, orgId, token]);
+    fetch(`${api}/api/agents/key-questions/${role}?org_id=${encodeURIComponent(orgId)}`, { headers: h })
+      .then((r) => (r.ok ? r.json() : null)).then(setKq).catch(() => {});
+  }, [api, orgId, token, role]);
 
   const p = d && d.overallPosture;
   const refreshed = d && d.generatedAt ? new Date(d.generatedAt).toLocaleString() : '';
@@ -83,7 +88,7 @@ export default function PersonaDashboard(props) {
             </div>
             <div>
               <div style={{ fontSize: 10, fontWeight: 600, color: '#8fa3bd', textTransform: 'uppercase', letterSpacing: '0.16em' }}>{cfg.tag}</div>
-              <h2 style={{ margin: '4px 0 6px', fontSize: 22, fontWeight: 700 }}>{props.orgName ? props.orgName : 'Enterprise'} cyber posture</h2>
+              <h2 style={{ margin: '4px 0 6px', fontSize: 22, fontWeight: 700 }}>{cfg.title}</h2>
               {p && (
                 <div style={{ display: 'flex', gap: 14, alignItems: 'center', fontSize: 12.5, color: '#cbd5e1', flexWrap: 'wrap' }}>
                   <span>Last period <strong style={{ color: '#fff' }}>{p.previous}</strong></span>
@@ -93,10 +98,26 @@ export default function PersonaDashboard(props) {
               )}
             </div>
           </div>
-          <VoiceControls voice={voice} onReplay={() => voice.speak(cfg.lead + (p ? ` Overall posture ${p.current} of 100, ${band(p.current)}.` : ''))} label="Listen" />
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <button onClick={() => setTab('summary')} style={{ background: '#1d4ed8', color: '#fff', border: 'none', borderRadius: 7, padding: '8px 13px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>⤓ PDF report</button>
+            <button onClick={() => setTab('summary')} style={{ background: 'transparent', color: '#cbd5e1', border: '1px solid #33425c', borderRadius: 7, padding: '8px 13px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>⤓ PowerPoint</button>
+            <VoiceControls voice={voice} onReplay={() => voice.speak((kq && kq.headline ? kq.headline + '. ' : '') + cfg.lead)} label="Listen" />
+          </div>
         </div>
-        <div style={{ marginTop: 14, fontSize: 13, color: '#e2e8f0', lineHeight: 1.5, maxWidth: 920 }}>{cfg.lead}</div>
-        {d && d.domainMatrix && (
+        {/* Role-specific headline (live from this seat's agent) */}
+        <div style={{ marginTop: 14, fontSize: 13.5, color: '#fff', fontWeight: 600, lineHeight: 1.5, maxWidth: 920 }}>{kq && kq.headline ? kq.headline : cfg.lead}</div>
+        <div style={{ marginTop: 4, fontSize: 12, color: '#cbd5e1', lineHeight: 1.5, maxWidth: 920 }}>{cfg.lead}</div>
+        {/* Role metric chips (this seat's numbers), falling back to security domains */}
+        {kq && Array.isArray(kq.metrics) && kq.metrics.length ? (
+          <div style={{ display: 'flex', gap: 6, marginTop: 14, flexWrap: 'wrap' }}>
+            {kq.metrics.map((m, i) => (
+              <div key={i} style={{ flex: 1, minWidth: 120, background: '#16263b', borderRadius: 5, padding: '7px 9px' }}>
+                <div style={{ fontSize: 9.5, color: '#8fa3bd', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.label}</div>
+                <div style={{ fontSize: 17, fontWeight: 700, color: '#fff' }}>{m.value}</div>
+              </div>
+            ))}
+          </div>
+        ) : d && d.domainMatrix && (
           <div style={{ display: 'flex', gap: 6, marginTop: 14, flexWrap: 'wrap' }}>
             {d.domainMatrix.filter((x) => x.weight > 0).map((x) => (
               <div key={x.id} title={`${x.name} ${x.current}`} style={{ flex: 1, minWidth: 92, background: '#16263b', borderRadius: 5, padding: '7px 9px' }}>
@@ -116,7 +137,34 @@ export default function PersonaDashboard(props) {
       </div>
 
       <div style={{ background: '#fff', borderRadius: '0 0 8px 8px', padding: '18px 22px' }}>
-        {tab === 'brief' && <ExecutiveAgentBrief role={role} entry onAnswer={() => setTab('details')} onGeneral={() => setTab('details')} {...panelProps} />}
+        {tab === 'brief' && (
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Current State</div>
+            <div style={{ background: NAVY, color: '#dbe4f0', borderRadius: 8, padding: '12px 16px', fontSize: 12.5, lineHeight: 1.55, marginBottom: 14 }}>
+              These are the <strong style={{ color: '#fff' }}>key questions every {role} should be able to answer at any time</strong>. Each shows where you stand right now — select a question for the full detail: the answer, the evidence behind it, and who owns it.
+            </div>
+            {!kq ? <div style={{ fontSize: 12, color: INK3 }}>Composing your {role} brief…</div> : (
+              <div style={{ display: 'grid', gap: 8, marginBottom: 18 }}>
+                {(kq.keyQuestions || []).map((c) => {
+                  const open = openCard === c.n;
+                  return (
+                    <div key={c.n} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${SEV[c.severity] || INK3}`, borderRadius: 8, padding: '11px 14px' }}>
+                      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
+                        <div style={{ fontSize: 13.5, fontWeight: 700, color: INK }}><span style={{ color: INK3, marginRight: 8 }}>{c.n}</span>{c.question}</div>
+                        <span style={{ fontSize: 9.5, fontWeight: 700, color: '#fff', background: SEV[c.severity] || INK3, borderRadius: 4, padding: '2px 8px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{c.severity}</span>
+                      </div>
+                      <div style={{ fontSize: 12, color: INK2, marginTop: 5, lineHeight: 1.5 }}>{c.summary}</div>
+                      <button onClick={() => setOpenCard(open ? null : c.n)} style={{ background: 'none', border: 'none', color: '#1d4ed8', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', padding: '6px 0 0' }}>{open ? 'Hide details' : 'View details →'}</button>
+                      {open && <div style={{ fontSize: 11.5, color: INK2, marginTop: 6, paddingTop: 8, borderTop: `1px solid ${HAIR}`, lineHeight: 1.55 }}>{c.detail}</div>}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            <div style={{ fontSize: 11, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Ask your {role} agent</div>
+            <ExecutiveAgentBrief role={role} entry onAnswer={() => setTab('details')} onGeneral={() => setTab('details')} {...panelProps} />
+          </div>
+        )}
         {tab === 'summary' && <ExecutiveSummaryEditor {...panelProps} />}
         {tab === 'risk' && <BusinessRiskPanel {...panelProps} />}
         {cfg.panels.map((x) => (tab === x.id ? <div key={x.id}>{x.el(panelProps)}</div> : null))}

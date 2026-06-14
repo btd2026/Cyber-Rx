@@ -106,6 +106,22 @@ router.get('/questions/:role', optionalJWT, async (req, res) => {
   });
 });
 
+// Role "Current State" — the 5 key questions for a seat with live answers + severity.
+router.get('/key-questions/:role', optionalJWT, async (req, res) => {
+  const orgId = resolveOrg(req, res);
+  if (!orgId) return;
+  const role = req.params.role;
+  if (!ExecutiveAgentService.isValidRole(role)) {
+    return res.status(400).json({ error: 'Invalid role', validRoles: ExecutiveAgentService.ROLE_KEYS });
+  }
+  try {
+    res.json(await ExecutiveAgentService.getKeyQuestions(role, orgId));
+  } catch (err) {
+    logger.error('Agent key-questions error', { error: err.message });
+    res.status(500).json({ error: 'Failed to load key questions', message: err.message });
+  }
+});
+
 // Interactive Q&A: the executive asks a question; the agent returns a summary
 // plus the relevant supporting details, grounded in live org data.
 router.post('/ask/:role', optionalJWT, async (req, res) => {
