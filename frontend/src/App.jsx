@@ -20,6 +20,7 @@ import CisoAgentPanel from "./components/CisoAgentPanel";
 import OrganizationIntakeDocuments from "./components/OrganizationIntakeDocuments";
 import IngestionUploader from "./components/IngestionUploader";
 import CrosswalkPanel from "./components/CrosswalkPanel";
+import CfoExposurePanel from "./components/CfoExposurePanel";
 import FrameworkScoreStrip from "./components/FrameworkScoreStrip";
 import RemediationPanel from "./components/RemediationPanel";
 import AuditDash from "./pages/AuditDash";
@@ -10895,6 +10896,7 @@ function CFODash(props) {
           }}
         />}
       <DashNav current="cfo" go={go}/>
+      <CfoExposurePanel />
       <BrianaBar pageKey="cfo" orgName={props.orgName||""} brianaOn={props.brianaOn!==false} setBrianaOn={props.setBrianaOn||function(){}}/>
 
       {/* AI agent brief - the tab opens here; a question selects the tab below */}

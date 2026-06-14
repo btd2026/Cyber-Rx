@@ -15,6 +15,7 @@
 import React, { useState, useEffect } from 'react';
 import ExecutiveAgentBrief from '../components/ExecutiveAgentBrief';
 import DashNav from '../components/DashNav';
+import AuditLineagePanel from '../components/AuditLineagePanel';
 
 const CLODash = (props) => {
   const { goBack, authToken, orgId, api_url } = props;
@@ -158,6 +159,7 @@ const CLODash = (props) => {
   return (
     <div style={{ padding: '2rem', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
       <DashNav current="clo" go={props.go} />
+      <AuditLineagePanel authToken={authToken} orgId={orgId} api_url={api_url} />
       {/* Header */}
       <div style={{
         marginBottom: '2rem',

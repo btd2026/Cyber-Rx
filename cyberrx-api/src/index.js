@@ -270,6 +270,11 @@ app.use('/api/risk',              [apiGetLimiter], require('./routes/risk-output
 // Cross-tenant benchmarking (Phase 7 scaffold; flag-gated, consent-bounded)
 app.use('/api/benchmark',         [apiGetLimiter, apiPostLimiter], require('./routes/benchmark'));
 
+// Entity resolution (CIO) · CFO exposure · CLO audit lineage
+app.use('/api/resolution',        [apiGetLimiter, apiPostLimiter], require('./routes/resolution'));
+app.use('/api/cfo',               [apiGetLimiter], require('./routes/cfo'));
+app.use('/api/audit',             [apiGetLimiter], require('./routes/audit'));
+
 // Saraqael — vendor document assessment agent (every doc type + cross-validation)
 app.use('/api/vendor-assessment', [apiGetLimiter, apiPostLimiter], require('./routes/vendorAssessment'));
 

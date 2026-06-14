@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import BusinessRiskPanel from './BusinessRiskPanel';
 
 const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e2e8f0', PANEL = '#f8fafc';
 const GREEN = '#1f8a4c', AMBER = '#B07C2E', RED = '#C0392B';
@@ -111,6 +112,10 @@ export default function CroBoardReport(props) {
         ({data.profileCoverage.coveredControls} of {data.profileCoverage.totalControls}). Maturity assessed at <strong>Tier {data.maturityTier.tier} — {data.maturityTier.label}</strong>.
       </div>
       <div style={{ marginTop: 12, fontSize: 10, color: INK3 }}>Computed from validation run #{data.runId}. Figures trace to stored checks; see the exported pack's appendix.</div>
+
+      {/* Operational resilience — RTO bridge, dependency blast radius, business-weighted risk */}
+      <h3 style={{ fontSize: 13, color: INK, margin: '24px 0 8px' }}>Operational resilience & business-weighted risk</h3>
+      <BusinessRiskPanel orgId={orgId} authToken={token} apiUrl={api} />
     </div>
   );
 }
