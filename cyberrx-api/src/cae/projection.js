@@ -41,4 +41,24 @@ function projectConnectionStatus(row) {
   };
 }
 
-module.exports = { projectTool, projectConnectorField, projectConnectionStatus };
+// Assessment result: the executive-ready, user-safe subset only. The weighted
+// composite (score_pct), raw evidence ref, run id, and review flag stay internal.
+function projectResult(row) {
+  if (!row) return null;
+  return {
+    framework: row.framework,
+    control_id: row.control_id,
+    control_name: row.control_name,
+    status: row.status,                                  // passed|failed|partial|not_tested|needs_manual_evidence
+    score: row.score == null ? null : Number(row.score), // 0–5 band
+    confidence: row.confidence == null ? null : Number(row.confidence), // 0–100
+    business_risk: row.business_risk || null,
+    summary_finding: row.summary_finding || null,
+    evidence_source: row.evidence_source_name || null,   // source NAME only, never raw evidence
+    recommended_action: row.recommended_action || null,
+    owner: row.owner || null,
+    due_date: row.due_date || null,
+  };
+}
+
+module.exports = { projectTool, projectConnectorField, projectConnectionStatus, projectResult };

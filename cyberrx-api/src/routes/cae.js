@@ -21,6 +21,7 @@ const express = require('express');
 const router = express.Router();
 const { optionalJWT, demoOrg } = require('../middleware/auth');
 const svc = require('../cae/onboardingService');
+const assess = require('../cae/assessmentService');
 
 router.use(optionalJWT, demoOrg);
 
@@ -74,6 +75,28 @@ router.delete('/connections/:tool', async (req, res) => {
   if (!req.orgId) return res.status(400).json({ error: 'Organization required.' });
   try { res.json(await svc.removeConnection(req.orgId, req.params.tool)); }
   catch (e) { res.status(500).json({ error: 'Unable to remove the connection.' }); }
+});
+
+// ── Assessment (framework tabs) ────────────────────────────────────────────
+// Run an assessment across one or more frameworks (each assessed independently).
+router.post('/assessment/run', async (req, res) => {
+  if (!req.orgId) return res.status(400).json({ error: 'Organization required.' });
+  try { res.json(await assess.runAssessment(req.orgId, (req.body && req.body.frameworks))); }
+  catch (e) { res.status(500).json({ error: 'Unable to run the assessment.' }); }
+});
+
+// Per-framework executive results (projected). ?framework=nist_csf_2_0
+router.get('/assessment', async (req, res) => {
+  if (!req.orgId) return res.status(400).json({ error: 'Organization required.' });
+  try { res.json(await assess.getResults(req.orgId, req.query.framework)); }
+  catch (e) { res.status(500).json({ error: 'Unable to load results.' }); }
+});
+
+// Per-framework rollup (status counts + average).
+router.get('/assessment/summary', async (req, res) => {
+  if (!req.orgId) return res.status(400).json({ error: 'Organization required.' });
+  try { res.json(await assess.getSummary(req.orgId)); }
+  catch (e) { res.status(500).json({ error: 'Unable to load the summary.' }); }
 });
 
 module.exports = router;
