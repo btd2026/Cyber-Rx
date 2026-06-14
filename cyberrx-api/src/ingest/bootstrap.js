@@ -70,6 +70,12 @@ async function bootstrap() {
     else steps.cisoDashboard = 'present';
   } catch (e) { logger.warn('bootstrap: CISO dashboard seed failed', { error: e.message }); }
 
+  try {
+    // Organization Intake document catalog (document_type + document_control_map).
+    // Idempotent upsert; cheap to re-run so curated catalog edits take effect on boot.
+    steps.intakeCatalog = await require('./seedIntakeCatalog').seed();
+  } catch (e) { logger.warn('bootstrap: intake catalog seed failed', { error: e.message }); }
+
   return steps;
 }
 
