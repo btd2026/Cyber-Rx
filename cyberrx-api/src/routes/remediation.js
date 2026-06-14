@@ -9,6 +9,7 @@
 const express = require('express');
 const router = express.Router();
 const RemediationPathService = require('../services/RemediationPathService');
+const RiskAcceptanceService = require('../services/RiskAcceptanceService');
 const { optionalJWT } = require('../middleware/auth');
 const logger = require('../utils/logger');
 
@@ -61,6 +62,36 @@ router.post('/ticket/refresh', optionalJWT, async (req, res) => {
     if (!sourceRef) return res.status(400).json({ error: 'sourceRef is required' });
     res.json({ ticket: await RemediationPathService.refreshStatus(orgId, sourceRef) });
   } catch (err) { logger.error('Remediation refresh error', { error: err.message }); res.status(500).json({ error: err.message }); }
+});
+
+// ----- Risk acceptance — the CISO's documented "accept as-is" decision -----
+router.post('/risk-acceptance', optionalJWT, async (req, res) => {
+  const orgId = resolveOrg(req, res);
+  if (!orgId) return;
+  try {
+    res.json({ acceptance: await RiskAcceptanceService.accept(orgId, req.body || {}) });
+  } catch (err) {
+    const code = /required/.test(err.message) ? 400 : 500;
+    logger.error('Risk acceptance error', { error: err.message });
+    res.status(code).json({ error: err.message });
+  }
+});
+
+router.get('/risk-acceptance', optionalJWT, async (req, res) => {
+  const orgId = resolveOrg(req, res);
+  if (!orgId) return;
+  try { res.json({ acceptance: await RiskAcceptanceService.getByRef(orgId, req.query.sourceRef) }); }
+  catch (err) { logger.error('Risk acceptance get error', { error: err.message }); res.status(500).json({ error: err.message }); }
+});
+
+router.post('/risk-acceptance/revoke', optionalJWT, async (req, res) => {
+  const orgId = resolveOrg(req, res);
+  if (!orgId) return;
+  try {
+    const sourceRef = (req.body && req.body.sourceRef) || req.query.sourceRef;
+    if (!sourceRef) return res.status(400).json({ error: 'sourceRef is required' });
+    res.json({ acceptance: await RiskAcceptanceService.revoke(orgId, sourceRef) });
+  } catch (err) { logger.error('Risk acceptance revoke error', { error: err.message }); res.status(500).json({ error: err.message }); }
 });
 
 module.exports = router;

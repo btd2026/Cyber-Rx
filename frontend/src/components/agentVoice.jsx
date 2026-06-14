@@ -63,7 +63,7 @@ export function VoiceControls({ voice, onReplay, label }) {
     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
       {!muted && onReplay && (
         <button onClick={() => (speaking ? stop() : onReplay())} style={{ ...btn, background: speaking ? '#C0392B' : '#0f172a', color: '#fff' }}>
-          {speaking ? '■ Stop' : `▶ ${label || 'Hear Michael'}`}
+          {speaking ? '■ Stop' : `▶ ${label || 'Listen'}`}
         </button>
       )}
       <button onClick={() => setMuted(!muted)} title={muted ? 'Unmute the agent' : 'Mute the agent'}

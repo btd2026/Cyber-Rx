@@ -41,6 +41,7 @@ export default function TicketControl(props) {
   const [ticket, setTicket] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [ownerInput, setOwnerInput] = useState(owner || '');
 
   const headers = useCallback(() => {
     const h = { 'X-Org-Id': orgId, 'Content-Type': 'application/json' };
@@ -60,7 +61,7 @@ export default function TicketControl(props) {
     setBusy(true); setError(null);
     fetch(`${api}/api/remediation/ticket`, {
       method: 'POST', headers: headers(),
-      body: JSON.stringify({ org_id: orgId, sourceRef, title, recommendation, severity, owner, system, source: 'CISO dashboard' }),
+      body: JSON.stringify({ org_id: orgId, sourceRef, title, recommendation, severity, owner: ownerInput || owner, system, source: 'CISO dashboard' }),
     }).then((r) => r.json()).then((t) => setTicket(t)).catch((e) => setError(e.message)).finally(() => setBusy(false));
   };
 
@@ -76,6 +77,11 @@ export default function TicketControl(props) {
   if (!ticket) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, color: INK2 }}>
+          Assign owner
+          <input value={ownerInput} onChange={(e) => setOwnerInput(e.target.value)} placeholder="e.g. IAM Lead"
+            style={{ border: `1px solid ${HAIR}`, borderRadius: 6, padding: '6px 9px', fontSize: 12, color: INK, minWidth: 140 }} />
+        </label>
         <button onClick={open} disabled={busy}
           style={{ background: '#0f1b2d', color: '#fff', border: 'none', borderRadius: 7, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}>
           {busy ? 'Opening…' : `＋ Open ticket in ${sysLabel}`}
