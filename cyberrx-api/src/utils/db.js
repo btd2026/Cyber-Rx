@@ -791,6 +791,26 @@ async function init() {
       ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS criticality_profile_id TEXT;
       ALTER TABLE framework_requirements ADD COLUMN IF NOT EXISTS assessment_type TEXT; -- automated | manual | hybrid
 
+      -- Cross-tenant benchmarking (Phase 7 scaffold; flag-gated, consent-bounded).
+      -- Tenant opt-in (give-to-get) for anonymized capability benchmarks.
+      CREATE TABLE IF NOT EXISTS benchmark_consent (
+        org_id     TEXT PRIMARY KEY REFERENCES orgs(id) ON DELETE CASCADE,
+        consented  BOOLEAN DEFAULT false,
+        scope      TEXT DEFAULT 'capabilities',
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      -- A shared dependency (e.g. NASCO) assessed ONCE, surfaced to dependents.
+      -- SHARED reference data (no organization_id); keyed by canonical dependency id.
+      CREATE TABLE IF NOT EXISTS shared_dependency_assessment (
+        id          TEXT PRIMARY KEY,
+        catalog_ref TEXT NOT NULL,
+        name        TEXT,
+        score       NUMERIC,
+        summary     TEXT,
+        assessed_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS shared_dependency_assessment_ref ON shared_dependency_assessment(catalog_ref);
+
       -- ===== Organization Intake — document request & review pipeline =====
       -- Canonical "thing we ask for" (requested at most once per org).
       CREATE TABLE IF NOT EXISTS document_type (

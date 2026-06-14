@@ -54,7 +54,14 @@ different processes is configuration, never a fork.
 `migrations/2026_06_14_linkage_reference_model.sql` mirrors the idempotent
 additions in `src/utils/db.js`.
 
-## Roadmap
-P2 generic ingestion · P3 wizard (process inventory, CMDB, crosswalk, dual
-evidence) · P4 unified assessment engine · P5 risk outputs · P6 sample-doc
-generator · P7 cross-tenant benchmarking.
+## Roadmap (all phases implemented)
+- **P1** data model + canonical taxonomy ✅ (`db.js`, `payerCapabilityTaxonomy.js`)
+- **P2** generic ingestion ✅ (`src/ingestion/*`, `/api/ingestion`)
+- **P3** wizard: process inventory, CMDB, crosswalk ✅ (`src/crosswalk/*`, `/api/crosswalk`, `IngestionUploader`/`CrosswalkPanel`)
+- **P4** unified assessment engine ✅ (`AssessmentEngine`, `/api/assessment`)
+- **P5** risk outputs ✅ (`RiskOutputsService`, `/api/risk`)
+- **P6** pilot sample-document generator ✅ flag `PILOT_SAMPLE_DOCS` (`SampleDocService`)
+- **P7** cross-tenant benchmarking scaffold ✅ flag `CROSS_TENANT_BENCHMARKING` (`BenchmarkService`, `/api/benchmark`)
+
+Verified by unit tests; run against a live DB/app to apply migrations + seeds
+and exercise the endpoints.

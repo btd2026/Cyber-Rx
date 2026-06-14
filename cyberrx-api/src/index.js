@@ -267,6 +267,9 @@ app.use('/api/assessment',        [apiGetLimiter, apiPostLimiter, apiPutLimiter]
 // Business-impact-weighted risk outputs (crown jewels, blast radius, gaps, ATT&CK)
 app.use('/api/risk',              [apiGetLimiter], require('./routes/risk-outputs'));
 
+// Cross-tenant benchmarking (Phase 7 scaffold; flag-gated, consent-bounded)
+app.use('/api/benchmark',         [apiGetLimiter, apiPostLimiter], require('./routes/benchmark'));
+
 // Saraqael — vendor document assessment agent (every doc type + cross-validation)
 app.use('/api/vendor-assessment', [apiGetLimiter, apiPostLimiter], require('./routes/vendorAssessment'));
 
