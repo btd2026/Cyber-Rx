@@ -4652,6 +4652,9 @@ function Setup(props) {
                                var extractedProcs=_epx[0]; var setExtractedProcs=_epx[1];
   var _epb=useState(false);    var extracting=_epb[0];     var setExtracting=_epb[1];
   var _epm=useState(null);     var extractMeta=_epm[0];    var setExtractMeta=_epm[1];
+  // Editable function → process → sub-process tree built from the uploaded file.
+  var _ept=useState(Array.isArray(_saved.procTree)?_saved.procTree:[]);
+                               var procTree=_ept[0];       var setProcTree=_ept[1];
   var _s9=useState(_saved.appSel||"");        var appSel=_s9[0];      var setAppSel=_s9[1];
   var _s10=useState(_saved.appConn||{});      var appConn=_s10[0];    var setAppConn=_s10[1];
   var _s11=useState("sample"); var appTab=_s11[0];     var setAppTab=_s11[1];
@@ -4679,6 +4682,7 @@ function Setup(props) {
         orgName: orgName,
         selProcs: Array.from(selProcs),
         extractedProcs: extractedProcs,
+        procTree: procTree,
         appSel: appSel,
         appConn: appConn,
         vendorSel: vendorSel,
@@ -4689,7 +4693,7 @@ function Setup(props) {
       });
     }, 1200);
     return function(){ if (persistTimerRef.current) { clearTimeout(persistTimerRef.current); } };
-  }, [selProcs, extractedProcs, appSel, appConn, vendorSel, infraSel, infraConn, orgName]);
+  }, [selProcs, extractedProcs, procTree, appSel, appConn, vendorSel, infraSel, infraConn, orgName]);
 
     useEffect(function(){
     if(step!==4)return;
@@ -4821,10 +4825,27 @@ function Setup(props) {
       })
         .then(function(r){return r.json();})
         .then(function(d){
+          var fns=(d&&d.functions)||[];
+          // Build an editable tree: every process/sub-process starts included.
+          var tree=fns.map(function(f){
+            return {
+              function:f.function,
+              processes:(f.processes||[]).map(function(p){
+                return {
+                  id:p.id, pid:matchCanonicalProc(p.name)||p.id, name:p.name,
+                  tier:p.tier||"", rto:p.rto||"", include:true,
+                  subprocesses:(p.subprocesses||[]).map(function(s){
+                    return {id:s.id, name:s.name, tier:s.tier||"", rto:s.rto||"", include:true};
+                  })
+                };
+              })
+            };
+          });
+          setProcTree(tree);
           var flat=(d&&d.flat)||[];
           flat=flat.map(function(p){return Object.assign({},p,{pid:matchCanonicalProc(p.name)||p.id});});
           setExtractedProcs(flat);
-          setSelProcs(new Set(flat.map(function(p){return p.pid;})));  // pre-select all; user unchecks
+          syncSelFromTree(tree);
           setExtractMeta({engine:(d&&d.engine)||"none",count:flat.length,note:d&&d.note});
         })
         .catch(function(err){ setExtractMeta({error:err.message}); })
@@ -4832,6 +4853,27 @@ function Setup(props) {
     };
     reader.readAsDataURL(file);
   }
+  // Selected processes = the included top-level processes in the validated tree.
+  function syncSelFromTree(tree){
+    var ids=[];
+    (tree||[]).forEach(function(f){(f.processes||[]).forEach(function(p){ if(p.include) ids.push(p.pid||p.id); });});
+    setSelProcs(new Set(ids));
+  }
+  function updateTree(mutator){
+    setProcTree(function(t){
+      var next=JSON.parse(JSON.stringify(t||[]));
+      mutator(next);
+      syncSelFromTree(next);
+      return next;
+    });
+  }
+  function setProcField(fi,pi,field,val){ updateTree(function(t){ t[fi].processes[pi][field]=val; }); }
+  function setSubField(fi,pi,si,field,val){ updateTree(function(t){ t[fi].processes[pi].subprocesses[si][field]=val; }); }
+  function addProcess(fi){ updateTree(function(t){ t[fi].processes.push({id:"new_"+Date.now(),pid:"new_"+Date.now(),name:"",tier:"",rto:"",include:true,subprocesses:[]}); }); }
+  function addSub(fi,pi){ updateTree(function(t){ t[fi].processes[pi].subprocesses.push({id:"news_"+Date.now(),name:"",tier:"",rto:"",include:true}); }); }
+  function removeProcess(fi,pi){ updateTree(function(t){ t[fi].processes.splice(pi,1); }); }
+  function removeSub(fi,pi,si){ updateTree(function(t){ t[fi].processes[pi].subprocesses.splice(si,1); }); }
+  function addFunction(){ updateTree(function(t){ t.push({function:"New function",processes:[]}); }); }
   function toggleApp(pid, appName) {
     setAppSel(function(s){
       var cur = s[pid]||{};
@@ -5595,63 +5637,77 @@ function Setup(props) {
             </Card>
 
             <Card style={{marginBottom:14}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-                <SH label={extractedProcs.length>0?"Validate the extracted processes":"Which business processes are in scope?"}/>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                <SH label={procTree.length>0?"Validate & correct — functions · processes · sub-processes":"Which business processes are in scope?"}/>
+                {procTree.length>0 ? (
+                  <button onClick={addFunction}
+                    style={{background:"transparent",border:"1px solid "+C.border,color:C.acc,cursor:"pointer",fontSize:10,fontWeight:700,borderRadius:6,padding:"3px 10px"}}>+ Add function</button>
+                ) : (
                 <div style={{display:"flex",gap:8}}>
-                  <button onClick={function(){
-                      if(extractedProcs.length>0){setSelProcs(new Set(extractedProcs.map(function(p){return p.pid;})));}
-                      else{setSelProcs(new Set(realOrgProcs(orgType||'Other Payer').map(function(p){return p.id;})));}
-                    }}
-                    style={{background:"transparent",border:"none",color:C.acc,cursor:"pointer",fontSize:11,fontWeight:600}}>
-                    Select all
-                  </button>
+                  <button onClick={function(){setSelProcs(new Set(realOrgProcs(orgType||'Other Payer').map(function(p){return p.id;})));}}
+                    style={{background:"transparent",border:"none",color:C.acc,cursor:"pointer",fontSize:11,fontWeight:600}}>Select all</button>
                   <button onClick={function(){setSelProcs(new Set());}}
-                    style={{background:"transparent",border:"none",color:C.muted,cursor:"pointer",fontSize:11}}>
-                    Clear
-                  </button>
+                    style={{background:"transparent",border:"none",color:C.muted,cursor:"pointer",fontSize:11}}>Clear</button>
                 </div>
+                )}
               </div>
-              {extractedProcs.length>0 ? (
-                <div style={{display:"grid",gridTemplateColumns:"1fr",gap:8}}>
-                  {(function(){
-                    // Group extracted processes by function; order by tightest RTO.
-                    var byFn={}; var order=[];
-                    extractedProcs.forEach(function(p){ if(!byFn[p.function]){byFn[p.function]=[];order.push(p.function);} byFn[p.function].push(p); });
-                    var rank=function(m){return m==null?Number.POSITIVE_INFINITY:m;};
-                    order.sort(function(a,b){ return rank(Math.min.apply(null,byFn[a].map(function(x){return rank(x.rtoMinutes);})))-rank(Math.min.apply(null,byFn[b].map(function(x){return rank(x.rtoMinutes);}))); });
-                    var tcolor=function(t){return t===1?"#EF4545":t===2?"#F5A623":t===3?"#3B9EFF":C.muted;};
-                    return order.map(function(fn){
-                      var procs=byFn[fn].slice().sort(function(a,b){return rank(a.rtoMinutes)-rank(b.rtoMinutes);});
-                      return (
-                        <div key={fn}>
-                          <div style={{color:C.acc,fontSize:11,fontWeight:700,margin:"6px 0 4px",textTransform:"uppercase",letterSpacing:"0.06em"}}>{fn}</div>
-                          {procs.map(function(p){
-                            var on=selProcs.has(p.pid);
+              {procTree.length>0&&(
+                <div style={{color:C.muted,fontSize:10.5,marginBottom:10,lineHeight:1.5}}>
+                  We extracted this from your file. Tick the items to include, fix any names, and add the <strong>Tier</strong> and <strong>RTO</strong> where they’re blank. Add anything we missed.
+                </div>
+              )}
+              {procTree.length>0 ? (
+                <div>
+                  {procTree.map(function(f,fi){
+                    return (
+                      <div key={fi} style={{marginBottom:14,border:"1px solid "+C.border,borderRadius:9,overflow:"hidden"}}>
+                        <div style={{display:"flex",alignItems:"center",gap:8,background:C.acc+"0D",padding:"8px 12px"}}>
+                          <input value={f.function} onChange={function(e){var v=e.target.value;updateTree(function(t){t[fi].function=v;});}}
+                            style={{flex:1,background:"transparent",border:"none",color:C.acc,fontSize:12,fontWeight:800,textTransform:"uppercase",letterSpacing:"0.06em",outline:"none"}}/>
+                          <button onClick={function(){addProcess(fi);}} style={{background:"transparent",border:"1px solid "+C.acc+"40",color:C.acc,borderRadius:5,padding:"2px 9px",fontSize:10,fontWeight:700,cursor:"pointer"}}>+ Process</button>
+                        </div>
+                        <div style={{padding:"8px 10px"}}>
+                          {f.processes.length===0&&<div style={{color:C.muted,fontSize:10,padding:"4px 6px"}}>No processes — add one.</div>}
+                          {f.processes.map(function(p,pi){
                             return (
-                              <div key={p.id} onClick={function(){toggleProc(p.pid);}}
-                                style={{display:"flex",gap:10,alignItems:"center",padding:"10px 12px",marginBottom:6,
-                                  background:on?C.acc+"10":C.dim,borderRadius:8,cursor:"pointer",
-                                  border:"1.5px solid "+(on?C.acc:C.border)}}>
-                                <div style={{width:18,height:18,borderRadius:4,flexShrink:0,
-                                  background:on?C.acc:C.bg,border:"1.5px solid "+(on?C.acc:C.border),
-                                  display:"flex",alignItems:"center",justifyContent:"center"}}>
-                                  {on&&<span style={{color:"#fff",fontSize:10,fontWeight:800}}>✓</span>}
+                              <div key={p.id} style={{marginBottom:7}}>
+                                <div style={{display:"flex",alignItems:"center",gap:7}}>
+                                  <input type="checkbox" checked={p.include} onChange={function(e){setProcField(fi,pi,"include",e.target.checked);}}/>
+                                  <input value={p.name} placeholder="Process name" onChange={function(e){setProcField(fi,pi,"name",e.target.value);}}
+                                    style={{flex:1,background:C.bg,border:"1px solid "+C.border,borderRadius:6,padding:"6px 8px",color:C.text,fontSize:11.5,outline:"none"}}/>
+                                  <select value={p.tier} onChange={function(e){setProcField(fi,pi,"tier",e.target.value);}} title="Criticality tier"
+                                    style={{background:C.bg,border:"1px solid "+C.border,borderRadius:6,padding:"6px 6px",color:p.tier?C.text:C.muted,fontSize:11}}>
+                                    <option value="">Tier —</option><option value="1">Tier 1</option><option value="2">Tier 2</option><option value="3">Tier 3</option><option value="4">Tier 4</option>
+                                  </select>
+                                  <input value={p.rto} placeholder="RTO" title="Recovery time objective" onChange={function(e){setProcField(fi,pi,"rto",e.target.value);}}
+                                    style={{width:62,background:C.bg,border:"1px solid "+C.border,borderRadius:6,padding:"6px 8px",color:C.text,fontSize:11,outline:"none"}}/>
+                                  <button onClick={function(){addSub(fi,pi);}} title="Add sub-process" style={{background:"transparent",border:"1px solid "+C.border,color:C.muted,borderRadius:5,padding:"4px 7px",fontSize:10,cursor:"pointer"}}>+ Sub</button>
+                                  <button onClick={function(){removeProcess(fi,pi);}} title="Remove process" style={{background:"transparent",border:"none",color:C.muted,cursor:"pointer",fontSize:14}}>×</button>
                                 </div>
-                                <div style={{flex:1}}>
-                                  <div style={{color:on?C.acc:C.text,fontSize:12,fontWeight:on?700:500}}>{p.name}</div>
-                                </div>
-                                {p.tier&&(
-                                  <span style={{fontSize:8,fontWeight:800,color:"#fff",background:tcolor(p.tier),
-                                    borderRadius:4,padding:"2px 7px"}}>TIER {p.tier}</span>
-                                )}
-                                <span style={{color:C.muted,fontSize:10,minWidth:54,textAlign:"right"}}>RTO {p.rto||"—"}</span>
+                                {p.subprocesses.map(function(s,si){
+                                  return (
+                                    <div key={s.id} style={{display:"flex",alignItems:"center",gap:7,marginTop:4,paddingLeft:30}}>
+                                      <input type="checkbox" checked={s.include} onChange={function(e){setSubField(fi,pi,si,"include",e.target.checked);}}/>
+                                      <span style={{color:C.muted,fontSize:11}}>↳</span>
+                                      <input value={s.name} placeholder="Sub-process" onChange={function(e){setSubField(fi,pi,si,"name",e.target.value);}}
+                                        style={{flex:1,background:C.bg,border:"1px solid "+C.border,borderRadius:6,padding:"5px 8px",color:C.text,fontSize:11,outline:"none"}}/>
+                                      <select value={s.tier} onChange={function(e){setSubField(fi,pi,si,"tier",e.target.value);}}
+                                        style={{background:C.bg,border:"1px solid "+C.border,borderRadius:6,padding:"5px 6px",color:s.tier?C.text:C.muted,fontSize:10.5}}>
+                                        <option value="">Tier —</option><option value="1">Tier 1</option><option value="2">Tier 2</option><option value="3">Tier 3</option><option value="4">Tier 4</option>
+                                      </select>
+                                      <input value={s.rto} placeholder="RTO" onChange={function(e){setSubField(fi,pi,si,"rto",e.target.value);}}
+                                        style={{width:62,background:C.bg,border:"1px solid "+C.border,borderRadius:6,padding:"5px 8px",color:C.text,fontSize:10.5,outline:"none"}}/>
+                                      <button onClick={function(){removeSub(fi,pi,si);}} title="Remove sub-process" style={{background:"transparent",border:"none",color:C.muted,cursor:"pointer",fontSize:13}}>×</button>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             );
                           })}
                         </div>
-                      );
-                    });
-                  })()}
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
               <div style={{display:"grid",gridTemplateColumns:"1fr",gap:8}}>
