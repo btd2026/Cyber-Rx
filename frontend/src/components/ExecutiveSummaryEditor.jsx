@@ -123,8 +123,19 @@ export default function ExecutiveSummaryEditor(props) {
           </button>
           {hasContent && !editing && <button onClick={() => setEditing(true)} style={{ background: '#fff', color: INK, border: `1px solid ${HAIR}`, borderRadius: 7, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>✎ Edit</button>}
           {editing && <button onClick={save} disabled={busy} style={{ background: GREEN, color: '#fff', border: 'none', borderRadius: 7, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}>✓ Save as reviewed</button>}
+          {hasContent && !editing && orgId && (
+            <>
+              <a href={`${api}/api/ciso/report.pdf?org_id=${encodeURIComponent(orgId)}`} title="Download the report with this summary"
+                style={{ background: '#fff', color: INK, border: `1px solid ${HAIR}`, borderRadius: 7, padding: '8px 12px', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>⤓ PDF</a>
+              <a href={`${api}/api/ciso/report.pptx?org_id=${encodeURIComponent(orgId)}`} title="Download the deck with this summary"
+                style={{ background: '#fff', color: INK, border: `1px solid ${HAIR}`, borderRadius: 7, padding: '8px 12px', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>⤓ PPTX</a>
+            </>
+          )}
         </div>
       </div>
+      {hasContent && !editing && status !== 'reviewed' && (
+        <div style={{ fontSize: 11, color: AMBER, marginBottom: 12 }}>Tip: Save as reviewed before exporting so the report uses your finalized text.</div>
+      )}
 
       {msg && <div style={{ background: '#f0f7f2', border: '1px solid #cce8d6', color: GREEN, borderRadius: 7, padding: '8px 12px', fontSize: 12, marginBottom: 12 }}>{msg}</div>}
       {error && <div style={{ background: '#fdecea', border: '1px solid #f3c9bf', color: RED, borderRadius: 7, padding: '8px 12px', fontSize: 12, marginBottom: 12 }}>{error}</div>}
