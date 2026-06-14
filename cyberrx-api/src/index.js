@@ -189,6 +189,7 @@ app.get('/health', (req, res) => {
 // Route groups with rate limiting
 app.use('/api/itsm',             [apiPostLimiter, apiPutLimiter], require('./routes/itsm'));
 app.use('/api/tools',            [apiGetLimiter, apiPostLimiter], require('./routes/tools'));
+app.use('/api/cae',              [apiGetLimiter, apiPostLimiter, apiDeleteLimiter], require('./routes/cae'));
 app.use('/api/credentials',      [apiGetLimiter, apiPostLimiter, apiDeleteLimiter], require('./routes/credentials'));
 app.use('/api/credentials',      [apiGetLimiter, apiPostLimiter], require('./routes/credentialRotation'));
 app.use('/api/orgs',             [apiGetLimiter, apiPostLimiter], require('./routes/orgs'));
