@@ -789,7 +789,8 @@ async function init() {
       ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS rto TEXT;
       ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS capability_id TEXT;
       ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS criticality_profile_id TEXT;
-      ALTER TABLE framework_requirements ADD COLUMN IF NOT EXISTS assessment_type TEXT; -- automated | manual | hybrid
+      -- NOTE: framework_requirements.assessment_type is added near the end of this
+      -- init batch, AFTER framework_requirements is created (see below).
 
       -- Cross-tenant benchmarking (Phase 7 scaffold; flag-gated, consent-bounded).
       -- Tenant opt-in (give-to-get) for anonymized capability benchmarks.
@@ -1130,6 +1131,10 @@ async function init() {
         captured_at TIMESTAMPTZ DEFAULT NOW()
       );
       CREATE INDEX IF NOT EXISTS ciso_dash_snap ON ciso_dashboard_snapshots(org_id, captured_at DESC);
+
+      -- Phase 1 additive column on framework_requirements (created above in this
+      -- batch). Kept here so the ALTER runs AFTER the table exists.
+      ALTER TABLE framework_requirements ADD COLUMN IF NOT EXISTS assessment_type TEXT; -- automated | manual | hybrid
     `);
     console.log('Database schema initialized');
   } catch (err) {
