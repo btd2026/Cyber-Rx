@@ -201,6 +201,19 @@ async function init() {
       id          SERIAL PRIMARY KEY,
       object      TEXT, field TEXT, type TEXT, required TEXT, description TEXT, example TEXT
     );
+
+    -- Tools the org declares it uses in the Organization Intake (Technology step).
+    -- These feed control enablement just like a connected connector does.
+    CREATE TABLE IF NOT EXISTS cae_selected_tool (
+      org_id      TEXT NOT NULL,
+      tool_name   TEXT NOT NULL,                  -- canonical cae_tool.name
+      category    TEXT,
+      input_name  TEXT,                           -- what the user actually selected
+      source      TEXT DEFAULT 'intake',
+      created_at  TIMESTAMPTZ DEFAULT NOW(),
+      PRIMARY KEY (org_id, tool_name)
+    );
+    CREATE INDEX IF NOT EXISTS cae_selected_tool_org ON cae_selected_tool(org_id);
   `);
   return true;
 }

@@ -4661,6 +4661,30 @@ function Setup(props) {
   var _s11b=useState(null);    var sampleResult=_s11b[0]; var setSampleResult=_s11b[1];
   var _s12=useState(null);     var uploadName=_s12[0]; var setUploadName=_s12[1];
   var _s13=useState(_saved.infraSel||{});     var infraSel=_s13[0];   var setInfraSel=_s13[1];
+  // Control coverage of the selected systems (which framework controls each tool
+  // evidences) — computed from the private control DB via /api/cae/coverage.
+  var _cvg=useState(null);  var caeCoverage=_cvg[0];  var setCaeCoverage=_cvg[1];
+  function selectedInfraToolNames(){
+    return Object.keys(infraSel).filter(function(k){return infraSel[k];}).map(function(k){return k.substring(k.indexOf(":")+1);});
+  }
+  useEffect(function(){
+    var names=selectedInfraToolNames();
+    if(!names.length){ setCaeCoverage(null); return; }
+    var t=setTimeout(function(){
+      fetch(CYBERRX_API+"/api/cae/coverage",{method:"POST",
+        headers:{"Content-Type":"application/json","X-Org-Id":(typeof localStorage!=="undefined"&&localStorage.getItem("cyberrx_org_id"))||""},
+        body:JSON.stringify({tools:names})})
+        .then(function(r){return r.json();}).then(setCaeCoverage).catch(function(){});
+    },400);
+    return function(){clearTimeout(t);};
+  }, [infraSel]);
+  function persistSelectedTools(){
+    var names=selectedInfraToolNames();
+    if(!names.length) return;
+    fetch(CYBERRX_API+"/api/cae/select-tools",{method:"POST",
+      headers:{"Content-Type":"application/json","X-Org-Id":(typeof localStorage!=="undefined"&&localStorage.getItem("cyberrx_org_id"))||""},
+      body:JSON.stringify({tools:names})}).catch(function(){});
+  }
   // Sync vendorSel up to root so VendorEcosystem dashboard can filter
   useEffect(function(){
     if (props.setRootVendorSel) { props.setRootVendorSel(vendorSel); }
@@ -6721,6 +6745,28 @@ function Setup(props) {
                 })}
               </div>
             </div>
+            {/* Control coverage of the selected systems — each tool maps to the
+                framework controls it will evidence; this feeds the assessment. */}
+            {caeCoverage&&caeCoverage.totalControls>0&&(
+              <Card style={{marginBottom:12,borderLeft:"3px solid "+C.acc}}>
+                <div style={{fontSize:12,fontWeight:800,color:C.text,marginBottom:6}}>
+                  Control coverage from your selected systems
+                </div>
+                <div style={{color:C.muted,fontSize:10.5,marginBottom:8,lineHeight:1.5}}>
+                  Your connected tools will automatically evidence these controls — assessed from live data, not self-attestation.
+                </div>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                  {Object.keys(caeCoverage.aggregate||{}).map(function(fw){
+                    return (
+                      <div key={fw} style={{border:"1px solid "+C.border,borderRadius:8,padding:"8px 12px",background:C.dim,minWidth:120}}>
+                        <div style={{fontSize:9.5,color:C.muted,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.05em"}}>{fw}</div>
+                        <div style={{fontSize:20,fontWeight:800,color:C.acc}}>{caeCoverage.aggregate[fw]}<span style={{fontSize:10,color:C.muted,fontWeight:500}}> controls</span></div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+            )}
             {SEC_TOOL_CATALOG.map(function(group){
               var selectedCount=Object.keys(infraSel).filter(function(k){return k.startsWith(group.cat+":")&&infraSel[k];}).length;
               return (
@@ -6760,6 +6806,7 @@ function Setup(props) {
                               {isOn&&<span style={{color:"#fff",fontSize:9,fontWeight:800}}>✓</span>}
                             </div>
                             <span style={{color:isOn?group.color:C.muted,fontSize:11,fontWeight:isOn?700:400}}>{tool}</span>
+                            {isOn&&(function(){var e=((caeCoverage&&caeCoverage.tools)||[]).find(function(x){return x.input===tool;});return e&&e.controls?(<span style={{fontSize:8,color:group.color,fontWeight:700,marginLeft:"auto"}}>{e.controls} controls</span>):null;})()}
                           </div>
                           {isRec&&!isOn&&<div style={{padding:"2px 8px 4px",background:"#0891B210",borderTop:"1px solid #0891B220"}}><div style={{color:"#0891B2",fontSize:8,fontWeight:600}}>Recommended for your processes</div></div>}
                           {isRec&&isOn&&<div style={{padding:"2px 8px 0",background:group.color+"10",borderTop:"1px solid "+group.color+"25"}}><div style={{color:group.color,fontSize:8,fontWeight:600}}>Pre-selected based on your processes</div></div>}
@@ -7156,7 +7203,7 @@ function Setup(props) {
             </div>
             <div style={{display:"flex",justifyContent:"space-between"}}>
               <Btn onClick={function(){setStep(4);}}>← Back</Btn>
-              <Btn onClick={function(){setStep(6);}} primary>Next: Document Request →</Btn>
+              <Btn onClick={function(){persistSelectedTools();setStep(6);}} primary>Next: Document Request →</Btn>
             </div>
           </div>
         )}

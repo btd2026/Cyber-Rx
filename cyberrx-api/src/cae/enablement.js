@@ -12,15 +12,19 @@
 
 const db = require('../utils/db');
 
-// Tools (and their categories) the org has connected + healthy.
+// Tools (and their categories) that can evidence controls for this org: either a
+// connected+healthy connector OR a tool the org declared in the intake Technology
+// step (cae_selected_tool). Both feed control enablement.
 async function connectedContext(orgId) {
-  const rows = await db.query(
+  const connected = await db.query(
     `SELECT c.tool_name, t.category
        FROM cae_connection c
        LEFT JOIN cae_tool t ON t.name = c.tool_name
       WHERE c.org_id=$1 AND c.status='connected'`, [orgId]);
+  const declared = await db.query(
+    'SELECT tool_name, category FROM cae_selected_tool WHERE org_id=$1', [orgId]);
   const tools = new Set(); const categories = new Set();
-  for (const r of rows) { if (r.tool_name) tools.add(r.tool_name); if (r.category) categories.add(r.category); }
+  for (const r of [...connected, ...declared]) { if (r.tool_name) tools.add(r.tool_name); if (r.category) categories.add(r.category); }
   return { tools, categories };
 }
 
