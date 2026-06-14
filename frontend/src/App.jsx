@@ -18989,6 +18989,33 @@ function SetupBot(props) {
      ask:'Which compliance frameworks does {orgName} report against or want to track? Select all that apply — you can always view the others later.',
      choices:['NIST CSF 2.0','HIPAA Security Rule','SOC 2','NIST SP 800-53','CIS Controls v8',
               'ISO 27001','NAIC Model Law','CMS 42 CFR §422','PCI DSS','GDPR']},
+    // ── Profile / Process / Technology — context for the LLM executive summary ──
+    // These map directly into the report data contract (org_profile / process /
+    // technology). Answers are optional; anything skipped is simply omitted.
+    {id:'subSector', type:'text', group:'Profile',
+     ask:'What sub-sector or primary line of business best describes {orgName}?',
+     placeholder:'e.g. Medicare Advantage, Commercial group', hint:'Optional'},
+    {id:'crownJewels', type:'text', group:'Profile',
+     ask:'What are your crown-jewel systems or processes — the assets that would hurt most if compromised?',
+     placeholder:'e.g. Claims processing, Member portal, EDW', hint:'Optional — comma-separated'},
+    {id:'riskAppetite', type:'choice', group:'Profile',
+     ask:"How would you characterize leadership's cybersecurity risk appetite?",
+     choices:['Risk-averse','Moderate','Risk-tolerant']},
+    {id:'governanceMaturity', type:'choice', group:'Process',
+     ask:'How mature is your security governance program today?',
+     choices:['Initial','Developing','Defined','Managed','Optimized']},
+    {id:'incidentResponse', type:'choice', group:'Process',
+     ask:'What is the state of your incident response capability?',
+     choices:['No formal plan','Documented, not tested','Documented and tested']},
+    {id:'hosting', type:'choice', group:'Technology',
+     ask:'Where do your systems primarily run?',
+     choices:['Mostly cloud','Hybrid','Mostly on-premises']},
+    {id:'appCount', type:'number', group:'Technology',
+     ask:'Approximately how many applications are in your environment?',
+     placeholder:'e.g. 180', hint:'Optional — a rough count is fine'},
+    {id:'identitySystems', type:'text', group:'Technology',
+     ask:'Which identity / IAM systems do you use?',
+     placeholder:'e.g. Okta, Microsoft Entra ID', hint:'Optional — comma-separated'},
     // ── CSF evidence interview ─────────────────────────────────────────────
     // These ten answers score the NIST CSF 2.0 categories that can't be read
     // from connected systems (the ✍ manual categories on the CSF scorecard).
@@ -19648,7 +19675,7 @@ function SetupBot(props) {
   var pct    = Math.round((qIdx / (QS.length-1)) * 100);
 
   // Groups with edit buttons in confirm view
-  var GROUPS = ['Identity','Scale','Capital','Insurance','Budget','Governance'];
+  var GROUPS = ['Identity','Scale','Capital','Insurance','Budget','Governance','Profile','Process','Technology'];
 
   return (
     <div style={{display:'flex',flexDirection:'column',height:'100%',

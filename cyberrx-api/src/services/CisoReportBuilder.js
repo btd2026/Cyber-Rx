@@ -122,18 +122,29 @@ function buildPdf(res, d, fw, ctx) {
 
   record('1. Executive summary');
   h1(doc, 'Executive summary');
-  const strengths = [...d.domainMatrix].sort((a, b) => b.current - a.current).slice(0, 3);
-  const weakest = [...d.domainMatrix].sort((a, b) => a.current - b.current).slice(0, 3);
-  const topActions = d.actionQueue.slice(0, 4);
-  sub(doc, 'What was done');
-  para(doc, `DTNK SHIELD assessed ${clientName}'s cybersecurity posture across ${d.controlRisk.length} control areas, evaluated through four independent frameworks — NIST CSF 2.0, NIST SP 800-53 r5, CIS Controls v8.1, and MITRE ATT&CK. Each control was tested with automated checks against ${clientName}'s security tooling, supplemented by structured review where automation does not apply. Findings are computed from validation run #${d.runId || '—'} on ${when}. Overall posture is ${p.current}/100 (${band(p.current)}), ${p.trend}.`);
-  sub(doc, 'Key strengths');
-  strengths.forEach((s) => bullet(doc, `${s.name} — ${s.current}/100 (${s.status}). ${s.topImproving ? 'Improving: ' + s.topImproving.metric + '.' : ''}`, GREEN));
-  sub(doc, 'Weakest areas');
-  weakest.forEach((w) => bullet(doc, `${w.name} — ${w.current}/100 (${w.status}). ${w.topDeteriorating ? 'Deteriorating: ' + w.topDeteriorating.metric + '.' : ''}`, RED));
-  bullet(doc, `${d.thresholds.breaches} of ${d.thresholds.total} risk-appetite thresholds are breached (${d.thresholds.critical} critical).`, RED);
-  sub(doc, 'Recommendations');
-  topActions.forEach((a, i) => bullet(doc, `${i + 1}. ${a.action} — protects ${a.process}; owner ${a.owner}, due ${a.dueDate}${a.escalation ? ' (escalate).' : '.'}`, STEEL));
+  const es = ctx && ctx.execSummary;
+  if (es && (es.context || es.posture || (es.key_risks && es.key_risks.length))) {
+    // Intake-driven, generated executive summary (stored/reviewed or deterministic).
+    if (es.context) para(doc, es.context);
+    if (es.posture) { sub(doc, 'Posture'); para(doc, es.posture); }
+    if (es.key_risks && es.key_risks.length) { sub(doc, 'Key risks'); es.key_risks.forEach((r) => bullet(doc, r.detail ? `${r.title} — ${r.detail}` : r.title, RED)); }
+    if (es.quick_wins && es.quick_wins.length) { sub(doc, 'Quick wins'); es.quick_wins.forEach((w) => bullet(doc, w.detail ? `${w.title} — ${w.detail}` : w.title, GREEN)); }
+    if (es.path_forward) { sub(doc, 'Path to target state'); para(doc, es.path_forward); }
+    if (es.stored === false || es.status === 'auto') { doc.fillColor(MUTE).fontSize(8).font('Helvetica-Oblique').text('Draft generated from intake + assessment data — pending consultant review.'); doc.font('Helvetica'); doc.moveDown(0.3); }
+  } else {
+    const strengths = [...d.domainMatrix].sort((a, b) => b.current - a.current).slice(0, 3);
+    const weakest = [...d.domainMatrix].sort((a, b) => a.current - b.current).slice(0, 3);
+    const topActions = d.actionQueue.slice(0, 4);
+    sub(doc, 'What was done');
+    para(doc, `DTNK SHIELD assessed ${clientName}'s cybersecurity posture across ${d.controlRisk.length} control areas, evaluated through four independent frameworks — NIST CSF 2.0, NIST SP 800-53 r5, CIS Controls v8.1, and MITRE ATT&CK. Each control was tested with automated checks against ${clientName}'s security tooling, supplemented by structured review where automation does not apply. Findings are computed from validation run #${d.runId || '—'} on ${when}. Overall posture is ${p.current}/100 (${band(p.current)}), ${p.trend}.`);
+    sub(doc, 'Key strengths');
+    strengths.forEach((s) => bullet(doc, `${s.name} — ${s.current}/100 (${s.status}). ${s.topImproving ? 'Improving: ' + s.topImproving.metric + '.' : ''}`, GREEN));
+    sub(doc, 'Weakest areas');
+    weakest.forEach((w) => bullet(doc, `${w.name} — ${w.current}/100 (${w.status}). ${w.topDeteriorating ? 'Deteriorating: ' + w.topDeteriorating.metric + '.' : ''}`, RED));
+    bullet(doc, `${d.thresholds.breaches} of ${d.thresholds.total} risk-appetite thresholds are breached (${d.thresholds.critical} critical).`, RED);
+    sub(doc, 'Recommendations');
+    topActions.forEach((a, i) => bullet(doc, `${i + 1}. ${a.action} — protects ${a.process}; owner ${a.owner}, due ${a.dueDate}${a.escalation ? ' (escalate).' : '.'}`, STEEL));
+  }
 
   // ---- Assessment details ----
   record('2. Assessment details');
@@ -265,20 +276,37 @@ async function buildPptxBuffer(d, fw, ctx) {
   s.addText(['1. Executive summary', '2. Assessment details', '3. Framework compliance — four lenses', '4. Methodology & traceability']
     .map((t) => ({ text: t, options: { fontSize: 16, color: INKH, bullet: false, breakLine: true, paraSpaceAfter: 10 } })), { x: 0.8, y: 1.4, w: 11, h: 4 });
 
-  // Executive summary — what was done / strengths / weakest / recommendations
-  const strengths = [...d.domainMatrix].sort((a, b) => b.current - a.current).slice(0, 3);
-  const weakest = [...d.domainMatrix].sort((a, b) => a.current - b.current).slice(0, 3);
-  s = pptx.addSlide(); slideTitle(s, 'Executive summary');
-  s.addText([
-    { text: 'What was done\n', options: { bold: true, color: STEELH, fontSize: 13 } },
-    { text: `DTNK SHIELD assessed ${clientName} across ${d.controlRisk.length} controls through NIST CSF 2.0, 800-53 r5, CIS v8.1 and MITRE ATT&CK (run #${d.runId || '—'}). Overall posture ${p.current}/100 (${band(p.current)}), ${p.trend}.\n\n`, options: { color: '334155', fontSize: 11 } },
-    { text: 'Key strengths\n', options: { bold: true, color: GREENH, fontSize: 13 } },
-    { text: strengths.map((x) => `• ${x.name} ${x.current} (${x.status})`).join('\n') + '\n\n', options: { color: '334155', fontSize: 11 } },
-    { text: 'Weakest areas\n', options: { bold: true, color: REDH, fontSize: 13 } },
-    { text: weakest.map((x) => `• ${x.name} ${x.current} (${x.status})`).join('\n') + `\n• ${d.thresholds.breaches}/${d.thresholds.total} thresholds breached\n\n`, options: { color: '334155', fontSize: 11 } },
-    { text: 'Recommendations\n', options: { bold: true, color: STEELH, fontSize: 13 } },
-    { text: d.actionQueue.slice(0, 4).map((a, i) => `${i + 1}. ${a.action} (${a.owner}, due ${a.dueDate})`).join('\n'), options: { color: '334155', fontSize: 11 } },
-  ], { x: 0.6, y: 1.15, w: 12.1, h: 6, valign: 'top' });
+  // Executive summary — intake-driven generated blocks when available, else rollup.
+  const es = ctx && ctx.execSummary;
+  if (es && (es.context || es.posture || (es.key_risks && es.key_risks.length))) {
+    s = pptx.addSlide(); slideTitle(s, 'Executive summary');
+    const b1 = [];
+    if (es.context) b1.push({ text: 'Context\n', options: { bold: true, color: STEELH, fontSize: 13 } }, { text: es.context + '\n\n', options: { color: '334155', fontSize: 11 } });
+    if (es.posture) b1.push({ text: 'Posture\n', options: { bold: true, color: STEELH, fontSize: 13 } }, { text: es.posture + '\n\n', options: { color: '334155', fontSize: 11 } });
+    if (es.path_forward) b1.push({ text: 'Path to target state\n', options: { bold: true, color: STEELH, fontSize: 13 } }, { text: es.path_forward, options: { color: '334155', fontSize: 11 } });
+    s.addText(b1, { x: 0.6, y: 1.15, w: 12.1, h: 6, valign: 'top' });
+    if ((es.key_risks && es.key_risks.length) || (es.quick_wins && es.quick_wins.length)) {
+      s = pptx.addSlide(); slideTitle(s, 'Executive summary — key risks & quick wins');
+      const b2 = [];
+      if (es.key_risks && es.key_risks.length) b2.push({ text: 'Key risks\n', options: { bold: true, color: REDH, fontSize: 13 } }, { text: es.key_risks.map((r) => `• ${r.title}${r.detail ? ' — ' + r.detail : ''}`).join('\n') + '\n\n', options: { color: '334155', fontSize: 11 } });
+      if (es.quick_wins && es.quick_wins.length) b2.push({ text: 'Quick wins\n', options: { bold: true, color: GREENH, fontSize: 13 } }, { text: es.quick_wins.map((w) => `• ${w.title}${w.detail ? ' — ' + w.detail : ''}`).join('\n'), options: { color: '334155', fontSize: 11 } });
+      s.addText(b2, { x: 0.6, y: 1.15, w: 12.1, h: 6, valign: 'top' });
+    }
+  } else {
+    const strengths = [...d.domainMatrix].sort((a, b) => b.current - a.current).slice(0, 3);
+    const weakest = [...d.domainMatrix].sort((a, b) => a.current - b.current).slice(0, 3);
+    s = pptx.addSlide(); slideTitle(s, 'Executive summary');
+    s.addText([
+      { text: 'What was done\n', options: { bold: true, color: STEELH, fontSize: 13 } },
+      { text: `DTNK SHIELD assessed ${clientName} across ${d.controlRisk.length} controls through NIST CSF 2.0, 800-53 r5, CIS v8.1 and MITRE ATT&CK (run #${d.runId || '—'}). Overall posture ${p.current}/100 (${band(p.current)}), ${p.trend}.\n\n`, options: { color: '334155', fontSize: 11 } },
+      { text: 'Key strengths\n', options: { bold: true, color: GREENH, fontSize: 13 } },
+      { text: strengths.map((x) => `• ${x.name} ${x.current} (${x.status})`).join('\n') + '\n\n', options: { color: '334155', fontSize: 11 } },
+      { text: 'Weakest areas\n', options: { bold: true, color: REDH, fontSize: 13 } },
+      { text: weakest.map((x) => `• ${x.name} ${x.current} (${x.status})`).join('\n') + `\n• ${d.thresholds.breaches}/${d.thresholds.total} thresholds breached\n\n`, options: { color: '334155', fontSize: 11 } },
+      { text: 'Recommendations\n', options: { bold: true, color: STEELH, fontSize: 13 } },
+      { text: d.actionQueue.slice(0, 4).map((a, i) => `${i + 1}. ${a.action} (${a.owner}, due ${a.dueDate})`).join('\n'), options: { color: '334155', fontSize: 11 } },
+    ], { x: 0.6, y: 1.15, w: 12.1, h: 6, valign: 'top' });
+  }
 
   // Assessment details — control gaps with org-specific risk (one slide of the worst)
   s = pptx.addSlide(); slideTitle(s, 'Assessment details — control gaps');

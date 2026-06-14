@@ -6,6 +6,7 @@ const AiControlsService = require('../services/AiControlsService');
 const CisoDashboardService = require('../services/CisoDashboardService');
 const ExecReportService = require('../services/ExecReportService');
 const CisoReportBuilder = require('../services/CisoReportBuilder');
+const ExecutiveSummaryService = require('../services/ExecutiveSummaryService');
 const MetricsEngine = require('../services/MetricsEngine');
 const db = require('../utils/db');
 const { optionalJWT } = require('../middleware/auth');
@@ -55,6 +56,7 @@ router.get('/report.pdf', optionalJWT, async (req, res) => {
       ExecReportService.cisoPack(orgId, { baseline: req.query.baseline }).catch(() => null),
       loadOrgCtx(orgId),
     ]);
+    octx.execSummary = await ExecutiveSummaryService.forReport(orgId, d, fw).catch(() => null);
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="dtnk-shield-${String(octx.name).replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-posture-assessment.pdf"`);
     CisoReportBuilder.buildPdf(res, d, fw, octx);
@@ -68,10 +70,42 @@ router.get('/report.pptx', optionalJWT, async (req, res) => {
       ExecReportService.cisoPack(orgId, { baseline: req.query.baseline }).catch(() => null),
       loadOrgCtx(orgId),
     ]);
+    octx.execSummary = await ExecutiveSummaryService.forReport(orgId, d, fw).catch(() => null);
     const buf = await CisoReportBuilder.buildPptxBuffer(d, fw, octx);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
     res.setHeader('Content-Disposition', `attachment; filename="cyberrx-ciso-posture-deck.pptx"`);
     res.end(buf);
   } catch (err) { logger.error('CISO pptx error', { error: err.message }); res.status(500).json({ error: 'Failed to build PPTX', message: err.message }); }
 });
+
+// ---- Executive summary — intake-driven, LLM-generated, human-in-the-loop -----
+// Generate a DRAFT from intake + assessment (stored, not auto-published).
+router.post('/exec-summary/generate', optionalJWT, async (req, res) => {
+  const orgId = org(req, res); if (!orgId) return;
+  try {
+    const [d, fw] = await Promise.all([
+      CisoDashboardService.getDashboard(orgId),
+      ExecReportService.cisoPack(orgId, { baseline: req.query.baseline }).catch(() => null),
+    ]);
+    res.json(await ExecutiveSummaryService.generate(orgId, d, fw));
+  } catch (err) { logger.error('exec-summary generate error', { error: err.message }); res.status(500).json({ error: err.message }); }
+});
+
+// Fetch the stored summary for review/edit.
+router.get('/exec-summary', optionalJWT, async (req, res) => {
+  const orgId = org(req, res); if (!orgId) return;
+  try { res.json(await ExecutiveSummaryService.getStored(orgId)); }
+  catch (err) { logger.error('exec-summary get error', { error: err.message }); res.status(500).json({ error: err.message }); }
+});
+
+// Save the consultant's reviewed/edited version (marks it reviewed).
+router.put('/exec-summary', optionalJWT, async (req, res) => {
+  const orgId = org(req, res); if (!orgId) return;
+  try {
+    const b = req.body || {};
+    if (!b.blocks) return res.status(400).json({ error: 'blocks is required' });
+    res.json(await ExecutiveSummaryService.saveEdited(orgId, b.blocks, b.editedBy));
+  } catch (err) { logger.error('exec-summary save error', { error: err.message }); res.status(500).json({ error: err.message }); }
+});
+
 module.exports = router;
