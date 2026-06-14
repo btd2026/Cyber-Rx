@@ -64,7 +64,19 @@ async function deriveFromEvidence(orgId, su) {
     const gv = await csfAvg(orgId, ['GV.']); if (gv != null) out.governance_maturity = govLabel(gv);
     const ir = await csfAvg(orgId, ['RS.', 'RC.']); if (ir != null) out.incident_response = irLabel(ir);
   } catch (_) { /* no assessment yet */ }
+  try {
+    const r = await db.query('SELECT COUNT(*)::int AS n FROM applications WHERE organization_id=$1', [orgId]);
+    if (r[0] && r[0].n) out.app_count = r[0].n;   // true deduped count from the inventory
+  } catch (_) { /* no inventory yet */ }
   return out;
+}
+
+// Dominant hosting environment label from a hostingMix object.
+function dominantEnv(mix) {
+  const LBL = { on_prem: 'On-prem', azure: 'Azure', aws: 'AWS', gcp: 'GCP', other_cloud: 'Other cloud', saas: 'SaaS' };
+  let best = null, bestV = -1;
+  Object.keys(mix || {}).forEach((k) => { const v = Number(mix[k]) || 0; if (v > bestV) { bestV = v; best = k; } });
+  return best ? (LBL[best] || best) : undefined;
 }
 
 async function loadIntake(orgId) {
@@ -107,11 +119,13 @@ async function loadIntake(orgId) {
     change_mgmt: g('changeMgmt', 'change_mgmt'),
   });
 
+  const hm = (su.hostingMix && typeof su.hostingMix === 'object') ? su.hostingMix : (su.hosting_mix && typeof su.hosting_mix === 'object' ? su.hosting_mix : undefined);
   const technology = clean({
-    hosting: g('hosting', 'hostingModel'),
+    hosting: hm ? dominantEnv(hm) : g('hosting', 'hostingModel'),
+    hosting_mix: hm,                                   // % workload per environment
     key_platforms: arr(g('keyPlatforms', 'key_platforms', 'appSel', 'platforms')),
     identity_systems: arr(g('identitySystems', 'identity_systems', 'idp')),
-    app_count: g('appCount', 'app_count', 'applications'),
+    app_count: derived.app_count || g('appCount', 'app_count', 'applications'),  // true deduped count
     security_tooling: arr(g('securityTooling', 'security_tooling', 'infraSel', 'vendorSel')),
     attack_surface_notes: g('attackSurfaceNotes', 'attack_surface_notes'),
   });

@@ -18696,6 +18696,7 @@ function SetupBot(props) {
   var doneRef   = useRef(false);
   // Public-data prefill (revenue/employees/members estimated from the org name).
   var _spf=useState({}); var prefill=_spf[0]; var setPrefill=_spf[1];
+  var _emx=useState({}); var envMix=_emx[0]; var setEnvMix=_emx[1]; // hostingMix % per environment
   var editIdxRef= useRef(null);
   var scrollRef = useRef(null);
   var startRef  = useRef(null); // ticket #21 — questionnaire start timestamp
@@ -19024,17 +19025,14 @@ function SetupBot(props) {
               'Moderate — balance risk against cost and speed (e.g. accept time-boxed exceptions with compensating controls)',
               'Risk-tolerant — accept more risk for speed or innovation (e.g. ship first, remediate fast-follow)'],
      hint:'This sets how we frame thresholds and recommendations — it is not a maturity score.'},
-    {id:'hosting', type:'choice', group:'Technology',
-     ask:'Where do your systems primarily run?',
-     choices:['Mostly cloud','Hybrid','Mostly on-premises']},
-    {id:'appCount', type:'number', group:'Technology',
-     ask:'Approximately how many applications are in your environment?',
-     placeholder:'e.g. 180', hint:'Optional — a rough count is fine'},
-    {id:'identitySystems', type:'multichoice', group:'Technology',
-     ask:'Which identity / IAM systems do you use? Select all that apply.',
-     choices:['Okta','Microsoft Entra ID (Azure AD)','Active Directory / ADFS','Ping Identity',
-              'SailPoint','CyberArk','Duo','Other'],
-     hint:'Optional — select one or more'},
+    {id:'hostingMix', type:'envmix', group:'Technology',
+     ask:'Where do your systems run? Enter the approximate % of workloads in each environment (they should total ~100%).',
+     envs:[['on_prem','On-prem'],['azure','Azure'],['aws','AWS'],['gcp','GCP'],['other_cloud','Other cloud'],['saas','SaaS']],
+     hint:'A rough split is fine — we chart it on the CISO and CIO dashboards.'},
+    // Application count and identity/IAM systems are NOT asked here — they come
+    // from the Technology step: upload your application inventory / CMDB (the
+    // platform computes the true deduplicated app count via entity resolution,
+    // and identifies identity systems from the inventory).
     // ── CSF evidence interview ─────────────────────────────────────────────
     // These ten answers score the NIST CSF 2.0 categories that can't be read
     // from connected systems (the ✍ manual categories on the CSF scorecard).
@@ -19420,7 +19418,9 @@ function SetupBot(props) {
     accRef.current[q.id] = value;
     setAnswers(Object.assign({}, accRef.current));
     setSuggest([]);
-    addMsg('user', Array.isArray(value) ? value.join(', ') : value);
+    addMsg('user', Array.isArray(value) ? value.join(', ')
+      : (value && typeof value === 'object') ? Object.entries(value).filter(function(e){return e[1];}).map(function(e){return e[0]+' '+e[1]+'%';}).join(', ')
+      : value);
     setInput('');
 
     // Auto-select state if orgName contains a state name (BCBS organizations)
@@ -19987,6 +19987,28 @@ function SetupBot(props) {
               </div>
               {curQ.hint&&<div style={{color:C.muted,fontSize:10,marginTop:4}}>{curQ.hint}</div>}
               {prefill[curQ.id]!=null&&<div style={{color:C.acc,fontSize:10,marginTop:4}}>✨ Prefilled from public data — verify or edit</div>}
+            </div>
+          )}
+          {curQ.type==='envmix'&&(
+            <div>
+              {(curQ.envs||[]).map(function(e){
+                var key=e[0], label=e[1];
+                return (
+                  <div key={key} style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
+                    <span style={{width:110,fontSize:12,color:C.text}}>{label}</span>
+                    <input value={envMix[key]==null?'':envMix[key]} inputMode='numeric'
+                      onChange={function(ev){ var v=ev.target.value.replace(/[^0-9]/g,''); var n=Object.assign({},envMix); if(v===''){delete n[key];}else{n[key]=Math.min(100,parseInt(v,10));} setEnvMix(n); }}
+                      placeholder='0' style={{width:70,background:C.card,border:'1px solid '+C.acc+'40',borderRadius:8,padding:'7px 10px',color:C.text,fontSize:12,outline:'none'}}/>
+                    <span style={{fontSize:12,color:C.muted}}>%</span>
+                  </div>
+                );
+              })}
+              <div style={{display:'flex',alignItems:'center',gap:10,marginTop:6}}>
+                <span style={{fontSize:11,color:(Object.values(envMix).reduce(function(s,v){return s+(Number(v)||0);},0)===100?'#0FBB80':C.muted)}}>Total: {Object.values(envMix).reduce(function(s,v){return s+(Number(v)||0);},0)}%</span>
+                <button onClick={function(){ var t=Object.values(envMix).reduce(function(s,v){return s+(Number(v)||0);},0); if(t>0){ pick(Object.assign({},envMix)); setEnvMix({}); } }}
+                  style={{background:C.acc,border:'none',color:'#fff',borderRadius:8,padding:'8px 16px',cursor:'pointer',fontSize:12,fontWeight:700}}>Next</button>
+              </div>
+              {curQ.hint&&<div style={{color:C.muted,fontSize:10,marginTop:4}}>{curQ.hint}</div>}
             </div>
           )}
           {curQ.type==='text'&&(

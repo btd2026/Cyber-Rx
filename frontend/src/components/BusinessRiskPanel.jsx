@@ -11,6 +11,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import WorkloadMixPanel from './WorkloadMixPanel';
 
 const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e2e8f0', PANEL = '#f8fafc', NAVY = '#0f1b2d';
 const GREEN = '#1f8a4c', AMBER = '#B07C2E', RED = '#C0392B', BLUE = '#1d4ed8';
@@ -80,6 +81,8 @@ export default function BusinessRiskPanel(props) {
       <div style={{ fontSize: 12.5, color: INK2, lineHeight: 1.5, marginBottom: 16, maxWidth: 760 }}>
         Risk as business impact — every score traces the <strong>function → process → application → control</strong> chain, weighted by Tier and RTO. Automated and document evidence merged into one defensible result.
       </div>
+
+      <WorkloadMixPanel orgId={orgId} authToken={token} apiUrl={api} />
 
       {/* Unified framework scores */}
       <Section title="Unified framework scores" hint="One assessment across frameworks (automated + document evidence merged)."
