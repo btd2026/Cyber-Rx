@@ -88,6 +88,11 @@ async function bootstrap() {
     steps.caeConnectors = await require('../cae/seedConnectors').seed();
   } catch (e) { logger.warn('bootstrap: cae connector seed failed', { error: e.message }); }
 
+  try {
+    // CAE control database (105 rows) + control→tool map (alias resolution).
+    steps.caeControls = await require('../cae/seedControls').seed();
+  } catch (e) { logger.warn('bootstrap: cae control seed failed', { error: e.message }); }
+
   return steps;
 }
 

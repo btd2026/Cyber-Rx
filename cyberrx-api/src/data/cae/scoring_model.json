@@ -1,0 +1,44 @@
+[
+  {
+    "Score_Component": "Coverage",
+    "Weight": 40,
+    "Description": "How much of the in-scope population has API evidence",
+    "Generic Formula / Logic": "covered_count / expected_count"
+  },
+  {
+    "Score_Component": "Compliance",
+    "Weight": 30,
+    "Description": "How much of covered population passes the control test",
+    "Generic Formula / Logic": "pass_count / covered_count"
+  },
+  {
+    "Score_Component": "Timeliness",
+    "Weight": 20,
+    "Description": "Whether evidence is current and SLA-compliant",
+    "Generic Formula / Logic": "fresh_evidence_count / covered_count; SLA based by control"
+  },
+  {
+    "Score_Component": "Exception Quality",
+    "Weight": 10,
+    "Description": "Whether failures have approved/current risk exceptions",
+    "Generic Formula / Logic": "valid_exception_count / exception_count"
+  },
+  {
+    "Score_Component": "Confidence Modifier",
+    "Weight": 0,
+    "Description": "Separate score showing trust in evidence",
+    "Generic Formula / Logic": "100 if multiple authoritative APIs agree; reduce for stale/missing sources"
+  },
+  {
+    "Score_Component": "Minimum floor rule",
+    "Weight": 0,
+    "Description": "Certain high-risk failures cap the score",
+    "Generic Formula / Logic": "Privileged accounts without MFA cap PR.AA-02 at 3 regardless of average"
+  },
+  {
+    "Score_Component": "No API evidence",
+    "Weight": 0,
+    "Description": "No evidence should not be scored as pass",
+    "Generic Formula / Logic": "score=0; confidence=0"
+  }
+]

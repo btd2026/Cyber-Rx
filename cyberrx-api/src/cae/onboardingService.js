@@ -45,9 +45,19 @@ async function listTools(category) {
   return rows.map(projectTool);
 }
 
+// Reconcile the tool-library name (what the user selects) with the connector-
+// library name (which can differ, e.g. "Palo Alto Panorama/NGFW" vs
+// "Palo Alto Panorama"): exact match first, then a contains-either fuzzy match.
 async function connectorForTool(toolName) {
-  const rows = await db.query('SELECT * FROM cae_connector_template WHERE tool_name=$1', [toolName]);
-  return rows[0] || null;
+  const exact = await db.query('SELECT * FROM cae_connector_template WHERE tool_name=$1', [toolName]);
+  if (exact[0]) return exact[0];
+  const tl = String(toolName || '').toLowerCase();
+  if (tl.length < 4) return null;
+  const all = await db.query('SELECT * FROM cae_connector_template');
+  return all.find((c) => {
+    const cl = c.tool_name.toLowerCase();
+    return cl.includes(tl) || tl.includes(cl);
+  }) || null;
 }
 
 // Connection-field manifest for a tool. If no connector template exists, the tool

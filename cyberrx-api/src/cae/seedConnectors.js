@@ -91,10 +91,14 @@ async function seedConnectors() {
     }
   }
 
-  // Flag tools that have a connector template (by name match).
+  // Flag tools that have a connector template. Tolerant match: exact, or either
+  // name contains the other (tool-library vs connector-library naming gap).
   await db.query(
     `UPDATE cae_tool t SET has_connector = EXISTS (
-       SELECT 1 FROM cae_connector_template c WHERE c.tool_name = t.name)`);
+       SELECT 1 FROM cae_connector_template c
+        WHERE c.tool_name = t.name
+           OR position(lower(c.tool_name) in lower(t.name)) > 0
+           OR position(lower(t.name) in lower(c.tool_name)) > 0)`);
   return { connectors, fields };
 }
 

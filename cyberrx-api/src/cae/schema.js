@@ -92,6 +92,116 @@ async function init() {
     );
     CREATE INDEX IF NOT EXISTS cae_connection_org ON cae_connection(org_id);
   `);
+
+  // ── Milestones 3–5: control engine, evidence, scoring (all PRIVATE) ────────
+  await db.query(`
+    -- The control database (105 rows). Fully INTERNAL except framework/id/name.
+    CREATE TABLE IF NOT EXISTS cae_control (
+      id                     TEXT PRIMARY KEY,         -- slug(framework).slug(control_id)
+      framework              TEXT NOT NULL,
+      control_id             TEXT NOT NULL,
+      control_name           TEXT,
+      category               TEXT,
+      assessment_method      TEXT,                     -- automated | hybrid | detection | manual
+      recommended_tools      TEXT,
+      api_query              TEXT,
+      connector_settings_json JSONB DEFAULT '{}',
+      normalized_evidence_json JSONB DEFAULT '{}',
+      validation_logic       TEXT,
+      metric                 TEXT,
+      scoring_rule           TEXT,
+      notes                  TEXT,
+      UNIQUE (framework, control_id)
+    );
+    CREATE INDEX IF NOT EXISTS cae_control_framework ON cae_control(framework);
+
+    -- Which tools/categories can evidence a control. INTERNAL mapping logic.
+    CREATE TABLE IF NOT EXISTS cae_control_tool_map (
+      id          SERIAL PRIMARY KEY,
+      control_pk  TEXT NOT NULL REFERENCES cae_control(id) ON DELETE CASCADE,
+      framework   TEXT NOT NULL,
+      control_id  TEXT NOT NULL,
+      match_type  TEXT NOT NULL,                       -- tool | category
+      tool_name   TEXT,                                -- canonical cae_tool.name (match_type=tool)
+      category    TEXT,                                -- (match_type=category)
+      role        TEXT DEFAULT 'secondary',            -- primary | secondary
+      resolved    BOOLEAN DEFAULT true,
+      raw_token   TEXT,
+      UNIQUE (control_pk, raw_token)
+    );
+    CREATE INDEX IF NOT EXISTS cae_ctm_control ON cae_control_tool_map(control_pk);
+
+    -- An assessment run.
+    CREATE TABLE IF NOT EXISTS cae_run (
+      id              TEXT PRIMARY KEY,
+      org_id          TEXT NOT NULL,
+      frameworks      JSONB DEFAULT '[]',
+      status          TEXT DEFAULT 'running',          -- running | complete | failed
+      controls_total  INTEGER DEFAULT 0,
+      controls_tested INTEGER DEFAULT 0,
+      controls_manual INTEGER DEFAULT 0,
+      started_at      TIMESTAMPTZ DEFAULT NOW(),
+      finished_at     TIMESTAMPTZ
+    );
+    CREATE INDEX IF NOT EXISTS cae_run_org ON cae_run(org_id);
+
+    -- Normalized evidence (population stats) per control test. INTERNAL.
+    CREATE TABLE IF NOT EXISTS cae_evidence (
+      id              TEXT PRIMARY KEY,
+      run_id          TEXT NOT NULL,
+      org_id          TEXT NOT NULL,
+      framework       TEXT NOT NULL,
+      control_id      TEXT NOT NULL,
+      tool_name       TEXT,
+      expected_count  INTEGER DEFAULT 0,
+      covered_count   INTEGER DEFAULT 0,
+      pass_count      INTEGER DEFAULT 0,
+      fresh_count     INTEGER DEFAULT 0,
+      exception_count INTEGER DEFAULT 0,
+      exception_valid INTEGER DEFAULT 0,
+      evidence_source TEXT,
+      source_kind     TEXT,                            -- api | ticket | document | manual | none
+      raw_evidence    JSONB DEFAULT '{}',              -- admin/auditor only
+      collected_at    TIMESTAMPTZ DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS cae_evidence_run ON cae_evidence(run_id);
+
+    -- Scored control result (latest per org+framework+control). User-safe subset
+    -- is projected by cae/projection.js.
+    CREATE TABLE IF NOT EXISTS cae_result (
+      id                  TEXT PRIMARY KEY,            -- org::framework::control
+      org_id              TEXT NOT NULL,
+      run_id              TEXT,
+      framework           TEXT NOT NULL,
+      control_id          TEXT NOT NULL,
+      control_name        TEXT,
+      status              TEXT,                         -- passed|failed|partial|not_tested|needs_manual_evidence
+      score               NUMERIC,                      -- 0–5 (display)
+      score_pct           NUMERIC,                      -- 0–100 (weighted composite)
+      confidence          INTEGER,                      -- 0–100
+      business_risk       TEXT,
+      summary_finding     TEXT,
+      evidence_source_name TEXT,
+      recommended_action  TEXT,
+      owner               TEXT,
+      due_date            TIMESTAMPTZ,
+      raw_evidence_ref    TEXT,
+      reviewed            BOOLEAN DEFAULT false,
+      computed_at         TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE (org_id, framework, control_id)
+    );
+    CREATE INDEX IF NOT EXISTS cae_result_org_fw ON cae_result(org_id, framework);
+
+    -- Scoring model + evidence schema (config). INTERNAL.
+    CREATE TABLE IF NOT EXISTS cae_scoring_model (
+      id          SERIAL PRIMARY KEY,
+      component   TEXT, weight NUMERIC, description TEXT, formula TEXT
+    );
+    CREATE TABLE IF NOT EXISTS cae_evidence_schema (
+      id          SERIAL PRIMARY KEY,
+      object      TEXT, field TEXT, type TEXT, required TEXT, description TEXT, example TEXT
+    );
+  `);
   return true;
 }
 
