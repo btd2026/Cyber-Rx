@@ -17,6 +17,7 @@ import CisoExecReport from "./components/CisoExecReport";
 import CroBoardReport from "./components/CroBoardReport";
 import CisoSecurityPostureDashboard from "./components/CisoSecurityPostureDashboard";
 import CisoAgentPanel from "./components/CisoAgentPanel";
+import OrganizationIntakeDocuments from "./components/OrganizationIntakeDocuments";
 import FrameworkScoreStrip from "./components/FrameworkScoreStrip";
 import RemediationPanel from "./components/RemediationPanel";
 import AuditDash from "./pages/AuditDash";
@@ -4543,7 +4544,16 @@ function Setup(props) {
   var setRootMailingVendor  = props.setRootMailingVendor  || function(){};
   var setRootMemberPortal   = props.setRootMemberPortal   || function(){};
 
-  var STEPS = ["Org Profile","Select Processes","Map Applications","Vendor Ecosystem","Core Infrastructure"];
+  // Four ordered intake phases. Technology spans the three internal technology
+  // steps (3 Map Applications, 4 Vendor Ecosystem, 5 Core Infrastructure);
+  // step 6 is the Document Request phase.
+  var PHASES = [
+    {label:"Organization Profile", steps:[1]},
+    {label:"Process",              steps:[2]},
+    {label:"Technology",           steps:[3,4,5]},
+    {label:"Document Request",     steps:[6]},
+  ];
+  var phaseOf = function(s){ for (var i=0;i<PHASES.length;i++){ if (PHASES[i].steps.indexOf(s)>=0) return i; } return 0; };
 
   var LSTEPS = [
     "Encrypting configuration…",
@@ -5075,7 +5085,7 @@ function Setup(props) {
           </div>
           <span style={{color:C.text,fontWeight:800,fontSize:14}}>CyberRx</span>
           <span style={{color:C.dim}}>/</span>
-          <span style={{color:C.text,fontSize:13,fontWeight:700}}>Setup Your Organization</span>
+          <span style={{color:C.text,fontSize:13,fontWeight:700}}>Organization Intake</span>
         </div>
         <div style={{display:"flex",gap:8}}>
           <button onClick={goBack}
@@ -5092,12 +5102,12 @@ function Setup(props) {
       <div style={{maxWidth:900,margin:"0 auto",padding:"28px 24px 80px"}}>
         {/* Stepper */}
         <div style={{display:"flex",alignItems:"center",marginBottom:24}}>
-          {STEPS.map(function(label,i){
-            var active=i+1===step; var done=i+1<step;
+          {PHASES.map(function(ph,i){
+            var cur=phaseOf(step); var active=i===cur; var done=i<cur;
             return (
-              <React.Fragment key={label}>
+              <React.Fragment key={ph.label}>
                 <div style={{display:"flex",alignItems:"center",gap:6,cursor:done?"pointer":"default"}}
-                  onClick={function(){ if(done){setStep(i+1);} }}>
+                  onClick={function(){ if(done){setStep(ph.steps[0]);} }}>
                   <div style={{width:26,height:26,borderRadius:"50%",flexShrink:0,
                     background:done?C.acc:active?C.faint:C.dim,
                     border:"2px solid "+(done||active?C.acc:C.border),
@@ -5105,9 +5115,9 @@ function Setup(props) {
                     {done?<span style={{color:"#fff",fontSize:10,fontWeight:800}}>✓</span>
                          :<span style={{color:active?C.acc:C.muted,fontSize:10,fontWeight:700}}>{i+1}</span>}
                   </div>
-                  <span style={{color:active?C.text:done?C.acc:C.muted,fontSize:11,fontWeight:active?700:400,whiteSpace:"nowrap"}}>{label}</span>
+                  <span style={{color:active?C.text:done?C.acc:C.muted,fontSize:11,fontWeight:active?700:400,whiteSpace:"nowrap"}}>{ph.label}</span>
                 </div>
-                {i<STEPS.length-1&&<div style={{flex:1,height:1,background:done?C.acc:C.border,margin:"0 6px"}}/>}
+                {i<PHASES.length-1&&<div style={{flex:1,height:1,background:done?C.acc:C.border,margin:"0 6px"}}/>}
               </React.Fragment>
             );
           })}
@@ -5125,7 +5135,7 @@ function Setup(props) {
               fontWeight:800,fontSize:14,color:"#fff"}}>B</div>
             <div style={{flex:1}}>
               <div style={{color:C.acc,fontSize:11,fontWeight:800}}>
-                Briana — CyberRx Setup Guide
+                Briana — CyberRx Intake Guide
               </div>
               <div style={{color:C.muted,fontSize:10,lineHeight:1.4}}>
                 {[null,null,
@@ -6905,6 +6915,17 @@ function Setup(props) {
             </div>
             <div style={{display:"flex",justifyContent:"space-between"}}>
               <Btn onClick={function(){setStep(4);}}>← Back</Btn>
+              <Btn onClick={function(){setStep(6);}} primary>Next: Document Request →</Btn>
+            </div>
+          </div>
+        )}
+
+        {/* ══ STEP 6: Document Request ════════════════════════════════ */}
+        {step===6&&(
+          <div>
+            <OrganizationIntakeDocuments orgId={(typeof localStorage!=="undefined"&&(localStorage.getItem("cyberrx_org_id")||localStorage.getItem("orgId")))||""} />
+            <div style={{display:"flex",justifyContent:"space-between",marginTop:18}}>
+              <Btn onClick={function(){setStep(5);}}>← Back</Btn>
               <Btn onClick={function(){launch();}} primary>Complete Setup →</Btn>
             </div>
           </div>
@@ -6933,7 +6954,7 @@ function Home(props) {
             <h1 style={{color:C.text,fontSize:19,fontWeight:800,margin:"0 0 2px",
               letterSpacing:"-0.02em"}}>Welcome, {displayName} &#x1F44B;</h1>
             <div style={{color:C.muted,fontSize:12}}>
-              {orgName?orgName+" · CyberRx Platform":"Complete your 5-step setup to activate your live risk posture"}
+              {orgName?orgName+" · CyberRx Platform":"Complete your intake to activate your live risk posture"}
             </div>
           </div>
           {!setupDone&&(
@@ -6957,7 +6978,7 @@ function Home(props) {
                 Your risk posture is not yet active
               </div>
               <div style={{color:C.muted,fontSize:12}}>
-                Complete the 5-step setup to see live dashboards, framework reports, and financial exposure.
+                Complete the intake to see live dashboards, framework reports, and financial exposure.
               </div>
             </div>
             <Btn onClick={function(){go("setup");}} primary>Start Setup &#x2192;</Btn>
@@ -17662,7 +17683,7 @@ function QuickNav(props) {
       {id:"board",     label:"Board Report",       mod:"F07"},
     ]},
     {group:"Configuration", items:[
-      {id:"setup",     label:"Org Setup",          mod:"F02"},
+      {id:"setup",     label:"Organization Intake", mod:"F02"},
       {id:"home",      label:"Home",               mod:""},
     ]},
   ];
@@ -17959,7 +17980,7 @@ function Shell(props) {
             <span style={{color:C.muted, fontSize:11}}>
               {"— Viewing sample data for "}
               <strong style={{color:"#F5A623"}}>{DEMO_ORG_NAME}</strong>
-              {". Complete your 5-step setup to activate your live risk posture."}
+              {". Complete your intake to activate your live risk posture."}
             </span>
           </div>
           <button onClick={function(){go("setup");}}
@@ -18615,7 +18636,7 @@ function WelcomePage(props) {
           margin:"0 0 32px",maxWidth:440}}>
           {setupDone?
             "Navigate to your live dashboards. All your data is saved.":
-            "Complete the 5-step setup and your CISO, CFO, CRO, and Board dashboards populate automatically from your actual data."
+            "Complete the intake and your CISO, CFO, CRO, and Board dashboards populate automatically from your actual data."
           }
         </p>
         <button onClick={setupDone?onGoToDashboard:onStartSetup}
