@@ -93,6 +93,11 @@ async function bootstrap() {
     steps.caeControls = await require('../cae/seedControls').seed();
   } catch (e) { logger.warn('bootstrap: cae control seed failed', { error: e.message }); }
 
+  try {
+    // CAE scoring model + evidence schema config.
+    steps.caeScoring = await require('../cae/seedScoringModel').seed();
+  } catch (e) { logger.warn('bootstrap: cae scoring seed failed', { error: e.message }); }
+
   return steps;
 }
 
