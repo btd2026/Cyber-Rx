@@ -33,6 +33,40 @@ function arr(v) {
   return [];
 }
 
+// Average unified-assessment score for CSF requirements under given prefixes.
+async function csfAvg(orgId, prefixes) {
+  const conds = prefixes.map((_, i) => `requirement_id LIKE $${i + 2}`).join(' OR ');
+  const rows = await db.query(
+    `SELECT AVG(score)::numeric AS s, COUNT(*)::int AS n FROM assessment_result
+      WHERE organization_id=$1 AND framework_id='nist_csf_2' AND (${conds})`,
+    [orgId, ...prefixes.map((p) => p + '%')]);
+  return rows[0] && rows[0].n ? Number(rows[0].s) : null;
+}
+const govLabel = (s) => (s >= 80 ? 'Optimized' : s >= 65 ? 'Managed' : s >= 50 ? 'Defined' : s >= 35 ? 'Developing' : 'Initial');
+const irLabel = (s) => (s >= 75 ? 'Documented and tested' : s >= 45 ? 'Documented, not tested' : 'No formal plan');
+
+// Derive (never self-rank): crown jewels from apps/processes, governance maturity
+// from CSF GV evidence, IR capability from CSF RS/RC evidence. Anything without
+// evidence yet is simply omitted (no fabrication).
+async function deriveFromEvidence(orgId, su) {
+  const out = {};
+  try {
+    const apps = await require('./RiskOutputsService').crownJewels(orgId);
+    const names = (apps || []).filter((a) => a.score > 0).slice(0, 5).map((a) => a.name);
+    if (names.length) out.crown_jewels = names;
+  } catch (_) { /* engine not ready */ }
+  if (!out.crown_jewels) {
+    const sp = su.selProcs;
+    const fb = Array.isArray(sp) ? sp : (sp && typeof sp === 'object' ? Object.keys(sp) : []);
+    if (fb.length) out.crown_jewels = fb.slice(0, 8);
+  }
+  try {
+    const gv = await csfAvg(orgId, ['GV.']); if (gv != null) out.governance_maturity = govLabel(gv);
+    const ir = await csfAvg(orgId, ['RS.', 'RC.']); if (ir != null) out.incident_response = irLabel(ir);
+  } catch (_) { /* no assessment yet */ }
+  return out;
+}
+
 async function loadIntake(orgId) {
   let su = {};
   try {
@@ -49,6 +83,10 @@ async function loadIntake(orgId) {
   const regs = arr(g('reportingFrameworks', 'regulatoryObligations', 'regulatory_obligations', 'complianceFrameworks'));
   if (cms && /yes|true/i.test(String(cms)) && !regs.some((x) => /cms/i.test(x))) regs.push('CMS');
 
+  // Crown jewels, governance maturity, and IR capability are DERIVED from the
+  // org's data + assessment evidence — never self-ranked in the intake.
+  const derived = await deriveFromEvidence(orgId, su);
+
   const org_profile = clean({
     industry: g('industry', 'sector', 'orgType', '_type'),
     sub_sector: g('subSector', 'sub_sector', 'lineOfBusiness'),
@@ -56,15 +94,15 @@ async function loadIntake(orgId) {
     revenue_band: g('revenueBand', 'revenue_band', 'revenue'),
     geos: arr(g('geos', 'geographies', 'regions')),
     regulatory_obligations: regs,
-    crown_jewels: arr(g('crownJewels', 'crown_jewels', 'criticalProcesses', 'selProcs')),
-    risk_appetite: g('riskAppetite', 'risk_appetite'),
+    crown_jewels: derived.crown_jewels,        // derived from apps/processes
+    risk_appetite: g('riskAppetite', 'risk_appetite'),  // leadership stance (asked)
     business_drivers: arr(g('businessDrivers', 'business_drivers')),
   });
 
   const process = clean({
-    governance_maturity: g('governanceMaturity', 'governance_maturity'),
+    governance_maturity: derived.governance_maturity,   // derived from CSF GV evidence
     policies_in_place: arr(g('policiesInPlace', 'policies_in_place', 'policies')),
-    incident_response: g('incidentResponse', 'incident_response', 'hasIRP'),
+    incident_response: derived.incident_response,        // derived from CSF RS/RC evidence
     vendor_mgmt: g('vendorMgmt', 'vendor_mgmt'),
     change_mgmt: g('changeMgmt', 'change_mgmt'),
   });

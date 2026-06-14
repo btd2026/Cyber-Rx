@@ -18694,6 +18694,8 @@ function SetupBot(props) {
   var _s8=useState(null); var saveError=_s8[0]; var setSaveError=_s8[1];
   var accRef    = useRef({});
   var doneRef   = useRef(false);
+  // Public-data prefill (revenue/employees/members estimated from the org name).
+  var _spf=useState({}); var prefill=_spf[0]; var setPrefill=_spf[1];
   var editIdxRef= useRef(null);
   var scrollRef = useRef(null);
   var startRef  = useRef(null); // ticket #21 — questionnaire start timestamp
@@ -19008,24 +19010,20 @@ function SetupBot(props) {
     // ── Profile / Process / Technology — context for the LLM executive summary ──
     // These map directly into the report data contract (org_profile / process /
     // technology). Answers are optional; anything skipped is simply omitted.
-    {id:'subSector', type:'text', group:'Profile',
-     ask:'What sub-sector or primary line of business best describes {orgName}?',
-     placeholder:'e.g. Medicare Advantage, Commercial group', hint:'Optional'},
-    {id:'crownJewels', type:'multichoice', group:'Profile',
-     ask:"Which of these are your crown-jewel systems or processes — the ones that would hurt most if compromised? Pick any that apply. Not sure? Choose the obvious ones — we'll refine your true crown jewels automatically from your CMDB and business processes.",
-     choices:['Claims Adjudication','Member Portal','Provider Portal','Enrollment & Eligibility',
-              'Pharmacy Claims (PBM)','EDI / Clearinghouse','Enterprise Data Warehouse (PHI)',
-              'Care / Utilization Management','Payment & Treasury','Provider Directory'],
-     hint:'Optional — select one or more'},
+    {id:'subSector', type:'choice', group:'Profile',
+     ask:'What is your primary line of business? (Your organization type is already captured — this is the dominant book of business.)',
+     choices:['Commercial / Group','Individual / Marketplace','Medicare Advantage','Medicaid Managed Care',
+              'Medicare Part D / Pharmacy','Dental / Vision / Ancillary','Multi-line']},
+    // Crown jewels, governance maturity, and IR capability are NOT self-reported
+    // here — they are derived from your processes/apps and your assessment
+    // evidence (the platform proposes them). Risk appetite is a leadership
+    // stance (not a self-assessment), so we ask it, with examples.
     {id:'riskAppetite', type:'choice', group:'Profile',
-     ask:"How would you characterize leadership's cybersecurity risk appetite?",
-     choices:['Risk-averse','Moderate','Risk-tolerant']},
-    {id:'governanceMaturity', type:'choice', group:'Process',
-     ask:'How mature is your security governance program today?',
-     choices:['Initial','Developing','Defined','Managed','Optimized']},
-    {id:'incidentResponse', type:'choice', group:'Process',
-     ask:'What is the state of your incident response capability?',
-     choices:['No formal plan','Documented, not tested','Documented and tested']},
+     ask:"How would leadership characterize the organization's cybersecurity risk appetite?",
+     choices:['Risk-averse — minimize risk even at higher cost or slower delivery (e.g. block launches over open criticals)',
+              'Moderate — balance risk against cost and speed (e.g. accept time-boxed exceptions with compensating controls)',
+              'Risk-tolerant — accept more risk for speed or innovation (e.g. ship first, remediate fast-follow)'],
+     hint:'This sets how we frame thresholds and recommendations — it is not a maturity score.'},
     {id:'hosting', type:'choice', group:'Technology',
      ask:'Where do your systems primarily run?',
      choices:['Mostly cloud','Hybrid','Mostly on-premises']},
@@ -19409,6 +19407,13 @@ function SetupBot(props) {
     if (scrollRef.current) { scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }
   }, [msgs, typing]);
 
+  // When the bot reaches a question we prefilled from public data, seed the
+  // input with the estimate so the user can confirm or overwrite it.
+  useEffect(function(){
+    var cq = QS[qIdx];
+    if (cq && prefill && prefill[cq.id] != null) { setInput(String(prefill[cq.id])); }
+  }, [qIdx]); // eslint-disable-line
+
   function pick(value) {
     var q = QS[qIdx];
     accRef.current = Object.assign({}, accRef.current);
@@ -19426,6 +19431,21 @@ function SetupBot(props) {
         accRef.current.selectedStates = [extractedState];
         setAnswers(Object.assign({}, accRef.current));
       }
+      // Best-effort public-data prefill so the user types less. Values are
+      // estimates merged into the answers; every prefilled field stays editable.
+      try {
+        fetch(CYBERRX_API + '/api/orgs/enrich', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: value }),
+        }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
+          if (!d || !d.fields || !Object.keys(d.fields).length) return;
+          accRef.current = Object.assign({}, accRef.current);
+          Object.keys(d.fields).forEach(function(k){ if (accRef.current[k]==null||accRef.current[k]==='') accRef.current[k]=String(d.fields[k]); });
+          setAnswers(Object.assign({}, accRef.current));
+          setPrefill(d.fields);
+          addMsg('bot', "I prefilled a few figures (revenue, employees, members) from public data — please verify and edit them as we go.");
+        }).catch(function(){});
+      } catch (e) {}
     }
 
     // If we're in edit mode, advance through the group before returning to confirm
@@ -19966,6 +19986,7 @@ function SetupBot(props) {
                     padding:'9px 16px',cursor:'pointer',fontSize:12,fontWeight:700}}>Next</button>
               </div>
               {curQ.hint&&<div style={{color:C.muted,fontSize:10,marginTop:4}}>{curQ.hint}</div>}
+              {prefill[curQ.id]!=null&&<div style={{color:C.acc,fontSize:10,marginTop:4}}>✨ Prefilled from public data — verify or edit</div>}
             </div>
           )}
           {curQ.type==='text'&&(
