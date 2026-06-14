@@ -18,6 +18,8 @@ import CroBoardReport from "./components/CroBoardReport";
 import CisoSecurityPostureDashboard from "./components/CisoSecurityPostureDashboard";
 import CisoAgentPanel from "./components/CisoAgentPanel";
 import OrganizationIntakeDocuments from "./components/OrganizationIntakeDocuments";
+import IngestionUploader from "./components/IngestionUploader";
+import CrosswalkPanel from "./components/CrosswalkPanel";
 import FrameworkScoreStrip from "./components/FrameworkScoreStrip";
 import RemediationPanel from "./components/RemediationPanel";
 import AuditDash from "./pages/AuditDash";
@@ -5612,6 +5614,9 @@ function Setup(props) {
                 <div style={{marginTop:10,color:C.muted,fontSize:11}}>{selProcs.size} of {realOrgProcs(orgType||'Other Payer').length} processes selected</div>
               )}
             </Card>
+            <div style={{marginTop:14}}>
+              <IngestionUploader sourceKind="process_inventory" label="Or upload a process inventory / BIA (optional)" />
+            </div>
             <div style={{display:"flex",justifyContent:"space-between"}}>
               <Btn onClick={function(){setStep(2);}}>← Back</Btn>
               <Btn onClick={function(){setStep(3);}} primary disabled={selProcs.size===0}>Next: Map Applications →</Btn>
@@ -5886,6 +5891,14 @@ function Setup(props) {
                 })}
               </Card>
             )}
+
+            <div style={{marginTop:14}}>
+              <IngestionUploader sourceKind="cmdb" label="Import applications from a CMDB (file)" />
+            </div>
+            <Card style={{marginTop:14}}>
+              <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:8}}>Crosswalk — map applications to processes</div>
+              <CrosswalkPanel />
+            </Card>
 
             <div style={{display:"flex",justifyContent:"space-between"}}>
               <Btn onClick={function(){setStep(2);}}>&#x2190; Back</Btn>

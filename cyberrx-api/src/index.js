@@ -258,6 +258,9 @@ app.use('/api/intake',            [apiGetLimiter, apiPostLimiter], require('./ro
 // Generic schema-agnostic ingestion (process inventory / CMDB) — files + APIs
 app.use('/api/ingestion',         [apiGetLimiter, apiPostLimiter], require('./routes/ingestion'));
 
+// Crosswalk — app -> process and process -> canonical capability (assisted)
+app.use('/api/crosswalk',         [apiGetLimiter, apiPostLimiter], require('./routes/crosswalk'));
+
 // Saraqael — vendor document assessment agent (every doc type + cross-validation)
 app.use('/api/vendor-assessment', [apiGetLimiter, apiPostLimiter], require('./routes/vendorAssessment'));
 
