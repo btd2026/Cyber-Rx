@@ -611,6 +611,186 @@ async function init() {
         edited_by     TEXT
       );
 
+      -- ===================================================================
+      -- Linkage & multi-tenant reference model (Phase 1)
+      -- Chain: BusinessFunction -> Process -> Application -> Asset -> Risk -> Control
+      -- Shared canonical reference tables carry NO organization_id.
+      -- ===================================================================
+
+      -- Canonical, versioned, plan-agnostic capability taxonomy (SHARED).
+      CREATE TABLE IF NOT EXISTS capability_library_version (
+        id           TEXT PRIMARY KEY,
+        label        TEXT NOT NULL,
+        version      TEXT NOT NULL,
+        published_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE TABLE IF NOT EXISTS capability (
+        id            TEXT PRIMARY KEY,
+        version_id    TEXT NOT NULL REFERENCES capability_library_version(id),
+        parent_id     TEXT,                       -- function -> capability
+        content_tier  TEXT NOT NULL,              -- A_universal | B_blue | C_extension
+        kind          TEXT NOT NULL,              -- function | capability
+        name          TEXT NOT NULL,
+        default_tier  INTEGER,                    -- default criticality tier 1|2|3
+        default_rto   TEXT
+      );
+      CREATE INDEX IF NOT EXISTS capability_version ON capability(version_id);
+      CREATE TABLE IF NOT EXISTS capability_pack (
+        id          TEXT PRIMARY KEY,             -- e.g. universal_payer | blue
+        version_id  TEXT NOT NULL REFERENCES capability_library_version(id),
+        label       TEXT
+      );
+      CREATE TABLE IF NOT EXISTS capability_pack_item (
+        pack_id       TEXT NOT NULL REFERENCES capability_pack(id),
+        capability_id TEXT NOT NULL REFERENCES capability(id),
+        PRIMARY KEY (pack_id, capability_id)
+      );
+
+      -- Tenant business model — Business Function (new top of the chain).
+      CREATE TABLE IF NOT EXISTS business_functions (
+        id              TEXT PRIMARY KEY,
+        organization_id TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        name            TEXT NOT NULL,
+        capability_id   TEXT,                     -- crosswalk to canonical function
+        owner           TEXT,
+        created_at      TIMESTAMPTZ DEFAULT NOW(),
+        updated_at      TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS business_functions_org ON business_functions(organization_id);
+
+      -- First-class Application entity (apps were assets.type='app' / id-arrays).
+      CREATE TABLE IF NOT EXISTS applications (
+        id                 TEXT PRIMARY KEY,
+        organization_id    TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        name               TEXT NOT NULL,
+        owner              TEXT,
+        criticality        TEXT,
+        tier               INTEGER,               -- inherited criticality tier
+        rto                TEXT,                  -- inherited tightest RTO
+        external_ref       TEXT,                  -- CMDB id / source key
+        vendor_dependency_id TEXT,                -- if provided by a third party
+        created_at         TIMESTAMPTZ DEFAULT NOW(),
+        updated_at         TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS applications_org ON applications(organization_id);
+
+      -- Auditable criticality (Tier + RTO), with how it was derived.
+      CREATE TABLE IF NOT EXISTS criticality_profile (
+        id              TEXT PRIMARY KEY,
+        organization_id TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        tier            INTEGER,                  -- 1 | 2 | 3
+        rto             TEXT,
+        derivation      TEXT,                     -- explicit | inherited
+        created_at      TIMESTAMPTZ DEFAULT NOW()
+      );
+
+      -- Crosswalks (the heart of the product) — confidence-scored, idempotent.
+      CREATE TABLE IF NOT EXISTS process_capability_map (
+        organization_id TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        process_id      TEXT NOT NULL,
+        capability_id   TEXT NOT NULL,
+        confidence      NUMERIC,
+        source          TEXT,                     -- reference | heuristic | llm | user
+        confirmed       BOOLEAN DEFAULT false,
+        confirmed_by    TEXT,
+        updated_at      TIMESTAMPTZ DEFAULT NOW(),
+        PRIMARY KEY (organization_id, process_id, capability_id)
+      );
+      CREATE TABLE IF NOT EXISTS app_process_map (
+        organization_id TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        application_id  TEXT NOT NULL,
+        process_id      TEXT NOT NULL,
+        confidence      NUMERIC,
+        source          TEXT,
+        confirmed       BOOLEAN DEFAULT false,
+        confirmed_by    TEXT,
+        updated_at      TIMESTAMPTZ DEFAULT NOW(),
+        PRIMARY KEY (organization_id, application_id, process_id)
+      );
+
+      -- Third-party DEPENDENCY (graph node) — distinct from a monitoring connector.
+      CREATE TABLE IF NOT EXISTS third_party_dependency (
+        id              TEXT PRIMARY KEY,
+        organization_id TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        name            TEXT NOT NULL,
+        kind            TEXT,                     -- claims_platform | pbm | edi_clearinghouse | ...
+        catalog_ref     TEXT,                     -- canonical dependency id, if seeded from a pack
+        supports_processes JSONB DEFAULT '[]',    -- process ids this dependency supports
+        created_at      TIMESTAMPTZ DEFAULT NOW(),
+        updated_at      TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS third_party_dependency_org ON third_party_dependency(organization_id);
+
+      -- Vendor-neutral CONNECTOR (a data source) — distinct from a dependency.
+      CREATE TABLE IF NOT EXISTS connector (
+        id              TEXT PRIMARY KEY,
+        organization_id TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        kind            TEXT NOT NULL,            -- cmdb | easm | ratings | vuln | evidence
+        provider        TEXT NOT NULL,            -- servicenow | bmc_helix | device42 | generic | ...
+        config          JSONB DEFAULT '{}',
+        status          TEXT DEFAULT 'configured',
+        last_synced_at  TIMESTAMPTZ,
+        created_at      TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS connector_org ON connector(organization_id);
+
+      -- Generic ingestion — a declared source + its persisted field mapping +
+      -- an exception queue (never silently drop rows).
+      CREATE TABLE IF NOT EXISTS ingestion_source (
+        id              TEXT PRIMARY KEY,
+        organization_id TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        source_kind     TEXT NOT NULL,            -- process_inventory | cmdb | ...
+        origin          TEXT NOT NULL,            -- file | connector
+        connector_id    TEXT,
+        label           TEXT,
+        created_at      TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS ingestion_source_org ON ingestion_source(organization_id);
+      CREATE TABLE IF NOT EXISTS ingestion_mapping (
+        id              TEXT PRIMARY KEY,
+        organization_id TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        source_id       TEXT NOT NULL REFERENCES ingestion_source(id) ON DELETE CASCADE,
+        mapping         JSONB NOT NULL DEFAULT '{}',  -- incoming field -> canonical field (+confidence)
+        confirmed       BOOLEAN DEFAULT false,
+        updated_at      TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE (source_id)
+      );
+      CREATE TABLE IF NOT EXISTS ingestion_exception (
+        id              TEXT PRIMARY KEY,
+        organization_id TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        source_id       TEXT NOT NULL REFERENCES ingestion_source(id) ON DELETE CASCADE,
+        raw_row         JSONB,
+        reason          TEXT,
+        status          TEXT DEFAULT 'open',      -- open | resolved | ignored
+        created_at      TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS ingestion_exception_src ON ingestion_exception(source_id);
+
+      -- Unified per-control assessment (merges automated + document evidence).
+      CREATE TABLE IF NOT EXISTS assessment_result (
+        id              TEXT PRIMARY KEY,
+        organization_id TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        framework_id    TEXT NOT NULL,
+        requirement_id  TEXT NOT NULL,
+        status          TEXT,                     -- met | partially met | not met
+        score           NUMERIC,
+        confidence      TEXT,
+        gap             TEXT,
+        recommendation  TEXT,
+        review_status   TEXT DEFAULT 'pending',   -- pending | reviewed
+        evidence_refs   JSONB DEFAULT '[]',       -- trace to check_results / control_assessment
+        updated_at      TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE (organization_id, framework_id, requirement_id)
+      );
+      CREATE INDEX IF NOT EXISTS assessment_result_org ON assessment_result(organization_id, framework_id);
+
+      -- Additive columns on existing tables (idempotent).
+      ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS business_function_id TEXT;
+      ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS rto TEXT;
+      ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS capability_id TEXT;
+      ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS criticality_profile_id TEXT;
+      ALTER TABLE framework_requirements ADD COLUMN IF NOT EXISTS assessment_type TEXT; -- automated | manual | hybrid
+
       -- ===== Organization Intake — document request & review pipeline =====
       -- Canonical "thing we ask for" (requested at most once per org).
       CREATE TABLE IF NOT EXISTS document_type (

@@ -76,6 +76,12 @@ async function bootstrap() {
     steps.intakeCatalog = await require('./seedIntakeCatalog').seed();
   } catch (e) { logger.warn('bootstrap: intake catalog seed failed', { error: e.message }); }
 
+  try {
+    // Canonical payer capability library + packs; backfills assessment_type.
+    // Shared reference content (no org_id); idempotent.
+    steps.referenceModel = await require('./seedReferenceModel').seed();
+  } catch (e) { logger.warn('bootstrap: reference model seed failed', { error: e.message }); }
+
   return steps;
 }
 
