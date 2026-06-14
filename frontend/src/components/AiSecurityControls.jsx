@@ -78,7 +78,7 @@ export default function AiSecurityControls(props) {
         <div style={{ fontSize: 12.5, color: INK, lineHeight: 1.5 }}>
           <strong style={{ color: '#1d4ed8' }}>What this shows:</strong> how well your AI/GenAI safeguards (Claude Code, Copilot, generative-AI use) are operating — each mapped to OWASP LLM Top 10 and NIST AI RMF, with the action to close each gap.
         </div>
-        <div style={{ flexShrink: 0 }}><VoiceControls voice={voice} onReplay={() => voice.speak(AI_INTRO)} label="Hear Michael" /></div>
+        <div style={{ flexShrink: 0 }}><VoiceControls voice={voice} onReplay={() => voice.speak(AI_INTRO)} label="Listen" /></div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginTop: 16 }}>

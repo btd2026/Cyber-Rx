@@ -578,6 +578,24 @@ async function init() {
       ALTER TABLE remediation_tickets ADD COLUMN IF NOT EXISTS last_synced_at TIMESTAMPTZ;
       ALTER TABLE remediation_tickets ADD COLUMN IF NOT EXISTS owner TEXT;
 
+      -- CISO risk acceptances — the documented decision to accept a risk as-is
+      -- (the alternative to opening a remediation ticket). One per (org, source).
+      CREATE TABLE IF NOT EXISTS risk_acceptances (
+        id              TEXT PRIMARY KEY,
+        organization_id TEXT NOT NULL,
+        source_ref      TEXT NOT NULL,
+        title           TEXT,
+        justification   TEXT,
+        risk_level      TEXT,
+        accepted_by     TEXT,
+        review_date     DATE,
+        status          TEXT DEFAULT 'active',   -- active | expired | revoked
+        created_at      TIMESTAMPTZ DEFAULT NOW(),
+        updated_at      TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE (organization_id, source_ref)
+      );
+      CREATE INDEX IF NOT EXISTS risk_acceptances_org ON risk_acceptances(organization_id);
+
       -- ===== Organization Intake — document request & review pipeline =====
       -- Canonical "thing we ask for" (requested at most once per org).
       CREATE TABLE IF NOT EXISTS document_type (

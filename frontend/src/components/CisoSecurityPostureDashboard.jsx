@@ -16,6 +16,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
 import TicketControl from './TicketControl';
+import RiskDecision from './RiskDecision';
 import CisoAgentPanel from './CisoAgentPanel';
 
 const STATUS_SEV = { Strong: 'Low', Moderate: 'Medium', Weak: 'High', Critical: 'Critical' };
@@ -444,26 +445,6 @@ function Thresholds({ board }) {
 }
 
 /* ---------------- Action-Now Queue + Attention ---------------- */
-// "Take action" surface for an item: explicit next step + the means to act —
-// open/track a ticket, email the owner, or copy an escalation note.
-function TakeAction({ sourceRef, title, action, owner, escalationPath, severity, dueDate, process }) {
-  const [copied, setCopied] = useState(false);
-  const note = `ESCALATION — ${title}\nRequested action: ${action}\nOwner: ${owner}\nEscalation path: ${escalationPath || 'CISO'}\nProtects: ${process || '—'}\nTarget: ${dueDate || 'ASAP'}\n— Raised from the CyberRx CISO dashboard.`;
-  const mailto = `mailto:?subject=${encodeURIComponent(`[Escalation] ${title}`)}&body=${encodeURIComponent(note)}`;
-  const copy = () => { try { navigator.clipboard.writeText(note); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch (_) {} };
-  return (
-    <div style={{ marginTop: 9, borderTop: `1px dashed ${HAIR}`, paddingTop: 9 }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: '#C0392B', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Action required from you</div>
-      <div style={{ fontSize: 12, color: INK, lineHeight: 1.5, marginBottom: 8 }}>{action} <span style={{ color: INK3 }}>· route: {escalationPath || 'CISO'}</span></div>
-      <TicketControl sourceRef={sourceRef} title={`[Escalation] ${title}`} recommendation={action} severity={severity} owner={owner} dueDate={dueDate} />
-      <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-        <a href={mailto} style={{ background: '#fff', border: `1px solid ${HAIR}`, borderRadius: 6, padding: '5px 11px', fontSize: 11, fontWeight: 600, color: INK, textDecoration: 'none' }}>✉ Email owner</a>
-        <button onClick={copy} style={{ background: '#fff', border: `1px solid ${HAIR}`, borderRadius: 6, padding: '5px 11px', fontSize: 11, fontWeight: 600, color: INK, cursor: 'pointer' }}>{copied ? '✓ Copied' : '⧉ Copy escalation note'}</button>
-      </div>
-    </div>
-  );
-}
-
 function Actions({ queue, attention }) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 18 }}>
@@ -485,7 +466,7 @@ function Actions({ queue, attention }) {
             </div>
             {/* Every action can be ticketed; escalations get the full take-action surface. */}
             {a.escalation
-              ? <TakeAction sourceRef={`act:${a.id}`} title={a.action} action={`Authorize and assign: ${a.action}`} owner={a.owner} escalationPath="CISO → executive sponsor" severity={numSev(a.severity)} dueDate={a.dueDate} process={a.process} />
+              ? <RiskDecision sourceRef={`act:${a.id}`} title={a.action} recommendation={`Authorize and assign: ${a.action}`} owner={a.owner} escalationPath="CISO → executive sponsor" severity={numSev(a.severity)} processName={a.process} />
               : <div style={{ marginTop: 9 }}><TicketControl sourceRef={`act:${a.id}`} title={`[Action] ${a.action}`} recommendation={a.action} severity={numSev(a.severity)} owner={a.owner} dueDate={a.dueDate} /></div>}
           </div>
         ))}
@@ -501,7 +482,7 @@ function Actions({ queue, attention }) {
             <div style={{ fontSize: 11, color: INK2, marginTop: 5 }}>{a.businessImpact}</div>
             <div style={{ fontSize: 10.5, color: '#1f8a4c', fontWeight: 600, marginTop: 5 }}>→ Decision needed: {a.decision}</div>
             <div style={{ fontSize: 10, color: INK3, marginTop: 4 }}>{a.owner} · {a.targetDate} · {a.escalationPath}{a.blockers ? ` · blocker: ${a.blockers}` : ''}</div>
-            <TakeAction sourceRef={`attn:${a.id}`} title={a.title} action={a.decision} owner={a.owner} escalationPath={a.escalationPath} severity={a.severity} dueDate={a.targetDate} process={a.process} />
+            <RiskDecision sourceRef={`attn:${a.id}`} title={a.title} recommendation={a.decision} owner={a.owner} escalationPath={a.escalationPath} severity={a.severity} processName={a.process} />
           </div>
         ))}
       </div>
@@ -635,6 +616,9 @@ function Hidden({ risks }) {
             <Pill text={h.formalAcceptance === false ? 'No formal acceptance' : h.formalAcceptance === 'expired' ? 'Exception expired' : 'Accepted'} color={h.formalAcceptance === true ? '#1f8a4c' : '#C0392B'} />
           </div>
           <div style={{ fontSize: 10.5, color: '#7c3aed', fontWeight: 600, marginTop: 6 }}>→ {h.escalation}</div>
+          <RiskDecision sourceRef={`hidden:${h.id}`} title={h.risk} recommendation={h.escalation}
+            severity={h.formalAcceptance === true ? 'Medium' : 'High'} processName={h.process}
+            escalationPath="CISO → executive sponsor" />
         </div>
       ))}
     </div>

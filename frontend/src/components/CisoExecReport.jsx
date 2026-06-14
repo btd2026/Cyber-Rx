@@ -101,7 +101,7 @@ export default function CisoExecReport(props) {
           <div style={{ fontSize: 11.5, color: INK2, marginTop: 5 }}>Four independent frameworks on the same program — pick a lens below. Computed from validation run #{data.runId}.</div>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <VoiceControls voice={voice} onReplay={() => voice.speak(LENS_VOICE[lens] || INTRO)} label="Hear Michael" />
+          <VoiceControls voice={voice} onReplay={() => voice.speak(LENS_VOICE[lens] || INTRO)} label="Listen" />
           <a href={pdfUrl} style={{ background: INK, color: '#fff', fontSize: 11.5, fontWeight: 600, borderRadius: 5, padding: '8px 14px', textDecoration: 'none' }}>⤓ PDF report</a>
           <a href={pptxUrl} style={{ background: '#fff', color: INK, border: `1px solid ${HAIR}`, fontSize: 11.5, fontWeight: 600, borderRadius: 5, padding: '8px 14px', textDecoration: 'none' }}>⤓ PowerPoint</a>
         </div>

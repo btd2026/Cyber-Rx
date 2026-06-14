@@ -91,52 +91,56 @@ export default function CisoAgentPanel(props) {
 
   return (
     <div style={{ padding: '4px 0 8px' }}>
-      {/* Header — agent + voice control (Michael), no Command Center guide */}
+      {/* Header + voice control. Voice is kept intact; the agent is not named in writing. */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.12em' }}>
-          Michael · CISO Agent — current state
+          Current State
         </div>
-        <VoiceControls voice={voice} onReplay={() => voice.speak(active ? active.narration : intro)} label="Hear Michael" />
+        <VoiceControls voice={voice} onReplay={() => voice.speak(active ? active.narration : intro)} label="Listen" />
       </div>
 
-      {/* Agent self-introduction — what's possible on the CISO tab */}
-      <div style={{ display: 'flex', gap: 12, background: '#0f1b2d', color: '#e6ecf5', borderRadius: 10, padding: '14px 18px', marginBottom: 14 }}>
-        <div style={{ width: 34, height: 34, borderRadius: 17, background: '#1e3a5f', color: '#9bc0ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, flexShrink: 0 }}>M</div>
-        <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>
-          <strong style={{ color: '#9bc0ff' }}>Michael — your CISO agent.</strong> These are the <strong>5 key questions every CISO should be able to answer at any time</strong>. Each one shows a quick summary of where you stand right now — <strong>click a question</strong> for the full details: the answer, the evidence behind it, the recommended action, and who owns it.
+      {/* Intro — shown only in list mode so the detail view stays focused. */}
+      {!active && (
+        <div style={{ background: '#0f1b2d', color: '#e6ecf5', borderRadius: 10, padding: '14px 18px', marginBottom: 14, fontSize: 12.5, lineHeight: 1.6 }}>
+          These are the <strong style={{ color: '#9bc0ff' }}>5 key questions every CISO should be able to answer at any time</strong>. Each one shows a quick summary of where you stand right now — <strong>select a question</strong> for the full details: the answer, the evidence behind it, the recommended action, and who owns it.
         </div>
-      </div>
+      )}
 
-      {/* The 5 key questions — each shows a summary; click a question for the
-          full details (which open inline directly beneath it). */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-        {d.questions.map((q) => {
-          const on = q.id === activeId;
-          return (
-            <div key={q.id}>
-              <button onClick={() => selectQuestion(q)}
-                style={{
-                  width: '100%', textAlign: 'left', background: on ? INK : '#fff', color: on ? '#fff' : INK,
-                  border: `1px solid ${on ? INK : HAIR}`, borderRadius: 10, padding: '12px 15px', cursor: 'pointer',
-                  boxShadow: on ? '0 2px 10px rgba(15,23,42,0.18)' : 'none', transition: 'all .12s',
-                }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ width: 22, height: 22, borderRadius: 11, background: on ? '#1e3a5f' : PANEL, color: on ? '#9bc0ff' : INK3, fontSize: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{q.n}</span>
-                  <span style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.4 }}>{q.question}</span>
-                  <span style={{ marginLeft: 'auto', flexShrink: 0, fontSize: 11, fontWeight: 600, color: on ? '#9bc0ff' : INK3 }}>{on ? 'Hide details ▲' : 'View details ▾'}</span>
-                </div>
-                {/* one-line summary of where we stand on this question */}
-                <div style={{ fontSize: 12.5, lineHeight: 1.5, marginTop: 7, paddingLeft: 32, color: on ? '#cdd8e6' : INK2 }}>{q.answer}</div>
-              </button>
-              {on && active && (
-                <div style={{ marginTop: 10, marginBottom: 4 }}>
-                  <CisoAnswerView a={active} issues={issues} onIssueClick={setIssue} />
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+      {/* List mode — the 5 questions, each with a quick summary. Selecting one
+          replaces the list with a focused detail view, so questions and their
+          explanations are never interleaved. */}
+      {!active && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+          {d.questions.map((q) => (
+            <button key={q.id} onClick={() => selectQuestion(q)}
+              style={{ width: '100%', textAlign: 'left', background: '#fff', color: INK,
+                border: `1px solid ${HAIR}`, borderLeft: `4px solid ${C[q.status] || INK3}`, borderRadius: 10, padding: '13px 16px', cursor: 'pointer', transition: 'all .12s' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ width: 22, height: 22, borderRadius: 11, background: PANEL, color: INK3, fontSize: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{q.n}</span>
+                <span style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.4 }}>{q.question}</span>
+                {q.status && <span style={{ marginLeft: 'auto', flexShrink: 0, fontSize: 9.5, fontWeight: 700, color: '#fff', background: C[q.status] || INK3, borderRadius: 4, padding: '2px 8px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{q.status}</span>}
+              </div>
+              <div style={{ fontSize: 12.5, lineHeight: 1.5, marginTop: 7, paddingLeft: 32, color: INK2 }}>{q.answer}</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#1d4ed8', marginTop: 6, paddingLeft: 32 }}>View details →</div>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Detail mode — one question, kept separate from the rest. */}
+      {active && (
+        <div>
+          <button onClick={() => selectQuestion(active)}
+            style={{ background: 'transparent', border: 'none', color: '#1d4ed8', fontSize: 12, fontWeight: 700, cursor: 'pointer', padding: 0, marginBottom: 12 }}>
+            ← All questions
+          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+            <span style={{ width: 24, height: 24, borderRadius: 12, background: '#0f1b2d', color: '#9bc0ff', fontSize: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{active.n}</span>
+            <span style={{ fontSize: 16, fontWeight: 800, color: INK, lineHeight: 1.35 }}>{active.question}</span>
+          </div>
+          <CisoAnswerView a={active} issues={issues} onIssueClick={setIssue} />
+        </div>
+      )}
 
       {issue && <IssueDrawer item={issue} voice={voice} onClose={() => { voice.stop(); setIssue(null); }} />}
     </div>
@@ -221,7 +225,7 @@ function IssueDrawer({ item, onClose, voice }) {
           {/* SME explanation — the agent explains in plain English */}
           {e.explanation && (
             <div style={{ background: '#eef4fb', border: '1px solid #cfe0f3', borderRadius: 9, padding: '13px 15px', marginBottom: 16 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: '#1d4ed8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Michael explains</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#1d4ed8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Why this matters</div>
               <div style={{ fontSize: 13, color: INK, lineHeight: 1.6 }}>{e.explanation}</div>
             </div>
           )}

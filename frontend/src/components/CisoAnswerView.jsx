@@ -31,15 +31,16 @@ export default function CisoAnswerView({ a, issues, onIssueClick }) {
 
   return (
     <div style={{ background: '#fff', border: `1px solid ${HAIR}`, borderTop: `4px solid ${status}`, borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 3px rgba(15,23,42,0.06)' }}>
-      {/* verdict header band */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, padding: '13px 24px', background: PANEL, borderBottom: `1px solid ${HAIR}` }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ width: 9, height: 9, borderRadius: 5, background: status, boxShadow: `0 0 0 3px ${status}22` }} />
-          <span style={{ fontSize: 13, fontWeight: 800, color: status, letterSpacing: '0.01em' }}>{verdict}</span>
-          <span style={{ fontSize: 11, color: INK3 }}>·</span>
+      {/* verdict header band — executive-first: status pill + key facts */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, padding: '15px 24px', background: `linear-gradient(135deg, ${status}14, ${status}05)`, borderBottom: `1px solid ${HAIR}` }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: 10, fontWeight: 800, color: '#fff', background: status, borderRadius: 6, padding: '5px 12px', textTransform: 'uppercase', letterSpacing: '0.07em', boxShadow: `0 1px 4px ${status}55` }}>{verdict}</span>
           <span style={{ fontSize: 11.5, color: INK2 }}>Confidence <strong style={{ color: conf(a.confidence) }}>{a.confidence}</strong></span>
         </div>
-        <div style={{ fontSize: 11.5, color: INK2 }}>Owner <strong style={{ color: INK }}>{a.owner}</strong> · by <strong style={{ color: INK }}>{a.targetDate}</strong></div>
+        <div style={{ fontSize: 11.5, color: INK2, display: 'flex', gap: 16 }}>
+          <span>Owner <strong style={{ color: INK }}>{a.owner}</strong></span>
+          <span>Target <strong style={{ color: INK }}>{a.targetDate}</strong></span>
+        </div>
       </div>
 
       <div style={{ padding: '20px 24px' }}>
@@ -51,7 +52,7 @@ export default function CisoAnswerView({ a, issues, onIssueClick }) {
           <div style={{ marginTop: 14, display: 'flex', gap: 10 }}>
             <div style={{ width: 3, borderRadius: 2, background: '#1d4ed8', flexShrink: 0 }} />
             <div>
-              <SectionLabel color="#1d4ed8">Michael explains</SectionLabel>
+              <SectionLabel color="#1d4ed8">Why this matters</SectionLabel>
               <div style={{ fontSize: 13.5, color: INK, lineHeight: 1.6 }}>{a.explanation}</div>
             </div>
           </div>
