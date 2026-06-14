@@ -261,6 +261,9 @@ app.use('/api/ingestion',         [apiGetLimiter, apiPostLimiter], require('./ro
 // Crosswalk — app -> process and process -> canonical capability (assisted)
 app.use('/api/crosswalk',         [apiGetLimiter, apiPostLimiter], require('./routes/crosswalk'));
 
+// Unified assessment engine — merge automated + document evidence per control
+app.use('/api/assessment',        [apiGetLimiter, apiPostLimiter, apiPutLimiter], require('./routes/assessment'));
+
 // Saraqael — vendor document assessment agent (every doc type + cross-validation)
 app.use('/api/vendor-assessment', [apiGetLimiter, apiPostLimiter], require('./routes/vendorAssessment'));
 
