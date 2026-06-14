@@ -596,6 +596,21 @@ async function init() {
       );
       CREATE INDEX IF NOT EXISTS risk_acceptances_org ON risk_acceptances(organization_id);
 
+      -- Intake-driven, LLM-generated executive summary (human-in-the-loop).
+      -- Stored as discrete blocks so layout is stable and a consultant can
+      -- review/edit before the report is finalized (never auto-published).
+      CREATE TABLE IF NOT EXISTS exec_summaries (
+        id            TEXT PRIMARY KEY,
+        org_id        TEXT NOT NULL UNIQUE,
+        blocks        JSONB NOT NULL,
+        status        TEXT DEFAULT 'draft',     -- draft | reviewed
+        model         TEXT,
+        generated_by  TEXT,                      -- llm | deterministic | edited
+        generated_at  TIMESTAMPTZ DEFAULT NOW(),
+        updated_at    TIMESTAMPTZ DEFAULT NOW(),
+        edited_by     TEXT
+      );
+
       -- ===== Organization Intake — document request & review pipeline =====
       -- Canonical "thing we ask for" (requested at most once per org).
       CREATE TABLE IF NOT EXISTS document_type (
