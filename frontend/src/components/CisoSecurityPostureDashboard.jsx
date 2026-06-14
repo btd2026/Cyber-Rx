@@ -18,6 +18,7 @@ import { useAgentVoice, VoiceControls } from './agentVoice';
 import TicketControl from './TicketControl';
 import RiskDecision from './RiskDecision';
 import CisoAgentPanel from './CisoAgentPanel';
+import ExecutiveSummaryEditor from './ExecutiveSummaryEditor';
 
 const STATUS_SEV = { Strong: 'Low', Moderate: 'Medium', Weak: 'High', Critical: 'Critical' };
 const numSev = (n) => (n >= 5 ? 'Critical' : n >= 4 ? 'High' : n >= 3 ? 'Medium' : 'Low');
@@ -91,7 +92,7 @@ export default function CisoSecurityPostureDashboard(props) {
   const refreshed = new Date(d.generatedAt).toLocaleString();
 
   const TABS = [
-    ['qa', 'Current State'], ['domains', 'Domain Health'], ['controls', 'Control Risk'],
+    ['qa', 'Current State'], ['summary', 'Executive Summary'], ['domains', 'Domain Health'], ['controls', 'Control Risk'],
     ['thresholds', `Thresholds · ${d.thresholds.breaches} breached`], ['actions', 'Action Now'],
     ['processes', 'Process Protection'], ['paths', 'Attack Pathways'], ['readiness', 'Readiness & Investment'],
     ['hidden', `Hidden Risk · ${d.hiddenRisks.length}`],
@@ -155,6 +156,7 @@ export default function CisoSecurityPostureDashboard(props) {
           </div>
         )}
         {tab === 'qa' && <CisoAgentPanel />}
+        {tab === 'summary' && <ExecutiveSummaryEditor />}
         {tab === 'domains' && <Domains matrix={d.domainMatrix} controlRisk={d.controlRisk} thresholds={d.thresholds} />}
         {tab === 'controls' && <Controls rows={d.controlRisk} />}
         {tab === 'thresholds' && <Thresholds board={d.thresholds} />}
