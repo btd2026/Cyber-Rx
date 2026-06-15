@@ -415,49 +415,4 @@ router.get('/categories', async (req, res) => {
   }
 });
 
-/**
- * POST /api/vendor-monitoring/vendors/:vendorId/connect/:connectorType
- * Authenticate to a monitoring source: vault the credentials, then pull signals.
- */
-router.post('/vendors/:vendorId/connect/:connectorType', async (req, res) => {
-  const { vendorId, connectorType } = req.params;
-  const { organizationId } = req;
-  const { credentials } = req.body || {};
-  try {
-    if (credentials && Object.keys(credentials).length) {
-      await vault.set(organizationId, `vendor:${vendorId}:${connectorType}`, credentials);
-    }
-    const result = await ContinuousMonitoringService.syncConnector(connectorType, vendorId, organizationId, credentials || {});
-    res.json({ success: true, data: { connected: true, ...result } });
-  } catch (error) {
-    res.status(500).json({ success: false, error: 'Connection failed. Check the credentials and required read-only permissions.' });
-  }
-});
-
-/**
- * POST /api/vendor-monitoring/vendors/:vendorId/risk-synthesis
- * Unified vendor risk = monitoring score + assurance-document review (LLM).
- */
-router.post('/vendors/:vendorId/risk-synthesis', async (req, res) => {
-  const { vendorId } = req.params;
-  const { organizationId } = req;
-  const { vendorName, documents } = req.body || {};
-  try {
-    res.json({ success: true, data: await VendorRiskSynthesis.synthesize(organizationId, vendorId, { vendorName, documents }) });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-/** GET /api/vendor-monitoring/vendors/:vendorId/risk — latest unified vendor risk. */
-router.get('/vendors/:vendorId/risk', async (req, res) => {
-  const { vendorId } = req.params;
-  const { organizationId } = req;
-  try {
-    res.json({ success: true, data: await VendorRiskSynthesis.getLatest(organizationId, vendorId) });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
 module.exports = router;

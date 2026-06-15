@@ -488,6 +488,25 @@ async function init() {
       );
       CREATE INDEX IF NOT EXISTS vendor_risk_assessment_org ON vendor_risk_assessment(organization_id);
 
+      -- LLM analysis of an uploaded vendor assurance document.
+      CREATE TABLE IF NOT EXISTS vendor_document_review (
+        id              TEXT PRIMARY KEY,
+        organization_id TEXT NOT NULL,
+        vendor_id       TEXT NOT NULL,
+        vendor_name     TEXT,
+        doc_type        TEXT,
+        file_name       TEXT,
+        score           INTEGER,                 -- 0-100 completeness/assurance
+        status          TEXT,                    -- Strong | Adequate | Weak | Insufficient
+        findings        JSONB DEFAULT '[]',      -- what's missing / weak
+        recommendations JSONB DEFAULT '[]',      -- how to fix
+        summary         TEXT,
+        engine          TEXT,
+        reviewed_at     TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE (organization_id, vendor_id, doc_type)
+      );
+      CREATE INDEX IF NOT EXISTS vendor_document_review_vendor ON vendor_document_review(organization_id, vendor_id);
+
       -- Indexes for Vendor Monitoring Connections
       CREATE INDEX IF NOT EXISTS vendor_monitoring_conn_org ON vendor_monitoring_connections(organization_id);
       CREATE INDEX IF NOT EXISTS vendor_monitoring_conn_vendor ON vendor_monitoring_connections(vendor_id);
