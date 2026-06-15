@@ -48,6 +48,7 @@ function matchEntity(d, text) {
 }
 
 export default function CisoAgentPanel(props) {
+  const role = props.role || 'CISO';
   const [d, setD] = useState(null);
   const [error, setError] = useState(null);
   const [activeId, setActiveId] = useState(null);
@@ -57,10 +58,10 @@ export default function CisoAgentPanel(props) {
 
   useEffect(() => {
     const h = { 'X-Org-Id': orgId }; if (token) h.Authorization = `Bearer ${token}`;
-    fetch(`${api}/api/ciso/dashboard?org_id=${encodeURIComponent(orgId)}`, { headers: h })
+    fetch(`${api}/api/ciso/dashboard?role=${encodeURIComponent(role)}&org_id=${encodeURIComponent(orgId)}`, { headers: h })
       .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(setD).catch((e) => setError(e.message));
-  }, [api, orgId, token]);
+  }, [api, orgId, token, role]);
 
   const active = useMemo(() => (d && activeId ? d.questions.find((q) => q.id === activeId) : null), [d, activeId]);
   const issues = useMemo(() => {
@@ -68,16 +69,19 @@ export default function CisoAgentPanel(props) {
     return (active.riskDrivers || []).map((label) => ({ label, entity: matchEntity(d, label) }));
   }, [d, active]);
 
-  const intro = "Hi, I'm Michael, your CISO agent. These are the five key questions every CISO should be able to answer at any time — how strong our posture is, where risk is concentrated, how we'd hold up if attacked today, whether we're inside our own risk thresholds, and whether our security investments are paying off. Each question shows a short summary of where we stand. Click a question and I'll give you the full details — the evidence, the recommended action, the owner, and a target date. Click any risk in my answer to trace it back to its source. Where would you like to start?";
+  const intro = role === 'CISO'
+    ? "Hi, I'm your CISO agent. These are the five key questions every CISO should be able to answer at any time — how strong our posture is, where risk is concentrated, how we'd hold up if attacked today, whether we're inside our own risk thresholds, and whether our security investments are paying off. Each question shows a short summary of where we stand. Click a question and I'll give you the full details — the evidence, the recommended action, the owner, and a target date. Where would you like to start?"
+    : `Hi, I'm your ${role} agent. These are the five key questions every ${role} should be able to answer at any time, each answered from your own data. Each question shows a short summary of where you stand. Click a question for the full details — the evidence behind it, the recommended action, the owner, and a target date. Where would you like to start?`;
 
-  // Michael introduces himself once when the CISO tab opens (respects mute).
+  // The agent introduces itself once per role when the tab opens (respects mute).
   useEffect(() => {
     if (!d) return;
-    if (typeof window !== 'undefined' && window._cx_ciso_intro_done) return;
-    if (typeof window !== 'undefined') window._cx_ciso_intro_done = true;
+    const flag = `_cx_intro_done_${role}`;
+    if (typeof window !== 'undefined' && window[flag]) return;
+    if (typeof window !== 'undefined') window[flag] = true;
     const t = setTimeout(() => voice.speak(intro), 350);
     return () => clearTimeout(t);
-  }, [d]); // eslint-disable-line
+  }, [d, role]); // eslint-disable-line
 
   const selectQuestion = (q) => {
     voice.stop(); setIssue(null);
@@ -86,8 +90,8 @@ export default function CisoAgentPanel(props) {
     if (!on) setTimeout(() => voice.speak(q.narration), 120); // voice TEACHES, not reads the screen
   };
 
-  if (error) return <div style={{ padding: 24, color: '#C0392B', fontSize: 13 }}>Could not load the CISO agent: {error}</div>;
-  if (!d) return <div style={{ padding: 24, color: INK3, fontSize: 13 }}>Loading CISO security questions…</div>;
+  if (error) return <div style={{ padding: 24, color: '#C0392B', fontSize: 13 }}>Could not load the {role} agent: {error}</div>;
+  if (!d) return <div style={{ padding: 24, color: INK3, fontSize: 13 }}>Loading {role} questions…</div>;
 
   return (
     <div style={{ padding: '4px 0 8px' }}>
@@ -102,7 +106,7 @@ export default function CisoAgentPanel(props) {
       {/* Intro — shown only in list mode so the detail view stays focused. */}
       {!active && (
         <div style={{ background: '#0f1b2d', color: '#e6ecf5', borderRadius: 10, padding: '14px 18px', marginBottom: 14, fontSize: 12.5, lineHeight: 1.6 }}>
-          These are the <strong style={{ color: '#9bc0ff' }}>5 key questions every CISO should be able to answer at any time</strong>. Each one shows a quick summary of where you stand right now — <strong>select a question</strong> for the full details: the answer, the evidence behind it, the recommended action, and who owns it.
+          These are the <strong style={{ color: '#9bc0ff' }}>5 key questions every {role} should be able to answer at any time</strong>. Each one shows a quick summary of where you stand right now — <strong>select a question</strong> for the full details: the answer, the evidence behind it, the recommended action, and who owns it.
         </div>
       )}
 
@@ -138,7 +142,7 @@ export default function CisoAgentPanel(props) {
             <span style={{ width: 24, height: 24, borderRadius: 12, background: '#0f1b2d', color: '#9bc0ff', fontSize: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{active.n}</span>
             <span style={{ fontSize: 16, fontWeight: 800, color: INK, lineHeight: 1.35 }}>{active.question}</span>
           </div>
-          <CisoAnswerView a={active} issues={issues} onIssueClick={setIssue} />
+          <CisoAnswerView a={active} role={role} issues={issues} onIssueClick={setIssue} />
         </div>
       )}
 

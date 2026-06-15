@@ -167,6 +167,80 @@ function roleScore(role, c) {
   return { score: s, narrative };
 }
 
+// ---- role pillars (drive the hero strip + Domain Health tab) ----------------
+// Returned in the CISO domainMatrix shape so the existing rich scaffold renders
+// them unchanged, but every pillar is the role's own — no shared security domains.
+const trendOf = (delta) => (delta >= 2 ? 'improving' : delta <= -2 ? 'deteriorating' : 'stable');
+function pillar(id, name, weight, current, delta, up, down, source) {
+  const cur = clamp(current, 20, 98);
+  return {
+    id, name, weight, current: cur, previous: clamp(cur - delta, 20, 98), delta,
+    trend: trendOf(delta), status: band(cur),
+    topImproving: up, topDeteriorating: down, source,
+  };
+}
+function roleDomains(role, c) {
+  const f = c.financial, r = c.risks, ctrl = c.controls, rm = c.remediation, l = c.legal, v = c.vendors, fi = c.findings, p = c.processes;
+  const invCapRisk = clamp(100 - (f.capitalAtRiskPct || 8) * 4, 30, 95);
+  switch (role) {
+    case 'CFO': return [
+      pillar('exposure_control', 'Exposure Control', 25, invCapRisk, 3, { metric: 'Net-exposure reduction', delta: 3 }, { metric: 'New high-dollar risks', delta: -2 }, 'Risk register · financial impacts'),
+      pillar('insurance', 'Insurance Coverage', 20, f.coverageRatio || 55, 2, { metric: 'Coverage ratio', delta: 2 }, { metric: 'PHI sub-limit gap', delta: -1 }, 'Insurance program'),
+      pillar('capital', 'Capital Adequacy', 20, f.surplus ? clamp(100 - (f.capitalAtRiskPct || 8) * 3, 40, 95) : 72, 1, { metric: 'Surplus headroom', delta: 1 }, { metric: 'Net exposure / surplus', delta: -2 }, 'Statutory surplus'),
+      pillar('remediation_roi', 'Remediation ROI', 20, clamp(100 - rm.overdue * 4, 40, 92), -2, { metric: 'Risk removed per $', delta: 2 }, { metric: 'Overdue remediation', delta: -3 }, 'Remediation program'),
+      pillar('loss_exp', 'Loss Experience', 15, 74, 1, { metric: 'No material losses', delta: 1 }, { metric: 'Near-miss frequency', delta: -1 }, 'Incident history'),
+    ];
+    case 'CIO': return [
+      pillar('system_health', 'System Health', 20, clamp(100 - p.atRisk.length * 6, 35, 92), 2, { metric: 'Tier-1 availability', delta: 2 }, { metric: 'At-risk crown jewels', delta: -3 }, 'CMDB · process map'),
+      pillar('control_cov', 'Control Coverage', 20, ctrl.avgEffectiveness || 64, 3, { metric: 'Controls implemented', delta: 3 }, { metric: 'Unimplemented controls', delta: -2 }, 'Control library'),
+      pillar('patch', 'Patch & Vulnerability', 18, clamp(100 - fi.openCritical.length * 7 - fi.repeat * 3, 30, 90), -3, { metric: 'KEV remediation', delta: 2 }, { metric: 'Repeat findings', delta: -4 }, 'Scanner · findings'),
+      pillar('lifecycle', 'Lifecycle Currency', 14, clamp(100 - ctrl.notImplemented * 2, 45, 90), 1, { metric: 'Supported platforms', delta: 1 }, { metric: 'End-of-life systems', delta: -2 }, 'Asset inventory'),
+      pillar('resilience', 'Resilience & Recovery', 16, 60, 2, { metric: 'Restore-test pass', delta: 2 }, { metric: 'Untested backups', delta: -2 }, 'Backup program'),
+      pillar('change', 'Change Discipline', 12, clamp(100 - rm.overdue * 3, 45, 90), -2, { metric: 'Change success rate', delta: 1 }, { metric: 'Overdue tasks', delta: -3 }, 'ITSM'),
+    ];
+    case 'CRO': return [
+      pillar('appetite', 'Appetite Adherence', 25, clamp(100 - r.critical * 14 - r.high * 4, 30, 92), -3, { metric: 'Within-appetite risks', delta: 2 }, { metric: 'Critical breaches', delta: -4 }, 'Risk appetite policy'),
+      pillar('closure', 'Critical Risk Closure', 20, clamp(100 - r.critical * 12, 35, 92), 2, { metric: 'Risks closed', delta: 2 }, { metric: 'Aging critical risks', delta: -2 }, 'Risk register'),
+      pillar('ownership', 'Owner Accountability', 20, clamp(100 - r.top.filter((x) => !x.owner).length * 12, 40, 95), 1, { metric: 'Risks with owner', delta: 1 }, { metric: 'Unassigned risks', delta: -3 }, 'Risk register'),
+      pillar('kri', 'KRI Tolerance', 20, clamp(100 - rm.overdue * 4, 40, 92), -2, { metric: 'KRIs in tolerance', delta: 1 }, { metric: 'Overdue remediation', delta: -3 }, 'KRI dashboard'),
+      pillar('acceptance', 'Acceptance Governance', 15, clamp(100 - r.acceptedCount * 6, 50, 95), 1, { metric: 'Documented acceptances', delta: 1 }, { metric: 'Silent acceptances', delta: -2 }, 'Exception register'),
+    ];
+    case 'CLO': return [
+      pillar('notification', 'Notification Readiness', 24, clamp(100 - l.triggered.length * 8, 40, 95), 2, { metric: 'Playbooks current', delta: 2 }, { metric: 'Triggered obligations', delta: -3 }, 'Legal obligations'),
+      pillar('obligation_cov', 'Obligation Coverage', 20, clamp(60 + l.total * 2, 50, 95), 1, { metric: 'Obligations mapped', delta: 1 }, { metric: 'Unmapped obligations', delta: -1 }, 'Compliance register'),
+      pillar('vendor_legal', 'Vendor / Contract Risk', 20, clamp(100 - v.activeSignals * 6, 40, 92), -2, { metric: 'BAAs current', delta: 1 }, { metric: 'Active vendor signals', delta: -3 }, 'TPRM · contracts'),
+      pillar('penalty', 'Penalty Containment', 18, clamp(90 - l.triggered.length * 8, 40, 92), -1, { metric: 'Reserves aligned', delta: 1 }, { metric: 'Penalty exposure', delta: -2 }, 'Legal reserves'),
+      pillar('privacy', 'Privacy Program', 18, 70, 2, { metric: 'PHI handling controls', delta: 2 }, { metric: 'Privacy gaps', delta: -1 }, 'Privacy office'),
+    ];
+    case 'Board':
+    default: return [
+      pillar('fin_exposure', 'Financial Exposure', 24, invCapRisk, 2, { metric: 'Net exposure trend', delta: 2 }, { metric: 'Uninsured exposure', delta: -2 }, 'Financial impacts'),
+      pillar('posture_trend', 'Risk Posture Trend', 22, clamp((ctrl.avgEffectiveness || 64), 35, 92), 2, { metric: 'Control effectiveness', delta: 2 }, { metric: 'Repeat findings', delta: -2 }, 'Posture engine'),
+      pillar('investment', 'Investment Adequacy', 18, 66, 1, { metric: 'Spend vs exposure', delta: 1 }, { metric: 'Underfunded areas', delta: -2 }, 'Security budget'),
+      pillar('insurance_adq', 'Insurance Adequacy', 18, f.coverageRatio || 55, 1, { metric: 'Coverage ratio', delta: 1 }, { metric: 'Sub-limit gaps', delta: -1 }, 'Insurance program'),
+      pillar('appetite_comp', 'Appetite Compliance', 18, clamp(100 - r.critical * 12, 35, 92), -2, { metric: 'Within appetite', delta: 1 }, { metric: 'Critical breaches', delta: -3 }, 'Risk appetite policy'),
+    ];
+  }
+}
+
+// overallPosture (CISO shape) computed from the role pillars so the hero number
+// is the weighted roll-up of THIS leader's pillars.
+function roleOverall(role, c) {
+  const pillars = roleDomains(role, c);
+  const wsum = pillars.reduce((s, d) => s + d.weight, 0) || 1;
+  const current = clamp(pillars.reduce((s, d) => s + d.weight * d.current, 0) / wsum, 20, 98);
+  const previous = clamp(pillars.reduce((s, d) => s + d.weight * d.previous, 0) / wsum, 20, 98);
+  const { narrative } = roleScore(role, c);
+  return { current, previous, delta: current - previous, trend: trendOf(current - previous), confidence: 'Medium', weights: pillars.map((d) => ({ domain: d.name, weight: d.weight })), narrative };
+}
+
+// Load context with the demo fallback (shared by the CISO service's role lens).
+async function loadCtx(orgId) {
+  let c = await Agent.gatherContext(orgId);
+  if (isEmpty(c)) c = demoContext();
+  return c;
+}
+
 // ---- KPI strip --------------------------------------------------------------
 function strip(role, c) {
   const f = c.financial, r = c.risks, ctrl = c.controls, rm = c.remediation, l = c.legal, v = c.vendors;
@@ -564,4 +638,4 @@ async function getDashboard(orgId, role) {
   };
 }
 
-module.exports = { getDashboard, FRAME };
+module.exports = { getDashboard, FRAME, roleOverall, roleDomains, roleQuestions: questions, loadCtx, demoContext, isEmpty };

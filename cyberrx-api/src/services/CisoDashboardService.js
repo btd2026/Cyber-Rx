@@ -249,7 +249,27 @@ async function persistSnapshot(orgId, overall) {
   } catch (e) { logger.debug('ciso snapshot skipped', { error: e.message }); }
 }
 
-async function getDashboard(orgId) {
+// Re-lens the full CISO scaffold for another executive seat: the hero score,
+// the pillar strip (domainMatrix), and the five Current State questions become
+// that leader's own, while the rich shared sections (control risk, thresholds,
+// action queue, process protection, attack pathways, readiness, hidden risk)
+// keep rendering the org's security/risk truth — so every leader page has the
+// EXACT same setup, populated with their corresponding information.
+function applyRoleLens(payload, role, ctx, refreshed) {
+  const Exec = require('./ExecDashboardService');
+  payload.persona = role;
+  payload.overallPosture = Exec.roleOverall(role, ctx);
+  payload.domainMatrix = Exec.roleDomains(role, ctx).map((d) => ({ ...d }));
+  const raw = Exec.roleQuestions(role, ctx);
+  payload.questions = raw.map((q) => ({
+    ...q,
+    lastRefreshed: refreshed,
+    explanation: q.whyItMatters || '',
+    narration: [q.answer, q.whyItMatters, q.recommendedAction ? `Recommended: ${q.recommendedAction}` : ''].filter(Boolean).join(' '),
+  }));
+}
+
+async function getDashboard(orgId, role) {
   const model = await compose(orgId);
   const refreshed = new Date().toISOString();
   const posture = overallPosture(model.domains);
@@ -278,7 +298,7 @@ async function getDashboard(orgId) {
   const tabNarration = {};
   tabs.forEach((t) => { tabNarration[t] = N.tabNarration(t, nmodel, posture, board, readiness); });
 
-  return {
+  const payload = {
     persona: 'CISO', organizationId: orgId, generatedAt: refreshed,
     overallPosture: posture,
     domainMatrix: matrix,
@@ -297,6 +317,16 @@ async function getDashboard(orgId) {
     questions: answers,
     tabNarration,
   };
+
+  // For any non-CISO seat, re-lens the hero, pillars, and questions to that role
+  // while keeping the rest of the (shared) scaffold intact.
+  if (role && role !== 'CISO') {
+    try {
+      const Exec = require('./ExecDashboardService');
+      applyRoleLens(payload, role, await Exec.loadCtx(orgId), refreshed);
+    } catch (e) { logger.warn('role lens failed; serving CISO baseline', { role, error: e.message }); }
+  }
+  return payload;
 }
 
 module.exports = { getDashboard };

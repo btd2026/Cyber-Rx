@@ -20,8 +20,6 @@ import RiskDecision from './RiskDecision';
 import CisoAgentPanel from './CisoAgentPanel';
 import ExecutiveSummaryEditor from './ExecutiveSummaryEditor';
 import BusinessRiskPanel from './BusinessRiskPanel';
-import ExecutiveAgentBrief from './ExecutiveAgentBrief';
-import ExecRoleDashboard from './ExecRoleDashboard';
 import DashNav from './DashNav';
 
 // Per-role header framing so every C-suite seat uses this SAME rich view.
@@ -67,9 +65,11 @@ function Bar({ value, color }) {
 
 export default function CisoSecurityPostureDashboard(props) {
   const role = props.role || 'CISO';
-  // Every leader OTHER than the CISO gets a dedicated, role-specific dashboard
-  // (same format, own content). The CISO keeps this rich posture view.
-  if (role !== 'CISO') return <ExecRoleDashboard {...props} />;
+  // Every leader uses this SAME rich scaffold (hero, pillar strip, full tab set,
+  // Current State cards). The backend re-lenses the hero, pillars, and the five
+  // Current State questions to the role; the deeper shared tabs render the org's
+  // security/risk truth. So all leader pages have an identical setup, populated
+  // with their own corresponding information.
   const frame = ROLE_FRAME[role] || ROLE_FRAME.CISO;
   const [d, setD] = useState(null);
   const [error, setError] = useState(null);
@@ -80,10 +80,10 @@ export default function CisoSecurityPostureDashboard(props) {
 
   useEffect(() => {
     const h = { 'X-Org-Id': orgId }; if (token) h.Authorization = `Bearer ${token}`;
-    fetch(`${api}/api/ciso/dashboard?org_id=${encodeURIComponent(orgId)}`, { headers: h })
+    fetch(`${api}/api/ciso/dashboard?role=${encodeURIComponent(role)}&org_id=${encodeURIComponent(orgId)}`, { headers: h })
       .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(setD).catch((e) => setError(e.message));
-  }, [api, orgId, token]);
+  }, [api, orgId, token, role]);
 
   // When arrived from the CISO agent with a question, open the Q&A tab and the
   // matching answer's evidence drawer so the agent's answer is front-and-center.
@@ -178,7 +178,7 @@ export default function CisoSecurityPostureDashboard(props) {
             <VoiceControls voice={voice} onReplay={() => voice.speak(d.tabNarration[tab])} label="Replay" />
           </div>
         )}
-        {tab === 'qa' && (role === 'CISO' ? <CisoAgentPanel /> : <ExecutiveAgentBrief role={role} entry />)}
+        {tab === 'qa' && <CisoAgentPanel role={role} />}
         {tab === 'rolepanel' && props.rolePanel}
         {tab === 'summary' && <ExecutiveSummaryEditor />}
         {tab === 'linkage' && <BusinessRiskPanel />}
