@@ -6099,65 +6099,6 @@ function Setup(props) {
           })}
         </div>
       </div>
-      <div style={{padding:"12px 16px"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-          <div style={{color:C.muted,fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.08em"}}>
-            Import vendor list
-          </div>
-          {orgType&&Object.keys(vendorSel).length>0&&(
-            <button onClick={function(){
-              if(window.confirm("Reset to Briana\'s recommended vendors for "+orgType+"?")){
-                setVendorSel(getVendorPreset(orgType));
-              }
-            }} style={{background:"transparent",border:"1px solid "+C.border,
-              color:C.muted,borderRadius:6,padding:"3px 10px",
-              cursor:"pointer",fontSize:9,fontWeight:600}}>
-              ↺ Reset to recommended
-            </button>
-          )}
-        </div>
-        <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:10}}>
-          {[
-            {id:"servicenow", label:"ServiceNow CMDB", icon:"\ud83c\udfab"},
-            {id:"archer",     label:"RSA Archer",      icon:"⛯"},
-            {id:"onetrust",   label:"OneTrust",        icon:"⚖"},
-            {id:"csv",        label:"CSV Upload",      icon:"\ud83d\udcc4"},
-          ].map(function(src){
-            return (
-              <button key={src.id}
-                onClick={function(){
-                  setVendorPulling(true);
-                  setTimeout(function(){
-                    // Use org-type-aware preset if available, else fall back to Tier 1
-                    var sel = orgType ? getVendorPreset(orgType) : {};
-                    if (Object.keys(sel).length === 0) {
-                      VENDOR_TIERS.filter(function(t){ return t.tier===1; }).forEach(function(t){
-                        (t.vendors||[]).forEach(function(v){ sel[v.id]=true; });
-                      });
-                    }
-                    setVendorSel(sel);
-                    setVendorPulling(false);
-                    setVendorImport(src.label);
-                  }, 1800);
-                }}
-                style={{display:"flex",alignItems:"center",gap:6,background:C.dim,
-                  border:"1px solid "+C.border,borderRadius:8,padding:"6px 14px",
-                  cursor:"pointer",fontSize:11,color:C.muted,fontWeight:500}}>
-                {src.icon} {src.label}
-              </button>
-            );
-          })}
-        </div>
-        {vendorPulling&&(
-          <div style={{color:C.acc,fontSize:11,padding:"6px 10px",background:C.faint,
-            borderRadius:7}}>Connecting and pulling vendor inventory...</div>
-        )}
-        {vendorImport&&!vendorPulling&&(
-          <div style={{color:"#0FBB80",fontSize:11}}>
-            ✓ Imported from {vendorImport} — {Object.keys(vendorSel).filter(function(k){return vendorSel[k];}).length} vendors selected
-          </div>
-        )}
-      </div>
     </div>
 
     {/* Tier-by-tier vendor selection */}
