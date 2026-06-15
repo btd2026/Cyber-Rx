@@ -20,6 +20,17 @@ import RiskDecision from './RiskDecision';
 import CisoAgentPanel from './CisoAgentPanel';
 import ExecutiveSummaryEditor from './ExecutiveSummaryEditor';
 import BusinessRiskPanel from './BusinessRiskPanel';
+import ExecutiveAgentBrief from './ExecutiveAgentBrief';
+
+// Per-role header framing so every C-suite seat uses this SAME rich view.
+const ROLE_FRAME = {
+  CISO: { tag: 'CISO · Security Posture', title: 'Executive Security Posture' },
+  CFO: { tag: 'CFO · Financial Exposure', title: 'Executive Financial Exposure' },
+  CIO: { tag: 'CIO · Technology Risk', title: 'Executive Technology Risk' },
+  CRO: { tag: 'CRO · Operational Resilience', title: 'Executive Risk & Resilience' },
+  CLO: { tag: 'CLO · Oversight & Compliance', title: 'Executive Oversight & Compliance' },
+  Board: { tag: 'Board · Enterprise Risk', title: 'Enterprise Cyber Risk' },
+};
 
 const STATUS_SEV = { Strong: 'Low', Moderate: 'Medium', Weak: 'High', Critical: 'Critical' };
 const numSev = (n) => (n >= 5 ? 'Critical' : n >= 4 ? 'High' : n >= 3 ? 'Medium' : 'Low');
@@ -53,6 +64,8 @@ function Bar({ value, color }) {
 }
 
 export default function CisoSecurityPostureDashboard(props) {
+  const role = props.role || 'CISO';
+  const frame = ROLE_FRAME[role] || ROLE_FRAME.CISO;
   const [d, setD] = useState(null);
   const [error, setError] = useState(null);
   const [tab, setTab] = useState('qa');
@@ -93,7 +106,9 @@ export default function CisoSecurityPostureDashboard(props) {
   const refreshed = new Date(d.generatedAt).toLocaleString();
 
   const TABS = [
-    ['qa', 'Current State'], ['summary', 'Executive Summary'], ['linkage', 'Business Risk'], ['domains', 'Domain Health'], ['controls', 'Control Risk'],
+    ['qa', 'Current State'], ['summary', 'Executive Summary'], ['linkage', 'Business Risk'],
+    ...(role !== 'CISO' && props.rolePanel ? [['rolepanel', props.rolePanelLabel || `${role} View`]] : []),
+    ['domains', 'Domain Health'], ['controls', 'Control Risk'],
     ['thresholds', `Thresholds · ${d.thresholds.breaches} breached`], ['actions', 'Action Now'],
     ['processes', 'Process Protection'], ['paths', 'Attack Pathways'], ['readiness', 'Readiness & Investment'],
     ['hidden', `Hidden Risk · ${d.hiddenRisks.length}`],
@@ -110,8 +125,8 @@ export default function CisoSecurityPostureDashboard(props) {
               <div style={{ fontSize: 10, color: '#8fa3bd', textTransform: 'uppercase', letterSpacing: '0.12em', marginTop: 4 }}>of 100 · {band(p.current)}</div>
             </div>
             <div>
-              <div style={{ fontSize: 10, fontWeight: 600, color: '#8fa3bd', textTransform: 'uppercase', letterSpacing: '0.16em' }}>CISO · Security Posture</div>
-              <h2 style={{ margin: '4px 0 6px', fontSize: 22, fontWeight: 700 }}>Executive Security Posture</h2>
+              <div style={{ fontSize: 10, fontWeight: 600, color: '#8fa3bd', textTransform: 'uppercase', letterSpacing: '0.16em' }}>{frame.tag}</div>
+              <h2 style={{ margin: '4px 0 6px', fontSize: 22, fontWeight: 700 }}>{frame.title}</h2>
               <div style={{ display: 'flex', gap: 14, alignItems: 'center', fontSize: 12.5, color: '#cbd5e1' }}>
                 <span>Last period <strong style={{ color: '#fff' }}>{p.previous}</strong></span>
                 <span style={{ color: p.delta >= 0 ? '#34d399' : '#f87171', fontWeight: 700 }}>{p.delta >= 0 ? '▲ +' : '▼ '}{p.delta} pts</span>
@@ -156,7 +171,8 @@ export default function CisoSecurityPostureDashboard(props) {
             <VoiceControls voice={voice} onReplay={() => voice.speak(d.tabNarration[tab])} label="Replay" />
           </div>
         )}
-        {tab === 'qa' && <CisoAgentPanel />}
+        {tab === 'qa' && (role === 'CISO' ? <CisoAgentPanel /> : <ExecutiveAgentBrief role={role} entry />)}
+        {tab === 'rolepanel' && props.rolePanel}
         {tab === 'summary' && <ExecutiveSummaryEditor />}
         {tab === 'linkage' && <BusinessRiskPanel />}
         {tab === 'domains' && <Domains matrix={d.domainMatrix} controlRisk={d.controlRisk} thresholds={d.thresholds} />}

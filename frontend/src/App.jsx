@@ -21,6 +21,8 @@ import OrganizationIntakeDocuments from "./components/OrganizationIntakeDocument
 import IngestionUploader from "./components/IngestionUploader";
 import AppProcessMap from "./components/AppProcessMap";
 import CfoExposurePanel from "./components/CfoExposurePanel";
+import ResolutionPanel from "./components/ResolutionPanel";
+import AuditLineagePanel from "./components/AuditLineagePanel";
 import PersonaDashboard from "./components/PersonaDashboard";
 import ControlAssessment from "./components/ControlAssessment";
 import FrameworkScoreStrip from "./components/FrameworkScoreStrip";
@@ -25961,9 +25963,9 @@ function CyberRxApp() {
     if (page==="bizlines")  { return React.createElement(BizLines,  sharedProps); }
     if (page==="appmap")    { return React.createElement(AppMap,    sharedProps); }
     if (page==="dashboard") { return React.createElement(CISODash,  sharedProps); }
-    if (page==="cro")       { return React.createElement(PersonaDashboard, Object.assign({}, sharedProps, {role:"CRO",   overview: React.createElement(CRODash,   Object.assign({}, sharedProps, {embedded:true}))})); }
-    if (page==="cfo")       { return React.createElement(PersonaDashboard, Object.assign({}, sharedProps, {role:"CFO",   overview: React.createElement(CFODash,   Object.assign({}, sharedProps, {embedded:true}))})); }
-    if (page==="boarddash") { return React.createElement(PersonaDashboard, Object.assign({}, sharedProps, {role:"Board", overview: React.createElement(BoardDash, Object.assign({}, sharedProps, {embedded:true}))})); }
+    if (page==="cro")       { return React.createElement(CisoSecurityPostureDashboard, Object.assign({}, sharedProps, {role:"CRO",   rolePanelLabel:"Board Pack",   rolePanel: React.createElement(CroBoardReport, sharedProps),    attackGraph: React.createElement(AttackPathDiagram)})); }
+    if (page==="cfo")       { return React.createElement(CisoSecurityPostureDashboard, Object.assign({}, sharedProps, {role:"CFO",   rolePanelLabel:"Exposure ($)", rolePanel: React.createElement(CfoExposurePanel, sharedProps), attackGraph: React.createElement(AttackPathDiagram)})); }
+    if (page==="boarddash") { return React.createElement(CisoSecurityPostureDashboard, Object.assign({}, sharedProps, {role:"Board", rolePanelLabel:"Board Pack",   rolePanel: React.createElement(CroBoardReport, sharedProps),    attackGraph: React.createElement(AttackPathDiagram)})); }
     if (page==="controls")  { return React.createElement(Controls,  sharedProps); }
     if (page==="cae")       { return React.createElement(ControlAssessment, sharedProps); }
     if (page==="assets")    { return React.createElement(ClaimLifecycle, sharedProps); }
@@ -25979,8 +25981,8 @@ function CyberRxApp() {
     if (page==="crownjewels") { return React.createElement(CrownJewelsModule, sharedProps); }
     if (page==="attackpaths")  { return React.createElement(AttackPathsModule, sharedProps); }
     // M2: CIO and CLO Dashboards
-    if (page==="cio")        { return React.createElement(PersonaDashboard, Object.assign({}, sharedProps, {role:"CIO", overview: React.createElement(CIODash, Object.assign({}, sharedProps, {embedded:true}))})); }
-    if (page==="clo")        { return React.createElement(PersonaDashboard, Object.assign({}, sharedProps, {role:"CLO", overview: React.createElement(CLODash, Object.assign({}, sharedProps, {embedded:true}))})); }
+    if (page==="cio")        { return React.createElement(CisoSecurityPostureDashboard, Object.assign({}, sharedProps, {role:"CIO", rolePanelLabel:"Systems & Inventory", rolePanel: React.createElement(ResolutionPanel, sharedProps),   attackGraph: React.createElement(AttackPathDiagram)})); }
+    if (page==="clo")        { return React.createElement(CisoSecurityPostureDashboard, Object.assign({}, sharedProps, {role:"CLO", rolePanelLabel:"Audit Lineage",      rolePanel: React.createElement(AuditLineagePanel, sharedProps), attackGraph: React.createElement(AttackPathDiagram)})); }
     // M3: Internal Audit Dashboard
     if (page==="audit")       { return React.createElement(AuditDash, sharedProps); }
     if (page==="correlated-finding") {
