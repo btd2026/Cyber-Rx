@@ -93,7 +93,9 @@ async function loadIntake(orgId) {
   const g = (...keys) => { for (const k of keys) { if (su[k] != null && su[k] !== '') return su[k]; } return undefined; };
   const cms = g('cmsContract');
   const regs = arr(g('reportingFrameworks', 'regulatoryObligations', 'regulatory_obligations', 'complianceFrameworks'));
-  if (cms && /yes|true/i.test(String(cms)) && !regs.some((x) => /cms/i.test(x))) regs.push('CMS');
+  // CMS applies whenever a CMS contract value is set to anything other than none —
+  // covers both legacy "Yes, …" answers and the financial CMS Contract Value field.
+  if (cms && !/^(no|none|not applicable|n\/a|0|\$?0)\b/i.test(String(cms).trim()) && !regs.some((x) => /cms/i.test(x))) regs.push('CMS');
 
   // Crown jewels, governance maturity, and IR capability are DERIVED from the
   // org's data + assessment evidence — never self-ranked in the intake.
