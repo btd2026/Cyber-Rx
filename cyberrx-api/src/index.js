@@ -221,6 +221,7 @@ app.use('/api/tasks',              [apiGetLimiter, apiPostLimiter, apiPutLimiter
 app.use('/api/evidence',           [apiGetLimiter, apiPostLimiter, apiDeleteLimiter], require('./routes/evidence'));
 
 // Vendor Continuous Monitoring Routes with rate limiting
+app.use('/api/vendor-monitoring',  [apiGetLimiter, apiPostLimiter], require('./routes/vendorRisk'));
 app.use('/api/vendor-monitoring',  [apiGetLimiter, apiPostLimiter], require('./routes/vendor-monitoring'));
 
 // Vendor Sync Status API with rate limiting

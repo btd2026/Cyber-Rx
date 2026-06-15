@@ -4765,14 +4765,44 @@ function Setup(props) {
   var _vdu=useState([]);       var vendorDocUploads=_vdu[0]; var setVendorDocUploads=_vdu[1];
   // Per-vendor selected document type (the upload now lives inside each vendor row).
   var _vdtv=useState({});      var vdTypeByVendor=_vdtv[0];  var setVdTypeByVendor=_vdtv[1];
-  var VENDOR_DOC_TYPES = [["soc2","SOC 2 Type II report"],["hitrust","HITRUST CSF certification"],
-    ["iso27001","ISO 27001 certificate"],["pentest","Penetration test report"],["vulnscan","Vulnerability scan results"],
-    ["baa","HIPAA BAA"],["irplan","Incident response plan"],["bcdr","BC/DR plan"],["subprocessors","Subprocessor list"],
-    ["cyberinsurance","Cyber insurance certificate"],["netdiagram","Network architecture diagram"],
-    ["sig_caiq","SIG / CAIQ questionnaire"],["pci_aoc","PCI DSS AOC"]];
+  var VENDOR_DOC_TYPES = [["soc2","SOC 2 Type II report"],["soc1","SOC 1 report"],["hitrust","HITRUST CSF certification"],
+    ["iso27001","ISO 27001 certificate"],["iso27701","ISO 27701 (privacy)"],["pci_aoc","PCI DSS AOC"],
+    ["baa","HIPAA BAA"],["dpa","Data Processing Agreement (DPA)"],["pentest","Penetration test report"],
+    ["vulnscan","Vulnerability scan results"],["sig_caiq","SIG / CAIQ questionnaire"],
+    ["netdiagram","Network / data-flow diagram"],["irplan","Incident response plan"],["bcdr","BC/DR plan"],
+    ["subprocessors","Subprocessor list"],["infosecpolicy","Information security policy"],
+    ["cyberinsurance","Cyber insurance certificate"]];
   var _s32=useState(false);    var vendorPulling=_s32[0];var setVendorPulling=_s32[1];
   // Vendor monitoring state
   var _s35=useState({});       var vendorConnections=_s35[0];  var setVendorConnections=_s35[1];
+  // Per-connector credential input (for authenticating to a monitoring service)
+  var _vci=useState({});       var vendorCredIn=_vci[0];       var setVendorCredIn=_vci[1];
+  // LLM document-review results, keyed by vendorName::docType
+  var _vdrv=useState({});      var vendorDocReviews=_vdrv[0];  var setVendorDocReviews=_vdrv[1];
+  function _vHdr(){return {"Content-Type":"application/json","X-Org-Id":(typeof localStorage!=="undefined"&&localStorage.getItem("cyberrx_org_id"))||""};}
+  function authConnectVendor(vendor,connector,connKey){
+    var token=String(vendorCredIn[connKey]||"").trim(); if(!token) return;
+    setVendorConnections(function(p){return Object.assign({},p,mk(connKey,{status:"connecting"}));});
+    fetch(CYBERRX_API+"/api/vendor-monitoring/vendors/"+encodeURIComponent(vendor.id)+"/connect/"+encodeURIComponent(connector.id),
+      {method:"POST",headers:_vHdr(),body:JSON.stringify({credentials:{api_token:token}})})
+      .then(function(r){return r.json();}).then(function(d){
+        if(d&&d.connected){setVendorConnections(function(p){return Object.assign({},p,mk(connKey,{status:"connected",lastSync:new Date().toISOString(),signalCount:d.signalCount||0}));});}
+        else{setVendorConnections(function(p){return Object.assign({},p,mk(connKey,{status:"auth",error:(d&&d.error)||"Connection failed"}));});}
+      }).catch(function(){setVendorConnections(function(p){return Object.assign({},p,mk(connKey,{status:"auth",error:"Connection failed. Check the credentials."}));});});
+  }
+  function analyzeVendorDoc(vendor,docType,file){
+    if(!file) return; var rk=vendor.name+"::"+docType;
+    setVendorDocReviews(function(p){return Object.assign({},p,mk(rk,{busy:true}));});
+    var reader=new FileReader();
+    reader.onload=function(){
+      var b64=String(reader.result||"").split(",").pop();
+      fetch(CYBERRX_API+"/api/vendor-monitoring/vendors/"+encodeURIComponent(vendor.id)+"/documents",
+        {method:"POST",headers:_vHdr(),body:JSON.stringify({vendorName:vendor.name,docType:docType,fileName:file.name,contentBase64:b64})})
+        .then(function(r){return r.json();}).then(function(d){setVendorDocReviews(function(p){return Object.assign({},p,mk(rk,d&&d.error?{error:d.error}:d));});})
+        .catch(function(e){setVendorDocReviews(function(p){return Object.assign({},p,mk(rk,{error:e.message}));});});
+    };
+    reader.readAsDataURL(file);
+  }
   // Additional org profile fields for complete dashboard data
   var _s33=useState({
     "hipaa_sr":true,"hipaa_pr":true,"hipaa_bn":true,
@@ -6311,44 +6341,27 @@ function Setup(props) {
                                   </div>
                                 </div>
                                 <div style={{display:"flex",gap:4}}>
-                                  {!isConnected && !isConnecting && (
+                                  {!isConnected && !isConnecting && (!conn || conn.status!=="auth") && (
                                     <button
-                                      onClick={function(){
-                                        setVendorConnections(function(prev){
-                                          var newConnections = {...prev};
-                                          newConnections[connKey] = {
-                                            status:"connecting",
-                                            lastSync:null,
-                                            signalCount:0
-                                          };
-                                          return newConnections;
-                                        });
-                                        setTimeout(function(){
-                                          setVendorConnections(function(prev){
-                                            var newConnections = {...prev};
-                                            newConnections[connKey] = {
-                                              status:"connected",
-                                              lastSync:new Date().toISOString(),
-                                              signalCount:Math.floor(Math.random()*10)+1,
-                                              riskContribution:Math.random()*0.5
-                                            };
-                                            return newConnections;
-                                          });
-                                        }, 1500);
-                                      }}
-                                      style={{
-                                        flex:1,
-                                        backgroundColor:"#2565EB",
-                                        border:"none",
-                                        color:"#fff",
-                                        borderRadius:4,
-                                        padding:"3px 6px",
-                                        cursor:"pointer",
-                                        fontSize:8,
-                                        fontWeight:600,
-                                        transition:"background-color 0.2s"
-                                      }}
+                                      onClick={function(){ setVendorConnections(function(p){return Object.assign({},p,mk(connKey,{status:"auth"}));}); }}
+                                      style={{flex:1,backgroundColor:"#2565EB",border:"none",color:"#fff",borderRadius:4,padding:"3px 6px",cursor:"pointer",fontSize:8,fontWeight:600}}
                                     >Connect</button>
+                                  )}
+                                  {conn && conn.status==="auth" && (
+                                    <div style={{display:"flex",flexDirection:"column",gap:3,width:"100%"}}>
+                                      <input type="password" placeholder={"Authenticate to "+connector.name+" — API token / key"}
+                                        value={vendorCredIn[connKey]||""}
+                                        onChange={function(e){var v=e.target.value;setVendorCredIn(function(p){return Object.assign({},p,mk(connKey,v));});}}
+                                        style={{border:"1px solid "+C.border,borderRadius:4,padding:"4px 6px",fontSize:8,outline:"none"}}/>
+                                      <div style={{display:"flex",gap:4}}>
+                                        <button onClick={function(){authConnectVendor(vendor,connector,connKey);}}
+                                          style={{flex:1,backgroundColor:"#0FBB80",border:"none",color:"#fff",borderRadius:4,padding:"3px 6px",cursor:"pointer",fontSize:8,fontWeight:700}}>Authenticate & connect</button>
+                                        <button onClick={function(){setVendorConnections(function(p){var n=Object.assign({},p);delete n[connKey];return n;});}}
+                                          style={{background:"transparent",border:"1px solid "+C.border,color:C.muted,borderRadius:4,padding:"3px 6px",cursor:"pointer",fontSize:8}}>Cancel</button>
+                                      </div>
+                                      {conn.error&&<span style={{color:"#EF4545",fontSize:7.5}}>{conn.error}</span>}
+                                      <span style={{color:C.muted,fontSize:7}}>Read-only credentials, stored encrypted in the vault.</span>
+                                    </div>
                                   )}
                                   {isConnected && (
                                     <button
@@ -6407,6 +6420,7 @@ function Setup(props) {
                                     if(f){
                                       var label=(VENDOR_DOC_TYPES.find(function(x){return x[0]===vdt;})||[])[1]||vdt;
                                       setVendorDocUploads(function(p){return p.concat([{vendorName:vendor.name,docType:vdt,docLabel:label,fileName:f.name}]);});
+                                      analyzeVendorDoc(vendor,vdt,f);   // LLM analysis → findings/score/recommendations
                                     }
                                     e.target.value="";
                                   }}/>
@@ -6416,12 +6430,37 @@ function Setup(props) {
                               <div style={{marginTop:8}}>
                                 {mine.map(function(u){
                                   var gi=vendorDocUploads.indexOf(u);
+                                  var rev=vendorDocReviews[vendor.name+"::"+u.docType];
+                                  var sCol=function(s){return s>=85?"#0FBB80":s>=65?"#B07C2E":s>=40?"#E8631A":"#C0392B";};
                                   return (
-                                    <div key={gi} style={{display:"flex",justifyContent:"space-between",alignItems:"center",
-                                      background:C.card,border:"1px solid "+C.border,borderRadius:6,padding:"5px 9px",marginBottom:4}}>
-                                      <span style={{color:C.text,fontSize:10}}>{u.docLabel} <span style={{color:C.muted}}>· {u.fileName}</span></span>
-                                      <button onClick={function(){setVendorDocUploads(function(p){return p.filter(function(_,j){return j!==gi;});});}}
-                                        style={{background:"transparent",border:"none",color:C.muted,cursor:"pointer",fontSize:13}}>×</button>
+                                    <div key={gi} style={{background:C.card,border:"1px solid "+C.border,borderRadius:6,padding:"6px 9px",marginBottom:6}}>
+                                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                                        <span style={{color:C.text,fontSize:10}}>{u.docLabel} <span style={{color:C.muted}}>· {u.fileName}</span></span>
+                                        <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                                          {rev&&rev.busy&&<span style={{color:C.muted,fontSize:8}}>Analyzing…</span>}
+                                          {rev&&!rev.busy&&rev.score!=null&&<span style={{fontSize:8.5,fontWeight:800,color:"#fff",background:sCol(rev.score),borderRadius:4,padding:"1px 7px"}}>{rev.status} · {rev.score}</span>}
+                                          <button onClick={function(){setVendorDocUploads(function(p){return p.filter(function(_,j){return j!==gi;});});}}
+                                            style={{background:"transparent",border:"none",color:C.muted,cursor:"pointer",fontSize:13}}>×</button>
+                                        </div>
+                                      </div>
+                                      {rev&&rev.error&&<div style={{color:"#C0392B",fontSize:8,marginTop:3}}>{rev.error}</div>}
+                                      {rev&&!rev.busy&&!rev.error&&(rev.findings||rev.recommendations)&&(
+                                        <div style={{marginTop:5,borderTop:"1px solid "+C.border,paddingTop:5}}>
+                                          {rev.summary&&<div style={{color:C.muted,fontSize:8.5,marginBottom:4,lineHeight:1.4}}>{rev.summary}</div>}
+                                          {(rev.findings||[]).length>0&&(
+                                            <div style={{marginBottom:4}}>
+                                              <div style={{color:"#C0392B",fontSize:8,fontWeight:700,marginBottom:2}}>Findings — what’s missing</div>
+                                              {rev.findings.slice(0,5).map(function(x,i){return <div key={i} style={{color:C.muted,fontSize:8,lineHeight:1.4}}>• {x}</div>;})}
+                                            </div>
+                                          )}
+                                          {(rev.recommendations||[]).length>0&&(
+                                            <div>
+                                              <div style={{color:"#0FBB80",fontSize:8,fontWeight:700,marginBottom:2}}>Recommendations — how to fix</div>
+                                              {rev.recommendations.slice(0,5).map(function(x,i){return <div key={i} style={{color:C.muted,fontSize:8,lineHeight:1.4}}>→ {x}</div>;})}
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
                                     </div>
                                   );
                                 })}
