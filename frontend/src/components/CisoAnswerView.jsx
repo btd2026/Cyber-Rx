@@ -22,7 +22,7 @@ const SectionLabel = ({ children, color }) => (
   <div style={{ fontSize: 10, fontWeight: 700, color: color || INK3, textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 6 }}>{children}</div>
 );
 
-export default function CisoAnswerView({ a, issues, onIssueClick }) {
+export default function CisoAnswerView({ a, issues, onIssueClick, role = 'CISO' }) {
   const [more, setMore] = useState(false);
   if (!a) return null;
   const status = C[a.status] || INK3;
@@ -67,7 +67,7 @@ export default function CisoAnswerView({ a, issues, onIssueClick }) {
         {/* remediation ticket + status feedback loop */}
         <div style={{ marginTop: 14 }}>
           <SectionLabel>Remediation — open & track a ticket</SectionLabel>
-          <TicketControl sourceRef={`ciso:${a.id}`} title={`[CISO] ${a.question}`}
+          <TicketControl sourceRef={`${role.toLowerCase()}:${a.id}`} title={`[${role}] ${a.question}`}
             recommendation={a.recommendedAction} severity={SEV[a.status] || 'Medium'}
             owner={a.owner} dueDate={a.targetDate} />
         </div>

@@ -42,7 +42,8 @@ router.get('/ai-controls', optionalJWT, async (req, res) => {
 // and a decision-ready executive answer for each of the 15 CISO questions.
 router.get('/dashboard', optionalJWT, async (req, res) => {
   const orgId = org(req, res); if (!orgId) return;
-  try { res.json(await CisoDashboardService.getDashboard(orgId)); }
+  const role = String(req.query.role || 'CISO').trim() || 'CISO';
+  try { res.json(await CisoDashboardService.getDashboard(orgId, role)); }
   catch (err) { logger.error('CISO dashboard error', { error: err.message }); res.status(500).json({ error: 'Failed to build CISO dashboard', message: err.message }); }
 });
 
