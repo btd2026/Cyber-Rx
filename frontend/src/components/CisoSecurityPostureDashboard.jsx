@@ -21,6 +21,7 @@ import CisoAgentPanel from './CisoAgentPanel';
 import ExecutiveSummaryEditor from './ExecutiveSummaryEditor';
 import BusinessRiskPanel from './BusinessRiskPanel';
 import ExecutiveAgentBrief from './ExecutiveAgentBrief';
+import DashNav from './DashNav';
 
 // Per-role header framing so every C-suite seat uses this SAME rich view.
 const ROLE_FRAME = {
@@ -116,6 +117,8 @@ export default function CisoSecurityPostureDashboard(props) {
 
   return (
     <div style={{ background: PANEL, borderRadius: 8, padding: 0, fontFamily: 'inherit' }}>
+      {/* Top executive nav (only when rendered as a standalone leader page). */}
+      {props.navId && <div style={{ marginBottom: 12 }}><DashNav current={props.navId} go={props.go} /></div>}
       {/* ===== Hero: Overall Security Posture ===== */}
       <div style={{ background: NAVY, borderRadius: '8px 8px 0 0', padding: '22px 28px', color: '#fff' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20, flexWrap: 'wrap' }}>
