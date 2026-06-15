@@ -140,16 +140,29 @@ function Questions({ role, section }) {
   const voice = useAgentVoice();
   const [active, setActive] = useState(null);
   const qs = section.questions || [];
-  const select = (q) => { voice.stop(); setActive(active && active.id === q.id ? null : q); };
+  const narrate = (q) => [q.answer, q.whyItMatters, q.recommendedAction ? `Recommended: ${q.recommendedAction}` : '']
+    .filter(Boolean).join(' ');
+  const intro = `These are the five key questions every ${role} should be able to answer at any time. ` +
+    `Each one shows where you stand right now. Select a question for the full answer, the evidence behind it, ` +
+    `the recommended action, and who owns it.`;
+  const select = (q) => {
+    voice.stop();
+    const on = active && active.id === q.id;
+    setActive(on ? null : q);
+    if (!on) setTimeout(() => voice.speak(narrate(q)), 120);
+  };
 
   if (active) {
     return (
       <div style={{ padding: '4px 0 8px' }}>
-        <button onClick={() => setActive(null)} style={{ background: 'transparent', border: 'none', color: '#1d4ed8', fontSize: 12, fontWeight: 700, cursor: 'pointer', padding: 0, marginBottom: 12 }}>← All questions</button>
+        <button onClick={() => { voice.stop(); setActive(null); }} style={{ background: 'transparent', border: 'none', color: '#1d4ed8', fontSize: 12, fontWeight: 700, cursor: 'pointer', padding: 0, marginBottom: 12 }}>← All questions</button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
           <span style={{ width: 24, height: 24, borderRadius: 12, background: NAVY, color: '#9bc0ff', fontSize: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{active.n}</span>
           <span style={{ fontSize: 16, fontWeight: 800, color: INK, lineHeight: 1.35 }}>{active.question}</span>
-          <span style={{ marginLeft: 'auto' }}><Pill text={active.status} color={C[active.status] || INK3} /></span>
+          <span style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
+            <Pill text={active.status} color={C[active.status] || INK3} />
+            <VoiceControls voice={voice} onReplay={() => voice.speak(narrate(active))} label="Listen" />
+          </span>
         </div>
         <Detail a={active} role={role} />
       </div>
@@ -160,6 +173,7 @@ function Questions({ role, section }) {
     <div style={{ padding: '4px 0 8px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.12em' }}>Current State</div>
+        <VoiceControls voice={voice} onReplay={() => voice.speak(intro)} label="Listen" />
       </div>
       <div style={{ background: NAVY, color: '#e6ecf5', borderRadius: 10, padding: '14px 18px', marginBottom: 14, fontSize: 12.5, lineHeight: 1.6 }}>{section.intro}</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
