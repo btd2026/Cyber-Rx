@@ -19212,6 +19212,15 @@ function SetupBot(props) {
     {id:'csf_pr_ds_encryption', type:'choice', group:'Security Evidence',
      ask:'Is protected health information encrypted at rest and in transit across your systems?',
      choices:['Fully encrypted at rest and in transit','Partially encrypted','Not encrypted']},
+    {id:'csf_pr_ds_encryption_inuse', type:'choice', group:'Security Evidence',
+     ask:'Beyond at rest and in transit, are your most sensitive fields (e.g. SSN, member ID) protected while in use — via field-level encryption, tokenization, or format-preserving encryption?',
+     choices:['Yes — field-level encryption or tokenization on sensitive fields','Some sensitive fields only','No protection in use']},
+    {id:'csf_pr_ds_key_mgmt', type:'choice', group:'Security Evidence',
+     ask:'How are your encryption keys managed?',
+     choices:['HSM / KMS with rotation and separation of duties','Centrally managed KMS, limited rotation','Manual or ad-hoc key handling','Unknown']},
+    {id:'csf_pr_ds_endpoint_enc', type:'choice', group:'Security Evidence',
+     ask:'Is full-disk encryption enforced on laptops, mobile devices, and removable media?',
+     choices:['Enforced on all endpoints and removable media','Most endpoints — gaps remain','Not enforced']},
     {id:'csf_pr_ds_dlp', type:'choice', group:'Security Evidence',
      ask:'Is Data Loss Prevention deployed for protected health information?',
      choices:['Yes — DLP deployed','Partial deployment','No DLP']},
@@ -19380,7 +19389,7 @@ function SetupBot(props) {
         });
       }).catch(function(err){
         console.warn("ElevenLabs failed, falling back to browser:",err.message);
-        // Continue to browser TTS below
+        browserSpeak();   // real fallback so the agent keeps talking
       });
       return;
     }
@@ -19420,12 +19429,13 @@ function SetupBot(props) {
         });
       }).catch(function(err){
         console.warn("OpenAI failed, falling back to browser:",err.message);
-        // Continue to browser TTS below
+        browserSpeak();   // real fallback so the agent keeps talking
       });
       return;
     }
 
-    // ── Browser TTS (fallback or default) ─────────────────────────────────────
+    // ── Browser TTS (used directly, or as fallback when a cloud TTS fails) ─────
+    function browserSpeak() {
     if (!window.speechSynthesis) { return; }
     window.speechSynthesis.cancel();
 
@@ -19504,6 +19514,8 @@ function SetupBot(props) {
       window.speechSynthesis.speak(u);
     }
     setTimeout(next,80);
+    } // end browserSpeak
+    browserSpeak();   // default path (provider 'browser'); cloud providers return earlier
   }
 
   function resolve(raw) {
