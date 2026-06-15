@@ -36,12 +36,13 @@ function ctx(props) {
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '—');
 
 export default function TicketControl(props) {
-  const { sourceRef, title, recommendation, severity, owner } = props;
+  const { sourceRef, title, recommendation, severity, owner, whyNow, process, application } = props;
   const { token, orgId, api, system } = ctx(props);
   const [ticket, setTicket] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [ownerInput, setOwnerInput] = useState(owner || '');
+  const [selSys, setSelSys] = useState(null);   // ticketing system chosen at setup
 
   const headers = useCallback(() => {
     const h = { 'X-Org-Id': orgId, 'Content-Type': 'application/json' };
@@ -49,20 +50,27 @@ export default function TicketControl(props) {
     return h;
   }, [token, orgId]);
 
-  // Look up an existing ticket for this finding on mount.
+  // Look up an existing ticket for this finding + the org's selected ticketing system.
   useEffect(() => {
     let live = true;
     fetch(`${api}/api/remediation/ticket?sourceRef=${encodeURIComponent(sourceRef)}&org_id=${encodeURIComponent(orgId)}`, { headers: headers() })
       .then((r) => r.json()).then((j) => { if (live) setTicket(j.ticket || null); }).catch(() => {});
+    fetch(`${api}/api/itsm/selected?org_id=${encodeURIComponent(orgId)}`, { headers: headers() })
+      .then((r) => r.json()).then((s) => { if (live) setSelSys(s); }).catch(() => {});
     return () => { live = false; };
   }, [api, orgId, sourceRef]); // eslint-disable-line
 
+  // Open a real ticket in the system selected during the Technology setup phase,
+  // with a CyberRX-composed body (falls back to a demo ticket if not connected).
   const open = () => {
     setBusy(true); setError(null);
-    fetch(`${api}/api/remediation/ticket`, {
+    fetch(`${api}/api/itsm/open`, {
       method: 'POST', headers: headers(),
-      body: JSON.stringify({ org_id: orgId, sourceRef, title, recommendation, severity, owner: ownerInput || owner, system, source: 'CISO dashboard' }),
-    }).then((r) => r.json()).then((t) => setTicket(t)).catch((e) => setError(e.message)).finally(() => setBusy(false));
+      body: JSON.stringify({ org_id: orgId, sourceRef, title, summary: title, recommendation, severity, owner: ownerInput || owner, whyNow, process, application, system: (selSys && selSys.code) || undefined }),
+    }).then((r) => r.json()).then((t) => {
+      if (t && t.error) { setError(t.error); return; }
+      setTicket({ ticketId: t.ticket_id, url: t.url, system: t.system, status: 'open', demo: t.demo });
+    }).catch((e) => setError(e.message)).finally(() => setBusy(false));
   };
 
   const refresh = () => {
@@ -72,7 +80,7 @@ export default function TicketControl(props) {
     }).then((r) => r.json()).then((j) => setTicket(j.ticket)).catch((e) => setError(e.message)).finally(() => setBusy(false));
   };
 
-  const sysLabel = SYS_LABEL[system] || system;
+  const sysLabel = (selSys && selSys.label) || SYS_LABEL[system] || 'ticketing system';
 
   if (!ticket) {
     return (
@@ -86,7 +94,11 @@ export default function TicketControl(props) {
           style={{ background: '#0f1b2d', color: '#fff', border: 'none', borderRadius: 7, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}>
           {busy ? 'Opening…' : `＋ Open ticket in ${sysLabel}`}
         </button>
-        <span style={{ fontSize: 11, color: INK3 }}>Creates a remediation ticket and starts the SLA clock.</span>
+        <span style={{ fontSize: 11, color: INK3 }}>
+          {selSys && selSys.code
+            ? (selSys.connected ? `Creates a real ticket in ${sysLabel} (connected at setup) and starts the SLA clock.` : `${sysLabel} selected at setup but not yet connected — opens a demo ticket until credentials are added.`)
+            : 'No ticketing system selected during setup — add one in the Technology step.'}
+        </span>
         {error && <span style={{ fontSize: 11, color: '#C0392B' }}>{error}</span>}
       </div>
     );
@@ -113,10 +125,11 @@ export default function TicketControl(props) {
         </button>
       </div>
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 9, fontSize: 11.5, color: INK2 }}>
-        <span>Day <strong style={{ color: INK }}>{ticket.daysOpen}</strong> open</span>
-        <span>Due <strong style={{ color: INK }}>{fmtDate(ticket.dueDate)}</strong>{ticket.daysToDue != null && ticket.status !== 'resolved' ? <span style={{ color: alert ? alert.fg : INK3 }}> ({ticket.daysToDue >= 0 ? `${ticket.daysToDue}d left` : `${Math.abs(ticket.daysToDue)}d over`})</span> : ''}</span>
+        {ticket.daysOpen != null && <span>Day <strong style={{ color: INK }}>{ticket.daysOpen}</strong> open</span>}
+        {ticket.dueDate && <span>Due <strong style={{ color: INK }}>{fmtDate(ticket.dueDate)}</strong>{ticket.daysToDue != null && ticket.status !== 'resolved' ? <span style={{ color: alert ? alert.fg : INK3 }}> ({ticket.daysToDue >= 0 ? `${ticket.daysToDue}d left` : `${Math.abs(ticket.daysToDue)}d over`})</span> : ''}</span>}
+        {ticket.demo && <span style={{ color: INK3 }}>Demo ticket — connect {sysLabel} at setup for a live ticket</span>}
         {ticket.owner && <span>Owner <strong style={{ color: INK }}>{ticket.owner}</strong></span>}
-        <span style={{ color: INK3 }}>Synced {ticket.lastSyncedAt ? new Date(ticket.lastSyncedAt).toLocaleTimeString() : '—'}</span>
+        {ticket.lastSyncedAt && <span style={{ color: INK3 }}>Synced {new Date(ticket.lastSyncedAt).toLocaleTimeString()}</span>}
       </div>
       {alert && (
         <div style={{ marginTop: 9, background: alert.bg, border: `1px solid ${alert.bd}`, borderRadius: 7, padding: '7px 11px', fontSize: 11.5, fontWeight: 600, color: alert.fg }}>

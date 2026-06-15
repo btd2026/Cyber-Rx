@@ -6853,6 +6853,16 @@ function Setup(props) {
                                   <button onClick={function(){
                                     if(!creds.url||!creds.apiKey){return;}
                                     setInfraCredField(key,"status","testing");
+                                    // If this is a ticketing system, vault the credentials so the
+                                    // 'Open ticket' action can use the connection established at setup.
+                                    (function(){
+                                      var nm=(tool||"").toLowerCase();
+                                      var sc=/servicenow/.test(nm)?"snow":/jira/.test(nm)?"jira":/freshservice/.test(nm)?"freshservice":null;
+                                      if(!sc)return;
+                                      fetch(CYBERRX_API+"/api/itsm/credentials",{method:"POST",
+                                        headers:{"Content-Type":"application/json","X-Org-Id":(typeof localStorage!=="undefined"&&localStorage.getItem("cyberrx_org_id"))||""},
+                                        body:JSON.stringify({system:sc,credentials:creds})}).catch(function(){});
+                                    })();
                                     fetch(creds.url+"/ping",{
                                       method:"GET",
                                       headers:{"Authorization":"Bearer "+creds.apiKey,
