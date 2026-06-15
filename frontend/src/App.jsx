@@ -19285,10 +19285,10 @@ function SetupBot(props) {
     {id:'endpoints',  type:'number',  group:'Budget',
      ask:'Approximately how many managed endpoints and devices does {orgName} operate?',
      placeholder:'e.g. 12000', hint:'Enter the exact number of managed devices'},
-    {id:'cmsContract',type:'choice',  group:'Governance',
-     ask:'Does {orgName} hold any Medicare Advantage or Part D contracts?',
-     choices:['Yes, Medicare Advantage only','Yes, Part D only','Yes, both MA and Part D',
-              'Yes, plus Medicaid managed care','No CMS contracts']},
+    // NOTE: the chat question "Does {orgName} hold any Medicare Advantage or Part D
+    // contracts?" was removed — its answer wasn't meaningfully used (process-suggestion
+    // path is dead; the financial 'CMS Contract Value' field drives exposure separately).
+    // CMS regulatory applicability is now derived from that value / reporting frameworks.
     // Papa — which frameworks the org reports against. Selected frameworks show
     // on the CRO dashboard; the app can still report on all of them.
     {id:'reportingFrameworks', type:'multichoice', group:'Governance',
