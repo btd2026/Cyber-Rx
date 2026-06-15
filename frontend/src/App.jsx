@@ -5678,24 +5678,15 @@ function Setup(props) {
 
             <Card style={{marginBottom:14}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-                <SH label={procTree.length>0?"Validate & correct — functions · processes · sub-processes":"Which business processes are in scope?"}/>
-                {procTree.length>0 ? (
-                  <button onClick={addFunction}
-                    style={{background:"transparent",border:"1px solid "+C.border,color:C.acc,cursor:"pointer",fontSize:10,fontWeight:700,borderRadius:6,padding:"3px 10px"}}>+ Add function</button>
-                ) : (
-                <div style={{display:"flex",gap:8}}>
-                  <button onClick={function(){setSelProcs(new Set(realOrgProcs(orgType||'Other Payer').map(function(p){return p.id;})));}}
-                    style={{background:"transparent",border:"none",color:C.acc,cursor:"pointer",fontSize:11,fontWeight:600}}>Select all</button>
-                  <button onClick={function(){setSelProcs(new Set());}}
-                    style={{background:"transparent",border:"none",color:C.muted,cursor:"pointer",fontSize:11}}>Clear</button>
-                </div>
-                )}
+                <SH label={procTree.length>0?"Validate & correct — functions · processes · sub-processes":"Your business processes"}/>
+                <button onClick={addFunction}
+                  style={{background:"transparent",border:"1px solid "+C.border,color:C.acc,cursor:"pointer",fontSize:10,fontWeight:700,borderRadius:6,padding:"3px 10px"}}>+ Add function</button>
               </div>
-              {procTree.length>0&&(
-                <div style={{color:C.muted,fontSize:10.5,marginBottom:10,lineHeight:1.5}}>
-                  We extracted this from your file. Tick the items to include, fix any names, and add the <strong>Tier</strong> and <strong>RTO</strong> where they’re blank. Add anything we missed.
-                </div>
-              )}
+              <div style={{color:C.muted,fontSize:10.5,marginBottom:10,lineHeight:1.5}}>
+                {procTree.length>0
+                  ? <span>We extracted this from your file. Tick the items to include, fix any names, and add the <strong>Tier</strong> and <strong>RTO</strong> where they’re blank. Add anything we missed.</span>
+                  : <span>Upload your process inventory above and we’ll extract this list — or build it manually with <strong>+ Add function</strong>. Nothing is pre-filled.</span>}
+              </div>
               {procTree.length>0 ? (
                 <div>
                   {procTree.map(function(f,fi){
@@ -5750,106 +5741,9 @@ function Setup(props) {
                   })}
                 </div>
               ) : (
-              <div style={{display:"grid",gridTemplateColumns:"1fr",gap:8}}>
-                {getOrgProcs(orgType||'Other Payer').map(function(p){
-                  // Tier header
-                  if(p.type==="tier"){
-                    return (
-                      <div key={p.id} style={{
-                        gridColumn:"1 / -1",
-                        padding:"10px 12px",
-                        background:C.acc+"10",
-                        borderLeft:"3px solid "+C.acc,
-                        borderRadius:6,
-                        marginTop:8,
-                        marginBottom:4
-                      }}>
-                        <div style={{color:C.acc,fontSize:11,fontWeight:700,marginBottom:2}}>{p.name}</div>
-                        <div style={{color:C.muted,fontSize:9}}>{p.description}</div>
-                      </div>
-                    );
-                  }
-                  // Section header
-                  if(p.type==="section"){
-                    return (
-                      <div key={p.id} style={{
-                        gridColumn:"1 / -1",
-                        padding:"8px 12px",
-                        background:C.acc+"08",
-                        border:"1px solid "+C.acc+"20",
-                        borderRadius:6,
-                        marginTop:8
-                      }}>
-                        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:p.note?4:0}}>
-                          <span style={{fontSize:16}}>{p.icon}</span>
-                          <span style={{color:C.acc,fontSize:11,fontWeight:700}}>{p.name}</span>
-                        </div>
-                        {p.note&&(
-                          <div style={{color:C.muted,fontSize:9,marginLeft:24,lineHeight:1.3}}>
-                            {p.note}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  }
-                  // Child process (indented)
-                  var isChild=p.parent;
-                  var on=selProcs.has(p.id);
-                  var rec=profile&&(profile.mandatoryProcs||[]).includes(p.id);
-                  return (
-                    (function(){
-                      var processBox = (
-                        <div onClick={function(){toggleProc(p.id);}}
-                          style={{display:"flex",gap:10,alignItems:"center",padding:"11px 13px",
-                            background:on?C.acc+"10":C.dim,borderRadius:8,cursor:"pointer",
-                            border:"1.5px solid "+(on?C.acc:C.border),flex:1}}>
-                          <span style={{fontSize:20}}>{p.icon}</span>
-                          <div style={{flex:1}}>
-                            <div style={{color:on?C.acc:C.text,fontSize:12,fontWeight:on?700:400}}>{p.name}</div>
-                            {(p.subcomponents||p.why)&&(
-                              <div style={{color:C.muted,fontSize:9,marginTop:1}}>
-                                {p.subcomponents&&p.subcomponents.length>0&&(
-                                  <div style={{marginBottom:2}}>{p.subcomponents.join(" · ")}</div>
-                                )}
-                                {p.why&&p.why.length>0&&(
-                                  <div style={{fontStyle:"italic",color:C.muted+"CC"}}>
-                                    Why: {p.why.join(" · ")}
-                                  </div>
-                                )}
-                                {EXP[p.id]&&!p.subcomponents&&(
-                                  <div>${EXP[p.id]}M exposure{rec?" · Recommended":""}</div>
-                                )}
-                                {rec&&!p.subcomponents&&!p.why&&"Recommended"}
-                              </div>
-                            )}
-                            {!p.subcomponents&&!p.why&&(
-                              <div style={{color:C.muted,fontSize:9,marginTop:1}}>
-                                {EXP[p.id]?"$"+EXP[p.id]+"M exposure":""}
-                                {rec?" · Recommended":""}
-                              </div>
-                            )}
-                          </div>
-                          <div style={{width:18,height:18,borderRadius:4,flexShrink:0,
-                            background:on?C.acc:C.bg,border:"1.5px solid "+(on?C.acc:C.border),
-                            display:"flex",alignItems:"center",justifyContent:"center"}}>
-                            {on&&<span style={{color:"#fff",fontSize:10,fontWeight:800}}>✓</span>}
-                          </div>
-                        </div>
-                      );
-                      // Wrap child processes with spacer for indentation
-                      if(isChild){
-                        return (
-                          <div key={p.id} style={{display:"flex",alignItems:"flex-start",gap:0}}>
-                            <div style={{width:40,flexShrink:0}}></div>
-                            {processBox}
-                          </div>
-                        );
-                      }
-                      return processBox;
-                    })()
-                  );
-                })}
-              </div>
+                <div style={{color:C.muted,fontSize:11,padding:"16px 6px",textAlign:"center",border:"1px dashed "+C.border,borderRadius:8}}>
+                  No processes yet — upload your process inventory above, or click <strong>+ Add function</strong> to add them manually.
+                </div>
               )}
               {selProcs.size>0&&(
                 <div style={{marginTop:10,color:C.muted,fontSize:11}}>{selProcs.size} process{selProcs.size===1?"":"es"} selected for the assessment</div>
