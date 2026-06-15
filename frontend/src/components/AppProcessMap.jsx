@@ -45,9 +45,9 @@ export default function AppProcessMap(props) {
       .catch((e) => setErr(e.message)).finally(() => setBusy(false));
   }, [api, orgId, headers]);
 
-  // Load any existing mapping on mount. Running the LLM mapping is an explicit
-  // user action (the "Intelligently map…" button) — never silent/auto.
-  useEffect(() => { load(); }, [load]);
+  // Load any existing mapping on mount, and again whenever the inventory changes
+  // (refreshKey bumps after an application import) so canMap reflects new apps.
+  useEffect(() => { load(); }, [load, props.refreshKey]);
 
   const processes = (graph && graph.processes) || [];
   const unmapped = (graph && graph.unmappedApps) || [];

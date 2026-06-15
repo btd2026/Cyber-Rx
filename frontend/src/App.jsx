@@ -4661,6 +4661,40 @@ function Setup(props) {
   var _s10=useState(_saved.appConn||{});      var appConn=_s10[0];    var setAppConn=_s10[1];
   var _s11=useState("sample"); var appTab=_s11[0];     var setAppTab=_s11[1];
   var _s11b=useState(null);    var sampleResult=_s11b[0]; var setSampleResult=_s11b[1];
+  // Application-inventory upload: confirmation (file name + deduped count) and a
+  // refresh signal so the app→process map re-reads after import.
+  var _aimp=useState(null);    var appImport=_aimp[0];    var setAppImport=_aimp[1];
+  var _mrf=useState(0);        var mapRefresh=_mrf[0];    var setMapRefresh=_mrf[1];
+  function uploadAppInventory(file){
+    if(!file) return;
+    var org=(typeof localStorage!=="undefined"&&(localStorage.getItem("cyberrx_org_id")||localStorage.getItem("orgId")))||"";
+    setAppImport({busy:true,fileName:file.name});
+    var reader=new FileReader();
+    reader.onload=function(){
+      var b64=String(reader.result||"").split(",").pop();
+      var hdr={"Content-Type":"application/json","X-Org-Id":org};
+      fetch(CYBERRX_API+"/api/ingestion/preview",{method:"POST",headers:hdr,
+        body:JSON.stringify({org_id:org,sourceKind:"cmdb",fileName:file.name,contentBase64:b64})})
+        .then(function(r){return r.json();})
+        .then(function(prev){
+          var mapping=(prev&&prev.mapping)||{};
+          return fetch(CYBERRX_API+"/api/ingestion/commit",{method:"POST",headers:hdr,
+            body:JSON.stringify({org_id:org,sourceKind:"cmdb",fileName:file.name,contentBase64:b64,mapping:mapping})}).then(function(r){return r.json();});
+        })
+        .then(function(res){
+          if(res&&res.error){setAppImport({error:res.error,fileName:file.name});return;}
+          setCmdbConn("success");
+          setMapRefresh(function(n){return n+1;});   // tell AppProcessMap to re-read
+          // True deduped application count from the DB.
+          fetch(CYBERRX_API+"/api/crosswalk/app-process/graph?org_id="+encodeURIComponent(org),{headers:hdr})
+            .then(function(r){return r.json();})
+            .then(function(g){setAppImport({fileName:file.name,count:(g&&g.counts&&g.counts.applications)||(res&&res.ingested)||0});})
+            .catch(function(){setAppImport({fileName:file.name,count:(res&&res.ingested)||0});});
+        })
+        .catch(function(e){setAppImport({error:e.message,fileName:file.name});});
+    };
+    reader.readAsDataURL(file);
+  }
   var _s12=useState(null);     var uploadName=_s12[0]; var setUploadName=_s12[1];
   var _s13=useState(_saved.infraSel||{});     var infraSel=_s13[0];   var setInfraSel=_s13[1];
   // Control coverage of the selected systems (which framework controls each tool
@@ -5928,8 +5962,21 @@ function Setup(props) {
                       cursor:"pointer",fontSize:11,fontWeight:700}}>
                       Browse Files
                       <input type="file" accept=".csv,.xlsx,.xls" style={{display:"none"}}
-                        onChange={function(e){if(e.target.files[0]){setCmdbConn("success");}}}/>
+                        onChange={function(e){var f=e.target.files&&e.target.files[0]; if(f){uploadAppInventory(f);} e.target.value="";}}/>
                     </label>
+                    {appImport&&(
+                      <div style={{marginTop:14}}>
+                        {appImport.busy&&<div style={{color:C.acc,fontSize:11,fontWeight:600}}>⏳ Importing {appImport.fileName}…</div>}
+                        {!appImport.busy&&!appImport.error&&(
+                          <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"#0FBB8010",border:"1px solid #0FBB8040",borderRadius:8,padding:"8px 14px"}}>
+                            <span style={{fontSize:14}}>📄</span>
+                            <span style={{color:C.text,fontSize:11,fontWeight:700}}>{appImport.fileName}</span>
+                            <span style={{color:"#0FBB80",fontSize:11,fontWeight:700}}>✓ {appImport.count} applications imported (deduped)</span>
+                          </div>
+                        )}
+                        {appImport.error&&<div style={{color:"#EF4545",fontSize:11}}>Import failed: {appImport.error}</div>}
+                      </div>
+                    )}
                   </div>
                   <div style={{background:C.dim,borderRadius:7,padding:"10px 14px"}}>
                     <div style={{color:C.muted,fontSize:9,fontWeight:700,marginBottom:4}}>REQUIRED COLUMN FORMAT</div>
@@ -6063,7 +6110,7 @@ function Setup(props) {
                 application to the process(es) it supports (many-to-many) and shows
                 the visual mapping. This drives all downstream calculations. */}
             <Card style={{marginTop:14}}>
-              <AppProcessMap />
+              <AppProcessMap refreshKey={mapRefresh} />
             </Card>
 
             <div style={{display:"flex",justifyContent:"space-between"}}>
