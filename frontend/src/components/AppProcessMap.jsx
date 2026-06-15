@@ -44,41 +44,47 @@ export default function AppProcessMap(props) {
       .catch((e) => setErr(e.message)).finally(() => setBusy(false));
   }, [api, orgId, headers]);
 
-  // Load existing mapping; if apps + processes exist but nothing is mapped yet,
-  // run the LLM mapping automatically (the "next step" after upload).
-  useEffect(() => {
-    load().then((g) => {
-      if (autoRan.current || !g) return;
-      const c = g.counts || {};
-      if (c.applications > 0 && c.processes > 0 && (c.mapped || 0) === 0) { autoRan.current = true; remap(); }
-    });
-  }, [load, remap]);
+  // Load any existing mapping on mount. Running the LLM mapping is an explicit
+  // user action (the "Intelligently map…" button) — never silent/auto.
+  useEffect(() => { load(); }, [load]);
 
   const processes = (graph && graph.processes) || [];
   const unmapped = (graph && graph.unmappedApps) || [];
   const counts = (graph && graph.counts) || {};
+  const hasMapping = (counts.mapped || 0) > 0;
+  const canMap = (counts.processes || 0) > 0 && (counts.applications || 0) > 0;
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap', marginBottom: 6 }}>
-        <div>
-          <div style={{ fontSize: 14, fontWeight: 800, color: INK }}>Applications → processes</div>
-          <div style={{ fontSize: 11.5, color: INK2, lineHeight: 1.5, maxWidth: 720 }}>
-            CyberRX mapped each application to the business process(es) it supports. This mapping drives all downstream
-            criticality and risk calculations — review the visual below.
-          </div>
+      <div style={{ marginBottom: 10 }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: INK }}>Map applications to the processes they support</div>
+        <div style={{ fontSize: 11.5, color: INK2, lineHeight: 1.5, maxWidth: 760 }}>
+          CyberRX reads your uploaded application inventory and your confirmed processes and uses AI to map each
+          application to the business process(es) it supports. This mapping drives all downstream criticality and risk
+          calculations.
         </div>
-        <button onClick={remap} disabled={busy} style={{ background: '#0f1b2d', color: '#fff', border: 'none', borderRadius: 7, padding: '8px 14px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', opacity: busy ? 0.6 : 1, whiteSpace: 'nowrap' }}>{busy ? 'Mapping…' : '↻ Re-map with AI'}</button>
       </div>
       {err && <div style={{ color: '#C0392B', fontSize: 12, margin: '8px 0' }}>{err}</div>}
-      {counts.processes != null && (
-        <div style={{ fontSize: 11, color: INK3, marginBottom: 12 }}>{counts.mapped || 0} of {counts.applications || 0} applications mapped across {counts.processes || 0} processes.</div>
+
+      {/* Explicit AI-mapping action — the requested button. */}
+      <div style={{ textAlign: 'center', padding: hasMapping ? '0 0 12px' : '22px 0', border: hasMapping ? 'none' : `1px dashed ${HAIR}`, borderRadius: 12, background: hasMapping ? 'transparent' : PANEL, marginBottom: hasMapping ? 4 : 0 }}>
+        <button onClick={remap} disabled={busy || !canMap}
+          style={{ background: hasMapping ? '#fff' : '#4f46e5', color: hasMapping ? INK : '#fff', border: hasMapping ? `1px solid ${HAIR}` : 'none', borderRadius: 9, padding: hasMapping ? '7px 14px' : '12px 22px', fontSize: hasMapping ? 11.5 : 13.5, fontWeight: 800, cursor: (busy || !canMap) ? 'default' : 'pointer', opacity: (busy || !canMap) ? 0.6 : 1, maxWidth: 460, whiteSpace: 'normal', lineHeight: 1.3 }}>
+          {busy ? 'Mapping… reading both files' : hasMapping ? '↻ Re-map with AI' : '🪄 Intelligently map processes to applications that support them'}
+        </button>
+        {!hasMapping && (
+          <div style={{ fontSize: 11, color: INK3, marginTop: 8 }}>
+            {canMap ? `AI will analyze ${counts.applications} applications against ${counts.processes} processes.`
+              : 'Upload your application inventory above and confirm your processes first.'}
+          </div>
+        )}
+      </div>
+      {hasMapping && (
+        <div style={{ fontSize: 11, color: INK3, marginBottom: 12 }}>{counts.mapped} of {counts.applications} applications mapped across {counts.processes} processes.</div>
       )}
 
-      {busy && !processes.length ? <div style={{ fontSize: 12, color: INK3, padding: '12px 0' }}>Mapping applications to processes…</div> : null}
-      {!processes.length && !busy ? <div style={{ fontSize: 12, color: INK3, padding: '12px 0' }}>Upload your application inventory and process list, then map.</div> : null}
-
-      {/* Visual: each process node with the applications that support it */}
+      {/* Visual: each process node with the applications that support it (after mapping) */}
+      {hasMapping && (
       <div style={{ display: 'grid', gap: 12 }}>
         {processes.map((p) => (
           <div key={p.id} style={{ display: 'flex', alignItems: 'stretch', gap: 0, border: `1px solid ${HAIR}`, borderRadius: 10, overflow: 'hidden', background: '#fff' }}>
@@ -100,8 +106,9 @@ export default function AppProcessMap(props) {
           </div>
         ))}
       </div>
+      )}
 
-      {unmapped.length > 0 && (
+      {hasMapping && unmapped.length > 0 && (
         <div style={{ marginTop: 16, border: `1px dashed ${HAIR}`, borderRadius: 10, padding: '12px 14px', background: '#fff' }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Not yet mapped to a process ({unmapped.length})</div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
