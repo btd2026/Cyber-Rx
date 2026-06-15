@@ -248,6 +248,10 @@ app.use('/api/attack-path',       [apiGetLimiter], require('./routes/attackPath'
 // CISO security posture across the eight posture domains
 app.use('/api/ciso',              [apiGetLimiter], require('./routes/ciso'));
 
+// Role-specific executive dashboards (CFO/CIO/CRO/CLO/Board) — each leader's own
+// hero, KPI strip, five key questions, and sub-tabs (no shared CISO content).
+app.use('/api/exec',              [apiGetLimiter], require('./routes/exec'));
+
 // Metrics engine - editable mock numbers + formula-driven dashboard figures
 app.use('/api/metrics',           [apiGetLimiter, apiPutLimiter], require('./routes/metrics'));
 

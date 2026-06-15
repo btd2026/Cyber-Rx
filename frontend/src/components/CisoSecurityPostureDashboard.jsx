@@ -21,6 +21,7 @@ import CisoAgentPanel from './CisoAgentPanel';
 import ExecutiveSummaryEditor from './ExecutiveSummaryEditor';
 import BusinessRiskPanel from './BusinessRiskPanel';
 import ExecutiveAgentBrief from './ExecutiveAgentBrief';
+import ExecRoleDashboard from './ExecRoleDashboard';
 import DashNav from './DashNav';
 
 // Per-role header framing so every C-suite seat uses this SAME rich view.
@@ -66,6 +67,9 @@ function Bar({ value, color }) {
 
 export default function CisoSecurityPostureDashboard(props) {
   const role = props.role || 'CISO';
+  // Every leader OTHER than the CISO gets a dedicated, role-specific dashboard
+  // (same format, own content). The CISO keeps this rich posture view.
+  if (role !== 'CISO') return <ExecRoleDashboard {...props} />;
   const frame = ROLE_FRAME[role] || ROLE_FRAME.CISO;
   const [d, setD] = useState(null);
   const [error, setError] = useState(null);
