@@ -122,6 +122,38 @@ router.get('/documents/:id/assessments', async (req, res) => {
   }
 });
 
+// Persist the user's validated process tree into business_processes so the
+// application→process mapping (and all downstream calculations) can use it.
+// Idempotent: replaces previously intake-sourced processes for this org.
+const SLUG = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'process';
+router.post('/save-processes', async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'org_id is required' });
+  const processes = Array.isArray(req.body && req.body.processes) ? req.body.processes : [];
+  const critFor = (t) => ({ 1: 'Critical', 2: 'High', 3: 'Medium', 4: 'Low' }[t] || 'Medium');
+  try {
+    await db.query("DELETE FROM business_processes WHERE organization_id=$1 AND description='(from intake)'", [orgId]);
+    let saved = 0;
+    for (const p of processes) {
+      const name = String(p.name || '').trim();
+      if (!name) continue;
+      const tier = Number(p.tier) || null;
+      await db.query(
+        `INSERT INTO business_processes (id, organization_id, name, tier, criticality, owner, crit_tier, rto, description)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'(from intake)')
+         ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, tier=EXCLUDED.tier, criticality=EXCLUDED.criticality,
+           crit_tier=EXCLUDED.crit_tier, rto=EXCLUDED.rto, updated_at=NOW()`,
+        [`${orgId}::proc::${SLUG(name)}`, orgId, name, (tier && tier <= 2) ? 'Primary' : 'Strategic',
+          critFor(tier), 'Unassigned', tier, p.rto || null]);
+      saved++;
+    }
+    res.json({ saved });
+  } catch (e) {
+    logger.warn('save-processes failed', { error: e.message });
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Extract the business-function -> process hierarchy (with RTO priority) from an
 // uploaded process / BIA document. Returns a structure the wizard renders as a
 // validation checklist; nothing is persisted here (the user validates first).

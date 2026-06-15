@@ -64,6 +64,15 @@ function resolve(token, ctx) {
   if (CATEGORY_TOKENS[tl]) {
     return { raw_token: raw, match_type: 'category', category: CATEGORY_TOKENS[tl], resolved: true };
   }
+  // known vendor token appears within the input (e.g. "SailPoint IGA" -> SailPoint,
+  // "CyberArk PAM" -> CyberArk). Prefer the longest matching alias key.
+  const aliasHit = Object.keys(ALIAS)
+    .filter((k) => new RegExp(`(^|[^a-z])${k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^a-z]|$)`, 'i').test(tl))
+    .sort((a, b) => b.length - a.length)[0];
+  if (aliasHit) {
+    const name = ALIAS[aliasHit];
+    return { raw_token: raw, match_type: 'tool', tool_name: name, resolved: ctx.toolByLower.has(low(name)) };
+  }
   // fuzzy: token is a substring of exactly one canonical tool name
   if (tl.length >= 4) {
     const hits = [];

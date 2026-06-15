@@ -984,11 +984,49 @@ async function answerQuestion(role, orgId, question) {
   };
 }
 
+// Role "Current State" cards — the key decision questions for a seat, each with
+// a live, data-backed one-line answer and a severity, mirroring the CISO view's
+// 5-key-questions panel but for any role. Deterministic (no LLM): summaries are
+// drawn from the same brief data, so the cards always reflect current org data.
+async function getKeyQuestions(role, orgId) {
+  const ctx = await gatherContext(orgId);
+  const brief = deterministicBrief(role, ctx);
+  const sevFromStatus = brief.status === 'red' ? 'Critical' : brief.status === 'amber' ? 'High' : 'Low';
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+  // Only read an EXPLICIT severity marker — "(Critical)" or "— High" — so phrases
+  // like "0 Critical, 0 High" in a metric line don't false-trigger. Else use the
+  // seat's overall status.
+  const sevFromText = (t) => {
+    const m = String(t).match(/\((critical|high|medium|low)\)|[—,-]\s*(critical|high|medium|low)\b/i);
+    return m ? cap(m[1] || m[2]) : sevFromStatus;
+  };
+  const lines = [brief.headline, ...(brief.highlights || []), brief.summary].filter(Boolean);
+  const questions = (SUGGESTED_QUESTIONS[role] || []).slice(0, 5);
+  const cards = questions.map((q, i) => {
+    const summary = lines[i] || brief.summary || brief.headline || '';
+    return {
+      n: i + 1,
+      question: q,
+      summary,
+      severity: i === 0 ? sevFromStatus : sevFromText(summary),
+      detail: brief.summary,
+    };
+  });
+  return {
+    role,
+    headline: brief.headline,
+    status: brief.status,
+    metrics: brief.metrics,
+    keyQuestions: cards,
+  };
+}
+
 module.exports = {
   ROLES,
   ROLE_KEYS,
   SUGGESTED_QUESTIONS,
   getSuggestedQuestions,
+  getKeyQuestions,
   isValidRole,
   aiEnabled,
   gatherContext,

@@ -22,8 +22,22 @@ const router = express.Router();
 const { optionalJWT, demoOrg } = require('../middleware/auth');
 const svc = require('../cae/onboardingService');
 const assess = require('../cae/assessmentService');
+const coverage = require('../cae/coverageService');
 
 router.use(optionalJWT, demoOrg);
+
+// Which framework controls the selected systems will evidence (read-only, for UI).
+router.post('/coverage', async (req, res) => {
+  try { res.json(await coverage.coverageForTools((req.body && req.body.tools) || [])); }
+  catch (e) { res.status(500).json({ error: 'Unable to compute coverage.' }); }
+});
+
+// Persist the org's declared systems so their controls are auto-assessed.
+router.post('/select-tools', async (req, res) => {
+  if (!req.orgId) return res.status(400).json({ error: 'Organization required.' });
+  try { res.json(await coverage.selectTools(req.orgId, (req.body && req.body.tools) || [])); }
+  catch (e) { res.status(500).json({ error: 'Unable to save selected tools.' }); }
+});
 
 router.get('/frameworks', (_req, res) => res.json({ frameworks: svc.listFrameworks() }));
 

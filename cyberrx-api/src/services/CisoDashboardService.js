@@ -58,7 +58,42 @@ async function compose(orgId) {
       Promise.resolve(D.EMERGING_RISKS),
       Promise.resolve(D.EVIDENCE_SOURCES),
     ]);
-  return { domains, controls, thresholds, processes, pathways, readiness, investments, hidden, attention, actions, peers, emerging, sources };
+  // Maintain linkage: the Process Protection list must be the SAME processes the
+  // user approved in the Process phase (business_processes), with their supporting
+  // applications from the crosswalk. Fall back to the demo set only when the org
+  // has not completed the Process phase yet.
+  const approved = await approvedProcesses(orgId);
+  const finalProcesses = approved.length ? approved : processes;
+  return { domains, controls, thresholds, processes: finalProcesses, pathways, readiness, investments, hidden, attention, actions, peers, emerging, sources };
+}
+
+// Build the Process-Protection rows from the org's approved processes + the
+// applications mapped to them (app_process_map). Coverage/risk default to
+// 'Medium' (not yet assessed) rather than fabricated specifics.
+async function approvedProcesses(orgId) {
+  let rows = [];
+  try {
+    rows = await db.query(
+      `SELECT bp.id, bp.name, bp.crit_tier, bp.rto,
+              COALESCE(ARRAY_AGG(DISTINCT a.name) FILTER (WHERE a.name IS NOT NULL), '{}') AS apps
+         FROM business_processes bp
+         LEFT JOIN app_process_map m ON m.process_id = bp.id AND m.organization_id = bp.organization_id
+         LEFT JOIN applications a ON a.id = m.application_id
+        WHERE bp.organization_id = $1
+        GROUP BY bp.id, bp.name, bp.crit_tier, bp.rto
+        ORDER BY bp.crit_tier NULLS LAST, bp.name`, [orgId]);
+  } catch (e) { logger.debug('approvedProcesses degraded', { error: e.message }); return []; }
+  const protByTier = { 1: 55, 2: 60, 3: 65, 4: 70 };
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    supportingSystems: Array.isArray(r.apps) ? r.apps : [],
+    protectionLevel: protByTier[r.crit_tier] || 60,
+    identityRisk: 'Medium', vulnRisk: 'Medium', detectionCoverage: 'Medium',
+    dataProtection: 'Medium', recoveryReadiness: 'Medium', thirdPartyRisk: 'Medium',
+    resilienceRating: 'Moderate',
+    tier: r.crit_tier || null, rto: r.rto || null,
+  }));
 }
 
 // ---- component builders ----------------------------------------------------

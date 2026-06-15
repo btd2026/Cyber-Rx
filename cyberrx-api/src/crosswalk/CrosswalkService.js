@@ -102,6 +102,104 @@ async function confirmProcessCapability(orgId, processId, capabilityId, confirme
   return { ok: true };
 }
 
+// ---- AUTO app -> process mapping (LLM, many-to-many) ------------------------
+// One application can support several processes and a process can be supported by
+// several applications. We ask the LLM to map every app to the processes it
+// materially supports; a deterministic name-match is the fallback. The result is
+// auto-accepted (used in all downstream calculations) but still editable later.
+async function llmMapAppProcess(apps, procs) {
+  const Anthropic = require('@anthropic-ai/sdk');
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const prompt = `You map a health-insurance payer's APPLICATIONS to the BUSINESS PROCESSES each one supports.
+One application may support MANY processes, and one process may be supported by MANY applications.
+
+APPLICATIONS:\n${apps.map((a) => `- ${a.name}${a.owner ? ` (owner: ${a.owner})` : ''}`).join('\n')}
+
+BUSINESS PROCESSES (use these EXACT names only):\n${procs.map((p) => `- ${p.name}`).join('\n')}
+
+Return ONLY JSON: {"map":[{"app":"<application name>","processes":["<process name>", ...]}]}.
+Map an app to every process it materially supports. If none clearly applies, use an empty list.`;
+  const resp = await client.messages.create({
+    model: process.env.ANTHROPIC_REVIEW_MODEL || 'claude-haiku-4-5-20251001',
+    max_tokens: 3000, temperature: 0, messages: [{ role: 'user', content: prompt }],
+  });
+  const raw = (resp.content || []).map((c) => c.text || '').join('');
+  const json = JSON.parse(raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1));
+  const procByName = new Map(procs.map((p) => [norm(p.name), p]));
+  const appByName = new Map(apps.map((a) => [norm(a.name), a]));
+  const out = [];
+  for (const row of (json.map || [])) {
+    const app = appByName.get(norm(row.app));
+    if (!app) continue;
+    const pids = (row.processes || []).map((pn) => procByName.get(norm(pn))).filter(Boolean)
+      .map((p) => ({ id: p.id, confidence: 0.92 }));
+    out.push({ application_id: app.id, links: pids });
+  }
+  return out;
+}
+
+function heuristicMapAppProcess(apps, procs) {
+  return apps.map((a) => {
+    const scored = procs.map((p) => ({ id: p.id, confidence: nameScore(a.name, p.name, a.owner) }))
+      .sort((x, y) => y.confidence - x.confidence);
+    let links = scored.filter((s) => s.confidence >= 0.5);     // every materially-matching process
+    if (!links.length && scored[0] && scored[0].confidence >= 0.3) links = [scored[0]]; // else best guess
+    return { application_id: a.id, links };
+  });
+}
+
+async function autoMapAppsToProcesses(orgId) {
+  const apps = await db.query('SELECT id, name, owner FROM applications WHERE organization_id=$1', [orgId]);
+  const procs = await db.query('SELECT id, name FROM business_processes WHERE organization_id=$1', [orgId]);
+  if (!apps.length || !procs.length) return { mappedApps: 0, links: 0, processes: procs.length, applications: apps.length };
+
+  let assignments = null;
+  if (process.env.ANTHROPIC_API_KEY) {
+    try { assignments = await llmMapAppProcess(apps, procs); } catch (_) { assignments = null; }
+  }
+  const source = assignments ? 'llm' : 'heuristic';
+  if (!assignments) assignments = heuristicMapAppProcess(apps, procs);
+
+  // Replace prior AUTO links (keep any user-confirmed ones), then insert fresh.
+  await db.query(`DELETE FROM app_process_map WHERE organization_id=$1 AND source IN ('llm','heuristic','auto')`, [orgId]);
+  let links = 0; const touched = new Set();
+  for (const a of assignments) {
+    for (const l of a.links) {
+      await db.query(
+        `INSERT INTO app_process_map (organization_id, application_id, process_id, confidence, source, confirmed, updated_at)
+         VALUES ($1,$2,$3,$4,$5,true,NOW())
+         ON CONFLICT (organization_id, application_id, process_id)
+         DO UPDATE SET confidence=EXCLUDED.confidence, source=EXCLUDED.source, confirmed=true, updated_at=NOW()`,
+        [orgId, a.application_id, l.id, l.confidence, source]);
+      links++; touched.add(a.application_id);
+    }
+  }
+  // Inherit process criticality (Tier + RTO) onto each mapped application.
+  for (const appId of touched) { try { await Prop.inheritAppCriticality(orgId, appId); } catch (_) { /* best effort */ } }
+
+  return { ...(await appProcessGraph(orgId)), source, mappedApps: touched.size, links };
+}
+
+// Process → supporting applications, for the visual mapping. Many-to-many.
+async function appProcessGraph(orgId) {
+  const rows = await db.query(
+    `SELECT p.id pid, p.name pname, COALESCE(p.crit_tier, NULL) AS tier, p.rto, a.id aid, a.name aname, m.confidence
+       FROM business_processes p
+       LEFT JOIN app_process_map m ON m.process_id=p.id AND m.organization_id=p.organization_id
+       LEFT JOIN applications a ON a.id=m.application_id
+      WHERE p.organization_id=$1
+      ORDER BY p.tier NULLS LAST, p.name, a.name`, [orgId]);
+  const byProc = new Map();
+  for (const r of rows) {
+    if (!byProc.has(r.pid)) byProc.set(r.pid, { id: r.pid, name: r.pname, tier: r.tier, rto: r.rto, apps: [] });
+    if (r.aid) byProc.get(r.pid).apps.push({ id: r.aid, name: r.aname, confidence: r.confidence != null ? Number(r.confidence) : null });
+  }
+  const mappedAppIds = new Set(rows.filter((r) => r.aid).map((r) => r.aid));
+  const allApps = await db.query('SELECT id, name FROM applications WHERE organization_id=$1', [orgId]);
+  const unmappedApps = allApps.filter((a) => !mappedAppIds.has(a.id)).map((a) => ({ id: a.id, name: a.name }));
+  return { processes: Array.from(byProc.values()), unmappedApps, counts: { processes: byProc.size, applications: allApps.length, mapped: mappedAppIds.size } };
+}
+
 async function status(orgId) {
   const [apps, procs, apm, pcm] = await Promise.all([
     db.query('SELECT COUNT(*)::int n FROM applications WHERE organization_id=$1', [orgId]),
@@ -112,4 +210,7 @@ async function status(orgId) {
   return { applications: apps[0].n, processes: procs[0].n, appsCrosswalked: apm[0].n, processesCrosswalked: pcm[0].n };
 }
 
-module.exports = { suggestAppProcess, confirmAppProcess, suggestProcessCapability, confirmProcessCapability, status, nameScore };
+module.exports = {
+  suggestAppProcess, confirmAppProcess, suggestProcessCapability, confirmProcessCapability,
+  autoMapAppsToProcesses, appProcessGraph, status, nameScore,
+};

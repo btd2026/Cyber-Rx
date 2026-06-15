@@ -5,10 +5,34 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   background: #f8fafc;
+  color: #0f172a;
   -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  letter-spacing: -0.006em;
 }
+
+/* ── Professional global polish (applies app-wide) ──────────────────────── */
+* { box-sizing: border-box; }
+h1, h2, h3, h4 { letter-spacing: -0.018em; }
+button { font-family: inherit; transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease, opacity .15s ease, transform .05s ease; }
+button:not(:disabled):active { transform: translateY(0.5px); }
+input, select, textarea { font-family: inherit; transition: border-color .15s ease, box-shadow .15s ease; }
+input:focus, select:focus, textarea:focus { outline: none; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18); }
+a { transition: color .15s ease; }
+
+/* Quiet, modern scrollbars */
+* { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
+*::-webkit-scrollbar-thumb:hover { background: #94a3b8; background-clip: content-box; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+::selection { background: rgba(37, 99, 235, 0.16); }
 
 #root {
   min-height: 100vh;

@@ -19,7 +19,7 @@ import CisoSecurityPostureDashboard from "./components/CisoSecurityPostureDashbo
 import CisoAgentPanel from "./components/CisoAgentPanel";
 import OrganizationIntakeDocuments from "./components/OrganizationIntakeDocuments";
 import IngestionUploader from "./components/IngestionUploader";
-import CrosswalkPanel from "./components/CrosswalkPanel";
+import AppProcessMap from "./components/AppProcessMap";
 import CfoExposurePanel from "./components/CfoExposurePanel";
 import PersonaDashboard from "./components/PersonaDashboard";
 import ControlAssessment from "./components/ControlAssessment";
@@ -3402,6 +3402,24 @@ function SH(props) {
   );
 }
 
+// WhyBanner — shown at the top of every Organization Intake section to explain,
+// up front, why we collect this information and what it is used for.
+function WhyBanner(props) {
+  var title, children; title=props.title; children=props.children;
+  return (
+    <div style={{background:C.acc+"0D", border:"1px solid "+C.acc+"33", borderLeft:"3px solid "+C.acc,
+      borderRadius:9, padding:"11px 14px", marginBottom:14}}>
+      <div style={{display:"flex", alignItems:"center", gap:7, marginBottom:4}}>
+        <span style={{fontSize:13}}>ℹ️</span>
+        <span style={{color:C.acc, fontSize:11, fontWeight:800, textTransform:"uppercase", letterSpacing:"0.08em"}}>
+          Why we collect this — {title}
+        </span>
+      </div>
+      <div style={{color:C.muted, fontSize:11, lineHeight:1.55}}>{children}</div>
+    </div>
+  );
+}
+
 function StatCard(props) {
   var label, value, color, sub, onClick; label=props.label; value=props.value; color=props.color; sub=props.sub; onClick=props.onClick;
   return (
@@ -4634,12 +4652,39 @@ function Setup(props) {
                                var extractedProcs=_epx[0]; var setExtractedProcs=_epx[1];
   var _epb=useState(false);    var extracting=_epb[0];     var setExtracting=_epb[1];
   var _epm=useState(null);     var extractMeta=_epm[0];    var setExtractMeta=_epm[1];
+  // Editable function → process → sub-process tree built from the uploaded file.
+  var _ept=useState(Array.isArray(_saved.procTree)?_saved.procTree:[]);
+                               var procTree=_ept[0];       var setProcTree=_ept[1];
   var _s9=useState(_saved.appSel||"");        var appSel=_s9[0];      var setAppSel=_s9[1];
   var _s10=useState(_saved.appConn||{});      var appConn=_s10[0];    var setAppConn=_s10[1];
   var _s11=useState("sample"); var appTab=_s11[0];     var setAppTab=_s11[1];
   var _s11b=useState(null);    var sampleResult=_s11b[0]; var setSampleResult=_s11b[1];
   var _s12=useState(null);     var uploadName=_s12[0]; var setUploadName=_s12[1];
   var _s13=useState(_saved.infraSel||{});     var infraSel=_s13[0];   var setInfraSel=_s13[1];
+  // Control coverage of the selected systems (which framework controls each tool
+  // evidences) — computed from the private control DB via /api/cae/coverage.
+  var _cvg=useState(null);  var caeCoverage=_cvg[0];  var setCaeCoverage=_cvg[1];
+  function selectedInfraToolNames(){
+    return Object.keys(infraSel).filter(function(k){return infraSel[k];}).map(function(k){return k.substring(k.indexOf(":")+1);});
+  }
+  useEffect(function(){
+    var names=selectedInfraToolNames();
+    if(!names.length){ setCaeCoverage(null); return; }
+    var t=setTimeout(function(){
+      fetch(CYBERRX_API+"/api/cae/coverage",{method:"POST",
+        headers:{"Content-Type":"application/json","X-Org-Id":(typeof localStorage!=="undefined"&&localStorage.getItem("cyberrx_org_id"))||""},
+        body:JSON.stringify({tools:names})})
+        .then(function(r){return r.json();}).then(setCaeCoverage).catch(function(){});
+    },400);
+    return function(){clearTimeout(t);};
+  }, [infraSel]);
+  function persistSelectedTools(){
+    var names=selectedInfraToolNames();
+    if(!names.length) return;
+    fetch(CYBERRX_API+"/api/cae/select-tools",{method:"POST",
+      headers:{"Content-Type":"application/json","X-Org-Id":(typeof localStorage!=="undefined"&&localStorage.getItem("cyberrx_org_id"))||""},
+      body:JSON.stringify({tools:names})}).catch(function(){});
+  }
   // Sync vendorSel up to root so VendorEcosystem dashboard can filter
   useEffect(function(){
     if (props.setRootVendorSel) { props.setRootVendorSel(vendorSel); }
@@ -4661,6 +4706,7 @@ function Setup(props) {
         orgName: orgName,
         selProcs: Array.from(selProcs),
         extractedProcs: extractedProcs,
+        procTree: procTree,
         appSel: appSel,
         appConn: appConn,
         vendorSel: vendorSel,
@@ -4671,7 +4717,7 @@ function Setup(props) {
       });
     }, 1200);
     return function(){ if (persistTimerRef.current) { clearTimeout(persistTimerRef.current); } };
-  }, [selProcs, extractedProcs, appSel, appConn, vendorSel, infraSel, infraConn, orgName]);
+  }, [selProcs, extractedProcs, procTree, appSel, appConn, vendorSel, infraSel, infraConn, orgName]);
 
     useEffect(function(){
     if(step!==4)return;
@@ -4803,10 +4849,27 @@ function Setup(props) {
       })
         .then(function(r){return r.json();})
         .then(function(d){
+          var fns=(d&&d.functions)||[];
+          // Build an editable tree: every process/sub-process starts included.
+          var tree=fns.map(function(f){
+            return {
+              function:f.function,
+              processes:(f.processes||[]).map(function(p){
+                return {
+                  id:p.id, pid:matchCanonicalProc(p.name)||p.id, name:p.name,
+                  tier:p.tier||"", rto:p.rto||"", include:true,
+                  subprocesses:(p.subprocesses||[]).map(function(s){
+                    return {id:s.id, name:s.name, tier:s.tier||"", rto:s.rto||"", include:true};
+                  })
+                };
+              })
+            };
+          });
+          setProcTree(tree);
           var flat=(d&&d.flat)||[];
           flat=flat.map(function(p){return Object.assign({},p,{pid:matchCanonicalProc(p.name)||p.id});});
           setExtractedProcs(flat);
-          setSelProcs(new Set(flat.map(function(p){return p.pid;})));  // pre-select all; user unchecks
+          syncSelFromTree(tree);
           setExtractMeta({engine:(d&&d.engine)||"none",count:flat.length,note:d&&d.note});
         })
         .catch(function(err){ setExtractMeta({error:err.message}); })
@@ -4814,6 +4877,41 @@ function Setup(props) {
     };
     reader.readAsDataURL(file);
   }
+  // Persist the validated process tree (included items, with Tier/RTO) to the
+  // server so the application→process mapping and downstream calculations use it.
+  function saveProcessesToServer(){
+    var list=[];
+    (procTree||[]).forEach(function(f){(f.processes||[]).forEach(function(p){
+      if(p.include&&String(p.name||"").trim()) list.push({name:p.name,tier:p.tier||null,rto:p.rto||null,function:f.function});
+    });});
+    if(!list.length) return;
+    fetch(CYBERRX_API+"/api/intake/save-processes",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","X-Org-Id":(typeof localStorage!=="undefined"&&localStorage.getItem("cyberrx_org_id"))||""},
+      body:JSON.stringify({processes:list})
+    }).catch(function(){});
+  }
+  // Selected processes = the included top-level processes in the validated tree.
+  function syncSelFromTree(tree){
+    var ids=[];
+    (tree||[]).forEach(function(f){(f.processes||[]).forEach(function(p){ if(p.include) ids.push(p.pid||p.id); });});
+    setSelProcs(new Set(ids));
+  }
+  function updateTree(mutator){
+    setProcTree(function(t){
+      var next=JSON.parse(JSON.stringify(t||[]));
+      mutator(next);
+      syncSelFromTree(next);
+      return next;
+    });
+  }
+  function setProcField(fi,pi,field,val){ updateTree(function(t){ t[fi].processes[pi][field]=val; }); }
+  function setSubField(fi,pi,si,field,val){ updateTree(function(t){ t[fi].processes[pi].subprocesses[si][field]=val; }); }
+  function addProcess(fi){ updateTree(function(t){ t[fi].processes.push({id:"new_"+Date.now(),pid:"new_"+Date.now(),name:"",tier:"",rto:"",include:true,subprocesses:[]}); }); }
+  function addSub(fi,pi){ updateTree(function(t){ t[fi].processes[pi].subprocesses.push({id:"news_"+Date.now(),name:"",tier:"",rto:"",include:true}); }); }
+  function removeProcess(fi,pi){ updateTree(function(t){ t[fi].processes.splice(pi,1); }); }
+  function removeSub(fi,pi,si){ updateTree(function(t){ t[fi].processes[pi].subprocesses.splice(si,1); }); }
+  function addFunction(){ updateTree(function(t){ t.push({function:"New function",processes:[]}); }); }
   function toggleApp(pid, appName) {
     setAppSel(function(s){
       var cur = s[pid]||{};
@@ -5284,7 +5382,9 @@ function Setup(props) {
                 setShowBot(false); setStep(2);
               }}/></div>
             ):(
-            <div><Card style={{marginBottom:14}}>
+            <div><WhyBanner title="Organization Profile">
+              We use your sector, size, revenue, geographies and regulatory obligations to <strong>size your financial risk exposure</strong>, select which frameworks and rules apply to you, and tailor the assessment. Public data is pre-filled where available so you only correct what's wrong — nothing here is used to rank you, only to scope the work.
+            </WhyBanner><Card style={{marginBottom:14}}>
               <SH label="Organization Profile"/>
               {/* Org Name */}
               <div style={{marginBottom:14}}>
@@ -5540,6 +5640,9 @@ function Setup(props) {
         
         {step===2&&(
           <div>
+            <WhyBanner title="Business Processes">
+              Cyber risk only matters in terms of the business it threatens. We capture your processes and their recovery-time objectives so we can <strong>rank crown jewels, compute blast radius, and scope the assessment to what actually runs your organization</strong> — prioritized by RTO. Upload your process inventory and validate what we extract; we don't guess.
+            </WhyBanner>
             {/* Upload-driven process discovery — nothing is preloaded. */}
             <Card style={{marginBottom:14}}>
               <SH label="Upload your process inventory / BIA — we'll extract it"/>
@@ -5572,63 +5675,77 @@ function Setup(props) {
             </Card>
 
             <Card style={{marginBottom:14}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-                <SH label={extractedProcs.length>0?"Validate the extracted processes":"Which business processes are in scope?"}/>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                <SH label={procTree.length>0?"Validate & correct — functions · processes · sub-processes":"Which business processes are in scope?"}/>
+                {procTree.length>0 ? (
+                  <button onClick={addFunction}
+                    style={{background:"transparent",border:"1px solid "+C.border,color:C.acc,cursor:"pointer",fontSize:10,fontWeight:700,borderRadius:6,padding:"3px 10px"}}>+ Add function</button>
+                ) : (
                 <div style={{display:"flex",gap:8}}>
-                  <button onClick={function(){
-                      if(extractedProcs.length>0){setSelProcs(new Set(extractedProcs.map(function(p){return p.pid;})));}
-                      else{setSelProcs(new Set(realOrgProcs(orgType||'Other Payer').map(function(p){return p.id;})));}
-                    }}
-                    style={{background:"transparent",border:"none",color:C.acc,cursor:"pointer",fontSize:11,fontWeight:600}}>
-                    Select all
-                  </button>
+                  <button onClick={function(){setSelProcs(new Set(realOrgProcs(orgType||'Other Payer').map(function(p){return p.id;})));}}
+                    style={{background:"transparent",border:"none",color:C.acc,cursor:"pointer",fontSize:11,fontWeight:600}}>Select all</button>
                   <button onClick={function(){setSelProcs(new Set());}}
-                    style={{background:"transparent",border:"none",color:C.muted,cursor:"pointer",fontSize:11}}>
-                    Clear
-                  </button>
+                    style={{background:"transparent",border:"none",color:C.muted,cursor:"pointer",fontSize:11}}>Clear</button>
                 </div>
+                )}
               </div>
-              {extractedProcs.length>0 ? (
-                <div style={{display:"grid",gridTemplateColumns:"1fr",gap:8}}>
-                  {(function(){
-                    // Group extracted processes by function; order by tightest RTO.
-                    var byFn={}; var order=[];
-                    extractedProcs.forEach(function(p){ if(!byFn[p.function]){byFn[p.function]=[];order.push(p.function);} byFn[p.function].push(p); });
-                    var rank=function(m){return m==null?Number.POSITIVE_INFINITY:m;};
-                    order.sort(function(a,b){ return rank(Math.min.apply(null,byFn[a].map(function(x){return rank(x.rtoMinutes);})))-rank(Math.min.apply(null,byFn[b].map(function(x){return rank(x.rtoMinutes);}))); });
-                    var tcolor=function(t){return t===1?"#EF4545":t===2?"#F5A623":t===3?"#3B9EFF":C.muted;};
-                    return order.map(function(fn){
-                      var procs=byFn[fn].slice().sort(function(a,b){return rank(a.rtoMinutes)-rank(b.rtoMinutes);});
-                      return (
-                        <div key={fn}>
-                          <div style={{color:C.acc,fontSize:11,fontWeight:700,margin:"6px 0 4px",textTransform:"uppercase",letterSpacing:"0.06em"}}>{fn}</div>
-                          {procs.map(function(p){
-                            var on=selProcs.has(p.pid);
+              {procTree.length>0&&(
+                <div style={{color:C.muted,fontSize:10.5,marginBottom:10,lineHeight:1.5}}>
+                  We extracted this from your file. Tick the items to include, fix any names, and add the <strong>Tier</strong> and <strong>RTO</strong> where they’re blank. Add anything we missed.
+                </div>
+              )}
+              {procTree.length>0 ? (
+                <div>
+                  {procTree.map(function(f,fi){
+                    return (
+                      <div key={fi} style={{marginBottom:14,border:"1px solid "+C.border,borderRadius:9,overflow:"hidden"}}>
+                        <div style={{display:"flex",alignItems:"center",gap:8,background:C.acc+"0D",padding:"8px 12px"}}>
+                          <input value={f.function} onChange={function(e){var v=e.target.value;updateTree(function(t){t[fi].function=v;});}}
+                            style={{flex:1,background:"transparent",border:"none",color:C.acc,fontSize:12,fontWeight:800,textTransform:"uppercase",letterSpacing:"0.06em",outline:"none"}}/>
+                          <button onClick={function(){addProcess(fi);}} style={{background:"transparent",border:"1px solid "+C.acc+"40",color:C.acc,borderRadius:5,padding:"2px 9px",fontSize:10,fontWeight:700,cursor:"pointer"}}>+ Process</button>
+                        </div>
+                        <div style={{padding:"8px 10px"}}>
+                          {f.processes.length===0&&<div style={{color:C.muted,fontSize:10,padding:"4px 6px"}}>No processes — add one.</div>}
+                          {f.processes.map(function(p,pi){
                             return (
-                              <div key={p.id} onClick={function(){toggleProc(p.pid);}}
-                                style={{display:"flex",gap:10,alignItems:"center",padding:"10px 12px",marginBottom:6,
-                                  background:on?C.acc+"10":C.dim,borderRadius:8,cursor:"pointer",
-                                  border:"1.5px solid "+(on?C.acc:C.border)}}>
-                                <div style={{width:18,height:18,borderRadius:4,flexShrink:0,
-                                  background:on?C.acc:C.bg,border:"1.5px solid "+(on?C.acc:C.border),
-                                  display:"flex",alignItems:"center",justifyContent:"center"}}>
-                                  {on&&<span style={{color:"#fff",fontSize:10,fontWeight:800}}>✓</span>}
+                              <div key={p.id} style={{marginBottom:7}}>
+                                <div style={{display:"flex",alignItems:"center",gap:7}}>
+                                  <input type="checkbox" checked={p.include} onChange={function(e){setProcField(fi,pi,"include",e.target.checked);}}/>
+                                  <input value={p.name} placeholder="Process name" onChange={function(e){setProcField(fi,pi,"name",e.target.value);}}
+                                    style={{flex:1,background:C.bg,border:"1px solid "+C.border,borderRadius:6,padding:"6px 8px",color:C.text,fontSize:11.5,outline:"none"}}/>
+                                  <select value={p.tier} onChange={function(e){setProcField(fi,pi,"tier",e.target.value);}} title="Criticality tier"
+                                    style={{background:C.bg,border:"1px solid "+C.border,borderRadius:6,padding:"6px 6px",color:p.tier?C.text:C.muted,fontSize:11}}>
+                                    <option value="">Tier —</option><option value="1">Tier 1</option><option value="2">Tier 2</option><option value="3">Tier 3</option><option value="4">Tier 4</option>
+                                  </select>
+                                  <input value={p.rto} placeholder="RTO" title="Recovery time objective" onChange={function(e){setProcField(fi,pi,"rto",e.target.value);}}
+                                    style={{width:62,background:C.bg,border:"1px solid "+C.border,borderRadius:6,padding:"6px 8px",color:C.text,fontSize:11,outline:"none"}}/>
+                                  <button onClick={function(){addSub(fi,pi);}} title="Add sub-process" style={{background:"transparent",border:"1px solid "+C.border,color:C.muted,borderRadius:5,padding:"4px 7px",fontSize:10,cursor:"pointer"}}>+ Sub</button>
+                                  <button onClick={function(){removeProcess(fi,pi);}} title="Remove process" style={{background:"transparent",border:"none",color:C.muted,cursor:"pointer",fontSize:14}}>×</button>
                                 </div>
-                                <div style={{flex:1}}>
-                                  <div style={{color:on?C.acc:C.text,fontSize:12,fontWeight:on?700:500}}>{p.name}</div>
-                                </div>
-                                {p.tier&&(
-                                  <span style={{fontSize:8,fontWeight:800,color:"#fff",background:tcolor(p.tier),
-                                    borderRadius:4,padding:"2px 7px"}}>TIER {p.tier}</span>
-                                )}
-                                <span style={{color:C.muted,fontSize:10,minWidth:54,textAlign:"right"}}>RTO {p.rto||"—"}</span>
+                                {p.subprocesses.map(function(s,si){
+                                  return (
+                                    <div key={s.id} style={{display:"flex",alignItems:"center",gap:7,marginTop:4,paddingLeft:30}}>
+                                      <input type="checkbox" checked={s.include} onChange={function(e){setSubField(fi,pi,si,"include",e.target.checked);}}/>
+                                      <span style={{color:C.muted,fontSize:11}}>↳</span>
+                                      <input value={s.name} placeholder="Sub-process" onChange={function(e){setSubField(fi,pi,si,"name",e.target.value);}}
+                                        style={{flex:1,background:C.bg,border:"1px solid "+C.border,borderRadius:6,padding:"5px 8px",color:C.text,fontSize:11,outline:"none"}}/>
+                                      <select value={s.tier} onChange={function(e){setSubField(fi,pi,si,"tier",e.target.value);}}
+                                        style={{background:C.bg,border:"1px solid "+C.border,borderRadius:6,padding:"5px 6px",color:s.tier?C.text:C.muted,fontSize:10.5}}>
+                                        <option value="">Tier —</option><option value="1">Tier 1</option><option value="2">Tier 2</option><option value="3">Tier 3</option><option value="4">Tier 4</option>
+                                      </select>
+                                      <input value={s.rto} placeholder="RTO" onChange={function(e){setSubField(fi,pi,si,"rto",e.target.value);}}
+                                        style={{width:62,background:C.bg,border:"1px solid "+C.border,borderRadius:6,padding:"5px 8px",color:C.text,fontSize:10.5,outline:"none"}}/>
+                                      <button onClick={function(){removeSub(fi,pi,si);}} title="Remove sub-process" style={{background:"transparent",border:"none",color:C.muted,cursor:"pointer",fontSize:13}}>×</button>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             );
                           })}
                         </div>
-                      );
-                    });
-                  })()}
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
               <div style={{display:"grid",gridTemplateColumns:"1fr",gap:8}}>
@@ -5738,7 +5855,7 @@ function Setup(props) {
             </Card>
             <div style={{display:"flex",justifyContent:"space-between"}}>
               <Btn onClick={function(){setStep(2);}}>← Back</Btn>
-              <Btn onClick={function(){setStep(3);}} primary disabled={selProcs.size===0}>Next: Map Applications →</Btn>
+              <Btn onClick={function(){saveProcessesToServer();setStep(3);}} primary disabled={selProcs.size===0}>Next: Map Applications →</Btn>
             </div>
           </div>
         )}
@@ -5747,6 +5864,9 @@ function Setup(props) {
         
         {step===3&&(
           <div>
+            <WhyBanner title="Application Inventory">
+              Linking each application to the process it supports lets us <strong>inherit business criticality, compute your true de-duplicated app count, and trace every finding to its business impact</strong>. Import once (CMDB, CSV/Excel, or API) and we map the rest — this is the backbone of the function → process → application → control chain.
+            </WhyBanner>
             <div style={{marginBottom:14}}>
               <div style={{color:C.text,fontSize:14,fontWeight:800,marginBottom:3}}>
                 Map Applications to Business Processes
@@ -6013,9 +6133,11 @@ function Setup(props) {
 
             {/* CMDB-file import removed here — applications are imported via the
                 connect-CMDB options and CSV/Excel upload above; no duplicate. */}
+            {/* After the inventory is uploaded, CyberRX uses the LLM to map every
+                application to the process(es) it supports (many-to-many) and shows
+                the visual mapping. This drives all downstream calculations. */}
             <Card style={{marginTop:14}}>
-              <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:8}}>Crosswalk — map applications to processes</div>
-              <CrosswalkPanel />
+              <AppProcessMap />
             </Card>
 
             <div style={{display:"flex",justifyContent:"space-between"}}>
@@ -6028,6 +6150,9 @@ function Setup(props) {
 
         {step===4&&(
   <div>
+    <WhyBanner title="Vendor Ecosystem">
+      Every third party that touches your data is a potential breach path. We capture your vendors to <strong>map PHI data flows, link required Business Associate Agreements, quantify supply-chain exposure, and validate the assessment documents</strong> (SOC 2, HITRUST, pen tests) each vendor provides — feeding the CISO and CRO dashboards.
+    </WhyBanner>
     {/* Papa 2.a/#8 — vendor assessment documents are now uploaded INSIDE each
         vendor row (expand a selected vendor → "Assessment documents"). Saraqael
         validates each, cross-checks them, and posts risk-rated findings to the
@@ -6515,6 +6640,9 @@ function Setup(props) {
         {/* ══ STEP 6: Core Infrastructure ══════════════════════════════ */}
         {step===5&&(
           <div>
+            <WhyBanner title="Core Infrastructure">
+              Connecting your security tools lets CyberRx <strong>pull evidence automatically and score controls from live data instead of self-attestation</strong>. Connections are read-only and credentials are stored in a secrets vault — we only collect what's needed to verify each control.
+            </WhyBanner>
             <div style={{background:C.acc+"08",border:"1px solid "+C.acc+"25",
               borderRadius:9,padding:"12px 16px",marginBottom:14}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
@@ -6617,6 +6745,28 @@ function Setup(props) {
                 })}
               </div>
             </div>
+            {/* Control coverage of the selected systems — each tool maps to the
+                framework controls it will evidence; this feeds the assessment. */}
+            {caeCoverage&&caeCoverage.totalControls>0&&(
+              <Card style={{marginBottom:12,borderLeft:"3px solid "+C.acc}}>
+                <div style={{fontSize:12,fontWeight:800,color:C.text,marginBottom:6}}>
+                  Control coverage from your selected systems
+                </div>
+                <div style={{color:C.muted,fontSize:10.5,marginBottom:8,lineHeight:1.5}}>
+                  Your connected tools will automatically evidence these controls — assessed from live data, not self-attestation.
+                </div>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                  {Object.keys(caeCoverage.aggregate||{}).map(function(fw){
+                    return (
+                      <div key={fw} style={{border:"1px solid "+C.border,borderRadius:8,padding:"8px 12px",background:C.dim,minWidth:120}}>
+                        <div style={{fontSize:9.5,color:C.muted,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.05em"}}>{fw}</div>
+                        <div style={{fontSize:20,fontWeight:800,color:C.acc}}>{caeCoverage.aggregate[fw]}<span style={{fontSize:10,color:C.muted,fontWeight:500}}> controls</span></div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+            )}
             {SEC_TOOL_CATALOG.map(function(group){
               var selectedCount=Object.keys(infraSel).filter(function(k){return k.startsWith(group.cat+":")&&infraSel[k];}).length;
               return (
@@ -6656,6 +6806,7 @@ function Setup(props) {
                               {isOn&&<span style={{color:"#fff",fontSize:9,fontWeight:800}}>✓</span>}
                             </div>
                             <span style={{color:isOn?group.color:C.muted,fontSize:11,fontWeight:isOn?700:400}}>{tool}</span>
+                            {isOn&&(function(){var e=((caeCoverage&&caeCoverage.tools)||[]).find(function(x){return x.input===tool;});return e&&e.controls?(<span style={{fontSize:8,color:group.color,fontWeight:700,marginLeft:"auto"}}>{e.controls} controls</span>):null;})()}
                           </div>
                           {isRec&&!isOn&&<div style={{padding:"2px 8px 4px",background:"#0891B210",borderTop:"1px solid #0891B220"}}><div style={{color:"#0891B2",fontSize:8,fontWeight:600}}>Recommended for your processes</div></div>}
                           {isRec&&isOn&&<div style={{padding:"2px 8px 0",background:group.color+"10",borderTop:"1px solid "+group.color+"25"}}><div style={{color:group.color,fontSize:8,fontWeight:600}}>Pre-selected based on your processes</div></div>}
@@ -6702,6 +6853,16 @@ function Setup(props) {
                                   <button onClick={function(){
                                     if(!creds.url||!creds.apiKey){return;}
                                     setInfraCredField(key,"status","testing");
+                                    // If this is a ticketing system, vault the credentials so the
+                                    // 'Open ticket' action can use the connection established at setup.
+                                    (function(){
+                                      var nm=(tool||"").toLowerCase();
+                                      var sc=/servicenow/.test(nm)?"snow":/jira/.test(nm)?"jira":/freshservice/.test(nm)?"freshservice":null;
+                                      if(!sc)return;
+                                      fetch(CYBERRX_API+"/api/itsm/credentials",{method:"POST",
+                                        headers:{"Content-Type":"application/json","X-Org-Id":(typeof localStorage!=="undefined"&&localStorage.getItem("cyberrx_org_id"))||""},
+                                        body:JSON.stringify({system:sc,credentials:creds})}).catch(function(){});
+                                    })();
                                     fetch(creds.url+"/ping",{
                                       method:"GET",
                                       headers:{"Authorization":"Bearer "+creds.apiKey,
@@ -7052,7 +7213,7 @@ function Setup(props) {
             </div>
             <div style={{display:"flex",justifyContent:"space-between"}}>
               <Btn onClick={function(){setStep(4);}}>← Back</Btn>
-              <Btn onClick={function(){setStep(6);}} primary>Next: Document Request →</Btn>
+              <Btn onClick={function(){persistSelectedTools();setStep(6);}} primary>Next: Document Request →</Btn>
             </div>
           </div>
         )}
@@ -7060,6 +7221,9 @@ function Setup(props) {
         {/* ══ STEP 6: Document Request ════════════════════════════════ */}
         {step===6&&(
           <div>
+            <WhyBanner title="Document Request">
+              Documents are the <strong>proof behind every manual control</strong>. Each requested item maps to specific NIST CSF 2.0, NIST 800-53 r5, and CIS requirements; we review each one to back your scores with real evidence rather than taking answers on faith. Upload only what applies — anything missing is simply scored as needing evidence.
+            </WhyBanner>
             <OrganizationIntakeDocuments orgId={(typeof localStorage!=="undefined"&&(localStorage.getItem("cyberrx_org_id")||localStorage.getItem("orgId")))||""} />
             <div style={{display:"flex",justifyContent:"space-between",marginTop:18}}>
               <Btn onClick={function(){setStep(5);}}>← Back</Btn>

@@ -39,11 +39,12 @@ function tierFromRto(mins) {
 
 const slug = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 48) || 'process';
 
-// Normalize an extracted record into the wizard's shape.
+// Normalize an extracted record into a flat shape (one row may carry a subprocess).
 function shape(rec, i) {
   const name = String(rec.process || rec.name || '').trim();
   if (!name) return null;
   const fn = String(rec.function || rec.business_function || 'General').trim() || 'General';
+  const sub = String(rec.subprocess || rec.sub_process || '').trim() || null;
   const rto = rec.rto != null && String(rec.rto).trim() ? String(rec.rto).trim() : null;
   const mins = rtoMinutes(rto);
   let tier = rec.tier != null ? parseInt(rec.tier, 10) : null;
@@ -52,6 +53,7 @@ function shape(rec, i) {
     id: `${slug(fn)}__${slug(name)}__${i}`,
     function: fn,
     name,
+    subprocess: sub,
     rto,
     rtoMinutes: mins,
     tier: tier || null,
@@ -59,22 +61,56 @@ function shape(rec, i) {
   };
 }
 
-// Group by business function; sort functions and processes by RTO priority.
+const rank = (m) => (m == null ? Number.POSITIVE_INFINITY : m);
+
+// Group into function → process → sub-process, sorted by RTO priority.
 function group(records) {
-  const flat = records.map(shape).filter(Boolean);
-  const byFn = new Map();
-  for (const p of flat) {
-    if (!byFn.has(p.function)) byFn.set(p.function, []);
-    byFn.get(p.function).push(p);
+  const rows = records.map(shape).filter(Boolean);
+  const byFn = new Map();                      // fn -> Map(processName -> processObj)
+  let i = 0;
+  for (const r of rows) {
+    if (!byFn.has(r.function)) byFn.set(r.function, new Map());
+    const procs = byFn.get(r.function);
+    if (!procs.has(r.name)) {
+      procs.set(r.name, {
+        id: `${slug(r.function)}__${slug(r.name)}`,
+        name: r.name, rto: null, rtoMinutes: null, tier: null, criticality: null, subprocesses: [],
+      });
+    }
+    const proc = procs.get(r.name);
+    if (r.subprocess) {
+      proc.subprocesses.push({
+        id: `${proc.id}__${slug(r.subprocess)}__${i++}`,
+        name: r.subprocess, rto: r.rto, rtoMinutes: r.rtoMinutes, tier: r.tier, criticality: r.criticality,
+      });
+    } else if (proc.rto == null && proc.tier == null) {
+      // process-level attributes come from the row without a subprocess
+      proc.rto = r.rto; proc.rtoMinutes = r.rtoMinutes; proc.tier = r.tier; proc.criticality = r.criticality;
+    }
   }
-  const rank = (m) => (m == null ? Number.POSITIVE_INFINITY : m);
-  const functions = Array.from(byFn.entries()).map(([fn, procs]) => {
-    procs.sort((a, b) => rank(a.rtoMinutes) - rank(b.rtoMinutes));
-    const top = procs.length ? rank(procs[0].rtoMinutes) : Number.POSITIVE_INFINITY;
-    return { function: fn, topRto: top, processes: procs };
+
+  const functions = Array.from(byFn.entries()).map(([fn, procMap]) => {
+    const processes = Array.from(procMap.values()).map((p) => {
+      // If a process has no own RTO/tier, inherit the tightest of its sub-processes.
+      if (p.rtoMinutes == null && p.subprocesses.length) {
+        const best = p.subprocesses.reduce((a, s) => (rank(s.rtoMinutes) < rank(a.rtoMinutes) ? s : a), p.subprocesses[0]);
+        p.rto = p.rto || best.rto; p.rtoMinutes = best.rtoMinutes; p.tier = p.tier || best.tier;
+      }
+      p.subprocesses.sort((a, b) => rank(a.rtoMinutes) - rank(b.rtoMinutes));
+      return p;
+    });
+    processes.sort((a, b) => rank(a.rtoMinutes) - rank(b.rtoMinutes));
+    const top = processes.length ? rank(processes[0].rtoMinutes) : Number.POSITIVE_INFINITY;
+    return { function: fn, topRto: top, processes };
   });
   functions.sort((a, b) => a.topRto - b.topRto);
   functions.forEach((f) => { delete f.topRto; });
+
+  // flat = top-level processes (for selection / canonical mapping in the wizard)
+  const flat = [];
+  functions.forEach((f) => f.processes.forEach((p) => flat.push({
+    id: p.id, function: f.function, name: p.name, rto: p.rto, rtoMinutes: p.rtoMinutes, tier: p.tier, criticality: p.criticality,
+  })));
   return { functions, flat };
 }
 
@@ -82,15 +118,17 @@ async function llmExtract(text) {
   const Anthropic = require('@anthropic-ai/sdk');
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const prompt = `You are a business-continuity analyst for a health-insurance payer.
-From the DOCUMENT below, extract the organization's business functions and the
-processes under each, with the recovery time objective (RTO) when stated.
+From the DOCUMENT below, extract the organization's business functions, the
+processes under each, and any sub-processes, with the recovery time objective
+(RTO) and criticality tier when stated.
 
 Return ONLY JSON of the form:
-{"processes":[{"function":"<business function>","process":"<process name>","rto":"<e.g. 4h, 24h, 3d, or empty>","tier":<1-4 or null>,"criticality":"<Critical|High|Moderate|Low or empty>"}]}
+{"processes":[{"function":"<business function>","process":"<process name>","subprocess":"<sub-process name or empty>","rto":"<e.g. 4h, 24h, 3d, or empty>","tier":<1-4 or null>,"criticality":"<Critical|High|Moderate|Low or empty>"}]}
 
 Rules:
-- Use ONLY processes evidenced in the document. Do not invent processes.
+- Use ONLY items evidenced in the document. Do not invent processes.
 - "function" groups related processes (e.g. Claims, Enrollment, Care Management, Finance).
+- Emit one row per process, and an additional row per sub-process (same function+process, with "subprocess" filled).
 - Lower RTO means higher priority. If tier is not stated, leave it null.
 
 DOCUMENT (may be truncated):
