@@ -21,6 +21,7 @@ import CisoAgentPanel from './CisoAgentPanel';
 import ExecutiveSummaryEditor from './ExecutiveSummaryEditor';
 import BusinessRiskPanel from './BusinessRiskPanel';
 import DashNav from './DashNav';
+import RoleSection from './RoleSections';
 
 // Per-role header framing so every C-suite seat uses this SAME rich view.
 const ROLE_FRAME = {
@@ -110,14 +111,25 @@ export default function CisoSecurityPostureDashboard(props) {
   const p = d.overallPosture;
   const refreshed = new Date(d.generatedAt).toLocaleString();
 
-  const TABS = [
-    ['qa', 'Current State'], ['summary', 'Executive Summary'], ['linkage', 'Business Risk'],
-    ...(role !== 'CISO' && props.rolePanel ? [['rolepanel', props.rolePanelLabel || `${role} View`]] : []),
-    ['domains', 'Domain Health'], ['controls', 'Control Risk'],
-    ['thresholds', `Thresholds · ${d.thresholds.breaches} breached`], ['actions', 'Action Now'],
-    ['processes', 'Process Protection'], ['paths', 'Attack Pathways'], ['readiness', 'Readiness & Investment'],
-    ['hidden', `Hidden Risk · ${d.hiddenRisks.length}`],
-  ];
+  // CISO keeps its full security tab set. Every other leader gets a tab layout
+  // tailored to what that role actually manages (d.roleTabs from the backend).
+  const roleTabs = (role !== 'CISO' && Array.isArray(d.roleTabs)) ? d.roleTabs : null;
+  const labelFor = (t) => {
+    if (t.kind === 'thresholds') return `Thresholds · ${d.thresholds.breaches} breached`;
+    if (t.kind === 'hidden') return `Hidden Risk · ${d.hiddenRisks.length}`;
+    if (t.kind === 'rolepanel') return props.rolePanelLabel || t.label;
+    return t.label;
+  };
+  const TABS = roleTabs
+    ? roleTabs.map((t) => [t.key, labelFor(t)])
+    : [
+      ['qa', 'Current State'], ['summary', 'Executive Summary'], ['linkage', 'Business Risk'],
+      ['domains', 'Domain Health'], ['controls', 'Control Risk'],
+      ['thresholds', `Thresholds · ${d.thresholds.breaches} breached`], ['actions', 'Action Now'],
+      ['processes', 'Process Protection'], ['paths', 'Attack Pathways'], ['readiness', 'Readiness & Investment'],
+      ['hidden', `Hidden Risk · ${d.hiddenRisks.length}`],
+    ];
+  const activeRoleTab = roleTabs ? (roleTabs.find((t) => t.key === tab) || roleTabs[0]) : null;
 
   return (
     <div style={{ background: PANEL, borderRadius: 8, padding: 0, fontFamily: 'inherit' }}>
@@ -178,18 +190,21 @@ export default function CisoSecurityPostureDashboard(props) {
             <VoiceControls voice={voice} onReplay={() => voice.speak(d.tabNarration[tab])} label="Replay" />
           </div>
         )}
-        {tab === 'qa' && <CisoAgentPanel role={role} />}
-        {tab === 'rolepanel' && props.rolePanel}
-        {tab === 'summary' && <ExecutiveSummaryEditor />}
-        {tab === 'linkage' && <BusinessRiskPanel />}
-        {tab === 'domains' && <Domains matrix={d.domainMatrix} controlRisk={d.controlRisk} thresholds={d.thresholds} />}
-        {tab === 'controls' && <Controls rows={d.controlRisk} />}
-        {tab === 'thresholds' && <Thresholds board={d.thresholds} />}
-        {tab === 'actions' && <Actions queue={d.actionQueue} attention={d.attentionItems} />}
-        {tab === 'processes' && <Processes procs={d.businessProcesses} />}
-        {tab === 'paths' && <PathsTab attackGraph={props.attackGraph} />}
-        {tab === 'readiness' && <Readiness readiness={d.readiness} investments={d.investments} peers={d.peerMaturity} emerging={d.emergingRisks} />}
-        {tab === 'hidden' && <Hidden risks={d.hiddenRisks} />}
+        {roleTabs
+          ? <RoleTabContent t={activeRoleTab} role={role} d={d} props={props} />
+          : (<>
+            {tab === 'qa' && <CisoAgentPanel role={role} />}
+            {tab === 'summary' && <ExecutiveSummaryEditor />}
+            {tab === 'linkage' && <BusinessRiskPanel />}
+            {tab === 'domains' && <Domains matrix={d.domainMatrix} controlRisk={d.controlRisk} thresholds={d.thresholds} />}
+            {tab === 'controls' && <Controls rows={d.controlRisk} />}
+            {tab === 'thresholds' && <Thresholds board={d.thresholds} />}
+            {tab === 'actions' && <Actions queue={d.actionQueue} attention={d.attentionItems} />}
+            {tab === 'processes' && <Processes procs={d.businessProcesses} />}
+            {tab === 'paths' && <PathsTab attackGraph={props.attackGraph} />}
+            {tab === 'readiness' && <Readiness readiness={d.readiness} investments={d.investments} peers={d.peerMaturity} emerging={d.emergingRisks} />}
+            {tab === 'hidden' && <Hidden risks={d.hiddenRisks} />}
+          </>)}
         <div style={{ fontSize: 10.5, color: INK3, marginTop: 16, borderTop: `1px solid ${HAIR}`, paddingTop: 10 }}>
           Last refreshed {refreshed}. Mock/demo data — structured for live replacement via {d.evidenceSources.length} sources (Okta, Splunk, ServiceNow, CrowdStrike, Tenable, SailPoint, Prisma, Panorama, DLP, backup).
         </div>
@@ -198,6 +213,27 @@ export default function CisoSecurityPostureDashboard(props) {
       {drawer && <EvidenceDrawer a={drawer} onClose={() => setDrawer(null)} />}
     </div>
   );
+}
+
+/* ---------------- Role tab dispatcher (non-CISO leaders) ----------------
+ * Renders the active role tab using either a shared CISO scaffold component
+ * (so the look is identical) or a role-specific data section. */
+function RoleTabContent({ t, role, d, props }) {
+  if (!t) return null;
+  switch (t.kind) {
+    case 'qa': return <CisoAgentPanel role={role} />;
+    case 'summary': return <ExecutiveSummaryEditor />;
+    case 'businessrisk': return <BusinessRiskPanel />;
+    case 'domains': return <Domains matrix={d.domainMatrix} controlRisk={d.controlRisk} thresholds={d.thresholds} />;
+    case 'controls': return <Controls rows={d.controlRisk} />;
+    case 'thresholds': return <Thresholds board={d.thresholds} />;
+    case 'processes': return <Processes procs={d.businessProcesses} />;
+    case 'paths': return <PathsTab attackGraph={props.attackGraph} />;
+    case 'hidden': return <Hidden risks={d.hiddenRisks} />;
+    case 'rolepanel': return <div>{props.rolePanel}</div>;
+    case 'section': return <RoleSection section={t.section} role={role} />;
+    default: return null;
+  }
 }
 
 /* ---------------- Executive Q&A ---------------- */

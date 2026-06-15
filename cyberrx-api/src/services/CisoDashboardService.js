@@ -260,6 +260,7 @@ function applyRoleLens(payload, role, ctx, refreshed) {
   payload.persona = role;
   payload.overallPosture = Exec.roleOverall(role, ctx);
   payload.domainMatrix = Exec.roleDomains(role, ctx).map((d) => ({ ...d }));
+  payload.roleTabs = Exec.roleLayout(role, ctx);
   const raw = Exec.roleQuestions(role, ctx);
   payload.questions = raw.map((q) => ({
     ...q,

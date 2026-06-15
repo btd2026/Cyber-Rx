@@ -516,101 +516,96 @@ function questions(role, c) {
   return out.map((q) => ({ ...q, confidence: q.confidence || 'Medium', dataSources: q.dataSources || ['CyberRX primary sources'] }));
 }
 
-// ---- role-specific sub-tab sections ----------------------------------------
-function tabs(role, c, qns) {
+// ---- role-specific sub-tab LAYOUT ------------------------------------------
+// Returns the ordered tabs each leader actually manages. `kind` tells the
+// frontend how to render: 'qa'/'summary'/'businessrisk'/'domains'/'controls'/
+// 'thresholds'/'processes'/'paths'/'hidden'/'rolepanel' reuse the shared CISO
+// scaffold components; 'section' renders a role-specific data section embedded
+// in the descriptor (metrics/ranked/table/cards/actions).
+function roleLayout(role, c) {
   const f = c.financial, r = c.risks, ctrl = c.controls, rm = c.remediation, l = c.legal, v = c.vendors, p = c.processes, fi = c.findings;
-  const current = { key: 'qa', label: 'Current State', type: 'questions',
-    intro: `These are the 5 key questions every ${role} should be able to answer at any time. Each shows where you stand right now — select a question for the full answer, the evidence behind it, the recommended action, and who owns it.`,
-    questions: qns };
-  const rolePanelTab = (label) => ({ key: 'rolepanel', label, type: 'rolepanel' });
-  const actionsFrom = (items) => ({ key: 'actions', label: 'Action Now', type: 'actions', note: 'Ranked by severity and business impact.', items });
+  const qa = { key: 'qa', label: 'Current State', kind: 'qa' };
+  const summary = { key: 'summary', label: 'Executive Summary', kind: 'summary' };
+  const shared = (key, label, kind) => ({ key, label, kind });
+  const rolePanel = (label) => ({ key: 'rolepanel', label, kind: 'rolepanel' });
+  const sec = (key, label, section) => ({ key, label, kind: 'section', section });
+  const actions = (items) => sec('actions', 'Action Now', { type: 'actions', note: 'Ranked by severity and business impact.', items });
 
   switch (role) {
-    case 'CFO': return [current,
-      { key: 'exposure', label: 'Exposure Breakdown', type: 'metrics', note: 'Where the dollars sit today.', items: [
+    case 'CFO': return [qa, summary,
+      sec('exposure', 'Financial Exposure', { type: 'metrics', note: 'Where the dollars sit today.', items: [
         { label: 'Gross exposure', value: usd(f.grossExposure), sub: `${r.openCount} open risks` },
         { label: 'Insurance offset', value: usd(f.insuranceCoverage), sub: `${f.coverageRatio}% of gross`, tone: 'good' },
         { label: 'Net retained exposure', value: usd(f.netExposure), sub: 'self-insured by default', tone: 'bad' },
         { label: 'Cost to remediate', value: usd(f.costToRemediate), sub: 'open book' },
         { label: 'Capital at risk', value: f.capitalAtRiskPct ? `${f.capitalAtRiskPct}%` : '—', sub: 'of statutory surplus' },
-      ] },
-      { key: 'dollarrisks', label: 'Top Dollar Risks', type: 'ranked', note: 'Open risks ranked by financial exposure.',
-        items: r.top.map((x) => ({ name: x.title, sub: `${x.severity} · owner ${x.owner || 'unassigned'}`, score: x.financialExposure, scoreLabel: usd(x.financialExposure), tone: x.severity === 'Critical' ? 'bad' : 'warn', action: `Fund remediation (owner ${x.remediationOwner || 'CISO'}).` })) },
-      { key: 'coverage', label: 'Insurance & Coverage', type: 'cards', note: 'Transfer vs retention.', items: [
+      ] }),
+      sec('dollarrisks', 'Top Dollar Risks', { type: 'ranked', note: 'Open risks ranked by financial exposure.',
+        items: r.top.map((x) => ({ name: x.title, sub: `${x.severity} · owner ${x.owner || 'unassigned'}`, score: x.financialExposure, scoreLabel: usd(x.financialExposure), tone: x.severity === 'Critical' ? 'bad' : 'warn', action: `Fund remediation (owner ${x.remediationOwner || 'CISO'}).` })) }),
+      sec('coverage', 'Insurance & Coverage', { type: 'cards', note: 'Risk transfer vs retention.', items: [
         { title: 'Coverage ratio', tag: `${f.coverageRatio}%`, tagTone: f.coverageRatio >= 50 ? 'good' : 'warn', fields: [{ k: 'Insured', v: usd(f.insuranceCoverage) }, { k: 'Gross exposure', v: usd(f.grossExposure) }, { k: 'Retained', v: usd(f.netExposure) }], action: f.coverageRatio < 50 ? 'Raise limits at renewal to close the retained gap.' : 'Re-test limits as exposure grows.' },
-      ] },
-      rolePanelTab('Exposure ($)'),
-      actionsFrom(r.top.filter((x) => x.financialExposure > 0).slice(0, 6).map((x, i) => ({ rank: i + 1, action: `Fund remediation of "${x.title}"`, whyNow: `${usd(x.financialExposure)} exposure (${x.severity})`, owner: x.remediationOwner || 'CISO', dueDate: '2026-07-31', severity: sevOf(x.severity), process: x.title }))),
+      ] }),
+      sec('roi', 'Remediation ROI', { type: 'metrics', note: 'Is security spend producing loss-avoidance?', items: [
+        { label: 'Cost to remediate', value: usd(f.costToRemediate) },
+        { label: 'Exposure removed', value: usd(Math.max(0, f.grossExposure - f.netExposure)), tone: 'good' },
+        { label: 'Spend-to-exposure', value: f.grossExposure ? `${Math.round((f.costToRemediate / f.grossExposure) * 100)}%` : '—' },
+        { label: 'Net retained', value: usd(f.netExposure), tone: 'bad' },
+      ] }),
+      shared('linkage', 'Business Risk', 'businessrisk'),
+      rolePanel('Exposure ($)'),
+      actions(r.top.filter((x) => x.financialExposure > 0).slice(0, 6).map((x, i) => ({ rank: i + 1, action: `Fund remediation of "${x.title}"`, whyNow: `${usd(x.financialExposure)} exposure (${x.severity})`, owner: x.remediationOwner || 'CISO', dueDate: '2026-07-31', severity: sevOf(x.severity), process: x.title }))),
     ];
-    case 'CRO': return [current,
-      { key: 'register', label: 'Risk Register', type: 'table', note: `${r.openCount} active risks.`, columns: [
+    case 'CIO': return [qa, summary,
+      rolePanel('Systems & Inventory'),
+      shared('domains', 'Domain Health', 'domains'),
+      shared('controls', 'Control Risk', 'controls'),
+      sec('findings', 'Vulnerabilities & Findings', { type: 'cards', note: 'Open critical/high findings to patch.', items: fi.openCritical.length ? fi.openCritical.map((x) => ({ title: x.title, tag: x.severity, tagTone: x.severity === 'Critical' ? 'bad' : 'warn', fields: [], action: 'Patch and verify; root-cause if repeat.' })) : [{ title: 'No open critical/high findings', tag: 'Clear', tagTone: 'good', fields: [], action: 'Maintain scanning cadence.' }] }),
+      shared('processes', 'Process Protection', 'processes'),
+      shared('paths', 'Attack Pathways', 'paths'),
+      actions(p.atRisk.slice(0, 6).map((x, i) => ({ rank: i + 1, action: `Prioritize remediation protecting "${x.name}"`, whyNow: `${x.criticality || 'critical'} system, tier ${x.tier || '—'}`, owner: x.owner || 'CIO', dueDate: '2026-07-20', severity: x.criticality === 'Critical' ? 'Critical' : 'High', process: x.name }))),
+    ];
+    case 'CRO': return [qa, summary,
+      shared('linkage', 'Business Risk', 'businessrisk'),
+      sec('register', 'Risk Register', { type: 'table', note: `${r.openCount} active risks.`, columns: [
         { key: 'title', label: 'Risk' }, { key: 'severity', label: 'Severity' }, { key: 'owner', label: 'Owner' }, { key: 'exposure', label: 'Exposure' }],
-        rows: r.top.map((x) => ({ title: x.title, severity: x.severity, owner: x.owner || '— unassigned', exposure: usd(x.financialExposure) })) },
-      { key: 'appetite', label: 'Appetite & Thresholds', type: 'metrics', note: 'Standing against board-approved appetite.', items: [
-        { label: 'Critical (breach)', value: String(r.critical), tone: r.critical ? 'bad' : 'good' },
-        { label: 'High', value: String(r.high), tone: r.high ? 'warn' : 'good' },
-        { label: 'Accepted', value: String(r.acceptedCount) },
-        { label: 'Overdue tasks', value: String(rm.overdue), tone: rm.overdue ? 'warn' : 'good' },
-      ] },
-      { key: 'owners', label: 'Open Risks by Owner', type: 'table', note: 'Accountability map.', columns: [
-        { key: 'title', label: 'Risk' }, { key: 'owner', label: 'Executive owner' }, { key: 'severity', label: 'Severity' }],
-        rows: r.top.map((x) => ({ title: x.title, owner: x.owner || '— UNASSIGNED', severity: x.severity })) },
-      rolePanelTab('Board Pack'),
-      actionsFrom(r.top.filter((x) => x.severity === 'Critical' || !x.owner).slice(0, 6).map((x, i) => ({ rank: i + 1, action: x.owner ? `Drive decision on "${x.title}"` : `Assign owner for "${x.title}"`, whyNow: `${x.severity}${x.owner ? '' : ', currently unassigned'}`, owner: x.owner || 'CRO', dueDate: '2026-07-15', severity: sevOf(x.severity), process: x.title }))),
+        rows: r.top.map((x) => ({ title: x.title, severity: x.severity, owner: x.owner || '— unassigned', exposure: usd(x.financialExposure) })) }),
+      shared('thresholds', 'Thresholds', 'thresholds'),
+      shared('controls', 'Control Risk', 'controls'),
+      shared('hidden', 'Hidden Risk', 'hidden'),
+      rolePanel('Board Pack'),
+      actions(r.top.filter((x) => x.severity === 'Critical' || !x.owner).slice(0, 6).map((x, i) => ({ rank: i + 1, action: x.owner ? `Drive decision on "${x.title}"` : `Assign owner for "${x.title}"`, whyNow: `${x.severity}${x.owner ? '' : ', currently unassigned'}`, owner: x.owner || 'CRO', dueDate: '2026-07-15', severity: sevOf(x.severity), process: x.title }))),
     ];
-    case 'CIO': return [current,
-      { key: 'controls', label: 'Control Effectiveness', type: 'metrics', note: 'How well the technology controls operate.', items: [
-        { label: 'Avg effectiveness', value: `${ctrl.avgEffectiveness || 0}%`, tone: (ctrl.avgEffectiveness || 0) >= 70 ? 'good' : 'warn' },
-        { label: 'Implemented', value: `${ctrl.implemented}/${ctrl.total}` },
-        { label: 'Not implemented', value: String(ctrl.notImplemented), tone: ctrl.notImplemented ? 'warn' : 'good' },
-        { label: 'Repeat findings', value: String(fi.repeat), tone: fi.repeat ? 'warn' : 'good' },
-      ] },
-      { key: 'findings', label: 'Vulnerabilities & Findings', type: 'cards', note: 'Open critical/high findings.', items: fi.openCritical.length ? fi.openCritical.map((x) => ({ title: x.title, tag: x.severity, tagTone: x.severity === 'Critical' ? 'bad' : 'warn', fields: [], action: 'Patch and verify; root-cause if repeat.' })) : [{ title: 'No open critical/high findings', tag: 'Clear', tagTone: 'good', fields: [], action: 'Maintain scanning cadence.' }] },
-      { key: 'procrisk', label: 'Processes at Risk', type: 'table', note: 'Crown-jewel systems with open risk.', columns: [
-        { key: 'name', label: 'Process / system' }, { key: 'criticality', label: 'Criticality' }, { key: 'tier', label: 'Tier' }, { key: 'owner', label: 'Owner' }],
-        rows: p.atRisk.map((x) => ({ name: x.name, criticality: x.criticality || '—', tier: x.tier || '—', owner: x.owner || '— unassigned' })) },
-      { key: 'overdue', label: 'Overdue Remediation', type: 'metrics', note: 'Backlog across the estate.', items: [
-        { label: 'Overdue tasks', value: String(rm.overdue), tone: rm.overdue ? 'bad' : 'good' },
-        { label: 'Processes at risk', value: String(p.atRisk.length), tone: p.atRisk.length ? 'warn' : 'good' },
-      ] },
-      rolePanelTab('Systems & Inventory'),
-      actionsFrom(p.atRisk.slice(0, 6).map((x, i) => ({ rank: i + 1, action: `Prioritize remediation protecting "${x.name}"`, whyNow: `${x.criticality || 'critical'} system, tier ${x.tier || '—'}`, owner: x.owner || 'CIO', dueDate: '2026-07-20', severity: x.criticality === 'Critical' ? 'Critical' : 'High', process: x.name }))),
-    ];
-    case 'CLO': return [current,
-      { key: 'obligations', label: 'Regulatory Obligations', type: 'table', note: `${l.triggered.length} of ${l.total} triggered.`, columns: [
+    case 'CLO': return [qa, summary,
+      sec('obligations', 'Regulatory Obligations', { type: 'table', note: `${l.triggered.length} of ${l.total} triggered.`, columns: [
         { key: 'name', label: 'Obligation' }, { key: 'source', label: 'Source' }, { key: 'timeline', label: 'Notify within' }, { key: 'penalty', label: 'Max penalty' }],
-        rows: (l.triggered.length ? l.triggered : []).map((x) => ({ name: x.name, source: x.source, timeline: x.notificationTimeline || 'per statute', penalty: x.maxPenalty ? usd(x.maxPenalty) : '—' })) },
-      { key: 'notify', label: 'Breach Notification Map', type: 'cards', note: 'Who we must notify and by when.', items: (l.triggered.length ? l.triggered : []).map((x) => ({ title: x.name, tag: x.source, tagTone: 'warn', fields: [{ k: 'Notify within', v: x.notificationTimeline || 'per statute' }, { k: 'Citation', v: x.citation || '—' }], action: 'Maintain pre-drafted notification on this timeline.' })) },
-      { key: 'vendorlegal', label: 'Vendor Legal Risk', type: 'metrics', note: 'Contractual and fourth-party exposure.', items: [
+        rows: (l.triggered.length ? l.triggered : []).map((x) => ({ name: x.name, source: x.source, timeline: x.notificationTimeline || 'per statute', penalty: x.maxPenalty ? usd(x.maxPenalty) : '—' })) }),
+      sec('notify', 'Breach Notification', { type: 'cards', note: 'Who we must notify and by when.', items: (l.triggered.length ? l.triggered : []).map((x) => ({ title: x.name, tag: x.source, tagTone: 'warn', fields: [{ k: 'Notify within', v: x.notificationTimeline || 'per statute' }, { k: 'Citation', v: x.citation || '—' }], action: 'Maintain a pre-drafted notification on this timeline.' })) }),
+      sec('vendorlegal', 'Vendor & Contract Risk', { type: 'metrics', note: 'Contractual and fourth-party exposure.', items: [
         { label: 'Active vendor signals', value: String(v.activeSignals), tone: v.activeSignals ? 'warn' : 'good' },
         { label: 'Obligations tracked', value: String(l.total) },
-      ] },
-      { key: 'penalty', label: 'Penalty Exposure', type: 'metrics', note: 'Ceiling across triggered obligations.', items: [
+      ] }),
+      sec('penalty', 'Penalty Exposure', { type: 'metrics', note: 'Ceiling across triggered obligations.', items: [
         { label: 'Max aggregate penalty', value: usd(l.triggered.reduce((s, x) => s + (x.maxPenalty || 0), 0)), tone: 'bad' },
         { label: 'Triggered obligations', value: String(l.triggered.length) },
-      ] },
-      rolePanelTab('Audit Lineage'),
-      actionsFrom(l.triggered.slice(0, 6).map((x, i) => ({ rank: i + 1, action: `Prepare notification posture for ${x.source} — ${x.name}`, whyNow: `Notify within ${x.notificationTimeline || 'statutory window'}`, owner: 'CLO', dueDate: '2026-07-10', severity: 'High', process: x.name }))),
+      ] }),
+      rolePanel('Audit Lineage'),
+      actions(l.triggered.slice(0, 6).map((x, i) => ({ rank: i + 1, action: `Prepare notification posture for ${x.source} — ${x.name}`, whyNow: `Notify within ${x.notificationTimeline || 'statutory window'}`, owner: 'CLO', dueDate: '2026-07-10', severity: 'High', process: x.name }))),
     ];
     case 'Board':
-    default: return [current,
-      { key: 'finexp', label: 'Financial Exposure', type: 'metrics', note: 'Enterprise dollar view.', items: [
+    default: return [qa, summary,
+      sec('finexp', 'Financial Exposure', { type: 'metrics', note: 'Enterprise dollar view.', items: [
         { label: 'Gross exposure', value: usd(f.grossExposure) },
         { label: 'Net exposure', value: usd(f.netExposure), tone: 'bad' },
         { label: 'Insured', value: `${f.coverageRatio}%`, tone: f.coverageRatio >= 50 ? 'good' : 'warn' },
         { label: 'Cost to remediate', value: usd(f.costToRemediate) },
-      ] },
-      { key: 'posture', label: 'Risk Posture', type: 'metrics', note: 'Are we improving?', items: [
-        { label: 'Critical risks', value: String(r.critical), tone: r.critical ? 'bad' : 'good' },
-        { label: 'Control effectiveness', value: `${ctrl.avgEffectiveness || 0}%` },
-        { label: 'Overdue tasks', value: String(rm.overdue), tone: rm.overdue ? 'warn' : 'good' },
-        { label: 'Repeat findings', value: String(fi.repeat) },
-      ] },
-      { key: 'investment', label: 'Investment Adequacy', type: 'cards', note: 'Spend vs exposure.', items: [
-        { title: 'Spend-to-exposure', tag: `${usd(f.costToRemediate)} / ${usd(f.grossExposure)}`, tagTone: 'warn', fields: [{ k: 'Net retained', v: usd(f.netExposure) }, { k: 'Insured', v: `${f.coverageRatio}%` }], action: 'Match investment to quantified exposure.' },
-      ] },
-      rolePanelTab('Board Pack'),
-      actionsFrom([
+      ] }),
+      shared('posture', 'Risk Posture', 'domains'),
+      sec('investment', 'Investment Adequacy', { type: 'cards', note: 'Spend vs exposure.', items: [
+        { title: 'Spend-to-exposure', tag: `${usd(f.costToRemediate)} / ${usd(f.grossExposure)}`, tagTone: 'warn', fields: [{ k: 'Net retained', v: usd(f.netExposure) }, { k: 'Insured', v: `${f.coverageRatio}%` }], action: 'Match investment to quantified exposure, not peer benchmarks alone.' },
+      ] }),
+      shared('processes', 'Process Protection', 'processes'),
+      rolePanel('Board Pack'),
+      actions([
         { rank: 1, action: 'Confirm cyber risk is within approved appetite', whyNow: r.critical ? `${r.critical} critical risk(s) open` : 'No critical breaches', owner: 'Board / CRO', dueDate: '2026-07-31', severity: r.critical ? 'High' : 'Medium', process: 'Enterprise' },
         { rank: 2, action: 'Review insurance adequacy vs gross exposure', whyNow: `${f.coverageRatio}% insured of ${usd(f.grossExposure)}`, owner: 'Board / CFO', dueDate: '2026-07-31', severity: f.coverageRatio < 50 ? 'High' : 'Medium', process: 'Enterprise' },
       ]),
@@ -624,7 +619,6 @@ async function getDashboard(orgId, role) {
   if (isEmpty(c)) c = demoContext();
   const { score, narrative } = roleScore(role, c);
   const delta = await snapshotDelta(orgId, role, score);
-  const qns = questions(role, c);
   return {
     role, organizationId: orgId, generatedAt: new Date().toISOString(),
     hero: {
@@ -634,8 +628,8 @@ async function getDashboard(orgId, role) {
       confidence: 'Medium', narrative,
     },
     strip: strip(role, c),
-    tabs: tabs(role, c, qns),
+    tabs: roleLayout(role, c),
   };
 }
 
-module.exports = { getDashboard, FRAME, roleOverall, roleDomains, roleQuestions: questions, loadCtx, demoContext, isEmpty };
+module.exports = { getDashboard, FRAME, roleOverall, roleDomains, roleQuestions: questions, roleLayout, loadCtx, demoContext, isEmpty };
