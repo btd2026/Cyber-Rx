@@ -27,6 +27,7 @@ export default function AppProcessMap(props) {
   const [graph, setGraph] = useState(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
+  const [view, setView] = useState('graph');   // 'graph' (node-and-connector) | 'list'
   const autoRan = useRef(false);
   const headers = useCallback(() => { const h = { 'Content-Type': 'application/json', 'X-Org-Id': orgId }; if (token) h.Authorization = `Bearer ${token}`; return h; }, [orgId, token]);
 
@@ -83,29 +84,38 @@ export default function AppProcessMap(props) {
         <div style={{ fontSize: 11, color: INK3, marginBottom: 12 }}>{counts.mapped} of {counts.applications} applications mapped across {counts.processes} processes.</div>
       )}
 
-      {/* Visual: each process node with the applications that support it (after mapping) */}
+      {/* Visual mapping (after mapping): node-and-connector graph or list. */}
       {hasMapping && (
-      <div style={{ display: 'grid', gap: 12 }}>
-        {processes.map((p) => (
-          <div key={p.id} style={{ display: 'flex', alignItems: 'stretch', gap: 0, border: `1px solid ${HAIR}`, borderRadius: 10, overflow: 'hidden', background: '#fff' }}>
-            {/* Process node */}
-            <div style={{ width: 230, flexShrink: 0, background: PANEL, borderRight: `1px solid ${HAIR}`, borderLeft: `4px solid ${tierColor(p.tier)}`, padding: '12px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <div style={{ fontSize: 12.5, fontWeight: 800, color: INK }}>{p.name}</div>
-              <div style={{ display: 'flex', gap: 6, marginTop: 5, alignItems: 'center' }}>
-                <span style={{ fontSize: 8.5, fontWeight: 800, color: '#fff', background: tierColor(p.tier), borderRadius: 4, padding: '2px 7px' }}>TIER {p.tier ?? '—'}</span>
-                <span style={{ fontSize: 10, color: INK3 }}>RTO {p.rto || '—'}</span>
-              </div>
-            </div>
-            {/* Connector + supporting apps */}
-            <div style={{ flex: 1, padding: '11px 14px', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-              <span style={{ color: INK3, fontSize: 16, marginRight: 2 }}>→</span>
-              {p.apps.length ? p.apps.map((a) => (
-                <span key={a.id} title={a.confidence != null ? `match ${Math.round(a.confidence * 100)}%` : ''} style={{ fontSize: 11, fontWeight: 600, color: '#1e3a5f', background: '#eaf1fb', border: '1px solid #cfe0f5', borderRadius: 14, padding: '4px 11px' }}>{a.name}</span>
-              )) : <span style={{ fontSize: 11, color: INK3, fontStyle: 'italic' }}>No application mapped yet</span>}
-            </div>
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 0, marginBottom: 10 }}>
+            {[['graph', 'Graph'], ['list', 'List']].map(([k, l]) => (
+              <button key={k} onClick={() => setView(k)} style={{ border: `1px solid ${HAIR}`, background: view === k ? '#0f1b2d' : '#fff', color: view === k ? '#fff' : INK2, padding: '5px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer', borderRadius: k === 'graph' ? '6px 0 0 6px' : '0 6px 6px 0' }}>{l}</button>
+            ))}
           </div>
-        ))}
-      </div>
+          {view === 'graph'
+            ? <GraphView processes={processes} />
+            : (
+              <div style={{ display: 'grid', gap: 12 }}>
+                {processes.map((p) => (
+                  <div key={p.id} style={{ display: 'flex', alignItems: 'stretch', gap: 0, border: `1px solid ${HAIR}`, borderRadius: 10, overflow: 'hidden', background: '#fff' }}>
+                    <div style={{ width: 230, flexShrink: 0, background: PANEL, borderRight: `1px solid ${HAIR}`, borderLeft: `4px solid ${tierColor(p.tier)}`, padding: '12px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                      <div style={{ fontSize: 12.5, fontWeight: 800, color: INK }}>{p.name}</div>
+                      <div style={{ display: 'flex', gap: 6, marginTop: 5, alignItems: 'center' }}>
+                        <span style={{ fontSize: 8.5, fontWeight: 800, color: '#fff', background: tierColor(p.tier), borderRadius: 4, padding: '2px 7px' }}>TIER {p.tier ?? '—'}</span>
+                        <span style={{ fontSize: 10, color: INK3 }}>RTO {p.rto || '—'}</span>
+                      </div>
+                    </div>
+                    <div style={{ flex: 1, padding: '11px 14px', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      <span style={{ color: INK3, fontSize: 16, marginRight: 2 }}>→</span>
+                      {p.apps.length ? p.apps.map((a) => (
+                        <span key={a.id} title={a.confidence != null ? `match ${Math.round(a.confidence * 100)}%` : ''} style={{ fontSize: 11, fontWeight: 600, color: '#1e3a5f', background: '#eaf1fb', border: '1px solid #cfe0f5', borderRadius: 14, padding: '4px 11px' }}>{a.name}</span>
+                      )) : <span style={{ fontSize: 11, color: INK3, fontStyle: 'italic' }}>No application mapped yet</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+        </div>
       )}
 
       {hasMapping && unmapped.length > 0 && (
@@ -116,6 +126,51 @@ export default function AppProcessMap(props) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// Bipartite node-and-connector graph: processes (left) linked to the applications
+// (right) that support them, with curved connectors. Many-to-many.
+function GraphView({ processes }) {
+  const apps = []; const seen = new Set();
+  processes.forEach((p) => (p.apps || []).forEach((a) => { if (!seen.has(a.id)) { seen.add(a.id); apps.push(a); } }));
+  if (!apps.length) return <div style={{ fontSize: 12, color: INK3, padding: '8px 0' }}>No applications mapped to processes yet.</div>;
+
+  const boxW = 208, boxH = 40, vGap = 14, leftX = 6, colGap = 190, TOP = 22;
+  const rightX = leftX + boxW + colGap;
+  const width = rightX + boxW + 6;
+  const colH = (n) => n * (boxH + vGap) + vGap;
+  const height = TOP + Math.max(colH(processes.length), colH(apps.length), 80);
+  const yFor = (i, n) => { const avail = height - TOP; return TOP + (avail - colH(n)) / 2 + vGap + i * (boxH + vGap) + boxH / 2; };
+  const pY = {}; processes.forEach((p, i) => { pY[p.id] = yFor(i, processes.length); });
+  const aY = {}; apps.forEach((a, i) => { aY[a.id] = yFor(i, apps.length); });
+  const trunc = (s, n) => (s && s.length > n ? `${s.slice(0, n - 1)}…` : (s || ''));
+
+  return (
+    <div style={{ overflowX: 'auto', border: `1px solid ${HAIR}`, borderRadius: 10, background: '#fff', padding: 4 }}>
+      <svg width={width} height={height} style={{ minWidth: width }}>
+        <text x={leftX + 2} y={13} fontSize="9" fontWeight="700" fill={INK3} style={{ letterSpacing: '0.08em' }}>PROCESSES</text>
+        <text x={rightX + 2} y={13} fontSize="9" fontWeight="700" fill={INK3} style={{ letterSpacing: '0.08em' }}>APPLICATIONS</text>
+        {processes.map((p) => (p.apps || []).map((a) => {
+          const x1 = leftX + boxW, y1 = pY[p.id], x2 = rightX, y2 = aY[a.id], mx = (x1 + x2) / 2;
+          return <path key={p.id + a.id} d={`M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`} fill="none" stroke="#c7d2e0" strokeWidth={1.4} />;
+        }))}
+        {processes.map((p) => { const y = pY[p.id] - boxH / 2; return (
+          <g key={p.id}>
+            <rect x={leftX} y={y} width={boxW} height={boxH} rx={9} fill="#f8fafc" stroke={HAIR} />
+            <rect x={leftX} y={y} width={5} height={boxH} rx={2} fill={tierColor(p.tier)} />
+            <text x={leftX + 14} y={y + 17} fontSize="11.5" fontWeight="800" fill={INK}>{trunc(p.name, 24)}</text>
+            <text x={leftX + 14} y={y + 31} fontSize="8.5" fill={INK3}>TIER {p.tier ?? '—'} · RTO {p.rto || '—'}</text>
+          </g>
+        ); })}
+        {apps.map((a) => { const y = aY[a.id] - boxH / 2; return (
+          <g key={a.id}>
+            <rect x={rightX} y={y} width={boxW} height={boxH} rx={9} fill="#eaf1fb" stroke="#cfe0f5" />
+            <text x={rightX + 14} y={y + 24} fontSize="11.5" fontWeight="600" fill="#1e3a5f">{trunc(a.name, 24)}</text>
+          </g>
+        ); })}
+      </svg>
     </div>
   );
 }
