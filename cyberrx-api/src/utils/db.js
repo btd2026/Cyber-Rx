@@ -468,6 +468,26 @@ async function init() {
       CREATE INDEX IF NOT EXISTS vendor_risk_signals_observed ON vendor_risk_signals(observed_at DESC);
       CREATE INDEX IF NOT EXISTS vendor_risk_signals_frameworks ON vendor_risk_signals USING GIN (mapped_frameworks);
 
+      -- Unified vendor risk = monitoring score + document review (LLM-synthesized)
+      CREATE TABLE IF NOT EXISTS vendor_risk_assessment (
+        id                  TEXT PRIMARY KEY,
+        organization_id     TEXT NOT NULL,
+        vendor_id           TEXT NOT NULL,
+        vendor_name         TEXT,
+        overall_risk        INTEGER,                 -- 0-100, higher = worse
+        rating              TEXT,                    -- Low | Moderate | High | Critical
+        monitoring_score    INTEGER,                 -- posture 0-100 from monitoring signals
+        summary             TEXT,
+        factors             JSONB DEFAULT '[]',
+        recommended_actions JSONB DEFAULT '[]',
+        document_assurance  JSONB DEFAULT '{}',
+        inputs              JSONB DEFAULT '{}',
+        engine              TEXT,
+        computed_at         TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE (organization_id, vendor_id)
+      );
+      CREATE INDEX IF NOT EXISTS vendor_risk_assessment_org ON vendor_risk_assessment(organization_id);
+
       -- Indexes for Vendor Monitoring Connections
       CREATE INDEX IF NOT EXISTS vendor_monitoring_conn_org ON vendor_monitoring_connections(organization_id);
       CREATE INDEX IF NOT EXISTS vendor_monitoring_conn_vendor ON vendor_monitoring_connections(vendor_id);
