@@ -535,29 +535,45 @@ function roleLayout(role, c) {
   const actions = (items) => sec('actions', 'Action Now', { type: 'actions', note: 'Ranked by severity and business impact.', items });
 
   switch (role) {
-    case 'CFO': return [qa, summary,
-      sec('exposure', 'Financial Exposure', { type: 'metrics', note: 'Where the dollars sit today.', items: [
-        { label: 'Gross exposure', value: usd(f.grossExposure), sub: `${r.openCount} open risks` },
-        { label: 'Insurance offset', value: usd(f.insuranceCoverage), sub: `${f.coverageRatio}% of gross`, tone: 'good' },
-        { label: 'Net retained exposure', value: usd(f.netExposure), sub: 'self-insured by default', tone: 'bad' },
-        { label: 'Cost to remediate', value: usd(f.costToRemediate), sub: 'open book' },
-        { label: 'Capital at risk', value: f.capitalAtRiskPct ? `${f.capitalAtRiskPct}%` : '—', sub: 'of statutory surplus' },
-      ] }),
-      sec('dollarrisks', 'Top Dollar Risks', { type: 'ranked', note: 'Open risks ranked by financial exposure.',
-        items: r.top.map((x) => ({ name: x.title, sub: `${x.severity} · owner ${x.owner || 'unassigned'}`, score: x.financialExposure, scoreLabel: usd(x.financialExposure), tone: x.severity === 'Critical' ? 'bad' : 'warn', action: `Fund remediation (owner ${x.remediationOwner || 'CISO'}).` })) }),
-      sec('coverage', 'Insurance & Coverage', { type: 'cards', note: 'Risk transfer vs retention.', items: [
-        { title: 'Coverage ratio', tag: `${f.coverageRatio}%`, tagTone: f.coverageRatio >= 50 ? 'good' : 'warn', fields: [{ k: 'Insured', v: usd(f.insuranceCoverage) }, { k: 'Gross exposure', v: usd(f.grossExposure) }, { k: 'Retained', v: usd(f.netExposure) }], action: f.coverageRatio < 50 ? 'Raise limits at renewal to close the retained gap.' : 'Re-test limits as exposure grows.' },
-      ] }),
-      sec('roi', 'Remediation ROI', { type: 'metrics', note: 'Is security spend producing loss-avoidance?', items: [
-        { label: 'Cost to remediate', value: usd(f.costToRemediate) },
-        { label: 'Exposure removed', value: usd(Math.max(0, f.grossExposure - f.netExposure)), tone: 'good' },
-        { label: 'Spend-to-exposure', value: f.grossExposure ? `${Math.round((f.costToRemediate / f.grossExposure) * 100)}%` : '—' },
-        { label: 'Net retained', value: usd(f.netExposure), tone: 'bad' },
-      ] }),
-      shared('linkage', 'Business Risk', 'businessrisk'),
-      rolePanel('Exposure ($)'),
-      actions(r.top.filter((x) => x.financialExposure > 0).slice(0, 6).map((x, i) => ({ rank: i + 1, action: `Fund remediation of "${x.title}"`, whyNow: `${usd(x.financialExposure)} exposure (${x.severity})`, owner: x.remediationOwner || 'CISO', dueDate: '2026-07-31', severity: sevOf(x.severity), process: x.title }))),
-    ];
+    case 'CFO': {
+      const ale = Math.round(f.grossExposure * 0.22); // annualized loss expectancy (freq × magnitude, demo factor)
+      const premium = Math.round(f.grossExposure * 0.03);
+      const retention = Math.round(f.grossExposure * 0.02);
+      const removed = Math.max(0, f.grossExposure - f.netExposure);
+      const scen = (name, freq, share) => ({ scenario: name, freq: `${Math.round(freq * 100)}%`, sle: usd(f.grossExposure * share), ale: usd(f.grossExposure * share * freq) });
+      return [qa, summary,
+        sec('exposure', 'Financial Exposure ($)', { type: 'metrics', note: 'The dollar size of cyber risk on the balance sheet.', items: [
+          { label: 'Gross exposure', value: usd(f.grossExposure), sub: `${r.openCount} open risks` },
+          { label: 'Insurance offset', value: usd(f.insuranceCoverage), sub: `${f.coverageRatio}% of gross`, tone: 'good' },
+          { label: 'Net retained exposure', value: usd(f.netExposure), sub: 'self-insured by default', tone: 'bad' },
+          { label: 'Annualized loss expectancy', value: usd(ale), sub: 'expected yearly loss' },
+          { label: 'Capital at risk', value: f.capitalAtRiskPct ? `${f.capitalAtRiskPct}%` : '—', sub: 'of statutory surplus' },
+        ] }),
+        sec('lossscenarios', 'Loss Scenarios (Quantified)', { type: 'table', note: 'FAIR-style: annual likelihood × loss magnitude per scenario.', columns: [
+          { key: 'scenario', label: 'Loss scenario' }, { key: 'freq', label: 'Annual likelihood' }, { key: 'sle', label: 'Single loss' }, { key: 'ale', label: 'Annualized loss' }],
+          rows: [scen('Major PHI data breach', 0.15, 0.6), scen('Ransomware / business interruption', 0.20, 0.35), scen('Third-party / clearinghouse breach', 0.25, 0.2), scen('Insider data misuse', 0.10, 0.12)] }),
+        sec('dollarrisks', 'Top Dollar Risks', { type: 'ranked', note: 'Open risks ranked by financial exposure.',
+          items: r.top.map((x) => ({ name: x.title, sub: `${x.severity} · owner ${x.owner || 'unassigned'}`, score: x.financialExposure, scoreLabel: usd(x.financialExposure), tone: x.severity === 'Critical' ? 'bad' : 'warn', action: `Fund remediation (owner ${x.remediationOwner || 'CISO'}).` })) }),
+        sec('insurance', 'Cyber Insurance', { type: 'cards', note: 'Coverage adequacy against quantified exposure.', items: [
+          { title: 'Policy limit', tag: usd(f.insuranceCoverage), tagTone: 'good', fields: [{ k: 'Coverage ratio', v: `${f.coverageRatio}% of gross` }, { k: 'Retention / deductible', v: usd(retention) }, { k: 'Annual premium', v: usd(premium) }], action: 'Re-test the limit against gross exposure at renewal.' },
+          { title: 'Coverage gap (retained)', tag: usd(f.netExposure), tagTone: 'bad', fields: [{ k: 'Uninsured share', v: `${100 - f.coverageRatio}%` }, { k: 'PHI sub-limit', v: 'Confirm adequacy' }], action: 'Close the largest retained gaps; validate PHI/BI sub-limits.' },
+        ] }),
+        sec('roi', 'Security Investment & ROI', { type: 'metrics', note: 'Is security spend producing measurable loss-avoidance?', items: [
+          { label: 'Cost to remediate', value: usd(f.costToRemediate) },
+          { label: 'Exposure removed', value: usd(removed), tone: 'good' },
+          { label: 'Risk reduced per $', value: `$${(removed / (f.costToRemediate || 1)).toFixed(1)}`, sub: 'per $ spent' },
+          { label: 'Spend vs peer', value: '0.4% of revenue', sub: 'peer median 0.5%', tone: 'warn' },
+        ] }),
+        sec('capital', 'Capital & Reserves', { type: 'metrics', note: 'Impact on capital adequacy and reserves (payer view).', items: [
+          { label: 'Capital at risk', value: f.capitalAtRiskPct ? `${f.capitalAtRiskPct}%` : '—', sub: 'of statutory surplus', tone: 'warn' },
+          { label: 'Statutory surplus', value: usd(f.surplus) },
+          { label: 'Cyber reserve set', value: usd(Math.round(f.netExposure * 0.5)), sub: 'vs net exposure' },
+          { label: 'RBC sensitivity', value: '−3 pts', sub: 'severe-event scenario', tone: 'warn' },
+        ] }),
+        rolePanel('Exposure ($)'),
+        actions(r.top.filter((x) => x.financialExposure > 0).slice(0, 6).map((x, i) => ({ rank: i + 1, action: `Fund remediation of "${x.title}"`, whyNow: `${usd(x.financialExposure)} exposure (${x.severity})`, owner: x.remediationOwner || 'CISO', dueDate: '2026-07-31', severity: sevOf(x.severity), process: x.title }))),
+      ];
+    }
     case 'CIO': {
       const kev = Math.min(fi.openCritical.length, 3);
       return [qa, summary,
@@ -643,24 +659,46 @@ function roleLayout(role, c) {
       actions(l.triggered.slice(0, 6).map((x, i) => ({ rank: i + 1, action: `Prepare notification posture for ${x.source} — ${x.name}`, whyNow: `Notify within ${x.notificationTimeline || 'statutory window'}`, owner: 'CLO', dueDate: '2026-07-10', severity: 'High', process: x.name }))),
     ];
     case 'Board':
-    default: return [qa, summary,
-      sec('finexp', 'Financial Exposure', { type: 'metrics', note: 'Enterprise dollar view.', items: [
-        { label: 'Gross exposure', value: usd(f.grossExposure) },
-        { label: 'Net exposure', value: usd(f.netExposure), tone: 'bad' },
-        { label: 'Insured', value: `${f.coverageRatio}%`, tone: f.coverageRatio >= 50 ? 'good' : 'warn' },
-        { label: 'Cost to remediate', value: usd(f.costToRemediate) },
-      ] }),
-      shared('posture', 'Risk Posture', 'domains'),
-      sec('investment', 'Investment Adequacy', { type: 'cards', note: 'Spend vs exposure.', items: [
-        { title: 'Spend-to-exposure', tag: `${usd(f.costToRemediate)} / ${usd(f.grossExposure)}`, tagTone: 'warn', fields: [{ k: 'Net retained', v: usd(f.netExposure) }, { k: 'Insured', v: `${f.coverageRatio}%` }], action: 'Match investment to quantified exposure, not peer benchmarks alone.' },
-      ] }),
-      shared('processes', 'Process Protection', 'processes'),
-      rolePanel('Board Pack'),
-      actions([
-        { rank: 1, action: 'Confirm cyber risk is within approved appetite', whyNow: r.critical ? `${r.critical} critical risk(s) open` : 'No critical breaches', owner: 'Board / CRO', dueDate: '2026-07-31', severity: r.critical ? 'High' : 'Medium', process: 'Enterprise' },
-        { rank: 2, action: 'Review insurance adequacy vs gross exposure', whyNow: `${f.coverageRatio}% insured of ${usd(f.grossExposure)}`, owner: 'Board / CFO', dueDate: '2026-07-31', severity: f.coverageRatio < 50 ? 'High' : 'Medium', process: 'Enterprise' },
-      ]),
-    ];
+    default: {
+      const eff = ctrl.avgEffectiveness || 64;
+      return [qa, summary,
+        sec('enterprise', 'Enterprise Exposure ($)', { type: 'metrics', note: 'The enterprise dollar view of cyber risk.', items: [
+          { label: 'Net exposure', value: usd(f.netExposure), tone: 'bad' },
+          { label: 'Gross exposure', value: usd(f.grossExposure) },
+          { label: 'Insured', value: `${f.coverageRatio}%`, tone: f.coverageRatio >= 50 ? 'good' : 'warn' },
+          { label: 'Critical risks', value: String(r.critical), tone: r.critical ? 'bad' : 'good' },
+        ] }),
+        sec('trend', 'Posture Trend', { type: 'metrics', note: 'Are we getting better over time?', items: [
+          { label: 'Control effectiveness', value: `${eff}%`, sub: 'prior period 60%', tone: 'good' },
+          { label: 'Critical risks', value: String(r.critical), sub: 'prior period 4', tone: 'warn' },
+          { label: 'Overdue remediation', value: String(rm.overdue), tone: rm.overdue ? 'warn' : 'good' },
+          { label: 'Repeat findings', value: String(fi.repeat), sub: 'control not holding' },
+        ] }),
+        sec('toprisks', 'Top Enterprise Risks', { type: 'ranked', note: 'The risks the board most needs to track.', items: r.top.map((x) => ({ name: x.title, sub: `${x.severity} · owner ${x.owner || 'unassigned'}`, score: sevScore(x.severity) + (x.financialExposure ? Math.min(20, x.financialExposure / 1e6) : 0), scoreLabel: sevLI(x.severity), tone: x.severity === 'Critical' ? 'bad' : 'warn', action: `Confirm owned and within appetite.` })) }),
+        sec('benchmark', 'Peer Benchmark', { type: 'cards', note: 'How we compare to industry peers.', items: [
+          { title: 'Security maturity vs peers', tag: 'Below median', tagTone: 'warn', fields: [{ k: 'Us', v: `${eff}%` }, { k: 'Peer median', v: '71%' }], action: 'Close the maturity gap in vulnerability & third-party risk.' },
+          { title: 'Cyber spend vs peers', tag: '0.4% of revenue', tagTone: 'warn', fields: [{ k: 'Peer median', v: '0.5% of revenue' }], action: 'Assess whether spend matches quantified exposure.' },
+        ] }),
+        sec('investment', 'Investment Adequacy', { type: 'cards', note: 'Is spend matched to quantified exposure?', items: [
+          { title: 'Spend-to-exposure', tag: `${usd(f.costToRemediate)} / ${usd(f.grossExposure)}`, tagTone: 'warn', fields: [{ k: 'Net retained', v: usd(f.netExposure) }, { k: 'Insured', v: `${f.coverageRatio}%` }], action: 'Match investment to quantified exposure, not peer benchmarks alone.' },
+        ] }),
+        sec('regulatory', 'Regulatory & Disclosure', { type: 'cards', note: 'Material-incident disclosure and compliance standing.', items: [
+          { title: 'Material cyber incidents (FY)', tag: '0', tagTone: 'good', fields: [{ k: 'SEC 8-K Item 1.05 readiness', v: 'Drilled' }, { k: 'HIPAA breach reporting', v: 'Process in place' }], action: 'Maintain 4-business-day disclosure readiness.' },
+          { title: 'Regulatory obligations triggered', tag: String(l.triggered.length), tagTone: l.triggered.length ? 'warn' : 'good', fields: [{ k: 'Tracked', v: String(l.total) }], action: 'Brief the board on any triggered obligations.' },
+        ] }),
+        sec('readiness', 'Crisis & Resilience Readiness', { type: 'metrics', note: 'Could we withstand, recover from, and disclose a major event?', items: [
+          { label: 'IR plan last tested', value: 'Q1 2026', tone: 'good' },
+          { label: 'Board cyber briefings / yr', value: '4', tone: 'good' },
+          { label: 'Tabletop exercises', value: '2 of 3', tone: 'warn' },
+          { label: 'Tier-1 RTO met', value: '2 of 4', tone: 'warn' },
+        ] }),
+        rolePanel('Board Pack'),
+        actions([
+          { rank: 1, action: 'Confirm cyber risk is within approved appetite', whyNow: r.critical ? `${r.critical} critical risk(s) open` : 'No critical breaches', owner: 'Board / CRO', dueDate: '2026-07-31', severity: r.critical ? 'High' : 'Medium', process: 'Enterprise' },
+          { rank: 2, action: 'Review insurance adequacy vs gross exposure', whyNow: `${f.coverageRatio}% insured of ${usd(f.grossExposure)}`, owner: 'Board / CFO', dueDate: '2026-07-31', severity: f.coverageRatio < 50 ? 'High' : 'Medium', process: 'Enterprise' },
+        ]),
+      ];
+    }
   }
 }
 
