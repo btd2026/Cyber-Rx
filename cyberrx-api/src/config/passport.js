@@ -9,7 +9,7 @@
  */
 
 const passport = require('passport');
-const { Strategy: SamlStrategy } = require('passport-saml');
+const { Strategy: SamlStrategy } = require('@node-saml/passport-saml');
 const { OIDCStrategy } = require('passport-azure-oidc');
 const { query } = require('../utils/db');
 
@@ -48,7 +48,8 @@ if (process.env.SAML_ENTRY_POINT && process.env.SAML_ISSUER && process.env.SAML_
   passport.use(new SamlStrategy({
     entryPoint: process.env.SAML_ENTRY_POINT,
     issuer: process.env.SAML_ISSUER,
-    cert: process.env.SAML_CERT,
+    // @node-saml/passport-saml v5 renamed `cert` -> `idpCert` (the IdP's signing cert).
+    idpCert: process.env.SAML_CERT,
     callbackUrl: process.env.SAML_CALLBACK_URL || 'http://localhost:3001/sso/saml/callback',
     identifierFormat: null, // Let Okta determine format
     wantAssertionsSigned: true,
