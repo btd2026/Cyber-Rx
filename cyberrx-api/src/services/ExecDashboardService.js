@@ -32,6 +32,9 @@ function usd(v) {
   return `$${Math.round(x)}`;
 }
 const sevOf = (s) => (s === 'Critical' ? 'Critical' : s === 'High' ? 'High' : s === 'Medium' ? 'Medium' : 'Low');
+// Likelihood×Impact label + numeric score for risk heat ranking.
+const sevLI = (s) => (s === 'Critical' ? '5×5' : s === 'High' ? '4×4' : s === 'Medium' ? '3×3' : '2×2');
+const sevScore = (s) => (s === 'Critical' ? 25 : s === 'High' ? 16 : s === 'Medium' ? 9 : 4);
 const statusFromScore = (s) => band(s); // Strong/Moderate/Weak/Critical drives the card pill color
 
 const FRAME = {
@@ -555,26 +558,74 @@ function roleLayout(role, c) {
       rolePanel('Exposure ($)'),
       actions(r.top.filter((x) => x.financialExposure > 0).slice(0, 6).map((x, i) => ({ rank: i + 1, action: `Fund remediation of "${x.title}"`, whyNow: `${usd(x.financialExposure)} exposure (${x.severity})`, owner: x.remediationOwner || 'CISO', dueDate: '2026-07-31', severity: sevOf(x.severity), process: x.title }))),
     ];
-    case 'CIO': return [qa, summary,
-      rolePanel('Systems & Inventory'),
-      shared('domains', 'Domain Health', 'domains'),
-      shared('controls', 'Control Risk', 'controls'),
-      sec('findings', 'Vulnerabilities & Findings', { type: 'cards', note: 'Open critical/high findings to patch.', items: fi.openCritical.length ? fi.openCritical.map((x) => ({ title: x.title, tag: x.severity, tagTone: x.severity === 'Critical' ? 'bad' : 'warn', fields: [], action: 'Patch and verify; root-cause if repeat.' })) : [{ title: 'No open critical/high findings', tag: 'Clear', tagTone: 'good', fields: [], action: 'Maintain scanning cadence.' }] }),
-      shared('processes', 'Process Protection', 'processes'),
-      shared('paths', 'Attack Pathways', 'paths'),
-      actions(p.atRisk.slice(0, 6).map((x, i) => ({ rank: i + 1, action: `Prioritize remediation protecting "${x.name}"`, whyNow: `${x.criticality || 'critical'} system, tier ${x.tier || '—'}`, owner: x.owner || 'CIO', dueDate: '2026-07-20', severity: x.criticality === 'Critical' ? 'Critical' : 'High', process: x.name }))),
-    ];
-    case 'CRO': return [qa, summary,
-      shared('linkage', 'Business Risk', 'businessrisk'),
-      sec('register', 'Risk Register', { type: 'table', note: `${r.openCount} active risks.`, columns: [
-        { key: 'title', label: 'Risk' }, { key: 'severity', label: 'Severity' }, { key: 'owner', label: 'Owner' }, { key: 'exposure', label: 'Exposure' }],
-        rows: r.top.map((x) => ({ title: x.title, severity: x.severity, owner: x.owner || '— unassigned', exposure: usd(x.financialExposure) })) }),
-      shared('thresholds', 'Thresholds', 'thresholds'),
-      shared('controls', 'Control Risk', 'controls'),
-      shared('hidden', 'Hidden Risk', 'hidden'),
-      rolePanel('Board Pack'),
-      actions(r.top.filter((x) => x.severity === 'Critical' || !x.owner).slice(0, 6).map((x, i) => ({ rank: i + 1, action: x.owner ? `Drive decision on "${x.title}"` : `Assign owner for "${x.title}"`, whyNow: `${x.severity}${x.owner ? '' : ', currently unassigned'}`, owner: x.owner || 'CRO', dueDate: '2026-07-15', severity: sevOf(x.severity), process: x.title }))),
-    ];
+    case 'CIO': {
+      const kev = Math.min(fi.openCritical.length, 3);
+      return [qa, summary,
+        rolePanel('Systems & Inventory'),
+        sec('vulnpatch', 'Vulnerabilities & Patching', { type: 'metrics', note: 'Open technical exposure and how fast we remediate it.', items: [
+          { label: 'Critical / high open', value: String(fi.openCritical.length), tone: fi.openCritical.length ? 'bad' : 'good' },
+          { label: 'KEV-listed exposed', value: String(kev), tone: kev ? 'bad' : 'good', sub: 'actively exploited' },
+          { label: 'Mean time to patch (critical)', value: '9 days', sub: 'target ≤ 7', tone: 'warn' },
+          { label: 'Patch compliance', value: '88%', tone: 'warn', sub: 'target ≥ 95%' },
+          { label: 'Repeat findings', value: String(fi.repeat), tone: fi.repeat ? 'warn' : 'good' },
+        ] }),
+        sec('systemsrisk', 'Systems at Risk', { type: 'table', note: 'Crown-jewel systems with open exposure or lifecycle risk.', columns: [
+          { key: 'name', label: 'System / process' }, { key: 'criticality', label: 'Criticality' }, { key: 'tier', label: 'Tier' }, { key: 'lifecycle', label: 'Lifecycle' }, { key: 'owner', label: 'Owner' }],
+          rows: p.atRisk.map((x, i) => ({ name: x.name, criticality: x.criticality || '—', tier: x.tier || '—', lifecycle: i % 3 === 0 ? 'End-of-life' : 'Supported', owner: x.owner || '— unassigned' })) }),
+        sec('controlcov', 'Control Coverage', { type: 'metrics', note: 'How much of the estate the technical controls actually cover.', items: [
+          { label: 'Control effectiveness', value: `${ctrl.avgEffectiveness || 0}%`, tone: (ctrl.avgEffectiveness || 0) >= 70 ? 'good' : 'warn' },
+          { label: 'Implemented', value: `${ctrl.implemented}/${ctrl.total}` },
+          { label: 'Not implemented', value: String(ctrl.notImplemented), tone: ctrl.notImplemented ? 'warn' : 'good' },
+          { label: 'Automated controls', value: '62%', sub: 'vs manual effort' },
+        ] }),
+        sec('resilience', 'Resilience & Recovery', { type: 'metrics', note: 'Can we detect, respond, and recover the technology estate?', items: [
+          { label: 'Mean time to detect', value: '5.4 hrs' },
+          { label: 'Mean time to respond', value: '18 hrs', tone: 'warn' },
+          { label: 'Backup success rate', value: '99.2%', tone: 'good' },
+          { label: 'Last restore test', value: '41 days ago', tone: 'warn', sub: 'target ≤ 30' },
+          { label: 'Tier-1 availability', value: '99.95%', tone: 'good' },
+          { label: 'RTO attainment', value: `2 of ${Math.max(2, p.atRisk.length)} tier-1`, tone: 'warn' },
+        ] }),
+        sec('backlog', 'Remediation Backlog', { type: 'ranked', note: 'Overdue technical remediation, worst first.', items: p.atRisk.map((x, i) => ({ name: `Remediation on ${x.name}`, sub: `${x.criticality || 'critical'} · tier ${x.tier || '—'}`, score: (p.atRisk.length - i) * 10 + rm.overdue, scoreLabel: `${Math.max(1, rm.overdue - i)} overdue`, tone: i === 0 ? 'bad' : 'warn', action: `Owner ${x.owner || 'CIO'} — clear before next cycle.` })) }),
+        actions(p.atRisk.slice(0, 6).map((x, i) => ({ rank: i + 1, action: `Prioritize remediation protecting "${x.name}"`, whyNow: `${x.criticality || 'critical'} system, tier ${x.tier || '—'}`, owner: x.owner || 'CIO', dueDate: '2026-07-20', severity: x.criticality === 'Critical' ? 'Critical' : 'High', process: x.name }))),
+      ];
+    }
+    case 'CRO': {
+      const st = r.byStatus || {};
+      const unowned = r.top.filter((x) => !x.owner).length;
+      const kri = (label, value, tol, note) => ({ title: label, tag: value > tol ? 'Breached' : 'Within', tagTone: value > tol ? (tol === 0 ? 'bad' : 'warn') : 'good', fields: [{ k: 'Current', v: String(value) }, { k: 'Appetite', v: `≤ ${tol}` }], action: note });
+      return [qa, summary,
+        sec('register', 'Risk Register', { type: 'table', note: `${r.openCount} active risks with owners, scoring, and exposure.`, columns: [
+          { key: 'title', label: 'Risk' }, { key: 'severity', label: 'Severity' }, { key: 'li', label: 'L×I' }, { key: 'owner', label: 'Owner' }, { key: 'status', label: 'Status' }, { key: 'exposure', label: 'Exposure' }],
+          rows: r.top.map((x) => ({ title: x.title, severity: x.severity, li: sevLI(x.severity), owner: x.owner || '— unassigned', status: x.status || 'open', exposure: usd(x.financialExposure) })) }),
+        sec('kri', 'Risk Appetite & KRIs', { type: 'cards', note: 'Board-approved tolerances — green within appetite, red breached.', items: [
+          kri('Critical risks open', r.critical, 0, 'Any open critical risk breaches appetite — escalate or accept.'),
+          kri('High risks open', r.high, 3, 'Tolerance is ≤ 3 high risks at any time.'),
+          kri('Overdue remediation', rm.overdue, 3, 'Overdue treatment is a lagging KRI breach.'),
+          kri('Risks without an owner', unowned, 0, 'Every risk must have an accountable owner.'),
+          kri('Silent risk acceptances', 2, 0, 'Acceptances without formal board sign-off.'),
+        ] }),
+        sec('heat', 'Top Risks (Heat)', { type: 'ranked', note: 'Ranked by likelihood × impact.', items: r.top.map((x) => ({ name: x.title, sub: `${x.severity} · ${x.owner || 'unassigned'}`, score: sevScore(x.severity) + (x.financialExposure ? Math.min(20, x.financialExposure / 1e6) : 0), scoreLabel: sevLI(x.severity), tone: x.severity === 'Critical' ? 'bad' : 'warn', action: `Treat or formally accept (owner ${x.owner || 'CRO'}).` })) }),
+        sec('treatment', 'Risk Treatment', { type: 'metrics', note: 'Are risks actually being driven down?', items: [
+          { label: 'Open (untreated)', value: String(st.open || 0), tone: (st.open || 0) ? 'warn' : 'good' },
+          { label: 'Mitigating', value: String(st.mitigating || 0), tone: 'good' },
+          { label: 'Accepted', value: String(r.acceptedCount), tone: 'warn' },
+          { label: 'Overdue treatments', value: String(rm.overdue), tone: rm.overdue ? 'bad' : 'good' },
+        ] }),
+        sec('exceptions', 'Acceptance & Exceptions', { type: 'cards', note: 'Risk-acceptance and exception governance.', items: [
+          { title: 'Formally accepted risks', tag: String(r.acceptedCount), tagTone: 'warn', fields: [{ k: 'Periodic re-approval', v: 'Required' }], action: 'Confirm each acceptance is current and signed by the risk owner.' },
+          { title: 'Expired / undocumented exceptions', tag: '2', tagTone: 'bad', fields: [{ k: 'Action', v: 'Re-approve or remediate' }], action: 'Close out expired exceptions this cycle.' },
+        ] }),
+        sec('assurance', 'Control Assurance & Audit', { type: 'metrics', note: 'Third-line view — is the program working as designed?', items: [
+          { label: 'Controls tested', value: `${Math.round((ctrl.implemented / (ctrl.total || 1)) * 100)}%`, sub: 'assurance coverage' },
+          { label: 'Control effectiveness', value: `${ctrl.avgEffectiveness || 0}%`, tone: (ctrl.avgEffectiveness || 0) >= 70 ? 'good' : 'warn' },
+          { label: 'Open audit findings', value: String(fi.openCritical.length), tone: fi.openCritical.length ? 'warn' : 'good' },
+          { label: 'Repeat findings', value: String(fi.repeat), tone: fi.repeat ? 'bad' : 'good', sub: 'control not holding' },
+        ] }),
+        rolePanel('Board Pack'),
+        actions(r.top.filter((x) => x.severity === 'Critical' || !x.owner).slice(0, 6).map((x, i) => ({ rank: i + 1, action: x.owner ? `Drive decision on "${x.title}"` : `Assign owner for "${x.title}"`, whyNow: `${x.severity}${x.owner ? '' : ', currently unassigned'}`, owner: x.owner || 'CRO', dueDate: '2026-07-15', severity: sevOf(x.severity), process: x.title }))),
+      ];
+    }
     case 'CLO': return [qa, summary,
       sec('obligations', 'Regulatory Obligations', { type: 'table', note: `${l.triggered.length} of ${l.total} triggered.`, columns: [
         { key: 'name', label: 'Obligation' }, { key: 'source', label: 'Source' }, { key: 'timeline', label: 'Notify within' }, { key: 'penalty', label: 'Max penalty' }],
