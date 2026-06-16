@@ -111,7 +111,6 @@ router.post('/saml/callback',
  * Returns service provider metadata XML
  */
 router.get('/metadata', (req, res) => {
-  const SamlStrategy = require('passport-saml').Strategy;
   const strategies = passport._strategies;
 
   if (!strategies || !strategies.saml) {
