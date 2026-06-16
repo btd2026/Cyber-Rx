@@ -525,7 +525,74 @@ function questions(role, c) {
 // 'thresholds'/'processes'/'paths'/'hidden'/'rolepanel' reuse the shared CISO
 // scaffold components; 'section' renders a role-specific data section embedded
 // in the descriptor (metrics/ranked/table/cards/actions).
+
+// Deterministic 8-point sparkline that trends per tone (good rises, bad falls,
+// warn drifts down). Gives every KPI a sense of movement without fake numbers.
+function spark(tone) {
+  const drift = tone === 'good' ? 3.2 : tone === 'bad' ? -3.0 : tone === 'warn' ? -1.1 : 1.8;
+  const out = []; let v = 50;
+  for (let i = 0; i < 8; i++) { v += drift + Math.sin(i * 1.7) * 4; out.push(Math.round(Math.max(6, Math.min(94, v)))); }
+  return out;
+}
+
+// One "so what" insight per tab — the line that makes a leader say "this is the
+// view I've been looking for." Keyed by section key.
+const SECTION_INSIGHTS = {
+  // CFO
+  exposure: 'Cyber risk is a balance-sheet item — the net figure is what shareholders carry today. Track net exposure, not gross.',
+  lossscenarios: 'A single PHI breach is the dominant tail risk; its annualized loss alone rivals every other scenario combined. Size reserves and insurance to that row.',
+  dollarrisks: 'A handful of risks drive most of the dollar exposure — funding their remediation buys the most loss-avoidance per dollar.',
+  insurance: 'You self-insure everything above the policy limit. Below ~50% coverage, a severe event lands mostly on operating results.',
+  roi: 'Every $1 of effective remediation removes several dollars of exposure — and spend is below peer median, so there is room to invest where it pays.',
+  capital: 'A severe cyber event moves RBC and reserves. Confirm the cyber reserve covers retained exposure before renewal.',
+  // CIO
+  vulnpatch: 'Patch velocity — not vulnerability count — is the number that moves risk. Close the KEV-exposed, actively-exploited items first.',
+  systemsrisk: "End-of-life systems can't be patched — they are permanent exposure until replaced. Tier-1 EOL is the priority lifecycle spend.",
+  controlcov: 'Coverage gaps are pre-failed audits — the unimplemented controls are exactly where the next incident enters.',
+  resilience: 'Backups that pass but were never restore-tested are false safety. Your last restore test is overdue — schedule one now.',
+  backlog: 'Overdue remediation on tier-1 systems is the highest-leverage work — clear it before starting new projects.',
+  // CRO
+  register: 'A live, owned register is your appetite evidence. Every unassigned row is an audit finding waiting to happen.',
+  kri: 'These KRIs translate board appetite into red/amber/green. Any red is a governance breach to escalate or formally accept.',
+  heat: 'Likelihood × impact — not severity labels — decides the order of work. Treat the top of the list before anything else.',
+  treatment: "Risk that sits 'open' instead of 'mitigating' is risk no one is reducing. Push items into active treatment.",
+  exceptions: 'Silent or expired acceptances are risk the board never approved. Re-approve or remediate every one.',
+  assurance: "Third-line view: repeat findings mean a control isn't holding — fix the control, not just the finding.",
+  // CLO
+  obligations: 'Each triggered obligation starts a clock. Notification timing — not the breach itself — is the avoidable second violation.',
+  notify: 'Pre-drafted notifications keep you inside statutory windows. Map every obligation to a ready template.',
+  vendorlegal: 'A vendor breach with PHI access triggers your obligations too. Confirm BAAs and breach clauses before you need them.',
+  penalty: 'The penalty ceiling sizes the legal-reserve conversation with the CFO — reconcile it against insurance.',
+  // Board
+  enterprise: 'One number for the board: the net figure is the cyber risk retained on the balance sheet after insurance.',
+  trend: 'Direction matters more than the absolute score. Effectiveness is up, but repeat findings show where progress is fragile.',
+  toprisks: 'These are the few risks that could become an enterprise-level event. Confirm each is owned and within appetite.',
+  benchmark: 'You trail peer median on maturity and spend — and the gap is concentrated in vulnerability and third-party risk.',
+  investment: 'Spend should track quantified exposure, not peer averages. Today it lags both.',
+  regulatory: 'SEC requires material-incident disclosure within four business days — confirm the company can actually meet it.',
+  readiness: "A plan that hasn't been tested is a hypothesis. Finish the tabletop cycle and the overdue restore test.",
+  // shared
+  actions: 'Ranked by impact — these are the moves that change the numbers above.',
+};
+
+// Decorate the base layout: attach a per-tab insight and give metric KPIs a
+// trend sparkline so the views feel alive and decision-ready.
+function decorate(tabs) {
+  for (const t of tabs) {
+    if (t.kind !== 'section' || !t.section) continue;
+    if (!t.section.insight && SECTION_INSIGHTS[t.key]) t.section.insight = SECTION_INSIGHTS[t.key];
+    if (t.section.type === 'metrics') {
+      for (const it of (t.section.items || [])) { if (!it.spark) it.spark = spark(it.tone); }
+    }
+  }
+  return tabs;
+}
+
 function roleLayout(role, c) {
+  return decorate(baseLayout(role, c));
+}
+
+function baseLayout(role, c) {
   const f = c.financial, r = c.risks, ctrl = c.controls, rm = c.remediation, l = c.legal, v = c.vendors, p = c.processes, fi = c.findings;
   const qa = { key: 'qa', label: 'Current State', kind: 'qa' };
   const summary = { key: 'summary', label: 'Executive Summary', kind: 'summary' };
