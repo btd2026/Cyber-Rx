@@ -272,6 +272,10 @@ app.use('/api/modules',           [apiGetLimiter], require('./routes/modules'));
 // projections against the security posture.
 app.use('/api/projects',          [apiGetLimiter, apiPostLimiter], require('./routes/projects'));
 
+// AI governance — AI-BOM (AI bill of materials): inventory of AI/ML systems,
+// shadow AI, data exposure, autonomy, and governance posture.
+app.use('/api/ai-systems',        [apiGetLimiter, apiPostLimiter], require('./routes/aiSystems'));
+
 // Generic schema-agnostic ingestion (process inventory / CMDB) — files + APIs
 app.use('/api/ingestion',         [apiGetLimiter, apiPostLimiter], require('./routes/ingestion'));
 
