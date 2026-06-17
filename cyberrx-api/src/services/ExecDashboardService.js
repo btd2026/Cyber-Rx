@@ -67,9 +67,38 @@ async function snapshotDelta(orgId, role, score) {
 
 // Coherent demo posture used ONLY when an org has not yet generated any risk
 // data, so every leader's dashboard is populated and professional out of the
-// box (mirrors the CISO's mock posture; replaced automatically by live data).
-function demoContext() {
+// box. Shaped by the org's selected industry (processes, regulations, and risk
+// titles) so it reflects the customer's sector; replaced automatically by live
+// data once the org runs assessments.
+function demoContext(industryId) {
+  let demo = {};
+  try { demo = (require('../data/industryProfiles').getProfile(industryId).demo) || {}; } catch (_) {}
+  // Industry risk titles laid over a fixed exposure/severity scaffold.
+  const scaffold = [
+    { severity: 'Critical', status: 'open', financialExposure: 9200000, owner: 'CISO', remediationOwner: 'VP Infrastructure' },
+    { severity: 'Critical', status: 'open', financialExposure: 7600000, owner: 'CISO', remediationOwner: 'IAM Lead' },
+    { severity: 'Critical', status: 'mitigating', financialExposure: 6100000, owner: 'CIO', remediationOwner: 'Cloud Platform' },
+    { severity: 'High', status: 'open', financialExposure: 4300000, owner: null, remediationOwner: 'TPRM' },
+    { severity: 'High', status: 'open', financialExposure: 3800000, owner: 'CISO', remediationOwner: 'Backup Eng' },
+    { severity: 'High', status: 'open', financialExposure: 2400000, owner: null, remediationOwner: 'SecOps' },
+  ];
+  const riskTitles = demo.topRisks && demo.topRisks.length ? demo.topRisks : [
+    'Unpatched internet-facing KEV vulnerabilities', 'Privileged access without MFA on critical systems',
+    'Public cloud storage exposing sensitive data', 'Third-party vendor with weak controls',
+    'Ransomware recovery not restore-tested', 'DLP gaps on business SaaS',
+  ];
+  const top = scaffold.map((s, i) => ({ id: `r${i + 1}`, title: riskTitles[i] || riskTitles[riskTitles.length - 1], ...s }));
+  const triggered = (demo.regulations && demo.regulations.length ? demo.regulations : [
+    { name: 'State Breach Law (multi-state)', source: 'State AG', citation: 'Various', notificationTimeline: '30–45 days', maxPenalty: 500000 },
+  ]).map((x, i) => ({ id: `l${i + 1}`, ...x }));
+  const atRisk = (demo.processes && demo.processes.length ? demo.processes : [
+    { name: 'Core Business Operations', tier: 1, criticality: 'Critical', owner: 'COO' },
+    { name: 'Finance & Accounting', tier: 1, criticality: 'Critical', owner: 'Controller' },
+    { name: 'Customer Management', tier: 2, criticality: 'High', owner: 'VP Sales' },
+    { name: 'IT Operations', tier: 2, criticality: 'High', owner: 'IT Director' },
+  ]).map((p, i) => ({ id: `p${i + 1}`, ...p }));
   return {
+    industry: industryId, crownJewel: demo.crownJewel || 'sensitive business data',
     financial: {
       grossExposure: 48200000, netExposure: 21600000, insuranceCoverage: 26600000,
       costToRemediate: 6400000, coverageRatio: 55, surplus: 260000000, capitalAtRiskPct: 8.3,
@@ -77,41 +106,19 @@ function demoContext() {
     risks: {
       bySeverity: { Critical: 3, High: 5, Medium: 6 }, byStatus: { open: 11, mitigating: 3, accepted: 2 },
       openCount: 14, acceptedCount: 2, critical: 3, high: 5,
-      top: [
-        { id: 'r1', title: 'Unpatched internet-facing KEV vulnerabilities', severity: 'Critical', status: 'open', financialExposure: 9200000, owner: 'CISO', remediationOwner: 'VP Infrastructure', regulatoryCitation: 'HIPAA Security Rule' },
-        { id: 'r2', title: 'Privileged access without MFA on claims systems', severity: 'Critical', status: 'open', financialExposure: 7600000, owner: 'CISO', remediationOwner: 'IAM Lead' },
-        { id: 'r3', title: 'Public cloud storage exposing PHI', severity: 'Critical', status: 'mitigating', financialExposure: 6100000, owner: 'CIO', remediationOwner: 'Cloud Platform' },
-        { id: 'r4', title: 'Third-party clearinghouse with weak controls', severity: 'High', status: 'open', financialExposure: 4300000, owner: null, remediationOwner: 'TPRM' },
-        { id: 'r5', title: 'Ransomware recovery not restore-tested', severity: 'High', status: 'open', financialExposure: 3800000, owner: 'CISO', remediationOwner: 'Backup Eng' },
-        { id: 'r6', title: 'DLP gaps on member-services SaaS', severity: 'High', status: 'open', financialExposure: 2400000, owner: null, remediationOwner: 'SecOps' },
-      ],
+      top,
     },
-    legal: {
-      total: 9,
-      triggered: [
-        { id: 'l1', name: 'HIPAA Breach Notification', source: 'HIPAA', citation: '45 CFR §164.404', notificationTimeline: '60 days', maxPenalty: 1900000 },
-        { id: 'l2', name: 'CMS Incident Reporting', source: 'CMS', citation: 'CMS ARS', notificationTimeline: '72 hours', maxPenalty: 500000 },
-        { id: 'l3', name: 'State Breach Law (multi-state)', source: 'State AG', citation: 'Various', notificationTimeline: '30–45 days', maxPenalty: 750000 },
-      ],
-    },
+    legal: { total: Math.max(9, triggered.length + 6), triggered },
     threats: [],
     controls: { total: 120, avgEffectiveness: 64, implemented: 78, notImplemented: 14 },
-    processes: {
-      byCriticality: { Critical: 4, High: 6 }, total: 18,
-      atRisk: [
-        { id: 'p1', name: 'Claims Adjudication', tier: 1, criticality: 'Critical', owner: 'VP Claims' },
-        { id: 'p2', name: 'Member Portal & Eligibility', tier: 1, criticality: 'Critical', owner: 'VP Member Svcs' },
-        { id: 'p3', name: 'Provider Payments', tier: 1, criticality: 'Critical', owner: 'VP Finance Ops' },
-        { id: 'p4', name: 'Clearinghouse Integration', tier: 2, criticality: 'High', owner: 'Director EDI' },
-      ],
-    },
+    processes: { byCriticality: { Critical: 4, High: 6 }, total: 18, atRisk },
     remediation: { byStatus: { Open: 12, 'In Progress': 9 }, overdue: 7 },
     findings: {
       repeat: 4,
       openCritical: [
-        { id: 'f1', title: 'KEV CVE-2024-XXXX on edge gateway', severity: 'Critical' },
+        { id: 'f1', title: 'KEV CVE on internet-facing gateway', severity: 'Critical' },
         { id: 'f2', title: 'Service account with domain admin', severity: 'Critical' },
-        { id: 'f3', title: 'Unencrypted PHI export job', severity: 'High' },
+        { id: 'f3', title: 'Unencrypted export of sensitive data', severity: 'High' },
       ],
     },
     vendors: { signalsBySeverity: { Critical: 1, High: 2, Medium: 3 }, activeSignals: 6 },
@@ -237,10 +244,21 @@ function roleOverall(role, c) {
   return { current, previous, delta: current - previous, trend: trendOf(current - previous), confidence: 'Medium', weights: pillars.map((d) => ({ domain: d.name, weight: d.weight })), narrative };
 }
 
-// Load context with the demo fallback (shared by the CISO service's role lens).
+// Read the org's selected industry (setup_json.industry) so demos and framing
+// reflect the customer's sector. Defaults to the generic profile.
+async function orgIndustry(orgId) {
+  try {
+    const db = require('../utils/db');
+    const rows = await db.query('SELECT setup_json FROM orgs WHERE id=$1', [orgId]);
+    return (rows[0] && rows[0].setup_json && rows[0].setup_json.industry) || 'generic';
+  } catch (_) { return 'generic'; }
+}
+
+// Load context with the industry-shaped demo fallback (shared by the CISO
+// service's role lens).
 async function loadCtx(orgId) {
   let c = await Agent.gatherContext(orgId);
-  if (isEmpty(c)) c = demoContext();
+  if (isEmpty(c)) c = demoContext(await orgIndustry(orgId));
   return c;
 }
 

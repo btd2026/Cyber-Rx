@@ -41,7 +41,20 @@ router.get('/assessment', optionalJWT, async (req, res) => {
 });
 
 router.get('/questions', optionalJWT, async (req, res) => {
-  res.json({ questions: NistCsfService.getQuestions() });
+  // Industry-aware interview: explicit ?industry= wins, else the org's saved
+  // industry, else the generic profile.
+  let industry = req.query.industry;
+  if (!industry) {
+    const orgId = req.orgId || req.headers['x-org-id'] || req.query.org_id || req.query.orgId;
+    if (orgId) {
+      try {
+        const db = require('../utils/db');
+        const rows = await db.query('SELECT setup_json FROM orgs WHERE id=$1', [orgId]);
+        industry = rows[0] && rows[0].setup_json && rows[0].setup_json.industry;
+      } catch (_) {}
+    }
+  }
+  res.json({ questions: NistCsfService.getQuestions(industry), industry: industry || 'generic' });
 });
 
 // Systemwide rankings — every organization's latest scorecard (the
