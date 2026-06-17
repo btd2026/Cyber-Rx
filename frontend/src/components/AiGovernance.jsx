@@ -32,8 +32,9 @@ export default function AiGovernance(props) {
   const [err, setErr] = useState(null);
   const [busy, setBusy] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
-  const [view, setView] = useState('bom'); // bom | nist_ai_rmf | owasp_llm | mitre_atlas
+  const [view, setView] = useState('bom'); // bom | nist_ai_rmf | owasp_llm | mitre_atlas | eu_ai_act
   const [assess, setAssess] = useState(null);
+  const [eu, setEu] = useState(null);
   const [form, setForm] = useState({ name: '', provider: '', dataSensitivity: 'PII', autonomy: 'Assistive', hosting: 'External SaaS', sanctioned: 'Shadow', owner: '', purpose: '' });
   const headers = useCallback(() => { const h = { 'Content-Type': 'application/json', 'X-Org-Id': orgId }; if (token) h.Authorization = `Bearer ${token}`; return h; }, [orgId, token]);
 
@@ -45,6 +46,12 @@ export default function AiGovernance(props) {
 
   useEffect(() => {
     if (view === 'bom') return;
+    if (view === 'eu_ai_act') {
+      setEu(null);
+      fetch(`${api}/api/ai-systems/eu-ai-act?org_id=${encodeURIComponent(orgId)}`, { headers: headers() })
+        .then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) setEu(d); }).catch(() => {});
+      return;
+    }
     setAssess(null);
     fetch(`${api}/api/ai-systems/assessment?framework=${encodeURIComponent(view)}&org_id=${encodeURIComponent(orgId)}`, { headers: headers() })
       .then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) setAssess(d); }).catch(() => {});
@@ -91,7 +98,7 @@ export default function AiGovernance(props) {
 
       {/* framework sub-tabs — each assessed independently */}
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
-        {[['bom', 'AI Inventory (AI-BOM)'], ['nist_ai_rmf', 'NIST AI RMF'], ['owasp_llm', 'OWASP LLM Top 10'], ['mitre_atlas', 'MITRE ATLAS']].map(([k, l]) => (
+        {[['bom', 'AI Inventory (AI-BOM)'], ['nist_ai_rmf', 'NIST AI RMF'], ['owasp_llm', 'OWASP LLM Top 10'], ['mitre_atlas', 'MITRE ATLAS'], ['eu_ai_act', 'EU AI Act']].map(([k, l]) => (
           <button key={k} onClick={() => setView(k)} style={{ border: `1px solid ${view === k ? '#0f1b2d' : HAIR}`, background: view === k ? '#0f1b2d' : '#fff', color: view === k ? '#fff' : INK2, padding: '6px 13px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', borderRadius: 999 }}>{l}</button>
         ))}
       </div>
@@ -113,7 +120,8 @@ export default function AiGovernance(props) {
         </div>
       )}
 
-      {view !== 'bom' && <FrameworkView a={assess} />}
+      {view === 'eu_ai_act' && <EuAiActView eu={eu} />}
+      {view !== 'bom' && view !== 'eu_ai_act' && <FrameworkView a={assess} />}
 
       {view === 'bom' && (!inv ? <div style={{ fontSize: 12, color: INK3 }}>Loading AI inventory…</div> : (
         <>
@@ -207,6 +215,34 @@ function sel(label, value, opts, onChange) {
     </select>
   );
 }
+const TIER = { 'High-risk': '#C0392B', 'Limited-risk': '#B07C2E', 'Minimal-risk': '#1f8a4c', 'Prohibited': '#7c1d12' };
+function EuAiActView({ eu }) {
+  if (!eu) return <div style={{ fontSize: 12, color: INK3 }}>Classifying under the EU AI Act…</div>;
+  return (
+    <div>
+      <div style={{ background: 'linear-gradient(135deg,#eef4fb,#f6f9fe)', border: '1px solid #d7e6f7', borderRadius: 10, padding: '12px 16px', marginBottom: 12, fontSize: 12.5, color: INK, lineHeight: 1.55 }}>{eu.summary}</div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+        {[['High-risk', eu.counts.high], ['Limited-risk', eu.counts.limited], ['Minimal-risk', eu.counts.minimal]].map(([k, n]) => (
+          <span key={k} style={{ fontSize: 11, color: INK2 }}><strong style={{ color: TIER[k] }}>{n || 0}</strong> {k}</span>
+        ))}
+      </div>
+      <div style={{ display: 'grid', gap: 8 }}>
+        {(eu.systems || []).map((s, i) => (
+          <div key={i} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${TIER[s.tier]}`, borderRadius: 8, padding: '10px 13px', background: '#fff' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>{s.name}</span>
+              <Pill text={s.tier} color={TIER[s.tier]} />
+            </div>
+            <div style={{ fontSize: 11, color: INK2, marginTop: 4 }}>{s.rationale}</div>
+            <div style={{ fontSize: 10.5, color: INK3, marginTop: 5 }}>Obligations: {(s.obligations || []).join(' · ')}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ fontSize: 10.5, color: INK3, marginTop: 10 }}>First-pass classification from system attributes — validate with Legal/Compliance before relying on it.</div>
+    </div>
+  );
+}
+
 function Kpi({ label, value, tone }) {
   const c = tone === 'bad' ? '#C0392B' : tone === 'warn' ? '#B07C2E' : tone === 'good' ? '#1f8a4c' : INK;
   return (

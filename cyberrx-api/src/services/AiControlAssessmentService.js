@@ -128,4 +128,39 @@ async function assess(orgId, framework) {
   return { frameworks: Object.values(FRAMEWORKS).map((fw) => scoreFramework(fw, sig)), signals: sig };
 }
 
-module.exports = { assess, FRAMEWORKS };
+// ---- EU AI Act risk classification ----------------------------------------
+// Heuristic tiering of each AI system into the Act's risk tiers, with the
+// obligations each tier triggers. Real classification is a legal determination;
+// this gives the CLO/CRO/Board a defensible first-pass to validate.
+const SENSITIVE2 = ['PHI', 'PCI', 'IP/Secrets', 'PII'];
+function classifyOne(s) {
+  const purpose = (s.purpose || '').toLowerCase();
+  const decisional = /decision|triage|eligib|adjudicat|credit|hir|screen|score|prioritiz|approve|deny/.test(purpose);
+  const sensitive = SENSITIVE2.includes(s.dataSensitivity);
+  let tier, rationale;
+  if (decisional && (sensitive || s.autonomy !== 'Assistive')) {
+    tier = 'High-risk'; rationale = 'Influences decisions affecting individuals (e.g., access to services/benefits) on sensitive data.';
+  } else if (s.autonomy === 'Agentic' || s.systemType === 'LLM Application' || s.systemType === 'Embedded GenAI') {
+    tier = 'Limited-risk'; rationale = 'Interacts with people / generates content — transparency obligations apply.';
+  } else {
+    tier = 'Minimal-risk'; rationale = 'Internal/assistive use with no decisional impact on individuals.';
+  }
+  const obligations = tier === 'High-risk'
+    ? ['Risk management system', 'Data governance & quality', 'Technical documentation', 'Human oversight', 'Logging & traceability', 'Accuracy/robustness/cybersecurity', 'Conformity assessment']
+    : tier === 'Limited-risk' ? ['Transparency: disclose AI use', 'Label AI-generated content', 'Basic logging'] : ['Voluntary codes of conduct'];
+  return { name: s.name, tier, rationale, obligations, dataSensitivity: s.dataSensitivity, autonomy: s.autonomy, owner: s.owner, sanctioned: s.sanctioned };
+}
+async function classifyEuAiAct(orgId) {
+  const inv = await AI.inventory(orgId);
+  const systems = (inv.systems || []).map(classifyOne);
+  const counts = systems.reduce((m, s) => { const k = s.tier.split('-')[0].toLowerCase(); m[k] = (m[k] || 0) + 1; return m; }, { high: 0, limited: 0, minimal: 0 });
+  const high = systems.filter((s) => s.tier === 'High-risk');
+  return {
+    counts, systems,
+    summary: high.length
+      ? `${high.length} system(s) likely fall under the EU AI Act's high-risk tier and carry the full obligation set (risk management, human oversight, documentation, conformity assessment). Validate with Legal.`
+      : 'No high-risk AI systems identified; transparency obligations apply to your generative/agentic systems. Validate with Legal.',
+  };
+}
+
+module.exports = { assess, classifyEuAiAct, FRAMEWORKS };

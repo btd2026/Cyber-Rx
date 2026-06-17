@@ -629,6 +629,42 @@ function decisionsFor(role, c) {
   }
 }
 
+// AI decision-intelligence: detected AI conditions → what could go wrong →
+// options, tailored per role. Driven by the AI-BOM inventory rollup.
+function aiDecisions(role, inv) {
+  if (!inv || !inv.counts) return [];
+  const c = inv.counts;
+  const sys = inv.systems || [];
+  const shadowSensitive = sys.find((s) => s.sanctioned === 'Shadow' && ['PHI', 'PCI', 'IP/Secrets', 'PII'].includes(s.dataSensitivity));
+  const agentNoHITL = sys.find((s) => s.autonomy === 'Agentic' && !s.humanInLoop);
+  const out = [];
+  if (shadowSensitive) {
+    out.push({ condition: `Shadow AI processing sensitive data: "${shadowSensitive.name}"`, severity: 'Critical', likelihood: 'High', impact: 'Data leak + regulatory exposure', horizon: 'Now',
+      projection: `${shadowSensitive.dataSensitivity} is flowing to an unsanctioned AI tool with no DPA, no logging, and no governance — a direct path to a reportable breach and a regulatory finding.`,
+      options: [{ label: 'Block the tool', effect: 'Stops the data flow immediately', tradeoff: 'May disrupt a team workflow' }, { label: 'Sanction with a DPA + guardrails', effect: 'Keeps the capability, governed', tradeoff: 'Vendor review + controls effort' }, { label: 'Provide a governed alternative', effect: 'Removes the incentive for shadow use', tradeoff: 'Stand-up cost' }],
+      recommended: 'Block now, then offer a sanctioned, DPA-backed alternative with DLP on prompts/outputs.' });
+  }
+  if (agentNoHITL && (role === 'CISO' || role === 'CIO' || role === 'CRO' || role === 'Board')) {
+    out.push({ condition: `Autonomous agent without human oversight: "${agentNoHITL.name}"`, severity: 'Critical', likelihood: 'Medium', impact: 'Unbounded automated action', horizon: '0–30 days',
+      projection: `An agent that takes actions without a human in the loop can act on a hallucination or a prompt-injection at machine speed — OWASP LLM06 "Excessive Agency" and ATLAS plugin-compromise risk.`,
+      options: [{ label: 'Require human approval for consequential actions', effect: 'Caps the blast radius', tradeoff: 'Slower automation' }, { label: 'Constrain tool/permission scope', effect: 'Limits what the agent can do', tradeoff: 'Engineering effort' }, { label: 'Add a kill-switch + action audit log', effect: 'Containment + traceability', tradeoff: 'Setup time' }],
+      recommended: 'Gate high-impact actions behind human approval and scope the agent\'s permissions before expanding it.' });
+  }
+  if ((role === 'CLO' || role === 'CRO' || role === 'Board') && (c.total > 0)) {
+    out.push({ condition: `${c.total} AI system(s) in use; EU AI Act classification pending`, severity: 'High', likelihood: 'Medium', impact: 'Regulatory non-conformity', horizon: 'Pre-enforcement',
+      projection: `Any AI system that influences decisions about individuals likely falls under the EU AI Act's high-risk tier — triggering risk-management, human-oversight, documentation, and conformity-assessment obligations you must evidence.`,
+      options: [{ label: 'Classify every AI system by tier', effect: 'Sizes the obligation', tradeoff: 'Legal/AI review time' }, { label: 'Stand up high-risk obligations', effect: 'Demonstrates conformity', tradeoff: 'Program investment' }, { label: 'Restrict high-risk use until ready', effect: 'Removes near-term exposure', tradeoff: 'Foregoes the capability' }],
+      recommended: 'Classify now (the AI Governance → EU AI Act tab does a first pass), then close obligations for any high-risk system.' });
+  }
+  if (role === 'CFO' && c.total > 0) {
+    out.push({ condition: `Ungoverned AI (${c.ungoverned} of ${c.total}) carries unpriced risk`, severity: 'Medium', likelihood: 'Medium', impact: 'Unquantified loss + insurance gaps', horizon: 'This year',
+      projection: `Ungoverned AI is exposure that isn't in your loss model or your cyber-insurance application — a misrepresentation risk at renewal and an unbudgeted loss if it triggers a breach.`,
+      options: [{ label: 'Fund an AI governance baseline', effect: 'Brings AI into the risk + insurance picture', tradeoff: 'Program cost' }, { label: 'Add AI to the cyber-insurance disclosure', effect: 'Avoids coverage disputes', tradeoff: 'Possible premium impact' }, { label: 'Cap AI spend pending governance', effect: 'Limits new exposure', tradeoff: 'Slows AI adoption' }],
+      recommended: 'Fund a lightweight AI governance baseline and reflect AI use in the next insurance renewal.' });
+  }
+  return out;
+}
+
 // Deterministic 8-point sparkline that trends per tone (good rises, bad falls,
 // warn drifts down). Gives every KPI a sense of movement without fake numbers.
 function spark(tone) {
@@ -906,4 +942,4 @@ async function getDashboard(orgId, role) {
   };
 }
 
-module.exports = { getDashboard, FRAME, roleOverall, roleDomains, roleQuestions: questions, roleLayout, loadCtx, demoContext, isEmpty };
+module.exports = { getDashboard, FRAME, roleOverall, roleDomains, roleQuestions: questions, roleLayout, aiDecisions, loadCtx, demoContext, isEmpty };

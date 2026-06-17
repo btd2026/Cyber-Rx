@@ -57,4 +57,10 @@ router.get('/assessment', async (req, res) => {
   try { res.json(await AiControl.assess(orgId, req.query.framework)); } catch (e) { res.status(500).json({ error: 'Unable to assess AI controls.' }); }
 });
 
+// Phase 3 — EU AI Act risk classification of each AI system.
+router.get('/eu-ai-act', async (req, res) => {
+  const orgId = orgOf(req); if (!orgId) return res.status(400).json({ error: 'Organization required.' });
+  try { res.json(await AiControl.classifyEuAiAct(orgId)); } catch (e) { res.status(500).json({ error: 'Unable to classify under the EU AI Act.' }); }
+});
+
 module.exports = router;
