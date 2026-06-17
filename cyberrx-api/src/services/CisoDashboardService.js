@@ -255,7 +255,7 @@ async function persistSnapshot(orgId, overall) {
 // action queue, process protection, attack pathways, readiness, hidden risk)
 // keep rendering the org's security/risk truth — so every leader page has the
 // EXACT same setup, populated with their corresponding information.
-function applyRoleLens(payload, role, ctx, refreshed) {
+async function applyRoleLens(payload, role, ctx, refreshed) {
   const Exec = require('./ExecDashboardService');
   payload.persona = role;
   payload.overallPosture = Exec.roleOverall(role, ctx);
@@ -268,6 +268,13 @@ function applyRoleLens(payload, role, ctx, refreshed) {
     explanation: q.whyItMatters || '',
     narration: [q.answer, q.whyItMatters, q.recommendedAction ? `Recommended: ${q.recommendedAction}` : ''].filter(Boolean).join(' '),
   }));
+  // Phase 3: fold AI decision-intelligence into the Decisions & Projections tab.
+  try {
+    const inv = await require('./AiInventoryService').inventory(payload.organizationId || ctx.orgId);
+    const aiItems = Exec.aiDecisions(role, inv);
+    const dtab = (payload.roleTabs || []).find((t) => t.key === 'decisions');
+    if (dtab && aiItems.length) { dtab.section.items = aiItems.concat(dtab.section.items || []); }
+  } catch (e) { logger.debug('ai decisions fold-in skipped', { error: e.message }); }
 }
 
 async function getDashboard(orgId, role) {
@@ -324,7 +331,7 @@ async function getDashboard(orgId, role) {
   if (role && role !== 'CISO') {
     try {
       const Exec = require('./ExecDashboardService');
-      applyRoleLens(payload, role, await Exec.loadCtx(orgId), refreshed);
+      await applyRoleLens(payload, role, await Exec.loadCtx(orgId), refreshed);
     } catch (e) { logger.warn('role lens failed; serving CISO baseline', { role, error: e.message }); }
   }
   return payload;
