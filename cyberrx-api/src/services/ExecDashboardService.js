@@ -700,6 +700,11 @@ function roleLayout(role, c) {
     section: { type: 'decisions', insight: 'Each detected condition is projected forward — what could go wrong if it is left unaddressed — with concrete decision options and a recommendation.', items: decisionsFor(role, c) },
   };
   tabs.splice(Math.min(2, tabs.length), 0, decisions);
+  // Security project portfolio (ROI + delay impact) — relevant to the leaders
+  // who fund, run, and govern the program.
+  if (['CIO', 'CFO', 'Board'].includes(role)) {
+    tabs.push({ key: 'projects', label: 'Projects & ROI', kind: 'projects' });
+  }
   return tabs;
 }
 

@@ -268,6 +268,10 @@ app.use('/api/industries',        [apiGetLimiter], require('./routes/industries'
 // validation, document assurance) with their entry points and health.
 app.use('/api/modules',           [apiGetLimiter], require('./routes/modules'));
 
+// Security project portfolio — upload inventory or pull from Jira; ROI + delay
+// projections against the security posture.
+app.use('/api/projects',          [apiGetLimiter, apiPostLimiter], require('./routes/projects'));
+
 // Generic schema-agnostic ingestion (process inventory / CMDB) — files + APIs
 app.use('/api/ingestion',         [apiGetLimiter, apiPostLimiter], require('./routes/ingestion'));
 
