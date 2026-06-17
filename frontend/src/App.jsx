@@ -3680,6 +3680,7 @@ function DemoRequest(props) {
   var _sName=useState(""); var name=_sName[0]; var setName=_sName[1];
   var _sEmail=useState(""); var email=_sEmail[0]; var setEmail=_sEmail[1];
   var _sOrgType=useState(""); var orgType=_sOrgType[0]; var setOrgType=_sOrgType[1];
+  var _sIndustry=useState((typeof localStorage!=="undefined"&&localStorage.getItem("cyberrx_industry"))||""); var industry=_sIndustry[0]; var setIndustry=_sIndustry[1];
   var _sJobTitle=useState(""); var jobTitle=_sJobTitle[0]; var setJobTitle=_sJobTitle[1];
   var _sMessage=useState(""); var message=_sMessage[0]; var setMessage=_sMessage[1];
   var _sSubmitting=useState(false); var submitting=_sSubmitting[0]; var setSubmitting=_sSubmitting[1];
@@ -3827,6 +3828,33 @@ function DemoRequest(props) {
                 <option value="TPA / Third-Party Administrator">TPA / Third-Party Administrator</option>
               </select>
             </div>
+            <div>
+              <label style={{color:C.text, fontSize:12, fontWeight:700, display:"block", marginBottom:6}}>
+                Industry *
+              </label>
+              <select
+                value={industry}
+                onChange={function(e){ setIndustry(e.target.value); setError(""); try{ if(typeof localStorage!=="undefined") localStorage.setItem("cyberrx_industry", e.target.value); }catch(_){} }}
+                disabled={submitting}
+                style={{width:"100%", background:C.bg, border:"1px solid "+C.border, borderRadius:8, padding:"10px 12px", fontSize:13, color:C.text, outline:"none"}}
+                required
+              >
+                <option value="">Select industry...</option>
+                <option value="healthcare_payer">Health Insurance (Payer)</option>
+                <option value="healthcare_provider">Hospital / Health System</option>
+                <option value="bank">Banking</option>
+                <option value="insurance_pc">Property & Casualty Insurance</option>
+                <option value="retail_ecommerce">Retail / E-commerce</option>
+                <option value="saas_tech">Software / SaaS</option>
+                <option value="manufacturing">Manufacturing</option>
+                <option value="energy_utilities">Energy / Utilities</option>
+                <option value="government">Government / Public Sector</option>
+                <option value="higher_ed">Higher Education</option>
+                <option value="generic">Other / General</option>
+              </select>
+            </div>
+          </div>
+          <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16}}>
             <div>
               <label style={{color:C.text, fontSize:12, fontWeight:700, display:"block", marginBottom:6}}>
                 Job Title *
@@ -4024,6 +4052,15 @@ function saveOrgProfile(orgData) {
   if (!orgData || !orgData.orgName) {
     return Promise.reject(new Error('Invalid org data: missing orgName'));
   }
+
+  // Industry-agnostic: always persist the org's selected industry so the
+  // backend adapts intake questions and executive views to the sector.
+  try {
+    if (!orgData.industry && typeof localStorage !== 'undefined') {
+      var savedInd = localStorage.getItem('cyberrx_industry');
+      if (savedInd) { orgData = Object.assign({}, orgData, { industry: savedInd }); }
+    }
+  } catch (e) { /* localStorage unavailable */ }
 
   // Generate org ID from org name
   var orgId = orgData.orgName

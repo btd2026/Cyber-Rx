@@ -261,6 +261,9 @@ app.use('/api/csf',               [apiGetLimiter, apiPostLimiter], require('./ro
 // Organization Intake — document request checklist + upload/review pipeline
 app.use('/api/intake',            [apiGetLimiter, apiPostLimiter], require('./routes/intake'));
 
+// Industry registry — makes the platform industry-agnostic (setup + intake)
+app.use('/api/industries',        [apiGetLimiter], require('./routes/industries'));
+
 // Generic schema-agnostic ingestion (process inventory / CMDB) — files + APIs
 app.use('/api/ingestion',         [apiGetLimiter, apiPostLimiter], require('./routes/ingestion'));
 

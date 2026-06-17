@@ -560,10 +560,15 @@ async function reviewDocuments(orgId) {
   };
 }
 
-function getQuestions() {
-  return EVIDENCE_QUESTIONS.map((q) => ({
+function getQuestions(industry) {
+  // Base framework (control-maturity) questions, plus an industry-specific
+  // overlay so the interview adapts to the customer's sector.
+  let extra = [];
+  try { extra = require('../data/industryProfiles').industryQuestions(industry); } catch (_) {}
+  const all = [...EVIDENCE_QUESTIONS, ...extra];
+  return all.map((q) => ({
     key: q.key, category: q.category, question: q.question,
-    options: Object.keys(q.options), suggestedDoc: q.doc,
+    options: Object.keys(q.options), suggestedDoc: q.doc, source: q.source || 'framework',
   }));
 }
 
