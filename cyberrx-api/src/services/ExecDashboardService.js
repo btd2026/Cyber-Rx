@@ -544,6 +544,91 @@ function questions(role, c) {
 // scaffold components; 'section' renders a role-specific data section embedded
 // in the descriptor (metrics/ranked/table/cards/actions).
 
+// ---- Decision Intelligence -------------------------------------------------
+// The platform's core mission: turn a DETECTED CONDITION into "what could go
+// wrong", then give the executive concrete DECISION OPTIONS with trade-offs and
+// a recommendation. Each item: { condition, severity, likelihood, impact,
+// horizon, projection, options:[{label,effect,tradeoff}], recommended }.
+function decisionsFor(role, c) {
+  const f = c.financial, r = c.risks, ctrl = c.controls, rm = c.remediation, l = c.legal, p = c.processes, fi = c.findings;
+  const top = (r.top && r.top[0]) || { title: 'the top open risk', financialExposure: 0, severity: 'High' };
+  const removed = Math.max(0, f.grossExposure - f.netExposure);
+  const opt = (label, effect, tradeoff) => ({ label, effect, tradeoff });
+  switch (role) {
+    case 'CFO': return [
+      { condition: `Only ${f.coverageRatio}% of gross exposure is insured — ${usd(f.netExposure)} is retained`, severity: f.coverageRatio < 50 ? 'High' : 'Medium', likelihood: 'Medium', impact: usd(f.netExposure), horizon: 'This policy year',
+        projection: `A severe breach (modeled single loss ${usd(Math.round(f.grossExposure * 0.6))}) would exceed the current policy limit; roughly ${usd(f.netExposure)} would land directly on operating results and reserves.`,
+        options: [opt('Raise the cyber limit at renewal', `Transfers most of the ${usd(f.netExposure)} retained gap`, `Premium +~${usd(Math.round(f.grossExposure * 0.012))}/yr`), opt('Fund top-risk remediation now', `Removes ~${usd(removed)} of exposure at the source`, `${usd(f.costToRemediate)} of remediation spend`), opt('Formally accept the retained exposure', 'No new spend this year', `Board must sign off on ${usd(f.netExposure)} retained`)],
+        recommended: 'Raise the limit and fund the top two dollar-risks; accept the small remainder explicitly.' },
+      { condition: `Largest single risk "${top.title}" carries ${usd(top.financialExposure)} exposure`, severity: top.severity === 'Critical' ? 'Critical' : 'High', likelihood: 'High', impact: usd(top.financialExposure), horizon: '0–90 days',
+        projection: `Left unfunded, this one risk can move quarterly results by up to ${usd(top.financialExposure)} and is the single best dollar-for-dollar remediation target.`,
+        options: [opt('Approve remediation funding', `Buys the most loss-avoidance per dollar`, 'Reallocates budget from lower-ROI items'), opt('Stage over two quarters', 'Spreads the cash impact', 'Exposure persists longer'), opt('Transfer via insurance rider', 'Caps the downside', 'Sub-limit + premium cost')],
+        recommended: 'Approve remediation funding this quarter — highest ROI on the book.' },
+      { condition: `Net exposure is ${f.capitalAtRiskPct || '—'}% of statutory surplus`, severity: (f.capitalAtRiskPct || 0) > 8 ? 'High' : 'Medium', likelihood: 'Low', impact: '−3 RBC pts (severe scenario)', horizon: 'Annual',
+        projection: `In a severe-event scenario the retained loss would draw down surplus and pressure the RBC ratio by ~3 points — a rating and regulatory concern.`,
+        options: [opt('Set a dedicated cyber reserve', 'Pre-funds the retained loss', `~${usd(Math.round(f.netExposure * 0.5))} set aside`), opt('Increase risk transfer', 'Lowers capital at risk', 'Premium cost'), opt('Reduce exposure via remediation', 'Lowers the loss magnitude', 'Remediation spend + time')],
+        recommended: 'Combine a modest reserve with targeted remediation to hold RBC headroom.' },
+    ];
+    case 'CIO': return [
+      { condition: `${rm.overdue} remediation task(s) overdue on tier-1 systems`, severity: rm.overdue > 5 ? 'High' : 'Medium', likelihood: 'High', impact: `${p.atRisk[0] ? p.atRisk[0].name : 'crown-jewel'} downtime`, horizon: '0–30 days',
+        projection: `Each overdue item on a tier-1 system widens the window for an outage or breach of "${p.atRisk[0] ? p.atRisk[0].name : 'a crown-jewel process'}" — the systems the business cannot run without.`,
+        options: [opt('Surge a remediation sprint', 'Clears the tier-1 backlog fast', 'Pulls engineers off projects'), opt('Re-baseline unrealistic dates', 'Restores a credible plan', "Doesn't reduce risk by itself"), opt('Add automation to patch pipeline', 'Prevents future backlog', 'Tooling + setup time')],
+        recommended: 'Run a two-week tier-1 surge, then automate patching to stop the backlog returning.' },
+      { condition: `${fi.openCritical.length} open critical finding(s); ${fi.repeat} repeat`, severity: fi.openCritical.length ? 'High' : 'Medium', likelihood: 'High', impact: 'Direct breach path', horizon: '0–14 days',
+        projection: `Repeat findings mean a control is not holding. Unpatched critical findings on exposed systems are the most likely entry point for the next incident.`,
+        options: [opt('Patch + verify criticals now', 'Closes the active entry points', 'Change-window coordination'), opt('Root-cause the repeat findings', 'Stops them recurring', 'Engineering time'), opt('Compensating controls (WAF/segmentation)', 'Buys time where patching is hard', 'Partial mitigation only')],
+        recommended: 'Patch the criticals this cycle and root-cause the repeats so they stop coming back.' },
+      { condition: `Last restore test was 41 days ago (target ≤ 30)`, severity: 'Medium', likelihood: 'Medium', impact: 'Failed recovery', horizon: 'Before next incident',
+        projection: `Backups that pass but were never restore-tested are false safety — a ransomware event could find them unusable when it matters most.`,
+        options: [opt('Schedule a restore test this week', 'Proves recoverability', 'A few hours of ops time'), opt('Automate quarterly restore drills', 'Sustained assurance', 'Setup effort'), opt('Accept until next cycle', 'No effort now', 'Recovery remains unproven')],
+        recommended: 'Run a restore test now and put quarterly drills on the calendar.' },
+    ];
+    case 'CRO': return [
+      { condition: `${r.critical} critical risk(s) breaching board-approved appetite`, severity: r.critical ? 'Critical' : 'Medium', likelihood: 'High', impact: 'Governance breach', horizon: 'Immediate',
+        projection: `Operating above approved appetite is a governance failure the board never signed off on — and the first thing an auditor or regulator will flag.`,
+        options: [opt('Escalate each breach for a decision', 'Restores accountability', 'Executive time'), opt('Fund remediation to within appetite', 'Removes the breach', 'Remediation spend'), opt('Formally accept with board sign-off', 'Documents the decision', 'Board must own the residual risk')],
+        recommended: 'Escalate now; remediate where cost-effective, formally accept the rest with sign-off.' },
+      { condition: `${r.top.filter((x) => !x.owner).length} open risk(s) without an owner`, severity: r.top.some((x) => !x.owner) ? 'High' : 'Medium', likelihood: 'High', impact: 'Unmanaged risk', horizon: 'This week',
+        projection: `An un-owned risk is a risk no one is driving down — the most common audit finding and the gap where incidents incubate unnoticed.`,
+        options: [opt('Assign accountable owners now', 'Every risk gets driven', 'Requires exec agreement'), opt('Auto-route by domain', 'Fast coverage', 'May need rebalancing'), opt('Defer to next review', 'No effort now', 'Risk stays unmanaged')],
+        recommended: 'Assign an accountable executive owner to every un-owned risk this week.' },
+      { condition: `${rm.overdue} remediation task(s) out of tolerance`, severity: rm.overdue > 5 ? 'High' : 'Medium', likelihood: 'Medium', impact: 'KRI breach', horizon: '30 days',
+        projection: `Persistent overdue remediation keeps risks above appetite longer than the board approved and erodes the credibility of the KRI program.`,
+        options: [opt('Escalate to owners with deadlines', 'Drives closure', 'Management attention'), opt('Re-baseline with realistic dates', 'Credible plan', 'Acknowledges slippage'), opt('Add capacity', 'Faster throughput', 'Budget')],
+        recommended: 'Escalate overdue items to owners; re-baseline only what is genuinely unrealistic.' },
+    ];
+    case 'CLO': return [
+      { condition: `${l.triggered.length} regulatory obligation(s) triggered by active risk`, severity: l.triggered.length ? 'High' : 'Medium', likelihood: 'Medium', impact: usd(l.triggered.reduce((s, x) => s + (x.maxPenalty || 0), 0)), horizon: 'On incident',
+        projection: `If an incident occurs, each triggered obligation starts a notification clock. Missing a deadline is a separate, avoidable violation on top of the breach — and the penalty ceiling is ${usd(l.triggered.reduce((s, x) => s + (x.maxPenalty || 0), 0))}.`,
+        options: [opt('Pre-draft notifications per obligation', 'Keeps you inside statutory windows', 'Legal prep time'), opt('Run a notification tabletop', 'Tests the process end-to-end', 'Coordination effort'), opt('Rely on ad-hoc response', 'No prep now', 'High risk of a blown deadline')],
+        recommended: 'Pre-draft templates and tabletop the timelines before you ever need them.' },
+      { condition: `${(c.vendors && c.vendors.activeSignals) || 0} active vendor risk signal(s)`, severity: 'Medium', likelihood: 'Medium', impact: 'Contractual + notification liability', horizon: '0–60 days',
+        projection: `A vendor breach involving your data triggers your obligations too. Without current BAAs/breach clauses, you inherit the liability with none of the control.`,
+        options: [opt('Confirm BAAs/breach clauses for PHI vendors', 'Closes the contractual gap', 'Vendor outreach'), opt('Require evidence of vendor controls', 'Reduces inherited risk', 'TPRM effort'), opt('Exit highest-risk vendors', 'Removes the exposure', 'Migration cost')],
+        recommended: 'Confirm breach-notification clauses for every vendor with data access now.' },
+      { condition: `Penalty ceiling ${usd(l.triggered.reduce((s, x) => s + (x.maxPenalty || 0), 0))} not reconciled to reserves`, severity: 'Medium', likelihood: 'Low', impact: 'Unfunded penalty', horizon: 'Annual',
+        projection: `If the penalty ceiling exceeds legal reserves and insurance, a regulatory action becomes an unfunded earnings event.`,
+        options: [opt('Reconcile ceiling with CFO reserves', 'Sizes the exposure', 'Finance coordination'), opt('Confirm insurance covers penalties', 'Transfers part of it', 'Policy review'), opt('Accept and monitor', 'No action now', 'Remains unfunded')],
+        recommended: 'Reconcile the penalty ceiling with the CFO and confirm insurance treatment.' },
+    ];
+    case 'Board':
+    default: return [
+      { condition: `${usd(f.netExposure)} net cyber exposure retained after insurance`, severity: 'High', likelihood: 'Medium', impact: usd(f.netExposure), horizon: 'Ongoing',
+        projection: `This is the enterprise loss shareholders carry if current risks materialize before they are mitigated or transferred — the number the board owns.`,
+        options: [opt('Direct management to a target reduction', 'Drives measurable improvement', 'Requires investment'), opt('Increase risk transfer', 'Lowers retained loss', 'Premium cost'), opt('Accept within stated appetite', 'No new spend', 'Must be explicit in the minutes')],
+        recommended: 'Set a quarter-over-quarter reduction target and confirm it is within appetite.' },
+      { condition: `Security spend is below peer median while ${r.critical} critical risk(s) are open`, severity: r.critical ? 'High' : 'Medium', likelihood: 'Medium', impact: 'Under-investment', horizon: 'Budget cycle',
+        projection: `Spend that lags both quantified exposure and peers signals under-investment — the gap shows up as repeat findings and a flat maturity trend.`,
+        options: [opt('Match investment to quantified exposure', 'Right-sizes the program', 'Budget increase'), opt('Reallocate to highest-ROI controls', 'Better risk-per-dollar', 'Internal trade-offs'), opt('Hold and re-assess next cycle', 'No change now', 'Gap persists')],
+        recommended: 'Fund to quantified exposure, concentrated on the highest-ROI controls.' },
+      { condition: `Material-incident disclosure readiness must meet a 4-business-day rule`, severity: 'Medium', likelihood: 'Low', impact: 'Disclosure failure', horizon: 'On incident',
+        projection: `If a material incident occurred, the company must disclose within four business days (SEC 8-K Item 1.05). An unrehearsed process risks a late or inaccurate filing.`,
+        options: [opt('Run a disclosure tabletop', 'Proves the process works', 'Executive time'), opt('Pre-stage the materiality assessment', 'Speeds the decision', 'Legal/finance prep'), opt('Assume current process suffices', 'No prep', 'Untested under pressure')],
+        recommended: 'Tabletop the materiality + disclosure process before it is needed for real.' },
+    ];
+  }
+}
+
 // Deterministic 8-point sparkline that trends per tone (good rises, bad falls,
 // warn drifts down). Gives every KPI a sense of movement without fake numbers.
 function spark(tone) {
@@ -607,7 +692,15 @@ function decorate(tabs) {
 }
 
 function roleLayout(role, c) {
-  return decorate(baseLayout(role, c));
+  const tabs = decorate(baseLayout(role, c));
+  // The core mission: surface "what could go wrong" + decision options. Placed
+  // right after Executive Summary so it's front-and-center for every leader.
+  const decisions = {
+    key: 'decisions', label: 'Decisions & Projections', kind: 'section',
+    section: { type: 'decisions', insight: 'Each detected condition is projected forward — what could go wrong if it is left unaddressed — with concrete decision options and a recommendation.', items: decisionsFor(role, c) },
+  };
+  tabs.splice(Math.min(2, tabs.length), 0, decisions);
+  return tabs;
 }
 
 function baseLayout(role, c) {

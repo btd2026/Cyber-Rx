@@ -264,6 +264,10 @@ app.use('/api/intake',            [apiGetLimiter, apiPostLimiter], require('./ro
 // Industry registry — makes the platform industry-agnostic (setup + intake)
 app.use('/api/industries',        [apiGetLimiter], require('./routes/industries'));
 
+// Core module registry — the five analysis modules (intake, mapping, control
+// validation, document assurance) with their entry points and health.
+app.use('/api/modules',           [apiGetLimiter], require('./routes/modules'));
+
 // Generic schema-agnostic ingestion (process inventory / CMDB) — files + APIs
 app.use('/api/ingestion',         [apiGetLimiter, apiPostLimiter], require('./routes/ingestion'));
 
