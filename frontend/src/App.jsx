@@ -3798,7 +3798,7 @@ function DemoRequest(props) {
                 type="email"
                 value={email}
                 onChange={function(e){ setEmail(e.target.value); setError(""); }}
-                placeholder="john@healthplan.org"
+                placeholder="you@yourcompany.com"
                 disabled={submitting}
                 style={{width:"100%", background:C.bg, border:"1px solid "+C.border, borderRadius:8, padding:"10px 12px", fontSize:13, color:C.text, outline:"none"}}
                 required
@@ -18948,6 +18948,44 @@ function WelcomePage(props) {
 
 
 
+// Industry-appropriate organization-type and line-of-business choices, keyed by
+// the industry label the user selects. Lets the intake read industry-neutral
+// instead of payer-only. Falls back to the question's own defaults.
+var INDUSTRY_ORG_TYPES = {
+  'Health Insurance (Payer)':['BCBS Plan','Commercial Health Plan','Medicare Advantage Plan','Medicaid Managed Care','Multi-line Health Insurer','Regional Health Plan','Other Payer'],
+  'Hospital / Health System':['Academic Medical Center','Community Hospital','Integrated Health System','Specialty Clinic / Practice','Other Provider'],
+  'Banking':['National Bank','Regional Bank','Community Bank','Credit Union','Digital / Neobank','Other'],
+  'Property & Casualty Insurance':['National Carrier','Regional Carrier','Specialty / E&S','MGA / Broker','Other'],
+  'Retail / E-commerce':['E-commerce Retailer','Omnichannel Retailer','Brick-and-Mortar','Online Marketplace','Other'],
+  'Software / SaaS':['B2B SaaS','B2C SaaS','Platform / Infrastructure','Marketplace','Other'],
+  'Manufacturing':['Discrete Manufacturing','Process Manufacturing','Industrial / OT-heavy','Defense Supplier','Other'],
+  'Energy / Utilities':['Electric Utility','Gas Utility','Water Utility','Generation / Renewables','Other'],
+  'Government / Public Sector':['Federal Agency','State Agency','Local / Municipal','Public Authority / District','Other'],
+  'Higher Education':['Research University','Liberal Arts College','Community College','University System','Other'],
+  'Other / General':['Enterprise','Mid-market','Small Business','Non-profit','Other'],
+};
+var INDUSTRY_SUBSECTORS = {
+  'Health Insurance (Payer)':['Commercial / Group','Individual / Marketplace','Medicare Advantage','Medicaid Managed Care','Medicare Part D / Pharmacy','Dental / Vision / Ancillary','Multi-line'],
+  'Hospital / Health System':['Acute Care','Ambulatory / Outpatient','Specialty Care','Academic / Research','Integrated Delivery'],
+  'Banking':['Retail Banking','Commercial Banking','Wealth / Investment','Payments / Cards','Mortgage / Lending'],
+  'Property & Casualty Insurance':['Personal Lines','Commercial Lines','Specialty','Reinsurance','Multi-line'],
+  'Retail / E-commerce':['Apparel / Goods','Grocery / Food','Electronics','Marketplace','Omnichannel'],
+  'Software / SaaS':['Enterprise Software','Developer / Infrastructure','Vertical SaaS','Consumer App','Platform'],
+  'Manufacturing':['Automotive','Aerospace / Defense','Industrial Equipment','Consumer Goods','Chemicals / Process'],
+  'Energy / Utilities':['Electric','Gas','Water','Renewables','Multi-utility'],
+  'Government / Public Sector':['Health & Human Services','Public Safety','Revenue / Tax','Education','General Services'],
+  'Higher Education':['Undergraduate','Graduate / Professional','Research','Online / Continuing Ed','Multi-campus'],
+  'Other / General':['Core Operations','Services','Products','Mixed'],
+};
+function resolveChoices(q, industryLabel) {
+  if (!q || !industryLabel) return q;
+  var map = q.id === 'orgType' ? INDUSTRY_ORG_TYPES : q.id === 'subSector' ? INDUSTRY_SUBSECTORS : null;
+  if (!map) return q;
+  var choices = map[industryLabel];
+  if (!choices) return q;
+  return Object.assign({}, q, { choices: choices });
+}
+
 function SetupBot(props) {
   var onComplete = props.onComplete || function(){};
 
@@ -19235,26 +19273,26 @@ function SetupBot(props) {
               'Medicaid Managed Care','Multi-line Health Insurer',
               'Regional Health Plan','Other Payer']},
     {id:'revenue', type:'number', group:'Scale',
-     ask:"What is your approximate annual premium revenue?",
+     ask:"What is your approximate annual revenue?",
      placeholder:'e.g. 4200000000', hint:'Enter exact dollars (e.g. 4200000000 for $4.2B)'},
     {id:'memberCount',type:'number',  group:'Scale',
-     ask:'How many members are currently enrolled across all lines?',
-     placeholder:'e.g. 3000000', hint:'Enter the exact number of members'},
+     ask:'How many customers or members do you serve?',
+     placeholder:'e.g. 3000000', hint:'Approximate number of customers, members, or accounts'},
     {id:'phiRecs',    type:'number',  group:'Scale',
-     ask:'How many protected health information records does {orgName} hold?',
-     placeholder:'e.g. 3000000', hint:'Enter the exact number of PHI records'},
+     ask:'How many sensitive or regulated records (PII, PHI, PCI, financial, etc.) does {orgName} hold?',
+     placeholder:'e.g. 3000000', hint:'Approximate number of sensitive/regulated records'},
     {id:'claimsAmt',  type:'number',  group:'Scale',
-     ask:'What is the approximate annual dollar volume of claims {orgName} processes?',
+     ask:'What is your approximate annual transaction volume (claims, payments, or orders) in dollars?',
      placeholder:'e.g. 8000000000', hint:'Enter exact dollars'},
     {id:'surplus',    type:'number',  group:'Capital',
-     ask:"What is your approximate statutory surplus?",
-     placeholder:'e.g. 2500000000', hint:'Enter exact dollars'},
+     ask:"What is your approximate capital reserve or statutory surplus? (If applicable — e.g. insurers/banks; otherwise leave blank.)",
+     placeholder:'e.g. 2500000000', hint:'Enter exact dollars; leave blank if not applicable'},
     {id:'rbcRatio',   type:'number',  group:'Capital',
-     ask:'What is your current risk-based capital ratio as a percentage of company action level? The regulatory minimum is 200 percent.',
-     placeholder:'e.g. 420', hint:'Enter the percentage (e.g. 420 for 420%); leave blank if unknown'},
+     ask:'If you are a regulated insurer, what is your risk-based capital ratio (% of company action level; minimum 200%)? Leave blank if not applicable.',
+     placeholder:'e.g. 420', hint:'Enter the percentage (e.g. 420 for 420%); leave blank if not applicable'},
     {id:'ibnr',       type:'number',  group:'Capital',
-     ask:'What are your approximate incurred but not reported reserves?',
-     placeholder:'e.g. 1500000000', hint:'Enter exact dollars; leave blank if unknown'},
+     ask:'If applicable, what are your approximate loss reserves (e.g. incurred-but-not-reported)? Leave blank if not applicable.',
+     placeholder:'e.g. 1500000000', hint:'Enter exact dollars; leave blank if not applicable'},
     {id:'insCarrier', type:'insurer',  group:'Insurance',
      ask:'Who is your cyber liability insurance carrier? Select from the list or type to search.'},
     {id:'insLimit',   type:'number',  group:'Insurance',
@@ -19289,6 +19327,8 @@ function SetupBot(props) {
      ask:'What is your primary line of business? (Your organization type is already captured — this is the dominant book of business.)',
      choices:['Commercial / Group','Individual / Marketplace','Medicare Advantage','Medicaid Managed Care',
               'Medicare Part D / Pharmacy','Dental / Vision / Ancillary','Multi-line']},
+    // NOTE: orgType and subSector choices above are defaults; resolveChoices()
+    // swaps them for industry-appropriate options based on the selected industry.
     // Crown jewels, governance maturity, and IR capability are NOT self-reported
     // here — they are derived from your processes/apps and your assessment
     // evidence (the platform proposes them). Risk appetite is a leadership
@@ -19992,6 +20032,9 @@ function SetupBot(props) {
 
   // When a pending follow-up is active it replaces the normal input controls.
   var curQ   = pendingAsk ? { type: 'pending' } : (QS[qIdx] || {});
+  // Industry-agnostic: swap org-type and line-of-business choices for options
+  // appropriate to the selected industry (defaults remain the payer set).
+  curQ = resolveChoices(curQ, accRef.current && accRef.current.industry);
   var isDone = doneRef.current;
   var pct    = Math.round((qIdx / (QS.length-1)) * 100);
 
