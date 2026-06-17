@@ -3551,7 +3551,7 @@ function Landing(props) {
               letterSpacing:"-0.03em"}}>CyberRx</span>
             <span style={{color:C.muted,fontSize:10,background:C.dim,
               borderRadius:6,padding:"2px 8px",marginLeft:8}}>
-              Healthcare Payer Edition
+              Executive Cyber Risk &amp; AI Governance
             </span>
           </div>
         </div>
@@ -3575,24 +3575,25 @@ function Landing(props) {
             background:C.acc,boxShadow:"0 0 8px "+C.acc}}/>
           <span style={{color:C.acc,fontSize:10,fontWeight:700,
             letterSpacing:"0.1em"}}>
-            HEALTHCARE PAYER CYBER RISK INTELLIGENCE
+            EXECUTIVE CYBER RISK & AI GOVERNANCE
           </span>
         </div>
 
         <h1 style={{color:C.text,fontSize:58,fontWeight:900,
           lineHeight:1.05,margin:"0 0 28px",letterSpacing:"-0.035em"}}>
-          The cyber risk platform<br/>
+          Cyber risk decisions,<br/>
           <span style={{background:"linear-gradient(90deg,"+C.acc+",#A78BFA)",
             WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",
             backgroundClip:"text"}}>
-            built for health plans.
+            for every executive.
           </span>
         </h1>
 
         <p style={{color:C.muted,fontSize:17,lineHeight:1.75,
-          margin:"0 0 44px",maxWidth:500}}>
-          Exclusively for health plans, Medicare Advantage organizations,
-          and Medicaid managed care.
+          margin:"0 0 44px",maxWidth:540}}>
+          CyberRx maps cyber risk to the business, validates controls with live
+          evidence, and gives every C-suite leader role-specific decision
+          intelligence — adapted to your industry, powered by AI.
         </p>
 
         <div style={{display:"flex",gap:12,justifyContent:"center",
@@ -3613,11 +3614,69 @@ function Landing(props) {
 
       </div>
 
+      {/* ── THE PROBLEMS WE FIX ── */}
+      <div style={{borderTop:"1px solid "+C.border,padding:"56px 24px"}}>
+        <div style={{maxWidth:1040,margin:"0 auto"}}>
+          <div style={{textAlign:"center",marginBottom:8,color:C.acc,fontSize:11,fontWeight:800,letterSpacing:"0.12em"}}>THE PROBLEMS WE FIX</div>
+          <h2 style={{textAlign:"center",color:C.text,fontSize:30,fontWeight:900,margin:"0 0 10px",letterSpacing:"-0.02em"}}>Cyber risk is reported in tools — not in decisions.</h2>
+          <p style={{textAlign:"center",color:C.muted,fontSize:14,lineHeight:1.7,maxWidth:680,margin:"0 auto 36px"}}>
+            Security data lives in dashboards no executive can act on. CyberRx connects it to the business and turns it into decisions each leader actually owns.
+          </p>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:16}}>
+            {[
+              ["🧩","No business context","Findings aren't tied to the processes, applications, and revenue they threaten — so no one can prioritize what matters."],
+              ["👔","Executives can't get answers","Every leader needs a different lens. CISO, CIO, CFO, CRO, CLO, and the Board each get role-specific analysis and decision options — not one generic report."],
+              ["📉","Manual, point-in-time compliance","Control validation is a spreadsheet exercise. CyberRx pulls live evidence from your stack and reviews your documents continuously."],
+              ["🕒","Project delays hide their cost","No one can see how a slipping security project changes the posture. CyberRx projects ROI at each milestone and the exposure a delay leaves on the books."],
+              ["🤖","AI sprawl & shadow AI","Teams adopt AI faster than it can be governed. CyberRx inventories every AI system — including shadow AI — and the data it touches."],
+              ["⚖️","Unclear AI & regulatory exposure","From the EU AI Act to OWASP-LLM risks, leaders can't see where AI creates obligations. CyberRx classifies and assesses it."],
+            ].map(function(p,i){return (
+              <div key={i} style={{background:C.card,border:"1px solid "+C.border,borderRadius:14,padding:"18px 18px"}}>
+                <div style={{fontSize:22,marginBottom:8}}>{p[0]}</div>
+                <div style={{color:C.text,fontSize:15,fontWeight:800,marginBottom:6}}>{p[1]}</div>
+                <div style={{color:C.muted,fontSize:12.5,lineHeight:1.6}}>{p[2]}</div>
+              </div>
+            );})}
+          </div>
+        </div>
+      </div>
+
+      {/* ── HOW WE USE AI ── */}
+      <div style={{borderTop:"1px solid "+C.border,padding:"56px 24px",background:C.dim}}>
+        <div style={{maxWidth:1040,margin:"0 auto"}}>
+          <div style={{textAlign:"center",marginBottom:8,color:"#A78BFA",fontSize:11,fontWeight:800,letterSpacing:"0.12em"}}>HOW CYBERRX USES AI</div>
+          <h2 style={{textAlign:"center",color:C.text,fontSize:30,fontWeight:900,margin:"0 0 10px",letterSpacing:"-0.02em"}}>AI does the heavy lifting — you make the decisions.</h2>
+          <p style={{textAlign:"center",color:C.muted,fontSize:14,lineHeight:1.7,maxWidth:720,margin:"0 auto 36px"}}>
+            CyberRx uses large language models and AI agents end-to-end — to read your inputs, validate controls, and brief each executive. AI prepares the analysis; people make the call.
+          </p>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))",gap:16}}>
+            {[
+              ["LLM","Reads your documents","Upload a process inventory, application list, or policy and an LLM extracts your functions, processes, and sub-processes — no manual data entry."],
+              ["LLM","Maps the business","An LLM maps every application to the processes it supports, so risk inherits real business criticality across the function → process → app → control chain."],
+              ["LLM","Reviews evidence","An LLM reviews your uploaded documents (SOC 2, policies, BAAs) for assurance, completeness, and compliance with manual and semi-manual control requirements."],
+              ["Agents","Briefs every executive","A dedicated AI agent per role runs continuously and answers the questions each leader owns — with the evidence, the recommended action, and who owns it."],
+              ["AI","Projects & decisions","AI projects ROI at each milestone, the cost of project delays, and turns each detected condition into 'what could go wrong' plus concrete decision options."],
+              ["AI Gov","Governs AI itself","CyberRx inventories your AI (including agents and shadow AI) and assesses it against NIST AI RMF, OWASP-LLM, MITRE ATLAS, and the EU AI Act — governing AI and using AI to defend you."],
+            ].map(function(a,i){return (
+              <div key={i} style={{background:C.bg,border:"1px solid "+C.border,borderRadius:14,padding:"18px 18px"}}>
+                <span style={{display:"inline-block",fontSize:9.5,fontWeight:800,letterSpacing:"0.06em",color:"#fff",background:"linear-gradient(135deg,"+C.acc+",#A78BFA)",borderRadius:999,padding:"3px 10px",marginBottom:10,textTransform:"uppercase"}}>{a[0]}</span>
+                <div style={{color:C.text,fontSize:15,fontWeight:800,marginBottom:6}}>{a[1]}</div>
+                <div style={{color:C.muted,fontSize:12.5,lineHeight:1.6}}>{a[2]}</div>
+              </div>
+            );})}
+          </div>
+          <div style={{textAlign:"center",color:C.muted,fontSize:12,lineHeight:1.7,maxWidth:760,margin:"30px auto 0",
+            background:C.card,border:"1px solid "+C.border,borderRadius:12,padding:"14px 18px"}}>
+            <strong style={{color:C.text}}>Responsible by design:</strong> credentials are vaulted and connections are read-only; AI keeps a human in the loop on decisions; every AI feature has a deterministic fallback; and what you see never exposes the underlying API logic or scoring.
+          </div>
+        </div>
+      </div>
+
       {/* ── FOOTER ── */}
       <div style={{padding:"20px 48px",borderTop:"1px solid "+C.border,
         textAlign:"center"}}>
         <span style={{color:C.muted,fontSize:11}}>
-          HIPAA-aware &middot; Purpose-built for health plans
+          Industry-agnostic &middot; Privacy-first &middot; Human-in-the-loop AI
           &middot; Contact us to access the platform
         </span>
       </div>
