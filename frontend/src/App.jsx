@@ -4679,6 +4679,17 @@ function Setup(props) {
   var _s7m=useState("");       var cmdbUser=_s7m[0];   var setCmdbUser=_s7m[1];
   var _s7n=useState("");       var cmdbConn=_s7n[0];   var setCmdbConn=_s7n[1];
   var _s7o=useState("");       var connName=_s7o[0];   var setConnName=_s7o[1];
+  // Industry profile (typical processes/technology/regulations for the selected
+  // sector) — drives industry-aware guidance in the Process & Technology steps.
+  var _sIndProf=useState(null); var indProfile=_sIndProf[0]; var setIndProfile=_sIndProf[1];
+  useEffect(function(){
+    var ind=(typeof localStorage!=="undefined"&&localStorage.getItem("cyberrx_industry"))||"";
+    if(!ind){ return; }
+    fetch(CYBERRX_API+"/api/industries/"+encodeURIComponent(ind))
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(p){ if(p) setIndProfile(p); })
+      .catch(function(){});
+  }, []);
   var _s7p=useState("");       var connToken=_s7p[0];  var setConnToken=_s7p[1];
   var _s7q=useState("");       var connEndpoint=_s7q[0];var setConnEndpoint=_s7q[1];
   // Steps 2-5 hydrate from the saved org profile (orgs.setup_json) so
@@ -5746,6 +5757,13 @@ function Setup(props) {
             <WhyBanner title="Business Processes">
               Cyber risk only matters in terms of the business it threatens. We capture your processes and their recovery-time objectives so we can <strong>rank crown jewels, compute blast radius, and scope the assessment to what actually runs your organization</strong> — prioritized by RTO. Upload your process inventory and validate what we extract; we don't guess.
             </WhyBanner>
+            {indProfile&&indProfile.keyProcesses&&indProfile.keyProcesses.length>0&&(
+              <div style={{background:"#0f1b2d",color:"#e6ecf5",borderRadius:10,padding:"12px 16px",marginBottom:12,fontSize:12,lineHeight:1.6}}>
+                <span style={{fontWeight:700,color:"#9bc0ff"}}>{indProfile.name}</span> — processes we typically see in your sector (use as a checklist for your upload):{" "}
+                {indProfile.keyProcesses.join(" · ")}.
+                {indProfile.crownJewelData?(<div style={{marginTop:4,color:"#8fa3bd"}}>Crown-jewel data to protect: {indProfile.crownJewelData}.</div>):null}
+              </div>
+            )}
             {/* Upload-driven process discovery — nothing is preloaded. */}
             <Card style={{marginBottom:14}}>
               <SH label="Upload your process inventory / BIA — we'll extract it"/>
@@ -5864,6 +5882,12 @@ function Setup(props) {
             <WhyBanner title="Application Inventory">
               Linking each application to the process it supports lets us <strong>inherit business criticality, compute your true de-duplicated app count, and trace every finding to its business impact</strong>. Import once (CMDB, CSV/Excel, or API) and we map the rest — this is the backbone of the function → process → application → control chain.
             </WhyBanner>
+            {indProfile&&indProfile.techCategories&&indProfile.techCategories.length>0&&(
+              <div style={{background:"#0f1b2d",color:"#e6ecf5",borderRadius:10,padding:"12px 16px",marginBottom:12,fontSize:12,lineHeight:1.6}}>
+                <span style={{fontWeight:700,color:"#9bc0ff"}}>{indProfile.name}</span> — technology categories typical for your sector (make sure your inventory covers these):{" "}
+                {indProfile.techCategories.join(" · ")}.
+              </div>
+            )}
             <div style={{marginBottom:14}}>
               <div style={{color:C.text,fontSize:14,fontWeight:800,marginBottom:3}}>
                 Map Applications to Business Processes
@@ -19200,6 +19224,11 @@ function SetupBot(props) {
     {id:'orgName',    type:'text',    group:'Identity',
      ask:"Hi! I'm "+agentName+", your CyberRx setup guide. I'll have your organization configured in just a couple of minutes.\n\nFirst, what is the full legal name of your organization?",
      placeholder:'Start typing your organization name...'},
+    {id:'industry',   type:'choice',  group:'Identity',
+     ask:'What industry is {orgName} in? This tailors the intake questions, the regulations we track, and the executive views to your sector.',
+     choices:['Health Insurance (Payer)','Hospital / Health System','Banking','Property & Casualty Insurance',
+              'Retail / E-commerce','Software / SaaS','Manufacturing','Energy / Utilities',
+              'Government / Public Sector','Higher Education','Other / General']},
     {id:'orgType',    type:'choice',  group:'Identity',
      ask:'Thanks! What type of organization is {orgName}?',
      choices:['BCBS Plan','Commercial Health Plan','Medicare Advantage Plan',
@@ -19834,6 +19863,21 @@ function SetupBot(props) {
 
       // Save org profile
       var orgData = accRef.current;
+
+      // Map the chosen industry label to its profile ID so the backend adapts
+      // intake questions, regulations, and executive views to the sector.
+      try {
+        var IND_LABEL_TO_ID = {
+          'Health Insurance (Payer)':'healthcare_payer','Hospital / Health System':'healthcare_provider',
+          'Banking':'bank','Property & Casualty Insurance':'insurance_pc','Retail / E-commerce':'retail_ecommerce',
+          'Software / SaaS':'saas_tech','Manufacturing':'manufacturing','Energy / Utilities':'energy_utilities',
+          'Government / Public Sector':'government','Higher Education':'higher_ed','Other / General':'generic'};
+        var indId = IND_LABEL_TO_ID[orgData.industry];
+        if (!indId && typeof localStorage !== 'undefined') { indId = localStorage.getItem('cyberrx_industry'); }
+        indId = indId || 'generic';
+        orgData = Object.assign({}, orgData, { industry: indId });
+        if (typeof localStorage !== 'undefined') { localStorage.setItem('cyberrx_industry', indId); }
+      } catch (e) { /* localStorage unavailable */ }
 
       // Show saving indicator
       setSaving(true);
