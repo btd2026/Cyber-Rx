@@ -32,6 +32,8 @@ export default function AiGovernance(props) {
   const [err, setErr] = useState(null);
   const [busy, setBusy] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
+  const [view, setView] = useState('bom'); // bom | nist_ai_rmf | owasp_llm | mitre_atlas
+  const [assess, setAssess] = useState(null);
   const [form, setForm] = useState({ name: '', provider: '', dataSensitivity: 'PII', autonomy: 'Assistive', hosting: 'External SaaS', sanctioned: 'Shadow', owner: '', purpose: '' });
   const headers = useCallback(() => { const h = { 'Content-Type': 'application/json', 'X-Org-Id': orgId }; if (token) h.Authorization = `Bearer ${token}`; return h; }, [orgId, token]);
 
@@ -40,6 +42,13 @@ export default function AiGovernance(props) {
       .then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) setInv(d); }).catch(() => {});
   }, [api, orgId, headers]);
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    if (view === 'bom') return;
+    setAssess(null);
+    fetch(`${api}/api/ai-systems/assessment?framework=${encodeURIComponent(view)}&org_id=${encodeURIComponent(orgId)}`, { headers: headers() })
+      .then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) setAssess(d); }).catch(() => {});
+  }, [view, api, orgId, headers]);
 
   function upload(file) {
     if (!file) return; setBusy(true); setErr(null);
@@ -80,6 +89,13 @@ export default function AiGovernance(props) {
 
       {err && <div style={{ color: '#C0392B', fontSize: 12, marginBottom: 10 }}>{err}</div>}
 
+      {/* framework sub-tabs — each assessed independently */}
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
+        {[['bom', 'AI Inventory (AI-BOM)'], ['nist_ai_rmf', 'NIST AI RMF'], ['owasp_llm', 'OWASP LLM Top 10'], ['mitre_atlas', 'MITRE ATLAS']].map(([k, l]) => (
+          <button key={k} onClick={() => setView(k)} style={{ border: `1px solid ${view === k ? '#0f1b2d' : HAIR}`, background: view === k ? '#0f1b2d' : '#fff', color: view === k ? '#fff' : INK2, padding: '6px 13px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', borderRadius: 999 }}>{l}</button>
+        ))}
+      </div>
+
       {showAdd && (
         <div style={{ border: `1px solid ${HAIR}`, borderRadius: 10, padding: '14px 16px', marginBottom: 14, background: PANEL }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: INK, marginBottom: 8 }}>Add an AI system</div>
@@ -97,7 +113,9 @@ export default function AiGovernance(props) {
         </div>
       )}
 
-      {!inv ? <div style={{ fontSize: 12, color: INK3 }}>Loading AI inventory…</div> : (
+      {view !== 'bom' && <FrameworkView a={assess} />}
+
+      {view === 'bom' && (!inv ? <div style={{ fontSize: 12, color: INK3 }}>Loading AI inventory…</div> : (
         <>
           {/* posture + KPIs */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px,1fr))', gap: 10, marginBottom: 12 }}>
@@ -140,9 +158,43 @@ export default function AiGovernance(props) {
               </table>
             </div>
           </div>
-          <div style={{ fontSize: 10.5, color: INK3, marginTop: 10 }}>Phase 1 of AI governance — the AI bill of materials. Control assessment (NIST AI RMF · OWASP LLM · MITRE ATLAS) and per-role AI decision-intelligence follow.</div>
+          <div style={{ fontSize: 10.5, color: INK3, marginTop: 10 }}>The AI bill of materials. Use the tabs above to assess controls against NIST AI RMF, OWASP LLM Top 10, and MITRE ATLAS — each independently.</div>
         </>
-      )}
+      ))}
+    </div>
+  );
+}
+
+const STBAND = { Strong: '#1f8a4c', Partial: '#B07C2E', Weak: '#A85B2E', Gap: '#C0392B' };
+function FrameworkView({ a }) {
+  if (!a) return <div style={{ fontSize: 12, color: INK3 }}>Assessing controls…</div>;
+  const sc = a.band === 'Strong' ? '#1f8a4c' : a.band === 'Partial' ? '#B07C2E' : a.band === 'Weak' ? '#A85B2E' : '#C0392B';
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', marginBottom: 12 }}>
+        <div style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${sc}`, borderRadius: 9, padding: '11px 15px', background: '#fff' }}>
+          <div style={{ fontSize: 10.5, color: INK2 }}>{a.name} posture</div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: sc }}>{a.score}<span style={{ fontSize: 12, color: INK3, fontWeight: 600 }}> / 100 · {a.band}</span></div>
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {['Strong', 'Partial', 'Weak', 'Gap'].map((k) => (
+            <span key={k} style={{ fontSize: 10.5, color: INK2 }}><strong style={{ color: STBAND[k] }}>{a.counts[k.toLowerCase()]}</strong> {k}</span>
+          ))}
+        </div>
+      </div>
+      <div style={{ display: 'grid', gap: 8 }}>
+        {a.controls.map((c) => (
+          <div key={c.id} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${STBAND[c.status]}`, borderRadius: 8, padding: '10px 13px', background: '#fff' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>{c.fn ? `${c.fn} · ` : ''}{c.id} — {c.name}</span>
+              <Pill text={c.status} color={STBAND[c.status]} />
+            </div>
+            <div style={{ fontSize: 11, color: INK2, marginTop: 4 }}>{c.finding}</div>
+            {c.status !== 'Strong' && <div style={{ fontSize: 11, color: '#1f8a4c', fontWeight: 600, marginTop: 3 }}>→ {c.recommendation}</div>}
+          </div>
+        ))}
+      </div>
+      <div style={{ fontSize: 10.5, color: INK3, marginTop: 10 }}>Scored from your AI inventory signals. Controls marked “needs evidence” become connector-driven as tool integrations are added.</div>
     </div>
   );
 }
