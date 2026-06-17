@@ -22,6 +22,7 @@ import ExecutiveSummaryEditor from './ExecutiveSummaryEditor';
 import BusinessRiskPanel from './BusinessRiskPanel';
 import DashNav from './DashNav';
 import RoleSection from './RoleSections';
+import SecurityProjects from './SecurityProjects';
 
 // Per-role header framing so every C-suite seat uses this SAME rich view.
 const ROLE_FRAME = {
@@ -127,7 +128,7 @@ export default function CisoSecurityPostureDashboard(props) {
       ['domains', 'Domain Health'], ['controls', 'Control Risk'],
       ['thresholds', `Thresholds · ${d.thresholds.breaches} breached`], ['actions', 'Action Now'],
       ['processes', 'Process Protection'], ['paths', 'Attack Pathways'], ['readiness', 'Readiness & Investment'],
-      ['hidden', `Hidden Risk · ${d.hiddenRisks.length}`],
+      ['hidden', `Hidden Risk · ${d.hiddenRisks.length}`], ['projects', 'Projects & ROI'],
     ];
   const activeRoleTab = roleTabs ? (roleTabs.find((t) => t.key === tab) || roleTabs[0]) : null;
 
@@ -204,6 +205,7 @@ export default function CisoSecurityPostureDashboard(props) {
             {tab === 'paths' && <PathsTab attackGraph={props.attackGraph} />}
             {tab === 'readiness' && <Readiness readiness={d.readiness} investments={d.investments} peers={d.peerMaturity} emerging={d.emergingRisks} />}
             {tab === 'hidden' && <Hidden risks={d.hiddenRisks} />}
+            {tab === 'projects' && <SecurityProjects />}
           </>)}
         <div style={{ fontSize: 10.5, color: INK3, marginTop: 16, borderTop: `1px solid ${HAIR}`, paddingTop: 10 }}>
           Last refreshed {refreshed}. Mock/demo data — structured for live replacement via {d.evidenceSources.length} sources (Okta, Splunk, ServiceNow, CrowdStrike, Tenable, SailPoint, Prisma, Panorama, DLP, backup).
@@ -231,6 +233,7 @@ function RoleTabContent({ t, role, d, props }) {
     case 'paths': return <PathsTab attackGraph={props.attackGraph} />;
     case 'hidden': return <Hidden risks={d.hiddenRisks} />;
     case 'rolepanel': return <div>{props.rolePanel}</div>;
+    case 'projects': return <SecurityProjects />;
     case 'section': return <RoleSection section={t.section} role={role} />;
     default: return null;
   }
