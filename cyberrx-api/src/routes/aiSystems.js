@@ -13,6 +13,7 @@ const router = express.Router();
 const { optionalJWT, demoOrg } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const AI = require('../services/AiInventoryService');
+const AiControl = require('../services/AiControlAssessmentService');
 
 router.use(optionalJWT, demoOrg);
 const orgOf = (req) => req.orgId || req.headers['x-org-id'] || req.query.org_id || req.query.orgId || (req.body && req.body.org_id);
@@ -47,6 +48,13 @@ router.get('/', async (req, res) => {
 router.get('/inventory', async (req, res) => {
   const orgId = orgOf(req); if (!orgId) return res.status(400).json({ error: 'Organization required.' });
   try { res.json(await AI.inventory(orgId)); } catch (e) { res.status(500).json({ error: 'Unable to compute AI inventory.' }); }
+});
+
+// Phase 2 — assess AI controls per framework (NIST AI RMF / OWASP LLM / ATLAS),
+// each framework independent. ?framework= for one, omit for all.
+router.get('/assessment', async (req, res) => {
+  const orgId = orgOf(req); if (!orgId) return res.status(400).json({ error: 'Organization required.' });
+  try { res.json(await AiControl.assess(orgId, req.query.framework)); } catch (e) { res.status(500).json({ error: 'Unable to assess AI controls.' }); }
 });
 
 module.exports = router;
