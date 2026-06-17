@@ -11,12 +11,76 @@ import { useState, useCallback, useEffect } from 'react';
 
 const MUTE_KEY = 'cx_ciso_voice_muted';
 
+// Make narration sound human and pronounce cleanly on any TTS engine: expand
+// acronyms (spaced letters read as letters; the rest as full words), soften to
+// contractions, and tidy punctuation. Longest patterns first so "NIST CSF 2.0"
+// wins over "CSF". Word-boundaried + case-sensitive so we don't mangle words.
+const SAY = [
+  ['NIST CSF 2.0', 'the NIST Cybersecurity Framework, version two point zero'],
+  ['NIST CSF', 'the NIST Cybersecurity Framework'],
+  ['NIST AI RMF', 'the NIST A I Risk Management Framework'],
+  ['NIST SP 800-53', 'NIST Special Publication 800 dash 53'],
+  ['NIST 800-53', 'NIST 800 dash 53'],
+  ['OWASP LLM Top 10', 'the O-WASP Top Ten for large language models'],
+  ['OWASP LLM', 'the O-WASP Top Ten for large language models'],
+  ['OWASP', 'O-WASP'],
+  ['MITRE ATLAS', 'MITRE Atlas'],
+  ['ATT&CK', 'attack'],
+  ['EU AI Act', 'the E U A I Act'],
+  ['AI-BOM', 'A I bill of materials'],
+  ['AI/ML', 'A I and machine learning'],
+  ['LLMs', 'large language models'],
+  ['LLM', 'large language model'],
+  ['ROI', 'return on investment'],
+  ['PHI', 'protected health information'],
+  ['PII', 'personal information'],
+  ['PCI', 'payment card data'],
+  ['MFA', 'multi-factor authentication'],
+  ['EDR', 'endpoint detection and response'],
+  ['SIEM', 'seem'],
+  ['DLP', 'data loss prevention'],
+  ['PAM', 'privileged access management'],
+  ['CSPM', 'cloud security posture management'],
+  ['KEV', 'known exploited vulnerability'],
+  ['RTO', 'recovery time objective'],
+  ['MTTR', 'mean time to respond'],
+  ['MTTD', 'mean time to detect'],
+  ['KRIs', 'key risk indicators'],
+  ['KRI', 'key risk indicator'],
+  ['SOC 2', 'sock two'],
+  ['DPA', 'data processing agreement'],
+  ['BAA', 'business associate agreement'],
+  ['RBC', 'risk-based capital'],
+  ['SLA', 'service level agreement'],
+  ['CISO', 'Chief Information Security Officer'],
+  ['CIO', 'Chief Information Officer'],
+  ['CFO', 'Chief Financial Officer'],
+  ['CRO', 'Chief Risk Officer'],
+  ['CLO', 'Chief Legal Officer'],
+  ['CIS', 'C I S'],
+  ['AI', 'A I'],
+];
+export function humanize(text) {
+  let s = String(text || '');
+  for (const [k, v] of SAY) {
+    const esc = k.replace(/[.*+?^${}()|[\]\\&]/g, '\\$&');
+    s = s.replace(new RegExp('(^|[^A-Za-z0-9])' + esc + '(?![A-Za-z0-9])', 'g'), (m, p1) => p1 + v);
+  }
+  return s
+    .replace(/\bit is\b/g, "it's").replace(/\bwe are\b/g, "we're").replace(/\bthat is\b/g, "that's")
+    .replace(/\byou are\b/g, "you're").replace(/\bdo not\b/g, "don't").replace(/\bcannot\b/g, "can't")
+    .replace(/\s—\s/g, ', ').replace(/—/g, ', ').replace(/–/g, ' to ')
+    .replace(/\s{2,}/g, ' ').trim();
+}
+
 function pickMichael() {
   if (typeof window === 'undefined' || !window.speechSynthesis) return null;
   const vs = window.speechSynthesis.getVoices() || [];
-  const prefer = ['Microsoft Guy Online (Natural)', 'Google US English', 'Daniel', 'Microsoft David', 'Alex'];
+  // Prefer the most natural/neural English voices available in the browser.
+  const prefer = ['Google US English', 'Microsoft Aria Online (Natural)', 'Microsoft Guy Online (Natural)', 'Microsoft Jenny Online (Natural)', 'Samantha', 'Daniel'];
   for (const name of prefer) { const v = vs.find((x) => x.name === name); if (v) return v; }
-  return vs.find((v) => /en/i.test(v.lang) && /male|guy|daniel|david|alex|mark|ryan/i.test(v.name))
+  return vs.find((v) => /en/i.test(v.lang) && /natural|neural|online/i.test(v.name))
+    || vs.find((v) => /en-US/i.test(v.lang))
     || vs.find((v) => /en/i.test(v.lang)) || null;
 }
 
@@ -42,9 +106,10 @@ export function useAgentVoice() {
     if (typeof window === 'undefined' || !window.speechSynthesis || !text) return;
     if (muted) return;
     window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(String(text));
+    const u = new SpeechSynthesisUtterance(humanize(text));
     const v = pickMichael(); if (v) u.voice = v;
-    u.rate = 1.03; u.pitch = 1.0;
+    // Slightly slower + natural pitch reads as more human and clearer.
+    u.rate = 0.98; u.pitch = 1.0;
     u.onend = () => setSpeaking(false);
     u.onerror = () => setSpeaking(false);
     setSpeaking(true);

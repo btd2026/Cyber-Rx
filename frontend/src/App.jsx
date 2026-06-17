@@ -19479,6 +19479,13 @@ function SetupBot(props) {
       'BAA':'Business Associate Agreement','API':'A P I',
       'BCBSA':'Blue Cross Blue Shield Association',
       'FEP':'F E P','FEHB':'F E H B','OPM':'O P M','PBM':'P B M',
+      'OWASP LLM':'the O-WASP Top Ten for large language models','OWASP':'O-WASP',
+      'LLMs':'large language models','LLM':'large language model',
+      'AI-BOM':'A I bill of materials','EU AI Act':'the E U A I Act','AI':'A I',
+      'ROI':'return on investment','RTO':'recovery time objective',
+      'NIST AI RMF':'the NIST A I Risk Management Framework','ATLAS':'Atlas',
+      'DLP':'data loss prevention','KEV':'known exploited vulnerability',
+      'CSF':'Cybersecurity Framework','DPA':'data processing agreement',
       '—':' , ','–':' to ','--':' , '
     };
     var spoken = rawText;
