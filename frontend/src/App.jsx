@@ -5265,7 +5265,7 @@ function Setup(props) {
   var STEP_NARRATION = [
     null,
     null,
-    "Hi, it's Briana. Based on what you told me, I've pre-loaded the processes for your type of organization. Take a look and confirm which ones are in scope. You can add or remove anything that doesn't fit.",
+    "Hi, it's Briana. Upload your process inventory or business impact analysis and I'll extract your business functions, processes, and sub-processes, then rank them by recovery-time priority. You review what I extract and uncheck anything that's out of scope — nothing is assumed.",
     "Now let's map your application inventory. Every application you use is part of your attack surface. Import from your asset management system, upload a spreadsheet, or add applications manually.",
     null, // Step 4 narration is generated dynamically by getVendorPresetNarration(orgType, orgName)
     "This step is important. For each security tool you've selected, I need a connection so I can pull live data. Enter your API endpoint and key, and I'll test the connection. This is what makes your compliance reports evidence-based, not just a checklist.",
@@ -5407,7 +5407,7 @@ function Setup(props) {
               </div>
               <div style={{color:C.muted,fontSize:10,lineHeight:1.4}}>
                 {[null,null,
-                  "The following business processes are preselected for your risk assessment based on your organization type.",
+                  "Upload your process inventory or BIA — I'll extract your functions and processes, and you confirm what's in scope.",
                   "Import your application inventory — CMDB, CSV, REST API, or manual entry.",
                   "Select the vendors in your ecosystem. Each one is a potential breach vector.",
                   "Connect CyberRx to your security tools via API, token, or connector.",
