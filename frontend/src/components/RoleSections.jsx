@@ -72,8 +72,77 @@ export default function RoleSection({ section, role = 'CISO' }) {
     case 'table': return <TableView section={section} />;
     case 'cards': return <CardsView section={section} />;
     case 'actions': return <ActionsView role={role} section={section} />;
+    case 'decisions': return <DecisionsView role={role} section={section} />;
     default: return null;
   }
+}
+
+// Decision Intelligence: detected condition → what could go wrong → options.
+function DecisionsView({ role, section }) {
+  const items = section.items || [];
+  const sevC = (s) => SEV[s] || '#B07C2E';
+  const chip = (k, v) => (
+    <span style={{ fontSize: 10, color: INK2, background: PANEL, border: `1px solid ${HAIR}`, borderRadius: 999, padding: '2px 9px' }}>{k} <strong style={{ color: INK }}>{v}</strong></span>
+  );
+  return (
+    <div>
+      <Insight section={section} />
+      {!items.length && <div style={{ fontSize: 12, color: INK3 }}>No decisions pending.</div>}
+      <div style={{ display: 'grid', gap: 14 }}>
+        {items.map((d, i) => {
+          const c = sevC(d.severity);
+          return (
+            <div key={i} style={{ border: `1px solid ${HAIR}`, borderRadius: 12, overflow: 'hidden', background: '#fff', boxShadow: '0 1px 3px rgba(15,23,42,0.05)' }}>
+              {/* condition header */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '13px 16px', borderLeft: `5px solid ${c}` }}>
+                <span style={{ fontSize: 15, lineHeight: 1.2 }}>🔎</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 9.5, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Detected condition</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: INK, marginTop: 2, lineHeight: 1.35 }}>{d.condition}</div>
+                </div>
+                <Pill text={d.severity} color={c} />
+              </div>
+              {/* what could go wrong */}
+              <div style={{ background: 'linear-gradient(135deg,#fdecea,#fff6f5)', borderTop: `1px solid ${HAIR}`, padding: '12px 16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 5 }}>
+                  <span style={{ fontSize: 13 }}>⚠️</span>
+                  <span style={{ fontSize: 9.5, fontWeight: 800, color: '#C0392B', textTransform: 'uppercase', letterSpacing: '0.07em' }}>What could go wrong</span>
+                </div>
+                <div style={{ fontSize: 12.5, color: INK, lineHeight: 1.55 }}>{d.projection}</div>
+                <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginTop: 9 }}>
+                  {d.likelihood && chip('Likelihood', d.likelihood)}
+                  {d.impact && chip('Impact', d.impact)}
+                  {d.horizon && chip('Horizon', d.horizon)}
+                </div>
+              </div>
+              {/* decision options */}
+              <div style={{ padding: '12px 16px' }}>
+                <div style={{ fontSize: 9.5, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>Decision options</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 9 }}>
+                  {(d.options || []).map((o, oi) => (
+                    <div key={oi} style={{ border: `1px solid ${HAIR}`, borderRadius: 9, padding: '10px 12px', background: PANEL }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: INK, lineHeight: 1.3 }}>{o.label}</div>
+                      {o.effect && <div style={{ fontSize: 10.5, color: '#1f8a4c', marginTop: 5 }}>✓ {o.effect}</div>}
+                      {o.tradeoff && <div style={{ fontSize: 10.5, color: INK2, marginTop: 3 }}>⚖ {o.tradeoff}</div>}
+                    </div>
+                  ))}
+                </div>
+                {d.recommended && (
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 9, marginTop: 11, background: '#f0f7f2', border: '1px solid #cce8d6', borderRadius: 9, padding: '10px 13px' }}>
+                    <span style={{ fontSize: 9.5, fontWeight: 800, color: '#fff', background: '#1f8a4c', borderRadius: 999, padding: '3px 9px', whiteSpace: 'nowrap', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Recommended</span>
+                    <div style={{ fontSize: 12.5, color: INK, lineHeight: 1.5, fontWeight: 500 }}>{d.recommended}</div>
+                  </div>
+                )}
+                <div style={{ marginTop: 10 }}>
+                  <TicketControl sourceRef={`${role.toLowerCase()}-dec:${i}`} title={`[${role}] ${d.condition}`} recommendation={d.recommended || ''} severity={d.severity} owner={role} dueDate={''} />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 function Metrics({ section }) {
