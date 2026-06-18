@@ -18,6 +18,7 @@ import CroBoardReport from "./components/CroBoardReport";
 import CisoSecurityPostureDashboard from "./components/CisoSecurityPostureDashboard";
 import CisoAgentPanel from "./components/CisoAgentPanel";
 import OrganizationIntakeDocuments from "./components/OrganizationIntakeDocuments";
+import IntakeSummary from "./components/IntakeSummary";
 import IngestionUploader from "./components/IngestionUploader";
 import AppProcessMap from "./components/AppProcessMap";
 import IntakeAppMapping from "./components/IntakeAppMapping";
@@ -4676,6 +4677,7 @@ function Setup(props) {
     {label:"Process",              steps:[2]},
     {label:"Technology",           steps:[3,4,5]},
     {label:"Document Request",     steps:[6]},
+    {label:"Review & Compile",     steps:[7]},
   ];
   var phaseOf = function(s){ for (var i=0;i<PHASES.length;i++){ if (PHASES[i].steps.indexOf(s)>=0) return i; } return 0; };
 
@@ -7229,7 +7231,29 @@ function Setup(props) {
             <OrganizationIntakeDocuments orgId={(typeof localStorage!=="undefined"&&(localStorage.getItem("cyberrx_org_id")||localStorage.getItem("orgId")))||""} />
             <div style={{display:"flex",justifyContent:"space-between",marginTop:18}}>
               <Btn onClick={function(){setStep(5);}}>← Back</Btn>
-              <Btn onClick={function(){launch();}} primary>Complete Setup →</Btn>
+              <Btn onClick={function(){setStep(7);}} primary>Next: Review &amp; Compile →</Btn>
+            </div>
+          </div>
+        )}
+
+        {/* ══ STEP 6: Summary — review & Confirm & Compile ═════════════════ */}
+        {step===7&&(
+          <div>
+            <WhyBanner title="Review & Compile">
+              A final review of everything intake captured and validated — your profile, the process hierarchy, the process→application mapping with coverage stats, documents, security systems, and an overall visibility-confidence indicator. <strong>Confirm &amp; Compile</strong> emits the validated structures to the compiling phase that builds the business risk → process → application → security system → control chain.
+            </WhyBanner>
+            <Card>
+              <IntakeSummary
+                orgId={(typeof localStorage!=="undefined"&&(localStorage.getItem("cyberrx_org_id")||localStorage.getItem("orgId")))||""}
+                profile={{orgName:orgName,orgType:orgType,industry:(typeof localStorage!=="undefined"&&localStorage.getItem("cyberrx_industry"))||""}}
+                documentCount={Array.isArray(props.docResults)?props.docResults.length:undefined}
+                securitySystemCount={(infraSel?Object.keys(infraSel).filter(function(k){return infraSel[k];}).length:0)+(vendorSel?Object.keys(vendorSel).filter(function(k){return vendorSel[k];}).length:0)}
+                decidedBy={orgName||"intake user"}
+                onConfirm={function(){ launch(); }}
+              />
+            </Card>
+            <div style={{display:"flex",justifyContent:"flex-start",marginTop:18}}>
+              <Btn onClick={function(){setStep(6);}}>← Back</Btn>
             </div>
           </div>
         )}
