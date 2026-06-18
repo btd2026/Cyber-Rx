@@ -105,10 +105,17 @@ export default function SecurityProjects(props) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px,1fr))', gap: 10, marginBottom: 12 }}>
             <Kpi label="Active projects" value={`${pf.counts.total}`} sub={`${pf.counts.atRisk} at risk`} tone={pf.counts.atRisk ? 'warn' : 'good'} />
             <Kpi label="Total investment" value={usd(pf.totalBudget)} />
-            <Kpi label="Posture lift (planned)" value={`+${pf.totalLift}`} sub={`+${pf.realizedLift} realized so far`} tone="good" />
-            <Kpi label="Exposure reduced" value={usd(pf.totalExposureReduced)} tone="good" />
-            <Kpi label="Blended ROI" value={pf.blendedRoi != null ? `${pf.blendedRoi}×` : '—'} sub="exposure removed per $" />
+            <Kpi label="Posture lift" value={`+${pf.realizedLift} / +${pf.totalLift}`} sub="realized / predicted" tone="good" />
+            <Kpi label="Loss avoided" value={`${usd(pf.realizedExposureReduced)} / ${usd(pf.totalExposureReduced)}`} sub="realized / predicted" tone="good" />
+            <Kpi label="Loss avoided per $" value={pf.blendedRoi != null ? `${pf.blendedRoi}×` : '—'} sub={pf.realizedRoi != null ? `${pf.realizedRoi}× realized to date` : 'expected loss avoided per $'} />
           </div>
+
+          {/* engine calibration — how realized accrual tracks the projection */}
+          {pf.calibration != null && (
+            <div style={{ fontSize: 11, color: INK2, background: PANEL, border: `1px solid ${HAIR}`, borderRadius: 8, padding: '8px 12px', marginBottom: 12, lineHeight: 1.5 }}>
+              <strong style={{ color: INK }}>Calibration:</strong> realized loss-avoided is tracking at <strong style={{ color: pf.calibration >= 90 ? TONE.good : pf.calibration >= 70 ? TONE.warn : TONE.bad }}>{pf.calibration}%</strong> of the straight-line projection — delivery friction and partial adoption are modeled, so realized benefit lands below a perfect-execution forecast. "Loss avoided per $" is expected loss avoided per dollar spent, not classic financial ROI.
+            </div>
+          )}
 
           {/* delay scenario */}
           {pf.delayScenario && pf.delayScenario.projectsAffected > 0 && (
@@ -141,18 +148,40 @@ function Kpi({ label, value, sub, tone }) {
   );
 }
 
+function PvR({ label, realized, predicted, fmt }) {
+  const r = Number(realized) || 0, p = Number(predicted) || 0;
+  const pct = p > 0 ? Math.min(100, Math.round((r / p) * 100)) : 0;
+  return (
+    <div style={{ marginBottom: 7 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, color: INK2, marginBottom: 2 }}>
+        <span>{label}</span>
+        <span><strong style={{ color: TONE.good }}>{fmt(r)}</strong> realized <span style={{ color: INK3 }}>/ {fmt(p)} predicted</span></span>
+      </div>
+      <div style={{ height: 7, background: '#eef2f6', borderRadius: 4, overflow: 'hidden', position: 'relative' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'repeating-linear-gradient(90deg,#dbe3ec 0 6px,transparent 6px 12px)' }} />
+        <div style={{ width: `${pct}%`, height: '100%', background: TONE.good, position: 'relative', borderRadius: 4 }} />
+      </div>
+    </div>
+  );
+}
+
 function portfolioNarration(pf) {
   const ds = pf.delayScenario;
   return `Security project portfolio. ${pf.counts.total} active projects, ${pf.counts.atRisk} at risk. ` +
-    `Total investment ${usd(pf.totalBudget)}. Planned posture lift plus ${pf.totalLift}, with plus ${pf.realizedLift} realized so far. ` +
-    `Exposure reduced ${usd(pf.totalExposureReduced)}. Blended ROI ${pf.blendedRoi != null ? pf.blendedRoi + ' times' : 'not available'}. ` +
+    `Total investment ${usd(pf.totalBudget)}. Predicted posture lift plus ${pf.totalLift}, with plus ${pf.realizedLift} realized so far. ` +
+    `Predicted loss avoided ${usd(pf.totalExposureReduced)}, of which ${usd(pf.realizedExposureReduced)} is realized to date. ` +
+    `Expected loss avoided per dollar ${pf.blendedRoi != null ? pf.blendedRoi + ' times' : 'not available'}. ` +
+    (pf.calibration != null ? `Realized benefit is tracking at ${pf.calibration} percent of the straight-line projection. ` : '') +
     (ds && ds.projectsAffected ? `If the ${ds.projectsAffected} at-risk projects each slip ${ds.slipDays} days, plus ${ds.postureLiftDeferred} posture points are deferred and ${usd(ds.exposureRetained)} of exposure stays on the books.` : '');
 }
 function projectNarration(p) {
   const a = p.analysis || {};
   const d60 = (a.delay || []).find((d) => d.days === 60);
+  const risks = (a.reducesRisks || []).map((r) => r.title).slice(0, 3);
   return `${p.name}. ${p.status}, ${p.percentComplete || 0} percent complete.${p.budget ? ' Budget ' + usd(p.budget) + '.' : ''} ` +
-    `Posture lift plus ${a.postureLift}, exposure reduced ${usd(a.exposureReduced)}${a.roi != null ? `, ROI ${a.roi} times` : ''}. ` +
+    (risks.length ? `It reduces ${risks.join(', ')}. ` : '') +
+    `Predicted posture lift plus ${a.postureLift}, with plus ${a.realizedLift} realized so far. ` +
+    `Predicted loss avoided ${usd(a.exposureReduced)}, ${usd(a.realizedExposureReduced)} realized to date${a.roi != null ? `, expected loss avoided per dollar ${a.roi} times` : ''}. ` +
     `Remaining exposure ${usd(a.remainingExposure)}.` + (d60 ? ` If it slips 60 days, ${usd(d60.exposureRetained)} of exposure stays on the books.` : '');
 }
 function ProjectCard({ p, voice }) {
@@ -183,12 +212,28 @@ function ProjectCard({ p, voice }) {
       <div style={{ padding: '0 16px' }}>
         <div style={{ height: 6, background: '#eef2f6', borderRadius: 4, overflow: 'hidden' }}><div style={{ width: `${p.percentComplete || 0}%`, height: '100%', background: TONE[tone] }} /></div>
       </div>
-      {/* ROI + lift */}
-      <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', padding: '11px 16px', fontSize: 11.5, color: INK2 }}>
-        <span>Posture lift <strong style={{ color: '#1f8a4c' }}>+{a.postureLift}</strong></span>
-        <span>Exposure reduced <strong style={{ color: INK }}>{usd(a.exposureReduced)}</strong></span>
-        {a.roi != null && <span>ROI <strong style={{ color: INK }}>{a.roi}×</strong></span>}
-        <span>Remaining exposure <strong style={{ color: '#C0392B' }}>{usd(a.remainingExposure)}</strong></span>
+      {/* risks this project reduces */}
+      {a.reducesRisks && a.reducesRisks.length > 0 && (
+        <div style={{ padding: '4px 16px 0' }}>
+          <div style={{ fontSize: 9.5, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 5 }}>Reduces these risks</div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {a.reducesRisks.map((r, i) => (
+              <span key={i} style={{ fontSize: 10.5, color: '#1e3a5f', background: '#eaf1fb', border: '1px solid #cfe0f5', borderRadius: 6, padding: '3px 9px' }}>
+                {r.title}{r.severity ? <span style={{ color: INK3 }}> · {r.severity}</span> : null}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+      {/* predicted vs realized */}
+      <div style={{ padding: '11px 16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9.5, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>
+          <span>Predicted vs realized</span>
+          <span style={{ textTransform: 'none', fontWeight: 600 }}>loss avoided per $: <strong style={{ color: INK }}>{a.roi != null ? `${a.roi}×` : '—'}</strong> predicted{a.realizedRoi != null ? ` · ${a.realizedRoi}× to date` : ''}</span>
+        </div>
+        <PvR label="Posture lift" realized={a.realizedLift} predicted={a.postureLift} fmt={(v) => `+${v}`} />
+        <PvR label="Loss avoided" realized={a.realizedExposureReduced} predicted={a.exposureReduced} fmt={usd} />
+        <div style={{ fontSize: 10.5, color: INK2, marginTop: 6 }}>Remaining (not yet realized) exposure <strong style={{ color: '#C0392B' }}>{usd(a.remainingExposure)}</strong>.</div>
       </div>
       {/* milestone ROI timeline */}
       {ms.length > 0 && (
