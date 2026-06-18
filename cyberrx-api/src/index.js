@@ -280,6 +280,12 @@ app.use('/api/ai-systems',        [apiGetLimiter, apiPostLimiter], require('./ro
 // decision & evidence ledger (the cross-role "decisions, not dashboards" surface).
 app.use('/api/decisions',         [apiGetLimiter, apiPostLimiter], require('./routes/decisions'));
 
+// Per-tenant overridable defaults (appetite, scoring weights, frameworks, taxonomy).
+app.use('/api/tenant-config',     [apiGetLimiter, apiPutLimiter], require('./routes/tenantConfig'));
+
+// Per-asset-class visibility confidence (how complete our own data is).
+app.use('/api/visibility',        [apiGetLimiter], require('./routes/visibility'));
+
 // Coaching layer + blind-spot detection over the decision spine (questions to
 // ask, materiality checklist, tabletop, per-leader neglect patterns).
 app.use('/api/coaching',          [apiGetLimiter], require('./routes/coaching'));

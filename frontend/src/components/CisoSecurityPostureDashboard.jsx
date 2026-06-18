@@ -26,6 +26,7 @@ import SecurityProjects from './SecurityProjects';
 import AiGovernance from './AiGovernance';
 import DecisionQueue from './DecisionQueue';
 import Coaching from './Coaching';
+import DecisionRail, { VisibilityChip } from './DecisionRail';
 
 // Per-role header framing so every C-suite seat uses this SAME rich view.
 const ROLE_FRAME = {
@@ -192,7 +193,8 @@ export default function CisoSecurityPostureDashboard(props) {
               </div>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <VisibilityChip orgId={orgId} authToken={token} apiUrl={api} />
             <a href={`${api}/api/ciso/report.pdf?org_id=${encodeURIComponent(orgId)}`} style={{ background: '#1e3a5f', color: '#fff', border: '1px solid #2c4f7c', borderRadius: 6, padding: '9px 15px', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>⤓ PDF report</a>
             <a href={`${api}/api/ciso/report.pptx?org_id=${encodeURIComponent(orgId)}`} style={{ background: 'transparent', color: '#cbd5e1', border: '1px solid #2c4f7c', borderRadius: 6, padding: '9px 15px', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>⤓ PowerPoint</a>
           </div>
@@ -213,6 +215,9 @@ export default function CisoSecurityPostureDashboard(props) {
       </div>
 
       {/* ===== Tabs ===== */}
+      {/* Persistent decision queue — visible across every sub-tab. */}
+      <DecisionRail role={role} orgId={orgId} authToken={token} apiUrl={api} onOpenQueue={() => setTab('decisionq')} />
+
       <div style={{ display: 'flex', gap: 0, background: '#fff', borderBottom: `1px solid ${HAIR}`, overflowX: 'auto', position: 'sticky', top: 0, zIndex: 5 }}>
         {groupsPresent.map((g) => (
           <button key={g.key} onClick={() => { if (g.members[0]) setTab(g.members[0][0]); }}

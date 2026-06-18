@@ -29,6 +29,20 @@ router.get('/ledger', async (req, res) => {
   catch (e) { res.status(500).json({ error: 'Unable to load the decision ledger.' }); }
 });
 
+// Defensibility artifact — export the decision & evidence ledger as CSV.
+router.get('/ledger.csv', async (req, res) => {
+  const orgId = orgOf(req); if (!orgId) return res.status(400).json({ error: 'Organization required.' });
+  try {
+    const rows = await Engine.ledger(orgId);
+    const cols = ['created_at', 'role', 'action', 'option_id', 'card_id', 'decided_by', 'rationale'];
+    const esc = (v) => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
+    const csv = [cols.join(','), ...rows.map((r) => cols.map((c) => esc(r[c])).join(','))].join('\n');
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="decision-ledger-${orgId}.csv"`);
+    res.send(csv);
+  } catch (e) { res.status(500).json({ error: 'Unable to export the ledger.' }); }
+});
+
 router.post('/:id/decision', async (req, res) => {
   const orgId = orgOf(req); if (!orgId) return res.status(400).json({ error: 'Organization required.' });
   const b = req.body || {};
