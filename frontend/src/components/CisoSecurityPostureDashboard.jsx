@@ -126,7 +126,7 @@ export default function CisoSecurityPostureDashboard(props) {
   const TABS = roleTabs
     ? roleTabs.map((t) => [t.key, labelFor(t)])
     : [
-      ['qa', 'Current State'], ['decisionq', 'Decision Queue'], ['summary', 'Executive Summary'], ['linkage', 'Business Risk'],
+      ['qa', 'Current State'], ['decisionq', 'Decisions & Projections'], ['summary', 'Executive Summary'], ['linkage', 'Business Risk'],
       ['domains', 'Domain Health'], ['controls', 'Control Risk'],
       ['thresholds', `Thresholds · ${d.thresholds.breaches} breached`], ['actions', 'Action Now'],
       ['processes', 'Process Protection'], ['paths', 'Attack Pathways'], ['readiness', 'Readiness & Investment'],

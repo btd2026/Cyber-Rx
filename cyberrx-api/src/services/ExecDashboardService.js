@@ -544,11 +544,12 @@ function questions(role, c) {
 // scaffold components; 'section' renders a role-specific data section embedded
 // in the descriptor (metrics/ranked/table/cards/actions).
 
-// ---- Decision Intelligence -------------------------------------------------
-// The platform's core mission: turn a DETECTED CONDITION into "what could go
-// wrong", then give the executive concrete DECISION OPTIONS with trade-offs and
-// a recommendation. Each item: { condition, severity, likelihood, impact,
-// horizon, projection, options:[{label,effect,tradeoff}], recommended }.
+// ---- Decision Intelligence (RETIRED) ---------------------------------------
+// decisionsFor() and aiDecisions() are the legacy per-role decision compute.
+// They were superseded by the shared decision spine (DecisionEngineService):
+// one event/DecisionCard rendered per role via the "Decisions & Projections"
+// (Decision Queue) tab. Kept temporarily, unreferenced, for diff safety; remove
+// in a dedicated cleanup. Do NOT wire new callers to these.
 function decisionsFor(role, c) {
   const f = c.financial, r = c.risks, ctrl = c.controls, rm = c.remediation, l = c.legal, p = c.processes, fi = c.findings;
   const top = (r.top && r.top[0]) || { title: 'the top open risk', financialExposure: 0, severity: 'High' };
@@ -729,16 +730,11 @@ function decorate(tabs) {
 
 function roleLayout(role, c) {
   const tabs = decorate(baseLayout(role, c));
-  // The core mission: surface "what could go wrong" + decision options. Placed
-  // right after Executive Summary so it's front-and-center for every leader.
-  const decisions = {
-    key: 'decisions', label: 'Decisions & Projections', kind: 'section',
-    section: { type: 'decisions', insight: 'Each detected condition is projected forward — what could go wrong if it is left unaddressed — with concrete decision options and a recommendation.', items: decisionsFor(role, c) },
-  };
-  tabs.splice(Math.min(2, tabs.length), 0, decisions);
-  // Decision spine: the shared event/DecisionCard queue rendered for this role,
-  // placed right after Current State ("decisions, not dashboards").
-  tabs.splice(Math.min(1, tabs.length), 0, { key: 'decisionq', label: 'Decision Queue', kind: 'decisionq' });
+  // Decision spine: the shared event/DecisionCard queue rendered for THIS role
+  // is now the single decision surface (it replaced the old per-role
+  // decisionsFor/aiDecisions compute). Placed right after Current State so it's
+  // front-and-center ("decisions, not dashboards").
+  tabs.splice(Math.min(1, tabs.length), 0, { key: 'decisionq', label: 'Decisions & Projections', kind: 'decisionq' });
   // AI governance (AI-BOM) — every leader cares about AI usage + securing AI.
   tabs.push({ key: 'ai', label: 'AI Governance', kind: 'ai' });
   // Security project portfolio (ROI + delay impact) — relevant to the leaders
@@ -945,4 +941,4 @@ async function getDashboard(orgId, role) {
   };
 }
 
-module.exports = { getDashboard, FRAME, roleOverall, roleDomains, roleQuestions: questions, roleLayout, aiDecisions, loadCtx, demoContext, isEmpty };
+module.exports = { getDashboard, FRAME, roleOverall, roleDomains, roleQuestions: questions, roleLayout, loadCtx, demoContext, isEmpty };
