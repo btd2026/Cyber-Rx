@@ -29,6 +29,7 @@ import Coaching from './Coaching';
 import DecisionRail, { VisibilityChip } from './DecisionRail';
 import CurrentState from './CurrentState';
 import ControlEfficacy from './ControlEfficacy';
+import KeyRisks from './KeyRisks';
 
 // Per-role header framing so every C-suite seat uses this SAME rich view.
 const ROLE_FRAME = {
@@ -110,7 +111,7 @@ const CISO_GROUP_DEFS = [
 ];
 const CISO_MEMBER_OF = {
   qa: 'state', summary: 'state',
-  decisionq: 'keyrisks', linkage: 'keyrisks', thresholds: 'keyrisks', processes: 'keyrisks', paths: 'keyrisks', hidden: 'keyrisks', ai: 'keyrisks', actions: 'keyrisks',
+  bizrisks: 'keyrisks', decisionq: 'keyrisks', thresholds: 'keyrisks', processes: 'keyrisks', paths: 'keyrisks', hidden: 'keyrisks', ai: 'keyrisks', actions: 'keyrisks',
   controlefficacy: 'controlefficacy',
   readiness: 'projects', projects: 'projects',
   coaching: 'coaching',
@@ -176,9 +177,9 @@ export default function CisoSecurityPostureDashboard(props) {
     ? roleTabs.map((t) => [t.key, labelFor(t)])
     : [
       ['qa', 'Current State'], ['summary', 'Executive Summary'],
-      ['decisionq', 'Decisions & Projections'], ['linkage', 'Business Risk'],
-      ['thresholds', `Thresholds · ${d.thresholds.breaches} breached`], ['processes', 'Process Protection'],
-      ['paths', 'Attack Pathways'], ['hidden', `Hidden Risk · ${d.hiddenRisks.length}`], ['ai', 'AI Governance'], ['actions', 'Action Now'],
+      ['bizrisks', 'Business Risks'], ['decisionq', 'Projections & Decisions'],
+      ['paths', 'Attack Pathways'], ['thresholds', `Thresholds · ${d.thresholds.breaches} breached`], ['processes', 'Process Protection'],
+      ['hidden', `Hidden Risk · ${d.hiddenRisks.length}`], ['ai', 'AI Governance'], ['actions', 'Action Now'],
       ['controlefficacy', 'Control Efficacy'],
       ['readiness', 'Readiness & Investment'], ['projects', 'Projects & ROI'],
       ['coaching', 'Coaching & Blind Spots'],
@@ -278,6 +279,7 @@ export default function CisoSecurityPostureDashboard(props) {
             {tab === 'domains' && <Domains matrix={d.domainMatrix} controlRisk={d.controlRisk} thresholds={d.thresholds} />}
             {tab === 'controls' && <Controls rows={d.controlRisk} />}
             {tab === 'controlefficacy' && <ControlEfficacy d={d} orgId={orgId} authToken={token} apiUrl={api} />}
+            {tab === 'bizrisks' && <KeyRisks orgId={orgId} authToken={token} apiUrl={api} />}
             {tab === 'thresholds' && <Thresholds board={d.thresholds} />}
             {tab === 'actions' && <Actions queue={d.actionQueue} attention={d.attentionItems} />}
             {tab === 'processes' && <Processes procs={d.businessProcesses} />}

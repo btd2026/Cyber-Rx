@@ -129,6 +129,18 @@ function options(cardId, ev) {
 // chain into a severe outcome. We tag each event, match tag pairs against known
 // attack-chain synergies, and model the JOINT likelihood/impact/blast-radius —
 // then frame the decision as "break one link to collapse the whole chain".
+// Scenario type for a risk (board taxonomy): ransomware / data exfil / business
+// disruption / fraud. Configurable taxonomy lives in tenant_config; this is the
+// default classifier.
+function classifyScenario(title) {
+  const t = String(title || '').toLowerCase();
+  if (/ransom|encrypt|detonation|unrecoverable/.test(t)) return 'Ransomware';
+  if (/exfil|leak|data|phi|pii|disclosure|breach|shadow ai/.test(t)) return 'Data exfiltration';
+  if (/fraud|payment|wire|\bbec\b|invoice|funds/.test(t)) return 'Fraud';
+  if (/outage|availabil|disruption|downtime|continuity|stalled|recover/.test(t)) return 'Business disruption';
+  return 'Business disruption';
+}
+
 function tagEvent(ev) {
   const t = `${ev.title} ${ev.category || ''}`.toLowerCase();
   const tags = [];
@@ -185,7 +197,7 @@ function compoundFrom(orgId, A, B, rule, crown, dataAtRisk) {
       { step: 'Chain', label: rule.name },
       { step: 'Objective', label: crown },
     ],
-    relevantRoles: rule.roles,
+    relevantRoles: rule.roles, scenarioType: classifyScenario(rule.name),
   };
   // Decision = which link to break. Breaking either collapses the compound.
   const breakCost = Math.round((cheaper.exposure || 0) * 0.06) || 250000;
@@ -232,7 +244,7 @@ async function generate(orgId) {
       id: `evt_${orgId}_${r.id || hash(r.title)}`,
       title: r.title, severity: r.severity || 'High', exposure: r.financialExposure || 0,
       owner: r.owner || r.remediationOwner || null, affectedSystem: (c.processes.atRisk[0] || {}).name || null,
-      crownJewel: crown, dataAtRisk,
+      crownJewel: crown, dataAtRisk, scenarioType: classifyScenario(r.title),
     };
     // Live exploit signal (EPSS/KEV) when the risk/finding text carries a CVE.
     let signal = null;
@@ -257,7 +269,7 @@ async function generate(orgId) {
     if (agent) aiEvents.push({ key: `ai_agent_${agent.name}`, title: `Autonomous AI agent without oversight: "${agent.name}"`, severity: 'Critical', exposure: Math.round(gross * 0.15) || 4500000, system: agent.name });
     aiEvents.forEach((a) => {
       const id = `dec_${orgId}_${hash(a.key)}`;
-      const ev = { id: `evt_${orgId}_${hash(a.key)}`, title: a.title, severity: a.severity, exposure: a.exposure, owner: 'CISO', affectedSystem: a.system, crownJewel: crown, dataAtRisk, category: 'AI' };
+      const ev = { id: `evt_${orgId}_${hash(a.key)}`, title: a.title, severity: a.severity, exposure: a.exposure, owner: 'CISO', affectedSystem: a.system, crownJewel: crown, dataAtRisk, category: 'AI', scenarioType: classifyScenario(a.title) };
       ev.timing = timing(ev, null);
       ev.loss = lossDistribution(id, ev.exposure, ev.timing.annualPct);
       ev.attackPath = attackPath(ev, crown);
@@ -274,7 +286,7 @@ async function generate(orgId) {
       .slice(0, 4).forEach((p) => {
         const a = p.analysis || {}; const d60 = (a.delay || []).find((x) => x.days === 60);
         const id = `dec_${orgId}_proj_${hash(p.name)}`;
-        const ev = { id: `evt_${id}`, title: `Stalled project: ${p.name}`, severity: 'High', exposure: a.remainingExposure || (d60 ? d60.exposureRetained : 0) || 0, owner: p.owner || 'CISO', affectedSystem: p.name, crownJewel: crown, dataAtRisk, category: 'project' };
+        const ev = { id: `evt_${id}`, title: `Stalled project: ${p.name}`, severity: 'High', exposure: a.remainingExposure || (d60 ? d60.exposureRetained : 0) || 0, owner: p.owner || 'CISO', affectedSystem: p.name, crownJewel: crown, dataAtRisk, category: 'project', scenarioType: 'Business disruption' };
         ev.timing = timing(ev, null);
         ev.loss = lossDistribution(id, ev.exposure, ev.timing.annualPct);
         ev.attackPath = attackPath(ev, crown);
