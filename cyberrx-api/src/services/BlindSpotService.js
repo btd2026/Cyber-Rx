@@ -48,6 +48,22 @@ async function detect(orgId) {
     add('High', 'AI risk going un-owned', `${aiUndecided.length} AI-risk event(s) detected with no decision (e.g. "${aiUndecided[0].event.title}").`,
       'Assign an owner and a decision to each AI risk; shadow AI and unsupervised agents are the fastest-growing un-owned exposure.', ['CISO', 'CIO', 'CLO']);
   }
+
+  // CIO-specific patterns from the shared ledger: repeated velocity-over-control,
+  // and recovery assumptions that have never been decided/tested.
+  const shipChoices = ledgerRows.filter((r) => /_friction_/.test(r.card_id || '') && r.action === 'select' && r.option_id === 'ship');
+  if (shipChoices.length >= 2) {
+    add('High', 'Velocity over control on delivery', `${shipChoices.length} initiative(s) were shipped on time with the security gate deferred rather than built in.`,
+      'A repeated ship-on-time pattern compounds un-owned risk on the systems you depend on most. Set a secure-by-design default for tier-0 and require sign-off to defer it.', ['CIO', 'CISO', 'Board']);
+  }
+  const disruption = cards.filter((c) => c.event.scenarioType === 'Business disruption' || c.event.scenarioType === 'Ransomware');
+  const disruptionUndecided = disruption.filter((c) => !decidedByCard[c.id]);
+  if (disruptionUndecided.length) {
+    add(disruptionUndecided.some((c) => c.event.severity === 'Critical') ? 'High' : 'Medium', 'Untested recovery assumptions',
+      `${disruptionUndecided.length} business-disruption / ransomware event(s) have no recorded recovery decision — the recovery plan is assumed, not validated.`,
+      'Run a restore test against declared RTO/RPO for the tier-0 services these events threaten, and record the result; an untested backup is the classic unrecoverable-ransomware blind spot.', ['CIO', 'CISO', 'CRO']);
+  }
+
   if (!findings.length) {
     add('Low', 'No blind spots detected', 'Every critical event has a recorded decision and all roles are engaging.',
       'Maintain the cadence; re-run after the next event generation.', ROLES);

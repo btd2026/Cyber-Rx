@@ -179,4 +179,37 @@ router.get('/overview', optionalJWT, async (req, res) => {
   }
 });
 
+// ---- CIO lens sub-tabs (shared decision spine) -----------------------------
+// Operational Posture (Current State): availability, recovery vs RTO/RPO,
+// tech-debt + shadow-IT, what-changed, exec brief, visibility.
+router.get('/operational', optionalJWT, async (req, res) => {
+  const orgId = resolveOrg(req, res); if (!orgId) return;
+  try { res.json(await require('../services/CioOperationalService').getPosture(orgId)); }
+  catch (err) { logger.error('CIO operational error', { error: err.message }); res.status(500).json({ error: 'Failed to load operational posture', message: err.message }); }
+});
+
+// Resilience Risks & SPOFs: shared events that threaten operations + single
+// points of failure + vendor/cloud/region concentration.
+router.get('/resilience', optionalJWT, async (req, res) => {
+  const orgId = resolveOrg(req, res); if (!orgId) return;
+  try { res.json(await require('../services/CioResilienceService').getResilience(orgId)); }
+  catch (err) { logger.error('CIO resilience error', { error: err.message }); res.status(500).json({ error: 'Failed to load resilience risks', message: err.message }); }
+});
+
+// Velocity-vs-Risk Friction Map: per-initiative ship-on-time vs secure-by-design
+// tradeoff, linked to shared events; selections write to the shared ledger.
+router.get('/friction', optionalJWT, async (req, res) => {
+  const orgId = resolveOrg(req, res); if (!orgId) return;
+  try { res.json(await require('../services/VelocityFrictionService').getFrictionMap(orgId)); }
+  catch (err) { logger.error('CIO friction error', { error: err.message }); res.status(500).json({ error: 'Failed to build friction map', message: err.message }); }
+});
+
+// Transformation Portfolio & ROI: initiatives scored for risk introduced/reduced
+// + resilience impact, predicted vs realized, sequence/secure/defer.
+router.get('/transformation', optionalJWT, async (req, res) => {
+  const orgId = resolveOrg(req, res); if (!orgId) return;
+  try { res.json(await require('../services/TransformationPortfolioService').getPortfolio(orgId)); }
+  catch (err) { logger.error('CIO transformation error', { error: err.message }); res.status(500).json({ error: 'Failed to build transformation portfolio', message: err.message }); }
+});
+
 module.exports = router;
