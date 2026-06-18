@@ -5483,78 +5483,8 @@ function Setup(props) {
         {/* ══ STEP 1: Org Profile ══════════════════════════════════════ */}
         {step===1&&(
           <div>
-            {showBot?(
-              <div style={{height:540}}><SetupBot orgName={orgName} setRootClaimsSystem={setRootClaimsSystem} setRootMailingVendor={setRootMailingVendor} setRootMemberPortal={setRootMemberPortal} onComplete={function(a){
-                if(a.orgName){setOrgName(a.orgName);}
-                if(a.orgType){setOrgType(a.orgType);}
-                if(a.cmsContract){setCmsContract(a.cmsContract);}
-                var rmap={"Under $500M":"<$500M","$500M to $2B":"$500M-$2B",
-                  "$2B to $10B":"$2B-$10B","$10B to $25B":"$10B-$25B",
-                  "$25B to $100B":"$25B-$100B","Over $100B":">$100B"};
-                if(a.revenue&&rmap[a.revenue]){setRevenue(rmap[a.revenue]);}
-                if(a.claimsAmt&&rmap[a.claimsAmt]){setClaimsAmt(rmap[a.claimsAmt]);}
-                var pmap={"Under 250K":"<250K","250K to 1M":"250K-1M",
-                  "1M to 5M":"1M-5M","5M to 15M":"5M-15M",
-                  "15M to 50M":"15M-50M","Over 50M":">50M"};
-                if(a.phiRecs&&pmap[a.phiRecs]){setPhiRecs(pmap[a.phiRecs]);}
-                var mmap={"Under 100 thousand":"<100K","100K to 500K":"100K-500K",
-                  "500K to 1 million":"500K-1M","1 to 2.5 million":"1M-2.5M",
-                  "2.5 to 5 million":"2.5M-5M","Over 5 million":">5M"};
-                if(a.memberCount&&mmap[a.memberCount]){setMembers(mmap[a.memberCount]);}
-                var smap={"Under $250M":"$200M","$250M to $750M":"$500M",
-                  "$750M to $2B":"$1.25B","$2B to $5B":"$3.5B",
-                  "$5B to $10B":"$7.5B","Over $10B":"$12B"};
-                if(a.surplus&&smap[a.surplus]){setSurplus(smap[a.surplus]);}
-                var rbcmap={"Below 200 percent (regulatory action)":"175",
-                  "200 to 300 percent":"250","300 to 400 percent":"350",
-                  "400 to 500 percent":"450","500 to 700 percent":"600",
-                  "Over 700 percent":"750","Unknown":"420"};
-                if(a.rbcRatio&&rbcmap[a.rbcRatio]){setRbcRatioIn(rbcmap[a.rbcRatio]);}
-                var imap={"Under $50M":"$40M","$50M to $250M":"$150M",
-                  "$250M to $1B":"$625M","$1B to $3B":"$2B",
-                  "$3B to $10B":"$6.5B","Over $10B":"$12B","Unknown":""};
-                if(a.ibnr&&imap[a.ibnr]){setIBNR(imap[a.ibnr]);}
-                if(a.insCarrier){setInsCarrierInput(a.insCarrier);}
-                var ilmap={"No cyber insurance":"0","Under $10M":"$10M",
-                  "$10M to $30M":"$10M-$30M","$30M to $75M":"$30M-$75M",
-                  "$75M to $200M":"$75M-$200M","Over $200M":">$200M"};
-                var ilNumMap={"No cyber insurance":0,"Under $10M":5e6,
-                  "$10M to $30M":20e6,"$30M to $75M":52.5e6,
-                  "$75M to $200M":137.5e6,"Over $200M":250e6};
-                if(a.insLimit&&ilmap[a.insLimit]){setCyberIns(ilmap[a.insLimit]);}
-                if(a.insLimit&&ilNumMap[a.insLimit]!=null&&props.setRootCyberInsLimit){
-                  props.setRootCyberInsLimit(ilNumMap[a.insLimit]);
-                }
-                var idmap={"No insurance":"0","Under $250K":"$250K","$250K to $1M":"$625K",
-                  "$1M to $3M":"$2M","$3M to $10M":"$6.5M","Over $10M":"$15M"};
-                if(a.insDeduct&&idmap[a.insDeduct]){setInsDeduct(idmap[a.insDeduct]);}
-                var bmap={"Under $25M":"$15M","$25M to $100M":"$60M",
-                  "$100M to $400M":"$250M","$400M to $1.5B":"$1B",
-                  "$1.5B to $5B":"$3.25B","Over $5B":"$7B"};
-                if(a.itBudget&&bmap[a.itBudget]){setItBudget(bmap[a.itBudget]);}
-                var emap={"Under 500":"250","500 to 2,500":"1500",
-                  "2,500 to 8,000":"5000","8,000 to 25,000":"16000",
-                  "25,000 to 100,000":"60000","Over 100,000":"125000"};
-                if(a.employees&&emap[a.employees]){setEmployees(emap[a.employees]);}
-                var epmap={"Under 1,000":"800","1,000 to 5,000":"3000",
-                  "5,000 to 20,000":"12000","20,000 to 75,000":"45000",
-                  "75,000 to 250,000":"160000","Over 250,000":"350000"};
-                if(a.endpoints&&epmap[a.endpoints]){setEndptCount(epmap[a.endpoints]);}
-                // Load org template based on type
-                if(a.orgType){
-                  setOrgConfig({
-                    type:a.orgType||"Other Payer",
-                  });
-                  // Processes are NOT preloaded — the user uploads their process /
-                  // BIA document on the Process step and the LLM extracts them.
-                }
-                // System names from setup
-                if(a.claimsPlatform){setRootClaimsSystem(a.claimsPlatform);}
-                if(a.mailingVendor){setRootMailingVendor(a.mailingVendor);}
-                if(a.memberPortal){setRootMemberPortal(a.memberPortal);}
-                setShowBot(false); setStep(2);
-              }}/></div>
-            ):(
+            {/* Single reviewable profile form (the prior guided Q&A sequence was
+                removed — one form the user fills and submits). */}
             <div><WhyBanner title="Organization Profile">
               We use your sector, size, revenue, geographies and regulatory obligations to <strong>size your financial risk exposure</strong>, select which frameworks and rules apply to you, and tailor the assessment. Public data is pre-filled where available so you only correct what's wrong — nothing here is used to rank you, only to scope the work.
             </WhyBanner><Card style={{marginBottom:14}}>
@@ -5802,7 +5732,6 @@ function Setup(props) {
               </button>
             </div>
             </div>
-            )}
 
           </div>
         )}
