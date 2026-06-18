@@ -433,10 +433,17 @@ function voiceNarration(role, card, rec) {
 async function list(orgId, role) {
   const g = await generate(orgId);
   const decided = await decidedMap(orgId);
+  // Central risk appetite (authored in the CRO lens, stored in tenant config) is
+  // read HERE so every role's lens shares one appetite definition.
+  let appetite = { riskThreshold: 'High' };
+  try { const cfg = await require('./TenantConfigService').get(orgId); if (cfg && cfg.config && cfg.config.appetite) appetite = cfg.config.appetite; } catch (_) {}
+  const sevRank = { Critical: 0, High: 1, Medium: 2, Low: 3 };
+  const threshold = sevRank[appetite.riskThreshold] != null ? sevRank[appetite.riskThreshold] : 1;
   const rel = (card) => (card.type === 'compound' ? (card.event.relevantRoles || []).includes(role) : true);
   let cards = g.cards.map((card) => ({
     id: card.id, type: card.type, event: card.event, options: card.options, recommended: card.recommended,
     decision: decided[card.id] || null, relevant: role ? rel(card) : true,
+    aboveAppetite: (sevRank[card.event.severity] != null ? sevRank[card.event.severity] : 1) <= threshold,
     lens: role ? lensFor(role, card) : null,
   }));
   if (role) {
@@ -445,7 +452,7 @@ async function list(orgId, role) {
     const rank = (c) => (c.relevant && c.type === 'compound' ? 0 : c.relevant ? 1 : c.type === 'compound' ? 2 : 3);
     cards = cards.sort((a, b) => rank(a) - rank(b));
   }
-  return { organizationId: orgId, generatedAt: g.generatedAt, role: role || null, cards };
+  return { organizationId: orgId, generatedAt: g.generatedAt, role: role || null, appetite, cards };
 }
 
 async function decidedMap(orgId) {
