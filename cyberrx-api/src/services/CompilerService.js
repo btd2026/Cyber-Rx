@@ -174,4 +174,37 @@ async function latestRun(orgId) {
   return { runId: r[0].id, status: r[0].status, decidedBy: r[0].decided_by, createdAt: r[0].created_at, summary: typeof r[0].summary === 'string' ? JSON.parse(r[0].summary) : r[0].summary };
 }
 
-module.exports = { assembleChain, run, latestRun, FRAMEWORKS, FRAMEWORK_LABEL };
+// ---- per-framework posture + gaps + remediation (live, from the assessment) --
+async function posture(orgId) {
+  const cfa = await rows(
+    `SELECT a.framework, a.status, a.score, a.requirement_ref, c.id AS control_id, c.title, c.implementation_status
+       FROM control_framework_assessment a
+       LEFT JOIN controls c ON c.id=a.control_id AND c.organization_id=a.organization_id
+      WHERE a.organization_id=$1`, [orgId]);
+  const perFramework = FRAMEWORKS.map((fw) => {
+    const rowsFw = cfa.filter((r) => r.framework === fw);
+    const t = { met: 0, partial: 0, gap: 0, not_assessed: 0, not_applicable: 0 };
+    rowsFw.forEach((r) => { t[r.status] = (t[r.status] || 0) + 1; });
+    const assessed = t.met + t.partial + t.gap;
+    const gaps = rowsFw.filter((r) => r.status === 'gap' || r.status === 'partial')
+      .map((r) => ({ controlId: r.control_id, requirementRef: r.requirement_ref, title: r.title || r.requirement_ref || r.control_id, status: r.status }))
+      .sort((a, b) => (a.status === 'gap' ? 0 : 1) - (b.status === 'gap' ? 0 : 1));
+    return { framework: fw, label: FRAMEWORK_LABEL[fw], ...t, assessed, posture: postureOf(t), gaps };
+  });
+  // Remediation: a control that is a gap/partial in multiple frameworks is the
+  // highest-leverage fix (one control closes several framework gaps).
+  const byControl = new Map();
+  cfa.forEach((r) => {
+    if (r.status !== 'gap' && r.status !== 'partial') return;
+    const key = r.control_id || r.requirement_ref; if (!key) return;
+    if (!byControl.has(key)) byControl.set(key, { controlId: r.control_id, title: r.title || r.requirement_ref || r.control_id, frameworks: [], worst: 'partial' });
+    const e = byControl.get(key); e.frameworks.push(r.framework); if (r.status === 'gap') e.worst = 'gap';
+  });
+  const remediation = Array.from(byControl.values())
+    .map((e) => ({ ...e, frameworkCount: e.frameworks.length, action: `${e.worst === 'gap' ? 'Implement' : 'Strengthen'} "${e.title}" — closes ${e.frameworks.length} framework gap(s) (${e.frameworks.join(', ')}).` }))
+    .sort((a, b) => (b.worst === 'gap' ? 1 : 0) - (a.worst === 'gap' ? 1 : 0) || b.frameworkCount - a.frameworkCount)
+    .slice(0, 20);
+  return { organizationId: orgId, generatedAt: new Date().toISOString(), crosswalk: false, perFramework, remediation, totals: { controls: new Set(cfa.map((r) => r.control_id)).size } };
+}
+
+module.exports = { assembleChain, run, latestRun, posture, FRAMEWORKS, FRAMEWORK_LABEL };
