@@ -27,7 +27,7 @@ const FRAMEWORK_LABEL = { nist_csf_2_0: 'NIST CSF 2.0', nist_800_53_r5: 'NIST SP
 async function rows(sql, params = []) { try { return await db.query(sql, params); } catch (e) { logger.debug('compiler query degraded', { error: e.message }); return []; } }
 const jarr = (v) => { try { return Array.isArray(v) ? v : JSON.parse(v || '[]'); } catch (_) { return []; } };
 
-// Map a control's implementation status to a first-pass per-framework verdict.
+// Map a control's implementation status to a fallback per-framework verdict.
 function statusFromImpl(impl) {
   switch (String(impl || '')) {
     case 'Implemented': return 'met';
@@ -35,6 +35,49 @@ function statusFromImpl(impl) {
     case 'Planned': case 'None': return 'gap';
     default: return 'not_assessed';
   }
+}
+
+// Each compiler framework id maps to the framework ids that real assessment
+// evidence (assessment_result / control_assessment / controls.framework) may use.
+const FW_ALIASES = {
+  nist_csf_2_0: ['nist_csf_2_0', 'nist_csf_2', 'NIST-CSF'],
+  nist_800_53_r5: ['nist_800_53_r5', 'nist_800_53', 'NIST-800-53'],
+  cis_v8: ['cis_v8', 'cis_v8_1', 'CIS-v8'],
+  iso_27001: ['iso_27001', 'ISO-27001'],
+  soc_2: ['soc_2', 'SOC2'],
+};
+function normStatus(s) {
+  const x = String(s || '').toLowerCase();
+  if (x === 'met') return 'met';
+  if (/partial/.test(x)) return 'partial';
+  if (/not met|gap|fail/.test(x)) return 'gap';
+  return null;
+}
+const scoreFor = (st, given) => (given != null ? Number(given) : st === 'met' ? 100 : st === 'partial' ? 50 : st === 'gap' ? 0 : null);
+
+// Build the independent per-framework evidence lookup for an org: for each
+// framework alias, the requirement-level verdicts from assessment_result first,
+// then the document review (control_assessment). NO framework reads another's.
+async function loadEvidence(orgId) {
+  const [ar, ca] = await Promise.all([
+    rows(`SELECT framework_id, requirement_id, status, score FROM assessment_result WHERE organization_id=$1`, [orgId]),
+    rows(`SELECT framework_id, requirement_id, status, reviewed_at FROM control_assessment WHERE org_id=$1 ORDER BY reviewed_at DESC NULLS LAST`, [orgId]),
+  ]);
+  // key: `${aliasFrameworkId}::${requirementId}` -> { status, score, source }
+  const map = new Map();
+  ar.forEach((r) => { const st = normStatus(r.status); if (st) map.set(`${r.framework_id}::${r.requirement_id}`, { status: st, score: scoreFor(st, r.score), source: 'assessment' }); });
+  ca.forEach((r) => { const k = `${r.framework_id}::${r.requirement_id}`; if (map.has(k)) return; const st = normStatus(r.status); if (st) map.set(k, { status: st, score: scoreFor(st, null), source: 'document' }); });
+  return map;
+}
+// Independent verdict for one control against one framework.
+function verdict(evidence, framework, control) {
+  const reqId = String(control.control_id || '');
+  for (const alias of (FW_ALIASES[framework] || [framework])) {
+    const hit = evidence.get(`${alias}::${reqId}`);
+    if (hit) return hit;
+  }
+  const st = statusFromImpl(control.implementation_status);
+  return { status: st, score: scoreFor(st, control.effectiveness_score != null ? control.effectiveness_score : null), source: 'implementation' };
 }
 
 // ---- chain assembly (read-only) --------------------------------------------
@@ -92,21 +135,22 @@ async function assembleChain(orgId) {
 
 // ---- compile run: populate control_framework_assessment + record run --------
 async function run(orgId, { decidedBy } = {}) {
-  const controls = await rows(`SELECT id, control_id, implementation_status FROM controls WHERE organization_id=$1`, [orgId]);
+  const controls = await rows(`SELECT id, control_id, implementation_status, effectiveness_score FROM controls WHERE organization_id=$1`, [orgId]);
+  const evidence = await loadEvidence(orgId);
   const tally = {}; FRAMEWORKS.forEach((fw) => { tally[fw] = { met: 0, partial: 0, gap: 0, not_assessed: 0 }; });
   let written = 0;
   for (const c of controls) {
-    const status = statusFromImpl(c.implementation_status);
     for (const fw of FRAMEWORKS) {
-      // Independent per-framework row; no framework reads another's verdict.
+      // Independent per-framework verdict from that framework's own evidence;
+      // no framework reads another's result (no crosswalk).
+      const v = verdict(evidence, fw, c);
       const id = `cfa_${orgId}_${c.id}_${fw}`;
-      const score = status === 'met' ? 100 : status === 'partial' ? 50 : status === 'gap' ? 0 : null;
-      const ok = await rows(
-        `INSERT INTO control_framework_assessment (id, organization_id, control_id, framework, status, score, assessed_at, created_at)
-         VALUES ($1,$2,$3,$4,$5,$6,NOW(),NOW())
-         ON CONFLICT (id) DO UPDATE SET status=EXCLUDED.status, score=EXCLUDED.score, assessed_at=NOW()
-         RETURNING id`, [id, orgId, c.id, fw, status, score]);
-      if (ok.length || true) { written++; tally[fw][status] = (tally[fw][status] || 0) + 1; }
+      await rows(
+        `INSERT INTO control_framework_assessment (id, organization_id, control_id, framework, requirement_ref, status, score, evidence_ref, assessed_at, created_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW(),NOW())
+         ON CONFLICT (id) DO UPDATE SET requirement_ref=EXCLUDED.requirement_ref, status=EXCLUDED.status, score=EXCLUDED.score, evidence_ref=EXCLUDED.evidence_ref, assessed_at=NOW()`,
+        [id, orgId, c.id, fw, c.control_id || null, v.status, v.score, v.source]);
+      written++; tally[fw][v.status] = (tally[fw][v.status] || 0) + 1;
     }
   }
   const chain = await assembleChain(orgId);
