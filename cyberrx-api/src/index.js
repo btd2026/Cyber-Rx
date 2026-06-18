@@ -251,6 +251,9 @@ app.use('/api/clo',               [apiGetLimiter], require('./routes/clo'));
 // Board oversight lens (oversight, decisions, accountability, investment)
 app.use('/api/board',             [apiGetLimiter], require('./routes/board'));
 
+// Compiler — traceable chain + per-framework control assessment (no crosswalk)
+app.use('/api/compiler',          [apiGetLimiter, apiPostLimiter], require('./routes/compiler'));
+
 // CISO attack-path graph (process → app → device → network → threat)
 app.use('/api/attack-path',       [apiGetLimiter], require('./routes/attackPath'));
 
