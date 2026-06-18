@@ -185,4 +185,36 @@ async function extract(text) {
   return { ...grouped, engine: res.engine, count: grouped.flat.length };
 }
 
-module.exports = { extract, group, rtoMinutes, tierFromRto, _heuristicExtract: heuristicExtract };
+// ---- tree extraction for the intake validation tree ------------------------
+// Returns a FLAT node list (function -> process -> subprocess) with parent refs,
+// per-node confidence + source — the strict JSON the validation tree renders.
+// Nothing is auto-accepted; the user validates before anything persists.
+const CONF = { llm: 0.8, heuristic: 0.55, none: 0.5 };
+
+async function extractTree(text) {
+  if (!String(text || '').trim()) return { nodes: [], engine: 'none', count: 0 };
+  // Reuse the grouped extraction, then flatten into provenance-carrying nodes.
+  let res;
+  if (process.env.ANTHROPIC_API_KEY) {
+    try { res = await llmExtract(text); } catch (e) { logger.debug('tree extract fell back', { error: e.message }); }
+  }
+  if (!res || !res.records.length) res = heuristicExtract(text);
+  const engine = res.engine || 'none';
+  const baseConf = CONF[engine] != null ? CONF[engine] : 0.5;
+  const { functions } = group(res.records);
+  const nodes = [];
+  functions.forEach((f) => {
+    const fid = `fn__${slug(f.function)}`;
+    nodes.push({ id: fid, name: f.function, level: 'function', parent: null, confidence: round2(baseConf + 0.1), source: engine, rationale: 'Business function grouping inferred from the document.' });
+    f.processes.forEach((p) => {
+      nodes.push({ id: p.id, name: p.name, level: 'process', parent: fid, rto: p.rto || '', tier: p.tier || null, criticality: p.criticality || '', confidence: round2(baseConf), source: engine, rationale: p.rto ? `Process with stated RTO ${p.rto}.` : 'Process identified in the document.' });
+      (p.subprocesses || []).forEach((s) => {
+        nodes.push({ id: s.id, name: s.name, level: 'subprocess', parent: p.id, rto: s.rto || '', tier: s.tier || null, criticality: s.criticality || '', confidence: round2(baseConf - 0.05), source: engine, rationale: 'Sub-process under the parent process.' });
+      });
+    });
+  });
+  return { nodes, engine, count: nodes.length };
+}
+const round2 = (n) => Math.max(0.1, Math.min(0.99, Math.round(n * 100) / 100));
+
+module.exports = { extract, extractTree, group, rtoMinutes, tierFromRto, _heuristicExtract: heuristicExtract };

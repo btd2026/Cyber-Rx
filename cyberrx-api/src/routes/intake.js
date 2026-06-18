@@ -174,8 +174,70 @@ router.post('/extract-processes', async (req, res) => {
   }
 });
 
-// ===== Intake redesign foundation (Slice 0) — scaffolding endpoints =========
+// ===== Intake redesign Step 2 — business-process tree (Slice 2) =============
 
+// Infer the FUNCTION -> PROCESS -> SUB-PROCESS tree from an uploaded document.
+// Returns strict-JSON nodes (name/level/parent/confidence/source). Nothing is
+// persisted — the user validates the tree first.
+router.post('/processes/infer', async (req, res) => {
+  const { file_name, contentBase64, text } = req.body || {};
+  if (!contentBase64 && !text) return res.status(400).json({ error: 'provide contentBase64 or text' });
+  try {
+    const input = contentBase64 ? Buffer.from(contentBase64, 'base64') : text;
+    const norm = normalize(input, file_name || 'process.txt');
+    const result = await ProcessExtraction.extractTree(norm.text);
+    res.json({ ...result, fileName: file_name || null, note: result.count ? undefined : 'No processes could be inferred. Try a process inventory or BIA with named processes and RTOs.' });
+  } catch (e) {
+    logger.warn('process tree infer failed', { error: e.message });
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Persist ONLY the user-validated nodes to business_processes (with level,
+// parent, source, confidence, status='validated') and log every validation
+// action to the intake evidence ledger. Idempotent per org.
+const PSLUG = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'process';
+router.post('/processes/validate', async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'org_id is required' });
+  const b = req.body || {};
+  const nodes = Array.isArray(b.nodes) ? b.nodes : [];          // validated nodes
+  const actions = Array.isArray(b.actions) ? b.actions : null;  // explicit ledger entries (accept/edit/delete/add)
+  const decidedBy = b.decidedBy || 'intake user';
+  const critFor = (t) => ({ 1: 'Critical', 2: 'High', 3: 'Medium', 4: 'Low' }[t] || 'Medium');
+  try {
+    // Replace this org's intake-sourced processes (idempotent re-validate;
+    // also clears legacy intake rows persisted before provenance existed).
+    await db.query("DELETE FROM business_processes WHERE organization_id=$1 AND (COALESCE(source,'') IN ('upload','llm','heuristic','manual','intake') OR description='(from intake)')", [orgId]);
+    const idFor = (n) => `${orgId}::proc::${PSLUG(n.id || n.name)}`;
+    let saved = 0;
+    for (const n of nodes) {
+      const name = String(n.name || '').trim(); if (!name) continue;
+      const tier = Number(n.tier) || null;
+      const pid = idFor(n);
+      const parentId = n.parent ? `${orgId}::proc::${PSLUG(n.parent)}` : null;
+      await db.query(
+        `INSERT INTO business_processes (id, organization_id, name, parent_id, level, tier, criticality, owner, crit_tier, rto, source, confidence, status, description)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'validated','(from intake)')
+         ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, parent_id=EXCLUDED.parent_id, level=EXCLUDED.level,
+           tier=EXCLUDED.tier, criticality=EXCLUDED.criticality, crit_tier=EXCLUDED.crit_tier, rto=EXCLUDED.rto,
+           source=EXCLUDED.source, confidence=EXCLUDED.confidence, status='validated', updated_at=NOW()`,
+        [pid, orgId, name, parentId, n.level || 'process', (tier && tier <= 2) ? 'Primary' : 'Strategic',
+          n.criticality || critFor(tier), 'Unassigned', tier, n.rto || null, n.source || 'upload', n.confidence != null ? Number(n.confidence) : null]);
+      saved++;
+    }
+    // Ledger: explicit actions if provided, else an 'accept' per persisted node.
+    const Ledger = require('../services/IntakeLedgerService');
+    const entries = actions || nodes.map((n) => ({ step: 'processes', objectType: 'process', objectId: idFor(n), action: 'accept', changes: { name: n.name, level: n.level, source: n.source, confidence: n.confidence }, decidedBy }));
+    await Ledger.recordMany(orgId, entries);
+    res.json({ saved, logged: entries.length });
+  } catch (e) {
+    logger.warn('process validate failed', { error: e.message });
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ===== Intake redesign foundation (Slice 0) — scaffolding endpoints =========
 // CMDB connector — test reachability/credentials for a direct application pull.
 router.post('/cmdb/test', async (req, res) => {
   const { system, config } = req.body || {};
