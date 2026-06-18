@@ -1,0 +1,130 @@
+/**
+ * CurrentState — auto-derived CISO brief (no questionnaire / self-assessment).
+ * Leads with "what changed since your last brief", then a generated executive
+ * summary with a voice/audio brief, the per-asset-class visibility confidence,
+ * and the inputs we INFERRED (appetite, crown jewels) which remain overridable.
+ *
+ * Reads the shared substrate: the dashboard payload (posture, domains, controls,
+ * thresholds, readiness), the decision spine (/api/decisions), visibility
+ * (/api/visibility), and tenant config (/api/tenant-config). It does not gate on
+ * any self-assessment.
+ */
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { useAgentVoice, VoiceControls } from './agentVoice';
+
+const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc', NAVY = '#0f1b2d';
+const band = (s) => (s >= 80 ? 'Strong' : s >= 60 ? 'Moderate' : s >= 40 ? 'Weak' : 'Critical');
+
+function ctx(props) {
+  const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
+  const token = props.authToken || ls('authToken') || '';
+  const orgId = props.orgId || ls('cyberrx_org_id') || ls('orgId') || '';
+  const api = props.api_url || props.apiUrl ||
+    (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) ||
+    ((typeof window !== 'undefined' && /localhost|127\.0\.0\.1/.test(window.location.hostname)) ? 'http://localhost:3001' : 'https://cyberrx-api.onrender.com');
+  return { token, orgId, api };
+}
+
+export default function CurrentState(props) {
+  const d = props.d || {};
+  const role = props.role || 'CISO';
+  const { token, orgId, api } = ctx(props);
+  const voice = useAgentVoice();
+  const [vis, setVis] = useState(null);
+  const [cfg, setCfg] = useState(null);
+  const [decisions, setDecisions] = useState([]);
+  const headers = useCallback(() => { const h = { 'X-Org-Id': orgId }; if (token) h.Authorization = `Bearer ${token}`; return h; }, [orgId, token]);
+
+  useEffect(() => {
+    fetch(`${api}/api/visibility?org_id=${encodeURIComponent(orgId)}`, { headers: headers() }).then((r) => r.ok ? r.json() : null).then((x) => x && setVis(x)).catch(() => {});
+    fetch(`${api}/api/tenant-config?org_id=${encodeURIComponent(orgId)}`, { headers: headers() }).then((r) => r.ok ? r.json() : null).then((x) => x && setCfg(x)).catch(() => {});
+    fetch(`${api}/api/decisions?role=${encodeURIComponent(role)}&org_id=${encodeURIComponent(orgId)}`, { headers: headers() }).then((r) => r.ok ? r.json() : null).then((x) => x && setDecisions(x.cards || [])).catch(() => {});
+  }, [api, orgId, role, headers]);
+
+  const p = d.overallPosture || { current: 0, previous: 0, delta: 0, trend: 'stable', narrative: '' };
+  const matrix = d.domainMatrix || [];
+  const improving = matrix.filter((m) => (m.delta || 0) >= 2).sort((a, b) => b.delta - a.delta).slice(0, 2);
+  const declining = matrix.filter((m) => (m.delta || 0) <= -2).sort((a, b) => a.delta - b.delta).slice(0, 2);
+  const topControls = (d.controlRisk || []).slice(0, 3);
+  const breaches = (d.thresholds && d.thresholds.breaches) || 0;
+  const undecided = decisions.filter((c) => !c.decision);
+  const crit = undecided.filter((c) => c.event && c.event.severity === 'Critical').length;
+  const readiness = (d.readiness && d.readiness.overall) || null;
+
+  // Auto-generated brief (deterministic, from the substrate) — also the voice script.
+  const changed = `Since the last brief, posture is ${p.delta >= 0 ? 'up' : 'down'} ${Math.abs(p.delta)} to ${p.current} out of 100 (${band(p.current)}), trending ${p.trend}.` +
+    (improving.length ? ` Gains in ${improving.map((m) => m.name).join(' and ')}.` : '') +
+    (declining.length ? ` Deterioration in ${declining.map((m) => m.name).join(' and ')}.` : '');
+  const brief = `${changed} ` +
+    (topControls.length ? `Greatest risk is concentrated in ${topControls.map((c) => c.name).join(', ')}. ` : '') +
+    `${breaches} risk-appetite threshold${breaches === 1 ? '' : 's'} breached. ` +
+    (undecided.length ? `${undecided.length} decision${undecided.length === 1 ? '' : 's'} need your attention${crit ? `, ${crit} critical` : ''}. ` : 'No open decisions. ') +
+    (readiness != null ? `Major-event readiness is ${readiness} out of 100. ` : '') +
+    (vis ? `Data visibility is ${vis.band} at ${vis.overall} percent${vis.thin && vis.thin.length ? `; thin coverage in ${vis.thin.join(', ')}.` : '.'}` : '');
+
+  const appetite = cfg && cfg.config && cfg.config.appetite;
+
+  return (
+    <div style={{ display: 'grid', gap: 14 }}>
+      {/* What changed since last brief */}
+      <div style={{ background: 'linear-gradient(135deg,#0f1b2d,#16263b)', color: '#e6ecf5', borderRadius: 11, padding: '14px 16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+          <div style={{ fontSize: 10, fontWeight: 800, color: '#9bc0ff', textTransform: 'uppercase', letterSpacing: '0.1em' }}>What changed since your last brief</div>
+          <VoiceControls voice={voice} onReplay={() => voice.speak(brief)} label="Listen to brief" />
+        </div>
+        <div style={{ fontSize: 14, fontWeight: 700, marginTop: 6 }}>
+          {p.current}/100 · {band(p.current)} <span style={{ color: p.delta >= 0 ? '#34d399' : '#f87171' }}>{p.delta >= 0 ? '▲ +' : '▼ '}{p.delta}</span> <span style={{ color: '#8fa3bd', textTransform: 'capitalize', fontWeight: 500 }}>· {p.trend}</span>
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+          {improving.map((m) => <span key={m.id} style={{ fontSize: 11, color: '#34d399', background: '#0f2a1e', borderRadius: 999, padding: '3px 10px' }}>▲ {m.name} +{m.delta}</span>)}
+          {declining.map((m) => <span key={m.id} style={{ fontSize: 11, color: '#fca5a5', background: '#2a1414', borderRadius: 999, padding: '3px 10px' }}>▼ {m.name} {m.delta}</span>)}
+          {!improving.length && !declining.length && <span style={{ fontSize: 11, color: '#8fa3bd' }}>No material domain movement this period.</span>}
+        </div>
+      </div>
+
+      {/* Generated executive summary */}
+      <div style={{ border: `1px solid ${HAIR}`, borderRadius: 11, background: '#fff', padding: '14px 16px' }}>
+        <div style={{ fontSize: 12.5, fontWeight: 800, color: INK, marginBottom: 6 }}>Executive summary <span style={{ fontSize: 10, fontWeight: 600, color: INK3 }}>· auto-derived from your data</span></div>
+        <div style={{ fontSize: 13, color: INK, lineHeight: 1.6 }}>{p.narrative || brief}</div>
+        <div style={{ fontSize: 12.5, color: INK2, lineHeight: 1.6, marginTop: 8 }}>{brief}</div>
+        {undecided.length > 0 && props.onOpenQueue && (
+          <button onClick={props.onOpenQueue} style={{ marginTop: 10, background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 7, padding: '7px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Review {undecided.length} open decision{undecided.length === 1 ? '' : 's'} →</button>
+        )}
+      </div>
+
+      {/* Visibility confidence */}
+      {vis && (
+        <div style={{ border: `1px solid ${HAIR}`, borderRadius: 11, background: '#fff', padding: '14px 16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <div style={{ fontSize: 12.5, fontWeight: 800, color: INK }}>Data visibility confidence</div>
+            <span style={{ fontSize: 12, fontWeight: 800, color: vis.band === 'High' ? '#1f8a4c' : vis.band === 'Moderate' ? '#B07C2E' : '#C0392B' }}>{vis.band} · {vis.overall}%</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 8 }}>
+            {vis.classes.map((c) => {
+              const col = c.confidence >= 80 ? '#1f8a4c' : c.confidence >= 50 ? '#B07C2E' : '#C0392B';
+              return (
+                <div key={c.id} style={{ border: `1px solid ${HAIR}`, borderRadius: 8, padding: '8px 10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}><span style={{ color: INK2 }}>{c.label}</span><strong style={{ color: col }}>{c.band}</strong></div>
+                  <div style={{ height: 5, background: '#eef2f6', borderRadius: 3, marginTop: 5, overflow: 'hidden' }}><div style={{ width: `${c.confidence}%`, height: '100%', background: col }} /></div>
+                  <div style={{ fontSize: 9.5, color: INK3, marginTop: 3 }}>{c.hasData ? `${c.rows} records` : 'no data — inferred'}</div>
+                </div>
+              );
+            })}
+          </div>
+          {vis.thin && vis.thin.length > 0 && <div style={{ fontSize: 11, color: INK2, marginTop: 8 }}>{vis.caveat}</div>}
+        </div>
+      )}
+
+      {/* Inferred & overridable inputs */}
+      <div style={{ border: `1px dashed ${HAIR}`, borderRadius: 11, background: PANEL, padding: '12px 16px' }}>
+        <div style={{ fontSize: 11.5, fontWeight: 700, color: INK2, marginBottom: 6 }}>Inferred inputs <span style={{ fontWeight: 500, color: INK3 }}>— defaulted from your data; override any in Settings</span></div>
+        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 11.5, color: INK2 }}>
+          <span>Risk appetite: <strong style={{ color: INK }}>{appetite ? `${appetite.riskThreshold}+ = above appetite` : '—'}</strong></span>
+          {appetite && <span>Tolerance: <strong style={{ color: INK }}>≤{appetite.maxHighOpen} high, {appetite.maxCriticalOpen} critical</strong></span>}
+          <span style={{ color: INK3 }}>Application criticality &amp; crown jewels are inferred from the process→app map; correct any in the Process/Application steps.</span>
+        </div>
+      </div>
+    </div>
+  );
+}
