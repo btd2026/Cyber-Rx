@@ -266,9 +266,26 @@ async function generate(orgId) {
     });
   } catch (_) { /* AI inventory optional */ }
 
+  // Stalled security projects feed the persistent decision queue (a stalled
+  // project defers posture and keeps exposure on the books).
+  try {
+    const pf = await require('./ProjectPortfolioService').portfolio(orgId);
+    (pf.projects || []).filter((p) => /hold|delay|behind|risk|block/i.test(p.status || '') || (p.percentComplete || 0) < 25)
+      .slice(0, 4).forEach((p) => {
+        const a = p.analysis || {}; const d60 = (a.delay || []).find((x) => x.days === 60);
+        const id = `dec_${orgId}_proj_${hash(p.name)}`;
+        const ev = { id: `evt_${id}`, title: `Stalled project: ${p.name}`, severity: 'High', exposure: a.remainingExposure || (d60 ? d60.exposureRetained : 0) || 0, owner: p.owner || 'CISO', affectedSystem: p.name, crownJewel: crown, dataAtRisk, category: 'project' };
+        ev.timing = timing(ev, null);
+        ev.loss = lossDistribution(id, ev.exposure, ev.timing.annualPct);
+        ev.attackPath = attackPath(ev, crown);
+        const opt = options(id, ev);
+        cards.push({ id, type: 'single', event: ev, options: opt.opts, recommended: opt.recommended, status: 'open' });
+      });
+  } catch (_) { /* portfolio optional */ }
+
   cards.forEach((c) => { if (!c.type) c.type = 'single'; });
   // Compound (chained) scenarios are the headline prediction — surface first.
-  const compounds = buildCompounds(orgId, cards, crown, dataAtRisk);
+  const compounds = buildCompounds(orgId, cards.filter((c) => c.event.category !== 'project'), crown, dataAtRisk);
   return { organizationId: orgId, generatedAt: new Date().toISOString(), cards: [...compounds, ...cards] };
 }
 
