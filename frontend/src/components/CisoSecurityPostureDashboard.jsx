@@ -68,6 +68,33 @@ function Bar({ value, color }) {
   return <div style={{ height: 6, background: '#eef2f6', borderRadius: 3, overflow: 'hidden' }}><div style={{ width: `${Math.max(0, Math.min(100, value))}%`, height: '100%', background: color || sc(value), borderRadius: 3 }} /></div>;
 }
 
+// Five top-level groups so the dashboard stays focused; related views collapse
+// into one group with an inner sub-nav (nothing is removed). Keys map every
+// existing tab — CISO and role-specific — into a group; unknown keys → 'risk'.
+const TAB_GROUPS = [
+  { key: 'state', label: 'Current State' },
+  { key: 'decisions', label: 'Decisions & Actions' },
+  { key: 'risk', label: 'Risk & Controls' },
+  { key: 'programs', label: 'Programs & AI' },
+  { key: 'coaching', label: 'Coaching' },
+];
+const GROUP_OF = {
+  qa: 'state', summary: 'state',
+  decisionq: 'decisions', actions: 'decisions',
+  // risk & controls (CISO + every role's analytical sections)
+  linkage: 'risk', domains: 'risk', controls: 'risk', thresholds: 'risk', processes: 'risk', paths: 'risk', hidden: 'risk', rolepanel: 'risk',
+  exposure: 'risk', lossscenarios: 'risk', dollarrisks: 'risk', insurance: 'risk', capital: 'risk',
+  vulnpatch: 'risk', systemsrisk: 'risk', controlcov: 'risk', resilience: 'risk', backlog: 'risk',
+  register: 'risk', kri: 'risk', heat: 'risk', treatment: 'risk', exceptions: 'risk', assurance: 'risk',
+  obligations: 'risk', notify: 'risk', vendorlegal: 'risk', penalty: 'risk',
+  enterprise: 'risk', trend: 'risk', toprisks: 'risk', benchmark: 'risk', finexp: 'risk', posture: 'risk',
+  // programs, investment & AI
+  readiness: 'programs', roi: 'programs', investment: 'programs', projects: 'programs', ai: 'programs',
+  // coaching
+  coaching: 'coaching',
+};
+const groupOf = (k) => GROUP_OF[k] || 'risk';
+
 export default function CisoSecurityPostureDashboard(props) {
   const role = props.role || 'CISO';
   // Every leader uses this SAME rich scaffold (hero, pillar strip, full tab set,
@@ -135,6 +162,13 @@ export default function CisoSecurityPostureDashboard(props) {
     ];
   const activeRoleTab = roleTabs ? (roleTabs.find((t) => t.key === tab) || roleTabs[0]) : null;
 
+  // Collapse the flat TABS into the 5 groups (only those with members), and
+  // derive the active group from the active tab so the two stay in sync.
+  const groupsPresent = TAB_GROUPS
+    .map((g) => ({ ...g, members: TABS.filter(([k]) => groupOf(k) === g.key) }))
+    .filter((g) => g.members.length);
+  const activeGroup = groupsPresent.find((g) => g.key === groupOf(tab)) || groupsPresent[0];
+
   return (
     <div style={{ background: PANEL, borderRadius: 8, padding: 0, fontFamily: 'inherit' }}>
       {/* Top executive nav (only when rendered as a standalone leader page). */}
@@ -180,10 +214,19 @@ export default function CisoSecurityPostureDashboard(props) {
 
       {/* ===== Tabs ===== */}
       <div style={{ display: 'flex', gap: 0, background: '#fff', borderBottom: `1px solid ${HAIR}`, overflowX: 'auto', position: 'sticky', top: 0, zIndex: 5 }}>
-        {TABS.map(([k, label]) => (
-          <button key={k} onClick={() => setTab(k)} style={{ background: 'transparent', border: 'none', borderBottom: `2px solid ${tab === k ? INK : 'transparent'}`, color: tab === k ? INK : INK3, padding: '11px 15px', cursor: 'pointer', fontSize: 12, fontWeight: tab === k ? 700 : 500, whiteSpace: 'nowrap' }}>{label}</button>
+        {groupsPresent.map((g) => (
+          <button key={g.key} onClick={() => { if (g.members[0]) setTab(g.members[0][0]); }}
+            style={{ background: 'transparent', border: 'none', borderBottom: `2px solid ${g.key === activeGroup.key ? INK : 'transparent'}`, color: g.key === activeGroup.key ? INK : INK3, padding: '12px 18px', cursor: 'pointer', fontSize: 12.5, fontWeight: g.key === activeGroup.key ? 700 : 500, whiteSpace: 'nowrap' }}>{g.label}</button>
         ))}
       </div>
+      {/* inner sub-nav for the active group (only when it holds more than one view) */}
+      {activeGroup.members.length > 1 && (
+        <div style={{ display: 'flex', gap: 4, background: PANEL, borderBottom: `1px solid ${HAIR}`, overflowX: 'auto', padding: '6px 10px' }}>
+          {activeGroup.members.map(([k, label]) => (
+            <button key={k} onClick={() => setTab(k)} style={{ background: tab === k ? '#fff' : 'transparent', border: `1px solid ${tab === k ? HAIR : 'transparent'}`, borderRadius: 7, color: tab === k ? INK : INK2, padding: '6px 12px', cursor: 'pointer', fontSize: 11.5, fontWeight: tab === k ? 700 : 500, whiteSpace: 'nowrap' }}>{label}</button>
+          ))}
+        </div>
+      )}
 
       <div style={{ background: '#fff', borderRadius: '0 0 8px 8px', padding: '18px 22px' }}>
         {/* Voice-only narration: Michael speaks the page (autoplay on tab open,
