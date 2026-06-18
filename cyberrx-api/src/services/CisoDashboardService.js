@@ -268,13 +268,9 @@ async function applyRoleLens(payload, role, ctx, refreshed) {
     explanation: q.whyItMatters || '',
     narration: [q.answer, q.whyItMatters, q.recommendedAction ? `Recommended: ${q.recommendedAction}` : ''].filter(Boolean).join(' '),
   }));
-  // Phase 3: fold AI decision-intelligence into the Decisions & Projections tab.
-  try {
-    const inv = await require('./AiInventoryService').inventory(payload.organizationId || ctx.orgId);
-    const aiItems = Exec.aiDecisions(role, inv);
-    const dtab = (payload.roleTabs || []).find((t) => t.key === 'decisions');
-    if (dtab && aiItems.length) { dtab.section.items = aiItems.concat(dtab.section.items || []); }
-  } catch (e) { logger.debug('ai decisions fold-in skipped', { error: e.message }); }
+  // (AI decision-intelligence is now folded into the shared decision spine —
+  // see DecisionEngineService.generate — so it appears in the Decisions &
+  // Projections / Decision Queue tab for every role, not a per-role section.)
 }
 
 async function getDashboard(orgId, role) {

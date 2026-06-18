@@ -150,6 +150,28 @@ async function generate(orgId) {
     const { opts, recommended } = options(id, ev);
     return { id, event: ev, options: opts, recommended, status: 'open' };
   }));
+
+  // AI-risk events folded into the SAME spine (migrated from the old per-role
+  // aiDecisions): shadow AI on sensitive data, autonomous agents w/o oversight.
+  try {
+    const inv = await require('./AiInventoryService').inventory(orgId);
+    const gross = (c.financial && c.financial.grossExposure) || 0;
+    const aiEvents = [];
+    const shadow = (inv.systems || []).find((s) => s.sanctioned === 'Shadow' && ['PHI', 'PCI', 'IP/Secrets', 'PII'].includes(s.dataSensitivity));
+    const agent = (inv.systems || []).find((s) => s.autonomy === 'Agentic' && !s.humanInLoop);
+    if (shadow) aiEvents.push({ key: `ai_shadow_${shadow.name}`, title: `Shadow AI processing sensitive data: "${shadow.name}"`, severity: 'Critical', exposure: Math.round(gross * 0.2) || 6000000, system: shadow.name });
+    if (agent) aiEvents.push({ key: `ai_agent_${agent.name}`, title: `Autonomous AI agent without oversight: "${agent.name}"`, severity: 'Critical', exposure: Math.round(gross * 0.15) || 4500000, system: agent.name });
+    aiEvents.forEach((a) => {
+      const id = `dec_${orgId}_${hash(a.key)}`;
+      const ev = { id: `evt_${orgId}_${hash(a.key)}`, title: a.title, severity: a.severity, exposure: a.exposure, owner: 'CISO', affectedSystem: a.system, crownJewel: crown, dataAtRisk, category: 'AI' };
+      ev.timing = timing(ev, null);
+      ev.loss = lossDistribution(id, ev.exposure, ev.timing.annualPct);
+      ev.attackPath = attackPath(ev, crown);
+      const { opts, recommended } = options(id, ev);
+      cards.push({ id, event: ev, options: opts, recommended, status: 'open' });
+    });
+  } catch (_) { /* AI inventory optional */ }
+
   return { organizationId: orgId, generatedAt: new Date().toISOString(), cards };
 }
 
