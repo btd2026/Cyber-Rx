@@ -174,6 +174,63 @@ router.post('/extract-processes', async (req, res) => {
   }
 });
 
+// ===== Intake redesign foundation (Slice 0) — scaffolding endpoints =========
+
+// CMDB connector — test reachability/credentials for a direct application pull.
+router.post('/cmdb/test', async (req, res) => {
+  const { system, config } = req.body || {};
+  if (!system) return res.status(400).json({ error: 'system is required (e.g. servicenow)' });
+  try { res.json(await require('../connectors/CmdbConnector').test(system, config || {})); }
+  catch (e) { res.status(e.code === 'NO_CONNECTOR' ? 400 : 500).json({ ok: false, message: e.message }); }
+});
+
+// CMDB connector — pull the application inventory (normalized rows; NOT persisted
+// here — Step 3 persists after the user validates).
+router.post('/cmdb/pull', async (req, res) => {
+  const { system, config } = req.body || {};
+  if (!system) return res.status(400).json({ error: 'system is required (e.g. servicenow)' });
+  try {
+    const apps = await require('../connectors/CmdbConnector').pullApplications(system, config || {});
+    res.json({ system, count: apps.length, applications: apps });
+  } catch (e) { res.status(e.code === 'NO_CONNECTOR' ? 400 : 500).json({ error: e.message }); }
+});
+
+// Intake evidence ledger — record a validation action (accept/edit/delete/add).
+router.post('/validate-log', async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'org_id is required' });
+  const b = req.body || {};
+  const entries = Array.isArray(b.entries) ? b.entries : [b];
+  try { res.json(await require('../services/IntakeLedgerService').recordMany(orgId, entries)); }
+  catch (e) { res.status(500).json({ error: e.message }); }
+});
+router.get('/validation-ledger', async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'org_id is required' });
+  try { res.json({ org_id: orgId, ledger: await require('../services/IntakeLedgerService').list(orgId, { step: req.query.step }) }); }
+  catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Summary preview — validated structures + coverage stats + visibility.
+router.get('/compile/preview', async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'org_id is required' });
+  try {
+    const Compile = require('../services/IntakeCompileService');
+    const data = await Compile.assemble(orgId);
+    let visibility = null; try { visibility = await require('../services/VisibilityService').assess(orgId); } catch (_) {}
+    res.json({ org_id: orgId, coverage: Compile.coverage(data), visibility, ...data });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Confirm & Compile — emit validated structures for the compiling phase (scaffold).
+router.post('/compile', async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'org_id is required' });
+  try { res.json(await require('../services/IntakeCompileService').compile(orgId, { decidedBy: (req.body && req.body.decidedBy) || null })); }
+  catch (e) { logger.warn('intake compile failed', { error: e.message }); res.status(500).json({ error: e.message }); }
+});
+
 // PILOT/TEST: generate a representative sample document for a document_type so
 // the full pipeline can be exercised end-to-end. Gated by PILOT_SAMPLE_DOCS.
 router.get('/sample/:documentTypeId', async (req, res) => {
