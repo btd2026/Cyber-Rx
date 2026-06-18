@@ -755,6 +755,71 @@ async function init() {
         PRIMARY KEY (organization_id, application_id, process_id)
       );
 
+      -- ===== Intake redesign: first-class process / application / mapping =====
+      -- Process hierarchy + provenance (function -> process -> subprocess).
+      ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS parent_id  TEXT;
+      ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS level      TEXT;   -- function | process | subprocess
+      ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS source     TEXT;   -- upload | cmdb | manual | llm
+      ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS confidence NUMERIC;
+      ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS status     TEXT DEFAULT 'proposed'; -- proposed | validated | rejected
+      -- Application provenance + descriptive fields.
+      ALTER TABLE applications ADD COLUMN IF NOT EXISTS vendor              TEXT;
+      ALTER TABLE applications ADD COLUMN IF NOT EXISTS hosting             TEXT;
+      ALTER TABLE applications ADD COLUMN IF NOT EXISTS data_classification JSONB DEFAULT '[]';
+      ALTER TABLE applications ADD COLUMN IF NOT EXISTS source              TEXT;
+      ALTER TABLE applications ADD COLUMN IF NOT EXISTS status              TEXT DEFAULT 'proposed';
+      -- app_process_map is the canonical process<->application join. Provenance +
+      -- validation lifecycle (the table risks/controls hang off).
+      ALTER TABLE app_process_map ADD COLUMN IF NOT EXISTS id                TEXT;
+      ALTER TABLE app_process_map ADD COLUMN IF NOT EXISTS relationship_type TEXT;  -- primary | supporting
+      ALTER TABLE app_process_map ADD COLUMN IF NOT EXISTS rationale         TEXT;
+      ALTER TABLE app_process_map ADD COLUMN IF NOT EXISTS status            TEXT DEFAULT 'proposed'; -- proposed | validated | rejected
+      ALTER TABLE app_process_map ADD COLUMN IF NOT EXISTS validated_by      TEXT;
+      ALTER TABLE app_process_map ADD COLUMN IF NOT EXISTS validated_at      TIMESTAMPTZ;
+      -- Carry forward the legacy confirmed flag into the new status lifecycle.
+      UPDATE app_process_map SET status='validated' WHERE confirmed = true AND (status IS NULL OR status='proposed');
+      -- Canonical name for the join (spec: process_application_map) over the same rows.
+      CREATE OR REPLACE VIEW process_application_map AS
+        SELECT COALESCE(id, organization_id || '::' || application_id || '::' || process_id) AS id,
+               organization_id, process_id, application_id,
+               relationship_type, confidence, rationale,
+               COALESCE(status, CASE WHEN confirmed THEN 'validated' ELSE 'proposed' END) AS status,
+               COALESCE(validated_by, confirmed_by) AS validated_by, validated_at, source, updated_at
+          FROM app_process_map;
+
+      -- Intake evidence ledger — who / when / what for every validation action
+      -- (accept | edit | delete | add) during the intake validation steps.
+      CREATE TABLE IF NOT EXISTS intake_validation_ledger (
+        id            TEXT PRIMARY KEY,
+        organization_id TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        step          TEXT,                       -- profile | processes | applications | summary
+        object_type   TEXT,                       -- process | application | mapping
+        object_id     TEXT,
+        action        TEXT,                       -- accept | edit | delete | add
+        changes       JSONB DEFAULT '{}',
+        decided_by    TEXT,
+        rationale     TEXT,
+        created_at    TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS intake_validation_ledger_org ON intake_validation_ledger(organization_id);
+
+      -- Compiler handoff scaffold: each control assessed against each framework
+      -- INDEPENDENTLY (no crosswalk). One row per (control, framework).
+      CREATE TABLE IF NOT EXISTS control_framework_assessment (
+        id              TEXT PRIMARY KEY,
+        organization_id TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        control_id      TEXT,
+        framework       TEXT,                      -- nist_csf_2_0 | nist_800_53_r5 | cis_v8 | iso_27001 | soc_2
+        requirement_ref TEXT,                      -- the framework's own clause/control id
+        status          TEXT,                      -- not_assessed | met | partial | gap
+        score           NUMERIC,
+        evidence_ref    TEXT,
+        assessed_at     TIMESTAMPTZ,
+        created_at      TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS control_framework_assessment_org ON control_framework_assessment(organization_id);
+      CREATE INDEX IF NOT EXISTS control_framework_assessment_fw ON control_framework_assessment(framework);
+
       -- Third-party DEPENDENCY (graph node) — distinct from a monitoring connector.
       CREATE TABLE IF NOT EXISTS third_party_dependency (
         id              TEXT PRIMARY KEY,
