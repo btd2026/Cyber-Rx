@@ -200,6 +200,159 @@ async function appProcessGraph(orgId) {
   return { processes: Array.from(byProc.values()), unmappedApps, counts: { processes: byProc.size, applications: allApps.length, mapped: mappedAppIds.size } };
 }
 
+// ===== Step 3 cascade: app -> process with a 3-tier confidence cascade =======
+// (a) structured inventory linkage (CMDB business-service / supported-capability /
+//     owner) -> source 'inventory', high confidence;
+// (b) LLM semantic match for the rest -> mapping + rationale + confidence;
+// (c) corroborate with data-classification + owner-org alignment to adjust.
+// Mappings are MANY-TO-MANY, persisted as status='proposed' (nothing auto-
+// validated); the user validates in a process-centric review.
+
+const CRIT_RANK = { Critical: 0, High: 1, Medium: 2, Moderate: 2, Low: 3 };
+const arr = (v) => { try { return Array.isArray(v) ? v : JSON.parse(v || '[]'); } catch (_) { return []; } };
+
+async function cascadeMap(orgId, opts = {}) {
+  const apps = (opts.apps && opts.apps.length)
+    ? opts.apps
+    : await db.query('SELECT id, name, owner, vendor, hosting, data_classification, external_ref, source FROM applications WHERE organization_id=$1', [orgId]);
+  // Map to the VALIDATED process/sub-process nodes (exclude function-level rows).
+  let procs = await db.query("SELECT id, name, crit_tier, criticality, level, supported_by_systems FROM business_processes WHERE organization_id=$1 AND COALESCE(status,'validated')='validated' AND COALESCE(level,'process')<>'function'", [orgId]);
+  if (!procs.length) procs = await db.query("SELECT id, name, crit_tier, criticality, level, supported_by_systems FROM business_processes WHERE organization_id=$1", [orgId]);
+  if (!apps.length || !procs.length) return { mappedApps: 0, links: 0, processes: procs.length, applications: apps.length };
+
+  const procByName = new Map(procs.map((p) => [norm(p.name), p]));
+  const linkage = opts.linkage || {};               // { appId: [businessServiceName, ...] }
+
+  // (b) semantic layer (LLM many-to-many, heuristic fallback) computed once.
+  let semantic = null;
+  if (process.env.ANTHROPIC_API_KEY) { try { semantic = await llmMapAppProcess(apps, procs); } catch (_) { semantic = null; } }
+  const semSource = semantic ? 'llm' : 'heuristic';
+  if (!semantic) semantic = heuristicMapAppProcess(apps, procs);
+  const semByApp = new Map(semantic.map((s) => [s.application_id, s.links]));
+
+  const assignments = apps.map((a) => {
+    const byProc = new Map();                        // process_id -> link
+    const add = (pid, conf, source, rationale) => {
+      const prev = byProc.get(pid);
+      if (!prev || conf > prev.confidence) byProc.set(pid, { id: pid, confidence: conf, source, rationale });
+    };
+    // (a) structured inventory linkage.
+    const services = (linkage[a.id] || a.businessServices || []).concat(a.supportedCapability ? [a.supportedCapability] : []);
+    services.forEach((svc) => {
+      const p = procByName.get(norm(svc)) || procs.find((pp) => contains(svc, pp.name));
+      if (p) add(p.id, 0.95, 'inventory', `CMDB business-service linkage: "${svc}" → ${p.name}`);
+    });
+    // (b) semantic matches.
+    (semByApp.get(a.id) || []).forEach((l) => {
+      const conf = semSource === 'llm' ? 0.8 : Math.min(0.78, l.confidence || 0.6);
+      add(l.id, conf, semSource, semSource === 'llm' ? 'LLM semantic match of app to process.' : 'Name/heuristic match of app to process.');
+    });
+    // (c) corroboration: data-classification + owner-org alignment nudge confidence.
+    const appData = arr(a.data_classification).map((d) => String(d).toLowerCase());
+    byProc.forEach((l) => {
+      if (l.source === 'inventory') return;          // already high-confidence
+      let bump = 0; const p = procs.find((pp) => pp.id === l.id);
+      if (p && appData.length && /phi|pii|pci|claims|member|financial/.test(`${p.name}`.toLowerCase()) && appData.some((d) => /phi|pii|pci|sensitive|financial/.test(d))) bump += 0.05;
+      if (a.owner && p && contains(a.owner, p.name)) bump += 0.05;
+      if (bump) { l.confidence = Math.min(0.99, Math.round((l.confidence + bump) * 100) / 100); l.rationale += ' Corroborated by data-classification/owner alignment.'; }
+    });
+    const links = Array.from(byProc.values()).sort((x, y) => y.confidence - x.confidence);
+    return { application_id: a.id, links };
+  });
+
+  // Persist proposed mappings (replace prior non-validated cascade links; keep
+  // anything the user already validated/rejected).
+  await db.query("DELETE FROM app_process_map WHERE organization_id=$1 AND COALESCE(status,'proposed')='proposed'", [orgId]);
+  let links = 0; const touched = new Set();
+  for (const a of assignments) {
+    a.links.forEach((l, idx) => { l.relationship_type = idx === 0 ? 'primary' : 'supporting'; });
+    for (const l of a.links) {
+      const mid = `${orgId}::${a.application_id}::${l.id}`;
+      await db.query(
+        `INSERT INTO app_process_map (id, organization_id, application_id, process_id, confidence, source, relationship_type, rationale, status, confirmed, updated_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'proposed',false,NOW())
+         ON CONFLICT (organization_id, application_id, process_id)
+         DO UPDATE SET id=EXCLUDED.id, confidence=EXCLUDED.confidence, source=EXCLUDED.source,
+           relationship_type=EXCLUDED.relationship_type, rationale=EXCLUDED.rationale, status='proposed', updated_at=NOW()`,
+        [mid, orgId, a.application_id, l.id, l.confidence, l.source, l.relationship_type, l.rationale]);
+      links++; touched.add(a.application_id);
+    }
+  }
+  return { ...(await mappingReview(orgId)), cascade: true, mappedApps: touched.size, links };
+}
+
+// Process-centric review: per process its mapped apps (low-confidence first),
+// plus gap findings (uncovered processes, orphan apps) and a low-confidence queue.
+async function mappingReview(orgId) {
+  const rows = await db.query(
+    `SELECT p.id pid, p.name pname, p.crit_tier tier, p.criticality, p.rto, p.level,
+            a.id aid, a.name aname, a.criticality acrit,
+            m.confidence, m.source, m.relationship_type, m.rationale, m.status
+       FROM business_processes p
+       LEFT JOIN app_process_map m ON m.process_id=p.id AND m.organization_id=p.organization_id AND COALESCE(m.status,'proposed')<>'rejected'
+       LEFT JOIN applications a ON a.id=m.application_id
+      WHERE p.organization_id=$1 AND COALESCE(p.level,'process')<>'function'
+      ORDER BY p.name, m.confidence ASC NULLS LAST`, [orgId]);
+  const byProc = new Map();
+  for (const r of rows) {
+    if (!byProc.has(r.pid)) byProc.set(r.pid, { id: r.pid, name: r.pname, tier: r.tier, criticality: r.criticality, rto: r.rto, apps: [] });
+    if (r.aid) byProc.get(r.pid).apps.push({ id: r.aid, name: r.aname, criticality: r.acrit, confidence: r.confidence != null ? Number(r.confidence) : null, source: r.source, relationshipType: r.relationship_type, rationale: r.rationale, status: r.status || 'proposed' });
+  }
+  const processes = Array.from(byProc.values());
+  const mappedAppIds = new Set(rows.filter((r) => r.aid).map((r) => r.aid));
+  const allApps = await db.query('SELECT id, name, criticality FROM applications WHERE organization_id=$1', [orgId]);
+  const orphanApps = allApps.filter((a) => !mappedAppIds.has(a.id)).map((a) => ({ id: a.id, name: a.name }));
+  const uncoveredProcesses = processes.filter((p) => !p.apps.length).map((p) => ({ id: p.id, name: p.name }));
+  // Low-confidence review queue (sorted to the top).
+  const lowConfidence = [];
+  processes.forEach((p) => p.apps.forEach((a) => { if (a.status === 'proposed') lowConfidence.push({ processId: p.id, process: p.name, applicationId: a.id, application: a.name, confidence: a.confidence, source: a.source, rationale: a.rationale }); }));
+  lowConfidence.sort((x, y) => (x.confidence || 0) - (y.confidence || 0));
+  return {
+    processes, orphanApps, uncoveredProcesses, lowConfidence,
+    findings: {
+      uncoveredProcesses: uncoveredProcesses.length,   // coverage holes / shadow IT
+      orphanApps: orphanApps.length,                   // apps with no process
+    },
+    counts: { processes: processes.length, applications: allApps.length, mapped: mappedAppIds.size, pctMapped: processes.length ? Math.round((processes.filter((p) => p.apps.length).length / processes.length) * 100) : 0 },
+  };
+}
+
+// Validate one mapping (accept / reject / edit relationship) -> status +
+// validated_by/at, ledger log, and criticality propagation on accept.
+async function validateMapping(orgId, { applicationId, processId, action, relationshipType, decidedBy }) {
+  const status = action === 'reject' || action === 'delete' ? 'rejected' : 'validated';
+  await db.query(
+    `UPDATE app_process_map SET status=$4, confirmed=$5, relationship_type=COALESCE($6,relationship_type),
+       validated_by=$7, validated_at=NOW(), confirmed_by=$7, updated_at=NOW()
+     WHERE organization_id=$1 AND application_id=$2 AND process_id=$3`,
+    [orgId, applicationId, processId, status, status === 'validated', relationshipType || null, decidedBy || null]);
+  try { await require('../services/IntakeLedgerService').record(orgId, { step: 'applications', objectType: 'mapping', objectId: `${applicationId}::${processId}`, action: action || 'accept', changes: { relationshipType }, decidedBy }); } catch (_) {}
+  let inherited = null;
+  if (status === 'validated') inherited = await propagateCriticality(orgId, applicationId);
+  return { ok: true, status, inherited };
+}
+
+// App criticality = MAX (most critical) of its VALIDATED mapped processes.
+async function propagateCriticality(orgId, applicationId) {
+  const ids = applicationId ? [applicationId] : (await db.query('SELECT id FROM applications WHERE organization_id=$1', [orgId])).map((r) => r.id);
+  const out = [];
+  for (const aid of ids) {
+    const rows = await db.query(
+      `SELECT p.criticality, p.crit_tier FROM app_process_map m
+         JOIN business_processes p ON p.id=m.process_id AND p.organization_id=m.organization_id
+        WHERE m.organization_id=$1 AND m.application_id=$2 AND m.status='validated'`, [orgId, aid]);
+    if (!rows.length) continue;
+    let bestCrit = null, bestTier = null;
+    rows.forEach((r) => {
+      if (r.criticality && (bestCrit == null || (CRIT_RANK[r.criticality] ?? 9) < (CRIT_RANK[bestCrit] ?? 9))) bestCrit = r.criticality;
+      const t = Number(r.crit_tier); if (Number.isFinite(t) && (bestTier == null || t < bestTier)) bestTier = t;
+    });
+    await db.query('UPDATE applications SET criticality=COALESCE($3,criticality), tier=COALESCE($4,tier), updated_at=NOW() WHERE id=$2 AND organization_id=$1', [orgId, aid, bestCrit, bestTier]);
+    out.push({ applicationId: aid, criticality: bestCrit, tier: bestTier });
+  }
+  return out;
+}
+
 async function status(orgId) {
   const [apps, procs, apm, pcm] = await Promise.all([
     db.query('SELECT COUNT(*)::int n FROM applications WHERE organization_id=$1', [orgId]),
@@ -213,4 +366,5 @@ async function status(orgId) {
 module.exports = {
   suggestAppProcess, confirmAppProcess, suggestProcessCapability, confirmProcessCapability,
   autoMapAppsToProcesses, appProcessGraph, status, nameScore,
+  cascadeMap, mappingReview, validateMapping, propagateCriticality,
 };
