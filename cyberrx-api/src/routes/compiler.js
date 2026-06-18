@@ -35,4 +35,11 @@ router.get('/run/latest', async (req, res) => {
   catch (e) { res.status(500).json({ error: 'Unable to load the latest run.' }); }
 });
 
+// Per-framework posture + gaps + remediation (live from control_framework_assessment).
+router.get('/posture', async (req, res) => {
+  const orgId = orgOf(req); if (!orgId) return res.status(400).json({ error: 'Organization required.' });
+  try { res.json(await Compiler.posture(orgId)); }
+  catch (e) { logger.warn('compiler posture failed', { error: e.message }); res.status(500).json({ error: 'Unable to compute posture.' }); }
+});
+
 module.exports = router;

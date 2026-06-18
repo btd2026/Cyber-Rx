@@ -30,6 +30,7 @@ import DecisionRail, { VisibilityChip } from './DecisionRail';
 import CurrentState from './CurrentState';
 import ControlEfficacy from './ControlEfficacy';
 import KeyRisks from './KeyRisks';
+import CompilerChain from './CompilerChain';
 import CioOperationalPosture from './CioOperationalPosture';
 import CioResilience from './CioResilience';
 import CioFrictionMap from './CioFrictionMap';
@@ -128,7 +129,7 @@ const CISO_GROUP_DEFS = [
 const CISO_MEMBER_OF = {
   qa: 'state', summary: 'state',
   bizrisks: 'keyrisks', decisionq: 'keyrisks', thresholds: 'keyrisks', processes: 'keyrisks', paths: 'keyrisks', hidden: 'keyrisks', ai: 'keyrisks', actions: 'keyrisks',
-  controlefficacy: 'controlefficacy',
+  controlefficacy: 'controlefficacy', compiler: 'controlefficacy',
   readiness: 'projects', projects: 'projects',
   coaching: 'coaching',
 };
@@ -298,7 +299,7 @@ export default function CisoSecurityPostureDashboard(props) {
       ['bizrisks', 'Business Risks'], ['decisionq', 'Projections & Decisions'],
       ['paths', 'Attack Pathways'], ['thresholds', `Thresholds · ${d.thresholds.breaches} breached`], ['processes', 'Process Protection'],
       ['hidden', `Hidden Risk · ${d.hiddenRisks.length}`], ['ai', 'AI Governance'], ['actions', 'Action Now'],
-      ['controlefficacy', 'Control Efficacy'],
+      ['controlefficacy', 'Control Efficacy'], ['compiler', 'Framework Compiler'],
       ['readiness', 'Readiness & Investment'], ['projects', 'Projects & ROI'],
       ['coaching', 'Coaching & Blind Spots'],
     ];
@@ -441,6 +442,7 @@ export default function CisoSecurityPostureDashboard(props) {
             {tab === 'domains' && <Domains matrix={d.domainMatrix} controlRisk={d.controlRisk} thresholds={d.thresholds} />}
             {tab === 'controls' && <Controls rows={d.controlRisk} />}
             {tab === 'controlefficacy' && <ControlEfficacy d={d} orgId={orgId} authToken={token} apiUrl={api} />}
+            {tab === 'compiler' && <CompilerChain orgId={orgId} authToken={token} apiUrl={api} />}
             {tab === 'bizrisks' && <KeyRisks orgId={orgId} authToken={token} apiUrl={api} />}
             {tab === 'thresholds' && <Thresholds board={d.thresholds} />}
             {tab === 'actions' && <Actions queue={d.actionQueue} attention={d.attentionItems} />}
