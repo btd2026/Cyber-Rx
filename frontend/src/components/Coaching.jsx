@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useAgentVoice, VoiceControls } from './agentVoice';
 
 const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc', NAVY = '#0f1b2d';
 const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
@@ -24,6 +25,7 @@ function ctx(props) {
 export default function Coaching(props) {
   const role = props.role || 'Board';
   const { token, orgId, api } = ctx(props);
+  const voice = useAgentVoice();
   const [d, setD] = useState(null);
   const headers = useCallback(() => { const h = { 'X-Org-Id': orgId }; if (token) h.Authorization = `Bearer ${token}`; return h; }, [orgId, token]);
   const load = useCallback(() => {
@@ -35,21 +37,32 @@ export default function Coaching(props) {
   if (!d) return <div style={{ fontSize: 12, color: INK3 }}>Preparing your coaching…</div>;
   const co = d.coaching || {}, bs = d.blindSpots || [], tt = co.tabletop;
 
-  const Card = ({ title, accent, children }) => (
+  const Card = ({ title, accent, narrate, children }) => (
     <div style={{ border: `1px solid ${HAIR}`, borderTop: `3px solid ${accent}`, borderRadius: 11, background: '#fff', padding: '14px 16px' }}>
-      <div style={{ fontSize: 12.5, fontWeight: 800, color: INK, marginBottom: 10 }}>{title}</div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+        <div style={{ fontSize: 12.5, fontWeight: 800, color: INK }}>{title}</div>
+        {narrate && <VoiceControls voice={voice} onReplay={() => voice.speak(narrate)} label="Listen" />}
+      </div>
       {children}
     </div>
   );
+  const bsNarr = bs.length ? `Blind spots for the ${role}. ` + bs.map((f) => `${f.pattern}. ${f.detail} ${f.recommendation}`).join(' ') : `No blind spots flagged for the ${role} right now.`;
+  const qNarr = `Questions to ask right now. ` + (co.questionsToAsk || []).join('. ');
+  const mNarr = `Materiality checklist${co.topEvent ? ` for ${co.topEvent.title}` : ''}. ` + (co.materialityChecklist || []).map((m) => `${m.item}: ${m.status}, ${m.note}`).join('. ');
+  const ttNarr = tt ? `${tt.scenario} ` + tt.prompts.join(' ') : '';
+  const overview = `Your ${role} coaching. What to ask, what's material, a tabletop to run, and the blind spots detected from how decisions are actually being made. Press listen on any section for the detail.`;
 
   return (
     <div style={{ display: 'grid', gap: 14 }}>
-      <div style={{ background: NAVY, color: '#e6ecf5', borderRadius: 10, padding: '13px 16px', fontSize: 12.5, lineHeight: 1.6 }}>
-        Your <strong style={{ color: '#9bc0ff' }}>{role} coaching</strong> — what to ask, what's material, a tabletop to run, and the blind spots detected from how decisions are actually being made.
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: NAVY, color: '#e6ecf5', borderRadius: 10, padding: '13px 16px' }}>
+        <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>
+          Your <strong style={{ color: '#9bc0ff' }}>{role} coaching</strong> — what to ask, what's material, a tabletop to run, and the blind spots detected from how decisions are actually being made.
+        </div>
+        <VoiceControls voice={voice} onReplay={() => voice.speak(overview)} label="Listen" />
       </div>
 
       {/* blind spots */}
-      <Card title="🔭 Blind spots detected" accent="#7c3aed">
+      <Card title="🔭 Blind spots detected" accent="#7c3aed" narrate={bsNarr}>
         {bs.length === 0 ? <div style={{ fontSize: 12, color: INK3 }}>No blind spots flagged for the {role} right now.</div> : (
           <div style={{ display: 'grid', gap: 8 }}>
             {bs.map((f, i) => (
@@ -67,14 +80,14 @@ export default function Coaching(props) {
       </Card>
 
       {/* questions to ask */}
-      <Card title="❓ Questions to ask right now" accent="#1d4ed8">
+      <Card title="❓ Questions to ask right now" accent="#1d4ed8" narrate={qNarr}>
         <ol style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 6 }}>
           {(co.questionsToAsk || []).map((q, i) => <li key={i} style={{ fontSize: 12.5, color: INK, lineHeight: 1.5 }}>{q}</li>)}
         </ol>
       </Card>
 
       {/* materiality checklist */}
-      <Card title="⚖️ Materiality checklist (top event)" accent="#B07C2E">
+      <Card title="⚖️ Materiality checklist (top event)" accent="#B07C2E" narrate={mNarr}>
         {co.topEvent && <div style={{ fontSize: 11, color: INK3, marginBottom: 8 }}>For: {co.topEvent.title}</div>}
         <div style={{ display: 'grid', gap: 6 }}>
           {(co.materialityChecklist || []).map((m, i) => (
@@ -88,7 +101,7 @@ export default function Coaching(props) {
 
       {/* tabletop */}
       {tt && (
-        <Card title="🎲 Tabletop — run this in your next meeting" accent="#C0392B">
+        <Card title="🎲 Tabletop — run this in your next meeting" accent="#C0392B" narrate={ttNarr}>
           <div style={{ fontSize: 12.5, color: INK, lineHeight: 1.6, background: PANEL, border: `1px solid ${HAIR}`, borderRadius: 8, padding: '10px 12px' }}>{tt.scenario}</div>
           <ol style={{ margin: '10px 0 0', paddingLeft: 18, display: 'grid', gap: 6 }}>
             {tt.prompts.map((p, i) => <li key={i} style={{ fontSize: 12, color: INK2, lineHeight: 1.5 }}>{p}</li>)}

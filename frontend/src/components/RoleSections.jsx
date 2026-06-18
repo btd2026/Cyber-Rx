@@ -9,6 +9,7 @@
 
 import React from 'react';
 import TicketControl from './TicketControl';
+import { useAgentVoice, VoiceControls } from './agentVoice';
 
 const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc';
 const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
@@ -47,18 +48,43 @@ function deltaChip(spark, tone) {
   return <span style={{ fontSize: 10.5, fontWeight: 800, color: c }}>{b >= a ? '▲' : '▼'} {Math.abs(pct)}%</span>;
 }
 
-// Section header: title-less here (the tab provides the title); shows the
-// insight callout + optional note so every tab leads with "so what".
+// Compose a short-but-complete spoken summary of a section for the agent voice.
+function sectionNarration(section) {
+  const parts = [];
+  if (section.insight) parts.push(section.insight);
+  else if (section.note) parts.push(section.note);
+  const it = section.items || [];
+  if (section.type === 'metrics') parts.push(it.map((m) => `${m.label}: ${m.value}${m.sub ? ', ' + m.sub : ''}`).join('. ') + '.');
+  else if (section.type === 'ranked') parts.push('Ranked: ' + it.slice(0, 4).map((x) => `${x.name}, ${x.scoreLabel || x.score}`).join('; ') + '.');
+  else if (section.type === 'cards') parts.push(it.map((x) => `${x.title}${x.tag ? ', ' + x.tag : ''}`).join('. ') + '.');
+  else if (section.type === 'actions') parts.push(`${it.length} action${it.length === 1 ? '' : 's'}. ` + it.slice(0, 3).map((a) => `${a.action}. Why now: ${a.whyNow}`).join('. ') + '.');
+  else if (section.type === 'decisions') parts.push(it.map((d) => `${d.condition}. ${d.projection} Recommended: ${d.recommended}`).join(' '));
+  else if (section.type === 'table') {
+    const rows = section.rows || [], cols = section.columns || [];
+    parts.push(`${rows.length} row${rows.length === 1 ? '' : 's'}.`);
+    if (rows[0] && cols.length) parts.push('For example: ' + rows.slice(0, 3).map((r) => cols.slice(0, 3).map((c) => r[c.key]).join(', ')).join('; ') + '.');
+  }
+  return parts.filter(Boolean).join(' ');
+}
+
+// Section header: insight callout + note + a Listen control that narrates the
+// whole section. So every tab leads with "so what" and can be heard in full.
 function Insight({ section }) {
-  if (!section.insight && !section.note) return null;
+  const voice = useAgentVoice();
+  const has = section.insight || section.note || (section.items && section.items.length) || (section.rows && section.rows.length);
+  if (!has) return null;
+  const narration = sectionNarration(section);
   return (
     <div style={{ marginBottom: 14 }}>
-      {section.insight && (
-        <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', background: 'linear-gradient(135deg,#eef4fb,#f6f9fe)', border: '1px solid #d7e6f7', borderRadius: 10, padding: '11px 14px' }}>
-          <span style={{ fontSize: 15, lineHeight: 1.3 }}>💡</span>
-          <div style={{ fontSize: 12.5, color: INK, lineHeight: 1.55, fontWeight: 500 }}>{section.insight}</div>
-        </div>
-      )}
+      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+        {section.insight ? (
+          <div style={{ flex: 1, display: 'flex', gap: 10, alignItems: 'flex-start', background: 'linear-gradient(135deg,#eef4fb,#f6f9fe)', border: '1px solid #d7e6f7', borderRadius: 10, padding: '11px 14px' }}>
+            <span style={{ fontSize: 15, lineHeight: 1.3 }}>💡</span>
+            <div style={{ fontSize: 12.5, color: INK, lineHeight: 1.55, fontWeight: 500 }}>{section.insight}</div>
+          </div>
+        ) : <div style={{ flex: 1 }} />}
+        {narration && <VoiceControls voice={voice} onReplay={() => voice.speak(narration)} label="Listen" />}
+      </div>
       {section.note && <div style={{ fontSize: 11, color: INK3, marginTop: section.insight ? 7 : 0 }}>{section.note}</div>}
     </div>
   );

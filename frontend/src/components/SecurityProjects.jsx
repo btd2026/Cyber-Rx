@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useAgentVoice, VoiceControls } from './agentVoice';
 
 const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc', NAVY = '#0f1b2d';
 const TONE = { good: '#1f8a4c', warn: '#B07C2E', bad: '#C0392B' };
@@ -28,6 +29,7 @@ const Pill = ({ text, tone }) => (
 
 export default function SecurityProjects(props) {
   const { token, orgId, api } = ctx(props);
+  const voice = useAgentVoice();
   const [pf, setPf] = useState(null);
   const [err, setErr] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -95,6 +97,10 @@ export default function SecurityProjects(props) {
 
       {!pf ? <div style={{ fontSize: 12, color: INK3 }}>Loading portfolio…</div> : (
         <>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Portfolio</div>
+            <VoiceControls voice={voice} onReplay={() => voice.speak(portfolioNarration(pf))} label="Listen" />
+          </div>
           {/* portfolio summary */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px,1fr))', gap: 10, marginBottom: 12 }}>
             <Kpi label="Active projects" value={`${pf.counts.total}`} sub={`${pf.counts.atRisk} at risk`} tone={pf.counts.atRisk ? 'warn' : 'good'} />
@@ -117,7 +123,7 @@ export default function SecurityProjects(props) {
 
           {/* per-project cards */}
           <div style={{ display: 'grid', gap: 12 }}>
-            {pf.projects.map((p) => <ProjectCard key={p.id || p.name} p={p} />)}
+            {pf.projects.map((p) => <ProjectCard key={p.id || p.name} p={p} voice={voice} />)}
           </div>
         </>
       )}
@@ -135,7 +141,21 @@ function Kpi({ label, value, sub, tone }) {
   );
 }
 
-function ProjectCard({ p }) {
+function portfolioNarration(pf) {
+  const ds = pf.delayScenario;
+  return `Security project portfolio. ${pf.counts.total} active projects, ${pf.counts.atRisk} at risk. ` +
+    `Total investment ${usd(pf.totalBudget)}. Planned posture lift plus ${pf.totalLift}, with plus ${pf.realizedLift} realized so far. ` +
+    `Exposure reduced ${usd(pf.totalExposureReduced)}. Blended ROI ${pf.blendedRoi != null ? pf.blendedRoi + ' times' : 'not available'}. ` +
+    (ds && ds.projectsAffected ? `If the ${ds.projectsAffected} at-risk projects each slip ${ds.slipDays} days, plus ${ds.postureLiftDeferred} posture points are deferred and ${usd(ds.exposureRetained)} of exposure stays on the books.` : '');
+}
+function projectNarration(p) {
+  const a = p.analysis || {};
+  const d60 = (a.delay || []).find((d) => d.days === 60);
+  return `${p.name}. ${p.status}, ${p.percentComplete || 0} percent complete.${p.budget ? ' Budget ' + usd(p.budget) + '.' : ''} ` +
+    `Posture lift plus ${a.postureLift}, exposure reduced ${usd(a.exposureReduced)}${a.roi != null ? `, ROI ${a.roi} times` : ''}. ` +
+    `Remaining exposure ${usd(a.remainingExposure)}.` + (d60 ? ` If it slips 60 days, ${usd(d60.exposureRetained)} of exposure stays on the books.` : '');
+}
+function ProjectCard({ p, voice }) {
   const a = p.analysis || {};
   const ms = a.milestones || [];
   const tone = statusTone(p.status);
@@ -143,7 +163,10 @@ function ProjectCard({ p }) {
     <div style={{ border: `1px solid ${HAIR}`, borderRadius: 11, background: '#fff', overflow: 'hidden', boxShadow: '0 1px 2px rgba(15,23,42,0.04)' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 16px', borderLeft: `5px solid ${TONE[tone]}` }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 13.5, fontWeight: 800, color: INK }}>{p.name}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ fontSize: 13.5, fontWeight: 800, color: INK }}>{p.name}</div>
+            {voice && <VoiceControls voice={voice} onReplay={() => voice.speak(projectNarration(p))} label="Listen" />}
+          </div>
           {p.objective && <div style={{ fontSize: 11, color: INK2, marginTop: 2, lineHeight: 1.45 }}>{p.objective}</div>}
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 10.5, color: INK3, marginTop: 6 }}>
             {p.owner && <span>Owner <strong style={{ color: INK2 }}>{p.owner}</strong></span>}

@@ -7,6 +7,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useAgentVoice, VoiceControls } from './agentVoice';
 
 const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc';
 const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
@@ -28,6 +29,7 @@ const Pill = ({ text, color }) => (
 
 export default function AiGovernance(props) {
   const { token, orgId, api } = ctx(props);
+  const voice = useAgentVoice();
   const [inv, setInv] = useState(null);
   const [err, setErr] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -97,10 +99,13 @@ export default function AiGovernance(props) {
       {err && <div style={{ color: '#C0392B', fontSize: 12, marginBottom: 10 }}>{err}</div>}
 
       {/* framework sub-tabs — each assessed independently */}
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
-        {[['bom', 'AI Inventory (AI-BOM)'], ['nist_ai_rmf', 'NIST AI RMF'], ['owasp_llm', 'OWASP LLM Top 10'], ['mitre_atlas', 'MITRE ATLAS'], ['eu_ai_act', 'EU AI Act']].map(([k, l]) => (
-          <button key={k} onClick={() => setView(k)} style={{ border: `1px solid ${view === k ? '#0f1b2d' : HAIR}`, background: view === k ? '#0f1b2d' : '#fff', color: view === k ? '#fff' : INK2, padding: '6px 13px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', borderRadius: 999 }}>{l}</button>
-        ))}
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14, justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {[['bom', 'AI Inventory (AI-BOM)'], ['nist_ai_rmf', 'NIST AI RMF'], ['owasp_llm', 'OWASP LLM Top 10'], ['mitre_atlas', 'MITRE ATLAS'], ['eu_ai_act', 'EU AI Act']].map(([k, l]) => (
+            <button key={k} onClick={() => setView(k)} style={{ border: `1px solid ${view === k ? '#0f1b2d' : HAIR}`, background: view === k ? '#0f1b2d' : '#fff', color: view === k ? '#fff' : INK2, padding: '6px 13px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', borderRadius: 999 }}>{l}</button>
+          ))}
+        </div>
+        <VoiceControls voice={voice} onReplay={() => voice.speak(aiNarration(view, inv, assess, eu))} label="Listen" />
       </div>
 
       {showAdd && (
@@ -205,6 +210,27 @@ function FrameworkView({ a }) {
       <div style={{ fontSize: 10.5, color: INK3, marginTop: 10 }}>Scored from your AI inventory signals. Controls marked “needs evidence” become connector-driven as tool integrations are added.</div>
     </div>
   );
+}
+
+// Spoken summary of the active AI-governance view for the agent voice.
+function aiNarration(view, inv, assess, eu) {
+  if (view === 'eu_ai_act') {
+    if (!eu) return 'Classifying AI systems under the E U A I Act.';
+    return `${eu.summary} ${eu.counts.high || 0} high-risk, ${eu.counts.limited || 0} limited-risk, ${eu.counts.minimal || 0} minimal-risk. ` +
+      (eu.systems || []).filter((s) => s.tier === 'High-risk').slice(0, 3).map((s) => `${s.name} is high-risk: ${s.rationale}`).join(' ');
+  }
+  if (view !== 'bom') {
+    if (!assess) return 'Assessing AI controls.';
+    const weak = (assess.controls || []).filter((c) => c.status === 'Weak' || c.status === 'Gap').slice(0, 3);
+    return `${assess.name}. Posture ${assess.score} of 100, ${assess.band}. ` +
+      `${assess.counts.strong} strong, ${assess.counts.partial} partial, ${assess.counts.weak} weak, ${assess.counts.gap} gap. ` +
+      (weak.length ? 'Biggest gaps: ' + weak.map((c) => `${c.name}. ${c.recommendation}`).join(' ') : 'No major gaps.');
+  }
+  if (!inv) return 'Loading the AI bill of materials.';
+  const c = inv.counts;
+  return `AI bill of materials. Governance posture ${inv.governanceScore} of 100. ${c.total} AI systems: ` +
+    `${c.shadow} shadow AI, ${c.agentic} autonomous agents, ${c.sensitiveExternal} sending sensitive data to external models, ${c.ungoverned} ungoverned, ${c.critical} critical-risk. ` +
+    (inv.systems || []).filter((s) => s.riskLevel === 'Critical' || s.riskLevel === 'High').slice(0, 3).map((s) => `${s.name}: ${(s.flags || []).map((f) => f.text).join('; ') || s.riskLevel}`).join('. ');
 }
 
 const inpStyle = { border: `1px solid ${HAIR}`, borderRadius: 7, padding: '8px 10px', fontSize: 12, outline: 'none' };
