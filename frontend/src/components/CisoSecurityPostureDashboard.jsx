@@ -27,6 +27,7 @@ import AiGovernance from './AiGovernance';
 import DecisionQueue from './DecisionQueue';
 import Coaching from './Coaching';
 import DecisionRail, { VisibilityChip } from './DecisionRail';
+import CurrentState from './CurrentState';
 
 // Per-role header framing so every C-suite seat uses this SAME rich view.
 const ROLE_FRAME = {
@@ -245,7 +246,7 @@ export default function CisoSecurityPostureDashboard(props) {
         {roleTabs
           ? <RoleTabContent t={activeRoleTab} role={role} d={d} props={props} />
           : (<>
-            {tab === 'qa' && <CisoAgentPanel role={role} />}
+            {tab === 'qa' && <CurrentState d={d} role={role} orgId={orgId} authToken={token} apiUrl={api} onOpenQueue={() => setTab('decisionq')} />}
             {tab === 'decisionq' && <DecisionQueue role={role} />}
             {tab === 'summary' && <ExecutiveSummaryEditor />}
             {tab === 'linkage' && <BusinessRiskPanel />}
