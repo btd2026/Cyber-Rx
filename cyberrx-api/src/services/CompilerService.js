@@ -23,6 +23,12 @@ const logger = require('../utils/logger');
 
 const FRAMEWORKS = ['nist_csf_2_0', 'nist_800_53_r5', 'cis_v8', 'iso_27001', 'soc_2'];
 const FRAMEWORK_LABEL = { nist_csf_2_0: 'NIST CSF 2.0', nist_800_53_r5: 'NIST SP 800-53 Rev 5', cis_v8: 'CIS Controls v8', iso_27001: 'ISO/IEC 27001', soc_2: 'SOC 2' };
+// ISO 27001 / SOC 2 are assessed REQUIREMENT-centrically (against their own
+// seeded requirement catalog + document evidence); the rest are CONTROL-centric
+// (against the org's controls). Both independent — no crosswalk either way.
+const REQ_FRAMEWORKS = ['iso_27001', 'soc_2'];
+const CONTROL_FRAMEWORKS = FRAMEWORKS.filter((f) => !REQ_FRAMEWORKS.includes(f));
+const slug = (s) => String(s || '').replace(/[^a-zA-Z0-9]+/g, '_');
 
 async function rows(sql, params = []) { try { return await db.query(sql, params); } catch (e) { logger.debug('compiler query degraded', { error: e.message }); return []; } }
 const jarr = (v) => { try { return Array.isArray(v) ? v : JSON.parse(v || '[]'); } catch (_) { return []; } };
@@ -78,6 +84,16 @@ function verdict(evidence, framework, control) {
   }
   const st = statusFromImpl(control.implementation_status);
   return { status: st, score: scoreFor(st, control.effectiveness_score != null ? control.effectiveness_score : null), source: 'implementation' };
+}
+// Independent verdict for one framework REQUIREMENT (ISO/SOC2): the framework's
+// own document evidence keyed by requirement id, else an honest not_assessed —
+// never inferred from a control's implementation or from another framework.
+function requirementVerdict(evidence, framework, requirementId) {
+  for (const alias of (FW_ALIASES[framework] || [framework])) {
+    const hit = evidence.get(`${alias}::${requirementId}`);
+    if (hit) return hit;
+  }
+  return { status: 'not_assessed', score: null, source: 'none' };
 }
 
 // ---- chain assembly (read-only) --------------------------------------------
@@ -139,8 +155,9 @@ async function run(orgId, { decidedBy } = {}) {
   const evidence = await loadEvidence(orgId);
   const tally = {}; FRAMEWORKS.forEach((fw) => { tally[fw] = { met: 0, partial: 0, gap: 0, not_assessed: 0 }; });
   let written = 0;
+  // Control-centric frameworks (NIST CSF / 800-53 / CIS): one row per control.
   for (const c of controls) {
-    for (const fw of FRAMEWORKS) {
+    for (const fw of CONTROL_FRAMEWORKS) {
       // Independent per-framework verdict from that framework's own evidence;
       // no framework reads another's result (no crosswalk).
       const v = verdict(evidence, fw, c);
@@ -150,6 +167,23 @@ async function run(orgId, { decidedBy } = {}) {
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW(),NOW())
          ON CONFLICT (id) DO UPDATE SET requirement_ref=EXCLUDED.requirement_ref, status=EXCLUDED.status, score=EXCLUDED.score, evidence_ref=EXCLUDED.evidence_ref, assessed_at=NOW()`,
         [id, orgId, c.id, fw, c.control_id || null, v.status, v.score, v.source]);
+      written++; tally[fw][v.status] = (tally[fw][v.status] || 0) + 1;
+    }
+  }
+  // Requirement-centric frameworks (ISO 27001 / SOC 2): one row per requirement
+  // from the seeded catalog, evidenced by documents; no evidence -> not_assessed.
+  for (const fw of REQ_FRAMEWORKS) {
+    // drop any stale control-keyed rows from earlier (pre-Slice-2) runs.
+    await rows(`DELETE FROM control_framework_assessment WHERE organization_id=$1 AND framework=$2 AND control_id IS NOT NULL`, [orgId, fw]);
+    const reqs = await rows(`SELECT requirement_id FROM framework_requirements WHERE framework_id=$1`, [fw]);
+    for (const req of reqs) {
+      const v = requirementVerdict(evidence, fw, req.requirement_id);
+      const id = `cfa_${orgId}_req_${fw}_${slug(req.requirement_id)}`;
+      await rows(
+        `INSERT INTO control_framework_assessment (id, organization_id, control_id, framework, requirement_ref, status, score, evidence_ref, assessed_at, created_at)
+         VALUES ($1,$2,NULL,$3,$4,$5,$6,$7,NOW(),NOW())
+         ON CONFLICT (id) DO UPDATE SET status=EXCLUDED.status, score=EXCLUDED.score, evidence_ref=EXCLUDED.evidence_ref, assessed_at=NOW()`,
+        [id, orgId, fw, req.requirement_id, v.status, v.score, v.source]);
       written++; tally[fw][v.status] = (tally[fw][v.status] || 0) + 1;
     }
   }
@@ -177,9 +211,11 @@ async function latestRun(orgId) {
 // ---- per-framework posture + gaps + remediation (live, from the assessment) --
 async function posture(orgId) {
   const cfa = await rows(
-    `SELECT a.framework, a.status, a.score, a.requirement_ref, c.id AS control_id, c.title, c.implementation_status
+    `SELECT a.framework, a.status, a.score, a.requirement_ref, c.id AS control_id,
+            COALESCE(c.title, fr.title, a.requirement_ref) AS title, c.implementation_status
        FROM control_framework_assessment a
        LEFT JOIN controls c ON c.id=a.control_id AND c.organization_id=a.organization_id
+       LEFT JOIN framework_requirements fr ON fr.framework_id=a.framework AND fr.requirement_id=a.requirement_ref
       WHERE a.organization_id=$1`, [orgId]);
   const perFramework = FRAMEWORKS.map((fw) => {
     const rowsFw = cfa.filter((r) => r.framework === fw);
