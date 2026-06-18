@@ -40,37 +40,75 @@ async function getPosture(orgId) {
   const rm = c.remediation || {};
   const fin = c.financial || {};
 
-  // Recovery readiness: backup/restore maturity drives the capability multiplier
-  // against the declared target. Lower control effectiveness = slower recovery.
+  // LIVE asset/process inventory (assets + business_processes). When present we
+  // read recovery posture and tech-debt from real rows; otherwise we model.
+  const live = await loadLive(orgId);
   const eff = Number(ctrl.avgEffectiveness) || 60;
-  const recoveryFactor = 1 + Math.max(0, (75 - eff)) / 40; // 1.0 at eff>=75, worse below
-  const recovery = procs.slice(0, 6).map((p, i) => {
-    const tier = tierOf(p);
-    const rtoTarget = TIER_RTO[tier], rpoTarget = TIER_RPO[tier];
-    const rtoActual = Math.round(rtoTarget * recoveryFactor * 10) / 10;
-    const rpoActual = Math.round(rpoTarget * recoveryFactor * 100) / 100;
-    // Deterministic "last tested": tier-0 should be tested often; model staleness.
-    const tested = !((i + (tier === 'Tier 0' ? 0 : 1)) % 3 === 0); // some untested
-    return {
-      process: p.name, owner: p.owner || 'IT Operations', tier,
-      rtoTargetHrs: rtoTarget, rtoCapabilityHrs: rtoActual, rtoMet: rtoActual <= rtoTarget * 1.1,
-      rpoTargetHrs: rpoTarget, rpoCapabilityHrs: rpoActual, rpoMet: rpoActual <= rpoTarget * 1.1,
-      recoveryTested: tested, gap: rtoActual > rtoTarget * 1.1 || !tested,
-    };
-  });
+  const recoveryFactor = 1 + Math.max(0, (75 - eff)) / 40; // modeling fallback multiplier
+
+  let recovery, recoverySource;
+  if (live.processes.length) {
+    recoverySource = 'live';
+    recovery = live.processes.slice(0, 8).map((bp) => {
+      const tier = tierOfRow(bp);
+      const rtoTarget = num(bp.rto_target_hrs) || TIER_RTO[tier];
+      const rpoTarget = num(bp.rpo_target_hrs) || TIER_RPO[tier];
+      // Capability: declared value if a recovery feed populated it, else derived
+      // from the support/patch posture of the systems that back this process.
+      const support = supportPosture(bp, live.assetsByProc);
+      const capFactor = bp.rto_capability_hrs != null ? null : (1 + (1 - support.health) * 1.4);
+      const rtoActual = bp.rto_capability_hrs != null ? num(bp.rto_capability_hrs) : Math.round(rtoTarget * capFactor * 10) / 10;
+      const rpoActual = Math.round(rpoTarget * (capFactor || (rtoActual / rtoTarget || 1)) * 100) / 100;
+      const tested = bp.last_recovery_test ? (Date.now() - new Date(bp.last_recovery_test).getTime()) <= 180 * 86400000 : false;
+      return {
+        process: bp.name, owner: bp.owner || 'IT Operations', tier,
+        rtoTargetHrs: rtoTarget, rtoCapabilityHrs: rtoActual, rtoMet: rtoActual <= rtoTarget * 1.1,
+        rpoTargetHrs: rpoTarget, rpoCapabilityHrs: rpoActual, rpoMet: rpoActual <= rpoTarget * 1.1,
+        recoveryTested: tested, lastTest: bp.last_recovery_test || null,
+        supportingSystems: support.count,
+        gap: rtoActual > rtoTarget * 1.1 || !tested,
+      };
+    });
+  } else {
+    recoverySource = 'modeled';
+    recovery = procs.slice(0, 6).map((p, i) => {
+      const tier = tierOf(p);
+      const rtoTarget = TIER_RTO[tier], rpoTarget = TIER_RPO[tier];
+      const rtoActual = Math.round(rtoTarget * recoveryFactor * 10) / 10;
+      const rpoActual = Math.round(rpoTarget * recoveryFactor * 100) / 100;
+      const tested = !((i + (tier === 'Tier 0' ? 0 : 1)) % 3 === 0);
+      return {
+        process: p.name, owner: p.owner || 'IT Operations', tier,
+        rtoTargetHrs: rtoTarget, rtoCapabilityHrs: rtoActual, rtoMet: rtoActual <= rtoTarget * 1.1,
+        rpoTargetHrs: rpoTarget, rpoCapabilityHrs: rpoActual, rpoMet: rpoActual <= rpoTarget * 1.1,
+        recoveryTested: tested, gap: rtoActual > rtoTarget * 1.1 || !tested,
+      };
+    });
+  }
   const recoveryGaps = recovery.filter((r) => r.gap);
 
   // Availability risk: tier-0/1 processes carrying open exposure.
   const availabilityAtRisk = procs.filter((p) => /0|1|crown|critical|mission/i.test(String(p.tier || p.criticality)));
   const availabilityScore = clamp(100 - availabilityAtRisk.length * 8 - recoveryGaps.length * 6 - (rm.overdue || 0) * 2, 30, 96);
 
-  // Technical debt: end-of-life / unsupported tech + repeat findings + overdue work.
-  const eolCount = (c.lifecycle && c.lifecycle.eol) || Math.max(0, Math.round((ctrl.notImplemented || 0) / 2));
+  // Technical debt: LIVE end-of-life / unsupported / low-patch from the asset
+  // inventory when present; modeled otherwise.
+  let eolCount, lowPatch, techDebtSource;
+  if (live.assets.length) {
+    techDebtSource = 'live';
+    eolCount = live.assets.filter((a) => a.supported === false || (a.end_of_support_date && new Date(a.end_of_support_date).getTime() < Date.now())).length;
+    lowPatch = live.assets.filter((a) => a.patch_pct != null && a.patch_pct < 85).length;
+  } else {
+    techDebtSource = 'modeled';
+    eolCount = (c.lifecycle && c.lifecycle.eol) || Math.max(0, Math.round((ctrl.notImplemented || 0) / 2));
+    lowPatch = 0;
+  }
   const techDebt = {
-    eolSystems: eolCount, repeatFindings: fi.repeat || 0, overdueRemediation: rm.overdue || 0,
+    eolSystems: eolCount, lowPatchSystems: lowPatch, repeatFindings: fi.repeat || 0, overdueRemediation: rm.overdue || 0,
     notImplementedControls: ctrl.notImplemented || 0,
     exposure: Math.round((fin.grossExposure || 0) * 0.15),
     band: eolCount + (fi.repeat || 0) >= 6 ? 'High' : eolCount + (fi.repeat || 0) >= 3 ? 'Elevated' : 'Contained',
+    source: techDebtSource,
   };
 
   // Shadow IT / shadow AI exposure (the un-owned tech the CIO doesn't control).
@@ -107,10 +145,47 @@ async function getPosture(orgId) {
     organizationId: orgId, generatedAt: new Date().toISOString(),
     overall, availabilityScore,
     availabilityAtRisk: availabilityAtRisk.map((p) => ({ name: p.name, tier: tierOf(p), owner: p.owner || 'IT Operations' })),
-    recovery, recoveryGaps: recoveryGaps.length,
+    recovery, recoveryGaps: recoveryGaps.length, recoverySource,
     techDebt, shadow, whatChanged, visibility, brief, narration,
-    recoveryNote: 'RTO/RPO targets are declared per tier (overridable); capability is modeled from current recovery readiness.',
+    dataSource: { recovery: recoverySource, techDebt: techDebt.source, assets: live.assets.length, processes: live.processes.length },
+    recoveryNote: recoverySource === 'live'
+      ? 'RTO/RPO targets and recovery tests are read from the asset/process inventory where populated; capability is otherwise derived from the support & patch posture of the backing systems.'
+      : 'No asset inventory connected — RTO/RPO targets are modeled per tier and capability from recovery readiness. Connect a CMDB / BC-DR feed to make these live.',
   };
 }
+
+// ---- live asset/process inventory ------------------------------------------
+async function loadLive(orgId) {
+  const db = require('../utils/db');
+  const q = async (sql) => { try { return await db.query(sql, [orgId]); } catch (e) { logger.debug('cio op live query degraded', { error: e.message }); return []; } };
+  const processes = await q(`SELECT id, name, tier, criticality, owner, rto_target_hrs, rpo_target_hrs, rto_capability_hrs, last_recovery_test,
+                                    COALESCE(supported_by_systems,'[]'::jsonb) AS supported_by_systems
+                               FROM business_processes WHERE organization_id=$1`);
+  const assets = await q(`SELECT id, name, supported, end_of_support_date, patch_pct,
+                                 COALESCE(business_process_ids,'[]'::jsonb) AS business_process_ids
+                            FROM assets WHERE organization_id=$1`);
+  // Index assets by the business process they back.
+  const assetsByProc = {};
+  assets.forEach((a) => { let ids = a.business_process_ids; try { ids = Array.isArray(ids) ? ids : JSON.parse(ids || '[]'); } catch (_) { ids = []; } (ids || []).forEach((pid) => { (assetsByProc[pid] = assetsByProc[pid] || []).push(a); }); });
+  return { processes, assets, assetsByProc };
+}
+// Recovery health (0..1) of the systems backing a process: supported & patched.
+function supportPosture(bp, assetsByProc) {
+  const backing = assetsByProc[bp.id] || [];
+  if (!backing.length) return { count: 0, health: 0.6 };
+  const supportedRatio = backing.filter((a) => a.supported !== false).length / backing.length;
+  const patched = backing.filter((a) => a.patch_pct != null);
+  const patchAvg = patched.length ? patched.reduce((s, a) => s + a.patch_pct, 0) / patched.length / 100 : 0.7;
+  return { count: backing.length, health: Math.max(0.2, Math.min(1, supportedRatio * 0.5 + patchAvg * 0.5)) };
+}
+function tierOfRow(bp) {
+  const crit = String(bp.criticality || '').toLowerCase();
+  if (crit === 'critical') return 'Tier 0';
+  if (crit === 'high') return 'Tier 1';
+  if (crit === 'medium') return 'Tier 2';
+  if (crit === 'low') return 'Tier 3';
+  return /strategic/i.test(bp.tier || '') ? 'Tier 2' : 'Tier 1';
+}
+const num = (v) => { const x = Number(v); return Number.isFinite(x) ? x : 0; };
 
 module.exports = { getPosture };

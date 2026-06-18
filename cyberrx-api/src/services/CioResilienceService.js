@@ -41,8 +41,10 @@ async function getResilience(orgId) {
       recoveryPath: recoveryPath(c.event),
     }));
 
-  // SPOFs + concentration from the substrate (graph fan-in + vendors/cloud).
-  const [spofs, concentration] = await Promise.all([detectSpofs(orgId), detectConcentration(orgId)]);
+  // SPOFs + concentration — LIVE from the asset/process inventory (shared with
+  // the CRO aggregation lens), modeled fallback only when no assets exist.
+  const Conc = require('./ConcentrationService');
+  const [spofs, concentration] = await Promise.all([Conc.detectSpofs(orgId), Conc.detectConcentration(orgId)]);
 
   const narration = `Resilience and single points of failure, CIO. ${events.length} shared risk(s) threaten operations` +
     `${events[0] ? `, led by ${events[0].title} reaching ${events[0].crownJewel}` : ''}. ` +
@@ -72,54 +74,6 @@ function recoveryPath(e) {
   if (st === 'Ransomware') return ['Isolate affected segment', 'Activate clean-room restore from immutable backups', 'Validate integrity of tier-0 data', 'Staged service restoration (tier-0 first)', 'Post-incident hardening'];
   if (st === 'Data exfiltration') return ['Contain the egress path', 'Preserve forensic evidence', 'Rotate exposed credentials/keys', 'Restore service continuity', 'Notification readiness (legal clock)'];
   return ['Failover to standby/secondary', 'Confirm RTO/RPO against declared targets', 'Restore dependent services in tier order', 'Root-cause and permanent fix', 'Resilience test the recovered path'];
-}
-
-// SPOFs: graph nodes (apps/devices/network) that many processes depend on. Falls
-// back to a modeled set keyed to the org's crown jewel when the graph is empty.
-async function detectSpofs(orgId) {
-  try {
-    const graph = await require('./AttackPathService').buildGraph(orgId);
-    const layers = graph.layers || [];
-    const out = [];
-    for (const lid of ['app', 'device', 'network']) {
-      const nodes = (layers.find((l) => l.id === lid) || {}).nodes || [];
-      nodes.forEach((nd) => {
-        const fanIn = Array.isArray(nd.procs) ? nd.procs.length : 0;
-        if (fanIn >= 3) out.push({
-          name: nd.label, layer: lid, dependents: fanIn,
-          why: `${fanIn} business processes depend on this single ${lid} with no redundant path.`,
-          recommendation: lid === 'network' ? 'Add a redundant path / segment to remove the chokepoint.' : 'Introduce redundancy / active-active so loss of this node does not halt dependents.',
-        });
-      });
-    }
-    if (out.length) return out.sort((a, b) => b.dependents - a.dependents).slice(0, 5);
-  } catch (e) { logger.debug('spof graph degraded', { error: e.message }); }
-  // Modeled fallback — the classic enterprise SPOFs.
-  return [
-    { name: 'Primary identity provider (SSO)', layer: 'app', dependents: 9, why: 'Nearly every business service authenticates through one identity provider with no break-glass alternative.', recommendation: 'Stand up a tested break-glass path and secondary IdP region.' },
-    { name: 'Core payments / clearing gateway', layer: 'app', dependents: 5, why: 'Revenue-bearing flows funnel through a single gateway instance.', recommendation: 'Active-active the gateway across regions.' },
-    { name: 'Primary data-center network core', layer: 'network', dependents: 7, why: 'A flat core with one egress path; loss halts dependent tiers.', recommendation: 'Dual-core with independent egress and segmentation.' },
-    { modeled: true },
-  ].filter((x) => !x.modeled).map((x) => ({ ...x, modeled: true }));
-}
-
-// Vendor / cloud / region concentration from the vendor inventory + a modeled
-// cloud/region split (labeled when modeled).
-async function detectConcentration(orgId) {
-  const out = [];
-  try {
-    const Exec = require('./ExecDashboardService');
-    const c = await Exec.loadCtx(orgId);
-    const vendors = (c.vendors && (c.vendors.list || c.vendors.top)) || [];
-    const critical = vendors.filter((v) => /critical|tier ?1|high/i.test(String(v.criticality || v.tier || '')) || (v.exposure || 0) > 0);
-    if (critical.length) {
-      const top = critical[0];
-      out.push({ kind: 'vendor', label: `Vendor concentration: ${top.name || 'a single critical vendor'}`, detail: `${critical.length} critical service(s) concentrate on a small set of vendors; ${top.name || 'the lead vendor'} underpins multiple processes.`, severity: critical.length >= 3 ? 'High' : 'Medium', recommendation: 'Qualify a secondary supplier for the most-depended-on service and contractually require resilience SLAs.' });
-    }
-  } catch (_) {}
-  // Modeled cloud/region concentration (replace with live cloud inventory).
-  out.push({ kind: 'cloud', label: 'Cloud / region concentration', detail: 'The majority of tier-0 workloads run in a single cloud region; a regional impairment is a single failure domain.', severity: 'High', recommendation: 'Distribute tier-0 workloads across a second region/AZ with tested failover.', modeled: true });
-  return out;
 }
 
 module.exports = { getResilience };

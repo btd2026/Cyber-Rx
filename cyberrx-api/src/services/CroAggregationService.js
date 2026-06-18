@@ -48,6 +48,8 @@ async function getAggregation(orgId) {
     };
   });
 
+  // LIVE concentration from the asset inventory (shared with the CIO lens) +
+  // vendor concentration from the substrate.
   const concentration = await detectConcentration(orgId);
 
   // Correlation matrix anchored to this org's aggregate cyber exposure.
@@ -71,8 +73,8 @@ async function getAggregation(orgId) {
   };
 }
 
-// Vendor / cloud / region concentration — derived from vendor inventory + a
-// modeled cloud/region split (labeled when modeled).
+// Vendor concentration from the substrate + LIVE cloud/region/identity
+// concentration from the asset inventory (shared ConcentrationService).
 async function detectConcentration(orgId) {
   const out = [];
   try {
@@ -83,8 +85,7 @@ async function detectConcentration(orgId) {
       out.push({ kind: 'vendor', label: `Vendor concentration: ${critical[0].name || 'a single critical vendor'}`, detail: `${critical.length} critical service(s) concentrate on a small vendor set.`, severity: critical.length >= 3 ? 'High' : 'Medium', recommendation: 'Qualify a secondary supplier for the most-depended-on service; require resilience SLAs.' });
     }
   } catch (_) {}
-  out.push({ kind: 'cloud', label: 'Cloud / region concentration', detail: 'Most tier-0 workloads run in a single cloud region — one failure domain for the enterprise.', severity: 'High', recommendation: 'Distribute tier-0 workloads across a second region/AZ with tested failover.', modeled: true });
-  out.push({ kind: 'identity', label: 'Identity-provider concentration', detail: 'Nearly all services authenticate through one identity provider with no tested break-glass path.', severity: 'High', recommendation: 'Stand up a break-glass path and a secondary IdP.', modeled: true });
+  try { const live = await require('./ConcentrationService').detectConcentration(orgId); out.push(...live); } catch (_) {}
   return out;
 }
 
