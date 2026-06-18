@@ -248,6 +248,9 @@ app.use('/api/cro',               [apiGetLimiter, apiPutLimiter], require('./rou
 // CLO / General Counsel lens (obligations, triggers, defensibility, portfolio)
 app.use('/api/clo',               [apiGetLimiter], require('./routes/clo'));
 
+// Board oversight lens (oversight, decisions, accountability, investment)
+app.use('/api/board',             [apiGetLimiter], require('./routes/board'));
+
 // CISO attack-path graph (process → app → device → network → threat)
 app.use('/api/attack-path',       [apiGetLimiter], require('./routes/attackPath'));
 
