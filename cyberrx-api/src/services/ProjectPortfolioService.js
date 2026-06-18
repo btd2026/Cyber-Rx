@@ -173,11 +173,59 @@ function liftFor(p) {
   // bigger budgets buy somewhat more lift (diminishing)
   return Math.min(14, round(lift + Math.log10(Math.max(1, (p.budget || 0) / 250000)) * 2));
 }
-function projectAnalysis(p, exposurePerPoint) {
+
+// Which risks a project reduces — keyed by security domain, matched against the
+// titles in the org's risk register. This is a deterministic keyword linkage
+// (NOT a DecisionEngine call — the engine consumes the portfolio, so calling it
+// back here would recurse).
+const PROJECT_RISK_KW = {
+  identity: /identit|credential|account|privileg|access|admin|\bmfa\b|phish|login|password|lateral/i,
+  iam: /identit|credential|account|privileg|access|admin|\bmfa\b|login|password/i,
+  mfa: /credential|phish|account|login|\bmfa\b|password|access/i,
+  detection: /detect|endpoint|malware|ransom|lateral|respon|alert|threat|dwell|\bedr\b/i,
+  edr: /detect|endpoint|malware|ransom|lateral|respon|\bedr\b/i,
+  siem: /detect|alert|log|monitor|respon|threat/i,
+  cloud: /cloud|bucket|\bs3\b|config|misconfig|saas|azure|\baws\b|\bgcp\b|public[-\s]?facing/i,
+  cspm: /cloud|config|misconfig|guardrail|saas|azure|\baws\b/i,
+  vuln: /vuln|patch|\bcve\b|exploit|unpatch|internet[-\s]?facing|edge|gateway|\bkev\b/i,
+  patch: /vuln|patch|\bcve\b|exploit|unpatch/i,
+  data: /\bdata\b|exfil|leak|\bdlp\b|\bpii\b|\bphi\b|sensitive|loss|encrypt/i,
+  dlp: /\bdata\b|exfil|leak|\bdlp\b|sensitive/i,
+  thirdparty: /vendor|third[-\s]?party|supply|\bbaa\b|contract|partner|remote support/i,
+  vendor: /vendor|third[-\s]?party|supply|partner/i,
+  recovery: /backup|recover|continuity|ransom|restore|resilien/i,
+  backup: /backup|recover|restore|ransom/i,
+  network: /network|segment|firewall|perimeter|lateral/i,
+};
+function reducesRisksFor(p, risks) {
+  if (!Array.isArray(risks) || !risks.length) return [];
+  const d = String(p.domain || '').toLowerCase();
+  let re = null;
+  for (const k of Object.keys(PROJECT_RISK_KW)) { if (d.includes(k)) { re = PROJECT_RISK_KW[k]; break; } }
+  // fall back to matching against the project name when domain is blank/unknown
+  if (!re) { for (const k of Object.keys(PROJECT_RISK_KW)) { if (String(p.name || '').toLowerCase().includes(k)) { re = PROJECT_RISK_KW[k]; break; } } }
+  if (!re) return [];
+  return risks.filter((r) => re.test(`${r.title || ''} ${r.affectedSystem || ''}`))
+    .map((r) => ({ title: r.title, severity: r.severity, exposure: Number(r.financialExposure) || 0 }))
+    .slice(0, 4);
+}
+
+// Engine calibration: realized benefit historically lands below the model's
+// straight-line projection (delivery friction, partial adoption). We apply a
+// single calibration factor so PREDICTED vs REALIZED is shown honestly rather
+// than implying perfect linear accrual.
+const REALIZED_FACTOR = 0.82;
+function projectAnalysis(p, exposurePerPoint, risks) {
   const lift = liftFor(p);
   const exposureReduced = round(lift * exposurePerPoint);
   const budget = p.budget || 0;
-  const roi = budget > 0 ? Math.round((exposureReduced / budget) * 100) / 100 : null; // $ exposure removed per $ spent
+  // ROI here is expected-loss-avoided per dollar — not classic financial ROI.
+  const roi = budget > 0 ? Math.round((exposureReduced / budget) * 100) / 100 : null;
+  const pct = (p.percentComplete || 0) / 100;
+  // Realized so far: work delivered × the calibration factor.
+  const realizedLift = round(lift * pct * REALIZED_FACTOR);
+  const realizedExposureReduced = round(exposureReduced * pct * REALIZED_FACTOR);
+  const realizedRoi = budget > 0 ? Math.round((realizedExposureReduced / budget) * 100) / 100 : null;
   // Milestones: derive 3 even checkpoints if none provided; posture lift accrues linearly.
   let ms = Array.isArray(p.milestones) && p.milestones.length ? p.milestones : [
     { name: 'Design / pilot', percent: 33 }, { name: 'Rollout', percent: 66 }, { name: 'Operational', percent: 100 },
@@ -185,21 +233,32 @@ function projectAnalysis(p, exposurePerPoint) {
   ms = ms.map((m) => ({
     name: m.name, percent: m.percent, postureGain: round((lift * (m.percent || 0)) / 100),
     exposureRemoved: round((exposureReduced * (m.percent || 0)) / 100),
+    reached: (p.percentComplete || 0) >= (m.percent || 0),
   }));
   // Delay scenarios: exposure retained ≈ remaining exposure × (slip ÷ 365).
-  const remaining = round(exposureReduced * (1 - (p.percentComplete || 0) / 100));
+  const remaining = round(exposureReduced * (1 - pct));
   const delay = [30, 60, 90].map((days) => ({ days, deferredLift: lift, exposureRetained: round(remaining * (days / 365)) }));
-  return { postureLift: lift, exposureReduced, roi, milestones: ms, delay, remainingExposure: remaining };
+  return {
+    postureLift: lift, exposureReduced, roi, milestones: ms, delay, remainingExposure: remaining,
+    realizedLift, realizedExposureReduced, realizedRoi, calibrationFactor: REALIZED_FACTOR,
+    reducesRisks: reducesRisksFor(p, risks),
+  };
 }
 
 async function analyze(orgId) {
   let projects = await listProjects(orgId);
   if (!projects.length) { projects = demoProjects(); }
-  // exposure-per-posture-point from the org's financial context (industry-shaped).
-  let grossExposure = 48200000;
-  try { const Exec = require('./ExecDashboardService'); const c = await Exec.loadCtx(orgId); grossExposure = (c.financial && c.financial.grossExposure) || grossExposure; } catch (_) {}
+  // exposure-per-posture-point + the risk register from the org's context
+  // (industry-shaped). loadCtx, NOT DecisionEngine — the engine consumes the
+  // portfolio, so calling back into it here would recurse.
+  let grossExposure = 48200000, risks = [];
+  try {
+    const Exec = require('./ExecDashboardService'); const c = await Exec.loadCtx(orgId);
+    grossExposure = (c.financial && c.financial.grossExposure) || grossExposure;
+    risks = (c.risks && c.risks.top) || [];
+  } catch (_) {}
   const exposurePerPoint = round(grossExposure / 100);
-  const analyzed = projects.map((p) => Object.assign({}, p, { analysis: projectAnalysis(p, exposurePerPoint) }));
+  const analyzed = projects.map((p) => Object.assign({}, p, { analysis: projectAnalysis(p, exposurePerPoint, risks) }));
   // persist analysis back when these are real rows
   if (projects[0] && projects[0].id) {
     for (const p of analyzed) { try { await db.query('UPDATE security_projects SET analysis=$1 WHERE id=$2', [JSON.stringify(p.analysis), p.id]); } catch (_) {} }
@@ -213,15 +272,21 @@ async function portfolio(orgId) {
   const totalBudget = projects.reduce((s, p) => s + (p.budget || 0), 0);
   const totalLift = projects.reduce((s, p) => s + p.analysis.postureLift, 0);
   const totalExposureReduced = projects.reduce((s, p) => s + p.analysis.exposureReduced, 0);
-  const realizedLift = projects.reduce((s, p) => s + round((p.analysis.postureLift * (p.percentComplete || 0)) / 100), 0);
+  const realizedLift = projects.reduce((s, p) => s + p.analysis.realizedLift, 0);
+  const realizedExposureReduced = projects.reduce((s, p) => s + p.analysis.realizedExposureReduced, 0);
+  // ROI = expected loss avoided per dollar (predicted and realized-to-date).
   const blendedRoi = totalBudget > 0 ? Math.round((totalExposureReduced / totalBudget) * 100) / 100 : null;
+  const realizedRoi = totalBudget > 0 ? Math.round((realizedExposureReduced / totalBudget) * 100) / 100 : null;
+  // How realized accrual is tracking against the straight-line projection.
+  const expectedToDate = projects.reduce((s, p) => s + round((p.analysis.exposureReduced * (p.percentComplete || 0)) / 100), 0);
+  const calibration = expectedToDate > 0 ? Math.round((realizedExposureReduced / expectedToDate) * 100) : null;
   const atRisk = projects.filter((p) => /hold|blocked|delayed|risk|behind/i.test(p.status) || (p.percentComplete || 0) < 25);
   // Portfolio-level delay scenario: if the at-risk projects each slip 60 days.
   const slip60 = atRisk.reduce((s, p) => s + (p.analysis.delay.find((d) => d.days === 60) || {}).exposureRetained || 0, 0);
   const deferredLift = atRisk.reduce((s, p) => s + p.analysis.postureLift, 0);
   return {
     counts: { total: projects.length, atRisk: atRisk.length },
-    totalBudget, totalLift, realizedLift, totalExposureReduced, blendedRoi,
+    totalBudget, totalLift, realizedLift, totalExposureReduced, realizedExposureReduced, blendedRoi, realizedRoi, calibration,
     delayScenario: { slipDays: 60, projectsAffected: atRisk.length, exposureRetained: slip60, postureLiftDeferred: deferredLift, names: atRisk.map((p) => p.name) },
     projects,
   };
