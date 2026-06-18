@@ -62,7 +62,7 @@ export default function CioOperationalPosture(props) {
       </Panel>
 
       {/* recovery readiness vs declared RTO/RPO */}
-      <Panel title="Recovery readiness vs declared RTO / RPO" note={d.recoveryNote}>
+      <Panel title={`Recovery readiness vs declared RTO / RPO${d.recoverySource ? ` · ${d.recoverySource === 'live' ? 'live from CMDB' : 'modeled'}` : ''}`} note={d.recoveryNote}>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11.5 }}>
             <thead><tr style={{ color: INK3, fontSize: 9.5, textTransform: 'uppercase' }}>

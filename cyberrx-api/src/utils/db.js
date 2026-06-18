@@ -119,6 +119,14 @@ async function init() {
       ALTER TABLE assets ADD COLUMN IF NOT EXISTS vuln_high INTEGER DEFAULT 0;
       ALTER TABLE assets ADD COLUMN IF NOT EXISTS patch_pct INTEGER;
 
+      -- Recovery posture on business processes (idempotent): populated by a
+      -- CMDB / BC-DR / recovery-test feed when available; read live when present,
+      -- otherwise modeled from tier. last_recovery_test drives "restore-tested".
+      ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS rto_target_hrs NUMERIC;
+      ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS rpo_target_hrs NUMERIC;
+      ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS rto_capability_hrs NUMERIC;
+      ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS last_recovery_test DATE;
+
       CREATE TABLE IF NOT EXISTS data_objects (
         id            TEXT PRIMARY KEY,
         name          TEXT NOT NULL,
