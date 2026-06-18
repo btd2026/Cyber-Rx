@@ -820,6 +820,18 @@ async function init() {
       CREATE INDEX IF NOT EXISTS control_framework_assessment_org ON control_framework_assessment(organization_id);
       CREATE INDEX IF NOT EXISTS control_framework_assessment_fw ON control_framework_assessment(framework);
 
+      -- Compiler run: a record of each compile that assembled the chain and wrote
+      -- the per-framework control assessments. summary holds counts + per-framework posture.
+      CREATE TABLE IF NOT EXISTS compile_run (
+        id           TEXT PRIMARY KEY,
+        org_id       TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        status       TEXT,
+        summary      JSONB DEFAULT '{}',
+        decided_by   TEXT,
+        created_at   TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS compile_run_org ON compile_run(org_id);
+
       -- Third-party DEPENDENCY (graph node) — distinct from a monitoring connector.
       CREATE TABLE IF NOT EXISTS third_party_dependency (
         id              TEXT PRIMARY KEY,
