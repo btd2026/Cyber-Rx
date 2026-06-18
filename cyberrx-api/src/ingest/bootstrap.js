@@ -50,6 +50,15 @@ async function bootstrap() {
   } catch (e) { logger.warn('bootstrap: CIS ingest failed', { error: e.message }); }
 
   try {
+    // ISO/IEC 27001:2022 + SOC 2 (AICPA TSC): paraphrased structure, verbatim
+    // gated by VERBATIM_ISO / VERBATIM_SOC2. Re-seed if either is incomplete.
+    const hasIso = await count(`SELECT COUNT(*)::int n FROM framework_requirements WHERE framework_id='iso_27001'`);
+    const hasSoc = await count(`SELECT COUNT(*)::int n FROM framework_requirements WHERE framework_id='soc_2'`);
+    if (hasIso < 90 || hasSoc < 40) steps.isoSoc2 = await require('./loadIsoSoc2').load();
+    else steps.isoSoc2 = 'present';
+  } catch (e) { logger.warn('bootstrap: ISO/SOC2 ingest failed', { error: e.message }); }
+
+  try {
     // OFFICIAL CSF<->800-53 references, when the CPRT export is supplied.
     const hasOfficial = await count(`SELECT COUNT(*)::int n FROM requirement_crosswalks WHERE provenance='NIST CPRT'`);
     if (!hasOfficial) steps.csfRefs = await require('./loadCsfRefs').load();
