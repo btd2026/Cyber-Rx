@@ -57,7 +57,12 @@ async function detect(orgId) {
   ROLES.forEach((role) => { byRole[role] = findings.filter((f) => f.roles.includes(role)); });
   return {
     organizationId: orgId, generatedAt: new Date().toISOString(),
-    summary: { totalEvents: cards.length, undecided: undecided.length, undecidedCritical: undecidedCritical.length, decisionsLogged: ledgerRows.length, silentRoles },
+    summary: {
+      totalEvents: cards.length, undecided: undecided.length,
+      criticalTotal: critical.length, undecidedCritical: undecidedCritical.length,
+      aiTotal: aiCards.length, aiOpen: aiUndecided.length,
+      decisionsLogged: ledgerRows.length, silentRoles,
+    },
     findings, byRole,
   };
 }

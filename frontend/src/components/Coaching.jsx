@@ -10,6 +10,40 @@ import { useAgentVoice, VoiceControls } from './agentVoice';
 
 const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc', NAVY = '#0f1b2d';
 const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
+const STAND = { good: '#1f8a4c', warn: '#B07C2E', bad: '#C0392B', unknown: INK3 };
+
+// One benchmark metric: your value vs the modeled peer median / top-quartile,
+// rendered on a 0→best scale so "ahead / typical / behind" is visible at a glance.
+function BenchRow({ m }) {
+  const fmt = (v) => (v == null ? '—' : `${v}${m.unit === '%' ? '%' : m.unit === 'h' ? 'h' : ''}`);
+  const tone = STAND[m.tone] || INK3;
+  // Scale: for higher-is-better, 0→max(top, value)*1.1; for lower-is-better invert.
+  const hi = m.dir === 'high';
+  const span = Math.max(m.peerTopQuartile, m.peerMedian, m.value || 0) * 1.12 || 100;
+  const posOf = (v) => (v == null ? 0 : hi ? Math.min(100, (v / span) * 100) : Math.min(100, (1 - Math.min(v, span) / span) * 100));
+  return (
+    <div style={{ borderBottom: `1px solid ${PANEL}`, paddingBottom: 8 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: INK }}>{m.label}</span>
+        <span style={{ fontSize: 11.5 }}>
+          <strong style={{ color: tone }}>{fmt(m.value)}</strong>
+          <span style={{ color: INK3 }}> · median {fmt(m.peerMedian)} · top {fmt(m.peerTopQuartile)}</span>
+          <span style={{ color: tone, fontWeight: 700, marginLeft: 6, textTransform: 'capitalize' }}>{m.standing}</span>
+        </span>
+      </div>
+      {/* track with peer markers */}
+      <div style={{ position: 'relative', height: 8, background: '#eef2f6', borderRadius: 4, marginTop: 6 }}>
+        {m.value != null && <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: `${posOf(m.value)}%`, background: tone, borderRadius: 4, opacity: 0.85 }} />}
+        <Marker pct={posOf(m.peerMedian)} color={INK3} title="peer median" />
+        <Marker pct={posOf(m.peerTopQuartile)} color="#0e7490" title="top quartile" />
+      </div>
+      <div style={{ fontSize: 10.5, color: INK2, marginTop: 4, lineHeight: 1.45 }}>{m.coaching}</div>
+    </div>
+  );
+}
+function Marker({ pct, color, title }) {
+  return <div title={title} style={{ position: 'absolute', left: `calc(${pct}% - 1px)`, top: -2, height: 12, width: 2, background: color, borderRadius: 2 }} />;
+}
 const STAT = (s) => (/^yes/i.test(s) ? '#1f8a4c' : /^no/i.test(s) ? '#C0392B' : /likely/i.test(s) ? '#B07C2E' : INK3);
 
 function ctx(props) {
@@ -35,7 +69,7 @@ export default function Coaching(props) {
   useEffect(() => { load(); }, [load]);
 
   if (!d) return <div style={{ fontSize: 12, color: INK3 }}>Preparing your coaching…</div>;
-  const co = d.coaching || {}, bs = d.blindSpots || [], tt = co.tabletop;
+  const co = d.coaching || {}, bs = d.blindSpots || [], tt = co.tabletop, bm = d.benchmark;
 
   const Card = ({ title, accent, narrate, children }) => (
     <div style={{ border: `1px solid ${HAIR}`, borderTop: `3px solid ${accent}`, borderRadius: 11, background: '#fff', padding: '14px 16px' }}>
@@ -50,6 +84,8 @@ export default function Coaching(props) {
   const qNarr = `Questions to ask right now. ` + (co.questionsToAsk || []).join('. ');
   const mNarr = `Materiality checklist${co.topEvent ? ` for ${co.topEvent.title}` : ''}. ` + (co.materialityChecklist || []).map((m) => `${m.item}: ${m.status}, ${m.note}`).join('. ');
   const ttNarr = tt ? `${tt.scenario} ` + tt.prompts.join(' ') : '';
+  const bmNarr = bm ? `Compared to ${bm.peerGroup.sizeBand} peers in ${bm.peerGroup.industryLabel}, you are ${bm.standing}. ` +
+    bm.metrics.filter((m) => m.value != null).map((m) => `${m.label}: ${m.value}${m.unit === '%' ? ' percent' : m.unit === 'h' ? ' hours' : ''}, ${m.standing}; peer median ${m.peerMedian}${m.unit === '%' ? ' percent' : m.unit === 'h' ? ' hours' : ''}.`).join(' ') : '';
   const overview = `Your ${role} coaching. What to ask, what's material, a tabletop to run, and the blind spots detected from how decisions are actually being made. Press listen on any section for the detail.`;
 
   return (
@@ -78,6 +114,24 @@ export default function Coaching(props) {
           </div>
         )}
       </Card>
+
+      {/* size / industry peer benchmark */}
+      {bm && (
+        <Card title="📊 How you compare — size & industry peers" accent="#0e7490" narrate={bmNarr}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
+            <div style={{ fontSize: 11.5, color: INK2 }}>
+              <strong style={{ color: INK }}>{bm.peerGroup.sizeBand}</strong> · {bm.peerGroup.industryLabel}
+              <span style={{ color: INK3 }}> ({bm.peerGroup.sizeBasis})</span> — you are{' '}
+              <strong style={{ color: bm.standing === 'ahead of peers' ? '#1f8a4c' : bm.standing === 'behind peers' ? '#C0392B' : '#B07C2E' }}>{bm.standing}</strong>.
+            </div>
+            <div style={{ fontSize: 10.5, color: INK3 }}>{bm.counts.ahead} ahead · {bm.counts.typical} typical · {bm.counts.behind} behind</div>
+          </div>
+          <div style={{ display: 'grid', gap: 9 }}>
+            {bm.metrics.map((m) => <BenchRow key={m.key} m={m} />)}
+          </div>
+          <div style={{ fontSize: 10, color: INK3, marginTop: 10, lineHeight: 1.5 }}>{bm.note}{bm.cohortAvailable ? ' Live consented peer-cohort benchmarking is available — opt in to replace the modeled band.' : ''}</div>
+        </Card>
+      )}
 
       {/* questions to ask */}
       <Card title="❓ Questions to ask right now" accent="#1d4ed8" narrate={qNarr}>
