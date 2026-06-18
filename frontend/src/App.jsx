@@ -5014,7 +5014,9 @@ function Setup(props) {
     var reader=new FileReader();
     reader.onload=function(){
       var b64=String(reader.result||"").split(",").pop();
-      fetch(CYBERRX_API+"/api/intake/extract-processes",{
+      // Infer the FUNCTION -> PROCESS -> SUB-PROCESS tree (strict JSON nodes with
+      // per-node confidence + source). Nothing persists until the user validates.
+      fetch(CYBERRX_API+"/api/intake/processes/infer",{
         method:"POST",
         headers:{"Content-Type":"application/json",
           "X-Org-Id":(typeof localStorage!=="undefined"&&localStorage.getItem("cyberrx_org_id"))||""},
@@ -5022,46 +5024,60 @@ function Setup(props) {
       })
         .then(function(r){return r.json();})
         .then(function(d){
-          var fns=(d&&d.functions)||[];
-          // Build an editable tree: every process/sub-process starts included.
+          var nodes=(d&&d.nodes)||[];
+          // Rebuild the editable tree from the flat node list (parent refs).
+          var fns=nodes.filter(function(n){return n.level==="function";});
+          var byParent=function(pid){return nodes.filter(function(n){return n.parent===pid;});};
           var tree=fns.map(function(f){
             return {
-              function:f.function,
-              processes:(f.processes||[]).map(function(p){
+              function:f.name, fid:f.id, conf:f.confidence, src:f.source,
+              processes:byParent(f.id).filter(function(n){return n.level==="process";}).map(function(p){
                 return {
-                  id:p.id, pid:matchCanonicalProc(p.name)||p.id, name:p.name,
-                  tier:p.tier||"", rto:p.rto||"", include:true,
-                  subprocesses:(p.subprocesses||[]).map(function(s){
-                    return {id:s.id, name:s.name, tier:s.tier||"", rto:s.rto||"", include:true};
+                  id:p.id, inferId:p.id, pid:matchCanonicalProc(p.name)||p.id, name:p.name,
+                  tier:p.tier||"", rto:p.rto||"", include:true, conf:p.confidence, src:p.source,
+                  subprocesses:byParent(p.id).filter(function(n){return n.level==="subprocess";}).map(function(s){
+                    return {id:s.id, inferId:s.id, name:s.name, tier:s.tier||"", rto:s.rto||"", include:true, conf:s.confidence, src:s.source};
                   })
                 };
               })
             };
           });
           setProcTree(tree);
-          var flat=(d&&d.flat)||[];
-          flat=flat.map(function(p){return Object.assign({},p,{pid:matchCanonicalProc(p.name)||p.id});});
+          var flat=[];
+          tree.forEach(function(f){(f.processes||[]).forEach(function(p){flat.push({id:p.id,function:f.function,name:p.name,tier:p.tier,rto:p.rto,pid:p.pid});});});
           setExtractedProcs(flat);
           syncSelFromTree(tree);
-          setExtractMeta({engine:(d&&d.engine)||"none",count:flat.length,note:d&&d.note});
+          setExtractMeta({engine:(d&&d.engine)||"none",count:flat.length,note:d&&d.note,fileName:file.name});
         })
         .catch(function(err){ setExtractMeta({error:err.message}); })
         .finally(function(){ setExtracting(false); });
     };
     reader.readAsDataURL(file);
   }
-  // Persist the validated process tree (included items, with Tier/RTO) to the
-  // server so the application→process mapping and downstream calculations use it.
+  // Persist ONLY the user-validated nodes (functions + included processes/
+  // sub-processes, with level/parent/source/confidence) and log each validation
+  // to the intake evidence ledger. Replaces the legacy flat save.
   function saveProcessesToServer(){
-    var list=[];
-    (procTree||[]).forEach(function(f){(f.processes||[]).forEach(function(p){
-      if(p.include&&String(p.name||"").trim()) list.push({name:p.name,tier:p.tier||null,rto:p.rto||null,function:f.function});
-    });});
-    if(!list.length) return;
-    fetch(CYBERRX_API+"/api/intake/save-processes",{
+    var nodes=[];
+    (procTree||[]).forEach(function(f){
+      var fid=f.fid||("fn-"+(f.function||"").toLowerCase().replace(/[^a-z0-9]+/g,"-"));
+      var anyIncluded=(f.processes||[]).some(function(p){return p.include&&String(p.name||"").trim();});
+      if(anyIncluded) nodes.push({id:fid,name:f.function,level:"function",parent:null,source:f.src||"upload",confidence:f.conf});
+      (f.processes||[]).forEach(function(p){
+        if(!(p.include&&String(p.name||"").trim())) return;
+        var pInfer=p.inferId||p.id;
+        nodes.push({id:pInfer,name:p.name,level:"process",parent:fid,tier:p.tier||null,rto:p.rto||null,source:p.src||"upload",confidence:p.conf});
+        (p.subprocesses||[]).forEach(function(s){
+          if(!(s.include&&String(s.name||"").trim())) return;
+          nodes.push({id:s.inferId||s.id,name:s.name,level:"subprocess",parent:pInfer,tier:s.tier||null,rto:s.rto||null,source:s.src||"upload",confidence:s.conf});
+        });
+      });
+    });
+    if(!nodes.length) return;
+    fetch(CYBERRX_API+"/api/intake/processes/validate",{
       method:"POST",
       headers:{"Content-Type":"application/json","X-Org-Id":(typeof localStorage!=="undefined"&&localStorage.getItem("cyberrx_org_id"))||""},
-      body:JSON.stringify({processes:list})
+      body:JSON.stringify({nodes:nodes,decidedBy:(orgName||"intake user")})
     }).catch(function(){});
   }
   // Selected processes = the included top-level processes in the validated tree.
@@ -5771,7 +5787,7 @@ function Setup(props) {
                 </label>
                 {extractMeta&&!extractMeta.error&&extractMeta.count>0&&(
                   <span style={{color:"#0FBB80",fontSize:11,fontWeight:600}}>
-                    ✓ {extractMeta.count} processes extracted{extractMeta.engine==="llm"?" by AI":""} — validate below
+                    {extractMeta.fileName?"✓ "+extractMeta.fileName+" received — ":"✓ "}{extractMeta.count} processes inferred{extractMeta.engine==="llm"?" by AI":extractMeta.engine==="heuristic"?" (pattern match)":""} — validate &amp; accept below
                   </span>
                 )}
                 {extractMeta&&!extractMeta.error&&extractMeta.count===0&&(
@@ -5813,6 +5829,12 @@ function Setup(props) {
                                   <input type="checkbox" checked={p.include} onChange={function(e){setProcField(fi,pi,"include",e.target.checked);}}/>
                                   <input value={p.name} placeholder="Process name" onChange={function(e){setProcField(fi,pi,"name",e.target.value);}}
                                     style={{flex:1,background:C.bg,border:"1px solid "+C.border,borderRadius:6,padding:"6px 8px",color:C.text,fontSize:11.5,outline:"none"}}/>
+                                  {p.conf!=null&&(
+                                    <span title={"Inferred from "+(p.src||"upload")+" — confidence "+Math.round((p.conf||0)*100)+"%. Validate before it persists."}
+                                      style={{fontSize:9,fontWeight:700,whiteSpace:"nowrap",color:(p.conf>=0.75?"#0FBB80":p.conf>=0.5?"#B07C2E":"#C0392B"),background:C.dim,border:"1px solid "+C.border,borderRadius:10,padding:"2px 7px"}}>
+                                      {Math.round((p.conf||0)*100)}% · {p.src||"upload"}
+                                    </span>
+                                  )}
                                   <select value={p.tier} onChange={function(e){setProcField(fi,pi,"tier",e.target.value);}} title="Criticality tier"
                                     style={{background:C.bg,border:"1px solid "+C.border,borderRadius:6,padding:"6px 6px",color:p.tier?C.text:C.muted,fontSize:11}}>
                                     <option value="">Tier —</option><option value="1">Tier 1</option><option value="2">Tier 2</option><option value="3">Tier 3</option><option value="4">Tier 4</option>
