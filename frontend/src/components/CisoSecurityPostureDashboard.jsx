@@ -34,6 +34,10 @@ import CioOperationalPosture from './CioOperationalPosture';
 import CioResilience from './CioResilience';
 import CioFrictionMap from './CioFrictionMap';
 import CioTransformation from './CioTransformation';
+import CroEnterprisePosition from './CroEnterprisePosition';
+import CroExposures from './CroExposures';
+import CroAggregation from './CroAggregation';
+import CroTreatment from './CroTreatment';
 
 // Per-role header framing so every C-suite seat uses this SAME rich view.
 const ROLE_FRAME = {
@@ -145,6 +149,31 @@ const CIO_TABS = [
   ['coaching', 'Blind Spots & Coaching'],
 ];
 
+// CRO uses a parallel 5-sub-tab lens at enterprise-risk altitude. Appetite is
+// AUTHORED in sub-tab 1 and propagates (shared tenant config); exposures are the
+// shared events normalized to portfolio altitude.
+const CRO_GROUP_DEFS = [
+  { key: 'position', label: 'Enterprise Risk Position' },
+  { key: 'appetite', label: 'Cyber vs Appetite' },
+  { key: 'aggregation', label: 'Aggregation & Correlation' },
+  { key: 'treatment', label: 'Treatment Portfolio & ROI' },
+  { key: 'coaching', label: 'Blind Spots & Coaching' },
+];
+const CRO_MEMBER_OF = {
+  croposition: 'position',
+  croexposures: 'appetite', decisionq: 'appetite',
+  croaggregation: 'aggregation',
+  crotreatment: 'treatment',
+  coaching: 'coaching',
+};
+const CRO_TABS = [
+  ['croposition', 'Enterprise Risk Position'],
+  ['croexposures', 'Cyber Risk vs Appetite & Top Exposures'], ['decisionq', 'Decisions'],
+  ['croaggregation', 'Aggregation & Correlation'],
+  ['crotreatment', 'Risk Treatment Portfolio & ROI'],
+  ['coaching', 'Blind Spots & Coaching'],
+];
+
 export default function CisoSecurityPostureDashboard(props) {
   const role = props.role || 'CISO';
   // Every leader uses this SAME rich scaffold (hero, pillar strip, full tab set,
@@ -192,18 +221,19 @@ export default function CisoSecurityPostureDashboard(props) {
   const p = d.overallPosture;
   const refreshed = new Date(d.generatedAt).toLocaleString();
 
-  // CISO and CIO each have a bespoke 5-sub-tab lens (built on the shared spine).
-  // Every other leader gets a tab layout tailored by the backend (d.roleTabs).
+  // CISO, CIO and CRO each have a bespoke 5-sub-tab lens (built on the shared
+  // spine). Every other leader gets a tab layout tailored by the backend (d.roleTabs).
   const isCisoLayout = role === 'CISO';
   const isCioLayout = role === 'CIO';
-  const roleTabs = (!isCisoLayout && !isCioLayout && Array.isArray(d.roleTabs)) ? d.roleTabs : null;
+  const isCroLayout = role === 'CRO';
+  const roleTabs = (!isCisoLayout && !isCioLayout && !isCroLayout && Array.isArray(d.roleTabs)) ? d.roleTabs : null;
   const labelFor = (t) => {
     if (t.kind === 'thresholds') return `Thresholds · ${d.thresholds.breaches} breached`;
     if (t.kind === 'hidden') return `Hidden Risk · ${d.hiddenRisks.length}`;
     if (t.kind === 'rolepanel') return props.rolePanelLabel || t.label;
     return t.label;
   };
-  const TABS = isCioLayout ? CIO_TABS : roleTabs
+  const TABS = isCioLayout ? CIO_TABS : isCroLayout ? CRO_TABS : roleTabs
     ? roleTabs.map((t) => [t.key, labelFor(t)])
     : [
       ['qa', 'Current State'], ['summary', 'Executive Summary'],
@@ -216,18 +246,20 @@ export default function CisoSecurityPostureDashboard(props) {
     ];
   const activeRoleTab = roleTabs ? (roleTabs.find((t) => t.key === tab) || roleTabs[0]) : null;
   // The bespoke layouts start on their first tab, not the shared 'qa' default.
-  const cioTab = isCioLayout ? (CIO_MEMBER_OF[tab] ? tab : 'cioposture') : tab;
+  const bespokeTab = isCioLayout ? (CIO_MEMBER_OF[tab] ? tab : 'cioposture')
+    : isCroLayout ? (CRO_MEMBER_OF[tab] ? tab : 'croposition') : tab;
 
   // Collapse the flat TABS into top-level groups (only those with members) and
-  // derive the active group from the active tab so the two stay in sync. CISO and
-  // CIO use their bespoke group structures; other roles use the generic groups.
-  const groupDefs = isCisoLayout ? CISO_GROUP_DEFS : isCioLayout ? CIO_GROUP_DEFS : TAB_GROUPS;
+  // derive the active group from the active tab so the two stay in sync. CISO,
+  // CIO and CRO use their bespoke group structures; other roles use the generic.
+  const groupDefs = isCisoLayout ? CISO_GROUP_DEFS : isCioLayout ? CIO_GROUP_DEFS : isCroLayout ? CRO_GROUP_DEFS : TAB_GROUPS;
   const memberOf = isCisoLayout ? ((k) => CISO_MEMBER_OF[k] || 'keyrisks')
-    : isCioLayout ? ((k) => CIO_MEMBER_OF[k] || 'opstate') : groupOf;
+    : isCioLayout ? ((k) => CIO_MEMBER_OF[k] || 'opstate')
+    : isCroLayout ? ((k) => CRO_MEMBER_OF[k] || 'position') : groupOf;
   const groupsPresent = groupDefs
     .map((g) => ({ ...g, members: TABS.filter(([k]) => memberOf(k) === g.key) }))
     .filter((g) => g.members.length);
-  const activeGroup = groupsPresent.find((g) => g.key === memberOf(cioTab)) || groupsPresent[0];
+  const activeGroup = groupsPresent.find((g) => g.key === memberOf(bespokeTab)) || groupsPresent[0];
 
   return (
     <div style={{ background: PANEL, borderRadius: 8, padding: 0, fontFamily: 'inherit' }}>
@@ -287,7 +319,7 @@ export default function CisoSecurityPostureDashboard(props) {
       {activeGroup.members.length > 1 && (
         <div style={{ display: 'flex', gap: 4, background: PANEL, borderBottom: `1px solid ${HAIR}`, overflowX: 'auto', padding: '6px 10px' }}>
           {activeGroup.members.map(([k, label]) => (
-            <button key={k} onClick={() => setTab(k)} style={{ background: cioTab === k ? '#fff' : 'transparent', border: `1px solid ${cioTab === k ? HAIR : 'transparent'}`, borderRadius: 7, color: cioTab === k ? INK : INK2, padding: '6px 12px', cursor: 'pointer', fontSize: 11.5, fontWeight: cioTab === k ? 700 : 500, whiteSpace: 'nowrap' }}>{label}</button>
+            <button key={k} onClick={() => setTab(k)} style={{ background: bespokeTab === k ? '#fff' : 'transparent', border: `1px solid ${bespokeTab === k ? HAIR : 'transparent'}`, borderRadius: 7, color: bespokeTab === k ? INK : INK2, padding: '6px 12px', cursor: 'pointer', fontSize: 11.5, fontWeight: bespokeTab === k ? 700 : 500, whiteSpace: 'nowrap' }}>{label}</button>
           ))}
         </div>
       )}
@@ -303,12 +335,21 @@ export default function CisoSecurityPostureDashboard(props) {
         )}
         {isCioLayout
           ? (<>
-            {cioTab === 'cioposture' && <CioOperationalPosture orgId={orgId} authToken={token} apiUrl={api} />}
-            {cioTab === 'resiliencerisks' && <CioResilience orgId={orgId} authToken={token} apiUrl={api} />}
-            {cioTab === 'decisionq' && <DecisionQueue role={role} orgId={orgId} authToken={token} apiUrl={api} />}
-            {cioTab === 'frictionmap' && <CioFrictionMap orgId={orgId} authToken={token} apiUrl={api} />}
-            {cioTab === 'ciotransformation' && <CioTransformation orgId={orgId} authToken={token} apiUrl={api} />}
-            {cioTab === 'coaching' && <Coaching role={role} orgId={orgId} authToken={token} apiUrl={api} />}
+            {bespokeTab === 'cioposture' && <CioOperationalPosture orgId={orgId} authToken={token} apiUrl={api} />}
+            {bespokeTab === 'resiliencerisks' && <CioResilience orgId={orgId} authToken={token} apiUrl={api} />}
+            {bespokeTab === 'decisionq' && <DecisionQueue role={role} orgId={orgId} authToken={token} apiUrl={api} />}
+            {bespokeTab === 'frictionmap' && <CioFrictionMap orgId={orgId} authToken={token} apiUrl={api} />}
+            {bespokeTab === 'ciotransformation' && <CioTransformation orgId={orgId} authToken={token} apiUrl={api} />}
+            {bespokeTab === 'coaching' && <Coaching role={role} orgId={orgId} authToken={token} apiUrl={api} />}
+          </>)
+          : isCroLayout
+          ? (<>
+            {bespokeTab === 'croposition' && <CroEnterprisePosition orgId={orgId} authToken={token} apiUrl={api} />}
+            {bespokeTab === 'croexposures' && <CroExposures orgId={orgId} authToken={token} apiUrl={api} />}
+            {bespokeTab === 'decisionq' && <DecisionQueue role={role} orgId={orgId} authToken={token} apiUrl={api} />}
+            {bespokeTab === 'croaggregation' && <CroAggregation orgId={orgId} authToken={token} apiUrl={api} />}
+            {bespokeTab === 'crotreatment' && <CroTreatment orgId={orgId} authToken={token} apiUrl={api} />}
+            {bespokeTab === 'coaching' && <Coaching role={role} orgId={orgId} authToken={token} apiUrl={api} />}
           </>)
           : roleTabs
           ? <RoleTabContent t={activeRoleTab} role={role} d={d} props={props} />

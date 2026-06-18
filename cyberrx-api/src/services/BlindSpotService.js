@@ -64,6 +64,22 @@ async function detect(orgId) {
       'Run a restore test against declared RTO/RPO for the tier-0 services these events threaten, and record the result; an untested backup is the classic unrecoverable-ransomware blind spot.', ['CIO', 'CISO', 'CRO']);
   }
 
+  // CRO-specific patterns: appetite-vs-reality gaps and unmanaged aggregation.
+  let appetite = { riskThreshold: 'High' };
+  try { const cfg = await require('./TenantConfigService').get(orgId); if (cfg && cfg.config && cfg.config.appetite) appetite = cfg.config.appetite; } catch (_) {}
+  const sevRank = { Critical: 0, High: 1, Medium: 2, Low: 3 };
+  const apThreshold = sevRank[appetite.riskThreshold] != null ? sevRank[appetite.riskThreshold] : 1;
+  const aboveAppetiteUndecided = cards.filter((c) => (sevRank[c.event.severity] != null ? sevRank[c.event.severity] : 1) <= apThreshold && !decidedByCard[c.id]);
+  if (aboveAppetiteUndecided.length) {
+    add('High', 'Appetite-vs-reality gap', `${aboveAppetiteUndecided.length} exposure(s) sit at or above the board-set appetite (${appetite.riskThreshold}+) with no recorded risk decision.`,
+      'Either bring these within appetite with a treatment, or formally accept them with a signed rationale — an appetite stated but not enforced is a governance finding.', ['CRO', 'Board', 'CISO']);
+  }
+  const compoundsUndecided = cards.filter((c) => c.type === 'compound' && !decidedByCard[c.id]);
+  if (compoundsUndecided.length) {
+    add('High', 'Unmanaged aggregation / concentration', `${compoundsUndecided.length} correlated multi-risk scenario(s) are undecided — risks managed individually that combine above appetite (e.g. "${compoundsUndecided[0].event.title}").`,
+      'Govern these at portfolio altitude: break one link to collapse the chain, and check for single vendor/cloud/region dependencies behind the correlation.', ['CRO', 'Board']);
+  }
+
   if (!findings.length) {
     add('Low', 'No blind spots detected', 'Every critical event has a recorded decision and all roles are engaging.',
       'Maintain the cadence; re-run after the next event generation.', ROLES);
