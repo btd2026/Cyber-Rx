@@ -237,6 +237,68 @@ router.post('/processes/validate', async (req, res) => {
   }
 });
 
+// ===== Intake redesign Step 3 — applications <-> processes (Slice 3) ========
+
+// Run the 3-tier confidence cascade and persist PROPOSED mappings (many-to-many).
+router.post('/apps/map', async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'org_id is required' });
+  try { res.json(await require('../crosswalk/CrosswalkService').cascadeMap(orgId, { apps: (req.body && req.body.apps) || null, linkage: (req.body && req.body.linkage) || null })); }
+  catch (e) { logger.warn('apps map failed', { error: e.message }); res.status(500).json({ error: e.message }); }
+});
+
+// Persist pulled/normalized application rows (CMDB or file) into applications
+// with provenance, then run the cascade using their structured linkage. Returns
+// the review.
+const ASLUG = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'app';
+router.post('/apps/ingest', async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'org_id is required' });
+  const apps = Array.isArray(req.body && req.body.apps) ? req.body.apps : [];
+  if (!apps.length) return res.status(400).json({ error: 'apps[] is required' });
+  try {
+    const linkage = {};
+    for (const a of apps) {
+      const name = String(a.name || '').trim(); if (!name) continue;
+      const id = `app_${orgId}_${ASLUG(a.externalRef || name)}`;
+      await db.query(
+        `INSERT INTO applications (id, organization_id, name, owner, vendor, hosting, data_classification, external_ref, source, status, created_at, updated_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'proposed',NOW(),NOW())
+         ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, owner=EXCLUDED.owner, vendor=EXCLUDED.vendor,
+           hosting=EXCLUDED.hosting, data_classification=EXCLUDED.data_classification, external_ref=EXCLUDED.external_ref,
+           source=EXCLUDED.source, updated_at=NOW()`,
+        [id, orgId, name, a.owner || null, a.vendor || null, a.hosting || null, JSON.stringify(a.dataClassification || []), a.externalRef || null, a.source || 'inventory']);
+      const svcs = (a.businessServices || []).concat(a.supportedCapability ? [a.supportedCapability] : []);
+      if (svcs.length) linkage[id] = svcs;
+    }
+    const review = await require('../crosswalk/CrosswalkService').cascadeMap(orgId, { linkage });
+    res.json({ ingested: apps.length, ...review });
+  } catch (e) { logger.warn('apps ingest failed', { error: e.message }); res.status(500).json({ error: e.message }); }
+});
+
+// Process-centric review: per process its mapped apps (low-confidence first) +
+// gap findings (uncovered processes, orphan apps).
+router.get('/apps/review', async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'org_id is required' });
+  try { res.json(await require('../crosswalk/CrosswalkService').mappingReview(orgId)); }
+  catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Validate a mapping (accept/reject/edit) -> status + ledger + criticality.
+router.post('/apps/validate', async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'org_id is required' });
+  const b = req.body || {};
+  const items = Array.isArray(b.items) ? b.items : [b];
+  try {
+    const Cross = require('../crosswalk/CrosswalkService');
+    const out = [];
+    for (const it of items) out.push(await Cross.validateMapping(orgId, it));
+    res.json({ validated: out.length, results: out });
+  } catch (e) { logger.warn('apps validate failed', { error: e.message }); res.status(500).json({ error: e.message }); }
+});
+
 // ===== Intake redesign foundation (Slice 0) — scaffolding endpoints =========
 // CMDB connector — test reachability/credentials for a direct application pull.
 router.post('/cmdb/test', async (req, res) => {

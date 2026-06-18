@@ -20,6 +20,7 @@ import CisoAgentPanel from "./components/CisoAgentPanel";
 import OrganizationIntakeDocuments from "./components/OrganizationIntakeDocuments";
 import IngestionUploader from "./components/IngestionUploader";
 import AppProcessMap from "./components/AppProcessMap";
+import IntakeAppMapping from "./components/IntakeAppMapping";
 import CfoExposurePanel from "./components/CfoExposurePanel";
 import ResolutionPanel from "./components/ResolutionPanel";
 import AuditLineagePanel from "./components/AuditLineagePanel";
@@ -6180,6 +6181,13 @@ function Setup(props) {
             {/* After the inventory is uploaded, CyberRX uses the LLM to map every
                 application to the process(es) it supports (many-to-many) and shows
                 the visual mapping. This drives all downstream calculations. */}
+            {/* Process-centric validation of the application↔process mapping:
+                3-tier cascade, accept/delete/edit, gap detection, criticality
+                propagation. The canonical process_application_map is built here. */}
+            <Card style={{marginTop:14}}>
+              <SH label="Validate the application → process mapping"/>
+              <IntakeAppMapping refreshKey={mapRefresh} />
+            </Card>
             <Card style={{marginTop:14}}>
               <AppProcessMap refreshKey={mapRefresh} />
             </Card>
