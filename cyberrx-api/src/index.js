@@ -280,6 +280,10 @@ app.use('/api/ai-systems',        [apiGetLimiter, apiPostLimiter], require('./ro
 // decision & evidence ledger (the cross-role "decisions, not dashboards" surface).
 app.use('/api/decisions',         [apiGetLimiter, apiPostLimiter], require('./routes/decisions'));
 
+// Coaching layer + blind-spot detection over the decision spine (questions to
+// ask, materiality checklist, tabletop, per-leader neglect patterns).
+app.use('/api/coaching',          [apiGetLimiter], require('./routes/coaching'));
+
 // Generic schema-agnostic ingestion (process inventory / CMDB) — files + APIs
 app.use('/api/ingestion',         [apiGetLimiter, apiPostLimiter], require('./routes/ingestion'));
 

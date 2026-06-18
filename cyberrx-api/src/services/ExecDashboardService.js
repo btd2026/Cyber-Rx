@@ -737,6 +737,8 @@ function roleLayout(role, c) {
   tabs.splice(Math.min(1, tabs.length), 0, { key: 'decisionq', label: 'Decisions & Projections', kind: 'decisionq' });
   // AI governance (AI-BOM) — every leader cares about AI usage + securing AI.
   tabs.push({ key: 'ai', label: 'AI Governance', kind: 'ai' });
+  // Coaching + blind-spot detection over the decision spine.
+  tabs.push({ key: 'coaching', label: 'Coaching & Blind Spots', kind: 'coaching' });
   // Security project portfolio (ROI + delay impact) — relevant to the leaders
   // who fund, run, and govern the program.
   if (['CIO', 'CFO', 'Board'].includes(role)) {

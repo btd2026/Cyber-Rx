@@ -25,6 +25,7 @@ import RoleSection from './RoleSections';
 import SecurityProjects from './SecurityProjects';
 import AiGovernance from './AiGovernance';
 import DecisionQueue from './DecisionQueue';
+import Coaching from './Coaching';
 
 // Per-role header framing so every C-suite seat uses this SAME rich view.
 const ROLE_FRAME = {
@@ -130,7 +131,7 @@ export default function CisoSecurityPostureDashboard(props) {
       ['domains', 'Domain Health'], ['controls', 'Control Risk'],
       ['thresholds', `Thresholds · ${d.thresholds.breaches} breached`], ['actions', 'Action Now'],
       ['processes', 'Process Protection'], ['paths', 'Attack Pathways'], ['readiness', 'Readiness & Investment'],
-      ['hidden', `Hidden Risk · ${d.hiddenRisks.length}`], ['ai', 'AI Governance'], ['projects', 'Projects & ROI'],
+      ['hidden', `Hidden Risk · ${d.hiddenRisks.length}`], ['ai', 'AI Governance'], ['coaching', 'Coaching & Blind Spots'], ['projects', 'Projects & ROI'],
     ];
   const activeRoleTab = roleTabs ? (roleTabs.find((t) => t.key === tab) || roleTabs[0]) : null;
 
@@ -209,6 +210,7 @@ export default function CisoSecurityPostureDashboard(props) {
             {tab === 'readiness' && <Readiness readiness={d.readiness} investments={d.investments} peers={d.peerMaturity} emerging={d.emergingRisks} />}
             {tab === 'hidden' && <Hidden risks={d.hiddenRisks} />}
             {tab === 'ai' && <AiGovernance />}
+            {tab === 'coaching' && <Coaching role={role} />}
             {tab === 'projects' && <SecurityProjects />}
           </>)}
         <div style={{ fontSize: 10.5, color: INK3, marginTop: 16, borderTop: `1px solid ${HAIR}`, paddingTop: 10 }}>
@@ -240,6 +242,7 @@ function RoleTabContent({ t, role, d, props }) {
     case 'projects': return <SecurityProjects />;
     case 'ai': return <AiGovernance />;
     case 'decisionq': return <DecisionQueue role={role} />;
+    case 'coaching': return <Coaching role={role} />;
     case 'section': return <RoleSection section={t.section} role={role} />;
     default: return null;
   }
