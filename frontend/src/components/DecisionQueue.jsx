@@ -8,6 +8,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
+import { DefensibleRationaleHint, DEFENSIBLE_PLACEHOLDER } from './legalRationale';
 
 const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc', NAVY = '#0f1b2d';
 const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
@@ -169,7 +170,8 @@ function Card({ card, role, onDecide, voice }) {
         {accepting && !decided && (
           <div style={{ marginTop: 10, border: `1px solid ${HAIR}`, borderRadius: 9, padding: '10px 12px', background: PANEL }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: INK, marginBottom: 6 }}>Document why you're accepting this risk (required, logged)</div>
-            <textarea value={rationale} onChange={(e) => setRationale(e.target.value)} rows={2} placeholder="Business justification, compensating factors, and review date…"
+            <div style={{ marginBottom: 7 }}><DefensibleRationaleHint compact /></div>
+            <textarea value={rationale} onChange={(e) => setRationale(e.target.value)} rows={3} placeholder={DEFENSIBLE_PLACEHOLDER}
               style={{ width: '100%', border: `1px solid ${HAIR}`, borderRadius: 7, padding: '8px 10px', fontSize: 12, outline: 'none', resize: 'vertical' }} />
             <button onClick={() => onDecide(card, card.options.find((x) => x.id === 'accept'), rationale)} disabled={!rationale.trim()}
               style={{ ...btn('#1f8a4c'), opacity: rationale.trim() ? 1 : 0.5, marginTop: 8 }}>Record acceptance</button>
