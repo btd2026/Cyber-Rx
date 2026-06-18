@@ -28,6 +28,7 @@ import DecisionQueue from './DecisionQueue';
 import Coaching from './Coaching';
 import DecisionRail, { VisibilityChip } from './DecisionRail';
 import CurrentState from './CurrentState';
+import ControlEfficacy from './ControlEfficacy';
 
 // Per-role header framing so every C-suite seat uses this SAME rich view.
 const ROLE_FRAME = {
@@ -97,6 +98,24 @@ const GROUP_OF = {
 };
 const groupOf = (k) => GROUP_OF[k] || 'risk';
 
+// CISO uses the redesigned 5-group structure (per spec): Current State, Key
+// Risks, Control Efficacy, Key Projects & ROI, Blind Spots & Coaching. Domain
+// Health + Control Risk are folded into Control Efficacy.
+const CISO_GROUP_DEFS = [
+  { key: 'state', label: 'Current State' },
+  { key: 'keyrisks', label: 'Key Risks' },
+  { key: 'controlefficacy', label: 'Control Efficacy' },
+  { key: 'projects', label: 'Key Projects & ROI' },
+  { key: 'coaching', label: 'Blind Spots & Coaching' },
+];
+const CISO_MEMBER_OF = {
+  qa: 'state', summary: 'state',
+  decisionq: 'keyrisks', linkage: 'keyrisks', thresholds: 'keyrisks', processes: 'keyrisks', paths: 'keyrisks', hidden: 'keyrisks', ai: 'keyrisks', actions: 'keyrisks',
+  controlefficacy: 'controlefficacy',
+  readiness: 'projects', projects: 'projects',
+  coaching: 'coaching',
+};
+
 export default function CisoSecurityPostureDashboard(props) {
   const role = props.role || 'CISO';
   // Every leader uses this SAME rich scaffold (hero, pillar strip, full tab set,
@@ -156,20 +175,26 @@ export default function CisoSecurityPostureDashboard(props) {
   const TABS = roleTabs
     ? roleTabs.map((t) => [t.key, labelFor(t)])
     : [
-      ['qa', 'Current State'], ['decisionq', 'Decisions & Projections'], ['summary', 'Executive Summary'], ['linkage', 'Business Risk'],
-      ['domains', 'Domain Health'], ['controls', 'Control Risk'],
-      ['thresholds', `Thresholds · ${d.thresholds.breaches} breached`], ['actions', 'Action Now'],
-      ['processes', 'Process Protection'], ['paths', 'Attack Pathways'], ['readiness', 'Readiness & Investment'],
-      ['hidden', `Hidden Risk · ${d.hiddenRisks.length}`], ['ai', 'AI Governance'], ['coaching', 'Coaching & Blind Spots'], ['projects', 'Projects & ROI'],
+      ['qa', 'Current State'], ['summary', 'Executive Summary'],
+      ['decisionq', 'Decisions & Projections'], ['linkage', 'Business Risk'],
+      ['thresholds', `Thresholds · ${d.thresholds.breaches} breached`], ['processes', 'Process Protection'],
+      ['paths', 'Attack Pathways'], ['hidden', `Hidden Risk · ${d.hiddenRisks.length}`], ['ai', 'AI Governance'], ['actions', 'Action Now'],
+      ['controlefficacy', 'Control Efficacy'],
+      ['readiness', 'Readiness & Investment'], ['projects', 'Projects & ROI'],
+      ['coaching', 'Coaching & Blind Spots'],
     ];
   const activeRoleTab = roleTabs ? (roleTabs.find((t) => t.key === tab) || roleTabs[0]) : null;
 
-  // Collapse the flat TABS into the 5 groups (only those with members), and
-  // derive the active group from the active tab so the two stay in sync.
-  const groupsPresent = TAB_GROUPS
-    .map((g) => ({ ...g, members: TABS.filter(([k]) => groupOf(k) === g.key) }))
+  // Collapse the flat TABS into top-level groups (only those with members) and
+  // derive the active group from the active tab so the two stay in sync. CISO
+  // uses the redesigned 5-group structure; other roles use the generic groups.
+  const isCisoLayout = role === 'CISO';
+  const groupDefs = isCisoLayout ? CISO_GROUP_DEFS : TAB_GROUPS;
+  const memberOf = isCisoLayout ? ((k) => CISO_MEMBER_OF[k] || 'keyrisks') : groupOf;
+  const groupsPresent = groupDefs
+    .map((g) => ({ ...g, members: TABS.filter(([k]) => memberOf(k) === g.key) }))
     .filter((g) => g.members.length);
-  const activeGroup = groupsPresent.find((g) => g.key === groupOf(tab)) || groupsPresent[0];
+  const activeGroup = groupsPresent.find((g) => g.key === memberOf(tab)) || groupsPresent[0];
 
   return (
     <div style={{ background: PANEL, borderRadius: 8, padding: 0, fontFamily: 'inherit' }}>
@@ -252,6 +277,7 @@ export default function CisoSecurityPostureDashboard(props) {
             {tab === 'linkage' && <BusinessRiskPanel />}
             {tab === 'domains' && <Domains matrix={d.domainMatrix} controlRisk={d.controlRisk} thresholds={d.thresholds} />}
             {tab === 'controls' && <Controls rows={d.controlRisk} />}
+            {tab === 'controlefficacy' && <ControlEfficacy d={d} orgId={orgId} authToken={token} apiUrl={api} />}
             {tab === 'thresholds' && <Thresholds board={d.thresholds} />}
             {tab === 'actions' && <Actions queue={d.actionQueue} attention={d.attentionItems} />}
             {tab === 'processes' && <Processes procs={d.businessProcesses} />}

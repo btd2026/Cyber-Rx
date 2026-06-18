@@ -47,6 +47,14 @@ router.get('/dashboard', optionalJWT, async (req, res) => {
   catch (err) { logger.error('CISO dashboard error', { error: err.message }); res.status(500).json({ error: 'Failed to build CISO dashboard', message: err.message }); }
 });
 
+// Control Efficacy — controls tied to the risks they reduce, SOC MTTD/MTTR, and
+// the framework + industry overlay with compliance posture.
+router.get('/control-efficacy', optionalJWT, async (req, res) => {
+  const orgId = org(req, res); if (!orgId) return;
+  try { res.json(await require('../services/ControlEfficacyService').getEfficacy(orgId)); }
+  catch (err) { logger.error('Control efficacy error', { error: err.message }); res.status(500).json({ error: 'Failed to build control efficacy', message: err.message }); }
+});
+
 // Professional executive exports — board-ready PDF and PowerPoint of the full
 // CISO posture (summary, domains, risks, actions, attack paths, readiness).
 router.get('/report.pdf', optionalJWT, async (req, res) => {
