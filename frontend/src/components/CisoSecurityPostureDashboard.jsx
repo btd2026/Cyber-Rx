@@ -24,6 +24,7 @@ import DashNav from './DashNav';
 import RoleSection from './RoleSections';
 import SecurityProjects from './SecurityProjects';
 import AiGovernance from './AiGovernance';
+import DecisionQueue from './DecisionQueue';
 
 // Per-role header framing so every C-suite seat uses this SAME rich view.
 const ROLE_FRAME = {
@@ -125,7 +126,7 @@ export default function CisoSecurityPostureDashboard(props) {
   const TABS = roleTabs
     ? roleTabs.map((t) => [t.key, labelFor(t)])
     : [
-      ['qa', 'Current State'], ['summary', 'Executive Summary'], ['linkage', 'Business Risk'],
+      ['qa', 'Current State'], ['decisionq', 'Decision Queue'], ['summary', 'Executive Summary'], ['linkage', 'Business Risk'],
       ['domains', 'Domain Health'], ['controls', 'Control Risk'],
       ['thresholds', `Thresholds · ${d.thresholds.breaches} breached`], ['actions', 'Action Now'],
       ['processes', 'Process Protection'], ['paths', 'Attack Pathways'], ['readiness', 'Readiness & Investment'],
@@ -196,6 +197,7 @@ export default function CisoSecurityPostureDashboard(props) {
           ? <RoleTabContent t={activeRoleTab} role={role} d={d} props={props} />
           : (<>
             {tab === 'qa' && <CisoAgentPanel role={role} />}
+            {tab === 'decisionq' && <DecisionQueue role={role} />}
             {tab === 'summary' && <ExecutiveSummaryEditor />}
             {tab === 'linkage' && <BusinessRiskPanel />}
             {tab === 'domains' && <Domains matrix={d.domainMatrix} controlRisk={d.controlRisk} thresholds={d.thresholds} />}
@@ -237,6 +239,7 @@ function RoleTabContent({ t, role, d, props }) {
     case 'rolepanel': return <div>{props.rolePanel}</div>;
     case 'projects': return <SecurityProjects />;
     case 'ai': return <AiGovernance />;
+    case 'decisionq': return <DecisionQueue role={role} />;
     case 'section': return <RoleSection section={t.section} role={role} />;
     default: return null;
   }

@@ -736,6 +736,9 @@ function roleLayout(role, c) {
     section: { type: 'decisions', insight: 'Each detected condition is projected forward — what could go wrong if it is left unaddressed — with concrete decision options and a recommendation.', items: decisionsFor(role, c) },
   };
   tabs.splice(Math.min(2, tabs.length), 0, decisions);
+  // Decision spine: the shared event/DecisionCard queue rendered for this role,
+  // placed right after Current State ("decisions, not dashboards").
+  tabs.splice(Math.min(1, tabs.length), 0, { key: 'decisionq', label: 'Decision Queue', kind: 'decisionq' });
   // AI governance (AI-BOM) — every leader cares about AI usage + securing AI.
   tabs.push({ key: 'ai', label: 'AI Governance', kind: 'ai' });
   // Security project portfolio (ROI + delay impact) — relevant to the leaders

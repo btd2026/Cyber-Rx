@@ -276,6 +276,10 @@ app.use('/api/projects',          [apiGetLimiter, apiPostLimiter], require('./ro
 // shadow AI, data exposure, autonomy, and governance posture.
 app.use('/api/ai-systems',        [apiGetLimiter, apiPostLimiter], require('./routes/aiSystems'));
 
+// Decision spine — one shared event/DecisionCard rendered per role, with a
+// decision & evidence ledger (the cross-role "decisions, not dashboards" surface).
+app.use('/api/decisions',         [apiGetLimiter, apiPostLimiter], require('./routes/decisions'));
+
 // Generic schema-agnostic ingestion (process inventory / CMDB) — files + APIs
 app.use('/api/ingestion',         [apiGetLimiter, apiPostLimiter], require('./routes/ingestion'));
 
