@@ -196,12 +196,55 @@ async function buildGraph(orgId) {
     { id: 'threat', label: 'Threat', nodes: threats },
   ];
 
+  // ── Directional reachability: shortest path from an internet-exposed entry
+  // node to each crown-jewel process (BFS over the layer adjacency). This makes
+  // the graph a real "entry point → crown jewel" model, not just association.
+  const reachablePaths = computeReachability({ processes, apps, devices, networks, threats, edges });
+  const reachableProcIds = new Set(reachablePaths.map((p) => p.targetId));
+  processes.forEach((p) => { p.reachable = reachableProcIds.has(p.id); });
+
   return {
     organizationId: orgId, generatedAt: new Date().toISOString(),
-    layers, edges, findings,
-    counts: { processes: processes.length, apps: apps.length, devices: devices.length, networks: networks.length, threats: threats.length, edges: edges.length, findings: findings.length },
+    layers, edges, findings, reachablePaths,
+    counts: { processes: processes.length, apps: apps.length, devices: devices.length, networks: networks.length, threats: threats.length, edges: edges.length, findings: findings.length, reachable: reachablePaths.length },
     totalExposure: Math.round(Object.values(procExposure).reduce((s, v) => s + v, 0)),
   };
+}
+
+// BFS the undirected adjacency from each internet-exposed entry (app/device) to
+// every crown-jewel process; keep the shortest path per process. Returns the
+// directed chains an attacker could traverse, ranked by the process exposure.
+function computeReachability({ processes, apps, devices, networks, threats, edges }) {
+  const byId = {};
+  [...processes, ...apps, ...devices, ...networks, ...threats].forEach((nd) => { byId[nd.id] = nd; });
+  const adj = {};
+  edges.forEach((e) => { (adj[e.from] = adj[e.from] || []).push(e.to); (adj[e.to] = adj[e.to] || []).push(e.from); });
+  const procIds = new Set(processes.map((p) => p.id));
+  const entries = [...apps, ...devices].filter((n) => n.internetExposed);
+  // If nothing is explicitly internet-exposed, treat the network layer as the perimeter.
+  const starts = entries.length ? entries : networks;
+  const best = {}; // procId -> {len, path:[ids], entryId}
+  starts.forEach((start) => {
+    const seen = new Set([start.id]); const q = [[start.id]];
+    while (q.length) {
+      const path = q.shift(); const cur = path[path.length - 1];
+      if (procIds.has(cur) && path.length > 1) {
+        if (!best[cur] || path.length < best[cur].len) best[cur] = { len: path.length, path: [...path], entryId: start.id };
+        continue; // a process is an objective; don't traverse past it
+      }
+      (adj[cur] || []).forEach((nx) => { if (!seen.has(nx)) { seen.add(nx); q.push([...path, nx]); } });
+    }
+  });
+  const label = (id) => { const n = byId[id]; return n ? { id, label: n.label, layer: n.layer } : { id, label: id, layer: '?' }; };
+  return Object.entries(best).map(([pid, r]) => {
+    const proc = byId[pid] || {};
+    const entry = byId[r.entryId] || {};
+    return {
+      targetId: pid, target: proc.label, exposure: proc.exposure || 0, criticality: proc.criticality || 'Medium',
+      entryId: r.entryId, entry: entry.label, entryExposed: !!entry.internetExposed,
+      hops: r.len - 1, steps: r.path.map(label),
+    };
+  }).sort((a, b) => (b.exposure - a.exposure) || (a.hops - b.hops)).slice(0, 12);
 }
 
 module.exports = { buildGraph };
