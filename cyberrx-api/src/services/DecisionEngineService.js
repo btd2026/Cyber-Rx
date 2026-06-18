@@ -43,16 +43,30 @@ async function ensureLedger() {
   } catch (e) { logger.debug('decision_ledger ensure failed', { error: e.message }); }
 }
 
-// ---- timing: modeled p(exploit) with an honest confidence band --------------
+// ---- timing: p(exploit) — live EPSS/KEV when a CVE is present, else modeled --
 const BASE_ANNUAL_P = { Critical: 0.55, High: 0.35, Medium: 0.18, Low: 0.08 };
-function timing(ev) {
+function timing(ev, signal) {
+  // Live signal path: EPSS is a 30-day exploitation probability; KEV = active.
+  if (signal && (signal.epss != null || signal.kev)) {
+    const p30 = signal.epss != null ? Math.round(signal.epss * 100) : (signal.kev ? 60 : 30);
+    const daily = 1 - Math.pow(1 - p30 / 100, 1 / 30);
+    const win = (d) => Math.round((1 - Math.pow(1 - daily, d)) * 100);
+    return {
+      annualPct: win(365), p7: win(7), p30, p90: win(90),
+      confidence: signal.epss != null ? 'High' : 'Medium',
+      basis: signal.epss != null
+        ? `FIRST.org EPSS (30-day exploit probability ${p30}%${signal.kev ? ', on CISA KEV' : ''}) for ${signal.cves.join(', ')}.`
+        : `On CISA KEV (actively exploited): ${signal.cves.join(', ') || 'known-exploited'}.`,
+      cves: signal.cves || [], kev: !!signal.kev,
+    };
+  }
+  // Modeled fallback.
   let annual = BASE_ANNUAL_P[ev.severity] || 0.2;
   if (/kev|internet|public|exploit|unpatched|rce|ransom/i.test(ev.title)) annual = clamp(annual + 0.12, 0, 0.92);
   const windowP = (days) => Math.round((1 - Math.pow(1 - annual, days / 365)) * 100);
   return {
-    annualPct: Math.round(annual * 100),
-    p7: windowP(7), p30: windowP(30), p90: windowP(90),
-    confidence: 'Low', basis: 'Modeled from severity and exposure signals — no live exploit/EPSS feed yet.',
+    annualPct: Math.round(annual * 100), p7: windowP(7), p30: windowP(30), p90: windowP(90),
+    confidence: 'Low', basis: 'Modeled from severity and exposure signals — no CVE/EPSS match.', cves: [], kev: false,
   };
 }
 
@@ -117,7 +131,8 @@ async function generate(orgId) {
   const crown = (c.processes && c.processes.atRisk && c.processes.atRisk[0] && c.processes.atRisk[0].name) || 'a crown-jewel process';
   const dataAtRisk = c.crownJewel || (c.industry ? 'regulated data' : 'sensitive data');
   const top = (c.risks && c.risks.top) || [];
-  const cards = top.slice(0, 8).map((r) => {
+  let Threat = null; try { Threat = require('./ThreatSignalService'); } catch (_) {}
+  const cards = await Promise.all(top.slice(0, 8).map(async (r) => {
     const id = `dec_${orgId}_${r.id || hash(r.title)}`;
     const ev = {
       id: `evt_${orgId}_${r.id || hash(r.title)}`,
@@ -125,12 +140,16 @@ async function generate(orgId) {
       owner: r.owner || r.remediationOwner || null, affectedSystem: (c.processes.atRisk[0] || {}).name || null,
       crownJewel: crown, dataAtRisk,
     };
-    ev.timing = timing(ev);
+    // Live exploit signal (EPSS/KEV) when the risk/finding text carries a CVE.
+    let signal = null;
+    if (Threat) { try { signal = await Threat.signalFor(`${r.title} ${r.description || ''} ${r.regulatoryCitation || ''}`); } catch (_) {} }
+    ev.timing = timing(ev, signal);
+    ev.exploitSignal = signal && (signal.epss != null || signal.kev) ? { epss: signal.epss, kev: signal.kev, cves: signal.cves } : null;
     ev.loss = lossDistribution(id, ev.exposure, ev.timing.annualPct);
     ev.attackPath = attackPath(ev, crown);
     const { opts, recommended } = options(id, ev);
     return { id, event: ev, options: opts, recommended, status: 'open' };
-  });
+  }));
   return { organizationId: orgId, generatedAt: new Date().toISOString(), cards };
 }
 
