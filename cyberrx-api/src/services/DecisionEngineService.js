@@ -124,6 +124,100 @@ function options(cardId, ev) {
   return { opts, recommended };
 }
 
+// ---- combinatorial / compound risk -----------------------------------------
+// The valuable prediction: two (or three) conditions that are low-risk ALONE but
+// chain into a severe outcome. We tag each event, match tag pairs against known
+// attack-chain synergies, and model the JOINT likelihood/impact/blast-radius —
+// then frame the decision as "break one link to collapse the whole chain".
+function tagEvent(ev) {
+  const t = `${ev.title} ${ev.category || ''}`.toLowerCase();
+  const tags = [];
+  if (/mfa|credential|password|privileg|access|account|identity/.test(t)) tags.push('credential');
+  if (/segment|network|flat|lateral|vpn|rdp|firewall|perimeter/.test(t)) tags.push('network');
+  if (/cve|patch|unpatched|vuln|exploit|\brce\b|internet[-\s]?facing|public[-\s]?facing|edge gateway|\bkev\b/.test(t)) tags.push('vuln');
+  if (/edr|malware|ransom|endpoint|antivirus/.test(t)) tags.push('endpoint');
+  if (/phi|pii|pci|dlp|encrypt|exfil|leak|bucket|storage|data/.test(t)) tags.push('data');
+  if (/vendor|third|supply|clearinghouse|baa|fourth/.test(t)) tags.push('vendor');
+  if (ev.category === 'AI' || /\bai\b|llm|agent|shadow ai|model/.test(t)) tags.push('ai');
+  if (/backup|recover|\bdr\b|restore|resilien/.test(t)) tags.push('backup');
+  return tags;
+}
+// rule: the two tags that chain, the resulting outcome, how much the combination
+// amplifies likelihood/impact, and which single control breaks the chain.
+const SYNERGIES = [
+  { a: 'credential', b: 'network', name: 'Lateral movement to crown jewels', outcome: 'Stolen credentials plus a flat/unsegmented network let an attacker move from a single foothold straight to the crown-jewel processes — a contained incident becomes an enterprise breach.', likeBoost: 28, impactMult: 2.4, breaks: 'Either enforce phishing-resistant MFA or segment the network — breaking one link stops the chain.', roles: ['CISO', 'CRO', 'CIO', 'Board'] },
+  { a: 'vuln', b: 'endpoint', name: 'Ransomware detonation', outcome: 'An internet-facing exploit with weak endpoint defense turns a single compromised host into org-wide ransomware.', likeBoost: 30, impactMult: 2.6, breaks: 'Patch the internet-facing weakness OR get EDR to full coverage — either alone breaks the detonation chain.', roles: ['CISO', 'CIO', 'CFO', 'Board'] },
+  { a: 'vuln', b: 'credential', name: 'Full domain compromise', outcome: 'An external exploit combined with weak access controls lets an attacker escalate to privileged/domain takeover.', likeBoost: 26, impactMult: 2.3, breaks: 'Patch the exploit OR enforce MFA/PAM on privileged accounts.', roles: ['CISO', 'CRO', 'Board'] },
+  { a: 'data', b: 'vendor', name: 'Mass data exfiltration (third-party path)', outcome: 'A data-protection gap plus a trusted vendor egress path enables large-scale PHI/PII exfiltration and mandatory breach notification.', likeBoost: 22, impactMult: 2.2, breaks: 'Add DLP/egress controls OR tighten the vendor connection — one fix removes the bulk-exfil path.', roles: ['CLO', 'CFO', 'CISO', 'CRO'] },
+  { a: 'data', b: 'ai', name: 'Mass data exfiltration (AI path)', outcome: 'Sensitive data plus an ungoverned AI/agent egress path enables silent bulk leakage of regulated data — a reportable breach with regulatory exposure.', likeBoost: 24, impactMult: 2.2, breaks: 'Put DLP/redaction on prompts & outputs OR sanction/govern the AI tool.', roles: ['CLO', 'CISO', 'CFO', 'Board'] },
+  { a: 'endpoint', b: 'backup', name: 'Unrecoverable ransomware', outcome: 'Ransomware combined with untested/incomplete backups means an extended outage with no clean recovery — the worst-case continuity event.', likeBoost: 18, impactMult: 2.8, breaks: 'Restore-test backups OR strengthen endpoint prevention — either restores recoverability.', roles: ['CISO', 'CIO', 'CFO', 'CRO', 'Board'] },
+  { a: 'vendor', b: 'network', name: 'Supply-chain pivot', outcome: 'A compromised trusted third-party connection plus a flat network lets the attacker pivot from the vendor straight into internal crown jewels.', likeBoost: 20, impactMult: 2.1, breaks: 'Segment/zero-trust the vendor connection OR monitor it — one control contains the pivot.', roles: ['CISO', 'CRO', 'CLO'] },
+];
+
+function compoundFrom(orgId, A, B, rule, crown, dataAtRisk) {
+  const id = `cmp_${orgId}_${hash(A.id + '|' + B.id)}`;
+  const aP = A.timing.p30, bP = B.timing.p30, maxP = Math.max(aP, bP), minP = Math.min(aP, bP);
+  const jointPct = clamp(Math.round(maxP + rule.likeBoost + minP * 0.3), maxP, 96);
+  const win = (days) => { const daily = 1 - Math.pow(1 - jointPct / 100, 1 / 30); return Math.round((1 - Math.pow(1 - daily, days)) * 100); };
+  const combinedExposure = Math.round(((A.exposure || 0) + (B.exposure || 0)) * rule.impactMult);
+  const loss = lossDistribution(id, combinedExposure, jointPct);
+  const cheaper = (A.exposure || 0) <= (B.exposure || 0) ? A : B;
+  const other = cheaper === A ? B : A;
+  const ev = {
+    id: `evt_${id}`, type: 'compound', title: rule.name, severity: 'Critical',
+    exposure: combinedExposure, crownJewel: crown, dataAtRisk,
+    members: [
+      { id: A.id, title: A.title, p30: aP, exposure: A.exposure },
+      { id: B.id, title: B.title, p30: bP, exposure: B.exposure },
+    ],
+    combination: {
+      outcome: rule.outcome,
+      individual: `Individually: "${A.title}" ~${aP}% and "${B.title}" ~${bP}% in 30 days — each looks manageable.`,
+      jointPct, amplification: `${(jointPct / Math.max(1, maxP)).toFixed(1)}×`,
+      breaks: rule.breaks, breakLink: cheaper.title, otherLink: other.title,
+    },
+    timing: { annualPct: win(365), p7: win(7), p30: jointPct, p90: win(90), confidence: 'Modeled (chained)', basis: 'Joint likelihood escalated because the two conditions form a viable attack chain.' },
+    loss,
+    blastRadius: { reaches: crown, scope: 'Enterprise — chain reaches crown-jewel processes', count: 'Org-wide' },
+    attackPath: [
+      { step: 'Condition A', label: A.title },
+      { step: 'Condition B', label: B.title },
+      { step: 'Chain', label: rule.name },
+      { step: 'Objective', label: crown },
+    ],
+    relevantRoles: rule.roles,
+  };
+  // Decision = which link to break. Breaking either collapses the compound.
+  const breakCost = Math.round((cheaper.exposure || 0) * 0.06) || 250000;
+  const opts = [
+    { id: 'break_cheaper', label: `Break the chain: fix "${cheaper.title}"`, cost: breakCost, costLabel: usd(breakCost), timeToEffectDays: 14, residualRiskReductionPct: 75, friction: 'Medium', note: 'Cheapest single link — fixing it collapses the whole compound scenario.' },
+    { id: 'break_other', label: `Break the chain: fix "${other.title}"`, cost: Math.round((other.exposure || 0) * 0.1) || 400000, costLabel: usd(Math.round((other.exposure || 0) * 0.1) || 400000), timeToEffectDays: 30, residualRiskReductionPct: 75, friction: 'High', note: 'Also collapses the chain; higher cost/effort than the other link.' },
+    { id: 'both', label: 'Fix both links (defense in depth)', cost: breakCost + (Math.round((other.exposure || 0) * 0.1) || 400000), costLabel: usd(breakCost + (Math.round((other.exposure || 0) * 0.1) || 400000)), timeToEffectDays: 45, residualRiskReductionPct: 92, friction: 'High', note: 'Eliminates the chain and reduces each individual risk.' },
+    { id: 'accept', label: 'Accept & monitor', cost: 0, costLabel: '$0', timeToEffectDays: 0, residualRiskReductionPct: 0, friction: 'None', acceptsRationale: true, note: 'Documented, signed acceptance of a chained critical scenario — review date required.' },
+  ];
+  return { id, type: 'compound', event: ev, options: opts, recommended: 'break_cheaper', status: 'open' };
+}
+
+function buildCompounds(orgId, cards, crown, dataAtRisk) {
+  const tagged = cards.map((c) => ({ card: c, tags: tagEvent(c.event) }));
+  const seen = new Set(); const out = [];
+  for (let i = 0; i < tagged.length; i++) {
+    for (let j = i + 1; j < tagged.length; j++) {
+      const A = tagged[i], B = tagged[j];
+      for (const rule of SYNERGIES) {
+        const ab = (A.tags.includes(rule.a) && B.tags.includes(rule.b)) || (A.tags.includes(rule.b) && B.tags.includes(rule.a));
+        if (!ab) continue;
+        const key = [A.card.id, B.card.id, rule.name].sort().join('|');
+        if (seen.has(key)) continue; seen.add(key);
+        out.push(compoundFrom(orgId, A.card.event, B.card.event, rule, crown, dataAtRisk));
+        break; // one synergy per pair
+      }
+    }
+  }
+  // Highest combined loss first; cap so the queue stays decision-focused.
+  return out.sort((a, b) => b.event.loss.expected - a.event.loss.expected).slice(0, 5);
+}
+
 // ---- event + card assembly from the substrate context ----------------------
 async function generate(orgId) {
   const Exec = require('./ExecDashboardService');
@@ -172,70 +266,157 @@ async function generate(orgId) {
     });
   } catch (_) { /* AI inventory optional */ }
 
-  return { organizationId: orgId, generatedAt: new Date().toISOString(), cards };
+  cards.forEach((c) => { if (!c.type) c.type = 'single'; });
+  // Compound (chained) scenarios are the headline prediction — surface first.
+  const compounds = buildCompounds(orgId, cards, crown, dataAtRisk);
+  return { organizationId: orgId, generatedAt: new Date().toISOString(), cards: [...compounds, ...cards] };
 }
 
 // ---- translation engine: one card → a role lens ----------------------------
 const FRAME = { CISO: 'Security', CFO: 'Financial', CIO: 'Technology', CRO: 'Risk', CLO: 'Legal', Board: 'Governance' };
+// What each leader OWNS — used both to frame the lens and to mark relevance.
+const DUTY = {
+  CISO: 'the security controls and the attack path', CFO: 'the financial loss and insurance posture',
+  CIO: 'the affected systems and operational delivery', CRO: 'risk appetite and aggregation',
+  CLO: 'disclosure obligations and materiality', Board: 'the governance decision and oversight',
+};
+
 function lensFor(role, card) {
   const e = card.event;
+  const compound = card.type === 'compound';
   const path = e.attackPath.map((s) => s.label).join(' → ');
-  const rec = card.options.find((o) => o.id === card.recommended);
+  const rec = card.options.find((o) => o.id === card.recommended) || card.options[0];
   let headline, primary, secondary, narrative, questionToAsk;
-  switch (role) {
-    case 'CFO':
-      headline = `${usd(e.loss.p50)} likely loss, up to ${usd(e.loss.p90)} (P90)`;
-      primary = { label: 'Expected annual loss', value: usd(e.loss.expected) };
-      secondary = { label: 'Worst-case (P90)', value: usd(e.loss.p90) };
-      narrative = `Modeled loss distribution for "${e.title}". Transfer caps the downside; remediation lowers the likelihood. Recommended: ${rec.label} (${rec.costLabel}).`;
-      break;
-    case 'CISO':
-      headline = `Attack path to ${e.crownJewel}`;
-      primary = { label: '30-day exploit likelihood', value: `${e.timing.p30}%` };
-      secondary = { label: 'Path', value: path };
-      narrative = `"${e.title}" — ${path}. Recommended: ${rec.label} (residual risk −${rec.residualRiskReductionPct}%, ${rec.timeToEffectDays}d to effect).`;
-      break;
-    case 'CIO':
-      headline = `${e.affectedSystem || 'Affected systems'} exposed`;
-      primary = { label: 'Time to effect (recommended)', value: `${rec.timeToEffectDays} days` };
-      secondary = { label: 'Operational friction', value: rec.friction };
-      narrative = `"${e.title}" affects ${e.affectedSystem || 'critical systems'}. The lowest-friction move is "${card.options.find((o) => o.id === 'mitigate').label}"; the durable fix is "${card.options.find((o) => o.id === 'remediate').label}".`;
-      break;
-    case 'CRO':
-      headline = `${e.severity} risk vs. appetite`;
-      primary = { label: '90-day likelihood', value: `${e.timing.p90}%` };
-      secondary = { label: 'Exposure', value: usd(e.exposure) };
-      narrative = `"${e.title}" contributes ${usd(e.loss.expected)} expected loss to the portfolio. ${e.severity === 'Critical' ? 'Above appetite — decision required.' : 'Track against threshold.'} Recommended: ${rec.label}.`;
-      break;
-    case 'CLO':
-      headline = `Disclosure exposure: ${e.dataAtRisk}`;
-      primary = { label: 'If realized, notify within', value: '72 hours (validate per obligation)' };
-      secondary = { label: 'Materiality', value: e.severity === 'Critical' ? 'Potentially material' : 'Assess' };
-      narrative = `If "${e.title}" is realized against ${e.dataAtRisk}, notification clocks (HIPAA/state/SEC as applicable) start. Pre-stage the materiality assessment now.`;
-      break;
-    case 'Board':
-    default:
-      headline = `Decision pending: ${e.title}`;
-      primary = { label: 'Recommended', value: `${rec.label} (${rec.costLabel})` };
-      secondary = { label: 'If we do nothing', value: `${usd(e.loss.expected)} expected loss, ${e.timing.p90}% within 90 days` };
-      narrative = `Management recommends "${rec.label}". The accept-and-monitor alternative requires a documented rationale.`;
-      questionToAsk = `Is "${e.title}" within our approved risk appetite, and who owns the decision?`;
-      break;
+
+  if (compound) {
+    const cb = e.combination, m = e.members;
+    switch (role) {
+      case 'CRO':
+        headline = `Risk aggregation: ${m[0].title} + ${m[1].title}`;
+        primary = { label: 'Combined likelihood', value: `${cb.jointPct}% (${cb.amplification} vs. alone)` };
+        secondary = { label: 'Combined exposure', value: usd(e.exposure) };
+        narrative = `Two sub-threshold risks aggregate above appetite: ${cb.individual} Combined → ${cb.jointPct}%. ${rec.label}.`;
+        break;
+      case 'CFO':
+        headline = `Combined loss ${usd(e.loss.expected)} (P90 ${usd(e.loss.p90)})`;
+        primary = { label: 'Expected (combined)', value: usd(e.loss.expected) };
+        secondary = { label: 'Amplification', value: `${cb.amplification} vs. either alone` };
+        narrative = `Chaining "${m[0].title}" and "${m[1].title}" makes the loss super-additive (${cb.amplification}). Breaking one link is the cheapest way to cut it: ${rec.label} (${rec.costLabel}).`;
+        break;
+      case 'CLO':
+        headline = `Compound disclosure exposure: ${e.dataAtRisk}`;
+        primary = { label: 'Combined likelihood', value: `${cb.jointPct}%` };
+        secondary = { label: 'Outcome', value: e.title };
+        narrative = `${cb.outcome} If realized, notification clocks start across ${e.dataAtRisk}. ${rec.label}.`;
+        break;
+      case 'CIO':
+        headline = `Chain reaches ${e.crownJewel}`;
+        primary = { label: 'Cheapest link to break', value: cb.breakLink };
+        secondary = { label: 'Time to effect', value: `${rec.timeToEffectDays} days` };
+        narrative = `${cb.outcome} You don't have to fix both — ${cb.breaks}`;
+        break;
+      case 'Board':
+        headline = `Two "low" risks combine into a critical event`;
+        primary = { label: 'Recommended', value: `${rec.label} (${rec.costLabel})` };
+        secondary = { label: 'If we do nothing', value: `${cb.jointPct}% chance, ${usd(e.loss.expected)} expected` };
+        narrative = `Individually these looked manageable; together they're critical (${cb.amplification} the likelihood). Management recommends breaking the cheapest link.`;
+        questionToAsk = `Are we managing risks in isolation when the real exposure is in how they combine?`;
+        break;
+      case 'CISO':
+      default:
+        headline = `Kill chain: ${e.title}`;
+        primary = { label: 'Joint likelihood (30d)', value: `${cb.jointPct}%` };
+        secondary = { label: 'Chain', value: path };
+        narrative = `${cb.outcome} ${cb.breaks} Recommended: ${rec.label}.`;
+        break;
+    }
+  } else {
+    switch (role) {
+      case 'CFO':
+        headline = `${usd(e.loss.p50)} likely loss, up to ${usd(e.loss.p90)} (P90)`;
+        primary = { label: 'Expected annual loss', value: usd(e.loss.expected) };
+        secondary = { label: 'Worst-case (P90)', value: usd(e.loss.p90) };
+        narrative = `Modeled loss distribution for "${e.title}". Transfer caps the downside; remediation lowers the likelihood. Recommended: ${rec.label} (${rec.costLabel}).`;
+        break;
+      case 'CISO':
+        headline = `Attack path to ${e.crownJewel}`;
+        primary = { label: '30-day exploit likelihood', value: `${e.timing.p30}%` };
+        secondary = { label: 'Path', value: path };
+        narrative = `"${e.title}" — ${path}. Recommended: ${rec.label} (residual risk −${rec.residualRiskReductionPct}%, ${rec.timeToEffectDays}d to effect).`;
+        break;
+      case 'CIO':
+        headline = `${e.affectedSystem || 'Affected systems'} exposed`;
+        primary = { label: 'Time to effect (recommended)', value: `${rec.timeToEffectDays} days` };
+        secondary = { label: 'Operational friction', value: rec.friction };
+        narrative = `"${e.title}" affects ${e.affectedSystem || 'critical systems'}. Lowest-friction first, durable fix next.`;
+        break;
+      case 'CRO':
+        headline = `${e.severity} risk vs. appetite`;
+        primary = { label: '90-day likelihood', value: `${e.timing.p90}%` };
+        secondary = { label: 'Exposure', value: usd(e.exposure) };
+        narrative = `"${e.title}" contributes ${usd(e.loss.expected)} expected loss. ${e.severity === 'Critical' ? 'Above appetite — decision required.' : 'Track against threshold.'} Recommended: ${rec.label}.`;
+        break;
+      case 'CLO':
+        headline = `Disclosure exposure: ${e.dataAtRisk}`;
+        primary = { label: 'If realized, notify within', value: '72 hours (validate per obligation)' };
+        secondary = { label: 'Materiality', value: e.severity === 'Critical' ? 'Potentially material' : 'Assess' };
+        narrative = `If "${e.title}" is realized against ${e.dataAtRisk}, notification clocks start. Pre-stage the materiality assessment.`;
+        break;
+      case 'Board':
+      default:
+        headline = `Decision pending: ${e.title}`;
+        primary = { label: 'Recommended', value: `${rec.label} (${rec.costLabel})` };
+        secondary = { label: 'If we do nothing', value: `${usd(e.loss.expected)} expected, ${e.timing.p90}% within 90 days` };
+        narrative = `Management recommends "${rec.label}". The accept-and-monitor alternative requires a documented rationale.`;
+        questionToAsk = `Is "${e.title}" within our approved risk appetite, and who owns the decision?`;
+        break;
+    }
   }
-  return { role, framing: FRAME[role] || 'Executive', headline, primary, secondary, narrative, questionToAsk: questionToAsk || null, recommended: card.recommended, options: card.options };
+  return {
+    role, framing: FRAME[role] || 'Executive', headline, primary, secondary, narrative,
+    questionToAsk: questionToAsk || null, recommended: card.recommended, options: card.options,
+    narration: voiceNarration(role, card, rec),
+  };
+}
+
+// Detailed spoken explanation for the agent voice — covers what it is, the
+// numbers, why it matters to THIS leader, and the decision.
+function voiceNarration(role, card, rec) {
+  const e = card.event;
+  const opensWith = `As the ${role}, you own ${DUTY[role] || 'this decision'}. `;
+  if (card.type === 'compound') {
+    const m = e.members, cb = e.combination;
+    return opensWith +
+      `Here's a chained risk. On their own, "${m[0].title}" sits around ${m[0].p30} percent and "${m[1].title}" around ${m[1].p30} percent over thirty days — each looks manageable. But combined, ${cb.outcome.toLowerCase()} ` +
+      `Together the likelihood jumps to about ${cb.jointPct} percent — roughly ${cb.amplification} either one alone — and the modeled loss climbs to about ${usd(e.loss.expected)} expected, up to ${usd(e.loss.p90)} in a bad case, reaching ${e.crownJewel}. ` +
+      `The good news: you don't have to fix everything. ${cb.breaks} The recommendation is to ${rec.label.toLowerCase()}, which costs about ${rec.costLabel} and takes roughly ${rec.timeToEffectDays} days. ` +
+      `If you choose to accept and monitor instead, that requires a documented, signed rationale and a review date.`;
+  }
+  const t = e.timing;
+  const basis = t.cves && t.cves.length ? `based on the live exploit signal for ${t.cves.join(', ')}` : 'modeled from severity and exposure';
+  return opensWith +
+    `The event is "${e.title}". Its likelihood of exploitation is about ${t.p7} percent within seven days, ${t.p30} percent within thirty, and ${t.p90} percent within ninety — ${basis}, at ${t.confidence} confidence. ` +
+    `The modeled financial loss is about ${usd(e.loss.expected)} expected, with a ninety-percentile worst case near ${usd(e.loss.p90)}. The attacker path runs ${e.attackPath.map((s) => s.label).join(', then ')}. ` +
+    `The recommended response is to ${rec.label.toLowerCase()} — about ${rec.costLabel}, ${rec.timeToEffectDays} days to take effect, cutting residual risk by ${rec.residualRiskReductionPct} percent, with ${rec.friction.toLowerCase()} operational friction. ` +
+    `Accepting and monitoring is available but requires a logged rationale.`;
 }
 
 async function list(orgId, role) {
   const g = await generate(orgId);
   const decided = await decidedMap(orgId);
-  return {
-    organizationId: orgId, generatedAt: g.generatedAt, role: role || null,
-    cards: g.cards.map((card) => ({
-      id: card.id, event: card.event, options: card.options, recommended: card.recommended,
-      decision: decided[card.id] || null,
-      lens: role ? lensFor(role, card) : null,
-    })),
-  };
+  const rel = (card) => (card.type === 'compound' ? (card.event.relevantRoles || []).includes(role) : true);
+  let cards = g.cards.map((card) => ({
+    id: card.id, type: card.type, event: card.event, options: card.options, recommended: card.recommended,
+    decision: decided[card.id] || null, relevant: role ? rel(card) : true,
+    lens: role ? lensFor(role, card) : null,
+  }));
+  if (role) {
+    // This leader's pertinent decisions first: relevant compounds, then their
+    // relevant singles, then the rest — so each C-level sees their own view.
+    const rank = (c) => (c.relevant && c.type === 'compound' ? 0 : c.relevant ? 1 : c.type === 'compound' ? 2 : 3);
+    cards = cards.sort((a, b) => rank(a) - rank(b));
+  }
+  return { organizationId: orgId, generatedAt: g.generatedAt, role: role || null, cards };
 }
 
 async function decidedMap(orgId) {

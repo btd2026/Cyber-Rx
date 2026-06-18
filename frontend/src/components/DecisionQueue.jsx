@@ -7,6 +7,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useAgentVoice, VoiceControls } from './agentVoice';
 
 const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc', NAVY = '#0f1b2d';
 const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
@@ -30,6 +31,7 @@ const Pill = ({ text, color }) => (
 export default function DecisionQueue(props) {
   const role = props.role || 'CISO';
   const { token, orgId, api } = ctx(props);
+  const voice = useAgentVoice();
   const [data, setData] = useState(null);
   const [err, setErr] = useState(null);
   const headers = useCallback(() => { const h = { 'Content-Type': 'application/json', 'X-Org-Id': orgId }; if (token) h.Authorization = `Bearer ${token}`; return h; }, [orgId, token]);
@@ -53,49 +55,80 @@ export default function DecisionQueue(props) {
   if (err && !data) return <div style={{ padding: 12, color: '#C0392B', fontSize: 12 }}>{err}</div>;
   if (!data) return <div style={{ fontSize: 12, color: INK3 }}>Building the decision queue…</div>;
 
+  const compounds = data.cards.filter((c) => c.type === 'compound');
+  const overview = `${role}, your decision queue. ` +
+    `${compounds.length ? `${compounds.length} of these are chained scenarios — risks that look low on their own but combine into a critical outcome. ` : ''}` +
+    `Each is rendered for what you own as ${role}. Select a response, or accept and monitor with a documented rationale. Every decision is logged. Press listen on any card for the full explanation.`;
+
   return (
     <div>
-      <div style={{ background: NAVY, color: '#e6ecf5', borderRadius: 10, padding: '13px 16px', marginBottom: 14, fontSize: 12.5, lineHeight: 1.6 }}>
-        These are the <strong style={{ color: '#9bc0ff' }}>same predicted events every executive sees</strong> — each rendered for the <strong>{role}</strong>. Pick a response, or accept &amp; monitor with a documented rationale. Every decision is logged.
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: NAVY, color: '#e6ecf5', borderRadius: 10, padding: '13px 16px', marginBottom: 14 }}>
+        <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>
+          The <strong style={{ color: '#9bc0ff' }}>same predicted events every executive sees</strong>, rendered for the <strong>{role}</strong>. Chained scenarios (low alone, critical combined) are flagged and shown first.
+        </div>
+        <VoiceControls voice={voice} onReplay={() => voice.speak(overview)} label="Listen" />
       </div>
       {err && <div style={{ color: '#C0392B', fontSize: 12, marginBottom: 10 }}>{err}</div>}
       <div style={{ display: 'grid', gap: 14 }}>
-        {data.cards.map((card) => <Card key={card.id} card={card} role={role} onDecide={decide} />)}
+        {data.cards.map((card) => <Card key={card.id} card={card} role={role} onDecide={decide} voice={voice} />)}
       </div>
     </div>
   );
 }
 
-function Card({ card, role, onDecide }) {
+function Card({ card, role, onDecide, voice }) {
   const e = card.event, lens = card.lens || {};
   const [accepting, setAccepting] = useState(false);
   const [rationale, setRationale] = useState('');
   const sev = SEV[e.severity] || '#B07C2E';
   const decided = card.decision;
+  const compound = card.type === 'compound';
 
   return (
-    <div style={{ border: `1px solid ${HAIR}`, borderRadius: 12, background: '#fff', overflow: 'hidden', boxShadow: '0 1px 3px rgba(15,23,42,0.05)' }}>
+    <div style={{ border: `1px solid ${compound ? '#e3d5f5' : HAIR}`, borderRadius: 12, background: '#fff', overflow: 'hidden', boxShadow: '0 1px 3px rgba(15,23,42,0.05)' }}>
       {/* event + role lens header */}
-      <div style={{ padding: '14px 16px', borderLeft: `5px solid ${sev}` }}>
+      <div style={{ padding: '14px 16px', borderLeft: `5px solid ${compound ? '#7c3aed' : sev}` }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-          <div>
+          <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              {compound && <Pill text="⛓ Chained risk" color="#7c3aed" />}
               <span style={{ fontSize: 9.5, fontWeight: 800, color: '#1d4ed8', background: '#eef4fb', border: '1px solid #cfe0f3', borderRadius: 999, padding: '2px 9px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{lens.framing || role} lens</span>
               <Pill text={e.severity} color={sev} />
+              {card.relevant && <span style={{ fontSize: 9, fontWeight: 700, color: '#1f8a4c', background: '#eaf7ef', border: '1px solid #cce8d6', borderRadius: 999, padding: '2px 8px', textTransform: 'uppercase' }}>Your call</span>}
               {decided && <Pill text={decided.action === 'accept' ? 'Accepted & monitoring' : 'Decided'} color="#1f8a4c" />}
             </div>
             <div style={{ fontSize: 15, fontWeight: 800, color: INK, marginTop: 7, lineHeight: 1.3 }}>{lens.headline || e.title}</div>
-            <div style={{ fontSize: 11, color: INK3, marginTop: 2 }}>Event: {e.title}</div>
+            <div style={{ fontSize: 11, color: INK3, marginTop: 2 }}>{compound ? 'Combined scenario' : 'Event'}: {e.title}</div>
           </div>
           <div style={{ textAlign: 'right', minWidth: 130 }}>
             {lens.primary && <><div style={{ fontSize: 9.5, color: INK3, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{lens.primary.label}</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: sev }}>{lens.primary.value}</div></>}
+              <div style={{ fontSize: 18, fontWeight: 800, color: sev }}>{lens.primary.value}</div></>}
             {lens.secondary && <div style={{ fontSize: 10.5, color: INK2, marginTop: 2 }}>{lens.secondary.label}: <strong>{lens.secondary.value}</strong></div>}
+            <div style={{ marginTop: 6, display: 'flex', justifyContent: 'flex-end' }}>{voice && lens.narration && <VoiceControls voice={voice} onReplay={() => voice.speak(lens.narration)} label="Listen" />}</div>
           </div>
         </div>
         {lens.narrative && <div style={{ fontSize: 12, color: INK2, marginTop: 8, lineHeight: 1.55 }}>{lens.narrative}</div>}
         {lens.questionToAsk && <div style={{ fontSize: 11.5, color: '#7c3aed', fontWeight: 600, marginTop: 6 }}>Question to ask: {lens.questionToAsk}</div>}
       </div>
+
+      {/* compound: the two conditions, individually low → combined critical */}
+      {compound && e.combination && (
+        <div style={{ margin: '0 16px 4px', background: 'linear-gradient(135deg,#f5f0fd,#faf8ff)', border: '1px solid #e3d5f5', borderRadius: 10, padding: '11px 13px' }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            {e.members.map((m, i) => (
+              <React.Fragment key={m.id}>
+                <span style={{ fontSize: 11, color: INK, background: '#fff', border: `1px solid ${HAIR}`, borderRadius: 8, padding: '4px 9px' }}>{m.title} <strong style={{ color: '#1f8a4c' }}>~{m.p30}%</strong></span>
+                {i < e.members.length - 1 && <span style={{ color: '#7c3aed', fontWeight: 800 }}>＋</span>}
+              </React.Fragment>
+            ))}
+            <span style={{ color: '#7c3aed', fontWeight: 800 }}>→</span>
+            <span style={{ fontSize: 11.5, fontWeight: 800, color: '#7c3aed' }}>{e.combination.jointPct}% combined ({e.combination.amplification})</span>
+          </div>
+          <div style={{ fontSize: 11.5, color: INK2, marginTop: 7, lineHeight: 1.55 }}>{e.combination.outcome}</div>
+          <div style={{ fontSize: 11, color: INK, marginTop: 6 }}>💡 <strong>You don't have to fix both.</strong> {e.combination.breaks}</div>
+          <div style={{ fontSize: 10.5, color: INK3, marginTop: 4 }}>Blast radius: {e.blastRadius.scope}</div>
+        </div>
+      )}
 
       {/* shared event facts — same for every role */}
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', padding: '10px 16px', background: PANEL, borderTop: `1px solid ${HAIR}`, fontSize: 11 }}>
