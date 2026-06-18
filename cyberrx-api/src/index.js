@@ -245,6 +245,9 @@ app.use('/api/cio',               [apiGetLimiter], require('./routes/cio'));
 // CRO enterprise-risk lens + central appetite authoring (propagates to all lenses)
 app.use('/api/cro',               [apiGetLimiter, apiPutLimiter], require('./routes/cro'));
 
+// CLO / General Counsel lens (obligations, triggers, defensibility, portfolio)
+app.use('/api/clo',               [apiGetLimiter], require('./routes/clo'));
+
 // CISO attack-path graph (process → app → device → network → threat)
 app.use('/api/attack-path',       [apiGetLimiter], require('./routes/attackPath'));
 

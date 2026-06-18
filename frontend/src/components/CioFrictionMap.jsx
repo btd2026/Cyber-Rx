@@ -8,6 +8,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
+import { DefensibleRationaleHint, DEFENSIBLE_PLACEHOLDER } from './legalRationale';
 
 const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc', NAVY = '#0f1b2d';
 const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
@@ -132,7 +133,8 @@ function FrictionCard({ item, onChoose, voice }) {
                   : <button onClick={() => onChoose(item, o)} style={btn(isRec ? '#4f46e5' : '#0f172a')}>Choose</button>)}
                 {accepting === o.id && !decided && o.id === 'ship' && (
                   <div style={{ marginTop: 8 }}>
-                    <textarea value={rationale} onChange={(e) => setRationale(e.target.value)} rows={2} placeholder="Why ship now and defer the control? (logged)"
+                    <div style={{ marginBottom: 6 }}><DefensibleRationaleHint compact /></div>
+                    <textarea value={rationale} onChange={(e) => setRationale(e.target.value)} rows={3} placeholder={DEFENSIBLE_PLACEHOLDER}
                       style={{ width: '100%', border: `1px solid ${HAIR}`, borderRadius: 7, padding: '7px 9px', fontSize: 11.5, outline: 'none', resize: 'vertical' }} />
                     <button onClick={() => onChoose(item, o, rationale)} disabled={!rationale.trim()} style={{ ...btn('#C0392B'), opacity: rationale.trim() ? 1 : 0.5, marginTop: 6 }}>Record ship-on-time</button>
                   </div>

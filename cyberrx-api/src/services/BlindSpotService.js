@@ -80,6 +80,22 @@ async function detect(orgId) {
       'Govern these at portfolio altitude: break one link to collapse the chain, and check for single vendor/cloud/region dependencies behind the correlation.', ['CRO', 'Board']);
   }
 
+  // CLO-specific patterns: discoverability/defensibility, late legal involvement,
+  // and untracked contractual notification SLAs.
+  const thinAccepts = accepts.filter((r) => !(r.rationale && String(r.rationale).trim().length >= 40));
+  if (thinAccepts.length) {
+    add('High', 'Indefensible acceptances on the record', `${thinAccepts.length} risk acceptance(s) carry thin or no rationale. These are discoverable in litigation and read as undocumented decisions.`,
+      'Strengthen each acceptance with a defensible rationale: business basis, compensating controls, accountable owner, and a review date. (Behavior flagged for Legal review before launch.)', ['CLO', 'CRO', 'Board']);
+  }
+  const cloDecided = ledgerRows.some((r) => r.role === 'CLO');
+  const disclosureBearing = cards.filter((c) => c.event.scenarioType === 'Data exfiltration' || c.event.severity === 'Critical');
+  if (disclosureBearing.length && !cloDecided) {
+    add('High', 'Legal involved late on disclosure-bearing risk', `${disclosureBearing.length} disclosure-bearing scenario(s) exist but Legal has recorded no decision — counsel is engaging after the fact, not pre-staging.`,
+      'Pull counsel into the decision queue now: pre-stage notification and confirm materiality before an incident forces the clock.', ['CLO', 'CISO', 'Board']);
+  }
+  add('Medium', 'Untracked contractual notification SLAs', 'Customer/vendor contracts often carry breach-notification SLAs (commonly 72 hours) that are shorter than statutory clocks and easy to miss.',
+    'Inventory contractual notification SLAs and map them onto the trigger map so the shortest applicable clock is always visible.', ['CLO', 'CRO']);
+
   if (!findings.length) {
     add('Low', 'No blind spots detected', 'Every critical event has a recorded decision and all roles are engaging.',
       'Maintain the cadence; re-run after the next event generation.', ROLES);

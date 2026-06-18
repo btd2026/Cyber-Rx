@@ -38,6 +38,10 @@ import CroEnterprisePosition from './CroEnterprisePosition';
 import CroExposures from './CroExposures';
 import CroAggregation from './CroAggregation';
 import CroTreatment from './CroTreatment';
+import CloObligationPosture from './CloObligationPosture';
+import CloTriggerMap from './CloTriggerMap';
+import CloDefensibility from './CloDefensibility';
+import CloPortfolio from './CloPortfolio';
 
 // Per-role header framing so every C-suite seat uses this SAME rich view.
 const ROLE_FRAME = {
@@ -174,6 +178,30 @@ const CRO_TABS = [
   ['coaching', 'Blind Spots & Coaching'],
 ];
 
+// CLO / General Counsel: a parallel 5-sub-tab lens at legal altitude. Triggers
+// attach to the shared events; the decision/evidence ledger is the legal artifact.
+const CLO_GROUP_DEFS = [
+  { key: 'obligations', label: 'Obligation Posture' },
+  { key: 'triggers', label: 'Trigger Map & Materiality' },
+  { key: 'defensibility', label: 'Defensibility & Evidence' },
+  { key: 'legalportfolio', label: 'Regulatory & Litigation' },
+  { key: 'coaching', label: 'Blind Spots & Coaching' },
+];
+const CLO_MEMBER_OF = {
+  cloobligations: 'obligations',
+  clotriggers: 'triggers', decisionq: 'triggers',
+  clodefensibility: 'defensibility',
+  cloportfolio: 'legalportfolio',
+  coaching: 'coaching',
+};
+const CLO_TABS = [
+  ['cloobligations', 'Obligation Posture'],
+  ['clotriggers', 'Trigger Map & Materiality'], ['decisionq', 'Decisions'],
+  ['clodefensibility', 'Defensibility & Evidence'],
+  ['cloportfolio', 'Regulatory & Litigation Portfolio'],
+  ['coaching', 'Blind Spots & Coaching'],
+];
+
 export default function CisoSecurityPostureDashboard(props) {
   const role = props.role || 'CISO';
   // Every leader uses this SAME rich scaffold (hero, pillar strip, full tab set,
@@ -226,14 +254,15 @@ export default function CisoSecurityPostureDashboard(props) {
   const isCisoLayout = role === 'CISO';
   const isCioLayout = role === 'CIO';
   const isCroLayout = role === 'CRO';
-  const roleTabs = (!isCisoLayout && !isCioLayout && !isCroLayout && Array.isArray(d.roleTabs)) ? d.roleTabs : null;
+  const isCloLayout = role === 'CLO';
+  const roleTabs = (!isCisoLayout && !isCioLayout && !isCroLayout && !isCloLayout && Array.isArray(d.roleTabs)) ? d.roleTabs : null;
   const labelFor = (t) => {
     if (t.kind === 'thresholds') return `Thresholds · ${d.thresholds.breaches} breached`;
     if (t.kind === 'hidden') return `Hidden Risk · ${d.hiddenRisks.length}`;
     if (t.kind === 'rolepanel') return props.rolePanelLabel || t.label;
     return t.label;
   };
-  const TABS = isCioLayout ? CIO_TABS : isCroLayout ? CRO_TABS : roleTabs
+  const TABS = isCioLayout ? CIO_TABS : isCroLayout ? CRO_TABS : isCloLayout ? CLO_TABS : roleTabs
     ? roleTabs.map((t) => [t.key, labelFor(t)])
     : [
       ['qa', 'Current State'], ['summary', 'Executive Summary'],
@@ -247,15 +276,17 @@ export default function CisoSecurityPostureDashboard(props) {
   const activeRoleTab = roleTabs ? (roleTabs.find((t) => t.key === tab) || roleTabs[0]) : null;
   // The bespoke layouts start on their first tab, not the shared 'qa' default.
   const bespokeTab = isCioLayout ? (CIO_MEMBER_OF[tab] ? tab : 'cioposture')
-    : isCroLayout ? (CRO_MEMBER_OF[tab] ? tab : 'croposition') : tab;
+    : isCroLayout ? (CRO_MEMBER_OF[tab] ? tab : 'croposition')
+    : isCloLayout ? (CLO_MEMBER_OF[tab] ? tab : 'cloobligations') : tab;
 
   // Collapse the flat TABS into top-level groups (only those with members) and
   // derive the active group from the active tab so the two stay in sync. CISO,
-  // CIO and CRO use their bespoke group structures; other roles use the generic.
-  const groupDefs = isCisoLayout ? CISO_GROUP_DEFS : isCioLayout ? CIO_GROUP_DEFS : isCroLayout ? CRO_GROUP_DEFS : TAB_GROUPS;
+  // CIO, CRO and CLO use their bespoke group structures; other roles use generic.
+  const groupDefs = isCisoLayout ? CISO_GROUP_DEFS : isCioLayout ? CIO_GROUP_DEFS : isCroLayout ? CRO_GROUP_DEFS : isCloLayout ? CLO_GROUP_DEFS : TAB_GROUPS;
   const memberOf = isCisoLayout ? ((k) => CISO_MEMBER_OF[k] || 'keyrisks')
     : isCioLayout ? ((k) => CIO_MEMBER_OF[k] || 'opstate')
-    : isCroLayout ? ((k) => CRO_MEMBER_OF[k] || 'position') : groupOf;
+    : isCroLayout ? ((k) => CRO_MEMBER_OF[k] || 'position')
+    : isCloLayout ? ((k) => CLO_MEMBER_OF[k] || 'obligations') : groupOf;
   const groupsPresent = groupDefs
     .map((g) => ({ ...g, members: TABS.filter(([k]) => memberOf(k) === g.key) }))
     .filter((g) => g.members.length);
@@ -349,6 +380,15 @@ export default function CisoSecurityPostureDashboard(props) {
             {bespokeTab === 'decisionq' && <DecisionQueue role={role} orgId={orgId} authToken={token} apiUrl={api} />}
             {bespokeTab === 'croaggregation' && <CroAggregation orgId={orgId} authToken={token} apiUrl={api} />}
             {bespokeTab === 'crotreatment' && <CroTreatment orgId={orgId} authToken={token} apiUrl={api} />}
+            {bespokeTab === 'coaching' && <Coaching role={role} orgId={orgId} authToken={token} apiUrl={api} />}
+          </>)
+          : isCloLayout
+          ? (<>
+            {bespokeTab === 'cloobligations' && <CloObligationPosture orgId={orgId} authToken={token} apiUrl={api} />}
+            {bespokeTab === 'clotriggers' && <CloTriggerMap orgId={orgId} authToken={token} apiUrl={api} />}
+            {bespokeTab === 'decisionq' && <DecisionQueue role={role} orgId={orgId} authToken={token} apiUrl={api} />}
+            {bespokeTab === 'clodefensibility' && <CloDefensibility orgId={orgId} authToken={token} apiUrl={api} />}
+            {bespokeTab === 'cloportfolio' && <CloPortfolio orgId={orgId} authToken={token} apiUrl={api} />}
             {bespokeTab === 'coaching' && <Coaching role={role} orgId={orgId} authToken={token} apiUrl={api} />}
           </>)
           : roleTabs
