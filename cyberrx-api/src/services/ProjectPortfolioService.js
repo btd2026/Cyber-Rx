@@ -126,7 +126,107 @@ async function importFromJira(orgId, { baseUrl, email, apiToken, jql }) {
     };
   });
 }
-function statusToPct(s) { const x = String(s).toLowerCase(); if (/done|closed|complete/.test(x)) return 100; if (/review|test|verif/.test(x)) return 80; if (/progress|doing|active/.test(x)) return 50; if (/to ?do|backlog|open|new/.test(x)) return 10; return 25; }
+function statusToPct(s) { const x = String(s).toLowerCase(); if (/done|closed|complete/.test(x)) return 100; if (/review|test|verif|resolved/.test(x)) return 80; if (/progress|doing|active|wip/.test(x)) return 50; if (/to ?do|backlog|open|new|proposed/.test(x)) return 10; return 25; }
+
+// ---- intake: additional project systems (same real-REST pattern as Jira) ----
+async function getJson(url, opts, tool) {
+  const r = await fetch(url, opts);
+  if (!r.ok) {
+    let detail = ''; try { detail = (await r.text()).slice(0, 200); } catch (_) {}
+    throw new Error(`${tool} returned HTTP ${r.status}. Check the URL/credentials and read access.${detail ? ` (${detail})` : ''}`);
+  }
+  return r.json();
+}
+const clip = (v, n = 280) => (typeof v === 'string' ? v.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n) : '');
+
+// Azure DevOps — WIQL for Epics/Features, then batch-fetch the work items.
+async function importFromAzureDevops(orgId, { organization, project, pat, wiql }) {
+  if (!organization || !project || !pat) throw new Error('Azure DevOps organization, project, and a personal access token (PAT) are required.');
+  await vault.set(orgId, 'project:azure_devops', { organization, project, pat }).catch(() => {});
+  const base = `https://dev.azure.com/${encodeURIComponent(organization)}`;
+  const auth = Buffer.from(`:${pat}`).toString('base64');
+  const headers = { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json', Accept: 'application/json' };
+  const query = wiql || "SELECT [System.Id] FROM workitems WHERE [System.WorkItemType] IN ('Epic','Feature') ORDER BY [System.ChangedDate] DESC";
+  const wq = await getJson(`${base}/${encodeURIComponent(project)}/_apis/wit/wiql?api-version=7.0`, { method: 'POST', headers, body: JSON.stringify({ query }) }, 'Azure DevOps');
+  const ids = ((wq && wq.workItems) || []).slice(0, 50).map((w) => w.id);
+  if (!ids.length) return [];
+  const fields = ['System.Title', 'System.State', 'System.AssignedTo', 'System.Description', 'Microsoft.VSTS.Scheduling.StartDate', 'Microsoft.VSTS.Scheduling.TargetDate'];
+  const wi = await getJson(`${base}/_apis/wit/workitems?ids=${ids.join(',')}&fields=${fields.join(',')}&api-version=7.0`, { headers }, 'Azure DevOps');
+  return ((wi && wi.value) || []).map((it) => {
+    const f = it.fields || {};
+    const state = f['System.State'] || 'Active';
+    return {
+      name: f['System.Title'] || `Work item ${it.id}`, objective: clip(f['System.Description']),
+      status: state, percentComplete: statusToPct(state),
+      startDate: f['Microsoft.VSTS.Scheduling.StartDate'] || '', targetEnd: f['Microsoft.VSTS.Scheduling.TargetDate'] || '',
+      budget: 0, owner: (f['System.AssignedTo'] && f['System.AssignedTo'].displayName) || '', domain: '', externalRef: String(it.id),
+    };
+  });
+}
+
+// ServiceNow — Project Portfolio Management table (pm_project) via Table API.
+async function importFromServiceNow(orgId, { instanceUrl, username, password, query }) {
+  if (!instanceUrl || !username || !password) throw new Error('ServiceNow instance URL, username, and password (or token) are required.');
+  await vault.set(orgId, 'project:servicenow', { instanceUrl, username, password }).catch(() => {});
+  const auth = Buffer.from(`${username}:${password}`).toString('base64');
+  const flds = 'number,short_description,description,state,percent_complete,start_date,end_date,project_manager';
+  const url = `${instanceUrl.replace(/\/$/, '')}/api/now/table/pm_project?sysparm_limit=50&sysparm_display_value=true&sysparm_fields=${flds}${query ? `&sysparm_query=${encodeURIComponent(query)}` : ''}`;
+  const data = await getJson(url, { headers: { Authorization: `Basic ${auth}`, Accept: 'application/json' } }, 'ServiceNow');
+  return ((data && data.result) || []).map((p) => {
+    const pct = num(p.percent_complete);
+    return {
+      name: p.short_description || p.number, objective: clip(p.description), status: p.state || 'In Progress',
+      percentComplete: pct || statusToPct(p.state), startDate: p.start_date || '', targetEnd: p.end_date || '',
+      budget: 0, owner: (p.project_manager && (p.project_manager.display_value || p.project_manager)) || '', domain: '', externalRef: p.number || '',
+    };
+  });
+}
+
+// Asana — projects in a workspace via the REST API + personal access token.
+async function importFromAsana(orgId, { accessToken, workspaceGid }) {
+  if (!accessToken) throw new Error('An Asana personal access token is required.');
+  await vault.set(orgId, 'project:asana', { accessToken, workspaceGid }).catch(() => {});
+  const headers = { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' };
+  let ws = workspaceGid;
+  if (!ws) { const w = await getJson('https://app.asana.com/api/1.0/workspaces?limit=1', { headers }, 'Asana'); ws = w && w.data && w.data[0] && w.data[0].gid; }
+  if (!ws) throw new Error('No Asana workspace found for this token.');
+  const opt = 'name,notes,current_status.text,due_on,start_on,owner.name';
+  const data = await getJson(`https://app.asana.com/api/1.0/projects?workspace=${encodeURIComponent(ws)}&limit=50&opt_fields=${encodeURIComponent(opt)}`, { headers }, 'Asana');
+  return ((data && data.data) || []).map((p) => {
+    const st = (p.current_status && p.current_status.text) || 'In Progress';
+    return {
+      name: p.name, objective: clip(p.notes), status: st, percentComplete: statusToPct(st),
+      startDate: p.start_on || '', targetEnd: p.due_on || '', budget: 0,
+      owner: (p.owner && p.owner.name) || '', domain: '', externalRef: String(p.gid || ''),
+    };
+  });
+}
+
+// monday.com — boards (or a board's items) via the GraphQL API.
+async function importFromMonday(orgId, { apiToken, boardId }) {
+  if (!apiToken) throw new Error('A monday.com API token is required.');
+  await vault.set(orgId, 'project:monday', { apiToken, boardId }).catch(() => {});
+  const headers = { Authorization: apiToken, 'Content-Type': 'application/json', 'API-Version': '2024-01' };
+  const query = boardId
+    ? `query { boards(ids: [${Number(boardId)}]) { items_page(limit: 50) { items { id name } } } }`
+    : 'query { boards(limit: 50, state: active) { id name state } }';
+  const data = await getJson('https://api.monday.com/v2', { method: 'POST', headers, body: JSON.stringify({ query }) }, 'monday.com');
+  if (data && data.errors && data.errors.length) throw new Error(`monday.com: ${data.errors[0].message}`);
+  const boards = (data && data.data && data.data.boards) || [];
+  const rows = boardId ? (boards[0] && boards[0].items_page && boards[0].items_page.items) || [] : boards;
+  return rows.map((b) => ({
+    name: b.name, objective: '', status: b.state || 'In Progress', percentComplete: statusToPct(b.state || 'active'),
+    startDate: '', targetEnd: '', budget: 0, owner: '', domain: '', externalRef: String(b.id || ''),
+  }));
+}
+
+const CONNECTORS = { jira: importFromJira, azure_devops: importFromAzureDevops, servicenow: importFromServiceNow, asana: importFromAsana, monday: importFromMonday };
+// Dispatch a connector import by tool key. Returns the normalized project list.
+async function importFromConnector(orgId, tool, creds) {
+  const fn = CONNECTORS[tool];
+  if (!fn) throw new Error(`Unsupported project connector: ${tool}.`);
+  return fn(orgId, creds || {});
+}
 
 // ---- persistence -----------------------------------------------------------
 async function saveProjects(orgId, projects) {
@@ -303,4 +403,4 @@ function demoProjects() {
   ];
 }
 
-module.exports = { parseInventory, importFromJira, saveProjects, listProjects, analyze, portfolio };
+module.exports = { parseInventory, importFromJira, importFromConnector, CONNECTORS, saveProjects, listProjects, analyze, portfolio };
