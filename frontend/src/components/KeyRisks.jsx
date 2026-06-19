@@ -26,6 +26,17 @@ function ctx(props) {
   return { token, orgId, api };
 }
 const Pill = ({ text, color }) => <span style={{ fontSize: 9, fontWeight: 700, color: '#fff', background: color, borderRadius: 999, padding: '2px 8px', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>{text}</span>;
+// Refined, low-noise status chip: tinted background + colored text (premium feel).
+const SoftChip = ({ text, color }) => <span style={{ fontSize: 10, fontWeight: 700, color, background: color + '14', border: `1px solid ${color}33`, borderRadius: 6, padding: '2px 9px', whiteSpace: 'nowrap', letterSpacing: '0.02em' }}>{text}</span>;
+// Compact labelled metric used in the right-hand stat panel.
+const Stat = ({ k, v, accent }) => <div style={{ minWidth: 0 }}><div style={{ fontSize: 9, color: INK3, fontWeight: 600 }}>{k}</div><div style={{ fontSize: 13.5, fontWeight: 700, color: accent || INK, lineHeight: 1.2, marginTop: 1 }}>{v}</div></div>;
+// Drop the leading quoted echo of the title that the lens narrative prepends.
+function cleanNarrative(n) {
+  if (!n) return '';
+  const s = String(n).trim();
+  const i = s.indexOf(' — ');
+  return (i !== -1 && /^["“']/.test(s)) ? s.slice(i + 3).trim() : s;
+}
 
 export default function KeyRisks(props) {
   const role = 'CISO';
@@ -68,32 +79,43 @@ export default function KeyRisks(props) {
           const apps = appsForRisk(graph, e);
           const procs = procsForRisk(graph, e);
           return (
-            <div key={c.id} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${SEV[e.severity]}`, borderRadius: 10, background: '#fff' }}>
-              <div style={{ padding: '12px 14px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', gap: 7, alignItems: 'center', flexWrap: 'wrap' }}>
-                      <Pill text={e.scenarioType} color={SCEN[e.scenarioType] || INK3} />
-                      <Pill text={e.severity} color={SEV[e.severity]} />
-                      {c.decision && <Pill text={c.decision.action === 'accept' ? 'Accepted' : 'In treatment'} color="#1f8a4c" />}
+            <div key={c.id} style={{ border: `1px solid ${HAIR}`, borderLeft: `3px solid ${SEV[e.severity]}`, borderRadius: 12, background: '#fff', boxShadow: '0 1px 2px rgba(15,23,42,0.04)' }}>
+              <div style={{ padding: '16px 18px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 18 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginBottom: 9 }}>
+                      <SoftChip text={e.severity} color={SEV[e.severity]} />
+                      <SoftChip text={e.scenarioType} color={SCEN[e.scenarioType] || INK3} />
+                      {c.decision && <SoftChip text={c.decision.action === 'accept' ? 'Accepted' : 'In treatment'} color="#1f8a4c" />}
                     </div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: INK, marginTop: 6 }}>{e.title}</div>
-                    <div style={{ fontSize: 11.5, color: INK2, marginTop: 4, lineHeight: 1.5 }}>{(c.lens && c.lens.narrative) || ''}</div>
-                    <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', fontSize: 10.5, color: INK3, marginTop: 6 }}>
-                      <span>Owner <strong style={{ color: INK2 }}>{e.owner || 'CISO'}</strong></span>
-                      <span>Status <strong style={{ color: INK2 }}>{c.decision ? (c.decision.action === 'accept' ? 'accepted & monitoring' : 'in treatment') : 'open'}</strong></span>
+                    <div style={{ fontSize: 15.5, fontWeight: 700, color: INK, lineHeight: 1.35 }}>{e.title}</div>
+                    <div style={{ fontSize: 12, color: INK2, marginTop: 7, lineHeight: 1.6, maxWidth: 660 }}>{cleanNarrative(c.lens && c.lens.narrative)}</div>
+                    <div style={{ display: 'flex', gap: 22, flexWrap: 'wrap', fontSize: 11, color: INK3, marginTop: 12 }}>
+                      <span>Owner&nbsp;&nbsp;<strong style={{ color: INK2 }}>{e.owner || 'CISO'}</strong></span>
+                      <span>Status&nbsp;&nbsp;<strong style={{ color: INK2, textTransform: 'capitalize' }}>{c.decision ? (c.decision.action === 'accept' ? 'Accepted & monitoring' : 'In treatment') : 'Open'}</strong></span>
                     </div>
                   </div>
-                  <div style={{ textAlign: 'right', minWidth: 150 }}>
-                    <div style={{ fontSize: 9.5, color: INK3, textTransform: 'uppercase' }}>Trajectory (exploit p)</div>
-                    <div style={{ fontSize: 11.5, color: INK }}>7d <strong>{e.timing.p7}%</strong> · 30d <strong style={{ color: SEV[e.severity] }}>{e.timing.p30}%</strong> · 90d <strong>{e.timing.p90}%</strong></div>
-                    <div style={{ fontSize: 10.5, color: INK2, marginTop: 3 }}>Loss P50 <strong>{usd(e.loss.p50)}</strong> · P90 <strong style={{ color: '#C0392B' }}>{usd(e.loss.p90)}</strong></div>
-                    <div style={{ marginTop: 6, display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                      {voice && c.lens && c.lens.narration && <VoiceControls voice={voice} onReplay={() => voice.speak(c.lens.narration)} label="Listen" />}
+                  <div style={{ minWidth: 196, background: PANEL, border: `1px solid ${HAIR}`, borderRadius: 10, padding: '11px 13px' }}>
+                    <div style={{ fontSize: 9, color: INK3, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700 }}>Exploit likelihood</div>
+                    <div style={{ display: 'flex', gap: 16, marginTop: 6 }}>
+                      <Stat k="7 days" v={`${e.timing.p7}%`} />
+                      <Stat k="30 days" v={`${e.timing.p30}%`} accent={SEV[e.severity]} />
+                      <Stat k="90 days" v={`${e.timing.p90}%`} />
                     </div>
+                    <div style={{ borderTop: `1px solid ${HAIR}`, margin: '10px 0' }} />
+                    <div style={{ fontSize: 9, color: INK3, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700 }}>Modeled loss</div>
+                    <div style={{ display: 'flex', gap: 16, marginTop: 6 }}>
+                      <Stat k="Expected" v={usd(e.loss.p50)} />
+                      <Stat k="Severe (P90)" v={usd(e.loss.p90)} accent="#C0392B" />
+                    </div>
+                    {voice && c.lens && c.lens.narration && (
+                      <div style={{ marginTop: 11, display: 'flex', justifyContent: 'flex-end' }}>
+                        <VoiceControls voice={voice} compact onReplay={() => voice.speak(c.lens.narration)} />
+                      </div>
+                    )}
                   </div>
                 </div>
-                <button onClick={() => setOpen(isOpen ? null : c.id)} style={{ marginTop: 8, background: 'transparent', border: 'none', color: '#1d4ed8', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', padding: 0 }}>{isOpen ? '▲ Hide impact & attack path' : '▼ Impact & live attack path'}</button>
+                <button onClick={() => setOpen(isOpen ? null : c.id)} style={{ marginTop: 12, background: 'transparent', border: 'none', color: '#1d4ed8', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', padding: 0 }}>{isOpen ? '▲ Hide impact & attack path' : '▼ Impact & live attack path'}</button>
               </div>
               {isOpen && (
                 <div style={{ borderTop: `1px solid ${HAIR}`, padding: '12px 14px', background: PANEL, display: 'grid', gap: 10 }}>

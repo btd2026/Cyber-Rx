@@ -25,8 +25,9 @@ function ctx(props) {
   return { token, orgId, api };
 }
 
-const Pill = ({ text, color }) => (
-  <span style={{ fontSize: 9.5, fontWeight: 700, color: '#fff', background: color, borderRadius: 999, padding: '2px 9px', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>{text}</span>
+// Refined, low-noise chip: tinted background + colored text (premium feel).
+const SoftChip = ({ text, color, strong }) => (
+  <span style={{ fontSize: 10, fontWeight: 700, color: strong ? '#fff' : color, background: strong ? color : color + '14', border: `1px solid ${strong ? color : color + '33'}`, borderRadius: 6, padding: '2px 9px', whiteSpace: 'nowrap', letterSpacing: '0.02em' }}>{text}</span>
 );
 
 export default function DecisionQueue(props) {
@@ -88,28 +89,30 @@ function Card({ card, role, onDecide, voice }) {
   return (
     <div style={{ border: `1px solid ${compound ? '#e3d5f5' : HAIR}`, borderRadius: 12, background: '#fff', overflow: 'hidden', boxShadow: '0 1px 3px rgba(15,23,42,0.05)' }}>
       {/* event + role lens header */}
-      <div style={{ padding: '14px 16px', borderLeft: `5px solid ${compound ? '#7c3aed' : sev}` }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-              {compound && <Pill text="⛓ Chained risk" color="#7c3aed" />}
-              <span style={{ fontSize: 9.5, fontWeight: 800, color: '#1d4ed8', background: '#eef4fb', border: '1px solid #cfe0f3', borderRadius: 999, padding: '2px 9px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{lens.framing || role} lens</span>
-              <Pill text={e.severity} color={sev} />
-              {card.relevant && <span style={{ fontSize: 9, fontWeight: 700, color: '#1f8a4c', background: '#eaf7ef', border: '1px solid #cce8d6', borderRadius: 999, padding: '2px 8px', textTransform: 'uppercase' }}>Your call</span>}
-              {decided && <Pill text={decided.action === 'accept' ? 'Accepted & monitoring' : 'Decided'} color="#1f8a4c" />}
+      <div style={{ padding: '16px 18px', borderLeft: `3px solid ${compound ? '#7c3aed' : sev}` }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 18 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginBottom: 9 }}>
+              {compound && <SoftChip text="⛓ Chained risk" color="#7c3aed" />}
+              <SoftChip text={e.severity} color={sev} />
+              <SoftChip text={`${lens.framing || role} lens`} color="#1d4ed8" />
+              {card.relevant && <SoftChip text="Your call" color="#1f8a4c" />}
+              {decided && <SoftChip text={decided.action === 'accept' ? 'Accepted & monitoring' : 'Decided'} color="#1f8a4c" strong />}
             </div>
-            <div style={{ fontSize: 15, fontWeight: 800, color: INK, marginTop: 7, lineHeight: 1.3 }}>{lens.headline || e.title}</div>
-            <div style={{ fontSize: 11, color: INK3, marginTop: 2 }}>{compound ? 'Combined scenario' : 'Event'}: {e.title}</div>
+            <div style={{ fontSize: 15.5, fontWeight: 700, color: INK, marginTop: 1, lineHeight: 1.35 }}>{lens.headline || e.title}</div>
+            {lens.headline && lens.headline !== e.title && <div style={{ fontSize: 11, color: INK3, marginTop: 3 }}>{compound ? 'Combined scenario' : 'Underlying event'}: {e.title}</div>}
           </div>
-          <div style={{ textAlign: 'right', minWidth: 130 }}>
-            {lens.primary && <><div style={{ fontSize: 9.5, color: INK3, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{lens.primary.label}</div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: sev }}>{lens.primary.value}</div></>}
-            {lens.secondary && <div style={{ fontSize: 10.5, color: INK2, marginTop: 2 }}>{lens.secondary.label}: <strong>{lens.secondary.value}</strong></div>}
-            <div style={{ marginTop: 6, display: 'flex', justifyContent: 'flex-end' }}>{voice && lens.narration && <VoiceControls voice={voice} onReplay={() => voice.speak(lens.narration)} label="Listen" />}</div>
+          <div style={{ minWidth: 150, textAlign: 'right' }}>
+            {lens.primary && <div style={{ background: PANEL, border: `1px solid ${HAIR}`, borderRadius: 10, padding: '10px 13px' }}>
+              <div style={{ fontSize: 9, color: INK3, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 }}>{lens.primary.label}</div>
+              <div style={{ fontSize: 21, fontWeight: 800, color: sev, lineHeight: 1.15, marginTop: 2 }}>{lens.primary.value}</div>
+              {lens.secondary && String(lens.secondary.value).length <= 24 && <div style={{ fontSize: 10.5, color: INK2, marginTop: 4 }}>{lens.secondary.label}: <strong style={{ color: INK }}>{lens.secondary.value}</strong></div>}
+            </div>}
+            {voice && lens.narration && <div style={{ marginTop: 9, display: 'flex', justifyContent: 'flex-end' }}><VoiceControls voice={voice} compact onReplay={() => voice.speak(lens.narration)} /></div>}
           </div>
         </div>
-        {lens.narrative && <div style={{ fontSize: 12, color: INK2, marginTop: 8, lineHeight: 1.55 }}>{lens.narrative}</div>}
-        {lens.questionToAsk && <div style={{ fontSize: 11.5, color: '#7c3aed', fontWeight: 600, marginTop: 6 }}>Question to ask: {lens.questionToAsk}</div>}
+        {lens.narrative && <div style={{ fontSize: 12, color: INK2, marginTop: 11, lineHeight: 1.6, maxWidth: 720 }}>{lens.narrative}</div>}
+        {lens.questionToAsk && <div style={{ fontSize: 11.5, color: '#7c3aed', fontWeight: 600, marginTop: 8 }}>Question to ask: {lens.questionToAsk}</div>}
       </div>
 
       {/* compound: the two conditions, individually low → combined critical */}

@@ -120,10 +120,21 @@ export function useAgentVoice() {
   return { muted, setMuted, speaking, speak, stop };
 }
 
-/** Small inline control: mute toggle + replay, shown on any narrating page. */
-export function VoiceControls({ voice, onReplay, label }) {
+/** Small inline control: mute toggle + replay, shown on any narrating page.
+ * `compact` renders only a discreet Listen/Stop affordance (no global mute
+ * toggle) for use on repeated cards, so the mute control lives once per page. */
+export function VoiceControls({ voice, onReplay, label, compact }) {
   const { muted, setMuted, speaking, stop } = voice;
   const btn = { border: 'none', borderRadius: 16, padding: '5px 12px', fontSize: 11.5, fontWeight: 600, cursor: 'pointer' };
+  if (compact) {
+    if (muted || !onReplay) return null;
+    return (
+      <button onClick={() => (speaking ? stop() : onReplay())} title={speaking ? 'Stop narration' : 'Listen to the analysis'}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'transparent', border: '1px solid ' + (speaking ? '#fca5a5' : '#e2e8f0'), color: speaking ? '#C0392B' : '#64748b', borderRadius: 999, padding: '4px 11px', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+        {speaking ? '■ Stop' : '🔊 Listen'}
+      </button>
+    );
+  }
   return (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
       {!muted && onReplay && (
