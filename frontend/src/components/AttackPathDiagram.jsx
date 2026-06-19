@@ -82,6 +82,12 @@ export default function AttackPathDiagram(props) {
             scenarios. The exposed attack chain is highlighted; click a flagged node to inspect the finding and open a
             remediation ticket.
           </div>
+          {data.synthesized && (
+            <div style={{ marginTop: 9, display: 'inline-flex', alignItems: 'center', gap: 7, background: '#fff7ed', border: '1px solid #f2d2ab', borderRadius: 7, padding: '6px 11px', fontSize: 11, color: '#9a5b1f', maxWidth: 680, lineHeight: 1.45 }}>
+              <span style={{ fontSize: 12 }}>ⓘ</span>
+              <span>Modeled from your risk data. Connect asset, vulnerability and threat sources to render live attack paths from observed telemetry.</span>
+            </div>
+          )}
         </div>
         <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 20, fontSize: 11, color: INK_2 }}>
           <div style={{ fontSize: 19, fontWeight: 600, color: SEV.Critical, fontVariantNumeric: 'tabular-nums' }}>{usd(data.totalExposure)}</div>
