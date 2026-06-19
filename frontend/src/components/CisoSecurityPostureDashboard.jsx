@@ -129,7 +129,10 @@ const CISO_GROUP_DEFS = [
 ];
 const CISO_MEMBER_OF = {
   qa: 'state',
-  bizrisks: 'keyrisks', decisionq: 'keyrisks', thresholds: 'keyrisks', processes: 'keyrisks', paths: 'keyrisks', hidden: 'keyrisks', ai: 'keyrisks', actions: 'keyrisks',
+  // Key Risks — capped at five decision-focused views.
+  bizrisks: 'keyrisks', decisionq: 'keyrisks', paths: 'keyrisks', thresholds: 'keyrisks', processes: 'keyrisks',
+  // Migrated out of Key Risks to keep that group to five and avoid overload:
+  ai: 'controlefficacy', actions: 'projects', hidden: 'coaching',
   controlefficacy: 'controlefficacy', compiler: 'controlefficacy', fourlens: 'controlefficacy',
   readiness: 'projects', projects: 'projects',
   coaching: 'coaching',
@@ -297,12 +300,15 @@ export default function CisoSecurityPostureDashboard(props) {
     ? roleTabs.map((t) => [t.key, labelFor(t)])
     : [
       ['qa', 'Current State'],
+      // Key Risks (5)
       ['bizrisks', 'Business Risks'], ['decisionq', 'Projections & Decisions'],
       ['paths', 'Attack Pathways'], ['thresholds', `Thresholds · ${d.thresholds.breaches} breached`], ['processes', 'Process Protection'],
-      ['hidden', `Hidden Risk · ${d.hiddenRisks.length}`], ['ai', 'AI Governance'], ['actions', 'Action Now'],
-      ['controlefficacy', 'Control Efficacy'], ['compiler', 'Framework Compiler'], ['fourlens', 'Four-Lens (CSF · 800-53 · CIS · ATT&CK)'],
-      ['readiness', 'Readiness & Investment'], ['projects', 'Projects & ROI'],
-      ['coaching', 'Coaching & Blind Spots'],
+      // Control Efficacy
+      ['controlefficacy', 'Control Efficacy'], ['compiler', 'Framework Compiler'], ['fourlens', 'Four-Lens (CSF · 800-53 · CIS · ATT&CK)'], ['ai', 'AI Governance'],
+      // Key Projects & ROI
+      ['readiness', 'Readiness & Investment'], ['projects', 'Projects & ROI'], ['actions', 'Action Now'],
+      // Blind Spots & Coaching
+      ['coaching', 'Coaching & Blind Spots'], ['hidden', `Hidden Risk · ${d.hiddenRisks.length}`],
     ];
   const activeRoleTab = roleTabs ? (roleTabs.find((t) => t.key === tab) || roleTabs[0]) : null;
   // The bespoke layouts start on their first tab, not the shared 'qa' default.
