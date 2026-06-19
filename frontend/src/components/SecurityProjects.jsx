@@ -27,14 +27,26 @@ const Pill = ({ text, tone }) => (
   <span style={{ fontSize: 9.5, fontWeight: 700, color: '#fff', background: TONE[tone] || INK3, borderRadius: 999, padding: '2px 9px', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>{text}</span>
 );
 
+// Supported read-only project-system connectors and the credentials each needs.
+// All post to /api/projects/connect/:key. Tools without API access can still use
+// the CSV/Excel "Import inventory" path.
+const TOOLS = [
+  { key: 'jira', label: 'Jira', fields: [['baseUrl', 'Base URL (https://yourco.atlassian.net)'], ['email', 'Account email'], ['apiToken', 'API token', 'password'], ['jql', 'JQL (optional — defaults to Epics/Initiatives)', 'text', 'full']] },
+  { key: 'azure_devops', label: 'Azure DevOps', fields: [['organization', 'Organization'], ['project', 'Project'], ['pat', 'Personal access token (PAT)', 'password'], ['wiql', 'WIQL (optional — defaults to Epics/Features)', 'text', 'full']] },
+  { key: 'servicenow', label: 'ServiceNow', fields: [['instanceUrl', 'Instance URL (https://yourco.service-now.com)'], ['username', 'Username'], ['password', 'Password / token', 'password'], ['query', 'Encoded query (optional)', 'text', 'full']] },
+  { key: 'asana', label: 'Asana', fields: [['accessToken', 'Personal access token', 'password'], ['workspaceGid', 'Workspace GID (optional)']] },
+  { key: 'monday', label: 'monday.com', fields: [['apiToken', 'API token', 'password'], ['boardId', 'Board ID (optional — defaults to all boards)']] },
+];
+
 export default function SecurityProjects(props) {
   const { token, orgId, api } = ctx(props);
   const voice = useAgentVoice();
   const [pf, setPf] = useState(null);
   const [err, setErr] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [mode, setMode] = useState(null); // null | 'jira'
-  const [jira, setJira] = useState({ baseUrl: '', email: '', apiToken: '', jql: '' });
+  const [mode, setMode] = useState(false); // connector panel open
+  const [tool, setTool] = useState('jira');
+  const [creds, setCreds] = useState({});
   const headers = useCallback(() => { const h = { 'Content-Type': 'application/json', 'X-Org-Id': orgId }; if (token) h.Authorization = `Bearer ${token}`; return h; }, [orgId, token]);
 
   const load = useCallback(() => {
@@ -55,10 +67,10 @@ export default function SecurityProjects(props) {
     reader.readAsDataURL(file);
   }
 
-  function importJira() {
+  function importConnector() {
     setBusy(true); setErr(null);
-    fetch(`${api}/api/projects/jira/import`, { method: 'POST', headers: headers(), body: JSON.stringify(Object.assign({ org_id: orgId }, jira)) })
-      .then((r) => r.json()).then((res) => { if (res.error) setErr(res.error); else { setMode(null); load(); } }).catch((e) => setErr(e.message)).finally(() => setBusy(false));
+    fetch(`${api}/api/projects/connect/${tool}`, { method: 'POST', headers: headers(), body: JSON.stringify(Object.assign({ org_id: orgId }, creds)) })
+      .then((r) => r.json()).then((res) => { if (res.error) setErr(res.error); else { setMode(false); load(); } }).catch((e) => setErr(e.message)).finally(() => setBusy(false));
   }
 
   return (
@@ -73,27 +85,36 @@ export default function SecurityProjects(props) {
             {busy ? 'Working…' : '⬆ Import inventory'}
             <input type="file" style={{ display: 'none' }} disabled={busy} accept=".csv,.xls,.xlsx,.txt,.pdf,.doc,.docx" onChange={(e) => { const f = e.target.files && e.target.files[0]; if (f) upload(f); e.target.value = ''; }} />
           </label>
-          <button onClick={() => setMode(mode === 'jira' ? null : 'jira')} style={{ background: '#fff', color: INK, border: `1px solid ${HAIR}`, borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>⤵ Connect Jira</button>
+          <button onClick={() => setMode(!mode)} style={{ background: '#fff', color: INK, border: `1px solid ${HAIR}`, borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>⤵ Connect project tool</button>
         </div>
       </div>
 
       {err && <div style={{ color: '#C0392B', fontSize: 12, marginBottom: 10 }}>{err}</div>}
 
-      {mode === 'jira' && (
-        <div style={{ border: `1px solid ${HAIR}`, borderRadius: 10, padding: '14px 16px', marginBottom: 14, background: PANEL }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: INK, marginBottom: 8 }}>Connect Jira (read-only project / portfolio import)</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            {[['baseUrl', 'Jira base URL (https://yourco.atlassian.net)'], ['email', 'Account email'], ['apiToken', 'API token'], ['jql', 'JQL (optional — defaults to Epics/Initiatives)']].map(([k, ph]) => (
-              <input key={k} type={k === 'apiToken' ? 'password' : 'text'} placeholder={ph} value={jira[k]} onChange={(e) => setJira(Object.assign({}, jira, { [k]: e.target.value }))}
-                style={{ border: `1px solid ${HAIR}`, borderRadius: 7, padding: '8px 10px', fontSize: 12, outline: 'none', gridColumn: k === 'jql' ? '1 / span 2' : 'auto' }} />
-            ))}
+      {mode && (() => {
+        const spec = TOOLS.find((t) => t.key === tool) || TOOLS[0];
+        return (
+          <div style={{ border: `1px solid ${HAIR}`, borderRadius: 10, padding: '14px 16px', marginBottom: 14, background: PANEL }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: INK, marginBottom: 9 }}>Connect a project tool <span style={{ fontWeight: 500, color: INK3 }}>— read-only; we only read project metadata</span></div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 11 }}>
+              {TOOLS.map((t) => (
+                <button key={t.key} onClick={() => { setTool(t.key); setCreds({}); setErr(null); }}
+                  style={{ background: t.key === tool ? '#0f172a' : '#fff', color: t.key === tool ? '#fff' : INK2, border: `1px solid ${t.key === tool ? '#0f172a' : HAIR}`, borderRadius: 999, padding: '5px 13px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>{t.label}</button>
+              ))}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              {spec.fields.map(([k, ph, type, span]) => (
+                <input key={k} type={type === 'password' ? 'password' : 'text'} placeholder={ph} value={creds[k] || ''} onChange={(e) => setCreds(Object.assign({}, creds, { [k]: e.target.value }))}
+                  style={{ border: `1px solid ${HAIR}`, borderRadius: 7, padding: '8px 10px', fontSize: 12, outline: 'none', gridColumn: span === 'full' ? '1 / span 2' : 'auto' }} />
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 8, marginTop: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+              <button onClick={importConnector} disabled={busy} style={{ background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 7, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}>{busy ? 'Importing…' : `Import from ${spec.label}`}</button>
+              <span style={{ fontSize: 10.5, color: INK3 }}>Credentials are stored securely. No API access? Use <strong>Import inventory</strong> to upload a CSV/Excel export instead.</span>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-            <button onClick={importJira} disabled={busy} style={{ background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 7, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}>{busy ? 'Importing…' : 'Import from Jira'}</button>
-            <span style={{ fontSize: 10.5, color: INK3, alignSelf: 'center' }}>Credentials are stored securely; CyberRX only reads project metadata.</span>
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {!pf ? <div style={{ fontSize: 12, color: INK3 }}>Loading portfolio…</div> : (
         <>

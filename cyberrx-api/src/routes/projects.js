@@ -39,6 +39,19 @@ router.post('/jira/import', async (req, res) => {
   } catch (e) { logger.warn('jira import failed', { error: e.message }); res.status(502).json({ error: e.message || 'Jira import failed.' }); }
 });
 
+// Generic project-system connector: /connect/:tool (jira | azure_devops | servicenow | asana | monday)
+router.post('/connect/:tool', async (req, res) => {
+  const orgId = orgOf(req); if (!orgId) return res.status(400).json({ error: 'Organization required.' });
+  const tool = String(req.params.tool || '').toLowerCase();
+  if (!Portfolio.CONNECTORS[tool]) return res.status(400).json({ error: `Unsupported connector: ${tool}.` });
+  try {
+    const projects = await Portfolio.importFromConnector(orgId, tool, req.body || {});
+    if (!projects.length) return res.status(422).json({ error: 'No projects returned. Check the filter/permissions for this tool.' });
+    await Portfolio.saveProjects(orgId, projects.map((p) => Object.assign({ source: tool }, p)));
+    res.json({ imported: projects.length, projects: await Portfolio.analyze(orgId) });
+  } catch (e) { logger.warn('connector import failed', { tool, error: e.message }); res.status(502).json({ error: e.message || `${tool} import failed.` }); }
+});
+
 router.get('/', async (req, res) => {
   const orgId = orgOf(req); if (!orgId) return res.status(400).json({ error: 'Organization required.' });
   try { res.json({ projects: await Portfolio.analyze(orgId) }); }
