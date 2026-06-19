@@ -310,13 +310,24 @@ const DUTY = {
   CLO: 'disclosure obligations and materiality', Board: 'the governance decision and oversight',
 };
 
+// Turn the attack-path steps into a clear, board-readable sentence and resolve
+// the generic "a crown-jewel process" placeholder to something concrete.
+function readablePath(e) {
+  const generic = /^(a |the )?crown.?jewel process$/i;
+  const objective = (e.crownJewel && !generic.test(String(e.crownJewel).trim()))
+    ? e.crownJewel : 'your most critical business processes';
+  const steps = (e.attackPath || []).map((s) => s.label).filter(Boolean);
+  if (steps.length) steps[steps.length - 1] = objective; // swap the generic objective for the real target
+  return { objective, path: steps.join(' → ') };
+}
+const tteText = (d) => (d >= 1 ? `effective in roughly ${d} day${d === 1 ? '' : 's'}` : 'effective immediately');
+
 function lensFor(role, card) {
   const e = card.event;
   const compound = card.type === 'compound';
   const path = e.attackPath.map((s) => s.label).join(' → ');
   const rec = card.options.find((o) => o.id === card.recommended) || card.options[0];
   let headline, primary, secondary, narrative, questionToAsk;
-
   if (compound) {
     const cb = e.combination, m = e.members;
     switch (role) {
@@ -367,12 +378,14 @@ function lensFor(role, card) {
         secondary = { label: 'Worst-case (P90)', value: usd(e.loss.p90) };
         narrative = `Modeled loss distribution for "${e.title}". Transfer caps the downside; remediation lowers the likelihood. Recommended: ${rec.label} (${rec.costLabel}).`;
         break;
-      case 'CISO':
-        headline = `Attack path to ${e.crownJewel}`;
+      case 'CISO': {
+        const rp = readablePath(e);
+        headline = `Attack path to ${rp.objective}`;
         primary = { label: '30-day exploit likelihood', value: `${e.timing.p30}%` };
-        secondary = { label: 'Path', value: path };
-        narrative = `"${e.title}" — ${path}. Recommended: ${rec.label} (residual risk −${rec.residualRiskReductionPct}%, ${rec.timeToEffectDays}d to effect).`;
+        secondary = { label: 'Path', value: rp.path };
+        narrative = `Likely attack path — ${rp.path}. Recommended action: ${rec.label.toLowerCase()} — cuts residual risk by about ${rec.residualRiskReductionPct}%, ${tteText(rec.timeToEffectDays)}.`;
         break;
+      }
       case 'CIO':
         headline = `${e.affectedSystem || 'Affected systems'} exposed`;
         primary = { label: 'Time to effect (recommended)', value: `${rec.timeToEffectDays} days` };
