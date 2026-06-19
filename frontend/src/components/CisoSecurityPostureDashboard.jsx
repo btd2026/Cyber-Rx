@@ -128,7 +128,7 @@ const CISO_GROUP_DEFS = [
   { key: 'coaching', label: 'Blind Spots & Coaching' },
 ];
 const CISO_MEMBER_OF = {
-  qa: 'state', summary: 'state',
+  qa: 'state',
   bizrisks: 'keyrisks', decisionq: 'keyrisks', thresholds: 'keyrisks', processes: 'keyrisks', paths: 'keyrisks', hidden: 'keyrisks', ai: 'keyrisks', actions: 'keyrisks',
   controlefficacy: 'controlefficacy', compiler: 'controlefficacy', fourlens: 'controlefficacy',
   readiness: 'projects', projects: 'projects',
@@ -296,7 +296,7 @@ export default function CisoSecurityPostureDashboard(props) {
   const TABS = isCioLayout ? CIO_TABS : isCroLayout ? CRO_TABS : isCloLayout ? CLO_TABS : isBoardLayout ? BOARD_TABS : roleTabs
     ? roleTabs.map((t) => [t.key, labelFor(t)])
     : [
-      ['qa', 'Current State'], ['summary', 'Executive Summary'],
+      ['qa', 'Current State'],
       ['bizrisks', 'Business Risks'], ['decisionq', 'Projections & Decisions'],
       ['paths', 'Attack Pathways'], ['thresholds', `Thresholds · ${d.thresholds.breaches} breached`], ['processes', 'Process Protection'],
       ['hidden', `Hidden Risk · ${d.hiddenRisks.length}`], ['ai', 'AI Governance'], ['actions', 'Action Now'],
@@ -438,7 +438,6 @@ export default function CisoSecurityPostureDashboard(props) {
           : (<>
             {tab === 'qa' && <CurrentState d={d} role={role} orgId={orgId} authToken={token} apiUrl={api} onOpenQueue={() => setTab('decisionq')} />}
             {tab === 'decisionq' && <DecisionQueue role={role} orgId={orgId} authToken={token} apiUrl={api} />}
-            {tab === 'summary' && <ExecutiveSummaryEditor />}
             {tab === 'linkage' && <BusinessRiskPanel />}
             {tab === 'domains' && <Domains matrix={d.domainMatrix} controlRisk={d.controlRisk} thresholds={d.thresholds} />}
             {tab === 'controls' && <Controls rows={d.controlRisk} />}
