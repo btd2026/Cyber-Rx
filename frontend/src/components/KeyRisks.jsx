@@ -102,10 +102,15 @@ export default function KeyRisks(props) {
                       <Stat k="30 days" v={`${e.timing.p30}%`} accent={SEV[e.severity]} />
                       <Stat k="90 days" v={`${e.timing.p90}%`} />
                     </div>
+                    {e.timing.confidence && (
+                      <div title={e.timing.basis || ''} style={{ fontSize: 9.5, color: INK3, marginTop: 6, cursor: e.timing.basis ? 'help' : 'default' }}>
+                        {(e.timing.cves && e.timing.cves.length) ? 'Live exploit signal' : 'Modeled'} · {e.timing.confidence} confidence
+                      </div>
+                    )}
                     <div style={{ borderTop: `1px solid ${HAIR}`, margin: '10px 0' }} />
                     <div style={{ fontSize: 9, color: INK3, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700 }}>Modeled loss</div>
                     <div style={{ display: 'flex', gap: 16, marginTop: 6 }}>
-                      <Stat k="Expected" v={usd(e.loss.p50)} />
+                      <Stat k="Expected" v={usd(e.loss.expected)} />
                       <Stat k="Severe (P90)" v={usd(e.loss.p90)} accent="#C0392B" />
                     </div>
                     {voice && c.lens && c.lens.narration && (
