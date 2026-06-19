@@ -100,7 +100,7 @@ function Card({ card, role, onDecide, voice }) {
               {decided && <SoftChip text={decided.action === 'accept' ? 'Accepted & monitoring' : 'Decided'} color="#1f8a4c" strong />}
             </div>
             <div style={{ fontSize: 15.5, fontWeight: 700, color: INK, marginTop: 1, lineHeight: 1.35 }}>{lens.headline || e.title}</div>
-            {lens.headline && lens.headline !== e.title && <div style={{ fontSize: 11, color: INK3, marginTop: 3 }}>{compound ? 'Combined scenario' : 'Underlying event'}: {e.title}</div>}
+            {!compound && lens.headline && lens.headline !== e.title && <div style={{ fontSize: 11, color: INK3, marginTop: 3 }}>Underlying event: {e.title}</div>}
           </div>
           <div style={{ minWidth: 150, textAlign: 'right' }}>
             {lens.primary && <div style={{ background: PANEL, border: `1px solid ${HAIR}`, borderRadius: 10, padding: '10px 13px' }}>
@@ -111,7 +111,9 @@ function Card({ card, role, onDecide, voice }) {
             {voice && lens.narration && <div style={{ marginTop: 9, display: 'flex', justifyContent: 'flex-end' }}><VoiceControls voice={voice} compact onReplay={() => voice.speak(lens.narration)} /></div>}
           </div>
         </div>
-        {lens.narrative && <div style={{ fontSize: 12, color: INK2, marginTop: 11, lineHeight: 1.6, maxWidth: 720 }}>{lens.narrative}</div>}
+        {/* For chained risks the outcome + how-to-break are shown in the compound
+            block below, so the header narrative would just repeat them. */}
+        {!compound && lens.narrative && <div style={{ fontSize: 12, color: INK2, marginTop: 11, lineHeight: 1.6, maxWidth: 720 }}>{lens.narrative}</div>}
         {lens.questionToAsk && <div style={{ fontSize: 11.5, color: '#7c3aed', fontWeight: 600, marginTop: 8 }}>Question to ask: {lens.questionToAsk}</div>}
       </div>
 
