@@ -39,51 +39,53 @@ async function signals(orgId) {
 // "base" controls that need evidence we can't yet pull score 55 (Partial).
 const NEEDS_EVIDENCE = 55;
 
+// `d` = the dominant AI-BOM signal that drives this control's score; it powers
+// the grounded "why / target / decision" the leader sees (see DRIVERS below).
 const NIST_AI_RMF = {
   id: 'nist_ai_rmf', name: 'NIST AI RMF',
   controls: [
-    { id: 'GV-1', name: 'AI policy & accountability', fn: 'GOVERN', score: (s) => clamp(s.hasInventory ? 78 - s.ungovernedRate * 40 : 35) },
-    { id: 'GV-2', name: 'AI inventory & roles/ownership', fn: 'GOVERN', score: (s) => clamp(s.hasInventory ? 85 - s.ungovernedRate * 50 : 25) },
-    { id: 'GV-3', name: 'AI/third-party supply chain', fn: 'GOVERN', score: (s) => clamp(80 - s.sensitiveExternalRate * 45 - s.shadowRate * 20) },
-    { id: 'MP-1', name: 'Context & intended use mapped', fn: 'MAP', score: (s) => clamp(s.hasInventory ? 72 - s.shadowRate * 40 : 35) },
-    { id: 'MP-2', name: 'AI risk identification', fn: 'MAP', score: (s) => clamp(75 - s.critical * 8) },
-    { id: 'MP-3', name: 'Impact assessment (incl. EU AI Act tiering)', fn: 'MAP', score: () => NEEDS_EVIDENCE },
-    { id: 'MS-1', name: 'Test, evaluation & red-teaming', fn: 'MEASURE', score: () => NEEDS_EVIDENCE - 5 },
-    { id: 'MS-2', name: 'Monitoring & metrics', fn: 'MEASURE', score: (s) => clamp(60 - s.shadowRate * 30) },
-    { id: 'MS-3', name: 'Data quality & provenance', fn: 'MEASURE', score: (s) => clamp(65 - s.sensitiveExternalRate * 30) },
-    { id: 'MG-1', name: 'Risk response & treatment', fn: 'MANAGE', score: (s) => clamp(70 - s.ungovernedRate * 35) },
-    { id: 'MG-2', name: 'AI incident response', fn: 'MANAGE', score: () => NEEDS_EVIDENCE },
-    { id: 'MG-3', name: 'Human oversight & change mgmt', fn: 'MANAGE', score: (s) => clamp(s.agenticNoHITL ? 40 - s.agenticNoHITL * 8 : 75) },
+    { id: 'GV-1', name: 'AI policy & accountability', fn: 'GOVERN', d: 'ungoverned', score: (s) => clamp(s.hasInventory ? 78 - s.ungovernedRate * 40 : 35) },
+    { id: 'GV-2', name: 'AI inventory & roles/ownership', fn: 'GOVERN', d: 'ungoverned', score: (s) => clamp(s.hasInventory ? 85 - s.ungovernedRate * 50 : 25) },
+    { id: 'GV-3', name: 'AI/third-party supply chain', fn: 'GOVERN', d: 'supplychain', score: (s) => clamp(80 - s.sensitiveExternalRate * 45 - s.shadowRate * 20) },
+    { id: 'MP-1', name: 'Context & intended use mapped', fn: 'MAP', d: 'shadow', score: (s) => clamp(s.hasInventory ? 72 - s.shadowRate * 40 : 35) },
+    { id: 'MP-2', name: 'AI risk identification', fn: 'MAP', d: 'critical', score: (s) => clamp(75 - s.critical * 8) },
+    { id: 'MP-3', name: 'Impact assessment (incl. EU AI Act tiering)', fn: 'MAP', d: 'evidence', score: () => NEEDS_EVIDENCE },
+    { id: 'MS-1', name: 'Test, evaluation & red-teaming', fn: 'MEASURE', d: 'evidence', score: () => NEEDS_EVIDENCE - 5 },
+    { id: 'MS-2', name: 'Monitoring & metrics', fn: 'MEASURE', d: 'shadow', score: (s) => clamp(60 - s.shadowRate * 30) },
+    { id: 'MS-3', name: 'Data quality & provenance', fn: 'MEASURE', d: 'sensitive', score: (s) => clamp(65 - s.sensitiveExternalRate * 30) },
+    { id: 'MG-1', name: 'Risk response & treatment', fn: 'MANAGE', d: 'ungoverned', score: (s) => clamp(70 - s.ungovernedRate * 35) },
+    { id: 'MG-2', name: 'AI incident response', fn: 'MANAGE', d: 'evidence', score: () => NEEDS_EVIDENCE },
+    { id: 'MG-3', name: 'Human oversight & change mgmt', fn: 'MANAGE', d: 'agentic', score: (s) => clamp(s.agenticNoHITL ? 40 - s.agenticNoHITL * 8 : 75) },
   ],
 };
 
 const OWASP_LLM = {
   id: 'owasp_llm', name: 'OWASP Top 10 for LLMs',
   controls: [
-    { id: 'LLM01', name: 'Prompt injection', score: () => NEEDS_EVIDENCE },
-    { id: 'LLM02', name: 'Sensitive information disclosure', score: (s) => clamp(80 - s.sensitiveExternalRate * 55) },
-    { id: 'LLM03', name: 'Supply chain (models/plugins)', score: (s) => clamp(72 - s.shadowRate * 35) },
-    { id: 'LLM04', name: 'Data & model poisoning', score: () => NEEDS_EVIDENCE },
-    { id: 'LLM05', name: 'Improper output handling', score: () => NEEDS_EVIDENCE },
-    { id: 'LLM06', name: 'Excessive agency', score: (s) => clamp(s.agenticNoHITL ? 38 - s.agenticNoHITL * 8 : s.agentic ? 65 : 82) },
-    { id: 'LLM07', name: 'System prompt leakage', score: () => NEEDS_EVIDENCE },
-    { id: 'LLM08', name: 'Vector & embedding weaknesses', score: (s) => clamp(s.sensitiveExternal ? 58 : 70) },
-    { id: 'LLM09', name: 'Misinformation / overreliance', score: (s) => clamp(s.agenticNoHITL ? 50 : 68) },
-    { id: 'LLM10', name: 'Unbounded consumption', score: () => NEEDS_EVIDENCE + 5 },
+    { id: 'LLM01', name: 'Prompt injection', d: 'evidence', score: () => NEEDS_EVIDENCE },
+    { id: 'LLM02', name: 'Sensitive information disclosure', d: 'sensitive', score: (s) => clamp(80 - s.sensitiveExternalRate * 55) },
+    { id: 'LLM03', name: 'Supply chain (models/plugins)', d: 'shadow', score: (s) => clamp(72 - s.shadowRate * 35) },
+    { id: 'LLM04', name: 'Data & model poisoning', d: 'evidence', score: () => NEEDS_EVIDENCE },
+    { id: 'LLM05', name: 'Improper output handling', d: 'evidence', score: () => NEEDS_EVIDENCE },
+    { id: 'LLM06', name: 'Excessive agency', d: 'agentic', score: (s) => clamp(s.agenticNoHITL ? 38 - s.agenticNoHITL * 8 : s.agentic ? 65 : 82) },
+    { id: 'LLM07', name: 'System prompt leakage', d: 'evidence', score: () => NEEDS_EVIDENCE },
+    { id: 'LLM08', name: 'Vector & embedding weaknesses', d: 'sensitive', score: (s) => clamp(s.sensitiveExternal ? 58 : 70) },
+    { id: 'LLM09', name: 'Misinformation / overreliance', d: 'agentic', score: (s) => clamp(s.agenticNoHITL ? 50 : 68) },
+    { id: 'LLM10', name: 'Unbounded consumption', d: 'evidence', score: () => NEEDS_EVIDENCE + 5 },
   ],
 };
 
 const MITRE_ATLAS = {
   id: 'mitre_atlas', name: 'MITRE ATLAS',
   controls: [
-    { id: 'AML.TA0002', name: 'Reconnaissance of AI systems', score: (s) => clamp(s.shadow ? 55 : 70) },
-    { id: 'AML.TA0004', name: 'Initial access to AI/ML', score: (s) => clamp(75 - s.sensitiveExternalRate * 30) },
-    { id: 'AML.T0051', name: 'LLM prompt injection', score: () => NEEDS_EVIDENCE },
-    { id: 'AML.T0024', name: 'Exfiltration via AI inference', score: (s) => clamp(78 - s.sensitiveExternalRate * 50) },
-    { id: 'AML.T0018', name: 'Manipulate AI model (poisoning)', score: () => NEEDS_EVIDENCE },
-    { id: 'AML.T0053', name: 'LLM plugin / tool compromise', score: (s) => clamp(s.agenticNoHITL ? 42 : s.agentic ? 62 : 78) },
-    { id: 'AML.TA0011', name: 'Impact (abuse / DoS of AI)', score: () => NEEDS_EVIDENCE + 5 },
-    { id: 'AML.T0048', name: 'Discover model ontology / data', score: (s) => clamp(s.shadowRate ? 52 : 68) },
+    { id: 'AML.TA0002', name: 'Reconnaissance of AI systems', d: 'shadow', score: (s) => clamp(s.shadow ? 55 : 70) },
+    { id: 'AML.TA0004', name: 'Initial access to AI/ML', d: 'sensitive', score: (s) => clamp(75 - s.sensitiveExternalRate * 30) },
+    { id: 'AML.T0051', name: 'LLM prompt injection', d: 'evidence', score: () => NEEDS_EVIDENCE },
+    { id: 'AML.T0024', name: 'Exfiltration via AI inference', d: 'sensitive', score: (s) => clamp(78 - s.sensitiveExternalRate * 50) },
+    { id: 'AML.T0018', name: 'Manipulate AI model (poisoning)', d: 'evidence', score: () => NEEDS_EVIDENCE },
+    { id: 'AML.T0053', name: 'LLM plugin / tool compromise', d: 'agentic', score: (s) => clamp(s.agenticNoHITL ? 42 : s.agentic ? 62 : 78) },
+    { id: 'AML.TA0011', name: 'Impact (abuse / DoS of AI)', d: 'evidence', score: () => NEEDS_EVIDENCE + 5 },
+    { id: 'AML.T0048', name: 'Discover model ontology / data', d: 'shadow', score: (s) => clamp(s.shadowRate ? 52 : 68) },
   ],
 };
 
@@ -108,11 +110,65 @@ function recFor(id, name, st) {
   return map[id] || `Address ${name.toLowerCase()} with a defined control and supporting evidence.`;
 }
 
+// Decision-grade explanation per control, grounded in the live AI-BOM signals:
+// WHY it scored this way, the TARGET state, and the DECISION leadership should
+// take. Keyed by the control's dominant driver. Goal: support a decision, not
+// just label a status.
+const TARGET_SCORE = 80; // "Strong"
+function explain(driver, sig, status, name) {
+  if (status === 'Strong') {
+    return { why: 'Current AI inventory signals show this operating effectively.', target: 'Sustain at Strong (80+); keep evidence current.', decision: 'No action beyond continuous monitoring and scheduled re-test.' };
+  }
+  const E = {
+    ungoverned: {
+      why: `${sig.ungoverned} of ${sig.total} AI systems have no accountable owner or formal governance — that is what holds this at ${status}.`,
+      target: 'Every AI system has a named owner and sits under governance (0 ungoverned).',
+      decision: 'Mandate owner assignment for each system and set a deadline to govern or retire shadow AI.',
+    },
+    shadow: {
+      why: `${sig.shadow} shadow-AI tool(s) are in use outside oversight, so this can't be assured.`,
+      target: 'No unsanctioned AI; all GenAI access routed through approved, monitored tools.',
+      decision: 'Run a shadow-AI amnesty, then block unsanctioned GenAI at the egress/proxy.',
+    },
+    sensitive: {
+      why: `${sig.sensitiveExternal} system(s) send regulated/sensitive data to external models with no confirmed safeguards.`,
+      target: 'No sensitive data leaves to external models without DLP, redaction and a signed DPA.',
+      decision: 'Require DLP/redaction on prompts & outputs; approve external-model use of sensitive data only with a DPA.',
+    },
+    supplychain: {
+      why: `External model dependencies (${sig.sensitiveExternal} external, ${sig.shadow} shadow) are not yet under third-party governance.`,
+      target: 'Every external AI/model provider is inventoried, risk-assessed and contractually governed.',
+      decision: 'Bring AI providers into TPRM; require model & data terms (DPA, training-data use) before approval.',
+    },
+    agentic: {
+      why: `${sig.agenticNoHITL} autonomous agent(s) act with no human in the loop, so consequential actions are uncontrolled.`,
+      target: 'Agents run least-privilege with human approval gating any consequential action.',
+      decision: 'Constrain agent permissions and require human sign-off on high-impact actions.',
+    },
+    critical: {
+      why: `${sig.critical} AI system(s) carry critical risk, which dominates this control.`,
+      target: 'Each critical-risk AI system has an identified, owned and treated risk.',
+      decision: 'Prioritise treatment of critical-risk systems; accept residual risk only with documented sign-off.',
+    },
+    evidence: {
+      why: 'No connector or artifact is on file to confirm this control yet, so it is scored conservatively as unverified rather than assumed to pass.',
+      target: 'Evidence on file (test results, logs, or an attested control), verified on a schedule.',
+      decision: `Stand up the control for ${name.toLowerCase()} and capture evidence; until then treat as unverified.`,
+    },
+  };
+  return E[driver] || E.evidence;
+}
+
 function scoreFramework(fw, sig) {
   const controls = fw.controls.map((c) => {
     const sc = clamp(c.score(sig));
     const st = band(sc);
-    return { id: c.id, name: c.name, fn: c.fn || null, score: sc, status: st, finding: findingFor(c.name, st), recommendation: recFor(c.id, c.name, st) };
+    const ex = explain(c.d, sig, st, c.name);
+    return {
+      id: c.id, name: c.name, fn: c.fn || null, score: sc, status: st,
+      finding: findingFor(c.name, st), recommendation: recFor(c.id, c.name, st),
+      why: ex.why, target: ex.target, targetScore: TARGET_SCORE, decision: ex.decision,
+    };
   });
   const score = clamp(controls.reduce((a, c) => a + c.score, 0) / controls.length);
   return {
