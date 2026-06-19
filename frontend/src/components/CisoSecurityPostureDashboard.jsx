@@ -25,7 +25,6 @@ import RoleSection from './RoleSections';
 import SecurityProjects from './SecurityProjects';
 import AiGovernance from './AiGovernance';
 import DecisionQueue from './DecisionQueue';
-import Coaching from './Coaching';
 import DecisionRail, { VisibilityChip } from './DecisionRail';
 import CurrentState from './CurrentState';
 import ControlEfficacy from './ControlEfficacy';
@@ -98,7 +97,6 @@ const TAB_GROUPS = [
   { key: 'decisions', label: 'Decisions & Actions' },
   { key: 'risk', label: 'Risk & Controls' },
   { key: 'programs', label: 'Programs & AI' },
-  { key: 'coaching', label: 'Coaching' },
 ];
 const GROUP_OF = {
   qa: 'state', summary: 'state',
@@ -112,8 +110,6 @@ const GROUP_OF = {
   enterprise: 'risk', trend: 'risk', toprisks: 'risk', benchmark: 'risk', finexp: 'risk', posture: 'risk',
   // programs, investment & AI
   readiness: 'programs', roi: 'programs', investment: 'programs', projects: 'programs', ai: 'programs',
-  // coaching
-  coaching: 'coaching',
 };
 const groupOf = (k) => GROUP_OF[k] || 'risk';
 
@@ -125,17 +121,15 @@ const CISO_GROUP_DEFS = [
   { key: 'keyrisks', label: 'Key Risks' },
   { key: 'controlefficacy', label: 'Control Efficacy' },
   { key: 'projects', label: 'Key Projects & ROI' },
-  { key: 'coaching', label: 'Blind Spots & Coaching' },
 ];
 const CISO_MEMBER_OF = {
   qa: 'state',
   // Key Risks — capped at five decision-focused views.
   bizrisks: 'keyrisks', decisionq: 'keyrisks', paths: 'keyrisks', thresholds: 'keyrisks', processes: 'keyrisks',
   // Migrated out of Key Risks to keep that group to five and avoid overload:
-  ai: 'controlefficacy', actions: 'projects', hidden: 'coaching',
+  ai: 'controlefficacy', actions: 'projects',
   controlefficacy: 'controlefficacy', compiler: 'controlefficacy', fourlens: 'controlefficacy',
   readiness: 'projects', projects: 'projects',
-  coaching: 'coaching',
 };
 
 // CIO uses a parallel 5-sub-tab lens, built on the SAME shared decision spine
@@ -145,21 +139,18 @@ const CIO_GROUP_DEFS = [
   { key: 'resilience', label: 'Resilience & SPOFs' },
   { key: 'friction', label: 'Velocity vs Risk' },
   { key: 'transformation', label: 'Transformation & ROI' },
-  { key: 'coaching', label: 'Blind Spots & Coaching' },
 ];
 const CIO_MEMBER_OF = {
   cioposture: 'opstate',
   resiliencerisks: 'resilience', decisionq: 'resilience',
   frictionmap: 'friction',
   ciotransformation: 'transformation',
-  coaching: 'coaching',
 };
 const CIO_TABS = [
   ['cioposture', 'Operational Posture'],
   ['resiliencerisks', 'Resilience Risks & SPOFs'], ['decisionq', 'Decisions'],
   ['frictionmap', 'Velocity-vs-Risk Friction Map'],
   ['ciotransformation', 'Transformation Portfolio & ROI'],
-  ['coaching', 'Blind Spots & Coaching'],
 ];
 
 // CRO uses a parallel 5-sub-tab lens at enterprise-risk altitude. Appetite is
@@ -170,21 +161,18 @@ const CRO_GROUP_DEFS = [
   { key: 'appetite', label: 'Cyber vs Appetite' },
   { key: 'aggregation', label: 'Aggregation & Correlation' },
   { key: 'treatment', label: 'Treatment Portfolio & ROI' },
-  { key: 'coaching', label: 'Blind Spots & Coaching' },
 ];
 const CRO_MEMBER_OF = {
   croposition: 'position',
   croexposures: 'appetite', decisionq: 'appetite',
   croaggregation: 'aggregation',
   crotreatment: 'treatment',
-  coaching: 'coaching',
 };
 const CRO_TABS = [
   ['croposition', 'Enterprise Risk Position'],
   ['croexposures', 'Cyber Risk vs Appetite & Top Exposures'], ['decisionq', 'Decisions'],
   ['croaggregation', 'Aggregation & Correlation'],
   ['crotreatment', 'Risk Treatment Portfolio & ROI'],
-  ['coaching', 'Blind Spots & Coaching'],
 ];
 
 // CLO / General Counsel: a parallel 5-sub-tab lens at legal altitude. Triggers
@@ -194,21 +182,18 @@ const CLO_GROUP_DEFS = [
   { key: 'triggers', label: 'Trigger Map & Materiality' },
   { key: 'defensibility', label: 'Defensibility & Evidence' },
   { key: 'legalportfolio', label: 'Regulatory & Litigation' },
-  { key: 'coaching', label: 'Blind Spots & Coaching' },
 ];
 const CLO_MEMBER_OF = {
   cloobligations: 'obligations',
   clotriggers: 'triggers', decisionq: 'triggers',
   clodefensibility: 'defensibility',
   cloportfolio: 'legalportfolio',
-  coaching: 'coaching',
 };
 const CLO_TABS = [
   ['cloobligations', 'Obligation Posture'],
   ['clotriggers', 'Trigger Map & Materiality'], ['decisionq', 'Decisions'],
   ['clodefensibility', 'Defensibility & Evidence'],
   ['cloportfolio', 'Regulatory & Litigation Portfolio'],
-  ['coaching', 'Blind Spots & Coaching'],
 ];
 
 // Board: a parallel 5-sub-tab oversight lens. Everything is an aggregation of the
@@ -218,21 +203,18 @@ const BOARD_GROUP_DEFS = [
   { key: 'decisions', label: 'Top Decisions' },
   { key: 'accountability', label: 'Oversight & Accountability' },
   { key: 'investment', label: 'Investment & ROI' },
-  { key: 'coaching', label: 'Blind Spots & Governance' },
 ];
 const BOARD_MEMBER_OF = {
   boardoversight: 'oversight',
   boarddecisions: 'decisions', decisionq: 'decisions',
   boardaccountability: 'accountability',
   boardinvestment: 'investment',
-  coaching: 'coaching',
 };
 const BOARD_TABS = [
   ['boardoversight', 'Enterprise Oversight'],
   ['boarddecisions', 'Top Decisions for the Board'], ['decisionq', 'Decisions'],
   ['boardaccountability', 'Oversight & Accountability'],
   ['boardinvestment', 'Investment & ROI'],
-  ['coaching', 'Blind Spots & Peer Governance'],
 ];
 
 export default function CisoSecurityPostureDashboard(props) {
@@ -307,8 +289,6 @@ export default function CisoSecurityPostureDashboard(props) {
       ['controlefficacy', 'Control Efficacy'], ['compiler', 'Framework Compiler'], ['fourlens', 'Four-Lens (CSF · 800-53 · CIS · ATT&CK)'], ['ai', 'AI Governance'],
       // Key Projects & ROI
       ['readiness', 'Readiness & Investment'], ['projects', 'Projects & ROI'], ['actions', 'Action Now'],
-      // Blind Spots & Coaching
-      ['coaching', 'Coaching & Blind Spots'], ['hidden', `Hidden Risk · ${d.hiddenRisks.length}`],
     ];
   const activeRoleTab = roleTabs ? (roleTabs.find((t) => t.key === tab) || roleTabs[0]) : null;
   // The bespoke layouts start on their first tab, not the shared 'qa' default.
@@ -410,7 +390,6 @@ export default function CisoSecurityPostureDashboard(props) {
             {bespokeTab === 'decisionq' && <DecisionQueue role={role} orgId={orgId} authToken={token} apiUrl={api} />}
             {bespokeTab === 'frictionmap' && <CioFrictionMap orgId={orgId} authToken={token} apiUrl={api} />}
             {bespokeTab === 'ciotransformation' && <CioTransformation orgId={orgId} authToken={token} apiUrl={api} />}
-            {bespokeTab === 'coaching' && <Coaching role={role} orgId={orgId} authToken={token} apiUrl={api} />}
           </>)
           : isCroLayout
           ? (<>
@@ -419,7 +398,6 @@ export default function CisoSecurityPostureDashboard(props) {
             {bespokeTab === 'decisionq' && <DecisionQueue role={role} orgId={orgId} authToken={token} apiUrl={api} />}
             {bespokeTab === 'croaggregation' && <CroAggregation orgId={orgId} authToken={token} apiUrl={api} />}
             {bespokeTab === 'crotreatment' && <CroTreatment orgId={orgId} authToken={token} apiUrl={api} />}
-            {bespokeTab === 'coaching' && <Coaching role={role} orgId={orgId} authToken={token} apiUrl={api} />}
           </>)
           : isCloLayout
           ? (<>
@@ -428,7 +406,6 @@ export default function CisoSecurityPostureDashboard(props) {
             {bespokeTab === 'decisionq' && <DecisionQueue role={role} orgId={orgId} authToken={token} apiUrl={api} />}
             {bespokeTab === 'clodefensibility' && <CloDefensibility orgId={orgId} authToken={token} apiUrl={api} />}
             {bespokeTab === 'cloportfolio' && <CloPortfolio orgId={orgId} authToken={token} apiUrl={api} />}
-            {bespokeTab === 'coaching' && <Coaching role={role} orgId={orgId} authToken={token} apiUrl={api} />}
           </>)
           : isBoardLayout
           ? (<>
@@ -437,7 +414,6 @@ export default function CisoSecurityPostureDashboard(props) {
             {bespokeTab === 'decisionq' && <DecisionQueue role={role} orgId={orgId} authToken={token} apiUrl={api} />}
             {bespokeTab === 'boardaccountability' && <BoardAccountability orgId={orgId} authToken={token} apiUrl={api} />}
             {bespokeTab === 'boardinvestment' && <BoardInvestment orgId={orgId} authToken={token} apiUrl={api} />}
-            {bespokeTab === 'coaching' && <Coaching role={role} orgId={orgId} authToken={token} apiUrl={api} />}
           </>)
           : roleTabs
           ? <RoleTabContent t={activeRoleTab} role={role} d={d} props={props} orgId={orgId} authToken={token} apiUrl={api} />
@@ -458,7 +434,6 @@ export default function CisoSecurityPostureDashboard(props) {
             {tab === 'readiness' && <Readiness readiness={d.readiness} investments={d.investments} peers={d.peerMaturity} emerging={d.emergingRisks} />}
             {tab === 'hidden' && <Hidden risks={d.hiddenRisks} />}
             {tab === 'ai' && <AiGovernance />}
-            {tab === 'coaching' && <Coaching role={role} orgId={orgId} authToken={token} apiUrl={api} />}
             {tab === 'projects' && <SecurityProjects />}
           </>)}
         <div style={{ fontSize: 10.5, color: INK3, marginTop: 16, borderTop: `1px solid ${HAIR}`, paddingTop: 10 }}>
@@ -490,7 +465,6 @@ function RoleTabContent({ t, role, d, props, orgId, authToken, apiUrl }) {
     case 'projects': return <SecurityProjects />;
     case 'ai': return <AiGovernance />;
     case 'decisionq': return <DecisionQueue role={role} orgId={orgId} authToken={authToken} apiUrl={apiUrl} />;
-    case 'coaching': return <Coaching role={role} orgId={orgId} authToken={authToken} apiUrl={apiUrl} />;
     case 'section': return <RoleSection section={t.section} role={role} />;
     default: return null;
   }
