@@ -213,24 +213,38 @@ function FrameworkView({ a }) {
 }
 
 // Spoken summary of the active AI-governance view for the agent voice.
+// Calm, business-toned narration that EXPLAINS what the leader is looking at and
+// where to focus — not a read-out of every number. Kept deliberately short.
 function aiNarration(view, inv, assess, eu) {
   if (view === 'eu_ai_act') {
-    if (!eu) return 'Classifying AI systems under the E U A I Act.';
-    return `${eu.summary} ${eu.counts.high || 0} high-risk, ${eu.counts.limited || 0} limited-risk, ${eu.counts.minimal || 0} minimal-risk. ` +
-      (eu.systems || []).filter((s) => s.tier === 'High-risk').slice(0, 3).map((s) => `${s.name} is high-risk: ${s.rationale}`).join(' ');
+    if (!eu) return 'Classifying your AI systems under the EU AI Act.';
+    const high = eu.counts.high || 0;
+    const top = (eu.systems || []).find((s) => s.tier === 'High-risk');
+    if (!high) return 'This sorts each AI system into the EU AI Act risk tiers. Nothing currently lands in the high-risk tier, so your obligations are lighter — but re-check whenever a system\'s purpose or data changes, and confirm with Legal.';
+    return `This sorts each AI system into the EU AI Act risk tiers, because the legal obligations rise sharply with the tier. ${high} of your systems fall into the high-risk tier, which carries the heaviest duties${top ? ` — most notably ${top.name}, since ${String(top.rationale || '').toLowerCase()}` : ''}. Treat those as the priority, and have Legal confirm the classification before you rely on it.`;
   }
   if (view !== 'bom') {
-    if (!assess) return 'Assessing AI controls.';
-    const weak = (assess.controls || []).filter((c) => c.status === 'Weak' || c.status === 'Gap').slice(0, 3);
-    return `${assess.name}. Posture ${assess.score} of 100, ${assess.band}. ` +
-      `${assess.counts.strong} strong, ${assess.counts.partial} partial, ${assess.counts.weak} weak, ${assess.counts.gap} gap. ` +
-      (weak.length ? 'Biggest gaps: ' + weak.map((c) => `${c.name}. ${c.recommendation}`).join(' ') : 'No major gaps.');
+    if (!assess) return 'Assessing your AI controls.';
+    const weak = (assess.controls || []).filter((c) => c.status === 'Weak' || c.status === 'Gap');
+    let s = `This grades your AI program against ${assess.name} — a recognised standard for trustworthy AI. You're at ${assess.score} out of 100, which we'd call ${String(assess.band || '').toLowerCase()}. `;
+    s += weak.length
+      ? `The quickest way to raise that is to close your weakest area first: ${weak[0].name} — ${weak[0].recommendation}`
+      : 'Controls are largely in place; keep them evidenced and re-test on schedule.';
+    return s;
   }
-  if (!inv) return 'Loading the AI bill of materials.';
+  if (!inv) return 'Loading your AI bill of materials.';
   const c = inv.counts;
-  return `AI bill of materials. Governance posture ${inv.governanceScore} of 100. ${c.total} AI systems: ` +
-    `${c.shadow} shadow AI, ${c.agentic} autonomous agents, ${c.sensitiveExternal} sending sensitive data to external models, ${c.ungoverned} ungoverned, ${c.critical} critical-risk. ` +
-    (inv.systems || []).filter((s) => s.riskLevel === 'Critical' || s.riskLevel === 'High').slice(0, 3).map((s) => `${s.name}: ${(s.flags || []).map((f) => f.text).join('; ') || s.riskLevel}`).join('. ');
+  const band = inv.governanceScore >= 75 ? 'a reasonably governed program' : inv.governanceScore >= 50 ? 'a program with meaningful gaps' : 'an early, largely ungoverned program';
+  const worst = (inv.systems || []).find((s) => s.riskLevel === 'Critical') || (inv.systems || []).find((s) => s.riskLevel === 'High');
+  const concerns = [];
+  if (c.shadow) concerns.push(`${c.shadow} shadow AI tool${c.shadow > 1 ? 's' : ''} running outside oversight`);
+  if (c.sensitiveExternal) concerns.push(`${c.sensitiveExternal} sending regulated data to external models`);
+  if (c.agentic) concerns.push(`${c.agentic} autonomous agent${c.agentic > 1 ? 's' : ''} acting without a human in the loop`);
+  let s = 'This is your AI bill of materials — one inventory of every AI system in use, including the shadow tools no one formally approved. Each row shows what data it touches, how independently it acts, and whether anyone owns its governance. ';
+  s += `At ${inv.governanceScore} out of 100, this is ${band}. `;
+  s += concerns.length ? `The exposure that matters most: ${concerns.slice(0, 2).join(', and ')}. ` : 'Nothing critical stands out right now. ';
+  if (worst) s += `I'd start with ${worst.name}: ${(worst.flags || []).map((f) => f.text).join('; ') || `${worst.riskLevel} risk`}.`;
+  return s;
 }
 
 const inpStyle = { border: `1px solid ${HAIR}`, borderRadius: 7, padding: '8px 10px', fontSize: 12, outline: 'none' };
