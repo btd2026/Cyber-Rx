@@ -196,18 +196,47 @@ function FrameworkView({ a }) {
         </div>
       </div>
       <div style={{ display: 'grid', gap: 8 }}>
-        {a.controls.map((c) => (
-          <div key={c.id} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${STBAND[c.status]}`, borderRadius: 8, padding: '10px 13px', background: '#fff' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>{c.fn ? `${c.fn} · ` : ''}{c.id} — {c.name}</span>
-              <Pill text={c.status} color={STBAND[c.status]} />
-            </div>
-            <div style={{ fontSize: 11, color: INK2, marginTop: 4 }}>{c.finding}</div>
-            {c.status !== 'Strong' && <div style={{ fontSize: 11, color: '#1f8a4c', fontWeight: 600, marginTop: 3 }}>→ {c.recommendation}</div>}
-          </div>
-        ))}
+        {a.controls.map((c) => <ControlRow key={c.id} c={c} />)}
       </div>
-      <div style={{ fontSize: 10.5, color: INK3, marginTop: 10 }}>Scored from your AI inventory signals. Controls marked “needs evidence” become connector-driven as tool integrations are added.</div>
+      <div style={{ fontSize: 10.5, color: INK3, marginTop: 10 }}>Scored from your AI inventory signals. Controls marked “needs evidence” become connector-driven as tool integrations are added. Expand any control for the rationale and the decision to take.</div>
+    </div>
+  );
+}
+
+// A control row that opens to the decision-grade detail: WHY this verdict, the
+// TARGET to reach, the immediate ACTION, and the DECISION leadership should make.
+function ControlRow({ c }) {
+  const [open, setOpen] = useState(false);
+  const detailed = c.why || c.target || c.decision;
+  return (
+    <div style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${STBAND[c.status]}`, borderRadius: 8, background: '#fff' }}>
+      <button onClick={() => detailed && setOpen(!open)} style={{ width: '100%', textAlign: 'left', background: 'transparent', border: 'none', padding: '10px 13px', cursor: detailed ? 'pointer' : 'default' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>{c.fn ? `${c.fn} · ` : ''}{c.id} — {c.name}</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Pill text={c.status} color={STBAND[c.status]} />
+            {detailed && <span style={{ fontSize: 10, color: INK3 }}>{open ? '▲' : '▼'}</span>}
+          </span>
+        </div>
+        <div style={{ fontSize: 11, color: INK2, marginTop: 4 }}>{c.finding}</div>
+        {!open && c.status !== 'Strong' && <div style={{ fontSize: 11, color: '#1f8a4c', fontWeight: 600, marginTop: 3 }}>→ {c.recommendation}</div>}
+      </button>
+      {open && detailed && (
+        <div style={{ borderTop: `1px solid ${HAIR}`, background: PANEL, padding: '11px 13px', display: 'grid', gap: 9 }}>
+          {c.why && <Detail label="Why this verdict" tone={INK2}>{c.why}</Detail>}
+          {(c.target || c.targetScore) && <Detail label="Target" tone={INK2}>{c.target}{c.targetScore ? ` (${c.targetScore}+/100).` : ''}</Detail>}
+          {c.recommendation && c.status !== 'Strong' && <Detail label="Action" tone="#1f8a4c">{c.recommendation}</Detail>}
+          {c.decision && <Detail label="Decision to take" tone="#7c3aed">{c.decision}</Detail>}
+        </div>
+      )}
+    </div>
+  );
+}
+function Detail({ label, tone, children }) {
+  return (
+    <div>
+      <div style={{ fontSize: 9, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 11.5, color: tone, lineHeight: 1.5, fontWeight: tone === '#7c3aed' ? 600 : 400 }}>{children}</div>
     </div>
   );
 }
