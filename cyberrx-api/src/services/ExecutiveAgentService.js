@@ -264,6 +264,7 @@ async function gatherContext(orgId) {
     repeatFindings,
     openCriticalFindings,
     vendorSignals,
+    processesTop,
   ] = await Promise.all([
     safeRows(
       `SELECT COALESCE(SUM(total_gross),0) gross, COALESCE(SUM(net_exposure),0) net,
@@ -331,6 +332,16 @@ async function gatherContext(orgId) {
     safeRows(
       `SELECT severity, COUNT(*) n FROM vendor_risk_signals
          WHERE organization_id=$1 AND status='active' GROUP BY severity`, [orgId]),
+    // Fallback crown-jewel candidates: the most critical business processes,
+    // regardless of whether a risk is explicitly linked to them. Used when no
+    // risk carries a business_process_ids link so the "crown jewel" is still a
+    // concrete, named process rather than a placeholder.
+    safeRows(
+      `SELECT id, name, tier, criticality, owner FROM business_processes
+         WHERE organization_id=$1
+         ORDER BY CASE criticality WHEN 'Critical' THEN 0 WHEN 'High' THEN 1 WHEN 'Medium' THEN 2 ELSE 3 END,
+                  tier NULLS LAST
+         LIMIT 12`, [orgId]),
   ]);
 
   const fin = finImpacts[0] || {};
@@ -401,7 +412,9 @@ async function gatherContext(orgId) {
     processes: {
       byCriticality: procMap,
       total: processes.reduce((s, r) => s + n(r.n), 0),
-      atRisk: processesAtRisk.map((p) => ({
+      // Prefer processes a risk explicitly reaches; otherwise fall back to the
+      // most critical processes so the crown jewel is always a concrete name.
+      atRisk: (processesAtRisk.length ? processesAtRisk : processesTop).map((p) => ({
         id: p.id, name: p.name, tier: p.tier, criticality: p.criticality, owner: p.owner,
       })),
     },
