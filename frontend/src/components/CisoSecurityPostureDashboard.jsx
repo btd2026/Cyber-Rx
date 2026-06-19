@@ -31,6 +31,7 @@ import CurrentState from './CurrentState';
 import ControlEfficacy from './ControlEfficacy';
 import KeyRisks from './KeyRisks';
 import CompilerChain from './CompilerChain';
+import CisoExecReport from './CisoExecReport';
 import CioOperationalPosture from './CioOperationalPosture';
 import CioResilience from './CioResilience';
 import CioFrictionMap from './CioFrictionMap';
@@ -129,7 +130,7 @@ const CISO_GROUP_DEFS = [
 const CISO_MEMBER_OF = {
   qa: 'state', summary: 'state',
   bizrisks: 'keyrisks', decisionq: 'keyrisks', thresholds: 'keyrisks', processes: 'keyrisks', paths: 'keyrisks', hidden: 'keyrisks', ai: 'keyrisks', actions: 'keyrisks',
-  controlefficacy: 'controlefficacy', compiler: 'controlefficacy',
+  controlefficacy: 'controlefficacy', compiler: 'controlefficacy', fourlens: 'controlefficacy',
   readiness: 'projects', projects: 'projects',
   coaching: 'coaching',
 };
@@ -299,7 +300,7 @@ export default function CisoSecurityPostureDashboard(props) {
       ['bizrisks', 'Business Risks'], ['decisionq', 'Projections & Decisions'],
       ['paths', 'Attack Pathways'], ['thresholds', `Thresholds · ${d.thresholds.breaches} breached`], ['processes', 'Process Protection'],
       ['hidden', `Hidden Risk · ${d.hiddenRisks.length}`], ['ai', 'AI Governance'], ['actions', 'Action Now'],
-      ['controlefficacy', 'Control Efficacy'], ['compiler', 'Framework Compiler'],
+      ['controlefficacy', 'Control Efficacy'], ['compiler', 'Framework Compiler'], ['fourlens', 'Four-Lens (CSF · 800-53 · CIS · ATT&CK)'],
       ['readiness', 'Readiness & Investment'], ['projects', 'Projects & ROI'],
       ['coaching', 'Coaching & Blind Spots'],
     ];
@@ -443,6 +444,7 @@ export default function CisoSecurityPostureDashboard(props) {
             {tab === 'controls' && <Controls rows={d.controlRisk} />}
             {tab === 'controlefficacy' && <ControlEfficacy d={d} orgId={orgId} authToken={token} apiUrl={api} />}
             {tab === 'compiler' && <CompilerChain orgId={orgId} authToken={token} apiUrl={api} />}
+            {tab === 'fourlens' && <CisoExecReport />}
             {tab === 'bizrisks' && <KeyRisks orgId={orgId} authToken={token} apiUrl={api} />}
             {tab === 'thresholds' && <Thresholds board={d.thresholds} />}
             {tab === 'actions' && <Actions queue={d.actionQueue} attention={d.attentionItems} />}
