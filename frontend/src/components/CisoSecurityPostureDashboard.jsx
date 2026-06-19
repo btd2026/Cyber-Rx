@@ -433,10 +433,10 @@ export default function CisoSecurityPostureDashboard(props) {
             {bespokeTab === 'coaching' && <Coaching role={role} orgId={orgId} authToken={token} apiUrl={api} />}
           </>)
           : roleTabs
-          ? <RoleTabContent t={activeRoleTab} role={role} d={d} props={props} />
+          ? <RoleTabContent t={activeRoleTab} role={role} d={d} props={props} orgId={orgId} authToken={token} apiUrl={api} />
           : (<>
             {tab === 'qa' && <CurrentState d={d} role={role} orgId={orgId} authToken={token} apiUrl={api} onOpenQueue={() => setTab('decisionq')} />}
-            {tab === 'decisionq' && <DecisionQueue role={role} />}
+            {tab === 'decisionq' && <DecisionQueue role={role} orgId={orgId} authToken={token} apiUrl={api} />}
             {tab === 'summary' && <ExecutiveSummaryEditor />}
             {tab === 'linkage' && <BusinessRiskPanel />}
             {tab === 'domains' && <Domains matrix={d.domainMatrix} controlRisk={d.controlRisk} thresholds={d.thresholds} />}
@@ -451,7 +451,7 @@ export default function CisoSecurityPostureDashboard(props) {
             {tab === 'readiness' && <Readiness readiness={d.readiness} investments={d.investments} peers={d.peerMaturity} emerging={d.emergingRisks} />}
             {tab === 'hidden' && <Hidden risks={d.hiddenRisks} />}
             {tab === 'ai' && <AiGovernance />}
-            {tab === 'coaching' && <Coaching role={role} />}
+            {tab === 'coaching' && <Coaching role={role} orgId={orgId} authToken={token} apiUrl={api} />}
             {tab === 'projects' && <SecurityProjects />}
           </>)}
         <div style={{ fontSize: 10.5, color: INK3, marginTop: 16, borderTop: `1px solid ${HAIR}`, paddingTop: 10 }}>
@@ -467,7 +467,7 @@ export default function CisoSecurityPostureDashboard(props) {
 /* ---------------- Role tab dispatcher (non-CISO leaders) ----------------
  * Renders the active role tab using either a shared CISO scaffold component
  * (so the look is identical) or a role-specific data section. */
-function RoleTabContent({ t, role, d, props }) {
+function RoleTabContent({ t, role, d, props, orgId, authToken, apiUrl }) {
   if (!t) return null;
   switch (t.kind) {
     case 'qa': return <CisoAgentPanel role={role} />;
@@ -482,8 +482,8 @@ function RoleTabContent({ t, role, d, props }) {
     case 'rolepanel': return <div>{props.rolePanel}</div>;
     case 'projects': return <SecurityProjects />;
     case 'ai': return <AiGovernance />;
-    case 'decisionq': return <DecisionQueue role={role} />;
-    case 'coaching': return <Coaching role={role} />;
+    case 'decisionq': return <DecisionQueue role={role} orgId={orgId} authToken={authToken} apiUrl={apiUrl} />;
+    case 'coaching': return <Coaching role={role} orgId={orgId} authToken={authToken} apiUrl={apiUrl} />;
     case 'section': return <RoleSection section={t.section} role={role} />;
     default: return null;
   }
