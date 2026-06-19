@@ -23,6 +23,7 @@ const db = require('../utils/db');
 const logger = require('../utils/logger');
 
 function n(v) { const x = Number(v); return Number.isFinite(x) ? x : 0; }
+const slug = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 48);
 async function rows(sql, params = []) {
   try { return await db.query(sql, params); } catch (err) { logger.debug('AttackPath query degraded', { error: err.message }); return []; }
 }
@@ -199,16 +200,89 @@ async function buildGraph(orgId) {
   // ── Directional reachability: shortest path from an internet-exposed entry
   // node to each crown-jewel process (BFS over the layer adjacency). This makes
   // the graph a real "entry point → crown jewel" model, not just association.
-  const reachablePaths = computeReachability({ processes, apps, devices, networks, threats, edges });
+  let reachablePaths = computeReachability({ processes, apps, devices, networks, threats, edges });
+  let synthesized = false;
+  if (!reachablePaths.length) {
+    // The asset/threat substrate is too sparse to form an entry→crown-jewel
+    // chain (no internet-exposed asset, no threat scenarios, or no risk↔process
+    // exposure links). Synthesize the exposed paths from the SAME decision spine
+    // that powers Key Risks and the Decision Queue, so this graph stays
+    // consistent with the rest of the platform and is never blank when real
+    // risks exist. (The arrays above are mutated in place.)
+    synthesized = await enrichFromDecisions(orgId, { processes, apps, devices, networks, threats, edges });
+    if (synthesized) reachablePaths = computeReachability({ processes, apps, devices, networks, threats, edges });
+  }
   const reachableProcIds = new Set(reachablePaths.map((p) => p.targetId));
-  processes.forEach((p) => { p.reachable = reachableProcIds.has(p.id); });
+  processes.forEach((p) => { p.reachable = !!p.reachable || reachableProcIds.has(p.id); });
 
+  const totalExposure = Math.round(processes.reduce((s, p) => s + n(p.exposure), 0));
   return {
     organizationId: orgId, generatedAt: new Date().toISOString(),
-    layers, edges, findings, reachablePaths,
+    layers, edges, findings, reachablePaths, synthesized,
     counts: { processes: processes.length, apps: apps.length, devices: devices.length, networks: networks.length, threats: threats.length, edges: edges.length, findings: findings.length, reachable: reachablePaths.length },
-    totalExposure: Math.round(Object.values(procExposure).reduce((s, v) => s + v, 0)),
+    totalExposure,
   };
+}
+
+// Build the exposed attack chains from the decision spine when the asset/threat
+// substrate can't. Each top decision event (which already carries an entry →
+// foothold → movement → objective path, a crown-jewel target and a modeled loss)
+// becomes a connected threat → app → device → network → process chain, attached
+// to the real crown-jewel process node when one matches by name. Returns true if
+// it added anything. Mutates the passed-in layer arrays.
+async function enrichFromDecisions(orgId, g) {
+  let events = [];
+  try {
+    const Dec = require('./DecisionEngineService');
+    const out = await Dec.generate(orgId);
+    events = (out.cards || [])
+      .filter((c) => c.type !== 'compound' && c.event && c.event.category !== 'project')
+      .map((c) => c.event);
+  } catch (err) { logger.debug('AttackPath decision enrich failed', { error: err.message }); return false; }
+  if (!events.length) return false;
+  events = events.sort((a, b) => ((b.loss && b.loss.expected) || b.exposure || 0) - ((a.loss && a.loss.expected) || a.exposure || 0)).slice(0, 6);
+
+  // Spread the chains across the real crown-jewel processes (ranked by exposure
+  // then criticality) so the graph shows distinct targets rather than collapsing
+  // onto the single generic crown the decision spine assigns every risk.
+  const ranked = g.processes
+    .filter((p) => p.layer === 'process' && !String(p.id).startsWith('ap_proc_'))
+    .sort((a, b) => (n(b.exposure) - n(a.exposure)) || ((sevRank[a.criticality] ?? 9) - (sevRank[b.criticality] ?? 9)));
+  const synthById = {};
+
+  events.forEach((ev, idx) => {
+    const ap = Array.isArray(ev.attackPath) ? ev.attackPath : [];
+    const crown = ev.crownJewel || ev.affectedSystem || 'Crown-jewel process';
+    let proc = ranked.length ? ranked[idx % ranked.length] : null;
+    if (!proc) {
+      const pid = `ap_proc_${slug(crown)}`;
+      proc = synthById[pid];
+      if (!proc) {
+        proc = { id: pid, layer: 'process', label: crown, criticality: ev.severity || 'High', exposure: 0, procs: [pid] };
+        synthById[pid] = proc;
+        g.processes.push(proc);
+      }
+    }
+    if (!proc.procs || !proc.procs.length) proc.procs = [proc.id];
+    const pid = proc.procs[0];
+    proc.exposure = n(proc.exposure) + Math.round(n(ev.exposure) || (ev.loss && n(ev.loss.expected)) || 0);
+    proc.reachable = true;
+
+    const eid = slug(ev.id || `${idx}`) || `e${idx}`;
+    const entryLabel = (ap[0] && ap[0].label) || 'Internet-facing weakness';
+    const footLabel = (ap[1] && ap[1].label) || ev.affectedSystem || 'Affected system';
+    const moveLabel = (ap[2] && ap[2].label) || 'Lateral movement / privilege escalation';
+
+    const app = { id: `ap_app_${eid}`, layer: 'app', label: entryLabel, procs: [pid], criticality: ev.severity || 'High', internetExposed: true, sensitiveData: true, synthetic: true };
+    const dev = { id: `ap_dev_${eid}`, layer: 'device', label: footLabel, procs: [pid], criticality: ev.severity || 'Medium', assetType: 'system', zone: 'Modeled from risk', synthetic: true };
+    const net = { id: `ap_net_${eid}`, layer: 'network', label: moveLabel, procs: [pid], synthetic: true };
+    const threat = { id: `ap_threat_${eid}`, layer: 'threat', label: ev.scenarioType || ev.title || 'Threat', threatType: ev.scenarioType || null, impact: ev.severity || 'High', probability: ev.timing ? n(ev.timing.p30) : 0, procs: [pid], synthetic: true };
+
+    g.apps.push(app); g.devices.push(dev); g.networks.push(net); g.threats.push(threat);
+    // Explicit linear chain so BFS walks the full entry → objective path.
+    g.edges.push({ from: threat.id, to: app.id }, { from: app.id, to: dev.id }, { from: dev.id, to: net.id }, { from: net.id, to: proc.id });
+  });
+  return true;
 }
 
 // BFS the undirected adjacency from each internet-exposed entry (app/device) to
