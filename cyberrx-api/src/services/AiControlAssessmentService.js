@@ -204,7 +204,13 @@ function classifyOne(s) {
   const obligations = tier === 'High-risk'
     ? ['Risk management system', 'Data governance & quality', 'Technical documentation', 'Human oversight', 'Logging & traceability', 'Accuracy/robustness/cybersecurity', 'Conformity assessment']
     : tier === 'Limited-risk' ? ['Transparency: disclose AI use', 'Label AI-generated content', 'Basic logging'] : ['Voluntary codes of conduct'];
-  return { name: s.name, tier, rationale, obligations, dataSensitivity: s.dataSensitivity, autonomy: s.autonomy, owner: s.owner, sanctioned: s.sanctioned };
+  // The decision leadership should take for this tier — not just the label.
+  const decision = tier === 'High-risk'
+    ? 'Treat as high-risk: assign an owner, stand up the full obligation set, and have Legal confirm the classification before relying on or expanding use.'
+    : tier === 'Limited-risk'
+      ? 'Meet the transparency duties — disclose AI use and label AI-generated content — and keep basic interaction logs.'
+      : 'Document the assessment; reassess if the system gains decisional impact or starts touching sensitive data.';
+  return { name: s.name, tier, rationale, obligations, decision, dataSensitivity: s.dataSensitivity, autonomy: s.autonomy, owner: s.owner, sanctioned: s.sanctioned };
 }
 async function classifyEuAiAct(orgId) {
   const inv = await AI.inventory(orgId);

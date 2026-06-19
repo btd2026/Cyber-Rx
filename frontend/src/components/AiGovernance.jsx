@@ -297,13 +297,14 @@ function EuAiActView({ eu }) {
       </div>
       <div style={{ display: 'grid', gap: 8 }}>
         {(eu.systems || []).map((s, i) => (
-          <div key={i} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${TIER[s.tier]}`, borderRadius: 8, padding: '10px 13px', background: '#fff' }}>
+          <div key={i} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${TIER[s.tier]}`, borderRadius: 8, padding: '10px 13px', background: '#fff', display: 'grid', gap: 7 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
               <span style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>{s.name}</span>
               <Pill text={s.tier} color={TIER[s.tier]} />
             </div>
-            <div style={{ fontSize: 11, color: INK2, marginTop: 4 }}>{s.rationale}</div>
-            <div style={{ fontSize: 10.5, color: INK3, marginTop: 5 }}>Obligations: {(s.obligations || []).join(' · ')}</div>
+            <Detail label="Why this tier" tone={INK2}>{s.rationale}</Detail>
+            <Detail label="Obligations to meet" tone={INK2}>{(s.obligations || []).join(' · ')}</Detail>
+            {s.decision && <Detail label="Decision to take" tone="#7c3aed">{s.decision}</Detail>}
           </div>
         ))}
       </div>
