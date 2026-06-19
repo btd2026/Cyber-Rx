@@ -73,7 +73,10 @@ export default function DecisionRail(props) {
             : <>No open decisions — you're current.</>}
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => setOpen(true)} style={{ background: tone, color: '#fff', border: 'none', borderRadius: 7, padding: '6px 14px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>Review decisions</button>
+          <button onClick={() => { if (props.onOpenQueue) props.onOpenQueue(); else setOpen(true); }} style={{ background: tone, color: '#fff', border: 'none', borderRadius: 7, padding: '6px 14px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>Review decisions</button>
+          {props.onOpenQueue && count > 0 && (
+            <button onClick={() => setOpen(true)} title="Quick peek without leaving this page" style={{ background: '#fff', color: INK2, border: `1px solid ${HAIR}`, borderRadius: 7, padding: '6px 10px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>Peek</button>
+          )}
           <a href={`${api}/api/decisions/ledger.csv?org_id=${encodeURIComponent(orgId)}`} style={{ background: '#fff', color: INK2, border: `1px solid ${HAIR}`, borderRadius: 7, padding: '6px 12px', fontSize: 11.5, fontWeight: 700, textDecoration: 'none' }}>⤓ Ledger</a>
         </div>
       </div>
@@ -90,12 +93,14 @@ export default function DecisionRail(props) {
             )}
             <div style={{ display: 'grid', gap: 8 }}>
               {undecided.map((c) => (
-                <div key={c.id} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${SEV[c.event.severity] || INK3}`, borderRadius: 8, padding: '9px 12px' }}>
+                <div key={c.id} onClick={props.onOpenQueue ? () => { setOpen(false); props.onOpenQueue(); } : undefined}
+                  role={props.onOpenQueue ? 'button' : undefined} tabIndex={props.onOpenQueue ? 0 : undefined}
+                  style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${SEV[c.event.severity] || INK3}`, borderRadius: 8, padding: '9px 12px', cursor: props.onOpenQueue ? 'pointer' : 'default' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                     <span style={{ fontSize: 12, fontWeight: 700, color: INK }}>{(c.lens && c.lens.headline) || c.event.title}</span>
                     <span style={{ fontSize: 9, fontWeight: 700, color: '#fff', background: SEV[c.event.severity] || INK3, borderRadius: 999, padding: '2px 7px', whiteSpace: 'nowrap', textTransform: 'uppercase' }}>{c.event.severity}</span>
                   </div>
-                  <div style={{ fontSize: 10.5, color: INK3, marginTop: 2 }}>{c.type === 'compound' ? 'Chained scenario' : c.event.category === 'project' ? 'Stalled project' : 'Risk'} · {c.event.title}</div>
+                  <div style={{ fontSize: 10.5, color: INK3, marginTop: 2 }}>{c.type === 'compound' ? 'Chained scenario' : c.event.category === 'project' ? 'Stalled project' : 'Risk'} · {c.event.title}{props.onOpenQueue ? ' · Decide →' : ''}</div>
                 </div>
               ))}
               {blind.map((f, i) => (
