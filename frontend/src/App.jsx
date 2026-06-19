@@ -8782,29 +8782,9 @@ function CISODash(props) {
     <div>
       <DashNav current="dashboard" go={go}/>
 
-      {/* CISO secondary nav — only the tab in use is highlighted */}
-      <div style={{padding:"14px 20px 0"}}>
-        <div style={{display:"flex",gap:4,borderBottom:"1px solid "+C.border}}>
-          {[["posturedash","Security Posture"],
-            ["aicontrols","AI Controls"],
-            ["execreport","Four-Lens (CSF · 800-53 · CIS · ATT&CK)"]].map(function(t){
-            var key=t[0]; var lbl=t[1];
-            var on=(key==="posturedash" ? (agentView==="posturedash"||!agentView) : agentView===key);
-            return (
-              <button key={key||"q"} onClick={function(){
-                  setDrillView(null);
-                  setAgentView(key); setAgentQ(key==="posturedash"?"CISO security posture dashboard":key==="aicontrols"?"AI security controls":key==="attackpath"?"Show the attack path":"Four-lens posture");
-                }}
-                style={{background:"transparent",border:"none",
-                  borderBottom:"3px solid "+(on?C.acc:"transparent"),
-                  color:on?C.acc:C.muted,padding:"9px 14px",cursor:"pointer",
-                  fontSize:12,fontWeight:on?700:500,marginBottom:-1,whiteSpace:"nowrap"}}>
-                {lbl}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      {/* CISO secondary nav removed — "Security Posture" was just this dashboard,
+          "Four-Lens" now lives in the dashboard's Control Efficacy group, and
+          "AI Controls" remains reachable via the assistant (agentView aicontrols). */}
 
       {/* Interactive attack-path diagram (process → app → device → network → threat) */}
       {!drillView&&agentView==="attackpath"&&(
