@@ -383,7 +383,7 @@ function lensFor(role, card) {
         headline = `Attack path to ${rp.objective}`;
         primary = { label: '30-day exploit likelihood', value: `${e.timing.p30}%` };
         secondary = { label: 'Path', value: rp.path };
-        narrative = `Likely attack path — ${rp.path}. Recommended action: ${rec.label.toLowerCase()} — cuts residual risk by about ${rec.residualRiskReductionPct}%, ${tteText(rec.timeToEffectDays)}.`;
+        narrative = `Likely attack path — ${rp.path}. Recommended action: ${rec.label.toLowerCase()} — about ${rec.costLabel}, cuts residual risk by ~${rec.residualRiskReductionPct}%, ${tteText(rec.timeToEffectDays)}, ${rec.friction.toLowerCase()} operational friction.`;
         break;
       }
       case 'CIO':
