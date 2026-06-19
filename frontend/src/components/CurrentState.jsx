@@ -100,6 +100,9 @@ export default function CurrentState(props) {
             <div style={{ fontSize: 12.5, fontWeight: 800, color: INK }}>Data visibility confidence</div>
             <span style={{ fontSize: 12, fontWeight: 800, color: vis.band === 'High' ? '#1f8a4c' : vis.band === 'Moderate' ? '#B07C2E' : '#C0392B' }}>{vis.band} · {vis.overall}%</span>
           </div>
+          <div style={{ fontSize: 11, color: INK3, marginBottom: 10, lineHeight: 1.5, maxWidth: 760 }}>
+            How complete the data behind these results is, by source. The platform's outputs are only as trustworthy as their inputs — connect each source to move it from <em>inferred</em> to observed and raise confidence.
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 8 }}>
             {vis.classes.map((c) => {
               const col = c.confidence >= 80 ? '#1f8a4c' : c.confidence >= 50 ? '#B07C2E' : '#C0392B';
