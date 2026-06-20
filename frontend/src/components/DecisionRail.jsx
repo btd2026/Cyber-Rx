@@ -36,11 +36,11 @@ export function VisibilityChip(props) {
       .then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) setV(d); }).catch(() => {});
   }, [api, orgId, token]);
   if (!v) return null;
-  const c = v.band === 'High' ? '#34d399' : v.band === 'Moderate' ? '#fbbf24' : '#f87171';
+  const c = v.band === 'High' ? '#1a7f37' : v.band === 'Moderate' ? '#9a6700' : '#cf222e';
   return (
-    <span title={v.caveat} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#16263b', border: '1px solid #2c4f7c', borderRadius: 999, padding: '5px 12px', fontSize: 11, color: '#cbd5e1', cursor: 'help' }}>
+    <span title={v.caveat} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#f6f7f9', border: '1px solid #ebecf0', borderRadius: 999, padding: '6px 12px', fontSize: 11, color: '#5c6066', cursor: 'help' }}>
       <span style={{ width: 7, height: 7, borderRadius: '50%', background: c }} />
-      Data visibility: <strong style={{ color: '#fff' }}>{v.band} ({v.overall}%)</strong>
+      Data visibility: <strong style={{ color: '#0b0c0e' }}>{v.band} ({v.overall}%)</strong>
     </span>
   );
 }

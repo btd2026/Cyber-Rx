@@ -52,7 +52,7 @@ export default function BusinessContext({ orgId, authToken, apiUrl }) {
   return (
     <>
       <button onClick={() => setOpen(true)} title="Author crown jewels, appetite and materiality"
-        style={{ background: 'transparent', color: '#cbd5e1', border: '1px solid #2c4f7c', borderRadius: 6, padding: '9px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>⚙ Business context</button>
+        style={{ background: '#ffffff', color: '#5c6066', border: '1px solid #dfe1e6', borderRadius: 7, padding: '8px 13px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>⚙ Business context</button>
 
       {open && (
         <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(8,15,28,0.5)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '40px 16px', overflowY: 'auto' }}>

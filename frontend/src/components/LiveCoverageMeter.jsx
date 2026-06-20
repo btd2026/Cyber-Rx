@@ -38,8 +38,8 @@ export default function LiveCoverageMeter({ orgId, authToken, apiUrl }) {
   return (
     <>
       <button onClick={() => setOpen(true)} title="Data trust — live vs. modeled coverage"
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#1e3a5f', color: '#fff',
-          border: '1px solid #2c4f7c', borderRadius: 6, padding: '7px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#ffffff', color: '#5c6066',
+          border: '1px solid #dfe1e6', borderRadius: 7, padding: '7px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
         {donut(20)}
         <span><strong style={{ fontFamily: FONTS.mono }}>{pct.live}%</strong> live data</span>
       </button>
