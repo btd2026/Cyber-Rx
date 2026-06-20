@@ -138,7 +138,7 @@ const VendorRiskDashboard = ({ vendorId, vendorName, organizationId, authToken }
       <div style={{
         padding: '2rem',
         textAlign: 'center',
-        color: '#6B7280'
+        color: '#5c6066'
       }}>
         Loading vendor risk dashboard...
       </div>
@@ -154,7 +154,7 @@ const VendorRiskDashboard = ({ vendorId, vendorName, organizationId, authToken }
         color: '#EF4545'
       }}>
         <div style={{ marginBottom: 8 }}>Error loading dashboard:</div>
-        <div style={{ fontSize: 12, color: '#6B7280' }}>{error}</div>
+        <div style={{ fontSize: 12, color: '#5c6066' }}>{error}</div>
       </div>
     );
   }
@@ -165,7 +165,7 @@ const VendorRiskDashboard = ({ vendorId, vendorName, organizationId, authToken }
       <div style={{
         padding: '2rem',
         textAlign: 'center',
-        color: '#6B7280'
+        color: '#5c6066'
       }}>
         No monitoring data available for this vendor
       </div>
@@ -245,14 +245,14 @@ const VendorRiskDashboard = ({ vendorId, vendorName, organizationId, authToken }
           <div style={{
             fontSize: 16,
             fontWeight: 700,
-            color: '#111827',
+            color: '#0b0c0e',
             marginBottom: 4
           }}>
             {vendorName || dashboard.vendorName} - Vendor Risk Dashboard
           </div>
           <div style={{
             fontSize: 11,
-            color: '#6B7280'
+            color: '#5c6066'
           }}>
             Continuous monitoring from {dashboard.connectedSources} sources •
             {dashboard.activeSignals} active signals
@@ -265,7 +265,7 @@ const VendorRiskDashboard = ({ vendorId, vendorName, organizationId, authToken }
             disabled={syncing}
             style={{
               padding: '6px 12px',
-              backgroundColor: syncing ? '#F5A623' : '#2563EB',
+              backgroundColor: syncing ? '#F5A623' : '#5e6ad2',
               border: 'none',
               color: '#FFFFFF',
               borderRadius: 6,
@@ -297,8 +297,8 @@ const VendorRiskDashboard = ({ vendorId, vendorName, organizationId, authToken }
             style={{
               padding: '6px 12px',
               backgroundColor: 'transparent',
-              border: '1px solid #D1D5DB',
-              color: '#6B7280',
+              border: '1px solid #d7d9de',
+              color: '#5c6066',
               borderRadius: 6,
               cursor: 'pointer',
               fontSize: 10
@@ -328,12 +328,12 @@ const VendorRiskDashboard = ({ vendorId, vendorName, organizationId, authToken }
           padding: 12,
           backgroundColor: '#F9FAFB',
           borderRadius: 8,
-          border: '1px solid #E5E7EB'
+          border: '1px solid #ebecf0'
         }}>
           <div style={{
             fontSize: 12,
             fontWeight: 700,
-            color: '#111827',
+            color: '#0b0c0e',
             marginBottom: 8
           }}>
             Risk Score Breakdown
@@ -345,38 +345,38 @@ const VendorRiskDashboard = ({ vendorId, vendorName, organizationId, authToken }
             fontSize: 10
           }}>
             <div>
-              <span style={{ color: '#6B7280' }}>External Posture (20%):</span>{' '}
-              <span style={{ fontWeight: 600, color: '#374151' }}>
+              <span style={{ color: '#5c6066' }}>External Posture (20%):</span>{' '}
+              <span style={{ fontWeight: 600, color: '#5c6066' }}>
                 {dashboard.riskScoreBreakdown.externalPosture}
               </span>
             </div>
             <div>
-              <span style={{ color: '#6B7280' }}>Breach Intel (25%):</span>{' '}
-              <span style={{ fontWeight: 600, color: '#374151' }}>
+              <span style={{ color: '#5c6066' }}>Breach Intel (25%):</span>{' '}
+              <span style={{ fontWeight: 600, color: '#5c6066' }}>
                 {dashboard.riskScoreBreakdown.breachIntel}
               </span>
             </div>
             <div>
-              <span style={{ color: '#6B7280' }}>Compliance (20%):</span>{' '}
-              <span style={{ fontWeight: 600, color: '#374151' }}>
+              <span style={{ color: '#5c6066' }}>Compliance (20%):</span>{' '}
+              <span style={{ fontWeight: 600, color: '#5c6066' }}>
                 {dashboard.riskScoreBreakdown.compliance}
               </span>
             </div>
             <div>
-              <span style={{ color: '#6B7280' }}>Questionnaire (10%):</span>{' '}
-              <span style={{ fontWeight: 600, color: '#374151' }}>
+              <span style={{ color: '#5c6066' }}>Questionnaire (10%):</span>{' '}
+              <span style={{ fontWeight: 600, color: '#5c6066' }}>
                 {dashboard.riskScoreBreakdown.questionnaire}
               </span>
             </div>
             <div>
-              <span style={{ color: '#6B7280' }}>Business Criticality (15%):</span>{' '}
-              <span style={{ fontWeight: 600, color: '#374151' }}>
+              <span style={{ color: '#5c6066' }}>Business Criticality (15%):</span>{' '}
+              <span style={{ fontWeight: 600, color: '#5c6066' }}>
                 {dashboard.riskScoreBreakdown.businessCriticality}
               </span>
             </div>
             <div>
-              <span style={{ color: '#6B7280' }}>Data Sensitivity (10%):</span>{' '}
-              <span style={{ fontWeight: 600, color: '#374151' }}>
+              <span style={{ color: '#5c6066' }}>Data Sensitivity (10%):</span>{' '}
+              <span style={{ fontWeight: 600, color: '#5c6066' }}>
                 {dashboard.riskScoreBreakdown.dataSensitivity}
               </span>
             </div>
@@ -389,7 +389,7 @@ const VendorRiskDashboard = ({ vendorId, vendorName, organizationId, authToken }
         <h3 style={{
           fontSize: 12,
           fontWeight: 700,
-          color: '#111827',
+          color: '#0b0c0e',
           marginBottom: 8
         }}>
           Signal Breakdown by Category
@@ -402,7 +402,7 @@ const VendorRiskDashboard = ({ vendorId, vendorName, organizationId, authToken }
         <h3 style={{
           fontSize: 12,
           fontWeight: 700,
-          color: '#111827',
+          color: '#0b0c0e',
           marginBottom: 8
         }}>
           Recent Risk Signals

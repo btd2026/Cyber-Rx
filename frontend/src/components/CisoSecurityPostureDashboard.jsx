@@ -31,7 +31,7 @@ import LiveCoverageMeter from './LiveCoverageMeter';
 import DataSources from './DataSources';
 import PlatformValue from './PlatformValue';
 import BusinessContext from './BusinessContext';
-import { FONTS, COLORS, HERO_BG, ELEV } from '../theme';
+import { FONTS, COLORS, ELEV } from '../theme';
 import CurrentState from './CurrentState';
 import ControlEfficacy from './ControlEfficacy';
 import KeyRisks from './KeyRisks';
@@ -68,12 +68,16 @@ const ROLE_FRAME = {
 const STATUS_SEV = { Strong: 'Low', Moderate: 'Medium', Weak: 'High', Critical: 'Critical' };
 const numSev = (n) => (n >= 5 ? 'Critical' : n >= 4 ? 'High' : n >= 3 ? 'Medium' : 'Low');
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e2e8f0', PANEL = '#f8fafc', NAVY = '#0f1b2d';
-const C = { Strong: '#1f8a4c', Moderate: '#B07C2E', Weak: '#A85B2E', Critical: '#C0392B', 'Not assessed': '#94a3b8' };
-const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
-const conf = (c) => (c === 'High' ? '#1f8a4c' : c === 'Medium' ? '#B07C2E' : '#94a3b8');
+const INK = '#0b0c0e', INK2 = '#5c6066', INK3 = '#8b9098', HAIR = '#ebecf0', PANEL = '#f6f7f9';
+const SUBTLE = '#f6f7f9', BORDERSTRONG = '#dfe1e6', ACCENT = '#5e6ad2', ACCENT_SOFT = '#eef0fb', ACCENT_TEXT = '#4a52b0';
+const C = { Strong: '#1a7f37', Moderate: '#9a6700', Weak: '#c2410c', Critical: '#cf222e', 'Not assessed': '#8b9098' };
+const SEV = { Critical: '#cf222e', High: '#c2410c', Medium: '#9a6700', Low: '#1a7f37' };
+// Soft tint paired to each status/accent color, for Linear-style soft badges.
+const SOFT = { '#cf222e': '#fdecec', '#c2410c': '#fdeee6', '#9a6700': '#fbf3da', '#1a7f37': '#e6f4ea', '#8b9098': '#f0f1f4', '#5e6ad2': '#eef0fb' };
+const conf = (c) => (c === 'High' ? '#1a7f37' : c === 'Medium' ? '#9a6700' : '#8b9098');
 const band = (s) => (s >= 80 ? 'Strong' : s >= 60 ? 'Moderate' : s >= 40 ? 'Weak' : 'Critical');
 const sc = (s) => C[band(s)];
+const scoreColor = (s) => (s >= 80 ? '#1a7f37' : s >= 60 ? '#9a6700' : '#cf222e');
 
 function ctx(props) {
   const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
@@ -86,14 +90,30 @@ function ctx(props) {
 }
 
 const Pill = ({ text, color }) => (
-  <span style={{ fontSize: 9.5, fontWeight: 700, color: '#fff', background: color, borderRadius: 4, padding: '2px 8px', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{text}</span>
+  <span style={{ fontSize: 10.5, fontWeight: 600, color, background: SOFT[color] || '#f0f1f4', borderRadius: 999, padding: '2px 9px', whiteSpace: 'nowrap' }}>{text}</span>
 );
 const Trend = ({ d }) => {
   const up = d > 0, flat = d === 0;
-  return <span style={{ color: flat ? INK3 : up ? '#1f8a4c' : '#C0392B', fontWeight: 700, fontSize: 11 }}>{flat ? '▬' : up ? '▲' : '▼'} {d > 0 ? '+' : ''}{d}</span>;
+  return <span style={{ color: flat ? INK3 : up ? '#1a7f37' : '#cf222e', fontWeight: 600, fontSize: 11.5, fontVariantNumeric: 'tabular-nums' }}>{flat ? '→' : up ? '↑' : '↓'} {d > 0 ? '+' : ''}{d}</span>;
 };
 function Bar({ value, color }) {
-  return <div style={{ height: 6, background: '#eef2f6', borderRadius: 3, overflow: 'hidden' }}><div style={{ width: `${Math.max(0, Math.min(100, value))}%`, height: '100%', background: color || sc(value), borderRadius: 3 }} /></div>;
+  return <div style={{ height: 6, background: '#f0f1f4', borderRadius: 999, overflow: 'hidden' }}><div style={{ width: `${Math.max(0, Math.min(100, value))}%`, height: '100%', background: color || sc(value), borderRadius: 999 }} /></div>;
+}
+// Posture score ring (SVG) — the hero centerpiece, on a light surface.
+function Ring({ value, size = 104 }) {
+  const r = (size - 14) / 2, c = 2 * Math.PI * r, off = c * (1 - Math.max(0, Math.min(100, value)) / 100);
+  return (
+    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
+      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)', display: 'block' }}>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#ebecf0" strokeWidth="8" />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={scoreColor(value)} strokeWidth="8" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={off} />
+      </svg>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <span className="crx-figure" style={{ fontSize: 30, fontWeight: 700, color: INK, letterSpacing: '-0.02em' }}>{value}</span>
+        <span style={{ fontSize: 9, color: INK3, textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: -1 }}>of 100</span>
+      </div>
+    </div>
+  );
 }
 
 // Five top-level groups so the dashboard stays focused; related views collapse
@@ -265,7 +285,7 @@ export default function CisoSecurityPostureDashboard(props) {
     return () => voice.stop();
   }, [d, tab]); // eslint-disable-line
 
-  if (error) return <div style={{ padding: 24, color: '#C0392B', fontSize: 13 }}>Could not load CISO dashboard: {error}</div>;
+  if (error) return <div style={{ padding: 24, color: '#cf222e', fontSize: 13 }}>Could not load CISO dashboard: {error}</div>;
   if (!d) return <div style={{ padding: 24, color: INK3, fontSize: 13 }}>Composing CISO security posture…</div>;
 
   const p = d.overallPosture;
@@ -322,22 +342,20 @@ export default function CisoSecurityPostureDashboard(props) {
     <div style={{ background: COLORS.paper, borderRadius: 16, padding: 0, fontFamily: FONTS.body, boxShadow: ELEV.card, border: `1px solid ${COLORS.hair}`, overflow: 'hidden' }}>
       {/* Top executive nav (only when rendered as a standalone leader page). */}
       {props.navId && <div style={{ marginBottom: 12 }}><DashNav current={props.navId} go={props.go} /></div>}
-      {/* ===== Hero: Overall Security Posture ===== */}
-      <div style={{ background: HERO_BG, padding: '24px 30px', color: '#fff', borderBottom: `1px solid ${COLORS.accentDim}` }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-            <div style={{ textAlign: 'center', paddingRight: 20, borderRight: `1px solid ${COLORS.navyLine}` }}>
-              <div className="crx-figure" style={{ fontSize: 54, fontWeight: 700, lineHeight: 1, color: sc(p.current) === '#A85B2E' ? '#f0a868' : sc(p.current) }}>{p.current}</div>
-              <div style={{ fontSize: 9.5, color: COLORS.navyInk, textTransform: 'uppercase', letterSpacing: '0.16em', marginTop: 6 }}>of 100 · {band(p.current)}</div>
-            </div>
+      {/* ===== Hero: Overall Security Posture (Modern SaaS — light) ===== */}
+      <div style={{ background: COLORS.white, padding: '22px 28px', borderBottom: `1px solid ${COLORS.hair}` }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 22, alignItems: 'center' }}>
+            <Ring value={p.current} />
             <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: COLORS.accent, textTransform: 'uppercase', letterSpacing: '0.22em' }}>{frame.tag}</div>
-              <h2 className="crx-display" style={{ margin: '5px 0 7px', fontSize: 26, fontWeight: 600, letterSpacing: '-0.01em', color: '#fff' }}>{frame.title}</h2>
-              <div style={{ display: 'flex', gap: 14, alignItems: 'center', fontSize: 12.5, color: '#cbd5e1', flexWrap: 'wrap' }}>
-                <span>Last period <strong className="crx-figure" style={{ color: '#fff' }}>{p.previous}</strong></span>
-                <span className="crx-figure" style={{ color: p.delta >= 0 ? '#34d399' : '#f87171', fontWeight: 700 }}>{p.delta >= 0 ? '▲ +' : '▼ '}{p.delta} pts</span>
+              <div style={{ fontSize: 11, fontWeight: 600, color: ACCENT_TEXT, textTransform: 'uppercase', letterSpacing: '0.07em' }}>{frame.tag}</div>
+              <h2 className="crx-display" style={{ margin: '5px 0 8px', fontSize: 24, fontWeight: 650, letterSpacing: '-0.025em', color: INK }}>{frame.title}</h2>
+              <div style={{ display: 'flex', gap: 13, alignItems: 'center', fontSize: 12.5, color: INK2, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: scoreColor(p.current), background: SOFT[scoreColor(p.current)] || PANEL, borderRadius: 999, padding: '2px 9px' }}>{band(p.current)}</span>
+                <span className="crx-figure" style={{ fontWeight: 600, color: p.delta >= 0 ? '#1a7f37' : '#cf222e' }}>{p.delta >= 0 ? '↑ +' : '↓ '}{p.delta} pts</span>
+                <span>Last period <strong className="crx-figure" style={{ color: INK }}>{p.previous}</strong></span>
                 <span style={{ textTransform: 'capitalize' }}>{p.trend}</span>
-                <span style={{ color: COLORS.navyInk }}>· Confidence {p.confidence}</span>
+                <span>Confidence {p.confidence}</span>
                 <VoiceControls voice={voice} onReplay={() => voice.speak(`Here is your ${role} briefing. ${p.narrative} As your advisor, I'd focus on the weakest domains shown here and the open decisions in the rail below — that is where your judgment is needed.`)} label="Listen" compact />
               </div>
             </div>
@@ -348,21 +366,21 @@ export default function CisoSecurityPostureDashboard(props) {
             <BusinessContext orgId={orgId} authToken={token} apiUrl={api} />
             <PlatformValue orgId={orgId} authToken={token} apiUrl={api} />
             <VisibilityChip orgId={orgId} authToken={token} apiUrl={api} />
-            <a href={`${api}/api/ciso/report.pdf?org_id=${encodeURIComponent(orgId)}`} style={{ background: 'rgba(200,163,91,0.14)', color: COLORS.accentSoft, border: `1px solid ${COLORS.accent}`, borderRadius: 8, padding: '9px 15px', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>⤓ PDF report</a>
-            <a href={`${api}/api/ciso/report.pptx?org_id=${encodeURIComponent(orgId)}`} style={{ background: 'transparent', color: COLORS.navyInk, border: `1px solid ${COLORS.navyLine}`, borderRadius: 8, padding: '9px 15px', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>⤓ PowerPoint</a>
+            <a href={`${api}/api/ciso/report.pdf?org_id=${encodeURIComponent(orgId)}`} style={{ background: ACCENT, color: '#fff', border: `1px solid ${ACCENT}`, borderRadius: 7, padding: '8px 14px', fontSize: 12.5, fontWeight: 600, textDecoration: 'none' }}>⤓ PDF report</a>
+            <a href={`${api}/api/ciso/report.pptx?org_id=${encodeURIComponent(orgId)}`} style={{ background: '#fff', color: INK2, border: `1px solid ${BORDERSTRONG}`, borderRadius: 7, padding: '8px 14px', fontSize: 12.5, fontWeight: 600, textDecoration: 'none' }}>⤓ PowerPoint</a>
           </div>
         </div>
-        <div style={{ marginTop: 14, fontSize: 13, color: '#dbe5f1', lineHeight: 1.6, maxWidth: 940 }}>{p.narrative}</div>
-        {/* weighted domain strip */}
-        <div style={{ display: 'flex', gap: 7, marginTop: 16, flexWrap: 'wrap' }}>
+        <div style={{ marginTop: 14, fontSize: 13.5, color: INK2, lineHeight: 1.6, maxWidth: 940 }}>{p.narrative}</div>
+        {/* weighted domain strip — clean KPI tiles */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(122px, 1fr))', gap: 8, marginTop: 16 }}>
           {d.domainMatrix.filter((x) => x.weight > 0).map((x) => (
-            <div key={x.id} title={`${x.name} ${x.current} (${x.weight}% weight)`} style={{ flex: 1, minWidth: 96, background: 'rgba(255,255,255,0.045)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 9, padding: '8px 10px' }}>
+            <div key={x.id} title={`${x.name} ${x.current} (${x.weight}% weight)`} style={{ background: COLORS.white, border: `1px solid ${COLORS.hair}`, borderRadius: 8, padding: '9px 11px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                {x.provenance && <Provenance prov={x.provenance} size={8} dark />}
-                <div style={{ fontSize: 9.5, color: COLORS.navyInk, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{x.name}</div>
+                {x.provenance && <Provenance prov={x.provenance} size={8} />}
+                <div style={{ fontSize: 10.5, color: INK3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{x.name}</div>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 2 }}>
-                <span className="crx-figure" style={{ fontSize: 18, fontWeight: 700, color: sc(x.current) === '#A85B2E' ? '#f0a868' : sc(x.current) }}>{x.current}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 5 }}>
+                <span className="crx-figure" style={{ fontSize: 18, fontWeight: 700, color: scoreColor(x.current), letterSpacing: '-0.02em' }}>{x.current}</span>
                 <Trend d={x.delta} />
               </div>
             </div>
@@ -523,7 +541,7 @@ function EvidenceDrawer({ a, onClose }) {
     </div>
   );
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,27,45,0.45)', zIndex: 50, display: 'flex', justifyContent: 'flex-end' }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(11,12,14,0.45)', zIndex: 50, display: 'flex', justifyContent: 'flex-end' }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: 'min(520px, 92vw)', height: '100%', background: '#fff', boxShadow: '-8px 0 24px rgba(0,0,0,0.2)', overflowY: 'auto', padding: '22px 24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, paddingBottom: 12, borderBottom: `1px solid ${HAIR}` }}>
           <div>
@@ -542,7 +560,7 @@ function EvidenceDrawer({ a, onClose }) {
         <Row label="Business / process impact">{a.businessImpact}</Row>
         <Row label="Key risk drivers">{(a.riskDrivers || []).join(' · ')}</Row>
         <div style={{ background: '#f0f7f2', border: '1px solid #cce8d6', borderRadius: 6, padding: '10px 12px', margin: '10px 0' }}>
-          <div style={{ fontSize: 9.5, fontWeight: 700, color: '#1f8a4c', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Recommended action</div>
+          <div style={{ fontSize: 9.5, fontWeight: 700, color: '#1a7f37', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Recommended action</div>
           <div style={{ fontSize: 12.5, color: INK, marginTop: 3 }}>{a.recommendedAction}</div>
         </div>
         <Row label="Remediation — open & track a ticket">
@@ -603,20 +621,20 @@ function Domains({ matrix, controlRisk = [], thresholds = {} }) {
               <span style={{ fontSize: 24, fontWeight: 800, color: sc(m.current) }}>{m.current}</span>
               <span style={{ fontSize: 11, color: INK3 }}>was {m.previous}</span>
               <Trend d={m.delta} />
-              <span style={{ marginLeft: 'auto', fontSize: 10, color: m.trend === 'improving' ? '#1f8a4c' : m.trend === 'deteriorating' ? '#C0392B' : INK3, fontWeight: 600, textTransform: 'capitalize' }}>{m.trend}</span>
+              <span style={{ marginLeft: 'auto', fontSize: 10, color: m.trend === 'improving' ? '#1a7f37' : m.trend === 'deteriorating' ? '#cf222e' : INK3, fontWeight: 600, textTransform: 'capitalize' }}>{m.trend}</span>
             </div>
             <Bar value={m.current} />
             <div style={{ fontSize: 10.5, color: INK2, marginTop: 8, lineHeight: 1.5 }}>
-              <div>▲ <span style={{ color: '#1f8a4c' }}>{m.topImproving.metric} (+{m.topImproving.delta})</span></div>
-              <div>▼ <span style={{ color: '#C0392B' }}>{m.topDeteriorating.metric} ({m.topDeteriorating.delta})</span></div>
+              <div>▲ <span style={{ color: '#1a7f37' }}>{m.topImproving.metric} (+{m.topImproving.delta})</span></div>
+              <div>▼ <span style={{ color: '#cf222e' }}>{m.topDeteriorating.metric} ({m.topDeteriorating.delta})</span></div>
             </div>
             {/* quick status line: breached metrics + risk contributors at a glance */}
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
-              {breached.length > 0 && <span style={{ fontSize: 9.5, fontWeight: 700, color: '#C0392B', background: '#fdecea', borderRadius: 4, padding: '2px 7px' }}>{breached.length} metric{breached.length > 1 ? 's' : ''} breached</span>}
+              {breached.length > 0 && <span style={{ fontSize: 9.5, fontWeight: 700, color: '#cf222e', background: '#fdecea', borderRadius: 4, padding: '2px 7px' }}>{breached.length} metric{breached.length > 1 ? 's' : ''} breached</span>}
               {ctrls.length > 0 && <span style={{ fontSize: 9.5, fontWeight: 700, color: INK2, background: PANEL, border: `1px solid ${HAIR}`, borderRadius: 4, padding: '2px 7px' }}>{ctrls.length} risk area{ctrls.length > 1 ? 's' : ''}</span>}
             </div>
             <button onClick={() => setOpen(expanded ? null : m.id)}
-              style={{ marginTop: 9, background: 'transparent', border: 'none', color: '#2563eb', fontSize: 10.5, fontWeight: 700, cursor: 'pointer', padding: 0 }}>
+              style={{ marginTop: 9, background: 'transparent', border: 'none', color: ACCENT, fontSize: 10.5, fontWeight: 700, cursor: 'pointer', padding: 0 }}>
               {expanded ? '▲ Hide detail' : '▼ What this means & what to do'}
             </button>
 
@@ -630,11 +648,11 @@ function Domains({ matrix, controlRisk = [], thresholds = {} }) {
                     {thrs.map((t) => {
                       const breach = t.status === 'Breach';
                       return (
-                        <div key={t.id} style={{ display: 'flex', alignItems: 'baseline', gap: 8, padding: '3px 0', fontSize: 11, borderBottom: '1px solid #f8fafc' }}>
+                        <div key={t.id} style={{ display: 'flex', alignItems: 'baseline', gap: 8, padding: '3px 0', fontSize: 11, borderBottom: '1px solid #f6f7f9' }}>
                           <span style={{ flex: 1, color: INK2 }}>{t.name}</span>
-                          <span style={{ fontWeight: 700, color: breach ? SEV[t.breachSeverity] : '#1f8a4c', fontVariantNumeric: 'tabular-nums' }}>{t.current}{t.unit === '%' ? '%' : ` ${t.unit}`}</span>
+                          <span style={{ fontWeight: 700, color: breach ? SEV[t.breachSeverity] : '#1a7f37', fontVariantNumeric: 'tabular-nums' }}>{t.current}{t.unit === '%' ? '%' : ` ${t.unit}`}</span>
                           <span style={{ color: INK3, fontSize: 10 }}>/ {t.threshold}</span>
-                          <Pill text={breach ? t.breachSeverity : 'Within'} color={breach ? SEV[t.breachSeverity] : '#1f8a4c'} />
+                          <Pill text={breach ? t.breachSeverity : 'Within'} color={breach ? SEV[t.breachSeverity] : '#1a7f37'} />
                         </div>
                       );
                     })}
@@ -645,13 +663,13 @@ function Domains({ matrix, controlRisk = [], thresholds = {} }) {
                   <div style={{ marginBottom: 10 }}>
                     <div style={{ fontSize: 9, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Top risk contributors</div>
                     {ctrls.slice(0, 4).map((c) => (
-                      <div key={c.id} style={{ padding: '4px 0', borderBottom: '1px solid #f8fafc' }}>
+                      <div key={c.id} style={{ padding: '4px 0', borderBottom: '1px solid #f6f7f9' }}>
                         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
                           <span style={{ flex: 1, fontSize: 11.5, fontWeight: 600, color: INK }}>{c.name}</span>
                           <span style={{ fontSize: 9.5, color: INK3 }}>{c.likelihood}×{c.impact}</span>
-                          <span style={{ fontSize: 11.5, fontWeight: 800, color: c.riskContribution >= 80 ? '#C0392B' : '#A85B2E', fontVariantNumeric: 'tabular-nums', width: 24, textAlign: 'right' }}>{c.riskContribution}</span>
+                          <span style={{ fontSize: 11.5, fontWeight: 800, color: c.riskContribution >= 80 ? '#cf222e' : '#c2410c', fontVariantNumeric: 'tabular-nums', width: 24, textAlign: 'right' }}>{c.riskContribution}</span>
                         </div>
-                        <div style={{ fontSize: 10.5, color: '#1f8a4c', marginTop: 1 }}>→ {c.action}</div>
+                        <div style={{ fontSize: 10.5, color: '#1a7f37', marginTop: 1 }}>→ {c.action}</div>
                       </div>
                     ))}
                   </div>
@@ -659,7 +677,7 @@ function Domains({ matrix, controlRisk = [], thresholds = {} }) {
 
                 {nextMove && (
                   <div style={{ background: '#f0f7f2', border: '1px solid #cce8d6', borderRadius: 6, padding: '8px 11px' }}>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: '#1f8a4c', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Recommended next move</div>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: '#1a7f37', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Recommended next move</div>
                     <div style={{ fontSize: 11.5, color: INK }}>{nextMove}</div>
                   </div>
                 )}
@@ -686,17 +704,17 @@ function Controls({ rows }) {
       {/* Concentration summary — where the risk actually sits, and where to start */}
       <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'baseline', background: '#fbfcfe', border: `1px solid ${HAIR}`, borderRadius: 6, padding: '9px 13px', marginBottom: 4, fontSize: 11.5, color: INK2 }}>
         <span><strong style={{ color: INK, fontSize: 13 }}>{total}</strong> control areas ranked by risk</span>
-        <span><strong style={{ color: '#C0392B' }}>{high}</strong> in the high band (≥80)</span>
+        <span><strong style={{ color: '#cf222e' }}>{high}</strong> in the high band (≥80)</span>
         <span>Top 3 drive <strong style={{ color: INK }}>{concentration}%</strong> of total risk</span>
-        {rows[0] && <span style={{ marginLeft: 'auto', color: '#1f8a4c', fontWeight: 600 }}>Start here → {rows[0].action}</span>}
+        {rows[0] && <span style={{ marginLeft: 'auto', color: '#1a7f37', fontWeight: 600 }}>Start here → {rows[0].action}</span>}
       </div>
       {rows.map((c) => (
         <div key={c.id} style={{ border: `1px solid ${HAIR}`, borderRadius: 6, overflow: 'hidden' }}>
           <button onClick={() => setOpen(open === c.id ? null : c.id)} style={{ width: '100%', textAlign: 'left', background: open === c.id ? PANEL : '#fff', border: 'none', cursor: 'pointer', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ fontSize: 12, fontWeight: 700, color: INK3, width: 22 }}>#{c.rank}</span>
             <span style={{ flex: 1, fontSize: 12.5, fontWeight: 700, color: INK }}>{c.name}<span style={{ fontSize: 9.5, color: INK3, fontWeight: 500, marginLeft: 8 }}>{c.csf} · {c.cis}</span></span>
-            <span style={{ width: 120 }}><Bar value={c.riskContribution} color={c.riskContribution >= 80 ? '#C0392B' : c.riskContribution >= 60 ? '#A85B2E' : '#B07C2E'} /></span>
-            <span style={{ fontSize: 13, fontWeight: 800, color: c.riskContribution >= 80 ? '#C0392B' : '#A85B2E', width: 30, textAlign: 'right' }}>{c.riskContribution}</span>
+            <span style={{ width: 120 }}><Bar value={c.riskContribution} color={c.riskContribution >= 80 ? '#cf222e' : c.riskContribution >= 60 ? '#c2410c' : '#9a6700'} /></span>
+            <span style={{ fontSize: 13, fontWeight: 800, color: c.riskContribution >= 80 ? '#cf222e' : '#c2410c', width: 30, textAlign: 'right' }}>{c.riskContribution}</span>
           </button>
           {open === c.id && (
             <div style={{ padding: '4px 14px 14px 48px', background: PANEL, fontSize: 11.5, color: INK2, lineHeight: 1.6 }}>
@@ -708,7 +726,7 @@ function Controls({ rows }) {
               </div>
               <div>Threat relevance: {c.threatRelevance}</div>
               <div>Evidence: {c.evidence}</div>
-              <div style={{ marginTop: 6, color: '#1f8a4c', fontWeight: 600 }}>→ {c.action}</div>
+              <div style={{ marginTop: 6, color: '#1a7f37', fontWeight: 600 }}>→ {c.action}</div>
             </div>
           )}
         </div>
@@ -736,23 +754,23 @@ function Thresholds({ board }) {
   return (
     <div>
       <div style={{ fontSize: 12, color: INK2, marginBottom: 12 }}>
-        <strong style={{ color: board.breaches ? '#C0392B' : '#1f8a4c' }}>{board.breaches} of {board.total}</strong> thresholds breached ({board.critical} critical). Breaches are risk-appetite violations — they lead the list below.
+        <strong style={{ color: board.breaches ? '#cf222e' : '#1a7f37' }}>{board.breaches} of {board.total}</strong> thresholds breached ({board.critical} critical). Breaches are risk-appetite violations — they lead the list below.
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 8 }}>
         {sorted.map((t) => {
           const breach = t.status === 'Breach';
           return (
-            <div key={t.id} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${breach ? SEV[t.breachSeverity] : '#1f8a4c'}`, borderRadius: 6, padding: '10px 13px' }}>
+            <div key={t.id} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${breach ? SEV[t.breachSeverity] : '#1a7f37'}`, borderRadius: 6, padding: '10px 13px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
                 <span style={{ fontSize: 12, fontWeight: 700, color: INK, display: 'inline-flex', alignItems: 'center', gap: 5 }}>{t.provenance && <Provenance prov={t.provenance} />}{t.name}</span>
-                <Pill text={breach ? t.breachSeverity : 'Within'} color={breach ? SEV[t.breachSeverity] : '#1f8a4c'} />
+                <Pill text={breach ? t.breachSeverity : 'Within'} color={breach ? SEV[t.breachSeverity] : '#1a7f37'} />
               </div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, margin: '5px 0' }}>
-                <span style={{ fontSize: 18, fontWeight: 800, color: breach ? SEV[t.breachSeverity] : '#1f8a4c' }}>{t.current}{t.unit === '%' ? '%' : ''}</span>
+                <span style={{ fontSize: 18, fontWeight: 800, color: breach ? SEV[t.breachSeverity] : '#1a7f37' }}>{t.current}{t.unit === '%' ? '%' : ''}</span>
                 <span style={{ fontSize: 11, color: INK3 }}>{t.unit !== '%' ? t.unit + ' · ' : ''}threshold {t.threshold}</span>
-                <span style={{ marginLeft: 'auto', fontSize: 10, color: t.trend === 'improving' ? '#1f8a4c' : t.trend === 'worsening' ? '#C0392B' : INK3, textTransform: 'capitalize' }}>{t.trend}</span>
+                <span style={{ marginLeft: 'auto', fontSize: 10, color: t.trend === 'improving' ? '#1a7f37' : t.trend === 'worsening' ? '#cf222e' : INK3, textTransform: 'capitalize' }}>{t.trend}</span>
               </div>
-              <div style={{ fontSize: 10, fontWeight: 600, color: breach ? SEV[t.breachSeverity] : '#1f8a4c' }}>{gap(t)}</div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: breach ? SEV[t.breachSeverity] : '#1a7f37' }}>{gap(t)}</div>
               {breach && <div style={{ fontSize: 10.5, color: INK2, marginTop: 4 }}>→ {t.action}</div>}
               <div style={{ fontSize: 9.5, color: INK3, marginTop: 4 }}>{t.policyRef}</div>
             </div>
@@ -770,11 +788,11 @@ function Actions({ queue, attention }) {
       <div>
         <div style={{ fontSize: 11, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Action-Now Queue <span style={{ fontWeight: 400, textTransform: 'none' }}>(ranked by severity × urgency × impact × threat × confidence)</span></div>
         {queue.map((a) => (
-          <div key={a.id} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${a.escalation ? '#C0392B' : numSev(a.severity) === 'High' ? '#A85B2E' : '#B07C2E'}`, borderRadius: 6, padding: '11px 13px', marginBottom: 8 }}>
+          <div key={a.id} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${a.escalation ? '#cf222e' : numSev(a.severity) === 'High' ? '#c2410c' : '#9a6700'}`, borderRadius: 6, padding: '11px 13px', marginBottom: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 14, fontWeight: 800, color: a.rank <= 2 ? '#C0392B' : INK3, width: 24 }}>#{a.rank}</span>
+              <span style={{ fontSize: 14, fontWeight: 800, color: a.rank <= 2 ? '#cf222e' : INK3, width: 24 }}>#{a.rank}</span>
               <span style={{ flex: 1, fontSize: 12.5, fontWeight: 700, color: INK }}>{a.action}</span>
-              {a.escalation && <Pill text="Escalate" color="#C0392B" />}
+              {a.escalation && <Pill text="Escalate" color="#cf222e" />}
             </div>
             <div style={{ fontSize: 11, color: INK2, marginTop: 5, lineHeight: 1.5 }}>Why now: {a.whyNow}</div>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 10.5, color: INK3, marginTop: 6 }}>
@@ -799,7 +817,7 @@ function Actions({ queue, attention }) {
               <Pill text={a.severity} color={SEV[a.severity]} />
             </div>
             <div style={{ fontSize: 11, color: INK2, marginTop: 5 }}>{a.businessImpact}</div>
-            <div style={{ fontSize: 10.5, color: '#1f8a4c', fontWeight: 600, marginTop: 5 }}>→ Decision needed: {a.decision}</div>
+            <div style={{ fontSize: 10.5, color: '#1a7f37', fontWeight: 600, marginTop: 5 }}>→ Decision needed: {a.decision}</div>
             <div style={{ fontSize: 10, color: INK3, marginTop: 4 }}>{a.owner} · {a.targetDate} · {a.escalationPath}{a.blockers ? ` · blocker: ${a.blockers}` : ''}</div>
             <RiskDecision sourceRef={`attn:${a.id}`} title={a.title} recommendation={a.decision} owner={a.owner} escalationPath={a.escalationPath} severity={a.severity} processName={a.process} />
           </div>
@@ -817,7 +835,7 @@ function Processes({ procs }) {
     // risk fields: High = bad; coverage fields: High = good
     const good = isRisk ? (v === 'Low') : (v === 'High');
     const bad = isRisk ? (v === 'High') : (v === 'Low');
-    return bad ? '#C0392B' : good ? '#1f8a4c' : '#B07C2E';
+    return bad ? '#cf222e' : good ? '#1a7f37' : '#9a6700';
   };
   const isRisk = (k) => /Risk/.test(k);
   return (
@@ -886,11 +904,11 @@ function Readiness({ readiness, investments, peers, emerging }) {
             <div key={iv.id} style={{ border: `1px solid ${HAIR}`, borderRadius: 6, padding: '11px 13px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: 12, fontWeight: 700, color: INK, display: 'inline-flex', alignItems: 'center', gap: 5 }}>{iv.provenance && <Provenance prov={iv.provenance} />}{iv.name}</span><span style={{ fontSize: 11, color: INK3 }}>{iv.spend}</span></div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '6px 0', fontSize: 11 }}>
-                <span style={{ color: INK3 }}>risk {iv.baselineRisk}</span><span style={{ color: '#E8631A' }}>→</span><span style={{ fontWeight: 700, color: '#1f8a4c' }}>{iv.currentRisk}</span>
-                <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, color: '#1f8a4c' }}>−{iv.riskReduction} pts</span>
+                <span style={{ color: INK3 }}>risk {iv.baselineRisk}</span><span style={{ color: '#c2410c' }}>→</span><span style={{ fontWeight: 700, color: '#1a7f37' }}>{iv.currentRisk}</span>
+                <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, color: '#1a7f37' }}>−{iv.riskReduction} pts</span>
               </div>
               <div style={{ fontSize: 10.5, color: INK2 }}>{iv.riskArea} · +{iv.futureReduction} expected{iv.blockers ? ` · blocker: ${iv.blockers}` : ''}</div>
-              {/Approve|Fund|Mandate/.test(iv.decision) && <div style={{ fontSize: 10.5, color: '#C0392B', fontWeight: 600, marginTop: 4 }}>Decision: {iv.decision}</div>}
+              {/Approve|Fund|Mandate/.test(iv.decision) && <div style={{ fontSize: 10.5, color: '#cf222e', fontWeight: 600, marginTop: 4 }}>Decision: {iv.decision}</div>}
             </div>
           ))}
         </div>
@@ -902,7 +920,7 @@ function Readiness({ readiness, investments, peers, emerging }) {
             <div key={p.domain} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
               <span style={{ flex: 1, fontSize: 11.5, color: INK }}>{p.domain}</span>
               <span style={{ fontSize: 11, color: INK3 }}>us {p.us} · peer {p.peerMedian}</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#C0392B', width: 36, textAlign: 'right' }}>{p.gap}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#cf222e', width: 36, textAlign: 'right' }}>{p.gap}</span>
             </div>
           ))}
         </div>
@@ -911,7 +929,7 @@ function Readiness({ readiness, investments, peers, emerging }) {
           {emerging.map((e) => (
             <div key={e.id} style={{ border: `1px solid ${HAIR}`, borderRadius: 5, padding: '8px 10px', marginBottom: 6 }}>
               <div style={{ fontSize: 11.5, fontWeight: 700, color: INK }}>{e.risk}</div>
-              <div style={{ fontSize: 10, color: INK2, marginTop: 2 }}>Velocity <strong style={{ color: '#C0392B' }}>{e.velocity}</strong> · our adaptation <strong>{e.ourAdaptation}</strong> — {e.note}</div>
+              <div style={{ fontSize: 10, color: INK2, marginTop: 2 }}>Velocity <strong style={{ color: '#cf222e' }}>{e.velocity}</strong> · our adaptation <strong>{e.ourAdaptation}</strong> — {e.note}</div>
             </div>
           ))}
         </div>
@@ -932,7 +950,7 @@ function Hidden({ risks }) {
           <div style={{ fontSize: 10.5, color: INK3, marginTop: 6 }}>{h.domain} · {h.process}</div>
           <div style={{ fontSize: 11, color: INK, marginTop: 5 }}>Impact: {h.impact}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 7 }}>
-            <Pill text={h.formalAcceptance === false ? 'No formal acceptance' : h.formalAcceptance === 'expired' ? 'Exception expired' : 'Accepted'} color={h.formalAcceptance === true ? '#1f8a4c' : '#C0392B'} />
+            <Pill text={h.formalAcceptance === false ? 'No formal acceptance' : h.formalAcceptance === 'expired' ? 'Exception expired' : 'Accepted'} color={h.formalAcceptance === true ? '#1a7f37' : '#cf222e'} />
           </div>
           <div style={{ fontSize: 10.5, color: '#7c3aed', fontWeight: 600, marginTop: 6 }}>→ {h.escalation}</div>
           <RiskDecision sourceRef={`hidden:${h.id}`} title={h.risk} recommendation={h.escalation}

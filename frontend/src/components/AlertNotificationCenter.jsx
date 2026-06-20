@@ -144,9 +144,9 @@ const AlertNotificationCenter = ({ api_url, authToken, orgId }) => {
       case 'Critical': return '#DC2626';
       case 'High': return '#F59E0B';
       case 'Medium': return '#EAB308';
-      case 'Low': return '#3B82F6';
-      case 'Info': return '#6B7280';
-      default: return '#6B7280';
+      case 'Low': return '#5e6ad2';
+      case 'Info': return '#5c6066';
+      default: return '#5c6066';
     }
   };
 
@@ -155,7 +155,7 @@ const AlertNotificationCenter = ({ api_url, authToken, orgId }) => {
       case 'Critical': return '#FEF2F2';
       case 'High': return '#FFFBEB';
       case 'Medium': return '#FEFCE8';
-      case 'Low': return '#EFF6FF';
+      case 'Low': return '#f3f4fc';
       case 'Info': return '#F3F4F6';
       default: return '#F3F4F6';
     }
@@ -211,7 +211,7 @@ const AlertNotificationCenter = ({ api_url, authToken, orgId }) => {
       <div style={{
         padding: '2rem',
         textAlign: 'center',
-        color: '#6B7280'
+        color: '#5c6066'
       }}>
         Loading alerts...
       </div>
@@ -229,7 +229,7 @@ const AlertNotificationCenter = ({ api_url, authToken, orgId }) => {
         <div style={{ marginBottom: 8, fontSize: 14, fontWeight: 600 }}>
           Error loading alerts
         </div>
-        <div style={{ fontSize: 12, color: '#6B7280' }}>{error}</div>
+        <div style={{ fontSize: 12, color: '#5c6066' }}>{error}</div>
       </div>
     );
   }
@@ -244,19 +244,19 @@ const AlertNotificationCenter = ({ api_url, authToken, orgId }) => {
       <div style={{
         marginBottom: 16,
         paddingBottom: 12,
-        borderBottom: '1px solid #E5E7EB'
+        borderBottom: '1px solid #ebecf0'
       }}>
         <div style={{
           fontSize: 18,
           fontWeight: 700,
-          color: '#111827',
+          color: '#0b0c0e',
           marginBottom: 4
         }}>
           Alert Notification Center
         </div>
         <div style={{
           fontSize: 12,
-          color: '#6B7280'
+          color: '#5c6066'
         }}>
           {totalCount} total alerts • {alertItems.filter(a => !a.acknowledged_at).length} unacknowledged
         </div>
@@ -283,18 +283,18 @@ const AlertNotificationCenter = ({ api_url, authToken, orgId }) => {
         padding: 12,
         backgroundColor: '#F9FAFB',
         borderRadius: 8,
-        border: '1px solid #E5E7EB'
+        border: '1px solid #ebecf0'
       }}>
         <select
           value={filters.severity}
           onChange={(e) => handleFilterChange('severity', e.target.value)}
           style={{
             padding: '6px 10px',
-            border: '1px solid #D1D5DB',
+            border: '1px solid #d7d9de',
             borderRadius: 6,
             fontSize: 12,
             backgroundColor: '#FFFFFF',
-            color: '#374151'
+            color: '#5c6066'
           }}
         >
           <option value="all">All Severities</option>
@@ -310,11 +310,11 @@ const AlertNotificationCenter = ({ api_url, authToken, orgId }) => {
           onChange={(e) => handleFilterChange('type', e.target.value)}
           style={{
             padding: '6px 10px',
-            border: '1px solid #D1D5DB',
+            border: '1px solid #d7d9de',
             borderRadius: 6,
             fontSize: 12,
             backgroundColor: '#FFFFFF',
-            color: '#374151'
+            color: '#5c6066'
           }}
         >
           <option value="all">All Types</option>
@@ -330,11 +330,11 @@ const AlertNotificationCenter = ({ api_url, authToken, orgId }) => {
           onChange={(e) => handleFilterChange('acknowledged', e.target.value)}
           style={{
             padding: '6px 10px',
-            border: '1px solid #D1D5DB',
+            border: '1px solid #d7d9de',
             borderRadius: 6,
             fontSize: 12,
             backgroundColor: '#FFFFFF',
-            color: '#374151'
+            color: '#5c6066'
           }}
         >
           <option value="all">All Status</option>
@@ -347,11 +347,11 @@ const AlertNotificationCenter = ({ api_url, authToken, orgId }) => {
           onChange={(e) => handleFilterChange('dateRange', e.target.value)}
           style={{
             padding: '6px 10px',
-            border: '1px solid #D1D5DB',
+            border: '1px solid #d7d9de',
             borderRadius: 6,
             fontSize: 12,
             backgroundColor: '#FFFFFF',
-            color: '#374151'
+            color: '#5c6066'
           }}
         >
           <option value="7d">Last 7 days</option>
@@ -370,11 +370,11 @@ const AlertNotificationCenter = ({ api_url, authToken, orgId }) => {
             flex: 1,
             minWidth: 200,
             padding: '6px 10px',
-            border: '1px solid #D1D5DB',
+            border: '1px solid #d7d9de',
             borderRadius: 6,
             fontSize: 12,
             backgroundColor: '#FFFFFF',
-            color: '#374151'
+            color: '#5c6066'
           }}
         />
 
@@ -384,7 +384,7 @@ const AlertNotificationCenter = ({ api_url, authToken, orgId }) => {
             disabled={acknowledging}
             style={{
               padding: '6px 12px',
-              backgroundColor: acknowledging ? '#F5A623' : '#2563EB',
+              backgroundColor: acknowledging ? '#F5A623' : '#5e6ad2',
               border: 'none',
               color: '#FFFFFF',
               borderRadius: 6,
@@ -408,10 +408,10 @@ const AlertNotificationCenter = ({ api_url, authToken, orgId }) => {
           <div style={{
             padding: '3rem',
             textAlign: 'center',
-            color: '#6B7280',
+            color: '#5c6066',
             backgroundColor: '#F9FAFB',
             borderRadius: 8,
-            border: '1px dashed #D1D5DB'
+            border: '1px dashed #d7d9de'
           }}>
             <div style={{ fontSize: 32, marginBottom: 8 }}>🔔</div>
             <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>
@@ -428,7 +428,7 @@ const AlertNotificationCenter = ({ api_url, authToken, orgId }) => {
               <div style={{
                 padding: '8px 12px',
                 backgroundColor: '#F3F4F6',
-                borderBottom: '1px solid #E5E7EB',
+                borderBottom: '1px solid #ebecf0',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8
@@ -439,7 +439,7 @@ const AlertNotificationCenter = ({ api_url, authToken, orgId }) => {
                   onChange={toggleAllAlerts}
                   style={{ cursor: 'pointer' }}
                 />
-                <span style={{ fontSize: 11, color: '#6B7280' }}>
+                <span style={{ fontSize: 11, color: '#5c6066' }}>
                   {selectedAlerts.length} selected
                 </span>
               </div>
@@ -452,7 +452,7 @@ const AlertNotificationCenter = ({ api_url, authToken, orgId }) => {
                 className={`alert-item ${alert.acknowledged_at ? 'acknowledged' : ''}`}
                 style={{
                   borderLeft: `4px solid ${getSeverityColor(alert.severity)}`,
-                  borderBottom: '1px solid #E5E7EB',
+                  borderBottom: '1px solid #ebecf0',
                   padding: 12,
                   backgroundColor: alert.acknowledged_at ? '#F9FAFB' : '#FFFFFF',
                   display: 'flex',
@@ -488,17 +488,17 @@ const AlertNotificationCenter = ({ api_url, authToken, orgId }) => {
                     >
                       {alert.severity}
                     </span>
-                    <span className="alert-type" style={{ fontSize: 11, fontWeight: 600, color: '#374151' }}>
+                    <span className="alert-type" style={{ fontSize: 11, fontWeight: 600, color: '#5c6066' }}>
                       {alert.alert_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                     </span>
-                    <span className="alert-time" style={{ fontSize: 10, color: '#6B7280', marginLeft: 'auto' }}>
+                    <span className="alert-time" style={{ fontSize: 10, color: '#5c6066', marginLeft: 'auto' }}>
                       {formatRelativeTime(alert.created_at)}
                     </span>
                   </div>
 
                   <div className="alert-message" style={{
                     fontSize: 13,
-                    color: '#1F2937',
+                    color: '#1c1f26',
                     marginBottom: 6,
                     lineHeight: 1.4
                   }}>
@@ -506,12 +506,12 @@ const AlertNotificationCenter = ({ api_url, authToken, orgId }) => {
                   </div>
 
                   {alert.vendor_name && (
-                    <div className="alert-vendor" style={{ fontSize: 11, color: '#6B7280' }}>
+                    <div className="alert-vendor" style={{ fontSize: 11, color: '#5c6066' }}>
                       Vendor:{' '}
                       <a
                         href={`/vendors/${alert.vendor_id}`}
                         onClick={(e) => e.stopPropagation()}
-                        style={{ color: '#2563EB', textDecoration: 'none' }}
+                        style={{ color: '#5e6ad2', textDecoration: 'none' }}
                       >
                         {alert.vendor_name}
                       </a>
@@ -543,7 +543,7 @@ const AlertNotificationCenter = ({ api_url, authToken, orgId }) => {
                   disabled={acknowledging || alert.acknowledged_at}
                   style={{
                     padding: '6px 12px',
-                    backgroundColor: alert.acknowledged_at ? '#D1D5DB' : '#2563EB',
+                    backgroundColor: alert.acknowledged_at ? '#d7d9de' : '#5e6ad2',
                     border: 'none',
                     color: '#FFFFFF',
                     borderRadius: 6,
@@ -569,10 +569,10 @@ const AlertNotificationCenter = ({ api_url, authToken, orgId }) => {
           alignItems: 'center',
           padding: '12px 16px',
           backgroundColor: '#F9FAFB',
-          borderTop: '1px solid #E5E7EB',
+          borderTop: '1px solid #ebecf0',
           borderRadius: '0 0 8px 8px'
         }}>
-          <div style={{ fontSize: 11, color: '#6B7280' }}>
+          <div style={{ fontSize: 11, color: '#5c6066' }}>
             Showing {(currentPage - 1) * 50 + 1}-{Math.min(currentPage * 50, totalCount)} of {totalCount}
           </div>
 
@@ -583,7 +583,7 @@ const AlertNotificationCenter = ({ api_url, authToken, orgId }) => {
               style={{
                 padding: '4px 8px',
                 backgroundColor: currentPage === 1 ? '#F3F4F6' : '#FFFFFF',
-                border: '1px solid #D1D5DB',
+                border: '1px solid #d7d9de',
                 borderRadius: 4,
                 cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
                 fontSize: 11
@@ -597,7 +597,7 @@ const AlertNotificationCenter = ({ api_url, authToken, orgId }) => {
               style={{
                 padding: '4px 8px',
                 backgroundColor: currentPage === 1 ? '#F3F4F6' : '#FFFFFF',
-                border: '1px solid #D1D5DB',
+                border: '1px solid #d7d9de',
                 borderRadius: 4,
                 cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
                 fontSize: 11
@@ -609,7 +609,7 @@ const AlertNotificationCenter = ({ api_url, authToken, orgId }) => {
               padding: '4px 12px',
               fontSize: 11,
               fontWeight: 600,
-              color: '#374151'
+              color: '#5c6066'
             }}>
               Page {currentPage} of {totalPages}
             </span>
@@ -619,7 +619,7 @@ const AlertNotificationCenter = ({ api_url, authToken, orgId }) => {
               style={{
                 padding: '4px 8px',
                 backgroundColor: currentPage === totalPages ? '#F3F4F6' : '#FFFFFF',
-                border: '1px solid #D1D5DB',
+                border: '1px solid #d7d9de',
                 borderRadius: 4,
                 cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
                 fontSize: 11
@@ -633,7 +633,7 @@ const AlertNotificationCenter = ({ api_url, authToken, orgId }) => {
               style={{
                 padding: '4px 8px',
                 backgroundColor: currentPage === totalPages ? '#F3F4F6' : '#FFFFFF',
-                border: '1px solid #D1D5DB',
+                border: '1px solid #d7d9de',
                 borderRadius: 4,
                 cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
                 fontSize: 11

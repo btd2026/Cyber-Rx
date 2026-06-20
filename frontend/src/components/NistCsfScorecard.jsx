@@ -17,6 +17,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS, FONTS } from '../theme';
 import CsfRankings from './CsfRankings';
 
 // Ticket #05 — NIST CSF maturity (1.00–4.00) ↔ CMMI level (0–5) crosswalk,
@@ -24,14 +25,15 @@ import CsfRankings from './CsfRankings';
 const CMMI_NAMES = ['Not Performed', 'Performed Informally', 'Planned & Tracked', 'Well Defined', 'Quantitatively Controlled', 'Continuously Improving'];
 function cmmiLevel(maturity) { return maturity == null ? null : Math.max(0, Math.min(5, Math.round(((maturity - 1) / 3) * 5))); }
 
-const INK = '#0f172a';
-const INK_2 = '#475569';
-const INK_3 = '#94a3b8';
-const HAIRLINE = '#e2e8f0';
-const TIER_COLORS = { 1: '#9E3B32', 2: '#B07C2E', 3: '#6E7F49', 4: '#31604B' };
+const INK = COLORS.ink;
+const INK_2 = COLORS.ink2;
+const INK_3 = COLORS.ink3;
+const HAIRLINE = COLORS.hair;
+// Maturity-tier scale (graduated 1→4) — a domain status palette; meaning preserved.
+const TIER_COLORS = { 1: COLORS.bad, 2: COLORS.warn, 3: '#6E7F49', 4: COLORS.good };
 const TIER_NAMES = { 1: 'Partial', 2: 'Risk Informed', 3: 'Repeatable', 4: 'Adaptive' };
-const NA_COLOR = '#8B95A3';
-const PANEL_BG = '#0f1b2d';
+const NA_COLOR = COLORS.ink3;
+const PANEL_BG = COLORS.navy1;
 const THRESHOLD = 3.0;
 const TRACK_MIN = 1, TRACK_MAX = 4;
 
@@ -116,7 +118,7 @@ export default function NistCsfScorecard(props) {
   if (loading) return <div style={{ padding: 28, color: INK_3, fontSize: 13 }}>Computing live CSF 2.0 assessment…</div>;
   if (error || !data) {
     return (
-      <div style={{ padding: 28, color: '#9E3B32', fontSize: 13 }}>
+      <div style={{ padding: 28, color: COLORS.bad, fontSize: 13 }}>
         Could not compute the CSF assessment: {error || 'no data'}
         <button onClick={load} style={{ ...ghostBtn, marginLeft: 12 }}>Retry</button>
       </div>
@@ -162,7 +164,7 @@ export default function NistCsfScorecard(props) {
           <div style={{ fontSize: 10, fontWeight: 600, color: INK_3, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 6 }}>
             Current-State Assessment · NIST Cybersecurity Framework 2.0
           </div>
-          <h2 style={{ margin: 0, fontSize: 21, fontWeight: 600, color: INK, letterSpacing: '-0.01em' }}>
+          <h2 style={{ margin: 0, fontSize: 21, fontWeight: 600, color: INK, letterSpacing: '-0.01em', fontFamily: FONTS.display }}>
             Cyber Maturity Profile
           </h2>
           <div style={{ color: INK_2, fontSize: 12, marginTop: 6, maxWidth: 620, lineHeight: 1.55 }}>
@@ -174,11 +176,11 @@ export default function NistCsfScorecard(props) {
         </div>
         <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 24 }}>
           <div style={{ display: 'inline-flex', alignItems: 'stretch', background: PANEL_BG, borderRadius: 4, overflow: 'hidden' }}>
-            <span style={{ background: data.overall.maturity == null ? NA_COLOR : TIER_COLORS[data.overall.tier], color: '#fff', fontWeight: 600, fontSize: 19, fontVariantNumeric: 'tabular-nums', padding: '10px 14px', display: 'flex', alignItems: 'center' }}>
+            <span style={{ background: data.overall.maturity == null ? NA_COLOR : TIER_COLORS[data.overall.tier], color: '#fff', fontWeight: 600, fontSize: 19, fontFamily: FONTS.mono, fontVariantNumeric: 'tabular-nums', padding: '10px 14px', display: 'flex', alignItems: 'center' }}>
               {fmt(data.overall.maturity)}
             </span>
-            <span style={{ color: '#e2e8f0', fontWeight: 500, fontSize: 12, padding: '10px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: 1.35 }}>
-              <span style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 9, color: '#8fa3bd' }}>Tier · CMMI</span>
+            <span style={{ color: '#ebecf0', fontWeight: 500, fontSize: 12, padding: '10px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: 1.35 }}>
+              <span style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 9, color: COLORS.accent }}>Tier · CMMI</span>
               <span>{data.overall.tier ? `Tier ${data.overall.tier}` : 'Not assessed'}{cmmiLevel(data.overall.maturity) != null ? ` · CMMI ${cmmiLevel(data.overall.maturity)}` : ''}</span>
             </span>
           </div>
@@ -196,7 +198,7 @@ export default function NistCsfScorecard(props) {
         <div style={{ width: 170, flexShrink: 0 }} />
         <div style={{ flex: 1, position: 'relative', height: 16 }}>
           {[1, 1.5, 2, 2.5, 3, 3.5, 4].map((t) => (
-            <span key={t} style={{ position: 'absolute', left: `calc(${pct(t)}% - 10px)`, fontSize: 9, color: t === THRESHOLD ? INK_2 : INK_3, fontWeight: t === THRESHOLD ? 600 : 400, fontVariantNumeric: 'tabular-nums' }}>
+            <span key={t} style={{ position: 'absolute', left: `calc(${pct(t)}% - 10px)`, fontSize: 9, color: t === THRESHOLD ? INK_2 : INK_3, fontWeight: t === THRESHOLD ? 600 : 400, fontFamily: FONTS.mono, fontVariantNumeric: 'tabular-nums' }}>
               {t.toFixed(2)}
             </span>
           ))}
@@ -211,14 +213,14 @@ export default function NistCsfScorecard(props) {
         const rows = laneRows(assessed);
         const laneH = 36 + (rows.length ? Math.max(...rows.map((r) => r.row)) * 26 : 0) + 14;
         return (
-          <div key={f.id} style={{ display: 'flex', alignItems: 'stretch', gap: 20, borderTop: `1px solid #f1f5f9` }}>
+          <div key={f.id} style={{ display: 'flex', alignItems: 'stretch', gap: 20, borderTop: `1px solid #f0f1f4` }}>
             {/* Function rail */}
             <div style={{ width: 170, flexShrink: 0, padding: '12px 0' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                <span style={{ fontSize: 17, fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: f.maturity == null ? NA_COLOR : TIER_COLORS[f.tier] }}>
+                <span style={{ fontSize: 17, fontWeight: 600, fontFamily: FONTS.mono, fontVariantNumeric: 'tabular-nums', color: f.maturity == null ? NA_COLOR : TIER_COLORS[f.tier] }}>
                   {fmt(f.maturity)}
                 </span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: INK }}>{f.name}</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: INK, fontFamily: FONTS.display }}>{f.name}</span>
               </div>
               <div style={{ fontSize: 9.5, color: INK_3, marginTop: 3, letterSpacing: '0.02em' }}>
                 {f.label || 'Not assessed'} · {f.assessedCount}/{f.categoryCount} categories
@@ -246,7 +248,7 @@ export default function NistCsfScorecard(props) {
                 <button key={c.id} onClick={() => setSel(sel === c.id ? null : c.id)}
                   title={`${c.name} — not assessed; click to provide evidence`}
                   style={{
-                    background: sel === c.id ? '#f1f5f9' : 'transparent', border: `1px dashed ${INK_3}88`,
+                    background: sel === c.id ? '#f0f1f4' : 'transparent', border: `1px dashed ${INK_3}88`,
                     color: INK_2, borderRadius: 3, padding: '2px 8px', fontSize: 9, fontWeight: 600,
                     letterSpacing: '0.04em', cursor: 'pointer',
                   }}>
@@ -268,7 +270,7 @@ export default function NistCsfScorecard(props) {
               </div>
               <div style={{ fontWeight: 600, color: INK, fontSize: 15 }}>
                 {selCat.name}
-                <span style={{ marginLeft: 12, fontSize: 12, fontWeight: 600, color: tierColor(selCat), fontVariantNumeric: 'tabular-nums' }}>
+                <span style={{ marginLeft: 12, fontSize: 12, fontWeight: 600, color: tierColor(selCat), fontFamily: FONTS.mono, fontVariantNumeric: 'tabular-nums' }}>
                   {selCat.maturity == null ? 'Not assessed' : `${selCat.maturity.toFixed(2)} — ${selCat.label}`}
                 </span>
               </div>
@@ -288,7 +290,7 @@ export default function NistCsfScorecard(props) {
                     Suggested evidence: {e.suggestedDoc}{e.docName ? ` — on file: ${e.docName}` : ''}
                   </div>
                   {e.answered ? (
-                    <span style={{ fontSize: 10, fontWeight: 600, color: '#31604B', border: '1px solid #31604B40', borderRadius: 3, padding: '3px 10px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: COLORS.good, border: `1px solid ${COLORS.good}40`, borderRadius: 3, padding: '3px 10px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                       Answered · {e.answer}
                     </span>
                   ) : (
@@ -354,6 +356,6 @@ const ANSWER_OPTIONS = {
 function answerOptions(key) { return ANSWER_OPTIONS[key]; }
 
 const ghostBtn = {
-  background: '#fff', border: '1px solid #cbd5e1', color: '#334155',
+  background: '#fff', border: '1px solid #d7d9de', color: '#5c6066',
   borderRadius: 3, padding: '5px 12px', fontSize: 11, cursor: 'pointer', fontWeight: 500,
 };

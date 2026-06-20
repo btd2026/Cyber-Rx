@@ -8,9 +8,10 @@
  */
 
 import React, { useState, useCallback } from 'react';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e2e8f0', PANEL = '#f8fafc', NAVY = '#0f1b2d';
-const GREEN = '#1f8a4c', AMBER = '#B07C2E', RED = '#C0392B';
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
+const GREEN = COLORS.good, AMBER = COLORS.warn, RED = COLORS.bad;
 
 function ctx(props) {
   const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
@@ -68,7 +69,7 @@ export default function IngestionUploader(props) {
   return (
     <div style={{ border: `1px solid ${HAIR}`, borderRadius: 10, padding: '14px 16px', background: '#fff' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>{label || (sourceKind === 'cmdb' ? 'Import applications (CMDB file)' : 'Upload process inventory / BIA')}</div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: INK, fontFamily: FONTS.display }}>{label || (sourceKind === 'cmdb' ? 'Import applications (CMDB file)' : 'Upload process inventory / BIA')}</div>
         <label style={{ background: NAVY, color: '#fff', borderRadius: 7, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}>
           {busy ? 'Working…' : '⤒ Choose file'}
           <input type="file" accept=".csv,.tsv,.json,.xml,.xlsx" disabled={busy} style={{ display: 'none' }} onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ''; onFile(f); }} />
@@ -84,7 +85,7 @@ export default function IngestionUploader(props) {
 
       {preview && !result && (
         <div style={{ marginTop: 12 }}>
-          <div style={{ fontSize: 11, color: INK3, marginBottom: 6 }}>Detected <strong style={{ color: INK }}>{preview.format}</strong> · {preview.rowCount} rows · review the field mapping:</div>
+          <div style={{ fontSize: 11, color: INK3, marginBottom: 6 }}>Detected <strong style={{ color: INK }}>{preview.format}</strong> · <span style={{ fontFamily: FONTS.mono }}>{preview.rowCount}</span> rows · review the field mapping:</div>
           <div style={{ display: 'grid', gap: 6 }}>
             {fields.map((k) => {
               const conf = preview.mapping[k] ? preview.mapping[k].confidence : null;
@@ -97,7 +98,7 @@ export default function IngestionUploader(props) {
                     <option value="">— not mapped —</option>
                     {(preview.headers || []).map((h) => <option key={h} value={h}>{h}</option>)}
                   </select>
-                  {conf != null && <span style={{ width: 44, textAlign: 'right', fontSize: 11, fontWeight: 700, color: confColor(conf) }}>{Math.round(conf * 100)}%</span>}
+                  {conf != null && <span style={{ width: 44, textAlign: 'right', fontSize: 11, fontWeight: 700, fontFamily: FONTS.mono, color: confColor(conf) }}>{Math.round(conf * 100)}%</span>}
                 </div>
               );
             })}

@@ -5,9 +5,10 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc';
-const TONE = { good: '#1f8a4c', warn: '#B07C2E', bad: '#C0392B', flat: '#475569' };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+const TONE = { good: COLORS.good, warn: COLORS.warn, bad: COLORS.bad, flat: COLORS.ink2 };
 
 export default function PlatformValue({ orgId, authToken, apiUrl }) {
   const [open, setOpen] = useState(false);
@@ -23,13 +24,13 @@ export default function PlatformValue({ orgId, authToken, apiUrl }) {
   return (
     <>
       <button onClick={() => setOpen(true)} title="What CyberRX has delivered to date"
-        style={{ background: 'transparent', color: '#cbd5e1', border: '1px solid #2c4f7c', borderRadius: 6, padding: '9px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>📈 Value realized</button>
+        style={{ background: '#ffffff', color: '#5c6066', border: '1px solid #dfe1e6', borderRadius: 7, padding: '8px 13px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>📈 Value realized</button>
 
       {open && (
-        <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(8,15,28,0.5)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '40px 16px', overflowY: 'auto' }}>
+        <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(11, 12, 14,0.5)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '40px 16px', overflowY: 'auto' }}>
           <div onClick={(e) => e.stopPropagation()} style={{ background: '#fff', borderRadius: 12, width: 'min(720px, 96vw)', boxShadow: '0 24px 64px rgba(0,0,0,0.3)', padding: '20px 22px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: INK }}>Value realized</h3>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: INK, fontFamily: FONTS.display }}>Value realized</h3>
               <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', fontSize: 22, color: INK3, cursor: 'pointer', lineHeight: 1 }}>×</button>
             </div>
             {!d ? <div style={{ fontSize: 12, color: INK3 }}>Loading…</div> : (
@@ -39,7 +40,7 @@ export default function PlatformValue({ orgId, authToken, apiUrl }) {
                   {d.cards.map((c) => (
                     <div key={c.key} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${TONE[c.tone] || INK3}`, borderRadius: 9, background: '#fff', padding: '11px 13px' }}>
                       <div style={{ fontSize: 10.5, color: INK2 }}>{c.label}</div>
-                      <div style={{ fontSize: 22, fontWeight: 800, color: TONE[c.tone] || INK, marginTop: 2 }}>{c.value}</div>
+                      <div style={{ fontSize: 22, fontWeight: 800, color: TONE[c.tone] || INK, marginTop: 2, fontFamily: FONTS.mono }}>{c.value}</div>
                       <div style={{ fontSize: 10, color: INK3, marginTop: 3, lineHeight: 1.4 }}>{c.sub}</div>
                     </div>
                   ))}

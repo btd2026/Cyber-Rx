@@ -64,7 +64,11 @@ async function getPosition(orgId) {
     `${breaches.length} of ${categories.length} categories breach appetite${breaches.length ? ` (${breaches.map((b) => b.name).join(', ')})` : ''}. ` +
     `The cyber position is the aggregate of the same ${cards.length} shared events every other leader works from — ${usd(aggLoss)} modeled expected loss. ` +
     `Appetite is set centrally here and propagates to every lens.`;
-  const narration = `Enterprise risk position, CRO. ` + brief;
+  const narration = `${cyber.aboveAppetite ? 'This one concerns me, and here is why.' : 'This is mostly good news, with one caution.'} ` +
+    `Normalized beside every other enterprise risk, cyber now scores ${cyber.score} on likelihood times impact against a tolerance of ${tolerance} — ${cyber.aboveAppetite ? 'above the line, so it belongs in the same conversation as your top enterprise risks' : 'inside appetite, where it should be'}. ` +
+    `${breaches.length > 1 ? `It is not alone: ${breaches.length} categories breach appetite — ${breaches.map((b) => b.name).join(', ')} — which is exactly the kind of correlated stack that hurts all at once.` : 'The rest of the portfolio is holding inside appetite.'} ` +
+    `${undecided ? `And ${undecided} cyber exposure(s) still have no recorded decision, so we are carrying risk no one formally chose to accept.` : ''} ` +
+    `What I would do: ${cyber.aboveAppetite || undecided ? 'either fund the breaches down or document a deliberate acceptance — and confirm the central appetite here still reflects what the board actually wants to tolerate.' : 'keep the appetite current and watch for the correlated categories before they move together.'}`;
 
   return {
     organizationId: orgId, generatedAt: new Date().toISOString(),

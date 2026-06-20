@@ -30,7 +30,7 @@ const VendorCard = ({ vendor, onSync, onClick, syncing = false }) => {
       medium: '#F59E0B',
       low: '#10B981'
     };
-    return colors[tier?.toLowerCase()] || '#6B7280';
+    return colors[tier?.toLowerCase()] || '#5c6066';
   };
 
   // Format timestamp
@@ -55,7 +55,7 @@ const VendorCard = ({ vendor, onSync, onClick, syncing = false }) => {
       style={{
         backgroundColor: '#FFFFFF',
         borderRadius: 12,
-        border: '1px solid #E5E7EB',
+        border: '1px solid #ebecf0',
         padding: 16,
         marginBottom: 12,
         cursor: 'pointer',
@@ -85,7 +85,7 @@ const VendorCard = ({ vendor, onSync, onClick, syncing = false }) => {
           <h3 style={{
             fontSize: 16,
             fontWeight: 600,
-            color: '#111827',
+            color: '#0b0c0e',
             margin: '0 0 4px 0',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -96,7 +96,7 @@ const VendorCard = ({ vendor, onSync, onClick, syncing = false }) => {
           {vendor.description && (
             <p style={{
               fontSize: 12,
-              color: '#6B7280',
+              color: '#5c6066',
               margin: 0,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -133,7 +133,7 @@ const VendorCard = ({ vendor, onSync, onClick, syncing = false }) => {
             alignItems: 'center',
             marginBottom: 4
           }}>
-            <span style={{ fontSize: 12, color: '#6B7280', fontWeight: 500 }}>
+            <span style={{ fontSize: 12, color: '#5c6066', fontWeight: 500 }}>
               Risk Score
             </span>
             <span style={{
@@ -178,14 +178,14 @@ const VendorCard = ({ vendor, onSync, onClick, syncing = false }) => {
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <StatusIcon status={vendor.status} size={12} />
             <span style={{
-              color: '#374151',
+              color: '#5c6066',
               fontWeight: 500,
               textTransform: 'capitalize'
             }}>
               {vendor.status}
             </span>
           </div>
-          <span style={{ color: '#6B7280' }}>
+          <span style={{ color: '#5c6066' }}>
             {formatTimestamp(vendor.lastSync)}
           </span>
         </div>
@@ -200,7 +200,7 @@ const VendorCard = ({ vendor, onSync, onClick, syncing = false }) => {
             borderRadius: 4,
             fontSize: 12,
             fontWeight: 600,
-            color: '#374151'
+            color: '#5c6066'
           }}>
             Grade: {vendor.grade}
           </div>
@@ -217,8 +217,8 @@ const VendorCard = ({ vendor, onSync, onClick, syncing = false }) => {
         style={{
           width: '100%',
           padding: '12px',
-          backgroundColor: syncing ? '#F3F4F6' : '#3B82F6',
-          color: syncing ? '#9CA3AF' : '#FFFFFF',
+          backgroundColor: syncing ? '#F3F4F6' : '#5e6ad2',
+          color: syncing ? '#8b9098' : '#FFFFFF',
           border: 'none',
           borderRadius: 8,
           fontSize: 14,
@@ -237,8 +237,8 @@ const VendorCard = ({ vendor, onSync, onClick, syncing = false }) => {
             <div style={{
               width: 16,
               height: 16,
-              border: '2px solid #9CA3AF',
-              borderTopColor: '#3B82F6',
+              border: '2px solid #8b9098',
+              borderTopColor: '#5e6ad2',
               borderRadius: '50%',
               animation: 'spin 1s linear infinite'
             }} />

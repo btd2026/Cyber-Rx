@@ -11,12 +11,13 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK_2 = '#475569', INK_3 = '#94a3b8', HAIRLINE = '#e2e8f0';
-const STATUS = { green: '#1f8a4c', amber: '#B07C2E', red: '#C0392B', 'Not assessed': '#94a3b8' };
+const INK = COLORS.ink, INK_2 = COLORS.ink2, INK_3 = COLORS.ink3, HAIRLINE = COLORS.hair;
+const STATUS = { green: COLORS.good, amber: COLORS.warn, red: COLORS.bad, 'Not assessed': COLORS.ink3 };
 const TREND = {
-  improving: { a: '▲', c: '#1f8a4c', t: 'Improving' }, deteriorating: { a: '▼', c: '#C0392B', t: 'Deteriorating' },
-  stable: { a: '▬', c: '#94a3b8', t: 'Stable' }, new: { a: '◆', c: '#2563eb', t: 'New baseline' },
+  improving: { a: '▲', c: COLORS.good, t: 'Improving' }, deteriorating: { a: '▼', c: COLORS.bad, t: 'Deteriorating' },
+  stable: { a: '▬', c: COLORS.ink3, t: 'Stable' }, new: { a: '◆', c: '#5e6ad2', t: 'New baseline' },
 };
 
 function resolveCtx(props) {
@@ -57,13 +58,13 @@ export default function CisoPostureDomains(props) {
   return (
     <div>
       {/* Overall band */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: '#0f1b2d', borderRadius: 8, padding: '14px 18px', marginBottom: 14 }}>
-        <div style={{ fontSize: 30, fontWeight: 700, color: sc(data.overall.status), fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
-          {data.overall.score}<span style={{ fontSize: 14, color: '#8fa3bd' }}>/100</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: '#f6f7f9', border: '1px solid #ebecf0', borderRadius: 8, padding: '14px 18px', marginBottom: 14 }}>
+        <div style={{ fontSize: 30, fontWeight: 700, color: sc(data.overall.status), fontFamily: FONTS.mono, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+          {data.overall.score}<span style={{ fontSize: 14, color: '#8b9098' }}>/100</span>
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ color: '#e2e8f0', fontSize: 13, fontWeight: 700 }}>Overall security posture · {data.overall.status.toUpperCase()}</div>
-          <div style={{ color: '#8fa3bd', fontSize: 11, marginTop: 2 }}>
+          <div style={{ color: '#0b0c0e', fontSize: 13, fontWeight: 700, fontFamily: FONTS.display }}>Overall security posture · {data.overall.status.toUpperCase()}</div>
+          <div style={{ color: '#8b9098', fontSize: 11, marginTop: 2 }}>
             Across 8 posture domains · <span style={{ color: TREND[data.overall.trend].c }}>{TREND[data.overall.trend].a} {TREND[data.overall.trend].t}{data.overall.delta ? ` (${data.overall.delta > 0 ? '+' : ''}${data.overall.delta} vs last period)` : ''}</span>
           </div>
         </div>
@@ -77,19 +78,19 @@ export default function CisoPostureDomains(props) {
             <div key={d.id} style={{ background: '#fff', border: `1px solid ${HAIRLINE}`, borderLeft: `4px solid ${sc(d.status)}`, borderRadius: 6, padding: '14px 16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
-                  <div style={{ fontSize: 13.5, fontWeight: 700, color: INK }}>{d.name}</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: INK, fontFamily: FONTS.display }}>{d.name}</div>
                   <div style={{ fontSize: 10.5, marginTop: 2, color: tr.c, fontWeight: 600 }}>
                     {tr.a} {tr.t}{d.delta ? ` (${d.delta > 0 ? '+' : ''}${d.delta})` : ''}
                     <span style={{ color: INK_3, fontWeight: 400, marginLeft: 8 }}>{d.metricsOutsideThreshold.length} metric(s) outside threshold</span>
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 22, fontWeight: 700, color: sc(d.status), fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{d.score}</div>
+                  <div style={{ fontSize: 22, fontWeight: 700, color: sc(d.status), fontFamily: FONTS.mono, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{d.score}</div>
                   <div style={{ fontSize: 8.5, fontWeight: 700, color: sc(d.status), textTransform: 'uppercase', letterSpacing: '0.06em' }}>{d.status}</div>
                 </div>
               </div>
               {/* score bar */}
-              <div style={{ height: 5, background: '#f1f5f9', borderRadius: 3, overflow: 'hidden', margin: '8px 0 10px' }}>
+              <div style={{ height: 5, background: '#f0f1f4', borderRadius: 3, overflow: 'hidden', margin: '8px 0 10px' }}>
                 <div style={{ width: `${d.score}%`, height: '100%', background: sc(d.status), borderRadius: 3 }} />
               </div>
               {/* top drivers */}
@@ -103,15 +104,15 @@ export default function CisoPostureDomains(props) {
               </div>
               {/* metrics drilldown */}
               <button onClick={() => setOpen(expanded ? null : d.id)}
-                style={{ marginTop: 8, background: 'transparent', border: 'none', color: '#2563eb', fontSize: 10.5, fontWeight: 600, cursor: 'pointer', padding: 0 }}>
+                style={{ marginTop: 8, background: 'transparent', border: 'none', color: '#5e6ad2', fontSize: 10.5, fontWeight: 600, cursor: 'pointer', padding: 0 }}>
                 {expanded ? '▲ Hide metrics' : `▼ All ${d.metrics.length} metrics`}
               </button>
               {expanded && (
                 <div style={{ marginTop: 6, borderTop: `1px solid ${HAIRLINE}`, paddingTop: 6 }}>
                   {d.metrics.map((m) => (
-                    <div key={m.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '3px 0', fontSize: 11, borderBottom: '1px solid #f8fafc' }}>
+                    <div key={m.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '3px 0', fontSize: 11, borderBottom: '1px solid #f6f7f9' }}>
                       <span style={{ color: INK_2 }}>{m.name}<span style={{ color: INK_3, fontSize: 9, marginLeft: 6 }}>{m.source}</span></span>
-                      <span style={{ fontWeight: 600, color: m.within ? '#1f8a4c' : '#C0392B', fontVariantNumeric: 'tabular-nums' }}>
+                      <span style={{ fontWeight: 600, color: m.within ? COLORS.good : COLORS.bad, fontFamily: FONTS.mono, fontVariantNumeric: 'tabular-nums' }}>
                         {m.value}{m.unit ? ` ${m.unit}` : ''} <span style={{ color: INK_3, fontWeight: 400 }}>/ {m.higher ? '≥' : '≤'}{m.target}</span>
                       </span>
                     </div>

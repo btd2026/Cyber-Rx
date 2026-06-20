@@ -7,10 +7,11 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc', NAVY = '#0f1b2d';
-const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
-const STAND = { good: '#1f8a4c', warn: '#B07C2E', bad: '#C0392B', unknown: INK3 };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+const SEV = { Critical: COLORS.bad, High: '#c2410c', Medium: COLORS.warn, Low: COLORS.good };
+const STAND = { good: COLORS.good, warn: COLORS.warn, bad: COLORS.bad, unknown: INK3 };
 
 // One benchmark metric: your value vs the modeled peer median / top-quartile,
 // rendered on a 0→best scale so "ahead / typical / behind" is visible at a glance.
@@ -32,7 +33,7 @@ function BenchRow({ m }) {
         </span>
       </div>
       {/* track with peer markers */}
-      <div style={{ position: 'relative', height: 8, background: '#eef2f6', borderRadius: 4, marginTop: 6 }}>
+      <div style={{ position: 'relative', height: 8, background: '#f0f1f4', borderRadius: 4, marginTop: 6 }}>
         {m.value != null && <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: `${posOf(m.value)}%`, background: tone, borderRadius: 4, opacity: 0.85 }} />}
         <Marker pct={posOf(m.peerMedian)} color={INK3} title="peer median" />
         <Marker pct={posOf(m.peerTopQuartile)} color="#0e7490" title="top quartile" />
@@ -44,7 +45,7 @@ function BenchRow({ m }) {
 function Marker({ pct, color, title }) {
   return <div title={title} style={{ position: 'absolute', left: `calc(${pct}% - 1px)`, top: -2, height: 12, width: 2, background: color, borderRadius: 2 }} />;
 }
-const STAT = (s) => (/^yes/i.test(s) ? '#1f8a4c' : /^no/i.test(s) ? '#C0392B' : /likely/i.test(s) ? '#B07C2E' : INK3);
+const STAT = (s) => (/^yes/i.test(s) ? '#1a7f37' : /^no/i.test(s) ? '#cf222e' : /likely/i.test(s) ? '#9a6700' : INK3);
 
 function ctx(props) {
   const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
@@ -74,7 +75,7 @@ export default function Coaching(props) {
   const Card = ({ title, accent, narrate, children }) => (
     <div style={{ border: `1px solid ${HAIR}`, borderTop: `3px solid ${accent}`, borderRadius: 11, background: '#fff', padding: '14px 16px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-        <div style={{ fontSize: 12.5, fontWeight: 800, color: INK }}>{title}</div>
+        <div style={{ fontSize: 12.5, fontWeight: 800, color: INK, fontFamily: FONTS.display }}>{title}</div>
         {narrate && <VoiceControls voice={voice} onReplay={() => voice.speak(narrate)} label="Listen" />}
       </div>
       {children}
@@ -90,9 +91,9 @@ export default function Coaching(props) {
 
   return (
     <div style={{ display: 'grid', gap: 14 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: NAVY, color: '#e6ecf5', borderRadius: 10, padding: '13px 16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: COLORS.subtle, border: `1px solid ${COLORS.hair}`, color: COLORS.ink2, borderRadius: 10, padding: '13px 16px' }}>
         <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>
-          Your <strong style={{ color: '#9bc0ff' }}>{role} coaching</strong> — what to ask, what's material, a tabletop to run, and the blind spots detected from how decisions are actually being made.
+          Your <strong style={{ color: COLORS.accentText }}>{role} coaching</strong> — what to ask, what's material, a tabletop to run, and the blind spots detected from how decisions are actually being made.
         </div>
         <VoiceControls voice={voice} onReplay={() => voice.speak(overview)} label="Listen" />
       </div>
@@ -108,7 +109,7 @@ export default function Coaching(props) {
                   <span style={{ fontSize: 9.5, fontWeight: 700, color: '#fff', background: SEV[f.severity] || INK3, borderRadius: 999, padding: '2px 8px', textTransform: 'uppercase' }}>{f.severity}</span>
                 </div>
                 <div style={{ fontSize: 11, color: INK2, marginTop: 3 }}>{f.detail}</div>
-                <div style={{ fontSize: 11, color: '#1f8a4c', fontWeight: 600, marginTop: 3 }}>→ {f.recommendation}</div>
+                <div style={{ fontSize: 11, color: COLORS.good, fontWeight: 600, marginTop: 3 }}>→ {f.recommendation}</div>
               </div>
             ))}
           </div>
@@ -122,7 +123,7 @@ export default function Coaching(props) {
             <div style={{ fontSize: 11.5, color: INK2 }}>
               <strong style={{ color: INK }}>{bm.peerGroup.sizeBand}</strong> · {bm.peerGroup.industryLabel}
               <span style={{ color: INK3 }}> ({bm.peerGroup.sizeBasis})</span> — you are{' '}
-              <strong style={{ color: bm.standing === 'ahead of peers' ? '#1f8a4c' : bm.standing === 'behind peers' ? '#C0392B' : '#B07C2E' }}>{bm.standing}</strong>.
+              <strong style={{ color: bm.standing === 'ahead of peers' ? COLORS.good : bm.standing === 'behind peers' ? COLORS.bad : COLORS.warn }}>{bm.standing}</strong>.
             </div>
             <div style={{ fontSize: 10.5, color: INK3 }}>{bm.counts.ahead} ahead · {bm.counts.typical} typical · {bm.counts.behind} behind</div>
           </div>
@@ -134,14 +135,14 @@ export default function Coaching(props) {
       )}
 
       {/* questions to ask */}
-      <Card title="❓ Questions to ask right now" accent="#1d4ed8" narrate={qNarr}>
+      <Card title="❓ Questions to ask right now" accent="#4f5ac4" narrate={qNarr}>
         <ol style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 6 }}>
           {(co.questionsToAsk || []).map((q, i) => <li key={i} style={{ fontSize: 12.5, color: INK, lineHeight: 1.5 }}>{q}</li>)}
         </ol>
       </Card>
 
       {/* materiality checklist */}
-      <Card title="⚖️ Materiality checklist (top event)" accent="#B07C2E" narrate={mNarr}>
+      <Card title="⚖️ Materiality checklist (top event)" accent="#9a6700" narrate={mNarr}>
         {co.topEvent && <div style={{ fontSize: 11, color: INK3, marginBottom: 8 }}>For: {co.topEvent.title}</div>}
         <div style={{ display: 'grid', gap: 6 }}>
           {(co.materialityChecklist || []).map((m, i) => (
@@ -155,7 +156,7 @@ export default function Coaching(props) {
 
       {/* tabletop */}
       {tt && (
-        <Card title="🎲 Tabletop — run this in your next meeting" accent="#C0392B" narrate={ttNarr}>
+        <Card title="🎲 Tabletop — run this in your next meeting" accent="#cf222e" narrate={ttNarr}>
           <div style={{ fontSize: 12.5, color: INK, lineHeight: 1.6, background: PANEL, border: `1px solid ${HAIR}`, borderRadius: 8, padding: '10px 12px' }}>{tt.scenario}</div>
           <ol style={{ margin: '10px 0 0', paddingLeft: 18, display: 'grid', gap: 6 }}>
             {tt.prompts.map((p, i) => <li key={i} style={{ fontSize: 12, color: INK2, lineHeight: 1.5 }}>{p}</li>)}

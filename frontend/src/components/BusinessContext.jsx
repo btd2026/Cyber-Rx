@@ -6,8 +6,9 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc';
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
 const THRESHOLDS = ['Critical', 'High', 'Medium', 'Low'];
 
 export default function BusinessContext({ orgId, authToken, apiUrl }) {
@@ -51,13 +52,13 @@ export default function BusinessContext({ orgId, authToken, apiUrl }) {
   return (
     <>
       <button onClick={() => setOpen(true)} title="Author crown jewels, appetite and materiality"
-        style={{ background: 'transparent', color: '#cbd5e1', border: '1px solid #2c4f7c', borderRadius: 6, padding: '9px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>⚙ Business context</button>
+        style={{ background: '#ffffff', color: '#5c6066', border: '1px solid #dfe1e6', borderRadius: 7, padding: '8px 13px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>⚙ Business context</button>
 
       {open && (
-        <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(8,15,28,0.5)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '40px 16px', overflowY: 'auto' }}>
+        <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(11, 12, 14,0.5)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '40px 16px', overflowY: 'auto' }}>
           <div onClick={(e) => e.stopPropagation()} style={{ background: '#fff', borderRadius: 12, width: 'min(640px, 96vw)', boxShadow: '0 24px 64px rgba(0,0,0,0.3)', padding: '20px 22px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: INK }}>Business context</h3>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: INK, fontFamily: FONTS.display }}>Business context</h3>
               <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', fontSize: 22, color: INK3, cursor: 'pointer', lineHeight: 1 }}>×</button>
             </div>
             <p style={{ margin: '0 0 14px', fontSize: 12, color: INK2, lineHeight: 1.5 }}>Author your own crown jewels and thresholds — these replace inferred defaults and propagate to every lens (Key Risks, attack paths, materiality, the decision spine).</p>
@@ -68,14 +69,14 @@ export default function BusinessContext({ orgId, authToken, apiUrl }) {
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 14 }}>
                   <Label nomargin>Crown jewels</Label>
-                  <button onClick={addCJ} style={{ fontSize: 11, fontWeight: 700, color: '#1d4ed8', background: 'none', border: 'none', cursor: 'pointer' }}>+ Add</button>
+                  <button onClick={addCJ} style={{ fontSize: 11, fontWeight: 700, color: '#4f5ac4', background: 'none', border: 'none', cursor: 'pointer' }}>+ Add</button>
                 </div>
                 {bc.crownJewels.length === 0 && <div style={{ fontSize: 11, color: INK3 }}>None yet — add the business processes/data an attacker would target.</div>}
                 {bc.crownJewels.map((cj, i) => (
                   <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 6, marginTop: 6, alignItems: 'center' }}>
                     <input style={inp} placeholder="Name (e.g. Claims platform)" value={cj.name || ''} onChange={(e) => setCJ(i, 'name', e.target.value)} />
                     <input style={inp} placeholder="Data types (e.g. PHI)" value={cj.dataTypes || ''} onChange={(e) => setCJ(i, 'dataTypes', e.target.value)} />
-                    <button onClick={() => rmCJ(i)} style={{ background: 'none', border: 'none', color: '#C0392B', fontSize: 16, cursor: 'pointer' }}>×</button>
+                    <button onClick={() => rmCJ(i)} style={{ background: 'none', border: 'none', color: '#cf222e', fontSize: 16, cursor: 'pointer' }}>×</button>
                   </div>
                 ))}
 
@@ -95,8 +96,8 @@ export default function BusinessContext({ orgId, authToken, apiUrl }) {
                 </div>
 
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 16 }}>
-                  <button onClick={save} disabled={busy} style={{ background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 7, padding: '9px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: busy ? 0.6 : 1 }}>{busy ? 'Saving…' : 'Save business context'}</button>
-                  {saved && <span style={{ fontSize: 11.5, color: '#1f8a4c', fontWeight: 700 }}>Saved · propagated to all lenses ✓</span>}
+                  <button onClick={save} disabled={busy} style={{ background: '#5e6ad2', color: '#fff', border: 'none', borderRadius: 7, padding: '9px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: busy ? 0.6 : 1 }}>{busy ? 'Saving…' : 'Save business context'}</button>
+                  {saved && <span style={{ fontSize: 11.5, color: '#1a7f37', fontWeight: 700 }}>Saved · propagated to all lenses ✓</span>}
                 </div>
               </>
             )}
@@ -108,5 +109,5 @@ export default function BusinessContext({ orgId, authToken, apiUrl }) {
 }
 
 function Label({ children, nomargin }) {
-  return <div style={{ fontSize: 10.5, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4, marginTop: nomargin ? 0 : 2 }}>{children}</div>;
+  return <div style={{ fontSize: 10.5, fontWeight: 700, color: '#5c6066', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4, marginTop: nomargin ? 0 : 2 }}>{children}</div>;
 }

@@ -6,9 +6,10 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc';
-const STATUS = { connected: '#1f8a4c', error: '#C0392B', not_connected: '#94a3b8' };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+const STATUS = { connected: COLORS.good, error: COLORS.bad, not_connected: COLORS.ink3 };
 
 export default function DataSources({ orgId, authToken, apiUrl }) {
   const [open, setOpen] = useState(false);
@@ -35,26 +36,26 @@ export default function DataSources({ orgId, authToken, apiUrl }) {
   return (
     <>
       <button onClick={() => setOpen(true)} title="Connect read-only security tools"
-        style={{ background: 'transparent', color: '#cbd5e1', border: '1px solid #2c4f7c', borderRadius: 6, padding: '9px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>🔌 Connect data sources</button>
+        style={{ background: '#ffffff', color: '#5c6066', border: '1px solid #dfe1e6', borderRadius: 7, padding: '8px 13px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>🔌 Connect data sources</button>
 
       {open && (
-        <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(8,15,28,0.5)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '40px 16px', overflowY: 'auto' }}>
+        <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(11, 12, 14,0.5)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '40px 16px', overflowY: 'auto' }}>
           <div onClick={(e) => e.stopPropagation()} style={{ background: '#fff', borderRadius: 12, width: 'min(680px, 96vw)', boxShadow: '0 24px 64px rgba(0,0,0,0.3)', padding: '20px 22px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: INK }}>Connect data sources</h3>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: INK, fontFamily: FONTS.display }}>Connect data sources</h3>
               <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', fontSize: 22, color: INK3, cursor: 'pointer', lineHeight: 1 }}>×</button>
             </div>
             <p style={{ margin: '0 0 14px', fontSize: 12, color: INK2, lineHeight: 1.5 }}>
               Read-only connectors. Connecting a source flips its posture signals from modeled to <strong>live</strong>. Credentials are stored securely and never displayed again.
             </p>
-            {err && <div style={{ color: '#C0392B', fontSize: 12, marginBottom: 10 }}>{err}</div>}
+            {err && <div style={{ color: '#cf222e', fontSize: 12, marginBottom: 10 }}>{err}</div>}
             {!list ? <div style={{ fontSize: 12, color: INK3 }}>Loading…</div> : (
               <div style={{ display: 'grid', gap: 10 }}>
                 {list.map((c) => (
                   <div key={c.key} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${STATUS[c.status] || INK3}`, borderRadius: 9, padding: '12px 14px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
                       <div>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: INK }}>{c.label}</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: INK, fontFamily: FONTS.display }}>{c.label}</span>
                         <span style={{ fontSize: 10.5, color: INK3, marginLeft: 8 }}>{c.category}</span>
                       </div>
                       <span style={{ fontSize: 10, fontWeight: 800, color: STATUS[c.status] || INK3, textTransform: 'uppercase' }}>
@@ -62,7 +63,7 @@ export default function DataSources({ orgId, authToken, apiUrl }) {
                       </span>
                     </div>
                     <div style={{ fontSize: 10.5, color: INK3, marginTop: 3 }}>Signals: {c.signals.join(', ')} · Access: {c.scopes.join(', ')}</div>
-                    {c.error && <div style={{ fontSize: 10.5, color: '#C0392B', marginTop: 3 }}>{c.error}</div>}
+                    {c.error && <div style={{ fontSize: 10.5, color: '#cf222e', marginTop: 3 }}>{c.error}</div>}
                     {c.lastSync && <div style={{ fontSize: 10, color: INK3, marginTop: 2 }}>Last sync {new Date(c.lastSync).toLocaleString()}</div>}
 
                     {active === c.key ? (
@@ -75,7 +76,7 @@ export default function DataSources({ orgId, authToken, apiUrl }) {
                           ))}
                         </div>
                         <div style={{ display: 'flex', gap: 8, marginTop: 9 }}>
-                          <button onClick={() => call('POST', `${c.key}/connect`, form)} disabled={busy} style={btn('#4f46e5')}>{busy ? 'Connecting…' : 'Connect & sync'}</button>
+                          <button onClick={() => call('POST', `${c.key}/connect`, form)} disabled={busy} style={btn('#5e6ad2')}>{busy ? 'Connecting…' : 'Connect & sync'}</button>
                           <button onClick={() => { setActive(null); setForm({}); }} style={btn('#fff', INK2)}>Cancel</button>
                         </div>
                       </div>
@@ -84,10 +85,10 @@ export default function DataSources({ orgId, authToken, apiUrl }) {
                         {c.connected ? (
                           <>
                             <button onClick={() => call('POST', `${c.key}/sync`)} disabled={busy} style={btn('#0e7490')}>Sync now</button>
-                            <button onClick={() => call('DELETE', c.key)} disabled={busy} style={btn('#fff', '#C0392B')}>Disconnect</button>
+                            <button onClick={() => call('DELETE', c.key)} disabled={busy} style={btn('#fff', '#cf222e')}>Disconnect</button>
                           </>
                         ) : (
-                          <button onClick={() => { setActive(c.key); setForm({}); setErr(null); }} style={btn('#4f46e5')}>Connect</button>
+                          <button onClick={() => { setActive(c.key); setForm({}); setErr(null); }} style={btn('#5e6ad2')}>Connect</button>
                         )}
                       </div>
                     )}
@@ -103,5 +104,5 @@ export default function DataSources({ orgId, authToken, apiUrl }) {
 }
 
 function btn(bg, color) {
-  return { background: bg, color: color || '#fff', border: `1px solid ${bg === '#fff' ? '#e6ebf2' : bg}`, borderRadius: 7, padding: '7px 13px', fontSize: 12, fontWeight: 700, cursor: 'pointer' };
+  return { background: bg, color: color || '#fff', border: `1px solid ${bg === '#fff' ? '#ebecf0' : bg}`, borderRadius: 7, padding: '7px 13px', fontSize: 12, fontWeight: 700, cursor: 'pointer' };
 }

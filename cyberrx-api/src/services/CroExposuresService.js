@@ -70,10 +70,10 @@ async function getExposures(orgId) {
     { id: 'accept_within', label: 'Accept exposures within appetite, treat only breaches', cost: 0, costLabel: '$0', residualRiskReductionPct: 0, acceptsRationale: true, note: 'Documented portfolio acceptance for within-appetite items; treat only the breaches.' },
   ];
 
-  const narration = `Cyber risk versus appetite, CRO. ${breaches.length} of ${kris.length} key risk indicators breach appetite. ` +
-    `${aboveAppetite.length} exposure(s) sit above appetite, ${aboveUndecided} of them undecided. ` +
-    `Aggregate modeled loss ${usd(aggLoss)} against a ${usd(lossTolerance)} tolerance. ` +
-    `Top exposures are the same events the CFO and CISO see — click any one for the financial translation and the live attack path.`;
+  const narration = `Here is my read: ${breaches.length === 0 ? 'cyber is living inside the appetite you set, and that is the headline' : `you are outside your own appetite, and that is the headline — ${breaches.length} of ${kris.length} key risk indicators are breached`}. ` +
+    `What concerns me more than the count is concentration: ${aboveAppetite.length} exposure(s) sit above appetite${aboveUndecided ? `, and ${aboveUndecided} of them have no recorded decision — meaning we are carrying risk nobody formally chose to accept` : ', though each has been deliberately decided'}. ` +
+    `On the whole, modeled loss runs ${usd(aggLoss)} against a ${usd(lossTolerance)} tolerance, so ${aggLoss > lossTolerance ? 'the aggregate is over the line, not just individual cards' : 'the aggregate still fits inside the band'}. ` +
+    `What I would do: ${aboveUndecided ? 'force a transfer-or-treat decision on the undecided breaches before the next board cycle, and consider capping the tail with insurance.' : 'hold the line and keep the within-appetite exposures documented as accepted.'}`;
 
   return {
     organizationId: orgId, generatedAt: new Date().toISOString(),

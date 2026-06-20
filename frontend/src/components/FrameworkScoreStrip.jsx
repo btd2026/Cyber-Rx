@@ -8,9 +8,10 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { COLORS, FONTS } from '../theme';
 
-const HAIRLINE = '#e2e8f0', INK = '#0f172a', INK_2 = '#475569', INK_3 = '#94a3b8';
-const RAG = (pct) => (pct == null ? '#94a3b8' : pct >= 75 ? '#31604B' : pct >= 50 ? '#B07C2E' : '#9E3B32');
+const HAIRLINE = COLORS.hair, INK = COLORS.ink, INK_2 = COLORS.ink2, INK_3 = COLORS.ink3;
+const RAG = (pct) => (pct == null ? COLORS.ink3 : pct >= 75 ? COLORS.good : pct >= 50 ? COLORS.warn : COLORS.bad);
 
 // Abbreviation + the selFramework id each card opens.
 const FRAMEWORKS = [
@@ -66,7 +67,7 @@ export default function FrameworkScoreStrip(props) {
           return (
             <button key={f.id} onClick={() => props.onOpen && props.onOpen(f.id)} title={f.name}
               style={{ background: '#fff', border: `1px solid ${HAIRLINE}`, borderTop: `3px solid ${c}`, borderRadius: 4, padding: '9px 6px', cursor: 'pointer', textAlign: 'center' }}>
-              <div style={{ fontSize: 16, fontWeight: 700, color: c, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: c, fontFamily: FONTS.mono, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
                 {pct == null ? '—' : pct}<span style={{ fontSize: 9, color: INK_3 }}>{pct == null ? '' : '%'}</span>
               </div>
               <div style={{ fontSize: 9.5, fontWeight: 600, color: INK_2, marginTop: 4 }}>{f.abbr}</div>

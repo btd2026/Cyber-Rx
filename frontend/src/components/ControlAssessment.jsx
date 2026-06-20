@@ -7,9 +7,10 @@
  * or raw evidence — the backend simply does not send them.
  */
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e2e8f0', PANEL = '#f8fafc', NAVY = '#0f1b2d';
-const GREEN = '#1f8a4c', AMBER = '#B07C2E', RED = '#C0392B', BLUE = '#1d4ed8';
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
+const GREEN = COLORS.good, AMBER = COLORS.warn, RED = COLORS.bad, BLUE = '#4f5ac4';
 const statusColor = (s) => (s === 'passed' ? GREEN : s === 'partial' ? AMBER : s === 'failed' ? RED : INK3);
 const statusLabel = (s) => ({ passed: 'Passed', partial: 'Partial', failed: 'Failed', not_tested: 'Not tested', needs_manual_evidence: 'Manual evidence' }[s] || s);
 
@@ -85,7 +86,7 @@ export default function ControlAssessment(props) {
 
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '8px 4px' }}>
-      <div style={{ fontSize: 20, fontWeight: 800, color: INK }}>Control Assessment</div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: INK, fontFamily: FONTS.display }}>Control Assessment</div>
       <div style={{ fontSize: 12.5, color: INK2, marginBottom: 14 }}>Select frameworks, connect your tools securely, run the assessment, and review executive-ready results. The engine does the rest.</div>
 
       {/* Stepper */}
@@ -172,8 +173,8 @@ export default function ControlAssessment(props) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(230px,1fr))', gap: 10, marginBottom: 16 }}>
               {summary.map((s) => (
                 <div key={s.framework} style={{ border: `1px solid ${HAIR}`, borderRadius: 9, padding: '12px 14px' }}>
-                  <div style={{ fontSize: 12.5, fontWeight: 800, color: INK }}>{s.framework}</div>
-                  <div style={{ fontSize: 24, fontWeight: 800, color: INK, margin: '4px 0' }}>{s.avg_score ?? '—'}<span style={{ fontSize: 12, color: INK3 }}>/5</span></div>
+                  <div style={{ fontSize: 12.5, fontWeight: 800, color: INK, fontFamily: FONTS.display }}>{s.framework}</div>
+                  <div style={{ fontSize: 24, fontWeight: 800, color: INK, margin: '4px 0', fontFamily: FONTS.mono }}>{s.avg_score ?? '—'}<span style={{ fontSize: 12, color: INK3 }}>/5</span></div>
                   <div style={{ fontSize: 10.5, color: INK2 }}><span style={{ color: GREEN }}>{s.passed} passed</span> · <span style={{ color: AMBER }}>{s.partial} partial</span> · <span style={{ color: RED }}>{s.failed} failed</span> · {s.manual} manual</div>
                 </div>
               ))}
@@ -186,8 +187,8 @@ export default function ControlAssessment(props) {
                 {results.map((r) => (
                   <div key={r.framework + r.control_id} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${statusColor(r.status)}`, borderRadius: 7, padding: '9px 12px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'baseline' }}>
-                      <span style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>{r.control_id} <span style={{ color: INK3, fontWeight: 400 }}>{r.control_name}</span></span>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: statusColor(r.status) }}>{statusLabel(r.status)} · {r.score ?? '—'}/5 · {r.confidence ?? '—'}% conf</span>
+                      <span style={{ fontSize: 12.5, fontWeight: 700, color: INK }}><span style={{ fontFamily: FONTS.mono }}>{r.control_id}</span> <span style={{ color: INK3, fontWeight: 400 }}>{r.control_name}</span></span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: statusColor(r.status), fontFamily: FONTS.mono }}>{statusLabel(r.status)} · {r.score ?? '—'}/5 · {r.confidence ?? '—'}% conf</span>
                     </div>
                     {r.summary_finding && <div style={{ fontSize: 11, color: INK2, marginTop: 3 }}>{r.summary_finding}</div>}
                     {r.business_risk && <div style={{ fontSize: 11, color: INK3, marginTop: 2 }}><strong>Risk:</strong> {r.business_risk}</div>}
@@ -204,8 +205,8 @@ export default function ControlAssessment(props) {
   );
 }
 
-const pick = (on) => ({ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, border: `1.5px solid ${on ? '#1f8a4c' : '#e2e8f0'}`, background: on ? '#f0fdf4' : '#fff', color: '#0f172a', borderRadius: 8, padding: '10px 13px', fontSize: 12, cursor: 'pointer', textAlign: 'left' });
-const row = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #e2e8f0', borderRadius: 8, padding: '10px 13px', marginBottom: 8 };
-const Card = ({ children }) => <div style={{ border: '1px solid #e2e8f0', borderRadius: 12, padding: '16px 18px', background: '#fff' }}>{children}</div>;
-const H = ({ children }) => <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', marginBottom: 12 }}>{children}</div>;
-const Next = ({ onClick, disabled }) => <div style={{ marginTop: 14 }}><button onClick={onClick} disabled={disabled} style={{ background: disabled ? '#cbd5e1' : '#0f1b2d', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 12.5, fontWeight: 700, cursor: disabled ? 'default' : 'pointer' }}>Next →</button></div>;
+const pick = (on) => ({ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, border: `1.5px solid ${on ? COLORS.good : COLORS.hair}`, background: on ? '#f0fdf4' : '#fff', color: COLORS.ink, borderRadius: 8, padding: '10px 13px', fontSize: 12, cursor: 'pointer', textAlign: 'left' });
+const row = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: `1px solid ${COLORS.hair}`, borderRadius: 8, padding: '10px 13px', marginBottom: 8 };
+const Card = ({ children }) => <div style={{ border: `1px solid ${COLORS.hair}`, borderRadius: 12, padding: '16px 18px', background: '#fff' }}>{children}</div>;
+const H = ({ children }) => <div style={{ fontSize: 13, fontWeight: 800, color: COLORS.ink, marginBottom: 12, fontFamily: FONTS.display }}>{children}</div>;
+const Next = ({ onClick, disabled }) => <div style={{ marginTop: 14 }}><button onClick={onClick} disabled={disabled} style={{ background: disabled ? '#d7d9de' : COLORS.navy1, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 12.5, fontWeight: 700, cursor: disabled ? 'default' : 'pointer' }}>Next →</button></div>;

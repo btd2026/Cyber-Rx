@@ -9,9 +9,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
 import Provenance from './Provenance';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc', NAVY = '#0f1b2d';
-const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+const SEV = { Critical: COLORS.bad, High: '#c2410c', Medium: COLORS.warn, Low: COLORS.good };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
 
 function ctx(props) {
@@ -50,7 +51,7 @@ export default function CroExposures(props) {
         {d.kris.map((k) => (
           <div key={k.name} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${k.breached ? SEV.Critical : SEV.Low}`, borderRadius: 9, padding: '11px 13px', background: '#fff' }}>
             <div style={{ fontSize: 10.5, color: INK2 }}>{k.name}</div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: k.breached ? SEV.Critical : INK, marginTop: 2 }}>{k.display}</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: k.breached ? SEV.Critical : INK, marginTop: 2, fontFamily: FONTS.mono }}>{k.display}</div>
             <div style={{ fontSize: 10, color: INK3, marginTop: 1 }}>Appetite: {k.thresholdDisplay} {k.breached ? <span style={{ color: SEV.Critical, fontWeight: 700 }}>· BREACHED</span> : <span style={{ color: SEV.Low }}>· within</span>}</div>
           </div>
         ))}
@@ -70,14 +71,14 @@ export default function CroExposures(props) {
                       <Pill text={e.scenarioType} color={sev} />
                       <Pill text={e.severity} color={sev} />
                       {e.aboveAppetite && <Pill text="Above appetite" color={SEV.Critical} />}
-                      {e.decision && <Pill text="Decided" color="#1f8a4c" />}
+                      {e.decision && <Pill text="Decided" color="#1a7f37" />}
                     </div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: INK, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>{e.provenance && <Provenance prov={e.provenance} />}<span>{e.title}</span></div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: INK, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONTS.display }}>{e.provenance && <Provenance prov={e.provenance} />}<span>{e.title}</span></div>
                     <div style={{ fontSize: 11.5, color: INK2, marginTop: 3 }}>{(e.croLens && e.croLens.narrative) || ''}</div>
                   </div>
                   <div style={{ textAlign: 'right', minWidth: 130 }}>
                     <div style={{ fontSize: 9.5, color: INK3, textTransform: 'uppercase' }}>Expected loss</div>
-                    <div style={{ fontSize: 17, fontWeight: 800, color: sev }}>{usd(e.loss.expected)}</div>
+                    <div style={{ fontSize: 17, fontWeight: 800, color: sev, fontFamily: FONTS.mono }}>{usd(e.loss.expected)}</div>
                     <div style={{ fontSize: 10.5, color: INK2 }}>P90 {usd(e.loss.p90)}</div>
                   </div>
                 </div>
@@ -89,13 +90,13 @@ export default function CroExposures(props) {
                   <span>90d <strong>{e.projection.p90}%</strong></span>
                   <span style={{ color: INK3 }}>· appetite line {e.projection.appetiteLine}%</span>
                 </div>
-                <button onClick={() => setOpen(isOpen ? null : e.id)} style={{ marginTop: 8, background: 'transparent', border: 'none', color: '#1d4ed8', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', padding: 0 }}>{isOpen ? '▲ Hide cross-lens detail' : '▼ Processes · CFO financial · CISO attack path'}</button>
+                <button onClick={() => setOpen(isOpen ? null : e.id)} style={{ marginTop: 8, background: 'transparent', border: 'none', color: '#4f5ac4', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', padding: 0 }}>{isOpen ? '▲ Hide cross-lens detail' : '▼ Processes · CFO financial · CISO attack path'}</button>
               </div>
               {isOpen && (
                 <div style={{ borderTop: `1px solid ${HAIR}`, padding: '12px 14px', background: PANEL, display: 'grid', gap: 12 }}>
                   <div>
                     <Label>Impacted business processes</Label>
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{e.businessProcesses.map((p, i) => <span key={i} style={{ fontSize: 11, color: '#1e3a5f', background: '#eaf1fb', border: '1px solid #cfe0f5', borderRadius: 6, padding: '3px 9px' }}>{p}</span>)}</div>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{e.businessProcesses.map((p, i) => <span key={i} style={{ fontSize: 11, color: '#1c1f26', background: '#eaf1fb', border: '1px solid #cfe0f5', borderRadius: 6, padding: '3px 9px' }}>{p}</span>)}</div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                     {e.financial && (
@@ -114,7 +115,7 @@ export default function CroExposures(props) {
                           {e.attackPath.map((s, i) => (
                             <React.Fragment key={i}>
                               <span style={{ fontSize: 10.5, color: INK, background: PANEL, border: `1px solid ${HAIR}`, borderRadius: 6, padding: '3px 7px' }}>{s.label}</span>
-                              {i < e.attackPath.length - 1 && <span style={{ color: '#C0392B', fontWeight: 800 }}>→</span>}
+                              {i < e.attackPath.length - 1 && <span style={{ color: '#cf222e', fontWeight: 800 }}>→</span>}
                             </React.Fragment>
                           ))}
                         </div>
@@ -130,7 +131,7 @@ export default function CroExposures(props) {
 
       {/* portfolio-level decision options */}
       <div style={{ border: `1px solid ${HAIR}`, borderRadius: 11, background: '#fff', padding: '13px 16px' }}>
-        <div style={{ fontSize: 12.5, fontWeight: 800, color: INK, marginBottom: 4 }}>Portfolio-level options</div>
+        <div style={{ fontSize: 12.5, fontWeight: 800, color: INK, marginBottom: 4, fontFamily: FONTS.display }}>Portfolio-level options</div>
         <div style={{ fontSize: 10.5, color: INK3, marginBottom: 9 }}>Act on the set, not one card. Aggregate loss {usd(d.aggregate.expectedLoss)} (P90 {usd(d.aggregate.p90)}) vs {usd(d.aggregate.lossTolerance)} tolerance.</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px,1fr))', gap: 9 }}>
           {d.portfolioOptions.map((o) => (

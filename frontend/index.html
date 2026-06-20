@@ -6,13 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@500;600;700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" />
     <style>
       :root { color-scheme: light; }
       body { font-family: 'Inter', system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-      /* Signature numerics + display, usable from any inline-styled component. */
-      .crx-figure { font-family: 'JetBrains Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
-      .crx-display { font-family: 'Fraunces', Georgia, serif; }
+      /* Signature numerics + display, usable from any inline-styled component.
+         Modern SaaS (Linear/Vercel): Inter throughout, no serif; figures use
+         tabular numerals with tight tracking for an instrument-panel feel. */
+      .crx-figure { font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+      .crx-display { font-family: 'Inter', system-ui, -apple-system, sans-serif; font-weight: 650; letter-spacing: -0.022em; }
     </style>
     <title>CyberRX</title>
   </head>

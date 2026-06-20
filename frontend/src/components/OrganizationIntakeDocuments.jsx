@@ -9,10 +9,11 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e2e8f0', PANEL = '#f8fafc', ACC = '#0891b2', AMBER = '#B07C2E';
-const STATUS_COLOR = { 'met': '#1f8a4c', 'partially met': '#B07C2E', 'not met': '#C0392B' };
-const UP_COLOR = { requested: '#94a3b8', uploaded: '#2563eb', normalized: '#2563eb', reviewed: '#1f8a4c', failed: '#C0392B' };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, ACC = '#0891b2', AMBER = COLORS.warn;
+const STATUS_COLOR = { 'met': COLORS.good, 'partially met': COLORS.warn, 'not met': COLORS.bad };
+const UP_COLOR = { requested: COLORS.ink3, uploaded: '#5e6ad2', normalized: '#5e6ad2', reviewed: COLORS.good, failed: COLORS.bad };
 
 function resolveCtx(props) {
   const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
@@ -125,7 +126,7 @@ export default function OrganizationIntakeDocuments(props) {
     }
   };
 
-  if (error && !docs) return <div style={{ padding: 18, color: '#C0392B', fontSize: 13 }}>Document Request unavailable: {error}</div>;
+  if (error && !docs) return <div style={{ padding: 18, color: '#cf222e', fontSize: 13 }}>Document Request unavailable: {error}</div>;
   if (!docs) return <div style={{ padding: 18, color: INK3, fontSize: 13 }}>Loading document checklist…</div>;
 
   const reviewed = docs.filter((d) => d.upload_status === 'reviewed').length;
@@ -136,10 +137,10 @@ export default function OrganizationIntakeDocuments(props) {
         <div style={{ fontSize: 12.5, color: INK2, lineHeight: 1.5, maxWidth: 640 }}>
           These are the documents required for manual control review. Each is requested <strong>once</strong> and, when uploaded, is reviewed against every control it satisfies.
         </div>
-        <div style={{ fontSize: 12, color: INK3, whiteSpace: 'nowrap' }}><strong style={{ color: INK }}>{reviewed}</strong> / {docs.length} reviewed</div>
+        <div style={{ fontSize: 12, color: INK3, whiteSpace: 'nowrap', fontFamily: FONTS.mono }}><strong style={{ color: INK }}>{reviewed}</strong> / {docs.length} reviewed</div>
       </div>
 
-      {error && <div style={{ background: '#fdecea', border: '1px solid #f3c9bf', color: '#C0392B', borderRadius: 6, padding: '8px 12px', fontSize: 12, marginBottom: 12 }}>{error}</div>}
+      {error && <div style={{ background: '#fdecea', border: '1px solid #f3c9bf', color: '#cf222e', borderRadius: 6, padding: '8px 12px', fontSize: 12, marginBottom: 12 }}>{error}</div>}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 12 }}>
         {docs.map((doc) => {
@@ -151,7 +152,7 @@ export default function OrganizationIntakeDocuments(props) {
             <div key={doc.id} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${UP_COLOR[status] || INK3}`, borderRadius: 8, padding: '13px 15px', background: '#fff' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>{doc.name}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: INK, fontFamily: FONTS.display }}>{doc.name}</div>
                   {doc.category && <div style={{ fontSize: 9.5, color: INK3, textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 2 }}>{doc.category}</div>}
                 </div>
                 <span style={{ fontSize: 9.5, fontWeight: 700, color: '#fff', background: UP_COLOR[status] || INK3, borderRadius: 4, padding: '2px 8px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{status}</span>
@@ -169,7 +170,7 @@ export default function OrganizationIntakeDocuments(props) {
                   {(doc.controls || []).map((c) => {
                     const r = (res || []).find((x) => x.framework_id === c.framework_id && x.requirement_id === c.requirement_id);
                     return (
-                      <div key={`${c.framework_id}:${c.requirement_id}`} style={{ padding: '4px 0', borderBottom: '1px solid #f8fafc' }}>
+                      <div key={`${c.framework_id}:${c.requirement_id}`} style={{ padding: '4px 0', borderBottom: '1px solid #f6f7f9' }}>
                         <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
                           <span style={{ fontSize: 10.5, fontWeight: 700, color: INK }}>{c.requirement_id}</span>
                           <span style={{ fontSize: 9.5, color: INK3 }}>{c.domain}</span>

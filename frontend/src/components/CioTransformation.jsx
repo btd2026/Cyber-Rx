@@ -8,10 +8,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
 import Provenance from './Provenance';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc';
-const TONE = { good: '#1f8a4c', warn: '#B07C2E', bad: '#C0392B' };
-const REC = { sequence: { c: '#1f8a4c', label: 'Sequence earlier' }, secure: { c: '#B07C2E', label: 'Secure-by-design' }, defer: { c: '#C0392B', label: 'Defer' } };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+const TONE = { good: COLORS.good, warn: COLORS.warn, bad: COLORS.bad };
+const REC = { sequence: { c: COLORS.good, label: 'Sequence earlier' }, secure: { c: COLORS.warn, label: 'Secure-by-design' }, defer: { c: COLORS.bad, label: 'Defer' } };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
 
 function ctx(props) {
@@ -39,7 +40,7 @@ export default function CioTransformation(props) {
 
   return (
     <div style={{ display: 'grid', gap: 14 }}>
-      {d.provenance && <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 5, fontSize: 10, color: '#94a3b8', marginBottom: -4 }}><Provenance prov={d.provenance} /><span>data provenance</span></div>}
+      {d.provenance && <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 5, fontSize: 10, color: '#8b9098', marginBottom: -4 }}><Provenance prov={d.provenance} /><span>data provenance</span></div>}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Transformation portfolio</div>
         <VoiceControls voice={voice} onReplay={() => voice.speak(d.narration)} label="Listen" />
@@ -62,7 +63,7 @@ export default function CioTransformation(props) {
             <div key={it.id} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${rec.c}`, borderRadius: 11, background: '#fff', padding: '12px 16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13.5, fontWeight: 800, color: INK }}>{it.name}</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 800, color: INK, fontFamily: FONTS.display }}>{it.name}</div>
                   {it.objective && <div style={{ fontSize: 11, color: INK2, marginTop: 2 }}>{it.objective}</div>}
                   <div style={{ fontSize: 10.5, color: INK3, marginTop: 4 }}>Owner {it.owner || '—'} · {it.percentComplete}% · {it.status}</div>
                 </div>
@@ -104,9 +105,9 @@ export default function CioTransformation(props) {
 
 function Kpi({ label, value, sub, tone }) {
   return (
-    <div style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${tone ? TONE[tone] : '#cbd5e1'}`, borderRadius: 9, padding: '11px 13px', background: '#fff' }}>
+    <div style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${tone ? TONE[tone] : '#d7d9de'}`, borderRadius: 9, padding: '11px 13px', background: '#fff' }}>
       <div style={{ fontSize: 10.5, color: INK2 }}>{label}</div>
-      <div style={{ fontSize: 19, fontWeight: 800, color: tone ? TONE[tone] : INK, marginTop: 2 }}>{value}</div>
+      <div style={{ fontSize: 19, fontWeight: 800, color: tone ? TONE[tone] : INK, marginTop: 2, fontFamily: FONTS.mono }}>{value}</div>
       {sub && <div style={{ fontSize: 10, color: INK3, marginTop: 1 }}>{sub}</div>}
     </div>
   );
@@ -117,7 +118,7 @@ function BarRow({ value, max, tone, suffix }) {
   return (
     <div>
       <div style={{ fontSize: 12.5, fontWeight: 800, color: tone }}>{value}{suffix}</div>
-      <div style={{ height: 6, background: '#eef2f6', borderRadius: 3, overflow: 'hidden', marginTop: 3 }}><div style={{ width: `${pct}%`, height: '100%', background: tone }} /></div>
+      <div style={{ height: 6, background: '#f0f1f4', borderRadius: 3, overflow: 'hidden', marginTop: 3 }}><div style={{ width: `${pct}%`, height: '100%', background: tone }} /></div>
     </div>
   );
 }

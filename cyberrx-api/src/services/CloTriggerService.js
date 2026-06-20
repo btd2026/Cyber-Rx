@@ -55,10 +55,10 @@ async function getTriggers(orgId) {
 
   const totalFired = new Set();
   scenarios.forEach((s) => s.firedObligations.forEach((f) => totalFired.add(f.obligation)));
-  const narration = `Trigger map and materiality, General Counsel. ${scenarios.length} top cyber scenario(s) would collectively fire ${totalFired.size} distinct obligation(s). ` +
-    `${scenarios.filter((s) => s.materiality.material).length} screen as potentially material. ` +
-    `Each scenario is the same technical event the security team sees — click for the attack path and the financial-materiality translation. ` +
-    `The first legal moves are pre-staged here: notification, legal hold, regulator engagement.`;
+  const materialCount = scenarios.filter((s) => s.materiality.material).length;
+  const narration = `This one I would not sit on. ${scenarios.length} of our top cyber scenario(s) would, if realized, fire ${totalFired.size} distinct legal obligation(s) — and ${materialCount} of them screen as potentially material, meaning a disclosure clock could start before we have the facts straight. ` +
+    `What makes it urgent is the timing: these are the same events the security team is already tracking, so the trigger is real, not hypothetical, and the shortest notification windows leave no room to improvise. ` +
+    `My recommendation: pre-stage the first legal moves now — notification drafts, a legal hold to stop spoliation, and proactive regulator engagement — so we are deciding deliberately under privilege rather than scrambling against the clock.`;
 
   return {
     organizationId: orgId, generatedAt: new Date().toISOString(),

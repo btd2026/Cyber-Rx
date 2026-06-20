@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CheckCircle, ArrowRight, FileSpreadsheet, Network } from 'lucide-react';
+import { COLORS, FONTS } from '../theme';
+
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
 
 const RestructureView = ({ matchId, goBack }) => {
   const [animationPlaying, setAnimationPlaying] = useState(false);
@@ -56,13 +59,13 @@ const RestructureView = ({ matchId, goBack }) => {
       <header style={{ marginBottom: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <div>
-            <button onClick={goBack} style={{ marginBottom: '12px', padding: '8px 16px', background: '#f1f5f9', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+            <button onClick={goBack} style={{ marginBottom: '12px', padding: '8px 16px', background: PANEL, border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
               ← Back
             </button>
-            <h1 style={{ fontSize: '28px', fontWeight: '700', margin: 0, color: '#0f172a' }}>
+            <h1 style={{ fontSize: '28px', fontWeight: '700', margin: 0, color: INK, fontFamily: FONTS.display }}>
               From Flat File to Hierarchical Structure
             </h1>
-            <p style={{ color: '#64748b', marginTop: '8px', fontSize: '14px' }}>
+            <p style={{ color: INK2, marginTop: '8px', fontSize: '14px' }}>
               Watch the transformation from messy Excel rows to organized taxonomy
             </p>
           </div>
@@ -71,7 +74,7 @@ const RestructureView = ({ matchId, goBack }) => {
             disabled={animationPlaying}
             style={{
               padding: '12px 24px',
-              background: animationPlaying ? '#94a3b8' : '#10b981',
+              background: animationPlaying ? INK3 : '#10b981',
               color: 'white',
               border: 'none',
               borderRadius: '8px',
@@ -104,12 +107,12 @@ const RestructureView = ({ matchId, goBack }) => {
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-            <FileSpreadsheet style={{ width: '24px', height: '24px', color: '#dc2626' }} />
+            <FileSpreadsheet style={{ width: '24px', height: '24px', color: COLORS.bad }} />
             <div>
-              <h2 style={{ fontSize: '18px', fontWeight: '700', margin: 0, color: '#dc2626' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '700', margin: 0, color: COLORS.bad, fontFamily: FONTS.display }}>
                 Before: Original Excel Upload
               </h2>
-              <p style={{ fontSize: '13px', color: '#991b1b', margin: '4px 0 0 0' }}>
+              <p style={{ fontSize: '13px', color: COLORS.bad, margin: '4px 0 0 0' }}>
                 Messy headers, inconsistent naming, flat structure
               </p>
             </div>
@@ -138,9 +141,9 @@ const RestructureView = ({ matchId, goBack }) => {
                   onClick={() => setSelectedRow(idx)}
                   style={{
                     cursor: 'pointer',
-                    background: selectedRow === idx ? '#fef3c7' : idx % 2 === 0 ? '#fff' : '#f9fafb',
+                    background: selectedRow === idx ? '#fef3c7' : idx % 2 === 0 ? '#fff' : PANEL,
                     transition: 'background 0.2s',
-                    borderLeft: selectedRow === idx ? '3px solid #f59e0b' : '3px solid transparent'
+                    borderLeft: selectedRow === idx ? `3px solid ${COLORS.warn}` : '3px solid transparent'
                   }}
                 >
                   <td style={{ padding: '10px', fontSize: '13px', borderBottom: '1px solid #fecaca' }}>{idx + 1}</td>
@@ -153,7 +156,7 @@ const RestructureView = ({ matchId, goBack }) => {
                       fontSize: '11px',
                       fontWeight: '600',
                       background: row.criticality === 'High' ? '#fecaca' : '#bbf7d0',
-                      color: row.criticality === 'High' ? '#dc2626' : '#16a34a'
+                      color: row.criticality === 'High' ? COLORS.bad : COLORS.good
                     }}>
                       {row.criticality}
                     </span>
@@ -169,7 +172,7 @@ const RestructureView = ({ matchId, goBack }) => {
           <ArrowRight style={{
             width: '48px',
             height: '48px',
-            color: animationPlaying ? '#10b981' : '#6b7280',
+            color: animationPlaying ? '#10b981' : INK2,
             transition: 'all 0.5s',
             transform: animationPlaying ? 'translateX(10px) scale(1.1)' : 'translateX(0)'
           }} />
@@ -186,12 +189,12 @@ const RestructureView = ({ matchId, goBack }) => {
           overflowY: 'auto'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-            <Network style={{ width: '24px', height: '24px', color: '#16a34a' }} />
+            <Network style={{ width: '24px', height: '24px', color: COLORS.good }} />
             <div>
-              <h2 style={{ fontSize: '18px', fontWeight: '700', margin: 0, color: '#16a34a' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '700', margin: 0, color: COLORS.good, fontFamily: FONTS.display }}>
                 After: Confirmed Taxonomy
               </h2>
-              <p style={{ fontSize: '13px', color: '#166534', margin: '4px 0 0 0' }}>
+              <p style={{ fontSize: '13px', color: COLORS.good, margin: '4px 0 0 0' }}>
                 Organized hierarchy, canonical names, clear relationships
               </p>
             </div>
@@ -217,31 +220,31 @@ const RestructureView = ({ matchId, goBack }) => {
         display: 'flex',
         gap: '40px',
         padding: '24px',
-        background: '#f9fafb',
+        background: PANEL,
         borderRadius: '12px',
-        border: '1px solid #e5e7eb'
+        border: `1px solid ${HAIR}`
       }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px' }}>Original Rows</div>
-          <div style={{ fontSize: '28px', fontWeight: '700', color: '#0f172a' }}>
+          <div style={{ fontSize: '13px', color: INK2, marginBottom: '4px' }}>Original Rows</div>
+          <div style={{ fontSize: '28px', fontWeight: '700', color: INK, fontFamily: FONTS.mono }}>
             {restructureData.stats?.original_rows || 0}
           </div>
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px' }}>Confirmed Nodes</div>
-          <div style={{ fontSize: '28px', fontWeight: '700', color: '#0f172a' }}>
+          <div style={{ fontSize: '13px', color: INK2, marginBottom: '4px' }}>Confirmed Nodes</div>
+          <div style={{ fontSize: '28px', fontWeight: '700', color: INK, fontFamily: FONTS.mono }}>
             {restructureData.stats?.confirmed_nodes || 0}
           </div>
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px' }}>Avg Confidence</div>
-          <div style={{ fontSize: '28px', fontWeight: '700', color: '#0f172a' }}>
+          <div style={{ fontSize: '13px', color: INK2, marginBottom: '4px' }}>Avg Confidence</div>
+          <div style={{ fontSize: '28px', fontWeight: '700', color: INK, fontFamily: FONTS.mono }}>
             {((restructureData.stats?.avg_confidence || 0) * 100).toFixed(0)}%
           </div>
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px' }}>Improvement</div>
-          <div style={{ fontSize: '28px', fontWeight: '700', color: '#10b981' }}>
+          <div style={{ fontSize: '13px', color: INK2, marginBottom: '4px' }}>Improvement</div>
+          <div style={{ fontSize: '28px', fontWeight: '700', color: '#10b981', fontFamily: FONTS.mono }}>
             +{(((restructureData.stats?.avg_confidence || 0) - 0.5) * 100).toFixed(0)}%
           </div>
         </div>
@@ -260,7 +263,7 @@ const TreeNode = ({ node, animationPlaying, expandedNodes, onToggle, level }) =>
       style={{
         marginLeft: level > 0 ? '20px' : '0',
         padding: '8px',
-        borderLeft: level > 0 ? '2px solid #e5e7eb' : 'none',
+        borderLeft: level > 0 ? `2px solid ${HAIR}` : 'none',
         transition: 'opacity 0.5s, transform 0.5s',
         opacity: animationPlaying ? 0 : 1,
         transform: animationPlaying ? 'translateX(-20px)' : 'translateX(0)',
@@ -277,24 +280,24 @@ const TreeNode = ({ node, animationPlaying, expandedNodes, onToggle, level }) =>
           padding: '8px',
           borderRadius: '6px',
           background: 'white',
-          border: '1px solid #e5e7eb',
+          border: `1px solid ${HAIR}`,
           transition: 'background 0.2s',
           position: 'relative'
         }}
-        onMouseEnter={(e) => e.currentTarget.style.background = '#f3f4f6'}
+        onMouseEnter={(e) => e.currentTarget.style.background = PANEL}
         onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
       >
-        <span style={{ fontSize: '10px', color: '#6b7280' }}>
+        <span style={{ fontSize: '10px', color: INK2 }}>
           {isExpanded ? '▼' : '▶'}
         </span>
         <CheckCircle style={{ width: '16px', height: '16px', color: '#10b981', flexShrink: 0 }} />
-        <span style={{ flex: 1, fontSize: '14px', fontWeight: '500', color: '#0f172a' }}>
+        <span style={{ flex: 1, fontSize: '14px', fontWeight: '500', color: INK }}>
           {node.name}
         </span>
         {node.type && (
           <span style={{
             fontSize: '11px',
-            color: '#6b7280',
+            color: INK2,
             fontStyle: 'italic',
             marginRight: '8px'
           }}>
@@ -304,8 +307,8 @@ const TreeNode = ({ node, animationPlaying, expandedNodes, onToggle, level }) =>
         {node.vendor && (
           <span style={{
             fontSize: '11px',
-            color: '#6b7280',
-            background: '#f3f4f6',
+            color: INK2,
+            background: PANEL,
             padding: '2px 6px',
             borderRadius: '4px',
             marginRight: '8px'
@@ -315,8 +318,8 @@ const TreeNode = ({ node, animationPlaying, expandedNodes, onToggle, level }) =>
         )}
         <span style={{
           marginLeft: 'auto',
-          background: '#dbeafe',
-          color: '#1e40af',
+          background: '#eef0fb',
+          color: '#4a52b0',
           padding: '4px 10px',
           borderRadius: '12px',
           fontSize: '12px',

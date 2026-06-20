@@ -11,10 +11,12 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS, FONTS } from '../theme';
 import WorkloadMixPanel from './WorkloadMixPanel';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e2e8f0', PANEL = '#f8fafc', NAVY = '#0f1b2d';
-const GREEN = '#1f8a4c', AMBER = '#B07C2E', RED = '#C0392B', BLUE = '#1d4ed8';
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
+// Status (semantic) + brand blue — meaning preserved.
+const GREEN = COLORS.good, AMBER = COLORS.warn, RED = COLORS.bad, BLUE = '#4f5ac4';
 const sc = (s) => (s >= 80 ? GREEN : s >= 50 ? AMBER : RED);
 const tierColor = (t) => (Number(t) === 1 ? RED : Number(t) === 2 ? AMBER : INK3);
 
@@ -92,7 +94,7 @@ export default function BusinessRiskPanel(props) {
             {data.rollup.map((f) => (
               <div key={f.framework_id} style={{ border: `1px solid ${HAIR}`, borderTop: `3px solid ${sc(Number(f.avg_score))}`, borderRadius: 8, padding: '12px 14px' }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: INK }}>{fwName(f.framework_id)}</div>
-                <div style={{ fontSize: 26, fontWeight: 800, color: sc(Number(f.avg_score)), lineHeight: 1.1, margin: '4px 0' }}>{f.avg_score}</div>
+                <div style={{ fontSize: 26, fontWeight: 800, color: sc(Number(f.avg_score)), lineHeight: 1.1, margin: '4px 0', fontFamily: FONTS.mono }}>{f.avg_score}</div>
                 <div style={{ fontSize: 10.5, color: INK2 }}>{f.met} met · {f.partially_met} partial · <span style={{ color: RED }}>{f.not_met} not met</span></div>
                 <div style={{ fontSize: 9.5, color: INK3, marginTop: 2 }}>{f.reviewed} reviewed · {f.total} controls</div>
               </div>
@@ -158,7 +160,7 @@ export default function BusinessRiskPanel(props) {
               {(data.attack.tactics || []).slice(0, 8).map((t) => (
                 <div key={t.tactic} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, padding: '3px 0' }}>
                   <span style={{ flex: 1, color: INK2 }}>{t.tactic}</span>
-                  <div style={{ width: 80, height: 5, background: '#eef2f6', borderRadius: 3 }}><div style={{ width: `${t.coveragePct}%`, height: '100%', background: sc(t.coveragePct), borderRadius: 3 }} /></div>
+                  <div style={{ width: 80, height: 5, background: '#f0f1f4', borderRadius: 3 }}><div style={{ width: `${t.coveragePct}%`, height: '100%', background: sc(t.coveragePct), borderRadius: 3 }} /></div>
                   <span style={{ width: 34, textAlign: 'right', color: sc(t.coveragePct), fontWeight: 700 }}>{t.coveragePct}%</span>
                 </div>
               ))}
@@ -173,7 +175,7 @@ export default function BusinessRiskPanel(props) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <div style={{ fontSize: 10, color: INK3, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Blast radius</div>
-                <h3 style={{ margin: '4px 0 0', fontSize: 16, fontWeight: 800, color: INK }}>{blast.name}</h3>
+                <h3 style={{ margin: '4px 0 0', fontSize: 16, fontWeight: 800, color: INK, fontFamily: FONTS.display }}>{blast.name}</h3>
               </div>
               <button onClick={() => setBlast(null)} style={{ background: 'none', border: 'none', fontSize: 20, color: INK3, cursor: 'pointer' }}>✕</button>
             </div>
@@ -190,7 +192,7 @@ export default function BusinessRiskPanel(props) {
                 </div>
                 <div style={{ fontSize: 10, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Affected processes</div>
                 {(blast.processes || []).map((p) => (
-                  <div key={p.id} style={{ display: 'flex', gap: 8, fontSize: 12, padding: '4px 0', borderBottom: '1px solid #f8fafc' }}>
+                  <div key={p.id} style={{ display: 'flex', gap: 8, fontSize: 12, padding: '4px 0', borderBottom: '1px solid #f6f7f9' }}>
                     <span style={{ fontSize: 9.5, fontWeight: 700, color: '#fff', background: tierColor(p.tier), borderRadius: 4, padding: '2px 6px' }}>T{p.tier ?? '—'}</span>
                     <span style={{ flex: 1, color: INK }}>{p.name}</span><span style={{ color: INK3 }}>{p.rto || '—'}</span>
                   </div>
@@ -206,5 +208,5 @@ export default function BusinessRiskPanel(props) {
 
 const Empty = ({ text }) => <div style={{ fontSize: 12, color: INK3, padding: '10px 0' }}>{text}</div>;
 const Stat = ({ label, value, color }) => (
-  <div><div style={{ fontSize: 20, fontWeight: 800, color: color || INK }}>{value}</div><div style={{ fontSize: 10, color: INK3, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div></div>
+  <div><div style={{ fontSize: 20, fontWeight: 800, color: color || INK, fontFamily: FONTS.mono }}>{value}</div><div style={{ fontSize: 10, color: INK3, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div></div>
 );

@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS, FONTS } from '../theme';
 
 const API =
   (typeof window !== 'undefined' && window.__CYBERRX_API) ||
@@ -15,16 +16,16 @@ const API =
   ((typeof window!=='undefined' && /localhost|127\.0\.0\.1/.test(window.location.hostname)) ? 'http://localhost:3001' : 'https://cyberrx-api.onrender.com');
 
 const S = {
-  page: { minHeight: '100vh', background: '#0e1118', color: '#e6ecf5', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', padding: '24px 28px' },
-  h1: { fontSize: 18, fontWeight: 800, margin: '0 0 2px' },
-  sub: { color: '#8b95a8', fontSize: 11, marginBottom: 18 },
-  input: { background: '#161b27', border: '1px solid #2a3346', borderRadius: 6, padding: '7px 10px', color: '#e6ecf5', fontSize: 12, outline: 'none' },
-  btn: { background: '#1a2436', color: '#9bc0ff', border: '1px solid #2f4a7a', borderRadius: 6, padding: '7px 12px', fontSize: 12, cursor: 'pointer', fontWeight: 600 },
-  btnDanger: { background: '#3a1212', color: '#ff7a6b', border: '1px solid #c0392b', borderRadius: 6, padding: '4px 8px', fontSize: 11, cursor: 'pointer' },
-  tableBtn: (active) => ({ display: 'block', width: '100%', textAlign: 'left', padding: '5px 10px', fontSize: 11, cursor: 'pointer', borderRadius: 5, border: 'none', background: active ? '#1a2436' : 'transparent', color: active ? '#9bc0ff' : '#aebbd4' }),
-  th: { padding: '6px 8px', textAlign: 'left', fontSize: 10, color: '#8b95a8', textTransform: 'uppercase', borderBottom: '1px solid #2a3346', whiteSpace: 'nowrap', position: 'sticky', top: 0, background: '#0e1118' },
-  td: { padding: '4px 8px', fontSize: 11, borderBottom: '1px solid #1c2230', whiteSpace: 'nowrap', maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis' },
-  cellInput: { background: '#241d0e', border: '1px solid #b8860b', borderRadius: 4, padding: '2px 6px', color: '#ffce5c', fontSize: 11, width: '95%' },
+  page: { minHeight: '100vh', background: COLORS.navy0, color: '#e6ecf5', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', padding: '24px 28px' },
+  h1: { fontSize: 18, fontWeight: 800, margin: '0 0 2px', fontFamily: FONTS.display },
+  sub: { color: COLORS.navyInk, fontSize: 11, marginBottom: 18 },
+  input: { background: COLORS.navy1, border: `1px solid ${COLORS.navyLine}`, borderRadius: 6, padding: '7px 10px', color: '#e6ecf5', fontSize: 12, outline: 'none' },
+  btn: { background: COLORS.navy2, color: '#9bc0ff', border: `1px solid ${COLORS.navyLine}`, borderRadius: 6, padding: '7px 12px', fontSize: 12, cursor: 'pointer', fontWeight: 600 },
+  btnDanger: { background: '#3a1212', color: '#ff7a6b', border: `1px solid ${COLORS.bad}`, borderRadius: 6, padding: '4px 8px', fontSize: 11, cursor: 'pointer' },
+  tableBtn: (active) => ({ display: 'block', width: '100%', textAlign: 'left', padding: '5px 10px', fontSize: 11, cursor: 'pointer', borderRadius: 5, border: 'none', background: active ? COLORS.navy2 : 'transparent', color: active ? '#9bc0ff' : '#aebbd4' }),
+  th: { padding: '6px 8px', textAlign: 'left', fontSize: 10, color: COLORS.navyInk, textTransform: 'uppercase', borderBottom: `1px solid ${COLORS.navyLine}`, whiteSpace: 'nowrap', position: 'sticky', top: 0, background: COLORS.navy0 },
+  td: { padding: '4px 8px', fontSize: 11, borderBottom: `1px solid ${COLORS.navyLine}`, whiteSpace: 'nowrap', maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis' },
+  cellInput: { background: COLORS.accentDim, border: `1px solid ${COLORS.accent}`, borderRadius: 4, padding: '2px 6px', color: COLORS.accentSoft, fontSize: 11, width: '95%' },
 };
 
 function fmtCell(v) {
@@ -126,7 +127,7 @@ export default function AdminDatabase() {
           <button style={S.btn} onClick={connect}>Connect</button>
         </div>
         {error && <div style={{ color: '#ff7a6b', fontSize: 12, marginTop: 10 }}>{error}</div>}
-        {status && <div style={{ color: '#8b95a8', fontSize: 12, marginTop: 10 }}>{status}</div>}
+        {status && <div style={{ color: COLORS.navyInk, fontSize: 12, marginTop: 10 }}>{status}</div>}
       </div>
     );
   }
@@ -143,28 +144,28 @@ export default function AdminDatabase() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '230px 1fr', gap: 18 }}>
         {/* Table list */}
-        <div style={{ borderRight: '1px solid #2a3346', paddingRight: 10, maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}>
+        <div style={{ borderRight: `1px solid ${COLORS.navyLine}`, paddingRight: 10, maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}>
           {tables.map((t) => (
             <button key={t.table} style={S.tableBtn(active === t.table)} onClick={() => loadTable(t.table, 0)}>
-              {t.table} <span style={{ color: '#6f7a8d' }}>({t.rows})</span>
+              {t.table} <span style={{ color: COLORS.navyInk }}>({t.rows})</span>
             </button>
           ))}
         </div>
 
         {/* Rows */}
         <div style={{ overflowX: 'auto', maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}>
-          {!data && <div style={{ color: '#8b95a8', fontSize: 12 }}>Select a table.</div>}
+          {!data && <div style={{ color: COLORS.navyInk, fontSize: 12 }}>Select a table.</div>}
           {data && (
             <>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
                 <span style={{ fontSize: 13, fontWeight: 700, color: '#9bc0ff' }}>{active}</span>
-                <span style={{ fontSize: 11, color: '#6f7a8d' }}>PK: {(data.primaryKey || []).join(', ') || '(none — editing disabled)'}</span>
+                <span style={{ fontSize: 11, color: COLORS.navyInk }}>PK: {(data.primaryKey || []).join(', ') || '(none — editing disabled)'}</span>
                 <input placeholder="filter org_id…" value={orgFilter} onChange={(e) => setOrgFilter(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && loadTable(active, 0, orgFilter)} style={{ ...S.input, width: 260, padding: '4px 8px' }} />
                 <button style={S.btn} onClick={() => loadTable(active, 0, orgFilter)}>Apply</button>
                 <span style={{ flex: 1 }} />
                 <button style={S.btn} disabled={offset === 0} onClick={() => loadTable(active, Math.max(0, offset - 100))}>← Prev</button>
-                <span style={{ fontSize: 11, color: '#8b95a8' }}>{offset + 1}–{Math.min(offset + 100, data.total)} of {data.total}</span>
+                <span style={{ fontSize: 11, color: COLORS.navyInk }}>{offset + 1}–{Math.min(offset + 100, data.total)} of {data.total}</span>
                 <button style={S.btn} disabled={offset + 100 >= data.total} onClick={() => loadTable(active, offset + 100)}>Next →</button>
               </div>
               <table style={{ borderCollapse: 'collapse', width: '100%' }}>
@@ -174,7 +175,7 @@ export default function AdminDatabase() {
                     {data.columns.map((c) => (
                       <th key={c.column_name} style={S.th}>
                         {c.column_name}{(data.primaryKey || []).includes(c.column_name) ? ' 🔑' : ''}
-                        <div style={{ fontWeight: 400, color: '#5a6477' }}>{c.data_type}</div>
+                        <div style={{ fontWeight: 400, color: COLORS.navyInk }}>{c.data_type}</div>
                       </th>
                     ))}
                   </tr>

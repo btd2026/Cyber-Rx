@@ -4,15 +4,16 @@
  * (orgs.setup_json.hostingMix). Shown on the CISO and CIO dashboards.
  */
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e2e8f0';
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair;
 const ENVS = [
-  { key: 'on_prem', label: 'On-prem', color: '#475569' },
+  { key: 'on_prem', label: 'On-prem', color: '#5c6066' },
   { key: 'azure', label: 'Azure', color: '#0078D4' },
   { key: 'aws', label: 'AWS', color: '#FF9900' },
   { key: 'gcp', label: 'GCP', color: '#4285F4' },
   { key: 'other_cloud', label: 'Other cloud', color: '#7c3aed' },
-  { key: 'saas', label: 'SaaS', color: '#1f8a4c' },
+  { key: 'saas', label: 'SaaS', color: '#1a7f37' },
 ];
 
 function ctx(props) {
@@ -32,7 +33,7 @@ export function Donut({ segments, size = 132, stroke = 20 }) {
   let off = 0;
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <circle cx={cx} cy={cx} r={r} fill="none" stroke="#eef2f6" strokeWidth={stroke} />
+      <circle cx={cx} cy={cx} r={r} fill="none" stroke="#f0f1f4" strokeWidth={stroke} />
       {segments.filter((s) => s.value > 0).map((s, i) => {
         const frac = s.value / total, len = frac * C;
         const el = (
@@ -69,7 +70,7 @@ export default function WorkloadMixPanel(props) {
 
   return (
     <div style={{ border: `1px solid ${HAIR}`, borderRadius: 10, padding: '14px 16px', background: '#fff', marginBottom: 16 }}>
-      <div style={{ fontSize: 13, fontWeight: 800, color: INK, marginBottom: 2 }}>Where workloads run</div>
+      <div style={{ fontSize: 13, fontWeight: 800, color: INK, marginBottom: 2, fontFamily: FONTS.display }}>Where workloads run</div>
       <div style={{ fontSize: 11.5, color: INK2, marginBottom: 10 }}>Hosting mix captured at intake — attack surface and shared-responsibility split by environment.</div>
       <div style={{ display: 'flex', gap: 18, alignItems: 'center', flexWrap: 'wrap' }}>
         <Donut segments={segments} />
@@ -78,7 +79,7 @@ export default function WorkloadMixPanel(props) {
             <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
               <span style={{ width: 11, height: 11, borderRadius: 3, background: s.color, flexShrink: 0 }} />
               <span style={{ flex: 1, color: INK }}>{s.label}</span>
-              <span style={{ fontWeight: 700, color: INK }}>{s.value}%</span>
+              <span style={{ fontWeight: 700, color: INK, fontFamily: FONTS.mono }}>{s.value}%</span>
             </div>
           ))}
         </div>

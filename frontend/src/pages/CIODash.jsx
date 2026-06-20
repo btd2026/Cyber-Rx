@@ -25,6 +25,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import ExecutiveAgentBrief from '../components/ExecutiveAgentBrief';
 import DashNav from '../components/DashNav';
 import ResolutionPanel from '../components/ResolutionPanel';
+import { COLORS, FONTS } from '../theme';
+
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
 
 const fmtUSD = (v) => {
   const x = Number(v) || 0;
@@ -35,15 +38,15 @@ const fmtUSD = (v) => {
 };
 
 const SEV = {
-  Critical: '#dc2626', High: '#ea580c', Medium: '#ca8a04', Low: '#16a34a',
+  Critical: COLORS.bad, High: '#ea580c', Medium: COLORS.warn, Low: COLORS.good,
 };
-const sevColor = (s) => SEV[s] || '#6b7280';
+const sevColor = (s) => SEV[s] || INK2;
 
-const card = { backgroundColor: '#fff', borderRadius: 8, border: '1px solid #e5e7eb' };
-const sectionHead = { padding: '1rem', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' };
-const h2 = { fontSize: '1rem', fontWeight: 600, margin: 0, color: '#111827' };
-const th = { padding: '0.75rem', textAlign: 'left', fontSize: '0.7rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.03em' };
-const td = { padding: '0.75rem', fontSize: '0.85rem', color: '#374151', borderBottom: '1px solid #f3f4f6' };
+const card = { backgroundColor: '#fff', borderRadius: 8, border: `1px solid ${HAIR}` };
+const sectionHead = { padding: '1rem', borderBottom: `1px solid ${HAIR}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' };
+const h2 = { fontSize: '1rem', fontWeight: 600, margin: 0, color: INK, fontFamily: FONTS.display };
+const th = { padding: '0.75rem', textAlign: 'left', fontSize: '0.7rem', fontWeight: 600, color: INK2, textTransform: 'uppercase', letterSpacing: '0.03em' };
+const td = { padding: '0.75rem', fontSize: '0.85rem', color: INK2, borderBottom: `1px solid ${HAIR}` };
 const pill = (bg, color) => ({ padding: '0.125rem 0.5rem', borderRadius: 999, fontSize: '0.7rem', fontWeight: 600, backgroundColor: bg, color });
 
 const CIODash = (props) => {
@@ -117,41 +120,41 @@ const CIODash = (props) => {
   const backlog = (data && data.remediationBacklog) || [];
   const threats = (data && data.threatsToSystems) || [];
 
-  const gradeColor = { Critical: '#dc2626', Elevated: '#ea580c', Moderate: '#ca8a04', Healthy: '#16a34a' }[risk.grade] || '#6b7280';
+  const gradeColor = { Critical: COLORS.bad, Elevated: '#ea580c', Moderate: COLORS.warn, Healthy: COLORS.good }[risk.grade] || INK2;
 
   // Which sections answer the current question, and the figure that leads the view.
   const show = (...vs) => vs.includes(cioView);
   const procExposure = processesAtRisk.reduce((s, p) => s + (Number(p.exposure) || 0), 0);
   const cioViewMeta = () => {
-    if (cioView === 'eol') return { title: 'End-of-Life Technology', num: String(eol.length), unit: '', color: '#ca8a04', label: 'Unsupported systems in the estate', sub: `${eol.filter((a) => a.criticality === 'Critical').length} on crown-jewel processes` };
-    if (cioView === 'vulns') return { title: 'Vulnerability & Patch Posture', num: String(k.criticalVulns ?? 0), unit: '', color: '#dc2626', label: 'Critical vulnerabilities open', sub: `${k.highVulns ?? 0} high · ${patch.avgPatch ?? 0}% avg patch SLA` };
-    if (cioView === 'remediation') return { title: 'Remediation Backlog', num: String(k.overdueTasks ?? 0), unit: '', color: (k.overdueTasks ?? 0) > 0 ? '#dc2626' : '#16a34a', label: 'Overdue remediation tasks', sub: `${k.openTasks ?? 0} open · ${fmtUSD(backlog.reduce((s, t) => s + (Number(t.estimatedCost) || 0), 0))} estimated cost` };
+    if (cioView === 'eol') return { title: 'End-of-Life Technology', num: String(eol.length), unit: '', color: COLORS.warn, label: 'Unsupported systems in the estate', sub: `${eol.filter((a) => a.criticality === 'Critical').length} on crown-jewel processes` };
+    if (cioView === 'vulns') return { title: 'Vulnerability & Patch Posture', num: String(k.criticalVulns ?? 0), unit: '', color: COLORS.bad, label: 'Critical vulnerabilities open', sub: `${k.highVulns ?? 0} high · ${patch.avgPatch ?? 0}% avg patch SLA` };
+    if (cioView === 'remediation') return { title: 'Remediation Backlog', num: String(k.overdueTasks ?? 0), unit: '', color: (k.overdueTasks ?? 0) > 0 ? COLORS.bad : COLORS.good, label: 'Overdue remediation tasks', sub: `${k.openTasks ?? 0} open · ${fmtUSD(backlog.reduce((s, t) => s + (Number(t.estimatedCost) || 0), 0))} estimated cost` };
     if (cioView === 'investments') return { title: 'Investments vs Operational Risk', num: String(risk.score), unit: '/100', color: gradeColor, label: `Technology risk score — ${risk.grade}`, sub: `${k.controlEffectiveness ?? 0}% control effectiveness across the estate` };
-    return { title: cioView === 'crownjewel' ? 'Crown-Jewel Processes Exposed' : 'Systems Most At Risk', num: String(processesAtRisk.length), unit: '', color: '#dc2626', label: 'Crown-jewel processes carrying open risk', sub: `${fmtUSD(procExposure)} exposure · ${k.criticalRisks ?? 0} critical risks` };
+    return { title: cioView === 'crownjewel' ? 'Crown-Jewel Processes Exposed' : 'Systems Most At Risk', num: String(processesAtRisk.length), unit: '', color: COLORS.bad, label: 'Crown-jewel processes carrying open risk', sub: `${fmtUSD(procExposure)} exposure · ${k.criticalRisks ?? 0} critical risks` };
   };
 
   const Kpi = ({ label, value, color, sub }) => (
     <div style={{ ...card, padding: '1rem' }}>
-      <div style={{ fontSize: '0.7rem', color: '#6b7280', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{label}</div>
-      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: color || '#111827' }}>{value}</div>
-      {sub && <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: 2 }}>{sub}</div>}
+      <div style={{ fontSize: '0.7rem', color: INK2, marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{label}</div>
+      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: color || INK, fontFamily: FONTS.mono }}>{value}</div>
+      {sub && <div style={{ fontSize: '0.7rem', color: INK3, marginTop: 2 }}>{sub}</div>}
     </div>
   );
 
   return (
-    <div style={{ padding: '2rem', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+    <div style={{ padding: '2rem', backgroundColor: PANEL, minHeight: '100vh' }}>
       {!props.embedded && <DashNav current="cio" go={props.go} />}
       {/* Header */}
-      <div style={{ marginBottom: '2rem', borderBottom: '1px solid #e5e7eb', paddingBottom: '1.5rem' }}>
+      <div style={{ marginBottom: '2rem', borderBottom: `1px solid ${HAIR}`, paddingBottom: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0, color: '#111827' }}>Technology Risk Protection Dashboard</h1>
-            <p style={{ color: '#6b7280', marginTop: '0.5rem', marginBottom: 0 }}>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0, color: INK, fontFamily: FONTS.display }}>Technology Risk Protection Dashboard</h1>
+            <p style={{ color: INK2, marginTop: '0.5rem', marginBottom: 0 }}>
               YOUR part of cyber responsibility — mapping systems and vulnerabilities to the crown-jewel processes they support
             </p>
           </div>
           {goBack && (
-            <button onClick={goBack} style={{ padding: '0.5rem 1rem', backgroundColor: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db', borderRadius: 6, cursor: 'pointer' }}>← Back</button>
+            <button onClick={goBack} style={{ padding: '0.5rem 1rem', backgroundColor: PANEL, color: INK2, border: `1px solid ${HAIR}`, borderRadius: 6, cursor: 'pointer' }}>← Back</button>
           )}
         </div>
       </div>
@@ -160,11 +163,11 @@ const CIODash = (props) => {
       <ExecutiveAgentBrief role="CIO" entry onAnswer={applyAgentAnswer} onGeneral={() => { setCioQ('General dashboard'); setCioView('systems'); }} authToken={authToken} orgId={orgId} api_url={api_url} />
 
       {loading && !error && (
-        <div style={{ fontSize: '0.78rem', color: '#9ca3af', margin: '0.5rem 0 1rem' }}>● Loading live technology-risk data…</div>
+        <div style={{ fontSize: '0.78rem', color: INK3, margin: '0.5rem 0 1rem' }}>● Loading live technology-risk data…</div>
       )}
 
       {error && (
-        <div style={{ ...card, padding: '1rem', marginBottom: '1.5rem', borderColor: '#fecaca', backgroundColor: '#fef2f2', color: '#991b1b', fontSize: '0.85rem' }}>
+        <div style={{ ...card, padding: '1rem', marginBottom: '1.5rem', borderColor: '#fecaca', backgroundColor: '#fef2f2', color: COLORS.bad, fontSize: '0.85rem' }}>
           Could not load technology-risk data: {error}. Showing whatever is available.
         </div>
       )}
@@ -174,15 +177,15 @@ const CIODash = (props) => {
         const h = cioViewMeta();
         return (
           <div style={{ ...card, padding: '1.25rem 1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1.25rem', borderLeft: `5px solid ${h.color}` }}>
-            <div style={{ fontSize: '2.5rem', fontWeight: 800, color: h.color, lineHeight: 1, flexShrink: 0 }}>
-              {h.num}<span style={{ fontSize: '1rem', color: '#9ca3af', fontWeight: 600 }}>{h.unit}</span>
+            <div style={{ fontSize: '2.5rem', fontWeight: 800, color: h.color, lineHeight: 1, flexShrink: 0, fontFamily: FONTS.mono }}>
+              {h.num}<span style={{ fontSize: '1rem', color: INK3, fontWeight: 600 }}>{h.unit}</span>
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '0.7rem', color: '#2563eb', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>Chief Information Officer — {h.title}</div>
-              <div style={{ fontSize: '1rem', fontWeight: 700, color: '#111827' }}>{h.label}</div>
-              <div style={{ fontSize: '0.78rem', color: '#6b7280', marginTop: 2 }}>{cioQ ? `Answering: “${cioQ}” · ` : ''}{h.sub}</div>
+              <div style={{ fontSize: '0.7rem', color: '#5e6ad2', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>Chief Information Officer — {h.title}</div>
+              <div style={{ fontSize: '1rem', fontWeight: 700, color: INK, fontFamily: FONTS.display }}>{h.label}</div>
+              <div style={{ fontSize: '0.78rem', color: INK2, marginTop: 2 }}>{cioQ ? `Answering: “${cioQ}” · ` : ''}{h.sub}</div>
             </div>
-            <button onClick={clearCioView} style={{ padding: '0.5rem 0.85rem', backgroundColor: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db', borderRadius: 6, cursor: 'pointer', fontSize: '0.8rem', whiteSpace: 'nowrap', flexShrink: 0 }}>← Ask another</button>
+            <button onClick={clearCioView} style={{ padding: '0.5rem 0.85rem', backgroundColor: PANEL, color: INK2, border: `1px solid ${HAIR}`, borderRadius: 6, cursor: 'pointer', fontSize: '0.8rem', whiteSpace: 'nowrap', flexShrink: 0 }}>← Ask another</button>
           </div>
         );
       })()}
@@ -191,18 +194,18 @@ const CIODash = (props) => {
       {show('investments') && (
       <div style={{ ...card, padding: '1.25rem 1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderLeft: `5px solid ${gradeColor}` }}>
         <div>
-          <div style={{ fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Technology Risk Score</div>
+          <div style={{ fontSize: '0.75rem', color: INK2, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Technology Risk Score</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', marginTop: 4 }}>
-            <span style={{ fontSize: '2.25rem', fontWeight: 800, color: gradeColor }}>{risk.score}</span>
-            <span style={{ fontSize: '0.9rem', color: '#6b7280' }}>/ 100</span>
+            <span style={{ fontSize: '2.25rem', fontWeight: 800, color: gradeColor, fontFamily: FONTS.mono }}>{risk.score}</span>
+            <span style={{ fontSize: '0.9rem', color: INK2 }}>/ 100</span>
             <span style={pill(`${gradeColor}1a`, gradeColor)}>{risk.grade}</span>
           </div>
         </div>
         <div style={{ flex: 1, marginLeft: '2rem', maxWidth: 420 }}>
-          <div style={{ height: 10, borderRadius: 6, backgroundColor: '#f3f4f6', overflow: 'hidden' }}>
+          <div style={{ height: 10, borderRadius: 6, backgroundColor: PANEL, overflow: 'hidden' }}>
             <div style={{ width: `${risk.score}%`, height: '100%', backgroundColor: gradeColor }} />
           </div>
-          <div style={{ fontSize: '0.72rem', color: '#9ca3af', marginTop: 6 }}>
+          <div style={{ fontSize: '0.72rem', color: INK3, marginTop: 6 }}>
             Composite of critical risks, EoL systems, overdue remediation, unpatched assets, and control gaps.
           </div>
         </div>
@@ -213,31 +216,31 @@ const CIODash = (props) => {
       {show('investments') && (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
         <Kpi label="Total Assets" value={k.totalAssets ?? 0} />
-        <Kpi label="Crown Jewels" value={k.crownJewels ?? 0} color="#dc2626" />
+        <Kpi label="Crown Jewels" value={k.crownJewels ?? 0} color={COLORS.bad} />
         <Kpi label="Open Risks" value={k.openRisks ?? 0} color="#ea580c" sub={`${k.criticalRisks ?? 0} critical`} />
-        <Kpi label="EoL Systems" value={k.eolSystems ?? 0} color="#ca8a04" />
-        <Kpi label="Critical Vulns" value={k.criticalVulns ?? 0} color="#dc2626" sub={`${k.highVulns ?? 0} high`} />
-        <Kpi label="Avg Patch SLA" value={`${k.avgPatch ?? 0}%`} color={(k.avgPatch ?? 0) >= 85 ? '#16a34a' : '#ca8a04'} />
-        <Kpi label="Control Effectiveness" value={`${k.controlEffectiveness ?? 0}%`} color={(k.controlEffectiveness ?? 0) >= 75 ? '#16a34a' : '#ca8a04'} />
-        <Kpi label="Overdue Tasks" value={k.overdueTasks ?? 0} color={(k.overdueTasks ?? 0) > 0 ? '#dc2626' : '#16a34a'} sub={`${k.openTasks ?? 0} open`} />
+        <Kpi label="EoL Systems" value={k.eolSystems ?? 0} color={COLORS.warn} />
+        <Kpi label="Critical Vulns" value={k.criticalVulns ?? 0} color={COLORS.bad} sub={`${k.highVulns ?? 0} high`} />
+        <Kpi label="Avg Patch SLA" value={`${k.avgPatch ?? 0}%`} color={(k.avgPatch ?? 0) >= 85 ? COLORS.good : COLORS.warn} />
+        <Kpi label="Control Effectiveness" value={`${k.controlEffectiveness ?? 0}%`} color={(k.controlEffectiveness ?? 0) >= 75 ? COLORS.good : COLORS.warn} />
+        <Kpi label="Overdue Tasks" value={k.overdueTasks ?? 0} color={(k.overdueTasks ?? 0) > 0 ? COLORS.bad : COLORS.good} sub={`${k.openTasks ?? 0} open`} />
       </div>
       )}
 
       {/* Systems / Business Processes at risk */}
       {show('systems', 'crownjewel') && (
       <section style={{ ...card, marginBottom: '1.5rem' }}>
-        <div style={sectionHead}><h2 style={h2}>Crown-Jewel Systems at Risk</h2><span style={{ fontSize: '0.75rem', color: '#6b7280' }}>{processesAtRisk.length} processes with open risk</span></div>
+        <div style={sectionHead}><h2 style={h2}>Crown-Jewel Systems at Risk</h2><span style={{ fontSize: '0.75rem', color: INK2 }}>{processesAtRisk.length} processes with open risk</span></div>
         <div style={{ padding: '1rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '0.75rem' }}>
-          {processesAtRisk.length === 0 && <div style={{ color: '#6b7280', fontSize: '0.85rem' }}>No business processes currently carrying open risk.</div>}
+          {processesAtRisk.length === 0 && <div style={{ color: INK2, fontSize: '0.85rem' }}>No business processes currently carrying open risk.</div>}
           {processesAtRisk.map((p) => (
-            <div key={p.id} style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: '0.85rem', borderTop: `3px solid ${sevColor(p.criticality)}` }}>
-              <div style={{ fontWeight: 600, color: '#111827', fontSize: '0.9rem' }}>{p.name}</div>
-              <div style={{ fontSize: '0.72rem', color: '#6b7280', margin: '2px 0 8px' }}>{p.tier} • Owner: {p.owner}</div>
+            <div key={p.id} style={{ border: `1px solid ${HAIR}`, borderRadius: 8, padding: '0.85rem', borderTop: `3px solid ${sevColor(p.criticality)}` }}>
+              <div style={{ fontWeight: 600, color: INK, fontSize: '0.9rem' }}>{p.name}</div>
+              <div style={{ fontSize: '0.72rem', color: INK2, margin: '2px 0 8px' }}>{p.tier} • Owner: {p.owner}</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={pill(`${sevColor(p.criticality)}1a`, sevColor(p.criticality))}>{p.criticality}</span>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111827' }}>{fmtUSD(p.exposure)}</div>
-                  <div style={{ fontSize: '0.68rem', color: '#9ca3af' }}>{p.openRisks} open risk(s)</div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: INK, fontFamily: FONTS.mono }}>{fmtUSD(p.exposure)}</div>
+                  <div style={{ fontSize: '0.68rem', color: INK3 }}>{p.openRisks} open risk(s)</div>
                 </div>
               </div>
             </div>
@@ -255,48 +258,48 @@ const CIODash = (props) => {
           <div style={{ padding: '1rem' }}>
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
               <div style={{ flex: 1, textAlign: 'center', padding: '0.75rem', backgroundColor: '#fef2f2', borderRadius: 8 }}>
-                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#dc2626' }}>{vulns.critical ?? 0}</div>
-                <div style={{ fontSize: '0.7rem', color: '#991b1b' }}>Critical vulns</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: COLORS.bad, fontFamily: FONTS.mono }}>{vulns.critical ?? 0}</div>
+                <div style={{ fontSize: '0.7rem', color: COLORS.bad }}>Critical vulns</div>
               </div>
               <div style={{ flex: 1, textAlign: 'center', padding: '0.75rem', backgroundColor: '#fff7ed', borderRadius: 8 }}>
-                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#ea580c' }}>{vulns.high ?? 0}</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#ea580c', fontFamily: FONTS.mono }}>{vulns.high ?? 0}</div>
                 <div style={{ fontSize: '0.7rem', color: '#9a3412' }}>High vulns</div>
               </div>
               <div style={{ flex: 1, textAlign: 'center', padding: '0.75rem', backgroundColor: '#f0fdf4', borderRadius: 8 }}>
-                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: (patch.avgPatch ?? 0) >= 85 ? '#16a34a' : '#ca8a04' }}>{patch.avgPatch ?? 0}%</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: (patch.avgPatch ?? 0) >= 85 ? COLORS.good : COLORS.warn, fontFamily: FONTS.mono }}>{patch.avgPatch ?? 0}%</div>
                 <div style={{ fontSize: '0.7rem', color: '#166534' }}>Avg patch SLA</div>
               </div>
             </div>
-            <div style={{ fontSize: '0.72rem', color: '#6b7280', marginBottom: 6 }}>Most exposed assets</div>
+            <div style={{ fontSize: '0.72rem', color: INK2, marginBottom: 6 }}>Most exposed assets</div>
             {(vulns.topAssets || []).map((a, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', borderBottom: '1px solid #f3f4f6', fontSize: '0.8rem' }}>
-                <span style={{ color: '#374151' }}>{a.name}</span>
-                <span style={{ color: '#6b7280' }}>{a.vulnCritical}C / {a.vulnHigh}H · {a.patchPct ?? '—'}% patched</span>
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', borderBottom: `1px solid ${HAIR}`, fontSize: '0.8rem' }}>
+                <span style={{ color: INK2 }}>{a.name}</span>
+                <span style={{ color: INK2 }}>{a.vulnCritical}C / {a.vulnHigh}H · {a.patchPct ?? '—'}% patched</span>
               </div>
             ))}
-            {(vulns.topAssets || []).length === 0 && <div style={{ color: '#6b7280', fontSize: '0.8rem' }}>No outstanding vulnerabilities.</div>}
+            {(vulns.topAssets || []).length === 0 && <div style={{ color: INK2, fontSize: '0.8rem' }}>No outstanding vulnerabilities.</div>}
           </div>
         </section>
         )}
 
         {show('investments') && (
         <section style={card}>
-          <div style={sectionHead}><h2 style={h2}>Control Effectiveness</h2><span style={{ fontSize: '0.75rem', color: '#6b7280' }}>{controlPosture.implemented}/{controlPosture.total} implemented</span></div>
+          <div style={sectionHead}><h2 style={h2}>Control Effectiveness</h2><span style={{ fontSize: '0.75rem', color: INK2 }}>{controlPosture.implemented}/{controlPosture.total} implemented</span></div>
           <div style={{ padding: '1rem' }}>
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', fontSize: '0.72rem' }}>
               <span style={pill('#dcfce7', '#166534')}>{controlPosture.implemented} Implemented</span>
               <span style={pill('#fef9c3', '#854d0e')}>{controlPosture.partial} Partial</span>
-              <span style={pill('#e0e7ff', '#3730a3')}>{controlPosture.planned} Planned</span>
-              <span style={pill('#fecaca', '#991b1b')}>{controlPosture.none} None</span>
+              <span style={pill('#eef0fb', '#3730a3')}>{controlPosture.planned} Planned</span>
+              <span style={pill('#fecaca', COLORS.bad)}>{controlPosture.none} None</span>
             </div>
             {(controlPosture.byFramework || []).map((f) => (
               <div key={f.framework} style={{ marginBottom: '0.6rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginBottom: 3 }}>
-                  <span style={{ color: '#374151', fontWeight: 500 }}>{f.framework}</span>
-                  <span style={{ color: '#6b7280' }}>{f.avgEffectiveness}% · {f.count} controls</span>
+                  <span style={{ color: INK2, fontWeight: 500 }}>{f.framework}</span>
+                  <span style={{ color: INK2 }}>{f.avgEffectiveness}% · {f.count} controls</span>
                 </div>
-                <div style={{ height: 8, borderRadius: 4, backgroundColor: '#f3f4f6', overflow: 'hidden' }}>
-                  <div style={{ width: `${f.avgEffectiveness}%`, height: '100%', backgroundColor: f.avgEffectiveness >= 75 ? '#16a34a' : f.avgEffectiveness >= 50 ? '#ca8a04' : '#dc2626' }} />
+                <div style={{ height: 8, borderRadius: 4, backgroundColor: PANEL, overflow: 'hidden' }}>
+                  <div style={{ width: `${f.avgEffectiveness}%`, height: '100%', backgroundColor: f.avgEffectiveness >= 75 ? COLORS.good : f.avgEffectiveness >= 50 ? COLORS.warn : COLORS.bad }} />
                 </div>
               </div>
             ))}
@@ -311,7 +314,7 @@ const CIODash = (props) => {
       <section style={{ ...card, marginBottom: '1.5rem' }}>
         <div style={sectionHead}>
           <h2 style={h2}>Asset Inventory</h2>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', cursor: 'pointer', color: '#374151' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', cursor: 'pointer', color: INK2 }}>
             <input type="checkbox" checked={crownJewelFilter} onChange={(e) => setCrownJewelFilter(e.target.checked)} style={{ cursor: 'pointer' }} />
             Crown jewels only ({filteredAssets.length})
           </label>
@@ -319,7 +322,7 @@ const CIODash = (props) => {
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ backgroundColor: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
+              <tr style={{ backgroundColor: PANEL, borderBottom: `2px solid ${HAIR}` }}>
                 <th style={th}>Asset</th><th style={th}>Type</th><th style={th}>Supports</th>
                 <th style={th}>Criticality</th><th style={th}>Vulns</th><th style={th}>Patch</th><th style={th}>Support</th>
               </tr>
@@ -328,29 +331,29 @@ const CIODash = (props) => {
               {filteredAssets.map((a) => (
                 <tr key={a.id}>
                   <td style={td}>
-                    <div style={{ fontWeight: 500, color: '#111827' }}>{a.name}</div>
-                    <div style={{ fontSize: '0.7rem', color: '#9ca3af' }}>{a.hostname} · {a.owner}{a.crownJewel ? '' : ''}</div>
+                    <div style={{ fontWeight: 500, color: INK }}>{a.name}</div>
+                    <div style={{ fontSize: '0.7rem', color: INK3 }}>{a.hostname} · {a.owner}{a.crownJewel ? '' : ''}</div>
                   </td>
                   <td style={td}>{a.type}</td>
-                  <td style={{ ...td, fontSize: '0.78rem', color: '#6b7280' }}>{(a.processNames || []).join(', ') || '—'}</td>
+                  <td style={{ ...td, fontSize: '0.78rem', color: INK2 }}>{(a.processNames || []).join(', ') || '—'}</td>
                   <td style={td}><span style={pill(`${sevColor(a.criticality)}1a`, sevColor(a.criticality))}>{a.criticality || '—'}</span>{a.crownJewel && <span style={{ ...pill('#fef3c7', '#92400e'), marginLeft: 4 }}>★</span>}</td>
                   <td style={td}>
-                    {a.vulnCritical > 0 && <span style={{ color: '#dc2626', fontWeight: 600 }}>{a.vulnCritical}C </span>}
+                    {a.vulnCritical > 0 && <span style={{ color: COLORS.bad, fontWeight: 600 }}>{a.vulnCritical}C </span>}
                     {a.vulnHigh > 0 && <span style={{ color: '#ea580c', fontWeight: 600 }}>{a.vulnHigh}H</span>}
-                    {a.vulnCritical === 0 && a.vulnHigh === 0 && <span style={{ color: '#16a34a' }}>clean</span>}
+                    {a.vulnCritical === 0 && a.vulnHigh === 0 && <span style={{ color: COLORS.good }}>clean</span>}
                   </td>
                   <td style={td}>
-                    <span style={{ color: a.patchPct == null ? '#9ca3af' : a.patchPct >= 85 ? '#16a34a' : a.patchPct >= 60 ? '#ca8a04' : '#dc2626', fontWeight: 600 }}>
+                    <span style={{ color: a.patchPct == null ? INK3 : a.patchPct >= 85 ? COLORS.good : a.patchPct >= 60 ? COLORS.warn : COLORS.bad, fontWeight: 600 }}>
                       {a.patchPct == null ? '—' : `${a.patchPct}%`}
                     </span>
                   </td>
                   <td style={td}>
-                    <span style={pill(a.supported ? '#dcfce7' : '#fecaca', a.supported ? '#166534' : '#991b1b')}>{a.supported ? 'Supported' : 'End-of-Life'}</span>
-                    {!a.supported && a.endOfSupportDate && <div style={{ fontSize: '0.65rem', color: '#9ca3af', marginTop: 2 }}>EoL {new Date(a.endOfSupportDate).toLocaleDateString()}</div>}
+                    <span style={pill(a.supported ? '#dcfce7' : '#fecaca', a.supported ? '#166534' : COLORS.bad)}>{a.supported ? 'Supported' : 'End-of-Life'}</span>
+                    {!a.supported && a.endOfSupportDate && <div style={{ fontSize: '0.65rem', color: INK3, marginTop: 2 }}>EoL {new Date(a.endOfSupportDate).toLocaleDateString()}</div>}
                   </td>
                 </tr>
               ))}
-              {filteredAssets.length === 0 && <tr><td style={{ ...td, textAlign: 'center', color: '#6b7280' }} colSpan={7}>No assets in inventory.</td></tr>}
+              {filteredAssets.length === 0 && <tr><td style={{ ...td, textAlign: 'center', color: INK2 }} colSpan={7}>No assets in inventory.</td></tr>}
             </tbody>
           </table>
         </div>
@@ -362,18 +365,18 @@ const CIODash = (props) => {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
         {show('eol') && (
         <section style={card}>
-          <div style={sectionHead}><h2 style={h2}>End-of-Life / Unsupported Technology</h2><span style={{ fontSize: '0.75rem', color: eol.length ? '#dc2626' : '#16a34a' }}>{eol.length} system(s)</span></div>
+          <div style={sectionHead}><h2 style={h2}>End-of-Life / Unsupported Technology</h2><span style={{ fontSize: '0.75rem', color: eol.length ? COLORS.bad : COLORS.good }}>{eol.length} system(s)</span></div>
           <div style={{ padding: '1rem' }}>
-            {eol.length === 0 && <div style={{ color: '#6b7280', fontSize: '0.85rem' }}>No unsupported technology detected.</div>}
+            {eol.length === 0 && <div style={{ color: INK2, fontSize: '0.85rem' }}>No unsupported technology detected.</div>}
             {eol.map((a) => (
-              <div key={a.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 0', borderBottom: '1px solid #f3f4f6' }}>
+              <div key={a.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 0', borderBottom: `1px solid ${HAIR}` }}>
                 <div>
-                  <div style={{ fontWeight: 500, color: '#111827', fontSize: '0.85rem' }}>{a.name}</div>
-                  <div style={{ fontSize: '0.7rem', color: '#6b7280' }}>{a.type} · supports {(a.processNames || []).join(', ') || '—'}</div>
+                  <div style={{ fontWeight: 500, color: INK, fontSize: '0.85rem' }}>{a.name}</div>
+                  <div style={{ fontSize: '0.7rem', color: INK2 }}>{a.type} · supports {(a.processNames || []).join(', ') || '—'}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <span style={pill(`${sevColor(a.criticality)}1a`, sevColor(a.criticality))}>{a.criticality}</span>
-                  {a.endOfSupportDate && <div style={{ fontSize: '0.68rem', color: '#dc2626', marginTop: 2 }}>EoL {new Date(a.endOfSupportDate).toLocaleDateString()}</div>}
+                  {a.endOfSupportDate && <div style={{ fontSize: '0.68rem', color: COLORS.bad, marginTop: 2 }}>EoL {new Date(a.endOfSupportDate).toLocaleDateString()}</div>}
                 </div>
               </div>
             ))}
@@ -385,14 +388,14 @@ const CIODash = (props) => {
         <section style={card}>
           <div style={sectionHead}><h2 style={h2}>Attack Pathways → Systems</h2></div>
           <div style={{ padding: '1rem' }}>
-            {threats.length === 0 && <div style={{ color: '#6b7280', fontSize: '0.85rem' }}>No active threat scenarios mapped.</div>}
+            {threats.length === 0 && <div style={{ color: INK2, fontSize: '0.85rem' }}>No active threat scenarios mapped.</div>}
             {threats.map((t) => (
-              <div key={t.id} style={{ padding: '0.6rem 0', borderBottom: '1px solid #f3f4f6' }}>
+              <div key={t.id} style={{ padding: '0.6rem 0', borderBottom: `1px solid ${HAIR}` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontWeight: 500, color: '#111827', fontSize: '0.85rem' }}>{t.name}</span>
+                  <span style={{ fontWeight: 500, color: INK, fontSize: '0.85rem' }}>{t.name}</span>
                   <span style={pill(`${sevColor(t.impact)}1a`, sevColor(t.impact))}>{t.probability}% · {t.impact}</span>
                 </div>
-                <div style={{ fontSize: '0.72rem', color: '#6b7280', marginTop: 3 }}>
+                <div style={{ fontSize: '0.72rem', color: INK2, marginTop: 3 }}>
                   {t.type} → {(t.systems || []).join(', ') || 'no mapped systems'}
                 </div>
               </div>
@@ -408,31 +411,31 @@ const CIODash = (props) => {
       <section style={{ ...card, marginBottom: '1.5rem' }}>
         <div style={sectionHead}>
           <h2 style={h2}>Remediation Backlog</h2>
-          <button onClick={() => props.go && props.go('execution')} style={{ padding: '0.375rem 0.75rem', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: '0.75rem' }}>View All Tasks</button>
+          <button onClick={() => props.go && props.go('execution')} style={{ padding: '0.375rem 0.75rem', backgroundColor: '#5e6ad2', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: '0.75rem' }}>View All Tasks</button>
         </div>
         <div style={{ padding: '1rem' }}>
           {backlog.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>No open remediation items</div>
+            <div style={{ textAlign: 'center', padding: '2rem', color: INK2 }}>No open remediation items</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
               {backlog.map((t) => (
-                <div key={t.id} style={{ padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: `4px solid ${sevColor(t.priority)}` }}>
+                <div key={t.id} style={{ padding: '0.75rem', border: `1px solid ${HAIR}`, borderRadius: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: `4px solid ${sevColor(t.priority)}` }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 500, color: '#111827', fontSize: '0.85rem' }}>
+                    <div style={{ fontWeight: 500, color: INK, fontSize: '0.85rem' }}>
                       {t.title}
-                      {t.overdue && <span style={{ ...pill('#fecaca', '#991b1b'), marginLeft: 8 }}>OVERDUE</span>}
+                      {t.overdue && <span style={{ ...pill('#fecaca', COLORS.bad), marginLeft: 8 }}>OVERDUE</span>}
                     </div>
-                    <div style={{ fontSize: '0.72rem', color: '#6b7280', marginTop: 2 }}>
+                    <div style={{ fontSize: '0.72rem', color: INK2, marginTop: 2 }}>
                       {t.assignedTeam}{t.targetDate && ` • Due ${new Date(t.targetDate).toLocaleDateString()}`}
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                     <span style={pill(`${sevColor(t.priority)}1a`, sevColor(t.priority))}>{t.priority}</span>
-                    <span style={{ fontSize: '0.72rem', color: '#6b7280' }}>{t.status}</span>
+                    <span style={{ fontSize: '0.72rem', color: INK2 }}>{t.status}</span>
                     {t.estimatedCost > 0 && (
                       <div style={{ textAlign: 'right', minWidth: 70 }}>
-                        <div style={{ fontSize: '0.68rem', color: '#9ca3af' }}>Est. cost</div>
-                        <div style={{ fontWeight: 600, color: '#374151', fontSize: '0.85rem' }}>{fmtUSD(t.estimatedCost)}</div>
+                        <div style={{ fontSize: '0.68rem', color: INK3 }}>Est. cost</div>
+                        <div style={{ fontWeight: 600, color: INK2, fontSize: '0.85rem', fontFamily: FONTS.mono }}>{fmtUSD(t.estimatedCost)}</div>
                       </div>
                     )}
                   </div>
@@ -447,8 +450,8 @@ const CIODash = (props) => {
       {/* Footer */}
       {cioView && (
       <div style={{ ...card, padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>Technology Risk Summary — Board-ready export</div>
-        <button onClick={() => window.print()} style={{ padding: '0.5rem 1rem', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: '0.85rem' }}>Export PDF</button>
+        <div style={{ fontSize: '0.85rem', color: INK2 }}>Technology Risk Summary — Board-ready export</div>
+        <button onClick={() => window.print()} style={{ padding: '0.5rem 1rem', backgroundColor: '#5e6ad2', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: '0.85rem' }}>Export PDF</button>
       </div>
       )}
     </div>

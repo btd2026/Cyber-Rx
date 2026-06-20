@@ -46,11 +46,10 @@ async function getResilience(orgId) {
   const Conc = require('./ConcentrationService');
   const [spofs, concentration] = await Promise.all([Conc.detectSpofs(orgId), Conc.detectConcentration(orgId)]);
 
-  const narration = `Resilience and single points of failure, CIO. ${events.length} shared risk(s) threaten operations` +
-    `${events[0] ? `, led by ${events[0].title} reaching ${events[0].crownJewel}` : ''}. ` +
-    `${spofs.length} single point(s) of failure detected${spofs[0] ? `, starting with ${spofs[0].name}` : ''}. ` +
-    `${concentration.length} concentration risk(s)${concentration[0] ? ` — ${concentration[0].label}` : ''}. ` +
-    `These are the same events the security team sees; click any risk for the recovery path and the live attack path.`;
+  const narration = `Honestly, this is where our ability to stay running is thinnest. ${events.length} of the same risks the security team tracks would actually take operations down` +
+    `${events[0] ? `, and the worst is ${events[0].title} — it runs straight to ${events[0].crownJewel}` : ''}. ` +
+    `${spofs.length === 0 ? 'No' : spofs.length} single point${spofs.length === 1 ? '' : 's'} of failure ${spofs.length === 1 ? 'sits' : 'sit'} under that${spofs[0] ? `, starting with ${spofs[0].name} — one dependency, no fallback` : ''}, and ${concentration.length === 0 ? 'no' : concentration.length} concentration risk${concentration.length === 1 ? '' : 's'}${concentration[0] ? ` like ${concentration[0].label}` : ''} mean a single failure cascades wide. ` +
+    `What I'd do: fix the top single point of failure first — it removes the most fragility for the least effort — and pressure-test the recovery path on ${events[0] ? events[0].crownJewel : 'the crown jewels'} before, not during, an incident.`;
 
   return {
     organizationId: orgId, generatedAt: new Date().toISOString(),

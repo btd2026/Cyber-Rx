@@ -15,15 +15,16 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK_2 = '#475569', INK_3 = '#94a3b8', HAIRLINE = '#e2e8f0', PANEL = '#f8fafc';
+const INK = COLORS.ink, INK_2 = COLORS.ink2, INK_3 = COLORS.ink3, HAIRLINE = COLORS.hair, PANEL = COLORS.paper;
 const TEST = {
-  auto: { label: 'Automated', color: '#1f8a4c', bg: '#1f8a4c14' },
-  partial: { label: 'Hybrid', color: '#B07C2E', bg: '#B07C2E14' },
+  auto: { label: 'Automated', color: COLORS.good, bg: `${COLORS.good}14` },
+  partial: { label: 'Hybrid', color: COLORS.warn, bg: `${COLORS.warn}14` },
   manual: { label: 'Manual', color: '#6366f1', bg: '#6366f114' },
 };
 const FN = {
-  GV: '#7c3aed', ID: '#2563eb', PR: '#0891b2', DE: '#ca8a04', RS: '#dc2626', RC: '#059669',
+  GV: '#7c3aed', ID: '#5e6ad2', PR: '#0891b2', DE: '#ca8a04', RS: '#dc2626', RC: '#059669',
 };
 
 function resolveCtx(props) {
@@ -75,7 +76,7 @@ export default function CsfControlLibrary(props) {
       t.category.toLowerCase().includes(needle) || t.controls.some((c) => c.toLowerCase().includes(needle)));
   }, [data, q]);
 
-  if (error) return <div style={{ padding: 20, color: '#C0392B', fontSize: 13 }}>Could not load control library: {error}</div>;
+  if (error) return <div style={{ padding: 20, color: COLORS.bad, fontSize: 13 }}>Could not load control library: {error}</div>;
   if (!data) return <div style={{ padding: 20, color: INK_3, fontSize: 13 }}>Loading NIST CSF 2.0 control library…</div>;
   const S = data.summary;
 
@@ -85,7 +86,7 @@ export default function CsfControlLibrary(props) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20, flexWrap: 'wrap', paddingBottom: 14, borderBottom: `1px solid ${HAIRLINE}` }}>
         <div>
           <div style={{ fontSize: 10, fontWeight: 600, color: INK_3, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 6 }}>{data.framework} · Control Library</div>
-          <h2 style={{ margin: 0, fontSize: 21, fontWeight: 600, color: INK }}>Every control, how it is tested, and which tool evidences it</h2>
+          <h2 style={{ margin: 0, fontSize: 21, fontWeight: 600, color: INK, fontFamily: FONTS.display }}>Every control, how it is tested, and which tool evidences it</h2>
           <div style={{ color: INK_2, fontSize: 12, marginTop: 6, maxWidth: 720, lineHeight: 1.55 }}>
             All {S.totalControls} NIST CSF 2.0 subcategories. <strong>{S.automatableTotal}</strong> can be evidenced via a security-tool API ({S.automated} fully automated, {S.hybrid} hybrid); <strong>{S.manual}</strong> are evidenced by documentation collected during organization setup.
           </div>
@@ -93,7 +94,7 @@ export default function CsfControlLibrary(props) {
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {[['Automated', S.automated, TEST.auto.color], ['Hybrid', S.hybrid, TEST.partial.color], ['Manual', S.manual, TEST.manual.color], ['Tools', S.totalTools, INK_2]].map(([l, v, col]) => (
             <div key={l} style={{ minWidth: 78, border: `1px solid ${HAIRLINE}`, borderTop: `3px solid ${col}`, borderRadius: 5, padding: '8px 12px', textAlign: 'center' }}>
-              <div style={{ fontSize: 22, fontWeight: 700, color: col, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{v}</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: col, fontFamily: FONTS.mono, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{v}</div>
               <div style={{ fontSize: 9, color: INK_3, textTransform: 'uppercase', letterSpacing: '0.07em', marginTop: 3 }}>{l}</div>
             </div>
           ))}
@@ -140,7 +141,7 @@ export default function CsfControlLibrary(props) {
                   return (
                     <tr key={c.id} style={{ verticalAlign: 'top' }}>
                       <td style={{ padding: '9px 8px', borderBottom: `1px solid ${PANEL}` }}>
-                        <span style={{ fontWeight: 700, color: FN[c.function] || INK, fontVariantNumeric: 'tabular-nums', fontSize: 11.5 }}>{c.id}</span>
+                        <span style={{ fontWeight: 700, color: FN[c.function] || INK, fontFamily: FONTS.mono, fontVariantNumeric: 'tabular-nums', fontSize: 11.5 }}>{c.id}</span>
                         <div style={{ fontSize: 9, color: INK_3, marginTop: 2 }}>{c.categoryName}</div>
                       </td>
                       <td style={{ padding: '9px 8px', borderBottom: `1px solid ${PANEL}`, color: INK, lineHeight: 1.45 }}>{c.name}</td>
@@ -153,7 +154,7 @@ export default function CsfControlLibrary(props) {
                             {c.tools.map((tool) => (
                               <button key={tool.id} onClick={() => { setTab('tools'); setOpenTool(tool.id); setQ(''); }}
                                 title={`${tool.category} — view API`}
-                                style={{ fontSize: 10.5, fontWeight: 600, color: tool.connected ? '#1f8a4c' : INK_2, background: tool.connected ? '#1f8a4c10' : '#fff', border: `1px solid ${tool.connected ? '#1f8a4c40' : HAIRLINE}`, borderRadius: 4, padding: '2px 8px', cursor: 'pointer' }}>
+                                style={{ fontSize: 10.5, fontWeight: 600, color: tool.connected ? COLORS.good : INK_2, background: tool.connected ? `${COLORS.good}10` : '#fff', border: `1px solid ${tool.connected ? `${COLORS.good}40` : HAIRLINE}`, borderRadius: 4, padding: '2px 8px', cursor: 'pointer' }}>
                                 {tool.name}{tool.connected ? ' ●' : ''}
                               </button>
                             ))}
@@ -180,14 +181,14 @@ export default function CsfControlLibrary(props) {
           {tools.map((t) => {
             const open = openTool === t.id;
             return (
-              <div key={t.id} style={{ border: `1px solid ${HAIRLINE}`, borderLeft: `4px solid ${t.connected ? '#1f8a4c' : INK_3}`, borderRadius: 6, overflow: 'hidden' }}>
+              <div key={t.id} style={{ border: `1px solid ${HAIRLINE}`, borderLeft: `4px solid ${t.connected ? COLORS.good : INK_3}`, borderRadius: 6, overflow: 'hidden' }}>
                 <button onClick={() => setOpenTool(open ? null : t.id)} style={{ width: '100%', textAlign: 'left', background: open ? PANEL : '#fff', border: 'none', cursor: 'pointer', padding: '12px 15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 14, fontWeight: 700, color: INK }}>{t.name}</span>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: INK, fontFamily: FONTS.display }}>{t.name}</span>
                       <span style={{ fontSize: 10.5, color: INK_3 }}>{t.vendor}</span>
-                      {t.live && <Pill text="Live connector" color="#1f8a4c" />}
-                      {t.connected && <Pill text="Connected" color="#1f8a4c" bg="#1f8a4c14" />}
+                      {t.live && <Pill text="Live connector" color={COLORS.good} />}
+                      {t.connected && <Pill text="Connected" color={COLORS.good} bg={`${COLORS.good}14`} />}
                     </div>
                     <div style={{ fontSize: 11, color: INK_2, marginTop: 3 }}>{t.category} · evidences {t.controlCount} control(s): <span style={{ color: INK_3 }}>{t.controls.join(', ')}</span></div>
                   </div>
@@ -196,12 +197,12 @@ export default function CsfControlLibrary(props) {
                 {open && (
                   <div style={{ padding: '4px 15px 15px', background: PANEL }}>
                     <div style={{ fontSize: 11, color: INK_2, margin: '6px 0' }}><strong>Auth:</strong> {t.auth}</div>
-                    <div style={{ fontSize: 11, color: INK_2, marginBottom: 10 }}><strong>Base URL:</strong> <code style={{ fontSize: 10.5 }}>{t.baseUrl}</code>{t.docs && <> · <a href={t.docs} target="_blank" rel="noreferrer" style={{ color: '#2563eb' }}>API docs ↗</a></>}</div>
+                    <div style={{ fontSize: 11, color: INK_2, marginBottom: 10 }}><strong>Base URL:</strong> <code style={{ fontSize: 10.5 }}>{t.baseUrl}</code>{t.docs && <> · <a href={t.docs} target="_blank" rel="noreferrer" style={{ color: '#5e6ad2' }}>API docs ↗</a></>}</div>
                     {t.apis.map((a, i) => (
                       <div key={i} style={{ background: '#0b1220', borderRadius: 6, padding: '11px 13px', marginBottom: 9, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
-                        <div style={{ color: '#94a3b8', fontSize: 10.5, marginBottom: 6, fontFamily: 'system-ui' }}>{a.purpose}{a.signal ? ` · → ${a.signal}` : ''}</div>
-                        <div style={{ fontSize: 11.5, color: '#e2e8f0', wordBreak: 'break-all' }}>
-                          <span style={{ color: '#34d399', fontWeight: 700 }}>{a.method}</span> {a.path}
+                        <div style={{ color: '#8b9098', fontSize: 10.5, marginBottom: 6, fontFamily: 'system-ui' }}>{a.purpose}{a.signal ? ` · → ${a.signal}` : ''}</div>
+                        <div style={{ fontSize: 11.5, color: '#ebecf0', wordBreak: 'break-all' }}>
+                          <span style={{ color: COLORS.good, fontWeight: 700 }}>{a.method}</span> {a.path}
                         </div>
                         {a.headers && Object.keys(a.headers).length > 0 && (
                           <div style={{ fontSize: 10.5, color: '#7dd3fc', marginTop: 5 }}>
@@ -209,8 +210,8 @@ export default function CsfControlLibrary(props) {
                           </div>
                         )}
                         {a.sample && <div style={{ fontSize: 10.5, color: '#fbbf24', marginTop: 6, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{a.sample}</div>}
-                        <div style={{ fontSize: 10.5, color: '#cbd5e1', marginTop: 7, fontFamily: 'system-ui', lineHeight: 1.5 }}>
-                          <span style={{ color: '#94a3b8' }}>Evidence:</span> {a.extract}
+                        <div style={{ fontSize: 10.5, color: '#d7d9de', marginTop: 7, fontFamily: 'system-ui', lineHeight: 1.5 }}>
+                          <span style={{ color: '#8b9098' }}>Evidence:</span> {a.extract}
                         </div>
                         {a.controls && a.controls.length > 0 && (
                           <div style={{ marginTop: 6, display: 'flex', gap: 4, flexWrap: 'wrap' }}>

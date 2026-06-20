@@ -18,10 +18,11 @@ import CfoExposurePanel from './CfoExposurePanel';
 import ResolutionPanel from './ResolutionPanel';
 import AuditLineagePanel from './AuditLineagePanel';
 import CroBoardReport from './CroBoardReport';
+import { COLORS, FONTS, HERO_BG } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e2e8f0', PANEL = '#f8fafc', NAVY = '#0f1b2d';
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
 const band = (s) => (s >= 80 ? 'Strong' : s >= 60 ? 'Moderate' : s >= 40 ? 'Weak' : 'Critical');
-const C = { Strong: '#1f8a4c', Moderate: '#B07C2E', Weak: '#A85B2E', Critical: '#C0392B' };
+const C = { Strong: COLORS.good, Moderate: COLORS.warn, Weak: '#c2410c', Critical: COLORS.bad };
 const sc = (s) => C[band(s)];
 
 // Per-role framing + the extra tabs (beyond the common ones).
@@ -32,7 +33,7 @@ const ROLES = {
   CLO: { navId: 'clo', tag: 'CLO · Oversight & Compliance', title: 'Executive Oversight & Compliance', lead: 'Provable oversight — one assessment across CSF / 800-53 / CIS with full, audit-ready control lineage.', panels: [{ id: 'lineage', label: 'Audit Lineage', el: (p) => <AuditLineagePanel {...p} /> }] },
   Board: { navId: 'boarddash', tag: 'Board · Executive Risk', title: 'Enterprise Cyber Risk', lead: 'Enterprise cyber risk in business terms — posture, exposure, and resilience at a glance.', panels: [{ id: 'boardpack', label: 'Board Pack', el: (p) => <CroBoardReport {...p} /> }] },
 };
-const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
+const SEV = { Critical: '#cf222e', High: '#c2410c', Medium: '#9a6700', Low: '#1a7f37' };
 
 function ctx(props) {
   const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
@@ -79,18 +80,18 @@ export default function PersonaDashboard(props) {
       <DashNav current={cfg.navId} go={props.go} />
 
       {/* Hero — same format as the CISO view, framed for this role */}
-      <div style={{ background: NAVY, borderRadius: '8px 8px 0 0', padding: '22px 28px', color: '#fff', marginTop: 12 }}>
+      <div style={{ background: HERO_BG, borderRadius: '8px 8px 0 0', padding: '22px 28px', color: '#fff', marginTop: 12 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', gap: 22, alignItems: 'center' }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 52, fontWeight: 800, lineHeight: 1, color: p ? (sc(p.current) === '#A85B2E' ? '#f0a868' : sc(p.current)) : '#8fa3bd' }}>{p ? p.current : '—'}</div>
+              <div style={{ fontSize: 52, fontWeight: 800, lineHeight: 1, fontFamily: FONTS.mono, color: p ? (sc(p.current) === '#c2410c' ? '#f0a868' : sc(p.current)) : '#8fa3bd' }}>{p ? p.current : '—'}</div>
               <div style={{ fontSize: 10, color: '#8fa3bd', textTransform: 'uppercase', letterSpacing: '0.12em', marginTop: 4 }}>of 100{p ? ` · ${band(p.current)}` : ''}</div>
             </div>
             <div>
-              <div style={{ fontSize: 10, fontWeight: 600, color: '#8fa3bd', textTransform: 'uppercase', letterSpacing: '0.16em' }}>{cfg.tag}</div>
-              <h2 style={{ margin: '4px 0 6px', fontSize: 22, fontWeight: 700 }}>{cfg.title}</h2>
+              <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.accent, textTransform: 'uppercase', letterSpacing: '0.16em' }}>{cfg.tag}</div>
+              <h2 style={{ margin: '4px 0 6px', fontSize: 22, fontWeight: 700, fontFamily: FONTS.display }}>{cfg.title}</h2>
               {p && (
-                <div style={{ display: 'flex', gap: 14, alignItems: 'center', fontSize: 12.5, color: '#cbd5e1', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 14, alignItems: 'center', fontSize: 12.5, color: '#d7d9de', flexWrap: 'wrap' }}>
                   <span>Last period <strong style={{ color: '#fff' }}>{p.previous}</strong></span>
                   <span style={{ color: p.delta >= 0 ? '#34d399' : '#f87171', fontWeight: 700 }}>{p.delta >= 0 ? '▲ +' : '▼ '}{p.delta} pts</span>
                   <span style={{ textTransform: 'capitalize' }}>{p.trend}</span>
@@ -99,30 +100,30 @@ export default function PersonaDashboard(props) {
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <button onClick={() => setTab('summary')} style={{ background: '#1d4ed8', color: '#fff', border: 'none', borderRadius: 7, padding: '8px 13px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>⤓ PDF report</button>
-            <button onClick={() => setTab('summary')} style={{ background: 'transparent', color: '#cbd5e1', border: '1px solid #33425c', borderRadius: 7, padding: '8px 13px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>⤓ PowerPoint</button>
+            <button onClick={() => setTab('summary')} style={{ background: '#4f5ac4', color: '#fff', border: 'none', borderRadius: 7, padding: '8px 13px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>⤓ PDF report</button>
+            <button onClick={() => setTab('summary')} style={{ background: 'transparent', color: '#d7d9de', border: '1px solid #33425c', borderRadius: 7, padding: '8px 13px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>⤓ PowerPoint</button>
             <VoiceControls voice={voice} onReplay={() => voice.speak((kq && kq.headline ? kq.headline + '. ' : '') + cfg.lead)} label="Listen" />
           </div>
         </div>
         {/* Role-specific headline (live from this seat's agent) */}
         <div style={{ marginTop: 14, fontSize: 13.5, color: '#fff', fontWeight: 600, lineHeight: 1.5, maxWidth: 920 }}>{kq && kq.headline ? kq.headline : cfg.lead}</div>
-        <div style={{ marginTop: 4, fontSize: 12, color: '#cbd5e1', lineHeight: 1.5, maxWidth: 920 }}>{cfg.lead}</div>
+        <div style={{ marginTop: 4, fontSize: 12, color: '#d7d9de', lineHeight: 1.5, maxWidth: 920 }}>{cfg.lead}</div>
         {/* Role metric chips (this seat's numbers), falling back to security domains */}
         {kq && Array.isArray(kq.metrics) && kq.metrics.length ? (
           <div style={{ display: 'flex', gap: 6, marginTop: 14, flexWrap: 'wrap' }}>
             {kq.metrics.map((m, i) => (
-              <div key={i} style={{ flex: 1, minWidth: 120, background: '#16263b', borderRadius: 5, padding: '7px 9px' }}>
+              <div key={i} style={{ flex: 1, minWidth: 120, background: '#15171c', borderRadius: 5, padding: '7px 9px' }}>
                 <div style={{ fontSize: 9.5, color: '#8fa3bd', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.label}</div>
-                <div style={{ fontSize: 17, fontWeight: 700, color: '#fff' }}>{m.value}</div>
+                <div style={{ fontSize: 17, fontWeight: 700, color: '#fff', fontFamily: FONTS.mono }}>{m.value}</div>
               </div>
             ))}
           </div>
         ) : d && d.domainMatrix && (
           <div style={{ display: 'flex', gap: 6, marginTop: 14, flexWrap: 'wrap' }}>
             {d.domainMatrix.filter((x) => x.weight > 0).map((x) => (
-              <div key={x.id} title={`${x.name} ${x.current}`} style={{ flex: 1, minWidth: 92, background: '#16263b', borderRadius: 5, padding: '7px 9px' }}>
+              <div key={x.id} title={`${x.name} ${x.current}`} style={{ flex: 1, minWidth: 92, background: '#15171c', borderRadius: 5, padding: '7px 9px' }}>
                 <div style={{ fontSize: 9.5, color: '#8fa3bd', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{x.name}</div>
-                <div style={{ fontSize: 17, fontWeight: 700, color: sc(x.current) === '#A85B2E' ? '#f0a868' : sc(x.current) }}>{x.current}</div>
+                <div style={{ fontSize: 17, fontWeight: 700, fontFamily: FONTS.mono, color: sc(x.current) === '#c2410c' ? '#f0a868' : sc(x.current) }}>{x.current}</div>
               </div>
             ))}
           </div>
@@ -154,7 +155,7 @@ export default function PersonaDashboard(props) {
                         <span style={{ fontSize: 9.5, fontWeight: 700, color: '#fff', background: SEV[c.severity] || INK3, borderRadius: 4, padding: '2px 8px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{c.severity}</span>
                       </div>
                       <div style={{ fontSize: 12, color: INK2, marginTop: 5, lineHeight: 1.5 }}>{c.summary}</div>
-                      <button onClick={() => setOpenCard(open ? null : c.n)} style={{ background: 'none', border: 'none', color: '#1d4ed8', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', padding: '6px 0 0' }}>{open ? 'Hide details' : 'View details →'}</button>
+                      <button onClick={() => setOpenCard(open ? null : c.n)} style={{ background: 'none', border: 'none', color: '#4f5ac4', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', padding: '6px 0 0' }}>{open ? 'Hide details' : 'View details →'}</button>
                       {open && <div style={{ fontSize: 11.5, color: INK2, marginTop: 6, paddingTop: 8, borderTop: `1px solid ${HAIR}`, lineHeight: 1.55 }}>{c.detail}</div>}
                     </div>
                   );

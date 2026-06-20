@@ -6,8 +6,9 @@
  */
 
 import React, { useState } from 'react';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2';
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair;
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
 
 export default function CrqDrawer({ card, orgId, authToken, apiUrl, onSaved }) {
@@ -31,12 +32,12 @@ export default function CrqDrawer({ card, orgId, authToken, apiUrl, onSaved }) {
 
   return (
     <>
-      <button onClick={openIt} style={{ background: 'none', border: 'none', padding: 0, fontSize: 9.5, color: '#1d4ed8', fontWeight: 700, cursor: 'pointer' }}>ⓘ How this is calculated</button>
+      <button onClick={openIt} style={{ background: 'none', border: 'none', padding: 0, fontSize: 9.5, color: '#4f5ac4', fontWeight: 700, cursor: 'pointer' }}>ⓘ How this is calculated</button>
       {open && (
-        <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(8,15,28,0.5)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '48px 16px', overflowY: 'auto' }}>
+        <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(11, 12, 14,0.5)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '48px 16px', overflowY: 'auto' }}>
           <div onClick={(e) => e.stopPropagation()} style={{ background: '#fff', borderRadius: 12, width: 'min(560px, 96vw)', boxShadow: '0 24px 64px rgba(0,0,0,0.3)', padding: '20px 22px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: INK }}>How this loss is calculated</h3>
+              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: INK, fontFamily: FONTS.display }}>How this loss is calculated</h3>
               <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', fontSize: 22, color: INK3, cursor: 'pointer', lineHeight: 1 }}>×</button>
             </div>
             {card.title && <div style={{ fontSize: 11.5, color: INK2, marginTop: 4 }}>{card.title}</div>}
@@ -45,7 +46,7 @@ export default function CrqDrawer({ card, orgId, authToken, apiUrl, onSaved }) {
               {[['Expected', loss.expected], ['P10', loss.p10], ['P50 (median)', loss.p50], ['P90', loss.p90], ['Worst case', loss.worstCase]].map(([k, v]) => (
                 <div key={k} style={{ minWidth: 84 }}>
                   <div style={{ fontSize: 9.5, color: INK3, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{k}</div>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: k === 'Worst case' ? '#C0392B' : INK }}>{v == null ? '—' : usd(v)}</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: k === 'Worst case' ? COLORS.bad : INK, fontFamily: FONTS.mono }}>{v == null ? '—' : usd(v)}</div>
                 </div>
               ))}
             </div>
@@ -69,7 +70,7 @@ export default function CrqDrawer({ card, orgId, authToken, apiUrl, onSaved }) {
                 ))}
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 10, alignItems: 'center' }}>
-                <button onClick={save} disabled={busy} style={{ background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 7, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: busy ? 0.6 : 1 }}>{busy ? 'Saving…' : 'Save & recompute'}</button>
+                <button onClick={save} disabled={busy} style={{ background: '#5e6ad2', color: '#fff', border: 'none', borderRadius: 7, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: busy ? 0.6 : 1 }}>{busy ? 'Saving…' : 'Save & recompute'}</button>
                 <span style={{ fontSize: 10.5, color: INK3 }}>Recomputes the distribution and marks it user-tuned.</span>
               </div>
             </div>

@@ -9,10 +9,11 @@ import React from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
 import { useState, useEffect, useCallback } from 'react';
 import Provenance from './Provenance';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc';
-const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
-const BAND = { Strong: '#C0392B', Moderate: '#B07C2E', Weak: '#1f8a4c' };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+const SEV = { Critical: COLORS.bad, High: '#c2410c', Medium: COLORS.warn, Low: COLORS.good };
+const BAND = { Strong: COLORS.bad, Moderate: COLORS.warn, Weak: COLORS.good };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
 
 function ctx(props) {
@@ -56,13 +57,13 @@ export default function CroAggregation(props) {
                   <div style={{ display: 'flex', gap: 7, alignItems: 'center', flexWrap: 'wrap' }}>
                     <Pill text="Correlated" color="#7c3aed" />
                     {f.aboveAppetite && <Pill text="Above appetite" color={SEV.Critical} />}
-                    {f.decision && <Pill text="Decided" color="#1f8a4c" />}
+                    {f.decision && <Pill text="Decided" color="#1a7f37" />}
                   </div>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: INK, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>{f.provenance && <Provenance prov={f.provenance} />}<span>{f.title}</span></div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: INK, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONTS.display }}>{f.provenance && <Provenance prov={f.provenance} />}<span>{f.title}</span></div>
                   <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 }}>
                     {f.members.map((m, i) => (
                       <React.Fragment key={i}>
-                        <span style={{ fontSize: 10.5, color: INK, background: '#fff', border: `1px solid ${HAIR}`, borderRadius: 7, padding: '3px 8px' }}>{m.title} <strong style={{ color: '#1f8a4c' }}>~{m.p30}%</strong></span>
+                        <span style={{ fontSize: 10.5, color: INK, background: '#fff', border: `1px solid ${HAIR}`, borderRadius: 7, padding: '3px 8px' }}>{m.title} <strong style={{ color: '#1a7f37' }}>~{m.p30}%</strong></span>
                         {i < f.members.length - 1 && <span style={{ color: '#7c3aed', fontWeight: 800 }}>＋</span>}
                       </React.Fragment>
                     ))}
@@ -74,7 +75,7 @@ export default function CroAggregation(props) {
                 </div>
                 <div style={{ textAlign: 'right', minWidth: 120 }}>
                   <div style={{ fontSize: 9.5, color: INK3, textTransform: 'uppercase' }}>Combined loss</div>
-                  <div style={{ fontSize: 16, fontWeight: 800, color: SEV.Critical }}>{usd(f.loss.expected)}</div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: SEV.Critical, fontFamily: FONTS.mono }}>{usd(f.loss.expected)}</div>
                   <div style={{ fontSize: 10, color: INK3, marginTop: 2 }}>{f.blastRadius ? f.blastRadius.scope : ''}</div>
                 </div>
               </div>
@@ -93,7 +94,7 @@ export default function CroAggregation(props) {
                 <Pill text={c.severity} color={SEV[c.severity] || INK3} />
               </div>
               <div style={{ fontSize: 11, color: INK2, marginTop: 3 }}>{c.detail}</div>
-              <div style={{ fontSize: 11, color: '#1f8a4c', fontWeight: 600, marginTop: 3 }}>→ {c.recommendation}</div>
+              <div style={{ fontSize: 11, color: '#1a7f37', fontWeight: 600, marginTop: 3 }}>→ {c.recommendation}</div>
             </div>
           ))}
         </div>
@@ -106,7 +107,7 @@ export default function CroAggregation(props) {
           {d.correlationMatrix.map((m) => (
             <div key={m.category} style={{ display: 'grid', gridTemplateColumns: '160px 1fr auto', gap: 10, alignItems: 'center' }}>
               <span style={{ fontSize: 11.5, fontWeight: 600, color: INK }}>{m.category}</span>
-              <div style={{ height: 9, background: '#eef2f6', borderRadius: 4, overflow: 'hidden' }}><div style={{ width: `${m.coefficient * 100}%`, height: '100%', background: BAND[m.band] }} /></div>
+              <div style={{ height: 9, background: '#f0f1f4', borderRadius: 4, overflow: 'hidden' }}><div style={{ width: `${m.coefficient * 100}%`, height: '100%', background: BAND[m.band] }} /></div>
               <span style={{ fontSize: 11, fontWeight: 700, color: BAND[m.band], minWidth: 130, textAlign: 'right' }}>{m.band} ({m.coefficient}) · {usd(m.transmittedLoss)}</span>
             </div>
           ))}
@@ -119,5 +120,5 @@ export default function CroAggregation(props) {
   );
 }
 function Section({ title, children }) {
-  return <div style={{ border: `1px solid ${HAIR}`, borderRadius: 11, background: PANEL, padding: '13px 16px' }}><div style={{ fontSize: 12.5, fontWeight: 800, color: INK, marginBottom: 9 }}>{title}</div>{children}</div>;
+  return <div style={{ border: `1px solid ${HAIR}`, borderRadius: 11, background: PANEL, padding: '13px 16px' }}><div style={{ fontSize: 12.5, fontWeight: 800, color: INK, marginBottom: 9, fontFamily: FONTS.display }}>{title}</div>{children}</div>;
 }

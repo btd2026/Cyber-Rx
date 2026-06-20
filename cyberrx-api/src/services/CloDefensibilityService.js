@@ -61,11 +61,12 @@ async function getDefensibility(orgId) {
   ];
 
   const defensibilityScore = ledger.length === 0 ? 40 : Math.round(60 + ((accepts.length - thin.length) / Math.max(1, accepts.length)) * 40);
-  const narration = `Defensibility and evidence, General Counsel. The shared decision ledger holds ${ledger.length} recorded decision(s) — your contemporaneous record of who knew what, when. ` +
-    `${accepts.length} are risk acceptances, ${thin.length} with thin rationale that would be hard to defend in discovery. ` +
-    `Critical risks on the record: ${criticalDecided.length} of ${criticalCards.length} decided. ` +
-    `Export the ledger as your board-oversight and litigation-readiness artifact. ` +
-    `Reminder: every acceptance here is discoverable — the rationale guidance is built to steer toward defensible reasoning, and is flagged for Legal review before launch.`;
+  const narration = `Here is my read on whether we could defend these decisions later: ` +
+    `${thin.length === 0 ? 'this is in reasonable shape' : 'this is the exposure I would close first'}. ` +
+    `The good part is that we have a contemporaneous record — ${ledger.length} decision(s) showing who knew what, when, which is exactly what a regulator or plaintiff's counsel will ask for. ` +
+    `The concern is the ${accepts.length} risk acceptance(s): ${thin.length} carry thin rationale, and in discovery a one-line "we accepted it" reads as negligence, not judgment. ` +
+    `${criticalCards.length ? `On oversight, only ${criticalDecided.length} of ${criticalCards.length} critical risk(s) are decided on the record — under Caremark, an undocumented critical risk is the gap that draws personal liability. ` : ''}` +
+    `What I would do: shore up the thin rationales now and export the ledger as your board-oversight artifact — and note every acceptance here is discoverable, which is precisely why it is flagged for Legal review before launch.`;
 
   return {
     organizationId: orgId, generatedAt: new Date().toISOString(),

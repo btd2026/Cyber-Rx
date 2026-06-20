@@ -136,14 +136,14 @@ const ConnectorCredentialModalDemo = () => {
         Connector Credential Modal Demo
       </h1>
 
-      <p style={{ fontSize: 12, color: '#6B7280', marginBottom: 32 }}>
+      <p style={{ fontSize: 12, color: '#5c6066', marginBottom: 32 }}>
         This demonstrates the ConnectorCredentialModal component with all supported connector types.
         Click any connector below to configure its credentials.
       </p>
 
       {/* Available connectors */}
       <section>
-        <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16, color: '#374151' }}>
+        <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16, color: '#5c6066' }}>
           Available Connectors
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
@@ -151,7 +151,7 @@ const ConnectorCredentialModalDemo = () => {
             <div
               key={connector.id}
               style={{
-                border: '1px solid #E5E7EB',
+                border: '1px solid #ebecf0',
                 borderRadius: 8,
                 padding: 16,
                 backgroundColor: '#FFFFFF',
@@ -161,15 +161,15 @@ const ConnectorCredentialModalDemo = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                 <span style={{ fontSize: 24 }}>{connector.icon}</span>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#0b0c0e' }}>
                     {connector.name}
                   </div>
-                  <div style={{ fontSize: 10, color: '#6B7280' }}>
+                  <div style={{ fontSize: 10, color: '#5c6066' }}>
                     {connector.purpose}
                   </div>
                 </div>
               </div>
-              <p style={{ fontSize: 11, color: '#6B7280', marginBottom: 12, lineHeight: 1.5 }}>
+              <p style={{ fontSize: 11, color: '#5c6066', marginBottom: 12, lineHeight: 1.5 }}>
                 {connector.description}
               </p>
               <button
@@ -177,7 +177,7 @@ const ConnectorCredentialModalDemo = () => {
                 style={{
                   width: '100%',
                   padding: '8px 16px',
-                  backgroundColor: '#2563EB',
+                  backgroundColor: '#5e6ad2',
                   border: 'none',
                   color: '#FFFFFF',
                   borderRadius: 6,
@@ -186,8 +186,8 @@ const ConnectorCredentialModalDemo = () => {
                   fontWeight: 600,
                   transition: 'background-color 0.2s ease'
                 }}
-                onMouseOver={(e) => e.target.style.backgroundColor = '#1D4ED8'}
-                onMouseOut={(e) => e.target.style.backgroundColor = '#2563EB'}
+                onMouseOver={(e) => e.target.style.backgroundColor = '#4f5ac4'}
+                onMouseOut={(e) => e.target.style.backgroundColor = '#5e6ad2'}
               >
                 Configure Credentials
               </button>
@@ -199,10 +199,10 @@ const ConnectorCredentialModalDemo = () => {
       {/* Connected connectors */}
       {connectedConnectors.length > 0 && (
         <section style={{ marginTop: 32 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16, color: '#374151' }}>
+          <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16, color: '#5c6066' }}>
             Connected Connectors
           </h2>
-          <div style={{ backgroundColor: '#F9FAFB', borderRadius: 8, padding: 16, border: '1px solid #E5E7EB' }}>
+          <div style={{ backgroundColor: '#F9FAFB', borderRadius: 8, padding: 16, border: '1px solid #ebecf0' }}>
             {connectedConnectors.map((conn, index) => {
               const connector = sampleConnectors.find(c => c.id === conn.connectorId);
               return (
@@ -216,16 +216,16 @@ const ConnectorCredentialModalDemo = () => {
                     backgroundColor: '#FFFFFF',
                     borderRadius: 6,
                     marginBottom: index < connectedConnectors.length - 1 ? 8 : 0,
-                    border: '1px solid #E5E7EB'
+                    border: '1px solid #ebecf0'
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontSize: 18 }}>{connector?.icon}</span>
                     <div>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: '#111827' }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: '#0b0c0e' }}>
                         {connector?.name}
                       </div>
-                      <div style={{ fontSize: 10, color: '#6B7280' }}>
+                      <div style={{ fontSize: 10, color: '#5c6066' }}>
                         Sync: {conn.syncFrequency}
                       </div>
                     </div>
@@ -244,11 +244,11 @@ const ConnectorCredentialModalDemo = () => {
       )}
 
       {/* Usage documentation */}
-      <section style={{ marginTop: 32, padding: 20, backgroundColor: '#F9FAFB', borderRadius: 8, border: '1px solid #E5E7EB' }}>
-        <h2 style={{ fontSize: 14, fontWeight: 700, marginBottom: 12, color: '#111827' }}>
+      <section style={{ marginTop: 32, padding: 20, backgroundColor: '#F9FAFB', borderRadius: 8, border: '1px solid #ebecf0' }}>
+        <h2 style={{ fontSize: 14, fontWeight: 700, marginBottom: 12, color: '#0b0c0e' }}>
           Integration Guide
         </h2>
-        <div style={{ fontSize: 11, color: '#374151', lineHeight: 1.6 }}>
+        <div style={{ fontSize: 11, color: '#5c6066', lineHeight: 1.6 }}>
           <p style={{ marginBottom: 8 }}>
             <strong>Props:</strong>
           </p>

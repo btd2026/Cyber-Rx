@@ -8,9 +8,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
 import Provenance from './Provenance';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc', NAVY = '#0f1b2d';
-const TONE = { good: '#1f8a4c', warn: '#B07C2E', bad: '#C0392B' };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+const TONE = { good: COLORS.good, warn: COLORS.warn, bad: COLORS.bad };
 
 function ctx(props) {
   const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
@@ -37,8 +38,8 @@ export default function CloObligationPosture(props) {
 
   return (
     <div style={{ display: 'grid', gap: 14 }}>
-      {d.provenance && <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 5, fontSize: 10, color: '#94a3b8', marginBottom: -4 }}><Provenance prov={d.provenance} /><span>data provenance</span></div>}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: NAVY, color: '#e6ecf5', borderRadius: 10, padding: '14px 16px' }}>
+      {d.provenance && <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 5, fontSize: 10, color: '#8b9098', marginBottom: -4 }}><Provenance prov={d.provenance} /><span>data provenance</span></div>}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: COLORS.subtle, border: `1px solid ${COLORS.hair}`, color: COLORS.ink2, borderRadius: 10, padding: '14px 16px' }}>
         <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>{d.brief}</div>
         <VoiceControls voice={voice} onReplay={() => voice.speak(d.narration || d.brief)} label="Listen" />
       </div>
@@ -51,7 +52,7 @@ export default function CloObligationPosture(props) {
       {/* defensibility posture */}
       <Panel title="Defensibility posture">
         <div style={{ display: 'flex', gap: 18, alignItems: 'center', flexWrap: 'wrap' }}>
-          <div><div style={{ fontSize: 30, fontWeight: 800, color: def.band === 'Strong' ? TONE.good : def.band === 'Adequate' ? TONE.warn : TONE.bad }}>{def.score}</div><div style={{ fontSize: 9.5, color: INK3, textTransform: 'uppercase' }}>{def.band}</div></div>
+          <div><div style={{ fontSize: 30, fontWeight: 800, fontFamily: FONTS.mono, color: def.band === 'Strong' ? TONE.good : def.band === 'Adequate' ? TONE.warn : TONE.bad }}>{def.score}</div><div style={{ fontSize: 9.5, color: INK3, textTransform: 'uppercase' }}>{def.band}</div></div>
           <div style={{ fontSize: 12, color: INK2, lineHeight: 1.6 }}>
             {def.decisionsLogged} decision(s) on the record · {def.acceptsWithRationale}/{def.accepts} acceptances carry a substantive rationale.
             <div style={{ fontSize: 10.5, color: INK3, marginTop: 2 }}>A documented record supports a good-faith oversight defense (Caremark / SEC).</div>
@@ -119,5 +120,5 @@ export default function CloObligationPosture(props) {
   );
 }
 function Panel({ title, children }) {
-  return <div style={{ border: `1px solid ${HAIR}`, borderRadius: 11, background: '#fff', padding: '13px 16px' }}><div style={{ fontSize: 12.5, fontWeight: 800, color: INK, marginBottom: 9 }}>{title}</div>{children}</div>;
+  return <div style={{ border: `1px solid ${HAIR}`, borderRadius: 11, background: '#fff', padding: '13px 16px' }}><div style={{ fontSize: 12.5, fontWeight: 800, fontFamily: FONTS.display, color: INK, marginBottom: 9 }}>{title}</div>{children}</div>;
 }

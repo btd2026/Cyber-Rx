@@ -8,11 +8,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
 import Provenance from './Provenance';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc';
-const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
-const TONE = { good: '#1f8a4c', warn: '#B07C2E', bad: '#C0392B' };
-const TREAT = { mitigate: { c: '#1f8a4c', label: 'Mitigate' }, transfer: { c: '#1d4ed8', label: 'Transfer' }, accept: { c: '#B07C2E', label: 'Accept' } };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+const SEV = { Critical: COLORS.bad, High: '#c2410c', Medium: COLORS.warn, Low: COLORS.good };
+const TONE = { good: COLORS.good, warn: COLORS.warn, bad: COLORS.bad };
+const TREAT = { mitigate: { c: COLORS.good, label: 'Mitigate' }, transfer: { c: '#4f5ac4', label: 'Transfer' }, accept: { c: COLORS.warn, label: 'Accept' } };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
 
 function ctx(props) {
@@ -60,8 +61,8 @@ export default function CroTreatment(props) {
           const t = TREAT[b.treatment];
           return (
             <div key={b.treatment} style={{ border: `1px solid ${HAIR}`, borderTop: `3px solid ${t.c}`, borderRadius: 11, background: '#fff', padding: '12px 14px' }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: t.c }}>{t.label}</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: INK, marginTop: 2 }}>{b.count}</div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: t.c, fontFamily: FONTS.display }}>{t.label}</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: INK, marginTop: 2, fontFamily: FONTS.mono }}>{b.count}</div>
               <div style={{ fontSize: 10.5, color: INK3 }}>{b.decided} decided</div>
               <div style={{ marginTop: 7, display: 'grid', gap: 2, fontSize: 11, color: INK2 }}>
                 <div>Capital <strong style={{ color: INK }}>{usd(b.capital)}</strong></div>
@@ -109,9 +110,9 @@ export default function CroTreatment(props) {
 }
 function Kpi({ label, value, sub, tone }) {
   return (
-    <div style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${tone ? TONE[tone] : '#cbd5e1'}`, borderRadius: 9, padding: '11px 13px', background: '#fff' }}>
+    <div style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${tone ? TONE[tone] : '#d7d9de'}`, borderRadius: 9, padding: '11px 13px', background: '#fff' }}>
       <div style={{ fontSize: 10.5, color: INK2 }}>{label}</div>
-      <div style={{ fontSize: 19, fontWeight: 800, color: tone ? TONE[tone] : INK, marginTop: 2 }}>{value}</div>
+      <div style={{ fontSize: 19, fontWeight: 800, color: tone ? TONE[tone] : INK, marginTop: 2, fontFamily: FONTS.mono }}>{value}</div>
       {sub && <div style={{ fontSize: 10, color: INK3, marginTop: 1 }}>{sub}</div>}
     </div>
   );

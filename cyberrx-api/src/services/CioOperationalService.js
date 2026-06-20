@@ -159,7 +159,17 @@ async function getPosture(orgId) {
     : 'No urgent operational gaps remain — focus on sustaining current controls.');
 
   const brief = sentences.join(' ');
-  const narration = `Here's your operational current state. ${brief}`;
+  // Advisor verdict (spoken) — a read on operational fragility, not a recap of the
+  // on-screen brief. Grounded in the same computed figures above.
+  const opVerdict = overall >= 80 ? 'in good operational shape' : overall >= 55 ? 'holding, but with real soft spots' : 'more fragile than it should be';
+  const narration = `Here is my read: the estate is ${opVerdict} — operational health is ${overall} and availability resilience ${availabilityScore}, both out of 100. ` +
+    (recoveryGaps.length
+      ? `What concerns me most is recovery: ${qty(recoveryGaps.length, 'tier-0 or tier-1 service')} ${recoveryGaps.length === 1 ? "can't make its declared recovery target" : "can't make their declared recovery targets"}${gap ? `, and ${gap.process} would take roughly ${gap.rtoCapabilityHrs} hours against a ${gap.rtoTargetHrs}-hour promise` : ''} — an untested recovery is a promise, not a capability. `
+      : `Recovery is the bright spot: every service can currently make its declared recovery target. `) +
+    `Underneath it, technical debt is ${techDebt.band.toLowerCase()} and ${qty(shadow.count, 'shadow IT or AI system')} ${shadow.count === 1 ? 'is running' : 'are running'} outside change control — invisible dependencies are exactly what turns a small failure into an outage. ` +
+    (wins.length
+      ? `If I had to pick the next move, I'd ${wins.slice(0, 2).join(', then ')} — that buys the most resilience for the least disruption to delivery.`
+      : `No urgent gaps remain — I'd keep the discipline that got you here rather than chase new spend.`);
 
   return {
     organizationId: orgId, generatedAt: new Date().toISOString(),

@@ -26,7 +26,7 @@ const BottomNavigation = ({ currentRoute = '/', onNavigate }) => {
         left: 0,
         right: 0,
         backgroundColor: '#FFFFFF',
-        borderTop: '1px solid #E5E7EB',
+        borderTop: '1px solid #ebecf0',
         display: 'flex',
         justifyContent: 'space-around',
         alignItems: 'center',
@@ -83,7 +83,7 @@ const BottomNavigation = ({ currentRoute = '/', onNavigate }) => {
               style={{
                 fontSize: 11,
                 fontWeight: isActive ? 600 : 500,
-                color: isActive ? '#3B82F6' : '#6B7280',
+                color: isActive ? '#5e6ad2' : '#5c6066',
                 textAlign: 'center',
                 lineHeight: 1
               }}

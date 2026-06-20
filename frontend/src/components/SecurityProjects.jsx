@@ -7,9 +7,10 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc', NAVY = '#0f1b2d';
-const TONE = { good: '#1f8a4c', warn: '#B07C2E', bad: '#C0392B' };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+const TONE = { good: COLORS.good, warn: COLORS.warn, bad: COLORS.bad };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
 const statusTone = (s) => (/hold|block|delay|behind|risk/i.test(s || '') ? 'bad' : /done|complete|operational/i.test(s || '') ? 'good' : 'warn');
 
@@ -81,7 +82,7 @@ export default function SecurityProjects(props) {
           Import your current cybersecurity projects to see how milestones and delays move your security posture and dollar exposure.
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <label style={{ background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}>
+          <label style={{ background: '#5e6ad2', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}>
             {busy ? 'Working…' : '⬆ Import inventory'}
             <input type="file" style={{ display: 'none' }} disabled={busy} accept=".csv,.xls,.xlsx,.txt,.pdf,.doc,.docx" onChange={(e) => { const f = e.target.files && e.target.files[0]; if (f) upload(f); e.target.value = ''; }} />
           </label>
@@ -89,7 +90,7 @@ export default function SecurityProjects(props) {
         </div>
       </div>
 
-      {err && <div style={{ color: '#C0392B', fontSize: 12, marginBottom: 10 }}>{err}</div>}
+      {err && <div style={{ color: '#cf222e', fontSize: 12, marginBottom: 10 }}>{err}</div>}
 
       {mode && (() => {
         const spec = TOOLS.find((t) => t.key === tool) || TOOLS[0];
@@ -99,7 +100,7 @@ export default function SecurityProjects(props) {
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 11 }}>
               {TOOLS.map((t) => (
                 <button key={t.key} onClick={() => { setTool(t.key); setCreds({}); setErr(null); }}
-                  style={{ background: t.key === tool ? '#0f172a' : '#fff', color: t.key === tool ? '#fff' : INK2, border: `1px solid ${t.key === tool ? '#0f172a' : HAIR}`, borderRadius: 999, padding: '5px 13px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>{t.label}</button>
+                  style={{ background: t.key === tool ? '#0b0c0e' : '#fff', color: t.key === tool ? '#fff' : INK2, border: `1px solid ${t.key === tool ? '#0b0c0e' : HAIR}`, borderRadius: 999, padding: '5px 13px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>{t.label}</button>
               ))}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -109,7 +110,7 @@ export default function SecurityProjects(props) {
               ))}
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-              <button onClick={importConnector} disabled={busy} style={{ background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 7, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}>{busy ? 'Importing…' : `Import from ${spec.label}`}</button>
+              <button onClick={importConnector} disabled={busy} style={{ background: '#5e6ad2', color: '#fff', border: 'none', borderRadius: 7, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}>{busy ? 'Importing…' : `Import from ${spec.label}`}</button>
               <span style={{ fontSize: 10.5, color: INK3 }}>Credentials are stored securely. No API access? Use <strong>Import inventory</strong> to upload a CSV/Excel export instead.</span>
             </div>
           </div>
@@ -141,9 +142,9 @@ export default function SecurityProjects(props) {
           {/* delay scenario */}
           {pf.delayScenario && pf.delayScenario.projectsAffected > 0 && (
             <div style={{ background: 'linear-gradient(135deg,#fdecea,#fff6f5)', border: '1px solid #f3c9c4', borderRadius: 10, padding: '12px 16px', marginBottom: 14 }}>
-              <div style={{ fontSize: 9.5, fontWeight: 800, color: '#C0392B', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>⚠️ Delay implication</div>
+              <div style={{ fontSize: 9.5, fontWeight: 800, color: '#cf222e', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>⚠️ Delay implication</div>
               <div style={{ fontSize: 13, color: INK, lineHeight: 1.55 }}>
-                If the {pf.delayScenario.projectsAffected} at-risk project{pf.delayScenario.projectsAffected > 1 ? 's' : ''} each slip {pf.delayScenario.slipDays} days, <strong>+{pf.delayScenario.postureLiftDeferred} posture points are deferred</strong> and <strong style={{ color: '#C0392B' }}>{usd(pf.delayScenario.exposureRetained)}</strong> of exposure stays on the books for the slip window.
+                If the {pf.delayScenario.projectsAffected} at-risk project{pf.delayScenario.projectsAffected > 1 ? 's' : ''} each slip {pf.delayScenario.slipDays} days, <strong>+{pf.delayScenario.postureLiftDeferred} posture points are deferred</strong> and <strong style={{ color: '#cf222e' }}>{usd(pf.delayScenario.exposureRetained)}</strong> of exposure stays on the books for the slip window.
               </div>
               {pf.delayScenario.names && pf.delayScenario.names.length > 0 && <div style={{ fontSize: 11, color: INK2, marginTop: 5 }}>At risk: {pf.delayScenario.names.join(' · ')}</div>}
             </div>
@@ -161,9 +162,9 @@ export default function SecurityProjects(props) {
 
 function Kpi({ label, value, sub, tone }) {
   return (
-    <div style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${tone ? TONE[tone] : '#cbd5e1'}`, borderRadius: 9, padding: '11px 13px', background: '#fff' }}>
+    <div style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${tone ? TONE[tone] : '#d7d9de'}`, borderRadius: 9, padding: '11px 13px', background: '#fff' }}>
       <div style={{ fontSize: 10.5, color: INK2 }}>{label}</div>
-      <div style={{ fontSize: 21, fontWeight: 800, color: tone ? TONE[tone] : INK, marginTop: 2 }}>{value}</div>
+      <div style={{ fontSize: 21, fontWeight: 800, color: tone ? TONE[tone] : INK, marginTop: 2, fontFamily: FONTS.mono }}>{value}</div>
       {sub && <div style={{ fontSize: 10, color: INK3, marginTop: 1 }}>{sub}</div>}
     </div>
   );
@@ -178,7 +179,7 @@ function PvR({ label, realized, predicted, fmt }) {
         <span>{label}</span>
         <span><strong style={{ color: TONE.good }}>{fmt(r)}</strong> realized <span style={{ color: INK3 }}>/ {fmt(p)} predicted</span></span>
       </div>
-      <div style={{ height: 7, background: '#eef2f6', borderRadius: 4, overflow: 'hidden', position: 'relative' }}>
+      <div style={{ height: 7, background: '#f0f1f4', borderRadius: 4, overflow: 'hidden', position: 'relative' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'repeating-linear-gradient(90deg,#dbe3ec 0 6px,transparent 6px 12px)' }} />
         <div style={{ width: `${pct}%`, height: '100%', background: TONE.good, position: 'relative', borderRadius: 4 }} />
       </div>
@@ -210,11 +211,11 @@ function ProjectCard({ p, voice }) {
   const ms = a.milestones || [];
   const tone = statusTone(p.status);
   return (
-    <div style={{ border: `1px solid ${HAIR}`, borderRadius: 11, background: '#fff', overflow: 'hidden', boxShadow: '0 1px 2px rgba(15,23,42,0.04)' }}>
+    <div style={{ border: `1px solid ${HAIR}`, borderRadius: 11, background: '#fff', overflow: 'hidden', boxShadow: '0 1px 2px rgba(11, 12, 14,0.04)' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 16px', borderLeft: `5px solid ${TONE[tone]}` }}>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ fontSize: 13.5, fontWeight: 800, color: INK }}>{p.name}</div>
+            <div style={{ fontSize: 13.5, fontWeight: 800, color: INK, fontFamily: FONTS.display }}>{p.name}</div>
             {voice && <VoiceControls voice={voice} onReplay={() => voice.speak(projectNarration(p))} label="Listen" />}
           </div>
           {p.objective && <div style={{ fontSize: 11, color: INK2, marginTop: 2, lineHeight: 1.45 }}>{p.objective}</div>}
@@ -231,7 +232,7 @@ function ProjectCard({ p, voice }) {
       </div>
       {/* progress */}
       <div style={{ padding: '0 16px' }}>
-        <div style={{ height: 6, background: '#eef2f6', borderRadius: 4, overflow: 'hidden' }}><div style={{ width: `${p.percentComplete || 0}%`, height: '100%', background: TONE[tone] }} /></div>
+        <div style={{ height: 6, background: '#f0f1f4', borderRadius: 4, overflow: 'hidden' }}><div style={{ width: `${p.percentComplete || 0}%`, height: '100%', background: TONE[tone] }} /></div>
       </div>
       {/* risks this project reduces */}
       {a.reducesRisks && a.reducesRisks.length > 0 && (
@@ -239,7 +240,7 @@ function ProjectCard({ p, voice }) {
           <div style={{ fontSize: 9.5, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 5 }}>Reduces these risks</div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {a.reducesRisks.map((r, i) => (
-              <span key={i} style={{ fontSize: 10.5, color: '#1e3a5f', background: '#eaf1fb', border: '1px solid #cfe0f5', borderRadius: 6, padding: '3px 9px' }}>
+              <span key={i} style={{ fontSize: 10.5, color: '#1c1f26', background: '#eaf1fb', border: '1px solid #cfe0f5', borderRadius: 6, padding: '3px 9px' }}>
                 {r.title}{r.severity ? <span style={{ color: INK3 }}> · {r.severity}</span> : null}
               </span>
             ))}
@@ -254,7 +255,7 @@ function ProjectCard({ p, voice }) {
         </div>
         <PvR label="Posture lift" realized={a.realizedLift} predicted={a.postureLift} fmt={(v) => `+${v}`} />
         <PvR label="Loss avoided" realized={a.realizedExposureReduced} predicted={a.exposureReduced} fmt={usd} />
-        <div style={{ fontSize: 10.5, color: INK2, marginTop: 6 }}>Remaining (not yet realized) exposure <strong style={{ color: '#C0392B' }}>{usd(a.remainingExposure)}</strong>.</div>
+        <div style={{ fontSize: 10.5, color: INK2, marginTop: 6 }}>Remaining (not yet realized) exposure <strong style={{ color: '#cf222e' }}>{usd(a.remainingExposure)}</strong>.</div>
       </div>
       {/* milestone ROI timeline */}
       {ms.length > 0 && (
@@ -265,7 +266,7 @@ function ProjectCard({ p, voice }) {
               <div key={i} style={{ flex: 1, border: `1px solid ${HAIR}`, borderRadius: 8, padding: '8px 10px', background: PANEL }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: INK }}>{m.name}</div>
                 <div style={{ fontSize: 9.5, color: INK3, marginTop: 1 }}>{m.percent}% milestone</div>
-                <div style={{ fontSize: 11, color: '#1f8a4c', marginTop: 5 }}>+{m.postureGain} posture</div>
+                <div style={{ fontSize: 11, color: '#1a7f37', marginTop: 5 }}>+{m.postureGain} posture</div>
                 <div style={{ fontSize: 11, color: INK2 }}>{usd(m.exposureRemoved)} reduced</div>
               </div>
             ))}
@@ -279,7 +280,7 @@ function ProjectCard({ p, voice }) {
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {a.delay.map((d) => (
               <span key={d.days} style={{ fontSize: 10.5, color: INK2, background: '#fff', border: `1px solid ${HAIR}`, borderRadius: 999, padding: '3px 10px' }}>
-                {d.days}d slip → <strong style={{ color: '#C0392B' }}>{usd(d.exposureRetained)}</strong> exposure retained
+                {d.days}d slip → <strong style={{ color: '#cf222e' }}>{usd(d.exposureRetained)}</strong> exposure retained
               </span>
             ))}
           </div>

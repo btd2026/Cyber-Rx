@@ -9,9 +9,10 @@
 
 import React, { useState, useEffect } from 'react';
 import BusinessRiskPanel from './BusinessRiskPanel';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e2e8f0', PANEL = '#f8fafc';
-const GREEN = '#1f8a4c', AMBER = '#B07C2E', RED = '#C0392B';
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+const GREEN = COLORS.good, AMBER = COLORS.warn, RED = COLORS.bad;
 const rate = (r) => (r === 'strong' ? GREEN : r === 'adequate' ? AMBER : r === 'weak' ? RED : INK3);
 const expColor = (s) => (s >= 60 ? RED : s >= 30 ? AMBER : GREEN);
 
@@ -50,12 +51,12 @@ export default function CroBoardReport(props) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap', borderBottom: `1px solid ${HAIR}`, paddingBottom: 14 }}>
         <div>
           <div style={{ fontSize: 10, fontWeight: 600, color: INK3, textTransform: 'uppercase', letterSpacing: '0.14em' }}>Board / CRO · Cybersecurity Pack</div>
-          <h2 style={{ margin: '6px 0 0', fontSize: 21, fontWeight: 600, color: INK }}>Enterprise cyber risk in business terms</h2>
+          <h2 style={{ margin: '6px 0 0', fontSize: 21, fontWeight: 600, color: INK, fontFamily: FONTS.display }}>Enterprise cyber risk in business terms</h2>
           <div style={{ fontSize: 12, color: INK2, marginTop: 6, maxWidth: 640 }}>{data.postureStatement}</div>
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <div style={{ textAlign: 'center', border: `1px solid ${HAIR}`, borderTop: `3px solid ${tierColor}`, borderRadius: 6, padding: '8px 14px' }}>
-            <div style={{ fontSize: 26, fontWeight: 700, color: tierColor, lineHeight: 1 }}>{data.enterpriseReadiness}</div>
+            <div style={{ fontSize: 26, fontWeight: 700, color: tierColor, lineHeight: 1, fontFamily: FONTS.mono }}>{data.enterpriseReadiness}</div>
             <div style={{ fontSize: 9, color: INK3, textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 3 }}>Readiness · Tier {data.maturityTier.tier}</div>
           </div>
           <a href={exportUrl} style={{ background: INK, color: '#fff', fontSize: 11.5, fontWeight: 600, borderRadius: 5, padding: '8px 14px', textDecoration: 'none', whiteSpace: 'nowrap' }}>⤓ Board pack (PDF)</a>
@@ -78,7 +79,7 @@ export default function CroBoardReport(props) {
       )}
 
       {/* Top processes by exposure */}
-      <h3 style={{ fontSize: 13, color: INK, margin: '20px 0 8px' }}>Top business processes by exposure</h3>
+      <h3 style={{ fontSize: 13, color: INK, margin: '20px 0 8px', fontFamily: FONTS.display }}>Top business processes by exposure</h3>
       <div style={{ display: 'grid', gap: 6 }}>
         {data.topProcesses.map((p) => (
           <div key={p.id} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${expColor(p.exposureScore)}`, borderRadius: 5, padding: '9px 13px' }}>
@@ -92,7 +93,7 @@ export default function CroBoardReport(props) {
       </div>
 
       {/* Business impacts */}
-      <h3 style={{ fontSize: 13, color: INK, margin: '20px 0 8px' }}>Business-impact themes</h3>
+      <h3 style={{ fontSize: 13, color: INK, margin: '20px 0 8px', fontFamily: FONTS.display }}>Business-impact themes</h3>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px,1fr))', gap: 8 }}>
         {data.businessImpacts.map((b) => (
           <div key={b.theme} style={{ border: `1px solid ${HAIR}`, borderRadius: 6, padding: '11px 13px' }}>
@@ -106,7 +107,7 @@ export default function CroBoardReport(props) {
       </div>
 
       {/* Profile coverage */}
-      <h3 style={{ fontSize: 13, color: INK, margin: '20px 0 8px' }}>Coverage of our chosen security profile</h3>
+      <h3 style={{ fontSize: 13, color: INK, margin: '20px 0 8px', fontFamily: FONTS.display }}>Coverage of our chosen security profile</h3>
       <div style={{ background: PANEL, border: `1px solid ${HAIR}`, borderRadius: 6, padding: '12px 16px', fontSize: 12, color: INK }}>
         <strong>{data.profileCoverage.name}</strong> — <strong style={{ color: expColor(100 - data.profileCoverage.coveragePct) }}>{data.profileCoverage.coveragePct}%</strong> of required safeguards are evidenced as operating
         ({data.profileCoverage.coveredControls} of {data.profileCoverage.totalControls}). Maturity assessed at <strong>Tier {data.maturityTier.tier} — {data.maturityTier.label}</strong>.
@@ -114,7 +115,7 @@ export default function CroBoardReport(props) {
       <div style={{ marginTop: 12, fontSize: 10, color: INK3 }}>Computed from validation run #{data.runId}. Figures trace to stored checks; see the exported pack's appendix.</div>
 
       {/* Operational resilience — RTO bridge, dependency blast radius, business-weighted risk */}
-      <h3 style={{ fontSize: 13, color: INK, margin: '24px 0 8px' }}>Operational resilience & business-weighted risk</h3>
+      <h3 style={{ fontSize: 13, color: INK, margin: '24px 0 8px', fontFamily: FONTS.display }}>Operational resilience & business-weighted risk</h3>
       <BusinessRiskPanel orgId={orgId} authToken={token} apiUrl={api} />
     </div>
   );

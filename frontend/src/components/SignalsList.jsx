@@ -16,7 +16,7 @@ const SignalsList = ({ signals, onSignalClick }) => {
       <div style={{
         padding: '2rem',
         textAlign: 'center',
-        color: '#6B7280',
+        color: '#5c6066',
         fontSize: 12
       }}>
         No signals to display
@@ -30,7 +30,7 @@ const SignalsList = ({ signals, onSignalClick }) => {
     High: '#F5A623',
     Medium: '#3B9EFF',
     Low: '#10B981',
-    Info: '#6B7280'
+    Info: '#5c6066'
   };
 
   // Filter signals
@@ -65,10 +65,10 @@ const SignalsList = ({ signals, onSignalClick }) => {
             onClick={() => setFilter(f)}
             style={{
               padding: '4px 10px',
-              border: '1px solid #E5E7EB',
+              border: '1px solid #ebecf0',
               borderRadius: 5,
-              backgroundColor: filter === f ? '#2563EB' : '#FFFFFF',
-              color: filter === f ? '#FFFFFF' : '#374151',
+              backgroundColor: filter === f ? '#5e6ad2' : '#FFFFFF',
+              color: filter === f ? '#FFFFFF' : '#5c6066',
               fontSize: 9,
               fontWeight: filter === f ? 600 : 400,
               cursor: 'pointer',
@@ -89,7 +89,7 @@ const SignalsList = ({ signals, onSignalClick }) => {
           <div
             key={signal.id || idx}
             style={{
-              border: '1px solid #E5E7EB',
+              border: '1px solid #ebecf0',
               borderRadius: 6,
               backgroundColor: '#FFFFFF',
               overflow: 'hidden',
@@ -112,7 +112,7 @@ const SignalsList = ({ signals, onSignalClick }) => {
                 minWidth: 4,
                 height: 40,
                 borderRadius: 2,
-                backgroundColor: severityColors[signal.severity] || '#6B7280'
+                backgroundColor: severityColors[signal.severity] || '#5c6066'
               }} />
 
               {/* Signal details */}
@@ -124,7 +124,7 @@ const SignalsList = ({ signals, onSignalClick }) => {
                   marginBottom: 4
                 }}>
                   <div style={{
-                    color: '#111827',
+                    color: '#0b0c0e',
                     fontSize: 11,
                     fontWeight: 600
                   }}>
@@ -133,8 +133,8 @@ const SignalsList = ({ signals, onSignalClick }) => {
                   <div style={{
                     padding: '2px 6px',
                     borderRadius: 4,
-                    backgroundColor: `${severityColors[signal.severity] || '#6B7280'}15`,
-                    color: severityColors[signal.severity] || '#6B7280',
+                    backgroundColor: `${severityColors[signal.severity] || '#5c6066'}15`,
+                    color: severityColors[signal.severity] || '#5c6066',
                     fontSize: 8,
                     fontWeight: 600
                   }}>
@@ -143,7 +143,7 @@ const SignalsList = ({ signals, onSignalClick }) => {
                 </div>
 
                 <div style={{
-                  color: '#6B7280',
+                  color: '#5c6066',
                   fontSize: 9,
                   marginBottom: 4
                 }}>
@@ -154,7 +154,7 @@ const SignalsList = ({ signals, onSignalClick }) => {
                   display: 'flex',
                   gap: 12,
                   fontSize: 8,
-                  color: '#9CA3AF'
+                  color: '#8b9098'
                 }}>
                   <span>Source: {signal.sourceName}</span>
                   <span>Category: {signal.signalCategory}</span>
@@ -166,16 +166,16 @@ const SignalsList = ({ signals, onSignalClick }) => {
             {/* Expandable details */}
             {expanded === idx && (
               <div style={{
-                borderTop: '1px solid #E5E7EB',
+                borderTop: '1px solid #ebecf0',
                 padding: 10,
                 backgroundColor: '#F9FAFB'
               }}>
                 {signal.recommendedAction && (
                   <div style={{ marginBottom: 8 }}>
-                    <div style={{ fontSize: 9, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                    <div style={{ fontSize: 9, fontWeight: 600, color: '#5c6066', marginBottom: 4 }}>
                       Recommended Action:
                     </div>
-                    <div style={{ fontSize: 9, color: '#6B7280' }}>
+                    <div style={{ fontSize: 9, color: '#5c6066' }}>
                       {signal.recommendedAction}
                     </div>
                   </div>
@@ -189,7 +189,7 @@ const SignalsList = ({ signals, onSignalClick }) => {
                       rel="noopener noreferrer"
                       style={{
                         fontSize: 9,
-                        color: '#2563EB',
+                        color: '#5e6ad2',
                         textDecoration: 'none'
                       }}
                     >
@@ -200,7 +200,7 @@ const SignalsList = ({ signals, onSignalClick }) => {
 
                 {signal.mappedFrameworks && signal.mappedFrameworks.length > 0 && (
                   <div>
-                    <div style={{ fontSize: 9, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+                    <div style={{ fontSize: 9, fontWeight: 600, color: '#5c6066', marginBottom: 4 }}>
                       Mapped Frameworks:
                     </div>
                     <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
@@ -210,9 +210,9 @@ const SignalsList = ({ signals, onSignalClick }) => {
                           style={{
                             padding: '2px 6px',
                             borderRadius: 3,
-                            backgroundColor: '#E5E7EB',
+                            backgroundColor: '#ebecf0',
                             fontSize: 8,
-                            color: '#374151'
+                            color: '#5c6066'
                           }}
                         >
                           {fw}
@@ -232,7 +232,7 @@ const SignalsList = ({ signals, onSignalClick }) => {
         <div style={{
           marginTop: 8,
           fontSize: 9,
-          color: '#6B7280',
+          color: '#5c6066',
           textAlign: 'center'
         }}>
           Showing {filteredSignals.length} of {signals.length} signals

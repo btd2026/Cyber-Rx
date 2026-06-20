@@ -45,9 +45,10 @@ async function getPortfolio(orgId) {
     realizedExposureReduced: pf.realizedExposureReduced,
     calibration: pf.calibration,
   };
-  const narration = `Regulatory and litigation portfolio, General Counsel. ${matters.length} open matter(s), ${contractual.length} contractual remediation item(s), and ${complianceInitiatives.length} compliance-relevant initiative(s). ` +
-    `Compliance initiatives are predicted to reduce ${usd(pf.totalExposureReduced || 0)} of exposure, ${usd(pf.realizedExposureReduced || 0)} realized to date` +
-    `${pf.calibration != null ? ` (${pf.calibration}% of projection)` : ''}. Matters and contractual items are modeled pending a matter-management feed.`;
+  const narration = `This is mostly good news, with one caveat I want to be honest about. ` +
+    `The compliance work is paying off legally — ${complianceInitiatives.length} initiative(s) are predicted to take down ${usd(pf.totalExposureReduced || 0)} of exposure, with ${usd(pf.realizedExposureReduced || 0)} already realized${pf.calibration != null ? ` — that is ${pf.calibration}% of projection, so the program is delivering, not just promising` : ''}. ` +
+    `Against that we are carrying ${matters.length} open matter(s) and ${contractual.length} contractual remediation item(s), which is a manageable load but the kind that compounds if it drifts. ` +
+    `My recommendation: keep funding the initiatives that are demonstrably reducing exposure, and push the contractual fixes to closure — and treat the matter and contract figures as modeled until we wire in the matter-management feed, so we are not reporting numbers we cannot stand behind.`;
 
   return {
     organizationId: orgId, generatedAt: new Date().toISOString(),

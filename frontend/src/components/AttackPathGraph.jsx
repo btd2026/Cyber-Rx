@@ -9,9 +9,11 @@
  * (layers + edges + node flags). Findings on the path are clickable.
  */
 import React, { useMemo } from 'react';
+import { COLORS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e2e8f0', PANEL = '#f8fafc';
-const RED = '#C0392B', ORANGE = '#E8631A', AMBER = '#B07C2E', GREEN = '#1f8a4c';
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+// Semantic severity colors for the kill-chain — meaning preserved, not chrome.
+const RED = COLORS.bad, ORANGE = '#c2410c', AMBER = COLORS.warn, GREEN = COLORS.good;
 const sevColor = (c) => (c === 'Critical' ? RED : c === 'High' ? ORANGE : c === 'Medium' ? AMBER : GREEN);
 
 // Distinct icon per node kind.
@@ -142,7 +144,7 @@ export default function AttackPathGraph(props) {
 }
 
 function Step({ s, onFinding, findingByRef }) {
-  const ring = s.kind === 'attacker' ? '#111827' : sevColor(s.criticality || 'Medium');
+  const ring = s.kind === 'attacker' ? '#0b0c0e' : sevColor(s.criticality || 'Medium');
   const findings = (s.findings || []).map((r) => (typeof r === 'string' ? findingByRef[r] : r)).filter(Boolean);
   return (
     <div style={{ width: 104, textAlign: 'center', position: 'relative' }}>

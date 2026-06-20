@@ -11,9 +11,10 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e2e8f0', PANEL = '#f8fafc', NAVY = '#0f1b2d';
-const GREEN = '#1f8a4c', AMBER = '#B07C2E', RED = '#C0392B', BLUE = '#1d4ed8';
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
+const GREEN = COLORS.good, AMBER = COLORS.warn, RED = COLORS.bad, BLUE = '#4f5ac4';
 const STATUS = { reviewed: GREEN, draft: AMBER, auto: INK3, none: INK3 };
 
 function ctx(props) {
@@ -148,7 +149,7 @@ export default function ExecutiveSummaryEditor(props) {
 
       {hasContent && !editing && (
         // Read view — on-screen executive summary
-        <div style={{ background: '#fff', border: `1px solid ${HAIR}`, borderRadius: 12, padding: '20px 22px', boxShadow: '0 1px 3px rgba(15,23,42,0.06)' }}>
+        <div style={{ background: '#fff', border: `1px solid ${HAIR}`, borderRadius: 12, padding: '20px 22px', boxShadow: '0 1px 3px rgba(11, 12, 14,0.06)' }}>
           {blocks.context && <p style={{ fontSize: 15, color: INK, lineHeight: 1.6, margin: '0 0 14px' }}>{blocks.context}</p>}
           {blocks.posture && <Block label="Posture" accent={BLUE}><p style={{ margin: 0, fontSize: 13.5, color: INK, lineHeight: 1.6 }}>{blocks.posture}</p></Block>}
           {(blocks.key_risks || []).length > 0 && (

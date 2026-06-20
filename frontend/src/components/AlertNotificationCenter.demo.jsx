@@ -96,14 +96,14 @@ const AlertNotificationCenterDemo = () => {
           <div style={{
             fontSize: 24,
             fontWeight: 700,
-            color: '#111827',
+            color: '#0b0c0e',
             marginBottom: 8
           }}>
             CyberRx Alert Center
           </div>
           <div style={{
             fontSize: 14,
-            color: '#6B7280',
+            color: '#5c6066',
             marginBottom: 24
           }}>
             Sign in to view and manage your alerts
@@ -114,7 +114,7 @@ const AlertNotificationCenterDemo = () => {
             style={{
               width: '100%',
               padding: '12px 24px',
-              backgroundColor: '#2563EB',
+              backgroundColor: '#5e6ad2',
               border: 'none',
               color: '#FFFFFF',
               borderRadius: 8,
@@ -124,10 +124,10 @@ const AlertNotificationCenterDemo = () => {
               transition: 'all 0.2s'
             }}
             onMouseOver={(e) => {
-              e.target.style.backgroundColor = '#1D4ED8';
+              e.target.style.backgroundColor = '#4f5ac4';
             }}
             onMouseOut={(e) => {
-              e.target.style.backgroundColor = '#2563EB';
+              e.target.style.backgroundColor = '#5e6ad2';
             }}
           >
             Sign In with Demo Account
@@ -136,7 +136,7 @@ const AlertNotificationCenterDemo = () => {
           <div style={{
             marginTop: 16,
             fontSize: 11,
-            color: '#9CA3AF'
+            color: '#8b9098'
           }}>
             Demo mode - No authentication required
           </div>
@@ -154,7 +154,7 @@ const AlertNotificationCenterDemo = () => {
       {/* Header */}
       <header style={{
         backgroundColor: '#FFFFFF',
-        borderBottom: '1px solid #E5E7EB',
+        borderBottom: '1px solid #ebecf0',
         padding: '16px 24px',
         display: 'flex',
         justifyContent: 'space-between',
@@ -164,14 +164,14 @@ const AlertNotificationCenterDemo = () => {
           <h1 style={{
             fontSize: 18,
             fontWeight: 700,
-            color: '#111827',
+            color: '#0b0c0e',
             margin: 0
           }}>
             CyberRx Platform
           </h1>
           <p style={{
             fontSize: 12,
-            color: '#6B7280',
+            color: '#5c6066',
             margin: '4px 0 0 0'
           }}>
             Alert Notification Center Demo
@@ -183,13 +183,13 @@ const AlertNotificationCenterDemo = () => {
             <div style={{
               fontSize: 12,
               fontWeight: 600,
-              color: '#374151'
+              color: '#5c6066'
             }}>
               {authState.user?.name}
             </div>
             <div style={{
               fontSize: 10,
-              color: '#6B7280'
+              color: '#5c6066'
             }}>
               {authState.user?.email}
             </div>
@@ -200,8 +200,8 @@ const AlertNotificationCenterDemo = () => {
             style={{
               padding: '6px 12px',
               backgroundColor: 'transparent',
-              border: '1px solid #D1D5DB',
-              color: '#6B7280',
+              border: '1px solid #d7d9de',
+              color: '#5c6066',
               borderRadius: 6,
               fontSize: 11,
               cursor: 'pointer'
@@ -224,14 +224,14 @@ const AlertNotificationCenterDemo = () => {
       {/* Footer */}
       <footer style={{
         backgroundColor: '#FFFFFF',
-        borderTop: '1px solid #E5E7EB',
+        borderTop: '1px solid #ebecf0',
         padding: '16px 24px',
         marginTop: 40,
         textAlign: 'center'
       }}>
         <div style={{
           fontSize: 11,
-          color: '#6B7280'
+          color: '#5c6066'
         }}>
           CyberRx Alert Notification Center Demo • Built with React + Tailwind CSS
         </div>

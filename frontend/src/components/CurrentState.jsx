@@ -12,8 +12,10 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc', NAVY = '#0f1b2d';
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+const TONE = { good: COLORS.good, warn: COLORS.warn, bad: COLORS.bad };
 const band = (s) => (s >= 80 ? 'Strong' : s >= 60 ? 'Moderate' : s >= 40 ? 'Weak' : 'Critical');
 
 function ctx(props) {
@@ -68,28 +70,28 @@ export default function CurrentState(props) {
   return (
     <div style={{ display: 'grid', gap: 14 }}>
       {/* What changed since last brief */}
-      <div style={{ background: 'linear-gradient(135deg,#0f1b2d,#16263b)', color: '#e6ecf5', borderRadius: 11, padding: '14px 16px' }}>
+      <div style={{ background: COLORS.subtle, border: `1px solid ${COLORS.hair}`, color: COLORS.ink, borderRadius: 11, padding: '14px 16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-          <div style={{ fontSize: 10, fontWeight: 800, color: '#9bc0ff', textTransform: 'uppercase', letterSpacing: '0.1em' }}>What changed since your last brief</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: COLORS.accentText, textTransform: 'uppercase', letterSpacing: '0.08em' }}>What changed since your last brief</div>
           <VoiceControls voice={voice} onReplay={() => voice.speak(brief)} label="Listen to brief" />
         </div>
-        <div style={{ fontSize: 14, fontWeight: 700, marginTop: 6 }}>
-          {p.current}/100 · {band(p.current)} <span style={{ color: p.delta >= 0 ? '#34d399' : '#f87171' }}>{p.delta >= 0 ? '▲ +' : '▼ '}{p.delta}</span> <span style={{ color: '#8fa3bd', textTransform: 'capitalize', fontWeight: 500 }}>· {p.trend}</span>
+        <div style={{ fontSize: 14, fontWeight: 700, marginTop: 6, fontFamily: FONTS.mono }}>
+          {p.current}/100 · {band(p.current)} <span style={{ color: p.delta >= 0 ? COLORS.good : COLORS.bad }}>{p.delta >= 0 ? '↑ +' : '↓ '}{p.delta}</span> <span style={{ color: COLORS.ink3, textTransform: 'capitalize', fontWeight: 500 }}>· {p.trend}</span>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
-          {improving.map((m) => <span key={m.id} style={{ fontSize: 11, color: '#34d399', background: '#0f2a1e', borderRadius: 999, padding: '3px 10px' }}>▲ {m.name} +{m.delta}</span>)}
-          {declining.map((m) => <span key={m.id} style={{ fontSize: 11, color: '#fca5a5', background: '#2a1414', borderRadius: 999, padding: '3px 10px' }}>▼ {m.name} {m.delta}</span>)}
-          {!improving.length && !declining.length && <span style={{ fontSize: 11, color: '#8fa3bd' }}>No material domain movement this period.</span>}
+          {improving.map((m) => <span key={m.id} style={{ fontSize: 11, color: COLORS.good, background: COLORS.goodSoft, borderRadius: 999, padding: '3px 10px' }}>↑ {m.name} +{m.delta}</span>)}
+          {declining.map((m) => <span key={m.id} style={{ fontSize: 11, color: COLORS.bad, background: COLORS.badSoft, borderRadius: 999, padding: '3px 10px' }}>↓ {m.name} {m.delta}</span>)}
+          {!improving.length && !declining.length && <span style={{ fontSize: 11, color: COLORS.ink3 }}>No material domain movement this period.</span>}
         </div>
       </div>
 
       {/* Generated executive summary */}
       <div style={{ border: `1px solid ${HAIR}`, borderRadius: 11, background: '#fff', padding: '14px 16px' }}>
-        <div style={{ fontSize: 12.5, fontWeight: 800, color: INK, marginBottom: 6 }}>Executive summary <span style={{ fontSize: 10, fontWeight: 600, color: INK3 }}>· auto-derived from your data</span></div>
+        <div style={{ fontSize: 12.5, fontWeight: 800, color: INK, marginBottom: 6, fontFamily: FONTS.display }}>Executive summary <span style={{ fontSize: 10, fontWeight: 600, color: INK3, fontFamily: FONTS.body }}>· auto-derived from your data</span></div>
         <div style={{ fontSize: 13, color: INK, lineHeight: 1.6 }}>{p.narrative || brief}</div>
         <div style={{ fontSize: 12.5, color: INK2, lineHeight: 1.6, marginTop: 8 }}>{brief}</div>
         {undecided.length > 0 && props.onOpenQueue && (
-          <button onClick={props.onOpenQueue} style={{ marginTop: 10, background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 7, padding: '7px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Review {undecided.length} open decision{undecided.length === 1 ? '' : 's'} →</button>
+          <button onClick={props.onOpenQueue} style={{ marginTop: 10, background: COLORS.accent, color: '#fff', border: 'none', borderRadius: 7, padding: '7px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Review {undecided.length} open decision{undecided.length === 1 ? '' : 's'} →</button>
         )}
       </div>
 
@@ -97,19 +99,19 @@ export default function CurrentState(props) {
       {vis && (
         <div style={{ border: `1px solid ${HAIR}`, borderRadius: 11, background: '#fff', padding: '14px 16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <div style={{ fontSize: 12.5, fontWeight: 800, color: INK }}>Data visibility confidence</div>
-            <span style={{ fontSize: 12, fontWeight: 800, color: vis.band === 'High' ? '#1f8a4c' : vis.band === 'Moderate' ? '#B07C2E' : '#C0392B' }}>{vis.band} · {vis.overall}%</span>
+            <div style={{ fontSize: 12.5, fontWeight: 800, color: INK, fontFamily: FONTS.display }}>Data visibility confidence</div>
+            <span style={{ fontSize: 12, fontWeight: 800, color: vis.band === 'High' ? TONE.good : vis.band === 'Moderate' ? TONE.warn : TONE.bad, fontFamily: FONTS.mono }}>{vis.band} · {vis.overall}%</span>
           </div>
           <div style={{ fontSize: 11, color: INK3, marginBottom: 10, lineHeight: 1.5, maxWidth: 760 }}>
             How complete the data behind these results is, by source. The platform's outputs are only as trustworthy as their inputs — connect each source to move it from <em>inferred</em> to observed and raise confidence.
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 8 }}>
             {vis.classes.map((c) => {
-              const col = c.confidence >= 80 ? '#1f8a4c' : c.confidence >= 50 ? '#B07C2E' : '#C0392B';
+              const col = c.confidence >= 80 ? TONE.good : c.confidence >= 50 ? TONE.warn : TONE.bad;
               return (
                 <div key={c.id} style={{ border: `1px solid ${HAIR}`, borderRadius: 8, padding: '8px 10px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}><span style={{ color: INK2 }}>{c.label}</span><strong style={{ color: col }}>{c.band}</strong></div>
-                  <div style={{ height: 5, background: '#eef2f6', borderRadius: 3, marginTop: 5, overflow: 'hidden' }}><div style={{ width: `${c.confidence}%`, height: '100%', background: col }} /></div>
+                  <div style={{ height: 5, background: '#f0f1f4', borderRadius: 3, marginTop: 5, overflow: 'hidden' }}><div style={{ width: `${c.confidence}%`, height: '100%', background: col }} /></div>
                   <div style={{ fontSize: 9.5, color: INK3, marginTop: 3 }}>{c.hasData ? `${c.rows} records` : 'no data — inferred'}</div>
                 </div>
               );

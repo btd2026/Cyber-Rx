@@ -8,10 +8,11 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc', NAVY = '#0f1b2d';
-const TONE = { good: '#1f8a4c', warn: '#B07C2E', bad: '#C0392B' };
-const ST = { met: '#1f8a4c', partial: '#B07C2E', gap: '#C0392B', not_assessed: '#94a3b8', not_applicable: '#cbd5e1' };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+const TONE = { good: COLORS.good, warn: COLORS.warn, bad: COLORS.bad };
+const ST = { met: '#1a7f37', partial: '#9a6700', gap: '#cf222e', not_assessed: '#8b9098', not_applicable: '#d7d9de' };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
 
 // Short-but-complete spoken intro to the compiler page; adapts to whether
@@ -69,13 +70,13 @@ export default function CompilerChain(props) {
 
   return (
     <div style={{ display: 'grid', gap: 14 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', background: NAVY, color: '#e6ecf5', borderRadius: 10, padding: '13px 16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', background: COLORS.subtle, border: `1px solid ${COLORS.hair}`, color: COLORS.ink2, borderRadius: 10, padding: '13px 16px' }}>
         <div style={{ fontSize: 12.5, lineHeight: 1.6, flex: 1, minWidth: 240 }}>
-          The traceable chain <strong style={{ color: '#9bc0ff' }}>business risk → process → application → security system → control</strong>, with each control assessed against all five frameworks <strong>independently</strong> (no crosswalk).
+          The traceable chain <strong style={{ color: COLORS.accentText }}>business risk → process → application → security system → control</strong>, with each control assessed against all five frameworks <strong style={{ color: COLORS.ink }}>independently</strong> (no crosswalk).
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <VoiceControls voice={voice} onReplay={() => voice.speak(buildNarration(posture, chain))} label="Listen" />
-          <button onClick={recompile} disabled={busy} style={{ background: busy ? '#475569' : '#4f46e5', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 12.5, fontWeight: 700, cursor: busy ? 'default' : 'pointer' }}>{busy ? 'Compiling…' : '↻ Recompile'}</button>
+          <button onClick={recompile} disabled={busy} style={{ background: busy ? '#9499a1' : COLORS.accent, color: '#fff', border: 'none', borderRadius: 7, padding: '9px 18px', fontSize: 12.5, fontWeight: 600, cursor: busy ? 'default' : 'pointer' }}>{busy ? 'Compiling…' : '↻ Recompile'}</button>
         </div>
       </div>
 
@@ -85,8 +86,8 @@ export default function CompilerChain(props) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px,1fr))', gap: 10 }}>
           {(posture ? posture.perFramework : []).map((f) => (
             <div key={f.framework} style={{ border: `1px solid ${HAIR}`, borderTop: `3px solid ${f.posture == null ? INK3 : f.posture >= 75 ? TONE.good : f.posture >= 50 ? TONE.warn : TONE.bad}`, borderRadius: 10, background: '#fff', padding: '11px 13px' }}>
-              <div style={{ fontSize: 12, fontWeight: 800, color: INK }}>{f.label}</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: f.posture == null ? INK3 : f.posture >= 75 ? TONE.good : f.posture >= 50 ? TONE.warn : TONE.bad, marginTop: 2 }}>{f.posture == null ? 'Not assessed' : `${f.posture}%`}</div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: INK, fontFamily: FONTS.display }}>{f.label}</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: f.posture == null ? INK3 : f.posture >= 75 ? TONE.good : f.posture >= 50 ? TONE.warn : TONE.bad, marginTop: 2, fontFamily: FONTS.mono }}>{f.posture == null ? 'Not assessed' : `${f.posture}%`}</div>
               <div style={{ display: 'flex', gap: 6, marginTop: 6, fontSize: 10, color: INK3, flexWrap: 'wrap' }}>
                 <Chip n={f.met} t="met" /><Chip n={f.partial} t="partial" /><Chip n={f.gap} t="gap" />
                 {f.not_assessed ? <Chip n={f.not_assessed} t="not_assessed" /> : null}

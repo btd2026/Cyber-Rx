@@ -4,8 +4,9 @@
  * assessment score. Backend: /api/cfo/exposure.
  */
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e2e8f0', PANEL = '#f8fafc', GREEN = '#1f8a4c', RED = '#C0392B';
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, GREEN = COLORS.good, RED = COLORS.bad;
 const usd = (n) => (n == null ? '—' : n >= 1e9 ? `$${(n / 1e9).toFixed(1)}B` : n >= 1e6 ? `$${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `$${Math.round(n / 1e3)}K` : `$${n}`);
 
 function ctx(props) {
@@ -31,21 +32,21 @@ export default function CfoExposurePanel(props) {
   const max = Math.max(1, ...(d.byApp || []).map((a) => a.weightedExposure || 0));
   const Stat = ({ label, value, color }) => (
     <div style={{ flex: 1, minWidth: 120, background: PANEL, border: `1px solid ${HAIR}`, borderRadius: 8, padding: '10px 12px' }}>
-      <div style={{ fontSize: 20, fontWeight: 800, color: color || INK }}>{value}</div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: color || INK, fontFamily: FONTS.mono }}>{value}</div>
       <div style={{ fontSize: 9.5, color: INK3, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
     </div>
   );
 
   return (
     <div style={{ background: '#fff', border: `1px solid ${HAIR}`, borderRadius: 10, padding: '16px 18px', marginBottom: 16 }}>
-      <div style={{ fontSize: 13, fontWeight: 800, color: INK }}>Business-weighted cyber exposure</div>
+      <div style={{ fontSize: 13, fontWeight: 800, color: INK, fontFamily: FONTS.display }}>Business-weighted cyber exposure</div>
       <div style={{ fontSize: 11.5, color: INK2, margin: '4px 0 12px', maxWidth: 720 }}>What our security dollars buy down — net exposure allocated to the applications that carry the most business criticality, against today's assessment score.</div>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
         <Stat label="Net exposure" value={usd(d.netExposure)} color={RED} />
         <Stat label="Gross exposure" value={usd(d.grossExposure)} />
         <Stat label="Insurance coverage" value={usd(d.insuranceCoverage)} color={GREEN} />
         <Stat label="Tier-1 apps" value={d.tier1Apps} />
-        <Stat label="Assessment score" value={d.assessmentScore ?? '—'} color={d.assessmentScore >= 80 ? GREEN : d.assessmentScore >= 50 ? '#B07C2E' : RED} />
+        <Stat label="Assessment score" value={d.assessmentScore ?? '—'} color={d.assessmentScore >= 80 ? GREEN : d.assessmentScore >= 50 ? '#9a6700' : RED} />
       </div>
       {(d.byApp || []).length > 0 && (
         <div>
@@ -53,8 +54,8 @@ export default function CfoExposurePanel(props) {
           {d.byApp.slice(0, 8).map((a) => (
             <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
               <span style={{ width: 180, fontSize: 12, color: INK, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</span>
-              <div style={{ flex: 1, height: 8, background: '#eef2f6', borderRadius: 4 }}><div style={{ width: `${Math.round((a.weightedExposure / max) * 100)}%`, height: '100%', background: RED, borderRadius: 4 }} /></div>
-              <span style={{ width: 64, textAlign: 'right', fontSize: 11.5, fontWeight: 700, color: INK }}>{usd(a.weightedExposure)}</span>
+              <div style={{ flex: 1, height: 8, background: '#f0f1f4', borderRadius: 4 }}><div style={{ width: `${Math.round((a.weightedExposure / max) * 100)}%`, height: '100%', background: RED, borderRadius: 4 }} /></div>
+              <span style={{ width: 64, textAlign: 'right', fontSize: 11.5, fontWeight: 700, color: INK, fontFamily: FONTS.mono }}>{usd(a.weightedExposure)}</span>
             </div>
           ))}
         </div>

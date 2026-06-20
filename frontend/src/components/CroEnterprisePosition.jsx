@@ -9,9 +9,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
 import Provenance from './Provenance';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc', NAVY = '#0f1b2d';
-const TONE = { good: '#1f8a4c', warn: '#B07C2E', bad: '#C0392B' };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+const TONE = { good: COLORS.good, warn: COLORS.warn, bad: COLORS.bad };
 const bandColor = (b) => (b === 'Above appetite' ? TONE.bad : b === 'At appetite' ? TONE.warn : TONE.good);
 
 function ctx(props) {
@@ -39,8 +40,8 @@ export default function CroEnterprisePosition(props) {
 
   return (
     <div style={{ display: 'grid', gap: 14 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: NAVY, color: '#e6ecf5', borderRadius: 10, padding: '14px 16px' }}>
-        <div style={{ fontSize: 12.5, lineHeight: 1.6, display: 'flex', alignItems: 'flex-start', gap: 6 }}>{d.provenance && <Provenance prov={d.provenance} dark />}<span>{d.brief}</span></div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: COLORS.subtle, border: `1px solid ${COLORS.hair}`, color: COLORS.ink2, borderRadius: 10, padding: '14px 16px' }}>
+        <div style={{ fontSize: 12.5, lineHeight: 1.6, display: 'flex', alignItems: 'flex-start', gap: 6 }}>{d.provenance && <Provenance prov={d.provenance} />}<span>{d.brief}</span></div>
         <VoiceControls voice={voice} onReplay={() => voice.speak(d.narration || d.brief)} label="Listen" />
       </div>
 
@@ -59,7 +60,7 @@ export default function CroEnterprisePosition(props) {
               <div key={c.name} style={{ borderLeft: `4px solid ${bandColor(c.band)}`, background: '#fff', border: `1px solid ${HAIR}`, borderRadius: 8, padding: '8px 11px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
                   <span style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>{c.name}{c.modeled ? <span style={{ fontSize: 9, color: INK3, fontWeight: 500 }}> · modeled</span> : null}</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: bandColor(c.band) }}>{c.score} · {c.band}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: bandColor(c.band) }}><span style={{ fontFamily: FONTS.mono }}>{c.score}</span> · {c.band}</span>
                 </div>
                 <div style={{ fontSize: 10.5, color: INK2, marginTop: 2 }}>L{c.likelihood} × I{c.impact} — {c.basis}</div>
               </div>
@@ -108,8 +109,8 @@ function AppetiteEditor({ api, orgId, headers, appetite, onSaved }) {
   return (
     <div style={{ border: `1px solid #cfe0f5`, borderRadius: 11, background: '#f4f8fe', padding: '13px 16px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 4 }}>
-        <div style={{ fontSize: 12.5, fontWeight: 800, color: INK }}>⚖️ Central risk appetite — authored here</div>
-        <div style={{ fontSize: 10.5, color: '#1d4ed8' }}>Saving propagates to every lens (CISO, CIO, CFO, Board).</div>
+        <div style={{ fontSize: 12.5, fontWeight: 800, color: INK, fontFamily: FONTS.display }}>⚖️ Central risk appetite — authored here</div>
+        <div style={{ fontSize: 10.5, color: '#4f5ac4' }}>Saving propagates to every lens (CISO, CIO, CFO, Board).</div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px,1fr))', gap: 10, marginTop: 8 }}>
         <Field label="Risk threshold (above = breach)">
@@ -123,7 +124,7 @@ function AppetiteEditor({ api, orgId, headers, appetite, onSaved }) {
         <Field label="Decision likelihood % (surface ≥)"><input type="number" value={a.decisionLikelihoodPct ?? 25} onChange={(e) => num('decisionLikelihoodPct', e.target.value)} style={inp} /></Field>
       </div>
       <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 10 }}>
-        <button onClick={save} disabled={busy} style={{ background: '#1d4ed8', color: '#fff', border: 'none', borderRadius: 7, padding: '8px 16px', fontSize: 12, fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}>{busy ? 'Saving…' : 'Save appetite'}</button>
+        <button onClick={save} disabled={busy} style={{ background: '#4f5ac4', color: '#fff', border: 'none', borderRadius: 7, padding: '8px 16px', fontSize: 12, fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}>{busy ? 'Saving…' : 'Save appetite'}</button>
         {saved && <span style={{ fontSize: 11.5, color: TONE.good, fontWeight: 600 }}>✓ Saved — now in effect across all lenses.</span>}
       </div>
     </div>
@@ -150,7 +151,7 @@ function Heatmap({ categories, tolerance }) {
               return (
                 <div key={lik} style={{ aspectRatio: '1.6', minHeight: 30, background: bg, borderRadius: 4, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, flexWrap: 'wrap', padding: 2 }}>
                   {here.map((c) => (
-                    <span key={c.name} title={`${c.name} (${c.score})`} style={{ fontSize: 8.5, fontWeight: 800, color: '#fff', background: c.name === 'Cyber' ? '#0f172a' : bandColor(c.band), borderRadius: 999, padding: '1px 6px', whiteSpace: 'nowrap' }}>{c.name === 'Cyber' ? 'CYBER' : c.name.split(' ')[0].slice(0, 4)}</span>
+                    <span key={c.name} title={`${c.name} (${c.score})`} style={{ fontSize: 8.5, fontWeight: 800, color: '#fff', background: c.name === 'Cyber' ? '#0b0c0e' : bandColor(c.band), borderRadius: 999, padding: '1px 6px', whiteSpace: 'nowrap' }}>{c.name === 'Cyber' ? 'CYBER' : c.name.split(' ')[0].slice(0, 4)}</span>
                   ))}
                 </div>
               );
@@ -163,6 +164,6 @@ function Heatmap({ categories, tolerance }) {
   );
 }
 function Panel({ title, children }) {
-  return <div style={{ border: `1px solid ${HAIR}`, borderRadius: 11, background: '#fff', padding: '13px 16px' }}><div style={{ fontSize: 12.5, fontWeight: 800, color: INK, marginBottom: 9 }}>{title}</div>{children}</div>;
+  return <div style={{ border: `1px solid ${HAIR}`, borderRadius: 11, background: '#fff', padding: '13px 16px' }}><div style={{ fontSize: 12.5, fontWeight: 800, color: INK, marginBottom: 9, fontFamily: FONTS.display }}>{title}</div>{children}</div>;
 }
 const Legend = ({ c, t }) => <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><span style={{ width: 9, height: 9, background: c, borderRadius: 2, display: 'inline-block' }} />{t}</span>;

@@ -10,9 +10,10 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK_2 = '#475569', INK_3 = '#94a3b8', HAIRLINE = '#e2e8f0';
-const SEV = { Critical: '#9E3B32', High: '#A85B2E', Medium: '#B07C2E', Low: '#6E7F49' };
+const INK = COLORS.ink, INK_2 = COLORS.ink2, INK_3 = COLORS.ink3, HAIRLINE = COLORS.hair;
+const SEV = { Critical: COLORS.bad, High: '#c2410c', Medium: COLORS.warn, Low: COLORS.good };
 const SYSTEMS = [['demo', 'Demo (no credentials)'], ['jira', 'Jira'], ['snow', 'ServiceNow']];
 
 function resolveCtx(props) {
@@ -66,7 +67,7 @@ export default function RemediationPanel(props) {
           <div style={{ fontSize: 10, fontWeight: 600, color: INK_3, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 6 }}>
             Remediation Path · findings → tickets
           </div>
-          <h2 style={{ margin: 0, fontSize: 21, fontWeight: 600, color: INK, letterSpacing: '-0.01em' }}>Remediation Tickets</h2>
+          <h2 style={{ margin: 0, fontSize: 21, fontWeight: 600, color: INK, letterSpacing: '-0.01em', fontFamily: FONTS.display }}>Remediation Tickets</h2>
           <div style={{ color: INK_2, fontSize: 12, marginTop: 6, maxWidth: 660, lineHeight: 1.55 }}>
             Every open finding — vendor risk signals from Saraqael and the monitors, and gaps from Zadkiel's NIST CSF
             review — opens a ticket with high-level remediation recommendations in your ticketing system. Re-running
@@ -75,11 +76,11 @@ export default function RemediationPanel(props) {
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0, marginLeft: 20 }}>
           <select value={system} onChange={(e) => setSystem(e.target.value)}
-            style={{ border: `1px solid #cbd5e1`, borderRadius: 3, padding: '7px 9px', fontSize: 11.5, color: INK }}>
+            style={{ border: `1px solid #d7d9de`, borderRadius: 3, padding: '7px 9px', fontSize: 11.5, color: INK }}>
             {SYSTEMS.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
           </select>
           <button onClick={sweep} disabled={sweeping}
-            style={{ background: '#0f1b2d', color: '#fff', border: 'none', borderRadius: 3, padding: '8px 16px', fontSize: 11.5, fontWeight: 600, cursor: 'pointer', opacity: sweeping ? 0.6 : 1 }}>
+            style={{ background: '#15171c', color: '#fff', border: 'none', borderRadius: 3, padding: '8px 16px', fontSize: 11.5, fontWeight: 600, cursor: 'pointer', opacity: sweeping ? 0.6 : 1 }}>
             {sweeping ? 'Opening tickets…' : 'Open tickets for new findings'}
           </button>
         </div>
@@ -101,7 +102,7 @@ export default function RemediationPanel(props) {
           </div>
         )}
         {tickets && tickets.map((t) => (
-          <div key={t.id} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', padding: '11px 0', borderBottom: `1px solid #f1f5f9` }}>
+          <div key={t.id} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', padding: '11px 0', borderBottom: `1px solid #f0f1f4` }}>
             <span style={{ fontSize: 8.5, fontWeight: 700, color: '#fff', background: SEV[t.severity] || INK_3, borderRadius: 2, padding: '3px 7px', textTransform: 'uppercase', letterSpacing: '0.06em', flexShrink: 0, marginTop: 2 }}>
               {t.severity}
             </span>
@@ -112,7 +113,7 @@ export default function RemediationPanel(props) {
             </div>
             <div style={{ textAlign: 'right', flexShrink: 0 }}>
               {t.url
-                ? <a href={t.url} target="_blank" rel="noreferrer" style={{ fontSize: 11.5, fontWeight: 600, color: '#2563eb' }}>{t.ticketId}</a>
+                ? <a href={t.url} target="_blank" rel="noreferrer" style={{ fontSize: 11.5, fontWeight: 600, color: '#5e6ad2' }}>{t.ticketId}</a>
                 : <span style={{ fontSize: 11.5, fontWeight: 600, color: INK_2, fontVariantNumeric: 'tabular-nums' }}>{t.ticketId}</span>}
               <div style={{ fontSize: 9.5, color: INK_3, textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 2 }}>{t.system}</div>
             </div>

@@ -7,9 +7,10 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc';
-const TONE = { good: '#1f8a4c', warn: '#B07C2E', bad: '#C0392B' };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+const TONE = { good: COLORS.good, warn: COLORS.warn, bad: COLORS.bad };
 const visTone = (b) => (/high|strong/i.test(b || '') ? 'good' : /mod/i.test(b || '') ? 'warn' : 'bad');
 
 function ctx(props) {
@@ -53,15 +54,15 @@ export default function IntakeSummary(props) {
   return (
     <div style={{ display: 'grid', gap: 14 }}>
       {/* visibility hero */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, background: '#0f1b2d', color: '#e6ecf5', borderRadius: 10, padding: '14px 18px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, background: COLORS.subtle, border: `1px solid ${COLORS.hair}`, color: COLORS.ink2, borderRadius: 10, padding: '14px 18px', flexWrap: 'wrap' }}>
         <div>
-          <div style={{ fontSize: 10, color: '#8fa3bd', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Overall visibility confidence</div>
-          <div style={{ fontSize: 26, fontWeight: 800, color: vis.overall >= 70 ? '#34d399' : vis.overall >= 45 ? '#f0a868' : '#f87171' }}>
-            {vis.overall != null ? `${vis.overall}%` : '—'} <span style={{ fontSize: 13, fontWeight: 600, color: '#cbd5e1' }}>{vis.band || ''}</span>
+          <div style={{ fontSize: 10, color: COLORS.accent, textTransform: 'uppercase', letterSpacing: '0.12em' }}>Overall visibility confidence</div>
+          <div style={{ fontSize: 26, fontWeight: 800, fontFamily: FONTS.mono, color: vis.overall >= 70 ? COLORS.good : vis.overall >= 45 ? COLORS.warn : COLORS.bad }}>
+            {vis.overall != null ? `${vis.overall}%` : '—'} <span style={{ fontSize: 13, fontWeight: 600, color: '#d7d9de' }}>{vis.band || ''}</span>
           </div>
           {vis.caveat && <div style={{ fontSize: 11, color: '#9fb2cc', marginTop: 3, maxWidth: 560 }}>{vis.caveat}</div>}
         </div>
-        {vis.thin && vis.thin.length > 0 && <div style={{ fontSize: 11, color: '#f0a868' }}>Thin coverage: {vis.thin.join(', ')}</div>}
+        {vis.thin && vis.thin.length > 0 && <div style={{ fontSize: 11, color: COLORS.warn }}>Thin coverage: {vis.thin.join(', ')}</div>}
       </div>
 
       {/* coverage stats */}
@@ -111,7 +112,7 @@ export default function IntakeSummary(props) {
         <div style={{ fontSize: 11, color: INK3, maxWidth: 520, lineHeight: 1.5 }}>
           Confirm to emit the validated structures to the compiling phase — the chain <strong>business risk → process → application → security system → control</strong>, assessed against each framework independently (NIST CSF 2.0, 800-53 r5, CIS, ISO 27001, SOC 2).
         </div>
-        <button onClick={confirm} disabled={busy} style={{ background: busy ? '#94a3b8' : '#4f46e5', color: '#fff', border: 'none', borderRadius: 9, padding: '11px 26px', fontSize: 14, fontWeight: 800, cursor: busy ? 'default' : 'pointer' }}>
+        <button onClick={confirm} disabled={busy} style={{ background: busy ? '#8b9098' : '#5e6ad2', color: '#fff', border: 'none', borderRadius: 9, padding: '11px 26px', fontSize: 14, fontWeight: 800, cursor: busy ? 'default' : 'pointer' }}>
           {busy ? 'Compiling…' : '✓ Confirm & Compile'}
         </button>
       </div>
@@ -120,10 +121,10 @@ export default function IntakeSummary(props) {
 }
 
 function Stat({ label, value, tone }) {
-  return <div style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${tone ? TONE[tone] : '#cbd5e1'}`, borderRadius: 9, padding: '10px 12px', background: '#fff' }}><div style={{ fontSize: 10.5, color: INK2 }}>{label}</div><div style={{ fontSize: 20, fontWeight: 800, color: tone ? TONE[tone] : INK, marginTop: 2 }}>{value}</div></div>;
+  return <div style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${tone ? TONE[tone] : '#d7d9de'}`, borderRadius: 9, padding: '10px 12px', background: '#fff' }}><div style={{ fontSize: 10.5, color: INK2 }}>{label}</div><div style={{ fontSize: 20, fontWeight: 800, fontFamily: FONTS.mono, color: tone ? TONE[tone] : INK, marginTop: 2 }}>{value}</div></div>;
 }
 function Panel({ title, children }) {
-  return <div style={{ border: `1px solid ${HAIR}`, borderRadius: 10, background: '#fff', padding: '11px 14px' }}><div style={{ fontSize: 12, fontWeight: 800, color: INK, marginBottom: 7 }}>{title}</div>{children}</div>;
+  return <div style={{ border: `1px solid ${HAIR}`, borderRadius: 10, background: '#fff', padding: '11px 14px' }}><div style={{ fontSize: 12, fontWeight: 800, color: INK, marginBottom: 7, fontFamily: FONTS.display }}>{title}</div>{children}</div>;
 }
 function Row({ k, v }) {
   return <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: INK2, padding: '2px 0' }}><span>{k}</span><strong style={{ color: INK }}>{v}</strong></div>;
