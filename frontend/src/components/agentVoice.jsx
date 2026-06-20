@@ -8,6 +8,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
+import { COLORS } from '../theme';
 
 const MUTE_KEY = 'cx_ciso_voice_muted';
 
@@ -125,25 +126,27 @@ export function useAgentVoice() {
  * toggle) for use on repeated cards, so the mute control lives once per page. */
 export function VoiceControls({ voice, onReplay, label, compact }) {
   const { muted, setMuted, speaking, stop } = voice;
-  const btn = { border: 'none', borderRadius: 16, padding: '5px 12px', fontSize: 11.5, fontWeight: 600, cursor: 'pointer' };
+  // Brass "Listen" reads on both the dark hero and light surfaces — it ties the
+  // narration affordance to the platform's accent so the voice feels first-class.
   if (compact) {
     if (muted || !onReplay) return null;
     return (
-      <button onClick={() => (speaking ? stop() : onReplay())} title={speaking ? 'Stop narration' : 'Listen to the analysis'}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'transparent', border: '1px solid ' + (speaking ? '#fca5a5' : '#e2e8f0'), color: speaking ? '#C0392B' : '#64748b', borderRadius: 999, padding: '4px 11px', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+      <button onClick={() => (speaking ? stop() : onReplay())} title={speaking ? 'Stop narration' : 'Listen to your advisor'}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: speaking ? 'rgba(192,57,43,0.12)' : 'transparent', border: '1px solid ' + (speaking ? '#e0a39c' : 'rgba(200,163,91,0.6)'), color: speaking ? COLORS.bad : COLORS.accent, borderRadius: 999, padding: '4px 12px', fontSize: 11, fontWeight: 700, letterSpacing: '0.02em', cursor: 'pointer' }}>
         {speaking ? '■ Stop' : '🔊 Listen'}
       </button>
     );
   }
+  const btn = { border: 'none', borderRadius: 999, padding: '6px 14px', fontSize: 11.5, fontWeight: 700, letterSpacing: '0.01em', cursor: 'pointer' };
   return (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
       {!muted && onReplay && (
-        <button onClick={() => (speaking ? stop() : onReplay())} style={{ ...btn, background: speaking ? '#C0392B' : '#0f172a', color: '#fff' }}>
+        <button onClick={() => (speaking ? stop() : onReplay())} style={{ ...btn, background: speaking ? COLORS.bad : COLORS.ink, color: '#fff' }}>
           {speaking ? '■ Stop' : `▶ ${label || 'Listen'}`}
         </button>
       )}
-      <button onClick={() => setMuted(!muted)} title={muted ? 'Unmute the agent' : 'Mute the agent'}
-        style={{ ...btn, background: muted ? '#fee2e2' : '#eef2f6', color: muted ? '#C0392B' : '#475569', border: '1px solid ' + (muted ? '#fecaca' : '#e2e8f0') }}>
+      <button onClick={() => setMuted(!muted)} title={muted ? 'Unmute your advisor' : 'Mute your advisor'}
+        style={{ ...btn, background: muted ? '#fbeae8' : COLORS.paper, color: muted ? COLORS.bad : COLORS.ink2, border: '1px solid ' + (muted ? '#f3c9c4' : COLORS.hair) }}>
         {muted ? '🔇 Muted' : '🔊 Voice on'}
       </button>
     </div>
