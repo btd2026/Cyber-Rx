@@ -261,7 +261,8 @@ async function generate(orgId) {
   const c = await Exec.loadCtx(orgId);
   const assumptions = await loadAssumptions(orgId);
   const ovFor = (id) => assumptions[id] || assumptions._default || null;
-  const crown = (c.processes && c.processes.atRisk && c.processes.atRisk[0] && c.processes.atRisk[0].name) || 'a crown-jewel process';
+  const crown = (c.crownJewels && c.crownJewels[0] && c.crownJewels[0].name)
+    || (c.processes && c.processes.atRisk && c.processes.atRisk[0] && c.processes.atRisk[0].name) || 'a crown-jewel process';
   const dataAtRisk = c.crownJewel || (c.industry ? 'regulated data' : 'sensitive data');
   const top = (c.risks && c.risks.top) || [];
   let Threat = null; try { Threat = require('./ThreatSignalService'); } catch (_) {}

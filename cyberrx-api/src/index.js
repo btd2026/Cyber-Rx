@@ -295,6 +295,9 @@ app.use('/api/integrations',      [apiGetLimiter, apiPostLimiter], require('./ro
 // Platform value realized — renewal-justification rollup over real activity.
 app.use('/api/value',             [apiGetLimiter], require('./routes/value'));
 
+// Org self-authoring — crown jewels, appetite, materiality, business context.
+app.use('/api/business-context',  [apiGetLimiter, apiPostLimiter], require('./routes/businessContext'));
+
 // Decision spine — one shared event/DecisionCard rendered per role, with a
 // decision & evidence ledger (the cross-role "decisions, not dashboards" surface).
 app.use('/api/decisions',         [apiGetLimiter, apiPostLimiter], require('./routes/decisions'));

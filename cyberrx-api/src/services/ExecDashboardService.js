@@ -272,6 +272,13 @@ async function loadCtx(orgId) {
   // honest (demo) rather than overstated (derived) on a no-data org.
   if (isEmpty(c)) { c = demoContext(await orgIndustry(orgId)); c.isDemo = true; }
   else { c.isDemo = false; }
+  // Org-authored business context overrides the inferred crown jewel.
+  try {
+    const bc = ((await require('./TenantConfigService').get(orgId)).config || {}).businessContext || {};
+    c.crownJewels = Array.isArray(bc.crownJewels) ? bc.crownJewels : [];
+    const authored = (bc.crownJewelData && String(bc.crownJewelData).trim()) || (c.crownJewels[0] && c.crownJewels[0].name);
+    if (authored) { c.crownJewel = authored; c.crownJewelAuthored = true; }
+  } catch (_) { c.crownJewels = c.crownJewels || []; }
   return c;
 }
 
