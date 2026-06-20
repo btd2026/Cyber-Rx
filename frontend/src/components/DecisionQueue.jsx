@@ -14,9 +14,9 @@ import CrqDrawer from './CrqDrawer';
 import { COLORS, FONTS } from '../theme';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
-const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
+const SEV = { Critical: COLORS.bad, High: '#c2410c', Medium: COLORS.warn, Low: COLORS.good };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
-const FRIC = { None: '#1f8a4c', Low: '#1f8a4c', Medium: '#B07C2E', High: '#C0392B' };
+const FRIC = { None: '#1a7f37', Low: '#1a7f37', Medium: '#9a6700', High: '#cf222e' };
 
 function ctx(props) {
   const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
@@ -57,7 +57,7 @@ export default function DecisionQueue(props) {
       .catch((e) => setErr(e.message));
   }
 
-  if (err && !data) return <div style={{ padding: 12, color: '#C0392B', fontSize: 12 }}>{err}</div>;
+  if (err && !data) return <div style={{ padding: 12, color: '#cf222e', fontSize: 12 }}>{err}</div>;
   if (!data) return <div style={{ fontSize: 12, color: INK3 }}>Building the decision queue…</div>;
 
   const compounds = data.cards.filter((c) => c.type === 'compound');
@@ -73,7 +73,7 @@ export default function DecisionQueue(props) {
         </div>
         <VoiceControls voice={voice} onReplay={() => voice.speak(overview)} label="Listen" />
       </div>
-      {err && <div style={{ color: '#C0392B', fontSize: 12, marginBottom: 10 }}>{err}</div>}
+      {err && <div style={{ color: '#cf222e', fontSize: 12, marginBottom: 10 }}>{err}</div>}
       <div style={{ display: 'grid', gap: 14 }}>
         {data.cards.map((card) => <Card key={card.id} card={card} role={role} onDecide={decide} voice={voice} orgId={orgId} apiUrl={api} authToken={token} onTuned={load} />)}
       </div>
@@ -85,7 +85,7 @@ function Card({ card, role, onDecide, voice, orgId, apiUrl, authToken, onTuned }
   const e = card.event, lens = card.lens || {};
   const [accepting, setAccepting] = useState(false);
   const [rationale, setRationale] = useState('');
-  const sev = SEV[e.severity] || '#B07C2E';
+  const sev = SEV[e.severity] || '#9a6700';
   const decided = card.decision;
   const compound = card.type === 'compound';
 
@@ -98,9 +98,9 @@ function Card({ card, role, onDecide, voice, orgId, apiUrl, authToken, onTuned }
             <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginBottom: 9 }}>
               {compound && <SoftChip text="⛓ Chained risk" color="#7c3aed" />}
               <SoftChip text={e.severity} color={sev} />
-              <SoftChip text={`${lens.framing || role} lens`} color="#1d4ed8" />
-              {card.relevant && <SoftChip text="Your call" color="#1f8a4c" />}
-              {decided && <SoftChip text={decided.action === 'accept' ? 'Accepted & monitoring' : 'Decided'} color="#1f8a4c" strong />}
+              <SoftChip text={`${lens.framing || role} lens`} color="#4f5ac4" />
+              {card.relevant && <SoftChip text="Your call" color="#1a7f37" />}
+              {decided && <SoftChip text={decided.action === 'accept' ? 'Accepted & monitoring' : 'Decided'} color="#1a7f37" strong />}
             </div>
             <div style={{ fontSize: 15.5, fontWeight: 700, color: INK, fontFamily: FONTS.display, marginTop: 1, lineHeight: 1.35 }}>{lens.headline || e.title}</div>
             {!compound && lens.headline && lens.headline !== e.title && <div style={{ fontSize: 11, color: INK3, marginTop: 3 }}>Underlying event: {e.title}</div>}
@@ -126,7 +126,7 @@ function Card({ card, role, onDecide, voice, orgId, apiUrl, authToken, onTuned }
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
             {e.members.map((m, i) => (
               <React.Fragment key={m.id}>
-                <span style={{ fontSize: 11, color: INK, background: '#fff', border: `1px solid ${HAIR}`, borderRadius: 8, padding: '4px 9px' }}>{m.title} <strong style={{ color: '#1f8a4c' }}>~{m.p30}%</strong></span>
+                <span style={{ fontSize: 11, color: INK, background: '#fff', border: `1px solid ${HAIR}`, borderRadius: 8, padding: '4px 9px' }}>{m.title} <strong style={{ color: '#1a7f37' }}>~{m.p30}%</strong></span>
                 {i < e.members.length - 1 && <span style={{ color: '#7c3aed', fontWeight: 800 }}>＋</span>}
               </React.Fragment>
             ))}
@@ -142,7 +142,7 @@ function Card({ card, role, onDecide, voice, orgId, apiUrl, authToken, onTuned }
       {/* shared event facts — same for every role */}
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center', padding: '10px 16px', background: PANEL, borderTop: `1px solid ${HAIR}`, fontSize: 11 }}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>{e.provenance && <Provenance prov={e.provenance} />}<span title={e.timing.basis}>Exploit likelihood ({e.timing.confidence} conf): <strong>{e.timing.p7}%</strong>/7d · <strong>{e.timing.p30}%</strong>/30d · <strong>{e.timing.p90}%</strong>/90d</span></span>
-        <span>Loss: P50 <strong>{usd(e.loss.p50)}</strong> · P90 <strong style={{ color: '#C0392B' }}>{usd(e.loss.p90)}</strong></span>
+        <span>Loss: P50 <strong>{usd(e.loss.p50)}</strong> · P90 <strong style={{ color: '#cf222e' }}>{usd(e.loss.p90)}</strong></span>
         <CrqDrawer card={{ id: card.id, title: e.title, loss: e.loss, provenance: e.provenance }} orgId={orgId} apiUrl={apiUrl} authToken={authToken} onSaved={onTuned} />
       </div>
       <div style={{ padding: '8px 16px', fontSize: 10.5, color: INK3 }}>
@@ -156,21 +156,21 @@ function Card({ card, role, onDecide, voice, orgId, apiUrl, authToken, onTuned }
             const isRec = o.id === card.recommended;
             const isChosen = decided && decided.optionId === o.id;
             return (
-              <div key={o.id} style={{ border: `1px solid ${isChosen ? '#1f8a4c' : isRec ? '#4f46e5' : HAIR}`, borderRadius: 9, padding: '10px 12px', background: isChosen ? '#f0f7f2' : '#fff' }}>
+              <div key={o.id} style={{ border: `1px solid ${isChosen ? '#1a7f37' : isRec ? '#5e6ad2' : HAIR}`, borderRadius: 9, padding: '10px 12px', background: isChosen ? '#f0f7f2' : '#fff' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
                   <span style={{ fontSize: 12, fontWeight: 700, color: INK }}>{o.label}</span>
-                  {isRec && !decided && <span style={{ fontSize: 8.5, fontWeight: 800, color: '#fff', background: '#4f46e5', borderRadius: 999, padding: '2px 7px', textTransform: 'uppercase' }}>Rec</span>}
+                  {isRec && !decided && <span style={{ fontSize: 8.5, fontWeight: 800, color: '#fff', background: '#5e6ad2', borderRadius: 999, padding: '2px 7px', textTransform: 'uppercase' }}>Rec</span>}
                 </div>
                 <div style={{ display: 'grid', gap: 2, marginTop: 7, fontSize: 10.5, color: INK2 }}>
                   <div>Cost <strong style={{ color: INK }}>{o.costLabel}</strong></div>
                   <div>Time to effect <strong style={{ color: INK }}>{o.timeToEffectDays}d</strong></div>
-                  <div>Residual risk <strong style={{ color: o.residualRiskReductionPct >= 60 ? '#1f8a4c' : INK }}>−{o.residualRiskReductionPct}%</strong></div>
+                  <div>Residual risk <strong style={{ color: o.residualRiskReductionPct >= 60 ? '#1a7f37' : INK }}>−{o.residualRiskReductionPct}%</strong></div>
                   <div>Friction <strong style={{ color: FRIC[o.friction] || INK }}>{o.friction}</strong></div>
                 </div>
                 {o.note && <div style={{ fontSize: 10, color: INK3, marginTop: 6, lineHeight: 1.4 }}>{o.note}</div>}
                 {!decided && (o.acceptsRationale
                   ? <button onClick={() => setAccepting(!accepting)} style={btn(INK3)}>Accept &amp; monitor…</button>
-                  : <button onClick={() => onDecide(card, o)} style={btn(isRec ? '#4f46e5' : '#0f172a')}>Choose</button>)}
+                  : <button onClick={() => onDecide(card, o)} style={btn(isRec ? '#5e6ad2' : '#0b0c0e')}>Choose</button>)}
               </div>
             );
           })}
@@ -183,13 +183,13 @@ function Card({ card, role, onDecide, voice, orgId, apiUrl, authToken, onTuned }
             <textarea value={rationale} onChange={(e) => setRationale(e.target.value)} rows={3} placeholder={DEFENSIBLE_PLACEHOLDER}
               style={{ width: '100%', border: `1px solid ${HAIR}`, borderRadius: 7, padding: '8px 10px', fontSize: 12, outline: 'none', resize: 'vertical' }} />
             <button onClick={() => onDecide(card, card.options.find((x) => x.id === 'accept'), rationale)} disabled={!rationale.trim()}
-              style={{ ...btn('#1f8a4c'), opacity: rationale.trim() ? 1 : 0.5, marginTop: 8 }}>Record acceptance</button>
+              style={{ ...btn('#1a7f37'), opacity: rationale.trim() ? 1 : 0.5, marginTop: 8 }}>Record acceptance</button>
           </div>
         )}
 
         {decided && (
           <div style={{ marginTop: 10, fontSize: 11, color: INK2, background: '#f0f7f2', border: '1px solid #cce8d6', borderRadius: 8, padding: '8px 12px' }}>
-            <strong style={{ color: '#1f8a4c' }}>Logged:</strong> {decided.action === 'accept' ? 'Accepted & monitoring' : 'Option selected'} by {decided.decidedBy || role}{decided.rationale ? ` — "${decided.rationale}"` : ''} ({new Date(decided.at).toLocaleString()}).
+            <strong style={{ color: '#1a7f37' }}>Logged:</strong> {decided.action === 'accept' ? 'Accepted & monitoring' : 'Option selected'} by {decided.decidedBy || role}{decided.rationale ? ` — "${decided.rationale}"` : ''} ({new Date(decided.at).toLocaleString()}).
           </div>
         )}
       </div>

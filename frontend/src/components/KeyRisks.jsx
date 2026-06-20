@@ -14,9 +14,9 @@ import { COLORS, FONTS } from '../theme';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
 const TONE = { good: COLORS.good, warn: COLORS.warn, bad: COLORS.bad };
-const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
+const SEV = { Critical: COLORS.bad, High: '#c2410c', Medium: COLORS.warn, Low: COLORS.good };
 const sevRank = { Critical: 0, High: 1, Medium: 2, Low: 3 };
-const SCEN = { Ransomware: '#C0392B', 'Data exfiltration': '#7c3aed', Fraud: '#A85B2E', 'Business disruption': '#1d4ed8' };
+const SCEN = { Ransomware: '#cf222e', 'Data exfiltration': '#7c3aed', Fraud: '#c2410c', 'Business disruption': '#4f5ac4' };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
 
 function ctx(props) {
@@ -123,7 +123,7 @@ export default function KeyRisks(props) {
                         {(e.timing.cves && e.timing.cves.length) ? 'Live exploit signal' : 'Modeled'} · {e.timing.confidence} confidence
                       </div>
                     )}
-                    <button onClick={() => openCrq(c)} style={{ marginTop: 6, background: 'none', border: 'none', padding: 0, fontSize: 9.5, color: '#1d4ed8', fontWeight: 700, cursor: 'pointer' }}>ⓘ How this is calculated</button>
+                    <button onClick={() => openCrq(c)} style={{ marginTop: 6, background: 'none', border: 'none', padding: 0, fontSize: 9.5, color: '#4f5ac4', fontWeight: 700, cursor: 'pointer' }}>ⓘ How this is calculated</button>
                     <div style={{ borderTop: `1px solid ${HAIR}`, margin: '10px 0' }} />
                     <div style={{ fontSize: 9, color: INK3, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700 }}>Modeled loss</div>
                     <div style={{ display: 'flex', gap: 16, marginTop: 6 }}>
@@ -137,14 +137,14 @@ export default function KeyRisks(props) {
                     )}
                   </div>
                 </div>
-                <button onClick={() => setOpen(isOpen ? null : c.id)} style={{ marginTop: 12, background: 'transparent', border: 'none', color: '#1d4ed8', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', padding: 0 }}>{isOpen ? '▲ Hide impact & attack path' : '▼ Impact & live attack path'}</button>
+                <button onClick={() => setOpen(isOpen ? null : c.id)} style={{ marginTop: 12, background: 'transparent', border: 'none', color: '#4f5ac4', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', padding: 0 }}>{isOpen ? '▲ Hide impact & attack path' : '▼ Impact & live attack path'}</button>
               </div>
               {isOpen && (
                 <div style={{ borderTop: `1px solid ${HAIR}`, padding: '12px 14px', background: PANEL, display: 'grid', gap: 10 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                     <div>
                       <div style={{ fontSize: 9.5, fontWeight: 700, color: INK3, textTransform: 'uppercase', marginBottom: 4 }}>Impacted business processes</div>
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{procs.length ? procs.map((p, i) => <span key={i} style={{ fontSize: 11, color: '#1e3a5f', background: '#eaf1fb', border: '1px solid #cfe0f5', borderRadius: 6, padding: '3px 9px' }}>{p}</span>) : <span style={{ fontSize: 11, color: INK3 }}>{e.crownJewel}</span>}</div>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{procs.length ? procs.map((p, i) => <span key={i} style={{ fontSize: 11, color: '#1c1f26', background: '#eaf1fb', border: '1px solid #cfe0f5', borderRadius: 6, padding: '3px 9px' }}>{p}</span>) : <span style={{ fontSize: 11, color: INK3 }}>{e.crownJewel}</span>}</div>
                     </div>
                     <div>
                       <div style={{ fontSize: 9.5, fontWeight: 700, color: INK3, textTransform: 'uppercase', marginBottom: 4 }}>Impacted applications</div>
@@ -157,7 +157,7 @@ export default function KeyRisks(props) {
                       {e.attackPath.map((s, i) => (
                         <React.Fragment key={i}>
                           <span style={{ fontSize: 11, color: INK, background: '#fff', border: `1px solid ${HAIR}`, borderRadius: 6, padding: '4px 9px' }}>{s.label}</span>
-                          {i < e.attackPath.length - 1 && <span style={{ color: '#C0392B', fontWeight: 800 }}>→</span>}
+                          {i < e.attackPath.length - 1 && <span style={{ color: '#cf222e', fontWeight: 800 }}>→</span>}
                         </React.Fragment>
                       ))}
                     </div>
@@ -174,7 +174,7 @@ export default function KeyRisks(props) {
       <div style={{ border: `1px dashed ${HAIR}`, borderRadius: 11, background: '#fff' }}>
         <button onClick={() => setShowEvidence(!showEvidence)} style={{ width: '100%', textAlign: 'left', background: 'transparent', border: 'none', padding: '12px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: 12.5, fontWeight: 800, color: INK, fontFamily: FONTS.display }}>🔬 Evidence — exploitability-ranked vulnerabilities {evidence && <span style={{ fontSize: 10.5, fontWeight: 600, color: INK3, fontFamily: FONTS.body }}>· {evidence.counts.kev} on CISA KEV · {evidence.counts.highEpss} high-EPSS{evidence.source === 'demo' ? ' · sample' : ''}</span>}</span>
-          <span style={{ color: '#1d4ed8', fontSize: 11.5, fontWeight: 700 }}>{showEvidence ? 'Hide' : 'Show'}</span>
+          <span style={{ color: '#4f5ac4', fontSize: 11.5, fontWeight: 700 }}>{showEvidence ? 'Hide' : 'Show'}</span>
         </button>
         {showEvidence && evidence && (
           <div style={{ padding: '0 16px 14px' }}>
@@ -243,7 +243,7 @@ export default function KeyRisks(props) {
                 ))}
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 10, alignItems: 'center' }}>
-                <button onClick={saveCrq} style={{ background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 7, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save &amp; recompute</button>
+                <button onClick={saveCrq} style={{ background: '#5e6ad2', color: '#fff', border: 'none', borderRadius: 7, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save &amp; recompute</button>
                 <span style={{ fontSize: 10.5, color: INK3 }}>Recomputes the loss distribution and marks it user-tuned.</span>
               </div>
             </div>

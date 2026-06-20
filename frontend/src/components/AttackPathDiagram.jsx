@@ -13,7 +13,7 @@ import AttackPathGraph from './AttackPathGraph';
 
 const INK = COLORS.ink, INK_2 = COLORS.ink2, INK_3 = COLORS.ink3, HAIRLINE = COLORS.hair;
 // SEV — semantic severity (graph/finding meaning), kept distinct from chrome palette.
-const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
+const SEV = { Critical: COLORS.bad, High: '#c2410c', Medium: COLORS.warn, Low: COLORS.good };
 
 function resolveCtx(props) {
   const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
@@ -129,7 +129,7 @@ export default function AttackPathDiagram(props) {
                   ['Affected system', selFinding.system || '—'],
                   ['Source', selFinding.source || '—'],
                 ].map(([k, v]) => (
-                  <div key={k} style={{ display: 'flex', padding: '6px 0', borderBottom: `1px solid #f1f5f9`, fontSize: 12 }}>
+                  <div key={k} style={{ display: 'flex', padding: '6px 0', borderBottom: `1px solid #f0f1f4`, fontSize: 12 }}>
                     <span style={{ width: 116, flexShrink: 0, color: INK_3 }}>{k}</span>
                     <span style={{ color: INK, fontWeight: 500 }}>{v}</span>
                   </div>
@@ -139,13 +139,13 @@ export default function AttackPathDiagram(props) {
 
                 <div style={{ marginTop: 14 }}>
                   {ticket && ticket.ticketId ? (
-                    <div style={{ fontSize: 12, color: INK_2, background: '#f8fafc', border: `1px solid ${HAIRLINE}`, borderRadius: 4, padding: '10px 12px' }}>
+                    <div style={{ fontSize: 12, color: INK_2, background: '#f6f7f9', border: `1px solid ${HAIRLINE}`, borderRadius: 4, padding: '10px 12px' }}>
                       Ticket <strong style={{ color: INK }}>{ticket.ticketId}</strong>
-                      <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: ticket.status === 'closed' ? '#31604B' : ticket.status === 'in_progress' ? '#B07C2E' : '#2563eb', border: `1px solid currentColor`, borderRadius: 3, padding: '2px 8px' }}>
+                      <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: ticket.status === 'closed' ? '#31604B' : ticket.status === 'in_progress' ? '#9a6700' : '#5e6ad2', border: `1px solid currentColor`, borderRadius: 3, padding: '2px 8px' }}>
                         {ticket.status === 'open' ? 'Processing' : ticket.status === 'in_progress' ? 'In progress' : ticket.status === 'closed' ? 'Closed' : ticket.status}
                       </span>
                       <span style={{ fontSize: 10, color: INK_3, marginLeft: 8 }}>· {ticket.system}</span>
-                      {ticket.url && <a href={ticket.url} target="_blank" rel="noreferrer" style={{ marginLeft: 8, fontSize: 11, color: '#2563eb' }}>open</a>}
+                      {ticket.url && <a href={ticket.url} target="_blank" rel="noreferrer" style={{ marginLeft: 8, fontSize: 11, color: '#5e6ad2' }}>open</a>}
                     </div>
                   ) : (
                     <button onClick={() => sendToTicketing(selFinding)} disabled={ticketBusy}

@@ -18,8 +18,8 @@ import { useAgentVoice, VoiceControls } from './agentVoice';
 import { COLORS, FONTS } from '../theme';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
-const C = { Strong: COLORS.good, Moderate: COLORS.warn, Weak: '#A85B2E', Critical: COLORS.bad };
-const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
+const C = { Strong: COLORS.good, Moderate: COLORS.warn, Weak: '#c2410c', Critical: COLORS.bad };
+const SEV = { Critical: COLORS.bad, High: '#c2410c', Medium: COLORS.warn, Low: COLORS.good };
 
 function ctx(props) {
   const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
@@ -91,7 +91,7 @@ export default function CisoAgentPanel(props) {
     if (!on) setTimeout(() => voice.speak(q.narration), 120); // voice TEACHES, not reads the screen
   };
 
-  if (error) return <div style={{ padding: 24, color: '#C0392B', fontSize: 13 }}>Could not load the {role} agent: {error}</div>;
+  if (error) return <div style={{ padding: 24, color: '#cf222e', fontSize: 13 }}>Could not load the {role} agent: {error}</div>;
   if (!d) return <div style={{ padding: 24, color: INK3, fontSize: 13 }}>Loading {role} questions…</div>;
 
   return (
@@ -126,7 +126,7 @@ export default function CisoAgentPanel(props) {
                 {q.status && <span style={{ marginLeft: 'auto', flexShrink: 0, fontSize: 9.5, fontWeight: 700, color: '#fff', background: C[q.status] || INK3, borderRadius: 4, padding: '2px 8px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{q.status}</span>}
               </div>
               <div style={{ fontSize: 12.5, lineHeight: 1.5, marginTop: 7, paddingLeft: 32, color: INK2 }}>{q.answer}</div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#1d4ed8', marginTop: 6, paddingLeft: 32 }}>View details →</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#4f5ac4', marginTop: 6, paddingLeft: 32 }}>View details →</div>
             </button>
           ))}
         </div>
@@ -136,7 +136,7 @@ export default function CisoAgentPanel(props) {
       {active && (
         <div>
           <button onClick={() => selectQuestion(active)}
-            style={{ background: 'transparent', border: 'none', color: '#1d4ed8', fontSize: 12, fontWeight: 700, cursor: 'pointer', padding: 0, marginBottom: 12 }}>
+            style={{ background: 'transparent', border: 'none', color: '#4f5ac4', fontSize: 12, fontWeight: 700, cursor: 'pointer', padding: 0, marginBottom: 12 }}>
             ← All questions
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
@@ -163,7 +163,7 @@ function IssueDrawer({ item, onClose, voice }) {
     why = `${e.threatRelevance}. Blast radius: ${e.blastRadius}.`;
     source = e.evidence; process = e.processAffected; action = e.action;
   } else if (kind === 'threshold') {
-    const breach = (e.status || '') === 'Breach'; sev = breach ? SEV[e.breachSeverity] : '#1f8a4c';
+    const breach = (e.status || '') === 'Breach'; sev = breach ? SEV[e.breachSeverity] : '#1a7f37';
     title = e.name; tag = breach ? `Breach · ${e.breachSeverity}` : 'Within appetite';
     what = `Current ${e.current}${e.unit === '%' ? '%' : ' ' + e.unit} against threshold ${e.threshold} (trend ${e.trend}).`;
     why = `Risk-appetite reference: ${e.policyRef}.`;
@@ -191,7 +191,7 @@ function IssueDrawer({ item, onClose, voice }) {
     action = `${e.escalation}. Formal acceptance: ${e.formalAcceptance === false ? 'none on record' : e.formalAcceptance === 'expired' ? 'expired' : 'on record'}.`;
   } else if (kind === 'investment') {
     const reduction = (e.baselineRisk || 0) - (e.currentRisk || 0);
-    title = e.name; tag = `${e.riskArea} · ${e.spend}`; sev = e.blockers ? SEV.Medium : '#1f8a4c';
+    title = e.name; tag = `${e.riskArea} · ${e.spend}`; sev = e.blockers ? SEV.Medium : '#1a7f37';
     what = `Measured risk cut from ${e.baselineRisk} to ${e.currentRisk} (−${reduction}); about ${e.futureReduction} more points available.`;
     why = e.blockers ? `Remaining return is blocked by: ${e.blockers}.` : 'On track — no blocker on record.';
     source = 'Investment-to-risk-reduction tracking';
@@ -230,7 +230,7 @@ function IssueDrawer({ item, onClose, voice }) {
           {/* SME explanation — the agent explains in plain English */}
           {e.explanation && (
             <div style={{ background: '#eef4fb', border: '1px solid #cfe0f3', borderRadius: 9, padding: '13px 15px', marginBottom: 16 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: '#1d4ed8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Why this matters</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#4f5ac4', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Why this matters</div>
               <div style={{ fontSize: 13, color: INK, lineHeight: 1.6 }}>{e.explanation}</div>
             </div>
           )}
@@ -242,7 +242,7 @@ function IssueDrawer({ item, onClose, voice }) {
           </div>
           {action && (
             <div style={{ marginTop: 16, background: '#f0f7f2', border: '1px solid #cce8d6', borderRadius: 9, padding: '13px 15px' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: '#1f8a4c', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Recommended action</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#1a7f37', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Recommended action</div>
               <div style={{ fontSize: 13, color: INK, lineHeight: 1.55 }}>{action}</div>
             </div>
           )}

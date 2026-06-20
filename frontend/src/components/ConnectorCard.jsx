@@ -216,7 +216,7 @@ const ConnectorCard = ({ connector, connection, onConnect, onTest, onSync, api_u
   return (
     <div
       style={{
-        border: status === 'not_connected' ? '1px solid #E5E7EB' : '1.5px solid #D1D5DB',
+        border: status === 'not_connected' ? '1px solid #ebecf0' : '1.5px solid #d7d9de',
         borderRadius: 8,
         padding: 12,
         backgroundColor: '#FFFFFF',
@@ -236,7 +236,7 @@ const ConnectorCard = ({ connector, connection, onConnect, onTest, onSync, api_u
         </span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
-            color: '#111827',
+            color: '#0b0c0e',
             fontSize: 11,
             fontWeight: 700,
             whiteSpace: 'nowrap',
@@ -246,7 +246,7 @@ const ConnectorCard = ({ connector, connection, onConnect, onTest, onSync, api_u
             {connector.name}
           </div>
           <div style={{
-            color: '#6B7280',
+            color: '#5c6066',
             fontSize: 9,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
@@ -279,20 +279,20 @@ const ConnectorCard = ({ connector, connection, onConnect, onTest, onSync, api_u
 
       {/* Details for connected/connecting/failed/syncing/sync_failed states */}
       {status !== 'not_connected' && status !== 'manual_entry_required' && (
-        <div style={{ fontSize: 9, color: '#6B7280', marginBottom: 8 }}>
+        <div style={{ fontSize: 9, color: '#5c6066', marginBottom: 8 }}>
           <div
             style={{ display: 'flex', justifyContent: 'space-between' }}
             title={getFullTimestamp(lastSync)}
           >
             <span>Last sync:</span>
-            <span style={{ fontWeight: 500, color: '#374151' }}>
+            <span style={{ fontWeight: 500, color: '#5c6066' }}>
               {formatLastSync(lastSync)}
             </span>
           </div>
           {signalCount > 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Signals:</span>
-              <span style={{ fontWeight: 500, color: '#374151' }}>
+              <span style={{ fontWeight: 500, color: '#5c6066' }}>
                 {signalCount}
               </span>
             </div>
@@ -335,7 +335,7 @@ const ConnectorCard = ({ connector, connection, onConnect, onTest, onSync, api_u
             onClick={() => setShowCredentialModal(true)}
             style={{
               flex: 1,
-              backgroundColor: '#2563EB',
+              backgroundColor: '#5e6ad2',
               border: 'none',
               color: '#FFFFFF',
               borderRadius: 5,
@@ -345,8 +345,8 @@ const ConnectorCard = ({ connector, connection, onConnect, onTest, onSync, api_u
               fontWeight: 600,
               transition: 'background-color 0.2s ease'
             }}
-            onMouseOver={(e) => e.target.style.backgroundColor = '#1D4ED8'}
-            onMouseOut={(e) => e.target.style.backgroundColor = '#2563EB'}
+            onMouseOver={(e) => e.target.style.backgroundColor = '#4f5ac4'}
+            onMouseOut={(e) => e.target.style.backgroundColor = '#5e6ad2'}
             aria-label="Connect connector"
           >
             Connect
@@ -377,7 +377,7 @@ const ConnectorCard = ({ connector, connection, onConnect, onTest, onSync, api_u
               disabled={isActionDisabled}
               style={{
                 flex: 1,
-                backgroundColor: isActionDisabled ? '#9CA3AF' : '#3B9EFF',
+                backgroundColor: isActionDisabled ? '#8b9098' : '#3B9EFF',
                 border: 'none',
                 color: '#FFFFFF',
                 borderRadius: 5,
@@ -389,7 +389,7 @@ const ConnectorCard = ({ connector, connection, onConnect, onTest, onSync, api_u
                 transition: isActionDisabled ? 'none' : 'background-color 0.2s ease'
               }}
               onMouseEnter={(e) => {
-                if (!isActionDisabled) e.target.style.backgroundColor = '#2563EB';
+                if (!isActionDisabled) e.target.style.backgroundColor = '#5e6ad2';
               }}
               onMouseLeave={(e) => {
                 if (!isActionDisabled) e.target.style.backgroundColor = '#3B9EFF';
@@ -404,8 +404,8 @@ const ConnectorCard = ({ connector, connection, onConnect, onTest, onSync, api_u
               style={{
                 flex: 1,
                 backgroundColor: 'transparent',
-                border: '1px solid #D1D5DB',
-                color: isActionDisabled ? '#9CA3AF' : '#6B7280',
+                border: '1px solid #d7d9de',
+                color: isActionDisabled ? '#8b9098' : '#5c6066',
                 borderRadius: 5,
                 padding: '4px 8px',
                 cursor: isActionDisabled ? 'not-allowed' : 'pointer',
@@ -414,13 +414,13 @@ const ConnectorCard = ({ connector, connection, onConnect, onTest, onSync, api_u
               }}
               onMouseOver={(e) => {
                 if (!isActionDisabled) {
-                  e.target.style.borderColor = '#9CA3AF';
-                  e.target.style.color = '#374151';
+                  e.target.style.borderColor = '#8b9098';
+                  e.target.style.color = '#5c6066';
                 }
               }}
               onMouseOut={(e) => {
-                e.target.style.borderColor = '#D1D5DB';
-                e.target.style.color = '#6B7280';
+                e.target.style.borderColor = '#d7d9de';
+                e.target.style.color = '#5c6066';
               }}
               aria-label="Test connection"
             >

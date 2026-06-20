@@ -15,7 +15,7 @@ import { DefensibleRationaleHint, DEFENSIBLE_PLACEHOLDER } from './legalRational
 import { COLORS, FONTS } from '../theme';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
-const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
+const SEV = { Critical: COLORS.bad, High: '#c2410c', Medium: COLORS.warn, Low: COLORS.good };
 const LIT = { High: COLORS.bad, Elevated: COLORS.warn, Moderate: COLORS.good };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
 
@@ -29,7 +29,7 @@ function ctx(props) {
   return { token, orgId, api };
 }
 const Pill = ({ text, color }) => <span style={{ fontSize: 9, fontWeight: 700, color: '#fff', background: color, borderRadius: 999, padding: '2px 8px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{text}</span>;
-const STAT = (s) => (/^yes/i.test(s) ? '#1f8a4c' : /^no/i.test(s) ? '#C0392B' : /likely/i.test(s) ? '#B07C2E' : '#94a3b8');
+const STAT = (s) => (/^yes/i.test(s) ? '#1a7f37' : /^no/i.test(s) ? '#cf222e' : /likely/i.test(s) ? '#9a6700' : '#8b9098');
 
 export default function CloTriggerMap(props) {
   const role = 'CLO';
@@ -59,14 +59,14 @@ export default function CloTriggerMap(props) {
 
   return (
     <div style={{ display: 'grid', gap: 14 }}>
-      {d.provenance && <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 5, fontSize: 10, color: '#94a3b8', marginBottom: -4 }}><Provenance prov={d.provenance} /><span>data provenance</span></div>}
+      {d.provenance && <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 5, fontSize: 10, color: '#8b9098', marginBottom: -4 }}><Provenance prov={d.provenance} /><span>data provenance</span></div>}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: NAVY, color: '#e6ecf5', borderRadius: 10, padding: '13px 16px' }}>
         <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>
           {d.counts.scenarios} top scenario(s) would fire <strong style={{ color: '#9bc0ff' }}>{d.counts.obligationsFired}</strong> distinct obligation(s); <strong style={{ color: '#f0a868' }}>{d.counts.material}</strong> screen as potentially material. Each is the <strong>same event</strong> the CISO and CFO see.
         </div>
         <VoiceControls voice={voice} onReplay={() => voice.speak(d.narration)} label="Listen" />
       </div>
-      {err && <div style={{ color: '#C0392B', fontSize: 12 }}>{err}</div>}
+      {err && <div style={{ color: '#cf222e', fontSize: 12 }}>{err}</div>}
 
       <div style={{ display: 'grid', gap: 11 }}>
         {d.scenarios.map((s) => {
@@ -80,7 +80,7 @@ export default function CloTriggerMap(props) {
                       <Pill text={s.scenarioType} color={sev} />
                       {s.materiality.material && <Pill text="Potentially material" color={SEV.Critical} />}
                       <Pill text={`Litigation ${s.projection.litigationLikelihood}`} color={LIT[s.projection.litigationLikelihood]} />
-                      {s.decision && <Pill text="Decided" color="#1f8a4c" />}
+                      {s.decision && <Pill text="Decided" color="#1a7f37" />}
                     </div>
                     <div style={{ fontSize: 14, fontWeight: 800, fontFamily: FONTS.display, color: INK, marginTop: 6 }}>{s.title}</div>
                     <div style={{ fontSize: 11, color: INK2, marginTop: 3 }}>Data at risk: {s.dataAtRisk} · nearest deadline: <strong>{s.projection.nearestDeadline}</strong></div>
@@ -103,7 +103,7 @@ export default function CloTriggerMap(props) {
                   ) : <div style={{ fontSize: 11, color: INK3 }}>No statutory clock fires on the current data mapping — confirm contractual SLAs with counsel.</div>}
                 </div>
 
-                <button onClick={() => setOpen(isOpen ? null : s.id)} style={{ marginTop: 9, background: 'transparent', border: 'none', color: '#1d4ed8', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', padding: 0 }}>{isOpen ? '▲ Hide materiality, cross-lens & legal moves' : '▼ Materiality checklist · CISO/CFO lenses · legal moves'}</button>
+                <button onClick={() => setOpen(isOpen ? null : s.id)} style={{ marginTop: 9, background: 'transparent', border: 'none', color: '#4f5ac4', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', padding: 0 }}>{isOpen ? '▲ Hide materiality, cross-lens & legal moves' : '▼ Materiality checklist · CISO/CFO lenses · legal moves'}</button>
               </div>
 
               {isOpen && (
@@ -130,7 +130,7 @@ export default function CloTriggerMap(props) {
                           {(s.technical.attackPath || []).map((st, i) => (
                             <React.Fragment key={i}>
                               <span style={{ fontSize: 10, color: INK, background: PANEL, border: `1px solid ${HAIR}`, borderRadius: 6, padding: '2px 6px' }}>{st.label}</span>
-                              {i < s.technical.attackPath.length - 1 && <span style={{ color: '#C0392B', fontWeight: 800 }}>→</span>}
+                              {i < s.technical.attackPath.length - 1 && <span style={{ color: '#cf222e', fontWeight: 800 }}>→</span>}
                             </React.Fragment>
                           ))}
                         </div>
@@ -149,7 +149,7 @@ export default function CloTriggerMap(props) {
                   <div>
                     <Label>First legal moves (logged to the shared ledger)</Label>
                     <LegalOptions scn={s} onChoose={choose} />
-                    {s.decision && <div style={{ marginTop: 8, fontSize: 11, color: INK2, background: '#f0f7f2', border: '1px solid #cce8d6', borderRadius: 8, padding: '8px 12px' }}><strong style={{ color: '#1f8a4c' }}>Logged:</strong> {s.decision.optionId} by {s.decision.decidedBy || 'General Counsel'}{s.decision.rationale ? ` — "${s.decision.rationale}"` : ''}.</div>}
+                    {s.decision && <div style={{ marginTop: 8, fontSize: 11, color: INK2, background: '#f0f7f2', border: '1px solid #cce8d6', borderRadius: 8, padding: '8px 12px' }}><strong style={{ color: '#1a7f37' }}>Logged:</strong> {s.decision.optionId} by {s.decision.decidedBy || 'General Counsel'}{s.decision.rationale ? ` — "${s.decision.rationale}"` : ''}.</div>}
                   </div>
                 </div>
               )}
@@ -171,18 +171,18 @@ function LegalOptions({ scn, onChoose }) {
       {scn.options.map((o) => {
         const isRec = o.id === scn.recommended;
         return (
-          <div key={o.id} style={{ border: `1px solid ${isRec ? '#4f46e5' : HAIR}`, borderRadius: 9, padding: '10px 12px', background: '#fff' }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: INK }}>{o.label}{isRec && <span style={{ fontSize: 8.5, fontWeight: 800, color: '#fff', background: '#4f46e5', borderRadius: 999, padding: '1px 6px', marginLeft: 5 }}>REC</span>}</div>
+          <div key={o.id} style={{ border: `1px solid ${isRec ? '#5e6ad2' : HAIR}`, borderRadius: 9, padding: '10px 12px', background: '#fff' }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: INK }}>{o.label}{isRec && <span style={{ fontSize: 8.5, fontWeight: 800, color: '#fff', background: '#5e6ad2', borderRadius: 999, padding: '1px 6px', marginLeft: 5 }}>REC</span>}</div>
             <div style={{ fontSize: 10, color: INK3, marginTop: 5, lineHeight: 1.45 }}>{o.note}</div>
             {o.id === 'accept'
-              ? <button onClick={() => setAccepting(!accepting)} style={btn('#94a3b8')}>Monitor — document…</button>
-              : <button onClick={() => onChoose(scn, o)} style={btn(isRec ? '#4f46e5' : '#0f172a')}>Choose</button>}
+              ? <button onClick={() => setAccepting(!accepting)} style={btn('#8b9098')}>Monitor — document…</button>
+              : <button onClick={() => onChoose(scn, o)} style={btn(isRec ? '#5e6ad2' : '#0b0c0e')}>Choose</button>}
             {accepting && o.id === 'accept' && (
               <div style={{ marginTop: 8, display: 'grid', gap: 6 }}>
                 <DefensibleRationaleHint compact />
                 <textarea value={rationale} onChange={(e) => setRationale(e.target.value)} rows={3} placeholder={DEFENSIBLE_PLACEHOLDER}
                   style={{ width: '100%', border: `1px solid ${HAIR}`, borderRadius: 7, padding: '7px 9px', fontSize: 11.5, outline: 'none', resize: 'vertical' }} />
-                <button onClick={() => onChoose(scn, o, rationale)} disabled={!rationale.trim()} style={{ ...btn('#1f8a4c'), opacity: rationale.trim() ? 1 : 0.5 }}>Record decision (logged & discoverable)</button>
+                <button onClick={() => onChoose(scn, o, rationale)} disabled={!rationale.trim()} style={{ ...btn('#1a7f37'), opacity: rationale.trim() ? 1 : 0.5 }}>Record decision (logged & discoverable)</button>
               </div>
             )}
           </div>

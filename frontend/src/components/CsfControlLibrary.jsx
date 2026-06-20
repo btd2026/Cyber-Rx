@@ -24,7 +24,7 @@ const TEST = {
   manual: { label: 'Manual', color: '#6366f1', bg: '#6366f114' },
 };
 const FN = {
-  GV: '#7c3aed', ID: '#2563eb', PR: '#0891b2', DE: '#ca8a04', RS: '#dc2626', RC: '#059669',
+  GV: '#7c3aed', ID: '#5e6ad2', PR: '#0891b2', DE: '#ca8a04', RS: '#dc2626', RC: '#059669',
 };
 
 function resolveCtx(props) {
@@ -197,11 +197,11 @@ export default function CsfControlLibrary(props) {
                 {open && (
                   <div style={{ padding: '4px 15px 15px', background: PANEL }}>
                     <div style={{ fontSize: 11, color: INK_2, margin: '6px 0' }}><strong>Auth:</strong> {t.auth}</div>
-                    <div style={{ fontSize: 11, color: INK_2, marginBottom: 10 }}><strong>Base URL:</strong> <code style={{ fontSize: 10.5 }}>{t.baseUrl}</code>{t.docs && <> · <a href={t.docs} target="_blank" rel="noreferrer" style={{ color: '#2563eb' }}>API docs ↗</a></>}</div>
+                    <div style={{ fontSize: 11, color: INK_2, marginBottom: 10 }}><strong>Base URL:</strong> <code style={{ fontSize: 10.5 }}>{t.baseUrl}</code>{t.docs && <> · <a href={t.docs} target="_blank" rel="noreferrer" style={{ color: '#5e6ad2' }}>API docs ↗</a></>}</div>
                     {t.apis.map((a, i) => (
                       <div key={i} style={{ background: '#0b1220', borderRadius: 6, padding: '11px 13px', marginBottom: 9, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
-                        <div style={{ color: '#94a3b8', fontSize: 10.5, marginBottom: 6, fontFamily: 'system-ui' }}>{a.purpose}{a.signal ? ` · → ${a.signal}` : ''}</div>
-                        <div style={{ fontSize: 11.5, color: '#e2e8f0', wordBreak: 'break-all' }}>
+                        <div style={{ color: '#8b9098', fontSize: 10.5, marginBottom: 6, fontFamily: 'system-ui' }}>{a.purpose}{a.signal ? ` · → ${a.signal}` : ''}</div>
+                        <div style={{ fontSize: 11.5, color: '#ebecf0', wordBreak: 'break-all' }}>
                           <span style={{ color: '#34d399', fontWeight: 700 }}>{a.method}</span> {a.path}
                         </div>
                         {a.headers && Object.keys(a.headers).length > 0 && (
@@ -210,8 +210,8 @@ export default function CsfControlLibrary(props) {
                           </div>
                         )}
                         {a.sample && <div style={{ fontSize: 10.5, color: '#fbbf24', marginTop: 6, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{a.sample}</div>}
-                        <div style={{ fontSize: 10.5, color: '#cbd5e1', marginTop: 7, fontFamily: 'system-ui', lineHeight: 1.5 }}>
-                          <span style={{ color: '#94a3b8' }}>Evidence:</span> {a.extract}
+                        <div style={{ fontSize: 10.5, color: '#d7d9de', marginTop: 7, fontFamily: 'system-ui', lineHeight: 1.5 }}>
+                          <span style={{ color: '#8b9098' }}>Evidence:</span> {a.extract}
                         </div>
                         {a.controls && a.controls.length > 0 && (
                           <div style={{ marginTop: 6, display: 'flex', gap: 4, flexWrap: 'wrap' }}>

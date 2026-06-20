@@ -8,12 +8,12 @@ import { COLORS, FONTS } from '../theme';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair;
 const ENVS = [
-  { key: 'on_prem', label: 'On-prem', color: '#475569' },
+  { key: 'on_prem', label: 'On-prem', color: '#5c6066' },
   { key: 'azure', label: 'Azure', color: '#0078D4' },
   { key: 'aws', label: 'AWS', color: '#FF9900' },
   { key: 'gcp', label: 'GCP', color: '#4285F4' },
   { key: 'other_cloud', label: 'Other cloud', color: '#7c3aed' },
-  { key: 'saas', label: 'SaaS', color: '#1f8a4c' },
+  { key: 'saas', label: 'SaaS', color: '#1a7f37' },
 ];
 
 function ctx(props) {
@@ -33,7 +33,7 @@ export function Donut({ segments, size = 132, stroke = 20 }) {
   let off = 0;
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <circle cx={cx} cy={cx} r={r} fill="none" stroke="#eef2f6" strokeWidth={stroke} />
+      <circle cx={cx} cy={cx} r={r} fill="none" stroke="#f0f1f4" strokeWidth={stroke} />
       {segments.filter((s) => s.value > 0).map((s, i) => {
         const frac = s.value / total, len = frac * C;
         const el = (

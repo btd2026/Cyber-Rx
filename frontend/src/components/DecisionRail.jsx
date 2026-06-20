@@ -15,7 +15,7 @@ import { COLORS, FONTS } from '../theme';
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
 const NAVY = COLORS.navy1;
 // SEV — semantic severity, meaning preserved.
-const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
+const SEV = { Critical: COLORS.bad, High: '#c2410c', Medium: COLORS.warn, Low: COLORS.good };
 
 function ctx(props) {
   const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
@@ -67,11 +67,11 @@ export default function DecisionRail(props) {
   const undecided = cards.filter((c) => !c.decision);
   const count = undecided.length + blind.length;
   const crit = undecided.filter((c) => c.event.severity === 'Critical').length;
-  const tone = crit > 0 ? '#C0392B' : count > 0 ? '#B07C2E' : '#1f8a4c';
+  const tone = crit > 0 ? '#cf222e' : count > 0 ? '#9a6700' : '#1a7f37';
 
   return (
     <>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, background: tone === '#1f8a4c' ? '#f0f7f2' : '#fff7ed', border: `1px solid ${tone}33`, borderLeft: `4px solid ${tone}`, padding: '9px 16px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, background: tone === '#1a7f37' ? '#f0f7f2' : '#fff7ed', border: `1px solid ${tone}33`, borderLeft: `4px solid ${tone}`, padding: '9px 16px', flexWrap: 'wrap' }}>
         <div style={{ fontSize: 12.5, color: INK, fontWeight: 600 }}>
           <span style={{ fontSize: 14 }}>⚖️</span>{' '}
           {count > 0
@@ -85,7 +85,7 @@ export default function DecisionRail(props) {
           )}
           {integrity && integrity.entries > 0 && (
             <span title={integrity.valid ? `Hash chain intact · ${integrity.entries} entries` : `Chain broken at entry ${integrity.brokenAt}`}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 700, color: integrity.valid ? '#1f8a4c' : '#C0392B', border: `1px solid ${integrity.valid ? '#1f8a4c' : '#C0392B'}33`, borderRadius: 7, padding: '6px 9px' }}>
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 700, color: integrity.valid ? '#1a7f37' : '#cf222e', border: `1px solid ${integrity.valid ? '#1a7f37' : '#cf222e'}33`, borderRadius: 7, padding: '6px 9px' }}>
               {integrity.valid ? '🛡 Integrity verified' : '⚠ Integrity broken'}
             </span>
           )}
@@ -127,7 +127,7 @@ export default function DecisionRail(props) {
               ))}
               {count === 0 && <div style={{ fontSize: 12, color: INK3 }}>Nothing pending — every critical item has a recorded decision.</div>}
             </div>
-            <a href={`${api}/api/decisions/ledger.csv?org_id=${encodeURIComponent(orgId)}`} style={{ display: 'inline-block', marginTop: 14, fontSize: 11.5, color: '#1d4ed8', fontWeight: 700 }}>⤓ Export decision &amp; evidence ledger (CSV)</a>
+            <a href={`${api}/api/decisions/ledger.csv?org_id=${encodeURIComponent(orgId)}`} style={{ display: 'inline-block', marginTop: 14, fontSize: 11.5, color: '#4f5ac4', fontWeight: 700 }}>⤓ Export decision &amp; evidence ledger (CSV)</a>
           </div>
         </div>
       )}

@@ -102,7 +102,7 @@ const CLODash = (props) => {
   const getSourceColor = (source) => {
     switch (source) {
       case 'HIPAA': return COLORS.bad;
-      case 'CMS': return '#2563eb';
+      case 'CMS': return '#5e6ad2';
       case 'State': return COLORS.warn;
       case 'NAIC': return '#8b5cf6';
       case 'Contract': return INK2;
@@ -155,7 +155,7 @@ const CLODash = (props) => {
     if (cloView === 'notify') return { title: 'Breach Notification Clock', num: '60', unit: ' days', color: COLORS.bad, label: 'HIPAA breach-notification deadline', sub: 'CMS Part D fastest at 1 business day · most states 30 days from discovery' };
     if (cloView === 'vendors') return { title: 'Contract & Vendor Risk', num: String(contractRisks.length), unit: '', color: COLORS.warn, label: 'Contracts in the risk register', sub: contractRisks.length === 0 ? 'No contracts tracked yet — add entries to assess legal risk' : 'Vendor agreements carrying contractual/legal risk' };
     if (cloView === 'penalty') return { title: 'Regulatory Penalty Exposure', num: penaltySum > 0 ? fmtUSD(penaltySum) : String(legalObligations.length), unit: '', color: COLORS.bad, label: penaltySum > 0 ? 'Maximum modeled penalty exposure' : 'Obligations with penalty exposure', sub: `${hipaaCmsCount} HIPAA/CMS obligations across ${legalObligations.length} tracked` };
-    if (cloView === 'obligations') return { title: 'Regulatory Obligations', num: String(legalObligations.length), unit: '', color: '#2563eb', label: 'Obligations tracked across sources', sub: `${hipaaCmsCount} carry HIPAA or CMS requirements` };
+    if (cloView === 'obligations') return { title: 'Regulatory Obligations', num: String(legalObligations.length), unit: '', color: '#5e6ad2', label: 'Obligations tracked across sources', sub: `${hipaaCmsCount} carry HIPAA or CMS requirements` };
     return { title: 'Overall Legal Risk', num: String(legalObligations.length), unit: '', color: COLORS.warn, label: 'Legal & regulatory obligations in scope', sub: `${hipaaCmsCount} HIPAA/CMS · ${Object.keys(obligationsBySource).filter((s) => s === 'State').length} state regimes` };
   };
 
@@ -207,7 +207,7 @@ const CLODash = (props) => {
               {h.num}<span style={{ fontSize: '1rem', color: INK3, fontWeight: 600 }}>{h.unit}</span>
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '0.7rem', color: '#2563eb', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>Chief Legal Officer — {h.title}</div>
+              <div style={{ fontSize: '0.7rem', color: '#5e6ad2', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>Chief Legal Officer — {h.title}</div>
               <div style={{ fontSize: '1rem', fontWeight: 700, color: INK, fontFamily: FONTS.display }}>{h.label}</div>
               <div style={{ fontSize: '0.78rem', color: INK2, marginTop: 2 }}>{cloQ ? `Answering: “${cloQ}” · ` : ''}{h.sub}</div>
             </div>
@@ -471,7 +471,7 @@ const CLODash = (props) => {
           <button
             style={{
               padding: '0.375rem 0.75rem',
-              backgroundColor: '#2563eb',
+              backgroundColor: '#5e6ad2',
               color: 'white',
               border: 'none',
               borderRadius: '4px',

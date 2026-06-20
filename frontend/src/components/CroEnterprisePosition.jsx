@@ -110,7 +110,7 @@ function AppetiteEditor({ api, orgId, headers, appetite, onSaved }) {
     <div style={{ border: `1px solid #cfe0f5`, borderRadius: 11, background: '#f4f8fe', padding: '13px 16px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 4 }}>
         <div style={{ fontSize: 12.5, fontWeight: 800, color: INK, fontFamily: FONTS.display }}>⚖️ Central risk appetite — authored here</div>
-        <div style={{ fontSize: 10.5, color: '#1d4ed8' }}>Saving propagates to every lens (CISO, CIO, CFO, Board).</div>
+        <div style={{ fontSize: 10.5, color: '#4f5ac4' }}>Saving propagates to every lens (CISO, CIO, CFO, Board).</div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px,1fr))', gap: 10, marginTop: 8 }}>
         <Field label="Risk threshold (above = breach)">
@@ -124,7 +124,7 @@ function AppetiteEditor({ api, orgId, headers, appetite, onSaved }) {
         <Field label="Decision likelihood % (surface ≥)"><input type="number" value={a.decisionLikelihoodPct ?? 25} onChange={(e) => num('decisionLikelihoodPct', e.target.value)} style={inp} /></Field>
       </div>
       <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 10 }}>
-        <button onClick={save} disabled={busy} style={{ background: '#1d4ed8', color: '#fff', border: 'none', borderRadius: 7, padding: '8px 16px', fontSize: 12, fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}>{busy ? 'Saving…' : 'Save appetite'}</button>
+        <button onClick={save} disabled={busy} style={{ background: '#4f5ac4', color: '#fff', border: 'none', borderRadius: 7, padding: '8px 16px', fontSize: 12, fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}>{busy ? 'Saving…' : 'Save appetite'}</button>
         {saved && <span style={{ fontSize: 11.5, color: TONE.good, fontWeight: 600 }}>✓ Saved — now in effect across all lenses.</span>}
       </div>
     </div>
@@ -151,7 +151,7 @@ function Heatmap({ categories, tolerance }) {
               return (
                 <div key={lik} style={{ aspectRatio: '1.6', minHeight: 30, background: bg, borderRadius: 4, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, flexWrap: 'wrap', padding: 2 }}>
                   {here.map((c) => (
-                    <span key={c.name} title={`${c.name} (${c.score})`} style={{ fontSize: 8.5, fontWeight: 800, color: '#fff', background: c.name === 'Cyber' ? '#0f172a' : bandColor(c.band), borderRadius: 999, padding: '1px 6px', whiteSpace: 'nowrap' }}>{c.name === 'Cyber' ? 'CYBER' : c.name.split(' ')[0].slice(0, 4)}</span>
+                    <span key={c.name} title={`${c.name} (${c.score})`} style={{ fontSize: 8.5, fontWeight: 800, color: '#fff', background: c.name === 'Cyber' ? '#0b0c0e' : bandColor(c.band), borderRadius: 999, padding: '1px 6px', whiteSpace: 'nowrap' }}>{c.name === 'Cyber' ? 'CYBER' : c.name.split(' ')[0].slice(0, 4)}</span>
                   ))}
                 </div>
               );

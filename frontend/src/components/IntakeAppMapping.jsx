@@ -11,7 +11,7 @@ import { COLORS, FONTS } from '../theme';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
 const TONE = { good: COLORS.good, warn: COLORS.warn, bad: COLORS.bad };
-const SRC = { inventory: COLORS.good, llm: '#1d4ed8', heuristic: COLORS.warn, user: COLORS.ink };
+const SRC = { inventory: COLORS.good, llm: '#4f5ac4', heuristic: COLORS.warn, user: COLORS.ink };
 const confColor = (c) => (c >= 0.75 ? TONE.good : c >= 0.5 ? TONE.warn : TONE.bad);
 
 function ctx(props) {
@@ -70,7 +70,7 @@ export default function IntakeAppMapping(props) {
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => setCmdb(cmdb ? null : { instance: '', username: '', password: '', query: '' })} style={btn('#fff', INK)}>⤵ Pull from ServiceNow CMDB</button>
-          <button onClick={runCascade} disabled={busy === 'map'} style={btn('#4f46e5', '#fff')}>{busy === 'map' ? 'Mapping…' : '✨ Run intelligent mapping'}</button>
+          <button onClick={runCascade} disabled={busy === 'map'} style={btn('#5e6ad2', '#fff')}>{busy === 'map' ? 'Mapping…' : '✨ Run intelligent mapping'}</button>
         </div>
       </div>
       {err && <div style={{ color: TONE.bad, fontSize: 12 }}>{err}</div>}
@@ -85,7 +85,7 @@ export default function IntakeAppMapping(props) {
                 style={{ border: `1px solid ${HAIR}`, borderRadius: 7, padding: '7px 9px', fontSize: 12, outline: 'none', gridColumn: k === 'query' ? '1 / span 2' : 'auto' }} />
             ))}
           </div>
-          <button onClick={pullCmdb} disabled={busy === 'cmdb' || !cmdb.instance} style={{ ...btn('#4f46e5', '#fff'), marginTop: 8, opacity: cmdb.instance ? 1 : 0.6 }}>{busy === 'cmdb' ? 'Pulling…' : 'Pull & map'}</button>
+          <button onClick={pullCmdb} disabled={busy === 'cmdb' || !cmdb.instance} style={{ ...btn('#5e6ad2', '#fff'), marginTop: 8, opacity: cmdb.instance ? 1 : 0.6 }}>{busy === 'cmdb' ? 'Pulling…' : 'Pull & map'}</button>
         </div>
       )}
 

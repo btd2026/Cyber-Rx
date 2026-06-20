@@ -179,7 +179,7 @@ export default function NistCsfScorecard(props) {
             <span style={{ background: data.overall.maturity == null ? NA_COLOR : TIER_COLORS[data.overall.tier], color: '#fff', fontWeight: 600, fontSize: 19, fontFamily: FONTS.mono, fontVariantNumeric: 'tabular-nums', padding: '10px 14px', display: 'flex', alignItems: 'center' }}>
               {fmt(data.overall.maturity)}
             </span>
-            <span style={{ color: '#e2e8f0', fontWeight: 500, fontSize: 12, padding: '10px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: 1.35 }}>
+            <span style={{ color: '#ebecf0', fontWeight: 500, fontSize: 12, padding: '10px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: 1.35 }}>
               <span style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 9, color: COLORS.accent }}>Tier · CMMI</span>
               <span>{data.overall.tier ? `Tier ${data.overall.tier}` : 'Not assessed'}{cmmiLevel(data.overall.maturity) != null ? ` · CMMI ${cmmiLevel(data.overall.maturity)}` : ''}</span>
             </span>
@@ -213,7 +213,7 @@ export default function NistCsfScorecard(props) {
         const rows = laneRows(assessed);
         const laneH = 36 + (rows.length ? Math.max(...rows.map((r) => r.row)) * 26 : 0) + 14;
         return (
-          <div key={f.id} style={{ display: 'flex', alignItems: 'stretch', gap: 20, borderTop: `1px solid #f1f5f9` }}>
+          <div key={f.id} style={{ display: 'flex', alignItems: 'stretch', gap: 20, borderTop: `1px solid #f0f1f4` }}>
             {/* Function rail */}
             <div style={{ width: 170, flexShrink: 0, padding: '12px 0' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
@@ -248,7 +248,7 @@ export default function NistCsfScorecard(props) {
                 <button key={c.id} onClick={() => setSel(sel === c.id ? null : c.id)}
                   title={`${c.name} — not assessed; click to provide evidence`}
                   style={{
-                    background: sel === c.id ? '#f1f5f9' : 'transparent', border: `1px dashed ${INK_3}88`,
+                    background: sel === c.id ? '#f0f1f4' : 'transparent', border: `1px dashed ${INK_3}88`,
                     color: INK_2, borderRadius: 3, padding: '2px 8px', fontSize: 9, fontWeight: 600,
                     letterSpacing: '0.04em', cursor: 'pointer',
                   }}>
@@ -356,6 +356,6 @@ const ANSWER_OPTIONS = {
 function answerOptions(key) { return ANSWER_OPTIONS[key]; }
 
 const ghostBtn = {
-  background: '#fff', border: '1px solid #cbd5e1', color: '#334155',
+  background: '#fff', border: '1px solid #d7d9de', color: '#5c6066',
   borderRadius: 3, padding: '5px 12px', fontSize: 11, cursor: 'pointer', fontWeight: 500,
 };

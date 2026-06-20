@@ -181,7 +181,7 @@ const CIODash = (props) => {
               {h.num}<span style={{ fontSize: '1rem', color: INK3, fontWeight: 600 }}>{h.unit}</span>
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '0.7rem', color: '#2563eb', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>Chief Information Officer — {h.title}</div>
+              <div style={{ fontSize: '0.7rem', color: '#5e6ad2', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>Chief Information Officer — {h.title}</div>
               <div style={{ fontSize: '1rem', fontWeight: 700, color: INK, fontFamily: FONTS.display }}>{h.label}</div>
               <div style={{ fontSize: '0.78rem', color: INK2, marginTop: 2 }}>{cioQ ? `Answering: “${cioQ}” · ` : ''}{h.sub}</div>
             </div>
@@ -289,7 +289,7 @@ const CIODash = (props) => {
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', fontSize: '0.72rem' }}>
               <span style={pill('#dcfce7', '#166534')}>{controlPosture.implemented} Implemented</span>
               <span style={pill('#fef9c3', '#854d0e')}>{controlPosture.partial} Partial</span>
-              <span style={pill('#e0e7ff', '#3730a3')}>{controlPosture.planned} Planned</span>
+              <span style={pill('#eef0fb', '#3730a3')}>{controlPosture.planned} Planned</span>
               <span style={pill('#fecaca', COLORS.bad)}>{controlPosture.none} None</span>
             </div>
             {(controlPosture.byFramework || []).map((f) => (
@@ -411,7 +411,7 @@ const CIODash = (props) => {
       <section style={{ ...card, marginBottom: '1.5rem' }}>
         <div style={sectionHead}>
           <h2 style={h2}>Remediation Backlog</h2>
-          <button onClick={() => props.go && props.go('execution')} style={{ padding: '0.375rem 0.75rem', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: '0.75rem' }}>View All Tasks</button>
+          <button onClick={() => props.go && props.go('execution')} style={{ padding: '0.375rem 0.75rem', backgroundColor: '#5e6ad2', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: '0.75rem' }}>View All Tasks</button>
         </div>
         <div style={{ padding: '1rem' }}>
           {backlog.length === 0 ? (
@@ -451,7 +451,7 @@ const CIODash = (props) => {
       {cioView && (
       <div style={{ ...card, padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: '0.85rem', color: INK2 }}>Technology Risk Summary — Board-ready export</div>
-        <button onClick={() => window.print()} style={{ padding: '0.5rem 1rem', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: '0.85rem' }}>Export PDF</button>
+        <button onClick={() => window.print()} style={{ padding: '0.5rem 1rem', backgroundColor: '#5e6ad2', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: '0.85rem' }}>Export PDF</button>
       </div>
       )}
     </div>

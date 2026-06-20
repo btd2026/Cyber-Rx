@@ -69,14 +69,14 @@ export default function BusinessContext({ orgId, authToken, apiUrl }) {
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 14 }}>
                   <Label nomargin>Crown jewels</Label>
-                  <button onClick={addCJ} style={{ fontSize: 11, fontWeight: 700, color: '#1d4ed8', background: 'none', border: 'none', cursor: 'pointer' }}>+ Add</button>
+                  <button onClick={addCJ} style={{ fontSize: 11, fontWeight: 700, color: '#4f5ac4', background: 'none', border: 'none', cursor: 'pointer' }}>+ Add</button>
                 </div>
                 {bc.crownJewels.length === 0 && <div style={{ fontSize: 11, color: INK3 }}>None yet — add the business processes/data an attacker would target.</div>}
                 {bc.crownJewels.map((cj, i) => (
                   <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 6, marginTop: 6, alignItems: 'center' }}>
                     <input style={inp} placeholder="Name (e.g. Claims platform)" value={cj.name || ''} onChange={(e) => setCJ(i, 'name', e.target.value)} />
                     <input style={inp} placeholder="Data types (e.g. PHI)" value={cj.dataTypes || ''} onChange={(e) => setCJ(i, 'dataTypes', e.target.value)} />
-                    <button onClick={() => rmCJ(i)} style={{ background: 'none', border: 'none', color: '#C0392B', fontSize: 16, cursor: 'pointer' }}>×</button>
+                    <button onClick={() => rmCJ(i)} style={{ background: 'none', border: 'none', color: '#cf222e', fontSize: 16, cursor: 'pointer' }}>×</button>
                   </div>
                 ))}
 
@@ -96,8 +96,8 @@ export default function BusinessContext({ orgId, authToken, apiUrl }) {
                 </div>
 
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 16 }}>
-                  <button onClick={save} disabled={busy} style={{ background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 7, padding: '9px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: busy ? 0.6 : 1 }}>{busy ? 'Saving…' : 'Save business context'}</button>
-                  {saved && <span style={{ fontSize: 11.5, color: '#1f8a4c', fontWeight: 700 }}>Saved · propagated to all lenses ✓</span>}
+                  <button onClick={save} disabled={busy} style={{ background: '#5e6ad2', color: '#fff', border: 'none', borderRadius: 7, padding: '9px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: busy ? 0.6 : 1 }}>{busy ? 'Saving…' : 'Save business context'}</button>
+                  {saved && <span style={{ fontSize: 11.5, color: '#1a7f37', fontWeight: 700 }}>Saved · propagated to all lenses ✓</span>}
                 </div>
               </>
             )}
@@ -109,5 +109,5 @@ export default function BusinessContext({ orgId, authToken, apiUrl }) {
 }
 
 function Label({ children, nomargin }) {
-  return <div style={{ fontSize: 10.5, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4, marginTop: nomargin ? 0 : 2 }}>{children}</div>;
+  return <div style={{ fontSize: 10.5, fontWeight: 700, color: '#5c6066', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4, marginTop: nomargin ? 0 : 2 }}>{children}</div>;
 }

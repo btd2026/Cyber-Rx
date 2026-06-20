@@ -318,8 +318,8 @@ const TreeNode = ({ node, animationPlaying, expandedNodes, onToggle, level }) =>
         )}
         <span style={{
           marginLeft: 'auto',
-          background: '#dbeafe',
-          color: '#1e40af',
+          background: '#eef0fb',
+          color: '#4a52b0',
           padding: '4px 10px',
           borderRadius: '12px',
           fontSize: '12px',

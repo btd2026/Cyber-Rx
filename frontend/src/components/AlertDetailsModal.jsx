@@ -16,9 +16,9 @@ const AlertDetailsModal = ({ alert, onClose, onAcknowledge, acknowledging }) => 
       case 'Critical': return { bg: '#FEF2F2', text: '#DC2626' };
       case 'High': return { bg: '#FFFBEB', text: '#F59E0B' };
       case 'Medium': return { bg: '#FEFCE8', text: '#EAB308' };
-      case 'Low': return { bg: '#EFF6FF', text: '#3B82F6' };
-      case 'Info': return { bg: '#F3F4F6', text: '#6B7280' };
-      default: return { bg: '#F3F4F6', text: '#6B7280' };
+      case 'Low': return { bg: '#f3f4fc', text: '#5e6ad2' };
+      case 'Info': return { bg: '#F3F4F6', text: '#5c6066' };
+      default: return { bg: '#F3F4F6', text: '#5c6066' };
     }
   };
 
@@ -78,7 +78,7 @@ const AlertDetailsModal = ({ alert, onClose, onAcknowledge, acknowledging }) => 
         {/* Header */}
         <div style={{
           padding: '16px 20px',
-          borderBottom: '1px solid #E5E7EB',
+          borderBottom: '1px solid #ebecf0',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'flex-start',
@@ -100,7 +100,7 @@ const AlertDetailsModal = ({ alert, onClose, onAcknowledge, acknowledging }) => 
               <span style={{
                 fontSize: 12,
                 fontWeight: 600,
-                color: '#374151'
+                color: '#5c6066'
               }}>
                 {alert.alert_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
               </span>
@@ -108,7 +108,7 @@ const AlertDetailsModal = ({ alert, onClose, onAcknowledge, acknowledging }) => 
             <div style={{
               fontSize: 14,
               fontWeight: 700,
-              color: '#111827'
+              color: '#0b0c0e'
             }}>
               Alert Details
             </div>
@@ -120,7 +120,7 @@ const AlertDetailsModal = ({ alert, onClose, onAcknowledge, acknowledging }) => 
               padding: 4,
               backgroundColor: 'transparent',
               border: 'none',
-              color: '#6B7280',
+              color: '#5c6066',
               cursor: 'pointer',
               fontSize: 20,
               lineHeight: 1
@@ -137,7 +137,7 @@ const AlertDetailsModal = ({ alert, onClose, onAcknowledge, acknowledging }) => 
             <div style={{
               fontSize: 11,
               fontWeight: 700,
-              color: '#374151',
+              color: '#5c6066',
               marginBottom: 6,
               textTransform: 'uppercase',
               letterSpacing: '0.05em'
@@ -146,12 +146,12 @@ const AlertDetailsModal = ({ alert, onClose, onAcknowledge, acknowledging }) => 
             </div>
             <div style={{
               fontSize: 13,
-              color: '#1F2937',
+              color: '#1c1f26',
               lineHeight: 1.5,
               backgroundColor: '#F9FAFB',
               padding: 12,
               borderRadius: 6,
-              border: '1px solid #E5E7EB'
+              border: '1px solid #ebecf0'
             }}>
               {alert.message}
             </div>
@@ -168,7 +168,7 @@ const AlertDetailsModal = ({ alert, onClose, onAcknowledge, acknowledging }) => 
               <div style={{
                 fontSize: 10,
                 fontWeight: 700,
-                color: '#6B7280',
+                color: '#5c6066',
                 marginBottom: 4,
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em'
@@ -177,7 +177,7 @@ const AlertDetailsModal = ({ alert, onClose, onAcknowledge, acknowledging }) => 
               </div>
               <div style={{
                 fontSize: 12,
-                color: '#374151',
+                color: '#5c6066',
                 fontFamily: 'monospace'
               }}>
                 {alert.id}
@@ -188,7 +188,7 @@ const AlertDetailsModal = ({ alert, onClose, onAcknowledge, acknowledging }) => 
               <div style={{
                 fontSize: 10,
                 fontWeight: 700,
-                color: '#6B7280',
+                color: '#5c6066',
                 marginBottom: 4,
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em'
@@ -197,7 +197,7 @@ const AlertDetailsModal = ({ alert, onClose, onAcknowledge, acknowledging }) => 
               </div>
               <div style={{
                 fontSize: 12,
-                color: '#374151'
+                color: '#5c6066'
               }}>
                 {formatDateTime(alert.created_at)}
               </div>
@@ -209,7 +209,7 @@ const AlertDetailsModal = ({ alert, onClose, onAcknowledge, acknowledging }) => 
                   <div style={{
                     fontSize: 10,
                     fontWeight: 700,
-                    color: '#6B7280',
+                    color: '#5c6066',
                     marginBottom: 4,
                     textTransform: 'uppercase',
                     letterSpacing: '0.05em'
@@ -218,7 +218,7 @@ const AlertDetailsModal = ({ alert, onClose, onAcknowledge, acknowledging }) => 
                   </div>
                   <div style={{
                     fontSize: 12,
-                    color: '#374151'
+                    color: '#5c6066'
                   }}>
                     {formatDateTime(alert.acknowledged_at)}
                   </div>
@@ -228,7 +228,7 @@ const AlertDetailsModal = ({ alert, onClose, onAcknowledge, acknowledging }) => 
                   <div style={{
                     fontSize: 10,
                     fontWeight: 700,
-                    color: '#6B7280',
+                    color: '#5c6066',
                     marginBottom: 4,
                     textTransform: 'uppercase',
                     letterSpacing: '0.05em'
@@ -237,7 +237,7 @@ const AlertDetailsModal = ({ alert, onClose, onAcknowledge, acknowledging }) => 
                   </div>
                   <div style={{
                     fontSize: 12,
-                    color: '#374151'
+                    color: '#5c6066'
                   }}>
                     {alert.acknowledged_by || 'Unknown'}
                   </div>
@@ -306,7 +306,7 @@ const AlertDetailsModal = ({ alert, onClose, onAcknowledge, acknowledging }) => 
               <div style={{
                 fontSize: 11,
                 fontWeight: 700,
-                color: '#374151',
+                color: '#5c6066',
                 marginBottom: 8,
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em'
@@ -316,7 +316,7 @@ const AlertDetailsModal = ({ alert, onClose, onAcknowledge, acknowledging }) => 
               <div style={{
                 backgroundColor: '#F9FAFB',
                 borderRadius: 6,
-                border: '1px solid #E5E7EB',
+                border: '1px solid #ebecf0',
                 overflow: 'hidden'
               }}>
                 {Object.entries(alert.metadata).map(([key, value]) => (
@@ -324,16 +324,16 @@ const AlertDetailsModal = ({ alert, onClose, onAcknowledge, acknowledging }) => 
                     key={key}
                     style={{
                       padding: '8px 12px',
-                      borderBottom: '1px solid #E5E7EB',
+                      borderBottom: '1px solid #ebecf0',
                       display: 'flex',
                       justifyContent: 'space-between',
                       fontSize: 11
                     }}
                   >
-                    <span style={{ color: '#6B7280', fontWeight: 600 }}>
+                    <span style={{ color: '#5c6066', fontWeight: 600 }}>
                       {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:
                     </span>
-                    <span style={{ color: '#374151', marginLeft: 12 }}>
+                    <span style={{ color: '#5c6066', marginLeft: 12 }}>
                       {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
                     </span>
                   </div>
@@ -346,7 +346,7 @@ const AlertDetailsModal = ({ alert, onClose, onAcknowledge, acknowledging }) => 
         {/* Footer */}
         <div style={{
           padding: '16px 20px',
-          borderTop: '1px solid #E5E7EB',
+          borderTop: '1px solid #ebecf0',
           display: 'flex',
           justifyContent: 'flex-end',
           gap: 8
@@ -356,8 +356,8 @@ const AlertDetailsModal = ({ alert, onClose, onAcknowledge, acknowledging }) => 
             style={{
               padding: '8px 16px',
               backgroundColor: '#FFFFFF',
-              border: '1px solid #D1D5DB',
-              color: '#374151',
+              border: '1px solid #d7d9de',
+              color: '#5c6066',
               borderRadius: 6,
               cursor: 'pointer',
               fontSize: 12,
@@ -372,7 +372,7 @@ const AlertDetailsModal = ({ alert, onClose, onAcknowledge, acknowledging }) => 
               disabled={acknowledging}
               style={{
                 padding: '8px 16px',
-                backgroundColor: acknowledging ? '#F5A623' : '#2563EB',
+                backgroundColor: acknowledging ? '#F5A623' : '#5e6ad2',
                 border: 'none',
                 color: '#FFFFFF',
                 borderRadius: 6,

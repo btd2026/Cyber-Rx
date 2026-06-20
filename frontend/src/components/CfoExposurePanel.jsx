@@ -46,7 +46,7 @@ export default function CfoExposurePanel(props) {
         <Stat label="Gross exposure" value={usd(d.grossExposure)} />
         <Stat label="Insurance coverage" value={usd(d.insuranceCoverage)} color={GREEN} />
         <Stat label="Tier-1 apps" value={d.tier1Apps} />
-        <Stat label="Assessment score" value={d.assessmentScore ?? '—'} color={d.assessmentScore >= 80 ? GREEN : d.assessmentScore >= 50 ? '#B07C2E' : RED} />
+        <Stat label="Assessment score" value={d.assessmentScore ?? '—'} color={d.assessmentScore >= 80 ? GREEN : d.assessmentScore >= 50 ? '#9a6700' : RED} />
       </div>
       {(d.byApp || []).length > 0 && (
         <div>
@@ -54,7 +54,7 @@ export default function CfoExposurePanel(props) {
           {d.byApp.slice(0, 8).map((a) => (
             <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
               <span style={{ width: 180, fontSize: 12, color: INK, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</span>
-              <div style={{ flex: 1, height: 8, background: '#eef2f6', borderRadius: 4 }}><div style={{ width: `${Math.round((a.weightedExposure / max) * 100)}%`, height: '100%', background: RED, borderRadius: 4 }} /></div>
+              <div style={{ flex: 1, height: 8, background: '#f0f1f4', borderRadius: 4 }}><div style={{ width: `${Math.round((a.weightedExposure / max) * 100)}%`, height: '100%', background: RED, borderRadius: 4 }} /></div>
               <span style={{ width: 64, textAlign: 'right', fontSize: 11.5, fontWeight: 700, color: INK, fontFamily: FONTS.mono }}>{usd(a.weightedExposure)}</span>
             </div>
           ))}

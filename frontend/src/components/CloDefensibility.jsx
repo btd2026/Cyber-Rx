@@ -40,7 +40,7 @@ export default function CloDefensibility(props) {
 
   return (
     <div style={{ display: 'grid', gap: 14 }}>
-      {d.provenance && <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 5, fontSize: 10, color: '#94a3b8', marginBottom: -4 }}><Provenance prov={d.provenance} /><span>data provenance</span></div>}
+      {d.provenance && <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 5, fontSize: 10, color: '#8b9098', marginBottom: -4 }}><Provenance prov={d.provenance} /><span>data provenance</span></div>}
       {/* prominent legal-review flag */}
       <div style={{ fontSize: 11.5, color: '#7a1d1d', background: '#fdecea', border: '1px solid #f3c9c4', borderRadius: 9, padding: '11px 14px', lineHeight: 1.55 }}>
         <strong>⚖️ {d.legalCaveat}</strong>
@@ -53,7 +53,7 @@ export default function CloDefensibility(props) {
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <VoiceControls voice={voice} onReplay={() => voice.speak(d.narration)} label="Listen" />
-          <a href={`${api}${d.exportUrl}`} style={{ background: '#0f172a', color: '#fff', borderRadius: 7, padding: '8px 14px', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>⤓ Export ledger (CSV)</a>
+          <a href={`${api}${d.exportUrl}`} style={{ background: '#0b0c0e', color: '#fff', borderRadius: 7, padding: '8px 14px', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>⤓ Export ledger (CSV)</a>
         </div>
       </div>
 

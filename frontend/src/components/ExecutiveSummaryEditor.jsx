@@ -14,7 +14,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { COLORS } from '../theme';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
-const GREEN = COLORS.good, AMBER = COLORS.warn, RED = COLORS.bad, BLUE = '#1d4ed8';
+const GREEN = COLORS.good, AMBER = COLORS.warn, RED = COLORS.bad, BLUE = '#4f5ac4';
 const STATUS = { reviewed: GREEN, draft: AMBER, auto: INK3, none: INK3 };
 
 function ctx(props) {

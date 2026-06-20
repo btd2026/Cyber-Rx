@@ -13,7 +13,7 @@ const SignalBreakdown = ({ signalsByCategory }) => {
       <div style={{
         padding: '2rem',
         textAlign: 'center',
-        color: '#6B7280',
+        color: '#5c6066',
         fontSize: 12
       }}>
         No signals available
@@ -38,7 +38,7 @@ const SignalBreakdown = ({ signalsByCategory }) => {
     high: '#F5A623',
     medium: '#3B9EFF',
     low: '#10B981',
-    info: '#6B7280'
+    info: '#5c6066'
   };
 
   return (
@@ -51,7 +51,7 @@ const SignalBreakdown = ({ signalsByCategory }) => {
         <div
           key={category}
           style={{
-            border: '1px solid #E5E7EB',
+            border: '1px solid #ebecf0',
             borderRadius: 8,
             padding: 12,
             backgroundColor: '#FFFFFF'
@@ -65,7 +65,7 @@ const SignalBreakdown = ({ signalsByCategory }) => {
             marginBottom: 8
           }}>
             <div style={{
-              color: '#111827',
+              color: '#0b0c0e',
               fontSize: 10,
               fontWeight: 700,
               flex: 1
@@ -75,8 +75,8 @@ const SignalBreakdown = ({ signalsByCategory }) => {
             <div style={{
               padding: '2px 6px',
               borderRadius: 4,
-              backgroundColor: `${categoryColors[category] || '#6B7280'}15`,
-              color: categoryColors[category] || '#6B7280',
+              backgroundColor: `${categoryColors[category] || '#5c6066'}15`,
+              color: categoryColors[category] || '#5c6066',
               fontSize: 9,
               fontWeight: 600
             }}>
@@ -151,7 +151,7 @@ const SignalBreakdown = ({ signalsByCategory }) => {
           )}
 
           {data.total === 0 && (
-            <div style={{ fontSize: 9, color: '#9CA3AF', fontStyle: 'italic' }}>
+            <div style={{ fontSize: 9, color: '#8b9098', fontStyle: 'italic' }}>
               No active signals
             </div>
           )}

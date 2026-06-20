@@ -13,7 +13,7 @@ import { COLORS, FONTS } from '../theme';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, ACC = '#0891b2', AMBER = COLORS.warn;
 const STATUS_COLOR = { 'met': COLORS.good, 'partially met': COLORS.warn, 'not met': COLORS.bad };
-const UP_COLOR = { requested: COLORS.ink3, uploaded: '#2563eb', normalized: '#2563eb', reviewed: COLORS.good, failed: COLORS.bad };
+const UP_COLOR = { requested: COLORS.ink3, uploaded: '#5e6ad2', normalized: '#5e6ad2', reviewed: COLORS.good, failed: COLORS.bad };
 
 function resolveCtx(props) {
   const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
@@ -126,7 +126,7 @@ export default function OrganizationIntakeDocuments(props) {
     }
   };
 
-  if (error && !docs) return <div style={{ padding: 18, color: '#C0392B', fontSize: 13 }}>Document Request unavailable: {error}</div>;
+  if (error && !docs) return <div style={{ padding: 18, color: '#cf222e', fontSize: 13 }}>Document Request unavailable: {error}</div>;
   if (!docs) return <div style={{ padding: 18, color: INK3, fontSize: 13 }}>Loading document checklist…</div>;
 
   const reviewed = docs.filter((d) => d.upload_status === 'reviewed').length;
@@ -140,7 +140,7 @@ export default function OrganizationIntakeDocuments(props) {
         <div style={{ fontSize: 12, color: INK3, whiteSpace: 'nowrap', fontFamily: FONTS.mono }}><strong style={{ color: INK }}>{reviewed}</strong> / {docs.length} reviewed</div>
       </div>
 
-      {error && <div style={{ background: '#fdecea', border: '1px solid #f3c9bf', color: '#C0392B', borderRadius: 6, padding: '8px 12px', fontSize: 12, marginBottom: 12 }}>{error}</div>}
+      {error && <div style={{ background: '#fdecea', border: '1px solid #f3c9bf', color: '#cf222e', borderRadius: 6, padding: '8px 12px', fontSize: 12, marginBottom: 12 }}>{error}</div>}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 12 }}>
         {docs.map((doc) => {
@@ -170,7 +170,7 @@ export default function OrganizationIntakeDocuments(props) {
                   {(doc.controls || []).map((c) => {
                     const r = (res || []).find((x) => x.framework_id === c.framework_id && x.requirement_id === c.requirement_id);
                     return (
-                      <div key={`${c.framework_id}:${c.requirement_id}`} style={{ padding: '4px 0', borderBottom: '1px solid #f8fafc' }}>
+                      <div key={`${c.framework_id}:${c.requirement_id}`} style={{ padding: '4px 0', borderBottom: '1px solid #f6f7f9' }}>
                         <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
                           <span style={{ fontSize: 10.5, fontWeight: 700, color: INK }}>{c.requirement_id}</span>
                           <span style={{ fontSize: 9.5, color: INK3 }}>{c.domain}</span>

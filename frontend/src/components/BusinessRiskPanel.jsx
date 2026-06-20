@@ -16,7 +16,7 @@ import WorkloadMixPanel from './WorkloadMixPanel';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
 // Status (semantic) + brand blue — meaning preserved.
-const GREEN = COLORS.good, AMBER = COLORS.warn, RED = COLORS.bad, BLUE = '#1d4ed8';
+const GREEN = COLORS.good, AMBER = COLORS.warn, RED = COLORS.bad, BLUE = '#4f5ac4';
 const sc = (s) => (s >= 80 ? GREEN : s >= 50 ? AMBER : RED);
 const tierColor = (t) => (Number(t) === 1 ? RED : Number(t) === 2 ? AMBER : INK3);
 
@@ -160,7 +160,7 @@ export default function BusinessRiskPanel(props) {
               {(data.attack.tactics || []).slice(0, 8).map((t) => (
                 <div key={t.tactic} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, padding: '3px 0' }}>
                   <span style={{ flex: 1, color: INK2 }}>{t.tactic}</span>
-                  <div style={{ width: 80, height: 5, background: '#eef2f6', borderRadius: 3 }}><div style={{ width: `${t.coveragePct}%`, height: '100%', background: sc(t.coveragePct), borderRadius: 3 }} /></div>
+                  <div style={{ width: 80, height: 5, background: '#f0f1f4', borderRadius: 3 }}><div style={{ width: `${t.coveragePct}%`, height: '100%', background: sc(t.coveragePct), borderRadius: 3 }} /></div>
                   <span style={{ width: 34, textAlign: 'right', color: sc(t.coveragePct), fontWeight: 700 }}>{t.coveragePct}%</span>
                 </div>
               ))}
@@ -192,7 +192,7 @@ export default function BusinessRiskPanel(props) {
                 </div>
                 <div style={{ fontSize: 10, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Affected processes</div>
                 {(blast.processes || []).map((p) => (
-                  <div key={p.id} style={{ display: 'flex', gap: 8, fontSize: 12, padding: '4px 0', borderBottom: '1px solid #f8fafc' }}>
+                  <div key={p.id} style={{ display: 'flex', gap: 8, fontSize: 12, padding: '4px 0', borderBottom: '1px solid #f6f7f9' }}>
                     <span style={{ fontSize: 9.5, fontWeight: 700, color: '#fff', background: tierColor(p.tier), borderRadius: 4, padding: '2px 6px' }}>T{p.tier ?? '—'}</span>
                     <span style={{ flex: 1, color: INK }}>{p.name}</span><span style={{ color: INK3 }}>{p.rto || '—'}</span>
                   </div>

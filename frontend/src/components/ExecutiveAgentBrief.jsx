@@ -18,9 +18,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 const STATUS_STYLES = {
-  green: { bg: '#0f2e1d', border: '#1f8a4c', text: '#5fe39b', label: 'On track' },
+  green: { bg: '#0f2e1d', border: '#1a7f37', text: '#5fe39b', label: 'On track' },
   amber: { bg: '#332708', border: '#b8860b', text: '#ffce5c', label: 'Attention' },
-  red: { bg: '#3a1212', border: '#c0392b', text: '#ff7a6b', label: 'Action needed' },
+  red: { bg: '#3a1212', border: '#cf222e', text: '#ff7a6b', label: 'Action needed' },
 };
 
 const PRIORITY_COLORS = {

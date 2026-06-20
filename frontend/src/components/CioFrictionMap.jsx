@@ -13,7 +13,7 @@ import { DefensibleRationaleHint, DEFENSIBLE_PLACEHOLDER } from './legalRational
 import { COLORS, FONTS } from '../theme';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
-const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
+const SEV = { Critical: COLORS.bad, High: '#c2410c', Medium: COLORS.warn, Low: COLORS.good };
 const FRIC = { None: COLORS.good, Low: COLORS.good, Medium: COLORS.warn, High: COLORS.bad };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
 
@@ -56,14 +56,14 @@ export default function CioFrictionMap(props) {
 
   return (
     <div style={{ display: 'grid', gap: 14 }}>
-      {d.provenance && <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 5, fontSize: 10, color: '#94a3b8', marginBottom: -4 }}><Provenance prov={d.provenance} /><span>data provenance</span></div>}
+      {d.provenance && <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 5, fontSize: 10, color: '#8b9098', marginBottom: -4 }}><Provenance prov={d.provenance} /><span>data provenance</span></div>}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: NAVY, color: '#e6ecf5', borderRadius: 10, padding: '13px 16px' }}>
         <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>
           Where security requirements meet delivery dates. Shipping every initiative as-is would leave <strong style={{ color: '#f0a868' }}>{usd(d.totalLossOnTable)}</strong> of expected loss on the table. Each tradeoff is the <strong>same shared risk</strong> the security team sees, and every choice is logged.
         </div>
         <VoiceControls voice={voice} onReplay={() => voice.speak(d.narration)} label="Listen" />
       </div>
-      {err && <div style={{ color: '#C0392B', fontSize: 12 }}>{err}</div>}
+      {err && <div style={{ color: '#cf222e', fontSize: 12 }}>{err}</div>}
 
       <div style={{ display: 'grid', gap: 14 }}>
         {d.initiatives.map((it) => <FrictionCard key={it.id} item={it} onChoose={choose} voice={voice} />)}
@@ -105,7 +105,7 @@ function FrictionCard({ item, onChoose, voice }) {
           </div>
           <div>
             <Label>Risk traded (shared events)</Label>
-            {item.linkedRisks.length ? <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{item.linkedRisks.map((r, i) => <span key={i} style={{ fontSize: 11, color: '#1e3a5f', background: '#eaf1fb', border: '1px solid #cfe0f5', borderRadius: 6, padding: '3px 9px' }}>{r.title}{r.severity ? <span style={{ color: INK3 }}> · {r.severity}</span> : null}</span>)}</div>
+            {item.linkedRisks.length ? <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{item.linkedRisks.map((r, i) => <span key={i} style={{ fontSize: 11, color: '#1c1f26', background: '#eaf1fb', border: '1px solid #cfe0f5', borderRadius: 6, padding: '3px 9px' }}>{r.title}{r.severity ? <span style={{ color: INK3 }}> · {r.severity}</span> : null}</span>)}</div>
               : <div style={{ fontSize: 11, color: INK3 }}>No directly-linked register risk — exposure modeled from the initiative domain.</div>}
           </div>
         </div>
@@ -113,9 +113,9 @@ function FrictionCard({ item, onChoose, voice }) {
 
       {/* the tradeoff bar */}
       <div style={{ display: 'flex', gap: 0, borderTop: `1px solid ${HAIR}`, borderBottom: `1px solid ${HAIR}`, background: PANEL }}>
-        <Tradeoff label="Ship on time" tone="#C0392B" lines={[`+${usd(t.expectedLossAdded)} expected loss`, `+${t.residualRiskAddedPct}% residual risk`, `saves ~${t.daysSaved} days`]} />
-        <Tradeoff label="Secure-by-design" tone="#1f8a4c" lines={[`${usd(t.secureCost)} cost`, `~${t.daysSaved} days added`, `avoids ${usd(t.expectedLossAdded)} loss`]} />
-        <Tradeoff label="Net (secure)" tone={t.netSecureValue >= 0 ? '#1f8a4c' : '#B07C2E'} lines={[`${t.netSecureValue >= 0 ? '+' : ''}${usd(t.netSecureValue)}`, 'loss avoided − cost', t.netSecureValue >= 0 ? 'secure pays off' : 'phase it']} />
+        <Tradeoff label="Ship on time" tone="#cf222e" lines={[`+${usd(t.expectedLossAdded)} expected loss`, `+${t.residualRiskAddedPct}% residual risk`, `saves ~${t.daysSaved} days`]} />
+        <Tradeoff label="Secure-by-design" tone="#1a7f37" lines={[`${usd(t.secureCost)} cost`, `~${t.daysSaved} days added`, `avoids ${usd(t.expectedLossAdded)} loss`]} />
+        <Tradeoff label="Net (secure)" tone={t.netSecureValue >= 0 ? '#1a7f37' : '#9a6700'} lines={[`${t.netSecureValue >= 0 ? '+' : ''}${usd(t.netSecureValue)}`, 'loss avoided − cost', t.netSecureValue >= 0 ? 'secure pays off' : 'phase it']} />
       </div>
 
       {/* options → ledger */}
@@ -125,21 +125,21 @@ function FrictionCard({ item, onChoose, voice }) {
             const isRec = o.id === item.recommended;
             const isChosen = decided && decided.optionId === o.id;
             return (
-              <div key={o.id} style={{ border: `1px solid ${isChosen ? '#1f8a4c' : isRec ? '#4f46e5' : HAIR}`, borderRadius: 9, padding: '10px 12px', background: isChosen ? '#f0f7f2' : '#fff' }}>
+              <div key={o.id} style={{ border: `1px solid ${isChosen ? '#1a7f37' : isRec ? '#5e6ad2' : HAIR}`, borderRadius: 9, padding: '10px 12px', background: isChosen ? '#f0f7f2' : '#fff' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
                   <span style={{ fontSize: 12, fontWeight: 700, color: INK }}>{o.label}</span>
-                  {isRec && !decided && <span style={{ fontSize: 8.5, fontWeight: 800, color: '#fff', background: '#4f46e5', borderRadius: 999, padding: '2px 7px', textTransform: 'uppercase' }}>Rec</span>}
+                  {isRec && !decided && <span style={{ fontSize: 8.5, fontWeight: 800, color: '#fff', background: '#5e6ad2', borderRadius: 999, padding: '2px 7px', textTransform: 'uppercase' }}>Rec</span>}
                 </div>
                 <div style={{ fontSize: 10, color: INK3, marginTop: 6, lineHeight: 1.45 }}>{o.note}</div>
                 {!decided && (o.id === 'ship'
                   ? <button onClick={() => setAccepting(accepting === o.id ? null : o.id)} style={btn(INK3)}>Ship on time…</button>
-                  : <button onClick={() => onChoose(item, o)} style={btn(isRec ? '#4f46e5' : '#0f172a')}>Choose</button>)}
+                  : <button onClick={() => onChoose(item, o)} style={btn(isRec ? '#5e6ad2' : '#0b0c0e')}>Choose</button>)}
                 {accepting === o.id && !decided && o.id === 'ship' && (
                   <div style={{ marginTop: 8 }}>
                     <div style={{ marginBottom: 6 }}><DefensibleRationaleHint compact /></div>
                     <textarea value={rationale} onChange={(e) => setRationale(e.target.value)} rows={3} placeholder={DEFENSIBLE_PLACEHOLDER}
                       style={{ width: '100%', border: `1px solid ${HAIR}`, borderRadius: 7, padding: '7px 9px', fontSize: 11.5, outline: 'none', resize: 'vertical' }} />
-                    <button onClick={() => onChoose(item, o, rationale)} disabled={!rationale.trim()} style={{ ...btn('#C0392B'), opacity: rationale.trim() ? 1 : 0.5, marginTop: 6 }}>Record ship-on-time</button>
+                    <button onClick={() => onChoose(item, o, rationale)} disabled={!rationale.trim()} style={{ ...btn('#cf222e'), opacity: rationale.trim() ? 1 : 0.5, marginTop: 6 }}>Record ship-on-time</button>
                   </div>
                 )}
               </div>
@@ -148,7 +148,7 @@ function FrictionCard({ item, onChoose, voice }) {
         </div>
         {decided && (
           <div style={{ marginTop: 10, fontSize: 11, color: INK2, background: '#f0f7f2', border: '1px solid #cce8d6', borderRadius: 8, padding: '8px 12px' }}>
-            <strong style={{ color: '#1f8a4c' }}>Logged:</strong> {decided.optionId === 'ship' ? 'Ship on time (risk delta accepted)' : decided.optionId === 'secure' ? 'Secure-by-design' : 'Phased'} by {decided.decidedBy || 'CIO'}{decided.rationale ? ` — "${decided.rationale}"` : ''} ({new Date(decided.at).toLocaleString()}).
+            <strong style={{ color: '#1a7f37' }}>Logged:</strong> {decided.optionId === 'ship' ? 'Ship on time (risk delta accepted)' : decided.optionId === 'secure' ? 'Secure-by-design' : 'Phased'} by {decided.decidedBy || 'CIO'}{decided.rationale ? ` — "${decided.rationale}"` : ''} ({new Date(decided.at).toLocaleString()}).
           </div>
         )}
       </div>

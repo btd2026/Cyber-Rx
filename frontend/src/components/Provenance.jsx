@@ -31,17 +31,17 @@ export default function Provenance({ prov, size = 9, dark = false }) {
           border: dark ? '1px solid rgba(255,255,255,0.45)' : '1px solid rgba(0,0,0,0.08)', cursor: 'help', flexShrink: 0 }} />
       {open && (
         <span style={{ position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)', zIndex: 60,
-          width: 222, background: '#0f172a', color: '#e2e8f0', borderRadius: 8, padding: '9px 11px', fontSize: 11, lineHeight: 1.45,
+          width: 222, background: '#0b0c0e', color: '#ebecf0', borderRadius: 8, padding: '9px 11px', fontSize: 11, lineHeight: 1.45,
           boxShadow: '0 8px 24px rgba(0,0,0,0.28)', textAlign: 'left', fontWeight: 400, whiteSpace: 'normal' }}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 700, color: '#fff' }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: color, display: 'inline-block' }} />
             {LABEL[prov.mode]} · {prov.confidence}% confidence
           </span>
-          <div style={{ marginTop: 4, color: '#cbd5e1' }}>{DESC[prov.mode]}</div>
-          <div style={{ marginTop: 5, color: '#94a3b8' }}>Source: <strong style={{ color: '#e2e8f0' }}>{prov.source}</strong></div>
-          {prov.lineage && <div style={{ color: '#94a3b8' }}>{prov.lineage}</div>}
-          {asOf && <div style={{ color: '#94a3b8' }}>As of {asOf}</div>}
-          {mix && <div style={{ marginTop: 5, color: '#94a3b8' }}>{mix.live}% live · {mix.derived}% derived · {mix.modeled}% modeled · {mix.demo}% demo</div>}
+          <div style={{ marginTop: 4, color: '#d7d9de' }}>{DESC[prov.mode]}</div>
+          <div style={{ marginTop: 5, color: '#8b9098' }}>Source: <strong style={{ color: '#ebecf0' }}>{prov.source}</strong></div>
+          {prov.lineage && <div style={{ color: '#8b9098' }}>{prov.lineage}</div>}
+          {asOf && <div style={{ color: '#8b9098' }}>As of {asOf}</div>}
+          {mix && <div style={{ marginTop: 5, color: '#8b9098' }}>{mix.live}% live · {mix.derived}% derived · {mix.modeled}% modeled · {mix.demo}% demo</div>}
         </span>
       )}
     </span>

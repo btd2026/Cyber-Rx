@@ -12,9 +12,9 @@ import Provenance from './Provenance';
 import { COLORS, FONTS } from '../theme';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
-const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
+const SEV = { Critical: COLORS.bad, High: '#c2410c', Medium: COLORS.warn, Low: COLORS.good };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
-const DET = { material: { label: 'Material', color: '#C0392B' }, not_material: { label: 'Not material', color: '#1f8a4c' }, pending: { label: 'Pending', color: '#B07C2E' } };
+const DET = { material: { label: 'Material', color: '#cf222e' }, not_material: { label: 'Not material', color: '#1a7f37' }, pending: { label: 'Pending', color: '#9a6700' } };
 
 function ctx(props) {
   const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
@@ -77,7 +77,7 @@ export default function CloMateriality(props) {
       </div>
 
       <div style={{ fontSize: 10.5, color: INK2, background: '#fff7ed', border: '1px solid #f3d9b8', borderRadius: 8, padding: '8px 12px' }}>{d.disclaimer}</div>
-      {err && <div style={{ color: '#C0392B', fontSize: 12 }}>{err}</div>}
+      {err && <div style={{ color: '#cf222e', fontSize: 12 }}>{err}</div>}
 
       <div style={{ display: 'grid', gap: 10 }}>
         {d.candidates.length === 0 && <div style={{ fontSize: 12, color: INK3 }}>No candidate incidents currently screened.</div>}
@@ -91,20 +91,20 @@ export default function CloMateriality(props) {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 800, fontFamily: FONTS.display, color: INK }}>{c.title}</div>
                   <div style={{ fontSize: 11, color: INK2, marginTop: 3 }}>
-                    Modeled loss <strong>{usd(c.lossExpected)}</strong> (P90 {usd(c.lossP90)}) · {c.quantExceeds ? <span style={{ color: '#C0392B', fontWeight: 700 }}>exceeds threshold</span> : 'below threshold'}
-                    {c.screenedMaterial && <span style={{ color: '#B07C2E', fontWeight: 700 }}> · screens material</span>}
+                    Modeled loss <strong>{usd(c.lossExpected)}</strong> (P90 {usd(c.lossP90)}) · {c.quantExceeds ? <span style={{ color: '#cf222e', fontWeight: 700 }}>exceeds threshold</span> : 'below threshold'}
+                    {c.screenedMaterial && <span style={{ color: '#9a6700', fontWeight: 700 }}> · screens material</span>}
                     {c.dataAtRisk && <span> · data: {c.dataAtRisk}</span>}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', minWidth: 150 }}>
                   {det
                     ? <><span style={{ fontSize: 10, fontWeight: 800, color: '#fff', background: det.color, borderRadius: 999, padding: '2px 9px', textTransform: 'uppercase' }}>{det.label}</span>
-                        {days != null && <div style={{ fontSize: 10.5, color: days <= 1 ? '#C0392B' : INK2, marginTop: 4 }}>8-K due {new Date(a.filingDeadline).toLocaleDateString()} · {days}d left</div>}</>
+                        {days != null && <div style={{ fontSize: 10.5, color: days <= 1 ? '#cf222e' : INK2, marginTop: 4 }}>8-K due {new Date(a.filingDeadline).toLocaleDateString()} · {days}d left</div>}</>
                     : <span style={{ fontSize: 10.5, color: INK3 }}>Not yet determined</span>}
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 9, flexWrap: 'wrap' }}>
-                <button onClick={() => openAssess(c)} style={btn('#0f1b2d')}>{isOpen ? 'Close' : a ? 'Revise determination' : 'Make determination'}</button>
+                <button onClick={() => openAssess(c)} style={btn('#15171c')}>{isOpen ? 'Close' : a ? 'Revise determination' : 'Make determination'}</button>
                 {a && <button onClick={() => loadDraft(a.id)} style={btn('#fff', INK2)}>Draft 8-K</button>}
                 {a && <a href={`${api}/api/clo/materiality/${a.id}/package?org_id=${encodeURIComponent(orgId)}`} style={{ ...btn('#fff', INK2), textDecoration: 'none', display: 'inline-block' }}>⤓ Disclosure package</a>}
               </div>
@@ -119,7 +119,7 @@ export default function CloMateriality(props) {
                         <span style={{ display: 'flex', gap: 4 }}>
                           {['yes', 'no', 'unknown'].map((v) => (
                             <button key={v} onClick={() => setFactor(f.id, v)} style={{ fontSize: 10, fontWeight: 700, borderRadius: 6, padding: '3px 8px', cursor: 'pointer',
-                              border: `1px solid ${form.factors[f.id] === v ? '#0f1b2d' : HAIR}`, background: form.factors[f.id] === v ? '#0f1b2d' : '#fff', color: form.factors[f.id] === v ? '#fff' : INK2 }}>{v}</button>
+                              border: `1px solid ${form.factors[f.id] === v ? '#15171c' : HAIR}`, background: form.factors[f.id] === v ? '#15171c' : '#fff', color: form.factors[f.id] === v ? '#fff' : INK2 }}>{v}</button>
                           ))}
                         </span>
                       </div>
@@ -133,8 +133,8 @@ export default function CloMateriality(props) {
                   </div>
                   <textarea value={form.rationale} onChange={(e) => setForm((f) => ({ ...f, rationale: e.target.value }))} placeholder="Documented rationale (required) — basis for the determination; recorded to the tamper-evident ledger and discoverable in litigation."
                     style={{ width: '100%', boxSizing: 'border-box', marginTop: 9, border: `1px solid ${HAIR}`, borderRadius: 7, padding: '8px 10px', fontSize: 12, minHeight: 64, outline: 'none', resize: 'vertical' }} />
-                  <button onClick={() => save(c)} disabled={busy} style={{ ...btn('#4f46e5'), marginTop: 8, opacity: busy ? 0.6 : 1 }}>{busy ? 'Recording…' : 'Record determination'}</button>
-                  {form.determination === 'material' && <span style={{ fontSize: 10.5, color: '#C0392B', marginLeft: 8 }}>Starts the 4-business-day 8-K clock.</span>}
+                  <button onClick={() => save(c)} disabled={busy} style={{ ...btn('#5e6ad2'), marginTop: 8, opacity: busy ? 0.6 : 1 }}>{busy ? 'Recording…' : 'Record determination'}</button>
+                  {form.determination === 'material' && <span style={{ fontSize: 10.5, color: '#cf222e', marginLeft: 8 }}>Starts the 4-business-day 8-K clock.</span>}
                 </div>
               )}
 
@@ -152,4 +152,4 @@ export default function CloMateriality(props) {
   );
 }
 
-function btn(bg, color) { return { background: bg, color: color || '#fff', border: `1px solid ${bg === '#fff' ? '#e6ebf2' : bg}`, borderRadius: 7, padding: '6px 12px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }; }
+function btn(bg, color) { return { background: bg, color: color || '#fff', border: `1px solid ${bg === '#fff' ? '#ebecf0' : bg}`, borderRadius: 7, padding: '6px 12px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }; }

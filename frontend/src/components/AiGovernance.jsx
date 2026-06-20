@@ -12,11 +12,11 @@ import Provenance from './Provenance';
 import { COLORS, FONTS } from '../theme';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
-const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
+const SEV = { Critical: COLORS.bad, High: '#c2410c', Medium: COLORS.warn, Low: COLORS.good };
 const sevTone = (s) => SEV[s] || INK3;
-const GSTATUS = { in_place: '#1f8a4c', partial: '#B07C2E', gap: '#C0392B', n_a: '#cbd5e1' };
+const GSTATUS = { in_place: '#1a7f37', partial: '#9a6700', gap: '#cf222e', n_a: '#d7d9de' };
 const GLABEL = { in_place: 'In place', partial: 'Partial', gap: 'Gap', n_a: 'N/A' };
-const bandC = (s) => (s == null ? INK3 : s >= 80 ? '#1f8a4c' : s >= 60 ? '#B07C2E' : '#C0392B');
+const bandC = (s) => (s == null ? INK3 : s >= 80 ? '#1a7f37' : s >= 60 ? '#9a6700' : '#cf222e');
 
 function ctx(props) {
   const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
@@ -84,7 +84,7 @@ export default function AiGovernance(props) {
   }
 
   const score = inv ? inv.governanceScore : null;
-  const scoreColor = score == null ? INK3 : score >= 80 ? '#1f8a4c' : score >= 60 ? '#B07C2E' : '#C0392B';
+  const scoreColor = score == null ? INK3 : score >= 80 ? '#1a7f37' : score >= 60 ? '#9a6700' : '#cf222e';
 
   return (
     <div>
@@ -93,7 +93,7 @@ export default function AiGovernance(props) {
           Your <strong>AI bill of materials</strong> — every AI/ML system, GenAI feature, and agent (including shadow AI), the data each touches, its autonomy, and whether it's governed.
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <label style={{ background: '#4f46e5', color: '#fff', borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}>
+          <label style={{ background: '#5e6ad2', color: '#fff', borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}>
             {busy ? 'Working…' : '⬆ Import AI inventory'}
             <input type="file" style={{ display: 'none' }} disabled={busy} accept=".csv,.xls,.xlsx,.txt,.pdf,.doc,.docx" onChange={(e) => { const f = e.target.files && e.target.files[0]; if (f) upload(f); e.target.value = ''; }} />
           </label>
@@ -101,13 +101,13 @@ export default function AiGovernance(props) {
         </div>
       </div>
 
-      {err && <div style={{ color: '#C0392B', fontSize: 12, marginBottom: 10 }}>{err}</div>}
+      {err && <div style={{ color: '#cf222e', fontSize: 12, marginBottom: 10 }}>{err}</div>}
 
       {/* framework sub-tabs — each assessed independently */}
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14, justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {[['bom', 'AI Inventory (AI-BOM)'], ['guardrails', 'Guardrail Posture'], ['agents', 'Agent Risk'], ['nist_ai_rmf', 'NIST AI RMF'], ['owasp_llm', 'OWASP LLM Top 10'], ['mitre_atlas', 'MITRE ATLAS'], ['eu_ai_act', 'EU AI Act'], ['our_ai_use', 'Our AI Use']].map(([k, l]) => (
-            <button key={k} onClick={() => setView(k)} style={{ border: `1px solid ${view === k ? '#0f1b2d' : HAIR}`, background: view === k ? '#0f1b2d' : '#fff', color: view === k ? '#fff' : INK2, padding: '6px 13px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', borderRadius: 999 }}>{l}</button>
+            <button key={k} onClick={() => setView(k)} style={{ border: `1px solid ${view === k ? '#15171c' : HAIR}`, background: view === k ? '#15171c' : '#fff', color: view === k ? '#fff' : INK2, padding: '6px 13px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', borderRadius: 999 }}>{l}</button>
           ))}
         </div>
         <VoiceControls voice={voice} onReplay={() => voice.speak(aiNarration(view, inv, assess, eu))} label="Listen" />
@@ -126,7 +126,7 @@ export default function AiGovernance(props) {
             <input placeholder="Owner (optional)" value={form.owner} onChange={(e) => setForm(Object.assign({}, form, { owner: e.target.value }))} style={inpStyle} />
             <input placeholder="Purpose (optional)" value={form.purpose} onChange={(e) => setForm(Object.assign({}, form, { purpose: e.target.value }))} style={inpStyle} />
           </div>
-          <button onClick={addSystem} disabled={busy} style={{ marginTop: 10, background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 7, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}>{busy ? 'Saving…' : 'Add system'}</button>
+          <button onClick={addSystem} disabled={busy} style={{ marginTop: 10, background: '#5e6ad2', color: '#fff', border: 'none', borderRadius: 7, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}>{busy ? 'Saving…' : 'Add system'}</button>
         </div>
       )}
 
@@ -168,10 +168,10 @@ export default function AiGovernance(props) {
                         {s.owner ? <div style={{ fontSize: 9.5, color: INK3, marginTop: 1 }}>Owner: {s.owner}</div> : null}
                       </td>
                       <td style={{ padding: '9px 12px', color: INK2 }}>{s.systemType}</td>
-                      <td style={{ padding: '9px 12px' }}>{['PHI', 'PCI', 'IP/Secrets', 'PII'].includes(s.dataSensitivity) ? <Pill text={s.dataSensitivity} color="#A85B2E" /> : <span style={{ color: INK3 }}>{s.dataSensitivity}</span>}</td>
-                      <td style={{ padding: '9px 12px' }}>{s.autonomy === 'Agentic' ? <Pill text="Agentic" color="#C0392B" /> : <span style={{ color: INK2 }}>{s.autonomy}</span>}</td>
+                      <td style={{ padding: '9px 12px' }}>{['PHI', 'PCI', 'IP/Secrets', 'PII'].includes(s.dataSensitivity) ? <Pill text={s.dataSensitivity} color="#c2410c" /> : <span style={{ color: INK3 }}>{s.dataSensitivity}</span>}</td>
+                      <td style={{ padding: '9px 12px' }}>{s.autonomy === 'Agentic' ? <Pill text="Agentic" color="#cf222e" /> : <span style={{ color: INK2 }}>{s.autonomy}</span>}</td>
                       <td style={{ padding: '9px 12px', color: INK2 }}>{s.hosting}</td>
-                      <td style={{ padding: '9px 12px' }}>{s.sanctioned === 'Shadow' ? <Pill text="Shadow" color="#C0392B" /> : s.sanctioned === 'Unreviewed' ? <Pill text="Unreviewed" color="#B07C2E" /> : <span style={{ color: '#1f8a4c', fontWeight: 600 }}>Sanctioned</span>}</td>
+                      <td style={{ padding: '9px 12px' }}>{s.sanctioned === 'Shadow' ? <Pill text="Shadow" color="#cf222e" /> : s.sanctioned === 'Unreviewed' ? <Pill text="Unreviewed" color="#9a6700" /> : <span style={{ color: '#1a7f37', fontWeight: 600 }}>Sanctioned</span>}</td>
                       <td style={{ padding: '9px 12px' }}><Pill text={s.riskLevel} color={sevTone(s.riskLevel)} /></td>
                     </tr>
                   ))}
@@ -186,10 +186,10 @@ export default function AiGovernance(props) {
   );
 }
 
-const STBAND = { Strong: '#1f8a4c', Partial: '#B07C2E', Weak: '#A85B2E', Gap: '#C0392B' };
+const STBAND = { Strong: '#1a7f37', Partial: '#9a6700', Weak: '#c2410c', Gap: '#cf222e' };
 function FrameworkView({ a }) {
   if (!a) return <div style={{ fontSize: 12, color: INK3 }}>Assessing controls…</div>;
-  const sc = a.band === 'Strong' ? '#1f8a4c' : a.band === 'Partial' ? '#B07C2E' : a.band === 'Weak' ? '#A85B2E' : '#C0392B';
+  const sc = a.band === 'Strong' ? '#1a7f37' : a.band === 'Partial' ? '#9a6700' : a.band === 'Weak' ? '#c2410c' : '#cf222e';
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', marginBottom: 12 }}>
@@ -227,13 +227,13 @@ function ControlRow({ c }) {
           </span>
         </div>
         <div style={{ fontSize: 11, color: INK2, marginTop: 4 }}>{c.finding}</div>
-        {!open && c.status !== 'Strong' && <div style={{ fontSize: 11, color: '#1f8a4c', fontWeight: 600, marginTop: 3 }}>→ {c.recommendation}</div>}
+        {!open && c.status !== 'Strong' && <div style={{ fontSize: 11, color: '#1a7f37', fontWeight: 600, marginTop: 3 }}>→ {c.recommendation}</div>}
       </button>
       {open && detailed && (
         <div style={{ borderTop: `1px solid ${HAIR}`, background: PANEL, padding: '11px 13px', display: 'grid', gap: 9 }}>
           {c.why && <Detail label="Why this verdict" tone={INK2}>{c.why}</Detail>}
           {(c.target || c.targetScore) && <Detail label="Target" tone={INK2}>{c.target}{c.targetScore ? ` (${c.targetScore}+/100).` : ''}</Detail>}
-          {c.recommendation && c.status !== 'Strong' && <Detail label="Action" tone="#1f8a4c">{c.recommendation}</Detail>}
+          {c.recommendation && c.status !== 'Strong' && <Detail label="Action" tone="#1a7f37">{c.recommendation}</Detail>}
           {c.decision && <Detail label="Decision to take" tone="#7c3aed">{c.decision}</Detail>}
         </div>
       )}
@@ -292,7 +292,7 @@ function sel(label, value, opts, onChange) {
     </select>
   );
 }
-const TIER = { 'High-risk': '#C0392B', 'Limited-risk': '#B07C2E', 'Minimal-risk': '#1f8a4c', 'Prohibited': '#7c1d12' };
+const TIER = { 'High-risk': '#cf222e', 'Limited-risk': '#9a6700', 'Minimal-risk': '#1a7f37', 'Prohibited': '#7c1d12' };
 function EuAiActView({ eu }) {
   if (!eu) return <div style={{ fontSize: 12, color: INK3 }}>Classifying under the EU AI Act…</div>;
   return (
@@ -322,9 +322,9 @@ function EuAiActView({ eu }) {
 }
 
 function Kpi({ label, value, tone }) {
-  const c = tone === 'bad' ? '#C0392B' : tone === 'warn' ? '#B07C2E' : tone === 'good' ? '#1f8a4c' : INK;
+  const c = tone === 'bad' ? '#cf222e' : tone === 'warn' ? '#9a6700' : tone === 'good' ? '#1a7f37' : INK;
   return (
-    <div style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${tone ? c : '#cbd5e1'}`, borderRadius: 9, padding: '11px 13px', background: '#fff' }}>
+    <div style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${tone ? c : '#d7d9de'}`, borderRadius: 9, padding: '11px 13px', background: '#fff' }}>
       <div style={{ fontSize: 10.5, color: INK2 }}>{label}</div>
       <div style={{ fontSize: 22, fontWeight: 800, color: tone ? c : INK, marginTop: 2, fontFamily: FONTS.mono }}>{value}</div>
     </div>
@@ -356,7 +356,7 @@ function GuardrailView({ g }) {
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
               {s.controls.map((c) => (
-                <span key={c.id} title={`${c.id} ${c.name}: ${GLABEL[c.status]}`} style={{ fontSize: 9.5, fontWeight: 700, color: c.status === 'n_a' ? INK3 : '#fff', background: c.status === 'n_a' ? '#f1f5f9' : GSTATUS[c.status], borderRadius: 4, padding: '2px 6px' }}>{c.id}</span>
+                <span key={c.id} title={`${c.id} ${c.name}: ${GLABEL[c.status]}`} style={{ fontSize: 9.5, fontWeight: 700, color: c.status === 'n_a' ? INK3 : '#fff', background: c.status === 'n_a' ? '#f0f1f4' : GSTATUS[c.status], borderRadius: 4, padding: '2px 6px' }}>{c.id}</span>
               ))}
             </div>
           </div>
@@ -415,7 +415,7 @@ function OurAiUseView({ p }) {
   if (!p) return <div style={{ fontSize: 12, color: INK3 }}>Loading…</div>;
   return (
     <div style={{ display: 'grid', gap: 12 }}>
-      <div style={{ border: `1px solid ${HAIR}`, borderRadius: 10, background: '#0f1b2d', color: '#e2e8f0', padding: '14px 16px', fontSize: 13, lineHeight: 1.55 }}>
+      <div style={{ border: `1px solid ${HAIR}`, borderRadius: 10, background: '#f6f7f9', color: '#0b0c0e', padding: '14px 16px', fontSize: 13, lineHeight: 1.55 }}>
         {p.statement}
       </div>
       <div style={{ display: 'grid', gap: 8 }}>

@@ -111,7 +111,7 @@ export default function CurrentState(props) {
               return (
                 <div key={c.id} style={{ border: `1px solid ${HAIR}`, borderRadius: 8, padding: '8px 10px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}><span style={{ color: INK2 }}>{c.label}</span><strong style={{ color: col }}>{c.band}</strong></div>
-                  <div style={{ height: 5, background: '#eef2f6', borderRadius: 3, marginTop: 5, overflow: 'hidden' }}><div style={{ width: `${c.confidence}%`, height: '100%', background: col }} /></div>
+                  <div style={{ height: 5, background: '#f0f1f4', borderRadius: 3, marginTop: 5, overflow: 'hidden' }}><div style={{ width: `${c.confidence}%`, height: '100%', background: col }} /></div>
                   <div style={{ fontSize: 9.5, color: INK3, marginTop: 3 }}>{c.hasData ? `${c.rows} records` : 'no data — inferred'}</div>
                 </div>
               );

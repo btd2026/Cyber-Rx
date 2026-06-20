@@ -27,7 +27,7 @@ const MobileHeader = ({
         top: 0,
         zIndex: 50,
         backgroundColor: '#FFFFFF',
-        borderBottom: '1px solid #E5E7EB',
+        borderBottom: '1px solid #ebecf0',
         padding: '12px 16px',
         display: 'flex',
         justifyContent: 'space-between',
@@ -50,7 +50,7 @@ const MobileHeader = ({
           borderRadius: 8,
           cursor: 'pointer',
           fontSize: 24,
-          color: '#374151',
+          color: '#5c6066',
           transition: 'background-color 0.2s ease'
         }}
         onTouchStart={(e) => {
@@ -69,7 +69,7 @@ const MobileHeader = ({
           style={{
             fontSize: 16,
             fontWeight: 600,
-            color: '#111827',
+            color: '#0b0c0e',
             margin: 0,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -83,7 +83,7 @@ const MobileHeader = ({
             display: 'inline-block',
             marginTop: 2,
             padding: '2px 8px',
-            backgroundColor: '#3B82F6',
+            backgroundColor: '#5e6ad2',
             color: '#FFFFFF',
             borderRadius: 12,
             fontSize: 11,
@@ -109,7 +109,7 @@ const MobileHeader = ({
           borderRadius: 8,
           cursor: refreshing ? 'not-allowed' : 'pointer',
           fontSize: 20,
-          color: refreshing ? '#9CA3AF' : '#374151',
+          color: refreshing ? '#8b9098' : '#5c6066',
           transition: 'all 0.2s ease'
         }}
         onTouchStart={(e) => {
@@ -125,8 +125,8 @@ const MobileHeader = ({
           <div style={{
             width: 20,
             height: 20,
-            border: '2px solid #9CA3AF',
-            borderTopColor: '#3B82F6',
+            border: '2px solid #8b9098',
+            borderTopColor: '#5e6ad2',
             borderRadius: '50%',
             animation: 'spin 1s linear infinite'
           }} />

@@ -10,7 +10,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { COLORS, FONTS } from '../theme';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
-const GREEN = COLORS.good, AMBER = COLORS.warn, RED = COLORS.bad, BLUE = '#1d4ed8';
+const GREEN = COLORS.good, AMBER = COLORS.warn, RED = COLORS.bad, BLUE = '#4f5ac4';
 const statusColor = (s) => (s === 'passed' ? GREEN : s === 'partial' ? AMBER : s === 'failed' ? RED : INK3);
 const statusLabel = (s) => ({ passed: 'Passed', partial: 'Partial', failed: 'Failed', not_tested: 'Not tested', needs_manual_evidence: 'Manual evidence' }[s] || s);
 
@@ -209,4 +209,4 @@ const pick = (on) => ({ display: 'flex', justifyContent: 'space-between', alignI
 const row = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: `1px solid ${COLORS.hair}`, borderRadius: 8, padding: '10px 13px', marginBottom: 8 };
 const Card = ({ children }) => <div style={{ border: `1px solid ${COLORS.hair}`, borderRadius: 12, padding: '16px 18px', background: '#fff' }}>{children}</div>;
 const H = ({ children }) => <div style={{ fontSize: 13, fontWeight: 800, color: COLORS.ink, marginBottom: 12, fontFamily: FONTS.display }}>{children}</div>;
-const Next = ({ onClick, disabled }) => <div style={{ marginTop: 14 }}><button onClick={onClick} disabled={disabled} style={{ background: disabled ? '#cbd5e1' : COLORS.navy1, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 12.5, fontWeight: 700, cursor: disabled ? 'default' : 'pointer' }}>Next →</button></div>;
+const Next = ({ onClick, disabled }) => <div style={{ marginTop: 14 }}><button onClick={onClick} disabled={disabled} style={{ background: disabled ? '#d7d9de' : COLORS.navy1, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 12.5, fontWeight: 700, cursor: disabled ? 'default' : 'pointer' }}>Next →</button></div>;

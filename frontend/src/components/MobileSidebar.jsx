@@ -97,7 +97,7 @@ const MobileSidebar = ({ isOpen = false, onClose, onNavigate, currentRoute = '/'
         <div
           style={{
             padding: '16px',
-            borderBottom: '1px solid #E5E7EB',
+            borderBottom: '1px solid #ebecf0',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -108,7 +108,7 @@ const MobileSidebar = ({ isOpen = false, onClose, onNavigate, currentRoute = '/'
             style={{
               fontSize: 18,
               fontWeight: 600,
-              color: '#111827',
+              color: '#0b0c0e',
               margin: 0
             }}
           >
@@ -127,7 +127,7 @@ const MobileSidebar = ({ isOpen = false, onClose, onNavigate, currentRoute = '/'
               borderRadius: 8,
               cursor: 'pointer',
               fontSize: 24,
-              color: '#374151',
+              color: '#5c6066',
               transition: 'background-color 0.2s ease'
             }}
             onTouchStart={(e) => {
@@ -149,7 +149,7 @@ const MobileSidebar = ({ isOpen = false, onClose, onNavigate, currentRoute = '/'
                 style={{
                   fontSize: 12,
                   fontWeight: 600,
-                  color: '#9CA3AF',
+                  color: '#8b9098',
                   textTransform: 'uppercase',
                   letterSpacing: '0.05em',
                   marginBottom: 8,
@@ -171,7 +171,7 @@ const MobileSidebar = ({ isOpen = false, onClose, onNavigate, currentRoute = '/'
                       alignItems: 'center',
                       gap: 12,
                       padding: '12px',
-                      backgroundColor: isActive ? '#EFF6FF' : 'transparent',
+                      backgroundColor: isActive ? '#f3f4fc' : 'transparent',
                       border: 'none',
                       borderRadius: 8,
                       cursor: 'pointer',
@@ -185,7 +185,7 @@ const MobileSidebar = ({ isOpen = false, onClose, onNavigate, currentRoute = '/'
                       }
                     }}
                     onTouchEnd={(e) => {
-                      e.currentTarget.style.backgroundColor = isActive ? '#EFF6FF' : 'transparent';
+                      e.currentTarget.style.backgroundColor = isActive ? '#f3f4fc' : 'transparent';
                     }}
                   >
                     <span style={{ fontSize: 20, lineHeight: 1 }}>{item.icon}</span>
@@ -193,7 +193,7 @@ const MobileSidebar = ({ isOpen = false, onClose, onNavigate, currentRoute = '/'
                       style={{
                         fontSize: 14,
                         fontWeight: isActive ? 600 : 500,
-                        color: isActive ? '#3B82F6' : '#374151',
+                        color: isActive ? '#5e6ad2' : '#5c6066',
                         textAlign: 'left',
                         flex: 1
                       }}
@@ -206,7 +206,7 @@ const MobileSidebar = ({ isOpen = false, onClose, onNavigate, currentRoute = '/'
                           width: 4,
                           height: 4,
                           borderRadius: '50%',
-                          backgroundColor: '#3B82F6'
+                          backgroundColor: '#5e6ad2'
                         }}
                       />
                     )}
@@ -221,9 +221,9 @@ const MobileSidebar = ({ isOpen = false, onClose, onNavigate, currentRoute = '/'
         <div
           style={{
             padding: '16px',
-            borderTop: '1px solid #E5E7EB',
+            borderTop: '1px solid #ebecf0',
             fontSize: 11,
-            color: '#9CA3AF',
+            color: '#8b9098',
             textAlign: 'center'
           }}
         >

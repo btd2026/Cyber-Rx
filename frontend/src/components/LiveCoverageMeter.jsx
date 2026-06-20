@@ -50,25 +50,25 @@ export default function LiveCoverageMeter({ orgId, authToken, apiUrl }) {
             background: '#fff', boxShadow: '-12px 0 40px rgba(0,0,0,0.25)', overflowY: 'auto', padding: '20px 22px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: THEME.ink, fontFamily: FONTS.display }}>Data Trust</h3>
-              <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', fontSize: 20, color: '#94a3b8', cursor: 'pointer', lineHeight: 1 }}>×</button>
+              <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', fontSize: 20, color: '#8b9098', cursor: 'pointer', lineHeight: 1 }}>×</button>
             </div>
-            <p style={{ margin: '0 0 14px', fontSize: 12, color: '#475569', lineHeight: 1.5 }}>
+            <p style={{ margin: '0 0 14px', fontSize: 12, color: '#5c6066', lineHeight: 1.5 }}>
               Where every posture signal comes from. Connect a source to upgrade it from modeled to live.
             </p>
 
             {/* headline mix */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderTop: '1px solid #e6ebf2', borderBottom: '1px solid #e6ebf2' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderTop: '1px solid #ebecf0', borderBottom: '1px solid #ebecf0' }}>
               {donut(56)}
               <div style={{ flex: 1 }}>
                 {ORDER.map((m) => (
-                  <div key={m} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12, color: '#334155', padding: '1px 0' }}>
+                  <div key={m} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12, color: '#5c6066', padding: '1px 0' }}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                       <span style={{ width: 9, height: 9, borderRadius: '50%', background: COLORS[m] }} />{LABEL[m]}
                     </span>
                     <strong style={{ fontFamily: FONTS.mono }}>{pct[m]}%</strong>
                   </div>
                 ))}
-                <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}><span style={{ fontFamily: FONTS.mono }}>{cov.total}</span> signals · avg confidence <span style={{ fontFamily: FONTS.mono }}>{cov.confidence}%</span></div>
+                <div style={{ fontSize: 11, color: '#8b9098', marginTop: 4 }}><span style={{ fontFamily: FONTS.mono }}>{cov.total}</span> signals · avg confidence <span style={{ fontFamily: FONTS.mono }}>{cov.confidence}%</span></div>
               </div>
             </div>
 
@@ -78,8 +78,8 @@ export default function LiveCoverageMeter({ orgId, authToken, apiUrl }) {
                 <div style={{ fontSize: 12, fontWeight: 800, color: THEME.ink, marginBottom: 7, fontFamily: FONTS.display }}>Go live — connect these sources</div>
                 {cov.upgrades.map((u, i) => (
                   <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, fontSize: 12,
-                    background: '#f8fafc', border: '1px solid #e6ebf2', borderRadius: 7, padding: '8px 10px', marginBottom: 6 }}>
-                    <span style={{ color: '#334155' }}><strong>{u.source}</strong> <span style={{ color: '#94a3b8' }}>→ {u.signal}</span></span>
+                    background: '#f6f7f9', border: '1px solid #ebecf0', borderRadius: 7, padding: '8px 10px', marginBottom: 6 }}>
+                    <span style={{ color: '#5c6066' }}><strong>{u.source}</strong> <span style={{ color: '#8b9098' }}>→ {u.signal}</span></span>
                     <span style={{ fontSize: 10.5, fontWeight: 700, color: '#0e7490', whiteSpace: 'nowrap' }}>Connect</span>
                   </div>
                 ))}
@@ -91,10 +91,10 @@ export default function LiveCoverageMeter({ orgId, authToken, apiUrl }) {
               <div style={{ fontSize: 12, fontWeight: 800, color: THEME.ink, marginBottom: 7, fontFamily: FONTS.display }}>By domain</div>
               {(cov.byDomain || []).map((d) => (
                 <div key={d.id} style={{ marginBottom: 9 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#334155' }}>
-                    <span>{d.name}</span><span style={{ color: COLORS[d.mode] || '#94a3b8', fontWeight: 700 }}>{LABEL[d.mode]}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#5c6066' }}>
+                    <span>{d.name}</span><span style={{ color: COLORS[d.mode] || '#8b9098', fontWeight: 700 }}>{LABEL[d.mode]}</span>
                   </div>
-                  <div style={{ display: 'flex', height: 6, borderRadius: 3, overflow: 'hidden', marginTop: 3, background: '#eef2f6' }}>
+                  <div style={{ display: 'flex', height: 6, borderRadius: 3, overflow: 'hidden', marginTop: 3, background: '#f0f1f4' }}>
                     {ORDER.map((m) => (d.pct && d.pct[m] ? <span key={m} style={{ width: `${d.pct[m]}%`, background: COLORS[m] }} /> : null))}
                   </div>
                 </div>

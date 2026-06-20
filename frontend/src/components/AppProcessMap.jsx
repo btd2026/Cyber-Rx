@@ -11,7 +11,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { COLORS, FONTS } from '../theme';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
-const tierColor = (t) => (Number(t) === 1 ? COLORS.bad : Number(t) === 2 ? COLORS.warn : Number(t) === 3 ? '#1d4ed8' : INK3);
+const tierColor = (t) => (Number(t) === 1 ? COLORS.bad : Number(t) === 2 ? COLORS.warn : Number(t) === 3 ? '#4f5ac4' : INK3);
 
 function ctx(props) {
   const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
@@ -66,12 +66,12 @@ export default function AppProcessMap(props) {
           calculations.
         </div>
       </div>
-      {err && <div style={{ color: '#C0392B', fontSize: 12, margin: '8px 0' }}>{err}</div>}
+      {err && <div style={{ color: '#cf222e', fontSize: 12, margin: '8px 0' }}>{err}</div>}
 
       {/* Explicit AI-mapping action — the requested button. */}
       <div style={{ textAlign: 'center', padding: hasMapping ? '0 0 12px' : '22px 0', border: hasMapping ? 'none' : `1px dashed ${HAIR}`, borderRadius: 12, background: hasMapping ? 'transparent' : PANEL, marginBottom: hasMapping ? 4 : 0 }}>
         <button onClick={remap} disabled={busy || !canMap}
-          style={{ background: hasMapping ? '#fff' : '#4f46e5', color: hasMapping ? INK : '#fff', border: hasMapping ? `1px solid ${HAIR}` : 'none', borderRadius: 9, padding: hasMapping ? '7px 14px' : '12px 22px', fontSize: hasMapping ? 11.5 : 13.5, fontWeight: 800, cursor: (busy || !canMap) ? 'default' : 'pointer', opacity: (busy || !canMap) ? 0.6 : 1, maxWidth: 460, whiteSpace: 'normal', lineHeight: 1.3 }}>
+          style={{ background: hasMapping ? '#fff' : '#5e6ad2', color: hasMapping ? INK : '#fff', border: hasMapping ? `1px solid ${HAIR}` : 'none', borderRadius: 9, padding: hasMapping ? '7px 14px' : '12px 22px', fontSize: hasMapping ? 11.5 : 13.5, fontWeight: 800, cursor: (busy || !canMap) ? 'default' : 'pointer', opacity: (busy || !canMap) ? 0.6 : 1, maxWidth: 460, whiteSpace: 'normal', lineHeight: 1.3 }}>
           {busy ? 'Mapping… reading both files' : hasMapping ? '↻ Re-map with AI' : '🪄 Intelligently map processes to applications that support them'}
         </button>
         {!hasMapping && (
@@ -109,7 +109,7 @@ export default function AppProcessMap(props) {
                     <div style={{ flex: 1, padding: '11px 14px', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                       <span style={{ color: INK3, fontSize: 16, marginRight: 2 }}>→</span>
                       {p.apps.length ? p.apps.map((a) => (
-                        <span key={a.id} title={a.confidence != null ? `match ${Math.round(a.confidence * 100)}%` : ''} style={{ fontSize: 11, fontWeight: 600, color: '#1e3a5f', background: '#eaf1fb', border: '1px solid #cfe0f5', borderRadius: 14, padding: '4px 11px' }}>{a.name}</span>
+                        <span key={a.id} title={a.confidence != null ? `match ${Math.round(a.confidence * 100)}%` : ''} style={{ fontSize: 11, fontWeight: 600, color: '#1c1f26', background: '#eaf1fb', border: '1px solid #cfe0f5', borderRadius: 14, padding: '4px 11px' }}>{a.name}</span>
                       )) : <span style={{ fontSize: 11, color: INK3, fontStyle: 'italic' }}>No application mapped yet</span>}
                     </div>
                   </div>
@@ -159,7 +159,7 @@ function GraphView({ processes }) {
         }))}
         {processes.map((p) => { const y = pY[p.id] - boxH / 2; return (
           <g key={p.id}>
-            <rect x={leftX} y={y} width={boxW} height={boxH} rx={9} fill="#f8fafc" stroke={HAIR} />
+            <rect x={leftX} y={y} width={boxW} height={boxH} rx={9} fill="#f6f7f9" stroke={HAIR} />
             <rect x={leftX} y={y} width={5} height={boxH} rx={2} fill={tierColor(p.tier)} />
             <text x={leftX + 14} y={y + 17} fontSize="11.5" fontWeight="800" fill={INK}>{trunc(p.name, 24)}</text>
             <text x={leftX + 14} y={y + 31} fontSize="8.5" fill={INK3}>TIER {p.tier ?? '—'} · RTO {p.rto || '—'}</text>
@@ -168,7 +168,7 @@ function GraphView({ processes }) {
         {apps.map((a) => { const y = aY[a.id] - boxH / 2; return (
           <g key={a.id}>
             <rect x={rightX} y={y} width={boxW} height={boxH} rx={9} fill="#eaf1fb" stroke="#cfe0f5" />
-            <text x={rightX + 14} y={y + 24} fontSize="11.5" fontWeight="600" fill="#1e3a5f">{trunc(a.name, 24)}</text>
+            <text x={rightX + 14} y={y + 24} fontSize="11.5" fontWeight="600" fill="#1c1f26">{trunc(a.name, 24)}</text>
           </g>
         ); })}
       </svg>

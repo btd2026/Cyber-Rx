@@ -32,7 +32,7 @@ export default function CrqDrawer({ card, orgId, authToken, apiUrl, onSaved }) {
 
   return (
     <>
-      <button onClick={openIt} style={{ background: 'none', border: 'none', padding: 0, fontSize: 9.5, color: '#1d4ed8', fontWeight: 700, cursor: 'pointer' }}>ⓘ How this is calculated</button>
+      <button onClick={openIt} style={{ background: 'none', border: 'none', padding: 0, fontSize: 9.5, color: '#4f5ac4', fontWeight: 700, cursor: 'pointer' }}>ⓘ How this is calculated</button>
       {open && (
         <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(8,15,28,0.5)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '48px 16px', overflowY: 'auto' }}>
           <div onClick={(e) => e.stopPropagation()} style={{ background: '#fff', borderRadius: 12, width: 'min(560px, 96vw)', boxShadow: '0 24px 64px rgba(0,0,0,0.3)', padding: '20px 22px' }}>
@@ -70,7 +70,7 @@ export default function CrqDrawer({ card, orgId, authToken, apiUrl, onSaved }) {
                 ))}
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 10, alignItems: 'center' }}>
-                <button onClick={save} disabled={busy} style={{ background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 7, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: busy ? 0.6 : 1 }}>{busy ? 'Saving…' : 'Save & recompute'}</button>
+                <button onClick={save} disabled={busy} style={{ background: '#5e6ad2', color: '#fff', border: 'none', borderRadius: 7, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: busy ? 0.6 : 1 }}>{busy ? 'Saving…' : 'Save & recompute'}</button>
                 <span style={{ fontSize: 10.5, color: INK3 }}>Recomputes the distribution and marks it user-tuned.</span>
               </div>
             </div>

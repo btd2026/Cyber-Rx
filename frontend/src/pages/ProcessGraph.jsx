@@ -155,7 +155,7 @@ const ProcessGraph = ({ matchId }) => {
     {
       selector: 'node[type="process"]',
       style: {
-        'background-color': '#3b82f6',
+        'background-color': '#5e6ad2',
         'label': 'data(label)',
         'color': 'white',
         'text-valign': 'center',
@@ -167,7 +167,7 @@ const ProcessGraph = ({ matchId }) => {
         'text-wrap': 'wrap',
         'text-max-width': '80px',
         'border-width': 2,
-        'border-color': '#1e40af'
+        'border-color': '#4a52b0'
       }
     },
     {
@@ -223,8 +223,8 @@ const ProcessGraph = ({ matchId }) => {
       selector: 'edge',
       style: {
         'width': 2,
-        'line-color': '#94a3b8',
-        'target-arrow-color': '#94a3b8',
+        'line-color': '#8b9098',
+        'target-arrow-color': '#8b9098',
         'target-arrow-shape': 'triangle',
         'curve-style': 'bezier',
         'arrow-scale': 0.8,
@@ -232,7 +232,7 @@ const ProcessGraph = ({ matchId }) => {
         'font-size': '9px',
         'text-rotation': 'autorotate',
         'text-margin-y': -10,
-        'color': '#64748b'
+        'color': '#8b9098'
       }
     },
     {

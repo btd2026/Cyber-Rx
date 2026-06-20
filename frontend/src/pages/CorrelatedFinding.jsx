@@ -111,7 +111,7 @@ const CorrelatedFinding = (props) => {
           width: '40px',
           height: '40px',
           border: `3px solid ${HAIR}`,
-          borderTopColor: '#2563eb',
+          borderTopColor: '#5e6ad2',
           borderRadius: '50%',
           animation: 'spin 1s linear infinite'
         }} />
@@ -627,8 +627,8 @@ const CorrelatedFinding = (props) => {
                           padding: '0.125rem 0.5rem',
                           borderRadius: '4px',
                           fontSize: '0.75rem',
-                          backgroundColor: '#e0e7ff',
-                          color: '#4338ca',
+                          backgroundColor: '#eef0fb',
+                          color: '#4f5ac4',
                           border: '1px solid #c7d2fe'
                         }}>
                           {fw}
@@ -768,7 +768,7 @@ const CorrelatedFinding = (props) => {
               onClick={goBack}
               style={{
                 padding: '0.5rem 1rem',
-                backgroundColor: '#2563eb',
+                backgroundColor: '#5e6ad2',
                 color: 'white',
                 border: 'none',
                 borderRadius: '6px',

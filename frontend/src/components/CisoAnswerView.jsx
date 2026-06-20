@@ -14,7 +14,7 @@ import TicketControl from './TicketControl';
 import { COLORS, FONTS } from '../theme';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
-const C = { Strong: COLORS.good, Moderate: COLORS.warn, Weak: '#A85B2E', Critical: COLORS.bad };
+const C = { Strong: COLORS.good, Moderate: COLORS.warn, Weak: '#c2410c', Critical: COLORS.bad };
 const VERDICT = { Strong: 'Healthy', Moderate: 'Needs attention', Weak: 'At risk', Critical: 'Urgent' };
 const SEV = { Strong: 'Low', Moderate: 'Medium', Weak: 'High', Critical: 'Critical' };
 const conf = (c) => (c === 'High' ? COLORS.good : c === 'Medium' ? COLORS.warn : COLORS.ink3);
@@ -51,9 +51,9 @@ export default function CisoAnswerView({ a, issues, onIssueClick, role = 'CISO' 
         {/* SME supporting context (distinct from the spoken narration) */}
         {a.explanation && (
           <div style={{ marginTop: 14, display: 'flex', gap: 10 }}>
-            <div style={{ width: 3, borderRadius: 2, background: '#1d4ed8', flexShrink: 0 }} />
+            <div style={{ width: 3, borderRadius: 2, background: '#4f5ac4', flexShrink: 0 }} />
             <div>
-              <SectionLabel color="#1d4ed8">Why this matters</SectionLabel>
+              <SectionLabel color="#4f5ac4">Why this matters</SectionLabel>
               <div style={{ fontSize: 13.5, color: INK, lineHeight: 1.6 }}>{a.explanation}</div>
             </div>
           </div>
@@ -61,7 +61,7 @@ export default function CisoAnswerView({ a, issues, onIssueClick, role = 'CISO' 
 
         {/* the decision — most prominent */}
         <div style={{ marginTop: 16, background: '#f0f7f2', border: '1px solid #cce8d6', borderRadius: 10, padding: '14px 16px' }}>
-          <SectionLabel color="#1f8a4c">Do this</SectionLabel>
+          <SectionLabel color="#1a7f37">Do this</SectionLabel>
           <div style={{ fontSize: 15, color: INK, lineHeight: 1.5, fontWeight: 500 }}>{a.recommendedAction}</div>
         </div>
 
@@ -95,7 +95,7 @@ export default function CisoAnswerView({ a, issues, onIssueClick, role = 'CISO' 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {clickable.map((it, i) => (
                 <button key={i} onClick={() => onIssueClick && onIssueClick(it.entity)}
-                  style={{ background: '#eef4fb', border: '1px solid #cfe0f3', color: '#1d4ed8', borderRadius: 18, padding: '7px 14px', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7, transition: 'all .12s' }}>
+                  style={{ background: '#eef4fb', border: '1px solid #cfe0f3', color: '#4f5ac4', borderRadius: 18, padding: '7px 14px', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7, transition: 'all .12s' }}>
                   {it.label}<span style={{ fontSize: 13, opacity: 0.7 }}>→</span>
                 </button>
               ))}
@@ -104,7 +104,7 @@ export default function CisoAnswerView({ a, issues, onIssueClick, role = 'CISO' 
         )}
 
         {/* secondary context — collapsed to keep the answer clean */}
-        <button onClick={() => setMore(!more)} style={{ marginTop: 18, background: 'transparent', border: 'none', color: '#1d4ed8', fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: 0 }}>
+        <button onClick={() => setMore(!more)} style={{ marginTop: 18, background: 'transparent', border: 'none', color: '#4f5ac4', fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: 0 }}>
           {more ? '▾ Hide background' : '▸ What changed & why it matters'}
         </button>
         {more && (

@@ -12,7 +12,7 @@ import Provenance from './Provenance';
 import { COLORS, FONTS } from '../theme';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
-const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
+const SEV = { Critical: COLORS.bad, High: '#c2410c', Medium: COLORS.warn, Low: COLORS.good };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
 
 function ctx(props) {
@@ -71,7 +71,7 @@ export default function CroExposures(props) {
                       <Pill text={e.scenarioType} color={sev} />
                       <Pill text={e.severity} color={sev} />
                       {e.aboveAppetite && <Pill text="Above appetite" color={SEV.Critical} />}
-                      {e.decision && <Pill text="Decided" color="#1f8a4c" />}
+                      {e.decision && <Pill text="Decided" color="#1a7f37" />}
                     </div>
                     <div style={{ fontSize: 14, fontWeight: 800, color: INK, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONTS.display }}>{e.provenance && <Provenance prov={e.provenance} />}<span>{e.title}</span></div>
                     <div style={{ fontSize: 11.5, color: INK2, marginTop: 3 }}>{(e.croLens && e.croLens.narrative) || ''}</div>
@@ -90,13 +90,13 @@ export default function CroExposures(props) {
                   <span>90d <strong>{e.projection.p90}%</strong></span>
                   <span style={{ color: INK3 }}>· appetite line {e.projection.appetiteLine}%</span>
                 </div>
-                <button onClick={() => setOpen(isOpen ? null : e.id)} style={{ marginTop: 8, background: 'transparent', border: 'none', color: '#1d4ed8', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', padding: 0 }}>{isOpen ? '▲ Hide cross-lens detail' : '▼ Processes · CFO financial · CISO attack path'}</button>
+                <button onClick={() => setOpen(isOpen ? null : e.id)} style={{ marginTop: 8, background: 'transparent', border: 'none', color: '#4f5ac4', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', padding: 0 }}>{isOpen ? '▲ Hide cross-lens detail' : '▼ Processes · CFO financial · CISO attack path'}</button>
               </div>
               {isOpen && (
                 <div style={{ borderTop: `1px solid ${HAIR}`, padding: '12px 14px', background: PANEL, display: 'grid', gap: 12 }}>
                   <div>
                     <Label>Impacted business processes</Label>
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{e.businessProcesses.map((p, i) => <span key={i} style={{ fontSize: 11, color: '#1e3a5f', background: '#eaf1fb', border: '1px solid #cfe0f5', borderRadius: 6, padding: '3px 9px' }}>{p}</span>)}</div>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{e.businessProcesses.map((p, i) => <span key={i} style={{ fontSize: 11, color: '#1c1f26', background: '#eaf1fb', border: '1px solid #cfe0f5', borderRadius: 6, padding: '3px 9px' }}>{p}</span>)}</div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                     {e.financial && (
@@ -115,7 +115,7 @@ export default function CroExposures(props) {
                           {e.attackPath.map((s, i) => (
                             <React.Fragment key={i}>
                               <span style={{ fontSize: 10.5, color: INK, background: PANEL, border: `1px solid ${HAIR}`, borderRadius: 6, padding: '3px 7px' }}>{s.label}</span>
-                              {i < e.attackPath.length - 1 && <span style={{ color: '#C0392B', fontWeight: 800 }}>→</span>}
+                              {i < e.attackPath.length - 1 && <span style={{ color: '#cf222e', fontWeight: 800 }}>→</span>}
                             </React.Fragment>
                           ))}
                         </div>

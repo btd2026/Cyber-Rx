@@ -13,9 +13,9 @@ import { useAgentVoice, VoiceControls } from './agentVoice';
 import { COLORS, FONTS } from '../theme';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
-const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
+const SEV = { Critical: COLORS.bad, High: '#c2410c', Medium: COLORS.warn, Low: COLORS.good };
 const TONE = { good: COLORS.good, warn: COLORS.warn, bad: COLORS.bad };
-const toneColor = (t) => TONE[t] || '#475569';
+const toneColor = (t) => TONE[t] || '#5c6066';
 
 const Pill = ({ text, color }) => (
   <span style={{ fontSize: 9.5, fontWeight: 700, color: '#fff', background: color, borderRadius: 999, padding: '2px 9px', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{text}</span>
@@ -107,7 +107,7 @@ export default function RoleSection({ section, role = 'CISO' }) {
 // Decision Intelligence: detected condition → what could go wrong → options.
 function DecisionsView({ role, section }) {
   const items = section.items || [];
-  const sevC = (s) => SEV[s] || '#B07C2E';
+  const sevC = (s) => SEV[s] || '#9a6700';
   const chip = (k, v) => (
     <span style={{ fontSize: 10, color: INK2, background: PANEL, border: `1px solid ${HAIR}`, borderRadius: 999, padding: '2px 9px' }}>{k} <strong style={{ color: INK }}>{v}</strong></span>
   );
@@ -133,7 +133,7 @@ function DecisionsView({ role, section }) {
               <div style={{ background: 'linear-gradient(135deg,#fdecea,#fff6f5)', borderTop: `1px solid ${HAIR}`, padding: '12px 16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 5 }}>
                   <span style={{ fontSize: 13 }}>⚠️</span>
-                  <span style={{ fontSize: 9.5, fontWeight: 800, color: '#C0392B', textTransform: 'uppercase', letterSpacing: '0.07em' }}>What could go wrong</span>
+                  <span style={{ fontSize: 9.5, fontWeight: 800, color: '#cf222e', textTransform: 'uppercase', letterSpacing: '0.07em' }}>What could go wrong</span>
                 </div>
                 <div style={{ fontSize: 12.5, color: INK, lineHeight: 1.55 }}>{d.projection}</div>
                 <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginTop: 9 }}>
@@ -149,14 +149,14 @@ function DecisionsView({ role, section }) {
                   {(d.options || []).map((o, oi) => (
                     <div key={oi} style={{ border: `1px solid ${HAIR}`, borderRadius: 9, padding: '10px 12px', background: PANEL }}>
                       <div style={{ fontSize: 12, fontWeight: 700, color: INK, lineHeight: 1.3 }}>{o.label}</div>
-                      {o.effect && <div style={{ fontSize: 10.5, color: '#1f8a4c', marginTop: 5 }}>✓ {o.effect}</div>}
+                      {o.effect && <div style={{ fontSize: 10.5, color: '#1a7f37', marginTop: 5 }}>✓ {o.effect}</div>}
                       {o.tradeoff && <div style={{ fontSize: 10.5, color: INK2, marginTop: 3 }}>⚖ {o.tradeoff}</div>}
                     </div>
                   ))}
                 </div>
                 {d.recommended && (
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 9, marginTop: 11, background: '#f0f7f2', border: '1px solid #cce8d6', borderRadius: 9, padding: '10px 13px' }}>
-                    <span style={{ fontSize: 9.5, fontWeight: 800, color: '#fff', background: '#1f8a4c', borderRadius: 999, padding: '3px 9px', whiteSpace: 'nowrap', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Recommended</span>
+                    <span style={{ fontSize: 9.5, fontWeight: 800, color: '#fff', background: '#1a7f37', borderRadius: 999, padding: '3px 9px', whiteSpace: 'nowrap', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Recommended</span>
                     <div style={{ fontSize: 12.5, color: INK, lineHeight: 1.5, fontWeight: 500 }}>{d.recommended}</div>
                   </div>
                 )}
@@ -181,14 +181,14 @@ function Metrics({ section }) {
           const c = toneColor(m.tone);
           return (
             <div key={i} style={{ position: 'relative', border: `1px solid ${HAIR}`, borderRadius: 12, padding: '14px 16px 10px', background: '#fff', boxShadow: '0 1px 2px rgba(15,23,42,0.04)', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: m.tone ? c : '#e2e8f0' }} />
+              <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: m.tone ? c : '#ebecf0' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
                 <div style={{ fontSize: 11, color: INK2, fontWeight: 600 }}>{m.label}</div>
                 {deltaChip(m.spark, m.tone)}
               </div>
               <div style={{ fontSize: 26, fontWeight: 800, color: m.tone ? c : INK, marginTop: 4, lineHeight: 1.1, letterSpacing: '-0.01em', fontFamily: FONTS.mono }}>{m.value}</div>
               {m.sub && <div style={{ fontSize: 10.5, color: INK3, marginTop: 2 }}>{m.sub}</div>}
-              <div style={{ marginTop: 8, marginLeft: -4, marginRight: -4 }}><Sparkline values={m.spark} color={m.tone ? c : '#94a3b8'} /></div>
+              <div style={{ marginTop: 8, marginLeft: -4, marginRight: -4 }}><Sparkline values={m.spark} color={m.tone ? c : '#8b9098'} /></div>
             </div>
           );
         })}
@@ -200,7 +200,7 @@ function Metrics({ section }) {
 function Ranked({ section }) {
   const items = section.items || [];
   const max = Math.max(1, ...items.map((x) => Number(x.score) || 0));
-  const medal = ['#C0392B', '#A85B2E', '#B07C2E'];
+  const medal = ['#cf222e', '#c2410c', '#9a6700'];
   return (
     <div>
       <Insight section={section} />
@@ -219,10 +219,10 @@ function Ranked({ section }) {
                 </div>
                 <span style={{ fontSize: 13.5, fontWeight: 800, color: c, minWidth: 58, textAlign: 'right', fontFamily: FONTS.mono }}>{x.scoreLabel || x.score}</span>
               </div>
-              <div style={{ height: 8, background: '#eef2f6', borderRadius: 5, overflow: 'hidden', marginTop: 9 }}>
+              <div style={{ height: 8, background: '#f0f1f4', borderRadius: 5, overflow: 'hidden', marginTop: 9 }}>
                 <div style={{ width: `${pct}%`, height: '100%', borderRadius: 5, background: `linear-gradient(90deg, ${c}aa, ${c})` }} />
               </div>
-              {x.action && <div style={{ fontSize: 11, color: '#1f8a4c', fontWeight: 600, marginTop: 7 }}>→ {x.action}</div>}
+              {x.action && <div style={{ fontSize: 11, color: '#1a7f37', fontWeight: 600, marginTop: 7 }}>→ {x.action}</div>}
             </div>
           );
         })}
@@ -293,7 +293,7 @@ function CardsView({ section }) {
         {items.map((it, i) => {
           const c = toneColor(it.tagTone);
           return (
-            <div key={i} style={{ border: `1px solid ${HAIR}`, borderTop: `3px solid ${it.tagTone ? c : '#cbd5e1'}`, borderRadius: 11, padding: '13px 15px', background: '#fff', boxShadow: '0 1px 2px rgba(15,23,42,0.04)' }}>
+            <div key={i} style={{ border: `1px solid ${HAIR}`, borderTop: `3px solid ${it.tagTone ? c : '#d7d9de'}`, borderRadius: 11, padding: '13px 15px', background: '#fff', boxShadow: '0 1px 2px rgba(15,23,42,0.04)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
                 <div style={{ fontSize: 12.5, fontWeight: 700, color: INK, lineHeight: 1.3, fontFamily: FONTS.display }}>{it.title}</div>
                 {it.tag && <Pill text={it.tag} color={it.tagTone ? c : INK3} />}
@@ -307,7 +307,7 @@ function CardsView({ section }) {
                   ))}
                 </div>
               )}
-              {it.action && <div style={{ fontSize: 11, color: '#1f8a4c', fontWeight: 600, marginTop: 10, paddingTop: 9, borderTop: `1px dashed ${HAIR}` }}>→ {it.action}</div>}
+              {it.action && <div style={{ fontSize: 11, color: '#1a7f37', fontWeight: 600, marginTop: 10, paddingTop: 9, borderTop: `1px dashed ${HAIR}` }}>→ {it.action}</div>}
             </div>
           );
         })}
@@ -324,7 +324,7 @@ function ActionsView({ role, section }) {
       {!items.length && <div style={{ fontSize: 12, color: INK3 }}>No actions required right now.</div>}
       <div style={{ display: 'grid', gap: 9 }}>
         {items.map((a) => {
-          const c = SEV[a.severity] || '#B07C2E';
+          const c = SEV[a.severity] || '#9a6700';
           return (
             <div key={a.rank} style={{ position: 'relative', border: `1px solid ${HAIR}`, borderRadius: 10, padding: '12px 14px 12px 16px', background: '#fff', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 0, left: 0, width: 5, height: '100%', background: c }} />

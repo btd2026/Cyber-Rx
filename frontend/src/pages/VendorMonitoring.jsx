@@ -78,7 +78,7 @@ const VendorMonitoring = ({ authToken, orgId, api_url }) => {
       <div style={{
         padding: '2rem',
         textAlign: 'center',
-        color: '#6B7280'
+        color: '#5c6066'
       }}>
         Loading vendor monitoring...
       </div>
@@ -94,7 +94,7 @@ const VendorMonitoring = ({ authToken, orgId, api_url }) => {
         color: '#EF4545'
       }}>
         <div style={{ marginBottom: 8 }}>Error loading vendor monitoring:</div>
-        <div style={{ fontSize: 12, color: '#6B7280' }}>{error}</div>
+        <div style={{ fontSize: 12, color: '#5c6066' }}>{error}</div>
       </div>
     );
   }
@@ -107,7 +107,7 @@ const VendorMonitoring = ({ authToken, orgId, api_url }) => {
         textAlign: 'center',
         backgroundColor: '#F9FAFB',
         borderRadius: 8,
-        border: '1px solid #E5E7EB'
+        border: '1px solid #ebecf0'
       }}>
         <div style={{
           fontSize: 48,
@@ -118,14 +118,14 @@ const VendorMonitoring = ({ authToken, orgId, api_url }) => {
         <h3 style={{
           fontSize: 14,
           fontWeight: 700,
-          color: '#111827',
+          color: '#0b0c0e',
           marginBottom: 8
         }}>
           No Vendors Configured for Monitoring
         </h3>
         <p style={{
           fontSize: 11,
-          color: '#6B7280',
+          color: '#5c6066',
           marginBottom: 16
         }}>
           Complete the Setup flow to select vendors and configure monitoring connectors
@@ -145,9 +145,9 @@ const VendorMonitoring = ({ authToken, orgId, api_url }) => {
             marginBottom: 16,
             padding: '6px 12px',
             backgroundColor: '#F3F4F6',
-            border: '1px solid #D1D5DB',
+            border: '1px solid #d7d9de',
             borderRadius: 6,
-            color: '#374151',
+            color: '#5c6066',
             cursor: 'pointer',
             fontSize: 10,
             fontWeight: 600
@@ -174,19 +174,19 @@ const VendorMonitoring = ({ authToken, orgId, api_url }) => {
       <div style={{
         marginBottom: 24,
         paddingBottom: 16,
-        borderBottom: '1px solid #E5E7EB'
+        borderBottom: '1px solid #ebecf0'
       }}>
         <h1 style={{
           fontSize: 24,
           fontWeight: 700,
-          color: '#111827',
+          color: '#0b0c0e',
           marginBottom: 8
         }}>
           Vendor Monitoring
         </h1>
         <p style={{
           fontSize: 12,
-          color: '#6B7280',
+          color: '#5c6066',
           marginBottom: 0
         }}>
           Continuous risk monitoring for {vendors.length} vendor(s)
@@ -204,7 +204,7 @@ const VendorMonitoring = ({ authToken, orgId, api_url }) => {
             key={vendor.id}
             onClick={() => handleVendorSelect(vendor)}
             style={{
-              border: '1px solid #E5E7EB',
+              border: '1px solid #ebecf0',
               borderRadius: 8,
               padding: 16,
               backgroundColor: '#FFFFFF',
@@ -212,11 +212,11 @@ const VendorMonitoring = ({ authToken, orgId, api_url }) => {
               transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
             }}
             onMouseOver={(e) => {
-              e.target.style.borderColor = '#2563EB';
+              e.target.style.borderColor = '#5e6ad2';
               e.target.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
             }}
             onMouseOut={(e) => {
-              e.target.style.borderColor = '#E5E7EB';
+              e.target.style.borderColor = '#ebecf0';
               e.target.style.boxShadow = 'none';
             }}
           >
@@ -224,7 +224,7 @@ const VendorMonitoring = ({ authToken, orgId, api_url }) => {
             <div style={{
               fontSize: 14,
               fontWeight: 700,
-              color: '#111827',
+              color: '#0b0c0e',
               marginBottom: 8
             }}>
               {vendor.name}
@@ -233,7 +233,7 @@ const VendorMonitoring = ({ authToken, orgId, api_url }) => {
             {/* Placeholder for risk score */}
             <div style={{
               fontSize: 12,
-              color: '#6B7280',
+              color: '#5c6066',
               marginBottom: 12
             }}>
               {vendor.riskScore !== null ? (
@@ -262,7 +262,7 @@ const VendorMonitoring = ({ authToken, orgId, api_url }) => {
               style={{
                 width: '100%',
                 padding: '6px 12px',
-                backgroundColor: '#2563EB',
+                backgroundColor: '#5e6ad2',
                 border: 'none',
                 color: '#FFFFFF',
                 borderRadius: 6,

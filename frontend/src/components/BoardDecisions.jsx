@@ -12,7 +12,7 @@ import Provenance from './Provenance';
 import { COLORS, FONTS } from '../theme';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
-const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
+const SEV = { Critical: COLORS.bad, High: '#c2410c', Medium: COLORS.warn, Low: COLORS.good };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
 
 function ctx(props) {
@@ -40,7 +40,7 @@ export default function BoardDecisions(props) {
 
   return (
     <div style={{ display: 'grid', gap: 12 }}>
-      {d.provenance && <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 5, fontSize: 10, color: '#94a3b8', marginBottom: -4 }}><Provenance prov={d.provenance} /><span>data provenance</span></div>}
+      {d.provenance && <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 5, fontSize: 10, color: '#8b9098', marginBottom: -4 }}><Provenance prov={d.provenance} /><span>data provenance</span></div>}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
         <div style={{ fontSize: 12.5, color: INK2 }}><strong>{d.counts.total}</strong> risk(s) at board altitude · <strong>{d.counts.open}</strong> open. Same events every executive manages — here at oversight altitude.</div>
         <VoiceControls voice={voice} onReplay={() => voice.speak(d.narration)} label="Listen" />
@@ -57,7 +57,7 @@ export default function BoardDecisions(props) {
                     {it.type === 'compound' && <Pill text="Correlated" color="#7c3aed" />}
                     <Pill text={it.severity} color={sev} />
                     {it.aboveAppetite && <Pill text="Above appetite" color={SEV.Critical} />}
-                    {it.decision ? <Pill text="Decided" color="#1f8a4c" /> : <Pill text="Open" color="#B07C2E" />}
+                    {it.decision ? <Pill text="Decided" color="#1a7f37" /> : <Pill text="Open" color="#9a6700" />}
                   </div>
                   <div style={{ fontSize: 14, fontWeight: 800, fontFamily: FONTS.display, color: INK, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>{it.provenance && <Provenance prov={it.provenance} />}<span>{lens.headline || it.title}</span></div>
                   <div style={{ fontSize: 11, color: INK3, marginTop: 1 }}>Event: {it.title} · owner {it.owner}</div>
@@ -70,7 +70,7 @@ export default function BoardDecisions(props) {
                   {lens.narration && <div style={{ marginTop: 6, display: 'flex', justifyContent: 'flex-end' }}><VoiceControls voice={voice} onReplay={() => voice.speak(lens.narration)} label="Listen" /></div>}
                 </div>
               </div>
-              {it.decision && <div style={{ fontSize: 11, color: INK2, background: '#f0f7f2', border: '1px solid #cce8d6', borderRadius: 8, padding: '7px 11px', marginTop: 8 }}><strong style={{ color: '#1f8a4c' }}>On the record:</strong> {it.decision.action === 'accept' ? 'Accepted & monitoring' : 'Treatment selected'} by {it.decision.decidedBy || it.decision.role || 'management'}{it.decision.rationale ? ` — "${it.decision.rationale}"` : ''}.</div>}
+              {it.decision && <div style={{ fontSize: 11, color: INK2, background: '#f0f7f2', border: '1px solid #cce8d6', borderRadius: 8, padding: '7px 11px', marginTop: 8 }}><strong style={{ color: '#1a7f37' }}>On the record:</strong> {it.decision.action === 'accept' ? 'Accepted & monitoring' : 'Treatment selected'} by {it.decision.decidedBy || it.decision.role || 'management'}{it.decision.rationale ? ` — "${it.decision.rationale}"` : ''}.</div>}
             </div>
           );
         })}

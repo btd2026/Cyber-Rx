@@ -11,9 +11,9 @@ import Provenance from './Provenance';
 import { COLORS, FONTS } from '../theme';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
-const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
+const SEV = { Critical: COLORS.bad, High: '#c2410c', Medium: COLORS.warn, Low: COLORS.good };
 const TONE = { good: COLORS.good, warn: COLORS.warn, bad: COLORS.bad };
-const TREAT = { mitigate: { c: COLORS.good, label: 'Mitigate' }, transfer: { c: '#1d4ed8', label: 'Transfer' }, accept: { c: COLORS.warn, label: 'Accept' } };
+const TREAT = { mitigate: { c: COLORS.good, label: 'Mitigate' }, transfer: { c: '#4f5ac4', label: 'Transfer' }, accept: { c: COLORS.warn, label: 'Accept' } };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
 
 function ctx(props) {
@@ -110,7 +110,7 @@ export default function CroTreatment(props) {
 }
 function Kpi({ label, value, sub, tone }) {
   return (
-    <div style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${tone ? TONE[tone] : '#cbd5e1'}`, borderRadius: 9, padding: '11px 13px', background: '#fff' }}>
+    <div style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${tone ? TONE[tone] : '#d7d9de'}`, borderRadius: 9, padding: '11px 13px', background: '#fff' }}>
       <div style={{ fontSize: 10.5, color: INK2 }}>{label}</div>
       <div style={{ fontSize: 19, fontWeight: 800, color: tone ? TONE[tone] : INK, marginTop: 2, fontFamily: FONTS.mono }}>{value}</div>
       {sub && <div style={{ fontSize: 10, color: INK3, marginTop: 1 }}>{sub}</div>}

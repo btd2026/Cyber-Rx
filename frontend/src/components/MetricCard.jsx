@@ -80,7 +80,7 @@ const MetricCard = ({ metric }) => {
 
   return (
     <div style={{
-      border: '1px solid #E5E7EB',
+      border: '1px solid #ebecf0',
       borderRadius: 8,
       padding: 12,
       backgroundColor: '#FFFFFF',
@@ -94,7 +94,7 @@ const MetricCard = ({ metric }) => {
         marginBottom: 8
       }}>
         <div style={{
-          color: '#111827',
+          color: '#0b0c0e',
           fontSize: 11,
           fontWeight: 700,
           flex: 1,
@@ -117,7 +117,7 @@ const MetricCard = ({ metric }) => {
       {metric.description && (
         <div style={{
           fontSize: 9,
-          color: '#6B7280',
+          color: '#5c6066',
           marginTop: 'auto',
           lineHeight: 1.3
         }}>
@@ -129,7 +129,7 @@ const MetricCard = ({ metric }) => {
       {metric.format === 'days' && (
         <div style={{
           fontSize: 8,
-          color: '#6B7280',
+          color: '#5c6066',
           marginTop: 4
         }}>
           {metric.value === 'No evidence' ? 'No evidence uploaded' : `days since last evidence`}
@@ -139,7 +139,7 @@ const MetricCard = ({ metric }) => {
       {metric.format === 'count' && metric.subtitle && (
         <div style={{
           fontSize: 8,
-          color: '#6B7280',
+          color: '#5c6066',
           marginTop: 4
         }}>
           {metric.subtitle}

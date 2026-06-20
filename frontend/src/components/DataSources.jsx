@@ -48,7 +48,7 @@ export default function DataSources({ orgId, authToken, apiUrl }) {
             <p style={{ margin: '0 0 14px', fontSize: 12, color: INK2, lineHeight: 1.5 }}>
               Read-only connectors. Connecting a source flips its posture signals from modeled to <strong>live</strong>. Credentials are stored securely and never displayed again.
             </p>
-            {err && <div style={{ color: '#C0392B', fontSize: 12, marginBottom: 10 }}>{err}</div>}
+            {err && <div style={{ color: '#cf222e', fontSize: 12, marginBottom: 10 }}>{err}</div>}
             {!list ? <div style={{ fontSize: 12, color: INK3 }}>Loading…</div> : (
               <div style={{ display: 'grid', gap: 10 }}>
                 {list.map((c) => (
@@ -63,7 +63,7 @@ export default function DataSources({ orgId, authToken, apiUrl }) {
                       </span>
                     </div>
                     <div style={{ fontSize: 10.5, color: INK3, marginTop: 3 }}>Signals: {c.signals.join(', ')} · Access: {c.scopes.join(', ')}</div>
-                    {c.error && <div style={{ fontSize: 10.5, color: '#C0392B', marginTop: 3 }}>{c.error}</div>}
+                    {c.error && <div style={{ fontSize: 10.5, color: '#cf222e', marginTop: 3 }}>{c.error}</div>}
                     {c.lastSync && <div style={{ fontSize: 10, color: INK3, marginTop: 2 }}>Last sync {new Date(c.lastSync).toLocaleString()}</div>}
 
                     {active === c.key ? (
@@ -76,7 +76,7 @@ export default function DataSources({ orgId, authToken, apiUrl }) {
                           ))}
                         </div>
                         <div style={{ display: 'flex', gap: 8, marginTop: 9 }}>
-                          <button onClick={() => call('POST', `${c.key}/connect`, form)} disabled={busy} style={btn('#4f46e5')}>{busy ? 'Connecting…' : 'Connect & sync'}</button>
+                          <button onClick={() => call('POST', `${c.key}/connect`, form)} disabled={busy} style={btn('#5e6ad2')}>{busy ? 'Connecting…' : 'Connect & sync'}</button>
                           <button onClick={() => { setActive(null); setForm({}); }} style={btn('#fff', INK2)}>Cancel</button>
                         </div>
                       </div>
@@ -85,10 +85,10 @@ export default function DataSources({ orgId, authToken, apiUrl }) {
                         {c.connected ? (
                           <>
                             <button onClick={() => call('POST', `${c.key}/sync`)} disabled={busy} style={btn('#0e7490')}>Sync now</button>
-                            <button onClick={() => call('DELETE', c.key)} disabled={busy} style={btn('#fff', '#C0392B')}>Disconnect</button>
+                            <button onClick={() => call('DELETE', c.key)} disabled={busy} style={btn('#fff', '#cf222e')}>Disconnect</button>
                           </>
                         ) : (
-                          <button onClick={() => { setActive(c.key); setForm({}); setErr(null); }} style={btn('#4f46e5')}>Connect</button>
+                          <button onClick={() => { setActive(c.key); setForm({}); setErr(null); }} style={btn('#5e6ad2')}>Connect</button>
                         )}
                       </div>
                     )}
@@ -104,5 +104,5 @@ export default function DataSources({ orgId, authToken, apiUrl }) {
 }
 
 function btn(bg, color) {
-  return { background: bg, color: color || '#fff', border: `1px solid ${bg === '#fff' ? '#e6ebf2' : bg}`, borderRadius: 7, padding: '7px 13px', fontSize: 12, fontWeight: 700, cursor: 'pointer' };
+  return { background: bg, color: color || '#fff', border: `1px solid ${bg === '#fff' ? '#ebecf0' : bg}`, borderRadius: 7, padding: '7px 13px', fontSize: 12, fontWeight: 700, cursor: 'pointer' };
 }

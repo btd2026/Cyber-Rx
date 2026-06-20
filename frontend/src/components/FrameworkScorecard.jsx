@@ -94,7 +94,7 @@ export default function FrameworkScorecard(props) {
             <span style={{ background: sc(data.status), color: '#fff', fontWeight: 600, fontSize: 19, fontFamily: FONTS.mono, fontVariantNumeric: 'tabular-nums', padding: '10px 14px', display: 'flex', alignItems: 'center' }}>
               {data.overall == null ? '—' : `${data.overall}%`}
             </span>
-            <span style={{ color: '#e2e8f0', fontWeight: 500, fontSize: 12, padding: '10px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: 1.35 }}>
+            <span style={{ color: '#ebecf0', fontWeight: 500, fontSize: 12, padding: '10px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: 1.35 }}>
               <span style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 9, color: COLORS.accent }}>Overall Compliance</span>
               <span>{data.status}</span>
             </span>
@@ -107,14 +107,14 @@ export default function FrameworkScorecard(props) {
 
       {/* Sections */}
       {data.sections.map((s) => (
-        <div key={s.id} style={{ borderBottom: `1px solid #f1f5f9`, padding: '16px 0' }}>
+        <div key={s.id} style={{ borderBottom: `1px solid #f0f1f4`, padding: '16px 0' }}>
           {/* Section header */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 10 }}>
             <div style={{ flex: 1 }}>
               <span style={{ fontSize: 13.5, fontWeight: 600, color: INK, fontFamily: FONTS.display }}>{s.name}</span>
               <span style={{ fontSize: 10, color: INK_3, marginLeft: 10 }}>{s.assessed}/{s.total} controls assessed</span>
             </div>
-            <div style={{ position: 'relative', width: 220, height: 8, background: '#f1f5f9', borderRadius: 4, overflow: 'visible', flexShrink: 0 }}>
+            <div style={{ position: 'relative', width: 220, height: 8, background: '#f0f1f4', borderRadius: 4, overflow: 'visible', flexShrink: 0 }}>
               {s.score != null && (
                 <div style={{ position: 'absolute', inset: 0, width: `${s.score}%`, background: sc(s.status), borderRadius: 4, opacity: 0.85 }} />
               )}
@@ -137,7 +137,7 @@ export default function FrameworkScorecard(props) {
                     style={{ fontSize: 8, fontWeight: 600, color: INK_3, letterSpacing: '0.1em', width: 50, flexShrink: 0 }}>
                     {MODE_TAGS[c.mode] ? MODE_TAGS[c.mode].label : ''}
                   </span>
-                  <div style={{ position: 'relative', width: 150, height: 5, background: '#f1f5f9', borderRadius: 3, flexShrink: 0 }}>
+                  <div style={{ position: 'relative', width: 150, height: 5, background: '#f0f1f4', borderRadius: 3, flexShrink: 0 }}>
                     {c.score != null && (
                       <div style={{ position: 'absolute', inset: 0, width: `${c.score}%`, background: sc(c.status), borderRadius: 3, opacity: 0.7 }} />
                     )}
@@ -179,7 +179,7 @@ export default function FrameworkScorecard(props) {
                       Score derivation
                     </div>
                     {c.sources.map((src) => (
-                      <div key={src.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: `1px solid #f1f5f9`, fontSize: 11.5 }}>
+                      <div key={src.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: `1px solid #f0f1f4`, fontSize: 11.5 }}>
                         <span style={{ color: INK_2 }}>
                           {src.label}
                           <span style={{ fontSize: 8.5, fontWeight: 600, color: INK_3, letterSpacing: '0.08em', marginLeft: 8 }}>
@@ -219,6 +219,6 @@ export default function FrameworkScorecard(props) {
 }
 
 const ghostBtn = {
-  background: '#fff', border: '1px solid #cbd5e1', color: '#334155',
+  background: '#fff', border: '1px solid #d7d9de', color: '#5c6066',
   borderRadius: 3, padding: '5px 12px', fontSize: 11, cursor: 'pointer', fontWeight: 500,
 };

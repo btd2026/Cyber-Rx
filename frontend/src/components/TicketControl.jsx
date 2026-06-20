@@ -18,7 +18,7 @@ import { COLORS } from '../theme';
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
 const SYS_LABEL = { demo: 'ticketing system', jira: 'Jira', snow: 'ServiceNow', servicenow: 'ServiceNow' };
 const STATUS = {
-  open: { label: 'Open', color: '#A85B2E' },
+  open: { label: 'Open', color: '#c2410c' },
   in_progress: { label: 'In progress', color: COLORS.warn },
   resolved: { label: 'Resolved', color: COLORS.good },
 };
@@ -92,7 +92,7 @@ export default function TicketControl(props) {
             style={{ border: `1px solid ${HAIR}`, borderRadius: 6, padding: '6px 9px', fontSize: 12, color: INK, minWidth: 140 }} />
         </label>
         <button onClick={open} disabled={busy}
-          style={{ background: '#0f1b2d', color: '#fff', border: 'none', borderRadius: 7, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}>
+          style={{ background: '#15171c', color: '#fff', border: 'none', borderRadius: 7, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1 }}>
           {busy ? 'Opening…' : `＋ Open ticket in ${sysLabel}`}
         </button>
         <span style={{ fontSize: 11, color: INK3 }}>
@@ -100,16 +100,16 @@ export default function TicketControl(props) {
             ? (selSys.connected ? `Creates a real ticket in ${sysLabel} (connected at setup) and starts the SLA clock.` : `${sysLabel} selected at setup but not yet connected — opens a demo ticket until credentials are added.`)
             : 'No ticketing system selected during setup — add one in the Technology step.'}
         </span>
-        {error && <span style={{ fontSize: 11, color: '#C0392B' }}>{error}</span>}
+        {error && <span style={{ fontSize: 11, color: '#cf222e' }}>{error}</span>}
       </div>
     );
   }
 
   const st = STATUS[ticket.status] || STATUS.open;
   const alert = ticket.pastDue
-    ? { bg: '#fdecea', bd: '#f3c9bf', fg: '#C0392B', text: `Past due by ${Math.abs(ticket.daysToDue)} day${Math.abs(ticket.daysToDue) === 1 ? '' : 's'}` }
+    ? { bg: '#fdecea', bd: '#f3c9bf', fg: '#cf222e', text: `Past due by ${Math.abs(ticket.daysToDue)} day${Math.abs(ticket.daysToDue) === 1 ? '' : 's'}` }
     : ticket.approaching
-      ? { bg: '#fdf6e9', bd: '#f0dcae', fg: '#B07C2E', text: `Approaching past-due — ${ticket.daysToDue} day${ticket.daysToDue === 1 ? '' : 's'} left` }
+      ? { bg: '#fdf6e9', bd: '#f0dcae', fg: '#9a6700', text: `Approaching past-due — ${ticket.daysToDue} day${ticket.daysToDue === 1 ? '' : 's'} left` }
       : null;
 
   return (
@@ -117,7 +117,7 @@ export default function TicketControl(props) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
         <span style={{ fontSize: 9.5, fontWeight: 700, color: '#fff', background: st.color, borderRadius: 4, padding: '2px 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{st.label}</span>
         <span style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>
-          {ticket.url ? <a href={ticket.url} target="_blank" rel="noreferrer" style={{ color: '#1d4ed8', textDecoration: 'none' }}>{ticket.ticketId}</a> : ticket.ticketId}
+          {ticket.url ? <a href={ticket.url} target="_blank" rel="noreferrer" style={{ color: '#4f5ac4', textDecoration: 'none' }}>{ticket.ticketId}</a> : ticket.ticketId}
         </span>
         <span style={{ fontSize: 11, color: INK3 }}>in {SYS_LABEL[ticket.system] || ticket.system}</span>
         <button onClick={refresh} disabled={busy} title="Refresh status from the ticketing system"

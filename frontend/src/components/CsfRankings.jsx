@@ -24,7 +24,7 @@ const INK_3 = COLORS.ink3;
 const HAIRLINE = COLORS.hair;
 // Maturity-tier scale (graduated 1→4) — a domain status palette; meaning preserved.
 const TIER_COLORS = { 1: COLORS.bad, 2: COLORS.warn, 3: '#6E7F49', 4: COLORS.good };
-const NA_COLOR = '#cbd5e1';
+const NA_COLOR = '#d7d9de';
 const THRESHOLD = 3.0;
 const TRACK_MIN = 1, TRACK_MAX = 4;
 
@@ -39,15 +39,15 @@ const tierColor = (v) => (v == null ? NA_COLOR : TIER_COLORS[tierOf(v)]);
 function exposureBadge(risk) {
   if (risk == null) return { label: 'Unknown', color: INK_3 };
   if (risk >= 4) return { label: 'Severe exposure', color: COLORS.bad };
-  if (risk >= 3) return { label: 'High exposure', color: '#A85B2E' };
+  if (risk >= 3) return { label: 'High exposure', color: '#c2410c' };
   if (risk >= 2) return { label: 'Moderate exposure', color: COLORS.warn };
-  return { label: 'Low exposure', color: '#64748b' };
+  return { label: 'Low exposure', color: '#8b9098' };
 }
 
 function verdict(overall, risk) {
   if (overall == null) return { label: 'Not assessed', color: INK_3, weight: 0 };
   if (overall < THRESHOLD && (risk || 0) >= 3) return { label: 'Priority', color: COLORS.bad, weight: 700 };
-  if (overall < THRESHOLD) return { label: 'Below threshold', color: '#A85B2E', weight: 600 };
+  if (overall < THRESHOLD) return { label: 'Below threshold', color: '#c2410c', weight: 600 };
   if (overall >= 3.5) return { label: 'Leading', color: COLORS.good, weight: 600 };
   return { label: 'On track', color: '#6E7F49', weight: 500 };
 }
@@ -190,7 +190,7 @@ export default function CsfRankings(props) {
     const ex = exposureBadge(r.inherentRisk);
     return (
       <div key={r.organizationId}
-        style={{ display: 'flex', alignItems: 'center', gap: 18, padding: '13px 16px', borderBottom: `1px solid #f1f5f9` }}>
+        style={{ display: 'flex', alignItems: 'center', gap: 18, padding: '13px 16px', borderBottom: `1px solid #f0f1f4` }}>
         {/* Rank */}
         <div style={{ width: 26, textAlign: 'right', fontSize: 17, fontWeight: 300, color: INK_3, fontFamily: FONTS.mono, fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
           {r.rank || '—'}
@@ -310,6 +310,6 @@ export default function CsfRankings(props) {
 }
 
 const ghostBtn = {
-  background: '#fff', border: '1px solid #cbd5e1', color: '#334155',
+  background: '#fff', border: '1px solid #d7d9de', color: '#5c6066',
   borderRadius: 3, padding: '6px 14px', fontSize: 11, cursor: 'pointer', fontWeight: 500,
 };

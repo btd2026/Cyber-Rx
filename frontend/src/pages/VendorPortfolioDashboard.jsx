@@ -270,7 +270,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
       medium: '#F59E0B',
       low: '#10B981'
     };
-    return colors[tier?.toLowerCase()] || '#6B7280';
+    return colors[tier?.toLowerCase()] || '#5c6066';
   };
 
   // Format timestamp
@@ -293,8 +293,8 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
       <div style={{
         padding: '2rem',
         textAlign: 'center',
-        color: '#6B7280',
-        backgroundColor: '#F8FAFC',
+        color: '#5c6066',
+        backgroundColor: '#f6f7f9',
         minHeight: '100vh'
       }}>
         <div style={{ marginBottom: 16 }}>Loading vendor portfolio...</div>
@@ -302,8 +302,8 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
           display: 'inline-block',
           width: 40,
           height: 40,
-          border: '3px solid #E5E7EB',
-          borderTopColor: '#3B82F6',
+          border: '3px solid #ebecf0',
+          borderTopColor: '#5e6ad2',
           borderRadius: '50%',
           animation: 'spin 1s linear infinite'
         }} />
@@ -365,7 +365,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
   return (
     <div style={{
       padding: '24px',
-      backgroundColor: '#F8FAFC',
+      backgroundColor: '#f6f7f9',
       minHeight: '100vh'
     }}>
       {/* Header */}
@@ -381,7 +381,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
           <h1 style={{
             fontSize: 24,
             fontWeight: 700,
-            color: '#111827',
+            color: '#0b0c0e',
             margin: 0,
             marginBottom: 4
           }}>
@@ -389,7 +389,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
           </h1>
           <p style={{
             fontSize: 14,
-            color: '#6B7280',
+            color: '#5c6066',
             margin: 0
           }}>
             Executive visibility into vendor risk posture and compliance status
@@ -403,8 +403,8 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
             style={{
               padding: '8px 16px',
               backgroundColor: vendors.length ? '#FFFFFF' : '#F3F4F6',
-              color: vendors.length ? '#374151' : '#9CA3AF',
-              border: '1px solid #D1D5DB',
+              color: vendors.length ? '#5c6066' : '#8b9098',
+              border: '1px solid #d7d9de',
               borderRadius: 6,
               cursor: vendors.length ? 'pointer' : 'not-allowed',
               fontSize: 13,
@@ -453,7 +453,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
         backgroundColor: '#FFFFFF',
         padding: 16,
         borderRadius: 8,
-        border: '1px solid #E5E7EB',
+        border: '1px solid #ebecf0',
         marginBottom: 16
       }}>
         <div style={{
@@ -462,13 +462,13 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
           alignItems: 'center',
           marginBottom: 12
         }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: '#0b0c0e' }}>
             Filters
             {activeFiltersCount > 0 && (
               <span style={{
                 marginLeft: 8,
                 padding: '2px 8px',
-                backgroundColor: '#3B82F6',
+                backgroundColor: '#5e6ad2',
                 color: '#FFFFFF',
                 borderRadius: 12,
                 fontSize: 11
@@ -484,8 +484,8 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
               style={{
                 padding: '4px 12px',
                 backgroundColor: 'transparent',
-                color: '#6B7280',
-                border: '1px solid #D1D5DB',
+                color: '#5c6066',
+                border: '1px solid #d7d9de',
                 borderRadius: 4,
                 cursor: 'pointer',
                 fontSize: 12,
@@ -508,7 +508,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
               display: 'block',
               fontSize: 12,
               fontWeight: 500,
-              color: '#374151',
+              color: '#5c6066',
               marginBottom: 4
             }}>
               Search Vendors
@@ -521,7 +521,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
               style={{
                 width: '100%',
                 padding: '8px 12px',
-                border: '1px solid #D1D5DB',
+                border: '1px solid #d7d9de',
                 borderRadius: 6,
                 fontSize: 13,
                 boxSizing: 'border-box'
@@ -535,7 +535,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
               display: 'block',
               fontSize: 12,
               fontWeight: 500,
-              color: '#374151',
+              color: '#5c6066',
               marginBottom: 4
             }}>
               Vendor Tier
@@ -546,7 +546,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
               style={{
                 width: '100%',
                 padding: '8px 12px',
-                border: '1px solid #D1D5DB',
+                border: '1px solid #d7d9de',
                 borderRadius: 6,
                 fontSize: 13,
                 backgroundColor: '#FFFFFF',
@@ -567,7 +567,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
               display: 'block',
               fontSize: 12,
               fontWeight: 500,
-              color: '#374151',
+              color: '#5c6066',
               marginBottom: 4
             }}>
               Risk Level
@@ -578,7 +578,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
               style={{
                 width: '100%',
                 padding: '8px 12px',
-                border: '1px solid #D1D5DB',
+                border: '1px solid #d7d9de',
                 borderRadius: 6,
                 fontSize: 13,
                 backgroundColor: '#FFFFFF',
@@ -599,7 +599,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
               display: 'block',
               fontSize: 12,
               fontWeight: 500,
-              color: '#374151',
+              color: '#5c6066',
               marginBottom: 4
             }}>
               Connection Status
@@ -610,7 +610,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
               style={{
                 width: '100%',
                 padding: '8px 12px',
-                border: '1px solid #D1D5DB',
+                border: '1px solid #d7d9de',
                 borderRadius: 6,
                 fontSize: 13,
                 backgroundColor: '#FFFFFF',
@@ -631,18 +631,18 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
       <div style={{
         backgroundColor: '#FFFFFF',
         borderRadius: 8,
-        border: '1px solid #E5E7EB',
+        border: '1px solid #ebecf0',
         overflow: 'hidden'
       }}>
         {/* Table header */}
         <div style={{
           padding: '16px',
-          borderBottom: '1px solid #E5E7EB',
+          borderBottom: '1px solid #ebecf0',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center'
         }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: '#0b0c0e' }}>
             Vendors ({vendors.length})
           </div>
         </div>
@@ -657,7 +657,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
             <thead>
               <tr style={{
                 backgroundColor: '#F9FAFB',
-                borderBottom: '1px solid #E5E7EB'
+                borderBottom: '1px solid #ebecf0'
               }}>
                 <th
                   onClick={() => handleSort('name')}
@@ -665,7 +665,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
                     padding: '12px 16px',
                     textAlign: 'left',
                     fontWeight: 600,
-                    color: '#374151',
+                    color: '#5c6066',
                     cursor: 'pointer',
                     userSelect: 'none',
                     whiteSpace: 'nowrap'
@@ -673,7 +673,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
                 >
                   Vendor Name
                   {sort.column === 'name' && (
-                    <span style={{ marginLeft: 4, color: '#3B82F6' }}>
+                    <span style={{ marginLeft: 4, color: '#5e6ad2' }}>
                       {sort.direction === 'asc' ? '↑' : '↓'}
                     </span>
                   )}
@@ -684,7 +684,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
                     padding: '12px 16px',
                     textAlign: 'left',
                     fontWeight: 600,
-                    color: '#374151',
+                    color: '#5c6066',
                     cursor: 'pointer',
                     userSelect: 'none',
                     whiteSpace: 'nowrap'
@@ -692,7 +692,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
                 >
                   Tier
                   {sort.column === 'tier' && (
-                    <span style={{ marginLeft: 4, color: '#3B82F6' }}>
+                    <span style={{ marginLeft: 4, color: '#5e6ad2' }}>
                       {sort.direction === 'asc' ? '↑' : '↓'}
                     </span>
                   )}
@@ -703,7 +703,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
                     padding: '12px 16px',
                     textAlign: 'left',
                     fontWeight: 600,
-                    color: '#374151',
+                    color: '#5c6066',
                     cursor: 'pointer',
                     userSelect: 'none',
                     whiteSpace: 'nowrap'
@@ -711,7 +711,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
                 >
                   Risk Score
                   {sort.column === 'riskScore' && (
-                    <span style={{ marginLeft: 4, color: '#3B82F6' }}>
+                    <span style={{ marginLeft: 4, color: '#5e6ad2' }}>
                       {sort.direction === 'asc' ? '↑' : '↓'}
                     </span>
                   )}
@@ -720,7 +720,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
                   padding: '12px 16px',
                   textAlign: 'left',
                   fontWeight: 600,
-                  color: '#374151',
+                  color: '#5c6066',
                   whiteSpace: 'nowrap'
                 }}>
                   Grade
@@ -731,7 +731,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
                     padding: '12px 16px',
                     textAlign: 'left',
                     fontWeight: 600,
-                    color: '#374151',
+                    color: '#5c6066',
                     cursor: 'pointer',
                     userSelect: 'none',
                     whiteSpace: 'nowrap'
@@ -739,7 +739,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
                 >
                   Status
                   {sort.column === 'status' && (
-                    <span style={{ marginLeft: 4, color: '#3B82F6' }}>
+                    <span style={{ marginLeft: 4, color: '#5e6ad2' }}>
                       {sort.direction === 'asc' ? '↓' : '↑'}
                     </span>
                   )}
@@ -750,7 +750,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
                     padding: '12px 16px',
                     textAlign: 'left',
                     fontWeight: 600,
-                    color: '#374151',
+                    color: '#5c6066',
                     cursor: 'pointer',
                     userSelect: 'none',
                     whiteSpace: 'nowrap'
@@ -758,7 +758,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
                 >
                   Last Sync
                   {sort.column === 'lastSync' && (
-                    <span style={{ marginLeft: 4, color: '#3B82F6' }}>
+                    <span style={{ marginLeft: 4, color: '#5e6ad2' }}>
                       {sort.direction === 'asc' ? '↑' : '↓'}
                     </span>
                   )}
@@ -767,7 +767,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
                   padding: '12px 16px',
                   textAlign: 'left',
                   fontWeight: 600,
-                  color: '#374151',
+                  color: '#5c6066',
                   whiteSpace: 'nowrap'
                 }}>
                   Actions
@@ -782,7 +782,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
                     style={{
                       padding: '32px',
                       textAlign: 'center',
-                      color: '#6B7280'
+                      color: '#5c6066'
                     }}
                   >
                     No vendors found matching the current filters
@@ -798,7 +798,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
                       key={vendor.id}
                       onClick={() => onNavigate?.(`/vendors/${vendor.id}`)}
                       style={{
-                        borderBottom: '1px solid #E5E7EB',
+                        borderBottom: '1px solid #ebecf0',
                         cursor: 'pointer',
                         transition: 'background-color 0.15s ease'
                       }}
@@ -812,7 +812,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
                       <td style={{ padding: '12px 16px' }}>
                         <div style={{
                           fontWeight: 500,
-                          color: '#111827',
+                          color: '#0b0c0e',
                           marginBottom: 2
                         }}>
                           {vendor.name}
@@ -820,7 +820,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
                         {vendor.description && (
                           <div style={{
                             fontSize: 11,
-                            color: '#6B7280',
+                            color: '#5c6066',
                             maxWidth: 200,
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
@@ -862,7 +862,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
                             <div style={{
                               fontSize: 14,
                               fontWeight: 600,
-                              color: '#111827'
+                              color: '#0b0c0e'
                             }}>
                               {vendor.riskScore}/100
                             </div>
@@ -882,7 +882,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
                           display: 'inline-block',
                           padding: '4px 8px',
                           backgroundColor: '#F3F4F6',
-                          color: '#374151',
+                          color: '#5c6066',
                           borderRadius: 4,
                           fontSize: 12,
                           fontWeight: 600
@@ -896,7 +896,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
                       </td>
 
                       <td style={{ padding: '12px 16px' }}>
-                        <div style={{ fontSize: 12, color: '#6B7280' }}>
+                        <div style={{ fontSize: 12, color: '#5c6066' }}>
                           {formatTimestamp(vendor.lastSync)}
                         </div>
                       </td>
@@ -910,8 +910,8 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
                           disabled={isSyncing}
                           style={{
                             padding: '6px 12px',
-                            backgroundColor: isSyncing ? '#F3F4F6' : '#3B82F6',
-                            color: isSyncing ? '#9CA3AF' : '#FFFFFF',
+                            backgroundColor: isSyncing ? '#F3F4F6' : '#5e6ad2',
+                            color: isSyncing ? '#8b9098' : '#FFFFFF',
                             border: 'none',
                             borderRadius: 6,
                             cursor: isSyncing ? 'not-allowed' : 'pointer',
@@ -934,14 +934,14 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
         {vendors.length > 0 && (
           <div style={{
             padding: '16px',
-            borderTop: '1px solid #E5E7EB',
+            borderTop: '1px solid #ebecf0',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             flexWrap: 'wrap',
             gap: 12
           }}>
-            <div style={{ fontSize: 12, color: '#6B7280' }}>
+            <div style={{ fontSize: 12, color: '#5c6066' }}>
               Showing {page * pageSize + 1}-{Math.min((page + 1) * pageSize, vendors.length)} of {vendors.length} vendors
             </div>
 
@@ -952,8 +952,8 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
                 style={{
                   padding: '6px 12px',
                   backgroundColor: page === 0 ? '#F3F4F6' : '#FFFFFF',
-                  color: page === 0 ? '#9CA3AF' : '#374151',
-                  border: '1px solid #D1D5DB',
+                  color: page === 0 ? '#8b9098' : '#5c6066',
+                  border: '1px solid #d7d9de',
                   borderRadius: 6,
                   cursor: page === 0 ? 'not-allowed' : 'pointer',
                   fontSize: 12,
@@ -965,7 +965,7 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
 
               <div style={{
                 padding: '6px 12px',
-                backgroundColor: '#3B82F6',
+                backgroundColor: '#5e6ad2',
                 color: '#FFFFFF',
                 borderRadius: 6,
                 fontSize: 12,
@@ -980,8 +980,8 @@ const VendorPortfolioDashboard = ({ api_url, authToken, orgId, onNavigate }) => 
                 style={{
                   padding: '6px 12px',
                   backgroundColor: !statistics?.hasMore ? '#F3F4F6' : '#FFFFFF',
-                  color: !statistics?.hasMore ? '#9CA3AF' : '#374151',
-                  border: '1px solid #D1D5DB',
+                  color: !statistics?.hasMore ? '#8b9098' : '#5c6066',
+                  border: '1px solid #d7d9de',
                   borderRadius: 6,
                   cursor: !statistics?.hasMore ? 'not-allowed' : 'pointer',
                   fontSize: 12,

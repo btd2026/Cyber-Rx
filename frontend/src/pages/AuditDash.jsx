@@ -270,7 +270,7 @@ const AuditDash = (props) => {
               </div>
               <div>
                 <div style={{ fontSize: '0.75rem', color: INK2 }}>Avg Effectiveness</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#2563eb', fontFamily: FONTS.mono }}>
+                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#5e6ad2', fontFamily: FONTS.mono }}>
                   {controlStats.avgEffectiveness ? Math.round(controlStats.avgEffectiveness) : 0}%
                 </div>
               </div>
@@ -321,7 +321,7 @@ const AuditDash = (props) => {
               </div>
               <div>
                 <div style={{ fontSize: '0.75rem', color: INK2 }}>With Files</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#2563eb', fontFamily: FONTS.mono }}>
+                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#5e6ad2', fontFamily: FONTS.mono }}>
                   {evidenceStats.withFiles || 0}
                 </div>
               </div>
@@ -480,7 +480,7 @@ const AuditDash = (props) => {
           <button
             style={{
               padding: '0.375rem 0.75rem',
-              backgroundColor: '#2563eb',
+              backgroundColor: '#5e6ad2',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
@@ -563,7 +563,7 @@ const AuditDash = (props) => {
             <button
               style={{
                 padding: '0.375rem 0.75rem',
-                backgroundColor: '#2563eb',
+                backgroundColor: '#5e6ad2',
                 color: 'white',
                 border: 'none',
                 borderRadius: '4px',
