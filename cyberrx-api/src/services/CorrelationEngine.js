@@ -131,7 +131,7 @@ class CorrelationEngine {
       if (asset) {
         // Get data objects that reside in this asset
         const assetDataObjects = await DataObject.findByAssetId(finding.assetId);
-        assetDataObjects.forEach(obj => dataObjectIds.add(obj.id));
+        (assetDataObjects || []).forEach(obj => dataObjectIds.add(obj.id));
       }
     }
 
@@ -181,6 +181,7 @@ class CorrelationEngine {
       let businessInterruption = baseExposure * 0.25;
       let reputationalLoss = baseExposure * 0.15;
       let legalCost = baseExposure * 0.1;
+      let fraudLoss = 0;
 
       // Adjust based on threat scenario
       if (threatScenario) {
