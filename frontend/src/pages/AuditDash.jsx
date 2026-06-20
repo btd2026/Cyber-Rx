@@ -13,6 +13,9 @@
 
 import React, { useState, useEffect } from 'react';
 import DashNav from '../components/DashNav';
+import { COLORS, FONTS } from '../theme';
+
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
 
 const AuditDash = (props) => {
   const { goBack, authToken, orgId, api_url } = props;
@@ -99,24 +102,24 @@ const AuditDash = (props) => {
   // Get severity color
   const getSeverityColor = (severity) => {
     switch (severity?.toLowerCase()) {
-      case 'critical': return '#dc2626';
+      case 'critical': return COLORS.bad;
       case 'high': return '#ea580c';
-      case 'medium': return '#ca8a04';
-      case 'low': return '#16a34a';
-      default: return '#6b7280';
+      case 'medium': return COLORS.warn;
+      case 'low': return COLORS.good;
+      default: return INK2;
     }
   };
 
   // Get status color
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'open': return '#dc2626';
-      case 'in_progress': return '#ca8a04';
+      case 'open': return COLORS.bad;
+      case 'in_progress': return COLORS.warn;
       case 'mitigating': return '#3b9eff';
       case 'accepted': return '#8b5cf6';
-      case 'closed': return '#16a34a';
-      case 'resolved': return '#16a34a';
-      default: return '#6b7280';
+      case 'closed': return COLORS.good;
+      case 'resolved': return COLORS.good;
+      default: return INK2;
     }
   };
 
@@ -129,20 +132,20 @@ const AuditDash = (props) => {
   }
 
   return (
-    <div style={{ padding: '2rem', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+    <div style={{ padding: '2rem', backgroundColor: PANEL, minHeight: '100vh' }}>
       <DashNav current="cro" go={props.go} />
       {/* Header */}
       <div style={{
         marginBottom: '2rem',
-        borderBottom: '1px solid #e5e7eb',
+        borderBottom: `1px solid ${HAIR}`,
         paddingBottom: '1.5rem'
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: '700', margin: 0, color: '#111827' }}>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: '700', margin: 0, color: INK, fontFamily: FONTS.display }}>
               Internal Audit Dashboard
             </h1>
-            <p style={{ color: '#6b7280', marginTop: '0.5rem', marginBottom: 0 }}>
+            <p style={{ color: INK2, marginTop: '0.5rem', marginBottom: 0 }}>
               Control Testing & Findings Management
             </p>
           </div>
@@ -151,9 +154,9 @@ const AuditDash = (props) => {
               onClick={goBack}
               style={{
                 padding: '0.5rem 1rem',
-                backgroundColor: '#f3f4f6',
-                color: '#374151',
-                border: '1px solid #d1d5db',
+                backgroundColor: PANEL,
+                color: INK2,
+                border: `1px solid ${HAIR}`,
                 borderRadius: '6px',
                 cursor: 'pointer'
               }}
@@ -175,12 +178,12 @@ const AuditDash = (props) => {
           backgroundColor: '#ffffff',
           padding: '1rem',
           borderRadius: '8px',
-          border: '1px solid #e5e7eb'
+          border: `1px solid ${HAIR}`
         }}>
-          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+          <div style={{ fontSize: '0.75rem', color: INK2, marginBottom: '0.25rem' }}>
             Total Findings
           </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111827' }}>
+          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: INK, fontFamily: FONTS.mono }}>
             {findings.length}
           </div>
         </div>
@@ -188,12 +191,12 @@ const AuditDash = (props) => {
           backgroundColor: '#ffffff',
           padding: '1rem',
           borderRadius: '8px',
-          border: '1px solid #e5e7eb'
+          border: `1px solid ${HAIR}`
         }}>
-          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+          <div style={{ fontSize: '0.75rem', color: INK2, marginBottom: '0.25rem' }}>
             Critical Findings
           </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#dc2626' }}>
+          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: COLORS.bad, fontFamily: FONTS.mono }}>
             {criticalFindings.length}
           </div>
         </div>
@@ -201,12 +204,12 @@ const AuditDash = (props) => {
           backgroundColor: '#ffffff',
           padding: '1rem',
           borderRadius: '8px',
-          border: '1px solid #e5e7eb'
+          border: `1px solid ${HAIR}`
         }}>
-          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+          <div style={{ fontSize: '0.75rem', color: INK2, marginBottom: '0.25rem' }}>
             Repeat Findings
           </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#ea580c' }}>
+          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#ea580c', fontFamily: FONTS.mono }}>
             {repeatFindings.length}
           </div>
         </div>
@@ -214,12 +217,12 @@ const AuditDash = (props) => {
           backgroundColor: '#ffffff',
           padding: '1rem',
           borderRadius: '8px',
-          border: '1px solid #e5e7eb'
+          border: `1px solid ${HAIR}`
         }}>
-          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+          <div style={{ fontSize: '0.75rem', color: INK2, marginBottom: '0.25rem' }}>
             Controls Tracked
           </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111827' }}>
+          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: INK, fontFamily: FONTS.mono }}>
             {controlStats?.total || controls.length || 0}
           </div>
         </div>
@@ -231,13 +234,13 @@ const AuditDash = (props) => {
           backgroundColor: '#ffffff',
           borderRadius: '8px',
           marginBottom: '2rem',
-          border: '1px solid #e5e7eb'
+          border: `1px solid ${HAIR}`
         }}>
           <div style={{
             padding: '1rem',
-            borderBottom: '1px solid #e5e7eb'
+            borderBottom: `1px solid ${HAIR}`
           }}>
-            <h2 style={{ fontSize: '1rem', fontWeight: '600', margin: 0 }}>
+            <h2 style={{ fontSize: '1rem', fontWeight: '600', margin: 0, fontFamily: FONTS.display }}>
               Control Effectiveness Summary
             </h2>
           </div>
@@ -248,26 +251,26 @@ const AuditDash = (props) => {
               gap: '1rem'
             }}>
               <div>
-                <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Implemented</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#16a34a' }}>
+                <div style={{ fontSize: '0.75rem', color: INK2 }}>Implemented</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: COLORS.good, fontFamily: FONTS.mono }}>
                   {controlStats.implemented || 0}
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Partial</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#ca8a04' }}>
+                <div style={{ fontSize: '0.75rem', color: INK2 }}>Partial</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: COLORS.warn, fontFamily: FONTS.mono }}>
                   {controlStats.partial || 0}
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Critical Tier</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#dc2626' }}>
+                <div style={{ fontSize: '0.75rem', color: INK2 }}>Critical Tier</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: COLORS.bad, fontFamily: FONTS.mono }}>
                   {controlStats.criticalCount || 0}
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Avg Effectiveness</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#2563eb' }}>
+                <div style={{ fontSize: '0.75rem', color: INK2 }}>Avg Effectiveness</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#2563eb', fontFamily: FONTS.mono }}>
                   {controlStats.avgEffectiveness ? Math.round(controlStats.avgEffectiveness) : 0}%
                 </div>
               </div>
@@ -282,13 +285,13 @@ const AuditDash = (props) => {
           backgroundColor: '#ffffff',
           borderRadius: '8px',
           marginBottom: '2rem',
-          border: '1px solid #e5e7eb'
+          border: `1px solid ${HAIR}`
         }}>
           <div style={{
             padding: '1rem',
-            borderBottom: '1px solid #e5e7eb'
+            borderBottom: `1px solid ${HAIR}`
           }}>
-            <h2 style={{ fontSize: '1rem', fontWeight: '600', margin: 0 }}>
+            <h2 style={{ fontSize: '1rem', fontWeight: '600', margin: 0, fontFamily: FONTS.display }}>
               Evidence Repository
             </h2>
           </div>
@@ -299,26 +302,26 @@ const AuditDash = (props) => {
               gap: '1rem'
             }}>
               <div>
-                <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Total Evidence</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#111827' }}>
+                <div style={{ fontSize: '0.75rem', color: INK2 }}>Total Evidence</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: INK, fontFamily: FONTS.mono }}>
                   {evidenceStats.total || 0}
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Valid</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#16a34a' }}>
+                <div style={{ fontSize: '0.75rem', color: INK2 }}>Valid</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: COLORS.good, fontFamily: FONTS.mono }}>
                   {evidenceStats.valid || 0}
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Expired</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#dc2626' }}>
+                <div style={{ fontSize: '0.75rem', color: INK2 }}>Expired</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: COLORS.bad, fontFamily: FONTS.mono }}>
                   {evidenceStats.expired || 0}
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>With Files</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#2563eb' }}>
+                <div style={{ fontSize: '0.75rem', color: INK2 }}>With Files</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#2563eb', fontFamily: FONTS.mono }}>
                   {evidenceStats.withFiles || 0}
                 </div>
               </div>
@@ -331,7 +334,7 @@ const AuditDash = (props) => {
                 border: '1px solid #dc262620',
                 borderRadius: '6px',
                 fontSize: '0.875rem',
-                color: '#dc2626'
+                color: COLORS.bad
               }}>
                 ⚠️ {evidenceStats.expired} evidence items have expired and need refresh
               </div>
@@ -346,13 +349,13 @@ const AuditDash = (props) => {
           backgroundColor: '#ffffff',
           borderRadius: '8px',
           marginBottom: '2rem',
-          border: '1px solid #e5e7eb'
+          border: `1px solid ${HAIR}`
         }}>
           <div style={{
             padding: '1rem',
-            borderBottom: '1px solid #e5e7eb'
+            borderBottom: `1px solid ${HAIR}`
           }}>
-            <h2 style={{ fontSize: '1rem', fontWeight: '600', margin: 0 }}>
+            <h2 style={{ fontSize: '1rem', fontWeight: '600', margin: 0, fontFamily: FONTS.display }}>
               Controls Requiring Attention (Effectiveness &lt; 60%)
             </h2>
           </div>
@@ -364,18 +367,18 @@ const AuditDash = (props) => {
                 .map(control => (
                   <div key={control.id} style={{
                     padding: '0.75rem',
-                    border: '1px solid #e5e7eb',
+                    border: `1px solid ${HAIR}`,
                     borderRadius: '6px',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    borderLeft: `4px solid ${control.effectiveness_score < 40 ? '#dc2626' : '#ca8a04'}`
+                    borderLeft: `4px solid ${control.effectiveness_score < 40 ? COLORS.bad : COLORS.warn}`
                   }}>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: '500', color: '#111827', fontSize: '0.875rem' }}>
+                      <div style={{ fontWeight: '500', color: INK, fontSize: '0.875rem' }}>
                         {control.title}
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                      <div style={{ fontSize: '0.75rem', color: INK2, marginTop: '0.25rem' }}>
                         {control.control_id} • {control.framework} • {control.tier}
                       </div>
                     </div>
@@ -385,7 +388,7 @@ const AuditDash = (props) => {
                       fontSize: '0.875rem',
                       fontWeight: '600',
                       backgroundColor: '#dc262615',
-                      color: '#dc2626'
+                      color: COLORS.bad
                     }}>
                       {control.effectiveness_score}%
                     </div>
@@ -407,12 +410,12 @@ const AuditDash = (props) => {
           backgroundColor: '#ffffff',
           padding: '1rem',
           borderRadius: '8px',
-          border: '1px solid #e5e7eb'
+          border: `1px solid ${HAIR}`
         }}>
-          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+          <div style={{ fontSize: '0.75rem', color: INK2, marginBottom: '0.25rem' }}>
             Total Findings
           </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111827' }}>
+          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: INK, fontFamily: FONTS.mono }}>
             {findings.length}
           </div>
         </div>
@@ -420,12 +423,12 @@ const AuditDash = (props) => {
           backgroundColor: '#ffffff',
           padding: '1rem',
           borderRadius: '8px',
-          border: '1px solid #e5e7eb'
+          border: `1px solid ${HAIR}`
         }}>
-          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+          <div style={{ fontSize: '0.75rem', color: INK2, marginBottom: '0.25rem' }}>
             Critical Findings
           </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#dc2626' }}>
+          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: COLORS.bad, fontFamily: FONTS.mono }}>
             {criticalFindings.length}
           </div>
         </div>
@@ -433,12 +436,12 @@ const AuditDash = (props) => {
           backgroundColor: '#ffffff',
           padding: '1rem',
           borderRadius: '8px',
-          border: '1px solid #e5e7eb'
+          border: `1px solid ${HAIR}`
         }}>
-          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+          <div style={{ fontSize: '0.75rem', color: INK2, marginBottom: '0.25rem' }}>
             Repeat Findings
           </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#ea580c' }}>
+          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#ea580c', fontFamily: FONTS.mono }}>
             {repeatFindings.length}
           </div>
         </div>
@@ -446,12 +449,12 @@ const AuditDash = (props) => {
           backgroundColor: '#ffffff',
           padding: '1rem',
           borderRadius: '8px',
-          border: '1px solid #e5e7eb'
+          border: `1px solid ${HAIR}`
         }}>
-          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+          <div style={{ fontSize: '0.75rem', color: INK2, marginBottom: '0.25rem' }}>
             Controls Tracked
           </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111827' }}>
+          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: INK, fontFamily: FONTS.mono }}>
             {controls.length}
           </div>
         </div>
@@ -462,16 +465,16 @@ const AuditDash = (props) => {
         backgroundColor: '#ffffff',
         borderRadius: '8px',
         marginBottom: '2rem',
-        border: '1px solid #e5e7eb'
+        border: `1px solid ${HAIR}`
       }}>
         <div style={{
           padding: '1rem',
-          borderBottom: '1px solid #e5e7eb',
+          borderBottom: `1px solid ${HAIR}`,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center'
         }}>
-          <h2 style={{ fontSize: '1rem', fontWeight: '600', margin: 0 }}>
+          <h2 style={{ fontSize: '1rem', fontWeight: '600', margin: 0, fontFamily: FONTS.display }}>
             Control Testing
           </h2>
           <button
@@ -492,27 +495,27 @@ const AuditDash = (props) => {
           <div style={{ marginBottom: '1rem' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ backgroundColor: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280' }}>
+                <tr style={{ backgroundColor: PANEL, borderBottom: `2px solid ${HAIR}` }}>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: '600', color: INK2 }}>
                     Control
                   </th>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280' }}>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: '600', color: INK2 }}>
                     Test Plan
                   </th>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280' }}>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: '600', color: INK2 }}>
                     Procedure
                   </th>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280' }}>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: '600', color: INK2 }}>
                     Evidence
                   </th>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: '600', color: '#6b7280' }}>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: '600', color: INK2 }}>
                     Result
                   </th>
                 </tr>
               </thead>
               <tbody>
-                <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
-                  <td colSpan="6" style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
+                <tr style={{ borderBottom: `1px solid ${PANEL}` }}>
+                  <td colSpan="6" style={{ padding: '2rem', textAlign: 'center', color: INK2 }}>
                     Control testing data will be populated from evidence repository and control validation modules.
                     <div style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>
                       Use "+ New Test" to create a new control test.
@@ -530,16 +533,16 @@ const AuditDash = (props) => {
         backgroundColor: '#ffffff',
         borderRadius: '8px',
         marginBottom: '2rem',
-        border: '1px solid #e5e7eb'
+        border: `1px solid ${HAIR}`
       }}>
         <div style={{
           padding: '1rem',
-          borderBottom: '1px solid #e5e7eb',
+          borderBottom: `1px solid ${HAIR}`,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center'
         }}>
-          <h2 style={{ fontSize: '1rem', fontWeight: '600', margin: 0 }}>
+          <h2 style={{ fontSize: '1rem', fontWeight: '600', margin: 0, fontFamily: FONTS.display }}>
             Audit Findings
           </h2>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -547,9 +550,9 @@ const AuditDash = (props) => {
               onClick={() => setShowRepeatFindings(!showRepeatFindings)}
               style={{
                 padding: '0.375rem 0.75rem',
-                backgroundColor: showRepeatFindings ? '#ea580c' : '#f3f4f6',
-                color: showRepeatFindings ? 'white' : '#374151',
-                border: '1px solid #d1d5db',
+                backgroundColor: showRepeatFindings ? '#ea580c' : PANEL,
+                color: showRepeatFindings ? 'white' : INK2,
+                border: `1px solid ${HAIR}`,
                 borderRadius: '4px',
                 cursor: 'pointer',
                 fontSize: '0.875rem'
@@ -574,7 +577,7 @@ const AuditDash = (props) => {
         </div>
         <div style={{ padding: '1rem' }}>
           {findings.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+            <div style={{ textAlign: 'center', padding: '2rem', color: INK2 }}>
               No audit findings tracked.
             </div>
           ) : (
@@ -582,7 +585,7 @@ const AuditDash = (props) => {
               {(showRepeatFindings ? repeatFindings : findings).map((finding) => (
                 <div key={finding.id} style={{
                   padding: '0.75rem',
-                  border: finding.is_repeat ? '2px solid #ea580c' : '1px solid #e5e7eb',
+                  border: finding.is_repeat ? '2px solid #ea580c' : `1px solid ${HAIR}`,
                   borderRadius: '6px',
                   backgroundColor: finding.is_repeat ? '#fef3c7' : 'transparent',
                   display: 'flex',
@@ -601,7 +604,7 @@ const AuditDash = (props) => {
                       }}>
                         {finding.severity}
                       </span>
-                      <span style={{ fontWeight: '500', color: '#111827', fontSize: '0.875rem' }}>
+                      <span style={{ fontWeight: '500', color: INK, fontSize: '0.875rem' }}>
                         {finding.title}
                       </span>
                       {finding.is_repeat && (
@@ -617,19 +620,19 @@ const AuditDash = (props) => {
                         </span>
                       )}
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                    <div style={{ fontSize: '0.75rem', color: INK2 }}>
                       Asset: {finding.asset_id || 'N/A'} • Control: {finding.source || 'N/A'}
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>MAP Target</div>
+                      <div style={{ fontSize: '0.75rem', color: INK2 }}>MAP Target</div>
                       {finding.target_date ? (
-                        <div style={{ fontWeight: '500', color: '#374151', fontSize: '0.875rem' }}>
+                        <div style={{ fontWeight: '500', color: INK2, fontSize: '0.875rem' }}>
                           {new Date(finding.target_date).toLocaleDateString()}
                         </div>
                       ) : (
-                        <div style={{ fontWeight: '400', color: '#9ca3af', fontSize: '0.875rem' }}>
+                        <div style={{ fontWeight: '400', color: INK3, fontSize: '0.875rem' }}>
                           Not set
                         </div>
                       )}
@@ -658,10 +661,10 @@ const AuditDash = (props) => {
         padding: '1rem',
         backgroundColor: '#ffffff',
         borderRadius: '8px',
-        border: '1px solid #e5e7eb',
+        border: `1px solid ${HAIR}`,
         textAlign: 'center',
         fontSize: '0.875rem',
-        color: '#6b7280'
+        color: INK2
       }}>
         Internal Audit Dashboard • Control testing data populated from evidence repository
       </div>

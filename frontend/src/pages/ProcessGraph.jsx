@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import CytoscapeComponent from 'react-cytoscapejs';
 import cytoscape from 'cytoscape';
+import { FONTS } from '../theme';
 import './ProcessGraph.module.css';
 
 /**
@@ -307,7 +308,7 @@ const ProcessGraph = ({ matchId }) => {
       {/* Header */}
       <header className="graph-header">
         <div className="header-left">
-          <h1>Process Mapping Graph</h1>
+          <h1 style={{ fontFamily: FONTS.display }}>Process Mapping Graph</h1>
           <p className="subtitle">
             Match ID: <code>{matchId}</code> •
             {graphData && (
@@ -382,7 +383,7 @@ const ProcessGraph = ({ matchId }) => {
       {selectedNode && (
         <div className="node-details-panel">
           <div className="panel-header">
-            <h2>Node Details</h2>
+            <h2 style={{ fontFamily: FONTS.display }}>Node Details</h2>
             <button
               className="close-button"
               onClick={() => {
