@@ -45,6 +45,14 @@ router.post('/commit', optionalJWT, async (req, res) => {
   if (!SOURCE_KINDS.includes(b.sourceKind)) return res.status(400).json({ error: `sourceKind must be one of ${SOURCE_KINDS.join(', ')}` });
   if (!b.mapping) return res.status(400).json({ error: 'mapping is required (confirm it from /preview first)' });
   try {
+    // The intake can import an application inventory before the org profile is
+    // formally saved. Ensure the orgs row exists so the ingestion_source -> orgs
+    // foreign key is satisfied; the later profile save merges real values in.
+    await db.query(
+      `INSERT INTO orgs (id, name, type, setup_json, created_at)
+       VALUES ($1,$2,$3,$4,NOW())
+       ON CONFLICT (id) DO NOTHING`,
+      [orgId, orgId, '', '{}']);
     const sourceId = `isrc_${orgId}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
     await db.query(
       `INSERT INTO ingestion_source (id, organization_id, source_kind, origin, label, created_at)
