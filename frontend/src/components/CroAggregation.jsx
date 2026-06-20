@@ -58,7 +58,7 @@ export default function CroAggregation(props) {
                     {f.aboveAppetite && <Pill text="Above appetite" color={SEV.Critical} />}
                     {f.decision && <Pill text="Decided" color="#1f8a4c" />}
                   </div>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: INK, marginTop: 6 }}>{f.title}</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: INK, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>{f.provenance && <Provenance prov={f.provenance} />}<span>{f.title}</span></div>
                   <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', alignItems: 'center', marginTop: 6 }}>
                     {f.members.map((m, i) => (
                       <React.Fragment key={i}>

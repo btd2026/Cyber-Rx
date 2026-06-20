@@ -50,7 +50,7 @@ async function getExposures(orgId) {
       try { cisoLens = Engine.lensFor('CISO', card); } catch (_) {}
       return {
         id: card.id, type: card.type, title: e.title, severity: e.severity, scenarioType: e.scenarioType,
-        crownJewel: e.crownJewel, exposure: e.exposure, loss: e.loss, timing: e.timing,
+        crownJewel: e.crownJewel, exposure: e.exposure, loss: e.loss, timing: e.timing, provenance: e.provenance,
         aboveAppetite: card.aboveAppetite, decision: card.decision || null,
         businessProcesses: businessProcesses(e),
         attackPath: e.attackPath,

@@ -72,7 +72,7 @@ export default function CroExposures(props) {
                       {e.aboveAppetite && <Pill text="Above appetite" color={SEV.Critical} />}
                       {e.decision && <Pill text="Decided" color="#1f8a4c" />}
                     </div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: INK, marginTop: 6 }}>{e.title}</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: INK, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>{e.provenance && <Provenance prov={e.provenance} />}<span>{e.title}</span></div>
                     <div style={{ fontSize: 11.5, color: INK2, marginTop: 3 }}>{(e.croLens && e.croLens.narrative) || ''}</div>
                   </div>
                   <div style={{ textAlign: 'right', minWidth: 130 }}>

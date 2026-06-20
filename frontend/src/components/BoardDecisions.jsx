@@ -58,7 +58,7 @@ export default function BoardDecisions(props) {
                     {it.aboveAppetite && <Pill text="Above appetite" color={SEV.Critical} />}
                     {it.decision ? <Pill text="Decided" color="#1f8a4c" /> : <Pill text="Open" color="#B07C2E" />}
                   </div>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: INK, marginTop: 6 }}>{lens.headline || it.title}</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: INK, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>{it.provenance && <Provenance prov={it.provenance} />}<span>{lens.headline || it.title}</span></div>
                   <div style={{ fontSize: 11, color: INK3, marginTop: 1 }}>Event: {it.title} · owner {it.owner}</div>
                   {lens.narrative && <div style={{ fontSize: 11.5, color: INK2, marginTop: 5, lineHeight: 1.55 }}>{lens.narrative}</div>}
                   {lens.questionToAsk && <div style={{ fontSize: 11.5, color: '#7c3aed', fontWeight: 600, marginTop: 6 }}>❓ Ask management: {lens.questionToAsk}</div>}
