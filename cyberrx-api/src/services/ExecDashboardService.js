@@ -193,7 +193,9 @@ function pillar(id, name, weight, current, delta, up, down, source) {
 // Role pillars with provenance: 'derived' when the org has its own data, 'demo'
 // when we're on the industry-shaped sample — consistent with the CISO lens.
 function roleDomains(role, c) {
-  const mode = isEmpty(c) ? 'demo' : 'derived';
+  // Honest provenance: 'demo' when the context is the industry sample (no org
+  // data), else 'derived' (computed from the org's own risk/financial/controls).
+  const mode = (c.isDemo || isEmpty(c)) ? 'demo' : 'derived';
   return roleDomainsRaw(role, c).map((d) => ({ ...d, provenance: prov(mode, d.source || 'Posture engine') }));
 }
 
@@ -266,7 +268,10 @@ async function orgIndustry(orgId) {
 // service's role lens).
 async function loadCtx(orgId) {
   let c = await Agent.gatherContext(orgId);
-  if (isEmpty(c)) c = demoContext(await orgIndustry(orgId));
+  // Mark whether we fell back to the industry-shaped demo, so provenance is
+  // honest (demo) rather than overstated (derived) on a no-data org.
+  if (isEmpty(c)) { c = demoContext(await orgIndustry(orgId)); c.isDemo = true; }
+  else { c.isDemo = false; }
   return c;
 }
 
