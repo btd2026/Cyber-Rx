@@ -9,6 +9,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
 import { DefensibleRationaleHint, DEFENSIBLE_PLACEHOLDER } from './legalRationale';
+import Provenance from './Provenance';
+import CrqDrawer from './CrqDrawer';
 
 const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc', NAVY = '#0f1b2d';
 const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
@@ -72,13 +74,13 @@ export default function DecisionQueue(props) {
       </div>
       {err && <div style={{ color: '#C0392B', fontSize: 12, marginBottom: 10 }}>{err}</div>}
       <div style={{ display: 'grid', gap: 14 }}>
-        {data.cards.map((card) => <Card key={card.id} card={card} role={role} onDecide={decide} voice={voice} />)}
+        {data.cards.map((card) => <Card key={card.id} card={card} role={role} onDecide={decide} voice={voice} orgId={orgId} apiUrl={api} authToken={token} onTuned={load} />)}
       </div>
     </div>
   );
 }
 
-function Card({ card, role, onDecide, voice }) {
+function Card({ card, role, onDecide, voice, orgId, apiUrl, authToken, onTuned }) {
   const e = card.event, lens = card.lens || {};
   const [accepting, setAccepting] = useState(false);
   const [rationale, setRationale] = useState('');
@@ -137,9 +139,10 @@ function Card({ card, role, onDecide, voice }) {
       )}
 
       {/* shared event facts — same for every role */}
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', padding: '10px 16px', background: PANEL, borderTop: `1px solid ${HAIR}`, fontSize: 11 }}>
-        <span title={e.timing.basis}>Exploit likelihood (modeled · {e.timing.confidence} conf): <strong>{e.timing.p7}%</strong>/7d · <strong>{e.timing.p30}%</strong>/30d · <strong>{e.timing.p90}%</strong>/90d</span>
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center', padding: '10px 16px', background: PANEL, borderTop: `1px solid ${HAIR}`, fontSize: 11 }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>{e.provenance && <Provenance prov={e.provenance} />}<span title={e.timing.basis}>Exploit likelihood ({e.timing.confidence} conf): <strong>{e.timing.p7}%</strong>/7d · <strong>{e.timing.p30}%</strong>/30d · <strong>{e.timing.p90}%</strong>/90d</span></span>
         <span>Loss: P50 <strong>{usd(e.loss.p50)}</strong> · P90 <strong style={{ color: '#C0392B' }}>{usd(e.loss.p90)}</strong></span>
+        <CrqDrawer card={{ id: card.id, title: e.title, loss: e.loss, provenance: e.provenance }} orgId={orgId} apiUrl={apiUrl} authToken={authToken} onSaved={onTuned} />
       </div>
       <div style={{ padding: '8px 16px', fontSize: 10.5, color: INK3 }}>
         Attack path: {e.attackPath.map((s) => s.label).join('  →  ')}
