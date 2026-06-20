@@ -9,9 +9,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
 import Provenance from './Provenance';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc';
-const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
 const sevTone = (s) => SEV[s] || INK3;
 const GSTATUS = { in_place: '#1f8a4c', partial: '#B07C2E', gap: '#C0392B', n_a: '#cbd5e1' };
 const GLABEL = { in_place: 'In place', partial: 'Partial', gap: 'Gap', n_a: 'N/A' };
@@ -114,7 +115,7 @@ export default function AiGovernance(props) {
 
       {showAdd && (
         <div style={{ border: `1px solid ${HAIR}`, borderRadius: 10, padding: '14px 16px', marginBottom: 14, background: PANEL }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: INK, marginBottom: 8 }}>Add an AI system</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: INK, marginBottom: 8, fontFamily: FONTS.display }}>Add an AI system</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             <input placeholder="Name (e.g. Marketing using ChatGPT)" value={form.name} onChange={(e) => setForm(Object.assign({}, form, { name: e.target.value }))} style={inpStyle} />
             <input placeholder="Provider / model" value={form.provider} onChange={(e) => setForm(Object.assign({}, form, { provider: e.target.value }))} style={inpStyle} />
@@ -141,7 +142,7 @@ export default function AiGovernance(props) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px,1fr))', gap: 10, marginBottom: 12 }}>
             <div style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${scoreColor}`, borderRadius: 9, padding: '11px 13px', background: '#fff' }}>
               <div style={{ fontSize: 10.5, color: INK2 }}>AI governance posture</div>
-              <div style={{ fontSize: 24, fontWeight: 800, color: scoreColor }}>{score}<span style={{ fontSize: 12, color: INK3, fontWeight: 600 }}> / 100</span></div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: scoreColor, fontFamily: FONTS.mono }}>{score}<span style={{ fontSize: 12, color: INK3, fontWeight: 600 }}> / 100</span></div>
             </div>
             <Kpi label="AI systems" value={inv.counts.total} />
             <Kpi label="Shadow AI" value={inv.counts.shadow} tone={inv.counts.shadow ? 'bad' : 'good'} />
@@ -194,7 +195,7 @@ function FrameworkView({ a }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', marginBottom: 12 }}>
         <div style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${sc}`, borderRadius: 9, padding: '11px 15px', background: '#fff' }}>
           <div style={{ fontSize: 10.5, color: INK2 }}>{a.name} posture</div>
-          <div style={{ fontSize: 24, fontWeight: 800, color: sc }}>{a.score}<span style={{ fontSize: 12, color: INK3, fontWeight: 600 }}> / 100 · {a.band}</span></div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: sc, fontFamily: FONTS.mono }}>{a.score}<span style={{ fontSize: 12, color: INK3, fontWeight: 600 }}> / 100 · {a.band}</span></div>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {['Strong', 'Partial', 'Weak', 'Gap'].map((k) => (
@@ -325,7 +326,7 @@ function Kpi({ label, value, tone }) {
   return (
     <div style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${tone ? c : '#cbd5e1'}`, borderRadius: 9, padding: '11px 13px', background: '#fff' }}>
       <div style={{ fontSize: 10.5, color: INK2 }}>{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 800, color: tone ? c : INK, marginTop: 2 }}>{value}</div>
+      <div style={{ fontSize: 22, fontWeight: 800, color: tone ? c : INK, marginTop: 2, fontFamily: FONTS.mono }}>{value}</div>
     </div>
   );
 }
@@ -338,7 +339,7 @@ function GuardrailView({ g }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
         <div style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${bandC(g.fleetScore)}`, borderRadius: 9, padding: '11px 14px', background: '#fff' }}>
           <div style={{ fontSize: 10.5, color: INK2, display: 'flex', alignItems: 'center', gap: 5 }}>{g.provenance && <Provenance prov={g.provenance} />}Fleet guardrail posture</div>
-          <div style={{ fontSize: 24, fontWeight: 800, color: bandC(g.fleetScore) }}>{g.fleetScore == null ? '—' : g.fleetScore}<span style={{ fontSize: 12, color: INK3, fontWeight: 600 }}> / 100</span></div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: bandC(g.fleetScore), fontFamily: FONTS.mono }}>{g.fleetScore == null ? '—' : g.fleetScore}<span style={{ fontSize: 12, color: INK3, fontWeight: 600 }}> / 100</span></div>
         </div>
         {g.worstControls && g.worstControls.length > 0 && (
           <div style={{ fontSize: 11.5, color: INK2, lineHeight: 1.5 }}>
@@ -429,7 +430,7 @@ function OurAiUseView({ p }) {
         ))}
       </div>
       <div style={{ border: `1px solid ${HAIR}`, borderRadius: 10, padding: '12px 16px', background: PANEL }}>
-        <div style={{ fontSize: 12, fontWeight: 800, color: INK, marginBottom: 7 }}>Controls on our AI use</div>
+        <div style={{ fontSize: 12, fontWeight: 800, color: INK, marginBottom: 7, fontFamily: FONTS.display }}>Controls on our AI use</div>
         <div style={{ display: 'grid', gap: 5 }}>
           {(p.controls || []).map((c, i) => <div key={i} style={{ fontSize: 11.5, color: INK2 }}>✓ {c}</div>)}
         </div>

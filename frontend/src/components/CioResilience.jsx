@@ -9,10 +9,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
 import Provenance from './Provenance';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc';
-const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
-const FRIC = { None: '#1f8a4c', Low: '#1f8a4c', Medium: '#B07C2E', High: '#C0392B' };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
+const FRIC = { None: COLORS.good, Low: COLORS.good, Medium: COLORS.warn, High: COLORS.bad };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
 
 function ctx(props) {
@@ -67,12 +68,12 @@ export default function CioResilience(props) {
                       {e.impactedServices.customerFacing && <Pill text="Customer-facing" color="#1d4ed8" />}
                       {e.decision && <Pill text="Decided" color="#1f8a4c" />}
                     </div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: INK, marginTop: 6 }}>{lens.headline || e.title}</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: INK, marginTop: 6, fontFamily: FONTS.display }}>{lens.headline || e.title}</div>
                     <div style={{ fontSize: 11.5, color: INK2, marginTop: 4, lineHeight: 1.5 }}>{lens.narrative || ''}</div>
                   </div>
                   <div style={{ textAlign: 'right', minWidth: 140 }}>
                     <div style={{ fontSize: 9.5, color: INK3, textTransform: 'uppercase' }}>Time to effect</div>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: sev }}>{lens.primary ? lens.primary.value : '—'}</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: sev, fontFamily: FONTS.mono }}>{lens.primary ? lens.primary.value : '—'}</div>
                     <div style={{ fontSize: 10.5, color: INK2, marginTop: 2 }}>Loss P90 <strong style={{ color: '#C0392B' }}>{usd(e.loss.p90)}</strong></div>
                     {lens.narration && <div style={{ marginTop: 6, display: 'flex', justifyContent: 'flex-end' }}><VoiceControls voice={voice} onReplay={() => voice.speak(lens.narration)} label="Listen" /></div>}
                   </div>
@@ -162,7 +163,7 @@ const Label = ({ children }) => <div style={{ fontSize: 9.5, fontWeight: 700, co
 function Section({ title, children }) {
   return (
     <div style={{ border: `1px solid ${HAIR}`, borderRadius: 11, background: PANEL, padding: '13px 16px' }}>
-      <div style={{ fontSize: 12.5, fontWeight: 800, color: INK, marginBottom: 9 }}>{title}</div>
+      <div style={{ fontSize: 12.5, fontWeight: 800, color: INK, marginBottom: 9, fontFamily: FONTS.display }}>{title}</div>
       {children}
     </div>
   );

@@ -9,9 +9,10 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e2e8f0', PANEL = '#f8fafc';
-const GREEN = '#1f8a4c', AMBER = '#B07C2E', RED = '#C0392B';
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+const GREEN = COLORS.good, AMBER = COLORS.warn, RED = COLORS.bad;
 const cstat = (s) => (s === 'green' ? GREEN : s === 'amber' ? AMBER : s === 'red' ? RED : INK3);
 const cov = { prevent: GREEN, detect: AMBER, none: '#e5e9f0' };
 
@@ -39,7 +40,7 @@ function ScoreChip({ label, score, status, onClick }) {
   return (
     <div onClick={onClick} title={onClick ? 'Click to drill into subcategories' : undefined}
       style={{ border: `1px solid ${HAIR}`, borderTop: `3px solid ${cstat(status)}`, borderRadius: 6, padding: '9px 12px', textAlign: 'center', minWidth: 92, cursor: onClick ? 'pointer' : 'default', transition: 'box-shadow .12s' }}>
-      <div style={{ fontSize: 22, fontWeight: 700, color: cstat(status), lineHeight: 1 }}>{score == null ? '—' : score}</div>
+      <div style={{ fontSize: 22, fontWeight: 700, color: cstat(status), lineHeight: 1, fontFamily: FONTS.mono }}>{score == null ? '—' : score}</div>
       <div style={{ fontSize: 9.5, color: INK3, textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 4 }}>{label}</div>
       {onClick && <div style={{ fontSize: 9, color: '#2563eb', marginTop: 4, fontWeight: 600 }}>dig in →</div>}
     </div>
@@ -97,7 +98,7 @@ export default function CisoExecReport(props) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap', paddingBottom: 14 }}>
         <div>
           <div style={{ fontSize: 10, fontWeight: 600, color: INK3, textTransform: 'uppercase', letterSpacing: '0.14em' }}>CISO · Security Posture Pack</div>
-          <h2 style={{ margin: '6px 0 0', fontSize: 21, fontWeight: 600, color: INK }}>Four-lens operational posture</h2>
+          <h2 style={{ margin: '6px 0 0', fontSize: 21, fontWeight: 600, color: INK, fontFamily: FONTS.display }}>Four-lens operational posture</h2>
           <div style={{ fontSize: 11.5, color: INK2, marginTop: 5 }}>Four independent frameworks on the same program — pick a lens below. Computed from validation run #{data.runId}.</div>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -209,7 +210,7 @@ export default function CisoExecReport(props) {
                       style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${cisCol(c.attainmentPct)}`, background: '#fff', borderRadius: 6, padding: '10px 12px', cursor: 'pointer' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
                         <span style={{ fontSize: 12, fontWeight: 700, color: INK }}><span style={{ color: INK3 }}>{c.number}.</span> {c.name}</span>
-                        <span style={{ fontSize: 16, fontWeight: 700, color: cisCol(c.attainmentPct), fontVariantNumeric: 'tabular-nums' }}>{c.attainmentPct}%</span>
+                        <span style={{ fontSize: 16, fontWeight: 700, color: cisCol(c.attainmentPct), fontVariantNumeric: 'tabular-nums', fontFamily: FONTS.mono }}>{c.attainmentPct}%</span>
                       </div>
                       <div style={{ height: 5, background: '#eef2f6', borderRadius: 3, margin: '6px 0 4px' }}><div style={{ width: `${c.attainmentPct}%`, height: '100%', background: cisCol(c.attainmentPct), borderRadius: 3 }} /></div>
                       <div style={{ fontSize: 10, color: INK3 }}>{c.covered}/{c.safeguards} safeguards evidenced</div>
@@ -279,7 +280,7 @@ function DrillDrawer({ drill, api, orgId, token, onClose }) {
         <div style={{ position: 'sticky', top: 0, background: '#fbfcfe', borderBottom: `1px solid ${HAIR}`, padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
           <div>
             <div style={{ fontSize: 10, color: INK3, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Drill-down</div>
-            <h3 style={{ margin: '4px 0 0', fontSize: 15.5, fontWeight: 700, color: INK }}>{drill.title}</h3>
+            <h3 style={{ margin: '4px 0 0', fontSize: 15.5, fontWeight: 700, color: INK, fontFamily: FONTS.display }}>{drill.title}</h3>
             {d && <div style={{ fontSize: 11, color: INK2, marginTop: 2 }}>{d.count} {drill.framework === 'attack' ? 'techniques' : 'subcategories'} · run #{d.runId || '—'}</div>}
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, color: INK3, cursor: 'pointer' }}>✕</button>
@@ -342,7 +343,7 @@ function Lens({ n, title, sub, accent, right, children }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, background: '#fbfcfe', borderBottom: `1px solid ${HAIR}`, borderLeft: `4px solid ${accent}`, padding: '11px 16px' }}>
         <div>
           <div style={{ fontSize: 9.5, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Lens {n}</div>
-          <div style={{ fontSize: 14.5, fontWeight: 700, color: INK }}>{title}</div>
+          <div style={{ fontSize: 14.5, fontWeight: 700, color: INK, fontFamily: FONTS.display }}>{title}</div>
           {sub && <div style={{ fontSize: 11, color: INK2, marginTop: 2, maxWidth: 720 }}>{sub}</div>}
         </div>
         {right && <div style={{ flexShrink: 0 }}>{right}</div>}

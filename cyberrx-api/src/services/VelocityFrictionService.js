@@ -90,10 +90,10 @@ async function getFrictionMap(orgId) {
   });
 
   const totalLossOnTable = initiatives.filter((i) => !i.decision || i.decision.optionId === 'ship').reduce((s, i) => s + i.tradeoff.expectedLossAdded, 0);
-  const narration = `Velocity versus risk, CIO. ${initiatives.length} delivery initiative(s) carry a security tradeoff. ` +
-    `Shipping every one on time as-is would leave about ${usd(totalLossOnTable)} of expected loss on the table. ` +
-    `For each, you can ship on time and accept the risk delta, phase it with a compensating control, or build it secure-by-design. ` +
-    `Every choice is the same shared risk the security team sees, and it's written to the decision ledger.`;
+  const narration = `Here is the tradeoff, plainly: speed and security are pulling against each other across ${initiatives.length} delivery initiative${initiatives.length === 1 ? '' : 's'}, and shipping every one as-is to hit the date would leave about ${usd(totalLossOnTable)} of expected loss on the table. ` +
+    `That number is the cost of velocity — it's not abstract, it's the same shared risk the security team is already tracking, just deferred. ` +
+    `For each one you have three honest moves: ship now and accept the delta, ship with a compensating control and harden next cycle, or build it secure-by-design up front. ` +
+    `What I'd do: where the loss avoided clearly beats the cost, pay for secure-by-design now; phase the borderline ones; and if you do accept a risk to hit a date, make it a written, deliberate decision — every choice here lands in the shared ledger so it's defensible later.`;
 
   return {
     organizationId: orgId, generatedAt: new Date().toISOString(),

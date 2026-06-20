@@ -66,7 +66,7 @@ async function oversight(orgId) {
     counts: { total: cards.length, critical: criticals.length, aboveAppetite: aboveAppetite.length, compounds: compounds.length, attention: attention.length, decided: decided.length },
     attentionItems: attention.slice(0, 5).map((c) => ({ title: c.event.title, severity: c.event.severity, owner: c.event.owner || 'Unassigned', question: (c.lens && c.lens.questionToAsk) || null })),
     whatChanged, visibility,
-    brief, narration: 'Enterprise oversight, for the board. ' + brief,
+    brief, narration: `Here is my read for the board: the enterprise position is ${posture >= 80 ? 'in good shape' : posture >= 60 ? 'holding, but not where it should be' : 'a concern'}, scoring ${posture} out of 100. In plain terms, the company could lose around ${usd(aggLoss)} in a typical year and as much as ${usd(aggP90)} in a bad one, and ${aboveAppetite.length} of those exposures sit above the risk appetite this board approved. What I would watch most is ownership: ${attention.length} board-level decision(s) are still open with no one accountable, though ${decided.length} are already on the record as evidence of active oversight. The board's job here is not to manage the fixes — it is to make sure every above-appetite risk has a named owner and a documented decision before the next meeting.`,
   };
 }
 
@@ -81,8 +81,7 @@ async function decisions(orgId) {
       owner: c.event.owner || 'Unassigned', aboveAppetite: c.aboveAppetite, decision: c.decision || null,
       loss: c.event.loss, lens: c.lens || null, provenance: c.event.provenance,
     }));
-  const narration = `Top decisions for the board. ${items.length} risk(s) have risen to the board's altitude — critical, above appetite, or correlated. ` +
-    `For each, management's recommendation and the cost of doing nothing are shown, with the question to put to management. ${items.filter((i) => !i.decision).length} are still open.`;
+  const narration = `This is where the board should spend its time. ${items.length} risk(s) have risen to your altitude — they are critical, above the appetite you approved, or correlated across the business, which is exactly the kind of thing that does not get fixed by any one executive alone. The honest concern is that ${items.filter((i) => !i.decision).length} of them are still open with no decision on the record. My recommendation: take each one in order, ask management for its recommendation and the cost of doing nothing, and make a deliberate, documented call — accept it, fund it, or transfer it. Silence is itself a decision, and it is the one that looks worst after an incident.`;
   return {
     organizationId: orgId, generatedAt: new Date().toISOString(),
     counts: { total: items.length, open: items.filter((i) => !i.decision).length },
@@ -114,9 +113,7 @@ async function accountability(orgId) {
     { item: 'SEC governance disclosure readiness', status: criticals.length ? 'Review' : 'Monitor', note: 'Reg S-K Item 106: board oversight & management role for cyber.' },
   ];
   const score = ledger.length === 0 ? 45 : clamp(55 + (criticals.length ? (criticalDecided.length / criticals.length) * 25 : 25) + ((accepts.length ? (accepts.length - thinAccepts.length) / accepts.length : 1) * 20), 25, 98);
-  const narration = `Oversight and accountability, for the board. ${criticalDecided.length} of ${criticals.length} critical risks are owned and decided. ` +
-    `Management has accepted ${accepting} and is actively treating ${treating} — a ${acceptRatio}% acceptance ratio. ` +
-    `${thinAccepts.length} acceptance(s) carry thin rationale. The decision ledger is your contemporaneous evidence of oversight and is exportable.`;
+  const narration = `Honestly, this is the area I would watch, because it is the board's own legal exposure. ${criticalDecided.length} of ${criticals.length} critical risks are owned and decided — ${criticals.length && criticalDecided.length === criticals.length ? 'that is where you want to be' : 'the gap is where accountability is missing'}. Management is treating ${treating} and accepting ${accepting}, a ${acceptRatio}% acceptance ratio, and ${acceptRatio >= 50 ? 'that leans toward quietly pushing risk into the future rather than fixing it' : 'that is a healthy bias toward action'}; ${thinAccepts.length} acceptance(s) are documented too thinly to defend. The reason this matters: a board defends itself by showing it had a system and used it. My recommendation is to require a written rationale on every acceptance and close the ${unowned.length} unowned risk(s) — the exportable ledger is your contemporaneous proof that you did.`;
   return {
     organizationId: orgId, generatedAt: new Date().toISOString(),
     score: Math.round(score),
@@ -147,10 +144,7 @@ async function investment(orgId) {
   const fundedCount = topExposures.filter((e) => e.funded).length;
   const alignment = topExposures.length ? Math.round((fundedCount / topExposures.length) * 100) : 0;
 
-  const narration = `Investment and capital oversight, for the board. The portfolio is predicted to avoid ${usd(pf.totalExposureReduced || 0)} of loss, ${usd(pf.realizedExposureReduced || 0)} realized to date` +
-    `${pf.calibration != null ? ` (${pf.calibration}% of projection)` : ''}. ` +
-    `Investment alignment is ${alignment}% — ${fundedCount} of the top ${topExposures.length} exposures have a funded initiative against them. ` +
-    `The oversight question: are we spending where the expected loss actually is?`;
+  const narration = `This is mostly good news for the board, with one caution. The money is working: the security portfolio is on track to avoid ${usd(pf.totalExposureReduced || 0)} in losses, with ${usd(pf.realizedExposureReduced || 0)} already realized${pf.calibration != null ? `, which is ${pf.calibration}% of what we projected — so the forecasts are honest` : ''}. The caution is alignment: only ${alignment}% of capital is aimed at the right targets, with just ${fundedCount} of your top ${topExposures.length} largest exposures actually funded. The question the board should put to management is simple — are we spending where the loss actually is? My recommendation is to redirect the next dollar to the biggest unfunded exposure before approving anything new.`;
   return {
     organizationId: orgId, generatedAt: new Date().toISOString(),
     rollup: {

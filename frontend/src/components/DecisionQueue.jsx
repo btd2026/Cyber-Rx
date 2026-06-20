@@ -11,9 +11,10 @@ import { useAgentVoice, VoiceControls } from './agentVoice';
 import { DefensibleRationaleHint, DEFENSIBLE_PLACEHOLDER } from './legalRationale';
 import Provenance from './Provenance';
 import CrqDrawer from './CrqDrawer';
+import { COLORS, FONTS, HERO_BG } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc', NAVY = '#0f1b2d';
-const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
+const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
 const FRIC = { None: '#1f8a4c', Low: '#1f8a4c', Medium: '#B07C2E', High: '#C0392B' };
 
@@ -66,7 +67,7 @@ export default function DecisionQueue(props) {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: NAVY, color: '#e6ecf5', borderRadius: 10, padding: '13px 16px', marginBottom: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: HERO_BG, color: '#e6ecf5', borderRadius: 10, padding: '13px 16px', marginBottom: 14 }}>
         <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>
           The <strong style={{ color: '#9bc0ff' }}>same predicted events every executive sees</strong>, rendered for the <strong>{role}</strong>. Chained scenarios (low alone, critical combined) are flagged and shown first.
         </div>
@@ -101,13 +102,13 @@ function Card({ card, role, onDecide, voice, orgId, apiUrl, authToken, onTuned }
               {card.relevant && <SoftChip text="Your call" color="#1f8a4c" />}
               {decided && <SoftChip text={decided.action === 'accept' ? 'Accepted & monitoring' : 'Decided'} color="#1f8a4c" strong />}
             </div>
-            <div style={{ fontSize: 15.5, fontWeight: 700, color: INK, marginTop: 1, lineHeight: 1.35 }}>{lens.headline || e.title}</div>
+            <div style={{ fontSize: 15.5, fontWeight: 700, color: INK, fontFamily: FONTS.display, marginTop: 1, lineHeight: 1.35 }}>{lens.headline || e.title}</div>
             {!compound && lens.headline && lens.headline !== e.title && <div style={{ fontSize: 11, color: INK3, marginTop: 3 }}>Underlying event: {e.title}</div>}
           </div>
           <div style={{ minWidth: 150, textAlign: 'right' }}>
             {lens.primary && <div style={{ background: PANEL, border: `1px solid ${HAIR}`, borderRadius: 10, padding: '10px 13px' }}>
               <div style={{ fontSize: 9, color: INK3, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 }}>{lens.primary.label}</div>
-              <div style={{ fontSize: 21, fontWeight: 800, color: sev, lineHeight: 1.15, marginTop: 2 }}>{lens.primary.value}</div>
+              <div style={{ fontSize: 21, fontWeight: 800, color: sev, fontFamily: FONTS.mono, lineHeight: 1.15, marginTop: 2 }}>{lens.primary.value}</div>
               {lens.secondary && String(lens.secondary.value).length <= 24 && <div style={{ fontSize: 10.5, color: INK2, marginTop: 4 }}>{lens.secondary.label}: <strong style={{ color: INK }}>{lens.secondary.value}</strong></div>}
             </div>}
             {voice && lens.narration && <div style={{ marginTop: 9, display: 'flex', justifyContent: 'flex-end' }}><VoiceControls voice={voice} compact onReplay={() => voice.speak(lens.narration)} /></div>}

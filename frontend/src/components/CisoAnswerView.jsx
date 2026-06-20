@@ -11,12 +11,13 @@
 
 import React, { useState } from 'react';
 import TicketControl from './TicketControl';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e8edf3', PANEL = '#f8fafc';
-const C = { Strong: '#1f8a4c', Moderate: '#B07C2E', Weak: '#A85B2E', Critical: '#C0392B' };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+const C = { Strong: COLORS.good, Moderate: COLORS.warn, Weak: '#A85B2E', Critical: COLORS.bad };
 const VERDICT = { Strong: 'Healthy', Moderate: 'Needs attention', Weak: 'At risk', Critical: 'Urgent' };
 const SEV = { Strong: 'Low', Moderate: 'Medium', Weak: 'High', Critical: 'Critical' };
-const conf = (c) => (c === 'High' ? '#1f8a4c' : c === 'Medium' ? '#B07C2E' : '#94a3b8');
+const conf = (c) => (c === 'High' ? COLORS.good : c === 'Medium' ? COLORS.warn : COLORS.ink3);
 
 const SectionLabel = ({ children, color }) => (
   <div style={{ fontSize: 10, fontWeight: 700, color: color || INK3, textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 6 }}>{children}</div>
@@ -45,7 +46,7 @@ export default function CisoAnswerView({ a, issues, onIssueClick, role = 'CISO' 
 
       <div style={{ padding: '20px 24px' }}>
         {/* the answer */}
-        <p style={{ fontSize: 18, color: INK, lineHeight: 1.5, margin: 0, fontWeight: 600 }}>{a.answer}</p>
+        <p style={{ fontSize: 18, color: INK, lineHeight: 1.5, margin: 0, fontWeight: 600, fontFamily: FONTS.display }}>{a.answer}</p>
 
         {/* SME supporting context (distinct from the spoken narration) */}
         {a.explanation && (

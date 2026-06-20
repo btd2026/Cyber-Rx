@@ -12,8 +12,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK_2 = '#475569', INK_3 = '#94a3b8', HAIRLINE = '#e2e8f0';
+const INK = COLORS.ink, INK_2 = COLORS.ink2, INK_3 = COLORS.ink3, HAIRLINE = COLORS.hair;
 const STATUS = { Operating: '#1f8a4c', Partial: '#B07C2E', Weak: '#A85B2E', Gap: '#C0392B', 'Not assessed': '#94a3b8' };
 
 function resolveCtx(props) {
@@ -59,15 +60,15 @@ export default function AiSecurityControls(props) {
           <div style={{ fontSize: 10, fontWeight: 600, color: INK_3, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 6 }}>
             CISO · AI &amp; GenAI Security Controls
           </div>
-          <h2 style={{ margin: 0, fontSize: 21, fontWeight: 600, color: INK }}>How well are our AI controls operating?</h2>
+          <h2 style={{ margin: 0, fontSize: 21, fontWeight: 600, color: INK, fontFamily: FONTS.display }}>How well are our AI controls operating?</h2>
           <div style={{ color: INK_2, fontSize: 12, marginTop: 6, maxWidth: 680, lineHeight: 1.55 }}>
             Controls around AI coding assistants (Claude Code, Copilot) and generative-AI use. {data.note}
           </div>
         </div>
         <div style={{ display: 'inline-flex', alignItems: 'stretch', background: '#0f1b2d', borderRadius: 4, overflow: 'hidden', flexShrink: 0, marginLeft: 20 }}>
-          <span style={{ background: sc(data.overall.status), color: '#fff', fontWeight: 600, fontSize: 19, fontVariantNumeric: 'tabular-nums', padding: '10px 14px', display: 'flex', alignItems: 'center' }}>{data.overall.score}</span>
+          <span style={{ background: sc(data.overall.status), color: '#fff', fontWeight: 600, fontSize: 19, fontVariantNumeric: 'tabular-nums', padding: '10px 14px', display: 'flex', alignItems: 'center', fontFamily: FONTS.mono }}>{data.overall.score}</span>
           <span style={{ color: '#e2e8f0', fontWeight: 500, fontSize: 12, padding: '10px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: 1.35 }}>
-            <span style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 9, color: '#8fa3bd' }}>AI controls operating</span>
+            <span style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 9, color: COLORS.accent }}>AI controls operating</span>
             <span>{data.controlsOperating}/{data.totalControls} operating · {data.controlsWithGaps} gap(s)</span>
           </span>
         </div>
@@ -86,11 +87,11 @@ export default function AiSecurityControls(props) {
           <div key={c.id} style={{ border: `1px solid ${HAIRLINE}`, borderLeft: `4px solid ${sc(c.status)}`, borderRadius: 6, padding: '13px 15px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: INK }}>{c.name}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: INK, fontFamily: FONTS.display }}>{c.name}</div>
                 <div style={{ fontSize: 9.5, color: INK_3, marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{c.ref}</div>
               </div>
               <div style={{ textAlign: 'right', marginLeft: 10 }}>
-                <div style={{ fontSize: 20, fontWeight: 700, color: sc(c.status), fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{c.score}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: sc(c.status), fontVariantNumeric: 'tabular-nums', lineHeight: 1, fontFamily: FONTS.mono }}>{c.score}</div>
                 <div style={{ fontSize: 8.5, fontWeight: 700, color: sc(c.status), textTransform: 'uppercase', letterSpacing: '0.06em' }}>{c.status}</div>
               </div>
             </div>

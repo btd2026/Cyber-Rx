@@ -7,10 +7,11 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
+import { COLORS, FONTS, HERO_BG } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc', NAVY = '#0f1b2d';
-const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
-const STAND = { good: '#1f8a4c', warn: '#B07C2E', bad: '#C0392B', unknown: INK3 };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
+const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
+const STAND = { good: COLORS.good, warn: COLORS.warn, bad: COLORS.bad, unknown: INK3 };
 
 // One benchmark metric: your value vs the modeled peer median / top-quartile,
 // rendered on a 0→best scale so "ahead / typical / behind" is visible at a glance.
@@ -74,7 +75,7 @@ export default function Coaching(props) {
   const Card = ({ title, accent, narrate, children }) => (
     <div style={{ border: `1px solid ${HAIR}`, borderTop: `3px solid ${accent}`, borderRadius: 11, background: '#fff', padding: '14px 16px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-        <div style={{ fontSize: 12.5, fontWeight: 800, color: INK }}>{title}</div>
+        <div style={{ fontSize: 12.5, fontWeight: 800, color: INK, fontFamily: FONTS.display }}>{title}</div>
         {narrate && <VoiceControls voice={voice} onReplay={() => voice.speak(narrate)} label="Listen" />}
       </div>
       {children}
@@ -90,9 +91,9 @@ export default function Coaching(props) {
 
   return (
     <div style={{ display: 'grid', gap: 14 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: NAVY, color: '#e6ecf5', borderRadius: 10, padding: '13px 16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: HERO_BG, color: '#e6ecf5', borderRadius: 10, padding: '13px 16px' }}>
         <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>
-          Your <strong style={{ color: '#9bc0ff' }}>{role} coaching</strong> — what to ask, what's material, a tabletop to run, and the blind spots detected from how decisions are actually being made.
+          Your <strong style={{ color: COLORS.accent }}>{role} coaching</strong> — what to ask, what's material, a tabletop to run, and the blind spots detected from how decisions are actually being made.
         </div>
         <VoiceControls voice={voice} onReplay={() => voice.speak(overview)} label="Listen" />
       </div>
@@ -108,7 +109,7 @@ export default function Coaching(props) {
                   <span style={{ fontSize: 9.5, fontWeight: 700, color: '#fff', background: SEV[f.severity] || INK3, borderRadius: 999, padding: '2px 8px', textTransform: 'uppercase' }}>{f.severity}</span>
                 </div>
                 <div style={{ fontSize: 11, color: INK2, marginTop: 3 }}>{f.detail}</div>
-                <div style={{ fontSize: 11, color: '#1f8a4c', fontWeight: 600, marginTop: 3 }}>→ {f.recommendation}</div>
+                <div style={{ fontSize: 11, color: COLORS.good, fontWeight: 600, marginTop: 3 }}>→ {f.recommendation}</div>
               </div>
             ))}
           </div>
@@ -122,7 +123,7 @@ export default function Coaching(props) {
             <div style={{ fontSize: 11.5, color: INK2 }}>
               <strong style={{ color: INK }}>{bm.peerGroup.sizeBand}</strong> · {bm.peerGroup.industryLabel}
               <span style={{ color: INK3 }}> ({bm.peerGroup.sizeBasis})</span> — you are{' '}
-              <strong style={{ color: bm.standing === 'ahead of peers' ? '#1f8a4c' : bm.standing === 'behind peers' ? '#C0392B' : '#B07C2E' }}>{bm.standing}</strong>.
+              <strong style={{ color: bm.standing === 'ahead of peers' ? COLORS.good : bm.standing === 'behind peers' ? COLORS.bad : COLORS.warn }}>{bm.standing}</strong>.
             </div>
             <div style={{ fontSize: 10.5, color: INK3 }}>{bm.counts.ahead} ahead · {bm.counts.typical} typical · {bm.counts.behind} behind</div>
           </div>

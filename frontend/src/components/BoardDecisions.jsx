@@ -9,9 +9,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
 import Provenance from './Provenance';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc';
-const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
 
 function ctx(props) {
@@ -58,13 +59,13 @@ export default function BoardDecisions(props) {
                     {it.aboveAppetite && <Pill text="Above appetite" color={SEV.Critical} />}
                     {it.decision ? <Pill text="Decided" color="#1f8a4c" /> : <Pill text="Open" color="#B07C2E" />}
                   </div>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: INK, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>{it.provenance && <Provenance prov={it.provenance} />}<span>{lens.headline || it.title}</span></div>
+                  <div style={{ fontSize: 14, fontWeight: 800, fontFamily: FONTS.display, color: INK, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>{it.provenance && <Provenance prov={it.provenance} />}<span>{lens.headline || it.title}</span></div>
                   <div style={{ fontSize: 11, color: INK3, marginTop: 1 }}>Event: {it.title} · owner {it.owner}</div>
                   {lens.narrative && <div style={{ fontSize: 11.5, color: INK2, marginTop: 5, lineHeight: 1.55 }}>{lens.narrative}</div>}
                   {lens.questionToAsk && <div style={{ fontSize: 11.5, color: '#7c3aed', fontWeight: 600, marginTop: 6 }}>❓ Ask management: {lens.questionToAsk}</div>}
                 </div>
                 <div style={{ textAlign: 'right', minWidth: 150 }}>
-                  {lens.primary && <><div style={{ fontSize: 9.5, color: INK3, textTransform: 'uppercase' }}>{lens.primary.label}</div><div style={{ fontSize: 14, fontWeight: 800, color: INK }}>{lens.primary.value}</div></>}
+                  {lens.primary && <><div style={{ fontSize: 9.5, color: INK3, textTransform: 'uppercase' }}>{lens.primary.label}</div><div style={{ fontSize: 14, fontWeight: 800, fontFamily: FONTS.mono, color: INK }}>{lens.primary.value}</div></>}
                   {lens.secondary && <div style={{ fontSize: 10.5, color: INK2, marginTop: 3 }}>{lens.secondary.label}: <strong style={{ color: sev }}>{lens.secondary.value}</strong></div>}
                   {lens.narration && <div style={{ marginTop: 6, display: 'flex', justifyContent: 'flex-end' }}><VoiceControls voice={voice} onReplay={() => voice.speak(lens.narration)} label="Listen" /></div>}
                 </div>

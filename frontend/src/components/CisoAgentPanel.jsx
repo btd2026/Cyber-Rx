@@ -15,10 +15,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import CisoAnswerView from './CisoAnswerView';
 import { useAgentVoice, VoiceControls } from './agentVoice';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e8edf3', PANEL = '#f8fafc';
-const C = { Strong: '#1f8a4c', Moderate: '#B07C2E', Weak: '#A85B2E', Critical: '#C0392B' };
-const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
+const C = { Strong: COLORS.good, Moderate: COLORS.warn, Weak: '#A85B2E', Critical: COLORS.bad };
+const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
 
 function ctx(props) {
   const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
@@ -105,7 +106,7 @@ export default function CisoAgentPanel(props) {
 
       {/* Intro — shown only in list mode so the detail view stays focused. */}
       {!active && (
-        <div style={{ background: '#0f1b2d', color: '#e6ecf5', borderRadius: 10, padding: '14px 18px', marginBottom: 14, fontSize: 12.5, lineHeight: 1.6 }}>
+        <div style={{ background: NAVY, color: '#e6ecf5', borderRadius: 10, padding: '14px 18px', marginBottom: 14, fontSize: 12.5, lineHeight: 1.6 }}>
           These are the <strong style={{ color: '#9bc0ff' }}>5 key questions every {role} should be able to answer at any time</strong>. Each one shows a quick summary of where you stand right now — <strong>select a question</strong> for the full details: the answer, the evidence behind it, the recommended action, and who owns it.
         </div>
       )}
@@ -139,8 +140,8 @@ export default function CisoAgentPanel(props) {
             ← All questions
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-            <span style={{ width: 24, height: 24, borderRadius: 12, background: '#0f1b2d', color: '#9bc0ff', fontSize: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{active.n}</span>
-            <span style={{ fontSize: 16, fontWeight: 800, color: INK, lineHeight: 1.35 }}>{active.question}</span>
+            <span style={{ width: 24, height: 24, borderRadius: 12, background: NAVY, color: COLORS.accent, fontSize: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{active.n}</span>
+            <span style={{ fontSize: 16, fontWeight: 800, color: INK, lineHeight: 1.35, fontFamily: FONTS.display }}>{active.question}</span>
           </div>
           <CisoAnswerView a={active} role={role} issues={issues} onIssueClick={setIssue} />
         </div>
@@ -218,7 +219,7 @@ function IssueDrawer({ item, onClose, voice }) {
             <div style={{ fontSize: 10, color: INK3, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Issue detail</div>
             <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, color: INK3, cursor: 'pointer', lineHeight: 1, marginTop: -4 }}>✕</button>
           </div>
-          <h3 style={{ margin: '6px 0 8px', fontSize: 16, fontWeight: 800, color: INK, lineHeight: 1.35 }}>{title}</h3>
+          <h3 style={{ margin: '6px 0 8px', fontSize: 16, fontWeight: 800, color: INK, lineHeight: 1.35, fontFamily: FONTS.display }}>{title}</h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', background: sev, borderRadius: 5, padding: '3px 10px' }}>{tag}</span>
             {voice && e.narration && <VoiceControls voice={voice} onReplay={() => voice.speak(e.narration)} label="Explain" />}

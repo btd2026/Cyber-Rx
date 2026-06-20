@@ -9,9 +9,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
 import Provenance from './Provenance';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc', NAVY = '#0f1b2d';
-const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
+const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
 const DET = { material: { label: 'Material', color: '#C0392B' }, not_material: { label: 'Not material', color: '#1f8a4c' }, pending: { label: 'Pending', color: '#B07C2E' } };
 
@@ -70,7 +71,7 @@ export default function CloMateriality(props) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: NAVY, color: '#e6ecf5', borderRadius: 10, padding: '13px 16px' }}>
         <div style={{ fontSize: 12.5, lineHeight: 1.6, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
           {d.provenance && <Provenance prov={d.provenance} dark />}
-          <span><strong style={{ color: '#9bc0ff' }}>SEC materiality & 8-K Item 1.05.</strong> {d.counts.determined} determination(s) on record, {d.counts.material} material. Materiality threshold {usd(d.thresholdUSD)}.</span>
+          <span><strong style={{ color: COLORS.accent }}>SEC materiality & 8-K Item 1.05.</strong> {d.counts.determined} determination(s) on record, {d.counts.material} material. Materiality threshold {usd(d.thresholdUSD)}.</span>
         </div>
         <VoiceControls voice={voice} onReplay={() => voice.speak(`SEC materiality workflow. ${d.candidates.length} candidate incidents. ${d.counts.material} determined material. A material determination starts the four business day 8-K clock.`)} label="Listen" />
       </div>
@@ -88,7 +89,7 @@ export default function CloMateriality(props) {
             <div key={c.eventRef} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${SEV[c.severity] || INK3}`, borderRadius: 10, background: '#fff', padding: '12px 14px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13.5, fontWeight: 800, color: INK }}>{c.title}</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 800, fontFamily: FONTS.display, color: INK }}>{c.title}</div>
                   <div style={{ fontSize: 11, color: INK2, marginTop: 3 }}>
                     Modeled loss <strong>{usd(c.lossExpected)}</strong> (P90 {usd(c.lossP90)}) · {c.quantExceeds ? <span style={{ color: '#C0392B', fontWeight: 700 }}>exceeds threshold</span> : 'below threshold'}
                     {c.screenedMaterial && <span style={{ color: '#B07C2E', fontWeight: 700 }}> · screens material</span>}

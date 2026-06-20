@@ -8,9 +8,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
 import Provenance from './Provenance';
+import { COLORS, FONTS, HERO_BG } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc', NAVY = '#0f1b2d';
-const TONE = { good: '#1f8a4c', warn: '#B07C2E', bad: '#C0392B' };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
+const TONE = { good: COLORS.good, warn: COLORS.warn, bad: COLORS.bad };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
 const band = (s) => (s >= 80 ? 'good' : s >= 55 ? 'warn' : 'bad');
 
@@ -40,7 +41,7 @@ export default function CioOperationalPosture(props) {
     <div style={{ display: 'grid', gap: 14 }}>
       {d.provenance && <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 5, fontSize: 10, color: '#94a3b8', marginBottom: -4 }}><Provenance prov={d.provenance} /><span>data provenance</span></div>}
       {/* exec brief + voice */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: NAVY, color: '#e6ecf5', borderRadius: 10, padding: '14px 16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: HERO_BG, color: '#e6ecf5', borderRadius: 10, padding: '14px 16px' }}>
         <div>
           <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginBottom: 8 }}>
             <Score label="Operational" value={d.overall} />
@@ -131,15 +132,15 @@ function Score({ label, value }) {
   const c = TONE[band(value)];
   return (
     <div style={{ textAlign: 'center' }}>
-      <div style={{ fontSize: 30, fontWeight: 800, lineHeight: 1, color: c === '#B07C2E' ? '#f0a868' : c }}>{value}</div>
-      <div style={{ fontSize: 9, color: '#8fa3bd', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 2 }}>{label}</div>
+      <div style={{ fontSize: 30, fontWeight: 800, lineHeight: 1, color: c === COLORS.warn ? '#f0a868' : c, fontFamily: FONTS.mono }}>{value}</div>
+      <div style={{ fontSize: 9, color: COLORS.accent, textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 2 }}>{label}</div>
     </div>
   );
 }
 function Panel({ title, note, children }) {
   return (
     <div style={{ border: `1px solid ${HAIR}`, borderRadius: 11, background: '#fff', padding: '13px 16px' }}>
-      <div style={{ fontSize: 12.5, fontWeight: 800, color: INK, marginBottom: note ? 2 : 9 }}>{title}</div>
+      <div style={{ fontSize: 12.5, fontWeight: 800, color: INK, marginBottom: note ? 2 : 9, fontFamily: FONTS.display }}>{title}</div>
       {note && <div style={{ fontSize: 10, color: INK3, marginBottom: 9 }}>{note}</div>}
       {children}
     </div>

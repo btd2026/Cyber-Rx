@@ -97,7 +97,12 @@ async function getPosture(orgId) {
     `${activeClocks.length} cyber scenario(s) would, if realized, trigger disclosure obligations — ${activeClocks.filter((a) => a.status.startsWith('Undecided')).length} are not yet decided and should have notification pre-staged. ` +
     `Defensibility posture is ${defensibilityBand.toLowerCase()} (${defensibilityScore}/100): ${decisionsLogged} decision(s) on the record, ${acceptsWithRationale.length} of ${accepts.length} acceptances carry a substantive rationale. ` +
     `Note for counsel: logged acceptances are discoverable in litigation — the rationale guidance steers toward defensible reasoning and is flagged for Legal review before launch.`;
-  const narration = `Obligation posture, General Counsel. ` + brief;
+  const undecidedClocks = activeClocks.filter((a) => a.status.startsWith('Undecided')).length;
+  const narration = `Here is where we stand on our legal exposure, and it is a yellow light, not green. ` +
+    `As a ${industry.replace(/_/g, ' ')} organization we are subject to ${obligations.length} obligation regime(s) with notification windows as short as ${shortestClock(obligations)} — that little margin is the real risk, because a clock can start before we have decided anything. ` +
+    `${activeClocks.length ? `Right now ${activeClocks.length} scenario(s) would trigger disclosure if realized, and ${undecidedClocks} of those are still undecided with no notification pre-staged. ` : ''}` +
+    `And our defensibility posture is ${defensibilityBand.toLowerCase()} at ${defensibilityScore} out of 100 — only ${acceptsWithRationale.length} of ${accepts.length} acceptance(s) carry a substantive rationale, which is exactly what gets tested in litigation. ` +
+    `What I would do: pre-stage notification for the undecided scenarios and tighten up those thin rationales — and remember every logged acceptance is discoverable, which is why this is flagged for Legal review before launch.`;
 
   return {
     organizationId: orgId, generatedAt: new Date().toISOString(),

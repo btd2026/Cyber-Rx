@@ -68,10 +68,10 @@ async function getTreatment(orgId) {
     };
   } catch (_) {}
 
-  const narration = `Risk treatment portfolio, CRO. Across ${rows.length} exposures: ${buckets[0].count} mitigate, ${buckets[1].count} transfer, ${buckets[2].count} accept. ` +
-    `Capital deployed ${usd(totalCapital)} to avoid a modeled ${usd(totalLossAvoided)} of expected loss — ` +
-    `${totalCapital > 0 ? `about ${Math.round((totalLossAvoided / totalCapital) * 100) / 100} dollars avoided per dollar spent` : 'no capital deployed yet'}. ` +
-    (predictedVsRealized && predictedVsRealized.calibration != null ? `Realized risk movement is tracking at ${predictedVsRealized.calibration}% of projection.` : '');
+  const narration = `Honestly, the question here is simple: is the capital working? ${totalCapital > 0 ? `It is — ${usd(totalCapital)} deployed is buying down a modeled ${usd(totalLossAvoided)} of expected loss, roughly ${Math.round((totalLossAvoided / totalCapital) * 100) / 100} dollars avoided for every dollar spent` : `right now no capital has been deployed, so across ${rows.length} exposures we are exposed without buying anything down`}. ` +
+    `The treatment mix tells the story: ${buckets[0].count} mitigate, ${buckets[1].count} transfer, ${buckets[2].count} accept — ${buckets[2].count > buckets[0].count + buckets[1].count ? 'we are leaning heavily on acceptance, which is fine only if those are deliberate, documented choices' : 'a reasonable balance of fixing, insuring, and consciously accepting risk'}. ` +
+    (predictedVsRealized && predictedVsRealized.calibration != null ? `And the engine is honest with us — realized movement is tracking at ${predictedVsRealized.calibration}% of what we projected, so ${predictedVsRealized.calibration >= 85 ? 'these numbers are credible' : 'I would discount the projections until calibration improves'}. ` : '') +
+    `What I would do: ${totalCapital > 0 ? 'concentrate the next dollar where capital efficiency is highest and transfer the tail you cannot cost-effectively mitigate.' : 'pick the highest-efficiency mitigations first and decide the rest explicitly rather than letting them sit open.'}`;
 
   return {
     organizationId: orgId, generatedAt: new Date().toISOString(),

@@ -60,10 +60,10 @@ async function getAggregation(orgId) {
     transmittedLoss: Math.round(aggLoss * r.coefficient),
   }));
 
-  const narration = `Aggregation and correlation, CRO. ${correlatedFailures.length} correlated multi-risk failure(s) detected — these are the shared compound scenarios where sub-threshold risks chain into a critical outcome` +
-    `${correlatedFailures[0] ? `, led by ${correlatedFailures[0].title} at ${correlatedFailures[0].jointPct}% joint likelihood` : ''}. ` +
-    `${concentration.length} concentration risk(s)${concentration[0] ? `, starting with ${concentration[0].label}` : ''}. ` +
-    `Cyber correlates most strongly with ${correlationMatrix[0].category.toLowerCase()} — a single realized event transmits across categories, so these are not independent bets.`;
+  const narration = `Honestly, this is the area I would watch — because aggregation is where small risks become a big one. ${correlatedFailures.length ? `We have ${correlatedFailures.length} correlated multi-risk failure(s), where sub-threshold risks chain into a critical outcome${correlatedFailures[0] ? `, led by ${correlatedFailures[0].title} at ${correlatedFailures[0].jointPct}% joint likelihood — far worse together than apart` : ''}` : 'no correlated compound failures are firing right now, which is the one piece of good news here'}. ` +
+    `On top of that, ${concentration.length} concentration risk(s)${concentration[0] ? `, starting with ${concentration[0].label}` : ''} — single points of failure where one outage takes several things down at once. ` +
+    `And these are not independent bets: cyber correlates most strongly with ${correlationMatrix[0].category.toLowerCase()}, so one realized event transmits straight into the other categories. ` +
+    `What I would do: ${correlatedFailures[0] ? 'break the strongest chain first — one mitigation can collapse a whole compound — and' : ''} reduce the top concentration by qualifying a backup for the most-depended-on dependency, because that is the cheapest way to lower correlated loss.`;
 
   return {
     organizationId: orgId, generatedAt: new Date().toISOString(),

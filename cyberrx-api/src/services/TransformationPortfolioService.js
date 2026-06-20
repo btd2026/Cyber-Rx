@@ -77,10 +77,9 @@ async function getPortfolio(orgId) {
   const netRiskReduced = initiatives.reduce((s, i) => s + i.netRisk, 0);
   const surfaceAdders = initiatives.filter((i) => i.riskIntroduced > i.riskReduced);
 
-  const narration = `Transformation portfolio, CIO. ${initiatives.length} initiative(s), net risk change ${netRiskReduced >= 0 ? 'plus' : 'minus'} ${Math.abs(netRiskReduced)} posture points. ` +
-    `${surfaceAdders.length} initiative(s) introduce more attack surface than they reduce and need secure-by-design gating. ` +
-    `Recommended: sequence ${buckets.sequence.length}, secure ${buckets.secure.length}, defer ${buckets.defer.length}. ` +
-    `Predicted-versus-realized uses the same calibrated engine the security ROI view uses.`;
+  const narration = `This is mostly good news, with one thing to watch. Across ${initiatives.length} initiative${initiatives.length === 1 ? '' : 's'}, the portfolio is ${netRiskReduced >= 0 ? `buying down risk on balance — net ${netRiskReduced} posture points reduced` : `adding risk on balance — net ${Math.abs(netRiskReduced)} posture points introduced`}, and these are the same calibrated numbers the security ROI view uses, so they're measured, not assumed. ` +
+    `The caution is delivery velocity outrunning security: ${surfaceAdders.length === 0 ? 'none' : surfaceAdders.length} initiative${surfaceAdders.length === 1 ? '' : 's'} introduce${surfaceAdders.length === 1 ? 's' : ''} more attack surface than ${surfaceAdders.length === 1 ? 'it reduces' : 'they reduce'} — new dependencies and surface that become tomorrow's tech debt if they ship ungated. ` +
+    `My recommendation tracks the economics: sequence the ${buckets.sequence.length} that pay off earlier, gate the ${buckets.secure.length} with secure-by-design before ${buckets.secure.length === 1 ? 'it advances' : 'they advance'}, and defer the ${buckets.defer.length} that aren't earning ${buckets.defer.length === 1 ? 'its' : 'their'} risk.`;
 
   return {
     organizationId: orgId, generatedAt: new Date().toISOString(),

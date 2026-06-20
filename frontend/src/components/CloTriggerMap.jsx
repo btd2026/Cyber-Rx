@@ -12,10 +12,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
 import Provenance from './Provenance';
 import { DefensibleRationaleHint, DEFENSIBLE_PLACEHOLDER } from './legalRationale';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc', NAVY = '#0f1b2d';
-const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
-const LIT = { High: '#C0392B', Elevated: '#B07C2E', Moderate: '#1f8a4c' };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
+const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
+const LIT = { High: COLORS.bad, Elevated: COLORS.warn, Moderate: COLORS.good };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
 
 function ctx(props) {
@@ -81,12 +82,12 @@ export default function CloTriggerMap(props) {
                       <Pill text={`Litigation ${s.projection.litigationLikelihood}`} color={LIT[s.projection.litigationLikelihood]} />
                       {s.decision && <Pill text="Decided" color="#1f8a4c" />}
                     </div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: INK, marginTop: 6 }}>{s.title}</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, fontFamily: FONTS.display, color: INK, marginTop: 6 }}>{s.title}</div>
                     <div style={{ fontSize: 11, color: INK2, marginTop: 3 }}>Data at risk: {s.dataAtRisk} · nearest deadline: <strong>{s.projection.nearestDeadline}</strong></div>
                   </div>
                   <div style={{ textAlign: 'right', minWidth: 120 }}>
                     <div style={{ fontSize: 9.5, color: INK3, textTransform: 'uppercase' }}>P90 loss</div>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: sev }}>{usd(s.loss.p90)}</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, fontFamily: FONTS.mono, color: sev }}>{usd(s.loss.p90)}</div>
                   </div>
                 </div>
 

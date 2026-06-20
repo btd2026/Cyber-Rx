@@ -10,10 +10,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
 import Provenance from './Provenance';
 import { DefensibleRationaleHint, DEFENSIBLE_PLACEHOLDER } from './legalRationale';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc', NAVY = '#0f1b2d';
-const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
-const FRIC = { None: '#1f8a4c', Low: '#1f8a4c', Medium: '#B07C2E', High: '#C0392B' };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
+const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
+const FRIC = { None: COLORS.good, Low: COLORS.good, Medium: COLORS.warn, High: COLORS.bad };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
 
 function ctx(props) {
@@ -85,7 +86,7 @@ function FrictionCard({ item, onChoose, voice }) {
       <div style={{ padding: '13px 16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: INK }}>{item.initiative}</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: INK, fontFamily: FONTS.display }}>{item.initiative}</div>
             {item.objective && <div style={{ fontSize: 11, color: INK2, marginTop: 2 }}>{item.objective}</div>}
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 10.5, color: INK3, marginTop: 5 }}>
               <span>Owner <strong style={{ color: INK2 }}>{item.owner}</strong></span>
@@ -160,7 +161,7 @@ function Tradeoff({ label, tone, lines }) {
   return (
     <div style={{ flex: 1, padding: '10px 14px', borderRight: `1px solid ${HAIR}` }}>
       <div style={{ fontSize: 10, fontWeight: 800, color: tone, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
-      {lines.map((l, i) => <div key={i} style={{ fontSize: i === 0 ? 13 : 10.5, fontWeight: i === 0 ? 800 : 500, color: i === 0 ? INK : INK2, marginTop: i === 0 ? 3 : 1 }}>{l}</div>)}
+      {lines.map((l, i) => <div key={i} style={{ fontSize: i === 0 ? 13 : 10.5, fontWeight: i === 0 ? 800 : 500, color: i === 0 ? INK : INK2, marginTop: i === 0 ? 3 : 1, fontFamily: i === 0 ? FONTS.mono : undefined }}>{l}</div>)}
     </div>
   );
 }

@@ -10,10 +10,11 @@
 import React from 'react';
 import TicketControl from './TicketControl';
 import { useAgentVoice, VoiceControls } from './agentVoice';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc';
-const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
-const TONE = { good: '#1f8a4c', warn: '#B07C2E', bad: '#C0392B' };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
+const TONE = { good: COLORS.good, warn: COLORS.warn, bad: COLORS.bad };
 const toneColor = (t) => TONE[t] || '#475569';
 
 const Pill = ({ text, color }) => (
@@ -124,7 +125,7 @@ function DecisionsView({ role, section }) {
                 <span style={{ fontSize: 15, lineHeight: 1.2 }}>🔎</span>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 9.5, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Detected condition</div>
-                  <div style={{ fontSize: 13.5, fontWeight: 700, color: INK, marginTop: 2, lineHeight: 1.35 }}>{d.condition}</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: INK, marginTop: 2, lineHeight: 1.35, fontFamily: FONTS.display }}>{d.condition}</div>
                 </div>
                 <Pill text={d.severity} color={c} />
               </div>
@@ -185,7 +186,7 @@ function Metrics({ section }) {
                 <div style={{ fontSize: 11, color: INK2, fontWeight: 600 }}>{m.label}</div>
                 {deltaChip(m.spark, m.tone)}
               </div>
-              <div style={{ fontSize: 26, fontWeight: 800, color: m.tone ? c : INK, marginTop: 4, lineHeight: 1.1, letterSpacing: '-0.01em' }}>{m.value}</div>
+              <div style={{ fontSize: 26, fontWeight: 800, color: m.tone ? c : INK, marginTop: 4, lineHeight: 1.1, letterSpacing: '-0.01em', fontFamily: FONTS.mono }}>{m.value}</div>
               {m.sub && <div style={{ fontSize: 10.5, color: INK3, marginTop: 2 }}>{m.sub}</div>}
               <div style={{ marginTop: 8, marginLeft: -4, marginRight: -4 }}><Sparkline values={m.spark} color={m.tone ? c : '#94a3b8'} /></div>
             </div>
@@ -213,10 +214,10 @@ function Ranked({ section }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <span style={{ width: 24, height: 24, borderRadius: 8, background: i < 3 ? medal[i] : '#eef2f7', color: i < 3 ? '#fff' : INK3, fontSize: 11.5, fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 12.5, fontWeight: 700, color: INK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{x.name}</div>
+                  <div style={{ fontSize: 12.5, fontWeight: 700, color: INK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: FONTS.display }}>{x.name}</div>
                   {x.sub && <div style={{ fontSize: 10, color: INK3, marginTop: 1 }}>{x.sub}</div>}
                 </div>
-                <span style={{ fontSize: 13.5, fontWeight: 800, color: c, minWidth: 58, textAlign: 'right' }}>{x.scoreLabel || x.score}</span>
+                <span style={{ fontSize: 13.5, fontWeight: 800, color: c, minWidth: 58, textAlign: 'right', fontFamily: FONTS.mono }}>{x.scoreLabel || x.score}</span>
               </div>
               <div style={{ height: 8, background: '#eef2f6', borderRadius: 5, overflow: 'hidden', marginTop: 9 }}>
                 <div style={{ width: `${pct}%`, height: '100%', borderRadius: 5, background: `linear-gradient(90deg, ${c}aa, ${c})` }} />
@@ -294,7 +295,7 @@ function CardsView({ section }) {
           return (
             <div key={i} style={{ border: `1px solid ${HAIR}`, borderTop: `3px solid ${it.tagTone ? c : '#cbd5e1'}`, borderRadius: 11, padding: '13px 15px', background: '#fff', boxShadow: '0 1px 2px rgba(15,23,42,0.04)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-                <div style={{ fontSize: 12.5, fontWeight: 700, color: INK, lineHeight: 1.3 }}>{it.title}</div>
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: INK, lineHeight: 1.3, fontFamily: FONTS.display }}>{it.title}</div>
                 {it.tag && <Pill text={it.tag} color={it.tagTone ? c : INK3} />}
               </div>
               {(it.fields || []).length > 0 && (

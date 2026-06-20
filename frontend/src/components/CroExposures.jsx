@@ -9,9 +9,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
 import Provenance from './Provenance';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc', NAVY = '#0f1b2d';
-const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
+const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
 
 function ctx(props) {
@@ -50,7 +51,7 @@ export default function CroExposures(props) {
         {d.kris.map((k) => (
           <div key={k.name} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${k.breached ? SEV.Critical : SEV.Low}`, borderRadius: 9, padding: '11px 13px', background: '#fff' }}>
             <div style={{ fontSize: 10.5, color: INK2 }}>{k.name}</div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: k.breached ? SEV.Critical : INK, marginTop: 2 }}>{k.display}</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: k.breached ? SEV.Critical : INK, marginTop: 2, fontFamily: FONTS.mono }}>{k.display}</div>
             <div style={{ fontSize: 10, color: INK3, marginTop: 1 }}>Appetite: {k.thresholdDisplay} {k.breached ? <span style={{ color: SEV.Critical, fontWeight: 700 }}>· BREACHED</span> : <span style={{ color: SEV.Low }}>· within</span>}</div>
           </div>
         ))}
@@ -72,12 +73,12 @@ export default function CroExposures(props) {
                       {e.aboveAppetite && <Pill text="Above appetite" color={SEV.Critical} />}
                       {e.decision && <Pill text="Decided" color="#1f8a4c" />}
                     </div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: INK, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>{e.provenance && <Provenance prov={e.provenance} />}<span>{e.title}</span></div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: INK, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONTS.display }}>{e.provenance && <Provenance prov={e.provenance} />}<span>{e.title}</span></div>
                     <div style={{ fontSize: 11.5, color: INK2, marginTop: 3 }}>{(e.croLens && e.croLens.narrative) || ''}</div>
                   </div>
                   <div style={{ textAlign: 'right', minWidth: 130 }}>
                     <div style={{ fontSize: 9.5, color: INK3, textTransform: 'uppercase' }}>Expected loss</div>
-                    <div style={{ fontSize: 17, fontWeight: 800, color: sev }}>{usd(e.loss.expected)}</div>
+                    <div style={{ fontSize: 17, fontWeight: 800, color: sev, fontFamily: FONTS.mono }}>{usd(e.loss.expected)}</div>
                     <div style={{ fontSize: 10.5, color: INK2 }}>P90 {usd(e.loss.p90)}</div>
                   </div>
                 </div>
@@ -130,7 +131,7 @@ export default function CroExposures(props) {
 
       {/* portfolio-level decision options */}
       <div style={{ border: `1px solid ${HAIR}`, borderRadius: 11, background: '#fff', padding: '13px 16px' }}>
-        <div style={{ fontSize: 12.5, fontWeight: 800, color: INK, marginBottom: 4 }}>Portfolio-level options</div>
+        <div style={{ fontSize: 12.5, fontWeight: 800, color: INK, marginBottom: 4, fontFamily: FONTS.display }}>Portfolio-level options</div>
         <div style={{ fontSize: 10.5, color: INK3, marginBottom: 9 }}>Act on the set, not one card. Aggregate loss {usd(d.aggregate.expectedLoss)} (P90 {usd(d.aggregate.p90)}) vs {usd(d.aggregate.lossTolerance)} tolerance.</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px,1fr))', gap: 9 }}>
           {d.portfolioOptions.map((o) => (

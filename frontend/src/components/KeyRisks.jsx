@@ -10,9 +10,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Provenance from './Provenance';
 import { useAgentVoice, VoiceControls } from './agentVoice';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc';
-const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+const TONE = { good: COLORS.good, warn: COLORS.warn, bad: COLORS.bad };
+const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
 const sevRank = { Critical: 0, High: 1, Medium: 2, Low: 3 };
 const SCEN = { Ransomware: '#C0392B', 'Data exfiltration': '#7c3aed', Fraud: '#A85B2E', 'Business disruption': '#1d4ed8' };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
@@ -30,7 +32,7 @@ const Pill = ({ text, color }) => <span style={{ fontSize: 9, fontWeight: 700, c
 // Refined, low-noise status chip: tinted background + colored text (premium feel).
 const SoftChip = ({ text, color }) => <span style={{ fontSize: 10, fontWeight: 700, color, background: color + '14', border: `1px solid ${color}33`, borderRadius: 6, padding: '2px 9px', whiteSpace: 'nowrap', letterSpacing: '0.02em' }}>{text}</span>;
 // Compact labelled metric used in the right-hand stat panel.
-const Stat = ({ k, v, accent }) => <div style={{ minWidth: 0 }}><div style={{ fontSize: 9, color: INK3, fontWeight: 600 }}>{k}</div><div style={{ fontSize: 13.5, fontWeight: 700, color: accent || INK, lineHeight: 1.2, marginTop: 1 }}>{v}</div></div>;
+const Stat = ({ k, v, accent }) => <div style={{ minWidth: 0 }}><div style={{ fontSize: 9, color: INK3, fontWeight: 600 }}>{k}</div><div style={{ fontSize: 13.5, fontWeight: 700, color: accent || INK, lineHeight: 1.2, marginTop: 1, fontFamily: FONTS.mono }}>{v}</div></div>;
 // Drop the leading quoted echo of the title that the lens narrative prepends.
 function cleanNarrative(n) {
   if (!n) return '';
@@ -100,9 +102,9 @@ export default function KeyRisks(props) {
                     <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginBottom: 9 }}>
                       <SoftChip text={e.severity} color={SEV[e.severity]} />
                       <SoftChip text={e.scenarioType} color={SCEN[e.scenarioType] || INK3} />
-                      {c.decision && <SoftChip text={c.decision.action === 'accept' ? 'Accepted' : 'In treatment'} color="#1f8a4c" />}
+                      {c.decision && <SoftChip text={c.decision.action === 'accept' ? 'Accepted' : 'In treatment'} color={TONE.good} />}
                     </div>
-                    <div style={{ fontSize: 15.5, fontWeight: 700, color: INK, lineHeight: 1.35 }}>{e.title}</div>
+                    <div style={{ fontSize: 15.5, fontWeight: 700, color: INK, lineHeight: 1.35, fontFamily: FONTS.display }}>{e.title}</div>
                     <div style={{ fontSize: 12, color: INK2, marginTop: 7, lineHeight: 1.6, maxWidth: 660 }}>{cleanNarrative(c.lens && c.lens.narrative)}</div>
                     <div style={{ display: 'flex', gap: 22, flexWrap: 'wrap', fontSize: 11, color: INK3, marginTop: 12 }}>
                       <span>Owner&nbsp;&nbsp;<strong style={{ color: INK2 }}>{e.owner || 'CISO'}</strong></span>
@@ -126,7 +128,7 @@ export default function KeyRisks(props) {
                     <div style={{ fontSize: 9, color: INK3, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700 }}>Modeled loss</div>
                     <div style={{ display: 'flex', gap: 16, marginTop: 6 }}>
                       <Stat k="Expected" v={usd(e.loss.expected)} />
-                      <Stat k="Severe (P90)" v={usd(e.loss.p90)} accent="#C0392B" />
+                      <Stat k="Severe (P90)" v={usd(e.loss.p90)} accent={TONE.bad} />
                     </div>
                     {voice && c.lens && c.lens.narration && (
                       <div style={{ marginTop: 11, display: 'flex', justifyContent: 'flex-end' }}>
@@ -171,7 +173,7 @@ export default function KeyRisks(props) {
       {/* Evidence layer: exploitability-ranked vulnerabilities */}
       <div style={{ border: `1px dashed ${HAIR}`, borderRadius: 11, background: '#fff' }}>
         <button onClick={() => setShowEvidence(!showEvidence)} style={{ width: '100%', textAlign: 'left', background: 'transparent', border: 'none', padding: '12px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: 12.5, fontWeight: 800, color: INK }}>🔬 Evidence — exploitability-ranked vulnerabilities {evidence && <span style={{ fontSize: 10.5, fontWeight: 600, color: INK3 }}>· {evidence.counts.kev} on CISA KEV · {evidence.counts.highEpss} high-EPSS{evidence.source === 'demo' ? ' · sample' : ''}</span>}</span>
+          <span style={{ fontSize: 12.5, fontWeight: 800, color: INK, fontFamily: FONTS.display }}>🔬 Evidence — exploitability-ranked vulnerabilities {evidence && <span style={{ fontSize: 10.5, fontWeight: 600, color: INK3, fontFamily: FONTS.body }}>· {evidence.counts.kev} on CISA KEV · {evidence.counts.highEpss} high-EPSS{evidence.source === 'demo' ? ' · sample' : ''}</span>}</span>
           <span style={{ color: '#1d4ed8', fontSize: 11.5, fontWeight: 700 }}>{showEvidence ? 'Hide' : 'Show'}</span>
         </button>
         {showEvidence && evidence && (
@@ -189,8 +191,8 @@ export default function KeyRisks(props) {
                       <td style={{ padding: '7px 8px', color: INK }}>{v.title}</td>
                       <td style={{ padding: '7px 8px', color: INK2 }}>{v.asset}</td>
                       <td style={{ padding: '7px 8px' }}><Pill text={v.severity} color={SEV[v.severity] || INK3} /></td>
-                      <td style={{ padding: '7px 8px', fontWeight: 700, color: (v.epss || 0) >= 50 ? '#C0392B' : INK }}>{v.epss != null ? `${v.epss}%` : '—'}</td>
-                      <td style={{ padding: '7px 8px' }}>{v.kev ? <Pill text="KEV" color="#C0392B" /> : <span style={{ color: INK3 }}>—</span>}</td>
+                      <td style={{ padding: '7px 8px', fontWeight: 700, color: (v.epss || 0) >= 50 ? TONE.bad : INK, fontFamily: FONTS.mono }}>{v.epss != null ? `${v.epss}%` : '—'}</td>
+                      <td style={{ padding: '7px 8px' }}>{v.kev ? <Pill text="KEV" color={TONE.bad} /> : <span style={{ color: INK3 }}>—</span>}</td>
                       <td style={{ padding: '7px 8px', color: INK2 }}>{v.ageDays != null ? `${v.ageDays}d` : '—'}</td>
                     </tr>
                   ))}
@@ -205,7 +207,7 @@ export default function KeyRisks(props) {
         <div onClick={() => setCrq(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(8,15,28,0.5)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '48px 16px', overflowY: 'auto' }}>
           <div onClick={(ev) => ev.stopPropagation()} style={{ background: '#fff', borderRadius: 12, width: 'min(560px, 96vw)', boxShadow: '0 24px 64px rgba(0,0,0,0.3)', padding: '20px 22px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: INK }}>How this loss is calculated</h3>
+              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: INK, fontFamily: FONTS.display }}>How this loss is calculated</h3>
               <button onClick={() => setCrq(null)} style={{ background: 'none', border: 'none', fontSize: 22, color: INK3, cursor: 'pointer', lineHeight: 1 }}>×</button>
             </div>
             <div style={{ fontSize: 11.5, color: INK2, marginTop: 4 }}>{crq.title}</div>
@@ -215,7 +217,7 @@ export default function KeyRisks(props) {
               {[['Expected', crq.loss.expected], ['P10', crq.loss.p10], ['P50 (median)', crq.loss.p50], ['P90', crq.loss.p90], ['Worst case', crq.loss.worstCase]].map(([k, v]) => (
                 <div key={k} style={{ minWidth: 84 }}>
                   <div style={{ fontSize: 9.5, color: INK3, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{k}</div>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: k === 'Worst case' ? '#C0392B' : INK }}>{usd(v)}</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: k === 'Worst case' ? TONE.bad : INK, fontFamily: FONTS.mono }}>{usd(v)}</div>
                 </div>
               ))}
             </div>
