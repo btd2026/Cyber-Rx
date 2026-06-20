@@ -8,6 +8,7 @@
 import React from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
 import { useState, useEffect, useCallback } from 'react';
+import Provenance from './Provenance';
 
 const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc';
 const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
@@ -40,7 +41,7 @@ export default function CroAggregation(props) {
   return (
     <div style={{ display: 'grid', gap: 14 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-        <div style={{ fontSize: 12.5, color: INK2 }}><strong>{d.counts.correlatedFailures}</strong> correlated multi-risk failure(s) · <strong>{d.counts.concentration}</strong> concentration risk(s).</div>
+        <div style={{ fontSize: 12.5, color: INK2, display: 'flex', alignItems: 'center', gap: 6 }}>{d.provenance && <Provenance prov={d.provenance} />}<span><strong>{d.counts.correlatedFailures}</strong> correlated multi-risk failure(s) · <strong>{d.counts.concentration}</strong> concentration risk(s).</span></div>
         <VoiceControls voice={voice} onReplay={() => voice.speak(d.narration)} label="Listen" />
       </div>
 
