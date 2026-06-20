@@ -44,6 +44,7 @@ import CroAggregation from './CroAggregation';
 import CroTreatment from './CroTreatment';
 import CloObligationPosture from './CloObligationPosture';
 import CloTriggerMap from './CloTriggerMap';
+import CloMateriality from './CloMateriality';
 import CloDefensibility from './CloDefensibility';
 import CloPortfolio from './CloPortfolio';
 import BoardOversight from './BoardOversight';
@@ -188,13 +189,13 @@ const CLO_GROUP_DEFS = [
 ];
 const CLO_MEMBER_OF = {
   cloobligations: 'obligations',
-  clotriggers: 'triggers', decisionq: 'triggers',
+  clotriggers: 'triggers', clomateriality: 'triggers', decisionq: 'triggers',
   clodefensibility: 'defensibility',
   cloportfolio: 'legalportfolio',
 };
 const CLO_TABS = [
   ['cloobligations', 'Obligation Posture'],
-  ['clotriggers', 'Trigger Map & Materiality'], ['decisionq', 'Decisions'],
+  ['clotriggers', 'Trigger Map & Materiality'], ['clomateriality', 'SEC Materiality (8-K)'], ['decisionq', 'Decisions'],
   ['clodefensibility', 'Defensibility & Evidence'],
   ['cloportfolio', 'Regulatory & Litigation Portfolio'],
 ];
@@ -411,6 +412,7 @@ export default function CisoSecurityPostureDashboard(props) {
           ? (<>
             {bespokeTab === 'cloobligations' && <CloObligationPosture orgId={orgId} authToken={token} apiUrl={api} />}
             {bespokeTab === 'clotriggers' && <CloTriggerMap orgId={orgId} authToken={token} apiUrl={api} />}
+            {bespokeTab === 'clomateriality' && <CloMateriality orgId={orgId} authToken={token} apiUrl={api} />}
             {bespokeTab === 'decisionq' && <DecisionQueue role={role} orgId={orgId} authToken={token} apiUrl={api} />}
             {bespokeTab === 'clodefensibility' && <CloDefensibility orgId={orgId} authToken={token} apiUrl={api} />}
             {bespokeTab === 'cloportfolio' && <CloPortfolio orgId={orgId} authToken={token} apiUrl={api} />}
