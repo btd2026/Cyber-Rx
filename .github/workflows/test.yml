@@ -26,6 +26,15 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
 
     steps:
       - name: Checkout code
@@ -47,6 +56,8 @@ jobs:
         env:
           NODE_ENV: test
           TEST_DATABASE_URL: postgresql://test:testpass@localhost:5432/cyberrx_test
+          DATABASE_URL: postgresql://test:testpass@localhost:5432/cyberrx_test
+          REDIS_URL: redis://localhost:6379
           JWT_SECRET: test-secret-key
         run: npm run test:unit -- --coverage
 
@@ -77,6 +88,15 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
 
     steps:
       - name: Checkout code
@@ -98,6 +118,8 @@ jobs:
         env:
           NODE_ENV: test
           TEST_DATABASE_URL: postgresql://test:testpass@localhost:5432/cyberrx_test
+          DATABASE_URL: postgresql://test:testpass@localhost:5432/cyberrx_test
+          REDIS_URL: redis://localhost:6379
           JWT_SECRET: test-secret-key
         run: npm run test:integration -- --coverage
 
@@ -159,6 +181,15 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
 
     steps:
       - name: Checkout code
@@ -188,6 +219,8 @@ jobs:
         env:
           NODE_ENV: test
           TEST_DATABASE_URL: postgresql://test:testpass@localhost:5432/cyberrx_test
+          DATABASE_URL: postgresql://test:testpass@localhost:5432/cyberrx_test
+          REDIS_URL: redis://localhost:6379
           JWT_SECRET: test-secret-key
           PORT: 3001
         run: |
