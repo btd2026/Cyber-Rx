@@ -31,6 +31,7 @@ import LiveCoverageMeter from './LiveCoverageMeter';
 import DataSources from './DataSources';
 import PlatformValue from './PlatformValue';
 import BusinessContext from './BusinessContext';
+import { FONTS, COLORS, HERO_BG, ELEV } from '../theme';
 import CurrentState from './CurrentState';
 import ControlEfficacy from './ControlEfficacy';
 import KeyRisks from './KeyRisks';
@@ -318,25 +319,26 @@ export default function CisoSecurityPostureDashboard(props) {
   const activeGroup = groupsPresent.find((g) => g.key === memberOf(bespokeTab)) || groupsPresent[0];
 
   return (
-    <div style={{ background: PANEL, borderRadius: 8, padding: 0, fontFamily: 'inherit' }}>
+    <div style={{ background: COLORS.paper, borderRadius: 16, padding: 0, fontFamily: FONTS.body, boxShadow: ELEV.card, border: `1px solid ${COLORS.hair}`, overflow: 'hidden' }}>
       {/* Top executive nav (only when rendered as a standalone leader page). */}
       {props.navId && <div style={{ marginBottom: 12 }}><DashNav current={props.navId} go={props.go} /></div>}
       {/* ===== Hero: Overall Security Posture ===== */}
-      <div style={{ background: NAVY, borderRadius: '8px 8px 0 0', padding: '22px 28px', color: '#fff' }}>
+      <div style={{ background: HERO_BG, padding: '24px 30px', color: '#fff', borderBottom: `1px solid ${COLORS.accentDim}` }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', gap: 22, alignItems: 'center' }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 52, fontWeight: 800, lineHeight: 1, color: sc(p.current) === '#A85B2E' ? '#f0a868' : sc(p.current) }}>{p.current}</div>
-              <div style={{ fontSize: 10, color: '#8fa3bd', textTransform: 'uppercase', letterSpacing: '0.12em', marginTop: 4 }}>of 100 · {band(p.current)}</div>
+          <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
+            <div style={{ textAlign: 'center', paddingRight: 20, borderRight: `1px solid ${COLORS.navyLine}` }}>
+              <div className="crx-figure" style={{ fontSize: 54, fontWeight: 700, lineHeight: 1, color: sc(p.current) === '#A85B2E' ? '#f0a868' : sc(p.current) }}>{p.current}</div>
+              <div style={{ fontSize: 9.5, color: COLORS.navyInk, textTransform: 'uppercase', letterSpacing: '0.16em', marginTop: 6 }}>of 100 · {band(p.current)}</div>
             </div>
             <div>
-              <div style={{ fontSize: 10, fontWeight: 600, color: '#8fa3bd', textTransform: 'uppercase', letterSpacing: '0.16em' }}>{frame.tag}</div>
-              <h2 style={{ margin: '4px 0 6px', fontSize: 22, fontWeight: 700 }}>{frame.title}</h2>
-              <div style={{ display: 'flex', gap: 14, alignItems: 'center', fontSize: 12.5, color: '#cbd5e1' }}>
-                <span>Last period <strong style={{ color: '#fff' }}>{p.previous}</strong></span>
-                <span style={{ color: p.delta >= 0 ? '#34d399' : '#f87171', fontWeight: 700 }}>{p.delta >= 0 ? '▲ +' : '▼ '}{p.delta} pts</span>
+              <div style={{ fontSize: 10, fontWeight: 700, color: COLORS.accent, textTransform: 'uppercase', letterSpacing: '0.22em' }}>{frame.tag}</div>
+              <h2 className="crx-display" style={{ margin: '5px 0 7px', fontSize: 26, fontWeight: 600, letterSpacing: '-0.01em', color: '#fff' }}>{frame.title}</h2>
+              <div style={{ display: 'flex', gap: 14, alignItems: 'center', fontSize: 12.5, color: '#cbd5e1', flexWrap: 'wrap' }}>
+                <span>Last period <strong className="crx-figure" style={{ color: '#fff' }}>{p.previous}</strong></span>
+                <span className="crx-figure" style={{ color: p.delta >= 0 ? '#34d399' : '#f87171', fontWeight: 700 }}>{p.delta >= 0 ? '▲ +' : '▼ '}{p.delta} pts</span>
                 <span style={{ textTransform: 'capitalize' }}>{p.trend}</span>
-                <span style={{ color: '#8fa3bd' }}>· Confidence {p.confidence}</span>
+                <span style={{ color: COLORS.navyInk }}>· Confidence {p.confidence}</span>
+                <VoiceControls voice={voice} onReplay={() => voice.speak(`Here is your ${role} briefing. ${p.narrative} As your advisor, I'd focus on the weakest domains shown here and the open decisions in the rail below — that is where your judgment is needed.`)} label="Listen" compact />
               </div>
             </div>
           </div>
@@ -346,21 +348,21 @@ export default function CisoSecurityPostureDashboard(props) {
             <BusinessContext orgId={orgId} authToken={token} apiUrl={api} />
             <PlatformValue orgId={orgId} authToken={token} apiUrl={api} />
             <VisibilityChip orgId={orgId} authToken={token} apiUrl={api} />
-            <a href={`${api}/api/ciso/report.pdf?org_id=${encodeURIComponent(orgId)}`} style={{ background: '#1e3a5f', color: '#fff', border: '1px solid #2c4f7c', borderRadius: 6, padding: '9px 15px', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>⤓ PDF report</a>
-            <a href={`${api}/api/ciso/report.pptx?org_id=${encodeURIComponent(orgId)}`} style={{ background: 'transparent', color: '#cbd5e1', border: '1px solid #2c4f7c', borderRadius: 6, padding: '9px 15px', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>⤓ PowerPoint</a>
+            <a href={`${api}/api/ciso/report.pdf?org_id=${encodeURIComponent(orgId)}`} style={{ background: 'rgba(200,163,91,0.14)', color: COLORS.accentSoft, border: `1px solid ${COLORS.accent}`, borderRadius: 8, padding: '9px 15px', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>⤓ PDF report</a>
+            <a href={`${api}/api/ciso/report.pptx?org_id=${encodeURIComponent(orgId)}`} style={{ background: 'transparent', color: COLORS.navyInk, border: `1px solid ${COLORS.navyLine}`, borderRadius: 8, padding: '9px 15px', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>⤓ PowerPoint</a>
           </div>
         </div>
-        <div style={{ marginTop: 14, fontSize: 13, color: '#e2e8f0', lineHeight: 1.5, maxWidth: 920 }}>{p.narrative}</div>
+        <div style={{ marginTop: 14, fontSize: 13, color: '#dbe5f1', lineHeight: 1.6, maxWidth: 940 }}>{p.narrative}</div>
         {/* weighted domain strip */}
-        <div style={{ display: 'flex', gap: 6, marginTop: 14, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 7, marginTop: 16, flexWrap: 'wrap' }}>
           {d.domainMatrix.filter((x) => x.weight > 0).map((x) => (
-            <div key={x.id} title={`${x.name} ${x.current} (${x.weight}% weight)`} style={{ flex: 1, minWidth: 92, background: '#16263b', borderRadius: 5, padding: '7px 9px' }}>
+            <div key={x.id} title={`${x.name} ${x.current} (${x.weight}% weight)`} style={{ flex: 1, minWidth: 96, background: 'rgba(255,255,255,0.045)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 9, padding: '8px 10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                 {x.provenance && <Provenance prov={x.provenance} size={8} dark />}
-                <div style={{ fontSize: 9.5, color: '#8fa3bd', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{x.name}</div>
+                <div style={{ fontSize: 9.5, color: COLORS.navyInk, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{x.name}</div>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <span style={{ fontSize: 17, fontWeight: 700, color: sc(x.current) === '#A85B2E' ? '#f0a868' : sc(x.current) }}>{x.current}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 2 }}>
+                <span className="crx-figure" style={{ fontSize: 18, fontWeight: 700, color: sc(x.current) === '#A85B2E' ? '#f0a868' : sc(x.current) }}>{x.current}</span>
                 <Trend d={x.delta} />
               </div>
             </div>
@@ -372,22 +374,28 @@ export default function CisoSecurityPostureDashboard(props) {
       {/* Persistent decision queue — visible across every sub-tab. */}
       <DecisionRail role={role} orgId={orgId} authToken={token} apiUrl={api} onOpenQueue={() => setTab('decisionq')} />
 
-      <div style={{ display: 'flex', gap: 0, background: '#fff', borderBottom: `1px solid ${HAIR}`, overflowX: 'auto', position: 'sticky', top: 0, zIndex: 5 }}>
-        {groupsPresent.map((g) => (
-          <button key={g.key} onClick={() => { if (g.members[0]) setTab(g.members[0][0]); }}
-            style={{ background: 'transparent', border: 'none', borderBottom: `2px solid ${g.key === activeGroup.key ? INK : 'transparent'}`, color: g.key === activeGroup.key ? INK : INK3, padding: '12px 18px', cursor: 'pointer', fontSize: 12.5, fontWeight: g.key === activeGroup.key ? 700 : 500, whiteSpace: 'nowrap' }}>{g.label}</button>
-        ))}
+      <div style={{ display: 'flex', gap: 0, background: '#fff', borderBottom: `1px solid ${COLORS.hair}`, overflowX: 'auto', position: 'sticky', top: 0, zIndex: 5 }}>
+        {groupsPresent.map((g) => {
+          const on = g.key === activeGroup.key;
+          return (
+            <button key={g.key} onClick={() => { if (g.members[0]) setTab(g.members[0][0]); }}
+              style={{ background: 'transparent', border: 'none', borderBottom: `2.5px solid ${on ? COLORS.accent : 'transparent'}`, color: on ? COLORS.ink : COLORS.ink3, padding: '13px 20px', cursor: 'pointer', fontSize: 12.5, fontWeight: on ? 700 : 500, letterSpacing: on ? '0.005em' : 0, whiteSpace: 'nowrap' }}>{g.label}</button>
+          );
+        })}
       </div>
       {/* inner sub-nav for the active group (only when it holds more than one view) */}
       {activeGroup.members.length > 1 && (
-        <div style={{ display: 'flex', gap: 4, background: PANEL, borderBottom: `1px solid ${HAIR}`, overflowX: 'auto', padding: '6px 10px' }}>
-          {activeGroup.members.map(([k, label]) => (
-            <button key={k} onClick={() => setTab(k)} style={{ background: bespokeTab === k ? '#fff' : 'transparent', border: `1px solid ${bespokeTab === k ? HAIR : 'transparent'}`, borderRadius: 7, color: bespokeTab === k ? INK : INK2, padding: '6px 12px', cursor: 'pointer', fontSize: 11.5, fontWeight: bespokeTab === k ? 700 : 500, whiteSpace: 'nowrap' }}>{label}</button>
-          ))}
+        <div style={{ display: 'flex', gap: 6, background: COLORS.paper, borderBottom: `1px solid ${COLORS.hair}`, overflowX: 'auto', padding: '9px 12px' }}>
+          {activeGroup.members.map(([k, label]) => {
+            const on = bespokeTab === k;
+            return (
+              <button key={k} onClick={() => setTab(k)} style={{ background: on ? '#fff' : 'transparent', border: `1px solid ${on ? COLORS.hair : 'transparent'}`, boxShadow: on ? ELEV.card : 'none', borderRadius: 999, color: on ? COLORS.ink : COLORS.ink2, padding: '6px 14px', cursor: 'pointer', fontSize: 11.5, fontWeight: on ? 700 : 500, whiteSpace: 'nowrap' }}>{label}</button>
+            );
+          })}
         </div>
       )}
 
-      <div style={{ background: '#fff', borderRadius: '0 0 8px 8px', padding: '18px 22px' }}>
+      <div style={{ background: '#fff', padding: '20px 24px' }}>
         {/* Voice-only narration: Michael speaks the page (autoplay on tab open,
             see the effect above). No on-screen transcript — just a discreet
             mute/replay control so the CISO can stop or hear it again. */}
