@@ -133,13 +133,33 @@ async function getPosture(orgId) {
   try { visibility = await require('./VisibilityService').assess(orgId); } catch (_) {}
 
   const overall = clamp((availabilityScore + (100 - Math.min(100, techDebt.eolSystems * 8 + (fi.repeat || 0) * 4))) / 2, 25, 95);
-  const brief = `Operationally, the estate scores ${overall}/100. ` +
-    `${availabilityAtRisk.length} tier-0/1 service(s) carry open exposure, and ${recoveryGaps.length} can't currently meet their declared recovery targets` +
-    `${recoveryGaps.length ? ` (e.g. ${recoveryGaps[0].process} targets ${recoveryGaps[0].rtoTargetHrs}h RTO but would take ~${recoveryGaps[0].rtoCapabilityHrs}h).` : '.'} ` +
-    `Technical debt is ${techDebt.band.toLowerCase()} — ${techDebt.eolSystems} end-of-life system(s), ${techDebt.repeatFindings} repeat finding(s), ${techDebt.overdueRemediation} overdue task(s). ` +
-    `${shadow.count} shadow IT/AI system(s) sit outside change control (${usd(shadow.exposure)} modeled exposure). ` +
-    `The fastest operational wins are restore-testing the tier-0 services and clearing the overdue backlog.`;
-  const narration = `Here's your operational current state, ${'CIO'}. ` + brief.replace(/RTO/g, 'recovery time objective');
+
+  // Plain-language summary, identical in text and voice. Correct singular/plural
+  // (no mail-merge "(s)"), both headline scores explained, and recommendations
+  // that follow the actual numbers — never advice for a gap that isn't present.
+  const qty = (count, noun, nounPlural) => `${count === 0 ? 'No' : count} ${count === 1 ? noun : (nounPlural || `${noun}s`)}`;
+  const gap = recoveryGaps[0];
+  const sentences = [
+    `The technology estate scores ${overall} for operational health and ${availabilityScore} for availability resilience, both out of 100.`,
+    recoveryGaps.length
+      ? `${qty(recoveryGaps.length, 'business service')} ${recoveryGaps.length === 1 ? 'cannot meet its declared recovery-time target' : 'cannot meet their declared recovery-time targets'}` +
+        (gap ? ` — for example, ${gap.process} would take about ${gap.rtoCapabilityHrs} hours to restore against a ${gap.rtoTargetHrs}-hour target.` : '.')
+      : 'Every business service can currently meet its declared recovery-time target.',
+  ];
+  if (availabilityAtRisk.length) sentences.push(`${qty(availabilityAtRisk.length, 'tier-0 or tier-1 service')} ${availabilityAtRisk.length === 1 ? 'carries' : 'carry'} open exposure.`);
+  sentences.push(`Technical debt is ${techDebt.band.toLowerCase()}: ${qty(techDebt.eolSystems, 'end-of-life system')}, ${qty(techDebt.repeatFindings, 'repeat finding')}, and ${qty(techDebt.overdueRemediation, 'overdue remediation task')}.`);
+  sentences.push(`${qty(shadow.count, 'shadow IT or AI system')} ${shadow.count === 1 ? 'sits' : 'sit'} outside change control${shadow.exposure ? `, carrying ${usd(shadow.exposure)} of modeled exposure` : ''}.`);
+  const wins = [];
+  if (recoveryGaps.length) wins.push('restore-test the services that miss their recovery targets');
+  if (techDebt.overdueRemediation > 0) wins.push('clear the overdue remediation backlog');
+  if (shadow.count) wins.push('bring shadow IT and AI under change control');
+  if (techDebt.eolSystems > 0) wins.push('replace end-of-life systems');
+  sentences.push(wins.length
+    ? `The fastest operational wins: ${wins.slice(0, 2).join(', and ')}.`
+    : 'No urgent operational gaps remain — focus on sustaining current controls.');
+
+  const brief = sentences.join(' ');
+  const narration = `Here's your operational current state. ${brief}`;
 
   return {
     organizationId: orgId, generatedAt: new Date().toISOString(),
