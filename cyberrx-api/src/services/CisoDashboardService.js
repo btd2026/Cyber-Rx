@@ -22,6 +22,7 @@ const db = require('../utils/db');
 const logger = require('../utils/logger');
 const D = require('../data/cisoDashboard');
 const N = require('./cisoNarration');
+const { prov } = require('../utils/provenance');
 
 const round = (n) => Math.round(n);
 function scoreBand(s) { return s >= 80 ? 'Strong' : s >= 60 ? 'Moderate' : s >= 40 ? 'Weak' : 'Critical'; }
@@ -31,28 +32,32 @@ function thresholdStatus(t) {
   return ok ? 'Within' : 'Breach';
 }
 
-// Load an entity set from ciso_entities (live-replaceable) else the module.
-async function entities(orgId, type, fallback) {
+// Load an entity set from ciso_entities (live-replaceable) else the module. The
+// `origins` map records, per type, whether the org's own data backed it ('live')
+// or we fell back to the sample set ('demo') — surfaced as provenance.
+async function entities(orgId, type, fallback, origins) {
   try {
     const rows = await db.query(
       `SELECT data FROM ciso_entities WHERE org_id=$1 AND entity_type=$2 ORDER BY ordinal NULLS LAST, entity_id`, [orgId, type]);
-    if (rows.length) return rows.map((r) => (typeof r.data === 'string' ? JSON.parse(r.data) : r.data));
+    if (rows.length) { if (origins) origins[type] = 'live'; return rows.map((r) => (typeof r.data === 'string' ? JSON.parse(r.data) : r.data)); }
   } catch (e) { logger.debug('ciso_entities read fallback', { type, error: e.message }); }
+  if (origins) origins[type] = 'demo';
   return fallback;
 }
 
 async function compose(orgId) {
+  const origins = {};
   const [domains, controls, thresholds, processes, pathways, readiness, investments, hidden, attention, actions, peers, emerging, sources] =
     await Promise.all([
-      entities(orgId, 'SecurityDomain', D.SECURITY_DOMAINS),
-      entities(orgId, 'ControlArea', D.CONTROL_AREAS),
-      entities(orgId, 'Threshold', D.THRESHOLDS),
-      entities(orgId, 'CriticalBusinessProcess', D.BUSINESS_PROCESSES),
-      entities(orgId, 'AttackPathway', D.ATTACK_PATHWAYS),
-      entities(orgId, 'CyberReadinessItem', D.READINESS_ITEMS),
-      entities(orgId, 'SecurityInvestment', D.INVESTMENTS),
-      entities(orgId, 'HiddenRisk', D.HIDDEN_RISKS),
-      entities(orgId, 'SecurityAction', D.ATTENTION_ITEMS),
+      entities(orgId, 'SecurityDomain', D.SECURITY_DOMAINS, origins),
+      entities(orgId, 'ControlArea', D.CONTROL_AREAS, origins),
+      entities(orgId, 'Threshold', D.THRESHOLDS, origins),
+      entities(orgId, 'CriticalBusinessProcess', D.BUSINESS_PROCESSES, origins),
+      entities(orgId, 'AttackPathway', D.ATTACK_PATHWAYS, origins),
+      entities(orgId, 'CyberReadinessItem', D.READINESS_ITEMS, origins),
+      entities(orgId, 'SecurityInvestment', D.INVESTMENTS, origins),
+      entities(orgId, 'HiddenRisk', D.HIDDEN_RISKS, origins),
+      entities(orgId, 'SecurityAction', D.ATTENTION_ITEMS, origins),
       entities(orgId, 'SecurityAction', D.ACTIONS).then(() => D.ACTIONS), // actions are module-driven
       Promise.resolve(D.PEER_MATURITY),
       Promise.resolve(D.EMERGING_RISKS),
@@ -64,7 +69,8 @@ async function compose(orgId) {
   // has not completed the Process phase yet.
   const approved = await approvedProcesses(orgId);
   const finalProcesses = approved.length ? approved : processes;
-  return { domains, controls, thresholds, processes: finalProcesses, pathways, readiness, investments, hidden, attention, actions, peers, emerging, sources };
+  if (approved.length) origins.CriticalBusinessProcess = 'live';
+  return { domains, controls, thresholds, processes: finalProcesses, pathways, readiness, investments, hidden, attention, actions, peers, emerging, sources, origins };
 }
 
 // Build the Process-Protection rows from the org's approved processes + the
@@ -116,12 +122,16 @@ function overallPosture(domains) {
   };
 }
 
-function domainMatrix(domains) {
+function domainMatrix(domains, origin) {
+  // Domain health is computed from the underlying signals, so it's 'derived' when
+  // the org has its own data and 'demo' when we're showing the sample set.
+  const mode = origin === 'live' ? 'derived' : 'demo';
   return domains.map((d) => {
     const delta = d.current - d.previous;
     return { id: d.id, name: d.name, weight: d.weight, current: d.current, previous: d.previous, delta,
       trend: trendOf(delta), status: scoreBand(d.current),
-      topImproving: d.topImproving, topDeteriorating: d.topDeteriorating, source: d.source };
+      topImproving: d.topImproving, topDeteriorating: d.topDeteriorating, source: d.source,
+      provenance: prov(mode, d.source || 'Posture engine') };
   });
 }
 
@@ -277,7 +287,7 @@ async function getDashboard(orgId, role) {
   const model = await compose(orgId);
   const refreshed = new Date().toISOString();
   const posture = overallPosture(model.domains);
-  const matrix = domainMatrix(model.domains);
+  const matrix = domainMatrix(model.domains, (model.origins || {}).SecurityDomain);
   const ranks = controlRisk(model.controls);
   const board = thresholdBoard(model.thresholds);
   const queue = actionQueue(model.actions);
@@ -304,6 +314,7 @@ async function getDashboard(orgId, role) {
 
   const payload = {
     persona: 'CISO', organizationId: orgId, generatedAt: refreshed,
+    dataProvenance: { origins: model.origins || {} },
     overallPosture: posture,
     domainMatrix: matrix,
     controlRisk: ranks,

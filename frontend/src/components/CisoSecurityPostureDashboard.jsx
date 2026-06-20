@@ -26,6 +26,8 @@ import SecurityProjects from './SecurityProjects';
 import AiGovernance from './AiGovernance';
 import DecisionQueue from './DecisionQueue';
 import DecisionRail, { VisibilityChip } from './DecisionRail';
+import Provenance from './Provenance';
+import LiveCoverageMeter from './LiveCoverageMeter';
 import CurrentState from './CurrentState';
 import ControlEfficacy from './ControlEfficacy';
 import KeyRisks from './KeyRisks';
@@ -335,6 +337,7 @@ export default function CisoSecurityPostureDashboard(props) {
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            {isCisoLayout && <LiveCoverageMeter orgId={orgId} authToken={token} apiUrl={api} />}
             <VisibilityChip orgId={orgId} authToken={token} apiUrl={api} />
             <a href={`${api}/api/ciso/report.pdf?org_id=${encodeURIComponent(orgId)}`} style={{ background: '#1e3a5f', color: '#fff', border: '1px solid #2c4f7c', borderRadius: 6, padding: '9px 15px', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>⤓ PDF report</a>
             <a href={`${api}/api/ciso/report.pptx?org_id=${encodeURIComponent(orgId)}`} style={{ background: 'transparent', color: '#cbd5e1', border: '1px solid #2c4f7c', borderRadius: 6, padding: '9px 15px', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>⤓ PowerPoint</a>
@@ -345,7 +348,10 @@ export default function CisoSecurityPostureDashboard(props) {
         <div style={{ display: 'flex', gap: 6, marginTop: 14, flexWrap: 'wrap' }}>
           {d.domainMatrix.filter((x) => x.weight > 0).map((x) => (
             <div key={x.id} title={`${x.name} ${x.current} (${x.weight}% weight)`} style={{ flex: 1, minWidth: 92, background: '#16263b', borderRadius: 5, padding: '7px 9px' }}>
-              <div style={{ fontSize: 9.5, color: '#8fa3bd', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{x.name}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                {x.provenance && <Provenance prov={x.provenance} size={8} dark />}
+                <div style={{ fontSize: 9.5, color: '#8fa3bd', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{x.name}</div>
+              </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                 <span style={{ fontSize: 17, fontWeight: 700, color: sc(x.current) === '#A85B2E' ? '#f0a868' : sc(x.current) }}>{x.current}</span>
                 <Trend d={x.delta} />

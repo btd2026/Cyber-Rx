@@ -29,6 +29,14 @@ router.get('/posture', optionalJWT, async (req, res) => {
   catch (err) { logger.error('CISO posture error', { error: err.message }); res.status(500).json({ error: 'Failed to compute posture', message: err.message }); }
 });
 
+// Live coverage — how much of the posture is real telemetry vs. derived/modeled/
+// demo, with per-signal detail and the "connect this to go live" upgrade list.
+router.get('/coverage', optionalJWT, async (req, res) => {
+  const orgId = org(req, res); if (!orgId) return;
+  try { res.json(await CisoPostureService.getCoverage(orgId)); }
+  catch (err) { logger.error('CISO coverage error', { error: err.message }); res.status(500).json({ error: 'Failed to compute coverage', message: err.message }); }
+});
+
 // AI security controls — how well AI-coding / GenAI controls are operating.
 router.get('/ai-controls', optionalJWT, async (req, res) => {
   const orgId = org(req, res); if (!orgId) return;
