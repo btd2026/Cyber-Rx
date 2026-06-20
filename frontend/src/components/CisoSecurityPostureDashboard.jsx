@@ -728,7 +728,7 @@ function Thresholds({ board }) {
           return (
             <div key={t.id} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${breach ? SEV[t.breachSeverity] : '#1f8a4c'}`, borderRadius: 6, padding: '10px 13px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: INK }}>{t.name}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: INK, display: 'inline-flex', alignItems: 'center', gap: 5 }}>{t.provenance && <Provenance prov={t.provenance} />}{t.name}</span>
                 <Pill text={breach ? t.breachSeverity : 'Within'} color={breach ? SEV[t.breachSeverity] : '#1f8a4c'} />
               </div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, margin: '5px 0' }}>
@@ -817,7 +817,7 @@ function Processes({ procs }) {
           {procs.map((p) => (
             <tr key={p.id} style={{ borderTop: `1px solid ${HAIR}` }}>
               <td style={{ padding: '9px 8px' }}>
-                <div style={{ fontWeight: 700, color: INK }}>{p.name}</div>
+                <div style={{ fontWeight: 700, color: INK, display: 'flex', alignItems: 'center', gap: 5 }}>{p.provenance && <Provenance prov={p.provenance} />}{p.name}</div>
                 <div style={{ fontSize: 9.5, color: INK3 }}>{p.supportingSystems.join(' · ')}</div>
               </td>
               <td style={{ padding: '9px 8px', width: 110 }}>
@@ -857,7 +857,7 @@ function Readiness({ readiness, investments, peers, emerging }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px,1fr))', gap: 6 }}>
           {readiness.items.map((r) => (
             <div key={r.id} style={{ border: `1px solid ${HAIR}`, borderRadius: 5, padding: '8px 10px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: 11, color: INK }}>{r.name}</span><span style={{ fontSize: 12, fontWeight: 700, color: sc(r.score) }}>{r.score}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: 11, color: INK, display: 'inline-flex', alignItems: 'center', gap: 5 }}>{r.provenance && <Provenance prov={r.provenance} />}{r.name}</span><span style={{ fontSize: 12, fontWeight: 700, color: sc(r.score) }}>{r.score}</span></div>
               <div style={{ marginTop: 4 }}><Bar value={r.score} /></div>
             </div>
           ))}
@@ -868,7 +868,7 @@ function Readiness({ readiness, investments, peers, emerging }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px,1fr))', gap: 8 }}>
           {investments.map((iv) => (
             <div key={iv.id} style={{ border: `1px solid ${HAIR}`, borderRadius: 6, padding: '11px 13px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: 12, fontWeight: 700, color: INK }}>{iv.name}</span><span style={{ fontSize: 11, color: INK3 }}>{iv.spend}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: 12, fontWeight: 700, color: INK, display: 'inline-flex', alignItems: 'center', gap: 5 }}>{iv.provenance && <Provenance prov={iv.provenance} />}{iv.name}</span><span style={{ fontSize: 11, color: INK3 }}>{iv.spend}</span></div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '6px 0', fontSize: 11 }}>
                 <span style={{ color: INK3 }}>risk {iv.baselineRisk}</span><span style={{ color: '#E8631A' }}>→</span><span style={{ fontWeight: 700, color: '#1f8a4c' }}>{iv.currentRisk}</span>
                 <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, color: '#1f8a4c' }}>−{iv.riskReduction} pts</span>
