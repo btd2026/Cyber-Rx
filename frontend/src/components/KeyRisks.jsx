@@ -49,7 +49,20 @@ export default function KeyRisks(props) {
   const [graph, setGraph] = useState(null);
   const [open, setOpen] = useState(null);
   const [showEvidence, setShowEvidence] = useState(false);
+  const [crq, setCrq] = useState(null); // { id, title, loss }
+  const [method, setMethod] = useState(null);
+  const [aform, setAform] = useState({});
   const headers = useCallback(() => { const h = { 'X-Org-Id': orgId }; if (token) h.Authorization = `Bearer ${token}`; return h; }, [orgId, token]);
+  const reloadCards = useCallback(() => { fetch(`${api}/api/decisions?role=${role}&org_id=${encodeURIComponent(orgId)}`, { headers: headers() }).then((r) => r.ok ? r.json() : null).then((d) => d && setCards(d.cards || [])).catch(() => {}); }, [api, orgId, headers]);
+  function openCrq(c) {
+    setCrq({ id: c.id, title: c.event.title, loss: c.event.loss || {}, prov: c.event.provenance });
+    setAform({});
+    if (!method) fetch(`${api}/api/decisions/methodology?org_id=${encodeURIComponent(orgId)}`, { headers: headers() }).then((r) => r.ok ? r.json() : null).then((d) => d && setMethod(d)).catch(() => {});
+  }
+  function saveCrq() {
+    fetch(`${api}/api/decisions/assumptions`, { method: 'PUT', headers: { ...headers(), 'Content-Type': 'application/json' }, body: JSON.stringify({ org_id: orgId, cardId: crq.id, ...aform }) })
+      .then((r) => r.json()).then(() => { setCrq(null); reloadCards(); }).catch(() => {});
+  }
 
   useEffect(() => {
     fetch(`${api}/api/decisions?role=${role}&org_id=${encodeURIComponent(orgId)}`, { headers: headers() }).then((r) => r.ok ? r.json() : null).then((d) => d && setCards(d.cards || [])).catch(() => {});
@@ -108,6 +121,7 @@ export default function KeyRisks(props) {
                         {(e.timing.cves && e.timing.cves.length) ? 'Live exploit signal' : 'Modeled'} · {e.timing.confidence} confidence
                       </div>
                     )}
+                    <button onClick={() => openCrq(c)} style={{ marginTop: 6, background: 'none', border: 'none', padding: 0, fontSize: 9.5, color: '#1d4ed8', fontWeight: 700, cursor: 'pointer' }}>ⓘ How this is calculated</button>
                     <div style={{ borderTop: `1px solid ${HAIR}`, margin: '10px 0' }} />
                     <div style={{ fontSize: 9, color: INK3, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700 }}>Modeled loss</div>
                     <div style={{ display: 'flex', gap: 16, marginTop: 6 }}>
@@ -186,6 +200,54 @@ export default function KeyRisks(props) {
           </div>
         )}
       </div>
+
+      {crq && (
+        <div onClick={() => setCrq(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(8,15,28,0.5)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '48px 16px', overflowY: 'auto' }}>
+          <div onClick={(ev) => ev.stopPropagation()} style={{ background: '#fff', borderRadius: 12, width: 'min(560px, 96vw)', boxShadow: '0 24px 64px rgba(0,0,0,0.3)', padding: '20px 22px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: INK }}>How this loss is calculated</h3>
+              <button onClick={() => setCrq(null)} style={{ background: 'none', border: 'none', fontSize: 22, color: INK3, cursor: 'pointer', lineHeight: 1 }}>×</button>
+            </div>
+            <div style={{ fontSize: 11.5, color: INK2, marginTop: 4 }}>{crq.title}</div>
+
+            {/* distribution */}
+            <div style={{ display: 'flex', gap: 14, marginTop: 14, padding: '12px 0', borderTop: `1px solid ${HAIR}`, borderBottom: `1px solid ${HAIR}`, flexWrap: 'wrap' }}>
+              {[['Expected', crq.loss.expected], ['P10', crq.loss.p10], ['P50 (median)', crq.loss.p50], ['P90', crq.loss.p90], ['Worst case', crq.loss.worstCase]].map(([k, v]) => (
+                <div key={k} style={{ minWidth: 84 }}>
+                  <div style={{ fontSize: 9.5, color: INK3, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{k}</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: k === 'Worst case' ? '#C0392B' : INK }}>{usd(v)}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* methodology */}
+            {method && (
+              <div style={{ fontSize: 11.5, color: INK2, lineHeight: 1.55, marginTop: 12 }}>
+                <div><strong style={{ color: INK }}>Model.</strong> {method.model}</div>
+                <div style={{ marginTop: 4 }}><strong style={{ color: INK }}>Frequency (LEF).</strong> {method.frequency}</div>
+                <div style={{ marginTop: 4 }}><strong style={{ color: INK }}>Magnitude (LM).</strong> {method.magnitude}</div>
+                <div style={{ marginTop: 4 }}><strong style={{ color: INK }}>Method.</strong> {method.method}</div>
+                <div style={{ marginTop: 4, color: INK3 }}>Sources: {(method.dataSources || []).join(' · ')}</div>
+              </div>
+            )}
+
+            {/* tunable assumptions */}
+            <div style={{ marginTop: 14 }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: INK, marginBottom: 7 }}>Tune assumptions for this risk</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {[['exposure', 'Asset value / exposure ($)'], ['freq', 'Annual likelihood (%)'], ['spreadLo', 'Magnitude low (×, e.g. 0.3)'], ['spreadHi', 'Magnitude high (×, e.g. 2.2)']].map(([k, ph]) => (
+                  <input key={k} type="number" placeholder={ph} value={aform[k] == null ? '' : aform[k]} onChange={(ev) => setAform(Object.assign({}, aform, { [k]: ev.target.value }))}
+                    style={{ border: `1px solid ${HAIR}`, borderRadius: 7, padding: '8px 10px', fontSize: 12, outline: 'none' }} />
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 10, alignItems: 'center' }}>
+                <button onClick={saveCrq} style={{ background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 7, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save &amp; recompute</button>
+                <span style={{ fontSize: 10.5, color: INK3 }}>Recomputes the loss distribution and marks it user-tuned.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

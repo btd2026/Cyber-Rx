@@ -24,6 +24,7 @@
  * when the org has no data — so the spine is not mock-divorced.
  */
 
+const crypto = require('crypto');
 const db = require('../utils/db');
 const logger = require('../utils/logger');
 const { prov } = require('../utils/provenance');
@@ -41,8 +42,28 @@ async function ensureLedger() {
       id TEXT PRIMARY KEY, org_id TEXT NOT NULL, card_id TEXT NOT NULL, role TEXT,
       action TEXT NOT NULL, option_id TEXT, rationale TEXT, decided_by TEXT,
       engine_state JSONB DEFAULT '{}', created_at TIMESTAMPTZ DEFAULT now())`);
+    // Tamper-evidence: a per-org SHA-256 hash chain over the decision record.
+    for (const col of ['seq INT', 'prev_hash TEXT', 'entry_hash TEXT', 'ts TEXT']) {
+      try { await db.query(`ALTER TABLE decision_ledger ADD COLUMN IF NOT EXISTS ${col}`); } catch (_) {}
+    }
+    // Per-org CRQ assumption overrides (card_id '_default' = org-wide).
+    await db.query(`CREATE TABLE IF NOT EXISTS crq_assumptions (
+      org_id TEXT NOT NULL, card_id TEXT NOT NULL, exposure NUMERIC, freq NUMERIC,
+      spread_lo NUMERIC, spread_hi NUMERIC, updated_at TIMESTAMPTZ DEFAULT now(),
+      PRIMARY KEY (org_id, card_id))`);
   } catch (e) { logger.debug('decision_ledger ensure failed', { error: e.message }); }
 }
+
+// Canonical string a ledger row is hashed over (stored text fields only, so it
+// round-trips exactly on verification).
+function ledgerCanonical(r) {
+  return JSON.stringify({
+    id: r.id, org_id: r.org_id, card_id: r.card_id, role: r.role || null, action: r.action,
+    option_id: r.option_id || null, rationale: r.rationale || null, decided_by: r.decided_by || null,
+    ts: r.ts || null, seq: r.seq, prev_hash: r.prev_hash || '0',
+  });
+}
+const sha256 = (s) => crypto.createHash('sha256').update(String(s)).digest('hex');
 
 // ---- timing: p(exploit) — live EPSS/KEV when a CVE is present, else modeled --
 const BASE_ANNUAL_P = { Critical: 0.55, High: 0.35, Medium: 0.18, Low: 0.08 };
@@ -72,10 +93,13 @@ function timing(ev, signal) {
 }
 
 // ---- loss: seeded Monte Carlo over a triangular magnitude × annual frequency -
-function lossDistribution(cardId, exposure, annualPct) {
+function lossDistribution(cardId, exposure, annualPct, ov) {
   const rnd = mulberry32(hash(cardId));
-  const E = Math.max(1, exposure || 0);
-  const lo = 0.3 * E, mode = E, hi = 2.2 * E, p = (annualPct || 20) / 100;
+  const E = Math.max(1, (ov && ov.exposure != null ? Number(ov.exposure) : exposure) || 0);
+  const spreadLo = (ov && ov.spreadLo != null ? Number(ov.spreadLo) : 0.3);
+  const spreadHi = (ov && ov.spreadHi != null ? Number(ov.spreadHi) : 2.2);
+  const lo = spreadLo * E, mode = E, hi = spreadHi * E;
+  const p = (ov && ov.freq != null ? Number(ov.freq) : (annualPct || 20)) / 100;
   const N = 2000; const losses = [];
   for (let i = 0; i < N; i++) {
     const occurs = rnd() < p;                       // does the event happen this year
@@ -235,6 +259,8 @@ function buildCompounds(orgId, cards, crown, dataAtRisk) {
 async function generate(orgId) {
   const Exec = require('./ExecDashboardService');
   const c = await Exec.loadCtx(orgId);
+  const assumptions = await loadAssumptions(orgId);
+  const ovFor = (id) => assumptions[id] || assumptions._default || null;
   const crown = (c.processes && c.processes.atRisk && c.processes.atRisk[0] && c.processes.atRisk[0].name) || 'a crown-jewel process';
   const dataAtRisk = c.crownJewel || (c.industry ? 'regulated data' : 'sensitive data');
   const top = (c.risks && c.risks.top) || [];
@@ -252,7 +278,7 @@ async function generate(orgId) {
     if (Threat) { try { signal = await Threat.signalFor(`${r.title} ${r.description || ''} ${r.regulatoryCitation || ''}`); } catch (_) {} }
     ev.timing = timing(ev, signal);
     ev.exploitSignal = signal && (signal.epss != null || signal.kev) ? { epss: signal.epss, kev: signal.kev, cves: signal.cves } : null;
-    ev.loss = lossDistribution(id, ev.exposure, ev.timing.annualPct);
+    ev.loss = lossDistribution(id, ev.exposure, ev.timing.annualPct, ovFor(id));
     ev.attackPath = attackPath(ev, crown);
     const { opts, recommended } = options(id, ev);
     return { id, event: ev, options: opts, recommended, status: 'open' };
@@ -280,7 +306,7 @@ async function generate(orgId) {
       const id = `dec_${orgId}_${hash(a.key)}`;
       const ev = { id: `evt_${orgId}_${hash(a.key)}`, title: a.title, severity: a.severity, exposure: a.exposure, owner: 'CISO', affectedSystem: a.system, crownJewel: crown, dataAtRisk, category: 'AI', scenarioType: classifyScenario(a.title) };
       ev.timing = timing(ev, null);
-      ev.loss = lossDistribution(id, ev.exposure, ev.timing.annualPct);
+      ev.loss = lossDistribution(id, ev.exposure, ev.timing.annualPct, ovFor(id));
       ev.attackPath = attackPath(ev, crown);
       const { opts, recommended } = options(id, ev);
       cards.push({ id, event: ev, options: opts, recommended, status: 'open' });
@@ -297,7 +323,7 @@ async function generate(orgId) {
         const id = `dec_${orgId}_proj_${hash(p.name)}`;
         const ev = { id: `evt_${id}`, title: `Stalled project: ${p.name}`, severity: 'High', exposure: a.remainingExposure || (d60 ? d60.exposureRetained : 0) || 0, owner: p.owner || 'CISO', affectedSystem: p.name, crownJewel: crown, dataAtRisk, category: 'project', scenarioType: 'Business disruption' };
         ev.timing = timing(ev, null);
-        ev.loss = lossDistribution(id, ev.exposure, ev.timing.annualPct);
+        ev.loss = lossDistribution(id, ev.exposure, ev.timing.annualPct, ovFor(id));
         ev.attackPath = attackPath(ev, crown);
         const opt = options(id, ev);
         cards.push({ id, type: 'single', event: ev, options: opt.opts, recommended: opt.recommended, status: 'open' });
@@ -313,9 +339,10 @@ async function generate(orgId) {
   all.forEach((c) => {
     const t = (c.event && c.event.timing) || {};
     const liveSignal = (t.cves && t.cves.length) || t.kev;
+    const tuned = !!ovFor(c.id);
     c.event.provenance = prov(liveSignal ? 'live' : 'modeled',
       liveSignal ? `EPSS/KEV · ${(t.cves || []).join(', ') || 'CISA KEV'}` : 'Loss & exploit model',
-      { lineage: liveSignal ? null : 'Monte Carlo loss × modeled likelihood' });
+      { lineage: tuned ? 'User-tuned assumptions' : (liveSignal ? null : 'Monte Carlo loss × modeled likelihood') });
   });
   return { organizationId: orgId, generatedAt: new Date().toISOString(), cards: all };
 }
@@ -502,11 +529,78 @@ async function record(orgId, cardId, { role, action, optionId, rationale, decide
     const err = new Error('A documented rationale is required to accept & monitor a risk.'); err.code = 'RATIONALE_REQUIRED'; throw err;
   }
   const id = `dl_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const ts = new Date().toISOString();
+  // Link into the per-org hash chain (append-only, tamper-evident).
+  let prevHash = '0', seq = 1;
+  try {
+    const last = await db.query('SELECT seq, entry_hash FROM decision_ledger WHERE org_id=$1 AND entry_hash IS NOT NULL ORDER BY seq DESC LIMIT 1', [orgId]);
+    if (last[0]) { prevHash = last[0].entry_hash || '0'; seq = (Number(last[0].seq) || 0) + 1; }
+  } catch (_) {}
+  const row = { id, org_id: orgId, card_id: cardId, role: role || null, action, option_id: optionId || null, rationale: rationale || null, decided_by: decidedBy || null, ts, seq, prev_hash: prevHash };
+  const entryHash = sha256(ledgerCanonical(row));
   await db.query(
-    `INSERT INTO decision_ledger (id, org_id, card_id, role, action, option_id, rationale, decided_by, engine_state)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
-    [id, orgId, cardId, role || null, action, optionId || null, rationale || null, decidedBy || null, JSON.stringify(engineState || {})]);
-  return { id, recorded: true };
+    `INSERT INTO decision_ledger (id, org_id, card_id, role, action, option_id, rationale, decided_by, engine_state, ts, seq, prev_hash, entry_hash)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+    [id, orgId, cardId, role || null, action, optionId || null, rationale || null, decidedBy || null, JSON.stringify(engineState || {}), ts, seq, prevHash, entryHash]);
+  return { id, recorded: true, seq, entryHash };
+}
+
+// ---- CRQ assumptions + methodology transparency ----------------------------
+async function loadAssumptions(orgId) {
+  await ensureLedger();
+  const map = {};
+  try {
+    (await db.query('SELECT card_id, exposure, freq, spread_lo, spread_hi FROM crq_assumptions WHERE org_id=$1', [orgId]))
+      .forEach((r) => { map[r.card_id] = { exposure: r.exposure, freq: r.freq, spreadLo: r.spread_lo, spreadHi: r.spread_hi }; });
+  } catch (_) {}
+  return map;
+}
+
+async function saveAssumptions(orgId, { cardId, exposure, freq, spreadLo, spreadHi }) {
+  await ensureLedger();
+  const key = cardId || '_default';
+  await db.query(
+    `INSERT INTO crq_assumptions (org_id, card_id, exposure, freq, spread_lo, spread_hi, updated_at)
+     VALUES ($1,$2,$3,$4,$5,$6,now())
+     ON CONFLICT (org_id, card_id) DO UPDATE SET exposure=EXCLUDED.exposure, freq=EXCLUDED.freq, spread_lo=EXCLUDED.spread_lo, spread_hi=EXCLUDED.spread_hi, updated_at=now()`,
+    [orgId, key, exposure != null ? Number(exposure) : null, freq != null ? Number(freq) : null, spreadLo != null ? Number(spreadLo) : null, spreadHi != null ? Number(spreadHi) : null]);
+  return { saved: true, cardId: key };
+}
+
+function methodology(orgId, overrides) {
+  return {
+    model: 'Annualized loss = Loss Event Frequency (LEF) × Loss Magnitude (LM), FAIR-aligned.',
+    frequency: 'LEF from FIRST.org EPSS (30-day exploit probability) and CISA KEV when a CVE is present; otherwise modeled from severity and exposure signals.',
+    magnitude: 'LM is a triangular distribution around the asset exposure (low 0.3×, mode 1×, high 2.2× by default; tunable).',
+    method: 'Monte Carlo, 2,000 iterations, seeded per card for reproducibility. Reported as expected, P10, P50, P90 and worst case.',
+    dataSources: ['FIRST.org EPSS', 'CISA Known Exploited Vulnerabilities', 'Org exposure / asset value', 'Org-tuned assumptions'],
+    tunable: ['exposure (asset value)', 'freq (annual % override)', 'spreadLo / spreadHi (magnitude spread)'],
+    overrides: overrides || {},
+  };
+}
+
+// ---- tamper-evident verification + evidence package ------------------------
+async function verifyLedger(orgId) {
+  await ensureLedger();
+  let rows = [];
+  try { rows = await db.query('SELECT * FROM decision_ledger WHERE org_id=$1 AND entry_hash IS NOT NULL ORDER BY seq ASC', [orgId]); } catch (_) {}
+  let prev = '0', brokenAt = null;
+  for (const r of rows) {
+    if ((r.prev_hash || '0') !== prev) { brokenAt = r.seq; break; }
+    if (sha256(ledgerCanonical(r)) !== r.entry_hash) { brokenAt = r.seq; break; }
+    prev = r.entry_hash;
+  }
+  return { valid: brokenAt == null, entries: rows.length, brokenAt, rootHash: rows.length ? rows[rows.length - 1].entry_hash : null };
+}
+
+async function evidencePackage(orgId) {
+  const [rows, integrity] = [await ledger(orgId), await verifyLedger(orgId)];
+  return {
+    organizationId: orgId, generatedAt: new Date().toISOString(),
+    integrity,
+    decisions: rows.map((r) => ({ ts: r.ts || r.created_at, seq: r.seq, role: r.role, action: r.action, optionId: r.option_id, cardId: r.card_id, rationale: r.rationale, decidedBy: r.decided_by, entryHash: r.entry_hash, prevHash: r.prev_hash })),
+    manifest: { entries: integrity.entries, rootHash: integrity.rootHash, chainValid: integrity.valid, algorithm: 'SHA-256 per-org hash chain' },
+  };
 }
 
 async function ledger(orgId) {
@@ -515,4 +609,4 @@ async function ledger(orgId) {
   catch (_) { return []; }
 }
 
-module.exports = { generate, lensFor, list, record, ledger };
+module.exports = { generate, lensFor, list, record, ledger, loadAssumptions, saveAssumptions, methodology, verifyLedger, evidencePackage };
