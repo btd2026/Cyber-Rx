@@ -7439,12 +7439,12 @@ function Home(props) {
           </p>
           <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
             {[
-              {fw:"HIPAA Security Rule",   badge:"All Payers",   color:"#EF4545"},
-              {fw:"NIST CSF 2.0",          badge:"All Payers",   color:"#F5A623"},
-              {fw:"NIST SP 800-53 Rev 5",  badge:"All Payers",   color:"#F5A623"},
-              {fw:"CIS Controls v8",       badge:"All Payers",   color:"#3B9EFF"},
-              {fw:"NAIC Model Law",        badge:"All Payers",   color:"#A78BFA"},
-              {fw:"ISO/IEC 27001:2022",    badge:"All Payers",   color:"#0FBB80"},
+              {fw:"HIPAA Security Rule",   badge:"All industries",   color:"#EF4545"},
+              {fw:"NIST CSF 2.0",          badge:"All industries",   color:"#F5A623"},
+              {fw:"NIST SP 800-53 Rev 5",  badge:"All industries",   color:"#F5A623"},
+              {fw:"CIS Controls v8",       badge:"All industries",   color:"#3B9EFF"},
+              {fw:"NAIC Model Law",        badge:"All industries",   color:"#A78BFA"},
+              {fw:"ISO/IEC 27001:2022",    badge:"All industries",   color:"#0FBB80"},
               {fw:"PCI DSS v4.0",          badge:"If Applicable",color:"#0891B2"},
               {fw:"CMS 42 CFR §422",  badge:"If Applicable",color:"#8B5CF6"},
             ].map(function(fw){
@@ -18647,7 +18647,7 @@ function WelcomePage(props) {
             letterSpacing:"-0.02em"}}>CyberRx</span>
           <span style={{color:C.muted,fontSize:11,background:C.dim,
             borderRadius:10,padding:"2px 8px",marginLeft:4}}>
-            Healthcare Payer Edition
+            Enterprise Edition
           </span>
         </div>
         <div style={{display:"flex",gap:10,alignItems:"center"}}>
@@ -18718,9 +18718,9 @@ function WelcomePage(props) {
           {/* Step flow */}
           <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:8,marginBottom:32}}>
             {[
-              {n:"1",icon:"🏥",color:"#3B9EFF",
+              {n:"1",icon:"🏢",color:"#3B9EFF",
                title:"Set Up Your Organization",
-               desc:"Answer a few foundation questions — org type, revenue, PHI record count, statutory surplus, and insurance details."},
+               desc:"Answer a few foundation questions — your industry, size, revenue, and insurance details."},
               {n:"2",icon:"🗄",color:"#A78BFA",
                title:"Import Your Applications",
                desc:"Import your business application inventory from your CMDB, a CSV/Excel export, or via REST API. CyberRx maps each app to its business process automatically."},
@@ -18869,23 +18869,23 @@ function WelcomePage(props) {
               <div style={{display:"flex",flexDirection:"column",gap:6}}>
                 {[
                   {fw:"HIPAA Security Rule",         ref:"45 CFR Part 164",
-                   badge:"All Payers",color:"#EF4545"},
+                   badge:"All industries",color:"#EF4545"},
                   {fw:"NIST CSF 2.0",               ref:"HHS HPH CPG 2024",
-                   badge:"All Payers",color:"#F5A623"},
+                   badge:"All industries",color:"#F5A623"},
                   {fw:"NIST SP 800-53 Rev 5",        ref:"OCR Referenced",
-                   badge:"All Payers",color:"#F5A623"},
+                   badge:"All industries",color:"#F5A623"},
                   {fw:"CIS Controls v8",             ref:"HHS IG2 Benchmark",
-                   badge:"All Payers",color:"#3B9EFF"},
+                   badge:"All industries",color:"#3B9EFF"},
                   {fw:"NAIC Model Law",              ref:"24+ States",
-                   badge:"All Payers",color:"#A78BFA"},
+                   badge:"All industries",color:"#A78BFA"},
                   {fw:"ISO/IEC 27001:2022",          ref:"BAA & DOI Standard",
-                   badge:"All Payers",color:"#0FBB80"},
+                   badge:"All industries",color:"#0FBB80"},
                   {fw:"PCI DSS v4.0",               ref:"Card Payments",
                    badge:"If Applicable",color:"#0891B2"},
                   {fw:"CMS 42 CFR §422/§423",ref:"MA / Part D",
                    badge:"If Applicable",color:"#8B5CF6"},
                 ].map(function(fw){
-                  var req = fw.badge === "All Payers";
+                  var req = fw.badge === "All industries";
                   return (
                     <div key={fw.fw} style={{display:"flex",gap:10,
                       alignItems:"center",background:C.card,
@@ -18948,7 +18948,7 @@ function WelcomePage(props) {
         <div style={{color:C.muted,fontSize:11,marginTop:12}}>
           {setupDone?
             "Pick up where you left off · All data saved":
-            "HIPAA-aware · 30-minute setup · No credit card required"
+            "Framework-aware · 30-minute setup · No credit card required"
           }
         </div>
       </div>
