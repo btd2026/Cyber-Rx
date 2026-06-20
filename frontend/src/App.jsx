@@ -4,6 +4,7 @@ import CorrelatedFinding from "./pages/CorrelatedFinding";
 import CIODash from "./pages/CIODash";
 import CLODash from "./pages/CLODash";
 import AdminDatabase from "./pages/AdminDatabase";
+import RedesignPrototype from "./pages/RedesignPrototype";
 import ExecutiveAgentBrief from "./components/ExecutiveAgentBrief";
 import NistCsfScorecard from "./components/NistCsfScorecard";
 import CsfControlLibrary from "./components/CsfControlLibrary";
@@ -25584,6 +25585,7 @@ function CyberRxApp() {
   // Hidden admin page: visiting /admin-database directly opens the DB editor
   // (no nav links anywhere; backend requires the admin key regardless).
   var _s52=useState(function(){
+    if (typeof window!=='undefined' && window.location.pathname==='/prototype') return 'prototype';
     return (typeof window!=='undefined' && window.location.pathname==='/admin-database') ? 'admindb' : 'home';
   }); var page=_s52[0]; var setPage=_s52[1];
   var _s53=useState([]); var history=_s53[0]; var setHistory=_s53[1];
@@ -25986,6 +25988,12 @@ function CyberRxApp() {
   // entirely. Protected server-side by the admin key, not by obscurity.
   if (page==="admindb") {
     return React.createElement(AdminDatabase, {});
+  }
+
+  // Design prototype (/prototype): a self-contained Modern SaaS redesign of the
+  // CISO dashboard for design review. Bypasses the phase router; static data.
+  if (page==="prototype") {
+    return React.createElement(RedesignPrototype, {});
   }
 
   // Phase router
