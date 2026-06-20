@@ -8,10 +8,14 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
+import Provenance from './Provenance';
 
 const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc';
 const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
 const sevTone = (s) => SEV[s] || INK3;
+const GSTATUS = { in_place: '#1f8a4c', partial: '#B07C2E', gap: '#C0392B', n_a: '#cbd5e1' };
+const GLABEL = { in_place: 'In place', partial: 'Partial', gap: 'Gap', n_a: 'N/A' };
+const bandC = (s) => (s == null ? INK3 : s >= 80 ? '#1f8a4c' : s >= 60 ? '#B07C2E' : '#C0392B');
 
 function ctx(props) {
   const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
@@ -34,9 +38,12 @@ export default function AiGovernance(props) {
   const [err, setErr] = useState(null);
   const [busy, setBusy] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
-  const [view, setView] = useState('bom'); // bom | nist_ai_rmf | owasp_llm | mitre_atlas | eu_ai_act
+  const [view, setView] = useState('bom'); // bom | guardrails | agents | nist_ai_rmf | owasp_llm | mitre_atlas | eu_ai_act | our_ai_use
   const [assess, setAssess] = useState(null);
   const [eu, setEu] = useState(null);
+  const [guard, setGuard] = useState(null);
+  const [agents, setAgents] = useState(null);
+  const [platform, setPlatform] = useState(null);
   const [form, setForm] = useState({ name: '', provider: '', dataSensitivity: 'PII', autonomy: 'Assistive', hosting: 'External SaaS', sanctioned: 'Shadow', owner: '', purpose: '' });
   const headers = useCallback(() => { const h = { 'Content-Type': 'application/json', 'X-Org-Id': orgId }; if (token) h.Authorization = `Bearer ${token}`; return h; }, [orgId, token]);
 
@@ -47,16 +54,13 @@ export default function AiGovernance(props) {
   useEffect(() => { load(); }, [load]);
 
   useEffect(() => {
+    const get = (path, set) => { set(null); fetch(`${api}${path}org_id=${encodeURIComponent(orgId)}`, { headers: headers() }).then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) set(d); }).catch(() => {}); };
     if (view === 'bom') return;
-    if (view === 'eu_ai_act') {
-      setEu(null);
-      fetch(`${api}/api/ai-systems/eu-ai-act?org_id=${encodeURIComponent(orgId)}`, { headers: headers() })
-        .then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) setEu(d); }).catch(() => {});
-      return;
-    }
-    setAssess(null);
-    fetch(`${api}/api/ai-systems/assessment?framework=${encodeURIComponent(view)}&org_id=${encodeURIComponent(orgId)}`, { headers: headers() })
-      .then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) setAssess(d); }).catch(() => {});
+    if (view === 'eu_ai_act') return get('/api/ai-systems/eu-ai-act?', setEu);
+    if (view === 'guardrails') return get('/api/ai-systems/guardrails?', setGuard);
+    if (view === 'agents') return get('/api/ai-systems/agents?', setAgents);
+    if (view === 'our_ai_use') return get('/api/ai-systems/platform-ai-use?', setPlatform);
+    get(`/api/ai-systems/assessment?framework=${encodeURIComponent(view)}&`, setAssess);
   }, [view, api, orgId, headers]);
 
   function upload(file) {
@@ -101,7 +105,7 @@ export default function AiGovernance(props) {
       {/* framework sub-tabs — each assessed independently */}
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14, justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {[['bom', 'AI Inventory (AI-BOM)'], ['nist_ai_rmf', 'NIST AI RMF'], ['owasp_llm', 'OWASP LLM Top 10'], ['mitre_atlas', 'MITRE ATLAS'], ['eu_ai_act', 'EU AI Act']].map(([k, l]) => (
+          {[['bom', 'AI Inventory (AI-BOM)'], ['guardrails', 'Guardrail Posture'], ['agents', 'Agent Risk'], ['nist_ai_rmf', 'NIST AI RMF'], ['owasp_llm', 'OWASP LLM Top 10'], ['mitre_atlas', 'MITRE ATLAS'], ['eu_ai_act', 'EU AI Act'], ['our_ai_use', 'Our AI Use']].map(([k, l]) => (
             <button key={k} onClick={() => setView(k)} style={{ border: `1px solid ${view === k ? '#0f1b2d' : HAIR}`, background: view === k ? '#0f1b2d' : '#fff', color: view === k ? '#fff' : INK2, padding: '6px 13px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', borderRadius: 999 }}>{l}</button>
           ))}
         </div>
@@ -126,7 +130,10 @@ export default function AiGovernance(props) {
       )}
 
       {view === 'eu_ai_act' && <EuAiActView eu={eu} />}
-      {view !== 'bom' && view !== 'eu_ai_act' && <FrameworkView a={assess} />}
+      {view === 'guardrails' && <GuardrailView g={guard} />}
+      {view === 'agents' && <AgentView a={agents} />}
+      {view === 'our_ai_use' && <OurAiUseView p={platform} />}
+      {!['bom', 'eu_ai_act', 'guardrails', 'agents', 'our_ai_use'].includes(view) && <FrameworkView a={assess} />}
 
       {view === 'bom' && (!inv ? <div style={{ fontSize: 12, color: INK3 }}>Loading AI inventory…</div> : (
         <>
@@ -155,7 +162,7 @@ export default function AiGovernance(props) {
                   {inv.systems.map((s, i) => (
                     <tr key={s.id || i} style={{ background: i % 2 ? '#fff' : '#fcfdfe', borderTop: i ? `1px solid ${HAIR}` : 'none' }}>
                       <td style={{ padding: '9px 12px' }}>
-                        <div style={{ fontWeight: 700, color: INK }}>{s.name}</div>
+                        <div style={{ fontWeight: 700, color: INK, display: 'flex', alignItems: 'center', gap: 5 }}>{s.provenance && <Provenance prov={s.provenance} />}{s.name}</div>
                         {s.flags && s.flags.length > 0 && <div style={{ fontSize: 10, color: sevTone(s.riskLevel), marginTop: 2 }}>{s.flags.map((f) => f.text).join(' · ')}</div>}
                         {s.owner ? <div style={{ fontSize: 9.5, color: INK3, marginTop: 1 }}>Owner: {s.owner}</div> : null}
                       </td>
@@ -319,6 +326,114 @@ function Kpi({ label, value, tone }) {
     <div style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${tone ? c : '#cbd5e1'}`, borderRadius: 9, padding: '11px 13px', background: '#fff' }}>
       <div style={{ fontSize: 10.5, color: INK2 }}>{label}</div>
       <div style={{ fontSize: 22, fontWeight: 800, color: tone ? c : INK, marginTop: 2 }}>{value}</div>
+    </div>
+  );
+}
+
+// ---- D2: per-system guardrail posture (OWASP LLM Top 10) -------------------
+function GuardrailView({ g }) {
+  if (!g) return <div style={{ fontSize: 12, color: INK3 }}>Assessing guardrails…</div>;
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+        <div style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${bandC(g.fleetScore)}`, borderRadius: 9, padding: '11px 14px', background: '#fff' }}>
+          <div style={{ fontSize: 10.5, color: INK2, display: 'flex', alignItems: 'center', gap: 5 }}>{g.provenance && <Provenance prov={g.provenance} />}Fleet guardrail posture</div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: bandC(g.fleetScore) }}>{g.fleetScore == null ? '—' : g.fleetScore}<span style={{ fontSize: 12, color: INK3, fontWeight: 600 }}> / 100</span></div>
+        </div>
+        {g.worstControls && g.worstControls.length > 0 && (
+          <div style={{ fontSize: 11.5, color: INK2, lineHeight: 1.5 }}>
+            <strong style={{ color: INK }}>Weakest controls:</strong> {g.worstControls.map((c) => `${c.id} ${c.name} (${c.gaps})`).join(' · ')}
+          </div>
+        )}
+      </div>
+      <div style={{ display: 'grid', gap: 8 }}>
+        {(g.systems || []).map((s) => (
+          <div key={s.id} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${bandC(s.score)}`, borderRadius: 9, padding: '11px 13px', background: '#fff' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 7 }}>
+              <span style={{ fontSize: 12.5, fontWeight: 700, color: INK, display: 'inline-flex', alignItems: 'center', gap: 5 }}>{s.provenance && <Provenance prov={s.provenance} />}{s.name}</span>
+              <span style={{ fontSize: 13, fontWeight: 800, color: bandC(s.score) }}>{s.score}</span>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+              {s.controls.map((c) => (
+                <span key={c.id} title={`${c.id} ${c.name}: ${GLABEL[c.status]}`} style={{ fontSize: 9.5, fontWeight: 700, color: c.status === 'n_a' ? INK3 : '#fff', background: c.status === 'n_a' ? '#f1f5f9' : GSTATUS[c.status], borderRadius: 4, padding: '2px 6px' }}>{c.id}</span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ fontSize: 10.5, color: INK3, marginTop: 10 }}>Assessed from the AI inventory against the OWASP Top 10 for LLM Applications. Connect an AI gateway to upgrade these from modeled to live.</div>
+    </div>
+  );
+}
+
+// ---- D3: agent least-privilege --------------------------------------------
+function AgentView({ a }) {
+  if (!a) return <div style={{ fontSize: 12, color: INK3 }}>Analyzing agents…</div>;
+  if (!a.agents.length) return <div style={{ fontSize: 12, color: INK3 }}>No autonomous agents in the inventory yet. Add an Agentic system in the AI-BOM to assess its permissions.</div>;
+  return (
+    <div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px,1fr))', gap: 10, marginBottom: 12 }}>
+        <Kpi label="Agents" value={a.counts.total} />
+        <Kpi label="Critical-risk" value={a.counts.critical} tone={a.counts.critical ? 'bad' : 'good'} />
+        <Kpi label="No human-in-loop" value={a.counts.noHITL} tone={a.counts.noHITL ? 'bad' : 'good'} />
+        <Kpi label="No kill-switch" value={a.counts.noKillSwitch} tone={a.counts.noKillSwitch ? 'warn' : 'good'} />
+      </div>
+      <div style={{ display: 'grid', gap: 8 }}>
+        {a.agents.map((ag) => (
+          <div key={ag.id} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${sevTone(ag.riskLevel)}`, borderRadius: 9, padding: '12px 14px', background: '#fff' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 12.5, fontWeight: 700, color: INK, display: 'inline-flex', alignItems: 'center', gap: 5 }}>{ag.provenance && <Provenance prov={ag.provenance} />}{ag.name}</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 10.5, color: INK3 }}>least-privilege</span>
+                <strong style={{ fontSize: 13, color: bandC(ag.leastPrivilegeScore) }}>{ag.leastPrivilegeScore}</strong>
+                <span style={{ fontSize: 9.5, fontWeight: 800, color: '#fff', background: sevTone(ag.riskLevel), borderRadius: 999, padding: '2px 8px', textTransform: 'uppercase' }}>{ag.riskLevel}</span>
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginTop: 7, fontSize: 11, color: INK2 }}>
+              <span><strong style={{ color: INK3 }}>Tools:</strong> {ag.tools.join(', ') || '—'}</span>
+              <span><strong style={{ color: INK3 }}>Data:</strong> {ag.dataScopes.join(', ') || '—'}</span>
+              <span><strong style={{ color: INK3 }}>Actions:</strong> {ag.actions.join(', ') || '—'}</span>
+              <span><strong style={{ color: INK3 }}>Approval on:</strong> {ag.humanApprovalOn.join(', ') || 'none'}</span>
+              <span><strong style={{ color: INK3 }}>Kill-switch:</strong> {ag.killSwitch ? 'yes' : 'no'}</span>
+            </div>
+            {ag.flags.length > 0 && (
+              <div style={{ marginTop: 7, display: 'grid', gap: 3 }}>
+                {ag.flags.map((f, i) => <div key={i} style={{ fontSize: 11, color: sevTone(f.level === 'critical' ? 'Critical' : f.level === 'high' ? 'High' : 'Medium') }}>⚠ {f.text}</div>)}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+      <div style={{ fontSize: 10.5, color: INK3, marginTop: 10 }}>Least-privilege analysis of what each agent can reach. Capture explicit tools/actions per agent to refine; otherwise inferred from the system profile.</div>
+    </div>
+  );
+}
+
+// ---- D6: how CyberRX itself uses LLMs --------------------------------------
+function OurAiUseView({ p }) {
+  if (!p) return <div style={{ fontSize: 12, color: INK3 }}>Loading…</div>;
+  return (
+    <div style={{ display: 'grid', gap: 12 }}>
+      <div style={{ border: `1px solid ${HAIR}`, borderRadius: 10, background: '#0f1b2d', color: '#e2e8f0', padding: '14px 16px', fontSize: 13, lineHeight: 1.55 }}>
+        {p.statement}
+      </div>
+      <div style={{ display: 'grid', gap: 8 }}>
+        {(p.uses || []).map((u, i) => (
+          <div key={i} style={{ border: `1px solid ${HAIR}`, borderRadius: 9, padding: '11px 13px', background: '#fff' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+              <span style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>{u.task}</span>
+              <span style={{ fontSize: 10.5, color: INK3 }}>{u.model}{u.humanReview ? ' · human-reviewed' : ''}</span>
+            </div>
+            <div style={{ fontSize: 11.5, color: INK2, marginTop: 3 }}>{u.note}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ border: `1px solid ${HAIR}`, borderRadius: 10, padding: '12px 16px', background: PANEL }}>
+        <div style={{ fontSize: 12, fontWeight: 800, color: INK, marginBottom: 7 }}>Controls on our AI use</div>
+        <div style={{ display: 'grid', gap: 5 }}>
+          {(p.controls || []).map((c, i) => <div key={i} style={{ fontSize: 11.5, color: INK2 }}>✓ {c}</div>)}
+        </div>
+      </div>
     </div>
   );
 }

@@ -23,6 +23,7 @@
 const db = require('../utils/db');
 const logger = require('../utils/logger');
 const { parseCsv } = require('../ingestion/parsers');
+const { prov } = require('../utils/provenance');
 
 const MODEL = process.env.ANTHROPIC_REVIEW_MODEL || 'claude-haiku-4-5-20251001';
 const lc = (v) => String(v == null ? '' : v).toLowerCase();
@@ -33,7 +34,8 @@ async function ensureTable() {
       id TEXT PRIMARY KEY, org_id TEXT NOT NULL, name TEXT NOT NULL, system_type TEXT,
       provider TEXT, model TEXT, hosting TEXT, data_sensitivity TEXT, autonomy TEXT,
       human_in_loop BOOLEAN, owner TEXT, sanctioned TEXT, purpose TEXT, source TEXT,
-      created_at TIMESTAMPTZ DEFAULT now())`);
+      agent_json JSONB, created_at TIMESTAMPTZ DEFAULT now())`);
+    try { await db.query('ALTER TABLE ai_systems ADD COLUMN IF NOT EXISTS agent_json JSONB'); } catch (_) {}
   } catch (e) { logger.debug('ai_systems ensureTable failed', { error: e.message }); }
 }
 
@@ -67,9 +69,14 @@ function normalize(s) {
   const sanctioned = /shadow|unsanction|unapproved|unknown/.test(sa) ? 'Shadow' : /sanction|approved|yes/.test(sa) ? 'Sanctioned' : (s.sanctioned ? 'Sanctioned' : 'Unreviewed');
   const hil = lc(s.humanInLoop);
   const humanInLoop = /y|true|1/.test(hil) ? true : /n|false|0/.test(hil) ? false : autonomy !== 'Agentic';
+  const arr = (v) => (Array.isArray(v) ? v : String(v == null ? '' : v).split(/[,;|]/).map((x) => x.trim()).filter(Boolean));
+  const hasAgent = s.tools || s.dataScopes || s.actions || s.humanApprovalOn || s.killSwitch != null;
+  const agent = hasAgent
+    ? { tools: arr(s.tools), dataScopes: arr(s.dataScopes), actions: arr(s.actions), humanApprovalOn: arr(s.humanApprovalOn), killSwitch: /y|true|1/.test(lc(s.killSwitch)) }
+    : null;
   return {
     name: String(s.name).slice(0, 160), systemType, provider: s.provider || '', model: s.model || '',
-    hosting, dataSensitivity, autonomy, humanInLoop, owner: s.owner || '', sanctioned, purpose: s.purpose || '',
+    hosting, dataSensitivity, autonomy, humanInLoop, owner: s.owner || '', sanctioned, purpose: s.purpose || '', agent,
   };
 }
 
@@ -112,9 +119,9 @@ async function saveSystems(orgId, systems, { replace = true } = {}) {
     const s = systems[i]; const id = `ai_${orgId}_${base + i + 1}`;
     try {
       await db.query(
-        `INSERT INTO ai_systems (id, org_id, name, system_type, provider, model, hosting, data_sensitivity, autonomy, human_in_loop, owner, sanctioned, purpose, source)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
-        [id, orgId, s.name, s.systemType, s.provider, s.model, s.hosting, s.dataSensitivity, s.autonomy, !!s.humanInLoop, s.owner, s.sanctioned, s.purpose, s.source || 'upload']);
+        `INSERT INTO ai_systems (id, org_id, name, system_type, provider, model, hosting, data_sensitivity, autonomy, human_in_loop, owner, sanctioned, purpose, source, agent_json)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+        [id, orgId, s.name, s.systemType, s.provider, s.model, s.hosting, s.dataSensitivity, s.autonomy, !!s.humanInLoop, s.owner, s.sanctioned, s.purpose, s.source || 'upload', s.agent ? JSON.stringify(s.agent) : null]);
       saved.push(Object.assign({ id }, s));
     } catch (e) { logger.debug('save ai system failed', { error: e.message }); }
   }
@@ -129,6 +136,7 @@ async function listSystems(orgId) {
       id: r.id, name: r.name, systemType: r.system_type, provider: r.provider, model: r.model, hosting: r.hosting,
       dataSensitivity: r.data_sensitivity, autonomy: r.autonomy, humanInLoop: r.human_in_loop, owner: r.owner,
       sanctioned: r.sanctioned, purpose: r.purpose,
+      agent: r.agent_json ? (typeof r.agent_json === 'string' ? JSON.parse(r.agent_json) : r.agent_json) : null,
     }));
   } catch (_) { return []; }
 }
@@ -151,8 +159,9 @@ function flagsFor(s) {
 
 async function inventory(orgId) {
   let systems = await listSystems(orgId);
-  if (!systems.length) systems = demoSystems();
-  const enriched = systems.map((s) => Object.assign({}, s, flagsFor(s)));
+  let isDemo = false;
+  if (!systems.length) { systems = demoSystems(); isDemo = true; }
+  const enriched = systems.map((s) => Object.assign({}, s, flagsFor(s), { provenance: prov(isDemo ? 'demo' : 'live', 'AI inventory') }));
   const by = (k) => enriched.reduce((m, s) => { const v = s[k] || 'Unknown'; m[v] = (m[v] || 0) + 1; return m; }, {});
   const shadow = enriched.filter((s) => s.sanctioned === 'Shadow');
   const agentic = enriched.filter((s) => s.autonomy === 'Agentic');
@@ -170,6 +179,8 @@ async function inventory(orgId) {
     },
     byType: by('systemType'), bySanctioned: by('sanctioned'), byDataSensitivity: by('dataSensitivity'),
     governanceScore: score,
+    demo: isDemo,
+    provenance: prov(isDemo ? 'demo' : 'live', 'AI inventory'),
     systems: enriched,
   };
 }
