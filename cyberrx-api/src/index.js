@@ -409,6 +409,8 @@ const server = app.listen(PORT, () => {
     environment: process.env.NODE_ENV || 'development',
     version: process.env.npm_package_version || '1.0.0'
   });
+  // Opt-in periodic auto-refresh of connected security-tool integrations.
+  try { require('./services/IntegrationScheduler').start(); } catch (e) { logger.debug('scheduler start failed', { error: e.message }); }
 });
 
 // Graceful shutdown handler

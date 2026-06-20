@@ -338,8 +338,8 @@ export default function CisoSecurityPostureDashboard(props) {
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            {isCisoLayout && <LiveCoverageMeter orgId={orgId} authToken={token} apiUrl={api} />}
-            {isCisoLayout && <DataSources orgId={orgId} authToken={token} apiUrl={api} />}
+            <LiveCoverageMeter orgId={orgId} authToken={token} apiUrl={api} />
+            <DataSources orgId={orgId} authToken={token} apiUrl={api} />
             <VisibilityChip orgId={orgId} authToken={token} apiUrl={api} />
             <a href={`${api}/api/ciso/report.pdf?org_id=${encodeURIComponent(orgId)}`} style={{ background: '#1e3a5f', color: '#fff', border: '1px solid #2c4f7c', borderRadius: 6, padding: '9px 15px', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>⤓ PDF report</a>
             <a href={`${api}/api/ciso/report.pptx?org_id=${encodeURIComponent(orgId)}`} style={{ background: 'transparent', color: '#cbd5e1', border: '1px solid #2c4f7c', borderRadius: 6, padding: '9px 15px', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>⤓ PowerPoint</a>

@@ -21,6 +21,7 @@
 const db = require('../utils/db');
 const logger = require('../utils/logger');
 const Agent = require('./ExecutiveAgentService');
+const { prov } = require('../utils/provenance');
 
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, Math.round(n)));
 const band = (s) => (s >= 80 ? 'Strong' : s >= 60 ? 'Moderate' : s >= 40 ? 'Weak' : 'Critical');
@@ -189,7 +190,14 @@ function pillar(id, name, weight, current, delta, up, down, source) {
     topImproving: up, topDeteriorating: down, source,
   };
 }
+// Role pillars with provenance: 'derived' when the org has its own data, 'demo'
+// when we're on the industry-shaped sample — consistent with the CISO lens.
 function roleDomains(role, c) {
+  const mode = isEmpty(c) ? 'demo' : 'derived';
+  return roleDomainsRaw(role, c).map((d) => ({ ...d, provenance: prov(mode, d.source || 'Posture engine') }));
+}
+
+function roleDomainsRaw(role, c) {
   const f = c.financial, r = c.risks, ctrl = c.controls, rm = c.remediation, l = c.legal, v = c.vendors, fi = c.findings, p = c.processes;
   const invCapRisk = clamp(100 - (f.capitalAtRiskPct || 8) * 4, 30, 95);
   switch (role) {
