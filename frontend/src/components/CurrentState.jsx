@@ -12,7 +12,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
-import { COLORS, FONTS, HERO_BG } from '../theme';
+import { COLORS, FONTS } from '../theme';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
 const TONE = { good: COLORS.good, warn: COLORS.warn, bad: COLORS.bad };
@@ -70,18 +70,18 @@ export default function CurrentState(props) {
   return (
     <div style={{ display: 'grid', gap: 14 }}>
       {/* What changed since last brief */}
-      <div style={{ background: HERO_BG, color: '#e6ecf5', borderRadius: 11, padding: '14px 16px' }}>
+      <div style={{ background: COLORS.subtle, border: `1px solid ${COLORS.hair}`, color: COLORS.ink, borderRadius: 11, padding: '14px 16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-          <div style={{ fontSize: 10, fontWeight: 800, color: COLORS.accent, textTransform: 'uppercase', letterSpacing: '0.1em' }}>What changed since your last brief</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: COLORS.accentText, textTransform: 'uppercase', letterSpacing: '0.08em' }}>What changed since your last brief</div>
           <VoiceControls voice={voice} onReplay={() => voice.speak(brief)} label="Listen to brief" />
         </div>
         <div style={{ fontSize: 14, fontWeight: 700, marginTop: 6, fontFamily: FONTS.mono }}>
-          {p.current}/100 · {band(p.current)} <span style={{ color: p.delta >= 0 ? '#34d399' : '#f87171' }}>{p.delta >= 0 ? '▲ +' : '▼ '}{p.delta}</span> <span style={{ color: '#8fa3bd', textTransform: 'capitalize', fontWeight: 500 }}>· {p.trend}</span>
+          {p.current}/100 · {band(p.current)} <span style={{ color: p.delta >= 0 ? COLORS.good : COLORS.bad }}>{p.delta >= 0 ? '↑ +' : '↓ '}{p.delta}</span> <span style={{ color: COLORS.ink3, textTransform: 'capitalize', fontWeight: 500 }}>· {p.trend}</span>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
-          {improving.map((m) => <span key={m.id} style={{ fontSize: 11, color: '#34d399', background: '#0f2a1e', borderRadius: 999, padding: '3px 10px' }}>▲ {m.name} +{m.delta}</span>)}
-          {declining.map((m) => <span key={m.id} style={{ fontSize: 11, color: '#fca5a5', background: '#2a1414', borderRadius: 999, padding: '3px 10px' }}>▼ {m.name} {m.delta}</span>)}
-          {!improving.length && !declining.length && <span style={{ fontSize: 11, color: '#8fa3bd' }}>No material domain movement this period.</span>}
+          {improving.map((m) => <span key={m.id} style={{ fontSize: 11, color: COLORS.good, background: COLORS.goodSoft, borderRadius: 999, padding: '3px 10px' }}>↑ {m.name} +{m.delta}</span>)}
+          {declining.map((m) => <span key={m.id} style={{ fontSize: 11, color: COLORS.bad, background: COLORS.badSoft, borderRadius: 999, padding: '3px 10px' }}>↓ {m.name} {m.delta}</span>)}
+          {!improving.length && !declining.length && <span style={{ fontSize: 11, color: COLORS.ink3 }}>No material domain movement this period.</span>}
         </div>
       </div>
 
@@ -91,7 +91,7 @@ export default function CurrentState(props) {
         <div style={{ fontSize: 13, color: INK, lineHeight: 1.6 }}>{p.narrative || brief}</div>
         <div style={{ fontSize: 12.5, color: INK2, lineHeight: 1.6, marginTop: 8 }}>{brief}</div>
         {undecided.length > 0 && props.onOpenQueue && (
-          <button onClick={props.onOpenQueue} style={{ marginTop: 10, background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 7, padding: '7px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Review {undecided.length} open decision{undecided.length === 1 ? '' : 's'} →</button>
+          <button onClick={props.onOpenQueue} style={{ marginTop: 10, background: COLORS.accent, color: '#fff', border: 'none', borderRadius: 7, padding: '7px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Review {undecided.length} open decision{undecided.length === 1 ? '' : 's'} →</button>
         )}
       </div>
 

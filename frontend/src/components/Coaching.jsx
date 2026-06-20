@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
-import { COLORS, FONTS, HERO_BG } from '../theme';
+import { COLORS, FONTS } from '../theme';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
 const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
@@ -91,9 +91,9 @@ export default function Coaching(props) {
 
   return (
     <div style={{ display: 'grid', gap: 14 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: HERO_BG, color: '#e6ecf5', borderRadius: 10, padding: '13px 16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: COLORS.subtle, border: `1px solid ${COLORS.hair}`, color: COLORS.ink2, borderRadius: 10, padding: '13px 16px' }}>
         <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>
-          Your <strong style={{ color: COLORS.accent }}>{role} coaching</strong> — what to ask, what's material, a tabletop to run, and the blind spots detected from how decisions are actually being made.
+          Your <strong style={{ color: COLORS.accentText }}>{role} coaching</strong> — what to ask, what's material, a tabletop to run, and the blind spots detected from how decisions are actually being made.
         </div>
         <VoiceControls voice={voice} onReplay={() => voice.speak(overview)} label="Listen" />
       </div>

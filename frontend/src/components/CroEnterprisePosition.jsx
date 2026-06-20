@@ -9,7 +9,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
 import Provenance from './Provenance';
-import { COLORS, FONTS, HERO_BG } from '../theme';
+import { COLORS, FONTS } from '../theme';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
 const TONE = { good: COLORS.good, warn: COLORS.warn, bad: COLORS.bad };
@@ -40,8 +40,8 @@ export default function CroEnterprisePosition(props) {
 
   return (
     <div style={{ display: 'grid', gap: 14 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: HERO_BG, color: '#e6ecf5', borderRadius: 10, padding: '14px 16px' }}>
-        <div style={{ fontSize: 12.5, lineHeight: 1.6, display: 'flex', alignItems: 'flex-start', gap: 6 }}>{d.provenance && <Provenance prov={d.provenance} dark />}<span>{d.brief}</span></div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: COLORS.subtle, border: `1px solid ${COLORS.hair}`, color: COLORS.ink2, borderRadius: 10, padding: '14px 16px' }}>
+        <div style={{ fontSize: 12.5, lineHeight: 1.6, display: 'flex', alignItems: 'flex-start', gap: 6 }}>{d.provenance && <Provenance prov={d.provenance} />}<span>{d.brief}</span></div>
         <VoiceControls voice={voice} onReplay={() => voice.speak(d.narration || d.brief)} label="Listen" />
       </div>
 

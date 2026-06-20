@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
-import { COLORS, FONTS, HERO_BG } from '../theme';
+import { COLORS, FONTS } from '../theme';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
 const TONE = { good: COLORS.good, warn: COLORS.warn, bad: COLORS.bad };
@@ -70,13 +70,13 @@ export default function CompilerChain(props) {
 
   return (
     <div style={{ display: 'grid', gap: 14 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', background: HERO_BG, color: '#e6ecf5', borderRadius: 10, padding: '13px 16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', background: COLORS.subtle, border: `1px solid ${COLORS.hair}`, color: COLORS.ink2, borderRadius: 10, padding: '13px 16px' }}>
         <div style={{ fontSize: 12.5, lineHeight: 1.6, flex: 1, minWidth: 240 }}>
-          The traceable chain <strong style={{ color: '#9bc0ff' }}>business risk → process → application → security system → control</strong>, with each control assessed against all five frameworks <strong>independently</strong> (no crosswalk).
+          The traceable chain <strong style={{ color: COLORS.accentText }}>business risk → process → application → security system → control</strong>, with each control assessed against all five frameworks <strong style={{ color: COLORS.ink }}>independently</strong> (no crosswalk).
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <VoiceControls voice={voice} onReplay={() => voice.speak(buildNarration(posture, chain))} label="Listen" />
-          <button onClick={recompile} disabled={busy} style={{ background: busy ? '#475569' : '#4f46e5', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 12.5, fontWeight: 700, cursor: busy ? 'default' : 'pointer' }}>{busy ? 'Compiling…' : '↻ Recompile'}</button>
+          <button onClick={recompile} disabled={busy} style={{ background: busy ? '#9499a1' : COLORS.accent, color: '#fff', border: 'none', borderRadius: 7, padding: '9px 18px', fontSize: 12.5, fontWeight: 600, cursor: busy ? 'default' : 'pointer' }}>{busy ? 'Compiling…' : '↻ Recompile'}</button>
         </div>
       </div>
 

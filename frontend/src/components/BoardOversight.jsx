@@ -8,7 +8,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
 import Provenance from './Provenance';
-import { COLORS, FONTS, HERO_BG } from '../theme';
+import { COLORS, FONTS } from '../theme';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
 const TONE = { good: COLORS.good, warn: COLORS.warn, bad: COLORS.bad };
@@ -42,11 +42,11 @@ export default function BoardOversight(props) {
   return (
     <div style={{ display: 'grid', gap: 14 }}>
       {d.provenance && <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 5, fontSize: 10, color: '#94a3b8', marginBottom: -4 }}><Provenance prov={d.provenance} /><span>data provenance</span></div>}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: HERO_BG, color: '#e6ecf5', borderRadius: 10, padding: '14px 16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: COLORS.subtle, border: `1px solid ${COLORS.hair}`, color: COLORS.ink2, borderRadius: 10, padding: '14px 16px' }}>
         <div style={{ display: 'flex', gap: 18, alignItems: 'center' }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 38, fontWeight: 800, lineHeight: 1, fontFamily: FONTS.mono, color: d.band === 'Adequate' ? '#f0a868' : TONE[bandTone(d.band)] }}>{d.posture}</div>
-            <div style={{ fontSize: 9, color: COLORS.accent, textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 3 }}>{d.band}</div>
+            <div style={{ fontSize: 38, fontWeight: 800, lineHeight: 1, fontFamily: FONTS.mono, color: TONE[bandTone(d.band)] }}>{d.posture}</div>
+            <div style={{ fontSize: 9, color: COLORS.accentText, textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 3 }}>{d.band}</div>
           </div>
           <div style={{ fontSize: 12.5, lineHeight: 1.6, maxWidth: 640 }}>{d.brief}</div>
         </div>

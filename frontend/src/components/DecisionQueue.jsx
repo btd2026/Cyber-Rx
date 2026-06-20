@@ -11,7 +11,7 @@ import { useAgentVoice, VoiceControls } from './agentVoice';
 import { DefensibleRationaleHint, DEFENSIBLE_PLACEHOLDER } from './legalRationale';
 import Provenance from './Provenance';
 import CrqDrawer from './CrqDrawer';
-import { COLORS, FONTS, HERO_BG } from '../theme';
+import { COLORS, FONTS } from '../theme';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
 const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
@@ -67,9 +67,9 @@ export default function DecisionQueue(props) {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: HERO_BG, color: '#e6ecf5', borderRadius: 10, padding: '13px 16px', marginBottom: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: COLORS.subtle, border: `1px solid ${COLORS.hair}`, color: COLORS.ink2, borderRadius: 10, padding: '13px 16px', marginBottom: 14 }}>
         <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>
-          The <strong style={{ color: '#9bc0ff' }}>same predicted events every executive sees</strong>, rendered for the <strong>{role}</strong>. Chained scenarios (low alone, critical combined) are flagged and shown first.
+          The <strong style={{ color: COLORS.accentText }}>same predicted events every executive sees</strong>, rendered for the <strong style={{ color: COLORS.ink }}>{role}</strong>. Chained scenarios (low alone, critical combined) are flagged and shown first.
         </div>
         <VoiceControls voice={voice} onReplay={() => voice.speak(overview)} label="Listen" />
       </div>
