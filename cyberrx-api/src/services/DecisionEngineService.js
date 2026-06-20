@@ -264,10 +264,18 @@ async function generate(orgId) {
     const inv = await require('./AiInventoryService').inventory(orgId);
     const gross = (c.financial && c.financial.grossExposure) || 0;
     const aiEvents = [];
-    const shadow = (inv.systems || []).find((s) => s.sanctioned === 'Shadow' && ['PHI', 'PCI', 'IP/Secrets', 'PII'].includes(s.dataSensitivity));
-    const agent = (inv.systems || []).find((s) => s.autonomy === 'Agentic' && !s.humanInLoop);
-    if (shadow) aiEvents.push({ key: `ai_shadow_${shadow.name}`, title: `Shadow AI processing sensitive data: "${shadow.name}"`, severity: 'Critical', exposure: Math.round(gross * 0.2) || 6000000, system: shadow.name });
-    if (agent) aiEvents.push({ key: `ai_agent_${agent.name}`, title: `Autonomous AI agent without oversight: "${agent.name}"`, severity: 'Critical', exposure: Math.round(gross * 0.15) || 4500000, system: agent.name });
+    const SENS = ['PHI', 'PCI', 'IP/Secrets', 'PII'];
+    const systems = inv.systems || [];
+    const shadow = systems.find((s) => s.sanctioned === 'Shadow' && SENS.includes(s.dataSensitivity));
+    const agent = systems.find((s) => s.autonomy === 'Agentic' && !s.humanInLoop);
+    const exfil = systems.find((s) => SENS.includes(s.dataSensitivity) && s.hosting === 'External SaaS' && s.sanctioned !== 'Sanctioned');
+    const supply = systems.find((s) => s.sanctioned === 'Shadow' || s.sanctioned === 'Unreviewed');
+    const used = new Set();
+    const add = (s, ev) => { if (s && !used.has(s.name)) { used.add(s.name); aiEvents.push(ev); } };
+    add(shadow, { key: `ai_shadow_${shadow && shadow.name}`, title: `Shadow AI processing sensitive data: "${shadow && shadow.name}"`, severity: 'Critical', exposure: Math.round(gross * 0.2) || 6000000, system: shadow && shadow.name });
+    add(agent, { key: `ai_agent_${agent && agent.name}`, title: `Autonomous AI agent without oversight: "${agent && agent.name}"`, severity: 'Critical', exposure: Math.round(gross * 0.15) || 4500000, system: agent && agent.name });
+    add(exfil, { key: `ai_exfil_${exfil && exfil.name}`, title: `${exfil && exfil.dataSensitivity} sent to an external model: "${exfil && exfil.name}"`, severity: 'High', exposure: Math.round(gross * 0.12) || 3500000, system: exfil && exfil.name });
+    add(supply, { key: `ai_supply_${supply && supply.name}`, title: `Unvetted AI model / supply chain: "${supply && supply.name}"`, severity: 'High', exposure: Math.round(gross * 0.08) || 2500000, system: supply && supply.name });
     aiEvents.forEach((a) => {
       const id = `dec_${orgId}_${hash(a.key)}`;
       const ev = { id: `evt_${orgId}_${hash(a.key)}`, title: a.title, severity: a.severity, exposure: a.exposure, owner: 'CISO', affectedSystem: a.system, crownJewel: crown, dataAtRisk, category: 'AI', scenarioType: classifyScenario(a.title) };

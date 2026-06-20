@@ -14,6 +14,7 @@ const { optionalJWT, demoOrg } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const AI = require('../services/AiInventoryService');
 const AiControl = require('../services/AiControlAssessmentService');
+const AiSec = require('../services/AiAgentSecurityService');
 
 router.use(optionalJWT, demoOrg);
 const orgOf = (req) => req.orgId || req.headers['x-org-id'] || req.query.org_id || req.query.orgId || (req.body && req.body.org_id);
@@ -61,6 +62,23 @@ router.get('/assessment', async (req, res) => {
 router.get('/eu-ai-act', async (req, res) => {
   const orgId = orgOf(req); if (!orgId) return res.status(400).json({ error: 'Organization required.' });
   try { res.json(await AiControl.classifyEuAiAct(orgId)); } catch (e) { res.status(500).json({ error: 'Unable to classify under the EU AI Act.' }); }
+});
+
+// Per-system guardrail posture (OWASP Top 10 for LLMs).
+router.get('/guardrails', async (req, res) => {
+  const orgId = orgOf(req); if (!orgId) return res.status(400).json({ error: 'Organization required.' });
+  try { res.json(await AiSec.guardrails(orgId)); } catch (e) { logger.warn('ai guardrails failed', { error: e.message }); res.status(500).json({ error: 'Unable to assess guardrails.' }); }
+});
+
+// Autonomous-agent least-privilege analysis.
+router.get('/agents', async (req, res) => {
+  const orgId = orgOf(req); if (!orgId) return res.status(400).json({ error: 'Organization required.' });
+  try { res.json(await AiSec.agents(orgId)); } catch (e) { logger.warn('ai agents failed', { error: e.message }); res.status(500).json({ error: 'Unable to analyze agents.' }); }
+});
+
+// How CyberRX itself uses LLMs (buyer-trust transparency).
+router.get('/platform-ai-use', async (req, res) => {
+  try { res.json(AiSec.platformAiUse()); } catch (e) { res.status(500).json({ error: 'Unable to load platform AI use.' }); }
 });
 
 module.exports = router;
