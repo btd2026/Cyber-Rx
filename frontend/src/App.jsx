@@ -4745,14 +4745,39 @@ function Setup(props) {
   // Industry profile (typical processes/technology/regulations for the selected
   // sector) — drives industry-aware guidance in the Process & Technology steps.
   var _sIndProf=useState(null); var indProfile=_sIndProf[0]; var setIndProfile=_sIndProf[1];
-  useEffect(function(){
-    var ind=(typeof localStorage!=="undefined"&&localStorage.getItem("cyberrx_industry"))||"";
-    if(!ind){ return; }
+  // Industry-agnostic intake: an explicit sector selector drives framing, presets
+  // and which sector-specific fields appear. Canonical ids match /api/industries.
+  var INDUSTRIES=[
+    ["healthcare_payer","Healthcare — Payer / Health Plan"],
+    ["healthcare_provider","Healthcare — Provider / Hospital"],
+    ["bank","Banking"],
+    ["insurance_pc","Insurance (P&C / Life)"],
+    ["saas_tech","SaaS / Technology"],
+    ["retail_ecommerce","Retail / E-commerce"],
+    ["manufacturing","Manufacturing"],
+    ["energy_utilities","Energy / Utilities"],
+    ["government","Government / Public Sector"],
+    ["higher_ed","Higher Education"],
+    ["generic","Other"],
+  ];
+  var _sInd=useState(function(){ try{ return (typeof localStorage!=="undefined"&&localStorage.getItem("cyberrx_industry"))||""; }catch(e){ return ""; } });
+  var industry=_sInd[0]; var setIndustryState=_sInd[1];
+  function loadIndustryProfile(ind){
+    if(!ind){ setIndProfile(null); return; }
     fetch(CYBERRX_API+"/api/industries/"+encodeURIComponent(ind))
       .then(function(r){return r.ok?r.json():null;})
       .then(function(p){ if(p) setIndProfile(p); })
       .catch(function(){});
-  }, []);
+  }
+  function changeIndustry(ind){
+    setIndustryState(ind);
+    try{ if(typeof localStorage!=="undefined") localStorage.setItem("cyberrx_industry", ind||""); }catch(e){}
+    loadIndustryProfile(ind);
+    // The payer ORG_TYPES only apply to health plans; for every other sector
+    // mirror the industry into orgType so downstream profile lookups still resolve.
+    if(ind && ind!=="healthcare_payer"){ setOrgType(ind); }
+  }
+  useEffect(function(){ loadIndustryProfile(industry); }, []); // eslint-disable-line
   var _s7p=useState("");       var connToken=_s7p[0];  var setConnToken=_s7p[1];
   var _s7q=useState("");       var connEndpoint=_s7q[0];var setConnEndpoint=_s7q[1];
   // Steps 2-5 hydrate from the saved org profile (orgs.setup_json) so
@@ -5528,6 +5553,10 @@ function Setup(props) {
                 <div style={{color:C.muted,fontSize:11,fontWeight:600,marginBottom:4}}>Organization Name *</div>
                 <input value={orgName||""} onChange={function(e){
                     var val=e.target.value; setOrgName(val);
+                    // Persist the org id immediately so downstream actions (e.g. the
+                    // application-inventory import) always have an org, even before
+                    // the profile is formally saved.
+                    try{ if(typeof localStorage!=="undefined"){ var _sid=String(val||"").toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').substring(0,50); if(_sid){ localStorage.setItem('cyberrx_org_id',_sid); } } }catch(_e){}
                     var lo=val.toLowerCase(); var detected=null;
                     INSURER_HINTS_RICH.forEach(function(h){
                       if(!detected){h.patterns.forEach(function(p){if(lo.includes(p)){detected=h;}});}
@@ -5541,7 +5570,7 @@ function Setup(props) {
                     });
                     if(detected){setOrgType(detected.type);}
                   }}
-                  placeholder="e.g. Humana, [ORG], Blue Shield of CA, Meridian Health Plan"
+                  placeholder="e.g. Acme Corp, Contoso, Northwind Traders"
                   style={{width:"100%",background:C.bg,border:"1px solid "+(orgName?C.acc:C.border),borderRadius:7,
                     padding:"9px 12px",color:C.text,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                 {hint&&(
@@ -5551,13 +5580,24 @@ function Setup(props) {
                   </div>
                 )}
               </div>
-              {/* Org Type */}
+              {/* Industry — drives framing, presets and which fields apply */}
               <div style={{marginBottom:14}}>
-                <div style={{color:C.muted,fontSize:11,fontWeight:600,marginBottom:4}}>Organization Type *</div>
+                <div style={{color:C.muted,fontSize:11,fontWeight:600,marginBottom:4}}>Industry *</div>
+                <select value={industry} onChange={function(e){changeIndustry(e.target.value);}}
+                  style={{width:"100%",background:C.bg,border:"1px solid "+(industry?C.acc:C.border),borderRadius:7,
+                    padding:"9px 12px",color:industry?C.text:C.muted,fontSize:13,outline:"none",boxSizing:"border-box"}}>
+                  <option value="">Select your industry…</option>
+                  {INDUSTRIES.map(function(it){return <option key={it[0]} value={it[0]}>{it[1]}</option>;})}
+                </select>
+                <div style={{marginTop:4,color:C.muted,fontSize:10}}>Sets which frameworks, tools and risk framing apply — you can change it later.</div>
+              </div>
+              {/* Plan type — only relevant for health-plan payers */}
+              {industry==="healthcare_payer" && (
+              <div style={{marginBottom:14}}>
+                <div style={{color:C.muted,fontSize:11,fontWeight:600,marginBottom:4}}>Plan type</div>
                 <select value={orgType} onChange={function(e){setOrgType(e.target.value);}}
                   style={{width:"100%",background:C.bg,border:"1px solid "+(orgType?C.acc:C.border),borderRadius:7,
                     padding:"9px 12px",color:orgType?C.text:C.muted,fontSize:13,outline:"none",boxSizing:"border-box"}}>
-                  <option value="">Select type…</option>
                   <option value="">Select type…</option>
                   <option value="unknown">I don't know / Not sure</option>
                   {ORG_TYPES.map(function(t){return <option key={t} value={t}>{t}</option>;})}
@@ -5569,6 +5609,7 @@ function Setup(props) {
                   </div>
                 )}
               </div>
+              )}
               {/* 14 Range dropdowns in 2-col grid */}
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
                 {/* Publicly traded toggle */}
@@ -5593,26 +5634,18 @@ function Setup(props) {
               </div>
 
               {[
-                  {label:"Members / Enrollees",             val:members,      set:setMembers,      ranges:MEMBER_RANGES,   tip:"PHI breach cost driver ($164/record)"},
-                  {label:"Employees",                        val:employees,    set:setEmployees,    ranges:EMPLOYEE_RANGES, tip:"Workforce security, insider threat scope"},
-                  {label:"Annual Premium Revenue",           val:revenue,      set:setRevenue,      ranges:REVENUE_RANGES,  tip:"Revenue loss and SEC materiality baseline"},
-                  {label:"Annual Claims Processed",          val:claimsAmt,    set:setClaimsAmt,    ranges:CLAIMS_RANGES,   tip:"FWA exposure and claims disruption cost"},
-                  {label:"CMS Contract Value (MA/Medicaid)", val:cmsContract,  set:setCmsContract,  ranges:CMS_RANGES,      tip:"Sanctions and RADV recovery exposure"},
-                  {label:"In-Network Providers",             val:providers,    set:setProviders,    ranges:PROVIDER_RANGES, tip:"Provider credentialing data liability"},
-                  {label:"Avg Member Premium / Month",       val:memberPremium,set:setMemberPremium,ranges:PREMIUM_RANGES,  tip:"Post-breach churn revenue calculation"},
-                  {label:"Expected Member Churn After Breach",val:churnRate,   set:setChurnRate,    ranges:CHURN_RANGES,    tip:"% members expected to leave after a breach"},
-                  {label:"Estimated Downtime (breach scenario)",val:downtimeDays,set:setDowntimeDays,ranges:DOWNTIME_RANGES,tip:"Drives business interruption and claims disruption calc"},
-                  {label:"Annual IT / Security Budget",      val:itBudget,     set:setItBudget,     ranges:IT_BUDGET_RANGES,tip:"Recovery/rebuild = 15% of IT budget"},
-                  {label:"Statutory Surplus (RBC Capital)",   val:surplus,      set:setSurplus,      ranges:SURPLUS_RANGES,  tip:"Risk-Based Capital statutory surplus — your primary capital shock absorber for cyber losses. Regulators intervene if depleted beyond 200% ACL."},
-                  {label:"Claims Reserves (IBNR + Unpaid)",   val:ibnr,         set:setIBNR,         ranges:IBNR_RANGES,     tip:"Incurred But Not Reported + unpaid claims reserves. Operational disruption (ransomware, system outage) directly draws from this pool."},
-                  {label:"Cyber Insurance Coverage",         val:cyberIns,     set:setCyberIns,     ranges:INSURANCE_RANGES,tip:"Reduces net exposure"},
-                  {label:"Ransomware Sublimit",              val:ransomCov,    set:setRansomCov,    ranges:RANSOM_RANGES,   tip:"Separate ransomware/extortion sublimit in policy"},
-                  {label:"PHI Records In Scope",           val:phiRecs,      set:setPhiRecs,      ranges:PHI_RECORDS_RANGES, tip:"Total member/patient PHI records accessible — drives breach notification cost and OCR fine exposure"},
-                  {label:"Total Managed Endpoints",        val:endptCount,   set:setEndptCount,   ranges:ENDPOINT_RANGES,    tip:"Laptops, servers, workstations — drives EDR coverage cost and patch surface area"},
-                  {label:"Privileged Account Count",       val:privAcctCnt,  set:setPrivAcctCnt,  ranges:PRIV_ACCT_RANGES,   tip:"Accounts with admin/elevated access — primary PAM scope and insider threat exposure"},
-                  {label:"Current RBC Ratio",              val:rbcRatioIn,   set:setRbcRatioIn,   ranges:RBC_RATIO_RANGES,   tip:"Current Risk-Based Capital ratio — regulatory minimum 200%, board must track cyber impact"},
-                  {label:"Cyber Insurance Deductible",     val:insDeduct,    set:setInsDeduct,    ranges:DEDUCTIBLE_RANGES,  tip:"Self-retention amount before cyber insurance triggers — affects net exposure calculation"},
-                ].map(function(f){
+                  {label:"Annual revenue",                   val:revenue,      set:setRevenue,      ranges:REVENUE_RANGES,  tip:"Revenue-loss and SEC-materiality baseline"},
+                  {label:"Employees",                        val:employees,    set:setEmployees,    ranges:EMPLOYEE_RANGES, tip:"Workforce security and insider-threat scope"},
+                  {label:"Sensitive / regulated records held",val:phiRecs,     set:setPhiRecs,      ranges:PHI_RECORDS_RANGES, tip:"PII / PHI / PCI records you hold — drives breach-notification cost and fine exposure"},
+                  {label:"Total managed endpoints",          val:endptCount,   set:setEndptCount,   ranges:ENDPOINT_RANGES,  tip:"Laptops, servers, workstations — EDR coverage and patch surface"},
+                  {label:"Privileged accounts",              val:privAcctCnt,  set:setPrivAcctCnt,  ranges:PRIV_ACCT_RANGES, tip:"Admin / elevated-access accounts — PAM scope and insider exposure"},
+                  {label:"Annual IT / security budget",      val:itBudget,     set:setItBudget,     ranges:IT_BUDGET_RANGES, tip:"Recovery / rebuild ≈ 15% of IT budget"},
+                  {label:"Cyber insurance limit",            val:cyberIns,     set:setCyberIns,     ranges:INSURANCE_RANGES, tip:"Reduces net financial exposure"},
+                  {label:"Cyber insurance deductible",       val:insDeduct,    set:setInsDeduct,    ranges:DEDUCTIBLE_RANGES,tip:"Self-retention before insurance triggers"},
+                  {label:"Statutory surplus (RBC capital)",   val:surplus,      set:setSurplus,      ranges:SURPLUS_RANGES,   tip:"Primary capital shock absorber for cyber losses (insurers / health plans).",show:(industry==="healthcare_payer"||industry==="insurance_pc")},
+                  {label:"Claims reserves (IBNR + unpaid)",   val:ibnr,         set:setIBNR,         ranges:IBNR_RANGES,      tip:"Reserve pool operational disruption draws from (insurers / health plans).",show:(industry==="healthcare_payer"||industry==="insurance_pc")},
+                  {label:"Current RBC ratio",                val:rbcRatioIn,   set:setRbcRatioIn,   ranges:RBC_RATIO_RANGES, tip:"Regulatory minimum 200% (insurers / health plans).",show:(industry==="healthcare_payer"||industry==="insurance_pc")},
+                ].filter(function(f){return f.show!==false;}).map(function(f){
                   return (
                     <div key={f.label}>
                       <div style={{color:C.muted,fontSize:11,fontWeight:600,marginBottom:4}}>{f.label}</div>
@@ -5632,36 +5665,6 @@ function Setup(props) {
               </div>
             </Card>
 
-            {/* ── Insurance Carrier Select ── */}
-            <Card>
-              <div style={{color:C.text,fontSize:11,fontWeight:700,marginBottom:8}}>Cyber Insurance Carrier</div>
-              <select value={insCarrierInput} onChange={function(e){setInsCarrierInput(e.target.value);}}
-                style={{width:"100%",background:C.bg,border:"1px solid "+(insCarrierInput?C.acc:C.border),
-                  borderRadius:7,padding:"9px 10px",color:insCarrierInput?C.text:C.muted,
-                  fontSize:11,outline:"none",boxSizing:"border-box"}}>
-                <option value="">Select carrier…</option>
-                <option value="unknown">I don't know / Not sure</option>
-                <option value="AIG / Lexington">AIG / Lexington Insurance</option>
-                <option value="AXA XL">AXA XL</option>
-                <option value="Beazley">Beazley</option>
-                <option value="Berkshire Hathaway Specialty">Berkshire Hathaway Specialty</option>
-                <option value="Chubb">Chubb</option>
-                <option value="Coalition">Coalition</option>
-                <option value="CNA Financial">CNA Financial</option>
-                <option value="Corvus">Corvus Insurance</option>
-                <option value="Cowbell Cyber">Cowbell Cyber</option>
-                <option value="Everest Insurance">Everest Insurance</option>
-                <option value="Hiscox">Hiscox</option>
-                <option value="Munich Re Specialty">Munich Re Specialty</option>
-                <option value="Nationwide">Nationwide</option>
-                <option value="Philadelphia Insurance">Philadelphia Insurance</option>
-                <option value="Tokio Marine HCC">Tokio Marine HCC</option>
-                <option value="Travelers">Travelers</option>
-                <option value="Zurich Insurance">Zurich Insurance</option>
-                <option value="Other">Other carrier</option>
-                <option value="None">No cyber insurance</option>
-              </select>
-            </Card>
 
             {/* ── States of Operation — multi-state picker ── */}
             <div style={{marginBottom:14,background:C.panel,border:"1px solid "+C.border,borderRadius:10,overflow:"hidden"}}>
@@ -5669,7 +5672,7 @@ function Setup(props) {
                 display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <div>
                   <div style={{color:C.text,fontSize:11,fontWeight:700}}>States of Operation</div>
-                  <div style={{color:C.muted,fontSize:9}}>Select states — healthcare regulations auto-add in Step 2</div>
+                  <div style={{color:C.muted,fontSize:9}}>Select states — state breach &amp; privacy laws auto-add in Step 2</div>
                 </div>
                 {Object.keys(selStates).filter(function(k){return selStates[k];}).length>0&&(
                   <span style={{color:C.acc,fontSize:10,fontWeight:700,background:C.faint,borderRadius:10,padding:"2px 10px"}}>
@@ -5721,34 +5724,6 @@ function Setup(props) {
               </div>
             </div>
 
-            <Card style={{marginBottom:14}}>
-              <SH label="System Names — personalizes all risk findings and reports"/>
-              <div style={{color:C.muted,fontSize:10,marginBottom:8}}>
-                Your actual system names replace generic labels in risk text, compliance evidence, and ITSM tickets.
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                {[["Claims Platform","HealthEdge / QNXT / Facets",props.setRootClaimsSystem],
-                  ["EOB Mailing Vendor","Conduent / DST / Broadridge",props.setRootMailingVendor],
-                ].map(function(f,i){return(
-                  <div key={i}>
-                    <div style={{color:C.muted,fontSize:10,fontWeight:600,marginBottom:3}}>{f[0]}</div>
-                    <input placeholder={f[1]}
-                      onChange={function(e){if(f[2])f[2](e.target.value);}}
-                      style={{width:"100%",background:C.bg,border:"1px solid "+C.border,
-                        borderRadius:6,padding:"5px 8px",fontSize:11,color:C.text,
-                        outline:"none",boxSizing:"border-box"}}/>
-                  </div>
-                );})}
-                <div style={{gridColumn:"1/-1"}}>
-                  <div style={{color:C.muted,fontSize:10,fontWeight:600,marginBottom:3}}>Member Portal / App Name</div>
-                  <input placeholder="e.g. MyBluePlan, MyHealth, member portal name"
-                    onChange={function(e){if(props.setRootMemberPortal)props.setRootMemberPortal(e.target.value);}}
-                    style={{width:"100%",background:C.bg,border:"1px solid "+C.border,
-                      borderRadius:6,padding:"5px 8px",fontSize:11,color:C.text,
-                      outline:"none",boxSizing:"border-box"}}/>
-                </div>
-              </div>
-            </Card>
 
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <Btn onClick={goBack}>← Exit Setup</Btn>
@@ -5759,9 +5734,9 @@ function Setup(props) {
                   if(Object.keys(stateFWs).length>0){
                     setSelFW(function(prev){return Object.assign({},prev,stateFWs);});
                   }
-                }} disabled={!orgName}
-                style={{background:orgName?C.acc:"#555",border:"none",color:"#fff",borderRadius:8,
-                  padding:"9px 24px",cursor:orgName?"pointer":"not-allowed",fontSize:13,fontWeight:700}}>
+                }} disabled={!orgName||!industry}
+                style={{background:(orgName&&industry)?C.acc:"#555",border:"none",color:"#fff",borderRadius:8,
+                  padding:"9px 24px",cursor:(orgName&&industry)?"pointer":"not-allowed",fontSize:13,fontWeight:700}}>
                 Next: Regulatory Frameworks →
               </button>
             </div>
