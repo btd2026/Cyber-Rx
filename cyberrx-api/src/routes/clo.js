@@ -49,4 +49,36 @@ router.get('/portfolio', async (req, res) => {
   catch (e) { logger.warn('clo portfolio failed', { error: e.message }); res.status(500).json({ error: 'Unable to build legal portfolio.' }); }
 });
 
+// ---- SEC materiality determination & 8-K Item 1.05 workflow ----------------
+router.get('/materiality', async (req, res) => {
+  const orgId = orgOf(req); if (!orgId) return res.status(400).json({ error: 'Organization required.' });
+  try { res.json(await svc('MaterialityService').list(orgId)); }
+  catch (e) { logger.warn('clo materiality list failed', { error: e.message }); res.status(500).json({ error: 'Unable to load materiality assessments.' }); }
+});
+
+router.post('/materiality', async (req, res) => {
+  const orgId = orgOf(req); if (!orgId) return res.status(400).json({ error: 'Organization required.' });
+  try { res.json(await svc('MaterialityService').determine(orgId, req.body || {})); }
+  catch (e) {
+    if (e.code === 'RATIONALE_REQUIRED') return res.status(422).json({ error: e.message });
+    logger.warn('clo materiality determine failed', { error: e.message }); res.status(400).json({ error: e.message || 'Unable to record determination.' });
+  }
+});
+
+router.get('/materiality/:id/draft-8k', async (req, res) => {
+  const orgId = orgOf(req); if (!orgId) return res.status(400).json({ error: 'Organization required.' });
+  try { res.json(await svc('MaterialityService').draft8k(orgId, req.params.id)); }
+  catch (e) { res.status(500).json({ error: e.message || 'Unable to draft the 8-K.' }); }
+});
+
+router.get('/materiality/:id/package', async (req, res) => {
+  const orgId = orgOf(req); if (!orgId) return res.status(400).json({ error: 'Organization required.' });
+  try {
+    const pkg = await svc('MaterialityService').evidencePackage(orgId, req.params.id);
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="materiality-package-${req.params.id}.json"`);
+    res.send(JSON.stringify(pkg, null, 2));
+  } catch (e) { res.status(500).json({ error: e.message || 'Unable to build the disclosure package.' }); }
+});
+
 module.exports = router;
