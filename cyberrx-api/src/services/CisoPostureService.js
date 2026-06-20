@@ -36,7 +36,7 @@ function metric(name, value, unit, target, higher, source) {
   else sub = clamp(100 - Math.max(0, (value / target) - 1) * 100);                  // lower is better, soft penalty over target
   const within = higher ? value >= target : value <= target;
   const tag = (source && typeof source === 'object') ? source : { source: source || '', mode: 'derived' };
-  return { name, value: Math.round(value * 10) / 10, unit, target, higher, within, sub: Math.round(sub), source: tag.source, mode: tag.mode };
+  return { name, value: Math.round(value * 10) / 10, unit, target, higher, within, sub: Math.round(sub), source: tag.source, mode: tag.mode, inputKey: tag.key || null };
 }
 
 function statusOf(score) { return score == null ? 'Not assessed' : score >= 80 ? 'green' : score >= 60 ? 'amber' : 'red'; }
@@ -59,12 +59,16 @@ async function gather(orgId) {
   // Whether this org has supplied real data: intake evidence, findings, controls
   // or threat scenarios. When false, signals are sample/demo, not measurements —
   // provenance is downgraded accordingly so we never overstate freshness.
+  // Connector-fed signals (Entra/CrowdStrike/Tenable/Splunk) → live provenance.
+  let sources = {};
+  try { sources = await require('./IntegrationService').sourcesForOrg(orgId); } catch (_) {}
   const dataPresent = evRows.length > 0
     || ((sev.Critical || 0) + (sev.High || 0) + (sev.Medium || 0) + (sev.Low || 0)) > 0
     || num((ctrlAgg[0] || {}).total) > 0
-    || num((threatAgg[0] || {}).n) > 0;
+    || num((threatAgg[0] || {}).n) > 0
+    || Object.keys(sources).length > 0;
   return {
-    I, dataPresent,
+    I, dataPresent, sources,
     crit: sev.Critical || 0, high: sev.High || 0, med: sev.Medium || 0,
     findingsTotal: (sev.Critical || 0) + (sev.High || 0) + (sev.Medium || 0) + (sev.Low || 0),
     vendorActive: num((vendorAgg[0] || {}).active), vendorSevere: num((vendorAgg[0] || {}).severe),
@@ -74,8 +78,8 @@ async function gather(orgId) {
   };
 }
 
-const LIVE = (label) => ({ source: label, mode: 'live' });   // directly-measured signal
-const DRV = (label) => ({ source: label, mode: 'derived' }); // computed from live signals
+const LIVE = (label, key) => ({ source: label, mode: 'live', key });   // directly-measured signal
+const DRV = (label, key) => ({ source: label, mode: 'derived', key }); // computed from live signals
 
 // ---------------------------------------------------------------------------
 // The eight CISO posture domains. Each returns its metric list.
@@ -92,8 +96,8 @@ function buildDomains(c) {
 
   return [
     { id: 'identity', name: 'Identity & Access Security', metrics: [
-      metric('MFA coverage', mfa, '%', 100, true, LIVE('Okta')),
-      metric('Privileged access coverage', pam, '%', 95, true, LIVE('CyberArk')),
+      metric('MFA coverage', mfa, '%', 100, true, LIVE('Okta','mfa_pct')),
+      metric('Privileged access coverage', pam, '%', 95, true, LIVE('CyberArk','pam_pct')),
       metric('PAM session recording', clamp(pam * 0.9), '%', 95, true, DRV('CyberArk')),
       metric('Dormant privileged accounts', Math.round(priv * (1 - pam / 100) * 0.25), 'accts', 0, false, DRV('IGA')),
       metric('Orphaned accounts', Math.round(priv * 0.014 + priv * (1 - pam / 100) * 0.05), 'accts', 0, false, DRV('SailPoint')),
@@ -104,13 +108,13 @@ function buildDomains(c) {
     { id: 'vuln', name: 'Vulnerability & Patch Posture', metrics: [
       metric('Critical exploitable vulnerabilities', c.crit, 'CVEs', 0, false, LIVE('Tenable')),
       metric('Known exploited vulnerabilities (KEV)', Math.round(c.crit * 0.4), 'CVEs', 0, false, DRV('CISA KEV')),
-      metric('Patch SLA compliance', patch, '%', 95, true, LIVE('Tenable')),
+      metric('Patch SLA compliance', patch, '%', 95, true, LIVE('Tenable','patch_pct')),
       metric('Vulnerabilities on critical assets', Math.round(c.crit * 0.6 + c.high * 0.2), 'CVEs', 0, false, DRV('Tenable')),
       metric('Avg age of critical vulnerabilities', Math.round(14 / Math.max(vuln, 30) * 95), 'days', 30, false, DRV('Tenable')),
       metric('Secure config baseline compliance', clamp(patch * 0.7 + 30), '%', 90, true, DRV('CIS-CAT')),
     ] },
     { id: 'endpoint', name: 'Endpoint & Workload Security', metrics: [
-      metric('EDR coverage', edr, '%', 99, true, LIVE('CrowdStrike')),
+      metric('EDR coverage', edr, '%', 99, true, LIVE('CrowdStrike','edr_pct')),
       metric('Unprotected endpoints', Math.round(endpoints * (1 - edr / 100)), 'endpoints', 0, false, DRV('CrowdStrike')),
       metric('Malware events (30d)', Math.round((100 - edr) / 4), 'events', 5, false, DRV('CrowdStrike')),
       metric('Endpoint policy compliance', clamp(edr * 0.85 + 12), '%', 95, true, DRV('CrowdStrike')),
@@ -129,8 +133,8 @@ function buildDomains(c) {
       metric('Critical log source coverage', clamp(Math.min(100, siem / 90 * 100) * 0.6 + 40), '%', 95, true, DRV('Splunk')),
       metric('Detection rule coverage', clamp(Math.min(100, siem / 90 * 100) * 0.5 + 35), '%', 90, true, DRV('Splunk')),
       metric('Open high-severity incidents', c.crit + c.high, 'incidents', 0, false, LIVE('Findings')),
-      metric('Mean time to detect (MTTD)', mttd, 'hrs', 24, false, LIVE('Splunk')),
-      metric('Mean time to respond (MTTR)', mttr, 'hrs', 4, false, LIVE('ServiceNow')),
+      metric('Mean time to detect (MTTD)', mttd, 'hrs', 24, false, LIVE('Splunk','mttd_hrs')),
+      metric('Mean time to respond (MTTR)', mttr, 'hrs', 4, false, LIVE('ServiceNow','mttr_hrs')),
       metric('SOC backlog', c.tasksOpen, 'tasks', 10, false, LIVE('ServiceNow')),
       metric('Failed detection tests', Math.round((100 - Math.min(100, siem / 90 * 100)) / 25), 'tests', 0, false, DRV('Purple team')),
       metric('IR playbook readiness', irReady, '%', 90, true, LIVE('Intake')),
@@ -191,12 +195,17 @@ async function getPosture(orgId, { persist = true } = {}) {
     const trend = before == null ? 'new' : delta >= 3 ? 'improving' : delta <= -3 ? 'deteriorating' : 'stable';
     // Effective provenance: a metric is only 'live'/'derived' if the org actually
     // supplied data; otherwise it's sample ('demo') or a bare model ('modeled').
+    const sync = c.sources || {};
     const metrics = d.metrics.map((m) => {
-      const eff = c.dataPresent ? m.mode : (m.mode === 'live' ? 'demo' : 'modeled');
+      const fed = m.inputKey && sync[m.inputKey] && sync[m.inputKey].fresh;
+      let eff, src, asOf, lineage = null;
+      if (fed) { eff = 'live'; src = sync[m.inputKey].source; asOf = sync[m.inputKey].asOf; lineage = 'Live feed'; }
+      else if (c.dataPresent) { eff = m.mode; src = m.source; asOf = generatedAt; }
+      else { eff = m.mode === 'live' ? 'demo' : 'modeled'; src = m.source; asOf = null; }
       return {
         name: m.name, value: m.value, unit: m.unit, target: m.target, higher: m.higher, within: m.within,
         source: m.source, intendedMode: m.mode,
-        provenance: prov(eff, m.source, { asOf: c.dataPresent ? generatedAt : null }),
+        provenance: prov(eff, src, { asOf, lineage }),
       };
     });
     return {

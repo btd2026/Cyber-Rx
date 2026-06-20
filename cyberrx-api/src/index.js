@@ -288,6 +288,10 @@ app.use('/api/projects',          [apiGetLimiter, apiPostLimiter], require('./ro
 // shadow AI, data exposure, autonomy, and governance posture.
 app.use('/api/ai-systems',        [apiGetLimiter, apiPostLimiter], require('./routes/aiSystems'));
 
+// Real integrations — read-only security-tool connectors that feed live signals
+// (Entra ID, CrowdStrike, Tenable, Splunk) into the posture/coverage pipeline.
+app.use('/api/integrations',      [apiGetLimiter, apiPostLimiter], require('./routes/integrations'));
+
 // Decision spine — one shared event/DecisionCard rendered per role, with a
 // decision & evidence ledger (the cross-role "decisions, not dashboards" surface).
 app.use('/api/decisions',         [apiGetLimiter, apiPostLimiter], require('./routes/decisions'));
