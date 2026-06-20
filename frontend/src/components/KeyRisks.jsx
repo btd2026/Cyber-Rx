@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Provenance from './Provenance';
 import { useAgentVoice, VoiceControls } from './agentVoice';
 
 const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc';
@@ -96,7 +97,7 @@ export default function KeyRisks(props) {
                     </div>
                   </div>
                   <div style={{ minWidth: 196, background: PANEL, border: `1px solid ${HAIR}`, borderRadius: 10, padding: '11px 13px' }}>
-                    <div style={{ fontSize: 9, color: INK3, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700 }}>Exploit likelihood</div>
+                    <div style={{ fontSize: 9, color: INK3, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>{e.provenance && <Provenance prov={e.provenance} />}Exploit likelihood &amp; loss</div>
                     <div style={{ display: 'flex', gap: 16, marginTop: 6 }}>
                       <Stat k="7 days" v={`${e.timing.p7}%`} />
                       <Stat k="30 days" v={`${e.timing.p30}%`} accent={SEV[e.severity]} />

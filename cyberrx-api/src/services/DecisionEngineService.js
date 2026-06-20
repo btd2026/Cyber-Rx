@@ -26,6 +26,7 @@
 
 const db = require('../utils/db');
 const logger = require('../utils/logger');
+const { prov } = require('../utils/provenance');
 
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
@@ -298,7 +299,17 @@ async function generate(orgId) {
   cards.forEach((c) => { if (!c.type) c.type = 'single'; });
   // Compound (chained) scenarios are the headline prediction — surface first.
   const compounds = buildCompounds(orgId, cards.filter((c) => c.event.category !== 'project'), crown, dataAtRisk);
-  return { organizationId: orgId, generatedAt: new Date().toISOString(), cards: [...compounds, ...cards] };
+  const all = [...compounds, ...cards];
+  // Provenance for the likelihood/loss panel: 'live' when a real exploit signal
+  // (EPSS/KEV) drives timing, otherwise 'modeled' (Monte Carlo loss × modeled p).
+  all.forEach((c) => {
+    const t = (c.event && c.event.timing) || {};
+    const liveSignal = (t.cves && t.cves.length) || t.kev;
+    c.event.provenance = prov(liveSignal ? 'live' : 'modeled',
+      liveSignal ? `EPSS/KEV · ${(t.cves || []).join(', ') || 'CISA KEV'}` : 'Loss & exploit model',
+      { lineage: liveSignal ? null : 'Monte Carlo loss × modeled likelihood' });
+  });
+  return { organizationId: orgId, generatedAt: new Date().toISOString(), cards: all };
 }
 
 // ---- translation engine: one card → a role lens ----------------------------

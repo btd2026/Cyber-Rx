@@ -68,8 +68,10 @@ async function compose(orgId) {
   // applications from the crosswalk. Fall back to the demo set only when the org
   // has not completed the Process phase yet.
   const approved = await approvedProcesses(orgId);
-  const finalProcesses = approved.length ? approved : processes;
   if (approved.length) origins.CriticalBusinessProcess = 'live';
+  // Real approved processes carry modeled coverage defaults until assessed → 'derived'.
+  const procMode = approved.length ? 'derived' : 'demo';
+  const finalProcesses = (approved.length ? approved : processes).map((p) => ({ ...p, provenance: prov(procMode, approved.length ? 'Process inventory' : 'Sample data') }));
   return { domains, controls, thresholds, processes: finalProcesses, pathways, readiness, investments, hidden, attention, actions, peers, emerging, sources, origins };
 }
 
@@ -140,9 +142,11 @@ function controlRisk(controls) {
     .map((c, i) => ({ rank: i + 1, ...c }));
 }
 
-function thresholdBoard(thresholds) {
+function thresholdBoard(thresholds, origin) {
+  const mode = origin === 'live' ? 'live' : 'demo';
   const rows = thresholds.map((t) => ({ ...t, status: thresholdStatus(t),
-    headroom: t.direction === 'lte' ? t.limit - t.current : t.current - t.limit }));
+    headroom: t.direction === 'lte' ? t.limit - t.current : t.current - t.limit,
+    provenance: prov(mode, 'Security thresholds') }));
   return { rows, breaches: rows.filter((r) => r.status === 'Breach').length, total: rows.length,
     critical: rows.filter((r) => r.status === 'Breach' && r.breachSeverity === 'Critical').length };
 }
@@ -154,13 +158,16 @@ function actionQueue(actions) {
     .map((a, i) => ({ rank: i + 1, ...a }));
 }
 
-function readinessView(items) {
-  const overall = round(items.reduce((s, r) => s + r.score, 0) / (items.length || 1));
-  return { items, overall, rating: scoreBand(overall) };
+function readinessView(items, origin) {
+  const mode = origin === 'live' ? 'derived' : 'demo';
+  const withProv = items.map((r) => ({ ...r, provenance: prov(mode, 'Readiness assessment') }));
+  const overall = round(withProv.reduce((s, r) => s + r.score, 0) / (withProv.length || 1));
+  return { items: withProv, overall, rating: scoreBand(overall) };
 }
 
-function investmentView(investments) {
-  return investments.map((iv) => ({ ...iv, riskReduction: iv.baselineRisk - iv.currentRisk }));
+function investmentView(investments, origin) {
+  const mode = origin === 'live' ? 'live' : 'demo';
+  return investments.map((iv) => ({ ...iv, riskReduction: iv.baselineRisk - iv.currentRisk, provenance: prov(mode, 'Investment register') }));
 }
 
 // ---- executive answer generator -------------------------------------------
@@ -289,10 +296,10 @@ async function getDashboard(orgId, role) {
   const posture = overallPosture(model.domains);
   const matrix = domainMatrix(model.domains, (model.origins || {}).SecurityDomain);
   const ranks = controlRisk(model.controls);
-  const board = thresholdBoard(model.thresholds);
+  const board = thresholdBoard(model.thresholds, (model.origins || {}).Threshold);
   const queue = actionQueue(model.actions);
-  const readiness = readinessView(model.readiness);
-  const invest = investmentView(model.investments);
+  const readiness = readinessView(model.readiness, (model.origins || {}).CyberReadinessItem);
+  const invest = investmentView(model.investments, (model.origins || {}).SecurityInvestment);
   const answers = buildAnswers(model, posture, matrix, ranks, board, queue, readiness, invest, refreshed);
   await persistSnapshot(orgId, posture);
 
