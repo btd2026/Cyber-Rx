@@ -182,9 +182,16 @@ router.get('/overview', optionalJWT, async (req, res) => {
 // ---- CIO lens sub-tabs (shared decision spine) -----------------------------
 // Operational Posture (Current State): availability, recovery vs RTO/RPO,
 // tech-debt + shadow-IT, what-changed, exec brief, visibility.
+// Per-view provenance: 'derived' (org data) vs 'demo' (industry sample).
+const { prov: _prov } = require('../utils/provenance');
+async function cioViewProv(orgId, label) {
+  try { const c = await require('../services/ExecDashboardService').loadCtx(orgId); return _prov(c.isDemo ? 'demo' : 'derived', label); }
+  catch (_) { return _prov('modeled', label); }
+}
+
 router.get('/operational', optionalJWT, async (req, res) => {
   const orgId = resolveOrg(req, res); if (!orgId) return;
-  try { res.json(await require('../services/CioOperationalService').getPosture(orgId)); }
+  try { const d = await require('../services/CioOperationalService').getPosture(orgId); d.provenance = await cioViewProv(orgId, 'Operational posture'); res.json(d); }
   catch (err) { logger.error('CIO operational error', { error: err.message }); res.status(500).json({ error: 'Failed to load operational posture', message: err.message }); }
 });
 
@@ -192,7 +199,7 @@ router.get('/operational', optionalJWT, async (req, res) => {
 // points of failure + vendor/cloud/region concentration.
 router.get('/resilience', optionalJWT, async (req, res) => {
   const orgId = resolveOrg(req, res); if (!orgId) return;
-  try { res.json(await require('../services/CioResilienceService').getResilience(orgId)); }
+  try { const d = await require('../services/CioResilienceService').getResilience(orgId); d.provenance = await cioViewProv(orgId, 'Resilience & SPOFs'); res.json(d); }
   catch (err) { logger.error('CIO resilience error', { error: err.message }); res.status(500).json({ error: 'Failed to load resilience risks', message: err.message }); }
 });
 
@@ -200,7 +207,7 @@ router.get('/resilience', optionalJWT, async (req, res) => {
 // tradeoff, linked to shared events; selections write to the shared ledger.
 router.get('/friction', optionalJWT, async (req, res) => {
   const orgId = resolveOrg(req, res); if (!orgId) return;
-  try { res.json(await require('../services/VelocityFrictionService').getFrictionMap(orgId)); }
+  try { const d = await require('../services/VelocityFrictionService').getFrictionMap(orgId); d.provenance = await cioViewProv(orgId, 'Velocity vs risk'); res.json(d); }
   catch (err) { logger.error('CIO friction error', { error: err.message }); res.status(500).json({ error: 'Failed to build friction map', message: err.message }); }
 });
 
@@ -208,7 +215,7 @@ router.get('/friction', optionalJWT, async (req, res) => {
 // + resilience impact, predicted vs realized, sequence/secure/defer.
 router.get('/transformation', optionalJWT, async (req, res) => {
   const orgId = resolveOrg(req, res); if (!orgId) return;
-  try { res.json(await require('../services/TransformationPortfolioService').getPortfolio(orgId)); }
+  try { const d = await require('../services/TransformationPortfolioService').getPortfolio(orgId); d.provenance = await cioViewProv(orgId, 'Transformation & ROI'); res.json(d); }
   catch (err) { logger.error('CIO transformation error', { error: err.message }); res.status(500).json({ error: 'Failed to build transformation portfolio', message: err.message }); }
 });
 

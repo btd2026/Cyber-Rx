@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
+import Provenance from './Provenance';
 
 const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc';
 const TONE = { good: '#1f8a4c', warn: '#B07C2E', bad: '#C0392B' };
@@ -37,6 +38,7 @@ export default function BoardAccountability(props) {
 
   return (
     <div style={{ display: 'grid', gap: 14 }}>
+      {d.provenance && <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 5, fontSize: 10, color: '#94a3b8', marginBottom: -4 }}><Provenance prov={d.provenance} /><span>data provenance</span></div>}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
           <div><div style={{ fontSize: 30, fontWeight: 800, color: d.score >= 80 ? TONE.good : d.score >= 60 ? TONE.warn : TONE.bad }}>{d.score}</div><div style={{ fontSize: 9, color: INK3, textTransform: 'uppercase' }}>Oversight</div></div>

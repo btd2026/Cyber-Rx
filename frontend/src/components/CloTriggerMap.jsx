@@ -10,6 +10,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
+import Provenance from './Provenance';
 import { DefensibleRationaleHint, DEFENSIBLE_PLACEHOLDER } from './legalRationale';
 
 const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc', NAVY = '#0f1b2d';
@@ -57,6 +58,7 @@ export default function CloTriggerMap(props) {
 
   return (
     <div style={{ display: 'grid', gap: 14 }}>
+      {d.provenance && <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 5, fontSize: 10, color: '#94a3b8', marginBottom: -4 }}><Provenance prov={d.provenance} /><span>data provenance</span></div>}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: NAVY, color: '#e6ecf5', borderRadius: 10, padding: '13px 16px' }}>
         <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>
           {d.counts.scenarios} top scenario(s) would fire <strong style={{ color: '#9bc0ff' }}>{d.counts.obligationsFired}</strong> distinct obligation(s); <strong style={{ color: '#f0a868' }}>{d.counts.material}</strong> screen as potentially material. Each is the <strong>same event</strong> the CISO and CFO see.

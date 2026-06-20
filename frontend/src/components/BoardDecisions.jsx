@@ -8,6 +8,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
+import Provenance from './Provenance';
 
 const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc';
 const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
@@ -38,6 +39,7 @@ export default function BoardDecisions(props) {
 
   return (
     <div style={{ display: 'grid', gap: 12 }}>
+      {d.provenance && <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 5, fontSize: 10, color: '#94a3b8', marginBottom: -4 }}><Provenance prov={d.provenance} /><span>data provenance</span></div>}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
         <div style={{ fontSize: 12.5, color: INK2 }}><strong>{d.counts.total}</strong> risk(s) at board altitude · <strong>{d.counts.open}</strong> open. Same events every executive manages — here at oversight altitude.</div>
         <VoiceControls voice={voice} onReplay={() => voice.speak(d.narration)} label="Listen" />
