@@ -79,7 +79,7 @@ async function decisions(orgId) {
     .map((c) => ({
       id: c.id, type: c.type, title: c.event.title, severity: c.event.severity, scenarioType: c.event.scenarioType,
       owner: c.event.owner || 'Unassigned', aboveAppetite: c.aboveAppetite, decision: c.decision || null,
-      loss: c.event.loss, lens: c.lens || null,
+      loss: c.event.loss, lens: c.lens || null, provenance: c.event.provenance,
     }));
   const narration = `Top decisions for the board. ${items.length} risk(s) have risen to the board's altitude — critical, above appetite, or correlated. ` +
     `For each, management's recommendation and the cost of doing nothing are shown, with the question to put to management. ${items.filter((i) => !i.decision).length} are still open.`;

@@ -42,7 +42,7 @@ async function getAggregation(orgId) {
       members: (e.members || []).map((m) => ({ title: m.title, p30: m.p30 })),
       jointPct: cb.jointPct, amplification: cb.amplification, individual: cb.individual,
       outcome: cb.outcome, breaks: cb.breaks, breakLink: cb.breakLink,
-      loss: e.loss, blastRadius: e.blastRadius, crownJewel: e.crownJewel,
+      loss: e.loss, blastRadius: e.blastRadius, crownJewel: e.crownJewel, provenance: e.provenance,
       decision: c.decision || null, aboveAppetite: c.aboveAppetite,
       options: c.options, recommended: c.recommended,
     };

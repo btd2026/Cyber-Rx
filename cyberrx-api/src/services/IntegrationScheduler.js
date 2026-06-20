@@ -29,8 +29,10 @@ async function runOnce() {
 }
 
 function start() {
-  const min = Number(process.env.INTEGRATION_SYNC_INTERVAL_MIN || 0);
-  if (!Number.isFinite(min) || min <= 0) { logger.info('integration scheduler disabled (set INTEGRATION_SYNC_INTERVAL_MIN to enable)'); return; }
+  // On by default (every 6h); set INTEGRATION_SYNC_INTERVAL_MIN=0 to disable.
+  // No-ops harmlessly until an org connects an integration.
+  const min = Number(process.env.INTEGRATION_SYNC_INTERVAL_MIN ?? 360);
+  if (!Number.isFinite(min) || min <= 0) { logger.info('integration scheduler disabled (INTEGRATION_SYNC_INTERVAL_MIN=0)'); return; }
   if (timer) clearInterval(timer);
   timer = setInterval(() => { runOnce().catch(() => {}); }, min * 60000);
   if (timer.unref) timer.unref();
