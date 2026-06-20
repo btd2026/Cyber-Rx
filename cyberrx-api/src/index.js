@@ -292,6 +292,9 @@ app.use('/api/ai-systems',        [apiGetLimiter, apiPostLimiter], require('./ro
 // (Entra ID, CrowdStrike, Tenable, Splunk) into the posture/coverage pipeline.
 app.use('/api/integrations',      [apiGetLimiter, apiPostLimiter], require('./routes/integrations'));
 
+// Platform value realized — renewal-justification rollup over real activity.
+app.use('/api/value',             [apiGetLimiter], require('./routes/value'));
+
 // Decision spine — one shared event/DecisionCard rendered per role, with a
 // decision & evidence ledger (the cross-role "decisions, not dashboards" surface).
 app.use('/api/decisions',         [apiGetLimiter, apiPostLimiter], require('./routes/decisions'));
