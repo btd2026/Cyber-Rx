@@ -8,6 +8,8 @@ const REGISTRY = {
   crowdstrike: require('./crowdstrike'),
   tenable: require('./tenable'),
   splunk: require('./splunk'),
+  azure_openai: require('./azure_openai'),
+  langsmith: require('./langsmith'),
 };
 
 // Public catalog (no secrets, no functions).

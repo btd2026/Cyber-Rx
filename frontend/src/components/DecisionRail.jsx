@@ -48,6 +48,7 @@ export default function DecisionRail(props) {
   const [cards, setCards] = useState([]);
   const [blind, setBlind] = useState([]);
   const [open, setOpen] = useState(false);
+  const [integrity, setIntegrity] = useState(null);
   const headers = useCallback(() => headersFor(orgId, token), [orgId, token]);
 
   useEffect(() => {
@@ -56,6 +57,8 @@ export default function DecisionRail(props) {
     // Blind spots feed the queue too (kept separate server-side to avoid recursion).
     fetch(`${api}/api/coaching/blindspots?org_id=${encodeURIComponent(orgId)}`, { headers: headers() })
       .then((r) => (r.ok ? r.json() : null)).then((d) => { if (d && d.findings) setBlind(d.findings.filter((f) => f.severity === 'Critical' || f.severity === 'High')); }).catch(() => {});
+    fetch(`${api}/api/decisions/ledger/verify?org_id=${encodeURIComponent(orgId)}`, { headers: headers() })
+      .then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) setIntegrity(d); }).catch(() => {});
   }, [api, orgId, role, headers]);
 
   const undecided = cards.filter((c) => !c.decision);
@@ -77,7 +80,14 @@ export default function DecisionRail(props) {
           {props.onOpenQueue && count > 0 && (
             <button onClick={() => setOpen(true)} title="Quick peek without leaving this page" style={{ background: '#fff', color: INK2, border: `1px solid ${HAIR}`, borderRadius: 7, padding: '6px 10px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>Peek</button>
           )}
+          {integrity && integrity.entries > 0 && (
+            <span title={integrity.valid ? `Hash chain intact · ${integrity.entries} entries` : `Chain broken at entry ${integrity.brokenAt}`}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 700, color: integrity.valid ? '#1f8a4c' : '#C0392B', border: `1px solid ${integrity.valid ? '#1f8a4c' : '#C0392B'}33`, borderRadius: 7, padding: '6px 9px' }}>
+              {integrity.valid ? '🛡 Integrity verified' : '⚠ Integrity broken'}
+            </span>
+          )}
           <a href={`${api}/api/decisions/ledger.csv?org_id=${encodeURIComponent(orgId)}`} style={{ background: '#fff', color: INK2, border: `1px solid ${HAIR}`, borderRadius: 7, padding: '6px 12px', fontSize: 11.5, fontWeight: 700, textDecoration: 'none' }}>⤓ Ledger</a>
+          <a href={`${api}/api/decisions/evidence-package?org_id=${encodeURIComponent(orgId)}`} title="Auditor evidence package (decisions + hash-chain proof)" style={{ background: '#fff', color: INK2, border: `1px solid ${HAIR}`, borderRadius: 7, padding: '6px 12px', fontSize: 11.5, fontWeight: 700, textDecoration: 'none' }}>⤓ Evidence</a>
         </div>
       </div>
 

@@ -49,14 +49,23 @@ function guardrailFor(sys) {
   return { controls, score, gaps: gaps.map((g) => `${g.id} ${g.name}`) };
 }
 
+// A connected AI gateway (Azure OpenAI / LangSmith) provides runtime evidence,
+// so guardrail/agent posture can be reported as 'live' rather than modeled.
+async function aiGateway(orgId) {
+  try { const s = await require('./IntegrationService').sourcesForOrg(orgId); return (s.ai_monitored && s.ai_monitored.fresh) ? s.ai_monitored : null; }
+  catch (_) { return null; }
+}
+
 async function guardrails(orgId) {
   const inv = await AI.inventory(orgId);
   const isDemo = !!inv.demo;
-  const mode = isDemo ? 'demo' : 'modeled';
+  const gw = await aiGateway(orgId);
+  const mode = gw ? 'live' : (isDemo ? 'demo' : 'modeled');
+  const provSource = gw ? gw.source : 'Guardrail assessment';
   const systems = (inv.systems || []).map((s) => {
     const g = guardrailFor(s);
     return { id: s.id, name: s.name, systemType: s.systemType, autonomy: s.autonomy,
-      score: g.score, controls: g.controls, gaps: g.gaps, provenance: prov(mode, 'Guardrail assessment') };
+      score: g.score, controls: g.controls, gaps: g.gaps, provenance: prov(mode, provSource) };
   });
   const fleet = systems.length ? Math.round(systems.reduce((a, s) => a + s.score, 0) / systems.length) : null;
   // Worst control across the fleet, by gap count.
@@ -64,7 +73,7 @@ async function guardrails(orgId) {
     gaps: systems.filter((s) => s.controls.find((x) => x.id === c.id && x.status === 'gap')).length }))
     .sort((a, b) => b.gaps - a.gaps);
   return { fleetScore: fleet, systems, worstControls: byControl.filter((c) => c.gaps > 0).slice(0, 5),
-    provenance: prov(mode, 'Guardrail assessment') };
+    provenance: prov(mode, provSource) };
 }
 
 // ---- D3: agent least-privilege ---------------------------------------------
@@ -108,7 +117,8 @@ function agentRisk(s) {
 
 async function agents(orgId) {
   const inv = await AI.inventory(orgId);
-  const mode = inv.demo ? 'demo' : 'modeled';
+  const gw = await aiGateway(orgId);
+  const mode = gw ? 'live' : (inv.demo ? 'demo' : 'modeled');
   const list = (inv.systems || []).filter((s) => s.autonomy === 'Agentic').map((s) => ({
     id: s.id, name: s.name, owner: s.owner, humanInLoop: s.humanInLoop, dataSensitivity: s.dataSensitivity,
     ...agentRisk(s), provenance: prov(mode, 'Agent least-privilege'),

@@ -43,6 +43,34 @@ router.get('/ledger.csv', async (req, res) => {
   } catch (e) { res.status(500).json({ error: 'Unable to export the ledger.' }); }
 });
 
+// CRQ methodology + the org's tunable assumptions (transparency).
+router.get('/methodology', async (req, res) => {
+  const orgId = orgOf(req); if (!orgId) return res.status(400).json({ error: 'Organization required.' });
+  try { res.json(Engine.methodology(orgId, await Engine.loadAssumptions(orgId))); }
+  catch (e) { res.status(500).json({ error: 'Unable to load methodology.' }); }
+});
+router.put('/assumptions', async (req, res) => {
+  const orgId = orgOf(req); if (!orgId) return res.status(400).json({ error: 'Organization required.' });
+  try { res.json(await Engine.saveAssumptions(orgId, req.body || {})); }
+  catch (e) { res.status(500).json({ error: 'Unable to save assumptions.' }); }
+});
+
+// Tamper-evidence: verify the hash chain, and export the auditor evidence package.
+router.get('/ledger/verify', async (req, res) => {
+  const orgId = orgOf(req); if (!orgId) return res.status(400).json({ error: 'Organization required.' });
+  try { res.json(await Engine.verifyLedger(orgId)); }
+  catch (e) { res.status(500).json({ error: 'Unable to verify the ledger.' }); }
+});
+router.get('/evidence-package', async (req, res) => {
+  const orgId = orgOf(req); if (!orgId) return res.status(400).json({ error: 'Organization required.' });
+  try {
+    const pkg = await Engine.evidencePackage(orgId);
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="evidence-package-${orgId}.json"`);
+    res.send(JSON.stringify(pkg, null, 2));
+  } catch (e) { res.status(500).json({ error: 'Unable to build the evidence package.' }); }
+});
+
 router.post('/:id/decision', async (req, res) => {
   const orgId = orgOf(req); if (!orgId) return res.status(400).json({ error: 'Organization required.' });
   const b = req.body || {};
