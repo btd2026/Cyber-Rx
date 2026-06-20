@@ -4776,9 +4776,23 @@ function Setup(props) {
   // refresh signal so the app→process map re-reads after import.
   var _aimp=useState(null);    var appImport=_aimp[0];    var setAppImport=_aimp[1];
   var _mrf=useState(0);        var mapRefresh=_mrf[0];    var setMapRefresh=_mrf[1];
+  // Resolve the org id for uploads. Prefer the persisted id, but fall back to
+  // the org the user picked in Setup (derived with the SAME slug rule as
+  // saveOrgToLocalStorage) so an inventory import works before the profile has
+  // been formally saved. Persists the derived id so later steps see it too.
+  function resolveOrgIdForUpload(){
+    var ls=function(k){try{return (typeof localStorage!=="undefined"&&localStorage.getItem(k))||"";}catch(e){return "";}};
+    var slug=function(s){return String(s||"").toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').substring(0,50);};
+    var id=ls("cyberrx_org_id")||ls("orgId");
+    if(!id&&props.orgName){id=slug(props.orgName);}
+    if(!id){try{var b=JSON.parse(ls("cyberrx_org_backup")||"null"); if(b&&b.orgName){id=slug(b.orgName);}}catch(e){}}
+    if(id){try{localStorage.setItem("cyberrx_org_id",id);}catch(e){}}
+    return id||"";
+  }
   function uploadAppInventory(file){
     if(!file) return;
-    var org=(typeof localStorage!=="undefined"&&(localStorage.getItem("cyberrx_org_id")||localStorage.getItem("orgId")))||"";
+    var org=resolveOrgIdForUpload();
+    if(!org){setAppImport({error:"Organization not specified — enter your organization name at the top of Setup, then re-upload.",fileName:file.name});return;}
     setAppImport({busy:true,fileName:file.name});
     var reader=new FileReader();
     reader.onload=function(){
