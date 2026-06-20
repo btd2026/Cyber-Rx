@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
+import Provenance from './Provenance';
 
 const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc';
 const bandColor = (s) => (s >= 80 ? '#1f8a4c' : s >= 60 ? '#B07C2E' : s >= 40 ? '#A85B2E' : '#C0392B');
@@ -57,7 +58,9 @@ export default function ControlEfficacy(props) {
           <div key={c.id} style={{ border: `1px solid ${c.flag ? '#f3c9c4' : HAIR}`, borderLeft: `4px solid ${c.flag ? '#C0392B' : bandColor(c.effectiveness)}`, borderRadius: 9, padding: '11px 14px', background: '#fff' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>{c.name}
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>
+                  {c.provenance && <span style={{ marginRight: 6, verticalAlign: 'middle' }}><Provenance prov={c.provenance} /></span>}
+                  {c.name}
                   <span style={{ fontSize: 9.5, color: INK3, fontWeight: 500, marginLeft: 8 }}>{c.csf} · {c.cis}</span>
                   {c.flag && <span style={{ fontSize: 9, fontWeight: 800, color: '#fff', background: '#C0392B', borderRadius: 999, padding: '2px 8px', marginLeft: 8, textTransform: 'uppercase' }}>{c.flag}</span>}
                 </div>

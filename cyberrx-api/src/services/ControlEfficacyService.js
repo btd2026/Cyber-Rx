@@ -48,7 +48,11 @@ async function getEfficacy(orgId) {
     require('./DecisionEngineService').list(orgId, 'CISO').catch(() => ({ cards: [] })),
     require('./TenantConfigService').get(orgId).catch(() => ({ config: {} })),
   ]);
+  const { prov } = require('../utils/provenance');
   const controlRisk = dash.controlRisk || [];
+  // Effectiveness is computed from control risk contribution: 'derived' when the
+  // org's own controls back it, 'demo' when we're on the sample set.
+  const ctrlMode = ((dash.dataProvenance || {}).origins || {}).ControlArea === 'live' ? 'derived' : 'demo';
   const domainMatrix = dash.domainMatrix || [];
   const domTrend = {}; domainMatrix.forEach((d) => { domTrend[d.id] = d.trend; });
   const events = (decisions.cards || []).map((c) => ({ title: c.event.title, severity: c.event.severity }));
@@ -74,6 +78,7 @@ async function getEfficacy(orgId) {
       reducesRisks: reduces, processAffected: c.processAffected, action: c.action, evidence: c.evidence,
       gating, gatingRisk: gatingTop,
       flag: gating && (weak || degrading) ? (degrading ? 'Degrading — gating' : 'Weak — gating') : null,
+      provenance: prov(ctrlMode, 'Control efficacy model'),
     };
   }).sort((a, b) => ((b.flag ? 1 : 0) - (a.flag ? 1 : 0)) || ((b.riskContribution || 0) - (a.riskContribution || 0)));
 

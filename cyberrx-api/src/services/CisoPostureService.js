@@ -19,6 +19,7 @@ const crypto = require('crypto');
 const db = require('../utils/db');
 const logger = require('../utils/logger');
 const MetricsEngine = require('./MetricsEngine');
+const { prov, aggregate } = require('../utils/provenance');
 
 function uid(p) { return `${p}_${crypto.randomBytes(5).toString('hex')}`; }
 function num(v, d = 0) { const x = Number(v); return Number.isFinite(x) ? x : d; }
@@ -34,7 +35,8 @@ function metric(name, value, unit, target, higher, source) {
   else if (target <= 0) sub = value <= 0 ? 100 : clamp(100 - value * 12);          // target is 0 (e.g. orphaned accounts)
   else sub = clamp(100 - Math.max(0, (value / target) - 1) * 100);                  // lower is better, soft penalty over target
   const within = higher ? value >= target : value <= target;
-  return { name, value: Math.round(value * 10) / 10, unit, target, higher, within, sub: Math.round(sub), source };
+  const tag = (source && typeof source === 'object') ? source : { source: source || '', mode: 'derived' };
+  return { name, value: Math.round(value * 10) / 10, unit, target, higher, within, sub: Math.round(sub), source: tag.source, mode: tag.mode };
 }
 
 function statusOf(score) { return score == null ? 'Not assessed' : score >= 80 ? 'green' : score >= 60 ? 'amber' : 'red'; }
@@ -54,8 +56,15 @@ async function gather(orgId) {
   ]);
   evRows.forEach((r) => { evidence[r.question_key] = r.answer; });
   const sev = {}; findSev.forEach((r) => { sev[r.severity] = num(r.n); });
+  // Whether this org has supplied real data: intake evidence, findings, controls
+  // or threat scenarios. When false, signals are sample/demo, not measurements —
+  // provenance is downgraded accordingly so we never overstate freshness.
+  const dataPresent = evRows.length > 0
+    || ((sev.Critical || 0) + (sev.High || 0) + (sev.Medium || 0) + (sev.Low || 0)) > 0
+    || num((ctrlAgg[0] || {}).total) > 0
+    || num((threatAgg[0] || {}).n) > 0;
   return {
-    I,
+    I, dataPresent,
     crit: sev.Critical || 0, high: sev.High || 0, med: sev.Medium || 0,
     findingsTotal: (sev.Critical || 0) + (sev.High || 0) + (sev.Medium || 0) + (sev.Low || 0),
     vendorActive: num((vendorAgg[0] || {}).active), vendorSevere: num((vendorAgg[0] || {}).severe),
@@ -65,8 +74,8 @@ async function gather(orgId) {
   };
 }
 
-const LIVE = (label) => label;          // marks a directly-measured signal
-const DRV = (label) => `${label} (derived)`;
+const LIVE = (label) => ({ source: label, mode: 'live' });   // directly-measured signal
+const DRV = (label) => ({ source: label, mode: 'derived' }); // computed from live signals
 
 // ---------------------------------------------------------------------------
 // The eight CISO posture domains. Each returns its metric list.
@@ -167,6 +176,7 @@ const ACTION = {
 
 async function getPosture(orgId, { persist = true } = {}) {
   const c = await gather(orgId);
+  const generatedAt = new Date().toISOString();
   const prev = {};
   (await safeRows(`SELECT DISTINCT ON (domain_id) domain_id, score FROM ciso_posture_snapshots WHERE org_id=$1 ORDER BY domain_id, captured_at DESC`, [orgId]))
     .forEach((r) => { prev[r.domain_id] = num(r.score); });
@@ -179,12 +189,23 @@ async function getPosture(orgId, { persist = true } = {}) {
     const before = prev[d.id];
     const delta = before == null ? 0 : score - before;
     const trend = before == null ? 'new' : delta >= 3 ? 'improving' : delta <= -3 ? 'deteriorating' : 'stable';
+    // Effective provenance: a metric is only 'live'/'derived' if the org actually
+    // supplied data; otherwise it's sample ('demo') or a bare model ('modeled').
+    const metrics = d.metrics.map((m) => {
+      const eff = c.dataPresent ? m.mode : (m.mode === 'live' ? 'demo' : 'modeled');
+      return {
+        name: m.name, value: m.value, unit: m.unit, target: m.target, higher: m.higher, within: m.within,
+        source: m.source, intendedMode: m.mode,
+        provenance: prov(eff, m.source, { asOf: c.dataPresent ? generatedAt : null }),
+      };
+    });
     return {
       id: d.id, name: d.name, score, status: statusOf(score),
       trend, delta, drivers,
       metricsOutsideThreshold: outside.map((m) => ({ name: m.name, value: m.value, unit: m.unit, target: m.target, higher: m.higher })),
       recommendedAction: ACTION[d.id],
-      metrics: d.metrics.map((m) => ({ name: m.name, value: m.value, unit: m.unit, target: m.target, higher: m.higher, within: m.within, source: m.source })),
+      metrics,
+      provenance: aggregate(metrics.map((m) => m.provenance), 'Posture engine'),
     };
   });
 
@@ -197,7 +218,7 @@ async function getPosture(orgId, { persist = true } = {}) {
   const overall = Math.round(domains.reduce((s, d) => s + d.score, 0) / domains.length);
   const overallPrevAvg = Object.keys(prev).length ? Math.round(Object.values(prev).reduce((s, v) => s + v, 0) / Object.values(prev).length) : null;
   return {
-    organizationId: orgId, generatedAt: new Date().toISOString(),
+    organizationId: orgId, generatedAt,
     overall: { score: overall, status: statusOf(overall),
       trend: overallPrevAvg == null ? 'new' : overall - overallPrevAvg >= 2 ? 'improving' : overall - overallPrevAvg <= -2 ? 'deteriorating' : 'stable',
       delta: overallPrevAvg == null ? 0 : overall - overallPrevAvg },
@@ -207,4 +228,33 @@ async function getPosture(orgId, { persist = true } = {}) {
   };
 }
 
-module.exports = { getPosture };
+// Live-coverage rollup: how much of the posture is real telemetry vs. derived,
+// modeled or demo — plus the per-signal detail and the "connect this to go live"
+// upgrade list that powers the Data Trust drawer and the coverage meter.
+async function getCoverage(orgId) {
+  const p = await getPosture(orgId, { persist: false });
+  const provs = [];
+  const signals = [];
+  p.domains.forEach((d) => d.metrics.forEach((m) => {
+    provs.push(m.provenance);
+    signals.push({ domain: d.name, name: m.name, source: m.source, mode: m.provenance.mode,
+      confidence: m.provenance.confidence, asOf: m.provenance.asOf, intendedMode: m.intendedMode });
+  }));
+  const agg = aggregate(provs, 'Posture signals');
+  const seen = new Set();
+  const upgrades = [];
+  signals.forEach((s) => {
+    if (s.intendedMode === 'live' && s.mode !== 'live' && !seen.has(s.source)) {
+      seen.add(s.source); upgrades.push({ source: s.source, signal: s.name });
+    }
+  });
+  return {
+    organizationId: orgId, generatedAt: p.generatedAt,
+    total: agg.total, counts: agg.counts, pct: agg.pct, confidence: agg.confidence,
+    byDomain: p.domains.map((d) => ({ id: d.id, name: d.name, mode: d.provenance.mode,
+      confidence: d.provenance.confidence, pct: d.provenance.pct })),
+    signals, upgrades: upgrades.slice(0, 10),
+  };
+}
+
+module.exports = { getPosture, getCoverage };
