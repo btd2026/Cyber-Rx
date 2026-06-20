@@ -14,7 +14,7 @@ import Provenance from './Provenance';
 import { DefensibleRationaleHint, DEFENSIBLE_PLACEHOLDER } from './legalRationale';
 import { COLORS, FONTS } from '../theme';
 
-const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
 const SEV = { Critical: COLORS.bad, High: '#c2410c', Medium: COLORS.warn, Low: COLORS.good };
 const LIT = { High: COLORS.bad, Elevated: COLORS.warn, Moderate: COLORS.good };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
@@ -60,9 +60,9 @@ export default function CloTriggerMap(props) {
   return (
     <div style={{ display: 'grid', gap: 14 }}>
       {d.provenance && <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 5, fontSize: 10, color: '#8b9098', marginBottom: -4 }}><Provenance prov={d.provenance} /><span>data provenance</span></div>}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: NAVY, color: '#e6ecf5', borderRadius: 10, padding: '13px 16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: COLORS.subtle, border: `1px solid ${COLORS.hair}`, color: COLORS.ink2, borderRadius: 10, padding: '13px 16px' }}>
         <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>
-          {d.counts.scenarios} top scenario(s) would fire <strong style={{ color: '#9bc0ff' }}>{d.counts.obligationsFired}</strong> distinct obligation(s); <strong style={{ color: '#f0a868' }}>{d.counts.material}</strong> screen as potentially material. Each is the <strong>same event</strong> the CISO and CFO see.
+          {d.counts.scenarios} top scenario(s) would fire <strong style={{ color: COLORS.accentText }}>{d.counts.obligationsFired}</strong> distinct obligation(s); <strong style={{ color: COLORS.warn }}>{d.counts.material}</strong> screen as potentially material. Each is the <strong>same event</strong> the CISO and CFO see.
         </div>
         <VoiceControls voice={voice} onReplay={() => voice.speak(d.narration)} label="Listen" />
       </div>

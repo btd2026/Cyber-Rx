@@ -31,7 +31,7 @@ export default function CisoAnswerView({ a, issues, onIssueClick, role = 'CISO' 
   const clickable = (issues || []).filter((it) => it.entity);
 
   return (
-    <div style={{ background: '#fff', border: `1px solid ${HAIR}`, borderTop: `4px solid ${status}`, borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 3px rgba(15,23,42,0.06)' }}>
+    <div style={{ background: '#fff', border: `1px solid ${HAIR}`, borderTop: `4px solid ${status}`, borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 3px rgba(11, 12, 14,0.06)' }}>
       {/* verdict header band — executive-first: status pill + key facts */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, padding: '15px 24px', background: `linear-gradient(135deg, ${status}14, ${status}05)`, borderBottom: `1px solid ${HAIR}` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -95,7 +95,7 @@ export default function CisoAnswerView({ a, issues, onIssueClick, role = 'CISO' 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {clickable.map((it, i) => (
                 <button key={i} onClick={() => onIssueClick && onIssueClick(it.entity)}
-                  style={{ background: '#eef4fb', border: '1px solid #cfe0f3', color: '#4f5ac4', borderRadius: 18, padding: '7px 14px', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7, transition: 'all .12s' }}>
+                  style={{ background: '#eef0fb', border: '1px solid #dfe1e6', color: '#4f5ac4', borderRadius: 18, padding: '7px 14px', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7, transition: 'all .12s' }}>
                   {it.label}<span style={{ fontSize: 13, opacity: 0.7 }}>→</span>
                 </button>
               ))}

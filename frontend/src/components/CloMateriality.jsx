@@ -11,7 +11,7 @@ import { useAgentVoice, VoiceControls } from './agentVoice';
 import Provenance from './Provenance';
 import { COLORS, FONTS } from '../theme';
 
-const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
 const SEV = { Critical: COLORS.bad, High: '#c2410c', Medium: COLORS.warn, Low: COLORS.good };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
 const DET = { material: { label: 'Material', color: '#cf222e' }, not_material: { label: 'Not material', color: '#1a7f37' }, pending: { label: 'Pending', color: '#9a6700' } };
@@ -68,7 +68,7 @@ export default function CloMateriality(props) {
 
   return (
     <div style={{ display: 'grid', gap: 14 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: NAVY, color: '#e6ecf5', borderRadius: 10, padding: '13px 16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: COLORS.subtle, border: `1px solid ${COLORS.hair}`, color: COLORS.ink2, borderRadius: 10, padding: '13px 16px' }}>
         <div style={{ fontSize: 12.5, lineHeight: 1.6, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
           {d.provenance && <Provenance prov={d.provenance} dark />}
           <span><strong style={{ color: COLORS.accent }}>SEC materiality & 8-K Item 1.05.</strong> {d.counts.determined} determination(s) on record, {d.counts.material} material. Materiality threshold {usd(d.thresholdUSD)}.</span>

@@ -9,7 +9,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
 import { COLORS, FONTS } from '../theme';
 
-const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
 const TONE = { good: COLORS.good, warn: COLORS.warn, bad: COLORS.bad };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
 const statusTone = (s) => (/hold|block|delay|behind|risk/i.test(s || '') ? 'bad' : /done|complete|operational/i.test(s || '') ? 'good' : 'warn');
@@ -211,7 +211,7 @@ function ProjectCard({ p, voice }) {
   const ms = a.milestones || [];
   const tone = statusTone(p.status);
   return (
-    <div style={{ border: `1px solid ${HAIR}`, borderRadius: 11, background: '#fff', overflow: 'hidden', boxShadow: '0 1px 2px rgba(15,23,42,0.04)' }}>
+    <div style={{ border: `1px solid ${HAIR}`, borderRadius: 11, background: '#fff', overflow: 'hidden', boxShadow: '0 1px 2px rgba(11, 12, 14,0.04)' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 16px', borderLeft: `5px solid ${TONE[tone]}` }}>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

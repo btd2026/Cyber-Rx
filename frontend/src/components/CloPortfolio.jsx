@@ -65,7 +65,7 @@ export default function CloPortfolio(props) {
             <div key={it.id} style={{ border: `1px solid ${HAIR}`, borderRadius: 9, background: '#fff', padding: '10px 13px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
                 <span style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>{it.name}</span>
-                <span style={{ fontSize: 10, color: '#4f5ac4', background: '#eef4fb', border: '1px solid #cfe0f3', borderRadius: 999, padding: '2px 8px' }}>{it.category}</span>
+                <span style={{ fontSize: 10, color: '#4f5ac4', background: '#eef0fb', border: '1px solid #dfe1e6', borderRadius: 999, padding: '2px 8px' }}>{it.category}</span>
               </div>
               <div style={{ fontSize: 10.5, color: INK3, marginTop: 2 }}>{it.owner} · {it.percentComplete}% · {it.status}</div>
               <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 11, color: INK2, marginTop: 6 }}>

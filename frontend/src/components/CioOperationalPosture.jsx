@@ -10,7 +10,7 @@ import { useAgentVoice, VoiceControls } from './agentVoice';
 import Provenance from './Provenance';
 import { COLORS, FONTS } from '../theme';
 
-const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
 const TONE = { good: COLORS.good, warn: COLORS.warn, bad: COLORS.bad };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
 const band = (s) => (s >= 80 ? 'good' : s >= 55 ? 'warn' : 'bad');
@@ -132,7 +132,7 @@ function Score({ label, value }) {
   const c = TONE[band(value)];
   return (
     <div style={{ textAlign: 'center' }}>
-      <div style={{ fontSize: 30, fontWeight: 800, lineHeight: 1, color: c === COLORS.warn ? '#f0a868' : c, fontFamily: FONTS.mono }}>{value}</div>
+      <div style={{ fontSize: 30, fontWeight: 800, lineHeight: 1, color: c === COLORS.warn ? COLORS.warn : c, fontFamily: FONTS.mono }}>{value}</div>
       <div style={{ fontSize: 9, color: COLORS.accent, textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 2 }}>{label}</div>
     </div>
   );

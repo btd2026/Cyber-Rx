@@ -13,7 +13,7 @@ import Provenance from './Provenance';
 import CrqDrawer from './CrqDrawer';
 import { COLORS, FONTS } from '../theme';
 
-const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
 const SEV = { Critical: COLORS.bad, High: '#c2410c', Medium: COLORS.warn, Low: COLORS.good };
 const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
 const FRIC = { None: '#1a7f37', Low: '#1a7f37', Medium: '#9a6700', High: '#cf222e' };
@@ -90,7 +90,7 @@ function Card({ card, role, onDecide, voice, orgId, apiUrl, authToken, onTuned }
   const compound = card.type === 'compound';
 
   return (
-    <div style={{ border: `1px solid ${compound ? '#e3d5f5' : HAIR}`, borderRadius: 12, background: '#fff', overflow: 'hidden', boxShadow: '0 1px 3px rgba(15,23,42,0.05)' }}>
+    <div style={{ border: `1px solid ${compound ? '#e3d5f5' : HAIR}`, borderRadius: 12, background: '#fff', overflow: 'hidden', boxShadow: '0 1px 3px rgba(11, 12, 14,0.05)' }}>
       {/* event + role lens header */}
       <div style={{ padding: '16px 18px', borderLeft: `3px solid ${compound ? '#7c3aed' : sev}` }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 18 }}>

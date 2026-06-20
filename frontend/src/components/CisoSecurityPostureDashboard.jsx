@@ -68,7 +68,7 @@ const ROLE_FRAME = {
 const STATUS_SEV = { Strong: 'Low', Moderate: 'Medium', Weak: 'High', Critical: 'Critical' };
 const numSev = (n) => (n >= 5 ? 'Critical' : n >= 4 ? 'High' : n >= 3 ? 'Medium' : 'Low');
 
-const INK = '#0b0c0e', INK2 = '#5c6066', INK3 = '#8b9098', HAIR = '#ebecf0', PANEL = '#f6f7f9', NAVY = '#0b0c0e';
+const INK = '#0b0c0e', INK2 = '#5c6066', INK3 = '#8b9098', HAIR = '#ebecf0', PANEL = '#f6f7f9';
 const SUBTLE = '#f6f7f9', BORDERSTRONG = '#dfe1e6', ACCENT = '#5e6ad2', ACCENT_SOFT = '#eef0fb', ACCENT_TEXT = '#4a52b0';
 const C = { Strong: '#1a7f37', Moderate: '#9a6700', Weak: '#c2410c', Critical: '#cf222e', 'Not assessed': '#8b9098' };
 const SEV = { Critical: '#cf222e', High: '#c2410c', Medium: '#9a6700', Low: '#1a7f37' };

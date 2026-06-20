@@ -132,7 +132,7 @@ export function VoiceControls({ voice, onReplay, label, compact }) {
     if (muted || !onReplay) return null;
     return (
       <button onClick={() => (speaking ? stop() : onReplay())} title={speaking ? 'Stop narration' : 'Listen to your advisor'}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: speaking ? 'rgba(192,57,43,0.12)' : 'transparent', border: '1px solid ' + (speaking ? '#e0a39c' : 'rgba(200,163,91,0.6)'), color: speaking ? COLORS.bad : COLORS.accent, borderRadius: 999, padding: '4px 12px', fontSize: 11, fontWeight: 700, letterSpacing: '0.02em', cursor: 'pointer' }}>
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: speaking ? 'rgba(192,57,43,0.12)' : 'transparent', border: '1px solid ' + (speaking ? '#e0a39c' : 'rgba(94, 106, 210,0.6)'), color: speaking ? COLORS.bad : COLORS.accent, borderRadius: 999, padding: '4px 12px', fontSize: 11, fontWeight: 700, letterSpacing: '0.02em', cursor: 'pointer' }}>
         {speaking ? '■ Stop' : '🔊 Listen'}
       </button>
     );

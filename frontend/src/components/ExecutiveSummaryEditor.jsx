@@ -149,7 +149,7 @@ export default function ExecutiveSummaryEditor(props) {
 
       {hasContent && !editing && (
         // Read view — on-screen executive summary
-        <div style={{ background: '#fff', border: `1px solid ${HAIR}`, borderRadius: 12, padding: '20px 22px', boxShadow: '0 1px 3px rgba(15,23,42,0.06)' }}>
+        <div style={{ background: '#fff', border: `1px solid ${HAIR}`, borderRadius: 12, padding: '20px 22px', boxShadow: '0 1px 3px rgba(11, 12, 14,0.06)' }}>
           {blocks.context && <p style={{ fontSize: 15, color: INK, lineHeight: 1.6, margin: '0 0 14px' }}>{blocks.context}</p>}
           {blocks.posture && <Block label="Posture" accent={BLUE}><p style={{ margin: 0, fontSize: 13.5, color: INK, lineHeight: 1.6 }}>{blocks.posture}</p></Block>}
           {(blocks.key_risks || []).length > 0 && (

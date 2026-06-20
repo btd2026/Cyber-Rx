@@ -95,7 +95,7 @@ export default function KeyRisks(props) {
           const apps = appsForRisk(graph, e);
           const procs = procsForRisk(graph, e);
           return (
-            <div key={c.id} style={{ border: `1px solid ${HAIR}`, borderLeft: `3px solid ${SEV[e.severity]}`, borderRadius: 12, background: '#fff', boxShadow: '0 1px 2px rgba(15,23,42,0.04)' }}>
+            <div key={c.id} style={{ border: `1px solid ${HAIR}`, borderLeft: `3px solid ${SEV[e.severity]}`, borderRadius: 12, background: '#fff', boxShadow: '0 1px 2px rgba(11, 12, 14,0.04)' }}>
               <div style={{ padding: '16px 18px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 18 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -204,7 +204,7 @@ export default function KeyRisks(props) {
       </div>
 
       {crq && (
-        <div onClick={() => setCrq(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(8,15,28,0.5)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '48px 16px', overflowY: 'auto' }}>
+        <div onClick={() => setCrq(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(11, 12, 14,0.5)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '48px 16px', overflowY: 'auto' }}>
           <div onClick={(ev) => ev.stopPropagation()} style={{ background: '#fff', borderRadius: 12, width: 'min(560px, 96vw)', boxShadow: '0 24px 64px rgba(0,0,0,0.3)', padding: '20px 22px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: INK, fontFamily: FONTS.display }}>How this loss is calculated</h3>

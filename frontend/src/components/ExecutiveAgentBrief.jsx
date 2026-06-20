@@ -18,16 +18,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 const STATUS_STYLES = {
-  green: { bg: '#0f2e1d', border: '#1a7f37', text: '#5fe39b', label: 'On track' },
-  amber: { bg: '#332708', border: '#b8860b', text: '#ffce5c', label: 'Attention' },
-  red: { bg: '#3a1212', border: '#cf222e', text: '#ff7a6b', label: 'Action needed' },
+  green: { bg: '#e6f4ea', border: '#1a7f37', text: '#1a7f37', label: 'On track' },
+  amber: { bg: '#fbf3da', border: '#ecd9a6', text: '#9a6700', label: 'Attention' },
+  red: { bg: '#fdecec', border: '#cf222e', text: '#cf222e', label: 'Action needed' },
 };
 
 const PRIORITY_COLORS = {
-  Critical: '#ff5c5c',
-  High: '#ffa64d',
-  Medium: '#ffd24d',
-  Low: '#8fb3ff',
+  Critical: '#cf222e',
+  High: '#c2410c',
+  Medium: '#9a6700',
+  Low: '#5e6ad2',
 };
 
 // Ticket #10 — angel name + distinct voice profile per persona (persists across
@@ -230,13 +230,13 @@ export default function ExecutiveAgentBrief(props) {
   }, [entry, role]);
 
   const wrap = {
-    background: 'linear-gradient(135deg, #11141c 0%, #161b27 100%)',
-    border: '1px solid #2a3346',
+    background: '#ffffff',
+    border: '1px solid #ebecf0',
     borderRadius: 14,
     padding: '20px 22px',
     margin: '0 0 24px 0',
-    color: '#e6ecf5',
-    boxShadow: '0 6px 24px rgba(0,0,0,0.25)',
+    color: '#0b0c0e',
+    boxShadow: '0 1px 2px rgba(11,12,14,0.05), 0 10px 28px -16px rgba(11,12,14,0.20)',
   };
 
   // Shared Q&A block (suggested chips, conversation, and ask input) — used by
@@ -246,14 +246,14 @@ export default function ExecutiveAgentBrief(props) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 12 }}>
         {conversation.map((m, i) => (
           <div key={i}>
-            <div style={{ fontSize: 13, color: '#9bc0ff', fontWeight: 600, marginBottom: 6 }}>
-              <span style={{ color: '#6f7a8d', fontWeight: 400 }}>You asked: </span>{m.q}
+            <div style={{ fontSize: 13, color: '#4a52b0', fontWeight: 600, marginBottom: 6 }}>
+              <span style={{ color: '#8b9098', fontWeight: 400 }}>You asked: </span>{m.q}
             </div>
             {m.pending ? (
-              <div style={{ fontSize: 13, color: '#8b95a8', fontStyle: 'italic' }}>● Agent is analyzing the data…</div>
+              <div style={{ fontSize: 13, color: '#8b9098', fontStyle: 'italic' }}>● Agent is analyzing the data…</div>
             ) : m.source === 'out_of_scope' ? (
-              <div style={{ background: '#241d0e', border: '1px solid #4a3a16', borderRadius: 10, padding: '12px 14px' }}>
-                <div style={{ fontSize: 14, color: '#ffce5c', lineHeight: 1.5 }}>{m.summary}</div>
+              <div style={{ background: '#fbf3da', border: '1px solid #ecd9a6', borderRadius: 10, padding: '12px 14px' }}>
+                <div style={{ fontSize: 14, color: '#9a6700', lineHeight: 1.5 }}>{m.summary}</div>
                 {Array.isArray(m.details) && m.details.length > 0 && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
                     {m.details.map((d, j) => (
@@ -263,26 +263,26 @@ export default function ExecutiveAgentBrief(props) {
                 )}
               </div>
             ) : (
-              <div style={{ background: '#0e1118', border: '1px solid #232b3a', borderRadius: 10, padding: '12px 14px' }}>
+              <div style={{ background: '#f6f7f9', border: '1px solid #ebecf0', borderRadius: 10, padding: '12px 14px' }}>
                 {m.matchedQuestion && m.matchedQuestion !== m.q && (
-                  <div style={{ fontSize: 11, color: '#7aa2ff', marginBottom: 8 }}>
+                  <div style={{ fontSize: 11, color: '#4a52b0', marginBottom: 8 }}>
                     Interpreted as: “{m.matchedQuestion}”
                   </div>
                 )}
                 {/* #11 — answer in full sentences first, then the supporting evidence */}
-                <div style={{ fontSize: 14, color: m.error ? '#ff9a8c' : '#e6ecf5', lineHeight: 1.55 }}>{m.summary}</div>
+                <div style={{ fontSize: 14, color: m.error ? '#cf222e' : '#0b0c0e', lineHeight: 1.55 }}>{m.summary}</div>
                 {Array.isArray(m.details) && m.details.length > 0 && (
                   <>
                     <div style={{ ...sectionLabel, marginTop: 10, marginBottom: 6 }}>Supporting evidence</div>
                     <ul style={{ margin: 0, paddingLeft: 18 }}>
                       {m.details.map((d, j) => (
-                        <li key={j} style={{ fontSize: 13, color: '#cdd6e6', marginBottom: 5, lineHeight: 1.45 }}>{d}</li>
+                        <li key={j} style={{ fontSize: 13, color: '#5c6066', marginBottom: 5, lineHeight: 1.45 }}>{d}</li>
                       ))}
                     </ul>
                   </>
                 )}
                 {!m.error && (
-                  <div style={{ fontSize: 12, color: '#8b95a8', marginTop: 10, fontStyle: 'italic' }}>
+                  <div style={{ fontSize: 12, color: '#8b9098', marginTop: 10, fontStyle: 'italic' }}>
                     Want me to break this down further or explain the methodology? Just ask.
                   </div>
                 )}
@@ -311,7 +311,7 @@ export default function ExecutiveAgentBrief(props) {
         onChange={(e) => setQuestion(e.target.value)}
         placeholder={`Ask the ${role} agent anything…`}
         disabled={asking}
-        style={{ flex: 1, background: '#0e1118', border: '1px solid #2f3a4d', borderRadius: 8, padding: '9px 12px', color: '#e6ecf5', fontSize: 13, outline: 'none' }}
+        style={{ flex: 1, background: '#f6f7f9', border: '1px solid #dfe1e6', borderRadius: 8, padding: '9px 12px', color: '#0b0c0e', fontSize: 13, outline: 'none' }}
       />
       <button type="submit" disabled={asking || !question.trim()} style={{ ...btnStyle, opacity: asking || !question.trim() ? 0.5 : 1 }}>
         {asking ? 'Asking…' : 'Ask →'}
@@ -327,24 +327,24 @@ export default function ExecutiveAgentBrief(props) {
     return (
       <div style={wrap} data-testid={`agent-brief-${role}`}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2, color: '#7aa2ff', textTransform: 'uppercase' }}>
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2, color: '#4a52b0', textTransform: 'uppercase' }}>
             {persona.name} · {role} Agent
           </span>
           <span style={{
             fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20,
-            background: '#23262e', color: '#9aa3b2', border: '1px solid #333a47',
+            background: '#f6f7f9', color: '#8b9098', border: '1px solid #ebecf0',
           }}>◆ continuous · live data</span>
           {/* Papa 3.a — each agent speaks its intro in a distinct voice */}
           <button onClick={() => speakAs(persona, spoken)} title={`Hear ${persona.name}`}
-            style={{ marginLeft: 'auto', background: '#1a2436', color: '#9bc0ff', border: '1px solid #2f4a7a', borderRadius: 16, padding: '3px 10px', fontSize: 11, cursor: 'pointer', fontWeight: 600 }}>
+            style={{ marginLeft: 'auto', background: '#eef0fb', color: '#4a52b0', border: '1px solid #dfe1e6', borderRadius: 16, padding: '3px 10px', fontSize: 11, cursor: 'pointer', fontWeight: 600 }}>
             🔊 {persona.name}
           </button>
         </div>
         {/* #09 — open with a warm, natural capability explanation, not a bold question */}
-        <div style={{ fontSize: 14, color: '#dbe3f2', lineHeight: 1.6, marginBottom: 6 }}>
+        <div style={{ fontSize: 14, color: '#0b0c0e', lineHeight: 1.6, marginBottom: 6 }}>
           {spoken}
         </div>
-        <div style={{ fontSize: 12.5, color: '#9aa6bc', marginBottom: 12, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 12.5, color: '#5c6066', marginBottom: 12, lineHeight: 1.5 }}>
           You can view your general dashboard, or ask me a question and I’ll answer it directly and build the view
           tailored to it.{suggested.length > 0 && ' For example, you could ask:'}
         </div>
@@ -374,7 +374,7 @@ export default function ExecutiveAgentBrief(props) {
     return (
       <div style={wrap} data-testid="agent-brief-error">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ fontSize: 14, color: '#ff9a8c' }}>Agent brief unavailable: {error || 'no data'}</div>
+          <div style={{ fontSize: 14, color: '#cf222e' }}>Agent brief unavailable: {error || 'no data'}</div>
           <button onClick={() => load(true)} style={btnStyle}>Retry</button>
         </div>
       </div>
@@ -389,19 +389,19 @@ export default function ExecutiveAgentBrief(props) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2, color: '#7aa2ff', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2, color: '#4a52b0', textTransform: 'uppercase' }}>
               {role} Agent
             </span>
             <span style={{
               fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20,
-              background: aiEnabled ? '#15243f' : '#23262e',
-              color: aiEnabled ? '#7aa2ff' : '#9aa3b2',
-              border: `1px solid ${aiEnabled ? '#2f4a7a' : '#333a47'}`,
+              background: aiEnabled ? '#eef0fb' : '#f6f7f9',
+              color: aiEnabled ? '#4a52b0' : '#8b9098',
+              border: `1px solid ${aiEnabled ? '#dfe1e6' : '#ebecf0'}`,
             }}>
               {aiEnabled ? '◆ AI · running continuously' : '◆ continuous · live data'}
             </span>
           </div>
-          <div style={{ fontSize: 13, color: '#9aa6bc', fontStyle: 'italic', marginBottom: 8 }}>
+          <div style={{ fontSize: 13, color: '#5c6066', fontStyle: 'italic', marginBottom: 8 }}>
             “{brief.question}”
           </div>
           <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.3 }}>{brief.headline}</div>
@@ -418,16 +418,16 @@ export default function ExecutiveAgentBrief(props) {
 
       {/* Summary */}
       {brief.summary && (
-        <div style={{ fontSize: 14, color: '#c5cee0', marginTop: 12, lineHeight: 1.55 }}>{brief.summary}</div>
+        <div style={{ fontSize: 14, color: '#5c6066', marginTop: 12, lineHeight: 1.55 }}>{brief.summary}</div>
       )}
 
       {/* Metrics */}
       {Array.isArray(brief.metrics) && brief.metrics.length > 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(brief.metrics.length, 4)}, 1fr)`, gap: 12, marginTop: 16 }}>
           {brief.metrics.slice(0, 4).map((m, i) => (
-            <div key={i} style={{ background: '#0e1118', border: '1px solid #232b3a', borderRadius: 10, padding: '12px 14px' }}>
-              <div style={{ fontSize: 11, color: '#8b95a8', marginBottom: 4 }}>{m.label}</div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: '#fff' }}>{m.value}</div>
+            <div key={i} style={{ background: '#f6f7f9', border: '1px solid #ebecf0', borderRadius: 10, padding: '12px 14px' }}>
+              <div style={{ fontSize: 11, color: '#8b9098', marginBottom: 4 }}>{m.label}</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: '#0b0c0e' }}>{m.value}</div>
             </div>
           ))}
         </div>
@@ -440,7 +440,7 @@ export default function ExecutiveAgentBrief(props) {
             <div style={sectionLabel}>What the agent surfaced</div>
             <ul style={{ margin: 0, paddingLeft: 18 }}>
               {brief.highlights.slice(0, 4).map((h, i) => (
-                <li key={i} style={{ fontSize: 13, color: '#cdd6e6', marginBottom: 6, lineHeight: 1.45 }}>{h}</li>
+                <li key={i} style={{ fontSize: 13, color: '#5c6066', marginBottom: 6, lineHeight: 1.45 }}>{h}</li>
               ))}
             </ul>
           </div>
@@ -452,11 +452,11 @@ export default function ExecutiveAgentBrief(props) {
               <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
                 <span style={{
                   marginTop: 2, fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 5,
-                  background: '#0e1118', color: PRIORITY_COLORS[a.priority] || '#cdd6e6',
-                  border: `1px solid ${PRIORITY_COLORS[a.priority] || '#333a47'}`, whiteSpace: 'nowrap',
+                  background: '#f6f7f9', color: PRIORITY_COLORS[a.priority] || '#5c6066',
+                  border: `1px solid ${PRIORITY_COLORS[a.priority] || '#ebecf0'}`, whiteSpace: 'nowrap',
                 }}>{a.priority}</span>
-                <div style={{ fontSize: 13, color: '#cdd6e6', lineHeight: 1.4 }}>
-                  {a.title} <span style={{ color: '#8b95a8' }}>· {a.owner}</span>
+                <div style={{ fontSize: 13, color: '#5c6066', lineHeight: 1.4 }}>
+                  {a.title} <span style={{ color: '#8b9098' }}>· {a.owner}</span>
                 </div>
               </div>
             ))}
@@ -465,8 +465,8 @@ export default function ExecutiveAgentBrief(props) {
       </div>
 
       {/* Footer */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, paddingTop: 12, borderTop: '1px solid #232b3a' }}>
-        <span style={{ fontSize: 11, color: '#6f7a8d' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, paddingTop: 12, borderTop: '1px solid #ebecf0' }}>
+        <span style={{ fontSize: 11, color: '#8b9098' }}>
           {brief.generatedAt ? `Updated ${new Date(brief.generatedAt).toLocaleString()}` : 'Live brief'}
         </span>
         <button onClick={() => load(true)} disabled={refreshing} style={btnStyle}>
@@ -475,7 +475,7 @@ export default function ExecutiveAgentBrief(props) {
       </div>
 
       {/* Interactive Q&A — ask the agent */}
-      <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px solid #232b3a' }}>
+      <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px solid #ebecf0' }}>
         <div style={{ ...sectionLabel, marginBottom: 10 }}>Ask your {role} agent</div>
         {renderConversation()}
         {renderSuggested()}
@@ -486,16 +486,16 @@ export default function ExecutiveAgentBrief(props) {
 }
 
 const sectionLabel = {
-  fontSize: 11, fontWeight: 700, letterSpacing: 0.6, color: '#8b95a8',
+  fontSize: 11, fontWeight: 700, letterSpacing: 0.6, color: '#8b9098',
   textTransform: 'uppercase', marginBottom: 8,
 };
 
 const btnStyle = {
-  background: '#1a2436', color: '#9bc0ff', border: '1px solid #2f4a7a',
+  background: '#eef0fb', color: '#4a52b0', border: '1px solid #dfe1e6',
   borderRadius: 8, padding: '6px 12px', fontSize: 12, cursor: 'pointer', fontWeight: 600,
 };
 
 const chipStyle = {
-  background: '#141a26', color: '#aebbd4', border: '1px solid #2a3346',
+  background: '#f6f7f9', color: '#5c6066', border: '1px solid #ebecf0',
   borderRadius: 16, padding: '5px 11px', fontSize: 12, cursor: 'pointer', textAlign: 'left',
 };

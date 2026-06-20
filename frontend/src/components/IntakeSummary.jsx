@@ -54,15 +54,15 @@ export default function IntakeSummary(props) {
   return (
     <div style={{ display: 'grid', gap: 14 }}>
       {/* visibility hero */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, background: COLORS.navy1, color: '#e6ecf5', borderRadius: 10, padding: '14px 18px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, background: COLORS.subtle, border: `1px solid ${COLORS.hair}`, color: COLORS.ink2, borderRadius: 10, padding: '14px 18px', flexWrap: 'wrap' }}>
         <div>
           <div style={{ fontSize: 10, color: COLORS.accent, textTransform: 'uppercase', letterSpacing: '0.12em' }}>Overall visibility confidence</div>
-          <div style={{ fontSize: 26, fontWeight: 800, fontFamily: FONTS.mono, color: vis.overall >= 70 ? '#34d399' : vis.overall >= 45 ? '#f0a868' : '#f87171' }}>
+          <div style={{ fontSize: 26, fontWeight: 800, fontFamily: FONTS.mono, color: vis.overall >= 70 ? COLORS.good : vis.overall >= 45 ? COLORS.warn : COLORS.bad }}>
             {vis.overall != null ? `${vis.overall}%` : '—'} <span style={{ fontSize: 13, fontWeight: 600, color: '#d7d9de' }}>{vis.band || ''}</span>
           </div>
           {vis.caveat && <div style={{ fontSize: 11, color: '#9fb2cc', marginTop: 3, maxWidth: 560 }}>{vis.caveat}</div>}
         </div>
-        {vis.thin && vis.thin.length > 0 && <div style={{ fontSize: 11, color: '#f0a868' }}>Thin coverage: {vis.thin.join(', ')}</div>}
+        {vis.thin && vis.thin.length > 0 && <div style={{ fontSize: 11, color: COLORS.warn }}>Thin coverage: {vis.thin.join(', ')}</div>}
       </div>
 
       {/* coverage stats */}

@@ -45,7 +45,7 @@ export default function LiveCoverageMeter({ orgId, authToken, apiUrl }) {
       </button>
 
       {open && (
-        <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(8,15,28,0.45)', zIndex: 1000 }}>
+        <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(11, 12, 14,0.45)', zIndex: 1000 }}>
           <div onClick={(e) => e.stopPropagation()} style={{ position: 'absolute', top: 0, right: 0, height: '100%', width: 'min(440px, 92vw)',
             background: '#fff', boxShadow: '-12px 0 40px rgba(0,0,0,0.25)', overflowY: 'auto', padding: '20px 22px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>

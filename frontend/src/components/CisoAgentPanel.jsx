@@ -106,8 +106,8 @@ export default function CisoAgentPanel(props) {
 
       {/* Intro — shown only in list mode so the detail view stays focused. */}
       {!active && (
-        <div style={{ background: NAVY, color: '#e6ecf5', borderRadius: 10, padding: '14px 18px', marginBottom: 14, fontSize: 12.5, lineHeight: 1.6 }}>
-          These are the <strong style={{ color: '#9bc0ff' }}>5 key questions every {role} should be able to answer at any time</strong>. Each one shows a quick summary of where you stand right now — <strong>select a question</strong> for the full details: the answer, the evidence behind it, the recommended action, and who owns it.
+        <div style={{ background: COLORS.subtle, border: `1px solid ${COLORS.hair}`, color: COLORS.ink2, borderRadius: 10, padding: '14px 18px', marginBottom: 14, fontSize: 12.5, lineHeight: 1.6 }}>
+          These are the <strong style={{ color: COLORS.accentText }}>5 key questions every {role} should be able to answer at any time</strong>. Each one shows a quick summary of where you stand right now — <strong>select a question</strong> for the full details: the answer, the evidence behind it, the recommended action, and who owns it.
         </div>
       )}
 
@@ -229,7 +229,7 @@ function IssueDrawer({ item, onClose, voice }) {
         <div style={{ padding: '18px 24px 26px' }}>
           {/* SME explanation — the agent explains in plain English */}
           {e.explanation && (
-            <div style={{ background: '#eef4fb', border: '1px solid #cfe0f3', borderRadius: 9, padding: '13px 15px', marginBottom: 16 }}>
+            <div style={{ background: '#eef0fb', border: '1px solid #dfe1e6', borderRadius: 9, padding: '13px 15px', marginBottom: 16 }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: '#4f5ac4', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Why this matters</div>
               <div style={{ fontSize: 13, color: INK, lineHeight: 1.6 }}>{e.explanation}</div>
             </div>

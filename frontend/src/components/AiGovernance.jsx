@@ -107,7 +107,7 @@ export default function AiGovernance(props) {
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14, justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {[['bom', 'AI Inventory (AI-BOM)'], ['guardrails', 'Guardrail Posture'], ['agents', 'Agent Risk'], ['nist_ai_rmf', 'NIST AI RMF'], ['owasp_llm', 'OWASP LLM Top 10'], ['mitre_atlas', 'MITRE ATLAS'], ['eu_ai_act', 'EU AI Act'], ['our_ai_use', 'Our AI Use']].map(([k, l]) => (
-            <button key={k} onClick={() => setView(k)} style={{ border: `1px solid ${view === k ? '#15171c' : HAIR}`, background: view === k ? '#15171c' : '#fff', color: view === k ? '#fff' : INK2, padding: '6px 13px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', borderRadius: 999 }}>{l}</button>
+            <button key={k} onClick={() => setView(k)} style={{ border: `1px solid ${view === k ? COLORS.accent : HAIR}`, background: view === k ? COLORS.accent : '#fff', color: view === k ? '#fff' : INK2, padding: '6px 13px', fontSize: 11.5, fontWeight: 600, cursor: 'pointer', borderRadius: 999 }}>{l}</button>
           ))}
         </div>
         <VoiceControls voice={voice} onReplay={() => voice.speak(aiNarration(view, inv, assess, eu))} label="Listen" />
@@ -297,7 +297,7 @@ function EuAiActView({ eu }) {
   if (!eu) return <div style={{ fontSize: 12, color: INK3 }}>Classifying under the EU AI Act…</div>;
   return (
     <div>
-      <div style={{ background: 'linear-gradient(135deg,#eef4fb,#f6f9fe)', border: '1px solid #d7e6f7', borderRadius: 10, padding: '12px 16px', marginBottom: 12, fontSize: 12.5, color: INK, lineHeight: 1.55 }}>{eu.summary}</div>
+      <div style={{ background: 'linear-gradient(135deg,#eef0fb,#f6f9fe)', border: '1px solid #d7e6f7', borderRadius: 10, padding: '12px 16px', marginBottom: 12, fontSize: 12.5, color: INK, lineHeight: 1.55 }}>{eu.summary}</div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
         {[['High-risk', eu.counts.high], ['Limited-risk', eu.counts.limited], ['Minimal-risk', eu.counts.minimal]].map(([k, n]) => (
           <span key={k} style={{ fontSize: 11, color: INK2 }}><strong style={{ color: TIER[k] }}>{n || 0}</strong> {k}</span>

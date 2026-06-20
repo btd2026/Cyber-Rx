@@ -202,7 +202,7 @@ export default function CsfControlLibrary(props) {
                       <div key={i} style={{ background: '#0b1220', borderRadius: 6, padding: '11px 13px', marginBottom: 9, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
                         <div style={{ color: '#8b9098', fontSize: 10.5, marginBottom: 6, fontFamily: 'system-ui' }}>{a.purpose}{a.signal ? ` · → ${a.signal}` : ''}</div>
                         <div style={{ fontSize: 11.5, color: '#ebecf0', wordBreak: 'break-all' }}>
-                          <span style={{ color: '#34d399', fontWeight: 700 }}>{a.method}</span> {a.path}
+                          <span style={{ color: COLORS.good, fontWeight: 700 }}>{a.method}</span> {a.path}
                         </div>
                         {a.headers && Object.keys(a.headers).length > 0 && (
                           <div style={{ fontSize: 10.5, color: '#7dd3fc', marginTop: 5 }}>

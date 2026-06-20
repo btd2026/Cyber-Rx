@@ -79,7 +79,7 @@ function Insight({ section }) {
     <div style={{ marginBottom: 14 }}>
       <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
         {section.insight ? (
-          <div style={{ flex: 1, display: 'flex', gap: 10, alignItems: 'flex-start', background: 'linear-gradient(135deg,#eef4fb,#f6f9fe)', border: '1px solid #d7e6f7', borderRadius: 10, padding: '11px 14px' }}>
+          <div style={{ flex: 1, display: 'flex', gap: 10, alignItems: 'flex-start', background: 'linear-gradient(135deg,#eef0fb,#f6f9fe)', border: '1px solid #d7e6f7', borderRadius: 10, padding: '11px 14px' }}>
             <span style={{ fontSize: 15, lineHeight: 1.3 }}>💡</span>
             <div style={{ fontSize: 12.5, color: INK, lineHeight: 1.55, fontWeight: 500 }}>{section.insight}</div>
           </div>
@@ -119,7 +119,7 @@ function DecisionsView({ role, section }) {
         {items.map((d, i) => {
           const c = sevC(d.severity);
           return (
-            <div key={i} style={{ border: `1px solid ${HAIR}`, borderRadius: 12, overflow: 'hidden', background: '#fff', boxShadow: '0 1px 3px rgba(15,23,42,0.05)' }}>
+            <div key={i} style={{ border: `1px solid ${HAIR}`, borderRadius: 12, overflow: 'hidden', background: '#fff', boxShadow: '0 1px 3px rgba(11, 12, 14,0.05)' }}>
               {/* condition header */}
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '13px 16px', borderLeft: `5px solid ${c}` }}>
                 <span style={{ fontSize: 15, lineHeight: 1.2 }}>🔎</span>
@@ -180,7 +180,7 @@ function Metrics({ section }) {
         {(section.items || []).map((m, i) => {
           const c = toneColor(m.tone);
           return (
-            <div key={i} style={{ position: 'relative', border: `1px solid ${HAIR}`, borderRadius: 12, padding: '14px 16px 10px', background: '#fff', boxShadow: '0 1px 2px rgba(15,23,42,0.04)', overflow: 'hidden' }}>
+            <div key={i} style={{ position: 'relative', border: `1px solid ${HAIR}`, borderRadius: 12, padding: '14px 16px 10px', background: '#fff', boxShadow: '0 1px 2px rgba(11, 12, 14,0.04)', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: m.tone ? c : '#ebecf0' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
                 <div style={{ fontSize: 11, color: INK2, fontWeight: 600 }}>{m.label}</div>
@@ -293,7 +293,7 @@ function CardsView({ section }) {
         {items.map((it, i) => {
           const c = toneColor(it.tagTone);
           return (
-            <div key={i} style={{ border: `1px solid ${HAIR}`, borderTop: `3px solid ${it.tagTone ? c : '#d7d9de'}`, borderRadius: 11, padding: '13px 15px', background: '#fff', boxShadow: '0 1px 2px rgba(15,23,42,0.04)' }}>
+            <div key={i} style={{ border: `1px solid ${HAIR}`, borderTop: `3px solid ${it.tagTone ? c : '#d7d9de'}`, borderRadius: 11, padding: '13px 15px', background: '#fff', boxShadow: '0 1px 2px rgba(11, 12, 14,0.04)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
                 <div style={{ fontSize: 12.5, fontWeight: 700, color: INK, lineHeight: 1.3, fontFamily: FONTS.display }}>{it.title}</div>
                 {it.tag && <Pill text={it.tag} color={it.tagTone ? c : INK3} />}

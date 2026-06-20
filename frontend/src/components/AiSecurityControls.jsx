@@ -65,17 +65,17 @@ export default function AiSecurityControls(props) {
             Controls around AI coding assistants (Claude Code, Copilot) and generative-AI use. {data.note}
           </div>
         </div>
-        <div style={{ display: 'inline-flex', alignItems: 'stretch', background: '#15171c', borderRadius: 4, overflow: 'hidden', flexShrink: 0, marginLeft: 20 }}>
+        <div style={{ display: 'inline-flex', alignItems: 'stretch', background: '#f6f7f9', border: '1px solid #ebecf0', borderRadius: 6, overflow: 'hidden', flexShrink: 0, marginLeft: 20 }}>
           <span style={{ background: sc(data.overall.status), color: '#fff', fontWeight: 600, fontSize: 19, fontVariantNumeric: 'tabular-nums', padding: '10px 14px', display: 'flex', alignItems: 'center', fontFamily: FONTS.mono }}>{data.overall.score}</span>
-          <span style={{ color: '#ebecf0', fontWeight: 500, fontSize: 12, padding: '10px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: 1.35 }}>
-            <span style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 9, color: COLORS.accent }}>AI controls operating</span>
+          <span style={{ color: '#5c6066', fontWeight: 500, fontSize: 12, padding: '10px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: 1.35 }}>
+            <span style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 9, color: COLORS.accentText }}>AI controls operating</span>
             <span>{data.controlsOperating}/{data.totalControls} operating · {data.controlsWithGaps} gap(s)</span>
           </span>
         </div>
       </div>
 
       {/* Dashboard intro + agent voice (mutable) */}
-      <div style={{ display: 'flex', gap: 14, justifyContent: 'space-between', alignItems: 'center', background: '#eef4fb', border: '1px solid #cfe0f3', borderRadius: 8, padding: '10px 15px', marginTop: 16 }}>
+      <div style={{ display: 'flex', gap: 14, justifyContent: 'space-between', alignItems: 'center', background: '#eef0fb', border: '1px solid #dfe1e6', borderRadius: 8, padding: '10px 15px', marginTop: 16 }}>
         <div style={{ fontSize: 12.5, color: INK, lineHeight: 1.5 }}>
           <strong style={{ color: '#4f5ac4' }}>What this shows:</strong> how well your AI/GenAI safeguards (Claude Code, Copilot, generative-AI use) are operating — each mapped to OWASP LLM Top 10 and NIST AI RMF, with the action to close each gap.
         </div>
