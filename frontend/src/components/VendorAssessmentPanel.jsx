@@ -9,10 +9,11 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK_2 = '#475569', INK_3 = '#94a3b8', HAIRLINE = '#e2e8f0', PANEL_BG = '#0f1b2d';
+const INK = COLORS.ink, INK_2 = COLORS.ink2, INK_3 = COLORS.ink3, HAIRLINE = COLORS.hair, PANEL_BG = COLORS.navy1;
 const RATING = {
-  Critical: '#9E3B32', High: '#A85B2E', Medium: '#B07C2E', Low: '#6E7F49', Informational: '#64748b', 'Not assessed': '#8B95A3',
+  Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good, Informational: '#64748b', 'Not assessed': '#8B95A3',
 };
 
 function resolveCtx(props) {
@@ -90,7 +91,7 @@ export default function VendorAssessmentPanel(props) {
           <div style={{ fontSize: 10, fontWeight: 600, color: INK_3, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 6 }}>
             Saraqael · Vendor Assurance Agent {aiEnabled ? '· AI extraction live' : '· structured intake'}
           </div>
-          <h2 style={{ margin: 0, fontSize: 21, fontWeight: 600, color: INK, letterSpacing: '-0.01em' }}>Vendor Document Assessment</h2>
+          <h2 style={{ margin: 0, fontSize: 21, fontWeight: 600, color: INK, letterSpacing: '-0.01em', fontFamily: FONTS.display }}>Vendor Document Assessment</h2>
           <div style={{ color: INK_2, fontSize: 12, marginTop: 6, maxWidth: 660, lineHeight: 1.55 }}>
             Saraqael validates every vendor document type, extracts the assurance data, maps findings to NIST CSF 2.0 /
             SOC 2 / HIPAA, cross-validates documents against each other, and feeds risk-rated findings into the vendor
@@ -101,21 +102,21 @@ export default function VendorAssessmentPanel(props) {
           <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 24, display: 'flex', gap: 8 }}>
             {summary.assuranceScore != null && (
               <div style={{ display: 'inline-flex', alignItems: 'stretch', background: PANEL_BG, borderRadius: 4, overflow: 'hidden' }}>
-                <span style={{ background: summary.assuranceScore >= 85 ? '#1f8a4c' : summary.assuranceScore >= 65 ? '#B07C2E' : summary.assuranceScore >= 40 ? '#A85B2E' : '#C0392B', color: '#fff', fontWeight: 600, fontSize: 19, fontVariantNumeric: 'tabular-nums', padding: '10px 14px' }}>
+                <span style={{ background: summary.assuranceScore >= 85 ? COLORS.good : summary.assuranceScore >= 65 ? COLORS.warn : summary.assuranceScore >= 40 ? '#A85B2E' : COLORS.bad, color: '#fff', fontWeight: 600, fontSize: 19, fontVariantNumeric: 'tabular-nums', fontFamily: FONTS.mono, padding: '10px 14px' }}>
                   {summary.assuranceScore}
                 </span>
                 <span style={{ color: '#e2e8f0', fontWeight: 500, fontSize: 12, padding: '10px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: 1.35 }}>
-                  <span style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 9, color: '#8fa3bd' }}>Assurance Score</span>
+                  <span style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 9, color: COLORS.accent }}>Assurance Score</span>
                   <span>{summary.postureBand} · C{summary.avgCompleteness}/A{summary.avgAccuracy}</span>
                 </span>
               </div>
             )}
             <div style={{ display: 'inline-flex', alignItems: 'stretch', background: PANEL_BG, borderRadius: 4, overflow: 'hidden' }}>
-              <span style={{ background: RATING[summary.overallRating] || INK_3, color: '#fff', fontWeight: 600, fontSize: 19, fontVariantNumeric: 'tabular-nums', padding: '10px 14px' }}>
+              <span style={{ background: RATING[summary.overallRating] || INK_3, color: '#fff', fontWeight: 600, fontSize: 19, fontVariantNumeric: 'tabular-nums', fontFamily: FONTS.mono, padding: '10px 14px' }}>
                 {summary.documentRiskScore}
               </span>
               <span style={{ color: '#e2e8f0', fontWeight: 500, fontSize: 12, padding: '10px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: 1.35 }}>
-                <span style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 9, color: '#8fa3bd' }}>Document Risk Score</span>
+                <span style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 9, color: COLORS.accent }}>Document Risk Score</span>
                 <span>{summary.overallRating}</span>
               </span>
             </div>
@@ -182,7 +183,7 @@ export default function VendorAssessmentPanel(props) {
                 {[['Documents on file', summary.documentCount], ['Critical', summary.findingCounts.Critical, 'Critical'], ['High', summary.findingCounts.High, 'High'], ['Medium', summary.findingCounts.Medium, 'Medium']].map(([label, val, r]) => (
                   <div key={label} style={{ padding: '0 24px 14px 0', marginRight: 24, borderRight: `1px solid ${HAIRLINE}` }}>
                     <div style={{ fontSize: 9, fontWeight: 600, color: INK_3, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>{label}</div>
-                    <div style={{ fontSize: 17, fontWeight: 600, color: r ? RATING[r] : INK, fontVariantNumeric: 'tabular-nums' }}>{val}</div>
+                    <div style={{ fontSize: 17, fontWeight: 600, color: r ? RATING[r] : INK, fontVariantNumeric: 'tabular-nums', fontFamily: FONTS.mono }}>{val}</div>
                   </div>
                 ))}
               </div>
@@ -202,13 +203,13 @@ export default function VendorAssessmentPanel(props) {
                   </div>
                   {d.score != null && (
                     <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginTop: 8 }}>
-                      <div style={{ fontSize: 20, fontWeight: 700, color: d.score >= 85 ? '#1f8a4c' : d.score >= 65 ? '#B07C2E' : d.score >= 40 ? '#A85B2E' : '#C0392B', lineHeight: 1 }}>
+                      <div style={{ fontSize: 20, fontWeight: 700, color: d.score >= 85 ? COLORS.good : d.score >= 65 ? COLORS.warn : d.score >= 40 ? '#A85B2E' : COLORS.bad, lineHeight: 1, fontFamily: FONTS.mono }}>
                         {d.score}<span style={{ fontSize: 9, color: INK_3, fontWeight: 600, marginLeft: 3 }}>{d.status}</span>
                       </div>
                       {[['Completeness', d.completeness], ['Accuracy', d.accuracy]].map(([lab, v]) => (
                         <div key={lab} style={{ flex: 1 }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: INK_3, textTransform: 'uppercase', letterSpacing: '0.06em' }}><span>{lab}</span><span>{v == null ? '—' : v + '%'}</span></div>
-                          <div style={{ height: 5, background: '#eef2f6', borderRadius: 3, marginTop: 2 }}><div style={{ width: `${v || 0}%`, height: '100%', background: (v || 0) >= 80 ? '#1f8a4c' : (v || 0) >= 50 ? '#B07C2E' : '#C0392B', borderRadius: 3 }} /></div>
+                          <div style={{ height: 5, background: '#eef2f6', borderRadius: 3, marginTop: 2 }}><div style={{ width: `${v || 0}%`, height: '100%', background: (v || 0) >= 80 ? COLORS.good : (v || 0) >= 50 ? COLORS.warn : COLORS.bad, borderRadius: 3 }} /></div>
                         </div>
                       ))}
                     </div>

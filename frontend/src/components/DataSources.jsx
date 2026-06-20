@@ -6,9 +6,10 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc';
-const STATUS = { connected: '#1f8a4c', error: '#C0392B', not_connected: '#94a3b8' };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+const STATUS = { connected: COLORS.good, error: COLORS.bad, not_connected: COLORS.ink3 };
 
 export default function DataSources({ orgId, authToken, apiUrl }) {
   const [open, setOpen] = useState(false);
@@ -41,7 +42,7 @@ export default function DataSources({ orgId, authToken, apiUrl }) {
         <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(8,15,28,0.5)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '40px 16px', overflowY: 'auto' }}>
           <div onClick={(e) => e.stopPropagation()} style={{ background: '#fff', borderRadius: 12, width: 'min(680px, 96vw)', boxShadow: '0 24px 64px rgba(0,0,0,0.3)', padding: '20px 22px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: INK }}>Connect data sources</h3>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: INK, fontFamily: FONTS.display }}>Connect data sources</h3>
               <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', fontSize: 22, color: INK3, cursor: 'pointer', lineHeight: 1 }}>×</button>
             </div>
             <p style={{ margin: '0 0 14px', fontSize: 12, color: INK2, lineHeight: 1.5 }}>
@@ -54,7 +55,7 @@ export default function DataSources({ orgId, authToken, apiUrl }) {
                   <div key={c.key} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${STATUS[c.status] || INK3}`, borderRadius: 9, padding: '12px 14px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
                       <div>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: INK }}>{c.label}</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: INK, fontFamily: FONTS.display }}>{c.label}</span>
                         <span style={{ fontSize: 10.5, color: INK3, marginLeft: 8 }}>{c.category}</span>
                       </div>
                       <span style={{ fontSize: 10, fontWeight: 800, color: STATUS[c.status] || INK3, textTransform: 'uppercase' }}>

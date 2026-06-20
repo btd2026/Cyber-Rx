@@ -4,8 +4,9 @@
  * Backend: /api/resolution/applications/{duplicates,merge}.
  */
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e2e8f0', NAVY = '#0f1b2d', GREEN = '#1f8a4c', RED = '#C0392B';
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, NAVY = COLORS.navy1, GREEN = COLORS.good, RED = COLORS.bad;
 
 function ctx(props) {
   const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
@@ -40,7 +41,7 @@ export default function ResolutionPanel(props) {
 
   return (
     <div style={{ background: '#fff', border: `1px solid ${HAIR}`, borderRadius: 10, padding: '16px 18px', marginBottom: 16 }}>
-      <div style={{ fontSize: 13, fontWeight: 800, color: INK }}>Entity resolution — application duplicates</div>
+      <div style={{ fontSize: 13, fontWeight: 800, color: INK, fontFamily: FONTS.display }}>Entity resolution — application duplicates</div>
       <div style={{ fontSize: 11.5, color: INK2, margin: '4px 0 10px', maxWidth: 720 }}>One trustworthy picture: applications reconciled across CMDB sources. Confirm a merge to collapse duplicates onto a single canonical app (crosswalk + criticality carry over).</div>
       {msg && <div style={{ background: '#f0f7f2', border: '1px solid #cce8d6', color: GREEN, borderRadius: 6, padding: '7px 11px', fontSize: 12, marginBottom: 10 }}>{msg}</div>}
       {!groups ? <div style={{ color: INK3, fontSize: 12 }}>Loading…</div> : !groups.length ? <div style={{ color: INK3, fontSize: 12 }}>No duplicate applications detected — inventory looks clean.</div> : (

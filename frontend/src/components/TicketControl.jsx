@@ -13,13 +13,14 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e2e8f0', PANEL = '#f8fafc';
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
 const SYS_LABEL = { demo: 'ticketing system', jira: 'Jira', snow: 'ServiceNow', servicenow: 'ServiceNow' };
 const STATUS = {
   open: { label: 'Open', color: '#A85B2E' },
-  in_progress: { label: 'In progress', color: '#B07C2E' },
-  resolved: { label: 'Resolved', color: '#1f8a4c' },
+  in_progress: { label: 'In progress', color: COLORS.warn },
+  resolved: { label: 'Resolved', color: COLORS.good },
 };
 
 function ctx(props) {

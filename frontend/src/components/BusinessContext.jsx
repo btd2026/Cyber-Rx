@@ -6,8 +6,9 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc';
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
 const THRESHOLDS = ['Critical', 'High', 'Medium', 'Low'];
 
 export default function BusinessContext({ orgId, authToken, apiUrl }) {
@@ -57,7 +58,7 @@ export default function BusinessContext({ orgId, authToken, apiUrl }) {
         <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(8,15,28,0.5)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '40px 16px', overflowY: 'auto' }}>
           <div onClick={(e) => e.stopPropagation()} style={{ background: '#fff', borderRadius: 12, width: 'min(640px, 96vw)', boxShadow: '0 24px 64px rgba(0,0,0,0.3)', padding: '20px 22px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: INK }}>Business context</h3>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: INK, fontFamily: FONTS.display }}>Business context</h3>
               <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', fontSize: 22, color: INK3, cursor: 'pointer', lineHeight: 1 }}>×</button>
             </div>
             <p style={{ margin: '0 0 14px', fontSize: 12, color: INK2, lineHeight: 1.5 }}>Author your own crown jewels and thresholds — these replace inferred defaults and propagate to every lens (Key Risks, attack paths, materiality, the decision spine).</p>

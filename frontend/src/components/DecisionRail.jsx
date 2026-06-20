@@ -10,9 +10,12 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc';
-const SEV = { Critical: '#C0392B', High: '#A85B2E', Medium: '#B07C2E', Low: '#1f8a4c' };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+const NAVY = COLORS.navy1;
+// SEV — semantic severity, meaning preserved.
+const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
 
 function ctx(props) {
   const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
@@ -95,11 +98,11 @@ export default function DecisionRail(props) {
         <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(15,27,45,0.45)', zIndex: 60, display: 'flex', justifyContent: 'flex-end' }}>
           <div onClick={(e) => e.stopPropagation()} style={{ width: 'min(460px,94vw)', height: '100%', background: '#fff', boxShadow: '-8px 0 24px rgba(0,0,0,0.2)', overflowY: 'auto', padding: '18px 20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: INK }}>Decisions needing attention</h3>
+              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: INK, fontFamily: FONTS.display }}>Decisions needing attention</h3>
               <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', fontSize: 20, color: INK3, cursor: 'pointer' }}>✕</button>
             </div>
             {props.onOpenQueue && (
-              <button onClick={() => { setOpen(false); props.onOpenQueue(); }} style={{ width: '100%', background: '#0f1b2d', color: '#fff', border: 'none', borderRadius: 8, padding: '9px', fontSize: 12, fontWeight: 700, cursor: 'pointer', marginBottom: 12 }}>Open the full Decision Queue →</button>
+              <button onClick={() => { setOpen(false); props.onOpenQueue(); }} style={{ width: '100%', background: NAVY, color: '#fff', border: 'none', borderRadius: 8, padding: '9px', fontSize: 12, fontWeight: 700, cursor: 'pointer', marginBottom: 12 }}>Open the full Decision Queue →</button>
             )}
             <div style={{ display: 'grid', gap: 8 }}>
               {undecided.map((c) => (

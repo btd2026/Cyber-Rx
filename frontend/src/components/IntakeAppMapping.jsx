@@ -7,10 +7,11 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e6ebf2', PANEL = '#f8fafc';
-const TONE = { good: '#1f8a4c', warn: '#B07C2E', bad: '#C0392B' };
-const SRC = { inventory: '#1f8a4c', llm: '#1d4ed8', heuristic: '#B07C2E', user: '#0f172a' };
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+const TONE = { good: COLORS.good, warn: COLORS.warn, bad: COLORS.bad };
+const SRC = { inventory: COLORS.good, llm: '#1d4ed8', heuristic: COLORS.warn, user: COLORS.ink };
 const confColor = (c) => (c >= 0.75 ? TONE.good : c >= 0.5 ? TONE.warn : TONE.bad);
 
 function ctx(props) {
@@ -65,7 +66,7 @@ export default function IntakeAppMapping(props) {
       {/* actions + coverage */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
         <div style={{ fontSize: 11.5, color: INK2 }}>
-          <strong>{c.mapped || 0}</strong>/{c.applications || 0} apps mapped · <strong>{c.pctMapped || 0}%</strong> of {c.processes || 0} processes covered
+          <strong style={{ fontFamily: FONTS.mono }}>{c.mapped || 0}</strong>/<span style={{ fontFamily: FONTS.mono }}>{c.applications || 0}</span> apps mapped · <strong style={{ fontFamily: FONTS.mono }}>{c.pctMapped || 0}%</strong> of <span style={{ fontFamily: FONTS.mono }}>{c.processes || 0}</span> processes covered
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => setCmdb(cmdb ? null : { instance: '', username: '', password: '', query: '' })} style={btn('#fff', INK)}>⤵ Pull from ServiceNow CMDB</button>
@@ -77,7 +78,7 @@ export default function IntakeAppMapping(props) {
       {/* CMDB connector form */}
       {cmdb && (
         <div style={{ border: `1px solid ${HAIR}`, borderRadius: 10, background: PANEL, padding: '12px 14px' }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: INK, marginBottom: 8 }}>ServiceNow CMDB (read-only pull of cmdb_ci_appl + business-service links)</div>
+          <div style={{ fontSize: 12, fontWeight: 800, color: INK, marginBottom: 8, fontFamily: FONTS.display }}>ServiceNow CMDB (read-only pull of cmdb_ci_appl + business-service links)</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             {[['instance', 'Instance URL (https://acme.service-now.com)'], ['username', 'Username'], ['password', 'Password / token'], ['query', 'sysparm_query (optional)']].map(([k, ph]) => (
               <input key={k} type={k === 'password' ? 'password' : 'text'} placeholder={ph} value={cmdb[k]} onChange={(e) => setCmdb(Object.assign({}, cmdb, { [k]: e.target.value }))}
@@ -101,7 +102,7 @@ export default function IntakeAppMapping(props) {
         {review.processes.map((p) => (
           <div key={p.id} style={{ border: `1px solid ${HAIR}`, borderRadius: 10, background: '#fff' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, padding: '9px 13px', background: PANEL, borderBottom: p.apps.length ? `1px solid ${HAIR}` : 'none' }}>
-              <span style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>{p.name}{p.criticality ? <span style={{ fontSize: 10, color: INK3 }}> · {p.criticality}</span> : null}</span>
+              <span style={{ fontSize: 12.5, fontWeight: 700, color: INK, fontFamily: FONTS.display }}>{p.name}{p.criticality ? <span style={{ fontSize: 10, color: INK3, fontFamily: FONTS.body }}> · {p.criticality}</span> : null}</span>
               <span style={{ fontSize: 10.5, color: p.apps.length ? INK3 : TONE.bad }}>{p.apps.length ? `${p.apps.length} app(s)` : 'no apps — coverage hole'}</span>
             </div>
             {p.apps.map((a) => (
@@ -109,7 +110,7 @@ export default function IntakeAppMapping(props) {
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 12, color: INK, fontWeight: 600 }}>{a.name}
                     <span style={{ fontSize: 9, fontWeight: 700, color: '#fff', background: SRC[a.source] || INK3, borderRadius: 10, padding: '1px 7px', marginLeft: 7 }}>{a.source}</span>
-                    <span style={{ fontSize: 9, fontWeight: 700, color: confColor(a.confidence || 0), border: `1px solid ${HAIR}`, borderRadius: 10, padding: '1px 7px', marginLeft: 5 }}>{Math.round((a.confidence || 0) * 100)}%</span>
+                    <span style={{ fontSize: 9, fontWeight: 700, fontFamily: FONTS.mono, color: confColor(a.confidence || 0), border: `1px solid ${HAIR}`, borderRadius: 10, padding: '1px 7px', marginLeft: 5 }}>{Math.round((a.confidence || 0) * 100)}%</span>
                     {a.status === 'validated' && <span style={{ fontSize: 9, fontWeight: 700, color: TONE.good, marginLeft: 6 }}>✓ validated</span>}
                   </div>
                   {a.rationale && <div style={{ fontSize: 10, color: INK3, marginTop: 1 }}>{a.rationale}</div>}
@@ -134,7 +135,7 @@ export default function IntakeAppMapping(props) {
 function Finding({ tone, title, detail, items }) {
   return (
     <div style={{ borderLeft: `4px solid ${TONE[tone]}`, background: '#fff', border: `1px solid ${HAIR}`, borderRadius: 9, padding: '9px 12px' }}>
-      <div style={{ fontSize: 12, fontWeight: 800, color: INK }}>{title}</div>
+      <div style={{ fontSize: 12, fontWeight: 800, color: INK, fontFamily: FONTS.display }}>{title}</div>
       <div style={{ fontSize: 10.5, color: INK2, marginTop: 2 }}>{detail}</div>
       {items && items.length > 0 && <div style={{ fontSize: 10.5, color: INK3, marginTop: 4 }}>{items.slice(0, 8).join(' · ')}{items.length > 8 ? ` +${items.length - 8}` : ''}</div>}
     </div>

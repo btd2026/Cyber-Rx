@@ -6,8 +6,9 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS as THEME, FONTS } from '../theme';
 
-const COLORS = { live: '#1f8a4c', derived: '#0e7490', modeled: '#B07C2E', demo: '#94a3b8' };
+const COLORS = { live: THEME.good, derived: '#0e7490', modeled: THEME.warn, demo: THEME.ink3 };
 const LABEL = { live: 'Live', derived: 'Derived', modeled: 'Modeled', demo: 'Demo' };
 const ORDER = ['live', 'derived', 'modeled', 'demo'];
 
@@ -40,7 +41,7 @@ export default function LiveCoverageMeter({ orgId, authToken, apiUrl }) {
         style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#1e3a5f', color: '#fff',
           border: '1px solid #2c4f7c', borderRadius: 6, padding: '7px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
         {donut(20)}
-        <span><strong>{pct.live}%</strong> live data</span>
+        <span><strong style={{ fontFamily: FONTS.mono }}>{pct.live}%</strong> live data</span>
       </button>
 
       {open && (
@@ -48,7 +49,7 @@ export default function LiveCoverageMeter({ orgId, authToken, apiUrl }) {
           <div onClick={(e) => e.stopPropagation()} style={{ position: 'absolute', top: 0, right: 0, height: '100%', width: 'min(440px, 92vw)',
             background: '#fff', boxShadow: '-12px 0 40px rgba(0,0,0,0.25)', overflowY: 'auto', padding: '20px 22px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#0f172a' }}>Data Trust</h3>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: THEME.ink, fontFamily: FONTS.display }}>Data Trust</h3>
               <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', fontSize: 20, color: '#94a3b8', cursor: 'pointer', lineHeight: 1 }}>×</button>
             </div>
             <p style={{ margin: '0 0 14px', fontSize: 12, color: '#475569', lineHeight: 1.5 }}>
@@ -64,17 +65,17 @@ export default function LiveCoverageMeter({ orgId, authToken, apiUrl }) {
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                       <span style={{ width: 9, height: 9, borderRadius: '50%', background: COLORS[m] }} />{LABEL[m]}
                     </span>
-                    <strong>{pct[m]}%</strong>
+                    <strong style={{ fontFamily: FONTS.mono }}>{pct[m]}%</strong>
                   </div>
                 ))}
-                <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>{cov.total} signals · avg confidence {cov.confidence}%</div>
+                <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}><span style={{ fontFamily: FONTS.mono }}>{cov.total}</span> signals · avg confidence <span style={{ fontFamily: FONTS.mono }}>{cov.confidence}%</span></div>
               </div>
             </div>
 
             {/* upgrade nudges */}
             {cov.upgrades && cov.upgrades.length > 0 && (
               <div style={{ marginTop: 16 }}>
-                <div style={{ fontSize: 12, fontWeight: 800, color: '#0f172a', marginBottom: 7 }}>Go live — connect these sources</div>
+                <div style={{ fontSize: 12, fontWeight: 800, color: THEME.ink, marginBottom: 7, fontFamily: FONTS.display }}>Go live — connect these sources</div>
                 {cov.upgrades.map((u, i) => (
                   <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, fontSize: 12,
                     background: '#f8fafc', border: '1px solid #e6ebf2', borderRadius: 7, padding: '8px 10px', marginBottom: 6 }}>
@@ -87,7 +88,7 @@ export default function LiveCoverageMeter({ orgId, authToken, apiUrl }) {
 
             {/* per-domain coverage */}
             <div style={{ marginTop: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 800, color: '#0f172a', marginBottom: 7 }}>By domain</div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: THEME.ink, marginBottom: 7, fontFamily: FONTS.display }}>By domain</div>
               {(cov.byDomain || []).map((d) => (
                 <div key={d.id} style={{ marginBottom: 9 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#334155' }}>

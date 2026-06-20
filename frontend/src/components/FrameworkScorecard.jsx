@@ -13,13 +13,14 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a';
-const INK_2 = '#475569';
-const INK_3 = '#94a3b8';
-const HAIRLINE = '#e2e8f0';
-const PANEL_BG = '#0f1b2d';
-const STATUS_COLORS = { Compliant: '#31604B', Partial: '#B07C2E', Gap: '#9E3B32', 'Not assessed': '#8B95A3' };
+const INK = COLORS.ink;
+const INK_2 = COLORS.ink2;
+const INK_3 = COLORS.ink3;
+const HAIRLINE = COLORS.hair;
+const PANEL_BG = COLORS.navy1;
+const STATUS_COLORS = { Compliant: COLORS.good, Partial: COLORS.warn, Gap: COLORS.bad, 'Not assessed': COLORS.ink3 };
 const THRESHOLD = 75;
 const TARGET = 90; // Papa #11 — proposed target per control
 
@@ -80,7 +81,7 @@ export default function FrameworkScorecard(props) {
           <div style={{ fontSize: 10, fontWeight: 600, color: INK_3, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 6 }}>
             Live Compliance Assessment · {data.standard}
           </div>
-          <h2 style={{ margin: 0, fontSize: 21, fontWeight: 600, color: INK, letterSpacing: '-0.01em' }}>{data.label}</h2>
+          <h2 style={{ margin: 0, fontSize: 21, fontWeight: 600, color: INK, letterSpacing: '-0.01em', fontFamily: FONTS.display }}>{data.label}</h2>
           <div style={{ color: INK_2, fontSize: 12, marginTop: 6, maxWidth: 640, lineHeight: 1.55 }}>
             {data.totalControls} controls scored from the same live signals as the CSF profile — {data.autoCount} automatic
             from connected systems, {data.partialCount} hybrid, {data.manualCount} from intake evidence. Controls without an
@@ -90,11 +91,11 @@ export default function FrameworkScorecard(props) {
         </div>
         <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 24 }}>
           <div style={{ display: 'inline-flex', alignItems: 'stretch', background: PANEL_BG, borderRadius: 4, overflow: 'hidden' }}>
-            <span style={{ background: sc(data.status), color: '#fff', fontWeight: 600, fontSize: 19, fontVariantNumeric: 'tabular-nums', padding: '10px 14px', display: 'flex', alignItems: 'center' }}>
+            <span style={{ background: sc(data.status), color: '#fff', fontWeight: 600, fontSize: 19, fontFamily: FONTS.mono, fontVariantNumeric: 'tabular-nums', padding: '10px 14px', display: 'flex', alignItems: 'center' }}>
               {data.overall == null ? '—' : `${data.overall}%`}
             </span>
             <span style={{ color: '#e2e8f0', fontWeight: 500, fontSize: 12, padding: '10px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: 1.35 }}>
-              <span style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 9, color: '#8fa3bd' }}>Overall Compliance</span>
+              <span style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 9, color: COLORS.accent }}>Overall Compliance</span>
               <span>{data.status}</span>
             </span>
           </div>
@@ -110,7 +111,7 @@ export default function FrameworkScorecard(props) {
           {/* Section header */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 10 }}>
             <div style={{ flex: 1 }}>
-              <span style={{ fontSize: 13.5, fontWeight: 600, color: INK }}>{s.name}</span>
+              <span style={{ fontSize: 13.5, fontWeight: 600, color: INK, fontFamily: FONTS.display }}>{s.name}</span>
               <span style={{ fontSize: 10, color: INK_3, marginLeft: 10 }}>{s.assessed}/{s.total} controls assessed</span>
             </div>
             <div style={{ position: 'relative', width: 220, height: 8, background: '#f1f5f9', borderRadius: 4, overflow: 'visible', flexShrink: 0 }}>
@@ -119,7 +120,7 @@ export default function FrameworkScorecard(props) {
               )}
               <div style={{ position: 'absolute', top: -3, bottom: -3, left: `${THRESHOLD}%`, borderLeft: `2px dashed ${INK_3}88` }} />
             </div>
-            <span style={{ width: 44, textAlign: 'right', fontSize: 14, fontWeight: 600, color: sc(s.status), fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
+            <span style={{ width: 44, textAlign: 'right', fontSize: 14, fontWeight: 600, color: sc(s.status), fontFamily: FONTS.mono, fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
               {s.score == null ? '—' : `${s.score}%`}
             </span>
           </div>
@@ -130,7 +131,7 @@ export default function FrameworkScorecard(props) {
               <div key={c.ref}>
                 <div onClick={() => setSel(active ? null : c.ref)}
                   style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '7px 0 7px 14px', cursor: 'pointer', borderLeft: `2px solid ${active ? sc(c.status) : 'transparent'}` }}>
-                  <span style={{ width: 96, flexShrink: 0, fontSize: 10.5, fontWeight: 600, color: INK_2, fontVariantNumeric: 'tabular-nums' }}>{c.ref}</span>
+                  <span style={{ width: 96, flexShrink: 0, fontSize: 10.5, fontWeight: 600, color: INK_2, fontFamily: FONTS.mono, fontVariantNumeric: 'tabular-nums' }}>{c.ref}</span>
                   <span style={{ flex: 1, fontSize: 12, color: INK }}>{c.name}</span>
                   <span title={MODE_TAGS[c.mode] ? MODE_TAGS[c.mode].title : ''}
                     style={{ fontSize: 8, fontWeight: 600, color: INK_3, letterSpacing: '0.1em', width: 50, flexShrink: 0 }}>
@@ -142,7 +143,7 @@ export default function FrameworkScorecard(props) {
                     )}
                     <div style={{ position: 'absolute', top: -2, bottom: -2, left: `${THRESHOLD}%`, borderLeft: `1.5px dashed ${INK_3}66` }} />
                   </div>
-                  <span style={{ width: 38, textAlign: 'right', fontSize: 11.5, fontWeight: 600, color: sc(c.status), fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
+                  <span style={{ width: 38, textAlign: 'right', fontSize: 11.5, fontWeight: 600, color: sc(c.status), fontFamily: FONTS.mono, fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
                     {c.score == null ? '—' : `${c.score}%`}
                   </span>
                   <span style={{ width: 88, textAlign: 'right', fontSize: 9.5, fontWeight: 600, color: sc(c.status), textTransform: 'uppercase', letterSpacing: '0.06em', flexShrink: 0 }}>
@@ -153,9 +154,9 @@ export default function FrameworkScorecard(props) {
                   <div style={{ margin: '4px 0 10px 110px', border: `1px solid ${HAIRLINE}`, borderRadius: 4, background: '#fafbfc', padding: '10px 14px' }}>
                     {/* Papa #11 — current vs proposed target, and what's needed to get there */}
                     <div style={{ display: 'flex', gap: 22, marginBottom: 10, paddingBottom: 8, borderBottom: `1px solid ${HAIRLINE}` }}>
-                      <span style={{ fontSize: 11.5, color: INK_2 }}>Current: <strong style={{ color: sc(c.status), fontVariantNumeric: 'tabular-nums' }}>{c.score == null ? 'Not assessed' : `${c.score}%`}</strong></span>
-                      <span style={{ fontSize: 11.5, color: INK_2 }}>Proposed target: <strong style={{ color: INK, fontVariantNumeric: 'tabular-nums' }}>{TARGET}%</strong></span>
-                      <span style={{ fontSize: 11.5, color: INK_2 }}>Gap: <strong style={{ color: c.score != null && c.score >= TARGET ? '#31604B' : '#9E3B32', fontVariantNumeric: 'tabular-nums' }}>{c.score == null ? '—' : Math.max(0, TARGET - c.score) + ' pts'}</strong></span>
+                      <span style={{ fontSize: 11.5, color: INK_2 }}>Current: <strong style={{ color: sc(c.status), fontFamily: FONTS.mono, fontVariantNumeric: 'tabular-nums' }}>{c.score == null ? 'Not assessed' : `${c.score}%`}</strong></span>
+                      <span style={{ fontSize: 11.5, color: INK_2 }}>Proposed target: <strong style={{ color: INK, fontFamily: FONTS.mono, fontVariantNumeric: 'tabular-nums' }}>{TARGET}%</strong></span>
+                      <span style={{ fontSize: 11.5, color: INK_2 }}>Gap: <strong style={{ color: c.score != null && c.score >= TARGET ? COLORS.good : COLORS.bad, fontFamily: FONTS.mono, fontVariantNumeric: 'tabular-nums' }}>{c.score == null ? '—' : Math.max(0, TARGET - c.score) + ' pts'}</strong></span>
                     </div>
                     {(() => {
                       const needs = c.sources.filter((s) => s.value == null || s.value < TARGET);
@@ -185,7 +186,7 @@ export default function FrameworkScorecard(props) {
                             {src.kind === 'live' ? 'LIVE' : 'INTAKE'}
                           </span>
                         </span>
-                        <span style={{ fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: src.value == null ? INK_3 : INK }}>
+                        <span style={{ fontWeight: 600, fontFamily: FONTS.mono, fontVariantNumeric: 'tabular-nums', color: src.value == null ? INK_3 : INK }}>
                           {src.value == null ? 'no data' : `${src.value}%`}
                         </span>
                       </div>

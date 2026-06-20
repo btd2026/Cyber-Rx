@@ -3,9 +3,10 @@
  * with its evidence trace and cross-framework peers. Backend: /api/audit/*.
  */
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e2e8f0', PANEL = '#f8fafc';
-const GREEN = '#1f8a4c', AMBER = '#B07C2E', RED = '#C0392B';
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+const GREEN = COLORS.good, AMBER = COLORS.warn, RED = COLORS.bad;
 const sc = (s) => (s >= 80 ? GREEN : s >= 50 ? AMBER : RED);
 const fwName = (id) => ({ nist_csf_2: 'CSF 2.0', nist_800_53_r5: '800-53', cis_v8_1: 'CIS' }[id] || id);
 
@@ -34,9 +35,9 @@ export default function AuditLineagePanel(props) {
 
   return (
     <div style={{ background: '#fff', border: `1px solid ${HAIR}`, borderRadius: 10, padding: '16px 18px', marginBottom: 16 }}>
-      <div style={{ fontSize: 13, fontWeight: 800, color: INK }}>Audit-ready control lineage</div>
+      <div style={{ fontSize: 13, fontWeight: 800, color: INK, fontFamily: FONTS.display }}>Audit-ready control lineage</div>
       <div style={{ fontSize: 11.5, color: INK2, margin: '4px 0 10px', maxWidth: 720 }}>One assessment across CSF / 800-53 / CIS, each result traced to its evidence and cross-framework peers — the oversight pack for disclosure.</div>
-      {sum && <div style={{ fontSize: 12, color: INK2, marginBottom: 10 }}><strong style={{ color: INK }}>{sum.total}</strong> controls assessed · <strong style={{ color: GREEN }}>{sum.met}</strong> met · <strong>{sum.reviewed}</strong> reviewed</div>}
+      {sum && <div style={{ fontSize: 12, color: INK2, marginBottom: 10 }}><strong style={{ color: INK, fontFamily: FONTS.mono }}>{sum.total}</strong> controls assessed · <strong style={{ color: GREEN, fontFamily: FONTS.mono }}>{sum.met}</strong> met · <strong style={{ fontFamily: FONTS.mono }}>{sum.reviewed}</strong> reviewed</div>}
       {!rows ? <div style={{ color: INK3, fontSize: 12 }}>Loading…</div> : !rows.length ? <div style={{ color: INK3, fontSize: 12 }}>No assessment yet — run the unified assessment first.</div> : (
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11.5 }}>
@@ -50,7 +51,7 @@ export default function AuditLineagePanel(props) {
                   <td style={{ padding: '6px 8px', color: INK2 }}>{fwName(r.framework_id)}</td>
                   <td style={{ padding: '6px 8px', color: INK3 }}>{r.assessment_type}</td>
                   <td style={{ padding: '6px 8px', fontWeight: 700, color: sc(Number(r.score)) }}>{r.status}</td>
-                  <td style={{ padding: '6px 8px', color: sc(Number(r.score)) }}>{r.score}</td>
+                  <td style={{ padding: '6px 8px', color: sc(Number(r.score)), fontFamily: FONTS.mono }}>{r.score}</td>
                   <td style={{ padding: '6px 8px', color: INK2 }}>{(r.evidence || []).map((e) => e.type).join(', ') || '—'}</td>
                   <td style={{ padding: '6px 8px', color: INK3 }}>{(r.crosswalk || []).length} peer{(r.crosswalk || []).length === 1 ? '' : 's'}</td>
                 </tr>

@@ -10,9 +10,10 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK_2 = '#475569', INK_3 = '#94a3b8', HAIRLINE = '#e2e8f0';
-const SEV = { Critical: '#9E3B32', High: '#A85B2E', Medium: '#B07C2E', Low: '#6E7F49' };
+const INK = COLORS.ink, INK_2 = COLORS.ink2, INK_3 = COLORS.ink3, HAIRLINE = COLORS.hair;
+const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
 const SYSTEMS = [['demo', 'Demo (no credentials)'], ['jira', 'Jira'], ['snow', 'ServiceNow']];
 
 function resolveCtx(props) {
@@ -66,7 +67,7 @@ export default function RemediationPanel(props) {
           <div style={{ fontSize: 10, fontWeight: 600, color: INK_3, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 6 }}>
             Remediation Path · findings → tickets
           </div>
-          <h2 style={{ margin: 0, fontSize: 21, fontWeight: 600, color: INK, letterSpacing: '-0.01em' }}>Remediation Tickets</h2>
+          <h2 style={{ margin: 0, fontSize: 21, fontWeight: 600, color: INK, letterSpacing: '-0.01em', fontFamily: FONTS.display }}>Remediation Tickets</h2>
           <div style={{ color: INK_2, fontSize: 12, marginTop: 6, maxWidth: 660, lineHeight: 1.55 }}>
             Every open finding — vendor risk signals from Saraqael and the monitors, and gaps from Zadkiel's NIST CSF
             review — opens a ticket with high-level remediation recommendations in your ticketing system. Re-running

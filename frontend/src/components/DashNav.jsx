@@ -6,8 +6,9 @@
  * `go(pageId)` function the app passes down.
  */
 import React from 'react';
+import { COLORS, FONTS } from '../theme';
 
-const C = { border: '#e2e8f0', acc: '#0891b2', text: '#0f172a', muted: '#64748b' };
+const C = { border: COLORS.hair, acc: COLORS.accent, text: COLORS.ink, muted: COLORS.ink2 };
 
 const TABS = [
   { id: 'dashboard', label: 'CISO',             mod: 'Security' },
@@ -34,7 +35,7 @@ export default function DashNav({ current, go }) {
               padding: '9px 18px', cursor: 'pointer', marginBottom: -1,
             }}
           >
-            <div style={{ color: active ? C.acc : C.text, fontSize: 12, fontWeight: active ? 700 : 500 }}>{tab.label}</div>
+            <div style={{ fontFamily: FONTS.display, color: active ? C.acc : C.text, fontSize: 12, fontWeight: active ? 700 : 500 }}>{tab.label}</div>
             <div style={{ color: C.muted, fontSize: 9 }}>{tab.mod}</div>
           </button>
         );

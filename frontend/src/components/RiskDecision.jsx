@@ -12,10 +12,13 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS } from '../theme';
 import TicketControl from './TicketControl';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e2e8f0', PANEL = '#f8fafc';
-const GREEN = '#1f8a4c', RED = '#C0392B', AMBER = '#B07C2E';
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+const NAVY = COLORS.navy1;
+// Status (semantic) — meaning preserved.
+const GREEN = COLORS.good, RED = COLORS.bad, AMBER = COLORS.warn;
 
 function ctx(props) {
   const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
@@ -28,7 +31,7 @@ function ctx(props) {
 }
 
 const Tab = ({ on, onClick, children }) => (
-  <button onClick={onClick} style={{ background: on ? '#0f1b2d' : '#fff', color: on ? '#fff' : INK2, border: `1px solid ${on ? '#0f1b2d' : HAIR}`, borderRadius: 7, padding: '6px 12px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>{children}</button>
+  <button onClick={onClick} style={{ background: on ? NAVY : '#fff', color: on ? '#fff' : INK2, border: `1px solid ${on ? NAVY : HAIR}`, borderRadius: 7, padding: '6px 12px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>{children}</button>
 );
 
 export default function RiskDecision(props) {
@@ -76,7 +79,7 @@ export default function RiskDecision(props) {
 
   return (
     <div style={{ marginTop: 9, borderTop: `1px dashed ${HAIR}`, paddingTop: 10 }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: '#0f1b2d', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Your decision</div>
+      <div style={{ fontSize: 10, fontWeight: 700, color: NAVY, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Your decision</div>
 
       {active ? (
         <div style={{ background: acceptance.expired ? '#fdf6e9' : '#f0f7f2', border: `1px solid ${acceptance.expired ? '#f0dcae' : '#cce8d6'}`, borderRadius: 8, padding: '10px 13px' }}>

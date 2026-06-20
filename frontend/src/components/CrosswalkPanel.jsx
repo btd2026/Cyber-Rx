@@ -7,8 +7,9 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e2e8f0', GREEN = '#1f8a4c', AMBER = '#B07C2E', RED = '#C0392B';
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, GREEN = COLORS.good, AMBER = COLORS.warn, RED = COLORS.bad;
 
 function ctx(props) {
   const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
@@ -70,19 +71,19 @@ export default function CrosswalkPanel(props) {
           const inh = done[app.id];
           return (
             <div key={app.id} style={{ border: `1px solid ${HAIR}`, borderRadius: 8, padding: '10px 13px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: INK, minWidth: 160 }}>{app.name}</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: INK, minWidth: 160, fontFamily: FONTS.display }}>{app.name}</span>
               <span style={{ fontSize: 12, color: INK3 }}>→</span>
               <select value={choice[app.id] || ''} onChange={(e) => setChoice({ ...choice, [app.id]: e.target.value })}
                 style={{ flex: 1, minWidth: 200, border: `1px solid ${HAIR}`, borderRadius: 6, padding: '6px 9px', fontSize: 12 }}>
                 <option value="">— select a process —</option>
                 {it.suggestions.map((s) => <option key={s.id} value={s.id}>{s.name} ({Math.round(s.confidence * 100)}%)</option>)}
               </select>
-              {top && <span style={{ fontSize: 11, fontWeight: 700, color: confColor(top.confidence) }}>{Math.round(top.confidence * 100)}%</span>}
+              {top && <span style={{ fontSize: 11, fontWeight: 700, color: confColor(top.confidence), fontFamily: FONTS.mono }}>{Math.round(top.confidence * 100)}%</span>}
               {inh ? (
-                <span style={{ fontSize: 11, fontWeight: 700, color: GREEN }}>✓ Tier {inh.tier ?? '—'} · RTO {inh.rto || '—'}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: GREEN, fontFamily: FONTS.mono }}>✓ Tier {inh.tier ?? '—'} · RTO {inh.rto || '—'}</span>
               ) : (
                 <button onClick={() => confirm(app.id)} disabled={busy[app.id] || !choice[app.id]}
-                  style={{ background: '#0f1b2d', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 12px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', opacity: (busy[app.id] || !choice[app.id]) ? 0.5 : 1 }}>
+                  style={{ background: COLORS.navy1, color: '#fff', border: 'none', borderRadius: 6, padding: '6px 12px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', opacity: (busy[app.id] || !choice[app.id]) ? 0.5 : 1 }}>
                   {busy[app.id] ? '…' : 'Confirm'}
                 </button>
               )}

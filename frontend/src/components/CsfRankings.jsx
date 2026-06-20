@@ -16,12 +16,14 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS, FONTS } from '../theme';
 
-const INK = '#0f172a';
-const INK_2 = '#475569';
-const INK_3 = '#94a3b8';
-const HAIRLINE = '#e2e8f0';
-const TIER_COLORS = { 1: '#9E3B32', 2: '#B07C2E', 3: '#6E7F49', 4: '#31604B' };
+const INK = COLORS.ink;
+const INK_2 = COLORS.ink2;
+const INK_3 = COLORS.ink3;
+const HAIRLINE = COLORS.hair;
+// Maturity-tier scale (graduated 1→4) — a domain status palette; meaning preserved.
+const TIER_COLORS = { 1: COLORS.bad, 2: COLORS.warn, 3: '#6E7F49', 4: COLORS.good };
 const NA_COLOR = '#cbd5e1';
 const THRESHOLD = 3.0;
 const TRACK_MIN = 1, TRACK_MAX = 4;
@@ -36,17 +38,17 @@ const tierColor = (v) => (v == null ? NA_COLOR : TIER_COLORS[tierOf(v)]);
 
 function exposureBadge(risk) {
   if (risk == null) return { label: 'Unknown', color: INK_3 };
-  if (risk >= 4) return { label: 'Severe exposure', color: '#9E3B32' };
+  if (risk >= 4) return { label: 'Severe exposure', color: COLORS.bad };
   if (risk >= 3) return { label: 'High exposure', color: '#A85B2E' };
-  if (risk >= 2) return { label: 'Moderate exposure', color: '#B07C2E' };
+  if (risk >= 2) return { label: 'Moderate exposure', color: COLORS.warn };
   return { label: 'Low exposure', color: '#64748b' };
 }
 
 function verdict(overall, risk) {
   if (overall == null) return { label: 'Not assessed', color: INK_3, weight: 0 };
-  if (overall < THRESHOLD && (risk || 0) >= 3) return { label: 'Priority', color: '#9E3B32', weight: 700 };
+  if (overall < THRESHOLD && (risk || 0) >= 3) return { label: 'Priority', color: COLORS.bad, weight: 700 };
   if (overall < THRESHOLD) return { label: 'Below threshold', color: '#A85B2E', weight: 600 };
-  if (overall >= 3.5) return { label: 'Leading', color: '#31604B', weight: 600 };
+  if (overall >= 3.5) return { label: 'Leading', color: COLORS.good, weight: 600 };
   return { label: 'On track', color: '#6E7F49', weight: 500 };
 }
 
@@ -144,13 +146,13 @@ export default function CsfRankings(props) {
     return (
       <div style={{ background: '#fff', border: `1px solid ${HAIRLINE}`, borderRadius: 6, padding: '40px 32px', textAlign: 'center' }}>
         <div style={{ fontSize: 10, fontWeight: 600, color: INK_3, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 8 }}>Peer Benchmarking · Opt-in required</div>
-        <h2 style={{ margin: '0 0 10px', fontSize: 20, fontWeight: 600, color: INK }}>Compare against your peers</h2>
+        <h2 style={{ margin: '0 0 10px', fontSize: 20, fontWeight: 600, color: INK, fontFamily: FONTS.display }}>Compare against your peers</h2>
         <div style={{ color: INK_2, fontSize: 13, maxWidth: 520, margin: '0 auto 18px', lineHeight: 1.6 }}>
           Share your framework scores <strong>anonymously</strong> (no organization name or identifying details) to the
           central benchmarking hub and unlock the peer comparison. Your full assessment and detailed dashboards
           remain completely private regardless of this choice.
         </div>
-        <button onClick={enableBenchmarking} style={{ ...ghostBtn, background: '#0f1b2d', color: '#fff', border: 'none', padding: '9px 20px', fontSize: 12 }}>
+        <button onClick={enableBenchmarking} style={{ ...ghostBtn, background: COLORS.navy1, color: '#fff', border: 'none', padding: '9px 20px', fontSize: 12 }}>
           Share anonymized scores & enable benchmarking
         </button>
       </div>
@@ -160,7 +162,7 @@ export default function CsfRankings(props) {
   if (loading) return <div style={{ padding: 28, color: INK_3, fontSize: 13 }}>Loading peer standings…</div>;
   if (error || !rows) {
     return (
-      <div style={{ padding: 28, color: '#9E3B32', fontSize: 13 }}>
+      <div style={{ padding: 28, color: COLORS.bad, fontSize: 13 }}>
         Could not load standings: {error || 'no data'}
         <button onClick={() => load(false)} style={{ ...ghostBtn, marginLeft: 12 }}>Retry</button>
       </div>
@@ -190,7 +192,7 @@ export default function CsfRankings(props) {
       <div key={r.organizationId}
         style={{ display: 'flex', alignItems: 'center', gap: 18, padding: '13px 16px', borderBottom: `1px solid #f1f5f9` }}>
         {/* Rank */}
-        <div style={{ width: 26, textAlign: 'right', fontSize: 17, fontWeight: 300, color: INK_3, fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
+        <div style={{ width: 26, textAlign: 'right', fontSize: 17, fontWeight: 300, color: INK_3, fontFamily: FONTS.mono, fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
           {r.rank || '—'}
         </div>
         {/* Identity */}
@@ -206,7 +208,7 @@ export default function CsfRankings(props) {
         <MaturityTrack value={r.overall} />
         {/* Score */}
         <div style={{ width: 52, textAlign: 'right', flexShrink: 0 }}>
-          <div style={{ fontSize: 16, fontWeight: 600, color: tierColor(r.overall), fontVariantNumeric: 'tabular-nums' }}>
+          <div style={{ fontSize: 16, fontWeight: 600, color: tierColor(r.overall), fontFamily: FONTS.mono, fontVariantNumeric: 'tabular-nums' }}>
             {r.overall == null ? '—' : r.overall.toFixed(2)}
           </div>
         </div>
@@ -227,7 +229,7 @@ export default function CsfRankings(props) {
           <div style={{ fontSize: 10, fontWeight: 600, color: INK_3, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 6 }}>
             Peer Comparison · NIST CSF v2.0 Outcomes
           </div>
-          <h2 style={{ margin: 0, fontSize: 21, fontWeight: 600, color: INK, letterSpacing: '-0.01em' }}>
+          <h2 style={{ margin: 0, fontSize: 21, fontWeight: 600, color: INK, letterSpacing: '-0.01em', fontFamily: FONTS.display }}>
             Risk-Adjusted Standings
           </h2>
           <div style={{ color: INK_2, fontSize: 12, marginTop: 6, lineHeight: 1.55, maxWidth: 660 }}>
@@ -246,13 +248,13 @@ export default function CsfRankings(props) {
         {[
           { label: 'Organizations assessed', value: String(scored.length) },
           { label: 'System median maturity', value: median == null ? '—' : median.toFixed(2), color: tierColor(median) },
-          { label: `At or above ${THRESHOLD.toFixed(1)}`, value: String(above.length), color: '#31604B' },
-          { label: `Below ${THRESHOLD.toFixed(1)}`, value: String(below.length), color: below.length ? '#9E3B32' : INK_2 },
+          { label: `At or above ${THRESHOLD.toFixed(1)}`, value: String(above.length), color: COLORS.good },
+          { label: `Below ${THRESHOLD.toFixed(1)}`, value: String(below.length), color: below.length ? COLORS.bad : INK_2 },
           weakestFn && { label: 'Weakest function systemwide', value: `${weakestFn.name} · ${weakestFn.avg.toFixed(2)}`, color: tierColor(weakestFn.avg) },
         ].filter(Boolean).map((s, i) => (
           <div key={s.label} style={{ padding: '14px 28px 14px 0', marginRight: 28, borderRight: `1px solid ${HAIRLINE}`, ...(i === 0 ? {} : {}) }}>
             <div style={{ fontSize: 9, fontWeight: 600, color: INK_3, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>{s.label}</div>
-            <div style={{ fontSize: 17, fontWeight: 600, color: s.color || INK, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
+            <div style={{ fontSize: 17, fontWeight: 600, color: s.color || INK, fontFamily: FONTS.mono, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
           </div>
         ))}
       </div>

@@ -11,9 +11,10 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { COLORS } from '../theme';
 
-const INK = '#0f172a', INK2 = '#475569', INK3 = '#94a3b8', HAIR = '#e2e8f0', PANEL = '#f8fafc', NAVY = '#0f1b2d';
-const GREEN = '#1f8a4c', AMBER = '#B07C2E', RED = '#C0392B', BLUE = '#1d4ed8';
+const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper, NAVY = COLORS.navy1;
+const GREEN = COLORS.good, AMBER = COLORS.warn, RED = COLORS.bad, BLUE = '#1d4ed8';
 const STATUS = { reviewed: GREEN, draft: AMBER, auto: INK3, none: INK3 };
 
 function ctx(props) {

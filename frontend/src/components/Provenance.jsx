@@ -6,8 +6,9 @@
  */
 
 import React, { useState } from 'react';
+import { COLORS as THEME } from '../theme';
 
-const COLORS = { live: '#1f8a4c', derived: '#0e7490', modeled: '#B07C2E', demo: '#94a3b8' };
+const COLORS = { live: THEME.good, derived: '#0e7490', modeled: THEME.warn, demo: THEME.ink3 };
 const LABEL = { live: 'Live', derived: 'Derived', modeled: 'Modeled', demo: 'Demo' };
 const DESC = {
   live: 'Directly measured from a connected system or attested intake.',

@@ -8,10 +8,12 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { COLORS, FONTS } from '../theme';
 import AttackPathGraph from './AttackPathGraph';
 
-const INK = '#0f172a', INK_2 = '#475569', INK_3 = '#94a3b8', HAIRLINE = '#e2e8f0';
-const SEV = { Critical: '#9E3B32', High: '#A85B2E', Medium: '#B07C2E', Low: '#6E7F49' };
+const INK = COLORS.ink, INK_2 = COLORS.ink2, INK_3 = COLORS.ink3, HAIRLINE = COLORS.hair;
+// SEV — semantic severity (graph/finding meaning), kept distinct from chrome palette.
+const SEV = { Critical: COLORS.bad, High: '#A85B2E', Medium: COLORS.warn, Low: COLORS.good };
 
 function resolveCtx(props) {
   const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
@@ -76,7 +78,7 @@ export default function AttackPathDiagram(props) {
           <div style={{ fontSize: 10, fontWeight: 600, color: INK_3, textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 6 }}>
             CISO · Attack Path Analysis
           </div>
-          <h2 style={{ margin: 0, fontSize: 21, fontWeight: 600, color: INK, letterSpacing: '-0.01em' }}>Threat exposure graph</h2>
+          <h2 style={{ margin: 0, fontSize: 21, fontWeight: 600, color: INK, letterSpacing: '-0.01em', fontFamily: FONTS.display }}>Threat exposure graph</h2>
           <div style={{ color: INK_2, fontSize: 12, marginTop: 6, maxWidth: 680, lineHeight: 1.55 }}>
             How a threat reaches each crown-jewel process, mapped from your live business processes, assets, and threat
             scenarios. The exposed attack chain is highlighted; click a flagged node to inspect the finding and open a
@@ -90,7 +92,7 @@ export default function AttackPathDiagram(props) {
           )}
         </div>
         <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 20, fontSize: 11, color: INK_2 }}>
-          <div style={{ fontSize: 19, fontWeight: 600, color: SEV.Critical, fontVariantNumeric: 'tabular-nums' }}>{usd(data.totalExposure)}</div>
+          <div style={{ fontSize: 19, fontWeight: 600, color: SEV.Critical, fontVariantNumeric: 'tabular-nums', fontFamily: FONTS.mono }}>{usd(data.totalExposure)}</div>
           <div style={{ fontSize: 10, color: INK_3 }}>exposure across {data.counts.processes} processes · {data.counts.threats} threats</div>
         </div>
       </div>
