@@ -24,6 +24,14 @@ const DEFAULTS = {
   scoringWeights: { coverage: 0.40, compliance: 0.30, timeliness: 0.20, exceptionQuality: 0.10 },
   frameworks: ['nist_csf_2_0'], // base framework(s); industry overlay adds more
   taxonomy: ['ransomware', 'data_exfil', 'business_disruption', 'fraud'],
+  // Org-authored business context (replaces inferred crown jewels). Read by the
+  // exec context loader and the decision spine across every lens.
+  businessContext: {
+    crownJewels: [],        // [{ name, dataTypes, why }]
+    crownJewelData: '',     // primary sensitive-data descriptor (e.g. "member PHI")
+    revenueUSD: null,       // optional — informs materiality framing
+  },
+  materialityThresholdUSD: null, // SEC materiality $ threshold (entity-specific)
 };
 
 function deepMerge(base, over) {
