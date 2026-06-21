@@ -25,6 +25,7 @@ import RoleSection from './RoleSections';
 import SecurityProjects from './SecurityProjects';
 import AiGovernance from './AiGovernance';
 import SoftwareSupplyChain from './SoftwareSupplyChain';
+import NarrativeSection from './NarrativeSection';
 import DecisionQueue from './DecisionQueue';
 import DecisionRail from './DecisionRail';
 import Provenance from './Provenance';
@@ -467,13 +468,16 @@ export default function CisoSecurityPostureDashboard(props) {
           ? <RoleTabContent t={activeRoleTab} role={role} d={d} props={props} orgId={orgId} authToken={token} apiUrl={api} />
           : (<>
             {tab === 'qa' && (
-              <div style={{ display: 'grid', gap: 16 }}>
+              <div style={{ maxWidth: 880, margin: '0 auto', display: 'grid', gap: 28 }}>
+                {/* 01 — The lede: what changed + the auto-derived executive summary */}
                 <CurrentState view="brief" d={d} role={role} orgId={orgId} authToken={token} apiUrl={api} onOpenQueue={() => setTab('decisionq')} />
-                <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 16 }}>
+
+                {/* 02 — Where you stand, by domain */}
+                <NarrativeSection step={2} kicker="The breakdown" title="Where you stand, by domain"
+                  lede="Your headline score is the weighted blend of the domains below. Read it top to bottom — the bars are today's standing, the arrows show where momentum is building or quietly slipping.">
                   <div style={{ background: COLORS.white, border: `1px solid ${COLORS.hair}`, borderRadius: 12, boxShadow: ELEV.card, padding: 18 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
-                      <h3 style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: INK, letterSpacing: '-0.01em' }}>Posture by domain</h3>
-                      <span style={{ fontSize: 11.5, color: INK3 }}>weighted</span>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
+                      <span style={{ fontSize: 11.5, color: INK3 }}>weighted by business impact</span>
                     </div>
                     <div style={{ display: 'grid', gap: 11 }}>
                       {d.domainMatrix.filter((x) => x.weight > 0).map((x) => (
@@ -488,9 +492,13 @@ export default function CisoSecurityPostureDashboard(props) {
                       ))}
                     </div>
                   </div>
+                </NarrativeSection>
+
+                {/* 03 — What needs your decision */}
+                <NarrativeSection step={3} kicker="The decisions" title="What needs your decision now"
+                  lede={`These are the moves that change the trajectory above — ranked by urgency and scoped to what you own as ${role}. Start at the top.`}>
                   <div style={{ background: COLORS.white, border: `1px solid ${COLORS.hair}`, borderRadius: 12, boxShadow: ELEV.card, padding: 18 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
-                      <h3 style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: INK, letterSpacing: '-0.01em' }}>Action queue</h3>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
                       <button onClick={() => setShowAllActions(true)} style={{ background: 'none', border: 'none', color: ACCENT, fontSize: 11.5, fontWeight: 600, cursor: 'pointer', padding: 0 }}>View all →</button>
                     </div>
                     <div style={{ display: 'grid', gap: 10 }}>
@@ -512,7 +520,9 @@ export default function CisoSecurityPostureDashboard(props) {
                       })}
                     </div>
                   </div>
-                </div>
+                </NarrativeSection>
+
+                {/* 04 — How much to trust this: visibility + the inputs we inferred */}
                 <CurrentState view="detail" d={d} role={role} orgId={orgId} authToken={token} apiUrl={api} onOpenQueue={() => setTab('decisionq')} />
               </div>
             )}
