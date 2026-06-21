@@ -140,11 +140,13 @@ const groupOf = (k) => GROUP_OF[k] || 'risk';
 // Risks, Control Efficacy, Key Projects & ROI, Blind Spots & Coaching. Domain
 // Health + Control Risk are folded into Control Efficacy.
 const CISO_GROUP_DEFS = [
+  { key: 'execsummary', label: 'Exec Summary' },
   { key: 'keyrisks', label: 'Key Risks' },
   { key: 'controlefficacy', label: 'Control Efficacy' },
   { key: 'projects', label: 'Key Projects & ROI' },
 ];
 const CISO_MEMBER_OF = {
+  qa: 'execsummary',
   // Key Risks — capped at five decision-focused views.
   bizrisks: 'keyrisks', decisionq: 'keyrisks', paths: 'keyrisks', thresholds: 'keyrisks', processes: 'keyrisks',
   // Migrated out of Key Risks to keep that group to five and avoid overload:
@@ -248,9 +250,9 @@ export default function CisoSecurityPostureDashboard(props) {
   const frame = ROLE_FRAME[role] || ROLE_FRAME.CISO;
   const [d, setD] = useState(null);
   const [error, setError] = useState(null);
-  // CISO folds "Current State" into the always-visible top section, so its tab
-  // set starts on Key Risks; other leaders keep the qa landing.
-  const [tab, setTab] = useState(role === 'CISO' ? 'bizrisks' : 'qa');
+  // Everyone lands on the Exec Summary (qa) tab; each tab swaps content in the
+  // same slot so pages stay short.
+  const [tab, setTab] = useState('qa');
   const [showAllActions, setShowAllActions] = useState(false); // "View all" → focused window
   const voice = useAgentVoice();
   const [drawer, setDrawer] = useState(null);   // an executive answer
@@ -308,6 +310,7 @@ export default function CisoSecurityPostureDashboard(props) {
   const TABS = isCioLayout ? CIO_TABS : isCroLayout ? CRO_TABS : isCloLayout ? CLO_TABS : isBoardLayout ? BOARD_TABS : roleTabs
     ? roleTabs.map((t) => [t.key, labelFor(t)])
     : [
+      ['qa', 'Exec Summary'],
       // Key Risks (5)
       ['bizrisks', 'Business Risks'], ['decisionq', 'Projections & Decisions'],
       ['paths', 'Attack Pathways'], ['thresholds', `Thresholds · ${d.thresholds.breaches} breached`], ['processes', 'Process Protection'],
@@ -412,60 +415,6 @@ export default function CisoSecurityPostureDashboard(props) {
         </div>
       )}
 
-      {/* ===== Overview: posture by domain + action queue (mockup layout) ===== */}
-      <div style={{ background: COLORS.paper, padding: '18px 28px', borderBottom: `1px solid ${COLORS.hair}`, display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 16 }}>
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.hair}`, borderRadius: 12, boxShadow: ELEV.card, padding: 18 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
-            <h3 style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: INK, letterSpacing: '-0.01em' }}>Posture by domain</h3>
-            <span style={{ fontSize: 11.5, color: INK3 }}>weighted</span>
-          </div>
-          <div style={{ display: 'grid', gap: 11 }}>
-            {d.domainMatrix.filter((x) => x.weight > 0).map((x) => (
-              <div key={x.id} style={{ display: 'grid', gridTemplateColumns: '1fr 40px 44px', alignItems: 'center', gap: 10 }}>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 12.5, fontWeight: 500, color: INK, marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{x.name}</div>
-                  <Bar value={x.current} />
-                </div>
-                <div className="crx-figure" style={{ fontSize: 14, fontWeight: 700, color: scoreColor(x.current), textAlign: 'right' }}>{x.current}</div>
-                <div style={{ textAlign: 'right' }}><Trend d={x.delta} /></div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.hair}`, borderRadius: 12, boxShadow: ELEV.card, padding: 18 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
-            <h3 style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: INK, letterSpacing: '-0.01em' }}>Action queue</h3>
-            <button onClick={() => setShowAllActions(true)} style={{ background: 'none', border: 'none', color: ACCENT, fontSize: 11.5, fontWeight: 600, cursor: 'pointer', padding: 0 }}>View all →</button>
-          </div>
-          <div style={{ display: 'grid', gap: 10 }}>
-            {(d.actionQueue || []).slice(0, 4).map((a) => {
-              const sv = a.escalation ? '#cf222e' : numSev(a.severity) === 'High' ? '#c2410c' : '#9a6700';
-              return (
-                <div key={a.id} style={{ display: 'flex', gap: 11, padding: '11px 12px', border: `1px solid ${COLORS.hair}`, borderRadius: 8 }}>
-                  <div className="crx-figure" style={{ flexShrink: 0, width: 22, height: 22, borderRadius: 6, background: SOFT[sv] || PANEL, color: sv, display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 700 }}>{a.rank}</div>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 12.5, fontWeight: 600, color: INK, lineHeight: 1.35 }}>{a.action}</div>
-                    <div style={{ fontSize: 11.5, color: INK2, marginTop: 3, lineHeight: 1.45 }}>{a.whyNow}</div>
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 7, flexWrap: 'wrap' }}>
-                      <Pill text={numSev(a.severity)} color={sv} />
-                      <span style={{ fontSize: 11, color: INK3 }}>{a.owner} · due {a.dueDate}</span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Current State folded into the top section (no separate tab): what changed,
-          the spoken brief, the executive summary, visibility and inferred inputs. */}
-      {isCisoLayout && (
-        <div style={{ padding: '16px 28px', background: COLORS.paper, borderBottom: `1px solid ${COLORS.hair}` }}>
-          <CurrentState d={d} role={role} orgId={orgId} authToken={token} apiUrl={api} onOpenQueue={() => setTab('decisionq')} />
-        </div>
-      )}
-
       {/* ===== Tabs ===== */}
       {/* Persistent decision queue — visible across every sub-tab. */}
       <DecisionRail role={role} orgId={orgId} authToken={token} apiUrl={api} onOpenQueue={() => setTab('decisionq')} />
@@ -515,7 +464,55 @@ export default function CisoSecurityPostureDashboard(props) {
           : roleTabs
           ? <RoleTabContent t={activeRoleTab} role={role} d={d} props={props} orgId={orgId} authToken={token} apiUrl={api} />
           : (<>
-            {!isCisoLayout && tab === 'qa' && <CurrentState d={d} role={role} orgId={orgId} authToken={token} apiUrl={api} onOpenQueue={() => setTab('decisionq')} />}
+            {tab === 'qa' && (
+              <div style={{ display: 'grid', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 16 }}>
+                  <div style={{ background: COLORS.white, border: `1px solid ${COLORS.hair}`, borderRadius: 12, boxShadow: ELEV.card, padding: 18 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+                      <h3 style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: INK, letterSpacing: '-0.01em' }}>Posture by domain</h3>
+                      <span style={{ fontSize: 11.5, color: INK3 }}>weighted</span>
+                    </div>
+                    <div style={{ display: 'grid', gap: 11 }}>
+                      {d.domainMatrix.filter((x) => x.weight > 0).map((x) => (
+                        <div key={x.id} style={{ display: 'grid', gridTemplateColumns: '1fr 40px 44px', alignItems: 'center', gap: 10 }}>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontSize: 12.5, fontWeight: 500, color: INK, marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{x.name}</div>
+                            <Bar value={x.current} />
+                          </div>
+                          <div className="crx-figure" style={{ fontSize: 14, fontWeight: 700, color: scoreColor(x.current), textAlign: 'right' }}>{x.current}</div>
+                          <div style={{ textAlign: 'right' }}><Trend d={x.delta} /></div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ background: COLORS.white, border: `1px solid ${COLORS.hair}`, borderRadius: 12, boxShadow: ELEV.card, padding: 18 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+                      <h3 style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: INK, letterSpacing: '-0.01em' }}>Action queue</h3>
+                      <button onClick={() => setShowAllActions(true)} style={{ background: 'none', border: 'none', color: ACCENT, fontSize: 11.5, fontWeight: 600, cursor: 'pointer', padding: 0 }}>View all →</button>
+                    </div>
+                    <div style={{ display: 'grid', gap: 10 }}>
+                      {(d.actionQueue || []).slice(0, 4).map((a) => {
+                        const sv = a.escalation ? '#cf222e' : numSev(a.severity) === 'High' ? '#c2410c' : '#9a6700';
+                        return (
+                          <div key={a.id} style={{ display: 'flex', gap: 11, padding: '11px 12px', border: `1px solid ${COLORS.hair}`, borderRadius: 8 }}>
+                            <div className="crx-figure" style={{ flexShrink: 0, width: 22, height: 22, borderRadius: 6, background: SOFT[sv] || PANEL, color: sv, display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 700 }}>{a.rank}</div>
+                            <div style={{ minWidth: 0 }}>
+                              <div style={{ fontSize: 12.5, fontWeight: 600, color: INK, lineHeight: 1.35 }}>{a.action}</div>
+                              <div style={{ fontSize: 11.5, color: INK2, marginTop: 3, lineHeight: 1.45 }}>{a.whyNow}</div>
+                              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 7, flexWrap: 'wrap' }}>
+                                <Pill text={numSev(a.severity)} color={sv} />
+                                <span style={{ fontSize: 11, color: INK3 }}>{a.owner} · due {a.dueDate}</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+                <CurrentState d={d} role={role} orgId={orgId} authToken={token} apiUrl={api} onOpenQueue={() => setTab('decisionq')} />
+              </div>
+            )}
             {tab === 'decisionq' && <DecisionQueue role={role} orgId={orgId} authToken={token} apiUrl={api} />}
             {tab === 'linkage' && <BusinessRiskPanel />}
             {tab === 'domains' && <Domains matrix={d.domainMatrix} controlRisk={d.controlRisk} thresholds={d.thresholds} />}
