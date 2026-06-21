@@ -35,7 +35,7 @@ import { FONTS, COLORS, ELEV } from '../theme';
 import CurrentState from './CurrentState';
 import ControlEfficacy from './ControlEfficacy';
 import KeyRisks from './KeyRisks';
-import CompilerChain from './CompilerChain';
+import CompilerChain from './CompilerChain'; // eslint-disable-line no-unused-vars -- retired from CISO nav; kept for other layouts
 import CisoExecReport from './CisoExecReport';
 import CioOperationalPosture from './CioOperationalPosture';
 import CioResilience from './CioResilience';
@@ -144,18 +144,16 @@ const groupOf = (k) => GROUP_OF[k] || 'risk';
 // Risks, Control Efficacy, Key Projects & ROI, Blind Spots & Coaching. Domain
 // Health + Control Risk are folded into Control Efficacy.
 const CISO_GROUP_DEFS = [
-  { key: 'state', label: 'Current State' },
   { key: 'keyrisks', label: 'Key Risks' },
   { key: 'controlefficacy', label: 'Control Efficacy' },
   { key: 'projects', label: 'Key Projects & ROI' },
 ];
 const CISO_MEMBER_OF = {
-  qa: 'state',
   // Key Risks — capped at five decision-focused views.
   bizrisks: 'keyrisks', decisionq: 'keyrisks', paths: 'keyrisks', thresholds: 'keyrisks', processes: 'keyrisks',
   // Migrated out of Key Risks to keep that group to five and avoid overload:
   ai: 'controlefficacy', actions: 'projects',
-  controlefficacy: 'controlefficacy', compiler: 'controlefficacy', fourlens: 'controlefficacy',
+  controlefficacy: 'controlefficacy', fourlens: 'controlefficacy',
   readiness: 'projects', projects: 'projects',
 };
 
@@ -254,7 +252,10 @@ export default function CisoSecurityPostureDashboard(props) {
   const frame = ROLE_FRAME[role] || ROLE_FRAME.CISO;
   const [d, setD] = useState(null);
   const [error, setError] = useState(null);
-  const [tab, setTab] = useState('qa');
+  // CISO folds "Current State" into the always-visible top section, so its tab
+  // set starts on Key Risks; other leaders keep the qa landing.
+  const [tab, setTab] = useState(role === 'CISO' ? 'bizrisks' : 'qa');
+  const [showAllActions, setShowAllActions] = useState(false); // "View all" → focused window
   const voice = useAgentVoice();
   const [drawer, setDrawer] = useState(null);   // an executive answer
   const { token, orgId, api } = ctx(props);
@@ -279,7 +280,10 @@ export default function CisoSecurityPostureDashboard(props) {
 
   // Auto-narrate the active tab (Michael explains the page). Respects mute.
   // The 'qa' tab hosts CisoAgentPanel, which does its own intro — skip here.
+  const lastTabRef = React.useRef(tab);
   useEffect(() => {
+    if (tab === lastTabRef.current) return; // data refreshed, not a tab change — don't auto-speak
+    lastTabRef.current = tab;
     if (tab === 'qa') return;
     if (d && d.tabNarration && d.tabNarration[tab]) voice.speak(d.tabNarration[tab]);
     return () => voice.stop();
@@ -308,12 +312,11 @@ export default function CisoSecurityPostureDashboard(props) {
   const TABS = isCioLayout ? CIO_TABS : isCroLayout ? CRO_TABS : isCloLayout ? CLO_TABS : isBoardLayout ? BOARD_TABS : roleTabs
     ? roleTabs.map((t) => [t.key, labelFor(t)])
     : [
-      ['qa', 'Current State'],
       // Key Risks (5)
       ['bizrisks', 'Business Risks'], ['decisionq', 'Projections & Decisions'],
       ['paths', 'Attack Pathways'], ['thresholds', `Thresholds · ${d.thresholds.breaches} breached`], ['processes', 'Process Protection'],
       // Control Efficacy
-      ['controlefficacy', 'Control Efficacy'], ['compiler', 'Framework Compiler'], ['fourlens', 'Four-Lens (CSF · 800-53 · CIS · ATT&CK)'], ['ai', 'AI Governance'],
+      ['controlefficacy', 'Control Efficacy'], ['fourlens', 'Four-Lens (CSF · 800-53 · CIS · ATT&CK)'], ['ai', 'AI Governance'],
       // Key Projects & ROI
       ['readiness', 'Readiness & Investment'], ['projects', 'Projects & ROI'], ['actions', 'Action Now'],
     ];
@@ -356,7 +359,6 @@ export default function CisoSecurityPostureDashboard(props) {
                 <span>Last period <strong className="crx-figure" style={{ color: INK }}>{p.previous}</strong></span>
                 <span style={{ textTransform: 'capitalize' }}>{p.trend}</span>
                 <span>Confidence {p.confidence}</span>
-                <VoiceControls voice={voice} onReplay={() => voice.speak(`Here is your ${role} briefing. ${p.narrative} As your advisor, I'd focus on the weakest domains shown here and the open decisions in the rail below — that is where your judgment is needed.`)} label="Listen" compact />
               </div>
             </div>
           </div>
@@ -370,7 +372,7 @@ export default function CisoSecurityPostureDashboard(props) {
             <a href={`${api}/api/ciso/report.pptx?org_id=${encodeURIComponent(orgId)}`} style={{ background: '#fff', color: INK2, border: `1px solid ${BORDERSTRONG}`, borderRadius: 7, padding: '8px 14px', fontSize: 12.5, fontWeight: 600, textDecoration: 'none' }}>⤓ PowerPoint</a>
           </div>
         </div>
-        <div style={{ marginTop: 14, fontSize: 13.5, color: INK2, lineHeight: 1.6, maxWidth: 940 }}>{p.narrative}</div>
+        {!isCisoLayout && <div style={{ marginTop: 14, fontSize: 13.5, color: INK2, lineHeight: 1.6, maxWidth: 940 }}>{p.narrative}</div>}
         {/* KPI row (mockup layout) */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginTop: 18 }}>
           {[
@@ -418,7 +420,7 @@ export default function CisoSecurityPostureDashboard(props) {
         <div style={{ background: COLORS.white, border: `1px solid ${COLORS.hair}`, borderRadius: 12, boxShadow: ELEV.card, padding: 18 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
             <h3 style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: INK, letterSpacing: '-0.01em' }}>Action queue</h3>
-            <button onClick={() => setTab('actions')} style={{ background: 'none', border: 'none', color: ACCENT, fontSize: 11.5, fontWeight: 600, cursor: 'pointer', padding: 0 }}>View all →</button>
+            <button onClick={() => setShowAllActions(true)} style={{ background: 'none', border: 'none', color: ACCENT, fontSize: 11.5, fontWeight: 600, cursor: 'pointer', padding: 0 }}>View all →</button>
           </div>
           <div style={{ display: 'grid', gap: 10 }}>
             {(d.actionQueue || []).slice(0, 4).map((a) => {
@@ -440,6 +442,14 @@ export default function CisoSecurityPostureDashboard(props) {
           </div>
         </div>
       </div>
+
+      {/* Current State folded into the top section (no separate tab): what changed,
+          the spoken brief, the executive summary, visibility and inferred inputs. */}
+      {isCisoLayout && (
+        <div style={{ padding: '16px 28px', background: COLORS.paper, borderBottom: `1px solid ${COLORS.hair}` }}>
+          <CurrentState d={d} role={role} orgId={orgId} authToken={token} apiUrl={api} onOpenQueue={() => setTab('decisionq')} />
+        </div>
+      )}
 
       {/* ===== Tabs ===== */}
       {/* Persistent decision queue — visible across every sub-tab. */}
@@ -511,13 +521,12 @@ export default function CisoSecurityPostureDashboard(props) {
           : roleTabs
           ? <RoleTabContent t={activeRoleTab} role={role} d={d} props={props} orgId={orgId} authToken={token} apiUrl={api} />
           : (<>
-            {tab === 'qa' && <CurrentState d={d} role={role} orgId={orgId} authToken={token} apiUrl={api} onOpenQueue={() => setTab('decisionq')} />}
+            {!isCisoLayout && tab === 'qa' && <CurrentState d={d} role={role} orgId={orgId} authToken={token} apiUrl={api} onOpenQueue={() => setTab('decisionq')} />}
             {tab === 'decisionq' && <DecisionQueue role={role} orgId={orgId} authToken={token} apiUrl={api} />}
             {tab === 'linkage' && <BusinessRiskPanel />}
             {tab === 'domains' && <Domains matrix={d.domainMatrix} controlRisk={d.controlRisk} thresholds={d.thresholds} />}
             {tab === 'controls' && <Controls rows={d.controlRisk} />}
             {tab === 'controlefficacy' && <ControlEfficacy d={d} orgId={orgId} authToken={token} apiUrl={api} />}
-            {tab === 'compiler' && <CompilerChain orgId={orgId} authToken={token} apiUrl={api} />}
             {tab === 'fourlens' && <CisoExecReport />}
             {tab === 'bizrisks' && <KeyRisks orgId={orgId} authToken={token} apiUrl={api} />}
             {tab === 'thresholds' && <Thresholds board={d.thresholds} />}
@@ -533,6 +542,22 @@ export default function CisoSecurityPostureDashboard(props) {
           Last refreshed {refreshed}. Mock/demo data — structured for live replacement via {d.evidenceSources.length} sources (Okta, Splunk, ServiceNow, CrowdStrike, Tenable, SailPoint, Prisma, Panorama, DLP, backup).
         </div>
       </div>
+
+      {/* "View all" opens the full action/decision list in a focused window so the
+          dashboard itself stays short — executives don't scroll a long page. */}
+      {showAllActions && (
+        <div onClick={() => setShowAllActions(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(11,12,14,0.45)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '40px 20px', overflowY: 'auto' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: COLORS.paper, borderRadius: 14, boxShadow: '0 24px 64px -20px rgba(11,12,14,0.45)', border: `1px solid ${COLORS.hair}`, width: '100%', maxWidth: 900, maxHeight: '86vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 20px', borderBottom: `1px solid ${COLORS.hair}`, background: COLORS.white, position: 'sticky', top: 0 }}>
+              <h3 className="crx-display" style={{ margin: 0, fontSize: 16, fontWeight: 650, color: INK, letterSpacing: '-0.01em' }}>Actions &amp; decisions <span style={{ fontWeight: 400, color: INK3, fontSize: 12.5 }}>({(d.actionQueue || []).length + (d.attentionItems || []).length})</span></h3>
+              <button onClick={() => setShowAllActions(false)} style={{ background: 'none', border: 'none', fontSize: 22, color: INK3, cursor: 'pointer', lineHeight: 1, padding: '0 4px' }}>×</button>
+            </div>
+            <div style={{ padding: '16px 20px', overflowY: 'auto' }}>
+              <Actions queue={d.actionQueue} attention={d.attentionItems} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {drawer && <EvidenceDrawer a={drawer} onClose={() => setDrawer(null)} />}
     </div>
@@ -836,45 +861,54 @@ function Thresholds({ board }) {
 
 /* ---------------- Action-Now Queue + Attention ---------------- */
 function Actions({ queue, attention }) {
+  // One prioritized list instead of two parallel columns. Each item is tagged by
+  // what it needs from you: "Action" = a remediation task you delegate/ticket;
+  // "Decision" = needs your explicit executive sign-off.
+  const sevRank = { Critical: 0, High: 1, Medium: 2, Low: 3 };
+  const items = [
+    ...(queue || []).map((a) => ({
+      key: `act:${a.id}`, kind: 'action', sev: numSev(a.severity), rank: a.rank,
+      title: a.action, why: a.whyNow, protects: a.process, owner: a.owner, due: a.dueDate,
+      automation: a.automation, escalation: a.escalation, raw: a,
+    })),
+    ...(attention || []).map((a) => ({
+      key: `attn:${a.id}`, kind: 'decision', sev: a.severity, rank: null,
+      title: a.title, why: a.businessImpact, decision: a.decision, owner: a.owner, due: a.targetDate,
+      escalationPath: a.escalationPath, blockers: a.blockers, process: a.process, raw: a,
+    })),
+  ].sort((x, y) => (sevRank[x.sev] ?? 9) - (sevRank[y.sev] ?? 9) || (x.rank ?? 99) - (y.rank ?? 99));
+
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 18 }}>
-      <div>
-        <div style={{ fontSize: 11, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Action-Now Queue <span style={{ fontWeight: 400, textTransform: 'none' }}>(ranked by severity × urgency × impact × threat × confidence)</span></div>
-        {queue.map((a) => (
-          <div key={a.id} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${a.escalation ? '#cf222e' : numSev(a.severity) === 'High' ? '#c2410c' : '#9a6700'}`, borderRadius: 6, padding: '11px 13px', marginBottom: 8 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 14, fontWeight: 800, color: a.rank <= 2 ? '#cf222e' : INK3, width: 24 }}>#{a.rank}</span>
-              <span style={{ flex: 1, fontSize: 12.5, fontWeight: 700, color: INK }}>{a.action}</span>
-              {a.escalation && <Pill text="Escalate" color="#cf222e" />}
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>Actions &amp; decisions <span style={{ fontWeight: 400, textTransform: 'none' }}>(ranked by severity × urgency × impact)</span></div>
+      <div style={{ display: 'grid', gap: 8 }}>
+        {items.map((it) => {
+          const c = it.sev === 'Critical' ? '#cf222e' : it.sev === 'High' ? '#c2410c' : it.sev === 'Medium' ? '#9a6700' : '#1a7f37';
+          const isDecision = it.kind === 'decision';
+          return (
+            <div key={it.key} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${c}`, borderRadius: 8, padding: '12px 14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                <span style={{ flexShrink: 0, fontSize: 8.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: isDecision ? '#5e6ad2' : INK3, background: isDecision ? (SOFT['#5e6ad2'] || PANEL) : PANEL, borderRadius: 999, padding: '2px 8px' }}>{isDecision ? 'Decision' : 'Action'}</span>
+                <span style={{ flex: 1, fontSize: 12.5, fontWeight: 700, color: INK, lineHeight: 1.3 }}>{it.title}</span>
+                <Pill text={it.sev} color={c} />
+              </div>
+              <div style={{ fontSize: 11, color: INK2, marginTop: 6, lineHeight: 1.5 }}>{isDecision ? it.why : `Why now: ${it.why}`}</div>
+              {it.decision && <div style={{ fontSize: 10.5, color: '#1a7f37', fontWeight: 600, marginTop: 5 }}>→ Decision needed: {it.decision}</div>}
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 10.5, color: INK3, marginTop: 6 }}>
+                {it.protects && <span>Protects <strong style={{ color: INK2 }}>{it.protects}</strong></span>}
+                <span>Owner <strong style={{ color: INK2 }}>{it.owner}</strong></span>
+                <span>Due <strong style={{ color: INK2 }}>{it.due}</strong></span>
+                {it.automation && it.automation !== 'n/a' && <span>⚙ {it.automation}</span>}
+                {it.blockers && <span>blocker: {it.blockers}</span>}
+              </div>
+              <div style={{ marginTop: 9 }}>
+                {isDecision || it.escalation
+                  ? <RiskDecision sourceRef={it.key} title={it.title} recommendation={it.decision || `Authorize and assign: ${it.title}`} owner={it.owner} escalationPath={it.escalationPath || 'CISO → executive sponsor'} severity={it.sev} processName={it.process} />
+                  : <TicketControl sourceRef={it.key} title={`[Action] ${it.title}`} recommendation={it.title} severity={it.sev} owner={it.owner} dueDate={it.due} />}
+              </div>
             </div>
-            <div style={{ fontSize: 11, color: INK2, marginTop: 5, lineHeight: 1.5 }}>Why now: {a.whyNow}</div>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 10.5, color: INK3, marginTop: 6 }}>
-              <span>Protects <strong style={{ color: INK2 }}>{a.process}</strong></span>
-              <span>Owner <strong style={{ color: INK2 }}>{a.owner}</strong></span>
-              <span>Due <strong style={{ color: INK2 }}>{a.dueDate}</strong></span>
-              {a.automation !== 'n/a' && <span>⚙ {a.automation}</span>}
-            </div>
-            {/* Every action can be ticketed; escalations get the full take-action surface. */}
-            {a.escalation
-              ? <RiskDecision sourceRef={`act:${a.id}`} title={a.action} recommendation={`Authorize and assign: ${a.action}`} owner={a.owner} escalationPath="CISO → executive sponsor" severity={numSev(a.severity)} processName={a.process} />
-              : <div style={{ marginTop: 9 }}><TicketControl sourceRef={`act:${a.id}`} title={`[Action] ${a.action}`} recommendation={a.action} severity={numSev(a.severity)} owner={a.owner} dueDate={a.dueDate} /></div>}
-          </div>
-        ))}
-      </div>
-      <div>
-        <div style={{ fontSize: 11, fontWeight: 700, color: INK3, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Top CISO Attention Items <span style={{ fontWeight: 400, textTransform: 'none' }}>(need your decision)</span></div>
-        {attention.map((a) => (
-          <div key={a.id} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${SEV[a.severity]}`, borderRadius: 6, padding: '10px 13px', marginBottom: 8 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: INK, lineHeight: 1.3 }}>{a.title}</span>
-              <Pill text={a.severity} color={SEV[a.severity]} />
-            </div>
-            <div style={{ fontSize: 11, color: INK2, marginTop: 5 }}>{a.businessImpact}</div>
-            <div style={{ fontSize: 10.5, color: '#1a7f37', fontWeight: 600, marginTop: 5 }}>→ Decision needed: {a.decision}</div>
-            <div style={{ fontSize: 10, color: INK3, marginTop: 4 }}>{a.owner} · {a.targetDate} · {a.escalationPath}{a.blockers ? ` · blocker: ${a.blockers}` : ''}</div>
-            <RiskDecision sourceRef={`attn:${a.id}`} title={a.title} recommendation={a.decision} owner={a.owner} escalationPath={a.escalationPath} severity={a.severity} processName={a.process} />
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
