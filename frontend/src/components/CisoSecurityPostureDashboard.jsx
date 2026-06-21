@@ -25,12 +25,8 @@ import RoleSection from './RoleSections';
 import SecurityProjects from './SecurityProjects';
 import AiGovernance from './AiGovernance';
 import DecisionQueue from './DecisionQueue';
-import DecisionRail, { VisibilityChip } from './DecisionRail';
+import DecisionRail from './DecisionRail';
 import Provenance from './Provenance';
-import LiveCoverageMeter from './LiveCoverageMeter';
-import DataSources from './DataSources';
-import PlatformValue from './PlatformValue';
-import BusinessContext from './BusinessContext';
 import { FONTS, COLORS, ELEV } from '../theme';
 import CurrentState from './CurrentState';
 import ControlEfficacy from './ControlEfficacy';
@@ -362,12 +358,9 @@ export default function CisoSecurityPostureDashboard(props) {
               </div>
             </div>
           </div>
+          {/* Config/coverage chips removed — connecting systems is handled by the
+              platform during intake, not by the executive. Exports kept. */}
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            <LiveCoverageMeter orgId={orgId} authToken={token} apiUrl={api} />
-            <DataSources orgId={orgId} authToken={token} apiUrl={api} />
-            <BusinessContext orgId={orgId} authToken={token} apiUrl={api} />
-            <PlatformValue orgId={orgId} authToken={token} apiUrl={api} />
-            <VisibilityChip orgId={orgId} authToken={token} apiUrl={api} />
             <a href={`${api}/api/ciso/report.pdf?org_id=${encodeURIComponent(orgId)}`} style={{ background: ACCENT, color: '#fff', border: `1px solid ${ACCENT}`, borderRadius: 7, padding: '8px 14px', fontSize: 12.5, fontWeight: 600, textDecoration: 'none' }}>⤓ PDF report</a>
             <a href={`${api}/api/ciso/report.pptx?org_id=${encodeURIComponent(orgId)}`} style={{ background: '#fff', color: INK2, border: `1px solid ${BORDERSTRONG}`, borderRadius: 7, padding: '8px 14px', fontSize: 12.5, fontWeight: 600, textDecoration: 'none' }}>⤓ PowerPoint</a>
           </div>

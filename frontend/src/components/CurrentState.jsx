@@ -65,6 +65,23 @@ export default function CurrentState(props) {
     (readiness != null ? `Major-event readiness is ${readiness} out of 100. ` : '') +
     (vis ? `Data visibility is ${vis.band} at ${vis.overall} percent${vis.thin && vis.thin.length ? `; thin coverage in ${vis.thin.join(', ')}.` : '.'}` : '');
 
+  // Spoken briefing — an advisor talking the CISO through the situation, NOT a
+  // verbatim read of the on-screen text. Conversational, story-first, derived
+  // from the same data but phrased as guidance.
+  const topRisk = topControls[0] && topControls[0].name;
+  const spoken = [
+    `Here's your security briefing.`,
+    `Right now you're sitting at ${p.current} out of 100 — that's ${band(p.current).toLowerCase()} — and the direction is ${p.trend}${p.delta > 0 ? `, up ${p.delta} since we last spoke` : p.delta < 0 ? `, down ${Math.abs(p.delta)} since we last spoke` : `, basically flat`}.`,
+    improving.length ? `The encouraging part: ${improving.map((m) => m.name).join(' and ')} ${improving.length > 1 ? 'have' : 'has'} strengthened.` : '',
+    declining.length ? `What I'd keep an eye on is ${declining.map((m) => m.name).join(' and ')} — ${declining.length > 1 ? "they've" : "it's"} slipped, and that's where attention pays off.` : '',
+    topRisk ? `If you only focus on one thing today, your biggest concentration of risk is ${topRisk}.` : '',
+    breaches ? `You also have ${breaches} area${breaches === 1 ? '' : 's'} running hotter than the risk appetite you set.` : `You're inside your risk appetite across the board, which is good.`,
+    undecided.length ? `There ${undecided.length === 1 ? 'is one decision' : `are ${undecided.length} decisions`} waiting on you${crit ? `, and ${crit === 1 ? 'one is' : `${crit} are`} critical — that's where your judgment matters most` : ''}.` : `Nothing is waiting on a decision from you at the moment.`,
+    readiness != null ? `If a serious incident hit today, I'd put your readiness at about ${readiness} out of 100.` : '',
+    vis ? `One honest caveat — I'm only working with ${vis.overall} percent data visibility right now, so treat the thinner areas as estimates until we wire in more sources.` : '',
+    `That's the headline. I can take you deeper on any of it whenever you want.`,
+  ].filter(Boolean).join(' ');
+
   const appetite = cfg && cfg.config && cfg.config.appetite;
 
   return (
@@ -73,7 +90,7 @@ export default function CurrentState(props) {
       <div style={{ background: COLORS.subtle, border: `1px solid ${COLORS.hair}`, color: COLORS.ink, borderRadius: 11, padding: '14px 16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
           <div style={{ fontSize: 10, fontWeight: 700, color: COLORS.accentText, textTransform: 'uppercase', letterSpacing: '0.08em' }}>What changed since your last brief</div>
-          <VoiceControls voice={voice} onReplay={() => voice.speak(brief)} label="Listen to brief" />
+          <VoiceControls voice={voice} onReplay={() => voice.speak(spoken)} label="Listen to brief" />
         </div>
         <div style={{ fontSize: 14, fontWeight: 700, marginTop: 6, fontFamily: FONTS.mono }}>
           {p.current}/100 · {band(p.current)} <span style={{ color: p.delta >= 0 ? COLORS.good : COLORS.bad }}>{p.delta >= 0 ? '↑ +' : '↓ '}{p.delta}</span> <span style={{ color: COLORS.ink3, textTransform: 'capitalize', fontWeight: 500 }}>· {p.trend}</span>
