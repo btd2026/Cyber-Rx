@@ -37,8 +37,8 @@ import RestructureView from "./pages/RestructureView";
 
 // --- Theme --------------------------------------------------------------------
 var C = {
-  bg:"#FBFBFC", panel:"#FFFFFF", card:"#FFFFFF", border:"#EBECF0",
-  acc:"#5E6AD2", faint:"#5E6AD214", text:"#0B0C0E", muted:"#5C6066", dim:"#F6F7F9"
+  bg:"#F7F4EE", panel:"#FFFDF9", card:"#FFFDF9", border:"#E8E2D6",
+  acc:"#243044", faint:"#24304414", text:"#211D18", muted:"#5C554B", dim:"#F1ECE3"
 };
 
 // --- Helpers ------------------------------------------------------------------

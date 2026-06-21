@@ -1,46 +1,50 @@
 /**
- * theme — CyberRX design language ("Modern SaaS").
+ * theme — CyberRX design language ("Intelligence Brief").
  *
- * A clean, near-monochrome system in the Linear / Vercel idiom: a light neutral
- * canvas, near-black ink, a single indigo accent used for interactive chrome
- * (brand, active nav, focus, primary actions) — never for status, so green/
- * amber/red keep their meaning. Inter throughout (no serif) for a confident,
- * data-forward feel; a mono face for code-like identifiers. Centralized so the
- * look retunes in one place and rolls across every surface.
+ * An editorial, advisory-document system — the antithesis of a generic SaaS app.
+ * A warm ivory paper canvas, warm near-black ink, and a single restrained navy
+ * accent used only for interactive chrome (brand, active nav, focus, primary) —
+ * never for status, so green/amber/red keep their meaning. A serif display face
+ * for headlines (boardroom gravitas), a clean sans for body, and a mono face for
+ * figures. Centralized so the whole identity retunes in one place.
  */
 
 export const FONTS = {
-  display: "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif",
-  body: "'Inter', system-ui, -apple-system, sans-serif",
+  // Serif display — reads like a printed advisory brief, not an app. System stack
+  // (no web-font dependency) for instant, dependable gravitas.
+  display: "'Source Serif 4', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif",
+  body: "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif",
   mono: "'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace",
 };
 
 export const COLORS = {
-  // Ink (light surfaces)
-  ink: '#0b0c0e', ink2: '#5c6066', ink3: '#8b9098', hair: '#ebecf0', paper: '#fbfbfc', white: '#ffffff',
-  text: '#0b0c0e', primary: '#5e6ad2',
-  // Subtle panel / hairline-strong
-  subtle: '#f6f7f9', hairStrong: '#dfe1e6',
-  // Dark slate (used by section-header banners via HERO_BG) — neutral, no brass
-  navy0: '#0b0c0e', navy1: '#15171c', navy2: '#1c1f26', navyLine: '#2a2e36', navyInk: '#9aa0a8',
-  // Indigo accent — INTERACTIVE CHROME ONLY (brand, active nav, focus, primary)
-  accent: '#5e6ad2', accentSoft: '#eef0fb', accentDim: 'rgba(94,106,210,0.12)', accentText: '#4a52b0',
-  // Status (semantic)
+  // Ink (warm, on paper)
+  ink: '#211d18', ink2: '#5c554b', ink3: '#8a8276', hair: '#e8e2d6', paper: '#f7f4ee', white: '#fffdf9',
+  text: '#211d18', primary: '#243044',
+  // Subtle panel / hairline-strong (warm)
+  subtle: '#f1ece3', hairStrong: '#d8d1c2',
+  // Masthead surface (section-header banners via HERO_BG) — warm charcoal, like newsprint
+  navy0: '#1a1712', navy1: '#252019', navy2: '#322c23', navyLine: '#403a2f', navyInk: '#a89f8f',
+  // Navy accent — INTERACTIVE CHROME ONLY (brand, active nav, focus, primary). No purple.
+  accent: '#243044', accentSoft: '#ecedf2', accentDim: 'rgba(36,48,68,0.12)', accentText: '#2f3e59',
+  // Status (semantic) — unchanged so meaning is preserved
   good: '#1a7f37', warn: '#9a6700', bad: '#cf222e',
   // Aliases some views reference
   low: '#1a7f37', medium: '#9a6700', high: '#c2410c', critical: '#cf222e', Low: '#1a7f37',
-  goodSoft: '#e6f4ea', warnSoft: '#fbf3da', badSoft: '#fdecec',
+  goodSoft: '#e6f1e8', warnSoft: '#f6efdd', badSoft: '#fceceb',
 };
 
-// Section-header banner surface: a clean neutral dark slate (no brass glow).
+// Section-header masthead surface: warm charcoal, like a printed brief's header rule.
 export const HERO_BG =
-  'linear-gradient(135deg, #0b0c0e 0%, #15171c 60%, #1c1f26 100%)';
+  'linear-gradient(135deg, #1a1712 0%, #252019 60%, #322c23 100%)';
 
 export const ELEV = {
-  card: '0 1px 2px rgba(11,12,14,0.05), 0 10px 28px -16px rgba(11,12,14,0.20)',
-  pop: '0 16px 48px -12px rgba(11,12,14,0.30)',
+  // Softer, paper-like — pages should feel printed, not floating.
+  card: '0 1px 2px rgba(33,29,24,0.04), 0 12px 30px -20px rgba(33,29,24,0.18)',
+  pop: '0 18px 50px -16px rgba(33,29,24,0.28)',
 };
 
-export const RADIUS = { sm: 7, md: 10, lg: 14, pill: 999 };
+// Crisper, less "bubbly" — editorial, not pill-heavy.
+export const RADIUS = { sm: 5, md: 8, lg: 12, pill: 999 };
 
 export default { FONTS, COLORS, HERO_BG, ELEV, RADIUS };
