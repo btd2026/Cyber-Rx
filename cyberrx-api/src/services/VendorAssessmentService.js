@@ -385,10 +385,12 @@ async function extractFields(docType, payload) {
   try {
     const schema = { type: 'object', additionalProperties: true, properties: {} };
     def.fields.forEach((k) => { schema.properties[k] = {}; });
+    const { fence, GUIDANCE } = require('./llmSafety');
+    const doc = fence(String(text).slice(0, 20000), 'DOCUMENT');
     const resp = await client.messages.create({
       model: MODEL, max_tokens: 1500, thinking: { type: 'adaptive' },
-      system: `You are Saraqael, a vendor-assurance analyst. Extract ONLY the following fields from this ${def.label} as JSON: ${def.fields.join(', ')}. Use null when a field is not present. Dates as ISO. Counts as numbers. Lists as arrays. Never invent values.`,
-      messages: [{ role: 'user', content: String(text).slice(0, 20000) }],
+      system: `You are Saraqael, a vendor-assurance analyst. Extract ONLY the following fields from this ${def.label} as JSON: ${def.fields.join(', ')}. Use null when a field is not present. Dates as ISO. Counts as numbers. Lists as arrays. Never invent values. ${GUIDANCE}`,
+      messages: [{ role: 'user', content: `Extract the fields from the document below.\n${doc.block}` }],
       output_config: { format: { type: 'json_schema', schema } },
     });
     const tb = (resp.content || []).find((b) => b.type === 'text');

@@ -88,10 +88,13 @@ function getAnthropic() {
 async function llmExtract(text) {
   const client = getAnthropic(); if (!client) return [];
   try {
+    const { fence, GUIDANCE } = require('./llmSafety');
+    const doc = fence(text.slice(0, 12000), 'DOCUMENT');
     const resp = await client.messages.create({
       model: MODEL, max_tokens: 1600, temperature: 0,
+      system: `You extract AI/ML system inventories from documents. ${GUIDANCE}`,
       messages: [{ role: 'user', content:
-        'Extract every AI/ML system (LLM apps, GenAI features, ML models, AI agents, AI features inside SaaS) from this text. Return ONLY JSON: {"systems":[{"name","systemType","provider","model","hosting","dataSensitivity","autonomy","humanInLoop","owner","sanctioned","purpose"}]}. autonomy is Assistive|Copilot|Agentic; dataSensitivity is the most sensitive data it touches; sanctioned is Sanctioned|Shadow|Unreviewed. Text:\n\n' + text.slice(0, 12000) }],
+        'Extract every AI/ML system (LLM apps, GenAI features, ML models, AI agents, AI features inside SaaS) from the document below. Return ONLY JSON: {"systems":[{"name","systemType","provider","model","hosting","dataSensitivity","autonomy","humanInLoop","owner","sanctioned","purpose"}]}. autonomy is Assistive|Copilot|Agentic; dataSensitivity is the most sensitive data it touches; sanctioned is Sanctioned|Shadow|Unreviewed.\n\n' + doc.block }],
     });
     const t = (resp.content && resp.content[0] && resp.content[0].text) || '';
     const j = JSON.parse(t.slice(t.indexOf('{'), t.lastIndexOf('}') + 1));
