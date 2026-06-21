@@ -305,8 +305,8 @@ app.use('/api/decisions',         [apiGetLimiter, apiPostLimiter], require('./ro
 // Per-tenant overridable defaults (appetite, scoring weights, frameworks, taxonomy).
 app.use('/api/tenant-config',     [apiGetLimiter, apiPutLimiter], require('./routes/tenantConfig'));
 
-// Per-asset-class visibility confidence (how complete our own data is).
-app.use('/api/visibility',        [apiGetLimiter], require('./routes/visibility'));
+// Visibility confidence: per-asset-class coverage + per-asset data completeness.
+app.use('/api/visibility',        [apiGetLimiter, apiPostLimiter], require('./routes/visibility'));
 
 // Coaching layer + blind-spot detection over the decision spine (questions to
 // ask, materiality checklist, tabletop, per-leader neglect patterns).

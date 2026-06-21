@@ -55,11 +55,115 @@ async function assess(orgId) {
   ].map((c) => { const s = score(c); return { ...c, confidence: s, band: band(s), hasData: c.rows > 0 }; });
   const overall = Math.round(classes.reduce((a, c) => a + c.confidence, 0) / classes.length);
   const thin = classes.filter((c) => c.confidence < 50).map((c) => c.label);
+  const perAssetResult = await perAsset(orgId);
   return {
     organizationId: orgId, generatedAt: new Date().toISOString(),
     overall, band: band(overall), classes, thin,
+    assets: perAssetResult.summary,
     caveat: thin.length ? `Outputs are caveated where data is thin: ${thin.join(', ')}. Connect these sources to raise confidence.` : 'Coverage is sufficient across tracked asset classes.',
   };
 }
 
-module.exports = { assess };
+// ---- per-asset visibility confidence ---------------------------------------
+// Class-level coverage (above) answers "do we see this category at all?". This
+// answers "how complete is our data on THIS specific asset?" — a 0-100 score
+// over the signals we'd expect to have on any tracked asset. Each missing signal
+// is a named blind spot, so the score is explainable, not a black box.
+//
+// Vulnerability telemetry is credited from linked findings (a scanner is
+// reporting on the asset), not the vuln_critical/_high counters — those default
+// to 0, so "0" can't be distinguished from "never scanned"; presence of a
+// finding is the honest signal that something is actually looking at the asset.
+const SIGNALS = [
+  { key: 'identity', label: 'Locatable (hostname/IP)', weight: 12, has: (a) => !!(a.hostname || a.ip_address) },
+  { key: 'ownership', label: 'Owner assigned', weight: 10, has: (a) => !!(a.owner && String(a.owner).trim()) },
+  { key: 'criticality', label: 'Criticality rated', weight: 9, has: (a) => !!(a.criticality && String(a.criticality).trim()) },
+  { key: 'tier', label: 'Tier classified', weight: 7, has: (a) => !!(a.tier && String(a.tier).trim()) },
+  { key: 'process_link', label: 'Linked to a business process', weight: 10, has: (a) => Array.isArray(a.business_process_ids) && a.business_process_ids.length > 0 },
+  { key: 'data_class', label: 'Data classification known', weight: 11, has: (a) => Array.isArray(a.data_classification) && a.data_classification.length > 0 },
+  { key: 'vuln_telemetry', label: 'Vulnerability telemetry (findings)', weight: 14, has: (a) => (a._findings || 0) > 0 },
+  { key: 'patch_telemetry', label: 'Patch telemetry', weight: 14, has: (a) => a.patch_pct != null },
+  { key: 'lifecycle', label: 'Lifecycle / end-of-support known', weight: 8, has: (a) => !!a.end_of_support_date },
+  { key: 'freshness', label: 'Record refreshed (<90d)', weight: 5, has: (a) => a.updated_at && (Date.now() - new Date(a.updated_at).getTime()) < 90 * 864e5 },
+];
+const WEIGHT_TOTAL = SIGNALS.reduce((s, x) => s + x.weight, 0);
+
+function assetConfidence(a) {
+  const signals = SIGNALS.map((s) => ({ key: s.key, label: s.label, weight: s.weight, present: !!s.has(a) }));
+  const earned = signals.reduce((sum, s) => sum + (s.present ? s.weight : 0), 0);
+  const confidence = Math.round((earned / WEIGHT_TOTAL) * 100);
+  return { confidence, band: band(confidence), signals, missing: signals.filter((s) => !s.present).map((s) => s.label) };
+}
+
+async function perAsset(orgId) {
+  let rows = [];
+  try {
+    rows = await db.query(
+      `SELECT id, name, type, hostname, ip_address, owner, criticality, tier,
+              business_process_ids, data_classification, patch_pct, vuln_critical,
+              vuln_high, end_of_support_date, updated_at
+         FROM assets WHERE organization_id=$1`, [orgId]);
+  } catch (e) { logger.debug('perAsset query degraded', { error: e.message }); }
+  // Linked-findings count per asset = "a scanner is actually reporting on it".
+  const fmap = {};
+  try {
+    (await db.query('SELECT asset_id, COUNT(*) n FROM findings WHERE organization_id=$1 AND asset_id IS NOT NULL GROUP BY asset_id', [orgId]))
+      .forEach((r) => { fmap[r.asset_id] = Number(r.n) || 0; });
+  } catch (_) {}
+
+  const assets = rows.map((a) => {
+    const c = assetConfidence({ ...a, _findings: fmap[a.id] || 0 });
+    return { id: a.id, name: a.name, type: a.type, hostname: a.hostname || null, confidence: c.confidence, band: c.band, signals: c.signals, missing: c.missing };
+  });
+  const total = assets.length;
+  const mean = total ? Math.round(assets.reduce((s, a) => s + a.confidence, 0) / total) : 0;
+  const low = assets.filter((a) => a.confidence < 50);
+  // Which signals are most often missing across the fleet — the ingestion to fix first.
+  const gapCount = {};
+  SIGNALS.forEach((s) => { gapCount[s.label] = 0; });
+  assets.forEach((a) => a.missing.forEach((m) => { gapCount[m] = (gapCount[m] || 0) + 1; }));
+  const weakestSignals = Object.entries(gapCount).filter(([, n2]) => n2 > 0)
+    .sort((x, y) => y[1] - x[1]).slice(0, 3)
+    .map(([label, n2]) => ({ label, missingOn: n2, pct: total ? Math.round((n2 / total) * 100) : 0 }));
+
+  const summary = {
+    total, mean, band: total ? band(mean) : 'Unknown',
+    lowVisibilityCount: low.length,
+    lowVisibility: low.sort((a, b) => a.confidence - b.confidence).slice(0, 10).map((a) => ({ id: a.id, name: a.name, confidence: a.confidence, missing: a.missing })),
+    weakestSignals,
+    caveat: total === 0
+      ? 'No asset inventory present — per-asset visibility is unknown. Connect a CMDB or import assets.'
+      : low.length
+        ? `${low.length} of ${total} assets have thin data (confidence <50%); treat decisions touching them with extra caution.`
+        : 'Per-asset data completeness is adequate across the inventory.',
+  };
+  return { organizationId: orgId, generatedAt: new Date().toISOString(), summary, assets };
+}
+
+// Persist the computed score back onto each asset so the substrate carries an
+// honest, queryable "how much we see" value (cached snapshot).
+async function recompute(orgId) {
+  const { assets, summary } = await perAsset(orgId);
+  const now = new Date().toISOString();
+  for (const a of assets) {
+    try {
+      await db.query(
+        `UPDATE assets SET visibility_confidence=$2, visibility_band=$3, visibility_signals=$4, visibility_computed_at=$5
+           WHERE id=$1 AND organization_id=$6`,
+        [a.id, a.confidence, a.band, JSON.stringify(a.signals), now, orgId]);
+    } catch (e) { logger.debug('visibility persist degraded', { error: e.message }); }
+  }
+  return { recomputed: assets.length, summary };
+}
+
+// A name/hostname → confidence index so the decision spine can caveat a card
+// when the affected system itself is thinly monitored.
+async function byName(orgId) {
+  const { assets, summary } = await perAsset(orgId);
+  const idx = {};
+  const put = (k, a) => { if (k) idx[String(k).trim().toLowerCase()] = a; };
+  assets.forEach((a) => { put(a.name, a); put(a.hostname, a); });
+  return { idx, summary };
+}
+
+module.exports = { assess, perAsset, recompute, byName, assetConfidence };

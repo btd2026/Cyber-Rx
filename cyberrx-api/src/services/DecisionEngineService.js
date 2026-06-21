@@ -259,6 +259,10 @@ function buildCompounds(orgId, cards, crown, dataAtRisk) {
 async function generate(orgId) {
   const Exec = require('./ExecDashboardService');
   const c = await Exec.loadCtx(orgId);
+  // Per-asset visibility (data completeness) so each card can be honest about
+  // how much we actually see on the affected system.
+  let vis = null;
+  try { vis = await require('./VisibilityService').byName(orgId); } catch (_) {}
   const assumptions = await loadAssumptions(orgId);
   const ovFor = (id) => assumptions[id] || assumptions._default || null;
   const crown = (c.crownJewels && c.crownJewels[0] && c.crownJewels[0].name)
@@ -344,8 +348,17 @@ async function generate(orgId) {
     c.event.provenance = prov(liveSignal ? 'live' : 'modeled',
       liveSignal ? `EPSS/KEV · ${(t.cves || []).join(', ') || 'CISA KEV'}` : 'Loss & exploit model',
       { lineage: tuned ? 'User-tuned assumptions' : (liveSignal ? null : 'Monte Carlo loss × modeled likelihood') });
+    // Visibility caveat: how complete our data is on the affected asset (or the
+    // org-wide mean when the system can't be resolved to a tracked asset).
+    if (vis) {
+      const e = c.event;
+      const match = e.affectedSystem ? vis.idx[String(e.affectedSystem).trim().toLowerCase()] : null;
+      e.visibility = match
+        ? { confidence: match.confidence, band: match.band, scope: 'asset', asset: match.name, missing: match.missing, basis: `Data completeness on ${match.name}.` }
+        : { confidence: vis.summary.mean, band: vis.summary.band, scope: 'org', missing: (vis.summary.weakestSignals || []).map((w) => w.label), basis: vis.summary.total ? 'No asset-level match — org-wide data completeness.' : 'No asset inventory — visibility unknown.' };
+    }
   });
-  return { organizationId: orgId, generatedAt: new Date().toISOString(), cards: all };
+  return { organizationId: orgId, generatedAt: new Date().toISOString(), visibility: vis ? vis.summary : null, cards: all };
 }
 
 // ---- translation engine: one card → a role lens ----------------------------
@@ -461,9 +474,17 @@ function lensFor(role, card) {
         break;
     }
   }
+  // Honest data-completeness caveat: when we don't fully see the affected asset,
+  // every leader should know the likelihood carries that uncertainty.
+  const v = e.visibility;
+  if (v && v.band && v.band !== 'High') {
+    const where = v.scope === 'asset' && v.asset ? `on ${v.asset}` : 'across the asset inventory';
+    narrative += ` Visibility caveat: our data completeness ${where} is ${v.confidence}% (${v.band})${v.missing && v.missing.length ? ` — missing ${v.missing.slice(0, 2).join(', ').toLowerCase()}` : ''}; treat the likelihood with that uncertainty.`;
+  }
   return {
     role, framing: FRAME[role] || 'Executive', headline, primary, secondary, narrative,
     questionToAsk: questionToAsk || null, recommended: card.recommended, options: card.options,
+    visibility: e.visibility || null,
     narration: voiceNarration(role, card, rec),
   };
 }

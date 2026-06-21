@@ -1,5 +1,23 @@
 # CyberRX — Architecture Audit vs. Target ("Decision OS")
 
+> **STATUS UPDATE (2026-06-21).** This audit is a point-in-time snapshot; the
+> Decision OS spine it scoped as *Absent* has since been **built**. The shared
+> `Event → DecisionCard → lensFor()` translation engine (all six role lenses),
+> EPSS/KEV exploit timing, a seeded Monte Carlo loss distribution, the
+> compound/chained-risk engine, RACI relevance, and a tamper-evident decision
+> ledger all live in `cyberrx-api/src/services/DecisionEngineService.js`
+> (served at `/api/decisions`). `ThreatSignalService` provides EPSS+KEV
+> ingestion; `CoachingService` and `BlindSpotService` cover the cross-cutting
+> coaching/blind-spot layer. The remaining sequenced-plan items are therefore
+> narrower than the body below implies — most are done. **Newly closed:** the
+> per-asset *visibility confidence* gap (A.6 / Top-5 #5) — `VisibilityService`
+> now scores each asset's data completeness (persisted on `assets`, served at
+> `/api/visibility/assets`) and the decision spine caveats any card whose
+> affected system is thinly monitored. The still-open item is finishing the
+> lens **migration** (audit Step 5): the role *dashboards* still run the legacy
+> per-role compute (`decisionsFor`/`roleLayout`/`applyRoleLens`) alongside the
+> spine.
+
 **Scope:** read-only audit. No code changed. All claims cite files under
 `cyberrx-api/src` (backend) and `frontend/src` (frontend).
 

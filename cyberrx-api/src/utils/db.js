@@ -119,6 +119,15 @@ async function init() {
       ALTER TABLE assets ADD COLUMN IF NOT EXISTS vuln_high INTEGER DEFAULT 0;
       ALTER TABLE assets ADD COLUMN IF NOT EXISTS patch_pct INTEGER;
 
+      -- Per-asset visibility confidence (data-completeness on THIS asset): how
+      -- much of the telemetry/context we'd expect to see is actually present.
+      -- Computed by VisibilityService and cached here so the substrate carries an
+      -- honest "how much we see" score per asset (idempotent for existing DBs).
+      ALTER TABLE assets ADD COLUMN IF NOT EXISTS visibility_confidence INTEGER;
+      ALTER TABLE assets ADD COLUMN IF NOT EXISTS visibility_band TEXT;
+      ALTER TABLE assets ADD COLUMN IF NOT EXISTS visibility_signals JSONB;
+      ALTER TABLE assets ADD COLUMN IF NOT EXISTS visibility_computed_at TIMESTAMPTZ;
+
       -- Recovery posture on business processes (idempotent): populated by a
       -- CMDB / BC-DR / recovery-test feed when available; read live when present,
       -- otherwise modeled from tier. last_recovery_test drives "restore-tested".
