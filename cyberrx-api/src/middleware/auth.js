@@ -1,5 +1,11 @@
 'use strict';
 const jwt = require('jsonwebtoken');
+const { isDemoOrg } = require('../config/demoOrgs');
+
+// Tenant isolation enforcement. Default OFF (observe + log only) so the live demo
+// and onboarding are never broken by surprise; flip STRICT_TENANT_ISOLATION=true to
+// enforce once verified in a controlled environment.
+const STRICT_TENANT_ISOLATION = process.env.STRICT_TENANT_ISOLATION === 'true';
 
 /**
  * JWT Verification Middleware
@@ -165,9 +171,35 @@ function requireOrgAccess(req, res, next) {
  * otherwise from the X-Org-Id header or org_id query param. Apply AFTER optionalJWT.
  */
 function demoOrg(req, res, next) {
-  if (!req.orgId) {
-    req.orgId = req.headers['x-org-id'] || req.query.org_id || req.query.orgId;
+  const headerOrg = req.headers['x-org-id'] || req.query.org_id || req.query.orgId || (req.body && req.body.org_id);
+
+  // Authenticated: the token's org is authoritative. An authenticated caller must
+  // never reach another org by passing a different header/param (IDOR / tenant spoof).
+  if (req.orgId) {
+    if (headerOrg && String(headerOrg) !== String(req.orgId) && !isAdmin(req)) {
+      console.warn(JSON.stringify({
+        ts: new Date().toISOString(), event: 'org_scope_violation',
+        userId: req.userId, tokenOrg: req.orgId, requestedOrg: headerOrg, path: req.path, enforced: STRICT_TENANT_ISOLATION,
+      }));
+      if (STRICT_TENANT_ISOLATION) {
+        return res.status(403).json({ error: 'Forbidden', message: 'You do not have permission to access this organization\'s data.' });
+      }
+    }
+    return next();
   }
+
+  // Unauthenticated: only the public demo orgs are explorable. Anything else needs a
+  // signed-in, org-scoped token — we never trust an arbitrary X-Org-Id from anonymous.
+  if (headerOrg && !isDemoOrg(headerOrg)) {
+    console.warn(JSON.stringify({
+      ts: new Date().toISOString(), event: 'unauth_nondemo_org_access',
+      requestedOrg: headerOrg, path: req.path, enforced: STRICT_TENANT_ISOLATION,
+    }));
+    if (STRICT_TENANT_ISOLATION) {
+      return res.status(401).json({ error: 'Unauthorized', message: 'Sign in to access this organization.' });
+    }
+  }
+  req.orgId = headerOrg;
   next();
 }
 
