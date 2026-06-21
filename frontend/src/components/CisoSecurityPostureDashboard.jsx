@@ -371,20 +371,73 @@ export default function CisoSecurityPostureDashboard(props) {
           </div>
         </div>
         <div style={{ marginTop: 14, fontSize: 13.5, color: INK2, lineHeight: 1.6, maxWidth: 940 }}>{p.narrative}</div>
-        {/* weighted domain strip — clean KPI tiles */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(122px, 1fr))', gap: 8, marginTop: 16 }}>
-          {d.domainMatrix.filter((x) => x.weight > 0).map((x) => (
-            <div key={x.id} title={`${x.name} ${x.current} (${x.weight}% weight)`} style={{ background: COLORS.white, border: `1px solid ${COLORS.hair}`, borderRadius: 8, padding: '9px 11px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                {x.provenance && <Provenance prov={x.provenance} size={8} />}
-                <div style={{ fontSize: 10.5, color: INK3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{x.name}</div>
+        {/* KPI row (mockup layout) */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginTop: 18 }}>
+          {[
+            { label: 'Posture score', value: p.current, unit: '/ 100', delta: p.delta, good: p.delta >= 0 },
+            { label: 'Thresholds breached', value: d.thresholds.breaches, unit: `of ${d.thresholds.total}`, sub: `${d.thresholds.critical} critical`, bad: d.thresholds.breaches > 0 },
+            { label: 'Readiness', value: d.readiness.overall, unit: '/ 100', sub: d.readiness.rating },
+            { label: 'Action items', value: (d.actionQueue || []).length, unit: 'ranked', sub: `${(d.attentionItems || []).length} need your decision` },
+          ].map((k) => (
+            <div key={k.label} style={{ background: COLORS.white, border: `1px solid ${COLORS.hair}`, borderRadius: 10, boxShadow: ELEV.card, padding: '13px 15px' }}>
+              <div style={{ fontSize: 12, color: INK3 }}>{k.label}</div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 5, marginTop: 7 }}>
+                <span className="crx-figure" style={{ fontSize: 26, fontWeight: 700, color: INK, letterSpacing: '-0.02em' }}>{k.value}</span>
+                <span style={{ fontSize: 11.5, color: INK3 }}>{k.unit}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 5 }}>
-                <span className="crx-figure" style={{ fontSize: 18, fontWeight: 700, color: scoreColor(x.current), letterSpacing: '-0.02em' }}>{x.current}</span>
-                <Trend d={x.delta} />
+              <div style={{ marginTop: 6, fontSize: 11.5 }}>
+                {k.delta !== undefined
+                  ? <span className="crx-figure" style={{ fontWeight: 600, color: k.good ? '#1a7f37' : '#cf222e' }}>{k.delta >= 0 ? '↑ +' : '↓ '}{k.delta} pts</span>
+                  : <span style={{ color: k.bad ? '#cf222e' : INK3 }}>{k.sub}</span>}
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* ===== Overview: posture by domain + action queue (mockup layout) ===== */}
+      <div style={{ background: COLORS.paper, padding: '18px 28px', borderBottom: `1px solid ${COLORS.hair}`, display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 16 }}>
+        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.hair}`, borderRadius: 12, boxShadow: ELEV.card, padding: 18 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+            <h3 style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: INK, letterSpacing: '-0.01em' }}>Posture by domain</h3>
+            <span style={{ fontSize: 11.5, color: INK3 }}>weighted</span>
+          </div>
+          <div style={{ display: 'grid', gap: 11 }}>
+            {d.domainMatrix.filter((x) => x.weight > 0).map((x) => (
+              <div key={x.id} style={{ display: 'grid', gridTemplateColumns: '1fr 40px 44px', alignItems: 'center', gap: 10 }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 500, color: INK, marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{x.name}</div>
+                  <Bar value={x.current} />
+                </div>
+                <div className="crx-figure" style={{ fontSize: 14, fontWeight: 700, color: scoreColor(x.current), textAlign: 'right' }}>{x.current}</div>
+                <div style={{ textAlign: 'right' }}><Trend d={x.delta} /></div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{ background: COLORS.white, border: `1px solid ${COLORS.hair}`, borderRadius: 12, boxShadow: ELEV.card, padding: 18 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+            <h3 style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: INK, letterSpacing: '-0.01em' }}>Action queue</h3>
+            <button onClick={() => setTab('actions')} style={{ background: 'none', border: 'none', color: ACCENT, fontSize: 11.5, fontWeight: 600, cursor: 'pointer', padding: 0 }}>View all →</button>
+          </div>
+          <div style={{ display: 'grid', gap: 10 }}>
+            {(d.actionQueue || []).slice(0, 4).map((a) => {
+              const sv = a.escalation ? '#cf222e' : numSev(a.severity) === 'High' ? '#c2410c' : '#9a6700';
+              return (
+                <div key={a.id} style={{ display: 'flex', gap: 11, padding: '11px 12px', border: `1px solid ${COLORS.hair}`, borderRadius: 8 }}>
+                  <div className="crx-figure" style={{ flexShrink: 0, width: 22, height: 22, borderRadius: 6, background: SOFT[sv] || PANEL, color: sv, display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 700 }}>{a.rank}</div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 12.5, fontWeight: 600, color: INK, lineHeight: 1.35 }}>{a.action}</div>
+                    <div style={{ fontSize: 11.5, color: INK2, marginTop: 3, lineHeight: 1.45 }}>{a.whyNow}</div>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 7, flexWrap: 'wrap' }}>
+                      <Pill text={numSev(a.severity)} color={sv} />
+                      <span style={{ fontSize: 11, color: INK3 }}>{a.owner} · due {a.dueDate}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 
