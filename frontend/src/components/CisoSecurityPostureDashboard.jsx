@@ -48,6 +48,7 @@ import CloTriggerMap from './CloTriggerMap';
 import CloMateriality from './CloMateriality';
 import CloDefensibility from './CloDefensibility';
 import CloPortfolio from './CloPortfolio';
+import CfoFinancialPosture from './CfoFinancialPosture';
 import BoardOversight from './BoardOversight';
 import BoardDecisions from './BoardDecisions';
 import BoardAccountability from './BoardAccountability';
@@ -124,7 +125,7 @@ const TAB_GROUPS = [
   { key: 'programs', label: 'Programs & AI' },
 ];
 const GROUP_OF = {
-  qa: 'state', summary: 'state',
+  qa: 'state', summary: 'state', cfoposture: 'state',
   decisionq: 'decisions', actions: 'decisions',
   // risk & controls (CISO + every role's analytical sections)
   linkage: 'risk', domains: 'risk', controls: 'risk', thresholds: 'risk', processes: 'risk', paths: 'risk', hidden: 'risk', rolepanel: 'risk',
@@ -576,6 +577,7 @@ function RoleTabContent({ t, role, d, props, orgId, authToken, apiUrl }) {
   if (!t) return null;
   switch (t.kind) {
     case 'qa': return <CisoAgentPanel role={role} />;
+    case 'cfoposture': return <CfoFinancialPosture orgId={orgId} authToken={authToken} apiUrl={apiUrl} />;
     case 'summary': return <ExecutiveSummaryEditor />;
     case 'businessrisk': return <BusinessRiskPanel />;
     case 'domains': return <Domains matrix={d.domainMatrix} controlRisk={d.controlRisk} thresholds={d.thresholds} />;

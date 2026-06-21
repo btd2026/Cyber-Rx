@@ -783,7 +783,10 @@ function baseLayout(role, c) {
       const retention = Math.round(f.grossExposure * 0.02);
       const removed = Math.max(0, f.grossExposure - f.netExposure);
       const scen = (name, freq, share) => ({ scenario: name, freq: `${Math.round(freq * 100)}%`, sle: usd(f.grossExposure * share), ale: usd(f.grossExposure * share * freq) });
-      return [qa, summary,
+      // Current State is the dedicated financial-position narrative overview
+      // (kind 'cfoposture'), matching the bespoke overviews the other leaders get.
+      const cfoPosture = { key: 'cfoposture', label: 'Current State', kind: 'cfoposture' };
+      return [cfoPosture, summary,
         sec('exposure', 'Financial Exposure ($)', { type: 'metrics', note: 'The dollar size of cyber risk on the balance sheet.', items: [
           { label: 'Gross exposure', value: usd(f.grossExposure), sub: `${r.openCount} open risks` },
           { label: 'Insurance offset', value: usd(f.insuranceCoverage), sub: `${f.coverageRatio}% of gross`, tone: 'good' },
