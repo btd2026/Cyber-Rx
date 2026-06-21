@@ -151,12 +151,12 @@ function Card({ card, role, onDecide, voice, orgId, apiUrl, authToken, onTuned }
 
       {/* options — the shared contract */}
       <div style={{ padding: '6px 16px 14px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 9 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gridAutoRows: '1fr', gap: 9 }}>
           {card.options.map((o) => {
             const isRec = o.id === card.recommended;
             const isChosen = decided && decided.optionId === o.id;
             return (
-              <div key={o.id} style={{ border: `1px solid ${isChosen ? '#1a7f37' : isRec ? '#5e6ad2' : HAIR}`, borderRadius: 9, padding: '10px 12px', background: isChosen ? '#f0f7f2' : '#fff' }}>
+              <div key={o.id} style={{ border: `1px solid ${isChosen ? '#1a7f37' : isRec ? '#5e6ad2' : HAIR}`, borderRadius: 9, padding: '10px 12px', background: isChosen ? '#f0f7f2' : '#fff', display: 'flex', flexDirection: 'column', height: '100%' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
                   <span style={{ fontSize: 12, fontWeight: 700, color: INK }}>{o.label}</span>
                   {isRec && !decided && <span style={{ fontSize: 8.5, fontWeight: 800, color: '#fff', background: '#5e6ad2', borderRadius: 999, padding: '2px 7px', textTransform: 'uppercase' }}>Rec</span>}
@@ -169,8 +169,8 @@ function Card({ card, role, onDecide, voice, orgId, apiUrl, authToken, onTuned }
                 </div>
                 {o.note && <div style={{ fontSize: 10, color: INK3, marginTop: 6, lineHeight: 1.4 }}>{o.note}</div>}
                 {!decided && (o.acceptsRationale
-                  ? <button onClick={() => setAccepting(!accepting)} style={btn(INK3)}>Accept &amp; monitor…</button>
-                  : <button onClick={() => onDecide(card, o)} style={btn(isRec ? '#5e6ad2' : '#0b0c0e')}>Choose</button>)}
+                  ? <button onClick={() => setAccepting(!accepting)} style={{ ...btn(INK3), marginTop: 'auto' }}>Accept &amp; monitor…</button>
+                  : <button onClick={() => onDecide(card, o)} style={{ ...btn(isRec ? '#5e6ad2' : '#0b0c0e'), marginTop: 'auto' }}>Choose</button>)}
               </div>
             );
           })}
