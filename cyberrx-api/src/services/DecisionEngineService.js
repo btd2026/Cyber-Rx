@@ -472,22 +472,22 @@ function lensFor(role, card) {
 // numbers, why it matters to THIS leader, and the decision.
 function voiceNarration(role, card, rec) {
   const e = card.event;
-  const opensWith = `As the ${role}, you own ${DUTY[role] || 'this decision'}. `;
+  const opensWith = `Let me walk you through this one — as the ${role}, it's yours to call${DUTY[role] ? `, and you own ${DUTY[role]}` : ''}. `;
   if (card.type === 'compound') {
     const m = e.members, cb = e.combination;
     return opensWith +
-      `Here's a chained risk. On their own, "${m[0].title}" sits around ${m[0].p30} percent and "${m[1].title}" around ${m[1].p30} percent over thirty days — each looks manageable. But combined, ${cb.outcome.toLowerCase()} ` +
-      `Together the likelihood jumps to about ${cb.jointPct} percent — roughly ${cb.amplification} either one alone — and the modeled loss climbs to about ${usd(e.loss.expected)} expected, up to ${usd(e.loss.p90)} in a bad case, reaching ${e.crownJewel}. ` +
-      `The good news: you don't have to fix everything. ${cb.breaks} The recommendation is to ${rec.label.toLowerCase()}, which costs about ${rec.costLabel} and takes roughly ${rec.timeToEffectDays} days. ` +
-      `If you choose to accept and monitor instead, that requires a documented, signed rationale and a review date.`;
+      `Here's what makes it interesting. On their own, "${m[0].title}" and "${m[1].title}" both look manageable — around ${m[0].p30} and ${m[1].p30} percent over the next month. The trap is they don't stay separate. Chain them together and ${cb.outcome.toLowerCase()} ` +
+      `Now you're suddenly looking at roughly ${cb.jointPct} percent — about ${cb.amplification} either one alone — with the loss climbing to around ${usd(e.loss.expected)}, or as much as ${usd(e.loss.p90)} on a bad day, reaching all the way to ${e.crownJewel}. ` +
+      `And here's the part I like: you don't have to fix everything. ${cb.breaks} What I'd do is ${rec.label.toLowerCase()} — call it ${rec.costLabel} and about ${rec.timeToEffectDays} days to take hold. ` +
+      `You can accept and monitor instead, and that's a legitimate choice — but it's a real one, so I'll need it in writing with a date to revisit.`;
   }
   const t = e.timing;
-  const basis = t.cves && t.cves.length ? `based on the live exploit signal for ${t.cves.join(', ')}` : 'modeled from severity and exposure';
+  const basis = t.cves && t.cves.length ? `and this isn't theoretical — there's a live exploit signal out there for ${t.cves.join(', ')}` : 'and that read comes from the severity and exposure we modeled';
   return opensWith +
-    `The event is "${e.title}". Its likelihood of exploitation is about ${t.p7} percent within seven days, ${t.p30} percent within thirty, and ${t.p90} percent within ninety — ${basis}, at ${t.confidence} confidence. ` +
-    `The modeled financial loss is about ${usd(e.loss.expected)} expected, with a ninety-percentile worst case near ${usd(e.loss.p90)}. The attacker path runs ${e.attackPath.map((s) => s.label).join(', then ')}. ` +
-    `The recommended response is to ${rec.label.toLowerCase()} — about ${rec.costLabel}, ${rec.timeToEffectDays} days to take effect, cutting residual risk by ${rec.residualRiskReductionPct} percent, with ${rec.friction.toLowerCase()} operational friction. ` +
-    `Accepting and monitoring is available but requires a logged rationale.`;
+    `The situation is "${e.title}", ${basis}. Realistically, there's about a ${t.p7} percent chance someone takes a run at this within the week, and that climbs to ${t.p90} percent over ninety days — at ${String(t.confidence).toLowerCase()} confidence. ` +
+    `If it lands, we're looking at somewhere around ${usd(e.loss.expected)}, with a worst case near ${usd(e.loss.p90)}. The path is a familiar one — ${e.attackPath.map((s) => s.label).join(', then ')}. ` +
+    `Here's my recommendation: ${rec.label.toLowerCase()}. It runs about ${rec.costLabel}, takes hold in ${rec.timeToEffectDays} days, pulls roughly ${rec.residualRiskReductionPct} percent of the risk off the table, and does it with ${rec.friction.toLowerCase()} disruption to the business. ` +
+    `Accepting and monitoring is on the table too — just say the word and I'll log the rationale.`;
 }
 
 // ---- decision RACI: which leaders must act on a card -----------------------
