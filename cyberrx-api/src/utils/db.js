@@ -1260,6 +1260,28 @@ async function init() {
       -- Phase 1 additive column on framework_requirements (created above in this
       -- batch). Kept here so the ALTER runs AFTER the table exists.
       ALTER TABLE framework_requirements ADD COLUMN IF NOT EXISTS assessment_type TEXT; -- automated | manual | hybrid
+
+      -- Security audit trail for tenant-isolation / auth events. Deliberately
+      -- separate from the credential-scoped audit_logs table, and intentionally
+      -- WITHOUT a foreign key to orgs: these rows record spoofed / unknown org
+      -- ids by design, so an FK would drop exactly the evidence we want to keep.
+      CREATE TABLE IF NOT EXISTS security_audit_logs (
+        id               BIGSERIAL PRIMARY KEY,
+        event_type       TEXT NOT NULL,            -- org_scope_violation | unauth_nondemo_org_access | org_access_blocked | ...
+        severity         TEXT NOT NULL DEFAULT 'warning', -- info | warning | critical
+        user_id          TEXT,
+        token_org_id     TEXT,                     -- org the caller is actually authorized for (from JWT)
+        requested_org_id TEXT,                     -- org the caller tried to reach
+        path             TEXT,
+        ip_address       TEXT,
+        user_agent       TEXT,
+        enforced         BOOLEAN DEFAULT false,    -- was the request actually blocked (STRICT mode)?
+        details          JSONB DEFAULT '{}',
+        created_at       TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS security_audit_event ON security_audit_logs(event_type);
+      CREATE INDEX IF NOT EXISTS security_audit_created ON security_audit_logs(created_at DESC);
+      CREATE INDEX IF NOT EXISTS security_audit_requested_org ON security_audit_logs(requested_org_id, created_at DESC);
     `);
     console.log('Database schema initialized');
   } catch (err) {

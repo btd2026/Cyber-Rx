@@ -197,6 +197,9 @@ app.use('/api/orgs',             [apiGetLimiter, apiPostLimiter], require('./rou
 // M3: Authentication Routes (public - no auth required for signup/login)
 app.use('/api/auth',             require('./routes/auth'));
 
+// Security audit trail (admin-only read of tenant-isolation / auth events)
+app.use('/api/security',         [apiGetLimiter], require('./routes/security'));
+
 // SSO Routes (public - SAML and OIDC authentication)
 app.use('/sso',                  require('./routes/sso'));
 
