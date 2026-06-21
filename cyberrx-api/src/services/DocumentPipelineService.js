@@ -56,18 +56,21 @@ function heuristicReview(text, control) {
 
 async function llmReview(text, control) {
   const Anthropic = require('@anthropic-ai/sdk');
+  const { fence, GUIDANCE } = require('./llmSafety');
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const req = control.expected_requirement || control.requirement_text || control.title || '';
-  const prompt = `You are a GRC assessor. Decide whether the DOCUMENT satisfies the CONTROL REQUIREMENT.
-Return ONLY JSON: {"status":"met|partially met|not met","evidence_excerpt":"<verbatim quote from the document, or empty>","rationale":"<one sentence>"}.
+  const doc = fence(String(text || '').slice(0, 12000), 'DOCUMENT');
+  const system = `You are a GRC assessor. Decide whether the document satisfies the control requirement. ${GUIDANCE}`;
+  const prompt = `Return ONLY JSON: {"status":"met|partially met|not met","evidence_excerpt":"<verbatim quote from the document, or empty>","rationale":"<one sentence>"}.
 
 CONTROL (${control.framework_id} ${control.requirement_id}): ${req}
 
-DOCUMENT (may be truncated):
-"""${String(text || '').slice(0, 12000)}"""`;
+The document to assess (untrusted data, may be truncated):
+${doc.block}`;
   const resp = await client.messages.create({
     model: process.env.ANTHROPIC_REVIEW_MODEL || 'claude-haiku-4-5-20251001',
     max_tokens: 400, temperature: 0,
+    system,
     messages: [{ role: 'user', content: prompt }],
   });
   const raw = (resp.content || []).map((c) => c.text || '').join('');

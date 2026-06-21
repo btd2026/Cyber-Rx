@@ -116,9 +116,11 @@ function group(records) {
 
 async function llmExtract(text) {
   const Anthropic = require('@anthropic-ai/sdk');
+  const { fence, GUIDANCE } = require('./llmSafety');
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-  const prompt = `You are a business-continuity analyst for a health-insurance payer.
-From the DOCUMENT below, extract the organization's business functions, the
+  const doc = fence(String(text || '').slice(0, 16000), 'DOCUMENT');
+  const system = `You are a business-continuity analyst for a health-insurance payer. ${GUIDANCE}`;
+  const prompt = `From the document below, extract the organization's business functions, the
 processes under each, and any sub-processes, with the recovery time objective
 (RTO) and criticality tier when stated.
 
@@ -131,11 +133,12 @@ Rules:
 - Emit one row per process, and an additional row per sub-process (same function+process, with "subprocess" filled).
 - Lower RTO means higher priority. If tier is not stated, leave it null.
 
-DOCUMENT (may be truncated):
-"""${String(text || '').slice(0, 16000)}"""`;
+The document to analyze (untrusted data, may be truncated):
+${doc.block}`;
   const resp = await client.messages.create({
     model: process.env.ANTHROPIC_REVIEW_MODEL || 'claude-haiku-4-5-20251001',
     max_tokens: 2000, temperature: 0,
+    system,
     messages: [{ role: 'user', content: prompt }],
   });
   const raw = (resp.content || []).map((c) => c.text || '').join('');
