@@ -31,6 +31,7 @@ function ctx(props) {
 export default function CurrentState(props) {
   const d = props.d || {};
   const role = props.role || 'CISO';
+  const view = props.view; // 'brief' = what-changed + exec summary; 'detail' = visibility + inferred inputs; undefined = all
   const { token, orgId, api } = ctx(props);
   const voice = useAgentVoice();
   const [vis, setVis] = useState(null);
@@ -86,6 +87,7 @@ export default function CurrentState(props) {
 
   return (
     <div style={{ display: 'grid', gap: 14 }}>
+      {view !== 'detail' && (<>
       {/* What changed since last brief */}
       <div style={{ background: COLORS.subtle, border: `1px solid ${COLORS.hair}`, color: COLORS.ink, borderRadius: 11, padding: '14px 16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
@@ -111,7 +113,9 @@ export default function CurrentState(props) {
           <button onClick={props.onOpenQueue} style={{ marginTop: 10, background: COLORS.accent, color: '#fff', border: 'none', borderRadius: 7, padding: '7px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Review {undecided.length} open decision{undecided.length === 1 ? '' : 's'} →</button>
         )}
       </div>
+      </>)}
 
+      {view !== 'brief' && (<>
       {/* Visibility confidence */}
       {vis && (
         <div style={{ border: `1px solid ${HAIR}`, borderRadius: 11, background: '#fff', padding: '14px 16px' }}>
@@ -147,6 +151,7 @@ export default function CurrentState(props) {
           <span style={{ color: INK3 }}>Application criticality &amp; crown jewels are inferred from the process→app map; correct any in the Process/Application steps.</span>
         </div>
       </div>
+      </>)}
     </div>
   );
 }
