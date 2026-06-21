@@ -91,10 +91,13 @@ async function llmExtract(text) {
   const client = getAnthropic();
   if (!client) return [];
   try {
+    const { fence, GUIDANCE } = require('./llmSafety');
+    const doc = fence(text.slice(0, 12000), 'DOCUMENT');
     const resp = await client.messages.create({
       model: MODEL, max_tokens: 1500, temperature: 0,
+      system: `You extract a cybersecurity project portfolio from a document. ${GUIDANCE}`,
       messages: [{ role: 'user', content:
-        'Extract the cybersecurity projects from this inventory. Return ONLY JSON: {"projects":[{"name","objective","status","percentComplete","startDate","targetEnd","budget","owner","domain"}]}. budget is a number (USD), percentComplete 0-100. Text:\n\n' + text.slice(0, 12000) }],
+        'Extract the cybersecurity projects from the inventory below. Return ONLY JSON: {"projects":[{"name","objective","status","percentComplete","startDate","targetEnd","budget","owner","domain"}]}. budget is a number (USD), percentComplete 0-100.\n\n' + doc.block }],
     });
     const t = (resp.content && resp.content[0] && resp.content[0].text) || '';
     const j = JSON.parse(t.slice(t.indexOf('{'), t.lastIndexOf('}') + 1));
