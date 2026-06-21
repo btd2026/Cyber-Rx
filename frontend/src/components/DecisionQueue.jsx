@@ -39,6 +39,7 @@ export default function DecisionQueue(props) {
   const voice = useAgentVoice();
   const [data, setData] = useState(null);
   const [err, setErr] = useState(null);
+  const [showAll, setShowAll] = useState(false);
   const headers = useCallback(() => { const h = { 'Content-Type': 'application/json', 'X-Org-Id': orgId }; if (token) h.Authorization = `Bearer ${token}`; return h; }, [orgId, token]);
 
   const load = useCallback(() => {
@@ -60,28 +61,40 @@ export default function DecisionQueue(props) {
   if (err && !data) return <div style={{ padding: 12, color: '#cf222e', fontSize: 12 }}>{err}</div>;
   if (!data) return <div style={{ fontSize: 12, color: INK3 }}>Building the decision queue…</div>;
 
-  const compounds = data.cards.filter((c) => c.type === 'compound');
+  // Scope to what this leader owns/approves; let them reveal the full spine.
+  const mine = data.cards.filter((c) => c.relevant !== false);
+  const others = data.cards.length - mine.length;
+  const shown = showAll ? data.cards : mine;
+  const compounds = shown.filter((c) => c.type === 'compound');
   const overview = `${role}, your decision queue. ` +
     `${compounds.length ? `${compounds.length} of these are chained scenarios — risks that look low on their own but combine into a critical outcome. ` : ''}` +
-    `Each is rendered for what you own as ${role}. Select a response, or accept and monitor with a documented rationale. Every decision is logged. Press listen on any card for the full explanation.`;
+    `These are the decisions you own or approve as ${role}. Select a response, or accept and monitor with a documented rationale. Every decision is logged. Press listen on any card for the full explanation.`;
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: COLORS.subtle, border: `1px solid ${COLORS.hair}`, color: COLORS.ink2, borderRadius: 10, padding: '13px 16px', marginBottom: 14 }}>
         <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>
-          The <strong style={{ color: COLORS.accentText }}>same predicted events every executive sees</strong>, rendered for the <strong style={{ color: COLORS.ink }}>{role}</strong>. Chained scenarios (low alone, critical combined) are flagged and shown first.
+          The decisions <strong style={{ color: COLORS.accentText }}>you own or approve</strong> as <strong style={{ color: COLORS.ink }}>{role}</strong>, drawn from the shared decision spine. Chained scenarios (low alone, critical combined) are flagged and shown first.
+          {others > 0 && (
+            <> {' '}
+              <button onClick={() => setShowAll((v) => !v)} style={{ background: 'none', border: 'none', color: COLORS.accentText, fontWeight: 700, fontSize: 12.5, cursor: 'pointer', padding: 0 }}>
+                {showAll ? `Show only mine (${mine.length})` : `Show all decisions (+${others} owned by others)`}
+              </button>
+            </>
+          )}
         </div>
         <VoiceControls voice={voice} onReplay={() => voice.speak(overview)} label="Listen" />
       </div>
       {err && <div style={{ color: '#cf222e', fontSize: 12, marginBottom: 10 }}>{err}</div>}
       <div style={{ display: 'grid', gap: 14 }}>
-        {data.cards.map((card) => <Card key={card.id} card={card} role={role} onDecide={decide} voice={voice} orgId={orgId} apiUrl={api} authToken={token} onTuned={load} />)}
+        {shown.map((card) => <Card key={card.id} card={card} role={role} showOwners={showAll} onDecide={decide} voice={voice} orgId={orgId} apiUrl={api} authToken={token} onTuned={load} />)}
+        {shown.length === 0 && <div style={{ fontSize: 12.5, color: INK3, padding: '12px 0' }}>No open decisions in your remit right now.</div>}
       </div>
     </div>
   );
 }
 
-function Card({ card, role, onDecide, voice, orgId, apiUrl, authToken, onTuned }) {
+function Card({ card, role, showOwners, onDecide, voice, orgId, apiUrl, authToken, onTuned }) {
   const e = card.event, lens = card.lens || {};
   const [accepting, setAccepting] = useState(false);
   const [rationale, setRationale] = useState('');
@@ -100,6 +113,7 @@ function Card({ card, role, onDecide, voice, orgId, apiUrl, authToken, onTuned }
               <SoftChip text={e.severity} color={sev} />
               <SoftChip text={`${lens.framing || role} lens`} color="#4f5ac4" />
               {card.relevant && <SoftChip text="Your call" color="#1a7f37" />}
+              {!card.relevant && showOwners && (card.decisionRoles || []).length > 0 && <SoftChip text={`Owned by ${card.decisionRoles.join(' · ')}`} color="#9a6700" />}
               {decided && <SoftChip text={decided.action === 'accept' ? 'Accepted & monitoring' : 'Decided'} color="#1a7f37" strong />}
             </div>
             <div style={{ fontSize: 15.5, fontWeight: 700, color: INK, fontFamily: FONTS.display, marginTop: 1, lineHeight: 1.35 }}>{lens.headline || e.title}</div>

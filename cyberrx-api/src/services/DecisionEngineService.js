@@ -490,6 +490,37 @@ function voiceNarration(role, card, rec) {
     `Accepting and monitoring is available but requires a logged rationale.`;
 }
 
+// ---- decision RACI: which leaders must act on a card -----------------------
+// One shared spine, but each leader's queue shows only what they own or approve.
+// Compounds carry curated relevantRoles; singles derive from risk kind, data
+// sensitivity, financial materiality, and appetite. CISO owns every security
+// decision; a card needing multiple sign-offs lists each role (levels of approval).
+function decisionRolesFor(card, aboveAppetite) {
+  if (card.type === 'compound') {
+    const r = new Set(card.event.relevantRoles || []);
+    r.add('CISO'); // security owns the chain-break decision
+    return [...r];
+  }
+  const e = card.event;
+  const tags = tagEvent(e);
+  const roles = new Set(['CISO']); // security owns every remediation decision
+  const critical = e.severity === 'Critical';
+  const material = critical || (((e.loss && e.loss.expected) || e.exposure || 0) >= 1000000);
+  // Legal / disclosure — regulated data or AI data-governance in play
+  if (tags.includes('data') || e.category === 'AI') roles.add('CLO');
+  // Third-party — enterprise risk + contractual/legal exposure
+  if (tags.includes('vendor')) { roles.add('CRO'); roles.add('CLO'); }
+  // Technology / operations — affected systems & delivery
+  if (e.category === 'project' || tags.includes('network') || tags.includes('vuln') || tags.includes('endpoint') || tags.includes('backup')) roles.add('CIO');
+  // Finance / insurance — materially large modeled loss
+  if (material) roles.add('CFO');
+  // Enterprise risk — outside appetite (aggregation handled on compounds)
+  if (aboveAppetite) roles.add('CRO');
+  // Board — governance, reserved for the critical / above-appetite few
+  if (critical || aboveAppetite) roles.add('Board');
+  return [...roles];
+}
+
 async function list(orgId, role) {
   const g = await generate(orgId);
   const decided = await decidedMap(orgId);
@@ -499,13 +530,17 @@ async function list(orgId, role) {
   try { const cfg = await require('./TenantConfigService').get(orgId); if (cfg && cfg.config && cfg.config.appetite) appetite = cfg.config.appetite; } catch (_) {}
   const sevRank = { Critical: 0, High: 1, Medium: 2, Low: 3 };
   const threshold = sevRank[appetite.riskThreshold] != null ? sevRank[appetite.riskThreshold] : 1;
-  const rel = (card) => (card.type === 'compound' ? (card.event.relevantRoles || []).includes(role) : true);
-  let cards = g.cards.map((card) => ({
-    id: card.id, type: card.type, event: card.event, options: card.options, recommended: card.recommended,
-    decision: decided[card.id] || null, relevant: role ? rel(card) : true,
-    aboveAppetite: (sevRank[card.event.severity] != null ? sevRank[card.event.severity] : 1) <= threshold,
-    lens: role ? lensFor(role, card) : null,
-  }));
+  let cards = g.cards.map((card) => {
+    const aboveAppetite = (sevRank[card.event.severity] != null ? sevRank[card.event.severity] : 1) <= threshold;
+    const decisionRoles = decisionRolesFor(card, aboveAppetite);
+    return {
+      id: card.id, type: card.type, event: card.event, options: card.options, recommended: card.recommended,
+      decision: decided[card.id] || null,
+      decisionRoles, relevant: role ? decisionRoles.includes(role) : true,
+      aboveAppetite,
+      lens: role ? lensFor(role, card) : null,
+    };
+  });
   if (role) {
     // This leader's pertinent decisions first: relevant compounds, then their
     // relevant singles, then the rest — so each C-level sees their own view.
