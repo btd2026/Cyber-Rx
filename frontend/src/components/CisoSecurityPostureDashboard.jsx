@@ -390,6 +390,28 @@ export default function CisoSecurityPostureDashboard(props) {
         </div>
       </div>
 
+      {/* ===== Primary navigation — sits directly below the Executive Posture ===== */}
+      <div style={{ display: 'flex', gap: 0, background: '#fff', borderBottom: `1px solid ${COLORS.hair}`, overflowX: 'auto', position: 'sticky', top: 0, zIndex: 5 }}>
+        {groupsPresent.map((g) => {
+          const on = g.key === activeGroup.key;
+          return (
+            <button key={g.key} onClick={() => { if (g.members[0]) setTab(g.members[0][0]); }}
+              style={{ background: 'transparent', border: 'none', borderBottom: `2.5px solid ${on ? COLORS.accent : 'transparent'}`, color: on ? COLORS.ink : COLORS.ink3, padding: '13px 20px', cursor: 'pointer', fontSize: 12.5, fontWeight: on ? 700 : 500, letterSpacing: on ? '0.005em' : 0, whiteSpace: 'nowrap' }}>{g.label}</button>
+          );
+        })}
+      </div>
+      {/* inner sub-nav for the active group (only when it holds more than one view) */}
+      {activeGroup.members.length > 1 && (
+        <div style={{ display: 'flex', gap: 6, background: COLORS.paper, borderBottom: `1px solid ${COLORS.hair}`, overflowX: 'auto', padding: '9px 12px' }}>
+          {activeGroup.members.map(([k, label]) => {
+            const on = bespokeTab === k;
+            return (
+              <button key={k} onClick={() => setTab(k)} style={{ background: on ? '#fff' : 'transparent', border: `1px solid ${on ? COLORS.hair : 'transparent'}`, boxShadow: on ? ELEV.card : 'none', borderRadius: 999, color: on ? COLORS.ink : COLORS.ink2, padding: '6px 14px', cursor: 'pointer', fontSize: 11.5, fontWeight: on ? 700 : 500, whiteSpace: 'nowrap' }}>{label}</button>
+            );
+          })}
+        </div>
+      )}
+
       {/* ===== Overview: posture by domain + action queue (mockup layout) ===== */}
       <div style={{ background: COLORS.paper, padding: '18px 28px', borderBottom: `1px solid ${COLORS.hair}`, display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 16 }}>
         <div style={{ background: COLORS.white, border: `1px solid ${COLORS.hair}`, borderRadius: 12, boxShadow: ELEV.card, padding: 18 }}>
@@ -447,27 +469,6 @@ export default function CisoSecurityPostureDashboard(props) {
       {/* ===== Tabs ===== */}
       {/* Persistent decision queue — visible across every sub-tab. */}
       <DecisionRail role={role} orgId={orgId} authToken={token} apiUrl={api} onOpenQueue={() => setTab('decisionq')} />
-
-      <div style={{ display: 'flex', gap: 0, background: '#fff', borderBottom: `1px solid ${COLORS.hair}`, overflowX: 'auto', position: 'sticky', top: 0, zIndex: 5 }}>
-        {groupsPresent.map((g) => {
-          const on = g.key === activeGroup.key;
-          return (
-            <button key={g.key} onClick={() => { if (g.members[0]) setTab(g.members[0][0]); }}
-              style={{ background: 'transparent', border: 'none', borderBottom: `2.5px solid ${on ? COLORS.accent : 'transparent'}`, color: on ? COLORS.ink : COLORS.ink3, padding: '13px 20px', cursor: 'pointer', fontSize: 12.5, fontWeight: on ? 700 : 500, letterSpacing: on ? '0.005em' : 0, whiteSpace: 'nowrap' }}>{g.label}</button>
-          );
-        })}
-      </div>
-      {/* inner sub-nav for the active group (only when it holds more than one view) */}
-      {activeGroup.members.length > 1 && (
-        <div style={{ display: 'flex', gap: 6, background: COLORS.paper, borderBottom: `1px solid ${COLORS.hair}`, overflowX: 'auto', padding: '9px 12px' }}>
-          {activeGroup.members.map(([k, label]) => {
-            const on = bespokeTab === k;
-            return (
-              <button key={k} onClick={() => setTab(k)} style={{ background: on ? '#fff' : 'transparent', border: `1px solid ${on ? COLORS.hair : 'transparent'}`, boxShadow: on ? ELEV.card : 'none', borderRadius: 999, color: on ? COLORS.ink : COLORS.ink2, padding: '6px 14px', cursor: 'pointer', fontSize: 11.5, fontWeight: on ? 700 : 500, whiteSpace: 'nowrap' }}>{label}</button>
-            );
-          })}
-        </div>
-      )}
 
       <div style={{ background: '#fff', padding: '20px 24px' }}>
         {/* Voice-only narration: Michael speaks the page (autoplay on tab open,
