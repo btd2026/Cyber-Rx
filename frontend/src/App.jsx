@@ -161,6 +161,7 @@ var NAV_GROUPS = [
   },
   {
     label: "Vendor Ecosystem",
+    hidden: true, // surfaced under the CRO dashboard, not as a top-level nav item
     items: [
       {id:"vendormap", label:"Vendor Ecosystem",     icon:"🌐", mod:"F03b"},
     ]
@@ -178,6 +179,7 @@ var NAV_GROUPS = [
   },
   {
     label: "Operations",
+    hidden: true, // back-office / staff tooling — hidden from the executive sidebar
     items: [
       {id:"setup",     label:"Organization Intake", icon:"🏢", mod:"F02"},
       {id:"cae",       label:"Control Assessment",  icon:"🔌", mod:"F04b"},
@@ -12827,7 +12829,12 @@ function VendorEcosystem(props) {
   return (
     <div>
 
-        <DashNav current="vendormap" go={go}/>
+        <DashNav current="cro" go={go}/>
+      <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:12}}>
+        <button onClick={function(){go("cro");}} style={{background:"transparent",border:"none",color:C.acc,cursor:"pointer",fontSize:11,fontWeight:700,padding:0}}>← CRO / Audit</button>
+        <span style={{color:C.muted}}>/</span>
+        <span style={{color:C.text,fontSize:11,fontWeight:700}}>Vendor Ecosystem</span>
+      </div>
       <BrianaBar pageKey="vendormap" orgName={props.orgName||""} brianaOn={props.brianaOn!==false} setBrianaOn={props.setBrianaOn||function(){}}/>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
         <div>
@@ -17935,7 +17942,6 @@ function DashNav(props) {
     {id:"cro",       label:"CRO / Audit",     mod:"Compliance"},
     {id:"cfo",       label:"CFO",             mod:"Financial"},
     {id:"boarddash", label:"Board",           mod:"Executive"},
-    {id:"vendormap", label:"Vendor Ecosystem",mod:"Ecosystem Risk"},
   ];
   return (
     <div style={{display:"flex",gap:0,marginBottom:16,borderBottom:"1px solid "+C.border}}>
@@ -18127,7 +18133,7 @@ function Shell(props) {
           )}
         </div>
         <div style={{flex:1, padding:"8px 0"}}>
-          {NAV_GROUPS.map(function(group){
+          {NAV_GROUPS.filter(function(group){return !group.hidden;}).map(function(group){
             return (
               <div key={group.label}>
                 {/* Section header */}
@@ -18280,12 +18286,6 @@ function Shell(props) {
               {". Complete your intake to activate your live risk posture."}
             </span>
           </div>
-          <button onClick={function(){go("setup");}}
-            style={{background:"#F5A623", border:"none", color:"#000",
-              borderRadius:6, padding:"5px 14px", cursor:"pointer",
-              fontSize:11, fontWeight:800, flexShrink:0, whiteSpace:"nowrap"}}>
-            {"\ud83d\udd17 Connect Your Organization →"}
-          </button>
         </div>
 
         {/* Page content */}
