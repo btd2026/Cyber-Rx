@@ -51,7 +51,7 @@ export default function CurrentState(props) {
   const declining = matrix.filter((m) => (m.delta || 0) <= -2).sort((a, b) => a.delta - b.delta).slice(0, 2);
   const topControls = (d.controlRisk || []).slice(0, 3);
   const breaches = (d.thresholds && d.thresholds.breaches) || 0;
-  const undecided = decisions.filter((c) => !c.decision);
+  const undecided = decisions.filter((c) => !c.decision && c.relevant !== false);
   const crit = undecided.filter((c) => c.event && c.event.severity === 'Critical').length;
   const readiness = (d.readiness && d.readiness.overall) || null;
 

@@ -64,8 +64,12 @@ export default function DecisionRail(props) {
       .then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) setIntegrity(d); }).catch(() => {});
   }, [api, orgId, role, headers]);
 
-  const undecided = cards.filter((c) => !c.decision);
-  const count = undecided.length + blind.length;
+  // Scope to what THIS leader owns/approves (relevant), so each C-suite tab shows
+  // only its own decisions. Blind-spot coaching is security-owned → CISO only.
+  const mine = cards.filter((c) => c.relevant !== false);
+  const undecided = mine.filter((c) => !c.decision);
+  const showBlind = role === 'CISO' ? blind : [];
+  const count = undecided.length + showBlind.length;
   const crit = undecided.filter((c) => c.event.severity === 'Critical').length;
   const tone = crit > 0 ? '#cf222e' : count > 0 ? '#9a6700' : '#1a7f37';
 
@@ -116,7 +120,7 @@ export default function DecisionRail(props) {
                   <div style={{ fontSize: 10.5, color: INK3, marginTop: 2 }}>{c.type === 'compound' ? 'Chained scenario' : c.event.category === 'project' ? 'Stalled project' : 'Risk'} · {c.event.title}{props.onOpenQueue ? ' · Decide →' : ''}</div>
                 </div>
               ))}
-              {blind.map((f, i) => (
+              {showBlind.map((f, i) => (
                 <div key={`b${i}`} style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid #7c3aed`, borderRadius: 8, padding: '9px 12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                     <span style={{ fontSize: 12, fontWeight: 700, color: INK }}>{f.pattern}</span>
