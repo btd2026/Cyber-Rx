@@ -9,6 +9,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
 import Provenance from './Provenance';
+import NarrativeSection from './NarrativeSection';
 import { COLORS, FONTS } from '../theme';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
@@ -39,57 +40,72 @@ export default function CroEnterprisePosition(props) {
   if (!d) return <div style={{ fontSize: 12, color: INK3 }}>Composing the enterprise risk position…</div>;
 
   return (
-    <div style={{ display: 'grid', gap: 14 }}>
+    <div style={{ maxWidth: 880, margin: '0 auto', display: 'grid', gap: 28 }}>
+      {/* 01 — The lede: where the enterprise stands, in a sentence */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: COLORS.subtle, border: `1px solid ${COLORS.hair}`, color: COLORS.ink2, borderRadius: 10, padding: '14px 16px' }}>
         <div style={{ fontSize: 12.5, lineHeight: 1.6, display: 'flex', alignItems: 'flex-start', gap: 6 }}>{d.provenance && <Provenance prov={d.provenance} />}<span>{d.brief}</span></div>
         <VoiceControls voice={voice} onReplay={() => voice.speak(d.narration || d.brief)} label="Listen" />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 14 }}>
-        {/* heatmap */}
-        <Panel title="Enterprise risk heatmap (likelihood × impact vs appetite)">
-          <Heatmap categories={d.categories} tolerance={d.tolerance} />
-          <div style={{ display: 'flex', gap: 12, marginTop: 8, fontSize: 10, color: INK3, flexWrap: 'wrap' }}>
-            <Legend c={TONE.good} t="Within appetite" /><Legend c={TONE.warn} t="At appetite" /><Legend c={TONE.bad} t="Above appetite" />
-          </div>
-        </Panel>
-        {/* category list */}
-        <Panel title="Risk categories">
-          <div style={{ display: 'grid', gap: 7 }}>
-            {d.categories.map((c) => (
-              <div key={c.name} style={{ borderLeft: `4px solid ${bandColor(c.band)}`, background: '#fff', border: `1px solid ${HAIR}`, borderRadius: 8, padding: '8px 11px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
-                  <span style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>{c.name}{c.modeled ? <span style={{ fontSize: 9, color: INK3, fontWeight: 500 }}> · modeled</span> : null}</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: bandColor(c.band) }}><span style={{ fontFamily: FONTS.mono }}>{c.score}</span> · {c.band}</span>
+      {/* 02 — Where cyber sits in the portfolio */}
+      <NarrativeSection step={2} kicker="The position" title="Where cyber sits in the portfolio"
+        lede="Cyber doesn't stand alone — here it is plotted beside every other enterprise risk on likelihood × impact, against the appetite bands you set. Anything in the red zone is above the line you've drawn.">
+        <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 14 }}>
+          {/* heatmap */}
+          <Panel>
+            <Heatmap categories={d.categories} tolerance={d.tolerance} />
+            <div style={{ display: 'flex', gap: 12, marginTop: 8, fontSize: 10, color: INK3, flexWrap: 'wrap' }}>
+              <Legend c={TONE.good} t="Within appetite" /><Legend c={TONE.warn} t="At appetite" /><Legend c={TONE.bad} t="Above appetite" />
+            </div>
+          </Panel>
+          {/* category list */}
+          <Panel>
+            <div style={{ display: 'grid', gap: 7 }}>
+              {d.categories.map((c) => (
+                <div key={c.name} style={{ borderLeft: `4px solid ${bandColor(c.band)}`, background: '#fff', border: `1px solid ${HAIR}`, borderRadius: 8, padding: '8px 11px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+                    <span style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>{c.name}{c.modeled ? <span style={{ fontSize: 9, color: INK3, fontWeight: 500 }}> · modeled</span> : null}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: bandColor(c.band) }}><span style={{ fontFamily: FONTS.mono }}>{c.score}</span> · {c.band}</span>
+                  </div>
+                  <div style={{ fontSize: 10.5, color: INK2, marginTop: 2 }}>L{c.likelihood} × I{c.impact} — {c.basis}</div>
                 </div>
-                <div style={{ fontSize: 10.5, color: INK2, marginTop: 2 }}>L{c.likelihood} × I{c.impact} — {c.basis}</div>
+              ))}
+            </div>
+          </Panel>
+        </div>
+      </NarrativeSection>
+
+      {/* 03 — The line you're holding to */}
+      <NarrativeSection step={3} kicker="Appetite" title="The line you're holding to"
+        lede="This is the single source of truth for risk appetite. Set it here once and it propagates to every other lens — CISO, CIO, CFO, Board all measure against these same thresholds.">
+        <AppetiteEditor api={api} orgId={orgId} headers={headers} appetite={d.appetite} onSaved={load} />
+      </NarrativeSection>
+
+      {/* 04 — What moved */}
+      <NarrativeSection step={4} kicker="Since last period" title="What moved"
+        lede="The shifts that changed the picture above since the last read.">
+        <Panel>
+          <div style={{ display: 'grid', gap: 6 }}>
+            {d.whatChanged.map((w, i) => (
+              <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'baseline', fontSize: 12, color: INK2 }}>
+                <span style={{ color: w.dir === 'up' ? TONE.good : w.dir === 'down' ? TONE.bad : INK3, fontWeight: 800 }}>{w.dir === 'up' ? '▲' : w.dir === 'down' ? '▼' : '▬'}</span>
+                <span>{w.text}</span>
               </div>
             ))}
           </div>
         </Panel>
-      </div>
+      </NarrativeSection>
 
-      {/* appetite authoring */}
-      <AppetiteEditor api={api} orgId={orgId} headers={headers} appetite={d.appetite} onSaved={load} />
-
-      {/* what changed */}
-      <Panel title="What changed">
-        <div style={{ display: 'grid', gap: 6 }}>
-          {d.whatChanged.map((w, i) => (
-            <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'baseline', fontSize: 12, color: INK2 }}>
-              <span style={{ color: w.dir === 'up' ? TONE.good : w.dir === 'down' ? TONE.bad : INK3, fontWeight: 800 }}>{w.dir === 'up' ? '▲' : w.dir === 'down' ? '▼' : '▬'}</span>
-              <span>{w.text}</span>
-            </div>
-          ))}
-        </div>
-      </Panel>
-
+      {/* 05 — How much to trust this read */}
       {d.visibility && (
-        <Panel title="Visibility confidence">
-          <div style={{ fontSize: 12, color: INK2 }}>Overall <strong style={{ color: INK }}>{d.visibility.overall || d.visibility.band}</strong>{d.visibility.caveat ? <span style={{ color: INK3 }}> — {d.visibility.caveat}</span> : null}</div>
-        </Panel>
+        <NarrativeSection step={5} kicker="Visibility" title="How much to trust this read"
+          lede="The position above is only as good as the inputs behind it. Here's the confidence in what we can see.">
+          <Panel>
+            <div style={{ fontSize: 12, color: INK2 }}>Overall <strong style={{ color: INK }}>{d.visibility.overall || d.visibility.band}</strong>{d.visibility.caveat ? <span style={{ color: INK3 }}> — {d.visibility.caveat}</span> : null}</div>
+            {d.note && <div style={{ fontSize: 10, color: INK3, marginTop: 6 }}>{d.note}</div>}
+          </Panel>
+        </NarrativeSection>
       )}
-      <div style={{ fontSize: 10, color: INK3 }}>{d.note}</div>
     </div>
   );
 }
@@ -164,6 +180,6 @@ function Heatmap({ categories, tolerance }) {
   );
 }
 function Panel({ title, children }) {
-  return <div style={{ border: `1px solid ${HAIR}`, borderRadius: 11, background: '#fff', padding: '13px 16px' }}><div style={{ fontSize: 12.5, fontWeight: 800, color: INK, marginBottom: 9, fontFamily: FONTS.display }}>{title}</div>{children}</div>;
+  return <div style={{ border: `1px solid ${HAIR}`, borderRadius: 11, background: '#fff', padding: '13px 16px' }}>{title && <div style={{ fontSize: 12.5, fontWeight: 800, color: INK, marginBottom: 9, fontFamily: FONTS.display }}>{title}</div>}{children}</div>;
 }
 const Legend = ({ c, t }) => <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><span style={{ width: 9, height: 9, background: c, borderRadius: 2, display: 'inline-block' }} />{t}</span>;
