@@ -24,6 +24,7 @@ import DashNav from './DashNav';
 import RoleSection from './RoleSections';
 import SecurityProjects from './SecurityProjects';
 import AiGovernance from './AiGovernance';
+import SoftwareSupplyChain from './SoftwareSupplyChain';
 import DecisionQueue from './DecisionQueue';
 import DecisionRail from './DecisionRail';
 import Provenance from './Provenance';
@@ -150,7 +151,7 @@ const CISO_MEMBER_OF = {
   // Key Risks — capped at five decision-focused views.
   bizrisks: 'keyrisks', decisionq: 'keyrisks', paths: 'keyrisks', thresholds: 'keyrisks', processes: 'keyrisks',
   // Migrated out of Key Risks to keep that group to five and avoid overload:
-  ai: 'controlefficacy', actions: 'projects',
+  ai: 'controlefficacy', supplychain: 'controlefficacy', actions: 'projects',
   controlefficacy: 'controlefficacy', fourlens: 'controlefficacy',
   readiness: 'projects', projects: 'projects',
 };
@@ -166,13 +167,13 @@ const CIO_GROUP_DEFS = [
 const CIO_MEMBER_OF = {
   cioposture: 'opstate',
   resiliencerisks: 'resilience', decisionq: 'resilience',
-  frictionmap: 'friction',
+  frictionmap: 'friction', supplychain: 'friction',
   ciotransformation: 'transformation',
 };
 const CIO_TABS = [
   ['cioposture', 'Operational Posture'],
   ['resiliencerisks', 'Resilience Risks & SPOFs'], ['decisionq', 'Decisions'],
-  ['frictionmap', 'Velocity-vs-Risk Friction Map'],
+  ['frictionmap', 'Velocity-vs-Risk Friction Map'], ['supplychain', 'Software Supply Chain'],
   ['ciotransformation', 'Transformation Portfolio & ROI'],
 ];
 
@@ -315,7 +316,7 @@ export default function CisoSecurityPostureDashboard(props) {
       ['bizrisks', 'Business Risks'], ['decisionq', 'Projections & Decisions'],
       ['paths', 'Attack Pathways'], ['thresholds', `Thresholds · ${d.thresholds.breaches} breached`], ['processes', 'Process Protection'],
       // Control Efficacy
-      ['controlefficacy', 'Control Efficacy'], ['fourlens', 'Four-Lens (CSF · 800-53 · CIS · ATT&CK)'], ['ai', 'AI Governance'],
+      ['controlefficacy', 'Control Efficacy'], ['fourlens', 'Four-Lens (CSF · 800-53 · CIS · ATT&CK)'], ['ai', 'AI Governance'], ['supplychain', 'Software Supply Chain'],
       // Key Projects & ROI
       ['readiness', 'Readiness & Investment'], ['projects', 'Projects & ROI'], ['actions', 'Action Now'],
     ];
@@ -434,6 +435,7 @@ export default function CisoSecurityPostureDashboard(props) {
             {bespokeTab === 'resiliencerisks' && <CioResilience orgId={orgId} authToken={token} apiUrl={api} />}
             {bespokeTab === 'decisionq' && <DecisionQueue role={role} orgId={orgId} authToken={token} apiUrl={api} />}
             {bespokeTab === 'frictionmap' && <CioFrictionMap orgId={orgId} authToken={token} apiUrl={api} />}
+            {bespokeTab === 'supplychain' && <SoftwareSupplyChain orgId={orgId} authToken={token} apiUrl={api} />}
             {bespokeTab === 'ciotransformation' && <CioTransformation orgId={orgId} authToken={token} apiUrl={api} />}
           </>)
           : isCroLayout
@@ -527,6 +529,7 @@ export default function CisoSecurityPostureDashboard(props) {
             {tab === 'readiness' && <Readiness readiness={d.readiness} investments={d.investments} peers={d.peerMaturity} emerging={d.emergingRisks} />}
             {tab === 'hidden' && <Hidden risks={d.hiddenRisks} />}
             {tab === 'ai' && <AiGovernance />}
+            {tab === 'supplychain' && <SoftwareSupplyChain orgId={orgId} authToken={token} apiUrl={api} />}
             {tab === 'projects' && <SecurityProjects />}
           </>)}
         <div style={{ fontSize: 10.5, color: INK3, marginTop: 16, borderTop: `1px solid ${HAIR}`, paddingTop: 10 }}>
