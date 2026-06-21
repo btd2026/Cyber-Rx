@@ -37,12 +37,12 @@ import RestructureView from "./pages/RestructureView";
 
 // --- Theme --------------------------------------------------------------------
 var C = {
-  bg:"#F8FAFC", panel:"#FFFFFF", card:"#FFFFFF", border:"#E2E8F0",
-  acc:"#0891B2", faint:"#0891B210", text:"#0F172A", muted:"#64748B", dim:"#F1F5F9"
+  bg:"#FBFBFC", panel:"#FFFFFF", card:"#FFFFFF", border:"#EBECF0",
+  acc:"#5E6AD2", faint:"#5E6AD214", text:"#0B0C0E", muted:"#5C6066", dim:"#F6F7F9"
 };
 
 // --- Helpers ------------------------------------------------------------------
-function hc(s) { return s>=80?"#0FBB80":s>=60?"#F5A623":"#EF4545"; }
+function hc(s) { return s>=80?"#1a7f37":s>=60?"#9a6700":"#cf222e"; }
 
 // ─── CMMI 5-level scoring ─────────────────────────────────────────────────────
 var CMMI_LEVELS = [
@@ -193,10 +193,10 @@ var NAV = NAV_GROUPS.reduce(function(acc, group) {
 }, []);
 
 // --- Score colours ------------------------------------------------------------
-var SEV_C = {Critical:"#EF4545", High:"#F5A623", Medium:"#3B9EFF", Low:"#0FBB80"};
+var SEV_C = {Critical:"#cf222e", High:"#c2410c", Medium:"#9a6700", Low:"#1a7f37"};
 var SEV_B = {Critical:"#EF454512", High:"#F5A62312", Medium:"#3B9EFF12", Low:"#0FBB8012"};
-var ST_C  = {pending_approval:"#F5A623", approved:"#3B9EFF", routed:"#A78BFA", complete:"#0FBB80"};
-var RISK_C = {High:"#EF4545", Med:"#F5A623", Low:"#0FBB80"};
+var ST_C  = {pending_approval:"#9a6700", approved:"#5E6AD2", routed:"#8B5CF6", complete:"#1a7f37"};
+var RISK_C = {High:"#cf222e", Med:"#9a6700", Low:"#1a7f37"};
 
 // --- Business Processes -------------------------------------------------------
 function mkT(b) {
