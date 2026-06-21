@@ -468,6 +468,7 @@ export default function CisoSecurityPostureDashboard(props) {
           : (<>
             {tab === 'qa' && (
               <div style={{ display: 'grid', gap: 16 }}>
+                <CurrentState view="brief" d={d} role={role} orgId={orgId} authToken={token} apiUrl={api} onOpenQueue={() => setTab('decisionq')} />
                 <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 16 }}>
                   <div style={{ background: COLORS.white, border: `1px solid ${COLORS.hair}`, borderRadius: 12, boxShadow: ELEV.card, padding: 18 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
@@ -512,7 +513,7 @@ export default function CisoSecurityPostureDashboard(props) {
                     </div>
                   </div>
                 </div>
-                <CurrentState d={d} role={role} orgId={orgId} authToken={token} apiUrl={api} onOpenQueue={() => setTab('decisionq')} />
+                <CurrentState view="detail" d={d} role={role} orgId={orgId} authToken={token} apiUrl={api} onOpenQueue={() => setTab('decisionq')} />
               </div>
             )}
             {tab === 'decisionq' && <DecisionQueue role={role} orgId={orgId} authToken={token} apiUrl={api} />}
