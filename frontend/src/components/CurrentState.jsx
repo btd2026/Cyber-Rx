@@ -10,8 +10,9 @@
  * any self-assessment.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
+import { scoreUp, scoreDown, isMuted, setMuted } from './soundFx';
 import { COLORS, FONTS } from '../theme';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
@@ -34,6 +35,9 @@ export default function CurrentState(props) {
   const view = props.view; // 'brief' = what-changed + exec summary; 'detail' = visibility + inferred inputs; undefined = all
   const { token, orgId, api } = ctx(props);
   const voice = useAgentVoice();
+  const scoreRef = useRef(null);
+  const playedRef = useRef(false);
+  const [muted, setMutedState] = useState(isMuted());
   const [vis, setVis] = useState(null);
   const [cfg, setCfg] = useState(null);
   const [decisions, setDecisions] = useState([]);
@@ -85,6 +89,22 @@ export default function CurrentState(props) {
 
   const appetite = cfg && cfg.config && cfg.config.appetite;
 
+  // Dynamic cue: when the brief first shows the posture, play a subtle sound and
+  // pulse the score in the direction it moved. Fires once per mount.
+  useEffect(() => {
+    if (view === 'detail' || !d.overallPosture || playedRef.current) return;
+    playedRef.current = true;
+    const delta = d.overallPosture.delta || 0;
+    if (delta > 0) scoreUp(); else if (delta < 0) scoreDown();
+    const el = scoreRef.current;
+    if (el && el.animate && delta !== 0) {
+      el.animate(
+        [{ transform: 'scale(1)' }, { transform: 'scale(1.12)' }, { transform: 'scale(1)' }],
+        { duration: 600, easing: 'cubic-bezier(.2,.8,.2,1)' },
+      );
+    }
+  }, [view, d.overallPosture]);
+
   return (
     <div style={{ display: 'grid', gap: 14 }}>
       {view !== 'detail' && (<>
@@ -92,9 +112,12 @@ export default function CurrentState(props) {
       <div style={{ background: COLORS.subtle, border: `1px solid ${COLORS.hair}`, color: COLORS.ink, borderRadius: 11, padding: '14px 16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
           <div style={{ fontSize: 10, fontWeight: 700, color: COLORS.accentText, textTransform: 'uppercase', letterSpacing: '0.08em' }}>What changed since your last brief</div>
-          <VoiceControls voice={voice} onReplay={() => voice.speak(spoken)} label="Listen to brief" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button onClick={() => { const m = !muted; setMuted(m); setMutedState(m); }} title={muted ? 'Sound effects off' : 'Sound effects on'} aria-label="Toggle sound effects" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: COLORS.ink3, padding: 0, lineHeight: 1 }}>{muted ? '🔇' : '🔊'}</button>
+            <VoiceControls voice={voice} onReplay={() => voice.speak(spoken)} label="Listen to brief" />
+          </div>
         </div>
-        <div style={{ fontSize: 14, fontWeight: 700, marginTop: 6, fontFamily: FONTS.mono }}>
+        <div ref={scoreRef} style={{ fontSize: 14, fontWeight: 700, marginTop: 6, fontFamily: FONTS.mono, display: 'inline-block', transformOrigin: 'left center' }}>
           {p.current}/100 · {band(p.current)} <span style={{ color: p.delta >= 0 ? COLORS.good : COLORS.bad }}>{p.delta >= 0 ? '↑ +' : '↓ '}{p.delta}</span> <span style={{ color: COLORS.ink3, textTransform: 'capitalize', fontWeight: 500 }}>· {p.trend}</span>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
