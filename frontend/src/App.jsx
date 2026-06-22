@@ -25581,7 +25581,10 @@ function CyberRxApp() {
   // (no nav links anywhere; backend requires the admin key regardless).
   var _s52=useState(function(){
     if (typeof window!=='undefined' && window.location.pathname==='/prototype') return 'prototype';
-    return (typeof window!=='undefined' && window.location.pathname==='/admin-database') ? 'admindb' : 'home';
+    if (typeof window!=='undefined' && window.location.pathname==='/admin-database') return 'admindb';
+    // Default landing is a seat's Exec Summary (situation room). The specific seat/tab
+    // is deep-linked via the URL hash (#/<seat>/<tab>), handled inside SituationRoom.
+    return 'exec-ciso';
   }); var page=_s52[0]; var setPage=_s52[1];
   var _s53=useState([]); var history=_s53[0]; var setHistory=_s53[1];
   // Correlated Finding state - T-113

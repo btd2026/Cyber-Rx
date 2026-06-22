@@ -12,7 +12,7 @@
  * (TODO real data) and bound to your API where it cleanly fits.
  */
 
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTheme } from './useTheme';
 import { CISO_SEAT } from './seats/ciso';
 
@@ -36,18 +36,57 @@ const DEEP = { CISO: 'dashboard', CIO: 'cio', CFO: 'cfo', CRO: 'cro', CLO: 'clo'
 
 const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
+/* Tabs for a seat (CISO is the fully-modeled reference). */
+const tabsForSeat = (s) => (s === 'CISO'
+  ? CISO_SEAT.tabs
+  : SEAT_TABS[s].map((name, i) => ({ key: i === 0 ? 'summary' : slug(name), name })));
+const seatFromSlug = (sl) => SEAT_ORDER.find((s) => s.toLowerCase() === sl) || null;
+
 export default function SituationRoom({ go, initialSeat } = {}) {
-  const start = (initialSeat || 'ciso').toUpperCase();
-  const [seat, setSeat] = useState(SEAT_ORDER.includes(start) ? start : 'CISO');
-  const [tabIdx, setTabIdx] = useState(0);
   const tabRefs = useRef([]);
   const { isDark, toggle } = useTheme();
 
-  const tabs = seat === 'CISO' ? CISO_SEAT.tabs : SEAT_TABS[seat].map((name, i) => ({ key: i === 0 ? 'summary' : slug(name), name }));
-  const activeTab = tabs[tabIdx] || tabs[0];
-  const goTabKey = (key) => { const i = tabs.findIndex((t) => t.key === key); if (i >= 0) setTabIdx(i); };
+  // Seat + tab are real, deep-linkable routes via the URL hash: #/<seat>/<tab>.
+  // Browser back/forward and direct links work; falls back to initialSeat → CISO.
+  const readRoute = useCallback(() => {
+    const fallback = SEAT_ORDER.includes((initialSeat || '').toUpperCase()) ? initialSeat.toUpperCase() : 'CISO';
+    let st = fallback, tk = 'summary';
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const parts = window.location.hash.replace(/^#\/?/, '').split('/');
+      const s = seatFromSlug((parts[0] || '').toLowerCase());
+      if (s) { st = s; if (parts[1]) tk = parts[1]; }
+    }
+    if (!tabsForSeat(st).some((t) => t.key === tk)) tk = 'summary';
+    return { seat: st, tabKey: tk };
+  }, [initialSeat]);
 
-  const selectSeat = (s) => { setSeat(s); setTabIdx(0); };
+  const [route, setRoute] = useState(readRoute);
+  const { seat, tabKey } = route;
+  const tabs = tabsForSeat(seat);
+  const tabIdx = Math.max(0, tabs.findIndex((t) => t.key === tabKey));
+  const activeTab = tabs[tabIdx] || tabs[0];
+
+  // Keep the URL hash in sync, and react to browser back/forward.
+  useEffect(() => {
+    const hash = `#/${seat.toLowerCase()}/${tabKey}`;
+    if (typeof window !== 'undefined' && window.location.hash !== hash) {
+      window.history.replaceState(null, '', hash);
+    }
+  }, [seat, tabKey]);
+  useEffect(() => {
+    const onPop = () => setRoute(readRoute());
+    window.addEventListener('popstate', onPop);
+    window.addEventListener('hashchange', onPop);
+    return () => { window.removeEventListener('popstate', onPop); window.removeEventListener('hashchange', onPop); };
+  }, [readRoute]);
+
+  const navigate = (s, key) => {
+    if (typeof window !== 'undefined') window.history.pushState(null, '', `#/${s.toLowerCase()}/${key}`);
+    setRoute({ seat: s, tabKey: key });
+  };
+  const selectSeat = (s) => navigate(s, 'summary');
+  const goTabKey = (key) => navigate(seat, key);
+  const setTabByIndex = (i) => navigate(seat, tabs[i].key);
 
   const onTabsKey = (e) => {
     const n = tabs.length;
@@ -56,7 +95,7 @@ export default function SituationRoom({ go, initialSeat } = {}) {
     else if (e.key === 'ArrowLeft') next = (tabIdx - 1 + n) % n;
     else if (e.key === 'Home') next = 0;
     else if (e.key === 'End') next = n - 1;
-    if (next != null) { e.preventDefault(); setTabIdx(next); const el = tabRefs.current[next]; if (el) el.focus(); }
+    if (next != null) { e.preventDefault(); setTabByIndex(next); const el = tabRefs.current[next]; if (el) el.focus(); }
   };
 
   const deep = DEEP[seat];
@@ -99,7 +138,7 @@ export default function SituationRoom({ go, initialSeat } = {}) {
               return (
                 <button key={t.key} ref={(el) => { tabRefs.current[i] = el; }} role="tab"
                   id={`sr-tab-${t.key}`} aria-controls={`sr-panel-${t.key}`} aria-selected={on}
-                  tabIndex={on ? 0 : -1} className={`sr-tab${on ? ' is-on' : ''}`} onClick={() => setTabIdx(i)}>
+                  tabIndex={on ? 0 : -1} className={`sr-tab${on ? ' is-on' : ''}`} onClick={() => setTabByIndex(i)}>
                   <span className="sr-tab__name">{t.name}</span>
                   {t.q && <span className="sr-tab__q">›&nbsp;{t.q}</span>}
                 </button>
