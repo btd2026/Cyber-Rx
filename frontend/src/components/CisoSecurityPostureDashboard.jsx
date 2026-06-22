@@ -25,14 +25,12 @@ import RoleSection from './RoleSections';
 import SecurityProjects from './SecurityProjects';
 import AiGovernance from './AiGovernance';
 import SoftwareSupplyChain from './SoftwareSupplyChain';
-import NarrativeSection from './NarrativeSection';
 import AdvisorIntro from './AdvisorIntro';
-import BusinessScenarios from './BusinessScenarios';
+import CisoExecSummary from './CisoExecSummary';
 import DecisionQueue from './DecisionQueue';
 import DecisionRail from './DecisionRail';
 import Provenance from './Provenance';
 import { FONTS, COLORS, ELEV } from '../theme';
-import CurrentState from './CurrentState';
 import ControlEfficacy from './ControlEfficacy';
 import KeyRisks from './KeyRisks';
 import CompilerChain from './CompilerChain'; // eslint-disable-line no-unused-vars -- retired from CISO nav; kept for other layouts
@@ -471,76 +469,15 @@ export default function CisoSecurityPostureDashboard(props) {
           ? <RoleTabContent t={activeRoleTab} role={role} d={d} props={props} orgId={orgId} authToken={token} apiUrl={api} />
           : (<>
             {tab === 'qa' && (
-              <div style={{ maxWidth: 880, margin: '0 auto', display: 'grid', gap: 28 }}>
-                {/* Briana opens the brief: who she is, what the CISO carries, and the
-                    three acts she'll walk through (i · where you stand, ii · what it
-                    means for the business, iii · what to decide). */}
+              <div style={{ maxWidth: 880, margin: '0 auto', display: 'grid', gap: 22 }}>
+                {/* Briana opens the brief: who she is and what the CISO carries. */}
                 <AdvisorIntro d={d} role={role} orgName={props.orgName} />
 
-                {/* i — Where you stand: what changed + the auto-derived summary, then domains */}
-                <NarrativeSection step={'i'} kicker="Where you stand" title="The situation right now"
-                  lede="Start with the read: what moved since your last brief, and where your headline score is coming from — weighted by what each domain means to the business.">
-                  <CurrentState view="brief" d={d} role={role} orgId={orgId} authToken={token} apiUrl={api} onOpenQueue={() => setTab('decisionq')} />
-                  <div style={{ background: COLORS.white, border: `1px solid ${COLORS.hair}`, borderRadius: 12, boxShadow: ELEV.card, padding: 18, marginTop: 14 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
-                      <span style={{ fontSize: 11.5, fontWeight: 700, color: INK2 }}>By domain</span>
-                      <span style={{ fontSize: 11.5, color: INK3 }}>weighted by business impact</span>
-                    </div>
-                    <div style={{ display: 'grid', gap: 11 }}>
-                      {d.domainMatrix.filter((x) => x.weight > 0).map((x) => (
-                        <div key={x.id} style={{ display: 'grid', gridTemplateColumns: '1fr 40px 44px', alignItems: 'center', gap: 10 }}>
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: 12.5, fontWeight: 500, color: INK, marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{x.name}</div>
-                            <Bar value={x.current} />
-                          </div>
-                          <div className="crx-figure" style={{ fontSize: 14, fontWeight: 700, color: scoreColor(x.current), textAlign: 'right' }}>{x.current}</div>
-                          <div style={{ textAlign: 'right' }}><Trend d={x.delta} /></div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </NarrativeSection>
-
-                {/* ii — What it means for the business: each issue projected onto this
-                    org's actual operations (system-derived, not authored). */}
-                <NarrativeSection step={'ii'} kicker="What it means for the business" title="If these go unaddressed"
-                  lede="A score isn't a consequence. Here's how today's biggest exposures play out for your actual business processes — drawn from your connected systems, not a template — and what changes each outcome.">
-                  <BusinessScenarios d={d} onOpenQueue={() => setTab('decisionq')} />
-                </NarrativeSection>
-
-                {/* iii — What to decide */}
-                <NarrativeSection step={'iii'} kicker="What to decide" title="The decisions in front of you"
-                  lede={`These are the moves that change the trajectory above — ranked by urgency and scoped to what you own as ${role}. Start at the top.`}>
-                  <div style={{ background: COLORS.white, border: `1px solid ${COLORS.hair}`, borderRadius: 12, boxShadow: ELEV.card, padding: 18 }}>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
-                      <button onClick={() => setShowAllActions(true)} style={{ background: 'none', border: 'none', color: ACCENT, fontSize: 11.5, fontWeight: 600, cursor: 'pointer', padding: 0 }}>View all →</button>
-                    </div>
-                    <div style={{ display: 'grid', gap: 10 }}>
-                      {(d.actionQueue || []).slice(0, 4).map((a) => {
-                        const sv = a.escalation ? '#cf222e' : numSev(a.severity) === 'High' ? '#c2410c' : '#9a6700';
-                        return (
-                          <div key={a.id} style={{ display: 'flex', gap: 11, padding: '11px 12px', border: `1px solid ${COLORS.hair}`, borderRadius: 8 }}>
-                            <div className="crx-figure" style={{ flexShrink: 0, width: 22, height: 22, borderRadius: 6, background: SOFT[sv] || PANEL, color: sv, display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 700 }}>{a.rank}</div>
-                            <div style={{ minWidth: 0 }}>
-                              <div style={{ fontSize: 12.5, fontWeight: 600, color: INK, lineHeight: 1.35 }}>{a.action}</div>
-                              <div style={{ fontSize: 11.5, color: INK2, marginTop: 3, lineHeight: 1.45 }}>{a.whyNow}</div>
-                              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 7, flexWrap: 'wrap' }}>
-                                <Pill text={numSev(a.severity)} color={sv} />
-                                <span style={{ fontSize: 11, color: INK3 }}>{a.owner} · due {a.dueDate}</span>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </NarrativeSection>
-
-                {/* Closing — how much to trust this: visibility + the inputs we inferred */}
-                <NarrativeSection step={'iv'} kicker="How much to trust this" title="The evidence behind this brief"
-                  lede="Every read above is only as good as what we can see. Here's data visibility by source, and the inputs Briana inferred where a system isn't connected yet.">
-                  <CurrentState view="detail" d={d} role={role} orgId={orgId} authToken={token} apiUrl={api} onOpenQueue={() => setTab('decisionq')} />
-                </NarrativeSection>
+                {/* The exec summary, decision-first: four boxes — Verdict · Decisions
+                    that need you (→ decision queue) · Active exposure · Trend vs
+                    appetite. Data-accuracy/visibility lives in the briefs' evidence
+                    layer, not here. */}
+                <CisoExecSummary d={d} role={role} orgId={orgId} authToken={token} apiUrl={api} onOpenQueue={() => setTab('decisionq')} />
               </div>
             )}
             {tab === 'decisionq' && <DecisionQueue role={role} orgId={orgId} authToken={token} apiUrl={api} />}
