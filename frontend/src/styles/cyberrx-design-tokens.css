@@ -42,8 +42,9 @@
   --critical-tint: #fceceb;
   --brand-tint: #ecedf2;
 
-  /* ---- Focus ------------------------------------------------------------- */
+  /* ---- Focus & overlay --------------------------------------------------- */
   --focus: #2f3e59;          /* high-contrast focus ring on ivory */
+  --scrim: rgba(33, 29, 24, 0.45);  /* modal backdrop (ink @ 45%) */
 
   /* ---- Type -------------------------------------------------------------- */
   --font-display: 'Source Serif 4', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;

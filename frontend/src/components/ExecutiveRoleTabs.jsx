@@ -17,7 +17,7 @@
  * Placeholder copy is marked "(placeholder)" where it isn't yet live data.
  */
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import TrendVsTarget from './TrendVsTarget';
 
 /* ---- The single running incident (shared spine) ----------------------------- */
@@ -282,6 +282,57 @@ const SEATS = [
   },
 ];
 
+/* ---- Draft summary: audience framing per seat ------------------------------ */
+const DRAFT = {
+  ceo:   { audience: 'Board & executive leadership', subject: 'CEO brief — security incident', position: 'Recommended position' },
+  ciso:  { audience: 'Board / executive sponsor', subject: 'Security incident summary', position: 'The call' },
+  cio:   { audience: 'Service owners & IT leadership', subject: 'Operational status — payment service', position: 'Recommended actions' },
+  cfo:   { audience: 'Finance leadership / audit committee', subject: 'Financial-exposure note', position: 'Recommended position' },
+  cro:   { audience: 'Risk committee', subject: 'Risk note — appetite breach (R-07)', position: 'Recommended treatment' },
+  clo:   { audience: 'Outside counsel / regulators', subject: 'Legal position — incident & obligations', position: 'Recommended position', privileged: true },
+  board: { audience: 'Board of directors', subject: 'Oversight record — minute entry', position: 'For the board' },
+};
+
+/* Compose an audience-appropriate draft, grounded ONLY in this seat's data + the
+   shared incident. No fabrication — every line traces to a field already on screen. */
+function composeDraft(seat) {
+  const m = DRAFT[seat.key] || { audience: 'Leadership', subject: 'Incident summary', position: 'Recommendation' };
+  const L = [];
+  if (m.privileged) { L.push('PRIVILEGED & CONFIDENTIAL — prepared at the direction of counsel.'); L.push(''); }
+  L.push(`DRAFT — ${m.subject}`);
+  L.push(`For: ${m.audience}`);
+  L.push(`Re: Security incident · ${INCIDENT.failedAt}`);
+  L.push(`Status: ${seat.verdict.stateLabel}`);
+  L.push('');
+  L.push('SITUATION');
+  L.push(INCIDENT.headline);
+  L.push('');
+  L.push('WHERE THIS STANDS');
+  L.push(seat.verdict.sentence);
+  L.push('');
+  L.push('EXPOSURE');
+  (seat.exposure.blastRadius || []).forEach((r) => L.push(`- ${r.k}: ${r.v}`));
+  L.push('');
+  L.push('CONTAINMENT');
+  L.push(`[verified] ${seat.exposure.contained.label}`);
+  if (seat.exposure.clock) L.push(`Clock — ${seat.exposure.clock.label}: ${seat.exposure.clock.remaining}`);
+  L.push('');
+  L.push('OBLIGATIONS / STATUS');
+  (seat.obligations.items || []).forEach((it) => L.push(`- ${it.k}: ${it.v}`));
+  L.push('');
+  L.push(m.position.toUpperCase());
+  (seat.decisions || []).forEach((d) => L.push(`- ${d.title}: ${d.recommendation}`));
+  if (seat.evidence && seat.evidence[0]) {
+    L.push('');
+    L.push('BASIS (how we know)');
+    L.push(`${seat.evidence[0].claim}:`);
+    (seat.evidence[0].proof || []).forEach((p) => L.push(`  ${p}`));
+  }
+  L.push('');
+  L.push(`— Auto-composed draft for review. Not yet sent. Generated ${new Date().toLocaleString()}.`);
+  return { subject: m.subject, audience: m.audience, text: L.join('\n') };
+}
+
 /* ===========================================================================
  * Component
  * ======================================================================== */
@@ -292,7 +343,9 @@ const DEEP_KEY = { ciso: 'dashboard', cio: 'cio', cfo: 'cfo', cro: 'cro', clo: '
 export default function ExecutiveRoleTabs({ initialSeat, go } = {}) {
   const startIdx = Math.max(0, SEATS.findIndex((s) => s.key === initialSeat));
   const [active, setActive] = useState(startIdx);
+  const [draftOpen, setDraftOpen] = useState(false);
   const tabRefs = useRef([]);
+  const select = (i) => { setActive(i); setDraftOpen(false); };
 
   const onKeyDown = (e) => {
     const n = SEATS.length;
@@ -303,7 +356,7 @@ export default function ExecutiveRoleTabs({ initialSeat, go } = {}) {
     else if (e.key === 'End') next = n - 1;
     if (next != null) {
       e.preventDefault();
-      setActive(next);
+      select(next);
       const el = tabRefs.current[next];
       if (el) el.focus();
     }
@@ -331,7 +384,7 @@ export default function ExecutiveRoleTabs({ initialSeat, go } = {}) {
           return (
             <button key={s.key} ref={(el) => { tabRefs.current[i] = el; }} role="tab" id={`exectab-${s.key}`}
               aria-selected={on} aria-controls={`execpanel-${s.key}`} tabIndex={on ? 0 : -1}
-              className="exec-tab" onClick={() => setActive(i)}>
+              className="exec-tab" onClick={() => select(i)}>
               {s.label}
             </button>
           );
@@ -352,9 +405,63 @@ export default function ExecutiveRoleTabs({ initialSeat, go } = {}) {
         <Layer n={1} title="Verdict"><Verdict v={seat.verdict} /></Layer>
         <Layer n={2} title="Decisions that need you"><Decisions items={seat.decisions} /></Layer>
         <Layer n={3} title="Active exposure"><Exposure x={seat.exposure} /></Layer>
-        <Layer n={4} title="Obligations / governance"><Obligations o={seat.obligations} /></Layer>
+        <Layer n={4} title="Obligations / governance"><Obligations o={seat.obligations} onDraft={() => setDraftOpen(true)} /></Layer>
         <Layer n={5} title="Trend vs target"><TrendVsTarget {...seat.trend} /></Layer>
         <Layer n={6} title="Evidence on demand"><Evidence items={seat.evidence} /></Layer>
+      </div>
+
+      {draftOpen && <DraftModal seat={seat} onClose={() => setDraftOpen(false)} />}
+    </div>
+  );
+}
+
+/* ---- Draft summary dialog -------------------------------------------------- */
+function DraftModal({ seat, onClose }) {
+  const draft = composeDraft(seat);
+  const closeRef = useRef(null);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => { if (closeRef.current) closeRef.current.focus(); }, []);
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const copy = () => {
+    try {
+      navigator.clipboard.writeText(draft.text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1800); });
+    } catch { /* clipboard unavailable */ }
+  };
+  const download = () => {
+    try {
+      const blob = new Blob([draft.text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `${seat.key}-draft-${new Date().toISOString().slice(0, 10)}.txt`;
+      a.click(); URL.revokeObjectURL(url);
+    } catch { /* download unavailable */ }
+  };
+
+  return (
+    <div className="exec-modal__backdrop" onClick={onClose}>
+      <div className="exec-modal" role="dialog" aria-modal="true" aria-labelledby="exec-draft-title" onClick={(e) => e.stopPropagation()}>
+        <div className="exec-modal__head">
+          <div>
+            <div className="exec-modal__kicker">One-click draft · for review before sending</div>
+            <h3 id="exec-draft-title" className="exec-modal__title">{draft.subject}</h3>
+            <div className="exec-modal__aud">For: {draft.audience}</div>
+          </div>
+          <button ref={closeRef} type="button" className="exec-modal__close" onClick={onClose} aria-label="Close draft">✕</button>
+        </div>
+        <pre className="exec-modal__body">{draft.text}</pre>
+        <div className="exec-modal__foot">
+          <span className="exec-modal__note">{copied ? '✓ Copied to clipboard' : 'Draft — not yet sent'}</span>
+          <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+            <button type="button" className="exec-btn exec-btn--ghost" onClick={copy}>Copy</button>
+            <button type="button" className="exec-btn exec-btn--primary" onClick={download}>⤓ Download .txt</button>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -439,7 +546,7 @@ function Exposure({ x }) {
 }
 
 /* ---- 4 · Obligations / governance ----------------------------------------- */
-function Obligations({ o }) {
+function Obligations({ o, onDraft }) {
   return (
     <div className="exec-card">
       <dl className="exec-dl">
@@ -449,7 +556,7 @@ function Obligations({ o }) {
           </div>
         ))}
       </dl>
-      <button type="button" className="exec-btn exec-btn--primary">⤓ {o.draftLabel}</button>
+      <button type="button" className="exec-btn exec-btn--primary" onClick={onDraft}>✎ {o.draftLabel}</button>
     </div>
   );
 }
@@ -542,7 +649,22 @@ function ScopedStyles() {
 
       .exec-btn { font-family:var(--font-body); font-size:12px; font-weight:600; border-radius:var(--radius-sm); padding:7px 14px; cursor:pointer; }
       .exec-btn--primary { margin-top:var(--space-3); background:var(--accent); color:var(--accent-on); border:1px solid var(--accent); }
+      .exec-btn--ghost { background:var(--surface); color:var(--text); border:1px solid var(--border); }
       .exec-btn:focus-visible { outline:2px solid var(--focus); outline-offset:2px; }
+
+      .exec-modal__backdrop { position:fixed; inset:0; background:var(--scrim); z-index:1000; display:flex; align-items:flex-start; justify-content:center; padding:6vh var(--space-4); overflow-y:auto; }
+      .exec-modal { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:var(--shadow-card); width:100%; max-width:680px; display:flex; flex-direction:column; max-height:86vh; }
+      @media (prefers-reduced-motion: no-preference){ .exec-modal{ animation:execRise .16s ease-out; } }
+      @keyframes execRise { from{ transform:translateY(8px); opacity:.6 } to{ transform:translateY(0); opacity:1 } }
+      .exec-modal__head { display:flex; justify-content:space-between; align-items:flex-start; gap:var(--space-3); padding:var(--space-4) var(--space-5); border-bottom:1px solid var(--border); }
+      .exec-modal__kicker { font-size:10px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--pass); }
+      .exec-modal__title { margin:3px 0 0; font-family:var(--font-display); font-size:18px; font-weight:600; color:var(--text); }
+      .exec-modal__aud { font-size:11.5px; color:var(--text-muted); margin-top:2px; }
+      .exec-modal__close { background:none; border:none; font-size:18px; line-height:1; color:var(--text-subtle); cursor:pointer; padding:2px 4px; }
+      .exec-modal__close:focus-visible { outline:2px solid var(--focus); outline-offset:2px; border-radius:var(--radius-sm); }
+      .exec-modal__body { margin:0; overflow-y:auto; padding:var(--space-4) var(--space-5); font-family:var(--font-mono); font-size:11.5px; line-height:1.7; color:var(--text); white-space:pre-wrap; }
+      .exec-modal__foot { display:flex; justify-content:space-between; align-items:center; gap:var(--space-3); padding:var(--space-3) var(--space-5); border-top:1px solid var(--border); flex-wrap:wrap; }
+      .exec-modal__note { font-size:11.5px; color:var(--text-muted); }
 
       .exec-evidence { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:var(--space-2) var(--space-3); }
       .exec-evidence summary { cursor:pointer; font-size:12.5px; font-weight:600; color:var(--text); }
