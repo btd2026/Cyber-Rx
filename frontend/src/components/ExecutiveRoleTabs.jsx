@@ -411,6 +411,20 @@ export default function ExecutiveRoleTabs(props = {}) {
 
   const seat = SEATS[active];
 
+  // "Every number is a door." A figure opens the seat's deep analytical dashboard
+  // when it has one; otherwise it reveals the Evidence-on-demand layer so the claim
+  // can always be traced. Keyboard-accessible because each door is a real <button>.
+  const revealEvidence = () => {
+    const el = typeof document !== 'undefined' && document.getElementById('exec-evidence-layer');
+    if (!el) return;
+    const reduce = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    const d = el.querySelector('details');
+    if (d) d.open = true;
+  };
+  const onNumber = (go && DEEP_KEY[seat.key]) ? () => go(DEEP_KEY[seat.key]) : revealEvidence;
+  const numberHint = (go && DEEP_KEY[seat.key]) ? 'opens the analytical view' : 'opens the evidence';
+
   return (
     <div className="crx-room crx-grain exec-room">
       <div className="exec-shell" style={{ fontFamily: 'var(--font-body)', color: 'var(--text)' }}>
@@ -471,10 +485,10 @@ export default function ExecutiveRoleTabs(props = {}) {
 
         <Layer n={1} title="Verdict"><Verdict v={seat.verdict} phase={phase} incident={inc} /></Layer>
         <Layer n={2} title="Decisions that need you"><Decisions items={seat.decisions} /></Layer>
-        <Layer n={3} title="Active exposure"><Exposure x={seat.exposure} phase={phase} /></Layer>
+        <Layer n={3} title="Active exposure"><Exposure x={seat.exposure} phase={phase} onNumber={onNumber} numberHint={numberHint} /></Layer>
         <Layer n={4} title="Obligations / governance"><Obligations o={seat.obligations} onDraft={() => setDraftOpen(true)} /></Layer>
         <Layer n={5} title="Trend vs target"><TrendVsTarget {...seat.trend} /></Layer>
-        <Layer n={6} title="Evidence on demand"><Evidence items={seat.evidence} ctx={ctx} /></Layer>
+        <Layer n={6} title="Evidence on demand" id="exec-evidence-layer"><Evidence items={seat.evidence} ctx={ctx} /></Layer>
       </div>
 
       {draftOpen && <DraftModal seat={seat} ctx={ctx} incident={inc} onClose={() => setDraftOpen(false)} />}
@@ -568,9 +582,9 @@ function DraftModal({ seat, ctx, incident, onClose }) {
 }
 
 /* ---- Layer frame ----------------------------------------------------------- */
-function Layer({ n, title, children }) {
+function Layer({ n, title, id, children }) {
   return (
-    <section className="exec-layer">
+    <section className="exec-layer" id={id}>
       <div className="exec-layer__head">
         <span className="exec-layer__n" aria-hidden="true">{String(n).padStart(2, '0')}</span>
         <h3 className="exec-layer__title">{title}</h3>
@@ -579,6 +593,18 @@ function Layer({ n, title, children }) {
     </section>
   );
 }
+
+/* A "door": a figure you can open. Renders plain text when there's nowhere to go,
+   so it degrades cleanly. Real <button> → keyboard + screen-reader accessible. */
+function Door({ onClick, label, children }) {
+  if (!onClick) return children;
+  return (
+    <button type="button" className="exec-door crx-door" onClick={onClick} aria-label={label}>
+      {children}<span className="exec-door__caret" aria-hidden="true">↗</span>
+    </button>
+  );
+}
+const hasNumber = (v) => /\d/.test(String(v));
 
 /* ---- 1 · Verdict ----------------------------------------------------------- */
 function Verdict({ v, phase = { contained: true, verified: true }, incident }) {
@@ -633,13 +659,19 @@ function Decisions({ items }) {
 }
 
 /* ---- 3 · Active exposure --------------------------------------------------- */
-function Exposure({ x, phase = { verified: true } }) {
+function Exposure({ x, phase = { verified: true }, onNumber, numberHint }) {
   return (
     <div className="exec-card">
+      {onNumber && (
+        <p className="exec-doorhint">Every figure is a door — selecting one {numberHint}.</p>
+      )}
       <dl className="exec-dl">
         {x.blastRadius.map((r, i) => (
           <div key={i} className="exec-dl__row">
-            <dt>{r.k}</dt><dd>{r.v}</dd>
+            <dt>{r.k}</dt>
+            <dd>{onNumber && hasNumber(r.v)
+              ? <Door onClick={onNumber} label={`${r.k} — ${numberHint}`}>{r.v}</Door>
+              : r.v}</dd>
           </div>
         ))}
       </dl>
@@ -853,6 +885,32 @@ function ScopedStyles() {
       .exec-sig__val { color:var(--text-muted); }
       .exec-sig__src { color:var(--text-subtle); text-align:right; }
       .exec-sig__ts { font-family:var(--font-mono); font-size:9.5px; color:var(--text-subtle); margin-top:var(--space-2); }
+
+      /* "Every number is a door" */
+      #exec-evidence-layer { scroll-margin-top:var(--space-5); }
+      .exec-doorhint { margin:0 0 var(--space-3); font-size:11px; color:var(--text-subtle); font-style:italic; }
+      .exec-door { font:inherit; color:inherit; background:transparent; border:none; padding:1px 4px; margin:-1px -2px;
+        cursor:pointer; display:inline; text-align:left; border-bottom:1px dashed var(--accent); }
+      .exec-door__caret { font-size:.82em; color:var(--accent); margin-left:3px; opacity:.7; }
+      .exec-door:hover { background:var(--accent-tint); }
+      .exec-door:hover .exec-door__caret { opacity:1; }
+      .exec-door:focus-visible { outline:2px solid var(--focus); outline-offset:2px; border-radius:var(--radius-sm); }
+
+      /* ---- Phase 5: responsive + motion ------------------------------------ */
+      @media (max-width: 680px){
+        .exec-shell { padding:var(--space-4) var(--space-3) var(--space-5); }
+        .exec-shellhead__title { font-size:18px; }
+        .exec-verdict__sentence { font-size:17px; }
+        .exec-dl__row { grid-template-columns:1fr; gap:2px; padding:var(--space-2) 0; }
+        .exec-sig__row { grid-template-columns:16px 1fr; }
+        .exec-sig__val, .exec-sig__src { grid-column:2; text-align:left; }
+        .exec-tab { padding:8px 13px; }
+        .exec-tab__role { font-size:12px; }
+        .exec-tab__q { font-size:10px; }
+      }
+      @media (prefers-reduced-motion: reduce){
+        #exec-evidence-layer { scroll-margin-top:0; }
+      }
     `}</style>
   );
 }
