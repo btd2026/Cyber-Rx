@@ -1,467 +1,468 @@
 /**
- * The six non-CISO seats — same shape as the CISO reference, each reframing the
- * SAME running incident (a claims-processing control failed at 14:02, contained)
- * in that executive's lens. Tab keys match slug(tabName) used by SituationRoom.
+ * The six non-CISO seats — ported to match the uploaded mock (cyberrx-ciso-os.html)
+ * exactly: each reframes the SAME 14:02 claims incident in that executive's lens.
+ * Rendered by the generic SeatPanel/SeatSection. Tab keys = slug(tabName).
  *
- * Shared incident facts are reused verbatim; figures with no clean source are
- * qualitative or marked (TODO real data) — no confident numbers invented.
- * These render through the generic SeatPanel; bind to per-seat APIs in a later pass.
+ * Sample content mirrors the mock verbatim; bind to per-seat APIs in a later pass.
  */
 
-/* Shared posture series (illustrative) for the trajectory-style tabs. */
-const POSTURE = {
-  quarterly: [{ label: 'Q1', value: 72 }, { label: 'Q2', value: 75 }, { label: 'Q3', value: 78 }, { label: 'Q4', value: 82 }],
-  monthly: [{ label: 'Mar', value: 77 }, { label: 'Apr', value: 79 }, { label: 'May', value: 80 }, { label: 'Jun', value: 82 }],
-};
-const trendUpDown = (up, down) => ({ kind: 'twocol', a: { title: 'Improving', tone: 'pass', items: up }, b: { title: 'Watch — needs attention', tone: 'exposure', items: down } });
-
 const SEATS_DATA = {
-  /* ===================== CEO — business language only ===================== */
+  /* ============================== CEO ============================== */
   CEO: {
     summary: {
-      verdict: 'The business is safe and in control — one contained incident, no customer or revenue impact.',
-      pill: 'Contained', pillKind: 'pass', pillVerified: true,
-      lede: 'A claims-processing control failed at 14:02 and was contained on a verified backup control. No customer data loss confirmed; revenue protected. Materiality is under review with Legal and Finance.',
+      verdict: 'Cyber risk is understood, managed, and within tolerance today.',
+      pill: '1 issue contained', pillKind: 'exposure',
+      lede: 'One contained issue on claims processing. Nothing requires the business to stop. Posture is improving; third-party risk is the one watch item.',
       tiles: [
-        { label: 'Business status', value: 'Operating', valueKind: 'pass', to: 'operating-status' },
-        { label: 'Revenue at risk', value: '$220M/day', to: 'principal-business-risk' },
-        { label: 'Customers impacted', value: 'None', valueKind: 'pass', to: 'operating-status' },
-        { label: 'Principal risk', value: 'Claims', valueKind: 'critical', to: 'principal-business-risk' },
-        { label: 'Board attention', value: '1', to: 'board-executive-attention' },
-        { label: 'Posture vs target', value: '82 / 85', to: 'trajectory' },
+        { label: 'Business risk', value: 'In tolerance', to: 'principal-business-risk' },
+        { label: 'Revenue at risk today', value: 'Contained', to: 'operating-status' },
+        { label: 'Customer / brand impact', value: 'None', to: 'operating-status' },
+        { label: 'Material events', value: '0', to: 'board-executive-attention' },
+        { label: 'Board attention', value: '1', valueKind: 'critical', to: 'board-executive-attention' },
+        { label: 'Posture trend', value: '82', delta: '↑+4', deltaKind: 'pass', to: 'trajectory' },
       ],
       briefing: [
-        { q: 'Are operations and revenue protected?', a: 'Yes — every critical service is operating; no revenue or customer impact.', pill: 'Operating', kind: 'pass', verified: true, to: 'operating-status' },
-        { q: 'What is the biggest risk to the business?', a: 'Claims processing — $220M/day if disrupted; one contained ransomware path to PHI.', pill: '1 High ↑', kind: 'exposure', to: 'principal-business-risk' },
-        { q: 'What needs the board or executives?', a: 'One item: brief the board on the contained incident; pre-agree the disclosure path if materiality changes.', pill: '1 item', kind: 'brand', to: 'board-executive-attention' },
-        { q: 'Are we getting better?', a: 'Improving (+4) and approaching the board target of 85.', pill: 'Improving ↑', kind: 'pass', verified: true, to: 'trajectory' },
+        { q: 'Are we safe to operate?', a: 'Yes — operations and revenue are protected; one contained security issue on claims.', pill: 'Safe', kind: 'pass', to: 'operating-status' },
+        { q: 'What is our biggest business risk?', a: 'Claims processing — revenue-critical and elevated, with a contained exposure.', pill: '1 elevated', kind: 'exposure', to: 'principal-business-risk' },
+        { q: 'What needs my attention?', a: '1 board item and 1 funding decision affecting customer-facing risk.', pill: '1 board', kind: 'exposure', to: 'board-executive-attention' },
+        { q: 'Are we improving?', a: 'Yes — posture +4 this quarter; the funded roadmap is on track.', pill: 'Improving ↑', kind: 'pass', to: 'trajectory' },
       ],
     },
     tabs: {
       'operating-status': {
-        name: 'Operating Status', q: 'Are operations and revenue protected?',
-        answer: 'Yes — operations and revenue are protected.', pill: 'Operating', pillKind: 'pass', pillVerified: true,
-        lede: 'Business continuity in plain terms — not systems uptime.',
+        name: 'Operating Status', q: 'Are operations and revenue protected?', pill: 'Yes', pillKind: 'pass',
+        lede: 'Revenue and operations are protected. One security issue is contained and not customer-visible.',
         sections: [
-          { kind: 'rows', title: 'What the business sees', items: [
-            { k: 'Critical services operating', v: 'All', verified: true, kind: 'pass' },
-            { k: 'Revenue impact', v: '$0 lost' },
-            { k: 'Customers impacted', v: 'None confirmed', verified: true, kind: 'pass' },
-            { k: 'Workforce disruption', v: 'None' },
+          { kind: 'cols', panels: [
+            { title: 'The business is running', rowsKind: 'srow', rows: [
+              { nm: 'Customer-facing services', stat: 'Running', statKind: 'pass' },
+              { nm: 'Revenue systems', sub: 'claims on a compensating control', stat: 'Protected · watch', statKind: 'exposure' },
+              { nm: 'Customer data', stat: 'No exposure', statKind: 'pass' },
+              { nm: 'Public / disclosure status', stat: 'Nothing to report', statKind: 'pass' },
+            ] },
+            { title: 'If the worst happened', rowsKind: 'kv', rows: [
+              { l: 'Worst-case revenue at risk', v: '~$2.3M/hr · contained', vKind: 'exposure' },
+              { l: 'Time to resume claims if down', v: '~3.5 days' },
+              { l: 'Crisis posture required', v: 'No', vKind: 'pass' },
+            ] },
           ] },
-          { kind: 'note', text: 'The affected claims control is on a verified compensating control. If it had failed open, claims would resume within ~3.5 days (recovery estimate).' },
         ],
       },
       'principal-business-risk': {
-        name: 'Principal Business Risk', q: 'What could hurt the business?',
-        answer: 'Claims processing is the principal risk — high and rising.', pill: '1 High ↑', pillKind: 'exposure',
-        lede: 'The exposures that matter to the business, expressed as processes — not servers.',
+        name: 'Principal Business Risk', q: 'What is our biggest business risk?', pill: 'Claims processing', pillKind: 'exposure',
+        lede: 'Ranked by impact to revenue, customers, and reputation — in business terms, not servers.',
         sections: [
-          { kind: 'table', title: 'Business risks', note: 'derived from process protection',
-            head: ['Process', 'Risk', "What's at stake"],
-            rows: [
-              { cells: [{ t: 'Claims Processing', name: true }, { t: 'High', pill: true, kind: 'critical' }, { t: '$220M/day if down; open ransomware path to claims DB', exposed: true }] },
-              { cells: [{ t: 'AI-Assisted Claims Review', name: true }, { t: 'High', pill: true, kind: 'critical' }, { t: 'Ungoverned model decisions touching PHI', exposed: true }] },
-              { cells: [{ t: 'Call Center Operations', name: true }, { t: 'Medium', pill: true, kind: 'exposure' }, { t: 'Vendor-dependent; identity exposure', exposed: true }] },
-              { cells: [{ t: 'Member Portal', name: true }, { t: 'Medium', pill: true, kind: 'exposure' }, { t: 'Internet-facing; credential-stuffing pressure', exposed: true }] },
-            ] },
-          { kind: 'chain', title: 'Most likely path to the crown jewels',
-            steps: ['Phishing email', 'Compromised user', 'Active Directory', 'Claims database', 'PHI exposure'],
-            stats: [{ k: 'Likelihood', v: 'High' }, { k: 'Blast radius', v: '2.4M records' }, { k: 'Time to contain', v: '~6 hrs' }] },
+          { kind: 'table', head: ['Business area', 'Risk', 'Trend', 'Why it matters'], rows: [
+            { cells: [{ t: 'Claims Processing', name: true }, { t: 'High', pill: true, kind: 'critical' }, { t: '↑', fg: 'critical' }, { t: '$220M/day revenue · contained security exposure', exposed: true }] },
+            { cells: [{ t: 'AI-Assisted Claims', name: true }, { t: 'High', pill: true, kind: 'critical' }, { t: '↑', fg: 'critical' }, { t: 'Fast-growing · ungoverned model decisions on PHI', exposed: true }] },
+            { cells: [{ t: 'Member Portal', name: true }, { t: 'Medium', pill: true, kind: 'exposure' }, { t: '→', fg: 'exposure' }, { t: 'Customer-facing · brand exposure', exposed: true }] },
+            { cells: [{ t: 'Provider Payments', name: true }, { t: 'Low', pill: true, kind: 'pass' }, { t: '↓', fg: 'pass' }, { t: 'Well-controlled', exposed: true }] },
+          ] },
         ],
       },
       'board-executive-attention': {
-        name: 'Board & Executive Attention', q: 'What is rising to the board?',
-        answer: 'One item for the board; no action required today.', pill: '1 item', pillKind: 'brand',
-        lede: 'What management is escalating, and what (if anything) the board must decide.',
+        name: 'Board & Executive Attention', q: 'What needs my attention?', pill: '1 board item', pillKind: 'exposure',
+        lede: 'What rises to the CEO and board — not the security team’s queue.',
         sections: [
-          { kind: 'decisions', title: 'Rising to the board', button: 'Generate board package →', items: [
-            { sev: 'BRIEF', kind: 'exposure', title: 'Brief the board on the contained claims incident.', owner: 'Owner: CEO / CISO → next session' },
-            { sev: 'PRE-AGREE', kind: 'exposure', title: 'Pre-agree the disclosure path if materiality changes.', owner: 'Owner: CLO → standby' },
+          { kind: 'decisions', title: 'Needs you or the board', button: 'Generate board package →', items: [
+            { sev: 'Board', kind: 'critical', title: 'Claims platform modernization — $220M/day exposure tied to a legacy system.', owner: 'With CIO & CFO · Board funding decision' },
+            { sev: 'Decide', kind: 'exposure', title: 'Accept or mitigate vendor (PHI) risk — a critical vendor is below tolerance.', owner: 'With CRO · Risk decision' },
           ] },
-          { kind: 'rows', title: 'Status', items: [
-            { k: 'Materiality', v: 'Under review', kind: 'exposure' },
-            { k: 'Disclosure obligation', v: 'None to date', verified: true, kind: 'pass' },
-          ] },
+          { kind: 'bigstat', text: 'One event is under materiality review; no public disclosure is required to date. A board-ready summary can be generated on demand.' },
         ],
       },
       trajectory: {
-        name: 'Trajectory', q: 'Are we getting better?',
-        answer: 'Improving — posture is closing on the board target.', pill: 'Improving ↑', pillKind: 'pass', pillVerified: true,
-        lede: 'Enterprise posture against the board-set target.',
+        name: 'Trajectory', q: 'Are we getting better?', pill: 'Improving', pillKind: 'pass',
+        lede: 'The trajectory you can take to the board.',
         sections: [
-          { kind: 'chart', posture: POSTURE, target: 85 },
-          trendUpDown(['Identity & access (IAM)', 'Cloud security', 'Endpoint protection'], ['Third-party risk', 'Recovery testing', 'AI governance']),
+          { kind: 'cols', panels: [
+            { title: 'Improving', rowsKind: 'srow', rows: [
+              { nm: 'Overall posture', stat: '82 · ↑+4', statKind: 'pass' },
+              { nm: 'Identity & access', stat: 'Up', statKind: 'pass' },
+              { nm: 'Detection speed', stat: '15% faster', statKind: 'pass' },
+            ] },
+            { title: 'Watch', rowsKind: 'srow', rows: [
+              { nm: 'Third-party risk', stat: 'Slipping', statKind: 'exposure' },
+              { nm: 'Recovery testing', stat: 'Slipping', statKind: 'exposure' },
+              { nm: 'AI governance', stat: 'Lagging', statKind: 'exposure' },
+            ] },
+          ] },
+          { kind: 'bigstat', text: 'If the funded roadmap completes, enterprise posture is projected to reach 89 and bring third-party risk back within appetite.' },
         ],
       },
     },
   },
 
-  /* ===================== CFO — dollars & materiality ===================== */
+  /* ============================== CFO ============================== */
   CFO: {
     summary: {
-      verdict: 'Financial exposure is bounded and below the insurance-notification threshold — no write-down today.',
-      pill: 'Bounded · immaterial to date', pillKind: 'pass', pillVerified: true,
-      lede: 'The contained claims incident has realized no loss. Modeled exposure is $0–$1.1M, below the cyber policy’s notification trigger. Materiality is under review with Legal.',
+      verdict: 'Financial exposure is bounded and below our insurance threshold today.',
+      pill: 'Within tolerance', pillKind: 'pass',
+      lede: 'The claims event is scoped to a $0–1.1M range, below the materiality and insurance thresholds. No write-down conversation today.',
       tiles: [
-        { label: 'Realized loss', value: '$0', valueKind: 'pass', to: 'financial-exposure' },
-        { label: 'Modeled exposure', value: '$0–1.1M', to: 'financial-exposure' },
-        { label: 'Revenue at risk / day', value: '$220M', to: 'financial-exposure' },
-        { label: 'Insurance threshold', value: 'Below', valueKind: 'pass', to: 'materiality' },
-        { label: 'Decisions for you', value: '2', to: 'decisions-required' },
-        { label: 'Incident spend', value: '≈$50K', to: 'return-on-investment' },
+        { label: 'Exposure today', value: '$0–1.1M', to: 'financial-exposure' },
+        { label: 'Insurance threshold', value: 'Below', to: 'materiality' },
+        { label: 'Financial materiality', value: 'Under review', to: 'materiality' },
+        { label: 'Loss exposure vs appetite', value: 'Within', to: 'return-on-investment' },
+        { label: 'Cyber spend YTD', value: '$10.2M', to: 'return-on-investment' },
+        { label: 'Decisions today', value: '3', valueKind: 'critical', to: 'decisions-required' },
       ],
       briefing: [
-        { q: 'What is the financial exposure?', a: 'Bounded to the payments path; $0 realized, modeled $0–$1.1M over 24h.', pill: 'Bounded', kind: 'pass', verified: true, to: 'financial-exposure' },
-        { q: 'Is it material?', a: 'Below the insurance notification threshold; materiality determination pending with Legal.', pill: 'Immaterial to date', kind: 'exposure', to: 'materiality' },
-        { q: 'What needs a decision?', a: 'Hold insurance notice (below trigger); approve up to $50K incident spend from reserve.', pill: '2 decisions', kind: 'exposure', to: 'decisions-required' },
-        { q: 'What is the return on spend?', a: 'PAM ($4.2M) closes the open path; recovery modernization ($6.0M) lifts readiness 78%→90%+.', pill: 'On track', kind: 'pass', verified: true, to: 'return-on-investment' },
+        { q: 'Are we financially exposed today?', a: 'Yes, but bounded to $0–1.1M on the payments/claims path — not the whole estate.', pill: 'Bounded', kind: 'exposure', to: 'financial-exposure' },
+        { q: 'Is anything material?', a: 'Under review with Legal; current estimate is below materiality and the insurance threshold.', pill: 'Under review', kind: 'exposure', to: 'materiality' },
+        { q: 'What needs my decision?', a: 'File a precautionary insurance notice, approve $180K response spend, hold the loss reserve.', pill: '3 today', kind: 'critical', to: 'decisions-required' },
+        { q: 'Are we spending well?', a: 'Loss exposure within appetite; funded roadmap returns measurable posture lift.', pill: 'On track', kind: 'pass', to: 'return-on-investment' },
       ],
     },
     tabs: {
       'financial-exposure': {
-        name: 'Financial Exposure', q: 'What is the financial exposure?',
-        answer: 'Exposure is bounded to the payments path — no loss realized.', pill: 'Bounded', pillKind: 'pass', pillVerified: true,
-        lede: 'Dollars, bounded ranges, and what drives them.',
+        name: 'Financial Exposure', q: 'Are we financially exposed today?', pill: 'Bounded', pillKind: 'exposure',
+        lede: 'Exposure in dollars, scoped to the affected path — not a whole-company number.',
         sections: [
-          { kind: 'rows', title: 'Exposure', items: [
-            { k: 'Realized loss to date', v: '$0', verified: true, kind: 'pass' },
-            { k: 'Modeled loss (FAIR, 24h)', sub: 'p50 / p90', v: '$0.4M / $1.1M' },
-            { k: 'Revenue at risk while degraded', v: '≈$220M/day — currently $0 (contained)' },
-            { k: 'Remediation cost estimate', v: '≈$50K' },
+          { kind: 'panel', title: 'Exposure — in dollars', rowsKind: 'kv', rows: [
+            { l: 'Revenue at risk', v: '~$2.3M / hr', vKind: 'exposure' },
+            { l: 'Bounded impact if unresolved 24h', v: '$0–1.1M' },
+            { l: 'Insurance notification threshold', v: 'Below · monitor', vKind: 'pass' },
+            { l: 'PCI / penalty exposure', v: 'Only if data confirmed', vKind: 'exposure' },
+            { l: 'Estimated remediation cost', v: '~$180K' },
+            { l: 'Containment', v: '✓ verified holding', vKind: 'pass' },
           ] },
-          { kind: 'note', text: 'Modeled exposure is illustrative (FAIR). Bind to /api/cfo/exposure for live loss modeling.' },
         ],
       },
       materiality: {
-        name: 'Materiality', q: 'Is it material?',
-        answer: 'Below the insurance notification threshold; determination pending.', pill: 'Immaterial to date', pillKind: 'exposure',
-        lede: 'The materiality call and the clocks it would start.',
+        name: 'Materiality', q: 'Is anything material?', pill: 'Under review', pillKind: 'exposure',
+        lede: 'Materiality and disclosure status, co-owned with Legal.',
         sections: [
-          { kind: 'rows', title: 'Materiality & thresholds', items: [
-            { k: 'Insurance notification threshold', v: 'Below ($2.0M single-loss trigger)', verified: true, kind: 'pass' },
-            { k: 'Financial-materiality determination', v: 'Under review with Legal', kind: 'exposure' },
-            { k: 'Investor-disclosure consideration', v: 'None unless determination changes' },
+          { kind: 'panel', title: 'Materiality & obligations', rowsKind: 'kv', rows: [
+            { l: 'Financial materiality', v: 'Under review · est. below threshold', vKind: 'exposure' },
+            { l: 'Investor disclosure (8-K)', v: 'Not triggered', vKind: 'pass' },
+            { l: 'Cyber-insurance notice', v: '46h window · precautionary advised', vKind: 'exposure' },
+            { l: 'Contingency budget', v: 'Response cost within it', vKind: 'pass' },
           ] },
         ],
       },
       'decisions-required': {
-        name: 'Decisions Required', q: 'What needs a decision?',
-        answer: 'Two finance decisions today; neither is urgent.', pill: '2 decisions', pillKind: 'exposure',
-        lede: 'Decisions that are yours to make, with the trade-off stated.',
+        name: 'Decisions Required', q: 'What needs my decision?', pill: '3 today', pillKind: 'critical',
+        lede: 'The financial calls — ranked by time sensitivity.',
         sections: [
-          { kind: 'decisions', title: 'Your decisions — today', button: 'Generate board package →', items: [
-            { sev: 'HOLD', kind: 'exposure', title: 'Hold cyber-insurance notification — exposure is below the policy trigger.', owner: 'Owner: CFO → re-evaluate if materiality changes' },
-            { sev: 'APPROVE', kind: 'exposure', title: 'Approve up to $50K incident spend from the reserve.', owner: 'Owner: CFO → RCA + vendor patch' },
+          { kind: 'decisions', button: 'Generate audit-committee note →', items: [
+            { sev: 'Time', kind: 'critical', title: 'File a precautionary insurance notice — preserves coverage, no admission; 46h window.', owner: 'Carrier CYB-2026 · File now' },
+            { sev: 'Approve', kind: 'exposure', title: 'Authorize $180K incident-response spend — forensics + emergency vendor support.', owner: 'Within contingency · Approve' },
+            { sev: 'Hold', kind: 'brand', title: 'Contingent loss reserve — exposure below materiality.', owner: 'Revisit in 2h 40m · Hold & revisit' },
           ] },
         ],
       },
       'return-on-investment': {
-        name: 'Return on Investment', q: 'What are we getting for the spend?',
-        answer: 'The roadmap closes the open gaps; two proposals await funding.', pill: 'On track', pillKind: 'pass', pillVerified: true,
-        lede: 'Security investment, what it returns, and what awaits your decision.',
+        name: 'Return on Investment', q: 'Are we spending well?', pill: 'On track', pillKind: 'pass',
+        lede: 'Cyber investment against loss exposure and the returns it buys.',
         sections: [
-          { kind: 'table', title: 'Investment & return',
-            head: ['Project', 'Investment', 'Expected return', 'Decision'],
-            rows: [
-              { cells: [{ t: 'PAM rollout', name: true }, { t: '$4.2M', mono: true }, { t: 'Closes the open ransomware path', exposed: true }, { t: '—' }] },
-              { cells: [{ t: 'Recovery modernization', name: true }, { t: '$6.0M', mono: true }, { t: 'Readiness 78% → 90%+', exposed: true }, { t: '—' }] },
-              { cells: [{ t: 'Third-party monitoring', name: true }, { t: '$1.8M', mono: true }, { t: 'Stops vendor risk drift', exposed: true }, { t: 'Needs funding', pill: true, kind: 'exposure' }] },
-              { cells: [{ t: 'AI governance program', name: true }, { t: '$2.5M', mono: true }, { t: 'Governs AI claims decisions', exposed: true }, { t: 'Needs funding', pill: true, kind: 'exposure' }] },
-            ] },
-          { kind: 'rows', title: 'Readiness & investment', items: [
-            { k: 'Committed this year', v: '$10.2M · 2 in flight' },
-            { k: 'Awaiting your decision', v: '$4.3M · 2 projects', kind: 'exposure' },
-            { k: 'Projected posture lift if funded', v: '82 → 89', kind: 'pass' },
+          { kind: 'table', head: ['Investment', 'Status', 'Cost', 'Return'], rows: [
+            { cells: [{ t: 'PAM rollout', name: true }, { t: '60% · on track', pill: true, kind: 'pass' }, { t: '$4.2M', mono: true }, { t: 'Closes the ransomware loss path', exposed: true }] },
+            { cells: [{ t: 'Recovery modernization', name: true }, { t: 'Funded', pill: true, kind: 'pass' }, { t: '$6.0M', mono: true }, { t: 'Cuts downtime loss exposure', exposed: true }] },
+            { cells: [{ t: 'Third-party monitoring', name: true }, { t: 'Proposed', pill: true, kind: 'exposure' }, { t: '$1.8M', mono: true }, { t: 'Stops vendor-driven loss drift', exposed: true }] },
+          ] },
+          { kind: 'panel', title: 'Return on cyber investment', rowsKind: 'kv', rows: [
+            { l: 'Annualized loss exposure vs appetite', v: 'Within', vKind: 'pass' },
+            { l: 'Awaiting your funding decision', v: '$4.3M · 2 projects', vKind: 'exposure' },
+            { l: 'Projected posture lift if funded', v: '82 → 89', vKind: 'pass' },
           ] },
         ],
       },
     },
   },
 
-  /* ===================== CIO — service & reliability ===================== */
+  /* ============================== CIO ============================== */
   CIO: {
     summary: {
-      verdict: 'Services are operational under a compensating control — no customer-facing outage.',
-      pill: 'Operational · degraded-safe', pillKind: 'pass', pillVerified: true,
-      lede: 'The payment-tokenization service runs on a WAF+ACL compensating control after the 14:02 failure. Uptime within SLA; an emergency change record is the one governance gap.',
+      verdict: 'Critical services are operational and recoverable today.',
+      pill: 'All running', pillKind: 'pass',
+      lede: 'Every critical service is up; one runs on a compensating control with no customer-facing outage. Recovery testing is the one slipping metric.',
       tiles: [
-        { label: 'Service status', value: 'Operational', valueKind: 'pass', to: 'service-status' },
-        { label: 'Uptime (MTD)', value: '99.98%', valueKind: 'pass', to: 'service-status' },
-        { label: 'SLA breaches', value: '0', valueKind: 'pass', to: 'service-status' },
-        { label: 'Operational threats', value: '1', valueKind: 'exposure', to: 'operational-threats' },
-        { label: 'Decisions for you', value: '2', to: 'decisions-required' },
-        { label: 'Reliability vs target', value: '99.98 / 99.9', to: 'reliability-trend' },
+        { label: 'Critical services', value: 'Up', to: 'service-status' },
+        { label: 'Uptime (30d)', value: '99.98%', to: 'service-status' },
+        { label: 'Recovery readiness', value: '78%', delta: '→', deltaKind: 'exposure', to: 'service-status' },
+        { label: 'Open Sev-1s', value: '0', to: 'operational-threats' },
+        { label: 'Change risk', value: 'Low', to: 'decisions-required' },
+        { label: 'Reliability trend', value: '↑', to: 'reliability-trend' },
       ],
       briefing: [
-        { q: 'Are systems and services operational?', a: 'Yes — payment service healthy on a compensating control; 0 min downtime.', pill: 'Operational', kind: 'pass', verified: true, to: 'service-status' },
-        { q: 'What operational threats are live?', a: 'Config drift preceded the failure; the WAF+ACL change is in prod without an ECR.', pill: '1 gap', kind: 'exposure', to: 'operational-threats' },
-        { q: 'What needs a decision?', a: 'Hold vs off-peak failover; raise the emergency change record now.', pill: '2 decisions', kind: 'exposure', to: 'decisions-required' },
-        { q: 'Are we getting more reliable?', a: 'Reliability above target and improving; MTTR trending down.', pill: 'Improving ↑', kind: 'pass', verified: true, to: 'reliability-trend' },
+        { q: 'Are critical services up?', a: 'Yes — all running; claims on a compensating control with no outage.', pill: 'Operating', kind: 'pass', to: 'service-status' },
+        { q: 'What could disrupt operations?', a: 'Legacy claims platform fragility and vendor dependency in the call center.', pill: '2 watch', kind: 'exposure', to: 'operational-threats' },
+        { q: 'What needs my decision?', a: 'Hold vs failover on the claims gateway; one emergency change to file.', pill: '1 decision', kind: 'exposure', to: 'decisions-required' },
+        { q: 'Are we more reliable over time?', a: 'Yes — uptime steady, MTTR improving; recovery testing needs investment.', pill: 'Improving ↑', kind: 'pass', to: 'reliability-trend' },
       ],
     },
     tabs: {
       'service-status': {
-        name: 'Service Status', q: 'Are our systems and services operational?',
-        answer: 'Operational — no customer-facing outage.', pill: 'Operational', pillKind: 'pass', pillVerified: true,
-        lede: 'Service health and continuity — the IT view of the same incident.',
+        name: 'Service Status', q: 'Are critical services up today?', pill: 'Yes', pillKind: 'pass',
+        lede: 'Operational status and recoverability of the services the business runs on.',
         sections: [
-          { kind: 'rows', title: 'Service health', items: [
-            { k: 'Payment tokenization service', sub: '1 of 42 services', v: 'Healthy (compensating control)', verified: true, kind: 'pass' },
-            { k: 'Uptime, month-to-date', v: '99.98% — within SLA', verified: true, kind: 'pass' },
-            { k: 'Downtime', v: '0 min' },
-            { k: 'Users affected', v: 'None; recovery est. 2 h · owner Platform Eng' },
+          { kind: 'cols', panels: [
+            { title: 'Critical business services', rowsKind: 'srow', rows: [
+              { nm: 'Claims Processing', sub: 'compensating control active', stat: 'Up · degraded', statKind: 'exposure' },
+              { nm: 'Member Portal', stat: 'Up', statKind: 'pass' },
+              { nm: 'Provider Payments', stat: 'Up', statKind: 'pass' },
+              { nm: 'Call Center Operations', stat: 'Up', statKind: 'pass' },
+              { nm: 'AI-Assisted Claims Review', stat: 'Up · watch', statKind: 'exposure' },
+            ] },
+            { title: 'Resilience & recovery', rowsKind: 'kv', rows: [
+              { l: 'Critical apps recoverable', v: '91%', vKind: 'pass' },
+              { l: 'Tested in last 12 months', v: '83%', vKind: 'exposure' },
+              { l: 'Recovery readiness', v: '78%', vKind: 'exposure' },
+              { l: 'AI systems recoverable', v: '52%', vKind: 'critical' },
+              { l: 'Backup success rate', v: '99.7%', vKind: 'pass' },
+            ] },
           ] },
+          { kind: 'bigstat', text: 'If ransomware hit today, claims processing resumes in ~3.5 days — within tolerance, but recovery testing is slipping and needs funding.' },
         ],
       },
       'operational-threats': {
-        name: 'Operational Threats', q: 'What could disrupt service?',
-        answer: 'Config drift and an unrecorded emergency change are the live gaps.', pill: '1 gap', pillKind: 'exposure',
-        lede: 'Operational risks to continuity — not security alerts (those live in CISO).',
+        name: 'Operational Threats', q: 'What could disrupt operations?', pill: '2 watch items', pillKind: 'exposure',
+        lede: 'Operational fragility and dependencies that could take a service down.',
         sections: [
-          { kind: 'rows', title: 'Live operational gaps', items: [
-            { k: 'Config drift in tokenization', sub: 'preceded the 14:02 failure', v: 'Open', kind: 'exposure' },
-            { k: 'Emergency change record (ECR)', sub: 'WAF+ACL change in prod', v: 'Missing — backfill SLA 24h', kind: 'exposure' },
-            { k: 'Dependency map', v: 'Checkout API → tokenization → processor' },
+          { kind: 'table', head: ['Service', 'Risk', 'Trend', 'Operational driver'], rows: [
+            { cells: [{ t: 'Claims Processing', name: true }, { t: 'High', pill: true, kind: 'critical' }, { t: '↑', fg: 'critical' }, { t: 'Legacy platform; single-path dependency', exposed: true }] },
+            { cells: [{ t: 'Call Center Ops', name: true }, { t: 'Medium', pill: true, kind: 'exposure' }, { t: '↑', fg: 'critical' }, { t: 'Vendor-dependent; identity exposure', exposed: true }] },
+            { cells: [{ t: 'AI-Assisted Claims', name: true }, { t: 'Medium', pill: true, kind: 'exposure' }, { t: '→', fg: 'exposure' }, { t: 'New service; limited recovery coverage', exposed: true }] },
+            { cells: [{ t: 'Member Portal', name: true }, { t: 'Low', pill: true, kind: 'pass' }, { t: '↓', fg: 'pass' }, { t: 'Resilient; multi-region', exposed: true }] },
           ] },
         ],
       },
       'decisions-required': {
-        name: 'Decisions Required', q: 'What needs a decision?',
-        answer: 'Two decisions; both can wait for the change window.', pill: '2 decisions', pillKind: 'exposure',
-        lede: 'Continuity trade-offs that are yours to make.',
+        name: 'Decisions Required', q: 'What needs my decision?', pill: '1 decision', pillKind: 'exposure',
+        lede: 'Continuity calls that are the CIO’s to make.',
         sections: [
-          { kind: 'decisions', title: 'Your decisions — today', button: 'Generate board package →', items: [
-            { sev: 'HOLD', kind: 'exposure', title: 'Hold on compensating control vs failover (risk ~2 min payment interruption).', owner: 'Owner: CIO → failover in tonight’s window' },
-            { sev: 'RAISE', kind: 'exposure', title: 'Raise the emergency change record now (governance gap).', owner: 'Owner: CIO → ECR within 24h' },
+          { kind: 'decisions', items: [
+            { sev: 'Decide', kind: 'exposure', title: 'Hold compensating control vs force failover — failover risks a 9-min payment outage for a control that is holding.', owner: 'Claims gateway · Recommend: hold' },
+            { sev: 'File', kind: 'brand', title: 'Emergency change record — for the applied compensating control.', owner: 'Change board · File now' },
           ] },
         ],
       },
       'reliability-trend': {
-        name: 'Reliability Trend', q: 'Are we getting more reliable?',
-        answer: 'Reliability is above target and improving.', pill: 'Improving ↑', pillKind: 'pass', pillVerified: true,
-        lede: 'Service reliability and control-health against target.',
+        name: 'Reliability Trend', q: 'Are we more reliable over time?', pill: 'Improving', pillKind: 'pass',
+        lede: 'Reliability and recovery trend against operational targets.',
         sections: [
-          { kind: 'chart', posture: POSTURE, target: 85 },
-          trendUpDown(['Uptime / SLA adherence', 'Patch currency', 'Change success rate'], ['Recovery testing', 'Config drift control', 'Legacy claims platform']),
-          { kind: 'note', text: 'Chart shows posture index (illustrative). Bind to /api/cio/resilience for live reliability/MTTR.' },
+          { kind: 'panel', title: 'Reliability trend', rowsKind: 'kv', rows: [
+            { l: 'Uptime (rolling 90d)', v: '99.98% · steady', vKind: 'pass' },
+            { l: 'Mean time to recover (MTTR)', v: 'Improving', vKind: 'pass' },
+            { l: 'Recovery readiness', v: '78% → target 90%', vKind: 'exposure' },
+            { l: 'Change-related incidents', v: 'Down', vKind: 'pass' },
+          ] },
         ],
       },
     },
   },
 
-  /* ===================== CLO — obligations & defensibility ===================== */
+  /* ============================== CLO ============================== */
   CLO: {
     summary: {
-      verdict: 'No disclosure obligation is triggered; the clock is tracked and evidence is preserved under privilege.',
-      pill: 'No obligation triggered', pillKind: 'pass', pillVerified: true,
-      lede: 'A litigation hold is active and communications are privileged. SEC, GDPR and state clocks are not started pending the materiality determination.',
+      verdict: 'No disclosure obligation is triggered today; clocks are tracked and evidence preserved.',
+      pill: 'No trigger yet', pillKind: 'pass',
+      lede: 'The claims event is under materiality review. Nothing requires regulatory or customer notification to date; evidence is preserved under privilege.',
       tiles: [
-        { label: 'Disclosure obligation', value: 'None', valueKind: 'pass', to: 'regulatory-obligation' },
-        { label: 'Regimes implicated', value: 'SEC·GDPR·State·PCI', to: 'regulatory-obligation' },
-        { label: 'Clocks running', value: '0', valueKind: 'pass', to: 'disclosure-timelines' },
-        { label: 'Data subjects confirmed', value: 'None', valueKind: 'pass', to: 'regulatory-obligation' },
-        { label: 'Decisions for you', value: '2', to: 'decisions-required' },
-        { label: 'Litigation hold', value: 'Active', valueKind: 'pass', to: 'defensibility' },
+        { label: 'Disclosure triggered', value: '0', to: 'regulatory-obligation' },
+        { label: 'Reg clocks running', value: '1', valueKind: 'critical', to: 'disclosure-timelines' },
+        { label: 'Privilege / preservation', value: 'In place', to: 'regulatory-obligation' },
+        { label: 'Open legal risks', value: '2', to: 'regulatory-obligation' },
+        { label: 'Regulatory readiness', value: '91%', to: 'defensibility' },
+        { label: 'Decisions today', value: '2', valueKind: 'critical', to: 'decisions-required' },
       ],
       briefing: [
-        { q: 'Do we have an obligation?', a: 'None triggered to date — no confirmed access to regulated data.', pill: 'No obligation', kind: 'pass', verified: true, to: 'regulatory-obligation' },
-        { q: 'What are the disclosure timelines?', a: 'SEC 8-K (4 business days) and GDPR Art. 33 (72h) — neither started.', pill: 'Not started', kind: 'pass', verified: true, to: 'disclosure-timelines' },
-        { q: 'What needs a decision?', a: 'Defer the materiality call with a documented basis; engage outside counsel.', pill: '2 decisions', kind: 'exposure', to: 'decisions-required' },
-        { q: 'Is our position defensible?', a: 'Yes — hold active, evidence preserved, communications privileged.', pill: 'Defensible', kind: 'pass', verified: true, to: 'defensibility' },
+        { q: 'Do we have an obligation today?', a: 'No disclosure triggered; two open legal risks tracked, evidence preserved under privilege.', pill: 'No trigger', kind: 'pass', to: 'regulatory-obligation' },
+        { q: 'What must we disclose, and when?', a: 'One clock running — SEC 4-day starts only on a materiality determination.', pill: '1 clock', kind: 'exposure', to: 'disclosure-timelines' },
+        { q: 'What needs my decision?', a: 'Make/defer the materiality call; decide on a precautionary litigation hold.', pill: '2 today', kind: 'exposure', to: 'decisions-required' },
+        { q: 'Is our position defensible?', a: 'Yes — regulatory readiness 91%; full evidence chain preserved.', pill: 'Defensible', kind: 'pass', to: 'defensibility' },
       ],
     },
     tabs: {
       'regulatory-obligation': {
-        name: 'Regulatory Obligation', q: 'Do we have an obligation?',
-        answer: 'No disclosure obligation is triggered to date.', pill: 'No obligation', pillKind: 'pass', pillVerified: true,
-        lede: 'The obligations matrix for this incident.',
+        name: 'Regulatory Obligation', q: 'Do we have an obligation today?', pill: 'No trigger yet', pillKind: 'pass',
+        lede: 'Regimes implicated by the event and our preservation posture.',
         sections: [
-          { kind: 'rows', title: 'Obligations matrix', items: [
-            { k: 'SEC 8-K (Item 1.05)', v: 'Conditional on materiality — not triggered', kind: 'pass', verified: true },
-            { k: 'GDPR Art. 33', v: 'No personal-data breach confirmed', kind: 'pass', verified: true },
-            { k: 'US state breach laws', v: 'Conditional on confirmed access — none', kind: 'pass', verified: true },
-            { k: 'PCI DSS contractual', v: 'Card-network notice under review', kind: 'exposure' },
+          { kind: 'panel', title: 'Legal exposure & posture', rowsKind: 'kv', rows: [
+            { l: 'Disclosure obligation triggered', v: 'None to date', vKind: 'pass' },
+            { l: 'Regimes potentially implicated', v: 'SEC, GDPR, state breach laws', vKind: 'exposure' },
+            { l: 'Data subjects confirmed exposed', v: '0 (under review)', vKind: 'exposure' },
+            { l: 'Litigation hold', v: 'Standing by' },
+            { l: 'Evidence preservation', v: 'In place · under privilege', vKind: 'pass' },
           ] },
         ],
       },
       'disclosure-timelines': {
-        name: 'Disclosure & Timelines', q: 'What clocks are running?',
-        answer: 'No disclosure clock has started.', pill: 'Not started', pillKind: 'pass', pillVerified: true,
-        lede: 'The clocks that would start on a materiality determination.',
+        name: 'Disclosure & Timelines', q: 'What must we disclose, and by when?', pill: '1 clock running', pillKind: 'exposure',
+        lede: 'Multi-jurisdiction obligations and the clocks attached to each.',
         sections: [
-          { kind: 'rows', title: 'Clocks', items: [
-            { k: 'SEC 8-K window', v: '4 business days from determination — not started' },
-            { k: 'GDPR 72-hour window', v: 'Not started — no personal data confirmed' },
-            { k: 'Regulator / customer notices', v: 'Drafts staged; not issued', kind: 'exposure' },
+          { kind: 'table', head: ['Regime', 'Status', 'Clock', 'Note'], rows: [
+            { cells: [{ t: 'SEC 8-K · Item 1.05 (US)', name: true }, { t: 'Not started', pill: true, kind: 'exposure' }, { t: '4 business days' }, { t: 'Starts only on materiality determination', exposed: true }] },
+            { cells: [{ t: 'GDPR 72-hr (EU)', name: true }, { t: 'N/A', pill: true, kind: 'pass' }, { t: '—' }, { t: 'No personal data confirmed exposed', exposed: true }] },
+            { cells: [{ t: 'State breach laws (US)', name: true }, { t: 'Monitoring', pill: true, kind: 'exposure' }, { t: 'Varies' }, { t: 'Below threshold pending data-scope', exposed: true }] },
+            { cells: [{ t: 'Contractual notice', name: true }, { t: '46h', pill: true, kind: 'exposure' }, { t: 'Vendor SLA' }, { t: 'Precautionary notice prepared', exposed: true }] },
           ] },
         ],
       },
       'decisions-required': {
-        name: 'Decisions Required', q: 'What needs a decision?',
-        answer: 'Two legal decisions; defer the materiality call with basis.', pill: '2 decisions', pillKind: 'exposure',
-        lede: 'Decisions that protect privilege and defensibility.',
+        name: 'Decisions Required', q: 'What needs my decision?', pill: '2 today', pillKind: 'exposure',
+        lede: 'The legal calls — privilege, preservation, and the materiality determination.',
         sections: [
-          { kind: 'decisions', title: 'Your decisions — today', button: 'Generate board package →', items: [
-            { sev: 'DEFER', kind: 'exposure', title: 'Defer the materiality call with a documented basis; reassess on new facts.', owner: 'Owner: CLO + CFO → re-evaluate' },
-            { sev: 'ENGAGE', kind: 'exposure', title: 'Engage outside counsel to anchor privilege and the obligations matrix.', owner: 'Owner: CLO → now' },
+          { kind: 'decisions', button: 'Generate counsel memo →', items: [
+            { sev: 'Decide', kind: 'exposure', title: 'Make or defer the materiality determination — co-owned with the CFO; due in 2h 40m.', owner: 'With CFO · Convene call' },
+            { sev: 'Decide', kind: 'brand', title: 'Issue a precautionary litigation hold — preserves evidence should status change.', owner: 'Legal ops · Recommend: issue' },
           ] },
         ],
       },
       defensibility: {
-        name: 'Defensibility', q: 'Is our position defensible?',
-        answer: 'Yes — evidence preserved under privilege; hold active.', pill: 'Defensible', pillKind: 'pass', pillVerified: true,
-        lede: 'The record that makes the position defensible.',
+        name: 'Defensibility', q: 'Is our position defensible?', pill: 'Defensible', pillKind: 'pass',
+        lede: 'The record that protects the company with regulators, auditors, and in litigation.',
         sections: [
-          { kind: 'rows', title: 'Defensibility', items: [
-            { k: 'Litigation hold', v: 'Active (LH-2026-014)', verified: true, kind: 'pass' },
-            { k: 'Evidence preservation', v: 'Timeline + attestations preserved', verified: true, kind: 'pass' },
-            { k: 'Privilege', v: 'Communications marked privileged', verified: true, kind: 'pass' },
+          { kind: 'panel', title: 'Defensibility', rowsKind: 'kv', rows: [
+            { l: 'Regulatory readiness', v: '91%', vKind: 'pass' },
+            { l: 'Evidence chain', v: 'Preserved · integrity verified', vKind: 'pass' },
+            { l: 'Obligations met on time (12mo)', v: '100%', vKind: 'pass' },
+            { l: 'Open legal risks', v: '2 · tracked', vKind: 'exposure' },
           ] },
         ],
       },
     },
   },
 
-  /* ===================== CRO — appetite & concentration ===================== */
+  /* ============================== CRO ============================== */
   CRO: {
     summary: {
-      verdict: 'One risk moved above appetite (payments); aggregate posture remains within tolerance.',
-      pill: '1 risk above appetite', pillKind: 'exposure',
-      lede: 'R-07 (payments availability & data integrity) breached its appetite ceiling while on a compensating control. Concentration to the control vendor is flagged. An out-of-cycle note is due.',
+      verdict: 'Aggregate cyber risk is within appetite; one risk has moved above the line.',
+      pill: '1 over appetite', pillKind: 'exposure',
+      lede: 'Claims/payments risk moved above appetite today; the enterprise aggregate remains within tolerance. Third-party risk is the structural concern.',
       tiles: [
-        { label: 'Risks above appetite', value: '1', valueKind: 'exposure', to: 'risk-appetite-status' },
-        { label: 'Aggregate residual', value: 'Within tolerance', valueKind: 'pass', to: 'risk-appetite-status' },
-        { label: 'Top risk', value: 'R-07', valueKind: 'exposure', to: 'tolerance-concentration' },
-        { label: 'Concentration flag', value: '1 vendor', valueKind: 'exposure', to: 'tolerance-concentration' },
-        { label: 'Decisions for you', value: '2', to: 'decisions-required' },
-        { label: 'Residual vs ceiling', value: '43 / 40', to: 'risk-trajectory' },
+        { label: 'Risks over appetite', value: '1', valueKind: 'critical', to: 'tolerance-concentration' },
+        { label: 'Aggregate risk', value: 'Within', to: 'risk-appetite-status' },
+        { label: 'Concentration', value: 'Payments', to: 'tolerance-concentration' },
+        { label: 'Third-party risk', value: 'Drifting', to: 'tolerance-concentration' },
+        { label: 'Risk transfer', value: 'Active', to: 'decisions-required' },
+        { label: 'Risk trend', value: '↑', to: 'risk-trajectory' },
       ],
       briefing: [
-        { q: 'Where do we sit against appetite?', a: 'One risk above appetite (R-07); aggregate within tolerance.', pill: '1 breach', kind: 'exposure', to: 'risk-appetite-status' },
-        { q: 'Where is tolerance/concentration strained?', a: 'Correlated to the control vendor — a concentration flag on payments.', pill: 'Concentration', kind: 'exposure', to: 'tolerance-concentration' },
-        { q: 'What needs a decision?', a: 'Mitigate with time-boxed acceptance; escalate an out-of-cycle note.', pill: '2 decisions', kind: 'exposure', to: 'decisions-required' },
-        { q: 'Which way is risk trending?', a: 'Residual ticked up this quarter on the breach; trajectory otherwise improving.', pill: 'Watch', kind: 'exposure', to: 'risk-trajectory' },
+        { q: 'Are we within risk appetite today?', a: 'Aggregate yes; one risk (claims/payments) is currently above the appetite line.', pill: '1 breach', kind: 'exposure', to: 'risk-appetite-status' },
+        { q: 'What is out of tolerance or concentrated?', a: 'Claims/payments over appetite; third-party risk drifting; concentration in payments.', pill: 'Concentrated', kind: 'exposure', to: 'tolerance-concentration' },
+        { q: 'What needs my decision?', a: 'Accept, transfer, or mitigate the vendor risk; escalate the breach to committee.', pill: '2 today', kind: 'exposure', to: 'decisions-required' },
+        { q: 'Is aggregate risk trending down?', a: 'Yes — residual risk improving over the last six quarters, within appetite.', pill: 'Improving ↑', kind: 'pass', to: 'risk-trajectory' },
       ],
     },
     tabs: {
       'risk-appetite-status': {
-        name: 'Risk Appetite Status', q: 'Where does this sit against appetite?',
-        answer: 'One risk above appetite; aggregate within tolerance.', pill: '1 breach', pillKind: 'exposure',
-        lede: 'Position against the board-set appetite.',
+        name: 'Risk Appetite Status', q: 'Are we within risk appetite today?', pill: 'Aggregate: yes', pillKind: 'pass',
+        lede: 'Each risk category against the board-set appetite line.',
         sections: [
-          { kind: 'rows', title: 'Appetite', items: [
-            { k: 'R-07 Payments availability & integrity', sub: 'score 43 · ceiling 40', v: 'Above appetite', kind: 'exposure' },
-            { k: 'Likelihood × impact', v: 'L: Low (contained) × I: High' },
-            { k: 'Aggregate residual', v: 'Within tolerance', verified: true, kind: 'pass' },
+          { kind: 'table', head: ['Risk category', 'Position', 'vs Appetite', 'Note'], rows: [
+            { cells: [{ t: 'Claims / payments', name: true }, { t: 'Elevated', pill: true, kind: 'critical' }, { t: 'Over', fg: 'critical' }, { t: 'Contained exposure pushed it above line', exposed: true }] },
+            { cells: [{ t: 'Third-party', name: true }, { t: 'Medium', pill: true, kind: 'exposure' }, { t: 'At line', fg: 'exposure' }, { t: 'Two critical vendors drifting', exposed: true }] },
+            { cells: [{ t: 'Identity / access', name: true }, { t: 'Low', pill: true, kind: 'pass' }, { t: 'Within', fg: 'pass' }, { t: 'Improving', exposed: true }] },
+            { cells: [{ t: 'Aggregate enterprise', name: true }, { t: 'Medium', pill: true, kind: 'exposure' }, { t: 'Within', fg: 'pass' }, { t: 'Within tolerance overall', exposed: true }] },
           ] },
         ],
       },
       'tolerance-concentration': {
-        name: 'Tolerance & Concentration', q: 'Where is risk concentrated?',
-        answer: 'Concentration to the control vendor on payments.', pill: 'Concentration', pillKind: 'exposure',
-        lede: 'Tolerance bands and concentration/third-party risk.',
+        name: 'Tolerance & Concentration', q: 'What is out of tolerance or concentrated?', pill: 'Concentrated in payments', pillKind: 'exposure',
+        lede: 'The risk-register entries breaching appetite, and where risk concentrates.',
         sections: [
-          { kind: 'rows', title: 'Concentration', items: [
-            { k: 'Third-party concentration', sub: 'control vendor shares blast radius', v: 'Flagged', kind: 'exposure' },
-            { k: 'Vendor reviews', v: '14 overdue', kind: 'exposure' },
-            { k: 'Tolerance band (payments)', v: 'Exceeded for R-07' },
+          { kind: 'panel', title: 'Out of tolerance & concentration', rowsKind: 'kv', rows: [
+            { l: 'Risks above appetite', v: '1 · claims/payments', vKind: 'exposure' },
+            { l: 'Concentration risk', v: 'Payments path', vKind: 'exposure' },
+            { l: 'Third-party risk', v: 'Drifting · 2 critical vendors', vKind: 'exposure' },
+            { l: 'Correlated / supply-chain risk', v: 'Monitored' },
           ] },
         ],
       },
       'decisions-required': {
-        name: 'Decisions Required', q: 'What needs a decision?',
-        answer: 'Two risk decisions; mitigate and escalate.', pill: '2 decisions', pillKind: 'exposure',
-        lede: 'Treatment decisions that are yours to make.',
+        name: 'Decisions Required', q: 'What needs my decision?', pill: '2 today', pillKind: 'exposure',
+        lede: 'Accept, transfer, or mitigate — and what to escalate to the risk committee.',
         sections: [
-          { kind: 'decisions', title: 'Your decisions — today', button: 'Generate board package →', items: [
-            { sev: 'MITIGATE', kind: 'exposure', title: 'Mitigate R-07; time-boxed acceptance until the native control is restored.', owner: 'Owner: CRO → with CISO' },
-            { sev: 'ESCALATE', kind: 'exposure', title: 'Escalate an out-of-cycle note to the risk committee.', owner: 'Owner: CRO → this week' },
+          { kind: 'decisions', items: [
+            { sev: 'Decide', kind: 'exposure', title: 'Accept, transfer, or mitigate vendor (PHI) risk — critical vendor below tolerance.', owner: 'Risk register · Recommend: mitigate' },
+            { sev: 'Escalate', kind: 'brand', title: 'Appetite-breach escalation — claims/payments above the line.', owner: 'Risk committee · Escalate' },
           ] },
         ],
       },
       'risk-trajectory': {
-        name: 'Risk Trajectory', q: 'Which way is risk trending?',
-        answer: 'Residual ticked up on the breach; otherwise improving.', pill: 'Watch', pillKind: 'exposure',
-        lede: 'Residual risk against the appetite ceiling over time.',
+        name: 'Risk Trajectory', q: 'Is aggregate risk trending down?', pill: 'Improving', pillKind: 'pass',
+        lede: 'Residual risk against appetite over time.',
         sections: [
-          { kind: 'chart', posture: POSTURE, target: 85 },
-          trendUpDown(['Control efficacy', 'Detection coverage'], ['Third-party risk', 'Payments concentration (R-07)', 'Recovery testing']),
-          { kind: 'note', text: 'Chart shows posture index (illustrative). Bind to /api/metrics/cro for live residual-vs-appetite.' },
+          { kind: 'panel', title: 'Risk trajectory', rowsKind: 'kv', rows: [
+            { l: 'Residual risk (6-quarter trend)', v: 'Down · within appetite', vKind: 'pass' },
+            { l: 'Appetite breaches this year', v: '3 · all resolved', vKind: 'pass' },
+            { l: 'Risk register items closed (Q)', v: '12', vKind: 'pass' },
+            { l: 'Projected if roadmap funded', v: 'Further reduction', vKind: 'pass' },
+          ] },
         ],
       },
     },
   },
 
-  /* ===================== Board — oversight & assurance ===================== */
+  /* ============================== Board ============================== */
   Board: {
     summary: {
-      verdict: 'Management is in control: one material-candidate event, contained, with no disclosure obligation to date.',
-      pill: 'Management in control', pillKind: 'pass', pillVerified: true,
-      lede: 'A payment-path control failed briefly and was contained and independently verified. No customer impact; no confirmed data loss. Materiality is under review.',
+      verdict: 'Management is in control. One event is under materiality review; no disclosure is required to date.',
+      pill: 'In control', pillKind: 'pass',
+      lede: 'A single contained event, handled by management within minutes. The record shows the board has exercised oversight. One funding decision is before you.',
       tiles: [
-        { label: 'Management in control', value: 'Yes', valueKind: 'pass', to: 'control-assurance' },
-        { label: 'Control assurance', value: '1,238 / 1,240', to: 'control-assurance' },
-        { label: 'Material events', value: '1 candidate', valueKind: 'exposure', to: 'materiality' },
-        { label: 'Board decisions', value: '1', to: 'board-decisions' },
-        { label: 'Disclosure obligation', value: 'None', valueKind: 'pass', to: 'materiality' },
-        { label: 'Posture vs appetite', value: '82 / 85', to: 'quarterly-oversight' },
+        { label: 'Management in control', value: 'Yes', to: 'control-assurance' },
+        { label: 'Material events', value: '0', to: 'materiality' },
+        { label: 'Board decisions needed', value: '1', valueKind: 'critical', to: 'board-decisions' },
+        { label: 'Posture vs appetite', value: 'Within', to: 'quarterly-oversight' },
+        { label: 'Quarter trend', value: '↑+4', to: 'quarterly-oversight' },
+        { label: 'Peer benchmark', value: 'Top quartile', to: 'quarterly-oversight' },
       ],
       briefing: [
-        { q: 'Is management in control?', a: 'Yes — detected, contained, verified, and escalated within policy.', pill: 'In control', kind: 'pass', verified: true, to: 'control-assurance' },
-        { q: 'Is anything material?', a: 'One material-candidate event under review; no disclosure obligation to date.', pill: 'Under review', kind: 'exposure', to: 'materiality' },
-        { q: 'What must the board decide?', a: 'Acknowledge the briefing; pre-agree the disclosure path if materiality changes.', pill: '1 decision', kind: 'brand', to: 'board-decisions' },
-        { q: 'How is oversight trending?', a: 'Enterprise posture improving and approaching the board appetite.', pill: 'Improving ↑', kind: 'pass', verified: true, to: 'quarterly-oversight' },
+        { q: 'Is management in control?', a: 'Yes — the event was contained in minutes; defenses across the enterprise hold.', pill: 'In control', kind: 'pass', to: 'control-assurance' },
+        { q: 'Is anything material?', a: 'One event under materiality review; no disclosure obligation triggered to date.', pill: 'Under review', kind: 'exposure', to: 'materiality' },
+        { q: 'What decisions does the board need?', a: 'One: approve claims-platform modernization funding ($220M/day exposure).', pill: '1 decision', kind: 'exposure', to: 'board-decisions' },
+        { q: 'Are we improving?', a: 'Yes — posture +4 this quarter, within appetite, top-quartile vs peers.', pill: 'Improving ↑', kind: 'pass', to: 'quarterly-oversight' },
       ],
     },
     tabs: {
       'control-assurance': {
-        name: 'Control Assurance', q: 'Is management in control?',
-        answer: 'Yes — contained by management and independently verified.', pill: 'In control', pillKind: 'pass', pillVerified: true,
-        lede: 'Independent assurance that controls hold.',
+        name: 'Control Assurance', q: 'Is management in control?', pill: 'Yes', pillKind: 'pass',
+        lede: 'Board-level assurance — no technical detail, just whether the company is being run safely.',
         sections: [
-          { kind: 'rows', title: 'Assurance', items: [
-            { k: 'Critical controls validated holding', v: '1,238 / 1,240', verified: true, kind: 'pass' },
-            { k: 'Incident handling', v: 'Detected, contained, verified, escalated within policy', verified: true, kind: 'pass' },
-            { k: 'Independent verification', v: 'Containment verified at 14:09 (synthetic probe)', verified: true, kind: 'pass' },
+          { kind: 'panel', title: 'Assurance', rowsKind: 'kv', rows: [
+            { l: 'Active compromise', v: 'None', vKind: 'pass' },
+            { l: 'Today’s event', v: 'Contained by management in minutes', vKind: 'pass' },
+            { l: 'Business operating normally', v: 'Yes', vKind: 'pass' },
+            { l: 'Accountability', v: 'Named owners on every open item', vKind: 'pass' },
           ] },
         ],
       },
       materiality: {
-        name: 'Materiality', q: 'Is anything material?',
-        answer: 'One material-candidate event; no obligation to date.', pill: 'Under review', pillKind: 'exposure',
-        lede: 'Materiality and disclosure status for oversight.',
+        name: 'Materiality', q: 'Is anything material?', pill: 'Under review', pillKind: 'exposure',
+        lede: 'What the board must know about materiality and disclosure.',
         sections: [
-          { kind: 'rows', title: 'Materiality & disclosure', items: [
-            { k: 'Materiality determination', v: 'Under review with Legal + Finance', kind: 'exposure' },
-            { k: 'Disclosure obligation', v: 'None to date', verified: true, kind: 'pass' },
-            { k: 'Financial exposure', v: 'Bounded, below insurance threshold', verified: true, kind: 'pass' },
+          { kind: 'panel', title: 'Materiality & disclosure', rowsKind: 'kv', rows: [
+            { l: 'Material events confirmed', v: '0', vKind: 'pass' },
+            { l: 'Under materiality review', v: '1 · determination due', vKind: 'exposure' },
+            { l: 'Disclosure obligation triggered', v: 'None to date', vKind: 'pass' },
+            { l: 'How management handled it', v: 'Contained, documented, evidence preserved', vKind: 'pass' },
           ] },
         ],
       },
       'board-decisions': {
-        name: 'Board Decisions', q: 'What must the board decide?',
-        answer: 'One decision; no action beyond acknowledgement today.', pill: '1 decision', pillKind: 'brand',
-        lede: 'What the board is asked to decide and minute.',
+        name: 'Board Decisions', q: 'What decisions does the board need?', pill: '1 decision', pillKind: 'exposure',
+        lede: 'Items requiring board action or formal acknowledgement.',
         sections: [
-          { kind: 'decisions', title: 'For the board', button: 'Generate board package →', items: [
-            { sev: 'ACKNOWLEDGE', kind: 'exposure', title: 'Acknowledge the briefing; minute the oversight record.', owner: 'Owner: Board → this session' },
-            { sev: 'PRE-AGREE', kind: 'exposure', title: 'Pre-agree the disclosure path if the event turns material.', owner: 'Owner: Board + CLO → standby' },
-          ] },
-          { kind: 'rows', title: 'Oversight questions to ask', items: [
-            { k: 'Containment durability', v: 'How long can the compensating control safely hold?' },
-            { k: 'Materiality basis', v: 'What would change the determination?' },
-            { k: 'Customer impact', v: 'What confirms no data was accessed?' },
+          { kind: 'decisions', title: 'For the board', button: 'Open board package →', items: [
+            { sev: 'Approve', kind: 'critical', title: 'Claims-platform modernization funding — addresses $220M/day exposure on a legacy system.', owner: 'Recommended by CISO, CIO, CFO · Approve funding' },
+            { sev: 'Note', kind: 'brand', title: 'Acknowledge the contained event — for the oversight record.', owner: 'Management briefing · Acknowledge' },
           ] },
         ],
       },
       'quarterly-oversight': {
-        name: 'Quarterly Oversight', q: 'How is oversight trending?',
-        answer: 'Enterprise posture is improving toward the board appetite.', pill: 'Improving ↑', pillKind: 'pass', pillVerified: true,
-        lede: 'Posture against the board-set appetite, quarter over quarter.',
+        name: 'Quarterly Oversight', q: 'Are we improving? (quarterly oversight)', pill: 'Improving', pillKind: 'pass',
+        lede: 'The quarterly view: posture, resilience, and how we compare to peers.',
         sections: [
-          { kind: 'chart', posture: POSTURE, target: 85 },
-          trendUpDown(['Identity & access (IAM)', 'Cloud security', 'Endpoint protection'], ['Third-party risk', 'Recovery testing', 'AI governance']),
+          { kind: 'panel', title: 'Quarterly oversight', rowsKind: 'kv', rows: [
+            { l: 'Posture vs board appetite', v: 'Within · 82 / target 85', vKind: 'pass' },
+            { l: 'Quarter-over-quarter', v: '↑ +4', vKind: 'pass' },
+            { l: 'Mean time to contain', v: '41 min · improving', vKind: 'pass' },
+            { l: 'Peer benchmark', v: 'Top quartile', vKind: 'pass' },
+            { l: 'Defensible record', v: 'Board summary + evidence on file', vKind: 'pass' },
+          ] },
         ],
       },
     },

@@ -212,8 +212,8 @@ function SeatPanel({ seat, tabKey, goTabKey, onBoardPack, asOf }) {
   if (!tab) return null;
   return (
     <div className="sr-stack">
-      <PanelHead kicker={tab.name} verdict={tab.answer} pill={tab.pill} pillKind={tab.pillKind}
-        pillVerified={tab.pillVerified} lede={tab.lede} />
+      <PanelHead verdict={tab.name} pill={tab.pill} pillKind={tab.pillKind}
+        pillVerified={tab.pillVerified} qsub={tab.q} lede={tab.lede} />
       {(tab.sections || []).map((s, i) => <SeatSection key={i} s={s} onBoardPack={onBoardPack} />)}
     </div>
   );
@@ -222,6 +222,9 @@ function SeatPanel({ seat, tabKey, goTabKey, onBoardPack, asOf }) {
 function SeatSection({ s, onBoardPack }) {
   if (s.kind === 'rows') return <Section title={s.title}><Rows items={s.items} /></Section>;
   if (s.kind === 'note') return <p className="sr-note">{s.text}</p>;
+  if (s.kind === 'bigstat') return <div className="sr-bigstat">{s.text}</div>;
+  if (s.kind === 'panel') return <SeatMiniPanel p={s} full />;
+  if (s.kind === 'cols') return <div className="sr-twocol">{s.panels.map((p, i) => <SeatMiniPanel key={i} p={p} />)}</div>;
   if (s.kind === 'decisions') {
     return (
       <Section title={s.title}>
@@ -256,22 +259,25 @@ function SeatSection({ s, onBoardPack }) {
   }
   if (s.kind === 'chart') return <PostureChart data={s.posture} target={s.target} />;
   if (s.kind === 'table') {
-    return (
-      <Section title={s.title} action={s.note ? <span className="sr-hint">{s.note}</span> : null}>
-        <table className="sr-table">
-          <thead><tr>{s.head.map((h) => <th key={h}>{h}</th>)}</tr></thead>
-          <tbody>
-            {s.rows.map((r, ri) => (
-              <tr key={ri}>{r.cells.map((c, ci) => (
-                <td key={ci} className={c.mono ? 'sr-mono' : c.exposed ? 'sr-td-exposed' : c.name ? 'sr-td-name' : ''}>
-                  {c.pill ? <Pill kind={c.kind}>{c.t}</Pill> : c.t}
-                </td>
-              ))}</tr>
-            ))}
-          </tbody>
-        </table>
-      </Section>
+    const table = (
+      <table className="sr-table">
+        <thead><tr>{s.head.map((h) => <th key={h}>{h}</th>)}</tr></thead>
+        <tbody>
+          {s.rows.map((r, ri) => (
+            <tr key={ri}>{r.cells.map((c, ci) => (
+              <td key={ci} className={c.mono ? 'sr-mono' : c.exposed ? 'sr-td-exposed' : c.name ? 'sr-td-name' : ''}>
+                {c.pill ? <Pill kind={c.kind}>{c.t}</Pill>
+                  : c.fg ? <span className={`sr-trend sr-fg--${c.fg}`}>{c.t}</span>
+                  : c.t}
+              </td>
+            ))}</tr>
+          ))}
+        </tbody>
+      </table>
     );
+    return s.title
+      ? <Section title={s.title} action={s.note ? <span className="sr-hint">{s.note}</span> : null}>{table}</Section>
+      : <div className="sr-section">{table}</div>;
   }
   return null;
 }
@@ -281,11 +287,12 @@ export function Pill({ kind = 'brand', verified, children }) {
   return <span className={`sr-pill sr-pill--${kind}`}>{verified ? '✓ ' : ''}{children}</span>;
 }
 
-export function PanelHead({ kicker, verdict, pill, pillKind, pillVerified, lede }) {
+export function PanelHead({ kicker, verdict, pill, pillKind, pillVerified, qsub, lede }) {
   return (
     <div className="sr-head">
-      {kicker && <div className="sr-head__top"><span className="sr-kicker">{kicker}</span>{pill && <Pill kind={pillKind} verified={pillVerified}>{pill}</Pill>}</div>}
-      {verdict && <h2 className="sr-verdict">{verdict}</h2>}
+      {kicker && <span className="sr-kicker">{kicker}</span>}
+      {verdict && <h2 className="sr-verdict">{verdict}{pill && <Pill kind={pillKind} verified={pillVerified}>{pill}</Pill>}</h2>}
+      {qsub && <p className="sr-qsub">{qsub}</p>}
       {lede && <p className="sr-lede">{lede}</p>}
     </div>
   );
@@ -393,8 +400,8 @@ function CisoPanel({ tabKey, goTabKey, bound, onBoardPack }) {
   const tab = S.tabs.find((t) => t.key === tabKey);
   if (!tab) return null;
   const head = (
-    <PanelHead kicker={tab.name} verdict={tab.answer} pill={tab.pill} pillKind={tab.pillKind}
-      pillVerified={tab.pillVerified} lede={tab.lede} />
+    <PanelHead verdict={tab.name} pill={tab.pill} pillKind={tab.pillKind}
+      pillVerified={tab.pillVerified} qsub={tab.q} lede={tab.lede} />
   );
 
   if (tabKey === 'operational') {
@@ -618,6 +625,19 @@ function FwCol({ label, items, sel, onPick, empty }) {
   );
 }
 
+/* A mini panel (srow / kv rows) — matches the mock's .panel blocks. */
+function SeatMiniPanel({ p, full }) {
+  return (
+    <div className={`sr-panel${full ? ' sr-panel--full' : ''}`}>
+      <h4 className="sr-panel__h">{p.title}</h4>
+      {p.rows.map((r, i) => (p.rowsKind === 'kv'
+        ? <div key={i} className="sr-kv"><span className="sr-kv__k">{r.l}</span><span className={`sr-kv__v${r.vKind ? ` sr-fg--${r.vKind}` : ''}`}>{r.v}</span></div>
+        : <div key={i} className="sr-srow"><span className="sr-srow__nm">{r.nm}{r.sub && <span className="sr-srow__sub">{r.sub}</span>}</span><span className={`sr-pill sr-pill--${r.statKind || 'brand'}`}>{r.stat}</span></div>
+      ))}
+    </div>
+  );
+}
+
 /* ---- Trust layer: provenance strip + audit log --------------------------- */
 function ProvenanceStrip({ provenance, asOf }) {
   const p = provenance || {};
@@ -720,8 +740,10 @@ function SrStyles() {
       .sr-head { display:grid; gap:var(--sr-3); }
       .sr-head__top { display:flex; align-items:center; gap:var(--sr-3); flex-wrap:wrap; }
       .sr-kicker { font-family:var(--sr-font-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--sr-subtle); }
-      .sr-verdict { margin:0; font-family:var(--sr-font-display); font-weight:500; font-size:27px; line-height:1.25; letter-spacing:-.015em; color:var(--sr-text); max-width:880px; }
-      .sr-lede { margin:0; font-size:15px; line-height:1.6; color:var(--sr-muted); max-width:780px; }
+      .sr-verdict { margin:0; font-family:var(--sr-font-display); font-weight:600; font-size:clamp(22px,3vw,30px); line-height:1.15; letter-spacing:-.018em; color:var(--sr-text); max-width:880px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+      .sr-qsub { margin:7px 0 0; font-size:14px; color:var(--sr-muted); }
+      .sr-qsub::before { content:"› "; color:var(--sr-brand); }
+      .sr-lede { margin:12px 0 0; font-size:16px; line-height:1.55; color:var(--sr-muted); max-width:760px; }
 
       .sr-pill { font-family:var(--sr-font-mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; padding:4px 10px; border-radius:999px; white-space:nowrap; }
       .sr-pill--brand { color:var(--sr-brand); background:var(--sr-brand-tint); }
@@ -839,6 +861,20 @@ function SrStyles() {
       .sr-ev__dl dt { font-family:var(--sr-font-mono); font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--sr-subtle); }
       .sr-ev__dl dd { margin:0; font-family:var(--sr-font-mono); font-size:12.5px; color:var(--sr-text); }
       .sr-ev__verified { font-family:var(--sr-font-mono); font-size:12px; font-weight:700; color:var(--sr-pass); }
+
+      /* Mini panels (srow / kv) + bigstat — match the mock's .panel blocks */
+      .sr-panel { background:var(--sr-glass); border:1px solid var(--sr-border); border-radius:var(--sr-radius); padding:18px 20px; }
+      .sr-panel--full { grid-column:1 / -1; }
+      .sr-panel__h { font-family:var(--sr-font-display); font-weight:600; font-size:13px; margin-bottom:13px; color:var(--sr-text); }
+      .sr-srow { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 0; border-top:1px solid var(--sr-border); font-size:14px; }
+      .sr-srow:first-of-type { border-top:none; }
+      .sr-srow__nm { font-weight:600; }
+      .sr-srow__sub { display:block; font-weight:400; color:var(--sr-muted); font-size:12px; margin-top:1px; }
+      .sr-kv { display:flex; justify-content:space-between; gap:12px; padding:9px 0; border-top:1px solid var(--sr-border); font-size:13.5px; }
+      .sr-kv:first-of-type { border-top:none; }
+      .sr-kv__k { color:var(--sr-muted); }
+      .sr-kv__v { font-family:var(--sr-font-mono); font-size:12.5px; }
+      .sr-bigstat { margin-top:6px; background:var(--sr-surface); border:1px solid var(--sr-border); border-radius:10px; padding:14px 16px; font-size:14px; color:var(--sr-muted); line-height:1.5; }
 
       /* Provenance strip */
       .sr-prov { display:flex; flex-wrap:wrap; gap:var(--sr-2) var(--sr-5); align-items:center; padding:var(--sr-3) var(--sr-4); background:var(--sr-surface); border:1px solid var(--sr-border); border-radius:var(--sr-radius); }

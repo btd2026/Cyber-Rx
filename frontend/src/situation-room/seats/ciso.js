@@ -11,7 +11,7 @@ export const CISO_SEAT = {
 
     {
       key: 'operational', name: 'Operational Status', q: 'Can we operate today?',
-      answer: 'Yes — no active compromise.', pill: 'Operating', pillKind: 'pass', pillVerified: true,
+      answer: 'Yes — no active compromise.', pill: 'Yes — no active compromise', pillKind: 'pass',
       lede: 'A security answer, not IT uptime — are we under attack, are our defenses holding right now, and is anything one step from forcing a critical service down?',
       panels: [
         { title: 'Live threat & defense status', rows: [
@@ -36,7 +36,7 @@ export const CISO_SEAT = {
 
     {
       key: 'material-exposure', name: 'Material Exposure', q: 'What could hurt the business?',
-      answer: 'One business-critical process is exposed and rising — claims processing.', pill: '1 High ↑', pillKind: 'exposure',
+      answer: 'One business-critical process is exposed and rising — claims processing.', pill: '1 High & rising', pillKind: 'exposure',
       lede: 'Exposure expressed as business processes, not servers — and the single most likely path to our crown jewels.',
       processes: [
         { name: 'Claims Processing', risk: 'High', riskKind: 'critical', trend: '↑', trendKind: 'critical', exposed: '$220M/day if down; open ransomware path to claims DB' },
@@ -57,7 +57,7 @@ export const CISO_SEAT = {
 
     {
       key: 'action-center', name: 'Action Center', q: 'What needs action?',
-      answer: 'Three decisions need you today — two are critical.', pill: '2 Critical', pillKind: 'critical',
+      answer: 'Three decisions need you today — two are critical.', pill: '2 critical', pillKind: 'critical',
       lede: 'Sorted by who owns it, so nothing waits on the wrong person. Nothing here is overdue — yet.',
       decisions: [
         { sev: 'CRITICAL', kind: 'critical', title: 'Legacy claims platform — $220M/day revenue exposure.', owner: 'Owner: CIO → Fund modernization' },
@@ -78,7 +78,7 @@ export const CISO_SEAT = {
 
     {
       key: 'trajectory', name: 'Trajectory', q: 'Are we getting better?',
-      answer: 'Yes — posture is improving and closing on the board target.', pill: 'Improving ↑', pillKind: 'pass', pillVerified: true,
+      answer: 'Yes — posture is improving and closing on the board target.', pill: 'Improving', pillKind: 'pass',
       lede: 'Posture trend against the board-set target, and exactly where attention is needed.',
       // TODO: real data — posture series illustrative; ends at the stated 82, target 85
       posture: {
@@ -92,7 +92,7 @@ export const CISO_SEAT = {
 
     {
       key: 'response-investment', name: 'Response & Investment', q: 'What are we doing about it?',
-      answer: 'The roadmap closes the open gaps; two proposals await your funding.', pill: 'On track', pillKind: 'pass', pillVerified: true,
+      answer: 'The roadmap closes the open gaps; two proposals await your funding.', pill: 'On track', pillKind: 'brand',
       lede: 'What it costs, what it returns, and what’s waiting on your decision.',
       projects: [
         { name: 'PAM rollout', status: '60% · on track', invest: '$4.2M', ret: 'Closes the open ransomware path', decision: '—' },
