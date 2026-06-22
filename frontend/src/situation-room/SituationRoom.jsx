@@ -14,6 +14,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTheme } from './useTheme';
+import { useCisoData } from './useCisoData';
 import { CISO_SEAT } from './seats/ciso';
 
 /* "View as" — exact order. */
@@ -42,9 +43,12 @@ const tabsForSeat = (s) => (s === 'CISO'
   : SEAT_TABS[s].map((name, i) => ({ key: i === 0 ? 'summary' : slug(name), name })));
 const seatFromSlug = (sl) => SEAT_ORDER.find((s) => s.toLowerCase() === sl) || null;
 
-export default function SituationRoom({ go, initialSeat } = {}) {
+export default function SituationRoom(props = {}) {
+  const { go, initialSeat } = props;
   const tabRefs = useRef([]);
   const { isDark, toggle } = useTheme();
+  // Real CISO data, bound conservatively (verified fields only); null when offline.
+  const bound = useCisoData(props);
 
   // Seat + tab are real, deep-linkable routes via the URL hash: #/<seat>/<tab>.
   // Browser back/forward and direct links work; falls back to initialSeat → CISO.
@@ -113,7 +117,7 @@ export default function SituationRoom({ go, initialSeat } = {}) {
             <span className="sr-seatlabel">{seat} · OPERATING SYSTEM</span>
           </div>
           <div className="sr-topright">
-            <span className="sr-live"><span className="sr-live__dot" aria-hidden="true" />LIVE · 14:09</span>
+            <span className="sr-live"><span className="sr-live__dot" aria-hidden="true" />LIVE · {bound?.live ? bound.live.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '14:09'}</span>
             <button type="button" className="sr-theme" onClick={toggle} aria-pressed={isDark}
               aria-label={`Switch to ${isDark ? 'light warm' : 'dark command'} theme`}>
               <span aria-hidden="true">◐</span> Theme
@@ -151,7 +155,7 @@ export default function SituationRoom({ go, initialSeat } = {}) {
         {/* Panel */}
         <div role="tabpanel" id={`sr-panel-${activeTab.key}`} aria-labelledby={`sr-tab-${activeTab.key}`} tabIndex={0} className="sr-panel">
           {seat === 'CISO'
-            ? <CisoPanel tabKey={activeTab.key} goTabKey={goTabKey} />
+            ? <CisoPanel tabKey={activeTab.key} goTabKey={goTabKey} bound={bound} />
             : <SeatPlaceholder seat={seat} tab={activeTab.name} />}
         </div>
 
@@ -268,14 +272,19 @@ export function Evidence({ source, method, last, result, verified = true, defaul
 }
 
 /* ============================ CISO seat panels ============================ */
-function CisoPanel({ tabKey, goTabKey }) {
+function CisoPanel({ tabKey, goTabKey, bound }) {
   const S = CISO_SEAT;
   if (tabKey === 'summary') {
+    // Bind the Overall-posture tile to real data when available; others stay sample.
+    const synced = bound?.live ? bound.live.toLocaleString() : '14:09';
+    const tiles = S.summary.tiles.map((t) => (
+      t.label === 'Overall posture' && bound?.posture ? { ...t, value: String(bound.posture.current) } : t
+    ));
     return (
       <div className="sr-stack">
-        <PanelHead kicker="Executive summary · synced 14:09" verdict={S.summary.verdict}
+        <PanelHead kicker={`Executive summary · synced ${synced}`} verdict={S.summary.verdict}
           pill={S.summary.pill} pillKind={S.summary.pillKind} lede={S.summary.lede} />
-        <MetricBand tiles={S.summary.tiles} onGo={goTabKey} />
+        <MetricBand tiles={tiles} onGo={goTabKey} />
         <Briefing rows={S.summary.briefing} onGo={goTabKey} />
       </div>
     );
