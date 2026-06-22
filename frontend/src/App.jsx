@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { alpha } from "./theme";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import CorrelatedFinding from "./pages/CorrelatedFinding";
 import CIODash from "./pages/CIODash";
@@ -37,9 +38,13 @@ import ProcessGraph from "./pages/ProcessGraph";
 import RestructureView from "./pages/RestructureView";
 
 // --- Theme --------------------------------------------------------------------
+// The app-chrome palette, now token-native so the whole shell re-themes live on
+// the light "brief" ⟷ dark "command" toggle. Alpha tints use alpha(C.x, "hh")
+// (see theme.js) instead of hex-string concat, since var() colors can't be concatenated.
 var C = {
-  bg:"#F7F4EE", panel:"#FFFDF9", card:"#FFFDF9", border:"#E8E2D6",
-  acc:"#243044", faint:"#24304414", text:"#211D18", muted:"#5C554B", dim:"#F1ECE3"
+  bg:"var(--bg)", panel:"var(--surface)", card:"var(--surface)", border:"var(--border)",
+  acc:"var(--accent)", faint:"color-mix(in srgb, var(--accent) 8%, transparent)",
+  text:"var(--text)", muted:"var(--text-muted)", dim:"var(--surface-2)"
 };
 
 // --- Helpers ------------------------------------------------------------------
@@ -3359,7 +3364,7 @@ function JustifiedStat(props) {
   return (
     <span>
       <span onClick={function(){setOpen(true);}}
-        style={{cursor:"pointer",borderBottom:"1px dashed "+C.acc+"60",
+        style={{cursor:"pointer",borderBottom:"1px dashed "+alpha(C.acc, "60"),
           color:props.color||C.text}}>
         {props.children}
       </span>
@@ -3415,7 +3420,7 @@ function SH(props) {
 function WhyBanner(props) {
   var title, children; title=props.title; children=props.children;
   return (
-    <div style={{background:C.acc+"0D", border:"1px solid "+C.acc+"33", borderLeft:"3px solid "+C.acc,
+    <div style={{background:alpha(C.acc, "0D"), border:"1px solid "+alpha(C.acc, "33"), borderLeft:"3px solid "+C.acc,
       borderRadius:9, padding:"11px 14px", marginBottom:14}}>
       <div style={{display:"flex", alignItems:"center", gap:7, marginBottom:4}}>
         <span style={{fontSize:13}}>ℹ️</span>
@@ -3563,7 +3568,7 @@ function Landing(props) {
         </div>
         <button onClick={onSignIn} style={{background:C.acc,border:"none",
           color:"#fff",borderRadius:8,padding:"8px 22px",cursor:"pointer",
-          fontSize:13,fontWeight:700,boxShadow:"0 0 20px "+C.acc+"40"}}>
+          fontSize:13,fontWeight:700,boxShadow:"0 0 20px "+alpha(C.acc, "40")}}>
           Sign In
         </button>
       </div>
@@ -3575,7 +3580,7 @@ function Landing(props) {
         margin:"0 auto",width:"100%"}}>
 
         <div style={{display:"inline-flex",alignItems:"center",gap:7,
-          background:C.acc+"15",border:"1px solid "+C.acc+"35",
+          background:alpha(C.acc, "15"),border:"1px solid "+alpha(C.acc, "35"),
           borderRadius:20,padding:"5px 18px",marginBottom:32}}>
           <div style={{width:6,height:6,borderRadius:"50%",
             background:C.acc,boxShadow:"0 0 8px "+C.acc}}/>
@@ -3606,7 +3611,7 @@ function Landing(props) {
           flexWrap:"wrap",marginBottom:48}}>
           <button onClick={onSignIn} style={{background:C.acc,border:"none",
             color:"#fff",borderRadius:12,padding:"16px 48px",cursor:"pointer",
-            fontSize:16,fontWeight:800,boxShadow:"0 4px 28px "+C.acc+"50",
+            fontSize:16,fontWeight:800,boxShadow:"0 4px 28px "+alpha(C.acc, "50"),
             letterSpacing:"-0.01em"}}>
             Sign In
           </button>
@@ -3955,7 +3960,7 @@ function DemoRequest(props) {
           <button
             type="submit"
             disabled={submitting}
-            style={{width:"100%", background:C.acc, border:"none", color:"#fff", borderRadius:10, padding:"14px", cursor:"pointer", fontSize:15, fontWeight:700, boxShadow:"0 4px 20px "+C.acc+"40", transition:"all 0.2s"}}
+            style={{width:"100%", background:C.acc, border:"none", color:"#fff", borderRadius:10, padding:"14px", cursor:"pointer", fontSize:15, fontWeight:700, boxShadow:"0 4px 20px "+alpha(C.acc, "40"), transition:"all 0.2s"}}
           >
             {submitting ? "Opening Email Client..." : "Submit Demo Request →"}
           </button>
@@ -5515,8 +5520,8 @@ function Setup(props) {
         {/* ── Briana banner for steps 2-6 ── */}
         {step>=2&&(
           <div style={{display:"flex",alignItems:"center",gap:10,
-            background:"linear-gradient(135deg,"+C.acc+"10,#A78BFA08)",
-            border:"1px solid "+C.acc+"25",borderRadius:10,
+            background:"linear-gradient(135deg,"+alpha(C.acc,"10")+","+alpha(C.acc,"06")+")",
+            border:"1px solid "+alpha(C.acc, "25"),borderRadius:10,
             padding:"10px 16px",marginBottom:16}}>
             <div style={{width:32,height:32,borderRadius:"50%",flexShrink:0,
               background:"linear-gradient(135deg,"+C.acc+",#A78BFA)",
@@ -5577,7 +5582,7 @@ function Setup(props) {
                   style={{width:"100%",background:C.bg,border:"1px solid "+(orgName?C.acc:C.border),borderRadius:7,
                     padding:"9px 12px",color:C.text,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                 {hint&&(
-                  <div style={{marginTop:6,padding:"8px 12px",background:C.acc+"12",border:"1px solid "+C.acc+"30",borderRadius:7}}>
+                  <div style={{marginTop:6,padding:"8px 12px",background:alpha(C.acc, "12"),border:"1px solid "+alpha(C.acc, "30"),borderRadius:7}}>
                     <div style={{color:C.acc,fontWeight:700,fontSize:11,marginBottom:2}}>✓ Detected: {hint.name} — {hint.type}</div>
                     <div style={{color:C.muted,fontSize:10,lineHeight:1.5}}>{hint.note}</div>
                   </div>
@@ -5694,7 +5699,7 @@ function Setup(props) {
                     {US_STATES.filter(function(st){return selStates[st.code];}).map(function(st){
                       return (
                         <div key={st.code} style={{display:"flex",gap:3,alignItems:"center",
-                          background:C.acc+"14",border:"1px solid "+C.acc+"40",borderRadius:20,padding:"2px 8px"}}>
+                          background:alpha(C.acc, "14"),border:"1px solid "+alpha(C.acc, "40"),borderRadius:20,padding:"2px 8px"}}>
                           <span style={{color:C.acc,fontSize:9,fontWeight:700}}>{st.code}</span>
                           <button onClick={function(){setSelStates(function(p){var n=Object.assign({},p);delete n[st.code];return n;});}}
                             style={{background:"transparent",border:"none",color:C.acc,cursor:"pointer",fontSize:10,lineHeight:1,padding:0,fontWeight:700}}>
@@ -5717,7 +5722,7 @@ function Setup(props) {
                     return (
                       <div key={st.code}
                         onClick={function(){setSelStates(function(p){var n=Object.assign({},p);if(isOn){delete n[st.code];}else{n[st.code]=true;}return n;});}}
-                        style={{background:isOn?C.acc+"18":C.bg,border:"1px solid "+(isOn?C.acc+"50":C.border),
+                        style={{background:isOn?alpha(C.acc, "18"):C.bg,border:"1px solid "+(isOn?alpha(C.acc, "50"):C.border),
                           borderRadius:5,padding:"3px 0",cursor:"pointer",textAlign:"center"}}>
                         <div style={{color:isOn?C.acc:C.text,fontSize:9,fontWeight:isOn?700:400}}>{st.code}</div>
                       </div>
@@ -5811,10 +5816,10 @@ function Setup(props) {
                   {procTree.map(function(f,fi){
                     return (
                       <div key={fi} style={{marginBottom:14,border:"1px solid "+C.border,borderRadius:9,overflow:"hidden"}}>
-                        <div style={{display:"flex",alignItems:"center",gap:8,background:C.acc+"0D",padding:"8px 12px"}}>
+                        <div style={{display:"flex",alignItems:"center",gap:8,background:alpha(C.acc, "0D"),padding:"8px 12px"}}>
                           <input value={f.function} onChange={function(e){var v=e.target.value;updateTree(function(t){t[fi].function=v;});}}
                             style={{flex:1,background:"transparent",border:"none",color:C.acc,fontSize:12,fontWeight:800,textTransform:"uppercase",letterSpacing:"0.06em",outline:"none"}}/>
-                          <button onClick={function(){addProcess(fi);}} style={{background:"transparent",border:"1px solid "+C.acc+"40",color:C.acc,borderRadius:5,padding:"2px 9px",fontSize:10,fontWeight:700,cursor:"pointer"}}>+ Process</button>
+                          <button onClick={function(){addProcess(fi);}} style={{background:"transparent",border:"1px solid "+alpha(C.acc, "40"),color:C.acc,borderRadius:5,padding:"2px 9px",fontSize:10,fontWeight:700,cursor:"pointer"}}>+ Process</button>
                         </div>
                         <div style={{padding:"8px 10px"}}>
                           {f.processes.length===0&&<div style={{color:C.muted,fontSize:10,padding:"4px 6px"}}>No processes — add one.</div>}
@@ -5938,8 +5943,8 @@ function Setup(props) {
                   var active = appTab===t.id;
                   return (
                     <button key={t.id} onClick={function(){setAppTab(t.id);}}
-                      style={{background:active?C.acc+"14":C.dim,
-                        border:"1.5px solid "+(active?C.acc+"50":C.border),
+                      style={{background:active?alpha(C.acc, "14"):C.dim,
+                        border:"1.5px solid "+(active?alpha(C.acc, "50"):C.border),
                         borderRadius:9,padding:"10px 16px",cursor:"pointer",textAlign:"left",
                         minWidth:150}}>
                       <div style={{fontSize:20,marginBottom:4}}>{t.icon}</div>
@@ -5959,7 +5964,7 @@ function Setup(props) {
                         CMDB System
                       </label>
                       <select value={cmdbSystem} onChange={function(e){setCmdbSystem(e.target.value);}}
-                        style={{width:"100%",background:C.bg,border:"1px solid "+(cmdbSystem?C.acc+"40":C.border),
+                        style={{width:"100%",background:C.bg,border:"1px solid "+(cmdbSystem?alpha(C.acc, "40"):C.border),
                           borderRadius:6,padding:"7px 10px",color:cmdbSystem?C.text:C.muted,fontSize:11,outline:"none"}}>
                         <option value="">Select CMDB system...</option>
                         {["ServiceNow CMDB","Jira Assets (Insight)","BMC Helix CMDB","Freshservice Asset Mgmt",
@@ -5975,7 +5980,7 @@ function Setup(props) {
                       </label>
                       <input value={cmdbUrl} onChange={function(e){setCmdbUrl(e.target.value);}}
                         placeholder="https://yourinstance.service-now.com/api/now/table/cmdb_ci"
-                        style={{width:"100%",background:C.bg,border:"1px solid "+(cmdbUrl?C.acc+"40":C.border),
+                        style={{width:"100%",background:C.bg,border:"1px solid "+(cmdbUrl?alpha(C.acc, "40"):C.border),
                           borderRadius:6,padding:"7px 10px",color:C.text,fontSize:10,
                           outline:"none",boxSizing:"border-box"}}/>
                     </div>
@@ -5985,7 +5990,7 @@ function Setup(props) {
                       </label>
                       <input type="password" value={cmdbKey} onChange={function(e){setCmdbKey(e.target.value);}}
                         placeholder="Bearer token or API key"
-                        style={{width:"100%",background:C.bg,border:"1px solid "+(cmdbKey?C.acc+"40":C.border),
+                        style={{width:"100%",background:C.bg,border:"1px solid "+(cmdbKey?alpha(C.acc, "40"):C.border),
                           borderRadius:6,padding:"7px 10px",color:C.text,fontSize:11,
                           outline:"none",boxSizing:"border-box"}}/>
                     </div>
@@ -6130,7 +6135,7 @@ function Setup(props) {
                     <div style={{color:C.muted,fontSize:10}}>&#x231B; Importing {appSel} catalog into your organization…</div>
                   )}
                   {appSel&&cmdbConn==="success"&&(
-                    <div style={{background:C.acc+"08",border:"1px solid "+C.acc+"25",borderRadius:8,padding:"10px 14px"}}>
+                    <div style={{background:alpha(C.acc, "08"),border:"1px solid "+alpha(C.acc, "25"),borderRadius:8,padding:"10px 14px"}}>
                       <div style={{color:C.acc,fontSize:10,fontWeight:700,marginBottom:4}}>
                         &#x2713; {appSel} profile loaded{sampleResult
                           ? " — "+sampleResult.assets+" applications imported and mapped to "+sampleResult.processes+" business processes"
@@ -6216,7 +6221,7 @@ function Setup(props) {
             if (presetCount === 0) return null;
             return (
               <span style={{color:C.acc,fontSize:10,fontWeight:700,
-                background:C.acc+"15",borderRadius:10,padding:"2px 10px",border:"1px solid "+C.acc+"30"}}>
+                background:alpha(C.acc, "15"),borderRadius:10,padding:"2px 10px",border:"1px solid "+alpha(C.acc, "30")}}>
                 {selCount > 0
                   ? selCount+" vendors selected for "+orgType
                   : presetCount+" pre-selected for "+orgType}
@@ -6255,13 +6260,13 @@ function Setup(props) {
     {/* Tier-by-tier vendor selection */}
     {/* Process + org pre-selection context banner */}
     {selProcs.size>0&&(
-      <div style={{background:C.acc+"06",border:"1px solid "+C.acc+"20",borderRadius:8,
+      <div style={{background:alpha(C.acc, "06"),border:"1px solid "+alpha(C.acc, "20"),borderRadius:8,
         padding:"10px 14px",marginBottom:12,display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
         <span style={{color:C.acc,fontSize:10,fontWeight:700}}>PRE-SELECTED BASED ON:</span>
         {Array.from(selProcs).slice(0,5).map(function(pid){
           var p=PROCS.find(function(x){return x.id===pid;});
           return p?(<span key={pid} style={{display:"flex",gap:3,alignItems:"center",
-            background:C.acc+"12",border:"1px solid "+C.acc+"30",
+            background:alpha(C.acc, "12"),border:"1px solid "+alpha(C.acc, "30"),
             borderRadius:4,padding:"2px 7px",fontSize:9,color:C.acc,fontWeight:600}}>
             <span style={{fontSize:11}}>{p.icon}</span><span>{p.name}</span>
           </span>):null;
@@ -6271,7 +6276,7 @@ function Setup(props) {
         </span>
         <div style={{display:"flex",gap:6}}>
           <button onClick={function(){setVendorSel(getRecommendedVendors(selProcs,orgType));}}
-            style={{background:C.acc+"18",border:"1px solid "+C.acc+"40",color:C.acc,
+            style={{background:alpha(C.acc, "18"),border:"1px solid "+alpha(C.acc, "40"),color:C.acc,
               borderRadius:5,padding:"3px 10px",cursor:"pointer",fontSize:10,fontWeight:700}}>
             ↺ Reset to Recommended
           </button>
@@ -6640,7 +6645,7 @@ function Setup(props) {
             <WhyBanner title="Core Infrastructure">
               Connecting your security tools lets CyberRx <strong>pull evidence automatically and score controls from live data instead of self-attestation</strong>. Connections are read-only and credentials are stored in a secrets vault — we only collect what's needed to verify each control.
             </WhyBanner>
-            <div style={{background:C.acc+"08",border:"1px solid "+C.acc+"25",
+            <div style={{background:alpha(C.acc, "08"),border:"1px solid "+alpha(C.acc, "25"),
               borderRadius:9,padding:"12px 16px",marginBottom:14}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                 <div style={{color:C.acc,fontSize:12,fontWeight:800}}>
@@ -6652,7 +6657,7 @@ function Setup(props) {
                       var p=getRecommendedKeys(selProcs);
                       setInfraSel(p);
                       setInfraConn(function(c){var n=Object.assign({},c);Object.keys(p).forEach(function(k){if(!n[k])n[k]="api";});return n;});
-                    }} style={{background:C.acc+"18",border:"1px solid "+C.acc+"40",color:C.acc,
+                    }} style={{background:alpha(C.acc, "18"),border:"1px solid "+alpha(C.acc, "40"),color:C.acc,
                       borderRadius:5,padding:"3px 10px",cursor:"pointer",fontSize:10,fontWeight:700}}>
                       ↺ Reset to Recommended
                     </button>
@@ -6710,7 +6715,7 @@ function Setup(props) {
                   {Array.from(selProcs).slice(0,6).map(function(pid){
                     var p=PROCS.find(function(x){return x.id===pid;});
                     return p?(<span key={pid} style={{display:"flex",gap:3,alignItems:"center",
-                      background:C.acc+"12",border:"1px solid "+C.acc+"30",
+                      background:alpha(C.acc, "12"),border:"1px solid "+alpha(C.acc, "30"),
                       borderRadius:4,padding:"2px 7px",fontSize:9,color:C.acc,fontWeight:600}}>
                       <span style={{fontSize:11}}>{p.icon}</span><span>{p.name}</span>
                     </span>):null;
@@ -6922,7 +6927,7 @@ function Setup(props) {
                                     onChange={function(e){setInfraCredField(key,"agentToken",e.target.value);}}
                                     style={{width:"100%",background:C.bg,border:"1px solid "+C.border,borderRadius:4,
                                       padding:"3px 7px",fontSize:9,color:C.text,outline:"none",boxSizing:"border-box",marginBottom:8}}/>
-                                  <div style={{fontSize:8,color:C.muted,lineHeight:1.4,background:C.bg+"80",padding:"4px 6px",borderRadius:4}}>
+                                  <div style={{fontSize:8,color:C.muted,lineHeight:1.4,background:alpha(C.bg, "80"),padding:"4px 6px",borderRadius:4}}>
                                     <div style={{fontWeight:600,marginBottom:2}}>📥 Agent Setup</div>
                                     <div>1. Download agent from vendor console</div>
                                     <div>2. Install on your log/event servers</div>
@@ -7030,7 +7035,7 @@ function Setup(props) {
                               )}
                               {method==="manual"&&(
                                 <div>
-                                  <div style={{fontSize:8,color:C.muted,lineHeight:1.4,background:C.bg+"80",padding:"6px 8px",borderRadius:4,marginBottom:8}}>
+                                  <div style={{fontSize:8,color:C.muted,lineHeight:1.4,background:alpha(C.bg, "80"),padding:"6px 8px",borderRadius:4,marginBottom:8}}>
                                     <div style={{fontWeight:600,marginBottom:3,marginTop:2}}>📄 Manual Data Entry Options</div>
                                     <div style={{marginBottom:2}}>Choose how you want to provide data:</div>
                                   </div>
@@ -7195,7 +7200,7 @@ function Setup(props) {
               </div>
             </Card>
             {/* Architecture reminder */}
-            <div style={{padding:"10px 14px",background:C.faint,border:"1px solid "+C.acc+"20",borderRadius:8,marginBottom:14}}>
+            <div style={{padding:"10px 14px",background:C.faint,border:"1px solid "+alpha(C.acc, "20"),borderRadius:8,marginBottom:14}}>
               <div style={{color:C.acc,fontWeight:700,fontSize:11,marginBottom:4}}>How CyberRx maps your data</div>
               <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
                 {["Business Processes","Applications (CMDB)","Risks & Findings","CIS Controls"].map(function(s,i,arr){
@@ -7266,7 +7271,7 @@ function Home(props) {
     <div style={{overflowY:"auto",height:"100%",background:C.bg}}>
 
       {/* Welcome bar */}
-      <div style={{background:"linear-gradient(135deg,"+C.acc+"10,#A78BFA08)",
+      <div style={{background:"linear-gradient(135deg,"+alpha(C.acc,"10")+","+alpha(C.acc,"06")+")",
         borderBottom:"1px solid "+C.border,padding:"20px 32px"}}>
         <div style={{maxWidth:960,margin:"0 auto",display:"flex",
           justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
@@ -7280,7 +7285,7 @@ function Home(props) {
           {!setupDone&&(
             <button onClick={function(){go("setup");}} style={{background:C.acc,
               border:"none",color:"#fff",borderRadius:9,padding:"9px 20px",
-              cursor:"pointer",fontSize:13,fontWeight:700,boxShadow:"0 0 16px "+C.acc+"40"}}>
+              cursor:"pointer",fontSize:13,fontWeight:700,boxShadow:"0 0 16px "+alpha(C.acc, "40")}}>
               Complete Setup &#x2192;
             </button>
           )}
@@ -7761,7 +7766,7 @@ function DocValidationAgent(props) {
     return (
       <div key={doc.id} style={{background:C.card,border:"1px solid "+
         (result?(result.pct>=80?"#0FBB8030":result.pct>=60?"#F5A62330":"#EF454530"):
-         uploaded?C.acc+"30":C.border),
+         uploaded?alpha(C.acc, "30"):C.border),
         borderRadius:9,marginBottom:6,overflow:"hidden"}}>
 
         {/* Doc row */}
@@ -7792,7 +7797,7 @@ function DocValidationAgent(props) {
               <div style={{fontWeight:700,color:C.text}}>{doc.allControls.length}</div>
               <div>controls</div>
             </span>
-            <label style={{background:uploaded?C.acc+"14":C.dim,border:"1px solid "+(uploaded?C.acc+"40":C.border),
+            <label style={{background:uploaded?alpha(C.acc, "14"):C.dim,border:"1px solid "+(uploaded?alpha(C.acc, "40"):C.border),
               borderRadius:6,padding:"4px 10px",cursor:"pointer",fontSize:10,color:uploaded?C.acc:C.muted,fontWeight:600}}>
               <input type="file" accept=".pdf,.docx,.doc,.xlsx,.txt"
                 style={{display:"none"}}
@@ -7938,8 +7943,8 @@ function DocValidationAgent(props) {
   return (
     <div>
       {/* Header */}
-      <div style={{padding:"12px 16px",background:"linear-gradient(135deg,"+C.acc+"10,"+C.panel+")",
-        border:"1px solid "+C.acc+"25",borderRadius:10,marginBottom:14}}>
+      <div style={{padding:"12px 16px",background:"linear-gradient(135deg,"+alpha(C.acc,"10")+","+C.panel+")",
+        border:"1px solid "+alpha(C.acc, "25"),borderRadius:10,marginBottom:14}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
           <div>
             <div style={{color:C.acc,fontWeight:800,fontSize:14,marginBottom:2}}>
@@ -8032,7 +8037,7 @@ function DocValidationAgent(props) {
                     return (
                       <div key={doc.id} style={{background:C.card,border:"1px solid "+
                         (result?(result.pct>=80?"#0FBB8025":result.pct>=60?"#F5A62325":"#EF454525"):
-                         uploaded?C.acc+"25":C.border),
+                         uploaded?alpha(C.acc, "25"):C.border),
                         borderRadius:8,marginBottom:6,padding:"8px 10px"}}>
                         <div style={{display:"flex",gap:8,alignItems:"flex-start"}}>
                           <div style={{flex:1}}>
@@ -8842,7 +8847,7 @@ function CISODash(props) {
 
       {/* ── Editable Metrics Panel ── */}
       {showMetricsPanel&&(
-        <div style={{background:C.card,border:"1px solid "+C.acc+"30",
+        <div style={{background:C.card,border:"1px solid "+alpha(C.acc, "30"),
           borderRadius:12,padding:"18px",marginBottom:16}}>
           <div style={{display:"flex",justifyContent:"space-between",
             alignItems:"center",marginBottom:14}}>
@@ -8938,7 +8943,7 @@ function CISODash(props) {
                       placeholder={m.hint}
                       disabled={isConnected}
                       style={{flex:1,background:isConnected?C.dim:C.card,
-                        border:"1px solid "+(isConnected?C.border:C.acc+"40"),
+                        border:"1px solid "+(isConnected?C.border:alpha(C.acc, "40")),
                         borderRadius:6,padding:"6px 10px",
                         color:isConnected?C.muted:C.text,fontSize:12,
                         outline:"none",opacity:isConnected?0.6:1}}/>
@@ -9141,7 +9146,7 @@ function CISODash(props) {
                         {(cap.tools||[]).map(function(t){
                           return (
                             <span key={t} style={{color:C.acc,fontSize:9,background:C.faint,
-                              borderRadius:4,padding:"2px 7px",border:"1px solid "+C.acc+"25"}}>{t}</span>
+                              borderRadius:4,padding:"2px 7px",border:"1px solid "+alpha(C.acc, "25")}}>{t}</span>
                           );
                         })}
                       </div>
@@ -9571,7 +9576,7 @@ function CISODash(props) {
           </div>
         </div>
         <div onClick={function(){go("execution");}}
-          style={{background:C.card,border:"1px solid "+C.acc+"30",borderRadius:10,
+          style={{background:C.card,border:"1px solid "+alpha(C.acc, "30"),borderRadius:10,
             padding:"12px 14px",cursor:"pointer"}}>
           <div style={{color:C.acc,fontSize:24,fontWeight:800,fontFamily:"monospace",marginBottom:4}}>
             {(execActions||ACTIONS).filter(function(a){return a.status==="pending_approval";}).length}
@@ -9586,7 +9591,7 @@ function CISODash(props) {
 
       {/* Active filter banner */}
       {(sevF!=="All" || procFilter) && (
-        <div style={{padding:"7px 14px",background:C.acc+"10",border:"1px solid "+C.acc+"25",
+        <div style={{padding:"7px 14px",background:alpha(C.acc, "10"),border:"1px solid "+alpha(C.acc, "25"),
           borderRadius:8,marginBottom:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <span style={{color:C.acc,fontSize:11,fontWeight:700}}>
             {sevF!=="All" ? ("Filtering: "+sevF+" findings only ("+shown.length+")") : ""}
@@ -9709,7 +9714,7 @@ function CISODash(props) {
                 return (
                   <button key={tab}
                     onClick={function(){setSevF(tab);setShowAll(false);setExpF(null);}}
-                    style={{background:active?SEV_C[tab]||C.acc+"20":"transparent",
+                    style={{background:active?SEV_C[tab]||alpha(C.acc, "20"):"transparent",
                       border:"1px solid "+(active?SEV_C[tab]||C.acc:C.border),
                       color:active?"#fff":C.muted,borderRadius:5,padding:"2px 9px",
                       cursor:"pointer",fontSize:10,fontWeight:active?700:400}}>
@@ -9734,7 +9739,7 @@ function CISODash(props) {
                   <div style={{padding:"10px 14px",borderTop:"1px solid "+SEV_C[f.sev]+"20",background:C.bg}}>
                     <p style={{color:C.text,fontSize:11,lineHeight:1.6,margin:"0 0 10px"}}>{orgText(f.wrong||"", orgName)}</p>
                     <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                      <Btn onClick={function(){props.viewCorrelatedFinding(f.id);}} small style={{background:C.acc+"15",color:C.acc,border:"1px solid "+C.acc+"40"}}>View Executive Narrative →</Btn>
+                      <Btn onClick={function(){props.viewCorrelatedFinding(f.id);}} small style={{background:alpha(C.acc, "15"),color:C.acc,border:"1px solid "+alpha(C.acc, "40")}}>View Executive Narrative →</Btn>
                       <Btn onClick={function(){setSingleF(f.id);}} small>View Details</Btn>
                       {f.act && <Btn onClick={function(){go("execution",{act:f.act});}} primary small>Execute {f.act} →</Btn>}
                     </div>
@@ -9994,7 +9999,7 @@ function CRODash(props) {
               <p style={{color:C.text,fontSize:12,lineHeight:1.8,margin:0,whiteSpace:"pre-line"}}>{orgText(f.fix||"", orgName)}</p>
             </div>
             <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-              <Btn onClick={function(){props.viewCorrelatedFinding(f.id);}} style={{background:C.acc+"15",color:C.acc,border:"1px solid "+C.acc+"40"}}>View Executive Narrative →</Btn>
+              <Btn onClick={function(){props.viewCorrelatedFinding(f.id);}} style={{background:alpha(C.acc, "15"),color:C.acc,border:"1px solid "+alpha(C.acc, "40")}}>View Executive Narrative →</Btn>
               <Btn onClick={function(){go("execution");}} primary>Route to Execution →</Btn>
               <Btn onClick={function(){setSelFinding(null);}}>Close</Btn>
             </div>
@@ -12579,7 +12584,7 @@ function AppMap(props) {
                 {(app.conn||[]).map(function(c){
                   return (
                     <span key={c} style={{color:C.acc,fontSize:11,background:C.faint,
-                      borderRadius:5,padding:"4px 10px",border:"1px solid "+C.acc+"25"}}>{c}</span>
+                      borderRadius:5,padding:"4px 10px",border:"1px solid "+alpha(C.acc, "25")}}>{c}</span>
                   );
                 })}
               </div>
@@ -12850,7 +12855,7 @@ function VendorEcosystem(props) {
       </div>
 
       {/* Data flow banner */}
-      <div style={{padding:"10px 14px",background:C.faint,border:"1px solid "+C.acc+"20",
+      <div style={{padding:"10px 14px",background:C.faint,border:"1px solid "+alpha(C.acc, "20"),
         borderRadius:9,marginBottom:14}}>
         <div style={{color:C.acc,fontSize:10,fontWeight:700,marginBottom:6}}>
           End-to-End Data Flow
@@ -12875,8 +12880,8 @@ function VendorEcosystem(props) {
       {/* Tier filter */}
       <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
         <button onClick={function(){setSelTier(null);}}
-          style={{background:!selTier?C.acc+"14":"transparent",
-            border:"1px solid "+(!selTier?C.acc+"50":C.border),
+          style={{background:!selTier?alpha(C.acc, "14"):"transparent",
+            border:"1px solid "+(!selTier?alpha(C.acc, "50"):C.border),
             borderRadius:20,padding:"4px 14px",cursor:"pointer",
             fontSize:11,color:!selTier?C.acc:C.muted,fontWeight:!selTier?700:400}}>
           All Vendors ({VENDOR_TIERS.reduce(function(s,t){return s+t.vendors.length;},0)})
@@ -13026,7 +13031,7 @@ function ClaimLifecycle(props) {
                     border:"3px solid "+(isSelected?C.acc:"#3B9EFF50"),
                     display:"flex",flexDirection:"column",
                     alignItems:"center",justifyContent:"center",marginBottom:6,
-                    boxShadow:isSelected?"0 0 0 4px "+C.acc+"30":"none"}}>
+                    boxShadow:isSelected?"0 0 0 4px "+alpha(C.acc, "30"):"none"}}>
                     <span style={{fontSize:18,lineHeight:1}}>{step.icon}</span>
                     <span style={{color:isSelected?"#fff":"#3B9EFF",
                       fontSize:9,fontWeight:800}}>{step.step}</span>
@@ -14360,7 +14365,7 @@ function ComplianceReport(props) {
             );
           })}
           <div style={{marginTop:12,padding:"10px 14px",background:C.faint,
-            border:"1px solid "+C.acc+"25",borderRadius:8,
+            border:"1px solid "+alpha(C.acc, "25"),borderRadius:8,
             display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <div>
               <div style={{color:C.muted,fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Next Assessment</div>
@@ -15625,7 +15630,7 @@ function DashHub(props) {
               {["Critical","High","Med","Low"].map(function(sev){
                 return (
                   <button key={sev} onClick={function(){setFilterSev(sev===filterSev?null:sev);}}
-                    style={{background:filterSev===sev?C.acc+"20":"transparent",
+                    style={{background:filterSev===sev?alpha(C.acc, "20"):"transparent",
                       border:"1px solid "+(filterSev===sev?C.acc:C.border),
                       color:filterSev===sev?C.acc:C.muted,borderRadius:6,
                       padding:"3px 10px",cursor:"pointer",fontSize:10,fontWeight:600}}>
@@ -15661,7 +15666,7 @@ function DashHub(props) {
                   </div>
                 </div>
                 {f.fix&&(
-                  <div style={{marginTop:8,background:C.acc+"08",borderRadius:6,
+                  <div style={{marginTop:8,background:alpha(C.acc, "08"),borderRadius:6,
                     padding:"8px 12px",fontSize:10,color:C.muted,lineHeight:1.5}}>
                     <span style={{color:C.acc,fontWeight:700}}>Fix: </span>{orgText(f.fix||"",orgName,orgExtras)}
                   </div>
@@ -15756,7 +15761,7 @@ function DashHub(props) {
                           borderTop:"none",borderRadius:"0 0 10px 10px",padding:"14px 16px"}}>
                           <div style={{color:C.muted,fontSize:11,lineHeight:1.65,marginBottom:10}}>{orgText(f.wrong||"",orgName,orgExtras)}</div>
                           {f.fix&&(
-                            <div style={{background:C.acc+"08",borderRadius:6,padding:"9px 12px",
+                            <div style={{background:alpha(C.acc, "08"),borderRadius:6,padding:"9px 12px",
                               fontSize:10,color:C.text,lineHeight:1.5}}>
                               <span style={{color:C.acc,fontWeight:700}}>Remediation: </span>{orgText(f.fix||"",orgName,orgExtras)}
                             </div>
@@ -15798,7 +15803,7 @@ function DashHub(props) {
               </span>
             )}
             <button onClick={function(){setFilterAtRisk(!filterAtRisk);}}
-              style={{marginLeft:"auto",background:filterAtRisk?C.acc+"20":"transparent",
+              style={{marginLeft:"auto",background:filterAtRisk?alpha(C.acc, "20"):"transparent",
                 border:"1px solid "+(filterAtRisk?C.acc:C.border),
                 color:filterAtRisk?C.acc:C.muted,borderRadius:6,
                 padding:"4px 12px",cursor:"pointer",fontSize:10,fontWeight:600}}>
@@ -16267,7 +16272,7 @@ function BizLines(props) {
                     {(step.systems||[]).map(function(s){
                       return (
                         <span key={s} style={{color:C.acc,fontSize:10,background:C.faint,
-                          borderRadius:5,padding:"3px 9px",border:"1px solid "+C.acc+"25"}}>{s}</span>
+                          borderRadius:5,padding:"3px 9px",border:"1px solid "+alpha(C.acc, "25")}}>{s}</span>
                       );
                     })}
                   </div>
@@ -16534,7 +16539,7 @@ function BizLines(props) {
 
         {/* Risk summary bar */}
         <div style={{display:"flex",gap:12,padding:"10px 14px",background:C.faint,
-          border:"1px solid "+C.acc+"20",borderRadius:9}}>
+          border:"1px solid "+alpha(C.acc, "20"),borderRadius:9}}>
           {[
             {label:"Critical",val:liveFind.filter(function(f){return f.sev==="Critical";}).length,color:"#EF4545"},
             {label:"High",    val:liveFind.filter(function(f){return f.sev==="High";}).length,    color:"#F5A623"},
@@ -16892,7 +16897,7 @@ function Scoring(props) {
             return (
               <div key={d.id} onClick={function(){setSelDomain(active?null:d);}}
                 style={{background:active?C.dim:C.card,
-                  border:"1px solid "+(active?C.acc+"40":C.border),
+                  border:"1px solid "+(active?alpha(C.acc, "40"):C.border),
                   borderRadius:10, padding:"12px 14px", marginBottom:8,
                   cursor:"pointer", boxShadow:"0 1px 3px rgba(0,0,0,0.06)"}}>
                 <div style={{display:"flex", alignItems:"center", gap:12}}>
@@ -17604,7 +17609,7 @@ function Execution(props) {
               })}
             </div>
             <div style={{padding:"10px 14px", background:C.faint,
-              border:"1px solid "+C.acc+"20", borderRadius:8, marginBottom:14}}>
+              border:"1px solid "+alpha(C.acc, "20"), borderRadius:8, marginBottom:14}}>
               <div style={{color:C.muted, fontSize:9, fontWeight:700,
                 textTransform:"uppercase", marginBottom:2}}>Projected score lift</div>
               <div style={{color:"#0FBB80", fontSize:13, fontWeight:700}}>
@@ -17898,7 +17903,7 @@ function Execution(props) {
       })()}
 
       <div style={{marginTop:20, padding:"14px 18px", background:C.faint,
-        border:"1px solid "+C.acc+"20", borderRadius:10}}>
+        border:"1px solid "+alpha(C.acc, "20"), borderRadius:10}}>
         <div style={{color:C.acc, fontWeight:700, fontSize:12, marginBottom:4}}>
           Why CyberRx doesn't execute directly
         </div>
@@ -18067,7 +18072,7 @@ function QuickNav(props) {
                         border:"none",padding:"7px 14px",cursor:isCurrent?"default":"pointer",
                         textAlign:"left"}}>
                       <span style={{color:isCurrent?C.acc:C.muted,fontSize:9,fontWeight:700,
-                        background:isCurrent?C.acc+"20":C.dim,
+                        background:isCurrent?alpha(C.acc, "20"):C.dim,
                         borderRadius:3,padding:"1px 5px",flexShrink:0,
                         minWidth:32,textAlign:"center"}}>{item.mod||"—"}</span>
                       <span style={{color:isCurrent?C.acc:C.text,
@@ -18153,12 +18158,12 @@ function Shell(props) {
                     <div key={n.id} onClick={function(){go(n.id);}}
                       style={{display:"flex", alignItems:"center", gap:9,
                         padding:"8px 14px", cursor:"pointer",
-                        background:active?C.acc+"12":"transparent",
+                        background:active?alpha(C.acc, "12"):"transparent",
                         borderLeft:"3px solid "+(active?C.acc:"transparent"),
                         margin:"1px 0"}}
                       onMouseEnter={function(e){
                         if(!active) {
-                          e.currentTarget.style.background = C.acc+"08";
+                          e.currentTarget.style.background = alpha(C.acc, "08");
                           e.currentTarget.style.color = C.acc;
                         }
                       }}
@@ -18247,8 +18252,8 @@ function Shell(props) {
           {/* Sync badge */}
           {isSync ? (
             <div style={{display:"flex", gap:5, alignItems:"center",
-              padding:"4px 10px", background:C.acc+"12",
-              border:"1px solid "+C.acc+"30", borderRadius:5}}>
+              padding:"4px 10px", background:alpha(C.acc, "12"),
+              border:"1px solid "+alpha(C.acc, "30"), borderRadius:5}}>
               <div style={{width:6, height:6, borderRadius:"50%", background:C.acc}}/>
               <span style={{color:C.acc, fontSize:10, fontWeight:700}}>Syncing</span>
             </div>
@@ -18666,7 +18671,7 @@ function WelcomePage(props) {
           <button onClick={setupDone?onGoToDashboard:onStartSetup}
             style={{background:C.acc,border:"none",color:"#fff",borderRadius:8,
               padding:"8px 20px",cursor:"pointer",fontSize:13,fontWeight:700,
-              boxShadow:"0 0 16px "+C.acc+"40"}}>
+              boxShadow:"0 0 16px "+alpha(C.acc, "40")}}>
             {setupDone?"Go to Dashboard →":"Start Assessment →"}
           </button>
         </div>
@@ -18676,8 +18681,8 @@ function WelcomePage(props) {
       <div style={{textAlign:"center",padding:"56px 24px 48px",
         maxWidth:720,margin:"0 auto"}}>
         <div style={{display:"inline-flex",alignItems:"center",gap:8,
-          background:"linear-gradient(90deg,"+C.acc+"20,#A78BFA20)",
-          border:"1px solid "+C.acc+"35",borderRadius:20,
+          background:"linear-gradient(90deg,"+alpha(C.acc,"20")+","+alpha(C.acc,"14")+")",
+          border:"1px solid "+alpha(C.acc, "35"),borderRadius:20,
           padding:"5px 16px",marginBottom:22}}>
           <div style={{width:6,height:6,borderRadius:"50%",background:C.acc,
             boxShadow:"0 0 8px "+C.acc}}/>
@@ -18840,7 +18845,7 @@ function WelcomePage(props) {
 
               <div style={{background:"linear-gradient(135deg,"+C.acc+",#A78BFA)",
                 borderRadius:16,padding:"20px 16px",textAlign:"center",
-                boxShadow:"0 0 40px "+C.acc+"35",marginBottom:6}}>
+                boxShadow:"0 0 40px "+alpha(C.acc, "35"),marginBottom:6}}>
                 <div style={{width:52,height:52,borderRadius:14,
                   background:"linear-gradient(135deg,#00C4A0,#0090F0)",
                   display:"flex",alignItems:"center",justifyContent:"center",
@@ -18858,7 +18863,7 @@ function WelcomePage(props) {
 
               <div style={{marginTop:10,textAlign:"center"}}>
                 <div style={{color:C.acc,fontSize:9,fontWeight:600,
-                  background:C.acc+"12",border:"1px solid "+C.acc+"30",
+                  background:alpha(C.acc, "12"),border:"1px solid "+alpha(C.acc, "30"),
                   borderRadius:6,padding:"4px 10px",lineHeight:1.5}}>
                   Evidence-based<br/>not self-attestation
                 </div>
@@ -18926,7 +18931,7 @@ function WelcomePage(props) {
       {/* ── CTA ── */}
       <div style={{flex:1,display:"flex",flexDirection:"column",
         alignItems:"center",justifyContent:"center",
-        background:"linear-gradient(135deg,"+C.acc+"10,#A78BFA08,"+C.bg+")",
+        background:"linear-gradient(135deg,"+alpha(C.acc,"10")+","+alpha(C.acc,"06")+","+C.bg+")",
         borderTop:"1px solid "+C.border,padding:"56px 24px",textAlign:"center"}}>
         <h2 style={{color:C.text,fontSize:28,fontWeight:900,
           margin:"0 0 14px",letterSpacing:"-0.02em"}}>
@@ -18945,7 +18950,7 @@ function WelcomePage(props) {
         <button onClick={setupDone?onGoToDashboard:onStartSetup}
           style={{background:C.acc,border:"none",color:"#fff",borderRadius:12,
             padding:"16px 52px",cursor:"pointer",fontSize:16,fontWeight:800,
-            boxShadow:"0 4px 28px "+C.acc+"50",letterSpacing:"-0.01em"}}>
+            boxShadow:"0 4px 28px "+alpha(C.acc, "50"),letterSpacing:"-0.01em"}}>
           {setupDone?
             "Go to CISO Dashboard →":
             "Start Your Assessment →"
@@ -20159,7 +20164,7 @@ function SetupBot(props) {
               </div>
               {!bot&&(
                 <div style={{width:28,height:28,borderRadius:'50%',flexShrink:0,
-                  background:C.acc+'25',border:'1px solid '+C.acc+'40',
+                  background:alpha(C.acc, '25'),border:'1px solid '+alpha(C.acc, '40'),
                   display:'flex',alignItems:'center',justifyContent:'center',
                   fontSize:11}}>{'\uD83D\uDC64'}</div>
               )}
@@ -20246,7 +20251,7 @@ function SetupBot(props) {
                     }
                   }}
                   placeholder='Type to search carriers...'
-                  style={{flex:1,background:C.card,border:'1px solid '+C.acc+'40',
+                  style={{flex:1,background:C.card,border:'1px solid '+alpha(C.acc, '40'),
                     borderRadius:8,padding:'8px 12px',color:C.text,fontSize:12,outline:'none'}}/>
                 <button onClick={function(){
                     if(selectedIdx>=0 && suggest[selectedIdx]){
@@ -20261,7 +20266,7 @@ function SetupBot(props) {
                 </button>
               </div>
               {suggest.length>0&&(
-                <div style={{background:C.card,border:'1px solid '+C.acc+'30',
+                <div style={{background:C.card,border:'1px solid '+alpha(C.acc, '30'),
                   borderRadius:8,overflow:'hidden',marginBottom:7}}>
                   {suggest.map(function(s, idx){
                     var isSelected = idx === selectedIdx;
@@ -20270,8 +20275,8 @@ function SetupBot(props) {
                         onClick={function(){pick(s);setSuggest([]);setInput('');setSelectedIdx(-1);}}
                         style={{padding:'8px 12px',cursor:'pointer',fontSize:11,color:C.text,
                           borderBottom:'1px solid '+C.border,
-                          background: isSelected ? C.acc+'14' : 'transparent'}}
-                        onMouseEnter={function(e){e.currentTarget.style.background=C.acc+'14';setSelectedIdx(idx);}}
+                          background: isSelected ? alpha(C.acc, '14') : 'transparent'}}
+                        onMouseEnter={function(e){e.currentTarget.style.background=alpha(C.acc, '14');setSelectedIdx(idx);}}
                         onMouseLeave={function(e){e.currentTarget.style.background='transparent';}}>
                         {s}
                       </div>
@@ -20285,7 +20290,7 @@ function SetupBot(props) {
                     <button key={ins} onClick={function(){pick(ins);}}
                       style={{background:C.dim,border:'1px solid '+C.border,
                         color:C.text,borderRadius:6,padding:'5px 10px',cursor:'pointer',fontSize:10}}
-                      onMouseEnter={function(e){e.currentTarget.style.background=C.acc+'18';e.currentTarget.style.borderColor=C.acc;}}
+                      onMouseEnter={function(e){e.currentTarget.style.background=alpha(C.acc, '18');e.currentTarget.style.borderColor=C.acc;}}
                       onMouseLeave={function(e){e.currentTarget.style.background=C.dim;e.currentTarget.style.borderColor=C.border;}}>
                       {ins}
                     </button>
@@ -20296,7 +20301,7 @@ function SetupBot(props) {
           )}
           {curQ.type==='pending'&&pendingAsk&&pendingAsk.kind==='upload'&&(
             <div style={{display:'flex',gap:7,alignItems:'center'}}>
-              <label style={{flex:1,background:C.card,border:'1px dashed '+C.acc+'60',borderRadius:8,
+              <label style={{flex:1,background:C.card,border:'1px dashed '+alpha(C.acc, '60'),borderRadius:8,
                 padding:'9px 12px',color:C.acc,fontSize:12,cursor:'pointer',textAlign:'center',fontWeight:600}}>
                 ⬆ Upload {pendingAsk.doc}
                 <input type='file' style={{display:'none'}}
@@ -20313,7 +20318,7 @@ function SetupBot(props) {
                 onChange={function(e){ setInput(e.target.value); }}
                 onKeyDown={function(e){ if(e.key==='Enter'&&input.trim()){ resolvePending(input.trim()); } }}
                 placeholder={pendingAsk.ask}
-                style={{flex:1,background:C.card,border:'1px solid '+C.acc+'40',
+                style={{flex:1,background:C.card,border:'1px solid '+alpha(C.acc, '40'),
                   borderRadius:8,padding:'9px 12px',color:C.text,fontSize:12,outline:'none'}}/>
               <button onClick={function(){ resolvePending(input.trim()||null); }}
                 style={{background:C.acc,border:'none',color:'#fff',borderRadius:8,
@@ -20327,7 +20332,7 @@ function SetupBot(props) {
                   onChange={function(e){ setInput(e.target.value.replace(/[^0-9.]/g,'')); }}
                   onKeyDown={function(e){ if(e.key==='Enter'&&input.trim()){ pick(input.trim()); setInput(''); } }}
                   placeholder={curQ.placeholder||'Enter a number'}
-                  style={{flex:1,background:C.card,border:'1px solid '+C.acc+'40',
+                  style={{flex:1,background:C.card,border:'1px solid '+alpha(C.acc, '40'),
                     borderRadius:8,padding:'9px 12px',color:C.text,fontSize:12,outline:'none'}}/>
                 <button onClick={function(){ if(input.trim()){ pick(input.trim()); setInput(''); } }}
                   style={{background:C.acc,border:'none',color:'#fff',borderRadius:8,
@@ -20346,7 +20351,7 @@ function SetupBot(props) {
                     <span style={{width:110,fontSize:12,color:C.text}}>{label}</span>
                     <input value={envMix[key]==null?'':envMix[key]} inputMode='numeric'
                       onChange={function(ev){ var v=ev.target.value.replace(/[^0-9]/g,''); var n=Object.assign({},envMix); if(v===''){delete n[key];}else{n[key]=Math.min(100,parseInt(v,10));} setEnvMix(n); }}
-                      placeholder='0' style={{width:70,background:C.card,border:'1px solid '+C.acc+'40',borderRadius:8,padding:'7px 10px',color:C.text,fontSize:12,outline:'none'}}/>
+                      placeholder='0' style={{width:70,background:C.card,border:'1px solid '+alpha(C.acc, '40'),borderRadius:8,padding:'7px 10px',color:C.text,fontSize:12,outline:'none'}}/>
                     <span style={{fontSize:12,color:C.muted}}>%</span>
                   </div>
                 );
@@ -20382,7 +20387,7 @@ function SetupBot(props) {
                     }
                   }}
                   placeholder={curQ.placeholder||'Type your answer...'}
-                  style={{flex:1,background:C.card,border:'1px solid '+C.acc+'40',
+                  style={{flex:1,background:C.card,border:'1px solid '+alpha(C.acc, '40'),
                     borderRadius:8,padding:'9px 12px',color:C.text,fontSize:12,outline:'none'}}/>
                 <button onClick={function(){
                     if(selectedIdx>=0 && suggest[selectedIdx]){
@@ -20398,7 +20403,7 @@ function SetupBot(props) {
               </div>
               {suggest.length>0&&(
                 <div style={{position:'absolute',bottom:'100%',left:0,right:52,
-                  background:C.card,border:'1px solid '+C.acc+'40',
+                  background:C.card,border:'1px solid '+alpha(C.acc, '40'),
                   borderRadius:8,marginBottom:3,maxHeight:300,overflowY:'auto',
                   boxShadow:'0 -4px 16px rgba(0,0,0,0.12)',zIndex:10}}>
                   {suggest.map(function(s, idx){
@@ -20407,8 +20412,8 @@ function SetupBot(props) {
                       <div key={s} onClick={function(){pick(s);setSuggest([]);setInput('');setSelectedIdx(-1);}}
                         style={{padding:'8px 12px',cursor:'pointer',fontSize:11,color:C.text,
                           borderBottom:'1px solid '+C.border,
-                          background: isSelected ? C.acc+'12' : 'transparent'}}
-                        onMouseEnter={function(e){e.currentTarget.style.background=C.acc+'12';setSelectedIdx(idx);}}
+                          background: isSelected ? alpha(C.acc, '12') : 'transparent'}}
+                        onMouseEnter={function(e){e.currentTarget.style.background=alpha(C.acc, '12');setSelectedIdx(idx);}}
                         onMouseLeave={function(e){if(idx!==selectedIdx){e.currentTarget.style.background='transparent';}}}>
                         {s}
                       </div>
@@ -20438,8 +20443,8 @@ function SetupBot(props) {
                         accRef.current[curQ.id]=cur;
                         setAnswers(Object.assign({},accRef.current));
                       }}
-                      style={{background:picked?C.acc+'20':C.card,
-                        border:'1px solid '+(picked?C.acc:C.acc+'40'),
+                      style={{background:picked?alpha(C.acc, '20'):C.card,
+                        border:'1px solid '+(picked?C.acc:alpha(C.acc, '40')),
                         color:picked?C.acc:C.text,
                         borderRadius:20,padding:'7px 14px',cursor:'pointer',fontSize:11}}>
                       {picked?'✓ ':''}{c}
@@ -20473,10 +20478,10 @@ function SetupBot(props) {
               {(curQ.choices||[]).map(function(c){
                 return (
                   <button key={c} onClick={function(){pick(c);}}
-                    style={{background:C.card,border:'1px solid '+C.acc+'40',color:C.text,
+                    style={{background:C.card,border:'1px solid '+alpha(C.acc, '40'),color:C.text,
                       borderRadius:20,padding:'7px 14px',cursor:'pointer',fontSize:11}}
-                    onMouseEnter={function(e){e.currentTarget.style.background=C.acc+'18';e.currentTarget.style.borderColor=C.acc;}}
-                    onMouseLeave={function(e){e.currentTarget.style.background=C.card;e.currentTarget.style.borderColor=C.acc+'40';}}>
+                    onMouseEnter={function(e){e.currentTarget.style.background=alpha(C.acc, '18');e.currentTarget.style.borderColor=C.acc;}}
+                    onMouseLeave={function(e){e.currentTarget.style.background=C.card;e.currentTarget.style.borderColor=alpha(C.acc, '40');}}>
                     {c}
                   </button>
                 );
@@ -20516,7 +20521,7 @@ function SetupBot(props) {
           {curQ.type==='dropdown'&&(
             <select value={input}
               onChange={function(e){if(e.target.value){pick(e.target.value);}}}
-              style={{width:'100%',background:C.card,border:'1px solid '+C.acc+'40',
+              style={{width:'100%',background:C.card,border:'1px solid '+alpha(C.acc, '40'),
                 borderRadius:8,padding:'9px 12px',color:C.text,
                 fontSize:12,outline:'none',cursor:'pointer'}}>
               <option value=''>Select your state...</option>
@@ -20934,7 +20939,7 @@ function DocDash(props) {
                       {selDocData.frameworks.map(function(fw){
                         return (
                           <span key={fw} style={{color:C.acc,fontSize:8,fontWeight:600,
-                            background:C.acc+"12",borderRadius:3,padding:"2px 6px"}}>
+                            background:alpha(C.acc, "12"),borderRadius:3,padding:"2px 6px"}}>
                             {fw.length>22?fw.substring(0,20)+"...":fw}
                           </span>
                         );
@@ -21316,7 +21321,7 @@ function BusinessMapDash(props) {
                       {orgText(f.wrong||"",orgName,orgExtras)}
                     </div>
                     {f.fix&&(
-                      <div style={{marginTop:8,background:C.acc+"08",borderRadius:6,
+                      <div style={{marginTop:8,background:alpha(C.acc, "08"),borderRadius:6,
                         padding:"8px 10px",fontSize:10,color:C.text}}>
                         <span style={{color:C.acc,fontWeight:700}}>Remediation: </span>{orgText(f.fix||"",orgName,orgExtras)}
                       </div>
@@ -21514,7 +21519,7 @@ function BusinessMapDash(props) {
         {!selBiz&&(
           <div>
             <div style={{color:C.muted,fontSize:11,marginBottom:14,
-              background:C.acc+"08",border:"1px solid "+C.acc+"20",
+              background:alpha(C.acc, "08"),border:"1px solid "+alpha(C.acc, "20"),
               borderRadius:8,padding:"10px 14px"}}>
               Click any business line to drill into its processes, applications, and regulatory status.
             </div>
@@ -21635,7 +21640,7 @@ function BusinessMapDash(props) {
                             <tr key={biz.id+proc.id+app.name}
                               onClick={function(){setSelBiz(biz.id);setSelProc(proc.id);setSelApp(app.name);}}
                               style={{cursor:"pointer",borderTop:"1px solid "+C.border}}
-                              onMouseEnter={function(e){e.currentTarget.style.background=C.acc+"08";}}
+                              onMouseEnter={function(e){e.currentTarget.style.background=alpha(C.acc, "08");}}
                               onMouseLeave={function(e){e.currentTarget.style.background="transparent";}}>
                               <td style={{padding:"5px 8px",color:C.text,fontWeight:600}}>
                                 {app.name}
@@ -21871,7 +21876,7 @@ function CyberRxAPIAdapter(props) {
         </div>
         <div style={{display:"flex",gap:8}}>
           {connectedCount > 0&&(
-            <div style={{background:C.accDim,border:"1px solid "+C.acc+"40",
+            <div style={{background:C.accDim,border:"1px solid "+alpha(C.acc, "40"),
               borderRadius:8,padding:"5px 12px",fontSize:11,color:C.acc}}>
               {connectedCount} source{connectedCount>1?"s":""} connected
               &nbsp;&middot;&nbsp;{totalFindings} findings normalized
@@ -22097,7 +22102,7 @@ function CyberRxAPIAdapter(props) {
                     return (
                       <div key={f.id}
                         style={{background:C.card,
-                          border:"1px solid "+(isOpen?C.acc+"50":C.border),
+                          border:"1px solid "+(isOpen?alpha(C.acc, "50"):C.border),
                           borderRadius:10,marginBottom:10,cursor:"pointer",
                           transition:"border 0.15s"}}
                         onClick={function(){
@@ -22279,7 +22284,7 @@ function CyberRxAPIAdapter(props) {
                             return (
                               <div key={f.id} style={{display:"flex",
                                 alignItems:"center",gap:10,padding:"6px 0",
-                                borderBottom:"1px solid "+C.border+"40",fontSize:11}}>
+                                borderBottom:"1px solid "+alpha(C.border, "40"),fontSize:11}}>
                                 <span style={{color:sev.text,fontSize:9}}>&#9679;</span>
                                 <span style={{color:C.muted}}>{f.source}</span>
                                 <span style={{color:C.text,flex:1}}>{f.findingType}</span>
@@ -23386,8 +23391,8 @@ function BrianaBar(props) {
   if (!brianaOn && dismissed) { return null; }
 
   return (
-    <div style={{background:"linear-gradient(135deg,"+C.acc+"0C,#A78BFA08)",
-      border:"1px solid "+C.acc+"25",borderRadius:10,
+    <div style={{background:"linear-gradient(135deg,"+alpha(C.acc,"0C")+","+alpha(C.acc,"08")+")",
+      border:"1px solid "+alpha(C.acc, "25"),borderRadius:10,
       padding:"10px 14px",marginBottom:14,
       display:"flex",gap:10,alignItems:"flex-start"}}>
 
@@ -23447,7 +23452,7 @@ function BrianaBar(props) {
         <button onClick={function(){setShowVoicePicker(!showVoicePicker);}}
           title="Change voice — Browser · OpenAI · ElevenLabs"
           style={{
-            background:showVoicePicker?C.acc+"25":
+            background:showVoicePicker?alpha(C.acc, "25"):
               voiceProvider==="elevenlabs"&&elKey?"#A78BFA15":
               voiceProvider==="openai"&&ttsKey?"#0FBB8015":C.faint||C.bg,
             border:"1.5px solid "+(showVoicePicker?C.acc:
@@ -23487,7 +23492,7 @@ function BrianaBar(props) {
                   setVoiceProvider(p.id);
                   if(window.localStorage){window.localStorage.setItem("cx_voice_provider",p.id);}
                 }} style={{flex:1,border:"1px solid "+(act?C.acc:C.border),
-                  background:act?C.acc+"18":"transparent",
+                  background:act?alpha(C.acc, "18"):"transparent",
                   borderRadius:7,padding:"5px 0",cursor:"pointer",textAlign:"center"}}>
                   <div style={{fontSize:10,fontWeight:700,color:act?C.acc:C.text}}>{p.label}</div>
                   <div style={{fontSize:8,color:C.muted}}>{p.sub}</div>
@@ -23546,7 +23551,7 @@ function BrianaBar(props) {
                       setVoiceModel(v.id);
                       if(window.localStorage){window.localStorage.setItem("cx_voice_model",v.id);}
                     }} style={{border:"1px solid "+(act?C.acc:C.border),
-                      background:act?C.acc+"18":"transparent",
+                      background:act?alpha(C.acc, "18"):"transparent",
                       borderRadius:7,padding:"6px 4px",cursor:"pointer",textAlign:"center"}}>
                       <div style={{fontSize:10,fontWeight:act?700:500,color:act?C.acc:C.text}}>{v.label}</div>
                       <div style={{fontSize:8,color:C.muted,marginTop:1}}>{v.desc}</div>
@@ -24611,7 +24616,7 @@ function CjdFindingsTab(props) {
                   {selAsset.data.map(function(d){
                     return (
                       <span key={d} style={{fontSize:9,fontWeight:700,color:C.acc,
-                        background:C.acc+"18",padding:"2px 7px",borderRadius:10}}>{d}</span>
+                        background:alpha(C.acc, "18"),padding:"2px 7px",borderRadius:10}}>{d}</span>
                     );
                   })}
                 </div>
@@ -24682,7 +24687,7 @@ function CrownJewelsModule(props) {
                 color:tab===t.id?C.acc:C.muted,transition:"all .12s"}}>
               {t.label}
               {t.id==="classify" && cjFoundCount>0 && (
-                <span style={{marginLeft:6,background:C.acc+"22",color:C.acc,
+                <span style={{marginLeft:6,background:alpha(C.acc, "22"),color:C.acc,
                   fontSize:9,padding:"1px 5px",borderRadius:8}}>{cjFoundCount} CJ</span>
               )}
             </div>
@@ -24855,8 +24860,8 @@ function CrownJewelMap(props) {
               var rtoColor = proc.rto_hrs<=4?"#EF4545":proc.rto_hrs<=12?"#F5A623":"#64748B";
               return (
                 <div key={proc.id} onClick={function(){setSelProc(proc.id);}}
-                  style={{background:isActive?C.acc+"15":C.bg,
-                    border:"1px solid "+(isActive?C.acc+"50":C.border),
+                  style={{background:isActive?alpha(C.acc, "15"):C.bg,
+                    border:"1px solid "+(isActive?alpha(C.acc, "50"):C.border),
                     borderRadius:10,padding:"10px 12px",marginBottom:6,cursor:"pointer"}}>
                   <div style={{display:"flex",gap:8,alignItems:"flex-start",marginBottom:5}}>
                     <span style={{fontSize:18}}>{proc.icon}</span>
@@ -25302,8 +25307,8 @@ function CrownJewelMap(props) {
                 var col = PROTO_COLOR[conn.protocol]||"#64748B";
                 return (
                   <div key={i} onClick={function(){setSelConn(conn);}}
-                    style={{background:isAct?C.acc+"15":C.bg,
-                      border:"1px solid "+(isAct?C.acc+"50":C.border),
+                    style={{background:isAct?alpha(C.acc, "15"):C.bg,
+                      border:"1px solid "+(isAct?alpha(C.acc, "50"):C.border),
                       borderRadius:8,padding:"8px 10px",marginBottom:4,cursor:"pointer"}}>
                     <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:4}}>
                       <span style={{color:C.text,fontSize:10,fontWeight:600,flex:1,
