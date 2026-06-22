@@ -330,10 +330,12 @@ Extraction output (written to `document_extraction.extracted`):
 | NIST 800-53 r5 | ✅ `nist_800_53_r5` | Reuse |
 | CIS v8.1 | ✅ `cis_v8_1` | Reuse |
 | MITRE ATT&CK | ✅ `attack_enterprise` | Keep (threat coverage, not compliance) |
-| **ISO 27001:2022** | ❌ | **Add** — Annex A 93 controls → `framework_requirements` |
-| **SOC 2 (TSC 2017)** | ❌ | **Add** — Common Criteria CC1–CC9 + categories |
-| **HIPAA Security Rule** | ❌ (only as obligation) | **Add** — §164.308/310/312/314/316 |
-| **HITRUST CSF** | ❌ | **Add** — control reference (maps heavily to the others) |
+| ISO 27001:2022 | ✅ `iso_27001` (Annex A + clauses, via `ingest/loadIsoSoc2.js`) | Reuse |
+| SOC 2 (TSC 2017) | ✅ `soc_2` (CC1–CC9 + A/C/PI/P, via `ingest/loadIsoSoc2.js`) | Reuse |
+| **HIPAA Security Rule** | ✅ **added** `hipaa_security` (`ingest/loadHipaaHitrust.js`) | §164.308/310/312/314/316 standards + impl specs |
+| **HITRUST CSF** | ✅ **added** `hitrust_csf` (`ingest/loadHipaaHitrust.js`) | 14 control categories |
+
+> **Correction to the initial sweep:** ISO 27001 and SOC 2 were *already* seeded (`ingest/loadIsoSoc2.js`, wired into `bootstrap.js`); the genuine gap was **HIPAA + HITRUST**, now added in Step 2. All seven compliance frameworks are present.
 
 ### 5.2 The crosswalk is the multiplier
 A single library control (e.g. `CL-IAM-001` "MFA on remote/privileged access") maps to:

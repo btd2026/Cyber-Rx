@@ -1326,6 +1326,35 @@ async function init() {
         computed_at      TIMESTAMPTZ DEFAULT NOW()
       );
       CREATE INDEX IF NOT EXISTS onboarding_completeness_org ON onboarding_completeness(organization_id, computed_at DESC);
+
+      -- ============= Unified Control Library (Step 2) =======================
+      -- Framework-agnostic master control list. One library control crosswalks
+      -- to many framework requirements, so one piece of evidence can score every
+      -- in-scope framework at once. The CAE's internal cae_control rows and the
+      -- document pipeline both post evidence against these stable keys.
+      -- See docs/plans/onboarding-redesign-blueprint.md (§3.4, §5).
+      CREATE TABLE IF NOT EXISTS control_library (
+        id             TEXT PRIMARY KEY,          -- stable key, e.g. CL-IAM-001
+        domain         TEXT NOT NULL,             -- IAM | Data Protection | Vuln Mgmt | Governance | ...
+        title          TEXT NOT NULL,
+        description    TEXT,
+        dimension      TEXT NOT NULL DEFAULT 'system', -- system | documentation | human
+        weight         INTEGER DEFAULT 1,
+        default_method TEXT,                       -- automated | document | attestation
+        meta           JSONB DEFAULT '{}'
+      );
+      CREATE INDEX IF NOT EXISTS control_library_domain ON control_library(domain);
+
+      -- One library control satisfies many framework requirements.
+      CREATE TABLE IF NOT EXISTS control_library_crosswalk (
+        library_control_id TEXT NOT NULL REFERENCES control_library(id) ON DELETE CASCADE,
+        framework          TEXT NOT NULL,          -- the seven frameworks
+        requirement_id     TEXT NOT NULL,
+        coverage           TEXT DEFAULT 'full',    -- full | partial
+        provenance         TEXT DEFAULT 'curated', -- curated | derived
+        PRIMARY KEY (library_control_id, framework, requirement_id)
+      );
+      CREATE INDEX IF NOT EXISTS control_library_xwalk_fw ON control_library_crosswalk(framework, requirement_id);
     `);
     console.log('Database schema initialized');
   } catch (err) {

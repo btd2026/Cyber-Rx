@@ -276,6 +276,7 @@ app.use('/api/csf',               [apiGetLimiter, apiPostLimiter], require('./ro
 // Organization Intake — document request checklist + upload/review pipeline
 app.use('/api/intake',            [apiGetLimiter, apiPostLimiter], require('./routes/intake'));
 app.use('/api/onboarding',        [apiGetLimiter, apiPostLimiter], require('./routes/onboarding'));
+app.use('/api/control-library',   [apiGetLimiter], require('./routes/control-library'));
 
 // Industry registry — makes the platform industry-agnostic (setup + intake)
 app.use('/api/industries',        [apiGetLimiter], require('./routes/industries'));
