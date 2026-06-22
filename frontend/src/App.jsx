@@ -6,6 +6,7 @@ import CLODash from "./pages/CLODash";
 import AdminDatabase from "./pages/AdminDatabase";
 import RedesignPrototype from "./pages/RedesignPrototype";
 import ExecutiveAgentBrief from "./components/ExecutiveAgentBrief";
+import ExecutiveRoleTabs from "./components/ExecutiveRoleTabs";
 import NistCsfScorecard from "./components/NistCsfScorecard";
 import CsfControlLibrary from "./components/CsfControlLibrary";
 import CsfRankings from "./components/CsfRankings";
@@ -17967,6 +17968,7 @@ function QuickNav(props) {
 
   var ALL_PAGES = [
     {group:"Dashboards",    items:[
+      {id:"exec-roles", label:"Executive Brief (all seats)", mod:"F08x"},
       {id:"dashboard", label:"CISO Dashboard",    mod:"F08"},
       {id:"cio",       label:"CIO Dashboard",     mod:"F08e"},
       {id:"clo",       label:"CLO / Legal",       mod:"F08f"},
@@ -26042,6 +26044,7 @@ function CyberRxApp() {
   // App shell + page router
   function renderPage() {
     if (page==="home")      { return React.createElement(Home,      sharedProps); }
+    if (page==="exec-roles"){ return React.createElement(ExecutiveRoleTabs, sharedProps); }
     if (page==="hub")       { return React.createElement(CISODash,  sharedProps); }
     if (page==="bizlines")  { return React.createElement(BizLines,  sharedProps); }
     if (page==="appmap")    { return React.createElement(AppMap,    sharedProps); }
