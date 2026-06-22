@@ -4,30 +4,40 @@
  * This is the ONE file where raw hex/length literals are allowed. Everything else
  * in the app must read these semantic tokens (var(--…)) — never hard-code values.
  *
- * ACCENT NOTE: --pass (green) is the primary/active accent for the executive views
- * AND the "verified / control holds" status color. Because the two meanings share
- * one color, always pair the *status* use with a ✓ glyph + label so it can't be
- * confused with the *accent* use. To move the accent to brand blue later, repoint
- * the accent aliases (--accent / --accent-on) at --brand — a one-line swap.
+ * STATUS COLORS CARRY MEANING (used sparingly, never decoratively):
+ *   --exposure (amber) = exposure / unresolved / clock running
+ *   --pass     (green) = verified / holds / pass   (always pair with a ✓ glyph + label)
+ *   --critical (red)   = critical / breach
+ *   --accent   (blue)  = brand / decision / interactive
+ *
+ * ACCENT: per the product decision (2026-06-22) the accent is BRAND BLUE so
+ * interactive/decision chrome is blue and GREEN is reserved purely for verified/
+ * pass status. To revert, repoint --accent at --pass (one line).
+ *
+ * THEMES: :root is the warm "brief" (light) default. [data-theme="command"] is the
+ * dark "situation room" — same token names, repointed. Components never branch on
+ * theme; they read tokens and both themes just work.
  * ========================================================================== */
 
 :root {
   /* ---- Brand & semantic accent ------------------------------------------- */
-  --brand: #243044;          /* navy — reserved for a future accent swap */
-  --pass: #1a7f37;           /* GREEN — verified/holds status + current accent */
+  --brand: #243044;          /* navy/blue — interactive/decision accent */
+  --brand-strong: #2f3e59;
+  --pass: #1a7f37;           /* GREEN — verified/holds/pass status ONLY */
   --exposure: #b45309;       /* amber — live exposure / at-risk / running clock */
   --critical: #cf222e;       /* red — critical / breach */
   --warn: #9a6700;           /* amber-gold — caution */
 
-  /* Accent aliases — point the executive views at these. Swap to var(--brand)
-     here (two lines) to move the whole accent to blue. */
-  --accent: var(--pass);
-  --accent-on: #ffffff;      /* text/!contrast on a filled accent surface */
+  /* Accent aliases — the executive views read these. */
+  --accent: var(--brand);
+  --accent-strong: var(--brand-strong);
+  --accent-on: #ffffff;      /* text/contrast on a filled accent surface */
 
   /* ---- Ink / text -------------------------------------------------------- */
   --text: #211d18;
   --text-muted: #5c554b;
   --text-subtle: #8a8276;
+  --text-on-accent: #ffffff;
 
   /* ---- Surfaces ---------------------------------------------------------- */
   --bg: #f7f4ee;
@@ -40,13 +50,36 @@
   --pass-tint: #e6f1e8;
   --exposure-tint: #f6ead9;
   --critical-tint: #fceceb;
+  --warn-tint: #f6efdd;
   --brand-tint: #ecedf2;
+  --accent-tint: var(--brand-tint);
+
+  /* ---- Masthead (section-header banner) — intentionally dark in BOTH themes,
+     like a printed brief's header rule. ----------------------------------- */
+  --masthead-0: #1a1712;
+  --masthead-1: #252019;
+  --masthead-2: #322c23;
+  --masthead-line: #403a2f;
+  --masthead-ink: #a89f8f;
+  --masthead-bg: linear-gradient(135deg, var(--masthead-0) 0%, var(--masthead-1) 60%, var(--masthead-2) 100%);
 
   /* ---- Focus & overlay --------------------------------------------------- */
   --focus: #2f3e59;          /* high-contrast focus ring on ivory */
   --scrim: rgba(33, 29, 24, 0.45);  /* modal backdrop (ink @ 45%) */
 
+  /* ---- Situation-room surface treatment --------------------------------- */
+  /* Glass = translucent card surface; glow = ambient background light; grain =
+     film-grain overlay opacity. Tuned per theme below. */
+  --glass-bg: rgba(255, 253, 249, 0.72);
+  --glass-border: rgba(33, 29, 24, 0.08);
+  --glass-blur: 14px;
+  --glow-1: rgba(36, 48, 68, 0.10);     /* brand-tinted ambient glow */
+  --glow-2: rgba(180, 83, 9, 0.06);     /* faint exposure warmth */
+  --grain-opacity: 0.035;
+
   /* ---- Type -------------------------------------------------------------- */
+  /* Two-voice system: DISPLAY for headings/verdicts, BODY for UI/prose, MONO for
+     machine evidence (timestamps, control IDs, signals, logs). */
   --font-display: 'Source Serif 4', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
   --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
@@ -64,4 +97,60 @@
   --radius-md: 10px;
   --radius-lg: 14px;
   --shadow-card: 0 1px 2px rgba(33, 29, 24, 0.04), 0 12px 30px -20px rgba(33, 29, 24, 0.18);
+  --shadow-pop: 0 18px 50px -16px rgba(33, 29, 24, 0.28);
+}
+
+/* ============================ DARK "COMMAND" THEME ========================= */
+/* Warm-charcoal situation room. Same token names; status hues brightened a touch
+   for contrast on dark. Green/amber/red keep their meaning. */
+[data-theme="command"] {
+  --brand: #5b7cc4;
+  --brand-strong: #7c98d6;
+  --pass: #4ec07a;
+  --exposure: #e0913a;
+  --critical: #f0656f;
+  --warn: #d8a93a;
+
+  --accent: var(--brand);
+  --accent-strong: var(--brand-strong);
+  --accent-on: #0e0c0a;
+
+  --text: #f3efe7;
+  --text-muted: #b9b1a3;
+  --text-subtle: #8a8276;
+  --text-on-accent: #0e0c0a;
+
+  --bg: #14110d;
+  --surface: #1c1813;
+  --surface-2: #251f18;
+  --border: #322c23;
+  --hairline: #403a2f;
+
+  --pass-tint: rgba(78, 192, 122, 0.14);
+  --exposure-tint: rgba(224, 145, 58, 0.16);
+  --critical-tint: rgba(240, 101, 111, 0.16);
+  --warn-tint: rgba(216, 169, 58, 0.16);
+  --brand-tint: rgba(91, 124, 196, 0.18);
+  --accent-tint: var(--brand-tint);
+
+  --focus: #8aa6e0;
+  --scrim: rgba(0, 0, 0, 0.6);
+
+  --glass-bg: rgba(28, 24, 19, 0.62);
+  --glass-border: rgba(243, 239, 231, 0.08);
+  --glass-blur: 16px;
+  --glow-1: rgba(91, 124, 196, 0.16);
+  --glow-2: rgba(224, 145, 58, 0.08);
+  --grain-opacity: 0.06;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 18px 40px -24px rgba(0, 0, 0, 0.7);
+  --shadow-pop: 0 24px 60px -18px rgba(0, 0, 0, 0.8);
+}
+
+/* Respect users who prefer the dark command theme by default, unless an explicit
+   data-theme is already set on <html>. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+  }
 }

@@ -5,15 +5,16 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  background: #f7f4ee;
-  color: #211d18;
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
   -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   letter-spacing: -0.006em;
+  transition: background-color .25s ease, color .25s ease;
 }
 
 /* ── Professional global polish (applies app-wide) ──────────────────────── */
@@ -22,17 +23,20 @@ h1, h2, h3, h4 { letter-spacing: -0.018em; }
 button { font-family: inherit; transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease, opacity .15s ease, transform .05s ease; }
 button:not(:disabled):active { transform: translateY(0.5px); }
 input, select, textarea { font-family: inherit; transition: border-color .15s ease, box-shadow .15s ease; }
-input:focus, select:focus, textarea:focus { outline: none; box-shadow: 0 0 0 3px rgba(36, 48, 68, 0.20); }
+input:focus, select:focus, textarea:focus { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 30%, transparent); }
 a { transition: color .15s ease; }
 
+/* Visible keyboard focus everywhere (a11y) */
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
 /* Quiet, modern scrollbars */
-* { scrollbar-width: thin; scrollbar-color: #d7d9de transparent; }
+* { scrollbar-width: thin; scrollbar-color: var(--hairline) transparent; }
 *::-webkit-scrollbar { width: 10px; height: 10px; }
-*::-webkit-scrollbar-thumb { background: #d7d9de; border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
-*::-webkit-scrollbar-thumb:hover { background: #b6bac1; background-clip: content-box; }
+*::-webkit-scrollbar-thumb { background: var(--hairline); border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
+*::-webkit-scrollbar-thumb:hover { background: var(--text-subtle); background-clip: content-box; }
 *::-webkit-scrollbar-track { background: transparent; }
 
-::selection { background: rgba(36, 48, 68, 0.16); }
+::selection { background: color-mix(in srgb, var(--accent) 18%, transparent); }
 
 #root {
   min-height: 100vh;
