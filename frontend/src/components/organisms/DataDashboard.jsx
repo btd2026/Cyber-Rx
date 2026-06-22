@@ -49,9 +49,9 @@ const DataDashboard = ({ organizationId }) => {
     const colors = {
       'PHI': '#EF4545',
       'PII': '#F5A623',
-      'PCI': '#7C3AED',
+      'PCI': '#64748B',
       'Financial': '#0EA5E9',
-      'Legal': '#6366F1',
+      'Legal': '#243044',
       'Confidential': '#6B7280'
     };
     return colors[type] || '#6B7280';

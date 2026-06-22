@@ -25,7 +25,7 @@ function resolveCtx(props) {
   return { token, organizationId, apiUrl };
 }
 
-const FW_COLOR = (fw) => (fw.startsWith('HIPAA') ? '#9E3B32' : fw.startsWith('SOC2') ? '#8B5CF6' : '#5e6ad2');
+const FW_COLOR = (fw) => (fw.startsWith('HIPAA') ? '#9E3B32' : fw.startsWith('SOC2') ? '#243044' : '#64748B');
 
 export default function VendorAssessmentPanel(props) {
   const [docTypes, setDocTypes] = useState([]);

@@ -100,7 +100,7 @@ const BusinessProcessDashboard = ({
   };
 
   const getTierColor = (tier) => {
-    return tier === 'Primary' ? '#1E40AF' : '#7C3AED';
+    return tier === 'Primary' ? '#1E40AF' : '#243044';
   };
 
   const StatCard = ({ title, value, subtitle, color = '#3B82F6', trend = null }) => (
@@ -191,7 +191,7 @@ const BusinessProcessDashboard = ({
           title="Avg Control Coverage"
           value={`${calculatedSummary.averageControlCoverage}%`}
           subtitle="Across all processes"
-          color="#8B5CF6"
+          color="#243044"
         />
         <StatCard
           title="Needs Attention"

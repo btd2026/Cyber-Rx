@@ -77,7 +77,7 @@ const ProcessSystemMapping = ({
   const getSystemTypeColor = (type) => {
     const colors = {
       'Application': '#3B82F6',
-      'Database': '#8B5CF6',
+      'Database': '#243044',
       'Infrastructure': '#10B981',
       'Cloud': '#F59E0B',
       'Network': '#EF4444',

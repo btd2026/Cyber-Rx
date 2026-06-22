@@ -110,7 +110,7 @@ const ProcessDataMapping = ({
     const colors = {
       'PHI': '#EF4444',
       'PII': '#F59E0B',
-      'PCI': '#8B5CF6',
+      'PCI': '#243044',
       'Financial': '#10B981',
       'Legal': '#3B82F6',
       'Confidential': '#EC4899',

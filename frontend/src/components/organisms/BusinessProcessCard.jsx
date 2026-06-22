@@ -34,7 +34,7 @@ const BusinessProcessCard = ({ process, onClick, compact = false }) => {
   };
 
   const getTierColor = (tier) => {
-    return tier === 'Primary' ? '#1E40AF' : '#7C3AED';
+    return tier === 'Primary' ? '#1E40AF' : '#243044';
   };
 
   const healthScore = process.healthScore || 0;

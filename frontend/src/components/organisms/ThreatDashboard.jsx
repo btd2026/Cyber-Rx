@@ -49,10 +49,10 @@ const ThreatDashboard = ({ organizationId }) => {
     const colors = {
       'ransomware': '#EF4545',
       'phishing': '#F5A623',
-      'insider': '#7C3AED',
+      'insider': '#64748B',
       'supply_chain': '#EC4899',
       'misconfig': '#0EA5E9',
-      'ddos': '#6366F1',
+      'ddos': '#243044',
       'api_abuse': '#F59E0B',
       'zero_day': '#DC2626'
     };

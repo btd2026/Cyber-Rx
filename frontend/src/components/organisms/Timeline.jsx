@@ -43,7 +43,7 @@ const Timeline = ({ events = [], compact = false, onEventClick }) => {
       deleted: '#EF4545',
       approved: '#0FBB80',
       rejected: '#EF4545',
-      routed: '#A78BFA',
+      routed: '#243044',
       incident: '#EF4545',
       remediation: '#F5A623'
     };
