@@ -202,6 +202,7 @@ export function MetricBand({ tiles, onGo }) {
             <span className={`sr-tile__value${t.valueKind ? ` sr-fg--${t.valueKind}` : ''}`}>{t.value}</span>
             {t.delta && <span className={`sr-tile__delta sr-fg--${t.deltaKind || 'muted'}`}>{t.delta}</span>}
           </span>
+          {t.note && <span className={`sr-tile__note sr-note--${t.note}`}>{t.note}</span>}
           <span className="sr-tile__arrow" aria-hidden="true">▸</span>
         </button>
       ))}
@@ -275,11 +276,9 @@ export function Evidence({ source, method, last, result, verified = true, defaul
 function CisoPanel({ tabKey, goTabKey, bound }) {
   const S = CISO_SEAT;
   if (tabKey === 'summary') {
-    // Bind the Overall-posture tile to real data when available; others stay sample.
+    // Merge real/derived tile overrides (label-keyed) over the sample tiles.
     const synced = bound?.live ? bound.live.toLocaleString() : '14:09';
-    const tiles = S.summary.tiles.map((t) => (
-      t.label === 'Overall posture' && bound?.posture ? { ...t, value: String(bound.posture.current) } : t
-    ));
+    const tiles = S.summary.tiles.map((t) => (bound?.tiles && bound.tiles[t.label] ? { ...t, ...bound.tiles[t.label] } : t));
     return (
       <div className="sr-stack">
         <PanelHead kicker={`Executive summary · synced ${synced}`} verdict={S.summary.verdict}
@@ -304,13 +303,15 @@ function CisoPanel({ tabKey, goTabKey, bound }) {
     );
   }
   if (tabKey === 'material-exposure') {
+    const processes = bound?.processes || tab.processes;
     return (
       <div className="sr-stack">{head}
-        <Section title="Business processes at risk">
+        <Section title="Business processes at risk"
+          action={bound?.processes ? <span className="sr-hint">risk derived from control protection · live</span> : null}>
           <table className="sr-table">
             <thead><tr><th>Process</th><th>Risk</th><th>Trend</th><th>What’s exposed</th></tr></thead>
             <tbody>
-              {tab.processes.map((p) => (
+              {processes.map((p) => (
                 <tr key={p.name}>
                   <td className="sr-td-name">{p.name}</td>
                   <td><Pill kind={p.riskKind}>{p.risk}</Pill></td>
@@ -335,11 +336,13 @@ function CisoPanel({ tabKey, goTabKey, bound }) {
     );
   }
   if (tabKey === 'action-center') {
+    const decisions = bound?.decisions || tab.decisions;
+    const others = bound?.others || tab.others;
     return (
       <div className="sr-stack">{head}
         <Section title="Your decisions — today">
           <div className="sr-decisions">
-            {tab.decisions.map((d, i) => (
+            {decisions.map((d, i) => (
               <article key={i} className={`sr-dc sr-dc--${d.kind}`}>
                 <Pill kind={d.kind}>{d.sev}</Pill>
                 <p className="sr-dc__title">{d.title}</p>
@@ -351,7 +354,7 @@ function CisoPanel({ tabKey, goTabKey, bound }) {
         </Section>
         <Section title="Others’ actions — this week">
           <div className="sr-rows">
-            {tab.others.map((o, i) => (
+            {others.map((o, i) => (
               <div key={i} className="sr-row sr-row--3"><span className="sr-row__k">{o.task}</span><span className="sr-row__owner">{o.owner}</span><span className="sr-due">{o.due}</span></div>
             ))}
           </div>
@@ -373,7 +376,7 @@ function CisoPanel({ tabKey, goTabKey, bound }) {
           <Section title="Deteriorating — needs attention"><ul className="sr-tl sr-tl--down">{tab.deteriorating.map((x) => <li key={x}>{x}</li>)}</ul></Section>
         </div>
         <Section title="Framework posture" action={<span className="sr-hint">function → category → control → evidence</span>}>
-          <FrameworkExplorer />
+          <FrameworkExplorer bound={bound?.fw} />
         </Section>
       </div>
     );
@@ -436,18 +439,22 @@ function PostureChart({ data, target }) {
 /* ---- Framework explorer (collect-once / map-to-many evidence) -------------- */
 import { FRAMEWORKS, FW_ORDER, EVIDENCE } from './seats/frameworks';
 
-function FrameworkExplorer() {
-  const [fw, setFw] = useState(FW_ORDER[0]);
+function FrameworkExplorer({ bound }) {
+  // Real cae data when bound; otherwise the sample model.
+  const FWS = bound?.frameworks || FRAMEWORKS;
+  const ORDER = (bound?.order && bound.order.length ? bound.order : FW_ORDER).filter((n) => FWS[n]);
+  const [fw, setFw] = useState(ORDER[0]);
   const [fnId, setFnId] = useState(null);
   const [catId, setCatId] = useState(null);
   const [ctrlId, setCtrlId] = useState(null);
 
-  const model = FRAMEWORKS[fw];
+  const model = FWS[fw] || FWS[ORDER[0]];
   const fns = model.functions;
   const fn = fns.find((f) => f.id === fnId);
   const cat = fn && fn.categories.find((c) => c.id === catId);
   const ctrl = cat && cat.controls.find((c) => c.id === ctrlId);
-  const ev = ctrl && EVIDENCE[ctrl.evidence];
+  // Bound controls carry an inline evidence object; sample controls carry an id.
+  const ev = ctrl && (typeof ctrl.evidence === 'object' ? ctrl.evidence : EVIDENCE[ctrl.evidence]);
 
   const pickFw = (name) => { setFw(name); setFnId(null); setCatId(null); setCtrlId(null); };
   const STK = { Met: 'pass', Partial: 'exposure', Gap: 'critical' };
@@ -455,9 +462,9 @@ function FrameworkExplorer() {
   return (
     <div className="sr-fw">
       <div className="sr-fw__tabs" role="tablist" aria-label="Framework">
-        {FW_ORDER.map((name) => (
+        {ORDER.map((name) => (
           <button key={name} role="tab" aria-selected={fw === name} className={`sr-fw__tab${fw === name ? ' is-on' : ''}`} onClick={() => pickFw(name)}>
-            {name}<span className="sr-fw__score">{FRAMEWORKS[name].score}<span className={`sr-fg--${FRAMEWORKS[name].trend === '↑' ? 'pass' : FRAMEWORKS[name].trend === '↓' ? 'critical' : 'muted'}`}> {FRAMEWORKS[name].trend}</span></span>
+            {name}<span className="sr-fw__score">{FWS[name].score}<span className={`sr-fg--${FWS[name].trend === '↑' ? 'pass' : FWS[name].trend === '↓' ? 'critical' : 'muted'}`}> {FWS[name].trend}</span></span>
           </button>
         ))}
       </div>
@@ -486,7 +493,7 @@ function FrameworkExplorer() {
           </dl>
           <div className="sr-fwev__foot">
             <span className="sr-ev__verified">✓ integrity verified</span>
-            <span className="sr-fwev__maps">Satisfies: {ev.satisfies.join(' · ')}</span>
+            {ev.satisfies && <span className="sr-fwev__maps">Satisfies: {ev.satisfies.join(' · ')}</span>}
           </div>
         </div>
       )}
@@ -578,6 +585,9 @@ function SrStyles() {
       .sr-tile__valrow { display:flex; align-items:baseline; gap:6px; }
       .sr-tile__value { font-family:var(--sr-font-display); font-weight:600; font-size:26px; letter-spacing:-.01em; }
       .sr-tile__delta { font-family:var(--sr-font-mono); font-size:12px; font-weight:600; }
+      .sr-tile__note { font-family:var(--sr-font-mono); font-size:8.5px; letter-spacing:.06em; text-transform:uppercase; padding:1px 6px; border-radius:999px; width:fit-content; }
+      .sr-note--live { color:var(--sr-pass); background:var(--sr-pass-tint); }
+      .sr-note--derived { color:var(--sr-exposure); background:var(--sr-exposure-tint); }
       .sr-tile__arrow { position:absolute; top:var(--sr-3); right:var(--sr-3); color:var(--sr-brand); opacity:0; transition:opacity .15s ease; }
       .sr-tile:hover .sr-tile__arrow, .sr-tile:focus-visible .sr-tile__arrow { opacity:1; }
 
