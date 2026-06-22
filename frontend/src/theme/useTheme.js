@@ -1,16 +1,16 @@
 /**
- * useTheme — the light "brief" ⟷ dark "command" theme runtime.
+ * useTheme — the light "Paper" ⟷ dark "Command" theme runtime.
  *
- * Sets data-theme on <html> so the token layer (cyberrx-design-tokens.css) does
- * all the work; nothing else branches on theme. SSR-safe: every window/localStorage
- * access is guarded, and the initial value is read lazily so it never throws during
- * a server render. Honors prefers-color-scheme on first visit.
+ * Matches the design-tokens convention: light is the default (:root, no attribute),
+ * dark is applied as data-theme="dark" on <html>. Components read tokens; nothing
+ * branches on theme. SSR-safe: window/localStorage access is guarded; initial value
+ * is read lazily. Honors prefers-color-scheme on first visit.
  */
 
 import { useCallback, useEffect, useState } from 'react';
 
 const STORAGE_KEY = 'cyberrx_theme';
-export const THEMES = { BRIEF: 'brief', COMMAND: 'command' };
+export const THEMES = { PAPER: 'paper', DARK: 'dark' };
 
 function safeGet(key) {
   try { return typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null; }
@@ -28,18 +28,18 @@ function prefersDark() {
   } catch { return false; }
 }
 
-/** Resolve the initial theme: stored choice > OS preference > light brief. */
+/** Resolve the initial theme: stored choice > OS preference > light Paper. */
 export function initialTheme() {
   const stored = safeGet(STORAGE_KEY);
-  if (stored === THEMES.BRIEF || stored === THEMES.COMMAND) return stored;
-  return prefersDark() ? THEMES.COMMAND : THEMES.BRIEF;
+  if (stored === THEMES.PAPER || stored === THEMES.DARK) return stored;
+  return prefersDark() ? THEMES.DARK : THEMES.PAPER;
 }
 
-/** Apply a theme to <html> (command sets data-theme; brief clears it = :root). */
+/** Apply a theme to <html> (dark sets data-theme="dark"; paper clears it = :root). */
 export function applyTheme(theme) {
   if (typeof document === 'undefined') return;
   const root = document.documentElement;
-  if (theme === THEMES.COMMAND) root.setAttribute('data-theme', 'command');
+  if (theme === THEMES.DARK) root.setAttribute('data-theme', 'dark');
   else root.removeAttribute('data-theme');
 }
 
@@ -55,11 +55,11 @@ export function useTheme() {
 
   const toggle = useCallback(() => {
     setThemeState((prev) => {
-      const next = prev === THEMES.COMMAND ? THEMES.BRIEF : THEMES.COMMAND;
+      const next = prev === THEMES.DARK ? THEMES.PAPER : THEMES.DARK;
       safeSet(STORAGE_KEY, next);
       return next;
     });
   }, []);
 
-  return { theme, setTheme, toggle, isCommand: theme === THEMES.COMMAND };
+  return { theme, setTheme, toggle, isDark: theme === THEMES.DARK };
 }

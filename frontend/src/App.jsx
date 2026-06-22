@@ -7,7 +7,7 @@ import CLODash from "./pages/CLODash";
 import AdminDatabase from "./pages/AdminDatabase";
 import RedesignPrototype from "./pages/RedesignPrototype";
 import ExecutiveAgentBrief from "./components/ExecutiveAgentBrief";
-import ExecutiveRoleTabs from "./components/ExecutiveRoleTabs";
+import CisoOperatingSystem from "./components/CisoOperatingSystem";
 import NistCsfScorecard from "./components/NistCsfScorecard";
 import CsfControlLibrary from "./components/CsfControlLibrary";
 import CsfRankings from "./components/CsfRankings";
@@ -26053,16 +26053,16 @@ function CyberRxApp() {
   // App shell + page router
   function renderPage() {
     if (page==="home")      { return React.createElement(Home,      sharedProps); }
-    if (page==="exec-roles"){ return React.createElement(ExecutiveRoleTabs, Object.assign({}, sharedProps, {go:go})); }
+    if (page==="exec-roles"){ return React.createElement(CisoOperatingSystem, Object.assign({}, sharedProps, {initialSeat:"ciso", go:go})); }
     // Executive role brief — the decision-first tabbed view. DashNav seats route here;
     // each opens on its seat and drills into the deep analytical dashboard on demand.
-    if (page==="exec-ceo")  { return React.createElement(ExecutiveRoleTabs, Object.assign({}, sharedProps, {initialSeat:"ceo",   go:go})); }
-    if (page==="exec-ciso") { return React.createElement(ExecutiveRoleTabs, Object.assign({}, sharedProps, {initialSeat:"ciso",  go:go})); }
-    if (page==="exec-cio")  { return React.createElement(ExecutiveRoleTabs, Object.assign({}, sharedProps, {initialSeat:"cio",   go:go})); }
-    if (page==="exec-cfo")  { return React.createElement(ExecutiveRoleTabs, Object.assign({}, sharedProps, {initialSeat:"cfo",   go:go})); }
-    if (page==="exec-cro")  { return React.createElement(ExecutiveRoleTabs, Object.assign({}, sharedProps, {initialSeat:"cro",   go:go})); }
-    if (page==="exec-clo")  { return React.createElement(ExecutiveRoleTabs, Object.assign({}, sharedProps, {initialSeat:"clo",   go:go})); }
-    if (page==="exec-board"){ return React.createElement(ExecutiveRoleTabs, Object.assign({}, sharedProps, {initialSeat:"board", go:go})); }
+    if (page==="exec-ceo")  { return React.createElement(CisoOperatingSystem, Object.assign({}, sharedProps, {initialSeat:"ceo",   go:go})); }
+    if (page==="exec-ciso") { return React.createElement(CisoOperatingSystem, Object.assign({}, sharedProps, {initialSeat:"ciso",  go:go})); }
+    if (page==="exec-cio")  { return React.createElement(CisoOperatingSystem, Object.assign({}, sharedProps, {initialSeat:"cio",   go:go})); }
+    if (page==="exec-cfo")  { return React.createElement(CisoOperatingSystem, Object.assign({}, sharedProps, {initialSeat:"cfo",   go:go})); }
+    if (page==="exec-cro")  { return React.createElement(CisoOperatingSystem, Object.assign({}, sharedProps, {initialSeat:"cro",   go:go})); }
+    if (page==="exec-clo")  { return React.createElement(CisoOperatingSystem, Object.assign({}, sharedProps, {initialSeat:"clo",   go:go})); }
+    if (page==="exec-board"){ return React.createElement(CisoOperatingSystem, Object.assign({}, sharedProps, {initialSeat:"board", go:go})); }
     if (page==="hub")       { return React.createElement(CISODash,  sharedProps); }
     if (page==="bizlines")  { return React.createElement(BizLines,  sharedProps); }
     if (page==="appmap")    { return React.createElement(AppMap,    sharedProps); }
