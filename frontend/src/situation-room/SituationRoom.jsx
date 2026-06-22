@@ -16,6 +16,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTheme } from './useTheme';
 import { useCisoData } from './useCisoData';
 import { CISO_SEAT } from './seats/ciso';
+import SEATS_DATA from './seats/otherSeats';
 
 /* "View as" — exact order. */
 const SEAT_ORDER = ['CEO', 'CISO', 'CFO', 'CIO', 'CLO', 'CRO', 'Board'];
@@ -156,7 +157,7 @@ export default function SituationRoom(props = {}) {
         <div role="tabpanel" id={`sr-panel-${activeTab.key}`} aria-labelledby={`sr-tab-${activeTab.key}`} tabIndex={0} className="sr-panel">
           {seat === 'CISO'
             ? <CisoPanel tabKey={activeTab.key} goTabKey={goTabKey} bound={bound} />
-            : <SeatPlaceholder seat={seat} tab={activeTab.name} />}
+            : <SeatPanel seat={seat} tabKey={activeTab.key} goTabKey={goTabKey} />}
         </div>
 
         <footer className="sr-footer">CyberRx · executive operating system — illustrative, with sample data</footer>
@@ -168,11 +169,93 @@ export default function SituationRoom(props = {}) {
 function SeatPlaceholder({ seat, tab }) {
   return (
     <div className="sr-stack">
-      <PanelHead kicker={`${seat} · ${tab}`} verdict={`The ${seat} seat is being authored next, in the same shape as CISO.`} />
-      {/* TODO: real data — author the {seat} seat (verdict, 6-tile band, briefing, per-tab detail). */}
-      <p className="sr-lede">CISO is the fully-built reference. {seat} will reframe the same running incident in this executive’s lens.</p>
+      <PanelHead kicker={`${seat} · ${tab}`} verdict={`The ${seat} seat is being authored.`} />
+      <p className="sr-lede">CISO is the fully-built reference. {seat} reframes the same running incident in this executive’s lens.</p>
     </div>
   );
+}
+
+/* Generic seat renderer — the six non-CISO seats share this one code path, driven
+   by data blocks (see seats/otherSeats.js). Same shape as the CISO reference. */
+function SeatPanel({ seat, tabKey, goTabKey }) {
+  const S = SEATS_DATA[seat];
+  if (!S) return <SeatPlaceholder seat={seat} tab={tabKey} />;
+  if (tabKey === 'summary') {
+    return (
+      <div className="sr-stack">
+        <PanelHead kicker={`${seat} · Executive summary`} verdict={S.summary.verdict}
+          pill={S.summary.pill} pillKind={S.summary.pillKind} pillVerified={S.summary.pillVerified} lede={S.summary.lede} />
+        <MetricBand tiles={S.summary.tiles} onGo={goTabKey} />
+        <Briefing rows={S.summary.briefing} onGo={goTabKey} />
+      </div>
+    );
+  }
+  const tab = S.tabs[tabKey];
+  if (!tab) return null;
+  return (
+    <div className="sr-stack">
+      <PanelHead kicker={tab.name} verdict={tab.answer} pill={tab.pill} pillKind={tab.pillKind}
+        pillVerified={tab.pillVerified} lede={tab.lede} />
+      {(tab.sections || []).map((s, i) => <SeatSection key={i} s={s} />)}
+    </div>
+  );
+}
+
+function SeatSection({ s }) {
+  if (s.kind === 'rows') return <Section title={s.title}><Rows items={s.items} /></Section>;
+  if (s.kind === 'note') return <p className="sr-note">{s.text}</p>;
+  if (s.kind === 'decisions') {
+    return (
+      <Section title={s.title}>
+        <div className="sr-decisions">
+          {s.items.map((d, i) => (
+            <article key={i} className={`sr-dc sr-dc--${d.kind}`}>
+              <Pill kind={d.kind}>{d.sev}</Pill>
+              <p className="sr-dc__title">{d.title}</p>
+              <p className="sr-dc__owner">{d.owner}</p>
+            </article>
+          ))}
+        </div>
+        {s.button && <button type="button" className="sr-btn">{s.button}</button>}
+      </Section>
+    );
+  }
+  if (s.kind === 'twocol') {
+    return (
+      <div className="sr-twocol">
+        <Section title={s.a.title}><ul className={`sr-tl sr-tl--${s.a.tone === 'pass' ? 'up' : 'down'}`}>{s.a.items.map((x) => <li key={x}>{x}</li>)}</ul></Section>
+        <Section title={s.b.title}><ul className={`sr-tl sr-tl--${s.b.tone === 'pass' ? 'up' : 'down'}`}>{s.b.items.map((x) => <li key={x}>{x}</li>)}</ul></Section>
+      </div>
+    );
+  }
+  if (s.kind === 'chain') {
+    return (
+      <Section title={s.title}>
+        <div className="sr-chain">{s.steps.map((x, i) => (<span key={x} className="sr-chain__step"><span className="sr-chain__box">{x}</span>{i < s.steps.length - 1 && <span className="sr-chain__arr" aria-hidden="true">→</span>}</span>))}</div>
+        {s.stats && <div className="sr-statgrid">{s.stats.map((x) => <div key={x.k} className="sr-stat"><span className="sr-stat__k">{x.k}</span><span className="sr-stat__v">{x.v}</span></div>)}</div>}
+      </Section>
+    );
+  }
+  if (s.kind === 'chart') return <PostureChart data={s.posture} target={s.target} />;
+  if (s.kind === 'table') {
+    return (
+      <Section title={s.title} action={s.note ? <span className="sr-hint">{s.note}</span> : null}>
+        <table className="sr-table">
+          <thead><tr>{s.head.map((h) => <th key={h}>{h}</th>)}</tr></thead>
+          <tbody>
+            {s.rows.map((r, ri) => (
+              <tr key={ri}>{r.cells.map((c, ci) => (
+                <td key={ci} className={c.mono ? 'sr-mono' : c.exposed ? 'sr-td-exposed' : c.name ? 'sr-td-name' : ''}>
+                  {c.pill ? <Pill kind={c.kind}>{c.t}</Pill> : c.t}
+                </td>
+              ))}</tr>
+            ))}
+          </tbody>
+        </table>
+      </Section>
+    );
+  }
+  return null;
 }
 
 /* ============================ Reusable building blocks ===================== */
