@@ -7,6 +7,7 @@
  *
  *   GET  /api/exec/dashboard?role=CFO   role hero + KPI strip + 5 key questions + role tabs
  *   POST /api/exec/draft                polish a grounded executive draft into prose
+ *   GET  /api/exec/signals              live platform signals behind brief evidence
  */
 
 const express = require('express');
@@ -15,6 +16,7 @@ const { optionalJWT } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const ExecDashboardService = require('../services/ExecDashboardService');
 const ExecDraftService = require('../services/ExecDraftService');
+const ExecEvidenceService = require('../services/ExecEvidenceService');
 
 function org(req, res) {
   const id = req.orgId || req.headers['x-org-id'] || req.query.org_id || req.query.orgId;
@@ -46,6 +48,18 @@ router.post('/draft', optionalJWT, async (req, res) => {
     const noLlm = err.code === 'NO_API_KEY';
     logger.debug('exec draft polish unavailable', { code: err.code, error: err.message });
     res.status(noLlm ? 503 : 500).json({ error: err.message, fallback: true });
+  }
+});
+
+// Live platform signals behind the briefs' evidence layer (data coverage, ledger
+// integrity, security-audit trail) — each with a real timestamp + source.
+router.get('/signals', optionalJWT, async (req, res) => {
+  const orgId = org(req, res); if (!orgId) return;
+  try {
+    res.json(await ExecEvidenceService.signals(orgId));
+  } catch (err) {
+    logger.error('Exec signals error', { error: err.message });
+    res.status(500).json({ error: 'Failed to load live signals', message: err.message });
   }
 });
 

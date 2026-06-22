@@ -420,7 +420,7 @@ export default function ExecutiveRoleTabs(props = {}) {
         <Layer n={3} title="Active exposure"><Exposure x={seat.exposure} /></Layer>
         <Layer n={4} title="Obligations / governance"><Obligations o={seat.obligations} onDraft={() => setDraftOpen(true)} /></Layer>
         <Layer n={5} title="Trend vs target"><TrendVsTarget {...seat.trend} /></Layer>
-        <Layer n={6} title="Evidence on demand"><Evidence items={seat.evidence} /></Layer>
+        <Layer n={6} title="Evidence on demand"><Evidence items={seat.evidence} ctx={ctx} /></Layer>
       </div>
 
       {draftOpen && <DraftModal seat={seat} ctx={ctx} onClose={() => setDraftOpen(false)} />}
@@ -606,16 +606,57 @@ function Obligations({ o, onDraft }) {
   );
 }
 
-/* ---- 6 · Evidence on demand ------------------------------------------------ */
-function Evidence({ items }) {
+/* ---- 6 · Evidence on demand ------------------------------------------------
+ * Incident-specific proof stays clearly marked as modeled (demo incident). The
+ * "Live platform signals" item lazily fetches genuinely-live signals (data
+ * coverage, ledger integrity, audit trail) from /api/exec/signals when expanded. */
+function Evidence({ items, ctx }) {
+  const [sig, setSig] = useState(null);
+  const [status, setStatus] = useState(null); // 'loading' | 'error' | null
+
+  const load = () => {
+    if (sig || status === 'loading' || !ctx) return;
+    setStatus('loading');
+    const headers = { 'X-Org-Id': ctx.orgId }; if (ctx.token) headers.Authorization = `Bearer ${ctx.token}`;
+    fetch(`${ctx.api}/api/exec/signals?org_id=${encodeURIComponent(ctx.orgId)}`, { headers })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then((j) => { setSig(j); setStatus(null); })
+      .catch(() => setStatus('error'));
+  };
+
+  // Group live signals by their `group` for readable sections.
+  const groups = sig ? sig.signals.reduce((acc, s) => { (acc[s.group] = acc[s.group] || []).push(s); return acc; }, {}) : {};
+
   return (
     <div className="exec-stack">
       {items.map((e, i) => (
         <details key={i} className="exec-evidence">
-          <summary>{e.claim}</summary>
+          <summary>{e.claim} <span className="exec-tag">modeled · demo incident</span></summary>
           <pre className="exec-evidence__proof">{e.proof.join('\n')}</pre>
         </details>
       ))}
+
+      <details className="exec-evidence" onToggle={(ev) => { if (ev.currentTarget.open) load(); }}>
+        <summary><span style={{ color: 'var(--pass)' }} aria-hidden="true">●</span> Live platform signals <span className="exec-tag exec-tag--live">live</span></summary>
+        <div className="exec-evidence__live" aria-live="polite">
+          {status === 'loading' && <div className="exec-evidence__muted">Loading live signals…</div>}
+          {status === 'error' && <div className="exec-evidence__muted">Live signals unavailable right now.</div>}
+          {sig && Object.keys(groups).map((g) => (
+            <div key={g} className="exec-sig__group">
+              <div className="exec-sig__ghead">{g}</div>
+              {groups[g].map((s, i) => (
+                <div key={i} className="exec-sig__row">
+                  <span className="exec-sig__mark" style={{ color: s.live ? 'var(--pass)' : 'var(--text-subtle)' }}>{s.live ? '✓' : '○'}</span>
+                  <span className="exec-sig__label">{s.label}</span>
+                  <span className="exec-sig__val">{s.value}{s.detail ? ` · ${s.detail}` : ''}</span>
+                  <span className="exec-sig__src">{s.source}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+          {sig && <div className="exec-sig__ts">as of {new Date(sig.generatedAt).toLocaleString()} · ✓ live · ○ inferred</div>}
+        </div>
+      </details>
     </div>
   );
 }
@@ -720,6 +761,19 @@ function ScopedStyles() {
       .exec-evidence summary:focus-visible { outline:2px solid var(--focus); outline-offset:2px; border-radius:var(--radius-sm); }
       .exec-evidence__proof { margin:var(--space-2) 0 0; font-family:var(--font-mono); font-size:11px; line-height:1.7; color:var(--text-muted);
         background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); padding:var(--space-2) var(--space-3); white-space:pre-wrap; overflow-x:auto; }
+      .exec-tag { font-size:9px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--text-subtle); background:var(--surface-2); border:1px solid var(--border); border-radius:999px; padding:1px 7px; margin-left:var(--space-2); }
+      .exec-tag--live { color:var(--pass); background:var(--pass-tint); border-color:var(--pass-tint); }
+      .exec-evidence__live { margin-top:var(--space-2); }
+      .exec-evidence__muted { font-size:11.5px; color:var(--text-muted); font-style:italic; padding:var(--space-2) 0; }
+      .exec-sig__group { margin-bottom:var(--space-3); }
+      .exec-sig__ghead { font-size:9.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--text-subtle); margin-bottom:var(--space-1); }
+      .exec-sig__row { display:grid; grid-template-columns:16px minmax(120px,1.2fr) 1.6fr auto; gap:var(--space-2); align-items:baseline; padding:3px 0; font-family:var(--font-mono); font-size:11px; border-bottom:1px solid var(--border); }
+      .exec-sig__row:last-child { border-bottom:none; }
+      .exec-sig__mark { font-weight:700; }
+      .exec-sig__label { color:var(--text); }
+      .exec-sig__val { color:var(--text-muted); }
+      .exec-sig__src { color:var(--text-subtle); text-align:right; }
+      .exec-sig__ts { font-family:var(--font-mono); font-size:9.5px; color:var(--text-subtle); margin-top:var(--space-2); }
     `}</style>
   );
 }
