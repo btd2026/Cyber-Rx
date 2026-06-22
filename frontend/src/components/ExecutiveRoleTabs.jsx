@@ -285,8 +285,13 @@ const SEATS = [
 /* ===========================================================================
  * Component
  * ======================================================================== */
-export default function ExecutiveRoleTabs() {
-  const [active, setActive] = useState(0);
+/* Each brief seat can drill into its deeper analytical dashboard (the existing
+   per-role view), reached by the app's page key. CEO has no deep view. */
+const DEEP_KEY = { ciso: 'dashboard', cio: 'cio', cfo: 'cfo', cro: 'cro', clo: 'clo', board: 'boarddash' };
+
+export default function ExecutiveRoleTabs({ initialSeat, go } = {}) {
+  const startIdx = Math.max(0, SEATS.findIndex((s) => s.key === initialSeat));
+  const [active, setActive] = useState(startIdx);
   const tabRefs = useRef([]);
 
   const onKeyDown = (e) => {
@@ -335,7 +340,14 @@ export default function ExecutiveRoleTabs() {
 
       {/* Tabpanel */}
       <div role="tabpanel" id={`execpanel-${seat.key}`} aria-labelledby={`exectab-${seat.key}`} tabIndex={0} className="exec-panel">
-        <div className="exec-question">{seat.question}</div>
+        <div className="exec-panel__head">
+          <div className="exec-question">{seat.question}</div>
+          {go && DEEP_KEY[seat.key] && (
+            <button type="button" className="exec-drill" onClick={() => go(DEEP_KEY[seat.key])}>
+              Open the full analytical dashboard →
+            </button>
+          )}
+        </div>
 
         <Layer n={1} title="Verdict"><Verdict v={seat.verdict} /></Layer>
         <Layer n={2} title="Decisions that need you"><Decisions items={seat.decisions} /></Layer>
@@ -488,7 +500,11 @@ function ScopedStyles() {
 
       .exec-panel { padding-top:var(--space-5); }
       .exec-panel:focus-visible { outline:2px solid var(--focus); outline-offset:3px; border-radius:var(--radius-md); }
-      .exec-question { font-family:var(--font-display); font-size:14px; font-style:italic; color:var(--text-muted); margin-bottom:var(--space-5); }
+      .exec-panel__head { display:flex; justify-content:space-between; align-items:baseline; gap:var(--space-3); margin-bottom:var(--space-5); flex-wrap:wrap; }
+      .exec-question { font-family:var(--font-display); font-size:14px; font-style:italic; color:var(--text-muted); }
+      .exec-drill { background:transparent; border:none; padding:0; cursor:pointer; font-family:var(--font-body); font-size:12px; font-weight:600; color:var(--accent); white-space:nowrap; }
+      .exec-drill:hover { text-decoration:underline; }
+      .exec-drill:focus-visible { outline:2px solid var(--focus); outline-offset:2px; border-radius:var(--radius-sm); }
 
       .exec-layer { margin-bottom:var(--space-6); }
       .exec-layer__head { display:flex; align-items:baseline; gap:var(--space-2); margin-bottom:var(--space-3); }

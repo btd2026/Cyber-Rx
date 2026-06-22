@@ -17937,12 +17937,16 @@ function getMidnightEST() {
 // ─── QuickNav — persistent page jump menu accessible everywhere ───────────────
 function DashNav(props) {
   var current=props.current; var go=props.go;
+  // Per-seat executive nav now routes to the decision-first brief (tabbed view),
+  // in the canonical seat order. Each brief drills into its deep dashboard on demand.
   var tabs=[
-    {id:"dashboard", label:"CISO",            mod:"Security"},
-    {id:"cio",       label:"CIO",             mod:"Technology"},
-    {id:"cro",       label:"CRO / Audit",     mod:"Compliance"},
-    {id:"cfo",       label:"CFO",             mod:"Financial"},
-    {id:"boarddash", label:"Board",           mod:"Executive"},
+    {id:"exec-ceo",   label:"CEO",   mod:"Executive"},
+    {id:"exec-ciso",  label:"CISO",  mod:"Security"},
+    {id:"exec-cio",   label:"CIO",   mod:"Technology"},
+    {id:"exec-cfo",   label:"CFO",   mod:"Financial"},
+    {id:"exec-cro",   label:"CRO",   mod:"Risk"},
+    {id:"exec-clo",   label:"CLO",   mod:"Legal"},
+    {id:"exec-board", label:"Board", mod:"Oversight"},
   ];
   return (
     <div style={{display:"flex",gap:0,marginBottom:16,borderBottom:"1px solid "+C.border}}>
@@ -17967,14 +17971,14 @@ function QuickNav(props) {
   var _s0=useState(false); var open=_s0[0]; var setOpen=_s0[1];
 
   var ALL_PAGES = [
-    {group:"Dashboards",    items:[
-      {id:"exec-roles", label:"Executive Brief (all seats)", mod:"F08x"},
-      {id:"dashboard", label:"CISO Dashboard",    mod:"F08"},
-      {id:"cio",       label:"CIO Dashboard",     mod:"F08e"},
-      {id:"clo",       label:"CLO / Legal",       mod:"F08f"},
-      {id:"cro",       label:"CRO / Audit",        mod:"F08b"},
-      {id:"cfo",       label:"CFO Dashboard",      mod:"F08c"},
-      {id:"boarddash", label:"Board Dashboard",    mod:"F08d"},
+    {group:"Executive briefs", items:[
+      {id:"exec-ceo",   label:"CEO Brief",   mod:"F08x"},
+      {id:"exec-ciso",  label:"CISO Brief",  mod:"F08"},
+      {id:"exec-cio",   label:"CIO Brief",   mod:"F08e"},
+      {id:"exec-cfo",   label:"CFO Brief",   mod:"F08c"},
+      {id:"exec-cro",   label:"CRO Brief",   mod:"F08b"},
+      {id:"exec-clo",   label:"CLO Brief",   mod:"F08f"},
+      {id:"exec-board", label:"Board Brief", mod:"F08d"},
     ]},
     {group:"Risk & Controls", items:[
       {id:"bizlines",  label:"Business Lines",     mod:"F01"},
@@ -26044,7 +26048,16 @@ function CyberRxApp() {
   // App shell + page router
   function renderPage() {
     if (page==="home")      { return React.createElement(Home,      sharedProps); }
-    if (page==="exec-roles"){ return React.createElement(ExecutiveRoleTabs, sharedProps); }
+    if (page==="exec-roles"){ return React.createElement(ExecutiveRoleTabs, Object.assign({}, sharedProps, {go:go})); }
+    // Executive role brief — the decision-first tabbed view. DashNav seats route here;
+    // each opens on its seat and drills into the deep analytical dashboard on demand.
+    if (page==="exec-ceo")  { return React.createElement(ExecutiveRoleTabs, Object.assign({}, sharedProps, {initialSeat:"ceo",   go:go})); }
+    if (page==="exec-ciso") { return React.createElement(ExecutiveRoleTabs, Object.assign({}, sharedProps, {initialSeat:"ciso",  go:go})); }
+    if (page==="exec-cio")  { return React.createElement(ExecutiveRoleTabs, Object.assign({}, sharedProps, {initialSeat:"cio",   go:go})); }
+    if (page==="exec-cfo")  { return React.createElement(ExecutiveRoleTabs, Object.assign({}, sharedProps, {initialSeat:"cfo",   go:go})); }
+    if (page==="exec-cro")  { return React.createElement(ExecutiveRoleTabs, Object.assign({}, sharedProps, {initialSeat:"cro",   go:go})); }
+    if (page==="exec-clo")  { return React.createElement(ExecutiveRoleTabs, Object.assign({}, sharedProps, {initialSeat:"clo",   go:go})); }
+    if (page==="exec-board"){ return React.createElement(ExecutiveRoleTabs, Object.assign({}, sharedProps, {initialSeat:"board", go:go})); }
     if (page==="hub")       { return React.createElement(CISODash,  sharedProps); }
     if (page==="bizlines")  { return React.createElement(BizLines,  sharedProps); }
     if (page==="appmap")    { return React.createElement(AppMap,    sharedProps); }
