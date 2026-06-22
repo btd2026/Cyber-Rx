@@ -295,26 +295,28 @@ const DRAFT = {
 
 /* Compose an audience-appropriate draft, grounded ONLY in this seat's data + the
    shared incident. No fabrication — every line traces to a field already on screen. */
-function composeDraft(seat) {
+function composeDraft(seat, incident) {
+  const inc = incident || INCIDENT;
+  const verified = incident ? incident.verified : true;
   const m = DRAFT[seat.key] || { audience: 'Leadership', subject: 'Incident summary', position: 'Recommendation' };
   const L = [];
   if (m.privileged) { L.push('PRIVILEGED & CONFIDENTIAL — prepared at the direction of counsel.'); L.push(''); }
   L.push(`DRAFT — ${m.subject}`);
   L.push(`For: ${m.audience}`);
-  L.push(`Re: Security incident · ${INCIDENT.failedAt}`);
-  L.push(`Status: ${seat.verdict.stateLabel}`);
+  L.push(`Re: Security incident · ${inc.failedAt}`);
+  L.push(`Status: ${incident ? incident.phase : seat.verdict.stateLabel}`);
   L.push('');
   L.push('SITUATION');
-  L.push(INCIDENT.headline);
+  L.push(inc.headline);
   L.push('');
   L.push('WHERE THIS STANDS');
-  L.push(seat.verdict.sentence);
+  L.push(verified ? seat.verdict.sentence : inc.headline);
   L.push('');
   L.push('EXPOSURE');
   (seat.exposure.blastRadius || []).forEach((r) => L.push(`- ${r.k}: ${r.v}`));
   L.push('');
   L.push('CONTAINMENT');
-  L.push(`[verified] ${seat.exposure.contained.label}`);
+  L.push(verified ? `[verified] ${seat.exposure.contained.label}` : '[in progress] Compensating control applied; verification pending.');
   if (seat.exposure.clock) L.push(`Clock — ${seat.exposure.clock.label}: ${seat.exposure.clock.remaining}`);
   L.push('');
   L.push('OBLIGATIONS / STATUS');
@@ -375,6 +377,23 @@ export default function ExecutiveRoleTabs(props = {}) {
     }
   };
 
+  // The single incident, fetched from the server spine (falls back to the static
+  // headline so the view never breaks offline). `phase` defaults to fully-verified
+  // so, absent an incident, every seat reads exactly as its authored content.
+  const [incident, setIncident] = useState(null);
+  const incHeaders = () => { const h = { 'X-Org-Id': ctx.orgId }; if (ctx.token) h.Authorization = `Bearer ${ctx.token}`; return h; };
+  useEffect(() => {
+    fetch(`${ctx.api}/api/exec/incident?org_id=${encodeURIComponent(ctx.orgId)}`, { headers: incHeaders() })
+      .then((r) => (r.ok ? r.json() : null)).then((j) => { if (j) setIncident(j); }).catch(() => {});
+  }, [ctx.api, ctx.orgId, ctx.token]); // eslint-disable-line
+  const step = (path) => fetch(`${ctx.api}${path}?org_id=${encodeURIComponent(ctx.orgId)}`, { method: 'POST', headers: incHeaders() })
+    .then((r) => (r.ok ? r.json() : null)).then((j) => { if (j) setIncident(j); }).catch(() => {});
+
+  // Demo controls are gated — ?demo=1 in the URL or localStorage cx_demo=1.
+  const demo = typeof window !== 'undefined' && (/[?&]demo=1/.test(window.location.search) || (typeof localStorage !== 'undefined' && localStorage.getItem('cx_demo') === '1'));
+  const inc = incident || INCIDENT;
+  const phase = incident ? { contained: incident.contained, verified: incident.verified } : { contained: true, verified: true };
+
   const seat = SEATS[active];
 
   return (
@@ -383,10 +402,19 @@ export default function ExecutiveRoleTabs(props = {}) {
 
       {/* The single running incident — the spine every seat re-frames. */}
       <div className="exec-incident" role="note" aria-label="Active incident">
-        <span className="exec-incident__dot" aria-hidden="true" />
-        <div>
-          <div className="exec-incident__kicker">Active incident · {INCIDENT.failedAt}</div>
-          <div className="exec-incident__text">{INCIDENT.headline}</div>
+        <span className="exec-incident__dot" aria-hidden="true" style={{ background: phase.verified ? 'var(--pass)' : 'var(--exposure)' }} />
+        <div style={{ flex: 1 }}>
+          <div className="exec-incident__kicker">
+            Active incident · {inc.failedAt}{incident ? ` · phase ${incident.step + 1}/${incident.totalSteps} · ${incident.phase}` : ''}
+          </div>
+          <div className="exec-incident__text">{inc.headline}</div>
+          {demo && (
+            <div className="exec-demo" role="group" aria-label="Demo incident controls">
+              <span className="exec-demo__label">Demo</span>
+              <button type="button" className="exec-demo__btn" onClick={() => step('/api/exec/incident/reset')}>▶ Trigger / restart</button>
+              <button type="button" className="exec-demo__btn" onClick={() => step('/api/exec/incident/advance')} disabled={!!(incident && incident.atFinal)}>Advance →</button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -415,22 +443,22 @@ export default function ExecutiveRoleTabs(props = {}) {
           )}
         </div>
 
-        <Layer n={1} title="Verdict"><Verdict v={seat.verdict} /></Layer>
+        <Layer n={1} title="Verdict"><Verdict v={seat.verdict} phase={phase} incident={inc} /></Layer>
         <Layer n={2} title="Decisions that need you"><Decisions items={seat.decisions} /></Layer>
-        <Layer n={3} title="Active exposure"><Exposure x={seat.exposure} /></Layer>
+        <Layer n={3} title="Active exposure"><Exposure x={seat.exposure} phase={phase} /></Layer>
         <Layer n={4} title="Obligations / governance"><Obligations o={seat.obligations} onDraft={() => setDraftOpen(true)} /></Layer>
         <Layer n={5} title="Trend vs target"><TrendVsTarget {...seat.trend} /></Layer>
         <Layer n={6} title="Evidence on demand"><Evidence items={seat.evidence} ctx={ctx} /></Layer>
       </div>
 
-      {draftOpen && <DraftModal seat={seat} ctx={ctx} onClose={() => setDraftOpen(false)} />}
+      {draftOpen && <DraftModal seat={seat} ctx={ctx} incident={inc} onClose={() => setDraftOpen(false)} />}
     </div>
   );
 }
 
 /* ---- Draft summary dialog -------------------------------------------------- */
-function DraftModal({ seat, ctx, onClose }) {
-  const draft = composeDraft(seat);
+function DraftModal({ seat, ctx, incident, onClose }) {
+  const draft = composeDraft(seat, incident);
   const privileged = seat.key === 'clo';
   const closeRef = useRef(null);
   const [copied, setCopied] = useState(false);
@@ -526,13 +554,19 @@ function Layer({ n, title, children }) {
 }
 
 /* ---- 1 · Verdict ----------------------------------------------------------- */
-function Verdict({ v }) {
-  const st = STATE[v.state] || STATE.info;
+function Verdict({ v, phase = { contained: true, verified: true }, incident }) {
+  // Overlay the live incident phase: until the compensating control is verified,
+  // the verdict reads as active/critical exposure and uses the incident's own
+  // phase-accurate headline; once verified, it settles to the seat's authored read.
+  const state = !phase.contained ? 'critical' : !phase.verified ? 'exposure' : v.state;
+  const label = !phase.contained ? 'Active exposure — containing' : !phase.verified ? 'Compensating control applied — verifying' : v.stateLabel;
+  const sentence = phase.verified ? v.sentence : (incident ? incident.headline : v.sentence);
+  const st = STATE[state] || STATE.info;
   return (
     <div className="exec-verdict" style={{ borderLeft: `4px solid ${st.color}` }}>
-      <p className="exec-verdict__sentence">{v.sentence}</p>
+      <p className="exec-verdict__sentence">{sentence}</p>
       <div className="exec-verdict__meta">
-        <StatusChip state={v.state} label={v.stateLabel} />
+        <StatusChip state={state} label={label} />
         <span className="exec-verdict__delta">{v.delta}</span>
       </div>
     </div>
@@ -572,7 +606,7 @@ function Decisions({ items }) {
 }
 
 /* ---- 3 · Active exposure --------------------------------------------------- */
-function Exposure({ x }) {
+function Exposure({ x, phase = { verified: true } }) {
   return (
     <div className="exec-card">
       <dl className="exec-dl">
@@ -583,7 +617,9 @@ function Exposure({ x }) {
         ))}
       </dl>
       <div className="exec-exposure__foot">
-        <span className="exec-verified">✓ {x.contained.label}</span>
+        {phase.verified
+          ? <span className="exec-verified">✓ {x.contained.label}</span>
+          : <span className="exec-verified" style={{ color: 'var(--exposure)' }}>Containment in progress — not yet verified</span>}
         {x.clock && <Clock {...x.clock} />}
       </div>
     </div>
@@ -683,6 +719,12 @@ function ScopedStyles() {
       @keyframes execPulse { 0%,100%{ opacity:1 } 50%{ opacity:.35 } }
       .exec-incident__kicker { font-size:10px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--exposure); }
       .exec-incident__text { font-size:13px; line-height:1.6; color:var(--text); margin-top:2px; max-width:760px; }
+      .exec-demo { display:flex; align-items:center; gap:var(--space-2); margin-top:var(--space-3); padding-top:var(--space-2); border-top:1px dashed var(--border); }
+      .exec-demo__label { font-size:9px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text-subtle); }
+      .exec-demo__btn { font-family:var(--font-body); font-size:11px; font-weight:600; cursor:pointer; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:var(--radius-sm); padding:4px 11px; }
+      .exec-demo__btn:hover { border-color:var(--accent); color:var(--accent); }
+      .exec-demo__btn:disabled { opacity:.45; cursor:default; }
+      .exec-demo__btn:focus-visible { outline:2px solid var(--focus); outline-offset:2px; }
 
       .exec-tablist { display:flex; gap:0; border-bottom:1px solid var(--border); overflow-x:auto; }
       .exec-tab { background:transparent; border:none; border-bottom:2px solid transparent; padding:10px 18px;
