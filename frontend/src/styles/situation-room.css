@@ -1,0 +1,110 @@
+/* =============================================================================
+ * situation-room.css — self-contained token + primitive layer for the executive
+ * "situation room" UI. Namespaced (--sr-*) so it cannot disturb the legacy app's
+ * tokens or theme.js. Light "warm" theme by default; dark "command" via
+ * data-theme="dark" on <html>. BLUE = brand/primary/decision. GREEN = verified/
+ * holds/pass (always with ✓). AMBER = exposure/clock. RED = critical.
+ * ========================================================================== */
+
+:root {
+  /* Brand / decision (blue) */
+  --sr-brand:        #2D6CE0;
+  --sr-brand-tint:   rgba(45,108,224,.09);
+  /* Status */
+  --sr-pass:         #2FA37A;
+  --sr-pass-tint:    rgba(47,163,122,.12);
+  --sr-exposure:     #C2772E;
+  --sr-exposure-tint:rgba(194,119,46,.12);
+  --sr-critical:     #C2443C;
+  --sr-critical-tint:rgba(194,68,60,.12);
+  /* Surfaces */
+  --sr-bg:           #F1EFE8;
+  --sr-surface:      #FFFFFF;
+  --sr-glass:        rgba(255,255,255,.62);
+  --sr-border:       #DAD7CC;
+  --sr-border-strong:#B9B5A8;
+  /* Ink */
+  --sr-text:         #11161D;
+  --sr-muted:        #5C6470;
+  --sr-subtle:       #8A8F98;
+  /* Focus */
+  --sr-focus:        #2D6CE0;
+  /* Ambient glow + grain */
+  --sr-glow-1:       rgba(45,108,224,.10);
+  --sr-glow-2:       rgba(194,119,46,.07);
+  --sr-grain:        .035;
+  /* Type */
+  --sr-font-display: 'Space Grotesk', -apple-system, system-ui, sans-serif;
+  --sr-font-body:    'Public Sans', -apple-system, system-ui, sans-serif;
+  --sr-font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  /* Shape & depth */
+  --sr-radius-sm: 8px;
+  --sr-radius:    12px;
+  --sr-radius-lg: 16px;
+  --sr-shadow-1:  0 1px 2px rgba(17,22,29,.06), 0 6px 18px -10px rgba(17,22,29,.16);
+  --sr-shadow-2:  0 28px 56px -28px rgba(17,22,29,.34);
+  /* Spacing (4px base) */
+  --sr-1:4px; --sr-2:8px; --sr-3:12px; --sr-4:16px; --sr-5:24px; --sr-6:32px; --sr-7:48px; --sr-8:64px;
+}
+
+[data-theme="dark"] {
+  --sr-brand:        #4E8BFF;
+  --sr-brand-tint:   rgba(78,139,255,.13);
+  --sr-pass:         #3FBF92;
+  --sr-pass-tint:    rgba(63,191,146,.14);
+  --sr-exposure:     #E0A968;
+  --sr-exposure-tint:rgba(224,169,104,.14);
+  --sr-critical:     #E0635B;
+  --sr-critical-tint:rgba(224,99,91,.15);
+  --sr-bg:           #0B0E13;
+  --sr-surface:      #161C25;
+  --sr-glass:        rgba(20,25,34,.6);
+  --sr-border:       #26303C;
+  --sr-border-strong:#3A4654;
+  --sr-text:         #E9EBEE;
+  --sr-muted:        #9AA4B0;
+  --sr-subtle:       #67707D;
+  --sr-focus:        #4E8BFF;
+  --sr-glow-1:       rgba(78,139,255,.16);
+  --sr-glow-2:       rgba(224,169,104,.08);
+  --sr-grain:        .05;
+  --sr-shadow-1:     0 1px 2px rgba(0,0,0,.4), 0 18px 40px -24px rgba(0,0,0,.7);
+  --sr-shadow-2:     0 28px 60px -22px rgba(0,0,0,.8);
+}
+
+/* ---- Primitives ----------------------------------------------------------- */
+/* Textured ground: warm bg + two faint radial glows, anchored top. */
+.sr-root {
+  position: relative;
+  min-height: 100%;
+  background-color: var(--sr-bg);
+  background-image:
+    radial-gradient(60% 45% at 15% -8%, var(--sr-glow-1) 0%, transparent 60%),
+    radial-gradient(55% 42% at 100% 0%, var(--sr-glow-2) 0%, transparent 55%);
+  background-attachment: fixed;
+  color: var(--sr-text);
+  font-family: var(--sr-font-body);
+}
+/* Faint film-grain over everything (asset-free SVG noise). */
+.sr-root::after {
+  content: "";
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  opacity: var(--sr-grain); mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+.sr-glass {
+  background: var(--sr-glass);
+  border: 1px solid var(--sr-border);
+  border-radius: var(--sr-radius);
+  box-shadow: var(--sr-shadow-1);
+  -webkit-backdrop-filter: saturate(1.1) blur(14px);
+  backdrop-filter: saturate(1.1) blur(14px);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .sr-glass { background: var(--sr-surface); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sr-root { background-attachment: scroll; }
+}
