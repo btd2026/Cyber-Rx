@@ -1297,6 +1297,35 @@ async function init() {
       CREATE INDEX IF NOT EXISTS security_audit_event ON security_audit_logs(event_type);
       CREATE INDEX IF NOT EXISTS security_audit_created ON security_audit_logs(created_at DESC);
       CREATE INDEX IF NOT EXISTS security_audit_requested_org ON security_audit_logs(requested_org_id, created_at DESC);
+
+      -- ============= Onboarding Redesign (Step 1: Foundations) ==============
+      -- One resumable onboarding journey per org. Drives the 7-phase stepper and
+      -- caches the latest completeness score for cheap reads. See
+      -- docs/plans/onboarding-redesign-blueprint.md.
+      CREATE TABLE IF NOT EXISTS onboarding_session (
+        id              TEXT PRIMARY KEY,
+        organization_id TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        phase           TEXT NOT NULL DEFAULT 'business_context', -- business_context | apps_tech | connectors | governance | third_party | scoring | completeness
+        status          TEXT NOT NULL DEFAULT 'in_progress',      -- in_progress | live | paused
+        completeness    NUMERIC DEFAULT 0,                        -- 0-100, cached from onboarding_completeness
+        phase_state     JSONB DEFAULT '{}',                       -- { <phase>: { started_at, completed_at } }
+        started_at      TIMESTAMPTZ DEFAULT NOW(),
+        went_live_at    TIMESTAMPTZ,
+        updated_at      TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS onboarding_session_org ON onboarding_session(organization_id);
+
+      -- Completeness score broken down by the six coverage dimensions, one row
+      -- per compute (history); the latest is mirrored onto onboarding_session.
+      CREATE TABLE IF NOT EXISTS onboarding_completeness (
+        id               TEXT PRIMARY KEY,
+        organization_id  TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        overall          NUMERIC NOT NULL,    -- 0-100 weighted
+        dimensions       JSONB NOT NULL,      -- { business_context, asset_coverage, connector_coverage, governance_coverage, third_party_coverage, framework_coverage }
+        answer_readiness JSONB,               -- { q1..q8: green|amber|red }
+        computed_at      TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS onboarding_completeness_org ON onboarding_completeness(organization_id, computed_at DESC);
     `);
     console.log('Database schema initialized');
   } catch (err) {
