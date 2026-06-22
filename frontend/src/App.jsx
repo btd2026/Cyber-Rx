@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import { alpha } from "./theme";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import CorrelatedFinding from "./pages/CorrelatedFinding";
 import CIODash from "./pages/CIODash";
@@ -7,7 +6,7 @@ import CLODash from "./pages/CLODash";
 import AdminDatabase from "./pages/AdminDatabase";
 import RedesignPrototype from "./pages/RedesignPrototype";
 import ExecutiveAgentBrief from "./components/ExecutiveAgentBrief";
-import CisoOperatingSystem from "./components/CisoOperatingSystem";
+import ExecutiveRoleTabs from "./components/ExecutiveRoleTabs";
 import NistCsfScorecard from "./components/NistCsfScorecard";
 import CsfControlLibrary from "./components/CsfControlLibrary";
 import CsfRankings from "./components/CsfRankings";
@@ -38,13 +37,9 @@ import ProcessGraph from "./pages/ProcessGraph";
 import RestructureView from "./pages/RestructureView";
 
 // --- Theme --------------------------------------------------------------------
-// The app-chrome palette, now token-native so the whole shell re-themes live on
-// the light "brief" ⟷ dark "command" toggle. Alpha tints use alpha(C.x, "hh")
-// (see theme.js) instead of hex-string concat, since var() colors can't be concatenated.
 var C = {
-  bg:"var(--bg)", panel:"var(--surface)", card:"var(--surface)", border:"var(--border)",
-  acc:"var(--accent)", faint:"color-mix(in srgb, var(--accent) 8%, transparent)",
-  text:"var(--text)", muted:"var(--text-muted)", dim:"var(--surface-2)"
+  bg:"#F7F4EE", panel:"#FFFDF9", card:"#FFFDF9", border:"#E8E2D6",
+  acc:"#243044", faint:"#24304414", text:"#211D18", muted:"#5C554B", dim:"#F1ECE3"
 };
 
 // --- Helpers ------------------------------------------------------------------
@@ -203,7 +198,7 @@ var NAV = NAV_GROUPS.reduce(function(acc, group) {
 // --- Score colours ------------------------------------------------------------
 var SEV_C = {Critical:"#cf222e", High:"#c2410c", Medium:"#9a6700", Low:"#1a7f37"};
 var SEV_B = {Critical:"#EF454512", High:"#F5A62312", Medium:"#3B9EFF12", Low:"#0FBB8012"};
-var ST_C  = {pending_approval:"#9a6700", approved:"#243044", routed:"#243044", complete:"#1a7f37"};
+var ST_C  = {pending_approval:"#9a6700", approved:"#5E6AD2", routed:"#8B5CF6", complete:"#1a7f37"};
 var RISK_C = {High:"#cf222e", Med:"#9a6700", Low:"#1a7f37"};
 
 // --- Business Processes -------------------------------------------------------
@@ -306,13 +301,13 @@ var ORG_TEMPLATES = {
       {id:"govt",    name:"Government Programs",    icon:"🏛",  color:"#3B9EFF",
        desc:"Medicare Advantage, FEP, Medicaid, and government-sponsored programs",
        streams:["Medicare Advantage","Federal Employee Program","Medicaid","Enterprise Payment Integrity / FWA"]},
-      {id:"commercial",name:"Commercial",           icon:"💼",  color:"#243044",
+      {id:"commercial",name:"Commercial",           icon:"💼",  color:"#A78BFA",
        desc:"Employer-sponsored, individual/family, and specialty commercial products",
        streams:["Sales & Marketing","Health Engagement","Commercial Product","Specialty Product","Benefits Administration"]},
       {id:"operations",name:"Operations",           icon:"⚙",   color:"#F5A623",
        desc:"Claims processing, enrollment, and regulatory operations",
        streams:["Claims (Medical & Dental)","Membership & Enrollment","Govt Reg Affairs & BCBSA Mandates"]},
-      {id:"corp",    name:"Corporate",              icon:"🏢",  color:"#243044",
+      {id:"corp",    name:"Corporate",              icon:"🏢",  color:"#8B5CF6",
        desc:"Audit, legal, finance, and corporate services",
        streams:["Audit & Risk Management","Legal","Finance","Foundation","Corporate Communications"]},
       {id:"service", name:"Service",                icon:"📞",  color:"#0FBB80",
@@ -336,7 +331,7 @@ var ORG_TEMPLATES = {
   // ── Commercial Health Plan (non-BCBS) ─────────────────────────────────────
   "Commercial Health Plan": {
     bizLines:[
-      {id:"commercial",name:"Commercial Lines",     icon:"💼",  color:"#243044",
+      {id:"commercial",name:"Commercial Lines",     icon:"💼",  color:"#A78BFA",
        desc:"Individual, small group, large group, and specialty commercial products",
        streams:["Individual & Family Plans","Small Group","Large Group / ASO","Specialty Products","Stop-Loss"]},
       {id:"govt",    name:"Government Programs",    icon:"🏛",  color:"#3B9EFF",
@@ -348,7 +343,7 @@ var ORG_TEMPLATES = {
       {id:"network", name:"Provider Network",       icon:"🏥",  color:"#0FBB80",
        desc:"Provider contracting, credentialing, and network management",
        streams:["Provider Contracting","Credentialing","Network Operations","Provider Relations"]},
-      {id:"corp",    name:"Corporate",              icon:"🏢",  color:"#243044",
+      {id:"corp",    name:"Corporate",              icon:"🏢",  color:"#8B5CF6",
        desc:"Finance, legal, compliance, and corporate services",
        streams:["Finance & Actuarial","Legal & Compliance","Human Resources","IT & Technology"]},
     ],
@@ -369,7 +364,7 @@ var ORG_TEMPLATES = {
       {id:"operations",name:"Operations",          icon:"⚙",   color:"#F5A623",
        desc:"Claims, enrollment, and member services",
        streams:["Claims Adjudication","Enrollment & Disenrollment","Member Services","Appeals & Grievances"]},
-      {id:"corp",    name:"Corporate",             icon:"🏢",  color:"#243044",
+      {id:"corp",    name:"Corporate",             icon:"🏢",  color:"#8B5CF6",
        desc:"Finance, compliance, and risk management",
        streams:["Finance & Actuarial","Compliance & Audit","RADV / Risk Adjustment","Legal"]},
     ],
@@ -381,7 +376,7 @@ var ORG_TEMPLATES = {
   // ── Multi-line Enterprise Insurer (Humana, Cigna, CVS/Aetna style) ─────────
   "Multi-line Health Insurer": {
     bizLines:[
-      {id:"commercial",name:"Commercial & Employer", icon:"💼",  color:"#243044",
+      {id:"commercial",name:"Commercial & Employer", icon:"💼",  color:"#A78BFA",
        desc:"Employer-sponsored, individual/family, ASO, and stop-loss",
        streams:["Large Group / National Accounts","Small & Mid-Market","Individual / ACA","ASO / Self-Funded","Stop-Loss & Specialty"]},
       {id:"govt",    name:"Government Programs",    icon:"🏛",  color:"#3B9EFF",
@@ -390,7 +385,7 @@ var ORG_TEMPLATES = {
       {id:"pharmacy",name:"Pharmacy / PBM",         icon:"💊",  color:"#10B981",
        desc:"Pharmacy benefit management, specialty pharmacy, and MTM",
        streams:["PBM Operations","Specialty Pharmacy","Mail-Order Pharmacy","Medication Therapy Management","Drug Pricing & Formulary"]},
-      {id:"behavioral",name:"Behavioral Health",   icon:"🧠",  color:"#243044",
+      {id:"behavioral",name:"Behavioral Health",   icon:"🧠",  color:"#8B5CF6",
        desc:"Mental health, substance use, and EAP programs",
        streams:["Mental Health Benefits","Substance Use Disorder","Employee Assistance Program","Autism & Applied Behavior Analysis"]},
       {id:"dental_vision",name:"Dental & Vision",  icon:"👁",   color:"#F5A623",
@@ -420,7 +415,7 @@ var ORG_TEMPLATES = {
       {id:"operations",name:"Operations",           icon:"⚙",   color:"#F5A623",
        desc:"Claims, enrollment, and state contract operations",
        streams:["Claims Adjudication","Member Enrollment / Disenrollment","State Reporting & Compliance","Member Services","Provider Relations"]},
-      {id:"corp",    name:"Corporate",              icon:"🏢",  color:"#243044",
+      {id:"corp",    name:"Corporate",              icon:"🏢",  color:"#8B5CF6",
        desc:"Finance, legal, and compliance under state contract",
        streams:["Finance & Actuarial","Legal & Compliance","Quality & HEDIS","Audit & Risk Management"]},
     ],
@@ -432,13 +427,13 @@ var ORG_TEMPLATES = {
   // ── Generic fallback ──────────────────────────────────────────────────────
   "Other Payer": {
     bizLines:[
-      {id:"commercial",name:"Commercial Lines",     icon:"💼",  color:"#243044",
+      {id:"commercial",name:"Commercial Lines",     icon:"💼",  color:"#A78BFA",
        desc:"Commercial health insurance products",
        streams:["Commercial Products","Sales & Marketing","Benefits Administration"]},
       {id:"operations",name:"Operations",           icon:"⚙",   color:"#F5A623",
        desc:"Claims and member operations",
        streams:["Claims Processing","Member Services","Enrollment"]},
-      {id:"corp",    name:"Corporate",              icon:"🏢",  color:"#243044",
+      {id:"corp",    name:"Corporate",              icon:"🏢",  color:"#8B5CF6",
        desc:"Corporate and administrative functions",
        streams:["Finance","Compliance","Information Technology"]},
     ],
@@ -449,7 +444,7 @@ var ORG_TEMPLATES = {
 
   "Regional Health Plan": {
     bizLines:[
-      {id:"commercial",name:"Commercial Lines",   icon:"💼",  color:"#243044",
+      {id:"commercial",name:"Commercial Lines",   icon:"💼",  color:"#A78BFA",
        desc:"Regional commercial and individual market products",
        streams:["Commercial Group","Individual/ACA","Medicare Supplement","Ancillary Products"]},
       {id:"govt",    name:"Government Programs",  icon:"🏛",  color:"#3B9EFF",
@@ -458,7 +453,7 @@ var ORG_TEMPLATES = {
       {id:"operations",name:"Operations",         icon:"⚙",   color:"#F5A623",
        desc:"Claims, enrollment, and member services",
        streams:["Claims","Enrollment","Member Services","Care Management"]},
-      {id:"corp",    name:"Corporate",            icon:"🏢",  color:"#243044",
+      {id:"corp",    name:"Corporate",            icon:"🏢",  color:"#8B5CF6",
        desc:"Finance, compliance, and IT",
        streams:["Finance","Legal & Compliance","Information Technology"]},
     ],
@@ -1193,7 +1188,7 @@ var ORG_PROFILES_RICH = {
     expMethods:["phi_breach","fwa","doi_fines"],secRequired:false,cmsRequired:false,radvRisk:false,
     boardContext:"Primary regulatory exposure is HIPAA and state oversight.",
     keyRisks:["Member PHI breach","Claims fraud","Employer contract risk"]},
-  "Medicare Advantage":{color:"#243044",
+  "Medicare Advantage":{color:"#A78BFA",
     regs:["HIPAA Security Rule","NIST CSF 2.0","CMS Star Ratings","CMS RADV Audit","SEC Cyber Disclosure"],
     mandatoryProcs:["claims","enroll","provider","care","finance","compliance","it_sec"],
     expMethods:["phi_breach","fwa","cms_sanctions","radv_recovery","sec_materiality"],
@@ -1714,7 +1709,7 @@ var COMPLIANCE_DOMAINS = {
        ]},
     ]},
   soc2:{
-    label:"SOC 2 Type II", color:"#243044",
+    label:"SOC 2 Type II", color:"#A78BFA",
     domains:[
       {id:"CC1",name:"Control Environment (CC1)",score:80,
        controls:[
@@ -2180,7 +2175,7 @@ var VENDOR_TIERS = [
   },
   // ── TIER 4: Member Mailing, Printing & Communications ───────────────────
   {
-    tier:4, label:"Member Communications & Mailing", color:"#243044",
+    tier:4, label:"Member Communications & Mailing", color:"#A78BFA",
     desc:"Vendors that produce and deliver member-facing communications including EOBs, ID cards, SB documents, and notices. All handle printed or transmitted PHI.",
     vendors:[
       {id:"cierant",     name:"[MAILING_VENDOR] Corporation",        cat:"Member Mailing",
@@ -2352,7 +2347,7 @@ var VENDOR_TIERS = [
   },
   // ── TIER 10: Member Portal, CRM & Engagement ────────────────────────────
   {
-    tier:10, label:"Member Portal, CRM & Digital Engagement", color:"#243044",
+    tier:10, label:"Member Portal, CRM & Digital Engagement", color:"#8B5CF6",
     desc:"Member-facing digital platforms, contact center systems, and CRM tools that are the primary member touchpoints.",
     vendors:[
       {id:"salesforce_hc", name:"Salesforce Health Cloud", cat:"CRM",
@@ -2438,7 +2433,7 @@ var VENDOR_TIERS = [
   },
   // ── TIER 13: Data & Analytics Partners ──────────────────────────────────
   {
-    tier:13, label:"Data Analytics, Actuarial & Reporting", color:"#243044",
+    tier:13, label:"Data Analytics, Actuarial & Reporting", color:"#6366F1",
     desc:"Analytics platforms and data partners that process aggregated and member-level PHI for population health, actuarial, and regulatory reporting.",
     vendors:[
       {id:"sg2",         name:"Vizient / SG2",              cat:"Market Analytics",
@@ -3078,7 +3073,7 @@ var ITSM_SYSTEMS = {
     apiAdapterId:null,
   },
   cherwell: {
-    id:"cherwell", label:"Cherwell", shortLabel:"Cherwell", icon:"⛺", color:"#243044",
+    id:"cherwell", label:"Cherwell", shortLabel:"Cherwell", icon:"⛺", color:"#9B59B6",
     toolKeys:["ITSM:Cherwell"],
     ticketType:"Change Request", ticketPrefix:"CHR",
     ticketGen:function(){ return "CHR-"+Math.floor(Math.random()*90000+10000); },
@@ -3128,7 +3123,7 @@ function buildRoutes(infraSel) {
     };
   });
   routes.push({
-    id:"soar", label:"SOAR", color:"#243044", icon:"⚙",
+    id:"soar", label:"SOAR", color:"#A78BFA", icon:"⚙",
     toolKeys:["SIEM:Splunk SIEM","SIEM:Microsoft Sentinel","SIEM:IBM QRadar","SIEM:Sumo Logic"],
     desc:"Triggers a security playbook in Splunk SOAR, XSOAR, Tines, or Swimlane with full finding context.",
     states:["Triggered","Running","Pending Approval","Complete"], ticketType:"Playbook",
@@ -3364,7 +3359,7 @@ function JustifiedStat(props) {
   return (
     <span>
       <span onClick={function(){setOpen(true);}}
-        style={{cursor:"pointer",borderBottom:"1px dashed "+alpha(C.acc, "60"),
+        style={{cursor:"pointer",borderBottom:"1px dashed "+C.acc+"60",
           color:props.color||C.text}}>
         {props.children}
       </span>
@@ -3420,7 +3415,7 @@ function SH(props) {
 function WhyBanner(props) {
   var title, children; title=props.title; children=props.children;
   return (
-    <div style={{background:alpha(C.acc, "0D"), border:"1px solid "+alpha(C.acc, "33"), borderLeft:"3px solid "+C.acc,
+    <div style={{background:C.acc+"0D", border:"1px solid "+C.acc+"33", borderLeft:"3px solid "+C.acc,
       borderRadius:9, padding:"11px 14px", marginBottom:14}}>
       <div style={{display:"flex", alignItems:"center", gap:7, marginBottom:4}}>
         <span style={{fontSize:13}}>ℹ️</span>
@@ -3568,7 +3563,7 @@ function Landing(props) {
         </div>
         <button onClick={onSignIn} style={{background:C.acc,border:"none",
           color:"#fff",borderRadius:8,padding:"8px 22px",cursor:"pointer",
-          fontSize:13,fontWeight:700,boxShadow:"0 0 20px "+alpha(C.acc, "40")}}>
+          fontSize:13,fontWeight:700,boxShadow:"0 0 20px "+C.acc+"40"}}>
           Sign In
         </button>
       </div>
@@ -3580,7 +3575,7 @@ function Landing(props) {
         margin:"0 auto",width:"100%"}}>
 
         <div style={{display:"inline-flex",alignItems:"center",gap:7,
-          background:alpha(C.acc, "15"),border:"1px solid "+alpha(C.acc, "35"),
+          background:C.acc+"15",border:"1px solid "+C.acc+"35",
           borderRadius:20,padding:"5px 18px",marginBottom:32}}>
           <div style={{width:6,height:6,borderRadius:"50%",
             background:C.acc,boxShadow:"0 0 8px "+C.acc}}/>
@@ -3593,7 +3588,7 @@ function Landing(props) {
         <h1 style={{color:C.text,fontSize:58,fontWeight:900,
           lineHeight:1.05,margin:"0 0 28px",letterSpacing:"-0.035em"}}>
           Cyber risk decisions,<br/>
-          <span style={{background:"linear-gradient(90deg,"+C.acc+",#243044)",
+          <span style={{background:"linear-gradient(90deg,"+C.acc+",#A78BFA)",
             WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",
             backgroundClip:"text"}}>
             for every executive.
@@ -3611,7 +3606,7 @@ function Landing(props) {
           flexWrap:"wrap",marginBottom:48}}>
           <button onClick={onSignIn} style={{background:C.acc,border:"none",
             color:"#fff",borderRadius:12,padding:"16px 48px",cursor:"pointer",
-            fontSize:16,fontWeight:800,boxShadow:"0 4px 28px "+alpha(C.acc, "50"),
+            fontSize:16,fontWeight:800,boxShadow:"0 4px 28px "+C.acc+"50",
             letterSpacing:"-0.01em"}}>
             Sign In
           </button>
@@ -3655,7 +3650,7 @@ function Landing(props) {
       {/* ── HOW WE USE AI ── */}
       <div style={{borderTop:"1px solid "+C.border,padding:"56px 24px",background:C.dim}}>
         <div style={{maxWidth:1040,margin:"0 auto"}}>
-          <div style={{textAlign:"center",marginBottom:8,color:"#243044",fontSize:11,fontWeight:800,letterSpacing:"0.12em"}}>HOW CYBERRX USES AI</div>
+          <div style={{textAlign:"center",marginBottom:8,color:"#A78BFA",fontSize:11,fontWeight:800,letterSpacing:"0.12em"}}>HOW CYBERRX USES AI</div>
           <h2 style={{textAlign:"center",color:C.text,fontSize:30,fontWeight:900,margin:"0 0 10px",letterSpacing:"-0.02em"}}>AI does the heavy lifting — you make the decisions.</h2>
           <p style={{textAlign:"center",color:C.muted,fontSize:14,lineHeight:1.7,maxWidth:720,margin:"0 auto 36px"}}>
             CyberRx uses large language models and AI agents end-to-end — to read your inputs, validate controls, and brief each executive. AI prepares the analysis; people make the call.
@@ -3670,7 +3665,7 @@ function Landing(props) {
               ["AI Gov","Governs AI itself","CyberRx inventories your AI (including agents and shadow AI) and assesses it against NIST AI RMF, OWASP-LLM, MITRE ATLAS, and the EU AI Act — governing AI and using AI to defend you."],
             ].map(function(a,i){return (
               <div key={i} style={{background:C.bg,border:"1px solid "+C.border,borderRadius:14,padding:"18px 18px"}}>
-                <span style={{display:"inline-block",fontSize:9.5,fontWeight:800,letterSpacing:"0.06em",color:"#fff",background:"linear-gradient(135deg,"+C.acc+",#243044)",borderRadius:999,padding:"3px 10px",marginBottom:10,textTransform:"uppercase"}}>{a[0]}</span>
+                <span style={{display:"inline-block",fontSize:9.5,fontWeight:800,letterSpacing:"0.06em",color:"#fff",background:"linear-gradient(135deg,"+C.acc+",#A78BFA)",borderRadius:999,padding:"3px 10px",marginBottom:10,textTransform:"uppercase"}}>{a[0]}</span>
                 <div style={{color:C.text,fontSize:15,fontWeight:800,marginBottom:6}}>{a[1]}</div>
                 <div style={{color:C.muted,fontSize:12.5,lineHeight:1.6}}>{a[2]}</div>
               </div>
@@ -3960,7 +3955,7 @@ function DemoRequest(props) {
           <button
             type="submit"
             disabled={submitting}
-            style={{width:"100%", background:C.acc, border:"none", color:"#fff", borderRadius:10, padding:"14px", cursor:"pointer", fontSize:15, fontWeight:700, boxShadow:"0 4px 20px "+alpha(C.acc, "40"), transition:"all 0.2s"}}
+            style={{width:"100%", background:C.acc, border:"none", color:"#fff", borderRadius:10, padding:"14px", cursor:"pointer", fontSize:15, fontWeight:700, boxShadow:"0 4px 20px "+C.acc+"40", transition:"all 0.2s"}}
           >
             {submitting ? "Opening Email Client..." : "Submit Demo Request →"}
           </button>
@@ -4051,7 +4046,7 @@ function MFA(props) {
 // --- Setup Wizard -------------------------------------------------------------
 // ─── Security tool catalog grouped by category ────────────────────────────────
 var SEC_TOOL_CATALOG = [
-  {cat:"IAM", label:"Identity & Access Management", color:"#243044",
+  {cat:"IAM", label:"Identity & Access Management", color:"#A78BFA",
    tools:["Okta","SailPoint IGA","Saviynt","CyberArk PAM","Microsoft Entra ID","Ping Identity","ForgeRock","BeyondTrust","HashiCorp Vault","Delinea"]},
   {cat:"Endpoint", label:"Endpoint Protection & EDR", color:"#F5A623",
    tools:["CrowdStrike Falcon","SentinelOne","Microsoft Defender","Carbon Black","Tanium","Trend Micro","Sophos","Trellix"]},
@@ -5520,11 +5515,11 @@ function Setup(props) {
         {/* ── Briana banner for steps 2-6 ── */}
         {step>=2&&(
           <div style={{display:"flex",alignItems:"center",gap:10,
-            background:"linear-gradient(135deg,"+alpha(C.acc,"10")+","+alpha(C.acc,"06")+")",
-            border:"1px solid "+alpha(C.acc, "25"),borderRadius:10,
+            background:"linear-gradient(135deg,"+C.acc+"10,#A78BFA08)",
+            border:"1px solid "+C.acc+"25",borderRadius:10,
             padding:"10px 16px",marginBottom:16}}>
             <div style={{width:32,height:32,borderRadius:"50%",flexShrink:0,
-              background:"linear-gradient(135deg,"+C.acc+",#243044)",
+              background:"linear-gradient(135deg,"+C.acc+",#A78BFA)",
               display:"flex",alignItems:"center",justifyContent:"center",
               fontWeight:800,fontSize:14,color:"#fff"}}>B</div>
             <div style={{flex:1}}>
@@ -5582,7 +5577,7 @@ function Setup(props) {
                   style={{width:"100%",background:C.bg,border:"1px solid "+(orgName?C.acc:C.border),borderRadius:7,
                     padding:"9px 12px",color:C.text,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                 {hint&&(
-                  <div style={{marginTop:6,padding:"8px 12px",background:alpha(C.acc, "12"),border:"1px solid "+alpha(C.acc, "30"),borderRadius:7}}>
+                  <div style={{marginTop:6,padding:"8px 12px",background:C.acc+"12",border:"1px solid "+C.acc+"30",borderRadius:7}}>
                     <div style={{color:C.acc,fontWeight:700,fontSize:11,marginBottom:2}}>✓ Detected: {hint.name} — {hint.type}</div>
                     <div style={{color:C.muted,fontSize:10,lineHeight:1.5}}>{hint.note}</div>
                   </div>
@@ -5699,7 +5694,7 @@ function Setup(props) {
                     {US_STATES.filter(function(st){return selStates[st.code];}).map(function(st){
                       return (
                         <div key={st.code} style={{display:"flex",gap:3,alignItems:"center",
-                          background:alpha(C.acc, "14"),border:"1px solid "+alpha(C.acc, "40"),borderRadius:20,padding:"2px 8px"}}>
+                          background:C.acc+"14",border:"1px solid "+C.acc+"40",borderRadius:20,padding:"2px 8px"}}>
                           <span style={{color:C.acc,fontSize:9,fontWeight:700}}>{st.code}</span>
                           <button onClick={function(){setSelStates(function(p){var n=Object.assign({},p);delete n[st.code];return n;});}}
                             style={{background:"transparent",border:"none",color:C.acc,cursor:"pointer",fontSize:10,lineHeight:1,padding:0,fontWeight:700}}>
@@ -5722,7 +5717,7 @@ function Setup(props) {
                     return (
                       <div key={st.code}
                         onClick={function(){setSelStates(function(p){var n=Object.assign({},p);if(isOn){delete n[st.code];}else{n[st.code]=true;}return n;});}}
-                        style={{background:isOn?alpha(C.acc, "18"):C.bg,border:"1px solid "+(isOn?alpha(C.acc, "50"):C.border),
+                        style={{background:isOn?C.acc+"18":C.bg,border:"1px solid "+(isOn?C.acc+"50":C.border),
                           borderRadius:5,padding:"3px 0",cursor:"pointer",textAlign:"center"}}>
                         <div style={{color:isOn?C.acc:C.text,fontSize:9,fontWeight:isOn?700:400}}>{st.code}</div>
                       </div>
@@ -5816,10 +5811,10 @@ function Setup(props) {
                   {procTree.map(function(f,fi){
                     return (
                       <div key={fi} style={{marginBottom:14,border:"1px solid "+C.border,borderRadius:9,overflow:"hidden"}}>
-                        <div style={{display:"flex",alignItems:"center",gap:8,background:alpha(C.acc, "0D"),padding:"8px 12px"}}>
+                        <div style={{display:"flex",alignItems:"center",gap:8,background:C.acc+"0D",padding:"8px 12px"}}>
                           <input value={f.function} onChange={function(e){var v=e.target.value;updateTree(function(t){t[fi].function=v;});}}
                             style={{flex:1,background:"transparent",border:"none",color:C.acc,fontSize:12,fontWeight:800,textTransform:"uppercase",letterSpacing:"0.06em",outline:"none"}}/>
-                          <button onClick={function(){addProcess(fi);}} style={{background:"transparent",border:"1px solid "+alpha(C.acc, "40"),color:C.acc,borderRadius:5,padding:"2px 9px",fontSize:10,fontWeight:700,cursor:"pointer"}}>+ Process</button>
+                          <button onClick={function(){addProcess(fi);}} style={{background:"transparent",border:"1px solid "+C.acc+"40",color:C.acc,borderRadius:5,padding:"2px 9px",fontSize:10,fontWeight:700,cursor:"pointer"}}>+ Process</button>
                         </div>
                         <div style={{padding:"8px 10px"}}>
                           {f.processes.length===0&&<div style={{color:C.muted,fontSize:10,padding:"4px 6px"}}>No processes — add one.</div>}
@@ -5943,8 +5938,8 @@ function Setup(props) {
                   var active = appTab===t.id;
                   return (
                     <button key={t.id} onClick={function(){setAppTab(t.id);}}
-                      style={{background:active?alpha(C.acc, "14"):C.dim,
-                        border:"1.5px solid "+(active?alpha(C.acc, "50"):C.border),
+                      style={{background:active?C.acc+"14":C.dim,
+                        border:"1.5px solid "+(active?C.acc+"50":C.border),
                         borderRadius:9,padding:"10px 16px",cursor:"pointer",textAlign:"left",
                         minWidth:150}}>
                       <div style={{fontSize:20,marginBottom:4}}>{t.icon}</div>
@@ -5964,7 +5959,7 @@ function Setup(props) {
                         CMDB System
                       </label>
                       <select value={cmdbSystem} onChange={function(e){setCmdbSystem(e.target.value);}}
-                        style={{width:"100%",background:C.bg,border:"1px solid "+(cmdbSystem?alpha(C.acc, "40"):C.border),
+                        style={{width:"100%",background:C.bg,border:"1px solid "+(cmdbSystem?C.acc+"40":C.border),
                           borderRadius:6,padding:"7px 10px",color:cmdbSystem?C.text:C.muted,fontSize:11,outline:"none"}}>
                         <option value="">Select CMDB system...</option>
                         {["ServiceNow CMDB","Jira Assets (Insight)","BMC Helix CMDB","Freshservice Asset Mgmt",
@@ -5980,7 +5975,7 @@ function Setup(props) {
                       </label>
                       <input value={cmdbUrl} onChange={function(e){setCmdbUrl(e.target.value);}}
                         placeholder="https://yourinstance.service-now.com/api/now/table/cmdb_ci"
-                        style={{width:"100%",background:C.bg,border:"1px solid "+(cmdbUrl?alpha(C.acc, "40"):C.border),
+                        style={{width:"100%",background:C.bg,border:"1px solid "+(cmdbUrl?C.acc+"40":C.border),
                           borderRadius:6,padding:"7px 10px",color:C.text,fontSize:10,
                           outline:"none",boxSizing:"border-box"}}/>
                     </div>
@@ -5990,7 +5985,7 @@ function Setup(props) {
                       </label>
                       <input type="password" value={cmdbKey} onChange={function(e){setCmdbKey(e.target.value);}}
                         placeholder="Bearer token or API key"
-                        style={{width:"100%",background:C.bg,border:"1px solid "+(cmdbKey?alpha(C.acc, "40"):C.border),
+                        style={{width:"100%",background:C.bg,border:"1px solid "+(cmdbKey?C.acc+"40":C.border),
                           borderRadius:6,padding:"7px 10px",color:C.text,fontSize:11,
                           outline:"none",boxSizing:"border-box"}}/>
                     </div>
@@ -6135,7 +6130,7 @@ function Setup(props) {
                     <div style={{color:C.muted,fontSize:10}}>&#x231B; Importing {appSel} catalog into your organization…</div>
                   )}
                   {appSel&&cmdbConn==="success"&&(
-                    <div style={{background:alpha(C.acc, "08"),border:"1px solid "+alpha(C.acc, "25"),borderRadius:8,padding:"10px 14px"}}>
+                    <div style={{background:C.acc+"08",border:"1px solid "+C.acc+"25",borderRadius:8,padding:"10px 14px"}}>
                       <div style={{color:C.acc,fontSize:10,fontWeight:700,marginBottom:4}}>
                         &#x2713; {appSel} profile loaded{sampleResult
                           ? " — "+sampleResult.assets+" applications imported and mapped to "+sampleResult.processes+" business processes"
@@ -6221,7 +6216,7 @@ function Setup(props) {
             if (presetCount === 0) return null;
             return (
               <span style={{color:C.acc,fontSize:10,fontWeight:700,
-                background:alpha(C.acc, "15"),borderRadius:10,padding:"2px 10px",border:"1px solid "+alpha(C.acc, "30")}}>
+                background:C.acc+"15",borderRadius:10,padding:"2px 10px",border:"1px solid "+C.acc+"30"}}>
                 {selCount > 0
                   ? selCount+" vendors selected for "+orgType
                   : presetCount+" pre-selected for "+orgType}
@@ -6260,13 +6255,13 @@ function Setup(props) {
     {/* Tier-by-tier vendor selection */}
     {/* Process + org pre-selection context banner */}
     {selProcs.size>0&&(
-      <div style={{background:alpha(C.acc, "06"),border:"1px solid "+alpha(C.acc, "20"),borderRadius:8,
+      <div style={{background:C.acc+"06",border:"1px solid "+C.acc+"20",borderRadius:8,
         padding:"10px 14px",marginBottom:12,display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
         <span style={{color:C.acc,fontSize:10,fontWeight:700}}>PRE-SELECTED BASED ON:</span>
         {Array.from(selProcs).slice(0,5).map(function(pid){
           var p=PROCS.find(function(x){return x.id===pid;});
           return p?(<span key={pid} style={{display:"flex",gap:3,alignItems:"center",
-            background:alpha(C.acc, "12"),border:"1px solid "+alpha(C.acc, "30"),
+            background:C.acc+"12",border:"1px solid "+C.acc+"30",
             borderRadius:4,padding:"2px 7px",fontSize:9,color:C.acc,fontWeight:600}}>
             <span style={{fontSize:11}}>{p.icon}</span><span>{p.name}</span>
           </span>):null;
@@ -6276,7 +6271,7 @@ function Setup(props) {
         </span>
         <div style={{display:"flex",gap:6}}>
           <button onClick={function(){setVendorSel(getRecommendedVendors(selProcs,orgType));}}
-            style={{background:alpha(C.acc, "18"),border:"1px solid "+alpha(C.acc, "40"),color:C.acc,
+            style={{background:C.acc+"18",border:"1px solid "+C.acc+"40",color:C.acc,
               borderRadius:5,padding:"3px 10px",cursor:"pointer",fontSize:10,fontWeight:700}}>
             ↺ Reset to Recommended
           </button>
@@ -6645,7 +6640,7 @@ function Setup(props) {
             <WhyBanner title="Core Infrastructure">
               Connecting your security tools lets CyberRx <strong>pull evidence automatically and score controls from live data instead of self-attestation</strong>. Connections are read-only and credentials are stored in a secrets vault — we only collect what's needed to verify each control.
             </WhyBanner>
-            <div style={{background:alpha(C.acc, "08"),border:"1px solid "+alpha(C.acc, "25"),
+            <div style={{background:C.acc+"08",border:"1px solid "+C.acc+"25",
               borderRadius:9,padding:"12px 16px",marginBottom:14}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                 <div style={{color:C.acc,fontSize:12,fontWeight:800}}>
@@ -6657,7 +6652,7 @@ function Setup(props) {
                       var p=getRecommendedKeys(selProcs);
                       setInfraSel(p);
                       setInfraConn(function(c){var n=Object.assign({},c);Object.keys(p).forEach(function(k){if(!n[k])n[k]="api";});return n;});
-                    }} style={{background:alpha(C.acc, "18"),border:"1px solid "+alpha(C.acc, "40"),color:C.acc,
+                    }} style={{background:C.acc+"18",border:"1px solid "+C.acc+"40",color:C.acc,
                       borderRadius:5,padding:"3px 10px",cursor:"pointer",fontSize:10,fontWeight:700}}>
                       ↺ Reset to Recommended
                     </button>
@@ -6715,7 +6710,7 @@ function Setup(props) {
                   {Array.from(selProcs).slice(0,6).map(function(pid){
                     var p=PROCS.find(function(x){return x.id===pid;});
                     return p?(<span key={pid} style={{display:"flex",gap:3,alignItems:"center",
-                      background:alpha(C.acc, "12"),border:"1px solid "+alpha(C.acc, "30"),
+                      background:C.acc+"12",border:"1px solid "+C.acc+"30",
                       borderRadius:4,padding:"2px 7px",fontSize:9,color:C.acc,fontWeight:600}}>
                       <span style={{fontSize:11}}>{p.icon}</span><span>{p.name}</span>
                     </span>):null;
@@ -6927,7 +6922,7 @@ function Setup(props) {
                                     onChange={function(e){setInfraCredField(key,"agentToken",e.target.value);}}
                                     style={{width:"100%",background:C.bg,border:"1px solid "+C.border,borderRadius:4,
                                       padding:"3px 7px",fontSize:9,color:C.text,outline:"none",boxSizing:"border-box",marginBottom:8}}/>
-                                  <div style={{fontSize:8,color:C.muted,lineHeight:1.4,background:alpha(C.bg, "80"),padding:"4px 6px",borderRadius:4}}>
+                                  <div style={{fontSize:8,color:C.muted,lineHeight:1.4,background:C.bg+"80",padding:"4px 6px",borderRadius:4}}>
                                     <div style={{fontWeight:600,marginBottom:2}}>📥 Agent Setup</div>
                                     <div>1. Download agent from vendor console</div>
                                     <div>2. Install on your log/event servers</div>
@@ -7035,7 +7030,7 @@ function Setup(props) {
                               )}
                               {method==="manual"&&(
                                 <div>
-                                  <div style={{fontSize:8,color:C.muted,lineHeight:1.4,background:alpha(C.bg, "80"),padding:"6px 8px",borderRadius:4,marginBottom:8}}>
+                                  <div style={{fontSize:8,color:C.muted,lineHeight:1.4,background:C.bg+"80",padding:"6px 8px",borderRadius:4,marginBottom:8}}>
                                     <div style={{fontWeight:600,marginBottom:3,marginTop:2}}>📄 Manual Data Entry Options</div>
                                     <div style={{marginBottom:2}}>Choose how you want to provide data:</div>
                                   </div>
@@ -7200,7 +7195,7 @@ function Setup(props) {
               </div>
             </Card>
             {/* Architecture reminder */}
-            <div style={{padding:"10px 14px",background:C.faint,border:"1px solid "+alpha(C.acc, "20"),borderRadius:8,marginBottom:14}}>
+            <div style={{padding:"10px 14px",background:C.faint,border:"1px solid "+C.acc+"20",borderRadius:8,marginBottom:14}}>
               <div style={{color:C.acc,fontWeight:700,fontSize:11,marginBottom:4}}>How CyberRx maps your data</div>
               <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
                 {["Business Processes","Applications (CMDB)","Risks & Findings","CIS Controls"].map(function(s,i,arr){
@@ -7271,7 +7266,7 @@ function Home(props) {
     <div style={{overflowY:"auto",height:"100%",background:C.bg}}>
 
       {/* Welcome bar */}
-      <div style={{background:"linear-gradient(135deg,"+alpha(C.acc,"10")+","+alpha(C.acc,"06")+")",
+      <div style={{background:"linear-gradient(135deg,"+C.acc+"10,#A78BFA08)",
         borderBottom:"1px solid "+C.border,padding:"20px 32px"}}>
         <div style={{maxWidth:960,margin:"0 auto",display:"flex",
           justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
@@ -7285,7 +7280,7 @@ function Home(props) {
           {!setupDone&&(
             <button onClick={function(){go("setup");}} style={{background:C.acc,
               border:"none",color:"#fff",borderRadius:9,padding:"9px 20px",
-              cursor:"pointer",fontSize:13,fontWeight:700,boxShadow:"0 0 16px "+alpha(C.acc, "40")}}>
+              cursor:"pointer",fontSize:13,fontWeight:700,boxShadow:"0 0 16px "+C.acc+"40"}}>
               Complete Setup &#x2192;
             </button>
           )}
@@ -7333,7 +7328,7 @@ function Home(props) {
               {icon:"🖥",label:"Core Application",sub:"Your vendor stack from Setup",
                note:"Which system is the attack surface?",color:"#F5A623"},
               {icon:"⚡",label:"Cyber Risk",sub:"Ransomware · PHI Breach · Supply Chain",
-               note:"What is the threat scenario?",color:"#243044"},
+               note:"What is the threat scenario?",color:"#A78BFA"},
               {icon:"🛡",label:"Security Control",sub:"EDR · MFA · SIEM · PAM",
                note:"What control is failing?",color:"#3B9EFF"},
               {icon:"💰",label:"Financial Impact",sub:"Breach cost · RBC impact · Fines",
@@ -7369,7 +7364,7 @@ function Home(props) {
              title:"Evidence-based, not self-attestation",
              body:"CyberRx draws evidence directly from your security environment. Controls are tested against what is actually happening — not what someone believes is happening.",
              tag:"No spreadsheets. No checkbox attestation. No quarterly manual refresh."},
-            {icon:"📋",color:"#243044",
+            {icon:"📋",color:"#A78BFA",
              title:"Framework reports that write themselves",
              body:"Connect your environment once. CyberRx automatically produces compliance assessments across every framework healthcare payers are required to meet.",
              tag:"HIPAA · NIST CSF 2.0 · NIST 800-53 · CIS · NAIC · ISO 27001 · PCI · CMS"},
@@ -7396,7 +7391,7 @@ function Home(props) {
               {icon:"🛡",role:"CISO",         color:"#3B9EFF",page:"dashboard",
                headline:"Posture from your actual environment",
                points:["Security score from your real tool inventory","Evidence-based — not self-reported metrics","Every finding: age, citation, dollar exposure","MITRE ATT&CK mapped to your vendor stack","10 capability drill-downs with CMMI maturity"]},
-              {icon:"📋",role:"CRO / Audit", color:"#243044",page:"cro",
+              {icon:"📋",role:"CRO / Audit", color:"#A78BFA",page:"cro",
                headline:"Control-level, not just compliant",
                points:["Findings linked to the specific control violated","Every control: owner, tested date, evidence","Scoring transparent — evidence, policy, testing","Regulatory exposure: OCR, DOI, CMS fines","8 framework reports from one environment"]},
               {icon:"💰",role:"CFO",         color:"#0FBB80",page:"cfo",
@@ -7451,10 +7446,10 @@ function Home(props) {
               {fw:"NIST CSF 2.0",          badge:"All industries",   color:"#F5A623"},
               {fw:"NIST SP 800-53 Rev 5",  badge:"All industries",   color:"#F5A623"},
               {fw:"CIS Controls v8",       badge:"All industries",   color:"#3B9EFF"},
-              {fw:"NAIC Model Law",        badge:"All industries",   color:"#243044"},
+              {fw:"NAIC Model Law",        badge:"All industries",   color:"#A78BFA"},
               {fw:"ISO/IEC 27001:2022",    badge:"All industries",   color:"#0FBB80"},
               {fw:"PCI DSS v4.0",          badge:"If Applicable",color:"#0891B2"},
-              {fw:"CMS 42 CFR §422",  badge:"If Applicable",color:"#243044"},
+              {fw:"CMS 42 CFR §422",  badge:"If Applicable",color:"#8B5CF6"},
             ].map(function(fw){
               var req=fw.badge==="All Payers";
               return (
@@ -7766,7 +7761,7 @@ function DocValidationAgent(props) {
     return (
       <div key={doc.id} style={{background:C.card,border:"1px solid "+
         (result?(result.pct>=80?"#0FBB8030":result.pct>=60?"#F5A62330":"#EF454530"):
-         uploaded?alpha(C.acc, "30"):C.border),
+         uploaded?C.acc+"30":C.border),
         borderRadius:9,marginBottom:6,overflow:"hidden"}}>
 
         {/* Doc row */}
@@ -7797,7 +7792,7 @@ function DocValidationAgent(props) {
               <div style={{fontWeight:700,color:C.text}}>{doc.allControls.length}</div>
               <div>controls</div>
             </span>
-            <label style={{background:uploaded?alpha(C.acc, "14"):C.dim,border:"1px solid "+(uploaded?alpha(C.acc, "40"):C.border),
+            <label style={{background:uploaded?C.acc+"14":C.dim,border:"1px solid "+(uploaded?C.acc+"40":C.border),
               borderRadius:6,padding:"4px 10px",cursor:"pointer",fontSize:10,color:uploaded?C.acc:C.muted,fontWeight:600}}>
               <input type="file" accept=".pdf,.docx,.doc,.xlsx,.txt"
                 style={{display:"none"}}
@@ -7904,7 +7899,7 @@ function DocValidationAgent(props) {
       desc:"Foundation policies required by every framework"
     },
     {
-      id:"access",     label:"Identity & Access", icon:"🔑", color:"#243044",
+      id:"access",     label:"Identity & Access", icon:"🔑", color:"#A78BFA",
       ids:["acp","emp","aulp"],
       desc:"Access control, encryption, and audit policies"
     },
@@ -7943,8 +7938,8 @@ function DocValidationAgent(props) {
   return (
     <div>
       {/* Header */}
-      <div style={{padding:"12px 16px",background:"linear-gradient(135deg,"+alpha(C.acc,"10")+","+C.panel+")",
-        border:"1px solid "+alpha(C.acc, "25"),borderRadius:10,marginBottom:14}}>
+      <div style={{padding:"12px 16px",background:"linear-gradient(135deg,"+C.acc+"10,"+C.panel+")",
+        border:"1px solid "+C.acc+"25",borderRadius:10,marginBottom:14}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
           <div>
             <div style={{color:C.acc,fontWeight:800,fontSize:14,marginBottom:2}}>
@@ -8037,7 +8032,7 @@ function DocValidationAgent(props) {
                     return (
                       <div key={doc.id} style={{background:C.card,border:"1px solid "+
                         (result?(result.pct>=80?"#0FBB8025":result.pct>=60?"#F5A62325":"#EF454525"):
-                         uploaded?alpha(C.acc, "25"):C.border),
+                         uploaded?C.acc+"25":C.border),
                         borderRadius:8,marginBottom:6,padding:"8px 10px"}}>
                         <div style={{display:"flex",gap:8,alignItems:"flex-start"}}>
                           <div style={{flex:1}}>
@@ -8215,8 +8210,8 @@ function MetricDetailModal(props) {
                   background:"#0891B214",borderRadius:4,padding:"2px 6px"}}>{detail.cis}</span>
               )}
               {detail && detail.nist && (
-                <span style={{color:"#243044",fontSize:9,fontWeight:700,
-                  background:"#24304414",borderRadius:4,padding:"2px 6px"}}>{detail.nist}</span>
+                <span style={{color:"#A78BFA",fontSize:9,fontWeight:700,
+                  background:"#A78BFA14",borderRadius:4,padding:"2px 6px"}}>{detail.nist}</span>
               )}
             </div>
             {/* Score vs target */}
@@ -8847,7 +8842,7 @@ function CISODash(props) {
 
       {/* ── Editable Metrics Panel ── */}
       {showMetricsPanel&&(
-        <div style={{background:C.card,border:"1px solid "+alpha(C.acc, "30"),
+        <div style={{background:C.card,border:"1px solid "+C.acc+"30",
           borderRadius:12,padding:"18px",marginBottom:16}}>
           <div style={{display:"flex",justifyContent:"space-between",
             alignItems:"center",marginBottom:14}}>
@@ -8943,7 +8938,7 @@ function CISODash(props) {
                       placeholder={m.hint}
                       disabled={isConnected}
                       style={{flex:1,background:isConnected?C.dim:C.card,
-                        border:"1px solid "+(isConnected?C.border:alpha(C.acc, "40")),
+                        border:"1px solid "+(isConnected?C.border:C.acc+"40"),
                         borderRadius:6,padding:"6px 10px",
                         color:isConnected?C.muted:C.text,fontSize:12,
                         outline:"none",opacity:isConnected?0.6:1}}/>
@@ -9146,7 +9141,7 @@ function CISODash(props) {
                         {(cap.tools||[]).map(function(t){
                           return (
                             <span key={t} style={{color:C.acc,fontSize:9,background:C.faint,
-                              borderRadius:4,padding:"2px 7px",border:"1px solid "+alpha(C.acc, "25")}}>{t}</span>
+                              borderRadius:4,padding:"2px 7px",border:"1px solid "+C.acc+"25"}}>{t}</span>
                           );
                         })}
                       </div>
@@ -9576,7 +9571,7 @@ function CISODash(props) {
           </div>
         </div>
         <div onClick={function(){go("execution");}}
-          style={{background:C.card,border:"1px solid "+alpha(C.acc, "30"),borderRadius:10,
+          style={{background:C.card,border:"1px solid "+C.acc+"30",borderRadius:10,
             padding:"12px 14px",cursor:"pointer"}}>
           <div style={{color:C.acc,fontSize:24,fontWeight:800,fontFamily:"monospace",marginBottom:4}}>
             {(execActions||ACTIONS).filter(function(a){return a.status==="pending_approval";}).length}
@@ -9591,7 +9586,7 @@ function CISODash(props) {
 
       {/* Active filter banner */}
       {(sevF!=="All" || procFilter) && (
-        <div style={{padding:"7px 14px",background:alpha(C.acc, "10"),border:"1px solid "+alpha(C.acc, "25"),
+        <div style={{padding:"7px 14px",background:C.acc+"10",border:"1px solid "+C.acc+"25",
           borderRadius:8,marginBottom:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <span style={{color:C.acc,fontSize:11,fontWeight:700}}>
             {sevF!=="All" ? ("Filtering: "+sevF+" findings only ("+shown.length+")") : ""}
@@ -9714,7 +9709,7 @@ function CISODash(props) {
                 return (
                   <button key={tab}
                     onClick={function(){setSevF(tab);setShowAll(false);setExpF(null);}}
-                    style={{background:active?SEV_C[tab]||alpha(C.acc, "20"):"transparent",
+                    style={{background:active?SEV_C[tab]||C.acc+"20":"transparent",
                       border:"1px solid "+(active?SEV_C[tab]||C.acc:C.border),
                       color:active?"#fff":C.muted,borderRadius:5,padding:"2px 9px",
                       cursor:"pointer",fontSize:10,fontWeight:active?700:400}}>
@@ -9739,7 +9734,7 @@ function CISODash(props) {
                   <div style={{padding:"10px 14px",borderTop:"1px solid "+SEV_C[f.sev]+"20",background:C.bg}}>
                     <p style={{color:C.text,fontSize:11,lineHeight:1.6,margin:"0 0 10px"}}>{orgText(f.wrong||"", orgName)}</p>
                     <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                      <Btn onClick={function(){props.viewCorrelatedFinding(f.id);}} small style={{background:alpha(C.acc, "15"),color:C.acc,border:"1px solid "+alpha(C.acc, "40")}}>View Executive Narrative →</Btn>
+                      <Btn onClick={function(){props.viewCorrelatedFinding(f.id);}} small style={{background:C.acc+"15",color:C.acc,border:"1px solid "+C.acc+"40"}}>View Executive Narrative →</Btn>
                       <Btn onClick={function(){setSingleF(f.id);}} small>View Details</Btn>
                       {f.act && <Btn onClick={function(){go("execution",{act:f.act});}} primary small>Execute {f.act} →</Btn>}
                     </div>
@@ -9999,7 +9994,7 @@ function CRODash(props) {
               <p style={{color:C.text,fontSize:12,lineHeight:1.8,margin:0,whiteSpace:"pre-line"}}>{orgText(f.fix||"", orgName)}</p>
             </div>
             <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-              <Btn onClick={function(){props.viewCorrelatedFinding(f.id);}} style={{background:alpha(C.acc, "15"),color:C.acc,border:"1px solid "+alpha(C.acc, "40")}}>View Executive Narrative →</Btn>
+              <Btn onClick={function(){props.viewCorrelatedFinding(f.id);}} style={{background:C.acc+"15",color:C.acc,border:"1px solid "+C.acc+"40"}}>View Executive Narrative →</Btn>
               <Btn onClick={function(){go("execution");}} primary>Route to Execution →</Btn>
               <Btn onClick={function(){setSelFinding(null);}}>Close</Btn>
             </div>
@@ -10022,11 +10017,11 @@ function CRODash(props) {
       <BrianaBar pageKey="cro" orgName={props.orgName||""} brianaOn={props.brianaOn!==false} setBrianaOn={props.setBrianaOn||function(){}}/>
 
         {/* CRO Header - Executive Cyber Responsibility */}
-        <div style={{padding:"16px 20px",background:"linear-gradient(135deg,#24304414,"+C.panel+")",
-          border:"1px solid #24304430",borderRadius:14,marginBottom:14}}>
+        <div style={{padding:"16px 20px",background:"linear-gradient(135deg,#A78BFA14,"+C.panel+")",
+          border:"1px solid #A78BFA30",borderRadius:14,marginBottom:14}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
             <div>
-              <div style={{color:"#243044",fontSize:10,fontWeight:700,textTransform:"uppercase",
+              <div style={{color:"#A78BFA",fontSize:10,fontWeight:700,textTransform:"uppercase",
                 letterSpacing:"0.1em",marginBottom:4}}>CHIEF RISK OFFICER</div>
               <h1 style={{color:C.text,fontSize:20,fontWeight:800,margin:"0 0 4px"}}>
                 Enterprise Risk Dashboard
@@ -10036,7 +10031,7 @@ function CRODash(props) {
               </div>
             </div>
             <div style={{textAlign:"right"}}>
-              <div style={{color:"#243044",fontSize:28,fontWeight:800,fontFamily:"monospace"}}>
+              <div style={{color:"#A78BFA",fontSize:28,fontWeight:800,fontFamily:"monospace"}}>
                 {calculateOverallScore({
                   mfaPct:props.mfaPct,edrPct:props.edrPct,siemDays:props.siemDays,
                   phishingPct:props.phishingPct,patchPct:props.patchPct,mttdHrs:props.mttdHrs,
@@ -10074,17 +10069,17 @@ function CRODash(props) {
         </div>
       )}
       {(props.orgType==="Multi-line Health Insurer")&&(
-        <div style={{background:"#24304408",border:"1px solid #24304425",
+        <div style={{background:"#A78BFA08",border:"1px solid #A78BFA25",
           borderRadius:8,padding:"9px 14px",marginBottom:10,
           display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-          <span style={{color:"#243044",fontSize:11,fontWeight:700}}>
+          <span style={{color:"#A78BFA",fontSize:11,fontWeight:700}}>
             Multi-line Insurer — Additional Requirements:
           </span>
           {["42 CFR Part 2 (Behavioral Health)","URAC PBM Accreditation",
             "NCQA Accreditation"].map(function(f){
             return (
-              <span key={f} style={{color:"#243044",fontSize:9,fontWeight:600,
-                background:"#24304414",borderRadius:3,padding:"2px 7px"}}>
+              <span key={f} style={{color:"#A78BFA",fontSize:9,fontWeight:600,
+                background:"#A78BFA14",borderRadius:3,padding:"2px 7px"}}>
                 {f}
               </span>
             );
@@ -10125,7 +10120,7 @@ function CRODash(props) {
                sub:"Members at risk",color:"#3B9EFF",
                method:"PHI record count entered in Org Setup. Drives OCR breach notification cost ($35/record) and class action exposure ($164/record avg settlement)."},
               {label:"Frameworks",     val:Object.keys(selFW||{}).filter(function(k){return (selFW||{})[k];}).length,
-               sub:"Active frameworks",color:"#243044",
+               sub:"Active frameworks",color:"#A78BFA",
                method:"Number of compliance frameworks selected in Setup Step 2. Each framework drives control requirements and audit scope."},
               {label:"Capital at Risk", val:Math.round((285+346+259+78+340)*1e6/surplus*100)+"%",
                sub:"of surplus",color:(285+346+259+78+340)*1e6/surplus>0.1?"#EF4545":"#F5A623",
@@ -10476,7 +10471,7 @@ function CRODash(props) {
               {h.num}<span style={{color:C.muted,fontSize:15,fontWeight:600}}>{h.unit}</span>
             </div>
             <div style={{flex:1}}>
-              <div style={{color:"#243044",fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:2}}>Chief Risk Officer — {h.title}</div>
+              <div style={{color:"#A78BFA",fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:2}}>Chief Risk Officer — {h.title}</div>
               <div style={{color:C.text,fontSize:14,fontWeight:800,marginBottom:2}}>{h.label}</div>
               <div style={{color:C.muted,fontSize:11,lineHeight:1.5}}>{croQ?("Answering: “"+croQ+"” · "):""}{h.sub}</div>
             </div>
@@ -10524,9 +10519,9 @@ function CRODash(props) {
             {id:"nistcsf",     label:"NIST CSF 2.0",             color:"#3B9EFF"},
             {id:"nist_800_53", label:"NIST SP 800-53 Rev 5",     color:"#F5A623"},
             {id:"cis",         label:"CIS Controls v8",          color:"#0891B2"},
-            {id:"naic",        label:"NAIC Model Law",           color:"#243044"},
+            {id:"naic",        label:"NAIC Model Law",           color:"#A78BFA"},
             {id:"iso27001",    label:"ISO/IEC 27001:2022",       color:"#0FBB80"},
-            {id:"soc2",        label:"SOC 2 Type II",            color:"#243044"},
+            {id:"soc2",        label:"SOC 2 Type II",            color:"#8B5CF6"},
             {id:"cms",         label:"CMS 42 CFR §422",     color:"#0891B2"},
             {id:"pci",         label:"PCI DSS v4.0",             color:"#F59E0B"},
             {id:"gdpr",        label:"GDPR / Privacy",            color:"#34D399"},
@@ -10548,7 +10543,7 @@ function CRODash(props) {
         <div style={{display:"flex",gap:0,borderBottom:"1px solid "+C.border,marginBottom:12,flexWrap:"wrap"}}>
           {[
             ["hipaa",  "HIPAA",          "#EF4545"],
-            ["soc2",   "SOC 2",          "#243044"],
+            ["soc2",   "SOC 2",          "#A78BFA"],
             ["cms",    "CMS / 42 CFR",   "#0891B2"],
             ["nistcsf","NIST CSF 2.0",   "#3B9EFF"],
             ["cis",    "CIS Controls",   "#0891B2"],
@@ -10740,7 +10735,7 @@ function CRODash(props) {
                 return (
                   <div key={cat} style={{marginBottom:14}}>
                     <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:8}}>
-                      <span style={{color:"#243044",fontSize:11,fontWeight:700,background:"#24304414",borderRadius:4,padding:"2px 8px"}}>{cat}</span>
+                      <span style={{color:"#A78BFA",fontSize:11,fontWeight:700,background:"#A78BFA14",borderRadius:4,padding:"2px 8px"}}>{cat}</span>
                       <span style={{color:hc(catAvg),fontSize:11,fontWeight:700,fontFamily:"monospace"}}>Avg: {catAvg}</span>
                     </div>
                     <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
@@ -10752,7 +10747,7 @@ function CRODash(props) {
                             borderRadius:8,cursor:"pointer",transition:"border 0.15s"}}
                             onClick={function(){ setSelGridCtrl(Object.assign({},ctrl,{framework:"SOC 2"})); }}>
                             <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:4}}>
-                              <span style={{color:"#243044",fontSize:9,fontWeight:700}}>{ctrl.ref||ctrl.id}</span>
+                              <span style={{color:"#A78BFA",fontSize:9,fontWeight:700}}>{ctrl.ref||ctrl.id}</span>
                               <span style={{color:hc(ctrl.score),fontSize:14,fontWeight:800,fontFamily:"monospace"}}>{ctrl.score}</span>
                             </div>
                             <div style={{color:C.text,fontSize:10,fontWeight:600,marginBottom:4,lineHeight:1.3}}>{ctrl.name}</div>
@@ -11161,7 +11156,7 @@ function CFODash(props) {
       label:"Return on security investment",sub:"$"+fmtExp(avoidedLoss/1e6)+" avoided loss on $"+fmtExp(securitySpend/1e6)+" spend"};
     if(view==="rbc") return {title:"RBC & Capital",num:rbcRatioPost+"%",unit:"",color:rbcColor,
       label:"RBC ratio after a catastrophic event",sub:capitalPct+"% of $"+fmtExp(surplusB/1e6)+" surplus at risk · 200% regulatory minimum"};
-    if(view==="scenarios") return {title:"Scenario Analysis",num:fmtExp(expectedLoss/1e6),unit:"",color:"#243044",
+    if(view==="scenarios") return {title:"Scenario Analysis",num:fmtExp(expectedLoss/1e6),unit:"",color:"#A78BFA",
       label:"Probability-weighted annual loss",sub:"Catastrophic case "+fmtExp(catastrophicLoss/1e6)+" · stress case "+fmtExp(stressLoss/1e6)};
     return {title:"Financial Exposure",num:"$"+Math.round(grossExp/1e6)+"M",unit:"",color:"#EF4545",
       label:"Gross cyber financial exposure",sub:"$"+Math.round(netExp/1e6)+"M net after $"+Math.round(insLimit/1e6)+"M insurance"};
@@ -11236,7 +11231,7 @@ function CFODash(props) {
                 {h.num}<span style={{color:C.muted,fontSize:15,fontWeight:600}}>{h.unit}</span>
               </div>
               <div style={{flex:1}}>
-                <div style={{color:"#243044",fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:2}}>Chief Financial Officer — {h.title}</div>
+                <div style={{color:"#A78BFA",fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:2}}>Chief Financial Officer — {h.title}</div>
                 <div style={{color:C.text,fontSize:14,fontWeight:800,marginBottom:2}}>{h.label}</div>
                 <div style={{color:C.muted,fontSize:11,lineHeight:1.5}}>{cfQ?("Answering: “"+cfQ+"” · "):""}{h.sub}</div>
               </div>
@@ -11259,7 +11254,7 @@ function CFODash(props) {
             {label:"Capital at Risk",       val:capitalPct+"%",sub:"of $"+fmtExp(surplusB/1e6)+" surplus",color:zoneColor(capitalPct),onClick:function(){setCfTab("rbc");}},
             {label:"RBC Post-Event",        val:rbcRatioPost+"%",sub:rbcRatioPost<200?"BELOW MIN":"vs 200% min",color:rbcColor,onClick:function(){setCfTab("rbc");}},
             {label:"Security ROI",          val:rosi+"%",sub:"Return on $"+fmtExp(securitySpend/1e6)+" spend",color:"#0FBB80",onClick:function(){setCfTab("rosi");}},
-            {label:"Expected Annual Loss",  val:fmtExp(annualLossExp/1e6),sub:"Probability-weighted — click for scenarios",color:"#243044",onClick:function(){setCfTab("scenarios");}},
+            {label:"Expected Annual Loss",  val:fmtExp(annualLossExp/1e6),sub:"Probability-weighted — click for scenarios",color:"#A78BFA",onClick:function(){setCfTab("scenarios");}},
           ].map(function(s){
             return (
               <div key={s.label} onClick={s.onClick}
@@ -11385,7 +11380,7 @@ function CFODash(props) {
                 {[
                   {label:"Security Spend",         val:securitySpend/1e6, color:"#3B9EFF",  unit:"M/yr"},
                   {label:"Losses Avoided (est.)",   val:avoidedLoss/1e6,  color:"#0FBB80",  unit:"M/yr"},
-                  {label:"Expected Annual Loss",    val:annualLossExp/1e6, color:"#243044",  unit:"M/yr"},
+                  {label:"Expected Annual Loss",    val:annualLossExp/1e6, color:"#A78BFA",  unit:"M/yr"},
                   {label:"Cost to Reduce Risk 73→85",val:15,              color:"#F5A623",  unit:"M"},
                 ].map(function(r){
                   return (
@@ -11604,7 +11599,7 @@ function CFODash(props) {
                 {[
                   {label:"Annual Security Budget (est. 60% of IT)",  val:fmtExp(securitySpend/1e6),      color:"#3B9EFF"},
                   {label:"Estimated Annual Avoided Loss",             val:fmtExp(avoidedLoss/1e6),         color:"#0FBB80"},
-                  {label:"Residual Expected Annual Loss",             val:fmtExp(annualLossExp/1e6),        color:"#243044"},
+                  {label:"Residual Expected Annual Loss",             val:fmtExp(annualLossExp/1e6),        color:"#A78BFA"},
                   {label:"Investment to Close Top 3 Gaps (F-006/F-003/F-001)",val:"$22-35M",             color:"#F5A623"},
                   {label:"Avoided Loss if Gaps Closed",               val:fmtExp(340/1000),                color:"#0FBB80"},
                 ].map(function(r){
@@ -11626,7 +11621,7 @@ function CFODash(props) {
                   {action:"Fix F-003: [MAILING_VENDOR] SFTP encryption",     cost:"$0.5M",  reduces:"$285M breach risk",   roi:"570x", color:"#EF4545"},
                   {action:"Extend SIEM retention to 6 years",       cost:"$0.3M",  reduces:"$50M OCR fine risk",   roi:"167x", color:"#EF4545"},
                   {action:"Enforce MFA 100% coverage",              cost:"$0.4M",  reduces:"$340M fraud exposure",  roi:"850x", color:"#F5A623"},
-                  {action:"Deploy SOAR",                            cost:"$0.8M",  reduces:"MTTR 6.8h→2h",         roi:"N/A",  color:"#243044"},
+                  {action:"Deploy SOAR",                            cost:"$0.8M",  reduces:"MTTR 6.8h→2h",         roi:"N/A",  color:"#A78BFA"},
                   {action:"Network segmentation (8 zones)",         cost:"$1.2M",  reduces:"$217M BI risk",         roi:"181x", color:"#F5A623"},
                 ].map(function(r){
                   return (
@@ -12584,7 +12579,7 @@ function AppMap(props) {
                 {(app.conn||[]).map(function(c){
                   return (
                     <span key={c} style={{color:C.acc,fontSize:11,background:C.faint,
-                      borderRadius:5,padding:"4px 10px",border:"1px solid "+alpha(C.acc, "25")}}>{c}</span>
+                      borderRadius:5,padding:"4px 10px",border:"1px solid "+C.acc+"25"}}>{c}</span>
                   );
                 })}
               </div>
@@ -12855,7 +12850,7 @@ function VendorEcosystem(props) {
       </div>
 
       {/* Data flow banner */}
-      <div style={{padding:"10px 14px",background:C.faint,border:"1px solid "+alpha(C.acc, "20"),
+      <div style={{padding:"10px 14px",background:C.faint,border:"1px solid "+C.acc+"20",
         borderRadius:9,marginBottom:14}}>
         <div style={{color:C.acc,fontSize:10,fontWeight:700,marginBottom:6}}>
           End-to-End Data Flow
@@ -12880,8 +12875,8 @@ function VendorEcosystem(props) {
       {/* Tier filter */}
       <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
         <button onClick={function(){setSelTier(null);}}
-          style={{background:!selTier?alpha(C.acc, "14"):"transparent",
-            border:"1px solid "+(!selTier?alpha(C.acc, "50"):C.border),
+          style={{background:!selTier?C.acc+"14":"transparent",
+            border:"1px solid "+(!selTier?C.acc+"50":C.border),
             borderRadius:20,padding:"4px 14px",cursor:"pointer",
             fontSize:11,color:!selTier?C.acc:C.muted,fontWeight:!selTier?700:400}}>
           All Vendors ({VENDOR_TIERS.reduce(function(s,t){return s+t.vendors.length;},0)})
@@ -13031,7 +13026,7 @@ function ClaimLifecycle(props) {
                     border:"3px solid "+(isSelected?C.acc:"#3B9EFF50"),
                     display:"flex",flexDirection:"column",
                     alignItems:"center",justifyContent:"center",marginBottom:6,
-                    boxShadow:isSelected?"0 0 0 4px "+alpha(C.acc, "30"):"none"}}>
+                    boxShadow:isSelected?"0 0 0 4px "+C.acc+"30":"none"}}>
                     <span style={{fontSize:18,lineHeight:1}}>{step.icon}</span>
                     <span style={{color:isSelected?"#fff":"#3B9EFF",
                       fontSize:9,fontWeight:800}}>{step.step}</span>
@@ -13690,7 +13685,7 @@ nist_800_53:{
   ],
 },
 naic:{
-  label:"NAIC Insurance Data Security Model Law", color:"#243044",
+  label:"NAIC Insurance Data Security Model Law", color:"#A78BFA",
   assessmentDate:"Q1 2025",
   scope:"[ORG] as a licensed insurer under the NAIC Model Law enacted in 24+ states. Sections 3 (WISP), 4 (Investigation), and 5 (Commissioner Notification) evaluated.",
   execSummary:"WISP meets Section 3 requirements. Gaps in Section 4 (90-day evidence retention vs. 14-day SIEM) and Section 5 (72-hour notification process not tabletop-tested).",
@@ -13882,12 +13877,12 @@ cis: {
 },
 
 naic: {
-  id:"naic", label:"NAIC Model Law", color:"#243044",
+  id:"naic", label:"NAIC Model Law", color:"#A78BFA",
   standard:"NAIC Insurance Data Security Model Law (MDL-668)", version:"2017 (adopted by 24+ states)", assessmentDate:"Q1 2025", assessor:"Internal + Compliance Counsel", overallLevel:76,
   scope:"All insurance operations including agent/policyholder data, claims systems, and third-party service providers.",
   execSummary:"Strong WISP and governance foundation. Gaps in third-party oversight (expired BAAs, missing right-to-audit) and legacy contract security requirements.",
   sections:[
-    {id:"governance", name:"Section 3 — Information Security Program", score:82, color:"#243044",
+    {id:"governance", name:"Section 3 — Information Security Program", score:82, color:"#A78BFA",
      controls:[
        {ref:"3(A)", name:"Written Information Security Program", status:"Compliant", score:84, owner:"CISO",      lastTested:"Q1 2025",
         desc:"WISP documented, board-approved, reviewed annually. Covers all 6 MDL-668 required elements. CISO designated.",
@@ -13899,7 +13894,7 @@ naic: {
         desc:"AES-256 on primary databases. Gap: [CLAIMS_SYSTEM] archive tables contain unencrypted SSN. TLS 1.2+ enforced on external APIs.",
         evidence:["AES-256: primary databases confirmed","[CLAIMS_SYSTEM] SSN gap: F-002 open","TLS 1.2+: all external APIs enforced","Encryption key management policy reviewed"]},
      ]},
-    {id:"third_party", name:"Section 4 — Third-Party Service Providers", score:64, color:"#243044",
+    {id:"third_party", name:"Section 4 — Third-Party Service Providers", score:64, color:"#A78BFA",
      controls:[
        {ref:"4(A)", name:"Due Diligence — Service Providers",   status:"Gap",       score:64, owner:"Vendor Mgmt",lastTested:"Q1 2025", finding:"F-016",
         desc:"11 of 13 BAAs current. Inovalon expired 47 days. 3 contracts missing right-to-audit. 4 Tier 1 annual VAs overdue.",
@@ -13908,7 +13903,7 @@ naic: {
         desc:"Standard security addendum in new contracts since Q3 2024. 8 of 12 legacy contracts updated.",
         evidence:["Security addendum: active new contracts","Legacy updates: 8 of 12 complete","Remaining 4 on renewal Q3 2025","CLM system tracking confirmed"]},
      ]},
-    {id:"incident", name:"Section 5 — Notification", score:78, color:"#243044",
+    {id:"incident", name:"Section 5 — Notification", score:78, color:"#A78BFA",
      controls:[
        {ref:"5(A)", name:"Event Investigation",                 status:"Compliant", score:80, owner:"IR Team",    lastTested:"Q1 2025",
         desc:"Investigation procedures in IR Plan v4.0. Forensic capability via CrowdStrike + Splunk. Notification timelines mapped.",
@@ -14263,7 +14258,7 @@ function ComplianceReport(props) {
                 var meta = ds.metricKey ? (syncMeta[ds.metricKey]||{}) : {};
                 var isConn = meta.status==="connected";
                 var isManu = meta.status==="manual";
-                var statusColor = isConn?"#0FBB80":isManu?"#F5A623":ds.type==="Document"?"#243044":C.muted;
+                var statusColor = isConn?"#0FBB80":isManu?"#F5A623":ds.type==="Document"?"#A78BFA":C.muted;
                 var statusLabel = isConn?"API":isManu?"Manual":ds.type==="Document"?"Document":"Not Set";
                 return (
                   <div key={ds.ctrl} style={{background:C.card,border:"1px solid "+C.border,
@@ -14365,7 +14360,7 @@ function ComplianceReport(props) {
             );
           })}
           <div style={{marginTop:12,padding:"10px 14px",background:C.faint,
-            border:"1px solid "+alpha(C.acc, "25"),borderRadius:8,
+            border:"1px solid "+C.acc+"25",borderRadius:8,
             display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <div>
               <div style={{color:C.muted,fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Next Assessment</div>
@@ -14500,7 +14495,7 @@ var MITRE_TACTICS = [
   {id:"TA0002", name:"Execution",             short:"Exec",   color:"#F59E0B"},
   {id:"TA0003", name:"Persistence",           short:"Persist",color:"#F5A623"},
   {id:"TA0004", name:"Privilege Escalation",  short:"PrivEsc",color:"#FB923C"},
-  {id:"TA0005", name:"Defense Evasion",       short:"DefEva", color:"#243044"},
+  {id:"TA0005", name:"Defense Evasion",       short:"DefEva", color:"#A78BFA"},
   {id:"TA0006", name:"Credential Access",     short:"Creds",  color:"#EC4899"},
   {id:"TA0007", name:"Discovery",             short:"Discov", color:"#0891B2"},
   {id:"TA0008", name:"Lateral Movement",      short:"LatMov", color:"#3B9EFF"},
@@ -15028,12 +15023,12 @@ function ProcessControlMap(props) {
   // Sample applications per process
   var appSample = {
     claims:  [{id:"NASCO",name:"NASCO",color:"#EF4545"},{id:"CHC",name:"Change HC",color:"#F5A623"},{id:"COTI",name:"Cotiviti",color:"#3B9EFF"}],
-    enroll:  [{id:"HE",name:"HealthEdge",color:"#243044"},{id:"SFHC",name:"Salesforce HC",color:"#0891B2"}],
+    enroll:  [{id:"HE",name:"HealthEdge",color:"#A78BFA"},{id:"SFHC",name:"Salesforce HC",color:"#0891B2"}],
     provider:[{id:"AV",name:"Availity",color:"#F5A623"},{id:"KY",name:"Kyruus",color:"#3B9EFF"}],
-    care:    [{id:"EC",name:"eviCore",color:"#0891B2"},{id:"INO",name:"Inovalon",color:"#243044"}],
+    care:    [{id:"EC",name:"eviCore",color:"#0891B2"},{id:"INO",name:"Inovalon",color:"#A78BFA"}],
     finance: [{id:"ORC",name:"Oracle ERP",color:"#F5A623"},{id:"OPT",name:"Optum Fin.",color:"#3B9EFF"}],
     member_svc:[{id:"GEN",name:"Genesys",color:"#0891B2"},{id:"MB",name:"[MEMBER_PORTAL]",color:"#3B9EFF"}],
-    compliance:[{id:"OT",name:"OneTrust",color:"#243044"},{id:"SN",name:"ServiceNow",color:"#3B9EFF"}],
+    compliance:[{id:"OT",name:"OneTrust",color:"#A78BFA"},{id:"SN",name:"ServiceNow",color:"#3B9EFF"}],
     it_sec:  [{id:"CS",name:"CrowdStrike",color:"#EF4545"},{id:"SPL",name:"Splunk",color:"#F5A623"},{id:"SLP",name:"SailPoint",color:"#0891B2"}],
   };
 
@@ -15115,7 +15110,7 @@ function ProcessControlMap(props) {
           {[
             {id:"process",label:"Processes", color:"#3B9EFF"},
             {id:"app",    label:"Apps",      color:"#0891B2"},
-            {id:"framework",label:"Frameworks",color:"#243044"},
+            {id:"framework",label:"Frameworks",color:"#A78BFA"},
             {id:"risk",   label:"Risks",     color:"#EF4545"},
           ].map(function(t){
             return (
@@ -15136,12 +15131,12 @@ function ProcessControlMap(props) {
             {/* Ring labels */}
             <text x={W/2} y={H/2-pR+16} textAnchor="middle" fill="#3B9EFF" fontSize="10" opacity="0.5">Processes</text>
             <text x={W/2} y={H/2-aR+16} textAnchor="middle" fill="#0891B2" fontSize="9" opacity="0.5">Applications</text>
-            <text x={W/2} y={H/2-fR+12} textAnchor="middle" fill="#243044" fontSize="9" opacity="0.5">Frameworks</text>
+            <text x={W/2} y={H/2-fR+12} textAnchor="middle" fill="#A78BFA" fontSize="9" opacity="0.5">Frameworks</text>
             <text x={W/2} y={H/2-rR+12} textAnchor="middle" fill="#EF4545" fontSize="9" opacity="0.5">Risks</text>
 
             {/* Ring circles */}
             {[pR,aR,fR,rR].map(function(r,i){
-              var colors=["#3B9EFF","#0891B2","#243044","#EF4545"];
+              var colors=["#3B9EFF","#0891B2","#A78BFA","#EF4545"];
               return <circle key={i} cx={W/2} cy={H/2} r={r} fill="none" stroke={colors[i]} strokeWidth="0.5" opacity="0.15"/>;
             })}
 
@@ -15266,7 +15261,7 @@ function ProcessControlMap(props) {
             {[
               {label:"Business Processes", val:PROCS.length,      color:"#3B9EFF"},
               {label:"Applications",        val:nodes.filter(function(n){return n.type==="app";}).length, color:"#0891B2"},
-              {label:"Frameworks",          val:fwNodes.length,    color:"#243044"},
+              {label:"Frameworks",          val:fwNodes.length,    color:"#A78BFA"},
               {label:"Risk Findings",       val:topFinds.length,   color:"#EF4545"},
             ].map(function(s){
               return (
@@ -15532,7 +15527,7 @@ function DashHub(props) {
               <span style={{background:"#F5A62320",color:"#F5A623",fontSize:10,fontWeight:700,borderRadius:4,padding:"3px 10px"}}>
                 High: Standard Payer Systems Missing
               </span>
-              <span style={{background:"#24304420",color:"#243044",fontSize:10,fontWeight:700,borderRadius:4,padding:"3px 10px"}}>
+              <span style={{background:"#A78BFA20",color:"#A78BFA",fontSize:10,fontWeight:700,borderRadius:4,padding:"3px 10px"}}>
                 Medium: Best-Practice Enhancements
               </span>
             </div>
@@ -15630,7 +15625,7 @@ function DashHub(props) {
               {["Critical","High","Med","Low"].map(function(sev){
                 return (
                   <button key={sev} onClick={function(){setFilterSev(sev===filterSev?null:sev);}}
-                    style={{background:filterSev===sev?alpha(C.acc, "20"):"transparent",
+                    style={{background:filterSev===sev?C.acc+"20":"transparent",
                       border:"1px solid "+(filterSev===sev?C.acc:C.border),
                       color:filterSev===sev?C.acc:C.muted,borderRadius:6,
                       padding:"3px 10px",cursor:"pointer",fontSize:10,fontWeight:600}}>
@@ -15666,7 +15661,7 @@ function DashHub(props) {
                   </div>
                 </div>
                 {f.fix&&(
-                  <div style={{marginTop:8,background:alpha(C.acc, "08"),borderRadius:6,
+                  <div style={{marginTop:8,background:C.acc+"08",borderRadius:6,
                     padding:"8px 12px",fontSize:10,color:C.muted,lineHeight:1.5}}>
                     <span style={{color:C.acc,fontWeight:700}}>Fix: </span>{orgText(f.fix||"",orgName,orgExtras)}
                   </div>
@@ -15761,7 +15756,7 @@ function DashHub(props) {
                           borderTop:"none",borderRadius:"0 0 10px 10px",padding:"14px 16px"}}>
                           <div style={{color:C.muted,fontSize:11,lineHeight:1.65,marginBottom:10}}>{orgText(f.wrong||"",orgName,orgExtras)}</div>
                           {f.fix&&(
-                            <div style={{background:alpha(C.acc, "08"),borderRadius:6,padding:"9px 12px",
+                            <div style={{background:C.acc+"08",borderRadius:6,padding:"9px 12px",
                               fontSize:10,color:C.text,lineHeight:1.5}}>
                               <span style={{color:C.acc,fontWeight:700}}>Remediation: </span>{orgText(f.fix||"",orgName,orgExtras)}
                             </div>
@@ -15803,7 +15798,7 @@ function DashHub(props) {
               </span>
             )}
             <button onClick={function(){setFilterAtRisk(!filterAtRisk);}}
-              style={{marginLeft:"auto",background:filterAtRisk?alpha(C.acc, "20"):"transparent",
+              style={{marginLeft:"auto",background:filterAtRisk?C.acc+"20":"transparent",
                 border:"1px solid "+(filterAtRisk?C.acc:C.border),
                 color:filterAtRisk?C.acc:C.muted,borderRadius:6,
                 padding:"4px 12px",cursor:"pointer",fontSize:10,fontWeight:600}}>
@@ -16081,7 +16076,7 @@ function DashHub(props) {
           {[
             {cat:"Breach Response",       val:285, color:"#EF4545"},
             {cat:"Business Interruption", val:217, color:"#F5A623"},
-            {cat:"Reputational / Churn",  val:259, color:"#243044"},
+            {cat:"Reputational / Churn",  val:259, color:"#A78BFA"},
             {cat:"Regulatory Fines",      val:346, color:"#0891B2"},
             {cat:"Fraud & Abuse",         val:340, color:"#F472B6"},
             {cat:"Legal & Extortion",     val:78,  color:"#3B9EFF"},
@@ -16272,7 +16267,7 @@ function BizLines(props) {
                     {(step.systems||[]).map(function(s){
                       return (
                         <span key={s} style={{color:C.acc,fontSize:10,background:C.faint,
-                          borderRadius:5,padding:"3px 9px",border:"1px solid "+alpha(C.acc, "25")}}>{s}</span>
+                          borderRadius:5,padding:"3px 9px",border:"1px solid "+C.acc+"25"}}>{s}</span>
                       );
                     })}
                   </div>
@@ -16332,8 +16327,8 @@ function BizLines(props) {
                       <div key={c} style={{display:"flex",gap:7,alignItems:"center",
                         padding:"5px 8px",background:C.bg,borderRadius:5,marginBottom:3,
                         border:"1px solid "+C.border}}>
-                        <span style={{color:"#243044",fontSize:9,fontWeight:700,
-                          background:"#24304414",borderRadius:3,padding:"1px 5px",flexShrink:0}}>
+                        <span style={{color:"#A78BFA",fontSize:9,fontWeight:700,
+                          background:"#A78BFA14",borderRadius:3,padding:"1px 5px",flexShrink:0}}>
                           {c.split(" ")[0]}
                         </span>
                         <span style={{color:C.muted,fontSize:10,flex:1}}>{c}</span>
@@ -16539,7 +16534,7 @@ function BizLines(props) {
 
         {/* Risk summary bar */}
         <div style={{display:"flex",gap:12,padding:"10px 14px",background:C.faint,
-          border:"1px solid "+alpha(C.acc, "20"),borderRadius:9}}>
+          border:"1px solid "+C.acc+"20",borderRadius:9}}>
           {[
             {label:"Critical",val:liveFind.filter(function(f){return f.sev==="Critical";}).length,color:"#EF4545"},
             {label:"High",    val:liveFind.filter(function(f){return f.sev==="High";}).length,    color:"#F5A623"},
@@ -16681,7 +16676,7 @@ function Assets(props) {
   ];
 
   var LAYER_COLORS = {
-    "External":   "#243044",
+    "External":   "#A78BFA",
     "Core Admin": "#3B9EFF",
     "Analytics":  "#F5A623",
     "Finance":    "#F5A623",
@@ -16897,7 +16892,7 @@ function Scoring(props) {
             return (
               <div key={d.id} onClick={function(){setSelDomain(active?null:d);}}
                 style={{background:active?C.dim:C.card,
-                  border:"1px solid "+(active?alpha(C.acc, "40"):C.border),
+                  border:"1px solid "+(active?C.acc+"40":C.border),
                   borderRadius:10, padding:"12px 14px", marginBottom:8,
                   cursor:"pointer", boxShadow:"0 1px 3px rgba(0,0,0,0.06)"}}>
                 <div style={{display:"flex", alignItems:"center", gap:12}}>
@@ -17468,7 +17463,7 @@ function Execution(props) {
                 );
               })}
               {rs.verifying && (
-                <div style={{color:"#243044"}}>
+                <div style={{color:"#A78BFA"}}>
                   Re-running CIS {act.cid} validation check…
                 </div>
               )}
@@ -17609,7 +17604,7 @@ function Execution(props) {
               })}
             </div>
             <div style={{padding:"10px 14px", background:C.faint,
-              border:"1px solid "+alpha(C.acc, "20"), borderRadius:8, marginBottom:14}}>
+              border:"1px solid "+C.acc+"20", borderRadius:8, marginBottom:14}}>
               <div style={{color:C.muted, fontSize:9, fontWeight:700,
                 textTransform:"uppercase", marginBottom:2}}>Projected score lift</div>
               <div style={{color:"#0FBB80", fontSize:13, fontWeight:700}}>
@@ -17689,7 +17684,7 @@ function Execution(props) {
           color="#F5A623"/>
         <StatCard label="Routed"
           value={actions.filter(function(a){return a.status==="routed";}).length}
-          color="#243044"/>
+          color="#A78BFA"/>
         <StatCard label="Resolved"
           value={actions.filter(function(a){return a.status==="complete";}).length}
           color="#0FBB80"/>
@@ -17753,9 +17748,9 @@ function Execution(props) {
           "Data Security","Vendor & Third-Party","Compliance & Regulatory","Other",
         ];
         var CAP_COLORS = {
-          "Identity & Access":"#243044","Endpoint Security":"#3B9EFF",
+          "Identity & Access":"#A78BFA","Endpoint Security":"#3B9EFF",
           "Monitoring & Detection":"#F5A623","Data Security":"#0FBB80",
-          "Vendor & Third-Party":"#EF4545","Compliance & Regulatory":"#243044","Other":C.muted,
+          "Vendor & Third-Party":"#EF4545","Compliance & Regulatory":"#8B5CF6","Other":C.muted,
         };
         var groups = {};
         CAP_ORDER.forEach(function(c){ groups[c] = []; });
@@ -17789,15 +17784,15 @@ function Execution(props) {
                   var hl2  = dl&&dl.act===a.id;
                   return (
                     <div key={a.id} ref={hl2?targetRef:null}
-                      style={{border:"1px solid "+(hl2?"#243044":open?sc+"50":C.border),
+                      style={{border:"1px solid "+(hl2?"#A78BFA":open?sc+"50":C.border),
                         borderRadius:10,overflow:"hidden",
-                        boxShadow:hl2?"0 0 0 3px #24304435":"none",transition:"box-shadow 0.3s"}}>
+                        boxShadow:hl2?"0 0 0 3px #A78BFA35":"none",transition:"box-shadow 0.3s"}}>
                       {hl2&&a.status==="routed"&&(
-                        <div style={{background:"linear-gradient(90deg,#24304418,transparent)",
-                          borderBottom:"1px solid #24304425",padding:"5px 14px",
+                        <div style={{background:"linear-gradient(90deg,#A78BFA18,transparent)",
+                          borderBottom:"1px solid #A78BFA25",padding:"5px 14px",
                           display:"flex",alignItems:"center",gap:8}}>
-                          <span style={{color:"#243044",fontSize:9,fontWeight:800,
-                            background:"#24304420",borderRadius:4,padding:"2px 7px",letterSpacing:0.5}}>
+                          <span style={{color:"#A78BFA",fontSize:9,fontWeight:800,
+                            background:"#A78BFA20",borderRadius:4,padding:"2px 7px",letterSpacing:0.5}}>
                             ✓ ROUTED
                           </span>
                           <span style={{color:C.muted,fontSize:9}}>
@@ -17826,9 +17821,9 @@ function Execution(props) {
                             {a.risk}
                           </span>
                           <span style={{
-                            color:a.status==="routed"?"#243044":a.status==="approved"||a.status==="complete"?"#0FBB80":C.muted,
+                            color:a.status==="routed"?"#A78BFA":a.status==="approved"||a.status==="complete"?"#0FBB80":C.muted,
                             fontSize:9,fontWeight:a.status==="routed"||a.status==="approved"||a.status==="complete"?700:400,
-                            background:a.status==="routed"?"#24304414":a.status==="approved"||a.status==="complete"?"#0FBB8014":"transparent",
+                            background:a.status==="routed"?"#A78BFA14":a.status==="approved"||a.status==="complete"?"#0FBB8014":"transparent",
                             borderRadius:4,padding:a.status==="routed"||a.status==="approved"||a.status==="complete"?"1px 5px":"0"
                           }}>{a.status}</span>
                           <span style={{color:C.muted,fontSize:10}}>{open?"▲":"▼"}</span>
@@ -17903,7 +17898,7 @@ function Execution(props) {
       })()}
 
       <div style={{marginTop:20, padding:"14px 18px", background:C.faint,
-        border:"1px solid "+alpha(C.acc, "20"), borderRadius:10}}>
+        border:"1px solid "+C.acc+"20", borderRadius:10}}>
         <div style={{color:C.acc, fontWeight:700, fontSize:12, marginBottom:4}}>
           Why CyberRx doesn't execute directly
         </div>
@@ -18072,7 +18067,7 @@ function QuickNav(props) {
                         border:"none",padding:"7px 14px",cursor:isCurrent?"default":"pointer",
                         textAlign:"left"}}>
                       <span style={{color:isCurrent?C.acc:C.muted,fontSize:9,fontWeight:700,
-                        background:isCurrent?alpha(C.acc, "20"):C.dim,
+                        background:isCurrent?C.acc+"20":C.dim,
                         borderRadius:3,padding:"1px 5px",flexShrink:0,
                         minWidth:32,textAlign:"center"}}>{item.mod||"—"}</span>
                       <span style={{color:isCurrent?C.acc:C.text,
@@ -18158,12 +18153,12 @@ function Shell(props) {
                     <div key={n.id} onClick={function(){go(n.id);}}
                       style={{display:"flex", alignItems:"center", gap:9,
                         padding:"8px 14px", cursor:"pointer",
-                        background:active?alpha(C.acc, "12"):"transparent",
+                        background:active?C.acc+"12":"transparent",
                         borderLeft:"3px solid "+(active?C.acc:"transparent"),
                         margin:"1px 0"}}
                       onMouseEnter={function(e){
                         if(!active) {
-                          e.currentTarget.style.background = alpha(C.acc, "08");
+                          e.currentTarget.style.background = C.acc+"08";
                           e.currentTarget.style.color = C.acc;
                         }
                       }}
@@ -18252,8 +18247,8 @@ function Shell(props) {
           {/* Sync badge */}
           {isSync ? (
             <div style={{display:"flex", gap:5, alignItems:"center",
-              padding:"4px 10px", background:alpha(C.acc, "12"),
-              border:"1px solid "+alpha(C.acc, "30"), borderRadius:5}}>
+              padding:"4px 10px", background:C.acc+"12",
+              border:"1px solid "+C.acc+"30", borderRadius:5}}>
               <div style={{width:6, height:6, borderRadius:"50%", background:C.acc}}/>
               <span style={{color:C.acc, fontSize:10, fontWeight:700}}>Syncing</span>
             </div>
@@ -18451,7 +18446,7 @@ function QuickVoicePicker() {
     setPrevState("playing");
   }
 
-  var COLORS={browser:C.acc, openai:"#0FBB80", elevenlabs:"#243044"};
+  var COLORS={browser:C.acc, openai:"#0FBB80", elevenlabs:"#A78BFA"};
   var ac = COLORS[provider]||C.acc;
   var hasKey = provider==="elevenlabs"?!!elKey : provider==="openai"?oaiKey.startsWith("sk-") : true;
 
@@ -18581,11 +18576,11 @@ function QuickVoicePicker() {
                   var act=model===v.id;
                   return (
                     <button key={v.id} onClick={function(){pickModel(v.id);}}
-                      style={{border:"1px solid "+(act?"#243044":C.border),
-                        background:act?"#24304418":"transparent",
+                      style={{border:"1px solid "+(act?"#A78BFA":C.border),
+                        background:act?"#A78BFA18":"transparent",
                         borderRadius:7,padding:"6px 8px",cursor:"pointer",
                         display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <span style={{fontSize:10,fontWeight:act?700:500,color:act?"#243044":C.text}}>{v.id}</span>
+                      <span style={{fontSize:10,fontWeight:act?700:500,color:act?"#A78BFA":C.text}}>{v.id}</span>
                       <span style={{fontSize:8,color:C.muted}}>{v.d}</span>
                     </button>
                   );
@@ -18599,10 +18594,10 @@ function QuickVoicePicker() {
                   LS.setItem("cx_el_key",k);
                 }}
                 style={{width:"100%",background:C.bg,
-                  border:"1.5px solid "+(elKey?"#243044":C.border),
+                  border:"1.5px solid "+(elKey?"#A78BFA":C.border),
                   borderRadius:7,padding:"7px 9px",fontSize:10,color:C.text,
                   outline:"none",boxSizing:"border-box"}}/>
-              {elKey&&<div style={{color:"#243044",fontSize:9,marginTop:4}}>✓ Key active</div>}
+              {elKey&&<div style={{color:"#A78BFA",fontSize:9,marginTop:4}}>✓ Key active</div>}
             </div>
           )}
 
@@ -18671,7 +18666,7 @@ function WelcomePage(props) {
           <button onClick={setupDone?onGoToDashboard:onStartSetup}
             style={{background:C.acc,border:"none",color:"#fff",borderRadius:8,
               padding:"8px 20px",cursor:"pointer",fontSize:13,fontWeight:700,
-              boxShadow:"0 0 16px "+alpha(C.acc, "40")}}>
+              boxShadow:"0 0 16px "+C.acc+"40"}}>
             {setupDone?"Go to Dashboard →":"Start Assessment →"}
           </button>
         </div>
@@ -18681,8 +18676,8 @@ function WelcomePage(props) {
       <div style={{textAlign:"center",padding:"56px 24px 48px",
         maxWidth:720,margin:"0 auto"}}>
         <div style={{display:"inline-flex",alignItems:"center",gap:8,
-          background:"linear-gradient(90deg,"+alpha(C.acc,"20")+","+alpha(C.acc,"14")+")",
-          border:"1px solid "+alpha(C.acc, "35"),borderRadius:20,
+          background:"linear-gradient(90deg,"+C.acc+"20,#A78BFA20)",
+          border:"1px solid "+C.acc+"35",borderRadius:20,
           padding:"5px 16px",marginBottom:22}}>
           <div style={{width:6,height:6,borderRadius:"50%",background:C.acc,
             boxShadow:"0 0 8px "+C.acc}}/>
@@ -18693,7 +18688,7 @@ function WelcomePage(props) {
         <h1 style={{color:C.text,fontSize:46,fontWeight:900,lineHeight:1.08,
           margin:"0 0 18px",letterSpacing:"-0.02em"}}>
           Translate cyber technical data into<br/>
-          <span style={{background:"linear-gradient(90deg,"+C.acc+",#243044)",
+          <span style={{background:"linear-gradient(90deg,"+C.acc+",#A78BFA)",
             WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",
             backgroundClip:"text"}}>business impact so executives can protect their organization.</span>
         </h1>
@@ -18732,7 +18727,7 @@ function WelcomePage(props) {
               {n:"1",icon:"🏢",color:"#3B9EFF",
                title:"Set Up Your Organization",
                desc:"Answer a few foundation questions — your industry, size, revenue, and insurance details."},
-              {n:"2",icon:"🗄",color:"#243044",
+              {n:"2",icon:"🗄",color:"#A78BFA",
                title:"Import Your Applications",
                desc:"Import your business application inventory from your CMDB, a CSV/Excel export, or via REST API. CyberRx maps each app to its business process automatically."},
               {n:"3",icon:"🔌",color:"#F5A623",
@@ -18744,7 +18739,7 @@ function WelcomePage(props) {
               {n:"5",icon:"⚡",color:"#0FBB80",
                title:"Launch Risk Intelligence",
                desc:"CyberRx analyzes your environment, tests every control against live evidence, and populates your compliance reports and financial exposure models."},
-              {n:"6",icon:"📊",color:"#243044",
+              {n:"6",icon:"📊",color:"#8B5CF6",
                title:"View Your Results",
                desc:"Your CISO, CRO, CFO, and Board dashboards are live. Every finding is traced to its business process, dollar impact, and regulatory consequence."},
             ].map(function(step, i){
@@ -18797,7 +18792,7 @@ function WelcomePage(props) {
                   {icon:"🛡",cat:"Endpoint Security",
                    ex:"EDR · XDR · AV",color:"#3B9EFF"},
                   {icon:"🔑",cat:"Identity & Access",
-                   ex:"MFA · SSO · PAM",color:"#243044"},
+                   ex:"MFA · SSO · PAM",color:"#A78BFA"},
                   {icon:"📡",cat:"SIEM & Monitoring",
                    ex:"Log aggregation · Alerting",color:"#F5A623"},
                   {icon:"🗄",cat:"CMDB & Asset Mgmt",
@@ -18807,7 +18802,7 @@ function WelcomePage(props) {
                   {icon:"☁",cat:"Cloud Security",
                    ex:"CSPM · CWPP · CIEM",color:"#0FBB80"},
                   {icon:"📋",cat:"GRC & Ticketing",
-                   ex:"Risk register · Change mgmt",color:"#243044"},
+                   ex:"Risk register · Change mgmt",color:"#8B5CF6"},
                   {icon:"📧",cat:"Email & Phishing",
                    ex:"Simulation · Gateway · DLP",color:"#EC4899"},
                 ].map(function(src){
@@ -18843,9 +18838,9 @@ function WelcomePage(props) {
               {/* Flow arrows + engine */}
               <div style={{color:C.acc,fontSize:20,marginBottom:6}}>&#x21e8;</div>
 
-              <div style={{background:"linear-gradient(135deg,"+C.acc+",#243044)",
+              <div style={{background:"linear-gradient(135deg,"+C.acc+",#A78BFA)",
                 borderRadius:16,padding:"20px 16px",textAlign:"center",
-                boxShadow:"0 0 40px "+alpha(C.acc, "35"),marginBottom:6}}>
+                boxShadow:"0 0 40px "+C.acc+"35",marginBottom:6}}>
                 <div style={{width:52,height:52,borderRadius:14,
                   background:"linear-gradient(135deg,#00C4A0,#0090F0)",
                   display:"flex",alignItems:"center",justifyContent:"center",
@@ -18863,7 +18858,7 @@ function WelcomePage(props) {
 
               <div style={{marginTop:10,textAlign:"center"}}>
                 <div style={{color:C.acc,fontSize:9,fontWeight:600,
-                  background:alpha(C.acc, "12"),border:"1px solid "+alpha(C.acc, "30"),
+                  background:C.acc+"12",border:"1px solid "+C.acc+"30",
                   borderRadius:6,padding:"4px 10px",lineHeight:1.5}}>
                   Evidence-based<br/>not self-attestation
                 </div>
@@ -18888,13 +18883,13 @@ function WelcomePage(props) {
                   {fw:"CIS Controls v8",             ref:"HHS IG2 Benchmark",
                    badge:"All industries",color:"#3B9EFF"},
                   {fw:"NAIC Model Law",              ref:"24+ States",
-                   badge:"All industries",color:"#243044"},
+                   badge:"All industries",color:"#A78BFA"},
                   {fw:"ISO/IEC 27001:2022",          ref:"BAA & DOI Standard",
                    badge:"All industries",color:"#0FBB80"},
                   {fw:"PCI DSS v4.0",               ref:"Card Payments",
                    badge:"If Applicable",color:"#0891B2"},
                   {fw:"CMS 42 CFR §422/§423",ref:"MA / Part D",
-                   badge:"If Applicable",color:"#243044"},
+                   badge:"If Applicable",color:"#8B5CF6"},
                 ].map(function(fw){
                   var req = fw.badge === "All industries";
                   return (
@@ -18931,7 +18926,7 @@ function WelcomePage(props) {
       {/* ── CTA ── */}
       <div style={{flex:1,display:"flex",flexDirection:"column",
         alignItems:"center",justifyContent:"center",
-        background:"linear-gradient(135deg,"+alpha(C.acc,"10")+","+alpha(C.acc,"06")+","+C.bg+")",
+        background:"linear-gradient(135deg,"+C.acc+"10,#A78BFA08,"+C.bg+")",
         borderTop:"1px solid "+C.border,padding:"56px 24px",textAlign:"center"}}>
         <h2 style={{color:C.text,fontSize:28,fontWeight:900,
           margin:"0 0 14px",letterSpacing:"-0.02em"}}>
@@ -18950,7 +18945,7 @@ function WelcomePage(props) {
         <button onClick={setupDone?onGoToDashboard:onStartSetup}
           style={{background:C.acc,border:"none",color:"#fff",borderRadius:12,
             padding:"16px 52px",cursor:"pointer",fontSize:16,fontWeight:800,
-            boxShadow:"0 4px 28px "+alpha(C.acc, "50"),letterSpacing:"-0.01em"}}>
+            boxShadow:"0 4px 28px "+C.acc+"50",letterSpacing:"-0.01em"}}>
           {setupDone?
             "Go to CISO Dashboard →":
             "Start Your Assessment →"
@@ -20076,7 +20071,7 @@ function SetupBot(props) {
       background:C.bg,borderRadius:12,overflow:'hidden',border:'1px solid '+C.border}}>
 
       {/* Header */}
-      <div style={{background:'linear-gradient(135deg,'+C.acc+',#243044)',
+      <div style={{background:'linear-gradient(135deg,'+C.acc+',#A78BFA)',
         padding:'11px 16px',display:'flex',alignItems:'center',gap:10}}>
         {qIdx>0&&(
           <button onClick={function(){
@@ -20147,14 +20142,14 @@ function SetupBot(props) {
               justifyContent:bot?'flex-start':'flex-end',alignItems:'flex-end'}}>
               {bot&&(
                 <div style={{width:28,height:28,borderRadius:'50%',flexShrink:0,
-                  background:'linear-gradient(135deg,'+C.acc+',#243044)',
+                  background:'linear-gradient(135deg,'+C.acc+',#A78BFA)',
                   display:'flex',alignItems:'center',justifyContent:'center',
                   fontWeight:800,fontSize:12,color:'#fff'}}>
                   {agentName[0]}
                 </div>
               )}
               <div style={{
-                background:bot?C.panel:'linear-gradient(135deg,'+C.acc+',#243044)',
+                background:bot?C.panel:'linear-gradient(135deg,'+C.acc+',#A78BFA)',
                 color:bot?C.text:'#fff',
                 border:bot?'1px solid '+C.border:'none',
                 borderRadius:bot?'12px 12px 12px 2px':'12px 12px 2px 12px',
@@ -20164,7 +20159,7 @@ function SetupBot(props) {
               </div>
               {!bot&&(
                 <div style={{width:28,height:28,borderRadius:'50%',flexShrink:0,
-                  background:alpha(C.acc, '25'),border:'1px solid '+alpha(C.acc, '40'),
+                  background:C.acc+'25',border:'1px solid '+C.acc+'40',
                   display:'flex',alignItems:'center',justifyContent:'center',
                   fontSize:11}}>{'\uD83D\uDC64'}</div>
               )}
@@ -20174,7 +20169,7 @@ function SetupBot(props) {
         {typing&&(
           <div style={{display:'flex',gap:8,alignItems:'flex-end'}}>
             <div style={{width:28,height:28,borderRadius:'50%',flexShrink:0,
-              background:'linear-gradient(135deg,'+C.acc+',#243044)',
+              background:'linear-gradient(135deg,'+C.acc+',#A78BFA)',
               display:'flex',alignItems:'center',justifyContent:'center',
               fontWeight:800,fontSize:12,color:'#fff'}}>{agentName[0]}</div>
             <div style={{background:C.panel,border:'1px solid '+C.border,
@@ -20251,7 +20246,7 @@ function SetupBot(props) {
                     }
                   }}
                   placeholder='Type to search carriers...'
-                  style={{flex:1,background:C.card,border:'1px solid '+alpha(C.acc, '40'),
+                  style={{flex:1,background:C.card,border:'1px solid '+C.acc+'40',
                     borderRadius:8,padding:'8px 12px',color:C.text,fontSize:12,outline:'none'}}/>
                 <button onClick={function(){
                     if(selectedIdx>=0 && suggest[selectedIdx]){
@@ -20266,7 +20261,7 @@ function SetupBot(props) {
                 </button>
               </div>
               {suggest.length>0&&(
-                <div style={{background:C.card,border:'1px solid '+alpha(C.acc, '30'),
+                <div style={{background:C.card,border:'1px solid '+C.acc+'30',
                   borderRadius:8,overflow:'hidden',marginBottom:7}}>
                   {suggest.map(function(s, idx){
                     var isSelected = idx === selectedIdx;
@@ -20275,8 +20270,8 @@ function SetupBot(props) {
                         onClick={function(){pick(s);setSuggest([]);setInput('');setSelectedIdx(-1);}}
                         style={{padding:'8px 12px',cursor:'pointer',fontSize:11,color:C.text,
                           borderBottom:'1px solid '+C.border,
-                          background: isSelected ? alpha(C.acc, '14') : 'transparent'}}
-                        onMouseEnter={function(e){e.currentTarget.style.background=alpha(C.acc, '14');setSelectedIdx(idx);}}
+                          background: isSelected ? C.acc+'14' : 'transparent'}}
+                        onMouseEnter={function(e){e.currentTarget.style.background=C.acc+'14';setSelectedIdx(idx);}}
                         onMouseLeave={function(e){e.currentTarget.style.background='transparent';}}>
                         {s}
                       </div>
@@ -20290,7 +20285,7 @@ function SetupBot(props) {
                     <button key={ins} onClick={function(){pick(ins);}}
                       style={{background:C.dim,border:'1px solid '+C.border,
                         color:C.text,borderRadius:6,padding:'5px 10px',cursor:'pointer',fontSize:10}}
-                      onMouseEnter={function(e){e.currentTarget.style.background=alpha(C.acc, '18');e.currentTarget.style.borderColor=C.acc;}}
+                      onMouseEnter={function(e){e.currentTarget.style.background=C.acc+'18';e.currentTarget.style.borderColor=C.acc;}}
                       onMouseLeave={function(e){e.currentTarget.style.background=C.dim;e.currentTarget.style.borderColor=C.border;}}>
                       {ins}
                     </button>
@@ -20301,7 +20296,7 @@ function SetupBot(props) {
           )}
           {curQ.type==='pending'&&pendingAsk&&pendingAsk.kind==='upload'&&(
             <div style={{display:'flex',gap:7,alignItems:'center'}}>
-              <label style={{flex:1,background:C.card,border:'1px dashed '+alpha(C.acc, '60'),borderRadius:8,
+              <label style={{flex:1,background:C.card,border:'1px dashed '+C.acc+'60',borderRadius:8,
                 padding:'9px 12px',color:C.acc,fontSize:12,cursor:'pointer',textAlign:'center',fontWeight:600}}>
                 ⬆ Upload {pendingAsk.doc}
                 <input type='file' style={{display:'none'}}
@@ -20318,7 +20313,7 @@ function SetupBot(props) {
                 onChange={function(e){ setInput(e.target.value); }}
                 onKeyDown={function(e){ if(e.key==='Enter'&&input.trim()){ resolvePending(input.trim()); } }}
                 placeholder={pendingAsk.ask}
-                style={{flex:1,background:C.card,border:'1px solid '+alpha(C.acc, '40'),
+                style={{flex:1,background:C.card,border:'1px solid '+C.acc+'40',
                   borderRadius:8,padding:'9px 12px',color:C.text,fontSize:12,outline:'none'}}/>
               <button onClick={function(){ resolvePending(input.trim()||null); }}
                 style={{background:C.acc,border:'none',color:'#fff',borderRadius:8,
@@ -20332,7 +20327,7 @@ function SetupBot(props) {
                   onChange={function(e){ setInput(e.target.value.replace(/[^0-9.]/g,'')); }}
                   onKeyDown={function(e){ if(e.key==='Enter'&&input.trim()){ pick(input.trim()); setInput(''); } }}
                   placeholder={curQ.placeholder||'Enter a number'}
-                  style={{flex:1,background:C.card,border:'1px solid '+alpha(C.acc, '40'),
+                  style={{flex:1,background:C.card,border:'1px solid '+C.acc+'40',
                     borderRadius:8,padding:'9px 12px',color:C.text,fontSize:12,outline:'none'}}/>
                 <button onClick={function(){ if(input.trim()){ pick(input.trim()); setInput(''); } }}
                   style={{background:C.acc,border:'none',color:'#fff',borderRadius:8,
@@ -20351,7 +20346,7 @@ function SetupBot(props) {
                     <span style={{width:110,fontSize:12,color:C.text}}>{label}</span>
                     <input value={envMix[key]==null?'':envMix[key]} inputMode='numeric'
                       onChange={function(ev){ var v=ev.target.value.replace(/[^0-9]/g,''); var n=Object.assign({},envMix); if(v===''){delete n[key];}else{n[key]=Math.min(100,parseInt(v,10));} setEnvMix(n); }}
-                      placeholder='0' style={{width:70,background:C.card,border:'1px solid '+alpha(C.acc, '40'),borderRadius:8,padding:'7px 10px',color:C.text,fontSize:12,outline:'none'}}/>
+                      placeholder='0' style={{width:70,background:C.card,border:'1px solid '+C.acc+'40',borderRadius:8,padding:'7px 10px',color:C.text,fontSize:12,outline:'none'}}/>
                     <span style={{fontSize:12,color:C.muted}}>%</span>
                   </div>
                 );
@@ -20387,7 +20382,7 @@ function SetupBot(props) {
                     }
                   }}
                   placeholder={curQ.placeholder||'Type your answer...'}
-                  style={{flex:1,background:C.card,border:'1px solid '+alpha(C.acc, '40'),
+                  style={{flex:1,background:C.card,border:'1px solid '+C.acc+'40',
                     borderRadius:8,padding:'9px 12px',color:C.text,fontSize:12,outline:'none'}}/>
                 <button onClick={function(){
                     if(selectedIdx>=0 && suggest[selectedIdx]){
@@ -20403,7 +20398,7 @@ function SetupBot(props) {
               </div>
               {suggest.length>0&&(
                 <div style={{position:'absolute',bottom:'100%',left:0,right:52,
-                  background:C.card,border:'1px solid '+alpha(C.acc, '40'),
+                  background:C.card,border:'1px solid '+C.acc+'40',
                   borderRadius:8,marginBottom:3,maxHeight:300,overflowY:'auto',
                   boxShadow:'0 -4px 16px rgba(0,0,0,0.12)',zIndex:10}}>
                   {suggest.map(function(s, idx){
@@ -20412,8 +20407,8 @@ function SetupBot(props) {
                       <div key={s} onClick={function(){pick(s);setSuggest([]);setInput('');setSelectedIdx(-1);}}
                         style={{padding:'8px 12px',cursor:'pointer',fontSize:11,color:C.text,
                           borderBottom:'1px solid '+C.border,
-                          background: isSelected ? alpha(C.acc, '12') : 'transparent'}}
-                        onMouseEnter={function(e){e.currentTarget.style.background=alpha(C.acc, '12');setSelectedIdx(idx);}}
+                          background: isSelected ? C.acc+'12' : 'transparent'}}
+                        onMouseEnter={function(e){e.currentTarget.style.background=C.acc+'12';setSelectedIdx(idx);}}
                         onMouseLeave={function(e){if(idx!==selectedIdx){e.currentTarget.style.background='transparent';}}}>
                         {s}
                       </div>
@@ -20443,8 +20438,8 @@ function SetupBot(props) {
                         accRef.current[curQ.id]=cur;
                         setAnswers(Object.assign({},accRef.current));
                       }}
-                      style={{background:picked?alpha(C.acc, '20'):C.card,
-                        border:'1px solid '+(picked?C.acc:alpha(C.acc, '40')),
+                      style={{background:picked?C.acc+'20':C.card,
+                        border:'1px solid '+(picked?C.acc:C.acc+'40'),
                         color:picked?C.acc:C.text,
                         borderRadius:20,padding:'7px 14px',cursor:'pointer',fontSize:11}}>
                       {picked?'✓ ':''}{c}
@@ -20478,10 +20473,10 @@ function SetupBot(props) {
               {(curQ.choices||[]).map(function(c){
                 return (
                   <button key={c} onClick={function(){pick(c);}}
-                    style={{background:C.card,border:'1px solid '+alpha(C.acc, '40'),color:C.text,
+                    style={{background:C.card,border:'1px solid '+C.acc+'40',color:C.text,
                       borderRadius:20,padding:'7px 14px',cursor:'pointer',fontSize:11}}
-                    onMouseEnter={function(e){e.currentTarget.style.background=alpha(C.acc, '18');e.currentTarget.style.borderColor=C.acc;}}
-                    onMouseLeave={function(e){e.currentTarget.style.background=C.card;e.currentTarget.style.borderColor=alpha(C.acc, '40');}}>
+                    onMouseEnter={function(e){e.currentTarget.style.background=C.acc+'18';e.currentTarget.style.borderColor=C.acc;}}
+                    onMouseLeave={function(e){e.currentTarget.style.background=C.card;e.currentTarget.style.borderColor=C.acc+'40';}}>
                     {c}
                   </button>
                 );
@@ -20521,7 +20516,7 @@ function SetupBot(props) {
           {curQ.type==='dropdown'&&(
             <select value={input}
               onChange={function(e){if(e.target.value){pick(e.target.value);}}}
-              style={{width:'100%',background:C.card,border:'1px solid '+alpha(C.acc, '40'),
+              style={{width:'100%',background:C.card,border:'1px solid '+C.acc+'40',
                 borderRadius:8,padding:'9px 12px',color:C.text,
                 fontSize:12,outline:'none',cursor:'pointer'}}>
               <option value=''>Select your state...</option>
@@ -20535,7 +20530,7 @@ function SetupBot(props) {
               {QS.slice(0,-1).map(function(q,i){
                 return <div key={i} style={{height:4,borderRadius:2,transition:'all 0.25s',
                   width:i===qIdx?16:4,
-                  background:i<qIdx?C.acc:i===qIdx?'linear-gradient(90deg,'+C.acc+',#243044)':C.border}}/>;
+                  background:i<qIdx?C.acc:i===qIdx?'linear-gradient(90deg,'+C.acc+',#A78BFA)':C.border}}/>;
               })}
             </div>
           )}
@@ -20939,7 +20934,7 @@ function DocDash(props) {
                       {selDocData.frameworks.map(function(fw){
                         return (
                           <span key={fw} style={{color:C.acc,fontSize:8,fontWeight:600,
-                            background:alpha(C.acc, "12"),borderRadius:3,padding:"2px 6px"}}>
+                            background:C.acc+"12",borderRadius:3,padding:"2px 6px"}}>
                             {fw.length>22?fw.substring(0,20)+"...":fw}
                           </span>
                         );
@@ -21051,7 +21046,7 @@ function BusinessMapDash(props) {
       ]
     },
     {
-      id:"care_mgmt", name:"Care Management", icon:"💊", color:"#243044",
+      id:"care_mgmt", name:"Care Management", icon:"💊", color:"#A78BFA",
       desc:"Utilization management, disease management, behavioral health",
       processes:[
         {
@@ -21094,7 +21089,7 @@ function BusinessMapDash(props) {
       ]
     },
     {
-      id:"corp_svcs", name:"Corporate Services",  icon:"🏢", color:"#243044",
+      id:"corp_svcs", name:"Corporate Services",  icon:"🏢", color:"#8B5CF6",
       desc:"Finance, actuarial, compliance, IT security",
       processes:[
         {
@@ -21321,7 +21316,7 @@ function BusinessMapDash(props) {
                       {orgText(f.wrong||"",orgName,orgExtras)}
                     </div>
                     {f.fix&&(
-                      <div style={{marginTop:8,background:alpha(C.acc, "08"),borderRadius:6,
+                      <div style={{marginTop:8,background:C.acc+"08",borderRadius:6,
                         padding:"8px 10px",fontSize:10,color:C.text}}>
                         <span style={{color:C.acc,fontWeight:700}}>Remediation: </span>{orgText(f.fix||"",orgName,orgExtras)}
                       </div>
@@ -21519,7 +21514,7 @@ function BusinessMapDash(props) {
         {!selBiz&&(
           <div>
             <div style={{color:C.muted,fontSize:11,marginBottom:14,
-              background:alpha(C.acc, "08"),border:"1px solid "+alpha(C.acc, "20"),
+              background:C.acc+"08",border:"1px solid "+C.acc+"20",
               borderRadius:8,padding:"10px 14px"}}>
               Click any business line to drill into its processes, applications, and regulatory status.
             </div>
@@ -21640,7 +21635,7 @@ function BusinessMapDash(props) {
                             <tr key={biz.id+proc.id+app.name}
                               onClick={function(){setSelBiz(biz.id);setSelProc(proc.id);setSelApp(app.name);}}
                               style={{cursor:"pointer",borderTop:"1px solid "+C.border}}
-                              onMouseEnter={function(e){e.currentTarget.style.background=alpha(C.acc, "08");}}
+                              onMouseEnter={function(e){e.currentTarget.style.background=C.acc+"08";}}
                               onMouseLeave={function(e){e.currentTarget.style.background="transparent";}}>
                               <td style={{padding:"5px 8px",color:C.text,fontWeight:600}}>
                                 {app.name}
@@ -21810,7 +21805,7 @@ var SEV_CONFIG = {
   critical: { bg:"#EF444420", border:"#EF4444", text:"#F87171", label:"CRITICAL" },
   high:     { bg:"#F59E0B20", border:"#F59E0B", text:"#FCD34D", label:"HIGH" },
   medium:   { bg:"#3B82F620", border:"#3B82F6", text:"#93C5FD", label:"MEDIUM" },
-  info:     { bg:"#24304420", border:"#243044", text:"#C4B5FD", label:"TRACKING" },
+  info:     { bg:"#8B5CF620", border:"#8B5CF6", text:"#C4B5FD", label:"TRACKING" },
   resolved: { bg:"#10B98120", border:"#10B981", text:"#6EE7B7", label:"RESOLVED" },
 };
 
@@ -21876,7 +21871,7 @@ function CyberRxAPIAdapter(props) {
         </div>
         <div style={{display:"flex",gap:8}}>
           {connectedCount > 0&&(
-            <div style={{background:C.accDim,border:"1px solid "+alpha(C.acc, "40"),
+            <div style={{background:C.accDim,border:"1px solid "+C.acc+"40",
               borderRadius:8,padding:"5px 12px",fontSize:11,color:C.acc}}>
               {connectedCount} source{connectedCount>1?"s":""} connected
               &nbsp;&middot;&nbsp;{totalFindings} findings normalized
@@ -22102,7 +22097,7 @@ function CyberRxAPIAdapter(props) {
                     return (
                       <div key={f.id}
                         style={{background:C.card,
-                          border:"1px solid "+(isOpen?alpha(C.acc, "50"):C.border),
+                          border:"1px solid "+(isOpen?C.acc+"50":C.border),
                           borderRadius:10,marginBottom:10,cursor:"pointer",
                           transition:"border 0.15s"}}
                         onClick={function(){
@@ -22284,7 +22279,7 @@ function CyberRxAPIAdapter(props) {
                             return (
                               <div key={f.id} style={{display:"flex",
                                 alignItems:"center",gap:10,padding:"6px 0",
-                                borderBottom:"1px solid "+alpha(C.border, "40"),fontSize:11}}>
+                                borderBottom:"1px solid "+C.border+"40",fontSize:11}}>
                                 <span style={{color:sev.text,fontSize:9}}>&#9679;</span>
                                 <span style={{color:C.muted}}>{f.source}</span>
                                 <span style={{color:C.text,flex:1}}>{f.findingType}</span>
@@ -22410,19 +22405,19 @@ function ProcessFlowDash(props) {
 
   // Infrastructure mapping to processes
   var _INFRA_STATIC = [
-    {id:"sailpoint", name:"SailPoint IGA",    cat:"Identity",   color:"#243044", procs:["enroll","claims","compliance","it_sec"]},
-    {id:"azuread",   name:"Azure AD",          cat:"Identity",   color:"#243044", procs:["enroll","finance","compliance","it_sec"]},
-    {id:"cyberark",  name:"CyberArk PAM",      cat:"Identity",   color:"#243044", procs:["finance","it_sec"]},
+    {id:"sailpoint", name:"SailPoint IGA",    cat:"Identity",   color:"#A78BFA", procs:["enroll","claims","compliance","it_sec"]},
+    {id:"azuread",   name:"Azure AD",          cat:"Identity",   color:"#A78BFA", procs:["enroll","finance","compliance","it_sec"]},
+    {id:"cyberark",  name:"CyberArk PAM",      cat:"Identity",   color:"#A78BFA", procs:["finance","it_sec"]},
     {id:"crowdstrike",name:"CrowdStrike",       cat:"Endpoint",   color:"#3B9EFF", procs:["claims","care","it_sec"]},
     {id:"splunk",    name:"Splunk SIEM",        cat:"Monitoring", color:"#F5A623", procs:["claims","compliance","it_sec"]},
     {id:"paloalto",  name:"Palo Alto NGFW",     cat:"Network",    color:"#0FBB80", procs:["provider","member_svc","it_sec"]},
     {id:"healthedge",name:"HealthEdge",         cat:"Application",color:"#EF4545", procs:["claims"]},
-    {id:"cotiviti",  name:"Cotiviti Gateway",   cat:"Vendor",     color:"#243044", procs:["claims"]},
-    {id:"cohere",    name:"Cohere Health",       cat:"Vendor",     color:"#243044", procs:["care"]},
+    {id:"cotiviti",  name:"Cotiviti Gateway",   cat:"Vendor",     color:"#8B5CF6", procs:["claims"]},
+    {id:"cohere",    name:"Cohere Health",       cat:"Vendor",     color:"#8B5CF6", procs:["care"]},
     {id:"kyruus",    name:"Kyruus ProviderMatch",cat:"Application",color:"#EF4545", procs:["provider"]},
     {id:"oracle",    name:"Oracle ERP",          cat:"Application",color:"#EF4545", procs:["provider","finance"]},
     {id:"genesys",   name:"Genesys Cloud",       cat:"Application",color:"#EF4545", procs:["member_svc"]},
-    {id:"inovalon",  name:"Inovalon",            cat:"Vendor",     color:"#243044", procs:["compliance"]},
+    {id:"inovalon",  name:"Inovalon",            cat:"Vendor",     color:"#8B5CF6", procs:["compliance"]},
     {id:"um_wb",     name:"UM Workbench",         cat:"Application",color:"#EF4545", procs:["care","compliance"]},
   ];
   // Inject any connected ITSM tools as "ITSM" category nodes
@@ -22570,8 +22565,8 @@ function ProcessFlowDash(props) {
   function InfraView() {
     var cats = ["Identity","Endpoint","Monitoring","Network","Application","Vendor","ITSM"];
     var catColors = {
-      "Identity":"#243044","Endpoint":"#3B9EFF","Monitoring":"#F5A623",
-      "Network":"#0FBB80","Application":"#EF4545","Vendor":"#243044","ITSM":"#0891B2",
+      "Identity":"#A78BFA","Endpoint":"#3B9EFF","Monitoring":"#F5A623",
+      "Network":"#0FBB80","Application":"#EF4545","Vendor":"#8B5CF6","ITSM":"#0891B2",
     };
     return (
       <div>
@@ -22760,7 +22755,7 @@ function ProcessFlowDash(props) {
           gap:8,marginBottom:18}}>
           {[
             {label:"Processes Mapped", val:PROC_FLOW.length, color:C.acc},
-            {label:"Applications",     val:INFRA_NODES.length, color:"#243044"},
+            {label:"Applications",     val:INFRA_NODES.length, color:"#A78BFA"},
             {label:"Attack Vectors",   val:PROC_FLOW.reduce(function(s,p){return s+p.attackVectors.length;},0), color:"#EF4545"},
             {label:"At-Risk Processes",val:PROC_FLOW.filter(function(p){return p.score<80;}).length, color:"#F5A623"},
           ].map(function(s){
@@ -23391,14 +23386,14 @@ function BrianaBar(props) {
   if (!brianaOn && dismissed) { return null; }
 
   return (
-    <div style={{background:"linear-gradient(135deg,"+alpha(C.acc,"0C")+","+alpha(C.acc,"08")+")",
-      border:"1px solid "+alpha(C.acc, "25"),borderRadius:10,
+    <div style={{background:"linear-gradient(135deg,"+C.acc+"0C,#A78BFA08)",
+      border:"1px solid "+C.acc+"25",borderRadius:10,
       padding:"10px 14px",marginBottom:14,
       display:"flex",gap:10,alignItems:"flex-start"}}>
 
       {/* Avatar */}
       <div style={{width:34,height:34,borderRadius:"50%",flexShrink:0,
-        background:"linear-gradient(135deg,"+C.acc+",#243044)",
+        background:"linear-gradient(135deg,"+C.acc+",#A78BFA)",
         display:"flex",alignItems:"center",justifyContent:"center",
         fontWeight:800,fontSize:14,color:"#fff",position:"relative"}}>
         B
@@ -23452,14 +23447,14 @@ function BrianaBar(props) {
         <button onClick={function(){setShowVoicePicker(!showVoicePicker);}}
           title="Change voice — Browser · OpenAI · ElevenLabs"
           style={{
-            background:showVoicePicker?alpha(C.acc, "25"):
-              voiceProvider==="elevenlabs"&&elKey?"#24304415":
+            background:showVoicePicker?C.acc+"25":
+              voiceProvider==="elevenlabs"&&elKey?"#A78BFA15":
               voiceProvider==="openai"&&ttsKey?"#0FBB8015":C.faint||C.bg,
             border:"1.5px solid "+(showVoicePicker?C.acc:
-              voiceProvider==="elevenlabs"&&elKey?"#243044":
+              voiceProvider==="elevenlabs"&&elKey?"#A78BFA":
               voiceProvider==="openai"&&ttsKey?"#0FBB80":C.border),
             color:showVoicePicker?C.acc:
-              voiceProvider==="elevenlabs"&&elKey?"#243044":
+              voiceProvider==="elevenlabs"&&elKey?"#A78BFA":
               voiceProvider==="openai"&&ttsKey?"#0FBB80":C.text,
             borderRadius:8,padding:"5px 11px",cursor:"pointer",
             fontSize:10,fontWeight:700,display:"flex",alignItems:"center",gap:5,
@@ -23492,7 +23487,7 @@ function BrianaBar(props) {
                   setVoiceProvider(p.id);
                   if(window.localStorage){window.localStorage.setItem("cx_voice_provider",p.id);}
                 }} style={{flex:1,border:"1px solid "+(act?C.acc:C.border),
-                  background:act?alpha(C.acc, "18"):"transparent",
+                  background:act?C.acc+"18":"transparent",
                   borderRadius:7,padding:"5px 0",cursor:"pointer",textAlign:"center"}}>
                   <div style={{fontSize:10,fontWeight:700,color:act?C.acc:C.text}}>{p.label}</div>
                   <div style={{fontSize:8,color:C.muted}}>{p.sub}</div>
@@ -23551,7 +23546,7 @@ function BrianaBar(props) {
                       setVoiceModel(v.id);
                       if(window.localStorage){window.localStorage.setItem("cx_voice_model",v.id);}
                     }} style={{border:"1px solid "+(act?C.acc:C.border),
-                      background:act?alpha(C.acc, "18"):"transparent",
+                      background:act?C.acc+"18":"transparent",
                       borderRadius:7,padding:"6px 4px",cursor:"pointer",textAlign:"center"}}>
                       <div style={{fontSize:10,fontWeight:act?700:500,color:act?C.acc:C.text}}>{v.label}</div>
                       <div style={{fontSize:8,color:C.muted,marginTop:1}}>{v.desc}</div>
@@ -23602,11 +23597,11 @@ function BrianaBar(props) {
                     <button key={v.id} onClick={function(){
                       setVoiceModel(v.id);
                       if(window.localStorage){window.localStorage.setItem("cx_voice_model",v.id);}
-                    }} style={{border:"1px solid "+(act?"#243044":C.border),
-                      background:act?"#24304418":"transparent",
+                    }} style={{border:"1px solid "+(act?"#A78BFA":C.border),
+                      background:act?"#A78BFA18":"transparent",
                       borderRadius:7,padding:"6px 8px",cursor:"pointer",
                       textAlign:"left",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <span style={{fontSize:10,fontWeight:act?700:500,color:act?"#243044":C.text}}>{v.id}</span>
+                      <span style={{fontSize:10,fontWeight:act?700:500,color:act?"#A78BFA":C.text}}>{v.id}</span>
                       <span style={{fontSize:8,color:C.muted}}>{v.desc}</span>
                     </button>
                   );
@@ -23615,7 +23610,7 @@ function BrianaBar(props) {
               <div style={{fontSize:9,color:C.muted,marginBottom:5}}>ElevenLabs API key</div>
               <div style={{display:"flex",gap:5}}>
                 <input type="password" placeholder="el-..." id="cx-el-input" defaultValue={elKey}
-                  style={{flex:1,background:C.bg,border:"1px solid "+(elKey?"#243044":C.border),
+                  style={{flex:1,background:C.bg,border:"1px solid "+(elKey?"#A78BFA":C.border),
                     borderRadius:6,padding:"5px 8px",fontSize:10,color:C.text,outline:"none"}}/>
                 <button onClick={function(){
                   var el=document.getElementById("cx-el-input");
@@ -23623,14 +23618,14 @@ function BrianaBar(props) {
                   var k=el.value.trim();
                   setElKey(k);
                   if(window.localStorage){window.localStorage.setItem("cx_el_key",k);}
-                }} style={{background:"#243044",border:"none",color:"#fff",borderRadius:6,
+                }} style={{background:"#A78BFA",border:"none",color:"#fff",borderRadius:6,
                   padding:"5px 12px",cursor:"pointer",fontSize:10,fontWeight:700}}>
                   Save
                 </button>
               </div>
-              {elKey&&<div style={{color:"#243044",fontSize:8,marginTop:4}}>✓ ElevenLabs active — {voiceModel}</div>}
+              {elKey&&<div style={{color:"#A78BFA",fontSize:8,marginTop:4}}>✓ ElevenLabs active — {voiceModel}</div>}
               <a href="https://elevenlabs.io/app/speech-synthesis" target="_blank"
-                style={{color:"#243044",fontSize:8,display:"block",marginTop:4}}>Get ElevenLabs key (free tier) →</a>
+                style={{color:"#A78BFA",fontSize:8,display:"block",marginTop:4}}>Get ElevenLabs key (free tier) →</a>
             </div>
           )}
 
@@ -24616,7 +24611,7 @@ function CjdFindingsTab(props) {
                   {selAsset.data.map(function(d){
                     return (
                       <span key={d} style={{fontSize:9,fontWeight:700,color:C.acc,
-                        background:alpha(C.acc, "18"),padding:"2px 7px",borderRadius:10}}>{d}</span>
+                        background:C.acc+"18",padding:"2px 7px",borderRadius:10}}>{d}</span>
                     );
                   })}
                 </div>
@@ -24687,7 +24682,7 @@ function CrownJewelsModule(props) {
                 color:tab===t.id?C.acc:C.muted,transition:"all .12s"}}>
               {t.label}
               {t.id==="classify" && cjFoundCount>0 && (
-                <span style={{marginLeft:6,background:alpha(C.acc, "22"),color:C.acc,
+                <span style={{marginLeft:6,background:C.acc+"22",color:C.acc,
                   fontSize:9,padding:"1px 5px",borderRadius:8}}>{cjFoundCount} CJ</span>
               )}
             </div>
@@ -24765,13 +24760,13 @@ function CrownJewelMap(props) {
 
   var VITALITY_COLOR = {Critical:"#EF4545",High:"#F5A623",Medium:"#0891B2",Support:"#64748B"};
   var PROTO_COLOR = {
-    "REST API":"#3B9EFF","EDI (X12)":"#F5A623","SFTP / Batch":"#243044",
+    "REST API":"#3B9EFF","EDI (X12)":"#F5A623","SFTP / Batch":"#A78BFA",
     "Database Connector":"#EF4545","HL7 / FHIR":"#0FBB80",
     "Agent/Connector":"#64748B","Webhook/Events":"#0891B2"
   };
   var PROC_COLOR = {
     claims:"#EF4545",enroll:"#3B9EFF",provider:"#0FBB80",
-    care:"#243044",finance:"#F5A623",member_svc:"#0891B2",compliance:"#64748B",it_sec:"#334155"
+    care:"#A78BFA",finance:"#F5A623",member_svc:"#0891B2",compliance:"#64748B",it_sec:"#334155"
   };
 
   function getConnScore(protocol) {
@@ -24860,8 +24855,8 @@ function CrownJewelMap(props) {
               var rtoColor = proc.rto_hrs<=4?"#EF4545":proc.rto_hrs<=12?"#F5A623":"#64748B";
               return (
                 <div key={proc.id} onClick={function(){setSelProc(proc.id);}}
-                  style={{background:isActive?alpha(C.acc, "15"):C.bg,
-                    border:"1px solid "+(isActive?alpha(C.acc, "50"):C.border),
+                  style={{background:isActive?C.acc+"15":C.bg,
+                    border:"1px solid "+(isActive?C.acc+"50":C.border),
                     borderRadius:10,padding:"10px 12px",marginBottom:6,cursor:"pointer"}}>
                   <div style={{display:"flex",gap:8,alignItems:"flex-start",marginBottom:5}}>
                     <span style={{fontSize:18}}>{proc.icon}</span>
@@ -25307,8 +25302,8 @@ function CrownJewelMap(props) {
                 var col = PROTO_COLOR[conn.protocol]||"#64748B";
                 return (
                   <div key={i} onClick={function(){setSelConn(conn);}}
-                    style={{background:isAct?alpha(C.acc, "15"):C.bg,
-                      border:"1px solid "+(isAct?alpha(C.acc, "50"):C.border),
+                    style={{background:isAct?C.acc+"15":C.bg,
+                      border:"1px solid "+(isAct?C.acc+"50":C.border),
                       borderRadius:8,padding:"8px 10px",marginBottom:4,cursor:"pointer"}}>
                     <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:4}}>
                       <span style={{color:C.text,fontSize:10,fontWeight:600,flex:1,
@@ -26053,16 +26048,16 @@ function CyberRxApp() {
   // App shell + page router
   function renderPage() {
     if (page==="home")      { return React.createElement(Home,      sharedProps); }
-    if (page==="exec-roles"){ return React.createElement(CisoOperatingSystem, Object.assign({}, sharedProps, {initialSeat:"ciso", go:go})); }
+    if (page==="exec-roles"){ return React.createElement(ExecutiveRoleTabs, Object.assign({}, sharedProps, {go:go})); }
     // Executive role brief — the decision-first tabbed view. DashNav seats route here;
     // each opens on its seat and drills into the deep analytical dashboard on demand.
-    if (page==="exec-ceo")  { return React.createElement(CisoOperatingSystem, Object.assign({}, sharedProps, {initialSeat:"ceo",   go:go})); }
-    if (page==="exec-ciso") { return React.createElement(CisoOperatingSystem, Object.assign({}, sharedProps, {initialSeat:"ciso",  go:go})); }
-    if (page==="exec-cio")  { return React.createElement(CisoOperatingSystem, Object.assign({}, sharedProps, {initialSeat:"cio",   go:go})); }
-    if (page==="exec-cfo")  { return React.createElement(CisoOperatingSystem, Object.assign({}, sharedProps, {initialSeat:"cfo",   go:go})); }
-    if (page==="exec-cro")  { return React.createElement(CisoOperatingSystem, Object.assign({}, sharedProps, {initialSeat:"cro",   go:go})); }
-    if (page==="exec-clo")  { return React.createElement(CisoOperatingSystem, Object.assign({}, sharedProps, {initialSeat:"clo",   go:go})); }
-    if (page==="exec-board"){ return React.createElement(CisoOperatingSystem, Object.assign({}, sharedProps, {initialSeat:"board", go:go})); }
+    if (page==="exec-ceo")  { return React.createElement(ExecutiveRoleTabs, Object.assign({}, sharedProps, {initialSeat:"ceo",   go:go})); }
+    if (page==="exec-ciso") { return React.createElement(ExecutiveRoleTabs, Object.assign({}, sharedProps, {initialSeat:"ciso",  go:go})); }
+    if (page==="exec-cio")  { return React.createElement(ExecutiveRoleTabs, Object.assign({}, sharedProps, {initialSeat:"cio",   go:go})); }
+    if (page==="exec-cfo")  { return React.createElement(ExecutiveRoleTabs, Object.assign({}, sharedProps, {initialSeat:"cfo",   go:go})); }
+    if (page==="exec-cro")  { return React.createElement(ExecutiveRoleTabs, Object.assign({}, sharedProps, {initialSeat:"cro",   go:go})); }
+    if (page==="exec-clo")  { return React.createElement(ExecutiveRoleTabs, Object.assign({}, sharedProps, {initialSeat:"clo",   go:go})); }
+    if (page==="exec-board"){ return React.createElement(ExecutiveRoleTabs, Object.assign({}, sharedProps, {initialSeat:"board", go:go})); }
     if (page==="hub")       { return React.createElement(CISODash,  sharedProps); }
     if (page==="bizlines")  { return React.createElement(BizLines,  sharedProps); }
     if (page==="appmap")    { return React.createElement(AppMap,    sharedProps); }
@@ -26170,7 +26165,7 @@ var EXPOSURE_HIERARCHY = [
        val:22.1, color:"#F59E0B",
        write:"Industry standard is 2 years of credit monitoring for all affected members. At $32.50 per member per year (Experian/TransUnion enterprise rate) for [MEMBER_SEGMENT] members, this totals $22.1M. Members receiving PHI-containing EOBs are especially at risk of identity fraud — the Social Security numbers on [CLAIMS_SYSTEM] archive tables compound this obligation."},
       {id:"pr_crisis",  label:"PR & Crisis Communications",
-       val:4.5, color:"#243044",
+       val:4.5, color:"#A78BFA",
        write:"A healthcare breach involving PHI of this scale triggers immediate reputational crisis management. A crisis communications firm retainer (typically Weber Shandwick or FTI Consulting) for a 6-month breach response engagement runs $3–6M. Member trust, employer retention, and broker relationships are at acute risk — loss of even 2% of commercial membership represents $84M in annual premium revenue."},
       {id:"call_center",label:"Call Center Surge Staffing",
        val:8.5, color:"#0891B2",
@@ -26201,7 +26196,7 @@ var EXPOSURE_HIERARCHY = [
        val:12.0, color:"#0891B2",
        write:"During a NASCO outage, member services representatives cannot access eligibility, claims status, or authorization data. Call abandonment rates spike, resulting in CMS grievance filings (§422.562 requires timely response). If the outage coincides with AEP or a Star measurement period, the downstream impact on Star ratings — and the $180M+ payment risk of a 0.5-star decline — creates a compound financial scenario."},
       {id:"provider_dam",label:"Provider Relationship & SLA Penalties",
-       val:64.0, color:"#243044",
+       val:64.0, color:"#A78BFA",
        write:"[ORG]'s contracted payment terms require electronic remittance (ERA 835) within 30 days of clean claim receipt. A 3–5 day outage that delays thousands of ERA transmissions triggers contractual interest penalties and, for FQHCs and rural hospitals, may create immediate cash flow crises — leading to formal dispute filings and potential network departures. Estimated SLA exposure across 180,000+ contracted providers: $60–70M in penalty and remediation payments."},
       {id:"cms_sanctions",label:"CMS Sanctions for MA Disruption",
        val:55.5, color:"#EF4545",
@@ -26223,7 +26218,7 @@ var EXPOSURE_HIERARCHY = [
        val:140.0, color:"#0891B2",
        write:"CMS intermediate sanctions include suspension of enrollment, marketing, and eventually contract termination. The [ORG] MA contract is valued at $2.8B annually. CMS has used these powers against Cigna (2023), Humana (2022), and others for cybersecurity and care access failures. A triggered corrective action plan (CAP) carries monitoring costs of $5–15M. Contract termination risk — even partial — represents the single largest regulatory exposure on this model."},
       {id:"sec_disc",   label:"SEC Disclosure & Shareholder Claims",
-       val:35.0, color:"#243044",
+       val:35.0, color:"#A78BFA",
        write:"The SEC's 2023 Cybersecurity Disclosure Rule requires material incident disclosure within 4 business days. For [ORG] (or its publicly traded parent entity), failure to timely disclose a material breach triggers SEC enforcement, shareholder derivative suits, and D&O liability claims. Comparable cases: SolarWinds (SEC charges, $26M settlement), UnitedHealth Group (ongoing CHC-related exposure). The 4-day clock starts at 'reasonably determines' — not at investigation completion."},
       {id:"state_ag",   label:"State AG & DOI Enforcement (M.G.L. c. 93H)",
        val:18.0, color:"#F5A623",
@@ -26248,7 +26243,7 @@ var EXPOSURE_HIERARCHY = [
        val:56.0, color:"#F5A623",
        write:"[ORG]'s risk adjustment data (HCC codes submitted to CMS for MA premium payment) represents $56M in RADV audit exposure based on the Q4 2025 self-audit finding of 12.3% HCC deletion rate. If an attacker with access to Inovalon's analytics platform manipulates prospective coding data — inflating HCC scores — [ORG] could be liable for return of MA overpayments plus interest and penalties. CMS RADV audits are increasingly focused on analytics-generated codes."},
       {id:"phi_darkweb",label:"PHI Dark Web Value & Identity Theft",
-       val:74.0, color:"#243044",
+       val:74.0, color:"#A78BFA",
        write:"PHI commands $250–$500 per complete record on dark web marketplaces — significantly more than credit card data ($5–$15) because it cannot be changed. A member's DOB, SSN, and medical history are permanent. The [MEMBER_SEGMENT] members whose PHI transits [MAILING_VENDOR]'s SFTP channel represent a dark web value of $85–170M to threat actors. [ORG]'s downstream liability when member identity theft is traced to a breach — including legal defense of individual member claims — is estimated at $74M."},
     ],
   },
@@ -26257,11 +26252,11 @@ var EXPOSURE_HIERARCHY = [
     label:"Reputational / Member Churn",
     icon:"📉",
     total:259,
-    color:"#243044",
+    color:"#A78BFA",
     summary:"Member trust is the most difficult asset to rebuild after a healthcare data breach. Massachusetts is a highly competitive commercial health insurance market with multiple large carriers. The combination of premium revenue loss from churn and employer contract non-renewals following a major breach represents [ORG]'s most sustained long-term financial exposure.",
     children:[
       {id:"member_churn",label:"Commercial Member Churn",
-       val:168.0, color:"#243044",
+       val:168.0, color:"#A78BFA",
        write:"Post-breach churn studies in healthcare (Ponemon 2024) show 7–15% of affected members switch carriers within 12 months of a breach notification. For [ORG]'s commercial book of 1.2M members at an average premium of $650/month, a 5% churn rate represents $468M in lost annual premium — or $156M at a 33% operating margin. The 3-year NPV of this churn, applying standard healthcare actuarial discount rates, reaches $168M."},
       {id:"employer_nr",  label:"Employer Contract Non-Renewals",
        val:56.0, color:"#EC4899",
@@ -26286,7 +26281,7 @@ var EXPOSURE_HIERARCHY = [
        val:28.0, color:"#3B9EFF",
        write:"Multi-regulator cybersecurity breach defense requires simultaneous engagement of OCR counsel, SEC counsel (if applicable), Massachusetts AG response, class action defense, and BCBSA relationship management. Partner-level healthcare regulatory counsel at major firms bill $850–1,200/hour. A 24-month legal response program involving 5 regulatory tracks and active class action defense typically totals $25–35M in outside counsel fees alone."},
       {id:"edr_ransom",  label:"Extortion & Dark Web Remediation",
-       val:28.0, color:"#243044",
+       val:28.0, color:"#A78BFA",
        write:"When threat actors claim to hold [ORG] PHI, the organization must engage a dark web intelligence firm to verify the claim, assess what data was actually obtained, and monitor dark web marketplaces for signs of data being traded or published. These specialized services (Chainalysis, Recorded Future IR, Mandiant) run $500K–2M per engagement. If data is confirmed exfiltrated, ongoing dark web monitoring for affected member data for 3–5 years adds $5–8M."},
     ],
   },

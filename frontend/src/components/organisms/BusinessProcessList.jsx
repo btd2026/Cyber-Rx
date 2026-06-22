@@ -83,7 +83,7 @@ const BusinessProcessList = ({
   };
 
   const getTierColor = (tier) => {
-    return tier === 'Primary' ? '#1E40AF' : '#243044';
+    return tier === 'Primary' ? '#1E40AF' : '#7C3AED';
   };
 
   if (loading) {

@@ -24,10 +24,10 @@ const SignalBreakdown = ({ signalsByCategory }) => {
   const categoryColors = {
     'External Attack Surface': '#3B9EFF',
     'Breach/Incident Intelligence': '#EF4545',
-    'Dark Web/Credential Exposure': '#243044',
+    'Dark Web/Credential Exposure': '#8B5CF6',
     'Regulatory Breach Disclosure': '#F59E0B',
     'Compliance Evidence': '#10B981',
-    'Questionnaire/Attestation': '#64748B',
+    'Questionnaire/Attestation': '#6366F1',
     'Fourth-Party Risk': '#EC4899',
     'Policy Drift': '#14B8A6',
     'Business Criticality': '#F97316'

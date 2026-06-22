@@ -24,7 +24,7 @@ const STATUS_CONFIG = {
   },
   routed: {
     icon: '→',
-    color: '#243044',
+    color: '#A78BFA',
     label: 'Routed'
   },
   complete: {

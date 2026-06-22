@@ -51,7 +51,7 @@ ChartJS.register(
 
 // BCBS healthcare color palette
 const CHART_COLORS = {
-  primary: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#14B8A6'],
+  primary: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'],
   critical: '#DC2626',
   high: '#EF4444',
   medium: '#F59E0B',

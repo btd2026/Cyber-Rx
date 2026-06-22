@@ -113,7 +113,7 @@ const ProcessControlMapping = ({
       'HIPAA': '#EF4444',
       'ISO 27001': '#10B981',
       'SOC 2': '#F59E0B',
-      'PCI DSS': '#243044',
+      'PCI DSS': '#8B5CF6',
       'GDPR': '#EC4899',
       'CCPA': '#06B6D4',
       'Other': '#6B7280'

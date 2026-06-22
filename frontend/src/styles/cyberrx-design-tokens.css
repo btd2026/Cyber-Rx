@@ -1,182 +1,67 @@
-/* ============================================================
-   CyberRx — Design Tokens
-   One source of truth for the marketing site AND the product.
-   Drop this in once, point components at the semantic vars,
-   and the whole app inherits the situation-room identity.
+/* =============================================================================
+ * cyberrx-design-tokens.css — the single source of truth for color, type, spacing.
+ *
+ * This is the ONE file where raw hex/length literals are allowed. Everything else
+ * in the app must read these semantic tokens (var(--…)) — never hard-code values.
+ *
+ * ACCENT NOTE: --pass (green) is the primary/active accent for the executive views
+ * AND the "verified / control holds" status color. Because the two meanings share
+ * one color, always pair the *status* use with a ✓ glyph + label so it can't be
+ * confused with the *accent* use. To move the accent to brand blue later, repoint
+ * the accent aliases (--accent / --accent-on) at --brand — a one-line swap.
+ * ========================================================================== */
 
-   Two themes share the SAME brand + status meanings:
-     :root            -> "Paper"   (light working surface)
-     [data-theme=dark]-> "Command" (dark situation-room)
-   Pick one as your app default; toggle with data-theme on <html>.
-   ============================================================ */
+:root {
+  /* ---- Brand & semantic accent ------------------------------------------- */
+  --brand: #243044;          /* navy — reserved for a future accent swap */
+  --pass: #1a7f37;           /* GREEN — verified/holds status + current accent */
+  --exposure: #b45309;       /* amber — live exposure / at-risk / running clock */
+  --critical: #cf222e;       /* red — critical / breach */
+  --warn: #9a6700;           /* amber-gold — caution */
 
-:root{
-  /* ---- BRAND / DECISION (blue is the brand + the "here's the call" color) ---- */
-  --brand:            #2D6CE0;
-  --brand-hover:      #225AC4;
-  --brand-bright:     #4E8BFF;   /* for dark surfaces + glows */
-  --brand-tint:       rgba(45,108,224,.10);
+  /* Accent aliases — point the executive views at these. Swap to var(--brand)
+     here (two lines) to move the whole accent to blue. */
+  --accent: var(--pass);
+  --accent-on: #ffffff;      /* text/!contrast on a filled accent surface */
 
-  /* ---- STATUS (carries meaning — never decorative) ----
-     amber  = exposure / unresolved / clock running
-     green  = verified / control holds / pass
-     red    = critical / breached / disclosure triggered      */
-  --exposure:         #C2772E;
-  --exposure-tint:    rgba(194,119,46,.12);
-  --pass:             #2FA37A;
-  --pass-tint:        rgba(47,163,122,.12);
-  --critical:         #C2443C;
-  --critical-tint:    rgba(194,68,60,.12);
+  /* ---- Ink / text -------------------------------------------------------- */
+  --text: #211d18;
+  --text-muted: #5c554b;
+  --text-subtle: #8a8276;
 
-  /* ---- NEUTRALS (Paper / light working theme) ---- */
-  --bg:               #F5F4F0;   /* app background  */
-  --surface:          #FFFFFF;   /* cards, panels   */
-  --surface-raised:   #ECEAE3;   /* nested / headers*/
-  --border:           #DAD7CC;   /* hairlines       */
-  --border-strong:    #B9B5A8;
-  --text:             #11161D;   /* primary copy    */
-  --text-muted:       #5C6470;   /* secondary       */
-  --text-subtle:      #8A8F98;   /* captions, meta  */
-  --focus:            #2D6CE0;
+  /* ---- Surfaces ---------------------------------------------------------- */
+  --bg: #f7f4ee;
+  --surface: #fffdf9;
+  --surface-2: #f1ece3;
+  --border: #e8e2d6;
+  --hairline: #d8d1c2;
 
-  /* ---- TYPOGRAPHY (the two-voice system) ----
-     display  -> headlines / the decision sentence
-     body     -> UI + prose
-     mono     -> machine EVIDENCE: timestamps, signals, logs, IDs
-     Keeping evidence in mono and decisions in sans is what makes
-     the product read as "proof -> judgment", not "more widgets".  */
-  --font-display: 'Space Grotesk', -apple-system, system-ui, sans-serif;
-  --font-body:    'Public Sans', -apple-system, system-ui, sans-serif;
-  --font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  /* ---- Soft status tints (chips/backgrounds; meaning-bearing) ------------ */
+  --pass-tint: #e6f1e8;
+  --exposure-tint: #f6ead9;
+  --critical-tint: #fceceb;
+  --brand-tint: #ecedf2;
 
-  /* ---- SHAPE & DEPTH (restrained — one radius, soft shadows) ---- */
-  --radius-sm: 7px;
-  --radius:    12px;
-  --radius-lg: 16px;
-  --shadow-1:  0 1px 2px rgba(17,22,29,.06), 0 4px 12px -6px rgba(17,22,29,.10);
-  --shadow-2:  0 24px 48px -24px rgba(17,22,29,.30);
+  /* ---- Focus & overlay --------------------------------------------------- */
+  --focus: #2f3e59;          /* high-contrast focus ring on ivory */
+  --scrim: rgba(33, 29, 24, 0.45);  /* modal backdrop (ink @ 45%) */
 
-  /* ---- SPACING SCALE (4px base — keep layouts disciplined) ---- */
-  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
-  --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
-}
+  /* ---- Type -------------------------------------------------------------- */
+  --font-display: 'Source Serif 4', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
 
-/* ---- Command (dark situation-room) ---- */
-[data-theme="dark"]{
-  --bg:               #0E1218;
-  --surface:          #161C25;
-  --surface-raised:   #1C2530;
-  --border:           #26303C;
-  --border-strong:    #3A4654;
-  --text:             #E9EBEE;
-  --text-muted:       #9AA4B0;
-  --text-subtle:      #67707D;
-  --brand:            #4E8BFF;   /* brand brightens on dark */
-  --brand-hover:      #6BA0FF;
-  --focus:            #4E8BFF;
-}
+  /* ---- Spacing scale ----------------------------------------------------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
 
-/* ============================================================
-   EXAMPLE COMPONENT WIRING
-   Illustrative — adapt class names to your codebase. The point is
-   that every component reads from semantic tokens, never hard-coded
-   hex. Re-theming then becomes editing this one file.
-   ============================================================ */
-
-body{
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-body);
-  -webkit-font-smoothing: antialiased;
-}
-
-/* the unit of the product is a DECISION card, not a chart tile:
-   verdict first (display), evidence second (mono), muted + collapsible */
-.decision-card{
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--brand);     /* status spine: swap to
-                                              --exposure / --critical
-                                              as state changes        */
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-1);
-  padding: var(--space-5);
-}
-.decision-card .verdict{
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: 20px;
-  line-height: 1.32;
-  letter-spacing: -.01em;
-  color: var(--text);
-}
-.decision-card .evidence{
-  font-family: var(--font-mono);
-  font-size: 12.5px;
-  color: var(--text-muted);
-  margin-top: var(--space-4);
-}
-
-/* status pills — meaning by color, set sparingly */
-.pill{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;
-  text-transform:uppercase;padding:4px 9px;border-radius:999px;display:inline-block}
-.pill.exposure{color:var(--exposure);background:var(--exposure-tint)}
-.pill.pass{color:var(--pass);background:var(--pass-tint)}
-.pill.critical{color:var(--critical);background:var(--critical-tint)}
-
-/* primary action */
-.btn-primary{
-  background:var(--brand); color:#fff; border:none;
-  font-family:var(--font-body); font-weight:600; font-size:15px;
-  padding:12px 20px; border-radius:var(--radius-sm); cursor:pointer;
-  transition:background .15s ease;
-}
-.btn-primary:hover{background:var(--brand-hover)}
-
-:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
-
-/* ============================================================
-   BACKWARD-COMPAT ALIASES
-   The mock tokens above are the source of truth. The app's legacy
-   deep-dive screens (reached via "Deep dive ▸") still reference the
-   previous token names through theme.js / scoped styles; these aliases
-   keep them rendering against the new palette until each is ported.
-   New seat components read the canonical tokens above directly.
-   ============================================================ */
-:root{
-  --accent:        var(--brand);
-  --accent-strong: var(--brand-hover);
-  --brand-strong:  var(--brand-hover);
-  --accent-on:     #fff;
-  --accent-tint:   var(--brand-tint);
-  --text-on-accent:#fff;
-  --surface-2:     var(--surface-raised);
-  --hairline:      var(--border-strong);
-  --warn:          var(--exposure);
-  --warn-tint:     var(--exposure-tint);
-  --radius-md:     var(--radius);
-  --shadow-card:   var(--shadow-1);
-  --shadow-pop:    var(--shadow-2);
-  --scrim:         rgba(17,22,29,.45);
-
-  /* legacy masthead banner — kept intentionally dark in both themes */
-  --masthead-0: #0E1218; --masthead-1: #161C25; --masthead-2: #1C2530;
-  --masthead-line: #26303C; --masthead-ink: #9AA4B0;
-  --masthead-bg: linear-gradient(135deg, var(--masthead-0) 0%, var(--masthead-1) 60%, var(--masthead-2) 100%);
-
-  /* situation-room primitives (glow / grain / glass) */
-  --glass-bg: rgba(255,255,255,.72);
-  --glass-border: rgba(17,22,29,.08);
-  --glass-blur: 14px;
-  --glow-1: rgba(45,108,224,.10);
-  --glow-2: rgba(194,119,46,.06);
-  --grain-opacity: .035;
-}
-[data-theme="dark"]{
-  --scrim: rgba(0,0,0,.6);
-  --glass-bg: rgba(22,28,37,.62);
-  --glass-border: rgba(233,235,238,.08);
-  --glow-1: rgba(78,139,255,.16);
-  --glow-2: rgba(194,119,46,.08);
-  --grain-opacity: .06;
+  /* ---- Radius / elevation ------------------------------------------------ */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --shadow-card: 0 1px 2px rgba(33, 29, 24, 0.04), 0 12px 30px -20px rgba(33, 29, 24, 0.18);
 }
