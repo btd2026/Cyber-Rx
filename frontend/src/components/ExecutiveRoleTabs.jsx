@@ -340,7 +340,20 @@ function composeDraft(seat) {
    per-role view), reached by the app's page key. CEO has no deep view. */
 const DEEP_KEY = { ciso: 'dashboard', cio: 'cio', cfo: 'cfo', cro: 'cro', clo: 'clo', board: 'boarddash' };
 
-export default function ExecutiveRoleTabs({ initialSeat, go } = {}) {
+/* API context (matches the convention used across the other components). */
+function apiCtx(props = {}) {
+  const ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
+  const token = props.authToken || ls('authToken') || '';
+  const orgId = props.orgId || ls('cyberrx_org_id') || ls('orgId') || '';
+  const api = props.api_url || props.apiUrl ||
+    (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) ||
+    ((typeof window !== 'undefined' && /localhost|127\.0\.0\.1/.test(window.location.hostname)) ? 'http://localhost:3001' : 'https://cyberrx-api.onrender.com');
+  return { token, orgId, api };
+}
+
+export default function ExecutiveRoleTabs(props = {}) {
+  const { initialSeat, go } = props;
+  const ctx = apiCtx(props);
   const startIdx = Math.max(0, SEATS.findIndex((s) => s.key === initialSeat));
   const [active, setActive] = useState(startIdx);
   const [draftOpen, setDraftOpen] = useState(false);
@@ -410,16 +423,24 @@ export default function ExecutiveRoleTabs({ initialSeat, go } = {}) {
         <Layer n={6} title="Evidence on demand"><Evidence items={seat.evidence} /></Layer>
       </div>
 
-      {draftOpen && <DraftModal seat={seat} onClose={() => setDraftOpen(false)} />}
+      {draftOpen && <DraftModal seat={seat} ctx={ctx} onClose={() => setDraftOpen(false)} />}
     </div>
   );
 }
 
 /* ---- Draft summary dialog -------------------------------------------------- */
-function DraftModal({ seat, onClose }) {
+function DraftModal({ seat, ctx, onClose }) {
   const draft = composeDraft(seat);
+  const privileged = seat.key === 'clo';
   const closeRef = useRef(null);
   const [copied, setCopied] = useState(false);
+  const [mode, setMode] = useState('grounded');   // 'grounded' | 'ai'
+  const [aiText, setAiText] = useState(null);
+  const [aiModel, setAiModel] = useState(null);
+  const [status, setStatus] = useState(null);      // 'loading' | 'error' | null
+
+  // What's currently shown / acted on.
+  const shown = mode === 'ai' && aiText ? aiText : draft.text;
 
   useEffect(() => { if (closeRef.current) closeRef.current.focus(); }, []);
   useEffect(() => {
@@ -428,17 +449,31 @@ function DraftModal({ seat, onClose }) {
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
 
+  const rewriteWithAI = () => {
+    if (aiText) { setMode('ai'); return; }   // already fetched — just switch
+    setStatus('loading');
+    const headers = { 'Content-Type': 'application/json', 'X-Org-Id': ctx.orgId };
+    if (ctx.token) headers.Authorization = `Bearer ${ctx.token}`;
+    fetch(`${ctx.api}/api/exec/draft`, {
+      method: 'POST', headers,
+      body: JSON.stringify({ draft: draft.text, audience: draft.audience, subject: draft.subject, privileged }),
+    })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then((j) => { if (j && j.text) { setAiText(j.text); setAiModel(j.model || 'llm'); setMode('ai'); setStatus(null); } else { setStatus('error'); } })
+      .catch(() => setStatus('error'));
+  };
+
   const copy = () => {
     try {
-      navigator.clipboard.writeText(draft.text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1800); });
+      navigator.clipboard.writeText(shown).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1800); });
     } catch { /* clipboard unavailable */ }
   };
   const download = () => {
     try {
-      const blob = new Blob([draft.text], { type: 'text/plain' });
+      const blob = new Blob([shown], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url; a.download = `${seat.key}-draft-${new Date().toISOString().slice(0, 10)}.txt`;
+      a.href = url; a.download = `${seat.key}-draft-${mode === 'ai' ? 'ai-' : ''}${new Date().toISOString().slice(0, 10)}.txt`;
       a.click(); URL.revokeObjectURL(url);
     } catch { /* download unavailable */ }
   };
@@ -454,7 +489,17 @@ function DraftModal({ seat, onClose }) {
           </div>
           <button ref={closeRef} type="button" className="exec-modal__close" onClick={onClose} aria-label="Close draft">✕</button>
         </div>
-        <pre className="exec-modal__body">{draft.text}</pre>
+
+        {/* Provenance: grounded vs AI-composed — always explicit. */}
+        <div className="exec-modal__prov" aria-live="polite">
+          {mode === 'ai'
+            ? <><span style={{ color: 'var(--pass)', fontWeight: 700 }}>✦ AI-composed</span> from the grounded draft <span style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-mono)' }}>· {aiModel}</span> · <button type="button" className="exec-link" onClick={() => setMode('grounded')}>Revert to grounded draft</button></>
+            : <>Grounded draft — every line traces to on-screen facts.{status !== 'loading' && <> <button type="button" className="exec-link" onClick={rewriteWithAI}>✦ Rewrite with AI</button></>}</>}
+          {status === 'loading' && <span style={{ color: 'var(--text-muted)' }}> · composing…</span>}
+          {status === 'error' && <span style={{ color: 'var(--exposure)' }}> · AI rewrite unavailable — keeping the grounded draft.</span>}
+        </div>
+
+        <pre className="exec-modal__body">{shown}</pre>
         <div className="exec-modal__foot">
           <span className="exec-modal__note">{copied ? '✓ Copied to clipboard' : 'Draft — not yet sent'}</span>
           <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
@@ -662,6 +707,10 @@ function ScopedStyles() {
       .exec-modal__aud { font-size:11.5px; color:var(--text-muted); margin-top:2px; }
       .exec-modal__close { background:none; border:none; font-size:18px; line-height:1; color:var(--text-subtle); cursor:pointer; padding:2px 4px; }
       .exec-modal__close:focus-visible { outline:2px solid var(--focus); outline-offset:2px; border-radius:var(--radius-sm); }
+      .exec-modal__prov { padding:var(--space-2) var(--space-5); font-size:11.5px; color:var(--text-muted); background:var(--surface-2); border-bottom:1px solid var(--border); }
+      .exec-link { background:none; border:none; padding:0; cursor:pointer; font-family:var(--font-body); font-size:11.5px; font-weight:700; color:var(--accent); }
+      .exec-link:hover { text-decoration:underline; }
+      .exec-link:focus-visible { outline:2px solid var(--focus); outline-offset:2px; border-radius:var(--radius-sm); }
       .exec-modal__body { margin:0; overflow-y:auto; padding:var(--space-4) var(--space-5); font-family:var(--font-mono); font-size:11.5px; line-height:1.7; color:var(--text); white-space:pre-wrap; }
       .exec-modal__foot { display:flex; justify-content:space-between; align-items:center; gap:var(--space-3); padding:var(--space-3) var(--space-5); border-top:1px solid var(--border); flex-wrap:wrap; }
       .exec-modal__note { font-size:11.5px; color:var(--text-muted); }

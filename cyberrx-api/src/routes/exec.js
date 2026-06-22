@@ -5,7 +5,8 @@
  * The CISO keeps its dedicated /api/ciso/dashboard; every other seat gets its
  * own role-specific payload here so no two leaders share the same content.
  *
- *   GET /api/exec/dashboard?role=CFO   role hero + KPI strip + 5 key questions + role tabs
+ *   GET  /api/exec/dashboard?role=CFO   role hero + KPI strip + 5 key questions + role tabs
+ *   POST /api/exec/draft                polish a grounded executive draft into prose
  */
 
 const express = require('express');
@@ -13,6 +14,7 @@ const router = express.Router();
 const { optionalJWT } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const ExecDashboardService = require('../services/ExecDashboardService');
+const ExecDraftService = require('../services/ExecDraftService');
 
 function org(req, res) {
   const id = req.orgId || req.headers['x-org-id'] || req.query.org_id || req.query.orgId;
@@ -29,6 +31,21 @@ router.get('/dashboard', optionalJWT, async (req, res) => {
   } catch (err) {
     logger.error('Exec dashboard error', { role, error: err.message });
     res.status(500).json({ error: 'Failed to build executive dashboard', message: err.message });
+  }
+});
+
+// Rewrite a client-composed, grounded draft into audience-ready prose. The draft
+// is the sole source of truth; the service adds no facts. If the LLM isn't
+// configured/available, return 503 so the client keeps its deterministic draft.
+router.post('/draft', optionalJWT, async (req, res) => {
+  const b = req.body || {};
+  if (!b.draft) return res.status(400).json({ error: 'draft is required' });
+  try {
+    res.json(await ExecDraftService.polish({ draft: b.draft, audience: b.audience, subject: b.subject, privileged: !!b.privileged }));
+  } catch (err) {
+    const noLlm = err.code === 'NO_API_KEY';
+    logger.debug('exec draft polish unavailable', { code: err.code, error: err.message });
+    res.status(noLlm ? 503 : 500).json({ error: err.message, fallback: true });
   }
 });
 
