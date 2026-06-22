@@ -26,6 +26,8 @@ import SecurityProjects from './SecurityProjects';
 import AiGovernance from './AiGovernance';
 import SoftwareSupplyChain from './SoftwareSupplyChain';
 import NarrativeSection from './NarrativeSection';
+import AdvisorIntro from './AdvisorIntro';
+import BusinessScenarios from './BusinessScenarios';
 import DecisionQueue from './DecisionQueue';
 import DecisionRail from './DecisionRail';
 import Provenance from './Provenance';
@@ -470,14 +472,18 @@ export default function CisoSecurityPostureDashboard(props) {
           : (<>
             {tab === 'qa' && (
               <div style={{ maxWidth: 880, margin: '0 auto', display: 'grid', gap: 28 }}>
-                {/* 01 — The lede: what changed + the auto-derived executive summary */}
-                <CurrentState view="brief" d={d} role={role} orgId={orgId} authToken={token} apiUrl={api} onOpenQueue={() => setTab('decisionq')} />
+                {/* Briana opens the brief: who she is, what the CISO carries, and the
+                    three acts she'll walk through (i · where you stand, ii · what it
+                    means for the business, iii · what to decide). */}
+                <AdvisorIntro d={d} role={role} orgName={props.orgName} />
 
-                {/* 02 — Where you stand, by domain */}
-                <NarrativeSection step={2} kicker="The breakdown" title="Where you stand, by domain"
-                  lede="Your headline score is the weighted blend of the domains below. Read it top to bottom — the bars are today's standing, the arrows show where momentum is building or quietly slipping.">
-                  <div style={{ background: COLORS.white, border: `1px solid ${COLORS.hair}`, borderRadius: 12, boxShadow: ELEV.card, padding: 18 }}>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
+                {/* i — Where you stand: what changed + the auto-derived summary, then domains */}
+                <NarrativeSection step={'i'} kicker="Where you stand" title="The situation right now"
+                  lede="Start with the read: what moved since your last brief, and where your headline score is coming from — weighted by what each domain means to the business.">
+                  <CurrentState view="brief" d={d} role={role} orgId={orgId} authToken={token} apiUrl={api} onOpenQueue={() => setTab('decisionq')} />
+                  <div style={{ background: COLORS.white, border: `1px solid ${COLORS.hair}`, borderRadius: 12, boxShadow: ELEV.card, padding: 18, marginTop: 14 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
+                      <span style={{ fontSize: 11.5, fontWeight: 700, color: INK2 }}>By domain</span>
                       <span style={{ fontSize: 11.5, color: INK3 }}>weighted by business impact</span>
                     </div>
                     <div style={{ display: 'grid', gap: 11 }}>
@@ -495,8 +501,15 @@ export default function CisoSecurityPostureDashboard(props) {
                   </div>
                 </NarrativeSection>
 
-                {/* 03 — What needs your decision */}
-                <NarrativeSection step={3} kicker="The decisions" title="What needs your decision now"
+                {/* ii — What it means for the business: each issue projected onto this
+                    org's actual operations (system-derived, not authored). */}
+                <NarrativeSection step={'ii'} kicker="What it means for the business" title="If these go unaddressed"
+                  lede="A score isn't a consequence. Here's how today's biggest exposures play out for your actual business processes — drawn from your connected systems, not a template — and what changes each outcome.">
+                  <BusinessScenarios d={d} onOpenQueue={() => setTab('decisionq')} />
+                </NarrativeSection>
+
+                {/* iii — What to decide */}
+                <NarrativeSection step={'iii'} kicker="What to decide" title="The decisions in front of you"
                   lede={`These are the moves that change the trajectory above — ranked by urgency and scoped to what you own as ${role}. Start at the top.`}>
                   <div style={{ background: COLORS.white, border: `1px solid ${COLORS.hair}`, borderRadius: 12, boxShadow: ELEV.card, padding: 18 }}>
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
@@ -523,8 +536,11 @@ export default function CisoSecurityPostureDashboard(props) {
                   </div>
                 </NarrativeSection>
 
-                {/* 04 — How much to trust this: visibility + the inputs we inferred */}
-                <CurrentState view="detail" d={d} role={role} orgId={orgId} authToken={token} apiUrl={api} onOpenQueue={() => setTab('decisionq')} />
+                {/* Closing — how much to trust this: visibility + the inputs we inferred */}
+                <NarrativeSection step={'iv'} kicker="How much to trust this" title="The evidence behind this brief"
+                  lede="Every read above is only as good as what we can see. Here's data visibility by source, and the inputs Briana inferred where a system isn't connected yet.">
+                  <CurrentState view="detail" d={d} role={role} orgId={orgId} authToken={token} apiUrl={api} onOpenQueue={() => setTab('decisionq')} />
+                </NarrativeSection>
               </div>
             )}
             {tab === 'decisionq' && <DecisionQueue role={role} orgId={orgId} authToken={token} apiUrl={api} />}

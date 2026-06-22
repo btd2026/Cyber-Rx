@@ -1,4 +1,3 @@
-import React from 'react';
 import { COLORS, FONTS } from '../theme';
 
 /**
@@ -17,8 +16,8 @@ export default function NarrativeSection({ step, kicker, title, lede, children }
         {(step != null || kicker) && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
             {step != null && (
-              <span className="crx-figure" style={{ fontSize: 11, fontWeight: 700, color: COLORS.accentText, fontFamily: FONTS.mono }}>
-                {String(step).padStart(2, '0')}
+              <span className="crx-figure" style={{ fontSize: typeof step === 'number' ? 11 : 13, fontWeight: 700, fontStyle: typeof step === 'number' ? 'normal' : 'italic', color: COLORS.accentText, fontFamily: typeof step === 'number' ? FONTS.mono : FONTS.display }}>
+                {typeof step === 'number' ? String(step).padStart(2, '0') : step}
               </span>
             )}
             {kicker && (
