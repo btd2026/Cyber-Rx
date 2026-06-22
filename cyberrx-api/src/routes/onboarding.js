@@ -17,6 +17,8 @@ const router = express.Router();
 const { optionalJWT, demoOrg } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const Onboarding = require('../services/OnboardingService');
+const Ledger = require('../services/EvidenceLedgerService');
+const Library = require('../services/ControlLibraryService');
 
 router.use(optionalJWT, demoOrg);
 const orgOf = (req) =>
@@ -101,6 +103,64 @@ router.post('/completeness/recompute', async (req, res) => {
   } catch (err) {
     logger.error('onboarding.recompute failed', { error: err.message });
     res.status(500).json({ error: 'Failed to recompute completeness.' });
+  }
+});
+
+// Per-framework posture for the org, projected from the evidence ledger.
+router.get('/posture/:framework', async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'Organization required.' });
+  try {
+    const posture = await Ledger.projectOrgFramework(orgId, req.params.framework);
+    res.json({ posture });
+  } catch (err) {
+    if (err.status === 400) return res.status(400).json({ error: err.message });
+    logger.error('onboarding.posture failed', { error: err.message });
+    res.status(500).json({ error: 'Failed to project posture.' });
+  }
+});
+
+// Summary posture across all seven frameworks.
+router.get('/posture', async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'Organization required.' });
+  try {
+    const satisfied = await Ledger.satisfiedControlIds(orgId);
+    const frameworks = [];
+    for (const f of Library.FRAMEWORKS) {
+      const p = await Library.projectFromSatisfied(f.id, satisfied);
+      frameworks.push({ framework: f.id, name: f.name, summary: p.summary });
+    }
+    res.json({ satisfied_controls: satisfied.length, frameworks });
+  } catch (err) {
+    logger.error('onboarding.posture.all failed', { error: err.message });
+    res.status(500).json({ error: 'Failed to project posture.' });
+  }
+});
+
+// System / Documentation / Human dimension rollup.
+router.get('/dimensions', async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'Organization required.' });
+  try {
+    const rollup = await Ledger.dimensionRollup(orgId);
+    res.json({ rollup });
+  } catch (err) {
+    logger.error('onboarding.dimensions failed', { error: err.message });
+    res.status(500).json({ error: 'Failed to compute dimensions.' });
+  }
+});
+
+// Raw evidence ledger for the org.
+router.get('/evidence', async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'Organization required.' });
+  try {
+    const evidence = await Ledger.listForOrg(orgId);
+    res.json({ evidence });
+  } catch (err) {
+    logger.error('onboarding.evidence failed', { error: err.message });
+    res.status(500).json({ error: 'Failed to load evidence.' });
   }
 });
 

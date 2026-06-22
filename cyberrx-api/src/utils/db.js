@@ -1355,6 +1355,43 @@ async function init() {
         PRIMARY KEY (library_control_id, framework, requirement_id)
       );
       CREATE INDEX IF NOT EXISTS control_library_xwalk_fw ON control_library_crosswalk(framework, requirement_id);
+
+      -- ============= Unified Evidence Ledger (Step 3) =======================
+      -- ONE ledger for every kind of evidence (connector pulls, uploaded
+      -- documents, manual attestations) recorded at the library-control grain.
+      -- The framework projection (ControlLibraryService) treats a library control
+      -- as satisfied when it has a 'met' row here, then rolls that up per
+      -- requirement across all in-scope frameworks. See blueprint §3.4.
+      CREATE TABLE IF NOT EXISTS control_evidence_ledger (
+        id                 TEXT PRIMARY KEY,
+        organization_id    TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        library_control_id TEXT NOT NULL REFERENCES control_library(id) ON DELETE CASCADE,
+        evidence_kind      TEXT NOT NULL,          -- document | attestation | connector | scan
+        dimension          TEXT NOT NULL DEFAULT 'system', -- system | documentation | human
+        source_ref         TEXT NOT NULL,          -- stable origin key (ca:<id> | cae:<fw>:<ctl> | upload:<id> | ...)
+        status             TEXT,                   -- met | partial | not_met
+        confidence         NUMERIC,
+        excerpt            TEXT,
+        freshness_date     DATE,                   -- when the evidence was last valid
+        created_at         TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE (organization_id, library_control_id, source_ref)
+      );
+      CREATE INDEX IF NOT EXISTS evidence_ledger_org_ctl ON control_evidence_ledger(organization_id, library_control_id);
+      CREATE INDEX IF NOT EXISTS evidence_ledger_org_status ON control_evidence_ledger(organization_id, status);
+
+      -- Structured facts extracted from an uploaded document (replaces the
+      -- verdict-only output). One row per (re)extraction of a document_upload.
+      CREATE TABLE IF NOT EXISTS document_extraction (
+        id                 TEXT PRIMARY KEY,
+        organization_id    TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        document_upload_id TEXT NOT NULL REFERENCES document_upload(id) ON DELETE CASCADE,
+        extracted          JSONB NOT NULL,         -- {owner, effective_date, review_cadence_months, scope, named_controls[], gaps[]}
+        confidence         NUMERIC,
+        engine             TEXT,                   -- llm | heuristic
+        model              TEXT,
+        extracted_at       TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS document_extraction_upload ON document_extraction(document_upload_id);
     `);
     console.log('Database schema initialized');
   } catch (err) {

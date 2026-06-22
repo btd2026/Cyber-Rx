@@ -16,6 +16,7 @@ const db = require('../utils/db');
 const logger = require('../utils/logger');
 const { normalize } = require('../services/DocumentNormalizer');
 const pipeline = require('../services/DocumentPipelineService');
+const extraction = require('../services/DocumentExtractionService');
 const SampleDoc = require('../services/SampleDocService');
 const ProcessExtraction = require('../services/ProcessExtractionService');
 
@@ -83,7 +84,10 @@ router.post('/documents', async (req, res) => {
       RETURNING id`, [id, orgId, document_type_id, file_name || null, norm.text, norm.format]);
     const uploadId = up[0].id;
 
-    const result = await pipeline.processUpload(orgId, uploadId);
+    // Structured extraction wraps the legacy review: it still writes
+    // control_assessment, and additionally records document_extraction + posts
+    // each verdict into the unified evidence ledger.
+    const result = await extraction.processUpload(orgId, uploadId);
     res.json({ upload_id: uploadId, format: norm.format, text_length: norm.text.length, ...result });
   } catch (e) {
     logger.warn('intake upload failed', { error: e.message });
@@ -96,7 +100,7 @@ router.post('/documents/:id/rereview', async (req, res) => {
   const orgId = orgOf(req);
   if (!orgId) return res.status(400).json({ error: 'org_id is required' });
   try {
-    const result = await pipeline.rereview(orgId, req.params.id);
+    const result = await extraction.processUpload(orgId, req.params.id);
     res.json(result);
   } catch (e) {
     const code = /not found/i.test(e.message) ? 404 : 500;

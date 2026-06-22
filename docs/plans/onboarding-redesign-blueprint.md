@@ -268,7 +268,7 @@ CREATE INDEX IF NOT EXISTS idx_cl_crosswalk_fw ON control_library_crosswalk(fram
 | M1 | Add new tables in `db.init()` (idempotent `CREATE TABLE IF NOT EXISTS`) | None — additive | Drop tables |
 | M2 | `ALTER TABLE business_processes ADD COLUMN downtime_cost_per_hour` | None — nullable | Drop column |
 | M3 | Seed `control_library` + `control_library_crosswalk` from a new CSV under `src/data/control-library/` (same loader pattern as `cae/onboardingService.js`) | Low — read-only seed | Truncate + reseed |
-| M4 | Backfill `control_evidence_ledger` from existing `control_assessment` + `cae_result` + `csf_evidence` (one-time script) | Low — read existing, write new | Truncate ledger |
+| M4 | Backfill `control_evidence_ledger` from existing `control_assessment` (documentation dim) + `cae_result` (system dim) via `ingest/backfillEvidenceLedger.js`. Safe by construction — only posts where a crosswalk mapping exists. **`csf_evidence` deferred:** it is Q&A keyed by `question_key` with no question→requirement map, so any mapping would be invented; wire it in once that map is curated. | Low — read existing, write new | Truncate ledger |
 | M5 | Seed ISO 27001 / SOC 2 / HIPAA / HITRUST requirements into `framework_requirements` (new CSVs) | Low — additive rows | Delete by framework_id |
 | M6 | Create `onboarding_session` rows for existing orgs (default phase = `live` for already-onboarded orgs) | Low | Delete rows |
 

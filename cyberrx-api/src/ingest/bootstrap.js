@@ -75,6 +75,15 @@ async function bootstrap() {
   } catch (e) { logger.warn('bootstrap: control library seed failed', { error: e.message }); }
 
   try {
+    // Backfill the unified evidence ledger from existing control_assessment +
+    // cae_result. Idempotent (ledger upserts); safe (only posts where a crosswalk
+    // mapping exists). Skips if the library has no crosswalk yet.
+    const hasXwalk = await count(`SELECT COUNT(*)::int n FROM control_library_crosswalk`);
+    if (hasXwalk > 0) steps.evidenceLedger = await require('./backfillEvidenceLedger').backfill();
+    else steps.evidenceLedger = 'skipped (no crosswalk)';
+  } catch (e) { logger.warn('bootstrap: evidence ledger backfill failed', { error: e.message }); }
+
+  try {
     // OFFICIAL CSF<->800-53 references, when the CPRT export is supplied.
     const hasOfficial = await count(`SELECT COUNT(*)::int n FROM requirement_crosswalks WHERE provenance='NIST CPRT'`);
     if (!hasOfficial) steps.csfRefs = await require('./loadCsfRefs').load();
