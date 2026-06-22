@@ -17,6 +17,7 @@ import { useTheme } from './useTheme';
 import { useCisoData } from './useCisoData';
 import { CISO_SEAT } from './seats/ciso';
 import SEATS_DATA from './seats/otherSeats';
+import { useNow, getAudit, downloadBoardPack } from './trust';
 
 /* "View as" — exact order. */
 const SEAT_ORDER = ['CEO', 'CISO', 'CFO', 'CIO', 'CLO', 'CRO', 'Board'];
@@ -50,6 +51,16 @@ export default function SituationRoom(props = {}) {
   const { isDark, toggle } = useTheme();
   // Real CISO data, bound conservatively (verified fields only); null when offline.
   const bound = useCisoData(props);
+  const now = useNow();                       // live "as-of" clock
+  const [auditOpen, setAuditOpen] = useState(false);
+
+  // Trust layer: provenance + as-of are per-seat (CISO is live; others sample).
+  const asOf = bound?.live ? bound.live.toLocaleString() : null;
+  const provenance = bound?.provenance || null;
+  const onBoardPack = () => {
+    const data = seat === 'CISO' ? CISO_SEAT : SEATS_DATA[seat];
+    if (data) downloadBoardPack({ seat, summary: data.summary, tabs: data.tabs, provenance, asOf });
+  };
 
   // Seat + tab are real, deep-linkable routes via the URL hash: #/<seat>/<tab>.
   // Browser back/forward and direct links work; falls back to initialSeat → CISO.
@@ -118,7 +129,12 @@ export default function SituationRoom(props = {}) {
             <span className="sr-seatlabel">{seat} · OPERATING SYSTEM</span>
           </div>
           <div className="sr-topright">
-            <span className="sr-live"><span className="sr-live__dot" aria-hidden="true" />LIVE · {bound?.live ? bound.live.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '14:09'}</span>
+            <span className="sr-live" title={asOf ? `Data as of ${asOf}` : 'Live'}>
+              <span className="sr-live__dot" aria-hidden="true" />LIVE · {now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </span>
+            <button type="button" className="sr-theme" onClick={() => setAuditOpen(true)} aria-haspopup="dialog">
+              <span aria-hidden="true">▤</span> Audit log
+            </button>
             <button type="button" className="sr-theme" onClick={toggle} aria-pressed={isDark}
               aria-label={`Switch to ${isDark ? 'light warm' : 'dark command'} theme`}>
               <span aria-hidden="true">◐</span> Theme
@@ -156,12 +172,13 @@ export default function SituationRoom(props = {}) {
         {/* Panel */}
         <div role="tabpanel" id={`sr-panel-${activeTab.key}`} aria-labelledby={`sr-tab-${activeTab.key}`} tabIndex={0} className="sr-panel">
           {seat === 'CISO'
-            ? <CisoPanel tabKey={activeTab.key} goTabKey={goTabKey} bound={bound} />
-            : <SeatPanel seat={seat} tabKey={activeTab.key} goTabKey={goTabKey} />}
+            ? <CisoPanel tabKey={activeTab.key} goTabKey={goTabKey} bound={bound} onBoardPack={onBoardPack} />
+            : <SeatPanel seat={seat} tabKey={activeTab.key} goTabKey={goTabKey} onBoardPack={onBoardPack} asOf={asOf} />}
         </div>
 
         <footer className="sr-footer">CyberRx · executive operating system — illustrative, with sample data</footer>
       </div>
+      {auditOpen && <AuditLogModal onClose={() => setAuditOpen(false)} />}
     </div>
   );
 }
@@ -177,7 +194,7 @@ function SeatPlaceholder({ seat, tab }) {
 
 /* Generic seat renderer — the six non-CISO seats share this one code path, driven
    by data blocks (see seats/otherSeats.js). Same shape as the CISO reference. */
-function SeatPanel({ seat, tabKey, goTabKey }) {
+function SeatPanel({ seat, tabKey, goTabKey, onBoardPack, asOf }) {
   const S = SEATS_DATA[seat];
   if (!S) return <SeatPlaceholder seat={seat} tab={tabKey} />;
   if (tabKey === 'summary') {
@@ -185,6 +202,7 @@ function SeatPanel({ seat, tabKey, goTabKey }) {
       <div className="sr-stack">
         <PanelHead kicker={`${seat} · Executive summary`} verdict={S.summary.verdict}
           pill={S.summary.pill} pillKind={S.summary.pillKind} pillVerified={S.summary.pillVerified} lede={S.summary.lede} />
+        <ProvenanceStrip provenance={null} asOf={asOf} />
         <MetricBand tiles={S.summary.tiles} onGo={goTabKey} />
         <Briefing rows={S.summary.briefing} onGo={goTabKey} />
       </div>
@@ -196,12 +214,12 @@ function SeatPanel({ seat, tabKey, goTabKey }) {
     <div className="sr-stack">
       <PanelHead kicker={tab.name} verdict={tab.answer} pill={tab.pill} pillKind={tab.pillKind}
         pillVerified={tab.pillVerified} lede={tab.lede} />
-      {(tab.sections || []).map((s, i) => <SeatSection key={i} s={s} />)}
+      {(tab.sections || []).map((s, i) => <SeatSection key={i} s={s} onBoardPack={onBoardPack} />)}
     </div>
   );
 }
 
-function SeatSection({ s }) {
+function SeatSection({ s, onBoardPack }) {
   if (s.kind === 'rows') return <Section title={s.title}><Rows items={s.items} /></Section>;
   if (s.kind === 'note') return <p className="sr-note">{s.text}</p>;
   if (s.kind === 'decisions') {
@@ -216,7 +234,7 @@ function SeatSection({ s }) {
             </article>
           ))}
         </div>
-        {s.button && <button type="button" className="sr-btn">{s.button}</button>}
+        {s.button && <button type="button" className="sr-btn" onClick={onBoardPack}>{s.button}</button>}
       </Section>
     );
   }
@@ -356,7 +374,7 @@ export function Evidence({ source, method, last, result, verified = true, defaul
 }
 
 /* ============================ CISO seat panels ============================ */
-function CisoPanel({ tabKey, goTabKey, bound }) {
+function CisoPanel({ tabKey, goTabKey, bound, onBoardPack }) {
   const S = CISO_SEAT;
   if (tabKey === 'summary') {
     // Merge real/derived tile overrides (label-keyed) over the sample tiles.
@@ -366,6 +384,7 @@ function CisoPanel({ tabKey, goTabKey, bound }) {
       <div className="sr-stack">
         <PanelHead kicker={`Executive summary · synced ${synced}`} verdict={S.summary.verdict}
           pill={S.summary.pill} pillKind={S.summary.pillKind} lede={S.summary.lede} />
+        <ProvenanceStrip provenance={bound?.provenance} asOf={bound?.live ? bound.live.toLocaleString() : null} />
         <MetricBand tiles={tiles} onGo={goTabKey} />
         <Briefing rows={S.summary.briefing} onGo={goTabKey} />
       </div>
@@ -433,7 +452,7 @@ function CisoPanel({ tabKey, goTabKey, bound }) {
               </article>
             ))}
           </div>
-          <button type="button" className="sr-btn">Generate board package →</button>
+          <button type="button" className="sr-btn" onClick={onBoardPack}>Generate board package →</button>
         </Section>
         <Section title="Others’ actions — this week">
           <div className="sr-rows">
@@ -595,6 +614,58 @@ function FwCol({ label, items, sel, onPick, empty }) {
             <span>{it.label}</span>{it.meta && <span className={`sr-fw__meta sr-fg--${it.metaKind || 'muted'}`}>{it.meta}</span>}
           </button>
         ))}
+    </div>
+  );
+}
+
+/* ---- Trust layer: provenance strip + audit log --------------------------- */
+function ProvenanceStrip({ provenance, asOf }) {
+  const p = provenance || {};
+  const items = [
+    ['Evidence', p.signals != null ? `${p.signals} signals` : 'sample'],
+    ['Sources', 'Okta · PAM · SIEM · KMS · GRC'],
+    ['Coverage', p.coverage != null ? `${Math.round(p.coverage)}%` : '—'],
+    ['Last sync', asOf || '—'],
+    ['Signed', 'CISO attestation'],
+  ];
+  return (
+    <div className="sr-prov" role="note" aria-label="Provenance">
+      {items.map(([k, v]) => (
+        <span key={k} className="sr-prov__item"><span className="sr-prov__k">{k}</span><span className="sr-prov__v">{v}</span></span>
+      ))}
+      {!provenance && <span className="sr-prov__item"><span className="sr-prov__v sr-fg--exposure">sample provenance</span></span>}
+    </div>
+  );
+}
+
+function AuditLogModal({ onClose }) {
+  const [entries, setEntries] = useState(getAudit());
+  useEffect(() => {
+    const refresh = () => setEntries(getAudit());
+    window.addEventListener('cyberrx-audit', refresh);
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => { window.removeEventListener('cyberrx-audit', refresh); document.removeEventListener('keydown', onKey); };
+  }, [onClose]);
+  return (
+    <div className="sr-modal__backdrop" onClick={onClose}>
+      <div className="sr-modal" role="dialog" aria-modal="true" aria-label="Audit log" onClick={(e) => e.stopPropagation()}>
+        <div className="sr-modal__head">
+          <h3 className="sr-modal__title">Audit log <span className="sr-modal__sub">who decided what · what changed</span></h3>
+          <button type="button" className="sr-modal__close" onClick={onClose} aria-label="Close audit log">✕</button>
+        </div>
+        <div className="sr-modal__body">
+          {entries.length === 0
+            ? <p className="sr-lede">No recorded actions yet. Generating a board pack (or other tracked actions) will appear here.</p>
+            : entries.map((e, i) => (
+              <div key={i} className="sr-audit__row">
+                <span className="sr-audit__ts">{new Date(e.ts).toLocaleString()}</span>
+                <span className="sr-audit__actor">{e.actor}</span>
+                <span className="sr-audit__act">{e.action}{e.detail ? ` · ${e.detail}` : ''}</span>
+              </div>
+            ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -768,6 +839,26 @@ function SrStyles() {
       .sr-ev__dl dt { font-family:var(--sr-font-mono); font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--sr-subtle); }
       .sr-ev__dl dd { margin:0; font-family:var(--sr-font-mono); font-size:12.5px; color:var(--sr-text); }
       .sr-ev__verified { font-family:var(--sr-font-mono); font-size:12px; font-weight:700; color:var(--sr-pass); }
+
+      /* Provenance strip */
+      .sr-prov { display:flex; flex-wrap:wrap; gap:var(--sr-2) var(--sr-5); align-items:center; padding:var(--sr-3) var(--sr-4); background:var(--sr-surface); border:1px solid var(--sr-border); border-radius:var(--sr-radius); }
+      .sr-prov__item { display:inline-flex; align-items:baseline; gap:6px; }
+      .sr-prov__k { font-family:var(--sr-font-mono); font-size:9.5px; letter-spacing:.07em; text-transform:uppercase; color:var(--sr-subtle); }
+      .sr-prov__v { font-family:var(--sr-font-mono); font-size:11.5px; color:var(--sr-text); }
+
+      /* Audit log modal */
+      .sr-modal__backdrop { position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,.45); display:flex; align-items:flex-start; justify-content:center; padding:6vh var(--sr-4); overflow-y:auto; }
+      .sr-modal { width:100%; max-width:620px; background:var(--sr-surface); border:1px solid var(--sr-border); border-radius:var(--sr-radius-lg); box-shadow:var(--sr-shadow-2); display:flex; flex-direction:column; max-height:84vh; }
+      .sr-modal__head { display:flex; justify-content:space-between; align-items:center; gap:var(--sr-3); padding:var(--sr-4) var(--sr-5); border-bottom:1px solid var(--sr-border); }
+      .sr-modal__title { margin:0; font-family:var(--sr-font-display); font-size:17px; font-weight:600; color:var(--sr-text); }
+      .sr-modal__sub { font-family:var(--sr-font-mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--sr-subtle); margin-left:var(--sr-2); }
+      .sr-modal__close { background:none; border:none; font-size:17px; line-height:1; color:var(--sr-subtle); cursor:pointer; padding:2px 4px; }
+      .sr-modal__close:focus-visible { outline:2px solid var(--sr-focus); outline-offset:2px; border-radius:var(--sr-radius-sm); }
+      .sr-modal__body { padding:var(--sr-4) var(--sr-5); overflow-y:auto; display:grid; gap:2px; }
+      .sr-audit__row { display:grid; grid-template-columns:minmax(140px,180px) minmax(90px,140px) 1fr; gap:var(--sr-3); padding:var(--sr-2) 0; border-bottom:1px solid var(--sr-border); font-size:12.5px; }
+      .sr-audit__ts { font-family:var(--sr-font-mono); font-size:11px; color:var(--sr-subtle); }
+      .sr-audit__actor { font-family:var(--sr-font-mono); font-size:11px; color:var(--sr-muted); }
+      .sr-audit__act { color:var(--sr-text); }
 
       .sr-footer { margin-top:var(--sr-7); padding-top:var(--sr-4); border-top:1px solid var(--sr-border); font-family:var(--sr-font-mono); font-size:11px; color:var(--sr-subtle); text-align:center; }
 

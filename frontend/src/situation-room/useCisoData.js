@@ -67,6 +67,11 @@ export function useCisoData(props = {}) {
   // ---- live timestamp ------------------------------------------------------
   if (d && d.generatedAt) out.live = new Date(d.generatedAt);
 
+  // ---- provenance (for the trust strip) ------------------------------------
+  if (cov && (typeof cov.pct === 'number' || cov.total != null)) {
+    out.provenance = { coverage: cov.pct, signals: cov.total, confidence: cov.confidence };
+  }
+
   // ---- 6 metric tiles (label-keyed overrides) ------------------------------
   const tiles = {};
   if (d && d.overallPosture && typeof d.overallPosture.current !== 'undefined') {
