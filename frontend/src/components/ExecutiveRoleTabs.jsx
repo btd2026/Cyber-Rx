@@ -8,17 +8,32 @@
  *
  * One running incident threads every seat so they tell a single story, each in
  * the leader's own terms. All color/type/spacing comes from the design tokens
- * (cyberrx-design-tokens.css) via CSS custom properties — no hard-coded hex.
+ * (cyberrx-design-tokens.css) via CSS custom properties — no hard-coded hex — so
+ * the view re-themes live on the light "brief" ⟷ dark "command" toggle.
  *
- * Accent: GREEN (var(--pass)) for the active tab + primary actions. Because
- * --pass is also the "verified / control holds" status color, every *status* use
- * is shown with a ✓ glyph + label, never color alone, so the meanings don't blur.
+ * Accent: BLUE (var(--accent)) for the active tab, layer numbers, and recommended
+ * calls. GREEN (var(--pass)) is reserved for "verified / control holds" status and
+ * is always shown with a ✓ glyph + label, never color alone, so the accent and
+ * status meanings never blur.
  *
  * Placeholder copy is marked "(placeholder)" where it isn't yet live data.
  */
 
 import { useEffect, useRef, useState } from 'react';
 import TrendVsTarget from './TrendVsTarget';
+import ThemeToggle from './ThemeToggle';
+
+/* Short guiding question per seat — the subtitle under each tab's role label.
+   (The full question still leads each panel.) */
+const TAB_Q = {
+  ceo: 'Is the business safe?',
+  ciso: 'Am I exposed — what’s the call?',
+  cio: 'Are systems operational?',
+  cfo: 'Is it financially material?',
+  cro: 'Within our risk appetite?',
+  clo: 'Any duty to disclose?',
+  board: 'Is management in control?',
+};
 
 /* ---- The single running incident (shared spine) ----------------------------- */
 const INCIDENT = {
@@ -397,11 +412,21 @@ export default function ExecutiveRoleTabs(props = {}) {
   const seat = SEATS[active];
 
   return (
-    <div style={{ fontFamily: 'var(--font-body)', color: 'var(--text)', maxWidth: 920, margin: '0 auto', padding: 'var(--space-4)' }}>
+    <div className="crx-room crx-grain exec-room">
+      <div className="exec-shell" style={{ fontFamily: 'var(--font-body)', color: 'var(--text)' }}>
       <ScopedStyles />
 
+      {/* Shell header — situation-room title + theme toggle. */}
+      <div className="exec-shellhead">
+        <div>
+          <div className="exec-shellhead__kicker">Executive situation room</div>
+          <h1 className="exec-shellhead__title">Take the seat that needs you</h1>
+        </div>
+        <ThemeToggle />
+      </div>
+
       {/* The single running incident — the spine every seat re-frames. */}
-      <div className="exec-incident" role="note" aria-label="Active incident">
+      <div className="exec-incident crx-glass" role="note" aria-label="Active incident">
         <span className="exec-incident__dot" aria-hidden="true" style={{ background: phase.verified ? 'var(--pass)' : 'var(--exposure)' }} />
         <div style={{ flex: 1 }}>
           <div className="exec-incident__kicker">
@@ -418,7 +443,7 @@ export default function ExecutiveRoleTabs(props = {}) {
         </div>
       </div>
 
-      {/* Tablist */}
+      {/* Seat switcher — each tab is a role (formal label) + its guiding question. */}
       <div role="tablist" aria-label="Executive role views" className="exec-tablist" onKeyDown={onKeyDown}>
         {SEATS.map((s, i) => {
           const on = i === active;
@@ -426,7 +451,8 @@ export default function ExecutiveRoleTabs(props = {}) {
             <button key={s.key} ref={(el) => { tabRefs.current[i] = el; }} role="tab" id={`exectab-${s.key}`}
               aria-selected={on} aria-controls={`execpanel-${s.key}`} tabIndex={on ? 0 : -1}
               className="exec-tab" onClick={() => select(i)}>
-              {s.label}
+              <span className="exec-tab__role">{s.label}</span>
+              <span className="exec-tab__q" aria-hidden="true">›&nbsp;{TAB_Q[s.key] || s.question}</span>
             </button>
           );
         })}
@@ -452,6 +478,7 @@ export default function ExecutiveRoleTabs(props = {}) {
       </div>
 
       {draftOpen && <DraftModal seat={seat} ctx={ctx} incident={inc} onClose={() => setDraftOpen(false)} />}
+      </div>
     </div>
   );
 }
@@ -521,7 +548,7 @@ function DraftModal({ seat, ctx, incident, onClose }) {
         {/* Provenance: grounded vs AI-composed — always explicit. */}
         <div className="exec-modal__prov" aria-live="polite">
           {mode === 'ai'
-            ? <><span style={{ color: 'var(--pass)', fontWeight: 700 }}>✦ AI-composed</span> from the grounded draft <span style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-mono)' }}>· {aiModel}</span> · <button type="button" className="exec-link" onClick={() => setMode('grounded')}>Revert to grounded draft</button></>
+            ? <><span style={{ color: 'var(--accent)', fontWeight: 700 }}>✦ AI-composed</span> from the grounded draft <span style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-mono)' }}>· {aiModel}</span> · <button type="button" className="exec-link" onClick={() => setMode('grounded')}>Revert to grounded draft</button></>
             : <>Grounded draft — every line traces to on-screen facts.{status !== 'loading' && <> <button type="button" className="exec-link" onClick={rewriteWithAI}>✦ Rewrite with AI</button></>}</>}
           {status === 'loading' && <span style={{ color: 'var(--text-muted)' }}> · composing…</span>}
           {status === 'error' && <span style={{ color: 'var(--exposure)' }}> · AI rewrite unavailable — keeping the grounded draft.</span>}
@@ -711,8 +738,14 @@ function Clock({ label, remaining }) {
 function ScopedStyles() {
   return (
     <style>{`
-      .exec-incident { display:flex; gap:var(--space-3); align-items:flex-start; background:var(--surface-2);
-        border:1px solid var(--border); border-left:4px solid var(--exposure); border-radius:var(--radius-md);
+      /* Situation-room shell */
+      .exec-room { min-height:100%; }
+      .exec-shell { position:relative; z-index:2; max-width:960px; margin:0 auto; padding:var(--space-5) var(--space-4) var(--space-6); }
+      .exec-shellhead { display:flex; justify-content:space-between; align-items:flex-start; gap:var(--space-3); margin-bottom:var(--space-4); flex-wrap:wrap; }
+      .exec-shellhead__kicker { font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); }
+      .exec-shellhead__title { margin:2px 0 0; font-family:var(--font-display); font-size:22px; font-weight:600; letter-spacing:-.01em; color:var(--text); }
+
+      .exec-incident { display:flex; gap:var(--space-3); align-items:flex-start; border-left:4px solid var(--exposure);
         padding:var(--space-3) var(--space-4); margin-bottom:var(--space-4); }
       .exec-incident__dot { width:9px; height:9px; border-radius:50%; background:var(--exposure); margin-top:5px; flex-shrink:0; }
       @media (prefers-reduced-motion: no-preference){ .exec-incident__dot{ animation:execPulse 2s ease-in-out infinite; } }
@@ -727,10 +760,14 @@ function ScopedStyles() {
       .exec-demo__btn:focus-visible { outline:2px solid var(--focus); outline-offset:2px; }
 
       .exec-tablist { display:flex; gap:0; border-bottom:1px solid var(--border); overflow-x:auto; }
-      .exec-tab { background:transparent; border:none; border-bottom:2px solid transparent; padding:10px 18px;
-        font-family:var(--font-body); font-size:13px; font-weight:500; color:var(--text-muted); cursor:pointer; white-space:nowrap; }
-      .exec-tab:hover { color:var(--text); }
-      .exec-tab[aria-selected="true"] { color:var(--pass); font-weight:700; border-bottom-color:var(--pass); }
+      .exec-tab { display:flex; flex-direction:column; align-items:flex-start; gap:1px; background:transparent; border:none;
+        border-bottom:2px solid transparent; padding:9px 16px; cursor:pointer; white-space:nowrap; text-align:left; }
+      .exec-tab__role { font-family:var(--font-body); font-size:13px; font-weight:600; color:var(--text-muted); letter-spacing:.01em; }
+      .exec-tab__q { font-family:var(--font-display); font-size:11px; font-style:italic; color:var(--text-subtle); }
+      .exec-tab:hover .exec-tab__role { color:var(--text); }
+      .exec-tab[aria-selected="true"] { border-bottom-color:var(--accent); }
+      .exec-tab[aria-selected="true"] .exec-tab__role { color:var(--accent); font-weight:700; }
+      .exec-tab[aria-selected="true"] .exec-tab__q { color:var(--text-muted); }
       .exec-tab:focus-visible { outline:2px solid var(--focus); outline-offset:-2px; border-radius:var(--radius-sm); }
 
       .exec-panel { padding-top:var(--space-5); }
@@ -743,7 +780,7 @@ function ScopedStyles() {
 
       .exec-layer { margin-bottom:var(--space-6); }
       .exec-layer__head { display:flex; align-items:baseline; gap:var(--space-2); margin-bottom:var(--space-3); }
-      .exec-layer__n { font-family:var(--font-mono); font-size:11px; font-weight:700; color:var(--pass); }
+      .exec-layer__n { font-family:var(--font-mono); font-size:11px; font-weight:700; color:var(--accent); }
       .exec-layer__title { margin:0; font-size:10.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text-subtle); }
 
       .exec-verdict { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:var(--space-4) var(--space-5); box-shadow:var(--shadow-card); }
@@ -763,7 +800,7 @@ function ScopedStyles() {
       .exec-options { display:flex; flex-wrap:wrap; gap:var(--space-2); margin:var(--space-3) 0; }
       .exec-option { font-size:11.5px; color:var(--text-muted); background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:3px 10px; }
       .exec-reco { font-size:13px; line-height:1.55; color:var(--text); margin:0; padding-top:var(--space-2); border-top:1px solid var(--border); }
-      .exec-reco__k { font-weight:700; color:var(--pass); }
+      .exec-reco__k { font-weight:700; color:var(--accent); }
 
       .exec-dl { margin:0; display:grid; gap:0; }
       .exec-dl__row { display:grid; grid-template-columns:minmax(140px,200px) 1fr; gap:var(--space-3); padding:var(--space-2) 0; border-bottom:1px solid var(--border); }
@@ -785,7 +822,7 @@ function ScopedStyles() {
       @media (prefers-reduced-motion: no-preference){ .exec-modal{ animation:execRise .16s ease-out; } }
       @keyframes execRise { from{ transform:translateY(8px); opacity:.6 } to{ transform:translateY(0); opacity:1 } }
       .exec-modal__head { display:flex; justify-content:space-between; align-items:flex-start; gap:var(--space-3); padding:var(--space-4) var(--space-5); border-bottom:1px solid var(--border); }
-      .exec-modal__kicker { font-size:10px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--pass); }
+      .exec-modal__kicker { font-size:10px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--accent); }
       .exec-modal__title { margin:3px 0 0; font-family:var(--font-display); font-size:18px; font-weight:600; color:var(--text); }
       .exec-modal__aud { font-size:11.5px; color:var(--text-muted); margin-top:2px; }
       .exec-modal__close { background:none; border:none; font-size:18px; line-height:1; color:var(--text-subtle); cursor:pointer; padding:2px 4px; }
