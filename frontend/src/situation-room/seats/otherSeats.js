@@ -1,9 +1,11 @@
 /**
- * The six non-CISO seats — ported to match the uploaded mock (cyberrx-ciso-os.html)
- * exactly: each reframes the SAME 14:02 claims incident in that executive's lens.
- * Rendered by the generic SeatPanel/SeatSection. Tab keys = slug(tabName).
+ * The six non-CISO seats — matching the mock, each reframing the SAME 14:02 claims
+ * incident in that executive's lens. Rendered by the generic SeatPanel/SeatSection.
+ * Tab keys = slug(tabName).
  *
- * Sample content mirrors the mock verbatim; bind to per-seat APIs in a later pass.
+ * Every panel figure (kv / srow row) carries `ev` — source · method · last collected
+ * · result — so any number digs to its proof. Illustrative sample data; bind to the
+ * per-seat APIs to go live.
  */
 
 const SEATS_DATA = {
@@ -35,15 +37,15 @@ const SEATS_DATA = {
         sections: [
           { kind: 'cols', panels: [
             { title: 'The business is running', rowsKind: 'srow', rows: [
-              { nm: 'Customer-facing services', stat: 'Running', statKind: 'pass' },
-              { nm: 'Revenue systems', sub: 'claims on a compensating control', stat: 'Protected · watch', statKind: 'exposure' },
-              { nm: 'Customer data', stat: 'No exposure', statKind: 'pass' },
-              { nm: 'Public / disclosure status', stat: 'Nothing to report', statKind: 'pass' },
+              { nm: 'Customer-facing services', stat: 'Running', statKind: 'pass', ev: { source: 'Service catalog + synthetic monitors', method: 'Automated — uptime checks', last: 'Real-time · last 14:08', result: 'All customer-facing services responding · 0 outages' } },
+              { nm: 'Revenue systems', sub: 'claims on a compensating control', stat: 'Protected · watch', statKind: 'exposure', ev: { source: 'Payments platform + SOAR', method: 'Automated — transaction monitor', last: 'Real-time · last 14:02', result: 'Claims on compensating control · 0 failed transactions' } },
+              { nm: 'Customer data', stat: 'No exposure', statKind: 'pass', ev: { source: 'DLP + breach detection', method: 'Automated — exfil monitoring', last: 'Continuous · last 14:06', result: 'No exfiltration signals · 0 records exposed' } },
+              { nm: 'Public / disclosure status', stat: 'Nothing to report', statKind: 'pass', ev: { source: 'Legal / GRC tracker', method: 'Manual attestation', last: 'last 13:30', result: 'No disclosure obligation triggered to date' } },
             ] },
             { title: 'If the worst happened', rowsKind: 'kv', rows: [
-              { l: 'Worst-case revenue at risk', v: '~$2.3M/hr · contained', vKind: 'exposure' },
-              { l: 'Time to resume claims if down', v: '~3.5 days' },
-              { l: 'Crisis posture required', v: 'No', vKind: 'pass' },
+              { l: 'Worst-case revenue at risk', v: '~$2.3M/hr · contained', vKind: 'exposure', ev: { source: 'FAIR loss model', method: 'Modeled — revenue × downtime', last: 'last 14:05', result: '~$2.3M/hr modeled · $0 realized (contained)' } },
+              { l: 'Time to resume claims if down', v: '~3.5 days', ev: { source: 'DR runbooks + backup platform', method: 'Auditor sample + recovery test', last: 'last test 5 months ago', result: '~3.5 days RTO for claims processing' } },
+              { l: 'Crisis posture required', v: 'No', vKind: 'pass', ev: { source: 'Incident command', method: 'Manual — IC assessment', last: '14:09', result: 'Contained at tier-2 · no crisis standup required' } },
             ] },
           ] },
         ],
@@ -77,14 +79,14 @@ const SEATS_DATA = {
         sections: [
           { kind: 'cols', panels: [
             { title: 'Improving', rowsKind: 'srow', rows: [
-              { nm: 'Overall posture', stat: '82 · ↑+4', statKind: 'pass' },
-              { nm: 'Identity & access', stat: 'Up', statKind: 'pass' },
-              { nm: 'Detection speed', stat: '15% faster', statKind: 'pass' },
+              { nm: 'Overall posture', stat: '82 · ↑+4', statKind: 'pass', ev: { source: 'Posture scoring engine', method: 'Automated — control rollup', last: 'Daily · last 06:00', result: '82 of 100 · +4 quarter-over-quarter' } },
+              { nm: 'Identity & access', stat: 'Up', statKind: 'pass', ev: { source: 'Okta + IGA', method: 'Automated — API pull', last: 'Continuous', result: 'MFA 98.1% · least-privilege improving' } },
+              { nm: 'Detection speed', stat: '15% faster', statKind: 'pass', ev: { source: 'SIEM + SOAR metrics', method: 'Automated — metric rollup', last: 'Rolling 30d', result: 'MTTD down 15% quarter-over-quarter' } },
             ] },
             { title: 'Watch', rowsKind: 'srow', rows: [
-              { nm: 'Third-party risk', stat: 'Slipping', statKind: 'exposure' },
-              { nm: 'Recovery testing', stat: 'Slipping', statKind: 'exposure' },
-              { nm: 'AI governance', stat: 'Lagging', statKind: 'exposure' },
+              { nm: 'Third-party risk', stat: 'Slipping', statKind: 'exposure', ev: { source: 'GRC vendor reviews', method: 'Manual attestation', last: 'last 23 days', result: '14 vendor reviews overdue' } },
+              { nm: 'Recovery testing', stat: 'Slipping', statKind: 'exposure', ev: { source: 'DR test records', method: 'Auditor sample', last: 'last test 5 months ago', result: '83% of critical apps tested · target 100%' } },
+              { nm: 'AI governance', stat: 'Lagging', statKind: 'exposure', ev: { source: 'AI governance program', method: 'Manual attestation', last: 'last 30 days', result: 'Model inventory partial · controls forming' } },
             ] },
           ] },
           { kind: 'bigstat', text: 'If the funded roadmap completes, enterprise posture is projected to reach 89 and bring third-party risk back within appetite.' },
@@ -120,12 +122,12 @@ const SEATS_DATA = {
         lede: 'Exposure in dollars, scoped to the affected path — not a whole-company number.',
         sections: [
           { kind: 'panel', title: 'Exposure — in dollars', rowsKind: 'kv', rows: [
-            { l: 'Revenue at risk', v: '~$2.3M / hr', vKind: 'exposure' },
-            { l: 'Bounded impact if unresolved 24h', v: '$0–1.1M' },
-            { l: 'Insurance notification threshold', v: 'Below · monitor', vKind: 'pass' },
-            { l: 'PCI / penalty exposure', v: 'Only if data confirmed', vKind: 'exposure' },
-            { l: 'Estimated remediation cost', v: '~$180K' },
-            { l: 'Containment', v: '✓ verified holding', vKind: 'pass' },
+            { l: 'Revenue at risk', v: '~$2.3M / hr', vKind: 'exposure', ev: { source: 'FAIR loss model', method: 'Modeled — revenue × downtime', last: 'last 14:05', result: '~$2.3M/hr while degraded · $0 realized' } },
+            { l: 'Bounded impact if unresolved 24h', v: '$0–1.1M', ev: { source: 'FAIR loss model', method: 'Modeled — p50 / p90', last: 'last 14:05', result: 'p50 $0.4M · p90 $1.1M over 24h' } },
+            { l: 'Insurance notification threshold', v: 'Below · monitor', vKind: 'pass', ev: { source: 'Cyber policy CYB-2026', method: 'Manual — policy review', last: 'last 13:50', result: 'Single-loss trigger $2.0M · currently below' } },
+            { l: 'PCI / penalty exposure', v: 'Only if data confirmed', vKind: 'exposure', ev: { source: 'Legal / PCI assessment', method: 'Manual attestation', last: 'last 13:40', result: 'No confirmed cardholder-data access' } },
+            { l: 'Estimated remediation cost', v: '~$180K', ev: { source: 'Incident cost tracker', method: 'Modeled — vendor + labor', last: 'last 14:00', result: 'Forensics + emergency vendor ≈ $180K' } },
+            { l: 'Containment', v: '✓ verified holding', vKind: 'pass', ev: { source: 'SOAR + synthetic probe', method: 'Automated', last: 'last 14:02', result: 'Compensating control verified holding' } },
           ] },
         ],
       },
@@ -134,10 +136,10 @@ const SEATS_DATA = {
         lede: 'Materiality and disclosure status, co-owned with Legal.',
         sections: [
           { kind: 'panel', title: 'Materiality & obligations', rowsKind: 'kv', rows: [
-            { l: 'Financial materiality', v: 'Under review · est. below threshold', vKind: 'exposure' },
-            { l: 'Investor disclosure (8-K)', v: 'Not triggered', vKind: 'pass' },
-            { l: 'Cyber-insurance notice', v: '46h window · precautionary advised', vKind: 'exposure' },
-            { l: 'Contingency budget', v: 'Response cost within it', vKind: 'pass' },
+            { l: 'Financial materiality', v: 'Under review · est. below threshold', vKind: 'exposure', ev: { source: 'Finance + Legal review', method: 'Manual attestation', last: 'last 13:30', result: 'Determination pending · estimate below threshold' } },
+            { l: 'Investor disclosure (8-K)', v: 'Not triggered', vKind: 'pass', ev: { source: 'Legal / SEC tracker', method: 'Manual attestation', last: 'last 13:30', result: 'Item 1.05 not triggered' } },
+            { l: 'Cyber-insurance notice', v: '46h window · precautionary advised', vKind: 'exposure', ev: { source: 'Cyber policy CYB-2026', method: 'Manual — policy clock', last: 'last 14:00', result: 'Precautionary notice window 46h' } },
+            { l: 'Contingency budget', v: 'Response cost within it', vKind: 'pass', ev: { source: 'Finance budget', method: 'Manual review', last: 'last 14:00', result: 'Response cost within contingency reserve' } },
           ] },
         ],
       },
@@ -162,9 +164,9 @@ const SEATS_DATA = {
             { cells: [{ t: 'Third-party monitoring', name: true }, { t: 'Proposed', pill: true, kind: 'exposure' }, { t: '$1.8M', mono: true }, { t: 'Stops vendor-driven loss drift', exposed: true }] },
           ] },
           { kind: 'panel', title: 'Return on cyber investment', rowsKind: 'kv', rows: [
-            { l: 'Annualized loss exposure vs appetite', v: 'Within', vKind: 'pass' },
-            { l: 'Awaiting your funding decision', v: '$4.3M · 2 projects', vKind: 'exposure' },
-            { l: 'Projected posture lift if funded', v: '82 → 89', vKind: 'pass' },
+            { l: 'Annualized loss exposure vs appetite', v: 'Within', vKind: 'pass', ev: { source: 'Risk quantification (FAIR)', method: 'Modeled — ALE', last: 'Quarterly', result: 'ALE within board appetite' } },
+            { l: 'Awaiting your funding decision', v: '$4.3M · 2 projects', vKind: 'exposure', ev: { source: 'Security portfolio', method: 'Manual — portfolio review', last: 'last 7 days', result: 'Third-party monitoring $1.8M + AI governance $2.5M' } },
+            { l: 'Projected posture lift if funded', v: '82 → 89', vKind: 'pass', ev: { source: 'Posture model', method: 'Modeled — projected', last: 'last 7 days', result: '+7 posture if both proposals funded' } },
           ] },
         ],
       },
@@ -199,18 +201,18 @@ const SEATS_DATA = {
         sections: [
           { kind: 'cols', panels: [
             { title: 'Critical business services', rowsKind: 'srow', rows: [
-              { nm: 'Claims Processing', sub: 'compensating control active', stat: 'Up · degraded', statKind: 'exposure' },
-              { nm: 'Member Portal', stat: 'Up', statKind: 'pass' },
-              { nm: 'Provider Payments', stat: 'Up', statKind: 'pass' },
-              { nm: 'Call Center Operations', stat: 'Up', statKind: 'pass' },
-              { nm: 'AI-Assisted Claims Review', stat: 'Up · watch', statKind: 'exposure' },
+              { nm: 'Claims Processing', sub: 'compensating control active', stat: 'Up · degraded', statKind: 'exposure', ev: { source: 'APM + synthetic monitor', method: 'Automated — health checks', last: 'Real-time · last 14:08', result: 'Healthy on compensating control · 0 downtime' } },
+              { nm: 'Member Portal', stat: 'Up', statKind: 'pass', ev: { source: 'APM', method: 'Automated — health checks', last: 'Real-time', result: '99.99% · multi-region' } },
+              { nm: 'Provider Payments', stat: 'Up', statKind: 'pass', ev: { source: 'APM', method: 'Automated — health checks', last: 'Real-time', result: 'Operating normally' } },
+              { nm: 'Call Center Operations', stat: 'Up', statKind: 'pass', ev: { source: 'Telephony + APM', method: 'Automated', last: 'Real-time', result: 'Operating · vendor-dependent' } },
+              { nm: 'AI-Assisted Claims Review', stat: 'Up · watch', statKind: 'exposure', ev: { source: 'Model serving + APM', method: 'Automated', last: 'Real-time', result: 'Operating · limited recovery coverage' } },
             ] },
             { title: 'Resilience & recovery', rowsKind: 'kv', rows: [
-              { l: 'Critical apps recoverable', v: '91%', vKind: 'pass' },
-              { l: 'Tested in last 12 months', v: '83%', vKind: 'exposure' },
-              { l: 'Recovery readiness', v: '78%', vKind: 'exposure' },
-              { l: 'AI systems recoverable', v: '52%', vKind: 'critical' },
-              { l: 'Backup success rate', v: '99.7%', vKind: 'pass' },
+              { l: 'Critical apps recoverable', v: '91%', vKind: 'pass', ev: { source: 'Backup platform', method: 'Automated — backup status', last: 'Daily', result: '91% of critical apps with verified backups' } },
+              { l: 'Tested in last 12 months', v: '83%', vKind: 'exposure', ev: { source: 'DR test records', method: 'Auditor sample', last: 'last test 5 months ago', result: '83% of critical apps recovery-tested' } },
+              { l: 'Recovery readiness', v: '78%', vKind: 'exposure', ev: { source: 'DR program', method: 'Modeled — readiness score', last: 'last 30d', result: '78% · target 90%' } },
+              { l: 'AI systems recoverable', v: '52%', vKind: 'critical', ev: { source: 'AI platform + backup', method: 'Automated', last: 'last 30d', result: '52% of AI systems with recovery plans' } },
+              { l: 'Backup success rate', v: '99.7%', vKind: 'pass', ev: { source: 'Backup platform', method: 'Automated — job logs', last: 'Daily', result: '99.7% backup-job success' } },
             ] },
           ] },
           { kind: 'bigstat', text: 'If ransomware hit today, claims processing resumes in ~3.5 days — within tolerance, but recovery testing is slipping and needs funding.' },
@@ -243,10 +245,10 @@ const SEATS_DATA = {
         lede: 'Reliability and recovery trend against operational targets.',
         sections: [
           { kind: 'panel', title: 'Reliability trend', rowsKind: 'kv', rows: [
-            { l: 'Uptime (rolling 90d)', v: '99.98% · steady', vKind: 'pass' },
-            { l: 'Mean time to recover (MTTR)', v: 'Improving', vKind: 'pass' },
-            { l: 'Recovery readiness', v: '78% → target 90%', vKind: 'exposure' },
-            { l: 'Change-related incidents', v: 'Down', vKind: 'pass' },
+            { l: 'Uptime (rolling 90d)', v: '99.98% · steady', vKind: 'pass', ev: { source: 'APM', method: 'Automated — uptime', last: 'Rolling 90d', result: '99.98% across critical services' } },
+            { l: 'Mean time to recover (MTTR)', v: 'Improving', vKind: 'pass', ev: { source: 'ITSM + SOAR', method: 'Automated — metric rollup', last: 'Rolling 90d', result: 'MTTR trending down quarter-over-quarter' } },
+            { l: 'Recovery readiness', v: '78% → target 90%', vKind: 'exposure', ev: { source: 'DR program', method: 'Modeled', last: 'last 30d', result: '78% · funding lifts to 90%+' } },
+            { l: 'Change-related incidents', v: 'Down', vKind: 'pass', ev: { source: 'ITSM change records', method: 'Automated', last: 'Rolling 90d', result: 'Change-failure rate down quarter-over-quarter' } },
           ] },
         ],
       },
@@ -280,11 +282,11 @@ const SEATS_DATA = {
         lede: 'Regimes implicated by the event and our preservation posture.',
         sections: [
           { kind: 'panel', title: 'Legal exposure & posture', rowsKind: 'kv', rows: [
-            { l: 'Disclosure obligation triggered', v: 'None to date', vKind: 'pass' },
-            { l: 'Regimes potentially implicated', v: 'SEC, GDPR, state breach laws', vKind: 'exposure' },
-            { l: 'Data subjects confirmed exposed', v: '0 (under review)', vKind: 'exposure' },
-            { l: 'Litigation hold', v: 'Standing by' },
-            { l: 'Evidence preservation', v: 'In place · under privilege', vKind: 'pass' },
+            { l: 'Disclosure obligation triggered', v: 'None to date', vKind: 'pass', ev: { source: 'Legal obligations matrix', method: 'Manual attestation', last: 'last 13:30', result: 'No regime triggered to date' } },
+            { l: 'Regimes potentially implicated', v: 'SEC, GDPR, state breach laws', vKind: 'exposure', ev: { source: 'Legal obligations matrix', method: 'Manual — scoping', last: 'last 13:30', result: 'Scoped pending data-impact confirmation' } },
+            { l: 'Data subjects confirmed exposed', v: '0 (under review)', vKind: 'exposure', ev: { source: 'DLP + forensics', method: 'Automated + manual review', last: 'last 14:00', result: '0 confirmed · review ongoing' } },
+            { l: 'Litigation hold', v: 'Standing by', ev: { source: 'Legal ops', method: 'Manual', last: 'last 13:30', result: 'Hold prepared · not yet issued' } },
+            { l: 'Evidence preservation', v: 'In place · under privilege', vKind: 'pass', ev: { source: 'Forensics + Legal', method: 'Manual — chain of custody', last: 'last 14:00', result: 'Timeline + artifacts preserved under privilege' } },
           ] },
         ],
       },
@@ -315,10 +317,10 @@ const SEATS_DATA = {
         lede: 'The record that protects the company with regulators, auditors, and in litigation.',
         sections: [
           { kind: 'panel', title: 'Defensibility', rowsKind: 'kv', rows: [
-            { l: 'Regulatory readiness', v: '91%', vKind: 'pass' },
-            { l: 'Evidence chain', v: 'Preserved · integrity verified', vKind: 'pass' },
-            { l: 'Obligations met on time (12mo)', v: '100%', vKind: 'pass' },
-            { l: 'Open legal risks', v: '2 · tracked', vKind: 'exposure' },
+            { l: 'Regulatory readiness', v: '91%', vKind: 'pass', ev: { source: 'GRC readiness assessment', method: 'Auditor sample + automated', last: 'Quarterly', result: '91% obligations-control coverage' } },
+            { l: 'Evidence chain', v: 'Preserved · integrity verified', vKind: 'pass', ev: { source: 'Evidence ledger', method: 'Automated — hash chain', last: 'Continuous', result: 'Integrity verified · no gaps' } },
+            { l: 'Obligations met on time (12mo)', v: '100%', vKind: 'pass', ev: { source: 'Legal obligations matrix', method: 'Manual attestation', last: 'Trailing 12mo', result: '100% on-time' } },
+            { l: 'Open legal risks', v: '2 · tracked', vKind: 'exposure', ev: { source: 'Legal risk register', method: 'Manual', last: 'last 7 days', result: '2 open · both tracked with owners' } },
           ] },
         ],
       },
@@ -364,10 +366,10 @@ const SEATS_DATA = {
         lede: 'The risk-register entries breaching appetite, and where risk concentrates.',
         sections: [
           { kind: 'panel', title: 'Out of tolerance & concentration', rowsKind: 'kv', rows: [
-            { l: 'Risks above appetite', v: '1 · claims/payments', vKind: 'exposure' },
-            { l: 'Concentration risk', v: 'Payments path', vKind: 'exposure' },
-            { l: 'Third-party risk', v: 'Drifting · 2 critical vendors', vKind: 'exposure' },
-            { l: 'Correlated / supply-chain risk', v: 'Monitored' },
+            { l: 'Risks above appetite', v: '1 · claims/payments', vKind: 'exposure', ev: { source: 'Risk register', method: 'Manual — appetite scoring', last: 'last 14:00', result: 'R-07 claims/payments above ceiling' } },
+            { l: 'Concentration risk', v: 'Payments path', vKind: 'exposure', ev: { source: 'Risk register + dependency map', method: 'Manual + automated', last: 'last 7 days', result: 'Concentration in payments/claims path' } },
+            { l: 'Third-party risk', v: 'Drifting · 2 critical vendors', vKind: 'exposure', ev: { source: 'GRC vendor monitoring', method: 'Automated + attestation', last: 'last 23 days', result: '2 critical vendors drifting · 14 reviews overdue' } },
+            { l: 'Correlated / supply-chain risk', v: 'Monitored', ev: { source: 'Supply-chain monitoring', method: 'Automated', last: 'Continuous', result: 'No new correlated exposure' } },
           ] },
         ],
       },
@@ -386,10 +388,10 @@ const SEATS_DATA = {
         lede: 'Residual risk against appetite over time.',
         sections: [
           { kind: 'panel', title: 'Risk trajectory', rowsKind: 'kv', rows: [
-            { l: 'Residual risk (6-quarter trend)', v: 'Down · within appetite', vKind: 'pass' },
-            { l: 'Appetite breaches this year', v: '3 · all resolved', vKind: 'pass' },
-            { l: 'Risk register items closed (Q)', v: '12', vKind: 'pass' },
-            { l: 'Projected if roadmap funded', v: 'Further reduction', vKind: 'pass' },
+            { l: 'Residual risk (6-quarter trend)', v: 'Down · within appetite', vKind: 'pass', ev: { source: 'Risk quantification', method: 'Modeled — residual', last: 'Quarterly', result: 'Residual declining 6 quarters' } },
+            { l: 'Appetite breaches this year', v: '3 · all resolved', vKind: 'pass', ev: { source: 'Risk register', method: 'Manual', last: 'YTD', result: '3 breaches · all resolved' } },
+            { l: 'Risk register items closed (Q)', v: '12', vKind: 'pass', ev: { source: 'Risk register', method: 'Manual', last: 'This quarter', result: '12 items closed' } },
+            { l: 'Projected if roadmap funded', v: 'Further reduction', vKind: 'pass', ev: { source: 'Risk model', method: 'Modeled — projected', last: 'last 7 days', result: 'Further reduction with funded roadmap' } },
           ] },
         ],
       },
@@ -423,10 +425,10 @@ const SEATS_DATA = {
         lede: 'Board-level assurance — no technical detail, just whether the company is being run safely.',
         sections: [
           { kind: 'panel', title: 'Assurance', rowsKind: 'kv', rows: [
-            { l: 'Active compromise', v: 'None', vKind: 'pass' },
-            { l: 'Today’s event', v: 'Contained by management in minutes', vKind: 'pass' },
-            { l: 'Business operating normally', v: 'Yes', vKind: 'pass' },
-            { l: 'Accountability', v: 'Named owners on every open item', vKind: 'pass' },
+            { l: 'Active compromise', v: 'None', vKind: 'pass', ev: { source: 'SIEM + EDR', method: 'Automated — correlation', last: 'Real-time · 14:08', result: 'No confirmed intrusion' } },
+            { l: 'Today’s event', v: 'Contained by management in minutes', vKind: 'pass', ev: { source: 'SOAR incident record', method: 'Automated — workflow logs', last: '14:02', result: 'Contained in 2s · verified holding' } },
+            { l: 'Business operating normally', v: 'Yes', vKind: 'pass', ev: { source: 'Service catalog', method: 'Automated — health checks', last: 'Real-time', result: 'All critical services operating' } },
+            { l: 'Accountability', v: 'Named owners on every open item', vKind: 'pass', ev: { source: 'Action register', method: 'Manual', last: 'last 14:00', result: 'Every open item owner-assigned' } },
           ] },
         ],
       },
@@ -435,10 +437,10 @@ const SEATS_DATA = {
         lede: 'What the board must know about materiality and disclosure.',
         sections: [
           { kind: 'panel', title: 'Materiality & disclosure', rowsKind: 'kv', rows: [
-            { l: 'Material events confirmed', v: '0', vKind: 'pass' },
-            { l: 'Under materiality review', v: '1 · determination due', vKind: 'exposure' },
-            { l: 'Disclosure obligation triggered', v: 'None to date', vKind: 'pass' },
-            { l: 'How management handled it', v: 'Contained, documented, evidence preserved', vKind: 'pass' },
+            { l: 'Material events confirmed', v: '0', vKind: 'pass', ev: { source: 'Legal + Finance review', method: 'Manual attestation', last: 'last 13:30', result: '0 confirmed material' } },
+            { l: 'Under materiality review', v: '1 · determination due', vKind: 'exposure', ev: { source: 'Legal + Finance review', method: 'Manual', last: 'last 13:30', result: '1 candidate · determination pending' } },
+            { l: 'Disclosure obligation triggered', v: 'None to date', vKind: 'pass', ev: { source: 'Legal obligations matrix', method: 'Manual', last: 'last 13:30', result: 'None triggered' } },
+            { l: 'How management handled it', v: 'Contained, documented, evidence preserved', vKind: 'pass', ev: { source: 'Incident record + evidence ledger', method: 'Automated + manual', last: '14:09', result: 'Detected, contained, verified, escalated within policy' } },
           ] },
         ],
       },
@@ -457,11 +459,11 @@ const SEATS_DATA = {
         lede: 'The quarterly view: posture, resilience, and how we compare to peers.',
         sections: [
           { kind: 'panel', title: 'Quarterly oversight', rowsKind: 'kv', rows: [
-            { l: 'Posture vs board appetite', v: 'Within · 82 / target 85', vKind: 'pass' },
-            { l: 'Quarter-over-quarter', v: '↑ +4', vKind: 'pass' },
-            { l: 'Mean time to contain', v: '41 min · improving', vKind: 'pass' },
-            { l: 'Peer benchmark', v: 'Top quartile', vKind: 'pass' },
-            { l: 'Defensible record', v: 'Board summary + evidence on file', vKind: 'pass' },
+            { l: 'Posture vs board appetite', v: 'Within · 82 / target 85', vKind: 'pass', ev: { source: 'Posture scoring engine', method: 'Automated — control rollup', last: 'Daily', result: '82 vs target 85' } },
+            { l: 'Quarter-over-quarter', v: '↑ +4', vKind: 'pass', ev: { source: 'Posture scoring engine', method: 'Automated', last: 'Quarterly', result: '+4 quarter-over-quarter' } },
+            { l: 'Mean time to contain', v: '41 min · improving', vKind: 'pass', ev: { source: 'SOAR metrics', method: 'Automated — metric rollup', last: 'Rolling 30d', result: 'MTTC 41 min · improving' } },
+            { l: 'Peer benchmark', v: 'Top quartile', vKind: 'pass', ev: { source: 'Industry benchmark feed', method: 'Automated — benchmark', last: 'Quarterly', result: 'Top quartile vs healthcare peers' } },
+            { l: 'Defensible record', v: 'Board summary + evidence on file', vKind: 'pass', ev: { source: 'Evidence ledger + board pack', method: 'Automated + manual', last: 'last 14:00', result: 'Board summary generated · evidence preserved' } },
           ] },
         ],
       },
