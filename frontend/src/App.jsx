@@ -168,14 +168,13 @@ var NAV_GROUPS = [
     ]
   },
   {
-    label: "Executive Dashboards",
+    label: "Executive",
     items: [
-      {id:"dashboard", label:"CISO",      icon:"S", mod:"F08a", subtabs:["attackpaths"]},
-      {id:"cio",       label:"CIO",       icon:"I", mod:"F08e"},
-      {id:"cro",       label:"CRO / Audit", icon:"C", mod:"F08b"},
-      {id:"cfo",       label:"CFO",       icon:"F", mod:"F08c"},
-      {id:"clo",       label:"CLO",       icon:"L", mod:"F08f"},
-      {id:"boarddash", label:"Board",     icon:"B", mod:"F08d"},
+      // Canonical executive experience = the situation room (7 seats). The legacy
+      // per-role dashboards (dashboard/cio/cro/cfo/clo/boarddash) are demoted to
+      // "Deep dive" targets reached from inside a seat — their renderPage() branches
+      // remain, they're just no longer top-level sidebar destinations.
+      {id:"exec-ciso", label:"Situation Room", icon:"◆", mod:"F08"},
     ]
   },
   {
@@ -26118,6 +26117,14 @@ function CyberRxApp() {
       });
     }
     return React.createElement(Home, sharedProps);
+  }
+
+  // Canonical executive experience renders full-bleed (no legacy Shell sidebar/topbar)
+  // to match the situation-room mock. Reached only post-auth (the landing/login/MFA
+  // phases return earlier), so this does not touch the auth gate. Everything else
+  // keeps the legacy Shell chrome exactly as before.
+  if (typeof page === 'string' && page.indexOf('exec-') === 0) {
+    return renderPage();
   }
 
   return React.createElement(Shell, {

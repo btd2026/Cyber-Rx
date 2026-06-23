@@ -12,9 +12,11 @@
  * (TODO real data) and bound to your API where it cleanly fits.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { HashRouter, Routes, Route, Navigate, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from './useTheme';
-import { useCisoData } from './useCisoData';
+import { useCisoData, apiCtx } from './useCisoData';
+import { useSeatData } from './useSeatData';
 import { CISO_SEAT } from './seats/ciso';
 import SEATS_DATA from './seats/otherSeats';
 import { useNow, getAudit, downloadBoardPack } from './trust';
@@ -25,13 +27,13 @@ const SEAT_ORDER = ['CEO', 'CISO', 'CFO', 'CIO', 'CLO', 'CRO', 'Board'];
 /* Per-seat tab definitions (formal name + plain question). CISO is complete; the
    other six show their exact tab names and are authored next. */
 const SEAT_TABS = {
-  CEO: ['Exec Summary', 'Operating Status', 'Principal Business Risk', 'Board & Executive Attention', 'Trajectory'],
+  CEO: ['Exec Summary', 'Operating Status', 'Principal Business Risk', 'Board & Executive Attention', 'Trajectory', '⚖ Liability'],
   CISO: CISO_SEAT.tabs.map((t) => t.name),
-  CFO: ['Exec Summary', 'Financial Exposure', 'Materiality', 'Decisions Required', 'Return on Investment'],
-  CIO: ['Exec Summary', 'Service Status', 'Operational Threats', 'Decisions Required', 'Reliability Trend'],
-  CLO: ['Exec Summary', 'Regulatory Obligation', 'Disclosure & Timelines', 'Decisions Required', 'Defensibility'],
-  CRO: ['Exec Summary', 'Risk Appetite Status', 'Tolerance & Concentration', 'Decisions Required', 'Risk Trajectory'],
-  Board: ['Exec Summary', 'Control Assurance', 'Materiality', 'Board Decisions', 'Quarterly Oversight'],
+  CFO: ['Exec Summary', 'Financial Exposure', 'Materiality', 'Decisions Required', 'Return on Investment', '⚖ Liability'],
+  CIO: ['Exec Summary', 'Service Status', 'Operational Threats', 'Decisions Required', 'Reliability Trend', '⚖ Liability'],
+  CLO: ['Exec Summary', 'Regulatory Obligation', 'Disclosure & Timelines', 'Decisions Required', 'Defensibility', '⚖ Liability'],
+  CRO: ['Exec Summary', 'Risk Appetite Status', 'Tolerance & Concentration', 'Decisions Required', 'Risk Trajectory', '⚖ Liability'],
+  Board: ['Exec Summary', 'Control Assurance', 'Materiality', 'Board Decisions', 'Quarterly Oversight', '⚖ Liability'],
 };
 
 /* Legacy deep-dive target per seat (kept routing). */
@@ -45,8 +47,31 @@ const tabsForSeat = (s) => (s === 'CISO'
   : SEAT_TABS[s].map((name, i) => ({ key: i === 0 ? 'summary' : slug(name), name })));
 const seatFromSlug = (sl) => SEAT_ORDER.find((s) => s.toLowerCase() === sl) || null;
 
+/* Scoped router — owns ONLY the URL #fragment (#/<seat>/<tab>), so the legacy
+   App.jsx state machine (which owns pathname) is left completely untouched.
+   Exactly one Router instance, at the module root. */
 export default function SituationRoom(props = {}) {
+  return (
+    <HashRouter>
+      <Routes>
+        <Route path="/:seat/:tab" element={<SeatView {...props} />} />
+        <Route path="/:seat" element={<SeatView {...props} />} />
+        <Route path="*" element={<DefaultRedirect initialSeat={props.initialSeat} />} />
+      </Routes>
+    </HashRouter>
+  );
+}
+
+function DefaultRedirect({ initialSeat }) {
+  const s = SEAT_ORDER.includes((initialSeat || '').toUpperCase()) ? initialSeat.toUpperCase() : 'CISO';
+  return <Navigate to={`/${s.toLowerCase()}/summary`} replace />;
+}
+
+function SeatView(props = {}) {
   const { go, initialSeat } = props;
+  const params = useParams();
+  const nav = useNavigate();
+  const loc = useLocation();
   const tabRefs = useRef([]);
   const { isDark, toggle } = useTheme();
   // Real CISO data, bound conservatively (verified fields only); null when offline.
@@ -54,55 +79,40 @@ export default function SituationRoom(props = {}) {
   const now = useNow();                       // live "as-of" clock
   const [auditOpen, setAuditOpen] = useState(false);
 
+  // Resolve seat + tab from the URL params (validated, with fallbacks).
+  const seat = seatFromSlug((params.seat || '').toLowerCase())
+    || (SEAT_ORDER.includes((initialSeat || '').toUpperCase()) ? initialSeat.toUpperCase() : 'CISO');
+  const tabs = tabsForSeat(seat);
+  const tabKey = tabs.some((t) => t.key === params.tab) ? params.tab : 'summary';
+  const tabIdx = Math.max(0, tabs.findIndex((t) => t.key === tabKey));
+  const activeTab = tabs[tabIdx] || tabs[0];
+  const seatBound = useSeatData(seat, props);   // common spine for the other six seats
+
   // Trust layer: provenance + as-of are per-seat (CISO is live; others sample).
   const asOf = bound?.live ? bound.live.toLocaleString() : null;
   const provenance = bound?.provenance || null;
   const onBoardPack = () => {
     const data = seat === 'CISO' ? CISO_SEAT : SEATS_DATA[seat];
+    // CISO: kick the server-side report builder (best-effort); then export the client
+    // board pack and log the audit entry regardless.
+    if (seat === 'CISO') {
+      const { token, orgId, api } = apiCtx(props);
+      const h = { 'Content-Type': 'application/json', 'X-Org-Id': orgId };
+      if (token) h.Authorization = `Bearer ${token}`;
+      fetch(`${api}/api/ciso/report/generate?org_id=${encodeURIComponent(orgId)}`, { method: 'POST', headers: h, body: '{}' }).catch(() => {});
+    }
     if (data) downloadBoardPack({ seat, summary: data.summary, tabs: data.tabs, provenance, asOf });
   };
 
-  // Seat + tab are real, deep-linkable routes via the URL hash: #/<seat>/<tab>.
-  // Browser back/forward and direct links work; falls back to initialSeat → CISO.
-  const readRoute = useCallback(() => {
-    const fallback = SEAT_ORDER.includes((initialSeat || '').toUpperCase()) ? initialSeat.toUpperCase() : 'CISO';
-    let st = fallback, tk = 'summary';
-    if (typeof window !== 'undefined' && window.location.hash) {
-      const parts = window.location.hash.replace(/^#\/?/, '').split('/');
-      const s = seatFromSlug((parts[0] || '').toLowerCase());
-      if (s) { st = s; if (parts[1]) tk = parts[1]; }
-    }
-    if (!tabsForSeat(st).some((t) => t.key === tk)) tk = 'summary';
-    return { seat: st, tabKey: tk };
-  }, [initialSeat]);
-
-  const [route, setRoute] = useState(readRoute);
-  const { seat, tabKey } = route;
-  const tabs = tabsForSeat(seat);
-  const tabIdx = Math.max(0, tabs.findIndex((t) => t.key === tabKey));
-  const activeTab = tabs[tabIdx] || tabs[0];
-
-  // Keep the URL hash in sync, and react to browser back/forward.
-  useEffect(() => {
-    const hash = `#/${seat.toLowerCase()}/${tabKey}`;
-    if (typeof window !== 'undefined' && window.location.hash !== hash) {
-      window.history.replaceState(null, '', hash);
-    }
-  }, [seat, tabKey]);
-  useEffect(() => {
-    const onPop = () => setRoute(readRoute());
-    window.addEventListener('popstate', onPop);
-    window.addEventListener('hashchange', onPop);
-    return () => { window.removeEventListener('popstate', onPop); window.removeEventListener('hashchange', onPop); };
-  }, [readRoute]);
-
-  const navigate = (s, key) => {
-    if (typeof window !== 'undefined') window.history.pushState(null, '', `#/${s.toLowerCase()}/${key}`);
-    setRoute({ seat: s, tabKey: key });
-  };
+  // Navigation drives the router → browser back/forward + deep links come free.
+  const navigate = (s, key) => nav(`/${s.toLowerCase()}/${key}`);
   const selectSeat = (s) => navigate(s, 'summary');
-  const goTabKey = (key) => navigate(seat, key);
+  // "Every number is a door": door clicks record their origin so the target can
+  // offer "← Back to <origin>". Tab-bar / seat switches don't (no origin).
+  const goTabKey = (key) => nav(`/${seat.toLowerCase()}/${key}`, { state: { from: activeTab.name } });
   const setTabByIndex = (i) => navigate(seat, tabs[i].key);
+  const back = (loc.state && loc.state.from && activeTab.key !== 'summary')
+    ? { label: loc.state.from, onClick: () => nav(-1) } : null;
 
   const onTabsKey = (e) => {
     const n = tabs.length;
@@ -172,8 +182,8 @@ export default function SituationRoom(props = {}) {
         {/* Panel */}
         <div role="tabpanel" id={`sr-panel-${activeTab.key}`} aria-labelledby={`sr-tab-${activeTab.key}`} tabIndex={0} className="sr-panel">
           {seat === 'CISO'
-            ? <CisoPanel tabKey={activeTab.key} goTabKey={goTabKey} bound={bound} onBoardPack={onBoardPack} />
-            : <SeatPanel seat={seat} tabKey={activeTab.key} goTabKey={goTabKey} onBoardPack={onBoardPack} asOf={asOf} />}
+            ? <CisoPanel tabKey={activeTab.key} goTabKey={goTabKey} bound={bound} onBoardPack={onBoardPack} back={back} />
+            : <SeatPanel seat={seat} tabKey={activeTab.key} goTabKey={goTabKey} onBoardPack={onBoardPack} asOf={null} bound={seatBound} back={back} />}
         </div>
 
         <footer className="sr-footer">CyberRx · executive operating system — illustrative, with sample data</footer>
@@ -194,17 +204,26 @@ function SeatPlaceholder({ seat, tab }) {
 
 /* Generic seat renderer — the six non-CISO seats share this one code path, driven
    by data blocks (see seats/otherSeats.js). Same shape as the CISO reference. */
-function SeatPanel({ seat, tabKey, goTabKey, onBoardPack, asOf }) {
+function SeatPanel({ seat, tabKey, goTabKey, onBoardPack, asOf, back, bound }) {
   const S = SEATS_DATA[seat];
   if (!S) return <SeatPlaceholder seat={seat} tab={tabKey} />;
   if (tabKey === 'summary') {
+    // Real verdict/lede/status ← agents brief; briefing ← key-questions (mapped to
+    // this seat's tabs, in order). Tiles stay sample. Tagged-sample fallback.
+    const b = bound?.brief;
+    const tabKeys = Object.keys(S.tabs);
+    const briefing = (bound?.briefingCards && bound.briefingCards.length)
+      ? bound.briefingCards.slice(0, tabKeys.length).map((c, i) => ({ ...c, to: tabKeys[i] }))
+      : S.summary.briefing;
     return (
       <div className="sr-stack">
-        <PanelHead kicker={`${seat} · Executive summary`} verdict={S.summary.verdict}
-          pill={S.summary.pill} pillKind={S.summary.pillKind} pillVerified={S.summary.pillVerified} lede={S.summary.lede} />
+        <PanelHead kicker={`${seat} · Executive summary`} tag={b ? 'live' : 'sample'}
+          verdict={b ? b.verdict : S.summary.verdict}
+          pill={b ? b.pill : S.summary.pill} pillKind={b ? b.pillKind : S.summary.pillKind}
+          pillVerified={!b && S.summary.pillVerified} lede={b ? b.lede : S.summary.lede} />
         <ProvenanceStrip provenance={null} asOf={asOf} />
         <MetricBand tiles={S.summary.tiles} onGo={goTabKey} />
-        <Briefing rows={S.summary.briefing} onGo={goTabKey} />
+        <Briefing rows={briefing} onGo={goTabKey} />
       </div>
     );
   }
@@ -213,7 +232,7 @@ function SeatPanel({ seat, tabKey, goTabKey, onBoardPack, asOf }) {
   return (
     <div className="sr-stack">
       <PanelHead verdict={tab.name} pill={tab.pill} pillKind={tab.pillKind}
-        pillVerified={tab.pillVerified} qsub={tab.q} lede={tab.lede} />
+        pillVerified={tab.pillVerified} qsub={tab.q} lede={tab.lede} back={back} />
       {(tab.sections || []).map((s, i) => <SeatSection key={i} s={s} onBoardPack={onBoardPack} />)}
     </div>
   );
@@ -287,10 +306,11 @@ export function Pill({ kind = 'brand', verified, children }) {
   return <span className={`sr-pill sr-pill--${kind}`}>{verified ? '✓ ' : ''}{children}</span>;
 }
 
-export function PanelHead({ kicker, verdict, pill, pillKind, pillVerified, qsub, lede }) {
+export function PanelHead({ kicker, verdict, pill, pillKind, pillVerified, qsub, lede, tag, back }) {
   return (
     <div className="sr-head">
-      {kicker && <span className="sr-kicker">{kicker}</span>}
+      {back && <button type="button" className="sr-back" onClick={back.onClick}>← Back to {back.label}</button>}
+      {(kicker || tag) && <span className="sr-kicker">{kicker}{tag && <span className={`sr-srctag sr-srctag--${tag}`}>{tag}</span>}</span>}
       {verdict && <h2 className="sr-verdict">{verdict}{pill && <Pill kind={pillKind} verified={pillVerified}>{pill}</Pill>}</h2>}
       {qsub && <p className="sr-qsub">{qsub}</p>}
       {lede && <p className="sr-lede">{lede}</p>}
@@ -404,19 +424,24 @@ export function Evidence({ source, method, last, result, verified = true, defaul
 }
 
 /* ============================ CISO seat panels ============================ */
-function CisoPanel({ tabKey, goTabKey, bound, onBoardPack }) {
+function CisoPanel({ tabKey, goTabKey, bound, onBoardPack, back }) {
   const S = CISO_SEAT;
   if (tabKey === 'summary') {
-    // Merge real/derived tile overrides (label-keyed) over the sample tiles.
+    // Real verdict/lede/pill ← agents brief; tiles ← dashboard/coverage; briefing ←
+    // key-questions. Each falls back to the seat's authored sample, tagged "sample".
     const synced = bound?.live ? bound.live.toLocaleString() : '14:09';
     const tiles = S.summary.tiles.map((t) => (bound?.tiles && bound.tiles[t.label] ? { ...t, ...bound.tiles[t.label] } : t));
+    const b = bound?.brief;
+    const briefing = (bound?.briefing && bound.briefing.length) ? bound.briefing : S.summary.briefing;
     return (
       <div className="sr-stack">
-        <PanelHead kicker={`Executive summary · synced ${synced}`} verdict={S.summary.verdict}
-          pill={S.summary.pill} pillKind={S.summary.pillKind} lede={S.summary.lede} />
+        <PanelHead kicker={`Executive summary · synced ${synced}`} tag={b ? 'live' : 'sample'}
+          verdict={b ? b.verdict : S.summary.verdict}
+          pill={b ? b.pill : S.summary.pill} pillKind={b ? b.pillKind : S.summary.pillKind}
+          lede={b ? b.lede : S.summary.lede} />
         <ProvenanceStrip provenance={bound?.provenance} asOf={bound?.live ? bound.live.toLocaleString() : null} />
         <MetricBand tiles={tiles} onGo={goTabKey} />
-        <Briefing rows={S.summary.briefing} onGo={goTabKey} />
+        <Briefing rows={briefing} onGo={goTabKey} />
       </div>
     );
   }
@@ -424,13 +449,44 @@ function CisoPanel({ tabKey, goTabKey, bound, onBoardPack }) {
   if (!tab) return null;
   const head = (
     <PanelHead verdict={tab.name} pill={tab.pill} pillKind={tab.pillKind}
-      pillVerified={tab.pillVerified} qsub={tab.q} lede={tab.lede} />
+      pillVerified={tab.pillVerified} qsub={tab.q} lede={tab.lede} back={back} />
   );
 
   if (tabKey === 'operational') {
+    const inc = bound?.incident;
+    const sigItems = bound?.signals?.items;
     return (
       <div className="sr-stack">{head}
+        {inc && (
+          <div className="sr-incident" role="note" aria-label="Active incident">
+            <span className="sr-incident__dot" aria-hidden="true" />
+            <div>
+              <div className="sr-incident__kicker">Active incident · {inc.failedAt || '—'}{inc.phase ? ` · ${inc.phase}` : ''}</div>
+              <div className="sr-incident__text">{inc.headline}</div>
+            </div>
+          </div>
+        )}
         {tab.panels.map((p) => <Section key={p.title} title={p.title}><Rows items={p.rows} /></Section>)}
+        {Array.isArray(sigItems) && sigItems.length > 0 && (
+          <Section title="Live platform signals" action={<span className="sr-hint">live · {bound.signals.generatedAt ? new Date(bound.signals.generatedAt).toLocaleString() : 'now'}</span>}>
+            <div className="sr-rows">
+              {sigItems.map((s, i) => (
+                <div key={i} className="sr-row">
+                  <span className="sr-row__k">{s.label}{s.detail && <span className="sr-row__sub">{s.detail}</span>}</span>
+                  <span className="sr-row__v">{s.live ? <span className="sr-fg--pass">✓ </span> : ''}{s.value}{s.source ? ` · ${s.source}` : ''}</span>
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
+      </div>
+    );
+  }
+  if (tabKey === 'liability') {
+    return (
+      <div className="sr-stack">{head}
+        {(tab.panels || []).map((p) => <Section key={p.title} title={p.title}><Rows items={p.rows} /></Section>)}
+        {tab.note && <p className="sr-bigstat">{tab.note}</p>}
       </div>
     );
   }
@@ -461,7 +517,8 @@ function CisoPanel({ tabKey, goTabKey, bound, onBoardPack }) {
             ))}
           </div>
           <div className="sr-statgrid">
-            {tab.pathStats.map((s) => <div key={s.k} className="sr-stat"><span className="sr-stat__k">{s.k}</span><span className="sr-stat__v">{s.v}</span></div>)}
+            {[...tab.pathStats, ...(bound?.coverage != null ? [{ k: 'ATT&CK coverage (live)', v: `${bound.coverage}%` }] : [])]
+              .map((s) => <div key={s.k} className="sr-stat"><span className="sr-stat__k">{s.k}</span><span className="sr-stat__v">{s.v}</span></div>)}
           </div>
         </Section>
       </div>
@@ -503,6 +560,11 @@ function CisoPanel({ tabKey, goTabKey, bound, onBoardPack }) {
     return (
       <div className="sr-stack">{head}
         <PostureChart data={tab.posture} target={tab.target} />
+        <div className="sr-fw__cap">
+          {bound?.postureLive != null
+            ? <>Current posture <strong>{bound.postureLive}</strong> (live · /api/metrics/ciso) · trend series illustrative (no history endpoint yet)</>
+            : <>Trend series illustrative — sample</>}
+        </div>
         <div className="sr-twocol">
           <Section title="Improving"><ul className="sr-tl sr-tl--up">{tab.improving.map((x) => <li key={x}>{x}</li>)}</ul></Section>
           <Section title="Deteriorating — needs attention"><ul className="sr-tl sr-tl--down">{tab.deteriorating.map((x) => <li key={x}>{x}</li>)}</ul></Section>
@@ -514,25 +576,27 @@ function CisoPanel({ tabKey, goTabKey, bound, onBoardPack }) {
     );
   }
   if (tabKey === 'response-investment') {
+    const projects = bound?.roadmap?.projects || tab.projects;
+    const readiness = bound?.roadmap?.readiness || tab.readiness;
     return (
       <div className="sr-stack">{head}
-        <Section title="Roadmap">
+        <Section title="Roadmap" action={bound?.roadmap ? <span className="sr-hint">live · /api/projects/portfolio</span> : null}>
           <table className="sr-table">
             <thead><tr><th>Project</th><th>Status</th><th>Investment</th><th>Expected return</th><th>Decision</th></tr></thead>
             <tbody>
-              {tab.projects.map((p) => (
-                <tr key={p.name}>
+              {projects.map((p, i) => (
+                <tr key={p.name || i}>
                   <td className="sr-td-name">{p.name}</td>
                   <td>{p.status}</td>
                   <td className="sr-mono">{p.invest}</td>
                   <td className="sr-td-exposed">{p.ret}</td>
-                  <td>{p.needs ? <Pill kind="exposure">{p.decision}</Pill> : <span className="sr-dash">{p.decision}</span>}</td>
+                  <td>{p.needs ? <Pill kind="exposure">{p.decision || 'Needs funding'}</Pill> : <span className="sr-dash">{p.decision || '—'}</span>}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </Section>
-        <Section title="Readiness & investment"><Rows items={tab.readiness} /></Section>
+        <Section title="Readiness & investment"><Rows items={readiness} /></Section>
       </div>
     );
   }
@@ -777,6 +841,17 @@ function SrStyles() {
       .sr-qsub { margin:7px 0 0; font-size:14px; color:var(--sr-muted); }
       .sr-qsub::before { content:"› "; color:var(--sr-brand); }
       .sr-lede { margin:12px 0 0; font-size:16px; line-height:1.55; color:var(--sr-muted); max-width:760px; }
+      .sr-back { display:inline-block; background:none; border:none; padding:0 0 6px; cursor:pointer; font-family:var(--sr-font-body); font-size:12.5px; font-weight:600; color:var(--sr-brand); }
+      .sr-back:hover { text-decoration:underline; }
+      .sr-back:focus-visible { outline:2px solid var(--sr-focus); outline-offset:2px; border-radius:var(--sr-radius-sm); }
+      .sr-srctag { margin-left:8px; font-family:var(--sr-font-mono); font-size:8.5px; letter-spacing:.06em; text-transform:uppercase; padding:1px 6px; border-radius:999px; vertical-align:middle; }
+      .sr-srctag--live { color:var(--sr-pass); background:var(--sr-pass-tint); }
+      .sr-srctag--sample { color:var(--sr-exposure); background:var(--sr-exposure-tint); }
+      .sr-incident { display:flex; gap:12px; align-items:flex-start; background:var(--sr-surface); border:1px solid var(--sr-border); border-left:4px solid var(--sr-exposure); border-radius:var(--sr-radius); padding:12px 16px; }
+      .sr-incident__dot { width:9px; height:9px; border-radius:50%; background:var(--sr-exposure); margin-top:5px; flex:none; }
+      @media (prefers-reduced-motion: no-preference){ .sr-incident__dot{ animation:srPulse 2s ease-in-out infinite; } }
+      .sr-incident__kicker { font-family:var(--sr-font-mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--sr-exposure); }
+      .sr-incident__text { font-size:13.5px; line-height:1.55; color:var(--sr-text); margin-top:2px; }
 
       .sr-pill { font-family:var(--sr-font-mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; padding:4px 10px; border-radius:999px; white-space:nowrap; }
       .sr-pill--brand { color:var(--sr-brand); background:var(--sr-brand-tint); }
