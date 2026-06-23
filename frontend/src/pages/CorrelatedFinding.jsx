@@ -1,22 +1,36 @@
 /**
- * Correlated Finding Page
- * Task: T-113
+ * Correlated Finding Page  (T-113)
  *
- * Renders the executive narrative for a correlated finding
- * Matches the NASCO F-001 screenshot field-for-field
+ * Executive narrative for a correlated finding. Re-skinned onto the shared
+ * component kit (frontend/src/ui) + --rx-* tokens; data flow is unchanged.
  *
- * This component is designed to be used within the App.jsx routing system
- * Props:
- *   - findingId: The ID of the finding to display
- *   - goBack: Function to navigate back
- *   - authToken: Authentication token
- *   - orgId: Organization ID
+ * Props: findingId, goBack, authToken, orgId, api_url
+ * Source: POST /api/correlation/narrative/:findingId
  */
 
-import React, { useState, useEffect } from 'react';
-import { COLORS, FONTS } from '../theme';
+import { useState, useEffect } from 'react';
+import { Panel, Cols, KV, Srow, Pill, Button } from '../ui';
 
-const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
+// finding severity / status / data-sensitivity → shared kit status kind.
+const sevKind = (s) => {
+  switch (String(s || '').toLowerCase()) {
+    case 'critical': return 'crit';
+    case 'high': case 'medium': return 'warn';
+    case 'low': return 'ok';
+    default: return 'info';
+  }
+};
+const statusKind = (s) => {
+  switch (String(s || '').toLowerCase()) {
+    case 'open': return 'crit';
+    case 'in progress': return 'warn';
+    case 'closed': case 'resolved': return 'ok';
+    default: return 'info';
+  }
+};
+const sensKind = (s) => (s === 'High' ? 'crit' : s === 'Medium' ? 'warn' : 'ok');
+const usd = (n) => `$${Number(n || 0).toLocaleString()}`;
+const titleCase = (k) => k.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase());
 
 const CorrelatedFinding = (props) => {
   const { findingId, goBack, authToken, orgId, api_url } = props;
@@ -25,7 +39,7 @@ const CorrelatedFinding = (props) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch the executive narrative for this finding
+  // Fetch the executive narrative for this finding (unchanged).
   useEffect(() => {
     const fetchNarrative = async () => {
       if (!findingId) {
@@ -75,725 +89,159 @@ const CorrelatedFinding = (props) => {
     fetchNarrative();
   }, [findingId, authToken, orgId, api_url]);
 
-  // Get severity color
-  const getSeverityColor = (severity) => {
-    switch (severity?.toLowerCase()) {
-      case 'critical': return COLORS.bad;
-      case 'high': return '#ea580c';
-      case 'medium': return COLORS.warn;
-      case 'low': return COLORS.good;
-      default: return INK2;
-    }
-  };
-
-  // Get status badge color
-  const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'open': return COLORS.bad;
-      case 'in progress': return COLORS.warn;
-      case 'closed': return COLORS.good;
-      case 'resolved': return COLORS.good;
-      default: return INK2;
-    }
-  };
-
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        flexDirection: 'column',
-        gap: '1rem'
-      }}>
-        <div style={{
-          width: '40px',
-          height: '40px',
-          border: `3px solid ${HAIR}`,
-          borderTopColor: '#5e6ad2',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }} />
-        <p style={{ color: INK2, fontSize: '0.875rem' }}>Loading executive narrative...</p>
+      <div className="rx-cf rx-cf--center">
+        <CfStyles />
+        <div className="rx-cf__spinner" />
+        <p className="rx-cf__muted">Loading executive narrative…</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div style={{
-        padding: '2rem',
-        maxWidth: '800px',
-        margin: '0 auto'
-      }}>
-        <div style={{
-          backgroundColor: '#fef2f2',
-          border: '1px solid #fecaca',
-          borderRadius: '8px',
-          padding: '1.5rem',
-          marginBottom: '1.5rem'
-        }}>
-          <h3 style={{
-            color: COLORS.bad,
-            marginTop: 0,
-            marginBottom: '0.5rem',
-            fontSize: '1.125rem',
-            fontFamily: FONTS.display
-          }}>Error Loading Narrative</h3>
-          <p style={{ color: COLORS.bad, marginBottom: '1rem' }}>{error}</p>
-          {goBack && (
-            <button
-              onClick={goBack}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: COLORS.bad,
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '0.875rem'
-              }}
-            >
-              Go Back
-            </button>
-          )}
-        </div>
+      <div className="rx-cf">
+        <CfStyles />
+        <Panel title="Error loading narrative">
+          <p style={{ color: 'var(--rx-critical)', margin: '0 0 14px', lineHeight: 1.6 }}>{error}</p>
+          {goBack && <Button primary onClick={goBack}>Go back</Button>}
+        </Panel>
       </div>
     );
   }
 
-  if (!narrative) {
-    return null;
-  }
+  if (!narrative) return null;
 
-  const { finding, executiveNarrative, correlation } = narrative;
+  const { finding, executiveNarrative: ex } = narrative;
+  const bp = ex.businessProcess;
+  const fin = ex.financialExposure;
+  const reg = ex.regulatory;
+  const own = ex.ownership;
 
   return (
-    <div style={{
-      maxWidth: '1200px',
-      margin: '0 auto',
-      padding: '2rem',
-      backgroundColor: '#ffffff',
-      minHeight: '100vh'
-    }}>
+    <div className="rx-cf">
+      <CfStyles />
+
       {/* Header */}
-      <div style={{
-        marginBottom: '2rem',
-        borderBottom: `1px solid ${HAIR}`,
-        paddingBottom: '1.5rem'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-              <span style={{
-                padding: '0.25rem 0.75rem',
-                borderRadius: '999px',
-                fontSize: '0.75rem',
-                fontWeight: '600',
-                textTransform: 'uppercase',
-                backgroundColor: '#fef3c7',
-                color: '#92400e'
-              }}>
-                Executive Narrative
-              </span>
-              <span style={{
-                padding: '0.25rem 0.75rem',
-                borderRadius: '999px',
-                fontSize: '0.75rem',
-                fontWeight: '600',
-                textTransform: 'uppercase',
-                backgroundColor: `${getSeverityColor(finding.severity)}20`,
-                color: getSeverityColor(finding.severity)
-              }}>
-                {finding.severity}
-              </span>
-              <span style={{
-                padding: '0.25rem 0.75rem',
-                borderRadius: '999px',
-                fontSize: '0.75rem',
-                fontWeight: '600',
-                textTransform: 'uppercase',
-                backgroundColor: `${getStatusColor(finding.status)}20`,
-                color: getStatusColor(finding.status)
-              }}>
-                {finding.status}
-              </span>
-            </div>
-            <h1 style={{
-              fontSize: '1.5rem',
-              fontWeight: '700',
-              margin: 0,
-              color: INK,
-              lineHeight: '1.3',
-              fontFamily: FONTS.display
-            }}>
-              {finding.title}
-            </h1>
-            <p style={{
-              color: INK2,
-              marginTop: '0.5rem',
-              fontSize: '0.875rem',
-              marginBottom: 0
-            }}>
-              Finding ID: {finding.id} • Discovered: {new Date(finding.discoveredDate).toLocaleDateString()}
-            </p>
+      <div className="rx-cf__head">
+        <div className="rx-cf__headmain">
+          <div className="rx-cf__badges">
+            <Pill kind="info">Executive Narrative</Pill>
+            {finding.severity && <Pill kind={sevKind(finding.severity)}>{finding.severity}</Pill>}
+            {finding.status && <Pill kind={statusKind(finding.status)}>{finding.status}</Pill>}
           </div>
-          {goBack && (
-            <button
-              onClick={goBack}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: PANEL,
-                color: INK2,
-                border: `1px solid ${HAIR}`,
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '0.875rem',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              ← Back
-            </button>
-          )}
+          <h1 className="rx-cf__title">{finding.title}</h1>
+          <p className="rx-cf__meta">
+            Finding ID: {finding.id}
+            {finding.discoveredDate && <> • Discovered: {new Date(finding.discoveredDate).toLocaleDateString()}</>}
+          </p>
         </div>
+        {goBack && <Button onClick={goBack}>← Back</Button>}
       </div>
 
       {/* Executive Summary */}
-      <section style={{
-        backgroundColor: PANEL,
-        borderRadius: '8px',
-        padding: '1.5rem',
-        marginBottom: '1.5rem',
-        border: `1px solid ${HAIR}`
-      }}>
-        <h2 style={{
-          fontSize: '1rem',
-          fontWeight: '600',
-          marginTop: 0,
-          marginBottom: '1rem',
-          color: INK2,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          fontFamily: FONTS.display
-        }}>
-          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          Executive Summary
-        </h2>
-        <p style={{
-          color: INK,
-          lineHeight: '1.6',
-          margin: 0,
-          fontSize: '0.9375rem'
-        }}>
-          {executiveNarrative.summary}
-        </p>
-      </section>
+      <Panel title="Executive summary">
+        <p style={{ color: 'var(--rx-text)', lineHeight: 1.6, margin: 0, fontSize: 15 }}>{ex.summary}</p>
+      </Panel>
 
-      {/* Two Column Layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-        {/* Left Column */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      <div style={{ marginTop: 18 }}>
+        <Cols>
+          {/* Left column */}
+          <div>
+            {bp && (
+              <Panel title="Affected business process">
+                <KV k="Process name" v={bp.name} />
+                {bp.tier && <KV k="Tier" v={<Pill kind={bp.tier === 'Tier 1' ? 'warn' : 'info'}>{bp.tier}</Pill>} />}
+                {bp.criticality && <KV k="Criticality" v={<Pill kind="crit">{bp.criticality}</Pill>} />}
+              </Panel>
+            )}
 
-          {/* Business Process */}
-          {executiveNarrative.businessProcess && (
-            <section style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '8px',
-              border: `1px solid ${HAIR}`,
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                backgroundColor: PANEL,
-                padding: '0.75rem 1rem',
-                borderBottom: `1px solid ${HAIR}`
-              }}>
-                <h3 style={{
-                  fontSize: '0.875rem',
-                  fontWeight: '600',
-                  margin: 0,
-                  color: INK2,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  fontFamily: FONTS.display
-                }}>
-                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                  Affected Business Process
-                </h3>
-              </div>
-              <div style={{ padding: '1rem' }}>
-                <div style={{ marginBottom: '0.75rem' }}>
-                  <div style={{ fontSize: '0.75rem', color: INK2, marginBottom: '0.25rem' }}>Process Name</div>
-                  <div style={{ fontSize: '0.9375rem', fontWeight: '500', color: INK }}>
-                    {executiveNarrative.businessProcess.name}
-                  </div>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                  <div>
-                    <div style={{ fontSize: '0.75rem', color: INK2, marginBottom: '0.25rem' }}>Tier</div>
-                    <span style={{
-                      padding: '0.125rem 0.5rem',
-                      borderRadius: '4px',
-                      fontSize: '0.75rem',
-                      fontWeight: '500',
-                      backgroundColor: executiveNarrative.businessProcess.tier === 'Tier 1' ? '#fef3c7' : PANEL,
-                      color: executiveNarrative.businessProcess.tier === 'Tier 1' ? '#92400e' : INK2
-                    }}>
-                      {executiveNarrative.businessProcess.tier}
-                    </span>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.75rem', color: INK2, marginBottom: '0.25rem' }}>Criticality</div>
-                    <span style={{
-                      padding: '0.125rem 0.5rem',
-                      borderRadius: '4px',
-                      fontSize: '0.75rem',
-                      fontWeight: '500',
-                      backgroundColor: '#fecaca',
-                      color: COLORS.bad
-                    }}>
-                      {executiveNarrative.businessProcess.criticality}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </section>
-          )}
+            {Array.isArray(ex.dataInvolvement) && ex.dataInvolvement.length > 0 && (
+              <Panel title="Data involvement">
+                {ex.dataInvolvement.map((d, i) => (
+                  <Srow key={i} name={d.classification || d.type} stat={d.sensitivity} statusKind={sensKind(d.sensitivity)} />
+                ))}
+              </Panel>
+            )}
 
-          {/* Data Involvement */}
-          {executiveNarrative.dataInvolvement && executiveNarrative.dataInvolvement.length > 0 && (
-            <section style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '8px',
-              border: `1px solid ${HAIR}`,
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                backgroundColor: PANEL,
-                padding: '0.75rem 1rem',
-                borderBottom: `1px solid ${HAIR}`
-              }}>
-                <h3 style={{
-                  fontSize: '0.875rem',
-                  fontWeight: '600',
-                  margin: 0,
-                  color: INK2,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  fontFamily: FONTS.display
-                }}>
-                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
-                  </svg>
-                  Data Involvement
-                </h3>
-              </div>
-              <div style={{ padding: '1rem' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  {executiveNarrative.dataInvolvement.map((data, index) => (
-                    <div key={index} style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      padding: '0.5rem',
-                      backgroundColor: data.sensitivity === 'High' ? '#fef2f2' : PANEL,
-                      borderRadius: '6px',
-                      border: `1px solid ${data.sensitivity === 'High' ? '#fecaca' : HAIR}`
-                    }}>
-                      <div style={{
-                        width: '8px',
-                        height: '8px',
-                        borderRadius: '50%',
-                        backgroundColor: data.sensitivity === 'High' ? COLORS.bad : data.sensitivity === 'Medium' ? COLORS.warn : INK2
-                      }} />
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '0.875rem', fontWeight: '500', color: INK }}>
-                          {data.classification || data.type}
-                        </div>
-                      </div>
-                      <span style={{
-                        padding: '0.125rem 0.5rem',
-                        borderRadius: '4px',
-                        fontSize: '0.75rem',
-                        backgroundColor: data.sensitivity === 'High' ? '#fecaca' : HAIR,
-                        color: data.sensitivity === 'High' ? COLORS.bad : INK2
-                      }}>
-                        {data.sensitivity}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-          )}
+            {ex.threat && (
+              <Panel title="Threat scenario">
+                <KV k="Threat type" v={ex.threat.name} />
+                {ex.threat.probability != null && <KV k="Probability" v={`${ex.threat.probability}%`} />}
+                {ex.threat.impact && <KV k="Impact level" v={<Pill kind="crit">{ex.threat.impact}</Pill>} />}
+                {ex.threat.mitreTechnique && <KV k="MITRE ATT&CK" v={<span className="rx-cf__code">{ex.threat.mitreTechnique}</span>} />}
+              </Panel>
+            )}
+          </div>
 
-          {/* Threat Scenario */}
-          {executiveNarrative.threat && (
-            <section style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '8px',
-              border: `1px solid ${HAIR}`,
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                backgroundColor: PANEL,
-                padding: '0.75rem 1rem',
-                borderBottom: `1px solid ${HAIR}`
-              }}>
-                <h3 style={{
-                  fontSize: '0.875rem',
-                  fontWeight: '600',
-                  margin: 0,
-                  color: INK2,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  fontFamily: FONTS.display
-                }}>
-                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                  Threat Scenario
-                </h3>
-              </div>
-              <div style={{ padding: '1rem' }}>
-                <div style={{ marginBottom: '0.75rem' }}>
-                  <div style={{ fontSize: '0.75rem', color: INK2, marginBottom: '0.25rem' }}>Threat Type</div>
-                  <div style={{ fontSize: '0.9375rem', fontWeight: '500', color: INK }}>
-                    {executiveNarrative.threat.name}
-                  </div>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                  <div>
-                    <div style={{ fontSize: '0.75rem', color: INK2, marginBottom: '0.25rem' }}>Probability</div>
-                    <div style={{ fontSize: '0.875rem', color: INK2 }}>
-                      {executiveNarrative.threat.probability}%
-                    </div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.75rem', color: INK2, marginBottom: '0.25rem' }}>Impact Level</div>
-                    <span style={{
-                      padding: '0.125rem 0.5rem',
-                      borderRadius: '4px',
-                      fontSize: '0.75rem',
-                      fontWeight: '500',
-                      backgroundColor: '#fecaca',
-                      color: COLORS.bad
-                    }}>
-                      {executiveNarrative.threat.impact}
-                    </span>
-                  </div>
-                </div>
-                {executiveNarrative.threat.mitreTechnique && (
-                  <div>
-                    <div style={{ fontSize: '0.75rem', color: INK2, marginBottom: '0.25rem' }}>MITRE ATT&CK</div>
-                    <code style={{
-                      padding: '0.125rem 0.5rem',
-                      borderRadius: '4px',
-                      fontSize: '0.75rem',
-                      backgroundColor: PANEL,
-                      color: COLORS.bad,
-                      border: `1px solid ${HAIR}`
-                    }}>
-                      {executiveNarrative.threat.mitreTechnique}
-                    </code>
+          {/* Right column */}
+          <div>
+            {fin && (
+              <Panel title="Financial exposure">
+                {fin.totalGrossExposure != null && <KV k="Total gross exposure" v={usd(fin.totalGrossExposure)} kind="crit" />}
+                {fin.netExposure != null && <KV k="Net exposure (after insurance)" v={usd(fin.netExposure)} kind="crit" />}
+                {fin.breakdown && Object.entries(fin.breakdown).map(([k, v]) => (
+                  v > 0 ? <KV key={k} k={titleCase(k)} v={usd(v)} /> : null
+                ))}
+              </Panel>
+            )}
+
+            {reg && (
+              <Panel title="Regulatory obligations">
+                {Array.isArray(reg.frameworks) && reg.frameworks.length > 0 && (
+                  <div className="rx-cf__chips">
+                    {reg.frameworks.map((fw, i) => <Pill key={i} kind="info">{fw}</Pill>)}
                   </div>
                 )}
-              </div>
-            </section>
-          )}
+                {Array.isArray(reg.obligations) && reg.obligations.map((o, i) => (
+                  <Srow key={i} name={o.name} sub={o.source} stat={o.notificationTimeline} statusKind="crit" />
+                ))}
+              </Panel>
+            )}
 
-        </div>
-
-        {/* Right Column */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-
-          {/* Financial Exposure */}
-          {executiveNarrative.financialExposure && (
-            <section style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '8px',
-              border: `1px solid ${HAIR}`,
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                backgroundColor: PANEL,
-                padding: '0.75rem 1rem',
-                borderBottom: `1px solid ${HAIR}`
-              }}>
-                <h3 style={{
-                  fontSize: '0.875rem',
-                  fontWeight: '600',
-                  margin: 0,
-                  color: INK2,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  fontFamily: FONTS.display
-                }}>
-                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Financial Exposure
-                </h3>
-              </div>
-              <div style={{ padding: '1rem' }}>
-                {executiveNarrative.financialExposure.totalGrossExposure && (
-                  <div style={{ marginBottom: '1rem' }}>
-                    <div style={{ fontSize: '0.75rem', color: INK2, marginBottom: '0.25rem' }}>Total Gross Exposure</div>
-                    <div style={{ fontSize: '1.25rem', fontWeight: '700', color: COLORS.bad, fontFamily: FONTS.mono }}>
-                      ${executiveNarrative.financialExposure.totalGrossExposure.toLocaleString()}
-                    </div>
-                  </div>
-                )}
-                {executiveNarrative.financialExposure.netExposure && (
-                  <div style={{ marginBottom: '1rem' }}>
-                    <div style={{ fontSize: '0.75rem', color: INK2, marginBottom: '0.25rem' }}>Net Exposure (after insurance)</div>
-                    <div style={{ fontSize: '1.125rem', fontWeight: '600', color: COLORS.bad, fontFamily: FONTS.mono }}>
-                      ${executiveNarrative.financialExposure.netExposure.toLocaleString()}
-                    </div>
-                  </div>
-                )}
-                {executiveNarrative.financialExposure.breakdown && (
-                  <div>
-                    <div style={{ fontSize: '0.75rem', color: INK2, marginBottom: '0.5rem' }}>Exposure Breakdown</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      {Object.entries(executiveNarrative.financialExposure.breakdown).map(([key, value]) => (
-                        value > 0 && (
-                          <div key={key} style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            fontSize: '0.875rem'
-                          }}>
-                            <span style={{ color: INK2 }}>
-                              {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                            </span>
-                            <span style={{ fontWeight: '500', color: INK2 }}>
-                              ${value.toLocaleString()}
-                            </span>
-                          </div>
-                        )
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </section>
-          )}
-
-          {/* Regulatory & Legal */}
-          {executiveNarrative.regulatory && (
-            <section style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '8px',
-              border: `1px solid ${HAIR}`,
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                backgroundColor: PANEL,
-                padding: '0.75rem 1rem',
-                borderBottom: `1px solid ${HAIR}`
-              }}>
-                <h3 style={{
-                  fontSize: '0.875rem',
-                  fontWeight: '600',
-                  margin: 0,
-                  color: INK2,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  fontFamily: FONTS.display
-                }}>
-                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-                  </svg>
-                  Regulatory Obligations
-                </h3>
-              </div>
-              <div style={{ padding: '1rem' }}>
-                {executiveNarrative.regulatory.frameworks && executiveNarrative.regulatory.frameworks.length > 0 && (
-                  <div style={{ marginBottom: '1rem' }}>
-                    <div style={{ fontSize: '0.75rem', color: INK2, marginBottom: '0.5rem' }}>Applicable Frameworks</div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                      {executiveNarrative.regulatory.frameworks.map((fw, index) => (
-                        <span key={index} style={{
-                          padding: '0.125rem 0.5rem',
-                          borderRadius: '4px',
-                          fontSize: '0.75rem',
-                          backgroundColor: '#eef0fb',
-                          color: '#4f5ac4',
-                          border: '1px solid #c7d2fe'
-                        }}>
-                          {fw}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {executiveNarrative.regulatory.obligations && executiveNarrative.regulatory.obligations.length > 0 && (
-                  <div>
-                    <div style={{ fontSize: '0.75rem', color: INK2, marginBottom: '0.5rem' }}>Notification Requirements</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      {executiveNarrative.regulatory.obligations.map((obl, index) => (
-                        <div key={index} style={{
-                          padding: '0.5rem',
-                          backgroundColor: PANEL,
-                          borderRadius: '6px',
-                          border: `1px solid ${HAIR}`
-                        }}>
-                          <div style={{ fontSize: '0.875rem', fontWeight: '500', color: INK, marginBottom: '0.25rem' }}>
-                            {obl.name}
-                          </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '0.75rem', color: INK2 }}>{obl.source}</span>
-                            <span style={{
-                              padding: '0.125rem 0.5rem',
-                              borderRadius: '4px',
-                              fontSize: '0.75rem',
-                              backgroundColor: '#fecaca',
-                              color: COLORS.bad,
-                              fontWeight: '500'
-                            }}>
-                              {obl.notificationTimeline}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </section>
-          )}
-
-          {/* Ownership */}
-          {executiveNarrative.ownership && (
-            <section style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '8px',
-              border: `1px solid ${HAIR}`,
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                backgroundColor: PANEL,
-                padding: '0.75rem 1rem',
-                borderBottom: `1px solid ${HAIR}`
-              }}>
-                <h3 style={{
-                  fontSize: '0.875rem',
-                  fontWeight: '600',
-                  margin: 0,
-                  color: INK2,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  fontFamily: FONTS.display
-                }}>
-                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  Ownership & Accountability
-                </h3>
-              </div>
-              <div style={{ padding: '1rem' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  {executiveNarrative.ownership.executive && (
-                    <div>
-                      <div style={{ fontSize: '0.75rem', color: INK2, marginBottom: '0.25rem' }}>Executive Owner</div>
-                      <div style={{ fontSize: '0.9375rem', fontWeight: '500', color: INK }}>
-                        {executiveNarrative.ownership.executive.name || executiveNarrative.ownership.executive.roleId}
-                      </div>
-                    </div>
-                  )}
-                  {executiveNarrative.ownership.remediationOwner && (
-                    <div>
-                      <div style={{ fontSize: '0.75rem', color: INK2, marginBottom: '0.25rem' }}>Remediation Owner</div>
-                      <div style={{ fontSize: '0.875rem', color: INK2 }}>
-                        {executiveNarrative.ownership.remediationOwner}
-                      </div>
-                    </div>
-                  )}
-                  {executiveNarrative.ownership.businessProcessOwner && (
-                    <div>
-                      <div style={{ fontSize: '0.75rem', color: INK2, marginBottom: '0.25rem' }}>Business Process Owner</div>
-                      <div style={{ fontSize: '0.875rem', color: INK2 }}>
-                        {executiveNarrative.ownership.businessProcessOwner}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </section>
-          )}
-
-        </div>
+            {own && (
+              <Panel title="Ownership & accountability">
+                {own.executive && <KV k="Executive owner" v={own.executive.name || own.executive.roleId} />}
+                {own.remediationOwner && <KV k="Remediation owner" v={own.remediationOwner} />}
+                {own.businessProcessOwner && <KV k="Business process owner" v={own.businessProcessOwner} />}
+              </Panel>
+            )}
+          </div>
+        </Cols>
       </div>
 
-      {/* Footer with actions */}
-      <div style={{
-        marginTop: '2rem',
-        paddingTop: '1.5rem',
-        borderTop: `1px solid ${HAIR}`,
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <div style={{ fontSize: '0.875rem', color: INK2 }}>
-          Last updated: {new Date().toLocaleString()}
-        </div>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button
-            onClick={() => window.print()}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#ffffff',
-              color: INK2,
-              border: `1px solid ${HAIR}`,
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '0.875rem'
-            }}
-          >
-            Print / Export PDF
-          </button>
-          {goBack && (
-            <button
-              onClick={goBack}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#5e6ad2',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '0.875rem'
-              }}
-            >
-              Done
-            </button>
-          )}
+      {/* Footer */}
+      <div className="rx-cf__foot">
+        <div className="rx-cf__meta">Last updated: {new Date().toLocaleString()}</div>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <Button onClick={() => window.print()}>Print / Export PDF</Button>
+          {goBack && <Button primary onClick={goBack}>Done</Button>}
         </div>
       </div>
-
-      <style>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-        @media print {
-          button {
-            display: none !important;
-          }
-        }
-      `}</style>
     </div>
   );
 };
+
+function CfStyles() {
+  return (
+    <style>{`
+      .rx-cf { max-width: 1120px; margin: 0 auto; padding: 4px 0 8px; color: var(--rx-text); font-family: var(--rx-font-body); }
+      .rx-cf--center { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; min-height: 60vh; }
+      .rx-cf__muted { color: var(--rx-muted); font-size: 14px; }
+      .rx-cf__spinner { width: 40px; height: 40px; border: 3px solid var(--rx-border); border-top-color: var(--rx-brand); border-radius: 50%; animation: rxspin 1s linear infinite; }
+      @keyframes rxspin { to { transform: rotate(360deg); } }
+      .rx-cf__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px; padding-bottom: 18px; border-bottom: 1px solid var(--rx-border); }
+      .rx-cf__headmain { flex: 1; min-width: 0; }
+      .rx-cf__badges { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 11px; }
+      .rx-cf__title { font-family: var(--rx-font-display); font-weight: 700; font-size: 24px; letter-spacing: -.018em; line-height: 1.2; margin: 0; color: var(--rx-text); }
+      .rx-cf__meta { color: var(--rx-muted); font-size: 13px; margin: 7px 0 0; }
+      .rx-cf__code { font-family: var(--rx-font-mono); font-size: 12px; color: var(--rx-critical); background: var(--rx-surface-2); border: 1px solid var(--rx-border); border-radius: 5px; padding: 2px 7px; }
+      .rx-cf__chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+      .rx-cf__foot { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--rx-border); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+      @media print { .rx-cf button { display: none !important; } }
+    `}</style>
+  );
+}
 
 export default CorrelatedFinding;

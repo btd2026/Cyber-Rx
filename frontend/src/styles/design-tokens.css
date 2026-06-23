@@ -1,0 +1,85 @@
+/* =============================================================================
+ * design-tokens.css — the SINGLE, app-wide design token layer (--rx-*).
+ *
+ * This is the shared design system promoted out of the situation-room module so
+ * the WHOLE application can consume it. Values match the approved mock
+ * (cyberrx-ciso-os): warm light default + dark "command" via data-theme="dark"
+ * on <html> (toggled by situation-room/useTheme.js).
+ *
+ * BLUE = brand / primary / decision.  GREEN = verified / pass (with ✓).
+ * AMBER = exposure / clock.  RED = critical.
+ *
+ * Loaded once in main.jsx, before any module styles. Legacy token files
+ * (theme.js, cyberrx-design-tokens.css) are left in place until each screen is
+ * migrated; this layer does not remove them.
+ * ========================================================================== */
+
+:root {
+  /* Brand / decision (blue) */
+  --rx-brand:        #2D6CE0;
+  --rx-brand-tint:   rgba(45,108,224,.09);
+  /* Status */
+  --rx-pass:         #2FA37A;
+  --rx-pass-tint:    rgba(47,163,122,.12);
+  --rx-exposure:     #C2772E;
+  --rx-exposure-tint:rgba(194,119,46,.12);
+  --rx-critical:     #C2443C;
+  --rx-critical-tint:rgba(194,68,60,.12);
+  /* Surfaces */
+  --rx-bg:           #F1EFE8;
+  --rx-surface:      #FFFFFF;
+  --rx-surface-2:    #ECEAE3;
+  --rx-glass:        rgba(255,255,255,.62);
+  --rx-edge-shade:   rgba(0,0,0,.035);
+  --rx-border:       #DAD7CC;
+  --rx-border-strong:#B9B5A8;
+  /* Ink */
+  --rx-text:         #11161D;
+  --rx-muted:        #5C6470;
+  --rx-subtle:       #8A8F98;
+  /* Focus */
+  --rx-focus:        #2D6CE0;
+  /* Ambient glow + grain */
+  --rx-glow-1:       rgba(45,108,224,.10);
+  --rx-glow-2:       rgba(194,119,46,.07);
+  --rx-grain:        .035;
+  /* Type */
+  --rx-font-display: 'Space Grotesk', -apple-system, system-ui, sans-serif;
+  --rx-font-body:    'Public Sans', -apple-system, system-ui, sans-serif;
+  --rx-font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  /* Shape & depth */
+  --rx-radius-sm: 8px;
+  --rx-radius:    13px;
+  --rx-radius-lg: 16px;
+  --rx-shadow-1:  0 1px 2px rgba(17,22,29,.06), 0 6px 18px -10px rgba(17,22,29,.16);
+  --rx-shadow-2:  0 28px 56px -28px rgba(17,22,29,.34);
+  /* Spacing (4px base) */
+  --rx-1:4px; --rx-2:8px; --rx-3:12px; --rx-4:16px; --rx-5:24px; --rx-6:32px; --rx-7:48px; --rx-8:64px;
+}
+
+[data-theme="dark"] {
+  --rx-brand:        #4E8BFF;
+  --rx-brand-tint:   rgba(78,139,255,.13);
+  --rx-pass:         #3FBF92;
+  --rx-pass-tint:    rgba(63,191,146,.14);
+  --rx-exposure:     #E0A968;
+  --rx-exposure-tint:rgba(224,169,104,.14);
+  --rx-critical:     #E0635B;
+  --rx-critical-tint:rgba(224,99,91,.15);
+  --rx-bg:           #0B0E13;
+  --rx-surface:      #161C25;
+  --rx-surface-2:    #1C2530;
+  --rx-glass:        rgba(20,25,34,.6);
+  --rx-edge-shade:   rgba(0,0,0,.18);
+  --rx-border:       #26303C;
+  --rx-border-strong:#3A4654;
+  --rx-text:         #E9EBEE;
+  --rx-muted:        #9AA4B0;
+  --rx-subtle:       #67707D;
+  --rx-focus:        #4E8BFF;
+  --rx-glow-1:       rgba(78,139,255,.16);
+  --rx-glow-2:       rgba(224,169,104,.08);
+  --rx-grain:        .05;
+  --rx-shadow-1:     0 1px 2px rgba(0,0,0,.4), 0 18px 40px -24px rgba(0,0,0,.7);
+  --rx-shadow-2:     0 28px 60px -22px rgba(0,0,0,.8);
+}

@@ -7,6 +7,7 @@ import AdminDatabase from "./pages/AdminDatabase";
 import RedesignPrototype from "./pages/RedesignPrototype";
 import ExecutiveAgentBrief from "./components/ExecutiveAgentBrief";
 import SituationRoom from "./situation-room/SituationRoom";
+import { useTheme } from "./situation-room/useTheme";
 import NistCsfScorecard from "./components/NistCsfScorecard";
 import CsfControlLibrary from "./components/CsfControlLibrary";
 import CsfRankings from "./components/CsfRankings";
@@ -18087,6 +18088,7 @@ function QuickNav(props) {
 function Shell(props) {
   var page, go, goBack, children, orgName, orgType, email, syncStatus, lastSync, runSync, syncPct; page=props.page; go=props.go; goBack=props.goBack; children=props.children; orgName=props.orgName; orgType=props.orgType; email=props.email; syncStatus=props.syncStatus; lastSync=props.lastSync; runSync=props.runSync; syncPct=props.syncPct;
   var displayName = nameFromEmail(email)||"";
+  var _theme = useTheme(); var isDark = _theme.isDark; var toggleTheme = _theme.toggle;
 
   var PAGE_ACTIONS = {
     home:      [{label:"Complete Setup",  id:"setup",      primary:false},
@@ -18115,190 +18117,164 @@ function Shell(props) {
   var isSync = syncStatus==="syncing";
 
   return (
-    <div style={{display:"flex", height:"100vh", background:C.bg, fontFamily:"Inter,system-ui,sans-serif",
-      color:C.text, fontSize:14}}>
+    <div className="rx-shell">
+      <ShellStyles />
       {/* Sidebar */}
-      <div style={{width:200, background:C.panel, borderRight:"1px solid "+C.border,
-        display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto"}}>
-        <div style={{padding:"14px 14px 10px",
-          borderBottom:"1px solid "+C.border}}>
-          <div style={{display:"flex", alignItems:"center", gap:8}}>
-            <div style={{width:28, height:28, borderRadius:8,
-              background:"linear-gradient(135deg,#00C4A0,#0090F0)",
-              display:"flex", alignItems:"center", justifyContent:"center"}}>
-              <span style={{color:"#000", fontWeight:900, fontSize:12}}>Rx</span>
-            </div>
-            <span style={{color:C.text, fontWeight:800, fontSize:15}}>CyberRx</span>
-          </div>
-          {orgName && (
-            <div style={{color:C.muted, fontSize:9, marginTop:5,
-              overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}}>
-              {orgName}
-            </div>
-          )}
+      <aside className="rx-side">
+        <div className="rx-side__brand">
+          <div className="rx-logo">Rx</div>
+          <span className="rx-side__name">CyberRx</span>
+          {orgName && <div className="rx-side__org" title={orgName}>{orgName}</div>}
         </div>
-        <div style={{flex:1, padding:"8px 0"}}>
+        <nav className="rx-side__nav">
           {NAV_GROUPS.filter(function(group){return !group.hidden;}).map(function(group){
             return (
-              <div key={group.label}>
-                {/* Section header */}
-                <div style={{padding:"12px 14px 4px", color:C.muted, fontSize:9, fontWeight:700, letterSpacing:"0.5px", textTransform:"uppercase"}}>
-                  {group.label}
-                </div>
-                {/* Group items */}
+              <div className="rx-navgroup" key={group.label}>
+                <div className="rx-navgroup__label">{group.label}</div>
                 {group.items.map(function(n){
                   var active = page===n.id;
                   return (
-                    <div key={n.id} onClick={function(){go(n.id);}}
-                      style={{display:"flex", alignItems:"center", gap:9,
-                        padding:"8px 14px", cursor:"pointer",
-                        background:active?C.acc+"12":"transparent",
-                        borderLeft:"3px solid "+(active?C.acc:"transparent"),
-                        margin:"1px 0"}}
-                      onMouseEnter={function(e){
-                        if(!active) {
-                          e.currentTarget.style.background = C.acc+"08";
-                          e.currentTarget.style.color = C.acc;
-                        }
-                      }}
-                      onMouseLeave={function(e){
-                        if(!active) {
-                          e.currentTarget.style.background = "transparent";
-                          e.currentTarget.style.color = C.muted;
-                        }
-                      }}>
-                      <span style={{fontSize:13, lineHeight:1}}>{n.icon}</span>
-                      <div>
-                        <div style={{color:active?C.acc:C.muted,
-                          fontSize:11, fontWeight:active?700:400}}>{n.label}</div>
-                      </div>
-                    </div>
+                    <button type="button" key={n.id} onClick={function(){go(n.id);}}
+                      className={"rx-nav"+(active?" is-active":"")}>
+                      <span className="rx-nav__ic" aria-hidden="true">{n.icon}</span>
+                      <span className="rx-nav__lb">{n.label}</span>
+                    </button>
                   );
                 })}
               </div>
             );
           })}
-        </div>
-        {/* Sync status in sidebar */}
-        <div style={{padding:"10px 14px", borderTop:"1px solid "+C.border}}>
+        </nav>
+        <div className="rx-side__sync">
           {isSync ? (
-            <div style={{color:C.acc, fontSize:10}}>
-              <div style={{display:"flex", gap:5, alignItems:"center", marginBottom:4}}>
-                <div style={{width:6, height:6, borderRadius:"50%",
-                  background:C.acc, animation:"pulse 1s infinite"}}/>
-                Syncing… {syncPct||0}%
-              </div>
-              <div style={{height:3, background:C.dim, borderRadius:1, overflow:"hidden"}}>
-                <div style={{width:(syncPct||0)+"%", height:"100%",
-                  background:C.acc, transition:"width 0.4s"}}/>
-              </div>
+            <div className="rx-sync">
+              <div className="rx-sync__row"><span className="rx-sync__dot"/>Syncing… {syncPct||0}%</div>
+              <div className="rx-sync__bar"><div className="rx-sync__fill" style={{width:(syncPct||0)+"%"}}/></div>
             </div>
           ) : (
-            <div style={{display:"flex", justifyContent:"space-between", alignItems:"center"}}>
-              <span style={{color:C.muted, fontSize:9}}>
-                {lastSync ? ("Synced "+lastSync) : "Not synced"}
-              </span>
-              <button onClick={runSync}
-                style={{background:"transparent", border:"none",
-                  color:C.muted, cursor:"pointer", fontSize:11, fontWeight:700}}>
-                ↻
-              </button>
+            <div className="rx-sync__idle">
+              <span>{lastSync ? ("Synced "+lastSync) : "Not synced"}</span>
+              <button type="button" onClick={runSync} className="rx-iconbtn" aria-label="Sync now">↻</button>
             </div>
           )}
         </div>
-      </div>
+      </aside>
 
       {/* Main content */}
-      <div style={{flex:1, display:"flex", flexDirection:"column", overflow:"hidden"}}>
+      <div className="rx-main">
         {/* Topbar */}
-        <div style={{background:C.panel, borderBottom:"1px solid "+C.border,
-          padding:"10px 22px", display:"flex", alignItems:"center",
-          gap:12, flexShrink:0}}>
-          {/* Back button if we have history */}
-          <button onClick={goBack}
-            style={{background:"transparent", border:"1px solid "+C.border,
-              color:C.muted, borderRadius:5, padding:"4px 10px", cursor:"pointer",
-              fontSize:11, flexShrink:0}}>
-            ←
-          </button>
-
-          {/* QuickNav — jump to any page */}
+        <header className="rx-top">
+          <button type="button" onClick={goBack} className="rx-iconbtn rx-top__back" aria-label="Back">←</button>
           <QuickNav go={go} currentPage={page} history={props.history||[]}/>
+          <div className="rx-bc">{(NAV.find(function(n){return n.id===page;})||{label:page}).label}</div>
 
-          {/* Page breadcrumb */}
-          <div style={{flex:1, overflow:"hidden"}}>
-            <div style={{color:C.text, fontWeight:700, fontSize:13,
-              overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}}>
-              {(NAV.find(function(n){return n.id===page;})||{label:page}).label}
-            </div>
-          </div>
-
-          {/* Topbar actions */}
           {pageActions.map(function(a){
             return (
-              <Btn key={a.id} onClick={function(){go(a.id);}}
-                primary={a.primary} small>
+              <Btn key={a.id} onClick={function(){go(a.id);}} primary={a.primary} small>
                 {a.label}
               </Btn>
             );
           })}
 
-          {/* Sync badge */}
           {isSync ? (
-            <div style={{display:"flex", gap:5, alignItems:"center",
-              padding:"4px 10px", background:C.acc+"12",
-              border:"1px solid "+C.acc+"30", borderRadius:5}}>
-              <div style={{width:6, height:6, borderRadius:"50%", background:C.acc}}/>
-              <span style={{color:C.acc, fontSize:10, fontWeight:700}}>Syncing</span>
-            </div>
+            <span className="rx-badge"><span className="rx-sync__dot"/>Syncing</span>
           ) : lastSync ? (
-            <div style={{display:"flex", gap:5, alignItems:"center"}}>
-              <span style={{color:C.muted, fontSize:9}}>Synced {lastSync}</span>
-              <button onClick={runSync}
-                style={{background:"transparent", border:"none",
-                  color:C.muted, cursor:"pointer", fontSize:11}}>↻</button>
-            </div>
+            <span className="rx-live"><span className="rx-live__dot"/>Synced {lastSync}</span>
           ) : null}
 
-          {/* User */}
-          {displayName && (
-            <div style={{color:C.muted, fontSize:11, flexShrink:0}}>
-              {displayName}
-            </div>
-          )}
-        </div>
+          <button type="button" className="rx-iconbtn" onClick={toggleTheme}
+            aria-pressed={isDark} aria-label={"Switch to "+(isDark?"light":"dark")+" theme"}>◐</button>
+
+          {displayName && <span className="rx-user">{displayName}</span>}
+        </header>
 
         {/* Sync complete banner */}
         {syncStatus==="done" && (
-          <div style={{background:"#0FBB8012", borderBottom:"1px solid #0FBB8030",
-            padding:"6px 22px"}}>
-            <span style={{color:"#0FBB80", fontSize:11, fontWeight:700}}>
-              ✓ Data sync complete — all risk scores updated
-            </span>
-          </div>
+          <div className="rx-banner rx-banner--done">✓ Data sync complete — all risk scores updated</div>
         )}
 
         {/* Demo banner */}
-        <div style={{background:"#F5A62318", borderBottom:"1px solid #F5A62340",
-          padding:"7px 22px", display:"flex", alignItems:"center",
-          justifyContent:"space-between", flexShrink:0}}>
-          <div style={{display:"flex", gap:8, alignItems:"center"}}>
-            <span style={{fontSize:13}}>🔬</span>
-            <span style={{color:"#F5A623", fontSize:11, fontWeight:700}}>Demo Mode</span>
-            <span style={{color:C.muted, fontSize:11}}>
-              {"— Viewing sample data for "}
-              <strong style={{color:"#F5A623"}}>{DEMO_ORG_NAME}</strong>
-              {". Complete your intake to activate your live risk posture."}
-            </span>
-          </div>
+        <div className="rx-banner rx-banner--demo">
+          <span aria-hidden="true">🔬</span>
+          <strong>Demo Mode</strong>
+          <span className="rx-banner__sub">
+            {"— Viewing sample data for "}<b>{DEMO_ORG_NAME}</b>{". Complete your intake to activate your live risk posture."}
+          </span>
         </div>
 
         {/* Page content */}
-        <div data-scroll="main" style={{flex:1, overflowY:"auto", padding:"22px 24px"}}>
+        <div data-scroll="main" className="rx-content">
           {children}
         </div>
       </div>
     </div>
+  );
+}
+
+/* Re-skinned legacy Shell chrome — built to the approved mock, consuming the
+   app-wide --rx-* tokens. Pure restyle: routing, nav data, and behavior are
+   unchanged. */
+function ShellStyles() {
+  return (
+    <style>{`
+      .rx-shell { display:flex; height:100vh; overflow:hidden; background:var(--rx-bg); color:var(--rx-text);
+        font-family:var(--rx-font-body); font-size:14px; }
+      .rx-side { width:212px; flex:none; display:flex; flex-direction:column; overflow-y:auto;
+        background:var(--rx-surface); border-right:1px solid var(--rx-border); }
+      .rx-side__brand { padding:15px 15px 12px; border-bottom:1px solid var(--rx-border); }
+      .rx-logo { width:30px; height:30px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center;
+        background:linear-gradient(150deg,var(--rx-brand),#10307A); color:#fff; font-family:var(--rx-font-display);
+        font-weight:700; font-size:13px; }
+      .rx-side__name { font-family:var(--rx-font-display); font-weight:700; font-size:16px; letter-spacing:-.01em;
+        margin-left:9px; vertical-align:middle; color:var(--rx-text); }
+      .rx-side__org { margin-top:7px; font-family:var(--rx-font-mono); font-size:10px; color:var(--rx-subtle);
+        white-space:nowrap; overflow:hidden; text-overflow:ellipsis; letter-spacing:.04em; }
+      .rx-side__nav { flex:1; padding:8px 8px 12px; }
+      .rx-navgroup { margin-bottom:6px; }
+      .rx-navgroup__label { padding:12px 8px 5px; font-family:var(--rx-font-mono); font-size:9.5px; font-weight:500;
+        letter-spacing:.12em; text-transform:uppercase; color:var(--rx-subtle); }
+      .rx-nav { display:flex; align-items:center; gap:9px; width:100%; text-align:left; cursor:pointer;
+        font-family:var(--rx-font-body); font-weight:600; font-size:13px; color:var(--rx-muted);
+        background:none; border:1px solid transparent; border-radius:9px; padding:8px 11px; margin:1px 0; }
+      .rx-nav:hover { color:var(--rx-text); background:var(--rx-surface-2); }
+      .rx-nav.is-active { color:var(--rx-brand); background:var(--rx-brand-tint);
+        border-color:color-mix(in srgb, var(--rx-brand) 32%, transparent); }
+      .rx-nav__ic { font-size:14px; line-height:1; flex:none; }
+      .rx-nav__lb { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+      .rx-side__sync { padding:11px 15px; border-top:1px solid var(--rx-border); }
+      .rx-sync { font-family:var(--rx-font-mono); font-size:10px; color:var(--rx-brand); }
+      .rx-sync__row { display:flex; align-items:center; gap:6px; margin-bottom:5px; }
+      .rx-sync__dot { width:6px; height:6px; border-radius:50%; background:var(--rx-brand); flex:none; }
+      .rx-sync__bar { height:3px; background:var(--rx-surface-2); border-radius:2px; overflow:hidden; }
+      .rx-sync__fill { height:100%; background:var(--rx-brand); transition:width .4s ease; }
+      .rx-sync__idle { display:flex; justify-content:space-between; align-items:center;
+        font-family:var(--rx-font-mono); font-size:10px; color:var(--rx-subtle); }
+      .rx-iconbtn { background:var(--rx-surface); border:1px solid var(--rx-border); color:var(--rx-muted);
+        border-radius:8px; padding:6px 10px; cursor:pointer; font-size:13px; line-height:1; flex:none; }
+      .rx-iconbtn:hover { border-color:var(--rx-border-strong); color:var(--rx-text); }
+      .rx-main { flex:1; min-width:0; display:flex; flex-direction:column; overflow:hidden; }
+      .rx-top { display:flex; align-items:center; gap:12px; flex:none; padding:11px 22px;
+        background:color-mix(in srgb, var(--rx-bg) 86%, transparent); -webkit-backdrop-filter:blur(10px);
+        backdrop-filter:blur(10px); border-bottom:1px solid var(--rx-border); }
+      .rx-bc { flex:1; min-width:0; font-family:var(--rx-font-display); font-weight:600; font-size:14px;
+        letter-spacing:-.01em; color:var(--rx-text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+      .rx-live { display:inline-flex; align-items:center; gap:7px; font-family:var(--rx-font-mono); font-size:11px;
+        color:var(--rx-pass); white-space:nowrap; }
+      .rx-live__dot { width:7px; height:7px; border-radius:50%; background:var(--rx-pass); flex:none; }
+      .rx-badge { display:inline-flex; align-items:center; gap:6px; font-family:var(--rx-font-mono); font-size:11px;
+        color:var(--rx-brand); background:var(--rx-brand-tint); border:1px solid color-mix(in srgb, var(--rx-brand) 30%, transparent);
+        border-radius:999px; padding:4px 11px; white-space:nowrap; }
+      .rx-user { font-family:var(--rx-font-mono); font-size:11px; color:var(--rx-muted); flex:none; }
+      .rx-banner { flex:none; padding:8px 22px; font-size:12px; display:flex; align-items:center; gap:8px; }
+      .rx-banner--done { color:var(--rx-pass); background:var(--rx-pass-tint);
+        border-bottom:1px solid color-mix(in srgb, var(--rx-pass) 30%, transparent); font-weight:600; }
+      .rx-banner--demo { color:var(--rx-exposure); background:var(--rx-exposure-tint);
+        border-bottom:1px solid color-mix(in srgb, var(--rx-exposure) 30%, transparent); }
+      .rx-banner--demo strong { font-weight:700; }
+      .rx-banner__sub { color:var(--rx-muted); font-weight:400; }
+      .rx-banner__sub b { color:var(--rx-exposure); font-weight:600; }
+      .rx-content { flex:1; overflow-y:auto; padding:22px 24px; }
+    `}</style>
   );
 }
 
