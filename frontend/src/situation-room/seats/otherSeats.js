@@ -471,4 +471,89 @@ const SEATS_DATA = {
   },
 };
 
+/* ⚖ Liability — a defensibility view per seat, composed from the same decision/
+   evidence records as the other tabs (best-judgment; tagged sample where not yet
+   live). Attached as the `liability` tab on each seat. */
+const LIABILITY = {
+  CEO: {
+    name: '⚖ Liability', q: 'Where could the business be held liable?', pill: 'Contained', pillKind: 'pass',
+    lede: 'Liability in business terms — disclosure, duty of care, and what is on the record.',
+    sections: [
+      { kind: 'panel', title: 'Business liability posture', rowsKind: 'kv', rows: [
+        { l: 'Disclosure obligation triggered', v: 'None to date', vKind: 'pass' },
+        { l: 'Duty-of-care decisions on record', v: 'Current', vKind: 'pass' },
+        { l: 'Material event under review', v: '1 · determination pending', vKind: 'exposure' },
+        { l: 'Customer / contractual exposure', v: 'None confirmed', vKind: 'pass' },
+      ] },
+      { kind: 'note', text: 'Composed from decision and disclosure records; values not yet sourced from live data are shown as sample.' },
+    ],
+  },
+  CFO: {
+    name: '⚖ Liability', q: 'What is our financial liability exposure?', pill: 'Bounded', pillKind: 'pass',
+    lede: 'Financial liability: insurance posture, penalty exposure, and reserves.',
+    sections: [
+      { kind: 'panel', title: 'Financial liability', rowsKind: 'kv', rows: [
+        { l: 'Insurance coverage status', v: 'In force · below notice threshold', vKind: 'pass' },
+        { l: 'Penalty / fine exposure', v: 'Only if data access confirmed', vKind: 'exposure' },
+        { l: 'Contingent reserve required', v: 'None today', vKind: 'pass' },
+        { l: 'Bounded loss range', v: '$0–1.1M' },
+      ] },
+      { kind: 'note', text: 'Composed from financial-exposure and insurance records; sample where not yet live.' },
+    ],
+  },
+  CIO: {
+    name: '⚖ Liability', q: 'Where are we operationally liable?', pill: 'Low', pillKind: 'pass',
+    lede: 'Operational liability: SLA commitments, change governance, and recovery duties.',
+    sections: [
+      { kind: 'panel', title: 'Operational liability', rowsKind: 'kv', rows: [
+        { l: 'SLA breaches (customer-facing)', v: '0', vKind: 'pass' },
+        { l: 'Emergency change governance', v: 'ECR on file', vKind: 'pass' },
+        { l: 'Recovery commitment (claims)', v: '~3.5 days · within tolerance', vKind: 'exposure' },
+        { l: 'Unrecorded production changes', v: 'None open', vKind: 'pass' },
+      ] },
+      { kind: 'note', text: 'Composed from service and change records; sample where not yet live.' },
+    ],
+  },
+  CLO: {
+    name: '⚖ Liability', q: 'Is our legal position defensible?', pill: 'Defensible', pillKind: 'pass',
+    lede: 'Legal liability and defensibility: privilege, preservation, and the obligations matrix.',
+    sections: [
+      { kind: 'panel', title: 'Legal liability & defensibility', rowsKind: 'kv', rows: [
+        { l: 'Litigation hold', v: 'Prepared · standing by', vKind: 'exposure' },
+        { l: 'Evidence preserved under privilege', v: 'Yes', vKind: 'pass' },
+        { l: 'Obligations met on time (12mo)', v: '100%', vKind: 'pass' },
+        { l: 'Open legal risks', v: '2 · tracked', vKind: 'exposure' },
+      ] },
+      { kind: 'note', text: 'Composed from the obligations matrix and evidence ledger; sample where not yet live.' },
+    ],
+  },
+  CRO: {
+    name: '⚖ Liability', q: 'Who is accountable for breaches of appetite?', pill: '1 breach owned', pillKind: 'exposure',
+    lede: 'Risk accountability: appetite breaches, named owners, and escalation on record.',
+    sections: [
+      { kind: 'panel', title: 'Risk accountability', rowsKind: 'kv', rows: [
+        { l: 'Appetite breaches', v: '1 · claims/payments', vKind: 'exposure' },
+        { l: 'Every breach has a named owner', v: 'Yes', vKind: 'pass' },
+        { l: 'Escalation to committee', v: 'On record', vKind: 'pass' },
+        { l: 'Risk register defensibility', v: 'Current', vKind: 'pass' },
+      ] },
+      { kind: 'note', text: 'Composed from the risk register and decision records; sample where not yet live.' },
+    ],
+  },
+  Board: {
+    name: '⚖ Liability', q: 'Is the board’s oversight defensible?', pill: 'Defensible', pillKind: 'pass',
+    lede: 'Oversight defensibility: the record that the board exercised its duty of care.',
+    sections: [
+      { kind: 'panel', title: 'Oversight defensibility', rowsKind: 'kv', rows: [
+        { l: 'Briefings minuted', v: 'Current', vKind: 'pass' },
+        { l: 'Material items acknowledged', v: 'Yes', vKind: 'pass' },
+        { l: 'Decisions with named owners', v: 'All', vKind: 'pass' },
+        { l: 'Evidence on file for the record', v: 'Yes', vKind: 'pass' },
+      ] },
+      { kind: 'note', text: 'Composed from oversight minutes and the evidence ledger; sample where not yet live.' },
+    ],
+  },
+};
+Object.keys(LIABILITY).forEach((s) => { if (SEATS_DATA[s]) SEATS_DATA[s].tabs.liability = LIABILITY[s]; });
+
 export default SEATS_DATA;

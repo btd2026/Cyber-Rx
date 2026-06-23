@@ -16,6 +16,7 @@ import { useEffect, useRef, useState } from 'react';
 import { HashRouter, Routes, Route, Navigate, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from './useTheme';
 import { useCisoData, apiCtx } from './useCisoData';
+import { useSeatData } from './useSeatData';
 import { CISO_SEAT } from './seats/ciso';
 import SEATS_DATA from './seats/otherSeats';
 import { useNow, getAudit, downloadBoardPack } from './trust';
@@ -26,13 +27,13 @@ const SEAT_ORDER = ['CEO', 'CISO', 'CFO', 'CIO', 'CLO', 'CRO', 'Board'];
 /* Per-seat tab definitions (formal name + plain question). CISO is complete; the
    other six show their exact tab names and are authored next. */
 const SEAT_TABS = {
-  CEO: ['Exec Summary', 'Operating Status', 'Principal Business Risk', 'Board & Executive Attention', 'Trajectory'],
+  CEO: ['Exec Summary', 'Operating Status', 'Principal Business Risk', 'Board & Executive Attention', 'Trajectory', '⚖ Liability'],
   CISO: CISO_SEAT.tabs.map((t) => t.name),
-  CFO: ['Exec Summary', 'Financial Exposure', 'Materiality', 'Decisions Required', 'Return on Investment'],
-  CIO: ['Exec Summary', 'Service Status', 'Operational Threats', 'Decisions Required', 'Reliability Trend'],
-  CLO: ['Exec Summary', 'Regulatory Obligation', 'Disclosure & Timelines', 'Decisions Required', 'Defensibility'],
-  CRO: ['Exec Summary', 'Risk Appetite Status', 'Tolerance & Concentration', 'Decisions Required', 'Risk Trajectory'],
-  Board: ['Exec Summary', 'Control Assurance', 'Materiality', 'Board Decisions', 'Quarterly Oversight'],
+  CFO: ['Exec Summary', 'Financial Exposure', 'Materiality', 'Decisions Required', 'Return on Investment', '⚖ Liability'],
+  CIO: ['Exec Summary', 'Service Status', 'Operational Threats', 'Decisions Required', 'Reliability Trend', '⚖ Liability'],
+  CLO: ['Exec Summary', 'Regulatory Obligation', 'Disclosure & Timelines', 'Decisions Required', 'Defensibility', '⚖ Liability'],
+  CRO: ['Exec Summary', 'Risk Appetite Status', 'Tolerance & Concentration', 'Decisions Required', 'Risk Trajectory', '⚖ Liability'],
+  Board: ['Exec Summary', 'Control Assurance', 'Materiality', 'Board Decisions', 'Quarterly Oversight', '⚖ Liability'],
 };
 
 /* Legacy deep-dive target per seat (kept routing). */
@@ -85,6 +86,7 @@ function SeatView(props = {}) {
   const tabKey = tabs.some((t) => t.key === params.tab) ? params.tab : 'summary';
   const tabIdx = Math.max(0, tabs.findIndex((t) => t.key === tabKey));
   const activeTab = tabs[tabIdx] || tabs[0];
+  const seatBound = useSeatData(seat, props);   // common spine for the other six seats
 
   // Trust layer: provenance + as-of are per-seat (CISO is live; others sample).
   const asOf = bound?.live ? bound.live.toLocaleString() : null;
@@ -181,7 +183,7 @@ function SeatView(props = {}) {
         <div role="tabpanel" id={`sr-panel-${activeTab.key}`} aria-labelledby={`sr-tab-${activeTab.key}`} tabIndex={0} className="sr-panel">
           {seat === 'CISO'
             ? <CisoPanel tabKey={activeTab.key} goTabKey={goTabKey} bound={bound} onBoardPack={onBoardPack} back={back} />
-            : <SeatPanel seat={seat} tabKey={activeTab.key} goTabKey={goTabKey} onBoardPack={onBoardPack} asOf={asOf} back={back} />}
+            : <SeatPanel seat={seat} tabKey={activeTab.key} goTabKey={goTabKey} onBoardPack={onBoardPack} asOf={null} bound={seatBound} back={back} />}
         </div>
 
         <footer className="sr-footer">CyberRx · executive operating system — illustrative, with sample data</footer>
@@ -202,17 +204,26 @@ function SeatPlaceholder({ seat, tab }) {
 
 /* Generic seat renderer — the six non-CISO seats share this one code path, driven
    by data blocks (see seats/otherSeats.js). Same shape as the CISO reference. */
-function SeatPanel({ seat, tabKey, goTabKey, onBoardPack, asOf, back }) {
+function SeatPanel({ seat, tabKey, goTabKey, onBoardPack, asOf, back, bound }) {
   const S = SEATS_DATA[seat];
   if (!S) return <SeatPlaceholder seat={seat} tab={tabKey} />;
   if (tabKey === 'summary') {
+    // Real verdict/lede/status ← agents brief; briefing ← key-questions (mapped to
+    // this seat's tabs, in order). Tiles stay sample. Tagged-sample fallback.
+    const b = bound?.brief;
+    const tabKeys = Object.keys(S.tabs);
+    const briefing = (bound?.briefingCards && bound.briefingCards.length)
+      ? bound.briefingCards.slice(0, tabKeys.length).map((c, i) => ({ ...c, to: tabKeys[i] }))
+      : S.summary.briefing;
     return (
       <div className="sr-stack">
-        <PanelHead kicker={`${seat} · Executive summary`} verdict={S.summary.verdict}
-          pill={S.summary.pill} pillKind={S.summary.pillKind} pillVerified={S.summary.pillVerified} lede={S.summary.lede} />
+        <PanelHead kicker={`${seat} · Executive summary`} tag={b ? 'live' : 'sample'}
+          verdict={b ? b.verdict : S.summary.verdict}
+          pill={b ? b.pill : S.summary.pill} pillKind={b ? b.pillKind : S.summary.pillKind}
+          pillVerified={!b && S.summary.pillVerified} lede={b ? b.lede : S.summary.lede} />
         <ProvenanceStrip provenance={null} asOf={asOf} />
         <MetricBand tiles={S.summary.tiles} onGo={goTabKey} />
-        <Briefing rows={S.summary.briefing} onGo={goTabKey} />
+        <Briefing rows={briefing} onGo={goTabKey} />
       </div>
     );
   }
