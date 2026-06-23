@@ -26119,6 +26119,14 @@ function CyberRxApp() {
     return React.createElement(Home, sharedProps);
   }
 
+  // Canonical executive experience renders full-bleed (no legacy Shell sidebar/topbar)
+  // to match the situation-room mock. Reached only post-auth (the landing/login/MFA
+  // phases return earlier), so this does not touch the auth gate. Everything else
+  // keeps the legacy Shell chrome exactly as before.
+  if (typeof page === 'string' && page.indexOf('exec-') === 0) {
+    return renderPage();
+  }
+
   return React.createElement(Shell, {
     page:page, go:go, goBack:goBack, history:history,
     orgName:orgName, orgType:orgType, email:email,
