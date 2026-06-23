@@ -14,6 +14,7 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { query } = require('../utils/db');
+const { requireJwtSecret } = require('../config/jwt');
 const { authLoginLimiter, authSignupLimiter } = require('../middleware/rateLimit');
 
 /**
@@ -58,7 +59,7 @@ router.post('/login', authLoginLimiter, async (req, res) => {
         orgId: user.org_id,
         role: user.role
       },
-      process.env.JWT_SECRET || 'cyberrx-dev-secret',
+      requireJwtSecret(),
       {
         expiresIn: '8h',
         issuer: 'cyberrx-api',
@@ -130,7 +131,7 @@ router.post('/signup', authSignupLimiter, async (req, res) => {
         orgId,
         role: role || 'viewer'
       },
-      process.env.JWT_SECRET || 'cyberrx-dev-secret',
+      requireJwtSecret(),
       {
         expiresIn: '8h',
         issuer: 'cyberrx-api',
@@ -165,7 +166,7 @@ router.get('/me', async (req, res) => {
     }
 
     const token = authHeader.substring(7);
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'cyberrx-dev-secret');
+    const decoded = jwt.verify(token, requireJwtSecret());
 
     // Get full user info
     const users = await query('SELECT id, email, role, org_id, name FROM users WHERE id = $1', [decoded.userId]);

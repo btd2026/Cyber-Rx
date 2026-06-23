@@ -125,8 +125,11 @@ async function llm(intake, a) {
     ' path_forward: one forward-looking paragraph on the path to target state.',
   ].join('\n');
   const user = `INTAKE:\n${JSON.stringify(intake)}\n\nASSESSMENT:\n${JSON.stringify(a)}`;
+  // No `temperature`: it is rejected (400) on claude-opus-4-8 and the rest of the
+  // 4.7+ family. (Previously set to 0.2, which silently forced the deterministic
+  // fallback on every call.) Steer with the prompt instead.
   const resp = await client.messages.create({
-    model, max_tokens: 1600, temperature: 0.2,
+    model, max_tokens: 1600,
     system, messages: [{ role: 'user', content: user }],
   });
   const raw = (resp.content || []).map((c) => c.text || '').join('');

@@ -11,6 +11,11 @@ const { passport, generateJWT, getFrontendRedirect } = require('../../src/config
 const jwt = require('jsonwebtoken');
 
 describe('Passport Configuration', () => {
+  // The unit test project does not load tests/setup.js, so provision a JWT secret
+  // here. (generateJWT now fails closed when JWT_SECRET is unset — the insecure
+  // hardcoded dev-secret fallback was removed.)
+  beforeAll(() => { process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret-key-for-testing-only'; });
+
   describe('generateJWT', () => {
     it('should generate a valid JWT token', () => {
       const mockUser = {
@@ -41,7 +46,7 @@ describe('Passport Configuration', () => {
       };
 
       const token = generateJWT(mockUser);
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'cyberrx-dev-secret');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       expect(decoded.userId).toBe(mockUser.id);
       expect(decoded.email).toBe(mockUser.email);
@@ -59,7 +64,7 @@ describe('Passport Configuration', () => {
       };
 
       const token = generateJWT(mockUser);
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'cyberrx-dev-secret');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       // Token should expire in 8 hours (28800 seconds)
       const now = Math.floor(Date.now() / 1000);
@@ -78,7 +83,7 @@ describe('Passport Configuration', () => {
       };
 
       const token = generateJWT(mockUser);
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'cyberrx-dev-secret');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       expect(decoded.iss).toBe('cyberrx-api');
       expect(decoded.aud).toBe('cyberrx-frontend');

@@ -274,6 +274,7 @@ if (process.env.AZURE_AD_CLIENT_ID && process.env.AZURE_AD_CLIENT_SECRET && proc
  */
 function generateJWT(user) {
   const jwt = require('jsonwebtoken');
+  const { requireJwtSecret } = require('./jwt');
 
   return jwt.sign(
     {
@@ -283,7 +284,7 @@ function generateJWT(user) {
       role: user.role,
       ssoProvider: user.sso_provider
     },
-    process.env.JWT_SECRET || 'cyberrx-dev-secret',
+    requireJwtSecret(),
     {
       expiresIn: '8h',
       issuer: 'cyberrx-api',
@@ -297,7 +298,9 @@ function generateJWT(user) {
  */
 function getFrontendRedirect(token) {
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-  return `${frontendUrl}/auth/callback?token=${token}`;
+  // Encode the token before placing it in the query string — never interpolate a
+  // credential into a URL raw (prevents query-param injection via a crafted token).
+  return `${frontendUrl}/auth/callback?token=${encodeURIComponent(token)}`;
 }
 
 module.exports = {

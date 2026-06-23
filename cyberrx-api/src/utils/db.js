@@ -658,6 +658,21 @@ async function init() {
         edited_by     TEXT
       );
 
+      -- LLM-composed multi-section board report (ReportBuilderService). Same
+      -- human-in-the-loop model as exec_summaries: generated as a draft, stored
+      -- for consultant review, rendered from the reviewed (or deterministic) copy.
+      CREATE TABLE IF NOT EXISTS llm_reports (
+        id            TEXT PRIMARY KEY,
+        org_id        TEXT NOT NULL UNIQUE,
+        report        JSONB NOT NULL,           -- { sections:[{id,heading,body,bullets}], model, generatedBy }
+        status        TEXT DEFAULT 'draft',     -- draft | reviewed
+        model         TEXT,
+        generated_by  TEXT,                      -- llm | deterministic | edited
+        generated_at  TIMESTAMPTZ DEFAULT NOW(),
+        updated_at    TIMESTAMPTZ DEFAULT NOW(),
+        edited_by     TEXT
+      );
+
       -- ===================================================================
       -- Linkage & multi-tenant reference model (Phase 1)
       -- Chain: BusinessFunction -> Process -> Application -> Asset -> Risk -> Control
@@ -1260,6 +1275,123 @@ async function init() {
       -- Phase 1 additive column on framework_requirements (created above in this
       -- batch). Kept here so the ALTER runs AFTER the table exists.
       ALTER TABLE framework_requirements ADD COLUMN IF NOT EXISTS assessment_type TEXT; -- automated | manual | hybrid
+
+      -- Security audit trail for tenant-isolation / auth events. Deliberately
+      -- separate from the credential-scoped audit_logs table, and intentionally
+      -- WITHOUT a foreign key to orgs: these rows record spoofed / unknown org
+      -- ids by design, so an FK would drop exactly the evidence we want to keep.
+      CREATE TABLE IF NOT EXISTS security_audit_logs (
+        id               BIGSERIAL PRIMARY KEY,
+        event_type       TEXT NOT NULL,            -- org_scope_violation | unauth_nondemo_org_access | org_access_blocked | ...
+        severity         TEXT NOT NULL DEFAULT 'warning', -- info | warning | critical
+        user_id          TEXT,
+        token_org_id     TEXT,                     -- org the caller is actually authorized for (from JWT)
+        requested_org_id TEXT,                     -- org the caller tried to reach
+        path             TEXT,
+        ip_address       TEXT,
+        user_agent       TEXT,
+        enforced         BOOLEAN DEFAULT false,    -- was the request actually blocked (STRICT mode)?
+        details          JSONB DEFAULT '{}',
+        created_at       TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS security_audit_event ON security_audit_logs(event_type);
+      CREATE INDEX IF NOT EXISTS security_audit_created ON security_audit_logs(created_at DESC);
+      CREATE INDEX IF NOT EXISTS security_audit_requested_org ON security_audit_logs(requested_org_id, created_at DESC);
+
+      -- ============= Onboarding Redesign (Step 1: Foundations) ==============
+      -- One resumable onboarding journey per org. Drives the 7-phase stepper and
+      -- caches the latest completeness score for cheap reads. See
+      -- docs/plans/onboarding-redesign-blueprint.md.
+      CREATE TABLE IF NOT EXISTS onboarding_session (
+        id              TEXT PRIMARY KEY,
+        organization_id TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        phase           TEXT NOT NULL DEFAULT 'business_context', -- business_context | apps_tech | connectors | governance | third_party | scoring | completeness
+        status          TEXT NOT NULL DEFAULT 'in_progress',      -- in_progress | live | paused
+        completeness    NUMERIC DEFAULT 0,                        -- 0-100, cached from onboarding_completeness
+        phase_state     JSONB DEFAULT '{}',                       -- { <phase>: { started_at, completed_at } }
+        started_at      TIMESTAMPTZ DEFAULT NOW(),
+        went_live_at    TIMESTAMPTZ,
+        updated_at      TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS onboarding_session_org ON onboarding_session(organization_id);
+
+      -- Completeness score broken down by the six coverage dimensions, one row
+      -- per compute (history); the latest is mirrored onto onboarding_session.
+      CREATE TABLE IF NOT EXISTS onboarding_completeness (
+        id               TEXT PRIMARY KEY,
+        organization_id  TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        overall          NUMERIC NOT NULL,    -- 0-100 weighted
+        dimensions       JSONB NOT NULL,      -- { business_context, asset_coverage, connector_coverage, governance_coverage, third_party_coverage, framework_coverage }
+        answer_readiness JSONB,               -- { q1..q8: green|amber|red }
+        computed_at      TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS onboarding_completeness_org ON onboarding_completeness(organization_id, computed_at DESC);
+
+      -- ============= Unified Control Library (Step 2) =======================
+      -- Framework-agnostic master control list. One library control crosswalks
+      -- to many framework requirements, so one piece of evidence can score every
+      -- in-scope framework at once. The CAE's internal cae_control rows and the
+      -- document pipeline both post evidence against these stable keys.
+      -- See docs/plans/onboarding-redesign-blueprint.md (§3.4, §5).
+      CREATE TABLE IF NOT EXISTS control_library (
+        id             TEXT PRIMARY KEY,          -- stable key, e.g. CL-IAM-001
+        domain         TEXT NOT NULL,             -- IAM | Data Protection | Vuln Mgmt | Governance | ...
+        title          TEXT NOT NULL,
+        description    TEXT,
+        dimension      TEXT NOT NULL DEFAULT 'system', -- system | documentation | human
+        weight         INTEGER DEFAULT 1,
+        default_method TEXT,                       -- automated | document | attestation
+        meta           JSONB DEFAULT '{}'
+      );
+      CREATE INDEX IF NOT EXISTS control_library_domain ON control_library(domain);
+
+      -- One library control satisfies many framework requirements.
+      CREATE TABLE IF NOT EXISTS control_library_crosswalk (
+        library_control_id TEXT NOT NULL REFERENCES control_library(id) ON DELETE CASCADE,
+        framework          TEXT NOT NULL,          -- the seven frameworks
+        requirement_id     TEXT NOT NULL,
+        coverage           TEXT DEFAULT 'full',    -- full | partial
+        provenance         TEXT DEFAULT 'curated', -- curated | derived
+        PRIMARY KEY (library_control_id, framework, requirement_id)
+      );
+      CREATE INDEX IF NOT EXISTS control_library_xwalk_fw ON control_library_crosswalk(framework, requirement_id);
+
+      -- ============= Unified Evidence Ledger (Step 3) =======================
+      -- ONE ledger for every kind of evidence (connector pulls, uploaded
+      -- documents, manual attestations) recorded at the library-control grain.
+      -- The framework projection (ControlLibraryService) treats a library control
+      -- as satisfied when it has a 'met' row here, then rolls that up per
+      -- requirement across all in-scope frameworks. See blueprint §3.4.
+      CREATE TABLE IF NOT EXISTS control_evidence_ledger (
+        id                 TEXT PRIMARY KEY,
+        organization_id    TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        library_control_id TEXT NOT NULL REFERENCES control_library(id) ON DELETE CASCADE,
+        evidence_kind      TEXT NOT NULL,          -- document | attestation | connector | scan
+        dimension          TEXT NOT NULL DEFAULT 'system', -- system | documentation | human
+        source_ref         TEXT NOT NULL,          -- stable origin key (ca:<id> | cae:<fw>:<ctl> | upload:<id> | ...)
+        status             TEXT,                   -- met | partial | not_met
+        confidence         NUMERIC,
+        excerpt            TEXT,
+        freshness_date     DATE,                   -- when the evidence was last valid
+        created_at         TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE (organization_id, library_control_id, source_ref)
+      );
+      CREATE INDEX IF NOT EXISTS evidence_ledger_org_ctl ON control_evidence_ledger(organization_id, library_control_id);
+      CREATE INDEX IF NOT EXISTS evidence_ledger_org_status ON control_evidence_ledger(organization_id, status);
+
+      -- Structured facts extracted from an uploaded document (replaces the
+      -- verdict-only output). One row per (re)extraction of a document_upload.
+      CREATE TABLE IF NOT EXISTS document_extraction (
+        id                 TEXT PRIMARY KEY,
+        organization_id    TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+        document_upload_id TEXT NOT NULL REFERENCES document_upload(id) ON DELETE CASCADE,
+        extracted          JSONB NOT NULL,         -- {owner, effective_date, review_cadence_months, scope, named_controls[], gaps[]}
+        confidence         NUMERIC,
+        engine             TEXT,                   -- llm | heuristic
+        model              TEXT,
+        extracted_at       TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS document_extraction_upload ON document_extraction(document_upload_id);
     `);
     console.log('Database schema initialized');
   } catch (err) {

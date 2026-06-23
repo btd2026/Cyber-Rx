@@ -7,6 +7,7 @@ const CisoDashboardService = require('../services/CisoDashboardService');
 const ExecReportService = require('../services/ExecReportService');
 const CisoReportBuilder = require('../services/CisoReportBuilder');
 const ExecutiveSummaryService = require('../services/ExecutiveSummaryService');
+const ReportBuilderService = require('../services/ReportBuilderService');
 const MetricsEngine = require('../services/MetricsEngine');
 const db = require('../utils/db');
 const { optionalJWT } = require('../middleware/auth');
@@ -130,6 +131,37 @@ router.put('/exec-summary', optionalJWT, async (req, res) => {
     if (!b.blocks) return res.status(400).json({ error: 'blocks is required' });
     res.json(await ExecutiveSummaryService.saveEdited(orgId, b.blocks, b.editedBy));
   } catch (err) { logger.error('exec-summary save error', { error: err.message }); res.status(500).json({ error: err.message }); }
+});
+
+// ---- LLM report builder — full multi-section board report, human-in-the-loop --
+// Generate a DRAFT report (LLM-composed, grounded; deterministic fallback). Stored,
+// not auto-published.
+router.post('/report/generate', optionalJWT, async (req, res) => {
+  const orgId = org(req, res); if (!orgId) return;
+  try {
+    const [d, fw] = await Promise.all([
+      CisoDashboardService.getDashboard(orgId),
+      ExecReportService.cisoPack(orgId, { baseline: req.query.baseline }).catch(() => null),
+    ]);
+    res.json(await ReportBuilderService.generate(orgId, d, fw));
+  } catch (err) { logger.error('report generate error', { error: err.message }); res.status(500).json({ error: err.message }); }
+});
+
+// Fetch the stored report for review/edit.
+router.get('/report', optionalJWT, async (req, res) => {
+  const orgId = org(req, res); if (!orgId) return;
+  try { res.json(await ReportBuilderService.getStored(orgId)); }
+  catch (err) { logger.error('report get error', { error: err.message }); res.status(500).json({ error: err.message }); }
+});
+
+// Save the consultant's reviewed/edited report (marks it reviewed).
+router.put('/report', optionalJWT, async (req, res) => {
+  const orgId = org(req, res); if (!orgId) return;
+  try {
+    const b = req.body || {};
+    if (!b.report || !Array.isArray(b.report.sections)) return res.status(400).json({ error: 'report.sections is required' });
+    res.json(await ReportBuilderService.saveEdited(orgId, b.report, b.editedBy));
+  } catch (err) { logger.error('report save error', { error: err.message }); res.status(500).json({ error: err.message }); }
 });
 
 module.exports = router;

@@ -9,6 +9,7 @@
  */
 
 const jwt = require('jsonwebtoken');
+const { requireJwtSecret } = require('../config/jwt');
 
 /**
  * Middleware to bind X-Org-Id to JWT identity
@@ -25,7 +26,7 @@ function orgIsolation(req, res, next) {
     const token = authHeader.substring(7);
 
     // Verify and decode JWT
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'cyberrx-dev-secret');
+    const decoded = jwt.verify(token, requireJwtSecret());
 
     // Get X-Org-Id from header
     const xOrgId = req.headers['x-org-id'];

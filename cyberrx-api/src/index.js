@@ -197,6 +197,9 @@ app.use('/api/orgs',             [apiGetLimiter, apiPostLimiter], require('./rou
 // M3: Authentication Routes (public - no auth required for signup/login)
 app.use('/api/auth',             require('./routes/auth'));
 
+// Security audit trail (admin-only read of tenant-isolation / auth events)
+app.use('/api/security',         [apiGetLimiter], require('./routes/security'));
+
 // SSO Routes (public - SAML and OIDC authentication)
 app.use('/sso',                  require('./routes/sso'));
 
@@ -262,7 +265,7 @@ app.use('/api/ciso',              [apiGetLimiter], require('./routes/ciso'));
 
 // Role-specific executive dashboards (CFO/CIO/CRO/CLO/Board) — each leader's own
 // hero, KPI strip, five key questions, and sub-tabs (no shared CISO content).
-app.use('/api/exec',              [apiGetLimiter], require('./routes/exec'));
+app.use('/api/exec',              [apiGetLimiter, apiPostLimiter], require('./routes/exec'));
 
 // Metrics engine - editable mock numbers + formula-driven dashboard figures
 app.use('/api/metrics',           [apiGetLimiter, apiPutLimiter], require('./routes/metrics'));
@@ -272,6 +275,8 @@ app.use('/api/csf',               [apiGetLimiter, apiPostLimiter], require('./ro
 
 // Organization Intake — document request checklist + upload/review pipeline
 app.use('/api/intake',            [apiGetLimiter, apiPostLimiter], require('./routes/intake'));
+app.use('/api/onboarding',        [apiGetLimiter, apiPostLimiter], require('./routes/onboarding'));
+app.use('/api/control-library',   [apiGetLimiter], require('./routes/control-library'));
 
 // Industry registry — makes the platform industry-agnostic (setup + intake)
 app.use('/api/industries',        [apiGetLimiter], require('./routes/industries'));

@@ -1,6 +1,7 @@
 'use strict';
 const jwt = require('jsonwebtoken');
 const { isDemoOrg } = require('../config/demoOrgs');
+const SecurityAudit = require('../services/SecurityAuditService');
 
 // Tenant isolation enforcement. Default OFF (observe + log only) so the live demo
 // and onboarding are never broken by surprise; flip STRICT_TENANT_ISOLATION=true to
@@ -156,6 +157,11 @@ function requireOrgAccess(req, res, next) {
       requestedOrgId,
       path: req.path
     }));
+    SecurityAudit.record({
+      eventType: 'org_access_blocked', severity: 'critical',
+      userId: req.userId, tokenOrgId: userOrgId, requestedOrgId,
+      enforced: true, ...SecurityAudit.fromReq(req),
+    });
     return res.status(403).json({
       error: 'Forbidden',
       message: 'You do not have permission to access this organization\'s data'
@@ -181,6 +187,13 @@ function demoOrg(req, res, next) {
         ts: new Date().toISOString(), event: 'org_scope_violation',
         userId: req.userId, tokenOrg: req.orgId, requestedOrg: headerOrg, path: req.path, enforced: STRICT_TENANT_ISOLATION,
       }));
+      // Durable audit (best-effort, non-blocking) — an authenticated caller
+      // reaching for another tenant is the highest-signal IDOR indicator.
+      SecurityAudit.record({
+        eventType: 'org_scope_violation', severity: 'critical',
+        userId: req.userId, tokenOrgId: req.orgId, requestedOrgId: headerOrg,
+        enforced: STRICT_TENANT_ISOLATION, ...SecurityAudit.fromReq(req),
+      });
       if (STRICT_TENANT_ISOLATION) {
         return res.status(403).json({ error: 'Forbidden', message: 'You do not have permission to access this organization\'s data.' });
       }
@@ -195,6 +208,12 @@ function demoOrg(req, res, next) {
       ts: new Date().toISOString(), event: 'unauth_nondemo_org_access',
       requestedOrg: headerOrg, path: req.path, enforced: STRICT_TENANT_ISOLATION,
     }));
+    // Durable audit (best-effort, non-blocking) — anonymous caller asserting a
+    // non-public org id.
+    SecurityAudit.record({
+      eventType: 'unauth_nondemo_org_access', severity: 'warning',
+      requestedOrgId: headerOrg, enforced: STRICT_TENANT_ISOLATION, ...SecurityAudit.fromReq(req),
+    });
     if (STRICT_TENANT_ISOLATION) {
       return res.status(401).json({ error: 'Unauthorized', message: 'Sign in to access this organization.' });
     }

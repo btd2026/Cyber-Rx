@@ -59,6 +59,31 @@ async function bootstrap() {
   } catch (e) { logger.warn('bootstrap: ISO/SOC2 ingest failed', { error: e.message }); }
 
   try {
+    // HIPAA Security Rule + HITRUST CSF: paraphrased structure (public-domain CFR
+    // citations for HIPAA; factual category names for HITRUST). Re-seed if either
+    // is incomplete. Completes the seven onboarding frameworks.
+    const hasHipaa = await count(`SELECT COUNT(*)::int n FROM framework_requirements WHERE framework_id='hipaa_security'`);
+    const hasHitrust = await count(`SELECT COUNT(*)::int n FROM framework_requirements WHERE framework_id='hitrust_csf'`);
+    if (hasHipaa < 50 || hasHitrust < 14) steps.hipaaHitrust = await require('./loadHipaaHitrust').load();
+    else steps.hipaaHitrust = 'present';
+  } catch (e) { logger.warn('bootstrap: HIPAA/HITRUST ingest failed', { error: e.message }); }
+
+  try {
+    // Unified control library + cross-framework crosswalk. Cheap and curated, so
+    // re-seed each boot to pick up mapping edits (it replaces its own crosswalk).
+    steps.controlLibrary = await require('./seedControlLibrary').seed();
+  } catch (e) { logger.warn('bootstrap: control library seed failed', { error: e.message }); }
+
+  try {
+    // Backfill the unified evidence ledger from existing control_assessment +
+    // cae_result. Idempotent (ledger upserts); safe (only posts where a crosswalk
+    // mapping exists). Skips if the library has no crosswalk yet.
+    const hasXwalk = await count(`SELECT COUNT(*)::int n FROM control_library_crosswalk`);
+    if (hasXwalk > 0) steps.evidenceLedger = await require('./backfillEvidenceLedger').backfill();
+    else steps.evidenceLedger = 'skipped (no crosswalk)';
+  } catch (e) { logger.warn('bootstrap: evidence ledger backfill failed', { error: e.message }); }
+
+  try {
     // OFFICIAL CSF<->800-53 references, when the CPRT export is supplied.
     const hasOfficial = await count(`SELECT COUNT(*)::int n FROM requirement_crosswalks WHERE provenance='NIST CPRT'`);
     if (!hasOfficial) steps.csfRefs = await require('./loadCsfRefs').load();

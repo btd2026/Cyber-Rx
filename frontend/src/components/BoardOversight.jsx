@@ -8,6 +8,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgentVoice, VoiceControls } from './agentVoice';
 import Provenance from './Provenance';
+import NarrativeSection from './NarrativeSection';
 import { COLORS, FONTS } from '../theme';
 
 const INK = COLORS.ink, INK2 = COLORS.ink2, INK3 = COLORS.ink3, HAIR = COLORS.hair, PANEL = COLORS.paper;
@@ -40,8 +41,10 @@ export default function BoardOversight(props) {
   const c = d.counts;
 
   return (
-    <div style={{ display: 'grid', gap: 14 }}>
-      {d.provenance && <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 5, fontSize: 10, color: '#8b9098', marginBottom: -4 }}><Provenance prov={d.provenance} /><span>data provenance</span></div>}
+    <div style={{ maxWidth: 880, margin: '0 auto', display: 'grid', gap: 28 }}>
+      {d.provenance && <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 5, fontSize: 10, color: '#8b9098', marginBottom: -14 }}><Provenance prov={d.provenance} /><span>data provenance</span></div>}
+
+      {/* 01 — The lede: posture vs the approved appetite, in a sentence */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, background: COLORS.subtle, border: `1px solid ${COLORS.hair}`, color: COLORS.ink2, borderRadius: 10, padding: '14px 16px' }}>
         <div style={{ display: 'flex', gap: 18, alignItems: 'center' }}>
           <div style={{ textAlign: 'center' }}>
@@ -53,49 +56,62 @@ export default function BoardOversight(props) {
         <VoiceControls voice={voice} onReplay={() => voice.speak(d.narration || d.brief)} label="Listen" />
       </div>
 
-      {/* oversight KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px,1fr))', gap: 10 }}>
-        <Kpi label="Aggregate exposure" value={usd(d.aggregate.expectedLoss)} sub={`P90 ${usd(d.aggregate.p90)}`} tone="bad" />
-        <Kpi label="Critical scenarios" value={`${c.critical}`} tone={c.critical ? 'bad' : 'good'} />
-        <Kpi label="Above appetite" value={`${c.aboveAppetite}`} sub={`appetite ${d.appetite.riskThreshold}+`} tone={c.aboveAppetite ? 'bad' : 'good'} />
-        <Kpi label="Correlated scenarios" value={`${c.compounds}`} tone={c.compounds ? 'warn' : 'good'} />
-        <Kpi label="Need ownership" value={`${c.attention}`} tone={c.attention ? 'warn' : 'good'} />
-        <Kpi label="Decided (documented)" value={`${c.decided}`} tone="good" />
-      </div>
+      {/* 02 — The numbers that matter */}
+      <NarrativeSection step={2} kicker="Oversight at a glance" title="The numbers that matter"
+        lede="Six figures the board governs to: how much is at stake, how much sits above the approved appetite, and how much is already owned and decided.">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px,1fr))', gap: 10 }}>
+          <Kpi label="Aggregate exposure" value={usd(d.aggregate.expectedLoss)} sub={`P90 ${usd(d.aggregate.p90)}`} tone="bad" />
+          <Kpi label="Critical scenarios" value={`${c.critical}`} tone={c.critical ? 'bad' : 'good'} />
+          <Kpi label="Above appetite" value={`${c.aboveAppetite}`} sub={`appetite ${d.appetite.riskThreshold}+`} tone={c.aboveAppetite ? 'bad' : 'good'} />
+          <Kpi label="Correlated scenarios" value={`${c.compounds}`} tone={c.compounds ? 'warn' : 'good'} />
+          <Kpi label="Need ownership" value={`${c.attention}`} tone={c.attention ? 'warn' : 'good'} />
+          <Kpi label="Decided (documented)" value={`${c.decided}`} tone="good" />
+        </div>
+      </NarrativeSection>
 
-      {/* needs board attention */}
-      <Panel title="Decisions needing board attention">
-        {d.attentionItems.length === 0 ? <div style={{ fontSize: 11.5, color: INK3 }}>Every board-level risk is owned and decided.</div> : (
-          <div style={{ display: 'grid', gap: 8 }}>
-            {d.attentionItems.map((a, i) => (
-              <div key={i} style={{ borderLeft: `4px solid ${SEV[a.severity] || INK3}`, background: '#fff', border: `1px solid ${HAIR}`, borderRadius: 8, padding: '9px 12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                  <span style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>{a.title}</span>
-                  <span style={{ fontSize: 10.5, color: a.owner === 'Unassigned' ? TONE.bad : INK3 }}>Owner: {a.owner}</span>
+      {/* 03 — What needs the board */}
+      <NarrativeSection step={3} kicker="Decisions" title="What needs the board"
+        lede="The board oversees, it does not manage — so these are the items that need ownership or a question put to management, not tasks to execute.">
+        <Panel>
+          {d.attentionItems.length === 0 ? <div style={{ fontSize: 11.5, color: INK3 }}>Every board-level risk is owned and decided.</div> : (
+            <div style={{ display: 'grid', gap: 8 }}>
+              {d.attentionItems.map((a, i) => (
+                <div key={i} style={{ borderLeft: `4px solid ${SEV[a.severity] || INK3}`, background: '#fff', border: `1px solid ${HAIR}`, borderRadius: 8, padding: '9px 12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                    <span style={{ fontSize: 12.5, fontWeight: 700, color: INK }}>{a.title}</span>
+                    <span style={{ fontSize: 10.5, color: a.owner === 'Unassigned' ? TONE.bad : INK3 }}>Owner: {a.owner}</span>
+                  </div>
+                  {a.question && <div style={{ fontSize: 11, color: '#7c3aed', fontWeight: 600, marginTop: 3 }}>Ask management: {a.question}</div>}
                 </div>
-                {a.question && <div style={{ fontSize: 11, color: '#7c3aed', fontWeight: 600, marginTop: 3 }}>Ask management: {a.question}</div>}
+              ))}
+            </div>
+          )}
+        </Panel>
+      </NarrativeSection>
+
+      {/* 04 — What moved since last meeting */}
+      <NarrativeSection step={4} kicker="Since last meeting" title="What moved since last meeting"
+        lede="The shifts worth noting in the minutes — what improved, what slipped, since the board last convened.">
+        <Panel>
+          <div style={{ display: 'grid', gap: 6 }}>
+            {d.whatChanged.map((w, i) => (
+              <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'baseline', fontSize: 12, color: INK2 }}>
+                <span style={{ color: w.dir === 'up' ? TONE.good : w.dir === 'down' ? TONE.bad : INK3, fontWeight: 800 }}>{w.dir === 'up' ? '▲' : w.dir === 'down' ? '▼' : '▬'}</span>
+                <span>{w.text}</span>
               </div>
             ))}
           </div>
-        )}
-      </Panel>
-
-      {/* what changed */}
-      <Panel title="What changed since last meeting">
-        <div style={{ display: 'grid', gap: 6 }}>
-          {d.whatChanged.map((w, i) => (
-            <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'baseline', fontSize: 12, color: INK2 }}>
-              <span style={{ color: w.dir === 'up' ? TONE.good : w.dir === 'down' ? TONE.bad : INK3, fontWeight: 800 }}>{w.dir === 'up' ? '▲' : w.dir === 'down' ? '▼' : '▬'}</span>
-              <span>{w.text}</span>
-            </div>
-          ))}
-        </div>
-      </Panel>
-
-      {d.visibility && (
-        <Panel title="Visibility confidence">
-          <div style={{ fontSize: 12, color: INK2 }}>Overall <strong style={{ color: INK }}>{d.visibility.overall || d.visibility.band}</strong>{d.visibility.caveat ? <span style={{ color: INK3 }}> — {d.visibility.caveat}</span> : null}</div>
         </Panel>
+      </NarrativeSection>
+
+      {/* 05 — How much to trust this read */}
+      {d.visibility && (
+        <NarrativeSection step={5} kicker="Visibility" title="How much to trust this read"
+          lede="The oversight picture rests on what management can see and report. Here's the confidence behind it.">
+          <Panel>
+            <div style={{ fontSize: 12, color: INK2 }}>Overall <strong style={{ color: INK }}>{d.visibility.overall || d.visibility.band}</strong>{d.visibility.caveat ? <span style={{ color: INK3 }}> — {d.visibility.caveat}</span> : null}</div>
+          </Panel>
+        </NarrativeSection>
       )}
     </div>
   );
@@ -104,5 +120,5 @@ function Kpi({ label, value, sub, tone }) {
   return <div style={{ border: `1px solid ${HAIR}`, borderLeft: `4px solid ${tone ? TONE[tone] : '#d7d9de'}`, borderRadius: 9, padding: '11px 13px', background: '#fff' }}><div style={{ fontSize: 10.5, color: INK2 }}>{label}</div><div style={{ fontSize: 19, fontWeight: 800, fontFamily: FONTS.mono, color: tone ? TONE[tone] : INK, marginTop: 2 }}>{value}</div>{sub && <div style={{ fontSize: 10, color: INK3, marginTop: 1 }}>{sub}</div>}</div>;
 }
 function Panel({ title, children }) {
-  return <div style={{ border: `1px solid ${HAIR}`, borderRadius: 11, background: '#fff', padding: '13px 16px' }}><div style={{ fontSize: 12.5, fontWeight: 800, fontFamily: FONTS.display, color: INK, marginBottom: 9 }}>{title}</div>{children}</div>;
+  return <div style={{ border: `1px solid ${HAIR}`, borderRadius: 11, background: '#fff', padding: '13px 16px' }}>{title && <div style={{ fontSize: 12.5, fontWeight: 800, fontFamily: FONTS.display, color: INK, marginBottom: 9 }}>{title}</div>}{children}</div>;
 }
