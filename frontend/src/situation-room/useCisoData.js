@@ -41,6 +41,8 @@ const statusKind = (s) => (s === 'red' ? 'critical' : s === 'amber' ? 'exposure'
 const statusLabel = (s) => (s === 'red' ? 'Action required' : s === 'amber' ? 'Attention' : 'Within tolerance');
 // CISO briefing rows map, in order, to the seat's tabs after Exec Summary.
 const CISO_BRIEFING_TO = ['operational', 'material-exposure', 'action-center', 'trajectory', 'response-investment'];
+const usd = (v) => { const x = Number(v) || 0; if (x >= 1e9) return `$${(x / 1e9).toFixed(1)}B`; if (x >= 1e6) return `$${(x / 1e6).toFixed(1)}M`; if (x >= 1e3) return `$${Math.round(x / 1e3)}K`; return `$${Math.round(x)}`; };
+const tierRisk = (t) => { const n = Number(t); if (n === 1) return { risk: 'High', riskKind: 'critical' }; if (n === 2) return { risk: 'Medium', riskKind: 'exposure' }; if (n >= 3) return { risk: 'Low', riskKind: 'pass' }; return { risk: '—', riskKind: 'muted' }; };
 function caeStatus(s) {
   const v = String(s || '').toLowerCase();
   if (/met|pass|compl/.test(v)) return 'Met';
@@ -57,6 +59,10 @@ export function useCisoData(props = {}) {
   const [kq, setKq] = useState(null);         // GET /api/agents/key-questions/ciso
   const [sig, setSig] = useState(null);       // GET /api/exec/signals
   const [inc, setInc] = useState(null);       // GET /api/exec/incident
+  const [pc, setPc] = useState(null);         // GET /api/risk/process-criticality
+  const [ac, setAc] = useState(null);         // GET /api/risk/attack-coverage
+  const [pf, setPf] = useState(null);         // GET /api/projects/portfolio
+  const [met, setMet] = useState(null);       // GET /api/metrics/ciso
 
   useEffect(() => {
     let alive = true;
@@ -71,10 +77,14 @@ export function useCisoData(props = {}) {
     grab('/api/agents/key-questions/ciso', setKq);
     grab('/api/exec/signals', setSig);
     grab('/api/exec/incident', setInc);
+    grab('/api/risk/process-criticality', setPc);
+    grab('/api/risk/attack-coverage', setAc);
+    grab('/api/projects/portfolio', setPf);
+    grab('/api/metrics/ciso', setMet);
     return () => { alive = false; };
   }, [api, orgId, token]);
 
-  if (!d && !cae && !cov && !brief && !kq && !sig && !inc) return null;
+  if (!d && !cae && !cov && !brief && !kq && !sig && !inc && !pc && !ac && !pf && !met) return null;
   const out = {};
 
   // ---- live timestamp ------------------------------------------------------
@@ -201,6 +211,43 @@ export function useCisoData(props = {}) {
       }])),
     };
   }
+
+  // ---- Material Exposure processes ← /api/risk/process-criticality ---------
+  const pcRows = pc && Array.isArray(pc.processes) ? pc.processes : null;
+  if (pcRows && pcRows.length) {
+    out.processes = pcRows.map((p) => {
+      const r = tierRisk(p.tier);
+      return {
+        name: p.name, risk: r.risk, riskKind: r.riskKind, trend: '—', trendKind: 'muted',
+        exposed: `Tier ${p.tier ?? '—'} · RTO ${p.rto ?? '—'}${p.app_count != null ? ` · ${p.app_count} apps` : ''}`,
+        derived: true,
+      };
+    });
+  }
+  if (ac && typeof ac.coveragePct === 'number') out.coverage = ac.coveragePct;
+
+  // ---- Response & Investment ← /api/projects/portfolio ---------------------
+  if (pf && Array.isArray(pf.projects) && pf.projects.length) {
+    out.roadmap = {
+      projects: pf.projects.slice(0, 8).map((p) => ({
+        name: p.name,
+        status: p.status || (p.percentComplete != null ? `${p.percentComplete}%` : '—'),
+        invest: p.budget != null ? usd(p.budget) : '—',
+        ret: (p.analysis && p.analysis.postureLift != null) ? `+${p.analysis.postureLift} posture` : (p.expectedReturn || '—'),
+        needs: /propos|hold|blocked|unfunded/i.test(p.status || ''),
+      })),
+      readiness: [
+        { k: 'Committed (portfolio budget)', v: pf.totalBudget != null ? usd(pf.totalBudget) : '—' },
+        { k: 'At-risk projects', v: pf.counts ? String(pf.counts.atRisk) : '—', kind: (pf.counts && pf.counts.atRisk) ? 'exposure' : 'pass' },
+        { k: 'Projected posture lift', v: pf.totalLift != null ? `+${pf.totalLift}` : '—', kind: 'pass' },
+      ],
+    };
+  }
+
+  // ---- Current posture (live) ← /api/metrics/ciso (no time-series available) -
+  const ps = met && met.metrics && (met.metrics.postureScore != null ? met.metrics.postureScore
+    : (met.metrics.posture != null ? met.metrics.posture : null));
+  if (ps != null) out.postureLive = ps;
 
   return Object.keys(out).length ? out : null;
 }

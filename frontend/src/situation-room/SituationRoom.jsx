@@ -15,7 +15,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { HashRouter, Routes, Route, Navigate, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from './useTheme';
-import { useCisoData } from './useCisoData';
+import { useCisoData, apiCtx } from './useCisoData';
 import { CISO_SEAT } from './seats/ciso';
 import SEATS_DATA from './seats/otherSeats';
 import { useNow, getAudit, downloadBoardPack } from './trust';
@@ -91,6 +91,14 @@ function SeatView(props = {}) {
   const provenance = bound?.provenance || null;
   const onBoardPack = () => {
     const data = seat === 'CISO' ? CISO_SEAT : SEATS_DATA[seat];
+    // CISO: kick the server-side report builder (best-effort); then export the client
+    // board pack and log the audit entry regardless.
+    if (seat === 'CISO') {
+      const { token, orgId, api } = apiCtx(props);
+      const h = { 'Content-Type': 'application/json', 'X-Org-Id': orgId };
+      if (token) h.Authorization = `Bearer ${token}`;
+      fetch(`${api}/api/ciso/report/generate?org_id=${encodeURIComponent(orgId)}`, { method: 'POST', headers: h, body: '{}' }).catch(() => {});
+    }
     if (data) downloadBoardPack({ seat, summary: data.summary, tabs: data.tabs, provenance, asOf });
   };
 
@@ -498,7 +506,8 @@ function CisoPanel({ tabKey, goTabKey, bound, onBoardPack, back }) {
             ))}
           </div>
           <div className="sr-statgrid">
-            {tab.pathStats.map((s) => <div key={s.k} className="sr-stat"><span className="sr-stat__k">{s.k}</span><span className="sr-stat__v">{s.v}</span></div>)}
+            {[...tab.pathStats, ...(bound?.coverage != null ? [{ k: 'ATT&CK coverage (live)', v: `${bound.coverage}%` }] : [])]
+              .map((s) => <div key={s.k} className="sr-stat"><span className="sr-stat__k">{s.k}</span><span className="sr-stat__v">{s.v}</span></div>)}
           </div>
         </Section>
       </div>
@@ -540,6 +549,11 @@ function CisoPanel({ tabKey, goTabKey, bound, onBoardPack, back }) {
     return (
       <div className="sr-stack">{head}
         <PostureChart data={tab.posture} target={tab.target} />
+        <div className="sr-fw__cap">
+          {bound?.postureLive != null
+            ? <>Current posture <strong>{bound.postureLive}</strong> (live · /api/metrics/ciso) · trend series illustrative (no history endpoint yet)</>
+            : <>Trend series illustrative — sample</>}
+        </div>
         <div className="sr-twocol">
           <Section title="Improving"><ul className="sr-tl sr-tl--up">{tab.improving.map((x) => <li key={x}>{x}</li>)}</ul></Section>
           <Section title="Deteriorating — needs attention"><ul className="sr-tl sr-tl--down">{tab.deteriorating.map((x) => <li key={x}>{x}</li>)}</ul></Section>
@@ -551,25 +565,27 @@ function CisoPanel({ tabKey, goTabKey, bound, onBoardPack, back }) {
     );
   }
   if (tabKey === 'response-investment') {
+    const projects = bound?.roadmap?.projects || tab.projects;
+    const readiness = bound?.roadmap?.readiness || tab.readiness;
     return (
       <div className="sr-stack">{head}
-        <Section title="Roadmap">
+        <Section title="Roadmap" action={bound?.roadmap ? <span className="sr-hint">live · /api/projects/portfolio</span> : null}>
           <table className="sr-table">
             <thead><tr><th>Project</th><th>Status</th><th>Investment</th><th>Expected return</th><th>Decision</th></tr></thead>
             <tbody>
-              {tab.projects.map((p) => (
-                <tr key={p.name}>
+              {projects.map((p, i) => (
+                <tr key={p.name || i}>
                   <td className="sr-td-name">{p.name}</td>
                   <td>{p.status}</td>
                   <td className="sr-mono">{p.invest}</td>
                   <td className="sr-td-exposed">{p.ret}</td>
-                  <td>{p.needs ? <Pill kind="exposure">{p.decision}</Pill> : <span className="sr-dash">{p.decision}</span>}</td>
+                  <td>{p.needs ? <Pill kind="exposure">{p.decision || 'Needs funding'}</Pill> : <span className="sr-dash">{p.decision || '—'}</span>}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </Section>
-        <Section title="Readiness & investment"><Rows items={tab.readiness} /></Section>
+        <Section title="Readiness & investment"><Rows items={readiness} /></Section>
       </div>
     );
   }
