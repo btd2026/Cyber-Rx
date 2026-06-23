@@ -168,14 +168,13 @@ var NAV_GROUPS = [
     ]
   },
   {
-    label: "Executive Dashboards",
+    label: "Executive",
     items: [
-      {id:"dashboard", label:"CISO",      icon:"S", mod:"F08a", subtabs:["attackpaths"]},
-      {id:"cio",       label:"CIO",       icon:"I", mod:"F08e"},
-      {id:"cro",       label:"CRO / Audit", icon:"C", mod:"F08b"},
-      {id:"cfo",       label:"CFO",       icon:"F", mod:"F08c"},
-      {id:"clo",       label:"CLO",       icon:"L", mod:"F08f"},
-      {id:"boarddash", label:"Board",     icon:"B", mod:"F08d"},
+      // Canonical executive experience = the situation room (7 seats). The legacy
+      // per-role dashboards (dashboard/cio/cro/cfo/clo/boarddash) are demoted to
+      // "Deep dive" targets reached from inside a seat — their renderPage() branches
+      // remain, they're just no longer top-level sidebar destinations.
+      {id:"exec-ciso", label:"Situation Room", icon:"◆", mod:"F08"},
     ]
   },
   {

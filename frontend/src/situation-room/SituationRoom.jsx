@@ -12,7 +12,8 @@
  * (TODO real data) and bound to your API where it cleanly fits.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { HashRouter, Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom';
 import { useTheme } from './useTheme';
 import { useCisoData } from './useCisoData';
 import { CISO_SEAT } from './seats/ciso';
@@ -45,14 +46,44 @@ const tabsForSeat = (s) => (s === 'CISO'
   : SEAT_TABS[s].map((name, i) => ({ key: i === 0 ? 'summary' : slug(name), name })));
 const seatFromSlug = (sl) => SEAT_ORDER.find((s) => s.toLowerCase() === sl) || null;
 
+/* Scoped router — owns ONLY the URL #fragment (#/<seat>/<tab>), so the legacy
+   App.jsx state machine (which owns pathname) is left completely untouched.
+   Exactly one Router instance, at the module root. */
 export default function SituationRoom(props = {}) {
+  return (
+    <HashRouter>
+      <Routes>
+        <Route path="/:seat/:tab" element={<SeatView {...props} />} />
+        <Route path="/:seat" element={<SeatView {...props} />} />
+        <Route path="*" element={<DefaultRedirect initialSeat={props.initialSeat} />} />
+      </Routes>
+    </HashRouter>
+  );
+}
+
+function DefaultRedirect({ initialSeat }) {
+  const s = SEAT_ORDER.includes((initialSeat || '').toUpperCase()) ? initialSeat.toUpperCase() : 'CISO';
+  return <Navigate to={`/${s.toLowerCase()}/summary`} replace />;
+}
+
+function SeatView(props = {}) {
   const { go, initialSeat } = props;
+  const params = useParams();
+  const nav = useNavigate();
   const tabRefs = useRef([]);
   const { isDark, toggle } = useTheme();
   // Real CISO data, bound conservatively (verified fields only); null when offline.
   const bound = useCisoData(props);
   const now = useNow();                       // live "as-of" clock
   const [auditOpen, setAuditOpen] = useState(false);
+
+  // Resolve seat + tab from the URL params (validated, with fallbacks).
+  const seat = seatFromSlug((params.seat || '').toLowerCase())
+    || (SEAT_ORDER.includes((initialSeat || '').toUpperCase()) ? initialSeat.toUpperCase() : 'CISO');
+  const tabs = tabsForSeat(seat);
+  const tabKey = tabs.some((t) => t.key === params.tab) ? params.tab : 'summary';
+  const tabIdx = Math.max(0, tabs.findIndex((t) => t.key === tabKey));
+  const activeTab = tabs[tabIdx] || tabs[0];
 
   // Trust layer: provenance + as-of are per-seat (CISO is live; others sample).
   const asOf = bound?.live ? bound.live.toLocaleString() : null;
@@ -62,44 +93,8 @@ export default function SituationRoom(props = {}) {
     if (data) downloadBoardPack({ seat, summary: data.summary, tabs: data.tabs, provenance, asOf });
   };
 
-  // Seat + tab are real, deep-linkable routes via the URL hash: #/<seat>/<tab>.
-  // Browser back/forward and direct links work; falls back to initialSeat → CISO.
-  const readRoute = useCallback(() => {
-    const fallback = SEAT_ORDER.includes((initialSeat || '').toUpperCase()) ? initialSeat.toUpperCase() : 'CISO';
-    let st = fallback, tk = 'summary';
-    if (typeof window !== 'undefined' && window.location.hash) {
-      const parts = window.location.hash.replace(/^#\/?/, '').split('/');
-      const s = seatFromSlug((parts[0] || '').toLowerCase());
-      if (s) { st = s; if (parts[1]) tk = parts[1]; }
-    }
-    if (!tabsForSeat(st).some((t) => t.key === tk)) tk = 'summary';
-    return { seat: st, tabKey: tk };
-  }, [initialSeat]);
-
-  const [route, setRoute] = useState(readRoute);
-  const { seat, tabKey } = route;
-  const tabs = tabsForSeat(seat);
-  const tabIdx = Math.max(0, tabs.findIndex((t) => t.key === tabKey));
-  const activeTab = tabs[tabIdx] || tabs[0];
-
-  // Keep the URL hash in sync, and react to browser back/forward.
-  useEffect(() => {
-    const hash = `#/${seat.toLowerCase()}/${tabKey}`;
-    if (typeof window !== 'undefined' && window.location.hash !== hash) {
-      window.history.replaceState(null, '', hash);
-    }
-  }, [seat, tabKey]);
-  useEffect(() => {
-    const onPop = () => setRoute(readRoute());
-    window.addEventListener('popstate', onPop);
-    window.addEventListener('hashchange', onPop);
-    return () => { window.removeEventListener('popstate', onPop); window.removeEventListener('hashchange', onPop); };
-  }, [readRoute]);
-
-  const navigate = (s, key) => {
-    if (typeof window !== 'undefined') window.history.pushState(null, '', `#/${s.toLowerCase()}/${key}`);
-    setRoute({ seat: s, tabKey: key });
-  };
+  // Navigation drives the router → browser back/forward + deep links come free.
+  const navigate = (s, key) => nav(`/${s.toLowerCase()}/${key}`);
   const selectSeat = (s) => navigate(s, 'summary');
   const goTabKey = (key) => navigate(seat, key);
   const setTabByIndex = (i) => navigate(seat, tabs[i].key);
