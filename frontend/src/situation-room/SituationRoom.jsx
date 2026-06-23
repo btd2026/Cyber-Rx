@@ -646,15 +646,27 @@ function FwCol({ label, items, sel, onPick, empty }) {
   );
 }
 
-/* A mini panel (srow / kv rows) — matches the mock's .panel blocks. */
+/* A mini panel (srow / kv rows) — matches the mock's .panel blocks. Rows that
+   carry `ev` expand to their evidence (source · method · last collected · result). */
 function SeatMiniPanel({ p, full }) {
   return (
     <div className={`sr-panel${full ? ' sr-panel--full' : ''}`}>
       <h4 className="sr-panel__h">{p.title}</h4>
-      {p.rows.map((r, i) => (p.rowsKind === 'kv'
-        ? <div key={i} className="sr-kv"><span className="sr-kv__k">{r.l}</span><span className={`sr-kv__v${r.vKind ? ` sr-fg--${r.vKind}` : ''}`}>{r.v}</span></div>
-        : <div key={i} className="sr-srow"><span className="sr-srow__nm">{r.nm}{r.sub && <span className="sr-srow__sub">{r.sub}</span>}</span><span className={`sr-pill sr-pill--${r.statKind || 'brand'}`}>{r.stat}</span></div>
-      ))}
+      {p.rows.map((r, i) => {
+        const kv = p.rowsKind === 'kv';
+        const inner = kv
+          ? <><span className="sr-kv__k">{r.l}</span><span className={`sr-kv__v${r.vKind ? ` sr-fg--${r.vKind}` : ''}`}>{r.v}</span></>
+          : <><span className="sr-srow__nm">{r.nm}{r.sub && <span className="sr-srow__sub">{r.sub}</span>}</span><span className={`sr-pill sr-pill--${r.statKind || 'brand'}`}>{r.stat}</span></>;
+        if (r.ev) {
+          return (
+            <details key={i} className={`${kv ? 'sr-kv' : 'sr-srow'} sr-mini--ev`}>
+              <summary className="sr-mini__sum">{inner}<span className="sr-row__chev" aria-hidden="true">▸</span></summary>
+              <EvidenceBox ev={r.ev} />
+            </details>
+          );
+        }
+        return <div key={i} className={kv ? 'sr-kv' : 'sr-srow'}>{inner}</div>;
+      })}
     </div>
   );
 }
@@ -901,6 +913,16 @@ function SrStyles() {
       .sr-row__chev { font-family:var(--sr-font-mono); font-size:11px; color:var(--sr-subtle); transition:transform .15s ease; flex:none; }
       .sr-row--ev[open] > summary .sr-row__chev { transform:rotate(90deg); color:var(--sr-brand); }
       .sr-row--ev:hover > summary .sr-row__chev { color:var(--sr-brand); }
+
+      /* Expandable mini-panel rows */
+      .sr-mini--ev { display:block; padding:0; }
+      .sr-mini--ev > summary { display:flex; align-items:center; justify-content:space-between; gap:12px; cursor:pointer; list-style:none; }
+      .sr-mini--ev.sr-kv > summary { padding:9px 0; font-size:13.5px; }
+      .sr-mini--ev.sr-srow > summary { padding:11px 0; font-size:14px; }
+      .sr-mini--ev > summary::-webkit-details-marker { display:none; }
+      .sr-mini--ev[open] > summary .sr-row__chev { transform:rotate(90deg); color:var(--sr-brand); }
+      .sr-mini--ev:hover > summary .sr-row__chev { color:var(--sr-brand); }
+      .sr-mini--ev > .sr-evbox { margin-bottom:11px; }
 
       /* Mini panels (srow / kv) + bigstat — match the mock's .panel blocks */
       .sr-panel { background:var(--sr-glass); border:1px solid var(--sr-border); border-radius:var(--sr-radius); padding:18px 20px; }
