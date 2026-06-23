@@ -13,7 +13,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { HashRouter, Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from './useTheme';
 import { useCisoData } from './useCisoData';
 import { CISO_SEAT } from './seats/ciso';
@@ -70,6 +70,7 @@ function SeatView(props = {}) {
   const { go, initialSeat } = props;
   const params = useParams();
   const nav = useNavigate();
+  const loc = useLocation();
   const tabRefs = useRef([]);
   const { isDark, toggle } = useTheme();
   // Real CISO data, bound conservatively (verified fields only); null when offline.
@@ -96,8 +97,12 @@ function SeatView(props = {}) {
   // Navigation drives the router → browser back/forward + deep links come free.
   const navigate = (s, key) => nav(`/${s.toLowerCase()}/${key}`);
   const selectSeat = (s) => navigate(s, 'summary');
-  const goTabKey = (key) => navigate(seat, key);
+  // "Every number is a door": door clicks record their origin so the target can
+  // offer "← Back to <origin>". Tab-bar / seat switches don't (no origin).
+  const goTabKey = (key) => nav(`/${seat.toLowerCase()}/${key}`, { state: { from: activeTab.name } });
   const setTabByIndex = (i) => navigate(seat, tabs[i].key);
+  const back = (loc.state && loc.state.from && activeTab.key !== 'summary')
+    ? { label: loc.state.from, onClick: () => nav(-1) } : null;
 
   const onTabsKey = (e) => {
     const n = tabs.length;
@@ -167,8 +172,8 @@ function SeatView(props = {}) {
         {/* Panel */}
         <div role="tabpanel" id={`sr-panel-${activeTab.key}`} aria-labelledby={`sr-tab-${activeTab.key}`} tabIndex={0} className="sr-panel">
           {seat === 'CISO'
-            ? <CisoPanel tabKey={activeTab.key} goTabKey={goTabKey} bound={bound} onBoardPack={onBoardPack} />
-            : <SeatPanel seat={seat} tabKey={activeTab.key} goTabKey={goTabKey} onBoardPack={onBoardPack} asOf={asOf} />}
+            ? <CisoPanel tabKey={activeTab.key} goTabKey={goTabKey} bound={bound} onBoardPack={onBoardPack} back={back} />
+            : <SeatPanel seat={seat} tabKey={activeTab.key} goTabKey={goTabKey} onBoardPack={onBoardPack} asOf={asOf} back={back} />}
         </div>
 
         <footer className="sr-footer">CyberRx · executive operating system — illustrative, with sample data</footer>
@@ -189,7 +194,7 @@ function SeatPlaceholder({ seat, tab }) {
 
 /* Generic seat renderer — the six non-CISO seats share this one code path, driven
    by data blocks (see seats/otherSeats.js). Same shape as the CISO reference. */
-function SeatPanel({ seat, tabKey, goTabKey, onBoardPack, asOf }) {
+function SeatPanel({ seat, tabKey, goTabKey, onBoardPack, asOf, back }) {
   const S = SEATS_DATA[seat];
   if (!S) return <SeatPlaceholder seat={seat} tab={tabKey} />;
   if (tabKey === 'summary') {
@@ -208,7 +213,7 @@ function SeatPanel({ seat, tabKey, goTabKey, onBoardPack, asOf }) {
   return (
     <div className="sr-stack">
       <PanelHead verdict={tab.name} pill={tab.pill} pillKind={tab.pillKind}
-        pillVerified={tab.pillVerified} qsub={tab.q} lede={tab.lede} />
+        pillVerified={tab.pillVerified} qsub={tab.q} lede={tab.lede} back={back} />
       {(tab.sections || []).map((s, i) => <SeatSection key={i} s={s} onBoardPack={onBoardPack} />)}
     </div>
   );
@@ -282,10 +287,11 @@ export function Pill({ kind = 'brand', verified, children }) {
   return <span className={`sr-pill sr-pill--${kind}`}>{verified ? '✓ ' : ''}{children}</span>;
 }
 
-export function PanelHead({ kicker, verdict, pill, pillKind, pillVerified, qsub, lede }) {
+export function PanelHead({ kicker, verdict, pill, pillKind, pillVerified, qsub, lede, tag, back }) {
   return (
     <div className="sr-head">
-      {kicker && <span className="sr-kicker">{kicker}</span>}
+      {back && <button type="button" className="sr-back" onClick={back.onClick}>← Back to {back.label}</button>}
+      {(kicker || tag) && <span className="sr-kicker">{kicker}{tag && <span className={`sr-srctag sr-srctag--${tag}`}>{tag}</span>}</span>}
       {verdict && <h2 className="sr-verdict">{verdict}{pill && <Pill kind={pillKind} verified={pillVerified}>{pill}</Pill>}</h2>}
       {qsub && <p className="sr-qsub">{qsub}</p>}
       {lede && <p className="sr-lede">{lede}</p>}
@@ -399,19 +405,24 @@ export function Evidence({ source, method, last, result, verified = true, defaul
 }
 
 /* ============================ CISO seat panels ============================ */
-function CisoPanel({ tabKey, goTabKey, bound, onBoardPack }) {
+function CisoPanel({ tabKey, goTabKey, bound, onBoardPack, back }) {
   const S = CISO_SEAT;
   if (tabKey === 'summary') {
-    // Merge real/derived tile overrides (label-keyed) over the sample tiles.
+    // Real verdict/lede/pill ← agents brief; tiles ← dashboard/coverage; briefing ←
+    // key-questions. Each falls back to the seat's authored sample, tagged "sample".
     const synced = bound?.live ? bound.live.toLocaleString() : '14:09';
     const tiles = S.summary.tiles.map((t) => (bound?.tiles && bound.tiles[t.label] ? { ...t, ...bound.tiles[t.label] } : t));
+    const b = bound?.brief;
+    const briefing = (bound?.briefing && bound.briefing.length) ? bound.briefing : S.summary.briefing;
     return (
       <div className="sr-stack">
-        <PanelHead kicker={`Executive summary · synced ${synced}`} verdict={S.summary.verdict}
-          pill={S.summary.pill} pillKind={S.summary.pillKind} lede={S.summary.lede} />
+        <PanelHead kicker={`Executive summary · synced ${synced}`} tag={b ? 'live' : 'sample'}
+          verdict={b ? b.verdict : S.summary.verdict}
+          pill={b ? b.pill : S.summary.pill} pillKind={b ? b.pillKind : S.summary.pillKind}
+          lede={b ? b.lede : S.summary.lede} />
         <ProvenanceStrip provenance={bound?.provenance} asOf={bound?.live ? bound.live.toLocaleString() : null} />
         <MetricBand tiles={tiles} onGo={goTabKey} />
-        <Briefing rows={S.summary.briefing} onGo={goTabKey} />
+        <Briefing rows={briefing} onGo={goTabKey} />
       </div>
     );
   }
@@ -419,13 +430,44 @@ function CisoPanel({ tabKey, goTabKey, bound, onBoardPack }) {
   if (!tab) return null;
   const head = (
     <PanelHead verdict={tab.name} pill={tab.pill} pillKind={tab.pillKind}
-      pillVerified={tab.pillVerified} qsub={tab.q} lede={tab.lede} />
+      pillVerified={tab.pillVerified} qsub={tab.q} lede={tab.lede} back={back} />
   );
 
   if (tabKey === 'operational') {
+    const inc = bound?.incident;
+    const sigItems = bound?.signals?.items;
     return (
       <div className="sr-stack">{head}
+        {inc && (
+          <div className="sr-incident" role="note" aria-label="Active incident">
+            <span className="sr-incident__dot" aria-hidden="true" />
+            <div>
+              <div className="sr-incident__kicker">Active incident · {inc.failedAt || '—'}{inc.phase ? ` · ${inc.phase}` : ''}</div>
+              <div className="sr-incident__text">{inc.headline}</div>
+            </div>
+          </div>
+        )}
         {tab.panels.map((p) => <Section key={p.title} title={p.title}><Rows items={p.rows} /></Section>)}
+        {Array.isArray(sigItems) && sigItems.length > 0 && (
+          <Section title="Live platform signals" action={<span className="sr-hint">live · {bound.signals.generatedAt ? new Date(bound.signals.generatedAt).toLocaleString() : 'now'}</span>}>
+            <div className="sr-rows">
+              {sigItems.map((s, i) => (
+                <div key={i} className="sr-row">
+                  <span className="sr-row__k">{s.label}{s.detail && <span className="sr-row__sub">{s.detail}</span>}</span>
+                  <span className="sr-row__v">{s.live ? <span className="sr-fg--pass">✓ </span> : ''}{s.value}{s.source ? ` · ${s.source}` : ''}</span>
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
+      </div>
+    );
+  }
+  if (tabKey === 'liability') {
+    return (
+      <div className="sr-stack">{head}
+        {(tab.panels || []).map((p) => <Section key={p.title} title={p.title}><Rows items={p.rows} /></Section>)}
+        {tab.note && <p className="sr-bigstat">{tab.note}</p>}
       </div>
     );
   }
@@ -772,6 +814,17 @@ function SrStyles() {
       .sr-qsub { margin:7px 0 0; font-size:14px; color:var(--sr-muted); }
       .sr-qsub::before { content:"› "; color:var(--sr-brand); }
       .sr-lede { margin:12px 0 0; font-size:16px; line-height:1.55; color:var(--sr-muted); max-width:760px; }
+      .sr-back { display:inline-block; background:none; border:none; padding:0 0 6px; cursor:pointer; font-family:var(--sr-font-body); font-size:12.5px; font-weight:600; color:var(--sr-brand); }
+      .sr-back:hover { text-decoration:underline; }
+      .sr-back:focus-visible { outline:2px solid var(--sr-focus); outline-offset:2px; border-radius:var(--sr-radius-sm); }
+      .sr-srctag { margin-left:8px; font-family:var(--sr-font-mono); font-size:8.5px; letter-spacing:.06em; text-transform:uppercase; padding:1px 6px; border-radius:999px; vertical-align:middle; }
+      .sr-srctag--live { color:var(--sr-pass); background:var(--sr-pass-tint); }
+      .sr-srctag--sample { color:var(--sr-exposure); background:var(--sr-exposure-tint); }
+      .sr-incident { display:flex; gap:12px; align-items:flex-start; background:var(--sr-surface); border:1px solid var(--sr-border); border-left:4px solid var(--sr-exposure); border-radius:var(--sr-radius); padding:12px 16px; }
+      .sr-incident__dot { width:9px; height:9px; border-radius:50%; background:var(--sr-exposure); margin-top:5px; flex:none; }
+      @media (prefers-reduced-motion: no-preference){ .sr-incident__dot{ animation:srPulse 2s ease-in-out infinite; } }
+      .sr-incident__kicker { font-family:var(--sr-font-mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--sr-exposure); }
+      .sr-incident__text { font-size:13.5px; line-height:1.55; color:var(--sr-text); margin-top:2px; }
 
       .sr-pill { font-family:var(--sr-font-mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; padding:4px 10px; border-radius:999px; white-space:nowrap; }
       .sr-pill--brand { color:var(--sr-brand); background:var(--sr-brand-tint); }

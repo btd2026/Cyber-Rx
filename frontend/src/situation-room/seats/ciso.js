@@ -107,6 +107,32 @@ export const CISO_SEAT = {
         { k: 'Projected posture lift if all funded', v: '82 → 89', kind: 'pass' },
       ],
     },
+
+    {
+      key: 'liability', name: '⚖ Liability', q: 'Are we defensible if this is challenged?',
+      answer: 'Defensible — decisions are on record and the evidence chain is intact.', pill: 'Defensible', pillKind: 'pass',
+      lede: 'The record that limits liability: what was decided, by whom, on what evidence — and where gaps remain.',
+      // Composed from the same evidence/decision records as the other tabs (best-judgment
+      // defensibility view); values not yet sourced from live data are shown as sample.
+      panels: [
+        { title: 'Decisions on record', rows: [
+          { k: 'Risk-acceptance decisions logged', v: 'All current', verified: true, kind: 'pass' },
+          { k: 'Open decisions awaiting an owner', v: '0', kind: 'pass' },
+          { k: 'Board notified of material items', sub: 'within policy window', v: 'Yes', verified: true, kind: 'pass' },
+        ] },
+        { title: 'Evidence-chain integrity', rows: [
+          { k: 'Evidence ledger integrity', sub: 'hash-chain verified', v: 'Intact', verified: true, kind: 'pass' },
+          { k: 'Control evidence freshness', v: '1,238 / 1,240 current' },
+          { k: 'Attestations on file', v: 'Current', verified: true, kind: 'pass' },
+        ] },
+        { title: 'Residual liability gaps', rows: [
+          { k: 'Controls in gap (could be challenged)', v: '2 partial — PAM, recovery testing', kind: 'exposure' },
+          { k: 'Overdue third-party reviews', v: '14 vendors', kind: 'exposure' },
+          { k: 'Disclosure obligations triggered', v: 'None to date', verified: true, kind: 'pass' },
+        ] },
+      ],
+      note: 'Defensibility composed from the same evidence and decision records as the other tabs; values not yet sourced from live data are shown as sample.',
+    },
   ],
 
   summary: {

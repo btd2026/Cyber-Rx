@@ -36,6 +36,11 @@ function riskFromProtection(p) {
   return { risk: 'High', riskKind: 'critical' };
 }
 const isCrit = (s) => /crit/i.test(String(s || ''));
+const sevKind = (s) => (isCrit(s) ? 'critical' : /high/i.test(String(s || '')) ? 'exposure' : /med/i.test(String(s || '')) ? 'exposure' : 'pass');
+const statusKind = (s) => (s === 'red' ? 'critical' : s === 'amber' ? 'exposure' : 'pass');
+const statusLabel = (s) => (s === 'red' ? 'Action required' : s === 'amber' ? 'Attention' : 'Within tolerance');
+// CISO briefing rows map, in order, to the seat's tabs after Exec Summary.
+const CISO_BRIEFING_TO = ['operational', 'material-exposure', 'action-center', 'trajectory', 'response-investment'];
 function caeStatus(s) {
   const v = String(s || '').toLowerCase();
   if (/met|pass|compl/.test(v)) return 'Met';
@@ -48,6 +53,10 @@ export function useCisoData(props = {}) {
   const [d, setD] = useState(null);
   const [cae, setCae] = useState(null);
   const [cov, setCov] = useState(null);
+  const [brief, setBrief] = useState(null);   // GET /api/agents/briefs/ciso
+  const [kq, setKq] = useState(null);         // GET /api/agents/key-questions/ciso
+  const [sig, setSig] = useState(null);       // GET /api/exec/signals
+  const [inc, setInc] = useState(null);       // GET /api/exec/incident
 
   useEffect(() => {
     let alive = true;
@@ -58,19 +67,53 @@ export function useCisoData(props = {}) {
     grab('/api/ciso/dashboard?role=CISO', setD);
     grab('/api/cae/assessment/summary', setCae);
     grab('/api/ciso/coverage', setCov);
+    grab('/api/agents/briefs/ciso', setBrief);
+    grab('/api/agents/key-questions/ciso', setKq);
+    grab('/api/exec/signals', setSig);
+    grab('/api/exec/incident', setInc);
     return () => { alive = false; };
   }, [api, orgId, token]);
 
-  if (!d && !cae && !cov) return null;
+  if (!d && !cae && !cov && !brief && !kq && !sig && !inc) return null;
   const out = {};
 
   // ---- live timestamp ------------------------------------------------------
   if (d && d.generatedAt) out.live = new Date(d.generatedAt);
+  else if (sig && sig.generatedAt) out.live = new Date(sig.generatedAt);
 
   // ---- provenance (for the trust strip) ------------------------------------
   if (cov && (typeof cov.pct === 'number' || cov.total != null)) {
     out.provenance = { coverage: cov.pct, signals: cov.total, confidence: cov.confidence };
   }
+
+  // ---- Exec Summary verdict + status + lede ← /api/agents/briefs/ciso -------
+  if (brief && brief.headline) {
+    out.brief = {
+      verdict: brief.headline,
+      lede: brief.summary || null,
+      pill: statusLabel(brief.status),
+      pillKind: statusKind(brief.status),
+      actions: Array.isArray(brief.actions) ? brief.actions : [],
+      note: 'live',
+    };
+  }
+
+  // ---- Briefing rows ← /api/agents/key-questions/ciso ----------------------
+  const cards = (kq && (kq.cards || kq.questions)) || null;
+  if (Array.isArray(cards) && cards.length) {
+    out.briefing = cards.slice(0, CISO_BRIEFING_TO.length).map((c, i) => ({
+      q: c.question, a: c.answer, pill: c.severity || '', kind: sevKind(c.severity),
+      to: CISO_BRIEFING_TO[i] || 'operational',
+    }));
+  }
+
+  // ---- Live platform signals ← /api/exec/signals (Operational evidence) ----
+  if (sig && Array.isArray(sig.signals)) {
+    out.signals = { items: sig.signals, generatedAt: sig.generatedAt };
+  }
+
+  // ---- The running incident ← /api/exec/incident (the shared spine) --------
+  if (inc && inc.headline) out.incident = inc;
 
   // ---- 6 metric tiles (label-keyed overrides) ------------------------------
   const tiles = {};
