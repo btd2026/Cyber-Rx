@@ -15,19 +15,19 @@ export const CISO_SEAT = {
       lede: 'A security answer, not IT uptime — are we under attack, are our defenses holding right now, and is anything one step from forcing a critical service down?',
       panels: [
         { title: 'Live threat & defense status', rows: [
-          { k: 'Active compromise', v: 'None', verified: true, kind: 'pass' },
-          { k: 'Critical controls validated holding', sub: 'tested against live evidence', v: '1,238 / 1,240' },
-          { k: 'Attacks blocked, last 24h', sub: 'identity + perimeter', v: '4,102' },
-          { k: 'Highest live threat', sub: 'phishing → claims staff', v: 'Elevated', kind: 'exposure' },
+          { k: 'Active compromise', v: 'None', verified: true, kind: 'pass', ev: { source: 'SIEM (Splunk) + EDR (CrowdStrike)', method: 'Agent telemetry + correlation rules', last: 'Real-time · last 14:08', result: 'No confirmed intrusion · 0 active C2 beacons · 0 lateral-movement alerts' } },
+          { k: 'Critical controls validated holding', sub: 'tested against live evidence', v: '1,238 / 1,240', ev: { source: 'Control validation engine', method: 'Automated control tests vs live evidence', last: 'Continuous · last 14:07', result: '1,238 of 1,240 passing · 2 partial (PAM, recovery testing)' } },
+          { k: 'Attacks blocked, last 24h', sub: 'identity + perimeter', v: '4,102', ev: { source: 'WAF + Okta + perimeter firewall', method: 'Automated — log ingestion', last: 'Rolling 24h · last 14:08', result: '4,102 blocked — 3,910 credential-stuffing, 142 web, 50 other' } },
+          { k: 'Highest live threat', sub: 'phishing → claims staff', v: 'Elevated', kind: 'exposure', ev: { source: 'Email security + phishing-sim platform', method: 'Agent telemetry', last: 'Continuous · last 13:40', result: 'Targeted phishing on claims staff · 4.2% click rate · 0 credential capture' } },
         ] },
         { title: 'Open exposure that could force us down', rows: [
-          { k: 'Claims processing control failed; compensating control verified holding', v: 'Contained', kind: 'pass', verified: true },
-          { k: 'Ransomware path to claims DB', sub: 'open, contained, not yet closed', v: 'Open · watched', kind: 'exposure' },
-          { k: 'Internet-facing critical vulnerabilities', v: '0 unpatched', verified: true, kind: 'pass' },
-          { k: 'Privileged access gaps', sub: 'PAM 60% deployed', v: 'Gap remains', kind: 'exposure' },
+          { k: 'Claims processing control failed; compensating control verified holding', v: 'Contained', kind: 'pass', verified: true, ev: { source: 'SOAR + control monitor', method: 'Automated — workflow logs + synthetic probe', last: 'Per incident · last 14:02', result: 'Compensating control applied in 2s · synthetic probe confirms holding' } },
+          { k: 'Ransomware path to claims DB', sub: 'open, contained, not yet closed', v: 'Open · watched', kind: 'exposure', ev: { source: 'Attack-path analytics', method: 'Automated — graph analysis', last: 'Continuous · last 14:06', result: '1 path open via legacy claims platform · PAM rollout closes it' } },
+          { k: 'Internet-facing critical vulnerabilities', v: '0 unpatched', verified: true, kind: 'pass', ev: { source: 'Vulnerability scanner + cloud posture', method: 'Automated — scheduled scan', last: 'Daily · last 06:00', result: '0 unpatched internet-facing criticals · 97% critical patch SLA' } },
+          { k: 'Privileged access gaps', sub: 'PAM 60% deployed', v: 'Gap remains', kind: 'exposure', ev: { source: 'CyberArk PAM', method: 'Automated — API pull', last: 'Continuous · last 14:03', result: '60% of privileged accounts onboarded · legacy claims accounts pending' } },
         ] },
         { title: 'Containment & response readiness', rows: [
-          { k: 'Mean time to detect / contain', v: '8 min / 41 min' },
+          { k: 'Mean time to detect / contain', v: '8 min / 41 min', ev: { source: 'SIEM + SOAR metrics', method: 'Automated — metric rollup', last: 'Rolling 30d', result: 'MTTD 8 min · MTTC 41 min · both improving quarter-over-quarter' } },
           { k: 'Incidents requiring your decision right now', v: '0' },
           { k: 'Could anything force a takedown of a critical service today?', v: 'No — all contained & monitored', kind: 'pass' },
         ] },

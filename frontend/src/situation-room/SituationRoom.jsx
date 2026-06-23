@@ -350,16 +350,39 @@ export function Section({ title, action, children }) {
   );
 }
 
-/* Key→value rows (mono values carry status). */
+/* The rich evidence box — source · method · last collected · result · ✓ verified. */
+export function EvidenceBox({ ev }) {
+  return (
+    <div className="sr-evbox">
+      <div className="sr-evbox__h">⛓ How this evidence was collected</div>
+      <div className="sr-erow"><span className="sr-ek">Source</span><span className="sr-ev2">{ev.source}</span></div>
+      <div className="sr-erow"><span className="sr-ek">Method</span><span className="sr-ev2">{ev.method}</span></div>
+      <div className="sr-erow"><span className="sr-ek">Last collected</span><span className="sr-ev2">{ev.last}</span></div>
+      <div className="sr-erow"><span className="sr-ek">Result</span><span className="sr-ev2">{ev.result}</span></div>
+      <div className="sr-ev__verified">✓ Captured automatically · integrity-verified · evidence chain intact</div>
+    </div>
+  );
+}
+
+/* Key→value rows (mono values carry status). Rows with `ev` expand to their proof. */
 export function Rows({ items }) {
   return (
     <div className="sr-rows">
-      {items.map((r, i) => (
+      {items.map((r, i) => (r.ev ? (
+        <details key={i} className="sr-row sr-row--ev">
+          <summary className="sr-row__sum">
+            <span className="sr-row__k">{r.k}{r.sub && <span className="sr-row__sub">{r.sub}</span>}</span>
+            <span className={`sr-row__v${r.kind ? ` sr-fg--${r.kind}` : ''}`}>{r.verified && <span className="sr-fg--pass">✓ </span>}{r.v}</span>
+            <span className="sr-row__chev" aria-hidden="true">▸</span>
+          </summary>
+          <EvidenceBox ev={r.ev} />
+        </details>
+      ) : (
         <div key={i} className="sr-row">
           <span className="sr-row__k">{r.k}{r.sub && <span className="sr-row__sub">{r.sub}</span>}</span>
           <span className={`sr-row__v${r.kind ? ` sr-fg--${r.kind}` : ''}`}>{r.verified && <span className="sr-fg--pass">✓ </span>}{r.v}</span>
         </div>
-      ))}
+      )))}
     </div>
   );
 }
@@ -567,21 +590,27 @@ function FrameworkExplorer({ bound }) {
 
   const pickFw = (name) => { setFw(name); setFnId(null); setCatId(null); setCtrlId(null); };
   const STK = { Met: 'pass', Partial: 'exposure', Gap: 'critical' };
+  const scoreKind = (n) => (typeof n !== 'number' ? 'muted' : n >= 80 ? 'pass' : n >= 70 ? 'exposure' : 'critical');
+  const trendKind = (t) => (t === '↑' ? 'pass' : t === '↓' ? 'critical' : 'muted');
 
   return (
     <div className="sr-fw">
       <div className="sr-fw__tabs" role="tablist" aria-label="Framework">
         {ORDER.map((name) => (
           <button key={name} role="tab" aria-selected={fw === name} className={`sr-fw__tab${fw === name ? ' is-on' : ''}`} onClick={() => pickFw(name)}>
-            {name}<span className="sr-fw__score">{FWS[name].score}<span className={`sr-fg--${FWS[name].trend === '↑' ? 'pass' : FWS[name].trend === '↓' ? 'critical' : 'muted'}`}> {FWS[name].trend}</span></span>
+            {name}<span className="sr-fw__score">{FWS[name].score}<span className={`sr-fg--${trendKind(FWS[name].trend)}`}> {FWS[name].trend}</span></span>
           </button>
         ))}
       </div>
 
+      {(model.score != null || model.sub) && (
+        <div className="sr-fw__cap"><strong>{fw}</strong>{model.score != null ? ` · overall ${model.score}` : ''}{model.sub ? ` · ${model.sub}` : ''}</div>
+      )}
+
       <div className="sr-fw__cols">
-        <FwCol label="Function" items={fns.map((f) => ({ id: f.id, label: `${f.id} · ${f.name}`, meta: `${f.score} ${f.trend}`, metaKind: f.trend === '↑' ? 'pass' : f.trend === '↓' ? 'critical' : 'muted' }))}
+        <FwCol label="Function" items={fns.map((f) => ({ id: f.id, label: f.name, meta: `${f.score} ${f.trend}`, metaKind: trendKind(f.trend) }))}
           sel={fnId} onPick={(id) => { setFnId(id); setCatId(null); setCtrlId(null); }} />
-        <FwCol label="Category" items={fn ? fn.categories.map((c) => ({ id: c.id, label: `${c.id} · ${c.name}` })) : []}
+        <FwCol label="Category" items={fn ? fn.categories.map((c) => ({ id: c.id, label: c.name, meta: c.score != null ? String(c.score) : undefined, metaKind: scoreKind(c.score) })) : []}
           sel={catId} onPick={(id) => { setCatId(id); setCtrlId(null); }} empty="Select a function" />
         <FwCol label="Control" items={cat ? cat.controls.map((c) => ({ id: c.id, label: `${c.id} · ${c.name}`, meta: c.status, metaKind: STK[c.status] })) : []}
           sel={ctrlId} onPick={setCtrlId} empty="Select a category" />
@@ -594,16 +623,8 @@ function FrameworkExplorer({ bound }) {
             <span className="sr-fwev__name">{ctrl.name}</span>
             <Pill kind={STK[ctrl.status]} verified={ctrl.status === 'Met'}>{ctrl.status}</Pill>
           </div>
-          <dl className="sr-ev__dl">
-            <div><dt>Source</dt><dd>{ev.source}</dd></div>
-            <div><dt>Method</dt><dd>{ev.method}</dd></div>
-            <div><dt>Last collected</dt><dd>{ev.last}</dd></div>
-            <div><dt>Result</dt><dd>{ev.result}</dd></div>
-          </dl>
-          <div className="sr-fwev__foot">
-            <span className="sr-ev__verified">✓ integrity verified</span>
-            {ev.satisfies && <span className="sr-fwev__maps">Satisfies: {ev.satisfies.join(' · ')}</span>}
-          </div>
+          <EvidenceBox ev={ev} />
+          {ev.satisfies && <div className="sr-fwev__maps">Satisfies: {ev.satisfies.join(' · ')}</div>}
         </div>
       )}
     </div>
@@ -861,6 +882,25 @@ function SrStyles() {
       .sr-ev__dl dt { font-family:var(--sr-font-mono); font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--sr-subtle); }
       .sr-ev__dl dd { margin:0; font-family:var(--sr-font-mono); font-size:12.5px; color:var(--sr-text); }
       .sr-ev__verified { font-family:var(--sr-font-mono); font-size:12px; font-weight:700; color:var(--sr-pass); }
+
+      /* Framework caption + evidence box + expandable rows */
+      .sr-fw__cap { font-size:13px; color:var(--sr-muted); margin:2px 0 2px; }
+      .sr-fw__cap strong { color:var(--sr-text); font-family:var(--sr-font-display); font-weight:600; }
+      .sr-evbox { background:var(--sr-bg); border:1px solid var(--sr-border); border-radius:10px; padding:13px 15px; margin-top:6px; }
+      .sr-evbox__h { font-family:var(--sr-font-mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--sr-brand); margin-bottom:10px; }
+      .sr-erow { display:flex; gap:10px; padding:4px 0; font-size:12.5px; }
+      .sr-ek { font-family:var(--sr-font-mono); color:var(--sr-subtle); width:118px; flex:none; font-size:10px; text-transform:uppercase; letter-spacing:.04em; padding-top:2px; }
+      .sr-ev2 { color:var(--sr-text); }
+      .sr-ev__verified { margin-top:10px; padding-top:9px; border-top:1px solid var(--sr-border); font-family:var(--sr-font-mono); font-size:11px; color:var(--sr-pass); }
+      .sr-fwev__maps { font-family:var(--sr-font-mono); font-size:11px; color:var(--sr-subtle); margin-top:8px; }
+      .sr-row--ev { border-top:1px solid var(--sr-border); }
+      .sr-row--ev:first-of-type { border-top:none; }
+      .sr-row--ev > summary { list-style:none; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 0; }
+      .sr-row--ev > summary::-webkit-details-marker { display:none; }
+      .sr-row__sum .sr-row__k { font-size:14px; color:var(--sr-text); display:flex; flex-direction:column; gap:2px; flex:1; }
+      .sr-row__chev { font-family:var(--sr-font-mono); font-size:11px; color:var(--sr-subtle); transition:transform .15s ease; flex:none; }
+      .sr-row--ev[open] > summary .sr-row__chev { transform:rotate(90deg); color:var(--sr-brand); }
+      .sr-row--ev:hover > summary .sr-row__chev { color:var(--sr-brand); }
 
       /* Mini panels (srow / kv) + bigstat — match the mock's .panel blocks */
       .sr-panel { background:var(--sr-glass); border:1px solid var(--sr-border); border-radius:var(--sr-radius); padding:18px 20px; }
