@@ -73,8 +73,10 @@ export function useCisoData(props = {}) {
     grab('/api/ciso/dashboard?role=CISO', setD);
     grab('/api/cae/assessment/summary', setCae);
     grab('/api/ciso/coverage', setCov);
-    grab('/api/agents/briefs/ciso', setBrief);
-    grab('/api/agents/key-questions/ciso', setKq);
+    // NOTE: agent endpoints validate role with EXACT case (ROLES keys are 'CISO',
+    // 'CFO', …). Lowercase 400s. metrics/:role uses lowercase. Keep them distinct.
+    grab('/api/agents/briefs/CISO', setBrief);
+    grab('/api/agents/key-questions/CISO', setKq);
     grab('/api/exec/signals', setSig);
     grab('/api/exec/incident', setInc);
     grab('/api/risk/process-criticality', setPc);

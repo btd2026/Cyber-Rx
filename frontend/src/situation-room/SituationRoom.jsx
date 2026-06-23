@@ -17,6 +17,7 @@ import { HashRouter, Routes, Route, Navigate, useParams, useNavigate, useLocatio
 import { useTheme } from './useTheme';
 import { useCisoData, apiCtx } from './useCisoData';
 import { useSeatData } from './useSeatData';
+import AgentAsk from './AgentAsk';
 import { CISO_SEAT } from './seats/ciso';
 import SEATS_DATA from './seats/otherSeats';
 import { useNow, getAudit, downloadBoardPack } from './trust';
@@ -184,6 +185,8 @@ function SeatView(props = {}) {
           {seat === 'CISO'
             ? <CisoPanel tabKey={activeTab.key} goTabKey={goTabKey} bound={bound} onBoardPack={onBoardPack} back={back} />
             : <SeatPanel seat={seat} tabKey={activeTab.key} goTabKey={goTabKey} onBoardPack={onBoardPack} asOf={null} bound={seatBound} back={back} />}
+          {/* The seat's Digital Twin — greets on entry, persists across this seat's tabs. */}
+          <AgentAsk key={seat} seat={seat} apiProps={props} />
         </div>
 
         <footer className="sr-footer">CyberRx · executive operating system — illustrative, with sample data</footer>

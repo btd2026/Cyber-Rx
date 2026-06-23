@@ -20,7 +20,10 @@ const isCrit = (s) => /crit/i.test(String(s || ''));
 const sevKind = (s) => (isCrit(s) ? 'critical' : /high|med/i.test(String(s || '')) ? 'exposure' : 'pass');
 
 export function useSeatData(seat, props = {}) {
-  const role = String(seat || '').toLowerCase();
+  // Agent endpoints validate role with EXACT case (ROLES keys are 'CFO','CRO',
+  // 'CLO','CIO','Board' — same as the seat string). metrics/:role is lowercase.
+  const agentRole = String(seat || '');
+  const metricRole = agentRole.toLowerCase();
   const { token, orgId, api } = apiCtx(props);
   const [brief, setBrief] = useState(null);
   const [kq, setKq] = useState(null);
@@ -33,11 +36,11 @@ export function useSeatData(seat, props = {}) {
     const q = `org_id=${encodeURIComponent(orgId)}`;
     const grab = (path, set) => fetch(`${api}${path}${path.includes('?') ? '&' : '?'}${q}`, { headers: h })
       .then((r) => (r.ok ? r.json() : null)).then((j) => { if (alive && j) set(j); }).catch(() => {});
-    grab(`/api/agents/briefs/${role}`, setBrief);
-    grab(`/api/agents/key-questions/${role}`, setKq);
-    grab(`/api/metrics/${role}`, setMet);
+    grab(`/api/agents/briefs/${agentRole}`, setBrief);
+    grab(`/api/agents/key-questions/${agentRole}`, setKq);
+    grab(`/api/metrics/${metricRole}`, setMet);
     return () => { alive = false; };
-  }, [seat, role, api, orgId, token]);
+  }, [seat, agentRole, metricRole, api, orgId, token]);
 
   if (!brief && !kq && !met) return null;
   const out = {};
