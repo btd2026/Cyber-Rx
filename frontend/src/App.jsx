@@ -39,8 +39,8 @@ import RestructureView from "./pages/RestructureView";
 
 // --- Theme --------------------------------------------------------------------
 var C = {
-  bg:"#F7F4EE", panel:"#FFFDF9", card:"#FFFDF9", border:"#E8E2D6",
-  acc:"#243044", faint:"#24304414", text:"#211D18", muted:"#5C554B", dim:"#F1ECE3"
+  bg:"#F1EFE8", panel:"#FFFFFF", card:"#FFFFFF", border:"#DAD7CC",
+  acc:"#2D6CE0", faint:"#2D6CE014", text:"#11161D", muted:"#5C6470", dim:"#ECEAE3"
 };
 
 // --- Helpers ------------------------------------------------------------------
@@ -3548,9 +3548,9 @@ function Landing(props) {
         justifyContent:"space-between",borderBottom:"1px solid "+C.border}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <div style={{width:38,height:38,borderRadius:11,
-            background:"linear-gradient(135deg,#00C4A0,#0090F0)",
+            background:"linear-gradient(135deg,#2D6CE0,#10307A)",
             display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <span style={{color:"#000",fontWeight:900,fontSize:16}}>Rx</span>
+            <span style={{color:"#fff",fontWeight:900,fontSize:16}}>Rx</span>
           </div>
           <div>
             <span style={{color:C.text,fontWeight:800,fontSize:18,
@@ -3704,9 +3704,9 @@ function Login(props) {
         boxShadow:"0 8px 32px rgba(0,0,0,0.08)"}}>
         <div style={{display:"flex", alignItems:"center", gap:10, marginBottom:28}}>
           <div style={{width:36, height:36, borderRadius:10,
-            background:"linear-gradient(135deg,#00C4A0,#0090F0)",
+            background:"linear-gradient(135deg,#2D6CE0,#10307A)",
             display:"flex", alignItems:"center", justifyContent:"center"}}>
-            <span style={{color:"#000", fontWeight:900, fontSize:14}}>Rx</span>
+            <span style={{color:"#fff", fontWeight:900, fontSize:14}}>Rx</span>
           </div>
           <span style={{color:C.text, fontWeight:800, fontSize:18}}>CyberRx</span>
         </div>
@@ -3818,8 +3818,8 @@ function DemoRequest(props) {
       <div style={{background:C.card, border:"1px solid "+C.border, borderRadius:16, padding:"40px", width:"100%", maxWidth:540, boxShadow:"0 8px 32px rgba(0,0,0,0.08)"}}>
         {/* Header */}
         <div style={{display:"flex", alignItems:"center", gap:10, marginBottom:24}}>
-          <div style={{width:38, height:38, borderRadius:11, background:"linear-gradient(135deg,#00C4A0,#0090F0)", display:"flex", alignItems:"center", justifyContent:"center"}}>
-            <span style={{color:"#000", fontWeight:900, fontSize:16}}>Rx</span>
+          <div style={{width:38, height:38, borderRadius:11, background:"linear-gradient(135deg,#2D6CE0,#10307A)", display:"flex", alignItems:"center", justifyContent:"center"}}>
+            <span style={{color:"#fff", fontWeight:900, fontSize:16}}>Rx</span>
           </div>
           <div>
             <span style={{color:C.text, fontWeight:800, fontSize:18}}>CyberRx</span>
@@ -5428,15 +5428,15 @@ function Setup(props) {
       <div style={{minHeight:"100vh",background:C.bg,display:"flex",alignItems:"center",justifyContent:"center"}}>
         <div style={{maxWidth:460,width:"100%",padding:32,textAlign:"center"}}>
           <div style={{width:50,height:50,borderRadius:14,margin:"0 auto 16px",
-            background:"linear-gradient(135deg,#00C4A0,#0090F0)",
+            background:"linear-gradient(135deg,#2D6CE0,#10307A)",
             display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <span style={{color:"#000",fontWeight:900,fontSize:20}}>Rx</span>
+            <span style={{color:"#fff",fontWeight:900,fontSize:20}}>Rx</span>
           </div>
           <div style={{color:C.text,fontWeight:800,fontSize:18,marginBottom:4}}>Generating Risk Profile</div>
           <div style={{color:C.muted,fontSize:13,marginBottom:22}}>{orgName}</div>
           <div style={{color:C.acc,fontSize:52,fontWeight:800,fontFamily:"monospace",lineHeight:1,marginBottom:8}}>{pct}%</div>
           <div style={{height:6,background:C.dim,borderRadius:3,overflow:"hidden",marginBottom:20}}>
-            <div style={{width:pct+"%",height:"100%",background:"linear-gradient(90deg,#00C4A0,#0090F0)",transition:"width 0.4s ease"}}/>
+            <div style={{width:pct+"%",height:"100%",background:"linear-gradient(90deg,#2D6CE0,#10307A)",transition:"width 0.4s ease"}}/>
           </div>
           <div style={{textAlign:"left"}}>
             {LSTEPS.map(function(s,i){
@@ -5468,9 +5468,9 @@ function Setup(props) {
       <div style={{background:C.panel,borderBottom:"1px solid "+C.border,padding:"13px 28px",
         display:"flex",justifyContent:"space-between",alignItems:"center"}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <div style={{width:28,height:28,borderRadius:8,background:"linear-gradient(135deg,#00C4A0,#0090F0)",
+          <div style={{width:28,height:28,borderRadius:8,background:"linear-gradient(135deg,#2D6CE0,#10307A)",
             display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <span style={{color:"#000",fontWeight:900,fontSize:12}}>Rx</span>
+            <span style={{color:"#fff",fontWeight:900,fontSize:12}}>Rx</span>
           </div>
           <span style={{color:C.text,fontWeight:800,fontSize:14}}>CyberRx</span>
           <span style={{color:C.dim}}>/</span>
@@ -18620,9 +18620,9 @@ function WelcomePage(props) {
         position:"sticky",top:0,background:C.bg,zIndex:10}}>
         <div style={{display:"flex",alignItems:"center",gap:9}}>
           <div style={{width:34,height:34,borderRadius:10,
-            background:"linear-gradient(135deg,#00C4A0,#0090F0)",
+            background:"linear-gradient(135deg,#2D6CE0,#10307A)",
             display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <span style={{color:"#000",fontWeight:900,fontSize:15}}>Rx</span>
+            <span style={{color:"#fff",fontWeight:900,fontSize:15}}>Rx</span>
           </div>
           <span style={{color:C.text,fontWeight:800,fontSize:17,
             letterSpacing:"-0.02em"}}>CyberRx</span>
@@ -18817,11 +18817,11 @@ function WelcomePage(props) {
                 borderRadius:16,padding:"20px 16px",textAlign:"center",
                 boxShadow:"0 0 40px "+C.acc+"35",marginBottom:6}}>
                 <div style={{width:52,height:52,borderRadius:14,
-                  background:"linear-gradient(135deg,#00C4A0,#0090F0)",
+                  background:"linear-gradient(135deg,#2D6CE0,#10307A)",
                   display:"flex",alignItems:"center",justifyContent:"center",
                   margin:"0 auto 10px",
                   boxShadow:"0 0 20px #00C4A050"}}>
-                  <span style={{color:"#000",fontWeight:900,fontSize:20}}>Rx</span>
+                  <span style={{color:"#fff",fontWeight:900,fontSize:20}}>Rx</span>
                 </div>
                 <div style={{color:"#fff",fontSize:12,fontWeight:800,
                   letterSpacing:"0.03em",marginBottom:4}}>CyberRx</div>
