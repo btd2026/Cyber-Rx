@@ -1,11 +1,11 @@
-# New App
+# CyberRXNew
 
 A standalone React + Vite + Tailwind frontend, kept fully separate from the
 existing `frontend/` (Cyber-Rx) application.
 
 ## Why this is separate
 
-- Lives in its own folder (`new-app/`) with its own `package.json`,
+- Lives in its own folder (`CyberRXNew/`) with its own `package.json`,
   `node_modules`, and config. Nothing here imports from or affects the old app.
 - Runs on **port 5174**, so it can run at the same time as the existing app
   (port 5173).
@@ -15,7 +15,7 @@ existing `frontend/` (Cyber-Rx) application.
 ## Getting started
 
 ```bash
-cd new-app
+cd CyberRXNew
 npm install
 npm run dev      # http://localhost:5174
 ```
@@ -32,5 +32,5 @@ npm run dev      # http://localhost:5174
 ## Deploying separately
 
 This app builds independently. To deploy it as its own Vercel project, point a
-new project at the `new-app/` directory (Root Directory = `new-app`). The
+new project at the `CyberRXNew/` directory (Root Directory = `CyberRXNew`). The
 existing app's deploy is unaffected.
