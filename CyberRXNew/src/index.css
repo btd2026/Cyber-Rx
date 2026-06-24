@@ -1,68 +1,17 @@
 @import "tailwindcss";
+@import "./styles/cyberrx.css";
 
 /* ════════════════════════════════════════════════════════════════════════
-   CyberRx design tokens — ported verbatim from the approved mock.
-   Warm-light default + dark variant (brief §1).
+   The design system (tokens, shell, seats, evidence drawer) lives in
+   cyberrx.css — ported verbatim from the approved mock. Below: only the
+   login front door (always dark) and the few classes the React build adds.
    ════════════════════════════════════════════════════════════════════════ */
-:root {
-  --bg: #f1efe8; --surface: #ffffff; --surface-2: #eceae3;
-  --glow-1: rgba(45,108,224,.06); --glow-2: rgba(47,163,122,.05); --grain: .04;
-  --glass: rgba(255,255,255,.62); --edge-shade: rgba(0,0,0,.035);
-  --border: #dad7cc; --border-strong: #b9b5a8;
-  --text: #11161d; --muted: #4c5562; --subtle: #5e6671;
-  --brand: #2d6ce0; --brand-tint: rgba(45,108,224,.09);
-  --pass: #2fa37a; --pass-tint: rgba(47,163,122,.12);
-  --exposure: #c2772e; --exposure-tint: rgba(194,119,46,.12);
-  --critical: #c2443c; --critical-tint: rgba(194,68,60,.12);
-  --gold: #b8860b; --gold-tint: rgba(184,134,11,.12);
-  --display: 'Space Grotesk', -apple-system, system-ui, sans-serif;
-  --body: 'Public Sans', -apple-system, system-ui, sans-serif;
-  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  --radius: 13px; --radius-sm: 8px;
-}
-[data-theme="dark"] {
-  --bg: #0b0e13; --surface: #161c25; --surface-2: #1c2530;
-  --glow-1: rgba(78,139,255,.10); --glow-2: rgba(47,163,122,.06); --grain: .05;
-  --glass: rgba(20,25,34,.6); --edge-shade: rgba(0,0,0,.18);
-  --border: #26303c; --border-strong: #3a4654;
-  --text: #e9ebee; --muted: #9aa4b0; --subtle: #8c96a4;
-  --brand: #4e8bff; --brand-tint: rgba(78,139,255,.13);
-  --pass: #3fbf92; --pass-tint: rgba(63,191,146,.12);
-  --exposure: #e0a968; --exposure-tint: rgba(224,169,104,.12);
-  --critical: #e0635b; --critical-tint: rgba(224,99,91,.12);
-  --gold: #e0b84e; --gold-tint: rgba(224,184,78,.15);
-}
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html, body, #root { min-height: 100%; }
-body {
-  background: var(--bg); color: var(--text); font-family: var(--body);
-  -webkit-font-smoothing: antialiased; line-height: 1.5; position: relative;
-}
-body::before {
-  content: ""; position: fixed; inset: 0; z-index: -2; pointer-events: none;
-  background:
-    radial-gradient(960px 540px at 80% -8%, var(--glow-1), transparent 58%),
-    radial-gradient(780px 620px at 3% 110%, var(--glow-2), transparent 55%),
-    linear-gradient(180deg, transparent, var(--edge-shade));
-}
-
-.wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
 .screen-center { min-height: 100vh; display: flex; align-items: center; justify-content: center; color: var(--muted); font-family: var(--mono); font-size: 13px; }
-@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
 
-/* ════════════════════════════════════════════════════════════════════════
-   Login / MFA front door — always dark (matches the mock's login treatment).
-   ════════════════════════════════════════════════════════════════════════ */
-.login {
-  position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
-  background: radial-gradient(1200px 700px at 50% -10%, rgba(45,108,224,.18), transparent 60%), #0b0e13;
-  padding: 40px 20px; overflow: auto; color: #e9ebee;
-}
-.lcard {
-  width: 100%; max-width: 400px; background: rgba(20,25,34,.72); backdrop-filter: blur(14px);
-  border: 1px solid #26303c; border-radius: 18px; padding: 34px 32px; box-shadow: 0 30px 80px rgba(0,0,0,.5);
-}
+/* ── Login / MFA front door (always dark, matches the mock's treatment) ──── */
+.login { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: radial-gradient(1200px 700px at 50% -10%, rgba(45,108,224,.18), transparent 60%), #0b0e13; padding: 40px 20px; overflow: auto; color: #e9ebee; z-index: 9999; }
+.lcard { width: 100%; max-width: 400px; background: rgba(20,25,34,.72); backdrop-filter: blur(14px); border: 1px solid #26303c; border-radius: 18px; padding: 34px 32px; box-shadow: 0 30px 80px rgba(0,0,0,.5); }
 .lbrand { display: flex; align-items: center; gap: 10px; }
 .lbrand .mk { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, #4e8bff, #2d6ce0); display: flex; align-items: center; justify-content: center; color: #fff; font-family: var(--display); font-weight: 700; font-size: 16px; }
 .lbrand .nm { font-family: var(--display); font-weight: 700; font-size: 18px; color: #e9ebee; }
@@ -82,63 +31,38 @@ body::before {
 .lnotice code { font-family: var(--mono); font-size: 11px; }
 .lsec { display: flex; align-items: center; gap: 7px; justify-content: center; margin-top: 20px; font-family: var(--mono); font-size: 10.5px; color: #7c8490; }
 
-/* ════════════════════════════════════════════════════════════════════════
-   Executive shell — top bar, seat switcher, nav (ported from the mock).
-   ════════════════════════════════════════════════════════════════════════ */
-.topbar { position: sticky; top: 0; z-index: 30; background: color-mix(in srgb, var(--bg) 86%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); }
-.topbar-in { display: flex; align-items: center; justify-content: space-between; height: 58px; gap: 12px; }
-.brand { display: flex; align-items: center; gap: 11px; }
-.brand .logo { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(150deg, var(--brand), #10307a); display: flex; align-items: center; justify-content: center; color: #fff; font-family: var(--display); font-weight: 700; font-size: 13px; }
-.brand b { font-family: var(--display); font-weight: 700; font-size: 17px; letter-spacing: -.01em; }
-.brand .ctx { font-family: var(--mono); font-size: 10.5px; color: var(--subtle); letter-spacing: .1em; border-left: 1px solid var(--border); padding-left: 11px; margin-left: 3px; white-space: nowrap; }
-.topbar-right { display: flex; align-items: center; gap: 14px; }
-.trust { display: inline-flex; align-items: center; gap: 9px; font-family: var(--mono); font-size: 11px; color: var(--muted); }
-.trust .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--pass); flex: none; animation: blink 1.6s ease-in-out infinite; }
-.trust .clock { color: var(--pass); }
-.trust .tdiv { width: 1px; height: 13px; background: var(--border); }
-.authpill { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 99px; padding: 4px 10px; }
-.authpill .role { color: var(--brand); font-weight: 600; }
-.authpill .so { cursor: pointer; color: var(--subtle); border-left: 1px solid var(--border); padding-left: 7px; margin-left: 1px; background: none; border-top: none; border-right: none; border-bottom: none; font-size: 12px; }
-.authpill .so:hover { color: var(--text); }
-.tbtn { font-family: var(--body); font-weight: 600; font-size: 12.5px; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 7px 12px; cursor: pointer; white-space: nowrap; }
-.tbtn:hover:not(:disabled) { border-color: var(--border-strong); }
-.tbtn.primary { background: var(--brand); color: #fff; border-color: var(--brand); }
-.tbtn:disabled { opacity: .45; cursor: not-allowed; }
-.warbtn { font-family: var(--body); font-weight: 600; font-size: 12.5px; color: #fff; background: var(--critical); border: 1px solid var(--critical); border-radius: 8px; padding: 7px 12px; cursor: pointer; white-space: nowrap; }
-.warbtn:disabled { opacity: .5; cursor: not-allowed; }
-.toggle { font-family: var(--mono); font-size: 11px; color: var(--muted); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
-.toggle:hover { border-color: var(--border-strong); color: var(--text); }
-
-.seatbar { position: sticky; top: 58px; z-index: 28; background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
-.seatbar-in { display: flex; gap: 6px; align-items: center; height: 48px; overflow-x: auto; }
-.seatbar-in .vl { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--subtle); margin-right: 4px; flex: none; }
-.sb { font-family: var(--body); font-weight: 600; font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--border); border-radius: 999px; padding: 6px 15px; cursor: pointer; white-space: nowrap; }
-.sb:hover { color: var(--text); border-color: var(--border-strong); }
-.sb.active { color: #fff; background: var(--brand); border-color: var(--brand); }
+/* ── Seat switcher additions ─────────────────────────────────────────────── */
 .sb .you { font-family: var(--mono); font-size: 8.5px; letter-spacing: .04em; margin-left: 6px; opacity: .8; }
 .seed-flag { margin-left: auto; flex: none; font-family: var(--mono); font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--exposure); background: var(--exposure-tint); border: 1px solid color-mix(in srgb, var(--exposure) 32%, transparent); border-radius: 999px; padding: 4px 10px; }
+.seat { padding: 26px 0 70px; }
 
-.nav { position: sticky; top: 106px; z-index: 25; background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
-.nav-in { display: flex; gap: 4px; overflow-x: auto; padding: 9px 0; }
-.nb { display: flex; align-items: center; gap: 8px; font-family: var(--body); font-weight: 600; font-size: 13.5px; color: var(--muted); background: none; border: 1px solid transparent; border-radius: 9px; padding: 8px 13px; cursor: pointer; white-space: nowrap; }
-.nb .qn { font-family: var(--mono); font-size: 11px; color: var(--subtle); border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px; }
-.nb:hover { color: var(--text); }
-.nb.active { color: var(--brand); background: var(--brand-tint); border-color: color-mix(in srgb, var(--brand) 35%, transparent); }
-.nb.active .qn { color: var(--brand); border-color: color-mix(in srgb, var(--brand) 40%, transparent); }
-.nb.home { color: var(--text); }
+/* ── Inline "see the decision ▸" links ───────────────────────────────────── */
+.scn-link { font-style: normal; color: var(--brand); cursor: pointer; }
+.scn-link:hover { text-decoration: underline; }
 
-.vob { display: flex; align-items: center; gap: 10px; background: var(--exposure-tint); border: 1px solid color-mix(in srgb, var(--exposure) 32%, transparent); color: var(--text); border-radius: 10px; padding: 9px 14px; margin: 16px 0 0; font-size: 13px; }
-.vob .eye { font-size: 15px; }
-.vob b { color: var(--exposure); }
+/* ── Framework posture tree (seed; full catalogs in Phase 4) ─────────────── */
+.fwtree { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.fwfn { border-bottom: 1px solid var(--border); }
+.fwfn:last-child { border-bottom: none; }
+.fwfn-h { width: 100%; display: flex; align-items: center; gap: 12px; background: var(--surface); border: none; padding: 13px 16px; cursor: pointer; font-family: var(--display); font-weight: 600; font-size: 15px; color: var(--text); }
+.fwfn-h:hover { background: var(--glass); }
+.fwfn-n { flex: 1; text-align: left; }
+.fwfn-x { font-family: var(--mono); color: var(--subtle); }
+.fwcat { padding: 4px 16px 12px 22px; background: var(--surface-2); }
+.fwcat-h { font-size: 13px; color: var(--muted); margin: 10px 0 6px; }
+.fwctrl { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-top: 1px solid var(--border); font-size: 13px; }
+.fwctrl-t { flex: 1; }
+.mono { font-family: var(--mono); font-size: 12px; color: var(--subtle); }
+.fwcmmi { font-family: var(--mono); font-size: 11px; border-radius: 6px; padding: 2px 8px; white-space: nowrap; }
+.fwcmmi.ok { color: var(--pass); background: var(--pass-tint); }
+.fwcmmi.warn { color: var(--exposure); background: var(--exposure-tint); }
+.fwcmmi.crit { color: var(--critical); background: var(--critical-tint); }
 
-/* ── Seat content (2a scaffold; filled in 2b/2c) ─────────────────────────── */
-.seat { padding: 26px 0 60px; }
-.eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--subtle); }
-.panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-top: 16px; }
-.panel h2 { font-family: var(--display); font-weight: 700; font-size: 22px; margin-bottom: 8px; }
-.panel p { color: var(--muted); max-width: 620px; }
+/* ── Legal-counsel review note (brief §10) ───────────────────────────────── */
+.legal-note { margin-top: 18px; font-size: 12.5px; color: var(--muted); background: var(--gold-tint); border: 1px solid color-mix(in srgb, var(--gold) 32%, transparent); border-radius: 10px; padding: 10px 14px; }
+.legal-note b { color: var(--gold); }
+
+/* ── Small helpers ───────────────────────────────────────────────────────── */
+.trust .clock { color: var(--pass); }
 .soon { display: inline-block; margin-top: 14px; font-family: var(--mono); font-size: 11px; color: var(--brand); border: 1px solid color-mix(in srgb, var(--brand) 35%, transparent); background: var(--brand-tint); border-radius: 999px; padding: 4px 10px; }
-.phase-list { display: flex; flex-direction: column; gap: 8px; font-size: 13px; margin-top: 18px; }
-.phase { padding: 9px 14px; border-radius: 8px; border: 1px solid var(--border); color: var(--muted); }
-.phase.done { color: var(--pass); }
-.phase.next { color: var(--brand); border-color: color-mix(in srgb, var(--brand) 40%, transparent); }
+.tbtn:disabled, .warbtn:disabled, .fwa:disabled, .pick2:disabled { opacity: .5; cursor: not-allowed; }

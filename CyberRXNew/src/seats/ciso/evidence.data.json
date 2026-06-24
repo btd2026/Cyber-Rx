@@ -1,0 +1,920 @@
+{
+  "intrusions": {
+    "claim": "Active intrusions / confirmed compromise",
+    "val": "None",
+    "valCls": "ok",
+    "what": "Whether any confirmed adversary presence or active intrusion exists across monitored systems right now.",
+    "sources": [
+      "CrowdStrike EDR",
+      "Splunk SIEM",
+      "Okta",
+      "Microsoft Defender"
+    ],
+    "signals": "312,400 events correlated in the last 24h · 0 matched a confirmed-compromise pattern",
+    "detail": [
+      [
+        "Confirmed compromises",
+        "0",
+        "ok"
+      ],
+      [
+        "Active investigations",
+        "0",
+        "ok"
+      ],
+      [
+        "Unresolved high-severity alerts",
+        "2 · triaged, benign",
+        "warn"
+      ],
+      [
+        "Threat-intel matches (IOCs)",
+        "0 active",
+        "ok"
+      ]
+    ],
+    "freshness": "Continuously evaluated · last event 14:09:51 (8s ago)",
+    "confidence": "High · 99.4% telemetry coverage",
+    "links": [
+      [
+        "See the highest live threat ▸",
+        "threat"
+      ]
+    ]
+  },
+  "controls": {
+    "claim": "Critical controls validated holding",
+    "val": "1,238 / 1,240",
+    "valCls": "warn",
+    "what": "How many critical security controls passed automated validation against live evidence in the latest test cycle — and which did not.",
+    "sources": [
+      "Splunk SIEM",
+      "CrowdStrike EDR",
+      "CyberArk PAM",
+      "Qualys",
+      "Okta"
+    ],
+    "signals": "1,240 controls tested · validated against live telemetry, not attestation",
+    "detail": [
+      [
+        "PR.AA-05 · Privileged access (PAM)",
+        "Failing · 60% deployed",
+        "crit"
+      ],
+      [
+        "RC.RP-01 · Recovery planning",
+        "Failing · DR test overdue",
+        "crit"
+      ],
+      [
+        "Other 1,238 critical controls",
+        "Holding",
+        "ok"
+      ]
+    ],
+    "freshness": "Last validation cycle 14:00:00 · 10 min ago",
+    "confidence": "High · evidence-backed, not self-attested",
+    "links": [
+      [
+        "See full framework evidence ▸",
+        "q5"
+      ],
+      [
+        "See the decision to close PAM ▸",
+        "q4"
+      ]
+    ]
+  },
+  "blocked": {
+    "claim": "Attacks blocked, last 24h",
+    "val": "4,102 blocked",
+    "valCls": "ok",
+    "what": "Malicious attempts stopped by identity and perimeter defenses in the trailing 24 hours, by category.",
+    "sources": [
+      "Okta",
+      "Cloudflare WAF",
+      "Proofpoint",
+      "CrowdStrike EDR"
+    ],
+    "signals": "4,102 blocked of 4,118 hostile attempts · 16 escalated to review, all benign",
+    "detail": [
+      [
+        "Credential / MFA attacks (identity)",
+        "3,540",
+        "ok"
+      ],
+      [
+        "Web / perimeter (WAF)",
+        "402",
+        "ok"
+      ],
+      [
+        "Malware / endpoint",
+        "148",
+        "ok"
+      ],
+      [
+        "Phishing (email)",
+        "12 campaigns",
+        "warn"
+      ]
+    ],
+    "freshness": "Rolling 24h window · updated 14:09:30",
+    "confidence": "High · 4 enforcement points reporting",
+    "links": [
+      [
+        "See the highest live threat ▸",
+        "threat"
+      ]
+    ]
+  },
+  "threat": {
+    "claim": "Highest live threat",
+    "val": "Elevated",
+    "valCls": "warn",
+    "what": "The most significant active threat campaign aimed at the organization right now.",
+    "sources": [
+      "Proofpoint",
+      "Okta",
+      "Threat Intelligence feed"
+    ],
+    "signals": "1 elevated phishing campaign targeting claims-processing staff · 12% volume increase",
+    "detail": [
+      [
+        "Vector",
+        "Phishing → credential theft",
+        "warn"
+      ],
+      [
+        "Target",
+        "Claims-processing staff",
+        "warn"
+      ],
+      [
+        "Volume vs baseline",
+        "+12% (24h)",
+        "warn"
+      ],
+      [
+        "Successful compromises",
+        "0",
+        "ok"
+      ],
+      [
+        "Mitigation",
+        "Targeted awareness + MFA enforced",
+        "ok"
+      ]
+    ],
+    "freshness": "Campaign first seen 11:20 · ongoing",
+    "confidence": "High · correlated across email + identity",
+    "links": [
+      [
+        "See attacks blocked ▸",
+        "blocked"
+      ]
+    ]
+  },
+  "mttd": {
+    "claim": "Mean time to detect / contain",
+    "val": "8 min / 41 min",
+    "valCls": "ok",
+    "what": "Average time to detect a genuine threat and to contain it, measured over the trailing 90 days against target.",
+    "sources": [
+      "Splunk SIEM",
+      "CrowdStrike EDR",
+      "SOAR platform"
+    ],
+    "signals": "Computed across 37 true-positive incidents in the trailing 90 days",
+    "detail": [
+      [
+        "Mean time to detect",
+        "8 min (target ≤15)",
+        "ok"
+      ],
+      [
+        "Mean time to contain",
+        "41 min (target ≤60)",
+        "ok"
+      ],
+      [
+        "Trend vs last quarter",
+        "15% faster",
+        "ok"
+      ],
+      [
+        "Slowest contained incident",
+        "2h 10m",
+        "warn"
+      ]
+    ],
+    "freshness": "90-day rolling · recomputed daily",
+    "confidence": "High · based on 37 incidents",
+    "links": [
+      [
+        "See the trajectory ▸",
+        "q5"
+      ]
+    ]
+  },
+  "incidents": {
+    "claim": "Incidents requiring your decision now",
+    "val": "0",
+    "valCls": "ok",
+    "what": "Open incidents that currently need a CISO-level decision, as opposed to those handled within the SOC.",
+    "sources": [
+      "ServiceNow SecOps",
+      "SOAR platform"
+    ],
+    "signals": "1 active incident (14:02 claims control) — contained, no CISO decision pending",
+    "detail": [
+      [
+        "Needing your decision",
+        "0",
+        "ok"
+      ],
+      [
+        "Active, SOC-handled",
+        "1 · contained",
+        "warn"
+      ],
+      [
+        "Awaiting other owners",
+        "3",
+        "warn"
+      ],
+      [
+        "Overdue",
+        "0",
+        "ok"
+      ]
+    ],
+    "freshness": "Live · synced 14:09",
+    "confidence": "High",
+    "links": [
+      [
+        "See decisions that need you ▸",
+        "q4"
+      ]
+    ]
+  },
+  "hunt": {
+    "claim": "Threat hunting",
+    "val": "Current",
+    "valCls": "ok",
+    "what": "Status of proactive threat-hunting sweeps looking for adversary activity that automated detection might miss.",
+    "sources": [
+      "CrowdStrike Falcon",
+      "Splunk",
+      "Threat-hunt playbooks"
+    ],
+    "signals": "Last hypothesis-driven sweep completed 6h ago · 0 findings",
+    "detail": [
+      [
+        "Last sweep",
+        "6h ago",
+        "ok"
+      ],
+      [
+        "Findings",
+        "0",
+        "ok"
+      ],
+      [
+        "Hypotheses tested",
+        "5",
+        "ok"
+      ],
+      [
+        "Next scheduled",
+        "In 6h",
+        "ok"
+      ]
+    ],
+    "freshness": "Last sweep 08:10 · clean",
+    "confidence": "High",
+    "links": []
+  },
+  "soc": {
+    "claim": "SOC staffed & on-call",
+    "val": "Full",
+    "valCls": "ok",
+    "what": "Whether the security operations center is fully staffed and on-call coverage is in place.",
+    "sources": [
+      "PagerDuty",
+      "SOC roster"
+    ],
+    "signals": "Full shift coverage · on-call escalation tree confirmed",
+    "detail": [
+      [
+        "Current shift",
+        "Fully staffed",
+        "ok"
+      ],
+      [
+        "On-call (tier 2/3)",
+        "Confirmed",
+        "ok"
+      ],
+      [
+        "Escalation tree",
+        "Verified today",
+        "ok"
+      ]
+    ],
+    "freshness": "Confirmed 06:00 shift change",
+    "confidence": "High",
+    "links": []
+  },
+  "proc-claims": {
+    "claim": "Claims Processing — operate safely today?",
+    "val": "Yes · on compensating control",
+    "valCls": "warn",
+    "what": "Whether claims processing can run today without unacceptable cyber risk, and how fast it recovers if hit.",
+    "sources": [
+      "ServiceNow CMDB",
+      "CrowdStrike EDR",
+      "Rubrik backup",
+      "Claims app telemetry"
+    ],
+    "signals": "$220M/day throughput · control failed 14:02, contained in 2s; compensating control validated holding",
+    "detail": [
+      [
+        "Operating now",
+        "Yes · degraded",
+        "warn"
+      ],
+      [
+        "Underlying control",
+        "Failed 14:02 · compensating active",
+        "warn"
+      ],
+      [
+        "Recovery readiness",
+        "78% (target 90%)",
+        "warn"
+      ],
+      [
+        "Time to resume if down",
+        "~3.5 days",
+        "warn"
+      ],
+      [
+        "Watch item",
+        "Open ransomware path",
+        "crit"
+      ]
+    ],
+    "freshness": "Live · control re-validated 14:08",
+    "confidence": "High · telemetry + tested backups",
+    "links": [
+      [
+        "See the operational-safety scenario ▸",
+        "q2"
+      ],
+      [
+        "See the decision to close the path ▸",
+        "q4"
+      ]
+    ]
+  },
+  "proc-payments": {
+    "claim": "Provider Payments — operate safely today?",
+    "val": "Yes · clean",
+    "valCls": "ok",
+    "what": "Whether provider payments can run safely today, and its recovery posture.",
+    "sources": [
+      "ServiceNow CMDB",
+      "Payments app telemetry",
+      "Rubrik backup"
+    ],
+    "signals": "No open exposure · multi-region · backups verified within the hour",
+    "detail": [
+      [
+        "Operating now",
+        "Yes · clean",
+        "ok"
+      ],
+      [
+        "Open exposure",
+        "None",
+        "ok"
+      ],
+      [
+        "Recovery readiness",
+        "High",
+        "ok"
+      ],
+      [
+        "Time to resume if down",
+        "< 1 day",
+        "ok"
+      ],
+      [
+        "Watch item",
+        "None",
+        "ok"
+      ]
+    ],
+    "freshness": "Live · synced 14:09",
+    "confidence": "High",
+    "links": []
+  },
+  "proc-portal": {
+    "claim": "Member Portal — operate safely today?",
+    "val": "Yes",
+    "valCls": "ok",
+    "what": "Whether the customer-facing member portal can run safely today.",
+    "sources": [
+      "Cloudflare WAF",
+      "Okta",
+      "Portal telemetry"
+    ],
+    "signals": "Internet-facing · credential-stuffing pressure elevated but mitigated by rate-limiting + MFA",
+    "detail": [
+      [
+        "Operating now",
+        "Yes",
+        "ok"
+      ],
+      [
+        "Recovery readiness",
+        "High · multi-region",
+        "ok"
+      ],
+      [
+        "Time to resume",
+        "< 1 day",
+        "ok"
+      ],
+      [
+        "Watch item",
+        "Credential-stuffing pressure",
+        "warn"
+      ]
+    ],
+    "freshness": "Live",
+    "confidence": "High",
+    "links": [
+      [
+        "See attacks blocked ▸",
+        "blocked"
+      ]
+    ]
+  },
+  "proc-ai": {
+    "claim": "AI-Assisted Claims — operate safely today?",
+    "val": "Yes · ungoverned",
+    "valCls": "warn",
+    "what": "Whether the AI-assisted claims service can run safely — and the governance gap that makes it a watch item.",
+    "sources": [
+      "AI gateway logs",
+      "Model registry",
+      "Claims app telemetry"
+    ],
+    "signals": "Operating · no human oversight on model decisions touching PHI · limited recovery coverage",
+    "detail": [
+      [
+        "Operating now",
+        "Yes",
+        "ok"
+      ],
+      [
+        "Model oversight",
+        "None",
+        "crit"
+      ],
+      [
+        "Recovery coverage (AI systems)",
+        "52%",
+        "crit"
+      ],
+      [
+        "Watch item",
+        "Ungoverned PHI decisions",
+        "crit"
+      ]
+    ],
+    "freshness": "Live",
+    "confidence": "Medium · limited AI telemetry",
+    "links": [
+      [
+        "See the AI-governance decision ▸",
+        "q4"
+      ]
+    ]
+  },
+  "exp-claims": {
+    "claim": "Claims Processing — material exposure",
+    "val": "High · rising",
+    "valCls": "crit",
+    "what": "The material cyber exposure on claims processing, expressed in business and dollar terms.",
+    "sources": [
+      "FAIR loss model",
+      "CrowdStrike EDR",
+      "CyberArk PAM",
+      "Claims telemetry"
+    ],
+    "signals": "$220M/day revenue dependency · one open ransomware path to the claims database",
+    "detail": [
+      [
+        "Modeled total exposure",
+        "$94M",
+        "crit"
+      ],
+      [
+        "Revenue at risk",
+        "$2.3M / hr",
+        "warn"
+      ],
+      [
+        "Records exposed if realized",
+        "2.4M PHI",
+        "crit"
+      ],
+      [
+        "Likelihood",
+        "High · path active",
+        "crit"
+      ],
+      [
+        "Trend",
+        "Rising",
+        "warn"
+      ]
+    ],
+    "freshness": "Loss model recomputed 14:00",
+    "confidence": "Medium-High · 62% (recovery is the weak input)",
+    "links": [
+      [
+        "See the realization scenario ▸",
+        "q3"
+      ],
+      [
+        "See the decision to close it ▸",
+        "q4"
+      ]
+    ]
+  },
+  "exp-ai": {
+    "claim": "AI-Assisted Claims — material exposure",
+    "val": "High · rising",
+    "valCls": "crit",
+    "what": "The material exposure from ungoverned AI making claims decisions on PHI.",
+    "sources": [
+      "AI gateway logs",
+      "Model registry",
+      "EU AI Act assessment"
+    ],
+    "signals": "Fast-growing usage · no human oversight · potential high-risk classification under the EU AI Act",
+    "detail": [
+      [
+        "Modeled exposure",
+        "$12–40M",
+        "crit"
+      ],
+      [
+        "Governance",
+        "None",
+        "crit"
+      ],
+      [
+        "Regulatory",
+        "Possible EU AI Act high-risk",
+        "warn"
+      ],
+      [
+        "Trend",
+        "Rising fast",
+        "crit"
+      ]
+    ],
+    "freshness": "Reviewed this quarter",
+    "confidence": "Medium",
+    "links": [
+      [
+        "See the AI-governance decision ▸",
+        "q4"
+      ]
+    ]
+  },
+  "exp-portal": {
+    "claim": "Member Portal — material exposure",
+    "val": "Medium",
+    "valCls": "warn",
+    "what": "Exposure on the customer-facing member portal — primarily brand and account risk.",
+    "sources": [
+      "Cloudflare WAF",
+      "Okta",
+      "Brand-risk model"
+    ],
+    "signals": "Internet-facing · credential-stuffing pressure · brand / reputation exposure",
+    "detail": [
+      [
+        "Exposure",
+        "Medium",
+        "warn"
+      ],
+      [
+        "Primary risk",
+        "Credential stuffing",
+        "warn"
+      ],
+      [
+        "At risk",
+        "Member account data",
+        "warn"
+      ],
+      [
+        "Trend",
+        "Flat",
+        ""
+      ]
+    ],
+    "freshness": "Live",
+    "confidence": "High",
+    "links": [
+      [
+        "See attacks blocked ▸",
+        "blocked"
+      ]
+    ]
+  },
+  "exp-payments": {
+    "claim": "Provider Payments — material exposure",
+    "val": "Low",
+    "valCls": "ok",
+    "what": "Exposure on provider payments — well-controlled and trending down.",
+    "sources": [
+      "Payments telemetry",
+      "Controls validation"
+    ],
+    "signals": "Strong controls · continuously monitored · trending down",
+    "detail": [
+      [
+        "Exposure",
+        "Low",
+        "ok"
+      ],
+      [
+        "Controls",
+        "Effective",
+        "ok"
+      ],
+      [
+        "Trend",
+        "Improving",
+        "ok"
+      ]
+    ],
+    "freshness": "Live",
+    "confidence": "High",
+    "links": []
+  },
+  "det-tpr": {
+    "claim": "Third-party risk — what’s causing the decline",
+    "val": "Drifting over appetite",
+    "valCls": "warn",
+    "what": "What is driving third-party risk worse this quarter, and where to act.",
+    "sources": [
+      "Third-party risk platform (SecurityScorecard)",
+      "Vendor register",
+      "Contracts"
+    ],
+    "signals": "Two critical vendors’ ratings dropped; NASCO (PHI processor) has no alternate provider",
+    "detail": [
+      [
+        "NASCO · PHI processor",
+        "Rating B → C · no alternate",
+        "crit"
+      ],
+      [
+        "Payments vendor",
+        "Rating A → B",
+        "warn"
+      ],
+      [
+        "Vendors below tolerance",
+        "2 of 14 critical",
+        "warn"
+      ],
+      [
+        "Root cause",
+        "No continuous monitoring on tier-2 vendors",
+        "warn"
+      ]
+    ],
+    "freshness": "Vendor ratings refreshed 1d ago",
+    "confidence": "High · external + internal",
+    "links": [
+      [
+        "See material exposure ▸",
+        "q3"
+      ],
+      [
+        "See the vendor-risk decision ▸",
+        "q4"
+      ]
+    ]
+  },
+  "det-rec": {
+    "claim": "Recovery testing — what’s causing the decline",
+    "val": "Test overdue",
+    "valCls": "crit",
+    "what": "Why recovery readiness is slipping, and the gap it creates.",
+    "sources": [
+      "Backup platform",
+      "DR test records",
+      "Control RC.RP-01"
+    ],
+    "signals": "Last full DR test was 5 months ago; recovery readiness 78% vs the 90% target",
+    "detail": [
+      [
+        "Last full DR test",
+        "5 months ago",
+        "crit"
+      ],
+      [
+        "Recovery readiness",
+        "78% (target 90%)",
+        "warn"
+      ],
+      [
+        "Est. resume time if down",
+        "~3.5 days",
+        "warn"
+      ],
+      [
+        "Control RC.RP-01",
+        "Partial",
+        "warn"
+      ],
+      [
+        "Root cause",
+        "DR test cadence missed",
+        "crit"
+      ]
+    ],
+    "freshness": "As of last test record",
+    "confidence": "High",
+    "links": [
+      [
+        "See operational safety ▸",
+        "q2"
+      ],
+      [
+        "See the recovery-modernization decision ▸",
+        "q4"
+      ]
+    ]
+  },
+  "det-aigov": {
+    "claim": "AI governance — what’s causing the decline",
+    "val": "Behind adoption",
+    "valCls": "crit",
+    "what": "Why AI governance posture is declining even as AI usage grows.",
+    "sources": [
+      "AI gateway logs",
+      "Model registry",
+      "NIST AI RMF assessment"
+    ],
+    "signals": "Agentic AI gained production tool access; no AI standard is fully implemented",
+    "detail": [
+      [
+        "Ungoverned models on PHI",
+        "Yes",
+        "crit"
+      ],
+      [
+        "Agentic AI tool access",
+        "Production",
+        "crit"
+      ],
+      [
+        "NIST AI RMF",
+        "Map stage only",
+        "warn"
+      ],
+      [
+        "OWASP LLM Top 10",
+        "4 of 10 controls",
+        "warn"
+      ],
+      [
+        "Root cause",
+        "AI adoption outpacing governance",
+        "crit"
+      ]
+    ],
+    "freshness": "Reviewed this quarter",
+    "confidence": "Medium",
+    "links": [
+      [
+        "See the AI-governance decision ▸",
+        "q4"
+      ]
+    ]
+  },
+  "imp-iam": {
+    "claim": "Identity & access — what’s driving the improvement",
+    "val": "Up this quarter",
+    "valCls": "ok",
+    "what": "What is improving identity & access posture.",
+    "sources": [
+      "Okta (IdP)",
+      "PAM platform"
+    ],
+    "signals": "MFA coverage rose to 98.1%; phishing-resistant methods rolled out",
+    "detail": [
+      [
+        "MFA coverage",
+        "98.1% (+8 pts)",
+        "ok"
+      ],
+      [
+        "Phishing-resistant auth",
+        "Rolled out",
+        "ok"
+      ],
+      [
+        "Control PR.AA-01",
+        "Met",
+        "ok"
+      ],
+      [
+        "Driver",
+        "MFA enforcement campaign",
+        "ok"
+      ]
+    ],
+    "freshness": "Continuous",
+    "confidence": "High",
+    "links": [
+      [
+        "See threat & compromise ▸",
+        "q1"
+      ]
+    ]
+  },
+  "imp-cloud": {
+    "claim": "Cloud security — what’s driving the improvement",
+    "val": "Up this quarter",
+    "valCls": "ok",
+    "what": "What is improving cloud security posture.",
+    "sources": [
+      "Cloud posture management",
+      "KMS"
+    ],
+    "signals": "Config drift down; encryption baseline coverage up",
+    "detail": [
+      [
+        "Config drift",
+        "1 workload (from 6)",
+        "ok"
+      ],
+      [
+        "Encryption baseline",
+        "98% coverage",
+        "ok"
+      ],
+      [
+        "Driver",
+        "CSPM auto-remediation",
+        "ok"
+      ]
+    ],
+    "freshness": "Continuous",
+    "confidence": "High",
+    "links": []
+  },
+  "imp-edr": {
+    "claim": "Endpoint protection — what’s driving the improvement",
+    "val": "Up this quarter",
+    "valCls": "ok",
+    "what": "What is improving endpoint protection.",
+    "sources": [
+      "CrowdStrike EDR"
+    ],
+    "signals": "Agent coverage up to 99.2%; mean dwell time down",
+    "detail": [
+      [
+        "EDR coverage",
+        "99.2% (+3 pts)",
+        "ok"
+      ],
+      [
+        "Unmanaged endpoints",
+        "Down 40%",
+        "ok"
+      ],
+      [
+        "Driver",
+        "Onboarding automation",
+        "ok"
+      ]
+    ],
+    "freshness": "Continuous",
+    "confidence": "High",
+    "links": []
+  }
+}

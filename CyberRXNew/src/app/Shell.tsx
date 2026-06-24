@@ -134,7 +134,7 @@ export default function Shell() {
         )}
 
         {viewedSeat === 'ciso' ? (
-          <CisoSeat tab={tab} canEdit={viewingOwn} />
+          <CisoSeat tab={tab} go={setTab} />
         ) : (
           <SeatPlaceholder seat={seat} />
         )}

@@ -1,36 +1,29 @@
-import { CISO_TABS } from './seats'
+import { EvidenceProvider } from './ciso/EvidenceDrawer'
+import ExecSummary from './ciso/views/ExecSummary'
+import Q1 from './ciso/views/Q1'
+import Q2 from './ciso/views/Q2'
+import Q3 from './ciso/views/Q3'
+import Q4 from './ciso/views/Q4'
+import Q5 from './ciso/views/Q5'
+import FrameworkPosture from './ciso/views/FrameworkPosture'
+import MyLiability from './ciso/views/MyLiability'
 
-// Phase 2a: the shell + navigation are real; each view is a scaffold. Phase 2b
-// fills the exec summary band, the five questions, Framework Posture, My
-// Liability, and the drill-to-evidence drawer (all on flagged seed data).
-export default function CisoSeat({ tab, canEdit }: { tab: string; canEdit: boolean }) {
-  const current = CISO_TABS.find((t) => t.id === tab) ?? CISO_TABS[0]
-
+// The CISO seat — the reference depth. Each tab is its own view; every figure is
+// a door into the drill-to-evidence drawer. Figures are flagged seed data until
+// connectors land (Phase 6); the engine computes them for real in Phase 4.
+export default function CisoSeat({ tab, go }: { tab: string; go: (t: string) => void }) {
   return (
-    <div className="seat">
-      <span className="eyebrow">CISO · Operating system{canEdit ? '' : ' · view only'}</span>
-      <div className="panel">
-        <h2>{current.label}</h2>
-        {tab === 'exec' ? (
-          <p>
-            This is the CISO situation room. The executive summary band, the five
-            questions, Framework Posture, and My Liability — each backed by the
-            drill-to-evidence drawer — are built next in sub-step 2b.
-          </p>
-        ) : (
-          <p>
-            The <b>{current.label}</b> view is wired into the navigation. Its full
-            content (with drill-to-evidence) arrives in sub-step 2b.
-          </p>
-        )}
-        <span className="soon">Builds in Phase 2b</span>
-
-        <div className="phase-list">
-          <div className="phase done">✓ 2a — Shell, seat switcher, theme, view-only RBAC</div>
-          <div className="phase next">→ 2b — The five questions + drill-to-evidence</div>
-          <div className="phase">2c — Decision ledger + ticketing UI</div>
-        </div>
+    <EvidenceProvider>
+      <div className="seat">
+        {tab === 'exec' && <ExecSummary go={go} />}
+        {tab === 'q1' && <Q1 />}
+        {tab === 'q2' && <Q2 />}
+        {tab === 'q3' && <Q3 go={go} />}
+        {tab === 'q4' && <Q4 />}
+        {tab === 'q5' && <Q5 go={go} />}
+        {tab === 'qF' && <FrameworkPosture />}
+        {tab === 'qL' && <MyLiability go={go} />}
       </div>
-    </div>
+    </EvidenceProvider>
   )
 }
