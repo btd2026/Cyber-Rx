@@ -3,8 +3,14 @@
 **Status:** Draft for founder approval. Nothing here writes product code. This is the
 blueprint we approve before Phase 1.
 
+**Approved direction (your call):** **Adopt & harden the existing build** — keep the
+connectors, auth, and server-side Anthropic work already in this repo, and prioritize fixing
+the gaps (real database row-level security, evidence-tracing, the launch security gate).
+*Not* a clean rebuild, *not* a re-platform to Supabase.
+
 **Source of truth:** `cyberrx-build-brief.md` (the brief) + `cyberrx-platform.html` (the
-approved mock). Where this plan and the brief ever disagree, the brief wins.
+approved mock), both now saved in the repo root. Where this plan and the brief disagree, the
+brief wins — **except** where you've explicitly chosen otherwise (the stack; see §0.3).
 
 **The one rule that governs everything:** every number a user sees is either *pulled from a
 connected system* or an *explicitly owned assumption* — never invented. The whole
@@ -12,286 +18,258 @@ architecture below exists to make that rule true and provable.
 
 ---
 
-## 0. The most important thing you need to decide first (please read)
+## 0. Where we actually stand (read this first)
 
-You asked me to plan a fresh build. But **this repository is not empty** — it already
-contains a substantial, in-flight CyberRx product built by previous work:
+### 0.1 What already exists and is worth keeping
+This repo is **not** empty. Previous work built a real CyberRx:
 
-- A Node/Express backend (`cyberrx-api/`) with ~25 SQL migrations, **16 read-only
-  connectors already written** (SecurityScorecard, BitSight, Black Kite, RiskRecon,
-  ServiceNow, RecordedFuture, HHS/OCR, and more), the **Anthropic SDK already used
-  server-side only** (good), SAML login, and app-level "org isolation" middleware.
-- A React frontend (`frontend/`) with many built screens, a shared component kit, and
-  design tokens.
-- ~40 planning/status documents and deployment configs for **Vercel + Render**.
+- **Backend** (`cyberrx-api/`, Node/Express): **16 read-only connectors** (SecurityScorecard,
+  BitSight, Black Kite, RiskRecon, ServiceNow, RecordedFuture, HHS/OCR, …), the **Anthropic
+  SDK already used server-side only** across ~10 AI services, ~25 SQL migrations, JWT + SAML
+  login, and a deterministic-engine family of services (scoring, FAIR-style, framework maps).
+- **Frontend** (`frontend/`, React 19 + Vite + React Router + React Query): many built
+  screens, a shared component kit, and design tokens.
+- Deployment configs for **Vercel (frontend) + Render (backend + Postgres)**.
 
-**This matters because the existing foundation differs from the brief in two big ways:**
+We keep all of this and build on it.
 
-| | The brief prescribes | What's in the repo today |
-|---|---|---|
-| Data + auth | **Supabase** (Postgres + Auth + **database-level RLS** + Storage) | Plain Postgres on Render; **no database RLS**; isolation done in app code |
-| Tenant isolation | **Row-Level Security at the database**, proven before real data | `organization_id` columns + middleware checks. **Zero `CREATE POLICY` / `ENABLE ROW LEVEL SECURITY` anywhere** |
+### 0.2 The gaps we must harden (what "adopt & harden" actually means)
+Verified by reading the code, not assuming. These are the Phase-1 priorities:
 
-**Why this is the headline finding:** your #1 non-negotiable is *"tenant isolation via RLS,
-proven with two test orgs before any real data."* The current code does **not** meet that
-bar — isolation today lives in application logic, which is exactly the thing the brief says
-is not good enough ("'immutable' must be true at the database level, not a UI label";
-"the client hiding a button is not security"). A single bug in app code could leak one
-customer's data to another. Database RLS is a second, independent wall that holds even when
-app code has a bug. We do not have that wall yet.
+| # | Gap found in the existing code | Why it matters | Fixed in |
+|---|---|---|---|
+| **G1** | **No database row-level security at all** — zero `CREATE POLICY` / `ENABLE ROW LEVEL SECURITY`. Isolation lives only in app code. | Your #1 non-negotiable. A single app bug could leak one customer's data to another. The database must hold the line independently. | Phase 1 |
+| **G2** | The app-level isolation check is **defaulted OFF** (`STRICT_TENANT_ISOLATION` = "observe + log only") and trusts an `X-Org-Id` **header the browser sends**. | Today, cross-tenant isolation is effectively *not enforced*. | Phase 1 |
+| **G3** | **No real MFA** (no TOTP library installed); login is JWT + SAML only. | Brief requires email/password **+ MFA** before any seat. | Phase 1 |
+| **G4** | Numbers in the existing screens are **seeded/demo**, not yet traced to signed evidence with citations. | The whole product is "every number traces to evidence or an owned assumption." | Phases 4–5 |
+| **G5** | Frontend is **plain JavaScript**, not TypeScript; isolation/secret checks aren't in CI. | Type-safety + automated guardrails reduce exactly the bugs that cause leaks. | Incremental (see §0.4) |
+| **G6** | Decision ledger / audit log are **not yet append-only + signed at the database**. | "Immutable" must be true in the database, not a UI label. | Phases 2 & 6 |
 
-### Your three options
+### 0.3 One deviation from the brief you're knowingly accepting
+The brief names **Supabase** (Postgres + Auth + RLS + Storage). You've chosen to **stay on the
+existing stack** (Render Postgres + the existing JWT/SAML auth) and harden it. That's a sound
+call: **row-level security is a core Postgres feature** and works identically on Render's
+Postgres, so we get the brief's exact isolation guarantee *without* a risky migration, and we
+keep the 16 connectors and AI services. The only things we forgo vs. Supabase are its
+batteries-included Auth/MFA/Storage — which we instead **add to the existing auth** (TOTP MFA)
+and object storage. I'm flagging this so it's a decision you made on purpose, not a drift.
 
-- **Option A — Greenfield on Supabase (literal to the brief).** New Supabase project, build
-  the RLS foundation clean, and re-port the valuable existing pieces (connectors, engine,
-  prompts) into it over time. Cleanest isolation story; slowest to first light because we
-  rebuild scaffolding that already exists.
-- **Option B — Retrofit RLS onto the existing Express/Postgres stack.** Keep everything,
-  add real Postgres RLS policies. Salvages the most code, but we'd be bolting Supabase-style
-  isolation onto a stack that wasn't designed for it, and we'd lose Supabase Auth/MFA/Storage
-  that the brief leans on.
-- **Option C — Hybrid (my recommendation).** Adopt **Supabase as the data + auth + RLS +
-  storage foundation exactly as the brief says**, and keep a **thin Node service** for the
-  engine, connectors, and all Anthropic calls. The brief explicitly allows this: *"Server-side
-  logic in Supabase Edge Functions or a thin Node service — whichever keeps the Anthropic key
-  server-side."* This gives us real database RLS (non-negotiable #1) **and** lets us reuse the
-  16 connectors and the AI services already written, by lifting them into the thin service.
-
-**My recommendation: Option C.** It honors the brief's non-negotiable isolation model while
-salvaging the genuinely valuable domain work already in the repo. **The rest of this plan is
-written for Option C.** If you prefer A or B, I'll revise before we touch any code.
-
-> Everything below describes the *target* architecture. The existing code becomes a parts
-> bin we draw from during Phases 2–6 — not the foundation we build on.
+### 0.4 Naming + TypeScript: pragmatic adopt-and-harden choices
+- The brief says `tenant_id`; the existing schema uses **`organization_id`** everywhere. We
+  **keep `organization_id`** (it *is* the tenant key) rather than churn 25 migrations and all
+  the code. Wherever the brief says `tenant_id`, read `organization_id`.
+- We **keep the frontend in JavaScript** for now and add TypeScript **incrementally** to new
+  modules, rather than a stop-the-world rewrite. (Open question Q4 if you'd rather invest in a
+  full TS migration first.)
 
 ---
 
-## 1. Proposed repo structure (frontend + backend)
+## 1. Repo structure (the existing layout + what we add)
 
-A clean two-app layout plus shared schema/infra. We grow into this; we don't build it all at
-once.
+We harden in place. New hardening lives beside the existing code; nothing is relocated
+wholesale in Phase 0–1.
 
 ```
-cyberrx/
-├─ apps/
-│  ├─ web/                      # React + Vite + TypeScript executive UI (the seven seats)
-│  │  ├─ src/
-│  │  │  ├─ app/                # router, providers, theme (light default + dark)
-│  │  │  ├─ seats/              # ceo/ ciso/ cfo/ cio/ clo/ cro/ board/ — one folder per seat
-│  │  │  ├─ shared/            # the reusable kit: answer-grid, drill-to-evidence drawer,
-│  │  │  │                      #   decision-ledger card, costed-decision card, no-data state
-│  │  │  ├─ onboarding/         # the Phase 3 intake flow
-│  │  │  ├─ warroom/            # War Room + Incident Commander console (Phase 6)
-│  │  │  ├─ lib/                # api client (React Query), supabase client, formatting/currency
-│  │  │  └─ styles/             # cyberrx-design-tokens.css ported from the mock
-│  │  └─ index.html
-│  │
-│  └─ api/                      # thin Node service: the engine, connectors, all Anthropic calls
-│     ├─ src/
-│     │  ├─ engine/             # DETERMINISTIC truth: scores, verdicts, CMMI, FAIR $ (no LLM here)
-│     │  ├─ ai/                 # Anthropic calls ONLY — spec-sheet prompts, the two gates,
-│     │  │                      #   schema validation. Key lives here, server-side, never shipped
-│     │  ├─ connectors/         # read-only integrations (ported from existing cyberrx-api)
-│     │  ├─ ingest/             # normalize → evidence schema → sign → store
-│     │  ├─ retrieval/          # pull this tenant's evidence for grounded answers (RLS-scoped)
-│     │  ├─ routes/             # REST endpoints; every handler is tenant-scoped
-│     │  ├─ middleware/         # verify session → derive tenant_id → SET LOCAL app.current_tenant
-│     │  └─ db/                 # query layer that always runs inside a tenant-scoped transaction
-│     └─ tests/                 # incl. the Phase 1 two-tenant isolation test
+Cyber-Rx/
+├─ cyberrx-api/                 # EXISTING Node/Express backend — adopted
+│  ├─ src/
+│  │  ├─ connectors/            # 16 read-only connectors — KEEP, harden to least-privilege + secret refs
+│  │  ├─ services/              # deterministic engine + AI services — KEEP; AI stays server-side only
+│  │  ├─ routes/ controllers/   # KEEP; every handler made tenant-scoped (G2)
+│  │  ├─ middleware/
+│  │  │  ├─ auth.js             # HARDEN: derive org from verified session, not a browser header
+│  │  │  ├─ org_isolation.js    # REPLACE header-trust with server-derived org + flip enforcement ON
+│  │  │  └─ tenantScope.js      # NEW: opens a tenant-scoped DB txn; runs SET LOCAL app.current_tenant
+│  │  ├─ db/                     # NEW: query layer that always runs inside the tenant-scoped txn
+│  │  └─ auth/mfa/               # NEW: TOTP enrollment + challenge (G3)
+│  ├─ migrations/                # EXISTING + NEW: add RLS policies to every tenant table (G1)
+│  ├─ seeds/                     # EXISTING + NEW: the two test orgs for the isolation proof
+│  └─ tests/integration/         # NEW: the two-tenant isolation test (the Phase 1 gate)
 │
-├─ supabase/
-│  ├─ migrations/               # the schema + RLS policies (§2). Versioned, reviewable
-│  ├─ seed/                     # the two test tenants for the isolation proof
-│  └─ config.toml
+├─ frontend/                    # EXISTING React 19 + Vite app — adopted
+│  ├─ src/
+│  │  ├─ situation-room/ pages/ seats/   # KEEP/extend toward the mock's seven seats
+│  │  ├─ ui/ components/ styles/         # KEEP shared kit + port cyberrx-design-tokens.css from the mock
+│  │  └─ lib/                            # api client (React Query) — never holds a secret, never calls Anthropic
+│  └─ vite.config.js
 │
-├─ packages/
-│  └─ shared-types/             # TypeScript types shared by web + api (table shapes, enums, roles)
+├─ docs/
+│  ├─ security-review-checklist.md      # NEW: the Phase 6 launch gate, drafted now
+│  └─ adr/                              # NEW: short "architecture decision records" (e.g. this stack choice)
 │
-├─ docs/                        # this plan, ADRs (architecture decisions), the security-review checklist
-├─ .env.example                 # names only, never values
-└─ README.md
+├─ cyberrx-build-brief.md  cyberrx-build-prompts.md  cyberrx-platform.html   # source of truth, now in repo
+├─ .env.example                         # names only, never values (already present)
+└─ PHASE_0_PLAN.md                      # this file
 ```
 
-**Why this shape:** the UI never holds secrets and never talks to Anthropic; the `api`
-service is the only thing with the Anthropic key and the only thing that computes numbers;
-the `engine` folder is deliberately separate from the `ai` folder so it's structurally
-obvious that **the engine owns the truth and the LLM only phrases it.**
+**The structural guarantee we preserve:** the frontend only ever talks to our own API; the
+API is the only thing holding the Anthropic key / connector creds / signing key; the
+deterministic engine (which computes numbers) stays separate from the AI services (which only
+phrase them). The LLM never decides a number.
 
 ---
 
-## 2. The full data model — every table, `tenant_id`, and an RLS policy
+## 2. The full data model — every table, its tenant key, and an RLS policy
 
 ### 2.1 How RLS works here (the isolation mechanism, in plain English)
+This is the locked vault door we're adding (G1), on the existing Render Postgres:
 
-1. **Every tenant-owned table has a `tenant_id` column** and is switched into Row-Level
-   Security with `ENABLE ROW LEVEL SECURITY` **and** `FORCE ROW LEVEL SECURITY` (so even the
-   table owner is subject to the rules — no accidental bypass).
-2. The database is told, for the duration of each request, *which tenant is asking*, via a
-   per-transaction setting: `SET LOCAL app.current_tenant = '<verified tenant id>'`.
-   That id comes **only** from the verified login session — never from anything the browser
-   sends in the request body.
-3. Each table gets a policy of the form:
+1. **Every tenant-owned table has `organization_id`** and is switched into Row-Level Security
+   with `ENABLE ROW LEVEL SECURITY` **and** `FORCE ROW LEVEL SECURITY` (so even the table
+   owner obeys the rules — no accidental bypass).
+2. Per request, the database is told **which org is asking** via a per-transaction setting:
+   `SET LOCAL app.current_tenant = '<org id derived from the verified session>'`. That id
+   comes **only** from the server-verified login — **never from the `X-Org-Id` header the
+   browser sends** (that's the G2 fix).
+3. Each table gets:
    ```sql
    CREATE POLICY tenant_isolation ON <table>
-     USING      (tenant_id = current_setting('app.current_tenant', true)::uuid)
-     WITH CHECK (tenant_id = current_setting('app.current_tenant', true)::uuid);
+     USING      (organization_id = current_setting('app.current_tenant', true)::uuid)
+     WITH CHECK (organization_id = current_setting('app.current_tenant', true)::uuid);
    ```
-   `USING` blocks reading other tenants' rows; `WITH CHECK` blocks writing a row stamped with
-   someone else's `tenant_id`.
-4. The application connects as a **non-superuser role without `BYPASSRLS`.** The powerful
-   `service_role` key is used **only** for narrow admin jobs (e.g. creating a tenant), never
-   on tenant data paths.
-5. **Append-only tables** (`decisions`, `audit_log`) additionally get *no* `UPDATE`/`DELETE`
-   policy at all, plus row signing (§2.4) — so "immutable" is enforced by the database.
+   `USING` blocks reading another org's rows; `WITH CHECK` blocks writing a row stamped with
+   someone else's org.
+4. The app connects as a **non-superuser role without `BYPASSRLS`.** Any admin-only job
+   (creating an org) uses a separate, narrow path — never on tenant data routes.
+5. **Append-only tables** (`decisions`, `audit_log`) get **no `UPDATE`/`DELETE` policy** plus
+   row signing (§2.4), so "immutable" is enforced by the database (G6).
 
-**Result:** even if app code forgets a `WHERE tenant_id = …`, the database returns zero of
-the other tenant's rows. That is the wall the brief requires, and Phase 1 proves it before
-any real data lands.
+**Result:** even if a handler forgets its `WHERE organization_id = …`, the database returns
+zero of the other org's rows. Phase 1 proves this with two orgs before any real data.
 
 ### 2.2 The tables
-
-Every table below carries `tenant_id uuid not null` (except the two global catalog tables,
-noted), `id uuid primary key`, `created_at`, and the `tenant_isolation` RLS policy from §2.1.
-I list each table's purpose and anything special about its policy.
+Each table below carries `organization_id` (the tenant key) and the `tenant_isolation` policy
+from §2.1, except the two **global catalogs** (noted). We map the brief's entities onto the
+existing schema, adding what's missing.
 
 **Identity & tenancy**
 
-| Table | Purpose & key columns | RLS / special rules |
+| Table (brief name → ours) | Purpose & key columns | RLS / special rules |
 |---|---|---|
-| `tenants` | Org profile: name, industry, ownership, regions[], regulated_data_types[], **primary_currency (ISO 4217)**, materiality_threshold. | A user can read a tenant row only if they're a member (policy via `memberships`). Created by the admin/service path only. |
-| `users` | Maps 1:1 to a Supabase Auth user (`auth.users`). Display name, email, MFA status. | A user reads only their own row + co-members of their tenant. |
-| `memberships` | The join: `(user_id, tenant_id, role)`. Role ∈ CEO/CISO/CFO/CIO/CLO/CRO/Board/Admin. Drives RBAC. | Read rows for tenants you belong to. The *source* of `app.current_tenant` and the role checks. |
+| `tenants` → **`orgs`** *(exists)* | Org profile: name, industry, ownership, regions[], regulated_data_types[], **primary_currency (ISO 4217)**, materiality_threshold. | Readable only by members (via `memberships`); created on the admin path only. |
+| `users` *(exists)* | Login identity; display name, email, **mfa_enrolled** *(new)*. | A user reads only self + co-members of their org. |
+| `memberships` *(add/confirm)* | `(user_id, organization_id, role)`, role ∈ CEO/CISO/CFO/CIO/CLO/CRO/Board/Admin. | The **source** of `app.current_tenant` + role checks. |
 
 **The evidence spine**
 
 | Table | Purpose & key columns | RLS / special rules |
 |---|---|---|
-| `connectors` | Per-tenant integration config + status + last_sync_at + health + scope. Credentials are **references** to the secret manager, not the secret values. | Tenant-isolated. Only Admin/owning-seat may edit. |
-| `evidence` | **The spine.** Normalized signals & documents: source_system, signal_type, collected_at, freshness, content_hash, signature, raw_ref, normalized_value (jsonb). | Tenant-isolated; effectively append-only (corrections add new rows). Every figure in the UI cites rows here. |
-| `documents` | Uploaded files (IR plans, contracts, policies) in Supabase Storage; metadata + hash here. | Tenant-isolated; Storage bucket also RLS-scoped by `tenant_id` path prefix. |
+| `connectors` *(exists)* | Per-org integration config + status + last_sync_at + health + scope. Creds are **references** to the secret store, not values. | Org-isolated; Admin/owning-seat edit only. |
+| `evidence` *(add canonical spine)* | source_system, signal_type, collected_at, freshness, content_hash, signature, raw_ref, normalized_value (jsonb). **Every UI figure cites rows here.** | Org-isolated; effectively append-only (corrections add rows). |
+| `documents` *(exists/extend)* | Uploaded files (IR plans, contracts, policies) in object storage; metadata + hash here. | Org-isolated; storage path also scoped by org prefix. |
 
 **Frameworks & scoring**
 
 | Table | Purpose & key columns | RLS / special rules |
 |---|---|---|
-| `frameworks` | **Global catalog** (CSF 2.0, 800-53, CIS v8, ISO 27001, SOC 2). No `tenant_id`. | Read-only to all authenticated users; written only by the catalog loader. |
-| `controls` | **Global catalog** of controls per framework, **verbatim IDs + titles** from OSCAL/CIS/ISO. No `tenant_id`. | Same as `frameworks`. |
-| `control_status` | Per-tenant per-control state: CMMI maturity 0–5, status, confidence, linked evidence ids[], analyst_review_state. | Tenant-isolated. Maturity is **engine-computed**; an LLM proposal is stored separately with its citation and never overwrites the computed value without analyst sign-off. |
+| `frameworks` *(global catalog)* | CSF 2.0, 800-53, CIS v8, ISO 27001, SOC 2. **No `organization_id`.** | Read-only to all authed users; written only by the catalog loader. |
+| `controls` *(global catalog; `control_library` exists)* | Per-framework controls, **verbatim IDs + titles** from OSCAL/CIS/ISO. **No `organization_id`.** | Same as `frameworks`. |
+| `control_status` *(exists/extend)* | Per-org per-control: CMMI 0–5, status, confidence, linked evidence ids[], analyst_review_state. | Org-isolated. Maturity is **engine-computed**; an LLM proposal is stored separately *with its citation* and never overwrites the computed value without analyst sign-off. |
 
 **Decisions, money & follow-through**
 
 | Table | Purpose & key columns | RLS / special rules |
 |---|---|---|
-| `decisions` | **The ledger / the wedge.** title, type, owner, decided_at, rationale, evidence_snapshot (jsonb, frozen at decision time), options_considered, chosen_option, residual_risk_amount + currency, status, re_review_trigger, **row signature**. | Tenant-isolated **and append-only**: `INSERT` + `SELECT` policies only, **no `UPDATE`/`DELETE`**. Status changes are new linked rows. Signed (§2.4). |
-| `assumptions` | Tenant-owned ◐ values: loaded labor rate, downtime $/hr, record-breach cost, discount rate… value, currency, owner, basis/benchmark, version. Cost/FAIR models reference these. | Tenant-isolated. Editable by the owning seat; **every edit writes a new version row + an `audit_log` entry** and triggers recompute + re-review. |
-| `tickets` | external_system (Jira/ServiceNow), external_id, status, due_date, linked decision_id. | Tenant-isolated. Reflects external state; blinks near/overdue in the UI. |
+| `decisions` *(the ledger — the wedge)* | title, type, owner, decided_at, rationale, **evidence_snapshot (jsonb, frozen at decision time)**, options_considered, chosen_option, residual_risk_amount + currency, status, re_review_trigger, **row signature**. | Org-isolated **and append-only**: `INSERT`+`SELECT` policies only, **no `UPDATE`/`DELETE`**; hash-chain signed (§2.4). |
+| `assumptions` *(exists as evidence ledger / extend)* | Owned ◐ values: loaded labor rate, downtime $/hr, breach $/record, discount rate… value, currency, owner, basis/benchmark, version. | Org-isolated; owning-seat edits **write a new version row + an `audit_log` entry** and trigger recompute + re-review. |
+| `tickets` *(ServiceNow connector exists)* | external_system, external_id, status, due_date, linked decision_id. | Org-isolated; blinks near/overdue in the UI. |
 
 **Incident readiness, benchmarking, audit**
 
 | Table | Purpose & key columns | RLS / special rules |
 |---|---|---|
-| `incident_plan` | IR plan doc ref + metadata; last_verified_at (call trees go stale → dangerous). | Tenant-isolated; CISO/Admin edit. |
-| `incident_contacts` | The 24/7 call tree: role, name, phone, internal/external, order. Powers Incident Commander click-to-call. | Tenant-isolated; encrypted at rest; periodic re-verification reminder. |
-| `benchmark_contributions` | **Opt-in, anonymized, high-level CMMI maturity only** — never findings/identifiers. Consent state + version. | Tenant-isolated for the row; the cross-tenant *aggregate* is computed server-side with **k-anonymity ≥ 8 peers or fall back to overall maturity**, exposed via a function, never raw rows. |
-| `audit_log` | **Append-only** record of every view, computation, model call, export, decision. actor, action, target, evidence_used, model_io_ref, at. | Tenant-isolated; `INSERT` + `SELECT` only, **no `UPDATE`/`DELETE`**; signed (§2.4). |
-
-> Naming note: the existing repo uses `organization_id`. The brief uses `tenant_id`. We
-> standardize on **`tenant_id`** for the new schema and map old → new when we port data.
+| `incident_plan` *(add)* | IR plan ref + metadata; **last_verified_at** (stale call trees are dangerous). | Org-isolated; CISO/Admin edit. |
+| `incident_contacts` *(add)* | 24/7 call tree: role, name, phone, internal/external, order. Powers Incident Commander click-to-call. | Org-isolated; **encrypted at rest**; periodic re-verify reminder. |
+| `benchmark_contributions` *(`cross_tenant_benchmarking` exists)* | **Opt-in, anonymized, high-level CMMI maturity only** — never findings/identifiers. Consent state + version. | Row org-isolated; the cross-org **aggregate** is computed server-side with **k-anonymity ≥ 8 peers, else fall back to overall maturity**, exposed via a function, never raw rows. |
+| `audit_log` *(`security_audit_logs` exists/extend)* | Every view, computation, model call, export, decision: actor, action, target, evidence_used, model_io_ref, at. | Org-isolated; **`INSERT`+`SELECT` only, no `UPDATE`/`DELETE`**; hash-chain signed (§2.4). |
 
 ### 2.3 RBAC (who can edit what)
-
-Membership role drives permissions, enforced **server-side** (and mirrored as RLS where it's
-data-level): you may **edit your own seat's** objects and **view** the others. Admin manages
-connectors, members, and onboarding. The UI hides buttons for nicety only — the server is the
-real gate.
+Membership role drives permissions, enforced **server-side** (and mirrored in RLS at the data
+level): you may **edit your own seat's** objects and **view** the others; Admin manages
+connectors, members, onboarding. The UI hiding a button is cosmetic — the server is the gate.
 
 ### 2.4 "Immutable" and "signed" made real
-
 `decisions` and `audit_log` are append-only at the database (no update/delete policy). Each
-row carries a signature over its content + the previous row's signature (a hash chain), so
-tampering is detectable and the ledger is verifiably ordered. The signing key lives in the
-secret manager, server-side. This is verified in the Phase 6 security review.
+row is signed over its content + the previous row's signature (a hash chain), so tampering is
+detectable and ordering is verifiable. The signing key lives in the secret store, server-side.
+Verified in the Phase 6 security review.
 
 ---
 
-## 3. Auth + MFA approach
+## 3. Auth + MFA approach (harden the existing auth; don't replace it)
 
-- **Supabase Auth** for identity: **email/password + MFA (TOTP)**. MFA enrollment required
-  for every user before they reach a seat. (SSO/SAML can be added later for enterprise buyers;
-  the existing repo already has SAML code we can draw on.)
-- **The front door matches the mock:** email/password → MFA challenge → role-aware seat
-  switcher. A user with no MFA enrolled is routed to enrollment first.
-- **Sessions:** short-lived access token + refresh, stored as httpOnly cookies (not readable
-  by browser JavaScript). The thin API verifies the token on every request, looks up the
-  caller's `memberships`, derives the **one** `tenant_id` + role for this session, and sets
-  `app.current_tenant` for the query transaction. **The browser never gets to name its own
-  tenant.**
+- **Keep** the existing **JWT + passport/SAML** login; **add TOTP MFA** (G3): every user
+  enrolls an authenticator app and must pass an MFA challenge before reaching any seat. SAML
+  SSO stays available for enterprise buyers.
+- **Front door matches the mock:** email/password → MFA challenge → role-aware seat switcher.
+  No MFA enrolled → routed to enrollment first.
+- **Server decides the tenant, not the browser (G2):** on every request the API verifies the
+  session, looks up the caller's `memberships`, derives the **one** `organization_id` + role
+  for this session, and sets `app.current_tenant` for the query transaction. **We stop trusting
+  the `X-Org-Id` header**, and **flip `STRICT_TENANT_ISOLATION` to enforced**, backed by RLS.
 - **RBAC server-side:** every mutating endpoint checks the caller's role for the target seat
-  before doing anything. Failing that check is a 403, regardless of what the UI showed.
+  first; failure is a 403 regardless of what the UI showed.
+- **Sessions:** httpOnly cookies (not readable by browser JS), short-lived access + refresh.
 
-**Phase 1 acceptance for auth:** a user can sign up, is forced through MFA, and lands scoped
-to exactly one tenant with one role.
+**Phase 1 acceptance for auth:** sign up → forced MFA → land scoped to exactly one org + role.
 
 ---
 
-## 4. Connector strategy (read-only integrations)
+## 4. Connector strategy (read-only — adopt the 16, harden them)
 
-- **Read-only, least-privilege, official APIs only.** OAuth where the vendor supports it;
-  scoped API tokens otherwise. We never request write scopes. Categories per the brief: EDR,
-  SIEM, firewall, IdP, CSPM, vuln, email security, backup/DR, MDM, ITSM/GRC, and the financial
-  sources that feed money leaves (cloud bills, HRIS, contracts).
-- **Reuse what exists:** the 16 connectors already in `cyberrx-api/src/connectors` are lifted
-  into `apps/api/src/connectors` behind one `BaseConnector` interface. Each connector's only
-  job is: authenticate read-only → fetch → hand raw data to ingest.
-- **One ingestion path for everything:** `ingest/` normalizes every connector's output into
-  the single `evidence` schema with `collected_at`, `freshness`, and a `content_hash`, then
-  **signs and stores** it. Nothing downstream knows or cares which vendor it came from.
-- **Confidence is mechanical:** computed from **coverage** (how much of the in-scope estate
-  reported) × **freshness** (how recent) — not a vibe, not the LLM.
-- **No-data is a designed state:** a connector that returns nothing yields an explicit "no
-  evidence" state in the UI, never a guess.
-- **Credentials never sit in the database:** `connectors` stores a *reference* to a secret in
-  the secret manager (§5); the actual token lives only there.
-- **Phasing:** Phases 1–3 run on clearly-flagged *seeded-but-real-shaped* evidence so we can
-  build and demo the UI; **real connector sync lands in Phase 4** (feeding the engine) and the
-  ITSM write-back loop in Phase 6.
+- **Read-only, least-privilege, official APIs only.** OAuth where supported; scoped tokens
+  otherwise. **Never** request write scopes. Categories per the brief: EDR, SIEM, firewall,
+  IdP, CSPM, vuln, email, backup/DR, MDM, ITSM/GRC, plus the financial sources that feed money
+  leaves (cloud bills, HRIS, contracts).
+- **Adopt the existing 16 connectors**; harden each behind the one `BaseConnector` interface
+  so its only job is: authenticate read-only → fetch → hand raw data to ingest.
+- **One ingestion path:** normalize every connector's output into the single `evidence` schema
+  with `collected_at`, `freshness`, `content_hash`, then **sign and store**. Downstream never
+  knows which vendor it came from.
+- **Confidence is mechanical:** coverage (how much of the in-scope estate reported) × freshness
+  — not the LLM.
+- **No-data is a designed state:** a connector returning nothing → explicit "no evidence" in
+  the UI, never a guess.
+- **Creds never sit in the database:** `connectors` stores a *reference* to a secret in the
+  secret store; the token lives only there.
+- **Phasing:** Phases 1–3 use clearly-flagged *seeded-but-real-shaped* evidence (already in the
+  repo's seeds) so the UI is buildable/demoable; **real connector sync feeds the engine in
+  Phase 4**; the ITSM write-back loop lands in Phase 6.
 
 ---
 
 ## 5. How secrets stay server-side (Anthropic key never in the client)
 
-- **The browser never holds a secret and never calls Anthropic.** The React app only ever
-  talks to our own `api` service. There is no Anthropic key, connector credential, or signing
-  key anywhere in the frontend bundle — we add a CI check that **fails the build** if an
-  `ANTHROPIC`/secret-looking string appears in client code.
-- **The Anthropic key lives only in the `api` service's environment** (Supabase secrets /
-  hosting env vars / a secret manager). All model calls originate there, behind the two gates,
-  on locked spec sheets.
-- **Connector credentials and the ledger signing key** live in the secret manager too,
-  referenced by id from the database — never stored as values in tables or the repo.
-- **`.env.example` lists names only**, never values; real `.env` is git-ignored. Production
-  uses the host's secret store, not files.
-- **Verified in Phase 1.5** (bundle scan + config review) and again in the **Phase 6 security
-  review** (full secret-handling audit).
+- **Already true and we keep it:** the Anthropic SDK is used **only** in `cyberrx-api` services
+  — the browser never calls Anthropic and never holds the key.
+- **Add a CI guardrail (G5):** a build check that **fails** if an `ANTHROPIC`/secret-looking
+  string appears in any client bundle, so it can't regress.
+- **Keys live only in the API's environment** (host env vars / secret manager): Anthropic key,
+  connector credentials, and the ledger signing key — referenced from the DB by id, never
+  stored as values in tables or the repo.
+- **`.env.example` lists names only** (already present); real `.env` is git-ignored; production
+  uses the host secret store, not files.
+- **Verified** in Phase 1.5 (bundle scan + config review) and again in the **Phase 6 security
+  review**.
 
 ---
 
 ## 6. The phase-by-phase build plan and what "done" looks like
 
-Each phase ends the same way: **I stop, explain in plain English what I built and decided,
-give you a live URL to click (from Phase 1.5 on), and wait for your approval.** No phase
-starts before you approve the one before it.
+Each phase ends the same way: **I stop, explain in plain English what I built and decided, give
+you a live URL to click (from Phase 1.5 on), and wait for your approval.** No phase starts
+before you approve the one before it.
 
-| Phase | What gets built | "Done" means (acceptance) |
+| Phase | What gets built (adopt & harden) | "Done" means (acceptance) |
 |---|---|---|
-| **0 — Plan** *(this doc)* | Repo structure, data model + RLS, auth/MFA, connector + secrets strategy, the phase plan, and the Option A/B/C decision. **No code.** | You've read it, picked a foundation option, and approved. |
-| **1 — Foundation** | Supabase project; the §2 schema with **`tenant_id` + RLS on every table**; email/password **+ MFA**; the role/membership model. | **The isolation proof:** two test tenants with overlapping data; an automated test sets `app.current_tenant` to A and shows **zero** of B's rows for *every* table — at the database, not the UI. **We do not proceed until this passes.** I show you the test and its output. |
-| **1.5 — Live preview** | Deploy `web` (Vercel) + Supabase backend so there's always a URL. Minimal is fine (login + MFA + a placeholder authed page). | You can open the URL and log in. Bundle scan confirms **no secrets / no Anthropic key client-side.** From here on every phase ends with something you can see. |
-| **2 — Exec shell + CISO seat** | Front door → seat switcher (RBAC server-side) → the **CISO seat in full** (five questions, exec summary, **drill-to-evidence drawer**, decision-ledger UI, ticketing shell, trajectory, framework posture, My Liability) on the mock's tokens. Then generalize to the other six seats. Wired to **clearly-flagged seeded-but-real-shaped** data. | You can click into every CISO figure and see its (seeded) evidence breakdown, sources, freshness, confidence; record a decision and see it stamped. Each seat shown on the live URL. |
-| **3 — Onboarding / intake** | The full intake: org profile **(+ primary currency as ISO)**, connector setup, processes & apps → auto-map + crown jewels, documents, per-seat data needs, **incident command plan + 24/7 call tree**, benchmark consent, review & go-live. Persists to `tenants`/`connectors`/`assumptions`/`incident_plan`. | You can run onboarding end-to-end; the chosen currency is then **honored everywhere**; the call tree is captured and stored securely. |
-| **4 — Frameworks + CMMI engine** | Load the **complete** authoritative catalogs (OSCAL CSF/800-53, CIS v8, ISO 27001, SOC 2) with verbatim IDs/titles. Build the **deterministic scorer** (evidence → controls → CMMI 0–5, confidence from coverage+freshness). LLM may **propose** a maturity *with a citation*; engine computes; analyst reviews. **Real connectors begin feeding evidence.** Signed auditor + evidence-manifest exports. | Posture drills function→category→control→evidence; numbers trace to pulled evidence or owned assumptions; exports are real, signed files. |
-| **5 — Executive Twin (anti-hallucination)** | **Surface A** (computed five-question verdicts + figures; LLM only slot-fills a locked template with engine values). Then **Surface B** (free-text Ask) with **both gates** — scope router + retrieval gate — grounded generation, **schema-validated** output, human-in-the-loop for consequential answers, chips generated from the org profile. The **leaf rule** (every $ = ● pulled or ◐ assumption) enforced in data. Voice briefings (server-side neural TTS) last. | Ask a thin/off-topic question → honest refusal, never a guess. Every dollar drills to pulled/assumption leaves. No claim ships without a citation. |
-| **6 — Orchestration, War Room, security review** | Real Jira/ServiceNow ticket sync from decisions (status/age/due back; blink near/overdue; closure loops back). War Room wired to live detections (feeds, kill-chain, blast radius, ticker; blink+alarm on a qualifying detection, with a sound preference). Incident Commander console (runbook, playbooks, click-to-call from the onboarding call tree). Then the **security review**. | **Launch gate:** the security review passes — RLS audit, secret handling, signed append-only ledger + audit log verified, PHI handling, dependency/pen-test pass. I show you the results. We do **not** call it launch-ready until this passes. |
+| **0 — Plan** *(this doc)* | The blueprint above + the adopt-and-harden decision. **No code.** | You've read it and approved (and answered §8 where you can). |
+| **1 — Harden the foundation** | Add **RLS to every tenant table** (G1); replace header-trust with server-derived org + **enforce isolation** (G2); add **TOTP MFA** (G3); confirm the role/membership model. | **The isolation proof:** two test orgs with overlapping data; an automated test sets `app.current_tenant` to A and shows **zero** of B's rows for **every** table — at the database, not the UI. **We do not proceed until this passes.** I show you the test + output. |
+| **1.5 — Live preview** | Confirm the existing Vercel + Render deploy serves a URL: login → MFA → a placeholder authed page. | You can open the URL and log in with MFA. Bundle scan confirms **no secrets / Anthropic key client-side.** Every phase from here ends with something you can see. |
+| **2 — Exec shell + CISO seat** | Front door → seat switcher (RBAC **server-side**) → the **CISO seat in full** (five questions, exec summary, **drill-to-evidence drawer**, decision-ledger UI, ticketing shell, trajectory, framework posture, My Liability) on the mock's tokens; then the other six seats. Wired to **clearly-flagged seeded-but-real-shaped** data; ledger writes start going append-only. | Click any CISO figure → see its (seeded) evidence breakdown, sources, freshness, confidence; record a decision → stamped (who/when/evidence). Each seat shown on the live URL. |
+| **3 — Onboarding / intake** | Org profile **(+ primary currency as ISO)**, connector setup, processes & apps → auto-map + crown jewels, documents, per-seat needs, **incident command plan + 24/7 call tree**, benchmark consent, review & go-live. Persists to `orgs`/`connectors`/`assumptions`/`incident_plan`. | Run onboarding end-to-end; chosen currency is then **honored everywhere**; call tree captured + stored securely. |
+| **4 — Frameworks + CMMI engine** | Load **complete** authoritative catalogs (OSCAL CSF/800-53, CIS v8, ISO 27001, SOC 2) verbatim. Build the **deterministic scorer** (evidence → controls → CMMI 0–5, confidence from coverage+freshness). LLM may **propose** a maturity *with a citation*; engine computes; analyst reviews. **Real connectors begin feeding evidence (G4).** Signed auditor + evidence-manifest exports. | Posture drills function→category→control→evidence; every number traces to pulled evidence or an owned assumption; exports are real, signed files. |
+| **5 — Executive Twin (anti-hallucination)** | **Surface A** (computed verdicts/figures; LLM only slot-fills a locked template with engine values + citations). Then **Surface B** (free-text Ask) with **both gates** — scope router + retrieval gate — grounded generation, **schema-validated** output, human-in-the-loop for consequential answers, chips generated from the org profile. The **leaf rule** (every $ = ● pulled or ◐ assumption) enforced in data. Voice briefings (server-side neural TTS) last. | A thin/off-topic question → honest refusal, never a guess. Every dollar drills to pulled/assumption leaves. No claim ships without a citation. |
+| **6 — Orchestration, War Room, security review** | Real Jira/ServiceNow ticket sync from decisions (status/age/due back; blink near/overdue; closure loops back). War Room wired to live detections (feeds, kill-chain, blast radius, ticker; blink + alarm on a qualifying detection, with a sound preference). Incident Commander console (runbook, playbooks, **click-to-call** from the onboarding call tree). Then the **security review**. | **Launch gate:** the review passes — RLS audit, secret handling, **signed append-only ledger + audit log verified** (G6), PHI handling, dependency/pen-test pass. I show you the results. Not launch-ready until it passes. |
 
 ---
 
@@ -299,28 +277,28 @@ starts before you approve the one before it.
 
 | Non-negotiable | Where it's made true |
 |---|---|
-| **Tenant isolation via RLS, proven with two test orgs before real data** | §2.1 RLS on every table; **Phase 1 isolation proof is a hard gate** before any real/PHI-like data. |
-| **Anthropic API server-side only** | §5; only `apps/api/src/ai` calls Anthropic; CI build fails on client-side keys; re-audited Phase 6. |
+| **Tenant isolation via RLS, proven with two test orgs before real data** | §2.1 RLS on every table + G1/G2 fixes; **Phase 1 isolation proof is a hard gate** before any real/PHI-like data. |
+| **Anthropic API server-side only** | §5 (already true); CI build fails on client-side keys; re-audited Phase 6. |
 | **Every user-facing number traces to pulled evidence or an owned assumption** | The `evidence` spine (§2.2), the leaf rule (Phase 5), engine-computes-not-LLM (§1, Phase 4), citations-or-it-doesn't-ship. |
-| **One security review before launch** | Phase 6d, an explicit launch gate; checklist drafted now in `docs/`. |
+| **One security review before launch** | Phase 6 launch gate; checklist drafted now in `docs/security-review-checklist.md`. |
 
 ---
 
 ## 8. Open questions for you (don't block reading this — we can decide as we go)
 
-1. **Foundation option A / B / C?** I recommend **C (Hybrid)**. *(This is the one I need
-   before Phase 1.)*
-2. **Hosting:** the brief says Vercel + Supabase; the repo has Render configs. I'll go with
-   **Vercel + Supabase** per the brief unless you say otherwise.
-3. **Beachhead data sensitivity:** confirm we treat all customer data as PHI-like from day one
-   (encryption at rest/in transit, minimize egress). I'm assuming **yes**.
-4. **Legal-reviewed copy:** My Liability / CFO / CLO / CRO language must be reviewed by real
-   counsel before it's customer-facing (brief §10). Who is that reviewer, and when?
+1. **Hosting:** stay on **Vercel + Render** (consistent with adopt-and-harden)? I'll assume
+   **yes** unless you'd rather move to Supabase/another host.
+2. **Data sensitivity:** treat all customer data as **PHI-like from day one** (encryption at
+   rest/in transit, minimize egress)? I'm assuming **yes**.
+3. **Legal-reviewed copy:** My Liability / CFO / CLO / CRO language must be reviewed by real
+   counsel before it's customer-facing (brief §10). **Who** is that reviewer, and **when**?
+4. **TypeScript:** keep the frontend in JS and add TS incrementally (my default), or invest in
+   a fuller TS migration during Phase 2?
 
 ---
 
 ## 9. What I am explicitly NOT doing in Phase 0
 
-No Supabase project created, no tables, no policies, no screens, no connectors wired, no
-Anthropic calls — **only this plan.** All of that starts in Phase 1, and only after you
-approve this and pick a foundation option.
+No RLS policies written, no MFA added, no schema changes, no screens, no connector hardening,
+no Anthropic changes — **only this plan.** All of that starts in Phase 1, and only after you
+approve.
