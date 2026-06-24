@@ -1,0 +1,46 @@
+▶ recreating database 'cyberrx_test'…
+▶ applying local Supabase auth shim…
+▶ applying migrations…
+   - 0001_schema.sql
+NOTICE:  schema "app" already exists, skipping
+   - 0002_rls.sql
+▶ running tenant-isolation acceptance test…
+NOTICE:  SETUP OK: 2 tenants seeded with overlapping data
+                   set_config                   
+------------------------------------------------
+ {"sub":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"}
+(1 row)
+
+NOTICE:  PASS: tenant B invisible to A in public.tenants
+NOTICE:  PASS: tenant B invisible to A in public.connectors
+NOTICE:  PASS: tenant B invisible to A in public.evidence
+NOTICE:  PASS: tenant B invisible to A in public.assumptions
+NOTICE:  PASS: tenant B invisible to A in public.decisions
+NOTICE:  PASS: tenant B invisible to A in public.memberships
+NOTICE:  PASS: user A sees its own evidence (rows: 1)
+NOTICE:  PASS: cross-tenant INSERT by A into tenant B blocked
+NOTICE:  PASS: direct-id read of tenant B decision returns nothing
+                   set_config                   
+------------------------------------------------
+ {"sub":"bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"}
+(1 row)
+
+NOTICE:  PASS: user B sees only tenant B (rows: 1)
+ set_config 
+------------
+ 
+(1 row)
+
+NOTICE:  PASS: anonymous caller sees no tenant data
+NOTICE:  PASS: decision UPDATE blocked (append-only) even for service_role
+NOTICE:  PASS: decision DELETE blocked (append-only)
+NOTICE:  PASS: ledger is signed and hash-chained (prev_hash links to prior row_hash)
+ set_config 
+------------
+ 
+(1 row)
+
+
+================================================================
+  PHASE 1 ISOLATION TEST: ALL CHECKS PASSED
+================================================================
