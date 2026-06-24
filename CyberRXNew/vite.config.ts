@@ -1,8 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// New app — runs on a separate port (5174) so it can run alongside the
-// existing `frontend/` app (5173) without colliding.
+// New CyberRx app — port 5174 so it can run alongside the legacy app (5173).
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],

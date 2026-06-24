@@ -1,9 +1,113 @@
 @import "tailwindcss";
 
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* ── CyberRx design tokens (ported from the approved mock) ───────────────── */
+:root {
+  --bg: #0b0e13;
+  --panel: rgba(20, 25, 34, 0.72);
+  --border: #26303c;
+  --ink: #e9ebee;
+  --ink-dim: #8a8f98;
+  --brand: #2d6ce0;
+  --brand-bright: #4e8bff;
+  --field: rgba(11, 14, 19, 0.6);
+  --field-border: #2c3744;
+  --danger: #e5484d;
 }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body, #root { height: 100%; }
+body {
+  font-family: "Public Sans", system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+.screen-center {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-dim);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+}
+
+/* ── Brand mark ──────────────────────────────────────────────────────────── */
+.lbrand { display: flex; align-items: center; gap: 10px; }
+.lbrand .mk {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--brand-bright), var(--brand));
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 16px;
+}
+.lbrand .nm { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 18px; color: var(--ink); }
+.lbrand .nm b { color: var(--brand-bright); }
+
+/* ── Login / MFA front door ──────────────────────────────────────────────── */
+.login {
+  position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(1200px 700px at 50% -10%, rgba(45, 108, 224, 0.18), transparent 60%), var(--bg);
+  padding: 40px 20px; overflow: auto;
+}
+.lcard {
+  width: 100%; max-width: 400px; background: var(--panel);
+  backdrop-filter: blur(14px); border: 1px solid var(--border); border-radius: 18px;
+  padding: 34px 32px; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+}
+.lsub { font-size: 13px; color: var(--ink-dim); margin: 6px 0 18px; line-height: 1.5; }
+.llabel {
+  font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--ink-dim); margin: 16px 0 7px;
+}
+.linput {
+  width: 100%; background: var(--field); border: 1px solid var(--field-border);
+  border-radius: 10px; padding: 12px 14px; color: var(--ink);
+  font-family: inherit; font-size: 14px; outline: none;
+}
+.linput:focus { border-color: var(--brand-bright); }
+.lcode { font-family: "JetBrains Mono", monospace; letter-spacing: 0.5em; text-align: center; font-size: 20px; }
+.lbtn {
+  width: 100%; margin-top: 22px; background: var(--brand); color: #fff; border: none;
+  border-radius: 10px; padding: 13px; font-family: inherit; font-weight: 700; font-size: 14px; cursor: pointer;
+}
+.lbtn:hover { background: #3b79ee; }
+.lbtn:disabled { opacity: 0.5; cursor: not-allowed; }
+.lback { display: block; width: 100%; background: none; border: none; color: var(--ink-dim); font-family: inherit; font-size: 12.5px; cursor: pointer; margin-top: 14px; }
+.lback:hover { color: var(--ink); }
+.lerror { margin-top: 14px; color: var(--danger); font-size: 12.5px; }
+.lnotice {
+  margin: 8px 0 4px; padding: 10px 12px; border-radius: 8px; font-size: 12px; line-height: 1.5;
+  background: rgba(229, 162, 72, 0.1); border: 1px solid rgba(229, 162, 72, 0.3); color: #e5a248;
+}
+.lnotice code { font-family: "JetBrains Mono", monospace; font-size: 11px; }
+.lsec {
+  display: flex; align-items: center; gap: 7px; justify-content: center; margin-top: 20px;
+  font-family: "JetBrains Mono", monospace; font-size: 10.5px; color: #7c8490;
+}
+
+/* ── Authed shell (placeholder) ──────────────────────────────────────────── */
+.shell { min-height: 100%; display: flex; flex-direction: column; }
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 22px; border-bottom: 1px solid var(--border);
+}
+.topbar-right { display: flex; align-items: center; gap: 14px; }
+.who { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--ink-dim); }
+.btn-ghost {
+  background: none; border: 1px solid var(--field-border); color: var(--ink);
+  border-radius: 8px; padding: 7px 14px; font-family: inherit; font-size: 12.5px; cursor: pointer;
+}
+.btn-ghost:hover { border-color: var(--brand-bright); }
+.placeholder { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 20px; }
+.placeholder .badge {
+  font-family: "JetBrains Mono", monospace; font-size: 10.5px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--brand-bright);
+  border: 1px solid rgba(78, 139, 255, 0.4); border-radius: 99px; padding: 5px 12px; margin-bottom: 18px;
+}
+.placeholder h1 { font-family: "Space Grotesk", sans-serif; font-size: 30px; margin-bottom: 12px; }
+.placeholder p { color: var(--ink-dim); max-width: 460px; line-height: 1.6; margin-bottom: 26px; }
+.phase-list { display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
+.phase { padding: 9px 16px; border-radius: 8px; border: 1px solid var(--border); }
+.phase.done { color: #56b877; }
+.phase.next { color: var(--brand-bright); border-color: rgba(78, 139, 255, 0.4); }
