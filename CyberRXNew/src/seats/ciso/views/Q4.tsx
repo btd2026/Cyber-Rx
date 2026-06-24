@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useLedger } from '../../../ledger/LedgerProvider'
 
 type Leaf = { label: string; leaf?: 'pulled' | 'assumption'; leafNote?: string; amount: string }
 type Line = { k: string; v: string; tone?: 'good' | 'warn' | 'bad' }
@@ -162,6 +163,11 @@ function Cost({ option }: { option: Option }) {
 }
 
 export default function Q4() {
+  const { openRecord } = useLedger()
+
+  const costOf = (o: Option) => o.cost?.total ?? o.costPlain ?? '—'
+  const riskOf = (o: Option) => o.lines.find((l) => l.k === 'Risk removed')?.v ?? '—'
+
   return (
     <section className="view active" id="q4">
       <div className="vhead">
@@ -203,7 +209,23 @@ export default function Q4() {
                     <span className={`v${l.tone ? ' ' + l.tone : ''}`}>{l.v}</span>
                   </div>
                 ))}
-                <button className="pick2" disabled title="Choose & record — sub-step 2c">
+                <button
+                  className="pick2"
+                  onClick={() =>
+                    openRecord({
+                      title: d.title,
+                      optionName: o.name,
+                      cost: costOf(o),
+                      riskRemoved: riskOf(o),
+                      evidenceSnapshot: {
+                        situation: d.situation,
+                        option: o.name,
+                        cost: costOf(o),
+                        riskRemoved: riskOf(o),
+                      },
+                    })
+                  }
+                >
                   Choose &amp; record
                 </button>
               </div>

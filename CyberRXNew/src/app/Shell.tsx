@@ -3,6 +3,7 @@ import { SEATS, CISO_TABS, seatById, type SeatId } from '../seats/seats'
 import { useCurrentUser } from './useCurrentUser'
 import { useAuth } from '../auth/AuthProvider'
 import { initialTheme, persistTheme, type Theme } from './theme'
+import { LedgerProvider, useLedger } from '../ledger/LedgerProvider'
 import CisoSeat from '../seats/CisoSeat'
 import SeatPlaceholder from '../seats/SeatPlaceholder'
 
@@ -15,9 +16,10 @@ function LiveClock() {
   return <span className="clock">LIVE · {now.toLocaleTimeString([], { hour12: false })}</span>
 }
 
-export default function Shell() {
+function ShellInner() {
   const user = useCurrentUser()
   const { signOut } = useAuth()
+  const { openLedger, decisions } = useLedger()
   const [theme, setTheme] = useState<Theme>(initialTheme)
   const [viewedSeat, setViewedSeat] = useState<SeatId>(user.ownSeat)
   const [tab, setTab] = useState('exec')
@@ -31,7 +33,6 @@ export default function Shell() {
 
   return (
     <>
-      {/* ── Top bar ─────────────────────────────────────────────────────── */}
       <div className="topbar">
         <div className="wrap topbar-in">
           <div className="brand">
@@ -57,8 +58,8 @@ export default function Shell() {
             <button className="warbtn" disabled title="War Room — Phase 6">
               ⚠ War Room
             </button>
-            <button className="tbtn" disabled title="Decisions — sub-step 2c">
-              ⚖ Decisions
+            <button className="tbtn" onClick={openLedger} title="Decision ledger">
+              ⚖ Decisions{decisions.length > 0 ? ` · ${decisions.length}` : ''}
             </button>
             <button className="tbtn" disabled title="Audit log — Phase 6">
               Audit log
@@ -74,7 +75,6 @@ export default function Shell() {
         </div>
       </div>
 
-      {/* ── Seat switcher (View as) ─────────────────────────────────────── */}
       <div className="seatbar">
         <div className="wrap seatbar-in">
           <span className="vl">View as</span>
@@ -97,7 +97,6 @@ export default function Shell() {
         </div>
       </div>
 
-      {/* ── Per-seat nav (CISO only for now) ────────────────────────────── */}
       {viewedSeat === 'ciso' && (
         <div className="nav">
           <div className="wrap nav-in">
@@ -121,7 +120,6 @@ export default function Shell() {
         </div>
       )}
 
-      {/* ── Content ─────────────────────────────────────────────────────── */}
       <div className="wrap">
         {!viewingOwn && (
           <div className="vob">
@@ -140,5 +138,14 @@ export default function Shell() {
         )}
       </div>
     </>
+  )
+}
+
+export default function Shell() {
+  const user = useCurrentUser()
+  return (
+    <LedgerProvider owner={`${user.name} · ${seatById(user.ownSeat).label}`}>
+      <ShellInner />
+    </LedgerProvider>
   )
 }
