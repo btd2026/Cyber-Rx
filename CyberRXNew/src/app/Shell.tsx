@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { SEATS, CISO_TABS, seatById, type SeatId } from '../seats/seats'
 import { useCurrentUser } from './useCurrentUser'
 import { useAuth } from '../auth/AuthProvider'
@@ -24,6 +25,7 @@ function ShellInner() {
   const user = useCurrentUser()
   const { signOut } = useAuth()
   const { openLedger, decisions } = useLedger()
+  const navigate = useNavigate()
   const [theme, setTheme] = useState<Theme>(initialTheme)
   const [viewedSeat, setViewedSeat] = useState<SeatId>(user.ownSeat)
   const [tab, setTab] = useState('exec')
@@ -64,6 +66,9 @@ function ShellInner() {
             </button>
             <button className="tbtn" onClick={openLedger} title="Decision ledger">
               ⚖ Decisions{decisions.length > 0 ? ` · ${decisions.length}` : ''}
+            </button>
+            <button className="tbtn" onClick={() => navigate('/onboarding')} title="Organization onboarding">
+              ⚙ Onboarding
             </button>
             <button className="tbtn" disabled title="Audit log — Phase 6">
               Audit log

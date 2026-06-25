@@ -125,3 +125,70 @@
 .ev-scn-impact { font-family: var(--mono); font-size: 12px; color: var(--exposure); margin: 5px 0; }
 .ev-scn-body { font-size: 12.5px; color: var(--muted); line-height: 1.55; }
 .ev-tells { font-size: 13px; color: var(--text); line-height: 1.6; background: var(--brand-tint); border-radius: 9px; padding: 10px 12px; margin-bottom: 8px; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   Onboarding wizard (Phase 3)
+   ════════════════════════════════════════════════════════════════════════ */
+.ob { padding: 28px 0 80px; }
+.ob-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.ob-head h1 { font-family: var(--display); font-weight: 700; font-size: 26px; }
+.ob-stepper { display: flex; gap: 6px; overflow-x: auto; margin: 20px 0 18px; padding-bottom: 4px; }
+.ob-step { display: flex; align-items: center; gap: 8px; flex: none; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 7px 14px; cursor: pointer; font-family: var(--body); font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.ob-step.active { color: var(--brand); border-color: color-mix(in srgb, var(--brand) 40%, transparent); background: var(--brand-tint); }
+.ob-step.done { color: var(--pass); }
+.ob-step-n { font-family: var(--mono); font-size: 11px; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid currentColor; border-radius: 50%; }
+.ob-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px; min-height: 340px; }
+.ob-panel h2 { font-family: var(--display); font-weight: 700; font-size: 20px; margin-bottom: 6px; }
+.ob-why { color: var(--muted); font-size: 13.5px; line-height: 1.55; margin-bottom: 20px; max-width: 660px; }
+.ob-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 8px; }
+@media (max-width: 640px) { .ob-grid { grid-template-columns: 1fr; } }
+.ob-f { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.ob-f > span { font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--subtle); }
+.linput2 { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: 10px 12px; color: var(--text); font-family: inherit; font-size: 14px; outline: none; }
+.linput2:focus { border-color: var(--brand); }
+.ob-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.ob-chip { font-family: var(--body); font-weight: 600; font-size: 12.5px; color: var(--muted); background: var(--bg); border: 1px solid var(--border); border-radius: 999px; padding: 7px 13px; cursor: pointer; }
+.ob-chip.on { color: #fff; background: var(--brand); border-color: var(--brand); }
+/* credibility meter */
+.ob-cred { margin-bottom: 18px; }
+.ob-cred-bar { height: 10px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
+.ob-cred-fill { height: 100%; background: linear-gradient(90deg, var(--brand), var(--pass)); transition: width .3s; }
+.ob-cred-lbl { font-family: var(--mono); font-size: 11.5px; color: var(--muted); margin-top: 7px; }
+.ob-cred-lbl b { color: var(--text); }
+.ob-conn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 640px) { .ob-conn-grid { grid-template-columns: 1fr; } }
+.ob-conn { border: 1px solid var(--border); border-radius: 11px; padding: 13px 15px; background: var(--bg); }
+.ob-conn.on { border-color: color-mix(in srgb, var(--pass) 45%, transparent); background: var(--pass-tint); }
+.ob-conn-h { display: flex; align-items: center; gap: 9px; }
+.ob-conn-ic { font-size: 16px; }
+.ob-conn-cat { font-weight: 600; font-size: 13.5px; }
+.ob-conn-v { font-family: var(--mono); font-size: 11px; color: var(--subtle); margin: 6px 0 11px; }
+.ob-conn-btn { font-family: var(--body); font-weight: 600; font-size: 12.5px; color: var(--brand); background: none; border: 1px solid color-mix(in srgb, var(--brand) 40%, transparent); border-radius: 8px; padding: 6px 13px; cursor: pointer; }
+.ob-conn-btn.on { color: var(--pass); border-color: color-mix(in srgb, var(--pass) 45%, transparent); }
+/* list rows */
+.ob-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.ob-del { flex: none; width: 38px; background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--subtle); cursor: pointer; font-size: 16px; }
+.ob-del:hover { color: var(--critical); border-color: var(--critical); }
+.ob-add { margin-top: 4px; font-family: var(--body); font-weight: 600; font-size: 13px; color: var(--brand); background: var(--brand-tint); border: 1px dashed color-mix(in srgb, var(--brand) 45%, transparent); border-radius: 9px; padding: 8px 14px; cursor: pointer; }
+/* crown jewels */
+.ob-cj { display: flex; flex-wrap: wrap; gap: 10px; }
+.ob-cj-item { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; color: var(--muted); background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 9px 14px; cursor: pointer; }
+.ob-cj-item.on { color: var(--gold); background: var(--gold-tint); border-color: color-mix(in srgb, var(--gold) 45%, transparent); }
+.ob-empty { color: var(--subtle); font-size: 13px; }
+/* incident plan */
+.ob-plan { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 18px; }
+.ob-plan-h { font-family: var(--display); font-weight: 600; font-size: 15px; margin-bottom: 14px; }
+.ob-plan-h span { display: block; font-family: var(--body); font-weight: 400; font-size: 12px; color: var(--muted); margin-top: 3px; }
+.ob-ct-h { font-family: var(--mono); font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--subtle); margin: 6px 0 10px; }
+.ob-ct-row { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 8px; margin-bottom: 8px; align-items: center; }
+@media (max-width: 640px) { .ob-ct-row { grid-template-columns: 1fr; } }
+.ob-ct-role { font-size: 13px; font-weight: 600; }
+/* review */
+.ob-review { border: 1px solid var(--border); border-radius: 11px; overflow: hidden; margin-bottom: 20px; }
+.ob-rev { display: flex; justify-content: space-between; gap: 16px; padding: 11px 15px; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+.ob-rev:last-child { border-bottom: none; }
+.ob-rev .k { color: var(--muted); }
+.ob-rev .v { text-align: right; font-weight: 600; }
+/* footer nav */
+.ob-nav { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; }
+.ob-nav-mid { font-family: var(--mono); font-size: 11.5px; color: var(--subtle); }

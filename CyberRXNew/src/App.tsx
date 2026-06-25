@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import Login from './pages/Login'
 import Shell from './app/Shell'
+import Onboarding from './onboarding/Onboarding'
 import { useAuth } from './auth/AuthProvider'
 import { supabaseConfigured } from './lib/supabase'
 
@@ -21,6 +22,7 @@ export default function App() {
   if (!supabaseConfigured) {
     return (
       <Routes>
+        <Route path="/onboarding" element={<Onboarding />} />
         <Route path="*" element={<Shell />} />
       </Routes>
     )
@@ -31,14 +33,8 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={session ? <Navigate to="/app" replace /> : <Login />} />
-      <Route
-        path="/app"
-        element={
-          <Protected>
-            <Shell />
-          </Protected>
-        }
-      />
+      <Route path="/app" element={<Protected><Shell /></Protected>} />
+      <Route path="/onboarding" element={<Protected><Onboarding /></Protected>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
