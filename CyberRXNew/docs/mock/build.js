@@ -1,0 +1,164 @@
+const fs=require("fs");
+const intake=fs.readFileSync("cyberrx-intake.html","utf8");
+const os=fs.readFileSync("cyberrx-ciso-os.html","utf8");
+const b64=s=>Buffer.from(s,"utf8").toString("base64");
+const shell=`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberRx · Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:"Public Sans",system-ui,sans-serif;background:#0A1B2E}
+  .switcher{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:9990;display:none;align-items:center;gap:4px;background:rgba(12,28,46,.9);backdrop-filter:blur(8px);border:1px solid #33506E;border-radius:99px;padding:4px;box-shadow:0 8px 28px rgba(0,0,0,.32)}
+  .switcher.show{display:flex}
+  .switcher .swlbl{font-family:inherit;font-weight:600;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#6b7682;padding:0 8px 0 10px;white-space:nowrap}
+  .switcher button{font-family:inherit;font-weight:600;font-size:12.5px;color:#9DB0C6;background:none;border:none;border-radius:99px;padding:7px 16px;cursor:pointer}
+  .switcher button.on{color:#fff;background:#0A4DC4}
+  .frame{position:fixed;inset:0;width:100%;height:100%;border:none;display:none}
+  .frame.show{display:block}
+
+  /* ===== Login / MFA front door ===== */
+  .login{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(1200px 700px at 50% -10%,rgba(10,77,196,.18),transparent 60%),#0A1B2E;overflow:auto;padding:40px 20px}
+  .login.hide{display:none}
+  .login::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.04;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  .lcard{position:relative;width:100%;max-width:400px;background:rgba(12,28,46,.72);backdrop-filter:blur(14px);border:1px solid #22394F;border-radius:18px;padding:34px 32px;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+  .lbrand{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .lbrand .mk{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#4F90FF,#0A4DC4);display:flex;align-items:center;justify-content:center;color:#fff;font-family:"Space Grotesk";font-weight:700;font-size:16px}
+  .lbrand .nm{font-family:"Space Grotesk";font-weight:700;font-size:18px;color:#E8EEF6}
+  .lbrand .nm b{color:#4F90FF}
+  .lsub{font-size:13px;color:#8A8F98;margin-bottom:24px;line-height:1.5}
+  .lstep{display:none} .lstep.on{display:block}
+  .llabel{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#8A8F98;margin:16px 0 7px}
+  .linput{width:100%;background:rgba(11,14,19,.6);border:1px solid #2C3744;border-radius:10px;padding:12px 14px;color:#E8EEF6;font-family:inherit;font-size:14px;outline:none}
+  .linput:focus{border-color:#4F90FF}
+  .lbtn{width:100%;margin-top:22px;background:#0A4DC4;color:#fff;border:none;border-radius:10px;padding:13px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer}
+  .lbtn:hover{background:#1E5FD6}
+  .lrole{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
+  .lrolechip{font-family:inherit;font-weight:600;font-size:12px;color:#C5CBD3;background:rgba(11,14,19,.5);border:1px solid #2C3744;border-radius:8px;padding:7px 11px;cursor:pointer}
+  .lrolechip.on{border-color:#4F90FF;background:rgba(10,77,196,.16);color:#fff}
+  .mfa-row{display:flex;gap:8px;justify-content:space-between}
+  .mfa-row input{width:46px;height:54px;text-align:center;font-family:"JetBrains Mono",monospace;font-size:22px;background:rgba(11,14,19,.6);border:1px solid #2C3744;border-radius:10px;color:#E8EEF6;outline:none}
+  .mfa-row input:focus{border-color:#4F90FF}
+  .lhint{font-size:11.5px;color:#8A93A1;margin-top:14px;text-align:center;line-height:1.5}
+  .lback{background:none;border:none;color:#8A8F98;font-family:inherit;font-size:12.5px;cursor:pointer;margin-top:14px;padding:0}
+  .lback:hover{color:#E8EEF6}
+  .lsec{display:flex;align-items:center;gap:7px;justify-content:center;margin-top:20px;font-family:"JetBrains Mono",monospace;font-size:10.5px;color:#7C8490}
+</style>
+</head>
+<body>
+  <!-- LOGIN / MFA -->
+  <div class="login" id="login">
+    <div class="lcard">
+      <div class="lbrand"><span class="mk">C</span><span class="nm">Cyber<b>Rx</b></span></div>
+
+      <div class="lstep on" id="step1">
+        <div class="lsub">Executive cyber-risk operating system. Sign in to your cockpit.</div>
+        <div class="llabel">Work email</div>
+        <input class="linput" id="email" type="email" value="sarah.chen@meridian.health" autocomplete="username">
+        <div class="llabel">Password</div>
+        <input class="linput" id="pwd" type="password" value="••••••••••" autocomplete="current-password">
+        <div class="llabel">Sign in as (demo)</div>
+        <div class="lrole" id="roleRow">
+          <button class="lrolechip" data-role="ceo" data-name="Marcus">CEO</button>
+          <button class="lrolechip on" data-role="ciso" data-name="Sarah">CISO</button>
+          <button class="lrolechip" data-role="cfo" data-name="Diane">CFO</button>
+          <button class="lrolechip" data-role="cio" data-name="Raj">CIO</button>
+          <button class="lrolechip" data-role="clo" data-name="Patricia">CLO</button>
+          <button class="lrolechip" data-role="cro" data-name="Sloan">CRO</button>
+          <button class="lrolechip" data-role="board" data-name="Chair">Board</button>
+        </div>
+        <button class="lbtn" id="toMfa">Continue</button>
+        <div class="lsec">🔒 SSO + SCIM provisioning supported in production</div>
+      </div>
+
+      <div class="lstep" id="step2">
+        <div class="lsub">Two-factor authentication. Enter the 6-digit code from your authenticator app.</div>
+        <div class="llabel">Verification code</div>
+        <div class="mfa-row" id="mfaRow">
+          <input maxlength="1" inputmode="numeric" value="4"><input maxlength="1" inputmode="numeric" value="1"><input maxlength="1" inputmode="numeric" value="8"><input maxlength="1" inputmode="numeric" value="2"><input maxlength="1" inputmode="numeric" value="0"><input maxlength="1" inputmode="numeric" value="7">
+        </div>
+        <button class="lbtn" id="verify">Verify &amp; enter</button>
+        <button class="lback" id="backTo1">← Use a different account</button>
+        <div class="lhint">Demo: any 6 digits work. Production enforces TOTP / FIDO2 hardware keys.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="switcher" id="switcher">
+    <span class="swlbl">View</span>
+    <button id="swIntake">Onboarding</button>
+    <button id="swOS" class="on">Operating System</button>
+  </div>
+  <iframe class="frame" id="fIntake"></iframe>
+  <iframe class="frame" id="fOS"></iframe>
+<script>
+  function b64ToUtf8(b){return decodeURIComponent(Array.prototype.map.call(atob(b),c=>"%"+("00"+c.charCodeAt(0).toString(16)).slice(-2)).join(""));}
+  var INTAKE="__INTAKE__", OSDOC="__OS__";
+  document.getElementById("fIntake").srcdoc=b64ToUtf8(INTAKE);
+  document.getElementById("fOS").srcdoc=b64ToUtf8(OSDOC);
+
+  var pickedRole="ciso", pickedName="Sarah";
+  document.querySelectorAll("#roleRow .lrolechip").forEach(function(c){
+    c.addEventListener("click",function(){
+      pickedRole=c.dataset.role; pickedName=c.dataset.name;
+      document.querySelectorAll("#roleRow .lrolechip").forEach(function(x){x.classList.toggle("on",x===c);});
+      var em=document.getElementById("email");
+      em.value=pickedName.toLowerCase()+"@meridian.health";
+    });
+  });
+  document.getElementById("toMfa").addEventListener("click",function(){
+    document.getElementById("step1").classList.remove("on");
+    document.getElementById("step2").classList.add("on");
+    var f=document.querySelector("#mfaRow input"); if(f)f.focus();
+  });
+  document.getElementById("backTo1").addEventListener("click",function(){
+    document.getElementById("step2").classList.remove("on");
+    document.getElementById("step1").classList.add("on");
+  });
+  // auto-advance MFA boxes
+  document.querySelectorAll("#mfaRow input").forEach(function(inp,i,arr){
+    inp.addEventListener("input",function(){if(inp.value&&arr[i+1])arr[i+1].focus();});
+  });
+  function osMsg(m){var f=document.getElementById("fOS");if(f.contentWindow)f.contentWindow.postMessage(m,"*");}
+  function enterPlatform(){
+    document.getElementById("login").classList.add("hide");
+    document.getElementById("switcher").classList.add("show");
+    show("os");
+    osMsg({type:"cyberrx-auth",role:pickedRole,name:pickedName});
+  }
+  document.getElementById("verify").addEventListener("click",enterPlatform);
+
+  function show(which){
+    var i=which==="intake";
+    document.getElementById("fIntake").classList.toggle("show",i);
+    document.getElementById("fOS").classList.toggle("show",!i);
+    document.getElementById("swIntake").classList.toggle("on",i);
+    document.getElementById("swOS").classList.toggle("on",!i);
+    osMsg(i?"cyberrx-os-inactive":"cyberrx-os-active");
+  }
+  document.getElementById("swIntake").addEventListener("click",function(){show("intake");});
+  document.getElementById("swOS").addEventListener("click",function(){show("os");});
+  window.addEventListener("message",function(e){
+    if(e.data && e.data.type==="cyberrx-golive"){ osMsg({type:"cyberrx-golive",names:e.data.names,industry:e.data.industry}); setTimeout(function(){show("os");},600); }
+    else if(e.data==="cyberrx-golive"){ setTimeout(function(){show("os");},600); }
+    else if(e.data==="cyberrx-signout"){
+      document.getElementById("switcher").classList.remove("show");
+      document.getElementById("fIntake").classList.remove("show");
+      document.getElementById("fOS").classList.remove("show");
+      document.getElementById("login").classList.remove("hide");
+      document.getElementById("step2").classList.remove("on");
+      document.getElementById("step1").classList.add("on");
+    }
+  });
+<\/script>
+</body>
+</html>`;
+const out=shell.replace("__INTAKE__",b64(intake)).replace("__OS__",b64(os));
+fs.writeFileSync("cyberrx-platform.html",out);
+console.log("rebuilt with login, bytes:",out.length);

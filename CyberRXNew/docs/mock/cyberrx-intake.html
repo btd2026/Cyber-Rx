@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberRx · Onboarding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --brand:#0A4DC4; --brand-tint:rgba(10,77,196,.09);
+    --pass:#2FA37A; --pass-tint:rgba(47,163,122,.10);
+    --exposure:#C2772E; --exposure-tint:rgba(194,119,46,.10);
+    --critical:#C2443C; --critical-tint:rgba(194,68,60,.10);
+    --gold:#B8860B; --gold-tint:rgba(184,134,11,.12);
+    --bg:#EEF3FA; --surface:#FFFFFF; --glass:rgba(255,255,255,.62);
+    --border:#D3DEEC; --border-strong:#AAB9CC;
+    --text:#0A1A2E; --muted:#46586E; --subtle:#637488;
+    --display:'Space Grotesk',sans-serif; --body:'Public Sans',sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  [data-theme="dark"]{
+    --brand:#4F90FF; --brand-tint:rgba(79,144,255,.13);
+    --pass:#3FBF92; --pass-tint:rgba(63,191,146,.14);
+    --exposure:#E0A968; --exposure-tint:rgba(224,169,104,.14);
+    --critical:#E0635B; --critical-tint:rgba(224,99,91,.14);
+    --gold:#E0B84E; --gold-tint:rgba(224,184,78,.15);
+    --bg:#0A1B2E; --surface:#102537; --glass:rgba(12,28,46,.6);
+    --border:#22394F; --border-strong:#33506E;
+    --text:#E8EEF6; --muted:#9DB0C6; --subtle:#8497AD;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--body);background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;position:relative}
+  body::before{content:"";position:fixed;inset:0;background:radial-gradient(60% 50% at 70% 0%,var(--brand-tint),transparent 70%);pointer-events:none;z-index:0}
+  body::after{content:"";position:fixed;inset:0;opacity:.025;pointer-events:none;z-index:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  .app{position:relative;z-index:1;max-width:1240px;margin:0 auto;padding:0 24px 60px}
+  header{display:flex;align-items:center;justify-content:space-between;padding:18px 0;position:sticky;top:0;background:linear-gradient(var(--bg),var(--bg) 70%,transparent);z-index:20}
+  .brand{display:flex;align-items:center;gap:11px;font-family:var(--display);font-weight:600;font-size:17px}
+  .brand .dot{width:11px;height:11px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 4px var(--brand-tint)}
+  .brand .sub{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--subtle);margin-left:4px}
+  .hright{display:flex;align-items:center;gap:12px}
+  .saved{font-family:var(--mono);font-size:11px;color:var(--pass);display:flex;align-items:center;gap:6px}
+  .saved .d{width:6px;height:6px;border-radius:50%;background:var(--pass)}
+  .toggle{font-family:var(--body);font-weight:600;font-size:13px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 11px;cursor:pointer}
+  .toggle:hover{border-color:var(--border-strong);color:var(--text)}
+
+  .hero{padding:14px 0 22px;border-bottom:1px solid var(--border);margin-bottom:26px}
+  .hero h1{font-family:var(--display);font-weight:600;font-size:27px;letter-spacing:-.02em;line-height:1.15}
+  .hero p{font-size:14.5px;color:var(--muted);margin-top:8px;max-width:700px;line-height:1.55}
+  .hero .complete{display:flex;align-items:center;gap:14px;margin-top:18px}
+  .hero .bar{flex:1;max-width:420px;height:8px;background:var(--border);border-radius:99px;overflow:hidden}
+  .hero .bar i{display:block;height:100%;width:0;background:var(--brand);border-radius:99px;transition:width .5s}
+  .hero .pct{font-family:var(--mono);font-size:12px;color:var(--text)}
+  .hero .pct b{color:var(--brand)}
+
+  .grid{display:grid;grid-template-columns:230px 1fr 280px;gap:26px;align-items:start}
+  @media (max-width:1080px){.grid{grid-template-columns:200px 1fr}.rail{display:none}}
+  @media (max-width:720px){.grid{grid-template-columns:1fr}.stepper{display:none}}
+  .stepper{position:sticky;top:92px;display:flex;flex-direction:column;gap:2px}
+  .step{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border-radius:10px;cursor:pointer;border:1px solid transparent}
+  .step:hover{background:var(--glass)}
+  .step.active{background:var(--glass);border-color:var(--border)}
+  .step .ix{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--border-strong);color:var(--muted);font-family:var(--mono);font-size:11px;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px}
+  .step.active .ix{border-color:var(--brand);color:var(--brand);background:var(--brand-tint)}
+  .step.done .ix{border-color:var(--pass);background:var(--pass);color:#fff}
+  .step .sl{font-size:13px;font-weight:600;line-height:1.25}
+  .step .sd{font-size:11px;color:var(--subtle);margin-top:2px}
+
+  .panel{background:var(--glass);border:1px solid var(--border);border-radius:16px;padding:26px 28px;min-height:440px}
+  .panel-h{margin-bottom:20px}
+  .panel-h .step-of{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--brand)}
+  .panel-h h2{font-family:var(--display);font-weight:600;font-size:21px;margin-top:7px;letter-spacing:-.01em}
+  .panel-h p{font-size:13.5px;color:var(--muted);margin-top:6px;line-height:1.5;max-width:600px}
+
+  .field{margin-bottom:16px}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:6px}
+  .field .hint{font-weight:400;color:var(--subtle);font-size:11.5px;margin-left:6px}
+  .field input,.field select{width:100%;font-family:var(--body);font-size:14px;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:10px 12px;outline:none}
+  .field input:focus,.field select:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-tint)}
+  .field input::placeholder{color:var(--subtle)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  @media (max-width:560px){.row2,.row3{grid-template-columns:1fr}}
+  .chips{display:flex;flex-wrap:wrap;gap:9px}
+  .pick{font-family:var(--body);font-size:13px;font-weight:500;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:99px;padding:8px 15px;cursor:pointer;user-select:none}
+  .pick:hover{border-color:var(--border-strong)}
+  .pick.on{color:var(--brand);border-color:var(--brand);background:var(--brand-tint)}
+  .pick.on::before{content:"✓ ";font-family:var(--mono)}
+
+  /* credibility meter */
+  .cred{background:var(--surface);border:1px solid var(--border-strong);border-radius:13px;padding:15px 17px;margin-bottom:20px}
+  .cred-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+  .cred-top .ct{font-family:var(--display);font-weight:600;font-size:14px}
+  .cred-top .cv{font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:6px;font-weight:500}
+  .cred-top .cv.l0{color:var(--critical);background:var(--critical-tint)} .cred-top .cv.l1{color:var(--exposure);background:var(--exposure-tint)} .cred-top .cv.l2{color:var(--brand);background:var(--brand-tint)} .cred-top .cv.l3{color:var(--pass);background:var(--pass-tint)}
+  .cred-bar{height:9px;background:var(--border);border-radius:99px;overflow:hidden}
+  .cred-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brand),var(--pass));border-radius:99px;transition:width .6s}
+  .cred-meta{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:8px}
+  .cred-meta b{color:var(--text)}
+
+  /* connectors */
+  .conn{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+  .conn-h{display:flex;align-items:center;gap:12px}
+  .conn-ic{width:34px;height:34px;border-radius:9px;background:var(--brand-tint);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:15px;flex:none}
+  .conn-t{flex:1;min-width:0}
+  .conn-t .cn{font-size:14px;font-weight:600}
+  .conn-t .cc{font-family:var(--mono);font-size:10.5px;color:var(--subtle);margin-top:1px}
+  .conn-st{font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:6px;white-space:nowrap}
+  .conn-st.no{color:var(--muted);background:var(--border)} .conn-st.ing{color:var(--exposure);background:var(--exposure-tint)} .conn-st.on{color:var(--pass);background:var(--pass-tint)}
+  .conn-body{display:none;margin-top:13px;padding-top:13px;border-top:1px solid var(--border)}
+  .conn.open .conn-body{display:block}
+  .conn-row{display:grid;grid-template-columns:1.4fr 1fr auto;gap:10px;align-items:end}
+  @media (max-width:560px){.conn-row{grid-template-columns:1fr}}
+  .conn-row .field{margin:0}
+  .conn-row .field label{font-size:11px}
+  .conn-row .field input,.conn-row .field select{padding:8px 10px;font-size:13px}
+  .conn-go{font-family:var(--body);font-weight:600;font-size:13px;color:#fff;background:var(--brand);border:none;border-radius:8px;padding:9px 16px;cursor:pointer;white-space:nowrap}
+  .conn-go:hover{filter:brightness(1.07)}
+  .conn-go.done{background:var(--pass-tint);color:var(--pass);cursor:default}
+  .conn-info{margin-top:12px;font-size:12px;line-height:1.55;color:var(--muted)}
+  .conn-info .pl{color:var(--text);font-weight:600} .conn-info .an{color:var(--brand);font-weight:600}
+  .conn-toggle{font-family:var(--mono);font-size:11px;color:var(--brand);cursor:pointer;margin-left:8px;white-space:nowrap}
+
+  /* uploads / extraction */
+  .drop{border:1.5px dashed var(--border-strong);border-radius:13px;padding:24px;text-align:center;cursor:pointer;background:var(--surface);transition:.15s}
+  .drop:hover{border-color:var(--brand);background:var(--brand-tint)}
+  .drop .ic{font-size:24px}.drop .t{font-family:var(--display);font-weight:600;font-size:15px;margin-top:8px}.drop .s{font-size:12.5px;color:var(--subtle);margin-top:4px}
+  .extracting{font-family:var(--mono);font-size:12px;color:var(--exposure);margin-top:14px;display:flex;align-items:center;gap:8px}
+  .extracting .sp{width:13px;height:13px;border:2px solid var(--border);border-top-color:var(--exposure);border-radius:50%;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .extracted-h{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--pass);margin:16px 0 9px}
+  .srcchoice{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:560px){.srcchoice{grid-template-columns:1fr}}
+  .srcopt{text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 16px;cursor:pointer;font-family:var(--body)}
+  .srcopt:hover{border-color:var(--brand)}
+  .srcopt.sel{border-color:var(--brand);background:var(--brand-tint)}
+  .srcopt .so-h{font-family:var(--display);font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px}
+  .srcopt .so-d{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.45}
+  .rec-tag{font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--pass);background:var(--pass-tint);padding:2px 7px;border-radius:5px}
+  .srcbox{margin-top:16px}
+  .srcbox .conn-row{display:grid;grid-template-columns:1.2fr 1.4fr auto;gap:10px;align-items:end}
+  @media (max-width:560px){.srcbox .conn-row{grid-template-columns:1fr}}
+  .srcbox .field{margin:0}.srcbox .field label{font-size:11px}.srcbox .field input,.srcbox .field select{padding:8px 10px;font-size:13px}
+  .xlist{display:flex;flex-direction:column;gap:8px}
+  .xrow{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px}
+  .xrow .xi{width:28px;height:28px;border-radius:7px;background:var(--brand-tint);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:13px;flex:none}
+  .xrow .xn{flex:1;min-width:0}.xrow .xn .nm{font-size:13.5px;font-weight:600}.xrow .xn .mt{font-family:var(--mono);font-size:10.5px;color:var(--subtle);margin-top:2px}
+  .crit{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:5px}
+  .crit.h{color:var(--critical);background:var(--critical-tint)}.crit.m{color:var(--exposure);background:var(--exposure-tint)}.crit.l{color:var(--pass);background:var(--pass-tint)}
+
+  /* mapping + crown jewels */
+  .maprow{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:12px 15px;margin-bottom:9px}
+  .maprow .ap{font-weight:600;font-size:13.5px;min-width:150px}
+  .maprow .ar{color:var(--subtle);font-family:var(--mono)}
+  .maprow .pr{flex:1;font-size:13.5px}
+  .maprow .conf{font-family:var(--mono);font-size:11px;padding:3px 8px;border-radius:6px}
+  .maprow .conf.hi{color:var(--pass);background:var(--pass-tint)}.maprow .conf.lo{color:var(--exposure);background:var(--exposure-tint)}
+  .maprow .cf{font-family:var(--body);font-weight:600;font-size:12px;border:1px solid var(--border);background:var(--surface);border-radius:7px;padding:6px 11px;cursor:pointer;white-space:nowrap}
+  .maprow.confirmed{border-color:color-mix(in srgb,var(--pass) 35%,transparent)}
+  .maprow.confirmed .cf{color:var(--pass);border-color:color-mix(in srgb,var(--pass) 35%,transparent);background:var(--pass-tint)}
+  .maprow.confirmed .cf::before{content:"✓ "}
+  .mapbtn{margin-top:6px;font-family:var(--body);font-weight:600;font-size:13.5px;color:#fff;background:var(--brand);border:none;border-radius:10px;padding:11px 18px;cursor:pointer}
+  .mapbtn:hover{filter:brightness(1.07)}
+  .cjwrap{margin-top:22px;display:none}.cjwrap.show{display:block;animation:fade .5s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .cj-sum{font-family:var(--display);font-weight:600;font-size:16px;margin-bottom:4px}
+  .cj-sub{font-size:13px;color:var(--muted);margin-bottom:18px}.cj-sub b{color:var(--gold)}
+  .cjmap{position:relative;display:grid;grid-template-columns:1fr 1fr 1fr;gap:40px}
+  .colh{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--subtle);margin-bottom:11px;text-align:center}
+  .cjcol{display:flex;flex-direction:column;gap:10px}
+  .node{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;position:relative;z-index:2}
+  .node .nn{font-size:12.5px;font-weight:600;line-height:1.2}.node .nd{font-family:var(--mono);font-size:10px;color:var(--subtle);margin-top:3px}
+  .node.proc{border-left:3px solid var(--muted)}.node.proc.h{border-left-color:var(--critical)}.node.proc.m{border-left-color:var(--exposure)}.node.proc.l{border-left-color:var(--pass)}
+  .node.cjwel{border-color:var(--gold);background:var(--gold-tint)}
+  .node.cjwel .badge{font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
+  .node.cjwel .score{font-family:var(--mono);font-size:10px;color:var(--gold);float:right}
+  .node.cjwel .why{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.4}
+  .cjsvg{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;overflow:visible}
+  .ln{fill:none;stroke:var(--brand);opacity:.32;stroke-width:1.5}.ln.id{stroke-dasharray:4 4;opacity:.22}.ln.cj{stroke:var(--gold);opacity:.55;stroke-width:2}
+  @media (max-width:680px){.cjmap{grid-template-columns:1fr;gap:14px}.cjsvg{display:none}}
+
+  /* documents */
+  .doclist{margin-top:16px;display:flex;flex-direction:column;gap:9px}
+  .doc{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 14px}
+  .doc .fi{width:30px;height:30px;border-radius:7px;background:var(--brand-tint);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:14px;flex:none}
+  .doc .dn{flex:1;min-width:0}.doc .dn .nm{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.doc .dn .mt{font-family:var(--mono);font-size:10.5px;color:var(--subtle);margin-top:2px}
+  .doc .st{font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:6px;white-space:nowrap}
+  .doc .st.up{color:var(--muted);background:var(--border)}.doc .st.ex{color:var(--exposure);background:var(--exposure-tint)}.doc .st.mp{color:var(--pass);background:var(--pass-tint)}
+  .docnote{font-size:12.5px;line-height:1.5;color:var(--muted);background:var(--brand-tint);border:1px solid color-mix(in srgb,var(--brand) 22%,transparent);border-radius:10px;padding:11px 13px;margin-bottom:14px}
+  .docprog{font-family:var(--mono);font-size:11.5px;color:var(--text);margin-bottom:16px}.docprog b{color:var(--brand)}
+  .dgroup{margin-bottom:18px}
+  .dgh{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--subtle);margin-bottom:9px}
+  .drow{display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 14px;margin-bottom:8px}
+  .drow .di{width:28px;height:28px;border-radius:7px;background:var(--brand-tint);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:13px;flex:none}
+  .drow .dn{flex:1;min-width:0}.drow .dn .nm{font-size:13px;font-weight:600}.drow .dn .ev{font-family:var(--mono);font-size:10px;color:var(--subtle);margin-top:2px}
+  .drow .dup{font-family:var(--body);font-weight:600;font-size:12px;color:var(--brand);background:var(--brand-tint);border:1px solid color-mix(in srgb,var(--brand) 30%,transparent);border-radius:7px;padding:6px 12px;cursor:pointer;white-space:nowrap}
+  .drow .dup:hover{filter:brightness(.97)}
+  .drow .dst{font-family:var(--mono);font-size:11px;padding:4px 9px;border-radius:6px;white-space:nowrap}
+  .drow .dst.rd{color:var(--exposure);background:var(--exposure-tint)}.drow .dst.ok{color:var(--pass);background:var(--pass-tint)}
+  .checklist{margin-top:18px}.checklist .cl-h{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--subtle);margin-bottom:9px}
+  .clrow{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:13px;border-top:1px solid var(--border)}.clrow:first-of-type{border-top:none}
+  .clrow .b{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--border-strong);flex:none}
+  .clrow.have .b{background:var(--pass);border-color:var(--pass)}.clrow.have .b::after{content:"✓";color:#fff;font-size:11px;display:block;text-align:center;line-height:14px}.clrow.have{color:var(--muted)}
+
+  /* per-seat data needs */
+  .seattabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+  .stab{font-family:var(--body);font-weight:600;font-size:12.5px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 13px;cursor:pointer}
+  .stab:hover{border-color:var(--border-strong)}
+  .stab.on{color:#fff;background:var(--brand);border-color:var(--brand)}
+  .seatq{font-size:13px;color:var(--muted);margin-bottom:14px;font-style:italic}
+  .need{display:flex;align-items:flex-start;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:13px 15px;margin-bottom:10px}
+  .need .src{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:5px;white-space:nowrap;margin-top:2px;flex:none}
+  .need .src.live{color:var(--pass);background:var(--pass-tint)} .need .src.doc{color:var(--brand);background:var(--brand-tint)} .need .src.derived{color:var(--brand);background:var(--brand-tint)} .need .src.declare{color:var(--exposure);background:var(--exposure-tint)} .need .src.off{color:var(--muted);background:var(--border)}
+  .need .nb{flex:1;min-width:0}
+  .need .ni{font-size:13.5px;font-weight:600}
+  .need .nm2{font-size:11.5px;color:var(--subtle);margin-top:2px;font-family:var(--mono)}
+  .need .df{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+  @media (max-width:560px){.need .df{grid-template-columns:1fr}}
+  .need .df input{width:100%;font-family:var(--body);font-size:13px;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 11px;outline:none}
+  .need .df input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-tint)}
+  .need .df input::placeholder{color:var(--subtle)}
+  .need .dfield{display:flex;flex-direction:column;gap:4px}
+  .need .dfield label{font-family:var(--mono);font-size:10px;letter-spacing:.03em;text-transform:uppercase;color:var(--subtle)}
+  .need .dfield input,.need .dfield select{width:100%;font-family:var(--body);font-size:13px;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 11px;outline:none}
+  .need .dfield input:focus,.need .dfield select:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-tint)}
+  .need .carrier-other{margin-top:6px}
+  .need .moneyf{display:flex;align-items:stretch;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--bg)}
+  .need .moneyf:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-tint)}
+  .need .moneyf .cur{display:flex;align-items:center;padding:0 9px;font-family:var(--mono);font-size:13px;color:var(--muted);background:var(--glass);border-right:1px solid var(--border)}
+  .need .moneyf .mnum{flex:1;border:none!important;box-shadow:none!important;background:transparent;text-align:right;font-family:var(--mono)}
+  .need .moneyf .unit{display:flex;align-items:center;padding:0 11px;font-family:var(--mono);font-size:12px;color:var(--muted);background:var(--glass);border-left:1px solid var(--border)}
+  .need .money-eq{font-family:var(--mono);font-size:10.5px;color:var(--pass);min-height:13px}
+  .moneyf{display:flex;align-items:stretch;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--bg)}
+  .moneyf:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-tint)}
+  .moneyf .cur{display:flex;align-items:center;padding:0 9px;font-family:var(--mono);font-size:13px;color:var(--muted);background:var(--glass);border-right:1px solid var(--border)}
+  .moneyf .mnum{flex:1;border:none!important;outline:none;box-shadow:none!important;background:transparent;text-align:right;font-family:var(--mono);font-size:13px;color:var(--text);padding:8px 11px}
+  .moneyf .unit{display:flex;align-items:center;padding:0 11px;font-family:var(--mono);font-size:12px;color:var(--muted);background:var(--glass);border-left:1px solid var(--border)}
+  .money-eq{font-family:var(--mono);font-size:10.5px;color:var(--pass);min-height:13px;margin-top:4px}
+  .planbox{margin-top:11px;display:flex;flex-direction:column;gap:10px}
+  .planup{font-family:var(--body);font-weight:600;font-size:13px;color:var(--brand);background:var(--brand-tint);border:1px dashed var(--brand);border-radius:9px;padding:10px 13px;cursor:pointer;text-align:left}
+  .planct-h{font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--subtle);display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
+  .planct-h span{text-transform:none;letter-spacing:0;font-size:10.5px;color:var(--subtle)}
+  .planct{display:flex;flex-direction:column;gap:7px}
+  .ctrow{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;align-items:center}
+  @media(max-width:560px){.ctrow{grid-template-columns:1fr}}
+  .ctrow .ctrole{font-size:12.5px;color:var(--text);font-weight:500}
+  .ctrow input{font-family:var(--body);font-size:13px;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 11px;outline:none}
+  .ctrow input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-tint)}
+
+  /* review */
+  .rev-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:18px}
+  @media (max-width:560px){.rev-grid{grid-template-columns:1fr}}
+  .rev{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:14px 16px}
+  .rev .k{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--subtle)}
+  .rev .v{font-family:var(--display);font-weight:600;font-size:17px;margin-top:5px}
+  .gen{background:var(--brand-tint);border:1px solid color-mix(in srgb,var(--brand) 28%,transparent);border-radius:12px;padding:16px 18px}
+  .gen h4{font-family:var(--display);font-weight:600;font-size:15px;margin-bottom:8px}
+  .gen ul{list-style:none;display:flex;flex-direction:column;gap:7px}.gen li{font-size:13.5px;display:flex;gap:9px;line-height:1.45}.gen li::before{content:"→";color:var(--brand);flex:none}
+
+  .nav{display:flex;align-items:center;justify-content:space-between;margin-top:24px}
+  .btn{font-family:var(--body);font-weight:600;font-size:14px;border-radius:10px;padding:11px 20px;cursor:pointer;border:1px solid var(--border)}
+  .btn.ghost{background:var(--surface);color:var(--text)}.btn.ghost:hover{border-color:var(--border-strong)}
+  .btn.primary{background:var(--brand);color:#fff;border-color:var(--brand)}.btn.primary:hover{filter:brightness(1.07)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .rail{position:sticky;top:92px;display:flex;flex-direction:column;gap:16px}
+  .card{background:var(--glass);border:1px solid var(--border);border-radius:14px;padding:16px 17px}
+  .card h5{font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--brand);margin-bottom:10px}
+  .card .why{font-size:13px;line-height:1.55;color:var(--muted)}
+  .once{font-size:12px;line-height:1.5;color:var(--muted);background:var(--pass-tint);border:1px solid color-mix(in srgb,var(--pass) 28%,transparent);border-radius:10px;padding:11px 13px}.once b{color:var(--pass)}
+  .concierge .cc-h{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+  .cc-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--brand),#5E9BFF);color:#fff;font-family:var(--display);font-weight:600;font-size:15px;display:flex;align-items:center;justify-content:center;flex:none}
+  .cc-nm{font-family:var(--display);font-weight:600;font-size:14px}
+  .cc-role{font-family:var(--mono);font-size:10px;color:var(--subtle)}
+  .cc-tip{font-size:12.5px;line-height:1.55;color:var(--muted)}
+  .cc-call{width:100%;margin-top:13px;font-family:var(--body);font-weight:600;font-size:12.5px;color:var(--brand);background:var(--brand-tint);border:1px solid color-mix(in srgb,var(--brand) 30%,transparent);border-radius:9px;padding:9px 12px;cursor:pointer}
+  .cc-call:hover{filter:brightness(.97)}
+  .cc-call.req{color:var(--pass);background:var(--pass-tint);border-color:color-mix(in srgb,var(--pass) 30%,transparent);cursor:default}
+  .livedot{width:6px;height:6px;border-radius:50%;background:var(--pass);display:inline-block;margin-right:6px;vertical-align:middle;animation:lp 1.4s ease-in-out infinite}
+  @keyframes lp{0%,100%{opacity:1;box-shadow:0 0 0 0 color-mix(in srgb,var(--pass) 60%,transparent)}50%{opacity:.6;box-shadow:0 0 0 4px transparent}}
+  @media (prefers-reduced-motion:reduce){.livedot{animation:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand"><span class="dot"></span>CyberRx <span class="sub">Onboarding</span></div>
+    <div class="hright"><span class="saved"><span class="d"></span>Saved · just now</span><button class="toggle" id="themeBtn">◐</button></div>
+  </header>
+  <div class="hero">
+    <h1>Let's set up your cyber operating system</h1>
+    <p>The credibility of every answer depends on where the data comes from. We pull most of it <b>live from your security stack</b>, extract the rest from your documents, and ask you only for what no system can report — so every executive sees evidence, not guesses.</p>
+    <div class="complete"><div class="bar"><i id="heroBar"></i></div><div class="pct"><b id="heroPct">0%</b> complete</div></div>
+  </div>
+  <div class="grid">
+    <nav class="stepper" id="stepper"></nav>
+    <main>
+      <div class="panel" id="panel"></div>
+      <div class="nav"><button class="btn ghost" id="backBtn">← Back</button><button class="btn primary" id="nextBtn">Save &amp; continue →</button></div>
+    </main>
+    <aside class="rail">
+      <div class="card concierge">
+        <div class="cc-h"><div class="cc-av">S</div><div><div class="cc-nm">Sam</div><div class="cc-role">Your onboarding concierge</div></div></div>
+        <div class="cc-tip" id="ccTip"></div>
+        <button class="cc-call" id="ccCall">📞 Book a 20-min onboarding call</button>
+      </div>
+      <div class="card"><h5>Why we ask</h5><div class="why" id="whyText"></div></div>
+      <div class="once">✦ <b>Live beats typed.</b> Data piped from your EDR, SIEM, identity and cloud is what makes “1,240 signals · 99.4% coverage · signed” true — and what an executive can defend to the board.</div>
+    </aside>
+  </div>
+</div>
+
+<script>
+  document.getElementById('themeBtn').addEventListener('click',()=>{const h=document.documentElement;h.dataset.theme=h.dataset.theme==='dark'?'light':'dark';if(mapDone)drawMap();});
+
+  const STEPS=[
+    {t:'Organization profile',d:'Who you are',why:'Your profile sets the rules — which regulations apply, what data you must protect, and which frameworks you\'ll be measured against.'},
+    {t:'Connect your systems',d:'The evidence spine',why:'This is what makes your numbers credible. We pull live from your EDR, SIEM, firewall, identity, cloud and more — so every figure traces to a real source, with freshness.'},
+    {t:'Business processes',d:'Upload your process list',why:'Upload your process list or BIA. We extract each process so answers speak in business terms — “claims, $220M/day,” not “cluster 3.”'},
+    {t:'Applications',d:'Upload your inventory',why:'Upload your app inventory or CMDB export. We extract every system so we can map each to the processes it supports.'},
+    {t:'Auto-map & crown jewels',d:'The core intelligence',why:'We infer which app supports which process, you confirm, and we deduce your crown jewels — the systems whose loss would hurt the business most.'},
+    {t:'Documents',d:'Evidence in files',why:'Your policies and reports are evidence. We extract, tag, and map their contents to controls automatically.'},
+    {t:'Executive data needs',d:'Per-seat inputs',why:'Working backwards from each executive\'s decisions: we show what\'s already covered by your systems and documents, and collect only the few things no system can report — like insurance, appetite, and board structure.'},
+    {t:'Review & go live',d:'Confirm and launch',why:'A final check. Once you go live, CyberRx generates your seats, framework coverage, crown-jewel map, and your first briefing.'}
+  ];
+
+  // ---- connectors ----
+  const CONN=[
+    {id:'edr',cat:'Endpoint Detection & Response (EDR)',ic:'🛡',w:14,sig:420,vendors:['CrowdStrike Falcon','Microsoft Defender for Endpoint','SentinelOne','VMware Carbon Black','Trend Micro'],pulls:'Live endpoint detections, threats blocked, agent coverage, dwell time.',ans:'CISO “are we under attack / can we operate,” CIO endpoint health.'},
+    {id:'siem',cat:'SIEM / Log analytics',ic:'📊',w:16,sig:510,vendors:['Splunk','Microsoft Sentinel','Elastic Security','IBM QRadar','Google Chronicle'],pulls:'Alerts, correlated incidents, MTTD/MTTC, log coverage.',ans:'CISO operational status & incident timeline, Board assurance.'},
+    {id:'fw',cat:'Firewall / Network',ic:'🧱',w:10,sig:180,vendors:['Palo Alto Networks','Fortinet FortiGate','Cisco Secure Firewall','Check Point','Zscaler'],pulls:'Attacks blocked, exposed services, segmentation gaps.',ans:'CISO threat & exposure, CIO network status.'},
+    {id:'idp',cat:'Identity provider (IdP / SSO)',ic:'🔑',w:14,sig:240,vendors:['Okta','Microsoft Entra ID','Ping Identity','Google Workspace','Duo'],pulls:'MFA coverage, privileged accounts, access reviews, risky sign-ins.',ans:'CISO control validation, CRO access risk, HIPAA/ISO evidence.'},
+    {id:'cloud',cat:'Cloud security posture (CSPM)',ic:'☁',w:12,sig:160,vendors:['AWS Security Hub','Microsoft Defender for Cloud','Wiz','Prisma Cloud','Google SCC'],pulls:'Misconfigurations, internet-exposed assets, IAM risk, inventory.',ans:'CISO exposure, CIO service & asset health.'},
+    {id:'vuln',cat:'Vulnerability management',ic:'🔍',w:10,sig:90,vendors:['Tenable','Qualys','Rapid7 InsightVM','Microsoft Defender VM'],pulls:'Critical vulns, internet-facing exposure, patch latency.',ans:'CISO material exposure, attack-path inputs.'},
+    {id:'email',cat:'Email security',ic:'✉',w:6,sig:70,vendors:['Proofpoint','Mimecast','Abnormal Security','Microsoft Defender for Office'],pulls:'Phishing blocked, account-takeover attempts, BEC signals.',ans:'CISO live threat (phishing → claims).'},
+    {id:'backup',cat:'Backup / DR',ic:'💾',w:10,sig:40,vendors:['Rubrik','Veeam','Cohesity','Commvault','AWS Backup'],pulls:'Recovery readiness, RPO/RTO actuals, immutable-backup status, last DR test.',ans:'CIO recovery, CEO “can we recover,” Board resilience.'},
+    {id:'mdm',cat:'Device management (MDM)',ic:'💻',w:4,sig:30,vendors:['Microsoft Intune','Jamf','VMware Workspace ONE','Kandji'],pulls:'Device compliance, encryption, patch state.',ans:'CISO control coverage.'},
+    {id:'grc',cat:'ITSM / GRC / Ticketing',ic:'🗂',w:4,sig:25,vendors:['ServiceNow','Jira','Archer','Vanta','Drata'],pulls:'Remediation status, change governance, decision & approval records.',ans:'Action Center, audit log, CLO defensibility, decisions.'}
+  ];
+  const TOTAL_SIG=CONN.reduce((s,c)=>s+c.sig,0);
+  const connected={};
+
+  let cur=0;
+  const done=new Array(STEPS.length).fill(false);
+  let procExtracted=false, appExtracted=false, mapDone=false, docCount=0, seatTab='cfo', procLive=false, appLive=false;
+  const seatNames={ceo:'Marcus',ciso:'Sarah',cfo:'Diane',cio:'Raj',clo:'Patricia',cro:'Sloan',board:'Chair'};
+  // Industry chosen here drives the rest of onboarding AND the operating system.
+  let selectedIndustry='healthcare-payer', selectedArch='healthcare';
+  const IMETA={
+   healthcare:{org:'Meridian Health Plan',data:['PHI','PII'],reg:'HIPAA · SEC',ctx:'Framed for healthcare — PHI exposure, HIPAA breach clocks, and claims/care continuity.'},
+   financial:{org:'Atlas Financial Group',data:['PII','PCI','Financial'],reg:'GLBA · NYDFS 500 · SEC',ctx:'Framed for financial services — funds & PII exposure, GLBA / NYDFS 500, payments continuity.'},
+   technology:{org:'Northstar Cloud',data:['PII','Customer data'],reg:'SOC 2 · GDPR',ctx:'Framed for technology / SaaS — customer-data & source-code exposure, SOC 2 / GDPR, platform uptime.'},
+   manufacturing:{org:'Vanguard Industries',data:['IP','OT'],reg:'IEC 62443 · NIST CSF',ctx:'Framed for manufacturing — IP & OT exposure, IEC 62443, production-line continuity.'},
+   energy:{org:'Helios Grid',data:['OT','PII'],reg:'NERC CIP · TSA',ctx:'Framed for energy & utilities — OT/grid exposure, NERC CIP / TSA, grid reliability & safety.'},
+   retail:{org:'Northwind Retail Group',data:['PCI','PII'],reg:'PCI-DSS',ctx:'Framed for retail — cardholder-data exposure, PCI-DSS, checkout & store continuity.'},
+   public:{org:'State of Northland',data:['PII','CJI'],reg:'FISMA · NIST 800-53',ctx:'Framed for public sector — citizen-data exposure, FISMA / NIST 800-53, service continuity.'},
+   defense:{org:'Meridian Aerospace',data:['CUI','Classified'],reg:'CMMC · ITAR',ctx:'Framed for aerospace & defense — CUI/classified exposure, CMMC / ITAR, program continuity.'},
+   services:{org:'Lincoln Advisory',data:['PII','Confidential'],reg:'SOC 2',ctx:'Framed for professional services — client-confidential & privileged data, SOC 2, client delivery.'},
+   transport:{org:'Cardinal Logistics',data:['PII','OT'],reg:'TSA · DOT',ctx:'Framed for transportation & logistics — shipment & customer data, TSA / DOT rules, dispatch continuity.'},
+   generic:{org:'Apex Enterprises',data:['PII'],reg:'SEC · State breach laws',ctx:'Framed for your industry — sensitive-data exposure, SEC & state breach laws, core-operations continuity.'}
+  };
+  function curMeta(){return IMETA[selectedArch]||IMETA.generic;}
+  function chipsHTML(){
+    const on=curMeta().data; const seen={}; const out=[];
+    on.forEach(d=>{seen[d]=1;out.push('<span class="pick on">'+d+'</span>');});
+    ['PHI','PII','PCI','Financial'].forEach(d=>{if(!seen[d]){seen[d]=1;out.push('<span class="pick">'+d+'</span>');}});
+    return out.join('');
+  }
+  const confirmed={};
+
+  const PROCS=[{id:'P1',n:'Claims Processing',c:'h',rev:'$220M/day',data:'PHI'},{id:'P2',n:'Provider Payments',c:'h',rev:'$60M/day',data:'Financial'},{id:'P3',n:'Member Portal',c:'m',rev:'$8M/day',data:'PHI, PII'},{id:'P4',n:'Call Center Ops',c:'m',rev:'—',data:'PII'},{id:'P5',n:'Corporate (internal)',c:'l',rev:'—',data:'Internal'}];
+  const APPS=[{id:'A1',n:'ClaimCore (legacy)',host:'On-prem · single point of failure',data:'PHI',proc:['P1'],conf:98,cj:true,score:96,why:'Sole system under Claims Processing ($220M/day, PHI) — no failover.'},{id:'A2',n:'Okta',host:'SaaS · internet-facing',data:'Identity',proc:['P1','P2','P3','P4'],conf:95,cj:true,score:94,why:'Single identity provider for every process — a compromise is enterprise-wide.'},{id:'A3',n:'Member Portal (AWS)',host:'Cloud · internet-facing',data:'PHI, PII',proc:['P3'],conf:99,cj:true,score:82,why:'Internet-facing; holds PHI/PII for 2.4M members.'},{id:'A4',n:'PayHub',host:'Cloud · internet-facing',data:'Financial',proc:['P2'],conf:92,cj:true,score:80,why:'Moves $60M/day in provider payments; internet-facing.'},{id:'A5',n:'Genesys CC',host:'SaaS',data:'PII',proc:['P4'],conf:88,cj:false},{id:'A6',n:'Confluence',host:'SaaS',data:'Internal docs',proc:['P5'],conf:61,cj:false}];
+  const PROC_BY={};PROCS.forEach(p=>PROC_BY[p.id]=p.n);
+
+  // ---- per-seat data needs ----
+  function liveSrc(){return Object.keys(connected).length>0;}
+  const SEATS=[
+    {id:'ceo',label:'CEO',q:'Are we governing cyber risk responsibly — and could we be surprised?',needs:[
+      {i:'Business & revenue exposure',src:'derived',m:'computed from your processes'},
+      {i:'Crisis management readiness',src:'declare',m:'no system reports this',df:['Date of last crisis tabletop','Exercise cadence (e.g. annual)']},
+      {i:'Delegation of authority in a crisis',src:'declare',m:'who can declare a crisis',df:['Crisis decision owner','Backup decision owner']},
+      {i:'Oversight & decision record',src:'live',m:'from ITSM / GRC'}]},
+    {id:'ciso',label:'CISO',q:'Can we operate safely today, and are we improving?',needs:[
+      {i:'Active threats & detections',src:'live',m:'from EDR + SIEM'},
+      {i:'Control validation & coverage',src:'live',m:'from Identity + Cloud + Vuln + MDM'},
+      {i:'Attacks blocked',src:'live',m:'from Firewall + Email'},
+      {i:'Framework evidence',src:'doc',m:'from your documents'},
+      {i:'Incident command plan & 24/7 call tree',src:'declare',m:'no system has this — it runs your crisis response and powers Incident Commander mode',plan:true,contacts:['Incident Commander','Deputy IC','Comms / PR lead','Breach counsel (external)','IR retainer / forensics (24/7)','Cyber-insurer claims hotline','Law enforcement (FBI field office)']}]},
+    {id:'cfo',label:'CFO',q:'What is our financial exposure, and is it material?',needs:[
+      {i:'Financial exposure model',src:'derived',m:'process revenue × loss model'},
+      {i:'Cyber insurance',src:'declare',m:'no system reports your policy',df:['Carrier','Coverage limit','Retention / deductible','Key sublimits','Notable exclusions','Renewal date']},
+      {i:'Materiality threshold',src:'declare',m:'your disclosure trigger',df:['Materiality threshold ($)']},
+      {i:'Prior loss history',src:'declare',m:'optional',df:['Cyber losses, last 12 mo']}]},
+    {id:'cio',label:'CIO',q:'Can we keep critical services running and recover?',needs:[
+      {i:'Service & endpoint health',src:'live',m:'from EDR + Cloud'},
+      {i:'Recovery readiness, RPO/RTO, immutable backups',src:'live',m:'from Backup / DR'},
+      {i:'Recovery targets per critical process',src:'declare',m:'your tolerance',df:['RTO target (claims)','RPO target (claims)']},
+      {i:'Change governance',src:'live',m:'from ITSM / GRC'}]},
+    {id:'clo',label:'CLO',q:'Do we meet every obligation — defensibly?',needs:[
+      {i:'Regulatory jurisdictions',src:'derived',m:'from your profile'},
+      {i:'Applicable disclosure obligations',src:'declare',m:'confirm what applies',df:['SEC 8-K applies? (Y/N)','State breach-law states','GDPR / HIPAA / other']},
+      {i:'Litigation hold & privilege',src:'declare',m:'your process owners',df:['Litigation-hold owner','Outside counsel']},
+      {i:'Evidence chain & decision record',src:'live',m:'from GRC / ticketing'}]},
+    {id:'cro',label:'CRO',q:'Is cyber risk within the board\'s appetite?',needs:[
+      {i:'Risk appetite by category',src:'declare',m:'the board\'s tolerance',df:['Cyber risk appetite ($)','Tolerance threshold']},
+      {i:'Third-party / concentration risk',src:'derived',m:'from vendors + processes'},
+      {i:'Risk register & residual risk',src:'live',m:'from Vuln + SIEM + GRC'},
+      {i:'Risk committee cadence',src:'declare',m:'governance rhythm',df:['Risk committee cadence']}]},
+    {id:'board',label:'Board',q:'Is management in control, and is our oversight demonstrable?',needs:[
+      {i:'Control assurance & posture',src:'live',m:'from all connected systems'},
+      {i:'Materiality & disclosure status',src:'derived',m:'from CFO + CLO inputs'},
+      {i:'Board & committee structure',src:'declare',m:'your governance',df:['Cyber-responsible committee','Oversight cadence']},
+      {i:'Oversight record',src:'live',m:'from GRC / ticketing'}]}
+  ];
+  const SEAT_BY={};SEATS.forEach(s=>SEAT_BY[s.id]=s);
+
+  const CONCIERGE=[
+    'Tip: get your legal entity name exactly right — it appears on every board report and audit export.',
+    'Most healthcare payers connect EDR, SIEM, identity and cloud first — that\'s over half your coverage in four clicks. Want us to do it with you live?',
+    'No clean process list? Upload your business-impact analysis — we\'ll pull the processes straight from it.',
+    'A CMDB export is ideal here. No CMDB? A rough app-inventory spreadsheet works fine — we\'ll clean it up.',
+    'Glance at the low-confidence matches first (under 85%) — those are the ones worth a human eye before you confirm.',
+    'Your SOC 2 and latest pen test give the most control coverage per upload. Start with those two.',
+    'Only the amber “You provide” items need you — everything green is already flowing from your connected systems.',
+    'Looks ready to go live. On a call, we can walk your team through your first board briefing together.'
+  ];
+  function tickTo(el,to,dur){if(!el)return;const from=parseInt((el.textContent||'0').replace(/,/g,''))||0;const t0=performance.now();(function f(t){const p=Math.min(1,(t-t0)/dur);el.textContent=Math.round(from+(to-from)*p).toLocaleString();if(p<1)requestAnimationFrame(f);})(performance.now());}
+
+  function renderStepper(){
+    document.getElementById('stepper').innerHTML=STEPS.map((s,i)=>'<div class="step '+(i===cur?'active':'')+' '+(done[i]?'done':'')+'" data-i="'+i+'"><div class="ix">'+(done[i]?'':(i+1))+'</div><div><div class="sl">'+s.t+'</div><div class="sd">'+s.d+'</div></div></div>').join('');
+    document.querySelectorAll('.step').forEach(el=>el.addEventListener('click',()=>{cur=+el.dataset.i;render();}));
+  }
+  function updateComplete(){const n=done.filter(Boolean).length;const pct=Math.round((n/STEPS.length)*100);document.getElementById('heroBar').style.width=pct+'%';document.getElementById('heroPct').textContent=pct+'%';}
+
+  const PANELS={
+    0:()=>`<div class="panel-h"><div class="step-of">Step 1 of 8</div><h2>Organization profile</h2><p>The basics that determine your regulatory obligations and how every figure gets framed.</p></div>
+      <div class="field"><label>Legal organization name</label><input id="orgNameIn" value="${curMeta().org}"></div>
+      <div class="row2"><div class="field"><label>Industry / sector</label><select id="indSel">
+        <optgroup label="Healthcare &amp; Life Sciences">
+          <option value="healthcare-payer" data-arch="healthcare">Healthcare — Payer</option><option value="healthcare-provider" data-arch="healthcare">Healthcare — Provider / Hospital System</option><option value="healthcare-pharmacy-pbm" data-arch="healthcare">Healthcare — Pharmacy / PBM</option><option value="health-tech" data-arch="technology">Health Technology / Digital Health</option><option value="pharmaceuticals" data-arch="manufacturing">Pharmaceuticals</option><option value="biotechnology" data-arch="manufacturing">Biotechnology</option><option value="medical-devices" data-arch="manufacturing">Medical Devices</option>
+        </optgroup>
+        <optgroup label="Financial Services">
+          <option value="banking" data-arch="financial">Banking — Retail / Commercial</option><option value="insurance" data-arch="financial">Insurance</option><option value="capital-markets" data-arch="financial">Capital Markets / Investment Banking</option><option value="asset-wealth" data-arch="financial">Asset / Wealth Management</option><option value="fintech" data-arch="financial">Fintech</option><option value="payments-card" data-arch="financial">Payments / Card Networks</option><option value="credit-union" data-arch="financial">Credit Union</option>
+        </optgroup>
+        <optgroup label="Technology">
+          <option value="tech-saas" data-arch="technology">Technology / SaaS</option><option value="semiconductors" data-arch="technology">Semiconductors / Hardware</option><option value="telecommunications" data-arch="technology">Telecommunications</option><option value="cloud-hosting" data-arch="technology">Cloud / Hosting / Data Center</option>
+        </optgroup>
+        <optgroup label="Industrial &amp; Energy">
+          <option value="manufacturing" data-arch="manufacturing">Manufacturing</option><option value="industrial-ot" data-arch="manufacturing">Industrial / OT / ICS</option><option value="automotive" data-arch="manufacturing">Automotive</option><option value="aerospace-defense" data-arch="defense">Aerospace &amp; Defense</option><option value="energy-utilities" data-arch="energy">Energy &amp; Utilities</option><option value="oil-gas" data-arch="energy">Oil &amp; Gas</option><option value="chemicals" data-arch="manufacturing">Chemicals</option><option value="mining-metals" data-arch="manufacturing">Mining &amp; Metals</option>
+        </optgroup>
+        <optgroup label="Consumer &amp; Retail">
+          <option value="retail" data-arch="retail">Retail</option><option value="ecommerce" data-arch="retail">E-commerce</option><option value="cpg" data-arch="retail">Consumer Packaged Goods</option><option value="food-beverage" data-arch="retail">Food &amp; Beverage</option><option value="hospitality-travel" data-arch="retail">Hospitality / Travel</option><option value="media-entertainment" data-arch="technology">Media &amp; Entertainment</option><option value="gaming" data-arch="technology">Gaming</option>
+        </optgroup>
+        <optgroup label="Services &amp; Public Sector">
+          <option value="professional-services" data-arch="services">Professional Services / Consulting</option><option value="legal" data-arch="services">Legal Services</option><option value="education" data-arch="public">Education</option><option value="gov-federal" data-arch="public">Government — Federal</option><option value="gov-state-local" data-arch="public">Government — State / Local</option><option value="defense-national-security" data-arch="defense">Defense / National Security</option><option value="nonprofit" data-arch="public">Non-profit / NGO</option>
+        </optgroup>
+        <optgroup label="Infrastructure">
+          <option value="transportation-logistics" data-arch="transport">Transportation &amp; Logistics</option><option value="real-estate" data-arch="generic">Real Estate</option><option value="construction-engineering" data-arch="generic">Construction / Engineering</option><option value="agriculture" data-arch="generic">Agriculture</option>
+        </optgroup>
+        <option value="other" data-arch="generic">Other</option>
+      </select><div class="hint" id="indCtx" style="margin-top:6px">${curMeta().ctx}</div></div>
+      <div class="field"><label>Ownership</label><select><option>Private</option><option>Public (SEC-reporting)</option><option>PE / VC-backed</option><option>Government / Public Sector</option><option>Non-profit</option><option>Subsidiary / Division</option></select></div></div>
+      <div class="field"><label>Primary currency <span class="hint">used across the platform</span></label><select id="hqSel">
+        <option data-cur="USD">$ USD — US Dollar</option><option data-cur="EUR">€ EUR — Euro</option><option data-cur="GBP">£ GBP — British Pound</option><option data-cur="CAD">C$ CAD — Canadian Dollar</option><option data-cur="AUD">A$ AUD — Australian Dollar</option><option data-cur="CHF">CHF — Swiss Franc</option><option data-cur="JPY">¥ JPY — Japanese Yen</option><option data-cur="SGD">S$ SGD — Singapore Dollar</option><option data-cur="INR">₹ INR — Indian Rupee</option>
+      </select></div>
+      <div class="row3"><div class="field"><label>Employees</label><input class="numfmt" id="empNum" inputmode="numeric" value="12,400"></div><div class="field"><label>Annual revenue</label><div class="moneyf"><span class="cur" id="revCur">$</span><input class="mnum" id="revNum" inputmode="decimal" value="4.2"><span class="unit">B</span></div><div class="money-eq" id="revEq">= $4,200,000,000</div></div><div class="field"><label>Members</label><div class="moneyf nocur"><input class="mnum" id="memNum" inputmode="decimal" value="2.4"><span class="unit">M</span></div><div class="money-eq" id="memEq">= 2,400,000</div></div></div>
+      <div class="field"><label>Operating regions <span class="hint">drives breach-law & privacy obligations</span></label><input value="US (CA, NY, TX, FL), EU"></div>
+      <div class="field"><label>Regulated data you handle</label><div class="chips" data-group id="dataChips">${chipsHTML()}</div></div>`,
+    1:()=>`<div class="panel-h"><div class="step-of">Step 2 of 8</div><h2>Connect your systems</h2><p>Most of your evidence is pulled live from here. Pick each system you run, provide its connection details, and CyberRx streams the data that answers your executives' questions. The more you connect, the more credible — and defensible — every answer.</p></div>
+      <div class="cred"><div class="cred-top"><span class="ct">Evidence credibility</span><span class="cv l0" id="credLabel">Not yet credible</span></div><div class="cred-bar"><i id="credBar"></i></div><div class="cred-meta"><b id="credSig">0</b> live signals · <b id="credSys">0</b> systems connected · <b id="credCov">0%</b> coverage</div></div>
+      <div id="connList"></div>`,
+    2:()=>`<div class="panel-h"><div class="step-of">Step 3 of 8</div><h2>Business processes</h2><p>Pull your processes live from your CMDB's service catalog or BIA tool — or upload a file. A live connection stays current; a file is a point-in-time snapshot.</p></div>
+      <div class="srcchoice" id="procChoice"><button class="srcopt" data-src="proc-connect"><div class="so-h">⚡ Connect a system <span class="rec-tag">recommended</span></div><div class="so-d">ServiceNow CMDB, BIA / GRC tools — pulled live, always current.</div></button><button class="srcopt" data-src="proc-upload"><div class="so-h">⤓ Upload a file</div><div class="so-d">CSV, XLSX, or PDF — a BIA or process list (snapshot).</div></button></div>
+      <div id="procSource"></div><div id="procResult"></div>`,
+    3:()=>`<div class="panel-h"><div class="step-of">Step 4 of 8</div><h2>Applications & systems</h2><p>Connect directly to your CMDB or discovery tool and we fetch every system automatically — or upload an inventory. Live discovery keeps your asset list current as things change.</p></div>
+      <div class="srcchoice" id="appChoice"><button class="srcopt" data-src="app-connect"><div class="so-h">⚡ Connect a system <span class="rec-tag">recommended</span></div><div class="so-d">ServiceNow CMDB, Device42, BMC Helix, Tanium, Lansweeper — live discovery.</div></button><button class="srcopt" data-src="app-upload"><div class="so-h">⤓ Upload a file</div><div class="so-d">CSV or XLSX — an app inventory or CMDB export (snapshot).</div></button></div>
+      <div id="appSource"></div><div id="appResult"></div>`,
+    4:()=>`<div class="panel-h"><div class="step-of">Step 5 of 8</div><h2>Auto-mapping & crown jewels</h2><p>CyberRx infers which application supports which process. Confirm each match — then we deduce your crown jewels: the systems whose loss would hurt the business most.</p></div>
+      <div id="mapList"></div><button class="mapbtn" id="deduceBtn">✦ Confirm mappings &amp; deduce crown jewels</button>
+      <div class="cjwrap" id="cjwrap"><div class="cj-sum">Crown jewels identified</div><div class="cj-sub">From <b>6 systems</b> across <b>5 processes</b>, CyberRx deduced <b>4 crown jewels</b> — scored by process criticality × data sensitivity × exposure.</div><div class="cjmap" id="cjmap"></div></div>`,
+    5:()=>`<div class="panel-h"><div class="step-of">Step 6 of 8</div><h2>Documents — evidence for non-automated controls</h2><p>Some controls can't be read from a system — they live in your policies and plans. We know exactly which documents score which controls. Upload what you have; CyberRx reads each one, aligns it to control requirements, flags gaps as findings, and scores maturity. <b>Results appear in your platform, not here.</b></p></div>
+      <div class="docnote">✦ Every document below maps to specific control requirements across your frameworks. Anything you don't provide becomes a flagged gap to resolve later — not a guess.</div>
+      <div class="docprog" id="docProg"></div>
+      <div id="keydocs"></div>`,
+    6:()=>`<div class="panel-h"><div class="step-of">Step 7 of 8</div><h2>Executive data needs</h2><p>Working backwards from each executive's decisions. Green is already covered by your connected systems and documents; amber is the handful of things only you can tell us. Switch seats to see each.</p></div>
+      <div class="seattabs" id="seatTabs"></div><div id="seatBody"></div>`,
+    7:()=>`<div class="panel-h"><div class="step-of">Step 8 of 8</div><h2>Review &amp; go live</h2><p>Here's what we have. When you go live, CyberRx builds your executive seats, computes coverage, and drafts your first briefing.</p></div>
+      <div class="rev-grid"><div class="rev"><div class="k">Organization</div><div class="v">Meridian Health Plan</div></div><div class="rev"><div class="k">Systems connected</div><div class="v" id="revSys">0</div></div><div class="rev"><div class="k">Live signals</div><div class="v" id="revSig">0</div></div><div class="rev"><div class="k">Crown jewels</div><div class="v" style="color:var(--gold)">4 deduced</div></div><div class="rev"><div class="k">Documents</div><div class="v" id="revDocs">0</div></div><div class="rev"><div class="k">Evidence credibility</div><div class="v" id="revCred">—</div></div></div>
+      <div class="gen"><h4>What we'll generate from this</h4><ul><li>Seven executive seats, each framed to your business and fed by live evidence</li><li>Framework coverage with the source & freshness behind every control</li><li>Your crown-jewel map, attack paths, and vendor concentration</li><li>Your first board-ready briefing and the Executive Twin — grounded only in your data</li></ul></div>
+      <div class="gen" style="border-color:var(--brand)"><h4>Peer benchmarking <span style="font-weight:400;color:var(--muted);font-size:13px">— optional &amp; reciprocal</span></h4><p style="font-size:13px;color:var(--muted);margin:0 0 11px;line-height:1.6">Compare your maturity against anonymized peers. Only high-level <b>CMMI maturity scores</b> leave your tenant — never findings, evidence, names, or identifiers. Cohorts under 8 are never shown. <b>It's reciprocal: you see peer benchmarks only if you contribute.</b></p><label style="display:flex;gap:9px;align-items:flex-start;font-size:13px;cursor:pointer"><input type="checkbox" id="benchConsent" style="margin-top:3px"> Contribute our anonymized maturity to the shared benchmark so we can see peer comparisons <span style="color:var(--muted)">(you can change this any time in the platform)</span></label></div>`
+  };
+
+  function render(){
+    renderStepper();
+    document.getElementById('panel').innerHTML=PANELS[cur]();
+    document.getElementById('whyText').textContent=STEPS[cur].why;
+    document.getElementById('ccTip').textContent=CONCIERGE[cur];
+    document.getElementById('backBtn').disabled=(cur===0);
+    document.getElementById('nextBtn').textContent=(cur===STEPS.length-1)?'✦ Go live':'Save & continue →';
+    document.querySelectorAll('[data-group] .pick').forEach(p=>p.addEventListener('click',()=>p.classList.toggle('on')));
+    if(cur===0){
+      applyOrgCur();
+      const isel=document.getElementById('indSel');
+      if(isel){
+        isel.value=selectedIndustry;
+        isel.addEventListener('change',function(){
+          const opt=isel.options[isel.selectedIndex];
+          selectedIndustry=isel.value; selectedArch=(opt&&opt.dataset.arch)||'generic';
+          render();
+        });
+      }
+    }
+    if(cur===1) renderConnectors();
+    if(cur===2) wireProc();
+    if(cur===3) wireApp();
+    if(cur===4) wireMapping();
+    if(cur===5) wireDocs();
+    if(cur===6) renderSeats();
+    if(cur===7) renderReview();
+  }
+
+  // ---- connectors ----
+  function renderConnectors(){
+    document.getElementById('connList').innerHTML=CONN.map(c=>{
+      const on=connected[c.id];
+      return '<div class="conn '+(on?'':'')+'" id="conn-'+c.id+'"><div class="conn-h"><div class="conn-ic">'+c.ic+'</div><div class="conn-t"><div class="cn">'+c.cat+'</div><div class="cc">'+c.vendors.length+' supported · pulls '+c.sig+' signals</div></div><span class="conn-st '+(on?'on':'no')+'" id="st-'+c.id+'">'+(on?'Connected · '+c.sig+' signals':'Not connected')+'</span><span class="conn-toggle" data-tog="'+c.id+'">details ▾</span></div>'+
+        '<div class="conn-body"><div class="conn-row"><div class="field"><label>Vendor</label><select>'+c.vendors.map(v=>'<option>'+v+'</option>').join('')+'</select></div><div class="field"><label>Version / API key / tenant</label><input placeholder="API key, tenant ID, or OAuth"></div><button class="conn-go '+(on?'done':'')+'" data-go="'+c.id+'">'+(on?'✓ Connected':'Connect')+'</button></div>'+
+        '<div class="conn-info"><span class="pl">Pulls:</span> '+c.pulls+'<br><span class="an">Answers:</span> '+c.ans+'</div></div></div>';
+    }).join('');
+    document.querySelectorAll('[data-tog]').forEach(t=>t.addEventListener('click',()=>{document.getElementById('conn-'+t.dataset.tog).classList.toggle('open');}));
+    document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>{
+      const id=b.dataset.go;if(connected[id])return;
+      const st=document.getElementById('st-'+id);st.className='conn-st ing';st.textContent='Connecting…';
+      setTimeout(()=>{
+        connected[id]=true;const c=CONN.find(x=>x.id===id);
+        st.className='conn-st on';st.innerHTML='<span class="livedot"></span>Connected · <span id="sigc-'+id+'">0</span> signals';
+        b.classList.add('done');b.textContent='✓ Connected';
+        tickTo(document.getElementById('sigc-'+id),c.sig,900);
+        updateCred();
+      },1100);
+    }));
+    updateCred();
+  }
+  function updateCred(){
+    const ids=Object.keys(connected);
+    const cov=Math.min(99,ids.reduce((s,id)=>s+CONN.find(c=>c.id===id).w,0));
+    const sig=ids.reduce((s,id)=>s+CONN.find(c=>c.id===id).sig,0);
+    const bar=document.getElementById('credBar');if(bar)bar.style.width=cov+'%';
+    tickTo(document.getElementById('credSig'),sig,900);
+    const sy=document.getElementById('credSys');if(sy)sy.textContent=ids.length;
+    const cv=document.getElementById('credCov');if(cv)cv.textContent=cov+'%';
+    const lab=document.getElementById('credLabel');
+    if(lab){let t,cl;if(cov===0){t='Not yet credible';cl='l0';}else if(cov<35){t='Building';cl='l1';}else if(cov<65){t='Moderate';cl='l1';}else if(cov<88){t='Strong';cl='l2';}else{t='Audit-ready';cl='l3';}lab.textContent=t;lab.className='cv '+cl;}
+  }
+
+  // ---- process / app extraction ----
+  // ---- process / app: connect (live) or upload (snapshot) ----
+  function wireProc(){
+    if(procExtracted){renderProc(procLive);return;}
+    document.querySelectorAll('#procChoice [data-src]').forEach(b=>b.addEventListener('click',()=>{
+      document.querySelectorAll('#procChoice .srcopt').forEach(o=>o.classList.remove('sel'));b.classList.add('sel');
+      const box=document.getElementById('procSource');
+      if(b.dataset.src==='proc-connect'){
+        box.innerHTML='<div class="srcbox"><div class="conn-row"><div class="field"><label>System</label><select><option>ServiceNow CMDB (business services)</option><option>SAP / GRC — BIA module</option><option>Apptio</option><option>Archer</option></select></div><div class="field"><label>Instance URL / API token</label><input placeholder="https://yourorg.service-now.com · token"></div><button class="conn-go" id="procFetch">Connect &amp; fetch</button></div></div>';
+        document.getElementById('procFetch').addEventListener('click',()=>{document.getElementById('procResult').innerHTML='<div class="extracting"><span class="sp"></span>Fetching processes live from ServiceNow CMDB…</div>';setTimeout(()=>{procExtracted=true;procLive=true;renderProc(true);},1400);});
+      }else{
+        box.innerHTML='<div class="drop" id="procDrop"><div class="ic">⤓</div><div class="t">Upload process list / BIA</div><div class="s">CSV, XLSX, or PDF — we\'ll extract each process</div></div>';
+        document.getElementById('procDrop').addEventListener('click',()=>{document.getElementById('procResult').innerHTML='<div class="extracting"><span class="sp"></span>Extracting processes from BIA_2025.xlsx…</div>';setTimeout(()=>{procExtracted=true;procLive=false;renderProc(false);},1400);});
+      }
+    }));
+  }
+  function renderProc(live){
+    document.getElementById('procChoice').style.display='none';document.getElementById('procSource').innerHTML='';
+    const src=live?'<span class="livedot"></span>5 processes · live from ServiceNow CMDB · streaming':'✓ 5 processes extracted from BIA_2025.xlsx';
+    document.getElementById('procResult').innerHTML='<div class="extracted-h">'+src+'</div><div class="xlist">'+PROCS.map(p=>'<div class="xrow"><div class="xi">▢</div><div class="xn"><div class="nm">'+p.n+'</div><div class="mt">'+p.data+' · '+p.rev+'</div></div><span class="crit '+p.c+'">'+(p.c==='h'?'High':p.c==='m'?'Medium':'Low')+'</span></div>').join('')+'</div>';
+  }
+  function wireApp(){
+    if(appExtracted){renderApp(appLive);return;}
+    document.querySelectorAll('#appChoice [data-src]').forEach(b=>b.addEventListener('click',()=>{
+      document.querySelectorAll('#appChoice .srcopt').forEach(o=>o.classList.remove('sel'));b.classList.add('sel');
+      const box=document.getElementById('appSource');
+      if(b.dataset.src==='app-connect'){
+        box.innerHTML='<div class="srcbox"><div class="conn-row"><div class="field"><label>System</label><select><option>ServiceNow CMDB</option><option>Device42</option><option>BMC Helix Discovery</option><option>Tanium</option><option>Lansweeper</option><option>ServiceNow Discovery</option></select></div><div class="field"><label>Instance URL / API token</label><input placeholder="https://yourorg.service-now.com · token"></div><button class="conn-go" id="appFetch">Connect &amp; fetch</button></div></div>';
+        document.getElementById('appFetch').addEventListener('click',()=>{document.getElementById('appResult').innerHTML='<div class="extracting"><span class="sp"></span>Discovering systems live from ServiceNow CMDB…</div>';setTimeout(()=>{appExtracted=true;appLive=true;renderApp(true);},1400);});
+      }else{
+        box.innerHTML='<div class="drop" id="appDrop"><div class="ic">⤓</div><div class="t">Upload app inventory / CMDB export</div><div class="s">CSV, XLSX — we\'ll extract each application</div></div>';
+        document.getElementById('appDrop').addEventListener('click',()=>{document.getElementById('appResult').innerHTML='<div class="extracting"><span class="sp"></span>Extracting systems from CMDB_export.csv…</div>';setTimeout(()=>{appExtracted=true;appLive=false;renderApp(false);},1400);});
+      }
+    }));
+  }
+  function renderApp(live){
+    document.getElementById('appChoice').style.display='none';document.getElementById('appSource').innerHTML='';
+    const src=live?'<span class="livedot"></span>6 systems · live discovery from ServiceNow CMDB · streaming':'✓ 6 systems extracted from CMDB_export.csv';
+    document.getElementById('appResult').innerHTML='<div class="extracted-h">'+src+'</div><div class="xlist">'+APPS.map(a=>'<div class="xrow"><div class="xi">⬚</div><div class="xn"><div class="nm">'+a.n+'</div><div class="mt">'+a.host+' · '+a.data+'</div></div></div>').join('')+'</div>';
+  }
+
+  // ---- mapping + crown jewels ----
+  function wireMapping(){
+    document.getElementById('mapList').innerHTML=APPS.map(a=>{const pn=a.proc.length>1?'All processes':PROC_BY[a.proc[0]];const hi=a.conf>=85;return '<div class="maprow '+(confirmed[a.id]?'confirmed':'')+'" data-id="'+a.id+'"><span class="ap">'+a.n+'</span><span class="ar">→</span><span class="pr">'+pn+'</span><span class="conf '+(hi?'hi':'lo')+'">'+a.conf+'% match</span><button class="cf">'+(confirmed[a.id]?'Confirmed':'Confirm')+'</button></div>';}).join('');
+    document.querySelectorAll('.maprow').forEach(row=>row.querySelector('.cf').addEventListener('click',()=>{confirmed[row.dataset.id]=true;row.classList.add('confirmed');row.querySelector('.cf').textContent='Confirmed';}));
+    if(mapDone){document.getElementById('cjwrap').classList.add('show');renderMap();}
+    document.getElementById('deduceBtn').addEventListener('click',()=>{APPS.forEach(a=>confirmed[a.id]=true);document.querySelectorAll('.maprow').forEach(r=>{r.classList.add('confirmed');r.querySelector('.cf').textContent='Confirmed';});mapDone=true;document.getElementById('cjwrap').classList.add('show');renderMap();});
+  }
+  function renderMap(){
+    const cjs=APPS.filter(a=>a.cj).sort((x,y)=>y.score-x.score);
+    document.getElementById('cjmap').innerHTML='<div><div class="colh">Business processes</div><div class="cjcol">'+PROCS.map(p=>'<div class="node proc '+p.c+'" id="n-'+p.id+'"><div class="nn">'+p.n+'</div><div class="nd">'+p.data+(p.rev!=='—'?' · '+p.rev:'')+'</div></div>').join('')+'</div></div><div><div class="colh">Applications</div><div class="cjcol">'+APPS.map(a=>'<div class="node'+(a.cj?' cjwel':'')+'" id="n-'+a.id+'"><div class="nn">'+a.n+'</div><div class="nd">'+a.data+'</div></div>').join('')+'</div></div><div><div class="colh">Crown jewels</div><div class="cjcol">'+cjs.map((a,i)=>'<div class="node cjwel" id="c-'+a.id+'"><span class="score">'+a.score+'</span><div class="badge">⬥ Crown jewel #'+(i+1)+'</div><div class="nn">'+a.n+'</div><div class="why">'+a.why+'</div></div>').join('')+'</div></div><svg class="cjsvg" id="cjsvg"></svg>';
+    requestAnimationFrame(drawMap);
+  }
+  function drawMap(){const map=document.getElementById('cjmap');const svg=document.getElementById('cjsvg');if(!map||!svg)return;const c=map.getBoundingClientRect();svg.setAttribute('viewBox','0 0 '+c.width+' '+c.height);function pt(id,side){const el=document.getElementById(id);if(!el)return null;const r=el.getBoundingClientRect();return {x:(side==='r'?r.right:r.left)-c.left,y:r.top-c.top+r.height/2};}function path(a,b,cls){if(!a||!b)return '';const dx=Math.max(30,(b.x-a.x)*0.45);return '<path class="ln '+cls+'" d="M '+a.x+' '+a.y+' C '+(a.x+dx)+' '+a.y+', '+(b.x-dx)+' '+b.y+', '+b.x+' '+b.y+'"/>';}let s='';APPS.forEach(a=>{a.proc.forEach(pid=>{s+=path(pt('n-'+pid,'r'),pt('n-'+a.id,'l'),a.proc.length>1?'id':'');});});APPS.filter(a=>a.cj).forEach(a=>{s+=path(pt('n-'+a.id,'r'),pt('c-'+a.id,'l'),'cj');});svg.innerHTML=s;}
+  window.addEventListener('resize',()=>{if(mapDone)drawMap();});
+
+  // ---- documents ----
+  // ---- documents: framework-aware key documents for non-automated controls ----
+  const KEYDOCS=[
+    {group:'Governance & Risk',items:[
+      {id:'d1',n:'Information Security Policy',ev:'NIST CSF GV · 800-53 PL/PM · ISO A.5',ctrls:14},
+      {id:'d2',n:'Risk Management Policy & latest Risk Assessment',ev:'CSF ID.RA · 800-53 RA · ISO A.5',ctrls:11},
+      {id:'d3',n:'Third-Party / Vendor Risk Management Policy',ev:'CSF GV.SC · 800-53 SR · SOC 2 CC9',ctrls:8}]},
+    {group:'Access & Identity',items:[
+      {id:'d4',n:'Access Control Policy',ev:'CSF PR.AA · 800-53 AC · HIPAA §164.312',ctrls:12},
+      {id:'d5',n:'Authentication / MFA Standard',ev:'800-53 IA · CSF PR.AA',ctrls:7}]},
+    {group:'Operations & Resilience',items:[
+      {id:'d6',n:'Incident Response Plan',ev:'CSF RS/RC · 800-53 IR · SOC 2 CC7',ctrls:10},
+      {id:'d7',n:'Business Continuity / DR Plan',ev:'CSF RC · 800-53 CP · ISO A.5.30',ctrls:9},
+      {id:'d8',n:'Change Management Policy',ev:'800-53 CM · SOC 2 CC8',ctrls:6},
+      {id:'d9',n:'Configuration / Hardening Standards',ev:'800-53 CM · CIS v8',ctrls:8}]},
+    {group:'Data & Privacy',items:[
+      {id:'d10',n:'Data Classification & Handling Policy',ev:'CSF PR.DS · 800-53 MP/SC',ctrls:9},
+      {id:'d11',n:'Encryption / Cryptography Policy',ev:'800-53 SC-13 · HIPAA §164.312(a)(2)(iv)',ctrls:5},
+      {id:'d12',n:'Privacy Policy / Notice',ev:'GDPR · HIPAA Privacy Rule',ctrls:7}]},
+    {group:'Assurance & Testing',items:[
+      {id:'d13',n:'Latest SOC 2 Type II report',ev:'Cross-maps as evidence to all frameworks',ctrls:31},
+      {id:'d14',n:'Penetration Test report',ev:'CSF ID.RA · 800-53 CA-8',ctrls:6},
+      {id:'d15',n:'Security Awareness Training records',ev:'CSF PR.AT · 800-53 AT',ctrls:4},
+      {id:'d16',n:'Audit Logging Policy',ev:'800-53 AU · CSF DE',ctrls:6}]}
+  ];
+  const TOTAL_DOCS=KEYDOCS.reduce((s,g)=>s+g.items.length,0);
+  const docState={};let docsProvided=0, ctrlsCovered=0;
+  function findDoc(id){for(const g of KEYDOCS){for(const d of g.items)if(d.id===id)return d;}}
+  function wireDocs(){renderKeyDocs();updateDocProg();}
+  function renderKeyDocs(){
+    document.getElementById('keydocs').innerHTML=KEYDOCS.map(g=>'<div class="dgroup"><div class="dgh">'+g.group+'</div>'+g.items.map(d=>'<div class="drow"><div class="di">▤</div><div class="dn"><div class="nm">'+d.n+'</div><div class="ev">evaluates: '+d.ev+'</div></div><span id="rs-'+d.id+'">'+(docState[d.id]?'<span class="dst ok">✓ Aligned · '+d.ctrls+' controls</span>':'<button class="dup" data-doc="'+d.id+'">Upload</button>')+'</span></div>').join('')+'</div>').join('');
+    document.querySelectorAll('[data-doc]').forEach(b=>b.addEventListener('click',()=>uploadDoc(b.dataset.doc)));
+  }
+  function uploadDoc(id){
+    const d=findDoc(id);const rs=document.getElementById('rs-'+id);
+    rs.innerHTML='<span class="dst rd">Reading &amp; aligning…</span>';
+    setTimeout(()=>{if(!docState[id]){docState[id]=true;docsProvided++;ctrlsCovered+=d.ctrls;}rs.innerHTML='<span class="dst ok">✓ Aligned · '+d.ctrls+' controls</span>';updateDocProg();},1500);
+  }
+  function updateDocProg(){const el=document.getElementById('docProg');if(el)el.innerHTML='<b>'+docsProvided+'</b> of '+TOTAL_DOCS+' key documents provided · <b>'+ctrlsCovered+'</b> control requirements covered';}
+
+  // ---- per-seat data needs ----
+  let orgCurrency='USD', hqIndex=0, revRaw='4.2', memRaw='2.4', empRaw='12,400';
+  const CUR={USD:'$',EUR:'€',GBP:'£',CAD:'C$',CHF:'CHF ',JPY:'¥',AUD:'A$',SGD:'S$',INR:'₹'};
+  function curSym(){return CUR[orgCurrency]||'$';}
+  function fmtUnit(v,mult,cur){return isNaN(v)?'':'= '+(cur?curSym():'')+(v*mult).toLocaleString();}
+  function applyOrgCur(){
+    const hq=document.getElementById('hqSel');if(hq)hq.selectedIndex=hqIndex;
+    const rc=document.getElementById('revCur');if(rc)rc.textContent=curSym();
+    const rn=document.getElementById('revNum');if(rn){rn.value=revRaw;const eq=document.getElementById('revEq');if(eq)eq.textContent=fmtUnit(parseFloat(revRaw),1e9,true);}
+    const mn=document.getElementById('memNum');if(mn){mn.value=memRaw;const eq=document.getElementById('memEq');if(eq)eq.textContent=fmtUnit(parseFloat(memRaw),1e6,false);}
+    const en=document.getElementById('empNum');if(en)en.value=empRaw;
+  }
+  const CYBER_INSURERS=['Chubb','Beazley','AXA XL','AIG','Travelers','Zurich','Coalition','At-Bay','CNA','Hiscox','Tokio Marine HCC','Sompo','Liberty Mutual','Munich Re / HSB','Arch','Fairmile / Lloyd\u2019s syndicate'];
+  function fieldHTML(label){
+    const l=label.toLowerCase();
+    if(/carrier/.test(l))
+      return '<div class="dfield"><label>'+label+'</label><select class="carrier-sel"><option value="">Select carrier\u2026</option>'+CYBER_INSURERS.map(c=>'<option>'+c+'</option>').join('')+'<option value="__other">Other (enter manually)\u2026</option></select><input class="carrier-other" placeholder="Enter carrier name" style="display:none"></div>';
+    if(/date/.test(l))
+      return '<div class="dfield"><label>'+label+'</label><input type="date"></div>';
+    if(/\(y\/n\)/.test(l))
+      return '<div class="dfield"><label>'+label.replace(/\s*\(y\/n\)/i,'')+'</label><select><option value="">\u2014</option><option>Yes</option><option>No</option></select></div>';
+    if(/\$|limit|retention|deductible|appetite|threshold|losses|premium/.test(l))
+      return '<div class="dfield"><label>'+label.replace(/\s*\(\$\)/,'')+'</label><div class="moneyf"><span class="cur">'+curSym()+'</span><input class="mnum" inputmode="decimal" placeholder="0"><span class="unit">M</span></div><div class="money-eq"></div></div>';
+    return '<div class="dfield"><label>'+label+'</label><input placeholder="'+label+'"></div>';
+  }
+  function renderSeats(){
+    document.getElementById('seatTabs').innerHTML=SEATS.map(s=>'<button class="stab '+(s.id===seatTab?'on':'')+'" data-seat="'+s.id+'">'+s.label+'</button>').join('');
+    document.querySelectorAll('[data-seat]').forEach(b=>b.addEventListener('click',()=>{seatTab=b.dataset.seat;renderSeats();}));
+    const s=SEAT_BY[seatTab];const live=liveSrc();
+    const srcTag={live:live?'Live':'Connect a system',doc:'From docs',derived:'Derived',declare:'You provide'};
+    const srcCls={live:live?'live':'off',doc:'doc',derived:'derived',declare:'declare'};
+    document.getElementById('seatBody').innerHTML='<div class="need" style="border-left:3px solid var(--brand)"><span class="src declare" style="color:var(--brand);background:var(--brand-tint)">You provide</span><div class="nb"><div class="ni">Who holds this seat?</div><div class="nm2">so your advisor can greet them by name</div><div class="df"><input id="seatName-'+s.id+'" placeholder="First name of your '+s.label+'" value="'+(seatNames[s.id]||'')+'"></div></div></div>'+
+      '<div class="seatq">› '+s.q+'</div>'+s.needs.map(n=>{
+      const df=n.plan?('<div class="planbox"><button class="planup" type="button">⬆ Upload IR plan &amp; playbooks (PDF)</button><div class="planct-h">Key contacts — reachable 24/7 <span>name + phone; powers Incident Commander mode</span></div><div class="planct">'+n.contacts.map(r=>'<div class="ctrow"><span class="ctrole">'+r+'</span><input placeholder="Name" class="ctname"><input placeholder="Phone" inputmode="tel" class="ctphone"></div>').join('')+'</div></div>'):(n.df?'<div class="df dfgrid">'+n.df.map(fieldHTML).join('')+'</div>':'');
+      return '<div class="need"><span class="src '+srcCls[n.src]+'">'+srcTag[n.src]+'</span><div class="nb"><div class="ni">'+n.i+'</div><div class="nm2">'+n.m+'</div>'+df+'</div></div>';
+    }).join('');
+    const nameIn=document.getElementById('seatName-'+s.id);
+    if(nameIn)nameIn.addEventListener('input',e=>{seatNames[s.id]=e.target.value;});
+  }
+
+  function renderReview(){
+    const ids=Object.keys(connected);const cov=Math.min(99,ids.reduce((s,id)=>s+CONN.find(c=>c.id===id).w,0));const sig=ids.reduce((s,id)=>s+CONN.find(c=>c.id===id).sig,0);
+    document.getElementById('revSys').textContent=ids.length;document.getElementById('revSig').textContent=sig.toLocaleString();document.getElementById('revDocs').textContent=docsProvided+' of '+TOTAL_DOCS;
+    let t='—';if(cov>0)t=cov<35?'Building':cov<65?'Moderate':cov<88?'Strong':'Audit-ready';document.getElementById('revCred').textContent=t;
+  }
+
+  // currency from primary-currency picker · carrier "Other" reveal · live number formatting
+  document.addEventListener('change',e=>{
+    const h=e.target.closest('#hqSel');
+    if(h){orgCurrency=h.options[h.selectedIndex].dataset.cur||'USD';hqIndex=h.selectedIndex;applyOrgCur();if(cur===6)renderSeats();}
+    const cs=e.target.closest('.carrier-sel');
+    if(cs){const o=cs.parentElement.querySelector('.carrier-other');if(o){o.style.display=cs.value==='__other'?'block':'none';if(cs.value==='__other')o.focus();}}
+  });
+  document.addEventListener('input',e=>{
+    const m=e.target.closest('.mnum');
+    if(m){
+      const wrap=m.closest('.dfield,.field');
+      const eq=wrap?wrap.querySelector('.money-eq'):null;
+      const unitEl=m.parentElement.querySelector('.unit');
+      const unit=unitEl?unitEl.textContent.trim():'M';
+      const mult=unit==='B'?1e9:unit==='K'?1e3:1e6;
+      const cur=!m.parentElement.classList.contains('nocur');
+      if(eq)eq.textContent=fmtUnit(parseFloat(m.value),mult,cur);
+      if(m.id==='revNum')revRaw=m.value; if(m.id==='memNum')memRaw=m.value;
+    }
+    const ni=e.target.closest('.numfmt');
+    if(ni){const d=ni.value.replace(/[^\d]/g,'');ni.value=d?parseInt(d,10).toLocaleString():'';if(ni.id==='empNum')empRaw=ni.value;}
+  });
+  document.getElementById('nextBtn').addEventListener('click',()=>{done[cur]=true;updateComplete();if(cur<STEPS.length-1){cur++;render();}else{document.getElementById('nextBtn').textContent='✓ Setup complete';const bc=document.getElementById('benchConsent');const benchShare=!!(bc&&bc.checked);try{window.parent.postMessage({type:'cyberrx-golive',industry:selectedIndustry,names:seatNames,benchShare:benchShare,currency:{code:orgCurrency,sym:curSym()}},'*');window.parent.postMessage('cyberrx-golive','*');}catch(e){}}});
+  document.getElementById('backBtn').addEventListener('click',()=>{if(cur>0){cur--;render();}});
+  document.getElementById('ccCall').addEventListener('click',function(){this.classList.add('req');this.textContent='✓ We\'ll reach out within 1 business day';});
+  render();updateComplete();
+</script>
+</body>
+</html>
