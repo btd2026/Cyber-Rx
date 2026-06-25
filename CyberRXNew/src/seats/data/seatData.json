@@ -1,0 +1,2493 @@
+{
+ "ceo": {
+  "label": "CEO",
+  "nav": [
+   {
+    "id": "exec",
+    "label": "⌂ Exec Summary"
+   },
+   {
+    "id": "q1",
+    "label": "1 · Operating Status"
+   },
+   {
+    "id": "q2",
+    "label": "2 · Principal Business Risk"
+   },
+   {
+    "id": "q3",
+    "label": "3 · Board &amp; Executive Attention"
+   },
+   {
+    "id": "q4",
+    "label": "4 · Trajectory"
+   }
+  ],
+  "views": {
+   "exec": [
+    {
+     "t": "head",
+     "q": "Cyber risk is understood, managed, and within tolerance today.",
+     "ans": "1 issue contained",
+     "ansCls": "warn",
+     "lead": "One contained issue on claims processing. Nothing requires the business to stop. Posture is improving; third-party risk is the one watch item."
+    },
+    {
+     "t": "band",
+     "items": [
+      {
+       "k": "Business risk",
+       "v": "In tolerance",
+       "small": 1,
+       "ev": "ceo-bizrisk"
+      },
+      {
+       "k": "Revenue at risk today",
+       "v": "Contained",
+       "small": 1,
+       "ev": "ceo-revenue"
+      },
+      {
+       "k": "Customer / brand impact",
+       "v": "None",
+       "small": 1,
+       "ev": "ceo-brand"
+      },
+      {
+       "k": "Material events",
+       "v": "0",
+       "ev": "ceo-material"
+      },
+      {
+       "k": "Posture trend",
+       "v": "82",
+       "tr": "↑+4",
+       "trCls": "up",
+       "ev": "ceo-posture"
+      }
+     ]
+    },
+    {
+     "t": "brief",
+     "items": [
+      {
+       "i": "1",
+       "q": "Are we safe to operate?",
+       "a": "Yes — operations and revenue are protected; one contained security issue on claims.",
+       "s": "Safe",
+       "sCls": "ok",
+       "view": "q1"
+      },
+      {
+       "i": "2",
+       "q": "What's our biggest business risk?",
+       "a": "Claims processing — revenue-critical and elevated, with a contained exposure.",
+       "s": "1 elevated",
+       "sCls": "warn",
+       "view": "q2"
+      },
+      {
+       "i": "3",
+       "q": "What needs my attention?",
+       "a": "1 board item and 1 funding decision affecting customer-facing risk.",
+       "s": "1 board",
+       "sCls": "warn",
+       "view": "q3"
+      },
+      {
+       "i": "4",
+       "q": "Are we improving?",
+       "a": "Yes — posture +4 this quarter; the funded roadmap is on track.",
+       "s": "Improving ↑",
+       "sCls": "ok",
+       "view": "q4"
+      }
+     ]
+    }
+   ],
+   "q1": [
+    {
+     "t": "head",
+     "q": "Are we safe to operate today?",
+     "ans": "Yes",
+     "ansCls": "ok",
+     "lead": "Revenue and operations are protected. One security issue is contained and not customer-visible."
+    },
+    {
+     "t": "ansgrid",
+     "cells": [
+      {
+       "l": "Why we can say this",
+       "v": "No active compromise. Every customer-facing service and revenue system is running; the one security issue (claims) is on a verified compensating control."
+      },
+      {
+       "l": "What it means for the business",
+       "v": "Revenue and customers are protected. Nothing requires the business to stop or a public statement today."
+      },
+      {
+       "l": "What changed",
+       "chg": true,
+       "v": "A claims control failed and was contained in seconds. Posture up +4 this quarter. Third-party risk is still slipping."
+      },
+      {
+       "l": "Needs you right now",
+       "good": true,
+       "v": "Nothing operationally. One board funding decision awaits in Attention."
+      }
+     ]
+    },
+    {
+     "t": "cols",
+     "panels": [
+      {
+       "title": "The business is running",
+       "kind": "srow",
+       "rows": [
+        {
+         "nm": "Customer-facing services",
+         "stat": "Running",
+         "statCls": "ok"
+        },
+        {
+         "nm": "Revenue systems",
+         "sub": "claims on a compensating control",
+         "stat": "Protected · watch",
+         "statCls": "warn"
+        },
+        {
+         "nm": "Customer data",
+         "stat": "No exposure",
+         "statCls": "ok"
+        },
+        {
+         "nm": "Public / disclosure status",
+         "stat": "Nothing to report",
+         "statCls": "ok"
+        }
+       ]
+      },
+      {
+       "title": "If the worst happened",
+       "kind": "kv",
+       "rows": [
+        {
+         "l": "Worst-case revenue at risk",
+         "v": "~$2.3M/hr · contained",
+         "cls": "warn"
+        },
+        {
+         "l": "Time to resume claims if down",
+         "v": "~3.5 days"
+        },
+        {
+         "l": "Crisis posture required",
+         "v": "No",
+         "cls": "ok"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "q2": [
+    {
+     "t": "head",
+     "q": "What's our biggest business risk?",
+     "ans": "Claims processing",
+     "ansCls": "warn",
+     "lead": "Ranked by impact to revenue, customers, and reputation — in business terms, not servers."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Business area",
+      "Risk",
+      "Trend",
+      "Why it matters"
+     ],
+     "rows": [
+      {
+       "c": [
+        "<div class=\"pn\">Claims Processing</div>",
+        "<span class=\"rk high\">High</span>",
+        "<span class=\"trn up\">↑</span>",
+        "Largest revenue dependency · open path to 2.4M PHI records"
+       ],
+       "ev": "exp-claims"
+      },
+      {
+       "c": [
+        "<div class=\"pn\">AI-Assisted Claims</div>",
+        "<span class=\"rk high\">High</span>",
+        "<span class=\"trn up\">↑</span>",
+        "Fast-growing · ungoverned model decisions on PHI"
+       ],
+       "ev": "exp-ai"
+      },
+      {
+       "c": [
+        "<div class=\"pn\">Member Portal</div>",
+        "<span class=\"rk med\">Medium</span>",
+        "<span class=\"trn flat\">→</span>",
+        "Customer-facing · brand exposure"
+       ],
+       "ev": "exp-portal"
+      },
+      {
+       "c": [
+        "<div class=\"pn\">Provider Payments</div>",
+        "<span class=\"rk low\">Low</span>",
+        "<span class=\"trn down\">↓</span>",
+        "Well-controlled"
+       ],
+       "ev": "exp-payments"
+      }
+     ]
+    },
+    {
+     "t": "scn",
+     "label": "If the claims exposure were realized →",
+     "html": "Claims processing could halt — <b>~$2.3M/hr</b> revenue at risk, ~3.5 days to resume at current recovery readiness. Contained today; the modernization funding decision removes the underlying fragility."
+    }
+   ],
+   "q3": [
+    {
+     "t": "head",
+     "q": "What needs my attention?",
+     "ans": "1 board item",
+     "ansCls": "warn",
+     "lead": "What rises to the CEO and board — not the security team’s queue."
+    },
+    {
+     "t": "dec2",
+     "items": [
+      {
+       "id": "ceo-mod",
+       "title": "Claims platform modernization",
+       "sev": "Board",
+       "sevCls": "crit",
+       "sit": "A legacy claims platform carries $220M/day revenue exposure. Three options are before the board.",
+       "options": [
+        {
+         "name": "A · Full modernization now",
+         "outcome": "Removes the legacy fragility; closes the largest single revenue exposure.",
+         "cost": "$18M",
+         "costId": "ceo-d1a",
+         "costBreak": [
+          [
+           "Platform replacement",
+           "$12.0M"
+          ],
+          [
+           "Migration &amp; integration",
+           "$4.5M"
+          ],
+          [
+           "Parallel-run &amp; cutover",
+           "$1.5M"
+          ]
+         ],
+         "costTotal": "$18.0M",
+         "risk": "−$220M/day single-point exposure",
+         "riskCls": "good",
+         "tradeoff": "18-month program; execution risk.",
+         "tradeoffCls": "warn"
+        },
+        {
+         "name": "B · Phased modernization",
+         "rec": true,
+         "recLabel": "Recommended",
+         "outcome": "Rebuilds the critical revenue path first; remainder follows.",
+         "cost": "$7.5M",
+         "costId": "ceo-d1b",
+         "costBreak": [
+          [
+           "Critical-path rebuild",
+           "$5.0M"
+          ],
+          [
+           "Integration",
+           "$2.0M"
+          ],
+          [
+           "Contingency",
+           "$0.5M"
+          ]
+         ],
+         "costTotal": "$7.5M",
+         "risk": "Cuts exposure ~60% in 6 months",
+         "riskCls": "warn",
+         "tradeoff": "Residual legacy risk for 12+ months.",
+         "tradeoffCls": "warn"
+        },
+        {
+         "name": "C · Defer to next year",
+         "outcome": "No spend now; legacy system continues.",
+         "cost": "$0 now · <span style=\"color:var(--critical)\">carries full exposure</span>",
+         "risk": "None",
+         "riskCls": "bad",
+         "tradeoff": "Exposure remains; not defensible if it fails.",
+         "tradeoffCls": "bad"
+        }
+       ],
+       "rec": "<b>Recommendation: Option B (phased).</b> Balances execution risk against exposure reduction — the critical revenue path is de-risked in 6 months for $7.5M, and full modernization can follow once proven."
+      }
+     ]
+    },
+    {
+     "t": "decisions",
+     "title": "Also needs you",
+     "items": [
+      {
+       "sev": "Decide",
+       "sevCls": "high",
+       "title": "Accept or mitigate vendor (PHI) risk",
+       "desc": "— a critical vendor is below tolerance.",
+       "owner": "With CRO",
+       "action": "Risk decision"
+      }
+     ],
+     "btn": "Generate board package →"
+    },
+    {
+     "t": "bigstat",
+     "html": "One event is <b>under materiality review</b>; no public disclosure is required to date. A board-ready summary can be generated on demand."
+    }
+   ],
+   "q4": [
+    {
+     "t": "head",
+     "q": "Are we getting better?",
+     "ans": "Improving",
+     "ansCls": "ok",
+     "lead": "The trajectory you can take to the board."
+    },
+    {
+     "t": "cols",
+     "panels": [
+      {
+       "title": "Improving",
+       "kind": "srow",
+       "rows": [
+        {
+         "nm": "Overall posture",
+         "stat": "82 · ↑+4",
+         "statCls": "ok"
+        },
+        {
+         "nm": "Identity &amp; access",
+         "stat": "Up",
+         "statCls": "ok"
+        },
+        {
+         "nm": "Detection speed",
+         "stat": "15% faster",
+         "statCls": "ok"
+        }
+       ]
+      },
+      {
+       "title": "Watch",
+       "kind": "srow",
+       "rows": [
+        {
+         "nm": "Third-party risk",
+         "stat": "Slipping",
+         "statCls": "warn"
+        },
+        {
+         "nm": "Recovery testing",
+         "stat": "Slipping",
+         "statCls": "warn"
+        },
+        {
+         "nm": "AI governance",
+         "stat": "Lagging",
+         "statCls": "warn"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "t": "bigstat",
+     "html": "If the funded roadmap completes, enterprise posture is projected to reach <b>89</b> and bring third-party risk back within appetite."
+    }
+   ]
+  }
+ },
+ "cfo": {
+  "label": "CFO",
+  "nav": [
+   {
+    "id": "exec",
+    "label": "⌂ Exec Summary"
+   },
+   {
+    "id": "q1",
+    "label": "1 · Financial Exposure"
+   },
+   {
+    "id": "q2",
+    "label": "2 · Materiality"
+   },
+   {
+    "id": "q3",
+    "label": "3 · Decisions Required"
+   },
+   {
+    "id": "q4",
+    "label": "4 · Return on Investment"
+   }
+  ],
+  "views": {
+   "exec": [
+    {
+     "t": "head",
+     "q": "Financial exposure is bounded and below our insurance threshold today.",
+     "ans": "Within tolerance",
+     "ansCls": "ok",
+     "lead": "The claims event is scoped to a $0–1.1M range, below the materiality and insurance thresholds. No write-down conversation today."
+    },
+    {
+     "t": "band",
+     "items": [
+      {
+       "k": "Loss exposure vs appetite",
+       "v": "Within",
+       "small": 1,
+       "ev": "cfo-appetite"
+      },
+      {
+       "k": "Cyber spend YTD",
+       "v": "$10.2M",
+       "ev": "cfo-spend"
+      },
+      {
+       "k": "Insurance threshold",
+       "v": "Below",
+       "small": 1,
+       "ev": "cfo-insurance"
+      },
+      {
+       "k": "Financial materiality",
+       "v": "Under review",
+       "small": 1,
+       "cls": "",
+       "ev": "cfo-materiality"
+      },
+      {
+       "k": "Decisions today",
+       "v": "3",
+       "cls": "warnum",
+       "ev": "cfo-decisions"
+      }
+     ]
+    },
+    {
+     "t": "brief",
+     "items": [
+      {
+       "i": "1",
+       "q": "Are we financially exposed today?",
+       "a": "Yes, but bounded to $0–1.1M on the payments/claims path — not the whole estate.",
+       "s": "Bounded",
+       "sCls": "warn",
+       "view": "q1"
+      },
+      {
+       "i": "2",
+       "q": "Is anything material?",
+       "a": "Under review with Legal; current estimate is below materiality and the insurance threshold.",
+       "s": "Under review",
+       "sCls": "warn",
+       "view": "q2"
+      },
+      {
+       "i": "3",
+       "q": "What needs my decision?",
+       "a": "File a precautionary insurance notice, approve $180K response spend, hold the loss reserve.",
+       "s": "3 today",
+       "sCls": "crit",
+       "view": "q3"
+      },
+      {
+       "i": "4",
+       "q": "Are we spending well?",
+       "a": "Loss exposure within appetite; funded roadmap returns measurable posture lift.",
+       "s": "On track",
+       "sCls": "ok",
+       "view": "q4"
+      }
+     ]
+    }
+   ],
+   "q1": [
+    {
+     "t": "head",
+     "q": "Are we financially exposed today?",
+     "ans": "Bounded",
+     "ansCls": "warn",
+     "lead": "Exposure in dollars, scoped to the affected path — not a whole-company number."
+    },
+    {
+     "t": "ansgrid",
+     "cells": [
+      {
+       "l": "Why we can say this",
+       "v": "Exposure is scoped to the affected payments/claims path, not the whole estate. Containment is verified and the loss model bounds the range."
+      },
+      {
+       "l": "What it means for the business",
+       "v": "A $0–1.1M range — below the materiality and insurance thresholds. No write-down or disclosure conversation today."
+      },
+      {
+       "l": "What changed",
+       "chg": true,
+       "v": "Today’s claims event added the bounded exposure; nothing else moved. The insurance notice window is 46 hours."
+      },
+      {
+       "l": "Needs you right now",
+       "v": "Three financial calls today — see Decisions Required."
+      }
+     ]
+    },
+    {
+     "t": "panel",
+     "title": "Exposure — in dollars",
+     "kind": "kv",
+     "rows": [
+      {
+       "l": "Revenue at risk",
+       "v": "~$2.3M / hr",
+       "cls": "warn"
+      },
+      {
+       "l": "Bounded impact if unresolved 24h",
+       "v": "$0–1.1M"
+      },
+      {
+       "l": "Insurance notification threshold",
+       "v": "Below · monitor",
+       "cls": "ok"
+      },
+      {
+       "l": "PCI / penalty exposure",
+       "v": "Only if data confirmed",
+       "cls": "warn"
+      },
+      {
+       "l": "Estimated remediation cost",
+       "v": "~$180K"
+      },
+      {
+       "l": "Containment",
+       "v": "✓ verified holding",
+       "cls": "ok"
+      }
+     ]
+    }
+   ],
+   "q2": [
+    {
+     "t": "head",
+     "q": "Is anything material?",
+     "ans": "Under review",
+     "ansCls": "warn",
+     "lead": "Materiality and disclosure status, co-owned with Legal."
+    },
+    {
+     "t": "panel",
+     "title": "Materiality &amp; obligations",
+     "kind": "kv",
+     "rows": [
+      {
+       "l": "Financial materiality",
+       "v": "Under review · est. below threshold",
+       "cls": "warn"
+      },
+      {
+       "l": "Investor disclosure (8-K)",
+       "v": "Not triggered",
+       "cls": "ok"
+      },
+      {
+       "l": "Cyber-insurance notice",
+       "v": "46h window · precautionary advised",
+       "cls": "warn"
+      },
+      {
+       "l": "Contingency budget",
+       "v": "Response cost within it",
+       "cls": "ok"
+      }
+     ]
+    },
+    {
+     "t": "scn",
+     "label": "If the determination tips over the materiality threshold →",
+     "html": "An 8-K Item 1.05 clock starts (<b>4 business days</b>) and a contingent loss reserve must be booked. The current estimate sits below the line; the determination is co-owned with Legal and due within hours."
+    }
+   ],
+   "q3": [
+    {
+     "t": "head",
+     "q": "What needs my decision?",
+     "ans": "3 today",
+     "ansCls": "crit",
+     "lead": "The financial calls — ranked by time sensitivity, with the cost math shown."
+    },
+    {
+     "t": "dec2",
+     "items": [
+      {
+       "id": "cfo-ir",
+       "title": "Authorize incident-response spend",
+       "sev": "Approve",
+       "sevCls": "high",
+       "sit": "Forensics and emergency vendor support for the contained claims event. The scope you fund determines how defensible the insurance claim and the materiality call are.",
+       "options": [
+        {
+         "name": "A · Full forensic + monitoring",
+         "rec": true,
+         "recLabel": "Recommended",
+         "outcome": "Definitive data-scope determination; supports the insurance claim and materiality call.",
+         "cost": "$180K",
+         "costId": "cfo-d1a",
+         "costBreak": [
+          [
+           "External forensics",
+           "$110K"
+          ],
+          [
+           "Emergency vendor support",
+           "$50K"
+          ],
+          [
+           "Extended monitoring (90d)",
+           "$20K"
+          ]
+         ],
+         "costTotal": "$180K",
+         "risk": "Removes uncertainty on data scope",
+         "riskCls": "good",
+         "tradeoff": "Higher upfront cost.",
+         "tradeoffCls": "warn"
+        },
+        {
+         "name": "B · Minimal triage",
+         "outcome": "Confirms containment only; data scope stays estimated.",
+         "cost": "$45K",
+         "costId": "cfo-d1b",
+         "costBreak": [
+          [
+           "Triage engagement",
+           "$35K"
+          ],
+          [
+           "Monitoring (30d)",
+           "$10K"
+          ]
+         ],
+         "costTotal": "$45K",
+         "risk": "Partial — scope unconfirmed",
+         "riskCls": "warn",
+         "tradeoff": "Weakens insurance &amp; materiality position.",
+         "tradeoffCls": "bad"
+        }
+       ],
+       "rec": "<b>Recommendation: Option A.</b> $180K is within contingency, and the forensic record is what protects a multi-million-dollar insurance claim and the materiality determination — worth far more than the $135K delta."
+      }
+     ]
+    },
+    {
+     "t": "decisions",
+     "title": "Also today",
+     "items": [
+      {
+       "sev": "Time",
+       "sevCls": "crit",
+       "title": "File a precautionary insurance notice",
+       "desc": "— preserves coverage, no admission; 46h window.",
+       "owner": "Carrier: CYB-2026",
+       "action": "File now"
+      },
+      {
+       "sev": "Hold",
+       "sevCls": "info",
+       "title": "Contingent loss reserve",
+       "desc": "— exposure below materiality.",
+       "owner": "Revisit in 2h 40m",
+       "action": "Hold &amp; revisit"
+      }
+     ],
+     "btn": "Generate audit-committee note →"
+    }
+   ],
+   "q4": [
+    {
+     "t": "head",
+     "q": "Are we spending well?",
+     "ans": "On track",
+     "ansCls": "ok",
+     "lead": "Cyber investment against loss exposure and the returns it buys."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Investment",
+      "Status",
+      "Cost",
+      "Return"
+     ],
+     "rows": [
+      [
+       "<div class=\"pn\">PAM rollout</div>",
+       "<span class=\"stat ok\">60% · on track</span>",
+       "$4.2M",
+       "Closes the ransomware loss path"
+      ],
+      [
+       "<div class=\"pn\">Recovery modernization</div>",
+       "<span class=\"stat ok\">Funded</span>",
+       "$6.0M",
+       "Cuts downtime loss exposure"
+      ],
+      [
+       "<div class=\"pn\">Third-party monitoring</div>",
+       "<span class=\"stat warn\">Proposed</span>",
+       "$1.8M",
+       "Stops vendor-driven loss drift"
+      ]
+     ]
+    },
+    {
+     "t": "panel",
+     "title": "Return on cyber investment",
+     "kind": "kv",
+     "mt": 1,
+     "rows": [
+      {
+       "l": "Annualized loss exposure vs appetite",
+       "v": "Within",
+       "cls": "ok"
+      },
+      {
+       "l": "Awaiting your funding decision",
+       "v": "$4.3M · 2 projects",
+       "cls": "warn"
+      },
+      {
+       "l": "Projected posture lift if funded",
+       "v": "82 → 89",
+       "cls": "ok"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "cio": {
+  "label": "CIO",
+  "nav": [
+   {
+    "id": "exec",
+    "label": "⌂ Exec Summary"
+   },
+   {
+    "id": "q1",
+    "label": "1 · Service Status"
+   },
+   {
+    "id": "q2",
+    "label": "2 · Operational Threats"
+   },
+   {
+    "id": "q3",
+    "label": "3 · Decisions Required"
+   },
+   {
+    "id": "q4",
+    "label": "4 · Reliability Trend"
+   }
+  ],
+  "views": {
+   "exec": [
+    {
+     "t": "head",
+     "q": "Critical services are operational and recoverable today.",
+     "ans": "All running",
+     "ansCls": "ok",
+     "lead": "Every critical service is up; one runs on a compensating control with no customer-facing outage. Recovery testing is the one slipping metric."
+    },
+    {
+     "t": "band",
+     "items": [
+      {
+       "k": "Critical services",
+       "v": "Up",
+       "small": 1,
+       "ev": "cio-svc"
+      },
+      {
+       "k": "Uptime (30d)",
+       "v": "99.98%",
+       "ev": "cio-uptime"
+      },
+      {
+       "k": "Recovery readiness",
+       "v": "78%",
+       "tr": "→",
+       "trCls": "flat",
+       "ev": "cio-recovery"
+      },
+      {
+       "k": "Open Sev-1s",
+       "v": "0",
+       "ev": "cio-sev1"
+      },
+      {
+       "k": "Reliability trend",
+       "v": "↑",
+       "cls": "",
+       "ev": "cio-trend"
+      }
+     ]
+    },
+    {
+     "t": "brief",
+     "items": [
+      {
+       "i": "1",
+       "q": "Are critical services up?",
+       "a": "Yes — all running; claims on a compensating control with no outage.",
+       "s": "Operating",
+       "sCls": "ok",
+       "view": "q1"
+      },
+      {
+       "i": "2",
+       "q": "What could disrupt operations?",
+       "a": "Legacy claims platform fragility and vendor dependency in the call center.",
+       "s": "2 watch",
+       "sCls": "warn",
+       "view": "q2"
+      },
+      {
+       "i": "3",
+       "q": "What needs my decision?",
+       "a": "Hold vs failover on the claims gateway; one emergency change to file.",
+       "s": "1 decision",
+       "sCls": "warn",
+       "view": "q3"
+      },
+      {
+       "i": "4",
+       "q": "Are we more reliable over time?",
+       "a": "Yes — uptime steady, MTTR improving; recovery testing needs investment.",
+       "s": "Improving ↑",
+       "sCls": "ok",
+       "view": "q4"
+      }
+     ]
+    }
+   ],
+   "q1": [
+    {
+     "t": "head",
+     "q": "Are critical services up today?",
+     "ans": "Yes",
+     "ansCls": "ok",
+     "lead": "Operational status and recoverability of the services the business runs on."
+    },
+    {
+     "t": "ansgrid",
+     "cells": [
+      {
+       "l": "Why we can say this",
+       "v": "All critical services are up; claims runs on a compensating control with no customer-facing outage. Backup success 99.7%, uptime 99.98%."
+      },
+      {
+       "l": "What it means for the business",
+       "v": "No outage, no customer impact. The business operates normally while the underlying claims fragility is addressed."
+      },
+      {
+       "l": "What changed",
+       "chg": true,
+       "v": "Claims moved to a compensating control at 14:02. Recovery readiness flat at 78% — still the weakest link if a real outage hit."
+      },
+      {
+       "l": "Needs you right now",
+       "v": "One continuity call — hold vs failover — in Decisions Required."
+      }
+     ]
+    },
+    {
+     "t": "cols",
+     "panels": [
+      {
+       "title": "Critical business services",
+       "kind": "srow",
+       "rows": [
+        {
+         "nm": "Claims Processing",
+         "sub": "compensating control active",
+         "stat": "Up · degraded",
+         "statCls": "warn"
+        },
+        {
+         "nm": "Member Portal",
+         "stat": "Up",
+         "statCls": "ok"
+        },
+        {
+         "nm": "Provider Payments",
+         "stat": "Up",
+         "statCls": "ok"
+        },
+        {
+         "nm": "Call Center Operations",
+         "stat": "Up",
+         "statCls": "ok"
+        },
+        {
+         "nm": "AI-Assisted Claims Review",
+         "stat": "Up · watch",
+         "statCls": "warn"
+        }
+       ]
+      },
+      {
+       "title": "Resilience &amp; recovery",
+       "kind": "kv",
+       "rows": [
+        {
+         "l": "Critical apps recoverable",
+         "v": "91%",
+         "cls": "ok"
+        },
+        {
+         "l": "Tested in last 12 months",
+         "v": "83%",
+         "cls": "warn"
+        },
+        {
+         "l": "Recovery readiness",
+         "v": "78%",
+         "cls": "warn"
+        },
+        {
+         "l": "AI systems recoverable",
+         "v": "52%",
+         "cls": "crit"
+        },
+        {
+         "l": "Backup success rate",
+         "v": "99.7%",
+         "cls": "ok"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "t": "bigstat",
+     "html": "If ransomware hit today, claims processing resumes in <b>~3.5 days</b> — within tolerance, but recovery testing is slipping and needs funding."
+    }
+   ],
+   "q2": [
+    {
+     "t": "head",
+     "q": "What could disrupt operations?",
+     "ans": "2 watch items",
+     "ansCls": "warn",
+     "lead": "Operational fragility and dependencies that could take a service down."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Service",
+      "Risk",
+      "Trend",
+      "Operational driver"
+     ],
+     "rows": [
+      {
+       "c": [
+        "<div class=\"pn\">Claims Processing</div>",
+        "<span class=\"rk high\">High</span>",
+        "<span class=\"trn up\">↑</span>",
+        "Legacy platform; single-path dependency"
+       ],
+       "ev": "exp-claims"
+      },
+      {
+       "c": [
+        "<div class=\"pn\">Call Center Ops</div>",
+        "<span class=\"rk med\">Medium</span>",
+        "<span class=\"trn up\">↑</span>",
+        "Vendor-dependent; identity exposure"
+       ],
+       "ev": "cio-callcenter"
+      },
+      {
+       "c": [
+        "<div class=\"pn\">AI-Assisted Claims</div>",
+        "<span class=\"rk med\">Medium</span>",
+        "<span class=\"trn flat\">→</span>",
+        "New service; limited recovery coverage"
+       ],
+       "ev": "exp-ai"
+      },
+      {
+       "c": [
+        "<div class=\"pn\">Member Portal</div>",
+        "<span class=\"rk low\">Low</span>",
+        "<span class=\"trn down\">↓</span>",
+        "Resilient; multi-region"
+       ],
+       "ev": "exp-portal"
+      }
+     ]
+    },
+    {
+     "t": "scn",
+     "label": "If the legacy claims platform failed outright →",
+     "html": "Claims processing resumes in <b>~3.5 days</b> at current recovery readiness (78%). Modernizing the critical path cuts that to under a day — the operational basis for the funding decision."
+    }
+   ],
+   "q3": [
+    {
+     "t": "head",
+     "q": "What needs my decision?",
+     "ans": "1 decision",
+     "ansCls": "warn",
+     "lead": "Continuity calls that are the CIO’s to make — with the cost of each path shown."
+    },
+    {
+     "t": "dec2",
+     "items": [
+      {
+       "id": "cio-fail",
+       "title": "Hold compensating control vs force failover",
+       "sev": "Decide",
+       "sevCls": "high",
+       "sit": "The claims gateway is on a compensating control that is holding. Forcing a failover would eliminate residual risk but risks a payment outage during cutover.",
+       "options": [
+        {
+         "name": "A · Hold the compensating control",
+         "rec": true,
+         "recLabel": "Recommended",
+         "outcome": "No outage; control is verified holding. Re-evaluate at incident close.",
+         "cost": "$0 now",
+         "risk": "Residual risk remains, monitored",
+         "riskCls": "warn",
+         "tradeoff": "Underlying path stays open until PAM closes it.",
+         "tradeoffCls": "warn"
+        },
+        {
+         "name": "B · Force failover to standby",
+         "outcome": "Eliminates the residual risk immediately.",
+         "cost": "$60K",
+         "costId": "cio-d1b",
+         "costBreak": [
+          [
+           "~9-min payment outage (est. revenue)",
+           "$35K"
+          ],
+          [
+           "Cutover engineering",
+           "$15K"
+          ],
+          [
+           "Post-cutover validation",
+           "$10K"
+          ]
+         ],
+         "costTotal": "$60K",
+         "risk": "Removes residual risk now",
+         "riskCls": "good",
+         "tradeoff": "~9-minute payment outage during cutover.",
+         "tradeoffCls": "bad"
+        }
+       ],
+       "rec": "<b>Recommendation: Option A (hold).</b> The control is holding and monitored; a guaranteed 9-minute payment outage isn’t justified to remove a residual risk that PAM will close anyway."
+      }
+     ]
+    },
+    {
+     "t": "decisions",
+     "title": "Also today",
+     "items": [
+      {
+       "sev": "File",
+       "sevCls": "info",
+       "title": "Emergency change record",
+       "desc": "— for the applied compensating control.",
+       "owner": "Change board",
+       "action": "File now"
+      }
+     ]
+    }
+   ],
+   "q4": [
+    {
+     "t": "head",
+     "q": "Are we more reliable over time?",
+     "ans": "Improving",
+     "ansCls": "ok",
+     "lead": "Reliability and recovery trend against operational targets."
+    },
+    {
+     "t": "panel",
+     "title": "Reliability trend",
+     "kind": "kv",
+     "rows": [
+      {
+       "l": "Uptime (rolling 90d)",
+       "v": "99.98% · steady",
+       "cls": "ok"
+      },
+      {
+       "l": "Mean time to recover (MTTR)",
+       "v": "Improving",
+       "cls": "ok"
+      },
+      {
+       "l": "Recovery readiness",
+       "v": "78% → target 90%",
+       "cls": "warn"
+      },
+      {
+       "l": "Change-related incidents",
+       "v": "Down",
+       "cls": "ok"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "clo": {
+  "label": "CLO",
+  "nav": [
+   {
+    "id": "exec",
+    "label": "⌂ Exec Summary"
+   },
+   {
+    "id": "q1",
+    "label": "1 · Regulatory Obligation"
+   },
+   {
+    "id": "q2",
+    "label": "2 · Disclosure &amp; Timelines"
+   },
+   {
+    "id": "q3",
+    "label": "3 · Decisions Required"
+   },
+   {
+    "id": "q4",
+    "label": "4 · Defensibility"
+   }
+  ],
+  "views": {
+   "exec": [
+    {
+     "t": "head",
+     "q": "No disclosure obligation is triggered today; clocks are tracked and evidence preserved.",
+     "ans": "No trigger yet",
+     "ansCls": "ok",
+     "lead": "The claims event is under materiality review. Nothing requires regulatory or customer notification to date; evidence is preserved under privilege."
+    },
+    {
+     "t": "band",
+     "items": [
+      {
+       "k": "Disclosure triggered",
+       "v": "0",
+       "ev": "clo-disclosure"
+      },
+      {
+       "k": "Reg clocks running",
+       "v": "1",
+       "cls": "warnum",
+       "ev": "clo-clocks"
+      },
+      {
+       "k": "Privilege / preservation",
+       "v": "In place",
+       "small": 1,
+       "ev": "clo-privilege"
+      },
+      {
+       "k": "Open legal risks",
+       "v": "2",
+       "ev": "clo-legalrisks"
+      },
+      {
+       "k": "Decisions today",
+       "v": "2",
+       "cls": "warnum",
+       "ev": "clo-decisions"
+      }
+     ]
+    },
+    {
+     "t": "brief",
+     "items": [
+      {
+       "i": "1",
+       "q": "Do we have an obligation today?",
+       "a": "No disclosure triggered; two open legal risks tracked, evidence preserved under privilege.",
+       "s": "No trigger",
+       "sCls": "ok",
+       "view": "q1"
+      },
+      {
+       "i": "2",
+       "q": "What must we disclose, and when?",
+       "a": "One clock running — SEC 4-day starts only on a materiality determination.",
+       "s": "1 clock",
+       "sCls": "warn",
+       "view": "q2"
+      },
+      {
+       "i": "3",
+       "q": "What needs my decision?",
+       "a": "Make/defer the materiality call; decide on a precautionary litigation hold.",
+       "s": "2 today",
+       "sCls": "warn",
+       "view": "q3"
+      },
+      {
+       "i": "4",
+       "q": "Is our position defensible?",
+       "a": "Yes — regulatory readiness 91%; full evidence chain preserved.",
+       "s": "Defensible",
+       "sCls": "ok",
+       "view": "q4"
+      }
+     ]
+    }
+   ],
+   "q1": [
+    {
+     "t": "head",
+     "q": "Do we have an obligation today?",
+     "ans": "No trigger yet",
+     "ansCls": "ok",
+     "lead": "Regimes implicated by the event and our preservation posture."
+    },
+    {
+     "t": "ansgrid",
+     "cells": [
+      {
+       "l": "Why we can say this",
+       "v": "No disclosure obligation has triggered. No personal data is confirmed exposed; evidence is preserved under privilege and clocks are tracked."
+      },
+      {
+       "l": "What it means for the business",
+       "v": "No regulatory or customer notification is required to date. The company’s legal position is defensible and documented."
+      },
+      {
+       "l": "What changed",
+       "chg": true,
+       "v": "The claims event opened a materiality review; an SEC 4-day clock is armed but not started. A GDPR clock remains N/A pending data-scope."
+      },
+      {
+       "l": "Needs you right now",
+       "v": "Two legal calls — the materiality determination and a precautionary litigation hold."
+      }
+     ]
+    },
+    {
+     "t": "panel",
+     "title": "Legal exposure &amp; posture",
+     "kind": "kv",
+     "rows": [
+      {
+       "l": "Disclosure obligation triggered",
+       "v": "None to date",
+       "cls": "ok"
+      },
+      {
+       "l": "Regimes potentially implicated",
+       "v": "SEC, GDPR, state breach laws",
+       "cls": "warn"
+      },
+      {
+       "l": "Data subjects confirmed exposed",
+       "v": "0 (under review)",
+       "cls": "warn"
+      },
+      {
+       "l": "Litigation hold",
+       "v": "Standing by",
+       "cls": ""
+      },
+      {
+       "l": "Evidence preservation",
+       "v": "In place · under privilege",
+       "cls": "ok"
+      }
+     ]
+    }
+   ],
+   "q2": [
+    {
+     "t": "head",
+     "q": "What must we disclose, and by when?",
+     "ans": "1 clock running",
+     "ansCls": "warn",
+     "lead": "Multi-jurisdiction obligations and the clocks attached to each."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Regime",
+      "Status",
+      "Clock",
+      "Note"
+     ],
+     "rows": [
+      [
+       "<div class=\"pn\">SEC 8-K · Item 1.05 (US)</div>",
+       "<span class=\"stat warn\">Not started</span>",
+       "4 business days",
+       "Starts only on materiality determination"
+      ],
+      [
+       "<div class=\"pn\">GDPR 72-hr (EU)</div>",
+       "<span class=\"stat ok\">N/A</span>",
+       "—",
+       "No personal data confirmed exposed"
+      ],
+      [
+       "<div class=\"pn\">State breach laws (US)</div>",
+       "<span class=\"stat warn\">Monitoring</span>",
+       "Varies",
+       "Below threshold pending data-scope"
+      ],
+      [
+       "<div class=\"pn\">Contractual notice</div>",
+       "<span class=\"stat warn\">46h</span>",
+       "Vendor SLA",
+       "Precautionary notice prepared"
+      ]
+     ]
+    },
+    {
+     "t": "scn",
+     "label": "If forensics confirms PHI was exposed →",
+     "html": "State breach-notification clocks start across <b>up to 11 states</b>, the SEC materiality determination likely tips to disclosable, and contractual vendor-notice obligations trigger. Evidence preserved under privilege keeps the position defensible either way."
+    }
+   ],
+   "q3": [
+    {
+     "t": "head",
+     "q": "What needs my decision?",
+     "ans": "2 today",
+     "ansCls": "warn",
+     "lead": "The legal calls — privilege, preservation, and the materiality determination, with the cost of each path."
+    },
+    {
+     "t": "dec2",
+     "items": [
+      {
+       "id": "clo-mat",
+       "title": "Make or defer the materiality determination",
+       "sev": "Decide",
+       "sevCls": "high",
+       "sit": "Co-owned with the CFO, due in 2h 40m. Determining now versus awaiting forensics changes both the disclosure clock and the defensibility of the call.",
+       "options": [
+        {
+         "name": "A · Determine now (not material)",
+         "outcome": "Closes the question on current evidence; no clock starts.",
+         "cost": "Low",
+         "risk": "Fast resolution",
+         "riskCls": "good",
+         "tradeoff": "Re-opens if forensics later contradicts — defensibility risk.",
+         "tradeoffCls": "bad"
+        },
+        {
+         "name": "B · Defer pending forensics",
+         "rec": true,
+         "recLabel": "Recommended",
+         "outcome": "Determine on complete data; preserves a defensible record.",
+         "cost": "$25K",
+         "costId": "clo-d1b",
+         "costBreak": [
+          [
+           "Outside-counsel review",
+           "$18K"
+          ],
+          [
+           "Forensic-liaison time",
+           "$7K"
+          ]
+         ],
+         "costTotal": "$25K",
+         "risk": "Most defensible determination",
+         "riskCls": "good",
+         "tradeoff": "Determination window stays open ~48h.",
+         "tradeoffCls": "warn"
+        }
+       ],
+       "rec": "<b>Recommendation: Option B (defer pending forensics).</b> A materiality call that later proves wrong is the larger exposure; the $25K to determine on complete evidence is cheap insurance for a defensible position."
+      }
+     ]
+    },
+    {
+     "t": "decisions",
+     "title": "Also today",
+     "items": [
+      {
+       "sev": "Decide",
+       "sevCls": "info",
+       "title": "Issue a precautionary litigation hold",
+       "desc": "— preserves evidence should status change.",
+       "owner": "Legal ops",
+       "action": "Recommend: issue"
+      }
+     ],
+     "btn": "Generate counsel memo →"
+    }
+   ],
+   "q4": [
+    {
+     "t": "head",
+     "q": "Is our position defensible?",
+     "ans": "Defensible",
+     "ansCls": "ok",
+     "lead": "The record that protects the company with regulators, auditors, and in litigation."
+    },
+    {
+     "t": "panel",
+     "title": "Defensibility",
+     "kind": "kv",
+     "rows": [
+      {
+       "l": "Regulatory readiness",
+       "v": "91%",
+       "cls": "ok"
+      },
+      {
+       "l": "Evidence chain",
+       "v": "Preserved · integrity verified",
+       "cls": "ok"
+      },
+      {
+       "l": "Obligations met on time (12mo)",
+       "v": "100%",
+       "cls": "ok"
+      },
+      {
+       "l": "Open legal risks",
+       "v": "2 · tracked",
+       "cls": "warn"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "cro": {
+  "label": "CRO",
+  "nav": [
+   {
+    "id": "exec",
+    "label": "⌂ Exec Summary"
+   },
+   {
+    "id": "q1",
+    "label": "1 · Risk Appetite"
+   },
+   {
+    "id": "q2",
+    "label": "2 · Risk Aggregation"
+   },
+   {
+    "id": "q3",
+    "label": "3 · Compliance &amp; AI Standards"
+   },
+   {
+    "id": "q4",
+    "label": "4 · Decisions Required"
+   },
+   {
+    "id": "q5",
+    "label": "5 · Risk Trajectory"
+   }
+  ],
+  "views": {
+   "exec": [
+    {
+     "t": "head",
+     "q": "All cyber risk aggregates to you. The enterprise is within appetite; one risk is over the line and AI risk is rising.",
+     "ans": "1 over appetite",
+     "ansCls": "warn",
+     "lead": "Every leader owns their slice of cyber risk — but it stacks up to you. Aggregate is within tolerance; claims/payments is over the line, and AI/agentic risk is the fastest-growing exposure."
+    },
+    {
+     "t": "band",
+     "items": [
+      {
+       "k": "Risks over appetite",
+       "v": "1",
+       "cls": "warnum",
+       "ev": "cro-overappetite"
+      },
+      {
+       "k": "Aggregate risk",
+       "v": "Within",
+       "small": 1,
+       "ev": "cro-aggregate"
+      },
+      {
+       "k": "Third-party risk",
+       "v": "Drifting",
+       "small": 1,
+       "ev": "cro-tpr"
+      },
+      {
+       "k": "AI &amp; agentic risk",
+       "v": "Rising",
+       "small": 1,
+       "cls": "",
+       "ev": "cro-airisk"
+      },
+      {
+       "k": "Risk trend",
+       "v": "↑",
+       "ev": "cro-trend"
+      }
+     ]
+    },
+    {
+     "t": "brief",
+     "items": [
+      {
+       "i": "1",
+       "q": "Are we within risk appetite today?",
+       "a": "Aggregate yes; one risk (claims/payments) is currently above the appetite line.",
+       "s": "1 breach",
+       "sCls": "warn",
+       "view": "q1"
+      },
+      {
+       "i": "2",
+       "q": "How does enterprise risk aggregate — and who owns each piece?",
+       "a": "Six leaders contribute; CISO and CIO carry the most. All of it rolls up to you, with named owners.",
+       "s": "Aggregated",
+       "sCls": "warn",
+       "view": "q2"
+      },
+      {
+       "i": "3",
+       "q": "Are we compliant, and is our AI risk governed?",
+       "a": "Compliance is current; AI governance is early — developer, agentic, and shadow AI are ahead of standards.",
+       "s": "AI: early",
+       "sCls": "warn",
+       "view": "q3"
+      },
+      {
+       "i": "4",
+       "q": "What needs my decision?",
+       "a": "Treat the vendor risk, escalate the breach, and stand up enterprise AI governance.",
+       "s": "3 today",
+       "sCls": "crit",
+       "view": "q4"
+      },
+      {
+       "i": "5",
+       "q": "Is aggregate risk trending down?",
+       "a": "Yes — residual risk improving over six quarters, within appetite.",
+       "s": "Improving ↑",
+       "sCls": "ok",
+       "view": "q5"
+      }
+     ]
+    }
+   ],
+   "q1": [
+    {
+     "t": "head",
+     "q": "Are we within risk appetite today?",
+     "ans": "Aggregate: yes",
+     "ansCls": "ok",
+     "lead": "Each risk category against the board-set appetite line."
+    },
+    {
+     "t": "ansgrid",
+     "cells": [
+      {
+       "l": "Why we can say this",
+       "v": "The enterprise aggregate sits within tolerance across categories. One entry (claims/payments) moved above the line on today’s contained exposure."
+      },
+      {
+       "l": "What it means for the business",
+       "v": "No enterprise-level breach of appetite. The single over-appetite item is contained and has a clear mitigation path."
+      },
+      {
+       "l": "What changed",
+       "chg": true,
+       "v": "Claims/payments crossed above appetite today. Third-party risk continues to drift; AI/agentic risk is rising fastest."
+      },
+      {
+       "l": "Needs you right now",
+       "v": "A vendor risk decision, a committee escalation, and an AI-governance call."
+      }
+     ]
+    },
+    {
+     "t": "table",
+     "head": [
+      "Risk category",
+      "Position",
+      "vs Appetite",
+      "Note"
+     ],
+     "rows": [
+      {
+       "c": [
+        "<div class=\"pn\">Claims / payments</div>",
+        "<span class=\"rk high\">Elevated</span>",
+        "<span class=\"trn up\">Over</span>",
+        "Contained exposure pushed it above line"
+       ],
+       "ev": "exp-claims"
+      },
+      {
+       "c": [
+        "<div class=\"pn\">AI &amp; agentic</div>",
+        "<span class=\"rk med\">Rising</span>",
+        "<span class=\"trn up\">Approaching</span>",
+        "Dev + agentic + shadow AI ahead of governance"
+       ],
+       "ev": "exp-ai"
+      },
+      {
+       "c": [
+        "<div class=\"pn\">Third-party</div>",
+        "<span class=\"rk med\">Medium</span>",
+        "<span class=\"trn flat\">At line</span>",
+        "Two critical vendors drifting"
+       ],
+       "ev": "cro-tpr"
+      },
+      {
+       "c": [
+        "<div class=\"pn\">Identity / access</div>",
+        "<span class=\"rk low\">Low</span>",
+        "<span class=\"trn down\">Within</span>",
+        "Improving"
+       ],
+       "ev": "cro-identity"
+      },
+      {
+       "c": [
+        "<div class=\"pn\">Aggregate enterprise</div>",
+        "<span class=\"rk med\">Medium</span>",
+        "<span class=\"trn down\">Within</span>",
+        "Within tolerance overall"
+       ],
+       "ev": "cro-aggregate"
+      }
+     ]
+    }
+   ],
+   "q2": [
+    {
+     "t": "head",
+     "q": "How does enterprise risk aggregate — and who owns each piece?",
+     "ans": "All rolls up to you",
+     "ansCls": "warn",
+     "lead": "Cyber risk is every leader’s responsibility, but it stacks into one enterprise picture you own — and you hold each owner accountable for their slice."
+    },
+    {
+     "t": "ansgrid",
+     "cells": [
+      {
+       "l": "Why we can say this",
+       "v": "Each leader’s risk domain is measured and rolled up: CISO (threat &amp; controls), CIO (operational), CLO (regulatory), CFO (financial), CEO (strategic/third-party), plus emerging AI risk."
+      },
+      {
+       "l": "What it means for you",
+       "v": "You see the whole, not six silos. The enterprise aggregate is within appetite, but two contributors (CISO’s ransomware path, AI risk) are over or approaching their line."
+      },
+      {
+       "l": "What changed",
+       "chg": true,
+       "v": "AI/agentic risk grew to 16% of the aggregate this quarter — now the third-largest contributor. CISO’s contribution rose on the active ransomware path."
+      },
+      {
+       "l": "Needs you right now",
+       "v": "Hold the CISO and CIO accountable on their over-line items; escalate AI governance."
+      }
+     ]
+    },
+    {
+     "t": "sec",
+     "title": "Enterprise risk — who contributes what"
+    },
+    {
+     "t": "raw",
+     "html": "<div class=\"agglegend\"><span class=\"lg\"><span class=\"sw\" style=\"background:#0A4DC4\"></span>CISO · threat &amp; controls 28%</span><span class=\"lg\"><span class=\"sw\" style=\"background:#6C5CE7\"></span>CIO · operational 22%</span><span class=\"lg\"><span class=\"sw\" style=\"background:#E0A968\"></span>AI &amp; agentic 16%</span><span class=\"lg\"><span class=\"sw\" style=\"background:#3E8E7E\"></span>CLO · regulatory 14%</span><span class=\"lg\"><span class=\"sw\" style=\"background:#B8860B\"></span>CFO · financial 12%</span><span class=\"lg\"><span class=\"sw\" style=\"background:#8A8F98\"></span>CEO · strategic 8%</span></div><div class=\"aggbar\"><div class=\"aggseg\" style=\"width:28%;background:#0A4DC4\">CISO 28%</div><div class=\"aggseg\" style=\"width:22%;background:#6C5CE7\">CIO 22%</div><div class=\"aggseg\" style=\"width:16%;background:#E0A968;color:#3a2a12\">AI 16%</div><div class=\"aggseg\" style=\"width:14%;background:#3E8E7E\">CLO 14%</div><div class=\"aggseg\" style=\"width:12%;background:#B8860B\">CFO 12%</div><div class=\"aggseg\" style=\"width:8%;background:#8A8F98\">CEO 8%</div></div>"
+    },
+    {
+     "t": "sec",
+     "title": "Accountability — your leverage over each owner"
+    },
+    {
+     "t": "table",
+     "head": [
+      "Risk domain",
+      "Accountable leader",
+      "Residual",
+      "vs Appetite",
+      "Hold accountable"
+     ],
+     "rows": [
+      [
+       "<div class=\"pn\">Threat &amp; control exposure</div>",
+       "S. Chen · CISO",
+       "$94M modeled",
+       "<span class=\"trn up\">Over</span>",
+       "<button class=\"acct-act act-edit\">Require remediation</button>"
+      ],
+      [
+       "<div class=\"pn\">AI &amp; agentic risk</div>",
+       "R. Patel · CIO + you",
+       "$12–40M",
+       "<span class=\"trn up\">Approaching</span>",
+       "<button class=\"acct-act act-edit\">Escalate</button>"
+      ],
+      [
+       "<div class=\"pn\">Operational resilience</div>",
+       "M. Chen · CIO",
+       "$1.1M",
+       "<span class=\"trn flat\">At line</span>",
+       "<button class=\"acct-act act-edit\">Track</button>"
+      ],
+      [
+       "<div class=\"pn\">Third-party concentration</div>",
+       "You + CEO",
+       "$0.4M",
+       "<span class=\"trn flat\">At line</span>",
+       "<button class=\"acct-act act-edit\">Mitigate</button>"
+      ],
+      [
+       "<div class=\"pn\">Regulatory / disclosure</div>",
+       "P. Adeyemi · CLO",
+       "—",
+       "<span class=\"trn down\">Within</span>",
+       "<button class=\"acct-act act-edit\">Monitor</button>"
+      ],
+      [
+       "<div class=\"pn\">Financial / insurance</div>",
+       "D. Okoye · CFO",
+       "$0–1.1M",
+       "<span class=\"trn down\">Within</span>",
+       "<button class=\"acct-act act-edit\">Monitor</button>"
+      ]
+     ]
+    }
+   ],
+   "q3": [
+    {
+     "t": "head",
+     "q": "Are we compliant, and is our AI risk governed?",
+     "ans": "Compliant · AI early",
+     "ansCls": "warn",
+     "lead": "You own enterprise compliance and the emerging AI-risk class. Regulatory posture is current; AI governance is behind the pace of AI adoption."
+    },
+    {
+     "t": "ansgrid",
+     "cells": [
+      {
+       "l": "Why we can say this",
+       "v": "HIPAA, SEC, and PCI obligations are current and evidenced. But developer AI (Claude Code, Copilot, Cursor), agentic AI, and shadow AI are in use ahead of any formal AI standard."
+      },
+      {
+       "l": "What it means for the business",
+       "v": "No compliance breach today — but AI risk is accumulating faster than governance, and the claims model may classify as high-risk under the EU AI Act."
+      },
+      {
+       "l": "What changed",
+       "chg": true,
+       "v": "Agentic AI gained production tool access this quarter; AI-tool usage spread across engineering. No AI standard is fully implemented."
+      },
+      {
+       "l": "Needs you right now",
+       "v": "Stand up enterprise AI governance against OWASP &amp; NIST AI RMF — see Decisions Required."
+      }
+     ]
+    },
+    {
+     "t": "sec",
+     "title": "Compliance &amp; regulatory posture",
+     "meta": "you own this at the enterprise level"
+    },
+    {
+     "t": "table",
+     "head": [
+      "Framework",
+      "Owner",
+      "Status",
+      "Gap"
+     ],
+     "rows": [
+      [
+       "<div class=\"pn\">HIPAA Security Rule</div>",
+       "CLO + CISO",
+       "<span class=\"stat ok\">Compliant</span>",
+       "—"
+      ],
+      [
+       "<div class=\"pn\">SEC Cyber Disclosure</div>",
+       "CLO + CFO",
+       "<span class=\"stat ok\">Ready</span>",
+       "—"
+      ],
+      [
+       "<div class=\"pn\">PCI-DSS v4</div>",
+       "CISO",
+       "<span class=\"stat ok\">Compliant</span>",
+       "—"
+      ],
+      [
+       "<div class=\"pn\">NIST CSF 2.0 <small>(control maturity — CISO)</small></div>",
+       "CISO",
+       "<span class=\"stat warn\">L3 Defined</span>",
+       "Recovery testing"
+      ],
+      [
+       "<div class=\"pn\">MITRE ATT&amp;CK <small>(threat coverage — CISO)</small></div>",
+       "CISO",
+       "<span class=\"stat warn\">Monitoring</span>",
+       "Detection-coverage gaps"
+      ],
+      [
+       "<div class=\"pn\">ISO/IEC 27001</div>",
+       "CISO",
+       "<span class=\"stat ok\">Certified</span>",
+       "Q3 surveillance audit"
+      ]
+     ]
+    },
+    {
+     "t": "sec",
+     "title": "AI risk &amp; standards",
+     "meta": "emerging risk class — owned by Risk"
+    },
+    {
+     "t": "table",
+     "head": [
+      "AI standard",
+      "What it measures",
+      "Posture",
+      "Priority gap"
+     ],
+     "rows": [
+      [
+       "<div class=\"pn\">OWASP Top 10 for LLM Apps</div>",
+       "Prompt injection, data disclosure, supply chain",
+       "<span class=\"stat warn\">Partial · 4/10</span>",
+       "Injection testing"
+      ],
+      [
+       "<div class=\"pn\">OWASP Agentic AI</div>",
+       "Autonomous action, tool/permission abuse",
+       "<span class=\"stat crit\">Early</span>",
+       "Permission governance"
+      ],
+      [
+       "<div class=\"pn\">NIST AI RMF</div>",
+       "Govern · map · measure · manage",
+       "<span class=\"stat warn\">Map stage</span>",
+       "Measurement"
+      ],
+      [
+       "<div class=\"pn\">ISO/IEC 42001</div>",
+       "AI management system",
+       "<span class=\"stat crit\">Not started</span>",
+       "Program standup"
+      ],
+      [
+       "<div class=\"pn\">EU AI Act</div>",
+       "High-risk classification &amp; obligations",
+       "<span class=\"stat warn\">Assessing</span>",
+       "Is the claims model high-risk?"
+      ],
+      [
+       "<div class=\"pn\">MITRE ATLAS</div>",
+       "Adversarial ML techniques",
+       "<span class=\"stat warn\">Monitoring</span>",
+       "Red-team coverage"
+      ]
+     ]
+    },
+    {
+     "t": "sec",
+     "title": "AI in use across the organization"
+    },
+    {
+     "t": "raw",
+     "html": "<div class=\"aicards\"><div class=\"aicard\"><div class=\"aih\"><div class=\"ait\">Developer AI tools</div><span class=\"aibadge med\">Medium</span></div><div class=\"aidesc\">Claude Code, GitHub Copilot, and Cursor are in use across engineering. Exposure: code provenance, secrets leaking into prompts, and license/IP contamination.</div><div class=\"aistd\">Measured against <b>OWASP LLM05 · LLM02 · SLSA</b></div></div><div class=\"aicard\"><div class=\"aih\"><div class=\"ait\">Agentic AI</div><span class=\"aibadge high\">High</span></div><div class=\"aidesc\">Autonomous agents hold tool access to CI/CD, ticketing, and data stores. Exposure: over-broad permissions and unbounded actions — an agent acts faster than oversight.</div><div class=\"aistd\">Measured against <b>OWASP Agentic AI · NIST AI RMF</b></div></div><div class=\"aicard\"><div class=\"aih\"><div class=\"ait\">Shadow AI</div><span class=\"aibadge high\">High</span></div><div class=\"aidesc\">Unsanctioned LLM use, some touching PHI, outside DLP. Exposure: PHI sent to third-party models with no audit trail.</div><div class=\"aistd\">Measured against <b>HIPAA · OWASP LLM06</b></div></div><div class=\"aicard\"><div class=\"aih\"><div class=\"ait\">AI in claims decisions</div><span class=\"aibadge high\">High</span></div><div class=\"aidesc\">Models make claims decisions on PHI without human oversight. Exposure: bias, hallucination, and no documented defensibility.</div><div class=\"aistd\">Measured against <b>EU AI Act (high-risk) · NIST AI RMF</b></div></div></div>"
+    },
+    {
+     "t": "scn",
+     "label": "If an agentic AI tool with production access is compromised or misbehaves →",
+     "html": "It can act at machine speed across CI/CD, ticketing, and data stores — <b>exfiltrating data or making changes faster than any human reviewer can intervene</b>. Governing agent permissions and adopting the OWASP Agentic AI controls is the mitigation, and the basis for the AI-governance decision."
+    }
+   ],
+   "q4": [
+    {
+     "t": "head",
+     "q": "What needs my decision?",
+     "ans": "3 today",
+     "ansCls": "crit",
+     "lead": "Treat the risk, hold owners accountable, and set the enterprise AI standard — each with the cost of every path."
+    },
+    {
+     "t": "dec2",
+     "items": [
+      {
+       "id": "cro-vendor",
+       "title": "Accept, transfer, or mitigate vendor (PHI) risk",
+       "sev": "Decide",
+       "sevCls": "high",
+       "sit": "A critical vendor handling PHI is below tolerance. The classic risk-treatment choice — each option has a different cost and residual.",
+       "options": [
+        {
+         "name": "A · Mitigate (tighten controls)",
+         "rec": true,
+         "recLabel": "Recommended",
+         "outcome": "Vendor access scoped down, monitoring added; brings the risk back within appetite.",
+         "cost": "$240K",
+         "costId": "cro-d1a",
+         "costBreak": [
+          [
+           "Vendor access re-scoping",
+           "$90K"
+          ],
+          [
+           "Continuous monitoring",
+           "$120K"
+          ],
+          [
+           "Contract / SLA amendment",
+           "$30K"
+          ]
+         ],
+         "costTotal": "$240K",
+         "risk": "Returns vendor risk within appetite",
+         "riskCls": "good",
+         "tradeoff": "Requires vendor cooperation; ~6 weeks.",
+         "tradeoffCls": "warn"
+        },
+        {
+         "name": "B · Transfer (insurance / contract)",
+         "outcome": "Shifts financial impact via coverage and indemnity; risk event still possible.",
+         "cost": "$310K/yr",
+         "costId": "cro-d1b",
+         "costBreak": [
+          [
+           "Cyber policy sub-limit increase",
+           "$260K"
+          ],
+          [
+           "Contractual indemnity legal",
+           "$50K"
+          ]
+         ],
+         "costTotal": "$310K/yr",
+         "risk": "Caps financial loss, not likelihood",
+         "riskCls": "warn",
+         "tradeoff": "Recurring cost; event can still occur.",
+         "tradeoffCls": "warn"
+        },
+        {
+         "name": "C · Accept with documentation",
+         "outcome": "Formally accept the residual risk; no spend.",
+         "cost": "$0 · <span style=\"color:var(--critical)\">$0.4M residual carried</span>",
+         "risk": "None removed",
+         "riskCls": "bad",
+         "tradeoff": "Above-appetite risk remains on the register.",
+         "tradeoffCls": "bad"
+        }
+       ],
+       "rec": "<b>Recommendation: Option A (mitigate).</b> At $240K it actually reduces likelihood and returns the risk within appetite, versus transfer which only caps the loss or acceptance which leaves you above the line."
+      },
+      {
+       "id": "cro-ai",
+       "title": "Establish enterprise AI governance &amp; standards",
+       "sev": "Decide",
+       "sevCls": "high",
+       "sit": "Developer, agentic, and shadow AI are in use ahead of governance. As risk owner, you set the enterprise standard every other leader executes against.",
+       "options": [
+        {
+         "name": "A · Adopt NIST AI RMF + OWASP, govern agents",
+         "rec": true,
+         "recLabel": "Recommended",
+         "outcome": "Enterprise AI standard, model inventory, agent-permission governance, monitoring.",
+         "cost": "$1.6M",
+         "costId": "cro-d2a",
+         "costBreak": [
+          [
+           "AI governance lead + 2 FTE × 12mo",
+           "$1.10M"
+          ],
+          [
+           "AI security tooling (DLP, agent guardrails)",
+           "$350K"
+          ],
+          [
+           "External AI red-team &amp; assessment",
+           "$150K"
+          ]
+         ],
+         "costTotal": "$1.60M",
+         "risk": "Brings AI risk within appetite · EU AI Act ready",
+         "riskCls": "good",
+         "tradeoff": "12-month program; cross-functional.",
+         "tradeoffCls": "warn"
+        },
+        {
+         "name": "B · Interim guardrails only",
+         "outcome": "Block shadow AI, scope agent permissions, sanction approved tools.",
+         "cost": "$280K",
+         "costId": "cro-d2b",
+         "costBreak": [
+          [
+           "DLP / egress controls",
+           "$140K"
+          ],
+          [
+           "Agent permission re-scoping",
+           "$90K"
+          ],
+          [
+           "Policy &amp; training",
+           "$50K"
+          ]
+         ],
+         "costTotal": "$280K",
+         "risk": "Stops worst-case now; not durable",
+         "riskCls": "warn",
+         "tradeoff": "No standards program; revisit next cycle.",
+         "tradeoffCls": "warn"
+        }
+       ],
+       "rec": "<b>Recommendation: Option A.</b> AI risk is compounding; an enterprise standard with agent-permission governance is what holds each leader accountable and gets you EU AI Act–ready before the claims model is classified high-risk."
+      }
+     ]
+    },
+    {
+     "t": "decisions",
+     "title": "Also today",
+     "items": [
+      {
+       "sev": "Escalate",
+       "sevCls": "info",
+       "title": "Appetite-breach escalation",
+       "desc": "— claims/payments above the line.",
+       "owner": "Risk committee",
+       "action": "Escalate"
+      }
+     ]
+    }
+   ],
+   "q5": [
+    {
+     "t": "head",
+     "q": "Is aggregate risk trending down?",
+     "ans": "Improving",
+     "ansCls": "ok",
+     "lead": "Residual risk against appetite over time."
+    },
+    {
+     "t": "panel",
+     "title": "Risk trajectory",
+     "kind": "kv",
+     "rows": [
+      {
+       "l": "Residual risk (6-quarter trend)",
+       "v": "Down · within appetite",
+       "cls": "ok"
+      },
+      {
+       "l": "Appetite breaches this year",
+       "v": "3 · all resolved",
+       "cls": "ok"
+      },
+      {
+       "l": "Risk register items closed (Q)",
+       "v": "12",
+       "cls": "ok"
+      },
+      {
+       "l": "AI risk (new this year)",
+       "v": "Rising · governance pending",
+       "cls": "warn"
+      },
+      {
+       "l": "Projected if roadmap funded",
+       "v": "Further reduction",
+       "cls": "ok"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "board": {
+  "label": "Board",
+  "nav": [
+   {
+    "id": "exec",
+    "label": "⌂ Exec Summary"
+   },
+   {
+    "id": "q1",
+    "label": "1 · Control Assurance"
+   },
+   {
+    "id": "q2",
+    "label": "2 · Materiality"
+   },
+   {
+    "id": "q3",
+    "label": "3 · Board Decisions"
+   },
+   {
+    "id": "q4",
+    "label": "4 · Quarterly Oversight"
+   }
+  ],
+  "views": {
+   "exec": [
+    {
+     "t": "head",
+     "q": "Management is in control. One event is under materiality review; no disclosure is required to date.",
+     "ans": "In control",
+     "ansCls": "ok",
+     "lead": "A single contained event, handled by management within minutes. The record shows the board has exercised oversight. One funding decision is before you."
+    },
+    {
+     "t": "band",
+     "items": [
+      {
+       "k": "Management in control",
+       "v": "Yes",
+       "small": 1,
+       "ev": "board-control"
+      },
+      {
+       "k": "Material events",
+       "v": "0",
+       "ev": "board-material"
+      },
+      {
+       "k": "Board decisions needed",
+       "v": "1",
+       "cls": "warnum",
+       "ev": "board-decisions"
+      },
+      {
+       "k": "Posture vs appetite",
+       "v": "Within",
+       "small": 1,
+       "ev": "board-appetite"
+      },
+      {
+       "k": "Peer benchmark",
+       "v": "Top quartile",
+       "small": 1,
+       "ev": "board-peer"
+      }
+     ]
+    },
+    {
+     "t": "brief",
+     "items": [
+      {
+       "i": "1",
+       "q": "Is management in control?",
+       "a": "Yes — the event was contained in minutes; defenses across the enterprise hold.",
+       "s": "In control",
+       "sCls": "ok",
+       "view": "q1"
+      },
+      {
+       "i": "2",
+       "q": "Is anything material?",
+       "a": "One event under materiality review; no disclosure obligation triggered to date.",
+       "s": "Under review",
+       "sCls": "warn",
+       "view": "q2"
+      },
+      {
+       "i": "3",
+       "q": "What decisions does the board need?",
+       "a": "One: approve claims-platform modernization funding ($220M/day exposure).",
+       "s": "1 decision",
+       "sCls": "warn",
+       "view": "q3"
+      },
+      {
+       "i": "4",
+       "q": "Are we improving?",
+       "a": "Yes — posture +4 this quarter, within appetite, top-quartile vs peers.",
+       "s": "Improving ↑",
+       "sCls": "ok",
+       "view": "q4"
+      }
+     ]
+    }
+   ],
+   "q1": [
+    {
+     "t": "head",
+     "q": "Is management in control?",
+     "ans": "Yes",
+     "ansCls": "ok",
+     "lead": "Board-level assurance — no technical detail, just whether the company is being run safely."
+    },
+    {
+     "t": "ansgrid",
+     "cells": [
+      {
+       "l": "Why we can say this",
+       "v": "No active compromise. Today’s event was contained by management in minutes, with named owners on every open item and evidence preserved."
+      },
+      {
+       "l": "What it means for the board",
+       "v": "The company is operating normally and the oversight record is intact. The board’s duty-of-care position is demonstrable."
+      },
+      {
+       "l": "What changed",
+       "chg": true,
+       "v": "One contained event entered materiality review; no disclosure triggered. Posture improved +4 this quarter, top-quartile vs peers."
+      },
+      {
+       "l": "Needs the board",
+       "v": "One funding decision — claims-platform modernization."
+      }
+     ]
+    },
+    {
+     "t": "panel",
+     "title": "Assurance",
+     "kind": "kv",
+     "rows": [
+      {
+       "l": "Active compromise",
+       "v": "None",
+       "cls": "ok"
+      },
+      {
+       "l": "Today's event",
+       "v": "Contained by management in minutes",
+       "cls": "ok"
+      },
+      {
+       "l": "Business operating normally",
+       "v": "Yes",
+       "cls": "ok"
+      },
+      {
+       "l": "Accountability",
+       "v": "Named owners on every open item",
+       "cls": "ok"
+      }
+     ]
+    }
+   ],
+   "q2": [
+    {
+     "t": "head",
+     "q": "Is anything material?",
+     "ans": "Under review",
+     "ansCls": "warn",
+     "lead": "What the board must know about materiality and disclosure."
+    },
+    {
+     "t": "panel",
+     "title": "Materiality &amp; disclosure",
+     "kind": "kv",
+     "rows": [
+      {
+       "l": "Material events confirmed",
+       "v": "0",
+       "cls": "ok"
+      },
+      {
+       "l": "Under materiality review",
+       "v": "1 · determination due",
+       "cls": "warn"
+      },
+      {
+       "l": "Disclosure obligation triggered",
+       "v": "None to date",
+       "cls": "ok"
+      },
+      {
+       "l": "How management handled it",
+       "v": "Contained, documented, evidence preserved",
+       "cls": "ok"
+      }
+     ]
+    },
+    {
+     "t": "scn",
+     "label": "If the event is later determined material →",
+     "html": "Management has the disclosure path ready: the SEC 4-day clock, a board-approved statement, and a preserved evidence chain. The board’s exposure turns on <b>demonstrable oversight</b> — which the record already shows."
+    }
+   ],
+   "q3": [
+    {
+     "t": "head",
+     "q": "What decisions does the board need?",
+     "ans": "1 decision",
+     "ansCls": "warn",
+     "lead": "Items requiring board action or formal acknowledgement — with the cost and exposure of each path."
+    },
+    {
+     "t": "dec2",
+     "items": [
+      {
+       "id": "brd-fund",
+       "title": "Claims-platform modernization funding",
+       "sev": "Approve",
+       "sevCls": "crit",
+       "sit": "Recommended by the CISO, CIO, and CFO. A legacy platform carries $220M/day revenue exposure. The board funds the path; management executes.",
+       "options": [
+        {
+         "name": "A · Full modernization",
+         "outcome": "Removes the legacy fragility entirely.",
+         "cost": "$18M",
+         "costId": "brd-d1a",
+         "costBreak": [
+          [
+           "Platform replacement",
+           "$12.0M"
+          ],
+          [
+           "Migration &amp; integration",
+           "$4.5M"
+          ],
+          [
+           "Parallel-run &amp; cutover",
+           "$1.5M"
+          ]
+         ],
+         "costTotal": "$18.0M",
+         "risk": "−$220M/day single-point exposure",
+         "riskCls": "good",
+         "tradeoff": "18-month program; execution risk.",
+         "tradeoffCls": "warn"
+        },
+        {
+         "name": "B · Phased modernization",
+         "rec": true,
+         "recLabel": "Management recommends",
+         "outcome": "Rebuilds the critical revenue path first; remainder follows.",
+         "cost": "$7.5M",
+         "costId": "brd-d1b",
+         "costBreak": [
+          [
+           "Critical-path rebuild",
+           "$5.0M"
+          ],
+          [
+           "Integration",
+           "$2.0M"
+          ],
+          [
+           "Contingency",
+           "$0.5M"
+          ]
+         ],
+         "costTotal": "$7.5M",
+         "risk": "Cuts exposure ~60% in 6 months",
+         "riskCls": "warn",
+         "tradeoff": "Residual legacy risk for 12+ months.",
+         "tradeoffCls": "warn"
+        },
+        {
+         "name": "C · Defer",
+         "outcome": "No funding; legacy system continues.",
+         "cost": "$0 now · <span style=\"color:var(--critical)\">full exposure carried</span>",
+         "risk": "None",
+         "riskCls": "bad",
+         "tradeoff": "Not defensible as oversight if it later fails.",
+         "tradeoffCls": "bad"
+        }
+       ],
+       "rec": "<b>Management recommends Option B (phased).</b> It de-risks the critical revenue path in 6 months for $7.5M while limiting execution risk. Approving it is the demonstrable oversight action the board’s duty calls for."
+      }
+     ]
+    },
+    {
+     "t": "decisions",
+     "title": "Also for the board",
+     "items": [
+      {
+       "sev": "Note",
+       "sevCls": "info",
+       "title": "Acknowledge the contained event",
+       "desc": "— for the oversight record.",
+       "owner": "Management briefing",
+       "action": "Acknowledge"
+      }
+     ],
+     "btn": "Open board package →"
+    }
+   ],
+   "q4": [
+    {
+     "t": "head",
+     "q": "Are we improving? (quarterly oversight)",
+     "ans": "Improving",
+     "ansCls": "ok",
+     "lead": "The quarterly view: posture, resilience, and how we compare to peers."
+    },
+    {
+     "t": "panel",
+     "title": "Quarterly oversight",
+     "kind": "kv",
+     "rows": [
+      {
+       "l": "Posture vs board appetite",
+       "v": "Within · 82 / target 85",
+       "cls": "ok"
+      },
+      {
+       "l": "Quarter-over-quarter",
+       "v": "↑ +4",
+       "cls": "ok"
+      },
+      {
+       "l": "Mean time to contain",
+       "v": "41 min · improving",
+       "cls": "ok"
+      },
+      {
+       "l": "Peer benchmark",
+       "v": "Top quartile",
+       "cls": "ok"
+      },
+      {
+       "l": "Defensible record",
+       "v": "Board summary + evidence on file",
+       "cls": "ok"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

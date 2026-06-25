@@ -4,8 +4,12 @@ import { useCurrentUser } from './useCurrentUser'
 import { useAuth } from '../auth/AuthProvider'
 import { initialTheme, persistTheme, type Theme } from './theme'
 import { LedgerProvider, useLedger } from '../ledger/LedgerProvider'
+import { EvidenceProvider } from '../seats/ciso/EvidenceDrawer'
+import { getSeat } from '../seats/seatData'
 import CisoSeat from '../seats/CisoSeat'
-import SeatPlaceholder from '../seats/SeatPlaceholder'
+import SeatRenderer from '../seats/SeatRenderer'
+
+const decode = (s: string) => s.replace(/&amp;/g, '&')
 
 function LiveClock() {
   const [now, setNow] = useState(() => new Date())
@@ -97,7 +101,7 @@ function ShellInner() {
         </div>
       </div>
 
-      {viewedSeat === 'ciso' && (
+      {viewedSeat === 'ciso' ? (
         <div className="nav">
           <div className="wrap nav-in">
             {CISO_TABS.map((t) => (
@@ -118,6 +122,22 @@ function ShellInner() {
             ))}
           </div>
         </div>
+      ) : (
+        getSeat(viewedSeat) && (
+          <div className="nav">
+            <div className="wrap nav-in">
+              {getSeat(viewedSeat)!.nav.map((t) => (
+                <button
+                  key={t.id}
+                  className={`nb${t.id === 'exec' ? ' home' : ''}${t.id === tab ? ' active' : ''}`}
+                  onClick={() => setTab(t.id)}
+                >
+                  {decode(t.label)}
+                </button>
+              ))}
+            </div>
+          </div>
+        )
       )}
 
       <div className="wrap">
@@ -131,11 +151,16 @@ function ShellInner() {
           </div>
         )}
 
-        {viewedSeat === 'ciso' ? (
-          <CisoSeat tab={tab} go={setTab} />
-        ) : (
-          <SeatPlaceholder seat={seat} />
-        )}
+        <EvidenceProvider>
+          {viewedSeat === 'ciso' ? (
+            <CisoSeat tab={tab} go={setTab} />
+          ) : (
+            <SeatRenderer
+              blocks={getSeat(viewedSeat)?.views[tab] ?? getSeat(viewedSeat)?.views.exec ?? []}
+              go={setTab}
+            />
+          )}
+        </EvidenceProvider>
       </div>
     </>
   )
