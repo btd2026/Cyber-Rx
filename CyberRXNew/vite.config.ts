@@ -1,7 +1,9 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { fileURLToPath, URL } from 'node:url'
 
-// New CyberRx app — port 5174 so it can run alongside the legacy app (5173).
+// The React app's HTML entry is app.html (served at /app in production), so the
+// static prototype can own the root index.html. Port 5174 for local dev.
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
@@ -12,5 +14,8 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    rollupOptions: {
+      input: fileURLToPath(new URL('./app.html', import.meta.url)),
+    },
   },
 })
