@@ -18,6 +18,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { adapterFor } from '../_shared/adapters/registry.ts'
 import { toEvidenceRows } from '../_shared/ingest.ts'
+import { makeSafeFetch, policyForProvider } from '../_shared/safeFetch.ts'
 import type { AdapterContext } from '../_shared/adapters/types.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
@@ -28,36 +29,12 @@ const CRON_SECRET = Deno.env.get('CRON_SECRET') ?? ''
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { 'content-type': 'application/json' } })
 
-// SSRF guard. Connector baseUrls are set by tenant Admins (trusted), but the
-// orchestrator runs in our cloud, so we hard-block the classic metadata/link-local
-// escalation targets that NO adapter ever needs. (Private RFC1918 / loopback are
-// left reachable on purpose — customers point self-hosted tools at them.)
-const BLOCKED_HOSTS = new Set(['169.254.169.254', 'metadata.google.internal', 'metadata', '[fd00:ec2::254]', 'fd00:ec2::254'])
-function isBlockedUrl(input: unknown): boolean {
-  try {
-    const u = new URL(String(input))
-    if (u.protocol !== 'http:' && u.protocol !== 'https:') return true
-    const host = u.hostname.toLowerCase()
-    if (BLOCKED_HOSTS.has(host)) return true
-    if (host.startsWith('169.254.')) return true // IPv4 link-local (incl. cloud metadata)
-    if (host.startsWith('fe80:') || host.startsWith('[fe80:')) return true // IPv6 link-local
-    return false
-  } catch {
-    return true // unparseable URL — refuse
-  }
-}
-
-// A fetch with a hard timeout + SSRF guard, handed to adapters so a hung or
-// malicious endpoint can't stall us or reach internal metadata.
-function boundedFetch(ms = 20_000): typeof fetch {
-  return ((input: any, init?: any) => {
-    if (isBlockedUrl(typeof input === 'string' ? input : input?.url)) {
-      return Promise.reject(new Error('blocked host (SSRF guard)'))
-    }
-    const ctrl = new AbortController()
-    const t = setTimeout(() => ctrl.abort(), ms)
-    return fetch(input, { ...init, signal: ctrl.signal }).finally(() => clearTimeout(t))
-  }) as typeof fetch
+// Constant-time string compare for the shared cron secret (no early-exit timing).
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  let r = 0
+  for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  return r === 0
 }
 
 Deno.serve(async (req) => {
@@ -69,7 +46,7 @@ Deno.serve(async (req) => {
   // ── Authorize: scheduled cron OR an Admin of this tenant ────────────────────
   const cronKey = req.headers.get('X-Cron-Key') ?? ''
   const authz = req.headers.get('Authorization') ?? ''
-  let authorized = !!CRON_SECRET && cronKey === CRON_SECRET
+  let authorized = !!CRON_SECRET && timingSafeEqual(cronKey, CRON_SECRET)
   if (!authorized) {
     if (!authz.startsWith('Bearer ')) return json({ error: 'authentication required' }, 401)
     const asUser = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { global: { headers: { Authorization: authz } } })
@@ -88,7 +65,6 @@ Deno.serve(async (req) => {
   const { data: connectors, error: cErr } = await q
   if (cErr) return json({ error: `load connectors: ${cErr.message}` }, 500)
 
-  const fetchImpl = boundedFetch()
   const ran: any[] = []
 
   for (const c of connectors ?? []) {
@@ -98,6 +74,8 @@ Deno.serve(async (req) => {
     const { data: sec } = await admin.from('connector_secrets').select('secret').eq('connector_id', c.id).maybeSingle()
     if (!sec?.secret) { ran.push({ connectorId: c.id, provider: c.provider, ok: false, evidence: 0, error: 'no credentials configured' }); continue }
 
+    // Each connector gets a fetch bound to its provider's egress policy (SSRF guard).
+    const fetchImpl = makeSafeFetch(policyForProvider(c.provider))
     try {
       const ctx: AdapterContext = { config: c.config ?? {}, secret: sec.secret as Record<string, string>, fetch: fetchImpl }
       const { signals, health } = await adapter.pull(ctx)
@@ -110,10 +88,14 @@ Deno.serve(async (req) => {
       await admin.from('audit_log').insert({ tenant_id: tenantId, action: 'ingest', object_type: 'connector', object_id: c.id, detail: { provider: c.provider, signals: rows.length } })
       ran.push({ connectorId: c.id, provider: c.provider, ok: true, evidence: rows.length })
     } catch (e) {
+      // Never persist raw error text to client-readable columns (it can carry
+      // request URLs / response data). Persist a generic code; log full detail
+      // server-side only; return the message just to the triggering caller.
       const msg = e instanceof Error ? e.message : 'pull failed'
-      await admin.from('connectors').update({ status: 'error', health: { error: msg } }).eq('id', c.id)
-      await admin.from('audit_log').insert({ tenant_id: tenantId, action: 'ingest', object_type: 'connector', object_id: c.id, detail: { provider: c.provider, error: msg } })
-      ran.push({ connectorId: c.id, provider: c.provider, ok: false, evidence: 0, error: msg })
+      console.error(`ingest connector ${c.id} (${c.provider}) failed:`, msg)
+      await admin.from('connectors').update({ status: 'error', health: { error_code: 'pull_failed' } }).eq('id', c.id)
+      await admin.from('audit_log').insert({ tenant_id: tenantId, action: 'ingest', object_type: 'connector', object_id: c.id, detail: { provider: c.provider, error_code: 'pull_failed' } })
+      ran.push({ connectorId: c.id, provider: c.provider, ok: false, evidence: 0, error: msg.slice(0, 200) })
     }
   }
 

@@ -55,6 +55,12 @@ Deno.serve(async (req) => {
   //    for identity.
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, { auth: { persistSession: false } })
 
+  // Anti-abuse: cap how many tenants one user can provision (each makes them an
+  // Admin). Prevents a single account from mass-creating tenants.
+  const MAX_TENANTS_PER_USER = 10
+  const { count } = await admin.from('memberships').select('tenant_id', { count: 'exact', head: true }).eq('user_id', userId).eq('role', 'Admin')
+  if ((count ?? 0) >= MAX_TENANTS_PER_USER) return json({ error: 'tenant limit reached for this account' }, 429)
+
   // tenant
   const materialityM = num(org.materiality)
   const { data: tenant, error: tErr } = await admin

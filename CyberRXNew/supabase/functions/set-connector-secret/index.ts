@@ -32,6 +32,9 @@ Deno.serve(async (req) => {
   if (!tenantId || !connectorId || !provider || !secret || typeof secret !== 'object') {
     return json({ error: 'tenantId, connectorId, provider, secret required' }, 400)
   }
+  const isUuid = (v: unknown) => typeof v === 'string' && /^[0-9a-f-]{36}$/i.test(v)
+  if (!isUuid(tenantId) || !isUuid(connectorId)) return json({ error: 'invalid tenantId/connectorId' }, 400)
+  if (typeof provider !== 'string' || provider.length > 64) return json({ error: 'invalid provider' }, 400)
 
   // Verify the caller is an Admin of this tenant (RLS lets them read own memberships).
   const asUser = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { global: { headers: { Authorization: authz } } })
