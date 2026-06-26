@@ -42,8 +42,25 @@ node CyberRXNew/supabase/scripts/load_catalogs.mjs r53-oscal.json | psql "$DB" -
 node --experimental-strip-types CyberRXNew/supabase/scripts/score_proof.ts
 ```
 
-## Next sub-steps
-- **4c** — Framework Posture UI over the full server-side catalog (drill
-  function→category→control→evidence) + per-framework benchmark on the CMMI scale
-  (reciprocal + k-anonymity ≥8 or fall back to overall maturity).
-- **4d** — Auditor report + evidence-manifest exports (real, signed files).
+## 4c — Framework Posture UI + benchmark (complete)
+- **Drill** function → category → control, with the complete **CSF 2.0** (all 22
+  categories) scored live by the engine. Click any control to see its evidence:
+  status, coverage, freshness, confidence, and the note that CMMI is re-derivable,
+  not generated.
+- **Per-framework benchmark** on the CMMI scale, enforcing both brief rules:
+  - **Reciprocal** — you must contribute your anonymized maturity (CMMI only,
+    never findings/identifiers) before you can view peers.
+  - **k-anonymity ≥ 8** — frameworks with fewer contributing peers (the ISO
+    cohort, n=5) **fall back to overall maturity only**, no distribution.
+
+## 4d — Signed exports (complete)
+- `src/engine/exports.ts` generates **real downloadable files**:
+  - **Auditor report** (Markdown) — per function/category/control CMMI, status,
+    confidence, coverage, evidence age.
+  - **Evidence manifest** (JSON) — machine-readable control scores.
+- Each is **SHA-256 signed** (hash embedded; tamper-evident), mirroring the
+  signed ledger. Production generates & signs these server-side over the signed
+  evidence chain.
+
+**Phase 4 complete.** Next: Phase 5 — the Executive Twin (anti-hallucination
+Surface A/B + the leaf rule + voice), the most important phase.

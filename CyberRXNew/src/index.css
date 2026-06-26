@@ -192,3 +192,21 @@
 /* footer nav */
 .ob-nav { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; }
 .ob-nav-mid { font-family: var(--mono); font-size: 11.5px; color: var(--subtle); }
+
+/* ── Framework posture: per-control evidence drill + benchmark (Phase 4c) ─── */
+.fwctrl-btn { cursor: pointer; }
+.fwctrl-btn:hover { background: var(--glass); }
+.fwev { padding: 10px 14px 12px; background: var(--surface-2); border-top: 1px solid var(--border); }
+.fwev-l { font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--subtle); margin-bottom: 8px; }
+.fwev-g { display: flex; flex-wrap: wrap; gap: 16px; font-size: 12.5px; color: var(--muted); }
+.fwev-g b { color: var(--text); font-weight: 600; }
+.fwev-g b.ok { color: var(--pass); } .fwev-g b.warn { color: var(--exposure); }
+.fwev-note { margin-top: 8px; font-family: var(--mono); font-size: 11px; color: var(--subtle); }
+.bench-gate p, .bench-fallback p { font-size: 13.5px; line-height: 1.6; color: var(--muted); margin-bottom: 14px; }
+.bench-you { font-size: 15px; }
+.bench-row { display: flex; align-items: center; gap: 12px; font-size: 13px; }
+.bench-bar { position: relative; flex: 1; height: 16px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px; }
+.bench-band { position: absolute; top: 0; bottom: 0; background: var(--brand-tint); border-left: 1px solid var(--brand); border-right: 1px solid var(--brand); }
+.bench-you-mark { position: absolute; top: -3px; width: 3px; height: 22px; background: var(--brand); border-radius: 2px; z-index: 1; }
+.bench-legend { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 12px; }
+.bench-note { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
