@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useLedger } from '../../../ledger/LedgerProvider'
+import { parseAmount, formatAmount, logAssumptionChange } from '../../../engine/assumptionsLog'
 
 type Leaf = { label: string; leaf?: 'pulled' | 'assumption'; leafNote?: string; amount: string }
 type Line = { k: string; v: string; tone?: 'good' | 'warn' | 'bad' }
@@ -120,6 +121,8 @@ const DECISIONS: Decision[] = [
 
 function Cost({ option }: { option: Option }) {
   const [open, setOpen] = useState(false)
+  const [vals, setVals] = useState<Record<string, string>>({})
+  const [logged, setLogged] = useState<string[]>([])
   if (option.costPlain) {
     return (
       <span className="v">
@@ -131,30 +134,51 @@ function Cost({ option }: { option: Option }) {
     )
   }
   if (!option.cost) return null
+  const bd = option.cost.breakdown
+  const amountOf = (label: string, original: string) => vals[label] ?? original
+  const total = bd.reduce((s, b) => s + parseAmount(amountOf(b.label, b.amount)), 0)
+  const edited = Object.keys(vals).length > 0
   return (
     <span className="v">
       <span className="costlink" onClick={() => setOpen((o) => !o)}>
-        {option.cost.total} — how? {open ? '▴' : '▾'}
+        {edited ? formatAmount(total) : option.cost.total} — how? {open ? '▴' : '▾'}
       </span>
       {open && (
         <span className="costbreak open">
-          {option.cost.breakdown.map((b) => (
+          {bd.map((b) => (
             <span key={b.label} className="cb">
               <span>
                 {b.label}
                 {b.leaf === 'assumption' && <span className="prov assum">◐ assumption</span>}
                 {b.leaf === 'pulled' && <span className="prov pull">● pulled · {b.leafNote}</span>}
               </span>
-              <span>{b.amount}</span>
+              {b.leaf === 'assumption' ? (
+                <input
+                  className="leaf-edit"
+                  value={amountOf(b.label, b.amount)}
+                  onChange={(e) => setVals((v) => ({ ...v, [b.label]: e.target.value }))}
+                  onBlur={() => {
+                    const from = parseAmount(b.amount)
+                    const to = parseAmount(amountOf(b.label, b.amount))
+                    if (from !== to) {
+                      logAssumptionChange({ key: b.label, label: b.label, from, to })
+                      setLogged((k) => (k.includes(b.label) ? k : [...k, b.label]))
+                    }
+                  }}
+                />
+              ) : (
+                <span>{b.amount}</span>
+              )}
             </span>
           ))}
           <span className="cb tot">
             <span>Total</span>
-            <span>{option.cost.total}</span>
+            <span>{formatAmount(total)}</span>
           </span>
           <span className="cb-leg">
-            ◐ <b>assumption</b> — editable, seeded from a benchmark · ● <b>pulled</b> — from a
-            connected system. (Editing &amp; recompute land in Phase 5.)
+            ◐ <b>assumption</b> — editable; recomputes live &amp; logs the change · ● <b>pulled</b> —
+            from a connected system.
+            {logged.length > 0 && <b className="leaf-logged"> ✓ change logged to the record</b>}
           </span>
         </span>
       )}

@@ -10,6 +10,7 @@ import { getSeat } from '../seats/seatData'
 import CisoSeat from '../seats/CisoSeat'
 import SeatRenderer from '../seats/SeatRenderer'
 import AskTwin from '../seats/ciso/AskTwin'
+import VoiceBrief from '../seats/VoiceBrief'
 
 const decode = (s: string) => s.replace(/&amp;/g, '&')
 
@@ -31,6 +32,7 @@ function ShellInner() {
   const [viewedSeat, setViewedSeat] = useState<SeatId>(user.ownSeat)
   const [tab, setTab] = useState('exec')
   const [twinOpen, setTwinOpen] = useState(false)
+  const [voiceOpen, setVoiceOpen] = useState(false)
 
   useEffect(() => {
     persistTheme(theme)
@@ -65,6 +67,9 @@ function ShellInner() {
             </span>
             <button className="warbtn" disabled title="War Room — Phase 6">
               ⚠ War Room
+            </button>
+            <button className="tbtn" onClick={() => setVoiceOpen((v) => !v)} title="Voice briefing">
+              🔊 Brief
             </button>
             <button className="tbtn" onClick={() => setTwinOpen(true)} title="Ask your Executive Twin">
               ✦ Ask Twin
@@ -174,6 +179,13 @@ function ShellInner() {
       </div>
 
       <AskTwin open={twinOpen} onClose={() => setTwinOpen(false)} />
+      <VoiceBrief
+        open={voiceOpen}
+        seatId={viewedSeat}
+        seatLabel={seat.label}
+        name={seat.name}
+        onClose={() => setVoiceOpen(false)}
+      />
     </>
   )
 }
