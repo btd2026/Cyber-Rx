@@ -238,14 +238,55 @@ function Rev({ k, v }: { k: string; v: string }) {
 }
 
 type Row = Record<string, string>
+
+// Parse an uploaded CSV/TSV into rows keyed by the step's columns. The first
+// line is skipped when it looks like a header. Client-side only (no backend
+// wired yet) so upload works in demo today.
+function parseDelimited(text: string, cols: { k: string }[]): Row[] {
+  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
+  if (!lines.length) return []
+  const delim = lines[0].includes('\t') ? '\t' : ','
+  const firstCell = lines[0].split(delim)[0].trim().replace(/^"|"$/g, '').toLowerCase()
+  const headerWords = ['name', 'process', 'processes', 'application', 'applications', 'app', 'document', 'documents', 'title', 'system']
+  const body = headerWords.includes(firstCell) ? lines.slice(1) : lines
+  return body
+    .map((line) => {
+      const cells = line.split(delim).map((c) => c.trim().replace(/^"|"$/g, ''))
+      const row: Row = {}
+      cols.forEach((col, i) => { row[col.k] = cells[i] ?? '' })
+      return row
+    })
+    .filter((r) => Object.values(r).some((v) => v))
+}
+
 function ListStep({ title, why, rows, cols, onChange, blank, addLabel = '+ Add row' }: {
   title: string; why: string; rows: Row[]; cols: { k: string; ph: string }[]
   onChange: (rows: Row[]) => void; blank: Row; addLabel?: string
 }) {
+  function ingest(file?: File | null) {
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const parsed = parseDelimited(String(reader.result || ''), cols)
+      if (!parsed.length) return
+      // Keep any rows the user already typed; append the extracted ones.
+      const existing = rows.filter((r) => Object.values(r).some((v) => (v || '').trim()))
+      onChange([...existing, ...parsed])
+    }
+    reader.readAsText(file)
+  }
   return (
     <div>
       {title && <h2>{title}</h2>}
       {why && <p className="ob-why">{why}</p>}
+      <label className="ob-drop" onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => { e.preventDefault(); ingest(e.dataTransfer?.files?.[0]) }}>
+        <span className="ob-drop-ic">↓</span>
+        <span className="ob-drop-t">Upload a file — CSV or TSV</span>
+        <span className="ob-drop-d">Click to browse or drag a file here · one per line ({cols.map((c) => c.k).join(', ')}). We'll extract each row.</span>
+        <input type="file" accept=".csv,.tsv,.txt" style={{ display: 'none' }}
+          onChange={(e) => { const f = e.target.files?.[0]; e.currentTarget.value = ''; ingest(f) }} />
+      </label>
       {rows.map((r, i) => (
         <div key={i} className="ob-row">
           {cols.map((col) => (
