@@ -602,15 +602,27 @@
         box.innerHTML='<div class="srcbox"><div class="conn-row"><div class="field"><label>System</label><select><option>ServiceNow CMDB</option><option>Device42</option><option>BMC Helix Discovery</option><option>Tanium</option><option>Lansweeper</option><option>ServiceNow Discovery</option></select></div><div class="field"><label>Instance URL / API token</label><input placeholder="https://yourorg.service-now.com · token"></div><button class="conn-go" id="appFetch">Connect &amp; fetch</button></div></div>';
         document.getElementById('appFetch').addEventListener('click',()=>{document.getElementById('appResult').innerHTML='<div class="extracting"><span class="sp"></span>Discovering systems live from ServiceNow CMDB…</div>';setTimeout(()=>{appExtracted=true;appLive=true;renderApp(true);},1400);});
       }else{
-        box.innerHTML='<div class="drop" id="appDrop"><div class="ic">⤓</div><div class="t">Upload app inventory / CMDB export</div><div class="s">CSV, XLSX — we\'ll extract each application</div></div>';
-        document.getElementById('appDrop').addEventListener('click',()=>{document.getElementById('appResult').innerHTML='<div class="extracting"><span class="sp"></span>Extracting systems from CMDB_export.csv…</div>';setTimeout(()=>{appExtracted=true;appLive=false;renderApp(false);},1400);});
+        box.innerHTML='<div class="drop" id="appDrop"><div class="ic">⤓</div><div class="t">Upload app inventory / CMDB export</div><div class="s">CSV or TSV — click to browse or drop a file; we\'ll extract each application</div><input type="file" id="appFile" accept=".csv,.tsv,.txt" style="display:none"></div>';
+        const ad=document.getElementById('appDrop'),af=document.getElementById('appFile');
+        ad.addEventListener('click',()=>af.click());
+        ad.addEventListener('dragover',e=>e.preventDefault());
+        ad.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files[0])takeAppFile(e.dataTransfer.files[0]);});
+        af.addEventListener('change',()=>{if(af.files[0])takeAppFile(af.files[0]);});
       }
     }));
   }
+  var APP_UP=null,APP_FN='';
+  function takeAppFile(file){
+    document.getElementById('appResult').innerHTML='<div class="extracting"><span class="sp"></span>Extracting systems from '+file.name+'…</div>';
+    var r=new FileReader();
+    r.onload=function(){APP_UP=parseDelim(r.result).map(function(c){return {n:c[0],host:c[1]||'—',data:c[2]||'—'};});APP_FN=file.name;setTimeout(function(){appExtracted=true;appLive=false;renderApp(false);},400);};
+    r.readAsText(file);
+  }
   function renderApp(live){
     document.getElementById('appChoice').style.display='none';document.getElementById('appSource').innerHTML='';
-    const src=live?'<span class="livedot"></span>6 systems · live discovery from ServiceNow CMDB · streaming':'✓ 6 systems extracted from CMDB_export.csv';
-    document.getElementById('appResult').innerHTML='<div class="extracted-h">'+src+'</div><div class="xlist">'+APPS.map(a=>'<div class="xrow"><div class="xi">⬚</div><div class="xn"><div class="nm">'+a.n+'</div><div class="mt">'+a.host+' · '+a.data+'</div></div></div>').join('')+'</div>';
+    const rows=(!live&&APP_UP&&APP_UP.length)?APP_UP:APPS;
+    const src=live?'<span class="livedot"></span>'+rows.length+' systems · live discovery from ServiceNow CMDB · streaming':'✓ '+rows.length+' systems extracted from '+(APP_FN||'CMDB_export.csv');
+    document.getElementById('appResult').innerHTML='<div class="extracted-h">'+src+'</div><div class="xlist">'+rows.map(a=>'<div class="xrow"><div class="xi">⬚</div><div class="xn"><div class="nm">'+a.n+'</div><div class="mt">'+(a.host||'—')+' · '+(a.data||'—')+'</div></div></div>').join('')+'</div>';
   }
 
   // ---- mapping + crown jewels ----
@@ -663,8 +675,15 @@
   }
   function uploadDoc(id){
     const d=findDoc(id);const rs=document.getElementById('rs-'+id);
-    rs.innerHTML='<span class="dst rd">Reading &amp; aligning…</span>';
-    setTimeout(()=>{if(!docState[id]){docState[id]=true;docsProvided++;ctrlsCovered+=d.ctrls;}rs.innerHTML='<span class="dst ok">✓ Aligned · '+d.ctrls+' controls</span>';updateDocProg();},1500);
+    const inp=document.createElement('input');inp.type='file';inp.accept='.pdf,.doc,.docx,.xlsx,.csv,.txt';inp.style.display='none';
+    document.body.appendChild(inp);
+    inp.addEventListener('change',()=>{
+      const f=inp.files&&inp.files[0];document.body.removeChild(inp);
+      if(!f)return;
+      rs.innerHTML='<span class="dst rd">Reading &amp; aligning '+f.name+'…</span>';
+      setTimeout(()=>{if(!docState[id]){docState[id]=true;docsProvided++;ctrlsCovered+=d.ctrls;}rs.innerHTML='<span class="dst ok">✓ '+f.name+' · aligned · '+d.ctrls+' controls</span>';updateDocProg();},700);
+    });
+    inp.click();
   }
   function updateDocProg(){const el=document.getElementById('docProg');if(el)el.innerHTML='<b>'+docsProvided+'</b> of '+TOTAL_DOCS+' key documents provided · <b>'+ctrlsCovered+'</b> control requirements covered';}
 
