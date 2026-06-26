@@ -92,6 +92,55 @@ export async function provisionTenant(s: OnboardingState): Promise<ProvisionResu
   }
 }
 
+// ── connectors / ingestion ────────────────────────────────────────────────────
+async function authedPost(path: string, body: unknown): Promise<{ ok: boolean; data: any }> {
+  if (!supabaseConfigured || !supabase || !FUNCTIONS_BASE) return { ok: false, data: { error: 'backend not configured' } }
+  const { data: sess } = await supabase.auth.getSession()
+  const token = sess.session?.access_token
+  if (!token) return { ok: false, data: { error: 'not signed in' } }
+  try {
+    const r = await fetch(`${FUNCTIONS_BASE}/${path}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(body),
+    })
+    return { ok: r.ok, data: await r.json().catch(() => ({})) }
+  } catch (e) {
+    return { ok: false, data: { error: e instanceof Error ? e.message : 'network error' } }
+  }
+}
+
+export type ConnectorRow = { id: string; kind: string; provider: string | null; display_name: string; status: string; last_sync_at: string | null; health: Record<string, unknown> }
+
+export async function loadConnectors(tenantId: string): Promise<ConnectorRow[]> {
+  if (!supabaseConfigured || !supabase || !tenantId) return []
+  const { data } = await supabase.from('connectors').select('id, kind, provider, display_name, status, last_sync_at, health').eq('tenant_id', tenantId)
+  return (data as ConnectorRow[]) ?? []
+}
+
+/** Store vendor credentials for a connector (admin only; write-only via Edge Fn). */
+export async function setConnectorSecret(
+  tenantId: string, connectorId: string, provider: string, secret: Record<string, string>, config?: Record<string, unknown>,
+): Promise<{ ok: boolean; error?: string }> {
+  const { ok, data } = await authedPost('set-connector-secret', { tenantId, connectorId, provider, secret, config })
+  return ok ? { ok: true } : { ok: false, error: data?.error ?? 'failed' }
+}
+
+/** Trigger a read-only ingestion run (one connector, or all for the tenant). */
+export async function runIngest(tenantId: string, connectorId?: string): Promise<{ ok: boolean; ran?: any[]; error?: string }> {
+  const { ok, data } = await authedPost('ingest', { tenantId, connectorId })
+  return ok ? { ok: true, ran: data?.ran } : { ok: false, error: data?.error ?? 'failed' }
+}
+
+/** Read pulled evidence for the tenant (RLS-scoped), optionally by kind. */
+export async function loadEvidence(tenantId: string, kind?: string): Promise<any[]> {
+  if (!supabaseConfigured || !supabase || !tenantId) return []
+  let q = supabase.from('evidence').select('source_system, kind, value, collected_at, freshness_seconds, content_hash').eq('tenant_id', tenantId).order('collected_at', { ascending: false }).limit(200)
+  if (kind) q = q.eq('kind', kind)
+  const { data } = await q
+  return data ?? []
+}
+
 // ── decisions (signed, append-only ledger) ───────────────────────────────────
 type DecisionRow = {
   id: string; seat: string; title: string; rationale: string | null

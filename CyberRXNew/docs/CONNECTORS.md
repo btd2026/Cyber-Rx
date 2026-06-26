@@ -1,0 +1,94 @@
+# CyberRx — Connector Ingestion (Phase 8 scaffold)
+
+Turns vendor APIs into **pulled evidence** that the deterministic CMMI scorer
+(`src/engine/scorer.ts`) turns into live maturity. This is the layer the
+readiness audit found missing entirely. It is now **scaffolded with four working
+adapters** against genuinely-free, self-serve developer tiers, plus a registry
+of the remaining categories (most of which are enterprise-gated).
+
+## Architecture
+
+```
+vendor API ──(read-only)──▶ Adapter.pull() ──▶ RawSignal[]
+                                                  │
+                          ingest orchestrator (service-role, server-side)
+                                                  │
+              sha256 content-hash ─▶ evidence INSERT ─▶ scorer ─▶ CMMI
+```
+
+- **Adapters** (`supabase/functions/_shared/adapters/*`) are pure
+  `config + secret → RawSignal[]` functions. They never touch the DB and never
+  see another tenant.
+- **Orchestrator** (`supabase/functions/ingest`) authenticates (tenant Admin or
+  the `CRON_SECRET`), loads connectors + their **service-role-only** secrets,
+  runs each adapter, content-hashes the signals, and inserts `evidence`. It
+  records per-connector status/health and a signed `audit_log` line.
+- **Secrets** live in `connector_secrets` (migration `0004`) — RLS forced, **no
+  policies**, so only the service role (the Edge Functions) can read them.
+  Credentials are set write-only via `set-connector-secret`. Prefer Supabase
+  Vault in production.
+- **Client helpers** (`src/lib/db.ts`): `loadConnectors`, `setConnectorSecret`,
+  `runIngest`, `loadEvidence` — all `supabaseConfigured`-gated.
+
+## Free API research — what you can actually sign up for
+
+Verified June 2026. "Free" = self-serve, no sales call, real read-only API.
+
+| Category | Provider | Free? | Adapter | Signup / signal |
+|---|---|---|---|---|
+| **Identity** | **Okta Integrator Free Plan** | ✅ free forever | ✅ wired | developer.okta.com/signup → SSWS API token → `mfa_coverage` (users×factors) |
+| **Identity** | **Microsoft Entra / M365 Dev E5 (Graph)** | ✅ free* | ✅ wired | Azure tenant + app reg (client-credentials) → `userRegistrationDetails` → `mfa_coverage` + admin count. *report needs Entra P1/P2 (free P2 trial); M365 Dev Program now needs a Visual Studio sub |
+| **ITSM / GRC** | **ServiceNow PDI** | ✅ free sandbox | ✅ wired | developer.servicenow.com → Basic auth → open security incidents (Aggregate API). Sandbox data; PDIs hibernate ~10d idle |
+| **SIEM** | **Elasticsearch Basic** | ✅ free forever | ✅ wired | `docker run elasticsearch` → API key → log-ingestion presence + events-by-severity |
+| ITSM / GRC | Jira Cloud Free | ✅ free (≤10 users) | ⬜ planned | id.atlassian.com API token → `/rest/api/3/search` open security tickets |
+| SIEM | Splunk Free (self-hosted) | ✅ free (500MB/day) | ⬜ planned | REST on :8089. (Splunk *Cloud* trial blocks the API — use self-hosted Free) |
+| Vuln mgmt | Nessus Essentials | ✅ free (16 IPs) | ⬜ planned | local API :8834, API keys → `critical_vuln_count` from `/scans/{id}` |
+| CSPM | AWS Security Hub | ✅ free tier (read) | ⬜ planned | IAM `securityhub:GetFindings` → findings by severity, compliance pass rate |
+| Backup/DR | Veeam Community Edition | ✅ free (10 workloads) | ⬜ planned | OAuth2 :9419 → `/api/v1/sessions` → backup success rate |
+| EDR | Defender Secure Score (Graph) | ✅ free via M365 Dev | ⬜ planned | `/security/secureScores` → `currentScore/maxScore` |
+| MDM | Intune (Graph) | ✅ free via M365 Dev | ⬜ planned | `/deviceManagement/managedDeviceOverview` → % compliant |
+| Firewall | Cisco DevNet sandbox | 🟡 trial/lab | ⬜ planned | always-on FMC/Meraki sandboxes (lab data, not yours) |
+| EDR | CrowdStrike / SentinelOne | ❌ enterprise | — | API needs a licensed tenant |
+| Email | Proofpoint / Mimecast / Abnormal | ❌ enterprise | — | no self-serve free tier |
+| CSPM | Wiz / Prisma Cloud | ❌ sales-gated | — | demo/trial via sales only |
+| Backup | Rubrik / Cohesity | ❌ enterprise | — | licensed tenant/appliance required |
+
+**Easiest two to demo end-to-end today:** Okta (instant, free forever) and
+Elasticsearch (zero signup, `docker run`). Both produce a real evidence row in
+minutes.
+
+## How to use it (once a backend is wired)
+
+1. **Sign up** for a free source above and get its credential (e.g. an Okta SSWS
+   token + your org URL).
+2. **Provision** your tenant via onboarding go-live (creates the `connectors`
+   rows for the categories you toggled).
+3. **Configure the source** — call `setConnectorSecret(tenantId, connectorId,
+   'okta', { token }, { orgUrl })`. (A "Configure data source" UI on the
+   connectors step is the remaining front-end surface — see below.)
+4. **Run ingestion** — `runIngest(tenantId)` (or schedule the `ingest` function
+   via Supabase cron with `X-Cron-Key: $CRON_SECRET`). Evidence lands in the
+   `evidence` table; the scorer picks it up.
+
+### Deploy
+```
+supabase functions deploy ingest
+supabase functions deploy set-connector-secret
+supabase secrets set SUPABASE_SERVICE_ROLE_KEY=...
+supabase secrets set CRON_SECRET=...      # optional, for scheduled runs
+# apply migration 0004_connector_secrets.sql
+```
+
+## Honest scope of this scaffold
+
+- ✅ Adapter contract + 4 real adapters (Okta, Entra/Graph, ServiceNow, Elastic).
+- ✅ Server-side orchestrator with auth, secret isolation, content-hashed evidence
+  writes, per-connector health, and signed audit logging.
+- ✅ Service-role-only secret storage (migration `0004`).
+- ✅ Client helpers to configure + trigger ingestion.
+- ⬜ **Remaining:** a "Configure data source" UI (vendor picker + credential form,
+  driven by each adapter's `secretFields`/`configFields`); the six planned
+  adapters above; scheduled-sync cron; and mapping each evidence `kind` to the
+  specific controls it scores (so a pulled `identity_mfa_coverage` moves the
+  exact NIST/CSF controls it evidences). The Edge Functions are Deno and are not
+  covered by the Vite build/lint; validate with `deno check` before deploy.
