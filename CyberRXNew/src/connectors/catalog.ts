@@ -77,7 +77,15 @@ export const CONNECTOR_CATALOG: CategoryDef[] = [
     { provider: 'splunk', label: 'Splunk Free (self-hosted)', free: 'free', implemented: false, signal: 'Log ingestion volume', secretFields: [], configFields: [] },
   ] },
   { kind: 'vuln', label: 'Vulnerability management', providers: [
-    { provider: 'nessus', label: 'Nessus Essentials', free: 'free', implemented: false, signupUrl: 'https://www.tenable.com/products/nessus/nessus-essentials', signal: 'Critical/high vuln counts', secretFields: [], configFields: [] },
+    {
+      provider: 'nessus', label: 'Nessus Essentials', free: 'free', implemented: true,
+      signupUrl: 'https://www.tenable.com/products/nessus/nessus-essentials', signal: 'Critical/high vulnerability counts',
+      secretFields: [
+        { key: 'accessKey', label: 'Access key', secret: true },
+        { key: 'secretKey', label: 'Secret key', secret: true },
+      ],
+      configFields: [{ key: 'baseUrl', label: 'Base URL', placeholder: 'https://localhost:8834' }],
+    },
   ] },
   { kind: 'cloud', label: 'Cloud security posture (CSPM)', providers: [
     { provider: 'securityhub', label: 'AWS Security Hub', free: 'free', implemented: false, signal: 'Findings by severity, compliance pass rate', secretFields: [], configFields: [] },
@@ -86,11 +94,29 @@ export const CONNECTOR_CATALOG: CategoryDef[] = [
     { provider: 'veeam', label: 'Veeam Community Edition', free: 'free', implemented: false, signupUrl: 'https://www.veeam.com/products/downloads.html', signal: 'Backup success rate', secretFields: [], configFields: [] },
   ] },
   { kind: 'edr', label: 'Endpoint Detection & Response', providers: [
-    { provider: 'msgraph_secure_score', label: 'Defender Secure Score (Graph)', free: 'free', implemented: false, signal: 'Endpoint/posture score', secretFields: [], configFields: [] },
+    {
+      provider: 'msgraph_secure_score', label: 'Defender Secure Score (Graph)', free: 'free', implemented: true,
+      signupUrl: 'https://developer.microsoft.com/microsoft-365/dev-program', signal: 'Defender Secure Score (posture %)',
+      secretFields: [
+        { key: 'tenantId', label: 'Directory (tenant) ID' },
+        { key: 'clientId', label: 'Application (client) ID' },
+        { key: 'clientSecret', label: 'Client secret', secret: true },
+      ],
+      configFields: [],
+    },
     { provider: 'crowdstrike', label: 'CrowdStrike Falcon', free: 'enterprise', implemented: false, signal: 'Sensor coverage', secretFields: [], configFields: [] },
   ] },
   { kind: 'mdm', label: 'Device management (MDM)', providers: [
-    { provider: 'msgraph_intune', label: 'Intune (Graph)', free: 'free', implemented: false, signal: 'Device compliance %', secretFields: [], configFields: [] },
+    {
+      provider: 'msgraph_intune', label: 'Intune (Graph)', free: 'free', implemented: true,
+      signupUrl: 'https://developer.microsoft.com/microsoft-365/dev-program', signal: 'Device compliance %',
+      secretFields: [
+        { key: 'tenantId', label: 'Directory (tenant) ID' },
+        { key: 'clientId', label: 'Application (client) ID' },
+        { key: 'clientSecret', label: 'Client secret', secret: true },
+      ],
+      configFields: [],
+    },
   ] },
   { kind: 'email', label: 'Email security', providers: [
     { provider: 'proofpoint', label: 'Proofpoint', free: 'enterprise', implemented: false, signal: 'Blocked email threats', secretFields: [], configFields: [] },

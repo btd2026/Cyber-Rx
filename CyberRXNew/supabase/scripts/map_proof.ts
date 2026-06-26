@@ -35,6 +35,16 @@ check('Jira (same kind, Jira source) grades RS.MA-01 to 0.9', jira['RS.MA-01']?.
 const siem = mapEvidenceToControls([{ kind: 'siem_log_ingestion', value: { log_ingestion_present: true, total_docs: 5000 }, collected_at: fresh }], now)
 check('siem maps to DE.CM-01 graded 1.0', siem['DE.CM-01']?.coverage === 1)
 
+// 3b. New signals: Defender Secure Score + Intune (→ PR.PS-01), Nessus (→ ID.RA-01).
+const sscore = mapEvidenceToControls([{ kind: 'edr_secure_score', value: { ratio: 0.7 }, collected_at: fresh, source_system: 'Defender' }], now)
+check('secure score maps to PR.PS-01 graded 0.7', Math.abs(sscore['PR.PS-01']?.coverage - 0.7) < 1e-9, JSON.stringify(sscore['PR.PS-01']))
+const intune = mapEvidenceToControls([{ kind: 'mdm_device_compliance', value: { ratio: 0.9 }, collected_at: fresh }], now)
+check('intune compliance also feeds PR.PS-01 (0.9)', intune['PR.PS-01']?.coverage === 0.9)
+const vuln0 = mapEvidenceToControls([{ kind: 'vuln_findings', value: { critical: 0, high: 0 }, collected_at: fresh }], now)
+const vulnMany = mapEvidenceToControls([{ kind: 'vuln_findings', value: { critical: 20, high: 10 }, collected_at: fresh }], now)
+check('0 vulns ⇒ ID.RA-01 1.0; 20crit+10high ⇒ 0', vuln0['ID.RA-01'].coverage === 1 && vulnMany['ID.RA-01'].coverage === 0,
+  `few=${vuln0['ID.RA-01'].coverage} many=${vulnMany['ID.RA-01'].coverage}`)
+
 // 4. Unmapped evidence kind is ignored (no invented controls).
 const unknown = mapEvidenceToControls([{ kind: 'totally_unknown_kind', value: { x: 1 }, collected_at: fresh }], now)
 check('unmapped evidence ⇒ no controls', Object.keys(unknown).length === 0)
@@ -55,7 +65,7 @@ check('multi-evidence takes freshest age (~1h)', multi['PR.AA-05'].ageHours < 2,
 const d1 = mapEvidenceToControls([{ kind: 'identity_mfa_coverage', value: { coverage_ratio: 0.7 }, collected_at: fresh }], now)
 const d2 = mapEvidenceToControls([{ kind: 'identity_mfa_coverage', value: { coverage_ratio: 0.7 }, collected_at: fresh }], now)
 check('deterministic mapping', JSON.stringify(d1) === JSON.stringify(d2))
-check('map covers all 3 shipped adapter kinds', Object.keys(EVIDENCE_CONTROL_MAP).length >= 3)
+check('map covers all shipped adapter kinds', Object.keys(EVIDENCE_CONTROL_MAP).length >= 6)
 
 console.log(failures === 0 ? '\n✅ MAPPING PROOF: all checks passed' : `\n❌ ${failures} check(s) failed`)
 process.exit(failures === 0 ? 0 : 1)

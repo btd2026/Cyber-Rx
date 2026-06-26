@@ -44,6 +44,22 @@ export const EVIDENCE_CONTROL_MAP: Record<string, MapEntry> = {
     label: 'Security monitoring / log ingestion',
     grade: (v) => (v.log_ingestion_present ? 1 : 0),
   },
+  edr_secure_score: {
+    controls: ['PR.PS-01'],
+    label: 'Defender Secure Score (posture)',
+    grade: (v) => clamp01(num(v.ratio)),
+  },
+  mdm_device_compliance: {
+    controls: ['PR.PS-01'],
+    label: 'Device compliance (MDM)',
+    grade: (v) => clamp01(num(v.ratio)),
+  },
+  vuln_findings: {
+    controls: ['ID.RA-01'],
+    label: 'Open vulnerabilities (critical-weighted)',
+    // 0 critical/high ⇒ 1.0; criticals weigh 2×. ~25 weighted findings ⇒ 0.
+    grade: (v) => clamp01(1 - (num(v.critical) * 2 + num(v.high)) / 50),
+  },
 }
 
 export type EvidenceRow = { kind: string; value: Record<string, unknown>; collected_at: string; source_system?: string }

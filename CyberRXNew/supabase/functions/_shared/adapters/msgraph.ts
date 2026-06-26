@@ -11,7 +11,9 @@ import type { ConnectorAdapter, AdapterContext, RawSignal } from './types.ts'
 
 const MAX_PAGES = 20
 
-async function token(ctx: AdapterContext, tenantId: string, clientId: string, clientSecret: string): Promise<string> {
+// Shared Graph OAuth2 client-credentials token — reused by the Secure Score and
+// Intune adapters (same app registration, same secret shape).
+export async function graphToken(ctx: AdapterContext, tenantId: string, clientId: string, clientSecret: string): Promise<string> {
   const r = await ctx.fetch(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`, {
     method: 'POST',
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
@@ -40,7 +42,7 @@ export const msGraphAdapter: ConnectorAdapter = {
   async pull(ctx): Promise<{ signals: RawSignal[]; health: Record<string, unknown> }> {
     const { tenantId, clientId, clientSecret } = ctx.secret
     if (!tenantId || !clientId || !clientSecret) throw new Error('Graph needs secret.tenantId/clientId/clientSecret')
-    const at = await token(ctx, tenantId, clientId, clientSecret)
+    const at = await graphToken(ctx, tenantId, clientId, clientSecret)
 
     let url: string | null = 'https://graph.microsoft.com/v1.0/reports/authenticationMethods/userRegistrationDetails?$top=200'
     let total = 0, withMfa = 0, admins = 0

@@ -12,13 +12,19 @@ import { msGraphAdapter } from './msgraph.ts'
 import { serviceNowAdapter } from './servicenow.ts'
 import { elasticAdapter } from './elastic.ts'
 import { jiraAdapter } from './jira.ts'
+import { msGraphSecureScoreAdapter } from './msgraphSecureScore.ts'
+import { msGraphIntuneAdapter } from './msgraphIntune.ts'
+import { nessusAdapter } from './nessus.ts'
 
 export const ADAPTERS: ConnectorAdapter[] = [
-  oktaAdapter,      // idp  — Okta Integrator Free Plan (free, instant)
-  msGraphAdapter,   // idp  — Microsoft Entra / M365 Dev E5 (free, Graph)
-  serviceNowAdapter,// grc  — ServiceNow PDI (free sandbox)
-  jiraAdapter,      // grc  — Jira Cloud Free plan (free, ≤10 users)
-  elasticAdapter,   // siem — Elasticsearch Basic (free, self-hosted)
+  oktaAdapter,             // idp  — Okta Integrator Free Plan (free, instant)
+  msGraphAdapter,          // idp  — Microsoft Entra / M365 Dev E5 (free, Graph)
+  serviceNowAdapter,       // grc  — ServiceNow PDI (free sandbox)
+  jiraAdapter,             // grc  — Jira Cloud Free plan (free, ≤10 users)
+  elasticAdapter,          // siem — Elasticsearch Basic (free, self-hosted)
+  msGraphSecureScoreAdapter,// edr  — Defender Secure Score (free via M365 Dev)
+  msGraphIntuneAdapter,    // mdm  — Intune device compliance (free via M365 Dev)
+  nessusAdapter,           // vuln — Nessus Essentials (free, self-hosted)
 ]
 
 export const adapterFor = (provider: string): ConnectorAdapter | undefined =>
@@ -46,7 +52,7 @@ export const CATEGORY_STATUS: CategoryStatus[] = [
     { provider: 'splunk', label: 'Splunk Free (self-hosted)', free: 'free', implemented: false },
   ] },
   { kind: 'vuln', label: 'Vulnerability management', providers: [
-    { provider: 'nessus', label: 'Nessus Essentials', free: 'free', implemented: false },
+    { provider: 'nessus', label: 'Nessus Essentials', free: 'free', implemented: true },
   ] },
   { kind: 'cloud', label: 'Cloud security posture (CSPM)', providers: [
     { provider: 'securityhub', label: 'AWS Security Hub', free: 'free', implemented: false },
@@ -55,11 +61,11 @@ export const CATEGORY_STATUS: CategoryStatus[] = [
     { provider: 'veeam', label: 'Veeam Community Edition', free: 'free', implemented: false },
   ] },
   { kind: 'edr', label: 'Endpoint Detection & Response', providers: [
-    { provider: 'msgraph_secure_score', label: 'Defender Secure Score (Graph)', free: 'free', implemented: false },
+    { provider: 'msgraph_secure_score', label: 'Defender Secure Score (Graph)', free: 'free', implemented: true },
     { provider: 'crowdstrike', label: 'CrowdStrike Falcon', free: 'enterprise', implemented: false },
   ] },
   { kind: 'mdm', label: 'Device management (MDM)', providers: [
-    { provider: 'msgraph_intune', label: 'Intune (Graph)', free: 'free', implemented: false },
+    { provider: 'msgraph_intune', label: 'Intune (Graph)', free: 'free', implemented: true },
   ] },
   { kind: 'email', label: 'Email security', providers: [
     { provider: 'proofpoint', label: 'Proofpoint', free: 'enterprise', implemented: false },

@@ -2,7 +2,7 @@
 
 Turns vendor APIs into **pulled evidence** that the deterministic CMMI scorer
 (`src/engine/scorer.ts`) turns into live maturity. This is the layer the
-readiness audit found missing entirely. It is now **scaffolded with five working
+readiness audit found missing entirely. It is now **scaffolded with eight working
 adapters** against genuinely-free, self-serve developer tiers, plus a registry
 of the remaining categories (most of which are enterprise-gated).
 
@@ -41,12 +41,12 @@ Verified June 2026. "Free" = self-serve, no sales call, real read-only API.
 | **ITSM / GRC** | **ServiceNow PDI** | ✅ free sandbox | ✅ wired | developer.servicenow.com → Basic auth → open security incidents (Aggregate API). Sandbox data; PDIs hibernate ~10d idle |
 | **SIEM** | **Elasticsearch Basic** | ✅ free forever | ✅ wired | `docker run elasticsearch` → API key → log-ingestion presence + events-by-severity |
 | **ITSM / GRC** | **Jira Cloud Free** | ✅ free (≤10 users) | ✅ wired | id.atlassian.com API token (Basic email:token) → JQL approximate-count of open security tickets |
+| **EDR** | **Defender Secure Score (Graph)** | ✅ free via M365 Dev | ✅ wired | `/security/secureScores` → `currentScore/maxScore` (posture %) |
+| **MDM** | **Intune (Graph)** | ✅ free via M365 Dev | ✅ wired | page `/deviceManagement/managedDevices` → % compliant |
+| **Vuln mgmt** | **Nessus Essentials** | ✅ free (16 IPs) | ✅ wired | local API :8834, `X-ApiKeys` → critical/high counts from `/scans/{id}` |
 | SIEM | Splunk Free (self-hosted) | ✅ free (500MB/day) | ⬜ planned | REST on :8089. (Splunk *Cloud* trial blocks the API — use self-hosted Free) |
-| Vuln mgmt | Nessus Essentials | ✅ free (16 IPs) | ⬜ planned | local API :8834, API keys → `critical_vuln_count` from `/scans/{id}` |
 | CSPM | AWS Security Hub | ✅ free tier (read) | ⬜ planned | IAM `securityhub:GetFindings` → findings by severity, compliance pass rate |
 | Backup/DR | Veeam Community Edition | ✅ free (10 workloads) | ⬜ planned | OAuth2 :9419 → `/api/v1/sessions` → backup success rate |
-| EDR | Defender Secure Score (Graph) | ✅ free via M365 Dev | ⬜ planned | `/security/secureScores` → `currentScore/maxScore` |
-| MDM | Intune (Graph) | ✅ free via M365 Dev | ⬜ planned | `/deviceManagement/managedDeviceOverview` → % compliant |
 | Firewall | Cisco DevNet sandbox | 🟡 trial/lab | ⬜ planned | always-on FMC/Meraki sandboxes (lab data, not yours) |
 | EDR | CrowdStrike / SentinelOne | ❌ enterprise | — | API needs a licensed tenant |
 | Email | Proofpoint / Mimecast / Abnormal | ❌ enterprise | — | no self-serve free tier |
@@ -83,7 +83,8 @@ supabase secrets set CRON_SECRET=...      # optional, for scheduled runs
 
 ## Honest scope of this scaffold
 
-- ✅ Adapter contract + 5 real adapters (Okta, Entra/Graph, ServiceNow, Jira, Elastic).
+- ✅ Adapter contract + 8 real adapters (Okta, Entra/Graph, ServiceNow, Jira,
+  Elastic, Defender Secure Score, Intune, Nessus).
 - ✅ Server-side orchestrator with auth, secret isolation, content-hashed evidence
   writes, per-connector health, and signed audit logging.
 - ✅ Service-role-only secret storage (migration `0004`).
@@ -106,6 +107,9 @@ supabase secrets set CRON_SECRET=...      # optional, for scheduled runs
 ### Evidence → control map (current)
 | Evidence kind | Grades to | CSF control | Reading |
 |---|---|---|---|
-| `identity_mfa_coverage` | coverage ratio | **PR.AA-05** | MFA enrollment % |
-| `itsm_open_security_incidents` | 1 − open_high/10 | **RS.MA-01** | incident remediation throughput |
-| `siem_log_ingestion` | present ? 1 : 0 | **DE.CM-01** | security monitoring present |
+| `identity_mfa_coverage` | coverage ratio | **PR.AA-05** | MFA enrollment % (Okta / Entra) |
+| `itsm_open_security_incidents` | 1 − open_high/10 | **RS.MA-01** | remediation throughput (ServiceNow / Jira) |
+| `siem_log_ingestion` | present ? 1 : 0 | **DE.CM-01** | security monitoring present (Elastic) |
+| `edr_secure_score` | posture ratio | **PR.PS-01** | Defender Secure Score |
+| `mdm_device_compliance` | compliant ratio | **PR.PS-01** | Intune device compliance % |
+| `vuln_findings` | 1 − (crit·2+high)/50 | **ID.RA-01** | open critical/high vulns (Nessus) |
