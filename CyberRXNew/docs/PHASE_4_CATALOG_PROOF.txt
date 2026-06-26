@@ -1,0 +1,27 @@
+CyberRx — Phase 4a catalog-load proof (NIST 800-53 Rev 5 OSCAL → Phase 1 schema)
+Generated against local PostgreSQL 16 (the engine Supabase uses).
+
+      key       |                 name                  |     version      
+----------------+---------------------------------------+------------------
+ CIS_V8         | CIS Critical Security Controls        | v8
+ CSF_2_0        | NIST Cybersecurity Framework 2.0      | 2.0
+ ISO_27001_2022 | ISO/IEC 27001                         | 2022
+ NIST_800_53    | NIST SP 800-53                        | Rev 5
+ SOC_2          | AICPA SOC 2 (Trust Services Criteria) | 2017 (rev. 2022)
+(5 rows)
+
+ base_controls | enhancements | total 
+---------------+--------------+-------
+           324 |          872 |  1196
+(1 row)
+
+ control_id |                 title                 
+------------+---------------------------------------
+ AC-1       | Policy and Procedures
+ AC-2       | Account Management
+ AC-2.1     | Automated System Account Management
+ CM-6       | Configuration Settings
+ RA-5       | Vulnerability Monitoring and Scanning
+ SI-4       | System Monitoring
+(6 rows)
+
