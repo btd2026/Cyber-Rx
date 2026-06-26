@@ -5773,14 +5773,19 @@ function Setup(props) {
                 RTO priority. You then validate the result and uncheck anything out of scope — nothing
                 is preloaded or assumed.
               </div>
-              <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
-                <label style={{background:C.acc,color:"#fff",borderRadius:7,padding:"8px 14px",fontSize:12,
-                  fontWeight:700,cursor:extracting?"default":"pointer",opacity:extracting?0.6:1}}>
-                  {extracting?"Extracting…":"⬆ Upload process document"}
-                  <input type="file" style={{display:"none"}} disabled={extracting}
-                    accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt"
-                    onChange={function(e){var f=e.target.files&&e.target.files[0];extractProcessesFromFile(f);e.target.value="";}}/>
-                </label>
+              <label
+                onDragOver={function(e){e.preventDefault();}}
+                onDrop={function(e){e.preventDefault();var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];if(f&&!extracting)extractProcessesFromFile(f);}}
+                style={{display:"block",border:"1.5px dashed "+(extracting?C.acc:C.border),borderRadius:12,
+                  padding:"26px 18px",textAlign:"center",cursor:extracting?"default":"pointer",background:C.acc+"06"}}>
+                <div style={{fontSize:22,color:C.acc,lineHeight:1,marginBottom:8}}>{extracting?"⏳":"↓"}</div>
+                <div style={{fontSize:14,fontWeight:700,color:C.text}}>{extracting?"Extracting…":"Upload process list / BIA"}</div>
+                <div style={{fontSize:12,color:C.muted,marginTop:4}}>CSV, XLSX, or PDF — we'll extract each process. Click to browse or drag a file here.</div>
+                <input type="file" style={{display:"none"}} disabled={extracting}
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt"
+                  onChange={function(e){var f=e.target.files&&e.target.files[0];extractProcessesFromFile(f);e.target.value="";}}/>
+              </label>
+              <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap",marginTop:10}}>
                 {extractMeta&&!extractMeta.error&&extractMeta.count>0&&(
                   <span style={{color:"#0FBB80",fontSize:11,fontWeight:600}}>
                     {extractMeta.fileName?"✓ "+extractMeta.fileName+" received — ":"✓ "}{extractMeta.count} processes inferred{extractMeta.engine==="llm"?" by AI":extractMeta.engine==="heuristic"?" (pattern match)":""} — validate &amp; accept below
