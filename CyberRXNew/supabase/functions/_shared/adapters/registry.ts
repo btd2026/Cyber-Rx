@@ -15,16 +15,18 @@ import { jiraAdapter } from './jira.ts'
 import { msGraphSecureScoreAdapter } from './msgraphSecureScore.ts'
 import { msGraphIntuneAdapter } from './msgraphIntune.ts'
 import { nessusAdapter } from './nessus.ts'
+import { securityHubAdapter } from './securityhub.ts'
 
 export const ADAPTERS: ConnectorAdapter[] = [
-  oktaAdapter,             // idp  — Okta Integrator Free Plan (free, instant)
-  msGraphAdapter,          // idp  — Microsoft Entra / M365 Dev E5 (free, Graph)
-  serviceNowAdapter,       // grc  — ServiceNow PDI (free sandbox)
-  jiraAdapter,             // grc  — Jira Cloud Free plan (free, ≤10 users)
-  elasticAdapter,          // siem — Elasticsearch Basic (free, self-hosted)
+  oktaAdapter,             // idp   — Okta Integrator Free Plan (free, instant)
+  msGraphAdapter,          // idp   — Microsoft Entra / M365 Dev E5 (free, Graph)
+  serviceNowAdapter,       // grc   — ServiceNow PDI (free sandbox)
+  jiraAdapter,             // grc   — Jira Cloud Free plan (free, ≤10 users)
+  elasticAdapter,          // siem  — Elasticsearch Basic (free, self-hosted)
   msGraphSecureScoreAdapter,// edr  — Defender Secure Score (free via M365 Dev)
-  msGraphIntuneAdapter,    // mdm  — Intune device compliance (free via M365 Dev)
-  nessusAdapter,           // vuln — Nessus Essentials (free, self-hosted)
+  msGraphIntuneAdapter,    // mdm   — Intune device compliance (free via M365 Dev)
+  nessusAdapter,           // vuln  — Nessus Essentials (free, self-hosted)
+  securityHubAdapter,      // cloud — AWS Security Hub (free-tier reads, SigV4)
 ]
 
 export const adapterFor = (provider: string): ConnectorAdapter | undefined =>
@@ -55,7 +57,7 @@ export const CATEGORY_STATUS: CategoryStatus[] = [
     { provider: 'nessus', label: 'Nessus Essentials', free: 'free', implemented: true },
   ] },
   { kind: 'cloud', label: 'Cloud security posture (CSPM)', providers: [
-    { provider: 'securityhub', label: 'AWS Security Hub', free: 'free', implemented: false },
+    { provider: 'securityhub', label: 'AWS Security Hub', free: 'free', implemented: true },
   ] },
   { kind: 'backup', label: 'Backup / DR', providers: [
     { provider: 'veeam', label: 'Veeam Community Edition', free: 'free', implemented: false },

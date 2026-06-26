@@ -88,7 +88,17 @@ export const CONNECTOR_CATALOG: CategoryDef[] = [
     },
   ] },
   { kind: 'cloud', label: 'Cloud security posture (CSPM)', providers: [
-    { provider: 'securityhub', label: 'AWS Security Hub', free: 'free', implemented: false, signal: 'Findings by severity, compliance pass rate', secretFields: [], configFields: [] },
+    {
+      provider: 'securityhub', label: 'AWS Security Hub', free: 'free', implemented: true,
+      signupUrl: 'https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-settingup.html',
+      signal: 'Findings by severity + compliance pass rate',
+      secretFields: [
+        { key: 'accessKeyId', label: 'Access key ID', secret: true },
+        { key: 'secretAccessKey', label: 'Secret access key', secret: true },
+        { key: 'sessionToken', label: 'Session token (optional)', secret: true },
+      ],
+      configFields: [{ key: 'region', label: 'AWS region', placeholder: 'us-east-1' }],
+    },
   ] },
   { kind: 'backup', label: 'Backup / DR', providers: [
     { provider: 'veeam', label: 'Veeam Community Edition', free: 'free', implemented: false, signupUrl: 'https://www.veeam.com/products/downloads.html', signal: 'Backup success rate', secretFields: [], configFields: [] },

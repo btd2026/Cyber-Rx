@@ -45,6 +45,12 @@ const vulnMany = mapEvidenceToControls([{ kind: 'vuln_findings', value: { critic
 check('0 vulns ⇒ ID.RA-01 1.0; 20crit+10high ⇒ 0', vuln0['ID.RA-01'].coverage === 1 && vulnMany['ID.RA-01'].coverage === 0,
   `few=${vuln0['ID.RA-01'].coverage} many=${vulnMany['ID.RA-01'].coverage}`)
 
+// 3c. CSPM grades on compliance pass rate (→ PR.PS-01), severity as fallback.
+const cspmRate = mapEvidenceToControls([{ kind: 'cspm_findings', value: { compliance_passed: 80, compliance_failed: 20 }, collected_at: fresh, source_system: 'AWS Security Hub' }], now)
+check('CSPM pass rate 80/100 ⇒ PR.PS-01 0.8', Math.abs(cspmRate['PR.PS-01'].coverage - 0.8) < 1e-9, `${cspmRate['PR.PS-01'].coverage}`)
+const cspmSev = mapEvidenceToControls([{ kind: 'cspm_findings', value: { critical: 0, high: 0 }, collected_at: fresh }], now)
+check('CSPM with no compliance data falls back to severity (1.0)', cspmSev['PR.PS-01'].coverage === 1)
+
 // 4. Unmapped evidence kind is ignored (no invented controls).
 const unknown = mapEvidenceToControls([{ kind: 'totally_unknown_kind', value: { x: 1 }, collected_at: fresh }], now)
 check('unmapped evidence ⇒ no controls', Object.keys(unknown).length === 0)
@@ -65,7 +71,7 @@ check('multi-evidence takes freshest age (~1h)', multi['PR.AA-05'].ageHours < 2,
 const d1 = mapEvidenceToControls([{ kind: 'identity_mfa_coverage', value: { coverage_ratio: 0.7 }, collected_at: fresh }], now)
 const d2 = mapEvidenceToControls([{ kind: 'identity_mfa_coverage', value: { coverage_ratio: 0.7 }, collected_at: fresh }], now)
 check('deterministic mapping', JSON.stringify(d1) === JSON.stringify(d2))
-check('map covers all shipped adapter kinds', Object.keys(EVIDENCE_CONTROL_MAP).length >= 6)
+check('map covers all shipped adapter kinds', Object.keys(EVIDENCE_CONTROL_MAP).length >= 7)
 
 console.log(failures === 0 ? '\n✅ MAPPING PROOF: all checks passed' : `\n❌ ${failures} check(s) failed`)
 process.exit(failures === 0 ? 0 : 1)

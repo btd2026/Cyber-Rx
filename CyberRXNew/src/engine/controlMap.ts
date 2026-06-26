@@ -60,6 +60,16 @@ export const EVIDENCE_CONTROL_MAP: Record<string, MapEntry> = {
     // 0 critical/high ⇒ 1.0; criticals weigh 2×. ~25 weighted findings ⇒ 0.
     grade: (v) => clamp01(1 - (num(v.critical) * 2 + num(v.high)) / 50),
   },
+  cspm_findings: {
+    controls: ['PR.PS-01'],
+    label: 'Cloud posture (CSPM)',
+    // Prefer the standards compliance pass rate; else fall back to severity counts.
+    grade: (v) => {
+      const passed = num(v.compliance_passed), failed = num(v.compliance_failed)
+      if (passed + failed > 0) return clamp01(passed / (passed + failed))
+      return clamp01(1 - (num(v.critical) * 2 + num(v.high)) / 50)
+    },
+  },
 }
 
 export type EvidenceRow = { kind: string; value: Record<string, unknown>; collected_at: string; source_system?: string }

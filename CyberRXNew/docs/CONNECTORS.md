@@ -2,7 +2,7 @@
 
 Turns vendor APIs into **pulled evidence** that the deterministic CMMI scorer
 (`src/engine/scorer.ts`) turns into live maturity. This is the layer the
-readiness audit found missing entirely. It is now **scaffolded with eight working
+readiness audit found missing entirely. It is now **scaffolded with nine working
 adapters** against genuinely-free, self-serve developer tiers, plus a registry
 of the remaining categories (most of which are enterprise-gated).
 
@@ -44,8 +44,8 @@ Verified June 2026. "Free" = self-serve, no sales call, real read-only API.
 | **EDR** | **Defender Secure Score (Graph)** | ✅ free via M365 Dev | ✅ wired | `/security/secureScores` → `currentScore/maxScore` (posture %) |
 | **MDM** | **Intune (Graph)** | ✅ free via M365 Dev | ✅ wired | page `/deviceManagement/managedDevices` → % compliant |
 | **Vuln mgmt** | **Nessus Essentials** | ✅ free (16 IPs) | ✅ wired | local API :8834, `X-ApiKeys` → critical/high counts from `/scans/{id}` |
+| **CSPM** | **AWS Security Hub** | ✅ free tier (read) | ✅ wired | SigV4 `GetFindings` → severity counts + compliance pass rate |
 | SIEM | Splunk Free (self-hosted) | ✅ free (500MB/day) | ⬜ planned | REST on :8089. (Splunk *Cloud* trial blocks the API — use self-hosted Free) |
-| CSPM | AWS Security Hub | ✅ free tier (read) | ⬜ planned | IAM `securityhub:GetFindings` → findings by severity, compliance pass rate |
 | Backup/DR | Veeam Community Edition | ✅ free (10 workloads) | ⬜ planned | OAuth2 :9419 → `/api/v1/sessions` → backup success rate |
 | Firewall | Cisco DevNet sandbox | 🟡 trial/lab | ⬜ planned | always-on FMC/Meraki sandboxes (lab data, not yours) |
 | EDR | CrowdStrike / SentinelOne | ❌ enterprise | — | API needs a licensed tenant |
@@ -83,8 +83,8 @@ supabase secrets set CRON_SECRET=...      # optional, for scheduled runs
 
 ## Honest scope of this scaffold
 
-- ✅ Adapter contract + 8 real adapters (Okta, Entra/Graph, ServiceNow, Jira,
-  Elastic, Defender Secure Score, Intune, Nessus).
+- ✅ Adapter contract + 9 real adapters (Okta, Entra/Graph, ServiceNow, Jira,
+  Elastic, Defender Secure Score, Intune, Nessus, AWS Security Hub).
 - ✅ Server-side orchestrator with auth, secret isolation, content-hashed evidence
   writes, per-connector health, and signed audit logging.
 - ✅ Service-role-only secret storage (migration `0004`).
@@ -98,11 +98,14 @@ supabase secrets set CRON_SECRET=...      # optional, for scheduled runs
   those controls **LIVE** with their pulled sources, and persists the engine's
   computed maturity to `control_status` (RLS-protected). So a real Okta
   `identity_mfa_coverage` reading moves PR.AA-05's CMMI on the dashboard. Proven:
-  `supabase/scripts/map_proof.ts` (13 checks) + 3 `control_status` SQL checks.
-- ⬜ **Remaining:** the six planned free adapters above; a scheduled-sync cron;
-  and broadening the control map (each new adapter adds a `controlMap` entry).
-  The Edge Functions are Deno and aren't covered by the Vite build/lint; validate
-  with `deno check` before deploy.
+  `supabase/scripts/map_proof.ts` + 3 `control_status` SQL checks.
+- ✅ **AWS SigV4 signer** (`_shared/aws/sigv4.ts`) for Security Hub, validated
+  against AWS's official test-suite "get-vanilla" vector + signing-key example
+  (`supabase/scripts/aws_sigv4_proof.ts`).
+- ⬜ **Remaining:** the planned adapters above (Splunk, Veeam, Cisco DevNet); a
+  scheduled-sync cron; and broadening the control map (each new adapter adds a
+  `controlMap` entry). The Edge Functions are Deno and aren't covered by the Vite
+  build/lint; validate with `deno check` before deploy.
 
 ### Evidence → control map (current)
 | Evidence kind | Grades to | CSF control | Reading |
@@ -113,3 +116,4 @@ supabase secrets set CRON_SECRET=...      # optional, for scheduled runs
 | `edr_secure_score` | posture ratio | **PR.PS-01** | Defender Secure Score |
 | `mdm_device_compliance` | compliant ratio | **PR.PS-01** | Intune device compliance % |
 | `vuln_findings` | 1 − (crit·2+high)/50 | **ID.RA-01** | open critical/high vulns (Nessus) |
+| `cspm_findings` | compliance pass rate | **PR.PS-01** | cloud posture (AWS Security Hub) |
