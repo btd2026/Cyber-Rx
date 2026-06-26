@@ -17,6 +17,8 @@ import { msGraphIntuneAdapter } from './msgraphIntune.ts'
 import { nessusAdapter } from './nessus.ts'
 import { securityHubAdapter } from './securityhub.ts'
 import { veeamAdapter } from './veeam.ts'
+import { splunkAdapter } from './splunk.ts'
+import { merakiAdapter } from './meraki.ts'
 
 export const ADAPTERS: ConnectorAdapter[] = [
   oktaAdapter,             // idp    — Okta Integrator Free Plan (free, instant)
@@ -24,11 +26,13 @@ export const ADAPTERS: ConnectorAdapter[] = [
   serviceNowAdapter,       // grc    — ServiceNow PDI (free sandbox)
   jiraAdapter,             // grc    — Jira Cloud Free plan (free, ≤10 users)
   elasticAdapter,          // siem   — Elasticsearch Basic (free, self-hosted)
+  splunkAdapter,           // siem   — Splunk Free (free, self-hosted)
   msGraphSecureScoreAdapter,// edr   — Defender Secure Score (free via M365 Dev)
   msGraphIntuneAdapter,    // mdm    — Intune device compliance (free via M365 Dev)
   nessusAdapter,           // vuln   — Nessus Essentials (free, self-hosted)
   securityHubAdapter,      // cloud  — AWS Security Hub (free-tier reads, SigV4)
   veeamAdapter,            // backup — Veeam Community Edition (free, self-hosted)
+  merakiAdapter,           // fw     — Cisco Meraki (free DevNet sandbox / API)
 ]
 
 export const adapterFor = (provider: string): ConnectorAdapter | undefined =>
@@ -53,7 +57,7 @@ export const CATEGORY_STATUS: CategoryStatus[] = [
   ] },
   { kind: 'siem', label: 'SIEM / Log analytics', providers: [
     { provider: 'elastic', label: 'Elasticsearch (Basic)', free: 'free', implemented: true },
-    { provider: 'splunk', label: 'Splunk Free (self-hosted)', free: 'free', implemented: false },
+    { provider: 'splunk', label: 'Splunk Free (self-hosted)', free: 'free', implemented: true },
   ] },
   { kind: 'vuln', label: 'Vulnerability management', providers: [
     { provider: 'nessus', label: 'Nessus Essentials', free: 'free', implemented: true },
@@ -75,6 +79,6 @@ export const CATEGORY_STATUS: CategoryStatus[] = [
     { provider: 'proofpoint', label: 'Proofpoint', free: 'enterprise', implemented: false },
   ] },
   { kind: 'fw', label: 'Firewall / Network', providers: [
-    { provider: 'cisco_devnet', label: 'Cisco DevNet (sandbox)', free: 'trial', implemented: false },
+    { provider: 'meraki', label: 'Cisco Meraki (DevNet/API)', free: 'trial', implemented: true },
   ] },
 ]

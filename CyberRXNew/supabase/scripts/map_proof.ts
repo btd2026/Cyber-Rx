@@ -55,6 +55,12 @@ check('CSPM with no compliance data falls back to severity (1.0)', cspmSev['PR.P
 const veeam = mapEvidenceToControls([{ kind: 'backup_success_rate', value: { success_rate: 0.85 }, collected_at: fresh, source_system: 'Veeam' }], now)
 check('backup success rate maps to RC.RP-01 graded 0.85', Math.abs(veeam['RC.RP-01']?.coverage - 0.85) < 1e-9, `${veeam['RC.RP-01']?.coverage}`)
 
+// 3e. Splunk reuses the siem kind (→ DE.CM-01); Meraki firewall hygiene ⇒ PR.IR-01.
+const splunk = mapEvidenceToControls([{ kind: 'siem_log_ingestion', value: { log_ingestion_present: true, total_docs: 99 }, collected_at: fresh, source_system: 'Splunk' }], now)
+check('Splunk (siem kind, Splunk source) grades DE.CM-01 1.0', splunk['DE.CM-01']?.coverage === 1 && splunk['DE.CM-01']?.sources[0]?.source === 'Splunk')
+const fw = mapEvidenceToControls([{ kind: 'firewall_rule_hygiene', value: { hygiene_ratio: 0.6 }, collected_at: fresh, source_system: 'Cisco Meraki' }], now)
+check('firewall hygiene maps to PR.IR-01 graded 0.6', Math.abs(fw['PR.IR-01']?.coverage - 0.6) < 1e-9, `${fw['PR.IR-01']?.coverage}`)
+
 // 4. Unmapped evidence kind is ignored (no invented controls).
 const unknown = mapEvidenceToControls([{ kind: 'totally_unknown_kind', value: { x: 1 }, collected_at: fresh }], now)
 check('unmapped evidence ⇒ no controls', Object.keys(unknown).length === 0)
@@ -75,7 +81,7 @@ check('multi-evidence takes freshest age (~1h)', multi['PR.AA-05'].ageHours < 2,
 const d1 = mapEvidenceToControls([{ kind: 'identity_mfa_coverage', value: { coverage_ratio: 0.7 }, collected_at: fresh }], now)
 const d2 = mapEvidenceToControls([{ kind: 'identity_mfa_coverage', value: { coverage_ratio: 0.7 }, collected_at: fresh }], now)
 check('deterministic mapping', JSON.stringify(d1) === JSON.stringify(d2))
-check('map covers all shipped adapter kinds', Object.keys(EVIDENCE_CONTROL_MAP).length >= 8)
+check('map covers all shipped adapter kinds', Object.keys(EVIDENCE_CONTROL_MAP).length >= 9)
 
 console.log(failures === 0 ? '\n✅ MAPPING PROOF: all checks passed' : `\n❌ ${failures} check(s) failed`)
 process.exit(failures === 0 ? 0 : 1)

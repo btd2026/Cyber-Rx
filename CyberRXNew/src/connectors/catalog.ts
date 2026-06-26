@@ -74,7 +74,12 @@ export const CONNECTOR_CATALOG: CategoryDef[] = [
         { key: 'index', label: 'Index pattern', placeholder: 'logs-*' },
       ],
     },
-    { provider: 'splunk', label: 'Splunk Free (self-hosted)', free: 'free', implemented: false, signal: 'Log ingestion volume', secretFields: [], configFields: [] },
+    {
+      provider: 'splunk', label: 'Splunk Free (self-hosted)', free: 'free', implemented: true,
+      signupUrl: 'https://www.splunk.com/en_us/download/splunk-enterprise.html', signal: 'Log ingestion volume',
+      secretFields: [{ key: 'token', label: 'Authentication token', placeholder: 'Bearer token', secret: true }],
+      configFields: [{ key: 'baseUrl', label: 'Management URL', placeholder: 'https://localhost:8089' }],
+    },
   ] },
   { kind: 'vuln', label: 'Vulnerability management', providers: [
     {
@@ -143,7 +148,15 @@ export const CONNECTOR_CATALOG: CategoryDef[] = [
     { provider: 'proofpoint', label: 'Proofpoint', free: 'enterprise', implemented: false, signal: 'Blocked email threats', secretFields: [], configFields: [] },
   ] },
   { kind: 'fw', label: 'Firewall / Network', providers: [
-    { provider: 'cisco_devnet', label: 'Cisco DevNet (sandbox)', free: 'trial', implemented: false, signupUrl: 'https://developer.cisco.com/', signal: 'Firewall rule hygiene', secretFields: [], configFields: [] },
+    {
+      provider: 'meraki', label: 'Cisco Meraki (DevNet/API)', free: 'trial', implemented: true,
+      signupUrl: 'https://developer.cisco.com/meraki/', signal: 'Firewall rule hygiene (any/any, logging)',
+      secretFields: [{ key: 'apiKey', label: 'Meraki API key', secret: true }],
+      configFields: [
+        { key: 'baseUrl', label: 'API base', placeholder: 'https://api.meraki.com/api/v1' },
+        { key: 'networkId', label: 'Network ID', placeholder: 'L_123456789' },
+      ],
+    },
   ] },
 ]
 

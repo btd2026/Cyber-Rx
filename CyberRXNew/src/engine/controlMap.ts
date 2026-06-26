@@ -75,6 +75,11 @@ export const EVIDENCE_CONTROL_MAP: Record<string, MapEntry> = {
     label: 'Backup success rate (recovery readiness)',
     grade: (v) => clamp01(num(v.success_rate)),
   },
+  firewall_rule_hygiene: {
+    controls: ['PR.IR-01'],
+    label: 'Firewall rule hygiene',
+    grade: (v) => clamp01(num(v.hygiene_ratio)),
+  },
 }
 
 export type EvidenceRow = { kind: string; value: Record<string, unknown>; collected_at: string; source_system?: string }

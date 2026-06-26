@@ -2,7 +2,7 @@
 
 Turns vendor APIs into **pulled evidence** that the deterministic CMMI scorer
 (`src/engine/scorer.ts`) turns into live maturity. This is the layer the
-readiness audit found missing entirely. It is now **scaffolded with ten working
+readiness audit found missing entirely. It is now **scaffolded with twelve working
 adapters** against genuinely-free, self-serve developer tiers, plus a registry
 of the remaining categories (most of which are enterprise-gated).
 
@@ -46,8 +46,8 @@ Verified June 2026. "Free" = self-serve, no sales call, real read-only API.
 | **Vuln mgmt** | **Nessus Essentials** | ✅ free (16 IPs) | ✅ wired | local API :8834, `X-ApiKeys` → critical/high counts from `/scans/{id}` |
 | **CSPM** | **AWS Security Hub** | ✅ free tier (read) | ✅ wired | SigV4 `GetFindings` → severity counts + compliance pass rate |
 | **Backup / DR** | **Veeam Community Edition** | ✅ free (10 workloads) | ✅ wired | OAuth2 :9419 → `/api/v1/sessions` → backup success rate |
-| SIEM | Splunk Free (self-hosted) | ✅ free (500MB/day) | ⬜ planned | REST on :8089. (Splunk *Cloud* trial blocks the API — use self-hosted Free) |
-| Firewall | Cisco DevNet sandbox | 🟡 trial/lab | ⬜ planned | always-on FMC/Meraki sandboxes (lab data, not yours) |
+| **SIEM** | **Splunk Free (self-hosted)** | ✅ free (500MB/day) | ✅ wired | bearer token → `/services/data/indexes` event counts. (Splunk *Cloud* trial blocks the API) |
+| **Firewall** | **Cisco Meraki (DevNet)** | 🟡 free lab / API | ✅ wired | API key → `appliance/firewall/l3FirewallRules` → rule hygiene |
 | EDR | CrowdStrike / SentinelOne | ❌ enterprise | — | API needs a licensed tenant |
 | Email | Proofpoint / Mimecast / Abnormal | ❌ enterprise | — | no self-serve free tier |
 | CSPM | Wiz / Prisma Cloud | ❌ sales-gated | — | demo/trial via sales only |
@@ -83,8 +83,9 @@ supabase secrets set CRON_SECRET=...      # optional, for scheduled runs
 
 ## Honest scope of this scaffold
 
-- ✅ Adapter contract + 10 real adapters (Okta, Entra/Graph, ServiceNow, Jira,
-  Elastic, Defender Secure Score, Intune, Nessus, AWS Security Hub, Veeam).
+- ✅ Adapter contract + 12 real adapters (Okta, Entra/Graph, ServiceNow, Jira,
+  Elastic, Splunk, Defender Secure Score, Intune, Nessus, AWS Security Hub,
+  Veeam, Cisco Meraki).
 - ✅ Server-side orchestrator with auth, secret isolation, content-hashed evidence
   writes, per-connector health, and signed audit logging.
 - ✅ Service-role-only secret storage (migration `0004`).
@@ -102,19 +103,42 @@ supabase secrets set CRON_SECRET=...      # optional, for scheduled runs
 - ✅ **AWS SigV4 signer** (`_shared/aws/sigv4.ts`) for Security Hub, validated
   against AWS's official test-suite "get-vanilla" vector + signing-key example
   (`supabase/scripts/aws_sigv4_proof.ts`).
-- ⬜ **Remaining:** the planned adapters above (Splunk, Cisco DevNet); a
-  scheduled-sync cron; and broadening the control map (each new adapter adds a
-  `controlMap` entry). The Edge Functions are Deno and aren't covered by the Vite
-  build/lint; validate with `deno check` before deploy.
+- ✅ **Scheduled-sync cron** (`supabase/cron/ingest_cron.sql`) — pg_cron + pg_net
+  fan out a read-only ingest to every tenant on a schedule (see below).
+- ⬜ **Remaining:** broadening the control map (each new adapter adds a
+  `controlMap` entry), and the enterprise-gated categories (no free API). The
+  Edge Functions are Deno and aren't covered by the Vite build/lint; validate
+  with `deno check` before deploy.
+
+## Scheduled sync (hosted Supabase)
+
+Connected sources refresh automatically — no manual "Sync now". Apply
+`supabase/cron/ingest_cron.sql` in the Supabase SQL editor (it needs pg_cron +
+pg_net, which is why it lives outside `migrations/` — keeps the local proof
+green). Then populate the operator settings once:
+
+```sql
+insert into app.settings (key, value) values
+  ('ingest_url', 'https://YOUR-REF.supabase.co/functions/v1/ingest'),
+  ('cron_secret', 'YOUR-CRON-SECRET')   -- same as the ingest function's CRON_SECRET
+on conflict (key) do update set value = excluded.value;
+```
+
+It runs every 6 hours by default (`cron.alter_job` to change). The fan-out reads
+secrets from `app.settings` (the `app` schema isn't exposed to the client API),
+hits the `ingest` function per tenant with `X-Cron-Key`, and the orchestrator
+does the rest. No-pg_cron fallback: any external scheduler can `curl` the same
+endpoint with the cron header (see the SQL file's footer).
 
 ### Evidence → control map (current)
 | Evidence kind | Grades to | CSF control | Reading |
 |---|---|---|---|
 | `identity_mfa_coverage` | coverage ratio | **PR.AA-05** | MFA enrollment % (Okta / Entra) |
 | `itsm_open_security_incidents` | 1 − open_high/10 | **RS.MA-01** | remediation throughput (ServiceNow / Jira) |
-| `siem_log_ingestion` | present ? 1 : 0 | **DE.CM-01** | security monitoring present (Elastic) |
+| `siem_log_ingestion` | present ? 1 : 0 | **DE.CM-01** | security monitoring present (Elastic / Splunk) |
 | `edr_secure_score` | posture ratio | **PR.PS-01** | Defender Secure Score |
 | `mdm_device_compliance` | compliant ratio | **PR.PS-01** | Intune device compliance % |
 | `vuln_findings` | 1 − (crit·2+high)/50 | **ID.RA-01** | open critical/high vulns (Nessus) |
 | `cspm_findings` | compliance pass rate | **PR.PS-01** | cloud posture (AWS Security Hub) |
 | `backup_success_rate` | success rate | **RC.RP-01** | recovery readiness (Veeam) |
+| `firewall_rule_hygiene` | hygiene ratio | **PR.IR-01** | network protection (Cisco Meraki) |
