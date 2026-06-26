@@ -11,11 +11,13 @@ import { oktaAdapter } from './okta.ts'
 import { msGraphAdapter } from './msgraph.ts'
 import { serviceNowAdapter } from './servicenow.ts'
 import { elasticAdapter } from './elastic.ts'
+import { jiraAdapter } from './jira.ts'
 
 export const ADAPTERS: ConnectorAdapter[] = [
   oktaAdapter,      // idp  — Okta Integrator Free Plan (free, instant)
   msGraphAdapter,   // idp  — Microsoft Entra / M365 Dev E5 (free, Graph)
   serviceNowAdapter,// grc  — ServiceNow PDI (free sandbox)
+  jiraAdapter,      // grc  — Jira Cloud Free plan (free, ≤10 users)
   elasticAdapter,   // siem — Elasticsearch Basic (free, self-hosted)
 ]
 
@@ -37,7 +39,7 @@ export const CATEGORY_STATUS: CategoryStatus[] = [
   ] },
   { kind: 'grc', label: 'ITSM / GRC', providers: [
     { provider: 'servicenow', label: 'ServiceNow (PDI)', free: 'free', implemented: true },
-    { provider: 'jira', label: 'Jira Cloud (Free)', free: 'free', implemented: false },
+    { provider: 'jira', label: 'Jira Cloud (Free)', free: 'free', implemented: true },
   ] },
   { kind: 'siem', label: 'SIEM / Log analytics', providers: [
     { provider: 'elastic', label: 'Elasticsearch (Basic)', free: 'free', implemented: true },

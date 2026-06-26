@@ -2,7 +2,7 @@
 
 Turns vendor APIs into **pulled evidence** that the deterministic CMMI scorer
 (`src/engine/scorer.ts`) turns into live maturity. This is the layer the
-readiness audit found missing entirely. It is now **scaffolded with four working
+readiness audit found missing entirely. It is now **scaffolded with five working
 adapters** against genuinely-free, self-serve developer tiers, plus a registry
 of the remaining categories (most of which are enterprise-gated).
 
@@ -40,7 +40,7 @@ Verified June 2026. "Free" = self-serve, no sales call, real read-only API.
 | **Identity** | **Microsoft Entra / M365 Dev E5 (Graph)** | ✅ free* | ✅ wired | Azure tenant + app reg (client-credentials) → `userRegistrationDetails` → `mfa_coverage` + admin count. *report needs Entra P1/P2 (free P2 trial); M365 Dev Program now needs a Visual Studio sub |
 | **ITSM / GRC** | **ServiceNow PDI** | ✅ free sandbox | ✅ wired | developer.servicenow.com → Basic auth → open security incidents (Aggregate API). Sandbox data; PDIs hibernate ~10d idle |
 | **SIEM** | **Elasticsearch Basic** | ✅ free forever | ✅ wired | `docker run elasticsearch` → API key → log-ingestion presence + events-by-severity |
-| ITSM / GRC | Jira Cloud Free | ✅ free (≤10 users) | ⬜ planned | id.atlassian.com API token → `/rest/api/3/search` open security tickets |
+| **ITSM / GRC** | **Jira Cloud Free** | ✅ free (≤10 users) | ✅ wired | id.atlassian.com API token (Basic email:token) → JQL approximate-count of open security tickets |
 | SIEM | Splunk Free (self-hosted) | ✅ free (500MB/day) | ⬜ planned | REST on :8089. (Splunk *Cloud* trial blocks the API — use self-hosted Free) |
 | Vuln mgmt | Nessus Essentials | ✅ free (16 IPs) | ⬜ planned | local API :8834, API keys → `critical_vuln_count` from `/scans/{id}` |
 | CSPM | AWS Security Hub | ✅ free tier (read) | ⬜ planned | IAM `securityhub:GetFindings` → findings by severity, compliance pass rate |
@@ -83,7 +83,7 @@ supabase secrets set CRON_SECRET=...      # optional, for scheduled runs
 
 ## Honest scope of this scaffold
 
-- ✅ Adapter contract + 4 real adapters (Okta, Entra/Graph, ServiceNow, Elastic).
+- ✅ Adapter contract + 5 real adapters (Okta, Entra/Graph, ServiceNow, Jira, Elastic).
 - ✅ Server-side orchestrator with auth, secret isolation, content-hashed evidence
   writes, per-connector health, and signed audit logging.
 - ✅ Service-role-only secret storage (migration `0004`).

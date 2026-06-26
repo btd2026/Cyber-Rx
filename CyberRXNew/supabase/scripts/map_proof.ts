@@ -27,6 +27,10 @@ check('incidents map to RS.MA-01', !!fewInc['RS.MA-01'])
 check('0 incidents grade 1.0, 12 grade 0', fewInc['RS.MA-01'].coverage === 1 && manyInc['RS.MA-01'].coverage === 0,
   `few=${fewInc['RS.MA-01'].coverage} many=${manyInc['RS.MA-01'].coverage}`)
 
+// 2b. Jira feeds the same kind from a different source ⇒ still grades RS.MA-01.
+const jira = mapEvidenceToControls([{ kind: 'itsm_open_security_incidents', value: { open_security_incidents: 3, open_high_priority: 1 }, collected_at: fresh, source_system: 'Jira' }], now)
+check('Jira (same kind, Jira source) grades RS.MA-01 to 0.9', jira['RS.MA-01']?.sources[0]?.source === 'Jira' && Math.abs(jira['RS.MA-01'].coverage - 0.9) < 1e-9, JSON.stringify(jira['RS.MA-01']))
+
 // 3. Log ingestion present ⇒ DE.CM-01 graded 1.0.
 const siem = mapEvidenceToControls([{ kind: 'siem_log_ingestion', value: { log_ingestion_present: true, total_docs: 5000 }, collected_at: fresh }], now)
 check('siem maps to DE.CM-01 graded 1.0', siem['DE.CM-01']?.coverage === 1)

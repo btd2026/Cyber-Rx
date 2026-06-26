@@ -51,7 +51,18 @@ export const CONNECTOR_CATALOG: CategoryDef[] = [
       ],
       configFields: [{ key: 'instance', label: 'Instance', placeholder: 'dev123456' }],
     },
-    { provider: 'jira', label: 'Jira Cloud (Free)', free: 'free', implemented: false, signupUrl: 'https://id.atlassian.com/', signal: 'Open security tickets', secretFields: [], configFields: [] },
+    {
+      provider: 'jira', label: 'Jira Cloud (Free)', free: 'free', implemented: true,
+      signupUrl: 'https://id.atlassian.com/manage-profile/security/api-tokens', signal: 'Open security/remediation tickets',
+      secretFields: [
+        { key: 'email', label: 'Atlassian account email', placeholder: 'you@org.com' },
+        { key: 'apiToken', label: 'API token', placeholder: 'from id.atlassian.com', secret: true },
+      ],
+      configFields: [
+        { key: 'baseUrl', label: 'Site URL', placeholder: 'https://your-site.atlassian.net' },
+        { key: 'jql', label: 'JQL filter', placeholder: 'project = SEC AND statusCategory != Done' },
+      ],
+    },
   ] },
   { kind: 'siem', label: 'SIEM / Log analytics', providers: [
     {
