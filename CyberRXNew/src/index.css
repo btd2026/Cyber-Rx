@@ -215,6 +215,24 @@
 .lps-v.ok { color: var(--pass); } .lps-v.warn { color: var(--exposure); } .lps-v.crit { color: var(--exposure); }
 .lps-sub { font-family: var(--mono); font-size: 10px; color: var(--subtle); margin-top: 2px; }
 .lps-sub.ok { color: var(--pass); }
+.lps-exp { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 12px; }
+.lps-exp-h { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.lps-exp-v { font-size: 26px; font-weight: 800; color: var(--exposure); line-height: 1.1; }
+.lps-exp-v small { font-size: 13px; font-weight: 600; color: var(--subtle); }
+.lps-trace-btn { font-family: var(--mono); font-size: 11px; color: var(--brand); background: var(--surface); border: 1px solid color-mix(in srgb, var(--brand) 35%, transparent); border-radius: 7px; padding: 6px 10px; cursor: pointer; white-space: nowrap; }
+.lps-trace-b { margin-top: 12px; }
+.lps-scn { border: 1px solid var(--border); border-radius: 9px; padding: 10px 12px; margin-bottom: 8px; background: var(--surface); }
+.lps-scn-h { display: flex; justify-content: space-between; gap: 10px; font-size: 12.5px; margin-bottom: 8px; }
+.lps-scn-h span { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.lps-leaves { display: flex; flex-direction: column; gap: 4px; }
+.lps-leaf { display: grid; grid-template-columns: 92px 1fr auto auto; align-items: center; gap: 10px; font-size: 11.5px; color: var(--muted); }
+.leaf-src { font-family: var(--mono); font-size: 8.5px; font-weight: 700; letter-spacing: .05em; border-radius: 4px; padding: 2px 5px; text-align: center; }
+.leaf-src.pulled { color: var(--pass); border: 1px solid color-mix(in srgb, var(--pass) 45%, transparent); }
+.leaf-src.assumption { color: var(--exposure); border: 1px solid color-mix(in srgb, var(--exposure) 45%, transparent); }
+.leaf-l { color: var(--text); }
+.leaf-v { font-family: var(--mono); font-size: 11px; color: var(--text); }
+.leaf-b { font-family: var(--mono); font-size: 10px; color: var(--subtle); }
+.lps-trace-note { font-size: 11.5px; color: var(--muted); line-height: 1.5; margin-top: 8px; }
 .fwev-src { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px; }
 .fwev-srcrow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 12px; color: var(--muted); padding: 3px 0; }
 .fwev-srcrow .mono { font-size: 11px; color: var(--text); }

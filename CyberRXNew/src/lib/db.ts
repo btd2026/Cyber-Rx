@@ -141,6 +141,15 @@ export async function loadEvidence(tenantId: string, kind?: string): Promise<any
   return data ?? []
 }
 
+/** Load the tenant's owned assumptions (key → numeric value), RLS-scoped. {} in demo. */
+export async function loadAssumptions(tenantId: string): Promise<Record<string, number>> {
+  if (!supabaseConfigured || !supabase || !tenantId) return {}
+  const { data } = await supabase.from('assumptions').select('key, value').eq('tenant_id', tenantId)
+  const out: Record<string, number> = {}
+  for (const r of (data as { key: string; value: number }[] | null) ?? []) out[r.key] = Number(r.value)
+  return out
+}
+
 export type ControlStatusEntry = { controlId: string; cmmi: number; status: string; confidence: number; citation: unknown }
 
 /** Record the engine's computed maturity per control (proposed_by='engine', with
