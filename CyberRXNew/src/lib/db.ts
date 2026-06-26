@@ -141,6 +141,26 @@ export async function loadEvidence(tenantId: string, kind?: string): Promise<any
   return data ?? []
 }
 
+export type ControlStatusEntry = { controlId: string; cmmi: number; status: string; confidence: number; citation: unknown }
+
+/** Record the engine's computed maturity per control (proposed_by='engine', with
+ *  an evidence citation). Resolves CSF control ids → controls.id; RLS requires the
+ *  caller be CISO/Admin. Best-effort: no-ops if catalogs aren't loaded. */
+export async function persistControlStatus(tenantId: string, frameworkKey: string, entries: ControlStatusEntry[]): Promise<void> {
+  if (!supabaseConfigured || !supabase || !tenantId || entries.length === 0) return
+  const { data: fw } = await supabase.from('frameworks').select('id').eq('key', frameworkKey).maybeSingle()
+  if (!fw) return
+  const { data: ctrls } = await supabase.from('controls').select('id, control_id').eq('framework_id', fw.id).in('control_id', entries.map((e) => e.controlId))
+  if (!ctrls?.length) return
+  const byCid = new Map((ctrls as { id: string; control_id: string }[]).map((c) => [c.control_id, c.id]))
+  const rows = entries.filter((e) => byCid.has(e.controlId)).map((e) => ({
+    tenant_id: tenantId, control_id: byCid.get(e.controlId), cmmi_maturity: e.cmmi, status: e.status,
+    confidence: e.confidence, proposed_by: 'engine', citation: e.citation, analyst_review_state: 'unreviewed',
+    updated_at: new Date().toISOString(),
+  }))
+  if (rows.length) await supabase.from('control_status').upsert(rows, { onConflict: 'tenant_id,control_id' })
+}
+
 // ── decisions (signed, append-only ledger) ───────────────────────────────────
 type DecisionRow = {
   id: string; seat: string; title: string; rationale: string | null

@@ -1,6 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { scoreControl, rollup, type ControlSignal, type ControlScore } from '../../../engine/scorer'
+import { mapEvidenceToControls, scoreFromGrade, type ControlEvidence, type EvidenceRow } from '../../../engine/controlMap'
 import { exportAuditorReport, exportEvidenceManifest, type ScoredFunction } from '../../../engine/exports'
+import { useCurrentUser } from '../../../app/useCurrentUser'
+import { loadEvidence, persistControlStatus } from '../../../lib/db'
 
 // Phase 4 (4b–4d): CMMI is computed by the deterministic engine; the full
 // authoritative catalogs load server-side (1,196 NIST 800-53 controls proven);
@@ -81,19 +84,48 @@ export default function FrameworkPosture() {
   const [showBench, setShowBench] = useState(false)
   const [consented, setConsented] = useState(false)
   const [busy, setBusy] = useState('')
+  const [evMap, setEvMap] = useState<Record<string, ControlEvidence>>({})
+
+  const { tenantId, demo } = useCurrentUser()
+
+  // Live: pull this tenant's evidence, map it to the controls it evidences, and
+  // record the engine's computed maturity back to control_status (best-effort).
+  useEffect(() => {
+    if (demo || !tenantId) return
+    let alive = true
+    loadEvidence(tenantId).then((rows) => {
+      if (!alive) return
+      const m = mapEvidenceToControls(rows as EvidenceRow[], Date.now())
+      setEvMap(m)
+      const entries = Object.entries(m).map(([controlId, ev]) => {
+        const s = scoreFromGrade(ev.coverage, ev.ageHours)
+        return { controlId, cmmi: s.cmmi, status: s.status, confidence: s.confidence, citation: { sources: ev.sources } }
+      })
+      if (entries.length) void persistControlStatus(tenantId, 'CSF_2_0', entries)
+    })
+    return () => { alive = false }
+  }, [demo, tenantId])
 
   const fwLabel = FRAMEWORKS.find((f) => f.key === fw)?.label ?? 'NIST CSF 2.0'
 
-  // Compute every control + function with the deterministic engine.
+  // Compute every control + function with the deterministic engine. Controls with
+  // pulled evidence use the GRADED real value + real age; the rest use seed.
   const scored: ScoredFunction[] = CSF.map((fn) => {
     const categories = fn.categories.map((cat) => ({
       ...cat,
-      controls: cat.controls.map((c) => ({ id: c.id, title: c.title, coverage: c.cov, ageHours: c.age, score: scoreControl(signals(c.cov, c.age)) as ControlScore })),
+      controls: cat.controls.map((c) => {
+        const live = evMap[c.id]
+        const coverage = live ? live.coverage : c.cov
+        const ageHours = live ? live.ageHours : c.age
+        const score = (live ? scoreFromGrade(coverage, ageHours) : scoreControl(signals(c.cov, c.age))) as ControlScore
+        return { id: c.id, title: c.title, coverage, ageHours, score }
+      }),
     }))
     const all = categories.flatMap((c) => c.controls.map((x) => x.score))
     const roll = rollup(all)
     return { key: fn.key, name: fn.name, cmmi: roll.cmmi, confidence: roll.confidence, categories }
   })
+  const liveCount = Object.keys(evMap).length
   const overall = rollup(scored.flatMap((fn) => fn.categories.flatMap((c) => c.controls.map((x) => x.score))))
 
   async function run(kind: 'report' | 'manifest') {
@@ -120,6 +152,9 @@ export default function FrameworkPosture() {
           Control catalogs mapped to live evidence — CMMI is <b>computed by the deterministic engine</b>
           {' '}from coverage and freshness. Overall maturity <b>CMMI {overall.cmmi}</b> · confidence{' '}
           {Math.round(overall.confidence * 100)}%.
+          {liveCount > 0
+            ? <> <b className="ok">{liveCount} control{liveCount > 1 ? 's' : ''}</b> now scored from pulled connector evidence.</>
+            : !demo && <> Connect a data source to replace seed figures with pulled evidence.</>}
         </div>
       </div>
 
@@ -169,6 +204,7 @@ export default function FrameworkPosture() {
                         <div className="fwctrl fwctrl-btn" onClick={() => setOpenCtrl(openCtrl === c.id ? null : c.id)} role="button">
                           <span className="mono">{c.id}</span>
                           <span className="fwctrl-t">{c.title}</span>
+                          {evMap[c.id] && <span className="fw-live">● LIVE</span>}
                           <span className="mono" style={{ fontSize: 10.5 }}>conf {Math.round(c.score.confidence * 100)}%</span>
                           <span className={`fwcmmi ${tone(c.score.cmmi)}`}>CMMI {c.score.cmmi}</span>
                         </div>
@@ -178,10 +214,25 @@ export default function FrameworkPosture() {
                             <div className="fwev-g">
                               <span>Status <b className={c.score.status === 'pass' ? 'ok' : c.score.status === 'no_data' ? '' : 'warn'}>{c.score.status}</b></span>
                               <span>Coverage <b>{Math.round(c.coverage * 100)}%</b></span>
-                              <span>Freshness <b>{Math.round(c.score.freshness * 100)}%</b> (age {c.ageHours}h)</span>
+                              <span>Freshness <b>{Math.round(c.score.freshness * 100)}%</b> (age {Math.round(c.ageHours)}h)</span>
                               <span>Confidence <b>{Math.round(c.score.confidence * 100)}%</b></span>
                             </div>
-                            <div className="fwev-note">CMMI {c.score.cmmi} computed deterministically from {5} evidence signals — re-derivable, not generated.</div>
+                            {evMap[c.id] ? (
+                              <div className="fwev-src">
+                                <div className="fwev-l">Pulled evidence</div>
+                                {evMap[c.id].sources.map((s, i) => (
+                                  <div key={i} className="fwev-srcrow">
+                                    <span className="mono">{s.source}</span>
+                                    <span>{s.label}</span>
+                                    <span className="mono">grade {Math.round(s.grade * 100)}%</span>
+                                    <span className="mono" style={{ color: 'var(--subtle)' }}>{new Date(s.collectedAt).toLocaleDateString()}</span>
+                                  </div>
+                                ))}
+                                <div className="fwev-note">CMMI {c.score.cmmi} computed from this content-hashed evidence — re-derivable, not generated.</div>
+                              </div>
+                            ) : (
+                              <div className="fwev-note">CMMI {c.score.cmmi} computed deterministically from seed signals — connect a data source to back this with pulled evidence.</div>
+                            )}
                           </div>
                         )}
                       </div>

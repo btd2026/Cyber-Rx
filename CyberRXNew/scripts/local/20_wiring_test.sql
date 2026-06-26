@@ -73,6 +73,44 @@ begin
   raise notice 'PASS: audit_log UPDATE blocked (append-only)';
 end $$;
 
+-- ── 5) control_status: engine-computed maturity, CISO-writable, tenant-isolated ─
+-- This is the path the evidence→control mapping uses to persist computed CMMI.
+set role service_role;
+insert into public.frameworks (id, key, name) values
+  ('ffffffff-ffff-ffff-ffff-ffffffffff01','CSF_2_0','NIST CSF 2.0') on conflict (key) do nothing;
+insert into public.controls (id, framework_id, control_id, title) values
+  ('ccccffff-cccc-cccc-cccc-0000000000a5','ffffffff-ffff-ffff-ffff-ffffffffff01','PR.AA-05','Privileged access managed')
+  on conflict (framework_id, control_id) do nothing;
+
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"}', false);
+do $$
+declare n int; blocked boolean := false;
+begin
+  insert into public.control_status (tenant_id, control_id, cmmi_maturity, status, confidence, proposed_by)
+    values ('11111111-1111-1111-1111-111111111111','ccccffff-cccc-cccc-cccc-0000000000a5', 5, 'pass', 0.95, 'engine');
+  select count(*) into n from public.control_status where control_id = 'ccccffff-cccc-cccc-cccc-0000000000a5';
+  if n <> 1 then raise exception 'FAIL: CISO could not read back its control_status (%)', n; end if;
+  raise notice 'PASS: engine maturity persisted to control_status by CISO';
+
+  begin
+    insert into public.control_status (tenant_id, control_id, cmmi_maturity, status, confidence)
+      values ('22222222-2222-2222-2222-222222222222','ccccffff-cccc-cccc-cccc-0000000000a5', 1, 'fail', 0.1);
+  exception when others then blocked := true;
+  end;
+  if not blocked then raise exception 'FAIL: A wrote control_status into tenant B'; end if;
+  raise notice 'PASS: cross-tenant control_status write blocked';
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"}', false);
+do $$
+declare n int;
+begin
+  select count(*) into n from public.control_status where tenant_id = '11111111-1111-1111-1111-111111111111';
+  if n <> 0 then raise exception 'FAIL: tenant B sees tenant A control_status'; end if;
+  raise notice 'PASS: control_status tenant-isolated';
+end $$;
+
 reset role;
 select set_config('request.jwt.claims', '', false);
 

@@ -91,8 +91,21 @@ supabase secrets set CRON_SECRET=...      # optional, for scheduled runs
 - ✅ **"Configure data sources" UI** — vendor picker + credential form (driven by
   the client catalog `src/connectors/catalog.ts`), Save → Sync → inline evidence,
   opened from the top bar.
-- ⬜ **Remaining:** the six planned free adapters above; scheduled-sync cron; and
-  mapping each evidence `kind` to the specific controls it scores (so a pulled
-  `identity_mfa_coverage` moves the exact NIST/CSF controls it evidences). The
-  Edge Functions are Deno and are not covered by the Vite build/lint; validate
+- ✅ **Evidence → control mapping** (`src/engine/controlMap.ts`): each evidence
+  `kind` is graded (value → 0..1) and mapped to the NIST CSF 2.0 controls it
+  evidences; Framework Posture overrides seed with the graded real value, marks
+  those controls **LIVE** with their pulled sources, and persists the engine's
+  computed maturity to `control_status` (RLS-protected). So a real Okta
+  `identity_mfa_coverage` reading moves PR.AA-05's CMMI on the dashboard. Proven:
+  `supabase/scripts/map_proof.ts` (13 checks) + 3 `control_status` SQL checks.
+- ⬜ **Remaining:** the six planned free adapters above; a scheduled-sync cron;
+  and broadening the control map (each new adapter adds a `controlMap` entry).
+  The Edge Functions are Deno and aren't covered by the Vite build/lint; validate
   with `deno check` before deploy.
+
+### Evidence → control map (current)
+| Evidence kind | Grades to | CSF control | Reading |
+|---|---|---|---|
+| `identity_mfa_coverage` | coverage ratio | **PR.AA-05** | MFA enrollment % |
+| `itsm_open_security_incidents` | 1 − open_high/10 | **RS.MA-01** | incident remediation throughput |
+| `siem_log_ingestion` | present ? 1 : 0 | **DE.CM-01** | security monitoring present |
