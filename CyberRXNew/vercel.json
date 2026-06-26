@@ -2,12 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
   "buildCommand": "npm install && npm run build",
-  "outputDirectory": "dist",
-  "redirects": [
-    { "source": "/", "destination": "/app", "permanent": false }
-  ],
-  "rewrites": [
-    { "source": "/app", "destination": "/app.html" },
-    { "source": "/app/(.*)", "destination": "/app.html" }
-  ]
+  "outputDirectory": "dist"
 }
