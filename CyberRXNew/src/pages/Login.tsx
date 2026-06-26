@@ -1,17 +1,16 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase, supabaseConfigured } from '../lib/supabase'
-import { loadState } from '../onboarding/onboardingStore'
 
 type Step = 'credentials' | 'mfa'
 
 export default function Login() {
   const navigate = useNavigate()
-  // Demo entry (no backend): skip real auth and go to onboarding, or straight to
-  // the cockpit once onboarding has been completed.
+  // Demo entry (no backend): skip real auth and always show onboarding next, so
+  // the full journey is visible. The cockpit is reachable from onboarding's
+  // "go live" (and from the onboarding button in the cockpit header).
   function enterDemo() {
-    const st = loadState()
-    navigate(st.completed ? '/cockpit' : '/onboarding')
+    navigate('/onboarding')
   }
   const [step, setStep] = useState<Step>('credentials')
   const [email, setEmail] = useState('')
