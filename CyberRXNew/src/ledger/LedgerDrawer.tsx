@@ -1,4 +1,5 @@
 import { useLedger } from './LedgerProvider'
+import { ageStr, dueState } from '../engine/ticketSync'
 
 function fmt(iso: string) {
   const d = new Date(iso)
@@ -6,7 +7,7 @@ function fmt(iso: string) {
 }
 
 export default function LedgerDrawer() {
-  const { ledgerOpen, closeLedger, decisions, ticketsFor, openTicketModal } = useLedger()
+  const { ledgerOpen, closeLedger, decisions, ticketsFor, openTicketModal, advanceTicket } = useLedger()
 
   return (
     <>
@@ -53,12 +54,27 @@ export default function LedgerDrawer() {
                       {d.rowHash.slice(0, 16)}…
                     </span>
                   </div>
+                  {tks.length > 0 && (
+                    <div className="led-tks">
+                      {tks.map((t) => {
+                        const ds = dueState(t.dueDate, t.status)
+                        const closed = t.status === 'Closed'
+                        return (
+                          <div key={t.id} className={`led-tkrow${ds === 'overdue' || ds === 'soon' ? ' blink' : ''}`}>
+                            <span className="led-tk-id">🎫 {t.system} {t.externalId}</span>
+                            <span className={`led-tk-st st-${t.status.replace(/\s/g, '').toLowerCase()}`}>{t.status}</span>
+                            <span className="led-tk-age">{ageStr(t.createdAt)}{t.dueDate ? ` · due ${t.dueDate}${ds === 'overdue' ? ' ⚠ overdue' : ds === 'soon' ? ' · soon' : ''}` : ''}</span>
+                            {closed ? (
+                              <span className="led-tk-closed">✓ closed → decision</span>
+                            ) : (
+                              <button className="led-tk-adv" onClick={() => advanceTicket(t.id)} title="Sync next status">→ advance</button>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
                   <div className="led-tk">
-                    {tks.map((t) => (
-                      <span key={t.id} className="led-tkchip">
-                        🎫 {t.system} {t.externalId} · {t.status}
-                      </span>
-                    ))}
                     <button
                       className="led-tkbtn"
                       onClick={() => openTicketModal({ decisionId: d.id, title: `${d.title} — ${d.optionName}` })}

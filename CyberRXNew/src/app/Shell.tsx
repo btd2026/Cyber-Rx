@@ -11,6 +11,9 @@ import CisoSeat from '../seats/CisoSeat'
 import SeatRenderer from '../seats/SeatRenderer'
 import AskTwin from '../seats/ciso/AskTwin'
 import VoiceBrief from '../seats/VoiceBrief'
+import { IncidentProvider, useIncident } from '../incident/IncidentProvider'
+import WarRoom from '../incident/WarRoom'
+import IncidentCommander from '../incident/IncidentCommander'
 
 const decode = (s: string) => s.replace(/&amp;/g, '&')
 
@@ -27,6 +30,8 @@ function ShellInner() {
   const user = useCurrentUser()
   const { signOut } = useAuth()
   const { openLedger, decisions } = useLedger()
+  const { active: incidentActive } = useIncident()
+  const [warOpen, setWarOpen] = useState(false)
   const navigate = useNavigate()
   const [theme, setTheme] = useState<Theme>(initialTheme)
   const [viewedSeat, setViewedSeat] = useState<SeatId>(user.ownSeat)
@@ -65,8 +70,12 @@ function ShellInner() {
                 </button>
               )}
             </span>
-            <button className="warbtn" disabled title="War Room — Phase 6">
-              ⚠ War Room
+            <button
+              className={`warbtn${incidentActive ? ' alarm' : ''}`}
+              onClick={() => setWarOpen(true)}
+              title="War Room — incident command center"
+            >
+              ⚠ {incidentActive ? 'LIVE INCIDENT' : 'War Room'}
             </button>
             <button className="tbtn" onClick={() => setVoiceOpen((v) => !v)} title="Voice briefing">
               🔊 Brief
@@ -168,7 +177,10 @@ function ShellInner() {
 
         <EvidenceProvider>
           {viewedSeat === 'ciso' ? (
-            <CisoSeat tab={tab} go={setTab} />
+            <>
+              {incidentActive && <IncidentCommander go={setTab} />}
+              <CisoSeat tab={tab} go={setTab} />
+            </>
           ) : (
             <SeatRenderer
               blocks={getSeat(viewedSeat)?.views[tab] ?? getSeat(viewedSeat)?.views.exec ?? []}
@@ -179,6 +191,7 @@ function ShellInner() {
       </div>
 
       <AskTwin open={twinOpen} onClose={() => setTwinOpen(false)} />
+      <WarRoom open={warOpen} onClose={() => setWarOpen(false)} />
       <VoiceBrief
         open={voiceOpen}
         seatId={viewedSeat}
@@ -194,7 +207,9 @@ export default function Shell() {
   const user = useCurrentUser()
   return (
     <LedgerProvider owner={`${user.name} · ${seatById(user.ownSeat).label}`}>
-      <ShellInner />
+      <IncidentProvider>
+        <ShellInner />
+      </IncidentProvider>
     </LedgerProvider>
   )
 }
