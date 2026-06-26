@@ -15,6 +15,7 @@ import { IncidentProvider, useIncident } from '../incident/IncidentProvider'
 import WarRoom from '../incident/WarRoom'
 import IncidentCommander from '../incident/IncidentCommander'
 import DataSources from '../connectors/DataSources'
+import LivePostureStrip from '../seats/LivePostureStrip'
 
 const decode = (s: string) => s.replace(/&amp;/g, '&')
 
@@ -186,6 +187,8 @@ function ShellInner() {
             </span>
           </div>
         )}
+
+        {tab === 'exec' && <LivePostureStrip />}
 
         <EvidenceProvider>
           {viewedSeat === 'ciso' ? (
