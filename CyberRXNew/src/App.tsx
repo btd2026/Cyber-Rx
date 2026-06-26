@@ -4,6 +4,7 @@ import Login from './pages/Login'
 import Shell from './app/Shell'
 import Onboarding from './onboarding/Onboarding'
 import { useAuth } from './auth/AuthProvider'
+import { TenantProvider } from './app/TenantProvider'
 import { supabaseConfigured } from './lib/supabase'
 
 function Protected({ children }: { children: ReactNode }) {
@@ -21,21 +22,25 @@ export default function App() {
   // configured, real auth + RLS apply and demo bypass is impossible.
   if (!supabaseConfigured) {
     return (
-      <Routes>
-        <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="*" element={<Shell />} />
-      </Routes>
+      <TenantProvider>
+        <Routes>
+          <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="*" element={<Shell />} />
+        </Routes>
+      </TenantProvider>
     )
   }
 
   if (loading) return <div className="screen-center">Loading…</div>
 
   return (
-    <Routes>
-      <Route path="/" element={session ? <Navigate to="/app" replace /> : <Login />} />
-      <Route path="/app" element={<Protected><Shell /></Protected>} />
-      <Route path="/onboarding" element={<Protected><Onboarding /></Protected>} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <TenantProvider>
+      <Routes>
+        <Route path="/" element={session ? <Navigate to="/app" replace /> : <Login />} />
+        <Route path="/app" element={<Protected><Shell /></Protected>} />
+        <Route path="/onboarding" element={<Protected><Onboarding /></Protected>} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </TenantProvider>
   )
 }

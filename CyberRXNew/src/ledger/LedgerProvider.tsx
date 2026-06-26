@@ -3,6 +3,9 @@ import LedgerDrawer from './LedgerDrawer'
 import RecordModal from './RecordModal'
 import TicketModal from './TicketModal'
 import { nextStatus } from '../engine/ticketSync'
+import { useTenant } from '../app/TenantProvider'
+import { useAuth } from '../auth/AuthProvider'
+import { insertDecision, loadDecisions, insertTicket, loadTickets, updateTicketStatus } from '../lib/db'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 export type EvidenceSnapshot = {
@@ -88,28 +91,62 @@ function load(): { decisions: LedgerDecision[]; tickets: Ticket[] } {
 }
 
 export function LedgerProvider({ owner, children }: { owner: string; children: ReactNode }) {
-  const [decisions, setDecisions] = useState<LedgerDecision[]>(() => load().decisions)
-  const [tickets, setTickets] = useState<Ticket[]>(() => load().tickets)
+  const { demo, activeTenantId, role } = useTenant()
+  const { session } = useAuth()
+  const seatRole = role ?? 'CISO'
+  const ownerUserId = session?.user.id ?? ''
+
+  const [decisions, setDecisions] = useState<LedgerDecision[]>(() => (demo ? load().decisions : []))
+  const [tickets, setTickets] = useState<Ticket[]>(() => (demo ? load().tickets : []))
   const [ledgerOpen, setLedgerOpen] = useState(false)
   const [pendingRecord, setPendingRecord] = useState<RecordPayload | null>(null)
   const [pendingTicket, setPendingTicket] = useState<TicketPayload | null>(null)
 
+  // Demo: mirror to localStorage (offline-first). Live: the DB is the source of
+  // truth — never cache another tenant's ledger in this browser.
   useEffect(() => {
-    localStorage.setItem(KEY, JSON.stringify({ decisions, tickets }))
-  }, [decisions, tickets])
+    if (demo) localStorage.setItem(KEY, JSON.stringify({ decisions, tickets }))
+  }, [demo, decisions, tickets])
+
+  // Live: load the tenant's signed ledger + tickets from the DB (RLS-scoped).
+  useEffect(() => {
+    if (demo || !activeTenantId) return
+    let alive = true
+    Promise.all([loadDecisions(activeTenantId, owner), loadTickets(activeTenantId)]).then(([ds, ts]) => {
+      if (!alive) return
+      setDecisions(ds)
+      setTickets(ts)
+    })
+    return () => { alive = false }
+  }, [demo, activeTenantId, owner])
 
   // Append-only: there is intentionally no update or delete here.
   async function recordDecision(p: RecordPayload, rationale: string) {
+    // Live: the DB trigger signs + hash-chains the row; trust the returned row.
+    if (!demo && activeTenantId && ownerUserId) {
+      const row = await insertDecision(activeTenantId, seatRole, ownerUserId, owner, p, rationale)
+      if (row) {
+        setDecisions((d) => [...d, row])
+        setPendingRecord(null)
+        setLedgerOpen(true)
+        return
+      }
+      // Insert failed: don't fabricate a "recorded" decision — surface the failure.
+      setPendingRecord(null)
+      alert('Could not record this decision to the ledger. Please retry.')
+      return
+    }
+    // Demo: compute the signature client-side, mirroring the server trigger.
     const prevHash = decisions.length ? decisions[decisions.length - 1].rowHash : ''
     const recordedAt = new Date().toISOString()
     const id = crypto.randomUUID()
     const canonical =
-      prevHash + 'CISO' + p.title + p.optionName + JSON.stringify(p.evidenceSnapshot) + recordedAt
+      prevHash + seatRole + p.title + p.optionName + JSON.stringify(p.evidenceSnapshot) + recordedAt
     const rowHash = await sha256Hex(canonical)
     setDecisions((d) => [
       ...d,
       {
-        id, seat: 'CISO', title: p.title, owner, optionName: p.optionName, cost: p.cost,
+        id, seat: seatRole, title: p.title, owner, optionName: p.optionName, cost: p.cost,
         riskRemoved: p.riskRemoved, rationale, evidenceSnapshot: p.evidenceSnapshot,
         recordedAt, prevHash, rowHash,
       },
@@ -118,18 +155,36 @@ export function LedgerProvider({ owner, children }: { owner: string; children: R
     setLedgerOpen(true)
   }
 
-  function createTicket(p: TicketPayload, system: string, dueDate: string) {
+  async function createTicket(p: TicketPayload, system: string, dueDate: string) {
     const seq = tickets.length + 1
     const prefix = system.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4) || 'TKT'
+    const externalId = `${prefix}-${1000 + seq}`
+    if (!demo && activeTenantId) {
+      const row = await insertTicket(activeTenantId, p.decisionId, system, externalId, p.title, 'Open', dueDate)
+      if (row) setTickets((t) => [...t, row])
+      setPendingTicket(null)
+      return
+    }
     setTickets((t) => [
       ...t,
       {
         id: crypto.randomUUID(), decisionId: p.decisionId, system,
-        externalId: `${prefix}-${1000 + seq}`, title: p.title, status: 'Open',
+        externalId, title: p.title, status: 'Open',
         dueDate, createdAt: new Date().toISOString(),
       },
     ])
     setPendingTicket(null)
+  }
+
+  function advanceTicket(id: string) {
+    setTickets((ts) => {
+      const next = ts.map((t) => (t.id === id ? { ...t, status: nextStatus(t.status) } : t))
+      if (!demo && activeTenantId) {
+        const moved = next.find((t) => t.id === id)
+        if (moved) void updateTicketStatus(activeTenantId, id, moved.status)
+      }
+      return next
+    })
   }
 
   const value: LedgerCtx = {
@@ -139,8 +194,7 @@ export function LedgerProvider({ owner, children }: { owner: string; children: R
     openRecord: (p) => setPendingRecord(p),
     openTicketModal: (p) => setPendingTicket(p),
     ticketsFor: (decisionId) => tickets.filter((t) => t.decisionId === decisionId),
-    advanceTicket: (id) =>
-      setTickets((ts) => ts.map((t) => (t.id === id ? { ...t, status: nextStatus(t.status) } : t))),
+    advanceTicket,
   }
 
   return (

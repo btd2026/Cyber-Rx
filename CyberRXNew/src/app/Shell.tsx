@@ -43,6 +43,16 @@ function ShellInner() {
     persistTheme(theme)
   }, [theme])
 
+  // Tenant/role resolves asynchronously from memberships; once it lands, snap the
+  // view to a seat the user can actually access.
+  useEffect(() => {
+    if (!user.availableSeats.includes(viewedSeat)) {
+      setViewedSeat(user.ownSeat)
+      setTab('exec')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user.availableSeats, user.ownSeat])
+
   const seat = seatById(viewedSeat)
   const viewingOwn = viewedSeat === user.ownSeat
 
@@ -106,7 +116,7 @@ function ShellInner() {
       <div className="seatbar">
         <div className="wrap seatbar-in">
           <span className="vl">View as</span>
-          {SEATS.map((s) => (
+          {SEATS.filter((s) => user.availableSeats.includes(s.id)).map((s) => (
             <button
               key={s.id}
               className={`sb${s.id === viewedSeat ? ' active' : ''}`}
@@ -119,8 +129,8 @@ function ShellInner() {
               {s.id === user.ownSeat && <span className="you">YOU</span>}
             </button>
           ))}
-          <span className="seed-flag" title="Figures are illustrative seed data until connectors are wired (Phase 6)">
-            ● Seed data
+          <span className="seed-flag" title={user.demo ? 'Figures are illustrative seed data until connectors are wired' : 'Live tenant — figures trace to your connected evidence'}>
+            ● {user.demo ? 'Seed data' : 'Live data'}
           </span>
         </div>
       </div>

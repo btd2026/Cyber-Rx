@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { EVIDENCE } from './evidence'
 import { askTwin, suggestedChips, type TwinVerdict } from '../../engine/twin'
 import { supabase } from '../../lib/supabase'
+import { useCurrentUser } from '../../app/useCurrentUser'
 
 type Turn = { q: string; v: TwinVerdict }
 
@@ -28,6 +29,7 @@ export default function AskTwin({ open, onClose }: { open: boolean; onClose: () 
   const [q, setQ] = useState('')
   const [turns, setTurns] = useState<Turn[]>([])
   const [busy, setBusy] = useState(false)
+  const { tenantId } = useCurrentUser()
   const chips = suggestedChips(EVIDENCE)
 
   async function ask(question: string) {
@@ -46,7 +48,7 @@ export default function AskTwin({ open, onClose }: { open: boolean; onClose: () 
             'content-type': 'application/json',
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
-          body: JSON.stringify({ question: text }),
+          body: JSON.stringify({ question: text, tenantId }),
         })
         // Only trust a 2xx whose body validates against the locked shape.
         if (r.ok) {

@@ -1,0 +1,209 @@
+// CyberRx — client persistence layer (Phase 7, production wiring).
+//
+// Every function here is a no-op that returns null/[] when Supabase isn't wired
+// (`supabaseConfigured === false`), so demo mode runs unchanged on seed data +
+// localStorage. With a backend wired, these read/write the real, RLS-protected,
+// signed tables. Identity is never trusted from the client: writes rely on the
+// caller's JWT, and tenant provisioning goes through a service-role Edge Function.
+
+import { supabase, supabaseConfigured } from './supabase'
+import type { SeatId } from '../seats/seats'
+import type { OnboardingState } from '../onboarding/onboardingStore'
+import { CONNECTORS } from '../onboarding/data'
+import type { LedgerDecision, Ticket, RecordPayload } from '../ledger/LedgerProvider'
+
+// ── role ↔ seat mapping ──────────────────────────────────────────────────────
+export type AppRole = 'CEO' | 'CISO' | 'CFO' | 'CIO' | 'CLO' | 'CRO' | 'Board' | 'Admin'
+
+const ROLE_TO_SEAT: Record<AppRole, SeatId> = {
+  CEO: 'ceo', CISO: 'ciso', CFO: 'cfo', CIO: 'cio', CLO: 'clo', CRO: 'cro', Board: 'board',
+  Admin: 'ciso', // Admin has no dashboard seat of its own — default to the CISO view.
+}
+const SEAT_TO_ROLE: Record<SeatId, AppRole> = {
+  ceo: 'CEO', ciso: 'CISO', cfo: 'CFO', cio: 'CIO', clo: 'CLO', cro: 'CRO', board: 'Board',
+}
+export const roleToSeat = (r: AppRole): SeatId => ROLE_TO_SEAT[r] ?? 'ciso'
+export const seatToRole = (s: SeatId): AppRole => SEAT_TO_ROLE[s]
+
+// ── membership / tenant resolution ───────────────────────────────────────────
+export type Membership = { tenantId: string; tenantName: string; role: AppRole }
+
+/** The signed-in user's memberships (tenant + role), via RLS. [] in demo. */
+export async function loadMemberships(): Promise<Membership[]> {
+  if (!supabaseConfigured || !supabase) return []
+  const { data, error } = await supabase
+    .from('memberships')
+    .select('tenant_id, role, tenants(name)')
+    .order('created_at', { ascending: true })
+  if (error || !data) return []
+  return data.map((m: { tenant_id: string; role: AppRole; tenants: { name: string } | { name: string }[] | null }) => ({
+    tenantId: m.tenant_id,
+    role: m.role,
+    tenantName: Array.isArray(m.tenants) ? (m.tenants[0]?.name ?? '') : (m.tenants?.name ?? ''),
+  }))
+}
+
+// ── go-live: provision a tenant from the onboarding state ─────────────────────
+const FUNCTIONS_BASE =
+  (import.meta.env.VITE_SUPABASE_FUNCTIONS_URL as string | undefined) ||
+  (import.meta.env.VITE_SUPABASE_URL ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1` : '')
+
+/** Shape the onboarding form into the provisioning payload (connected sources,
+ *  owned assumptions, inventory, incident plan). */
+function toProvisionPayload(s: OnboardingState) {
+  const connectors = CONNECTORS.filter((c) => s.connectors[c.id]).map((c) => ({ kind: c.id, display_name: c.cat }))
+  const assumptions = [
+    s.assumptions.insurance.trim() && { key: 'cyber_insurance_coverage', value: Number(s.assumptions.insurance) * 1_000_000, currency: s.org.currency, unit: 'currency', basis: 'onboarding' },
+    s.assumptions.appetite && { key: 'risk_appetite', value: { Low: 1, Moderate: 2, High: 3 }[s.assumptions.appetite] ?? 2, unit: 'ordinal', basis: 'onboarding' },
+  ].filter(Boolean)
+  const crown = new Set(s.crownJewels)
+  const processes = s.processes.filter((p) => p.name.trim()).map((p) => ({ name: p.name, business_value: p.value, is_crown_jewel: crown.has(p.name) }))
+  const apps = s.apps.filter((a) => a.name.trim()).map((a) => ({ name: a.name, is_crown_jewel: crown.has(a.name) }))
+  return {
+    org: { ...s.org, regulatedData: s.org.regulatedData },
+    connectors, assumptions, processes, apps,
+    incidentPlan: {
+      planDoc: s.incidentPlan.planDoc,
+      contacts: s.incidentPlan.contacts.filter((c) => c.name.trim()).map((c) => ({ ...c, is_external: /external|insurer|FBI|forensics/i.test(c.role) })),
+    },
+  }
+}
+
+export type ProvisionResult = { ok: true; tenantId: string } | { ok: false; error: string }
+
+/** Create the tenant + membership + onboarding rows server-side. Returns a
+ *  sentinel in demo so the caller can fall back to localStorage. */
+export async function provisionTenant(s: OnboardingState): Promise<ProvisionResult | null> {
+  if (!supabaseConfigured || !supabase || !FUNCTIONS_BASE) return null
+  const { data } = await supabase.auth.getSession()
+  const token = data.session?.access_token
+  if (!token) return { ok: false, error: 'You must be signed in to go live.' }
+  try {
+    const r = await fetch(`${FUNCTIONS_BASE}/provision`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ onboarding: toProvisionPayload(s) }),
+    })
+    const body = await r.json().catch(() => ({}))
+    if (!r.ok) return { ok: false, error: body?.error ?? `Provisioning failed (${r.status}).` }
+    return { ok: true, tenantId: body.tenantId }
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Network error during provisioning.' }
+  }
+}
+
+// ── decisions (signed, append-only ledger) ───────────────────────────────────
+type DecisionRow = {
+  id: string; seat: string; title: string; rationale: string | null
+  chosen_option: { name?: string; cost?: string; riskRemoved?: string } | null
+  evidence_snapshot: LedgerDecision['evidenceSnapshot']
+  prev_hash: string | null; row_hash: string | null; recorded_at: string
+}
+
+const rowToDecision = (r: DecisionRow, owner: string): LedgerDecision => ({
+  id: r.id, seat: r.seat, title: r.title, owner,
+  optionName: r.chosen_option?.name ?? '', cost: r.chosen_option?.cost ?? '',
+  riskRemoved: r.chosen_option?.riskRemoved ?? '', rationale: r.rationale ?? '',
+  evidenceSnapshot: r.evidence_snapshot, recordedAt: r.recorded_at,
+  prevHash: r.prev_hash ?? '', rowHash: r.row_hash ?? '',
+})
+
+/** Load the tenant's decision ledger (newest-first preserved by caller). [] in demo. */
+export async function loadDecisions(tenantId: string, owner: string): Promise<LedgerDecision[]> {
+  if (!supabaseConfigured || !supabase || !tenantId) return []
+  const { data, error } = await supabase
+    .from('decisions')
+    .select('id, seat, title, rationale, chosen_option, evidence_snapshot, prev_hash, row_hash, recorded_at')
+    .eq('tenant_id', tenantId)
+    .order('recorded_at', { ascending: true })
+  if (error || !data) return []
+  return (data as DecisionRow[]).map((r) => rowToDecision(r, owner))
+}
+
+/** Insert a decision; the DB trigger computes the hash chain. Returns the signed
+ *  row, or null in demo (caller signs client-side). */
+export async function insertDecision(
+  tenantId: string, seat: AppRole, ownerUserId: string, owner: string, p: RecordPayload, rationale: string,
+): Promise<LedgerDecision | null> {
+  if (!supabaseConfigured || !supabase || !tenantId) return null
+  const { data, error } = await supabase
+    .from('decisions')
+    .insert({
+      tenant_id: tenantId, seat, title: p.title, owner_user_id: ownerUserId, rationale,
+      chosen_option: { name: p.optionName, cost: p.cost, riskRemoved: p.riskRemoved },
+      evidence_snapshot: p.evidenceSnapshot,
+    })
+    .select('id, seat, title, rationale, chosen_option, evidence_snapshot, prev_hash, row_hash, recorded_at')
+    .single()
+  if (error || !data) return null
+  return rowToDecision(data as DecisionRow, owner)
+}
+
+// ── tickets ──────────────────────────────────────────────────────────────────
+type TicketRow = { id: string; decision_id: string | null; external_system: string; external_id: string | null; title: string; status: string | null; due_date: string | null; created_at: string }
+const rowToTicket = (r: TicketRow): Ticket => ({
+  id: r.id, decisionId: r.decision_id ?? '', system: r.external_system, externalId: r.external_id ?? '',
+  title: r.title, status: r.status ?? 'Open', dueDate: r.due_date ?? '', createdAt: r.created_at,
+})
+
+export async function loadTickets(tenantId: string): Promise<Ticket[]> {
+  if (!supabaseConfigured || !supabase || !tenantId) return []
+  const { data, error } = await supabase
+    .from('tickets')
+    .select('id, decision_id, external_system, external_id, title, status, due_date, created_at')
+    .eq('tenant_id', tenantId)
+    .order('created_at', { ascending: true })
+  if (error || !data) return []
+  return (data as TicketRow[]).map(rowToTicket)
+}
+
+export async function insertTicket(
+  tenantId: string, decisionId: string, system: string, externalId: string, title: string, status: string, dueDate: string,
+): Promise<Ticket | null> {
+  if (!supabaseConfigured || !supabase || !tenantId) return null
+  const { data, error } = await supabase
+    .from('tickets')
+    .insert({
+      tenant_id: tenantId, decision_id: decisionId || null, external_system: system,
+      external_id: externalId || null, title, status, due_date: dueDate || null,
+    })
+    .select('id, decision_id, external_system, external_id, title, status, due_date, created_at')
+    .single()
+  if (error || !data) return null
+  return rowToTicket(data as TicketRow)
+}
+
+export async function updateTicketStatus(tenantId: string, id: string, status: string): Promise<void> {
+  if (!supabaseConfigured || !supabase || !tenantId) return
+  await supabase.from('tickets').update({ status }).eq('id', id).eq('tenant_id', tenantId)
+}
+
+// ── document uploads (Storage + signed metadata row) ─────────────────────────
+async function sha256Hex(buf: ArrayBuffer): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', buf)
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+export type UploadedDoc = { id: string; filename: string; storagePath: string; contentHash: string }
+
+/** Upload a file to tenant-scoped Storage and register its signed metadata.
+ *  Returns null in demo (caller keeps the filename locally). */
+export async function uploadDocument(tenantId: string, file: File, kind: string): Promise<UploadedDoc | null> {
+  if (!supabaseConfigured || !supabase || !tenantId) return null
+  const bytes = await file.arrayBuffer()
+  const contentHash = await sha256Hex(bytes)
+  const safe = file.name.replace(/[^\w.\-]+/g, '_')
+  const storagePath = `${tenantId}/${contentHash.slice(0, 12)}-${safe}`
+  const up = await supabase.storage.from('documents').upload(storagePath, file, { contentType: file.type || 'application/octet-stream', upsert: false })
+  if (up.error && !/exists/i.test(up.error.message)) return null
+  const { data, error } = await supabase
+    .from('documents')
+    .insert({
+      tenant_id: tenantId, filename: file.name, storage_path: storagePath, bucket: 'documents',
+      content_hash: contentHash, file_size_bytes: file.size, mime_type: file.type || null, kind,
+    })
+    .select('id')
+    .single()
+  if (error || !data) return null
+  return { id: data.id, filename: file.name, storagePath, contentHash }
+}

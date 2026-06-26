@@ -1,9 +1,32 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   CONNECTORS, TOTAL_SIG, CURRENCIES, symbolFor, INDUSTRIES, OWNERSHIP, REGIONS, DATA_TYPES,
 } from './data'
 import { loadState, saveState, type OnboardingState } from './onboardingStore'
+import { supabaseConfigured } from '../lib/supabase'
+import { provisionTenant, uploadDocument } from '../lib/db'
+
+// Minimal dependency-free CSV parse: rows of comma-separated cells, quotes honored.
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = []
+  let row: string[] = [], cell = '', q = false
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i]
+    if (q) {
+      if (c === '"' && text[i + 1] === '"') { cell += '"'; i++ }
+      else if (c === '"') q = false
+      else cell += c
+    } else if (c === '"') q = true
+    else if (c === ',') { row.push(cell); cell = '' }
+    else if (c === '\n' || c === '\r') {
+      if (cell || row.length) { row.push(cell); rows.push(row); row = []; cell = '' }
+      if (c === '\r' && text[i + 1] === '\n') i++
+    } else cell += c
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row) }
+  return rows.filter((r) => r.some((c) => c.trim()))
+}
 
 const STEPS = [
   { t: 'Organization profile', d: 'Who you are' },
@@ -32,6 +55,12 @@ export default function Onboarding() {
   const navigate = useNavigate()
   const [cur, setCur] = useState(0)
   const [s, setS] = useState<OnboardingState>(loadState)
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState('')
+  // Pending file bytes can't be JSON-persisted; hold them here until go-live,
+  // when the tenant exists and we can upload to Storage. Filenames mirror to state.
+  const docFilesRef = useRef<File[]>([])
+  const planFileRef = useRef<File | null>(null)
 
   useEffect(() => {
     saveState(s)
@@ -45,21 +74,51 @@ export default function Onboarding() {
   const connectedSig = CONNECTORS.filter((c) => s.connectors[c.id]).reduce((a, c) => a + c.sig, 0)
   const credibility = Math.round((connectedSig / TOTAL_SIG) * 100)
 
-  const goLive = () => {
+  const goLive = async () => {
+    setErr('')
+    setBusy(true)
+    // Live: provision the tenant server-side (privileged), then upload any files.
+    const res = await provisionTenant(s) // null in demo
+    if (res && !res.ok) {
+      setErr(res.error)
+      setBusy(false)
+      return
+    }
+    const tenantId = res?.ok ? res.tenantId : ''
+    if (tenantId) {
+      try {
+        for (const f of docFilesRef.current) await uploadDocument(tenantId, f, 'policy')
+        if (planFileRef.current) await uploadDocument(tenantId, planFileRef.current, 'ir_plan')
+      } catch {
+        /* tenant is live; file uploads can be retried from the documents step */
+      }
+    }
     set({ completed: true })
     saveState({ ...s, completed: true })
+    setBusy(false)
     navigate('/') // back to the seats (basename /app)
   }
 
   const namedProcesses = s.processes.filter((p) => p.name.trim())
   const namedApps = s.apps.filter((a) => a.name.trim())
 
+  const onPickDocs = (files: FileList | null) => {
+    if (!files?.length) return
+    const added = Array.from(files)
+    docFilesRef.current = [...docFilesRef.current, ...added]
+    set({ documents: [...s.documents, ...added.map((f) => ({ name: f.name }))] })
+  }
+  const removeDoc = (i: number) => {
+    docFilesRef.current = docFilesRef.current.filter((_, j) => j !== i)
+    set({ documents: s.documents.filter((_, j) => j !== i) })
+  }
+
   return (
     <div className="wrap ob">
       <div className="ob-head">
         <h1>Let's set up your cyber operating system</h1>
-        <span className="seed-flag" title="Saved locally in demo; writes to Supabase (tenants/connectors/assumptions/incident_plan) when wired">
-          ● Demo · saved locally
+        <span className="seed-flag" title={supabaseConfigured ? 'Go live provisions your tenant and writes to Supabase behind RLS' : 'Saved locally in demo; writes to Supabase (tenants/connectors/assumptions/incident_plan) on go-live when a backend is wired'}>
+          ● {supabaseConfigured ? 'Live · writes to your tenant' : 'Demo · saved locally'}
         </span>
       </div>
 
@@ -159,16 +218,23 @@ export default function Onboarding() {
         {cur === 5 && (
           <div>
             <h2>Documents — evidence for non-automated controls</h2>
-            <p className="ob-why">Your policies and reports are evidence. The engine extracts, tags, and maps their contents to controls.</p>
-            <ListStep
-              title=""
-              why=""
-              rows={s.documents}
-              cols={[{ k: 'name', ph: 'IR Plan 2026.pdf' }]}
-              onChange={(rows) => set({ documents: rows as OnboardingState['documents'] })}
-              blank={{ name: '' }}
-              addLabel="+ Add document"
-            />
+            <p className="ob-why">
+              Your policies and reports are evidence. The engine extracts, tags, and maps their contents to controls.
+              {!supabaseConfigured && <span className="twin-demo"> Demo: files are listed by name only — they upload to Storage once a backend is wired.</span>}
+            </p>
+            <label className="ob-add" style={{ display: 'inline-flex', cursor: 'pointer' }}>
+              + Add documents
+              <input type="file" multiple accept=".pdf,.doc,.docx,.txt,.csv,.xlsx,.png,.jpg" style={{ display: 'none' }} onChange={(e) => { onPickDocs(e.target.files); e.target.value = '' }} />
+            </label>
+            <div>
+              {s.documents.map((d, i) => (
+                <div key={i} className="ob-row">
+                  <span style={{ flex: 1 }}>📄 {d.name}</span>
+                  <button type="button" className="ob-del" onClick={() => removeDoc(i)} title="Remove">×</button>
+                </div>
+              ))}
+              {s.documents.length === 0 && <div className="ob-empty">No documents added yet.</div>}
+            </div>
           </div>
         )}
 
@@ -185,6 +251,10 @@ export default function Onboarding() {
             <div className="ob-plan">
               <div className="ob-plan-h">Incident command plan & 24/7 call tree <span>no system has this — it powers Incident Commander mode</span></div>
               <label className="ob-f"><span>IR plan / playbooks</span><input className="linput2" value={s.incidentPlan.planDoc} onChange={(e) => set({ incidentPlan: { ...s.incidentPlan, planDoc: e.target.value } })} placeholder="IR-Plan-2026.pdf (or describe)" /></label>
+              <label className="ob-add" style={{ display: 'inline-flex', cursor: 'pointer', marginTop: 6 }}>
+                {planFileRef.current ? `✓ ${planFileRef.current.name}` : '📎 Attach IR plan file'}
+                <input type="file" accept=".pdf,.doc,.docx,.txt" style={{ display: 'none' }} onChange={(e) => { const f = e.target.files?.[0]; if (f) { planFileRef.current = f; set({ incidentPlan: { ...s.incidentPlan, planDoc: f.name } }) } }} />
+              </label>
               <div className="ob-ct-h">Key contacts — reachable 24/7 (name + phone)</div>
               {s.incidentPlan.contacts.map((c, i) => (
                 <div key={c.role} className="ob-ct-row">
@@ -214,7 +284,8 @@ export default function Onboarding() {
               <Rev k="Insurance / appetite" v={`${sym}${s.assumptions.insurance || '—'}M · ${s.assumptions.appetite} appetite`} />
               <Rev k="Call tree" v={`${s.incidentPlan.contacts.filter((c) => c.name.trim()).length}/${s.incidentPlan.contacts.length} contacts named`} />
             </div>
-            <button className="lbtn" style={{ maxWidth: 260 }} onClick={goLive}>🚀 Go live</button>
+            <button className="lbtn" style={{ maxWidth: 260 }} onClick={goLive} disabled={busy}>{busy ? 'Going live…' : '🚀 Go live'}</button>
+            {err && <div className="ob-err" role="alert" style={{ color: '#c0392b', marginTop: 8 }}>{err}</div>}
           </div>
         )}
       </div>
@@ -225,7 +296,7 @@ export default function Onboarding() {
         {cur < STEPS.length - 1 ? (
           <button className="tbtn primary" onClick={() => setCur((c) => Math.min(STEPS.length - 1, c + 1))}>Continue →</button>
         ) : (
-          <button className="tbtn primary" onClick={goLive}>Go live →</button>
+          <button className="tbtn primary" onClick={goLive} disabled={busy}>{busy ? 'Going live…' : 'Go live →'}</button>
         )}
       </div>
     </div>
@@ -241,6 +312,21 @@ function ListStep({ title, why, rows, cols, onChange, blank, addLabel = '+ Add r
   title: string; why: string; rows: Row[]; cols: { k: string; ph: string }[]
   onChange: (rows: Row[]) => void; blank: Row; addLabel?: string
 }) {
+  // Bulk import: CSV columns map positionally onto this step's columns.
+  const importCsv = (file: File | undefined) => {
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const grid = parseCsv(String(reader.result ?? ''))
+      // Drop a header row if its first cell matches the first column key/placeholder.
+      const head = grid[0]?.[0]?.toLowerCase().trim()
+      const body = head && (head === cols[0].k || /name|process|application|system/.test(head)) ? grid.slice(1) : grid
+      const imported = body.map((r) => { const o: Row = { ...blank }; cols.forEach((c, ci) => { o[c.k] = (r[ci] ?? '').trim() }); return o }).filter((o) => (o[cols[0].k] ?? '').trim())
+      const existing = rows.filter((r) => (r[cols[0].k] ?? '').trim())
+      onChange([...existing, ...imported])
+    }
+    reader.readAsText(file)
+  }
   return (
     <div>
       {title && <h2>{title}</h2>}
@@ -254,7 +340,13 @@ function ListStep({ title, why, rows, cols, onChange, blank, addLabel = '+ Add r
           <button type="button" className="ob-del" onClick={() => onChange(rows.filter((_, j) => j !== i))} title="Remove">×</button>
         </div>
       ))}
-      <button type="button" className="ob-add" onClick={() => onChange([...rows, { ...blank }])}>{addLabel}</button>
+      <div className="ob-row" style={{ border: 'none', padding: 0, gap: 8 }}>
+        <button type="button" className="ob-add" onClick={() => onChange([...rows, { ...blank }])}>{addLabel}</button>
+        <label className="ob-add" style={{ display: 'inline-flex', cursor: 'pointer' }}>
+          ⬆ Import CSV
+          <input type="file" accept=".csv,text/csv" style={{ display: 'none' }} onChange={(e) => { importCsv(e.target.files?.[0]); e.target.value = '' }} />
+        </label>
+      </div>
     </div>
   )
 }

@@ -30,3 +30,6 @@ done
 
 echo "▶ running tenant-isolation acceptance test…"
 pg "$DB" < "$HERE/10_isolation_test.sql"
+
+echo "▶ running production-wiring acceptance test…"
+pg "$DB" < "$HERE/20_wiring_test.sql"
