@@ -10,22 +10,22 @@
 .screen-center { min-height: 100vh; display: flex; align-items: center; justify-content: center; color: var(--muted); font-family: var(--mono); font-size: 13px; }
 
 /* ── Login / MFA front door (always dark, matches the mock's treatment) ──── */
-.login { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: radial-gradient(1200px 700px at 50% -10%, rgba(45,108,224,.18), transparent 60%), #0b0e13; padding: 40px 20px; overflow: auto; color: #e9ebee; z-index: 9999; }
-.lcard { width: 100%; max-width: 400px; background: rgba(20,25,34,.72); backdrop-filter: blur(14px); border: 1px solid #26303c; border-radius: 18px; padding: 34px 32px; box-shadow: 0 30px 80px rgba(0,0,0,.5); }
+.login { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: radial-gradient(1200px 700px at 50% -10%, rgba(10,77,196,.18), transparent 60%), #0a1b2e; padding: 40px 20px; overflow: auto; color: #e8eef6; z-index: 9999; }
+.lcard { width: 100%; max-width: 400px; background: rgba(12,28,46,.72); backdrop-filter: blur(14px); border: 1px solid #22394f; border-radius: 18px; padding: 34px 32px; box-shadow: 0 30px 80px rgba(0,0,0,.5); }
 .lbrand { display: flex; align-items: center; gap: 10px; }
-.lbrand .mk { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, #4e8bff, #2d6ce0); display: flex; align-items: center; justify-content: center; color: #fff; font-family: var(--display); font-weight: 700; font-size: 16px; }
-.lbrand .nm { font-family: var(--display); font-weight: 700; font-size: 18px; color: #e9ebee; }
-.lbrand .nm b { color: #4e8bff; }
+.lbrand .mk { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, #4f90ff, #0a4dc4); display: flex; align-items: center; justify-content: center; color: #fff; font-family: var(--display); font-weight: 700; font-size: 16px; }
+.lbrand .nm { font-family: var(--display); font-weight: 700; font-size: 18px; color: #e8eef6; }
+.lbrand .nm b { color: #4f90ff; }
 .lsub { font-size: 13px; color: #8a8f98; margin: 6px 0 18px; line-height: 1.5; }
 .llabel { font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #8a8f98; margin: 16px 0 7px; }
-.linput { width: 100%; background: rgba(11,14,19,.6); border: 1px solid #2c3744; border-radius: 10px; padding: 12px 14px; color: #e9ebee; font-family: inherit; font-size: 14px; outline: none; }
-.linput:focus { border-color: #4e8bff; }
+.linput { width: 100%; background: rgba(8,18,30,.6); border: 1px solid #2c3e52; border-radius: 10px; padding: 12px 14px; color: #e8eef6; font-family: inherit; font-size: 14px; outline: none; }
+.linput:focus { border-color: #4f90ff; }
 .lcode { font-family: var(--mono); letter-spacing: .5em; text-align: center; font-size: 20px; }
-.lbtn { width: 100%; margin-top: 22px; background: #2d6ce0; color: #fff; border: none; border-radius: 10px; padding: 13px; font-family: inherit; font-weight: 700; font-size: 14px; cursor: pointer; }
-.lbtn:hover { background: #3b79ee; }
+.lbtn { width: 100%; margin-top: 22px; background: #0a4dc4; color: #fff; border: none; border-radius: 10px; padding: 13px; font-family: inherit; font-weight: 700; font-size: 14px; cursor: pointer; }
+.lbtn:hover { background: #1e5fd6; }
 .lbtn:disabled { opacity: .5; cursor: not-allowed; }
 .lback { display: block; width: 100%; background: none; border: none; color: #8a8f98; font-family: inherit; font-size: 12.5px; cursor: pointer; margin-top: 14px; }
-.lback:hover { color: #e9ebee; }
+.lback:hover { color: #e8eef6; }
 .lerror { margin-top: 14px; color: #e5484d; font-size: 12.5px; }
 .lnotice { margin: 8px 0 4px; padding: 10px 12px; border-radius: 8px; font-size: 12px; line-height: 1.5; background: rgba(229,162,72,.1); border: 1px solid rgba(229,162,72,.3); color: #e5a248; }
 .lnotice code { font-family: var(--mono); font-size: 11px; }

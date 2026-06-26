@@ -1,27 +1,29 @@
 
   :root{
-    --bg:#F1EFE8; --surface:#FFFFFF; --surface-2:#ECEAE3;
-    --glow-1:rgba(45,108,224,.06); --glow-2:rgba(47,163,122,.05); --grain:.04; --glass:rgba(255,255,255,.62); --edge-shade:rgba(0,0,0,.035);
-    --border:#DAD7CC; --border-strong:#B9B5A8;
-    --text:#11161D; --muted:#4C5562; --subtle:#5E6671;
-    --brand:#2D6CE0; --brand-tint:rgba(45,108,224,.09);
+    --bg:#EEF3FA; --surface:#FFFFFF; --surface-2:#E4ECF6;
+    --glow-1:rgba(10,77,196,.06); --glow-2:rgba(0,34,68,.05); --grain:.04; --glass:rgba(255,255,255,.62); --edge-shade:rgba(0,0,0,.035);
+    --border:#D3DEEC; --border-strong:#AAB9CC;
+    --text:#0A1A2E; --muted:#46586E; --subtle:#637488;
+    --brand:#0A4DC4; --brand-tint:rgba(10,77,196,.09);
     --pass:#2FA37A; --pass-tint:rgba(47,163,122,.12);
     --exposure:#C2772E; --exposure-tint:rgba(194,119,46,.12);
     --critical:#C2443C; --critical-tint:rgba(194,68,60,.12);
+    --gold:#B8860B; --gold-tint:rgba(184,134,11,.12);
     --display:'Space Grotesk',-apple-system,system-ui,sans-serif;
     --body:'Public Sans',-apple-system,system-ui,sans-serif;
     --mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
     --radius:13px; --radius-sm:8px;
   }
   [data-theme="dark"]{
-    --bg:#0B0E13; --surface:#161C25; --surface-2:#1C2530;
-    --glow-1:rgba(78,139,255,.10); --glow-2:rgba(47,163,122,.06); --grain:.05; --glass:rgba(20,25,34,.6); --edge-shade:rgba(0,0,0,.18);
-    --border:#26303C; --border-strong:#3A4654;
-    --text:#E9EBEE; --muted:#9AA4B0; --subtle:#8C96A4;
-    --brand:#4E8BFF; --brand-tint:rgba(78,139,255,.13);
+    --bg:#0A1B2E; --surface:#102537; --surface-2:#17304C;
+    --glow-1:rgba(79,144,255,.10); --glow-2:rgba(11,42,92,.10); --grain:.05; --glass:rgba(12,28,46,.6); --edge-shade:rgba(0,0,0,.18);
+    --border:#22394F; --border-strong:#33506E;
+    --text:#E8EEF6; --muted:#9DB0C6; --subtle:#8497AD;
+    --brand:#4F90FF; --brand-tint:rgba(79,144,255,.13);
     --pass:#3FBF92; --pass-tint:rgba(63,191,146,.12);
     --exposure:#E0A968; --exposure-tint:rgba(224,169,104,.12);
     --critical:#E0635B; --critical-tint:rgba(224,99,91,.12);
+    --gold:#E0B84E; --gold-tint:rgba(224,184,78,.15);
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg);color:var(--text);font-family:var(--body);-webkit-font-smoothing:antialiased;line-height:1.5;position:relative;min-height:100vh}
