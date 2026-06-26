@@ -6,6 +6,7 @@ import {
 import { loadState, saveState, type OnboardingState } from './onboardingStore'
 import { supabaseConfigured } from '../lib/supabase'
 import { provisionTenant, uploadDocument } from '../lib/db'
+import DemoBanner from '../app/DemoBanner'
 
 // Minimal dependency-free CSV parse: rows of comma-separated cells, quotes honored.
 function parseCsv(text: string): string[][] {
@@ -115,6 +116,7 @@ export default function Onboarding() {
 
   return (
     <div className="wrap ob">
+      <DemoBanner />
       <div className="ob-head">
         <h1>Let's set up your cyber operating system</h1>
         <span className="seed-flag" title={supabaseConfigured ? 'Go live provisions your tenant and writes to Supabase behind RLS' : 'Saved locally in demo; writes to Supabase (tenants/connectors/assumptions/incident_plan) on go-live when a backend is wired'}>
@@ -154,10 +156,14 @@ export default function Onboarding() {
         {cur === 1 && (
           <div>
             <h2>Connect your systems</h2>
-            <p className="ob-why">This is what makes your numbers credible — every figure traces to a real source, with freshness.</p>
+            <p className="ob-why">
+              This is what makes your numbers credible — every figure traces to a real source, with freshness.
+              <br /><b>Selecting</b> a source here marks which systems you use. You enter <b>live credentials</b> and pull real
+              evidence in <b>🔌 Data sources</b> after go-live{!supabaseConfigured && ' (requires a connected backend)'}.
+            </p>
             <div className="ob-cred">
               <div className="ob-cred-bar"><div className="ob-cred-fill" style={{ width: `${credibility}%` }} /></div>
-              <div className="ob-cred-lbl">Evidence credibility <b>{credibility}%</b> · {CONNECTORS.filter((c) => s.connectors[c.id]).length} of {CONNECTORS.length} connected</div>
+              <div className="ob-cred-lbl">Evidence credibility <b>{credibility}%</b> · {CONNECTORS.filter((c) => s.connectors[c.id]).length} of {CONNECTORS.length} selected</div>
             </div>
             <div className="ob-conn-grid">
               {CONNECTORS.map((c) => {
@@ -166,7 +172,7 @@ export default function Onboarding() {
                   <div key={c.id} className={`ob-conn${on ? ' on' : ''}`}>
                     <div className="ob-conn-h"><span className="ob-conn-ic">{c.ic}</span><span className="ob-conn-cat">{c.cat}</span></div>
                     <div className="ob-conn-v">{c.vendors.join(' · ')}</div>
-                    <button type="button" className={`ob-conn-btn${on ? ' on' : ''}`} onClick={() => set({ connectors: { ...s.connectors, [c.id]: !on } })}>{on ? '✓ Connected' : 'Connect'}</button>
+                    <button type="button" className={`ob-conn-btn${on ? ' on' : ''}`} onClick={() => set({ connectors: { ...s.connectors, [c.id]: !on } })}>{on ? '✓ Selected' : 'Select'}</button>
                   </div>
                 )
               })}

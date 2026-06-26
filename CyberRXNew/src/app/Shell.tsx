@@ -16,6 +16,7 @@ import WarRoom from '../incident/WarRoom'
 import IncidentCommander from '../incident/IncidentCommander'
 import DataSources from '../connectors/DataSources'
 import LivePostureStrip from '../seats/LivePostureStrip'
+import DemoBanner from './DemoBanner'
 
 const decode = (s: string) => s.replace(/&amp;/g, '&')
 
@@ -61,6 +62,7 @@ function ShellInner() {
 
   return (
     <>
+      <DemoBanner />
       <div className="topbar">
         <div className="wrap topbar-in">
           <div className="brand">
