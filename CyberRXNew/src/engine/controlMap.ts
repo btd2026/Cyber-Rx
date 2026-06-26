@@ -70,6 +70,11 @@ export const EVIDENCE_CONTROL_MAP: Record<string, MapEntry> = {
       return clamp01(1 - (num(v.critical) * 2 + num(v.high)) / 50)
     },
   },
+  backup_success_rate: {
+    controls: ['RC.RP-01'],
+    label: 'Backup success rate (recovery readiness)',
+    grade: (v) => clamp01(num(v.success_rate)),
+  },
 }
 
 export type EvidenceRow = { kind: string; value: Record<string, unknown>; collected_at: string; source_system?: string }

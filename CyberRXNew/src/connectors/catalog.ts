@@ -101,7 +101,18 @@ export const CONNECTOR_CATALOG: CategoryDef[] = [
     },
   ] },
   { kind: 'backup', label: 'Backup / DR', providers: [
-    { provider: 'veeam', label: 'Veeam Community Edition', free: 'free', implemented: false, signupUrl: 'https://www.veeam.com/products/downloads.html', signal: 'Backup success rate', secretFields: [], configFields: [] },
+    {
+      provider: 'veeam', label: 'Veeam Community Edition', free: 'free', implemented: true,
+      signupUrl: 'https://www.veeam.com/products/downloads.html', signal: 'Backup success rate + last successful backup',
+      secretFields: [
+        { key: 'username', label: 'Username', placeholder: 'Administrator' },
+        { key: 'password', label: 'Password', secret: true },
+      ],
+      configFields: [
+        { key: 'baseUrl', label: 'Base URL', placeholder: 'https://veeam-host:9419' },
+        { key: 'apiVersion', label: 'API version', placeholder: '1.1-rev1' },
+      ],
+    },
   ] },
   { kind: 'edr', label: 'Endpoint Detection & Response', providers: [
     {

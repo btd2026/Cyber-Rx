@@ -2,7 +2,7 @@
 
 Turns vendor APIs into **pulled evidence** that the deterministic CMMI scorer
 (`src/engine/scorer.ts`) turns into live maturity. This is the layer the
-readiness audit found missing entirely. It is now **scaffolded with nine working
+readiness audit found missing entirely. It is now **scaffolded with ten working
 adapters** against genuinely-free, self-serve developer tiers, plus a registry
 of the remaining categories (most of which are enterprise-gated).
 
@@ -45,8 +45,8 @@ Verified June 2026. "Free" = self-serve, no sales call, real read-only API.
 | **MDM** | **Intune (Graph)** | ✅ free via M365 Dev | ✅ wired | page `/deviceManagement/managedDevices` → % compliant |
 | **Vuln mgmt** | **Nessus Essentials** | ✅ free (16 IPs) | ✅ wired | local API :8834, `X-ApiKeys` → critical/high counts from `/scans/{id}` |
 | **CSPM** | **AWS Security Hub** | ✅ free tier (read) | ✅ wired | SigV4 `GetFindings` → severity counts + compliance pass rate |
+| **Backup / DR** | **Veeam Community Edition** | ✅ free (10 workloads) | ✅ wired | OAuth2 :9419 → `/api/v1/sessions` → backup success rate |
 | SIEM | Splunk Free (self-hosted) | ✅ free (500MB/day) | ⬜ planned | REST on :8089. (Splunk *Cloud* trial blocks the API — use self-hosted Free) |
-| Backup/DR | Veeam Community Edition | ✅ free (10 workloads) | ⬜ planned | OAuth2 :9419 → `/api/v1/sessions` → backup success rate |
 | Firewall | Cisco DevNet sandbox | 🟡 trial/lab | ⬜ planned | always-on FMC/Meraki sandboxes (lab data, not yours) |
 | EDR | CrowdStrike / SentinelOne | ❌ enterprise | — | API needs a licensed tenant |
 | Email | Proofpoint / Mimecast / Abnormal | ❌ enterprise | — | no self-serve free tier |
@@ -83,8 +83,8 @@ supabase secrets set CRON_SECRET=...      # optional, for scheduled runs
 
 ## Honest scope of this scaffold
 
-- ✅ Adapter contract + 9 real adapters (Okta, Entra/Graph, ServiceNow, Jira,
-  Elastic, Defender Secure Score, Intune, Nessus, AWS Security Hub).
+- ✅ Adapter contract + 10 real adapters (Okta, Entra/Graph, ServiceNow, Jira,
+  Elastic, Defender Secure Score, Intune, Nessus, AWS Security Hub, Veeam).
 - ✅ Server-side orchestrator with auth, secret isolation, content-hashed evidence
   writes, per-connector health, and signed audit logging.
 - ✅ Service-role-only secret storage (migration `0004`).
@@ -102,7 +102,7 @@ supabase secrets set CRON_SECRET=...      # optional, for scheduled runs
 - ✅ **AWS SigV4 signer** (`_shared/aws/sigv4.ts`) for Security Hub, validated
   against AWS's official test-suite "get-vanilla" vector + signing-key example
   (`supabase/scripts/aws_sigv4_proof.ts`).
-- ⬜ **Remaining:** the planned adapters above (Splunk, Veeam, Cisco DevNet); a
+- ⬜ **Remaining:** the planned adapters above (Splunk, Cisco DevNet); a
   scheduled-sync cron; and broadening the control map (each new adapter adds a
   `controlMap` entry). The Edge Functions are Deno and aren't covered by the Vite
   build/lint; validate with `deno check` before deploy.
@@ -117,3 +117,4 @@ supabase secrets set CRON_SECRET=...      # optional, for scheduled runs
 | `mdm_device_compliance` | compliant ratio | **PR.PS-01** | Intune device compliance % |
 | `vuln_findings` | 1 − (crit·2+high)/50 | **ID.RA-01** | open critical/high vulns (Nessus) |
 | `cspm_findings` | compliance pass rate | **PR.PS-01** | cloud posture (AWS Security Hub) |
+| `backup_success_rate` | success rate | **RC.RP-01** | recovery readiness (Veeam) |
