@@ -14,6 +14,7 @@ import VoiceBrief from '../seats/VoiceBrief'
 import { IncidentProvider, useIncident } from '../incident/IncidentProvider'
 import WarRoom from '../incident/WarRoom'
 import IncidentCommander from '../incident/IncidentCommander'
+import DataSources from '../connectors/DataSources'
 
 const decode = (s: string) => s.replace(/&amp;/g, '&')
 
@@ -38,6 +39,7 @@ function ShellInner() {
   const [tab, setTab] = useState('exec')
   const [twinOpen, setTwinOpen] = useState(false)
   const [voiceOpen, setVoiceOpen] = useState(false)
+  const [sourcesOpen, setSourcesOpen] = useState(false)
 
   useEffect(() => {
     persistTheme(theme)
@@ -99,8 +101,8 @@ function ShellInner() {
             <button className="tbtn" onClick={() => navigate('/onboarding')} title="Organization onboarding">
               ⚙ Onboarding
             </button>
-            <button className="tbtn" disabled title="Audit log — Phase 6">
-              Audit log
+            <button className="tbtn" onClick={() => setSourcesOpen(true)} title="Configure data sources">
+              🔌 Data sources
             </button>
             <button
               className="toggle"
@@ -201,6 +203,7 @@ function ShellInner() {
       </div>
 
       <AskTwin open={twinOpen} onClose={() => setTwinOpen(false)} />
+      <DataSources open={sourcesOpen} onClose={() => setSourcesOpen(false)} />
       <WarRoom open={warOpen} onClose={() => setWarOpen(false)} />
       <VoiceBrief
         open={voiceOpen}

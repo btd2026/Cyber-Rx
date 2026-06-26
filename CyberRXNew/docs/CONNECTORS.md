@@ -63,12 +63,14 @@ minutes.
    token + your org URL).
 2. **Provision** your tenant via onboarding go-live (creates the `connectors`
    rows for the categories you toggled).
-3. **Configure the source** — call `setConnectorSecret(tenantId, connectorId,
-   'okta', { token }, { orgUrl })`. (A "Configure data source" UI on the
-   connectors step is the remaining front-end surface — see below.)
-4. **Run ingestion** — `runIngest(tenantId)` (or schedule the `ingest` function
-   via Supabase cron with `X-Cron-Key: $CRON_SECRET`). Evidence lands in the
-   `evidence` table; the scorer picks it up.
+3. **Configure the source** — open **🔌 Data sources** in the top bar
+   (`src/connectors/DataSources.tsx`). Pick a provider for the connected
+   category, paste the credential, **Save**, then **Sync now** — the pulled,
+   content-hashed evidence row appears inline. (Under the hood:
+   `setConnectorSecret` → `runIngest` → `loadEvidence`.)
+4. **Schedule** ongoing pulls by invoking the `ingest` function via Supabase
+   cron with `X-Cron-Key: $CRON_SECRET`. Evidence lands in the `evidence` table;
+   the scorer picks it up.
 
 ### Deploy
 ```
@@ -86,9 +88,11 @@ supabase secrets set CRON_SECRET=...      # optional, for scheduled runs
   writes, per-connector health, and signed audit logging.
 - ✅ Service-role-only secret storage (migration `0004`).
 - ✅ Client helpers to configure + trigger ingestion.
-- ⬜ **Remaining:** a "Configure data source" UI (vendor picker + credential form,
-  driven by each adapter's `secretFields`/`configFields`); the six planned
-  adapters above; scheduled-sync cron; and mapping each evidence `kind` to the
-  specific controls it scores (so a pulled `identity_mfa_coverage` moves the
-  exact NIST/CSF controls it evidences). The Edge Functions are Deno and are not
-  covered by the Vite build/lint; validate with `deno check` before deploy.
+- ✅ **"Configure data sources" UI** — vendor picker + credential form (driven by
+  the client catalog `src/connectors/catalog.ts`), Save → Sync → inline evidence,
+  opened from the top bar.
+- ⬜ **Remaining:** the six planned free adapters above; scheduled-sync cron; and
+  mapping each evidence `kind` to the specific controls it scores (so a pulled
+  `identity_mfa_coverage` moves the exact NIST/CSF controls it evidences). The
+  Edge Functions are Deno and are not covered by the Vite build/lint; validate
+  with `deno check` before deploy.

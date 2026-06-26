@@ -236,6 +236,25 @@
 .twin-input { display: flex; gap: 8px; padding: 12px 20px; border-top: 1px solid var(--border); }
 .twin-input .linput2 { flex: 1; }
 
+/* ── Configure data sources (Phase 8) ────────────────────────────────────── */
+.ds-card { border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 14px; background: var(--surface); }
+.ds-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.ds-head b { font-size: 13.5px; }
+.ds-status { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--subtle); }
+.ds-status.ds-healthy { color: var(--pass); }
+.ds-status.ds-error { color: var(--exposure); }
+.ds-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); margin: 6px 0 10px; }
+.ds-meta a { color: var(--brand); font-weight: 600; text-decoration: none; }
+.ds-badge { color: #fff; font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: .06em; border-radius: 5px; padding: 2px 6px; }
+.ds-actions { display: flex; gap: 8px; margin-top: 6px; }
+.ds-soon { font-size: 12px; color: var(--subtle); padding: 6px 0; }
+.ds-msg { font-size: 12px; margin-top: 10px; padding: 8px 10px; border-radius: 8px; }
+.ds-msg.ok { color: var(--pass); background: color-mix(in srgb, var(--pass) 10%, transparent); }
+.ds-msg.err { color: var(--exposure); background: var(--exposure-tint); }
+.ds-evidence { margin-top: 10px; border: 1px solid color-mix(in srgb, var(--pass) 30%, transparent); border-radius: 8px; overflow: hidden; }
+.ds-ev-k { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--pass); background: color-mix(in srgb, var(--pass) 10%, transparent); padding: 5px 9px; }
+.ds-evidence pre { margin: 0; padding: 10px; font-family: var(--mono); font-size: 11px; color: var(--text); white-space: pre-wrap; word-break: break-word; max-height: 220px; overflow: auto; }
+
 /* ── Editable assumption leaf (Phase 5c) ─────────────────────────────────── */
 .leaf-edit { width: 78px; text-align: right; font-family: var(--mono); font-size: 11.5px; color: var(--text); background: var(--surface); border: 1px solid color-mix(in srgb, var(--exposure) 40%, transparent); border-radius: 6px; padding: 2px 6px; outline: none; }
 .leaf-edit:focus { border-color: var(--exposure); background: var(--exposure-tint); }
