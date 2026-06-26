@@ -13,7 +13,7 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    sourcemap: false, // don't ship source/comments to the client (security review)
     rollupOptions: {
       input: fileURLToPath(new URL('./app.html', import.meta.url)),
     },

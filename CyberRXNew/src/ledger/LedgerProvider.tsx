@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import LedgerDrawer from './LedgerDrawer'
 import RecordModal from './RecordModal'
 import TicketModal from './TicketModal'
+import { nextStatus } from '../engine/ticketSync'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 export type EvidenceSnapshot = {
@@ -56,6 +57,7 @@ type LedgerCtx = {
   openRecord: (p: RecordPayload) => void
   openTicketModal: (p: TicketPayload) => void
   ticketsFor: (decisionId: string) => Ticket[]
+  advanceTicket: (id: string) => void
 }
 
 const Ctx = createContext<LedgerCtx | null>(null)
@@ -137,6 +139,8 @@ export function LedgerProvider({ owner, children }: { owner: string; children: R
     openRecord: (p) => setPendingRecord(p),
     openTicketModal: (p) => setPendingTicket(p),
     ticketsFor: (decisionId) => tickets.filter((t) => t.decisionId === decisionId),
+    advanceTicket: (id) =>
+      setTickets((ts) => ts.map((t) => (t.id === id ? { ...t, status: nextStatus(t.status) } : t))),
   }
 
   return (
