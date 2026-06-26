@@ -20,10 +20,16 @@ export default function App() {
   // so the shell is viewable on seed data (clearly flagged). When a backend IS
   // configured, real auth + RLS apply and demo bypass is impossible.
   if (!supabaseConfigured) {
+    // Demo flow still shows the full journey — Login → Onboarding → Cockpit —
+    // on seed data (no real auth, clearly flagged), so the experience is visible
+    // end to end. Login's demo button routes into onboarding (or straight to the
+    // cockpit once onboarding is completed).
     return (
       <Routes>
+        <Route path="/" element={<Login />} />
         <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="*" element={<Shell />} />
+        <Route path="/cockpit" element={<Shell />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     )
   }

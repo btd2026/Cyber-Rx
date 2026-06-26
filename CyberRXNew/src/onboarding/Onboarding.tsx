@@ -4,6 +4,7 @@ import {
   CONNECTORS, TOTAL_SIG, CURRENCIES, symbolFor, INDUSTRIES, OWNERSHIP, REGIONS, DATA_TYPES,
 } from './data'
 import { loadState, saveState, type OnboardingState } from './onboardingStore'
+import { supabaseConfigured } from '../lib/supabase'
 
 const STEPS = [
   { t: 'Organization profile', d: 'Who you are' },
@@ -48,7 +49,7 @@ export default function Onboarding() {
   const goLive = () => {
     set({ completed: true })
     saveState({ ...s, completed: true })
-    navigate('/') // back to the seats (basename /app)
+    navigate(supabaseConfigured ? '/' : '/cockpit') // into the cockpit (demo uses /cockpit)
   }
 
   const namedProcesses = s.processes.filter((p) => p.name.trim())

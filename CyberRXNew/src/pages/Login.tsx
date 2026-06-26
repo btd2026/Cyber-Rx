@@ -1,9 +1,18 @@
 import { useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase, supabaseConfigured } from '../lib/supabase'
+import { loadState } from '../onboarding/onboardingStore'
 
 type Step = 'credentials' | 'mfa'
 
 export default function Login() {
+  const navigate = useNavigate()
+  // Demo entry (no backend): skip real auth and go to onboarding, or straight to
+  // the cockpit once onboarding has been completed.
+  function enterDemo() {
+    const st = loadState()
+    navigate(st.completed ? '/cockpit' : '/onboarding')
+  }
   const [step, setStep] = useState<Step>('credentials')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -105,9 +114,15 @@ export default function Login() {
               required
             />
             {error && <div className="lerror">{error}</div>}
-            <button className="lbtn" type="submit" disabled={busy || !supabaseConfigured}>
-              {busy ? 'Signing in…' : 'Sign in'}
-            </button>
+            {supabaseConfigured ? (
+              <button className="lbtn" type="submit" disabled={busy}>
+                {busy ? 'Signing in…' : 'Sign in'}
+              </button>
+            ) : (
+              <button className="lbtn" type="button" onClick={enterDemo}>
+                Enter the cockpit (demo) →
+              </button>
+            )}
           </form>
         )}
 
