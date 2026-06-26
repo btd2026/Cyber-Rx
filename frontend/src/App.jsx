@@ -12430,9 +12430,9 @@ function BoardDash(props) {
 
 function Controls(props) {
   var go, goBack; go=props.go; goBack=props.goBack;
-  var _isDemo = isDemoOrg("meridian");
+  var _isDemo = isDemoOrg(props.orgName);
   if (!_isDemo) {
-    return React.createElement(NonDemoPlaceholder, {orgName:"Your Organization", page:"Control Validation", go:go});
+    return React.createElement(NonDemoPlaceholder, {orgName:props.orgName||"Your Organization", page:"Control Validation", go:go});
   }
   var CIS_CONTROLS = Object.keys(CIS).map(function(id){
     return {id:parseInt(id), name:CIS_N[id], score:CIS[id]};
@@ -16856,9 +16856,9 @@ function Assets(props) {
 
 function Scoring(props) {
   var go, goBack; go=props.go; goBack=props.goBack;
-  var _isDemo = isDemoOrg("meridian");
+  var _isDemo = isDemoOrg(props.orgName);
   if (!_isDemo) {
-    return React.createElement(NonDemoPlaceholder, {orgName:"Your Organization", page:"Risk Scoring", go:go});
+    return React.createElement(NonDemoPlaceholder, {orgName:props.orgName||"Your Organization", page:"Risk Scoring", go:go});
   }
   var DOMAINS = [
     {id:"iam",  name:"Identity & Access",     score:61, ctrls:[5,6]},
@@ -18089,6 +18089,9 @@ function Shell(props) {
   var page, go, goBack, children, orgName, orgType, email, syncStatus, lastSync, runSync, syncPct; page=props.page; go=props.go; goBack=props.goBack; children=props.children; orgName=props.orgName; orgType=props.orgType; email=props.email; syncStatus=props.syncStatus; lastSync=props.lastSync; runSync=props.runSync; syncPct=props.syncPct;
   var displayName = nameFromEmail(email)||"";
   var _theme = useTheme(); var isDark = _theme.isDark; var toggleTheme = _theme.toggle;
+  // Demo mode is driven by the active org: no org yet, or a demo/sample org → demo.
+  // A real (non-demo) org name turns it off and the live banner shows instead.
+  var demoMode = isDemoOrg(orgName);
 
   var PAGE_ACTIONS = {
     home:      [{label:"Complete Setup",  id:"setup",      primary:false},
@@ -18193,14 +18196,23 @@ function Shell(props) {
           <div className="rx-banner rx-banner--done">✓ Data sync complete — all risk scores updated</div>
         )}
 
-        {/* Demo banner */}
-        <div className="rx-banner rx-banner--demo">
-          <span aria-hidden="true">🔬</span>
-          <strong>Demo Mode</strong>
-          <span className="rx-banner__sub">
-            {"— Viewing sample data for "}<b>{DEMO_ORG_NAME}</b>{". Complete your intake to activate your live risk posture."}
-          </span>
-        </div>
+        {/* Demo / live banner — driven by the active org */}
+        {demoMode ? (
+          <div className="rx-banner rx-banner--demo">
+            <span aria-hidden="true">🔬</span>
+            <strong>Demo Mode</strong>
+            <span className="rx-banner__sub">
+              {"— Viewing sample data"}{orgName?(" for "):(". ")}{orgName&&<b>{orgName}</b>}{". Complete your intake to activate your live risk posture."}
+            </span>
+            <button type="button" className="rx-banner__cta" onClick={function(){go("setup");}}>Complete intake →</button>
+          </div>
+        ) : (
+          <div className="rx-banner rx-banner--live">
+            <span className="rx-live__dot" aria-hidden="true" />
+            <strong>Live</strong>
+            <span className="rx-banner__sub">{"— "}<b>{orgName}</b>{" · showing your organization's data."}</span>
+          </div>
+        )}
 
         {/* Page content */}
         <div data-scroll="main" className="rx-content">
@@ -18271,8 +18283,15 @@ function ShellStyles() {
       .rx-banner--demo { color:var(--rx-exposure); background:var(--rx-exposure-tint);
         border-bottom:1px solid color-mix(in srgb, var(--rx-exposure) 30%, transparent); }
       .rx-banner--demo strong { font-weight:700; }
+      .rx-banner--live { color:var(--rx-pass); background:var(--rx-pass-tint);
+        border-bottom:1px solid color-mix(in srgb, var(--rx-pass) 30%, transparent); }
+      .rx-banner--live strong { font-weight:700; }
+      .rx-banner--live .rx-banner__sub b { color:var(--rx-text); }
       .rx-banner__sub { color:var(--rx-muted); font-weight:400; }
       .rx-banner__sub b { color:var(--rx-exposure); font-weight:600; }
+      .rx-banner__cta { margin-left:auto; font-family:var(--rx-font-body); font-weight:600; font-size:12px;
+        color:#fff; background:var(--rx-brand); border:none; border-radius:7px; padding:5px 12px; cursor:pointer; white-space:nowrap; }
+      .rx-banner__cta:hover { filter:brightness(1.07); }
       .rx-content { flex:1; overflow-y:auto; padding:22px 24px; }
     `}</style>
   );
