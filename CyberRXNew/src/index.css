@@ -210,3 +210,28 @@
 .bench-you-mark { position: absolute; top: -3px; width: 3px; height: 22px; background: var(--brand); border-radius: 2px; z-index: 1; }
 .bench-legend { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 12px; }
 .bench-note { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+
+/* ── Ask your Executive Twin (Phase 5, Surface B) ────────────────────────── */
+.evdrawer.twin { width: 480px; }
+.twin-intro { font-size: 12.5px; color: var(--muted); line-height: 1.55; background: var(--brand-tint); border: 1px solid color-mix(in srgb, var(--brand) 22%, transparent); border-radius: 10px; padding: 11px 13px; margin-bottom: 14px; }
+.twin-demo { color: var(--exposure); }
+.twin-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.twin-chip { font-family: var(--body); font-weight: 600; font-size: 12px; color: var(--brand); background: var(--surface); border: 1px solid color-mix(in srgb, var(--brand) 35%, transparent); border-radius: 999px; padding: 7px 12px; cursor: pointer; text-align: left; }
+.twin-chip:hover { background: var(--brand-tint); }
+.twin-chip:disabled { opacity: .5; cursor: not-allowed; }
+.twin-turn { margin-bottom: 16px; }
+.twin-q { font-weight: 600; font-size: 13.5px; margin-bottom: 8px; }
+.twin-q::before { content: "You "; font-family: var(--mono); font-size: 10px; color: var(--subtle); text-transform: uppercase; letter-spacing: .06em; margin-right: 6px; }
+.twin-a { font-size: 13px; line-height: 1.6; border-radius: 10px; padding: 12px 14px; }
+.twin-a.refused { background: var(--exposure-tint); border: 1px solid color-mix(in srgb, var(--exposure) 30%, transparent); color: var(--text); }
+.twin-a.refused.gate-scope { background: var(--surface-2); border-color: var(--border); color: var(--muted); }
+.twin-gate { display: inline-block; font-family: var(--mono); font-size: 9.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--exposure); border: 1px solid color-mix(in srgb, var(--exposure) 40%, transparent); border-radius: 5px; padding: 1px 6px; margin-right: 8px; }
+.twin-a.grounded { background: var(--surface); border: 1px solid var(--border); }
+.twin-answer { color: var(--text); }
+.twin-cite { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 10px; }
+.twin-cite-l { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--subtle); }
+.twin-src { font-family: var(--mono); font-size: 10.5px; color: var(--text); background: var(--glass); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; }
+.twin-conf { font-family: var(--mono); font-size: 10.5px; color: var(--pass); margin-top: 8px; }
+.twin-busy { font-family: var(--mono); font-size: 12px; color: var(--subtle); }
+.twin-input { display: flex; gap: 8px; padding: 12px 20px; border-top: 1px solid var(--border); }
+.twin-input .linput2 { flex: 1; }

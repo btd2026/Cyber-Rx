@@ -9,6 +9,7 @@ import { EvidenceProvider } from '../seats/ciso/EvidenceDrawer'
 import { getSeat } from '../seats/seatData'
 import CisoSeat from '../seats/CisoSeat'
 import SeatRenderer from '../seats/SeatRenderer'
+import AskTwin from '../seats/ciso/AskTwin'
 
 const decode = (s: string) => s.replace(/&amp;/g, '&')
 
@@ -29,6 +30,7 @@ function ShellInner() {
   const [theme, setTheme] = useState<Theme>(initialTheme)
   const [viewedSeat, setViewedSeat] = useState<SeatId>(user.ownSeat)
   const [tab, setTab] = useState('exec')
+  const [twinOpen, setTwinOpen] = useState(false)
 
   useEffect(() => {
     persistTheme(theme)
@@ -63,6 +65,9 @@ function ShellInner() {
             </span>
             <button className="warbtn" disabled title="War Room — Phase 6">
               ⚠ War Room
+            </button>
+            <button className="tbtn" onClick={() => setTwinOpen(true)} title="Ask your Executive Twin">
+              ✦ Ask Twin
             </button>
             <button className="tbtn" onClick={openLedger} title="Decision ledger">
               ⚖ Decisions{decisions.length > 0 ? ` · ${decisions.length}` : ''}
@@ -167,6 +172,8 @@ function ShellInner() {
           )}
         </EvidenceProvider>
       </div>
+
+      <AskTwin open={twinOpen} onClose={() => setTwinOpen(false)} />
     </>
   )
 }
