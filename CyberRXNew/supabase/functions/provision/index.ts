@@ -25,7 +25,9 @@ const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } })
 
 const str = (v: unknown) => (typeof v === 'string' ? v : '')
-const arr = (v: unknown) => (Array.isArray(v) ? v : [])
+// Cap arrays so a caller can't drive an unbounded mass-insert via one provision call.
+const MAX_ROWS = 200
+const arr = (v: unknown) => (Array.isArray(v) ? v.slice(0, MAX_ROWS) : [])
 const num = (v: unknown) => {
   const n = typeof v === 'number' ? v : parseFloat(String(v ?? ''))
   return Number.isFinite(n) ? n : null

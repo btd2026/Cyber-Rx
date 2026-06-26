@@ -28,9 +28,32 @@ const CRON_SECRET = Deno.env.get('CRON_SECRET') ?? ''
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { 'content-type': 'application/json' } })
 
-// A fetch with a hard timeout, handed to adapters so a hung vendor can't stall us.
+// SSRF guard. Connector baseUrls are set by tenant Admins (trusted), but the
+// orchestrator runs in our cloud, so we hard-block the classic metadata/link-local
+// escalation targets that NO adapter ever needs. (Private RFC1918 / loopback are
+// left reachable on purpose — customers point self-hosted tools at them.)
+const BLOCKED_HOSTS = new Set(['169.254.169.254', 'metadata.google.internal', 'metadata', '[fd00:ec2::254]', 'fd00:ec2::254'])
+function isBlockedUrl(input: unknown): boolean {
+  try {
+    const u = new URL(String(input))
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return true
+    const host = u.hostname.toLowerCase()
+    if (BLOCKED_HOSTS.has(host)) return true
+    if (host.startsWith('169.254.')) return true // IPv4 link-local (incl. cloud metadata)
+    if (host.startsWith('fe80:') || host.startsWith('[fe80:')) return true // IPv6 link-local
+    return false
+  } catch {
+    return true // unparseable URL — refuse
+  }
+}
+
+// A fetch with a hard timeout + SSRF guard, handed to adapters so a hung or
+// malicious endpoint can't stall us or reach internal metadata.
 function boundedFetch(ms = 20_000): typeof fetch {
   return ((input: any, init?: any) => {
+    if (isBlockedUrl(typeof input === 'string' ? input : input?.url)) {
+      return Promise.reject(new Error('blocked host (SSRF guard)'))
+    }
     const ctrl = new AbortController()
     const t = setTimeout(() => ctrl.abort(), ms)
     return fetch(input, { ...init, signal: ctrl.signal }).finally(() => clearTimeout(t))
