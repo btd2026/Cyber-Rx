@@ -11,7 +11,7 @@ const strip = (s: string) =>
 
 const CISO_SCRIPT =
   "CISO briefing. Cyber risk is understood, managed, and within tolerance today — one exposure is contained. " +
-  "Question one: we are not compromised; over four thousand attacks were blocked in the last day, with one elevated phishing campaign aimed at claims staff. " +
+  "Question one: we are not compromised; four thousand one hundred and two attacks were blocked in the last day, with one elevated phishing campaign aimed at claims staff. " +
   "Question two: the business can operate safely — every revenue process is running, claims on a verified compensating control. " +
   "Question three: material exposure is one high and rising item — an open ransomware path to protected health information, ninety-four million dollars modeled if realized. " +
   "Question four: two decisions need you today, each with costed options and a recommendation. " +

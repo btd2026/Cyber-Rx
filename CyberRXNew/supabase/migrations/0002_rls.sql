@@ -41,9 +41,13 @@ begin
   select row_hash into prev from public.decisions
    where tenant_id = new.tenant_id order by recorded_at desc, id desc limit 1;
   new.prev_hash := prev;
+  -- Hash over every field that matters for defensibility (identity, type, and
+  -- the residual-risk figure) so none can be altered without breaking the chain.
   new.row_hash := encode(digest(
     coalesce(prev,'') || new.tenant_id::text || new.seat::text || new.title ||
+    coalesce(new.decision_type,'') || coalesce(new.owner_user_id::text,'') ||
     coalesce(new.rationale,'') || coalesce(new.chosen_option::text,'') ||
+    coalesce(new.residual_risk_amount::text,'') || coalesce(new.residual_risk_currency,'') ||
     new.evidence_snapshot::text || new.recorded_at::text, 'sha256'), 'hex');
   return new;
 end;

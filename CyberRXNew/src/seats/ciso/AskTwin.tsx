@@ -1,8 +1,22 @@
 import { useState, type FormEvent } from 'react'
 import { EVIDENCE } from './evidence'
 import { askTwin, suggestedChips, type TwinVerdict } from '../../engine/twin'
+import { supabase } from '../../lib/supabase'
 
 type Turn = { q: string; v: TwinVerdict }
+
+// Validate an untrusted server response into a TwinVerdict, or return null.
+function parseVerdict(x: unknown): TwinVerdict | null {
+  if (!x || typeof x !== 'object') return null
+  const o = x as Record<string, unknown>
+  if (o.kind === 'refused' && (o.gate === 'scope' || o.gate === 'retrieval') && typeof o.message === 'string') {
+    return { kind: 'refused', gate: o.gate, message: o.message }
+  }
+  if (o.kind === 'grounded' && typeof o.answer === 'string' && Array.isArray(o.citations) && typeof o.confidence === 'string') {
+    return { kind: 'grounded', answer: o.answer, citations: o.citations.map(String), confidence: o.confidence, evidenceKey: '' }
+  }
+  return null
+}
 
 // Surface B — "Ask your Executive Twin". Both gates run before any answer; in
 // demo the answer is grounded deterministically from the engine's evidence (no
@@ -21,20 +35,27 @@ export default function AskTwin({ open, onClose }: { open: boolean; onClose: () 
     if (!text) return
     setQ('')
     setBusy(true)
-    let v: TwinVerdict
+    let v: TwinVerdict = askTwin(text, EVIDENCE) // deterministic ground truth / fallback
     if (TWIN_URL) {
       try {
+        const { data } = (await supabase?.auth.getSession()) ?? { data: { session: null } }
+        const token = data.session?.access_token
         const r = await fetch(TWIN_URL, {
           method: 'POST',
-          headers: { 'content-type': 'application/json' },
+          headers: {
+            'content-type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
           body: JSON.stringify({ question: text }),
         })
-        v = (await r.json()) as TwinVerdict
+        // Only trust a 2xx whose body validates against the locked shape.
+        if (r.ok) {
+          const parsed = parseVerdict(await r.json())
+          if (parsed) v = parsed
+        }
       } catch {
-        v = askTwin(text, EVIDENCE) // fall back to deterministic grounding
+        /* keep the deterministic answer */
       }
-    } else {
-      v = askTwin(text, EVIDENCE)
     }
     setTurns((t) => [...t, { q: text, v }])
     setBusy(false)

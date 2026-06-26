@@ -164,8 +164,8 @@
   .wr-log .ln.crit b{color:#FF5C5C}.wr-log .ln.act b{color:#3FBF92}
   .wr-dec{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
   @media(max-width:640px){.wr-dec{grid-template-columns:1fr}}
-  .wr-dcell{background:#0f141b;border:1px solid #1b232d;border-radius:9px;padding:10px 12px;border-left:3px solid #4E8BFF}
-  .wr-dcell .r{font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:#4E8BFF;font-weight:600}
+  .wr-dcell{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:10px 12px;border-left:3px solid var(--brand)}
+  .wr-dcell .r{font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--brand);font-weight:600}
   .wr-dcell .d{font-size:12.5px;color:#E6EDF3;margin-top:3px;line-height:1.45}
   .wr-comms{background:#0f141b;border:1px solid #1b232d;border-radius:10px;padding:12px 14px;font-size:12.5px;color:#9aa6b2;line-height:1.7}
   .wr-comms b{color:#E6EDF3}
