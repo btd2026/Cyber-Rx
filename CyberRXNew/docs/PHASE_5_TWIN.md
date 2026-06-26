@@ -47,7 +47,20 @@ node --experimental-strip-types CyberRXNew/supabase/scripts/twin_proof.ts
 ```
 Open `/app` → **✦ Ask Twin** in the top bar.
 
-## Next sub-steps
-- **5c** — the leaf rule: every dollar decomposes to ● pulled / ◐ assumption;
-  assumptions become **editable**, recompute live, and **log the change**.
-- **5d** — voice briefings (server-side neural TTS, one voice per seat).
+## 5c — The leaf rule (complete)
+- Every dollar in a decision's cost decomposes to **● pulled** (from a connected
+  system, read-only) or **◐ assumption** (owned, editable).
+- Assumption leaves are now **editable inline**; the option total **recomputes
+  live**, and every edit is **logged** (`src/engine/assumptionsLog.ts`) with
+  old→new + timestamp. In production this writes the `assumptions` version
+  history + an `audit_log` entry behind RLS.
+
+## 5d — Voice briefings (complete)
+- A grounded per-seat **briefing script** (`src/engine/briefing.ts`) assembled
+  from the seat's engine verdicts — same on-screen values, no new claims.
+- **🔊 Brief** in the top bar plays it, **one voice per seat** (chosen
+  deterministically). Demo uses browser speech, clearly flagged; **production
+  uses server-side neural TTS** on the same script.
+
+**Phase 5 complete.** Next: Phase 6 — orchestration (real Jira/ServiceNow sync),
+the War Room + Incident Commander, and the launch-gate security review.
