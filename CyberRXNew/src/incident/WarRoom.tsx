@@ -91,7 +91,7 @@ export default function WarRoom({ open, onClose }: { open: boolean; onClose: () 
             <Sec>Live event feed</Sec>
             <div className="wr2-log">
               {feed.map((f, i) => (
-                <div className={`ln ${f[3]}`} key={i}>{f[0]}&nbsp;&nbsp;<b>{f[1]}</b>&nbsp;&nbsp;{f[2]}</div>
+                <div className={`ln ${f[3]}`} key={`${f[0]}-${f[1]}-${i}`}>{f[0]}&nbsp;&nbsp;<b>{f[1]}</b>&nbsp;&nbsp;{f[2]}</div>
               ))}
             </div>
 

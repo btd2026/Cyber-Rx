@@ -71,6 +71,7 @@ export function IncidentProvider({ children }: { children: ReactNode }) {
   }
 
   function trigger() {
+    if (activeRef.current) return // already live — don't leak a second interval/alarm
     ensureAudio() // called from a user click → autoplay-safe
     activeRef.current = true
     startRef.current = Date.now()
@@ -83,7 +84,7 @@ export function IncidentProvider({ children }: { children: ReactNode }) {
       setNow((x) => x + 1)
       if (n % 3 === 0) {
         const p = FEED_POOL[Math.floor((n / 3) % FEED_POOL.length)]
-        const ts = `14:${String(2 + Math.floor(n / 20)).padStart(2, '0')}:${String((n * 7) % 60).padStart(2, '0')}`
+        const ts = `14:${String((2 + Math.floor(n / 20)) % 60).padStart(2, '0')}:${String((n * 7) % 60).padStart(2, '0')}`
         setFeed((f) => [...f, [ts, p[0], p[1], p[2]] as FeedLine].slice(-16))
       }
     }, 1000)

@@ -56,7 +56,11 @@ export default function RecordModal({
             disabled={busy}
             onClick={async () => {
               setBusy(true)
-              await onConfirm(rationale.trim())
+              try {
+                await onConfirm(rationale.trim())
+              } finally {
+                setBusy(false) // never get stuck on "Signing…" if signing rejects
+              }
             }}
           >
             {busy ? 'Signing…' : 'Choose & record'}

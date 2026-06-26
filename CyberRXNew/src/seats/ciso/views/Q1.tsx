@@ -18,9 +18,9 @@ export default function Q1() {
         <div className="ansc">
           <div className="l">Why we can say this</div>
           <div className="v">
-            No confirmed compromise across 1,240 monitored controls. EDR + SIEM show no active
-            intrusion; identity shows no anomalous privileged sessions. Detection is live (8-min
-            MTTD).
+            No confirmed compromise across the 1,240 monitored controls (1,238 validated holding,
+            2 failing). EDR + SIEM show no active intrusion; identity shows no anomalous privileged
+            sessions. Detection is live (8-min MTTD).
           </div>
         </div>
         <div className="ansc">
