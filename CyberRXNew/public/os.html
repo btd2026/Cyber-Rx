@@ -1459,7 +1459,8 @@
   // deterministic maturity so the tree is stable & realistic; pinned controls keep the narrative consistent
   function hashStr(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0);}
   const PINNED={'PR.AA-05':'partial','RC.RP-01':'partial','RC.RP-03':'partial','PR.DS-01':'partial','ID.AM-02':'partial','PR.PS-06':'partial','GV.SC-07':'partial','AC-6':'partial','CM-2':'partial','CP-4':'partial','6.5':'partial','11.1':'partial','16.1':'partial','A.8.2':'partial','A.5.23':'partial','A1.2':'partial'};
-  function statusFor(id){if(PINNED[id])return PINNED[id];const h=hashStr(id)%100;if(h<6)return 'gap';if(h<20)return 'partial';return 'met';}
+  let LIVE_CTRL=null; // {control_id: 'met'|'partial'|'gap'} from /api/cae/assessment when reachable
+  function statusFor(id){if(LIVE_CTRL&&LIVE_CTRL[id])return LIVE_CTRL[id];if(PINNED[id])return PINNED[id];const h=hashStr(id)%100;if(h<6)return 'gap';if(h<20)return 'partial';return 'met';}
   function levelFor(id,st){const h=hashStr(id+'m');if(st==='gap')return h%3===0?0:1;if(st==='partial')return 2+(h%2);return 4+(h%2);}
   function catMaturity(c){let sum=0,n=0;(c.subs||[]).forEach(s=>{sum+=levelFor(s.id,statusFor(s.id));n++;});return n?sum/n:0;}
   function grpMaturity(g){let sum=0,n=0;g.cats.forEach(c=>(c.subs||[]).forEach(s=>{sum+=levelFor(s.id,statusFor(s.id));n++;}));return n?sum/n:0;}
@@ -1493,7 +1494,7 @@
   function grpCounts(g){let m=0,p=0,x=0;g.cats.forEach(c=>{const n=catCounts(c);m+=n.m;p+=n.p;x+=n.x;});return {m,p,x,t:m+p+x};}
   function grpMaturity(g){let sum=0,n=0;g.cats.forEach(c=>(c.subs||[]).forEach(s=>{sum+=levelFor(s.id,statusFor(s.id));n++;}));return n?sum/n:0;}
   function grpH(g){const n=grpCounts(g);const mm=grpMaturity(g);return '<details class="l1"><summary><span class="chev">▸</span><span class="nm">'+g.name+'</span><span class="catn">'+n.t+' · '+n.m+'✓ '+n.p+'~'+(n.x?' '+n.x+'✗':'')+'</span><span class="score '+mCls(mm)+'">'+mm.toFixed(1)+'</span></summary>'+(g.cats||[]).map(catH).join('')+'</details>';}
-  function buildTree(fw){const f=FW[fw]();let m=0,p=0,x=0,t=0,msum=0;f.groups.forEach(g=>{const n=grpCounts(g);m+=n.m;p+=n.p;x+=n.x;t+=n.t;g.cats.forEach(c=>(c.subs||[]).forEach(s=>{msum+=levelFor(s.id,statusFor(s.id));}));});const overall=(msum/Math.max(1,t));document.getElementById('fwtree').innerHTML=f.groups.map(grpH).join('');document.getElementById('fwCap').innerHTML='<b>'+f.name+'</b> · overall '+(f.metric||'maturity')+' <b>'+overall.toFixed(1)+' / 5</b>'+(f.metricSuffix!==undefined?f.metricSuffix:' (CMMI)')+' · <b>'+t+' of '+t+'</b> '+f.unit+' · '+f.groups.length+' groups · '+m+' met · '+p+' partial'+(x?' · '+x+' gap':'')+'<div class="fw-note">'+(f.note||('Complete catalog · every '+f.unit.replace(/s$/,'')+' is scored on the CMMI 0–5 maturity scale &amp; evidence-mapped. Maturity shown is illustrative; production scores each control via the engine against live evidence with analyst review.'))+'</div>';}
+  function buildTree(fw){const f=FW[fw]();let m=0,p=0,x=0,t=0,msum=0;f.groups.forEach(g=>{const n=grpCounts(g);m+=n.m;p+=n.p;x+=n.x;t+=n.t;g.cats.forEach(c=>(c.subs||[]).forEach(s=>{msum+=levelFor(s.id,statusFor(s.id));}));});const overall=(msum/Math.max(1,t));document.getElementById('fwtree').innerHTML=f.groups.map(grpH).join('');document.getElementById('fwCap').innerHTML=(LIVE_CTRL?'<span class="livedot"></span>live · ':'')+'<b>'+f.name+'</b> · overall '+(f.metric||'maturity')+' <b>'+overall.toFixed(1)+' / 5</b>'+(f.metricSuffix!==undefined?f.metricSuffix:' (CMMI)')+' · <b>'+t+' of '+t+'</b> '+f.unit+' · '+f.groups.length+' groups · '+m+' met · '+p+' partial'+(x?' · '+x+' gap':'')+'<div class="fw-note">'+(f.note||('Complete catalog · every '+f.unit.replace(/s$/,'')+' is scored on the CMMI 0–5 maturity scale &amp; evidence-mapped. Maturity shown is illustrative; production scores each control via the engine against live evidence with analyst review.'))+'</div>';}
   document.querySelectorAll('#fwSel .seg').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#fwSel .seg').forEach(x=>x.classList.remove('active'));b.classList.add('active');buildTree(b.dataset.fw);}));
   buildTree('csf');
   // ===== Multi-seat executive operating system =====
@@ -1885,6 +1886,26 @@
     }catch(e){ setDataSrc(false,'API unreachable — showing sample'); }
   }
   loadPlatform();
+  // Live control-assessment statuses for the Framework explorer (CAE engine).
+  async function loadFrameworks(){
+    try{
+      const q='org_id='+encodeURIComponent(PLATFORM.orgId);
+      const r=await fetch(PLATFORM.api+'/api/cae/assessment?'+q,{headers:{'X-Org-Id':PLATFORM.orgId}});
+      if(!r.ok)throw new Error('http '+r.status);
+      const d=await r.json();
+      const rows=(d&&(d.results||d.controls||(Array.isArray(d)?d:[])))||[];
+      const norm=function(s){s=String(s||'').toLowerCase();if(/partial|progress/.test(s))return 'partial';if(/fail|gap|not[ _]?met|miss|absent/.test(s))return 'gap';if(/pass|met|effective|implement|cover/.test(s))return 'met';return null;};
+      const map={};let n=0;
+      rows.forEach(function(x){const id=x.control_id||x.controlId||x.id;const st=norm(x.status||x.result);if(id&&st){map[id]=st;n++;}});
+      if(n>0){
+        LIVE_CTRL=map;
+        const act=document.querySelector('#fwSel .seg.active');
+        if(act&&document.getElementById('fwtree'))buildTree(act.dataset.fw);
+        setDataSrc(true,n+' controls live · '+PLATFORM.orgId);
+      }
+    }catch(e){ /* keep illustrative statuses */ }
+  }
+  loadFrameworks();
 
   // ===== Executive Twin / Simulator / Copilot =====
   const SCN={
