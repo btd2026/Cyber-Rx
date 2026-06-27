@@ -1824,7 +1824,9 @@
     if(ov.inject)out=out.concat(ov.inject);
     return out;
   }
-  function showDyn(view){const s=SEATS[curSeat];if(!s)return;curDynView=view;let title=null;if(view!=='exec'){const ne=s.nav.find(n=>n.id===view);if(ne)title=ne.label.replace(/^\d+\s·\s/,'').replace(/^[^\w(]+/,'').trim();}document.getElementById('seatDyn').innerHTML=renderView(applySeatOverride(curSeat,view,s.views[view]),title);document.querySelectorAll('#navDynIn .nb').forEach(b=>b.classList.toggle('active',b.dataset.dynview===view));if(typeof updateTwinScope==='function')updateTwinScope();window.scrollTo({top:0});}
+  function showDyn(view){const s=SEATS[curSeat];if(!s)return;curDynView=view;let title=null;if(view!=='exec'){const ne=s.nav.find(n=>n.id===view);if(ne)title=ne.label.replace(/^\d+\s·\s/,'').replace(/^[^\w(]+/,'').trim();}var _blocks=applySeatOverride(curSeat,view,s.views[view]);
+if(view==='exec'&&typeof LIVE_SEAT!=='undefined'&&LIVE_SEAT[curSeat]){var _L=LIVE_SEAT[curSeat];_blocks=_blocks.map(function(b){return (b&&b.t==='head')?Object.assign({},b,{q:_L.verdict||b.q,ans:_L.ans||b.ans,ansCls:_L.ansCls||b.ansCls,lead:_L.lead||b.lead}):b;});}
+document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.querySelectorAll('#navDynIn .nb').forEach(b=>b.classList.toggle('active',b.dataset.dynview===view));if(typeof updateTwinScope==='function')updateTwinScope();window.scrollTo({top:0});}
   let curSeat='ciso', curCisoView='exec', curDynView='exec', backTo=null;
   function cleanLbl(s){return s.replace(/^[⌂+\d\s·]+/,'').trim();}
   function getLabel(view){if(curSeat==='ciso'){const b=document.querySelector('#navCiso .nb[data-view="'+view+'"]');return b?cleanLbl(b.textContent):'Exec Summary';}const ne=SEATS[curSeat].nav.find(n=>n.id===view);return ne?cleanLbl(ne.label):'Exec Summary';}
@@ -1906,6 +1908,26 @@
     }catch(e){ /* keep illustrative statuses */ }
   }
   loadFrameworks();
+  // Live per-seat Exec Summary (verdict/status/lede) from the executive-agent
+  // briefs. Non-CISO seats only (CISO is wired via posture/framework); CEO has
+  // no backend agent role. Falls back to the authored seat copy.
+  var LIVE_SEAT={};
+  async function loadSeats(){
+    const roles={cfo:'CFO',cio:'CIO',clo:'CLO',cro:'CRO',board:'Board'};
+    const lab=function(s){return s==='red'?{a:'Action required',c:'crit'}:s==='amber'?{a:'Attention',c:'warn'}:{a:'Within tolerance',c:'ok'};};
+    let any=false;
+    await Promise.all(Object.keys(roles).map(async function(seat){
+      try{
+        const q='org_id='+encodeURIComponent(PLATFORM.orgId);
+        const r=await fetch(PLATFORM.api+'/api/agents/briefs/'+roles[seat]+'?'+q,{headers:{'X-Org-Id':PLATFORM.orgId}});
+        if(!r.ok)return;
+        const d=await r.json();
+        if(d&&d.headline){const L=lab(d.status);LIVE_SEAT[seat]={verdict:d.headline,lead:d.summary||'',ans:L.a,ansCls:L.c};any=true;}
+      }catch(e){}
+    }));
+    if(any){ if(curSeat!=='ciso'&&curDynView==='exec'&&document.getElementById('seatDyn'))showDyn('exec'); setDataSrc(true,'seat briefs live · '+PLATFORM.orgId); }
+  }
+  loadSeats();
 
   // ===== Executive Twin / Simulator / Copilot =====
   const SCN={
