@@ -2364,14 +2364,18 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     try{
       window.speechSynthesis.cancel();
       const _txt=agentScript(seat); if(!_txt||!_txt.trim())return;
-      const u=new SpeechSynthesisUtterance(_txt);
-      const cfg=VOICE[seat]||VOICE.ciso; u.rate=cfg.r; u.pitch=cfg.p; u.volume=1;
-      const v=SEAT_VOICE[seat]||pickVoice(seat,new Set()); if(v)u.voice=v;
-      const box=document.getElementById('voiceAgent');
-      u.onstart=()=>box.classList.add('speaking');
-      u.onend=()=>box.classList.remove('speaking');
-      u.onerror=()=>box.classList.remove('speaking');
-      window.speechSynthesis.speak(u); vaSpoke=true;
+      const _doSpeak=function(){
+        const u=new SpeechSynthesisUtterance(_txt);
+        const cfg=VOICE[seat]||VOICE.ciso; u.rate=cfg.r; u.pitch=cfg.p; u.volume=1;
+        const v=SEAT_VOICE[seat]||pickVoice(seat,new Set()); if(v)u.voice=v;
+        const box=document.getElementById('voiceAgent');
+        u.onstart=function(){box.classList.add('speaking');};
+        u.onend=function(){box.classList.remove('speaking');};
+        u.onerror=function(){box.classList.remove('speaking');};
+        window.speechSynthesis.speak(u); vaSpoke=true;
+      };
+      // Chrome drops utterances if speak() follows cancel() too quickly
+      if(window.speechSynthesis.speaking||window.speechSynthesis.pending){setTimeout(_doSpeak,120);}else{_doSpeak();}
     }catch(e){}
   }
   document.getElementById('vaReplay').addEventListener('click',()=>speakAgent(curSeat,true));
