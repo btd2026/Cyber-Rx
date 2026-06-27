@@ -139,7 +139,7 @@
   document.getElementById("swIntake").addEventListener("click",function(){show("intake");});
   document.getElementById("swOS").addEventListener("click",function(){show("os");});
   window.addEventListener("message",function(e){
-    if(e.data && e.data.type==="cyberrx-golive"){ osMsg({type:"cyberrx-golive",names:e.data.names,industry:e.data.industry}); setTimeout(function(){show("os");},600); }
+    if(e.data && e.data.type==="cyberrx-golive"){ osMsg({type:"cyberrx-golive",names:e.data.names,industry:e.data.industry,org:e.data.org}); setTimeout(function(){show("os");},600); }
     else if(e.data==="cyberrx-golive"){ setTimeout(function(){show("os");},600); }
     else if(e.data==="cyberrx-signout"){
       document.getElementById("switcher").classList.remove("show");
