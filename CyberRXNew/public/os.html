@@ -2350,7 +2350,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     const a=AGENT[seat]||AGENT.ciso;
     const nm=SEAT_NAMES[seat];
     const points=(a.explain||[]).join(' ');
-    return 'Welcome back'+(nm?', '+nm:'')+'. Here’s your '+SEAT_TITLE[seat]+' briefing for '+ORG+'. '+a.read+' Here’s what your dashboard is telling you. '+points+' Every figure on screen opens its own evidence — just click any number to see what stands behind it.';
+    return 'Welcome back'+(nm?', '+nm:'')+'. Here’s your '+SEAT_TITLE[seat]+' briefing for '+(USER_ORG||ORG)+'. '+a.read+' Here’s what your dashboard is telling you. '+points+' Every figure on screen opens its own evidence — just click any number to see what stands behind it.';
   }
   let lastSpeakAt=0,lastSpeakSeat='';
   function speakAgent(seat,force){
@@ -2386,10 +2386,15 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
   window.addEventListener('message',function(e){
     if(e.data && e.data.type==='cyberrx-golive'){
       if(e.data.industry){try{applyIndustry(e.data.industry);}catch(_){}}
+      // Prefer the org passed in the message; if absent, recover it from the
+      // shared store (covers the cockpit iframe loading before the name was typed).
       if(e.data.org){try{applyOrgName(e.data.org);}catch(_){}}
-      if(e.data.names){Object.assign(SEAT_NAMES,e.data.names);if(typeof e.data.benchShare==='boolean')benchShare=e.data.benchShare;if(e.data.currency&&e.data.currency.sym){MON=e.data.currency.sym;applyCurrencyAll();}}
+      else{try{var _go=localStorage.getItem('cyberrx_org_name');if(_go)applyOrgName(_go);}catch(_){}}
+      if(e.data.names){Object.assign(SEAT_NAMES,e.data.names);}
+      if(typeof e.data.benchShare==='boolean')benchShare=e.data.benchShare;
+      if(e.data.currency&&e.data.currency.sym){MON=e.data.currency.sym;applyCurrencyAll();}
     }
-    if(e.data==='cyberrx-os-active'){vaActive=true;if(!vaMuted)speakAgent(curSeat);}
+    if(e.data==='cyberrx-os-active'){vaActive=true;try{if(!USER_ORG){var _ao=localStorage.getItem('cyberrx_org_name');if(_ao)applyOrgName(_ao);}}catch(_){}if(!vaMuted)speakAgent(curSeat);}
     else if(e.data==='cyberrx-os-inactive'){vaActive=false;try{window.speechSynthesis.cancel();}catch(_){}}
   });
   function openTwin(id){
@@ -2403,7 +2408,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     openModal('twinModal');
   }
   // ===== Scoped Executive Twin — each tab answers only its own topic, grounded in CyberRx evidence =====
-  const ORGNAME=(typeof ORG_PROFILE!=='undefined'&&ORG_PROFILE.name)||'your organization';
+  const ORGNAME=USER_ORG||(typeof ORG_PROFILE!=='undefined'&&ORG_PROFILE.name)||'your organization';
   const TABSCOPE={
    'ciso:exec':{t:'Security Overview',kw:['overview','summary','posture','status','today','brief','headline','overall','stand','snapshot','need me','secure','security','safe','protected','at risk','healthy'],ex:['Where do we stand right now?','What needs me today?','Give me the headline.'],a:['No active compromise; every revenue process is operating.','One open ransomware path to {data} and ungoverned AI on {process} — $94M modeled exposure.','Posture 82/100 (+4), improving; recovery and AI governance are the drags.'],al:['overall','ok','fine','trouble','worried','sleep at night','bottom line','state of play','how are we doing','red flags']},
    'ciso:q1':{t:'Threat & Compromise',kw:['threat','compromise','attack','attacker','adversary','intrusion','breach','phish','malware','ransom','exploit','ioc','indicator','hunt','detect','blocked','active','compromised','c2','lateral','dwell','campaign'],ex:['Are we compromised right now?','What\u2019s the highest live threat?','How many attacks were blocked in 24h?'],a:['No active compromise — 312,400 events correlated, 0 matched a compromise pattern (99.4% coverage).','4,102 attacks blocked in 24h; one elevated phishing campaign aimed at {process} staff.','The live concern is the open ransomware path to {data}, not an intruder in the estate.'],al:['hacker','hackers','broke in','break in','broken into','intruder','network','under attack','getting hit','bad actor','breached','penetrated','someone in','adversary','nation state','compromise']},
@@ -2458,8 +2463,8 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
   function twRank(prefix,qt){var out=[];Object.keys(TABSCOPE).forEach(function(k){if(prefix&&k.indexOf(prefix)!==0)return;out.push([k,twScore(k,qt)]);});out.sort(function(a,b){return b[1]-a[1];});return out;}
   function escTw(s){return (s||'').replace(/[<>&]/g,function(c){return c==='<'?'&lt;':c==='>'?'&gt;':'&amp;';});}
   function twinFoot(show){var mf=document.querySelector('#twinModal .modal-f');if(mf)mf.style.display=show?'':'none';}
-  function openTwinGrounded(sc,q,qt){twinFoot(false);var fa=(sc.a||[]).slice();if(qt&&qt.length){fa=fa.map(function(f){var ft={};twToks(fillTok(f)).forEach(function(t){ft[t]=1;});var ov=0;qt.forEach(function(t){if(ft[t])ov+=(TWIN_IDF[t]||0.15);});return [f,ov];}).sort(function(a,b){return b[1]-a[1];}).map(function(x){return x[0];});}var facts=fa.map(function(x){return '<div class="twin-fact">'+fillTok(x)+'</div>';}).join('');document.getElementById('twinBody').innerHTML='<div class="twin-sub">'+sc.t+' twin \u00b7 grounded in CyberRx evidence for '+ORGNAME+'</div><div class="twin-q" style="font-size:17px">On \u201c'+escTw(q)+'\u201d</div>'+(facts?'<div class="twin-facts">'+facts+'</div>':'')+'<div class="twin-conf">Answered from the <b>'+sc.t+'</b> evidence \u00b7 '+fa.length+' grounded items \u00b7 no figure is used that isn\u2019t in this tab\u2019s evidence.</div>';openModal('twinModal');}
-  function openTwinRefuse(sc,info){twinFoot(false);var ex=(sc.ex||[]).map(function(x){return '<button class="chip" data-ex="'+escTw(fillTok(x))+'">'+fillTok(x)+'</button>';}).join('');var head;if(info.other&&info.other.cross){head='That looks like a <b>'+info.other.t+'</b> question \u2014 handled under the <b>'+info.other.seat.toUpperCase()+'</b> seat. This twin is scoped to <b>'+sc.t+'</b>.';}else if(info.other){head='That\u2019s a <b>'+info.other.t+'</b> question \u2014 switch to the <b>'+info.other.t+'</b> tab to ask it. This twin is scoped to <b>'+sc.t+'</b>.';}else if(info.inDomain){head='That\u2019s outside what the <b>'+sc.t+'</b> tab covers.';}else{head='I\u2019m the <b>'+sc.t+'</b> twin for '+ORGNAME+'. I only answer <b>'+sc.t+'</b> questions, grounded in CyberRx evidence \u2014 not general questions, and nothing beyond your data.';}document.getElementById('twinBody').innerHTML='<div class="twin-deny">\u2298 Out of scope</div><div class="twin-q" style="font-size:16px;line-height:1.4">'+head+'</div><div class="twin-sub">'+sc.t+' twin \u00b7 '+ORGNAME+'</div><div class="twin-sublabel">What I can answer on this tab</div><div class="cp-chips" style="margin-top:0">'+ex+'</div><div class="twin-conf">This twin only answers <b>'+sc.t+'</b> questions, grounded in connected CyberRx evidence \u2014 no guesses, no unrelated topics.</div>';openModal('twinModal');}
+  function openTwinGrounded(sc,q,qt){twinFoot(false);var fa=(sc.a||[]).slice();if(qt&&qt.length){fa=fa.map(function(f){var ft={};twToks(fillTok(f)).forEach(function(t){ft[t]=1;});var ov=0;qt.forEach(function(t){if(ft[t])ov+=(TWIN_IDF[t]||0.15);});return [f,ov];}).sort(function(a,b){return b[1]-a[1];}).map(function(x){return x[0];});}var facts=fa.map(function(x){return '<div class="twin-fact">'+fillTok(x)+'</div>';}).join('');document.getElementById('twinBody').innerHTML='<div class="twin-sub">'+sc.t+' twin \u00b7 grounded in CyberRx evidence for '+(USER_ORG||ORGNAME)+'</div><div class="twin-q" style="font-size:17px">On \u201c'+escTw(q)+'\u201d</div>'+(facts?'<div class="twin-facts">'+facts+'</div>':'')+'<div class="twin-conf">Answered from the <b>'+sc.t+'</b> evidence \u00b7 '+fa.length+' grounded items \u00b7 no figure is used that isn\u2019t in this tab\u2019s evidence.</div>';openModal('twinModal');}
+  function openTwinRefuse(sc,info){twinFoot(false);var ex=(sc.ex||[]).map(function(x){return '<button class="chip" data-ex="'+escTw(fillTok(x))+'">'+fillTok(x)+'</button>';}).join('');var head;if(info.other&&info.other.cross){head='That looks like a <b>'+info.other.t+'</b> question \u2014 handled under the <b>'+info.other.seat.toUpperCase()+'</b> seat. This twin is scoped to <b>'+sc.t+'</b>.';}else if(info.other){head='That\u2019s a <b>'+info.other.t+'</b> question \u2014 switch to the <b>'+info.other.t+'</b> tab to ask it. This twin is scoped to <b>'+sc.t+'</b>.';}else if(info.inDomain){head='That\u2019s outside what the <b>'+sc.t+'</b> tab covers.';}else{head='I\u2019m the <b>'+sc.t+'</b> twin for '+(USER_ORG||ORGNAME)+'. I only answer <b>'+sc.t+'</b> questions, grounded in CyberRx evidence \u2014 not general questions, and nothing beyond your data.';}document.getElementById('twinBody').innerHTML='<div class="twin-deny">\u2298 Out of scope</div><div class="twin-q" style="font-size:16px;line-height:1.4">'+head+'</div><div class="twin-sub">'+sc.t+' twin \u00b7 '+(USER_ORG||ORGNAME)+'</div><div class="twin-sublabel">What I can answer on this tab</div><div class="cp-chips" style="margin-top:0">'+ex+'</div><div class="twin-conf">This twin only answers <b>'+sc.t+'</b> questions, grounded in connected CyberRx evidence \u2014 no guesses, no unrelated topics.</div>';openModal('twinModal');}
   var TWIN_TH=1.1;
   function askTwin(){var inp=document.getElementById('cpIn');var raw=(inp.value||'').trim();if(!raw){inp.focus();return;}var v=raw.toLowerCase();var sc=curScope();
     if(OFFDOMAIN.some(function(k){return v.indexOf(k)>=0;}))return openTwinRefuse(sc,{inDomain:false});
@@ -2851,7 +2856,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
   // Real .pptx (PptxGenJS) and .pdf (jsPDF), bundled in-file. Content is pulled from
   // the LIVE assessment results for the framework currently selected.
   function skinStr(s){let t=s;for(let i=0;i<ACTIVE_PAIRS.length;i++){const a=ACTIVE_PAIRS[i][0];if(t.indexOf(a)>=0)t=t.split(a).join(ACTIVE_PAIRS[i][1]);}return t;}
-  function _orgName(){return (ACTIVE_PACK&&ACTIVE_PACK.org)||ORG_PROFILE.name;}
+  function _orgName(){return USER_ORG||(ACTIVE_PACK&&ACTIVE_PACK.org)||ORG_PROFILE.name;}
   function _indLabel(){return (ACTIVE_PACK&&ACTIVE_PACK.label)||ORG_PROFILE.industry;}
   function _chunk(a,n){const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n));return o;}
   function _blobDL(blob,filename){try{const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=filename;a.style.display='none';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2500);}catch(e){alert('Download is available when the file is opened directly in a browser.');}}
