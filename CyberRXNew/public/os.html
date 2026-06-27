@@ -2079,6 +2079,19 @@
     add('HIPAA',c.regHipaa);
     add('health records',c.healthRecords);
     if(c.patient){ add('Patient',_cap(c.patient)); add('patient',c.patient); }
+    // Payer-specific audience/partner terms — only for non-healthcare industries,
+    // and only as unambiguous compounds (never bare 'member'/'provider', which
+    // would corrupt "board member", "identity provider", "cloud provider", etc.).
+    if(c.arch && c.arch!=='healthcare'){
+      const aud=c.audience||'customer';
+      add('Member Portal',_cap(aud)+' Portal'); add('member portal',aud+' portal');
+      add('plan members',aud+'s'); add('health plan members',aud+'s');
+      add('Members',_cap(aud)+'s'); add('members',aud+'s');
+      add('member PII',c.crownData||(aud+' data')); add('member data',(aud+' data'));
+      const ptn=c.partnerTerm||'partner';
+      add('Provider Payments',_cap(ptn)+' payments'); add('Provider Payment',_cap(ptn)+' payment');
+      add('Provider Portal',_cap(ptn)+' portal'); add('Provider Network',_cap(ptn)+' network'); add('provider network',ptn+' network');
+    }
     (c.extra||[]).forEach(x=>P.push(x));
     return P;
   }

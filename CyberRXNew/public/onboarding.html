@@ -284,7 +284,7 @@
 <div class="app">
   <header>
     <div class="brand"><span class="dot"></span>CyberRx <span class="sub">Onboarding</span></div>
-    <div class="hright"><span class="saved"><span class="d"></span>Saved · just now</span><button class="toggle" id="themeBtn">◐</button></div>
+    <div class="hright"><span class="saved"><span class="d"></span>Saved · just now</span><button class="toggle" id="toOS" title="Jump to the Operating System">⌂ Operating System →</button><button class="toggle" id="themeBtn">◐</button></div>
   </header>
   <div class="hero">
     <h1>Let's set up your cyber operating system</h1>
@@ -349,6 +349,9 @@
   // is shared with the OS iframe, so the cockpit can adopt the real name).
   let orgName=''; try{orgName=localStorage.getItem('cyberrx_org_name')||'';}catch(e){}
   document.addEventListener('input',e=>{ if(e.target&&e.target.id==='orgNameIn'){ orgName=e.target.value; try{localStorage.setItem('cyberrx_org_name',orgName);}catch(_){} } });
+  // Jump straight to the Operating System from any onboarding step (applies the
+  // industry + org name entered so far).
+  (function(){var b=document.getElementById('toOS'); if(b)b.addEventListener('click',function(){try{window.parent.postMessage({type:'cyberrx-golive',industry:selectedIndustry,org:(orgName||'').trim(),names:seatNames},'*');}catch(e){}});})();
   const IMETA={
    healthcare:{org:'Meridian Health Plan',data:['PHI','PII'],reg:'HIPAA · SEC',ctx:'Framed for healthcare — PHI exposure, HIPAA breach clocks, and claims/care continuity.'},
    financial:{org:'Atlas Financial Group',data:['PII','PCI','Financial'],reg:'GLBA · NYDFS 500 · SEC',ctx:'Framed for financial services — funds & PII exposure, GLBA / NYDFS 500, payments continuity.'},
