@@ -1973,32 +1973,32 @@
      crownData:'PHI',crownDataLong:'protected health information',crownDataRecords:'PHI records',
      vendor:'NASCO',vendorRole:'single-source PHI processor',regHipaa:'HIPAA',regBreach:'HIPAA Breach Rule',
      threatPath:'ransomware path to PHI',patient:'patient'},
-   financial:{label:'Banking — Global',org:'Atlas Financial Group',orgShort:'Atlas',entity:'global bank',peers:'global banks',
+   financial:{audience:'customer',partnerTerm:'counterparty',healthRecords:'customer accounts',label:'Banking — Global',org:'Atlas Financial Group',orgShort:'Atlas',entity:'global bank',peers:'global banks',
      crownProcess:'payments',crownProcessing:'payments processing',crownPath:'payments rails',crownStore:'core ledger',
      crownData:'PII',crownDataLong:'customer PII & funds',crownDataRecords:'customer records',
      vendor:'FIS',vendorRole:'single-source payments processor',regHipaa:'GLBA / NYDFS 500',regBreach:'NYDFS Part 500',
      threatPath:'fraud & ransomware path to funds',patient:'customer',healthRecords:'customer accounts'},
-   technology:{label:'Technology / SaaS',org:'Northstar Cloud',orgShort:'Northstar',entity:'SaaS provider',peers:'enterprise SaaS providers',
+   technology:{audience:'customer',partnerTerm:'vendor',healthRecords:'customer data',label:'Technology / SaaS',org:'Northstar Cloud',orgShort:'Northstar',entity:'SaaS provider',peers:'enterprise SaaS providers',
      crownProcess:'production platform',crownProcessing:'production operations',crownPath:'service-delivery path',crownStore:'customer data store',
      crownData:'customer data',crownDataLong:'customer data & source code',crownDataRecords:'customer records',
      vendor:'AWS',vendorRole:'single-source hosting provider',regHipaa:'SOC 2 / GDPR',regBreach:'state breach laws / GDPR',
      threatPath:'supply-chain & ransomware path to customer data',patient:'customer'},
-   manufacturing:{label:'Manufacturing',org:'Vanguard Industries',orgShort:'Vanguard',entity:'manufacturer',peers:'global manufacturers',
+   manufacturing:{audience:'customer',partnerTerm:'supplier',healthRecords:'design records',label:'Manufacturing',org:'Vanguard Industries',orgShort:'Vanguard',entity:'manufacturer',peers:'global manufacturers',
      crownProcess:'production lines',crownProcessing:'plant operations',crownPath:'production path',crownStore:'MES / OT systems',
      crownData:'IP & OT data',crownDataLong:'trade secrets & OT telemetry',crownDataRecords:'design records',
      vendor:'the OT integrator',vendorRole:'single-source OT integrator',regHipaa:'IEC 62443 / NIST CSF',regBreach:'state breach & trade-secret laws',
      threatPath:'OT ransomware path to production',patient:'customer'},
-   energy:{label:'Energy & Utilities',org:'Helios Grid',orgShort:'Helios',entity:'utility',peers:'North American utilities',
+   energy:{audience:'customer',partnerTerm:'interconnection',healthRecords:'customer accounts',label:'Energy & Utilities',org:'Helios Grid',orgShort:'Helios',entity:'utility',peers:'North American utilities',
      crownProcess:'grid operations',crownProcessing:'grid dispatch',crownPath:'grid-control path',crownStore:'SCADA / EMS',
      crownData:'OT & grid data',crownDataLong:'OT telemetry & customer data',crownDataRecords:'customer accounts',
      vendor:'the SCADA vendor',vendorRole:'single-source OT/SCADA vendor',regHipaa:'NERC CIP / TSA',regBreach:'NERC CIP reporting',
      threatPath:'OT compromise path to the grid',patient:'customer'},
-   retail:{label:'Retail — Omnichannel',org:'Northwind Retail Group',orgShort:'Northwind',entity:'retailer',peers:'national retailers',
+   retail:{audience:'customer',partnerTerm:'fulfillment partner',healthRecords:'cardholder records',label:'Retail — Omnichannel',org:'Northwind Retail Group',orgShort:'Northwind',entity:'retailer',peers:'national retailers',
      crownProcess:'transactions',crownProcessing:'checkout & order processing',crownPath:'checkout path',crownStore:'e-commerce platform',
      crownData:'cardholder data',crownDataLong:'cardholder data',crownDataRecords:'cardholder records',
      vendor:'the payment processor',vendorRole:'single-source payment processor',regHipaa:'PCI-DSS',regBreach:'PCI-DSS / state breach laws',
      threatPath:'skimming & ransomware path to cardholder data',patient:'customer'},
-   public:{label:'Government',org:'State of Northland',orgShort:'Northland',entity:'public agency',peers:'public-sector agencies',
+   public:{audience:'constituent',partnerTerm:'vendor',healthRecords:'citizen records',label:'Government',org:'State of Northland',orgShort:'Northland',entity:'public agency',peers:'public-sector agencies',
      crownProcess:'citizen services',crownProcessing:'benefits & services processing',crownPath:'service-delivery path',crownStore:'case-management systems',
      crownData:'citizen PII',crownDataLong:'citizen records',crownDataRecords:'citizen records',
      vendor:'the systems integrator',vendorRole:'single-source systems integrator',regHipaa:'FISMA / NIST 800-53',regBreach:'state & federal breach reporting',
@@ -2018,7 +2018,7 @@
      crownData:'shipment & customer data',crownDataLong:'shipment & customer data',crownDataRecords:'shipment records',
      vendor:'the TMS vendor',vendorRole:'single-source logistics platform',regHipaa:'TSA / DOT cyber rules',regBreach:'state breach reporting',
      threatPath:'ransomware path to dispatch',patient:'customer'},
-   generic:{label:'Your Industry',org:'Apex Enterprises',orgShort:'Apex',entity:'enterprise',peers:'industry peers',
+   generic:{audience:'customer',partnerTerm:'partner',healthRecords:'sensitive data',label:'Your Industry',org:'Apex Enterprises',orgShort:'Apex',entity:'enterprise',peers:'industry peers',
      crownProcess:'core operations',crownProcessing:'core business operations',crownPath:'operations path',crownStore:'core systems',
      crownData:'sensitive data',crownDataLong:'sensitive business & customer data',crownDataRecords:'records',
      vendor:'the critical vendor',vendorRole:'single-source critical vendor',regHipaa:'SEC / state breach laws',regBreach:'state breach reporting',
@@ -2027,8 +2027,8 @@
   /* Every onboarding-dropdown option -> archetype + sub-vertical overrides. UNIVERSAL. */
   const IND={
    'healthcare-payer':{arch:'healthcare'},
-   'healthcare-provider':{arch:'healthcare',label:'Healthcare — Provider',org:'Meridian Health System',entity:'health system',crownProcess:'patient care',crownProcessing:'care delivery',crownPath:'care-delivery path',crownStore:'EHR',vendor:'Epic',vendorRole:'single-source EHR vendor',threatPath:'ransomware path to patient care',peers:'US health systems'},
-   'healthcare-pharmacy-pbm':{arch:'healthcare',label:'Healthcare — Pharmacy / PBM',org:'Meridian Pharmacy Services',entity:'PBM',crownProcess:'prescription processing',crownProcessing:'prescription adjudication',crownStore:'pharmacy platform',vendor:'the PBM platform',vendorRole:'single-source PBM platform',peers:'pharmacy & PBM operators'},
+   'healthcare-provider':{arch:'healthcare',label:'Healthcare — Provider',org:'Meridian Health System',entity:'health system',crownProcess:'patient care',crownProcessing:'care delivery',crownPath:'care-delivery path',crownStore:'EHR',vendor:'Epic',vendorRole:'single-source EHR vendor',threatPath:'ransomware path to patient care',peers:'US health systems',extra:[['Member Portal','Patient Portal'],['member portal','patient portal'],['member PHI','patient PHI'],['member PII','patient PII'],['member data','patient data'],['member abrasion','patient dissatisfaction'],['member-facing','patient-facing'],['member harm','patient harm'],['member-churn','patient attrition'],['plan members','patients'],['health plan members','patients'],['Provider Portal','Referral Portal'],['Provider Payments','Reimbursements'],['Provider Payment','Reimbursement'],['Provider Network','Care Network'],['provider network','care network'],['provider/member abrasion','patient dissatisfaction'],['Fortune-50 healthcare payers','Fortune-50 health systems'],['healthcare payers','health systems'],['healthcare payer','health system'],['Eligibility & Benefits','Patient Registration'],['Authorization / Utilization Mgmt','Clinical Authorization'],['Payment & Remittance','Patient Billing']]},
+   'healthcare-pharmacy-pbm':{arch:'healthcare',label:'Healthcare — Pharmacy / PBM',org:'Meridian Pharmacy Services',entity:'PBM',crownProcess:'prescription processing',crownProcessing:'prescription adjudication',crownStore:'pharmacy platform',vendor:'the PBM platform',vendorRole:'single-source PBM platform',peers:'pharmacy & PBM operators',extra:[['member PHI','member Rx data'],['PHI records','Rx claims records'],['Provider Payments','Pharmacy Payments'],['Provider Payment','Pharmacy Payment'],['Provider Portal','Pharmacy Portal'],['Provider Network','Pharmacy Network'],['provider network','pharmacy network'],['provider SLA','pharmacy SLA'],['denials','rejections']]},
    'health-tech':{arch:'technology',label:'Health Technology',org:'Meridian Digital Health',crownData:'PHI',crownDataLong:'protected health information',crownDataRecords:'PHI records',regHipaa:'HIPAA / SOC 2',regBreach:'HIPAA Breach Rule',threatPath:'ransomware path to PHI',peers:'digital-health companies'},
    'pharmaceuticals':{arch:'manufacturing',label:'Pharmaceuticals',org:'Meridian Pharma',entity:'pharmaceutical company',crownProcess:'R&D & manufacturing',crownProcessing:'GxP manufacturing',crownStore:'research & MES systems',crownData:'clinical & IP data',crownDataLong:'clinical-trial & research IP',vendor:'the CRO',vendorRole:'single-source CRO',regHipaa:'FDA 21 CFR Part 11 / GxP',regBreach:'FDA & state reporting',threatPath:'IP-theft & ransomware path to research data',peers:'pharmaceutical companies'},
    'biotechnology':{arch:'manufacturing',label:'Biotechnology',org:'Helix Bio',entity:'biotech company',crownProcess:'research & development',crownStore:'research systems',crownData:'research IP',crownDataLong:'research IP & clinical data',vendor:'the CRO',regHipaa:'FDA / GxP',threatPath:'IP-theft & ransomware path to research data',peers:'biotech companies'},
@@ -2082,6 +2082,35 @@
     add('single-source PHI processor',c.vendorRole||'single-source provider');
     add('health payer',c.entity);
     const p=c.crownProcess;
+    // Universal healthcare/payer-jargon scrub for NON-healthcare industries — runs
+    // BEFORE the 'claims' pass so compound terms win. Verified homograph-safe
+    // (audit wf_bf0dad24): only multi-word/hyphenated/entity compounds; never bare
+    // member/provider/payer/Authorization.
+    if(c.arch && c.arch!=='healthcare'){
+      const aud=c.audience||'customer', Aud=_cap(aud);
+      const ptn=c.partnerTerm||'partner', Ptn=_cap(ptn);
+      const proc=c.crownProcessing||c.crownProcess||'core operations', Proc=_cap(proc);
+      const peers=c.peers||'industry peers';
+      add('claims adjudication',proc); add('Claims adjudication',Proc);
+      add('mis-adjudicates','mis-handles '+(c.crownProcess||'operations')); add('mis-adjudication','mis-handling');
+      add('Mass improper adjudications','Mass improper '+(c.crownProcess||'operations')+' actions');
+      add('improper denials/approvals','improper '+(c.crownProcess||'operations')+' actions');
+      add('Adjudication',Proc); add('adjudication',proc);
+      add('unfair-claims-practice','unfair-business-practice'); add('unfair-claims regulatory','regulatory'); add('unfair-claims','regulatory');
+      add('prompt-payment','payment-terms'); add('prompt-pay','payment-terms');
+      add('OCR breach investigation','regulator breach investigation');
+      add('provider/member abrasion',ptn+'/'+aud+' churn');
+      add('member abrasion',aud+' churn'); add('member-facing',aud+'-facing'); add('member harm',aud+' harm'); add('member-churn',aud+'-churn');
+      add('member PHI',(c.crownData||(aud+' data'))); add('Member account data',Aud+' account data'); add('Members served',Aud+'s served');
+      add('provider SLA',ptn+' SLA'); add('providers aren’t paid',ptn+'s aren’t settled'); add('Provider payments delayed',Ptn+' payments delayed');
+      add('Fortune-50 healthcare payers','Fortune-50 '+peers); add('healthcare payers',peers); add('healthcare payer',c.entity||peers.replace(/s$/,'')); add('Fortune-50 payer','Fortune-50 '+(c.entity||'enterprise'));
+      add('Payment & Remittance — EDI 835','Payment & Settlement'); add('Payment & Remittance','Payment & Settlement'); add('Remittance','Settlement');
+      add('Eligibility & Benefits — EDI 270/271','Account & Verification'); add('Eligibility & Benefits','Account & Verification'); add('Eligibility 270/271','Account verification');
+      add('Authorization / Utilization Mgmt','Access / Authorization Mgmt'); add('Authorization / UM','Access / Authorization');
+      add('Pharmacy / PBM integration',(ptn==='partner'?'Supplier':Ptn)+' integration'); add('Pharmacy / PBM',(ptn==='partner'?'Supplier':Ptn)+' systems');
+      add('EDI 837','intake interface'); add('EDI 835','settlement interface'); add('EDI 270/271','lookup interface');
+      add('Claims Intake — EDI 837',(c.crownProcess?_cap(c.crownProcess):'Intake')+' interface'); add('Claims Intake 837',(c.crownProcess?_cap(c.crownProcess):'Intake')+' interface');
+    }
     if(p){
       add('claims processing',c.crownProcessing||p);
       add('claims-halt',(p+'-halt')); add('claims halt',(p+' halt'));
