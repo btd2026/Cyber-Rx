@@ -80,7 +80,7 @@ export default function Onboarding() {
             <h2>Organization profile</h2>
             <p className="ob-why">Your profile sets the rules — which regulations apply, what data you must protect, and which frameworks you're measured against.</p>
             <div className="ob-grid">
-              <label className="ob-f"><span>Organization name</span><input className="linput2" value={s.org.name} onChange={(e) => setOrg({ name: e.target.value })} placeholder="Meridian Health" /></label>
+              <label className="ob-f"><span>Organization name</span><input className="linput2" value={s.org.name} onChange={(e) => setOrg({ name: e.target.value })} placeholder="Your organization name" /></label>
               <label className="ob-f"><span>Industry</span><select className="linput2" value={s.org.industry} onChange={(e) => setOrg({ industry: e.target.value })}>{INDUSTRIES.map((i) => <option key={i}>{i}</option>)}</select></label>
               <label className="ob-f"><span>Ownership</span><select className="linput2" value={s.org.ownership} onChange={(e) => setOrg({ ownership: e.target.value })}>{OWNERSHIP.map((o) => <option key={o}>{o}</option>)}</select></label>
               <label className="ob-f"><span>Employees</span><input className="linput2" inputMode="numeric" value={s.org.employees} onChange={(e) => setOrg({ employees: e.target.value.replace(/[^\d]/g, '') })} placeholder="12,000" /></label>
