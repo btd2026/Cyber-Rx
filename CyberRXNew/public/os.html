@@ -2368,6 +2368,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     if(!(window.speechSynthesis.getVoices()||[]).length){ window.speechSynthesis.onvoiceschanged=function(){assignVoices();speakAgent(seat,true);}; return; }
     lastSpeakAt=now; lastSpeakSeat=seat;
     try{
+      const wasSpeaking=window.speechSynthesis.speaking||window.speechSynthesis.pending;
       window.speechSynthesis.cancel();
       const _txt=agentScript(seat); if(!_txt||!_txt.trim())return;
       const _doSpeak=function(){
@@ -2380,7 +2381,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
         u.onerror=function(){box.classList.remove('speaking');};
         window.speechSynthesis.speak(u); vaSpoke=true;
       };
-      setTimeout(_doSpeak,150);
+      if(wasSpeaking){setTimeout(_doSpeak,150);}else{_doSpeak();}
     }catch(e){}
   }
   document.getElementById('vaReplay').addEventListener('click',()=>{vaActive=true;speakAgent(curSeat,true);});
