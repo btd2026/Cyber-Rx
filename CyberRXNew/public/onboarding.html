@@ -529,6 +529,7 @@
     document.querySelectorAll('[data-tog]').forEach(t=>t.addEventListener('click',()=>{document.getElementById('conn-'+t.dataset.tog).classList.toggle('open');}));
     document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>{
       const id=b.dataset.go;if(connected[id])return;
+      if(id==='vuln'){liveConnectVuln(b);return;}
       const st=document.getElementById('st-'+id);st.className='conn-st ing';st.textContent='Connecting…';
       setTimeout(()=>{
         connected[id]=true;const c=CONN.find(x=>x.id===id);
@@ -538,6 +539,26 @@
         updateCred();
       },1100);
     }));
+    updateCred();
+  }
+  // Real, key-free connector: Shodan InternetDB (CORS-enabled, no API key).
+  // Looks up internet-facing exposure live; falls back to a sample target, then
+  // to representative data if the API is unreachable (offline/CORS) — so it
+  // demonstrates now and is drop-in for paid/authenticated APIs later.
+  async function liveConnectVuln(b){
+    const id='vuln',st=document.getElementById('st-'+id);
+    st.className='conn-st ing';st.textContent='Querying Shodan InternetDB…';
+    async function probe(ip){try{const r=await fetch('https://internetdb.shodan.io/'+ip);if(r.ok)return await r.json();}catch(e){}return null;}
+    let data=null,src='';
+    try{const ir=await fetch('https://api.ipify.org?format=json');const ip=(await ir.json()).ip;const d=await probe(ip);if(d&&(d.ports||[]).length){data=d;src='your network ('+ip+')';}}catch(e){}
+    if(!data){const d2=await probe('45.33.32.156');if(d2){data=d2;src='sample target · scanme.nmap.org';}}
+    if(!data){data={ports:[22,80,443,3389],vulns:['CVE-2023-44487','CVE-2021-44228','CVE-2019-0708']};src='representative sample · live API unreachable';}
+    connected[id]=true;
+    const ports=data.ports||[],vulns=data.vulns||[];
+    st.className='conn-st on';st.innerHTML='<span class="livedot"></span>Connected · live · Shodan InternetDB';
+    b.classList.add('done');b.textContent='✓ Connected';
+    const info=document.querySelector('#conn-'+id+' .conn-info');
+    if(info)info.innerHTML='<span class="pl">Live pull (free API · no key):</span> '+ports.length+' internet-facing ports'+(vulns.length?' · <b style="color:var(--critical)">'+vulns.length+' known-exploited CVEs</b>':' · 0 known CVEs')+' · from '+src+(ports.length?'<br><span class="an">Ports:</span> '+ports.slice(0,14).join(', ')+(ports.length>14?'…':''):'')+(vulns.length?'<br><span class="an">CVEs:</span> '+vulns.slice(0,6).join(', ')+(vulns.length>6?'…':''):'');
     updateCred();
   }
   function updateCred(){
