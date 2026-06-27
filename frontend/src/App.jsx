@@ -324,7 +324,7 @@ var ORG_TEMPLATES = {
        streams:["Care Navigation","Health & Medical Management (HMM)","Provider Operations & Engagement"]},
     ],
     procs:CROWN_JEWEL_PROCS,
-    frameworks:["hipaa_sr","hipaa_pr","hipaa_bn","nist_csf","nist_800_53","cis_v8","iso_27001","soc2","naic_model","pci_dss","cms_422"],
+    frameworks:["hipaa_sr","hipaa_pr","hipaa_bn","nist_csf","nist_800_53","soc2","naic_model","pci_dss","cms_422"],
     extraFrameworks:["BCBSA Plan Performance Program","FEHB/OPM Data Security (if FEP)"],
   },
 
@@ -348,7 +348,7 @@ var ORG_TEMPLATES = {
        streams:["Finance & Actuarial","Legal & Compliance","Human Resources","IT & Technology"]},
     ],
     procs:CROWN_JEWEL_PROCS,
-    frameworks:["hipaa_sr","hipaa_pr","hipaa_bn","nist_csf","nist_800_53","cis_v8","iso_27001","soc2","naic_model","pci_dss","cms_422"],
+    frameworks:["hipaa_sr","hipaa_pr","hipaa_bn","nist_csf","nist_800_53","soc2","naic_model","pci_dss","cms_422"],
     extraFrameworks:[],
   },
 
@@ -369,7 +369,7 @@ var ORG_TEMPLATES = {
        streams:["Finance & Actuarial","Compliance & Audit","RADV / Risk Adjustment","Legal"]},
     ],
     procs:CROWN_JEWEL_PROCS,
-    frameworks:["hipaa_sr","hipaa_pr","hipaa_bn","nist_csf","nist_800_53","cis_v8","soc2","naic_model","cms_422"],
+    frameworks:["hipaa_sr","hipaa_pr","hipaa_bn","nist_csf","nist_800_53","soc2","naic_model","cms_422"],
     extraFrameworks:["CMS STAR Rating Program","RADV Audit Requirements","CMS Part D Requirements"],
   },
 
@@ -399,7 +399,7 @@ var ORG_TEMPLATES = {
        streams:["Finance & Actuarial","Information Technology","Legal & Compliance","Human Resources","Enterprise Analytics"]},
     ],
     procs:CROWN_JEWEL_PROCS,
-    frameworks:["hipaa_sr","hipaa_pr","hipaa_bn","nist_csf","nist_800_53","cis_v8","iso_27001","soc2","naic_model","pci_dss","cms_422"],
+    frameworks:["hipaa_sr","hipaa_pr","hipaa_bn","nist_csf","nist_800_53","soc2","naic_model","pci_dss","cms_422"],
     extraFrameworks:["42 CFR Part 2 (Behavioral Health)","URAC PBM Accreditation","NCQA Accreditation"],
   },
 
@@ -420,7 +420,7 @@ var ORG_TEMPLATES = {
        streams:["Finance & Actuarial","Legal & Compliance","Quality & HEDIS","Audit & Risk Management"]},
     ],
     procs:CROWN_JEWEL_PROCS,
-    frameworks:["hipaa_sr","hipaa_pr","hipaa_bn","nist_csf","nist_800_53","cis_v8","soc2","naic_model","cms_422"],
+    frameworks:["hipaa_sr","hipaa_pr","hipaa_bn","nist_csf","nist_800_53","soc2","naic_model","cms_422"],
     extraFrameworks:["State Medicaid Agency Requirements","42 CFR Part 438 (Medicaid MCO)","42 CFR Part 2 (Behavioral Health)","NCQA Medicaid Accreditation"],
   },
 
@@ -438,7 +438,7 @@ var ORG_TEMPLATES = {
        streams:["Finance","Compliance","Information Technology"]},
     ],
     procs:CROWN_JEWEL_PROCS,
-    frameworks:["hipaa_sr","hipaa_pr","hipaa_bn","nist_csf","nist_800_53","cis_v8","soc2","naic_model"],
+    frameworks:["hipaa_sr","hipaa_pr","hipaa_bn","nist_csf","nist_800_53","soc2","naic_model"],
     extraFrameworks:[],
   },
 
@@ -458,7 +458,7 @@ var ORG_TEMPLATES = {
        streams:["Finance","Legal & Compliance","Information Technology"]},
     ],
     procs:CROWN_JEWEL_PROCS,
-    frameworks:["hipaa_sr","hipaa_pr","hipaa_bn","nist_csf","nist_800_53","cis_v8","soc2","naic_model","pci_dss"],
+    frameworks:["hipaa_sr","hipaa_pr","hipaa_bn","nist_csf","nist_800_53","soc2","naic_model","pci_dss"],
     extraFrameworks:["State Insurance Department Requirements"],
   },
 };
@@ -732,7 +732,7 @@ function calculateTotalExposure(procs, orgSize, metrics) {
 // Legacy support - initialize with calculated values
 var EXP = {claims:340,enroll:85,provider_net:60,care_mgmt:95,fwa:180,member_svc:75,actuarial:210,govt_ma:120,govt_fep:150,govt_mcaid:100,pharmacy_pbm:130,compliance:180,identity:450,data_platform:190};
 
-// --- CIS Controls -------------------------------------------------------------
+// --- Control Catalog ----------------------------------------------------------
 var CIS_N = {
   1:"Inventory of Enterprise Assets", 2:"Inventory of Software Assets",
   3:"Data Protection",                4:"Secure Config of Enterprise Assets",
@@ -1111,16 +1111,16 @@ var ACTIONS = [
   {id:"ACT-020",fid:"F-019",risk:"High", cid:5, hb:78,ha:89,sys:"CyberArk PAM",         assignee:"IAM / PAM Team",   title:"Onboard 57% of systems to CyberArk privileged session recording",status:"pending_approval",by:null,        at:null,  done:null},
   {id:"ACT-021",fid:"F-021",risk:"High", cid:12,hb:77,ha:88,sys:"Palo Alto NGFW",        assignee:"Network Engineering",title:"Implement micro-segmentation for 3 flat network zones",     status:"pending_approval",  by:null,        at:null,  done:null},
   {id:"ACT-022",fid:"F-022",risk:"Low",  cid:13,hb:66,ha:78,sys:"Panorama / Palo Alto", assignee:"Network / SOC",    title:"Enable automatic daily IDS/IPS signature updates",            status:"pending_approval",  by:null,        at:null,  done:null},
-  {id:"ACT-023",cat:"Response",  cid:hb:61,ha:74,sys:"Splunk SOAR / IR Platform", assignee:"SOC / IR Team",
+  {id:"ACT-023",cat:"Response",  cid:17,hb:61,ha:74,sys:"Splunk SOAR / IR Platform", assignee:"SOC / IR Team",
    title:"Deploy SOAR and update IR playbooks to reduce MTTR to <4hr",
    status:"pending", by:null, at:null, done:null,
    fid:"F-017",
    steps:["Deploy Splunk SOAR with automated account isolation playbook","Auto-route SOC alerts to IT Ops without manual handoff","Update all 12 IR playbooks (deadline: May 2026)","Implement one-click approval for emergency account lockdown","Target MTTR reduction: 6.8hr → <4hr"]},
-  {id:"ACT-024",cat:"Training",  cid:hb:58,ha:72,sys:"KnowBe4 / Workday HCM", assignee:"HR / Security",
+  {id:"ACT-024",cat:"Training",  cid:14,hb:58,ha:72,sys:"KnowBe4 / Workday HCM", assignee:"HR / Security",
    title:"Complete security awareness training for all 412 overdue employees",
    status:"pending", by:null, at:null, done:null,
    fid:"F-023",
-   steps:["Issue mandatory 30-day deadline to Claims Ops (156 employees) and Finance (84 employees)","Integrate KnowBe4 with Workday for automatic new-hire enrollment","Add HIPAA Workforce Security training to LMS with completion tracking","Weekly manager escalation for teams with >20% non-completion","Target: 100% training completion — CIS 14 and HIPAA §164.308(a)(5)"]},
+   steps:["Issue mandatory 30-day deadline to Claims Ops (156 employees) and Finance (84 employees)","Integrate KnowBe4 with Workday for automatic new-hire enrollment","Add HIPAA Workforce Security training to LMS with completion tracking","Weekly manager escalation for teams with >20% non-completion","Target: 100% training completion — HIPAA §164.308(a)(5)"]},
 ];
 
 // --- Policy catalog -----------------------------------------------------------
@@ -1147,13 +1147,13 @@ var DEMO_ORG_ID   = "meridian-demo-2026";
 var DEMO_ORG_NAME = "Meridian Health Plan (Demo)";
 
 var ELOGS = {
-  "ACT-001":["Initiating — SailPoint IGA API v3","✓ Auth → 200","✓ Query: 14 terminated accounts found","✓ PATCH jsmith_term {enabled:false} → 200","✓ PATCH dlee_term {enabled:false} → 200 (privileged)","✓ 14/14 accounts disabled","✓ Evidence EVD-REM-001 created","✅ COMPLETE — CIS 5: 55→75 | +3 pts"],
-  "ACT-002":["Initiating — ServiceNow REST API","✓ Auth → session established","✓ GET glide.ui.session_timeout → '480'","✓ PATCH {value:'15'} → 200","✓ Verified: '15' ✓","✅ COMPLETE — CIS 4: 61→72 | +1 pt"],
-  "ACT-003":["Initiating — Splunk ES API","✓ ESCU v4.22.0 installed","✓ T1566 Phishing hunt → @6h","✓ T1110 Brute Force hunt → @6h","✓ 15/15 hunts scheduled","✅ COMPLETE — CIS 8: 63→80 | +2 pts"],
-  "ACT-004":["Initiating — Okta API (dual-approved)","✓ Auth scope=okta.policies.write → 200","✓ PUT rules {mfaRequired:true,basicAuth:false}","✓ Verified: mfaRequired=true ✓","✅ COMPLETE — CIS 6: 61→82 | +8 pts"],
-  "ACT-005":["Initiating — CrowdStrike API","✓ 31 unprotected hosts retrieved","✓ Sensor push: qnxt-app-svr-01..08 (priority)","✓ 31/31 sensors deployed","✓ PHI-Systems-Strict policy applied","✅ COMPLETE — CIS 10: 62→88 | +6 pts"],
-  "ACT-006":["Initiating — Okta API","✓ Blocking Basic Auth on 3 admin portals","✓ Migration notice to 4 vendors (30-day)","✅ COMPLETE — CIS 4: 72→79 | +3 pts"],
-  "ACT-007":["Initiating — Cotiviti Partner API","✓ PGP key exchange complete","✓ PATCH claims-prod {encryption:PGP} → 200","✓ Test transfer: encrypted ✓","✅ COMPLETE — CIS 3: 58→84 | +8 pts"],
+  "ACT-001":["Initiating — SailPoint IGA API v3","✓ Auth → 200","✓ Query: 14 terminated accounts found","✓ PATCH jsmith_term {enabled:false} → 200","✓ PATCH dlee_term {enabled:false} → 200 (privileged)","✓ 14/14 accounts disabled","✓ Evidence EVD-REM-001 created","✅ COMPLETE — Control 5: 55→75 | +3 pts"],
+  "ACT-002":["Initiating — ServiceNow REST API","✓ Auth → session established","✓ GET glide.ui.session_timeout → '480'","✓ PATCH {value:'15'} → 200","✓ Verified: '15' ✓","✅ COMPLETE — Control 4: 61→72 | +1 pt"],
+  "ACT-003":["Initiating — Splunk ES API","✓ ESCU v4.22.0 installed","✓ T1566 Phishing hunt → @6h","✓ T1110 Brute Force hunt → @6h","✓ 15/15 hunts scheduled","✅ COMPLETE — Control 8: 63→80 | +2 pts"],
+  "ACT-004":["Initiating — Okta API (dual-approved)","✓ Auth scope=okta.policies.write → 200","✓ PUT rules {mfaRequired:true,basicAuth:false}","✓ Verified: mfaRequired=true ✓","✅ COMPLETE — Control 6: 61→82 | +8 pts"],
+  "ACT-005":["Initiating — CrowdStrike API","✓ 31 unprotected hosts retrieved","✓ Sensor push: qnxt-app-svr-01..08 (priority)","✓ 31/31 sensors deployed","✓ PHI-Systems-Strict policy applied","✅ COMPLETE — Control 10: 62→88 | +6 pts"],
+  "ACT-006":["Initiating — Okta API","✓ Blocking Basic Auth on 3 admin portals","✓ Migration notice to 4 vendors (30-day)","✅ COMPLETE — Control 4: 72→79 | +3 pts"],
+  "ACT-007":["Initiating — Cotiviti Partner API","✓ PGP key exchange complete","✓ PATCH claims-prod {encryption:PGP} → 200","✓ Test transfer: encrypted ✓","✅ COMPLETE — Control 3: 58→84 | +8 pts"],
 };
 
 
@@ -2963,7 +2963,7 @@ var ITSM_SYSTEMS = {
     ticketType:"Change Request", ticketPrefix:"CHG",
     ticketGen:function(){ return "CHG"+(1000000+Math.floor(Math.random()*900000)); },
     states:["New","Assigned","In Progress","In Review","Closed"],
-    desc:"Creates a Change Request in ServiceNow pre-populated with finding, CIS control, affected CI, and remediation steps. Auto-assigns to the configured assignment group.",
+    desc:"Creates a Change Request in ServiceNow pre-populated with finding, control, affected CI, and remediation steps. Auto-assigns to the configured assignment group.",
     mttrSource:"ServiceNow ITSM",
     assignGroup:"IT Security Operations",
     credFields:[
@@ -2971,7 +2971,7 @@ var ITSM_SYSTEMS = {
       {id:"apiKey",   label:"API Token",          placeholder:"Bearer token or username:password",      type:"password"},
       {id:"assignGrp",label:"Assignment Group",   placeholder:"IT Security Operations",                 type:"text"},
     ],
-    briana:"Route it to ServiceNow as a Change Request. The ticket will pre-populate with the finding description, affected system, CIS control, and remediation steps. Your assignment group will be notified automatically.",
+    briana:"Route it to ServiceNow as a Change Request. The ticket will pre-populate with the finding description, affected system, control, and remediation steps. Your assignment group will be notified automatically.",
     apiAdapterId:"servicenow",
   },
   jira: {
@@ -2980,7 +2980,7 @@ var ITSM_SYSTEMS = {
     ticketType:"Security Issue", ticketPrefix:"SEC",
     ticketGen:function(){ return "SEC-"+Math.floor(Math.random()*9000+1000); },
     states:["Open","In Progress","In Review","Done"],
-    desc:"Creates a Security issue in Jira Service Management with severity, SLA, CIS control mapping, and a link back to this finding. Assignee is set from the action's team.",
+    desc:"Creates a Security issue in Jira Service Management with severity, SLA, control mapping, and a link back to this finding. Assignee is set from the action's team.",
     mttrSource:"Jira Service Management",
     assignGroup:"Security Engineering",
     credFields:[
@@ -2989,7 +2989,7 @@ var ITSM_SYSTEMS = {
       {id:"project",  label:"Project Key",         placeholder:"SEC",                                   type:"text"},
       {id:"assignGrp",label:"Default Team",        placeholder:"Security Engineering",                   type:"text"},
     ],
-    briana:"Route it to Jira as a Security issue. The ticket will include finding details, severity label, and CIS control mapping. Your security engineering team will be assigned automatically.",
+    briana:"Route it to Jira as a Security issue. The ticket will include finding details, severity label, and control mapping. Your security engineering team will be assigned automatically.",
     apiAdapterId:null,
   },
   remedy: {
@@ -3476,20 +3476,6 @@ function NonDemoPlaceholder(props) {
 
 
 // --- Landing Page -------------------------------------------------------------
-function CisTag(props) {
-  var cid = props.cid;
-  var score = CIS[cid] || 0;
-  var name  = CIS_N[cid] || "";
-  return (
-    <span title={"CIS Control "+cid+": "+name+" (score: "+score+")"}
-      style={{color:hc(score), fontSize:9, fontWeight:700,
-        background:hc(score)+"18", borderRadius:4,
-        padding:"1px 6px", cursor:"help", flexShrink:0}}>
-      CIS {cid}
-    </span>
-  );
-}
-
 function Landing(props) {
   var onStart, onSignIn; onStart=props.onStart; onSignIn=props.onSignIn;
 
@@ -7404,9 +7390,7 @@ function Home(props) {
               {fw:"HIPAA Security Rule",   badge:"All industries",   color:"#EF4545"},
               {fw:"NIST CSF 2.0",          badge:"All industries",   color:"#F5A623"},
               {fw:"NIST SP 800-53 Rev 5",  badge:"All industries",   color:"#F5A623"},
-              {fw:"CIS Controls v8",       badge:"All industries",   color:"#3B9EFF"},
               {fw:"NAIC Model Law",        badge:"All industries",   color:"#A78BFA"},
-              {fw:"ISO/IEC 27001:2022",    badge:"All industries",   color:"#0FBB80"},
               {fw:"PCI DSS v4.0",          badge:"If Applicable",color:"#0891B2"},
               {fw:"CMS 42 CFR §422",  badge:"If Applicable",color:"#8B5CF6"},
             ].map(function(fw){
@@ -7513,26 +7497,6 @@ var DOC_REQUIREMENTS = {
     {id:"acp", name:"Logical Access Policy",             controls:["CC6.1","CC6.2"],         required:true},
     {id:"chgp",name:"Change Management Policy",          controls:["CC8.1"],                 required:true},
     {id:"vmp", name:"Vendor Risk Policy",                controls:["CC9.2"],                 required:true},
-  ]},
-  cis_v8:     {label:"CIS Controls v8",        docs:[
-    {id:"acp", name:"Asset & Access Control Policy",     controls:["CIS-1","CIS-5","CIS-6"], required:true},
-    {id:"dcp", name:"Data Protection Policy",            controls:["CIS-3"],                 required:true},
-    {id:"vmp", name:"Vulnerability Management Procedure",controls:["CIS-7"],                 required:true},
-    {id:"aulp",name:"Audit Log Management Policy",       controls:["CIS-8"],                 required:true},
-    {id:"irp", name:"Incident Response Plan",            controls:["CIS-17"],                required:true},
-    {id:"sap", name:"Security Awareness Program",        controls:["CIS-14"],                required:true},
-    {id:"ptf", name:"Penetration Test Report (CIS-18)",                controls:["CIS-18"],       required:true},
-    {id:"rar", name:"Risk Exception / Acceptance Register",             controls:["CIS-7"],        required:false},
-  ]},
-  iso_27001:  {label:"ISO/IEC 27001:2022",     docs:[
-    {id:"isp", name:"Information Security Policy (A.5.1)",controls:["A.5.1"],               required:true},
-    {id:"rap", name:"Risk Assessment & Treatment Plan",   controls:["Clause 6.1","A.8.2"],  required:true},
-    {id:"acp", name:"Access Control Policy (A.8.2)",     controls:["A.8.2","A.8.3"],        required:true},
-    {id:"irp", name:"Incident Management (A.5.25)",      controls:["A.5.25","A.5.26"],      required:true},
-    {id:"bcp", name:"Business Continuity (A.5.29)",      controls:["A.5.29","A.5.30"],      required:true},
-    {id:"sap", name:"Security Awareness (A.6.3)",        controls:["A.6.3"],                required:true},
-    {id:"brp", name:"Board Information Security Governance Record",     controls:["Clause 5.1"],   required:true},
-    {id:"ptf", name:"Penetration Test Report (A.8.8)", controls:["A.8.8"], required:true},
   ]},
   cms_422:    {label:"CMS §422 MA",        docs:[
     {id:"rap", name:"HIPAA Risk Analysis",               controls:["§422.504(a)(6)"],   required:true},
@@ -7906,7 +7870,7 @@ function DocValidationAgent(props) {
             </div>
             <div style={{color:C.muted,fontSize:11,lineHeight:1.6,maxWidth:520}}>
               Upload your existing security policies. CyberRx AI validates each document against
-              its required control attributes for HIPAA, NIST, CIS, ISO 27001, and PCI.
+              its required control attributes for HIPAA, NIST, and PCI.
               Skip any group — you can return at any time.
             </div>
           </div>
@@ -8785,7 +8749,7 @@ function CISODash(props) {
         </div>
       )}
 
-      {/* Four-lens executive posture pack (CSF / 800-53 / ATT&CK / CIS) */}
+      {/* Four-lens executive posture pack (CSF / 800-53 / ATT&CK) */}
       {!drillView&&agentView==="execreport"&&(
         <div style={{padding:"0 20px 20px"}}>
           <div style={{display:"flex",justifyContent:"flex-end",marginBottom:8}}>
@@ -9004,7 +8968,7 @@ function CISODash(props) {
             <div style={{marginBottom:4}}><div style={{color:cmmi(overallScore).color,fontSize:40,fontWeight:800,fontFamily:"monospace",lineHeight:1}}>{overallScore}</div><div style={{marginTop:4}}><CmmiBadge score={overallScore} size="lg"/></div></div>
             <div>
               <div style={{color:C.text,fontSize:18,fontWeight:800}}>Overall Risk Score</div>
-              <div style={{color:C.muted,fontSize:12}}>Composite score across 8 business processes and 18 CIS Controls</div>
+              <div style={{color:C.muted,fontSize:12}}>Composite score across 8 business processes and mapped controls</div>
             </div>
           </div>
 
@@ -9459,7 +9423,7 @@ function CISODash(props) {
           <JustifiedStat label="Security Score Methodology"
             displayValue={overallScore+"/100"}
             methodology={"Composite score weighted across 9 security capability inputs: MFA (15%), EDR (15%), SIEM retention (12%), Phishing resistance (13%), Patch compliance (15%), MTTD (8%), MTTR (7%), Training (7%), PAM (8%). Enter actual values in Setup Step 8 for org-specific scoring."}
-            sources={["Weights based on NIST CSF 2.0 function criticality","CIS Controls v8 IG2 benchmark","Ponemon Institute Healthcare Security Index 2024"]}>
+            sources={["Weights based on NIST CSF 2.0 function criticality","Ponemon Institute Healthcare Security Index 2024"]}>
             <span style={{color:C.acc,fontSize:9,cursor:"pointer"}}>ⓘ score methodology</span>
           </JustifiedStat>
         </div>
@@ -9868,7 +9832,7 @@ function CRODash(props) {
   var _s4=useState("hipaa");var gridTab=_s4[0];      var setGridTab=_s4[1];
   var _s5=useState(null);  var selReport=_s5[0];    var setSelReport=_s5[1];
 
-  var frameworks = ['hipaa','nistcsf','nist_800_53','cis','naic','iso27001','soc2','cms','pci','gdpr'];
+  var frameworks = ['hipaa','nistcsf','nist_800_53','naic','soc2','cms','pci','gdpr'];
 
   // Agent-driven view: the tab opens with just the agent; a question reveals the body.
   var _crav=useState(null); var croView=_crav[0]; var setCroView=_crav[1];
@@ -10209,7 +10173,7 @@ function CRODash(props) {
   // and the Remediation path.
   var CRO_FW_TABS = [
     ["nistcsf","NIST CSF"],["hipaa","HIPAA"],["soc2","SOC 2"],["nist_800_53","800-53"],
-    ["cis","CIS"],["iso27001","ISO 27001"],["naic","NAIC"],["cms","CMS"],["pci","PCI"],["gdpr","GDPR"],
+    ["naic","NAIC"],["cms","CMS"],["pci","PCI"],["gdpr","GDPR"],
     ["csf_rankings","Peer Comparison"],["vendor_assurance","Vendor Assurance"],["remediation","Remediation"],
   ];
   // Papa — only the org's selected reporting frameworks show by default; the
@@ -10477,9 +10441,7 @@ function CRODash(props) {
             {id:"hipaa",       label:"HIPAA Security Rule",     color:"#EF4545"},
             {id:"nistcsf",     label:"NIST CSF 2.0",             color:"#3B9EFF"},
             {id:"nist_800_53", label:"NIST SP 800-53 Rev 5",     color:"#F5A623"},
-            {id:"cis",         label:"CIS Controls v8",          color:"#0891B2"},
             {id:"naic",        label:"NAIC Model Law",           color:"#A78BFA"},
-            {id:"iso27001",    label:"ISO/IEC 27001:2022",       color:"#0FBB80"},
             {id:"soc2",        label:"SOC 2 Type II",            color:"#8B5CF6"},
             {id:"cms",         label:"CMS 42 CFR §422",     color:"#0891B2"},
             {id:"pci",         label:"PCI DSS v4.0",             color:"#F59E0B"},
@@ -10505,7 +10467,6 @@ function CRODash(props) {
             ["soc2",   "SOC 2",          "#A78BFA"],
             ["cms",    "CMS / 42 CFR",   "#0891B2"],
             ["nistcsf","NIST CSF 2.0",   "#3B9EFF"],
-            ["cis",    "CIS Controls",   "#0891B2"],
             ["gdpr",   "GDPR / Privacy", "#34D399"],
           ].map(function(t){
             var active=gridTab===t[0];
@@ -10856,49 +10817,6 @@ function CRODash(props) {
                   </div>
                 );
               })}
-            </div>
-          );
-        })()}
-
-        {/* CIS Controls grid */}
-        {gridTab==="cis"&&(function(){
-          var cisKeys=Object.keys(CIS);
-          return (
-            <div>
-              <div style={{color:C.muted,fontSize:11,marginBottom:12}}>
-                CIS Controls v8 — Implementation Group scores. Click any control to see related findings.
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
-                {cisKeys.map(function(cid){
-                  var s=CIS[cid];
-                  var name=CIS_N[cid]||"";
-                  var relFindings=FINDINGS.filter(function(f){
-                    return f.sev==="Critical"||f.sev==="High";
-                  }).slice(0,2);
-                  return (
-                    <div key={cid} onClick={function(){setSelGridCtrl((function(){
-                          var relF=FINDINGS.filter(function(f){return f.cis===parseInt(cid,10)||f.cis===cid;}).map(function(f){return f.id;});
-                          var cisEntry=COMPLIANCE_REPORTS.cis&&(COMPLIANCE_REPORTS.cis.sections||[]).reduce(function(acc,sec){return acc.concat(sec.controls||[]);},[]).find(function(c){return c.ref==="CIS-"+cid;});
-                          return {id:cid,name:CIS_N[cid]||cid,score:CIS[cid]||60,
-                            findings:relF,
-                            evidence:cisEntry?(cisEntry.evidence||[]):[],
-                            desc:cisEntry?cisEntry.desc:"CIS Control "+cid+": "+(CIS_N[cid]||"")+" — Implementation Group 1-3 scored control.",
-                            framework:"CIS Controls v8"};
-                        })())}} style={{padding:"10px 12px",background:C.card,cursor:"pointer",
-                      border:"1px solid "+(s<65?"#EF454330":s<75?"#F5A62325":C.border),
-                      borderRadius:8}}>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:4}}>
-                        <span style={{color:"#0891B2",fontSize:9,fontWeight:700}}>CIS {cid}</span>
-                        <span style={{color:hc(s),fontSize:16,fontWeight:800,fontFamily:"monospace"}}>{s}</span>
-                      </div>
-                      <div style={{color:C.text,fontSize:10,fontWeight:600,marginBottom:4,lineHeight:1.3}}>{name}</div>
-                      <div style={{height:4,background:C.dim,borderRadius:2,overflow:"hidden"}}>
-                        <div style={{width:s+"%",height:"100%",background:hc(s)}}/>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
             </div>
           );
         })()}
@@ -12426,7 +12344,7 @@ function Controls(props) {
             Control Validation · F04
           </h2>
           <div style={{color:C.muted, fontSize:12}}>
-            Automated validation of 18 CIS Controls against connected systems.
+            Automated validation of security controls against connected systems.
           </div>
         </div>
         <div style={{display:"flex", gap:8, flexWrap:"wrap"}}>
@@ -12466,7 +12384,7 @@ function Controls(props) {
               boxShadow:"0 1px 3px rgba(0,0,0,0.06)"}}>
               <div style={{display:"flex", justifyContent:"space-between",
                 alignItems:"flex-start", marginBottom:6}}>
-                <div style={{color:C.muted, fontSize:9, fontWeight:700}}>CIS {ctrl.id}</div>
+                <div style={{color:C.muted, fontSize:9, fontWeight:700}}>Control {ctrl.id}</div>
                 <div style={{color:clr, fontSize:16, fontWeight:800,
                   fontFamily:"monospace"}}>{score}</div>
               </div>
@@ -13453,8 +13371,8 @@ nistcsf: {
         desc:"Data classification: 4-tier (Public, Internal, Confidential, PHI). Purview DLP: 44% PHI classification complete. Encryption at rest: AES-256 on primary databases — [CLAIMS_SYSTEM] SSN archive unencrypted (F-002). Encryption in transit: TLS 1.2+ on 89% of channels. Data retention: policy defined — automated enforcement 67%.",
         evidence:["4-tier classification scheme: documented","DLP: 44% PHI classification","Encryption at rest: 91% — [CLAIMS_SYSTEM] SSN gap (F-002)","Encryption in transit: 89% — TLS 1.2+","Retention automation: 67% — manual for 33%"]},
        {ref:"PR.PS-01",name:"Platform Security — Hardening",     status:"Compliant",score:74,finding:null,
-        desc:"Hardening standard: CIS Benchmark Level 1 for Windows, Linux, and cloud. Applied to 78% of managed systems. Patch management: Tenable + Tanium — weekly scans, critical 7-day SLA (63% compliance). Configuration drift: detected weekly via ServiceNow. Secure baseline verification: automated for cloud resources.",
-        evidence:["CIS Benchmark Level 1: 78% applied","Weekly patch scanning: Tenable + Tanium","Critical CVE SLA: 63% — 4 CVEs overdue","Config drift: ServiceNow weekly detection","Cloud baseline: automated — 100% cloud resources"]},
+        desc:"Hardening standard: industry secure-configuration baselines for Windows, Linux, and cloud. Applied to 78% of managed systems. Patch management: Tenable + Tanium — weekly scans, critical 7-day SLA (63% compliance). Configuration drift: detected weekly via ServiceNow. Secure baseline verification: automated for cloud resources.",
+        evidence:["Secure-config baseline: 78% applied","Weekly patch scanning: Tenable + Tanium","Critical CVE SLA: 63% — 4 CVEs overdue","Config drift: ServiceNow weekly detection","Cloud baseline: automated — 100% cloud resources"]},
        {ref:"PR.IR-01",name:"Technology Infrastructure Resilience", status:"Compliant",score:78,finding:null,
         desc:"Redundancy: active-active for NASCO (99.9% availability SLA), active-passive for [MEMBER_PORTAL] and HealthEdge. Backup: daily incremental, weekly full, monthly offsite (AWS S3 Glacier). RTO targets defined for all critical systems. Load balancing: AWS ELB for all public-facing services. Geographic redundancy: primary (Burlington) + DR (Framingham).",
         evidence:["NASCO active-active: 99.9% SLA met — 2025 uptime 99.97%","Backup: daily/weekly/monthly — all current","AWS S3 Glacier: monthly offsite — tested September 2025","Load balancing: ELB all public services","Geographic redundancy: 2 sites"]},
@@ -13521,8 +13439,8 @@ pci: {
         desc:"CDE network segments not microsegmented — corporate VLAN has unrestricted access to Oracle ERP payment systems. Palo Alto segmentation policy exists for PCI segments but east-west CDE-to-CDE traffic uncontrolled.",
         evidence:["Network diagram Q4 2024","Palo Alto firewall ruleset review","VLAN documentation"]},
        {id:"2.2.1", title:"System configuration hardening", status:"Pass",  owner:"Infrastructure",
-        desc:"CIS hardening benchmarks applied to all CDE servers. Automated compliance scanning via Tenable.io weekly.",
-        evidence:["Tenable scan reports Q4 2024","CIS benchmark attestation"]},
+        desc:"Industry hardening benchmarks applied to all CDE servers. Automated compliance scanning via Tenable.io weekly.",
+        evidence:["Tenable scan reports Q4 2024","Hardening baseline attestation"]},
      ]},
     {id:"req3", title:"Req 3: Protect Stored Account Data", status:"Fail",
      controls:[
@@ -13586,36 +13504,6 @@ pci: {
   ],
   nextAudit:"Annual PCI QSA assessment: Q4 2025. Self-assessment attestation (AOC) due March 31, 2026.",
 },
-cis:{
-  label:"CIS Controls v8 (IG2)", color:"#3B9EFF",
-  assessmentDate:"Q1 2025",
-  scope:"[ORG] Implementation Group 2 (IG2) baseline — applicable to organizations with dedicated IT/security staff managing sensitive data. 153 Safeguards across 18 Control Groups evaluated. HHS HPH Cybersecurity Performance Goals (Jan 2024) map directly to CIS IG2.",
-  execSummary:"[ORG] meets 64% of CIS IG2 Safeguards. Essential Hygiene controls (CIS 1-6) score highest at 79%. Significant gaps in CG 7 (Continuous Vulnerability Management), CG 8 (Audit Log Management), and CG 14 (Security Awareness Training phishing simulation).",
-  sections:[
-    {id:"CG1",name:"CG 1-3 — Inventory, Data, Configuration",score:78,controls:[
-      {ref:"CIS-1",name:"Enterprise Asset Inventory",status:"Compliant",score:82,owner:"IT Operations",lastTested:"Q1 2025",finding:null,desc:"CMDB maintained with 94% coverage of known assets. Auto-discovery tools deployed on corporate network segments.",evidence:["CMDB asset count verified","Auto-discovery coverage report"]},
-      {ref:"CIS-2",name:"Software Asset Inventory",status:"Compliant",score:76,owner:"IT Operations",lastTested:"Q1 2025",finding:null,desc:"Software inventory maintained via endpoint management tools. Unauthorized software blocked on managed endpoints.",evidence:["Software inventory report Q1 2025"]},
-      {ref:"CIS-3",name:"Data Protection",status:"Gap",score:58,owner:"Security Arch",lastTested:"Q1 2025",finding:"F-003",desc:"DLP solution deployed but [MAILING_VENDOR] SFTP transmits PHI without encryption. Violates CIS 3.10 (Encrypt Sensitive Data in Transit).",evidence:["DLP coverage report","SFTP gap documented — F-003"]},
-    ]},
-    {id:"CG5",name:"CG 4-6 — Access, Accounts, Credentials",score:72,controls:[
-      {ref:"CIS-5",name:"Account Management",status:"Gap",score:62,owner:"IAM Team",lastTested:"Q1 2025",finding:"F-007",desc:"14 orphaned accounts violate CIS 5.3 (Disable Dormant Accounts). 90-day dormancy threshold defined but not enforced via automated process.",evidence:["Account audit Q4 2024","14 orphaned accounts confirmed"]},
-      {ref:"CIS-6",name:"Access Control Management",status:"Gap",score:65,owner:"IAM Team",lastTested:"Q1 2025",finding:"F-001",desc:"CIS 6.3 requires MFA for all remote network access. 22% of privileged accounts lack MFA.",evidence:["MFA deployment report — 78% coverage","Remote access policy reviewed"]},
-    ]},
-    {id:"CG7",name:"CG 7 — Vulnerability Management",score:61,controls:[
-      {ref:"CIS-7",name:"Continuous Vulnerability Management",status:"Gap",score:58,owner:"Vuln Mgmt",lastTested:"Q1 2025",finding:"F-005",desc:"CIS 7.5 requires remediation of critical vulnerabilities within 7 days. Compliance at 91%. CIS 7.4 requires remediation of high vulnerabilities within 30 days. Compliance at 78%.",evidence:["Vuln scan Q1 2025","SLA compliance — 91% Critical, 78% High"]},
-    ]},
-    {id:"CG8",name:"CG 8 — Audit Log Management",score:42,controls:[
-      {ref:"CIS-8",name:"Audit Log Management",status:"Gap",score:38,owner:"SOC",lastTested:"Q1 2025",finding:"F-006",dueDate:"2025-09-30",desc:"CIS 8.3 requires 90 days of logs immediately available, 1 year retained. Current SIEM retention: 14 days. HHS HPH CPGs use CIS 8 as the logging benchmark.",evidence:["SIEM retention — 14 days","CIS 8.3 gap vs. 90-day requirement confirmed"]},
-    ]},
-    {id:"CG14",name:"CG 14 — Security Awareness",score:66,controls:[
-      {ref:"CIS-14",name:"Security Awareness and Skills Training",status:"Gap",score:60,owner:"HR/Security",lastTested:"Q1 2025",finding:"F-014",desc:"Security awareness training completion at 94%. Phishing simulation conducted quarterly but failure remediation rate is 34% — target is 90%.",evidence:["Training completion report — 94%","Phishing simulation Q4 2024 — 34% remediation"]},
-    ]},
-    {id:"CG17",name:"CG 17 — Incident Response",score:77,controls:[
-      {ref:"CIS-17",name:"Incident Response Management",status:"Compliant",score:77,owner:"SOC",lastTested:"Q4 2024",finding:null,desc:"IRP documented, tested via tabletop Q4 2024. MTTD averages 4.2 days — above CIS benchmark of 24 hours.",evidence:["IRP v4.1 reviewed","Tabletop Q4 2024 completed"]},
-    ]},
-  ],
-},
-
 nist_800_53:{
   label:"NIST SP 800-53 Rev 5", color:"#F5A623",
   assessmentDate:"Q1 2025",
@@ -13664,29 +13552,6 @@ naic:{
     ]},
   ],
 },
-iso27001:{
-  label:"ISO/IEC 27001:2022", color:"#0FBB80",
-  assessmentDate:"Q1 2025",
-  scope:"[ORG] ISMS covering all systems processing member PHI, financial data, and provider information. 93 Annex A controls evaluated against Statement of Applicability.",
-  execSummary:"Strong governance alignment. Primary gaps in A.8 Technological Controls: endpoint coverage (71%), SIEM retention, and vulnerability SLA compliance.",
-  sections:[
-    {id:"C4",name:"Clauses 4-6 — Governance",score:82,controls:[
-      {ref:"Clause 4.1",name:"Understanding the Organization",status:"Compliant",score:86,owner:"CISO",lastTested:"Q1 2025",finding:null,desc:"Internal/external context documented. Stakeholder register covers OCR, CMS, DOI, BAs, and members.",evidence:["Context analysis reviewed","Stakeholder register current"]},
-      {ref:"Clause 6.1",name:"Risk Treatment Plan",status:"Compliant",score:81,owner:"CISO",lastTested:"Q1 2025",finding:null,desc:"Risk treatment plan per ISO 27005. Statement of Applicability maintained with justifications.",evidence:["Risk treatment plan v3.1","SoA reviewed and current"]},
-    ]},
-    {id:"A5",name:"A.5 — Organizational Controls",score:75,controls:[
-      {ref:"A.5.1",name:"Information Security Policies",status:"Compliant",score:83,owner:"CISO",lastTested:"Q1 2025",finding:null,desc:"14-policy suite board-approved, reviewed annually. Covers all 93 Annex A control areas.",evidence:["Policy suite inventory reviewed","Board sign-off confirmed"]},
-      {ref:"A.5.19",name:"Supplier Relationships",status:"Gap",score:55,owner:"Vendor Mgmt",lastTested:"Q4 2024",finding:"F-017",desc:"3 expired supplier agreements covering NPI-bearing services.",evidence:["Supplier register — 3 expired"]},
-    ]},
-    {id:"A8",name:"A.8 — Technological Controls",score:59,controls:[
-      {ref:"A.8.2",name:"Privileged Access Rights",status:"Gap",score:63,owner:"IAM Team",lastTested:"Q1 2025",finding:"F-001",desc:"22% of privileged accounts lack MFA. PAM deployed for 84%.",evidence:["PAM deployment report","MFA gap — 22% confirmed"]},
-      {ref:"A.8.7",name:"Protection Against Malware",status:"Gap",score:60,owner:"Endpoint",lastTested:"Q1 2025",finding:"F-005",desc:"EDR on 71% of managed endpoints. 29% gap in legacy clinical workstations.",evidence:["EDR deployment — 71% coverage"]},
-      {ref:"A.8.15",name:"Logging",status:"Gap",score:44,owner:"SOC",lastTested:"Q1 2025",finding:"F-006",dueDate:"2025-09-30",desc:"14-day SIEM retention insufficient for A.8.15 log preservation requirements.",evidence:["SIEM retention — 14 days","ISO requirement gap documented"]},
-      {ref:"A.8.8",name:"Technical Vulnerability Management",status:"Gap",score:61,owner:"Vuln Mgmt",lastTested:"Q1 2025",finding:"F-005",desc:"Critical SLA met at 91%. High SLA met at 78%.",evidence:["Vuln management metrics Q1 2025"]},
-    ]},
-  ],
-},
-
 gdpr: {
   id:"gdpr", label:"GDPR & CCPA Privacy Program Assessment",
   color:"#34D399",
@@ -13793,48 +13658,6 @@ nist_800_53: {
   ]
 },
 
-cis: {
-  id:"cis", label:"CIS Controls v8", color:"#0891B2",
-  standard:"CIS Critical Security Controls Version 8", version:"v8 (2021)", assessmentDate:"Q1 2025", assessor:"Internal Security Team", overallLevel:71,
-  scope:"All endpoints, servers, network devices, and cloud assets.",
-  execSummary:"Foundational hygiene strong in asset inventory and malware defenses. Material gaps: Audit Log Management (CIS 8), Account Management (CIS 5 — orphaned accounts), Security Awareness Training (CIS 14 — 412 untrained).",
-  sections:[
-    {id:"ig1", name:"IG1 — Basic Cyber Hygiene (Controls 1-6)", score:72, color:"#0891B2",
-     controls:[
-       {ref:"CIS-1", name:"Inventory of Enterprise Assets",  status:"Compliant", score:74, owner:"IT Ops",      lastTested:"Q1 2025",
-        desc:"ServiceNow CMDB maintains 47-system inventory. Monthly reconciliation against network scans.",
-        evidence:["CMDB export: 47 systems reviewed","Reconciliation Q1 2025 — 3 shadow IT gaps found","Asset owner assignments: 94% complete","Monthly Tenable scans active"]},
-       {ref:"CIS-5", name:"Account Management",              status:"Gap",       score:62, owner:"IAM Team",    lastTested:"Q1 2025", finding:"F-007",
-        desc:"14 orphaned accounts from terminated employees. 90-day dormancy threshold defined but not auto-enforced.",
-        evidence:["14 orphaned accounts (F-007 open)","Auto-deprovisioning not enabled","Dormancy threshold defined: 90 days","Manual quarterly review — Q4 2024"]},
-       {ref:"CIS-6", name:"Access Control Management",       status:"Gap",       score:64, owner:"IAM Team",    lastTested:"Q1 2025", finding:"F-001",
-        desc:"MFA at 78%. Azure AD Conditional Access gaps on 3 legacy apps. PAM session recording at 43%.",
-        evidence:["MFA coverage: 78% (F-001 open)","Conditional Access gaps: 3 legacy apps (F-020)","PAM session recording: 43% (F-019 open)","Privileged account inventory complete"]},
-     ]},
-    {id:"ig2", name:"IG2 — Foundational (Controls 7-12)", score:68, color:"#0891B2",
-     controls:[
-       {ref:"CIS-7", name:"Continuous Vulnerability Management",status:"Gap",    score:72, owner:"Security Eng",lastTested:"Q1 2025",
-        desc:"Tenable weekly scans. 4 critical CVEs open >30 days. Patch SLA compliance 63%.",
-        evidence:["Tenable: weekly cadence confirmed","Critical CVEs >30 days: 4 open","Patch SLA: 63% (target 95%)","ACT-005 active for EDR/server coverage"]},
-       {ref:"CIS-8", name:"Audit Log Management",             status:"Gap",       score:38, owner:"SOC",         lastTested:"Q1 2025", finding:"F-006",
-        desc:"CIS 8.3 requires 90 days immediately available. Current: 14 days. Critical gap.",
-        evidence:["Retention: 14 days (F-006 critical)","CIS 8.3 requirement: 90 days","Remediation cost: $45K/yr","ACT-008 approved Q3 2025"]},
-       {ref:"CIS-10",name:"Malware Defenses",                 status:"Gap",       score:69, owner:"Security Eng",lastTested:"Q1 2025", finding:"F-005",
-        desc:"CrowdStrike covers 71% of endpoints. 23 servers unprotected. 8 sensors in RFM.",
-        evidence:["CrowdStrike: 71% coverage (F-005 open)","23 unprotected servers","8 sensors in Reduced Functionality Mode","ACT-005 approved for server deployment"]},
-     ]},
-    {id:"ig3", name:"IG3 — Organizational (Controls 13-18)", score:74, color:"#0891B2",
-     controls:[
-       {ref:"CIS-14",name:"Security Awareness Training",      status:"Gap",       score:58, owner:"HR / Security",lastTested:"Q1 2025", finding:"F-023",
-        desc:"71% completed annual training. 412 overdue (Claims 38%, Finance 31%). Violates HIPAA §164.308(a)(5).",
-        evidence:["Completion: 71% — 412 overdue (F-023)","Claims Ops: 38% non-completion","Finance: 31% non-completion","ACT-024 approved — 30-day deadline"]},
-       {ref:"CIS-17",name:"Incident Response Management",     status:"Compliant", score:80, owner:"IR Team",     lastTested:"Q1 2025",
-        desc:"IR Plan v4.0 current. Tabletop Nov 2025. 12 playbooks reviewed. SOAR deployment active.",
-        evidence:["IR Plan v4.0 current","Tabletop Nov 2025 — gaps addressed","12 playbooks reviewed","ACT-023 (SOAR) approved Q2 2026"]},
-     ]},
-  ]
-},
-
 naic: {
   id:"naic", label:"NAIC Model Law", color:"#A78BFA",
   standard:"NAIC Insurance Data Security Model Law (MDL-668)", version:"2017 (adopted by 24+ states)", assessmentDate:"Q1 2025", assessor:"Internal + Compliance Counsel", overallLevel:76,
@@ -13874,50 +13697,6 @@ naic: {
   ]
 },
 
-iso27001: {
-  id:"iso27001", label:"ISO/IEC 27001:2022", color:"#0FBB80",
-  standard:"ISO/IEC 27001:2022 Information Security Management System", version:"2022 Edition", assessmentDate:"Q1 2025", assessor:"Internal Security Team", overallLevel:73,
-  scope:"ISMS covering all data processing systems, workforce, and third-party relationships.",
-  execSummary:"ISMS governance and risk management mature. Key gaps: A.8 Technology Controls (access control, log retention); A.5 Organizational Controls (vendor management). Used as maturity benchmark — not seeking certification.",
-  sections:[
-    {id:"cls4", name:"Clauses 4-6 — Context, Leadership & Planning", score:80, color:"#0FBB80",
-     controls:[
-       {ref:"A.5.1", name:"Information Security Policies",     status:"Compliant", score:83, owner:"CISO",      lastTested:"Q1 2025",
-        desc:"14-policy suite board-approved, reviewed annually. Covers all 93 Annex A control areas.",
-        evidence:["14-policy suite — board-approved March 2025","Annual review confirmed","All 93 Annex A areas addressed","Exception register: 2 active exceptions"]},
-       {ref:"A.6.1", name:"Information Security Roles",        status:"Compliant", score:84, owner:"CISO",      lastTested:"Q4 2024",
-        desc:"CISO designated. PHO in Legal. Security responsibilities in 94% of job descriptions.",
-        evidence:["CISO designation confirmed","PHO role in Legal established","Security responsibilities: 94% of JDs updated","RACI matrix reviewed — current"]},
-       {ref:"A.6.3", name:"Security Awareness Training",       status:"Gap",       score:60, owner:"HR",         lastTested:"Q1 2025", finding:"F-023",
-        desc:"71% completed annual training. 412 overdue. Violates ISO 27001 A.6.3 requirement for all personnel.",
-        evidence:["Completion: 71% (F-023 open)","412 employees overdue","KnowBe4-Workday HCM integration pending","ACT-024 approved — 30-day deadline issued"]},
-     ]},
-    {id:"a5", name:"A.5 — Organizational Controls", score:70, color:"#0FBB80",
-     controls:[
-       {ref:"A.5.19",name:"Supplier Relationships",            status:"Gap",       score:65, owner:"Vendor Mgmt",lastTested:"Q1 2025", finding:"F-016",
-        desc:"11 of 13 BAAs current. Inovalon expired. 3 contracts missing ISO 27001 requirements. 4 Tier 1 annual reviews overdue.",
-        evidence:["Supplier contract audit: 11 of 13 current (F-016)","Inovalon expired: 47 days","A.5.19 requirements: missing 3 contracts","Tier 1 review: 4 overdue"]},
-       {ref:"A.5.23",name:"Cloud Services Security",          status:"Compliant", score:74, owner:"Cloud Sec",  lastTested:"Q4 2024",
-        desc:"Cloud policy covers AWS/Azure. CASB deployed (Zscaler). Cloud inventory maintained. US-only data residency.",
-        evidence:["Cloud security policy reviewed","CASB: Zscaler deployed","Cloud asset inventory: 47 assets","Data residency: US-only confirmed"]},
-     ]},
-    {id:"a8", name:"A.8 — Technological Controls", score:68, color:"#0FBB80",
-     controls:[
-       {ref:"A.8.2", name:"Privileged Access Rights",          status:"Gap",       score:63, owner:"IAM Team",  lastTested:"Q1 2025", finding:"F-001",
-        desc:"22% of privileged accounts lack MFA. PAM covers 43% of sessions. Legacy portals excluded.",
-        evidence:["Privileged MFA gap: 22% (F-001 open)","CyberArk PAM: 43% session recording (F-019 open)","Legacy portal exclusions: 4 apps","ACT-004 approved — Okta MFA expansion"]},
-       {ref:"A.8.15",name:"Logging",                           status:"Gap",       score:38, owner:"SOC",        lastTested:"Q1 2025", finding:"F-006",
-        desc:"A.8.15 requires logs sufficient for investigation. SIEM: 14 days — insufficient vs 90-day minimum.",
-        evidence:["SIEM: 14 days retention (F-006 critical)","Required: 90 days for investigation","ACT-008 approved — Q3 2025 target","Interim S3 archive in planning"]},
-       {ref:"A.8.16",name:"Monitoring Activities",            status:"Compliant", score:74, owner:"SOC",        lastTested:"Q1 2025",
-        desc:"24/7 SOC via Splunk. CrowdStrike alerts. UEBA. IDS/IPS lag 18 days (F-022 open).",
-        evidence:["SOC: 24/7 via Splunk + CrowdStrike","UEBA: 12 triggered alerts Q1 2025","IDS/IPS lag: 18 days (F-022 open — ACT-022 active)","847 SIEM sources active"]},
-       {ref:"A.8.28",name:"Secure Coding",                    status:"Compliant", score:75, owner:"Dev Sec",    lastTested:"Q4 2024",
-        desc:"SAST/DAST in CI/CD for 3 of 5 apps. SDLC policy documented. Snyk third-party scanning active.",
-        evidence:["SAST/DAST: 3 of 5 apps in pipeline","SDLC security policy reviewed","Snyk scanning active","Remaining 2 apps on-boarding Q2 2025"]},
-     ]},
-  ]
-}
 };
 
 // ─── Enhanced ComplianceReport component with full report structure ────────────
@@ -15002,13 +14781,12 @@ function ProcessControlMap(props) {
   var fwNodes = [
     {id:"F_HIPAA",label:"HIPAA",color:"#EF4545"},
     {id:"F_NIST",label:"NIST CSF",color:"#3B9EFF"},
-    {id:"F_CIS",label:"CIS v8",color:"#0891B2"},
   ];
   fwNodes.forEach(function(fw){nodes.push(Object.assign({},fw,{type:"framework"}));});
 
   // Sample app→framework links
   [["A_NASCO","F_HIPAA"],["A_CHC","F_HIPAA"],["A_COTI","F_NIST"],
-   ["A_CS","F_CIS"],["A_SPL","F_NIST"],["A_SLP","F_CIS"],
+   ["A_SPL","F_NIST"],
    ["A_OT","F_HIPAA"],["A_SN","F_NIST"]].forEach(function(pair){
     links.push({source:pair[0],target:pair[1],color:"#3B9EFF60"});
   });
@@ -16875,14 +16653,14 @@ function Scoring(props) {
         <div>
           {selDomain ? (
             <Card>
-              <SH label={"CIS Controls — "+selDomain.name}/>
+              <SH label={"Controls — "+selDomain.name}/>
               {selDomain.ctrls.map(function(cid){
                 return (
                   <div key={cid} style={{display:"flex", gap:10, alignItems:"center",
                     padding:"8px 0", borderBottom:"1px solid "+C.dim}}>
                     <div style={{flex:1}}>
                       <div style={{color:C.text, fontSize:11, fontWeight:600}}>
-                        CIS {cid}: {CIS_N[cid]}
+                        Control {cid}: {CIS_N[cid]}
                       </div>
                     </div>
                     <div style={{color:hc(CIS[cid]), fontSize:14, fontWeight:700,
@@ -16899,7 +16677,7 @@ function Scoring(props) {
               <div style={{textAlign:"center", padding:"20px 10px"}}>
                 <div style={{fontSize:32, marginBottom:10}}>📈</div>
                 <div style={{color:C.muted, fontSize:12}}>
-                  Select a domain to see its CIS controls and score breakdown.
+                  Select a domain to see its controls and score breakdown.
                 </div>
               </div>
             </Card>
@@ -17423,12 +17201,12 @@ function Execution(props) {
               })}
               {rs.verifying && (
                 <div style={{color:"#A78BFA"}}>
-                  Re-running CIS {act.cid} validation check…
+                  Re-running Control {act.cid} validation check…
                 </div>
               )}
               {rs.verified && (
                 <div style={{color:"#0FBB80"}}>
-                  CIS {act.cid} validated — score {act.hb} to {act.ha}
+                  Control {act.cid} validated — score {act.hb} to {act.ha}
                 </div>
               )}
             </div>
@@ -17473,7 +17251,7 @@ function Execution(props) {
                 <div style={{padding:"8px 14px", background:"#0FBB8010",
                   border:"1px solid #0FBB8030", borderRadius:8, flex:1}}>
                   <span style={{color:"#0FBB80", fontWeight:700, fontSize:12}}>
-                    Resolved — CIS {act.cid}: {act.hb} to {act.ha}
+                    Resolved — Control {act.cid}: {act.hb} to {act.ha}
                   </span>
                 </div>
               )}
@@ -17567,7 +17345,7 @@ function Execution(props) {
               <div style={{color:C.muted, fontSize:9, fontWeight:700,
                 textTransform:"uppercase", marginBottom:2}}>Projected score lift</div>
               <div style={{color:"#0FBB80", fontSize:13, fontWeight:700}}>
-                CIS {act.cid}: {act.hb} to {act.ha} (+{act.ha-act.hb} pts)
+                Control {act.cid}: {act.hb} to {act.ha} (+{act.ha-act.hb} pts)
               </div>
             </div>
             <div style={{display:"flex", gap:10}}>
@@ -17647,7 +17425,7 @@ function Execution(props) {
         <StatCard label="Resolved"
           value={actions.filter(function(a){return a.status==="complete";}).length}
           color="#0FBB80"/>
-        <StatCard label="CIS Pts Gained"
+        <StatCard label="Control Pts Gained"
           value={actions.filter(function(a){return a.status==="complete";})
             .reduce(function(s,a){return s+(a.ha-a.hb);},0)}
           color="#0FBB80"/>
@@ -17878,7 +17656,7 @@ var SYNC_STEPS = [
   "Loading SailPoint certification data…","Syncing CyberArk PAM status…",
   "Checking Palo Alto NGFW rules…","Fetching Oracle ERP audit trail…",
   "Ingesting Cotiviti PHI transfer logs…","Re-assessing policy documents…",
-  "Re-running 18 CIS control checks…","Recalculating process risk scores…",
+  "Re-running control checks…","Recalculating process risk scores…",
   "Updating financial exposure models…","✓ All data refreshed",
 ];
 
@@ -18833,12 +18611,8 @@ function WelcomePage(props) {
                    badge:"All industries",color:"#F5A623"},
                   {fw:"NIST SP 800-53 Rev 5",        ref:"OCR Referenced",
                    badge:"All industries",color:"#F5A623"},
-                  {fw:"CIS Controls v8",             ref:"HHS IG2 Benchmark",
-                   badge:"All industries",color:"#3B9EFF"},
                   {fw:"NAIC Model Law",              ref:"24+ States",
                    badge:"All industries",color:"#A78BFA"},
-                  {fw:"ISO/IEC 27001:2022",          ref:"BAA & DOI Standard",
-                   badge:"All industries",color:"#0FBB80"},
                   {fw:"PCI DSS v4.0",               ref:"Card Payments",
                    badge:"If Applicable",color:"#0891B2"},
                   {fw:"CMS 42 CFR §422/§423",ref:"MA / Part D",
@@ -19289,8 +19063,8 @@ function SetupBot(props) {
     // on the CRO dashboard; the app can still report on all of them.
     {id:'reportingFrameworks', type:'multichoice', group:'Governance',
      ask:'Which compliance frameworks does {orgName} report against or want to track? Select all that apply — you can always view the others later.',
-     choices:['NIST CSF 2.0','HIPAA Security Rule','SOC 2','NIST SP 800-53','CIS Controls v8',
-              'ISO 27001','NAIC Model Law','CMS 42 CFR §422','PCI DSS','GDPR']},
+     choices:['NIST CSF 2.0','HIPAA Security Rule','SOC 2','NIST SP 800-53',
+              'NAIC Model Law','CMS 42 CFR §422','PCI DSS','GDPR']},
     // ── Profile / Process / Technology — context for the LLM executive summary ──
     // These map directly into the report data contract (org_profile / process /
     // technology). Answers are optional; anything skipped is simply omitted.
@@ -19916,7 +19690,7 @@ function SetupBot(props) {
           // dashboard shows only those (the app can still report on all).
           try {
             var FW_LABEL_TO_ID = {'NIST CSF 2.0':'nistcsf','HIPAA Security Rule':'hipaa','SOC 2':'soc2',
-              'NIST SP 800-53':'nist_800_53','CIS Controls v8':'cis','ISO 27001':'iso27001',
+              'NIST SP 800-53':'nist_800_53',
               'NAIC Model Law':'naic','CMS 42 CFR §422':'cms','PCI DSS':'pci','GDPR':'gdpr'};
             var fwIds = (orgData.reportingFrameworks||[]).map(function(l){return FW_LABEL_TO_ID[l];}).filter(Boolean);
             if (fwIds.length) { localStorage.setItem('cyberrx_frameworks', JSON.stringify(fwIds)); }
@@ -20607,9 +20381,9 @@ function DocDash(props) {
       {id:"ir_plan",name:"Incident Response Plan",required:true,frameworks:["HIPAA","NIST CSF","SOC 2"],controls:["164.308(a)(6)","RS.RP-1","CC7.4"],result:MOCK_RESULTS["ir_plan"]},
       {id:"risk_analysis",name:"Annual Risk Analysis & Management Plan",required:true,frameworks:["HIPAA"],controls:["164.308(a)(1)"],result:MOCK_RESULTS["risk_analysis"]},
       {id:"sanction_policy",name:"Sanctions Policy for HIPAA Violations",required:true,frameworks:["HIPAA"],controls:["164.308(a)(1)","164.308(a)(3)"],result:MOCK_RESULTS["sanction_policy"]},
-      {id:"access_policy",name:"Access Control & Minimum Necessary Policy",required:true,frameworks:["HIPAA","CIS Controls"],controls:["164.308(a)(4)","164.312(a)(1)"],result:MOCK_RESULTS["access_policy"]},
+      {id:"access_policy",name:"Access Control & Minimum Necessary Policy",required:true,frameworks:["HIPAA"],controls:["164.308(a)(4)","164.312(a)(1)"],result:MOCK_RESULTS["access_policy"]},
       {id:"dr_plan",name:"Disaster Recovery / Business Continuity Plan",required:true,frameworks:["HIPAA","NIST CSF","SOC 2"],controls:["164.308(a)(7)","A1.3","RC.RP-1"],result:MOCK_RESULTS["dr_plan"]},
-      {id:"phishing_policy",name:"Security Awareness Training Program",required:true,frameworks:["HIPAA","CIS Controls"],controls:["164.308(a)(5)"],result:MOCK_RESULTS["phishing_policy"]},
+      {id:"phishing_policy",name:"Security Awareness Training Program",required:true,frameworks:["HIPAA"],controls:["164.308(a)(5)"],result:MOCK_RESULTS["phishing_policy"]},
       {id:"device_policy",name:"Workstation & Device Security Policy",required:true,frameworks:["HIPAA"],controls:["164.310(b)","164.310(c)","164.310(d)(1)"],result:MOCK_RESULTS["device_policy"]},
       {id:"vendor_mgmt",name:"Third-Party Vendor Management Policy",required:true,frameworks:["HIPAA","SOC 2","NAIC"],controls:["164.308(b)(1)","CC9.2"],result:MOCK_RESULTS["vendor_mgmt"]},
       {id:"hipaa_soc2",name:"SOC 2 Readiness — System Description",required:false,frameworks:["SOC 2"],controls:["CC1.1","CC1.3"],result:MOCK_RESULTS["hipaa_soc2"]},
@@ -21647,9 +21421,9 @@ var MOCK_RESPONSES = {
       ]
     },
     normalized: [
-      { id:"F-SPL-001", source:"Splunk", findingType:"Brute Force / Credential Attack", severity:"high", affectedAssets:["ws-hr-004","ws-hr-011","ws-fin-002"], count:847, detail:"847 failed Windows login attempts across 3 endpoints in 24h. Threshold: >50 = alert.", cisControl:"CIS-6", cisName:"Access Control Management", frameworks:["HIPAA §164.312(d)","NIST CSF PR.AC-1","SOC2 CC6.1"] },
-      { id:"F-SPL-002", source:"Splunk", findingType:"Potential Data Exfiltration", severity:"critical", affectedAssets:["srv-db-01"], count:3, detail:"Outbound HTTPS traffic >50MB from database server in 33-minute window. Possible PHI exfil.", cisControl:"CIS-13", cisName:"Network Monitoring & Defense", frameworks:["HIPAA §164.312(b)","NIST CSF DE.CM-1","NAIC Model Law §7"] },
-      { id:"F-SPL-003", source:"Splunk", findingType:"Privileged Access Anomaly", severity:"medium", affectedAssets:["okta-tenant"], count:22, detail:"22 admin console logins outside business hours. Expected baseline: <5/day.", cisControl:"CIS-5", cisName:"Account Management", frameworks:["HIPAA §164.308(a)(4)","NIST CSF PR.AC-4","SOC2 CC6.3"] }
+      { id:"F-SPL-001", source:"Splunk", findingType:"Brute Force / Credential Attack", severity:"high", affectedAssets:["ws-hr-004","ws-hr-011","ws-fin-002"], count:847, detail:"847 failed Windows login attempts across 3 endpoints in 24h. Threshold: >50 = alert.", cisControl:"CTRL-6", cisName:"Access Control Management", frameworks:["HIPAA §164.312(d)","NIST CSF PR.AC-1","SOC2 CC6.1"] },
+      { id:"F-SPL-002", source:"Splunk", findingType:"Potential Data Exfiltration", severity:"critical", affectedAssets:["srv-db-01"], count:3, detail:"Outbound HTTPS traffic >50MB from database server in 33-minute window. Possible PHI exfil.", cisControl:"CTRL-13", cisName:"Network Monitoring & Defense", frameworks:["HIPAA §164.312(b)","NIST CSF DE.CM-1","NAIC Model Law §7"] },
+      { id:"F-SPL-003", source:"Splunk", findingType:"Privileged Access Anomaly", severity:"medium", affectedAssets:["okta-tenant"], count:22, detail:"22 admin console logins outside business hours. Expected baseline: <5/day.", cisControl:"CTRL-5", cisName:"Account Management", frameworks:["HIPAA §164.308(a)(4)","NIST CSF PR.AC-4","SOC2 CC6.3"] }
     ]
   },
 
@@ -21669,9 +21443,9 @@ var MOCK_RESPONSES = {
       coverage_stats: { total_enrolled: 1831, total_discovered: 2044, coverage_pct: 89.6, unmanaged: 213 }
     },
     normalized: [
-      { id:"F-CRW-001", source:"CrowdStrike", findingType:"EDR Coverage Gap — Unmanaged Endpoints", severity:"high", affectedAssets:["213 unmanaged devices"], count:213, detail:"213 discovered assets have no Falcon agent. Includes srv-claims-01 (PHI-bearing claims server). Coverage: 89.6% — below 95% threshold.", cisControl:"CIS-1", cisName:"Inventory & Control of Enterprise Assets", frameworks:["HIPAA §164.312(a)(1)","NIST CSF ID.AM-1","CMS IS ARS 3.1"] },
-      { id:"F-CRW-002", source:"CrowdStrike", findingType:"Active MITRE ATT&CK Detection — Credential Access", severity:"high", affectedAssets:["ws-fin-002"], count:1, detail:"T1003 (OS Credential Dumping) detected on finance workstation. Severity score 80/100. Status: confirmed true positive.", cisControl:"CIS-10", cisName:"Malware Defenses", frameworks:["HIPAA §164.308(a)(5)","NIST CSF DE.CM-4","SOC2 CC7.1"] },
-      { id:"F-CRW-003", source:"CrowdStrike", findingType:"Agent Degraded — Reduced Functionality", severity:"medium", affectedAssets:["ws-ops-017"], count:1, detail:"Falcon agent in reduced functionality state. Detection coverage impaired. T1562 (Impair Defenses) also active on same host.", cisControl:"CIS-10", cisName:"Malware Defenses", frameworks:["NIST CSF PR.PT-3","SOC2 CC6.8"] }
+      { id:"F-CRW-001", source:"CrowdStrike", findingType:"EDR Coverage Gap — Unmanaged Endpoints", severity:"high", affectedAssets:["213 unmanaged devices"], count:213, detail:"213 discovered assets have no Falcon agent. Includes srv-claims-01 (PHI-bearing claims server). Coverage: 89.6% — below 95% threshold.", cisControl:"CTRL-1", cisName:"Inventory & Control of Enterprise Assets", frameworks:["HIPAA §164.312(a)(1)","NIST CSF ID.AM-1","CMS IS ARS 3.1"] },
+      { id:"F-CRW-002", source:"CrowdStrike", findingType:"Active MITRE ATT&CK Detection — Credential Access", severity:"high", affectedAssets:["ws-fin-002"], count:1, detail:"T1003 (OS Credential Dumping) detected on finance workstation. Severity score 80/100. Status: confirmed true positive.", cisControl:"CTRL-10", cisName:"Malware Defenses", frameworks:["HIPAA §164.308(a)(5)","NIST CSF DE.CM-4","SOC2 CC7.1"] },
+      { id:"F-CRW-003", source:"CrowdStrike", findingType:"Agent Degraded — Reduced Functionality", severity:"medium", affectedAssets:["ws-ops-017"], count:1, detail:"Falcon agent in reduced functionality state. Detection coverage impaired. T1562 (Impair Defenses) also active on same host.", cisControl:"CTRL-10", cisName:"Malware Defenses", frameworks:["NIST CSF PR.PT-3","SOC2 CC6.8"] }
     ]
   },
 
@@ -21693,9 +21467,9 @@ var MOCK_RESPONSES = {
       admin_accounts: { total: 47, super_admins_without_mfa: 3 }
     },
     normalized: [
-      { id:"F-OKT-001", source:"Okta", findingType:"MFA Enrollment Gap", severity:"high", affectedAssets:["1,092 users"], count:1092, detail:"22.7% of workforce (1,092 users) lacks MFA. Includes 3 Super Admins. Industry benchmark: >95% enrollment required for HIPAA technical safeguards.", cisControl:"CIS-6", cisName:"Access Control Management", frameworks:["HIPAA §164.312(d)","NIST CSF PR.AC-7","NAIC Model Law §4(C)"] },
-      { id:"F-OKT-002", source:"Okta", findingType:"Stale Accounts — Access Not Revoked", severity:"medium", affectedAssets:["312 accounts"], count:312, detail:"312 active accounts with no login in 90+ days. Includes former employees not offboarded. Violates least-privilege principle.", cisControl:"CIS-5", cisName:"Account Management", frameworks:["HIPAA §164.308(a)(3)","NIST CSF PR.AC-1","SOC2 CC6.2"] },
-      { id:"F-OKT-003", source:"Okta", findingType:"Service Account with Admin Privileges — No MFA", severity:"critical", affectedAssets:["svc-claims-etl"], count:1, detail:"Claims ETL service account has ORG_ADMIN role, no MFA, last login unknown. Compromised service account = full tenant access.", cisControl:"CIS-5", cisName:"Account Management", frameworks:["HIPAA §164.312(a)(2)(iii)","NIST CSF PR.AC-4","CMS ARS PE-3"] }
+      { id:"F-OKT-001", source:"Okta", findingType:"MFA Enrollment Gap", severity:"high", affectedAssets:["1,092 users"], count:1092, detail:"22.7% of workforce (1,092 users) lacks MFA. Includes 3 Super Admins. Industry benchmark: >95% enrollment required for HIPAA technical safeguards.", cisControl:"CTRL-6", cisName:"Access Control Management", frameworks:["HIPAA §164.312(d)","NIST CSF PR.AC-7","NAIC Model Law §4(C)"] },
+      { id:"F-OKT-002", source:"Okta", findingType:"Stale Accounts — Access Not Revoked", severity:"medium", affectedAssets:["312 accounts"], count:312, detail:"312 active accounts with no login in 90+ days. Includes former employees not offboarded. Violates least-privilege principle.", cisControl:"CTRL-5", cisName:"Account Management", frameworks:["HIPAA §164.308(a)(3)","NIST CSF PR.AC-1","SOC2 CC6.2"] },
+      { id:"F-OKT-003", source:"Okta", findingType:"Service Account with Admin Privileges — No MFA", severity:"critical", affectedAssets:["svc-claims-etl"], count:1, detail:"Claims ETL service account has ORG_ADMIN role, no MFA, last login unknown. Compromised service account = full tenant access.", cisControl:"CTRL-5", cisName:"Account Management", frameworks:["HIPAA §164.312(a)(2)(iii)","NIST CSF PR.AC-4","CMS ARS PE-3"] }
     ]
   },
 
@@ -21713,8 +21487,8 @@ var MOCK_RESPONSES = {
       analytics_coverage: { total_rules: 112, enabled: 89, disabled: 23, pct_enabled: 79.5 }
     },
     normalized: [
-      { id:"F-SEN-001", source:"Sentinel", findingType:"Anonymous IP Sign-In — Unassigned Incident", severity:"high", affectedAssets:["3 entities"], count:7, detail:"7 alerts consolidated into active incident. Tactic: Initial Access (T1078 — Valid Accounts). No owner assigned — incident aging without triage.", cisControl:"CIS-8", cisName:"Audit Log Management", frameworks:["HIPAA §164.312(b)","NIST CSF DE.AE-2","SOC2 CC7.2"] },
-      { id:"F-SEN-002", source:"Sentinel", findingType:"Analytics Rules Gap — 23 Rules Disabled", severity:"medium", affectedAssets:["Sentinel workspace"], count:23, detail:"20.5% of detection rules disabled. Gaps include: Ransomware indicators, Lateral Movement patterns, Insider Threat UEBA. Blind spots in detection coverage.", cisControl:"CIS-8", cisName:"Audit Log Management", frameworks:["NIST CSF DE.CM-1","HIPAA §164.308(a)(1)","NAIC Model Law §7(B)"] }
+      { id:"F-SEN-001", source:"Sentinel", findingType:"Anonymous IP Sign-In — Unassigned Incident", severity:"high", affectedAssets:["3 entities"], count:7, detail:"7 alerts consolidated into active incident. Tactic: Initial Access (T1078 — Valid Accounts). No owner assigned — incident aging without triage.", cisControl:"CTRL-8", cisName:"Audit Log Management", frameworks:["HIPAA §164.312(b)","NIST CSF DE.AE-2","SOC2 CC7.2"] },
+      { id:"F-SEN-002", source:"Sentinel", findingType:"Analytics Rules Gap — 23 Rules Disabled", severity:"medium", affectedAssets:["Sentinel workspace"], count:23, detail:"20.5% of detection rules disabled. Gaps include: Ransomware indicators, Lateral Movement patterns, Insider Threat UEBA. Blind spots in detection coverage.", cisControl:"CTRL-8", cisName:"Audit Log Management", frameworks:["NIST CSF DE.CM-1","HIPAA §164.308(a)(1)","NAIC Model Law §7(B)"] }
     ]
   },
 
@@ -21726,24 +21500,24 @@ var MOCK_RESPONSES = {
     freeTest: "ServiceNow Personal Developer Instance — free at developer.servicenow.com",
     rawResponse: {
       result: [
-        { sys_id: "chg-abc123", number: "CHG1234567", state: "3", state_label: "In Progress", short_description: "CyberRx: Enable MFA for 1,092 users — CIS-6", assigned_to: { display_value: "IAM Team" }, opened_at: "2024-01-15T10:00:00Z", expected_start: "2024-01-16T08:00:00Z", sys_updated_on: "2024-01-15T14:22:00Z", close_notes: null, cyberrx_finding_id: "F-OKT-001" },
-        { sys_id: "chg-def456", number: "CHG1234568", state: "7", state_label: "Closed Complete", short_description: "CyberRx: Deploy Falcon agent to 213 unmanaged endpoints — CIS-1", assigned_to: { display_value: "Endpoint Team" }, opened_at: "2024-01-13T08:00:00Z", expected_start: "2024-01-14T08:00:00Z", sys_updated_on: "2024-01-15T16:45:00Z", close_notes: "All 213 endpoints enrolled. Coverage now 99.1%.", cyberrx_finding_id: "F-CRW-001" }
+        { sys_id: "chg-abc123", number: "CHG1234567", state: "3", state_label: "In Progress", short_description: "CyberRx: Enable MFA for 1,092 users — CTRL-6", assigned_to: { display_value: "IAM Team" }, opened_at: "2024-01-15T10:00:00Z", expected_start: "2024-01-16T08:00:00Z", sys_updated_on: "2024-01-15T14:22:00Z", close_notes: null, cyberrx_finding_id: "F-OKT-001" },
+        { sys_id: "chg-def456", number: "CHG1234568", state: "7", state_label: "Closed Complete", short_description: "CyberRx: Deploy Falcon agent to 213 unmanaged endpoints — CTRL-1", assigned_to: { display_value: "Endpoint Team" }, opened_at: "2024-01-13T08:00:00Z", expected_start: "2024-01-14T08:00:00Z", sys_updated_on: "2024-01-15T16:45:00Z", close_notes: "All 213 endpoints enrolled. Coverage now 99.1%.", cyberrx_finding_id: "F-CRW-001" }
       ]
     },
     normalized: [
-      { id:"F-SNW-001", source:"ServiceNow", findingType:"Remediation Tracking — In Progress", severity:"info", affectedAssets:["CHG1234567"], count:1, detail:"MFA rollout change request in progress. Assigned to IAM Team. Expected start: Jan 16. CyberRx will re-check CIS-6 score when state = Closed.", cisControl:"CIS-6", cisName:"Access Control Management", frameworks:[] },
-      { id:"F-SNW-002", source:"ServiceNow", findingType:"Remediation Complete — Loop Closed", severity:"resolved", affectedAssets:["CHG1234568"], count:1, detail:"Endpoint enrollment completed. Coverage moved from 89.6% → 99.1%. CyberRx confirmed control improvement and updated CIS-1 score.", cisControl:"CIS-1", cisName:"Inventory & Control", frameworks:[] }
+      { id:"F-SNW-001", source:"ServiceNow", findingType:"Remediation Tracking — In Progress", severity:"info", affectedAssets:["CHG1234567"], count:1, detail:"MFA rollout change request in progress. Assigned to IAM Team. Expected start: Jan 16. CyberRx will re-check CTRL-6 score when state = Closed.", cisControl:"CTRL-6", cisName:"Access Control Management", frameworks:[] },
+      { id:"F-SNW-002", source:"ServiceNow", findingType:"Remediation Complete — Loop Closed", severity:"resolved", affectedAssets:["CHG1234568"], count:1, detail:"Endpoint enrollment completed. Coverage moved from 89.6% → 99.1%. CyberRx confirmed control improvement and updated CTRL-1 score.", cisControl:"CTRL-1", cisName:"Inventory & Control", frameworks:[] }
     ]
   }
 };
 
-var CIS_SCORES = {
-  "CIS-1": { name:"Inventory & Control", score:72, impact:+18, color:C.info },
-  "CIS-5": { name:"Account Management", score:58, impact:+22, color:C.danger },
-  "CIS-6": { name:"Access Control Mgmt", score:51, impact:+28, color:C.danger },
-  "CIS-8": { name:"Audit Log Management", score:67, impact:+14, color:C.warn },
-  "CIS-10":{ name:"Malware Defenses", score:79, impact:+8, color:C.green },
-  "CIS-13":{ name:"Network Monitoring", score:63, impact:+16, color:C.warn },
+var CTRL_SCORES = {
+  "CTRL-1": { name:"Inventory & Control", score:72, impact:+18, color:C.info },
+  "CTRL-5": { name:"Account Management", score:58, impact:+22, color:C.danger },
+  "CTRL-6": { name:"Access Control Mgmt", score:51, impact:+28, color:C.danger },
+  "CTRL-8": { name:"Audit Log Management", score:67, impact:+14, color:C.warn },
+  "CTRL-10":{ name:"Malware Defenses", score:79, impact:+8, color:C.green },
+  "CTRL-13":{ name:"Network Monitoring", score:63, impact:+16, color:C.warn },
 };
 
 var TOOLS = [
@@ -22042,7 +21816,7 @@ function CyberRxAPIAdapter(props) {
                 <div>
                   <div style={{fontSize:11,color:C.muted,marginBottom:16}}>
                     Raw {tool.label} response &#8594; normalized finding
-                    objects &#8594; mapped to CIS controls and compliance frameworks
+                    objects &#8594; mapped to controls and compliance frameworks
                   </div>
                   {tool.normalized.map(function(f){
                     var sev    = SEV_CONFIG[f.severity]||SEV_CONFIG.info;
@@ -22117,10 +21891,10 @@ function CyberRxAPIAdapter(props) {
                                     <span style={{color:C.muted}}>count: </span>{f.count}
                                   </div>
                                   <div>
-                                    <span style={{color:C.muted}}>cisControl: </span>{f.cisControl}
+                                    <span style={{color:C.muted}}>control: </span>{f.cisControl}
                                   </div>
                                   <div>
-                                    <span style={{color:C.muted}}>cisName: </span>{f.cisName}
+                                    <span style={{color:C.muted}}>controlName: </span>{f.cisName}
                                   </div>
                                 </div>
                               </div>
@@ -22157,12 +21931,12 @@ function CyberRxAPIAdapter(props) {
             </div>
           )}
 
-          {/* ── CIS CONTROL SCORE IMPACT TAB ── */}
+          {/* ── CONTROL SCORE IMPACT TAB ── */}
           {activeTab===ADAPTER_TAB.MAPPING&&(
             <div style={{padding:24}}>
               <div style={{marginBottom:20}}>
                 <div style={{fontSize:16,fontWeight:700,marginBottom:4}}>
-                  CIS Control Score Impact
+                  Control Score Impact
                 </div>
                 <div style={{fontSize:11,color:C.muted}}>
                   Aggregated across all connected sources &middot; Projected improvement when findings are remediated
@@ -22174,7 +21948,7 @@ function CyberRxAPIAdapter(props) {
                   <div>Connect at least one source to see control scores</div>
                 </div>
               ):(
-                Object.entries(CIS_SCORES).map(function(cisEntry){
+                Object.entries(CTRL_SCORES).map(function(cisEntry){
                   var id   = cisEntry[0];
                   var ctrl = cisEntry[1];
                   var relatedFindings = cisImpact[id]||[];
@@ -22887,9 +22661,9 @@ function BrianaBar(props) {
     processflow: "This is your process intelligence map. It shows how "+orgName+"'s business processes connect to each other. Use the buttons at the top to switch views. Process flow shows the topology and which applications hang below each process. Infrastructure maps your security tools to each process. And attack paths is the one I'd look at first if I were you. It shows exactly how a threat actor would move through your environment, based on findings that are open right now.",
 
     bizmap: "Here you can see the whole picture in one place. Business line, process, application, and regulatory status. Click any business line to go deeper. Then a process to see its applications. Then an application to see its full compliance status across HIPAA, NIST, PCI, and CMS. Anything in red is a gap that needs to be closed before your next audit. This is the view to pull up when you're doing a business impact analysis or preparing for a regulatory review.",
-    apiadapter: "You're looking at the API Adapter Layer. This is the technical heart of how CyberRx connects to your security tools. Pick any tool on the left -- Splunk, CrowdStrike, Okta, Sentinel, or ServiceNow. Click Run Mock Pull and you'll see exactly what that tool's API returns, how we normalize it into a standard finding object, and how it maps to CIS controls and compliance frameworks. The Control Scores tab at the bottom shows you what your scores would look like after everything is remediated. This is the view to pull up when your IT team needs to understand how to set up the integration.",
+    apiadapter: "You're looking at the API Adapter Layer. This is the technical heart of how CyberRx connects to your security tools. Pick any tool on the left -- Splunk, CrowdStrike, Okta, Sentinel, or ServiceNow. Click Run Mock Pull and you'll see exactly what that tool's API returns, how we normalize it into a standard finding object, and how it maps to controls and compliance frameworks. The Control Scores tab at the bottom shows you what your scores would look like after everything is remediated. This is the view to pull up when your IT team needs to understand how to set up the integration.",
 
-    scoring: "Think of this as the engine room behind your posture score. Those six domains across the top -- identity, endpoints, data, network, detection, and compliance -- each pull every CIS Control into a single score, and together they're what drive your headline number up or down. Below that, the MITRE map is the honest part: it shows which attacker techniques you'd actually catch, and which ones would walk right past you. See a domain dragging? Click it, and I'll show you exactly which findings are holding it back -- and what fixing them would do to your number.",
+    scoring: "Think of this as the engine room behind your posture score. Those six domains across the top -- identity, endpoints, data, network, detection, and compliance -- each pull every mapped control into a single score, and together they're what drive your headline number up or down. Below that, the MITRE map is the honest part: it shows which attacker techniques you'd actually catch, and which ones would walk right past you. See a domain dragging? Click it, and I'll show you exactly which findings are holding it back -- and what fixing them would do to your number.",
 
     crownjewels: "This module helps you identify and map your most critical assets -- the ones that if compromised, would bring down the business or trigger a regulatory enforcement action. Start with Discover Assets. Run any of the six tools -- Nmap, Nessus, BloodHound, Shodan, cloud APIs, or a business impact assessment. Each one finds a different layer of your environment. Once assets are discovered, Score and Classify will tell you which ones are Crown Jewels based on data sensitivity, business impact, regulatory scope, and exposure. The Interaction Map shows how they depend on each other. And Red Team Findings shows exactly what a penetration tester would find against each one today.",
 
@@ -23609,89 +23383,89 @@ var MK = {
   blu:"#3A9EF5", pur:"#9060F0"
 };
 
-// ── CIS control health ────────────────────────────────────────────────────────
+// ── Control health ───────────────────────────────────────────────────────────
 var MOD_CH = {
-  "CIS-1":{n:"Asset Inventory",s:72},"CIS-3":{n:"Data Protection",s:55},
-  "CIS-4":{n:"Secure Config",s:66},"CIS-5":{n:"Account Mgmt",s:58},
-  "CIS-6":{n:"Access Control",s:51},"CIS-7":{n:"Vuln Mgmt",s:63},
-  "CIS-8":{n:"Audit Log Mgmt",s:67},"CIS-9":{n:"Email/Web",s:69},
-  "CIS-10":{n:"Malware Defenses",s:79},"CIS-11":{n:"Data Recovery",s:47},
-  "CIS-12":{n:"Network Infra",s:71},"CIS-13":{n:"Net Monitoring",s:63},
-  "CIS-14":{n:"Sec Awareness",s:44},"CIS-15":{n:"Vendor Mgmt",s:38},
-  "CIS-16":{n:"App Security",s:60},"CIS-17":{n:"Incident Response",s:55}
+  "CTRL-1":{n:"Asset Inventory",s:72},"CTRL-3":{n:"Data Protection",s:55},
+  "CTRL-4":{n:"Secure Config",s:66},"CTRL-5":{n:"Account Mgmt",s:58},
+  "CTRL-6":{n:"Access Control",s:51},"CTRL-7":{n:"Vuln Mgmt",s:63},
+  "CTRL-8":{n:"Audit Log Mgmt",s:67},"CTRL-9":{n:"Email/Web",s:69},
+  "CTRL-10":{n:"Malware Defenses",s:79},"CTRL-11":{n:"Data Recovery",s:47},
+  "CTRL-12":{n:"Network Infra",s:71},"CTRL-13":{n:"Net Monitoring",s:63},
+  "CTRL-14":{n:"Sec Awareness",s:44},"CTRL-15":{n:"Vendor Mgmt",s:38},
+  "CTRL-16":{n:"App Security",s:60},"CTRL-17":{n:"Incident Response",s:55}
 };
 
 var ATK_NW = 175; var ATK_NH = 102;
 
 // ── Attack graph nodes (MITRE ATT&CK) ────────────────────────────────────────
 var ATK_NODES = [
-  {id:"N01",tech:"T1566.001",name:"Spearphishing\nAttachment",  x:18,y:18,  col:"Initial Access",   controls:["CIS-9","CIS-14"],
+  {id:"N01",tech:"T1566.001",name:"Spearphishing\nAttachment",  x:18,y:18,  col:"Initial Access",   controls:["CTRL-9","CTRL-14"],
    detail:"Targeted emails with malicious Office macros to claims, finance, HR staff. Healthcare click rate: 18% (2x industry avg). Once opened, all perimeter controls bypassed.",
    fix:"Attachment sandbox, macro policy via GPO, monthly phishing simulations, DMARC/DKIM/SPF enforcement"},
-  {id:"N02",tech:"T1195",    name:"Supply Chain\nCompromise",   x:18,y:160, col:"Initial Access",   controls:["CIS-15","CIS-6"],
+  {id:"N02",tech:"T1195",    name:"Supply Chain\nCompromise",   x:18,y:160, col:"Initial Access",   controls:["CTRL-15","CTRL-6"],
    detail:"Compromising a trusted billing clearinghouse, MSP, or EDI partner with standing VPN access. Vector used in Change Healthcare 2024 breach.",
    fix:"Vendor risk assessments, MFA for all 3rd-party access, zero-trust vendor segmentation, quarterly access reviews"},
-  {id:"N03",tech:"T1078",    name:"Stolen\nCredentials",        x:18,y:302, col:"Initial Access",   controls:["CIS-6","CIS-5"],
+  {id:"N03",tech:"T1078",    name:"Stolen\nCredentials",        x:18,y:302, col:"Initial Access",   controls:["CTRL-6","CTRL-5"],
    detail:"Credentials from dark web ($15-30/account), password spray against O365/VPN without MFA, or prior breach databases.",
    fix:"MFA on every account, breach-password detection, conditional access policies, account lockout"},
-  {id:"N04",tech:"T1190",    name:"Exploit Public\nApplication",x:18,y:444, col:"Initial Access",   controls:["CIS-16","CIS-7"],
+  {id:"N04",tech:"T1190",    name:"Exploit Public\nApplication",x:18,y:444, col:"Initial Access",   controls:["CTRL-16","CTRL-7"],
    detail:"Weaponized CVEs in member portals, Citrix/Ivanti/Pulse VPN appliances. Healthcare payers are top-5 targets for VPN zero-day exploitation.",
    fix:"Patch critical CVEs within 24h, WAF in blocking mode, external pen testing, DAST scanning on all public-facing apps"},
-  {id:"N05",tech:"T1078.004",name:"Insider Threat\nValid Account",x:18,y:586,col:"Initial Access",  controls:["CIS-5","CIS-6"],
+  {id:"N05",tech:"T1078.004",name:"Insider Threat\nValid Account",x:18,y:586,col:"Initial Access",  controls:["CTRL-5","CTRL-6"],
    detail:"Disgruntled employee or contractor with legitimate access. No exploit needed. 35% of healthcare breaches. Traditional perimeter tools completely blind.",
    fix:"Least-privilege, UEBA behavioral baseline, quarterly access certifications, automated offboarding within 2h"},
-  {id:"N06",tech:"T1204",    name:"User Execution\nMacro/Script",x:262,y:18, col:"Execution",       controls:["CIS-10","CIS-14"],
+  {id:"N06",tech:"T1204",    name:"User Execution\nMacro/Script",x:262,y:18, col:"Execution",       controls:["CTRL-10","CTRL-14"],
    detail:"Victim enables macro dropping PowerShell loader. Modern loaders bypass signature AV ~40%. EDR behavioral detection is last line of defense.",
    fix:"Disable macros via GPO, EDR behavioral blocking, WDAC allowlisting, user awareness with simulated attacks"},
-  {id:"N07",tech:"T1105",    name:"C2 Implant\nDeployment",    x:262,y:170, col:"Execution",        controls:["CIS-10","CIS-12"],
+  {id:"N07",tech:"T1105",    name:"C2 Implant\nDeployment",    x:262,y:170, col:"Execution",        controls:["CTRL-10","CTRL-12"],
    detail:"Cobalt Strike/Sliver/Havoc beacon providing persistent remote access. Blends with HTTPS to CDNs. Healthcare avg dwell time: 200 days.",
    fix:"NTA with JA3/JA3S C2 fingerprinting, DNS sinkholing, egress filtering, EDR process injection detection"},
-  {id:"N08",tech:"T1078",    name:"Valid Account\nAuthentication",x:262,y:332,col:"Execution",      controls:["CIS-6","CIS-8"],
+  {id:"N08",tech:"T1078",    name:"Valid Account\nAuthentication",x:262,y:332,col:"Execution",      controls:["CTRL-6","CTRL-8"],
    detail:"Attacker logs in with stolen credentials. No malware, no exploit — invisible to traditional security. UEBA is the only reliable detection.",
    fix:"Conditional access (device compliance + location), UEBA impossible travel alerts, SIEM off-hours admin login rules"},
-  {id:"N09",tech:"T1505.003",name:"Web Shell\nDeployment",     x:262,y:488, col:"Execution",        controls:["CIS-16","CIS-10"],
+  {id:"N09",tech:"T1505.003",name:"Web Shell\nDeployment",     x:262,y:488, col:"Execution",        controls:["CTRL-16","CTRL-10"],
    detail:"Browser-based persistent backdoor uploaded post-exploit. Survives patching cycles if web directories not audited. On-demand RCE without C2.",
    fix:"FIM on web roots, WAF shell signatures, EDR on web servers, periodic web dir audits"},
-  {id:"N10",tech:"T1003",    name:"OS Credential\nDumping",    x:506,y:52,  col:"Priv Escalation",  controls:["CIS-6","CIS-5"],
+  {id:"N10",tech:"T1003",    name:"OS Credential\nDumping",    x:506,y:52,  col:"Priv Escalation",  controls:["CTRL-6","CTRL-5"],
    detail:"Mimikatz/LSASS dump/DCSync harvests domain credentials. Without Credential Guard yields domain access in under 5 minutes.",
    fix:"Windows Credential Guard, disable WDigest, LSASS protected process, tiered admin model, MFA for all privileged accounts"},
-  {id:"N11",tech:"T1068",    name:"Privilege\nEscalation",     x:506,y:222, col:"Priv Escalation",  controls:["CIS-5","CIS-4"],
+  {id:"N11",tech:"T1068",    name:"Privilege\nEscalation",     x:506,y:222, col:"Priv Escalation",  controls:["CTRL-5","CTRL-4"],
    detail:"Local priv esc via unpatched kernel vuln, token impersonation, misconfigured service. 78% of CVEs exploited in healthcare are local priv esc.",
-   fix:"Patch local priv esc CVEs within 30 days, CIS benchmark hardening, least-privilege services, UAC enforcement"},
-  {id:"N12",tech:"T1562",    name:"Impair Defenses\nKill EDR", x:506,y:400, col:"Priv Escalation",  controls:["CIS-10","CIS-1"],
+   fix:"Patch local priv esc CVEs within 30 days, secure-config benchmark hardening, least-privilege services, UAC enforcement"},
+  {id:"N12",tech:"T1562",    name:"Impair Defenses\nKill EDR", x:506,y:400, col:"Priv Escalation",  controls:["CTRL-10","CTRL-1"],
    detail:"Attacker disables EDR, terminates Defender, abuses AV exclusion paths. Pre-staged before ransomware. EDR killed = encryption succeeds 94%.",
    fix:"EDR tamper protection (kernel-level), centralized agent health monitoring, alert on any agent stop event"},
-  {id:"N13",tech:"T1547",    name:"Establish\nPersistence",    x:506,y:564, col:"Priv Escalation",  controls:["CIS-1","CIS-10"],
+  {id:"N13",tech:"T1547",    name:"Establish\nPersistence",    x:506,y:564, col:"Priv Escalation",  controls:["CTRL-1","CTRL-10"],
    detail:"Registry Run keys, scheduled tasks, WMI subscriptions survive reboots. Attacker layers 3-4 persistence mechanisms for redundancy.",
-   fix:"Registry monitoring, scheduled task auditing, EDR persistence detection, startup path auditing via CIS-1"},
-  {id:"N14",tech:"T1082",    name:"Network & AD\nReconnaissance",x:750,y:52, col:"Lateral Movement", controls:["CIS-1","CIS-13"],
+   fix:"Registry monitoring, scheduled task auditing, EDR persistence detection, startup path auditing via CTRL-1"},
+  {id:"N14",tech:"T1082",    name:"Network & AD\nReconnaissance",x:750,y:52, col:"Lateral Movement", controls:["CTRL-1","CTRL-13"],
    detail:"BloodHound AD enumeration maps shortest path to Domain Admin. Network scanning finds DCs, SQL, backup servers. Avg undetected recon: 4 hours.",
    fix:"East-west monitoring, AD tiering blocking BloodHound, honeypot assets for instant recon detection, NAC"},
-  {id:"N15",tech:"T1021",    name:"Remote Services\nRDP/SMB/WMI",x:750,y:242,col:"Lateral Movement",controls:["CIS-12","CIS-6"],
+  {id:"N15",tech:"T1021",    name:"Remote Services\nRDP/SMB/WMI",x:750,y:242,col:"Lateral Movement",controls:["CTRL-12","CTRL-6"],
    detail:"Pivot to PHI servers via RDP/SMB pass-the-hash/WMI. Flat networks allow unlimited lateral movement. Most payers lack east-west segmentation.",
    fix:"Network microsegmentation isolating PHI systems, disable SMBv1/NTLMv1, JIT privileged access, RDP gateway with recording"},
-  {id:"N16",tech:"T1569",    name:"LOLBins\nPSExec/WMIC",      x:750,y:442, col:"Lateral Movement", controls:["CIS-4","CIS-12"],
+  {id:"N16",tech:"T1569",    name:"LOLBins\nPSExec/WMIC",      x:750,y:442, col:"Lateral Movement", controls:["CTRL-4","CTRL-12"],
    detail:"PSExec, WMIC, PowerShell Remoting used for lateral movement. Built-in tools bypass allowlists. Only behavioral analytics catches this.",
    fix:"PowerShell constrained language mode, PSExec restriction to admin tier, SIEM LOLBin detection, PAW strategy"},
-  {id:"N17",tech:"T1213",    name:"PHI Data\nDiscovery",        x:994,y:70,  col:"Collection",       controls:["CIS-3","CIS-13"],
+  {id:"N17",tech:"T1213",    name:"PHI Data\nDiscovery",        x:994,y:70,  col:"Collection",       controls:["CTRL-3","CTRL-13"],
    detail:"SQL SELECT * FROM members, S3 bucket enumeration, file share searches. DAM and UEBA detect bulk access if deployed.",
    fix:"Database activity monitoring (DAM), data classification tagging, DLP on bulk data access, UEBA alerts"},
-  {id:"N18",tech:"T1550",    name:"Credential Reuse\nKerberoasting",x:994,y:280,col:"Collection",    controls:["CIS-5","CIS-6"],
+  {id:"N18",tech:"T1550",    name:"Credential Reuse\nKerberoasting",x:994,y:280,col:"Collection",    controls:["CTRL-5","CTRL-6"],
    detail:"Pass-the-hash, Kerberoasting service accounts. Single compromised service account with broad access = full environment.",
    fix:"LAPS, disable NTLM, Kerberos AES-256 only, 90-day service account rotation, SID history auditing, Protected Users"},
-  {id:"N19",tech:"T1074",    name:"Data Staging\nCompression",  x:994,y:490, col:"Collection",       controls:["CIS-3","CIS-8"],
+  {id:"N19",tech:"T1074",    name:"Data Staging\nCompression",  x:994,y:490, col:"Collection",       controls:["CTRL-3","CTRL-8"],
    detail:"PHI compressed with 7zip/WinRAR before exfil to evade DLP file-type inspection. Staged in temp dirs, recycle bin, backup folders.",
    fix:"DLP rules on mass archive creation in sensitive paths, SIEM compression alerts, FIM, honeypot PHI files"},
-  {id:"N20",tech:"T1048",    name:"PHI Exfiltration\nAlt Protocol",x:1238,y:42,col:"Impact",        controls:["CIS-13","CIS-3"],
+  {id:"N20",tech:"T1048",    name:"PHI Exfiltration\nAlt Protocol",x:1238,y:42,col:"Impact",        controls:["CTRL-13","CTRL-3"],
    detail:"PHI exfil via HTTPS to Mega/Dropbox, DNS tunneling, SMTP before encryption. Ransomware groups exfil first for double extortion. Avg: 56GB before detection.",
    fix:"Egress filtering, CASB blocking personal cloud uploads, DNS monitoring/RPZ, SSL inspection, DLP egress rules"},
-  {id:"N21",tech:"T1486",    name:"Ransomware\nDeployment",     x:1238,y:230,col:"Impact",           controls:["CIS-11","CIS-10"],
+  {id:"N21",tech:"T1486",    name:"Ransomware\nDeployment",     x:1238,y:230,col:"Impact",           controls:["CTRL-11","CTRL-10"],
    detail:"Full environment encryption. $2-5M/day deferred claims. Avg ransom demand 2024: $4.2M. Recovery from backup: 23 days average.",
    fix:"Air-gapped immutable backups, tested recovery runbook with RTO/RPO targets, ransomware network kill switch, tamper-protected EDR"},
-  {id:"N22",tech:"T1657",    name:"Financial Fraud\n/ BEC",     x:1238,y:438,col:"Impact",           controls:["CIS-14","CIS-17"],
+  {id:"N22",tech:"T1657",    name:"Financial Fraud\n/ BEC",     x:1238,y:438,col:"Impact",           controls:["CTRL-14","CTRL-17"],
    detail:"Finance inbox compromise leads to fraudulent wire, ACH redirect, fake vendor invoice. Avg healthcare BEC loss: $280K. Recovery after 24h: <15%.",
    fix:"Out-of-band wire confirmation, dual-approval on ACH, DMARC enforcement, BEC filter rules, quarterly finance BEC training"},
-  {id:"N23",tech:"T1567",    name:"Insider Cloud\nExfiltration",x:1238,y:618,col:"Impact",           controls:["CIS-3","CIS-8"],
+  {id:"N23",tech:"T1567",    name:"Insider Cloud\nExfiltration",x:1238,y:618,col:"Impact",           controls:["CTRL-3","CTRL-8"],
    detail:"Bulk upload of member records to personal Google Drive, OneDrive, or USB. No malware — evades all signature detection.",
    fix:"CASB blocking personal cloud storage, USB write-block GPO, DLP bulk upload policy, insider threat program"}
 ];
@@ -24082,7 +23856,7 @@ function AttackPathsModule(props) {
         padding:"12px 20px",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
         <div>
           <div style={{fontSize:10,color:MK.a1,letterSpacing:2.5,fontWeight:700,marginBottom:2}}>
-            MITRE ATT&CK · CIS CONTROLS · LIVE CONTROL HEALTH
+            MITRE ATT&CK · CONTROL HEALTH · LIVE CONTROL HEALTH
           </div>
           <div style={{fontSize:16,fontWeight:700,color:MK.t1}}>
             Attack Path Analyzer — Full Process Flow

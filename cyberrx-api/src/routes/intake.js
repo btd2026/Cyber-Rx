@@ -20,6 +20,7 @@ const extraction = require('../services/DocumentExtractionService');
 const SampleDoc = require('../services/SampleDocService');
 const ProcessExtraction = require('../services/ProcessExtractionService');
 const ScanQuota = require('../services/ScanQuotaService');
+const RagIngest = require('../services/rag/RagIngestService');
 const { requireAdmin } = require('../middleware/auth');
 
 // Identity available for quota scoping. orgId is always derivable here; userId
@@ -104,7 +105,15 @@ router.post('/documents', async (req, res) => {
     const result = await ScanQuota.runGuardedScan(
       scanIds(req),
       { documentId: uploadId, actor: req.userId || orgId },
-      () => extraction.processUpload(orgId, uploadId)
+      async () => {
+        // Section-aware chunk + embed into the vector store (best-effort), then
+        // run the per-control assessment. Chunking failure must not break upload.
+        let ingest = null;
+        try { ingest = await RagIngest.ingestUpload(orgId, uploadId, norm.text); }
+        catch (e) { logger.warn('rag ingest failed', { uploadId, error: e.message }); }
+        const r = await extraction.processUpload(orgId, uploadId);
+        return { ...r, ingest };
+      }
     );
     const quota = await ScanQuota.usage(scanIds(req));
     res.json({ upload_id: uploadId, format: norm.format, text_length: norm.text.length, ...result, quota });
@@ -126,7 +135,13 @@ router.post('/documents/:id/rereview', async (req, res) => {
     const result = await ScanQuota.runGuardedScan(
       scanIds(req),
       { documentId: req.params.id, actor: req.userId || orgId },
-      () => extraction.processUpload(orgId, req.params.id)
+      async () => {
+        let ingest = null;
+        try { ingest = await RagIngest.ingestUpload(orgId, req.params.id); }
+        catch (e) { logger.warn('rag ingest failed', { uploadId: req.params.id, error: e.message }); }
+        const r = await extraction.processUpload(orgId, req.params.id);
+        return { ...r, ingest };
+      }
     );
     const quota = await ScanQuota.usage(scanIds(req));
     res.json({ ...result, quota });
