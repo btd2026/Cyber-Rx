@@ -121,7 +121,24 @@ class BitSightConnector extends BaseConnector {
     const status = response.status;
     const statusText = response.statusText;
 
-    // Map common HTTP errors to user-friendly messages (do this first)
+    // Prefer the API's own error message when a parseable body is available.
+    // This surfaces vendor-specific detail (e.g. why a request was rejected)
+    // instead of masking it with a generic mapped message.
+    if (typeof response.json === 'function') {
+      try {
+        const errorData = await response.json();
+        const bodyMessage = errorData && (errorData.message || errorData.error);
+        if (bodyMessage) {
+          return { message: bodyMessage };
+        }
+      } catch (e) {
+        // Body could not be parsed - fall back to a generic HTTP message
+        // rather than a friendly mapped one, so the raw status is preserved.
+        return { message: `HTTP ${status}: ${statusText}` };
+      }
+    }
+
+    // Map common HTTP errors to user-friendly messages
     if (status === 400) return { message: 'Bad request - invalid domain or parameters' };
     if (status === 401) return { message: 'Invalid BitSight API key' };
     if (status === 403) return { message: 'Forbidden - insufficient permissions' };
@@ -129,16 +146,7 @@ class BitSightConnector extends BaseConnector {
     if (status === 429) return { message: 'Rate limit exceeded - please retry later' };
     if (status >= 500) return { message: 'BitSight server error - please retry later' };
 
-    // For other errors, try to parse response body
-    let message = `HTTP ${status}: ${statusText}`;
-    try {
-      const errorData = await response.json();
-      message = errorData.message || errorData.error || message;
-    } catch (e) {
-      // Use default message if parsing fails
-    }
-
-    return { message };
+    return { message: `HTTP ${status}: ${statusText}` };
   }
 
   /**
@@ -284,13 +292,14 @@ class BitSightConnector extends BaseConnector {
       if (g === 'F') return 'Critical';                  // 250-499
     }
 
-    // If only score available (fallback)
-    if (score) {
+    // If only score available (fallback). Use a type check so a score of 0
+    // (the worst possible rating) is evaluated rather than treated as missing.
+    if (typeof score === 'number' && !isNaN(score)) {
       if (score >= 800) return 'Info';
       if (score >= 700) return 'Low';
       if (score >= 600) return 'Medium';
       if (score >= 500) return 'High';
-      if (score >= 250) return 'Critical';
+      return 'Critical'; // 250-499 and anything below (e.g. 0)
     }
 
     return 'Medium'; // Default
@@ -302,11 +311,13 @@ class BitSightConnector extends BaseConnector {
    * @returns {string} Normalized severity
    */
   calculateSeverityFromVulns(vulns) {
+    if (!vulns) return 'Info';
+
     const count = vulns.count || 0;
     const critical = vulns.critical || 0;
     const high = vulns.high || 0;
 
-    if (critical > 10 || high > 50) return 'Critical';
+    if (critical >= 5 || high > 50) return 'Critical';
     if (critical > 0 || high > 20) return 'High';
     if (count > 100) return 'Medium';
     if (count > 0) return 'Low';
@@ -348,10 +359,18 @@ class BitSightConnector extends BaseConnector {
    * @returns {string} Normalized severity
    */
   getCompromiseSeverity(compromises) {
-    const count = compromises.length;
-    const recentCount = compromises.filter(c => {
+    // Only consider compromises that carry a valid date. Entries with a
+    // missing or unparseable date are excluded so they don't inflate the
+    // count or accidentally register as "recent".
+    const validCompromises = compromises.filter(c => {
+      return c && c.date && !isNaN(new Date(c.date).getTime());
+    });
+
+    const count = validCompromises.length;
+    const recentCount = validCompromises.filter(c => {
       const daysSince = (Date.now() - new Date(c.date)) / (1000 * 60 * 60 * 24);
-      return daysSince <= 90;
+      // Future-dated entries (negative daysSince) are not treated as recent.
+      return daysSince >= 0 && daysSince <= 90;
     }).length;
 
     if (recentCount > 0) return 'Critical';

@@ -102,9 +102,12 @@ describe('AiAgentSecurityService.agentRisk (least-privilege)', () => {
 });
 
 describe('connector registry', () => {
-  it('registers the six connectors', () => {
+  it('registers the full connector catalog', () => {
     const keys = Connectors.list().map((c) => c.key).sort();
-    expect(keys).toEqual(['azure_openai', 'crowdstrike', 'entra', 'langsmith', 'splunk', 'tenable']);
+    expect(keys).toEqual([
+      'azure_openai', 'crowdstrike', 'cyberark', 'defender', 'entra', 'knowbe4',
+      'langsmith', 'okta', 'qualys', 'sailpoint', 'sentinel', 'splunk', 'tenable',
+    ]);
   });
   it('every connector exposes label/category/signals/scopes/fields', () => {
     for (const c of Connectors.list()) {

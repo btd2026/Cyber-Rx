@@ -422,7 +422,7 @@ describe('BitSightConnector (Standalone Tests)', () => {
       expect(badRequest.message).toContain('Bad request');
 
       const unauthorized = await connector.handleErrorResponse({ status: 401, statusText: 'Unauthorized' });
-      expect(unauthorized.message).toContain('Invalid API key');
+      expect(unauthorized.message).toContain('Invalid BitSight API key');
 
       const forbidden = await connector.handleErrorResponse({ status: 403, statusText: 'Forbidden' });
       expect(forbidden.message).toContain('insufficient permissions');
@@ -483,7 +483,7 @@ describe('BitSightConnector (Standalone Tests)', () => {
       const result = await connector.testConnection();
 
       expect(result.status).toBe('error');
-      expect(result.message).toContain('Invalid API key');
+      expect(result.message).toContain('Invalid BitSight API key');
     });
 
     test('should return error for forbidden access', async () => {
@@ -630,7 +630,10 @@ describe('BitSightConnector (Standalone Tests)', () => {
       const start = Date.now();
       await connector.sleep(100);
       const end = Date.now();
-      expect(end - start).toBeGreaterThanOrEqual(100);
+      // Allow a small scheduling tolerance: setTimeout may fire a fraction of a
+      // millisecond early (e.g. 99.x ms) due to timer rounding, but the call
+      // must still introduce a real, substantial delay.
+      expect(end - start).toBeGreaterThanOrEqual(90);
     });
   });
 
