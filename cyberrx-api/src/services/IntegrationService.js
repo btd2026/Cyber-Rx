@@ -14,6 +14,7 @@ const db = require('../utils/db');
 const logger = require('../utils/logger');
 const vault = require('../utils/vault');
 const Connectors = require('./connectors');
+const EvidenceAdapter = require('./EvidenceAdapterService');
 
 const FRESH_DAYS = 7;
 
@@ -74,7 +75,12 @@ async function sync(orgId, key) {
     const { signals } = await c.fetchSignals(creds);
     for (const s of signals) { await upsertInput(orgId, s.key, s.value); await upsertSignal(orgId, s.key, c.label, s.value, s.asOf); }
     await setStatus(orgId, key, 'connected', signals.length, null);
-    return { connector: key, status: 'connected', signals: signals.map((s) => ({ key: s.key, value: s.value })) };
+    // Project the signals into the evidence ledger as control evidence (best
+    // effort — never fail a sync because evidence projection hiccuped).
+    let evidence = 0;
+    try { ({ recorded: evidence } = await EvidenceAdapter.recordSignals(orgId, { connectorKey: key, label: c.label, signals })); }
+    catch (e) { logger.warn(`Evidence projection failed for ${key}: ${e.message}`); }
+    return { connector: key, status: 'connected', signals: signals.map((s) => ({ key: s.key, value: s.value })), evidenceRows: evidence };
   } catch (e) {
     await setStatus(orgId, key, 'error', 0, e.message);
     throw e;
