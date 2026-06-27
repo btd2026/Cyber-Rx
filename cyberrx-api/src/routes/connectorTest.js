@@ -71,7 +71,7 @@ function mapCreds(vendor, apiKey) {
   return { apiKey };
 }
 
-router.post('/', async (req, res) => {
+router.post('/test', async (req, res) => {
   const { connector, vendor, apiKey } = req.body || {};
 
   if (!apiKey || String(apiKey).trim().length < 8) {

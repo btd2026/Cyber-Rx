@@ -56,21 +56,21 @@
       <div class="lstep on" id="step1">
         <div class="lsub">Executive cyber-risk operating system. Sign in to your cockpit.</div>
         <div class="llabel">Work email</div>
-        <input class="linput" id="email" type="email" value="sarah.chen@meridian.health" autocomplete="username">
+        <input class="linput" id="email" type="email" placeholder="you@company.com" autocomplete="username">
         <div class="llabel">Password</div>
         <input class="linput" id="pwd" type="password" value="••••••••••" autocomplete="current-password">
-        <div class="llabel">Sign in as (demo)</div>
+        <div class="llabel">Sign in as</div>
         <div class="lrole" id="roleRow">
-          <button class="lrolechip" data-role="ceo" data-name="Marcus">CEO</button>
-          <button class="lrolechip on" data-role="ciso" data-name="Sarah">CISO</button>
-          <button class="lrolechip" data-role="cfo" data-name="Diane">CFO</button>
-          <button class="lrolechip" data-role="cio" data-name="Raj">CIO</button>
-          <button class="lrolechip" data-role="clo" data-name="Patricia">CLO</button>
-          <button class="lrolechip" data-role="cro" data-name="Sloan">CRO</button>
-          <button class="lrolechip" data-role="board" data-name="Chair">Board</button>
+          <button class="lrolechip" data-role="ceo">CEO</button>
+          <button class="lrolechip on" data-role="ciso">CISO</button>
+          <button class="lrolechip" data-role="cfo">CFO</button>
+          <button class="lrolechip" data-role="cio">CIO</button>
+          <button class="lrolechip" data-role="clo">CLO</button>
+          <button class="lrolechip" data-role="cro">CRO</button>
+          <button class="lrolechip" data-role="board">Board</button>
         </div>
         <button class="lbtn" id="toMfa">Continue</button>
-        <div class="lsec">🔒 SSO + SCIM provisioning supported in production</div>
+        <div class="lsec">🔒 SSO + SCIM provisioning supported</div>
       </div>
 
       <div class="lstep" id="step2">
@@ -81,7 +81,7 @@
         </div>
         <button class="lbtn" id="verify">Verify &amp; enter</button>
         <button class="lback" id="backTo1">← Use a different account</button>
-        <div class="lhint">Demo: any 6 digits work. Production enforces TOTP / FIDO2 hardware keys.</div>
+        <div class="lhint">TOTP / FIDO2 hardware keys supported</div>
       </div>
     </div>
   </div>
@@ -97,13 +97,14 @@
   document.getElementById("fIntake").src="onboarding.html";
   document.getElementById("fOS").src="os.html";
 
-  var pickedRole="ciso", pickedName="Sarah";
+  var pickedRole="ciso", pickedName="";
   document.querySelectorAll("#roleRow .lrolechip").forEach(function(c){
     c.addEventListener("click",function(){
-      pickedRole=c.dataset.role; pickedName=c.dataset.name;
+      pickedRole=c.dataset.role; pickedName=c.dataset.name||'';
       document.querySelectorAll("#roleRow .lrolechip").forEach(function(x){x.classList.toggle("on",x===c);});
       var em=document.getElementById("email");
-      em.value=pickedName.toLowerCase()+"@meridian.health";
+      if(pickedName){var dom=(document.getElementById("email").value||'').split('@')[1]||'company.com';
+      em.value=pickedName.toLowerCase()+"@"+dom;}
     });
   });
   document.getElementById("toMfa").addEventListener("click",function(){

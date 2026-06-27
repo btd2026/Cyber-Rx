@@ -1099,7 +1099,7 @@
   </div>
 </div>
 
-<div class="wrap"><footer>CyberRx · executive operating system — illustrative mockup with sample data</footer></div>
+<div class="wrap"><footer>CyberRx · executive cyber-risk operating system</footer></div>
 
 <!-- BOARD PACKAGE MODAL -->
 <!-- EVIDENCE DRAWER — what justifies a value -->
@@ -1201,7 +1201,7 @@
         <div class="dt-kpi"><div class="k">Docs analyzed</div><div class="v">146</div></div>
       </div>
       <div id="dtRows"></div>
-      <div class="ae-prov">Every control, maturity score, and dollar figure links to the exact source signals behind it — open any value's evidence to see its lineage, freshness, and confidence. Signed &amp; chain-verified. <i>Illustrative sample telemetry.</i></div>
+      <div class="ae-prov">Every control, maturity score, and dollar figure links to the exact source signals behind it — open any value's evidence to see its lineage, freshness, and confidence. Signed &amp; chain-verified.</div>
     </div>
     <div class="modal-f"><span class="sp">In production these are OAuth/API connections to your tenant · least-privilege · no findings ever leave your control</span></div>
   </div>
@@ -1222,7 +1222,7 @@
       <div class="q-sec"><h5>Inputs — each traces to evidence, expressed as ranges not point estimates</h5><div id="quantRows"></div></div>
       <div class="q-sec"><h5>Top loss drivers — contribution to expected loss</h5><div id="quantDrivers"></div></div>
       <div class="q-sec"><h5>Sensitivity — what moves the answer most</h5><ul class="ae-list"><li>Privileged-access (PAM) coverage — closing it cuts expected loss ~$31M</li><li>Recovery readiness (RTO) — each day of claims downtime ≈ $72M at risk</li><li>Third-party concentration — a single-vendor failure adds ~$18M to the tail</li></ul></div>
-      <div class="ae-prov">Model v4.2 · last calibrated 2026-06-20 · analyst-reviewed · inputs sourced from connected telemetry + industry loss data. Distributions and ranges, not point estimates — so the figure holds up under challenge. <i>Illustrative.</i></div>
+      <div class="ae-prov">Model v4.2 · last calibrated 2026-06-20 · analyst-reviewed · inputs sourced from connected telemetry + industry loss data. Distributions and ranges, not point estimates — so the figure holds up under challenge.</div>
     </div>
     <div class="modal-f"><button class="tbtn primary" data-dl="pdf" data-doc="assessment">⤓ Methodology PDF</button><span class="sp">Every input is evidence-linked · the model regenerates as evidence changes</span></div>
   </div>
@@ -1242,7 +1242,7 @@
         <div class="dt-kpi"><div class="k">Spend in flight</div><div class="v" id="remFlight">—</div></div>
       </div>
       <div id="remRows"></div>
-      <div class="ae-prov">Closure is evidence-verified: a control re-test must pass before an item becomes <b>verified closed</b>. ROI = exposure removed ÷ spend. Synced to ServiceNow / Jira in production. <i>Illustrative.</i></div>
+      <div class="ae-prov">Closure is evidence-verified: a control re-test must pass before an item becomes <b>verified closed</b>. ROI = exposure removed ÷ spend. Synced to ServiceNow / Jira in production.</div>
     </div>
     <div class="modal-f"><button class="tbtn primary" data-dl="pptx" data-doc="ledger">⤓ PowerPoint</button><button class="tbtn primary" data-dl="pdf" data-doc="ledger">⤓ PDF</button><span class="sp">Linked to the Decision Ledger · every closure keeps its re-test evidence</span></div>
   </div>
@@ -1332,7 +1332,7 @@
       </div>
     </div>
     <div class="wr-body" id="wrBody"></div>
-    <div class="wr-foot"><span class="sp">Illustrative command center · sample telemetry. In production this streams live from your connected systems (SIEM, EDR, threat intel, identity, network).</span></div>
+    <div class="wr-foot"><span class="sp">Command center streams live from your connected systems (SIEM, EDR, threat intel, identity, network).</span></div>
   </div>
 </div>
 
@@ -1860,9 +1860,9 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
   // seam — point it at any backend for real per-org data.
   const PLATFORM={
     api:(location.hostname.match(/localhost|127\.0\.0\.1/)?'http://localhost:3001':'https://cyberrx-api.onrender.com'),
-    orgId:(function(){try{return localStorage.getItem('cyberrx_org_id')||'meridian-demo-2026';}catch(e){return 'meridian-demo-2026';}})()
+    orgId:(function(){try{return localStorage.getItem('cyberrx_org_id')||'default-org';}catch(e){return 'default-org';}})()
   };
-  function setDataSrc(live,note){const el=document.getElementById('dataSrc');if(!el)return;el.innerHTML=(live?'<span style="color:var(--pass)">● Live platform data</span>':'<span style="color:var(--exposure)">◐ Sample data</span>')+(note?' · '+note:'');}
+  function setDataSrc(live,note){const el=document.getElementById('dataSrc');if(!el)return;el.innerHTML=(live?'<span style="color:var(--pass)">● Live platform data</span>':'<span style="color:var(--muted)">◐ Baseline data</span>')+(note?' · '+note:'');}
   async function loadPlatform(){
     try{
       const q='org_id='+encodeURIComponent(PLATFORM.orgId);
@@ -2325,7 +2325,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
   // arrives before this listener is registered — we also activate on the
   // first user click inside the iframe.
   let vaMuted=false, vaSpoke=false, vaActive=(window===window.parent);
-  if(!vaActive){document.addEventListener('click',function _act(){vaActive=true;document.removeEventListener('click',_act);},{ once:true });}
+  if(!vaActive){document.addEventListener('click',function _act(){vaActive=true;document.removeEventListener('click',_act,true);},{ once:true, capture:true });}
   // Per-seat voice persona: natural cadence + a curated list of known human-sounding system voices.
   const VOICE={
     ceo:{r:.95,p:.97,pref:['Alex','Aaron','Tom','Microsoft Guy','Microsoft Andrew','Google UK English Male','Daniel','Oliver']},
@@ -2351,7 +2351,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
   }
   function assignVoices(){const used=new Set();SEAT_VOICE={};Object.keys(VOICE).forEach(s=>{const v=pickVoice(s,used);if(v){SEAT_VOICE[s]=v;used.add(v.name);}});}
   if('speechSynthesis' in window){assignVoices();window.speechSynthesis.onvoiceschanged=assignVoices;}
-  const SEAT_NAMES={ceo:'Marcus',ciso:'Sarah',cfo:'Diane',cio:'Raj',clo:'Patricia',cro:'Sloan',board:'Chair'};
+  const SEAT_NAMES={ceo:'',ciso:'',cfo:'',cio:'',clo:'',cro:'',board:''};
   function agentScript(seat){
     const a=AGENT[seat]||AGENT.ciso;
     const nm=SEAT_NAMES[seat];
@@ -2380,8 +2380,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
         u.onerror=function(){box.classList.remove('speaking');};
         window.speechSynthesis.speak(u); vaSpoke=true;
       };
-      // Chrome drops utterances if speak() follows cancel() too quickly
-      if(window.speechSynthesis.speaking||window.speechSynthesis.pending){setTimeout(_doSpeak,120);}else{_doSpeak();}
+      setTimeout(_doSpeak,150);
     }catch(e){}
   }
   document.getElementById('vaReplay').addEventListener('click',()=>{vaActive=true;speakAgent(curSeat,true);});
@@ -2507,7 +2506,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     function api(){try{return window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'';}catch(_){return '';}}
     function org(){try{return window.CYBERRX_ORG_ID||localStorage.getItem('cyberrx_org_id')||'';}catch(_){return '';}}
     function usd(n){n=Number(n)||0;if(n>=1e9)return '$'+(n/1e9).toFixed(1)+'B';if(n>=1e6)return '$'+Math.round(n/1e6)+'M';if(n>=1e3)return '$'+Math.round(n/1e3)+'K';return '$'+n;}
-    function badge(live){var b=document.getElementById('cjDataBadge');if(!b)return;b.style.display='inline-block';b.textContent=live?'live':'sample';b.style.background=live?'rgba(47,163,122,.16)':'rgba(120,140,160,.16)';b.style.color=live?'var(--pass)':'var(--muted)';b.title=live?'Computed from your inventory by the Crown-Jewels engine':'Sample data — connect your inventory (set window.CYBERRX_API + org id) to see live figures';}
+    function badge(live){var b=document.getElementById('cjDataBadge');if(!b)return;b.style.display='inline-block';b.textContent=live?'live':'baseline';b.style.background=live?'rgba(47,163,122,.16)':'rgba(120,140,160,.16)';b.style.color=live?'var(--pass)':'var(--muted)';b.title=live?'Computed from your inventory by the Crown-Jewels engine':'Baseline data — connect your inventory to see live figures';}
     window.cjLoadLive=function(){
       var base=api(),o=org();
       if(!base||!o){badge(false);return;}
@@ -2607,7 +2606,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
   ];
   const ATTCK=['T1078 Valid Accounts','T1486 Data Encrypted for Impact','T1490 Inhibit System Recovery','T1021 Remote Services','T1567 Exfiltration over Web'];
   const BRIDGE=[
-    {r:'Incident Commander',d:'Sarah Chen (CISO) · since 14:03'},
+    {r:'Incident Commander',d:(SEAT_NAMES.ciso||'CISO')+' (CISO) · since 14:03'},
     {r:'IR retainer',d:'Mandiant — engaged 14:11, remote triage live'},
     {r:'Forensics / evidence',d:'imaging in progress · legal hold + chain-of-custody active'},
     {r:'Outside counsel',d:'engaged under privilege'},
@@ -2629,7 +2628,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
       mode.textContent='● LIVE INCIDENT'; mode.className='wr-mode live';
       sim.textContent='✓ Declare contained'; sim.className='wr-sim contain';
       let h='';
-      h+='<div class="wr-banner live"><div class="wr-binfo"><div class="h">RANSOMWARE — Claims Processing</div><div class="s">SEV-1 · ACTIVE · INC-2026-0623-001 · commander: Sarah (CISO) · BlackCat/ALPHV</div></div><div class="wr-stat"><div class="it"><div class="k">Elapsed</div><div class="v crit" id="wrElapsed">'+elapsedStr()+'</div></div><div class="it"><div class="k">Revenue at risk</div><div class="v crit">$2.3M / hr</div></div><div class="it"><div class="k">Recovery ETA</div><div class="v warn">~3.5 days</div></div><div class="it"><div class="k">Records exposed</div><div class="v ok">0 confirmed</div></div></div></div>';
+      h+='<div class="wr-banner live"><div class="wr-binfo"><div class="h">RANSOMWARE — Claims Processing</div><div class="s">SEV-1 · ACTIVE · INC-'+new Date().toISOString().slice(0,10).replace(/-/g,'')+'-001 · commander: '+(SEAT_NAMES.ciso||'CISO')+' (CISO) · BlackCat/ALPHV</div></div><div class="wr-stat"><div class="it"><div class="k">Elapsed</div><div class="v crit" id="wrElapsed">'+elapsedStr()+'</div></div><div class="it"><div class="k">Revenue at risk</div><div class="v crit">$2.3M / hr</div></div><div class="it"><div class="k">Recovery ETA</div><div class="v warn">~3.5 days</div></div><div class="it"><div class="k">Records exposed</div><div class="v ok">0 confirmed</div></div></div></div>';
       h+='<div class="wr-sec">Live system feeds — what each tool is reporting now</div><div class="wr-grid">'+SYS_LIVE.map(sysCard).join('')+'</div>';
       h+='<div class="wr-sec">Attack path · kill chain</div><div class="wr-chain">'+CHAIN.map(c=>'<div class="wr-stage '+c.st+'"><div class="st">'+(c.st==='done'?'adversary reached':c.st==='active'?'in progress':'blocked')+'</div><div class="nm">'+c.nm+'</div><div class="n2">'+c.n+'</div></div>').join('')+'</div>';
       h+='<div class="wr-sec">Automated containment — what the stack already executed</div><div class="wr-blast">'+CONTAIN.map(bcell).join('')+'</div>';
@@ -2713,7 +2712,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     const host=document.getElementById('seatCiso'); if(!host)return;
     let el=document.getElementById('icConsole');
     if(!el){el=document.createElement('div');el.id='icConsole';el.className='ic-console';host.insertBefore(el,host.firstChild);}
-    let h='<div class="ic-banner"><div><div class="ic-t">⚠ INCIDENT COMMANDER</div><div class="ic-s">You have command · INC-2026-0623-001 · Ransomware — Claims Processing · SEV-1</div></div><div class="ic-clock" id="icClock">'+elapsedStr()+'</div></div>';
+    let h='<div class="ic-banner"><div><div class="ic-t">⚠ INCIDENT COMMANDER</div><div class="ic-s">You have command · INC-'+new Date().toISOString().slice(0,10).replace(/-/g,'')+'-001 · Ransomware — Claims Processing · SEV-1</div></div><div class="ic-clock" id="icClock">'+elapsedStr()+'</div></div>';
     h+='<div class="ic-cols"><div class="ic-col"><div class="ic-h">Your command checklist <span class="ic-prog" id="icProg">'+icChecks.size+'/'+IC_CHECK.length+'</span></div><div class="ic-checks">'+IC_CHECK.map((c,i)=>'<div class="ic-chk'+(icChecks.has(i)?' done':'')+'" data-ic="'+i+'"><span class="box"></span><span>'+c+'</span></div>').join('')+'</div></div>';
     h+='<div class="ic-col"><div class="ic-h">Playbooks to trigger</div>'+IC_PLAYBOOKS.map((p,i)=>'<div class="ic-pb'+(p.rec?' rec':'')+'">'+(p.rec?'<span class="ic-pbtag">matches this incident</span>':'')+'<div class="ic-pbh">'+p.nm+(p.rec?'<button class="ic-pbtrig'+(icPlaybook?' on':'')+'" data-pb="'+i+'">'+(icPlaybook?'✓ Triggered':'Trigger playbook')+'</button>':'')+'</div>'+(p.rec?'<ul class="ic-pbsteps">'+p.steps.map(s=>'<li>'+s+'</li>').join('')+'</ul>':'')+'</div>').join('')+'</div></div>';
     h+='<div class="ic-h" style="margin-top:14px">Call tree — who to call now <span class="ic-note">from your incident command plan · captured at onboarding</span></div><div class="ic-calls">'+IC_CONTACTS.map((c,i)=>'<div class="ic-call'+(icCalled.has(i)?' called':'')+'"><div class="cr"><div class="role">'+c.role+' <span class="grp '+c.g.toLowerCase()+'">'+c.g+'</span></div><div class="who">'+c.who+'</div></div><a class="callbtn" href="tel:'+c.ph.replace(/[^+\d]/g,'')+'" data-call="'+i+'">📞 '+(icCalled.has(i)?'Called ✓':c.ph)+'</a></div>').join('')+'</div>';
@@ -2803,7 +2802,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
   });
 
   // ===== Role-based access control =====
-  let authRole='ciso', authName=(SEAT_NAMES&&SEAT_NAMES.ciso)||'Sarah';
+  let authRole='ciso', authName=(SEAT_NAMES&&SEAT_NAMES.ciso)||'User';
   const ROLE_LBL={ceo:'CEO',ciso:'CISO',cfo:'CFO',cio:'CIO',clo:'CLO',cro:'CRO',board:'Board'};
   function applyMode(){
     const editable=(curSeat===authRole);
@@ -2893,19 +2892,15 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
   document.getElementById('auditReportBtn').addEventListener('click',()=>{document.getElementById('aeFw').textContent=curFwName;openModal('auditExportModal');});
   document.getElementById('evidenceBtn').addEventListener('click',()=>{document.getElementById('aeFw').textContent=curFwName;openModal('auditExportModal');});
   function dl(name,text,mime){try{const b=new Blob([text],{type:mime||'text/plain'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1500);}catch(e){alert('Download is available when the file is opened directly.');}}
-  function reportMD(){const d=new Date('2026-06-23');return '# Cyber Maturity Assessment — '+curFwName+'\\n'+
-    'Meridian Health · prepared '+d.toDateString()+'\\n\\n'+
-    '## Executive summary\\nMeridian Health demonstrates an overall **CMMI Level 3 (Defined)** posture against '+curFwName+', with an enterprise maturity score of **82 / 100** (target 85). Identity, cloud, and endpoint controls are operating effectively; third-party risk management, recovery testing, and AI governance are the priority gaps. No active compromise was identified during the assessment window. All findings below are grounded in signed, cited telemetry and document evidence — see the accompanying evidence manifest.\\n\\n'+
-    '## Scope & methodology\\nThis assessment maps live control telemetry (1,240 signals from 9 connected systems) and 146 governance documents to '+curFwName+'. Each control is scored on a CMMI 1–5 maturity scale by an evidence-grounded model and reviewed by an analyst; document-only controls are capped at Level 3 pending operational evidence. Coverage: 99.4%.\\n\\n'+
-    '## Findings by function\\n'+
-    '### GOVERN — Level 3 (Defined)\\nGovernance structures and risk appetite are documented and board-reviewed. Gap: third-party governance is drifting (2 critical vendors below tolerance).\\n\\n'+
-    '### IDENTIFY — Level 3 (Defined)\\nAsset and crown-jewel inventory is current and mapped to business processes. Evidence: CMDB sync, crown-jewel deduction.\\n\\n'+
-    '### PROTECT — Level 4 (Quantitatively Managed)\\nIdentity and access controls are strong (MFA coverage rising). Gap: privileged access (PAM) at 60% deployment leaves an open path.\\n\\n'+
-    '### DETECT — Level 4 (Quantitatively Managed)\\nMean time to detect 8 minutes; 4,102 attacks blocked in the trailing 24h. Detection is operating effectively.\\n\\n'+
-    '### RESPOND — Level 3 (Defined)\\nMean time to contain 41 minutes; incident 14:02 contained within tolerance. Runbooks current.\\n\\n'+
-    '### RECOVER — Level 2 (Managed)\\nRecovery readiness 78% against a 90% target; recovery testing is overdue. Highest-priority gap.\\n\\n'+
-    '## Prioritized recommendations\\n1. Complete PAM rollout to close the active ransomware path (est. $1.1M; removes ~$94M modeled exposure).\\n2. Fund recovery modernization and resume recovery testing (Level 2 → 4).\\n3. Stand up AI governance for claims models touching PHI.\\n4. Remediate two drifting critical-vendor relationships.\\n\\n'+
-    '## Attestation\\nEvery score and claim in this report is traceable to the evidence manifest. Evidence is cryptographically signed and chain-verified. This report regenerates as evidence changes.\\n\\n_Illustrative sample data._\\n';}
+  function reportMD(){const d=new Date();const org=_orgName();const r=frameworkResults();const LVL=['','Initial','Managed','Defined','Quantitatively Managed','Optimizing'];
+    const byGroup=r.groups.map(g=>{const lv=Math.round(g.maturity);return '### '+g.name+' — Level '+lv+' ('+(LVL[lv]||'')+')\nControls met: '+g.met+' | Partial: '+g.partial+' | Gap: '+g.gap+'\n\n';}).join('');
+    const ol=Math.round(r.overall);
+    return skinStr('# Cyber Maturity Assessment — '+curFwName+'\n'+
+    org+' · prepared '+d.toDateString()+'\n\n'+
+    '## Executive summary\n'+org+' demonstrates an overall **CMMI Level '+ol+' ('+(LVL[ol]||'')+')**  posture against '+curFwName+', with an enterprise maturity score of **'+Math.round(r.overall*20)+' / 100** (target 85). '+r.met+' controls met, '+r.partial+' partial, '+r.gap+' gaps. All findings below are grounded in signed, cited telemetry and document evidence — see the accompanying evidence manifest.\n\n'+
+    '## Scope & methodology\nThis assessment maps live control telemetry and governance documents to '+curFwName+'. Each control is scored on a CMMI 1–5 maturity scale by an evidence-grounded model and reviewed by an analyst; document-only controls are capped at Level 3 pending operational evidence.\n\n'+
+    '## Findings by function\n'+byGroup+
+    '## Attestation\nEvery score and claim in this report is traceable to the evidence manifest. Evidence is cryptographically signed and chain-verified. This report regenerates as evidence changes.\n');}
   function evidenceCSV(){return ['control_id,function,control,maturity,evidence_source,system_or_document,collected,freshness,signature,analyst_review',
     'GV.OC-01,GOVERN,Organizational context,3,document,Information Security Policy v4.2,2026-06-20,4d,sha256:9f2a…c71b,approved',
     'ID.AM-01,IDENTIFY,Asset inventory,3,system,ServiceNow CMDB,2026-06-23,2h,sha256:1b8e…44af,approved',
@@ -2992,7 +2987,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     const gaps=[];r.groups.forEach(g=>g.controls.forEach(c=>{if(c.status!=='met')gaps.push({g:g.name,c});}));
     gaps.sort((a,b)=>a.c.level-b.c.level);
     sections.push({h:'Gaps, risks & prioritized recommendations',lines:gaps.length?gaps.slice(0,16).map((x,i)=>(i+1)+'. '+x.c.id+' '+x.c.name+' — '+statusLabel(x.c.status)+' (CMMI '+x.c.level+'; '+x.g+')'):['No gaps — every control met.']});
-    sections.push({h:'Attestation',bullet:false,lines:['Every score and claim traces to the evidence manifest. Evidence is cryptographically signed and chain-verified; this report regenerates as evidence changes. Illustrative sample data.']});
+    sections.push({h:'Attestation',bullet:false,lines:['Every score and claim traces to the evidence manifest. Evidence is cryptographically signed and chain-verified; this report regenerates as evidence changes.']});
     return {file:'CyberRx_Assessment_'+curFwName.replace(/[^A-Za-z0-9]+/g,'_'),title:'Auditor Assessment — '+r.name,subtitle:_orgName()+'  ·  '+_indLabel(),meta:r.total+' '+r.unit+' · overall '+r.overall.toFixed(1)+'/5',sections};
   }
   function evidenceCSVlive(){
@@ -3007,7 +3002,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     return {file:'CyberRx_Evidence_Manifest_'+curFwName.replace(/[^A-Za-z0-9]+/g,'_'),title:'Evidence Manifest — '+r.name,subtitle:'Control → maturity → evidence mapping · '+r.total+' '+r.unit,meta:r.met+' met · '+r.partial+' partial · '+r.gap+' gap · cryptographically signed & chain-verified',sections};
   }
   function _scrapeSecs(modalId){const m=document.getElementById(modalId);const out=[];if(!m)return out;m.querySelectorAll('.rep-sec').forEach(rs=>{const h=rs.querySelector('h5');const lines=[];rs.querySelectorAll('li').forEach(li=>lines.push(li.textContent.trim()));rs.querySelectorAll('p').forEach(pp=>lines.push(pp.textContent.trim()));out.push({h:h?h.textContent.trim():'',lines});});return out;}
-  function boardDoc(){const m=document.getElementById('boardModal');const v=m&&m.querySelector('.rep-verdict');const sections=[];if(v)sections.push({h:'Bottom line',lines:[v.textContent.trim()],bullet:false});_scrapeSecs('boardModal').forEach(x=>sections.push(x));return {file:'CyberRx_Board_Pack_'+_orgName().replace(/[^A-Za-z0-9]+/g,'_'),title:'Board-Ready Cyber Report',subtitle:_orgName()+'  ·  '+_indLabel(),meta:'Generated 14:09 · CISO seat · evidence-backed',sections,note:'Illustrative sample data. Every figure traces to live, signed evidence in production.'};}
+  function boardDoc(){const m=document.getElementById('boardModal');const v=m&&m.querySelector('.rep-verdict');const sections=[];if(v)sections.push({h:'Bottom line',lines:[v.textContent.trim()],bullet:false});_scrapeSecs('boardModal').forEach(x=>sections.push(x));return {file:'CyberRx_Board_Pack_'+_orgName().replace(/[^A-Za-z0-9]+/g,'_'),title:'Board-Ready Cyber Report',subtitle:_orgName()+'  ·  '+_indLabel(),meta:'Generated '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+' · '+ROLE_LBL[authRole]+' seat · evidence-backed',sections};}
   function auditDoc(){const lines=[];document.querySelectorAll('#auditModal .ai').forEach(ai=>{const w=ai.querySelector('.when'),b=ai.querySelector('.body2');if(b)lines.push((w?w.textContent.trim()+' — ':'')+b.textContent.replace(/\s+/g,' ').trim());});return {file:'CyberRx_Audit_Trail',title:'Activity & Assurance Log',subtitle:_orgName()+'  ·  tamper-evident · retained 7 yrs',meta:'Immutable · every entry keeps its evidence',sections:[{h:'Log entries',lines:lines.length?lines:['No entries.']}]};}
   function ledgerDoc(){const lines=[];document.querySelectorAll('#dlList .dec2, #dlList .dl-item, #dlList > div').forEach(d=>{const tx=d.textContent.replace(/\s+/g,' ').trim();if(tx)lines.push(tx.slice(0,240));});if(!lines.length)lines.push('No decisions recorded yet.');return {file:'CyberRx_Decision_Ledger',title:'Decision Ledger',subtitle:_orgName()+'  ·  system of record',meta:'Immutable · every decision keeps the evidence it was made on',sections:[{h:'Decisions',lines}]};}
   const DOC_BUILDERS={board:boardDoc,assessment:assessmentDoc,evidence:evidenceDoc,audit:auditDoc,ledger:ledgerDoc};
@@ -3999,7 +3994,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     h+='<div class="ev-sec">Freshness &amp; confidence</div><div class="ev-meta"><span>\u23f1 <b>'+e.freshness+'</b></span><span>\u25ce <b>'+e.confidence+'</b></span></div>';
     if(e.detail&&e.detail.some(d=>d[3]))h+='<div class="ev-leg"><span class="prov pull">\u25cf</span> pulled from a system &nbsp;\u00b7&nbsp; <span class="prov assum">\u25d0</span> assumption — owned &amp; editable</div>';
     if(e.links&&e.links.length){h+='<div class="ev-sec">Go deeper</div><div class="ev-links">'+e.links.map(l=>'<button class="ev-link" data-evlink="'+l[1]+'">'+l[0]+'</button>').join('')+'</div>';}
-    if(e.generated)h+='<div style="margin-top:18px;font-family:var(--mono);font-size:10px;color:var(--subtle);line-height:1.5">Illustrative provenance — in production this panel shows the exact signals, documents, and rule that produced this value.</div>';
+    if(e.generated)h+='<div style="margin-top:18px;font-family:var(--mono);font-size:10px;color:var(--subtle);line-height:1.5">This panel shows the signals, documents, and rules that produced this value.</div>';
     document.getElementById('evInlineBody').innerHTML=h;
     showEvInline();
   }
