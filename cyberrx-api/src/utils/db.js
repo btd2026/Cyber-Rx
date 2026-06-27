@@ -1067,6 +1067,39 @@ async function init() {
       CREATE INDEX IF NOT EXISTS scan_record_scope ON scan_record(scope_type, scope_id, created_at);
       CREATE INDEX IF NOT EXISTS scan_record_doc ON scan_record(document_id);
 
+      -- Analyst review queue (Stage 7/8): low-confidence + reconciliation
+      -- conflicts routed for human confirm/override, with an audit trail.
+      CREATE TABLE IF NOT EXISTS analyst_queue (
+        id          TEXT PRIMARY KEY,
+        org_id      TEXT NOT NULL,
+        scan_id     TEXT,
+        item_type   TEXT NOT NULL,        -- missed_coverage|unsupported_verdict|low_confidence|...
+        framework   TEXT,
+        control_id  TEXT,
+        status      TEXT NOT NULL DEFAULT 'open',  -- open|confirmed|overridden|dismissed
+        payload     JSONB DEFAULT '{}',
+        reason      TEXT,
+        resolver    TEXT,
+        resolution  JSONB DEFAULT '{}',
+        created_at  TIMESTAMPTZ DEFAULT NOW(),
+        resolved_at TIMESTAMPTZ
+      );
+      CREATE INDEX IF NOT EXISTS analyst_queue_org ON analyst_queue(org_id, status);
+      CREATE INDEX IF NOT EXISTS analyst_queue_scan ON analyst_queue(scan_id);
+
+      -- Append-only audit of analyst decisions.
+      CREATE TABLE IF NOT EXISTS analyst_queue_audit (
+        id         TEXT PRIMARY KEY,
+        queue_id   TEXT NOT NULL,
+        org_id     TEXT,
+        action     TEXT NOT NULL,
+        actor      TEXT,
+        reason     TEXT,
+        detail     JSONB DEFAULT '{}',
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS analyst_queue_audit_q ON analyst_queue_audit(queue_id);
+
       -- CISO posture-domain snapshots — one row per (org, domain) per capture,
       -- so the dashboard can show whether each domain is improving/deteriorating.
       CREATE TABLE IF NOT EXISTS ciso_posture_snapshots (
