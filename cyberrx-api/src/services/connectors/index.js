@@ -9,6 +9,8 @@ const REGISTRY = {
   crowdstrike: require('./crowdstrike'),
   tenable: require('./tenable'),
   splunk: require('./splunk'),
+  sentinel: require('./sentinel'),
+  sailpoint: require('./sailpoint'),
   azure_openai: require('./azure_openai'),
   langsmith: require('./langsmith'),
 };
