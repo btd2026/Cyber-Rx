@@ -1047,6 +1047,26 @@ async function init() {
       CREATE INDEX IF NOT EXISTS scan_quota_audit_scope
         ON scan_quota_audit(scope_type, scope_id, created_at);
 
+      -- Per-scan record (§4): status + token usage / estimated cost (by stage),
+      -- framework versions pinned, linked to the quota period. Powers cost-per-
+      -- scan observability and incremental re-assessment (Stage 8).
+      CREATE TABLE IF NOT EXISTS scan_record (
+        scan_id               TEXT PRIMARY KEY,
+        scope_type            TEXT,
+        scope_id              TEXT,
+        document_id           TEXT,
+        document_version_hash TEXT,
+        framework_versions    JSONB DEFAULT '{}',
+        quota_period_key      TEXT,
+        status                TEXT,                 -- reserved|running|completed|failed|refunded
+        token_usage           JSONB DEFAULT '{}',   -- {input,cached_read,output,est_cost_usd,by_stage}
+        started_at            TIMESTAMPTZ,
+        completed_at          TIMESTAMPTZ,
+        created_at            TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS scan_record_scope ON scan_record(scope_type, scope_id, created_at);
+      CREATE INDEX IF NOT EXISTS scan_record_doc ON scan_record(document_id);
+
       -- CISO posture-domain snapshots — one row per (org, domain) per capture,
       -- so the dashboard can show whether each domain is improving/deteriorating.
       CREATE TABLE IF NOT EXISTS ciso_posture_snapshots (

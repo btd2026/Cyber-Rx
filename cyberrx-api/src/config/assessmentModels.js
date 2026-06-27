@@ -15,4 +15,11 @@ module.exports = {
   get judgeModel() { return str('ASSESSMENT_JUDGE_MODEL', 'claude-sonnet-4-6'); },           // mid (default)
   get escalateModel() { return str('ASSESSMENT_ESCALATE_MODEL', 'claude-opus-4-8'); },        // flagship
   get maxTokens() { return int('ASSESSMENT_MAX_TOKENS', 1024); },
+
+  // Routing thresholds (Stage 5).
+  get obviousSim() { return num('ASSESSMENT_OBVIOUS_SIM', 0.82); },            // >= => obvious, use cheap model
+  get escalateBelowConfidence() { return num('ASSESSMENT_ESCALATE_BELOW', 0.6); }, // < => re-judge with flagship
+  get verifyEnabled() { return (process.env.ASSESSMENT_VERIFY || 'true') !== 'false'; },
 };
+
+function num(name, def) { const v = parseFloat(process.env[name]); return Number.isFinite(v) ? v : def; }
