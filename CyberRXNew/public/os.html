@@ -1825,7 +1825,6 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
   function hideBack(){backTo=null;document.getElementById('backbarWrap').style.display='none';}
   document.getElementById('backbtn').addEventListener('click',()=>{const t=backTo;hideBack();if(curSeat==='ciso')show(t);else showDyn(t);});
   function selectSeat(seat){
-    vaActive=true; // user interaction proves the OS is visible
     curSeat=seat;hideBack();{var _ei=document.getElementById('evInline');if(_ei)_ei.style.display='none';}
     document.querySelectorAll('#seatbar .sb').forEach(b=>b.classList.toggle('active',b.dataset.seat===seat));
     const isCiso=(seat==='ciso');
