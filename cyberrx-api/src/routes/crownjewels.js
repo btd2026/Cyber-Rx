@@ -10,6 +10,7 @@
 const express = require('express');
 const router = express.Router();
 const Analysis = require('../services/crownjewels/AnalysisRunService');
+const CrownJewelEngine = require('../services/crownjewels/CrownJewelEngine');
 const { optionalJWT, requireAdmin } = require('../middleware/auth');
 
 function ids(req) {
@@ -39,6 +40,23 @@ router.post('/analyze', optionalJWT, async (req, res) => {
     if (e && e.code === 'ANALYSIS_CAP_REACHED') return res.status(429).json({ error: e.message, code: e.code, used: e.used, limit: e.limit, reset_date: e.resetDate });
     res.status(500).json({ error: e.message });
   }
+});
+
+// Crown-jewel summary for the cockpit (material exposure, crown jewels, counts).
+// Computed from the org's real inventory; { empty:true } when none ingested yet.
+router.get('/summary', optionalJWT, async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'org_id is required' });
+  try { const out = await CrownJewelEngine.run(orgId); res.json({ org_id: orgId, generated_at: out.generated_at, empty: !!out.empty, ...out.summary }); }
+  catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Full process -> asset -> risk -> control GraphModel for the visualization.
+router.get('/graph', optionalJWT, async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'org_id is required' });
+  try { const out = await CrownJewelEngine.run(orgId); res.json({ org_id: orgId, generated_at: out.generated_at, empty: !!out.empty, ...out.graph }); }
+  catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // Remaining full-rebuild cap — FREE.

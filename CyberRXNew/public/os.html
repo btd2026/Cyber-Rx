@@ -788,7 +788,7 @@
     </div>
     <div class="band" style="grid-template-columns:repeat(5,1fr)">
       <button class="pm pm-ev" data-ev="intrusions"><div class="k">Active compromise</div><div class="v" style="font-size:18px">None</div><span class="pmgo ev">details ▸</span></button>
-      <button class="pm pm-ev" data-ev="ciso-exposure"><div class="k">Material exposure</div><div class="v" style="color:var(--critical)">$94M</div><span class="pmgo ev">details ▸</span></button>
+      <button class="pm pm-ev" data-ev="ciso-exposure"><div class="k">Material exposure <span id="cjDataBadge" style="display:none;font-size:9px;font-weight:600;padding:1px 5px;border-radius:6px;vertical-align:middle"></span></div><div class="v" style="color:var(--critical)" id="cjMatExp">$94M</div><span class="pmgo ev">details ▸</span></button>
       <button class="pm pm-ev" data-ev="controls"><div class="k">Critical controls validated</div><div class="v" style="font-size:18px">1,238 / 1,240</div><span class="pmgo ev">details ▸</span></button>
       <button class="pm pm-ev" data-ev="ciso-vulns"><div class="k">Exploitable exposure</div><div class="v"><span style="color:var(--critical)">2 ext</span> <span style="font-size:12px;color:var(--critical)">1 KEV</span></div><span class="pmgo ev">details ▸</span></button>
       <button class="pm pm-ev" data-ev="ciso-decisions"><div class="k">Decisions requiring you</div><div class="v warnum">2</div><span class="pmgo ev">details ▸</span></button>
@@ -2394,7 +2394,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
       if(typeof e.data.benchShare==='boolean')benchShare=e.data.benchShare;
       if(e.data.currency&&e.data.currency.sym){MON=e.data.currency.sym;applyCurrencyAll();}
     }
-    if(e.data==='cyberrx-os-active'){vaActive=true;try{if(!USER_ORG){var _ao=localStorage.getItem('cyberrx_org_name');if(_ao)applyOrgName(_ao);}}catch(_){}if(!vaMuted)speakAgent(curSeat);}
+    if(e.data==='cyberrx-os-active'){vaActive=true;try{if(!USER_ORG){var _ao=localStorage.getItem('cyberrx_org_name');if(_ao)applyOrgName(_ao);}}catch(_){}try{if(window.cjLoadLive)window.cjLoadLive();}catch(_){}if(!vaMuted)speakAgent(curSeat);}
     else if(e.data==='cyberrx-os-inactive'){vaActive=false;try{window.speechSynthesis.cancel();}catch(_){}}
   });
   function openTwin(id){
@@ -2487,6 +2487,31 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
   document.getElementById('cpIn').addEventListener('keydown',function(e){if(e.key==='Enter')askTwin();});
   renderAgent('ciso');
   updateTwinScope();
+
+  // ===== Live engine data: pull real crown-jewel / material-exposure figures
+  // from cyberrx-api when the deployment is configured (window.CYBERRX_API +
+  // an org id). Falls back to the sample figure, clearly badged, otherwise —
+  // so the number is either real-and-labelled-live or demo-and-labelled-sample,
+  // never a silent static value pretending to be real. =====
+  (function(){
+    function api(){try{return window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'';}catch(_){return '';}}
+    function org(){try{return window.CYBERRX_ORG_ID||localStorage.getItem('cyberrx_org_id')||'';}catch(_){return '';}}
+    function usd(n){n=Number(n)||0;if(n>=1e9)return '$'+(n/1e9).toFixed(1)+'B';if(n>=1e6)return '$'+Math.round(n/1e6)+'M';if(n>=1e3)return '$'+Math.round(n/1e3)+'K';return '$'+n;}
+    function badge(live){var b=document.getElementById('cjDataBadge');if(!b)return;b.style.display='inline-block';b.textContent=live?'live':'sample';b.style.background=live?'rgba(47,163,122,.16)':'rgba(120,140,160,.16)';b.style.color=live?'var(--pass)':'var(--muted)';b.title=live?'Computed from your inventory by the Crown-Jewels engine':'Sample data — connect your inventory (set window.CYBERRX_API + org id) to see live figures';}
+    window.cjLoadLive=function(){
+      var base=api(),o=org();
+      if(!base||!o){badge(false);return;}
+      try{
+        fetch(base.replace(/\/+$/,'')+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}})
+          .then(function(r){return r.ok?r.json():null;})
+          .then(function(d){var v=document.getElementById('cjMatExp');
+            if(d&&!d.empty&&Number(d.material_exposure_usd)>0&&v){v.textContent=usd(d.material_exposure_usd);badge(true);}
+            else{badge(false);}})
+          .catch(function(){badge(false);});
+      }catch(_){badge(false);}
+    };
+    window.cjLoadLive();
+  })();
   document.getElementById('warBtn').addEventListener('click',()=>{ensureAudio();openModal('warModal');renderWar();});
   // ===== War Room — live incident command center =====
   let incidentActive=false, wrStart=0, wrTimer=null, wrTick=0, alarmMuted=false, audioCtx=null, alarmTO=null;
