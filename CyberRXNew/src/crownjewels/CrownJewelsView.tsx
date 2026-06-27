@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { CrownJewelSummary, GraphModel } from './types'
 import { sampleSummary, sampleGraph } from './sampleData'
+import { fetchSummary, fetchGraph } from './api'
 import CrownJewelGraph from './CrownJewelGraph'
 import CoverageMatrix from './CoverageMatrix'
 import RiskHeatmap from './RiskHeatmap'
@@ -11,11 +12,19 @@ const fmt = (n: number) => n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1)}M` : 
 
 export default function CrownJewelsView() {
   const [tab, setTab] = useState<ViewTab>('summary')
+  const [summary, setSummary] = useState<CrownJewelSummary>(sampleSummary)
+  const [graph, setGraph] = useState<GraphModel>(sampleGraph)
+  const [live, setLive] = useState(false)
 
-  // In production, these would come from API calls via useSWR/React Query.
-  // For now, use sample data (same pattern as the rest of CyberRXNew).
-  const summary: CrownJewelSummary = sampleSummary
-  const graph: GraphModel = sampleGraph
+  useEffect(() => {
+    let cancelled = false
+    Promise.all([fetchSummary(), fetchGraph()]).then(([s, g]) => {
+      if (cancelled) return
+      if (s && !s.empty) { setSummary(s); setLive(true) }
+      if (g && g.nodes && g.nodes.length > 0) { setGraph(g); setLive(true) }
+    })
+    return () => { cancelled = true }
+  }, [])
 
   const tabs: { id: ViewTab; label: string }[] = [
     { id: 'summary', label: 'Crown Jewels' },
@@ -29,6 +38,7 @@ export default function CrownJewelsView() {
       <div className="vhead">
         <div className="q">
           Crown Jewel Analysis <span className="ans warn">{summary.counts.crown_jewels} Crown Jewels identified</span>
+          {!live && <span style={{ fontSize: '11px', color: '#ca8a04', marginLeft: '8px' }}>Seed data</span>}
         </div>
         <div className="qsub">
           Which assets are mission-critical, what threatens them, and where are the control gaps?

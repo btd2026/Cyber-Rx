@@ -1,16 +1,14 @@
 'use strict';
 
 /**
- * routes/crown-jewels — Crown-Jewels analysis engine API.
- * Stage 1: the analysis entrypoint behind the run cost-ceiling gate. The
- * downstream pipeline (ingest -> resolve -> map -> score -> graph) is stubbed
- * here and filled in by Stages 2-10.
+ * routes/crown-jewels — Crown-Jewels analysis engine API (Stages 1-10).
  */
 
 const express = require('express');
 const router = express.Router();
 const Analysis = require('../services/crownjewels/AnalysisRunService');
 const CrownJewelEngine = require('../services/crownjewels/CrownJewelEngine');
+const AnalystQueue = require('../services/assessment/AnalystQueueService');
 const { optionalJWT, requireAdmin } = require('../middleware/auth');
 
 function ids(req) {
@@ -73,6 +71,30 @@ router.post('/quota/reset', requireAdmin, async (req, res) => {
   const orgId = orgOf(req); if (!orgId) return res.status(400).json({ error: 'org_id is required' });
   try { const actor = (req.user && req.user.userId) || req.headers['x-admin-actor'] || 'admin'; res.json(await Analysis.adminReset(ids(req), { actor, reason: req.body && req.body.reason })); }
   catch (e) { res.status(400).json({ error: e.message }); }
+});
+
+// Review queue — items needing human confirmation/override from the analysis.
+router.get('/review', optionalJWT, async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'org_id is required' });
+  try {
+    const status = req.query.status || 'open';
+    const items = await AnalystQueue.list(orgId, { status, scanId: req.query.run_id });
+    res.json({ org_id: orgId, status, items });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.post('/review/:id/resolve', optionalJWT, async (req, res) => {
+  try {
+    const actor = req.userId || req.headers['x-admin-actor'] || 'analyst';
+    const result = await AnalystQueue.resolve(req.params.id, {
+      action: req.body.action,
+      actor,
+      reason: req.body.reason,
+      resolution: req.body.resolution,
+    });
+    res.json(result);
+  } catch (e) { res.status(400).json({ error: e.message }); }
 });
 
 module.exports = router;

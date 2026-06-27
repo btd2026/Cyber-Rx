@@ -22,6 +22,7 @@ const EntityResolution = require('./EntityResolutionService');
 const DependencyMapping = require('./DependencyMappingService');
 const RiskMapping = require('./RiskMappingService');
 const ControlMapping = require('./ControlMappingService');
+const AnalystQueue = require('../assessment/AnalystQueueService');
 
 const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
 
@@ -160,6 +161,42 @@ async function runPipeline(orgId, { runId, meter, anthropic } = {}) {
   });
 
   const expo = materialExposure(crownAssets, allRisks);
+
+  // Stage 10: Review Queue — enqueue low-confidence items for human review
+  try {
+    const reviewItems = [];
+    for (const dep of depResult.review || []) {
+      reviewItems.push({
+        type: 'dependency_inferred',
+        control_id: null,
+        reason: `Inferred dependency (confidence ${dep.confidence}) between process ${dep.process_id} and asset ${dep.asset_id}`,
+        ...dep,
+      });
+    }
+    for (const rm of riskResult.review || []) {
+      reviewItems.push({
+        type: 'risk_mapping_low_confidence',
+        control_id: null,
+        reason: rm.rationale || `Low-confidence risk mapping (${rm.confidence})`,
+        ...rm,
+      });
+    }
+    for (const gap of controlResult.gaps || []) {
+      reviewItems.push({
+        type: 'control_gap',
+        framework: gap.framework,
+        control_id: gap.control_id,
+        reason: `Control ${gap.control_id} is not documented on crown-jewel asset ${gap.asset_id}`,
+        ...gap,
+      });
+    }
+    if (reviewItems.length > 0) {
+      await AnalystQueue.enqueue(orgId, runId, reviewItems);
+      logger.info(`[CrownJewelEngine] Enqueued ${reviewItems.length} items for analyst review`);
+    }
+  } catch (e) {
+    logger.warn(`[CrownJewelEngine] Review queue enqueue failed: ${e.message}`);
+  }
 
   return {
     org_id: orgId,
