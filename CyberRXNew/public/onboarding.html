@@ -156,27 +156,30 @@
   .crit.h{color:var(--critical);background:var(--critical-tint)}.crit.m{color:var(--exposure);background:var(--exposure-tint)}.crit.l{color:var(--pass);background:var(--pass-tint)}
 
   /* mapping + crown jewels */
-  .maprow{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:12px 15px;margin-bottom:9px}
-  .maprow .ap{font-weight:600;font-size:13.5px;min-width:150px}
-  .maprow .ar{color:var(--subtle);font-family:var(--mono)}
-  .maprow .pr{flex:1;font-size:13.5px}
-  .maprow .conf{font-family:var(--mono);font-size:11px;padding:3px 8px;border-radius:6px}
+  #mapList{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  @media (max-width:900px){#mapList{grid-template-columns:1fr 1fr}}
+  @media (max-width:560px){#mapList{grid-template-columns:1fr}}
+  .maprow{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:9px 11px;font-size:12.5px}
+  .maprow .ap{font-weight:600;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+  .maprow .ar{color:var(--subtle);font-family:var(--mono);font-size:11px}
+  .maprow .pr{flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .maprow .conf{font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:5px}
   .maprow .conf.hi{color:var(--pass);background:var(--pass-tint)}.maprow .conf.lo{color:var(--exposure);background:var(--exposure-tint)}
-  .maprow .cf{font-family:var(--body);font-weight:600;font-size:12px;border:1px solid var(--border);background:var(--surface);border-radius:7px;padding:6px 11px;cursor:pointer;white-space:nowrap}
+  .maprow .cf{font-family:var(--body);font-weight:600;font-size:11px;border:1px solid var(--border);background:var(--surface);border-radius:6px;padding:4px 8px;cursor:pointer;white-space:nowrap}
   .maprow.confirmed{border-color:color-mix(in srgb,var(--pass) 35%,transparent)}
   .maprow.confirmed .cf{color:var(--pass);border-color:color-mix(in srgb,var(--pass) 35%,transparent);background:var(--pass-tint)}
   .maprow.confirmed .cf::before{content:"✓ "}
-  .mapbtn{margin-top:6px;font-family:var(--body);font-weight:600;font-size:13.5px;color:#fff;background:var(--brand);border:none;border-radius:10px;padding:11px 18px;cursor:pointer}
+  .mapbtn{margin-top:10px;font-family:var(--body);font-weight:600;font-size:13.5px;color:#fff;background:var(--brand);border:none;border-radius:10px;padding:11px 18px;cursor:pointer}
   .mapbtn:hover{filter:brightness(1.07)}
   .cjwrap{margin-top:22px;display:none}.cjwrap.show{display:block;animation:fade .5s ease}
   @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
   .cj-sum{font-family:var(--display);font-weight:600;font-size:16px;margin-bottom:4px}
   .cj-sub{font-size:13px;color:var(--muted);margin-bottom:18px}.cj-sub b{color:var(--gold)}
-  .cjmap{position:relative;display:grid;grid-template-columns:1fr 1fr 1fr;gap:40px}
+  .cjmap{position:relative;display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px}
   .colh{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--subtle);margin-bottom:11px;text-align:center}
   .cjcol{display:flex;flex-direction:column;gap:10px}
-  .node{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;position:relative;z-index:2}
-  .node .nn{font-size:12.5px;font-weight:600;line-height:1.2}.node .nd{font-family:var(--mono);font-size:10px;color:var(--subtle);margin-top:3px}
+  .node{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;position:relative;z-index:2}
+  .node .nn{font-size:11.5px;font-weight:600;line-height:1.2}.node .nd{font-family:var(--mono);font-size:9.5px;color:var(--subtle);margin-top:2px}
   .node.proc{border-left:3px solid var(--muted)}.node.proc.h{border-left-color:var(--critical)}.node.proc.m{border-left-color:var(--exposure)}.node.proc.l{border-left-color:var(--pass)}
   .node.cjwel{border-color:var(--gold);background:var(--gold-tint)}
   .node.cjwel .badge{font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
@@ -779,7 +782,7 @@
     const G=liveGraph();const cjs=G.apps.filter(a=>a.cj).sort((x,y)=>y.score-x.score);
     const sub=document.querySelector('#cjwrap .cj-sub');if(sub)sub.innerHTML='From <b>'+G.apps.length+' system'+(G.apps.length===1?'':'s')+'</b> across <b>'+G.procs.length+' process'+(G.procs.length===1?'':'es')+'</b>, CyberRx deduced <b>'+cjs.length+' crown jewel'+(cjs.length===1?'':'s')+'</b> — scored by process criticality × data sensitivity × exposure.';
     const dataSens={'PHI':'Critical','PII':'High','PCI':'Critical','Financial':'High','Identity':'Critical','Internal docs':'Low','Internal':'Low'};
-    document.getElementById('cjmap').innerHTML='<div><div class="colh">Business processes</div><div class="cjcol">'+G.procs.map(p=>'<div class="node proc '+p.c+'" id="n-'+p.id+'"><div class="nn">'+p.n+'</div><div class="nd">'+p.data+(p.rev!=='—'?' · '+p.rev:'')+'</div></div>').join('')+'</div></div><div><div class="colh">Applications &amp; systems</div><div class="cjcol">'+G.apps.map(a=>{const sens=dataSens[a.data.split(',')[0].trim()]||'Medium';const sensCls=sens==='Critical'?'h':sens==='High'?'m':'l';return '<div class="node'+(a.cj?' cjwel':'')+'" id="n-'+a.id+'"><div class="nn">'+a.n+'</div><div class="nd">'+a.data+' · <span class="crit '+sensCls+'">'+sens+'</span>'+(a.host?' · '+a.host:'')+'</div></div>';}).join('')+'</div></div><div><div class="colh">Crown jewels</div><div class="cjcol">'+cjs.map((a,i)=>{const pNames=a.proc.map(pid=>PROC_BY[pid]||pid).join(', ');const dep=a.proc.length>1?'Multi-process dependency':'Single-process dependency';return '<div class="node cjwel" id="c-'+a.id+'"><span class="score">'+a.score+'</span><div class="badge">⬥ Crown jewel #'+(i+1)+'</div><div class="nn">'+a.n+'</div><div class="nd" style="margin:3px 0;font-size:10px;color:var(--gold)">'+dep+' · supports: '+pNames+'</div><div class="why">'+a.why+'</div><div class="nd" style="margin-top:4px">Score: process criticality × data sensitivity × exposure</div></div>';}).join('')+'</div></div><svg class="cjsvg" id="cjsvg"></svg>';
+    document.getElementById('cjmap').innerHTML='<div><div class="colh">Processes</div><div class="cjcol">'+G.procs.map(p=>'<div class="node proc '+p.c+'" id="n-'+p.id+'"><div class="nn">'+p.n+'</div><div class="nd">'+p.data+(p.rev!=='—'?' · '+p.rev:'')+'</div></div>').join('')+'</div></div><div><div class="colh">Systems</div><div class="cjcol">'+G.apps.map(a=>{const sens=dataSens[a.data.split(',')[0].trim()]||'Medium';const sensCls=sens==='Critical'?'h':sens==='High'?'m':'l';return '<div class="node'+(a.cj?' cjwel':'')+'" id="n-'+a.id+'"><div class="nn">'+a.n+'</div><div class="nd">'+a.data+' · <span class="crit '+sensCls+'">'+sens+'</span></div></div>';}).join('')+'</div></div><div><div class="colh">Crown jewels</div><div class="cjcol">'+cjs.map((a,i)=>'<div class="node cjwel" id="c-'+a.id+'"><span class="score">'+a.score+'</span><div class="badge">⬥ #'+(i+1)+'</div><div class="nn">'+a.n+'</div><div class="why">'+a.why+'</div></div>').join('')+'</div></div><svg class="cjsvg" id="cjsvg"></svg>';
     requestAnimationFrame(drawMap);
   }
   function drawMap(){const G=liveGraph();const map=document.getElementById('cjmap');const svg=document.getElementById('cjsvg');if(!map||!svg)return;const c=map.getBoundingClientRect();svg.setAttribute('viewBox','0 0 '+c.width+' '+c.height);function pt(id,side){const el=document.getElementById(id);if(!el)return null;const r=el.getBoundingClientRect();return {x:(side==='r'?r.right:r.left)-c.left,y:r.top-c.top+r.height/2};}function path(a,b,cls){if(!a||!b)return '';const dx=Math.max(30,(b.x-a.x)*0.45);return '<path class="ln '+cls+'" d="M '+a.x+' '+a.y+' C '+(a.x+dx)+' '+a.y+', '+(b.x-dx)+' '+b.y+', '+b.x+' '+b.y+'"/>';}let s='';G.apps.forEach(a=>{a.proc.forEach(pid=>{s+=path(pt('n-'+pid,'r'),pt('n-'+a.id,'l'),a.proc.length>1?'id':'');});});G.apps.filter(a=>a.cj).forEach(a=>{s+=path(pt('n-'+a.id,'r'),pt('c-'+a.id,'l'),'cj');});svg.innerHTML=s;}

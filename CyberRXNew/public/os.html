@@ -1825,6 +1825,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
   function hideBack(){backTo=null;document.getElementById('backbarWrap').style.display='none';}
   document.getElementById('backbtn').addEventListener('click',()=>{const t=backTo;hideBack();if(curSeat==='ciso')show(t);else showDyn(t);});
   function selectSeat(seat){
+    vaActive=true; // user interaction proves the OS is visible
     curSeat=seat;hideBack();{var _ei=document.getElementById('evInline');if(_ei)_ei.style.display='none';}
     document.querySelectorAll('#seatbar .sb').forEach(b=>b.classList.toggle('active',b.dataset.seat===seat));
     const isCiso=(seat==='ciso');
@@ -2319,7 +2320,13 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     speakAgent(seat);
   }
   // The advisor is HEARD, not shown — spoken via the browser speech engine, a distinct voice per seat.
+  // vaActive gates speech. In standalone mode (no parent frame) it's true
+  // immediately. In an iframe it starts false and is set true by the
+  // cyberrx-os-active postMessage. As a fallback — in case the message
+  // arrives before this listener is registered — we also activate on the
+  // first user click inside the iframe.
   let vaMuted=false, vaSpoke=false, vaActive=(window===window.parent);
+  if(!vaActive){document.addEventListener('click',function _act(){vaActive=true;document.removeEventListener('click',_act);},{ once:true });}
   // Per-seat voice persona: natural cadence + a curated list of known human-sounding system voices.
   const VOICE={
     ceo:{r:.95,p:.97,pref:['Alex','Aaron','Tom','Microsoft Guy','Microsoft Andrew','Google UK English Male','Daniel','Oliver']},
@@ -2378,7 +2385,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
       if(window.speechSynthesis.speaking||window.speechSynthesis.pending){setTimeout(_doSpeak,120);}else{_doSpeak();}
     }catch(e){}
   }
-  document.getElementById('vaReplay').addEventListener('click',()=>speakAgent(curSeat,true));
+  document.getElementById('vaReplay').addEventListener('click',()=>{vaActive=true;speakAgent(curSeat,true);});
   document.getElementById('vaMute').addEventListener('click',()=>{
     vaMuted=!vaMuted;
     document.getElementById('vaMute').textContent=vaMuted?'🔇':'🔊';
