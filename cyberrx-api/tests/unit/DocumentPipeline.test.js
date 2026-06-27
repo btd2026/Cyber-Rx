@@ -62,7 +62,7 @@ describe('reviewDocument fan-out (one finding per mapped control)', () => {
     const controls = [
       { framework_id: 'nist_csf_2', requirement_id: 'PR.AA-03', requirement_text: 'Multi-factor authentication for privileged access.' },
       { framework_id: 'nist_800_53_r5', requirement_id: 'AC-2', requirement_text: 'Account management: review and recertify user access.' },
-      { framework_id: 'cis_v8_1', requirement_id: '5.3', requirement_text: 'Disable dormant accounts within 45 days.' },
+      { framework_id: 'nist_800_53_r5', requirement_id: 'AC-2(3)', requirement_text: 'Disable dormant accounts within 45 days.' },
     ];
     const results = await reviewDocument(SAMPLE, controls);
     expect(results).toHaveLength(3);

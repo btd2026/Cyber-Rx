@@ -8,25 +8,25 @@
  *                                                             └─ assessed against EACH
  *                                                                framework INDEPENDENTLY.
  *
- * Each framework (NIST CSF 2.0, NIST SP 800-53 Rev 5, CIS v8, ISO 27001, SOC 2)
- * is its own column — control_framework_assessment holds one row per
- * (control × framework). There is NO crosswalk between frameworks.
+ * Each framework (NIST CSF 2.0, NIST SP 800-53 Rev 5, SOC 2) is its own column —
+ * control_framework_assessment holds one row per (control × framework). There is
+ * NO crosswalk between frameworks.
  *
  * Slice 0 (foundation): assemble the chain from the validated substrate, populate
  * control_framework_assessment with a first-pass status derived from the control's
  * implementation status, and record a compile_run. Richer per-framework assessment
- * (AssessmentEngine reuse, ISO/SOC2 requirement loaders) lands in later slices.
+ * (AssessmentEngine reuse, SOC2 requirement loaders) lands in later slices.
  */
 
 const db = require('../utils/db');
 const logger = require('../utils/logger');
 
-const FRAMEWORKS = ['nist_csf_2_0', 'nist_800_53_r5', 'cis_v8', 'iso_27001', 'soc_2'];
-const FRAMEWORK_LABEL = { nist_csf_2_0: 'NIST CSF 2.0', nist_800_53_r5: 'NIST SP 800-53 Rev 5', cis_v8: 'CIS Controls v8', iso_27001: 'ISO/IEC 27001', soc_2: 'SOC 2' };
-// ISO 27001 / SOC 2 are assessed REQUIREMENT-centrically (against their own
-// seeded requirement catalog + document evidence); the rest are CONTROL-centric
-// (against the org's controls). Both independent — no crosswalk either way.
-const REQ_FRAMEWORKS = ['iso_27001', 'soc_2'];
+const FRAMEWORKS = ['nist_csf_2_0', 'nist_800_53_r5', 'soc_2'];
+const FRAMEWORK_LABEL = { nist_csf_2_0: 'NIST CSF 2.0', nist_800_53_r5: 'NIST SP 800-53 Rev 5', soc_2: 'SOC 2' };
+// SOC 2 is assessed REQUIREMENT-centrically (against its own seeded requirement
+// catalog + document evidence); the rest are CONTROL-centric (against the org's
+// controls). Both independent — no crosswalk either way.
+const REQ_FRAMEWORKS = ['soc_2'];
 const CONTROL_FRAMEWORKS = FRAMEWORKS.filter((f) => !REQ_FRAMEWORKS.includes(f));
 const slug = (s) => String(s || '').replace(/[^a-zA-Z0-9]+/g, '_');
 
@@ -48,8 +48,6 @@ function statusFromImpl(impl) {
 const FW_ALIASES = {
   nist_csf_2_0: ['nist_csf_2_0', 'nist_csf_2', 'NIST-CSF'],
   nist_800_53_r5: ['nist_800_53_r5', 'nist_800_53', 'NIST-800-53'],
-  cis_v8: ['cis_v8', 'cis_v8_1', 'CIS-v8'],
-  iso_27001: ['iso_27001', 'ISO-27001'],
   soc_2: ['soc_2', 'SOC2'],
 };
 function normStatus(s) {
@@ -85,7 +83,7 @@ function verdict(evidence, framework, control) {
   const st = statusFromImpl(control.implementation_status);
   return { status: st, score: scoreFor(st, control.effectiveness_score != null ? control.effectiveness_score : null), source: 'implementation' };
 }
-// Independent verdict for one framework REQUIREMENT (ISO/SOC2): the framework's
+// Independent verdict for one framework REQUIREMENT (SOC2): the framework's
 // own document evidence keyed by requirement id, else an honest not_assessed —
 // never inferred from a control's implementation or from another framework.
 function requirementVerdict(evidence, framework, requirementId) {
@@ -155,7 +153,7 @@ async function run(orgId, { decidedBy } = {}) {
   const evidence = await loadEvidence(orgId);
   const tally = {}; FRAMEWORKS.forEach((fw) => { tally[fw] = { met: 0, partial: 0, gap: 0, not_assessed: 0 }; });
   let written = 0;
-  // Control-centric frameworks (NIST CSF / 800-53 / CIS): one row per control.
+  // Control-centric frameworks (NIST CSF / 800-53): one row per control.
   for (const c of controls) {
     for (const fw of CONTROL_FRAMEWORKS) {
       // Independent per-framework verdict from that framework's own evidence;
@@ -170,7 +168,7 @@ async function run(orgId, { decidedBy } = {}) {
       written++; tally[fw][v.status] = (tally[fw][v.status] || 0) + 1;
     }
   }
-  // Requirement-centric frameworks (ISO 27001 / SOC 2): one row per requirement
+  // Requirement-centric frameworks (SOC 2): one row per requirement
   // from the seeded catalog, evidenced by documents; no evidence -> not_assessed.
   for (const fw of REQ_FRAMEWORKS) {
     // drop any stale control-keyed rows from earlier (pre-Slice-2) runs.

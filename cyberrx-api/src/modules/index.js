@@ -40,10 +40,10 @@ const MODULES = [
   },
   {
     id: 'M4', name: 'Technical Control Validation',
-    purpose: 'Obtain API keys / credentials, connect to the technology stack, and grab the data needed to validate controls for NIST CSF 2.0, NIST SP 800-53, CIS, and SOC — each framework assessed independently, with no attempt to cross-map frameworks.',
+    purpose: 'Obtain API keys / credentials, connect to the technology stack, and grab the data needed to validate controls for NIST CSF 2.0, NIST SP 800-53, and SOC — each framework assessed independently, with no attempt to cross-map frameworks.',
     service: 'cae/assessmentService', entry: 'runAssessment(orgId, frameworks)',
     route: 'POST /api/cae/assessment/run, GET /api/cae/assessment',
-    frameworks: ['nist_csf_2_0', 'nist_800_53', 'cis_v8', 'soc_2'], independentFrameworks: true, llm: false,
+    frameworks: ['nist_csf_2_0', 'nist_800_53', 'soc_2'], independentFrameworks: true, llm: false,
   },
   {
     id: 'M5', name: 'Document Assurance Review',

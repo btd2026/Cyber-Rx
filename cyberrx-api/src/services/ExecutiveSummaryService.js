@@ -68,7 +68,7 @@ function deterministic(intake, a) {
   if (regs.length) context += ` It is subject to ${regs.join(', ')}, which set the baseline for its security obligations.`;
   if ((op.geos || []).length) context += ` Operations span ${op.geos.join(', ')}.`;
 
-  let posture = `Overall cybersecurity posture is ${a.overall.score != null ? a.overall.score : '—'}/100 (${a.overall.band})${a.overall.trend ? `, ${a.overall.trend}` : ''}, assessed across ${a.controlCount || 0} control areas through NIST CSF 2.0, NIST SP 800-53, CIS Controls, and MITRE ATT&CK.`;
+  let posture = `Overall cybersecurity posture is ${a.overall.score != null ? a.overall.score : '—'}/100 (${a.overall.band})${a.overall.trend ? `, ${a.overall.trend}` : ''}, assessed across ${a.controlCount || 0} control areas through NIST CSF 2.0, NIST SP 800-53, and MITRE ATT&CK.`;
   if (a.thresholds && a.thresholds.breaches) posture += ` ${a.thresholds.breaches} of ${a.thresholds.total} risk-appetite thresholds are breached (${a.thresholds.critical} critical).`;
   if (jewels.length && (a.weakest || []).length) posture += ` Weakness in ${a.weakest[0].name} bears directly on ${jewels.slice(0, 2).join(' and ')}.`;
   else if (regs.length && (a.weakest || []).length) posture += ` ${a.weakest[0].name} is the most exposed area relative to ${regs[0]} obligations.`;

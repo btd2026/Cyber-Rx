@@ -328,7 +328,7 @@
     {id:'edr',cat:'Endpoint Detection & Response (EDR)',ic:'🛡',w:14,sig:420,vendors:['CrowdStrike Falcon','Microsoft Defender for Endpoint','SentinelOne','VMware Carbon Black','Trend Micro'],pulls:'Live endpoint detections, threats blocked, agent coverage, dwell time.',ans:'CISO “are we under attack / can we operate,” CIO endpoint health.'},
     {id:'siem',cat:'SIEM / Log analytics',ic:'📊',w:16,sig:510,vendors:['Splunk','Microsoft Sentinel','Elastic Security','IBM QRadar','Google Chronicle'],pulls:'Alerts, correlated incidents, MTTD/MTTC, log coverage.',ans:'CISO operational status & incident timeline, Board assurance.'},
     {id:'fw',cat:'Firewall / Network',ic:'🧱',w:10,sig:180,vendors:['Palo Alto Networks','Fortinet FortiGate','Cisco Secure Firewall','Check Point','Zscaler'],pulls:'Attacks blocked, exposed services, segmentation gaps.',ans:'CISO threat & exposure, CIO network status.'},
-    {id:'idp',cat:'Identity provider (IdP / SSO)',ic:'🔑',w:14,sig:240,vendors:['Okta','Microsoft Entra ID','Ping Identity','Google Workspace','Duo'],pulls:'MFA coverage, privileged accounts, access reviews, risky sign-ins.',ans:'CISO control validation, CRO access risk, HIPAA/ISO evidence.'},
+    {id:'idp',cat:'Identity provider (IdP / SSO)',ic:'🔑',w:14,sig:240,vendors:['Okta','Microsoft Entra ID','Ping Identity','Google Workspace','Duo'],pulls:'MFA coverage, privileged accounts, access reviews, risky sign-ins.',ans:'CISO control validation, CRO access risk, HIPAA evidence.'},
     {id:'cloud',cat:'Cloud security posture (CSPM)',ic:'☁',w:12,sig:160,vendors:['AWS Security Hub','Microsoft Defender for Cloud','Wiz','Prisma Cloud','Google SCC'],pulls:'Misconfigurations, internet-exposed assets, IAM risk, inventory.',ans:'CISO exposure, CIO service & asset health.'},
     {id:'vuln',cat:'Vulnerability management',ic:'🔍',w:10,sig:90,vendors:['Tenable','Qualys','Rapid7 InsightVM','Microsoft Defender VM'],pulls:'Critical vulns, internet-facing exposure, patch latency.',ans:'CISO material exposure, attack-path inputs.'},
     {id:'email',cat:'Email security',ic:'✉',w:6,sig:70,vendors:['Proofpoint','Mimecast','Abnormal Security','Microsoft Defender for Office'],pulls:'Phishing blocked, account-takeover attempts, BEC signals.',ans:'CISO live threat (phishing → claims).'},
@@ -672,17 +672,17 @@
   // ---- documents: framework-aware key documents for non-automated controls ----
   const KEYDOCS=[
     {group:'Governance & Risk',items:[
-      {id:'d1',n:'Information Security Policy',ev:'NIST CSF GV · 800-53 PL/PM · ISO A.5',ctrls:14},
-      {id:'d2',n:'Risk Management Policy & latest Risk Assessment',ev:'CSF ID.RA · 800-53 RA · ISO A.5',ctrls:11},
+      {id:'d1',n:'Information Security Policy',ev:'NIST CSF GV · 800-53 PL/PM',ctrls:14},
+      {id:'d2',n:'Risk Management Policy & latest Risk Assessment',ev:'CSF ID.RA · 800-53 RA',ctrls:11},
       {id:'d3',n:'Third-Party / Vendor Risk Management Policy',ev:'CSF GV.SC · 800-53 SR · SOC 2 CC9',ctrls:8}]},
     {group:'Access & Identity',items:[
       {id:'d4',n:'Access Control Policy',ev:'CSF PR.AA · 800-53 AC · HIPAA §164.312',ctrls:12},
       {id:'d5',n:'Authentication / MFA Standard',ev:'800-53 IA · CSF PR.AA',ctrls:7}]},
     {group:'Operations & Resilience',items:[
       {id:'d6',n:'Incident Response Plan',ev:'CSF RS/RC · 800-53 IR · SOC 2 CC7',ctrls:10},
-      {id:'d7',n:'Business Continuity / DR Plan',ev:'CSF RC · 800-53 CP · ISO A.5.30',ctrls:9},
+      {id:'d7',n:'Business Continuity / DR Plan',ev:'CSF RC · 800-53 CP',ctrls:9},
       {id:'d8',n:'Change Management Policy',ev:'800-53 CM · SOC 2 CC8',ctrls:6},
-      {id:'d9',n:'Configuration / Hardening Standards',ev:'800-53 CM · CIS v8',ctrls:8}]},
+      {id:'d9',n:'Configuration / Hardening Standards',ev:'800-53 CM',ctrls:8}]},
     {group:'Data & Privacy',items:[
       {id:'d10',n:'Data Classification & Handling Policy',ev:'CSF PR.DS · 800-53 MP/SC',ctrls:9},
       {id:'d11',n:'Encryption / Cryptography Policy',ev:'800-53 SC-13 · HIPAA §164.312(a)(2)(iv)',ctrls:5},

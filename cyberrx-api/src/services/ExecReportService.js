@@ -8,8 +8,8 @@
  * existing business-process / risk graph) — never from seeded scores.
  *
  *   cisoPack(orgId, {baseline})  D1 — operational security language:
- *     CSF function scores, 800-53 family compliance vs baseline, CIS IG progress
- *     (pending B3), ATT&CK heat map, failing-control queue + remediation, trends.
+ *     CSF function scores, 800-53 family compliance vs baseline, ATT&CK heat map,
+ *     failing-control queue + remediation, trends.
  *   croPack(orgId)               D2 — business-risk language only:
  *     top processes by exposure, enterprise risk trend, "what changed", CSF
  *     maturity tier, profile coverage, deltas as business impact.
@@ -147,46 +147,11 @@ async function cisoPack(orgId, { baseline = 'moderate' } = {}) {
     nist80053: { overall: ctrl.overall != null ? ctrl.overall : null, families,
       baseline: { name: baseCol, total: baseTotal, covered: baseCovered,
         coveragePct: baseTotal ? Math.round((baseCovered / baseTotal) * 100) : 0 } },
-    cis: await cisProgress(orgId, runId),
     attack: { summary: attackSummary, heat },
     failingQueue: queue,
     trends: { csf: trendCsf.reverse(), nist80053: trendCtrl.reverse() },
     runMeta: latest.run,
   };
-}
-
-// CIS Controls v8.1 — coverage across the 18 Controls (categories). For each
-// CIS Control, of its safeguards, how many have a passing mapped check this run.
-async function cisProgress(orgId, runId) {
-  const has = await db.query(`SELECT COUNT(*)::int n FROM framework_requirements WHERE framework_id='cis_v8_1'`);
-  if (!has[0] || !has[0].n) {
-    return { status: 'pending', note: 'CIS v8.1 workbook not yet ingested (resources/cis/).' };
-  }
-  // safeguards (family = parent CIS Control number), with run coverage
-  const rows = await db.query(`
-    SELECT r.requirement_id, r.family, r.parent_id,
-      EXISTS (
-        SELECT 1 FROM requirement_mappings m JOIN check_results cr
-          ON cr.check_id=m.check_id AND cr.run_id=$1 AND cr.org_id=$2 AND cr.status IN ('pass','partial')
-        WHERE m.framework_id='cis_v8_1' AND m.requirement_id=r.requirement_id
-      ) AS covered
-    FROM framework_requirements r
-    WHERE r.framework_id='cis_v8_1' AND r.meta->>'kind'='safeguard'`, [runId, orgId]);
-  // the 18 CIS Controls (titles)
-  const ctrlRows = await db.query(`
-    SELECT requirement_id, title FROM framework_requirements
-    WHERE framework_id='cis_v8_1' AND meta->>'kind'='control' ORDER BY (requirement_id)::int NULLS LAST, requirement_id`);
-  const controls = ctrlRows.map((c) => {
-    const sgs = rows.filter((r) => String(r.parent_id) === String(c.requirement_id) || String(r.family) === String(c.requirement_id));
-    const covered = sgs.filter((r) => r.covered).length;
-    const pct = sgs.length ? Math.round((covered / sgs.length) * 100) : 0;
-    return {
-      number: c.requirement_id, name: c.title,
-      safeguards: sgs.length, covered, attainmentPct: pct,
-      status: pct >= 80 ? 'Strong' : pct >= 50 ? 'Moderate' : pct >= 25 ? 'Weak' : 'Gap',
-    };
-  });
-  return { status: 'ingested', version: '8.1.2', safeguards: rows.length, totalControls: controls.length, controls };
 }
 
 function recommend(signal, tool) {
@@ -299,10 +264,10 @@ function businessImpacts(csf) {
 }
 
 // -------------------------------------------------------------- Drill-down (D1+)
-// Dig into one framework node: a CSF function, an 800-53 family, a CIS Control,
-// or an ATT&CK tactic -> its subcategories/requirements with computed scores,
-// what was done (the checks + their results), findings, and recommendations.
-const FW_ID = { csf: 'nist_csf_2', n80053: 'nist_800_53_r5', cis: 'cis_v8_1' };
+// Dig into one framework node: a CSF function, an 800-53 family, or an ATT&CK
+// tactic -> its subcategories/requirements with computed scores, what was done
+// (the checks + their results), findings, and recommendations.
+const FW_ID = { csf: 'nist_csf_2', n80053: 'nist_800_53_r5' };
 
 function parseEvidence(e) { try { return typeof e === 'string' ? JSON.parse(e) : (e || {}); } catch (_) { return {}; } }
 
@@ -320,9 +285,7 @@ async function frameworkDrilldown(orgId, framework, group) {
   const latest = await ensureRun(orgId);
   const runId = latest.run && latest.run.id;
 
-  const where = framework === 'cis'
-    ? `framework_id=$1 AND parent_id=$2 AND meta->>'kind'='safeguard'`
-    : `framework_id=$1 AND family=$2`;
+  const where = `framework_id=$1 AND family=$2`;
   const reqs = await db.query(
     `SELECT requirement_id, title, text FROM framework_requirements
        WHERE ${where} AND COALESCE(withdrawn,false)=false ORDER BY requirement_id`, [fwId, group]);

@@ -31,8 +31,6 @@ function normalizeCaeFramework(raw) {
   const s = String(raw || '').toLowerCase();
   if (s.includes('csf')) return 'nist_csf_2';
   if (s.includes('800-53') || s.includes('800 53')) return 'nist_800_53_r5';
-  if (s.includes('cis')) return 'cis_v8_1';
-  if (s.includes('27001') || s.includes('iso')) return 'iso_27001';
   if (s.includes('soc')) return 'soc_2';
   if (s.includes('hitrust')) return 'hitrust_csf';
   if (s.includes('hipaa')) return 'hipaa_security';

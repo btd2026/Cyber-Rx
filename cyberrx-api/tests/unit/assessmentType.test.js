@@ -19,7 +19,7 @@ describe('assessmentTypeFor', () => {
   });
   test('missing test flag defaults to hybrid', () => {
     expect(assessmentTypeFor({ framework_id: 'nist_800_53_r5', meta: {} })).toBe('hybrid');
-    expect(assessmentTypeFor({ framework_id: 'cis_v8_1' })).toBe('hybrid');
+    expect(assessmentTypeFor({ framework_id: 'soc_2' })).toBe('hybrid');
   });
   test('handles meta provided as a JSON string', () => {
     expect(assessmentTypeFor({ framework_id: 'nist_csf_2', meta: '{"test":"auto"}' })).toBe('automated');

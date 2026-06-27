@@ -21,7 +21,6 @@ const DATA_DIR = path.join(__dirname, '..', 'data', 'cae');
 const FILES = [
   'nist_csf_2_0_control_api_rows.csv',
   'nist_800_53_control_api_rows.csv',
-  'cis_v8_control_api_rows.csv',
   'mitre_attck_control_api_rows.csv',
 ];
 const slug = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'x';

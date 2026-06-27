@@ -21,13 +21,11 @@
 
 const db = require('../utils/db');
 
-// The seven compliance frameworks the onboarding journey reports against.
+// The compliance frameworks the onboarding journey reports against.
 // (MITRE ATT&CK is threat-coverage, not a compliance framework, so it is excluded.)
 const FRAMEWORKS = [
   { id: 'nist_csf_2', name: 'NIST CSF 2.0' },
   { id: 'nist_800_53_r5', name: 'NIST SP 800-53 Rev 5' },
-  { id: 'cis_v8_1', name: 'CIS Controls v8.1' },
-  { id: 'iso_27001', name: 'ISO/IEC 27001:2022' },
   { id: 'soc_2', name: 'SOC 2 (AICPA TSC)' },
   { id: 'hipaa_security', name: 'HIPAA Security Rule' },
   { id: 'hitrust_csf', name: 'HITRUST CSF' },

@@ -824,7 +824,7 @@ async function init() {
         id              TEXT PRIMARY KEY,
         organization_id TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
         control_id      TEXT,
-        framework       TEXT,                      -- nist_csf_2_0 | nist_800_53_r5 | cis_v8 | iso_27001 | soc_2
+        framework       TEXT,                      -- nist_csf_2_0 | nist_800_53_r5 | soc_2
         requirement_ref TEXT,                      -- the framework's own clause/control id
         status          TEXT,                      -- not_assessed | met | partial | gap
         score           NUMERIC,
@@ -1143,12 +1143,12 @@ async function init() {
 
       -- ================= Four-lens posture engine (exec reporting) ==========
       -- Generalized framework catalog (Phase 7). Catalog tables are GLOBAL
-      -- (no org_id): NIST CSF 2.0, SP 800-53 r5.2.0, CIS v8.1, ATT&CK.
+      -- (no org_id): NIST CSF 2.0, SP 800-53 r5.2.0, ATT&CK.
       CREATE TABLE IF NOT EXISTS frameworks (
-        id          TEXT PRIMARY KEY,          -- 'nist_csf_2', 'nist_800_53_r5', 'cis_v8_1', 'attack_enterprise'
+        id          TEXT PRIMARY KEY,          -- 'nist_csf_2', 'nist_800_53_r5', 'attack_enterprise'
         name        TEXT NOT NULL,
         version     TEXT,
-        provenance  TEXT,                      -- 'NIST OSCAL', 'NIST CPRT', 'CIS', 'MITRE'
+        provenance  TEXT,                      -- 'NIST OSCAL', 'NIST CPRT', 'MITRE'
         ingested_at TIMESTAMPTZ DEFAULT NOW()
       );
       CREATE TABLE IF NOT EXISTS framework_requirements (

@@ -17,18 +17,17 @@ const logger = require('../utils/logger');
 const { CATALOG } = require('../data/intakeDocumentCatalog');
 
 const slug = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'x';
-const FW_LABEL = { nist_csf_2: 'NIST CSF 2.0', nist_800_53_r5: 'NIST 800-53', cis_v8_1: 'CIS' };
+const FW_LABEL = { nist_csf_2: 'NIST CSF 2.0', nist_800_53_r5: 'NIST 800-53' };
 const CSF_FN = { GV: 'Govern', ID: 'Identify', PR: 'Protect', DE: 'Detect', RS: 'Respond', RC: 'Recover' };
 const NIST_FAM = { AC: 'Access Control', AT: 'Awareness & Training', AU: 'Audit & Accountability', CA: 'Assessment, Authorization & Monitoring', CM: 'Configuration Management', CP: 'Contingency Planning', IA: 'Identification & Authentication', IR: 'Incident Response', MA: 'Maintenance', MP: 'Media Protection', PE: 'Physical & Environmental Protection', PL: 'Planning', PM: 'Program Management', PS: 'Personnel Security', PT: 'PII Processing & Transparency', RA: 'Risk Assessment', SA: 'System & Services Acquisition', SC: 'System & Communications Protection', SI: 'System & Information Integrity', SR: 'Supply Chain Risk Management' };
 
 function familyDocName(fw, family) {
   if (fw === 'nist_csf_2') return `${CSF_FN[family] || family} (CSF) — policy & evidence`;
   if (fw === 'nist_800_53_r5') return `${NIST_FAM[family] || family} (800-53 ${family}) — policy & evidence`;
-  if (fw === 'cis_v8_1') return `CIS Control ${family} — policy & evidence`;
   return `${FW_LABEL[fw] || fw} ${family} — policy & evidence`;
 }
 
-// Auto-cover EVERY manual/hybrid control across CSF / 800-53 / CIS that the
+// Auto-cover EVERY manual/hybrid control across CSF / 800-53 that the
 // curated catalog doesn't already request, grouped into one document per
 // framework family — so the Document Request phase is complete for the manual
 // assessment. Idempotent; skips controls already mapped.
@@ -40,7 +39,7 @@ async function seedManualCoverage() {
        FROM framework_requirements
       WHERE assessment_type IN ('manual','hybrid')
         AND framework_id = ANY($1) AND family IS NOT NULL`,
-    [['nist_csf_2', 'nist_800_53_r5', 'cis_v8_1']]);
+    [['nist_csf_2', 'nist_800_53_r5']]);
 
   let docTypes = 0, mappings = 0; const seenType = new Set();
   for (const r of reqs) {

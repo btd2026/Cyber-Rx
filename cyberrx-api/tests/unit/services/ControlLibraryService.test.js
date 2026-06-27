@@ -9,13 +9,15 @@ const Library = require('../../../src/services/ControlLibraryService');
 describe('ControlLibraryService', () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it('lists the seven compliance frameworks (no ATT&CK)', () => {
+  it('lists the five compliance frameworks (no ATT&CK; ISO/CIS removed)', () => {
     const ids = Library.FRAMEWORK_IDS;
-    expect(ids).toHaveLength(7);
+    expect(ids).toHaveLength(5);
     expect(ids).toEqual(expect.arrayContaining([
-      'nist_csf_2', 'nist_800_53_r5', 'cis_v8_1', 'iso_27001', 'soc_2', 'hipaa_security', 'hitrust_csf',
+      'nist_csf_2', 'nist_800_53_r5', 'soc_2', 'hipaa_security', 'hitrust_csf',
     ]));
     expect(ids).not.toContain('attack_enterprise');
+    expect(ids).not.toContain('iso_27001');
+    expect(ids).not.toContain('cis_v8_1');
   });
 
   it('rejects an unknown framework in coverageByFramework', async () => {

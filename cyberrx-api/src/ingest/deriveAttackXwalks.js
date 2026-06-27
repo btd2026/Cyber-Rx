@@ -3,19 +3,17 @@
 /**
  * ingest/deriveAttackXwalks.js — optional mappings (derived)
  * ----------------------------------------------------------
- * Derives provisional crosswalks linking CIS v8.1 safeguards and CSF 2.0
- * subcategories to ATT&CK techniques, via the chain:
+ * Derives provisional crosswalks linking CSF 2.0 subcategories to ATT&CK
+ * techniques, via the chain:
  *
  *   technique —(CTID)→ 800-53 controls —(requirement_mappings)→ checks
- *   safeguard/subcategory —(requirement_mappings)→ checks
+ *   subcategory —(requirement_mappings)→ checks
  *
- * Where a technique's control-mapped checks intersect a safeguard's or
- * subcategory's checks, the pair is recorded as 'addresses' with
- * provenance='derived', provisional=true, and the shared-check count in meta.
+ * Where a technique's control-mapped checks intersect a subcategory's checks,
+ * the pair is recorded as 'addresses' with provenance='derived',
+ * provisional=true, and the shared-check count in meta.
  *
- * These are honest, traceable approximations. When the licensed CIS↔ATT&CK
- * mapping workbook is supplied (resources/cis/), loadCis ingests it as
- * OFFICIAL (provenance='CIS') and those rows take precedence.
+ * These are honest, traceable approximations.
  */
 
 const db = require('../utils/db');
@@ -43,7 +41,7 @@ async function derive() {
   });
 
   const results = {};
-  for (const [fw, label] of [['cis_v8_1', 'cis'], ['nist_csf_2', 'csf']]) {
+  for (const [fw, label] of [['nist_csf_2', 'csf']]) {
     const reqChecks = await checkSetsByRequirement(fw);
     let n = 0;
     for (const [reqId, rset] of Object.entries(reqChecks)) {

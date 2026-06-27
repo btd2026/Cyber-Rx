@@ -51,8 +51,6 @@ const CSF: Func[] = [
 const FRAMEWORKS = [
   { key: 'csf', label: 'NIST CSF 2.0' },
   { key: 'r53', label: 'NIST 800-53' },
-  { key: 'cis', label: 'CIS v8' },
-  { key: 'iso', label: 'ISO 27001' },
   { key: 'soc2', label: 'SOC 2' },
 ]
 
@@ -61,8 +59,6 @@ const FRAMEWORKS = [
 const COHORTS: Record<string, { peers: number; median: number; p25: number; p75: number }> = {
   csf: { peers: 12, median: 3, p25: 2, p75: 4 },
   r53: { peers: 9, median: 3, p25: 2, p75: 4 },
-  cis: { peers: 11, median: 3, p25: 2, p75: 3 },
-  iso: { peers: 5, median: 3, p25: 2, p75: 4 }, // < 8 ⇒ fallback
   soc2: { peers: 8, median: 4, p25: 3, p75: 4 },
 }
 const K_MIN = 8

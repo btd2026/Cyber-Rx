@@ -44,19 +44,12 @@ async function bootstrap() {
   } catch (e) { logger.warn('bootstrap: ATT&CK ingest failed', { error: e.message }); }
 
   try {
-    const hasCis = await count(`SELECT COUNT(*)::int n FROM framework_requirements WHERE framework_id='cis_v8_1'`);
-    if (hasCis < 100) steps.cis = await require('./loadCis').load();
-    else steps.cis = 'present';
-  } catch (e) { logger.warn('bootstrap: CIS ingest failed', { error: e.message }); }
-
-  try {
-    // ISO/IEC 27001:2022 + SOC 2 (AICPA TSC): paraphrased structure, verbatim
-    // gated by VERBATIM_ISO / VERBATIM_SOC2. Re-seed if either is incomplete.
-    const hasIso = await count(`SELECT COUNT(*)::int n FROM framework_requirements WHERE framework_id='iso_27001'`);
+    // SOC 2 (AICPA TSC): paraphrased structure, verbatim gated by VERBATIM_SOC2.
+    // Re-seed if incomplete.
     const hasSoc = await count(`SELECT COUNT(*)::int n FROM framework_requirements WHERE framework_id='soc_2'`);
-    if (hasIso < 90 || hasSoc < 40) steps.isoSoc2 = await require('./loadIsoSoc2').load();
+    if (hasSoc < 40) steps.isoSoc2 = await require('./loadIsoSoc2').load();
     else steps.isoSoc2 = 'present';
-  } catch (e) { logger.warn('bootstrap: ISO/SOC2 ingest failed', { error: e.message }); }
+  } catch (e) { logger.warn('bootstrap: SOC2 ingest failed', { error: e.message }); }
 
   try {
     // HIPAA Security Rule + HITRUST CSF: paraphrased structure (public-domain CFR
@@ -91,7 +84,7 @@ async function bootstrap() {
   } catch (e) { logger.warn('bootstrap: CSF refs ingest failed', { error: e.message }); }
 
   try {
-    // Derived CIS/CSF -> ATT&CK crosswalks (provisional; cheap to recompute).
+    // Derived CSF -> ATT&CK crosswalks (provisional; cheap to recompute).
     const hasDerived = await count(`SELECT COUNT(*)::int n FROM requirement_crosswalks WHERE to_framework='attack_enterprise' AND provenance='derived'`);
     if (!hasDerived) steps.attackXwalks = await require('./deriveAttackXwalks').derive();
     else steps.attackXwalks = 'present';

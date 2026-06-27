@@ -57,7 +57,6 @@ function composeTicket(payload = {}) {
   if (process) lines.push(`Affected business process: ${process}`);
   if (application) lines.push(`Affected application/system: ${application}`);
   if (finding && finding.mitre) lines.push(`MITRE ATT&CK: ${finding.mitre.techniqueId} ${finding.mitre.technique} (${finding.mitre.tactic})`);
-  if (finding && finding.cis) lines.push(`CIS Control: ${finding.cis.id} ${finding.cis.name}`);
   if (recommendation) lines.push('', `Recommended remediation: ${recommendation}`);
   if (evidence) lines.push('', `Evidence: ${evidence}`);
   if (owner) lines.push('', `Suggested owner: ${owner}`);
