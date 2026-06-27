@@ -19,6 +19,15 @@ const pipeline = require('../services/DocumentPipelineService');
 const extraction = require('../services/DocumentExtractionService');
 const SampleDoc = require('../services/SampleDocService');
 const ProcessExtraction = require('../services/ProcessExtractionService');
+const ScanQuota = require('../services/ScanQuotaService');
+const { requireAdmin } = require('../middleware/auth');
+
+// Identity available for quota scoping. orgId is always derivable here; userId
+// is only present when the route is authenticated (it usually isn't today), so
+// the configured default scope is `org` (see config/scanQuota.js).
+function scanIds(req) {
+  return { orgId: orgOf(req), userId: req.userId || null, accountId: (req.user && req.user.accountId) || null };
+}
 
 function orgOf(req) {
   return req.query.org_id || (req.body && req.body.org_id) || req.headers['x-org-id'] || '';
@@ -84,12 +93,25 @@ router.post('/documents', async (req, res) => {
       RETURNING id`, [id, orgId, document_type_id, file_name || null, norm.text, norm.format]);
     const uploadId = up[0].id;
 
+    // QUOTA GATE (spec §3b). Normalizing + storing the document above is free;
+    // initiating the assessment run consumes a scan slot. The gate reserves
+    // before any LLM/embedding work, consumes on success, refunds on infra
+    // failure. A QuotaExceededError short-circuits before processUpload runs.
+    //
     // Structured extraction wraps the legacy review: it still writes
     // control_assessment, and additionally records document_extraction + posts
     // each verdict into the unified evidence ledger.
-    const result = await extraction.processUpload(orgId, uploadId);
-    res.json({ upload_id: uploadId, format: norm.format, text_length: norm.text.length, ...result });
+    const result = await ScanQuota.runGuardedScan(
+      scanIds(req),
+      { documentId: uploadId, actor: req.userId || orgId },
+      () => extraction.processUpload(orgId, uploadId)
+    );
+    const quota = await ScanQuota.usage(scanIds(req));
+    res.json({ upload_id: uploadId, format: norm.format, text_length: norm.text.length, ...result, quota });
   } catch (e) {
+    if (e && e.code === 'SCAN_QUOTA_EXCEEDED') {
+      return res.status(429).json({ error: e.message, code: e.code, used: e.used, limit: e.limit, reset_date: e.resetDate });
+    }
     logger.warn('intake upload failed', { error: e.message });
     res.status(500).json({ error: e.message });
   }
@@ -100,12 +122,51 @@ router.post('/documents/:id/rereview', async (req, res) => {
   const orgId = orgOf(req);
   if (!orgId) return res.status(400).json({ error: 'org_id is required' });
   try {
-    const result = await extraction.processUpload(orgId, req.params.id);
-    res.json(result);
+    // An incremental re-assessment is a new scan and consumes a slot (spec §3b).
+    const result = await ScanQuota.runGuardedScan(
+      scanIds(req),
+      { documentId: req.params.id, actor: req.userId || orgId },
+      () => extraction.processUpload(orgId, req.params.id)
+    );
+    const quota = await ScanQuota.usage(scanIds(req));
+    res.json({ ...result, quota });
   } catch (e) {
+    if (e && e.code === 'SCAN_QUOTA_EXCEEDED') {
+      return res.status(429).json({ error: e.message, code: e.code, used: e.used, limit: e.limit, reset_date: e.resetDate });
+    }
     const code = /not found/i.test(e.message) ? 404 : 500;
     res.status(code).json({ error: e.message });
   }
+});
+
+// Remaining scan quota for the caller's scope — FREE (consumes nothing).
+// Powers the "N of 2 scans remaining; resets <date>" surface.
+router.get('/scan-quota', async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'org_id is required' });
+  try { res.json(await ScanQuota.usage(scanIds(req))); }
+  catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Admin override — grant extra scans for the current period (logged actor+reason).
+router.post('/scan-quota/grant', requireAdmin, async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'org_id is required' });
+  const { extra, reason } = req.body || {};
+  try {
+    const actor = (req.user && req.user.userId) || req.headers['x-admin-actor'] || 'admin';
+    res.json(await ScanQuota.adminGrant(scanIds(req), { extra: parseInt(extra, 10), actor, reason }));
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
+
+// Admin override — reset the period (refund active reservations; logged).
+router.post('/scan-quota/reset', requireAdmin, async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'org_id is required' });
+  try {
+    const actor = (req.user && req.user.userId) || req.headers['x-admin-actor'] || 'admin';
+    res.json(await ScanQuota.adminReset(scanIds(req), { actor, reason: (req.body && req.body.reason) }));
+  } catch (e) { res.status(400).json({ error: e.message }); }
 });
 
 // Per-control assessment results for a single upload (the fan-out output).

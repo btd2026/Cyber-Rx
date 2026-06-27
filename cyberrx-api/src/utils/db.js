@@ -997,6 +997,56 @@ async function init() {
       );
       CREATE INDEX IF NOT EXISTS control_assessment_org ON control_assessment(org_id, framework_id, requirement_id);
 
+      -- Scan-quota ledger (hard cost ceiling, spec §3b). One reservation row per
+      -- initiated assessment run; status reserved -> consumed (run started) or
+      -- refunded (infra failure). The active count per (scope, period) is the
+      -- quota counter; reservation happens under a pg advisory lock for atomicity.
+      CREATE TABLE IF NOT EXISTS scan_quota_reservation (
+        id           TEXT PRIMARY KEY,
+        scope_type   TEXT NOT NULL,                 -- org | user | account
+        scope_id     TEXT NOT NULL,
+        period_key   TEXT NOT NULL,                 -- 'YYYY-MM' or 'rolling'
+        status       TEXT NOT NULL CHECK (status IN ('reserved','consumed','refunded')),
+        scan_id      TEXT,
+        document_id  TEXT,
+        created_at   TIMESTAMPTZ DEFAULT NOW(),
+        updated_at   TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS scan_quota_reservation_window
+        ON scan_quota_reservation(scope_type, scope_id, period_key, status);
+      CREATE INDEX IF NOT EXISTS scan_quota_reservation_recent
+        ON scan_quota_reservation(scope_type, scope_id, created_at);
+
+      -- Admin-granted extra scans (raises the effective limit for a period).
+      CREATE TABLE IF NOT EXISTS scan_quota_grant (
+        id           TEXT PRIMARY KEY,
+        scope_type   TEXT NOT NULL,
+        scope_id     TEXT NOT NULL,
+        period_key   TEXT NOT NULL,
+        extra        INT  NOT NULL,
+        actor        TEXT,
+        reason       TEXT,
+        created_at   TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS scan_quota_grant_window
+        ON scan_quota_grant(scope_type, scope_id, period_key);
+
+      -- Append-only audit trail for every quota transition.
+      CREATE TABLE IF NOT EXISTS scan_quota_audit (
+        id             TEXT PRIMARY KEY,
+        scope_type     TEXT,
+        scope_id       TEXT,
+        period_key     TEXT,
+        action         TEXT NOT NULL,               -- reserve|consume|refund|reject|admin_grant|admin_reset
+        reservation_id TEXT,
+        actor          TEXT,
+        reason         TEXT,
+        detail         JSONB DEFAULT '{}',
+        created_at     TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS scan_quota_audit_scope
+        ON scan_quota_audit(scope_type, scope_id, created_at);
+
       -- CISO posture-domain snapshots — one row per (org, domain) per capture,
       -- so the dashboard can show whether each domain is improving/deteriorating.
       CREATE TABLE IF NOT EXISTS ciso_posture_snapshots (
