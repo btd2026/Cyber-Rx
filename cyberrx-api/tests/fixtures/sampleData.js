@@ -233,7 +233,7 @@ exports.sampleMetrics = {
     open_findings: 89
   },
   complianceStatus: {
-    frameworks: ['HIPAA', 'NIST', 'ISO 27001'],
+    frameworks: ['HIPAA', 'NIST'],
     overall_score: 87,
     controls_assessed: 234,
     controls_passing: 204,

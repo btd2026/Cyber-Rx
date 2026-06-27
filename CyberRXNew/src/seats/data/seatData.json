@@ -1868,12 +1868,6 @@
        "CISO",
        "<span class=\"stat warn\">Monitoring</span>",
        "Detection-coverage gaps"
-      ],
-      [
-       "<div class=\"pn\">ISO/IEC 27001</div>",
-       "CISO",
-       "<span class=\"stat ok\">Certified</span>",
-       "Q3 surveillance audit"
       ]
      ]
     },

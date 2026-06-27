@@ -4,7 +4,7 @@
  * ingest/loadHipaaHitrust.js — Onboarding redesign, Step 2 (Control Library)
  * --------------------------------------------------------------------------
  * Seeds the two frameworks that were still missing from the engine (CSF 2.0,
- * 800-53 r5, CIS v8, ISO 27001 and SOC 2 already load elsewhere):
+ * 800-53 r5 and SOC 2 already load elsewhere):
  *   - HIPAA Security Rule (45 CFR Part 164 Subpart C) — standards + their
  *     implementation specifications, with the Required/Addressable flag and the
  *     CFR citation preserved in meta.

@@ -9,13 +9,12 @@
  * uploaded policy) can score every in-scope framework at once.
  *
  * Crosswalk provenance is 'curated': mappings follow well-established public
- * references (NIST OLIR, CIS mappings, common ISO/SOC2/HIPAA crosswalks). Where a
- * mapping is a reasonable-but-imperfect fit, coverage is marked 'partial' so the
- * projection never over-claims. Idempotent: re-running replaces the crosswalk.
+ * references (NIST OLIR, common SOC2/HIPAA crosswalks). Where a mapping is a
+ * reasonable-but-imperfect fit, coverage is marked 'partial' so the projection
+ * never over-claims. Idempotent: re-running replaces the crosswalk.
  *
  * Framework IDs match framework_requirements:
- *   nist_csf_2 · nist_800_53_r5 · cis_v8_1 · iso_27001 · soc_2 ·
- *   hipaa_security · hitrust_csf
+ *   nist_csf_2 · nist_800_53_r5 · soc_2 · hipaa_security · hitrust_csf
  */
 
 const db = require('../utils/db');
@@ -31,7 +30,7 @@ const LIBRARY = [
     description: 'MFA is enforced for remote access and for all privileged/administrative accounts.',
     x: {
       nist_csf_2: ['PR.AA-02', 'PR.AA-03'], nist_800_53_r5: ['IA-2(1)', 'IA-2(2)'],
-      cis_v8_1: ['CIS 6.3', 'CIS 6.4', 'CIS 6.5'], iso_27001: ['A.8.5'], soc_2: ['CC6.1'],
+      soc_2: ['CC6.1'],
       hipaa_security: ['164.312(d)'], hitrust_csf: ['01.0'],
     },
   },
@@ -41,7 +40,6 @@ const LIBRARY = [
     description: 'Access is provisioned, reviewed and revoked on a least-privilege basis with timely deprovisioning.',
     x: {
       nist_csf_2: ['PR.AA-01', 'PR.AA-05'], nist_800_53_r5: ['AC-2', 'AC-6'],
-      cis_v8_1: ['CIS 5.1', 'CIS 6.1', 'CIS 6.2', 'CIS 6.8'], iso_27001: ['A.5.15', 'A.5.18'],
       soc_2: ['CC6.2', 'CC6.3'], hipaa_security: ['164.308(a)(4)(i)', '164.312(a)(2)(i)'], hitrust_csf: ['01.0'],
     },
   },
@@ -51,7 +49,7 @@ const LIBRARY = [
     description: 'Sensitive data is encrypted at rest and in transit using strong, managed cryptography.',
     x: {
       nist_csf_2: ['PR.DS-01', 'PR.DS-02'], nist_800_53_r5: ['SC-8', 'SC-13', 'SC-28'],
-      cis_v8_1: ['CIS 3.10', 'CIS 3.11'], iso_27001: ['A.8.24'], soc_2: ['CC6.7'],
+      soc_2: ['CC6.7'],
       hipaa_security: ['164.312(a)(2)(iv)', '164.312(e)(2)(ii)'], hitrust_csf: ['09.0'],
     },
   },
@@ -61,7 +59,7 @@ const LIBRARY = [
     description: 'Systems are scanned for vulnerabilities and remediated within risk-based timelines.',
     x: {
       nist_csf_2: ['ID.RA-01', 'PR.PS-02'], nist_800_53_r5: ['RA-5', 'SI-2'],
-      cis_v8_1: ['CIS 7.1', 'CIS 7.3', 'CIS 7.4'], iso_27001: ['A.8.8'], soc_2: ['CC7.1'],
+      soc_2: ['CC7.1'],
       hipaa_security: ['164.308(a)(1)(ii)(B)'], hitrust_csf: ['10.0'],
     },
   },
@@ -71,7 +69,7 @@ const LIBRARY = [
     description: 'Security-relevant events are logged centrally, retained, and monitored for anomalies.',
     x: {
       nist_csf_2: ['DE.CM-01', 'DE.AE-03'], nist_800_53_r5: ['AU-2', 'AU-6', 'SI-4'],
-      cis_v8_1: ['CIS 8.2', 'CIS 8.5', 'CIS 8.11'], iso_27001: ['A.8.15', 'A.8.16'], soc_2: ['CC7.2'],
+      soc_2: ['CC7.2'],
       hipaa_security: ['164.312(b)', '164.308(a)(1)(ii)(D)'], hitrust_csf: ['09.0'],
     },
   },
@@ -81,7 +79,7 @@ const LIBRARY = [
     description: 'Anti-malware / EDR is deployed and current on endpoints and servers.',
     x: {
       nist_csf_2: ['PR.PS-05', 'DE.CM-01'], nist_800_53_r5: ['SI-3'],
-      cis_v8_1: ['CIS 10.1', 'CIS 10.2'], iso_27001: ['A.8.7'], soc_2: ['CC6.8'],
+      soc_2: ['CC6.8'],
       hipaa_security: ['164.308(a)(5)(ii)(B)'], hitrust_csf: ['09.0'],
     },
   },
@@ -91,7 +89,6 @@ const LIBRARY = [
     description: 'Critical data is backed up, recoverable, and recovery procedures are tested.',
     x: {
       nist_csf_2: ['RC.RP-01', 'PR.DS-11'], nist_800_53_r5: ['CP-9', 'CP-10'],
-      cis_v8_1: ['CIS 11.1', 'CIS 11.2', 'CIS 11.3'], iso_27001: ['A.8.13', 'A.5.29'],
       soc_2: ['A1.2', 'A1.3'], hipaa_security: ['164.308(a)(7)(i)', '164.308(a)(7)(ii)(A)'], hitrust_csf: ['12.0'],
     },
   },
@@ -101,7 +98,7 @@ const LIBRARY = [
     description: 'A documented, exercised incident response capability detects, responds to and reports incidents.',
     x: {
       nist_csf_2: ['RS.MA-01', 'DE.AE-02'], nist_800_53_r5: ['IR-4', 'IR-8'],
-      cis_v8_1: ['CIS 17.1', 'CIS 17.4'], iso_27001: ['A.5.24', 'A.5.26'], soc_2: ['CC7.4'],
+      soc_2: ['CC7.4'],
       hipaa_security: ['164.308(a)(6)(i)', '164.308(a)(6)(ii)'], hitrust_csf: ['11.0'],
     },
   },
@@ -110,8 +107,7 @@ const LIBRARY = [
     title: 'Information security policy',
     description: 'A board-approved information security policy is established, communicated and reviewed.',
     x: {
-      nist_csf_2: ['GV.PO-01'], nist_800_53_r5: ['PL-1', 'PM-1'], iso_27001: ['A.5.1'],
-      soc_2: ['CC1.1'], hipaa_security: ['164.316(a)'], hitrust_csf: ['04.0'],
+      nist_csf_2: ['GV.PO-01'], nist_800_53_r5: ['PL-1', 'PM-1'], soc_2: ['CC1.1'], hipaa_security: ['164.316(a)'], hitrust_csf: ['04.0'],
     },
   },
   {
@@ -120,7 +116,7 @@ const LIBRARY = [
     description: 'Cyber risk is assessed, treated and tracked through a documented risk-management process.',
     x: {
       nist_csf_2: ['ID.RA-01', 'GV.RM-01'], nist_800_53_r5: ['RA-3', 'PM-9'],
-      iso_27001: ['Clause 6.1'], soc_2: ['CC3.1', 'CC3.2'],
+      soc_2: ['CC3.1', 'CC3.2'],
       hipaa_security: ['164.308(a)(1)(ii)(A)', '164.308(a)(1)(ii)(B)'], hitrust_csf: ['03.0'],
     },
   },
@@ -130,7 +126,7 @@ const LIBRARY = [
     description: 'Suppliers and business associates are risk-assessed and bound by security obligations.',
     x: {
       nist_csf_2: ['GV.SC-01', 'GV.SC-07'], nist_800_53_r5: ['SR-3', 'SR-6', 'SA-9'],
-      cis_v8_1: ['CIS 15.1', 'CIS 15.2'], iso_27001: ['A.5.19', 'A.5.20'], soc_2: ['CC9.2'],
+      soc_2: ['CC9.2'],
       hipaa_security: ['164.308(b)(1)', '164.314(a)(1)'], hitrust_csf: ['05.0'],
     },
   },
@@ -140,7 +136,7 @@ const LIBRARY = [
     description: 'Workforce receives security awareness training on a defined cadence.',
     x: {
       nist_csf_2: ['PR.AT-01', 'PR.AT-02'], nist_800_53_r5: ['AT-2', 'AT-3'],
-      cis_v8_1: ['CIS 14.1', 'CIS 14.2'], iso_27001: ['A.6.3'], soc_2: ['CC1.4'],
+      soc_2: ['CC1.4'],
       hipaa_security: ['164.308(a)(5)(i)', '164.308(a)(5)(ii)(A)'], hitrust_csf: ['02.0'],
     },
   },

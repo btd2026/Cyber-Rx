@@ -95,7 +95,7 @@ router.get('/exec/cro', optionalJWT, async (req, res) => {
   try { res.json(await ExecReportService.croPack(orgId)); }
   catch (err) { fail(res, 'cro pack failed')(err); }
 });
-// Drill-down: a framework node (CSF function / 800-53 family / CIS Control /
+// Drill-down: a framework node (CSF function / 800-53 family /
 // ATT&CK tactic) -> its subcategories with scores, what was done, findings, recs.
 router.get('/exec/drilldown', optionalJWT, async (req, res) => {
   const orgId = org(req, res); if (!orgId) return;

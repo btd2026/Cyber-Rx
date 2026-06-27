@@ -136,7 +136,7 @@ function buildPdf(res, d, fw, ctx) {
     const weakest = [...d.domainMatrix].sort((a, b) => a.current - b.current).slice(0, 3);
     const topActions = d.actionQueue.slice(0, 4);
     sub(doc, 'What was done');
-    para(doc, `DTNK SHIELD assessed ${clientName}'s cybersecurity posture across ${d.controlRisk.length} control areas, evaluated through four independent frameworks — NIST CSF 2.0, NIST SP 800-53 r5, CIS Controls v8.1, and MITRE ATT&CK. Each control was tested with automated checks against ${clientName}'s security tooling, supplemented by structured review where automation does not apply. Findings are computed from validation run #${d.runId || '—'} on ${when}. Overall posture is ${p.current}/100 (${band(p.current)}), ${p.trend}.`);
+    para(doc, `DTNK SHIELD assessed ${clientName}'s cybersecurity posture across ${d.controlRisk.length} control areas, evaluated through three independent frameworks — NIST CSF 2.0, NIST SP 800-53 r5, and MITRE ATT&CK. Each control was tested with automated checks against ${clientName}'s security tooling, supplemented by structured review where automation does not apply. Findings are computed from validation run #${d.runId || '—'} on ${when}. Overall posture is ${p.current}/100 (${band(p.current)}), ${p.trend}.`);
     sub(doc, 'Key strengths');
     strengths.forEach((s) => bullet(doc, `${s.name} — ${s.current}/100 (${s.status}). ${s.topImproving ? 'Improving: ' + s.topImproving.metric + '.' : ''}`, GREEN));
     sub(doc, 'Weakest areas');
@@ -152,19 +152,14 @@ function buildPdf(res, d, fw, ctx) {
   para(doc, `Each control below shows what it is, how it was tested, and the result in plain English. Where a control gap was found, the risk is stated specifically for ${clientName} using the data provided during setup.`);
   d.controlRisk.forEach((c) => controlBlock(doc, c, ctx, ensureSpace));
 
-  // ---- Four-lens framework compliance ----
+  // ---- Three-lens framework compliance ----
   if (fw) {
-    record('3. Framework compliance — four lenses');
-    section(doc, 'Framework compliance — four lenses');
-    para(doc, 'The same program seen through four independent frameworks.');
+    record('3. Framework compliance — three lenses');
+    section(doc, 'Framework compliance — three lenses');
+    para(doc, 'The same program seen through three independent frameworks.');
     if (fw.csf) { ensureSpace(30); doc.fillColor(INK).fontSize(10.5).font('Helvetica-Bold').text(`NIST CSF 2.0 — overall ${fw.csf.overall ?? '—'}`); para(doc, fw.csf.functions.map((f) => `${f.name} ${f.score ?? '—'}`).join('  ·  ')); }
     if (fw.nist80053 && fw.nist80053.baseline) { ensureSpace(30); doc.fillColor(INK).fontSize(10.5).font('Helvetica-Bold').text(`NIST 800-53 r5 — ${fw.nist80053.baseline.name} baseline ${fw.nist80053.baseline.coveragePct}%`); para(doc, `${fw.nist80053.baseline.covered} of ${fw.nist80053.baseline.total} controls evidenced. Weakest families: ${(fw.nist80053.families || []).filter((f) => f.score != null).slice(0, 6).map((f) => `${f.family} ${f.score}`).join(', ')}.`); }
     if (fw.attack && fw.attack.summary) { ensureSpace(24); doc.fillColor(INK).fontSize(10.5).font('Helvetica-Bold').text(`MITRE ATT&CK — ${fw.attack.summary.covered}/${fw.attack.summary.total} techniques covered`); para(doc, `Prevent ${fw.attack.summary.prevent}, detect ${fw.attack.summary.detect}.`); }
-    if (fw.cis && fw.cis.status === 'ingested') {
-      ensureSpace(24); doc.fillColor(INK).fontSize(10.5).font('Helvetica-Bold').text(`CIS Controls v${fw.cis.version} — the 18 Controls`);
-      (fw.cis.controls || []).forEach((c) => { ensureSpace(12); const cc = c.attainmentPct >= 80 ? GREEN : c.attainmentPct >= 50 ? AMBER : RED; doc.fillColor(INK2).fontSize(9).font('Helvetica').text(`${c.number}. ${c.name}`, M + 8, doc.y, { width: 360, continued: true }).fillColor(cc).font('Helvetica-Bold').text(`   ${c.attainmentPct}% (${c.covered}/${c.safeguards})`); });
-      doc.moveDown(0.3);
-    }
   }
 
   // ---- Appendix ----
@@ -230,7 +225,7 @@ function controlBlock(doc, c, ctx, ensureSpace) {
   const y0 = doc.y;
   doc.fillColor(INK).fontSize(11).font('Helvetica-Bold').text(`${c.name}`, M + 10, y0 + 4, { width: CONTENT_W - 120, continued: false });
   doc.fillColor(accent).fontSize(9).font('Helvetica-Bold').text(finding ? 'CONTROL GAP' : 'EFFECTIVE', PAGE_W - M - 100, y0 + 5, { width: 90, align: 'right' });
-  doc.fillColor(MUTE).fontSize(8.5).font('Helvetica').text(`${c.csf} · ${c.cis} · affects ${c.processAffected}`, M + 10, doc.y + 1, { width: CONTENT_W - 20 });
+  doc.fillColor(MUTE).fontSize(8.5).font('Helvetica').text(`${c.csf} · affects ${c.processAffected}`, M + 10, doc.y + 1, { width: CONTENT_W - 20 });
   kvi(doc, 'Summary', plainSummary(c.name));
   kvi(doc, 'Test approach', testApproach(c));
   kvi(doc, 'Result', resultPlain(c));
@@ -298,7 +293,7 @@ async function buildPptxBuffer(d, fw, ctx) {
     s = pptx.addSlide(); slideTitle(s, 'Executive summary');
     s.addText([
       { text: 'What was done\n', options: { bold: true, color: STEELH, fontSize: 13 } },
-      { text: `DTNK SHIELD assessed ${clientName} across ${d.controlRisk.length} controls through NIST CSF 2.0, 800-53 r5, CIS v8.1 and MITRE ATT&CK (run #${d.runId || '—'}). Overall posture ${p.current}/100 (${band(p.current)}), ${p.trend}.\n\n`, options: { color: '334155', fontSize: 11 } },
+      { text: `DTNK SHIELD assessed ${clientName} across ${d.controlRisk.length} controls through NIST CSF 2.0, 800-53 r5 and MITRE ATT&CK (run #${d.runId || '—'}). Overall posture ${p.current}/100 (${band(p.current)}), ${p.trend}.\n\n`, options: { color: '334155', fontSize: 11 } },
       { text: 'Key strengths\n', options: { bold: true, color: GREENH, fontSize: 13 } },
       { text: strengths.map((x) => `• ${x.name} ${x.current} (${x.status})`).join('\n') + '\n\n', options: { color: '334155', fontSize: 11 } },
       { text: 'Weakest areas\n', options: { bold: true, color: REDH, fontSize: 13 } },
@@ -312,21 +307,20 @@ async function buildPptxBuffer(d, fw, ctx) {
   s = pptx.addSlide(); slideTitle(s, 'Assessment details — control gaps');
   const gaps = d.controlRisk.filter(isFinding).slice(0, 5);
   gaps.forEach((c, i) => s.addText([
-    { text: `${c.name}  (${c.csf} · ${c.cis})\n`, options: { bold: true, color: REDH, fontSize: 12 } },
+    { text: `${c.name}  (${c.csf})\n`, options: { bold: true, color: REDH, fontSize: 12 } },
     { text: `Summary: ${plainSummary(c.name)}  ·  Test: ${testApproach(c)}\n`, options: { color: '64748b', fontSize: 9 } },
     { text: `Result: ${resultPlain(c)}\n`, options: { color: '334155', fontSize: 9.5 } },
     { text: `Risk to ${clientName}: ${orgRisk(c, ctx)}\n`, options: { color: INKH, fontSize: 9.5, italic: true } },
     { text: `→ ${c.action}`, options: { color: GREENH, fontSize: 9.5 } },
   ], { x: 0.5, y: 1.1 + i * 1.18, w: 12.3, h: 1.12, valign: 'top' }));
 
-  // Framework compliance — four lenses
+  // Framework compliance — three lenses
   if (fw) {
-    s = pptx.addSlide(); slideTitle(s, 'Framework compliance — four lenses');
+    s = pptx.addSlide(); slideTitle(s, 'Framework compliance — three lenses');
     const lines = [];
     if (fw.csf) lines.push(`NIST CSF 2.0 — overall ${fw.csf.overall ?? '—'}: ${fw.csf.functions.map((f) => `${f.name} ${f.score ?? '—'}`).join(', ')}`);
     if (fw.nist80053 && fw.nist80053.baseline) lines.push(`NIST 800-53 r5 — ${fw.nist80053.baseline.name} baseline ${fw.nist80053.baseline.coveragePct}% (${fw.nist80053.baseline.covered}/${fw.nist80053.baseline.total})`);
     if (fw.attack && fw.attack.summary) lines.push(`MITRE ATT&CK — ${fw.attack.summary.covered}/${fw.attack.summary.total} techniques covered (prevent ${fw.attack.summary.prevent}, detect ${fw.attack.summary.detect})`);
-    if (fw.cis && fw.cis.status === 'ingested') lines.push(`CIS Controls v${fw.cis.version} — ${(fw.cis.controls || []).filter((c) => c.attainmentPct < 50).length} of 18 controls below 50%`);
     s.addText(lines.map((l) => `• ${l}`).join('\n\n'), { x: 0.6, y: 1.3, w: 12, fontSize: 14, color: '0f172a', lineSpacingMultiple: 1.2 });
   }
 

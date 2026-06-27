@@ -11,9 +11,9 @@
 //   node load_catalogs.mjs <path-to-800-53-oscal.json> > catalogs.sql
 //   psql "$DATABASE_URL" -f catalogs.sql        # local Postgres or Supabase
 //
-// CIS v8, ISO 27001:2022, and SOC 2 control TITLES are licensed and must be
-// loaded from their licensed distributions; this loader registers the frameworks
-// and is ready to ingest their control rows the same way.
+// SOC 2 control TITLES are licensed and must be loaded from their licensed
+// distributions; this loader registers the frameworks and is ready to ingest
+// their control rows the same way.
 
 import { readFileSync } from 'node:fs'
 
@@ -23,8 +23,6 @@ function emitFrameworks() {
   const rows = [
     ['CSF_2_0', 'NIST Cybersecurity Framework 2.0', '2.0', 'https://www.nist.gov/cyberframework'],
     ['NIST_800_53', 'NIST SP 800-53', 'Rev 5', 'https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final'],
-    ['CIS_V8', 'CIS Critical Security Controls', 'v8', 'https://www.cisecurity.org/controls/v8'],
-    ['ISO_27001_2022', 'ISO/IEC 27001', '2022', 'https://www.iso.org/standard/27001'],
     ['SOC_2', 'AICPA SOC 2 (Trust Services Criteria)', '2017 (rev. 2022)', 'https://www.aicpa.org'],
   ]
   const lines = rows.map(

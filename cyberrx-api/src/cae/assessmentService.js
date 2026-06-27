@@ -18,7 +18,6 @@ const { projectResult } = require('./projection');
 const SUPPORTED = {
   'nist_csf_2_0': 'NIST CSF 2.0',
   'nist_800_53': 'NIST SP 800-53 Rev. 5',
-  'cis_v8': 'CIS Controls v8',
   'mitre_attck': 'MITRE ATT&CK Enterprise',
 };
 

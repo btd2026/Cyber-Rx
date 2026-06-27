@@ -4,7 +4,7 @@
  * FrameworkScoreService
  * ---------------------
  * Live compliance scorecards for the non-CSF frameworks (HIPAA, NIST 800-53,
- * CIS v8, NAIC, ISO 27001, SOC 2, CMS 42 CFR, PCI DSS, GDPR).
+ * NAIC, SOC 2, CMS 42 CFR, PCI DSS, GDPR).
  *
  * Every framework ultimately asks about the same underlying facts — identity,
  * training, data protection, logging, response, recovery, vendors, governance.
@@ -238,35 +238,6 @@ const FRAMEWORKS = {
       ] },
     ],
   },
-  cis: {
-    label: 'CIS Controls v8', standard: 'All 18 controls (Implementation Group 2)',
-    sections: [
-      { id: 'g1', name: 'Controls 1–6 — Basic Cyber Hygiene', controls: [
-        ctl('CIS-1', 'Inventory & Control of Enterprise Assets', ['inventory']),
-        ctl('CIS-2', 'Inventory & Control of Software Assets', ['inventory', 'patch']),
-        ctl('CIS-3', 'Data Protection', ['encryption', 'dlp']),
-        ctl('CIS-4', 'Secure Configuration of Assets & Software', ['patch']),
-        ctl('CIS-5', 'Account Management', ['pam']),
-        ctl('CIS-6', 'Access Control Management', ['mfa', 'pam']),
-      ] },
-      { id: 'g2', name: 'Controls 7–12 — Foundational', controls: [
-        ctl('CIS-7', 'Continuous Vulnerability Management', ['vulnSla', 'patch']),
-        ctl('CIS-8', 'Audit Log Management', ['siem']),
-        ctl('CIS-9', 'Email & Web Browser Protections', ['phishing']),
-        ctl('CIS-10', 'Malware Defenses', ['edr']),
-        ctl('CIS-11', 'Data Recovery', ['drTest', 'resilience']),
-        ctl('CIS-12', 'Network Infrastructure Management', ['patch', 'soc']),
-      ] },
-      { id: 'g3', name: 'Controls 13–18 — Organizational', controls: [
-        ctl('CIS-13', 'Network Monitoring & Defense', ['mttd', 'soc']),
-        ctl('CIS-14', 'Security Awareness & Skills Training', ['training', 'phishing']),
-        ctl('CIS-15', 'Service Provider Management', ['vendor']),
-        ctl('CIS-16', 'Application Software Security', ['vulnSla', 'patch']),
-        ctl('CIS-17', 'Incident Response Management', ['irplan', 'mttr', 'forensics']),
-        ctl('CIS-18', 'Penetration Testing', ['vulnSla', 'riskAssess']),
-      ] },
-    ],
-  },
   naic: {
     label: 'NAIC Insurance Data Security Model Law', standard: 'Model Law 668',
     sections: [
@@ -291,46 +262,6 @@ const FRAMEWORKS = {
         ctl('§5', 'Investigation of Cybersecurity Events', ['forensics', 'irplan']),
         ctl('§6.A', '72-Hour Commissioner Notification', ['notify']),
         ctl('§6.B', 'Notification to Consumers', ['notify', 'recoveryComms']),
-      ] },
-    ],
-  },
-  iso27001: {
-    label: 'ISO/IEC 27001:2022', standard: 'Annex A — all four control themes',
-    sections: [
-      { id: 'a5', name: 'A.5 Organizational Controls', controls: [
-        ctl('A.5.1', 'Policies for Information Security', ['policy']),
-        ctl('A.5.2', 'Information Security Roles & Responsibilities', ['roles']),
-        ctl('A.5.7', 'Threat Intelligence', ['soc']),
-        ctl('A.5.9', 'Inventory of Information & Assets', ['inventory']),
-        ctl('A.5.12', 'Classification of Information', ['dlp', 'inventory']),
-        ctl('A.5.15', 'Access Control', ['mfa', 'pam']),
-        ctl('A.5.19', 'Information Security in Supplier Relationships', ['vendor']),
-        ctl('A.5.24', 'Incident Management Planning & Preparation', ['irplan']),
-        ctl('A.5.29', 'Information Security During Disruption', ['drTest', 'resilience']),
-        ctl('A.5.30', 'ICT Readiness for Business Continuity', ['drTest']),
-      ] },
-      { id: 'a6', name: 'A.6 People Controls', controls: [
-        ctl('A.6.3', 'Awareness, Education & Training', ['training', 'phishing']),
-        ctl('A.6.6', 'Confidentiality / NDAs', ['policy']),
-        ctl('A.6.8', 'Information Security Event Reporting', ['lessons', 'soc']),
-      ] },
-      { id: 'a7', name: 'A.7 Physical Controls', controls: [
-        ctl('A.7.1', 'Physical Security Perimeters', ['inventory']),
-        ctl('A.7.2', 'Physical Entry', ['inventory']),
-        ctl('A.7.10', 'Storage Media', ['encryption']),
-        ctl('A.7.14', 'Secure Disposal / Reuse of Equipment', ['inventory', 'encryption']),
-      ] },
-      { id: 'a8', name: 'A.8 Technological Controls', controls: [
-        ctl('A.8.2', 'Privileged Access Rights', ['pam']),
-        ctl('A.8.5', 'Secure Authentication', ['mfa']),
-        ctl('A.8.7', 'Protection Against Malware', ['edr']),
-        ctl('A.8.8', 'Management of Technical Vulnerabilities', ['vulnSla', 'patch']),
-        ctl('A.8.12', 'Data Leakage Prevention', ['dlp']),
-        ctl('A.8.13', 'Information Backup', ['resilience', 'drTest']),
-        ctl('A.8.15', 'Logging', ['siem']),
-        ctl('A.8.16', 'Monitoring Activities', ['mttd', 'soc']),
-        ctl('A.8.24', 'Use of Cryptography', ['encryption']),
-        ctl('A.8.25', 'Secure Development Life Cycle', ['vulnSla']),
       ] },
     ],
   },

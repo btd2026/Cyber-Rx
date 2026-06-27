@@ -13,7 +13,7 @@ const db = require('../utils/db');
 const logger = require('../utils/logger');
 const { VERSION, CAPABILITIES, PACKS } = require('../data/payerCapabilityTaxonomy');
 
-const CONTROL_FRAMEWORKS = ['nist_csf_2', 'nist_800_53_r5', 'cis_v8_1'];
+const CONTROL_FRAMEWORKS = ['nist_csf_2', 'nist_800_53_r5'];
 
 function parseMeta(m) {
   if (!m) return {};

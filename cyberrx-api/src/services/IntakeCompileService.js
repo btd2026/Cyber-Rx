@@ -8,8 +8,8 @@
  *   business risk -> process -> application -> security system -> control
  *
  * Controls are assessed against each framework INDEPENDENTLY (NIST CSF 2.0,
- * NIST SP 800-53 Rev 5, CIS Controls, ISO 27001, SOC 2) — no crosswalk between
- * frameworks; each is its own assessment column (control_framework_assessment).
+ * NIST SP 800-53 Rev 5, SOC 2) — no crosswalk between frameworks; each is its
+ * own assessment column (control_framework_assessment).
  *
  * SCAFFOLD ONLY: this assembles and returns the validated inputs and seeds the
  * per-framework assessment shell. The heavy compile logic is a separate task.
@@ -18,7 +18,7 @@
 const db = require('../utils/db');
 const logger = require('../utils/logger');
 
-const FRAMEWORKS = ['nist_csf_2_0', 'nist_800_53_r5', 'cis_v8', 'iso_27001', 'soc_2'];
+const FRAMEWORKS = ['nist_csf_2_0', 'nist_800_53_r5', 'soc_2'];
 
 async function rows(sql, params = []) { try { return await db.query(sql, params); } catch (e) { logger.debug('compile query degraded', { error: e.message }); return []; } }
 

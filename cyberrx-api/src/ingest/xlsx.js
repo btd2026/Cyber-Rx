@@ -8,7 +8,7 @@
  * directory, inflates entries with zlib, and turns a worksheet into a 2-D array
  * of cell strings (shared strings + inline numbers resolved).
  *
- * Scope: enough to read the CIS Controls workbook (text + shared strings).
+ * Scope: enough to read a simple workbook (text + shared strings).
  * Not a general xlsx implementation — no formulas, styles, or dates.
  */
 

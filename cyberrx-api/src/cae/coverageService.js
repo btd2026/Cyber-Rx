@@ -18,7 +18,6 @@ const { resolve } = require('./aliasMap');
 const FW_LABEL = {
   'NIST CSF 2.0': 'NIST CSF 2.0',
   'NIST SP 800-53 Rev. 5': 'NIST 800-53',
-  'CIS Controls v8': 'CIS v8',
   'MITRE ATT&CK Enterprise': 'MITRE ATT&CK',
 };
 

@@ -253,19 +253,6 @@ function getSeedDataForFramework(framework) {
     { controlId: 'NIST-CSF-RC-3', framework: 'NIST-CSF', title: 'Recovery Communications', description: 'Recovery communications are coordinated.', tier: 'Tier 2', controlType: 'Corrective' }
   ];
 
-  const cisV8 = [
-    { controlId: 'CIS-1', framework: 'CIS-v8', title: 'Inventory of Authorized and Unauthorized Devices', description: 'Actively manage (inventory, track, and correct) all hardware devices on the network so that only authorized devices are present.', tier: 'Tier 2', controlType: 'Preventive' },
-    { controlId: 'CIS-2', framework: 'CIS-v8', title: 'Inventory of Authorized and Unauthorized Software', description: 'Actively manage (inventory, track, and correct) all software on the network so that only authorized software is installed and can execute.', tier: 'Tier 2', controlType: 'Preventive' },
-    { controlId: 'CIS-3', framework: 'CIS-v8', title: 'Secure Configuration for Hardware and Software', description: 'Manage, track, and control secure configurations of hardware and software.', tier: 'Tier 1', controlType: 'Preventive' },
-    { controlId: 'CIS-4', framework: 'CIS-v8', title: 'Continuous Vulnerability Management', description: 'Continuously acquire, assess, and take action on new information to identify vulnerabilities, remediate, and mitigate risks.', tier: 'Tier 1', controlType: 'Corrective' },
-    { controlId: 'CIS-5', framework: 'CIS-v8', title: 'Access Control', description: 'Strictly control and limit access to critical assets.', tier: 'Tier 1', controlType: 'Preventive' },
-    { controlId: 'CIS-6', framework: 'CIS-v8', title: 'Secure Logging and Monitoring', description: 'Collect, monitor, and analyze security event logs to detect and respond to anomalies.', tier: 'Tier 1', controlType: 'Detective' },
-    { controlId: 'CIS-7', framework: 'CIS-v8', title: 'Email and Web Browser Protections', description: 'Minimize the attack surface and opportunities for attackers to manipulate human behavior through their interaction with email and web browsers.', tier: 'Tier 1', controlType: 'Preventive' },
-    { controlId: 'CIS-8', framework: 'CIS-v8', title: 'Malware Defenses', description: 'Prevent or control the installation, spread, and execution of malicious code and malware.', tier: 'Tier 1', controlType: 'Preventive' },
-    { controlId: 'CIS-9', framework: 'CIS-v8', title: 'Data Recovery', description: 'Ensure processes and tools are in place for data recovery and backup.', tier: 'Tier 1', controlType: 'Corrective' },
-    { controlId: 'CIS-10', framework: 'CIS-v8', title: 'Incident Response', description: 'Protect the organization and respond to incidents effectively.', tier: 'Tier 1', controlType: 'Corrective' }
-  ];
-
   const hipaa = [
     { controlId: 'HIPAA-164.308(a)(1)', framework: 'HIPAA', title: 'Security Management Process', description: 'Implement policies and procedures to prevent, detect, contain, and correct security violations.', tier: 'Tier 1', controlType: 'Preventive' },
     { controlId: 'HIPAA-164.308(a)(2)', framework: 'HIPAA', title: 'Assigned Security Responsibility', description: 'Identify the security official responsible for developing and implementing policies and procedures.', tier: 'Tier 1', controlType: 'Preventive' },
@@ -287,9 +274,6 @@ function getSeedDataForFramework(framework) {
     case 'nist-csf':
     case 'nist-csf-2.0':
       return nistCSF20;
-    case 'cis-v8':
-    case 'cis':
-      return cisV8;
     case 'hipaa':
       return hipaa;
     default:

@@ -5,7 +5,7 @@ const db = require('../utils/db');
 /**
  * Control Entity
  *
- * Represents a security control from frameworks like NIST CSF 2.0, CIS v8, HIPAA
+ * Represents a security control from frameworks like NIST CSF 2.0, HIPAA
  * Tracks implementation status, effectiveness, and testing evidence
  */
 class Control {

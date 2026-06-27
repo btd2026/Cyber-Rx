@@ -18,12 +18,11 @@ const logger = require('../utils/logger');
 const { getConnector } = require('./connectorFramework');
 const { projectTool, projectConnectorField, projectConnectionStatus } = require('./projection');
 
-// The four supported, independent framework modules (Step 1 of the user flow).
+// The supported, independent framework modules (Step 1 of the user flow).
 // No cross-framework relationships are ever surfaced.
 const FRAMEWORKS = [
   { id: 'nist_csf_2_0', name: 'NIST CSF 2.0' },
   { id: 'nist_800_53', name: 'NIST SP 800-53' },
-  { id: 'cis_v8', name: 'CIS Controls v8' },
   { id: 'mitre_attck', name: 'MITRE ATT&CK' },
 ];
 

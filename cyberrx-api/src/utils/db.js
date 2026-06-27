@@ -824,7 +824,7 @@ async function init() {
         id              TEXT PRIMARY KEY,
         organization_id TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
         control_id      TEXT,
-        framework       TEXT,                      -- nist_csf_2_0 | nist_800_53_r5 | cis_v8 | iso_27001 | soc_2
+        framework       TEXT,                      -- nist_csf_2_0 | nist_800_53_r5 | soc_2
         requirement_ref TEXT,                      -- the framework's own clause/control id
         status          TEXT,                      -- not_assessed | met | partial | gap
         score           NUMERIC,
@@ -997,6 +997,135 @@ async function init() {
       );
       CREATE INDEX IF NOT EXISTS control_assessment_org ON control_assessment(org_id, framework_id, requirement_id);
 
+      -- Scan-quota ledger (hard cost ceiling, spec §3b). One reservation row per
+      -- initiated assessment run; status reserved -> consumed (run started) or
+      -- refunded (infra failure). The active count per (scope, period) is the
+      -- quota counter; reservation happens under a pg advisory lock for atomicity.
+      CREATE TABLE IF NOT EXISTS scan_quota_reservation (
+        id           TEXT PRIMARY KEY,
+        scope_type   TEXT NOT NULL,                 -- org | user | account
+        scope_id     TEXT NOT NULL,
+        period_key   TEXT NOT NULL,                 -- 'YYYY-MM' or 'rolling'
+        status       TEXT NOT NULL CHECK (status IN ('reserved','consumed','refunded')),
+        scan_id      TEXT,
+        document_id  TEXT,
+        created_at   TIMESTAMPTZ DEFAULT NOW(),
+        updated_at   TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS scan_quota_reservation_window
+        ON scan_quota_reservation(scope_type, scope_id, period_key, status);
+      CREATE INDEX IF NOT EXISTS scan_quota_reservation_recent
+        ON scan_quota_reservation(scope_type, scope_id, created_at);
+
+      -- Admin-granted extra scans (raises the effective limit for a period).
+      CREATE TABLE IF NOT EXISTS scan_quota_grant (
+        id           TEXT PRIMARY KEY,
+        scope_type   TEXT NOT NULL,
+        scope_id     TEXT NOT NULL,
+        period_key   TEXT NOT NULL,
+        extra        INT  NOT NULL,
+        actor        TEXT,
+        reason       TEXT,
+        created_at   TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS scan_quota_grant_window
+        ON scan_quota_grant(scope_type, scope_id, period_key);
+
+      -- Append-only audit trail for every quota transition.
+      CREATE TABLE IF NOT EXISTS scan_quota_audit (
+        id             TEXT PRIMARY KEY,
+        scope_type     TEXT,
+        scope_id       TEXT,
+        period_key     TEXT,
+        action         TEXT NOT NULL,               -- reserve|consume|refund|reject|admin_grant|admin_reset
+        reservation_id TEXT,
+        actor          TEXT,
+        reason         TEXT,
+        detail         JSONB DEFAULT '{}',
+        created_at     TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS scan_quota_audit_scope
+        ON scan_quota_audit(scope_type, scope_id, created_at);
+
+      -- Per-scan record (§4): status + token usage / estimated cost (by stage),
+      -- framework versions pinned, linked to the quota period. Powers cost-per-
+      -- scan observability and incremental re-assessment (Stage 8).
+      CREATE TABLE IF NOT EXISTS scan_record (
+        scan_id               TEXT PRIMARY KEY,
+        scope_type            TEXT,
+        scope_id              TEXT,
+        document_id           TEXT,
+        document_version_hash TEXT,
+        framework_versions    JSONB DEFAULT '{}',
+        quota_period_key      TEXT,
+        status                TEXT,                 -- reserved|running|completed|failed|refunded
+        token_usage           JSONB DEFAULT '{}',   -- {input,cached_read,output,est_cost_usd,by_stage}
+        started_at            TIMESTAMPTZ,
+        completed_at          TIMESTAMPTZ,
+        created_at            TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS scan_record_scope ON scan_record(scope_type, scope_id, created_at);
+      CREATE INDEX IF NOT EXISTS scan_record_doc ON scan_record(document_id);
+
+      -- Analyst review queue (Stage 7/8): low-confidence + reconciliation
+      -- conflicts routed for human confirm/override, with an audit trail.
+      CREATE TABLE IF NOT EXISTS analyst_queue (
+        id          TEXT PRIMARY KEY,
+        org_id      TEXT NOT NULL,
+        scan_id     TEXT,
+        item_type   TEXT NOT NULL,        -- missed_coverage|unsupported_verdict|low_confidence|...
+        framework   TEXT,
+        control_id  TEXT,
+        status      TEXT NOT NULL DEFAULT 'open',  -- open|confirmed|overridden|dismissed
+        payload     JSONB DEFAULT '{}',
+        reason      TEXT,
+        resolver    TEXT,
+        resolution  JSONB DEFAULT '{}',
+        created_at  TIMESTAMPTZ DEFAULT NOW(),
+        resolved_at TIMESTAMPTZ
+      );
+      CREATE INDEX IF NOT EXISTS analyst_queue_org ON analyst_queue(org_id, status);
+      CREATE INDEX IF NOT EXISTS analyst_queue_scan ON analyst_queue(scan_id);
+
+      -- Append-only audit of analyst decisions.
+      CREATE TABLE IF NOT EXISTS analyst_queue_audit (
+        id         TEXT PRIMARY KEY,
+        queue_id   TEXT NOT NULL,
+        org_id     TEXT,
+        action     TEXT NOT NULL,
+        actor      TEXT,
+        reason     TEXT,
+        detail     JSONB DEFAULT '{}',
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS analyst_queue_audit_q ON analyst_queue_audit(queue_id);
+
+      -- Persisted grounded assessment records (the §4 per-control verdicts from
+      -- the retrieval-grounded engine). Drives reports/exports, the analyst
+      -- queue, and incremental re-assessment.
+      CREATE TABLE IF NOT EXISTS grounded_assessment (
+        id                       TEXT PRIMARY KEY,
+        org_id                   TEXT NOT NULL,
+        scan_id                  TEXT,
+        upload_id                TEXT,
+        framework                TEXT NOT NULL,
+        control_id               TEXT NOT NULL,
+        status                   TEXT,
+        control_nature           TEXT,
+        confidence               NUMERIC,
+        evidence                 JSONB DEFAULT '[]',
+        gap_description          TEXT,
+        remediation_suggestion   TEXT,
+        operating_effectiveness_note TEXT,
+        operating_effectiveness_evidence_type TEXT,
+        assessment_method        TEXT,
+        propagated_from          TEXT,
+        needs_review             BOOLEAN DEFAULT false,
+        created_at               TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS grounded_assessment_scan ON grounded_assessment(scan_id);
+      CREATE INDEX IF NOT EXISTS grounded_assessment_upload ON grounded_assessment(org_id, upload_id, framework);
+
       -- CISO posture-domain snapshots — one row per (org, domain) per capture,
       -- so the dashboard can show whether each domain is improving/deteriorating.
       CREATE TABLE IF NOT EXISTS ciso_posture_snapshots (
@@ -1093,12 +1222,12 @@ async function init() {
 
       -- ================= Four-lens posture engine (exec reporting) ==========
       -- Generalized framework catalog (Phase 7). Catalog tables are GLOBAL
-      -- (no org_id): NIST CSF 2.0, SP 800-53 r5.2.0, CIS v8.1, ATT&CK.
+      -- (no org_id): NIST CSF 2.0, SP 800-53 r5.2.0, ATT&CK.
       CREATE TABLE IF NOT EXISTS frameworks (
-        id          TEXT PRIMARY KEY,          -- 'nist_csf_2', 'nist_800_53_r5', 'cis_v8_1', 'attack_enterprise'
+        id          TEXT PRIMARY KEY,          -- 'nist_csf_2', 'nist_800_53_r5', 'attack_enterprise'
         name        TEXT NOT NULL,
         version     TEXT,
-        provenance  TEXT,                      -- 'NIST OSCAL', 'NIST CPRT', 'CIS', 'MITRE'
+        provenance  TEXT,                      -- 'NIST OSCAL', 'NIST CPRT', 'MITRE'
         ingested_at TIMESTAMPTZ DEFAULT NOW()
       );
       CREATE TABLE IF NOT EXISTS framework_requirements (
@@ -1140,6 +1269,28 @@ async function init() {
         PRIMARY KEY (from_framework, from_id, to_framework, to_id)
       );
       CREATE INDEX IF NOT EXISTS xwalk_to ON requirement_crosswalks(to_framework, to_id);
+
+      -- Control corpus for the grounded assessment engine (§4). Built once from
+      -- authoritative sources (800-53 OSCAL + 800-53A CPRT, CSF 2.0 library),
+      -- version-pinned, reused for every document scan. Spine = NIST_SP_800-53.
+      CREATE TABLE IF NOT EXISTS control_corpus (
+        framework             TEXT NOT NULL,      -- 'NIST_SP_800-53' | 'NIST_CSF_2.0'
+        framework_version     TEXT NOT NULL,
+        control_id            TEXT NOT NULL,      -- 'AC-2' | 'PR.AA-01'
+        title                 TEXT,
+        requirement_text      TEXT,
+        family                TEXT,
+        control_nature        TEXT,               -- automated_capable | non_automated_procedural | hybrid
+        assessment_objectives JSONB DEFAULT '[]', -- [{objective_id, determination_statement}]
+        crosswalk             JSONB DEFAULT '{}', -- {"NIST_CSF_2.0":[{control_id,mapping}]}
+        is_spine              BOOLEAN DEFAULT false,
+        source_provenance     TEXT,
+        meta                  JSONB DEFAULT '{}',
+        loaded_at             TIMESTAMPTZ DEFAULT NOW(),
+        PRIMARY KEY (framework, control_id)
+      );
+      CREATE INDEX IF NOT EXISTS control_corpus_fw ON control_corpus(framework);
+      CREATE INDEX IF NOT EXISTS control_corpus_nature ON control_corpus(control_nature);
 
       -- Parameterized automated checks (catalog; execution is org-scoped)
       CREATE TABLE IF NOT EXISTS checks (
