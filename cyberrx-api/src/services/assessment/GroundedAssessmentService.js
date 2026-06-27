@@ -111,6 +111,7 @@ function validateVerdict(verdict, evidenceChunks) {
 function record(objective, control, fields) {
   return {
     control_id: objective.objective_id || control.control_id,
+    parent_control_id: control.control_id, // the spine control this objective belongs to (for rollup)
     framework: control.framework,
     framework_version: control.framework_version,
     status: fields.status,
