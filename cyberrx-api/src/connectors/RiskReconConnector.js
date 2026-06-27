@@ -223,8 +223,8 @@ class RiskReconConnector extends BaseConnector {
     if (typeof score !== 'number') return 'Medium';
 
     if (score >= 80) return 'Critical';
-    if (score >= 60) return 'High';
-    if (score >= 40) return 'Medium';
+    if (score >= 55) return 'High';
+    if (score >= 30) return 'Medium';
     if (score >= 20) return 'Low';
     return 'Info';
   }

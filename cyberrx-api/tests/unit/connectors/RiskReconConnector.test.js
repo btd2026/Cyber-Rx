@@ -377,7 +377,7 @@ describe('RiskReconConnector', () => {
       expect(result.status).toBe('error');
       expect(result.configured).toBe(true);
       expect(result.authenticated).toBe(false);
-      expect(result.message).toContain('Invalid credentials');
+      expect(result.message).toContain('Invalid RiskRecon API credentials');
     });
 
     it('should return error for missing credentials', async () => {
@@ -461,7 +461,11 @@ describe('RiskReconConnector', () => {
       expect(typeof gradeSignal.signalName).toBe('string');
       expect(typeof gradeSignal.severity).toBe('string');
       expect(typeof gradeSignal.confidence).toBe('number');
-      expect(gradeSignal.observedAt).toBeInstanceOf(Date);
+      // observedAt is an ISO timestamp string (serialization-safe), matching the
+      // repo's connector convention (src/services/connectors/* use nowIso()).
+      // Validate it is a string that parses to a valid Date.
+      expect(typeof gradeSignal.observedAt).toBe('string');
+      expect(Number.isNaN(Date.parse(gradeSignal.observedAt))).toBe(false);
     });
 
     it('should include evidence URLs when available', async () => {

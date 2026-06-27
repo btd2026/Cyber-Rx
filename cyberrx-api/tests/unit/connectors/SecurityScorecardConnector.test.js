@@ -22,8 +22,10 @@ describe('SecurityScorecardConnector', () => {
     mockFetch = jest.fn();
     global.fetch = mockFetch;
 
-    // Mock vault
-    jest.mock('../../../src/utils/vault');
+    // Note: vault is mocked per-test by reassigning vault.get on the real
+    // module instance (see individual tests). A runtime jest.mock() here would
+    // create a separate auto-mocked module that the connector's top-level
+    // require() does not share, causing vault.get to never be invoked.
   });
 
   afterEach(() => {

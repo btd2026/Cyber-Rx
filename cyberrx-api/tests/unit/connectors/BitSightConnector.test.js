@@ -17,6 +17,12 @@ describe('BitSightConnector', () => {
     // Reset all mocks before each test
     jest.clearAllMocks();
 
+    // clearAllMocks() resets call history but leaves any queued one-time
+    // implementations (mockResolvedValueOnce/mockRejectedValueOnce) in place.
+    // A preceding test can leave an unconsumed queued response behind, which
+    // would pollute the next test's fetch sequence. Fully reset fetch's queue.
+    global.fetch.mockReset();
+
     // Setup default config
     mockConfig = {
       organizationId: 'org-123',
@@ -386,7 +392,7 @@ describe('BitSightConnector', () => {
       expect(badRequest.message).toContain('Bad request');
 
       const unauthorized = await connector.handleErrorResponse({ status: 401, statusText: 'Unauthorized' });
-      expect(unauthorized.message).toContain('Invalid API key');
+      expect(unauthorized.message).toContain('Invalid BitSight API key');
 
       const forbidden = await connector.handleErrorResponse({ status: 403, statusText: 'Forbidden' });
       expect(forbidden.message).toContain('insufficient permissions');
@@ -436,7 +442,7 @@ describe('BitSightConnector', () => {
       const result = await connector.testConnection();
 
       expect(result.status).toBe('error');
-      expect(result.message).toContain('Invalid API key');
+      expect(result.message).toContain('Invalid BitSight API key');
     });
 
     test('should return error for forbidden access', async () => {
