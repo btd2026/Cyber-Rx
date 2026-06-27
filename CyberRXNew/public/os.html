@@ -2643,7 +2643,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
       h+='<div class="wr-banner calm"><div class="wr-binfo"><div class="h">● No active incident</div><div class="s">Continuous monitoring · last threat-hunt sweep 6h ago, clean · all feeds streaming</div></div><div class="wr-stat"><div class="it"><div class="k">Active incidents</div><div class="v ok">0</div></div><div class="it"><div class="k">Systems online</div><div class="v ok">9 / 9</div></div><div class="it"><div class="k">MTTD (90d)</div><div class="v ok">8 min</div></div></div></div>';
       h+='<div class="wr-sec">Live system feeds — what each tool is reporting now</div><div class="wr-grid">'+SYS_CALM.map(sysCard).join('')+'</div>';
       h+='<div class="wr-sec">Response readiness — armed and ready</div><div class="wr-blast">'+READY.map(bcell).join('')+'</div>';
-      h+='<div class="wr-comms" style="margin-top:16px">If a qualifying incident is detected, this room goes <b>live</b> automatically: the alarm sounds, the War Room button flashes across every seat, and the C-suite is convened with shared facts and role-specific decisions. Use <b>Simulate live incident</b> to preview.</div>';
+      h+='<div class="wr-comms" style="margin-top:16px">'+(siemConnected?'<b style="color:var(--pass)">⚡ SIEM auto-detection active.</b> When your SIEM confirms a SEV-1 incident, this room goes <b>live</b> automatically: the alarm sounds, the War Room button flashes across every seat, and the C-suite is convened with shared facts and role-specific decisions.':'Connect your SIEM in onboarding to enable auto-detection. When a qualifying incident is confirmed, this room will go <b>live</b> automatically.')+'</div>';
       body.innerHTML=h;
     }
   }
@@ -2653,6 +2653,36 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
   function containIncident(){incidentActive=false;stopAlarm();stopWarLive();const b=document.getElementById('warBtn');b.classList.remove('alarm');b.innerHTML='⚠ War Room';icChecks=new Set();icCalled=new Set();icPlaybook=false;hideIC();renderWar();}
   document.getElementById('wrSim').addEventListener('click',()=>{ensureAudio();if(incidentActive)containIncident();else triggerIncident();});
   document.getElementById('wrMute').addEventListener('click',()=>{alarmMuted=!alarmMuted;document.getElementById('wrMute').textContent=alarmMuted?'🔇':'🔊';if(alarmMuted)stopAlarm();else if(incidentActive)startAlarm();});
+  // SIEM auto-detection: poll connected SIEM for confirmed incidents.
+  // In production, this is a WebSocket/SSE stream from the backend that
+  // watches Splunk/Sentinel/QRadar notable events. The backend filters for
+  // SEV-1 confirmed incidents and pushes them here. For now we expose the
+  // hook so the backend can call window.siemIncidentDetected() to auto-trigger.
+  let siemPollTimer=null, siemConnected=false;
+  window.siemIncidentDetected=function(payload){
+    if(incidentActive)return;
+    ensureAudio(); triggerIncident();
+    if(payload&&payload.summary){
+      const fb=document.getElementById('wrFeed');
+      if(fb){const ts=new Date().toLocaleTimeString('en',{hour12:false});FEED.unshift([ts,'SIEM','AUTO-DETECTED: '+payload.summary,'crit']);fb.innerHTML=FEED.map(feedLineHTML).join('');}
+    }
+  };
+  function startSiemPoll(){
+    if(siemPollTimer)return; siemConnected=true;
+    const sim=document.getElementById('wrSim');
+    if(sim&&!incidentActive){sim.textContent='⚡ SIEM monitoring active · simulate';}
+    siemPollTimer=setInterval(async function(){
+      try{
+        const r=await fetch('/api/siem/incidents?severity=critical&status=confirmed');
+        if(r.ok){const d=await r.json();if(d&&d.incidents&&d.incidents.length)window.siemIncidentDetected(d.incidents[0]);}
+      }catch(e){}
+    },30000);
+  }
+  // Auto-start SIEM polling if SIEM was connected during onboarding
+  window.addEventListener('message',function(e){
+    if(e.data&&e.data.type==='cyberrx-siem-connected')startSiemPoll();
+  });
+  try{if(localStorage.getItem('cyberrx_siem_connected'))startSiemPoll();}catch(e){}
 
   // ===== Incident Commander mode (CISO) — run the response =====
   const IC_CHECK=['Declare incident & assume command','Assemble the response team (call tree)','Contain & isolate affected systems','Preserve evidence — forensic images & logs','Assess scope, data impact & materiality','Notify per plan — exec, legal, insurer, regulators','Open the incident decision log','Set comms cadence — internal & external'];
