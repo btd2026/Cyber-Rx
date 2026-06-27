@@ -823,7 +823,7 @@
     const ni=e.target.closest('.numfmt');
     if(ni){const d=ni.value.replace(/[^\d]/g,'');ni.value=d?parseInt(d,10).toLocaleString():'';if(ni.id==='empNum')empRaw=ni.value;}
   });
-  document.getElementById('nextBtn').addEventListener('click',()=>{done[cur]=true;updateComplete();if(cur<STEPS.length-1){cur++;render();}else{document.getElementById('nextBtn').textContent='✓ Setup complete';const bc=document.getElementById('benchConsent');const benchShare=!!(bc&&bc.checked);try{window.parent.postMessage({type:'cyberrx-golive',industry:selectedIndustry,org:(orgName||'').trim(),names:seatNames,benchShare:benchShare,currency:{code:orgCurrency,sym:curSym()}},'*');window.parent.postMessage('cyberrx-golive','*');}catch(e){}}});
+  document.getElementById('nextBtn').addEventListener('click',()=>{done[cur]=true;updateComplete();if(cur<STEPS.length-1){cur++;render();}else{document.getElementById('nextBtn').textContent='✓ Setup complete';const bc=document.getElementById('benchConsent');const benchShare=!!(bc&&bc.checked);var _org='';try{_org=(orgName||localStorage.getItem('cyberrx_org_name')||'').trim();}catch(_){_org=(orgName||'').trim();}if(_org){try{localStorage.setItem('cyberrx_org_name',_org);}catch(_){}}try{window.parent.postMessage({type:'cyberrx-golive',industry:selectedIndustry,org:_org,names:seatNames,benchShare:benchShare,currency:{code:orgCurrency,sym:curSym()}},'*');window.parent.postMessage('cyberrx-golive','*');}catch(e){}}});
   document.getElementById('backBtn').addEventListener('click',()=>{if(cur>0){cur--;render();}});
   document.getElementById('ccCall').addEventListener('click',function(){this.classList.add('req');this.textContent='✓ We\'ll reach out within 1 business day';});
   render();updateComplete();
