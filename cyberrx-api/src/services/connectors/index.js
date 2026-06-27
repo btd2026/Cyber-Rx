@@ -5,6 +5,7 @@
 // that posture/coverage already read.
 const REGISTRY = {
   entra: require('./entra'),
+  okta: require('./okta'),
   crowdstrike: require('./crowdstrike'),
   tenable: require('./tenable'),
   splunk: require('./splunk'),
