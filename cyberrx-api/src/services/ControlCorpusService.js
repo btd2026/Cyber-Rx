@@ -153,6 +153,10 @@ async function listSpine({ nature, limit } = {}) {
   return (await db.query(sql, params)).map(rowToRecord);
 }
 
+async function listByFramework(framework) {
+  return (await db.query('SELECT * FROM control_corpus WHERE framework=$1 ORDER BY control_id', [framework])).map(rowToRecord);
+}
+
 async function counts() {
   const rows = await db.query('SELECT framework, control_nature, COUNT(*)::int AS n FROM control_corpus GROUP BY framework, control_nature ORDER BY framework, control_nature');
   return rows;
@@ -161,6 +165,6 @@ async function counts() {
 module.exports = {
   mappingStrength, buildCrosswalk, rowToRecord,
   loadSpine, loadCsfTarget, load,
-  getControl, listSpine, counts,
+  getControl, listSpine, listByFramework, counts,
   RES,
 };

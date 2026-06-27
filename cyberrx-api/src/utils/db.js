@@ -1100,6 +1100,32 @@ async function init() {
       );
       CREATE INDEX IF NOT EXISTS analyst_queue_audit_q ON analyst_queue_audit(queue_id);
 
+      -- Persisted grounded assessment records (the §4 per-control verdicts from
+      -- the retrieval-grounded engine). Drives reports/exports, the analyst
+      -- queue, and incremental re-assessment.
+      CREATE TABLE IF NOT EXISTS grounded_assessment (
+        id                       TEXT PRIMARY KEY,
+        org_id                   TEXT NOT NULL,
+        scan_id                  TEXT,
+        upload_id                TEXT,
+        framework                TEXT NOT NULL,
+        control_id               TEXT NOT NULL,
+        status                   TEXT,
+        control_nature           TEXT,
+        confidence               NUMERIC,
+        evidence                 JSONB DEFAULT '[]',
+        gap_description          TEXT,
+        remediation_suggestion   TEXT,
+        operating_effectiveness_note TEXT,
+        operating_effectiveness_evidence_type TEXT,
+        assessment_method        TEXT,
+        propagated_from          TEXT,
+        needs_review             BOOLEAN DEFAULT false,
+        created_at               TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS grounded_assessment_scan ON grounded_assessment(scan_id);
+      CREATE INDEX IF NOT EXISTS grounded_assessment_upload ON grounded_assessment(org_id, upload_id, framework);
+
       -- CISO posture-domain snapshots — one row per (org, domain) per capture,
       -- so the dashboard can show whether each domain is improving/deteriorating.
       CREATE TABLE IF NOT EXISTS ciso_posture_snapshots (

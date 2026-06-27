@@ -12,7 +12,10 @@
  * the mean of available objective confidences.
  */
 
+const { OE_TYPE } = require('./GroundedAssessmentService');
+
 const STATUS = { FULL: 'Fully addressed', PARTIAL: 'Partially addressed', NOT: 'Not addressed', NA: 'Not applicable' };
+const joinUnique = (arr) => [...new Set(arr.filter(Boolean).map((s) => s.trim()))].join(' ');
 
 function rollupStatus(statuses) {
   const live = statuses.filter((s) => s !== STATUS.NA);
@@ -45,14 +48,21 @@ function rollup(objectiveRecords) {
     const status = rollupStatus(recs.map((r) => r.status));
     const evidence = dedupeEvidence(recs.flatMap((r) => r.evidence || []));
     const confs = recs.map((r) => r.confidence).filter((c) => c != null);
+    const nature = recs[0].control_nature;
     verdicts[cid] = {
       control_id: cid,
       framework: recs[0].framework,
       framework_version: recs[0].framework_version,
-      control_nature: recs[0].control_nature,
+      control_nature: nature,
       status,
       evidence,
       confidence: confs.length ? Math.round((confs.reduce((a, c) => a + c, 0) / confs.length) * 100) / 100 : null,
+      gap_description: status === STATUS.FULL ? '' : joinUnique(recs.map((r) => r.gap_description)),
+      remediation_suggestion: joinUnique(recs.filter((r) => r.status !== STATUS.FULL).map((r) => r.remediation_suggestion)),
+      operating_effectiveness_note: 'Design/documentation coverage only — operating-effectiveness evidence still required to prove the control runs.',
+      operating_effectiveness_evidence_type: (OE_TYPE && OE_TYPE[nature]) || 'either',
+      assessment_method: 'rollup',
+      propagated_from: null,
       objectives_total: recs.length,
       objectives_addressed: recs.filter((r) => r.status === STATUS.FULL || r.status === STATUS.PARTIAL).length,
     };

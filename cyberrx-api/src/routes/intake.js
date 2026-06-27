@@ -21,7 +21,20 @@ const SampleDoc = require('../services/SampleDocService');
 const ProcessExtraction = require('../services/ProcessExtractionService');
 const ScanQuota = require('../services/ScanQuotaService');
 const RagIngest = require('../services/rag/RagIngestService');
+const AssessmentPipeline = require('../services/assessment/AssessmentPipelineService');
+const ScanRecord = require('../services/assessment/ScanRecordService');
+const GroundedStore = require('../services/assessment/GroundedAssessmentStore');
+const AssessmentReport = require('../services/assessment/AssessmentReportService');
+const ExportService = require('../services/assessment/ExportService');
+const AnalystQueue = require('../services/assessment/AnalystQueueService');
 const { requireAdmin } = require('../middleware/auth');
+
+// Split persisted grounded records into a report model (re-export is free).
+function reportFromRecords(records, scanId, uploadId) {
+  const spine = records.filter((r) => r.framework === 'NIST_SP_800-53');
+  const csf = records.filter((r) => r.framework === 'NIST_CSF_2.0');
+  return AssessmentReport.buildReport({ spineVerdicts: spine, csfRecords: csf, scanId, documentId: uploadId, generatedAt: new Date().toISOString() });
+}
 
 // Identity available for quota scoping. orgId is always derivable here; userId
 // is only present when the route is authenticated (it usually isn't today), so
@@ -181,6 +194,67 @@ router.post('/scan-quota/reset', requireAdmin, async (req, res) => {
   try {
     const actor = (req.user && req.user.userId) || req.headers['x-admin-actor'] || 'admin';
     res.json(await ScanQuota.adminReset(scanIds(req), { actor, reason: (req.body && req.body.reason) }));
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
+
+// Run the grounded assessment engine for an upload (quota-gated). Persists §4
+// records + scan record, enqueues conflicts, returns the report summary.
+router.post('/documents/:id/assess-grounded', async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'org_id is required' });
+  const uploadId = req.params.id;
+  try {
+    const out = await ScanQuota.runGuardedScan(scanIds(req), { documentId: uploadId, actor: req.userId || orgId }, async () => {
+      const up = await db.query('SELECT normalized_text FROM document_upload WHERE id=$1 AND org_id=$2', [uploadId, orgId]);
+      if (!up[0]) { const e = new Error('upload not found'); e.code = 'NOT_FOUND'; throw e; }
+      const scanId = await ScanRecord.start({ scopeType: scanIds(req).orgId ? 'org' : 'user', scopeId: orgId, documentId: uploadId, documentText: up[0].normalized_text });
+      await RagIngest.ingestUpload(orgId, uploadId, up[0].normalized_text); // ensure chunks/embeddings fresh
+      const result = await AssessmentPipeline.run(orgId, uploadId, { scanId, generatedAt: new Date().toISOString() });
+      await ScanRecord.complete(scanId, result.usage);
+      return { scan_id: scanId, summary: result.report.summary, scorecards: result.report.scorecards, usage: result.usage };
+    });
+    const quota = await ScanQuota.usage(scanIds(req));
+    res.json({ ...out, quota });
+  } catch (e) {
+    if (e && e.code === 'SCAN_QUOTA_EXCEEDED') return res.status(429).json({ error: e.message, code: e.code, used: e.used, limit: e.limit, reset_date: e.resetDate });
+    if (e && e.code === 'NOT_FOUND') return res.status(404).json({ error: e.message });
+    logger.warn('grounded assess failed', { uploadId, error: e.message });
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Export a completed scan's report (FREE — re-export does not consume quota).
+router.get('/scan/:scanId/report.:fmt', async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'org_id is required' });
+  const { scanId, fmt } = req.params;
+  if (!['pdf', 'xlsx', 'docx', 'json'].includes(fmt)) return res.status(400).json({ error: 'format must be pdf|xlsx|docx|json' });
+  try {
+    const records = await GroundedStore.listByScan(scanId);
+    if (!records.length) return res.status(404).json({ error: 'no assessment records for this scan' });
+    const report = reportFromRecords(records, scanId);
+    if (fmt === 'json') return res.json(report);
+    const { buffer, contentType } = await ExportService.exportReport(report, fmt);
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="assessment-${scanId}.${fmt}"`);
+    res.send(buffer);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Analyst review queue (human-in-the-loop).
+router.get('/analyst-queue', async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'org_id is required' });
+  try { res.json(await AnalystQueue.list(orgId, { status: req.query.status, scanId: req.query.scan_id })); }
+  catch (e) { res.status(500).json({ error: e.message }); }
+});
+router.post('/analyst-queue/:id/resolve', async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'org_id is required' });
+  const { action, reason, resolution } = req.body || {};
+  try {
+    const actor = req.userId || (req.body && req.body.actor) || 'analyst';
+    res.json(await AnalystQueue.resolve(req.params.id, { action, actor, reason, resolution }));
   } catch (e) { res.status(400).json({ error: e.message }); }
 });
 
