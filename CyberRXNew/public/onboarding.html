@@ -345,6 +345,10 @@
   const seatNames={ceo:'Marcus',ciso:'Sarah',cfo:'Diane',cio:'Raj',clo:'Patricia',cro:'Sloan',board:'Chair'};
   // Industry chosen here drives the rest of onboarding AND the operating system.
   let selectedIndustry='healthcare-payer', selectedArch='healthcare';
+  // Capture the typed organization name and persist it (same-origin localStorage
+  // is shared with the OS iframe, so the cockpit can adopt the real name).
+  let orgName=''; try{orgName=localStorage.getItem('cyberrx_org_name')||'';}catch(e){}
+  document.addEventListener('input',e=>{ if(e.target&&e.target.id==='orgNameIn'){ orgName=e.target.value; try{localStorage.setItem('cyberrx_org_name',orgName);}catch(_){} } });
   const IMETA={
    healthcare:{org:'Meridian Health Plan',data:['PHI','PII'],reg:'HIPAA · SEC',ctx:'Framed for healthcare — PHI exposure, HIPAA breach clocks, and claims/care continuity.'},
    financial:{org:'Atlas Financial Group',data:['PII','PCI','Financial'],reg:'GLBA · NYDFS 500 · SEC',ctx:'Framed for financial services — funds & PII exposure, GLBA / NYDFS 500, payments continuity.'},
@@ -776,7 +780,7 @@
     const ni=e.target.closest('.numfmt');
     if(ni){const d=ni.value.replace(/[^\d]/g,'');ni.value=d?parseInt(d,10).toLocaleString():'';if(ni.id==='empNum')empRaw=ni.value;}
   });
-  document.getElementById('nextBtn').addEventListener('click',()=>{done[cur]=true;updateComplete();if(cur<STEPS.length-1){cur++;render();}else{document.getElementById('nextBtn').textContent='✓ Setup complete';const bc=document.getElementById('benchConsent');const benchShare=!!(bc&&bc.checked);try{window.parent.postMessage({type:'cyberrx-golive',industry:selectedIndustry,names:seatNames,benchShare:benchShare,currency:{code:orgCurrency,sym:curSym()}},'*');window.parent.postMessage('cyberrx-golive','*');}catch(e){}}});
+  document.getElementById('nextBtn').addEventListener('click',()=>{done[cur]=true;updateComplete();if(cur<STEPS.length-1){cur++;render();}else{document.getElementById('nextBtn').textContent='✓ Setup complete';const bc=document.getElementById('benchConsent');const benchShare=!!(bc&&bc.checked);try{window.parent.postMessage({type:'cyberrx-golive',industry:selectedIndustry,org:(orgName||'').trim(),names:seatNames,benchShare:benchShare,currency:{code:orgCurrency,sym:curSym()}},'*');window.parent.postMessage('cyberrx-golive','*');}catch(e){}}});
   document.getElementById('backBtn').addEventListener('click',()=>{if(cur>0){cur--;render();}});
   document.getElementById('ccCall').addEventListener('click',function(){this.classList.add('req');this.textContent='✓ We\'ll reach out within 1 business day';});
   render();updateComplete();

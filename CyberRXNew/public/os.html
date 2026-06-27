@@ -2054,7 +2054,7 @@
   function _cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
   function buildPairs(c){
     const P=[]; const add=(a,b)=>{ if(b&&a!==b) P.push([a,b]); };
-    if(c.org){ add('Meridian Health',c.org); if(c.orgShort)add('Meridian',c.orgShort); }
+    { const _org=USER_ORG||c.org; if(_org){ add('Meridian Health',_org); add('Meridian', USER_ORG?USER_ORG.split(' ')[0]:(c.orgShort||_org.split(' ')[0])); } }
     add('Healthcare — Payer',c.label);
     add('US health payers',c.peers);
     add('ransomware path to PHI',c.threatPath);
@@ -2124,6 +2124,10 @@
    }}}
   };
   const _packCache={};
+  // The real org name typed at onboarding (shared via same-origin localStorage),
+  // applied over the industry pack's default so the cockpit shows YOUR name.
+  let USER_ORG=''; let SKIN_VER=0;
+  try{USER_ORG=localStorage.getItem('cyberrx_org_name')||'';}catch(e){}
   function resolveIndustry(id){
     if(_packCache[id])return _packCache[id];
     const ov=IND[id]||IND['other']; const base=ARCH[ov.arch]||ARCH.generic;
@@ -2140,10 +2144,10 @@
     if(!n||n.nodeType!==3)return;
     const p=n.parentNode; if(p&&(p.nodeName==='SCRIPT'||p.nodeName==='STYLE'))return;
     const base=(n.__b!==undefined)?n.__b:(n.__b=n.nodeValue);
-    if(n.__s===ACTIVE)return;
+    if(n.__sv===SKIN_VER)return;
     let t=base;
     for(let i=0;i<ACTIVE_PAIRS.length;i++){const a=ACTIVE_PAIRS[i][0]; if(t.indexOf(a)>=0)t=t.split(a).join(ACTIVE_PAIRS[i][1]);}
-    n.nodeValue=t; n.__s=ACTIVE;
+    n.nodeValue=t; n.__sv=SKIN_VER;
   }
   function reskinTree(root){
     if(!root)return;
@@ -2159,8 +2163,17 @@
   function applyIndustry(id){
     if(!IND[id])id='other';
     const cfg=resolveIndustry(id); ACTIVE=id; ACTIVE_PAIRS=cfg._pairs; ACTIVE_PACK=cfg;
-    reskinTree(document.body);
+    SKIN_VER++; reskinTree(document.body);
     return cfg;
+  }
+  // Apply the user's real org name over whatever the industry pack defaulted to.
+  function applyOrgName(nm){
+    if(!nm||!String(nm).trim())return; nm=String(nm).trim(); USER_ORG=nm;
+    try{localStorage.setItem('cyberrx_org_name',nm);}catch(e){}
+    Object.keys(_packCache).forEach(k=>delete _packCache[k]); // rebuild pairs with the new name
+    ACTIVE_PACK=resolveIndustry(ACTIVE); ACTIVE_PAIRS=ACTIVE_PACK._pairs;
+    ORG=nm; try{if(typeof ORG_PROFILE!=='undefined')ORG_PROFILE.name=nm;}catch(e){}
+    SKIN_VER++; reskinTree(document.body);
   }
   (function initIndustry(){
     function wire(){
@@ -2189,7 +2202,8 @@
   function renderChips(seat){ updateTwinScope(); }
 
   // ===== Per-seat agent voice (org name comes from intake in production) =====
-  const ORG='Meridian Health';
+  let ORG=USER_ORG||'Meridian Health';
+  if(USER_ORG){try{applyOrgName(USER_ORG);}catch(e){}}
   // Currency follows the org's HQ (chosen at onboarding). Swaps the display symbol across all
   // figures, including dynamically rendered ones, via a MutationObserver. In production the figures
   // arrive in the org's native currency from its financial systems — this is symbol display, not FX.
@@ -2296,6 +2310,7 @@
   window.addEventListener('message',function(e){
     if(e.data && e.data.type==='cyberrx-golive'){
       if(e.data.industry){try{applyIndustry(e.data.industry);}catch(_){}}
+      if(e.data.org){try{applyOrgName(e.data.org);}catch(_){}}
       if(e.data.names){Object.assign(SEAT_NAMES,e.data.names);if(typeof e.data.benchShare==='boolean')benchShare=e.data.benchShare;if(e.data.currency&&e.data.currency.sym){MON=e.data.currency.sym;applyCurrencyAll();}}
     }
     if(e.data==='cyberrx-os-active'){vaActive=true;if(!vaMuted)speakAgent(curSeat);}
