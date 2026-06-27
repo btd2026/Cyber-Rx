@@ -46,7 +46,10 @@ const productionOrigins = [
   // Vercel preview/branch deployments for this project (hash changes per deploy)
   'https://cyber-rx-frontend-*.vercel.app',
   'https://cyber-rx-*-btd2026s-projects.vercel.app',
-  'https://*-btd2026s-projects.vercel.app'
+  'https://*-btd2026s-projects.vercel.app',
+  // CyberRXNew app (production alias; preview hashes already covered above)
+  'https://cyberrxnew.vercel.app',
+  'https://cyberrxnew-*.vercel.app'
 ];
 
 // Development URLs (only in development mode)
