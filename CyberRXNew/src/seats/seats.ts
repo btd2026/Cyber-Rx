@@ -25,6 +25,7 @@ export const CISO_TABS: Tab[] = [
   { id: 'q5', label: 'Trajectory', mark: '5' },
   { id: 'qF', label: 'Framework Posture', mark: '▦' },
   { id: 'qL', label: 'My Liability', mark: '⚖' },
+  { id: 'qCJ', label: 'Crown Jewels', mark: '◆' },
 ]
 
 export const seatById = (id: SeatId): Seat => SEATS.find((s) => s.id === id) ?? SEATS[1]

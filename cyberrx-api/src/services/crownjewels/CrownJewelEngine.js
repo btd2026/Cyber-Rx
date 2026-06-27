@@ -1,14 +1,15 @@
 'use strict';
 
 /**
- * CrownJewelEngine — orchestrates the deterministic crown-jewel analysis over an
- * org's REAL inventory (the existing assets / business_processes / risks tables),
- * producing the crown-jewel set, material exposure, and the GraphModel. Reuses
- * the Compliance Engine corpus/findings for control documentation status.
+ * CrownJewelEngine — orchestrates the full 10-stage crown-jewel analysis pipeline.
  *
- * Deterministic + explainable; the LLM-assisted entity-resolution / applicability
- * stages layer on top later. Degrades gracefully to an empty result when an org
- * has no inventory yet (callers fall back to sample data).
+ * Lightweight run():   deterministic scoring from existing inventory (no quota).
+ * Full runPipeline():  quota-gated, runs Stages 2-8:
+ *   Entity Resolution → Dependency Mapping → Criticality Scoring →
+ *   Risk Mapping → Control Mapping → Graph Assembly.
+ *
+ * Deterministic-first; LLM only for entity resolution ambiguity (cheap model).
+ * Degrades gracefully to an empty result when an org has no inventory.
  */
 
 const logger = require('../../utils/logger');
@@ -17,6 +18,10 @@ const BusinessProcess = require('../../models/BusinessProcess');
 const Risk = require('../../models/Risk');
 const Criticality = require('./CriticalityService');
 const Graph = require('./GraphModelService');
+const EntityResolution = require('./EntityResolutionService');
+const DependencyMapping = require('./DependencyMappingService');
+const RiskMapping = require('./RiskMappingService');
+const ControlMapping = require('./ControlMappingService');
 
 const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
 
@@ -30,13 +35,11 @@ async function run(orgId) {
 
   const procById = {}; processes.forEach((p) => { procById[p.id] = p; });
 
-  // For SPOF: how many assets support each process.
   const supporters = {};
   assets.forEach((a) => (a.business_process_ids || []).forEach((pid) => { supporters[pid] = (supporters[pid] || 0) + 1; }));
 
   const scored = assets.map((a) => {
     const procs = (a.business_process_ids || []).map((pid) => procById[pid]).filter(Boolean);
-    // single point of failure: this asset is the sole supporter of a critical process
     const isSpof = procs.some((p) => ['critical', 'high'].includes(String(p.criticality || '').toLowerCase()) && supporters[p.id] === 1);
     const s = Criticality.scoreAsset(a, { processes: procs, isSpof });
     return { ...a, criticality_score: s.score, criticality_breakdown: s.breakdown, crown_jewel: s.crown_jewel, crown_jewel_tier: s.crown_jewel_tier, rationale: s.rationale };
@@ -64,8 +67,136 @@ async function run(orgId) {
   };
 }
 
-// Material exposure = open risks (financial_exposure) tied to crown-jewel assets
-// (the risk register is authoritative). Deterministic + auditable.
+/**
+ * Full pipeline — called from the quota-gated POST /analyze route.
+ * Runs stages 3-8 with CostMeter tracking. Returns the complete analysis result.
+ */
+async function runPipeline(orgId, { runId, meter, anthropic } = {}) {
+  const [assets, processes, risks] = await Promise.all([
+    Asset.findByOrganization(orgId).catch(() => []),
+    BusinessProcess.findByOrganization(orgId).catch(() => []),
+    Risk.findByOrganization(orgId).catch(() => []),
+  ]);
+  if (!assets.length) return empty(orgId);
+
+  // Stage 3: Entity Resolution
+  let resolvedAssets = assets;
+  let resolvedProcesses = processes;
+  let erStats = null;
+  try {
+    const er = await EntityResolution.resolve(orgId, assets, processes, { anthropic, meter });
+    erStats = er.stats;
+    logger.info(`[CrownJewelEngine] Entity resolution: ${JSON.stringify(er.stats)}`);
+  } catch (e) {
+    logger.warn(`[CrownJewelEngine] Entity resolution skipped: ${e.message}`);
+  }
+
+  // Stage 4: Dependency Mapping
+  let depResult = { edges: [], review: [], stats: {} };
+  try {
+    depResult = await DependencyMapping.build(orgId, resolvedAssets, resolvedProcesses, { runId, meter });
+    logger.info(`[CrownJewelEngine] Dependencies: ${depResult.stats.explicit} explicit, ${depResult.stats.inferred_accepted} inferred`);
+  } catch (e) {
+    logger.warn(`[CrownJewelEngine] Dependency mapping skipped: ${e.message}`);
+  }
+
+  // Stage 5: Criticality Scoring (uses dependency edges for SPOF detection)
+  const procById = {}; resolvedProcesses.forEach((p) => { procById[p.id] = p; });
+  const supporters = {};
+  for (const edge of depResult.edges) {
+    supporters[edge.process_id] = (supporters[edge.process_id] || 0) + 1;
+  }
+  // Fallback to business_process_ids if no dependency edges
+  if (depResult.edges.length === 0) {
+    resolvedAssets.forEach((a) => (a.business_process_ids || []).forEach((pid) => { supporters[pid] = (supporters[pid] || 0) + 1; }));
+  }
+
+  const scored = resolvedAssets.map((a) => {
+    const linkedProcessIds = depResult.edges.length > 0
+      ? depResult.edges.filter((e) => e.asset_id === a.id).map((e) => e.process_id)
+      : (a.business_process_ids || []);
+    const procs = linkedProcessIds.map((pid) => procById[pid]).filter(Boolean);
+    const isSpof = procs.some((p) => ['critical', 'high'].includes(String(p.criticality || '').toLowerCase()) && supporters[p.id] === 1);
+    const s = Criticality.scoreAsset(a, { processes: procs, isSpof });
+    return { ...a, criticality_score: s.score, criticality_breakdown: s.breakdown, crown_jewel: s.crown_jewel, crown_jewel_tier: s.crown_jewel_tier, rationale: s.rationale, business_process_ids: linkedProcessIds };
+  });
+
+  const crownAssets = scored.filter((a) => a.crown_jewel).sort((x, y) => y.criticality_score - x.criticality_score);
+
+  // Stage 6: Risk Mapping
+  let riskResult = { mappings: [], risks: [], review: [], stats: {} };
+  try {
+    riskResult = await RiskMapping.mapRisks(orgId, scored, resolvedProcesses, { existingRisks: risks });
+    logger.info(`[CrownJewelEngine] Risks: ${riskResult.stats.from_register} register, ${riskResult.stats.from_rules} rules`);
+  } catch (e) {
+    logger.warn(`[CrownJewelEngine] Risk mapping skipped: ${e.message}`);
+  }
+
+  // Stage 7: Control Mapping (requires corpus from ControlCorpusService)
+  let controlResult = { applications: [], gaps: [], stats: {} };
+  try {
+    let corpus = [];
+    try {
+      const ControlCorpus = require('../ControlCorpusService');
+      corpus = await ControlCorpus.listSpine();
+    } catch (_) {
+      logger.warn('[CrownJewelEngine] Control corpus unavailable, control mapping will use empty corpus');
+    }
+    controlResult = await ControlMapping.mapControls(orgId, scored, riskResult.mappings, { corpus, runId });
+    logger.info(`[CrownJewelEngine] Controls: ${controlResult.stats.total} applications, ${controlResult.stats.gaps_on_crown_jewels} gaps`);
+  } catch (e) {
+    logger.warn(`[CrownJewelEngine] Control mapping skipped: ${e.message}`);
+  }
+
+  // Stage 8: Graph Assembly
+  const allRisks = [...risks, ...riskResult.risks];
+  const graph = Graph.build({
+    processes: resolvedProcesses,
+    assets: scored,
+    risks: allRisks,
+    controls: controlResult.applications,
+    dependencyEdges: depResult.edges,
+    riskMappings: riskResult.mappings,
+  });
+
+  const expo = materialExposure(crownAssets, allRisks);
+
+  return {
+    org_id: orgId,
+    generated_at: new Date().toISOString(),
+    run_id: runId,
+    summary: {
+      material_exposure_usd: expo.total,
+      material_exposure_basis: expo.basis,
+      material_exposure_items: expo.items.slice(0, 10),
+      counts: {
+        assets: resolvedAssets.length, processes: resolvedProcesses.length,
+        risks: allRisks.length, crown_jewels: crownAssets.length,
+        dependency_edges: depResult.edges.length,
+        control_applications: controlResult.applications.length,
+        control_gaps: controlResult.gaps.length,
+      },
+      crown_jewels: crownAssets.slice(0, 12).map((a) => ({
+        id: a.id, name: a.name, type: a.type, tier: a.crown_jewel_tier,
+        score: Math.round(a.criticality_score * 100), breakdown: a.criticality_breakdown, rationale: a.rationale,
+      })),
+    },
+    graph,
+    assets: scored,
+    stages: {
+      entity_resolution: erStats,
+      dependencies: depResult.stats,
+      risks: riskResult.stats,
+      controls: controlResult.stats,
+    },
+    review: {
+      dependencies: depResult.review,
+      risks: riskResult.review,
+      control_gaps: controlResult.gaps,
+    },
+  };
+}
+
 function materialExposure(crownAssets, risks) {
   const cj = new Set(crownAssets.map((a) => a.id));
   let total = 0; const items = [];
@@ -86,4 +217,4 @@ function empty(orgId) {
     graph: { nodes: [], edges: [] }, assets: [] };
 }
 
-module.exports = { run, materialExposure };
+module.exports = { run, runPipeline, materialExposure };

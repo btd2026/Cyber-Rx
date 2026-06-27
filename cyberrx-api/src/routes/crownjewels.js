@@ -28,11 +28,8 @@ router.post('/analyze', optionalJWT, async (req, res) => {
   if (!orgId) return res.status(400).json({ error: 'org_id is required' });
   const mode = (req.body && req.body.mode) === 'delta' ? 'delta' : 'full';
   try {
-    const out = await Analysis.runGuardedAnalysis(ids(req), { mode, actor: req.userId || orgId }, async (/* { runId, meter } */) => {
-      // Stage 1: downstream pipeline stubbed. Stages 2-10 implement ingest ->
-      // entity resolution -> dependency mapping -> criticality -> risk ->
-      // control mapping -> graph assembly. The meter will accrue per-stage cost.
-      return { stub: true, message: 'analysis pipeline not yet implemented (Stage 1 gate only)' };
+    const out = await Analysis.runGuardedAnalysis(ids(req), { mode, actor: req.userId || orgId }, async ({ runId, meter }) => {
+      return CrownJewelEngine.runPipeline(orgId, { runId, meter });
     });
     const quota = await Analysis.usage(ids(req));
     res.json({ run_id: out.runId, mode: out.mode, usage: out.usage, result: out.result, quota });
