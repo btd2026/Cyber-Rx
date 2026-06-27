@@ -278,6 +278,7 @@ app.use('/api/csf',               [apiGetLimiter, apiPostLimiter], require('./ro
 
 // Organization Intake — document request checklist + upload/review pipeline
 app.use('/api/intake',            [apiGetLimiter, apiPostLimiter], require('./routes/intake'));
+app.use('/api/crown-jewels',      [apiGetLimiter, apiPostLimiter], require('./routes/crownjewels'));
 app.use('/api/onboarding',        [apiGetLimiter, apiPostLimiter], require('./routes/onboarding'));
 app.use('/api/control-library',   [apiGetLimiter], require('./routes/control-library'));
 

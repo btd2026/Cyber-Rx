@@ -1126,6 +1126,39 @@ async function init() {
       CREATE INDEX IF NOT EXISTS grounded_assessment_scan ON grounded_assessment(scan_id);
       CREATE INDEX IF NOT EXISTS grounded_assessment_upload ON grounded_assessment(org_id, upload_id, framework);
 
+      -- Crown-Jewels analysis runs (cost ceiling + telemetry, spec §3b). A FULL
+      -- run reserves a cap slot under an advisory lock; DELTA runs are uncapped.
+      -- cap-active = a 'full' run not refunded. token_usage holds per-stage cost.
+      CREATE TABLE IF NOT EXISTS analysis_run (
+        id             TEXT PRIMARY KEY,
+        scope_type     TEXT NOT NULL,            -- account|org|user
+        scope_id       TEXT NOT NULL,
+        mode           TEXT NOT NULL,            -- full|delta
+        period_key     TEXT NOT NULL,            -- 'YYYY-MM' or 'rolling'
+        status         TEXT NOT NULL,            -- reserved|running|completed|failed|refunded
+        document_scope JSONB DEFAULT '{}',
+        token_usage    JSONB DEFAULT '{}',
+        started_at     TIMESTAMPTZ,
+        completed_at   TIMESTAMPTZ,
+        created_at     TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS analysis_run_window ON analysis_run(scope_type, scope_id, period_key, mode, status);
+      CREATE INDEX IF NOT EXISTS analysis_run_recent ON analysis_run(scope_type, scope_id, created_at);
+
+      CREATE TABLE IF NOT EXISTS analysis_run_grant (
+        id TEXT PRIMARY KEY, scope_type TEXT NOT NULL, scope_id TEXT NOT NULL,
+        period_key TEXT NOT NULL, extra INT NOT NULL, actor TEXT, reason TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS analysis_run_grant_window ON analysis_run_grant(scope_type, scope_id, period_key);
+
+      CREATE TABLE IF NOT EXISTS analysis_run_audit (
+        id TEXT PRIMARY KEY, scope_type TEXT, scope_id TEXT, period_key TEXT,
+        action TEXT NOT NULL, run_id TEXT, actor TEXT, reason TEXT,
+        detail JSONB DEFAULT '{}', created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS analysis_run_audit_scope ON analysis_run_audit(scope_type, scope_id, created_at);
+
       -- CISO posture-domain snapshots — one row per (org, domain) per capture,
       -- so the dashboard can show whether each domain is improving/deteriorating.
       CREATE TABLE IF NOT EXISTS ciso_posture_snapshots (
