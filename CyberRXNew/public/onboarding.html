@@ -378,6 +378,42 @@
   const APPS=[{id:'A1',n:'ClaimCore (legacy)',host:'On-prem · single point of failure',data:'PHI',proc:['P1'],conf:98,cj:true,score:96,why:'Sole system under Claims Processing ($220M/day, PHI) — no failover.'},{id:'A2',n:'Okta',host:'SaaS · internet-facing',data:'Identity',proc:['P1','P2','P3','P4'],conf:95,cj:true,score:94,why:'Single identity provider for every process — a compromise is enterprise-wide.'},{id:'A3',n:'Member Portal (AWS)',host:'Cloud · internet-facing',data:'PHI, PII',proc:['P3'],conf:99,cj:true,score:82,why:'Internet-facing; holds PHI/PII for 2.4M members.'},{id:'A4',n:'PayHub',host:'Cloud · internet-facing',data:'Financial',proc:['P2'],conf:92,cj:true,score:80,why:'Moves $60M/day in provider payments; internet-facing.'},{id:'A5',n:'Genesys CC',host:'SaaS',data:'PII',proc:['P4'],conf:88,cj:false},{id:'A6',n:'Confluence',host:'SaaS',data:'Internal docs',proc:['P5'],conf:61,cj:false}];
   const PROC_BY={};PROCS.forEach(p=>PROC_BY[p.id]=p.n);
 
+  // --- De-hardcoded graph -------------------------------------------------
+  // When the user has uploaded a process list AND an app/CMDB inventory, build
+  // the process -> app -> crown-jewel graph from THEIR data, with a transparent
+  // score (data sensitivity x exposure x supported-process criticality). Only
+  // falls back to the sample set when nothing was uploaded. Interim front-end
+  // heuristic; the real deterministic+explainable engine is /api/crown-jewels.
+  let GRAPH=null;
+  function orgDisplay(){return (orgName||'').trim()||curMeta().org;}
+  function dataRank(d){d=(d||'').toUpperCase();if(/PHI|PCI|CLASSIFIED|CUI/.test(d))return 3;if(/FINANCIAL|PII|CARDHOLDER/.test(d))return 2;if(/INTERNAL|DOC|PUBLIC/.test(d))return 0;return 1;}
+  function exposureOf(host){host=(host||'').toLowerCase();if(/internet|public|saas|cloud|aws|azure|gcp/.test(host))return {x:1,label:'internet-facing'};if(/on-?prem|single|legacy/.test(host))return {x:0.5,label:'on-prem'};return {x:0.3,label:'internal'};}
+  function procCrit(p){return p&&p.c==='h'?1:p&&p.c==='m'?0.6:0.3;}
+  function liveGraph(){
+    if(GRAPH)return GRAPH;
+    if(PROC_UP&&PROC_UP.length&&APP_UP&&APP_UP.length){
+      const procs=PROC_UP.map((p,i)=>{const r=dataRank(p.data);const c=(((p.rev||'').indexOf('$')>=0)||r>=3)?'h':(r<=0?'l':'m');return {id:'P'+(i+1),n:p.n,c:c,rev:p.rev||'—',data:p.data||'Process'};});
+      const apps=APP_UP.map((a,i)=>{
+        const e=exposureOf(a.host);const dr=dataRank(a.data);
+        const toks=(a.data||'').toUpperCase().split(/[^A-Z]+/).filter(t=>t.length>1);
+        let linked=procs.filter(p=>toks.some(t=>(p.data||'').toUpperCase().indexOf(t)>=0)).map(p=>p.id);
+        if(!linked.length){const top=procs.slice().sort((x,y)=>procCrit(y)-procCrit(x))[0];linked=top?[top.id]:[];}
+        const maxPC=linked.length?Math.max.apply(null,linked.map(id=>procCrit(procs.find(p=>p.id===id)))):0.3;
+        const spof=/single|sole|no failover|legacy|spof/.test((a.host||'').toLowerCase())?1:0;
+        const score=Math.round((dr/3)*35+e.x*25+maxPC*25+spof*15);
+        const conf=(linked.length&&toks.length)?92:67;
+        const lp=procs.find(p=>p.id===linked[0]);
+        const sup=linked.length?(linked.length>1?('supports '+linked.length+' processes'):('key system under '+(lp?lp.n:'a process'))):'no mapped process';
+        const why=(dr>=2?('Holds '+a.data+'; '):'')+e.label+(spof?'; single point of failure':'')+'; '+sup+' — criticality score '+score+'.';
+        return {id:'A'+(i+1),n:a.n,host:a.host||'—',data:a.data||'—',proc:linked,conf:conf,score:score,why:why,cj:false};
+      });
+      apps.slice().sort((x,y)=>y.score-x.score).forEach((a)=>{a.cj=a.score>=70;});
+      if(!apps.some(a=>a.cj)){const top=apps.slice().sort((x,y)=>y.score-x.score)[0];if(top)top.cj=true;}
+      GRAPH={procs:procs,apps:apps};
+    } else { GRAPH={procs:PROCS,apps:APPS}; }
+    return GRAPH;
+  }
+
   // ---- per-seat data needs ----
   function liveSrc(){return Object.keys(connected).length>0;}
   const SEATS=[
@@ -440,7 +476,7 @@
 
   const PANELS={
     0:()=>`<div class="panel-h"><div class="step-of">Step 1 of 8</div><h2>Organization profile</h2><p>The basics that determine your regulatory obligations and how every figure gets framed.</p></div>
-      <div class="field"><label>Legal organization name</label><input id="orgNameIn" value="${curMeta().org}"></div>
+      <div class="field"><label>Legal organization name</label><input id="orgNameIn" value="${orgDisplay()}"></div>
       <div class="row2"><div class="field"><label>Industry / sector</label><select id="indSel">
         <optgroup label="Healthcare &amp; Life Sciences">
           <option value="healthcare-payer" data-arch="healthcare">Healthcare — Payer</option><option value="healthcare-provider" data-arch="healthcare">Healthcare — Provider / Hospital System</option><option value="healthcare-pharmacy-pbm" data-arch="healthcare">Healthcare — Pharmacy / PBM</option><option value="health-tech" data-arch="technology">Health Technology / Digital Health</option><option value="pharmaceuticals" data-arch="manufacturing">Pharmaceuticals</option><option value="biotechnology" data-arch="manufacturing">Biotechnology</option><option value="medical-devices" data-arch="manufacturing">Medical Devices</option>
@@ -491,7 +527,7 @@
     6:()=>`<div class="panel-h"><div class="step-of">Step 7 of 8</div><h2>Executive data needs</h2><p>Working backwards from each executive's decisions. Green is already covered by your connected systems and documents; amber is the handful of things only you can tell us. Switch seats to see each.</p></div>
       <div class="seattabs" id="seatTabs"></div><div id="seatBody"></div>`,
     7:()=>`<div class="panel-h"><div class="step-of">Step 8 of 8</div><h2>Review &amp; go live</h2><p>Here's what we have. When you go live, CyberRx builds your executive seats, computes coverage, and drafts your first briefing.</p></div>
-      <div class="rev-grid"><div class="rev"><div class="k">Organization</div><div class="v">Meridian Health Plan</div></div><div class="rev"><div class="k">Systems connected</div><div class="v" id="revSys">0</div></div><div class="rev"><div class="k">Live signals</div><div class="v" id="revSig">0</div></div><div class="rev"><div class="k">Crown jewels</div><div class="v" style="color:var(--gold)">4 deduced</div></div><div class="rev"><div class="k">Documents</div><div class="v" id="revDocs">0</div></div><div class="rev"><div class="k">Evidence credibility</div><div class="v" id="revCred">—</div></div></div>
+      <div class="rev-grid"><div class="rev"><div class="k">Organization</div><div class="v" id="revOrg">—</div></div><div class="rev"><div class="k">Systems connected</div><div class="v" id="revSys">0</div></div><div class="rev"><div class="k">Live signals</div><div class="v" id="revSig">0</div></div><div class="rev"><div class="k">Crown jewels</div><div class="v" id="revCj" style="color:var(--gold)">—</div></div><div class="rev"><div class="k">Documents</div><div class="v" id="revDocs">0</div></div><div class="rev"><div class="k">Evidence credibility</div><div class="v" id="revCred">—</div></div></div>
       <div class="gen"><h4>What we'll generate from this</h4><ul><li>Seven executive seats, each framed to your business and fed by live evidence</li><li>Framework coverage with the source & freshness behind every control</li><li>Your crown-jewel map, attack paths, and vendor concentration</li><li>Your first board-ready briefing and the Executive Twin — grounded only in your data</li></ul></div>
       <div class="gen" style="border-color:var(--brand)"><h4>Peer benchmarking <span style="font-weight:400;color:var(--muted);font-size:13px">— optional &amp; reciprocal</span></h4><p style="font-size:13px;color:var(--muted);margin:0 0 11px;line-height:1.6">Compare your maturity against anonymized peers. Only high-level <b>CMMI maturity scores</b> leave your tenant — never findings, evidence, names, or identifiers. Cohorts under 8 are never shown. <b>It's reciprocal: you see peer benchmarks only if you contribute.</b></p><label style="display:flex;gap:9px;align-items:flex-start;font-size:13px;cursor:pointer"><input type="checkbox" id="benchConsent" style="margin-top:3px"> Contribute our anonymized maturity to the shared benchmark so we can see peer comparisons <span style="color:var(--muted)">(you can change this any time in the platform)</span></label></div>`
   };
@@ -594,7 +630,7 @@
   function takeProcFile(file){
     document.getElementById('procResult').innerHTML='<div class="extracting"><span class="sp"></span>Extracting processes from '+file.name+'…</div>';
     var r=new FileReader();
-    r.onload=function(){PROC_UP=parseDelim(r.result).map(function(c){return {n:c[0],data:c[1]||'Process',rev:c[2]||'—',c:'m'};});PROC_FN=file.name;setTimeout(function(){procExtracted=true;procLive=false;renderProc(false);},400);};
+    r.onload=function(){PROC_UP=parseDelim(r.result).map(function(c){return {n:c[0],data:c[1]||'Process',rev:c[2]||'—',c:'m'};});PROC_FN=file.name;GRAPH=null;setTimeout(function(){procExtracted=true;procLive=false;renderProc(false);},400);};
     r.readAsText(file);
   }
   function wireProc(){
@@ -643,7 +679,7 @@
   function takeAppFile(file){
     document.getElementById('appResult').innerHTML='<div class="extracting"><span class="sp"></span>Extracting systems from '+file.name+'…</div>';
     var r=new FileReader();
-    r.onload=function(){APP_UP=parseDelim(r.result).map(function(c){return {n:c[0],host:c[1]||'—',data:c[2]||'—'};});APP_FN=file.name;setTimeout(function(){appExtracted=true;appLive=false;renderApp(false);},400);};
+    r.onload=function(){APP_UP=parseDelim(r.result).map(function(c){return {n:c[0],host:c[1]||'—',data:c[2]||'—'};});APP_FN=file.name;GRAPH=null;setTimeout(function(){appExtracted=true;appLive=false;renderApp(false);},400);};
     r.readAsText(file);
   }
   function renderApp(live){
@@ -655,17 +691,19 @@
 
   // ---- mapping + crown jewels ----
   function wireMapping(){
-    document.getElementById('mapList').innerHTML=APPS.map(a=>{const pn=a.proc.length>1?'All processes':PROC_BY[a.proc[0]];const hi=a.conf>=85;return '<div class="maprow '+(confirmed[a.id]?'confirmed':'')+'" data-id="'+a.id+'"><span class="ap">'+a.n+'</span><span class="ar">→</span><span class="pr">'+pn+'</span><span class="conf '+(hi?'hi':'lo')+'">'+a.conf+'% match</span><button class="cf">'+(confirmed[a.id]?'Confirmed':'Confirm')+'</button></div>';}).join('');
+    const G=liveGraph();const PB={};G.procs.forEach(p=>PB[p.id]=p.n);
+    document.getElementById('mapList').innerHTML=G.apps.map(a=>{const pn=a.proc.length>1?'All processes':(PB[a.proc[0]]||'—');const hi=a.conf>=85;return '<div class="maprow '+(confirmed[a.id]?'confirmed':'')+'" data-id="'+a.id+'"><span class="ap">'+a.n+'</span><span class="ar">→</span><span class="pr">'+pn+'</span><span class="conf '+(hi?'hi':'lo')+'">'+a.conf+'% match</span><button class="cf">'+(confirmed[a.id]?'Confirmed':'Confirm')+'</button></div>';}).join('');
     document.querySelectorAll('.maprow').forEach(row=>row.querySelector('.cf').addEventListener('click',()=>{confirmed[row.dataset.id]=true;row.classList.add('confirmed');row.querySelector('.cf').textContent='Confirmed';}));
     if(mapDone){document.getElementById('cjwrap').classList.add('show');renderMap();}
-    document.getElementById('deduceBtn').addEventListener('click',()=>{APPS.forEach(a=>confirmed[a.id]=true);document.querySelectorAll('.maprow').forEach(r=>{r.classList.add('confirmed');r.querySelector('.cf').textContent='Confirmed';});mapDone=true;document.getElementById('cjwrap').classList.add('show');renderMap();});
+    document.getElementById('deduceBtn').addEventListener('click',()=>{liveGraph().apps.forEach(a=>confirmed[a.id]=true);document.querySelectorAll('.maprow').forEach(r=>{r.classList.add('confirmed');r.querySelector('.cf').textContent='Confirmed';});mapDone=true;document.getElementById('cjwrap').classList.add('show');renderMap();});
   }
   function renderMap(){
-    const cjs=APPS.filter(a=>a.cj).sort((x,y)=>y.score-x.score);
-    document.getElementById('cjmap').innerHTML='<div><div class="colh">Business processes</div><div class="cjcol">'+PROCS.map(p=>'<div class="node proc '+p.c+'" id="n-'+p.id+'"><div class="nn">'+p.n+'</div><div class="nd">'+p.data+(p.rev!=='—'?' · '+p.rev:'')+'</div></div>').join('')+'</div></div><div><div class="colh">Applications</div><div class="cjcol">'+APPS.map(a=>'<div class="node'+(a.cj?' cjwel':'')+'" id="n-'+a.id+'"><div class="nn">'+a.n+'</div><div class="nd">'+a.data+'</div></div>').join('')+'</div></div><div><div class="colh">Crown jewels</div><div class="cjcol">'+cjs.map((a,i)=>'<div class="node cjwel" id="c-'+a.id+'"><span class="score">'+a.score+'</span><div class="badge">⬥ Crown jewel #'+(i+1)+'</div><div class="nn">'+a.n+'</div><div class="why">'+a.why+'</div></div>').join('')+'</div></div><svg class="cjsvg" id="cjsvg"></svg>';
+    const G=liveGraph();const cjs=G.apps.filter(a=>a.cj).sort((x,y)=>y.score-x.score);
+    const sub=document.querySelector('#cjwrap .cj-sub');if(sub)sub.innerHTML='From <b>'+G.apps.length+' system'+(G.apps.length===1?'':'s')+'</b> across <b>'+G.procs.length+' process'+(G.procs.length===1?'':'es')+'</b>, CyberRx deduced <b>'+cjs.length+' crown jewel'+(cjs.length===1?'':'s')+'</b> — scored by process criticality × data sensitivity × exposure.';
+    document.getElementById('cjmap').innerHTML='<div><div class="colh">Business processes</div><div class="cjcol">'+G.procs.map(p=>'<div class="node proc '+p.c+'" id="n-'+p.id+'"><div class="nn">'+p.n+'</div><div class="nd">'+p.data+(p.rev!=='—'?' · '+p.rev:'')+'</div></div>').join('')+'</div></div><div><div class="colh">Applications</div><div class="cjcol">'+G.apps.map(a=>'<div class="node'+(a.cj?' cjwel':'')+'" id="n-'+a.id+'"><div class="nn">'+a.n+'</div><div class="nd">'+a.data+'</div></div>').join('')+'</div></div><div><div class="colh">Crown jewels</div><div class="cjcol">'+cjs.map((a,i)=>'<div class="node cjwel" id="c-'+a.id+'"><span class="score">'+a.score+'</span><div class="badge">⬥ Crown jewel #'+(i+1)+'</div><div class="nn">'+a.n+'</div><div class="why">'+a.why+'</div></div>').join('')+'</div></div><svg class="cjsvg" id="cjsvg"></svg>';
     requestAnimationFrame(drawMap);
   }
-  function drawMap(){const map=document.getElementById('cjmap');const svg=document.getElementById('cjsvg');if(!map||!svg)return;const c=map.getBoundingClientRect();svg.setAttribute('viewBox','0 0 '+c.width+' '+c.height);function pt(id,side){const el=document.getElementById(id);if(!el)return null;const r=el.getBoundingClientRect();return {x:(side==='r'?r.right:r.left)-c.left,y:r.top-c.top+r.height/2};}function path(a,b,cls){if(!a||!b)return '';const dx=Math.max(30,(b.x-a.x)*0.45);return '<path class="ln '+cls+'" d="M '+a.x+' '+a.y+' C '+(a.x+dx)+' '+a.y+', '+(b.x-dx)+' '+b.y+', '+b.x+' '+b.y+'"/>';}let s='';APPS.forEach(a=>{a.proc.forEach(pid=>{s+=path(pt('n-'+pid,'r'),pt('n-'+a.id,'l'),a.proc.length>1?'id':'');});});APPS.filter(a=>a.cj).forEach(a=>{s+=path(pt('n-'+a.id,'r'),pt('c-'+a.id,'l'),'cj');});svg.innerHTML=s;}
+  function drawMap(){const G=liveGraph();const map=document.getElementById('cjmap');const svg=document.getElementById('cjsvg');if(!map||!svg)return;const c=map.getBoundingClientRect();svg.setAttribute('viewBox','0 0 '+c.width+' '+c.height);function pt(id,side){const el=document.getElementById(id);if(!el)return null;const r=el.getBoundingClientRect();return {x:(side==='r'?r.right:r.left)-c.left,y:r.top-c.top+r.height/2};}function path(a,b,cls){if(!a||!b)return '';const dx=Math.max(30,(b.x-a.x)*0.45);return '<path class="ln '+cls+'" d="M '+a.x+' '+a.y+' C '+(a.x+dx)+' '+a.y+', '+(b.x-dx)+' '+b.y+', '+b.x+' '+b.y+'"/>';}let s='';G.apps.forEach(a=>{a.proc.forEach(pid=>{s+=path(pt('n-'+pid,'r'),pt('n-'+a.id,'l'),a.proc.length>1?'id':'');});});G.apps.filter(a=>a.cj).forEach(a=>{s+=path(pt('n-'+a.id,'r'),pt('c-'+a.id,'l'),'cj');});svg.innerHTML=s;}
   window.addEventListener('resize',()=>{if(mapDone)drawMap();});
 
   // ---- documents ----
@@ -757,6 +795,8 @@
 
   function renderReview(){
     const ids=Object.keys(connected);const cov=Math.min(99,ids.reduce((s,id)=>s+CONN.find(c=>c.id===id).w,0));const sig=ids.reduce((s,id)=>s+CONN.find(c=>c.id===id).sig,0);
+    const orgEl=document.getElementById('revOrg');if(orgEl)orgEl.textContent=orgDisplay();
+    const cjEl=document.getElementById('revCj');if(cjEl){const ncj=liveGraph().apps.filter(a=>a.cj).length;cjEl.textContent=ncj+' deduced';}
     document.getElementById('revSys').textContent=ids.length;document.getElementById('revSig').textContent=sig.toLocaleString();document.getElementById('revDocs').textContent=docsProvided+' of '+TOTAL_DOCS;
     let t='—';if(cov>0)t=cov<35?'Building':cov<65?'Moderate':cov<88?'Strong':'Audit-ready';document.getElementById('revCred').textContent=t;
   }
