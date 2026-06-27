@@ -363,6 +363,11 @@ app.use('/api/seeds',             [apiGetLimiter, apiPostLimiter, apiDeleteLimit
 // ATT&CK coverage (four-lens executive reporting layer).
 app.use('/api/frameworks',        [apiGetLimiter, apiPostLimiter], require('./routes/frameworks'));
 
+// Onboarding UI endpoints: connector validation, document analysis, SIEM polling
+app.use('/api/connectors',        [apiPostLimiter], require('./routes/connectorTest'));
+app.use('/api/documents',         [apiPostLimiter], require('./routes/documents'));
+app.use('/api/siem',              [apiGetLimiter], require('./routes/siemIncidents'));
+
 // 404
 app.use(function(req, res) {
   res.status(404).json({ error: 'Not found', path: req.path });
