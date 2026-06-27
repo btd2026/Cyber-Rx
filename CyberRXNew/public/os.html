@@ -2398,7 +2398,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
       if(typeof e.data.benchShare==='boolean')benchShare=e.data.benchShare;
       if(e.data.currency&&e.data.currency.sym){MON=e.data.currency.sym;applyCurrencyAll();}
     }
-    if(e.data==='cyberrx-os-active'){vaActive=true;try{if(!USER_ORG){var _ao=localStorage.getItem('cyberrx_org_name');if(_ao)applyOrgName(_ao);}}catch(_){}try{if(window.cjLoadLive)window.cjLoadLive();}catch(_){}if(!vaMuted)speakAgent(curSeat);}
+    if(e.data==='cyberrx-os-active'){vaActive=true;try{var _ao=localStorage.getItem('cyberrx_org_name');if(_ao)applyOrgName(_ao);}catch(_){}try{if(window.cjLoadLive)window.cjLoadLive();}catch(_){}if(!vaMuted)speakAgent(curSeat);}
     else if(e.data==='cyberrx-os-inactive'){vaActive=false;try{window.speechSynthesis.cancel();}catch(_){}}
   });
   function openTwin(id){
