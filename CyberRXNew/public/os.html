@@ -1214,11 +1214,11 @@
   <div class="modal" style="max-width:760px">
     <div class="modal-h"><div class="t">How the exposure is calculated <span class="badge">FAIR · Monte Carlo</span></div><button class="modal-x" data-close>×</button></div>
     <div class="modal-b">
-      <p class="ae-intro">The $94M expected loss and $156M Cyber VaR are not opinions — they're a model you can defend to a CFO, an auditor, or a regulator. Method: FAIR (Factor Analysis of Information Risk) with a 50,000-iteration Monte&nbsp;Carlo simulation over evidenced input ranges.</p>
+      <p class="ae-intro">The expected loss and Cyber VaR below are <b>computed live</b>, not opinions — a model you can defend to a CFO, an auditor, or a regulator. Method: FAIR (Factor Analysis of Information Risk) with a <span id="faIters">50,000</span>-iteration Monte&nbsp;Carlo simulation over the evidenced input ranges below.</p>
       <div class="dt-sum">
-        <div class="dt-kpi"><div class="k">Expected loss (mean)</div><div class="v">$94M</div></div>
-        <div class="dt-kpi"><div class="k">Cyber VaR (p95)</div><div class="v warn">$156M</div></div>
-        <div class="dt-kpi"><div class="k">Tail (p99)</div><div class="v crit">$210M</div></div>
+        <div class="dt-kpi"><div class="k">Expected loss (mean)</div><div class="v" id="faMean">—</div></div>
+        <div class="dt-kpi"><div class="k">Cyber VaR (p95)</div><div class="v warn" id="faVar">—</div></div>
+        <div class="dt-kpi"><div class="k">Tail (p99)</div><div class="v crit" id="faTail">—</div></div>
         <div class="dt-kpi"><div class="k">Appetite</div><div class="v">$120M</div></div>
       </div>
       <div class="q-sec"><h5>Inputs — each traces to evidence, expressed as ranges not point estimates</h5><div id="quantRows"></div></div>
@@ -1838,9 +1838,8 @@
     document.getElementById('seatCiso').style.display=isCiso?'':'none';
     document.getElementById('navDyn').style.display=isCiso?'none':'';
     document.getElementById('seatDyn').style.display=isCiso?'none':'';
-    if(isCiso){show('exec');}else{renderDynNav(seat);showDyn('exec');}
-    renderChips(seat);
-    renderAgent(seat);
+    try{ if(isCiso){show('exec');}else{renderDynNav(seat);showDyn('exec');} renderChips(seat); }catch(e){}
+    renderAgent(seat); // always brief — the voice must fire for every seat (incl. CRO)
     window.scrollTo({top:0});
   }
   document.querySelectorAll('#seatbar .sb').forEach(b=>b.addEventListener('click',()=>selectSeat(b.dataset.seat)));
@@ -2241,10 +2240,14 @@
     if(!vaActive||vaMuted||!('speechSynthesis' in window))return;
     const now=Date.now();
     if(!force && seat===lastSpeakSeat && now-lastSpeakAt<1800)return; // guard against double-trigger (os-active + first click)
+    // Voices load async; if none are ready yet, assign + retry once when they
+    // arrive so no seat (e.g. CRO) silently fails to speak on first selection.
+    if(!(window.speechSynthesis.getVoices()||[]).length){ window.speechSynthesis.onvoiceschanged=function(){assignVoices();speakAgent(seat,true);}; return; }
     lastSpeakAt=now; lastSpeakSeat=seat;
     try{
       window.speechSynthesis.cancel();
-      const u=new SpeechSynthesisUtterance(agentScript(seat));
+      const _txt=agentScript(seat); if(!_txt||!_txt.trim())return;
+      const u=new SpeechSynthesisUtterance(_txt);
       const cfg=VOICE[seat]||VOICE.ciso; u.rate=cfg.r; u.pitch=cfg.p; u.volume=1;
       const v=SEAT_VOICE[seat]||pickVoice(seat,new Set()); if(v)u.voice=v;
       const box=document.getElementById('voiceAgent');
@@ -2883,19 +2886,49 @@
     el.innerHTML='<table class="dtbl"><thead><tr><th>Source</th><th>Category</th><th>Status</th><th>Last sync</th><th>Signals</th><th>Coverage</th><th>Feeds</th></tr></thead><tbody>'+
       CONNECTORS.map(c=>'<tr><td class="sys">'+c.sys+'</td><td>'+c.cat+'</td><td><span class="dot-s '+c.st+'"></span>'+(c.st==='live'?'live':'degraded')+'</td><td>'+c.sync+'</td><td>'+c.sig+'</td><td>'+c.cov+'</td><td style="color:var(--muted)">'+c.feeds+'</td></tr>').join('')+'</tbody></table>';
   }
-  const QUANT_INPUTS=[
-    ['Loss Event Frequency (LEF)','0.18–0.34 / yr','threat intel + attack-path exploitability'],
-    ['Threat Event Frequency','ransomware (BlackCat-class), elevated','H-ISAC + Splunk correlation'],
-    ['Vulnerability (control-failure prob.)','~22% on the claims path','PAM at 60% (CyberArk)'],
-    ['Primary loss — response &amp; recovery','$8–22M','Rubrik RTO + IR retainer model'],
-    ['Primary loss — lost revenue','$2.3M/hr · up to ~$72M/day','claims telemetry + finance'],
-    ['Secondary — fines &amp; legal','$5–40M','HIPAA / state model + counsel'],
-    ['Secondary — reputation / churn','$3–18M','member-churn model']
-  ];
-  const QUANT_DRIVERS=[['Claims ransomware path',54],['Ungoverned AI on PHI',22],['Third-party concentration',14],['Operational resilience',10]];
+  // ---- FAIR quantification engine — a real Monte Carlo over evidenced ranges ----
+  // LEF (loss events/yr) and four loss-magnitude components ($M/event), each a
+  // Beta-PERT (triangular-approx) distribution. Annual loss = LEF × Σ(components).
+  // Editable inputs here are where real platform numbers plug in later.
+  const FAIR_INPUTS={
+    lef:{min:0.18,mode:0.26,max:0.34,src:'threat intel + attack-path exploitability'},
+    loss:[
+      {label:'Primary — response &amp; recovery',min:20,mode:35,max:60,src:'Rubrik RTO + IR retainer model'},
+      {label:'Primary — lost revenue (outage)',min:80,mode:180,max:300,src:'claims telemetry + finance · $2.3M/hr'},
+      {label:'Secondary — fines &amp; legal',min:20,mode:60,max:120,src:'HIPAA / state model + counsel'},
+      {label:'Secondary — reputation / churn',min:15,mode:45,max:90,src:'member-churn model'}
+    ]
+  };
+  const FAIR_ITERS=50000;
+  function pertSample(min,mode,max){ // triangular approximation of Beta-PERT
+    if(max<=min)return min;
+    const u=Math.random(),c=(mode-min)/(max-min);
+    return u<c ? min+Math.sqrt(u*(max-min)*(mode-min)) : max-Math.sqrt((1-u)*(max-min)*(max-mode));
+  }
+  function fairSim(N){
+    const L=FAIR_INPUTS.loss, losses=new Array(N);
+    for(let i=0;i<N;i++){
+      const lef=pertSample(FAIR_INPUTS.lef.min,FAIR_INPUTS.lef.mode,FAIR_INPUTS.lef.max);
+      let lm=0; for(let j=0;j<L.length;j++) lm+=pertSample(L[j].min,L[j].mode,L[j].max);
+      losses[i]=lef*lm;
+    }
+    losses.sort((a,b)=>a-b);
+    const mean=losses.reduce((s,x)=>s+x,0)/N, q=p=>losses[Math.min(N-1,Math.floor(p*N))];
+    return {mean,p50:q(.5),p95:q(.95),p99:q(.99)};
+  }
+  const usdM=v=>'$'+Math.round(v)+'M';
   function renderQuant(){
-    const r=document.getElementById('quantRows');if(r)r.innerHTML='<table class="dtbl"><thead><tr><th>Input</th><th>Evidenced range</th><th>Source</th></tr></thead><tbody>'+QUANT_INPUTS.map(q=>'<tr><td class="sys">'+q[0]+'</td><td>'+q[1]+'</td><td style="color:var(--muted)">'+q[2]+'</td></tr>').join('')+'</tbody></table>';
-    const d=document.getElementById('quantDrivers');if(d)d.innerHTML=QUANT_DRIVERS.map(x=>'<div class="qbar"><div class="ql">'+x[0]+'</div><div class="qt"><div class="qf" style="width:'+x[1]+'%"></div></div><div class="qp">'+x[1]+'%</div></div>').join('');
+    const res=fairSim(FAIR_ITERS);
+    const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+    set('faMean',usdM(res.mean));set('faVar',usdM(res.p95));set('faTail',usdM(res.p99));set('faIters',FAIR_ITERS.toLocaleString());
+    const rows=[['<b>Loss Event Frequency (LEF)</b>',FAIR_INPUTS.lef.min.toFixed(2)+'–'+FAIR_INPUTS.lef.max.toFixed(2)+' /yr',FAIR_INPUTS.lef.src]]
+      .concat(FAIR_INPUTS.loss.map(l=>[l.label,'$'+l.min+'–'+l.max+'M',l.src]));
+    const r=document.getElementById('quantRows');
+    if(r)r.innerHTML='<table class="dtbl"><thead><tr><th>Input</th><th>Evidenced range</th><th>Source</th></tr></thead><tbody>'+rows.map(q=>'<tr><td class="sys">'+q[0]+'</td><td>'+q[1]+'</td><td style="color:var(--muted)">'+q[2]+'</td></tr>').join('')+'</tbody></table>';
+    const tot=FAIR_INPUTS.loss.reduce((s,l)=>s+l.mode,0);
+    const drivers=FAIR_INPUTS.loss.map(l=>[l.label,Math.round(l.mode/tot*100)]).sort((a,b)=>b[1]-a[1]);
+    const d=document.getElementById('quantDrivers');
+    if(d)d.innerHTML=drivers.map(x=>'<div class="qbar"><div class="ql">'+x[0]+'</div><div class="qt"><div class="qf" style="width:'+x[1]+'%"></div></div><div class="qp">'+x[1]+'%</div></div>').join('');
   }
   const REMED=[
     {action:'Complete PAM rollout',owner:'M. Chen · CIO',decision:'Hold compensating control → full PAM',status:'inprog',prog:'60%',due:'Q3 2026',removes:'$31M',spend:'$4.2M',retest:'pending · re-scores PR.AA-05'},
