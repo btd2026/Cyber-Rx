@@ -1960,9 +1960,43 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     name:'Meridian Health', industry:'Healthcare — Payer',
     stack:{idp:'Okta', edr:'CrowdStrike', siem:'Splunk', pam:'CyberArk', cloud:'AWS + Azure'},
     crownProcess:'claims', criticalVendor:'NASCO', dataType:'PHI',
-    findings:{ransomwarePath:true, pamGap:true, recoveryOverdue:true, aiGovGap:true}
+    findings:{ransomwarePath:true, pamGap:true, recoveryOverdue:true, aiGovGap:true},
+    revenueBn:4.2, employees:12400, membersMn:2.4, ownership:'Private', dataTypes:['PHI','PII'], regions:[]
   };
+  try{const _sp=localStorage.getItem('cyberrx_org_profile');if(_sp){const _pp=JSON.parse(_sp);Object.assign(ORG_PROFILE,_pp);}}catch(_){}
   const TOK={idp:ORG_PROFILE.stack.idp,edr:ORG_PROFILE.stack.edr,pam:ORG_PROFILE.stack.pam,vendor:ORG_PROFILE.criticalVendor,process:ORG_PROFILE.crownProcess,data:ORG_PROFILE.dataType};
+  // Derived financial figures from org profile
+  function deriveFinancials(){
+    const rev=ORG_PROFILE.revenueBn||4.2;
+    const emp=ORG_PROFILE.employees||12400;
+    const mem=ORG_PROFILE.membersMn||0;
+    const ownership=ORG_PROFILE.ownership||'Private';
+    const isSEC=ownership.includes('SEC')||ownership.includes('Public');
+    const revDaily=rev*1e9/365;
+    const revHourly=revDaily/24;
+    const matThreshold=Math.max(rev*1e9*0.01,5e6);
+    const exposure=Math.round(rev*1e9*0.022);
+    const exposureM=Math.round(exposure/1e6);
+    const directLossMax=Math.round(revDaily*3.5);
+    const directLossMaxM=(directLossMax/1e6).toFixed(1);
+    const blastRecords=mem>0?mem+'M records':(emp>5000?Math.round(emp*0.8).toLocaleString():'—')+' records';
+    const revAtRisk=MON+(revHourly/1e6).toFixed(1)+'M / hr';
+    const pamCost=Math.round(Math.max(rev*250000,500000));
+    const pamCostStr=pamCost>=1e6?MON+(pamCost/1e6).toFixed(1)+'M':MON+(pamCost/1e3).toFixed(0)+'K';
+    const regions=(ORG_PROFILE.regions||[]);
+    const stateCount=regions.filter(r=>!Object.keys(typeof REGIONS!=='undefined'?REGIONS:{}).includes(r)).length;
+    const breachStates=stateCount>0?stateCount+'-state breach notification triggered':'multi-state breach notification triggered';
+    return {rev,revDaily,revHourly,matThreshold,exposure,exposureM,directLossMax,directLossMaxM,blastRecords,revAtRisk,pamCost,pamCostStr,isSEC,breachStates,stateCount,ownership,regions};
+  }
+  let FIN=deriveFinancials();
+  function applyFinancials(){
+    FIN=deriveFinancials();
+    // Rebuild industry pairs (includes financial figures now)
+    Object.keys(_packCache).forEach(k=>delete _packCache[k]);
+    ACTIVE_PACK=resolveIndustry(ACTIVE); ACTIVE_PAIRS=ACTIVE_PACK._pairs;
+    // Update key DOM element directly (rendered before reskin runs)
+    const matExp=document.getElementById('cjMatExp');if(matExp)matExp.textContent=MON+FIN.exposureM+'M';
+  }
 
   /* ===== UNIVERSAL INDUSTRY ADAPTATION =======================================
      The industry the customer selects at ONBOARDING drives the whole platform.
@@ -2156,6 +2190,31 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
       add('Provider Portal',_cap(ptn)+' portal'); add('Provider Network',_cap(ptn)+' network'); add('provider network',ptn+' network');
     }
     (c.extra||[]).forEach(x=>P.push(x));
+    // Financial figures derived from org profile
+    const f=FIN||deriveFinancials();
+    add('$94M',MON+f.exposureM+'M');
+    add('2.4M records',f.blastRecords);
+    add('2.4M PHI records',f.blastRecords);
+    add('$2.3M / hr',f.revAtRisk);
+    add('$2.3M/hr',f.revAtRisk);
+    add('$1.1M',f.pamCostStr);
+    add('$0–1.1M',MON+'0–'+f.directLossMaxM+'M');
+    add('$0–1.1M',MON+'0–'+f.directLossMaxM+'M');
+    add('11-state breach notification triggered',f.breachStates);
+    const revDailyM=Math.round(f.revDaily/1e6);
+    add('$220M/day',MON+revDailyM+'M/day');
+    add('$220M / day',MON+revDailyM+'M / day');
+    add('up to 11 states','up to '+(f.stateCount||'multiple')+' states');
+    const matThreshM=Math.round(f.matThreshold/1e6);
+    add('$5M materiality',MON+matThreshM+'M materiality');
+    add('$5M threshold',MON+matThreshM+'M threshold');
+    if(matThreshM!==5) add('$5M',MON+matThreshM+'M');
+    // Ownership-driven disclosure language
+    if(!f.isSEC){
+      add('No 8-K trigger yet','No regulatory disclosure trigger yet');
+      add('Investor disclosure (8-K)','Regulatory disclosure');
+      add('An 8-K Item 1.05 clock starts','A regulatory notification clock starts');
+    }
     return P;
   }
   /* ===== STRUCTURAL LAYER ====================================================
@@ -2356,7 +2415,8 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     const a=AGENT[seat]||AGENT.ciso;
     const nm=SEAT_NAMES[seat];
     const points=(a.explain||[]).join(' ');
-    return 'Welcome back'+(nm?', '+nm:'')+'. Here’s your '+SEAT_TITLE[seat]+' briefing for '+(USER_ORG||ORG)+'. '+a.read+' Here’s what your dashboard is telling you. '+points+' Every figure on screen opens its own evidence — just click any number to see what stands behind it.';
+    const raw=’Welcome back’+(nm?’, ‘+nm:’’)+’. Here\’s your ‘+SEAT_TITLE[seat]+’ briefing for ‘+(USER_ORG||ORG)+’. ‘+a.read+’ Here\’s what your dashboard is telling you. ‘+points+’ Every figure on screen opens its own evidence — just click any number to see what stands behind it.’;
+    return (typeof skinStr===’function’)?skinStr(raw):raw;
   }
   let lastSpeakAt=0,lastSpeakSeat='';
   function speakAgent(seat,force){
@@ -2395,14 +2455,14 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
   // when embedded, only activate the voice once the Operating System screen is shown
   window.addEventListener('message',function(e){
     if(e.data && e.data.type==='cyberrx-golive'){
+      if(e.data.profile){try{Object.assign(ORG_PROFILE,e.data.profile);localStorage.setItem('cyberrx_org_profile',JSON.stringify(e.data.profile));}catch(_){}}
       if(e.data.industry){try{applyIndustry(e.data.industry);}catch(_){}}
-      // Prefer the org passed in the message; if absent, recover it from the
-      // shared store (covers the cockpit iframe loading before the name was typed).
       if(e.data.org){try{applyOrgName(e.data.org);}catch(_){}}
       else{try{var _go=localStorage.getItem('cyberrx_org_name');if(_go)applyOrgName(_go);}catch(_){}}
       if(e.data.names){Object.assign(SEAT_NAMES,e.data.names);}
       if(typeof e.data.benchShare==='boolean')benchShare=e.data.benchShare;
       if(e.data.currency&&e.data.currency.sym){MON=e.data.currency.sym;applyCurrencyAll();}
+      try{applyFinancials();reskinTree(document.body);}catch(_){}
     }
     if(e.data==='cyberrx-os-active'){vaActive=true;try{var _ao=localStorage.getItem('cyberrx_org_name');if(_ao)applyOrgName(_ao);}catch(_){}try{if(window.cjLoadLive)window.cjLoadLive();}catch(_){}if(!vaMuted)speakAgent(curSeat);}
     else if(e.data==='cyberrx-os-inactive'){vaActive=false;try{window.speechSynthesis.cancel();}catch(_){}}
