@@ -827,7 +827,7 @@
       {id:'d16',n:'Audit Logging Policy',ev:'800-53 AU · CSF DE',ctrls:6}]}
   ];
   const TOTAL_DOCS=KEYDOCS.reduce((s,g)=>s+g.items.length,0);
-  const docState={};let docsProvided=0, ctrlsCovered=0;
+  const docState={};const docResults={};let docsProvided=0, ctrlsCovered=0;
   function findDoc(id){for(const g of KEYDOCS){for(const d of g.items)if(d.id===id)return d;}}
   function wireDocs(){renderKeyDocs();updateDocProg();}
   function renderKeyDocs(){
@@ -879,14 +879,26 @@
       const r=await fetch('/api/documents/analyze',{method:'POST',body:fd});
       if(r.ok)return await r.json();
     }catch(_){}
-    // Fallback: client-side keyword matching
+    // Fallback: client-side keyword + attribute matching
     const lower=text.toLowerCase();
     const kw=DOC_KEYWORDS[docId]||[];
     const found=kw.filter(k=>new RegExp(k,'i').test(lower));
     const coverage=kw.length?Math.round((found.length/kw.length)*100):0;
-    const maturity=coverage>=75?'Defined':coverage>=45?'Developing':'Initial';
     const gaps=kw.filter(k=>!new RegExp(k,'i').test(lower));
-    return {coverage,maturity,matched:found.length,total:kw.length,gaps:gaps.slice(0,3),words:text.split(/\s+/).length};
+    function scoreCMMI(m,t){if(t===0)return 1;var p=m/t;return p>=.9?5:p>=.75?4:p>=.55?3:p>=.35?2:1;}
+    const cmmi=scoreCMMI(found.length,kw.length);
+    const cmmiLabels={1:'Initial',2:'Managed',3:'Defined',4:'Quantitatively Managed',5:'Optimizing'};
+    // Build attribute-level results from keywords
+    const attrs=kw.map(function(k){return{tag:'P',key:k,label:k.replace(/\./g,' '),found:new RegExp(k,'i').test(lower)};});
+    const ctrl={id:docId.toUpperCase(),family:docId.replace(/\d/g,'').toUpperCase()||'GV',name:'Policy Assessment',cmmi:cmmi,cmmiLabel:cmmiLabels[cmmi],matched:found.length,total:kw.length,attrs:attrs};
+    const fam={};fam[ctrl.family]={cmmi:cmmi,cmmiLabel:cmmiLabels[cmmi],controlCount:1,controls:[ctrl.id]};
+    const recs=[];
+    const missing=attrs.filter(function(a){return!a.found;});
+    if(missing.length>0){
+      var potCMMI=scoreCMMI(found.length+missing.length,kw.length);
+      recs.push({controlId:ctrl.id,controlName:ctrl.name,currentCMMI:cmmi,missingAttrs:missing.map(function(m){return m.label;}),priority:missing.length>=4?'high':missing.length>=2?'medium':'low',suggestion:'Add language covering: '+missing.map(function(m){return m.label;}).join(', '),impact:{controlFrom:cmmi,controlTo:potCMMI,familyFrom:cmmi,familyTo:potCMMI,overallDelta:Math.round(((missing.length/kw.length)*100)*10)/10}});
+    }
+    return {coverage:coverage,cmmi:cmmi,cmmiLabel:cmmiLabels[cmmi],matched:found.length,total:kw.length,controls:[ctrl],families:fam,recommendations:recs,gaps:gaps.slice(0,3),words:text.split(/\s+/).length};
   }
   function uploadDoc(id){
     const d=findDoc(id);const rs=document.getElementById('rs-'+id);
@@ -899,13 +911,19 @@
       try{
         const result=await analyzeDocContent(f,id);
         if(!docState[id]){docState[id]=true;docsProvided++;ctrlsCovered+=d.ctrls;}
+        result.docId=id;result.docName=d.n;result.filename=f.name;result.framework=d.ev;result.ctrlCount=d.ctrls;
+        docResults[id]=result;
+        try{localStorage.setItem('cyberrx_doc_results',JSON.stringify(docResults));}catch(_){}
         const cov=result.coverage||0;
+        const cmmiLabel=result.cmmiLabel||result.maturity||'Analyzed';
+        const cmmiScore=result.cmmi||0;
         const cls=cov>=60?'ok':'rd';
-        const mat=result.maturity||'Analyzed';
-        const gapNote=result.gaps&&result.gaps.length>0?' · gaps: '+result.gaps.slice(0,2).join(', '):'';
-        rs.innerHTML='<span class="dst '+cls+'">✓ '+f.name+' · '+mat+' ('+cov+'% coverage)'+gapNote+' · '+d.ctrls+' controls</span>';
+        const gapNote=result.recommendations&&result.recommendations.length>0?' · '+result.recommendations.length+' improvements':'';
+        rs.innerHTML='<span class="dst '+cls+'">✓ '+f.name+' · CMMI '+cmmiScore+' '+cmmiLabel+' ('+cov+'%)'+gapNote+' · '+d.ctrls+' controls</span>';
       }catch(e){
         if(!docState[id]){docState[id]=true;docsProvided++;ctrlsCovered+=d.ctrls;}
+        docResults[id]={docId:id,docName:d.n,filename:f.name,cmmi:1,cmmiLabel:'Initial',coverage:0,controls:[],families:{},recommendations:[],framework:d.ev,ctrlCount:d.ctrls};
+        try{localStorage.setItem('cyberrx_doc_results',JSON.stringify(docResults));}catch(_){}
         rs.innerHTML='<span class="dst ok">✓ '+f.name+' · aligned · '+d.ctrls+' controls</span>';
       }
       updateDocProg();
@@ -1037,7 +1055,7 @@
     try{localStorage.setItem('cyberrx_org_profile',JSON.stringify(profile));}catch(_){}
     return profile;
   }
-  document.getElementById('nextBtn').addEventListener('click',()=>{done[cur]=true;updateComplete();if(cur<STEPS.length-1){cur++;render();}else{document.getElementById('nextBtn').textContent='✓ Setup complete';const bc=document.getElementById('benchConsent');const benchShare=!!(bc&&bc.checked);var _org='';try{_org=(orgName||localStorage.getItem('cyberrx_org_name')||'').trim();}catch(_){_org=(orgName||'').trim();}if(_org){try{localStorage.setItem('cyberrx_org_name',_org);}catch(_){}}const profile=collectProfile();try{window.parent.postMessage({type:'cyberrx-golive',industry:selectedIndustry,org:_org,names:seatNames,benchShare:benchShare,currency:{code:orgCurrency,sym:curSym()},profile:profile},'*');window.parent.postMessage('cyberrx-golive','*');}catch(e){}}});
+  document.getElementById('nextBtn').addEventListener('click',()=>{done[cur]=true;updateComplete();if(cur<STEPS.length-1){cur++;render();}else{document.getElementById('nextBtn').textContent='✓ Setup complete';const bc=document.getElementById('benchConsent');const benchShare=!!(bc&&bc.checked);var _org='';try{_org=(orgName||localStorage.getItem('cyberrx_org_name')||'').trim();}catch(_){_org=(orgName||'').trim();}if(_org){try{localStorage.setItem('cyberrx_org_name',_org);}catch(_){}}const profile=collectProfile();try{window.parent.postMessage({type:'cyberrx-golive',industry:selectedIndustry,org:_org,names:seatNames,benchShare:benchShare,currency:{code:orgCurrency,sym:curSym()},profile:profile,docResults:docResults},'*');window.parent.postMessage('cyberrx-golive','*');}catch(e){}}});
   document.getElementById('backBtn').addEventListener('click',()=>{if(cur>0){cur--;render();}});
   document.getElementById('ccCall').addEventListener('click',function(){this.classList.add('req');this.textContent='✓ We\'ll reach out within 1 business day';});
   // ---- operating regions multi-select ----
