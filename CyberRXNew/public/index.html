@@ -92,10 +92,12 @@
     <button id="swOS" class="on">Operating System</button>
   </div>
   <iframe class="frame" id="fIntake"></iframe>
-  <iframe class="frame" id="fOS"></iframe>
+  <iframe class="frame" id="fOS" allow="autoplay; speaker-selection"></iframe>
 <script>
   document.getElementById("fIntake").src="onboarding.html";
   document.getElementById("fOS").src="os.html";
+  // Pre-load voices so they're ready when the OS iframe requests speech
+  if('speechSynthesis' in window){window.speechSynthesis.getVoices();window.speechSynthesis.onvoiceschanged=function(){window.speechSynthesis.getVoices();};}
 
   var pickedRole="ciso", pickedName="";
   document.querySelectorAll("#roleRow .lrolechip").forEach(function(c){
@@ -142,6 +144,26 @@
   window.addEventListener("message",function(e){
     if(e.data && e.data.type==="cyberrx-golive"){ osMsg({type:"cyberrx-golive",names:e.data.names,industry:e.data.industry,org:e.data.org,benchShare:e.data.benchShare,currency:e.data.currency,profile:e.data.profile}); setTimeout(function(){show("os");},600); }
     else if(e.data==="cyberrx-golive"){ setTimeout(function(){show("os");},600); }
+    else if(e.data && e.data.type==="cyberrx-speak"){
+      try{
+        window.speechSynthesis.cancel();
+        var u=new SpeechSynthesisUtterance(e.data.text);
+        if(e.data.rate)u.rate=e.data.rate;
+        if(e.data.pitch)u.pitch=e.data.pitch;
+        u.volume=1;
+        if(e.data.voiceName){
+          var vs=window.speechSynthesis.getVoices();
+          for(var vi=0;vi<vs.length;vi++){if(vs[vi].name===e.data.voiceName){u.voice=vs[vi];break;}}
+        }
+        u.onstart=function(){osMsg({type:"cyberrx-speech-event",event:"start"});};
+        u.onend=function(){osMsg({type:"cyberrx-speech-event",event:"end"});};
+        u.onerror=function(){osMsg({type:"cyberrx-speech-event",event:"error"});};
+        window.speechSynthesis.speak(u);
+      }catch(_){}
+    }
+    else if(e.data && e.data.type==="cyberrx-speak-cancel"){
+      try{window.speechSynthesis.cancel();}catch(_){}
+    }
     else if(e.data==="cyberrx-signout"){
       document.getElementById("switcher").classList.remove("show");
       document.getElementById("fIntake").classList.remove("show");

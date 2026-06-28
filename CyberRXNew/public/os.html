@@ -2428,33 +2428,49 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     if(!(window.speechSynthesis.getVoices()||[]).length){ window.speechSynthesis.onvoiceschanged=function(){assignVoices();speakAgent(seat,true);}; return; }
     lastSpeakAt=now; lastSpeakSeat=seat;
     try{
-      const wasSpeaking=window.speechSynthesis.speaking||window.speechSynthesis.pending;
-      window.speechSynthesis.cancel();
       const _txt=agentScript(seat); if(!_txt||!_txt.trim())return;
-      const _doSpeak=function(){
-        const u=new SpeechSynthesisUtterance(_txt);
-        const cfg=VOICE[seat]||VOICE.ciso; u.rate=cfg.r; u.pitch=cfg.p; u.volume=1;
-        const v=SEAT_VOICE[seat]||pickVoice(seat,new Set()); if(v)u.voice=v;
-        const box=document.getElementById('voiceAgent');
-        u.onstart=function(){box.classList.add('speaking');};
-        u.onend=function(){box.classList.remove('speaking');};
-        u.onerror=function(){box.classList.remove('speaking');};
-        window.speechSynthesis.speak(u); vaSpoke=true;
-      };
-      if(wasSpeaking){setTimeout(_doSpeak,150);}else{_doSpeak();}
+      const cfg=VOICE[seat]||VOICE.ciso;
+      const v=SEAT_VOICE[seat]||pickVoice(seat,new Set());
+      const box=document.getElementById('voiceAgent');
+      // In an iframe, delegate speech to the parent frame (Chrome blocks
+      // speechSynthesis in iframes). Parent sends back start/end events.
+      if(window!==window.parent){
+        try{
+          window.parent.postMessage({type:'cyberrx-speak',text:_txt,rate:cfg.r,pitch:cfg.p,voiceName:v?v.name:''},'*');
+          box.classList.add('speaking'); vaSpoke=true;
+        }catch(_){}
+      }else{
+        const wasSpeaking=window.speechSynthesis.speaking||window.speechSynthesis.pending;
+        window.speechSynthesis.cancel();
+        const _doSpeak=function(){
+          const u=new SpeechSynthesisUtterance(_txt);
+          u.rate=cfg.r; u.pitch=cfg.p; u.volume=1;
+          if(v)u.voice=v;
+          u.onstart=function(){box.classList.add('speaking');};
+          u.onend=function(){box.classList.remove('speaking');};
+          u.onerror=function(){box.classList.remove('speaking');};
+          window.speechSynthesis.speak(u); vaSpoke=true;
+        };
+        if(wasSpeaking){setTimeout(_doSpeak,150);}else{_doSpeak();}
+      }
     }catch(e){}
   }
   document.getElementById('vaReplay').addEventListener('click',()=>{vaActive=true;speakAgent(curSeat,true);});
   document.getElementById('vaMute').addEventListener('click',()=>{
     vaMuted=!vaMuted;
     document.getElementById('vaMute').textContent=vaMuted?'🔇':'🔊';
-    if(vaMuted)window.speechSynthesis.cancel(); else speakAgent(curSeat,true);
+    if(vaMuted){try{window.speechSynthesis.cancel();}catch(_){}try{window.parent.postMessage({type:'cyberrx-speak-cancel'},'*');}catch(_){}document.getElementById('voiceAgent').classList.remove('speaking');} else speakAgent(curSeat,true);
   });
   // browsers block speech until a user gesture — speak on first interaction (only once the OS is active)
   document.addEventListener('click',function firstSpeak(){if(vaActive&&!vaSpoke&&!vaMuted)speakAgent(curSeat);document.removeEventListener('click',firstSpeak);},{once:true});
   // when embedded, only activate the voice once the Operating System screen is shown
   window.addEventListener('message',function(e){
-    if(e.data && e.data.type==='cyberrx-golive'){
+    if(e.data && e.data.type==='cyberrx-speech-event'){
+      const box=document.getElementById('voiceAgent');
+      if(e.data.event==='start'){box.classList.add('speaking');}
+      else{box.classList.remove('speaking');}
+    }
+    else if(e.data && e.data.type==='cyberrx-golive'){
       if(e.data.profile){try{Object.assign(ORG_PROFILE,e.data.profile);localStorage.setItem('cyberrx_org_profile',JSON.stringify(e.data.profile));}catch(_){}}
       if(e.data.industry){try{applyIndustry(e.data.industry);}catch(_){}}
       if(e.data.org){try{applyOrgName(e.data.org);}catch(_){}}
@@ -2465,7 +2481,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
       try{applyFinancials();reskinTree(document.body);}catch(_){}
     }
     if(e.data==='cyberrx-os-active'){vaActive=true;try{var _ao=localStorage.getItem('cyberrx_org_name');if(_ao)applyOrgName(_ao);}catch(_){}try{if(window.cjLoadLive)window.cjLoadLive();}catch(_){}if(!vaMuted)speakAgent(curSeat);}
-    else if(e.data==='cyberrx-os-inactive'){vaActive=false;try{window.speechSynthesis.cancel();}catch(_){}}
+    else if(e.data==='cyberrx-os-inactive'){vaActive=false;try{window.speechSynthesis.cancel();}catch(_){}try{window.parent.postMessage({type:'cyberrx-speak-cancel'},'*');}catch(_){}}
   });
   function openTwin(id){
     const s=SCN[id];if(!s)return;twinFoot(true);
