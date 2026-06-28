@@ -1,0 +1,8 @@
+{
+  "signals": [
+    { "key": "notable_events_30d", "value": 1842, "asOf": "2026-06-28T12:00:00Z", "raw": {} },
+    { "key": "mttd_hrs", "value": 1.4, "asOf": "2026-06-28T12:00:00Z", "raw": {} },
+    { "key": "mttr_hrs", "value": 6.2, "asOf": "2026-06-28T12:00:00Z", "raw": {} }
+  ],
+  "meta": { "vendor": "Splunk" }
+}

@@ -1,0 +1,6 @@
+{
+  "signals": [
+    { "key": "edr_pct", "value": 91, "asOf": "2026-06-28T12:00:00Z", "raw": { "machines": 8200, "onboarded": 7462 } }
+  ],
+  "meta": { "vendor": "Microsoft Defender for Endpoint" }
+}

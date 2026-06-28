@@ -1,0 +1,7 @@
+{
+  "signals": [
+    { "key": "mfa_pct", "value": 94, "asOf": "2026-06-28T12:00:00Z", "raw": { "users": 4200, "mfa": 3948 } },
+    { "key": "priv_accts", "value": 38, "asOf": "2026-06-28T12:00:00Z", "raw": { "roles": 12 } }
+  ],
+  "meta": { "vendor": "Microsoft Entra ID" }
+}

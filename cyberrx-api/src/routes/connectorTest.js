@@ -71,18 +71,40 @@ function mapCreds(vendor, apiKey) {
   return { apiKey };
 }
 
+router.post('/demo-mode', (req, res) => {
+  const { key, enabled } = req.body || {};
+  if (key === undefined || enabled === undefined) return res.status(400).json({ error: 'key and enabled are required.' });
+  Connectors.setDemoMode(key, enabled);
+  return res.json({ key, demoMode: Connectors.getDemoMode(key === '*' ? Object.keys(Connectors.REGISTRY)[0] : key) });
+});
+
+router.get('/demo-mode', (_req, res) => {
+  const modes = {};
+  for (const c of Connectors.list()) modes[c.key] = Connectors.getDemoMode(c.key);
+  return res.json({ modes });
+});
+
 router.post('/test', async (req, res) => {
   const { connector, vendor, apiKey } = req.body || {};
+
+  const registryKey = VENDOR_MAP[vendor];
+  const conn = registryKey ? Connectors.get(registryKey) : null;
+
+  // In demo mode, skip credential validation entirely
+  if (conn && conn.demoMode) {
+    try {
+      const result = await conn.test({});
+      return res.json({ ok: true, detail: result.detail || `Connected to ${conn.label}.`, demoMode: true });
+    } catch (e) {
+      return res.status(500).json({ ok: false, error: e.message });
+    }
+  }
 
   if (!apiKey || String(apiKey).trim().length < 8) {
     return res.status(400).json({ ok: false, error: 'API key is too short or missing.' });
   }
 
-  const registryKey = VENDOR_MAP[vendor];
-  const conn = registryKey ? Connectors.get(registryKey) : null;
-
   if (!conn) {
-    // No backend connector for this vendor yet — validate format only
     if (String(apiKey).trim().length < 16) {
       return res.status(400).json({ ok: false, error: `API key for ${vendor || connector} appears too short (minimum 16 characters).` });
     }

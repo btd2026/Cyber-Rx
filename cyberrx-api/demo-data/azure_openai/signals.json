@@ -1,0 +1,7 @@
+{
+  "signals": [
+    { "key": "ai_monitored", "value": 1, "asOf": "2026-06-28T12:00:00Z", "raw": {} },
+    { "key": "ai_deployments", "value": 5, "asOf": "2026-06-28T12:00:00Z", "raw": {} }
+  ],
+  "meta": { "vendor": "Azure OpenAI", "deployments": 5 }
+}

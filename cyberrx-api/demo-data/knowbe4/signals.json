@@ -1,0 +1,7 @@
+{
+  "signals": [
+    { "key": "training_pct", "value": 89, "asOf": "2026-06-28T12:00:00Z", "raw": { "enrollments": 3800, "completed": 3382 } },
+    { "key": "phishing_pct", "value": 4.2, "asOf": "2026-06-28T12:00:00Z", "raw": { "campaigns": 12 } }
+  ],
+  "meta": { "vendor": "KnowBe4" }
+}
