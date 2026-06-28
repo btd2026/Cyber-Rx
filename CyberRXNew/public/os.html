@@ -1986,7 +1986,28 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     const regions=(ORG_PROFILE.regions||[]);
     const stateCount=regions.filter(r=>!Object.keys(typeof REGIONS!=='undefined'?REGIONS:{}).includes(r)).length;
     const breachStates=stateCount>0?stateCount+'-state breach notification triggered':'multi-state breach notification triggered';
-    return {rev,revDaily,revHourly,matThreshold,exposure,exposureM,directLossMax,directLossMaxM,blastRecords,revAtRisk,pamCost,pamCostStr,isSEC,breachStates,stateCount,ownership,regions};
+    // Consume declare fields from onboarding seatData
+    const sd=ORG_PROFILE.seatData||{};
+    const cfoD=sd.cfo||{};const croD=sd.cro||{};const cioD=sd.cio||{};const ceoD=sd.ceo||{};const boardD=sd.board||{};
+    const userMatThreshold=parseFloat(String(cfoD['Materiality threshold']||'').replace(/[^\d.]/g,''));
+    if(userMatThreshold>0) matThreshold=userMatThreshold*1e6;
+    const insuranceCoverage=parseFloat(String(cfoD['Coverage limit']||'').replace(/[^\d.]/g,''));
+    const insuranceCoverageM=insuranceCoverage>0?insuranceCoverage:75;
+    const insuranceCarrier=cfoD['Carrier']||'';
+    const insuranceRetention=cfoD['Retention / deductible']||'';
+    const insuranceRenewal=cfoD['Renewal date']||'';
+    const riskAppetite=parseFloat(String(croD['Cyber risk appetite']||'').replace(/[^\d.]/g,''));
+    const riskAppetiteM=riskAppetite>0?riskAppetite:120;
+    const rtoTarget=cioD['RTO target (claims)']||'4 hrs';
+    const rpoTarget=cioD['RPO target (claims)']||'< 1 hr';
+    const riskCadence=croD['Risk committee cadence']||'';
+    const boardCommittee=boardD['Cyber-responsible committee']||'';
+    const boardCadence=boardD['Oversight cadence']||'';
+    const cyberBudget=parseFloat(String(cfoD['Annual cybersecurity budget']||'').replace(/[^\d.]/g,''));
+    const cyberBudgetM=cyberBudget>0?cyberBudget:0;
+    const insurancePremium=parseFloat(String(cfoD['Annual cyber insurance premium']||'').replace(/[^\d.]/g,''));
+    const contacts=(ORG_PROFILE.seatContacts&&ORG_PROFILE.seatContacts.ciso)||{};
+    return {rev,revDaily,revHourly,matThreshold,exposure,exposureM,directLossMax,directLossMaxM,blastRecords,revAtRisk,pamCost,pamCostStr,isSEC,breachStates,stateCount,ownership,regions,insuranceCoverageM,insuranceCarrier,insuranceRetention,insuranceRenewal,riskAppetiteM,rtoTarget,rpoTarget,riskCadence,boardCommittee,boardCadence,cyberBudgetM,insurancePremium,contacts};
   }
   let FIN=deriveFinancials();
   function applyFinancials(){
@@ -2214,6 +2235,26 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
       add('No 8-K trigger yet','No regulatory disclosure trigger yet');
       add('Investor disclosure (8-K)','Regulatory disclosure');
       add('An 8-K Item 1.05 clock starts','A regulatory notification clock starts');
+    }
+    // Insurance coverage from declare fields
+    if(f.insuranceCoverageM!==75){
+      add('$75M against',MON+f.insuranceCoverageM+'M against');
+      add('$75M vs',MON+f.insuranceCoverageM+'M vs');
+      add('Tower limit','Tower limit');
+      var insTail=Math.round(f.exposureM-f.insuranceCoverageM);
+      if(insTail>0){add('~$19M uninsured','~'+MON+insTail+'M uninsured');add('~$19M','~'+MON+insTail+'M');}
+    }
+    // Risk appetite from declare fields
+    if(f.riskAppetiteM!==120){
+      add('$120M',MON+f.riskAppetiteM+'M');
+    }
+    // RTO from declare fields
+    if(f.rtoTarget!=='4 hrs'&&f.rtoTarget!=='4 hours'){
+      add('4 hrs',f.rtoTarget);add('4 hours',f.rtoTarget);
+    }
+    // RPO from declare fields
+    if(f.rpoTarget!=='< 1 hr'){
+      add('< 1 hr',f.rpoTarget);
     }
     return P;
   }
@@ -2478,7 +2519,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
       if(e.data.names){Object.assign(SEAT_NAMES,e.data.names);}
       if(typeof e.data.benchShare==='boolean')benchShare=e.data.benchShare;
       if(e.data.currency&&e.data.currency.sym){MON=e.data.currency.sym;applyCurrencyAll();}
-      try{applyFinancials();reskinTree(document.body);}catch(_){}
+      try{applyFinancials();IC_CONTACTS=buildICContacts();reskinTree(document.body);}catch(_){}
     }
     if(e.data==='cyberrx-os-active'){vaActive=true;try{var _ao=localStorage.getItem('cyberrx_org_name');if(_ao)applyOrgName(_ao);}catch(_){}try{if(window.cjLoadLive)window.cjLoadLive();}catch(_){}if(!vaMuted)speakAgent(curSeat);}
     else if(e.data==='cyberrx-os-inactive'){vaActive=false;try{window.speechSynthesis.cancel();}catch(_){}try{window.parent.postMessage({type:'cyberrx-speak-cancel'},'*');}catch(_){}}
@@ -2768,16 +2809,23 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
 
   // ===== Incident Commander mode (CISO) — run the response =====
   const IC_CHECK=['Declare incident & assume command','Assemble the response team (call tree)','Contain & isolate affected systems','Preserve evidence — forensic images & logs','Assess scope, data impact & materiality','Notify per plan — exec, legal, insurer, regulators','Open the incident decision log','Set comms cadence — internal & external'];
-  const IC_CONTACTS=[
-    {role:'Deputy Incident Commander',who:'Marcus Webb',ph:'+1 555-0142',g:'Internal'},
-    {role:'Comms / PR lead',who:'Elena Ruiz',ph:'+1 555-0188',g:'Internal'},
-    {role:'Legal / Privacy',who:'Patricia Lang · CLO',ph:'+1 555-0110',g:'Internal'},
-    {role:'IT / DR lead',who:'Raj Patel · CIO',ph:'+1 555-0133',g:'Internal'},
-    {role:'IR retainer / forensics · 24/7',who:'Mandiant — hotline',ph:'+1 866-555-0199',g:'External'},
-    {role:'Breach counsel',who:'Hogan & Pierce LLP',ph:'+1 202-555-0170',g:'External'},
-    {role:'Cyber-insurer claims hotline',who:'Chubb — cyber claims',ph:'+1 800-555-0123',g:'External'},
-    {role:'Law enforcement · FBI Cyber',who:'Field office',ph:'+1 555-0100',g:'External'}
-  ];
+  function buildICContacts(){
+    var ct=(FIN&&FIN.contacts)||{};
+    function c(role,fallbackWho,fallbackPh,g){
+      var entry=ct[role]||{};
+      return {role:role,who:entry.name||fallbackWho,ph:entry.phone||fallbackPh,g:g};
+    }
+    return [
+      c('Deputy IC',(SEAT_NAMES.ciso||'Deputy'),'',  'Internal'),
+      c('Comms / PR lead','Comms lead','','Internal'),
+      c('Breach counsel (external)','Breach counsel','','External'),
+      c('IR retainer / forensics (24/7)','IR retainer','','External'),
+      c('Cyber-insurer claims hotline','Insurer claims hotline','','External'),
+      c('Law enforcement (FBI field office)','FBI field office','','External'),
+      c('Incident Commander',(SEAT_NAMES.ciso||'CISO'),'','Internal')
+    ];
+  }
+  var IC_CONTACTS=buildICContacts();
   const IC_PLAYBOOKS=[
     {nm:'Ransomware response',rec:true,steps:['Isolate affected hosts; cut lateral paths','Revoke privileged tokens & rotate keys','Verify backup integrity BEFORE any restore','Engage IR retainer + breach counsel','Do NOT pay without counsel + an exec decision','Preserve ransom note & IOCs for attribution']},
     {nm:'Data exfiltration / breach',steps:[]},

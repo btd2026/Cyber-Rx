@@ -376,6 +376,8 @@
   const done=new Array(STEPS.length).fill(false);
   let procExtracted=false, appExtracted=false, mapDone=false, docCount=0, seatTab='cfo', procLive=false, appLive=false;
   const seatNames={ceo:'',ciso:'',cfo:'',cio:'',clo:'',cro:'',board:''};
+  const seatData={ceo:{},ciso:{},cfo:{},cio:{},clo:{},cro:{},board:{}};
+  const seatContacts={ciso:{}};
   // Industry chosen here drives the rest of onboarding AND the operating system.
   let selectedIndustry='healthcare-payer', selectedArch='healthcare';
   // Capture the typed organization name and persist it (same-origin localStorage
@@ -460,12 +462,14 @@
       {i:'Control validation & coverage',src:'live',m:'from Identity + Cloud + Vuln + MDM'},
       {i:'Attacks blocked',src:'live',m:'from Firewall + Email'},
       {i:'Framework evidence',src:'doc',m:'from your documents'},
+      {i:'Security testing',src:'declare',m:'assessment recency',df:['Last penetration test date','Last vulnerability scan date']},
       {i:'Incident command plan & 24/7 call tree',src:'declare',m:'no system has this — it runs your crisis response and powers Incident Commander mode',plan:true,contacts:['Incident Commander','Deputy IC','Comms / PR lead','Breach counsel (external)','IR retainer / forensics (24/7)','Cyber-insurer claims hotline','Law enforcement (FBI field office)']}]},
     {id:'cfo',label:'CFO',q:'What is our financial exposure, and is it material?',needs:[
       {i:'Financial exposure model',src:'derived',m:'process revenue × loss model'},
       {i:'Cyber insurance',src:'declare',m:'no system reports your policy',df:['Carrier','Coverage limit','Retention / deductible','Key sublimits','Notable exclusions','Renewal date']},
       {i:'Materiality threshold',src:'declare',m:'your disclosure trigger',df:['Materiality threshold ($)']},
-      {i:'Prior loss history',src:'declare',m:'optional',df:['Cyber losses, last 12 mo']}]},
+      {i:'Prior loss history',src:'declare',m:'optional',df:['Cyber losses, last 12 mo','Annual cyber insurance premium']},
+      {i:'Annual cybersecurity budget',src:'declare',m:'enables spend benchmarking',df:['Annual cybersecurity budget ($)']}]},
     {id:'cio',label:'CIO',q:'Can we keep critical services running and recover?',needs:[
       {i:'Service & endpoint health',src:'live',m:'from EDR + Cloud'},
       {i:'Recovery readiness, RPO/RTO, immutable backups',src:'live',m:'from Backup / DR'},
@@ -478,7 +482,7 @@
       {i:'Evidence chain & decision record',src:'live',m:'from GRC / ticketing'}]},
     {id:'cro',label:'CRO',q:'Is cyber risk within the board\'s appetite?',needs:[
       {i:'Risk appetite by category',src:'declare',m:'the board\'s tolerance',df:['Cyber risk appetite ($)','Tolerance threshold']},
-      {i:'Third-party / concentration risk',src:'derived',m:'from vendors + processes'},
+      {i:'Third-party / concentration risk',src:'derived',m:'from vendors + processes',df:['Number of critical vendors']},
       {i:'Risk register & residual risk',src:'live',m:'from Vuln + SIEM + GRC'},
       {i:'Risk committee cadence',src:'declare',m:'governance rhythm',df:['Risk committee cadence']}]},
     {id:'board',label:'Board',q:'Is management in control, and is our oversight demonstrable?',needs:[
@@ -935,7 +939,30 @@
       return '<div class="dfield"><label>'+label.replace(/\s*\(\$\)/,'')+'</label><div class="moneyf"><span class="cur">'+curSym()+'</span><input class="mnum" inputmode="decimal" placeholder="0"><span class="unit">M</span></div><div class="money-eq"></div></div>';
     return '<div class="dfield"><label>'+label+'</label><input placeholder="'+label+'"></div>';
   }
+  function saveSeatFields(){
+    const s=SEAT_BY[seatTab];if(!s)return;
+    const body=document.getElementById('seatBody');if(!body)return;
+    const sd=seatData[s.id];
+    body.querySelectorAll('.dfield').forEach((df,i)=>{
+      const inp=df.querySelector('input,select');if(!inp)return;
+      const label=df.querySelector('label');
+      const key=label?label.textContent.trim():('f'+i);
+      if(inp.classList.contains('mnum')){sd[key]=inp.value;}
+      else if(inp.classList.contains('carrier-sel')){sd[key]=inp.value;const oth=df.querySelector('.carrier-other');if(oth&&inp.value==='__other')sd[key+'_other']=oth.value;}
+      else{sd[key]=inp.value;}
+    });
+    body.querySelectorAll('.ctrow').forEach((row,i)=>{
+      const role=row.querySelector('.ctrole');
+      const nm=row.querySelector('.ctname');
+      const ph=row.querySelector('.ctphone');
+      if(role&&nm&&ph){
+        if(!seatContacts[s.id])seatContacts[s.id]={};
+        seatContacts[s.id][role.textContent.trim()]={name:nm.value,phone:ph.value};
+      }
+    });
+  }
   function renderSeats(){
+    saveSeatFields();
     document.getElementById('seatTabs').innerHTML=SEATS.map(s=>'<button class="stab '+(s.id===seatTab?'on':'')+'" data-seat="'+s.id+'">'+s.label+'</button>').join('');
     document.querySelectorAll('[data-seat]').forEach(b=>b.addEventListener('click',()=>{seatTab=b.dataset.seat;renderSeats();}));
     const s=SEAT_BY[seatTab];const live=liveSrc();
@@ -943,11 +970,24 @@
     const srcCls={live:live?'live':'off',doc:'doc',derived:'derived',declare:'declare'};
     document.getElementById('seatBody').innerHTML='<div class="need" style="border-left:3px solid var(--brand)"><span class="src declare" style="color:var(--brand);background:var(--brand-tint)">You provide</span><div class="nb"><div class="ni">Who holds this seat?</div><div class="nm2">so your advisor can greet them by name</div><div class="df"><input id="seatName-'+s.id+'" placeholder="First name of your '+s.label+'" value="'+(seatNames[s.id]||'')+'"></div></div></div>'+
       '<div class="seatq">› '+s.q+'</div>'+s.needs.map(n=>{
-      const df=n.plan?('<div class="planbox"><button class="planup" type="button">⬆ Upload IR plan &amp; playbooks (PDF)</button><div class="planct-h">Key contacts — reachable 24/7 <span>name + phone; powers Incident Commander mode</span></div><div class="planct">'+n.contacts.map(r=>'<div class="ctrow"><span class="ctrole">'+r+'</span><input placeholder="Name" class="ctname"><input placeholder="Phone" inputmode="tel" class="ctphone"></div>').join('')+'</div></div>'):(n.df?'<div class="df dfgrid">'+n.df.map(fieldHTML).join('')+'</div>':'');
+      const df=n.plan?('<div class="planbox"><button class="planup" type="button">⬆ Upload IR plan &amp; playbooks (PDF)</button><div class="planct-h">Key contacts — reachable 24/7 <span>name + phone; powers Incident Commander mode</span></div><div class="planct">'+n.contacts.map(r=>'<div class="ctrow"><span class="ctrole">'+r+'</span><input placeholder="Name" class="ctname" value="'+((seatContacts[s.id]&&seatContacts[s.id][r]&&seatContacts[s.id][r].name)||'')+'"><input placeholder="Phone" inputmode="tel" class="ctphone" value="'+((seatContacts[s.id]&&seatContacts[s.id][r]&&seatContacts[s.id][r].phone)||'')+'"></div>').join('')+'</div></div>'):(n.df?'<div class="df dfgrid">'+n.df.map(fieldHTML).join('')+'</div>':'');
       return '<div class="need"><span class="src '+srcCls[n.src]+'">'+srcTag[n.src]+'</span><div class="nb"><div class="ni">'+n.i+'</div><div class="nm2">'+n.m+'</div>'+df+'</div></div>';
     }).join('');
     const nameIn=document.getElementById('seatName-'+s.id);
     if(nameIn)nameIn.addEventListener('input',e=>{seatNames[s.id]=e.target.value;});
+    // Restore saved declare field values
+    const sd=seatData[s.id]||{};
+    const body=document.getElementById('seatBody');
+    body.querySelectorAll('.dfield').forEach((df,i)=>{
+      const inp=df.querySelector('input,select');if(!inp)return;
+      const label=df.querySelector('label');
+      const key=label?label.textContent.trim():('f'+i);
+      if(sd[key]!==undefined){
+        if(inp.classList.contains('mnum')){inp.value=sd[key];const eq=df.querySelector('.money-eq');if(eq)eq.textContent=fmtUnit(parseFloat(sd[key]),1e6,true);}
+        else if(inp.classList.contains('carrier-sel')){inp.value=sd[key];if(sd[key]==='__other'){const oth=df.querySelector('.carrier-other');if(oth){oth.style.display='block';oth.value=sd[key+'_other']||'';}}}
+        else{inp.value=sd[key];}
+      }
+    });
   }
 
   function renderReview(){
@@ -992,7 +1032,8 @@
     const rev=parseFloat(revRaw)||0;
     const emp=parseInt(String(empRaw).replace(/[^\d]/g,''),10)||0;
     const mem=parseFloat(memRaw)||0;
-    const profile={revenue:rev,revenueBn:rev,employees:emp,members:mem,membersMn:mem,ownership,dataTypes,regions,industry:selectedIndustry};
+    saveSeatFields();
+    const profile={revenue:rev,revenueBn:rev,employees:emp,members:mem,membersMn:mem,ownership,dataTypes,regions,industry:selectedIndustry,seatData:JSON.parse(JSON.stringify(seatData)),seatContacts:JSON.parse(JSON.stringify(seatContacts))};
     try{localStorage.setItem('cyberrx_org_profile',JSON.stringify(profile));}catch(_){}
     return profile;
   }
