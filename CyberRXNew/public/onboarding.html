@@ -209,12 +209,12 @@
   .dgroup .dgh{grid-column:1/-1}
   @media (max-width:720px){.dgroup{grid-template-columns:1fr}}
   .dgh{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--subtle);margin-bottom:9px}
-  .drow{display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 14px}
+  .drow{display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 14px;min-width:0;overflow:hidden}
   .drow .di{width:28px;height:28px;border-radius:7px;background:var(--brand-tint);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:13px;flex:none}
   .drow .dn{flex:1;min-width:0}.drow .dn .nm{font-size:13px;font-weight:600}.drow .dn .ev{font-family:var(--mono);font-size:10px;color:var(--subtle);margin-top:2px}
   .drow .dup{font-family:var(--body);font-weight:600;font-size:12px;color:var(--brand);background:var(--brand-tint);border:1px solid color-mix(in srgb,var(--brand) 30%,transparent);border-radius:7px;padding:6px 12px;cursor:pointer;white-space:nowrap}
   .drow .dup:hover{filter:brightness(.97)}
-  .drow .dst{font-family:var(--mono);font-size:11px;padding:4px 9px;border-radius:6px;white-space:nowrap}
+  .drow .dst{font-family:var(--mono);font-size:10px;padding:4px 8px;border-radius:6px;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1 1 0;white-space:nowrap}
   .drow .dst.rd{color:var(--exposure);background:var(--exposure-tint)}.drow .dst.ok{color:var(--pass);background:var(--pass-tint)}
   .checklist{margin-top:18px}.checklist .cl-h{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--subtle);margin-bottom:9px}
   .clrow{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:13px;border-top:1px solid var(--border)}.clrow:first-of-type{border-top:none}
@@ -960,7 +960,8 @@
         const cmmiScore=result.cmmi||0;
         const cls=cov>=60?'ok':'rd';
         const gapNote=result.recommendations&&result.recommendations.length>0?' · '+result.recommendations.length+' improvements':'';
-        rs.innerHTML='<span class="dst '+cls+'">✓ '+f.name+' · CMMI '+cmmiScore+' '+cmmiLabel+' ('+cov+'%)'+gapNote+' · '+d.ctrls+' controls</span>';
+        var fullTxt='✓ '+f.name+' · CMMI '+cmmiScore+' '+cmmiLabel+' ('+cov+'%)'+gapNote+' · '+d.ctrls+' controls';
+        rs.innerHTML='<span class="dst '+cls+'" title="'+fullTxt.replace(/"/g,'&quot;')+'">'+fullTxt+'</span>';
       }catch(e){
         if(!docState[id]){docState[id]=true;docsProvided++;ctrlsCovered+=d.ctrls;}
         docResults[id]={docId:id,docName:d.n,filename:f.name,cmmi:1,cmmiLabel:'Initial',coverage:0,controls:[],families:{},recommendations:[],framework:d.ev,ctrlCount:d.ctrls};
