@@ -759,15 +759,36 @@
   var PROC_UP=null,PROC_FN='';
   function parseDelim(text){
     var lines=String(text||'').split(/\r?\n/).map(function(l){return l.trim();}).filter(Boolean);
-    if(!lines.length)return [];
-    var first=(lines[0].split(/[\t,]/)[0]||'').replace(/^"|"$/g,'').toLowerCase();
-    if(['name','process','processes','application','applications','app','system','title','document'].indexOf(first)>=0)lines=lines.slice(1);
-    return lines.map(function(l){return l.split(/[\t,]/).map(function(x){return x.trim().replace(/^"|"$/g,'');});}).filter(function(c){return c[0];});
+    if(!lines.length)return {headers:null,rows:[]};
+    var cells=lines[0].split(/[\t,]/).map(function(x){return x.trim().replace(/^"|"$/g,'');});
+    var firstLow=cells[0].toLowerCase();
+    var hasHeader=/^(name|process|application|app|system|title|document|sys_id|process_id|ci_class|id)/.test(firstLow);
+    var headers=hasHeader?cells.map(function(h){return h.toLowerCase();}):null;
+    var dataLines=hasHeader?lines.slice(1):lines;
+    var rows=dataLines.map(function(l){return l.split(/[\t,]/).map(function(x){return x.trim().replace(/^"|"$/g,'');});}).filter(function(c){return c[0];});
+    return {headers:headers,rows:rows};
+  }
+  function findCol(headers,names){
+    if(!headers)return -1;
+    for(var i=0;i<names.length;i++){for(var j=0;j<headers.length;j++){if(headers[j].indexOf(names[i])>=0)return j;}}
+    return -1;
   }
   function takeProcFile(file){
     document.getElementById('procResult').innerHTML='<div class="extracting"><span class="sp"></span>Extracting processes from '+file.name+'…</div>';
     var r=new FileReader();
-    r.onload=function(){PROC_UP=parseDelim(r.result).map(function(c){return {n:c[0],data:c[1]||'Process',rev:c[2]||'—',c:'m'};});PROC_FN=file.name;GRAPH=null;setTimeout(function(){procExtracted=true;procLive=false;renderProc(false);},400);};
+    r.onload=function(){
+      var parsed=parseDelim(r.result);var h=parsed.headers;
+      var nameCol=findCol(h,['process_name','name','title','process']);
+      var domCol=findCol(h,['process_domain','domain','category','type']);
+      var revCol=findCol(h,['revenue','rev','value']);
+      PROC_UP=parsed.rows.map(function(c){
+        var nm=(nameCol>=0?c[nameCol]:null)||c[0];
+        var data=(domCol>=0?c[domCol]:null)||c[1]||'Process';
+        var rev=(revCol>=0?c[revCol]:null)||c[2]||'—';
+        return {n:nm,data:data,rev:rev,c:'m'};
+      });
+      PROC_FN=file.name;GRAPH=null;setTimeout(function(){procExtracted=true;procLive=false;renderProc(false);},400);
+    };
     r.readAsText(file);
   }
   function wireProc(){
@@ -816,7 +837,19 @@
   function takeAppFile(file){
     document.getElementById('appResult').innerHTML='<div class="extracting"><span class="sp"></span>Extracting systems from '+file.name+'…</div>';
     var r=new FileReader();
-    r.onload=function(){APP_UP=parseDelim(r.result).map(function(c){return {n:c[0],host:c[1]||'—',data:c[2]||'—'};});APP_FN=file.name;GRAPH=null;setTimeout(function(){appExtracted=true;appLive=false;renderApp(false);},400);};
+    r.onload=function(){
+      var parsed=parseDelim(r.result);var h=parsed.headers;
+      var nameCol=findCol(h,['application_name','app_name','name','title','application']);
+      var classCol=findCol(h,['ci_class','class','type','category','hosting']);
+      var dataCol=findCol(h,['data','data_classification','sensitivity']);
+      APP_UP=parsed.rows.map(function(c){
+        var nm=(nameCol>=0?c[nameCol]:null)||c[0];
+        var host=(classCol>=0?c[classCol]:null)||c[1]||'—';
+        var data=(dataCol>=0?c[dataCol]:null)||c[2]||'—';
+        return {n:nm,host:host,data:data};
+      });
+      APP_FN=file.name;GRAPH=null;setTimeout(function(){appExtracted=true;appLive=false;renderApp(false);},400);
+    };
     r.readAsText(file);
   }
   function renderApp(live){

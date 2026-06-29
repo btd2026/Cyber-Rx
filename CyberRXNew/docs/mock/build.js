@@ -96,12 +96,13 @@ const shell=`<!DOCTYPE html>
     <button id="swOS" class="on">Operating System</button>
   </div>
   <iframe class="frame" id="fIntake"></iframe>
-  <iframe class="frame" id="fOS"></iframe>
+  <iframe class="frame" id="fOS" allow="autoplay; speaker-selection"></iframe>
 <script>
   function b64ToUtf8(b){return decodeURIComponent(Array.prototype.map.call(atob(b),c=>"%"+("00"+c.charCodeAt(0).toString(16)).slice(-2)).join(""));}
   var INTAKE="__INTAKE__", OSDOC="__OS__";
   document.getElementById("fIntake").srcdoc=b64ToUtf8(INTAKE);
   document.getElementById("fOS").srcdoc=b64ToUtf8(OSDOC);
+  if('speechSynthesis' in window){window.speechSynthesis.getVoices();window.speechSynthesis.onvoiceschanged=function(){window.speechSynthesis.getVoices();};}
 
   var pickedRole="ciso", pickedName="Sarah";
   document.querySelectorAll("#roleRow .lrolechip").forEach(function(c){
@@ -147,6 +148,32 @@ const shell=`<!DOCTYPE html>
   window.addEventListener("message",function(e){
     if(e.data && e.data.type==="cyberrx-golive"){ osMsg({type:"cyberrx-golive",names:e.data.names,industry:e.data.industry}); setTimeout(function(){show("os");},600); }
     else if(e.data==="cyberrx-golive"){ setTimeout(function(){show("os");},600); }
+    else if(e.data && e.data.type==="cyberrx-speak"){
+      try{
+        window.speechSynthesis.cancel();
+        var u=new SpeechSynthesisUtterance(e.data.text);
+        if(e.data.rate)u.rate=e.data.rate;
+        if(e.data.pitch)u.pitch=e.data.pitch;
+        u.volume=1;
+        var vs=window.speechSynthesis.getVoices();
+        var picked=null;
+        if(e.data.voiceName){for(var vi=0;vi<vs.length;vi++){if(vs[vi].name===e.data.voiceName){picked=vs[vi];break;}}}
+        if(!picked&&e.data.voicePref&&e.data.voicePref.length){
+          for(var pi=0;pi<e.data.voicePref.length;pi++){
+            for(var vi2=0;vi2<vs.length;vi2++){if(vs[vi2].name.toLowerCase().indexOf(e.data.voicePref[pi].toLowerCase())!==-1&&(vs[vi2].lang||'').toLowerCase().indexOf('en')===0){picked=vs[vi2];break;}}
+            if(picked)break;
+          }
+        }
+        if(picked)u.voice=picked;
+        u.onstart=function(){osMsg({type:"cyberrx-speech-event",event:"start"});};
+        u.onend=function(){osMsg({type:"cyberrx-speech-event",event:"end"});};
+        u.onerror=function(){osMsg({type:"cyberrx-speech-event",event:"error"});};
+        window.speechSynthesis.speak(u);
+      }catch(_){}
+    }
+    else if(e.data && e.data.type==="cyberrx-speak-cancel"){
+      try{window.speechSynthesis.cancel();}catch(_){}
+    }
     else if(e.data==="cyberrx-signout"){
       document.getElementById("switcher").classList.remove("show");
       document.getElementById("fIntake").classList.remove("show");

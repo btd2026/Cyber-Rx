@@ -242,18 +242,37 @@ type Row = Record<string, string>
 // Parse an uploaded CSV/TSV into rows keyed by the step's columns. The first
 // line is skipped when it looks like a header. Client-side only (no backend
 // wired yet) so upload works in demo today.
+const NAME_ALIASES: Record<string, string[]> = {
+  name: ['application_name', 'app_name', 'process_name', 'name', 'title', 'application', 'process', 'system', 'document'],
+  value: ['revenue', 'rev', 'value', 'process_domain', 'domain'],
+}
+
 function parseDelimited(text: string, cols: { k: string }[]): Row[] {
   const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
   if (!lines.length) return []
   const delim = lines[0].includes('\t') ? '\t' : ','
-  const firstCell = lines[0].split(delim)[0].trim().replace(/^"|"$/g, '').toLowerCase()
-  const headerWords = ['name', 'process', 'processes', 'application', 'applications', 'app', 'document', 'documents', 'title', 'system']
-  const body = headerWords.includes(firstCell) ? lines.slice(1) : lines
+  const headerCells = lines[0].split(delim).map((c) => c.trim().replace(/^"|"$/g, ''))
+  const headerLow = headerCells.map((h) => h.toLowerCase())
+  const headerWords = ['name', 'process', 'processes', 'application', 'applications', 'app',
+    'document', 'documents', 'title', 'system', 'sys_id', 'process_id', 'ci_class', 'id']
+  const hasHeader = headerWords.some((w) => headerLow[0].startsWith(w))
+  const body = hasHeader ? lines.slice(1) : lines
+
+  const colMap = cols.map((col, fallback) => {
+    if (!hasHeader) return fallback
+    const aliases = NAME_ALIASES[col.k] || [col.k]
+    for (const alias of aliases) {
+      const idx = headerLow.findIndex((h) => h.includes(alias))
+      if (idx >= 0) return idx
+    }
+    return fallback
+  })
+
   return body
     .map((line) => {
       const cells = line.split(delim).map((c) => c.trim().replace(/^"|"$/g, ''))
       const row: Row = {}
-      cols.forEach((col, i) => { row[col.k] = cells[i] ?? '' })
+      cols.forEach((col, i) => { row[col.k] = cells[colMap[i]] ?? '' })
       return row
     })
     .filter((r) => Object.values(r).some((v) => v))
