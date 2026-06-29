@@ -501,7 +501,7 @@
     {id:'cio',label:'CIO',q:'Can we keep critical services running and recover?',needs:[
       {i:'Service & endpoint health',src:'live',m:'from EDR + Cloud'},
       {i:'Recovery readiness, RPO/RTO, immutable backups',src:'live',m:'from Backup / DR'},
-      {i:'Recovery targets per critical process',src:'declare',m:'your tolerance',df:['RTO target (claims)','RPO target (claims)']},
+      {i:'Recovery targets per critical process',src:'declare',m:'your tolerance',df:null,dynRTO:true},
       {i:'Change governance',src:'live',m:'from ITSM / GRC'}]},
     {id:'clo',label:'CLO',q:'Do we meet every obligation — defensibly?',needs:[
       {i:'Regulatory jurisdictions',src:'derived',m:'from your profile'},
@@ -1158,9 +1158,19 @@
     const s=SEAT_BY[seatTab];const live=liveSrc();
     const srcTag={live:live?'Live':'Connect a system',doc:'From docs',derived:'Derived',declare:'You provide'};
     const srcCls={live:live?'live':'off',doc:'doc',derived:'derived',declare:'declare'};
+    function rtoFields(){
+      var G=liveGraph();var cjs=G.apps.filter(function(a){return a.cj;}).sort(function(x,y){return y.score-x.score;});
+      if(!cjs.length){var procs=G.procs.filter(function(p){return p.c==='h';});if(!procs.length)procs=G.procs.slice(0,3);return procs.reduce(function(arr,p){arr.push('RTO target ('+p.n+')');arr.push('RPO target ('+p.n+')');return arr;},[]);}
+      var procIds={};cjs.forEach(function(a){a.proc.forEach(function(pid){procIds[pid]=1;});});
+      var procs=G.procs.filter(function(p){return procIds[p.id];});
+      if(!procs.length)procs=G.procs.filter(function(p){return p.c==='h';});
+      if(!procs.length)procs=G.procs.slice(0,3);
+      return procs.reduce(function(arr,p){arr.push('RTO target ('+p.n+')');arr.push('RPO target ('+p.n+')');return arr;},[]);
+    }
     document.getElementById('seatBody').innerHTML='<div class="need" style="border-left:3px solid var(--brand)"><span class="src declare" style="color:var(--brand);background:var(--brand-tint)">You provide</span><div class="nb"><div class="ni">Who holds this seat?</div><div class="nm2">so your advisor can greet them by name</div><div class="df"><input id="seatName-'+s.id+'" placeholder="First name of your '+s.label+'" value="'+(seatNames[s.id]||'')+'"></div></div></div>'+
       '<div class="seatq">› '+s.q+'</div>'+s.needs.map(n=>{
-      const df=n.plan?('<div class="planbox"><button class="planup" type="button">⬆ Upload IR plan &amp; playbooks (PDF)</button><div class="planct-h">Key contacts — reachable 24/7 <span>name + phone; powers Incident Commander mode</span></div><div class="planct">'+n.contacts.map(r=>'<div class="ctrow"><span class="ctrole">'+r+'</span><input placeholder="Name" class="ctname" value="'+((seatContacts[s.id]&&seatContacts[s.id][r]&&seatContacts[s.id][r].name)||'')+'"><input placeholder="Phone" inputmode="tel" class="ctphone" value="'+((seatContacts[s.id]&&seatContacts[s.id][r]&&seatContacts[s.id][r].phone)||'')+'"></div>').join('')+'</div></div>'):(n.df?'<div class="df dfgrid">'+n.df.map(fieldHTML).join('')+'</div>':'');
+      var dfArr=n.df;if(n.dynRTO)dfArr=rtoFields();
+      const df=n.plan?('<div class="planbox"><button class="planup" type="button">⬆ Upload IR plan &amp; playbooks (PDF)</button><div class="planct-h">Key contacts — reachable 24/7 <span>name + phone; powers Incident Commander mode</span></div><div class="planct">'+n.contacts.map(r=>'<div class="ctrow"><span class="ctrole">'+r+'</span><input placeholder="Name" class="ctname" value="'+((seatContacts[s.id]&&seatContacts[s.id][r]&&seatContacts[s.id][r].name)||'')+'"><input placeholder="Phone" inputmode="tel" class="ctphone" value="'+((seatContacts[s.id]&&seatContacts[s.id][r]&&seatContacts[s.id][r].phone)||'')+'"></div>').join('')+'</div></div>'):(dfArr?'<div class="df dfgrid">'+dfArr.map(fieldHTML).join('')+'</div>':'');
       return '<div class="need"><span class="src '+srcCls[n.src]+'">'+srcTag[n.src]+'</span><div class="nb"><div class="ni">'+n.i+'</div><div class="nm2">'+n.m+'</div>'+df+'</div></div>';
     }).join('');
     const nameIn=document.getElementById('seatName-'+s.id);
