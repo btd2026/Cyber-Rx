@@ -2757,7 +2757,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     cfo:{r:.96,p:1.0,pref:['Susan','Allison','Microsoft Jenny','Microsoft Michelle','Joelle','Karen','Samantha']},
     cio:{r:1.0,p:.99,pref:['Rishi','Daniel','Google UK English Male','Microsoft Guy','Alex','Oliver']},
     clo:{r:.94,p:1.0,pref:['Moira','Tessa','Fiona','Kate','Microsoft Michelle','Serena','Karen']},
-    cro:{r:.98,p:1.05,pref:['Serena','Allison','Microsoft Zira','Ava','Kate','Samantha']},
+    cro:{r:.98,p:1.05,pref:['Serena','Allison','Microsoft Zira','Google US English','Ava','Kate','Samantha']},
     board:{r:.92,p:.95,pref:['Daniel','Microsoft Andrew','Microsoft David','Google UK English Male','Alex','Oliver']}
   };
   // novelty / robotic system voices to never use
@@ -2790,9 +2790,10 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     if(!force && seat===lastSpeakSeat && now-lastSpeakAt<1800)return; // guard against double-trigger (os-active + first click)
     // Voices load async; if none are ready yet, assign + retry once when they
     // arrive so no seat (e.g. CRO) silently fails to speak on first selection.
-    if(window===window.parent && !(window.speechSynthesis.getVoices()||[]).length){ window.speechSynthesis.onvoiceschanged=function(){assignVoices();speakAgent(seat,true);}; return; }
+    if(window===window.parent && !(window.speechSynthesis.getVoices()||[]).length){ window.speechSynthesis.onvoiceschanged=function(){assignVoices();speakAgent(curSeat,true);}; return; }
     lastSpeakAt=now; lastSpeakSeat=seat;
     try{
+      if(!SEAT_VOICE[seat]&&(window.speechSynthesis.getVoices()||[]).length)assignVoices();
       const _txt=agentScript(seat); if(!_txt||!_txt.trim())return;
       const cfg=VOICE[seat]||VOICE.ciso;
       const v=SEAT_VOICE[seat]||pickVoice(seat,new Set());
@@ -3564,13 +3565,39 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     const d=document.getElementById('quantDrivers');
     if(d)d.innerHTML=drivers.map(x=>'<div class="qbar"><div class="ql">'+x[0]+'</div><div class="qt"><div class="qf" style="width:'+x[1]+'%"></div></div><div class="qp">'+x[1]+'%</div></div>').join('');
   }
-  const REMED=[
+  const REMED_SEED=[
     {action:'Complete PAM rollout',owner:'M. Chen · CIO',decision:'Hold compensating control → full PAM',status:'inprog',prog:'60%',due:'Q3 2026',removes:'$31M',spend:'$4.2M',retest:'pending · re-scores PR.AA-05'},
     {action:'Recovery modernization',owner:'M. Chen · CIO',decision:'Board-funded resilience program',status:'inprog',prog:'funded',due:'Q4 2026',removes:'$22M',spend:'$6.0M',retest:'RC.RP-01 re-test scheduled'},
     {action:'MFA expansion (remaining apps)',owner:'S. Chen · CISO',decision:'Enforce MFA everywhere',status:'closed',prog:'100%',due:'closed',removes:'$9M',spend:'$0.6M',retest:'✓ verified · PR.AA-01 re-scored 4'},
     {action:'Remediate 2 critical vendors',owner:'Procurement + CISO',decision:'Require remediation or exit',status:'open',prog:'0%',due:'Q3 2026',removes:'$8M',spend:'$0.3M',retest:'GV.SC-07 re-test on close'},
     {action:'Stand up AI governance',owner:'R. Patel · CIO + CISO',decision:'Govern AI on PHI (NIST AI RMF)',status:'open',prog:'scoping',due:'Q4 2026',removes:'$12–40M',spend:'TBD',retest:'new control set to be evidenced'}
   ];
+  let REMED=REMED_SEED;
+  async function loadRemediation(){
+    try{
+      const q='org_id='+encodeURIComponent(PLATFORM.orgId);
+      const r=await fetch(PLATFORM.api+'/api/remediation/tickets?'+q,{headers:{'X-Org-Id':PLATFORM.orgId}});
+      if(!r.ok)return;
+      const d=await r.json();
+      const tix=d.tickets||d;
+      if(Array.isArray(tix)&&tix.length){
+        const statusMap={open:'open',in_progress:'inprog',inprog:'inprog',closed:'closed',verified:'closed',done:'closed'};
+        REMED=tix.map(function(t){return{
+          action:t.title||t.action||'Untitled',
+          owner:t.owner||t.assignee||'',
+          decision:t.decision||t.description||'',
+          status:statusMap[(t.status||'open').toLowerCase()]||'open',
+          prog:t.progress||t.prog||'0%',
+          due:t.due||t.dueDate||'',
+          removes:t.exposureRemoved||t.removes||'',
+          spend:t.spend||t.cost||'',
+          retest:t.retest||t.closureProof||''
+        };});
+        setDataSrc(true,'remediation live · '+PLATFORM.orgId);
+      }
+    }catch(e){}
+  }
+  loadRemediation();
   function _money(s){const m=(''+s).match(/([\d.]+)/);return m?parseFloat(m[1]):0;}
   function renderRemed(){
     const el=document.getElementById('remRows');if(!el)return;

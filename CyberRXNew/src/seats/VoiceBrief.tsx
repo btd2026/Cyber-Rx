@@ -10,7 +10,7 @@ const VOICE_PREF: Record<string, { rate: number; pitch: number; pref: string[] }
   cfo:   { rate: 0.96, pitch: 1.0,  pref: ['Susan','Allison','Microsoft Jenny','Microsoft Michelle','Joelle','Karen','Samantha'] },
   cio:   { rate: 1.0,  pitch: 0.99, pref: ['Rishi','Daniel','Google UK English Male','Microsoft Guy','Alex','Oliver'] },
   clo:   { rate: 0.94, pitch: 1.0,  pref: ['Moira','Tessa','Fiona','Kate','Microsoft Michelle','Serena','Karen'] },
-  cro:   { rate: 0.98, pitch: 1.05, pref: ['Serena','Allison','Microsoft Zira','Ava','Kate','Samantha'] },
+  cro:   { rate: 0.98, pitch: 1.05, pref: ['Serena','Allison','Microsoft Zira','Google US English','Ava','Kate','Samantha'] },
   board: { rate: 0.92, pitch: 0.95, pref: ['Daniel','Microsoft Andrew','Microsoft David','Google UK English Male','Alex','Oliver'] },
 }
 
