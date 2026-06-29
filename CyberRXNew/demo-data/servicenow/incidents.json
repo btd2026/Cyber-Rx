@@ -1,0 +1,20 @@
+[
+  {
+    "number": "INC0001234",
+    "priority": "1",
+    "severity": "Critical",
+    "shortDescription": "Potential ransomware incident",
+    "state": "In Progress",
+    "assignmentGroup": "SOC",
+    "opened": "2026-06-28T09:20:00Z"
+  },
+  {
+    "number": "INC0001235",
+    "priority": "2",
+    "severity": "High",
+    "shortDescription": "Compromised account investigation",
+    "state": "New",
+    "assignmentGroup": "Identity Security",
+    "opened": "2026-06-28T10:50:00Z"
+  }
+]

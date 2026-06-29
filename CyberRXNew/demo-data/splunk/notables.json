@@ -1,0 +1,24 @@
+[
+  {
+    "id": "NOTABLE-1001",
+    "title": "Possible Ransomware Activity",
+    "severity": "Critical",
+    "status": "New",
+    "host": "FIN-SQL-01",
+    "user": "jsmith",
+    "mitreTechnique": "T1486",
+    "time": "2026-06-28T09:15:00Z",
+    "source": "Splunk ES"
+  },
+  {
+    "id": "NOTABLE-1002",
+    "title": "Suspicious PowerShell Execution",
+    "severity": "High",
+    "status": "In Progress",
+    "host": "HR-LT-102",
+    "user": "adoe",
+    "mitreTechnique": "T1059.001",
+    "time": "2026-06-28T10:30:00Z",
+    "source": "Splunk ES"
+  }
+]

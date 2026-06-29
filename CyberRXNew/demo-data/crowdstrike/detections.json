@@ -1,0 +1,20 @@
+[
+  {
+    "id": "DET-1001",
+    "severity": "Critical",
+    "hostname": "CLAIMS-APP-01",
+    "user": "svc_claims",
+    "technique": "T1055",
+    "status": "New",
+    "time": "2026-06-28T11:20:00Z"
+  },
+  {
+    "id": "DET-1002",
+    "severity": "High",
+    "hostname": "CEO-LAPTOP",
+    "user": "ceo",
+    "technique": "T1566.001",
+    "status": "Investigating",
+    "time": "2026-06-28T11:45:00Z"
+  }
+]

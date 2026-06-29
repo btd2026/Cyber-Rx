@@ -1,0 +1,18 @@
+[
+  {
+    "vendor": "Acme Healthcare",
+    "score": 72,
+    "grade": "C",
+    "networkSecurity": 80,
+    "patching": 60,
+    "dnsHealth": 65
+  },
+  {
+    "vendor": "Global Claims Processing",
+    "score": 88,
+    "grade": "B",
+    "networkSecurity": 95,
+    "patching": 85,
+    "dnsHealth": 84
+  }
+]

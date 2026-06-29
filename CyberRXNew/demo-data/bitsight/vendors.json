@@ -1,0 +1,16 @@
+[
+  {
+    "vendor": "Medical Data Systems",
+    "rating": 640,
+    "tier": "Medium Risk",
+    "botnetInfections": 1,
+    "openPorts": 4
+  },
+  {
+    "vendor": "Claims Exchange Inc",
+    "rating": 780,
+    "tier": "Low Risk",
+    "botnetInfections": 0,
+    "openPorts": 2
+  }
+]

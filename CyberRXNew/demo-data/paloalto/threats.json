@@ -1,0 +1,20 @@
+[
+  {
+    "id": "PA-1001",
+    "severity": "Critical",
+    "sourceIp": "10.10.15.23",
+    "destinationIp": "185.220.101.12",
+    "application": "powershell",
+    "action": "blocked",
+    "time": "2026-06-28T11:15:00Z"
+  },
+  {
+    "id": "PA-1002",
+    "severity": "High",
+    "sourceIp": "10.10.20.45",
+    "destinationIp": "45.77.80.22",
+    "application": "ssh",
+    "action": "alert",
+    "time": "2026-06-28T12:00:00Z"
+  }
+]

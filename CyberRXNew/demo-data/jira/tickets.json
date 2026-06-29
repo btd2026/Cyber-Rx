@@ -1,0 +1,16 @@
+[
+  {
+    "key": "SEC-101",
+    "summary": "Patch critical vulnerability on SQL Server",
+    "status": "In Progress",
+    "priority": "Highest",
+    "assignee": "Infrastructure Team"
+  },
+  {
+    "key": "SEC-102",
+    "summary": "Review phishing incident response",
+    "status": "To Do",
+    "priority": "High",
+    "assignee": "SOC"
+  }
+]
