@@ -381,7 +381,7 @@
 
   let cur=0;
   const done=new Array(STEPS.length).fill(false);
-  let procExtracted=false, appExtracted=false, mapDone=false, docCount=0, seatTab='cfo', procLive=false, appLive=false;
+  let procExtracted=false, appExtracted=false, mapDone=false, docCount=0, seatTab='ceo', procLive=false, appLive=false;
   const seatNames={ceo:'',ciso:'',cfo:'',cio:'',clo:'',cro:'',board:''};
   const seatData={ceo:{},ciso:{},cfo:{},cio:{},clo:{},cro:{},board:{}};
   const seatContacts={ciso:{}};
@@ -584,6 +584,7 @@
     document.getElementById('ccTip').textContent=CONCIERGE[cur];
     document.getElementById('backBtn').disabled=(cur===0);
     document.getElementById('nextBtn').textContent=(cur===STEPS.length-1)?'✦ Go live':'Save & continue →';
+    updateSeatNextBtn();
     document.querySelectorAll('[data-group] .pick').forEach(p=>p.addEventListener('click',()=>p.classList.toggle('on')));
     if(cur===0){
       applyOrgCur();wireRegionDD();
@@ -1021,6 +1022,20 @@
       }
     });
   }
+  function updateSeatNextBtn(){
+    if(cur!==6)return;
+    var seatOrder=['ceo','ciso','cfo','cio','clo','cro','board'];
+    var curIdx=seatOrder.indexOf(seatTab);
+    var btn=document.getElementById('nextBtn');
+    var back=document.getElementById('backBtn');
+    if(curIdx<seatOrder.length-1){
+      var nextLabel=({ceo:'CEO',ciso:'CISO',cfo:'CFO',cio:'CIO',clo:'CLO',cro:'CRO',board:'Board'})[seatOrder[curIdx+1]]||'next';
+      btn.textContent='Save & next → '+nextLabel;
+    }else{
+      btn.textContent='Save & continue →';
+    }
+    if(back)back.disabled=(curIdx===0&&cur===0);
+  }
   function renderSeats(){
     saveSeatFields();
     document.getElementById('seatTabs').innerHTML=SEATS.map(s=>'<button class="stab '+(s.id===seatTab?'on':'')+'" data-seat="'+s.id+'">'+s.label+'</button>').join('');
@@ -1048,6 +1063,7 @@
         else{inp.value=sd[key];}
       }
     });
+    updateSeatNextBtn();
   }
 
   function renderReview(){
@@ -1097,8 +1113,29 @@
     try{localStorage.setItem('cyberrx_org_profile',JSON.stringify(profile));}catch(_){}
     return profile;
   }
-  document.getElementById('nextBtn').addEventListener('click',()=>{done[cur]=true;updateComplete();if(cur<STEPS.length-1){cur++;render();}else{document.getElementById('nextBtn').textContent='✓ Setup complete';const bc=document.getElementById('benchConsent');const benchShare=!!(bc&&bc.checked);var _org='';try{_org=(orgName||localStorage.getItem('cyberrx_org_name')||'').trim();}catch(_){_org=(orgName||'').trim();}if(_org){try{localStorage.setItem('cyberrx_org_name',_org);}catch(_){}}const profile=collectProfile();try{window.parent.postMessage({type:'cyberrx-golive',industry:selectedIndustry,org:_org,names:seatNames,benchShare:benchShare,currency:{code:orgCurrency,sym:curSym()},profile:profile,docResults:docResults},'*');window.parent.postMessage('cyberrx-golive','*');}catch(e){}}});
-  document.getElementById('backBtn').addEventListener('click',()=>{if(cur>0){cur--;render();}});
+  document.getElementById('nextBtn').addEventListener('click',()=>{
+    // On the seats step, save current seat and advance to next leader before leaving
+    if(cur===6){
+      saveSeatFields();
+      var seatOrder=['ceo','ciso','cfo','cio','clo','cro','board'];
+      var curIdx=seatOrder.indexOf(seatTab);
+      if(curIdx<seatOrder.length-1){
+        seatTab=seatOrder[curIdx+1];
+        renderSeats();
+        document.getElementById('seatBody').scrollIntoView({behavior:'smooth',block:'start'});
+        return;
+      }
+    }
+    done[cur]=true;updateComplete();if(cur<STEPS.length-1){cur++;render();}else{document.getElementById('nextBtn').textContent='✓ Setup complete';const bc=document.getElementById('benchConsent');const benchShare=!!(bc&&bc.checked);var _org='';try{_org=(orgName||localStorage.getItem('cyberrx_org_name')||'').trim();}catch(_){_org=(orgName||'').trim();}if(_org){try{localStorage.setItem('cyberrx_org_name',_org);}catch(_){}}const profile=collectProfile();try{window.parent.postMessage({type:'cyberrx-golive',industry:selectedIndustry,org:_org,names:seatNames,benchShare:benchShare,currency:{code:orgCurrency,sym:curSym()},profile:profile,docResults:docResults},'*');window.parent.postMessage('cyberrx-golive','*');}catch(e){}}});
+  document.getElementById('backBtn').addEventListener('click',()=>{
+    if(cur===6){
+      saveSeatFields();
+      var seatOrder=['ceo','ciso','cfo','cio','clo','cro','board'];
+      var curIdx=seatOrder.indexOf(seatTab);
+      if(curIdx>0){seatTab=seatOrder[curIdx-1];renderSeats();return;}
+    }
+    if(cur>0){cur--;render();}
+  });
   document.getElementById('ccCall').addEventListener('click',function(){this.classList.add('req');this.textContent='✓ We\'ll reach out within 1 business day';});
   // ---- operating regions multi-select ----
   const REGIONS={
