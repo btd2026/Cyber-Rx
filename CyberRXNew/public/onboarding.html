@@ -163,19 +163,26 @@
   .crit.h{color:var(--critical);background:var(--critical-tint)}.crit.m{color:var(--exposure);background:var(--exposure-tint)}.crit.l{color:var(--pass);background:var(--pass-tint)}
 
   /* mapping + crown jewels */
-  #mapList{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-  @media (max-width:900px){#mapList{grid-template-columns:1fr 1fr}}
-  @media (max-width:560px){#mapList{grid-template-columns:1fr}}
-  .maprow{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:9px 11px;font-size:12.5px}
-  .maprow .ap{font-weight:600;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
-  .maprow .ar{color:var(--subtle);font-family:var(--mono);font-size:11px}
-  .maprow .pr{flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .maprow .conf{font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:5px}
-  .maprow .conf.hi{color:var(--pass);background:var(--pass-tint)}.maprow .conf.lo{color:var(--exposure);background:var(--exposure-tint)}
-  .maprow .cf{font-family:var(--body);font-weight:600;font-size:11px;border:1px solid var(--border);background:var(--surface);border-radius:6px;padding:4px 8px;cursor:pointer;white-space:nowrap}
-  .maprow.confirmed{border-color:color-mix(in srgb,var(--pass) 35%,transparent)}
-  .maprow.confirmed .cf{color:var(--pass);border-color:color-mix(in srgb,var(--pass) 35%,transparent);background:var(--pass-tint)}
-  .maprow.confirmed .cf::before{content:"✓ "}
+  .map-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  .map-toolbar .map-stat{font-family:var(--mono);font-size:11px;color:var(--subtle)}
+  .map-toolbar .map-stat b{color:var(--text)}
+  .map-bulk{font-family:var(--body);font-weight:600;font-size:11.5px;border:1px solid var(--border);background:var(--surface);border-radius:7px;padding:5px 10px;cursor:pointer;white-space:nowrap}
+  .map-bulk:hover{border-color:var(--brand);color:var(--brand)}
+  .map-group{margin-bottom:14px}
+  .map-group-h{font-family:var(--display);font-weight:600;font-size:13.5px;padding:7px 0 5px;border-bottom:1px solid var(--border);margin-bottom:0;display:flex;align-items:center;gap:8px}
+  .map-group-h .mg-cnt{font-family:var(--mono);font-size:10px;color:var(--subtle)}
+  .maptbl{width:100%;border-collapse:collapse;font-size:12.5px}
+  .maptbl th{text-align:left;font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--subtle);padding:6px 8px;border-bottom:1px solid var(--border);font-weight:500}
+  .maptbl td{padding:6px 8px;border-bottom:1px solid color-mix(in srgb,var(--border) 50%,transparent);vertical-align:middle}
+  .maptbl .app-nm{font-weight:600}
+  .maptbl select{font-family:var(--body);font-size:12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 6px;color:var(--text);max-width:200px}
+  .maptbl .conf{font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:5px;white-space:nowrap}
+  .maptbl .conf.hi{color:var(--pass);background:var(--pass-tint)}.maptbl .conf.lo{color:var(--exposure);background:var(--exposure-tint)}
+  .maptbl .map-acts{display:flex;gap:4px}
+  .maptbl .cf{font-family:var(--body);font-weight:600;font-size:10.5px;border:1px solid var(--border);background:var(--surface);border-radius:5px;padding:3px 7px;cursor:pointer;white-space:nowrap}
+  .maptbl tr.confirmed .cf-ok{color:var(--pass);border-color:color-mix(in srgb,var(--pass) 35%,transparent);background:var(--pass-tint)}
+  .maptbl tr.rejected{opacity:.45;text-decoration:line-through}
+  .maptbl tr.rejected .cf-no{color:var(--exposure);border-color:color-mix(in srgb,var(--exposure) 35%,transparent);background:var(--exposure-tint)}
   .mapbtn{margin-top:10px;font-family:var(--body);font-weight:600;font-size:13.5px;color:#fff;background:var(--brand);border:none;border-radius:10px;padding:11px 18px;cursor:pointer}
   .mapbtn:hover{filter:brightness(1.07)}
   .cjwrap{margin-top:22px;display:none}.cjwrap.show{display:block;animation:fade .5s ease}
@@ -436,15 +443,21 @@
     if(GRAPH)return GRAPH;
     if(PROC_UP&&PROC_UP.length&&APP_UP&&APP_UP.length){
       const procs=PROC_UP.map((p,i)=>{const r=dataRank(p.data);const c=(((p.rev||'').indexOf('$')>=0)||r>=3)?'h':(r<=0?'l':'m');return {id:'P'+(i+1),n:p.n,c:c,rev:p.rev||'—',data:p.data||'Process'};});
+      function wordSet(s){return (s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').split(' ').filter(function(w){return w.length>2&&['the','and','for','from','with','this','that','all'].indexOf(w)<0;});}
+      function nameSim(a,b){var wa=wordSet(a),wb=wordSet(b);if(!wa.length||!wb.length)return 0;var hits=0;wa.forEach(function(w){wb.forEach(function(w2){if(w===w2)hits+=2;else if(w.indexOf(w2)>=0||w2.indexOf(w)>=0)hits+=1;});});return hits/Math.max(wa.length,wb.length);}
       const apps=APP_UP.map((a,i)=>{
         const e=exposureOf(a.host);const dr=dataRank(a.data);
         const toks=(a.data||'').toUpperCase().split(/[^A-Z]+/).filter(t=>t.length>1);
-        let linked=procs.filter(p=>toks.some(t=>(p.data||'').toUpperCase().indexOf(t)>=0)).map(p=>p.id);
-        if(!linked.length){const top=procs.slice().sort((x,y)=>procCrit(y)-procCrit(x))[0];linked=top?[top.id]:[];}
+        var dataMtch=procs.filter(p=>toks.some(t=>(p.data||'').toUpperCase().indexOf(t)>=0)).map(p=>p.id);
+        var nameScores=procs.map(function(p){return{id:p.id,s:nameSim(a.n,p.n)+nameSim(a.n,p.data)};}).filter(function(x){return x.s>=0.4;}).sort(function(x,y){return y.s-x.s;});
+        var linked=[]; var conf=67;
+        if(nameScores.length&&nameScores[0].s>=0.8){linked=[nameScores[0].id];conf=Math.min(98,Math.round(60+nameScores[0].s*40));}
+        else if(dataMtch.length&&dataMtch.length<=procs.length*0.5){linked=dataMtch;conf=92;}
+        else if(nameScores.length){linked=[nameScores[0].id];conf=Math.min(85,Math.round(50+nameScores[0].s*40));}
+        else{linked=[];conf=0;}
         const maxPC=linked.length?Math.max.apply(null,linked.map(id=>procCrit(procs.find(p=>p.id===id)))):0.3;
         const spof=/single|sole|no failover|legacy|spof/.test((a.host||'').toLowerCase())?1:0;
         const score=Math.round((dr/3)*35+e.x*25+maxPC*25+spof*15);
-        const conf=(linked.length&&toks.length)?92:67;
         const lp=procs.find(p=>p.id===linked[0]);
         const sup=linked.length?(linked.length>1?('supports '+linked.length+' processes'):('key system under '+(lp?lp.n:'a process'))):'no mapped process';
         const why=(dr>=2?('Holds '+a.data+'; '):'')+e.label+(spof?'; single point of failure':'')+'; '+sup+' — criticality score '+score+'.';
@@ -563,8 +576,9 @@
     3:()=>`<div class="panel-h"><div class="step-of">Step 4 of 8</div><h2>Applications & systems</h2><p>Connect directly to your CMDB or discovery tool and we fetch every system automatically — or upload an inventory. Live discovery keeps your asset list current as things change.</p></div>
       <div class="srcchoice" id="appChoice"><button class="srcopt" data-src="app-connect"><div class="so-h">⚡ Connect a system <span class="rec-tag">recommended</span></div><div class="so-d">ServiceNow CMDB, Device42, BMC Helix, Tanium, Lansweeper — live discovery.</div></button><button class="srcopt" data-src="app-upload"><div class="so-h">⤓ Upload a file</div><div class="so-d">CSV or XLSX — an app inventory or CMDB export (snapshot).</div></button></div>
       <div id="appSource"></div><div id="appResult"></div>`,
-    4:()=>`<div class="panel-h"><div class="step-of">Step 5 of 8</div><h2>Auto-mapping & crown jewels</h2><p>CyberRx infers which application supports which process. Confirm each match — then we deduce your crown jewels: the systems whose loss would hurt the business most.</p></div>
-      <div id="mapList"></div><button class="mapbtn" id="deduceBtn">✦ Confirm mappings &amp; deduce crown jewels</button>
+    4:()=>`<div class="panel-h"><div class="step-of">Step 5 of 8</div><h2>Auto-mapping & crown jewels</h2><p>CyberRx infers which application supports which process. Review the mappings below — confirm, reassign, or reject each one. Then we deduce your crown jewels.</p></div>
+      <div class="map-toolbar" id="mapToolbar"></div>
+      <div id="mapList"></div><button class="mapbtn" id="deduceBtn">✦ Confirm remaining &amp; deduce crown jewels</button>
       <div class="cjwrap" id="cjwrap"><div class="cj-sum">Crown jewels identified</div><div class="cj-sub">From <b>6 systems</b> across <b>5 processes</b>, CyberRx deduced <b>4 crown jewels</b> — scored by process criticality × data sensitivity × exposure.</div><div class="cjmap" id="cjmap"></div></div>`,
     5:()=>`<div class="panel-h"><div class="step-of">Step 6 of 8</div><h2>Documents — evidence for non-automated controls</h2><p>Some controls can't be read from a system — they live in your policies and plans. We know exactly which documents score which controls. Upload what you have; CyberRx reads each one, aligns it to control requirements, flags gaps as findings, and scores maturity. <b>Results appear in your platform, not here.</b></p></div>
       <div class="docnote">✦ Every document below maps to specific control requirements across your frameworks. Anything you don't provide becomes a flagged gap to resolve later — not a guess.</div>
@@ -860,12 +874,72 @@
   }
 
   // ---- mapping + crown jewels ----
+  var rejected={};
+  function updateMapStats(){
+    var G=liveGraph();var tot=G.apps.length;
+    var conf=Object.keys(confirmed).length;var rej=Object.keys(rejected).length;var pend=tot-conf-rej;
+    var tb=document.getElementById('mapToolbar');if(!tb)return;
+    tb.innerHTML='<span class="map-stat"><b>'+tot+'</b> systems</span><span class="map-stat">·</span><span class="map-stat"><b>'+conf+'</b> confirmed</span><span class="map-stat"><b>'+rej+'</b> rejected</span><span class="map-stat"><b>'+pend+'</b> pending</span>'+
+      '<button class="map-bulk" id="bulkHi">✓ Confirm all high-confidence</button>'+
+      '<button class="map-bulk" id="bulkAll">✓ Confirm all pending</button>';
+    document.getElementById('bulkHi').addEventListener('click',function(){G.apps.forEach(function(a){if(a.conf>=85&&!rejected[a.id]){confirmed[a.id]=true;var tr=document.querySelector('tr[data-id="'+a.id+'"]');if(tr){tr.classList.add('confirmed');tr.classList.remove('rejected');}}});delete rejected;rejected={};updateMapStats();});
+    document.getElementById('bulkAll').addEventListener('click',function(){G.apps.forEach(function(a){if(!rejected[a.id]){confirmed[a.id]=true;var tr=document.querySelector('tr[data-id="'+a.id+'"]');if(tr){tr.classList.add('confirmed');tr.classList.remove('rejected');}}});updateMapStats();});
+  }
   function wireMapping(){
-    const G=liveGraph();const PB={};G.procs.forEach(p=>PB[p.id]=p.n);
-    document.getElementById('mapList').innerHTML=G.apps.map(a=>{const pn=a.proc.length>1?'All processes':(PB[a.proc[0]]||'—');const hi=a.conf>=85;return '<div class="maprow '+(confirmed[a.id]?'confirmed':'')+'" data-id="'+a.id+'"><span class="ap">'+a.n+'</span><span class="ar">→</span><span class="pr">'+pn+'</span><span class="conf '+(hi?'hi':'lo')+'">'+a.conf+'% match</span><button class="cf">'+(confirmed[a.id]?'Confirmed':'Confirm')+'</button></div>';}).join('');
-    document.querySelectorAll('.maprow').forEach(row=>row.querySelector('.cf').addEventListener('click',()=>{confirmed[row.dataset.id]=true;row.classList.add('confirmed');row.querySelector('.cf').textContent='Confirmed';}));
+    var G=liveGraph();var PB={};G.procs.forEach(function(p){PB[p.id]=p.n;});
+    var procOpts=G.procs.map(function(p){return '<option value="'+p.id+'">'+p.n+'</option>';}).join('')+'<option value="_all">All processes</option><option value="_none">— none / unmapped —</option>';
+    var groups={};var ungrouped=[];
+    G.apps.forEach(function(a){
+      if(!a.proc.length||a.conf===0){ungrouped.push(a);return;}
+      var pid=a.proc.length>1?'_all':a.proc[0];
+      if(!groups[pid])groups[pid]=[];groups[pid].push(a);
+    });
+    function appRow(a){
+      var selVal=a.proc.length>1?'_all':(a.proc[0]||'_none');
+      var hi=a.conf>=85;var st=confirmed[a.id]?'confirmed':(rejected[a.id]?'rejected':'');
+      return '<tr class="'+st+'" data-id="'+a.id+'"><td class="app-nm">'+a.n+'</td>'+
+        '<td><select class="map-sel" data-id="'+a.id+'">'+procOpts.replace('value="'+selVal+'"','value="'+selVal+'" selected')+'</select></td>'+
+        '<td><span class="conf '+(hi?'hi':'lo')+'">'+(a.conf?a.conf+'%':'—')+'</span></td>'+
+        '<td class="map-acts"><button class="cf cf-ok" data-id="'+a.id+'" data-act="ok" title="Confirm">✓</button><button class="cf cf-no" data-id="'+a.id+'" data-act="no" title="Reject / exclude">✗</button></td></tr>';
+    }
+    var html='';
+    var sortedPids=Object.keys(groups).sort(function(a,b){return groups[b].length-groups[a].length;});
+    sortedPids.forEach(function(pid){
+      var pn=pid==='_all'?'All processes':(PB[pid]||pid);
+      html+='<div class="map-group"><div class="map-group-h">'+pn+' <span class="mg-cnt">'+groups[pid].length+' systems</span></div>';
+      html+='<table class="maptbl"><thead><tr><th>Application</th><th>Mapped to process</th><th>Confidence</th><th></th></tr></thead><tbody>';
+      groups[pid].forEach(function(a){html+=appRow(a);});
+      html+='</tbody></table></div>';
+    });
+    if(ungrouped.length){
+      html+='<div class="map-group"><div class="map-group-h">Unmapped <span class="mg-cnt">'+ungrouped.length+' systems — assign a process or reject</span></div>';
+      html+='<table class="maptbl"><thead><tr><th>Application</th><th>Mapped to process</th><th>Confidence</th><th></th></tr></thead><tbody>';
+      ungrouped.forEach(function(a){html+=appRow(a);});
+      html+='</tbody></table></div>';
+    }
+    document.getElementById('mapList').innerHTML=html;
+    updateMapStats();
+    document.querySelectorAll('.maptbl .cf').forEach(function(btn){btn.addEventListener('click',function(){
+      var id=btn.dataset.id;var tr=btn.closest('tr');
+      if(btn.dataset.act==='ok'){confirmed[id]=true;delete rejected[id];tr.classList.add('confirmed');tr.classList.remove('rejected');}
+      else{rejected[id]=true;delete confirmed[id];tr.classList.add('rejected');tr.classList.remove('confirmed');}
+      updateMapStats();
+    });});
+    document.querySelectorAll('.maptbl .map-sel').forEach(function(sel){sel.addEventListener('change',function(){
+      var id=sel.dataset.id;var G2=liveGraph();var a=G2.apps.find(function(x){return x.id===id;});
+      if(a){if(sel.value==='_all')a.proc=G2.procs.map(function(p){return p.id;});else if(sel.value==='_none')a.proc=[];else a.proc=[sel.value];}
+      delete confirmed[id];delete rejected[id];
+      var tr=sel.closest('tr');tr.classList.remove('confirmed','rejected');
+      updateMapStats();
+    });});
     if(mapDone){document.getElementById('cjwrap').classList.add('show');renderMap();}
-    document.getElementById('deduceBtn').addEventListener('click',()=>{liveGraph().apps.forEach(a=>confirmed[a.id]=true);document.querySelectorAll('.maprow').forEach(r=>{r.classList.add('confirmed');r.querySelector('.cf').textContent='Confirmed';});mapDone=true;document.getElementById('cjwrap').classList.add('show');renderMap();});
+    document.getElementById('deduceBtn').addEventListener('click',function(){
+      liveGraph().apps.forEach(function(a){if(!rejected[a.id])confirmed[a.id]=true;});
+      document.querySelectorAll('.maptbl tr[data-id]').forEach(function(r){if(!r.classList.contains('rejected'))r.classList.add('confirmed');});
+      mapDone=true;GRAPH=null;
+      var G2=liveGraph();G2.apps=G2.apps.filter(function(a){return !rejected[a.id];});
+      document.getElementById('cjwrap').classList.add('show');renderMap();updateMapStats();
+    });
   }
   function renderMap(){
     const G=liveGraph();const cjs=G.apps.filter(a=>a.cj).sort((x,y)=>y.score-x.score);
