@@ -122,6 +122,13 @@
   .conn-err.show{display:block}
   .conn-st.amber{color:var(--gold);background:var(--gold-tint)}
   .conn-info{margin-top:12px;font-size:12px;line-height:1.55;color:var(--muted)}
+  .demo-bar{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding:12px 16px;background:linear-gradient(90deg,rgba(79,144,255,.08),rgba(79,144,255,.03));border:1px solid rgba(79,144,255,.25);border-radius:10px}
+  .demo-bar .demo-label{flex:1;font-size:13px;color:var(--text);font-weight:600}
+  .demo-bar .demo-sub{font-size:11.5px;color:var(--subtle);font-weight:400;margin-left:6px}
+  .demo-btn{font-family:var(--body);font-weight:600;font-size:12.5px;color:var(--brand);background:var(--brand-tint);border:1px solid rgba(79,144,255,.3);border-radius:8px;padding:7px 16px;cursor:pointer;white-space:nowrap;transition:all .15s}
+  .demo-btn:hover{background:var(--brand);color:#fff}
+  .demo-btn.active{background:var(--pass-tint);color:var(--pass);border-color:var(--pass)}
+  .demo-btn.loading{opacity:.6;pointer-events:none}
   .conn-info .pl{color:var(--text);font-weight:600} .conn-info .an{color:var(--brand);font-weight:600}
   .conn-toggle{font-family:var(--mono);font-size:11px;color:var(--brand);cursor:pointer;margin-left:8px;white-space:nowrap}
   #connList{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -546,6 +553,7 @@
       <div class="field"><label>Operating regions <span class="hint">drives breach-law & privacy obligations</span></label><div class="region-dd" id="regionDD"><button type="button" class="dd-toggle" id="regionToggle">Select regions…</button><div class="dd-menu" id="regionMenu"></div></div></div>
       <div class="field"><label>Regulated data you handle</label><div class="chips" data-group id="dataChips">${chipsHTML()}</div></div>`,
     1:()=>`<div class="panel-h"><div class="step-of">Step 2 of 8</div><h2>Connect your systems</h2><p>Most of your evidence is pulled live from here. Pick each system you run, provide its connection details, and CyberRx streams the data that answers your executives' questions. The more you connect, the more credible — and defensible — every answer.</p></div>
+      <div class="demo-bar"><span class="demo-label">Demo Mode<span class="demo-sub">Auto-connect all systems with simulated data — no API keys needed</span></span><button class="demo-btn" id="demoToggle">Enable Demo Mode</button></div>
       <div class="cred"><div class="cred-top"><span class="ct">Evidence credibility</span><span class="cv l0" id="credLabel">Not yet credible</span></div><div class="cred-bar"><i id="credBar"></i></div><div class="cred-meta"><b id="credSig">0</b> live signals · <b id="credSys">0</b> systems connected · <b id="credCov">0%</b> coverage</div></div>
       <div id="connList"></div>`,
     2:()=>`<div class="panel-h"><div class="step-of">Step 3 of 8</div><h2>Business processes</h2><p>Pull your processes live from your CMDB's service catalog or BIA tool — or upload a file. A live connection stays current; a file is a point-in-time snapshot.</p></div>
@@ -676,7 +684,40 @@
         if(id==='siem'){try{localStorage.setItem('cyberrx_siem_connected','1');window.parent.postMessage({type:'cyberrx-siem-connected'},'*');}catch(_){}}
       }
     }
+    // Wire demo mode toggle
+    var demoBtn=document.getElementById('demoToggle');
+    if(demoBtn)demoBtn.addEventListener('click',function(){
+      if(demoBtn.classList.contains('active')){return;}
+      demoBtn.classList.add('loading');demoBtn.textContent='Connecting…';
+      activateDemoMode().then(function(){
+        demoBtn.classList.remove('loading');demoBtn.classList.add('active');demoBtn.textContent='✓ Demo Mode Active';
+      });
+    });
     updateCred();
+  }
+  var demoActive=false;
+  async function activateDemoMode(){
+    demoActive=true;
+    // Try to enable demo mode on the backend (best-effort)
+    try{await fetch('/api/connectors/demo-mode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:'*',enabled:true})});}catch(_){}
+    // Auto-connect each connector with a staggered animation
+    for(var ci=0;ci<CONN.length;ci++){
+      var c=CONN[ci];
+      if(connected[c.id])continue;
+      connected[c.id]=true;
+      var st=document.getElementById('st-'+c.id);
+      var goBtn=document.querySelector('[data-go="'+c.id+'"]');
+      if(st){st.className='conn-st on';st.innerHTML='<span class="livedot"></span>Demo · '+c.sig+' signals';}
+      if(goBtn){goBtn.classList.add('done');goBtn.textContent='✓ Demo';}
+      var sigEl=document.getElementById('sigc-'+c.id);
+      if(!sigEl&&st){st.innerHTML='<span class="livedot"></span>Demo · <span id="sigc-'+c.id+'">0</span> signals';sigEl=document.getElementById('sigc-'+c.id);}
+      if(sigEl)tickTo(sigEl,c.sig,600);
+      updateCred();
+      await new Promise(function(r){setTimeout(r,120);});
+    }
+    updateCred();
+    if(typeof localStorage!=='undefined'){try{localStorage.setItem('cyberrx_siem_connected','1');localStorage.setItem('cyberrx_demo_mode','1');}catch(_){}}
+    try{window.parent.postMessage({type:'cyberrx-siem-connected'},'*');}catch(_){}
   }
   // Real, key-free connector: Shodan InternetDB (CORS-enabled, no API key).
   // Looks up internet-facing exposure live; falls back to a sample target, then
