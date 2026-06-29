@@ -151,10 +151,18 @@
         if(e.data.rate)u.rate=e.data.rate;
         if(e.data.pitch)u.pitch=e.data.pitch;
         u.volume=1;
+        var vs=window.speechSynthesis.getVoices();
+        var picked=null;
         if(e.data.voiceName){
-          var vs=window.speechSynthesis.getVoices();
-          for(var vi=0;vi<vs.length;vi++){if(vs[vi].name===e.data.voiceName){u.voice=vs[vi];break;}}
+          for(var vi=0;vi<vs.length;vi++){if(vs[vi].name===e.data.voiceName){picked=vs[vi];break;}}
         }
+        if(!picked&&e.data.voicePref&&e.data.voicePref.length){
+          for(var pi=0;pi<e.data.voicePref.length;pi++){
+            for(var vi2=0;vi2<vs.length;vi2++){if(vs[vi2].name.toLowerCase().indexOf(e.data.voicePref[pi].toLowerCase())!==-1&&(vs[vi2].lang||'').toLowerCase().indexOf('en')===0){picked=vs[vi2];break;}}
+            if(picked)break;
+          }
+        }
+        if(picked)u.voice=picked;
         u.onstart=function(){osMsg({type:"cyberrx-speech-event",event:"start"});};
         u.onend=function(){osMsg({type:"cyberrx-speech-event",event:"end"});};
         u.onerror=function(){osMsg({type:"cyberrx-speech-event",event:"error"});};
