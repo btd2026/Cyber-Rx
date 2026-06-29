@@ -436,8 +436,8 @@
   // heuristic; the real deterministic+explainable engine is /api/crown-jewels.
   let GRAPH=null;
   function orgDisplay(){return (orgName||'').trim()||curMeta().org;}
-  function dataRank(d){d=(d||'').toUpperCase();if(/PHI|PCI|CLASSIFIED|CUI/.test(d))return 3;if(/FINANCIAL|PII|CARDHOLDER/.test(d))return 2;if(/INTERNAL|DOC|PUBLIC/.test(d))return 0;return 1;}
-  function exposureOf(host){host=(host||'').toLowerCase();if(/internet|public|saas|cloud|aws|azure|gcp/.test(host))return {x:1,label:'internet-facing'};if(/on-?prem|single|legacy/.test(host))return {x:0.5,label:'on-prem'};return {x:0.3,label:'internal'};}
+  function dataRank(d){d=(d||'').toUpperCase();var score=0;if(/PHI/.test(d))score=Math.max(score,3);if(/PCI|CARDHOLDER/.test(d))score=Math.max(score,3);if(/CLASSIFIED|CUI/.test(d))score=Math.max(score,3);if(/FINANCIAL/.test(d))score=Math.max(score,2.5);if(/PII/.test(d))score=Math.max(score,2);if(/IDENTITY|CREDENTIAL|SECRET/.test(d))score=Math.max(score,2.5);if(/INTERNAL|DOC|PUBLIC/.test(d)&&score===0)score=0.5;if(score===0)score=1;var multi=0;['PHI','PII','PCI','FINANCIAL','IDENTITY'].forEach(function(k){if(d.indexOf(k)>=0)multi++;});if(multi>1)score=Math.min(3,score+multi*0.2);return score;}
+  function exposureOf(host){host=(host||'').toLowerCase();if(/internet|public|saas|cloud|aws|azure|gcp|portal|web|api|external/.test(host))return {x:1,label:'internet-facing'};if(/on-?prem|single|legacy|mainframe/.test(host))return {x:0.7,label:'on-prem'};if(/cmdb_ci|business_app|server/.test(host))return {x:0.6,label:'business application'};return {x:0.4,label:'internal'};}
   function procCrit(p){return p&&p.c==='h'?1:p&&p.c==='m'?0.6:0.3;}
   function liveGraph(){
     if(GRAPH)return GRAPH;
@@ -457,14 +457,21 @@
         else{linked=[];conf=0;}
         const maxPC=linked.length?Math.max.apply(null,linked.map(id=>procCrit(procs.find(p=>p.id===id)))):0.3;
         const spof=/single|sole|no failover|legacy|spof/.test((a.host||'').toLowerCase())?1:0;
-        const score=Math.round((dr/3)*35+e.x*25+maxPC*25+spof*15);
+        var multiProc=linked.length>1?Math.min(linked.length*3,12):0;
+        var coreName=/claim|billing|payment|erp|identity|sso|okta|active.?dir|portal|member|patient|enrollment/i.test(a.n)?8:0;
+        const score=Math.round((dr/3)*30+e.x*20+maxPC*20+spof*10+multiProc+coreName);
         const lp=procs.find(p=>p.id===linked[0]);
         const sup=linked.length?(linked.length>1?('supports '+linked.length+' processes'):('key system under '+(lp?lp.n:'a process'))):'no mapped process';
-        const why=(dr>=2?('Holds '+a.data+'; '):'')+e.label+(spof?'; single point of failure':'')+'; '+sup+' — criticality score '+score+'.';
+        var whyParts=[];if(dr>=2)whyParts.push('Holds '+a.data);whyParts.push(e.label);if(spof)whyParts.push('single point of failure');if(linked.length>1)whyParts.push('supports '+linked.length+' processes');else if(lp)whyParts.push('key system under '+lp.n);
+        const why=whyParts.join('; ')+' — criticality score '+score+'.';
         return {id:'A'+(i+1),n:a.n,host:a.host||'—',data:a.data||'—',proc:linked,conf:conf,score:score,why:why,cj:false};
       });
-      apps.slice().sort((x,y)=>y.score-x.score).forEach((a)=>{a.cj=a.score>=70;});
-      if(!apps.some(a=>a.cj)){const top=apps.slice().sort((x,y)=>y.score-x.score)[0];if(top)top.cj=true;}
+      var sorted=apps.slice().sort((x,y)=>y.score-x.score);
+      var cjCount=Math.max(3,Math.min(Math.ceil(apps.length*0.15),15));
+      cjCount=Math.min(cjCount,apps.length);
+      var cutoff=sorted[cjCount-1]?sorted[cjCount-1].score:0;
+      sorted.forEach(function(a,i){a.cj=(i<cjCount&&a.score>0)||(a.score>=cutoff&&a.score>0);});
+      if(!apps.some(a=>a.cj)&&sorted[0])sorted[0].cj=true;
       GRAPH={procs:procs,apps:apps};
     } else { GRAPH={procs:PROCS,apps:APPS}; }
     return GRAPH;
