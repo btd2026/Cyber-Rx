@@ -2812,9 +2812,10 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
           const u=new SpeechSynthesisUtterance(_txt);
           u.rate=cfg.r; u.pitch=cfg.p; u.volume=1;
           if(v)u.voice=v;
+          var _ka=setInterval(function(){if(window.speechSynthesis.speaking)window.speechSynthesis.resume();else clearInterval(_ka);},5000);
           u.onstart=function(){box.classList.add('speaking');};
-          u.onend=function(){box.classList.remove('speaking');};
-          u.onerror=function(){box.classList.remove('speaking');};
+          u.onend=function(){clearInterval(_ka);box.classList.remove('speaking');};
+          u.onerror=function(){clearInterval(_ka);box.classList.remove('speaking');};
           window.speechSynthesis.speak(u); vaSpoke=true;
         };
         if(wasSpeaking){setTimeout(_doSpeak,150);}else{_doSpeak();}

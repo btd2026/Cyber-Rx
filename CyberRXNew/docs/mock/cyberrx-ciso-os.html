@@ -2204,6 +2204,7 @@
   }
   // The advisor is HEARD, not shown — spoken via the browser speech engine, a distinct voice per seat.
   let vaMuted=false, vaSpoke=false, vaActive=(window===window.parent);
+  if(!vaActive){document.addEventListener('click',function _act(){vaActive=true;document.removeEventListener('click',_act,true);},{ once:true, capture:true });}
   // Per-seat voice persona: natural cadence + a curated list of known human-sounding system voices.
   const VOICE={
     ceo:{r:.95,p:.97,pref:['Alex','Aaron','Tom','Microsoft Guy','Microsoft Andrew','Google UK English Male','Daniel','Oliver']},
@@ -2211,7 +2212,7 @@
     cfo:{r:.96,p:1.0,pref:['Susan','Allison','Microsoft Jenny','Microsoft Michelle','Joelle','Karen','Samantha']},
     cio:{r:1.0,p:.99,pref:['Rishi','Daniel','Google UK English Male','Microsoft Guy','Alex','Oliver']},
     clo:{r:.94,p:1.0,pref:['Moira','Tessa','Fiona','Kate','Microsoft Michelle','Serena','Karen']},
-    cro:{r:.98,p:1.05,pref:['Serena','Allison','Microsoft Zira','Ava','Kate','Samantha']},
+    cro:{r:.98,p:1.05,pref:['Serena','Allison','Microsoft Zira','Google US English','Ava','Kate','Samantha']},
     board:{r:.92,p:.95,pref:['Daniel','Microsoft Andrew','Microsoft David','Google UK English Male','Alex','Oliver']}
   };
   // novelty / robotic system voices to never use
@@ -2240,25 +2241,42 @@
   function speakAgent(seat,force){
     if(!vaActive||vaMuted||!('speechSynthesis' in window))return;
     const now=Date.now();
-    if(!force && seat===lastSpeakSeat && now-lastSpeakAt<1800)return; // guard against double-trigger (os-active + first click)
+    if(!force && seat===lastSpeakSeat && now-lastSpeakAt<1800)return;
+    if(window===window.parent && !(window.speechSynthesis.getVoices()||[]).length){ window.speechSynthesis.onvoiceschanged=function(){assignVoices();speakAgent(curSeat,true);}; return; }
     lastSpeakAt=now; lastSpeakSeat=seat;
     try{
-      window.speechSynthesis.cancel();
-      const u=new SpeechSynthesisUtterance(agentScript(seat));
-      const cfg=VOICE[seat]||VOICE.ciso; u.rate=cfg.r; u.pitch=cfg.p; u.volume=1;
-      const v=SEAT_VOICE[seat]||pickVoice(seat,new Set()); if(v)u.voice=v;
+      if(!SEAT_VOICE[seat]&&(window.speechSynthesis.getVoices()||[]).length)assignVoices();
+      const _txt=agentScript(seat); if(!_txt||!_txt.trim())return;
+      const cfg=VOICE[seat]||VOICE.ciso;
+      const v=SEAT_VOICE[seat]||pickVoice(seat,new Set());
       const box=document.getElementById('voiceAgent');
-      u.onstart=()=>box.classList.add('speaking');
-      u.onend=()=>box.classList.remove('speaking');
-      u.onerror=()=>box.classList.remove('speaking');
-      window.speechSynthesis.speak(u); vaSpoke=true;
+      if(window!==window.parent){
+        try{
+          window.parent.postMessage({type:'cyberrx-speak',text:_txt,rate:cfg.r,pitch:cfg.p,voiceName:v?v.name:'',voicePref:cfg.pref||[]},'*');
+          box.classList.add('speaking'); vaSpoke=true;
+        }catch(_){}
+      }else{
+        const wasSpeaking=window.speechSynthesis.speaking||window.speechSynthesis.pending;
+        window.speechSynthesis.cancel();
+        const _doSpeak=function(){
+          const u=new SpeechSynthesisUtterance(_txt);
+          u.rate=cfg.r; u.pitch=cfg.p; u.volume=1;
+          if(v)u.voice=v;
+          var _ka=setInterval(function(){if(window.speechSynthesis.speaking)window.speechSynthesis.resume();else clearInterval(_ka);},5000);
+          u.onstart=function(){box.classList.add('speaking');};
+          u.onend=function(){clearInterval(_ka);box.classList.remove('speaking');};
+          u.onerror=function(){clearInterval(_ka);box.classList.remove('speaking');};
+          window.speechSynthesis.speak(u); vaSpoke=true;
+        };
+        if(wasSpeaking){setTimeout(_doSpeak,150);}else{_doSpeak();}
+      }
     }catch(e){}
   }
-  document.getElementById('vaReplay').addEventListener('click',()=>speakAgent(curSeat,true));
+  document.getElementById('vaReplay').addEventListener('click',()=>{vaActive=true;speakAgent(curSeat,true);});
   document.getElementById('vaMute').addEventListener('click',()=>{
     vaMuted=!vaMuted;
     document.getElementById('vaMute').textContent=vaMuted?'🔇':'🔊';
-    if(vaMuted)window.speechSynthesis.cancel(); else speakAgent(curSeat,true);
+    if(vaMuted){try{window.speechSynthesis.cancel();}catch(_){}try{window.parent.postMessage({type:'cyberrx-speak-cancel'},'*');}catch(_){}document.getElementById('voiceAgent').classList.remove('speaking');} else speakAgent(curSeat,true);
   });
   // browsers block speech until a user gesture — speak on first interaction (only once the OS is active)
   document.addEventListener('click',function firstSpeak(){if(vaActive&&!vaSpoke&&!vaMuted)speakAgent(curSeat);document.removeEventListener('click',firstSpeak);},{once:true});
@@ -2268,8 +2286,13 @@
       if(e.data.industry){try{applyIndustry(e.data.industry);}catch(_){}}
       if(e.data.names){Object.assign(SEAT_NAMES,e.data.names);if(typeof e.data.benchShare==='boolean')benchShare=e.data.benchShare;if(e.data.currency&&e.data.currency.sym){MON=e.data.currency.sym;applyCurrencyAll();}}
     }
-    if(e.data==='cyberrx-os-active'){vaActive=true;if(!vaMuted)speakAgent(curSeat);}
-    else if(e.data==='cyberrx-os-inactive'){vaActive=false;try{window.speechSynthesis.cancel();}catch(_){}}
+    if(e.data && e.data.type==='cyberrx-speech-event'){
+      const box=document.getElementById('voiceAgent');
+      if(e.data.event==='start'){box.classList.add('speaking');}
+      else{box.classList.remove('speaking');}
+    }
+    if(e.data==='cyberrx-os-active'){vaActive=true;try{var _ao=localStorage.getItem('cyberrx_org_name');if(_ao)applyOrgName(_ao);}catch(_){}if(!vaMuted)speakAgent(curSeat);}
+    else if(e.data==='cyberrx-os-inactive'){vaActive=false;try{window.speechSynthesis.cancel();}catch(_){}try{window.parent.postMessage({type:'cyberrx-speak-cancel'},'*');}catch(_){}}
   });
   function openTwin(id){
     const s=SCN[id];if(!s)return;twinFoot(true);

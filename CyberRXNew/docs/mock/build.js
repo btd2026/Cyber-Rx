@@ -165,9 +165,10 @@ const shell=`<!DOCTYPE html>
           }
         }
         if(picked)u.voice=picked;
+        var _ka=setInterval(function(){if(window.speechSynthesis.speaking)window.speechSynthesis.resume();else clearInterval(_ka);},5000);
         u.onstart=function(){osMsg({type:"cyberrx-speech-event",event:"start"});};
-        u.onend=function(){osMsg({type:"cyberrx-speech-event",event:"end"});};
-        u.onerror=function(){osMsg({type:"cyberrx-speech-event",event:"error"});};
+        u.onend=function(){clearInterval(_ka);osMsg({type:"cyberrx-speech-event",event:"end"});};
+        u.onerror=function(){clearInterval(_ka);osMsg({type:"cyberrx-speech-event",event:"error"});};
         window.speechSynthesis.speak(u);
       }catch(_){}
     }

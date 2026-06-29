@@ -71,8 +71,12 @@ export default function VoiceBrief({ open, seatId, seatLabel, name, onClose }: {
     const cfg = VOICE_PREF[seatId] || VOICE_PREF.ciso
     u.rate = cfg.rate
     u.pitch = cfg.pitch
-    u.onend = () => setSpeaking(false)
-    u.onerror = () => setSpeaking(false)
+    const keepAlive = setInterval(() => {
+      if (window.speechSynthesis.speaking) window.speechSynthesis.resume()
+      else clearInterval(keepAlive)
+    }, 5000)
+    u.onend = () => { clearInterval(keepAlive); setSpeaking(false) }
+    u.onerror = () => { clearInterval(keepAlive); setSpeaking(false) }
     utterRef.current = u
     setSpeaking(true)
     window.speechSynthesis.speak(u)
