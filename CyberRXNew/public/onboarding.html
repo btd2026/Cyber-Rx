@@ -445,17 +445,50 @@
     if(GRAPH)return GRAPH;
     if(PROC_UP&&PROC_UP.length&&APP_UP&&APP_UP.length){
       const procs=PROC_UP.map((p,i)=>{const r=dataRank(p.data);const c=(((p.rev||'').indexOf('$')>=0)||r>=3)?'h':(r<=0?'l':'m');return {id:'P'+(i+1),n:p.n,c:c,rev:p.rev||'—',data:p.data||'Process'};});
-      function wordSet(s){return (s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').split(' ').filter(function(w){return w.length>2&&['the','and','for','from','with','this','that','all'].indexOf(w)<0;});}
-      function nameSim(a,b){var wa=wordSet(a),wb=wordSet(b);if(!wa.length||!wb.length)return 0;var hits=0;wa.forEach(function(w){wb.forEach(function(w2){if(w===w2)hits+=2;else if(w.indexOf(w2)>=0||w2.indexOf(w)>=0)hits+=1;});});return hits/Math.max(wa.length,wb.length);}
+      var DOMAIN_TAGS={
+        'claim':['claim','adjudicat','preauth','pre-auth','prior auth','denial','appeal','remittance','explanation of benefit','eob'],
+        'payment':['payment','payable','receivable','billing','invoice','ledger','treasury','payhub','remit','ach','wire transfer'],
+        'member':['member','patient','enroll','eligib','beneficiar','subscriber','portal','self-service','consumer','registration'],
+        'call_center':['call center','contact center','ivr','genesys','avaya','telephon','agent desktop','crm','ticket','helpdesk','service desk','support'],
+        'corporate':['confluence','sharepoint','intranet','wiki','document management','collab','email','office 365','slack','teams','hr','payroll','erp','finance','accounting','travel','facilities'],
+        'identity':['identity','sso','okta','entra','active directory','ldap','ping','auth0','iam','mfa','privileged access','cyberark','pam'],
+        'security':['edr','siem','splunk','sentinel','crowdstrike','firewall','antivirus','dlp','soar','vulnerability','pentest','security monitoring','incident','threat','malware','endpoint protection'],
+        'infrastructure':['backup','disaster recovery','dns','dhcp','load balancer','proxy','vpn','network','storage','vmware','hypervisor','kubernetes','docker','container','server','database','sql','oracle','postgres','mongo'],
+        'cloud':['aws','azure','gcp','cloud','saas','iaas','paas'],
+        'compliance':['audit','compliance','grc','governance','risk management','policy','regulatory','hipaa','pci','sox','gdpr'],
+        'clinical':['clinical','ehr','emr','pharmacy','lab','radiology','imaging','diagnosis','treatment','care management','utilization','quality','reporting','analytics'],
+        'provider':['provider','physician','credentialing','contract','network management','fee schedule','reimbursement']
+      };
+      function domainOf(name){var n=(name||'').toLowerCase();var scores={};for(var d in DOMAIN_TAGS){var s=0;DOMAIN_TAGS[d].forEach(function(kw){if(n.indexOf(kw)>=0)s+=kw.split(' ').length;});if(s>0)scores[d]=s;}return scores;}
+      function procDomains(p){var n=(p.n||'').toLowerCase()+' '+(p.data||'').toLowerCase();var scores={};for(var d in DOMAIN_TAGS){var s=0;DOMAIN_TAGS[d].forEach(function(kw){if(n.indexOf(kw)>=0)s+=kw.split(' ').length;});if(s>0)scores[d]=s;}return scores;}
+      function semanticMatch(appName,proc){
+        var ad=domainOf(appName);var pd=procDomains(proc);
+        if(!Object.keys(ad).length||!Object.keys(pd).length)return 0;
+        var score=0;var maxA=0;
+        for(var d in ad){if(ad[d]>maxA)maxA=ad[d];if(pd[d])score+=Math.min(ad[d],pd[d])*2;}
+        return maxA>0?score/maxA:0;
+      }
+      function wordSet(s){return (s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').split(' ').filter(function(w){return w.length>2&&['the','and','for','from','with','this','that','all','system','platform','management','console','module','application','service','tool','suite','server','manager'].indexOf(w)<0;});}
+      function nameSim(a,b){var wa=wordSet(a),wb=wordSet(b);if(!wa.length||!wb.length)return 0;var hits=0;wa.forEach(function(w){wb.forEach(function(w2){if(w===w2)hits+=2;else if(w.length>4&&w2.length>4&&(w.indexOf(w2)>=0||w2.indexOf(w)>=0))hits+=1;});});return hits/Math.max(wa.length+wb.length,1);}
+      var INFRA_WORDS=/\b(backup|restore|disaster.recovery|dns|dhcp|load.balanc|proxy|vpn|storage|hypervisor|vmware|esxi|kubernetes|docker|container|monitoring|nagios|zabbix|grafana|log.collect|syslog|ntp|certificate|pki|patch|wsus|sccm|antivirus|firewall|ids|ips|network.switch|router|san|nas)\b/i;
+      var SUPPORT_WORDS=/\b(configuration.management|cmdb|asset.management|itsm|servicenow|jira|ticketing|audit|compliance|grc|wiki|confluence|sharepoint|documentation|collaboration|email.gateway|spam.filter|web.filter)\b/i;
       const apps=APP_UP.map((a,i)=>{
         const e=exposureOf(a.host);const dr=dataRank(a.data);
-        const toks=(a.data||'').toUpperCase().split(/[^A-Z]+/).filter(t=>t.length>1);
-        var dataMtch=procs.filter(p=>toks.some(t=>(p.data||'').toUpperCase().indexOf(t)>=0)).map(p=>p.id);
-        var nameScores=procs.map(function(p){return{id:p.id,s:nameSim(a.n,p.n)+nameSim(a.n,p.data)};}).filter(function(x){return x.s>=0.4;}).sort(function(x,y){return y.s-x.s;});
-        var linked=[]; var conf=67;
-        if(nameScores.length&&nameScores[0].s>=0.8){linked=[nameScores[0].id];conf=Math.min(98,Math.round(60+nameScores[0].s*40));}
-        else if(dataMtch.length&&dataMtch.length<=procs.length*0.5){linked=dataMtch;conf=92;}
-        else if(nameScores.length){linked=[nameScores[0].id];conf=Math.min(85,Math.round(50+nameScores[0].s*40));}
+        var bestProc=null;var bestScore=0;var bestConf=0;
+        var isInfra=INFRA_WORDS.test(a.n);
+        var isSupport=SUPPORT_WORDS.test(a.n);
+        procs.forEach(function(p){
+          var sem=semanticMatch(a.n,p);
+          var ns=nameSim(a.n,p.n);
+          var combined=sem*0.7+ns*0.3;
+          if(combined>bestScore){bestScore=combined;bestProc=p;}
+        });
+        var linked=[]; var conf=0;
+        if(bestScore>=1.5){linked=[bestProc.id];conf=Math.min(98,Math.round(70+bestScore*15));}
+        else if(bestScore>=0.8){linked=[bestProc.id];conf=Math.min(90,Math.round(55+bestScore*20));}
+        else if(bestScore>=0.4&&!isInfra&&!isSupport){linked=[bestProc.id];conf=Math.min(72,Math.round(40+bestScore*30));}
+        else if(isInfra||isSupport){linked=[];conf=0;}
+        else if(bestScore>0.1){linked=[bestProc.id];conf=Math.min(50,Math.round(20+bestScore*30));}
         else{linked=[];conf=0;}
         const maxPC=linked.length?Math.max.apply(null,linked.map(id=>procCrit(procs.find(p=>p.id===id)))):0.3;
         const spof=/single|sole|no failover|legacy|spof/.test((a.host||'').toLowerCase())?1:0;
