@@ -548,9 +548,8 @@
       {i:'Recovery targets per crown jewel',src:'derived',m:'auto-populated from your crown jewels — adjust to your tolerance',df:null,dynRTO:true},
       {i:'Change governance',src:'live',m:'from ITSM / GRC'}]},
     {id:'clo',label:'CLO',q:'Do we meet every obligation — defensibly?',needs:[
-      {i:'Regulatory jurisdictions',src:'derived',m:'from your profile'},
-      {i:'Applicable disclosure obligations',src:'declare',m:'confirm what applies',df:['SEC 8-K applies? (Y/N)','State breach-law states','GDPR / HIPAA / other']},
-      {i:'Litigation hold & privilege',src:'declare',m:'your process owners',df:['Litigation-hold owner','Outside counsel']},
+      {i:'Regulatory jurisdictions & obligations',src:'derived',m:'auto-derived from your industry, data types, and operating regions'},
+      {i:'Litigation hold & privilege',src:'declare',m:'powers the War Room and incident response',df:['Litigation-hold owner','Outside counsel firm']},
       {i:'Evidence chain & decision record',src:'live',m:'from GRC / ticketing'}]},
     {id:'cro',label:'CRO',q:'Is cyber risk within the board\'s appetite?',needs:[
       {i:'Risk appetite by category',src:'declare',m:'the board\'s tolerance',df:['Cyber risk appetite ($)','Tolerance threshold']},

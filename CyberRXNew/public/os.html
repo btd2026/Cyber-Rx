@@ -2178,6 +2178,9 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     if(lastTabletop==='none'||lastTabletop===''){tabletopDaysAgo=999;tabletopStatus='crit';tabletopLabel=lastTabletop==='none'?'Never conducted':'Unknown';}
     else{var td=new Date(lastTabletop);var now=new Date();tabletopDaysAgo=Math.round((now-td)/(1000*60*60*24));tabletopLabel=tabletopDaysAgo<31?tabletopDaysAgo+' days ago':Math.round(tabletopDaysAgo/30)+' months ago';var cadenceThreshold=exerciseCadence==='Monthly'?45:exerciseCadence==='Quarterly'?120:exerciseCadence==='Semi-annually'?200:400;tabletopStatus=tabletopDaysAgo>cadenceThreshold?'warn':'ok';}
     var cisoD=sd.ciso||{};
+    var cloD=sd.clo||{};
+    var litHoldOwner=cloD['Litigation-hold owner']||'';
+    var outsideCounsel=cloD['Outside counsel firm']||'';
     var lastPentest=cisoD['Last penetration test date']||'';
     var lastVulnScan=cisoD['Last vulnerability scan date']||'';
     var pentestDaysAgo=0,pentestLabel='Unknown',pentestStatus='warn';
@@ -2257,7 +2260,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     var seatNamesObj=ORG_PROFILE.seatNames||{};
     var cisoName=seatNamesObj.ciso||'CISO',cioName=seatNamesObj.cio||'CIO',cloName=seatNamesObj.clo||'CLO',cfoName=seatNamesObj.cfo||'CFO',croName=seatNamesObj.cro||'CRO',ceoName=seatNamesObj.ceo||'CEO';
     var vendorResidualM=(sf*0.4).toFixed(1),aiRiskLowM=Math.round(sf*12),aiRiskHighM=Math.round(sf*40),opResidualM=(sf*1.1).toFixed(1);
-    return {rev,revDaily,revHourly,matThreshold,exposure,exposureM,directLossMax,directLossMaxM,blastRecords,revAtRisk,pamCost,pamCostStr,isSEC,breachStates,stateCount,ownership,regions,insuranceCoverageM,insuranceCarrier,insuranceRetentionM,insuranceRenewal,insuranceExclusions,priorLosses,riskAppetiteM,rtoTarget,rpoTarget,rtoTargets,rpoTargets,riskCadence,boardCommittee,boardCadence,tabletopDaysAgo,tabletopStatus,tabletopLabel,exerciseCadence,crisisOwner,crisisBackup,ceoBoardCadence,ceoBoardCommittee,pentestDaysAgo,pentestLabel,pentestStatus,vulnScanDaysAgo,vulnScanLabel,vulnScanStatus,cyberBudgetM,insurancePremium,contacts,sf,posture,postureTrend,postureTarget,postureProjected,recoveryPct,uptimePctVal,recoveryDays,drTestDays,drTestMo,critAppsRecoverable,testedPct,aiRecoverable,backupSuccessRate,critServices,forensicsFullK,forensicsMinK,forensicsExtK,forensicsVendorK,forensicsMonK,forensicsTriageK,forensicsMonSmK,forensicsDeltaK,failoverTotalK,failoverRevK,failoverEngK,failoverValK,counselTotalK,counselReviewK,counselLiaisonK,vendorMitigateK,vendorScopeK,vendorMonK,vendorContractK,vendorTransferK,vendorSubK,vendorIndemK,aiInterimK,aiDlpK,aiAgentK,aiPolicyK,modFullStr,modPlatformStr,modMigrationStr,modCutoverStr,modPhasedStr,modCritPathStr,modIntegStr,modContingStr,pamRolloutStr,recoveryModStr,tpMonitorStr,aiGovStr,aiGovFteStr,aiToolK,aiRedTeamK,awaitingFundStr,ytdSpendM,ytdSpendStr,lossReductionM,lossInitialM,returnMultiple,var95M,headroomM,insuranceTailM,spendPctRev,spendPctIT,fwControlCount,connectedSources,coveragePct,regReadiness,cisoName,cioName,cloName,cfoName,croName,ceoName,vendorResidualM,aiRiskLowM,aiRiskHighM,opResidualM,modFullM,modPhasedM};
+    return {rev,revDaily,revHourly,matThreshold,exposure,exposureM,directLossMax,directLossMaxM,blastRecords,revAtRisk,pamCost,pamCostStr,isSEC,breachStates,stateCount,ownership,regions,insuranceCoverageM,insuranceCarrier,insuranceRetentionM,insuranceRenewal,insuranceExclusions,priorLosses,riskAppetiteM,rtoTarget,rpoTarget,rtoTargets,rpoTargets,riskCadence,boardCommittee,boardCadence,tabletopDaysAgo,tabletopStatus,tabletopLabel,exerciseCadence,crisisOwner,crisisBackup,ceoBoardCadence,ceoBoardCommittee,pentestDaysAgo,pentestLabel,pentestStatus,vulnScanDaysAgo,vulnScanLabel,vulnScanStatus,litHoldOwner,outsideCounsel,cyberBudgetM,insurancePremium,contacts,sf,posture,postureTrend,postureTarget,postureProjected,recoveryPct,uptimePctVal,recoveryDays,drTestDays,drTestMo,critAppsRecoverable,testedPct,aiRecoverable,backupSuccessRate,critServices,forensicsFullK,forensicsMinK,forensicsExtK,forensicsVendorK,forensicsMonK,forensicsTriageK,forensicsMonSmK,forensicsDeltaK,failoverTotalK,failoverRevK,failoverEngK,failoverValK,counselTotalK,counselReviewK,counselLiaisonK,vendorMitigateK,vendorScopeK,vendorMonK,vendorContractK,vendorTransferK,vendorSubK,vendorIndemK,aiInterimK,aiDlpK,aiAgentK,aiPolicyK,modFullStr,modPlatformStr,modMigrationStr,modCutoverStr,modPhasedStr,modCritPathStr,modIntegStr,modContingStr,pamRolloutStr,recoveryModStr,tpMonitorStr,aiGovStr,aiGovFteStr,aiToolK,aiRedTeamK,awaitingFundStr,ytdSpendM,ytdSpendStr,lossReductionM,lossInitialM,returnMultiple,var95M,headroomM,insuranceTailM,spendPctRev,spendPctIT,fwControlCount,connectedSources,coveragePct,regReadiness,cisoName,cioName,cloName,cfoName,croName,ceoName,vendorResidualM,aiRiskLowM,aiRiskHighM,opResidualM,modFullM,modPhasedM};
   }
   var FIN=deriveFinancials();
   function applyFinancials(){
@@ -3086,7 +3089,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     {r:'Incident Commander',d:(SEAT_NAMES.ciso||'CISO')+' (CISO) · since 14:03'},
     {r:'IR retainer',d:'Mandiant — engaged 14:11, remote triage live'},
     {r:'Forensics / evidence',d:'imaging in progress · legal hold + chain-of-custody active'},
-    {r:'Outside counsel',d:'engaged under privilege'},
+    {r:'Outside counsel',d:(FIN.outsideCounsel?FIN.outsideCounsel+' · ':'')+'engaged under privilege'},
     {r:'Law enforcement',d:'FBI / CISA notification prepared'}
   ];
   const READY=[
