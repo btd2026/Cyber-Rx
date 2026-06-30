@@ -131,7 +131,7 @@ const shell=`<!DOCTYPE html>
     document.getElementById("login").classList.add("hide");
     document.getElementById("switcher").classList.add("show");
     show("os");
-    osMsg({type:"cyberrx-auth",role:pickedRole,name:pickedName});
+    setTimeout(function(){osMsg({type:"cyberrx-auth",role:pickedRole,name:pickedName});},300);
   }
   document.getElementById("verify").addEventListener("click",enterPlatform);
 

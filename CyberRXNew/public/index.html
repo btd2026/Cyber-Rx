@@ -127,7 +127,7 @@
     document.getElementById("login").classList.add("hide");
     document.getElementById("switcher").classList.add("show");
     show("intake");
-    osMsg({type:"cyberrx-auth",role:pickedRole,name:pickedName});
+    setTimeout(function(){osMsg({type:"cyberrx-auth",role:pickedRole,name:pickedName});},300);
   }
   document.getElementById("verify").addEventListener("click",enterPlatform);
 
@@ -146,28 +146,32 @@
     else if(e.data==="cyberrx-golive"){ setTimeout(function(){show("os");},600); }
     else if(e.data && e.data.type==="cyberrx-speak"){
       try{
+        var _wasSpeaking=window.speechSynthesis.speaking||window.speechSynthesis.pending;
         window.speechSynthesis.cancel();
-        var u=new SpeechSynthesisUtterance(e.data.text);
-        if(e.data.rate)u.rate=e.data.rate;
-        if(e.data.pitch)u.pitch=e.data.pitch;
-        u.volume=1;
-        var vs=window.speechSynthesis.getVoices();
-        var picked=null;
-        if(e.data.voiceName){
-          for(var vi=0;vi<vs.length;vi++){if(vs[vi].name===e.data.voiceName){picked=vs[vi];break;}}
-        }
-        if(!picked&&e.data.voicePref&&e.data.voicePref.length){
-          for(var pi=0;pi<e.data.voicePref.length;pi++){
-            for(var vi2=0;vi2<vs.length;vi2++){if(vs[vi2].name.toLowerCase().indexOf(e.data.voicePref[pi].toLowerCase())!==-1&&(vs[vi2].lang||'').toLowerCase().indexOf('en')===0){picked=vs[vi2];break;}}
-            if(picked)break;
+        var _doParentSpeak=function(){
+          var u=new SpeechSynthesisUtterance(e.data.text);
+          if(e.data.rate)u.rate=e.data.rate;
+          if(e.data.pitch)u.pitch=e.data.pitch;
+          u.volume=1;
+          var vs=window.speechSynthesis.getVoices();
+          var picked=null;
+          if(e.data.voiceName){
+            for(var vi=0;vi<vs.length;vi++){if(vs[vi].name===e.data.voiceName){picked=vs[vi];break;}}
           }
-        }
-        if(picked)u.voice=picked;
-        var _ka=setInterval(function(){if(window.speechSynthesis.speaking)window.speechSynthesis.resume();else clearInterval(_ka);},5000);
-        u.onstart=function(){osMsg({type:"cyberrx-speech-event",event:"start"});};
-        u.onend=function(){clearInterval(_ka);osMsg({type:"cyberrx-speech-event",event:"end"});};
-        u.onerror=function(){clearInterval(_ka);osMsg({type:"cyberrx-speech-event",event:"error"});};
-        window.speechSynthesis.speak(u);
+          if(!picked&&e.data.voicePref&&e.data.voicePref.length){
+            for(var pi=0;pi<e.data.voicePref.length;pi++){
+              for(var vi2=0;vi2<vs.length;vi2++){if(vs[vi2].name.toLowerCase().indexOf(e.data.voicePref[pi].toLowerCase())!==-1&&(vs[vi2].lang||'').toLowerCase().indexOf('en')===0){picked=vs[vi2];break;}}
+              if(picked)break;
+            }
+          }
+          if(picked)u.voice=picked;
+          var _ka=setInterval(function(){if(window.speechSynthesis.speaking)window.speechSynthesis.resume();else clearInterval(_ka);},5000);
+          u.onstart=function(){osMsg({type:"cyberrx-speech-event",event:"start"});};
+          u.onend=function(){clearInterval(_ka);osMsg({type:"cyberrx-speech-event",event:"end"});};
+          u.onerror=function(){clearInterval(_ka);osMsg({type:"cyberrx-speech-event",event:"error"});};
+          window.speechSynthesis.speak(u);
+        };
+        if(_wasSpeaking){setTimeout(_doParentSpeak,200);}else{_doParentSpeak();}
       }catch(_){}
     }
     else if(e.data && e.data.type==="cyberrx-speak-cancel"){
