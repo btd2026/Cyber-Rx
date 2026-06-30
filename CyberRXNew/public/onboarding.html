@@ -552,8 +552,8 @@
       {i:'Litigation hold & privilege',src:'declare',m:'powers the War Room and incident response',df:['Litigation-hold owner','Outside counsel firm']},
       {i:'Evidence chain & decision record',src:'live',m:'from GRC / ticketing'}]},
     {id:'cro',label:'CRO',q:'Is cyber risk within the board\'s appetite?',needs:[
-      {i:'Risk appetite by category',src:'declare',m:'the board\'s tolerance',df:['Cyber risk appetite ($)','Tolerance threshold']},
-      {i:'Third-party / concentration risk',src:'derived',m:'from vendors + processes',df:['Number of critical vendors']},
+      {i:'Board-approved risk appetite',src:'declare',m:'the maximum loss the board will tolerate',df:['Cyber risk appetite ($)']},
+      {i:'Third-party / concentration risk',src:'declare',m:'vendor dependency that multiplies exposure',df:['Tier 1 vendors (critical — handle sensitive data or run key processes)','Tier 2 vendors (important — operational but not crown-jewel)']},
       {i:'Risk register & residual risk',src:'live',m:'from Vuln + SIEM + GRC'},
       {i:'Risk committee cadence',src:'declare',m:'governance rhythm',df:['Risk committee cadence']}]},
     {id:'board',label:'Board',q:'Is management in control, and is our oversight demonstrable?',needs:[
@@ -1153,6 +1153,8 @@
     if(/exercise cadence/.test(l))
       return '<div class="dfield"><label>'+label+'</label><select><option value="">Select…</option><option>Monthly</option><option>Quarterly</option><option>Semi-annually</option><option>Annually</option></select></div>';
     if(/board cyber.briefing cadence/.test(l))
+      return '<div class="dfield"><label>'+label+'</label><select><option value="">Select…</option><option>Monthly</option><option>Quarterly</option><option>Semi-annually</option><option>Annually</option></select></div>';
+    if(/risk committee cadence/.test(l))
       return '<div class="dfield"><label>'+label+'</label><select><option value="">Select…</option><option>Monthly</option><option>Quarterly</option><option>Semi-annually</option><option>Annually</option></select></div>';
     if(/tabletop/.test(l))
       return '<div class="dfield"><label>'+label+'</label><select class="tabletop-sel"><option value="">Select…</option><option value="none">None / not yet conducted</option><option value="date">Select date…</option></select><input type="date" class="tabletop-date" style="display:none"></div>';
