@@ -527,12 +527,12 @@
       {i:'Attacks blocked',src:'live',m:'from Firewall + Email'},
       {i:'Framework evidence',src:'doc',m:'from your documents'},
       {i:'Security testing',src:'declare',m:'assessment recency',df:['Last penetration test date','Last vulnerability scan date']},
-      {i:'Incident command plan & 24/7 call tree',src:'declare',m:'no system has this — it runs your crisis response and powers Incident Commander mode',plan:true,contacts:['Incident Commander','Deputy IC','Comms / PR lead','Breach counsel (external)','IR retainer / forensics (24/7)','Cyber-insurer claims hotline','Law enforcement (FBI field office)']}]},
+      {i:'24/7 incident call tree',src:'declare',m:'powers Incident Commander mode — who to call when it matters',plan:true,contacts:['Incident Commander','Deputy IC','Comms / PR lead','Breach counsel (external)','IR retainer / forensics (24/7)','Cyber-insurer claims hotline','Law enforcement (FBI field office)']}]},
     {id:'cfo',label:'CFO',q:'What is our financial exposure, and is it material?',needs:[
       {i:'Financial exposure model',src:'derived',m:'process revenue × loss model'},
-      {i:'Cyber insurance',src:'declare',m:'no system reports your policy',df:['Carrier','Coverage limit','Retention / deductible','Key sublimits','Notable exclusions','Renewal date']},
+      {i:'Cyber insurance',src:'declare',m:'no system reports your policy',df:['Carrier','Coverage limit','Retention / deductible','Notable exclusions','Renewal date']},
       {i:'Materiality threshold',src:'declare',m:'your disclosure trigger',df:['Materiality threshold ($)']},
-      {i:'Prior loss history',src:'declare',m:'optional',df:['Cyber losses, last 12 mo','Annual cyber insurance premium']},
+      {i:'Prior loss history',src:'declare',m:'loss ratio benchmarking',df:['Annual cyber insurance premium ($)']},
       {i:'Annual cybersecurity budget',src:'declare',m:'enables spend benchmarking',df:['Annual cybersecurity budget ($)']}]},
     {id:'cio',label:'CIO',q:'Can we keep critical services running and recover?',needs:[
       {i:'Service & endpoint health',src:'live',m:'from EDR + Cloud'},
@@ -1213,7 +1213,7 @@
     document.getElementById('seatBody').innerHTML='<div class="need" style="border-left:3px solid var(--brand)"><span class="src declare" style="color:var(--brand);background:var(--brand-tint)">You provide</span><div class="nb"><div class="ni">Who holds this seat?</div><div class="nm2">so your advisor can greet them by name</div><div class="df"><input id="seatName-'+s.id+'" placeholder="First name of your '+s.label+'" value="'+(seatNames[s.id]||'')+'"></div></div></div>'+
       '<div class="seatq">› '+s.q+'</div>'+s.needs.map(n=>{
       var dfArr=n.df;if(n.dynRTO)dfArr=rtoFields();
-      const df=n.plan?('<div class="planbox"><button class="planup" type="button">⬆ Upload IR plan &amp; playbooks (PDF)</button><div class="planct-h">Key contacts — reachable 24/7 <span>name + phone; powers Incident Commander mode</span></div><div class="planct">'+n.contacts.map(r=>'<div class="ctrow"><span class="ctrole">'+r+'</span><input placeholder="Name" class="ctname" value="'+((seatContacts[s.id]&&seatContacts[s.id][r]&&seatContacts[s.id][r].name)||'')+'"><input placeholder="Phone" inputmode="tel" class="ctphone" value="'+((seatContacts[s.id]&&seatContacts[s.id][r]&&seatContacts[s.id][r].phone)||'')+'"></div>').join('')+'</div></div>'):(dfArr?'<div class="df dfgrid">'+dfArr.map(fieldHTML).join('')+'</div>':'');
+      const df=n.plan?('<div class="planbox"><div class="planct-h">Key contacts — reachable 24/7 <span>name + phone; powers Incident Commander mode</span></div><div class="planct">'+n.contacts.map(r=>'<div class="ctrow"><span class="ctrole">'+r+'</span><input placeholder="Name" class="ctname" value="'+((seatContacts[s.id]&&seatContacts[s.id][r]&&seatContacts[s.id][r].name)||'')+'"><input placeholder="Phone" inputmode="tel" class="ctphone" value="'+((seatContacts[s.id]&&seatContacts[s.id][r]&&seatContacts[s.id][r].phone)||'')+'"></div>').join('')+'</div></div>'):(dfArr?'<div class="df dfgrid">'+dfArr.map(fieldHTML).join('')+'</div>':'');
       return '<div class="need"><span class="src '+srcCls[n.src]+'">'+srcTag[n.src]+'</span><div class="nb"><div class="ni">'+n.i+'</div><div class="nm2">'+n.m+'</div>'+df+'</div></div>';
     }).join('');
     const nameIn=document.getElementById('seatName-'+s.id);

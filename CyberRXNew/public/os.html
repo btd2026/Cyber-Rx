@@ -1099,6 +1099,8 @@
         <div class="srow"><div class="nm">Acted with reasonable care &amp; judgment <small>decisions evidence-based</small></div><span class="stat ok">Demonstrable ✓</span></div>
         <div class="srow"><div class="nm">Reporting / disclosure obligations met on time</div><span class="stat ok">Yes ✓</span></div>
         <div class="srow" id="ceoTabletopRow"><div class="nm">Crisis management exercised <small>last tabletop 5 months ago</small></div><span class="stat warn">Overdue</span></div>
+        <div class="srow" id="cisoPentestRow"><div class="nm">Penetration testing current <small>last test unknown</small></div><span class="stat warn">Unknown</span></div>
+        <div class="srow" id="cisoVulnScanRow"><div class="nm">Vulnerability scanning current <small>last scan unknown</small></div><span class="stat warn">Unknown</span></div>
         <div class="srow"><div class="nm">No known risk left unaddressed without sign-off</div><span class="stat warn">1 open · recovery</span></div>
       </div>
       <div class="panel">
@@ -2175,13 +2177,23 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     var tabletopDaysAgo=0,tabletopStatus='ok',tabletopLabel='';
     if(lastTabletop==='none'||lastTabletop===''){tabletopDaysAgo=999;tabletopStatus='crit';tabletopLabel=lastTabletop==='none'?'Never conducted':'Unknown';}
     else{var td=new Date(lastTabletop);var now=new Date();tabletopDaysAgo=Math.round((now-td)/(1000*60*60*24));tabletopLabel=tabletopDaysAgo<31?tabletopDaysAgo+' days ago':Math.round(tabletopDaysAgo/30)+' months ago';var cadenceThreshold=exerciseCadence==='Monthly'?45:exerciseCadence==='Quarterly'?120:exerciseCadence==='Semi-annually'?200:400;tabletopStatus=tabletopDaysAgo>cadenceThreshold?'warn':'ok';}
+    var cisoD=sd.ciso||{};
+    var lastPentest=cisoD['Last penetration test date']||'';
+    var lastVulnScan=cisoD['Last vulnerability scan date']||'';
+    var pentestDaysAgo=0,pentestLabel='Unknown',pentestStatus='warn';
+    if(lastPentest){var pd=new Date(lastPentest);var now2=new Date();pentestDaysAgo=Math.round((now2-pd)/(1000*60*60*24));pentestLabel=pentestDaysAgo<31?pentestDaysAgo+' days ago':Math.round(pentestDaysAgo/30)+' months ago';pentestStatus=pentestDaysAgo>365?'crit':pentestDaysAgo>180?'warn':'ok';}
+    var vulnScanDaysAgo=0,vulnScanLabel='Unknown',vulnScanStatus='warn';
+    if(lastVulnScan){var vd=new Date(lastVulnScan);var now3=new Date();vulnScanDaysAgo=Math.round((now3-vd)/(1000*60*60*24));vulnScanLabel=vulnScanDaysAgo<31?vulnScanDaysAgo+' days ago':Math.round(vulnScanDaysAgo/30)+' months ago';vulnScanStatus=vulnScanDaysAgo>90?'crit':vulnScanDaysAgo>30?'warn':'ok';}
     const userMatThreshold=parseFloat(String(cfoD['Materiality threshold']||'').replace(/[^\d.]/g,''));
     if(userMatThreshold>0) matThreshold=userMatThreshold*1e6;
     const insuranceCoverage=parseFloat(String(cfoD['Coverage limit']||'').replace(/[^\d.]/g,''));
     const insuranceCoverageM=insuranceCoverage>0?insuranceCoverage:75;
     const insuranceCarrier=cfoD['Carrier']||'';
-    const insuranceRetention=cfoD['Retention / deductible']||'';
+    const insuranceRetentionRaw=parseFloat(String(cfoD['Retention / deductible']||'').replace(/[^\d.]/g,''));
+    const insuranceRetentionM=insuranceRetentionRaw>0?insuranceRetentionRaw:2.5;
     const insuranceRenewal=cfoD['Renewal date']||'';
+    const insuranceExclusions=cfoD['Notable exclusions']||'';
+    const priorLosses=cfoD['Cyber losses, last 12 mo']||'';
     const riskAppetite=parseFloat(String(croD['Cyber risk appetite']||'').replace(/[^\d.]/g,''));
     const riskAppetiteM=riskAppetite>0?riskAppetite:120;
     const rtoTarget=cioD['RTO target (claims)']||'4 hrs';
@@ -2243,7 +2255,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     var seatNamesObj=ORG_PROFILE.seatNames||{};
     var cisoName=seatNamesObj.ciso||'CISO',cioName=seatNamesObj.cio||'CIO',cloName=seatNamesObj.clo||'CLO',cfoName=seatNamesObj.cfo||'CFO',croName=seatNamesObj.cro||'CRO',ceoName=seatNamesObj.ceo||'CEO';
     var vendorResidualM=(sf*0.4).toFixed(1),aiRiskLowM=Math.round(sf*12),aiRiskHighM=Math.round(sf*40),opResidualM=(sf*1.1).toFixed(1);
-    return {rev,revDaily,revHourly,matThreshold,exposure,exposureM,directLossMax,directLossMaxM,blastRecords,revAtRisk,pamCost,pamCostStr,isSEC,breachStates,stateCount,ownership,regions,insuranceCoverageM,insuranceCarrier,insuranceRetention,insuranceRenewal,riskAppetiteM,rtoTarget,rpoTarget,riskCadence,boardCommittee,boardCadence,tabletopDaysAgo,tabletopStatus,tabletopLabel,exerciseCadence,crisisOwner,crisisBackup,ceoBoardCadence,ceoBoardCommittee,cyberBudgetM,insurancePremium,contacts,sf,posture,postureTrend,postureTarget,postureProjected,recoveryPct,uptimePctVal,recoveryDays,drTestDays,drTestMo,critAppsRecoverable,testedPct,aiRecoverable,backupSuccessRate,critServices,forensicsFullK,forensicsMinK,forensicsExtK,forensicsVendorK,forensicsMonK,forensicsTriageK,forensicsMonSmK,forensicsDeltaK,failoverTotalK,failoverRevK,failoverEngK,failoverValK,counselTotalK,counselReviewK,counselLiaisonK,vendorMitigateK,vendorScopeK,vendorMonK,vendorContractK,vendorTransferK,vendorSubK,vendorIndemK,aiInterimK,aiDlpK,aiAgentK,aiPolicyK,modFullStr,modPlatformStr,modMigrationStr,modCutoverStr,modPhasedStr,modCritPathStr,modIntegStr,modContingStr,pamRolloutStr,recoveryModStr,tpMonitorStr,aiGovStr,aiGovFteStr,aiToolK,aiRedTeamK,awaitingFundStr,ytdSpendM,ytdSpendStr,lossReductionM,lossInitialM,returnMultiple,var95M,headroomM,insuranceTailM,spendPctRev,spendPctIT,fwControlCount,connectedSources,coveragePct,regReadiness,cisoName,cioName,cloName,cfoName,croName,ceoName,vendorResidualM,aiRiskLowM,aiRiskHighM,opResidualM,modFullM,modPhasedM};
+    return {rev,revDaily,revHourly,matThreshold,exposure,exposureM,directLossMax,directLossMaxM,blastRecords,revAtRisk,pamCost,pamCostStr,isSEC,breachStates,stateCount,ownership,regions,insuranceCoverageM,insuranceCarrier,insuranceRetentionM,insuranceRenewal,insuranceExclusions,priorLosses,riskAppetiteM,rtoTarget,rpoTarget,riskCadence,boardCommittee,boardCadence,tabletopDaysAgo,tabletopStatus,tabletopLabel,exerciseCadence,crisisOwner,crisisBackup,ceoBoardCadence,ceoBoardCommittee,pentestDaysAgo,pentestLabel,pentestStatus,vulnScanDaysAgo,vulnScanLabel,vulnScanStatus,cyberBudgetM,insurancePremium,contacts,sf,posture,postureTrend,postureTarget,postureProjected,recoveryPct,uptimePctVal,recoveryDays,drTestDays,drTestMo,critAppsRecoverable,testedPct,aiRecoverable,backupSuccessRate,critServices,forensicsFullK,forensicsMinK,forensicsExtK,forensicsVendorK,forensicsMonK,forensicsTriageK,forensicsMonSmK,forensicsDeltaK,failoverTotalK,failoverRevK,failoverEngK,failoverValK,counselTotalK,counselReviewK,counselLiaisonK,vendorMitigateK,vendorScopeK,vendorMonK,vendorContractK,vendorTransferK,vendorSubK,vendorIndemK,aiInterimK,aiDlpK,aiAgentK,aiPolicyK,modFullStr,modPlatformStr,modMigrationStr,modCutoverStr,modPhasedStr,modCritPathStr,modIntegStr,modContingStr,pamRolloutStr,recoveryModStr,tpMonitorStr,aiGovStr,aiGovFteStr,aiToolK,aiRedTeamK,awaitingFundStr,ytdSpendM,ytdSpendStr,lossReductionM,lossInitialM,returnMultiple,var95M,headroomM,insuranceTailM,spendPctRev,spendPctIT,fwControlCount,connectedSources,coveragePct,regReadiness,cisoName,cioName,cloName,cfoName,croName,ceoName,vendorResidualM,aiRiskLowM,aiRiskHighM,opResidualM,modFullM,modPhasedM};
   }
   var FIN=deriveFinancials();
   function applyFinancials(){
@@ -2255,6 +2267,8 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     // Update key DOM element directly (rendered before reskin runs)
     const matExp=document.getElementById('cjMatExp');if(matExp)matExp.textContent=MON+FIN.exposureM+'M';
     var ttRow=document.getElementById('ceoTabletopRow');if(ttRow){ttRow.innerHTML='<div class="nm">Crisis management exercised <small>'+(FIN.tabletopLabel?'last tabletop '+FIN.tabletopLabel:'no tabletop on record')+'</small></div><span class="stat '+(FIN.tabletopStatus==='ok'?'ok':FIN.tabletopStatus==='warn'?'warn':'crit')+'">'+(FIN.tabletopStatus==='ok'?'Current':(FIN.tabletopStatus==='warn'?'Overdue':'No record'))+'</span>';}
+    var ptRow=document.getElementById('cisoPentestRow');if(ptRow){ptRow.innerHTML='<div class="nm">Penetration testing current <small>last test '+FIN.pentestLabel+'</small></div><span class="stat '+FIN.pentestStatus+'">'+(FIN.pentestStatus==='ok'?'Current':(FIN.pentestStatus==='warn'?'Due soon':'Overdue'))+'</span>';}
+    var vsRow=document.getElementById('cisoVulnScanRow');if(vsRow){vsRow.innerHTML='<div class="nm">Vulnerability scanning current <small>last scan '+FIN.vulnScanLabel+'</small></div><span class="stat '+FIN.vulnScanStatus+'">'+(FIN.vulnScanStatus==='ok'?'Current':(FIN.vulnScanStatus==='warn'?'Due soon':'Overdue'))+'</span>';}
   }
 
   /* ===== UNIVERSAL INDUSTRY ADAPTATION =======================================
@@ -2482,6 +2496,12 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
       var insTail=Math.round(f.exposureM-f.insuranceCoverageM);
       if(insTail>0){add('~$19M uninsured','~'+MON+insTail+'M uninsured');add('~$19M','~'+MON+insTail+'M');}
     }
+    // Insurance retention from declare fields
+    if(f.insuranceRetentionM!==2.5){
+      add('$2.5M','$'+f.insuranceRetentionM+'M');
+    }
+    // Insurance carrier — inject into detail arrays via applyFinancials DOM update
+
     // Risk appetite from declare fields
     if(f.riskAppetiteM!==120){
       add('$120M',MON+f.riskAppetiteM+'M');
