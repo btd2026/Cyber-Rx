@@ -71,6 +71,7 @@ const shell=`<!DOCTYPE html>
           <button class="lrolechip" data-role="cio" data-name="Raj">CIO</button>
           <button class="lrolechip" data-role="clo" data-name="Patricia">CLO</button>
           <button class="lrolechip" data-role="cro" data-name="Sloan">CRO</button>
+          <button class="lrolechip" data-role="board" data-name="Chair">Board</button>
         </div>
         <button class="lbtn" id="toMfa">Continue</button>
         <div class="lsec">🔒 SSO + SCIM provisioning supported in production</div>

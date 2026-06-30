@@ -268,14 +268,6 @@
   .planct-h{font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--subtle);display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
   .planct-h span{text-transform:none;letter-spacing:0;font-size:10.5px;color:var(--subtle)}
   .planct{display:flex;flex-direction:column;gap:7px}
-  .rto-tbl{width:100%;border-collapse:collapse;margin-top:8px}
-  .rto-tbl th{font-family:var(--mono);font-size:10px;letter-spacing:.03em;text-transform:uppercase;color:var(--subtle);text-align:left;padding:6px 8px;border-bottom:1px solid var(--border)}
-  .rto-tbl td{padding:8px;border-bottom:1px solid color-mix(in srgb,var(--border) 50%,transparent)}
-  .rto-pn{font-size:13px;font-weight:500;color:var(--text);line-height:1.4}
-  .rto-pn .crit{font-size:10px;font-weight:600}
-  .rto-sel{font-family:var(--body);font-size:13px;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px 10px;outline:none;width:100%}
-  .rto-sel:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-tint)}
-  .rto-hint{font-size:11px;color:var(--subtle);margin-top:8px;font-style:italic}
   .ctrow{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;align-items:center}
   @media(max-width:560px){.ctrow{grid-template-columns:1fr}}
   .ctrow .ctrole{font-size:12.5px;color:var(--text);font-weight:500}
@@ -353,8 +345,14 @@
       <div class="panel" id="panel"></div>
       <div class="nav"><button class="btn ghost" id="backBtn">← Back</button><button class="btn primary" id="nextBtn">Save &amp; continue →</button></div>
     </main>
-    <aside class=”rail”>
-      <div class=”card”><h5>Why we ask</h5><div class=”why” id=”whyText”></div></div>
+    <aside class="rail">
+      <div class="card concierge">
+        <div class="cc-h"><div class="cc-av">S</div><div><div class="cc-nm">Sam</div><div class="cc-role">Your onboarding concierge</div></div></div>
+        <div class="cc-tip" id="ccTip"></div>
+        <button class="cc-call" id="ccCall">📞 Book a 20-min onboarding call</button>
+      </div>
+      <div class="card"><h5>Why we ask</h5><div class="why" id="whyText"></div></div>
+      <div class="once">✦ <b>Live beats typed.</b> Data piped from your EDR, SIEM, identity and cloud is what makes “1,240 signals · 99.4% coverage · signed” true — and what an executive can defend to the board.</div>
     </aside>
   </div>
 </div>
@@ -384,15 +382,7 @@
     {id:'email',cat:'Email security',ic:'✉',w:6,sig:70,vendors:['Proofpoint','Mimecast','Abnormal Security','Microsoft Defender for Office'],pulls:'Phishing blocked, account-takeover attempts, BEC signals.',ans:'CISO live threat (phishing → claims).'},
     {id:'backup',cat:'Backup / DR',ic:'💾',w:10,sig:40,vendors:['Rubrik','Veeam','Cohesity','Commvault','AWS Backup'],pulls:'Recovery readiness, RPO/RTO actuals, immutable-backup status, last DR test.',ans:'CIO recovery, CEO “can we recover,” Board resilience.'},
     {id:'mdm',cat:'Device management (MDM)',ic:'💻',w:4,sig:30,vendors:['Microsoft Intune','Jamf','VMware Workspace ONE','Kandji'],pulls:'Device compliance, encryption, patch state.',ans:'CISO control coverage.'},
-    {id:'grc',cat:'ITSM / GRC / Ticketing',ic:'🗂',w:4,sig:25,vendors:['ServiceNow','Jira','Archer','Vanta','Drata'],pulls:'Remediation status, change governance, decision & approval records.',ans:'Action Center, audit log, CLO defensibility, decisions.'},
-    {id:'dlp',cat:'Data Loss Prevention (DLP)',ic:'🚫',w:8,sig:110,vendors:['Symantec DLP','Microsoft Purview','Forcepoint','Digital Guardian','Zscaler Data Protection'],pulls:'Policy violations, sensitive-data exfiltration attempts, channel breakdowns (email, web, USB).',ans:'CISO data-at-risk posture, CLO regulatory exposure, CFO breach-cost inputs.'},
-    {id:'pam',cat:'Privileged Access Management (PAM)',ic:'🔐',w:8,sig:95,vendors:['CyberArk','BeyondTrust','Delinea','HashiCorp Vault','Teleport'],pulls:'Privileged session counts, credential rotation compliance, standing vs. JIT access.',ans:'CISO control validation, CRO insider-risk, audit evidence.'},
-    {id:'soar',cat:'SOAR / Automation',ic:'⚙',w:4,sig:45,vendors:['Palo Alto XSOAR','Splunk SOAR','Swimlane','Tines','Microsoft Sentinel (playbooks)'],pulls:'Playbook runs, MTTR, automation coverage, analyst workload.',ans:'CISO operational efficiency, CIO service metrics.'},
-    {id:'waf',cat:'Web Application Firewall (WAF)',ic:'🌐',w:6,sig:60,vendors:['Cloudflare','Akamai','AWS WAF','Imperva','F5'],pulls:'Web attacks blocked, bot traffic, OWASP top-10 hits, API abuse.',ans:'CISO application-layer threat, CIO web-service health.'},
-    {id:'asm',cat:'Attack Surface Management (ASM)',ic:'🗺',w:6,sig:55,vendors:['Mandiant ASM','CrowdStrike Falcon Surface','Censys','Cycognito','Microsoft Defender EASM'],pulls:'Internet-facing assets, shadow IT, certificate issues, exposed services.',ans:'CISO exposure & shadow IT, CIO asset hygiene.'},
-    {id:'ti',cat:'Threat Intelligence Platform',ic:'🎯',w:4,sig:40,vendors:['Recorded Future','Mandiant Advantage','CrowdStrike Falcon Intel','Anomali','ThreatConnect'],pulls:'IOC feeds, dark-web mentions, industry-specific threat actors, campaign tracking.',ans:'CISO threat context, Board threat landscape.'},
-    {id:'ndr',cat:'Network Detection & Response (NDR)',ic:'📡',w:6,sig:65,vendors:['Darktrace','ExtraHop','Vectra AI','Corelight','Cisco Secure Network Analytics'],pulls:'Lateral movement, C2 beaconing, anomalous traffic, encrypted-traffic analysis.',ans:'CISO "are we compromised," CIO network integrity.'},
-    {id:'casm',cat:'Cloud Infrastructure Entitlements (CIEM)',ic:'🔏',w:4,sig:35,vendors:['Zscaler CIEM','CrowdStrike','Ermetic (Tenable)','Sonrai','CloudKnox (Microsoft)'],pulls:'Over-privileged cloud identities, cross-account risk, unused permissions.',ans:'CISO cloud access risk, CRO identity risk aggregation.'}
+    {id:'grc',cat:'ITSM / GRC / Ticketing',ic:'🗂',w:4,sig:25,vendors:['ServiceNow','Jira','Archer','Vanta','Drata'],pulls:'Remediation status, change governance, decision & approval records.',ans:'Action Center, audit log, CLO defensibility, decisions.'}
   ];
   const TOTAL_SIG=CONN.reduce((s,c)=>s+c.sig,0);
   const connected={};
@@ -400,8 +390,8 @@
   let cur=0;
   const done=new Array(STEPS.length).fill(false);
   let procExtracted=false, appExtracted=false, mapDone=false, docCount=0, seatTab='ceo', procLive=false, appLive=false;
-  const seatNames={ceo:'',ciso:'',cfo:'',cio:'',clo:'',cro:''};
-  const seatData={ceo:{},ciso:{},cfo:{},cio:{},clo:{},cro:{}};
+  const seatNames={ceo:'',ciso:'',cfo:'',cio:'',clo:'',cro:'',board:''};
+  const seatData={ceo:{},ciso:{},cfo:{},cio:{},clo:{},cro:{},board:{}};
   const seatContacts={ciso:{}};
   // Industry chosen here drives the rest of onboarding AND the operating system.
   let selectedIndustry='healthcare-payer', selectedArch='healthcare';
@@ -453,50 +443,17 @@
     if(GRAPH)return GRAPH;
     if(PROC_UP&&PROC_UP.length&&APP_UP&&APP_UP.length){
       const procs=PROC_UP.map((p,i)=>{const r=dataRank(p.data);const c=(((p.rev||'').indexOf('$')>=0)||r>=3)?'h':(r<=0?'l':'m');return {id:'P'+(i+1),n:p.n,c:c,rev:p.rev||'—',data:p.data||'Process'};});
-      var DOMAIN_TAGS={
-        'claim':['claim','adjudicat','preauth','pre-auth','prior auth','denial','appeal','remittance','explanation of benefit','eob'],
-        'payment':['payment','payable','receivable','billing','invoice','ledger','treasury','payhub','remit','ach','wire transfer'],
-        'member':['member','patient','enroll','eligib','beneficiar','subscriber','portal','self-service','consumer','registration'],
-        'call_center':['call center','contact center','ivr','genesys','avaya','telephon','agent desktop','crm','ticket','helpdesk','service desk','support'],
-        'corporate':['confluence','sharepoint','intranet','wiki','document management','collab','email','office 365','slack','teams','hr','payroll','erp','finance','accounting','travel','facilities'],
-        'identity':['identity','sso','okta','entra','active directory','ldap','ping','auth0','iam','mfa','privileged access','cyberark','pam'],
-        'security':['edr','siem','splunk','sentinel','crowdstrike','firewall','antivirus','dlp','soar','vulnerability','pentest','security monitoring','incident','threat','malware','endpoint protection'],
-        'infrastructure':['backup','disaster recovery','dns','dhcp','load balancer','proxy','vpn','network','storage','vmware','hypervisor','kubernetes','docker','container','server','database','sql','oracle','postgres','mongo'],
-        'cloud':['aws','azure','gcp','cloud','saas','iaas','paas'],
-        'compliance':['audit','compliance','grc','governance','risk management','policy','regulatory','hipaa','pci','sox','gdpr'],
-        'clinical':['clinical','ehr','emr','pharmacy','lab','radiology','imaging','diagnosis','treatment','care management','utilization','quality','reporting','analytics'],
-        'provider':['provider','physician','credentialing','contract','network management','fee schedule','reimbursement']
-      };
-      function domainOf(name){var n=(name||'').toLowerCase();var scores={};for(var d in DOMAIN_TAGS){var s=0;DOMAIN_TAGS[d].forEach(function(kw){if(n.indexOf(kw)>=0)s+=kw.split(' ').length;});if(s>0)scores[d]=s;}return scores;}
-      function procDomains(p){var n=(p.n||'').toLowerCase()+' '+(p.data||'').toLowerCase();var scores={};for(var d in DOMAIN_TAGS){var s=0;DOMAIN_TAGS[d].forEach(function(kw){if(n.indexOf(kw)>=0)s+=kw.split(' ').length;});if(s>0)scores[d]=s;}return scores;}
-      function semanticMatch(appName,proc){
-        var ad=domainOf(appName);var pd=procDomains(proc);
-        if(!Object.keys(ad).length||!Object.keys(pd).length)return 0;
-        var score=0;var maxA=0;
-        for(var d in ad){if(ad[d]>maxA)maxA=ad[d];if(pd[d])score+=Math.min(ad[d],pd[d])*2;}
-        return maxA>0?score/maxA:0;
-      }
-      function wordSet(s){return (s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').split(' ').filter(function(w){return w.length>2&&['the','and','for','from','with','this','that','all','system','platform','management','console','module','application','service','tool','suite','server','manager'].indexOf(w)<0;});}
-      function nameSim(a,b){var wa=wordSet(a),wb=wordSet(b);if(!wa.length||!wb.length)return 0;var hits=0;wa.forEach(function(w){wb.forEach(function(w2){if(w===w2)hits+=2;else if(w.length>4&&w2.length>4&&(w.indexOf(w2)>=0||w2.indexOf(w)>=0))hits+=1;});});return hits/Math.max(wa.length+wb.length,1);}
-      var INFRA_WORDS=/\b(backup|restore|disaster.recovery|dns|dhcp|load.balanc|proxy|vpn|storage|hypervisor|vmware|esxi|kubernetes|docker|container|monitoring|nagios|zabbix|grafana|log.collect|syslog|ntp|certificate|pki|patch|wsus|sccm|antivirus|firewall|ids|ips|network.switch|router|san|nas)\b/i;
-      var SUPPORT_WORDS=/\b(configuration.management|cmdb|asset.management|itsm|servicenow|jira|ticketing|audit|compliance|grc|wiki|confluence|sharepoint|documentation|collaboration|email.gateway|spam.filter|web.filter)\b/i;
+      function wordSet(s){return (s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').split(' ').filter(function(w){return w.length>2&&['the','and','for','from','with','this','that','all'].indexOf(w)<0;});}
+      function nameSim(a,b){var wa=wordSet(a),wb=wordSet(b);if(!wa.length||!wb.length)return 0;var hits=0;wa.forEach(function(w){wb.forEach(function(w2){if(w===w2)hits+=2;else if(w.indexOf(w2)>=0||w2.indexOf(w)>=0)hits+=1;});});return hits/Math.max(wa.length,wb.length);}
       const apps=APP_UP.map((a,i)=>{
         const e=exposureOf(a.host);const dr=dataRank(a.data);
-        var bestProc=null;var bestScore=0;var bestConf=0;
-        var isInfra=INFRA_WORDS.test(a.n);
-        var isSupport=SUPPORT_WORDS.test(a.n);
-        procs.forEach(function(p){
-          var sem=semanticMatch(a.n,p);
-          var ns=nameSim(a.n,p.n);
-          var combined=sem*0.7+ns*0.3;
-          if(combined>bestScore){bestScore=combined;bestProc=p;}
-        });
-        var linked=[]; var conf=0;
-        if(bestScore>=1.5){linked=[bestProc.id];conf=Math.min(98,Math.round(70+bestScore*15));}
-        else if(bestScore>=0.8){linked=[bestProc.id];conf=Math.min(90,Math.round(55+bestScore*20));}
-        else if(bestScore>=0.4&&!isInfra&&!isSupport){linked=[bestProc.id];conf=Math.min(72,Math.round(40+bestScore*30));}
-        else if(isInfra||isSupport){linked=[];conf=0;}
-        else if(bestScore>0.1){linked=[bestProc.id];conf=Math.min(50,Math.round(20+bestScore*30));}
+        const toks=(a.data||'').toUpperCase().split(/[^A-Z]+/).filter(t=>t.length>1);
+        var dataMtch=procs.filter(p=>toks.some(t=>(p.data||'').toUpperCase().indexOf(t)>=0)).map(p=>p.id);
+        var nameScores=procs.map(function(p){return{id:p.id,s:nameSim(a.n,p.n)+nameSim(a.n,p.data)};}).filter(function(x){return x.s>=0.4;}).sort(function(x,y){return y.s-x.s;});
+        var linked=[]; var conf=67;
+        if(nameScores.length&&nameScores[0].s>=0.8){linked=[nameScores[0].id];conf=Math.min(98,Math.round(60+nameScores[0].s*40));}
+        else if(dataMtch.length&&dataMtch.length<=procs.length*0.5){linked=dataMtch;conf=92;}
+        else if(nameScores.length){linked=[nameScores[0].id];conf=Math.min(85,Math.round(50+nameScores[0].s*40));}
         else{linked=[];conf=0;}
         const maxPC=linked.length?Math.max.apply(null,linked.map(id=>procCrit(procs.find(p=>p.id===id)))):0.3;
         const spof=/single|sole|no failover|legacy|spof/.test((a.host||'').toLowerCase())?1:0;
@@ -525,9 +482,8 @@
   const SEATS=[
     {id:'ceo',label:'CEO',q:'Are we governing cyber risk responsibly — and could we be surprised?',needs:[
       {i:'Business & revenue exposure',src:'derived',m:'computed from your processes'},
-      {i:'Crisis management readiness',src:'declare',m:'no system reports this',df:['Date of last crisis tabletop','Exercise cadence']},
+      {i:'Crisis management readiness',src:'declare',m:'no system reports this',df:['Date of last crisis tabletop','Exercise cadence (e.g. annual)']},
       {i:'Delegation of authority in a crisis',src:'declare',m:'who can declare a crisis',df:['Crisis decision owner','Backup decision owner']},
-      {i:'Board reporting on cyber',src:'declare',m:'governance rhythm',df:['Board cyber-briefing cadence','Cyber-responsible board committee']},
       {i:'Oversight & decision record',src:'live',m:'from ITSM / GRC'}]},
     {id:'ciso',label:'CISO',q:'Can we operate safely today, and are we improving?',needs:[
       {i:'Active threats & detections',src:'live',m:'from EDR + SIEM'},
@@ -535,28 +491,33 @@
       {i:'Attacks blocked',src:'live',m:'from Firewall + Email'},
       {i:'Framework evidence',src:'doc',m:'from your documents'},
       {i:'Security testing',src:'declare',m:'assessment recency',df:['Last penetration test date','Last vulnerability scan date']},
-      {i:'24/7 incident call tree',src:'declare',m:'powers Incident Commander mode — who to call when it matters',plan:true,contacts:['Incident Commander','Deputy IC','Comms / PR lead','Breach counsel (external)','IR retainer / forensics (24/7)','Cyber-insurer claims hotline','Law enforcement (FBI field office)']}]},
+      {i:'Incident command plan & 24/7 call tree',src:'declare',m:'no system has this — it runs your crisis response and powers Incident Commander mode',plan:true,contacts:['Incident Commander','Deputy IC','Comms / PR lead','Breach counsel (external)','IR retainer / forensics (24/7)','Cyber-insurer claims hotline','Law enforcement (FBI field office)']}]},
     {id:'cfo',label:'CFO',q:'What is our financial exposure, and is it material?',needs:[
       {i:'Financial exposure model',src:'derived',m:'process revenue × loss model'},
-      {i:'Cyber insurance',src:'declare',m:'no system reports your policy',df:['Carrier','Coverage limit','Retention / deductible','Notable exclusions','Renewal date']},
+      {i:'Cyber insurance',src:'declare',m:'no system reports your policy',df:['Carrier','Coverage limit','Retention / deductible','Key sublimits','Notable exclusions','Renewal date']},
       {i:'Materiality threshold',src:'declare',m:'your disclosure trigger',df:['Materiality threshold ($)']},
-      {i:'Prior loss history',src:'declare',m:'loss ratio benchmarking',df:['Annual cyber insurance premium ($)']},
+      {i:'Prior loss history',src:'declare',m:'optional',df:['Cyber losses, last 12 mo','Annual cyber insurance premium']},
       {i:'Annual cybersecurity budget',src:'declare',m:'enables spend benchmarking',df:['Annual cybersecurity budget ($)']}]},
     {id:'cio',label:'CIO',q:'Can we keep critical services running and recover?',needs:[
       {i:'Service & endpoint health',src:'live',m:'from EDR + Cloud'},
       {i:'Recovery readiness, RPO/RTO, immutable backups',src:'live',m:'from Backup / DR'},
-      {i:'Recovery targets per crown jewel',src:'derived',m:'auto-populated from your crown jewels — adjust to your tolerance',df:null,dynRTO:true},
+      {i:'Recovery targets per critical process',src:'declare',m:'your tolerance',df:null,dynRTO:true},
       {i:'Change governance',src:'live',m:'from ITSM / GRC'}]},
     {id:'clo',label:'CLO',q:'Do we meet every obligation — defensibly?',needs:[
-      {i:'Regulatory jurisdictions & obligations',src:'derived',m:'auto-derived from your industry, data types, and operating regions'},
-      {i:'Litigation hold & privilege',src:'declare',m:'powers the War Room and incident response',df:['Litigation-hold owner','Outside counsel firm']},
+      {i:'Regulatory jurisdictions',src:'derived',m:'from your profile'},
+      {i:'Applicable disclosure obligations',src:'declare',m:'confirm what applies',df:['SEC 8-K applies? (Y/N)','State breach-law states','GDPR / HIPAA / other']},
+      {i:'Litigation hold & privilege',src:'declare',m:'your process owners',df:['Litigation-hold owner','Outside counsel']},
       {i:'Evidence chain & decision record',src:'live',m:'from GRC / ticketing'}]},
     {id:'cro',label:'CRO',q:'Is cyber risk within the board\'s appetite?',needs:[
-      {i:'Board-approved risk appetite',src:'declare',m:'the maximum loss the board will tolerate',df:['Cyber risk appetite ($)']},
-      {i:'Third-party / concentration risk',src:'declare',m:'vendor dependency that multiplies exposure',df:['Tier 1 vendors (critical — handle sensitive data or run key processes)','Tier 2 vendors (important — operational but not crown-jewel)']},
+      {i:'Risk appetite by category',src:'declare',m:'the board\'s tolerance',df:['Cyber risk appetite ($)','Tolerance threshold']},
+      {i:'Third-party / concentration risk',src:'derived',m:'from vendors + processes',df:['Number of critical vendors']},
       {i:'Risk register & residual risk',src:'live',m:'from Vuln + SIEM + GRC'},
-      {i:'Risk committee cadence',src:'declare',m:'governance rhythm',df:['Risk committee cadence']},
-      {i:'Board governance',src:'declare',m:'board oversight structure',df:['Cyber-responsible committee','Oversight cadence','Target posture score']}]}
+      {i:'Risk committee cadence',src:'declare',m:'governance rhythm',df:['Risk committee cadence']}]},
+    {id:'board',label:'Board',q:'Is management in control, and is our oversight demonstrable?',needs:[
+      {i:'Control assurance & posture',src:'live',m:'from all connected systems'},
+      {i:'Materiality & disclosure status',src:'derived',m:'from CFO + CLO inputs'},
+      {i:'Board & committee structure',src:'declare',m:'your governance',df:['Cyber-responsible committee','Oversight cadence']},
+      {i:'Oversight record',src:'live',m:'from GRC / ticketing'}]}
   ];
   const SEAT_BY={};SEATS.forEach(s=>SEAT_BY[s.id]=s);
 
@@ -642,7 +603,7 @@
     renderStepper();
     document.getElementById('panel').innerHTML=PANELS[cur]();
     document.getElementById('whyText').textContent=STEPS[cur].why;
-    var _ccTip=document.getElementById('ccTip'); if(_ccTip) _ccTip.textContent=CONCIERGE[cur];
+    document.getElementById('ccTip').textContent=CONCIERGE[cur];
     document.getElementById('backBtn').disabled=(cur===0);
     document.getElementById('nextBtn').textContent=(cur===STEPS.length-1)?'✦ Go live':'Save & continue →';
     updateSeatNextBtn();
@@ -1146,14 +1107,6 @@
     const l=label.toLowerCase();
     if(/carrier/.test(l))
       return '<div class="dfield"><label>'+label+'</label><select class="carrier-sel"><option value="">Select carrier\u2026</option>'+CYBER_INSURERS.map(c=>'<option>'+c+'</option>').join('')+'<option value="__other">Other (enter manually)\u2026</option></select><input class="carrier-other" placeholder="Enter carrier name" style="display:none"></div>';
-    if(/exercise cadence/.test(l))
-      return '<div class="dfield"><label>'+label+'</label><select><option value="">Select…</option><option>Monthly</option><option>Quarterly</option><option>Semi-annually</option><option>Annually</option></select></div>';
-    if(/board cyber.briefing cadence/.test(l))
-      return '<div class="dfield"><label>'+label+'</label><select><option value="">Select…</option><option>Monthly</option><option>Quarterly</option><option>Semi-annually</option><option>Annually</option></select></div>';
-    if(/risk committee cadence|oversight cadence/.test(l))
-      return '<div class="dfield"><label>'+label+'</label><select><option value="">Select…</option><option>Monthly</option><option>Quarterly</option><option>Semi-annually</option><option>Annually</option></select></div>';
-    if(/tabletop/.test(l))
-      return '<div class="dfield"><label>'+label+'</label><select class="tabletop-sel"><option value="">Select…</option><option value="none">None / not yet conducted</option><option value="date">Select date…</option></select><input type="date" class="tabletop-date" style="display:none"></div>';
     if(/date/.test(l))
       return '<div class="dfield"><label>'+label+'</label><input type="date"></div>';
     if(/\(y\/n\)/.test(l))
@@ -1172,11 +1125,7 @@
       const key=label?label.textContent.trim():('f'+i);
       if(inp.classList.contains('mnum')){sd[key]=inp.value;}
       else if(inp.classList.contains('carrier-sel')){sd[key]=inp.value;const oth=df.querySelector('.carrier-other');if(oth&&inp.value==='__other')sd[key+'_other']=oth.value;}
-      else if(inp.classList.contains('tabletop-sel')){var di=df.querySelector('.tabletop-date');sd[key]=inp.value==='date'&&di?di.value:(inp.value||'');}
       else{sd[key]=inp.value;}
-    });
-    body.querySelectorAll('.rto-sel').forEach(function(sel){
-      var key=sel.dataset.key;if(key)sd[key]=sel.value;
     });
     body.querySelectorAll('.ctrow').forEach((row,i)=>{
       const role=row.querySelector('.ctrole');
@@ -1190,12 +1139,12 @@
   }
   function updateSeatNextBtn(){
     if(cur!==6)return;
-    var seatOrder=['ceo','ciso','cfo','cio','clo','cro'];
+    var seatOrder=['ceo','ciso','cfo','cio','clo','cro','board'];
     var curIdx=seatOrder.indexOf(seatTab);
     var btn=document.getElementById('nextBtn');
     var back=document.getElementById('backBtn');
     if(curIdx<seatOrder.length-1){
-      var nextLabel=({ceo:'CEO',ciso:'CISO',cfo:'CFO',cio:'CIO',clo:'CLO',cro:'CRO'})[seatOrder[curIdx+1]]||'next';
+      var nextLabel=({ceo:'CEO',ciso:'CISO',cfo:'CFO',cio:'CIO',clo:'CLO',cro:'CRO',board:'Board'})[seatOrder[curIdx+1]]||'next';
       btn.textContent='Save & next → '+nextLabel;
     }else{
       btn.textContent='Save & continue →';
@@ -1209,38 +1158,19 @@
     const s=SEAT_BY[seatTab];const live=liveSrc();
     const srcTag={live:live?'Live':'Connect a system',doc:'From docs',derived:'Derived',declare:'You provide'};
     const srcCls={live:live?'live':'off',doc:'doc',derived:'derived',declare:'declare'};
-    var RTO_OPTS=['15 min','30 min','1 hr','2 hrs','4 hrs','8 hrs','12 hrs','24 hrs','48 hrs','72 hrs','1 week'];
-    var RPO_OPTS=['0 (zero data loss)','5 min','15 min','30 min','1 hr','4 hrs','8 hrs','24 hrs'];
-    function rtoDefault(crit){return crit==='h'?'4 hrs':crit==='m'?'8 hrs':'24 hrs';}
-    function rpoDefault(crit){return crit==='h'?'15 min':crit==='m'?'1 hr':'4 hrs';}
-    function rtoTableHTML(){
-      var G=liveGraph();
-      var cjs=G.apps.filter(function(a){return a.cj;}).sort(function(x,y){return y.score-x.score;});
-      var procIds={};
-      if(cjs.length){cjs.forEach(function(a){a.proc.forEach(function(pid){procIds[pid]=1;});});}
+    function rtoFields(){
+      var G=liveGraph();var cjs=G.apps.filter(function(a){return a.cj;}).sort(function(x,y){return y.score-x.score;});
+      if(!cjs.length){var procs=G.procs.filter(function(p){return p.c==='h';});if(!procs.length)procs=G.procs.slice(0,3);return procs.reduce(function(arr,p){arr.push('RTO target ('+p.n+')');arr.push('RPO target ('+p.n+')');return arr;},[]);}
+      var procIds={};cjs.forEach(function(a){a.proc.forEach(function(pid){procIds[pid]=1;});});
       var procs=G.procs.filter(function(p){return procIds[p.id];});
       if(!procs.length)procs=G.procs.filter(function(p){return p.c==='h';});
       if(!procs.length)procs=G.procs.slice(0,3);
-      var sd=seatData.cio||{};
-      var rows=procs.map(function(p){
-        var savedRTO=sd['RTO:'+p.id]||rtoDefault(p.c);
-        var savedRPO=sd['RPO:'+p.id]||rpoDefault(p.c);
-        var critLabel=p.c==='h'?'High':p.c==='m'?'Medium':'Low';
-        var critCls=p.c==='h'?'h':p.c==='m'?'m':'l';
-        return '<tr data-proc="'+p.id+'"><td class="rto-pn">'+p.n+'<br><span class="crit '+critCls+'">'+critLabel+' · '+p.data+'</span></td>'+
-          '<td><select class="rto-sel" data-key="RTO:'+p.id+'">'+RTO_OPTS.map(function(o){return '<option'+(o===savedRTO?' selected':'')+'>'+o+'</option>';}).join('')+'</select></td>'+
-          '<td><select class="rto-sel" data-key="RPO:'+p.id+'">'+RPO_OPTS.map(function(o){return '<option'+(o===savedRPO?' selected':'')+'>'+o+'</option>';}).join('')+'</select></td></tr>';
-      });
-      return '<table class="rto-tbl"><thead><tr><th>Crown-jewel process</th><th>RTO target</th><th>RPO target</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>'+
-        '<div class="rto-hint">Defaults set by process criticality. Adjust to your actual recovery tolerance.</div>';
+      return procs.reduce(function(arr,p){arr.push('RTO target ('+p.n+')');arr.push('RPO target ('+p.n+')');return arr;},[]);
     }
     document.getElementById('seatBody').innerHTML='<div class="need" style="border-left:3px solid var(--brand)"><span class="src declare" style="color:var(--brand);background:var(--brand-tint)">You provide</span><div class="nb"><div class="ni">Who holds this seat?</div><div class="nm2">so your advisor can greet them by name</div><div class="df"><input id="seatName-'+s.id+'" placeholder="First name of your '+s.label+'" value="'+(seatNames[s.id]||'')+'"></div></div></div>'+
       '<div class="seatq">› '+s.q+'</div>'+s.needs.map(n=>{
-      var dfArr=n.df;
-      var df='';
-      if(n.dynRTO){df=rtoTableHTML();}
-      else if(n.plan){df='<div class="planbox"><div class="planct-h">Key contacts — reachable 24/7 <span>name + phone; powers Incident Commander mode</span></div><div class="planct">'+n.contacts.map(r=>'<div class="ctrow"><span class="ctrole">'+r+'</span><input placeholder="Name" class="ctname" value="'+((seatContacts[s.id]&&seatContacts[s.id][r]&&seatContacts[s.id][r].name)||'')+'"><input placeholder="Phone" inputmode="tel" class="ctphone" value="'+((seatContacts[s.id]&&seatContacts[s.id][r]&&seatContacts[s.id][r].phone)||'')+'"></div>').join('')+'</div></div>';}
-      else if(dfArr){df='<div class="df dfgrid">'+dfArr.map(fieldHTML).join('')+'</div>';}
+      var dfArr=n.df;if(n.dynRTO)dfArr=rtoFields();
+      const df=n.plan?('<div class="planbox"><button class="planup" type="button">⬆ Upload IR plan &amp; playbooks (PDF)</button><div class="planct-h">Key contacts — reachable 24/7 <span>name + phone; powers Incident Commander mode</span></div><div class="planct">'+n.contacts.map(r=>'<div class="ctrow"><span class="ctrole">'+r+'</span><input placeholder="Name" class="ctname" value="'+((seatContacts[s.id]&&seatContacts[s.id][r]&&seatContacts[s.id][r].name)||'')+'"><input placeholder="Phone" inputmode="tel" class="ctphone" value="'+((seatContacts[s.id]&&seatContacts[s.id][r]&&seatContacts[s.id][r].phone)||'')+'"></div>').join('')+'</div></div>'):(dfArr?'<div class="df dfgrid">'+dfArr.map(fieldHTML).join('')+'</div>':'');
       return '<div class="need"><span class="src '+srcCls[n.src]+'">'+srcTag[n.src]+'</span><div class="nb"><div class="ni">'+n.i+'</div><div class="nm2">'+n.m+'</div>'+df+'</div></div>';
     }).join('');
     const nameIn=document.getElementById('seatName-'+s.id);
@@ -1255,7 +1185,6 @@
       if(sd[key]!==undefined){
         if(inp.classList.contains('mnum')){inp.value=sd[key];const eq=df.querySelector('.money-eq');if(eq)eq.textContent=fmtUnit(parseFloat(sd[key]),1e6,true);}
         else if(inp.classList.contains('carrier-sel')){inp.value=sd[key];if(sd[key]==='__other'){const oth=df.querySelector('.carrier-other');if(oth){oth.style.display='block';oth.value=sd[key+'_other']||'';}}}
-        else if(inp.classList.contains('tabletop-sel')){var di=df.querySelector('.tabletop-date');if(sd[key]==='none'){inp.value='none';}else if(sd[key]){inp.value='date';if(di){di.style.display='block';di.value=sd[key];}}}
         else{inp.value=sd[key];}
       }
     });
@@ -1276,8 +1205,6 @@
     if(h){orgCurrency=h.options[h.selectedIndex].dataset.cur||'USD';hqIndex=h.selectedIndex;applyOrgCur();if(cur===6)renderSeats();}
     const cs=e.target.closest('.carrier-sel');
     if(cs){const o=cs.parentElement.querySelector('.carrier-other');if(o){o.style.display=cs.value==='__other'?'block':'none';if(cs.value==='__other')o.focus();}}
-    const ts=e.target.closest('.tabletop-sel');
-    if(ts){const di=ts.parentElement.querySelector('.tabletop-date');if(di){di.style.display=ts.value==='date'?'block':'none';if(ts.value==='date')di.focus();}}
   });
   document.addEventListener('input',e=>{
     const m=e.target.closest('.mnum');
@@ -1315,7 +1242,7 @@
     // On the seats step, save current seat and advance to next leader before leaving
     if(cur===6){
       saveSeatFields();
-      var seatOrder=['ceo','ciso','cfo','cio','clo','cro'];
+      var seatOrder=['ceo','ciso','cfo','cio','clo','cro','board'];
       var curIdx=seatOrder.indexOf(seatTab);
       if(curIdx<seatOrder.length-1){
         seatTab=seatOrder[curIdx+1];
@@ -1328,13 +1255,13 @@
   document.getElementById('backBtn').addEventListener('click',()=>{
     if(cur===6){
       saveSeatFields();
-      var seatOrder=['ceo','ciso','cfo','cio','clo','cro'];
+      var seatOrder=['ceo','ciso','cfo','cio','clo','cro','board'];
       var curIdx=seatOrder.indexOf(seatTab);
       if(curIdx>0){seatTab=seatOrder[curIdx-1];renderSeats();return;}
     }
     if(cur>0){cur--;render();}
   });
-  var _ccCall=document.getElementById('ccCall'); if(_ccCall) _ccCall.addEventListener('click',function(){this.classList.add('req');this.textContent='✓ We\'ll reach out within 1 business day';});
+  document.getElementById('ccCall').addEventListener('click',function(){this.classList.add('req');this.textContent='✓ We\'ll reach out within 1 business day';});
   // ---- operating regions multi-select ----
   const REGIONS={
     'United States':['Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming'],
