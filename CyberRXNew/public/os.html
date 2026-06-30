@@ -1098,7 +1098,7 @@
         <div class="srow"><div class="nm">Leadership &amp; board properly informed</div><span class="stat ok">Yes ✓</span></div>
         <div class="srow"><div class="nm">Acted with reasonable care &amp; judgment <small>decisions evidence-based</small></div><span class="stat ok">Demonstrable ✓</span></div>
         <div class="srow"><div class="nm">Reporting / disclosure obligations met on time</div><span class="stat ok">Yes ✓</span></div>
-        <div class="srow"><div class="nm">Crisis management exercised <small>last tabletop 5 months ago</small></div><span class="stat warn">Overdue</span></div>
+        <div class="srow" id="ceoTabletopRow"><div class="nm">Crisis management exercised <small>last tabletop 5 months ago</small></div><span class="stat warn">Overdue</span></div>
         <div class="srow"><div class="nm">No known risk left unaddressed without sign-off</div><span class="stat warn">1 open · recovery</span></div>
       </div>
       <div class="panel">
@@ -1834,7 +1834,7 @@
   }
   const LIAB={
     ceo:liabView('Your duty of care as CEO — can you show the company exercised reasonable oversight of cyber risk?',
-      [{nm:'Cyber risk on the board agenda each quarter',stat:'Yes ✓',statCls:'ok'},{nm:'Crisis management exercised',sub:'last tabletop 5 months ago',stat:'Overdue',statCls:'warn'},{nm:'Material risks escalated to you & the board',stat:'Yes ✓',statCls:'ok'},{nm:'Reasonable oversight demonstrable',stat:'Yes ✓',statCls:'ok'}],
+      [{nm:'Cyber risk on the board agenda'+(FIN.ceoBoardCadence?' '+FIN.ceoBoardCadence.toLowerCase():''),stat:(FIN.ceoBoardCadence?'Yes ✓':'Not set'),statCls:(FIN.ceoBoardCadence?'ok':'warn')},{nm:'Crisis management exercised',sub:FIN.tabletopLabel?('last tabletop '+FIN.tabletopLabel):'no tabletop on record',stat:FIN.tabletopStatus==='ok'?'Current':(FIN.tabletopStatus==='warn'?'Overdue':'No record'),statCls:FIN.tabletopStatus},{nm:'Material risks escalated to you & the board',stat:'Yes ✓',statCls:'ok'},{nm:'Reasonable oversight demonstrable',stat:'Yes ✓',statCls:'ok'}],
       [{l:'Board-informed record',v:'Complete · minuted',cls:'ok'},{l:'Decisions on record (12 mo)',v:'47 · with rationale'},{l:'Personal exposure',v:'Low · documented',cls:'ok'}],
       'Every briefing and decision is recorded with <b>who, why, and what was known</b> — the documented trail that shows you governed cyber risk responsibly.'),
     cfo:liabView('Financial-disclosure accuracy and investor-litigation exposure — is your cyber risk reporting defensible?',
@@ -2166,6 +2166,15 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     // Consume declare fields from onboarding seatData
     const sd=ORG_PROFILE.seatData||{};
     const cfoD=sd.cfo||{};const croD=sd.cro||{};const cioD=sd.cio||{};const ceoD=sd.ceo||{};const boardD=sd.board||{};
+    var lastTabletop=ceoD['Date of last crisis tabletop']||'';
+    var exerciseCadence=ceoD['Exercise cadence']||'';
+    var crisisOwner=ceoD['Crisis decision owner']||'';
+    var crisisBackup=ceoD['Backup decision owner']||'';
+    var ceoBoardCadence=ceoD['Board cyber-briefing cadence']||'';
+    var ceoBoardCommittee=ceoD['Cyber-responsible board committee']||'';
+    var tabletopDaysAgo=0,tabletopStatus='ok',tabletopLabel='';
+    if(lastTabletop==='none'||lastTabletop===''){tabletopDaysAgo=999;tabletopStatus='crit';tabletopLabel=lastTabletop==='none'?'Never conducted':'Unknown';}
+    else{var td=new Date(lastTabletop);var now=new Date();tabletopDaysAgo=Math.round((now-td)/(1000*60*60*24));tabletopLabel=tabletopDaysAgo<31?tabletopDaysAgo+' days ago':Math.round(tabletopDaysAgo/30)+' months ago';var cadenceThreshold=exerciseCadence==='Monthly'?45:exerciseCadence==='Quarterly'?120:exerciseCadence==='Semi-annually'?200:400;tabletopStatus=tabletopDaysAgo>cadenceThreshold?'warn':'ok';}
     const userMatThreshold=parseFloat(String(cfoD['Materiality threshold']||'').replace(/[^\d.]/g,''));
     if(userMatThreshold>0) matThreshold=userMatThreshold*1e6;
     const insuranceCoverage=parseFloat(String(cfoD['Coverage limit']||'').replace(/[^\d.]/g,''));
@@ -2234,7 +2243,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     var seatNamesObj=ORG_PROFILE.seatNames||{};
     var cisoName=seatNamesObj.ciso||'CISO',cioName=seatNamesObj.cio||'CIO',cloName=seatNamesObj.clo||'CLO',cfoName=seatNamesObj.cfo||'CFO',croName=seatNamesObj.cro||'CRO',ceoName=seatNamesObj.ceo||'CEO';
     var vendorResidualM=(sf*0.4).toFixed(1),aiRiskLowM=Math.round(sf*12),aiRiskHighM=Math.round(sf*40),opResidualM=(sf*1.1).toFixed(1);
-    return {rev,revDaily,revHourly,matThreshold,exposure,exposureM,directLossMax,directLossMaxM,blastRecords,revAtRisk,pamCost,pamCostStr,isSEC,breachStates,stateCount,ownership,regions,insuranceCoverageM,insuranceCarrier,insuranceRetention,insuranceRenewal,riskAppetiteM,rtoTarget,rpoTarget,riskCadence,boardCommittee,boardCadence,cyberBudgetM,insurancePremium,contacts,sf,posture,postureTrend,postureTarget,postureProjected,recoveryPct,uptimePctVal,recoveryDays,drTestDays,drTestMo,critAppsRecoverable,testedPct,aiRecoverable,backupSuccessRate,critServices,forensicsFullK,forensicsMinK,forensicsExtK,forensicsVendorK,forensicsMonK,forensicsTriageK,forensicsMonSmK,forensicsDeltaK,failoverTotalK,failoverRevK,failoverEngK,failoverValK,counselTotalK,counselReviewK,counselLiaisonK,vendorMitigateK,vendorScopeK,vendorMonK,vendorContractK,vendorTransferK,vendorSubK,vendorIndemK,aiInterimK,aiDlpK,aiAgentK,aiPolicyK,modFullStr,modPlatformStr,modMigrationStr,modCutoverStr,modPhasedStr,modCritPathStr,modIntegStr,modContingStr,pamRolloutStr,recoveryModStr,tpMonitorStr,aiGovStr,aiGovFteStr,aiToolK,aiRedTeamK,awaitingFundStr,ytdSpendM,ytdSpendStr,lossReductionM,lossInitialM,returnMultiple,var95M,headroomM,insuranceTailM,spendPctRev,spendPctIT,fwControlCount,connectedSources,coveragePct,regReadiness,cisoName,cioName,cloName,cfoName,croName,ceoName,vendorResidualM,aiRiskLowM,aiRiskHighM,opResidualM,modFullM,modPhasedM};
+    return {rev,revDaily,revHourly,matThreshold,exposure,exposureM,directLossMax,directLossMaxM,blastRecords,revAtRisk,pamCost,pamCostStr,isSEC,breachStates,stateCount,ownership,regions,insuranceCoverageM,insuranceCarrier,insuranceRetention,insuranceRenewal,riskAppetiteM,rtoTarget,rpoTarget,riskCadence,boardCommittee,boardCadence,tabletopDaysAgo,tabletopStatus,tabletopLabel,exerciseCadence,crisisOwner,crisisBackup,ceoBoardCadence,ceoBoardCommittee,cyberBudgetM,insurancePremium,contacts,sf,posture,postureTrend,postureTarget,postureProjected,recoveryPct,uptimePctVal,recoveryDays,drTestDays,drTestMo,critAppsRecoverable,testedPct,aiRecoverable,backupSuccessRate,critServices,forensicsFullK,forensicsMinK,forensicsExtK,forensicsVendorK,forensicsMonK,forensicsTriageK,forensicsMonSmK,forensicsDeltaK,failoverTotalK,failoverRevK,failoverEngK,failoverValK,counselTotalK,counselReviewK,counselLiaisonK,vendorMitigateK,vendorScopeK,vendorMonK,vendorContractK,vendorTransferK,vendorSubK,vendorIndemK,aiInterimK,aiDlpK,aiAgentK,aiPolicyK,modFullStr,modPlatformStr,modMigrationStr,modCutoverStr,modPhasedStr,modCritPathStr,modIntegStr,modContingStr,pamRolloutStr,recoveryModStr,tpMonitorStr,aiGovStr,aiGovFteStr,aiToolK,aiRedTeamK,awaitingFundStr,ytdSpendM,ytdSpendStr,lossReductionM,lossInitialM,returnMultiple,var95M,headroomM,insuranceTailM,spendPctRev,spendPctIT,fwControlCount,connectedSources,coveragePct,regReadiness,cisoName,cioName,cloName,cfoName,croName,ceoName,vendorResidualM,aiRiskLowM,aiRiskHighM,opResidualM,modFullM,modPhasedM};
   }
   var FIN=deriveFinancials();
   function applyFinancials(){
@@ -2245,6 +2254,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     ACTIVE_PACK=resolveIndustry(ACTIVE); ACTIVE_PAIRS=ACTIVE_PACK._pairs;
     // Update key DOM element directly (rendered before reskin runs)
     const matExp=document.getElementById('cjMatExp');if(matExp)matExp.textContent=MON+FIN.exposureM+'M';
+    var ttRow=document.getElementById('ceoTabletopRow');if(ttRow){ttRow.innerHTML='<div class="nm">Crisis management exercised <small>'+(FIN.tabletopLabel?'last tabletop '+FIN.tabletopLabel:'no tabletop on record')+'</small></div><span class="stat '+(FIN.tabletopStatus==='ok'?'ok':FIN.tabletopStatus==='warn'?'warn':'crit')+'">'+(FIN.tabletopStatus==='ok'?'Current':(FIN.tabletopStatus==='warn'?'Overdue':'No record'))+'</span>';}
   }
 
   /* ===== UNIVERSAL INDUSTRY ADAPTATION =======================================

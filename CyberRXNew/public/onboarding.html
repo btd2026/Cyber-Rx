@@ -517,8 +517,9 @@
   const SEATS=[
     {id:'ceo',label:'CEO',q:'Are we governing cyber risk responsibly — and could we be surprised?',needs:[
       {i:'Business & revenue exposure',src:'derived',m:'computed from your processes'},
-      {i:'Crisis management readiness',src:'declare',m:'no system reports this',df:['Date of last crisis tabletop','Exercise cadence (e.g. annual)']},
+      {i:'Crisis management readiness',src:'declare',m:'no system reports this',df:['Date of last crisis tabletop','Exercise cadence']},
       {i:'Delegation of authority in a crisis',src:'declare',m:'who can declare a crisis',df:['Crisis decision owner','Backup decision owner']},
+      {i:'Board reporting on cyber',src:'declare',m:'governance rhythm',df:['Board cyber-briefing cadence','Cyber-responsible board committee']},
       {i:'Oversight & decision record',src:'live',m:'from ITSM / GRC'}]},
     {id:'ciso',label:'CISO',q:'Can we operate safely today, and are we improving?',needs:[
       {i:'Active threats & detections',src:'live',m:'from EDR + SIEM'},
@@ -1142,6 +1143,12 @@
     const l=label.toLowerCase();
     if(/carrier/.test(l))
       return '<div class="dfield"><label>'+label+'</label><select class="carrier-sel"><option value="">Select carrier\u2026</option>'+CYBER_INSURERS.map(c=>'<option>'+c+'</option>').join('')+'<option value="__other">Other (enter manually)\u2026</option></select><input class="carrier-other" placeholder="Enter carrier name" style="display:none"></div>';
+    if(/exercise cadence/.test(l))
+      return '<div class="dfield"><label>'+label+'</label><select><option value="">Select…</option><option>Monthly</option><option>Quarterly</option><option>Semi-annually</option><option>Annually</option></select></div>';
+    if(/board cyber.briefing cadence/.test(l))
+      return '<div class="dfield"><label>'+label+'</label><select><option value="">Select…</option><option>Monthly</option><option>Quarterly</option><option>Semi-annually</option><option>Annually</option></select></div>';
+    if(/tabletop/.test(l))
+      return '<div class="dfield"><label>'+label+'</label><select class="tabletop-sel"><option value="">Select…</option><option value="none">None / not yet conducted</option><option value="date">Select date…</option></select><input type="date" class="tabletop-date" style="display:none"></div>';
     if(/date/.test(l))
       return '<div class="dfield"><label>'+label+'</label><input type="date"></div>';
     if(/\(y\/n\)/.test(l))
@@ -1160,6 +1167,7 @@
       const key=label?label.textContent.trim():('f'+i);
       if(inp.classList.contains('mnum')){sd[key]=inp.value;}
       else if(inp.classList.contains('carrier-sel')){sd[key]=inp.value;const oth=df.querySelector('.carrier-other');if(oth&&inp.value==='__other')sd[key+'_other']=oth.value;}
+      else if(inp.classList.contains('tabletop-sel')){var di=df.querySelector('.tabletop-date');sd[key]=inp.value==='date'&&di?di.value:(inp.value||'');}
       else{sd[key]=inp.value;}
     });
     body.querySelectorAll('.ctrow').forEach((row,i)=>{
@@ -1220,6 +1228,7 @@
       if(sd[key]!==undefined){
         if(inp.classList.contains('mnum')){inp.value=sd[key];const eq=df.querySelector('.money-eq');if(eq)eq.textContent=fmtUnit(parseFloat(sd[key]),1e6,true);}
         else if(inp.classList.contains('carrier-sel')){inp.value=sd[key];if(sd[key]==='__other'){const oth=df.querySelector('.carrier-other');if(oth){oth.style.display='block';oth.value=sd[key+'_other']||'';}}}
+        else if(inp.classList.contains('tabletop-sel')){var di=df.querySelector('.tabletop-date');if(sd[key]==='none'){inp.value='none';}else if(sd[key]){inp.value='date';if(di){di.style.display='block';di.value=sd[key];}}}
         else{inp.value=sd[key];}
       }
     });
@@ -1240,6 +1249,8 @@
     if(h){orgCurrency=h.options[h.selectedIndex].dataset.cur||'USD';hqIndex=h.selectedIndex;applyOrgCur();if(cur===6)renderSeats();}
     const cs=e.target.closest('.carrier-sel');
     if(cs){const o=cs.parentElement.querySelector('.carrier-other');if(o){o.style.display=cs.value==='__other'?'block':'none';if(cs.value==='__other')o.focus();}}
+    const ts=e.target.closest('.tabletop-sel');
+    if(ts){const di=ts.parentElement.querySelector('.tabletop-date');if(di){di.style.display=ts.value==='date'?'block':'none';if(ts.value==='date')di.focus();}}
   });
   document.addEventListener('input',e=>{
     const m=e.target.closest('.mnum');
