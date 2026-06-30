@@ -345,8 +345,8 @@
       <div class="panel" id="panel"></div>
       <div class="nav"><button class="btn ghost" id="backBtn">← Back</button><button class="btn primary" id="nextBtn">Save &amp; continue →</button></div>
     </main>
-    <aside class=”rail”>
-      <div class=”card”><h5>Why we ask</h5><div class=”why” id=”whyText”></div></div>
+    <aside class="rail">
+      <div class="card"><h5>Why we ask</h5><div class="why" id="whyText"></div></div>
     </aside>
   </div>
 </div>
@@ -357,7 +357,7 @@
   const STEPS=[
     {t:'Organization profile',d:'Who you are',why:'Your profile sets the rules — which regulations apply, what data you must protect, and which frameworks you\'ll be measured against.'},
     {t:'Connect your systems',d:'The evidence spine',why:'This is what makes your numbers credible. We pull live from your EDR, SIEM, firewall, identity, cloud and more — so every figure traces to a real source, with freshness.'},
-    {t:'Business processes',d:'Upload your process list',why:'Upload your process list or BIA. We extract each process so answers speak in business terms — “claims, $220M/day,” not “cluster 3.”'},
+    {t:'Business processes',d:'Upload your process list',why:'Upload your process list or BIA. We extract each process so answers speak in business terms — "claims, $220M/day," not "cluster 3."'},
     {t:'Applications',d:'Upload your inventory',why:'Upload your app inventory or CMDB export. We extract every system so we can map each to the processes it supports.'},
     {t:'Auto-map & crown jewels',d:'The core intelligence',why:'We infer which app supports which process, you confirm, and we deduce your crown jewels — the systems whose loss would hurt the business most.'},
     {t:'Documents',d:'Evidence in files',why:'Your policies and reports are evidence. We extract, tag, and map their contents to controls automatically.'},
@@ -367,14 +367,14 @@
 
   // ---- connectors ----
   const CONN=[
-    {id:'edr',cat:'Endpoint Detection & Response (EDR)',ic:'🛡',w:14,sig:420,vendors:['CrowdStrike Falcon','Microsoft Defender for Endpoint','SentinelOne','VMware Carbon Black','Trend Micro'],pulls:'Live endpoint detections, threats blocked, agent coverage, dwell time.',ans:'CISO “are we under attack / can we operate,” CIO endpoint health.'},
+    {id:'edr',cat:'Endpoint Detection & Response (EDR)',ic:'🛡',w:14,sig:420,vendors:['CrowdStrike Falcon','Microsoft Defender for Endpoint','SentinelOne','VMware Carbon Black','Trend Micro'],pulls:'Live endpoint detections, threats blocked, agent coverage, dwell time.',ans:'CISO "are we under attack / can we operate," CIO endpoint health.'},
     {id:'siem',cat:'SIEM / Log analytics',ic:'📊',w:16,sig:510,vendors:['Splunk','Microsoft Sentinel','Elastic Security','IBM QRadar','Google Chronicle'],pulls:'Alerts, correlated incidents, MTTD/MTTC, log coverage.',ans:'CISO operational status & incident timeline, Board assurance.'},
     {id:'fw',cat:'Firewall / Network',ic:'🧱',w:10,sig:180,vendors:['Palo Alto Networks','Fortinet FortiGate','Cisco Secure Firewall','Check Point','Zscaler'],pulls:'Attacks blocked, exposed services, segmentation gaps.',ans:'CISO threat & exposure, CIO network status.'},
     {id:'idp',cat:'Identity provider (IdP / SSO)',ic:'🔑',w:14,sig:240,vendors:['Okta','Microsoft Entra ID','Ping Identity','Google Workspace','Duo'],pulls:'MFA coverage, privileged accounts, access reviews, risky sign-ins.',ans:'CISO control validation, CRO access risk, HIPAA evidence.'},
     {id:'cloud',cat:'Cloud security posture (CSPM)',ic:'☁',w:12,sig:160,vendors:['AWS Security Hub','Microsoft Defender for Cloud','Wiz','Prisma Cloud','Google SCC'],pulls:'Misconfigurations, internet-exposed assets, IAM risk, inventory.',ans:'CISO exposure, CIO service & asset health.'},
     {id:'vuln',cat:'Vulnerability management',ic:'🔍',w:10,sig:90,vendors:['Tenable','Qualys','Rapid7 InsightVM','Microsoft Defender VM'],pulls:'Critical vulns, internet-facing exposure, patch latency.',ans:'CISO material exposure, attack-path inputs.'},
     {id:'email',cat:'Email security',ic:'✉',w:6,sig:70,vendors:['Proofpoint','Mimecast','Abnormal Security','Microsoft Defender for Office'],pulls:'Phishing blocked, account-takeover attempts, BEC signals.',ans:'CISO live threat (phishing → claims).'},
-    {id:'backup',cat:'Backup / DR',ic:'💾',w:10,sig:40,vendors:['Rubrik','Veeam','Cohesity','Commvault','AWS Backup'],pulls:'Recovery readiness, RPO/RTO actuals, immutable-backup status, last DR test.',ans:'CIO recovery, CEO “can we recover,” Board resilience.'},
+    {id:'backup',cat:'Backup / DR',ic:'💾',w:10,sig:40,vendors:['Rubrik','Veeam','Cohesity','Commvault','AWS Backup'],pulls:'Recovery readiness, RPO/RTO actuals, immutable-backup status, last DR test.',ans:'CIO recovery, CEO "can we recover," Board resilience.'},
     {id:'mdm',cat:'Device management (MDM)',ic:'💻',w:4,sig:30,vendors:['Microsoft Intune','Jamf','VMware Workspace ONE','Kandji'],pulls:'Device compliance, encryption, patch state.',ans:'CISO control coverage.'},
     {id:'grc',cat:'ITSM / GRC / Ticketing',ic:'🗂',w:4,sig:25,vendors:['ServiceNow','Jira','Archer','Vanta','Drata'],pulls:'Remediation status, change governance, decision & approval records.',ans:'Action Center, audit log, CLO defensibility, decisions.'}
   ];
@@ -544,7 +544,7 @@
     'A CMDB export is ideal here. No CMDB? A rough app-inventory spreadsheet works fine — we\'ll clean it up.',
     'Glance at the low-confidence matches first (under 85%) — those are the ones worth a human eye before you confirm.',
     'Your SOC 2 and latest pen test give the most control coverage per upload. Start with those two.',
-    'Only the amber “You provide” items need you — everything green is already flowing from your connected systems.',
+    'Only the amber "You provide" items need you — everything green is already flowing from your connected systems.',
     'Looks ready to go live. On a call, we can walk your team through your first board briefing together.'
   ];
   function tickTo(el,to,dur){if(!el)return;const from=parseInt((el.textContent||'0').replace(/,/g,''))||0;const t0=performance.now();(function f(t){const p=Math.min(1,(t-t0)/dur);el.textContent=Math.round(from+(to-from)*p).toLocaleString();if(p<1)requestAnimationFrame(f);})(performance.now());}
@@ -619,7 +619,7 @@
     renderStepper();
     document.getElementById('panel').innerHTML=PANELS[cur]();
     document.getElementById('whyText').textContent=STEPS[cur].why;
-    document.getElementById('ccTip').textContent=CONCIERGE[cur];
+    var ccT=document.getElementById('ccTip');if(ccT)ccT.textContent=CONCIERGE[cur];
     document.getElementById('backBtn').disabled=(cur===0);
     document.getElementById('nextBtn').textContent=(cur===STEPS.length-1)?'✦ Go live':'Save & continue →';
     updateSeatNextBtn();
@@ -1277,7 +1277,7 @@
     }
     if(cur>0){cur--;render();}
   });
-  document.getElementById('ccCall').addEventListener('click',function(){this.classList.add('req');this.textContent='✓ We\'ll reach out within 1 business day';});
+  var ccCallBtn=document.getElementById('ccCall');if(ccCallBtn)ccCallBtn.addEventListener('click',function(){this.classList.add('req');this.textContent='✓ We\'ll reach out within 1 business day';});
   // ---- operating regions multi-select ----
   const REGIONS={
     'United States':['Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming'],
