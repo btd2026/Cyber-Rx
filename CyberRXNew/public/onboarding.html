@@ -400,8 +400,8 @@
   let cur=0;
   const done=new Array(STEPS.length).fill(false);
   let procExtracted=false, appExtracted=false, mapDone=false, docCount=0, seatTab='ceo', procLive=false, appLive=false;
-  const seatNames={ceo:'',ciso:'',cfo:'',cio:'',clo:'',cro:'',board:''};
-  const seatData={ceo:{},ciso:{},cfo:{},cio:{},clo:{},cro:{},board:{}};
+  const seatNames={ceo:'',ciso:'',cfo:'',cio:'',clo:'',cro:''};
+  const seatData={ceo:{},ciso:{},cfo:{},cio:{},clo:{},cro:{}};
   const seatContacts={ciso:{}};
   // Industry chosen here drives the rest of onboarding AND the operating system.
   let selectedIndustry='healthcare-payer', selectedArch='healthcare';
@@ -555,12 +555,8 @@
       {i:'Board-approved risk appetite',src:'declare',m:'the maximum loss the board will tolerate',df:['Cyber risk appetite ($)']},
       {i:'Third-party / concentration risk',src:'declare',m:'vendor dependency that multiplies exposure',df:['Tier 1 vendors (critical — handle sensitive data or run key processes)','Tier 2 vendors (important — operational but not crown-jewel)']},
       {i:'Risk register & residual risk',src:'live',m:'from Vuln + SIEM + GRC'},
-      {i:'Risk committee cadence',src:'declare',m:'governance rhythm',df:['Risk committee cadence']}]},
-    {id:'board',label:'Board',q:'Is management in control, and is our oversight demonstrable?',needs:[
-      {i:'Control assurance & posture',src:'live',m:'from all connected systems'},
-      {i:'Materiality & disclosure status',src:'derived',m:'from CFO + CLO inputs'},
-      {i:'Board & committee structure',src:'declare',m:'your governance',df:['Cyber-responsible committee','Oversight cadence']},
-      {i:'Oversight record',src:'live',m:'from GRC / ticketing'}]}
+      {i:'Risk committee cadence',src:'declare',m:'governance rhythm',df:['Risk committee cadence']},
+      {i:'Board governance',src:'declare',m:'board oversight structure',df:['Cyber-responsible committee','Oversight cadence','Target posture score']}]}
   ];
   const SEAT_BY={};SEATS.forEach(s=>SEAT_BY[s.id]=s);
 
@@ -1154,7 +1150,7 @@
       return '<div class="dfield"><label>'+label+'</label><select><option value="">Select…</option><option>Monthly</option><option>Quarterly</option><option>Semi-annually</option><option>Annually</option></select></div>';
     if(/board cyber.briefing cadence/.test(l))
       return '<div class="dfield"><label>'+label+'</label><select><option value="">Select…</option><option>Monthly</option><option>Quarterly</option><option>Semi-annually</option><option>Annually</option></select></div>';
-    if(/risk committee cadence/.test(l))
+    if(/risk committee cadence|oversight cadence/.test(l))
       return '<div class="dfield"><label>'+label+'</label><select><option value="">Select…</option><option>Monthly</option><option>Quarterly</option><option>Semi-annually</option><option>Annually</option></select></div>';
     if(/tabletop/.test(l))
       return '<div class="dfield"><label>'+label+'</label><select class="tabletop-sel"><option value="">Select…</option><option value="none">None / not yet conducted</option><option value="date">Select date…</option></select><input type="date" class="tabletop-date" style="display:none"></div>';
@@ -1194,12 +1190,12 @@
   }
   function updateSeatNextBtn(){
     if(cur!==6)return;
-    var seatOrder=['ceo','ciso','cfo','cio','clo','cro','board'];
+    var seatOrder=['ceo','ciso','cfo','cio','clo','cro'];
     var curIdx=seatOrder.indexOf(seatTab);
     var btn=document.getElementById('nextBtn');
     var back=document.getElementById('backBtn');
     if(curIdx<seatOrder.length-1){
-      var nextLabel=({ceo:'CEO',ciso:'CISO',cfo:'CFO',cio:'CIO',clo:'CLO',cro:'CRO',board:'Board'})[seatOrder[curIdx+1]]||'next';
+      var nextLabel=({ceo:'CEO',ciso:'CISO',cfo:'CFO',cio:'CIO',clo:'CLO',cro:'CRO'})[seatOrder[curIdx+1]]||'next';
       btn.textContent='Save & next → '+nextLabel;
     }else{
       btn.textContent='Save & continue →';
@@ -1319,7 +1315,7 @@
     // On the seats step, save current seat and advance to next leader before leaving
     if(cur===6){
       saveSeatFields();
-      var seatOrder=['ceo','ciso','cfo','cio','clo','cro','board'];
+      var seatOrder=['ceo','ciso','cfo','cio','clo','cro'];
       var curIdx=seatOrder.indexOf(seatTab);
       if(curIdx<seatOrder.length-1){
         seatTab=seatOrder[curIdx+1];
@@ -1332,7 +1328,7 @@
   document.getElementById('backBtn').addEventListener('click',()=>{
     if(cur===6){
       saveSeatFields();
-      var seatOrder=['ceo','ciso','cfo','cio','clo','cro','board'];
+      var seatOrder=['ceo','ciso','cfo','cio','clo','cro'];
       var curIdx=seatOrder.indexOf(seatTab);
       if(curIdx>0){seatTab=seatOrder[curIdx-1];renderSeats();return;}
     }

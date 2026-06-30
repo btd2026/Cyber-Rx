@@ -2167,7 +2167,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     const breachStates=stateCount>0?stateCount+'-state breach notification triggered':'multi-state breach notification triggered';
     // Consume declare fields from onboarding seatData
     const sd=ORG_PROFILE.seatData||{};
-    const cfoD=sd.cfo||{};const croD=sd.cro||{};const cioD=sd.cio||{};const ceoD=sd.ceo||{};const boardD=sd.board||{};
+    const cfoD=sd.cfo||{};const croD=sd.cro||{};const cioD=sd.cio||{};const ceoD=sd.ceo||{};
     var lastTabletop=ceoD['Date of last crisis tabletop']||'';
     var exerciseCadence=ceoD['Exercise cadence']||'';
     var crisisOwner=ceoD['Crisis decision owner']||'';
@@ -2206,8 +2206,8 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     const riskCadence=croD['Risk committee cadence']||'';
     const tier1Vendors=parseInt(croD['Tier 1 vendors (critical — handle sensitive data or run key processes)']||'')||14;
     const tier2Vendors=parseInt(croD['Tier 2 vendors (important — operational but not crown-jewel)']||'')||30;
-    const boardCommittee=boardD['Cyber-responsible committee']||'';
-    const boardCadence=boardD['Oversight cadence']||'';
+    const boardCommittee=croD['Cyber-responsible committee']||'';
+    const boardCadence=croD['Oversight cadence']||'';
     const cyberBudget=parseFloat(String(cfoD['Annual cybersecurity budget']||'').replace(/[^\d.]/g,''));
     const cyberBudgetM=cyberBudget>0?cyberBudget:0;
     const insurancePremium=parseFloat(String(cfoD['Annual cyber insurance premium']||'').replace(/[^\d.]/g,''));
@@ -2218,7 +2218,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     var avgDocCmmi=docKeys.length>0?docKeys.reduce(function(s,k){return s+(docR[k].cmmi||1);},0)/docKeys.length:0;
     var posture=docKeys.length>0?Math.min(100,Math.round(avgDocCmmi*20)):82;
     var postureTrend=Math.min(10,Math.max(1,Math.round(posture*0.05)));
-    var postureTarget=parseInt(boardD['Target posture']||'')||85;
+    var postureTarget=parseInt(croD['Target posture score']||'')||85;
     var postureProjected=Math.min(100,posture+7);
     var recoveryPct=parseInt(cioD['Recovery readiness %']||'')||78;
     var uptimePctVal=cioD['Uptime (30d)']||'99.98%';
