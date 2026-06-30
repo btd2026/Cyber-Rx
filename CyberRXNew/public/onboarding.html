@@ -268,6 +268,14 @@
   .planct-h{font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--subtle);display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
   .planct-h span{text-transform:none;letter-spacing:0;font-size:10.5px;color:var(--subtle)}
   .planct{display:flex;flex-direction:column;gap:7px}
+  .rto-tbl{width:100%;border-collapse:collapse;margin-top:8px}
+  .rto-tbl th{font-family:var(--mono);font-size:10px;letter-spacing:.03em;text-transform:uppercase;color:var(--subtle);text-align:left;padding:6px 8px;border-bottom:1px solid var(--border)}
+  .rto-tbl td{padding:8px;border-bottom:1px solid color-mix(in srgb,var(--border) 50%,transparent)}
+  .rto-pn{font-size:13px;font-weight:500;color:var(--text);line-height:1.4}
+  .rto-pn .crit{font-size:10px;font-weight:600}
+  .rto-sel{font-family:var(--body);font-size:13px;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px 10px;outline:none;width:100%}
+  .rto-sel:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-tint)}
+  .rto-hint{font-size:11px;color:var(--subtle);margin-top:8px;font-style:italic}
   .ctrow{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;align-items:center}
   @media(max-width:560px){.ctrow{grid-template-columns:1fr}}
   .ctrow .ctrole{font-size:12.5px;color:var(--text);font-weight:500}
@@ -537,7 +545,7 @@
     {id:'cio',label:'CIO',q:'Can we keep critical services running and recover?',needs:[
       {i:'Service & endpoint health',src:'live',m:'from EDR + Cloud'},
       {i:'Recovery readiness, RPO/RTO, immutable backups',src:'live',m:'from Backup / DR'},
-      {i:'Recovery targets per critical process',src:'declare',m:'your tolerance',df:null,dynRTO:true},
+      {i:'Recovery targets per crown jewel',src:'derived',m:'auto-populated from your crown jewels — adjust to your tolerance',df:null,dynRTO:true},
       {i:'Change governance',src:'live',m:'from ITSM / GRC'}]},
     {id:'clo',label:'CLO',q:'Do we meet every obligation — defensibly?',needs:[
       {i:'Regulatory jurisdictions',src:'derived',m:'from your profile'},
@@ -1170,6 +1178,9 @@
       else if(inp.classList.contains('tabletop-sel')){var di=df.querySelector('.tabletop-date');sd[key]=inp.value==='date'&&di?di.value:(inp.value||'');}
       else{sd[key]=inp.value;}
     });
+    body.querySelectorAll('.rto-sel').forEach(function(sel){
+      var key=sel.dataset.key;if(key)sd[key]=sel.value;
+    });
     body.querySelectorAll('.ctrow').forEach((row,i)=>{
       const role=row.querySelector('.ctrole');
       const nm=row.querySelector('.ctname');
@@ -1201,19 +1212,38 @@
     const s=SEAT_BY[seatTab];const live=liveSrc();
     const srcTag={live:live?'Live':'Connect a system',doc:'From docs',derived:'Derived',declare:'You provide'};
     const srcCls={live:live?'live':'off',doc:'doc',derived:'derived',declare:'declare'};
-    function rtoFields(){
-      var G=liveGraph();var cjs=G.apps.filter(function(a){return a.cj;}).sort(function(x,y){return y.score-x.score;});
-      if(!cjs.length){var procs=G.procs.filter(function(p){return p.c==='h';});if(!procs.length)procs=G.procs.slice(0,3);return procs.reduce(function(arr,p){arr.push('RTO target ('+p.n+')');arr.push('RPO target ('+p.n+')');return arr;},[]);}
-      var procIds={};cjs.forEach(function(a){a.proc.forEach(function(pid){procIds[pid]=1;});});
+    var RTO_OPTS=['15 min','30 min','1 hr','2 hrs','4 hrs','8 hrs','12 hrs','24 hrs','48 hrs','72 hrs','1 week'];
+    var RPO_OPTS=['0 (zero data loss)','5 min','15 min','30 min','1 hr','4 hrs','8 hrs','24 hrs'];
+    function rtoDefault(crit){return crit==='h'?'4 hrs':crit==='m'?'8 hrs':'24 hrs';}
+    function rpoDefault(crit){return crit==='h'?'15 min':crit==='m'?'1 hr':'4 hrs';}
+    function rtoTableHTML(){
+      var G=liveGraph();
+      var cjs=G.apps.filter(function(a){return a.cj;}).sort(function(x,y){return y.score-x.score;});
+      var procIds={};
+      if(cjs.length){cjs.forEach(function(a){a.proc.forEach(function(pid){procIds[pid]=1;});});}
       var procs=G.procs.filter(function(p){return procIds[p.id];});
       if(!procs.length)procs=G.procs.filter(function(p){return p.c==='h';});
       if(!procs.length)procs=G.procs.slice(0,3);
-      return procs.reduce(function(arr,p){arr.push('RTO target ('+p.n+')');arr.push('RPO target ('+p.n+')');return arr;},[]);
+      var sd=seatData.cio||{};
+      var rows=procs.map(function(p){
+        var savedRTO=sd['RTO:'+p.id]||rtoDefault(p.c);
+        var savedRPO=sd['RPO:'+p.id]||rpoDefault(p.c);
+        var critLabel=p.c==='h'?'High':p.c==='m'?'Medium':'Low';
+        var critCls=p.c==='h'?'h':p.c==='m'?'m':'l';
+        return '<tr data-proc="'+p.id+'"><td class="rto-pn">'+p.n+'<br><span class="crit '+critCls+'">'+critLabel+' · '+p.data+'</span></td>'+
+          '<td><select class="rto-sel" data-key="RTO:'+p.id+'">'+RTO_OPTS.map(function(o){return '<option'+(o===savedRTO?' selected':'')+'>'+o+'</option>';}).join('')+'</select></td>'+
+          '<td><select class="rto-sel" data-key="RPO:'+p.id+'">'+RPO_OPTS.map(function(o){return '<option'+(o===savedRPO?' selected':'')+'>'+o+'</option>';}).join('')+'</select></td></tr>';
+      });
+      return '<table class="rto-tbl"><thead><tr><th>Crown-jewel process</th><th>RTO target</th><th>RPO target</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>'+
+        '<div class="rto-hint">Defaults set by process criticality. Adjust to your actual recovery tolerance.</div>';
     }
     document.getElementById('seatBody').innerHTML='<div class="need" style="border-left:3px solid var(--brand)"><span class="src declare" style="color:var(--brand);background:var(--brand-tint)">You provide</span><div class="nb"><div class="ni">Who holds this seat?</div><div class="nm2">so your advisor can greet them by name</div><div class="df"><input id="seatName-'+s.id+'" placeholder="First name of your '+s.label+'" value="'+(seatNames[s.id]||'')+'"></div></div></div>'+
       '<div class="seatq">› '+s.q+'</div>'+s.needs.map(n=>{
-      var dfArr=n.df;if(n.dynRTO)dfArr=rtoFields();
-      const df=n.plan?('<div class="planbox"><div class="planct-h">Key contacts — reachable 24/7 <span>name + phone; powers Incident Commander mode</span></div><div class="planct">'+n.contacts.map(r=>'<div class="ctrow"><span class="ctrole">'+r+'</span><input placeholder="Name" class="ctname" value="'+((seatContacts[s.id]&&seatContacts[s.id][r]&&seatContacts[s.id][r].name)||'')+'"><input placeholder="Phone" inputmode="tel" class="ctphone" value="'+((seatContacts[s.id]&&seatContacts[s.id][r]&&seatContacts[s.id][r].phone)||'')+'"></div>').join('')+'</div></div>'):(dfArr?'<div class="df dfgrid">'+dfArr.map(fieldHTML).join('')+'</div>':'');
+      var dfArr=n.df;
+      var df='';
+      if(n.dynRTO){df=rtoTableHTML();}
+      else if(n.plan){df='<div class="planbox"><div class="planct-h">Key contacts — reachable 24/7 <span>name + phone; powers Incident Commander mode</span></div><div class="planct">'+n.contacts.map(r=>'<div class="ctrow"><span class="ctrole">'+r+'</span><input placeholder="Name" class="ctname" value="'+((seatContacts[s.id]&&seatContacts[s.id][r]&&seatContacts[s.id][r].name)||'')+'"><input placeholder="Phone" inputmode="tel" class="ctphone" value="'+((seatContacts[s.id]&&seatContacts[s.id][r]&&seatContacts[s.id][r].phone)||'')+'"></div>').join('')+'</div></div>';}
+      else if(dfArr){df='<div class="df dfgrid">'+dfArr.map(fieldHTML).join('')+'</div>';}
       return '<div class="need"><span class="src '+srcCls[n.src]+'">'+srcTag[n.src]+'</span><div class="nb"><div class="ni">'+n.i+'</div><div class="nm2">'+n.m+'</div>'+df+'</div></div>';
     }).join('');
     const nameIn=document.getElementById('seatName-'+s.id);
