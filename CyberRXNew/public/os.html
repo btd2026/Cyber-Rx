@@ -936,6 +936,12 @@
         <tr class="drill" data-ev="exp-payments"><td><div class="pn">Provider Payments</div></td><td><span class="rk low">Low</span></td><td><span class="trn down">↓</span></td><td>Well-controlled</td></tr>
       </tbody>
     </table>
+    <!-- Live crown-jewel dependency map — rendered from /api/crown-jewels/graph
+         (process → asset ← risk) when real inventory exists; hidden in demo mode. -->
+    <div id="cjGraphSec" style="display:none">
+      <div class="sec-h"><h3>Crown-jewel dependency map</h3><span class="meta">computed from your inventory · process → asset ← risk</span></div>
+      <div class="panel" style="overflow-x:auto"><div id="cjGraph"></div></div>
+    </div>
     <div class="sec-h"><h3>Most likely path to the crown jewels</h3></div>
     <div class="panel">
       <div class="path">
@@ -3062,6 +3068,67 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
         rows.innerHTML=cjs.slice(0,12).map(function(a){return '<tr><td><div class="pn">'+a.name+' <span style="color:var(--muted);font-weight:400">('+(a.type||'asset')+')</span></div></td><td><span class="rk '+rkClass(a.score)+'">'+a.score+'/100</span></td><td><span class="trn flat">'+(a.tier||'—')+'</span></td><td>'+(a.rationale||'').replace(/^[^:]*:\s*/,'').replace(/ — criticality.*$/,'')+'</td></tr>';}).join('');
       }
     }
+    // Render a layered SVG dependency map from the real /graph output. Columns:
+    // Processes → Assets (crown jewels highlighted) ← Risks. Dependency-free.
+    function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+    function renderGraph(g){
+      var sec=document.getElementById('cjGraphSec'),host=document.getElementById('cjGraph');
+      if(!sec||!host)return;
+      var nodes=(g&&Array.isArray(g.nodes))?g.nodes:[],edges=(g&&Array.isArray(g.edges))?g.edges:[];
+      var procs=nodes.filter(function(n){return n.type==='process';});
+      var assets=nodes.filter(function(n){return n.type==='asset';});
+      var risks=nodes.filter(function(n){return n.type==='risk';});
+      if(!assets.length){sec.style.display='none';return;}
+      // Sort assets: crown jewels first (by score desc), so the map leads with what matters.
+      assets=assets.slice().sort(function(a,b){var ca=(a.attrs&&a.attrs.crown_jewel_tier&&a.attrs.crown_jewel_tier!=='none')?1:0,cb=(b.attrs&&b.attrs.crown_jewel_tier&&b.attrs.crown_jewel_tier!=='none')?1:0;if(cb-ca)return cb-ca;return ((b.attrs&&b.attrs.score)||0)-((a.attrs&&a.attrs.score)||0);});
+      var cols=[{k:'process',items:procs,x:20,label:'Processes'},{k:'asset',items:assets,x:340,label:'Crown-jewel assets'},{k:'risk',items:risks,x:660,label:'Risks'}];
+      var rowH=46,boxW=250,boxH=34,padTop=34;
+      var maxRows=Math.max(procs.length,assets.length,risks.length,1);
+      var h=padTop+maxRows*rowH+10,w=930;
+      var pos={}; // node id -> {x,y}
+      cols.forEach(function(col){
+        var n=col.items.length,offset=(maxRows-n)/2; // vertically center shorter columns
+        col.items.forEach(function(it,i){pos[it.id]={x:col.x,y:padTop+(offset+i)*rowH+boxH/2};});
+      });
+      var svg='<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" style="font:12px system-ui,sans-serif">';
+      // edges first (under nodes)
+      edges.forEach(function(e){
+        var s=pos[e.source],t=pos[e.target];if(!s||!t)return;
+        var x1=s.x+boxW,y1=s.y,x2=t.x,y2=t.y; // default proc(right)->asset(left)
+        if(e.type==='threatens'){x1=t.x+boxW;y1=t.y;x2=s.x;y2=s.y;} // risk(left edge) -> asset(right edge): draw asset.right -> risk.left
+        var col=e.type==='threatens'?'rgba(214,69,69,.5)':e.type==='supports'?'rgba(90,120,200,.45)':'rgba(120,140,160,.4)';
+        var mx=(x1+x2)/2;
+        svg+='<path d="M'+x1+' '+y1+' C '+mx+' '+y1+', '+mx+' '+y2+', '+x2+' '+y2+'" fill="none" stroke="'+col+'" stroke-width="1.5"/>';
+      });
+      // column headers
+      cols.forEach(function(col){svg+='<text x="'+(col.x+boxW/2)+'" y="18" text-anchor="middle" fill="var(--muted)" style="font-weight:600;font-size:11px;letter-spacing:.04em">'+esc(col.label.toUpperCase())+'</text>';});
+      // nodes
+      function box(it,type){
+        var p=pos[it.id];if(!p)return '';
+        var cj=type==='asset'&&it.attrs&&it.attrs.crown_jewel_tier&&it.attrs.crown_jewel_tier!=='none';
+        var fill=type==='process'?'rgba(90,120,200,.12)':type==='risk'?'rgba(214,69,69,.12)':cj?'rgba(199,158,58,.18)':'rgba(120,140,160,.12)';
+        var stroke=type==='process'?'rgba(90,120,200,.5)':type==='risk'?'rgba(214,69,69,.5)':cj?'var(--gold,#c79e3a)':'rgba(120,140,160,.45)';
+        var sub=type==='asset'&&it.attrs&&it.attrs.score!=null?(' · '+Math.round(it.attrs.score*100)+'/100'):(type==='risk'&&it.attrs&&it.attrs.severity?(' · '+it.attrs.severity):(type==='process'&&it.attrs&&it.attrs.criticality?(' · '+it.attrs.criticality):''));
+        var lbl=esc(it.label||'').slice(0,30)+(String(it.label||'').length>30?'…':'');
+        return '<g><rect x="'+p.x+'" y="'+(p.y-boxH/2)+'" width="'+boxW+'" height="'+boxH+'" rx="7" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+(cj?'2':'1')+'"/>'+
+          (cj?'<text x="'+(p.x+12)+'" y="'+(p.y+4)+'" fill="var(--gold,#c79e3a)">♦</text>':'')+
+          '<text x="'+(p.x+(cj?26:12))+'" y="'+(p.y+4)+'" fill="var(--fg,#222)">'+lbl+'<tspan fill="var(--muted)">'+esc(sub)+'</tspan></text></g>';
+      }
+      procs.forEach(function(it){svg+=box(it,'process');});
+      assets.forEach(function(it){svg+=box(it,'asset');});
+      risks.forEach(function(it){svg+=box(it,'risk');});
+      svg+='</svg>';
+      host.innerHTML=svg;sec.style.display='';
+    }
+    function loadGraph(){
+      var base=api(),o=org();if(!base||!o)return;
+      try{
+        fetch(base.replace(/\/+$/,'')+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}})
+          .then(function(r){return r.ok?r.json():null;})
+          .then(function(g){if(g&&!g.empty)renderGraph(g);else{var s=document.getElementById('cjGraphSec');if(s)s.style.display='none';}})
+          .catch(function(){});
+      }catch(_){}
+    }
     window.cjLoadLive=function(){
       var base=api(),o=org();
       if(!base||!o){badge(false);setDataMode(null);return;}
@@ -3073,8 +3140,9 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
               if(v&&Number(d.material_exposure_usd)>0)v.textContent=usd(d.material_exposure_usd);
               try{applyExposureEvidence(d);}catch(_){}
               try{applyExposureView(d);}catch(_){}
+              try{loadGraph();}catch(_){}
               badge(true);
-            }else{badge(false);}
+            }else{badge(false);var _gs=document.getElementById('cjGraphSec');if(_gs)_gs.style.display='none';}
             setDataMode(d);})
           .catch(function(){badge(false);setDataMode(null);});
       }catch(_){badge(false);setDataMode(null);}
