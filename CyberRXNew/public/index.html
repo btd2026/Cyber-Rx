@@ -45,6 +45,31 @@
   .lback{background:none;border:none;color:#8A8F98;font-family:inherit;font-size:12.5px;cursor:pointer;margin-top:14px;padding:0}
   .lback:hover{color:#E8EEF6}
   .lsec{display:flex;align-items:center;gap:7px;justify-content:center;margin-top:20px;font-family:"JetBrains Mono",monospace;font-size:10.5px;color:#7C8490}
+
+  /* ===== One-time orientation (manifesto, role-aware, skippable) ===== */
+  .orient{position:fixed;inset:0;z-index:9998;display:none;align-items:center;justify-content:center;
+    background:radial-gradient(1200px 700px at 50% -10%,rgba(10,77,196,.20),transparent 60%),#0A1B2E;overflow:auto;padding:44px 20px}
+  .orient.show{display:flex}
+  .ocard{position:relative;width:100%;max-width:600px;background:rgba(12,28,46,.78);backdrop-filter:blur(14px);border:1px solid #22394F;border-radius:20px;padding:40px 40px 34px;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+  .obrand{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+  .obrand .mk{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#4F90FF,#0A4DC4);display:flex;align-items:center;justify-content:center;color:#fff;font-family:"Space Grotesk";font-weight:700;font-size:16px}
+  .obrand .nm{font-family:"Space Grotesk";font-weight:700;font-size:17px;color:#E8EEF6}
+  .obrand .nm b{color:#4F90FF}
+  .obrand .oseat{margin-left:auto;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#8A93A1;border:1px solid #2C3744;border-radius:99px;padding:4px 10px}
+  .oeyebrow{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#4F90FF;margin-bottom:12px}
+  .otitle{font-family:"Space Grotesk";font-weight:700;font-size:27px;line-height:1.2;color:#F1F5FB;margin-bottom:12px}
+  .osub{font-size:14.5px;line-height:1.6;color:#9DB0C6;margin-bottom:26px}
+  .obeats{display:flex;flex-direction:column;gap:14px;margin-bottom:30px}
+  .obeat{display:flex;gap:13px;align-items:flex-start}
+  .obeat .oi{flex:none;width:30px;height:30px;border-radius:9px;background:rgba(10,77,196,.16);border:1px solid #2C4A6E;display:flex;align-items:center;justify-content:center;font-size:15px}
+  .obeat .ot{font-size:14px;line-height:1.55;color:#D7E0EC}
+  .obeat .ot b{color:#F1F5FB;font-weight:700}
+  .oactions{display:flex;align-items:center;gap:16px}
+  .obtn{background:#0A4DC4;color:#fff;border:none;border-radius:11px;padding:13px 26px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer}
+  .obtn:hover{background:#1E5FD6}
+  .oskip{background:none;border:none;color:#8A93A1;font-family:inherit;font-size:13px;cursor:pointer}
+  .oskip:hover{color:#E8EEF6}
+  .ofoot{margin-top:24px;display:flex;align-items:center;gap:7px;font-family:"JetBrains Mono",monospace;font-size:10.5px;color:#7C8490}
 </style>
 </head>
 <body>
@@ -83,6 +108,22 @@
         <button class="lback" id="backTo1">← Use a different account</button>
         <div class="lhint">TOTP / FIDO2 hardware keys supported</div>
       </div>
+    </div>
+  </div>
+
+  <!-- ONE-TIME ORIENTATION (manifesto, role-aware, skippable) -->
+  <div class="orient" id="orient">
+    <div class="ocard">
+      <div class="obrand"><span class="mk">C</span><span class="nm">Cyber<b>Rx</b></span><span class="oseat" id="oSeat">CISO</span></div>
+      <div class="oeyebrow">The Cybersecurity Operating System</div>
+      <div class="otitle" id="oTitle"></div>
+      <div class="osub" id="oSub"></div>
+      <div class="obeats" id="oBeats"></div>
+      <div class="oactions">
+        <button class="obtn" id="oEnter">Enter your cockpit →</button>
+        <button class="oskip" id="oSkip">Skip</button>
+      </div>
+      <div class="ofoot">🔒 Every figure traces to your data or is clearly labeled modeled — no black boxes.</div>
     </div>
   </div>
 
@@ -129,7 +170,52 @@
     show("intake");
     setTimeout(function(){osMsg({type:"cyberrx-auth",role:pickedRole,name:pickedName});},300);
   }
-  document.getElementById("verify").addEventListener("click",enterPlatform);
+  // ===== One-time, role-aware orientation (manifesto, not a tutorial) =====
+  var ORIENT={
+    ceo:{t:"Cyber risk, in the language of the business you run.",
+      s:"Not controls and jargon — dollars, continuity, and reputation. This is where cyber becomes a business conversation you can lead.",
+      b:[["$","See enterprise cyber risk as <b>material exposure in dollars</b> and impact to the revenue that matters."],["✓","Make and record the <b>few decisions that need you</b> — each with its cost and what it buys down."],["◷","Know in one glance whether you're <b>within tolerance and getting better</b>."]]},
+    ciso:{t:"Run your program in the language your board speaks.",
+      s:"Every signal, threat, and control — translated into business exposure and the decisions that move it.",
+      b:[["$","Turn posture, threats, and controls into <b>business exposure and dollars</b> leadership acts on."],["✓","Drive risk down with <b>costed, owned, verified decisions</b> — not a backlog of findings."],["🛡","Everything is <b>evidence-backed and traceable</b> to its source signal."]]},
+    cfo:{t:"Cyber risk as dollars, ROI, and insurability.",
+      s:"See what's truly at stake financially, what each decision returns, and whether your coverage matches your exposure.",
+      b:[["$","See <b>material exposure in dollars</b> and the <b>ROI of every security decision</b>."],["◷","Weigh <b>cost of inaction</b> against spend; align cyber-insurance to modeled exposure."],["🛡","Defensible, evidence-backed, audit-ready figures."]]},
+    cio:{t:"Cyber and resilience for the systems you run.",
+      s:"Which systems carry the business, what threatens them, and the decisions that keep revenue running.",
+      b:[["◈","See your <b>crown-jewel systems</b> and the operational risk each one carries."],["✓","Prioritize <b>recovery, resilience, and continuity</b> decisions that protect revenue."],["◈","Grounded in your <b>real inventory</b>, not a questionnaire."]]},
+    clo:{t:"Cyber risk as obligation, liability, and defensibility.",
+      s:"Regulatory exposure, notification duties, and materiality — in legal-business terms, not security jargon.",
+      b:[["§","See <b>regulatory exposure and disclosure obligations</b> in plain legal-business terms."],["✓","Make and <b>document the decisions</b> that keep the organization defensible."],["🛡","Every claim is <b>evidence-backed</b> with a traceable chain."]]},
+    cro:{t:"Cyber inside your enterprise risk picture.",
+      s:"Cyber exposure in dollars, measured against appetite, alongside every other risk you steward.",
+      b:[["$","See cyber <b>exposure in dollars</b>, against <b>appetite</b>, next to your other risks."],["◷","Track <b>concentration</b> and the decisions that bring risk within tolerance."],["🛡","Quantified and traceable — no opaque scores."]]},
+    board:{t:"Cyber oversight in five minutes — in business terms.",
+      s:"Whether cyber risk is within tolerance and improving, what management decided, and what needs the board.",
+      b:[["$","See whether cyber risk is <b>within tolerance and getting better</b> — in dollars."],["✓","Review <b>what management decided</b> and what needs a board decision."],["🛡","Every figure traces to data or is <b>clearly labeled modeled</b>."]]}
+  };
+  function showOrient(role){
+    var o=ORIENT[role]||ORIENT.ciso;
+    document.getElementById("oSeat").textContent=(role||"ciso").toUpperCase();
+    document.getElementById("oTitle").textContent=o.t;
+    document.getElementById("oSub").textContent=o.s;
+    document.getElementById("oBeats").innerHTML=o.b.map(function(x){return '<div class="obeat"><div class="oi">'+x[0]+'</div><div class="ot">'+x[1]+'</div></div>';}).join("");
+    document.getElementById("orient").classList.add("show");
+  }
+  function dismissOrient(){
+    try{localStorage.setItem("cyberrx_orient_seen","1");}catch(_){}
+    document.getElementById("orient").classList.remove("show");
+    enterPlatform();
+  }
+  function afterSignIn(){
+    document.getElementById("login").classList.add("hide");
+    var seen=false; try{seen=localStorage.getItem("cyberrx_orient_seen")==="1";}catch(_){}
+    if(seen){ enterPlatform(); }
+    else { showOrient(pickedRole); }
+  }
+  document.getElementById("oEnter").addEventListener("click",dismissOrient);
+  document.getElementById("oSkip").addEventListener("click",dismissOrient);
+  document.getElementById("verify").addEventListener("click",afterSignIn);
 
   function show(which){
     var i=which==="intake";
