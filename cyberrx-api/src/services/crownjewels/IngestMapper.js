@@ -70,4 +70,55 @@ function mapOnboarding(input = {}) {
   return { org: { id: orgId, name: String(input.org_name || orgId).trim() }, processes: procRows, assets: assetRows };
 }
 
-module.exports = { mapOnboarding, critFromRevData, typeFromHost, expoFromHost, dataClasses, slug };
+const SEV = { critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low' };
+const STAT = { open: 'open', mitigating: 'mitigating', accepted: 'accepted', closed: 'closed' };
+const norm = (s) => String(s || '').trim().toLowerCase();
+// Parse a money value, honoring magnitude suffixes ("$52M", "8000000", "2.1B",
+// "750k", "12 million"). Returns a positive number or null.
+function money(v) {
+  const s = String(v == null ? '' : v);
+  const n = Number(s.replace(/[^0-9.]/g, ''));
+  if (!Number.isFinite(n) || n <= 0) return null;
+  const u = s.toLowerCase();
+  let mult = 1;
+  if (/billion|[0-9.]\s*b\b/.test(u)) mult = 1e9;
+  else if (/million|mm\b|[0-9.]\s*m\b/.test(u)) mult = 1e6;
+  else if (/thousand|[0-9.]\s*k\b/.test(u)) mult = 1e3;
+  return n * mult;
+}
+
+/**
+ * Map a loose risk-register upload to canonical Risk.create rows. Pure + no DB.
+ * Links each risk to an asset/process BY NAME (callers don't know generated ids).
+ * @param {Array} risks  onboarding rows {title|name, severity, status, asset, processes|process, financial_exposure|exposure, cost_to_remediate, likelihood, description}
+ * @param {{org:{id}, assets:Array, processes:Array}} mapped  output of mapOnboarding
+ * @returns {Array} Risk.create-ready rows
+ */
+function mapRisks(risks, mapped) {
+  const orgId = mapped.org.id;
+  const assetByName = {}; (mapped.assets || []).forEach((a) => { assetByName[norm(a.name)] = a.id; });
+  const procByName = {}; (mapped.processes || []).forEach((p) => { procByName[norm(p.name)] = p.id; });
+  const out = [];
+  (risks || []).forEach((r, i) => {
+    if (!r) return;
+    const title = String(r.title || r.name || '').trim();
+    if (!title) return;
+    const procNames = r.processes || (r.process ? [r.process] : []);
+    out.push({
+      id: `${orgId}_R${i + 1}`,
+      title,
+      severity: SEV[norm(r.severity)] || 'High',
+      status: STAT[norm(r.status)] || 'open',
+      organizationId: orgId,
+      assetId: r.asset ? (assetByName[norm(r.asset)] || null) : null,
+      businessProcessIds: (Array.isArray(procNames) ? procNames : []).map((n) => procByName[norm(n)]).filter(Boolean),
+      financialExposure: money(r.financial_exposure != null ? r.financial_exposure : r.exposure),
+      costToRemediate: money(r.cost_to_remediate),
+      likelihood: r.likelihood || null,
+      description: r.description || null,
+    });
+  });
+  return out;
+}
+
+module.exports = { mapOnboarding, mapRisks, critFromRevData, typeFromHost, expoFromHost, dataClasses, slug, money };

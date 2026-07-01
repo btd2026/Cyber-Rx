@@ -950,7 +950,7 @@
   function renderRiskResult(){
     var el=document.getElementById('riskResult');if(!el||!RISK_UP)return;
     var rd=document.getElementById('riskDrop');if(rd)rd.style.display='none';
-    var tot=0;RISK_UP.forEach(function(x){var n=Number(String(x.exposure).replace(/[^0-9.]/g,''));if(isFinite(n))tot+=n;});
+    var tot=0;RISK_UP.forEach(function(x){var s=String(x.exposure||'').toLowerCase();var n=Number(s.replace(/[^0-9.]/g,''));if(!isFinite(n)||n<=0)return;var m=1;if(/billion|[0-9.]\s*b\b/.test(s))m=1e9;else if(/million|mm\b|[0-9.]\s*m\b/.test(s))m=1e6;else if(/thousand|[0-9.]\s*k\b/.test(s))m=1e3;tot+=n*m;});
     el.innerHTML='<div class="extracted-h">✓ '+RISK_UP.length+' risks read from '+(RISK_FN||'risk register')+(tot>0?' · ~$'+(tot>=1e6?(Math.round(tot/1e6)+'M'):(tot>=1e3?Math.round(tot/1e3)+'K':tot))+' total exposure':'')+'</div><div class="xlist">'+RISK_UP.slice(0,8).map(function(x){return '<div class="xrow"><div class="xi">▲</div><div class="xn"><div class="nm">'+x.title+'</div><div class="mt">'+(x.asset||'—')+' · '+(x.severity||'—')+(x.exposure?(' · '+x.exposure):'')+'</div></div></div>';}).join('')+'</div>';
   }
   function wireRisk(){
