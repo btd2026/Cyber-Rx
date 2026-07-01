@@ -26,13 +26,26 @@ const AnalystQueue = require('../assessment/AnalystQueueService');
 
 const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
 
+// Models return camelCase (businessProcessIds/dataClassification/cloudProvider),
+// but the scorer + graph read snake_case. Alias both so DB-loaded assets score
+// correctly (unit fixtures use snake_case directly, so this only bites live data).
+function normAsset(a) {
+  return {
+    ...a,
+    business_process_ids: a.business_process_ids || a.businessProcessIds || [],
+    data_classification: a.data_classification || a.dataClassification || [],
+    cloud_provider: a.cloud_provider || a.cloudProvider || null,
+  };
+}
+
 async function run(orgId) {
-  const [assets, processes, risks] = await Promise.all([
+  const [rawAssets, processes, risks] = await Promise.all([
     Asset.findByOrganization(orgId).catch(() => []),
     BusinessProcess.findByOrganization(orgId).catch(() => []),
     Risk.findByOrganization(orgId).catch(() => []),
   ]);
-  if (!assets.length) return empty(orgId);
+  if (!rawAssets.length) return empty(orgId);
+  const assets = rawAssets.map(normAsset);
 
   const procById = {}; processes.forEach((p) => { procById[p.id] = p; });
 
@@ -73,12 +86,13 @@ async function run(orgId) {
  * Runs stages 3-8 with CostMeter tracking. Returns the complete analysis result.
  */
 async function runPipeline(orgId, { runId, meter, anthropic } = {}) {
-  const [assets, processes, risks] = await Promise.all([
+  const [rawAssets, processes, risks] = await Promise.all([
     Asset.findByOrganization(orgId).catch(() => []),
     BusinessProcess.findByOrganization(orgId).catch(() => []),
     Risk.findByOrganization(orgId).catch(() => []),
   ]);
-  if (!assets.length) return empty(orgId);
+  if (!rawAssets.length) return empty(orgId);
+  const assets = rawAssets.map(normAsset);
 
   // Stage 3: Entity Resolution
   let resolvedAssets = assets;
