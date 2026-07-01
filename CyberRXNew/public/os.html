@@ -926,10 +926,10 @@
       <div class="qsub">What's our material exposure — and can we defend our response?</div>
       <div class="lead">Where we're genuinely exposed, the dollar impact if it's realized, and what's trending worse — with the scenarios that show what "realized" actually looks like.</div>
     </div>
-    <div class="sec-h"><h3>Business areas at risk</h3><span class="meta">ranked by impact to revenue, customers, and reputation</span></div>
+    <div class="sec-h"><h3 id="cjExpHead">Business areas at risk</h3><span class="meta" id="cjExpMeta">ranked by impact to revenue, customers, and reputation</span></div>
     <table class="tbl">
       <thead><tr><th style="width:30%">Business area</th><th>Risk</th><th>Trend</th><th>Why it matters</th></tr></thead>
-      <tbody>
+      <tbody id="cjExpRows">
         <tr class="drill" data-ev="exp-claims"><td><div class="pn">Claims Processing</div></td><td><span class="rk high">High</span></td><td><span class="trn up">↑</span></td><td>$220M/day revenue · open ransomware path to PHI</td></tr>
         <tr class="drill" data-ev="exp-ai"><td><div class="pn">AI-Assisted Claims</div></td><td><span class="rk high">High</span></td><td><span class="trn up">↑</span></td><td>Fast-growing · ungoverned model decisions on PHI</td></tr>
         <tr class="drill" data-ev="exp-portal"><td><div class="pn">Member Portal</div></td><td><span class="rk med">Medium</span></td><td><span class="trn flat">→</span></td><td>Customer-facing · brand exposure</td></tr>
@@ -3044,6 +3044,24 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
       if(clock)clock.textContent=real?('● LIVE · '+nm):'◐ SAMPLE DATA';
       if(src)src.textContent=real?('🛡 '+((d.counts||{}).assets||0)+' assets · '+((d.counts||{}).crown_jewels||0)+' crown jewels'):'illustrative — not live';
     }
+    // Replace the CISO Material-Exposure (q3) "business areas at risk" table with
+    // the org's real crown jewels (or open-risk items) when live. Gated on real
+    // data — in demo mode the authored rows stand (and the banner labels them).
+    function rkClass(score){return score>=85?'high':score>=75?'high':'med';}
+    function applyExposureView(d){
+      var rows=document.getElementById('cjExpRows');if(!rows)return;
+      var cjs=Array.isArray(d.crown_jewels)?d.crown_jewels:[],items=Array.isArray(d.material_exposure_items)?d.material_exposure_items:[];
+      var head=document.getElementById('cjExpHead'),meta=document.getElementById('cjExpMeta');
+      if(items.length){
+        if(head)head.textContent='Where the exposure sits';
+        if(meta)meta.textContent='open risks on your crown-jewel assets · from your risk register';
+        rows.innerHTML=items.slice(0,12).map(function(x){return '<tr><td><div class="pn">'+(x.risk||'Risk')+'</div></td><td><span class="rk '+(String(x.severity||'').toLowerCase()==='critical'?'high':String(x.severity||'').toLowerCase()==='high'?'high':'med')+'">'+(x.severity||'—')+'</span></td><td><span class="trn flat">'+usd(x.exposure_usd)+'</span></td><td>on '+(x.asset_id||'crown-jewel asset')+'</td></tr>';}).join('');
+      }else if(cjs.length){
+        if(head)head.textContent='Your crown jewels';
+        if(meta)meta.textContent='ranked by deterministic criticality · computed from your inventory';
+        rows.innerHTML=cjs.slice(0,12).map(function(a){return '<tr><td><div class="pn">'+a.name+' <span style="color:var(--muted);font-weight:400">('+(a.type||'asset')+')</span></div></td><td><span class="rk '+rkClass(a.score)+'">'+a.score+'/100</span></td><td><span class="trn flat">'+(a.tier||'—')+'</span></td><td>'+(a.rationale||'').replace(/^[^:]*:\s*/,'').replace(/ — criticality.*$/,'')+'</td></tr>';}).join('');
+      }
+    }
     window.cjLoadLive=function(){
       var base=api(),o=org();
       if(!base||!o){badge(false);setDataMode(null);return;}
@@ -3054,6 +3072,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
             if(d&&!d.empty&&(Number(d.material_exposure_usd)>0||(d.counts&&d.counts.crown_jewels>0))){
               if(v&&Number(d.material_exposure_usd)>0)v.textContent=usd(d.material_exposure_usd);
               try{applyExposureEvidence(d);}catch(_){}
+              try{applyExposureView(d);}catch(_){}
               badge(true);
             }else{badge(false);}
             setDataMode(d);})
