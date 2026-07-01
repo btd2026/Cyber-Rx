@@ -1258,11 +1258,10 @@
     <div class="modal-b">
       <p class="ae-intro">Every number in CyberRx traces to live signals from your own stack — not a questionnaire. This is the data layer the decisions stand on: what's connected, how fresh it is, how complete, and what each feed drives.</p>
       <div class="dt-sum">
-        <div class="dt-kpi"><div class="k">Coverage</div><div class="v ok">99.4%</div></div>
-        <div class="dt-kpi"><div class="k">Live signals</div><div class="v">1,240</div></div>
-        <div class="dt-kpi"><div class="k">Systems</div><div class="v">9 / 9</div></div>
-        <div class="dt-kpi"><div class="k">Freshest</div><div class="v ok">12s ago</div></div>
-        <div class="dt-kpi"><div class="k">Docs analyzed</div><div class="v">146</div></div>
+        <div class="dt-kpi"><div class="k">Tools connected</div><div class="v" id="dtKpiSystems">—</div></div>
+        <div class="dt-kpi"><div class="k">Live signals</div><div class="v" id="dtKpiSignals">—</div></div>
+        <div class="dt-kpi"><div class="k">Freshest</div><div class="v" id="dtKpiFresh">—</div></div>
+        <div class="dt-kpi"><div class="k">Status</div><div class="v" id="dtKpiStatus">—</div></div>
       </div>
       <div id="dtRows"></div>
       <div class="ae-prov">Every control, maturity score, and dollar figure links to the exact source signals behind it — open any value's evidence to see its lineage, freshness, and confidence. Signed &amp; chain-verified.</div>
@@ -3733,10 +3732,66 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     {sys:'AWS',cat:'Cloud posture',st:'live',sync:'1m ago',sig:'52',cov:'98%',feeds:'config, exposure, data stores'},
     {sys:'Azure',cat:'Cloud posture',st:'live',sync:'1m ago',sig:'24',cov:'95%',feeds:'config, identity, exposure'}
   ];
-  function renderData(){
+  // Real integrations panel: renders connectors from /api/integrations with their
+  // actual credential fields, connects via the API, and reflects real status.
+  function intBase(){try{return (window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'https://cyber-rx.onrender.com').replace(/\/+$/,'');}catch(_){return 'https://cyber-rx.onrender.com';}}
+  function intOrg(){try{return window.CYBERRX_ORG_ID||localStorage.getItem('cyberrx_org_id')||'';}catch(_){return '';}}
+  function esc2(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function fresh2(iso){if(!iso)return '—';var t=Date.parse(iso);if(!t)return '—';var s=Math.max(0,(Date.now()-t)/1000);return s<90?Math.round(s)+'s ago':s<5400?Math.round(s/60)+'m ago':s<172800?Math.round(s/3600)+'h ago':Math.round(s/86400)+'d ago';}
+  async function renderData(){
     const el=document.getElementById('dtRows');if(!el)return;
-    el.innerHTML='<table class="dtbl"><thead><tr><th>Source</th><th>Category</th><th>Status</th><th>Last sync</th><th>Signals</th><th>Coverage</th><th>Feeds</th></tr></thead><tbody>'+
-      CONNECTORS.map(c=>'<tr><td class="sys">'+c.sys+'</td><td>'+c.cat+'</td><td><span class="dot-s '+c.st+'"></span>'+(c.st==='live'?'live':'degraded')+'</td><td>'+c.sync+'</td><td>'+c.sig+'</td><td>'+c.cov+'</td><td style="color:var(--muted)">'+c.feeds+'</td></tr>').join('')+'</tbody></table>';
+    const base=intBase(),o=intOrg();
+    const setk=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+    if(!o){el.innerHTML='<div style="color:var(--muted);padding:14px">Complete onboarding first (so we have your organization), then connect your security tools here.</div>';setk('dtKpiSystems','—');setk('dtKpiSignals','—');setk('dtKpiFresh','—');setk('dtKpiStatus','not set up');return;}
+    el.innerHTML='<div style="color:var(--muted);padding:14px">Loading your connectors…</div>';
+    let cat=[],sigs=[];
+    try{const r=await fetch(base+'/api/integrations?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}});const d=await r.json();cat=(d&&d.connectors)||[];}catch(_){}
+    try{const r=await fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}});const d=await r.json();sigs=(d&&d.signals)||[];}catch(_){}
+    const connected=cat.filter(c=>c.connected).length;
+    let freshest=null;sigs.forEach(s=>{var t=Date.parse(s.as_of);if(t&&(!freshest||t>freshest))freshest=t;});
+    setk('dtKpiSystems',connected+' / '+cat.length);
+    setk('dtKpiSignals',String(sigs.length));
+    setk('dtKpiFresh',freshest?fresh2(new Date(freshest).toISOString()):'—');
+    setk('dtKpiStatus',connected?'live':'none connected');
+    if(!cat.length){el.innerHTML='<div style="color:var(--muted);padding:14px">No connectors available from the backend.</div>';return;}
+    el.innerHTML=cat.map(function(c){
+      const st=c.connected?'live':(c.status==='error'?'error':'off');
+      const stlbl=c.connected?('connected · '+(c.signalCount||0)+' signals'):(c.status==='error'?('error: '+esc2(c.error||'')):'not connected');
+      const fields=(c.fields||[]).map(function(f){return '<div class="field" style="margin:6px 0"><label style="font-size:12px">'+esc2(f.label||f.key)+(f.optional?' <span style="color:var(--muted)">(optional)</span>':'')+'</label><input data-fkey="'+esc2(f.key)+'" type="'+(f.secret?'password':'text')+'" '+(c.connected?'placeholder="•••• stored"':'')+' style="width:100%;padding:6px 8px;font-size:12px"></div>';}).join('');
+      return '<div class="int-conn" data-key="'+esc2(c.key)+'" style="border:1px solid var(--line,#e6e6e6);border-radius:9px;padding:11px 13px;margin-bottom:9px">'+
+        '<div style="display:flex;align-items:center;gap:9px"><b>'+esc2(c.label||c.key)+'</b><span style="color:var(--muted);font-size:12px">'+esc2(c.category||'')+'</span>'+(c.demoMode?'<span style="font-size:10px;font-weight:600;color:var(--warn,#b7791f);background:rgba(214,158,46,.14);padding:1px 6px;border-radius:6px">demo mode · simulated</span>':'')+
+        '<span style="margin-left:auto;font-size:11px;font-weight:600;color:'+(st==='live'?'var(--pass)':st==='error'?'var(--critical)':'var(--muted)')+'">'+(st==='live'?'● ':st==='error'?'▲ ':'○ ')+esc2(stlbl)+'</span>'+
+        '<button class="int-tog" data-tog="'+esc2(c.key)+'" style="background:none;border:none;color:var(--brand);cursor:pointer;font-size:12px">'+(c.connected?'manage ▾':'connect ▾')+'</button></div>'+
+        '<div class="int-body" id="intbody-'+esc2(c.key)+'" style="display:none;margin-top:9px">'+fields+
+        '<div style="display:flex;gap:8px;margin-top:8px"><button class="int-do" data-do="'+esc2(c.key)+'" style="background:var(--brand);color:#fff;border:none;border-radius:7px;padding:6px 13px;font-size:12px;cursor:pointer">'+(c.connected?'Reconnect':'Connect')+'</button>'+
+        (c.connected?'<button class="int-sync" data-sync="'+esc2(c.key)+'" style="background:none;border:1px solid var(--line);border-radius:7px;padding:6px 13px;font-size:12px;cursor:pointer">Sync now</button><button class="int-dis" data-dis="'+esc2(c.key)+'" style="background:none;border:1px solid var(--line);border-radius:7px;padding:6px 13px;font-size:12px;cursor:pointer;color:var(--critical)">Disconnect</button>':'')+
+        '<span class="int-msg" id="intmsg-'+esc2(c.key)+'" style="font-size:12px;align-self:center;color:var(--muted)"></span></div>'+
+        '<div style="font-size:11px;color:var(--muted);margin-top:6px">Pulls: '+esc2((c.signals||[]).join(', ')||'signals')+' · read-only</div></div></div>';
+    }).join('');
+    wireIntegrations();
+  }
+  function wireIntegrations(){
+    const base=intBase(),o=intOrg();
+    document.querySelectorAll('[data-tog]').forEach(function(b){b.onclick=function(){var body=document.getElementById('intbody-'+b.dataset.tog);if(body)body.style.display=body.style.display==='none'?'':'none';};});
+    document.querySelectorAll('[data-do]').forEach(function(b){b.onclick=async function(){
+      var key=b.dataset.do,conn=b.closest('.int-conn'),msg=document.getElementById('intmsg-'+key);
+      var creds={};conn.querySelectorAll('[data-fkey]').forEach(function(i){if(i.value.trim())creds[i.dataset.fkey]=i.value.trim();});
+      msg.textContent='Connecting…';msg.style.color='var(--muted)';b.disabled=true;
+      try{
+        var r=await fetch(base+'/api/integrations/'+encodeURIComponent(key)+'/connect?org_id='+encodeURIComponent(o),{method:'POST',headers:{'Content-Type':'application/json','X-Org-Id':o},body:JSON.stringify(creds)});
+        var d=await r.json();
+        if(r.ok){msg.textContent='✓ connected · '+((d.signals&&d.signals.length)||0)+' signals';msg.style.color='var(--pass)';try{window.cjLoadLive&&window.cjLoadLive();}catch(_){}setTimeout(renderData,700);}
+        else{msg.textContent='✗ '+(d.error||('HTTP '+r.status));msg.style.color='var(--critical)';}
+      }catch(e){msg.textContent='✗ '+e.message;msg.style.color='var(--critical)';}
+      b.disabled=false;
+    };});
+    document.querySelectorAll('[data-sync]').forEach(function(b){b.onclick=async function(){
+      var key=b.dataset.sync,msg=document.getElementById('intmsg-'+key);msg.textContent='Syncing…';
+      try{var r=await fetch(base+'/api/integrations/'+encodeURIComponent(key)+'/sync?org_id='+encodeURIComponent(o),{method:'POST',headers:{'X-Org-Id':o}});var d=await r.json();msg.textContent=r.ok?('✓ '+((d.signals&&d.signals.length)||0)+' signals'):('✗ '+(d.error||''));msg.style.color=r.ok?'var(--pass)':'var(--critical)';try{window.cjLoadLive&&window.cjLoadLive();}catch(_){}setTimeout(renderData,700);}catch(e){msg.textContent='✗ '+e.message;}
+    };});
+    document.querySelectorAll('[data-dis]').forEach(function(b){b.onclick=async function(){
+      var key=b.dataset.dis;try{await fetch(base+'/api/integrations/'+encodeURIComponent(key)+'?org_id='+encodeURIComponent(o),{method:'DELETE',headers:{'X-Org-Id':o}});try{window.cjLoadLive&&window.cjLoadLive();}catch(_){}renderData();}catch(_){}
+    };});
   }
   // ---- FAIR quantification engine — a real Monte Carlo over evidenced ranges ----
   // LEF (loss events/yr) and four loss-magnitude components ($M/event), each a
