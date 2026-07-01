@@ -2494,7 +2494,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
   // so the number is either real-and-labelled-live or demo-and-labelled-sample,
   // never a silent static value pretending to be real. =====
   (function(){
-    function api(){try{return window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'';}catch(_){return '';}}
+    function api(){try{return window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'https://cyberrx-api.onrender.com';}catch(_){return 'https://cyberrx-api.onrender.com';}}
     function org(){try{return window.CYBERRX_ORG_ID||localStorage.getItem('cyberrx_org_id')||'';}catch(_){return '';}}
     function usd(n){n=Number(n)||0;if(n>=1e9)return '$'+(n/1e9).toFixed(1)+'B';if(n>=1e6)return '$'+Math.round(n/1e6)+'M';if(n>=1e3)return '$'+Math.round(n/1e3)+'K';return '$'+n;}
     function badge(live){var b=document.getElementById('cjDataBadge');if(!b)return;b.style.display='inline-block';b.textContent=live?'live':'sample';b.style.background=live?'rgba(47,163,122,.16)':'rgba(120,140,160,.16)';b.style.color=live?'var(--pass)':'var(--muted)';b.title=live?'Computed from your inventory by the Crown-Jewels engine':'Sample data — connect your inventory (set window.CYBERRX_API + org id) to see live figures';}

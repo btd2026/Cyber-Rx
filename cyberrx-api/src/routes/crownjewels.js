@@ -9,8 +9,12 @@
 
 const express = require('express');
 const router = express.Router();
+const db = require('../utils/db');
+const Asset = require('../models/Asset');
+const BusinessProcess = require('../models/BusinessProcess');
 const Analysis = require('../services/crownjewels/AnalysisRunService');
 const CrownJewelEngine = require('../services/crownjewels/CrownJewelEngine');
+const IngestMapper = require('../services/crownjewels/IngestMapper');
 const { optionalJWT, requireAdmin } = require('../middleware/auth');
 
 function ids(req) {
@@ -40,6 +44,22 @@ router.post('/analyze', optionalJWT, async (req, res) => {
     if (e && e.code === 'ANALYSIS_CAP_REACHED') return res.status(429).json({ error: e.message, code: e.code, used: e.used, limit: e.limit, reset_date: e.resetDate });
     res.status(500).json({ error: e.message });
   }
+});
+
+// Ingest onboarding uploads (process list + app/CMDB inventory) into the org's
+// canonical inventory so the engine scores REAL data. Idempotent per org.
+router.post('/ingest', optionalJWT, async (req, res) => {
+  const b = req.body || {};
+  if (!b.org_name && !b.org_id) return res.status(400).json({ error: 'org_name or org_id is required' });
+  try {
+    const { org, processes, assets } = IngestMapper.mapOnboarding(b);
+    await db.query('INSERT INTO orgs (id, name) VALUES ($1,$2) ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name', [org.id, org.name]);
+    await db.query('DELETE FROM assets WHERE organization_id=$1', [org.id]).catch(() => {});
+    await db.query('DELETE FROM business_processes WHERE organization_id=$1', [org.id]).catch(() => {});
+    for (const p of processes) { try { await BusinessProcess.create(p); } catch (e) { /* skip a bad row */ } }
+    for (const a of assets) { try { await Asset.create(a); } catch (e) { /* skip a bad row */ } }
+    res.json({ org_id: org.id, org_name: org.name, counts: { processes: processes.length, assets: assets.length } });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // Crown-jewel summary for the cockpit (material exposure, crown jewels, counts).

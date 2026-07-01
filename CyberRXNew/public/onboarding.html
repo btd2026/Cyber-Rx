@@ -823,7 +823,17 @@
     const ni=e.target.closest('.numfmt');
     if(ni){const d=ni.value.replace(/[^\d]/g,'');ni.value=d?parseInt(d,10).toLocaleString():'';if(ni.id==='empNum')empRaw=ni.value;}
   });
-  document.getElementById('nextBtn').addEventListener('click',()=>{done[cur]=true;updateComplete();if(cur<STEPS.length-1){cur++;render();}else{document.getElementById('nextBtn').textContent='✓ Setup complete';const bc=document.getElementById('benchConsent');const benchShare=!!(bc&&bc.checked);var _org='';try{_org=(orgName||localStorage.getItem('cyberrx_org_name')||'').trim();}catch(_){_org=(orgName||'').trim();}if(_org){try{localStorage.setItem('cyberrx_org_name',_org);}catch(_){}}try{window.parent.postMessage({type:'cyberrx-golive',industry:selectedIndustry,org:_org,names:seatNames,benchShare:benchShare,currency:{code:orgCurrency,sym:curSym()}},'*');window.parent.postMessage('cyberrx-golive','*');}catch(e){}}});
+  document.getElementById('nextBtn').addEventListener('click',()=>{done[cur]=true;updateComplete();if(cur<STEPS.length-1){cur++;render();}else{document.getElementById('nextBtn').textContent='✓ Setup complete';const bc=document.getElementById('benchConsent');const benchShare=!!(bc&&bc.checked);var _org='';try{_org=(orgName||localStorage.getItem('cyberrx_org_name')||'').trim();}catch(_){_org=(orgName||'').trim();}if(_org){try{localStorage.setItem('cyberrx_org_name',_org);}catch(_){}}
+    // Best-effort: push the uploaded inventory into the backend so the cockpit's
+    // engine scores REAL data. Stores the returned org_id for the cockpit to query.
+    try{
+      var _api='';try{_api=window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'https://cyberrx-api.onrender.com';}catch(_){_api='https://cyberrx-api.onrender.com';}
+      if(_api&&((PROC_UP&&PROC_UP.length)||(APP_UP&&APP_UP.length))){
+        fetch(_api.replace(/\/+$/,'')+'/api/crown-jewels/ingest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({org_name:_org||'My Organization',processes:(PROC_UP||[]).map(function(p){return {name:p.n,data:p.data,rev:p.rev};}),apps:(APP_UP||[]).map(function(a){return {name:a.n,host:a.host,data:a.data};})})})
+          .then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.org_id){try{localStorage.setItem('cyberrx_org_id',d.org_id);}catch(_){}}}).catch(function(){});
+      }
+    }catch(_){}
+    try{window.parent.postMessage({type:'cyberrx-golive',industry:selectedIndustry,org:_org,names:seatNames,benchShare:benchShare,currency:{code:orgCurrency,sym:curSym()}},'*');window.parent.postMessage('cyberrx-golive','*');}catch(e){}}});
   document.getElementById('backBtn').addEventListener('click',()=>{if(cur>0){cur--;render();}});
   document.getElementById('ccCall').addEventListener('click',function(){this.classList.add('req');this.textContent='✓ We\'ll reach out within 1 business day';});
   render();updateComplete();
