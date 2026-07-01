@@ -280,4 +280,4 @@ function empty(orgId) {
     graph: { nodes: [], edges: [] }, assets: [] };
 }
 
-module.exports = { run, runPipeline, materialExposure };
+module.exports = { run, runPipeline, materialExposure, normAsset, normRisk };
