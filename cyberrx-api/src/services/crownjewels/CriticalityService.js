@@ -32,8 +32,9 @@ function exposureValue(asset) {
   const e = String(asset.exposure || '').toLowerCase();
   if (e.includes('internet')) return 1;
   if (e.includes('internal')) return 0.3;
-  // derive from hints when exposure not explicitly set
-  const hint = `${asset.environment || ''} ${asset.cloud_provider || ''} ${(asset.attributes && asset.attributes.host) || ''} ${asset.type || ''}`.toLowerCase();
+  // derive from hints when exposure not an explicit column (assets table stores
+  // the host string in description/hostname).
+  const hint = `${asset.environment || ''} ${asset.cloud_provider || ''} ${asset.description || ''} ${asset.hostname || ''} ${(asset.attributes && asset.attributes.host) || ''} ${asset.type || ''}`.toLowerCase();
   if (/internet|public|saas|cloud|aws|azure|gcp|api/.test(hint)) return 1;
   if (/on-?prem|internal|datacenter|lan/.test(hint)) return 0.3;
   return 0.5; // unknown
