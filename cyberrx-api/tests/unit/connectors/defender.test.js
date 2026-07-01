@@ -19,7 +19,7 @@ describe('defender connector', () => {
     expect(defender.category).toBe('EDR / XDR');
     expect(defender.signals).toContain('edr_pct');
     expect(defender.fields.find((f) => f.key === 'clientSecret').secret).toBe(true);
-    expect(registry.get('defender')).toBe(defender);
+    expect(registry.get('defender').key).toBe('defender'); // wrapped by demo-mode registry
   });
 
   test('test() requires OAuth creds before any network call', async () => {

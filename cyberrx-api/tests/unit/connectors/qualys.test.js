@@ -25,7 +25,7 @@ describe('qualys connector', () => {
     expect(qualys.category).toBe('Vulnerability Management');
     expect(qualys.signals).toContain('vuln_sla_pct');
     expect(qualys.fields.find((f) => f.key === 'password').secret).toBe(true);
-    expect(registry.get('qualys')).toBe(qualys);
+    expect(registry.get('qualys').key).toBe('qualys'); // wrapped by demo-mode registry
   });
 
   test('test() requires pod/baseUrl + credentials before any network call', async () => {

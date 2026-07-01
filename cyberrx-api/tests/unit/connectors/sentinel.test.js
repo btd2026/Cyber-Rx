@@ -25,7 +25,7 @@ describe('sentinel connector', () => {
     expect(sentinel.category).toBe('SIEM / Detection');
     expect(sentinel.signals).toEqual(expect.arrayContaining(['mttd_hrs', 'mttr_hrs', 'open_incidents']));
     expect(sentinel.fields.find((f) => f.key === 'clientSecret').secret).toBe(true);
-    expect(registry.get('sentinel')).toBe(sentinel);
+    expect(registry.get('sentinel').key).toBe('sentinel'); // wrapped by demo-mode registry
     expect(registry.list().some((c) => c.key === 'sentinel')).toBe(true);
   });
 

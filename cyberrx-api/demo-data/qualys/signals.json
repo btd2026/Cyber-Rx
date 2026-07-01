@@ -1,0 +1,6 @@
+{
+  "signals": [
+    { "key": "vuln_sla_pct", "value": 87, "asOf": "2026-06-28T12:00:00Z", "raw": { "detections": 3420, "fixed": 2975 } }
+  ],
+  "meta": { "vendor": "Qualys VMDR" }
+}

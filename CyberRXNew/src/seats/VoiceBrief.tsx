@@ -1,10 +1,35 @@
 import { useEffect, useRef, useState } from 'react'
 import { briefingScript } from '../engine/briefing'
-import { SEATS, type SeatId } from './seats'
+import type { SeatId } from './seats'
 
-// Voice briefing bar (Phase 5d). Demo: browser speech synthesis, one voice per
-// seat (chosen deterministically), clearly flagged. Production: server-side
-// neural TTS, one voice per seat, on the same grounded script.
+const VOICE_BLACKLIST = ['albert','bad news','bahh','bells','boing','bubbles','cellos','deranged','good news','jester','organ','superstar','trinoids','whisper','wobble','zarvox','junior','ralph','fred','kathy','princess','eddy','flo','grandma','grandpa','reed','rocko','sandy','shelley','bruce','agnes','vicki','victoria','novelty']
+
+const VOICE_PREF: Record<string, { rate: number; pitch: number; pref: string[] }> = {
+  ceo:   { rate: 0.95, pitch: 0.97, pref: ['Alex','Aaron','Tom','Microsoft Guy','Microsoft Andrew','Google UK English Male','Daniel','Oliver'] },
+  ciso:  { rate: 0.99, pitch: 1.02, pref: ['Samantha','Ava','Microsoft Aria','Google US English','Allison','Nicky','Susan'] },
+  cfo:   { rate: 0.96, pitch: 1.0,  pref: ['Susan','Allison','Microsoft Jenny','Microsoft Michelle','Joelle','Karen','Samantha'] },
+  cio:   { rate: 1.0,  pitch: 0.99, pref: ['Rishi','Daniel','Google UK English Male','Microsoft Guy','Alex','Oliver'] },
+  clo:   { rate: 0.94, pitch: 1.0,  pref: ['Moira','Tessa','Fiona','Kate','Microsoft Michelle','Serena','Karen'] },
+  cro:   { rate: 0.98, pitch: 1.05, pref: ['Serena','Allison','Microsoft Zira','Google US English','Ava','Kate','Samantha'] },
+  board: { rate: 0.92, pitch: 0.95, pref: ['Daniel','Microsoft Andrew','Microsoft David','Google UK English Male','Alex','Oliver'] },
+}
+
+function isNatural(v: SpeechSynthesisVoice) {
+  const n = v.name.toLowerCase()
+  return !VOICE_BLACKLIST.some(b => n.includes(b))
+}
+
+function pickVoice(seatId: string): SpeechSynthesisVoice | null {
+  const voices = window.speechSynthesis.getVoices()
+  const en = voices.filter(v => (v.lang || '').toLowerCase().startsWith('en')).filter(isNatural)
+  const cfg = VOICE_PREF[seatId] || VOICE_PREF.ciso
+  for (const want of cfg.pref) {
+    const match = en.find(v => v.name.toLowerCase().includes(want.toLowerCase()))
+    if (match) return match
+  }
+  return en[0] || voices[0] || null
+}
+
 export default function VoiceBrief({ open, seatId, seatLabel, name, onClose }: {
   open: boolean
   seatId: SeatId
@@ -14,18 +39,24 @@ export default function VoiceBrief({ open, seatId, seatLabel, name, onClose }: {
 }) {
   const [speaking, setSpeaking] = useState(false)
   const [showScript, setShowScript] = useState(false)
+  const [voicesReady, setVoicesReady] = useState(false)
   const supported = typeof window !== 'undefined' && 'speechSynthesis' in window
   const script = briefingScript(seatId, seatLabel)
-  const seatIdx = Math.max(0, SEATS.findIndex((s) => s.id === seatId))
   const utterRef = useRef<SpeechSynthesisUtterance | null>(null)
 
   useEffect(() => {
+    if (!supported) return
+    const check = () => {
+      if (window.speechSynthesis.getVoices().length > 0) setVoicesReady(true)
+    }
+    check()
+    window.speechSynthesis.onvoiceschanged = check
     return () => {
-      if (supported) window.speechSynthesis.cancel()
+      window.speechSynthesis.cancel()
+      window.speechSynthesis.onvoiceschanged = null
     }
   }, [supported])
 
-  // Stop speaking if the bar closes or the seat changes.
   useEffect(() => {
     if (supported) window.speechSynthesis.cancel()
     setSpeaking(false)
@@ -35,10 +66,17 @@ export default function VoiceBrief({ open, seatId, seatLabel, name, onClose }: {
     if (!supported) return
     window.speechSynthesis.cancel()
     const u = new SpeechSynthesisUtterance(script)
-    const voices = window.speechSynthesis.getVoices()
-    if (voices.length) u.voice = voices[seatIdx % voices.length] // one voice per seat
-    u.rate = 1.0
-    u.onend = () => setSpeaking(false)
+    const voice = pickVoice(seatId)
+    if (voice) u.voice = voice
+    const cfg = VOICE_PREF[seatId] || VOICE_PREF.ciso
+    u.rate = cfg.rate
+    u.pitch = cfg.pitch
+    const keepAlive = setInterval(() => {
+      if (window.speechSynthesis.speaking) window.speechSynthesis.resume()
+      else clearInterval(keepAlive)
+    }, 5000)
+    u.onend = () => { clearInterval(keepAlive); setSpeaking(false) }
+    u.onerror = () => { clearInterval(keepAlive); setSpeaking(false) }
     utterRef.current = u
     setSpeaking(true)
     window.speechSynthesis.speak(u)
@@ -61,7 +99,7 @@ export default function VoiceBrief({ open, seatId, seatLabel, name, onClose }: {
           <span className="vb-wave"><span /><span /><span /><span /><span /></span>
         )}
         {!speaking ? (
-          <button className="tbtn primary" onClick={play} disabled={!supported} title={supported ? '' : 'Speech not supported here'}>
+          <button className="tbtn primary" onClick={play} disabled={!supported || !voicesReady} title={!supported ? 'Speech not supported here' : !voicesReady ? 'Loading voices...' : ''}>
             ▶ Brief me
           </button>
         ) : (

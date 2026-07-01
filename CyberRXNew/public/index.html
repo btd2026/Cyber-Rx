@@ -56,21 +56,21 @@
       <div class="lstep on" id="step1">
         <div class="lsub">Executive cyber-risk operating system. Sign in to your cockpit.</div>
         <div class="llabel">Work email</div>
-        <input class="linput" id="email" type="email" value="sarah.chen@meridian.health" autocomplete="username">
+        <input class="linput" id="email" type="email" placeholder="you@company.com" autocomplete="username">
         <div class="llabel">Password</div>
         <input class="linput" id="pwd" type="password" value="••••••••••" autocomplete="current-password">
-        <div class="llabel">Sign in as (demo)</div>
+        <div class="llabel">Sign in as</div>
         <div class="lrole" id="roleRow">
-          <button class="lrolechip" data-role="ceo" data-name="Marcus">CEO</button>
-          <button class="lrolechip on" data-role="ciso" data-name="Sarah">CISO</button>
-          <button class="lrolechip" data-role="cfo" data-name="Diane">CFO</button>
-          <button class="lrolechip" data-role="cio" data-name="Raj">CIO</button>
-          <button class="lrolechip" data-role="clo" data-name="Patricia">CLO</button>
-          <button class="lrolechip" data-role="cro" data-name="Sloan">CRO</button>
-          <button class="lrolechip" data-role="board" data-name="Chair">Board</button>
+          <button class="lrolechip" data-role="ceo">CEO</button>
+          <button class="lrolechip on" data-role="ciso">CISO</button>
+          <button class="lrolechip" data-role="cfo">CFO</button>
+          <button class="lrolechip" data-role="cio">CIO</button>
+          <button class="lrolechip" data-role="clo">CLO</button>
+          <button class="lrolechip" data-role="cro">CRO</button>
+          <button class="lrolechip" data-role="board">Board</button>
         </div>
         <button class="lbtn" id="toMfa">Continue</button>
-        <div class="lsec">🔒 SSO + SCIM provisioning supported in production</div>
+        <div class="lsec">🔒 SSO + SCIM provisioning supported</div>
       </div>
 
       <div class="lstep" id="step2">
@@ -81,7 +81,7 @@
         </div>
         <button class="lbtn" id="verify">Verify &amp; enter</button>
         <button class="lback" id="backTo1">← Use a different account</button>
-        <div class="lhint">Demo: any 6 digits work. Production enforces TOTP / FIDO2 hardware keys.</div>
+        <div class="lhint">TOTP / FIDO2 hardware keys supported</div>
       </div>
     </div>
   </div>
@@ -92,18 +92,21 @@
     <button id="swOS" class="on">Operating System</button>
   </div>
   <iframe class="frame" id="fIntake"></iframe>
-  <iframe class="frame" id="fOS"></iframe>
+  <iframe class="frame" id="fOS" allow="autoplay; speaker-selection"></iframe>
 <script>
   document.getElementById("fIntake").src="onboarding.html";
   document.getElementById("fOS").src="os.html";
+  // Pre-load voices so they're ready when the OS iframe requests speech
+  if('speechSynthesis' in window){window.speechSynthesis.getVoices();window.speechSynthesis.onvoiceschanged=function(){window.speechSynthesis.getVoices();};}
 
-  var pickedRole="ciso", pickedName="Sarah";
+  var pickedRole="ciso", pickedName="";
   document.querySelectorAll("#roleRow .lrolechip").forEach(function(c){
     c.addEventListener("click",function(){
-      pickedRole=c.dataset.role; pickedName=c.dataset.name;
+      pickedRole=c.dataset.role; pickedName=c.dataset.name||'';
       document.querySelectorAll("#roleRow .lrolechip").forEach(function(x){x.classList.toggle("on",x===c);});
       var em=document.getElementById("email");
-      em.value=pickedName.toLowerCase()+"@meridian.health";
+      if(pickedName){var dom=(document.getElementById("email").value||'').split('@')[1]||'company.com';
+      em.value=pickedName.toLowerCase()+"@"+dom;}
     });
   });
   document.getElementById("toMfa").addEventListener("click",function(){
@@ -124,7 +127,7 @@
     document.getElementById("login").classList.add("hide");
     document.getElementById("switcher").classList.add("show");
     show("intake");
-    osMsg({type:"cyberrx-auth",role:pickedRole,name:pickedName});
+    setTimeout(function(){osMsg({type:"cyberrx-auth",role:pickedRole,name:pickedName});},300);
   }
   document.getElementById("verify").addEventListener("click",enterPlatform);
 
@@ -139,8 +142,41 @@
   document.getElementById("swIntake").addEventListener("click",function(){show("intake");});
   document.getElementById("swOS").addEventListener("click",function(){show("os");});
   window.addEventListener("message",function(e){
-    if(e.data && e.data.type==="cyberrx-golive"){ osMsg({type:"cyberrx-golive",names:e.data.names,industry:e.data.industry,org:e.data.org,benchShare:e.data.benchShare,currency:e.data.currency}); setTimeout(function(){show("os");},600); }
+    if(e.data && e.data.type==="cyberrx-golive"){ osMsg({type:"cyberrx-golive",names:e.data.names,industry:e.data.industry,org:e.data.org,benchShare:e.data.benchShare,currency:e.data.currency,profile:e.data.profile,docResults:e.data.docResults}); setTimeout(function(){show("os");},600); }
     else if(e.data==="cyberrx-golive"){ setTimeout(function(){show("os");},600); }
+    else if(e.data && e.data.type==="cyberrx-speak"){
+      try{
+        var _wasSpeaking=window.speechSynthesis.speaking||window.speechSynthesis.pending;
+        window.speechSynthesis.cancel();
+        var _doParentSpeak=function(){
+          var u=new SpeechSynthesisUtterance(e.data.text);
+          if(e.data.rate)u.rate=e.data.rate;
+          if(e.data.pitch)u.pitch=e.data.pitch;
+          u.volume=1;
+          var vs=window.speechSynthesis.getVoices();
+          var picked=null;
+          if(e.data.voiceName){
+            for(var vi=0;vi<vs.length;vi++){if(vs[vi].name===e.data.voiceName){picked=vs[vi];break;}}
+          }
+          if(!picked&&e.data.voicePref&&e.data.voicePref.length){
+            for(var pi=0;pi<e.data.voicePref.length;pi++){
+              for(var vi2=0;vi2<vs.length;vi2++){if(vs[vi2].name.toLowerCase().indexOf(e.data.voicePref[pi].toLowerCase())!==-1&&(vs[vi2].lang||'').toLowerCase().indexOf('en')===0){picked=vs[vi2];break;}}
+              if(picked)break;
+            }
+          }
+          if(picked)u.voice=picked;
+          var _ka=setInterval(function(){if(window.speechSynthesis.speaking)window.speechSynthesis.resume();else clearInterval(_ka);},5000);
+          u.onstart=function(){osMsg({type:"cyberrx-speech-event",event:"start"});};
+          u.onend=function(){clearInterval(_ka);osMsg({type:"cyberrx-speech-event",event:"end"});};
+          u.onerror=function(){clearInterval(_ka);osMsg({type:"cyberrx-speech-event",event:"error"});};
+          window.speechSynthesis.speak(u);
+        };
+        if(_wasSpeaking){setTimeout(_doParentSpeak,200);}else{_doParentSpeak();}
+      }catch(_){}
+    }
+    else if(e.data && e.data.type==="cyberrx-speak-cancel"){
+      try{window.speechSynthesis.cancel();}catch(_){}
+    }
     else if(e.data==="cyberrx-signout"){
       document.getElementById("switcher").classList.remove("show");
       document.getElementById("fIntake").classList.remove("show");

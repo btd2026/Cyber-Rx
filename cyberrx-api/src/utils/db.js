@@ -119,6 +119,17 @@ async function init() {
       ALTER TABLE assets ADD COLUMN IF NOT EXISTS vuln_high INTEGER DEFAULT 0;
       ALTER TABLE assets ADD COLUMN IF NOT EXISTS patch_pct INTEGER;
 
+      -- Crown Jewel Analysis Engine columns on assets
+      DO $$ BEGIN
+        ALTER TABLE assets ADD COLUMN IF NOT EXISTS exposure TEXT;
+        ALTER TABLE assets ADD COLUMN IF NOT EXISTS impact_level TEXT;
+        ALTER TABLE assets ADD COLUMN IF NOT EXISTS environment TEXT;
+        ALTER TABLE assets ADD COLUMN IF NOT EXISTS aliases JSONB DEFAULT '[]';
+        ALTER TABLE assets ADD COLUMN IF NOT EXISTS sources JSONB DEFAULT '[]';
+        ALTER TABLE assets ADD COLUMN IF NOT EXISTS provenance JSONB DEFAULT '{}';
+      EXCEPTION WHEN others THEN NULL;
+      END $$;
+
       -- Recovery posture on business processes (idempotent): populated by a
       -- CMDB / BC-DR / recovery-test feed when available; read live when present,
       -- otherwise modeled from tier. last_recovery_test drives "restore-tested".
@@ -245,6 +256,17 @@ async function init() {
         created_at          TIMESTAMPTZ DEFAULT NOW(),
         updated_at          TIMESTAMPTZ DEFAULT NOW()
       );
+
+      -- Crown Jewel Analysis Engine columns on risks
+      DO $$ BEGIN
+        ALTER TABLE risks ADD COLUMN IF NOT EXISTS origin TEXT;
+        ALTER TABLE risks ADD COLUMN IF NOT EXISTS threat_refs JSONB DEFAULT '[]';
+        ALTER TABLE risks ADD COLUMN IF NOT EXISTS confidence NUMERIC;
+        ALTER TABLE risks ADD COLUMN IF NOT EXISTS rationale TEXT;
+        ALTER TABLE risks ADD COLUMN IF NOT EXISTS estimated BOOLEAN DEFAULT false;
+        ALTER TABLE risks ADD COLUMN IF NOT EXISTS review_status TEXT DEFAULT 'auto';
+      EXCEPTION WHEN others THEN NULL;
+      END $$;
 
       CREATE TABLE IF NOT EXISTS findings (
         id                  TEXT PRIMARY KEY,
@@ -1158,6 +1180,89 @@ async function init() {
         detail JSONB DEFAULT '{}', created_at TIMESTAMPTZ DEFAULT NOW()
       );
       CREATE INDEX IF NOT EXISTS analysis_run_audit_scope ON analysis_run_audit(scope_type, scope_id, created_at);
+
+      -- Crown Jewel Analysis Engine tables
+
+      CREATE TABLE IF NOT EXISTS dependency_edge (
+        id              TEXT PRIMARY KEY,
+        organization_id TEXT NOT NULL,
+        process_id      TEXT NOT NULL,
+        asset_id        TEXT NOT NULL,
+        relation        TEXT NOT NULL DEFAULT 'depends_on',
+        origin          TEXT NOT NULL DEFAULT 'explicit',
+        confidence      NUMERIC DEFAULT 1.0,
+        rationale       TEXT,
+        review_status   TEXT DEFAULT 'auto',
+        reviewer        TEXT,
+        reviewed_at     TIMESTAMPTZ,
+        run_id          TEXT,
+        created_at      TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS dep_edge_org ON dependency_edge(organization_id);
+      CREATE INDEX IF NOT EXISTS dep_edge_process ON dependency_edge(process_id);
+      CREATE INDEX IF NOT EXISTS dep_edge_asset ON dependency_edge(asset_id);
+      CREATE UNIQUE INDEX IF NOT EXISTS dep_edge_pair ON dependency_edge(organization_id, process_id, asset_id);
+
+      CREATE TABLE IF NOT EXISTS control_application (
+        id                    TEXT PRIMARY KEY,
+        organization_id       TEXT NOT NULL,
+        control_id            TEXT NOT NULL,
+        framework             TEXT NOT NULL,
+        framework_version     TEXT,
+        asset_id              TEXT NOT NULL,
+        risk_id               TEXT,
+        basis                 TEXT NOT NULL DEFAULT 'baseline_attribute_driven',
+        rationale             TEXT,
+        confidence            NUMERIC DEFAULT 0.9,
+        documentation_status  TEXT DEFAULT 'unknown',
+        review_status         TEXT DEFAULT 'auto',
+        reviewer              TEXT,
+        reviewed_at           TIMESTAMPTZ,
+        run_id                TEXT,
+        created_at            TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS ctrl_app_org ON control_application(organization_id);
+      CREATE INDEX IF NOT EXISTS ctrl_app_asset ON control_application(asset_id);
+      CREATE INDEX IF NOT EXISTS ctrl_app_control ON control_application(control_id, framework);
+      CREATE UNIQUE INDEX IF NOT EXISTS ctrl_app_uniq ON control_application(organization_id, control_id, framework, asset_id, COALESCE(risk_id, ''));
+
+      CREATE TABLE IF NOT EXISTS risk_mapping (
+        id              TEXT PRIMARY KEY,
+        organization_id TEXT NOT NULL,
+        risk_id         TEXT NOT NULL,
+        node_type       TEXT NOT NULL,
+        node_id         TEXT NOT NULL,
+        rationale       TEXT,
+        confidence      NUMERIC DEFAULT 0.8,
+        origin          TEXT NOT NULL DEFAULT 'register',
+        severity        TEXT,
+        likelihood      TEXT,
+        estimated       BOOLEAN DEFAULT false,
+        review_status   TEXT DEFAULT 'auto',
+        reviewer        TEXT,
+        reviewed_at     TIMESTAMPTZ,
+        run_id          TEXT,
+        created_at      TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS risk_map_org ON risk_mapping(organization_id);
+      CREATE INDEX IF NOT EXISTS risk_map_risk ON risk_mapping(risk_id);
+      CREATE INDEX IF NOT EXISTS risk_map_node ON risk_mapping(node_type, node_id);
+
+      CREATE TABLE IF NOT EXISTS crown_jewel_snapshot (
+        id                    TEXT PRIMARY KEY,
+        organization_id       TEXT NOT NULL,
+        asset_id              TEXT NOT NULL,
+        run_id                TEXT,
+        criticality_score     NUMERIC NOT NULL,
+        criticality_breakdown JSONB DEFAULT '{}',
+        crown_jewel           BOOLEAN DEFAULT false,
+        crown_jewel_tier      TEXT DEFAULT 'none',
+        rationale             TEXT,
+        created_at            TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS cj_snap_org ON crown_jewel_snapshot(organization_id);
+      CREATE INDEX IF NOT EXISTS cj_snap_run ON crown_jewel_snapshot(run_id);
+      CREATE INDEX IF NOT EXISTS cj_snap_asset ON crown_jewel_snapshot(asset_id);
 
       -- CISO posture-domain snapshots — one row per (org, domain) per capture,
       -- so the dashboard can show whether each domain is improving/deteriorating.

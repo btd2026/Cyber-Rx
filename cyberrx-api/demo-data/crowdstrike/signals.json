@@ -1,0 +1,7 @@
+{
+  "signals": [
+    { "key": "edr_hosts", "value": 12480, "asOf": "2026-06-28T12:00:00Z", "raw": {} },
+    { "key": "edr_pct", "value": 96, "asOf": "2026-06-28T12:00:00Z", "raw": { "managed": 12480, "total": 13000 } }
+  ],
+  "meta": { "vendor": "CrowdStrike Falcon", "managed": 12480 }
+}

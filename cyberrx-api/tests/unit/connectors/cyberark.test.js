@@ -19,7 +19,7 @@ describe('cyberark connector', () => {
     expect(cyberark.category).toBe('Privileged Access (PAM)');
     expect(cyberark.signals).toContain('pam_pct');
     expect(cyberark.fields.find((f) => f.key === 'password').secret).toBe(true);
-    expect(registry.get('cyberark')).toBe(cyberark);
+    expect(registry.get('cyberark').key).toBe('cyberark'); // wrapped by demo-mode registry
   });
 
   test('test() requires PVWA URL + credentials before any network call', async () => {

@@ -22,7 +22,7 @@ describe('sailpoint connector', () => {
     expect(sailpoint.category).toBe('Identity Governance');
     expect(sailpoint.signals).toContain('access_review_pct');
     expect(sailpoint.fields.find((f) => f.key === 'clientSecret').secret).toBe(true);
-    expect(registry.get('sailpoint')).toBe(sailpoint);
+    expect(registry.get('sailpoint').key).toBe('sailpoint'); // wrapped by demo-mode registry
     expect(registry.list().some((c) => c.key === 'sailpoint')).toBe(true);
   });
 
