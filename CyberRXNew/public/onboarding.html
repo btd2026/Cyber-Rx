@@ -406,8 +406,9 @@
       try{
         var procs=(PROC_UP||[]).filter(function(p){return p&&p.n;}).map(function(p){return {name:p.n,data:p.data,rev:p.rev};});
         var apps=(APP_UP||[]).filter(function(a){return a&&a.n;}).map(function(a){return {name:a.n,host:a.host,data:a.data};});
+        var risks=(RISK_UP||[]).filter(function(x){return x&&x.title;}).map(function(x){return {title:x.title,severity:x.severity,asset:x.asset,status:x.status,financial_exposure:x.exposure};});
         if(org&&(procs.length||apps.length)){
-          var r=await fetch(apiBase()+'/api/crown-jewels/ingest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({org_name:org,org_id:orgId,processes:procs,apps:apps})});
+          var r=await fetch(apiBase()+'/api/crown-jewels/ingest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({org_name:org,org_id:orgId,processes:procs,apps:apps,risks:risks})});
           if(r&&r.ok){var body=await r.json().catch(function(){return{};});if(body&&body.org_id)orgId=body.org_id;}
         }
       }catch(_){}
@@ -617,7 +618,13 @@
       <div id="procSource"></div><div id="procResult"></div>`,
     3:()=>`<div class="panel-h"><div class="step-of">Step 4 of 8</div><h2>Applications & systems</h2><p>Connect directly to your CMDB or discovery tool and we fetch every system automatically — or upload an inventory. Live discovery keeps your asset list current as things change.</p></div>
       <div class="srcchoice" id="appChoice"><button class="srcopt" data-src="app-connect"><div class="so-h">⚡ Connect a system <span class="rec-tag">recommended</span></div><div class="so-d">ServiceNow CMDB, Device42, BMC Helix, Tanium, Lansweeper — live discovery.</div></button><button class="srcopt" data-src="app-upload"><div class="so-h">⤓ Upload a file</div><div class="so-d">CSV or XLSX — an app inventory or CMDB export (snapshot).</div></button></div>
-      <div id="appSource"></div><div id="appResult"></div>`,
+      <div id="appSource"></div><div id="appResult"></div>
+      <div class="risk-optin" style="margin-top:22px;padding-top:18px;border-top:1px solid var(--line,#e6e6e6)">
+        <div style="font-weight:600;font-size:14px;margin-bottom:3px">Risk register <span class="hint" style="font-weight:400">— optional, quantifies exposure</span></div>
+        <div class="hint" style="margin-bottom:10px">Upload known open risks with their dollar exposure (CSV/TSV: <b>title, severity, asset, exposure, status</b>). This is what turns your crown-jewel map into a <b>material-exposure figure</b> in dollars. Skip it and exposure stays qualitative until you add risks later.</div>
+        <div id="riskSource"></div><div id="riskResult"></div>
+        <div class="drop" id="riskDrop"><div class="ic">⤓</div><div class="t">Upload risk register</div><div class="s">CSV or TSV — one row per risk; link each to an asset by name</div><input type="file" id="riskFile" accept=".csv,.tsv,.txt" style="display:none"></div>
+      </div>`,
     4:()=>`<div class="panel-h"><div class="step-of">Step 5 of 8</div><h2>Auto-mapping & crown jewels</h2><p>CyberRx infers which application supports which process. Review the mappings below — confirm, reassign, or reject each one. Then we deduce your crown jewels.</p></div>
       <div class="map-toolbar" id="mapToolbar"></div>
       <div id="mapList"></div><button class="mapbtn" id="deduceBtn">✦ Confirm remaining &amp; deduce crown jewels</button>
@@ -657,7 +664,7 @@
     }
     if(cur===1) renderConnectors();
     if(cur===2) wireProc();
-    if(cur===3) wireApp();
+    if(cur===3){ wireApp(); wireRisk(); }
     if(cur===4) wireMapping();
     if(cur===5) wireDocs();
     if(cur===6) renderSeats();
@@ -913,6 +920,47 @@
     const rows=(!live&&APP_UP&&APP_UP.length)?APP_UP:APPS;
     const src=live?'<span class="livedot"></span>'+rows.length+' systems · live discovery from ServiceNow CMDB · streaming':'✓ '+rows.length+' systems extracted from '+(APP_FN||'CMDB_export.csv');
     document.getElementById('appResult').innerHTML='<div class="extracted-h">'+src+'</div><div class="xlist">'+rows.map(a=>'<div class="xrow"><div class="xi">⬚</div><div class="xn"><div class="nm">'+a.n+'</div><div class="mt">'+(a.host||'—')+' · '+(a.data||'—')+'</div></div></div>').join('')+'</div>';
+  }
+  // ---- optional risk register (quantifies material exposure) ----
+  var RISK_UP=null,RISK_FN='';
+  function takeRiskFile(file){
+    document.getElementById('riskResult').innerHTML='<div class="extracting"><span class="sp"></span>Reading risks from '+file.name+'…</div>';
+    var r=new FileReader();
+    r.onload=function(){
+      var parsed=parseDelim(r.result);var h=parsed.headers;
+      var titleCol=findCol(h,['title','risk','name','description']);
+      var sevCol=findCol(h,['severity','sev','priority','rating']);
+      var assetCol=findCol(h,['asset','system','application','app','ci']);
+      var expCol=findCol(h,['exposure','financial','impact','loss','ale','value','amount','$']);
+      var statCol=findCol(h,['status','state']);
+      RISK_UP=parsed.rows.map(function(c){
+        return {
+          title:(titleCol>=0?c[titleCol]:null)||c[0],
+          severity:(sevCol>=0?c[sevCol]:null)||'High',
+          asset:(assetCol>=0?c[assetCol]:null)||'',
+          exposure:(expCol>=0?c[expCol]:null)||'',
+          status:(statCol>=0?c[statCol]:null)||'open'
+        };
+      }).filter(function(x){return x.title;});
+      RISK_FN=file.name;
+      renderRiskResult();
+    };
+    r.readAsText(file);
+  }
+  function renderRiskResult(){
+    var el=document.getElementById('riskResult');if(!el||!RISK_UP)return;
+    var rd=document.getElementById('riskDrop');if(rd)rd.style.display='none';
+    var tot=0;RISK_UP.forEach(function(x){var n=Number(String(x.exposure).replace(/[^0-9.]/g,''));if(isFinite(n))tot+=n;});
+    el.innerHTML='<div class="extracted-h">✓ '+RISK_UP.length+' risks read from '+(RISK_FN||'risk register')+(tot>0?' · ~$'+(tot>=1e6?(Math.round(tot/1e6)+'M'):(tot>=1e3?Math.round(tot/1e3)+'K':tot))+' total exposure':'')+'</div><div class="xlist">'+RISK_UP.slice(0,8).map(function(x){return '<div class="xrow"><div class="xi">▲</div><div class="xn"><div class="nm">'+x.title+'</div><div class="mt">'+(x.asset||'—')+' · '+(x.severity||'—')+(x.exposure?(' · '+x.exposure):'')+'</div></div></div>';}).join('')+'</div>';
+  }
+  function wireRisk(){
+    var rd=document.getElementById('riskDrop'),rf=document.getElementById('riskFile');
+    if(!rd||!rf)return;
+    if(RISK_UP&&RISK_UP.length){renderRiskResult();return;}
+    rd.addEventListener('click',function(){rf.click();});
+    rd.addEventListener('dragover',function(e){e.preventDefault();});
+    rd.addEventListener('drop',function(e){e.preventDefault();if(e.dataTransfer.files[0])takeRiskFile(e.dataTransfer.files[0]);});
+    rf.addEventListener('change',function(){if(rf.files[0])takeRiskFile(rf.files[0]);});
   }
 
   // ---- mapping + crown jewels ----
