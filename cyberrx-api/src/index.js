@@ -184,6 +184,9 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
     version: process.env.npm_package_version || '1.0.0',
+    // Render sets RENDER_GIT_COMMIT automatically — lets us confirm which commit
+    // is actually deployed vs. what's on main.
+    commit: (process.env.RENDER_GIT_COMMIT || process.env.GIT_COMMIT || 'unknown').slice(0, 12),
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
   });

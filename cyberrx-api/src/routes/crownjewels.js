@@ -7,6 +7,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../utils/db');
+const logger = require('../utils/logger');
 const Analysis = require('../services/crownjewels/AnalysisRunService');
 const CrownJewelEngine = require('../services/crownjewels/CrownJewelEngine');
 const IngestMapper = require('../services/crownjewels/IngestMapper');
@@ -54,10 +55,12 @@ router.post('/ingest', optionalJWT, async (req, res) => {
   const apps = Array.isArray(b.apps) ? b.apps : [];
   if (!processes.length && !apps.length) return res.status(400).json({ error: 'processes and/or apps are required' });
 
+  let step = 'map';
   try {
     const mapped = IngestMapper.mapOnboarding({ org_id: orgId, org_name: orgName || orgId, processes, apps });
 
     // Ensure the org row exists so the FK on business_processes/assets is satisfied.
+    step = 'upsert_org';
     await db.query(
       `INSERT INTO orgs (id, name, type, setup_json, created_at)
        VALUES ($1,$2,$3,$4,NOW())
@@ -65,15 +68,18 @@ router.post('/ingest', optionalJWT, async (req, res) => {
       [mapped.org.id, mapped.org.name, '', '{}']);
 
     // Idempotent replace: clear the org's prior inventory, then insert the mapped rows.
+    step = 'clear_inventory';
     await db.query('DELETE FROM assets WHERE organization_id = $1', [mapped.org.id]);
     await db.query('DELETE FROM business_processes WHERE organization_id = $1', [mapped.org.id]);
 
+    step = 'insert_processes';
     for (const p of mapped.processes) {
       await BusinessProcess.create({
         id: p.id, name: p.name, tier: p.tier, criticality: p.criticality,
         owner: p.owner || '—', organizationId: mapped.org.id,
       });
     }
+    step = 'insert_assets';
     for (const a of mapped.assets) {
       await Asset.create({
         id: a.id, name: a.name, type: a.type, organizationId: mapped.org.id,
@@ -86,7 +92,12 @@ router.post('/ingest', optionalJWT, async (req, res) => {
       org_id: mapped.org.id, org_name: mapped.org.name,
       counts: { processes: mapped.processes.length, assets: mapped.assets.length },
     });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) {
+    // Surface the real cause (masked by the global handler otherwise) so ingest
+    // failures are diagnosable from the response itself.
+    logger.error('[crown-jewels/ingest] failed', { step, message: e.message, code: e.code, detail: e.detail });
+    res.status(500).json({ error: e.message, code: e.code || null, detail: e.detail || null, step });
+  }
 });
 
 // Crown-jewel summary for the cockpit (material exposure, crown jewels, counts).
