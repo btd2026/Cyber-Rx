@@ -1859,7 +1859,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
   // always clear whether a figure is live or sample. PLATFORM.api is the single
   // seam — point it at any backend for real per-org data.
   const PLATFORM={
-    api:(location.hostname.match(/localhost|127\.0\.0\.1/)?'http://localhost:3001':'https://cyberrx-api.onrender.com'),
+    api:(location.hostname.match(/localhost|127\.0\.0\.1/)?'http://localhost:3001':'https://cyber-rx.onrender.com'),
     orgId:(function(){try{return localStorage.getItem('cyberrx_org_id')||'meridian-demo-2026';}catch(e){return 'meridian-demo-2026';}})()
   };
   function setDataSrc(live,note){const el=document.getElementById('dataSrc');if(!el)return;el.innerHTML=(live?'<span style="color:var(--pass)">● Live platform data</span>':'<span style="color:var(--exposure)">◐ Sample data</span>')+(note?' · '+note:'');}
@@ -2494,7 +2494,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
   // so the number is either real-and-labelled-live or demo-and-labelled-sample,
   // never a silent static value pretending to be real. =====
   (function(){
-    function api(){try{return window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'https://cyberrx-api.onrender.com';}catch(_){return 'https://cyberrx-api.onrender.com';}}
+    function api(){try{return window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'https://cyber-rx.onrender.com';}catch(_){return 'https://cyber-rx.onrender.com';}}
     function org(){try{return window.CYBERRX_ORG_ID||localStorage.getItem('cyberrx_org_id')||'';}catch(_){return '';}}
     function usd(n){n=Number(n)||0;if(n>=1e9)return '$'+(n/1e9).toFixed(1)+'B';if(n>=1e6)return '$'+Math.round(n/1e6)+'M';if(n>=1e3)return '$'+Math.round(n/1e3)+'K';return '$'+n;}
     function badge(live){var b=document.getElementById('cjDataBadge');if(!b)return;b.style.display='inline-block';b.textContent=live?'live':'sample';b.style.background=live?'rgba(47,163,122,.16)':'rgba(120,140,160,.16)';b.style.color=live?'var(--pass)':'var(--muted)';b.title=live?'Computed from your inventory by the Crown-Jewels engine':'Sample data — connect your inventory (set window.CYBERRX_API + org id) to see live figures';}

@@ -827,7 +827,7 @@
     // Best-effort: push the uploaded inventory into the backend so the cockpit's
     // engine scores REAL data. Stores the returned org_id for the cockpit to query.
     try{
-      var _api='';try{_api=window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'https://cyberrx-api.onrender.com';}catch(_){_api='https://cyberrx-api.onrender.com';}
+      var _api='';try{_api=window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'https://cyber-rx.onrender.com';}catch(_){_api='https://cyber-rx.onrender.com';}
       if(_api&&((PROC_UP&&PROC_UP.length)||(APP_UP&&APP_UP.length))){
         fetch(_api.replace(/\/+$/,'')+'/api/crown-jewels/ingest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({org_name:_org||'My Organization',processes:(PROC_UP||[]).map(function(p){return {name:p.n,data:p.data,rev:p.rev};}),apps:(APP_UP||[]).map(function(a){return {name:a.n,host:a.host,data:a.data};})})})
           .then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.org_id){try{localStorage.setItem('cyberrx_org_id',d.org_id);}catch(_){}}}).catch(function(){});
