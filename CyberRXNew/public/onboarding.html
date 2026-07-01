@@ -395,26 +395,31 @@
   document.addEventListener('input',e=>{ if(e.target&&e.target.id==='orgNameIn'){ orgName=e.target.value; try{localStorage.setItem('cyberrx_org_name',orgName);}catch(_){} } });
   // Jump straight to the Operating System from any onboarding step (applies the
   // industry + org name entered so far).
+  function cjApiBase(){try{return window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'https://cyber-rx.onrender.com';}catch(_){return 'https://cyber-rx.onrender.com';}}
+  function cjSlug(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,32)||'org';}
+  // Shared go-live: persist the uploaded inventory to the backend (so the cockpit
+  // shows this org's REAL numbers), store the org id, then hand off to the OS.
+  // Called from BOTH the "Operating System" shortcut and the primary "Go live".
+  async function ingestAndGoLive(org, extra){
+    org=(org||'').trim();
+    var orgId=org?('org_'+cjSlug(org)):'';
+    try{
+      var procs=(PROC_UP||[]).filter(function(p){return p&&p.n;}).map(function(p){return {name:p.n,data:p.data,rev:p.rev};});
+      var apps=(APP_UP||[]).filter(function(a){return a&&a.n;}).map(function(a){return {name:a.n,host:a.host,data:a.data};});
+      var risks=(RISK_UP||[]).filter(function(x){return x&&x.title;}).map(function(x){return {title:x.title,severity:x.severity,asset:x.asset,status:x.status,financial_exposure:x.exposure};});
+      if(org&&(procs.length||apps.length)){
+        var r=await fetch(cjApiBase()+'/api/crown-jewels/ingest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({org_name:org,org_id:orgId,processes:procs,apps:apps,risks:risks})});
+        if(r&&r.ok){var body=await r.json().catch(function(){return{};});if(body&&body.org_id)orgId=body.org_id;}
+      }
+    }catch(_){}
+    try{if(orgId)localStorage.setItem('cyberrx_org_id',orgId);if(org)localStorage.setItem('cyberrx_org_name',org);}catch(_){}
+    var msg={type:'cyberrx-golive',industry:selectedIndustry,org:org,orgId:orgId,names:seatNames};
+    if(extra){for(var k in extra){if(Object.prototype.hasOwnProperty.call(extra,k))msg[k]=extra[k];}}
+    try{window.parent.postMessage(msg,'*');}catch(e){}
+  }
   (function(){
     var b=document.getElementById('toOS'); if(!b)return;
-    function apiBase(){try{return window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'https://cyber-rx.onrender.com';}catch(_){return 'https://cyber-rx.onrender.com';}}
-    function slug(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,32)||'org';}
-    b.addEventListener('click',async function(){
-      var org=(orgName||'').trim();
-      var orgId=org?('org_'+slug(org)):'';
-      // Persist the uploaded inventory so the cockpit shows this org's real numbers.
-      try{
-        var procs=(PROC_UP||[]).filter(function(p){return p&&p.n;}).map(function(p){return {name:p.n,data:p.data,rev:p.rev};});
-        var apps=(APP_UP||[]).filter(function(a){return a&&a.n;}).map(function(a){return {name:a.n,host:a.host,data:a.data};});
-        var risks=(RISK_UP||[]).filter(function(x){return x&&x.title;}).map(function(x){return {title:x.title,severity:x.severity,asset:x.asset,status:x.status,financial_exposure:x.exposure};});
-        if(org&&(procs.length||apps.length)){
-          var r=await fetch(apiBase()+'/api/crown-jewels/ingest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({org_name:org,org_id:orgId,processes:procs,apps:apps,risks:risks})});
-          if(r&&r.ok){var body=await r.json().catch(function(){return{};});if(body&&body.org_id)orgId=body.org_id;}
-        }
-      }catch(_){}
-      try{if(orgId)localStorage.setItem('cyberrx_org_id',orgId);if(org)localStorage.setItem('cyberrx_org_name',org);}catch(_){}
-      try{window.parent.postMessage({type:'cyberrx-golive',industry:selectedIndustry,org:org,orgId:orgId,names:seatNames},'*');}catch(e){}
-    });
+    b.addEventListener('click',function(){ingestAndGoLive((orgName||'').trim());});
   })();
   const IMETA={
    healthcare:{org:'Meridian Health Plan',data:['PHI','PII','Personal Data'],reg:'HIPAA · GDPR · NIS2',ctx:'Framed for healthcare — PHI / personal-data exposure, HIPAA & regional health-data rules, and care continuity.'},
@@ -1334,7 +1339,10 @@
         return;
       }
     }
-    done[cur]=true;updateComplete();if(cur<STEPS.length-1){cur++;render();}else{document.getElementById('nextBtn').textContent='✓ Setup complete';const bc=document.getElementById('benchConsent');const benchShare=!!(bc&&bc.checked);var _org='';try{_org=(orgName||localStorage.getItem('cyberrx_org_name')||'').trim();}catch(_){_org=(orgName||'').trim();}if(_org){try{localStorage.setItem('cyberrx_org_name',_org);}catch(_){}}const profile=collectProfile();try{window.parent.postMessage({type:'cyberrx-golive',industry:selectedIndustry,org:_org,names:seatNames,benchShare:benchShare,currency:{code:orgCurrency,sym:curSym()},profile:profile,docResults:docResults},'*');window.parent.postMessage('cyberrx-golive','*');}catch(e){}}});
+    done[cur]=true;updateComplete();if(cur<STEPS.length-1){cur++;render();}else{document.getElementById('nextBtn').textContent='✓ Setup complete';const bc=document.getElementById('benchConsent');const benchShare=!!(bc&&bc.checked);var _org='';try{_org=(orgName||localStorage.getItem('cyberrx_org_name')||'').trim();}catch(_){_org=(orgName||'').trim();}if(_org){try{localStorage.setItem('cyberrx_org_name',_org);}catch(_){}}const profile=collectProfile();
+      // Ingest the uploaded inventory to the backend, then go live (real data path).
+      ingestAndGoLive(_org,{benchShare:benchShare,currency:{code:orgCurrency,sym:curSym()},profile:profile,docResults:docResults}).then(function(){try{window.parent.postMessage('cyberrx-golive','*');}catch(e){}});
+    }});
   document.getElementById('backBtn').addEventListener('click',()=>{
     if(cur===6){
       saveSeatFields();
