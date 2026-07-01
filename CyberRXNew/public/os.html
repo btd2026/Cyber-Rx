@@ -784,6 +784,11 @@
   </div>
 </div>
 
+<!-- Honest data-mode banner: states plainly whether the cockpit is showing the
+     org's real computed data or illustrative sample data, so nothing on screen
+     is mistaken for real. Populated by the data-mode check below. -->
+<div id="dataModeBar" style="display:none"><div class="wrap" id="dataModeInner"></div></div>
+
 <div class="seatbar">
   <div class="wrap seatbar-in" id="seatbar">
     <span class="vl">Accountability view</span>
@@ -2026,7 +2031,10 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
   if(Object.keys(DOC_RESULTS).length>0)renderDocReview();
 
   // live "as-of" clock — makes real-time tangible
-  function tickClock(){const d=new Date();const hh=String(d.getHours()).padStart(2,'0'),mm=String(d.getMinutes()).padStart(2,'0'),ss=String(d.getSeconds()).padStart(2,'0');const el=document.getElementById('liveClock');if(el)el.textContent='LIVE · '+hh+':'+mm+':'+ss;}
+  function tickClock(){const d=new Date();const hh=String(d.getHours()).padStart(2,'0'),mm=String(d.getMinutes()).padStart(2,'0'),ss=String(d.getSeconds()).padStart(2,'0');const el=document.getElementById('liveClock');if(!el)return;
+    // Only claim "LIVE" when the org's real data is confirmed; otherwise say so.
+    if(window.__cyberrxRealData){el.textContent='● LIVE · '+hh+':'+mm+':'+ss;el.style.color='';}
+    else{el.textContent='◐ SAMPLE DATA';el.style.color='var(--warn,#b7791f)';}}
   tickClock();setInterval(tickClock,1000);
 
   // ===== Platform data layer =====
@@ -2038,7 +2046,16 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     api:(location.hostname.match(/localhost|127\.0\.0\.1/)?'http://localhost:3001':'https://cyber-rx.onrender.com'),
     orgId:(function(){try{return localStorage.getItem('cyberrx_org_id')||'default-org';}catch(e){return 'default-org';}})()
   };
-  function setDataSrc(live,note){const el=document.getElementById('dataSrc');if(!el)return;el.innerHTML=(live?'<span style="color:var(--pass)">● Live platform data</span>':'<span style="color:var(--muted)">◐ Baseline data</span>')+(note?' · '+note:'');}
+  // Honesty gate: these dashboard/framework/seat endpoints fall back to demo
+  // data server-side, so a 200 response does NOT prove the org's real data.
+  // Only claim "live" when the crown-jewels data-mode has confirmed real inventory
+  // (window.__cyberrxRealData). Otherwise the topbar owns the honest label and we
+  // don't overwrite it with a misleading "Live platform data".
+  function setDataSrc(live,note){
+    if(!window.__cyberrxRealData)return; // topbar data-mode banner is authoritative in demo mode
+    const el=document.getElementById('dataSrc');if(!el)return;
+    el.innerHTML='<span style="color:var(--pass)">● Live</span>'+(note?' · '+note:'');
+  }
   async function loadPlatform(){
     try{
       const q='org_id='+encodeURIComponent(PLATFORM.orgId);
@@ -3001,9 +3018,35 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
       e.confidence=exp>0?'Deterministic · from your inventory + risk register':'Deterministic · inventory only (no quantified risks yet)';
       e.links=[];
     }
+    function orgName(){try{return localStorage.getItem('cyberrx_org_name')||'';}catch(_){return '';}}
+    // Honest global data-mode banner + topbar indicator. States plainly whether
+    // the cockpit is showing the org's real computed data or illustrative sample
+    // data, so nothing on screen is mistaken for real (option D).
+    function setDataMode(d){
+      var real=!!(d&&!d.empty&&d.counts&&(d.counts.assets>0));
+      window.__cyberrxRealData=real; // gates setDataSrc's "live" claims elsewhere
+      var bar=document.getElementById('dataModeBar'),inner=document.getElementById('dataModeInner');
+      var clock=document.getElementById('liveClock'),src=document.getElementById('dataSrc');
+      var nm=orgName()||'your organization';
+      if(bar&&inner){
+        bar.style.display='block';bar.style.borderBottom='1px solid';bar.style.fontSize='12px';bar.style.fontWeight='600';
+        if(real){
+          var c=(d.counts||{});
+          bar.style.background='rgba(47,163,122,.10)';bar.style.borderBottomColor='rgba(47,163,122,.35)';bar.style.color='var(--pass)';
+          inner.style.padding='7px 0';
+          inner.innerHTML='● <b>Live · '+nm+'</b> — crown jewels &amp; material exposure are computed from your inventory ('+(c.assets||0)+' assets, '+(c.crown_jewels||0)+' crown jewels). Other figures are marked <span style="opacity:.8">◐ illustrative</span> until their data source is connected.';
+        }else{
+          bar.style.background='rgba(214,158,46,.12)';bar.style.borderBottomColor='rgba(214,158,46,.4)';bar.style.color='var(--warn,#b7791f)';
+          inner.style.padding='7px 0';
+          inner.innerHTML='◐ <b>Demonstration data</b> — every figure shown is illustrative sample data, not '+nm+'’s. Complete onboarding (upload your inventory → Go live) to compute live results.';
+        }
+      }
+      if(clock)clock.textContent=real?('● LIVE · '+nm):'◐ SAMPLE DATA';
+      if(src)src.textContent=real?('🛡 '+((d.counts||{}).assets||0)+' assets · '+((d.counts||{}).crown_jewels||0)+' crown jewels'):'illustrative — not live';
+    }
     window.cjLoadLive=function(){
       var base=api(),o=org();
-      if(!base||!o){badge(false);return;}
+      if(!base||!o){badge(false);setDataMode(null);return;}
       try{
         fetch(base.replace(/\/+$/,'')+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}})
           .then(function(r){return r.ok?r.json():null;})
@@ -3012,9 +3055,10 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
               if(v&&Number(d.material_exposure_usd)>0)v.textContent=usd(d.material_exposure_usd);
               try{applyExposureEvidence(d);}catch(_){}
               badge(true);
-            }else{badge(false);}})
-          .catch(function(){badge(false);});
-      }catch(_){badge(false);}
+            }else{badge(false);}
+            setDataMode(d);})
+          .catch(function(){badge(false);setDataMode(null);});
+      }catch(_){badge(false);setDataMode(null);}
     };
     window.cjLoadLive();
   })();
