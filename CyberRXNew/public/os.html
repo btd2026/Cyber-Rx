@@ -2853,8 +2853,10 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     else if(e.data && e.data.type==='cyberrx-golive'){
       if(e.data.profile){try{Object.assign(ORG_PROFILE,e.data.profile);localStorage.setItem('cyberrx_org_profile',JSON.stringify(e.data.profile));}catch(_){}}
       if(e.data.industry){try{applyIndustry(e.data.industry);}catch(_){}}
+      if(e.data.orgId){try{localStorage.setItem('cyberrx_org_id',e.data.orgId);PLATFORM.orgId=e.data.orgId;}catch(_){}}
       if(e.data.org){try{applyOrgName(e.data.org);}catch(_){}}
       else{try{var _go=localStorage.getItem('cyberrx_org_name');if(_go)applyOrgName(_go);}catch(_){}}
+      try{if(window.cjLoadLive)window.cjLoadLive();}catch(_){}
       if(e.data.names){Object.assign(SEAT_NAMES,e.data.names);ORG_PROFILE.seatNames=e.data.names;}
       if(typeof e.data.benchShare==='boolean')benchShare=e.data.benchShare;
       if(e.data.currency&&e.data.currency.sym){MON=e.data.currency.sym;applyCurrencyAll();}
