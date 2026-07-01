@@ -38,14 +38,25 @@ function normAsset(a) {
   };
 }
 
+// materialExposure() reads snake_case, but Risk._transformFromDb returns camelCase.
+function normRisk(r) {
+  return {
+    ...r,
+    asset_id: r.asset_id || r.assetId || null,
+    business_process_ids: r.business_process_ids || r.businessProcessIds || [],
+    financial_exposure: r.financial_exposure != null ? r.financial_exposure : r.financialExposure,
+  };
+}
+
 async function run(orgId) {
-  const [rawAssets, processes, risks] = await Promise.all([
+  const [rawAssets, processes, rawRisks] = await Promise.all([
     Asset.findByOrganization(orgId).catch(() => []),
     BusinessProcess.findByOrganization(orgId).catch(() => []),
     Risk.findByOrganization(orgId).catch(() => []),
   ]);
   if (!rawAssets.length) return empty(orgId);
   const assets = rawAssets.map(normAsset);
+  const risks = rawRisks.map(normRisk);
 
   const procById = {}; processes.forEach((p) => { procById[p.id] = p; });
 
@@ -86,13 +97,14 @@ async function run(orgId) {
  * Runs stages 3-8 with CostMeter tracking. Returns the complete analysis result.
  */
 async function runPipeline(orgId, { runId, meter, anthropic } = {}) {
-  const [rawAssets, processes, risks] = await Promise.all([
+  const [rawAssets, processes, rawRisks] = await Promise.all([
     Asset.findByOrganization(orgId).catch(() => []),
     BusinessProcess.findByOrganization(orgId).catch(() => []),
     Risk.findByOrganization(orgId).catch(() => []),
   ]);
   if (!rawAssets.length) return empty(orgId);
   const assets = rawAssets.map(normAsset);
+  const risks = rawRisks.map(normRisk);
 
   // Stage 3: Entity Resolution
   let resolvedAssets = assets;

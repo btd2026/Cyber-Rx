@@ -13,6 +13,7 @@ const CrownJewelEngine = require('../services/crownjewels/CrownJewelEngine');
 const IngestMapper = require('../services/crownjewels/IngestMapper');
 const Asset = require('../models/Asset');
 const BusinessProcess = require('../models/BusinessProcess');
+const Risk = require('../models/Risk');
 const AnalystQueue = require('../services/assessment/AnalystQueueService');
 const { optionalJWT, requireAdmin } = require('../middleware/auth');
 
@@ -53,6 +54,7 @@ router.post('/ingest', optionalJWT, async (req, res) => {
   if (!orgId) return res.status(400).json({ error: 'org_name or org_id is required' });
   const processes = Array.isArray(b.processes) ? b.processes : [];
   const apps = Array.isArray(b.apps) ? b.apps : [];
+  const risks = Array.isArray(b.risks) ? b.risks : [];
   if (!processes.length && !apps.length) return res.status(400).json({ error: 'processes and/or apps are required' });
 
   let step = 'map';
@@ -88,9 +90,44 @@ router.post('/ingest', optionalJWT, async (req, res) => {
       });
     }
 
+    // Optional risk register — quantified open risks linked to assets/processes by
+    // NAME (callers don't know generated ids). Unlocks the material-exposure $ figure.
+    step = 'insert_risks';
+    let risksInserted = 0;
+    if (risks.length) {
+      await db.query('DELETE FROM risks WHERE organization_id = $1', [mapped.org.id]);
+      const norm = (s) => String(s || '').trim().toLowerCase();
+      const assetByName = {}; mapped.assets.forEach((a) => { assetByName[norm(a.name)] = a.id; });
+      const procByName = {}; mapped.processes.forEach((p) => { procByName[norm(p.name)] = p.id; });
+      const SEV = { critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low' };
+      const STAT = { open: 'open', mitigating: 'mitigating', accepted: 'accepted', closed: 'closed' };
+      const money = (v) => { const n = Number(String(v == null ? '' : v).replace(/[^0-9.]/g, '')); return Number.isFinite(n) && n > 0 ? n : null; };
+      for (let i = 0; i < risks.length; i++) {
+        const r = risks[i] || {};
+        const title = String(r.title || r.name || '').trim();
+        if (!title) continue;
+        const assetId = r.asset ? (assetByName[norm(r.asset)] || null) : null;
+        const procNames = r.processes || (r.process ? [r.process] : []);
+        const bpIds = (Array.isArray(procNames) ? procNames : []).map((n) => procByName[norm(n)]).filter(Boolean);
+        await Risk.create({
+          id: `${mapped.org.id}_R${i + 1}`, title,
+          severity: SEV[norm(r.severity)] || 'High',
+          status: STAT[norm(r.status)] || 'open',
+          organizationId: mapped.org.id,
+          assetId,
+          businessProcessIds: bpIds,
+          financialExposure: money(r.financial_exposure != null ? r.financial_exposure : r.exposure),
+          costToRemediate: money(r.cost_to_remediate),
+          likelihood: r.likelihood || null,
+          description: r.description || null,
+        });
+        risksInserted++;
+      }
+    }
+
     res.json({
       org_id: mapped.org.id, org_name: mapped.org.name,
-      counts: { processes: mapped.processes.length, assets: mapped.assets.length },
+      counts: { processes: mapped.processes.length, assets: mapped.assets.length, risks: risksInserted },
     });
   } catch (e) {
     // Surface the real cause (masked by the global handler otherwise) so ingest
