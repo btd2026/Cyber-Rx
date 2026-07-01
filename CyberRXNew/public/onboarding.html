@@ -395,7 +395,26 @@
   document.addEventListener('input',e=>{ if(e.target&&e.target.id==='orgNameIn'){ orgName=e.target.value; try{localStorage.setItem('cyberrx_org_name',orgName);}catch(_){} } });
   // Jump straight to the Operating System from any onboarding step (applies the
   // industry + org name entered so far).
-  (function(){var b=document.getElementById('toOS'); if(b)b.addEventListener('click',function(){try{window.parent.postMessage({type:'cyberrx-golive',industry:selectedIndustry,org:(orgName||'').trim(),names:seatNames},'*');}catch(e){}});})();
+  (function(){
+    var b=document.getElementById('toOS'); if(!b)return;
+    function apiBase(){try{return window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'https://cyber-rx.onrender.com';}catch(_){return 'https://cyber-rx.onrender.com';}}
+    function slug(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,32)||'org';}
+    b.addEventListener('click',async function(){
+      var org=(orgName||'').trim();
+      var orgId=org?('org_'+slug(org)):'';
+      // Persist the uploaded inventory so the cockpit shows this org's real numbers.
+      try{
+        var procs=(PROC_UP||[]).filter(function(p){return p&&p.n;}).map(function(p){return {name:p.n,data:p.data,rev:p.rev};});
+        var apps=(APP_UP||[]).filter(function(a){return a&&a.n;}).map(function(a){return {name:a.n,host:a.host,data:a.data};});
+        if(org&&(procs.length||apps.length)){
+          var r=await fetch(apiBase()+'/api/crown-jewels/ingest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({org_name:org,org_id:orgId,processes:procs,apps:apps})});
+          if(r&&r.ok){var body=await r.json().catch(function(){return{};});if(body&&body.org_id)orgId=body.org_id;}
+        }
+      }catch(_){}
+      try{if(orgId)localStorage.setItem('cyberrx_org_id',orgId);if(org)localStorage.setItem('cyberrx_org_name',org);}catch(_){}
+      try{window.parent.postMessage({type:'cyberrx-golive',industry:selectedIndustry,org:org,orgId:orgId,names:seatNames},'*');}catch(e){}
+    });
+  })();
   const IMETA={
    healthcare:{org:'Meridian Health Plan',data:['PHI','PII','Personal Data'],reg:'HIPAA · GDPR · NIS2',ctx:'Framed for healthcare — PHI / personal-data exposure, HIPAA & regional health-data rules, and care continuity.'},
    financial:{org:'Atlas Financial Group',data:['PII','PCI','Financial','Personal Data'],reg:'PCI-DSS · DORA · GLBA',ctx:'Framed for financial services — funds & personal-data exposure, PCI-DSS / DORA / GLBA, payments continuity.'},

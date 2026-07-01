@@ -6,8 +6,12 @@
 
 const express = require('express');
 const router = express.Router();
+const db = require('../utils/db');
 const Analysis = require('../services/crownjewels/AnalysisRunService');
 const CrownJewelEngine = require('../services/crownjewels/CrownJewelEngine');
+const IngestMapper = require('../services/crownjewels/IngestMapper');
+const Asset = require('../models/Asset');
+const BusinessProcess = require('../models/BusinessProcess');
 const AnalystQueue = require('../services/assessment/AnalystQueueService');
 const { optionalJWT, requireAdmin } = require('../middleware/auth');
 
@@ -35,6 +39,54 @@ router.post('/analyze', optionalJWT, async (req, res) => {
     if (e && e.code === 'ANALYSIS_CAP_REACHED') return res.status(429).json({ error: e.message, code: e.code, used: e.used, limit: e.limit, reset_date: e.resetDate });
     res.status(500).json({ error: e.message });
   }
+});
+
+// Ingest an onboarding inventory (process list + app/CMDB export) into the
+// canonical org / business_processes / assets tables the engine scores.
+// Deterministic + idempotent: re-ingesting an org replaces its prior inventory.
+// FREE (no embedding/LLM) — persistence only; scoring happens on read via /summary.
+router.post('/ingest', optionalJWT, async (req, res) => {
+  const b = req.body || {};
+  const orgName = String(b.org_name || b.org || '').trim();
+  const orgId = ids(req).orgId || b.org_id || (orgName ? `org_${IngestMapper.slug(orgName)}` : '');
+  if (!orgId) return res.status(400).json({ error: 'org_name or org_id is required' });
+  const processes = Array.isArray(b.processes) ? b.processes : [];
+  const apps = Array.isArray(b.apps) ? b.apps : [];
+  if (!processes.length && !apps.length) return res.status(400).json({ error: 'processes and/or apps are required' });
+
+  try {
+    const mapped = IngestMapper.mapOnboarding({ org_id: orgId, org_name: orgName || orgId, processes, apps });
+
+    // Ensure the org row exists so the FK on business_processes/assets is satisfied.
+    await db.query(
+      `INSERT INTO orgs (id, name, type, setup_json, created_at)
+       VALUES ($1,$2,$3,$4,NOW())
+       ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name`,
+      [mapped.org.id, mapped.org.name, '', '{}']);
+
+    // Idempotent replace: clear the org's prior inventory, then insert the mapped rows.
+    await db.query('DELETE FROM assets WHERE organization_id = $1', [mapped.org.id]);
+    await db.query('DELETE FROM business_processes WHERE organization_id = $1', [mapped.org.id]);
+
+    for (const p of mapped.processes) {
+      await BusinessProcess.create({
+        id: p.id, name: p.name, tier: p.tier, criticality: p.criticality,
+        owner: p.owner || '—', organizationId: mapped.org.id,
+      });
+    }
+    for (const a of mapped.assets) {
+      await Asset.create({
+        id: a.id, name: a.name, type: a.type, organizationId: mapped.org.id,
+        businessProcessIds: a.businessProcessIds || [], dataClassification: a.dataClassification || [],
+        description: a.description || null,
+      });
+    }
+
+    res.json({
+      org_id: mapped.org.id, org_name: mapped.org.name,
+      counts: { processes: mapped.processes.length, assets: mapped.assets.length },
+    });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // Crown-jewel summary for the cockpit (material exposure, crown jewels, counts).
