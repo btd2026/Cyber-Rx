@@ -109,6 +109,22 @@ async function listForOrg(orgId) {
   });
 }
 
+// Current signal values for the org (what connected tools actually returned).
+// Numeric values parsed; freshness derived from as_of. Used by the cockpit to
+// show live tool signals instead of illustrative figures.
+async function signalsForOrg(orgId) {
+  await ensureTables();
+  const out = [];
+  try {
+    (await db.query('SELECT key, source, value, as_of, status FROM signal_sync WHERE org_id=$1 ORDER BY key', [orgId])).forEach((r) => {
+      const fresh = r.status === 'fresh' && r.as_of && (Date.now() - new Date(r.as_of).getTime()) < FRESH_DAYS * 864e5;
+      const num = Number(r.value);
+      out.push({ key: r.key, value: Number.isFinite(num) ? num : r.value, source: r.source, as_of: r.as_of, fresh, status: r.status });
+    });
+  } catch (_) {}
+  return out;
+}
+
 // Provenance map for posture: key → { source, asOf, fresh }.
 async function sourcesForOrg(orgId) {
   await ensureTables();
@@ -122,4 +138,4 @@ async function sourcesForOrg(orgId) {
   return map;
 }
 
-module.exports = { connect, sync, disconnect, listForOrg, sourcesForOrg, ensureTables };
+module.exports = { connect, sync, disconnect, listForOrg, sourcesForOrg, signalsForOrg, ensureTables };

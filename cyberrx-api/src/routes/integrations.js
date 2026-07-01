@@ -23,6 +23,13 @@ router.get('/', async (req, res) => {
   catch (e) { logger.warn('integrations list failed', { error: e.message }); res.status(500).json({ error: 'Unable to load integrations.' }); }
 });
 
+// Current live signal values from the org's connected tools (empty until connected).
+router.get('/signals', async (req, res) => {
+  const orgId = orgOf(req); if (!orgId) return res.status(400).json({ error: 'Organization required.' });
+  try { res.json({ org_id: orgId, signals: await Integrations.signalsForOrg(orgId) }); }
+  catch (e) { logger.warn('signals list failed', { error: e.message }); res.status(500).json({ error: 'Unable to load signals.' }); }
+});
+
 router.post('/:key/connect', async (req, res) => {
   const orgId = orgOf(req); if (!orgId) return res.status(400).json({ error: 'Organization required.' });
   try {

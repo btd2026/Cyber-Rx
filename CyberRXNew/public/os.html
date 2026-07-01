@@ -852,6 +852,12 @@
       <span class="pv">Last full sync <b>14:09:22</b></span>
       <span class="seal">✓ cryptographically signed · chain intact</span>
     </div>
+    <!-- Live signals pulled from the org's connected security tools (real values
+         from /api/integrations/signals). Hidden until at least one tool is connected. -->
+    <div id="liveSignalsSec" style="display:none">
+      <div class="sec-h"><h3>Live signals from your connected tools</h3><span class="meta" id="liveSignalsMeta"></span></div>
+      <div class="band" id="liveSignalsBand" style="grid-template-columns:repeat(4,1fr)"></div>
+    </div>
     <div class="sec-h"><h3>The five questions, answered</h3><span class="meta">click any to open its detail</span></div>
     <div class="brief">
       <button class="qrow" data-view="q1"><span class="qi">1</span><div class="qm"><div class="qq">Are we compromised or under attack right now?</div><div class="qa">No active compromise. 4,102 attacks blocked in 24h; one elevated phishing campaign aimed at claims staff. Nothing needs you this second.</div></div><span class="qs ok">No compromise</span><span class="go">▸</span></button>
@@ -3129,9 +3135,36 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
           .catch(function(){});
       }catch(_){}
     }
+    // Friendly labels for the connector signal keys (edr_pct, mfa_pct, ...).
+    var SIGLBL={edr_pct:'EDR coverage',mfa_pct:'MFA adoption',vuln_sla_pct:'Vuln SLA met',patch_pct:'Patch compliance',training_pct:'Security training',phishing_pct:'Phish-prone rate',pam_pct:'Privileged accts managed',access_review_pct:'Access reviews complete',mdm_pct:'Device management',dlp_pct:'DLP coverage',backup_pct:'Backup coverage'};
+    function sigLabel(k){return SIGLBL[k]||String(k||'').replace(/_pct$/,'').replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});}
+    function loadSignals(){
+      var base=api(),o=org();var sec=document.getElementById('liveSignalsSec');if(!base||!o||!sec)return;
+      try{
+        fetch(base.replace(/\/+$/,'')+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}})
+          .then(function(r){return r.ok?r.json():null;})
+          .then(function(d){
+            var sigs=(d&&Array.isArray(d.signals))?d.signals:[];
+            var band=document.getElementById('liveSignalsBand'),meta=document.getElementById('liveSignalsMeta');
+            if(!sigs.length){sec.style.display='none';return;}
+            var srcs={};sigs.forEach(function(s){if(s.source)srcs[s.source]=1;});
+            if(meta)meta.textContent=sigs.length+' signals · '+Object.keys(srcs).length+' tools · real values pulled from your systems';
+            band.style.gridTemplateColumns='repeat('+Math.min(4,Math.max(1,sigs.length))+',1fr)';
+            band.innerHTML=sigs.slice(0,12).map(function(s){
+              var isPct=/_pct$/.test(s.key)&&typeof s.value==='number';
+              var val=isPct?(Math.round(s.value)+'%'):(typeof s.value==='number'?s.value:String(s.value));
+              var good=isPct?(/(phish)/.test(s.key)?s.value<=10:s.value>=90):null;
+              var col=good===null?'':good?'var(--pass)':(isPct&&(/(phish)/.test(s.key)?s.value>25:s.value<75)?'var(--critical)':'var(--warn,#b7791f)');
+              return '<div class="pm"><div class="k">'+esc(sigLabel(s.key))+' '+(s.fresh?'<span style="color:var(--pass);font-size:9px">● fresh</span>':'<span style="color:var(--muted);font-size:9px">◐ stale</span>')+'</div><div class="v"'+(col?(' style="color:'+col+'"'):'')+'>'+esc(val)+'</div><span class="pmgo" style="color:var(--muted)">'+esc(s.source||'')+'</span></div>';
+            }).join('');
+            sec.style.display='';
+          }).catch(function(){sec.style.display='none';});
+      }catch(_){}
+    }
     window.cjLoadLive=function(){
       var base=api(),o=org();
       if(!base||!o){badge(false);setDataMode(null);return;}
+      try{loadSignals();}catch(_){}
       try{
         fetch(base.replace(/\/+$/,'')+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}})
           .then(function(r){return r.ok?r.json():null;})
