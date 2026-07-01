@@ -1,0 +1,6 @@
+{
+  "signals": [
+    { "key": "ai_monitored", "value": 1, "asOf": "2026-06-28T12:00:00Z", "raw": { "tracedSample": 1 } }
+  ],
+  "meta": { "vendor": "LangSmith" }
+}

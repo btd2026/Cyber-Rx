@@ -20,7 +20,7 @@ describe('okta connector', () => {
     expect(okta.category).toBe('Identity');
     expect(okta.signals).toContain('mfa_pct');
     expect(okta.fields.find((f) => f.key === 'apiToken').secret).toBe(true);
-    expect(registry.get('okta')).toBe(okta);
+    expect(registry.get('okta').key).toBe('okta'); // wrapped by demo-mode registry
     expect(registry.list().some((c) => c.key === 'okta')).toBe(true);
   });
 

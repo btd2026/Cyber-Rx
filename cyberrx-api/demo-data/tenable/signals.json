@@ -1,0 +1,8 @@
+{
+  "signals": [
+    { "key": "critical_vuln_assets", "value": 14, "asOf": "2026-06-28T12:00:00Z", "raw": { "totalAssets": 620 } },
+    { "key": "patch_pct", "value": 98, "asOf": "2026-06-28T12:00:00Z", "raw": { "totalAssets": 620, "withCrit": 14 } },
+    { "key": "vuln_sla_pct", "value": 98, "asOf": "2026-06-28T12:00:00Z", "raw": { "totalAssets": 620, "withCrit": 14 } }
+  ],
+  "meta": { "vendor": "Tenable.io", "totalAssets": 620 }
+}

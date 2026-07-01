@@ -1,0 +1,6 @@
+{
+  "signals": [
+    { "key": "mfa_pct", "value": 97, "asOf": "2026-06-28T12:00:00Z", "raw": { "activeUsers": 3100, "sampled": 50, "enrolled": 49 } }
+  ],
+  "meta": { "vendor": "Okta" }
+}

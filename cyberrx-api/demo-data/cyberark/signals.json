@@ -1,0 +1,6 @@
+{
+  "signals": [
+    { "key": "pam_pct", "value": 73, "asOf": "2026-06-28T12:00:00Z", "raw": { "vaulted": 410, "autoManaged": 299 } }
+  ],
+  "meta": { "vendor": "CyberArk" }
+}

@@ -55,4 +55,16 @@ export function loadState(): OnboardingState {
 
 export function saveState(s: OnboardingState): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(s))
+  if (s.org.name) localStorage.setItem('cyberrx_org_name', s.org.name)
+}
+
+export function getOrgName(): string {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (parsed?.org?.name) return parsed.org.name
+    }
+  } catch { /* ignore */ }
+  return localStorage.getItem('cyberrx_org_name') || ''
 }

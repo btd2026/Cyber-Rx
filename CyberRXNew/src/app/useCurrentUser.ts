@@ -22,6 +22,6 @@ export function useCurrentUser(): CurrentUser {
     demo,
     ownSeat: 'ciso',
     name: 'Sarah',
-    email: session?.user.email ?? 'sarah.chen@meridian.health',
+    email: session?.user.email ?? 'sarah.chen@cyberrx.demo',
   }
 }

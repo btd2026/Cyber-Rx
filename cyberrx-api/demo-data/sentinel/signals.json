@@ -1,0 +1,8 @@
+{
+  "signals": [
+    { "key": "open_incidents", "value": 7, "asOf": "2026-06-28T12:00:00Z", "raw": {} },
+    { "key": "mttd_hrs", "value": 0.8, "asOf": "2026-06-28T12:00:00Z", "raw": {} },
+    { "key": "mttr_hrs", "value": 4.1, "asOf": "2026-06-28T12:00:00Z", "raw": {} }
+  ],
+  "meta": { "vendor": "Microsoft Sentinel" }
+}

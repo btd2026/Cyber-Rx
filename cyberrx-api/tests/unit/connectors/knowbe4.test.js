@@ -18,7 +18,7 @@ describe('knowbe4 connector', () => {
     expect(knowbe4.category).toBe('Security Awareness');
     expect(knowbe4.signals).toEqual(expect.arrayContaining(['training_pct', 'phishing_pct']));
     expect(knowbe4.fields.find((f) => f.key === 'apiToken').secret).toBe(true);
-    expect(registry.get('knowbe4')).toBe(knowbe4);
+    expect(registry.get('knowbe4').key).toBe('knowbe4'); // wrapped by demo-mode registry
   });
 
   test('test() requires an API token before any network call', async () => {

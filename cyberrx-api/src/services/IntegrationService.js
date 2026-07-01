@@ -59,8 +59,8 @@ async function setStatus(orgId, connector, status, signalCount, error) {
 async function connect(orgId, key, creds) {
   const c = Connectors.get(key);
   if (!c) throw new Error(`Unknown connector: ${key}`);
-  await c.test(creds); // throws on bad creds
-  await vault.set(orgId, `integration:${key}`, creds).catch(() => {});
+  await c.test(creds); // throws on bad creds (skipped in demo mode by wrapper)
+  if (!c.demoMode) await vault.set(orgId, `integration:${key}`, creds).catch(() => {});
   return sync(orgId, key);
 }
 
@@ -69,10 +69,10 @@ async function sync(orgId, key) {
   await ensureTables();
   const c = Connectors.get(key);
   if (!c) throw new Error(`Unknown connector: ${key}`);
-  const creds = await vault.get(orgId, `integration:${key}`).catch(() => null);
-  if (!creds) throw new Error(`${c.label} is not connected.`);
+  const creds = c.demoMode ? {} : await vault.get(orgId, `integration:${key}`).catch(() => null);
+  if (!creds && !c.demoMode) throw new Error(`${c.label} is not connected.`);
   try {
-    const { signals } = await c.fetchSignals(creds);
+    const { signals } = await c.fetchSignals(creds || {});
     for (const s of signals) { await upsertInput(orgId, s.key, s.value); await upsertSignal(orgId, s.key, c.label, s.value, s.asOf); }
     await setStatus(orgId, key, 'connected', signals.length, null);
     // Project the signals into the evidence ledger as control evidence (best

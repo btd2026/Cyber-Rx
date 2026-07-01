@@ -6,7 +6,20 @@ import { fileURLToPath, URL } from 'node:url'
 // static prototype can own the root index.html. Port 5174 for local dev.
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      name: 'spa-fallback-app-html',
+      configureServer(server) {
+        server.middlewares.use((req, _res, next) => {
+          if (req.url && req.url.startsWith('/app') && !req.url.includes('.')) {
+            req.url = '/app.html'
+          }
+          next()
+        })
+      },
+    },
+  ],
   server: {
     port: 5174,
     host: true,
