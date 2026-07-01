@@ -2967,6 +2967,40 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     function org(){try{return window.CYBERRX_ORG_ID||localStorage.getItem('cyberrx_org_id')||'';}catch(_){return '';}}
     function usd(n){n=Number(n)||0;if(n>=1e9)return '$'+(n/1e9).toFixed(1)+'B';if(n>=1e6)return '$'+Math.round(n/1e6)+'M';if(n>=1e3)return '$'+Math.round(n/1e3)+'K';return '$'+n;}
     function badge(live){var b=document.getElementById('cjDataBadge');if(!b)return;b.style.display='inline-block';b.textContent=live?'live':'baseline';b.style.background=live?'rgba(47,163,122,.16)':'rgba(120,140,160,.16)';b.style.color=live?'var(--pass)':'var(--muted)';b.title=live?'Computed from your inventory by the Crown-Jewels engine':'Baseline data — connect your inventory to see live figures';}
+    // Rewrite the material-exposure drill-down (EVIDENCE['ciso-exposure']) from
+    // the org's real crown-jewels engine output — so the panel a buyer clicks
+    // into shows their inventory, not the authored $94M/claims narrative. Only
+    // fires when live data exists; otherwise the authored fallback stands.
+    function applyExposureEvidence(d){
+      if(typeof EVIDENCE==='undefined'||!EVIDENCE['ciso-exposure'])return;
+      var c=(d.counts||{}),cjs=Array.isArray(d.crown_jewels)?d.crown_jewels:[],items=Array.isArray(d.material_exposure_items)?d.material_exposure_items:[];
+      var e=EVIDENCE['ciso-exposure'],exp=Number(d.material_exposure_usd)||0;
+      e.val=exp>0?(usd(exp)+' · modeled'):((c.crown_jewels||0)+' crown jewels');
+      e.valCls=exp>0?'crit':'warn';
+      e.claim='Material exposure — computed from your inventory';
+      e.signals=d.material_exposure_basis||'Computed by the Crown-Jewels engine from your uploaded inventory.';
+      e.why='Computed from your inventory: '+(c.assets||0)+' assets across '+(c.processes||0)+' processes; '+(c.crown_jewels||0)+' classified as crown jewels by deterministic criticality scoring. '+(d.material_exposure_basis||'')+'.';
+      e.sources=['Your uploaded process inventory','Your uploaded app / CMDB export','Crown-Jewels criticality engine','Open risks on crown-jewel assets'];
+      if(cjs.length){
+        e.detailLabel='Your crown jewels — ranked by criticality';
+        e.detail=cjs.slice(0,8).map(function(a){return [a.name+' ('+(a.type||'asset')+')','score '+a.score+' · '+(a.tier||'crown jewel'),(a.score>=85?'crit':'warn'),'p'];});
+        e.aggregate=(c.crown_jewels||0)+' of your '+(c.assets||0)+' assets are crown jewels — the concentration to protect first. Ranking is deterministic and explainable (each score has a factor breakdown and rationale).';
+      }else if(items.length){
+        e.detailLabel='Where the exposure sits — open risks on crown-jewel assets';
+        e.detail=items.slice(0,8).map(function(x){return [x.risk||'Risk',usd(x.exposure_usd)+(x.severity?(' · '+x.severity):''),'crit','p'];});
+        e.aggregate=d.material_exposure_basis||'';
+      }else{
+        e.detailLabel='Inventory summary';
+        e.detail=[['Assets ingested',String(c.assets||0),'','p'],['Business processes',String(c.processes||0),'','p'],['Crown jewels',String(c.crown_jewels||0),'warn','p'],['Open risks',String(c.risks||0),'','p']];
+        e.aggregate='No quantified risks on crown-jewel assets yet — add a risk register or connect a scanner to put a dollar figure on the exposure.';
+      }
+      // Drop the authored fiction that can't be backed by inventory alone.
+      e.questions=[{q:'Where does this number come from?',a:'The Crown-Jewels engine scores <b>your uploaded inventory</b> deterministically (5 explainable factors), identifies crown-jewel assets, and sums open-risk exposure mapped to them. No fabricated figures.'},{q:'What would make it more precise?',a:'A quantified risk register (or a connected vulnerability scanner) lets the engine attach real dollar exposure to each crown-jewel asset.'}];
+      e.scenarios=[];
+      e.freshness='Computed from your inventory'+(d.generated_at?(' · '+String(d.generated_at).slice(0,16).replace('T',' ')):'');
+      e.confidence=exp>0?'Deterministic · from your inventory + risk register':'Deterministic · inventory only (no quantified risks yet)';
+      e.links=[];
+    }
     window.cjLoadLive=function(){
       var base=api(),o=org();
       if(!base||!o){badge(false);return;}
@@ -2974,8 +3008,11 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
         fetch(base.replace(/\/+$/,'')+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}})
           .then(function(r){return r.ok?r.json():null;})
           .then(function(d){var v=document.getElementById('cjMatExp');
-            if(d&&!d.empty&&Number(d.material_exposure_usd)>0&&v){v.textContent=usd(d.material_exposure_usd);badge(true);}
-            else{badge(false);}})
+            if(d&&!d.empty&&(Number(d.material_exposure_usd)>0||(d.counts&&d.counts.crown_jewels>0))){
+              if(v&&Number(d.material_exposure_usd)>0)v.textContent=usd(d.material_exposure_usd);
+              try{applyExposureEvidence(d);}catch(_){}
+              badge(true);
+            }else{badge(false);}})
           .catch(function(){badge(false);});
       }catch(_){badge(false);}
     };
