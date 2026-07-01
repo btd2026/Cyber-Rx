@@ -49,7 +49,10 @@ const productionOrigins = [
   'https://*-btd2026s-projects.vercel.app',
   // CyberRXNew app (production alias; preview hashes already covered above)
   'https://cyberrxnew.vercel.app',
-  'https://cyberrxnew-*.vercel.app'
+  'https://cyberrxnew-*.vercel.app',
+  // The API's own origin — so same-origin calls and browser-console testing
+  // against the deployed backend are allowed (previously blocked → masked 500).
+  'https://cyber-rx.onrender.com'
 ];
 
 // Development URLs (only in development mode)

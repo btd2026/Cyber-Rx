@@ -62,6 +62,8 @@ router.get('/', async (req, res) => {
   const healthStatus = {
     status: 'healthy',
     version: process.env.npm_package_version || '1.0.0',
+    // Render sets RENDER_GIT_COMMIT automatically — confirms the deployed commit.
+    commit: (process.env.RENDER_GIT_COMMIT || process.env.GIT_COMMIT || 'unknown').slice(0, 12),
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
     checks: {}
