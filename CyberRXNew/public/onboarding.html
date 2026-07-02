@@ -1,1469 +1,236 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CyberRx · Onboarding</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>CyberRx · Setup</title>
 <style>
   :root{
-    --brand:#0A4DC4; --brand-tint:rgba(10,77,196,.09);
-    --pass:#2FA37A; --pass-tint:rgba(47,163,122,.10);
-    --exposure:#C2772E; --exposure-tint:rgba(194,119,46,.10);
-    --critical:#C2443C; --critical-tint:rgba(194,68,60,.10);
-    --gold:#B8860B; --gold-tint:rgba(184,134,11,.12);
-    --bg:#EEF3FA; --surface:#FFFFFF; --glass:rgba(255,255,255,.62);
-    --border:#D3DEEC; --border-strong:#AAB9CC;
-    --text:#0A1A2E; --muted:#46586E; --subtle:#637488;
-    --display:'Space Grotesk',sans-serif; --body:'Public Sans',sans-serif; --mono:'JetBrains Mono',monospace;
-  }
-  [data-theme="dark"]{
-    --brand:#4F90FF; --brand-tint:rgba(79,144,255,.13);
-    --pass:#3FBF92; --pass-tint:rgba(63,191,146,.14);
-    --exposure:#E0A968; --exposure-tint:rgba(224,169,104,.14);
-    --critical:#E0635B; --critical-tint:rgba(224,99,91,.14);
-    --gold:#E0B84E; --gold-tint:rgba(224,184,78,.15);
-    --bg:#0A1B2E; --surface:#102537; --glass:rgba(12,28,46,.6);
-    --border:#22394F; --border-strong:#33506E;
-    --text:#E8EEF6; --muted:#9DB0C6; --subtle:#8497AD;
+    --plane:#0d0d0d; --surface:#1a1a19; --surface-2:#211f1d; --line:#2c2c2a; --line-2:#3a3a37;
+    --ink:#fff; --ink-2:#c3c2b7; --muted:#898781;
+    --blue:#3987e5; --blue-soft:rgba(57,135,229,.14); --good:#0ca30c; --good-soft:rgba(12,163,12,.14); --warn:#fab219; --gold:#c79e3a;
+    --mono:"SFMono-Regular",Consolas,Menlo,monospace;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:var(--body);background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;position:relative}
-  body::before{content:"";position:fixed;inset:0;background:radial-gradient(60% 50% at 70% 0%,var(--brand-tint),transparent 70%);pointer-events:none;z-index:0}
-  body::after{content:"";position:fixed;inset:0;opacity:.025;pointer-events:none;z-index:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
-  .app{position:relative;z-index:1;max-width:1240px;margin:0 auto;padding:0 24px 60px}
-  header{display:flex;align-items:center;justify-content:space-between;padding:18px 0;position:sticky;top:0;background:linear-gradient(var(--bg),var(--bg) 70%,transparent);z-index:20}
-  .brand{display:flex;align-items:center;gap:11px;font-family:var(--display);font-weight:600;font-size:17px}
-  .brand .dot{width:11px;height:11px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 4px var(--brand-tint)}
-  .brand .sub{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--subtle);margin-left:4px}
-  .hright{display:flex;align-items:center;gap:12px}
-  .saved{font-family:var(--mono);font-size:11px;color:var(--pass);display:flex;align-items:center;gap:6px}
-  .saved .d{width:6px;height:6px;border-radius:50%;background:var(--pass)}
-  .toggle{font-family:var(--body);font-weight:600;font-size:13px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 11px;cursor:pointer}
-  .toggle:hover{border-color:var(--border-strong);color:var(--text)}
-
-  .hero{padding:14px 0 22px;border-bottom:1px solid var(--border);margin-bottom:26px}
-  .hero h1{font-family:var(--display);font-weight:600;font-size:27px;letter-spacing:-.02em;line-height:1.15}
-  .hero p{font-size:14.5px;color:var(--muted);margin-top:8px;max-width:700px;line-height:1.55}
-  .hero .complete{display:flex;align-items:center;gap:14px;margin-top:18px}
-  .hero .bar{flex:1;max-width:420px;height:8px;background:var(--border);border-radius:99px;overflow:hidden}
-  .hero .bar i{display:block;height:100%;width:0;background:var(--brand);border-radius:99px;transition:width .5s}
-  .hero .pct{font-family:var(--mono);font-size:12px;color:var(--text)}
-  .hero .pct b{color:var(--brand)}
-
-  .grid{display:grid;grid-template-columns:230px 1fr 280px;gap:26px;align-items:start}
-  @media (max-width:1080px){.grid{grid-template-columns:200px 1fr}.rail{display:none}}
-  @media (max-width:720px){.grid{grid-template-columns:1fr}.stepper{display:none}}
-  .stepper{position:sticky;top:92px;display:flex;flex-direction:column;gap:2px}
-  .step{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border-radius:10px;cursor:pointer;border:1px solid transparent}
-  .step:hover{background:var(--glass)}
-  .step.active{background:var(--glass);border-color:var(--border)}
-  .step .ix{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--border-strong);color:var(--muted);font-family:var(--mono);font-size:11px;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px}
-  .step.active .ix{border-color:var(--brand);color:var(--brand);background:var(--brand-tint)}
-  .step.done .ix{border-color:var(--pass);background:var(--pass);color:#fff}
-  .step .sl{font-size:13px;font-weight:600;line-height:1.25}
-  .step .sd{font-size:11px;color:var(--subtle);margin-top:2px}
-
-  .panel{background:var(--glass);border:1px solid var(--border);border-radius:16px;padding:26px 28px;min-height:440px}
-  .panel-h{margin-bottom:20px}
-  .panel-h .step-of{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--brand)}
-  .panel-h h2{font-family:var(--display);font-weight:600;font-size:21px;margin-top:7px;letter-spacing:-.01em}
-  .panel-h p{font-size:13.5px;color:var(--muted);margin-top:6px;line-height:1.5;max-width:600px}
-
-  .field{margin-bottom:16px}
-  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:6px}
-  .field .hint{font-weight:400;color:var(--subtle);font-size:11.5px;margin-left:6px}
-  .field input,.field select{width:100%;font-family:var(--body);font-size:14px;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:10px 12px;outline:none}
-  .field input:focus,.field select:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-tint)}
-  .field input::placeholder{color:var(--subtle)}
-  .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
-  @media (max-width:560px){.row2,.row3{grid-template-columns:1fr}}
-  .chips{display:flex;flex-wrap:wrap;gap:9px}
-  .pick{font-family:var(--body);font-size:13px;font-weight:500;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:99px;padding:8px 15px;cursor:pointer;user-select:none}
-  .pick:hover{border-color:var(--border-strong)}
-  .pick.on{color:var(--brand);border-color:var(--brand);background:var(--brand-tint)}
-  .pick.on::before{content:"✓ ";font-family:var(--mono)}
-
-  /* credibility meter */
-  .cred{background:var(--surface);border:1px solid var(--border-strong);border-radius:13px;padding:15px 17px;margin-bottom:20px}
-  .cred-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
-  .cred-top .ct{font-family:var(--display);font-weight:600;font-size:14px}
-  .cred-top .cv{font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:6px;font-weight:500}
-  .cred-top .cv.l0{color:var(--critical);background:var(--critical-tint)} .cred-top .cv.l1{color:var(--exposure);background:var(--exposure-tint)} .cred-top .cv.l2{color:var(--brand);background:var(--brand-tint)} .cred-top .cv.l3{color:var(--pass);background:var(--pass-tint)}
-  .cred-bar{height:9px;background:var(--border);border-radius:99px;overflow:hidden}
-  .cred-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brand),var(--pass));border-radius:99px;transition:width .6s}
-  .cred-meta{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:8px}
-  .cred-meta b{color:var(--text)}
-
-  /* connectors */
-  .conn{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px}
-  .conn-h{display:flex;align-items:center;gap:12px}
-  .conn-ic{width:34px;height:34px;border-radius:9px;background:var(--brand-tint);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:15px;flex:none}
-  .conn-t{flex:1;min-width:0}
-  .conn-t .cn{font-size:14px;font-weight:600}
-  .conn-t .cc{font-family:var(--mono);font-size:10.5px;color:var(--subtle);margin-top:1px}
-  .conn-st{font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:6px;white-space:nowrap}
-  .conn-st.no{color:var(--muted);background:var(--border)} .conn-st.ing{color:var(--exposure);background:var(--exposure-tint)} .conn-st.on{color:var(--pass);background:var(--pass-tint)}
-  .conn-body{display:none;margin-top:13px;padding-top:13px;border-top:1px solid var(--border)}
-  .conn.open .conn-body{display:block}
-  .conn-row{display:grid;grid-template-columns:1.4fr 1fr auto;gap:10px;align-items:end}
-  @media (max-width:560px){.conn-row{grid-template-columns:1fr}}
-  .conn-row .field{margin:0}
-  .conn-row .field label{font-size:11px}
-  .conn-row .field input,.conn-row .field select{padding:8px 10px;font-size:13px}
-  .conn-go{font-family:var(--body);font-weight:600;font-size:13px;color:#fff;background:var(--brand);border:none;border-radius:8px;padding:9px 16px;cursor:pointer;white-space:nowrap}
-  .conn-go:hover{filter:brightness(1.07)}
-  .conn-go.done{background:var(--pass-tint);color:var(--pass);cursor:default}
-  .conn-go.amber{background:var(--gold-tint);color:var(--gold);cursor:default}
-  .conn-err{font-family:var(--mono);font-size:11.5px;color:var(--critical);margin-top:8px;padding:6px 10px;background:var(--critical-tint);border-radius:7px;display:none}
-  .conn-err.show{display:block}
-  .conn-st.amber{color:var(--gold);background:var(--gold-tint)}
-  .conn-info{margin-top:12px;font-size:12px;line-height:1.55;color:var(--muted)}
-  .demo-bar{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding:12px 16px;background:linear-gradient(90deg,rgba(79,144,255,.08),rgba(79,144,255,.03));border:1px solid rgba(79,144,255,.25);border-radius:10px}
-  .demo-bar .demo-label{flex:1;font-size:13px;color:var(--text);font-weight:600}
-  .demo-bar .demo-sub{font-size:11.5px;color:var(--subtle);font-weight:400;margin-left:6px}
-  .demo-btn{font-family:var(--body);font-weight:600;font-size:12.5px;color:var(--brand);background:var(--brand-tint);border:1px solid rgba(79,144,255,.3);border-radius:8px;padding:7px 16px;cursor:pointer;white-space:nowrap;transition:all .15s}
-  .demo-btn:hover{background:var(--brand);color:#fff}
-  .demo-btn.active{background:var(--pass-tint);color:var(--pass);border-color:var(--pass)}
-  .demo-btn.loading{opacity:.6;pointer-events:none}
-  .conn-info .pl{color:var(--text);font-weight:600} .conn-info .an{color:var(--brand);font-weight:600}
-  .conn-toggle{font-family:var(--mono);font-size:11px;color:var(--brand);cursor:pointer;margin-left:8px;white-space:nowrap}
-  #connList{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  #connList .conn{margin-bottom:0}
-  @media (max-width:720px){#connList{grid-template-columns:1fr}}
-
-  /* uploads / extraction */
-  .drop{border:1.5px dashed var(--border-strong);border-radius:13px;padding:24px;text-align:center;cursor:pointer;background:var(--surface);transition:.15s}
-  .drop:hover{border-color:var(--brand);background:var(--brand-tint)}
-  .drop .ic{font-size:24px}.drop .t{font-family:var(--display);font-weight:600;font-size:15px;margin-top:8px}.drop .s{font-size:12.5px;color:var(--subtle);margin-top:4px}
-  .extracting{font-family:var(--mono);font-size:12px;color:var(--exposure);margin-top:14px;display:flex;align-items:center;gap:8px}
-  .extracting .sp{width:13px;height:13px;border:2px solid var(--border);border-top-color:var(--exposure);border-radius:50%;animation:spin .7s linear infinite}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .extracted-h{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--pass);margin:16px 0 9px}
-  .srcchoice{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  @media (max-width:560px){.srcchoice{grid-template-columns:1fr}}
-  .srcopt{text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 16px;cursor:pointer;font-family:var(--body)}
-  .srcopt:hover{border-color:var(--brand)}
-  .srcopt.sel{border-color:var(--brand);background:var(--brand-tint)}
-  .srcopt .so-h{font-family:var(--display);font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px}
-  .srcopt .so-d{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.45}
-  .rec-tag{font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--pass);background:var(--pass-tint);padding:2px 7px;border-radius:5px}
-  .srcbox{margin-top:16px}
-  .srcbox .conn-row{display:grid;grid-template-columns:1.2fr 1.4fr auto;gap:10px;align-items:end}
-  @media (max-width:560px){.srcbox .conn-row{grid-template-columns:1fr}}
-  .srcbox .field{margin:0}.srcbox .field label{font-size:11px}.srcbox .field input,.srcbox .field select{padding:8px 10px;font-size:13px}
-  .xlist{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .xrow{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px}
-  .xrow .xi{width:28px;height:28px;border-radius:7px;background:var(--brand-tint);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:13px;flex:none}
-  .xrow .xn{flex:1;min-width:0}.xrow .xn .nm{font-size:13.5px;font-weight:600}.xrow .xn .mt{font-family:var(--mono);font-size:10.5px;color:var(--subtle);margin-top:2px}
-  .crit{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:5px}
-  .crit.h{color:var(--critical);background:var(--critical-tint)}.crit.m{color:var(--exposure);background:var(--exposure-tint)}.crit.l{color:var(--pass);background:var(--pass-tint)}
-
-  /* mapping + crown jewels */
-  .map-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-  .map-toolbar .map-stat{font-family:var(--mono);font-size:11px;color:var(--subtle)}
-  .map-toolbar .map-stat b{color:var(--text)}
-  .map-bulk{font-family:var(--body);font-weight:600;font-size:11.5px;border:1px solid var(--border);background:var(--surface);border-radius:7px;padding:5px 10px;cursor:pointer;white-space:nowrap}
-  .map-bulk:hover{border-color:var(--brand);color:var(--brand)}
-  .map-group{margin-bottom:14px}
-  .map-group-h{font-family:var(--display);font-weight:600;font-size:13.5px;padding:7px 0 5px;border-bottom:1px solid var(--border);margin-bottom:0;display:flex;align-items:center;gap:8px}
-  .map-group-h .mg-cnt{font-family:var(--mono);font-size:10px;color:var(--subtle)}
-  .maptbl{width:100%;border-collapse:collapse;font-size:12.5px}
-  .maptbl th{text-align:left;font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--subtle);padding:6px 8px;border-bottom:1px solid var(--border);font-weight:500}
-  .maptbl td{padding:6px 8px;border-bottom:1px solid color-mix(in srgb,var(--border) 50%,transparent);vertical-align:middle}
-  .maptbl .app-nm{font-weight:600}
-  .maptbl select{font-family:var(--body);font-size:12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 6px;color:var(--text);max-width:200px}
-  .maptbl .conf{font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:5px;white-space:nowrap}
-  .maptbl .conf.hi{color:var(--pass);background:var(--pass-tint)}.maptbl .conf.lo{color:var(--exposure);background:var(--exposure-tint)}
-  .maptbl .map-acts{display:flex;gap:4px}
-  .maptbl .cf{font-family:var(--body);font-weight:600;font-size:10.5px;border:1px solid var(--border);background:var(--surface);border-radius:5px;padding:3px 7px;cursor:pointer;white-space:nowrap}
-  .maptbl tr.confirmed .cf-ok{color:var(--pass);border-color:color-mix(in srgb,var(--pass) 35%,transparent);background:var(--pass-tint)}
-  .maptbl tr.rejected{opacity:.45;text-decoration:line-through}
-  .maptbl tr.rejected .cf-no{color:var(--exposure);border-color:color-mix(in srgb,var(--exposure) 35%,transparent);background:var(--exposure-tint)}
-  .mapbtn{margin-top:10px;font-family:var(--body);font-weight:600;font-size:13.5px;color:#fff;background:var(--brand);border:none;border-radius:10px;padding:11px 18px;cursor:pointer}
-  .mapbtn:hover{filter:brightness(1.07)}
-  .cjwrap{margin-top:22px;display:none}.cjwrap.show{display:block;animation:fade .5s ease}
-  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-  .cj-sum{font-family:var(--display);font-weight:600;font-size:16px;margin-bottom:4px}
-  .cj-sub{font-size:13px;color:var(--muted);margin-bottom:18px}.cj-sub b{color:var(--gold)}
-  .cjmap{position:relative;display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px}
-  .colh{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--subtle);margin-bottom:11px;text-align:center}
-  .cjcol{display:flex;flex-direction:column;gap:10px}
-  .node{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;position:relative;z-index:2}
-  .node .nn{font-size:11.5px;font-weight:600;line-height:1.2}.node .nd{font-family:var(--mono);font-size:9.5px;color:var(--subtle);margin-top:2px}
-  .node.proc{border-left:3px solid var(--muted)}.node.proc.h{border-left-color:var(--critical)}.node.proc.m{border-left-color:var(--exposure)}.node.proc.l{border-left-color:var(--pass)}
-  .node.cjwel{border-color:var(--gold);background:var(--gold-tint)}
-  .node.cjwel .badge{font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
-  .node.cjwel .score{font-family:var(--mono);font-size:10px;color:var(--gold);float:right}
-  .node.cjwel .why{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.4}
-  .cjsvg{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;overflow:visible}
-  .ln{fill:none;stroke:var(--brand);opacity:.32;stroke-width:1.5}.ln.id{stroke-dasharray:4 4;opacity:.22}.ln.cj{stroke:var(--gold);opacity:.55;stroke-width:2}
-  @media (max-width:680px){.cjmap{grid-template-columns:1fr;gap:14px}.cjsvg{display:none}}
-
-  /* documents */
-  .doclist{margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:9px}
-  .doc{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 14px}
-  .doc .fi{width:30px;height:30px;border-radius:7px;background:var(--brand-tint);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:14px;flex:none}
-  .doc .dn{flex:1;min-width:0}.doc .dn .nm{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.doc .dn .mt{font-family:var(--mono);font-size:10.5px;color:var(--subtle);margin-top:2px}
-  .doc .st{font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:6px;white-space:nowrap}
-  .doc .st.up{color:var(--muted);background:var(--border)}.doc .st.ex{color:var(--exposure);background:var(--exposure-tint)}.doc .st.mp{color:var(--pass);background:var(--pass-tint)}
-  .docnote{font-size:12.5px;line-height:1.5;color:var(--muted);background:var(--brand-tint);border:1px solid color-mix(in srgb,var(--brand) 22%,transparent);border-radius:10px;padding:11px 13px;margin-bottom:14px}
-  .docprog{font-family:var(--mono);font-size:11.5px;color:var(--text);margin-bottom:16px}.docprog b{color:var(--brand)}
-  .dgroup{margin-bottom:18px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .dgroup .dgh{grid-column:1/-1}
-  @media (max-width:720px){.dgroup{grid-template-columns:1fr}}
-  .dgh{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--subtle);margin-bottom:9px}
-  .drow{display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 14px;min-width:0;overflow:hidden}
-  .drow .di{width:28px;height:28px;border-radius:7px;background:var(--brand-tint);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:13px;flex:none}
-  .drow .dn{flex:1;min-width:0}.drow .dn .nm{font-size:13px;font-weight:600}.drow .dn .ev{font-family:var(--mono);font-size:10px;color:var(--subtle);margin-top:2px}
-  .drow .dup{font-family:var(--body);font-weight:600;font-size:12px;color:var(--brand);background:var(--brand-tint);border:1px solid color-mix(in srgb,var(--brand) 30%,transparent);border-radius:7px;padding:6px 12px;cursor:pointer;white-space:nowrap}
-  .drow .dup:hover{filter:brightness(.97)}
-  .drow>[id^="rs-"]{flex:none;min-width:0;max-width:50%;overflow:hidden}
-  .drow .dst{font-family:var(--mono);font-size:10px;padding:4px 8px;border-radius:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
-  .drow .dst.rd{color:var(--exposure);background:var(--exposure-tint)}.drow .dst.ok{color:var(--pass);background:var(--pass-tint)}
-  .checklist{margin-top:18px}.checklist .cl-h{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--subtle);margin-bottom:9px}
-  .clrow{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:13px;border-top:1px solid var(--border)}.clrow:first-of-type{border-top:none}
-  .clrow .b{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--border-strong);flex:none}
-  .clrow.have .b{background:var(--pass);border-color:var(--pass)}.clrow.have .b::after{content:"✓";color:#fff;font-size:11px;display:block;text-align:center;line-height:14px}.clrow.have{color:var(--muted)}
-
-  /* per-seat data needs */
-  .seattabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
-  .stab{font-family:var(--body);font-weight:600;font-size:12.5px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 13px;cursor:pointer}
-  .stab:hover{border-color:var(--border-strong)}
-  .stab.on{color:#fff;background:var(--brand);border-color:var(--brand)}
-  .seatq{font-size:13px;color:var(--muted);margin-bottom:14px;font-style:italic}
-  .need{display:flex;align-items:flex-start;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:13px 15px;margin-bottom:10px}
-  .need .src{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:5px;white-space:nowrap;margin-top:2px;flex:none}
-  .need .src.live{color:var(--pass);background:var(--pass-tint)} .need .src.doc{color:var(--brand);background:var(--brand-tint)} .need .src.derived{color:var(--brand);background:var(--brand-tint)} .need .src.declare{color:var(--exposure);background:var(--exposure-tint)} .need .src.off{color:var(--muted);background:var(--border)}
-  .need .nb{flex:1;min-width:0}
-  .need .ni{font-size:13.5px;font-weight:600}
-  .need .nm2{font-size:11.5px;color:var(--subtle);margin-top:2px;font-family:var(--mono)}
-  .need .df{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
-  @media (max-width:560px){.need .df{grid-template-columns:1fr}}
-  .need .df input{width:100%;font-family:var(--body);font-size:13px;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 11px;outline:none}
-  .need .df input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-tint)}
-  .need .df input::placeholder{color:var(--subtle)}
-  .need .dfield{display:flex;flex-direction:column;gap:4px}
-  .need .dfield label{font-family:var(--mono);font-size:10px;letter-spacing:.03em;text-transform:uppercase;color:var(--subtle)}
-  .need .dfield input,.need .dfield select{width:100%;font-family:var(--body);font-size:13px;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 11px;outline:none}
-  .need .dfield input:focus,.need .dfield select:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-tint)}
-  .need .carrier-other{margin-top:6px}
-  .need .moneyf{display:flex;align-items:stretch;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--bg)}
-  .need .moneyf:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-tint)}
-  .need .moneyf .cur{display:flex;align-items:center;padding:0 9px;font-family:var(--mono);font-size:13px;color:var(--muted);background:var(--glass);border-right:1px solid var(--border)}
-  .need .moneyf .mnum{flex:1;border:none!important;box-shadow:none!important;background:transparent;text-align:right;font-family:var(--mono)}
-  .need .moneyf .unit{display:flex;align-items:center;padding:0 11px;font-family:var(--mono);font-size:12px;color:var(--muted);background:var(--glass);border-left:1px solid var(--border)}
-  .need .money-eq{font-family:var(--mono);font-size:10.5px;color:var(--pass);min-height:13px}
-  .moneyf{display:flex;align-items:stretch;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--bg)}
-  .moneyf:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-tint)}
-  .moneyf .cur{display:flex;align-items:center;padding:0 9px;font-family:var(--mono);font-size:13px;color:var(--muted);background:var(--glass);border-right:1px solid var(--border)}
-  .moneyf .mnum{flex:1;border:none!important;outline:none;box-shadow:none!important;background:transparent;text-align:right;font-family:var(--mono);font-size:13px;color:var(--text);padding:8px 11px}
-  .moneyf .unit{display:flex;align-items:center;padding:0 11px;font-family:var(--mono);font-size:12px;color:var(--muted);background:var(--glass);border-left:1px solid var(--border)}
-  .money-eq{font-family:var(--mono);font-size:10.5px;color:var(--pass);min-height:13px;margin-top:4px}
-  .planbox{margin-top:11px;display:flex;flex-direction:column;gap:10px}
-  .planup{font-family:var(--body);font-weight:600;font-size:13px;color:var(--brand);background:var(--brand-tint);border:1px dashed var(--brand);border-radius:9px;padding:10px 13px;cursor:pointer;text-align:left}
-  .planct-h{font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--subtle);display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
-  .planct-h span{text-transform:none;letter-spacing:0;font-size:10.5px;color:var(--subtle)}
-  .planct{display:flex;flex-direction:column;gap:7px}
-  .ctrow{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;align-items:center}
-  @media(max-width:560px){.ctrow{grid-template-columns:1fr}}
-  .ctrow .ctrole{font-size:12.5px;color:var(--text);font-weight:500}
-  .ctrow input{font-family:var(--body);font-size:13px;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 11px;outline:none}
-  .ctrow input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-tint)}
-
-  /* review */
-  .rev-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:18px}
-  @media (max-width:560px){.rev-grid{grid-template-columns:1fr}}
-  .rev{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:14px 16px}
-  .rev .k{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--subtle)}
-  .rev .v{font-family:var(--display);font-weight:600;font-size:17px;margin-top:5px}
-  .gen{background:var(--brand-tint);border:1px solid color-mix(in srgb,var(--brand) 28%,transparent);border-radius:12px;padding:16px 18px}
-  .gen h4{font-family:var(--display);font-weight:600;font-size:15px;margin-bottom:8px}
-  .gen ul{list-style:none;display:flex;flex-direction:column;gap:7px}.gen li{font-size:13.5px;display:flex;gap:9px;line-height:1.45}.gen li::before{content:"→";color:var(--brand);flex:none}
-
-  .nav{display:flex;align-items:center;justify-content:space-between;margin-top:24px}
-  .btn{font-family:var(--body);font-weight:600;font-size:14px;border-radius:10px;padding:11px 20px;cursor:pointer;border:1px solid var(--border)}
-  .btn.ghost{background:var(--surface);color:var(--text)}.btn.ghost:hover{border-color:var(--border-strong)}
-  .btn.primary{background:var(--brand);color:#fff;border-color:var(--brand)}.btn.primary:hover{filter:brightness(1.07)}
-  .btn:disabled{opacity:.4;cursor:not-allowed}
-  .rail{position:sticky;top:92px;display:flex;flex-direction:column;gap:16px}
-  .card{background:var(--glass);border:1px solid var(--border);border-radius:14px;padding:16px 17px}
-  .card h5{font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--brand);margin-bottom:10px}
-  .card .why{font-size:13px;line-height:1.55;color:var(--muted)}
-  .once{font-size:12px;line-height:1.5;color:var(--muted);background:var(--pass-tint);border:1px solid color-mix(in srgb,var(--pass) 28%,transparent);border-radius:10px;padding:11px 13px}.once b{color:var(--pass)}
-  .concierge .cc-h{display:flex;align-items:center;gap:10px;margin-bottom:11px}
-  .cc-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--brand),#5E9BFF);color:#fff;font-family:var(--display);font-weight:600;font-size:15px;display:flex;align-items:center;justify-content:center;flex:none}
-  .cc-nm{font-family:var(--display);font-weight:600;font-size:14px}
-  .cc-role{font-family:var(--mono);font-size:10px;color:var(--subtle)}
-  .cc-tip{font-size:12.5px;line-height:1.55;color:var(--muted)}
-  .cc-call{width:100%;margin-top:13px;font-family:var(--body);font-weight:600;font-size:12.5px;color:var(--brand);background:var(--brand-tint);border:1px solid color-mix(in srgb,var(--brand) 30%,transparent);border-radius:9px;padding:9px 12px;cursor:pointer}
-  .cc-call:hover{filter:brightness(.97)}
-  .cc-call.req{color:var(--pass);background:var(--pass-tint);border-color:color-mix(in srgb,var(--pass) 30%,transparent);cursor:default}
-  .livedot{width:6px;height:6px;border-radius:50%;background:var(--pass);display:inline-block;margin-right:6px;vertical-align:middle;animation:lp 1.4s ease-in-out infinite}
-  @keyframes lp{0%,100%{opacity:1;box-shadow:0 0 0 0 color-mix(in srgb,var(--pass) 60%,transparent)}50%{opacity:.6;box-shadow:0 0 0 4px transparent}}
-  @media (prefers-reduced-motion:reduce){.livedot{animation:none}}
-
-  /* regions multi-select dropdown */
-  .region-dd{position:relative}
-  .region-dd .dd-toggle{width:100%;font-family:var(--body);font-size:14px;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:10px 12px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-height:42px}
-  .region-dd .dd-toggle:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-tint)}
-  .region-dd .dd-toggle .placeholder{color:var(--muted)}
-  .region-dd .rtag{display:inline-flex;align-items:center;gap:4px;background:var(--brand-tint);color:var(--brand);font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap}
-  .region-dd .rtag .rx{cursor:pointer;font-size:13px;line-height:1;opacity:.6}
-  .region-dd .rtag .rx:hover{opacity:1}
-  .region-dd .dd-menu{display:none;position:absolute;top:100%;left:0;right:0;max-height:380px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:9px;margin-top:4px;z-index:30;padding:0;box-shadow:0 8px 24px rgba(0,0,0,.12)}
-  .region-dd.open .dd-menu{display:block}
-  .region-dd .dd-search{width:100%;border:none;border-bottom:1px solid var(--border);padding:10px 14px;font-size:13px;font-family:var(--body);outline:none;background:transparent;color:var(--text);position:sticky;top:0;z-index:1;background:var(--surface)}
-  .region-dd .dd-cols{display:grid;grid-template-columns:1fr 1fr;gap:0}
-  .region-dd .dd-col{border-right:1px solid var(--border);padding:4px 0}
-  .region-dd .dd-col:last-child{border-right:none}
-  .region-dd .dd-group{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--subtle);padding:10px 12px 4px;display:flex;align-items:center;justify-content:space-between}
-  .region-dd .dd-group .g-toggle{font-family:var(--body);font-size:10px;text-transform:none;letter-spacing:0;color:var(--brand);cursor:pointer;font-weight:600}
-  .region-dd .dd-item{display:flex;align-items:center;gap:6px;padding:3px 12px;font-size:12px;cursor:pointer;line-height:1.4}
-  .region-dd .dd-item:hover{background:var(--brand-tint)}
-  .region-dd .dd-item input[type=checkbox]{accent-color:var(--brand);flex:none;width:13px;height:13px}
-  .region-dd .dd-hidden{display:none}
+  body{background:var(--plane);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:900px;margin:0 auto;padding:0 24px}
+  .top{border-bottom:1px solid var(--line);background:linear-gradient(180deg,#111,#0d0d0d)}
+  .top-in{display:flex;align-items:center;gap:13px;height:58px}
+  .logo{width:29px;height:29px;border-radius:8px;background:linear-gradient(135deg,#4F90FF,#0A4DC4);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
+  .brand{font-weight:700;font-size:16px}.brand span{color:var(--muted);font-weight:500;font-size:11px;letter-spacing:.13em;text-transform:uppercase;margin-left:9px}
+  .top-r{margin-left:auto;color:var(--muted);font-size:12px}
+  .head{padding:34px 0 6px}
+  .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);font-weight:600;margin-bottom:11px}
+  h1{font-size:26px;font-weight:700;letter-spacing:-.02em}
+  .lede{color:var(--ink-2);font-size:14.5px;margin-top:10px;max-width:680px}
+  .lede b{color:#fff}
+  .sec{margin-top:26px;background:var(--surface);border:1px solid var(--line);border-radius:15px;padding:22px 24px}
+  .sh{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px}
+  .sn{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--blue);background:var(--blue-soft);border:1px solid rgba(57,135,229,.35);border-radius:9px;padding:6px 10px;line-height:1}
+  .st{font-size:16px;font-weight:700}.sd{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .badge{margin-left:auto;font-size:11px;font-weight:700;color:var(--muted)}
+  .badge.done{color:var(--good)}
+  .row{display:grid;gap:14px}.row.c2{grid-template-columns:1fr 1fr}.row.c3{grid-template-columns:1fr 1fr 1fr}
+  .field{display:flex;flex-direction:column}
+  label{font-size:12px;color:var(--ink-2);margin-bottom:6px;font-weight:600}
+  label .h{color:var(--muted);font-weight:400}
+  input,select{width:100%;background:var(--plane);border:1px solid var(--line-2);border-radius:9px;padding:10px 12px;color:var(--ink);font-family:inherit;font-size:13.5px;outline:none}
+  input:focus,select:focus{border-color:var(--blue)}
+  input::placeholder{color:#5f5d58}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{font-size:12.5px;font-weight:600;color:var(--ink-2);background:var(--plane);border:1px solid var(--line-2);border-radius:99px;padding:7px 13px;cursor:pointer}
+  .chip.on{color:#fff;background:var(--blue-soft);border-color:var(--blue)}
+  .drop{border:1.5px dashed var(--line-2);border-radius:11px;padding:20px;text-align:center;cursor:pointer;transition:border-color .12s}
+  .drop:hover{border-color:var(--blue)}
+  .drop .ic{font-size:22px;color:var(--blue)}.drop .t{font-weight:600;font-size:13.5px;margin-top:6px}.drop .s{font-size:12px;color:var(--muted);margin-top:3px}
+  .tmpl{font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--plane);border:1px solid var(--line);border-radius:7px;padding:7px 10px;margin-top:10px;overflow-x:auto;white-space:nowrap}
+  .tmpl b{color:var(--ink-2)}
+  .result{margin-top:12px;font-size:12.5px}
+  .result .ok{color:var(--good);font-weight:600}
+  .xlist{margin-top:10px;max-height:150px;overflow-y:auto;border:1px solid var(--line);border-radius:9px}
+  .xrow{display:flex;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);font-size:12.5px}.xrow:last-child{border:none}
+  .xrow .nm{font-weight:600}.xrow .mt{color:var(--muted);margin-left:auto;font-size:12px}
+  .note{font-size:12.5px;color:var(--muted);line-height:1.6}
+  .note b{color:var(--ink-2)}
+  .foot{position:sticky;bottom:0;background:linear-gradient(180deg,transparent,#0d0d0d 30%);padding:22px 0 26px;margin-top:24px}
+  .foot-in{display:flex;align-items:center;gap:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 20px}
+  .foot .sum{font-size:12.5px;color:var(--muted)}.foot .sum b{color:#fff}
+  .golive{margin-left:auto;background:var(--blue);color:#fff;border:none;border-radius:10px;padding:12px 24px;font-weight:700;font-size:14px;cursor:pointer}
+  .golive:hover{background:#1e5fd6}.golive:disabled{opacity:.5;cursor:not-allowed}
+  .glmsg{font-size:12.5px}
 </style>
 </head>
 <body>
-<div class="app">
-  <header>
-    <div class="brand"><span class="dot"></span>CyberRx <span class="sub">Onboarding</span></div>
-    <div class="hright"><span class="saved"><span class="d"></span>Saved · just now</span><button class="toggle" id="toOS" title="Jump to the Operating System">⌂ Operating System →</button><button class="toggle" id="themeBtn">◐</button></div>
-  </header>
-  <div class="hero">
-    <h1>Let's build your defensible cyber-risk record</h1>
-    <p>The credibility of every answer depends on where the data comes from. We pull most of it <b>live from your security stack</b>, extract the rest from your documents, and ask you only for what no system can report — so every executive sees evidence, not guesses.</p>
-    <div class="complete"><div class="bar"><i id="heroBar"></i></div><div class="pct"><b id="heroPct">0%</b> complete</div></div>
+<div class="top"><div class="wrap top-in"><div class="logo">Rx</div><div class="brand">CyberRx <span>Setup</span></div><div class="top-r">Only what your executive cockpit needs — nothing more.</div></div></div>
+
+<div class="wrap">
+  <div class="head">
+    <div class="eyebrow">Set up your organization</div>
+    <h1>Give CyberRx your business, and it returns your cyber position — in dollars.</h1>
+    <div class="lede">A focused setup. Fields are optional, but the more you provide the more of the cockpit is <b>live from your data</b> instead of illustrative. Everything can be edited later.</div>
   </div>
-  <div class="grid">
-    <nav class="stepper" id="stepper"></nav>
-    <main>
-      <div class="panel" id="panel"></div>
-      <div class="nav"><button class="btn ghost" id="backBtn">← Back</button><button class="btn primary" id="nextBtn">Save &amp; continue →</button></div>
-    </main>
-    <aside class="rail">
-      <div class="card"><h5>Why we ask</h5><div class="why" id="whyText"></div></div>
-    </aside>
+
+  <!-- 1 · Organization -->
+  <div class="sec">
+    <div class="sh"><div class="sn">1</div><div><div class="st">Organization</div><div class="sd">Drives the industry lens and which regulators/jurisdictions apply.</div></div><div class="badge" id="b1">optional</div></div>
+    <div class="row c2">
+      <div class="field"><label>Organization name</label><input id="orgName" placeholder="e.g. Northwind Financial"></div>
+      <div class="field"><label>Industry</label><select id="industry">
+        <option value="">Select…</option><option>Financial services</option><option>Banking</option><option>Insurance</option><option>Healthcare</option><option>Technology / SaaS</option><option>Manufacturing</option><option>Retail / e-commerce</option><option>Energy / Utilities</option><option>Telecommunications</option><option>Transportation / Logistics</option><option>Government / Public sector</option><option>Professional services</option><option>Other</option>
+      </select></div>
+    </div>
+    <div class="field" style="margin-top:14px"><label>Operating regions <span class="h">— sets notification clocks &amp; penalties</span></label>
+      <div class="chips" id="regions"><span class="chip" data-r="US">United States</span><span class="chip" data-r="EU">European Union</span><span class="chip" data-r="UK">United Kingdom</span><span class="chip" data-r="Canada">Canada</span><span class="chip" data-r="Singapore">Singapore</span><span class="chip" data-r="Australia">Australia</span><span class="chip" data-r="APAC">APAC (other)</span><span class="chip" data-r="Global">Global</span></div>
+    </div>
   </div>
+
+  <!-- 2 · Financials -->
+  <div class="sec">
+    <div class="sh"><div class="sn">2</div><div><div class="st">Financials &amp; appetite</div><div class="sd">Turns cyber risk into board language — % of revenue, materiality, appetite, ROI. Type values like $8.4B or $120M.</div></div><div class="badge" id="b2">optional</div></div>
+    <div class="row c3">
+      <div class="field"><label>Annual revenue</label><input id="finRevenue" placeholder="$8.4B"></div>
+      <div class="field"><label>Operating income</label><input id="finOpInc" placeholder="$1.4B"></div>
+      <div class="field"><label>Net income</label><input id="finNetInc" placeholder="$1.06B"></div>
+    </div>
+    <div class="row c3" style="margin-top:14px">
+      <div class="field"><label>Enterprise value / market cap</label><input id="finEV" placeholder="$30B"></div>
+      <div class="field"><label>Board cyber-risk appetite</label><input id="finAppetite" placeholder="$120M"></div>
+      <div class="field"><label>Annual cyber budget</label><input id="finBudget" placeholder="$9M"></div>
+    </div>
+  </div>
+
+  <!-- 3 · Insurance -->
+  <div class="sec">
+    <div class="sh"><div class="sn">3</div><div><div class="st">Cyber insurance</div><div class="sd">Powers the coverage-vs-worst-case gap and the renewal position.</div></div><div class="badge" id="b3">optional</div></div>
+    <div class="row c3">
+      <div class="field"><label>Coverage limit</label><input id="insLimit" placeholder="$150M"></div>
+      <div class="field"><label>Annual premium</label><input id="insPrem" placeholder="$4.2M"></div>
+      <div class="field"><label>Renewal date</label><input id="insRenew" placeholder="2026-09-30"></div>
+    </div>
+  </div>
+
+  <!-- 4 · Business processes -->
+  <div class="sec">
+    <div class="sh"><div class="sn">4</div><div><div class="st">Business processes</div><div class="sd">Your key revenue processes — drives crown jewels, downtime cost, and recovery.</div></div><div class="badge" id="b4">recommended</div></div>
+    <div class="drop" id="dropProc"><div class="ic">⤓</div><div class="t">Upload your process list (CSV or TSV)</div><div class="s">click to browse or drop a file</div><input type="file" id="fileProc" accept=".csv,.tsv,.txt" style="display:none"></div>
+    <div class="tmpl">columns: <b>name</b>, revenue, rto, data, criticality &nbsp;·&nbsp; e.g. &nbsp;Claims processing, $2.1B, 6, "PHI, Financial", Critical</div>
+    <div class="result" id="resProc"></div>
+  </div>
+
+  <!-- 5 · Systems -->
+  <div class="sec">
+    <div class="sh"><div class="sn">5</div><div><div class="st">Systems &amp; applications</div><div class="sd">Your CMDB / app inventory — drives crown jewels, vendor concentration, tech-debt.</div></div><div class="badge" id="b5">recommended</div></div>
+    <div class="drop" id="dropApp"><div class="ic">⤓</div><div class="t">Upload your systems inventory (CSV or TSV)</div><div class="s">click to browse or drop a file</div><input type="file" id="fileApp" accept=".csv,.tsv,.txt" style="display:none"></div>
+    <div class="tmpl">columns: <b>name</b>, hosting, data, vendor, eol, recovery &nbsp;·&nbsp; e.g. &nbsp;ClaimsDB, "database on-prem", PHI, "Cloud A", no, 24</div>
+    <div class="result" id="resApp"></div>
+  </div>
+
+  <!-- 6 · Risk register -->
+  <div class="sec">
+    <div class="sh"><div class="sn">6</div><div><div class="st">Risk register</div><div class="sd">Open risks with dollar exposure — turns the crown-jewel map into a material-exposure figure.</div></div><div class="badge" id="b6">optional</div></div>
+    <div class="drop" id="dropRisk"><div class="ic">⤓</div><div class="t">Upload your risk register (CSV or TSV)</div><div class="s">click to browse or drop a file</div><input type="file" id="fileRisk" accept=".csv,.tsv,.txt" style="display:none"></div>
+    <div class="tmpl">columns: <b>title</b>, severity, asset, exposure, status &nbsp;·&nbsp; e.g. &nbsp;Ransomware path, Critical, ClaimsDB, $52M, open</div>
+    <div class="result" id="resRisk"></div>
+  </div>
+
+  <!-- 7 · Connect tools -->
+  <div class="sec">
+    <div class="sh"><div class="sn">7</div><div><div class="st">Connect your tools</div><div class="sd">Live security signals and your ticketing system — for real coverage figures and to track decisions to completion.</div></div><div class="badge">in the cockpit</div></div>
+    <div class="note">Once you go live, open <b>“Live data — connected sources”</b> from the cockpit’s top bar to connect Okta, Defender, Qualys, CrowdStrike, your SIEM, and your ticketing system (ServiceNow / Jira). Each connection lights up its signals and lets decisions be recorded to real tickets — <b>nothing is simulated</b>.</div>
+  </div>
+
+  <div class="foot"><div class="wrap" style="padding:0"><div class="foot-in">
+    <div class="sum" id="summary">Nothing collected yet</div>
+    <span class="glmsg" id="glmsg"></span>
+    <button class="golive" id="goLive">✦ Go live →</button>
+  </div></div></div>
 </div>
 
 <script>
-  document.getElementById('themeBtn').addEventListener('click',()=>{const h=document.documentElement;h.dataset.theme=h.dataset.theme==='dark'?'light':'dark';if(mapDone)drawMap();});
+  function apiBase(){try{return (window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'https://cyber-rx.onrender.com').replace(/\/+$/,'');}catch(_){return 'https://cyber-rx.onrender.com';}}
+  function slug(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,32)||'org';}
+  var PROC=[],APP=[],RISK=[],REGIONS=[];
 
-  const STEPS=[
-    {t:'Organization profile',d:'Who you are',why:'Your profile sets the rules — which regulations apply, what data you must protect, and which frameworks you\'ll be measured against.'},
-    {t:'Connect your systems',d:'The evidence spine',why:'This is what makes your numbers credible. We pull live from your EDR, SIEM, firewall, identity, cloud and more — so every figure traces to a real source, with freshness.'},
-    {t:'Business processes',d:'Upload your process list',why:'Upload your process list or BIA. We extract each process so answers speak in business terms — "claims, $220M/day," not "cluster 3."'},
-    {t:'Applications',d:'Upload your inventory',why:'Upload your app inventory or CMDB export. We extract every system so we can map each to the processes it supports.'},
-    {t:'Auto-map & crown jewels',d:'The core intelligence',why:'We infer which app supports which process, you confirm, and we deduce your crown jewels — the systems whose loss would hurt the business most.'},
-    {t:'Documents',d:'Evidence in files',why:'Your policies and reports are evidence. We extract, tag, and map their contents to controls automatically.'},
-    {t:'Executive data needs',d:'Per-seat inputs',why:'Working backwards from each executive\'s decisions: we show what\'s already covered by your systems and documents, and collect only the few things no system can report — like insurance, appetite, and board structure.'},
-    {t:'Review & go live',d:'Confirm and launch',why:'A final check. Once you go live, CyberRx generates your seats, framework coverage, crown-jewel map, and your first briefing.'}
-  ];
-
-  // ---- connectors ----
-  const CONN=[
-    {id:'edr',cat:'Endpoint Detection & Response (EDR)',ic:'🛡',w:14,sig:420,vendors:['CrowdStrike Falcon','Microsoft Defender for Endpoint','SentinelOne','VMware Carbon Black','Trend Micro'],pulls:'Live endpoint detections, threats blocked, agent coverage, dwell time.',ans:'CISO "are we under attack / can we operate," CIO endpoint health.'},
-    {id:'siem',cat:'SIEM / Log analytics',ic:'📊',w:16,sig:510,vendors:['Splunk','Microsoft Sentinel','Elastic Security','IBM QRadar','Google Chronicle'],pulls:'Alerts, correlated incidents, MTTD/MTTC, log coverage.',ans:'CISO operational status & incident timeline, Board assurance.'},
-    {id:'fw',cat:'Firewall / Network',ic:'🧱',w:10,sig:180,vendors:['Palo Alto Networks','Fortinet FortiGate','Cisco Secure Firewall','Check Point','Zscaler'],pulls:'Attacks blocked, exposed services, segmentation gaps.',ans:'CISO threat & exposure, CIO network status.'},
-    {id:'idp',cat:'Identity provider (IdP / SSO)',ic:'🔑',w:14,sig:240,vendors:['Okta','Microsoft Entra ID','Ping Identity','Google Workspace','Duo'],pulls:'MFA coverage, privileged accounts, access reviews, risky sign-ins.',ans:'CISO control validation, CRO access risk, HIPAA evidence.'},
-    {id:'cloud',cat:'Cloud security posture (CSPM)',ic:'☁',w:12,sig:160,vendors:['AWS Security Hub','Microsoft Defender for Cloud','Wiz','Prisma Cloud','Google SCC'],pulls:'Misconfigurations, internet-exposed assets, IAM risk, inventory.',ans:'CISO exposure, CIO service & asset health.'},
-    {id:'vuln',cat:'Vulnerability management',ic:'🔍',w:10,sig:90,vendors:['Tenable','Qualys','Rapid7 InsightVM','Microsoft Defender VM'],pulls:'Critical vulns, internet-facing exposure, patch latency.',ans:'CISO material exposure, attack-path inputs.'},
-    {id:'email',cat:'Email security',ic:'✉',w:6,sig:70,vendors:['Proofpoint','Mimecast','Abnormal Security','Microsoft Defender for Office'],pulls:'Phishing blocked, account-takeover attempts, BEC signals.',ans:'CISO live threat (phishing → claims).'},
-    {id:'backup',cat:'Backup / DR',ic:'💾',w:10,sig:40,vendors:['Rubrik','Veeam','Cohesity','Commvault','AWS Backup'],pulls:'Recovery readiness, RPO/RTO actuals, immutable-backup status, last DR test.',ans:'CIO recovery, CEO "can we recover," Board resilience.'},
-    {id:'mdm',cat:'Device management (MDM)',ic:'💻',w:4,sig:30,vendors:['Microsoft Intune','Jamf','VMware Workspace ONE','Kandji'],pulls:'Device compliance, encryption, patch state.',ans:'CISO control coverage.'},
-    {id:'grc',cat:'ITSM / GRC / Ticketing',ic:'🗂',w:4,sig:25,vendors:['ServiceNow','Jira','Archer','Vanta','Drata'],pulls:'Remediation status, change governance, decision & approval records.',ans:'Action Center, audit log, CLO defensibility, decisions.'}
-  ];
-  const TOTAL_SIG=CONN.reduce((s,c)=>s+c.sig,0);
-  const connected={};
-
-  let cur=0;
-  const done=new Array(STEPS.length).fill(false);
-  let procExtracted=false, appExtracted=false, mapDone=false, docCount=0, seatTab='ceo', procLive=false, appLive=false;
-  const seatNames={ceo:'',ciso:'',cfo:'',cio:'',clo:'',cro:'',board:''};
-  const seatData={ceo:{},ciso:{},cfo:{},cio:{},clo:{},cro:{},board:{}};
-  const seatContacts={ciso:{}};
-  // Industry chosen here drives the rest of onboarding AND the operating system.
-  let selectedIndustry='healthcare-payer', selectedArch='healthcare';
-  // Capture the typed organization name and persist it (same-origin localStorage
-  // is shared with the OS iframe, so the cockpit can adopt the real name).
-  let orgName=''; try{orgName=localStorage.getItem('cyberrx_org_name')||'';}catch(e){}
-  document.addEventListener('input',e=>{ if(e.target&&e.target.id==='orgNameIn'){ orgName=e.target.value; try{localStorage.setItem('cyberrx_org_name',orgName);}catch(_){} } });
-  // Jump straight to the Operating System from any onboarding step (applies the
-  // industry + org name entered so far).
-  function cjApiBase(){try{return window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'https://cyber-rx.onrender.com';}catch(_){return 'https://cyber-rx.onrender.com';}}
-  function cjSlug(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,32)||'org';}
-  // Shared go-live: persist the uploaded inventory to the backend (so the cockpit
-  // shows this org's REAL numbers), store the org id, then hand off to the OS.
-  // Called from BOTH the "Operating System" shortcut and the primary "Go live".
-  async function ingestAndGoLive(org, extra){
-    org=(org||'').trim();
-    var orgId=org?('org_'+cjSlug(org)):'';
-    try{
-      var procs=(PROC_UP||[]).filter(function(p){return p&&p.n;}).map(function(p){return {name:p.n,data:p.data,rev:p.rev,revenue:p.rev,rto:p.rto};});
-      var apps=(APP_UP||[]).filter(function(a){return a&&a.n;}).map(function(a){return {name:a.n,host:a.host,data:a.data,vendor:a.vendor,eol:a.eol,recovery:a.recovery};});
-      var risks=(RISK_UP||[]).filter(function(x){return x&&x.title;}).map(function(x){return {title:x.title,severity:x.severity,asset:x.asset,status:x.status,financial_exposure:x.exposure};});
-      function fv(id){var e=document.getElementById(id);return e?String(e.value||'').trim():'';}
-      var financials={revenue:fv('finRevenue'),operatingIncome:fv('finOpInc'),netIncome:fv('finNetInc'),enterpriseValue:fv('finEV')};
-      var insurance={limit:fv('finInsLimit'),premium:fv('finInsPrem'),renewal:fv('finInsRenew')};
-      var appetite=fv('finAppetite'),budget=fv('finBudget');
-      if(org&&(procs.length||apps.length)){
-        var r=await fetch(cjApiBase()+'/api/crown-jewels/ingest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({org_name:org,org_id:orgId,processes:procs,apps:apps,risks:risks,financials:financials,appetite:appetite,insurance:insurance,budget:budget,industry:selectedIndustry})});
-        if(r&&r.ok){var body=await r.json().catch(function(){return{};});if(body&&body.org_id)orgId=body.org_id;}
-      }
-    }catch(_){}
-    try{if(orgId)localStorage.setItem('cyberrx_org_id',orgId);if(org)localStorage.setItem('cyberrx_org_name',org);}catch(_){}
-    var msg={type:'cyberrx-golive',industry:selectedIndustry,org:org,orgId:orgId,names:seatNames};
-    if(extra){for(var k in extra){if(Object.prototype.hasOwnProperty.call(extra,k))msg[k]=extra[k];}}
-    try{window.parent.postMessage(msg,'*');}catch(e){}
-  }
-  (function(){
-    var b=document.getElementById('toOS'); if(!b)return;
-    b.addEventListener('click',function(){ingestAndGoLive((orgName||'').trim());});
-  })();
-  const IMETA={
-   healthcare:{org:'Meridian Health Plan',data:['PHI','PII','Personal Data'],reg:'HIPAA · GDPR · NIS2',ctx:'Framed for healthcare — PHI / personal-data exposure, HIPAA & regional health-data rules, and care continuity.'},
-   financial:{org:'Atlas Financial Group',data:['PII','PCI','Financial','Personal Data'],reg:'PCI-DSS · DORA · GLBA',ctx:'Framed for financial services — funds & personal-data exposure, PCI-DSS / DORA / GLBA, payments continuity.'},
-   technology:{org:'Northstar Cloud',data:['PII','Customer data','Personal Data'],reg:'SOC 2 · GDPR · ISO 27001',ctx:'Framed for technology / SaaS — customer-data & source-code exposure, SOC 2 / GDPR / ISO 27001, platform uptime.'},
-   manufacturing:{org:'Vanguard Industries',data:['IP','OT','Personal Data'],reg:'IEC 62443 · NIST CSF · NIS2',ctx:'Framed for manufacturing — IP & OT exposure, IEC 62443, production-line continuity.'},
-   energy:{org:'Helios Grid',data:['OT','PII','Personal Data'],reg:'IEC 62443 · NIS2 · NERC CIP',ctx:'Framed for energy & utilities — OT/grid exposure, IEC 62443 / NIS2 / NERC CIP, grid reliability & safety.'},
-   retail:{org:'Northwind Retail Group',data:['PCI','PII','Personal Data'],reg:'PCI-DSS · GDPR',ctx:'Framed for retail — cardholder-data & personal-data exposure, PCI-DSS, checkout & store continuity.'},
-   public:{org:'State of Northland',data:['PII','CJI','Personal Data'],reg:'NIST 800-53 · ISO 27001',ctx:'Framed for public sector — citizen-data exposure, NIST 800-53 / ISO 27001, service continuity.'},
-   defense:{org:'Meridian Aerospace',data:['CUI','Classified'],reg:'CMMC · ITAR · NATO STANAG',ctx:'Framed for aerospace & defense — CUI/classified exposure, CMMC / ITAR, program continuity.'},
-   services:{org:'Lincoln Advisory',data:['PII','Confidential','Personal Data'],reg:'SOC 2 · GDPR · ISO 27001',ctx:'Framed for professional services — client-confidential & privileged data, SOC 2 / GDPR, client delivery.'},
-   transport:{org:'Cardinal Logistics',data:['PII','OT','Personal Data'],reg:'NIS2 · ISO 27001',ctx:'Framed for transportation & logistics — shipment & personal data, NIS2 / ISO 27001, dispatch continuity.'},
-   generic:{org:'Apex Enterprises',data:['PII','Personal Data'],reg:'ISO 27001 · NIST CSF',ctx:'Framed for your industry — sensitive-data exposure, applicable privacy & breach-notification laws, core-operations continuity.'}
-  };
-  function curMeta(){return IMETA[selectedArch]||IMETA.generic;}
-  function chipsHTML(){
-    const on=curMeta().data; const seen={}; const out=[];
-    on.forEach(d=>{seen[d]=1;out.push('<span class="pick on">'+d+'</span>');});
-    ['PHI','PII','Personal Data','PCI','Financial','IP','OT','CUI'].forEach(d=>{if(!seen[d]){seen[d]=1;out.push('<span class="pick">'+d+'</span>');}});
-    return out.join('');
-  }
-  const confirmed={};
-
-  const SAMPLE_DATA={
-    healthcare:{
-      procs:[{id:'P1',n:'Claims Processing',c:'h',rev:'$220M/day',data:'PHI'},{id:'P2',n:'Provider Payments',c:'h',rev:'$60M/day',data:'Financial'},{id:'P3',n:'Member Portal',c:'m',rev:'$8M/day',data:'PHI, PII'},{id:'P4',n:'Call Center Ops',c:'m',rev:'—',data:'PII'},{id:'P5',n:'Corporate (internal)',c:'l',rev:'—',data:'Internal'}],
-      apps:[{id:'A1',n:'ClaimCore (legacy)',host:'On-prem · single point of failure',data:'PHI',proc:['P1'],conf:98,cj:true,score:96,why:'Sole system under Claims Processing ($220M/day, PHI) — no failover.'},{id:'A2',n:'Okta',host:'SaaS · internet-facing',data:'Identity',proc:['P1','P2','P3','P4'],conf:95,cj:true,score:94,why:'Single identity provider for every process — a compromise is enterprise-wide.'},{id:'A3',n:'Member Portal (AWS)',host:'Cloud · internet-facing',data:'PHI, PII',proc:['P3'],conf:99,cj:true,score:82,why:'Internet-facing; holds PHI/PII for 2.4M members.'},{id:'A4',n:'PayHub',host:'Cloud · internet-facing',data:'Financial',proc:['P2'],conf:92,cj:true,score:80,why:'Moves $60M/day in provider payments; internet-facing.'},{id:'A5',n:'Genesys CC',host:'SaaS',data:'PII',proc:['P4'],conf:88,cj:false},{id:'A6',n:'Confluence',host:'SaaS',data:'Internal docs',proc:['P5'],conf:61,cj:false}]},
-    financial:{
-      procs:[{id:'P1',n:'Core Banking / Trading',c:'h',rev:'$180M/day',data:'Financial'},{id:'P2',n:'Payment Processing',c:'h',rev:'$95M/day',data:'PCI, Financial'},{id:'P3',n:'Customer Onboarding / KYC',c:'m',rev:'$12M/day',data:'PII'},{id:'P4',n:'Wealth / Portfolio Management',c:'m',rev:'$40M/day',data:'Financial, PII'},{id:'P5',n:'Corporate (internal)',c:'l',rev:'—',data:'Internal'}],
-      apps:[{id:'A1',n:'Core Banking Platform',host:'On-prem · single point of failure',data:'Financial',proc:['P1'],conf:98,cj:true,score:96,why:'Sole system under Core Banking — handles all transactions, no failover.'},{id:'A2',n:'Okta',host:'SaaS · internet-facing',data:'Identity',proc:['P1','P2','P3','P4'],conf:95,cj:true,score:94,why:'Single identity provider for every process — a compromise is enterprise-wide.'},{id:'A3',n:'Payment Gateway',host:'Cloud · internet-facing',data:'PCI, Financial',proc:['P2'],conf:99,cj:true,score:90,why:'Internet-facing; processes all card transactions.'},{id:'A4',n:'Client Portal',host:'Cloud · internet-facing',data:'PII, Financial',proc:['P3','P4'],conf:92,cj:true,score:82,why:'Internet-facing; holds client PII and financial data.'},{id:'A5',n:'CRM',host:'SaaS',data:'PII',proc:['P3'],conf:88,cj:false},{id:'A6',n:'Confluence',host:'SaaS',data:'Internal docs',proc:['P5'],conf:61,cj:false}]},
-    technology:{
-      procs:[{id:'P1',n:'Platform / SaaS Delivery',c:'h',rev:'$50M/day',data:'Customer data'},{id:'P2',n:'CI/CD & Engineering',c:'h',rev:'—',data:'IP, Source code'},{id:'P3',n:'Customer Support',c:'m',rev:'$5M/day',data:'PII'},{id:'P4',n:'Billing & Subscriptions',c:'m',rev:'$30M/day',data:'PCI, Financial'},{id:'P5',n:'Corporate (internal)',c:'l',rev:'—',data:'Internal'}],
-      apps:[{id:'A1',n:'Production Platform (AWS/GCP)',host:'Cloud · internet-facing',data:'Customer data',proc:['P1'],conf:98,cj:true,score:96,why:'Core product platform — customer data, SLA-bound uptime.'},{id:'A2',n:'GitHub / GitLab',host:'SaaS · internet-facing',data:'IP, Source code',proc:['P2'],conf:95,cj:true,score:92,why:'All source code and CI/CD secrets — a compromise exposes the product.'},{id:'A3',n:'Okta',host:'SaaS · internet-facing',data:'Identity',proc:['P1','P2','P3','P4'],conf:95,cj:true,score:94,why:'Single identity provider for every process.'},{id:'A4',n:'Stripe / Billing',host:'SaaS · internet-facing',data:'PCI, Financial',proc:['P4'],conf:92,cj:true,score:80,why:'Processes all subscription payments.'},{id:'A5',n:'Zendesk',host:'SaaS',data:'PII',proc:['P3'],conf:88,cj:false},{id:'A6',n:'Confluence',host:'SaaS',data:'Internal docs',proc:['P5'],conf:61,cj:false}]},
-    manufacturing:{
-      procs:[{id:'P1',n:'Production / Manufacturing',c:'h',rev:'$85M/day',data:'OT, IP'},{id:'P2',n:'Supply Chain Management',c:'h',rev:'$40M/day',data:'Financial'},{id:'P3',n:'Quality & Compliance',c:'m',rev:'—',data:'IP'},{id:'P4',n:'ERP / Finance',c:'m',rev:'$20M/day',data:'Financial, PII'},{id:'P5',n:'Corporate (internal)',c:'l',rev:'—',data:'Internal'}],
-      apps:[{id:'A1',n:'SCADA / MES',host:'On-prem · OT network',data:'OT',proc:['P1'],conf:98,cj:true,score:96,why:'Controls production line — a compromise halts manufacturing.'},{id:'A2',n:'ERP (SAP/Oracle)',host:'On-prem / Cloud',data:'Financial, PII',proc:['P2','P4'],conf:95,cj:true,score:92,why:'Runs supply chain and finance — enterprise-wide dependency.'},{id:'A3',n:'PLM / CAD',host:'On-prem',data:'IP',proc:['P1','P3'],conf:90,cj:true,score:85,why:'Contains all product designs and trade secrets.'},{id:'A4',n:'Okta',host:'SaaS · internet-facing',data:'Identity',proc:['P1','P2','P3','P4'],conf:95,cj:true,score:88,why:'Single identity provider.'},{id:'A5',n:'QMS',host:'SaaS',data:'IP',proc:['P3'],conf:85,cj:false},{id:'A6',n:'Confluence',host:'SaaS',data:'Internal docs',proc:['P5'],conf:61,cj:false}]},
-    energy:{
-      procs:[{id:'P1',n:'Grid / Plant Operations',c:'h',rev:'$120M/day',data:'OT'},{id:'P2',n:'SCADA / Control Systems',c:'h',rev:'—',data:'OT'},{id:'P3',n:'Customer Billing',c:'m',rev:'$25M/day',data:'PII, Financial'},{id:'P4',n:'Regulatory Compliance',c:'m',rev:'—',data:'OT, PII'},{id:'P5',n:'Corporate (internal)',c:'l',rev:'—',data:'Internal'}],
-      apps:[{id:'A1',n:'SCADA / EMS',host:'On-prem · OT network · air-gapped',data:'OT',proc:['P1','P2'],conf:98,cj:true,score:98,why:'Controls grid/plant operations — safety-of-life system.'},{id:'A2',n:'Historian / PI',host:'On-prem · OT',data:'OT',proc:['P1','P2'],conf:95,cj:true,score:90,why:'Stores all operational telemetry — compromise enables stealth attacks.'},{id:'A3',n:'Billing Platform',host:'Cloud · internet-facing',data:'PII, Financial',proc:['P3'],conf:92,cj:true,score:82,why:'Internet-facing; customer PII and payment data.'},{id:'A4',n:'Okta',host:'SaaS · internet-facing',data:'Identity',proc:['P1','P2','P3','P4'],conf:95,cj:true,score:88,why:'Single identity provider.'},{id:'A5',n:'GRC Platform',host:'SaaS',data:'PII',proc:['P4'],conf:85,cj:false},{id:'A6',n:'Confluence',host:'SaaS',data:'Internal docs',proc:['P5'],conf:61,cj:false}]},
-    retail:{
-      procs:[{id:'P1',n:'Point of Sale / Checkout',c:'h',rev:'$65M/day',data:'PCI'},{id:'P2',n:'E-commerce Platform',c:'h',rev:'$40M/day',data:'PCI, PII'},{id:'P3',n:'Supply Chain / Inventory',c:'m',rev:'$20M/day',data:'Financial'},{id:'P4',n:'Customer Loyalty / CRM',c:'m',rev:'$10M/day',data:'PII'},{id:'P5',n:'Corporate (internal)',c:'l',rev:'—',data:'Internal'}],
-      apps:[{id:'A1',n:'POS System',host:'On-prem · store network',data:'PCI',proc:['P1'],conf:98,cj:true,score:94,why:'Processes all in-store card transactions.'},{id:'A2',n:'E-commerce (Shopify/Custom)',host:'Cloud · internet-facing',data:'PCI, PII',proc:['P2'],conf:98,cj:true,score:92,why:'Internet-facing; handles all online orders and customer data.'},{id:'A3',n:'ERP / Inventory',host:'Cloud',data:'Financial',proc:['P3'],conf:92,cj:true,score:84,why:'Manages entire supply chain — disruption halts restocking.'},{id:'A4',n:'Okta',host:'SaaS · internet-facing',data:'Identity',proc:['P1','P2','P3','P4'],conf:95,cj:true,score:88,why:'Single identity provider.'},{id:'A5',n:'CRM / Loyalty',host:'SaaS',data:'PII',proc:['P4'],conf:85,cj:false},{id:'A6',n:'Confluence',host:'SaaS',data:'Internal docs',proc:['P5'],conf:61,cj:false}]}
-  };
-  function sampleProcs(){return (SAMPLE_DATA[selectedArch]||SAMPLE_DATA.healthcare).procs;}
-  function sampleApps(){return (SAMPLE_DATA[selectedArch]||SAMPLE_DATA.healthcare).apps;}
-  const PROCS=sampleProcs();
-  const APPS=sampleApps();
-  const PROC_BY={};PROCS.forEach(p=>PROC_BY[p.id]=p.n);
-
-  // --- De-hardcoded graph -------------------------------------------------
-  // When the user has uploaded a process list AND an app/CMDB inventory, build
-  // the process -> app -> crown-jewel graph from THEIR data, with a transparent
-  // score (data sensitivity x exposure x supported-process criticality). Only
-  // falls back to the sample set when nothing was uploaded. Interim front-end
-  // heuristic; the real deterministic+explainable engine is /api/crown-jewels.
-  let GRAPH=null;
-  function orgDisplay(){return (orgName||'').trim()||curMeta().org;}
-  function dataRank(d){d=(d||'').toUpperCase();var score=0;if(/PHI/.test(d))score=Math.max(score,3);if(/PCI|CARDHOLDER/.test(d))score=Math.max(score,3);if(/CLASSIFIED|CUI/.test(d))score=Math.max(score,3);if(/FINANCIAL/.test(d))score=Math.max(score,2.5);if(/PII/.test(d))score=Math.max(score,2);if(/IDENTITY|CREDENTIAL|SECRET/.test(d))score=Math.max(score,2.5);if(/INTERNAL|DOC|PUBLIC/.test(d)&&score===0)score=0.5;if(score===0)score=1;var multi=0;['PHI','PII','PCI','FINANCIAL','IDENTITY'].forEach(function(k){if(d.indexOf(k)>=0)multi++;});if(multi>1)score=Math.min(3,score+multi*0.2);return score;}
-  function exposureOf(host){host=(host||'').toLowerCase();if(/internet|public|saas|cloud|aws|azure|gcp|portal|web|api|external/.test(host))return {x:1,label:'internet-facing'};if(/on-?prem|single|legacy|mainframe/.test(host))return {x:0.7,label:'on-prem'};if(/cmdb_ci|business_app|server/.test(host))return {x:0.6,label:'business application'};return {x:0.4,label:'internal'};}
-  function procCrit(p){return p&&p.c==='h'?1:p&&p.c==='m'?0.6:0.3;}
-  function liveGraph(){
-    if(GRAPH)return GRAPH;
-    if(PROC_UP&&PROC_UP.length&&APP_UP&&APP_UP.length){
-      const procs=PROC_UP.map((p,i)=>{const r=dataRank(p.data);const c=(((p.rev||'').indexOf('$')>=0)||r>=3)?'h':(r<=0?'l':'m');return {id:'P'+(i+1),n:p.n,c:c,rev:p.rev||'—',data:p.data||'Process'};});
-      function wordSet(s){return (s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').split(' ').filter(function(w){return w.length>2&&['the','and','for','from','with','this','that','all'].indexOf(w)<0;});}
-      function nameSim(a,b){var wa=wordSet(a),wb=wordSet(b);if(!wa.length||!wb.length)return 0;var hits=0;wa.forEach(function(w){wb.forEach(function(w2){if(w===w2)hits+=2;else if(w.indexOf(w2)>=0||w2.indexOf(w)>=0)hits+=1;});});return hits/Math.max(wa.length,wb.length);}
-      const apps=APP_UP.map((a,i)=>{
-        const e=exposureOf(a.host);const dr=dataRank(a.data);
-        const toks=(a.data||'').toUpperCase().split(/[^A-Z]+/).filter(t=>t.length>1);
-        var dataMtch=procs.filter(p=>toks.some(t=>(p.data||'').toUpperCase().indexOf(t)>=0)).map(p=>p.id);
-        var nameScores=procs.map(function(p){return{id:p.id,s:nameSim(a.n,p.n)+nameSim(a.n,p.data)};}).filter(function(x){return x.s>=0.4;}).sort(function(x,y){return y.s-x.s;});
-        var linked=[]; var conf=67;
-        if(nameScores.length&&nameScores[0].s>=0.8){linked=[nameScores[0].id];conf=Math.min(98,Math.round(60+nameScores[0].s*40));}
-        else if(dataMtch.length&&dataMtch.length<=procs.length*0.5){linked=dataMtch;conf=92;}
-        else if(nameScores.length){linked=[nameScores[0].id];conf=Math.min(85,Math.round(50+nameScores[0].s*40));}
-        else{linked=[];conf=0;}
-        const maxPC=linked.length?Math.max.apply(null,linked.map(id=>procCrit(procs.find(p=>p.id===id)))):0.3;
-        const spof=/single|sole|no failover|legacy|spof/.test((a.host||'').toLowerCase())?1:0;
-        var multiProc=linked.length>1?Math.min(linked.length*3,12):0;
-        var coreName=/claim|billing|payment|erp|identity|sso|okta|active.?dir|portal|member|patient|enrollment/i.test(a.n)?8:0;
-        const score=Math.round((dr/3)*30+e.x*20+maxPC*20+spof*10+multiProc+coreName);
-        const lp=procs.find(p=>p.id===linked[0]);
-        const sup=linked.length?(linked.length>1?('supports '+linked.length+' processes'):('key system under '+(lp?lp.n:'a process'))):'no mapped process';
-        var whyParts=[];if(dr>=2)whyParts.push('Holds '+a.data);whyParts.push(e.label);if(spof)whyParts.push('single point of failure');if(linked.length>1)whyParts.push('supports '+linked.length+' processes');else if(lp)whyParts.push('key system under '+lp.n);
-        const why=whyParts.join('; ')+' — criticality score '+score+'.';
-        return {id:'A'+(i+1),n:a.n,host:a.host||'—',data:a.data||'—',proc:linked,conf:conf,score:score,why:why,cj:false};
-      });
-      var sorted=apps.slice().sort((x,y)=>y.score-x.score);
-      var cjCount=Math.max(3,Math.min(Math.ceil(apps.length*0.15),15));
-      cjCount=Math.min(cjCount,apps.length);
-      var cutoff=sorted[cjCount-1]?sorted[cjCount-1].score:0;
-      sorted.forEach(function(a,i){a.cj=(i<cjCount&&a.score>0)||(a.score>=cutoff&&a.score>0);});
-      if(!apps.some(a=>a.cj)&&sorted[0])sorted[0].cj=true;
-      GRAPH={procs:procs,apps:apps};
-    } else { GRAPH={procs:PROCS,apps:APPS}; }
-    return GRAPH;
-  }
-
-  // ---- per-seat data needs ----
-  function liveSrc(){return Object.keys(connected).length>0;}
-  const SEATS=[
-    {id:'ceo',label:'CEO',q:'Are we governing cyber risk responsibly — and could we be surprised?',needs:[
-      {i:'Business & revenue exposure',src:'derived',m:'computed from your processes'},
-      {i:'Crisis management readiness',src:'declare',m:'no system reports this',df:['Date of last crisis tabletop','Exercise cadence (e.g. annual)']},
-      {i:'Delegation of authority in a crisis',src:'declare',m:'who can declare a crisis',df:['Crisis decision owner','Backup decision owner']},
-      {i:'Oversight & decision record',src:'live',m:'from ITSM / GRC'}]},
-    {id:'ciso',label:'CISO',q:'Can we operate safely today, and are we improving?',needs:[
-      {i:'Active threats & detections',src:'live',m:'from EDR + SIEM'},
-      {i:'Control validation & coverage',src:'live',m:'from Identity + Cloud + Vuln + MDM'},
-      {i:'Attacks blocked',src:'live',m:'from Firewall + Email'},
-      {i:'Framework evidence',src:'doc',m:'from your documents'},
-      {i:'Security testing',src:'declare',m:'assessment recency',df:['Last penetration test date','Last vulnerability scan date']},
-      {i:'Incident command plan & 24/7 call tree',src:'declare',m:'no system has this — it runs your crisis response and powers Incident Commander mode',plan:true,contacts:['Incident Commander','Deputy IC','Comms / PR lead','Breach counsel (external)','IR retainer / forensics (24/7)','Cyber-insurer claims hotline','Law enforcement (FBI field office)']}]},
-    {id:'cfo',label:'CFO',q:'What is our financial exposure, and is it material?',needs:[
-      {i:'Financial exposure model',src:'derived',m:'process revenue × loss model'},
-      {i:'Cyber insurance',src:'declare',m:'no system reports your policy',df:['Carrier','Coverage limit','Retention / deductible','Key sublimits','Notable exclusions','Renewal date']},
-      {i:'Materiality threshold',src:'declare',m:'your disclosure trigger',df:['Materiality threshold ($)']},
-      {i:'Prior loss history',src:'declare',m:'optional',df:['Cyber losses, last 12 mo','Annual cyber insurance premium']},
-      {i:'Annual cybersecurity budget',src:'declare',m:'enables spend benchmarking',df:['Annual cybersecurity budget ($)']}]},
-    {id:'cio',label:'CIO',q:'Can we keep critical services running and recover?',needs:[
-      {i:'Service & endpoint health',src:'live',m:'from EDR + Cloud'},
-      {i:'Recovery readiness, RPO/RTO, immutable backups',src:'live',m:'from Backup / DR'},
-      {i:'Recovery targets per critical process',src:'declare',m:'your tolerance',df:null,dynRTO:true},
-      {i:'Change governance',src:'live',m:'from ITSM / GRC'}]},
-    {id:'clo',label:'CLO',q:'Do we meet every obligation — defensibly?',needs:[
-      {i:'Regulatory jurisdictions',src:'derived',m:'from your profile'},
-      {i:'Applicable disclosure obligations',src:'derived',m:'auto-derived from your regions, industry & ownership'},
-      {i:'Litigation hold & privilege',src:'declare',m:'your process owners',df:['Litigation-hold owner','Outside counsel']},
-      {i:'Evidence chain & decision record',src:'live',m:'from GRC / ticketing'}]},
-    {id:'cro',label:'CRO',q:'Is cyber risk within the board\'s appetite?',needs:[
-      {i:'Risk appetite by category',src:'declare',m:'the board\'s tolerance',df:['Cyber risk appetite ($)','Tolerance threshold']},
-      {i:'Third-party / concentration risk',src:'derived',m:'from vendors + processes',df:['Number of critical vendors']},
-      {i:'Risk register & residual risk',src:'live',m:'from Vuln + SIEM + GRC'},
-      {i:'Risk committee cadence',src:'declare',m:'governance rhythm',df:['Risk committee cadence']}]},
-    {id:'board',label:'Board',q:'Is management in control, and is our oversight demonstrable?',needs:[
-      {i:'Control assurance & posture',src:'live',m:'from all connected systems'},
-      {i:'Materiality & disclosure status',src:'derived',m:'from CFO + CLO inputs'},
-      {i:'Board & committee structure',src:'declare',m:'your governance',df:['Cyber-responsible committee','Oversight cadence']},
-      {i:'Oversight record',src:'live',m:'from GRC / ticketing'}]}
-  ];
-  const SEAT_BY={};SEATS.forEach(s=>SEAT_BY[s.id]=s);
-
-  const CONCIERGE=[
-    'Tip: get your legal entity name exactly right — it appears on every board report and audit export.',
-    'Most healthcare payers connect EDR, SIEM, identity and cloud first — that\'s over half your coverage in four clicks. Want us to do it with you live?',
-    'No clean process list? Upload your business-impact analysis — we\'ll pull the processes straight from it.',
-    'A CMDB export is ideal here. No CMDB? A rough app-inventory spreadsheet works fine — we\'ll clean it up.',
-    'Glance at the low-confidence matches first (under 85%) — those are the ones worth a human eye before you confirm.',
-    'Your SOC 2 and latest pen test give the most control coverage per upload. Start with those two.',
-    'Only the amber "You provide" items need you — everything green is already flowing from your connected systems.',
-    'Looks ready to go live. On a call, we can walk your team through your first board briefing together.'
-  ];
-  function tickTo(el,to,dur){if(!el)return;const from=parseInt((el.textContent||'0').replace(/,/g,''))||0;const t0=performance.now();(function f(t){const p=Math.min(1,(t-t0)/dur);el.textContent=Math.round(from+(to-from)*p).toLocaleString();if(p<1)requestAnimationFrame(f);})(performance.now());}
-
-  function renderStepper(){
-    document.getElementById('stepper').innerHTML=STEPS.map((s,i)=>'<div class="step '+(i===cur?'active':'')+' '+(done[i]?'done':'')+'" data-i="'+i+'"><div class="ix">'+(done[i]?'':(i+1))+'</div><div><div class="sl">'+s.t+'</div><div class="sd">'+s.d+'</div></div></div>').join('');
-    document.querySelectorAll('.step').forEach(el=>el.addEventListener('click',()=>{cur=+el.dataset.i;render();}));
-  }
-  function updateComplete(){const n=done.filter(Boolean).length;const pct=Math.round((n/STEPS.length)*100);document.getElementById('heroBar').style.width=pct+'%';document.getElementById('heroPct').textContent=pct+'%';}
-
-  const PANELS={
-    0:()=>`<div class="panel-h"><div class="step-of">Step 1 of 8</div><h2>Organization profile</h2><p>The basics that determine your regulatory obligations and how every figure gets framed.</p></div>
-      <div class="field"><label>Legal organization name</label><input id="orgNameIn" value="${orgDisplay()}"></div>
-      <div class="row2"><div class="field"><label>Industry / sector</label><select id="indSel">
-        <optgroup label="Healthcare &amp; Life Sciences">
-          <option value="healthcare-payer" data-arch="healthcare">Healthcare — Payer</option><option value="healthcare-provider" data-arch="healthcare">Healthcare — Provider / Hospital System</option><option value="healthcare-pharmacy-pbm" data-arch="healthcare">Healthcare — Pharmacy / PBM</option><option value="health-tech" data-arch="technology">Health Technology / Digital Health</option><option value="pharmaceuticals" data-arch="manufacturing">Pharmaceuticals</option><option value="biotechnology" data-arch="manufacturing">Biotechnology</option><option value="medical-devices" data-arch="manufacturing">Medical Devices</option>
-        </optgroup>
-        <optgroup label="Financial Services">
-          <option value="banking" data-arch="financial">Banking — Retail / Commercial</option><option value="insurance" data-arch="financial">Insurance</option><option value="capital-markets" data-arch="financial">Capital Markets / Investment Banking</option><option value="asset-wealth" data-arch="financial">Asset / Wealth Management</option><option value="fintech" data-arch="financial">Fintech</option><option value="payments-card" data-arch="financial">Payments / Card Networks</option><option value="credit-union" data-arch="financial">Credit Union</option>
-        </optgroup>
-        <optgroup label="Technology">
-          <option value="tech-saas" data-arch="technology">Technology / SaaS</option><option value="semiconductors" data-arch="technology">Semiconductors / Hardware</option><option value="telecommunications" data-arch="technology">Telecommunications</option><option value="cloud-hosting" data-arch="technology">Cloud / Hosting / Data Center</option>
-        </optgroup>
-        <optgroup label="Industrial &amp; Energy">
-          <option value="manufacturing" data-arch="manufacturing">Manufacturing</option><option value="industrial-ot" data-arch="manufacturing">Industrial / OT / ICS</option><option value="automotive" data-arch="manufacturing">Automotive</option><option value="aerospace-defense" data-arch="defense">Aerospace &amp; Defense</option><option value="energy-utilities" data-arch="energy">Energy &amp; Utilities</option><option value="oil-gas" data-arch="energy">Oil &amp; Gas</option><option value="chemicals" data-arch="manufacturing">Chemicals</option><option value="mining-metals" data-arch="manufacturing">Mining &amp; Metals</option>
-        </optgroup>
-        <optgroup label="Consumer &amp; Retail">
-          <option value="retail" data-arch="retail">Retail</option><option value="ecommerce" data-arch="retail">E-commerce</option><option value="cpg" data-arch="retail">Consumer Packaged Goods</option><option value="food-beverage" data-arch="retail">Food &amp; Beverage</option><option value="hospitality-travel" data-arch="retail">Hospitality / Travel</option><option value="media-entertainment" data-arch="technology">Media &amp; Entertainment</option><option value="gaming" data-arch="technology">Gaming</option>
-        </optgroup>
-        <optgroup label="Services &amp; Public Sector">
-          <option value="professional-services" data-arch="services">Professional Services / Consulting</option><option value="legal" data-arch="services">Legal Services</option><option value="education" data-arch="public">Education</option><option value="gov-federal" data-arch="public">Government — Federal</option><option value="gov-state-local" data-arch="public">Government — State / Local</option><option value="defense-national-security" data-arch="defense">Defense / National Security</option><option value="nonprofit" data-arch="public">Non-profit / NGO</option>
-        </optgroup>
-        <optgroup label="Infrastructure">
-          <option value="transportation-logistics" data-arch="transport">Transportation &amp; Logistics</option><option value="real-estate" data-arch="generic">Real Estate</option><option value="construction-engineering" data-arch="generic">Construction / Engineering</option><option value="agriculture" data-arch="generic">Agriculture</option>
-        </optgroup>
-        <option value="other" data-arch="generic">Other</option>
-      </select><div class="hint" id="indCtx" style="margin-top:6px">${curMeta().ctx}</div></div>
-      <div class="field"><label>Ownership</label><select id="ownershipSel"><option>Private</option><option>Public (listed)</option><option>PE / VC-backed</option><option>Government / Public Sector</option><option>Non-profit</option><option>Subsidiary / Division</option></select></div></div>
-      <div class="field"><label>Primary currency <span class="hint">used across the platform</span></label><select id="hqSel">
-        <option data-cur="USD">$ USD — US Dollar</option><option data-cur="EUR">€ EUR — Euro</option><option data-cur="GBP">£ GBP — British Pound</option><option data-cur="CAD">C$ CAD — Canadian Dollar</option><option data-cur="AUD">A$ AUD — Australian Dollar</option><option data-cur="CHF">CHF — Swiss Franc</option><option data-cur="JPY">¥ JPY — Japanese Yen</option><option data-cur="SGD">S$ SGD — Singapore Dollar</option><option data-cur="INR">₹ INR — Indian Rupee</option><option data-cur="BRL">R$ BRL — Brazilian Real</option><option data-cur="MXN">MX$ MXN — Mexican Peso</option><option data-cur="ZAR">R ZAR — South African Rand</option><option data-cur="AED">AED — UAE Dirham</option><option data-cur="SAR">SAR — Saudi Riyal</option><option data-cur="KRW">₩ KRW — Korean Won</option><option data-cur="HKD">HK$ HKD — Hong Kong Dollar</option><option data-cur="SEK">kr SEK — Swedish Krona</option><option data-cur="NOK">kr NOK — Norwegian Krone</option><option data-cur="PLN">zł PLN — Polish Zloty</option><option data-cur="CNY">¥ CNY — Chinese Yuan</option><option data-cur="TWD">NT$ TWD — Taiwan Dollar</option><option data-cur="THB">฿ THB — Thai Baht</option><option data-cur="IDR">Rp IDR — Indonesian Rupiah</option><option data-cur="MYR">RM MYR — Malaysian Ringgit</option><option data-cur="PHP">₱ PHP — Philippine Peso</option><option data-cur="ILS">₪ ILS — Israeli Shekel</option><option data-cur="NGN">₦ NGN — Nigerian Naira</option><option data-cur="COP">COP — Colombian Peso</option><option data-cur="CLP">CLP — Chilean Peso</option><option data-cur="PEN">S/. PEN — Peruvian Sol</option><option data-cur="ARS">AR$ ARS — Argentine Peso</option>
-      </select></div>
-      <div class="${(selectedArch==='healthcare'||selectedIndustry==='insurance'||selectedIndustry==='credit-union'||selectedIndustry==='telecommunications')?'row3':'row2'}"><div class="field"><label>Employees</label><input class="numfmt" id="empNum" inputmode="numeric" value="12,400"></div><div class="field"><label>Annual revenue</label><div class="moneyf"><span class="cur" id="revCur">$</span><input class="mnum" id="revNum" inputmode="decimal" value="4.2"><span class="unit">B</span></div><div class="money-eq" id="revEq">= $4,200,000,000</div></div>${(selectedArch==='healthcare'||selectedIndustry==='insurance'||selectedIndustry==='credit-union'||selectedIndustry==='telecommunications')?'<div class="field"><label>'+(selectedArch==='healthcare'?'Members':(selectedIndustry==='telecommunications'?'Subscribers':'Members / Policyholders'))+'</label><div class="moneyf nocur"><input class="mnum" id="memNum" inputmode="decimal" value="2.4"><span class="unit">M</span></div><div class="money-eq" id="memEq">= 2,400,000</div></div>':''}</div>
-      <div class="field"><label>Operating regions <span class="hint">drives breach-law & privacy obligations</span></label><div class="region-dd" id="regionDD"><button type="button" class="dd-toggle" id="regionToggle">Select regions…</button><div class="dd-menu" id="regionMenu"></div></div></div>
-      <div class="field"><label>Regulated data you handle</label><div class="chips" data-group id="dataChips">${chipsHTML()}</div></div>`,
-    1:()=>`<div class="panel-h"><div class="step-of">Step 2 of 8</div><h2>Connect your systems</h2><p>Most of your evidence is pulled live from here. Pick each system you run, provide its connection details, and CyberRx streams the data that answers your executives' questions. The more you connect, the more credible — and defensible — every answer.</p></div>
-      <div class="demo-bar"><span class="demo-label">Demo Mode<span class="demo-sub">Auto-connect all systems with simulated data — no API keys needed</span></span><button class="demo-btn" id="demoToggle">Enable Demo Mode</button></div>
-      <div class="cred"><div class="cred-top"><span class="ct">Evidence credibility</span><span class="cv l0" id="credLabel">Not yet credible</span></div><div class="cred-bar"><i id="credBar"></i></div><div class="cred-meta"><b id="credSig">0</b> live signals · <b id="credSys">0</b> systems connected · <b id="credCov">0%</b> coverage</div></div>
-      <div id="connList"></div>`,
-    2:()=>`<div class="panel-h"><div class="step-of">Step 3 of 8</div><h2>Business processes</h2><p>Pull your processes live from your CMDB's service catalog or BIA tool — or upload a file. A live connection stays current; a file is a point-in-time snapshot.</p></div>
-      <div class="srcchoice" id="procChoice"><button class="srcopt" data-src="proc-connect"><div class="so-h">⚡ Connect a system <span class="rec-tag">recommended</span></div><div class="so-d">ServiceNow CMDB, BIA / GRC tools — pulled live, always current.</div></button><button class="srcopt" data-src="proc-upload"><div class="so-h">⤓ Upload a file</div><div class="so-d">CSV, XLSX, or PDF — a BIA or process list (snapshot).</div></button></div>
-      <div id="procSource"></div><div id="procResult"></div>`,
-    3:()=>`<div class="panel-h"><div class="step-of">Step 4 of 8</div><h2>Applications & systems</h2><p>Connect directly to your CMDB or discovery tool and we fetch every system automatically — or upload an inventory. Live discovery keeps your asset list current as things change.</p></div>
-      <div class="srcchoice" id="appChoice"><button class="srcopt" data-src="app-connect"><div class="so-h">⚡ Connect a system <span class="rec-tag">recommended</span></div><div class="so-d">ServiceNow CMDB, Device42, BMC Helix, Tanium, Lansweeper — live discovery.</div></button><button class="srcopt" data-src="app-upload"><div class="so-h">⤓ Upload a file</div><div class="so-d">CSV or XLSX — an app inventory or CMDB export (snapshot).</div></button></div>
-      <div id="appSource"></div><div id="appResult"></div>
-      <div class="risk-optin" style="margin-top:22px;padding-top:18px;border-top:1px solid var(--line,#e6e6e6)">
-        <div style="font-weight:600;font-size:14px;margin-bottom:3px">Risk register <span class="hint" style="font-weight:400">— optional, quantifies exposure</span></div>
-        <div class="hint" style="margin-bottom:10px">Upload known open risks with their dollar exposure (CSV/TSV: <b>title, severity, asset, exposure, status</b>). This is what turns your crown-jewel map into a <b>material-exposure figure</b> in dollars. Skip it and exposure stays qualitative until you add risks later.</div>
-        <div id="riskSource"></div><div id="riskResult"></div>
-        <div class="drop" id="riskDrop"><div class="ic">⤓</div><div class="t">Upload risk register</div><div class="s">CSV or TSV — one row per risk; link each to an asset by name</div><input type="file" id="riskFile" accept=".csv,.tsv,.txt" style="display:none"></div>
-      </div>`,
-    4:()=>`<div class="panel-h"><div class="step-of">Step 5 of 8</div><h2>Auto-mapping & crown jewels</h2><p>CyberRx infers which application supports which process. Review the mappings below — confirm, reassign, or reject each one. Then we deduce your crown jewels.</p></div>
-      <div class="map-toolbar" id="mapToolbar"></div>
-      <div id="mapList"></div><button class="mapbtn" id="deduceBtn">✦ Confirm remaining &amp; deduce crown jewels</button>
-      <div class="cjwrap" id="cjwrap"><div class="cj-sum">Crown jewels identified</div><div class="cj-sub">From <b>6 systems</b> across <b>5 processes</b>, CyberRx deduced <b>4 crown jewels</b> — scored by process criticality × data sensitivity × exposure.</div><div class="cjmap" id="cjmap"></div></div>`,
-    5:()=>`<div class="panel-h"><div class="step-of">Step 6 of 8</div><h2>Documents — evidence for non-automated controls</h2><p>Some controls can't be read from a system — they live in your policies and plans. We know exactly which documents score which controls. Upload what you have; CyberRx reads each one, aligns it to control requirements, flags gaps as findings, and scores maturity. <b>Results appear in your platform, not here.</b></p></div>
-      <div class="docnote">✦ Every document below maps to specific control requirements across your frameworks. Anything you don't provide becomes a flagged gap to resolve later — not a guess.</div>
-      <div class="docprog" id="docProg"></div>
-      <div id="keydocs"></div>`,
-    6:()=>`<div class="panel-h"><div class="step-of">Step 7 of 8</div><h2>Executive data needs</h2><p>Working backwards from each executive's decisions. Green is already covered by your connected systems and documents; amber is the handful of things only you can tell us. Switch seats to see each.</p></div>
-      <div class="seattabs" id="seatTabs"></div><div id="seatBody"></div>`,
-    7:()=>`<div class="panel-h"><div class="step-of">Step 8 of 8</div><h2>Review &amp; go live</h2><p>Here's what we have. When you go live, CyberRx builds your executive seats, computes coverage, and drafts your first briefing.</p></div>
-      <div class="rev-grid"><div class="rev"><div class="k">Organization</div><div class="v" id="revOrg">—</div></div><div class="rev"><div class="k">Systems connected</div><div class="v" id="revSys">0</div></div><div class="rev"><div class="k">Live signals</div><div class="v" id="revSig">0</div></div><div class="rev"><div class="k">Crown jewels</div><div class="v" id="revCj" style="color:var(--gold)">—</div></div><div class="rev"><div class="k">Documents</div><div class="v" id="revDocs">0</div></div><div class="rev"><div class="k">Evidence credibility</div><div class="v" id="revCred">—</div></div></div>
-      <div class="gen" style="border-color:var(--brand)"><h4>Executive-cockpit financials <span style="font-weight:400;color:var(--muted);font-size:13px">— power the board &amp; CFO views (optional, editable later)</span></h4>
-        <p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.6">These turn cyber risk into your board's language — % of revenue, materiality, risk appetite, and the insurance gap. Approximate figures are fine; you can type values like <b>$8.4B</b> or <b>$120M</b>.</p>
-        <div class="row3"><div class="field"><label>Annual revenue</label><input id="finRevenue" placeholder="$8.4B"></div><div class="field"><label>Operating income</label><input id="finOpInc" placeholder="$1.4B"></div><div class="field"><label>Net income</label><input id="finNetInc" placeholder="$1.06B"></div></div>
-        <div class="row3"><div class="field"><label>Enterprise value / market cap</label><input id="finEV" placeholder="$30B"></div><div class="field"><label>Board cyber-risk appetite</label><input id="finAppetite" placeholder="$120M"></div><div class="field"><label>Annual cyber budget</label><input id="finBudget" placeholder="$9M"></div></div>
-        <div class="row3"><div class="field"><label>Cyber-insurance limit</label><input id="finInsLimit" placeholder="$150M"></div><div class="field"><label>Insurance premium</label><input id="finInsPrem" placeholder="$4.2M"></div><div class="field"><label>Insurance renewal date</label><input id="finInsRenew" placeholder="2026-09-30"></div></div>
-      </div>
-      <div class="gen"><h4>What we'll generate from this</h4><ul><li>Seven executive seats, each framed to your business and fed by live evidence</li><li>Framework coverage with the source & freshness behind every control</li><li>Your crown-jewel map, attack paths, and vendor concentration</li><li>Your first board-ready briefing and the Executive Twin — grounded only in your data</li></ul></div>
-      <div class="gen" style="border-color:var(--brand)"><h4>Peer benchmarking <span style="font-weight:400;color:var(--muted);font-size:13px">— optional &amp; reciprocal</span></h4><p style="font-size:13px;color:var(--muted);margin:0 0 11px;line-height:1.6">Compare your maturity against anonymized peers. Only high-level <b>CMMI maturity scores</b> leave your tenant — never findings, evidence, names, or identifiers. Cohorts under 8 are never shown. <b>It's reciprocal: you see peer benchmarks only if you contribute.</b></p><label style="display:flex;gap:9px;align-items:flex-start;font-size:13px;cursor:pointer"><input type="checkbox" id="benchConsent" style="margin-top:3px"> Contribute our anonymized maturity to the shared benchmark so we can see peer comparisons <span style="color:var(--muted)">(you can change this any time in the platform)</span></label></div>`
-  };
-
-  function render(){
-    renderStepper();
-    document.getElementById('panel').innerHTML=PANELS[cur]();
-    document.getElementById('whyText').textContent=STEPS[cur].why;
-    var ccT=document.getElementById('ccTip');if(ccT)ccT.textContent=CONCIERGE[cur];
-    document.getElementById('backBtn').disabled=(cur===0);
-    document.getElementById('nextBtn').textContent=(cur===STEPS.length-1)?'✦ Go live':'Save & continue →';
-    updateSeatNextBtn();
-    document.querySelectorAll('[data-group] .pick').forEach(p=>p.addEventListener('click',()=>p.classList.toggle('on')));
-    if(cur===0){
-      applyOrgCur();wireRegionDD();
-      const isel=document.getElementById('indSel');
-      if(isel){
-        isel.value=selectedIndustry;
-        isel.addEventListener('change',function(){
-          const opt=isel.options[isel.selectedIndex];
-          selectedIndustry=isel.value; selectedArch=(opt&&opt.dataset.arch)||'generic';
-          render();
-        });
-      }
-    }
-    if(cur===1) renderConnectors();
-    if(cur===2) wireProc();
-    if(cur===3){ wireApp(); wireRisk(); }
-    if(cur===4) wireMapping();
-    if(cur===5) wireDocs();
-    if(cur===6) renderSeats();
-    if(cur===7) renderReview();
-  }
-
-  // ---- connectors ----
-  function renderConnectors(){
-    document.getElementById('connList').innerHTML=CONN.map(c=>{
-      const on=connected[c.id];
-      return '<div class="conn '+(on?'':'')+'" id="conn-'+c.id+'"><div class="conn-h"><div class="conn-ic">'+c.ic+'</div><div class="conn-t"><div class="cn">'+c.cat+'</div><div class="cc">'+c.vendors.length+' supported · pulls '+c.sig+' signals</div></div><span class="conn-st '+(on?'on':'no')+'" id="st-'+c.id+'">'+(on?'Connected · '+c.sig+' signals':'Not connected')+'</span><span class="conn-toggle" data-tog="'+c.id+'">details ▾</span></div>'+
-        '<div class="conn-body"><div class="conn-row"><div class="field"><label>Vendor</label><select>'+c.vendors.map(v=>'<option>'+v+'</option>').join('')+'</select></div><div class="field"><label>Version / API key / tenant</label><input placeholder="API key, tenant ID, or OAuth"></div><button class="conn-go '+(on?'done':'')+'" data-go="'+c.id+'">'+(on?'✓ Connected':'Connect')+'</button></div>'+
-        '<div class="conn-err" id="err-'+c.id+'"></div>'+
-        '<div class="conn-info"><span class="pl">Pulls:</span> '+c.pulls+'<br><span class="an">Answers:</span> '+c.ans+'</div></div></div>';
-    }).join('');
-    document.querySelectorAll('[data-tog]').forEach(t=>t.addEventListener('click',()=>{document.getElementById('conn-'+t.dataset.tog).classList.toggle('open');}));
-    document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>{
-      const id=b.dataset.go;if(connected[id])return;
-      if(id==='vuln'){liveConnectVuln(b);return;}
-      connectSystem(id,b);
-    }));
-
-    async function connectSystem(id,b){
-      const wrap=document.getElementById('conn-'+id);
-      const keyInput=wrap.querySelector('.conn-row input');
-      const vendorSel=wrap.querySelector('.conn-row select');
-      const errEl=document.getElementById('err-'+id);
-      const st=document.getElementById('st-'+id);
-      const c=CONN.find(x=>x.id===id);
-      const apiKey=(keyInput?keyInput.value:'').trim();
-      const vendor=(vendorSel?vendorSel.value:'').trim();
-
-      // hide previous errors
-      errEl.classList.remove('show');errEl.textContent='';
-
-      // 1. validate not empty
-      if(!apiKey){errEl.textContent='Enter your API key, tenant ID, or OAuth token';errEl.classList.add('show');return;}
-
-      // 2. show validating state
-      st.className='conn-st ing';st.textContent='Validating…';
-      b.disabled=true;
-
-      // 3. try backend validation endpoint
-      let backendOk=null; // null=unreachable, true=success, false=error
-      let backendMsg='';
-      try{
-        const res=await fetch('/api/connectors/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({connector:id,vendor,apiKey})});
-        const body=await res.json().catch(()=>({}));
-        if(res.ok){backendOk=true;}
-        else{backendOk=false;backendMsg=body.error||body.message||('HTTP '+res.status+' — check your API key');}
-      }catch(e){
-        // network error or 404 — backend not available
-        backendOk=null;
-      }
-
-      b.disabled=false;
-
-      if(backendOk===true){
-        // green success
-        connected[id]=true;
-        st.className='conn-st on';st.innerHTML='<span class="livedot"></span>Connected · <span id="sigc-'+id+'">0</span> signals';
-        b.classList.add('done');b.textContent='✓ Connected';
-        tickTo(document.getElementById('sigc-'+id),c.sig,900);
-        updateCred();
-        if(id==='siem'){try{localStorage.setItem('cyberrx_siem_connected','1');window.parent.postMessage({type:'cyberrx-siem-connected'},'*');}catch(_){}}
-      }else if(backendOk===false){
-        // real error from backend
-        st.className='conn-st no';st.textContent='Not connected';
-        errEl.textContent=backendMsg;errEl.classList.add('show');
-      }else{
-        // backend unreachable — fall back to key format validation
-        if(apiKey.length<16){
-          st.className='conn-st no';st.textContent='Not connected';
-          errEl.textContent='API key too short (minimum 16 characters)';errEl.classList.add('show');
-          return;
-        }
-        // amber accepted
-        connected[id]=true;
-        st.className='conn-st amber';st.innerHTML='Key accepted · backend verification pending';
-        b.classList.add('amber');b.textContent='✓ Accepted';
-        updateCred();
-        if(id==='siem'){try{localStorage.setItem('cyberrx_siem_connected','1');window.parent.postMessage({type:'cyberrx-siem-connected'},'*');}catch(_){}}
-      }
-    }
-    // Wire demo mode toggle
-    var demoBtn=document.getElementById('demoToggle');
-    if(demoBtn)demoBtn.addEventListener('click',function(){
-      if(demoBtn.classList.contains('active')){return;}
-      demoBtn.classList.add('loading');demoBtn.textContent='Connecting…';
-      activateDemoMode().then(function(){
-        demoBtn.classList.remove('loading');demoBtn.classList.add('active');demoBtn.textContent='✓ Demo Mode Active';
-      });
-    });
-    updateCred();
-  }
-  var demoActive=false;
-  async function activateDemoMode(){
-    demoActive=true;
-    // Try to enable demo mode on the backend (best-effort)
-    try{await fetch('/api/connectors/demo-mode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:'*',enabled:true})});}catch(_){}
-    // Auto-connect each connector with a staggered animation
-    for(var ci=0;ci<CONN.length;ci++){
-      var c=CONN[ci];
-      if(connected[c.id])continue;
-      connected[c.id]=true;
-      var st=document.getElementById('st-'+c.id);
-      var goBtn=document.querySelector('[data-go="'+c.id+'"]');
-      if(st){st.className='conn-st on';st.innerHTML='<span class="livedot"></span>Demo · '+c.sig+' signals';}
-      if(goBtn){goBtn.classList.add('done');goBtn.textContent='✓ Demo';}
-      var sigEl=document.getElementById('sigc-'+c.id);
-      if(!sigEl&&st){st.innerHTML='<span class="livedot"></span>Demo · <span id="sigc-'+c.id+'">0</span> signals';sigEl=document.getElementById('sigc-'+c.id);}
-      if(sigEl)tickTo(sigEl,c.sig,600);
-      updateCred();
-      await new Promise(function(r){setTimeout(r,120);});
-    }
-    updateCred();
-    if(typeof localStorage!=='undefined'){try{localStorage.setItem('cyberrx_siem_connected','1');localStorage.setItem('cyberrx_demo_mode','1');}catch(_){}}
-    try{window.parent.postMessage({type:'cyberrx-siem-connected'},'*');}catch(_){}
-  }
-  // Real, key-free connector: Shodan InternetDB (CORS-enabled, no API key).
-  // Looks up internet-facing exposure live; falls back to a sample target, then
-  // to representative data if the API is unreachable (offline/CORS) — so it
-  // demonstrates now and is drop-in for paid/authenticated APIs later.
-  async function liveConnectVuln(b){
-    const id='vuln',st=document.getElementById('st-'+id);
-    st.className='conn-st ing';st.textContent='Querying Shodan InternetDB…';
-    async function probe(ip){try{const r=await fetch('https://internetdb.shodan.io/'+ip);if(r.ok)return await r.json();}catch(e){}return null;}
-    let data=null,src='';
-    try{const ir=await fetch('https://api.ipify.org?format=json');const ip=(await ir.json()).ip;const d=await probe(ip);if(d&&(d.ports||[]).length){data=d;src='your network ('+ip+')';}}catch(e){}
-    if(!data){const d2=await probe('45.33.32.156');if(d2){data=d2;src='sample target · scanme.nmap.org';}}
-    if(!data){data={ports:[22,80,443,3389],vulns:['CVE-2023-44487','CVE-2021-44228','CVE-2019-0708']};src='representative sample · live API unreachable';}
-    connected[id]=true;
-    const ports=data.ports||[],vulns=data.vulns||[];
-    st.className='conn-st on';st.innerHTML='<span class="livedot"></span>Connected · live · Shodan InternetDB';
-    b.classList.add('done');b.textContent='✓ Connected';
-    const info=document.querySelector('#conn-'+id+' .conn-info');
-    if(info)info.innerHTML='<span class="pl">Live pull (free API · no key):</span> '+ports.length+' internet-facing ports'+(vulns.length?' · <b style="color:var(--critical)">'+vulns.length+' known-exploited CVEs</b>':' · 0 known CVEs')+' · from '+src+(ports.length?'<br><span class="an">Ports:</span> '+ports.slice(0,14).join(', ')+(ports.length>14?'…':''):'')+(vulns.length?'<br><span class="an">CVEs:</span> '+vulns.slice(0,6).join(', ')+(vulns.length>6?'…':''):'');
-    updateCred();
-  }
-  function updateCred(){
-    const ids=Object.keys(connected);
-    const cov=Math.min(99,ids.reduce((s,id)=>s+CONN.find(c=>c.id===id).w,0));
-    const sig=ids.reduce((s,id)=>s+CONN.find(c=>c.id===id).sig,0);
-    const bar=document.getElementById('credBar');if(bar)bar.style.width=cov+'%';
-    tickTo(document.getElementById('credSig'),sig,900);
-    const sy=document.getElementById('credSys');if(sy)sy.textContent=ids.length;
-    const cv=document.getElementById('credCov');if(cv)cv.textContent=cov+'%';
-    const lab=document.getElementById('credLabel');
-    if(lab){let t,cl;if(cov===0){t='Not yet credible';cl='l0';}else if(cov<35){t='Building';cl='l1';}else if(cov<65){t='Moderate';cl='l1';}else if(cov<88){t='Strong';cl='l2';}else{t='Audit-ready';cl='l3';}lab.textContent=t;lab.className='cv '+cl;}
-  }
-
-  // ---- process / app extraction ----
-  // ---- process / app: connect (live) or upload (snapshot) ----
-  // Real client-side extraction for uploaded files (CSV or TSV).
-  var PROC_UP=null,PROC_FN='';
+  // ---- CSV/TSV parsing ----
   function parseDelim(text){
     var lines=String(text||'').split(/\r?\n/).map(function(l){return l.trim();}).filter(Boolean);
     if(!lines.length)return {headers:null,rows:[]};
-    var cells=lines[0].split(/[\t,]/).map(function(x){return x.trim().replace(/^"|"$/g,'');});
-    var firstLow=cells[0].toLowerCase();
-    var hasHeader=/^(name|process|application|app|system|title|document|sys_id|process_id|ci_class|id)/.test(firstLow);
+    function split(l){var out=[],cur='',q=false;for(var i=0;i<l.length;i++){var ch=l[i];if(ch==='"'){q=!q;}else if((ch===','||ch==='\t')&&!q){out.push(cur);cur='';}else cur+=ch;}out.push(cur);return out.map(function(x){return x.trim().replace(/^"|"$/g,'');});}
+    var cells=split(lines[0]);var firstLow=cells[0].toLowerCase();
+    var hasHeader=/^(name|process|application|app|system|title|risk|sys_id|id|ci_class)/.test(firstLow);
     var headers=hasHeader?cells.map(function(h){return h.toLowerCase();}):null;
     var dataLines=hasHeader?lines.slice(1):lines;
-    var rows=dataLines.map(function(l){return l.split(/[\t,]/).map(function(x){return x.trim().replace(/^"|"$/g,'');});}).filter(function(c){return c[0];});
+    var rows=dataLines.map(split).filter(function(c){return c[0];});
     return {headers:headers,rows:rows};
   }
-  function findCol(headers,names){
-    if(!headers)return -1;
-    for(var i=0;i<names.length;i++){for(var j=0;j<headers.length;j++){if(headers[j].indexOf(names[i])>=0)return j;}}
-    return -1;
+  function findCol(h,names){if(!h)return -1;for(var i=0;i<names.length;i++)for(var j=0;j<h.length;j++)if(h[j].indexOf(names[i])>=0)return j;return -1;}
+  function get(c,i){return i>=0&&i<c.length?c[i]:null;}
+
+  function readFile(file,cb){var r=new FileReader();r.onload=function(){cb(parseDelim(r.result));};r.readAsText(file);}
+  function showRows(el,rows,fmt){el.innerHTML='<div class="ok">✓ '+rows.length+' loaded from your file</div><div class="xlist">'+rows.slice(0,50).map(fmt).join('')+'</div>';}
+  function badgeDone(id){var b=document.getElementById(id);if(b){b.textContent='✓ '+b.dataset.n+' loaded';b.classList.add('done');}}
+
+  function wireDrop(dropId,fileId,handler){
+    var d=document.getElementById(dropId),f=document.getElementById(fileId);
+    d.addEventListener('click',function(){f.click();});
+    d.addEventListener('dragover',function(e){e.preventDefault();});
+    d.addEventListener('drop',function(e){e.preventDefault();if(e.dataTransfer.files[0])handler(e.dataTransfer.files[0]);});
+    f.addEventListener('change',function(){if(f.files[0])handler(f.files[0]);});
   }
-  function takeProcFile(file){
-    document.getElementById('procResult').innerHTML='<div class="extracting"><span class="sp"></span>Extracting processes from '+file.name+'…</div>';
-    var r=new FileReader();
-    r.onload=function(){
-      var parsed=parseDelim(r.result);var h=parsed.headers;
-      var nameCol=findCol(h,['process_name','name','title','process']);
-      var domCol=findCol(h,['process_domain','domain','category','type']);
-      var revCol=findCol(h,['revenue','rev','value']);
-      var rtoCol=findCol(h,['rto','recovery_time_objective','recovery objective','target recovery']);
-      PROC_UP=parsed.rows.map(function(c){
-        var nm=(nameCol>=0?c[nameCol]:null)||c[0];
-        var data=(domCol>=0?c[domCol]:null)||c[1]||'Process';
-        var rev=(revCol>=0?c[revCol]:null)||c[2]||'—';
-        var rto=rtoCol>=0?c[rtoCol]:null;
-        return {n:nm,data:data,rev:rev,rto:rto,c:'m'};
-      });
-      PROC_FN=file.name;GRAPH=null;setTimeout(function(){procExtracted=true;procLive=false;renderProc(false);},400);
-    };
-    r.readAsText(file);
-  }
-  function wireProc(){
-    if(procExtracted){renderProc(procLive);return;}
-    document.querySelectorAll('#procChoice [data-src]').forEach(b=>b.addEventListener('click',()=>{
-      document.querySelectorAll('#procChoice .srcopt').forEach(o=>o.classList.remove('sel'));b.classList.add('sel');
-      const box=document.getElementById('procSource');
-      if(b.dataset.src==='proc-connect'){
-        box.innerHTML='<div class="srcbox"><div class="conn-row"><div class="field"><label>System</label><select><option>ServiceNow CMDB (business services)</option><option>SAP / GRC — BIA module</option><option>Apptio</option><option>Archer</option></select></div><div class="field"><label>Instance URL / API token</label><input placeholder="https://yourorg.service-now.com · token"></div><button class="conn-go" id="procFetch">Connect &amp; fetch</button></div></div>';
-        document.getElementById('procFetch').addEventListener('click',()=>{document.getElementById('procResult').innerHTML='<div class="extracting"><span class="sp"></span>Fetching processes live from ServiceNow CMDB…</div>';setTimeout(()=>{procExtracted=true;procLive=true;renderProc(true);},1400);});
-      }else{
-        box.innerHTML='<div class="drop" id="procDrop"><div class="ic">⤓</div><div class="t">Upload process list / BIA</div><div class="s">CSV or TSV — click to browse or drop a file; we\'ll extract each process</div><input type="file" id="procFile" accept=".csv,.tsv,.txt" style="display:none"></div>';
-        const pd=document.getElementById('procDrop'),pf=document.getElementById('procFile');
-        pd.addEventListener('click',()=>pf.click());
-        pd.addEventListener('dragover',e=>e.preventDefault());
-        pd.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files[0])takeProcFile(e.dataTransfer.files[0]);});
-        pf.addEventListener('change',()=>{if(pf.files[0])takeProcFile(pf.files[0]);});
-      }
-    }));
-  }
-  function renderProc(live){
-    document.getElementById('procChoice').style.display='none';document.getElementById('procSource').innerHTML='';
-    const rows=(!live&&PROC_UP&&PROC_UP.length)?PROC_UP:PROCS;
-    const src=live?'<span class="livedot"></span>'+rows.length+' processes · live from ServiceNow CMDB · streaming':'✓ '+rows.length+' processes extracted from '+(PROC_FN||'BIA_2025.xlsx');
-    document.getElementById('procResult').innerHTML='<div class="extracted-h">'+src+'</div><div class="xlist">'+rows.map(p=>'<div class="xrow"><div class="xi">▢</div><div class="xn"><div class="nm">'+p.n+'</div><div class="mt">'+(p.data||'Process')+' · '+(p.rev||'—')+'</div></div><span class="crit '+(p.c||'m')+'">'+(p.c==='h'?'High':p.c==='l'?'Low':'Medium')+'</span></div>').join('')+'</div>';
-  }
-  function wireApp(){
-    if(appExtracted){renderApp(appLive);return;}
-    document.querySelectorAll('#appChoice [data-src]').forEach(b=>b.addEventListener('click',()=>{
-      document.querySelectorAll('#appChoice .srcopt').forEach(o=>o.classList.remove('sel'));b.classList.add('sel');
-      const box=document.getElementById('appSource');
-      if(b.dataset.src==='app-connect'){
-        box.innerHTML='<div class="srcbox"><div class="conn-row"><div class="field"><label>System</label><select><option>ServiceNow CMDB</option><option>Device42</option><option>BMC Helix Discovery</option><option>Tanium</option><option>Lansweeper</option><option>ServiceNow Discovery</option></select></div><div class="field"><label>Instance URL / API token</label><input placeholder="https://yourorg.service-now.com · token"></div><button class="conn-go" id="appFetch">Connect &amp; fetch</button></div></div>';
-        document.getElementById('appFetch').addEventListener('click',()=>{document.getElementById('appResult').innerHTML='<div class="extracting"><span class="sp"></span>Discovering systems live from ServiceNow CMDB…</div>';setTimeout(()=>{appExtracted=true;appLive=true;renderApp(true);},1400);});
-      }else{
-        box.innerHTML='<div class="drop" id="appDrop"><div class="ic">⤓</div><div class="t">Upload app inventory / CMDB export</div><div class="s">CSV or TSV — click to browse or drop a file; we\'ll extract each application</div><input type="file" id="appFile" accept=".csv,.tsv,.txt" style="display:none"></div>';
-        const ad=document.getElementById('appDrop'),af=document.getElementById('appFile');
-        ad.addEventListener('click',()=>af.click());
-        ad.addEventListener('dragover',e=>e.preventDefault());
-        ad.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files[0])takeAppFile(e.dataTransfer.files[0]);});
-        af.addEventListener('change',()=>{if(af.files[0])takeAppFile(af.files[0]);});
-      }
-    }));
-  }
-  var APP_UP=null,APP_FN='';
-  function takeAppFile(file){
-    document.getElementById('appResult').innerHTML='<div class="extracting"><span class="sp"></span>Extracting systems from '+file.name+'…</div>';
-    var r=new FileReader();
-    r.onload=function(){
-      var parsed=parseDelim(r.result);var h=parsed.headers;
-      var nameCol=findCol(h,['application_name','app_name','name','title','application']);
-      var classCol=findCol(h,['ci_class','class','type','category','hosting']);
-      var dataCol=findCol(h,['data','data_classification','sensitivity']);
-      var vendorCol=findCol(h,['vendor','provider','supplier','hosted_by','cloud']);
-      var eolCol=findCol(h,['eol','end_of_life','end of support','supported','lifecycle']);
-      var recCol=findCol(h,['recovery','recovery_hours','rto_actual','restore']);
-      APP_UP=parsed.rows.map(function(c){
-        var nm=(nameCol>=0?c[nameCol]:null)||c[0];
-        var host=(classCol>=0?c[classCol]:null)||c[1]||'—';
-        var data=(dataCol>=0?c[dataCol]:null)||c[2]||'—';
-        return {n:nm,host:host,data:data,vendor:vendorCol>=0?c[vendorCol]:null,eol:eolCol>=0?c[eolCol]:null,recovery:recCol>=0?c[recCol]:null};
-      });
-      APP_FN=file.name;GRAPH=null;setTimeout(function(){appExtracted=true;appLive=false;renderApp(false);},400);
-    };
-    r.readAsText(file);
-  }
-  function renderApp(live){
-    document.getElementById('appChoice').style.display='none';document.getElementById('appSource').innerHTML='';
-    const rows=(!live&&APP_UP&&APP_UP.length)?APP_UP:APPS;
-    const src=live?'<span class="livedot"></span>'+rows.length+' systems · live discovery from ServiceNow CMDB · streaming':'✓ '+rows.length+' systems extracted from '+(APP_FN||'CMDB_export.csv');
-    document.getElementById('appResult').innerHTML='<div class="extracted-h">'+src+'</div><div class="xlist">'+rows.map(a=>'<div class="xrow"><div class="xi">⬚</div><div class="xn"><div class="nm">'+a.n+'</div><div class="mt">'+(a.host||'—')+' · '+(a.data||'—')+'</div></div></div>').join('')+'</div>';
-  }
-  // ---- optional risk register (quantifies material exposure) ----
-  var RISK_UP=null,RISK_FN='';
-  function takeRiskFile(file){
-    document.getElementById('riskResult').innerHTML='<div class="extracting"><span class="sp"></span>Reading risks from '+file.name+'…</div>';
-    var r=new FileReader();
-    r.onload=function(){
-      var parsed=parseDelim(r.result);var h=parsed.headers;
-      var titleCol=findCol(h,['title','risk','name','description']);
-      var sevCol=findCol(h,['severity','sev','priority','rating']);
-      var assetCol=findCol(h,['asset','system','application','app','ci']);
-      var expCol=findCol(h,['exposure','financial','impact','loss','ale','value','amount','$']);
-      var statCol=findCol(h,['status','state']);
-      RISK_UP=parsed.rows.map(function(c){
-        return {
-          title:(titleCol>=0?c[titleCol]:null)||c[0],
-          severity:(sevCol>=0?c[sevCol]:null)||'High',
-          asset:(assetCol>=0?c[assetCol]:null)||'',
-          exposure:(expCol>=0?c[expCol]:null)||'',
-          status:(statCol>=0?c[statCol]:null)||'open'
-        };
-      }).filter(function(x){return x.title;});
-      RISK_FN=file.name;
-      renderRiskResult();
-    };
-    r.readAsText(file);
-  }
-  function renderRiskResult(){
-    var el=document.getElementById('riskResult');if(!el||!RISK_UP)return;
-    var rd=document.getElementById('riskDrop');if(rd)rd.style.display='none';
-    var tot=0;RISK_UP.forEach(function(x){var s=String(x.exposure||'').toLowerCase();var n=Number(s.replace(/[^0-9.]/g,''));if(!isFinite(n)||n<=0)return;var m=1;if(/billion|[0-9.]\s*b\b/.test(s))m=1e9;else if(/million|mm\b|[0-9.]\s*m\b/.test(s))m=1e6;else if(/thousand|[0-9.]\s*k\b/.test(s))m=1e3;tot+=n*m;});
-    el.innerHTML='<div class="extracted-h">✓ '+RISK_UP.length+' risks read from '+(RISK_FN||'risk register')+(tot>0?' · ~$'+(tot>=1e6?(Math.round(tot/1e6)+'M'):(tot>=1e3?Math.round(tot/1e3)+'K':tot))+' total exposure':'')+'</div><div class="xlist">'+RISK_UP.slice(0,8).map(function(x){return '<div class="xrow"><div class="xi">▲</div><div class="xn"><div class="nm">'+x.title+'</div><div class="mt">'+(x.asset||'—')+' · '+(x.severity||'—')+(x.exposure?(' · '+x.exposure):'')+'</div></div></div>';}).join('')+'</div>';
-  }
-  function wireRisk(){
-    var rd=document.getElementById('riskDrop'),rf=document.getElementById('riskFile');
-    if(!rd||!rf)return;
-    if(RISK_UP&&RISK_UP.length){renderRiskResult();return;}
-    rd.addEventListener('click',function(){rf.click();});
-    rd.addEventListener('dragover',function(e){e.preventDefault();});
-    rd.addEventListener('drop',function(e){e.preventDefault();if(e.dataTransfer.files[0])takeRiskFile(e.dataTransfer.files[0]);});
-    rf.addEventListener('change',function(){if(rf.files[0])takeRiskFile(rf.files[0]);});
+  wireDrop('dropProc','fileProc',function(file){readFile(file,function(p){var h=p.headers;
+    var nc=findCol(h,['process_name','name','title','process']),rvc=findCol(h,['revenue','rev','value']),rtc=findCol(h,['rto','recovery']),dc=findCol(h,['data','domain','sensitivity','category']),cc=findCol(h,['criticality','crit','tier','priority']);
+    PROC=p.rows.map(function(c){return {name:get(c,nc)||c[0],revenue:get(c,rvc)||get(c,2),rto:get(c,rtc),data:get(c,dc)||get(c,1)||'Process',criticality:get(c,cc)};}).filter(function(x){return x.name;});
+    showRows(document.getElementById('resProc'),PROC,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.data||'')+(x.revenue?(' · '+x.revenue):'')+(x.rto?(' · RTO '+x.rto+'h'):'')+'</span></div>';});
+    var b=document.getElementById('b4');b.dataset.n=PROC.length;badgeDone('b4');updateSummary();});});
+  wireDrop('dropApp','fileApp',function(file){readFile(file,function(p){var h=p.headers;
+    var nc=findCol(h,['application_name','app_name','name','title','application']),hc=findCol(h,['ci_class','hosting','host','class','type']),dc=findCol(h,['data','sensitivity','classification']),vc=findCol(h,['vendor','provider','supplier','cloud']),ec=findCol(h,['eol','end_of_life','supported','lifecycle']),rc=findCol(h,['recovery','recovery_hours','restore','rto']);
+    APP=p.rows.map(function(c){return {name:get(c,nc)||c[0],host:get(c,hc)||get(c,1)||'—',data:get(c,dc)||get(c,2)||'—',vendor:get(c,vc),eol:get(c,ec),recovery:get(c,rc)};}).filter(function(x){return x.name;});
+    showRows(document.getElementById('resApp'),APP,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.host||'')+(x.vendor?(' · '+x.vendor):'')+'</span></div>';});
+    var b=document.getElementById('b5');b.dataset.n=APP.length;badgeDone('b5');updateSummary();});});
+  wireDrop('dropRisk','fileRisk',function(file){readFile(file,function(p){var h=p.headers;
+    var tc=findCol(h,['title','risk','name','description']),sc=findCol(h,['severity','sev','priority','rating']),ac=findCol(h,['asset','system','application','app','ci']),ec=findCol(h,['exposure','financial','impact','loss','ale','amount']),stc=findCol(h,['status','state']);
+    RISK=p.rows.map(function(c){return {title:get(c,tc)||c[0],severity:get(c,sc)||'High',asset:get(c,ac)||'',exposure:get(c,ec)||'',status:get(c,stc)||'open'};}).filter(function(x){return x.title;});
+    showRows(document.getElementById('resRisk'),RISK,function(x){return '<div class="xrow"><span class="nm">'+x.title+'</span><span class="mt">'+(x.asset||'')+(x.exposure?(' · '+x.exposure):'')+' · '+(x.severity||'')+'</span></div>';});
+    var b=document.getElementById('b6');b.dataset.n=RISK.length;badgeDone('b6');updateSummary();});});
+
+  // regions chips
+  document.querySelectorAll('#regions .chip').forEach(function(c){c.addEventListener('click',function(){c.classList.toggle('on');REGIONS=[...document.querySelectorAll('#regions .chip.on')].map(function(x){return x.dataset.r;});var b=document.getElementById('b1');if(REGIONS.length){b.textContent='✓ '+REGIONS.length+' regions';b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}updateSummary();});});
+  ['orgName','industry','finRevenue','finAppetite','insLimit'].forEach(function(id){var e=document.getElementById(id);if(e)e.addEventListener('input',updateSummary);});
+  function v(id){var e=document.getElementById(id);return e?String(e.value||'').trim():'';}
+  function anyFin(){return v('finRevenue')||v('finOpInc')||v('finNetInc')||v('finEV')||v('finAppetite')||v('finBudget');}
+  function updateSummary(){
+    if(anyFin()){document.getElementById('b2').textContent='✓ provided';document.getElementById('b2').classList.add('done');}
+    if(v('insLimit')||v('insPrem')){document.getElementById('b3').textContent='✓ provided';document.getElementById('b3').classList.add('done');}
+    var parts=[];if(PROC.length)parts.push(PROC.length+' processes');if(APP.length)parts.push(APP.length+' systems');if(RISK.length)parts.push(RISK.length+' risks');if(anyFin())parts.push('financials');
+    document.getElementById('summary').innerHTML=parts.length?('Collected: <b>'+parts.join(' · ')+'</b>'):'Add at least your processes or systems to go live';
   }
 
-  // ---- mapping + crown jewels ----
-  var rejected={};
-  function updateMapStats(){
-    var G=liveGraph();var tot=G.apps.length;
-    var conf=Object.keys(confirmed).length;var rej=Object.keys(rejected).length;var pend=tot-conf-rej;
-    var tb=document.getElementById('mapToolbar');if(!tb)return;
-    tb.innerHTML='<span class="map-stat"><b>'+tot+'</b> systems</span><span class="map-stat">·</span><span class="map-stat"><b>'+conf+'</b> confirmed</span><span class="map-stat"><b>'+rej+'</b> rejected</span><span class="map-stat"><b>'+pend+'</b> pending</span>'+
-      '<button class="map-bulk" id="bulkHi">✓ Confirm all high-confidence</button>'+
-      '<button class="map-bulk" id="bulkAll">✓ Confirm all pending</button>';
-    document.getElementById('bulkHi').addEventListener('click',function(){G.apps.forEach(function(a){if(a.conf>=85&&!rejected[a.id]){confirmed[a.id]=true;var tr=document.querySelector('tr[data-id="'+a.id+'"]');if(tr){tr.classList.add('confirmed');tr.classList.remove('rejected');}}});delete rejected;rejected={};updateMapStats();});
-    document.getElementById('bulkAll').addEventListener('click',function(){G.apps.forEach(function(a){if(!rejected[a.id]){confirmed[a.id]=true;var tr=document.querySelector('tr[data-id="'+a.id+'"]');if(tr){tr.classList.add('confirmed');tr.classList.remove('rejected');}}});updateMapStats();});
-  }
-  function wireMapping(){
-    var G=liveGraph();var PB={};G.procs.forEach(function(p){PB[p.id]=p.n;});
-    var procOpts=G.procs.map(function(p){return '<option value="'+p.id+'">'+p.n+'</option>';}).join('')+'<option value="_all">All processes</option><option value="_none">— none / unmapped —</option>';
-    var groups={};var ungrouped=[];
-    G.apps.forEach(function(a){
-      if(!a.proc.length||a.conf===0){ungrouped.push(a);return;}
-      var pid=a.proc.length>1?'_all':a.proc[0];
-      if(!groups[pid])groups[pid]=[];groups[pid].push(a);
-    });
-    function appRow(a){
-      var selVal=a.proc.length>1?'_all':(a.proc[0]||'_none');
-      var hi=a.conf>=85;var st=confirmed[a.id]?'confirmed':(rejected[a.id]?'rejected':'');
-      return '<tr class="'+st+'" data-id="'+a.id+'"><td class="app-nm">'+a.n+'</td>'+
-        '<td><select class="map-sel" data-id="'+a.id+'">'+procOpts.replace('value="'+selVal+'"','value="'+selVal+'" selected')+'</select></td>'+
-        '<td><span class="conf '+(hi?'hi':'lo')+'">'+(a.conf?a.conf+'%':'—')+'</span></td>'+
-        '<td class="map-acts"><button class="cf cf-ok" data-id="'+a.id+'" data-act="ok" title="Confirm">✓</button><button class="cf cf-no" data-id="'+a.id+'" data-act="no" title="Reject / exclude">✗</button></td></tr>';
-    }
-    var html='';
-    var sortedPids=Object.keys(groups).sort(function(a,b){return groups[b].length-groups[a].length;});
-    sortedPids.forEach(function(pid){
-      var pn=pid==='_all'?'All processes':(PB[pid]||pid);
-      html+='<div class="map-group"><div class="map-group-h">'+pn+' <span class="mg-cnt">'+groups[pid].length+' systems</span></div>';
-      html+='<table class="maptbl"><thead><tr><th>Application</th><th>Mapped to process</th><th>Confidence</th><th></th></tr></thead><tbody>';
-      groups[pid].forEach(function(a){html+=appRow(a);});
-      html+='</tbody></table></div>';
-    });
-    if(ungrouped.length){
-      html+='<div class="map-group"><div class="map-group-h">Unmapped <span class="mg-cnt">'+ungrouped.length+' systems — assign a process or reject</span></div>';
-      html+='<table class="maptbl"><thead><tr><th>Application</th><th>Mapped to process</th><th>Confidence</th><th></th></tr></thead><tbody>';
-      ungrouped.forEach(function(a){html+=appRow(a);});
-      html+='</tbody></table></div>';
-    }
-    document.getElementById('mapList').innerHTML=html;
-    updateMapStats();
-    document.querySelectorAll('.maptbl .cf').forEach(function(btn){btn.addEventListener('click',function(){
-      var id=btn.dataset.id;var tr=btn.closest('tr');
-      if(btn.dataset.act==='ok'){confirmed[id]=true;delete rejected[id];tr.classList.add('confirmed');tr.classList.remove('rejected');}
-      else{rejected[id]=true;delete confirmed[id];tr.classList.add('rejected');tr.classList.remove('confirmed');}
-      updateMapStats();
-    });});
-    document.querySelectorAll('.maptbl .map-sel').forEach(function(sel){sel.addEventListener('change',function(){
-      var id=sel.dataset.id;var G2=liveGraph();var a=G2.apps.find(function(x){return x.id===id;});
-      if(a){if(sel.value==='_all')a.proc=G2.procs.map(function(p){return p.id;});else if(sel.value==='_none')a.proc=[];else a.proc=[sel.value];}
-      delete confirmed[id];delete rejected[id];
-      var tr=sel.closest('tr');tr.classList.remove('confirmed','rejected');
-      updateMapStats();
-    });});
-    if(mapDone){document.getElementById('cjwrap').classList.add('show');renderMap();}
-    document.getElementById('deduceBtn').addEventListener('click',function(){
-      liveGraph().apps.forEach(function(a){if(!rejected[a.id])confirmed[a.id]=true;});
-      document.querySelectorAll('.maptbl tr[data-id]').forEach(function(r){if(!r.classList.contains('rejected'))r.classList.add('confirmed');});
-      mapDone=true;GRAPH=null;
-      var G2=liveGraph();G2.apps=G2.apps.filter(function(a){return !rejected[a.id];});
-      document.getElementById('cjwrap').classList.add('show');renderMap();updateMapStats();
-    });
-  }
-  function renderMap(){
-    const G=liveGraph();const cjs=G.apps.filter(a=>a.cj).sort((x,y)=>y.score-x.score);
-    const sub=document.querySelector('#cjwrap .cj-sub');if(sub)sub.innerHTML='From <b>'+G.apps.length+' system'+(G.apps.length===1?'':'s')+'</b> across <b>'+G.procs.length+' process'+(G.procs.length===1?'':'es')+'</b>, CyberRx deduced <b>'+cjs.length+' crown jewel'+(cjs.length===1?'':'s')+'</b> — scored by process criticality × data sensitivity × exposure.';
-    const dataSens={'PHI':'Critical','PII':'High','Personal Data':'High','PCI':'Critical','Financial':'High','Identity':'Critical','IP':'High','OT':'Critical','CUI':'Critical','Classified':'Critical','Internal docs':'Low','Internal':'Low'};
-    document.getElementById('cjmap').innerHTML='<div><div class="colh">Processes</div><div class="cjcol">'+G.procs.map(p=>'<div class="node proc '+p.c+'" id="n-'+p.id+'"><div class="nn">'+p.n+'</div><div class="nd">'+p.data+(p.rev!=='—'?' · '+p.rev:'')+'</div></div>').join('')+'</div></div><div><div class="colh">Systems</div><div class="cjcol">'+G.apps.map(a=>{const sens=dataSens[a.data.split(',')[0].trim()]||'Medium';const sensCls=sens==='Critical'?'h':sens==='High'?'m':'l';return '<div class="node'+(a.cj?' cjwel':'')+'" id="n-'+a.id+'"><div class="nn">'+a.n+'</div><div class="nd">'+a.data+' · <span class="crit '+sensCls+'">'+sens+'</span></div></div>';}).join('')+'</div></div><div><div class="colh">Crown jewels</div><div class="cjcol">'+cjs.map((a,i)=>'<div class="node cjwel" id="c-'+a.id+'"><span class="score">'+a.score+'</span><div class="badge">⬥ #'+(i+1)+'</div><div class="nn">'+a.n+'</div><div class="why">'+a.why+'</div></div>').join('')+'</div></div><svg class="cjsvg" id="cjsvg"></svg>';
-    requestAnimationFrame(drawMap);
-  }
-  function drawMap(){const G=liveGraph();const map=document.getElementById('cjmap');const svg=document.getElementById('cjsvg');if(!map||!svg)return;const c=map.getBoundingClientRect();svg.setAttribute('viewBox','0 0 '+c.width+' '+c.height);function pt(id,side){const el=document.getElementById(id);if(!el)return null;const r=el.getBoundingClientRect();return {x:(side==='r'?r.right:r.left)-c.left,y:r.top-c.top+r.height/2};}function path(a,b,cls){if(!a||!b)return '';const dx=Math.max(30,(b.x-a.x)*0.45);return '<path class="ln '+cls+'" d="M '+a.x+' '+a.y+' C '+(a.x+dx)+' '+a.y+', '+(b.x-dx)+' '+b.y+', '+b.x+' '+b.y+'"/>';}let s='';G.apps.forEach(a=>{a.proc.forEach(pid=>{s+=path(pt('n-'+pid,'r'),pt('n-'+a.id,'l'),a.proc.length>1?'id':'');});});G.apps.filter(a=>a.cj).forEach(a=>{s+=path(pt('n-'+a.id,'r'),pt('c-'+a.id,'l'),'cj');});svg.innerHTML=s;}
-  window.addEventListener('resize',()=>{if(mapDone)drawMap();});
-
-  // ---- documents ----
-  // ---- documents: framework-aware key documents for non-automated controls ----
-  const KEYDOCS=[
-    {group:'Governance & Risk',items:[
-      {id:'d1',n:'Information Security Policy',ev:'NIST CSF GV · 800-53 PL/PM',ctrls:14},
-      {id:'d2',n:'Risk Management Policy & latest Risk Assessment',ev:'CSF ID.RA · 800-53 RA',ctrls:11},
-      {id:'d3',n:'Third-Party / Vendor Risk Management Policy',ev:'CSF GV.SC · 800-53 SR · SOC 2 CC9',ctrls:8}]},
-    {group:'Access & Identity',items:[
-      {id:'d4',n:'Access Control Policy',ev:'CSF PR.AA · 800-53 AC · HIPAA §164.312',ctrls:12},
-      {id:'d5',n:'Authentication / MFA Standard',ev:'800-53 IA · CSF PR.AA',ctrls:7}]},
-    {group:'Operations & Resilience',items:[
-      {id:'d6',n:'Incident Response Plan',ev:'CSF RS/RC · 800-53 IR · SOC 2 CC7',ctrls:10},
-      {id:'d7',n:'Business Continuity / DR Plan',ev:'CSF RC · 800-53 CP',ctrls:9},
-      {id:'d8',n:'Change Management Policy',ev:'800-53 CM · SOC 2 CC8',ctrls:6},
-      {id:'d9',n:'Configuration / Hardening Standards',ev:'800-53 CM',ctrls:8}]},
-    {group:'Data & Privacy',items:[
-      {id:'d10',n:'Data Classification & Handling Policy',ev:'CSF PR.DS · 800-53 MP/SC',ctrls:9},
-      {id:'d11',n:'Encryption / Cryptography Policy',ev:'800-53 SC-13 · HIPAA §164.312(a)(2)(iv)',ctrls:5},
-      {id:'d12',n:'Privacy Policy / Notice',ev:'GDPR · HIPAA Privacy Rule',ctrls:7}]},
-    {group:'Assurance & Testing',items:[
-      {id:'d13',n:'Latest SOC 2 Type II report',ev:'Cross-maps as evidence to all frameworks',ctrls:31},
-      {id:'d14',n:'Penetration Test report',ev:'CSF ID.RA · 800-53 CA-8',ctrls:6},
-      {id:'d15',n:'Security Awareness Training records',ev:'CSF PR.AT · 800-53 AT',ctrls:4},
-      {id:'d16',n:'Audit Logging Policy',ev:'800-53 AU · CSF DE',ctrls:6}]}
-  ];
-  const TOTAL_DOCS=KEYDOCS.reduce((s,g)=>s+g.items.length,0);
-  const docState={};const docResults={};let docsProvided=0, ctrlsCovered=0;
-  function findDoc(id){for(const g of KEYDOCS){for(const d of g.items)if(d.id===id)return d;}}
-  function wireDocs(){renderKeyDocs();updateDocProg();}
-  function renderKeyDocs(){
-    document.getElementById('keydocs').innerHTML=KEYDOCS.map(g=>'<div class="dgroup"><div class="dgh">'+g.group+'</div>'+g.items.map(d=>'<div class="drow"><div class="di">▤</div><div class="dn"><div class="nm">'+d.n+'</div><div class="ev">evaluates: '+d.ev+'</div></div><span id="rs-'+d.id+'">'+(docState[d.id]?'<span class="dst ok">✓ Aligned · '+d.ctrls+' controls</span>':'<button class="dup" data-doc="'+d.id+'">Upload</button>')+'</span></div>').join('')+'</div>').join('');
-    document.querySelectorAll('[data-doc]').forEach(b=>b.addEventListener('click',()=>uploadDoc(b.dataset.doc)));
-  }
-  const DOC_KEYWORDS={
-    d1:['information security','acceptable use','security policy','data protection','governance','scope','enforcement'],
-    d2:['risk assessment','risk management','risk register','risk appetite','risk tolerance','likelihood','impact','inherent','residual'],
-    d3:['third.party','vendor','supplier','due diligence','vendor risk','supply chain','subcontractor','sla'],
-    d4:['access control','least privilege','role.based','authorization','need.to.know','segregation','rbac','provisioning'],
-    d5:['multi.factor','mfa','authentication','password','credential','identity verification','biometric','totp'],
-    d6:['incident response','incident management','escalation','containment','eradication','recovery','playbook','severity'],
-    d7:['business continuity','disaster recovery','bcp','drp','rto','rpo','failover','backup','resilience'],
-    d8:['change management','change control','cab','change advisory','release management','rollback','approval'],
-    d9:['configuration','hardening','baseline','cis benchmark','stig','patch management','golden image'],
-    d10:['data classification','data handling','data retention','data disposal','sensitive data','confidential','restricted'],
-    d11:['encryption','cryptography','key management','tls','aes','at rest','in transit','certificate'],
-    d12:['privacy','consent','data subject','gdpr','hipaa','notice','personal data','pii','right to delete'],
-    d13:['soc 2','type ii','service organization','trust services','criteria','control environment'],
-    d14:['penetration test','pentest','vulnerability assessment','findings','remediation','exploit','cvss'],
-    d15:['security awareness','training','phishing simulation','social engineering','completion rate'],
-    d16:['audit log','logging','monitoring','log retention','siem','event','alert','tamper']
-  };
-  function readFileText(file){
-    return new Promise(resolve=>{
-      const reader=new FileReader();
-      if(file.name.match(/\.(txt|csv|md)$/i)){
-        reader.onload=()=>resolve(reader.result||'');
-        reader.onerror=()=>resolve('');
-        reader.readAsText(file);
-      }else{
-        reader.onload=()=>{
-          const arr=new Uint8Array(reader.result);
-          let text='';
-          for(let i=0;i<arr.length;i++){const c=arr[i];if(c>=32&&c<=126)text+=String.fromCharCode(c);else if(c===10||c===13)text+=' ';}
-          resolve(text);
-        };
-        reader.onerror=()=>resolve('');
-        reader.readAsArrayBuffer(file);
-      }
-    });
-  }
-  async function analyzeDocContent(file,docId){
-    const text=await readFileText(file);
-    // Try backend analysis first
+  document.getElementById('goLive').addEventListener('click',async function(){
+    var btn=this,msg=document.getElementById('glmsg');
+    var org=v('orgName');
+    if(!org){msg.textContent='Enter an organization name.';msg.style.color='var(--warn)';return;}
+    if(!PROC.length&&!APP.length){msg.textContent='Upload your processes or systems first.';msg.style.color='var(--warn)';return;}
+    var orgId='org_'+slug(org);
+    var payload={
+      org_name:org,org_id:orgId,industry:v('industry'),regions:REGIONS,
+      financials:{revenue:v('finRevenue'),operatingIncome:v('finOpInc'),netIncome:v('finNetInc'),enterpriseValue:v('finEV')},
+      appetite:v('finAppetite'),budget:v('finBudget'),
+      insurance:{limit:v('insLimit'),premium:v('insPrem'),renewal:v('insRenew')},
+      processes:PROC.map(function(p){return {name:p.name,data:p.data,rev:p.revenue,revenue:p.revenue,rto:p.rto,criticality:p.criticality};}),
+      apps:APP.map(function(a){return {name:a.name,host:a.host,data:a.data,vendor:a.vendor,eol:a.eol,recovery:a.recovery};}),
+      risks:RISK.map(function(r){return {title:r.title,severity:r.severity,asset:r.asset,status:r.status,financial_exposure:r.exposure};})
+    };
+    btn.disabled=true;msg.textContent='Building your cockpit…';msg.style.color='var(--muted)';
     try{
-      const fd=new FormData();fd.append('file',file);fd.append('doc_type',docId);
-      const r=await fetch('/api/documents/analyze',{method:'POST',body:fd});
-      if(r.ok)return await r.json();
-    }catch(_){}
-    // Fallback: client-side keyword + attribute matching
-    const lower=text.toLowerCase();
-    const kw=DOC_KEYWORDS[docId]||[];
-    const found=kw.filter(k=>new RegExp(k,'i').test(lower));
-    const coverage=kw.length?Math.round((found.length/kw.length)*100):0;
-    const gaps=kw.filter(k=>!new RegExp(k,'i').test(lower));
-    function scoreCMMI(m,t){if(t===0)return 1;var p=m/t;return p>=.9?5:p>=.75?4:p>=.55?3:p>=.35?2:1;}
-    const cmmi=scoreCMMI(found.length,kw.length);
-    const cmmiLabels={1:'Initial',2:'Managed',3:'Defined',4:'Quantitatively Managed',5:'Optimizing'};
-    // Build attribute-level results from keywords
-    const attrs=kw.map(function(k){return{tag:'P',key:k,label:k.replace(/\./g,' '),found:new RegExp(k,'i').test(lower)};});
-    const ctrl={id:docId.toUpperCase(),family:docId.replace(/\d/g,'').toUpperCase()||'GV',name:'Policy Assessment',cmmi:cmmi,cmmiLabel:cmmiLabels[cmmi],matched:found.length,total:kw.length,attrs:attrs};
-    const fam={};fam[ctrl.family]={cmmi:cmmi,cmmiLabel:cmmiLabels[cmmi],controlCount:1,controls:[ctrl.id]};
-    const recs=[];
-    const missing=attrs.filter(function(a){return!a.found;});
-    if(missing.length>0){
-      var potCMMI=scoreCMMI(found.length+missing.length,kw.length);
-      recs.push({controlId:ctrl.id,controlName:ctrl.name,currentCMMI:cmmi,missingAttrs:missing.map(function(m){return m.label;}),priority:missing.length>=4?'high':missing.length>=2?'medium':'low',suggestion:'Add language covering: '+missing.map(function(m){return m.label;}).join(', '),impact:{controlFrom:cmmi,controlTo:potCMMI,familyFrom:cmmi,familyTo:potCMMI,overallDelta:Math.round(((missing.length/kw.length)*100)*10)/10}});
-    }
-    return {coverage:coverage,cmmi:cmmi,cmmiLabel:cmmiLabels[cmmi],matched:found.length,total:kw.length,controls:[ctrl],families:fam,recommendations:recs,gaps:gaps.slice(0,3),words:text.split(/\s+/).length};
-  }
-  function uploadDoc(id){
-    const d=findDoc(id);const rs=document.getElementById('rs-'+id);
-    const inp=document.createElement('input');inp.type='file';inp.accept='.pdf,.doc,.docx,.xlsx,.csv,.txt';inp.style.display='none';
-    document.body.appendChild(inp);
-    inp.addEventListener('change',async ()=>{
-      const f=inp.files&&inp.files[0];document.body.removeChild(inp);
-      if(!f)return;
-      rs.innerHTML='<span class="dst rd">Analyzing '+f.name+'…</span>';
-      try{
-        const result=await analyzeDocContent(f,id);
-        if(!docState[id]){docState[id]=true;docsProvided++;ctrlsCovered+=d.ctrls;}
-        result.docId=id;result.docName=d.n;result.filename=f.name;result.framework=d.ev;result.ctrlCount=d.ctrls;
-        docResults[id]=result;
-        try{localStorage.setItem('cyberrx_doc_results',JSON.stringify(docResults));}catch(_){}
-        const cov=result.coverage||0;
-        const cmmiLabel=result.cmmiLabel||result.maturity||'Analyzed';
-        const cmmiScore=result.cmmi||0;
-        const cls=cov>=60?'ok':'rd';
-        const gapNote=result.recommendations&&result.recommendations.length>0?' · '+result.recommendations.length+' improvements':'';
-        var fullTxt='✓ '+f.name+' · CMMI '+cmmiScore+' '+cmmiLabel+' ('+cov+'%)'+gapNote+' · '+d.ctrls+' controls';
-        rs.innerHTML='<span class="dst '+cls+'" title="'+fullTxt.replace(/"/g,'&quot;')+'">'+fullTxt+'</span>';
-      }catch(e){
-        if(!docState[id]){docState[id]=true;docsProvided++;ctrlsCovered+=d.ctrls;}
-        docResults[id]={docId:id,docName:d.n,filename:f.name,cmmi:1,cmmiLabel:'Initial',coverage:0,controls:[],families:{},recommendations:[],framework:d.ev,ctrlCount:d.ctrls};
-        try{localStorage.setItem('cyberrx_doc_results',JSON.stringify(docResults));}catch(_){}
-        rs.innerHTML='<span class="dst ok">✓ '+f.name+' · aligned · '+d.ctrls+' controls</span>';
-      }
-      updateDocProg();
-    });
-    inp.click();
-  }
-  function updateDocProg(){const el=document.getElementById('docProg');if(el)el.innerHTML='<b>'+docsProvided+'</b> of '+TOTAL_DOCS+' key documents provided · <b>'+ctrlsCovered+'</b> control requirements covered';}
-
-  // ---- per-seat data needs ----
-  let orgCurrency='USD', hqIndex=0, revRaw='4.2', memRaw='2.4', empRaw='12,400';
-  const CUR={USD:'$',EUR:'€',GBP:'£',CAD:'C$',CHF:'CHF ',JPY:'¥',AUD:'A$',SGD:'S$',INR:'₹',BRL:'R$',MXN:'MX$',ZAR:'R',AED:'د.إ',SAR:'﷼',KRW:'₩',HKD:'HK$',SEK:'kr',NOK:'kr',PLN:'zł',CNY:'¥',TWD:'NT$',THB:'฿',IDR:'Rp',MYR:'RM',PHP:'₱',ILS:'₪',NGN:'₦',COP:'COL$',CLP:'CLP$',PEN:'S/.',ARS:'AR$'};
-  function curSym(){return CUR[orgCurrency]||'$';}
-  function fmtUnit(v,mult,cur){return isNaN(v)?'':'= '+(cur?curSym():'')+(v*mult).toLocaleString();}
-  function applyOrgCur(){
-    const hq=document.getElementById('hqSel');if(hq)hq.selectedIndex=hqIndex;
-    const rc=document.getElementById('revCur');if(rc)rc.textContent=curSym();
-    const rn=document.getElementById('revNum');if(rn){rn.value=revRaw;const eq=document.getElementById('revEq');if(eq)eq.textContent=fmtUnit(parseFloat(revRaw),1e9,true);}
-    const mn=document.getElementById('memNum');if(mn){mn.value=memRaw;const eq=document.getElementById('memEq');if(eq)eq.textContent=fmtUnit(parseFloat(memRaw),1e6,false);}
-    const en=document.getElementById('empNum');if(en)en.value=empRaw;
-  }
-  const CYBER_INSURERS=['Chubb','Beazley','AXA XL','AIG','Travelers','Zurich','Coalition','At-Bay','CNA','Hiscox','Tokio Marine HCC','Sompo','Liberty Mutual','Munich Re / HSB','Arch','Fairmile / Lloyd\u2019s syndicate','Allianz','Generali','HDI Global','SCOR','Mapfre','Swiss Re','MSIG','Ping An','QBE','IAG','Tawuniya','ADNIC','Bradesco Seguros','SulAm\u00e9rica','Samsung Fire & Marine','Fubon Insurance'];
-  function fieldHTML(label){
-    const l=label.toLowerCase();
-    if(/carrier/.test(l))
-      return '<div class="dfield"><label>'+label+'</label><select class="carrier-sel"><option value="">Select carrier\u2026</option>'+CYBER_INSURERS.map(c=>'<option>'+c+'</option>').join('')+'<option value="__other">Other (enter manually)\u2026</option></select><input class="carrier-other" placeholder="Enter carrier name" style="display:none"></div>';
-    if(/date/.test(l))
-      return '<div class="dfield"><label>'+label+'</label><input type="date"></div>';
-    if(/\(y\/n\)/.test(l))
-      return '<div class="dfield"><label>'+label.replace(/\s*\(y\/n\)/i,'')+'</label><select><option value="">\u2014</option><option>Yes</option><option>No</option></select></div>';
-    if(/\$|limit|retention|deductible|appetite|threshold|losses|premium/.test(l))
-      return '<div class="dfield"><label>'+label.replace(/\s*\(\$\)/,'')+'</label><div class="moneyf"><span class="cur">'+curSym()+'</span><input class="mnum" inputmode="decimal" placeholder="0"><span class="unit">M</span></div><div class="money-eq"></div></div>';
-    return '<div class="dfield"><label>'+label+'</label><input placeholder="'+label+'"></div>';
-  }
-  function saveSeatFields(){
-    const s=SEAT_BY[seatTab];if(!s)return;
-    const body=document.getElementById('seatBody');if(!body)return;
-    const sd=seatData[s.id];
-    body.querySelectorAll('.dfield').forEach((df,i)=>{
-      const inp=df.querySelector('input,select');if(!inp)return;
-      const label=df.querySelector('label');
-      const key=label?label.textContent.trim():('f'+i);
-      if(inp.classList.contains('mnum')){sd[key]=inp.value;}
-      else if(inp.classList.contains('carrier-sel')){sd[key]=inp.value;const oth=df.querySelector('.carrier-other');if(oth&&inp.value==='__other')sd[key+'_other']=oth.value;}
-      else{sd[key]=inp.value;}
-    });
-    body.querySelectorAll('.ctrow').forEach((row,i)=>{
-      const role=row.querySelector('.ctrole');
-      const nm=row.querySelector('.ctname');
-      const ph=row.querySelector('.ctphone');
-      if(role&&nm&&ph){
-        if(!seatContacts[s.id])seatContacts[s.id]={};
-        seatContacts[s.id][role.textContent.trim()]={name:nm.value,phone:ph.value};
-      }
-    });
-  }
-  function updateSeatNextBtn(){
-    if(cur!==6)return;
-    var seatOrder=['ceo','ciso','cfo','cio','clo','cro','board'];
-    var curIdx=seatOrder.indexOf(seatTab);
-    var btn=document.getElementById('nextBtn');
-    var back=document.getElementById('backBtn');
-    if(curIdx<seatOrder.length-1){
-      var nextLabel=({ceo:'CEO',ciso:'CISO',cfo:'CFO',cio:'CIO',clo:'CLO',cro:'CRO',board:'Board'})[seatOrder[curIdx+1]]||'next';
-      btn.textContent='Save & next → '+nextLabel;
-    }else{
-      btn.textContent='Save & continue →';
-    }
-    if(back)back.disabled=(curIdx===0&&cur===0);
-  }
-  function renderSeats(){
-    saveSeatFields();
-    document.getElementById('seatTabs').innerHTML=SEATS.map(s=>'<button class="stab '+(s.id===seatTab?'on':'')+'" data-seat="'+s.id+'">'+s.label+'</button>').join('');
-    document.querySelectorAll('[data-seat]').forEach(b=>b.addEventListener('click',()=>{seatTab=b.dataset.seat;renderSeats();}));
-    const s=SEAT_BY[seatTab];const live=liveSrc();
-    const srcTag={live:live?'Live':'Connect a system',doc:'From docs',derived:'Derived',declare:'You provide'};
-    const srcCls={live:live?'live':'off',doc:'doc',derived:'derived',declare:'declare'};
-    function rtoFields(){
-      var G=liveGraph();var cjs=G.apps.filter(function(a){return a.cj;}).sort(function(x,y){return y.score-x.score;});
-      if(!cjs.length){var procs=G.procs.filter(function(p){return p.c==='h';});if(!procs.length)procs=G.procs.slice(0,3);return procs.reduce(function(arr,p){arr.push('RTO target ('+p.n+')');arr.push('RPO target ('+p.n+')');return arr;},[]);}
-      var procIds={};cjs.forEach(function(a){a.proc.forEach(function(pid){procIds[pid]=1;});});
-      var procs=G.procs.filter(function(p){return procIds[p.id];});
-      if(!procs.length)procs=G.procs.filter(function(p){return p.c==='h';});
-      if(!procs.length)procs=G.procs.slice(0,3);
-      return procs.reduce(function(arr,p){arr.push('RTO target ('+p.n+')');arr.push('RPO target ('+p.n+')');return arr;},[]);
-    }
-    document.getElementById('seatBody').innerHTML='<div class="need" style="border-left:3px solid var(--brand)"><span class="src declare" style="color:var(--brand);background:var(--brand-tint)">You provide</span><div class="nb"><div class="ni">Who holds this seat?</div><div class="nm2">so your advisor can greet them by name</div><div class="df"><input id="seatName-'+s.id+'" placeholder="First name of your '+s.label+'" value="'+(seatNames[s.id]||'')+'"></div></div></div>'+
-      '<div class="seatq">› '+s.q+'</div>'+s.needs.map(n=>{
-      var dfArr=n.df;if(n.dynRTO)dfArr=rtoFields();
-      const df=n.plan?('<div class="planbox"><button class="planup" type="button">⬆ Upload IR plan &amp; playbooks (PDF)</button><div class="planct-h">Key contacts — reachable 24/7 <span>name + phone; powers Incident Commander mode</span></div><div class="planct">'+n.contacts.map(r=>'<div class="ctrow"><span class="ctrole">'+r+'</span><input placeholder="Name" class="ctname" value="'+((seatContacts[s.id]&&seatContacts[s.id][r]&&seatContacts[s.id][r].name)||'')+'"><input placeholder="Phone" inputmode="tel" class="ctphone" value="'+((seatContacts[s.id]&&seatContacts[s.id][r]&&seatContacts[s.id][r].phone)||'')+'"></div>').join('')+'</div></div>'):(dfArr?'<div class="df dfgrid">'+dfArr.map(fieldHTML).join('')+'</div>':'');
-      return '<div class="need"><span class="src '+srcCls[n.src]+'">'+srcTag[n.src]+'</span><div class="nb"><div class="ni">'+n.i+'</div><div class="nm2">'+n.m+'</div>'+df+'</div></div>';
-    }).join('');
-    const nameIn=document.getElementById('seatName-'+s.id);
-    if(nameIn)nameIn.addEventListener('input',e=>{seatNames[s.id]=e.target.value;});
-    // Restore saved declare field values
-    const sd=seatData[s.id]||{};
-    const body=document.getElementById('seatBody');
-    body.querySelectorAll('.dfield').forEach((df,i)=>{
-      const inp=df.querySelector('input,select');if(!inp)return;
-      const label=df.querySelector('label');
-      const key=label?label.textContent.trim():('f'+i);
-      if(sd[key]!==undefined){
-        if(inp.classList.contains('mnum')){inp.value=sd[key];const eq=df.querySelector('.money-eq');if(eq)eq.textContent=fmtUnit(parseFloat(sd[key]),1e6,true);}
-        else if(inp.classList.contains('carrier-sel')){inp.value=sd[key];if(sd[key]==='__other'){const oth=df.querySelector('.carrier-other');if(oth){oth.style.display='block';oth.value=sd[key+'_other']||'';}}}
-        else{inp.value=sd[key];}
-      }
-    });
-    updateSeatNextBtn();
-  }
-
-  function renderReview(){
-    const ids=Object.keys(connected);const cov=Math.min(99,ids.reduce((s,id)=>s+CONN.find(c=>c.id===id).w,0));const sig=ids.reduce((s,id)=>s+CONN.find(c=>c.id===id).sig,0);
-    const orgEl=document.getElementById('revOrg');if(orgEl)orgEl.textContent=orgDisplay();
-    const cjEl=document.getElementById('revCj');if(cjEl){const ncj=liveGraph().apps.filter(a=>a.cj).length;cjEl.textContent=ncj+' deduced';}
-    document.getElementById('revSys').textContent=ids.length;document.getElementById('revSig').textContent=sig.toLocaleString();document.getElementById('revDocs').textContent=docsProvided+' of '+TOTAL_DOCS;
-    let t='—';if(cov>0)t=cov<35?'Building':cov<65?'Moderate':cov<88?'Strong':'Audit-ready';document.getElementById('revCred').textContent=t;
-  }
-
-  // currency from primary-currency picker · carrier "Other" reveal · live number formatting
-  document.addEventListener('change',e=>{
-    const h=e.target.closest('#hqSel');
-    if(h){orgCurrency=h.options[h.selectedIndex].dataset.cur||'USD';hqIndex=h.selectedIndex;applyOrgCur();if(cur===6)renderSeats();}
-    const cs=e.target.closest('.carrier-sel');
-    if(cs){const o=cs.parentElement.querySelector('.carrier-other');if(o){o.style.display=cs.value==='__other'?'block':'none';if(cs.value==='__other')o.focus();}}
+      var r=await fetch(apiBase()+'/api/crown-jewels/ingest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      var body=await r.json().catch(function(){return{};});
+      if(r.ok&&body&&body.org_id)orgId=body.org_id;
+      else if(!r.ok){msg.textContent='Setup error: '+(body.error||('HTTP '+r.status));msg.style.color='var(--warn)';btn.disabled=false;return;}
+    }catch(e){/* offline: still hand off; cockpit shows illustrative */}
+    try{localStorage.setItem('cyberrx_org_id',orgId);localStorage.setItem('cyberrx_org_name',org);}catch(_){}
+    try{window.parent.postMessage({type:'cyberrx-golive',org:org,orgId:orgId,industry:v('industry')},'*');}catch(_){}
+    msg.textContent='✓ Live';msg.style.color='var(--good)';
   });
-  document.addEventListener('input',e=>{
-    const m=e.target.closest('.mnum');
-    if(m){
-      const wrap=m.closest('.dfield,.field');
-      const eq=wrap?wrap.querySelector('.money-eq'):null;
-      const unitEl=m.parentElement.querySelector('.unit');
-      const unit=unitEl?unitEl.textContent.trim():'M';
-      const mult=unit==='B'?1e9:unit==='K'?1e3:1e6;
-      const cur=!m.parentElement.classList.contains('nocur');
-      if(eq)eq.textContent=fmtUnit(parseFloat(m.value),mult,cur);
-      if(m.id==='revNum')revRaw=m.value; if(m.id==='memNum')memRaw=m.value;
-    }
-    const ni=e.target.closest('.numfmt');
-    if(ni){const d=ni.value.replace(/[^\d]/g,'');ni.value=d?parseInt(d,10).toLocaleString():'';if(ni.id==='empNum')empRaw=ni.value;}
-  });
-  function collectProfile(){
-    const owSel=document.getElementById('ownershipSel');
-    const ownership=owSel?owSel.value:'Private';
-    const dataEls=document.querySelectorAll('#dataChips .pick.on');
-    const dataTypes=[];dataEls.forEach(el=>dataTypes.push(el.textContent.trim()));
-    const regions=[];for(const [group,subs] of Object.entries(REGIONS)){
-      if(subs.every(s=>selectedRegions.has(s))){regions.push(group);}
-      else{subs.filter(s=>selectedRegions.has(s)).forEach(s=>regions.push(s));}
-    }
-    const rev=parseFloat(revRaw)||0;
-    const emp=parseInt(String(empRaw).replace(/[^\d]/g,''),10)||0;
-    const mem=parseFloat(memRaw)||0;
-    saveSeatFields();
-    const profile={revenue:rev,revenueBn:rev,employees:emp,members:mem,membersMn:mem,ownership,dataTypes,regions,industry:selectedIndustry,seatData:JSON.parse(JSON.stringify(seatData)),seatContacts:JSON.parse(JSON.stringify(seatContacts))};
-    try{localStorage.setItem('cyberrx_org_profile',JSON.stringify(profile));}catch(_){}
-    return profile;
-  }
-  document.getElementById('nextBtn').addEventListener('click',()=>{
-    // On the seats step, save current seat and advance to next leader before leaving
-    if(cur===6){
-      saveSeatFields();
-      var seatOrder=['ceo','ciso','cfo','cio','clo','cro','board'];
-      var curIdx=seatOrder.indexOf(seatTab);
-      if(curIdx<seatOrder.length-1){
-        seatTab=seatOrder[curIdx+1];
-        renderSeats();
-        document.getElementById('seatBody').scrollIntoView({behavior:'smooth',block:'start'});
-        return;
-      }
-    }
-    done[cur]=true;updateComplete();if(cur<STEPS.length-1){cur++;render();}else{document.getElementById('nextBtn').textContent='✓ Setup complete';const bc=document.getElementById('benchConsent');const benchShare=!!(bc&&bc.checked);var _org='';try{_org=(orgName||localStorage.getItem('cyberrx_org_name')||'').trim();}catch(_){_org=(orgName||'').trim();}if(_org){try{localStorage.setItem('cyberrx_org_name',_org);}catch(_){}}const profile=collectProfile();
-      // Ingest the uploaded inventory to the backend, then go live (real data path).
-      ingestAndGoLive(_org,{benchShare:benchShare,currency:{code:orgCurrency,sym:curSym()},profile:profile,docResults:docResults}).then(function(){try{window.parent.postMessage('cyberrx-golive','*');}catch(e){}});
-    }});
-  document.getElementById('backBtn').addEventListener('click',()=>{
-    if(cur===6){
-      saveSeatFields();
-      var seatOrder=['ceo','ciso','cfo','cio','clo','cro','board'];
-      var curIdx=seatOrder.indexOf(seatTab);
-      if(curIdx>0){seatTab=seatOrder[curIdx-1];renderSeats();return;}
-    }
-    if(cur>0){cur--;render();}
-  });
-  var ccCallBtn=document.getElementById('ccCall');if(ccCallBtn)ccCallBtn.addEventListener('click',function(){this.classList.add('req');this.textContent='✓ We\'ll reach out within 1 business day';});
-  // ---- operating regions multi-select ----
-  const REGIONS={
-    'United States':['Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming'],
-    'Canada':['Alberta','British Columbia','Manitoba','New Brunswick','Newfoundland & Labrador','Nova Scotia','Ontario','Prince Edward Island','Quebec','Saskatchewan'],
-    'Europe (EU/EEA)':['Austria','Belgium','Bulgaria','Croatia','Czech Republic','Denmark','Estonia','Finland','France','Germany','Greece','Hungary','Iceland','Ireland','Italy','Latvia','Lithuania','Luxembourg','Netherlands','Norway','Poland','Portugal','Romania','Slovakia','Slovenia','Spain','Sweden','Switzerland','Turkey'],
-    'United Kingdom':['England','Scotland','Wales','Northern Ireland'],
-    'Asia-Pacific':['Australia','Bangladesh','Cambodia','China','Hong Kong','India','Indonesia','Japan','Malaysia','Myanmar','New Zealand','Pakistan','Philippines','Singapore','South Korea','Sri Lanka','Taiwan','Thailand','Vietnam'],
-    'Middle East & Africa':['Bahrain','Egypt','Ethiopia','Ghana','Israel','Jordan','Kenya','Kuwait','Morocco','Nigeria','Oman','Qatar','Rwanda','Saudi Arabia','South Africa','Tanzania','Tunisia','UAE','Uganda'],
-    'Latin America & Caribbean':['Argentina','Bolivia','Brazil','Chile','Colombia','Costa Rica','Dominican Republic','Ecuador','Guatemala','Jamaica','Mexico','Panama','Paraguay','Peru','Puerto Rico','Trinidad & Tobago','Uruguay','Venezuela']
-  };
-  let selectedRegions=new Set();
-  const REGION_KEYS=Object.keys(REGIONS);
-  const COL1=REGION_KEYS.slice(0,Math.ceil(REGION_KEYS.length/2));
-  const COL2=REGION_KEYS.slice(Math.ceil(REGION_KEYS.length/2));
-  function buildRegionMenu(){
-    const menu=document.getElementById('regionMenu');if(!menu)return;
-    let html='<input type="text" class="dd-search" placeholder="Search regions…">';
-    html+='<div class="dd-cols">';
-    [COL1,COL2].forEach(col=>{
-      html+='<div class="dd-col">';
-      col.forEach(group=>{
-        html+='<div class="dd-group"><span>'+group+'</span><span class="g-toggle" data-grp="'+group+'">Select all</span></div>';
-        REGIONS[group].forEach(s=>{html+='<label class="dd-item" data-search="'+s.toLowerCase()+'"><input type="checkbox" data-region="'+s+'" data-parent="'+group+'"> '+s+'</label>';});
-      });
-      html+='</div>';
-    });
-    html+='</div>';
-    menu.innerHTML=html;
-    menu.querySelectorAll('input[type=checkbox]').forEach(cb=>{if(selectedRegions.has(cb.dataset.region))cb.checked=true;});
-    menu.querySelector('.dd-search').addEventListener('input',function(){
-      const q=this.value.toLowerCase().trim();
-      menu.querySelectorAll('.dd-item').forEach(el=>{el.classList.toggle('dd-hidden',q&&!el.dataset.search.includes(q));});
-      menu.querySelectorAll('.dd-group').forEach(g=>{
-        const grp=g.dataset?.grp||g.querySelector('.g-toggle')?.dataset?.grp;
-        if(!grp)return;
-        const items=menu.querySelectorAll('.dd-item[data-search]');
-        let vis=false;
-        items.forEach(it=>{const cb=it.querySelector('input');if(cb&&cb.dataset.parent===grp&&!it.classList.contains('dd-hidden'))vis=true;});
-        g.classList.toggle('dd-hidden',q&&!vis);
-      });
-    });
-    menu.querySelectorAll('.g-toggle').forEach(gt=>gt.addEventListener('click',()=>{
-      const grp=gt.dataset.grp;const subs=REGIONS[grp];
-      const allSel=subs.every(s=>selectedRegions.has(s));
-      subs.forEach(s=>{if(allSel)selectedRegions.delete(s);else selectedRegions.add(s);});
-      if(allSel)selectedRegions.delete(grp);else selectedRegions.add(grp);
-      menu.querySelectorAll('input[data-parent="'+grp+'"]').forEach(c=>{c.checked=!allSel;});
-      gt.textContent=allSel?'Select all':'Clear';
-      updateRegionSummary();
-    }));
-    menu.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.addEventListener('change',()=>{
-      if(cb.checked)selectedRegions.add(cb.dataset.region);else selectedRegions.delete(cb.dataset.region);
-      if(cb.dataset.parent){
-        const all=REGIONS[cb.dataset.parent];
-        const allChecked=all.every(s=>selectedRegions.has(s));
-        if(allChecked)selectedRegions.add(cb.dataset.parent);else selectedRegions.delete(cb.dataset.parent);
-        const gt=menu.querySelector('.g-toggle[data-grp="'+cb.dataset.parent+'"]');
-        if(gt)gt.textContent=allChecked?'Clear':'Select all';
-      }
-      updateRegionSummary();
-    }));
-  }
-  function updateRegionSummary(){
-    const tog=document.getElementById('regionToggle');if(!tog)return;
-    const tags=[];
-    for(const [group,subs] of Object.entries(REGIONS)){
-      const allSel=subs.every(s=>selectedRegions.has(s));
-      if(allSel){tags.push({label:group,key:group,type:'group'});}
-      else{subs.filter(s=>selectedRegions.has(s)).forEach(s=>{tags.push({label:s,key:s,type:'sub',parent:group});});}
-    }
-    if(!tags.length){tog.innerHTML='<span class="placeholder">Select regions…</span>';return;}
-    tog.innerHTML=tags.map(t=>'<span class="rtag">'+t.label+'<span class="rx" data-rkey="'+t.key+'" data-rtype="'+t.type+'"'+(t.parent?' data-rparent="'+t.parent+'"':'')+'>&times;</span></span>').join('');
-    tog.querySelectorAll('.rx').forEach(x=>x.addEventListener('click',e=>{
-      e.stopPropagation();
-      const k=x.dataset.rkey,tp=x.dataset.rtype;
-      if(tp==='group'){selectedRegions.delete(k);(REGIONS[k]||[]).forEach(s=>selectedRegions.delete(s));
-        const menu=document.getElementById('regionMenu');
-        menu.querySelectorAll('input[data-parent="'+k+'"]').forEach(c=>{c.checked=false;});
-        const gt=menu.querySelector('.g-toggle[data-grp="'+k+'"]');if(gt)gt.textContent='Select all';
-      }else{selectedRegions.delete(k);
-        const menu=document.getElementById('regionMenu');
-        const cb=menu.querySelector('input[data-region="'+k+'"]');if(cb)cb.checked=false;
-        if(x.dataset.rparent){selectedRegions.delete(x.dataset.rparent);
-          const gt=menu.querySelector('.g-toggle[data-grp="'+x.dataset.rparent+'"]');if(gt)gt.textContent='Select all';}
-      }
-      updateRegionSummary();
-    }));
-  }
-  function wireRegionDD(){
-    const dd=document.getElementById('regionDD');if(!dd)return;
-    buildRegionMenu();updateRegionSummary();
-    dd.querySelector('.dd-toggle').addEventListener('click',e=>{if(e.target.closest('.rx'))return;e.preventDefault();dd.classList.toggle('open');});
-    document.addEventListener('click',e=>{if(!dd.contains(e.target))dd.classList.remove('open');});
-  }
-
-  render();updateComplete();
 </script>
 </body>
 </html>
