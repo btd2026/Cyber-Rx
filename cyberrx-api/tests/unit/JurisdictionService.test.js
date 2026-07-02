@@ -36,6 +36,22 @@ describe('JurisdictionService.derive', () => {
     expect(withPii.obligations.find((o) => o.code === 'US-STATE')).toBeTruthy();
   });
 
+  test('US-only org does NOT match Australia (substring "us" in "australia" must not trigger)', () => {
+    const out = J.derive({ regions: ['US'], dataClasses: ['PII', 'PHI'] });
+    expect(out.obligations.find((o) => o.code === 'AU-PRIV')).toBeFalsy();
+    expect(out.obligations.find((o) => o.code === 'US-SEC')).toBeTruthy();
+    expect(out.obligations.find((o) => o.code === 'US-STATE')).toBeTruthy();
+    // only US regimes for a US-only footprint
+    expect(out.obligations.every((o) => o.code.startsWith('US-'))).toBe(true);
+  });
+
+  test('region phrases still match on word boundaries (North America → US, Canada)', () => {
+    const out = J.derive({ regions: ['North America'], dataClasses: ['PII'] });
+    expect(out.obligations.find((o) => o.code === 'US-SEC')).toBeTruthy();
+    expect(out.obligations.find((o) => o.code === 'CA-PIPEDA')).toBeTruthy();
+    expect(out.obligations.find((o) => o.code === 'AU-PRIV')).toBeFalsy();
+  });
+
   test('no regions → empty with a clear note', () => {
     const out = J.derive({ regions: [] });
     expect(out.count).toBe(0);

@@ -91,6 +91,14 @@
   .ctag{display:inline-block;font-size:11.5px;font-weight:600;color:var(--ink-2);background:var(--plane);border:1px solid var(--line);border-radius:7px;padding:3px 8px;margin:0 5px 5px 0}
   .rtag{color:var(--serious)}
   .cj-why{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}.cj-why b{color:var(--ink-2)}
+  .proc-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .proc-h .proc-n{font-size:14.5px;font-weight:700}
+  .proc-h .proc-crit{font-size:10.5px;font-weight:700;color:var(--muted);border:1px solid var(--line-2);border-radius:99px;padding:2px 9px}
+  .proc-h .proc-exp{font-size:11.5px;font-weight:700;color:var(--serious,#e0a94a);margin-left:auto}
+  .proc-apps{margin-top:11px;font-size:12.5px;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+  .app-chip{display:inline-block;font-size:11.5px;font-weight:600;color:var(--ink-2);background:var(--plane);border:1px solid var(--line);border-radius:7px;padding:4px 9px}
+  .app-chip.cj{color:#111;background:#e6c25a;border-color:#e6c25a;font-weight:700}
+  .proc-meta{margin-top:10px;font-size:12px;color:var(--muted);line-height:1.9}
   .qoq{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;margin-bottom:16px}
   .qtbl{width:100%;border-collapse:collapse;font-size:12.5px}.qtbl th{text-align:left;color:var(--muted);font-weight:600;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;padding:0 8px 9px 0;border-bottom:1px solid var(--line)}
   .qtbl td{padding:10px 8px 10px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}.qtbl tr:last-child td{border:none;font-weight:700}.qtbl .up{color:var(--good)}
@@ -238,7 +246,7 @@ function render(seat){
   h+='<div class="spine"><span class="lk">⛓ One source of truth</span><span class="num"><b id="lvSpineExpo">$68M</b> <span>expected annual loss ·</span> <b id="lvSpineTail">$180M</b> <span>tail</span></span><span class="arrow">the same number every seat sees — in the <b>'+SEAT_LABEL[seat]+'</b> lens ↓</span></div></div>';
   h+=s.body();
   document.getElementById('app').innerHTML=h;
-  wireChoose();renderInitiatives();renderChain();renderProcBars();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderProcBars();renderCioSystems();applyLive();window.scrollTo({top:0});
 }
 </script>
 <script src="cockpit-seats.js"></script>
@@ -314,10 +322,10 @@ function renderDecStatus(dec){
   var proj;
   if(d.ticket){var lnk=d.url?('<a href="'+d.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+d.ticket+'</a>'):('<b style="color:#fff">'+d.ticket+'</b>');
     var stp=statusStep(d.status);proj='Project '+lnk+(d.system?(' in '+d.system):'')+(d.demoTicket?' <span class="tag warn" style="font-size:10px">demo</span>':'')+' · <span class="tag '+(stp.n>=4?'good':'')+'" style="font-size:10.5px">'+(d.status?stp.t:'Open')+'</span>';}
-  else if(d.pushing)proj='<span style="color:var(--muted)">opening project…</span>';
-  else proj='<span style="color:var(--muted)">not yet a project</span> <button class="wr-btn" style="padding:5px 12px;font-size:11.5px;margin-left:6px" data-push="'+dec+'">▶ Push to ticketing — start project</button>';
+  else if(d.pushing)proj='<span style="color:var(--muted)">opening the project in your ticketing system…</span>';
+  else proj='<span style="color:var(--muted)">recorded here · not sent to your ticketing system yet</span> <button class="wr-btn" style="padding:5px 12px;font-size:11.5px;margin-left:6px" data-push="'+dec+'">▶ Send to ticketing → open project</button>';
   var stepN=d.ticket?statusStep(d.status).n:(committed?3:2);
-  s.innerHTML='<div class="st-h">'+(committed?'🔒 Committed':'✓ Recorded')+' · '+proj+'</div>'+
+  s.innerHTML='<div class="st-h">'+(committed?'🔒 Committed':'✓ Recorded')+'</div><div class="st-b" style="margin-top:4px">'+proj+'</div>'+
     '<div class="st-b">Decision by <b style="color:#fff">'+d.by+'</b> ('+SEAT_LABEL[d.seat]+') · Option '+d.opt+' · '+fmtWhen(d.ts)+'</div>'+
     '<div class="track"><div class="tstep done"></div><div class="tstep'+(stepN>=2?' done':'')+'"></div><div class="tstep'+(stepN>=3?' done':'')+'"></div><div class="tstep'+(stepN>=4?' done':'')+'"></div></div>'+
     (committed
@@ -368,7 +376,7 @@ function renderInitiatives(){
   var decRows=list.map(function(d){
     var committed=(Date.now()-(d.ts||0))>=EDIT_WINDOW_MS;
     var cost=extractCost(d.osum),roi=extractROI(d.osum);
-    var tk=d.ticket?(d.url?('<a href="'+d.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+d.ticket+'</a>'):('<b style="color:#fff">'+d.ticket+'</b>'))+(d.system?(' · '+d.system):''):'<span style="color:var(--muted)">not pushed</span>';
+    var tk=d.ticket?(d.url?('<a href="'+d.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+d.ticket+'</a>'):('<b style="color:#fff">'+d.ticket+'</b>'))+(d.system?(' · '+d.system):''):'<span style="color:var(--muted)">not sent yet</span>';
     var st;
     if(d.ticket){var sp=statusStep(d.status);st='<span class="tag '+(sp.n>=4?'good':'')+'">'+(d.status?sp.t:'Open')+'</span>';}
     else st=committed?'<span class="tag crit">Committed</span>':'<span class="tag warn">In 24h review</span>';
@@ -421,7 +429,7 @@ function applyLive(){if(!LIVE)return;var e=LIVE.economics||{},r=e.ratios||{},ap=
     if(rs.tech_debt&&rs.tech_debt.exposure)setTxt('lvTechDebt',usd(rs.tech_debt.exposure));
   }}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderProcBars();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderProcBars();renderCioSystems();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -429,47 +437,53 @@ function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!
    crown-jewel scoring from /summary). Falls back to an illustrative example so the
    method is always visible; the section header states which is showing. */
 var GRAPH=null;
-var ILLU_CHAIN=[
-  {asset:'Claims &amp; payments database',tier:'Tier 1',score:78,procs:['Claims &amp; payments processing'],risks:[{t:'Ransomware → payments halt',x:'$34M'}],ctrls:['Privileged access (PAM)','Immutable backups','Network segmentation'],why:'Holds PHI + cardholder data · the single application a critical revenue process depends on (single point of failure) · internet-reachable'},
-  {asset:'Member portal &amp; servicing',tier:'Tier 2',score:75,procs:['Member portal &amp; servicing'],risks:[{t:'Account takeover / data breach',x:'$18M'}],ctrls:['Multi-factor auth','Web application firewall','Endpoint detection'],why:'Customer PII at scale · internet-facing · high transaction volume'}
+/* Grouped by business process (the "function"): each process shows the
+   applications that run it — crown jewels highlighted — plus the top risk and
+   controls. Compact (one card per process) and shows ALL processes. */
+var ILLU_PROC=[
+  {name:'Claims &amp; payments processing',exposure:'$34M',crit:'Critical',risk:'Ransomware → payments halt',ctrls:['Privileged access (PAM)','Immutable backups','Segmentation'],apps:[
+    {name:'Claims &amp; payments database',cj:true,tier:'Tier 1',why:'PHI + cardholder data · single point of failure · internet-reachable'},
+    {name:'Payment gateway',cj:false}]},
+  {name:'Member portal &amp; servicing',exposure:'$18M',crit:'High',risk:'Account takeover / data breach',ctrls:['MFA','Web app firewall','EDR'],apps:[
+    {name:'Member portal',cj:true,tier:'Tier 2',why:'Customer PII at scale · internet-facing'},
+    {name:'CRM',cj:false}]},
+  {name:'Policy administration',exposure:'$11M',crit:'High',risk:'Sensitive-data exposure',ctrls:['Access control','Encryption at rest'],apps:[
+    {name:'Policy admin system',cj:false},{name:'Document store',cj:false}]},
+  {name:'Trading &amp; settlement',exposure:'$8M',crit:'Medium',risk:'Settlement disruption',ctrls:['DR / recovery','Reconciliation'],apps:[
+    {name:'Settlement engine',cj:true,tier:'Tier 2',why:'Moves funds · time-critical recovery'}]}
 ];
-function chainFromGraph(){
+function chainByProcess(){
   if(!GRAPH||!GRAPH.nodes||!GRAPH.nodes.length)return null;
   var byId={};GRAPH.nodes.forEach(function(n){byId[n.id]=n;});
-  var procOf={},riskOf={},ctrlOf={};
+  var appsOfProc={},riskOfAsset={},ctrlOfAsset={};
   (GRAPH.edges||[]).forEach(function(e){
-    if(e.type==='supports'){(procOf[e.target]=procOf[e.target]||[]).push(byId[e.source]);}
-    else if(e.type==='threatens'){(riskOf[e.target]=riskOf[e.target]||[]).push(byId[e.source]);}
-    else if(e.type==='mitigates'||e.type==='applies_to'){(ctrlOf[e.target]=ctrlOf[e.target]||[]).push(byId[e.source]);}
+    if(e.type==='supports'){(appsOfProc[e.source]=appsOfProc[e.source]||[]).push(byId[e.target]);}
+    else if(e.type==='threatens'){(riskOfAsset[e.target]=riskOfAsset[e.target]||[]).push(byId[e.source]);}
+    else if(e.type==='mitigates'||e.type==='applies_to'){(ctrlOfAsset[e.target]=ctrlOfAsset[e.target]||[]).push(byId[e.source]);}
   });
   var whyByName={};if(LIVE&&LIVE.crown_jewels)LIVE.crown_jewels.forEach(function(c){whyByName[c.name]=c;});
-  var xByAsset={};if(LIVE&&LIVE.material_exposure_items)LIVE.material_exposure_items.forEach(function(i){if(i.asset_id)xByAsset[i.asset_id]=usd(i.exposure_usd);});
-  var assets=GRAPH.nodes.filter(function(n){return n.type==='asset';});
-  assets.sort(function(a,b){var ta=(a.attrs&&a.attrs.crown_jewel_tier&&a.attrs.crown_jewel_tier!=='none')?0:1,tb=(b.attrs&&b.attrs.crown_jewel_tier&&b.attrs.crown_jewel_tier!=='none')?0:1;if(ta!==tb)return ta-tb;return ((b.attrs&&b.attrs.score)||0)-((a.attrs&&a.attrs.score)||0);});
-  return assets.slice(0,6).map(function(a){
-    var cj=whyByName[a.label]||{};var aid=a.id.replace(/^asset:/,'');
-    return {
-      asset:a.label,
-      tier:(a.attrs&&a.attrs.crown_jewel_tier&&a.attrs.crown_jewel_tier!=='none')?('Tier '+a.attrs.crown_jewel_tier):null,
-      score:cj.score||(a.attrs&&a.attrs.score!=null?Math.round(a.attrs.score*100):null),
-      procs:(procOf[a.id]||[]).map(function(n){return n?n.label:'';}).filter(Boolean),
-      risks:(riskOf[a.id]||[]).map(function(n){return {t:n?n.label:'',x:xByAsset[aid]||''};}),
-      ctrls:(ctrlOf[a.id]||[]).map(function(n){return n?n.label:'';}).filter(Boolean),
-      why:cj.rationale||''
-    };
+  var expoByProc={};if(LIVE&&LIVE.process_exposure)LIVE.process_exposure.forEach(function(p){expoByProc[p.name]={usd:p.exposure_usd,crit:p.criticality};});
+  var procs=GRAPH.nodes.filter(function(n){return n.type==='process';});
+  var out=procs.map(function(pn){
+    var apps=(appsOfProc[pn.id]||[]).filter(Boolean);
+    var appObjs=apps.map(function(a){var cj=whyByName[a.label]||{};var isCj=(a.attrs&&a.attrs.crown_jewel_tier&&a.attrs.crown_jewel_tier!=='none');
+      return {name:a.label,cj:isCj,tier:isCj?('Tier '+a.attrs.crown_jewel_tier):null,why:cj.rationale||''};});
+    var risks=[],ctrls={};
+    apps.forEach(function(a){(riskOfAsset[a.id]||[]).forEach(function(r){if(r&&r.label)risks.push(r.label);});(ctrlOfAsset[a.id]||[]).forEach(function(c){if(c&&c.label)ctrls[c.label]=1;});});
+    var ex=expoByProc[pn.label]||{};
+    return {name:pn.label,exposure:ex.usd?usd(ex.usd):'',crit:ex.crit||(pn.attrs&&pn.attrs.criticality)||'',hasCj:appObjs.some(function(a){return a.cj;}),apps:appObjs,risk:risks[0]||'',ctrls:Object.keys(ctrls)};
   });
+  out.sort(function(a,b){if(a.hasCj!==b.hasCj)return a.hasCj?-1:1;return 0;});
+  return out;
 }
-function chainCard(c){
-  var procs=(c.procs&&c.procs.length)?c.procs.map(function(p){return '<div>'+p+'</div>';}).join(''):'<span class="sub">no linked process</span>';
-  var risks=(c.risks&&c.risks.length)?c.risks.map(function(r){return '<div class="rtag">'+r.t+(r.x?(' <b>'+r.x+'</b>'):'')+'</div>';}).join(''):'<span class="sub">no open risk mapped</span>';
-  var ctrls=(c.ctrls&&c.ctrls.length)?c.ctrls.map(function(x){return '<span class="ctag">'+x+'</span>';}).join(''):'<span class="sub">controls determined at analysis</span>';
-  var badge=c.tier?('<span class="cj-badge">Crown jewel · '+c.tier+(c.score?(' · '+c.score):'')+'</span>'):'';
-  return '<div class="chain-card"><div class="chain-flow">'+
-    '<div class="chain-step"><div class="cs-k">① Business process</div><div class="cs-v">'+procs+'</div></div>'+
-    '<div class="chain-step"><div class="cs-k">② Application that runs it</div><div class="cs-v">'+c.asset+badge+'</div></div>'+
-    '<div class="chain-step"><div class="cs-k">③ Risk on the application</div><div class="cs-v">'+risks+'</div></div>'+
-    '<div class="chain-step"><div class="cs-k">④ Controls on the risk</div><div class="cs-v">'+ctrls+'</div></div>'+
-    '</div>'+(c.why?('<div class="cj-why"><b>Why it’s a crown jewel:</b> '+c.why+'</div>'):'')+'</div>';
+function procCard(p){
+  var apps=(p.apps&&p.apps.length)?p.apps.map(function(a){return '<span class="app-chip'+(a.cj?' cj':'')+'"'+(a.why?(' title="'+String(a.why).replace(/"/g,'')+'"'):'')+'>'+a.name+(a.cj?(' ⬥ '+(a.tier||'crown jewel')):'')+'</span>';}).join(''):'<span class="sub">no application mapped</span>';
+  var meta=[];if(p.risk)meta.push('Top risk: <span class="rtag">'+p.risk+'</span>');if(p.ctrls&&p.ctrls.length)meta.push('Controls: '+p.ctrls.slice(0,4).map(function(c){return '<span class="ctag">'+c+'</span>';}).join(''));
+  var whyList=(p.apps||[]).filter(function(a){return a.cj&&a.why;});
+  var why=whyList.length?('<div class="cj-why"><b>Why crown jewel:</b> '+whyList.map(function(a){return a.name+' — '+a.why;}).join(' · ')+'</div>'):'';
+  return '<div class="chain-card"><div class="proc-h"><span class="proc-n">'+p.name+'</span>'+(p.crit?'<span class="proc-crit">'+p.crit+'</span>':'')+(p.exposure?'<span class="proc-exp">'+p.exposure+' exposure</span>':'')+'</div>'+
+    '<div class="proc-apps"><span class="cs-k">Applications that run it →</span> '+apps+'</div>'+
+    (meta.length?'<div class="proc-meta">'+meta.join(' &nbsp;·&nbsp; ')+'</div>':'')+why+'</div>';
 }
 /* CEO "which business processes carry the risk" — real per-process exposure from
    /summary (process_exposure), ranked. Keeps illustrative bars until live. */
@@ -484,13 +498,28 @@ function renderProcBars(){
     return '<div class="bar-row"><div class="bar-lbl claim" data-ev="procexpo">'+lbl+' <span class="fx">ƒ</span></div><div class="bar-track"><div class="bar-fill '+cls+'" style="width:'+pct+'%"></div></div><div class="bar-val">'+usd(p.exposure_usd)+'</div></div>';
   }).join('')+'</div>';
 }
+/* CIO "which systems carry the business" — the crown-jewel systems, ranked by
+   $/hr of downtime (from /summary resilience.systems). Illustrative until live. */
+function renderCioSystems(){
+  var host=document.getElementById('cioSystems');if(!host)return;
+  var sy=LIVE&&LIVE.resilience&&LIVE.resilience.systems;if(!sy||!sy.length)return;
+  var withHr=sy.filter(function(s){return s.per_hr>0;});var list=withHr.length?withHr:sy;
+  var max=list[0].per_hr||list[0].exposure_usd||1;
+  host.innerHTML='<div class="card">'+list.map(function(s){
+    var basis=s.per_hr>0?s.per_hr:(s.exposure_usd||0);var pct=Math.max(8,Math.round(basis/max*100));
+    var rec=s.recovery_hours!=null?(s.recovery_hours>=24?(Math.round(s.recovery_hours/2.4)/10+' days'):(s.recovery_hours+' hrs')):'recovery n/a';
+    var lbl=s.name+(s.per_hr>0?(' ('+usd(s.per_hr)+'/hr)'):'')+(s.crown_jewel?' <span class="cj-badge" style="margin-left:6px">crown jewel</span>':'');
+    return '<div class="bar-row"><div class="bar-lbl claim" data-ev="recovery">'+lbl+' <span class="fx">ƒ</span></div><div class="bar-track"><div class="bar-fill '+(s.crown_jewel?'hot':'')+'" style="width:'+pct+'%"></div></div><div class="bar-val">'+rec+'</div></div>';
+  }).join('')+'</div>';
+}
 function renderChain(){
   var host=document.getElementById('cjchain');if(!host)return;
-  var live=chainFromGraph();var chain=(live&&live.length)?live:ILLU_CHAIN;
+  var live=chainByProcess();var chain=(live&&live.length)?live:ILLU_PROC;
+  var cjCount=chain.reduce(function(s,p){return s+((p.apps||[]).filter(function(a){return a.cj;}).length);},0);
   var note=(live&&live.length)
-    ? '<div class="cn" style="margin-bottom:12px">● <b style="color:var(--good)">Live</b> — drawn from the process→application links you mapped at onboarding, the risks on each application, and the crown-jewel scoring engine.</div>'
-    : '<div class="cn" style="margin-bottom:12px">◐ <b style="color:var(--warn)">Illustrative</b> — an example of the chain. Map your applications to their processes at onboarding to see your own.</div>';
-  host.innerHTML=note+'<div class="chain">'+chain.map(chainCard).join('')+'</div>';
+    ? '<div class="cn" style="margin-bottom:12px">● <b style="color:var(--good)">Live</b> — your <b>'+chain.length+'</b> business '+(chain.length===1?'process':'processes')+', the applications that run each, and which are crown jewels (<b>'+cjCount+'</b>). Chain: process → application → risk → control.</div>'
+    : '<div class="cn" style="margin-bottom:12px">◐ <b style="color:var(--warn)">Illustrative</b> — an example. Map your processes and applications at onboarding to see your own.</div>';
+  host.innerHTML=note+'<div class="chain">'+chain.map(procCard).join('')+'</div>';
 }
 
 function selectSeat(seat){document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===seat);});render(seat);if(!VOICE_MUTED)speakSeat(seat);}
