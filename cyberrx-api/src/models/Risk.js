@@ -90,7 +90,7 @@ class Risk {
         executive_owner, remediation_owner, evidence_owner,
         audit_evidence_required, audit_test_ids,
         description, likelihood
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
       RETURNING *`,
       [
         id, title, severity, status, organizationId,

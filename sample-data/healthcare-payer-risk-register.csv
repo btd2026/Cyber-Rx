@@ -1,0 +1,28 @@
+title,severity,asset,process,exposure,likelihood,status,owner
+Ransomware encrypting the claims adjudication platform,Critical,Claims Adjudication Platform,Claims Intake and Adjudication,$52M,High,open,SecOps
+PHI data breach via member portal account takeover,Critical,Member Portal,Contact Center Member Support,$34M,High,open,App Security
+Third-party BAA breach at pharmacy benefit manager (PBM),High,Pharmacy Benefits System,Pharmacy Benefits Coordination,$28M,Medium,mitigating,Vendor Risk
+Managed file-transfer (MOVEit-style) vendor compromise exposing member data,Critical,EDI Clearinghouse Gateway,Claims Intake and Adjudication,$41M,High,open,Vendor Risk
+Legacy mainframe claims interface end-of-life and unsupported,High,Mainframe Claims Interface,Claims Intake and Adjudication,$18M,Medium,open,Enterprise Architecture
+Cloud storage misconfiguration exposing PHI in the data warehouse,High,Enterprise Data Warehouse,Data Classification and PHI Discovery,$22M,Medium,mitigating,Cloud Security
+Prior-authorization AI model bias and lack of governance,Medium,Prior Authorization Engine,Prior Authorization Management,$8M,Medium,open,AI Governance
+Insider threat — privileged DBA exfiltration of member records,High,Enterprise Data Warehouse,Data Classification and PHI Discovery,$16M,Low,open,Insider Risk
+Business email compromise and fraudulent provider payments,High,Payment Gateway Integration,Premium Billing and Payment Processing,$12M,Medium,mitigating,SecOps
+Unpatched remote-access VPN appliance exploited,Critical,Remote Access Gateway,Enterprise Identity and Access Lifecycle,$30M,High,open,SecOps
+Provider portal credential stuffing and takeover,Medium,Provider Directory Portal,Provider Portal Access and Claims Inquiry,$6M,Medium,mitigating,App Security
+HIPAA Security Rule risk analysis overdue — control gaps,High,Governance and Compliance,Regulatory Compliance Evidence Management,$14M,Medium,open,GRC
+DDoS on member-facing services during open enrollment,Medium,Member Portal,Member Enrollment and Eligibility,$5M,Medium,accepted,Network Security
+Call recording and screen exposure of PHI in the contact center,Medium,Call Recording Platform,Contact Center Member Support,$7M,Medium,open,Data Security
+Telehealth platform vulnerability exposing encounter data,Medium,Telehealth Gateway,Care Management Case Coordination,$9M,Medium,mitigating,App Security
+Ransomware on the care management case-coordination platform,High,Care Management Platform,Care Management Case Coordination,$19M,Medium,open,SecOps
+Data poisoning of risk-adjustment analytics models,Medium,Actuarial Modeling Workspace,Risk Adjustment Data Submission,$6M,Low,open,AI Governance
+Phishing-driven credential theft against the identity provider,High,Identity Provider (Okta),Enterprise Identity and Access Lifecycle,$24M,High,mitigating,IAM Team
+Immutable-backup gap — recovery not proven for claims,High,Backup Infrastructure,Business Continuity and Disaster Recovery,$15M,Medium,open,Infrastructure
+Shadow IT and unmanaged SaaS holding member PHI,Medium,SaaS Environment,Data Classification and PHI Discovery,$8M,Medium,open,Cloud Security
+Medical-claims fraud via claims API abuse,Medium,Claims API Gateway,Claims Intake and Adjudication,$11M,Medium,mitigating,App Security
+Nation-state targeting of member SSNs in the data warehouse,High,Enterprise Data Warehouse,Data Classification and PHI Discovery,$26M,Low,open,Threat Intel
+Single cloud-region outage disrupts revenue operations,Medium,Cloud Platform,Business Continuity and Disaster Recovery,$10M,Low,accepted,Resilience
+Lost or stolen device with cached PHI,Low,Endpoint Fleet,Enterprise Identity and Access Lifecycle,$3M,Medium,mitigating,SecOps
+Terminated-employee access not revoked (orphaned accounts),Medium,Identity Provider (Okta),Enterprise Identity and Access Lifecycle,$5M,Medium,open,IAM Team
+Eligibility-verification service outage blocks enrollment,High,Eligibility Verification Service,Member Enrollment and Eligibility,$13M,Medium,open,SecOps
+Premium-billing tampering and financial misstatement,Medium,Premium Billing System,Premium Billing and Payment Processing,$9M,Low,open,GRC
