@@ -624,7 +624,38 @@ function renderGov(){
     '<div style="margin-top:8px">'+items.map(function(i){return govRow(i.k,i.v,i.ok);}).join('')+'</div>'+
     '<div class="cn" style="margin-top:8px">These are the exact governance disclosures Item 106(c) requires in your 10-K. Fill any gaps in onboarding to make this filing-ready.</div></div>';
 }
-function renderBoard(){renderStress();renderReadiness();renderThirdParty();renderGov();}
+function renderBoard(){renderStress();renderReadiness();renderThirdParty();renderGov();renderMateriality();}
+/* CLO materiality-determination workbench — a timed, evidenced determination.
+   Records material/not-material with the deciding leader + timestamp, then shows
+   the live SEC 4-business-day and binding-jurisdiction countdowns. The D&O defense. */
+function matKey(){return 'cyberrx_mat_'+orgId();}
+function loadMat(){try{return JSON.parse(localStorage.getItem(matKey())||'null');}catch(_){return null;}}
+function saveMat(d){try{if(d)localStorage.setItem(matKey(),JSON.stringify(d));else localStorage.removeItem(matKey());}catch(_){}}
+function addBusinessDays(ts,n){var d=new Date(ts),added=0;while(added<n){d.setDate(d.getDate()+1);var wd=d.getDay();if(wd!==0&&wd!==6)added++;}return d.getTime();}
+function countdown(msLeft){if(msLeft<=0)return '<b style="color:var(--crit)">elapsed</b>';var h=Math.floor(msLeft/3.6e6),d=Math.floor(h/24),hh=h%24;return d>0?('<b>'+d+'d '+hh+'h</b>'):('<b style="color:var(--warn)">'+hh+'h '+Math.floor((msLeft%3.6e6)/6e4)+'m</b>');}
+function renderMateriality(){
+  var host=document.getElementById('cloMateriality');if(!host)return;var m=loadMat();
+  var cloName=(seatNames()['clo']||SEAT_LABEL['clo']||'General Counsel');
+  if(!m){
+    host.innerHTML='<div class="card"><div class="ck">Materiality determination</div><div class="cn" style="margin-top:6px">When an incident occurs, record the board’s materiality call here — it starts the SEC 4-business-day clock and becomes the evidenced, timestamped record for your disclosure defense.</div>'+
+      '<div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap"><button class="wr-btn" style="background:var(--crit);border-color:var(--crit);color:#fff" data-mat="material">⚠ Material — start the clock</button><button class="wr-btn gh" data-mat="not">Not material — record &amp; close</button></div></div>';
+    host.querySelectorAll('[data-mat]').forEach(function(b){b.onclick=function(){saveMat({determination:b.dataset.mat,by:cloName,ts:Date.now(),basis:''});renderMateriality();};});
+    return;
+  }
+  var committed=m.determination==='material';
+  var secDeadline=addBusinessDays(m.ts,4);var secLeft=secDeadline-Date.now();
+  var lg=LIVE&&LIVE.legal;var bind=lg&&lg.binding;
+  var bindDeadline=bind&&bind.clock_hours?(m.ts+bind.clock_hours*3.6e6):null;var bindLeft=bindDeadline!=null?(bindDeadline-Date.now()):null;
+  var head=committed?'⚠ <b style="color:var(--crit)">Material</b> — disclosure clocks running':'✓ <b style="color:var(--good)">Not material</b> — recorded &amp; closed';
+  var clocks=committed?('<div style="display:flex;gap:24px;margin-top:14px;flex-wrap:wrap">'+
+    '<div><div class="cn">SEC Form 8-K (Item 1.05)</div><div style="font-size:16px">'+countdown(secLeft)+' left</div></div>'+
+    (bind?('<div><div class="cn">'+bind.jurisdiction+' — '+bind.obligation+'</div><div style="font-size:16px">'+countdown(bindLeft)+' left</div></div>'):'')+
+    '</div>'):'';
+  host.innerHTML='<div class="card"><div class="ck">Materiality determination · '+head+'</div>'+
+    '<div class="st-b" style="margin-top:8px;color:var(--ink-2)">Determined by <b style="color:#fff">'+m.by+'</b> ('+SEAT_LABEL['clo']+') · '+new Date(m.ts).toLocaleString()+'</div>'+clocks+
+    '<div style="margin-top:14px"><button class="wr-btn gh" style="padding:5px 12px;font-size:11.5px" data-matreset="1">Reopen / change determination</button></div></div>';
+  var rb=host.querySelector('[data-matreset]');if(rb)rb.onclick=function(){saveMat(null);renderMateriality();};
+}
 /* CRO: cyber on one scale beside the org's other principal risks (from /summary
    portfolio). Cyber is live; the other values are the CRO's ERM inputs. */
 function renderCroPortfolio(){

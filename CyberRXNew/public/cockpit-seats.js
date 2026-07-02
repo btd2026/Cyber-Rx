@@ -104,7 +104,7 @@ var SEATS = {
        {tag:'B · Ad-hoc at incident time',on:'Option B · Ad-hoc',osum:'no upfront work',pros:['No setup cost today'],cons:['High risk of missing the 4-day / 72-hour clock','Weaker legal defense on the materiality call','Filings drafted under time pressure']},
        {tag:'C · External breach counsel on retainer',on:'Option C · Retainer',osum:'counsel on call',pros:['Specialist breach counsel on demand','Privilege established before an incident'],cons:['Annual retainer cost','Slower first hours vs. a standing internal committee']}]}]))
    +sec('04','Is an incident material — and are we covered by contract?','The two calls the General Counsel owns beyond disclosure: the materiality determination (who signs, by when, on the record) and the contract/DPA obligations to customers.',
-     '<div class="cols">'
+     '<div id="cloMateriality" style="margin-bottom:16px"></div><div class="cols">'
      +kvcard('Materiality determination',[{k:'Threshold (reportable at)',v:'<span id="lvCloMateriality">$53M</span>',ev:'materiality'},{k:'Sign-off',v:'CFO · GC · CISO · CIO'},{k:'SEC clock once material',v:'4 business days',ev:'clock'},{k:'Evidenced &amp; logged',v:'Yes — D&amp;O defense',cls:'good',ev:'oversight'}])
      +kvcard('Customer contract / DPA obligations',[{k:'Contracts with notice clauses',v:'—',ev:'contracts'},{k:'Tightest customer deadline',v:'often 24–72h',ev:'contracts'},{k:'Class-action exposure',v:'<span id="lvCloLiability2">$22M</span>',cls:'warn',ev:'liability'},{k:'Status',v:'Add DPAs to quantify',cls:'warn'}])+'</div>')
   );}
