@@ -172,8 +172,9 @@ var SEATS = {
      '<div id="cjchain"></div>')
    +sec('03','How is security helping the business grow — and win deals?','Security is not only a cost that avoids loss — it is a sales accelerant. Here is the pipeline moving through security review, how fast we clear it, the certifications that are the price of admission in our market, and the trust we can sell. This is the growth side of the ledger.',
      '<div id="cisoGrowth"></div>')
-   +sec('04','Are our controls actually working?','We judge controls by the dollars of risk they remove — not by a maturity score. Here is what our controls have bought down over the last three years, and the live coverage streaming from your connected tools, with any gaps named.',
-     tiles([
+   +sec('04','Are our controls actually working — and is the program improving?','We judge controls by the dollars of risk they remove — not by a maturity score. Here is the program scorecard the board wants: expected loss over time, risk bought down, detection speed and crown-jewel coverage — plus the live control coverage streaming from your tools, with any gaps named.',
+     '<div id="cisoScorecard" style="margin-bottom:14px"></div>'
+     +tiles([
       {k:'Controls effectiveness',v:'$210M removed',ev:'controleff',note:'<span class="pill mod">modeled</span> risk bought down (not CMMI)'},
       {k:'Coverage from tools',v:'<span id="lvCovTile">99.4%</span>',ev:'coverage',note:'<span id="lvCovTileNote">live once your tools connect; gaps named &amp; costed</span>'}])
      +'<div id="cisoCoverage">'+kvcard('Coverage from connected tools <span class="pill mod">live once connected</span>',[{k:'Endpoint detection (EDR)',v:'98.1%',cls:'good'},{k:'Multi-factor (MFA)',v:'96% — 4% legacy',cls:'warn'},{k:'Privileged accounts managed',v:'60% — the driver',cls:'crit'},{k:'Phishing-prone rate',v:'3% (was 9%)',cls:'good'}])+'</div>')
