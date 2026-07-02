@@ -480,6 +480,13 @@ function applyLive(){if(!LIVE)return;var e=LIVE.economics||{},r=e.ratios||{},ap=
       if(ins.renewal){var cd=renewalDays(ins.renewal);setTxt('lvCfoRenewal',cd!=null?(cd+' days'):ins.renewal);}
     }
   }
+  // CRO seat — cyber vs appetite, transfer, concentration (all from the org's data)
+  if(ale>0){
+    setTxt('lvCroAle',usd(ale));setTxt('lvCroCyber',usd(ale));
+    if(ap&&ap.appetite){setTxt('lvCroAppetite',usd(ap.appetite));var acp=Math.round(ale/ap.appetite*100);setTxt('lvCroAppetitePct',acp+'% of allocated appetite');}
+    if(ins&&ins.transfer_efficiency!=null)setTxt('lvCroTransfer',Math.round(ins.transfer_efficiency*100)+'%');
+    var pe=LIVE.process_exposure;if(pe&&pe.length){var tot=pe.reduce(function(s,p){return s+(Number(p.exposure_usd)||0);},0);if(tot>0){var top=pe[0];setTxt('lvCroConc',Math.round(top.exposure_usd/tot*100)+'% in '+top.name);}}
+  }
   renderTrend();
   // CLO seat — legal liability (from records) + materiality + jurisdiction table.
   var lg=LIVE.legal;

@@ -116,18 +116,18 @@ var SEATS = {
   sub:'Cyber inside the enterprise risk portfolio: measured in the same currency as every other risk, tested for correlation and aggregation, tracked against appetite.',
   brief:'Cyber now sits on the same dollar scale as our other principal risks, and it is within appetite at sixty-eight million. The item to watch is correlation: a payments event couples with third-party and operational risk, and together they can breach appetite at the tail. Two decisions bring that back inside. Our emerging-risk radar flags A.I. decisioning and vendor concentration as the fastest movers.',
   body:function(){return (
-   sec('01','Where does cyber sit against appetite and our other risks?','One dollar scale for every principal risk.',
+   sec('01','Where does cyber sit against appetite and our other risks?','Cyber measured in the same dollars as every other principal risk — computed from your risk register and board appetite.',
      tiles([
-      {k:'Cyber vs. appetite',v:'$68M / $120M',cls:'good',ev:'appetite',note:'57% of allocated appetite'},
-      {k:'Concentration',v:'50% in payments',cls:'warn',ev:'proc-claims',note:'one process carries half the risk'},
-      {k:'Correlation flag',v:'2 risks',cls:'warn',ev:'correlation',note:'couples with third-party + operational'},
-      {k:'Risk transferred',v:'83%',ev:'transfer',note:'of the tail, via insurance'}]))
-   +sec('02','What could breach appetite, and what is rising fastest?','Aggregation at the tail, and an emerging-risk radar by velocity.',
-     bars([{l:'Credit / market',v:'$210M',pct:100},{l:'Operational',v:'$140M',pct:67},{l:'Cyber',v:'$68M',pct:32,cls:'hot'},{l:'Third-party',v:'$54M',pct:26},{l:'Compliance',v:'$30M',pct:14}])
+      {k:'Cyber vs. appetite',v:'<span id="lvCroAle">$68M</span> / <span id="lvCroAppetite">$120M</span>',cls:'good',ev:'appetite',note:'<span id="lvCroAppetitePct">57% of allocated appetite</span>'},
+      {k:'Concentration',v:'<span id="lvCroConc">50% in payments</span>',cls:'warn',ev:'procexpo',note:'one process carries most of the risk'},
+      {k:'Correlation flag',v:'2 risks',cls:'warn',ev:'correlation',note:'<span class="pill mod">modeled</span> couples with third-party + operational'},
+      {k:'Risk transferred',v:'<span id="lvCroTransfer">83%</span>',ev:'transfer',note:'of the tail, via insurance'}]))
+   +sec('02','What could breach appetite, and what is rising fastest?','Cyber on one scale beside your other principal risks. Your <b>cyber</b> figure is live; the other principal-risk values are your ERM inputs — <span class="pill mod">illustrative</span> until entered.',
+     bars([{l:'Credit / market',v:'$210M',pct:100},{l:'Operational',v:'$140M',pct:67},{l:'Cyber',v:'<span id="lvCroCyber">$68M</span>',pct:32,cls:'hot'},{l:'Third-party',v:'$54M',pct:26},{l:'Compliance',v:'$30M',pct:14}])
      +lists([
-      {c:'c',ic:'▲',t:'AI / automated decisioning — velocity high, adaptation forming',s:'+$8M this quarter and accelerating.'},
-      {c:'w',ic:'▲',t:'Third-party & cloud concentration — velocity high, adaptation partial',ev:'correlation',s:'One provider underpins three revenue systems.'},
-      {c:'b',ic:'◐',t:'Quantum / crypto obsolescence — velocity medium, planned',s:'Long-dated data exposed; migration staged.'}]))
+      {c:'c',ic:'▲',t:'<span class="pill mod">modeled</span> AI / automated decisioning — velocity high, adaptation forming',s:'Emerging-risk radar — refine with your risk team.'},
+      {c:'w',ic:'▲',t:'<span class="pill mod">modeled</span> Third-party &amp; cloud concentration — velocity high',ev:'vendor',s:'A single provider underpins multiple revenue systems.'},
+      {c:'b',ic:'◐',t:'<span class="pill mod">modeled</span> Quantum / crypto obsolescence — velocity medium, planned',s:'Long-dated data exposed; migration staged.'}]))
    +sec('03','What decision needs the CRO?','How we bring the correlated tail within appetite. Choosing one records to your ticketing system.',
      decisions([{n:1,q:'How do we bring the correlated tail within appetite?',sit:'A correlated payments + top-vendor event models at $205M — above the $180M enterprise tail. Three levers:',opts:[
        {rec:true,tag:'A · Reduce (fund PAM + DR)',on:'Option A · Reduce',osum:'$4.6M · removes $92M',pros:['Cuts likelihood and impact','De-correlates the payments path','Tail returns within appetite'],cons:['$4.6M capital']},
@@ -166,15 +166,15 @@ var SEATS = {
   body:function(){return (
    sec('01','Are we compromised — and what is driving our exposure?','Live status, and the dollar drivers each with a fix.',
      tiles([
-      {k:'Live threat status',v:'No active compromise',cls:'good',ev:'threatstatus',note:'312,400 events correlated · 0 matches'},
-      {k:'Top exposure driver',v:'$52M',cls:'crit',ev:'proc-claims',note:'privileged path to payments'},
-      {k:'Controls effectiveness',v:'$210M removed',ev:'controleff',note:'risk bought down over 3 yrs (not CMMI)'},
-      {k:'Coverage from tools',v:'99.4%',ev:'coverage',note:'live signals; gaps named &amp; costed'}]))
+      {k:'Live threat status',v:'No active compromise',cls:'good',ev:'threatstatus',note:'streams live from your SIEM/EDR once connected'},
+      {k:'Top exposure driver',v:'$52M',cls:'crit',ev:'proc-claims',note:'<span class="pill mod">modeled</span> privileged path to payments'},
+      {k:'Controls effectiveness',v:'$210M removed',ev:'controleff',note:'<span class="pill mod">modeled</span> risk bought down (not CMMI)'},
+      {k:'Coverage from tools',v:'99.4%',ev:'coverage',note:'live once your tools connect; gaps named &amp; costed'}]))
    +sec('02','Your crown jewels — and why','We map each business process to the applications that run it, then the risks and controls on each. That chain is what makes an application a crown jewel: the systems below are ranked by criticality — data sensitivity × exposure × the processes that depend on them.',
      '<div id="cjchain"></div>')
-   +sec('03','What is driving the $68M — and how good is our coverage?','Each driver carries a funded decision, so the list is a plan, not a backlog.',
+   +sec('03','What is driving the $68M — and how good is our coverage?','Each driver carries a funded decision, so the list is a plan, not a backlog. Coverage streams live from your connected tools.',
      bars([{l:'Privileged path → payments',v:'$52M',pct:100,cls:'hot',ev:'roicfo'},{l:'Recovery not yet proven',v:'$40M',pct:77,cls:'hot',ev:'recovery'},{l:'AI decisioning (new)',v:'$8M',pct:15},{l:'Third-party concentration',v:'$6M',pct:12,ev:'vendor'}])
-     +kvcard('Coverage from connected tools (live signals)',[{k:'Endpoint detection (EDR)',v:'98.1%',cls:'good'},{k:'Multi-factor (MFA)',v:'96% — 4% legacy',cls:'warn'},{k:'Privileged accounts managed',v:'60% — the driver',cls:'crit'},{k:'Phishing-prone rate',v:'3% (was 9%)',cls:'good'}]))
+     +kvcard('Coverage from connected tools <span class="pill mod">live once connected</span>',[{k:'Endpoint detection (EDR)',v:'98.1%',cls:'good'},{k:'Multi-factor (MFA)',v:'96% — 4% legacy',cls:'warn'},{k:'Privileged accounts managed',v:'60% — the driver',cls:'crit'},{k:'Phishing-prone rate',v:'3% (was 9%)',cls:'good'}]))
    +sec('04','What decision needs the CISO?','Where the next dollar of security spend goes. Choosing one records to your ticketing system.',
      decisions([{n:1,q:'Which control gap do we close first?',sit:'The biggest dollar driver is the privileged path into payments. Where do we direct the next dollar?',opts:[
        {rec:true,tag:'A · Privileged access (PAM)',on:'Option A · PAM',osum:'$1.4M · 37×',pros:['Closes the $52M driver','Highest return available','Improves board posture immediately'],cons:['$1.4M','3 weeks of IAM effort']},
