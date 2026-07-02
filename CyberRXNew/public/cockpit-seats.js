@@ -56,7 +56,7 @@ var SEATS = {
      tiles([
       {k:'Expected annual loss',v:'<span id="lvExpoCfo">$68M</span>',ev:'ale',note:'<span id="lvCfoPctRev">≈0.8% of revenue</span> · provisioned'},
       {k:'Value-at-Risk (95%)',v:'<span id="lvTailCfo">$180M</span>',cls:'warn',ev:'tail',note:'<span id="lvCfoPctEV">0.6% of enterprise value</span>'},
-      {k:'Return on security spend',v:'$1 → $9',ev:'roicfo',note:'<span class="pill mod">modeled</span> risk reduced per dollar'},
+      {k:'Return on security spend',v:'<span id="lvCfoRoiVal">$1 → $9</span>',ev:'roicfo',note:'<span id="lvCfoRoiNote"><span class="pill mod">modeled</span> risk reduced per dollar</span>'},
       {k:'Cost of inaction',v:'+$92M',cls:'warn',ev:'inaction',note:'<span class="pill mod">modeled</span> exposure on deferred decisions'}]))
    +sec('02','What would a bad year do to earnings?','Cyber loss in the terms only finance can put in front of the board — share of annual earnings, EPS impact, and revenue at risk per day of downtime. Computed from your net income, shares outstanding and downtime cost.',
      '<div id="cfoEarnings"><div class="card"><div class="cn">◐ Add net income (and shares outstanding, for EPS) in onboarding to translate cyber loss into earnings and EPS impact.</div></div></div>')
@@ -104,7 +104,7 @@ var SEATS = {
        {tag:'B · Ad-hoc at incident time',on:'Option B · Ad-hoc',osum:'no upfront work',pros:['No setup cost today'],cons:['High risk of missing the 4-day / 72-hour clock','Weaker legal defense on the materiality call','Filings drafted under time pressure']},
        {tag:'C · External breach counsel on retainer',on:'Option C · Retainer',osum:'counsel on call',pros:['Specialist breach counsel on demand','Privilege established before an incident'],cons:['Annual retainer cost','Slower first hours vs. a standing internal committee']}]}]))
    +sec('04','Is an incident material — and are we covered by contract?','The two calls the General Counsel owns beyond disclosure: the materiality determination (who signs, by when, on the record) and the contract/DPA obligations to customers.',
-     '<div class="cols">'
+     '<div id="cloMateriality" style="margin-bottom:16px"></div><div class="cols">'
      +kvcard('Materiality determination',[{k:'Threshold (reportable at)',v:'<span id="lvCloMateriality">$53M</span>',ev:'materiality'},{k:'Sign-off',v:'CFO · GC · CISO · CIO'},{k:'SEC clock once material',v:'4 business days',ev:'clock'},{k:'Evidenced &amp; logged',v:'Yes — D&amp;O defense',cls:'good',ev:'oversight'}])
      +kvcard('Customer contract / DPA obligations',[{k:'Contracts with notice clauses',v:'—',ev:'contracts'},{k:'Tightest customer deadline',v:'often 24–72h',ev:'contracts'},{k:'Class-action exposure',v:'<span id="lvCloLiability2">$22M</span>',cls:'warn',ev:'liability'},{k:'Status',v:'Add DPAs to quantify',cls:'warn'}])+'</div>')
   );}
@@ -123,7 +123,7 @@ var SEATS = {
       {k:'Correlation flag',v:'2 risks',cls:'warn',ev:'correlation',note:'<span class="pill mod">modeled</span> couples with third-party + operational'},
       {k:'Risk transferred',v:'<span id="lvCroTransfer">83%</span>',ev:'transfer',note:'of the tail, via insurance'}]))
    +sec('02','What could breach appetite, and what is rising fastest?','Cyber on one scale beside your other principal risks. Your <b>cyber</b> figure is live; the other principal-risk values are your ERM inputs — <span class="pill mod">illustrative</span> until entered.',
-     bars([{l:'Credit / market',v:'$210M',pct:100},{l:'Operational',v:'$140M',pct:67},{l:'Cyber',v:'<span id="lvCroCyber">$68M</span>',pct:32,cls:'hot'},{l:'Third-party',v:'$54M',pct:26},{l:'Compliance',v:'$30M',pct:14}])
+     '<div id="croPortfolio">'+bars([{l:'Credit / market',v:'$210M',pct:100},{l:'Operational',v:'$140M',pct:67},{l:'Cyber',v:'<span id="lvCroCyber">$68M</span>',pct:32,cls:'hot'},{l:'Third-party',v:'$54M',pct:26},{l:'Compliance',v:'$30M',pct:14}])+'</div>'
      +lists([
       {c:'c',ic:'▲',t:'<span class="pill mod">modeled</span> AI / automated decisioning — velocity high, adaptation forming',s:'Emerging-risk radar — refine with your risk team.'},
       {c:'w',ic:'▲',t:'<span class="pill mod">modeled</span> Third-party &amp; cloud concentration — velocity high',ev:'vendor',s:'A single provider underpins multiple revenue systems.'},
@@ -166,15 +166,15 @@ var SEATS = {
   body:function(){return (
    sec('01','Are we compromised — and what is driving our exposure?','Live status, and the dollar drivers each with a fix.',
      tiles([
-      {k:'Live threat status',v:'No active compromise',cls:'good',ev:'threatstatus',note:'streams live from your SIEM/EDR once connected'},
+      {k:'Live threat status',v:'<span id="lvThreatStatus">No active compromise</span>',cls:'good',ev:'threatstatus',note:'<span id="lvThreatNote">streams live from your SIEM/EDR once connected</span>'},
       {k:'Top exposure driver',v:'$52M',cls:'crit',ev:'proc-claims',note:'<span class="pill mod">modeled</span> privileged path to payments'},
       {k:'Controls effectiveness',v:'$210M removed',ev:'controleff',note:'<span class="pill mod">modeled</span> risk bought down (not CMMI)'},
-      {k:'Coverage from tools',v:'99.4%',ev:'coverage',note:'live once your tools connect; gaps named &amp; costed'}]))
+      {k:'Coverage from tools',v:'<span id="lvCovTile">99.4%</span>',ev:'coverage',note:'<span id="lvCovTileNote">live once your tools connect; gaps named &amp; costed</span>'}]))
    +sec('02','Your crown jewels — and why','We map each business process to the applications that run it, then the risks and controls on each. That chain is what makes an application a crown jewel: the systems below are ranked by criticality — data sensitivity × exposure × the processes that depend on them.',
      '<div id="cjchain"></div>')
    +sec('03','What is driving the $68M — and how good is our coverage?','Each driver carries a funded decision, so the list is a plan, not a backlog. Coverage streams live from your connected tools.',
      bars([{l:'Privileged path → payments',v:'$52M',pct:100,cls:'hot',ev:'roicfo'},{l:'Recovery not yet proven',v:'$40M',pct:77,cls:'hot',ev:'recovery'},{l:'AI decisioning (new)',v:'$8M',pct:15},{l:'Third-party concentration',v:'$6M',pct:12,ev:'vendor'}])
-     +kvcard('Coverage from connected tools <span class="pill mod">live once connected</span>',[{k:'Endpoint detection (EDR)',v:'98.1%',cls:'good'},{k:'Multi-factor (MFA)',v:'96% — 4% legacy',cls:'warn'},{k:'Privileged accounts managed',v:'60% — the driver',cls:'crit'},{k:'Phishing-prone rate',v:'3% (was 9%)',cls:'good'}]))
+     +'<div id="cisoCoverage">'+kvcard('Coverage from connected tools <span class="pill mod">live once connected</span>',[{k:'Endpoint detection (EDR)',v:'98.1%',cls:'good'},{k:'Multi-factor (MFA)',v:'96% — 4% legacy',cls:'warn'},{k:'Privileged accounts managed',v:'60% — the driver',cls:'crit'},{k:'Phishing-prone rate',v:'3% (was 9%)',cls:'good'}])+'</div>')
    +sec('04','What decision needs the CISO?','Where the next dollar of security spend goes. Choosing one records to your ticketing system.',
      decisions([{n:1,q:'Which control gap do we close first?',sit:'The biggest dollar driver is the privileged path into payments. Where do we direct the next dollar?',opts:[
        {rec:true,tag:'A · Privileged access (PAM)',on:'Option A · PAM',osum:'$1.4M · 37×',pros:['Closes the $52M driver','Highest return available','Improves board posture immediately'],cons:['$1.4M','3 weeks of IAM effort']},

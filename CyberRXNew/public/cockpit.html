@@ -252,7 +252,7 @@ function render(seat){
   h+='<div class="spine"><span class="lk">⛓ One source of truth</span><span class="num"><b id="lvSpineExpo">$68M</b> <span>expected annual loss ·</span> <b id="lvSpineTail">$180M</b> <span>tail</span></span><span class="arrow">the same number every seat sees — in the <b>'+SEAT_LABEL[seat]+'</b> lens ↓</span></div></div>';
   h+=s.body();
   document.getElementById('app').innerHTML=h;
-  wireChoose();renderInitiatives();renderChain();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();renderSignals();applyLive();window.scrollTo({top:0});
 }
 </script>
 <script src="cockpit-seats.js"></script>
@@ -510,8 +510,30 @@ function applyLive(){if(!LIVE)return;var e=LIVE.economics||{},r=e.ratios||{},ap=
     if(rs.top_vendor_blast)setTxt('lvVendor','1 vendor, '+(rs.top_vendor_blast.systems||[]).length+' systems');
     if(rs.tech_debt&&rs.tech_debt.exposure)setTxt('lvTechDebt',usd(rs.tech_debt.exposure));
   }}
+/* CISO live signals — real coverage / threat status from the org's connected
+   tools (/api/integrations/signals). Renders live values when present. */
+var SIGNALS=null;
+function sig(k){if(!SIGNALS)return null;var s=SIGNALS[k];return (s&&s.value!=null&&isFinite(s.value))?Number(s.value):null;}
+function renderSignals(){
+  if(!SIGNALS)return;
+  var oi=sig('open_incidents');
+  if(oi!=null){var el=document.getElementById('lvThreatStatus');if(el)el.textContent=oi>0?(oi+' open incident'+(oi>1?'s':'')):'No active compromise';
+    var n=document.getElementById('lvThreatNote');if(n)n.innerHTML='<span class="pill good">live</span> from your SIEM'+(sig('mttd_hrs')!=null?(' · MTTD '+sig('mttd_hrs')+'h'):'');}
+  var host=document.getElementById('cisoCoverage');var rows=[];
+  if(sig('edr_pct')!=null)rows.push({k:'Endpoint detection (EDR)',v:sig('edr_pct')+'%',cls:sig('edr_pct')>=95?'good':'warn'});
+  if(sig('mfa_pct')!=null)rows.push({k:'Multi-factor (MFA)',v:sig('mfa_pct')+'%',cls:sig('mfa_pct')>=95?'good':'warn'});
+  if(sig('pam_pct')!=null)rows.push({k:'Privileged accounts managed',v:sig('pam_pct')+'%',cls:sig('pam_pct')>=80?'good':'crit'});
+  if(sig('phishing_pct')!=null)rows.push({k:'Phishing-prone rate',v:sig('phishing_pct')+'%',cls:sig('phishing_pct')<=5?'good':'warn'});
+  if(sig('training_pct')!=null)rows.push({k:'Security-awareness training',v:sig('training_pct')+'%',cls:sig('training_pct')>=90?'good':'warn'});
+  if(host&&rows.length){host.innerHTML=kvcard('Coverage from connected tools <span class="pill good">live</span>',rows);
+    var pcts=['edr_pct','mfa_pct','pam_pct'].map(sig).filter(function(x){return x!=null;});
+    if(pcts.length){var avg=Math.round(pcts.reduce(function(s,x){return s+x;},0)/pcts.length);setTxt('lvCovTile',avg+'%');var tn=document.getElementById('lvCovTileNote');if(tn)tn.innerHTML='<span class="pill good">live</span> from '+pcts.length+' connected tool'+(pcts.length>1?'s':'');}
+  }
+}
+function loadSignals(){var base=apiBase(),o=orgId();if(!base||!o)return;
+  try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}}).catch(function(){});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderProcBars();renderCioSystems();renderBoard();renderEarnings();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderProcBars();renderCioSystems();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -624,7 +646,48 @@ function renderGov(){
     '<div style="margin-top:8px">'+items.map(function(i){return govRow(i.k,i.v,i.ok);}).join('')+'</div>'+
     '<div class="cn" style="margin-top:8px">These are the exact governance disclosures Item 106(c) requires in your 10-K. Fill any gaps in onboarding to make this filing-ready.</div></div>';
 }
-function renderBoard(){renderStress();renderReadiness();renderThirdParty();renderGov();}
+function renderBoard(){renderStress();renderReadiness();renderThirdParty();renderGov();renderMateriality();}
+/* CLO materiality-determination workbench — a timed, evidenced determination.
+   Records material/not-material with the deciding leader + timestamp, then shows
+   the live SEC 4-business-day and binding-jurisdiction countdowns. The D&O defense. */
+function matKey(){return 'cyberrx_mat_'+orgId();}
+function loadMat(){try{return JSON.parse(localStorage.getItem(matKey())||'null');}catch(_){return null;}}
+function saveMat(d){try{if(d)localStorage.setItem(matKey(),JSON.stringify(d));else localStorage.removeItem(matKey());}catch(_){}}
+function addBusinessDays(ts,n){var d=new Date(ts),added=0;while(added<n){d.setDate(d.getDate()+1);var wd=d.getDay();if(wd!==0&&wd!==6)added++;}return d.getTime();}
+function countdown(msLeft){if(msLeft<=0)return '<b style="color:var(--crit)">elapsed</b>';var h=Math.floor(msLeft/3.6e6),d=Math.floor(h/24),hh=h%24;return d>0?('<b>'+d+'d '+hh+'h</b>'):('<b style="color:var(--warn)">'+hh+'h '+Math.floor((msLeft%3.6e6)/6e4)+'m</b>');}
+function renderMateriality(){
+  var host=document.getElementById('cloMateriality');if(!host)return;var m=loadMat();
+  var cloName=(seatNames()['clo']||SEAT_LABEL['clo']||'General Counsel');
+  if(!m){
+    host.innerHTML='<div class="card"><div class="ck">Materiality determination</div><div class="cn" style="margin-top:6px">When an incident occurs, record the board’s materiality call here — it starts the SEC 4-business-day clock and becomes the evidenced, timestamped record for your disclosure defense.</div>'+
+      '<div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap"><button class="wr-btn" style="background:var(--crit);border-color:var(--crit);color:#fff" data-mat="material">⚠ Material — start the clock</button><button class="wr-btn gh" data-mat="not">Not material — record &amp; close</button></div></div>';
+    host.querySelectorAll('[data-mat]').forEach(function(b){b.onclick=function(){saveMat({determination:b.dataset.mat,by:cloName,ts:Date.now(),basis:''});renderMateriality();};});
+    return;
+  }
+  var committed=m.determination==='material';
+  var secDeadline=addBusinessDays(m.ts,4);var secLeft=secDeadline-Date.now();
+  var lg=LIVE&&LIVE.legal;var bind=lg&&lg.binding;
+  var bindDeadline=bind&&bind.clock_hours?(m.ts+bind.clock_hours*3.6e6):null;var bindLeft=bindDeadline!=null?(bindDeadline-Date.now()):null;
+  var head=committed?'⚠ <b style="color:var(--crit)">Material</b> — disclosure clocks running':'✓ <b style="color:var(--good)">Not material</b> — recorded &amp; closed';
+  var clocks=committed?('<div style="display:flex;gap:24px;margin-top:14px;flex-wrap:wrap">'+
+    '<div><div class="cn">SEC Form 8-K (Item 1.05)</div><div style="font-size:16px">'+countdown(secLeft)+' left</div></div>'+
+    (bind?('<div><div class="cn">'+bind.jurisdiction+' — '+bind.obligation+'</div><div style="font-size:16px">'+countdown(bindLeft)+' left</div></div>'):'')+
+    '</div>'):'';
+  host.innerHTML='<div class="card"><div class="ck">Materiality determination · '+head+'</div>'+
+    '<div class="st-b" style="margin-top:8px;color:var(--ink-2)">Determined by <b style="color:#fff">'+m.by+'</b> ('+SEAT_LABEL['clo']+') · '+new Date(m.ts).toLocaleString()+'</div>'+clocks+
+    '<div style="margin-top:14px"><button class="wr-btn gh" style="padding:5px 12px;font-size:11.5px" data-matreset="1">Reopen / change determination</button></div></div>';
+  var rb=host.querySelector('[data-matreset]');if(rb)rb.onclick=function(){saveMat(null);renderMateriality();};
+}
+/* CRO: cyber on one scale beside the org's other principal risks (from /summary
+   portfolio). Cyber is live; the other values are the CRO's ERM inputs. */
+function renderCroPortfolio(){
+  var host=document.getElementById('croPortfolio');if(!host)return;var p=LIVE&&LIVE.portfolio;
+  if(!p||!p.has_data)return; // keep illustrative until ERM values are entered
+  var rows=[{l:'Credit / market',v:p.creditMarket},{l:'Operational',v:p.operational},{l:'Cyber',v:p.cyber,cyber:true},{l:'Third-party',v:p.thirdParty},{l:'Compliance',v:p.compliance}]
+    .filter(function(r){return r.v!=null&&r.v>0;}).sort(function(a,b){return b.v-a.v;});
+  if(!rows.length)return;var max=rows[0].v||1;
+  host.innerHTML='<div class="card">'+rows.map(function(r){var pct=Math.max(6,Math.round(r.v/max*100));return '<div class="bar-row"><div class="bar-lbl">'+r.l+'</div><div class="bar-track"><div class="bar-fill '+(r.cyber?'hot':'')+'" style="width:'+pct+'%"></div></div><div class="bar-val">'+usd(r.v)+'</div></div>';}).join('')+'</div>';
+}
 /* CFO: cyber loss translated into earnings / EPS / revenue-at-risk (from /summary
    earnings — net income, shares outstanding, downtime cost). */
 function renderEarnings(){
@@ -637,6 +700,15 @@ function renderEarnings(){
   if(!cards.length)return;
   cards=cards.slice(0,4);
   host.innerHTML='<div class="grid'+(cards.length>=4?'4':'3')+'">'+cards.map(function(c){return '<div class="card"><div class="ck">'+c.k+'</div><div class="cv" style="font-size:22px;margin-top:6px'+(c.warn?';color:var(--warn)':'')+'">'+c.v+'</div></div>';}).join('')+'</div>';
+}
+/* CFO return-on-spend — MEASURED once real posture history exists: risk removed
+   since baseline ÷ annual security budget. Stays modeled until ≥2 snapshots. */
+function renderRoi(){
+  var e=LIVE&&LIVE.economics,t=LIVE&&LIVE.trend;if(!e||!t||t.length<2||!e.budget)return;
+  var reduced=(Number(t[0].ale)||0)-(Number(t[t.length-1].ale)||0);if(reduced<=0||e.budget<=0)return;
+  var roi=reduced/e.budget;
+  setTxt('lvCfoRoiVal','$1 → $'+(roi>=1?roi.toFixed(1):roi.toFixed(2)));
+  var note=document.getElementById('lvCfoRoiNote');if(note)note.innerHTML='<span class="pill good">measured</span> '+usd(reduced)+' risk removed ÷ '+usd(e.budget)+' spend';
 }
 /* CIO "which systems carry the business" — the crown-jewel systems, ranked by
    $/hr of downtime (from /summary resilience.systems). Illustrative until live. */
@@ -663,7 +735,7 @@ function renderChain(){
 
 function selectSeat(seat){document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===seat);});render(seat);if(!VOICE_MUTED)speakSeat(seat);}
 document.querySelectorAll('.seat').forEach(function(b){b.addEventListener('click',function(){selectSeat(b.dataset.seat);});});
-render('ceo');loadLive();
+render('ceo');loadLive();loadSignals();
 
 /* ---- Advisor voice: speak the seat's verdict via the parent (autoplay-safe) ---- */
 var VOICE_MUTED=true;

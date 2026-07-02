@@ -79,6 +79,7 @@ router.post('/ingest', optionalJWT, async (req, res) => {
       },
       budget: money(b.budget),
       dataRecords: money(b.dataRecords),
+      principalRisks: (function () { const p = b.principalRisks || {}; return { creditMarket: money(p.creditMarket), operational: money(p.operational), thirdParty: money(p.thirdParty), compliance: money(p.compliance) }; })(),
       industry: b.industry || null,
       regions: Array.isArray(b.regions) ? b.regions : (b.regions ? [b.regions] : []),
     };
