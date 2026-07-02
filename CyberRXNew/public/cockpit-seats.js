@@ -168,26 +168,21 @@ var SEATS = {
   body:function(){return (
    sec('01','Are we under attack right now?','The first question every morning — is anything on fire? This is your live operating picture: active incidents, the health of your security tools, how much of the attacker playbook (MITRE ATT&CK) you can see, and any key-vendor trouble — each with what the team is doing about it. If an incident is confirmed, the War Room opens here.',
      '<div id="cisoWarRoom" style="margin-bottom:14px"></div><div id="cisoOps"></div>')
-   +sec('02','What are we protecting — and what is each worth?','Before controls or spend, the thing that matters: your crown jewels — the systems whose loss would hurt the business most. Each shows today’s dollar exposure, its top open risk, the data it holds, how exposed it is to attack, and how fast it recovers.',
+   +sec('02','What are we protecting — and what is each worth?','Before controls or spend, the thing that matters: your crown jewels — the systems whose loss would hurt the business most. Each shows the transactions and dollars it carries every day, today’s open-risk exposure, how exposed it is to attack, and how fast it recovers — so exposure lives here, on the assets themselves.',
      '<div id="cjchain"></div>')
-   +sec('03','What is driving our exposure — and in dollars?','Our expected annual loss, decomposed. Every driver is a specific, named weakness with a dollar figure and a funded fix — so this reads as a plan, not a backlog. It is the same number the board and CFO see.',
-     tiles([
-      {k:'Expected annual loss',v:'<span id="lvExpoCiso">$68M</span>',ev:'ale',note:'the one number that rolls up to the board'},
-      {k:'Top exposure driver',v:'$52M',cls:'crit',ev:'proc-claims',note:'<span class="pill mod">modeled</span> privileged path to payments'}])
-     +bars([{l:'Privileged path → payments',v:'$52M',pct:100,cls:'hot',ev:'roicfo'},{l:'Recovery not yet proven',v:'$40M',pct:77,cls:'hot',ev:'recovery'},{l:'AI decisioning (new)',v:'$8M',pct:15},{l:'Third-party concentration',v:'$6M',pct:12,ev:'vendor'}]))
-   +sec('04','Are our controls actually working?','We judge controls by the dollars of risk they remove — not by a maturity score. Here is what our controls have bought down over the last three years, and the live coverage streaming from your connected tools, with any gaps named.',
+   +sec('03','Are our controls actually working?','We judge controls by the dollars of risk they remove — not by a maturity score. Here is what our controls have bought down over the last three years, and the live coverage streaming from your connected tools, with any gaps named.',
      tiles([
       {k:'Controls effectiveness',v:'$210M removed',ev:'controleff',note:'<span class="pill mod">modeled</span> risk bought down (not CMMI)'},
       {k:'Coverage from tools',v:'<span id="lvCovTile">99.4%</span>',ev:'coverage',note:'<span id="lvCovTileNote">live once your tools connect; gaps named &amp; costed</span>'}])
      +'<div id="cisoCoverage">'+kvcard('Coverage from connected tools <span class="pill mod">live once connected</span>',[{k:'Endpoint detection (EDR)',v:'98.1%',cls:'good'},{k:'Multi-factor (MFA)',v:'96% — 4% legacy',cls:'warn'},{k:'Privileged accounts managed',v:'60% — the driver',cls:'crit'},{k:'Phishing-prone rate',v:'3% (was 9%)',cls:'good'}])+'</div>')
-   +sec('05','The fastest-changing risk: AI','As frontier models (e.g. Anthropic’s <b>Mythos</b>) make attackers faster at finding and exploiting weaknesses, here is our exposure, the dollars at stake, and the priority actions — alongside governance of the AI we run (NIST AI RMF · OWASP LLM).',
+   +sec('04','The fastest-changing risk: AI','As frontier models (e.g. Anthropic’s <b>Mythos</b>) make attackers faster at finding and exploiting weaknesses, here is our exposure, the dollars at stake, and the priority actions — alongside governance of the AI we run (NIST AI RMF · OWASP LLM).',
      '<div id="cisoAiRisk"><div class="card"><div class="cn">◐ Add AI-governance answers in onboarding and connect vulnerability management for live data.</div></div></div>')
-   +sec('06','What decision needs you now?','Where the next security dollar goes — a plain-English, costed choice. Pick one and it records to your ticketing system as a tracked project, so the decision and its owner are on the record.',
+   +sec('05','What decision needs you now?','Where the next security dollar goes — a plain-English, costed choice. Pick one and it records to your ticketing system as a tracked project, so the decision and its owner are on the record.',
      decisions([{n:1,q:'Which control gap do we close first?',sit:'The biggest dollar driver is the privileged path into payments. Where do we direct the next dollar?',opts:[
        {rec:true,tag:'A · Privileged access (PAM)',on:'Option A · PAM',osum:'$1.4M · 37×',pros:['Closes the $52M driver','Highest return available','Improves board posture immediately'],cons:['$1.4M','3 weeks of IAM effort']},
        {tag:'B · Prove recovery (DR test)',on:'Option B · DR',osum:'$3.2M · <6h recovery',pros:['Removes ~$40M of the recovery tail','Meets regulatory recovery expectations'],cons:['$3.2M — larger program than PAM','Leaves the #1 driver (the $52M privileged path) open']},
        {tag:'C · AI-decisioning governance',on:'Option C · AI governance',osum:'standard + oversight',pros:['Addresses the fastest-rising risk (+$8M/qtr)','Gets ahead of the AI board decision'],cons:['Does not touch the $52M top driver yet','Benefit is preventive, not immediate risk removed']}]}]))
-   +sec('07','What are we spending — and what is the return?','The live portfolio of funded cyber projects you manage with the CFO: budget, target ROI, and delivered-to-date — tracked to completion in your ticketing system.',
+   +sec('06','What are we spending — and what is the return?','The live portfolio of funded cyber projects you manage with the CFO: budget, target ROI, and delivered-to-date — tracked to completion in your ticketing system.',
      '<div id="initiatives-panel"></div>')
   );}
  }
