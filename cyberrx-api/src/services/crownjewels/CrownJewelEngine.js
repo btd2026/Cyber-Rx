@@ -110,6 +110,18 @@ async function run(orgId) {
     dataClasses,
     industry: (econIn && econIn.industry) || '',
   });
+  // Legal liability (CLO seat) — computed from the org's record count, not authored.
+  // Class-action / notification cost uses the IBM Cost of a Data Breach per-record
+  // figure; the regulatory ceiling comes from the binding jurisdiction penalty.
+  const records = num(econIn && econIn.dataRecords) || 0;
+  const COST_PER_RECORD = 165; // IBM Cost of a Data Breach — per-record average (configurable)
+  legal.liability = records > 0 ? {
+    records,
+    cost_per_record: COST_PER_RECORD,
+    class_action_exposure: records * COST_PER_RECORD,
+    regulatory_ceiling: legal.binding ? legal.binding.penalty : null,
+    basis: 'records × per-record cost (IBM Cost of a Data Breach) + regulatory penalty ceiling',
+  } : null;
 
   // Operational resilience (CIO/CRO seats) — assembled from per-process revenue
   // and per-asset vendor/EOL/recovery attributes captured at onboarding

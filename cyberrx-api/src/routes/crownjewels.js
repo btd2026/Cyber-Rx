@@ -78,6 +78,7 @@ router.post('/ingest', optionalJWT, async (req, res) => {
         retention: money(ins.retention), renewal: ins.renewal || null,
       },
       budget: money(b.budget),
+      dataRecords: money(b.dataRecords),
       industry: b.industry || null,
       regions: Array.isArray(b.regions) ? b.regions : (b.regions ? [b.regions] : []),
     };
