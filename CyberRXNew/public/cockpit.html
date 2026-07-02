@@ -563,7 +563,12 @@ function renderInitiatives(){
    Live from the growth block (CRM pipeline in security review, deal-review cycle
    time, certifications, trust reviews) captured at onboarding; illustrative until
    connected, always labeled. Reframes the seat from cost-center to growth-side. */
-function pctDrop(before,now){before=Number(before);now=Number(now);if(!(before>0)||!(now>=0))return null;return Math.round((1-now/before)*100);}
+function pctDrop(before,now){
+  if(before==null||now==null||before===''||now==='')return null; // Number(null)===0 would fabricate a drop
+  before=Number(before);now=Number(now);
+  if(!isFinite(before)||!isFinite(now)||before<=0||now<0)return null;
+  return Math.round((1-now/before)*100); // may be negative if the review got slower
+}
 function renderGrowth(){
   var host=document.getElementById('cisoGrowth');if(!host)return;
   var g=LIVE&&LIVE.growth;
@@ -575,7 +580,7 @@ function renderGrowth(){
     : '<div class="cn" style="margin-bottom:12px">◐ <b style="color:var(--warn)">Illustrative</b> — connect your CRM (Salesforce) and log deal security-reviews at onboarding to make this live. Example shown.</div>';
   var t='<div class="grid4">'+
     '<div class="card"><div class="ck">Pipeline in security review</div><div class="cv" style="font-size:22px;color:var(--good)">'+(Number(d.pipelineUsd)>0?usd(d.pipelineUsd):'—')+'</div><div class="cn">revenue that closes only if security clears it — you are the accelerant, not the tax</div></div>'+
-    '<div class="card"><div class="ck">Security-review cycle time</div><div class="cv" style="font-size:22px">'+((d.reviewBeforeWks!=null&&d.reviewNowWks!=null)?(d.reviewBeforeWks+' → <span style="color:var(--good)">'+d.reviewNowWks+'</span> wks'):'—')+'</div><div class="cn">'+(drop!=null?('<span class="pill good" style="font-size:10px">−'+drop+'%</span> deals clear faster'):'log review times to trend this')+'</div></div>'+
+    '<div class="card"><div class="ck">Security-review cycle time</div><div class="cv" style="font-size:22px">'+((d.reviewBeforeWks!=null&&d.reviewNowWks!=null)?(d.reviewBeforeWks+' → <span style="color:var(--good)">'+d.reviewNowWks+'</span> wks'):'—')+'</div><div class="cn">'+(drop==null?'log review times to trend this':drop>0?('<span class="pill good" style="font-size:10px">−'+drop+'%</span> deals clear faster'):drop<0?('<span class="pill warn" style="font-size:10px">+'+Math.abs(drop)+'%</span> slower — investigate'):'no change vs baseline')+'</div></div>'+
     '<div class="card"><div class="ck">Deals gated by security / qtr</div><div class="cv" style="font-size:22px">'+(Number(d.dealsGated)>0?d.dealsGated:'—')+'</div><div class="cn">enterprise deals that need your sign-off — your throughput is their velocity</div></div>'+
     '<div class="card"><div class="ck">Trust posture</div><div class="cv" style="font-size:22px;color:var(--good)">'+(d.trustReviews!=null?(d.trustReviews+' cleared'):'clean')+'</div><div class="cn">customer trust / due-diligence reviews passed — brand value worth more than the budget</div></div>'+
     '</div>';
