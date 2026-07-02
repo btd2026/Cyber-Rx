@@ -96,7 +96,7 @@
         </div>
         <button class="lbtn" id="toMfa">Continue</button>
         <div class="lsec">🔒 SSO + SCIM provisioning supported</div>
-        <div class="lsec" id="buildStamp" style="margin-top:8px;opacity:.7">build 2026-07-02c · exec cockpit v2 · evidence · full intake</div>
+        <div class="lsec" id="buildStamp" style="margin-top:8px;opacity:.7">build 2026-07-02d · NEW cockpit is now the OS view (evidence + full intake)</div>
       </div>
 
       <div class="lstep" id="step2">
@@ -137,7 +137,8 @@
   <iframe class="frame" id="fOS" allow="autoplay; speaker-selection"></iframe>
 <script>
   document.getElementById("fIntake").src="onboarding.html";
-  document.getElementById("fOS").src="os.html";
+  // The Operating System view is the new business-language executive cockpit.
+  document.getElementById("fOS").src="cockpit.html";
   // Pre-load voices so they're ready when the OS iframe requests speech
   if('speechSynthesis' in window){window.speechSynthesis.getVoices();window.speechSynthesis.onvoiceschanged=function(){window.speechSynthesis.getVoices();};}
 
