@@ -377,11 +377,27 @@
   // process criticality). The authoritative scoring runs on the engine at go-live.
   var MAP_EDIT_OPEN=false; // the adjust-mapping editor is collapsed by default
   function mtok(s){return String(s||'').toUpperCase().split(/[^A-Z0-9]+/).filter(function(t){return t.length>1;});}
+  // Name-similarity so an app links to the process it actually serves — not to
+  // every process that merely shares a data class (which mapped everything to
+  // everything and over-crowned the whole inventory).
+  function wordSet(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').split(' ').filter(function(w){return w.length>2&&['the','and','for','from','with','this','that','all','system','platform','service','services','management','data','application','app','core'].indexOf(w)<0;});}
+  function nameSim(a,b){var wa=wordSet(a),wb=wordSet(b);if(!wa.length||!wb.length)return 0;var hits=0;wa.forEach(function(w){wb.forEach(function(w2){if(w===w2)hits+=2;else if(w.length>3&&w2.length>3&&(w.indexOf(w2)>=0||w2.indexOf(w)>=0))hits+=1;});});return hits/Math.max(wa.length,wb.length);}
   function autoMap(app){
+    if(!PROC.length)return [];
     var at=mtok(app.data);
-    var m=PROC.filter(function(p){var pt=mtok(p.data);return at.some(function(t){return pt.indexOf(t)>=0;});}).map(function(p){return p.name;});
-    if(!m.length&&PROC.length){var rank={critical:0,high:1,medium:2,low:3};m=[PROC.slice().sort(function(x,y){var rx=rank[String(x.criticality||'').toLowerCase()],ry=rank[String(y.criticality||'').toLowerCase()];return (rx==null?2:rx)-(ry==null?2:ry);})[0].name];}
-    return m;
+    var scored=PROC.map(function(p){
+      var pt=mtok(p.data);var overlap=at.filter(function(t){return pt.indexOf(t)>=0;}).length;
+      return {name:p.name,s:nameSim(app.name,p.name)*2+nameSim(app.name,p.data)+overlap*0.35,crit:String(p.criticality||'').toLowerCase()};
+    }).sort(function(x,y){return y.s-x.s;});
+    var best=scored[0];
+    if(best&&best.s>=0.6){
+      var out=[best.name];
+      if(scored[1]&&scored[1].s>=0.6&&scored[1].s>=best.s*0.85)out.push(scored[1].name); // a close second only
+      return out;
+    }
+    // No confident match → attach to the single most-critical process (fallback).
+    var rank={critical:0,high:1,medium:2,low:3};
+    return [PROC.slice().sort(function(x,y){var rx=rank[String(x.criticality||'').toLowerCase()],ry=rank[String(y.criticality||'').toLowerCase()];return (rx==null?2:rx)-(ry==null?2:ry);})[0].name];
   }
   function dataRank(d){d=(d||'').toUpperCase();var s=0;if(/PHI/.test(d))s=Math.max(s,3);if(/PCI|CARDHOLDER/.test(d))s=Math.max(s,3);if(/CLASSIFIED|CUI/.test(d))s=Math.max(s,3);if(/FINANCIAL/.test(d))s=Math.max(s,2.5);if(/PII|PERSONAL/.test(d))s=Math.max(s,2);if(/IDENTITY|CREDENTIAL|SECRET/.test(d))s=Math.max(s,2.5);if(/INTERNAL|DOC|PUBLIC/.test(d)&&s===0)s=0.5;return s||1;}
   function exposureOf(host){host=(host||'').toLowerCase();if(/internet|public|saas|cloud|aws|azure|gcp|portal|web|api|external/.test(host))return {x:1,l:'internet-facing'};if(/on-?prem|single|legacy|mainframe/.test(host))return {x:0.7,l:'on-prem'};if(/server|business_app|cmdb/.test(host))return {x:0.6,l:'business app'};return {x:0.4,l:'internal'};}
@@ -406,7 +422,7 @@
       return {id:'A'+(i+1),n:a.name,host:a.host||'—',data:a.data||'—',pids:pids,score:score,why:why.join(' · '),cj:false};
     });
     var sorted=apps.slice().sort(function(x,y){return y.score-x.score;});
-    var cjN=Math.min(apps.length,Math.max(2,Math.ceil(apps.length*0.3)));
+    var cjN=Math.min(apps.length,12,Math.max(2,Math.ceil(apps.length*0.15)));
     sorted.forEach(function(a,i){a.cj=i<cjN&&a.score>0;});
     return {procs:procs,apps:apps};
   }

@@ -91,14 +91,19 @@
   .ctag{display:inline-block;font-size:11.5px;font-weight:600;color:var(--ink-2);background:var(--plane);border:1px solid var(--line);border-radius:7px;padding:3px 8px;margin:0 5px 5px 0}
   .rtag{color:var(--serious)}
   .cj-why{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}.cj-why b{color:var(--ink-2)}
-  .proc-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  .proc-h .proc-n{font-size:14.5px;font-weight:700}
-  .proc-h .proc-crit{font-size:10.5px;font-weight:700;color:var(--muted);border:1px solid var(--line-2);border-radius:99px;padding:2px 9px}
-  .proc-h .proc-exp{font-size:11.5px;font-weight:700;color:var(--serious,#e0a94a);margin-left:auto}
-  .proc-apps{margin-top:11px;font-size:12.5px;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
-  .app-chip{display:inline-block;font-size:11.5px;font-weight:600;color:var(--ink-2);background:var(--plane);border:1px solid var(--line);border-radius:7px;padding:4px 9px}
-  .app-chip.cj{color:#111;background:#e6c25a;border-color:#e6c25a;font-weight:700}
-  .proc-meta{margin-top:10px;font-size:12px;color:var(--muted);line-height:1.9}
+  /* crown-jewels ranked list */
+  .cjlist{display:flex;flex-direction:column;gap:10px}
+  .cjrow{display:flex;align-items:center;gap:16px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .cjrow .cjrank{font-size:13px;font-weight:800;color:var(--muted);width:26px;flex:none;text-align:center}
+  .cjrow .cjmain{flex:1;min-width:0}
+  .cjrow .cjname{font-size:14px;font-weight:700;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .cjrow .cjtier{font-size:10px;font-weight:800;color:#3a2f10;background:#e6c25a;border-radius:99px;padding:2px 9px;letter-spacing:.02em}
+  .cjrow .cjprocs{font-size:12px;color:var(--ink-2);margin-top:5px}
+  .cjrow .cjwhy{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.5}
+  .cjrow .cjscore{width:96px;flex:none;text-align:right}
+  .cjrow .cjscore-n{font-size:19px;font-weight:800;color:#e6c25a;line-height:1}
+  .cjrow .cjbar{height:5px;background:#2a2a28;border-radius:3px;margin-top:6px;overflow:hidden}
+  .cjrow .cjbar i{display:block;height:100%;background:#e6c25a;border-radius:3px}
   .qoq{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;margin-bottom:16px}
   .qtbl{width:100%;border-collapse:collapse;font-size:12.5px}.qtbl th{text-align:left;color:var(--muted);font-weight:600;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;padding:0 8px 9px 0;border-bottom:1px solid var(--line)}
   .qtbl td{padding:10px 8px 10px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}.qtbl tr:last-child td{border:none;font-weight:700}.qtbl .up{color:var(--good)}
@@ -437,53 +442,37 @@ function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!
    crown-jewel scoring from /summary). Falls back to an illustrative example so the
    method is always visible; the section header states which is showing. */
 var GRAPH=null;
-/* Grouped by business process (the "function"): each process shows the
-   applications that run it — crown jewels highlighted — plus the top risk and
-   controls. Compact (one card per process) and shows ALL processes. */
-var ILLU_PROC=[
-  {name:'Claims &amp; payments processing',exposure:'$34M',crit:'Critical',risk:'Ransomware → payments halt',ctrls:['Privileged access (PAM)','Immutable backups','Segmentation'],apps:[
-    {name:'Claims &amp; payments database',cj:true,tier:'Tier 1',why:'PHI + cardholder data · single point of failure · internet-reachable'},
-    {name:'Payment gateway',cj:false}]},
-  {name:'Member portal &amp; servicing',exposure:'$18M',crit:'High',risk:'Account takeover / data breach',ctrls:['MFA','Web app firewall','EDR'],apps:[
-    {name:'Member portal',cj:true,tier:'Tier 2',why:'Customer PII at scale · internet-facing'},
-    {name:'CRM',cj:false}]},
-  {name:'Policy administration',exposure:'$11M',crit:'High',risk:'Sensitive-data exposure',ctrls:['Access control','Encryption at rest'],apps:[
-    {name:'Policy admin system',cj:false},{name:'Document store',cj:false}]},
-  {name:'Trading &amp; settlement',exposure:'$8M',crit:'Medium',risk:'Settlement disruption',ctrls:['DR / recovery','Reconciliation'],apps:[
-    {name:'Settlement engine',cj:true,tier:'Tier 2',why:'Moves funds · time-critical recovery'}]}
+/* Clean, ranked list of the DISTINCT crown jewels (authoritative top set from
+   /summary), each with its tier, score, the process(es) it supports, and a
+   concise rationale. No per-process repetition. */
+var ILLU_CJ=[
+  {name:'Claims &amp; payments database',tier:'Tier 1',score:83,procs:['Claims &amp; payments processing'],why:'Holds PHI + cardholder data; single point of failure for a critical revenue process; internet-reachable.'},
+  {name:'Member portal',tier:'Tier 2',score:76,procs:['Member portal &amp; servicing'],why:'Customer PII at scale; internet-facing; high transaction volume.'},
+  {name:'Settlement engine',tier:'Tier 2',score:72,procs:['Trading &amp; settlement'],why:'Moves funds; time-critical recovery window.'},
+  {name:'Policy administration system',tier:'Tier 3',score:64,procs:['Policy administration'],why:'System of record for policies; sensitive data; high availability need.'}
 ];
-function chainByProcess(){
-  if(!GRAPH||!GRAPH.nodes||!GRAPH.nodes.length)return null;
-  var byId={};GRAPH.nodes.forEach(function(n){byId[n.id]=n;});
-  var appsOfProc={},riskOfAsset={},ctrlOfAsset={};
-  (GRAPH.edges||[]).forEach(function(e){
-    if(e.type==='supports'){(appsOfProc[e.source]=appsOfProc[e.source]||[]).push(byId[e.target]);}
-    else if(e.type==='threatens'){(riskOfAsset[e.target]=riskOfAsset[e.target]||[]).push(byId[e.source]);}
-    else if(e.type==='mitigates'||e.type==='applies_to'){(ctrlOfAsset[e.target]=ctrlOfAsset[e.target]||[]).push(byId[e.source]);}
+function tierLabel(t){t=String(t||'').toLowerCase().replace('tier','').trim();if(t==='1')return 'Tier 1';if(t==='2')return 'Tier 2';if(t==='3')return 'Tier 3';return t?('Tier '+t):'';}
+function cleanWhy(name,why){why=String(why||'').trim();var n=String(name||'').trim();
+  if(n)why=why.replace(new RegExp('^'+n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*[—:\\-]\\s*','i'),'');
+  return why;}
+function crownList(){
+  if(!(LIVE&&LIVE.crown_jewels&&LIVE.crown_jewels.length))return null;
+  var procsOfAsset={};
+  if(GRAPH&&GRAPH.nodes){var byId={};GRAPH.nodes.forEach(function(n){byId[n.id]=n;});
+    (GRAPH.edges||[]).forEach(function(e){if(e.type==='supports'){var an=byId[e.target],pn=byId[e.source];if(an&&pn){(procsOfAsset[an.label]=procsOfAsset[an.label]||[]).push(pn.label);}}});}
+  return LIVE.crown_jewels.map(function(c){
+    var seen={},procs=[];(procsOfAsset[c.name]||[]).forEach(function(p){if(!seen[p]){seen[p]=1;procs.push(p);}});
+    return {name:c.name,tier:tierLabel(c.tier),score:c.score,procs:procs.slice(0,3),moreProcs:Math.max(0,procs.length-3),why:cleanWhy(c.name,c.rationale)};
   });
-  var whyByName={};if(LIVE&&LIVE.crown_jewels)LIVE.crown_jewels.forEach(function(c){whyByName[c.name]=c;});
-  var expoByProc={};if(LIVE&&LIVE.process_exposure)LIVE.process_exposure.forEach(function(p){expoByProc[p.name]={usd:p.exposure_usd,crit:p.criticality};});
-  var procs=GRAPH.nodes.filter(function(n){return n.type==='process';});
-  var out=procs.map(function(pn){
-    var apps=(appsOfProc[pn.id]||[]).filter(Boolean);
-    var appObjs=apps.map(function(a){var cj=whyByName[a.label]||{};var isCj=(a.attrs&&a.attrs.crown_jewel_tier&&a.attrs.crown_jewel_tier!=='none');
-      return {name:a.label,cj:isCj,tier:isCj?('Tier '+a.attrs.crown_jewel_tier):null,why:cj.rationale||''};});
-    var risks=[],ctrls={};
-    apps.forEach(function(a){(riskOfAsset[a.id]||[]).forEach(function(r){if(r&&r.label)risks.push(r.label);});(ctrlOfAsset[a.id]||[]).forEach(function(c){if(c&&c.label)ctrls[c.label]=1;});});
-    var ex=expoByProc[pn.label]||{};
-    return {name:pn.label,exposure:ex.usd?usd(ex.usd):'',crit:ex.crit||(pn.attrs&&pn.attrs.criticality)||'',hasCj:appObjs.some(function(a){return a.cj;}),apps:appObjs,risk:risks[0]||'',ctrls:Object.keys(ctrls)};
-  });
-  out.sort(function(a,b){if(a.hasCj!==b.hasCj)return a.hasCj?-1:1;return 0;});
-  return out;
 }
-function procCard(p){
-  var apps=(p.apps&&p.apps.length)?p.apps.map(function(a){return '<span class="app-chip'+(a.cj?' cj':'')+'"'+(a.why?(' title="'+String(a.why).replace(/"/g,'')+'"'):'')+'>'+a.name+(a.cj?(' ⬥ '+(a.tier||'crown jewel')):'')+'</span>';}).join(''):'<span class="sub">no application mapped</span>';
-  var meta=[];if(p.risk)meta.push('Top risk: <span class="rtag">'+p.risk+'</span>');if(p.ctrls&&p.ctrls.length)meta.push('Controls: '+p.ctrls.slice(0,4).map(function(c){return '<span class="ctag">'+c+'</span>';}).join(''));
-  var whyList=(p.apps||[]).filter(function(a){return a.cj&&a.why;});
-  var why=whyList.length?('<div class="cj-why"><b>Why crown jewel:</b> '+whyList.map(function(a){return a.name+' — '+a.why;}).join(' · ')+'</div>'):'';
-  return '<div class="chain-card"><div class="proc-h"><span class="proc-n">'+p.name+'</span>'+(p.crit?'<span class="proc-crit">'+p.crit+'</span>':'')+(p.exposure?'<span class="proc-exp">'+p.exposure+' exposure</span>':'')+'</div>'+
-    '<div class="proc-apps"><span class="cs-k">Applications that run it →</span> '+apps+'</div>'+
-    (meta.length?'<div class="proc-meta">'+meta.join(' &nbsp;·&nbsp; ')+'</div>':'')+why+'</div>';
+function cjRow(c,i){
+  var maxScore=100;var pct=Math.round(Math.min(100,(c.score||60))/maxScore*100);
+  var procs=c.procs&&c.procs.length?('Supports: '+c.procs.join(' · ')+(c.moreProcs?(' +'+c.moreProcs+' more'):'')):'';
+  return '<div class="cjrow"><div class="cjrank">#'+(i+1)+'</div>'+
+    '<div class="cjmain"><div class="cjname">'+c.name+(c.tier?'<span class="cjtier">'+c.tier+'</span>':'')+'</div>'+
+    (procs?'<div class="cjprocs">'+procs+'</div>':'')+
+    (c.why?'<div class="cjwhy">'+c.why+'</div>':'')+'</div>'+
+    '<div class="cjscore"><div class="cjscore-n">'+(c.score!=null?c.score:'')+'</div><div class="cjbar"><i style="width:'+pct+'%"></i></div></div></div>';
 }
 /* CEO "which business processes carry the risk" — real per-process exposure from
    /summary (process_exposure), ranked. Keeps illustrative bars until live. */
@@ -524,12 +513,11 @@ function renderCioSystems(){
 }
 function renderChain(){
   var host=document.getElementById('cjchain');if(!host)return;
-  var live=chainByProcess();var chain=(live&&live.length)?live:ILLU_PROC;
-  var cjCount=chain.reduce(function(s,p){return s+((p.apps||[]).filter(function(a){return a.cj;}).length);},0);
+  var live=crownList();var list=(live&&live.length)?live:ILLU_CJ;
   var note=(live&&live.length)
-    ? '<div class="cn" style="margin-bottom:12px">● <b style="color:var(--good)">Live</b> — your <b>'+chain.length+'</b> business '+(chain.length===1?'process':'processes')+', the applications that run each, and which are crown jewels (<b>'+cjCount+'</b>). Chain: process → application → risk → control.</div>'
-    : '<div class="cn" style="margin-bottom:12px">◐ <b style="color:var(--warn)">Illustrative</b> — an example. Map your processes and applications at onboarding to see your own.</div>';
-  host.innerHTML=note+'<div class="chain">'+chain.map(procCard).join('')+'</div>';
+    ? '<div class="cn" style="margin-bottom:14px">● <b style="color:var(--good)">Live</b> — your <b>'+list.length+'</b> crown-jewel '+(list.length===1?'system':'systems')+', ranked by criticality (data sensitivity × exposure × the processes that depend on them). The systems whose loss would hurt the business most.</div>'
+    : '<div class="cn" style="margin-bottom:14px">◐ <b style="color:var(--warn)">Illustrative</b> — an example. Complete onboarding to see your own crown jewels.</div>';
+  host.innerHTML=note+'<div class="cjlist">'+list.map(cjRow).join('')+'</div>';
 }
 
 function selectSeat(seat){document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===seat);});render(seat);if(!VOICE_MUTED)speakSeat(seat);}
