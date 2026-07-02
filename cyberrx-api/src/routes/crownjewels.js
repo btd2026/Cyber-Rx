@@ -92,7 +92,15 @@ router.post('/ingest', optionalJWT, async (req, res) => {
       if (!p || !p.name) return;
       const rev = money(p.revenue != null ? p.revenue : p.rev);
       const rto = p.rto != null ? Number(String(p.rto).replace(/[^0-9.]/g, '')) : null;
-      if (rev || rto) resilience.processes[String(p.name).trim()] = { revenue: rev, rto: Number.isFinite(rto) ? rto : null };
+      // Optional: transactions/day (from the process file or an observability feed)
+      // and board-approved downtime tolerance ($ loss the board will tolerate for an
+      // outage of this process). Both power the CISO crown-jewel cards.
+      const txRaw = p.txPerDay != null ? p.txPerDay : p.tx;
+      const tx = txRaw != null ? Number(String(txRaw).replace(/[^0-9.]/g, '')) : null;
+      const tol = money(p.tolerance != null ? p.tolerance : p.downtimeTolerance);
+      if (rev || rto || tx || tol) resilience.processes[String(p.name).trim()] = {
+        revenue: rev, rto: Number.isFinite(rto) ? rto : null,
+        txPerDay: Number.isFinite(tx) && tx > 0 ? tx : null, tolerance: tol || null };
     });
     apps.forEach((a) => {
       if (!a || !a.name) return;

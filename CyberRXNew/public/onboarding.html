@@ -275,7 +275,7 @@
     <div class="srcchoice"><div class="srcopt sel" data-choice="proc" data-mode="upload"><div class="so-h">⤓ Upload a file</div><div class="so-d">CSV or TSV snapshot</div></div><div class="srcopt" data-choice="proc" data-mode="connect"><div class="so-h">⚡ Connect a system</div><div class="so-d">ServiceNow / BIA — live</div></div></div>
     <div id="procUpload">
       <div class="drop" id="dropProc"><div class="ic">⤓</div><div class="t">Upload your process list (CSV or TSV)</div><div class="s">click to browse or drop a file</div><input type="file" id="fileProc" accept=".csv,.tsv,.txt" style="display:none"></div>
-      <div class="tmpl">columns: <b>name</b>, revenue, rto, data, criticality &nbsp;·&nbsp; e.g. &nbsp;Claims processing, $2.1B, 6, "PHI, Financial", Critical</div>
+      <div class="tmpl">columns: <b>name</b>, revenue, rto, data, criticality, transactions_per_day, downtime_tolerance &nbsp;·&nbsp; e.g. &nbsp;Claims processing, $2.1B, 6, "PHI, Financial", Critical, 480000, $3M<br><span style="color:var(--muted)">transactions_per_day &amp; downtime_tolerance are optional — leave blank to pull volume from observability later and default tolerance to your board risk appetite.</span></div>
     </div>
     <div id="procConnect" style="display:none">
       <div class="conn-row"><div class="field" style="min-width:200px"><label>System</label><select id="procSys"><option>ServiceNow CMDB (business services)</option><option>SAP GRC — BIA</option><option>Apptio</option><option>Archer</option></select></div><div class="field" style="flex:1;min-width:220px"><label>Instance URL / API token</label><input id="procCred" placeholder="https://yourorg.service-now.com · token"></div><button class="conn-go" data-conn="proc">Connect &amp; save</button></div>
@@ -390,8 +390,8 @@
     f.addEventListener('change',function(){if(f.files[0])handler(f.files[0]);});
   }
   wireDrop('dropProc','fileProc',function(file){readFile(file,function(p){var h=p.headers;
-    var nc=findCol(h,['process_name','name','title','process']),rvc=findCol(h,['revenue','rev','value']),rtc=findCol(h,['rto','recovery']),dc=findCol(h,['data','domain','sensitivity','category']),cc=findCol(h,['criticality','crit','tier','priority']);
-    PROC=p.rows.map(function(c){return {name:get(c,nc)||c[0],revenue:get(c,rvc)||get(c,2),rto:get(c,rtc),data:get(c,dc)||get(c,1)||'Process',criticality:get(c,cc)};}).filter(function(x){return x.name;});
+    var nc=findCol(h,['process_name','name','title','process']),rvc=findCol(h,['revenue','rev','value']),rtc=findCol(h,['rto','recovery']),dc=findCol(h,['data','domain','sensitivity','category']),cc=findCol(h,['criticality','crit','tier','priority']),txc=findCol(h,['transactions_per_day','transactions','tx_per_day','daily_transactions','volume','throughput']),tlc=findCol(h,['downtime_tolerance','tolerance','board_tolerance','loss_tolerance']);
+    PROC=p.rows.map(function(c){return {name:get(c,nc)||c[0],revenue:get(c,rvc)||get(c,2),rto:get(c,rtc),data:get(c,dc)||get(c,1)||'Process',criticality:get(c,cc),tx:get(c,txc),tolerance:get(c,tlc)};}).filter(function(x){return x.name;});
     showRows(document.getElementById('resProc'),PROC,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.data||'')+(x.revenue?(' · '+x.revenue):'')+(x.rto?(' · RTO '+x.rto+'h'):'')+'</span></div>';});
     var b=document.getElementById('b4');b.dataset.n=PROC.length;badgeDone('b4');updateSummary();renderMap();});});
   wireDrop('dropApp','fileApp',function(file){readFile(file,function(p){var h=p.headers;
@@ -618,7 +618,7 @@
       appetite:mval('finAppetite'),budget:mval('finBudget'),dataRecords:mval('finRecords'),
       principalRisks:{creditMarket:mval('ermCredit'),operational:mval('ermOps'),thirdParty:mval('ermTP'),compliance:mval('ermComp')},
       insurance:{limit:mval('insLimit'),premium:mval('insPrem'),renewal:v('insRenew')},
-      processes:PROC.map(function(p){return {name:p.name,data:p.data,rev:p.revenue,revenue:p.revenue,rto:p.rto,criticality:p.criticality};}),
+      processes:PROC.map(function(p){return {name:p.name,data:p.data,rev:p.revenue,revenue:p.revenue,rto:p.rto,criticality:p.criticality,txPerDay:p.tx,tolerance:p.tolerance};}),
       apps:APP.map(function(a){return {name:a.name,host:a.host,data:a.data,vendor:a.vendor,eol:a.eol,recovery:a.recovery,processes:Array.isArray(a.processes)?a.processes:[]};}),
       risks:RISK.map(function(r){return {title:r.title,severity:r.severity,asset:r.asset,status:r.status,financial_exposure:r.exposure};}),
       initiatives:INIT,

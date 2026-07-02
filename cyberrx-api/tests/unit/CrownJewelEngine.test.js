@@ -4,7 +4,7 @@
 
 const Crit = require('../../src/services/crownjewels/CriticalityService');
 const Graph = require('../../src/services/crownjewels/GraphModelService');
-const { materialExposure, processExposure, normAsset, normRisk } = require('../../src/services/crownjewels/CrownJewelEngine');
+const { materialExposure, processExposure, crownEconomics, normAsset, normRisk } = require('../../src/services/crownjewels/CrownJewelEngine');
 
 describe('CriticalityService.scoreAsset', () => {
   test('internet-facing PHI asset, sole supporter of a critical process => crown jewel with explainable breakdown', () => {
@@ -100,6 +100,47 @@ describe('processExposure', () => {
     expect(pe).toHaveLength(1);
     expect(pe[0].name).toBe('Settlement');
     expect(pe[0].exposure_usd).toBe(8000000);
+  });
+});
+
+describe('crownEconomics', () => {
+  const processes = [
+    { id: 'P1', name: 'Claims' },
+    { id: 'P2', name: 'Settlement' },
+    { id: 'P3', name: 'Portal' },
+  ];
+  const scored = [
+    { id: 'A1', name: 'ClaimsDB', business_process_ids: ['P1', 'P2'] }, // supports two processes
+    { id: 'A2', name: 'SettleEngine', business_process_ids: ['P2'] }, // shares P2 with A1
+    { id: 'A3', name: 'PortalApp', business_process_ids: ['P3'] }, // isolated
+  ];
+  const rp = {
+    Claims: { revenue: 365000000, txPerDay: 480000, tolerance: 9000000 },
+    Settlement: { revenue: 73000000, txPerDay: 95000, tolerance: 5000000 },
+    Portal: { revenue: 0 },
+  };
+
+  test('daily value = Σ process revenue ÷ 365; tx/day summed; tolerance = most-binding', () => {
+    const e = crownEconomics(scored, processes, rp);
+    // A1 supports Claims ($1M/day) + Settlement ($0.2M/day) = $1.2M/day
+    expect(e.A1.daily_value_usd).toBe(1000000 + 200000);
+    expect(e.A1.tx_per_day).toBe(575000);
+    expect(e.A1.tolerance_usd).toBe(5000000); // min(9M, 5M)
+    expect(e.A1.tolerance_process).toBe('Settlement');
+  });
+
+  test('impact radius = other systems sharing a process; isolated system has none', () => {
+    const e = crownEconomics(scored, processes, rp);
+    expect(e.A1.impact_radius).toEqual(['SettleEngine']); // shares P2
+    expect(e.A2.impact_radius).toEqual(['ClaimsDB']);
+    expect(e.A3.impact_radius).toEqual([]);
+  });
+
+  test('missing economics degrade to null, not zero/NaN', () => {
+    const e = crownEconomics(scored, processes, rp);
+    expect(e.A3.daily_value_usd).toBeNull();
+    expect(e.A3.tx_per_day).toBeNull();
+    expect(e.A3.tolerance_usd).toBeNull();
   });
 });
 

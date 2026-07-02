@@ -168,6 +168,16 @@ async function run(orgId) {
   // "which business processes carry the risk?"). Derived from the org's inventory.
   const process_exposure = processExposure(scored, risks, processes).slice(0, 10);
 
+  // Per-crown-jewel operating economics for the CISO crown-jewel cards:
+  //  • daily_value_usd  — value of transactions processed per day (process annual
+  //    revenue ÷ 365, summed over the processes the system supports)
+  //  • tx_per_day       — transactions/day (from onboarding or an observability feed)
+  //  • tolerance_usd    — board-approved downtime tolerance for the most-binding
+  //    supporting process ($ loss tolerated before it breaches board appetite)
+  //  • impact_radius    — the other systems that share a business process with it
+  //    (the blast radius if it fails; from the process→system graph)
+  const cjEcon = crownEconomics(scored, processes, rp);
+
   // Named board stress scenario — a concrete "worst realistic day" derived from
   // the top crown jewel, its largest open risk, worst-case recovery, and the
   // binding regulatory clock. All from the org's own data (no invented figures).
@@ -254,6 +264,7 @@ async function run(orgId) {
         recovery_hours: (ra[a.name] && ra[a.name].recovery != null) ? Number(ra[a.name].recovery) : null,
         owner: a.owner || null,
         open_risk_count: risks.filter((r) => r.asset_id === a.id && (!r.status || String(r.status).toLowerCase() === 'open')).length,
+        ...(cjEcon[a.id] || {}),
       })),
       economics,
       earnings,
@@ -461,6 +472,44 @@ function processExposure(scoredAssets, risks, processes) {
   return Object.values(acc).filter((p) => p.exposure_usd > 0).sort((a, b) => b.exposure_usd - a.exposure_usd);
 }
 
+/**
+ * Per-crown-jewel operating economics for the CISO crown-jewel cards.
+ * @param {Array} scoredAssets  assets with {id,name,business_process_ids}
+ * @param {Array} processes     business processes ({id,name})
+ * @param {Object} rp           resilience.processes keyed by process NAME
+ *                              ({revenue, txPerDay, tolerance})
+ * @returns {Object} map assetId → {daily_value_usd, tx_per_day, tolerance_usd,
+ *                                  tolerance_process, impact_radius}
+ */
+function crownEconomics(scoredAssets, processes, rp) {
+  rp = rp || {};
+  const pidName = {}; (processes || []).forEach((p) => { pidName[p.id] = p.name; });
+  const assetsByPid = {};
+  (scoredAssets || []).forEach((a) => { (a.business_process_ids || []).forEach((pid) => { (assetsByPid[pid] = assetsByPid[pid] || []).push(a.name); }); });
+  const out = {};
+  (scoredAssets || []).forEach((a) => {
+    const pids = a.business_process_ids || [];
+    let daily = 0; let tx = 0; let tol = null; let tolProc = null;
+    pids.forEach((pid) => {
+      const info = rp[pidName[pid]] || {};
+      const rev = Number(info.revenue) || 0;
+      if (rev > 0) daily += rev / 365; // value of a day's transactions
+      const t = Number(info.txPerDay) || 0; if (t > 0) tx += t;
+      const tv = Number(info.tolerance) || 0;
+      if (tv > 0 && (tol == null || tv < tol)) { tol = tv; tolProc = pidName[pid]; } // most-binding
+    });
+    const radius = Array.from(new Set([].concat(...pids.map((pid) => assetsByPid[pid] || [])))).filter((n) => n !== a.name);
+    out[a.id] = {
+      daily_value_usd: daily > 0 ? Math.round(daily) : null,
+      tx_per_day: tx > 0 ? Math.round(tx) : null,
+      tolerance_usd: tol,
+      tolerance_process: tolProc,
+      impact_radius: radius.slice(0, 8),
+    };
+  });
+  return out;
+}
+
 function materialExposure(crownAssets, risks) {
   const cj = new Set(crownAssets.map((a) => a.id));
   let total = 0; const items = [];
@@ -481,4 +530,4 @@ function empty(orgId) {
     graph: { nodes: [], edges: [] }, assets: [] };
 }
 
-module.exports = { run, runPipeline, materialExposure, processExposure, normAsset, normRisk };
+module.exports = { run, runPipeline, materialExposure, processExposure, crownEconomics, normAsset, normRisk };

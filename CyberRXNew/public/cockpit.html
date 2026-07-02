@@ -140,6 +140,41 @@
   .cjm{display:flex;flex-direction:column;line-height:1.3}
   .cjm b{font-size:12.5px;font-weight:700;color:var(--ink-2)}.cjm.hot b{color:var(--crit)}.cjm.warn b{color:var(--warn)}.cjm.rtag b{color:var(--serious,#e0a94a);font-weight:600}
   .cjm i{font-size:9.5px;font-style:normal;color:var(--muted);letter-spacing:.03em;text-transform:uppercase;margin-top:1px}
+  /* crown-jewel cards — 2-column, per-system operating economics + incident panel */
+  .cjgridwrap{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:920px){.cjgridwrap{grid-template-columns:1fr}}
+  .cjcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:15px 17px;display:flex;flex-direction:column}
+  .cjcard.involved{border-color:var(--crit)}
+  .cjtop{display:flex;align-items:flex-start;gap:10px}
+  .cjtop .cjrank{font-size:12px;font-weight:800;color:var(--muted);margin-top:2px}
+  .cjtop .cjname{flex:1;font-size:14px;font-weight:700;display:flex;align-items:center;gap:9px;flex-wrap:wrap;min-width:0}
+  .cjtop .cjcrit{text-align:right;flex:none}
+  .cjtop .cjcrit b{font-size:17px;font-weight:800;color:#e6c25a;display:block;line-height:1}
+  .cjtop .cjcrit span{font-size:8px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+  .cjsupports{font-size:12px;color:var(--ink-2);margin-top:8px}.cjsupports b{color:var(--ink)}
+  .cjgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-top:12px}
+  .cjmet{display:flex;flex-direction:column;line-height:1.25}
+  .cjmet b{font-size:13.5px;font-weight:700;color:var(--ink)}.cjmet.hot b{color:var(--crit)}.cjmet.warn b{color:var(--warn)}.cjmet.good b{color:var(--good)}.cjmet.mut b{color:var(--muted);font-weight:600}
+  .cjmet i{font-size:9px;font-style:normal;color:var(--muted);letter-spacing:.03em;text-transform:uppercase;margin-top:2px}
+  .cjsub{font-size:11px;color:var(--muted);margin-top:11px;line-height:1.55}.cjsub b{color:var(--ink-2)}.cjsub .rk{color:var(--serious,#e0a94a)}
+  .cjcard .cjwhy{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.5}
+  .cjincident{margin-top:12px;border-top:1px solid var(--crit);padding-top:11px;border-radius:8px}
+  .cjih{font-size:12px;font-weight:800;color:var(--crit);letter-spacing:.02em}
+  .cjir{font-size:11px;color:var(--ink-2);margin-top:7px}
+  .cjchip{display:inline-block;font-size:10.5px;background:rgba(208,59,59,.16);color:#ff9b9b;border-radius:6px;padding:2px 8px;margin:4px 5px 0 0}
+  .cjloss-row{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;color:var(--ink-2);margin-top:11px}
+  .cjloss-row b{color:#fff;font-size:13px}.cjloss-row i{font-style:normal;color:var(--muted)}
+  .cjtolbar{height:12px;background:#2a2a28;border-radius:6px;overflow:hidden;margin-top:6px}
+  .cjtolbar i{display:block;height:100%;width:0;background:var(--warn);border-radius:6px;transition:width .5s linear}
+  .cjih-sub{font-size:10.5px;color:var(--muted);margin-top:8px;line-height:1.55}
+  .cjradius-tag{margin-top:11px;font-size:11px;color:var(--warn);border-top:1px solid var(--line);padding-top:9px}.cjradius-tag b{color:#fff}
+  .cjincident.p50 .cjtolbar i{background:var(--warn)}
+  .cjincident.p75 .cjtolbar i{background:var(--serious,#ec835a)}
+  .cjincident.p100 .cjtolbar i{background:var(--crit)}
+  .cjincident.p50{animation:cjblink 1.15s ease-in-out infinite}
+  .cjincident.p75{animation:cjblink .62s ease-in-out infinite}
+  .cjincident.p100{animation:cjblink .32s ease-in-out infinite}
+  @keyframes cjblink{0%,100%{box-shadow:inset 0 0 0 0 rgba(208,59,59,0);background:transparent}50%{box-shadow:inset 0 0 44px 0 rgba(208,59,59,.30);background:rgba(208,59,59,.06)}}
   .qoq{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;margin-bottom:16px}
   .qtbl{width:100%;border-collapse:collapse;font-size:12.5px}.qtbl th{text-align:left;color:var(--muted);font-weight:600;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;padding:0 8px 9px 0;border-bottom:1px solid var(--line)}
   .qtbl td{padding:10px 8px 10px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}.qtbl tr:last-child td{border:none;font-weight:700}.qtbl .up{color:var(--good)}
@@ -624,10 +659,10 @@ var GRAPH=null;
    /summary), each with its tier, score, the process(es) it supports, and a
    concise rationale. No per-process repetition. */
 var ILLU_CJ=[
-  {name:'Claims &amp; payments database',tier:'Tier 1',score:83,procs:['Claims &amp; payments processing'],why:'Holds PHI + cardholder data; single point of failure for a critical revenue process; internet-reachable.',exposure:34e6,topRisk:{title:'Ransomware → payments halt'},data:['PHI','PCI'],internet:true,recovery:74,riskCount:3},
-  {name:'Member portal',tier:'Tier 2',score:76,procs:['Member portal &amp; servicing'],why:'Customer PII at scale; internet-facing; high transaction volume.',exposure:18e6,topRisk:{title:'Account takeover / breach'},data:['PII'],internet:true,recovery:40,riskCount:2},
-  {name:'Settlement engine',tier:'Tier 2',score:72,procs:['Trading &amp; settlement'],why:'Moves funds; time-critical recovery window.',exposure:11e6,topRisk:{title:'Settlement disruption'},data:['Financial'],internet:false,recovery:28,riskCount:1},
-  {name:'Policy administration system',tier:'Tier 3',score:64,procs:['Policy administration'],why:'System of record for policies; sensitive data; high availability need.',exposure:5e6,topRisk:{title:'Data exposure'},data:['PII'],internet:false,recovery:12,riskCount:1}
+  {name:'Claims &amp; payments database',tier:'Tier 1',score:83,procs:['Claims &amp; payments processing'],why:'Holds PHI + cardholder data; single point of failure for a critical revenue process; internet-reachable.',exposure:34e6,topRisk:{title:'Ransomware → payments halt'},data:['PHI','PCI'],internet:true,recovery:74,riskCount:3,dailyValue:5.8e6,txPerDay:480000,tolerance:9e6,toleranceProc:'Claims &amp; payments processing',impactRadius:['Member portal','Settlement engine','EDI gateway']},
+  {name:'Member portal',tier:'Tier 2',score:76,procs:['Member portal &amp; servicing'],why:'Customer PII at scale; internet-facing; high transaction volume.',exposure:18e6,topRisk:{title:'Account takeover / breach'},data:['PII'],internet:true,recovery:40,riskCount:2,dailyValue:2.1e6,txPerDay:260000,tolerance:6e6,toleranceProc:'Member portal &amp; servicing',impactRadius:['Claims &amp; payments database','Eligibility service']},
+  {name:'Settlement engine',tier:'Tier 2',score:72,procs:['Trading &amp; settlement'],why:'Moves funds; time-critical recovery window.',exposure:11e6,topRisk:{title:'Settlement disruption'},data:['Financial'],internet:false,recovery:28,riskCount:1,dailyValue:3.4e6,txPerDay:95000,tolerance:5e6,toleranceProc:'Trading &amp; settlement',impactRadius:['Claims &amp; payments database']},
+  {name:'Policy administration system',tier:'Tier 3',score:64,procs:['Policy administration'],why:'System of record for policies; sensitive data; high availability need.',exposure:5e6,topRisk:{title:'Data exposure'},data:['PII'],internet:false,recovery:12,riskCount:1,dailyValue:0.9e6,txPerDay:40000,tolerance:3e6,toleranceProc:'Policy administration',impactRadius:['Member portal']}
 ];
 function tierLabel(t){t=String(t||'').toLowerCase().replace('tier','').trim();if(t==='1')return 'Tier 1';if(t==='2')return 'Tier 2';if(t==='3')return 'Tier 3';return t?('Tier '+t):'';}
 function cleanWhy(name,why){why=String(why||'').trim();var n=String(name||'').trim();
@@ -638,30 +673,82 @@ function crownList(){
   var procsOfAsset={};
   if(GRAPH&&GRAPH.nodes){var byId={};GRAPH.nodes.forEach(function(n){byId[n.id]=n;});
     (GRAPH.edges||[]).forEach(function(e){if(e.type==='supports'){var an=byId[e.target],pn=byId[e.source];if(an&&pn){(procsOfAsset[an.label]=procsOfAsset[an.label]||[]).push(pn.label);}}});}
+  // Fallback for daily transaction value: $/hr of downtime (from resilience) × 24.
+  var perHrByName={};((LIVE.resilience&&LIVE.resilience.systems)||[]).forEach(function(s){perHrByName[s.name]=s.per_hr||0;});
   return LIVE.crown_jewels.map(function(c){
     var seen={},procs=[];(procsOfAsset[c.name]||[]).forEach(function(p){if(!seen[p]){seen[p]=1;procs.push(p);}});
+    var daily=(c.daily_value_usd!=null&&c.daily_value_usd>0)?c.daily_value_usd:((perHrByName[c.name]||0)>0?Math.round(perHrByName[c.name]*24):null);
     return {name:c.name,tier:tierLabel(c.tier),score:c.score,procs:procs.slice(0,3),moreProcs:Math.max(0,procs.length-3),why:cleanWhy(c.name,c.rationale),
-      exposure:c.exposure_usd||0,topRisk:c.top_risk||null,data:c.data_classification||[],internet:!!c.internet_facing,recovery:c.recovery_hours,riskCount:c.open_risk_count||0};
+      exposure:c.exposure_usd||0,topRisk:c.top_risk||null,data:c.data_classification||[],internet:!!c.internet_facing,recovery:c.recovery_hours,riskCount:c.open_risk_count||0,
+      dailyValue:daily,txPerDay:(c.tx_per_day!=null&&c.tx_per_day>0)?c.tx_per_day:null,tolerance:(c.tolerance_usd!=null&&c.tolerance_usd>0)?c.tolerance_usd:null,toleranceProc:c.tolerance_process||null,
+      impactRadius:Array.isArray(c.impact_radius)?c.impact_radius:[]};
   });
 }
-function cjMetric(val,label,cls){return '<span class="cjm'+(cls?' '+cls:'')+'"><b>'+val+'</b><i>'+label+'</i></span>';}
+function cjMet(val,label,cls){return '<div class="cjmet'+(cls?' '+cls:'')+'"><b>'+val+'</b><i>'+label+'</i></div>';}
+function numCommas(n){return (Number(n)||0).toLocaleString('en-US');}
+/* Board downtime tolerance for this crown jewel — the process-level board-approved
+   figure when captured at onboarding, else the enterprise risk appetite. */
+function cjTolerance(c){if(c.tolerance)return c.tolerance;var ap=(LIVE&&LIVE.economics&&Number(LIVE.economics.appetite))||0;return ap>0?ap:null;}
+function cjToleranceSrc(c){return c.tolerance?('board tolerance · '+(c.toleranceProc||'process')):'board risk appetite (enterprise)';}
+/* Incident economics: as the outage runs, transaction value is lost each day it
+   lasts; we track cumulative loss against the board tolerance. Time is accelerated
+   (1 real second models 1 hour of outage) so the trajectory is visible in-session. */
+var SIM_HRS_PER_SEC=1;
+function incidentHrs(){return (typeof incidentActive!=='undefined'&&incidentActive&&wrStart)?Math.max(0,((Date.now()-wrStart)/1000)*SIM_HRS_PER_SEC):0;}
+function incidentDays(){return incidentHrs()/24;}
+function cjLoss(c){return Math.round((c.dailyValue||0)*incidentDays());}
+function cjTolPct(c){var tol=cjTolerance(c);if(!tol||!(c.dailyValue>0))return 0;return (cjLoss(c)/tol)*100;}
+function tolPhase(pct){return pct>=100?100:pct>=75?75:pct>=50?50:0;}
+function cjBreachDay(c){var tol=cjTolerance(c);return (tol&&c.dailyValue>0)?(tol/c.dailyValue):null;}
+function currentCjList(){var live=crownList();return (live&&live.length)?live:ILLU_CJ;}
+function cjRadiusOf(name){var l=currentCjList();for(var i=0;i<l.length;i++)if(l[i].name===name)return l[i].impactRadius||[];return [];}
+function cjIsPrimary(c){return (typeof incidentActive!=='undefined')&&incidentActive&&incidentAsset&&c.name===incidentAsset;}
+function cjInRadius(c){return (typeof incidentActive!=='undefined')&&incidentActive&&incidentAsset&&cjRadiusOf(incidentAsset).indexOf(c.name)>=0;}
 function cjRow(c,i){
-  var maxScore=100;var pct=Math.round(Math.min(100,(c.score||60))/maxScore*100);
-  var procs=c.procs&&c.procs.length?('Supports: '+c.procs.join(' · ')+(c.moreProcs?(' +'+c.moreProcs+' more'):'')):'';
-  // CISO columns: today's $ exposure, top open risk, data class, exposure surface, recovery
-  var meta='<div class="cjmeta">'+
-    cjMetric(c.exposure>0?usd(c.exposure):'—','exposure today',c.exposure>0?'hot':'')+
-    cjMetric(c.topRisk&&c.topRisk.title?c.topRisk.title:'—','top open risk','rtag')+
-    cjMetric((c.data&&c.data.length)?c.data.slice(0,2).join(', '):'—','data')+
-    cjMetric(c.internet?'Internet-facing':'Internal',(c.internet?'exposure surface':'exposure surface'),c.internet?'warn':'')+
-    cjMetric(c.recovery!=null?hrsToStr(c.recovery):'—','recovery (RTO)')+
-    (c.riskCount?cjMetric(c.riskCount,'open risks'):'')+
+  var involved=cjIsPrimary(c)||cjInRadius(c);
+  var supports=c.procs&&c.procs.length?('Supports: <b>'+c.procs.join('</b> · <b>')+'</b>'+(c.moreProcs?(' +'+c.moreProcs+' more'):'')):'Supports: <span style="color:var(--muted)">—</span>';
+  var grid='<div class="cjgrid">'+
+    cjMet(c.txPerDay!=null?numCommas(c.txPerDay):'—',c.txPerDay!=null?'transactions / day':'tx/day — connect observability',c.txPerDay!=null?'':'mut')+
+    cjMet(c.dailyValue!=null?usd(c.dailyValue):'—','value processed / day',c.dailyValue!=null?'good':'mut')+
+    cjMet(c.internet?'External-facing':'Internal',c.internet?'exposure · internet-reachable':'exposure · internal only',c.internet?'warn':'')+
+    cjMet(c.recovery!=null?hrsToStr(c.recovery):'—','recovery target (RTO)',c.recovery!=null&&c.recovery>=48?'warn':'')+
     '</div>';
-  return '<div class="cjrow"><div class="cjrank">#'+(i+1)+'</div>'+
-    '<div class="cjmain"><div class="cjname">'+c.name+(c.tier?'<span class="cjtier">'+c.tier+'</span>':'')+'</div>'+
-    (procs?'<div class="cjprocs">'+procs+'</div>':'')+meta+
-    (c.why?'<div class="cjwhy">'+c.why+'</div>':'')+'</div>'+
-    '<div class="cjscore"><div class="cjscore-n">'+(c.score!=null?c.score:'')+'</div><div class="cjbar"><i style="width:'+pct+'%"></i></div><div class="cjscore-l">criticality</div></div></div>';
+  var sub='<div class="cjsub">'+(c.exposure>0?('Open-risk exposure today <b>'+usd(c.exposure)+'</b>'):'')+
+    (c.topRisk&&c.topRisk.title?(' · top risk <span class="rk">'+c.topRisk.title+'</span>'):'')+
+    ((c.data&&c.data.length)?(' · data '+c.data.slice(0,3).join(', ')):'')+(c.riskCount?(' · '+c.riskCount+' open risk'+(c.riskCount>1?'s':'')):'')+'</div>';
+  var incident='';
+  if(cjIsPrimary(c)){
+    var tol=cjTolerance(c),loss=cjLoss(c),pct=cjTolPct(c),ph=tolPhase(pct),bd=cjBreachDay(c);
+    var chips=(c.impactRadius&&c.impactRadius.length)?c.impactRadius.map(function(n){return '<span class="cjchip">'+n+'</span>';}).join(''):'<span style="color:var(--muted)">no mapped downstream systems — map dependencies in your CMDB</span>';
+    incident='<div class="cjincident'+(ph?' p'+ph:'')+'" id="cjpanel-'+i+'">'+
+      '<div class="cjih">⚠ IN THIS INCIDENT — system down, transaction flow halted</div>'+
+      '<div class="cjir"><b style="color:#fff">Impact radius</b> — systems that interface with it and are exposed to spread:<br>'+chips+'</div>'+
+      '<div class="cjloss-row"><span>Aggregate loss so far <b id="cjloss-'+i+'">'+usd(loss)+'</b> <i>· day <span id="cjday-'+i+'">'+incidentDays().toFixed(1)+'</span> of outage</i></span>'+
+        '<span style="text-align:right">tolerance <b>'+(tol?usd(tol):'—')+'</b><br><i style="font-size:9px">'+cjToleranceSrc(c)+'</i></span></div>'+
+      '<div class="cjtolbar"><i id="cjbarfill-'+i+'" style="width:'+Math.min(100,pct).toFixed(1)+'%"></i></div>'+
+      '<div class="cjih-sub">Losing <b>'+(c.dailyValue?usd(c.dailyValue):'—')+'</b>/day of transaction value.'+(bd?(' At this rate it breaches board tolerance on <b>day '+bd.toFixed(1)+'</b>.'):'')+' <span class="pill mod">accelerated · 1s = 1h</span></div>'+
+      '</div>';
+  } else if(cjInRadius(c)){
+    incident='<div class="cjradius-tag">◉ In the blast radius of <b>'+incidentAsset+'</b> — it interfaces directly; monitor for lateral spread and be ready to isolate.</div>';
+  }
+  return '<div class="cjcard'+(involved?' involved':'')+'">'+
+    '<div class="cjtop"><span class="cjrank">#'+(i+1)+'</span><div class="cjname">'+c.name+(c.tier?'<span class="cjtier">'+c.tier+'</span>':'')+'</div>'+
+      '<div class="cjcrit"><b>'+(c.score!=null?c.score:'—')+'</b><span>criticality</span></div></div>'+
+    '<div class="cjsupports">'+supports+'</div>'+grid+sub+
+    (c.why?'<div class="cjwhy">'+c.why+'</div>':'')+incident+'</div>';
+}
+/* Per-second update of the live incident panels — moves the loss counter and the
+   tolerance bar and escalates the phase (blink+sound) without rebuilding the DOM. */
+function updateCjIncident(){
+  if(!(typeof incidentActive!=='undefined'&&incidentActive))return;
+  currentCjList().forEach(function(c,i){
+    if(!cjIsPrimary(c))return;
+    var loss=cjLoss(c),pct=cjTolPct(c),ph=tolPhase(pct);
+    var le=document.getElementById('cjloss-'+i);if(le)le.textContent=usd(loss);
+    var de=document.getElementById('cjday-'+i);if(de)de.textContent=incidentDays().toFixed(1);
+    var bf=document.getElementById('cjbarfill-'+i);if(bf)bf.style.width=Math.min(100,pct).toFixed(1)+'%';
+    var pn=document.getElementById('cjpanel-'+i);if(pn){pn.classList.remove('p50','p75','p100');if(ph)pn.classList.add('p'+ph);}
+  });
 }
 /* CEO "which business processes carry the risk" — real per-process exposure from
    /summary (process_exposure), ranked. Keeps illustrative bars until live. */
@@ -1059,9 +1146,9 @@ function renderChain(){
   var host=document.getElementById('cjchain');if(!host)return;
   var live=crownList();var list=(live&&live.length)?live:ILLU_CJ;
   var note=(live&&live.length)
-    ? '<div class="cn" style="margin-bottom:14px">● <b style="color:var(--good)">Live</b> — your <b>'+list.length+'</b> crown-jewel '+(list.length===1?'system':'systems')+', ranked by criticality (data sensitivity × exposure × the processes that depend on them). The systems whose loss would hurt the business most.</div>'
+    ? '<div class="cn" style="margin-bottom:14px">● <b style="color:var(--good)">Live</b> — your <b>'+list.length+'</b> crown-jewel '+(list.length===1?'system':'systems')+', ranked by criticality (data sensitivity × exposure × the processes that depend on them). Each shows the transactions and dollar value it carries every day, how exposed it is, and how fast it recovers.</div>'
     : '<div class="cn" style="margin-bottom:14px">◐ <b style="color:var(--warn)">Illustrative</b> — an example. Complete onboarding to see your own crown jewels.</div>';
-  host.innerHTML=note+'<div class="cjlist">'+list.map(cjRow).join('')+'</div>';
+  host.innerHTML=note+'<div class="cjgridwrap">'+list.map(cjRow).join('')+'</div>';
 }
 
 function selectSeat(seat){document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===seat);});render(seat);if(!VOICE_MUTED)speakSeat(seat);}
@@ -1080,7 +1167,7 @@ document.getElementById('voiceBtn').addEventListener('click',function(){
 
 /* ================= War Room — full incident command center (ported) ================= */
 var SEAT_NAMES=(function(){try{return JSON.parse(localStorage.getItem('cyberrx_seat_names')||'{}');}catch(_){return{};}})();
-var incidentActive=false,wrStart=0,wrTimer=null,wrTick=0,alarmMuted=false,audioCtx=null,alarmTO=null;
+var incidentActive=false,wrStart=0,wrTimer=null,wrTick=0,alarmMuted=false,audioCtx=null,alarmTO=null,incidentAsset=null,cjIncidentTimer=null;
 function ciso(){return SEAT_NAMES.ciso||'CISO';}
 var SYS_CALM=[{nm:'SIEM',sub:'Splunk',st:'ok',m:'1.2B events/day',ev:['0 active correlations','ingest 100% · 0 gaps']},{nm:'Threat Intel',sub:'feeds + ISAC',st:'ok',m:'0 IOC matches',ev:['no actor activity','feeds current']},{nm:'EDR',sub:'CrowdStrike',st:'ok',m:'hosts clean',ev:['0 detections','coverage nominal']},{nm:'Identity',sub:'Okta',st:'ok',m:'MFA nominal',ev:['0 risky sign-ins','no privilege anomalies']},{nm:'Network',sub:'Firewall + WAF',st:'ok',m:'attacks blocked',ev:['no C2 traffic','segmentation intact']},{nm:'Email',sub:'Secure email',st:'warn',m:'phishing elevated',ev:['campaigns blocked','staff targeted']}];
 var SYS_LIVE=[{nm:'SIEM',sub:'Splunk',st:'crit',live:true,m:'alerts/min',ev:['ransomware playbook firing','mass file-encryption on a crown-jewel VLAN']},{nm:'Threat Intel',sub:'feeds + ISAC',st:'crit',m:'BlackCat / ALPHV',ev:['TTPs match known affiliate','ransom-note signature matched']},{nm:'EDR',sub:'CrowdStrike',st:'crit',m:'hosts encrypting',ev:['auto-isolation in progress','patient-zero identified']},{nm:'Identity',sub:'Okta',st:'warn',m:'1 priv acct abused',ev:['service account from new ASN','token revoked']},{nm:'Network',sub:'Firewall + WAF',st:'warn',m:'C2 egress blocked',ev:['egress to 91.211.x.x dropped','VLAN contained']},{nm:'Email',sub:'Secure email',st:'crit',m:'initial access: phish',ev:['malicious attachment opened','staff inbox']}];
@@ -1096,8 +1183,19 @@ var FEED=[],icChecks={},icCalled={},icPlaybook=false;
 var FEED_SEED=[['14:02:11','EDR','ransomware behavior flagged on a crown-jewel host','crit'],['14:02:13','SOAR','auto-isolation triggered','act'],['14:02:19','SIEM','correlation: mass file-encryption on the VLAN','crit'],['14:02:24','TI','signature match → BlackCat/ALPHV affiliate','crit'],['14:02:31','IAM','privileged service-account token revoked','act'],['14:02:40','NET','egress to C2 91.211.x.x blocked at perimeter','act']];
 var FEED_POOL=[['EDR','host quarantined','act'],['SOAR','backup integrity check started','act'],['SIEM','encryption rate plateauing — containment holding','act'],['NET','additional C2 domain sinkholed','act'],['IAM','forced re-auth on privileged sessions','act'],['TI','affiliate infrastructure mapped · shared to ISAC','act'],['EDR','no spread to other VLANs','act'],['DR','recovery environment warming','act'],['SIEM','new encryption attempt blocked','crit'],['LEGAL','multi-state breach assessment opened','act']];
 function ensureAudio(){if(!audioCtx){try{audioCtx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(audioCtx&&audioCtx.state==='suspended'){try{audioCtx.resume();}catch(e){}}}
-function alarmBeep(){if(!audioCtx)return;var t=audioCtx.currentTime;[[920,0],[680,0.2]].forEach(function(p){var o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='square';o.frequency.value=p[0];o.connect(g);g.connect(audioCtx.destination);g.gain.setValueAtTime(0.0001,t+p[1]);g.gain.exponentialRampToValueAtTime(0.05,t+p[1]+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+p[1]+0.17);o.start(t+p[1]);o.stop(t+p[1]+0.2);});}
-function alarmLoop(){if(!incidentActive||alarmMuted)return;alarmBeep();alarmTO=setTimeout(alarmLoop,2300);}
+/* Worst tolerance phase across the crown jewels involved in the live incident —
+   drives how urgent the alarm sounds (louder + faster as loss nears tolerance). */
+function worstIncidentPhase(){
+  if(!incidentActive)return 0;var worst=0;
+  try{currentCjList().forEach(function(c){if(cjIsPrimary(c)){var ph=tolPhase(cjTolPct(c));if(ph>worst)worst=ph;}});}catch(_){}
+  return worst;
+}
+function alarmBeep(phase){if(!audioCtx)return;var t=audioCtx.currentTime;
+  var gain=phase>=100?0.14:phase>=75?0.10:phase>=50?0.07:0.05;
+  var freqs=phase>=100?[[1200,0],[880,0.14]]:phase>=75?[[1050,0],[770,0.17]]:[[920,0],[680,0.2]];
+  freqs.forEach(function(p){var o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='square';o.frequency.value=p[0];o.connect(g);g.connect(audioCtx.destination);g.gain.setValueAtTime(0.0001,t+p[1]);g.gain.exponentialRampToValueAtTime(gain,t+p[1]+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+p[1]+0.17);o.start(t+p[1]);o.stop(t+p[1]+0.2);});}
+function alarmInterval(phase){return phase>=100?650:phase>=75?1100:phase>=50?1700:2300;}
+function alarmLoop(){if(!incidentActive||alarmMuted)return;var ph=worstIncidentPhase();alarmBeep(ph);alarmTO=setTimeout(alarmLoop,alarmInterval(ph));}
 function startAlarm(){ensureAudio();clearTimeout(alarmTO);if(!alarmMuted)alarmLoop();}
 function stopAlarm(){clearTimeout(alarmTO);}
 function elapsedStr(){var s=Math.floor((Date.now()-wrStart)/1000);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
@@ -1131,7 +1229,16 @@ function feedLineHTML(f){return '<div class="ln '+(f[3]||'')+'">'+f[0]+'  <b>'+f
 function bcell(b){return '<div class="wr-bcell"><div class="bn"><div class="t">'+b.t+'</div><div class="d">'+b.d+'</div></div><span class="wr-pill '+b.st+'">'+b.lbl+'</span></div>';}
 function attckChips(){return ATTCK.map(function(t){return '<span style="display:inline-block;font-family:var(--mono);font-size:10px;background:rgba(57,135,229,.14);color:#4F90FF;border-radius:4px;padding:2px 7px;margin:3px 4px 0 0">'+t+'</span>';}).join('');}
 // Blast radius + regulatory clocks come from the org's REAL crown jewels + jurisdictions when present.
-function blastCells(){var cjs=(LIVE&&LIVE.crown_jewels)||[];if(cjs.length)return cjs.slice(0,4).map(function(a,i){return {t:a.name,d:(a.type||'asset')+' · crown jewel',st:i===0?'atrisk':i===1?'contained':'safe',lbl:i===0?'AT RISK':i===1?'CONTAINED':'SAFE'};});return [{t:'Revenue-critical process',d:'affected hosts isolated',st:'atrisk',lbl:'AT RISK'},{t:'Primary database',d:'isolated · not yet encrypted',st:'contained',lbl:'CONTAINED'},{t:'Payments',d:'segmented · unaffected',st:'safe',lbl:'SAFE'},{t:'Customer portal',d:'unaffected',st:'safe',lbl:'SAFE'}];}
+function blastCells(){
+  // Anchor on the crown jewel actually under attack + its impact radius, so the
+  // War Room and the crown-jewel cards tell one consistent blast-radius story.
+  if(incidentAsset){var radius=cjRadiusOf(incidentAsset);
+    var cells=[{t:incidentAsset,d:'crown jewel · under attack · flow halted',st:'atrisk',lbl:'AT RISK'}];
+    radius.slice(0,3).forEach(function(n,i){cells.push({t:n,d:'interfaces with '+incidentAsset+' · watch for spread',st:i===0?'contained':'safe',lbl:i===0?'CONTAINED':'SAFE'});});
+    if(cells.length===1)cells.push({t:'No mapped downstream systems',d:'map dependencies in your CMDB',st:'safe',lbl:'—'});
+    return cells;}
+  var cjs=(LIVE&&LIVE.crown_jewels)||[];if(cjs.length)return cjs.slice(0,4).map(function(a,i){return {t:a.name,d:(a.type||'asset')+' · crown jewel',st:i===0?'atrisk':i===1?'contained':'safe',lbl:i===0?'AT RISK':i===1?'CONTAINED':'SAFE'};});
+  return [{t:'Revenue-critical process',d:'affected hosts isolated',st:'atrisk',lbl:'AT RISK'},{t:'Primary database',d:'isolated · not yet encrypted',st:'contained',lbl:'CONTAINED'},{t:'Payments',d:'segmented · unaffected',st:'safe',lbl:'SAFE'},{t:'Customer portal',d:'unaffected',st:'safe',lbl:'SAFE'}];}
 function regClkCells(){var obs=(LIVE&&LIVE.legal&&LIVE.legal.obligations)||[];if(obs.length)return obs.slice(0,5).map(function(o){return {t:o.jurisdiction+' — '+o.obligation.split('—')[0].trim(),d:'max: '+(o.penalty||''),st:o.clock_hours<=24?'atrisk':o.clock_hours<=96?'contained':'safe',lbl:o.clock+' · CLOCK'};});return [{t:'SEC Item 1.05 — material?',d:'4 business days from determination',st:'atrisk',lbl:'CLOCK EVALUATING'},{t:'Breach notification',d:'per your jurisdictions',st:'atrisk',lbl:'ASSESSMENT OPEN'},{t:'Cyber-insurance notice',d:'“as soon as practicable”',st:'atrisk',lbl:'DRAFT — AWAITING CFO'}];}
 function icHTML(){
   var h='<div class="ic-console"><div class="ic-banner"><div><div class="ic-t">⚠ INCIDENT COMMANDER — '+ciso()+'</div><div class="ic-s">You have command · INC-'+new Date().toISOString().slice(0,10).replace(/-/g,'')+'-001 · SEV-1</div></div><div class="ic-clock" id="icClock">'+elapsedStr()+'</div></div>';
@@ -1172,8 +1279,13 @@ function renderWar(){
 }
 function startWarLive(){clearInterval(wrTimer);wrTick=0;wrTimer=setInterval(function(){wrTick++;var el=document.getElementById('wrElapsed');if(el)el.textContent=elapsedStr();var icc=document.getElementById('icClock');if(icc)icc.textContent=elapsedStr();document.querySelectorAll('[data-sysmetric]').forEach(function(n){n.textContent=(180+Math.floor(Math.random()*70))+' alerts/min';});if(wrTick%3===0){var p=FEED_POOL[Math.floor(Math.random()*FEED_POOL.length)];var ts='14:'+String(2+Math.floor(wrTick/20)).padStart(2,'0')+':'+String((wrTick*7)%60).padStart(2,'0');FEED.push([ts,p[0],p[1],p[2]]);if(FEED.length>16)FEED.shift();var fb=document.getElementById('wrFeed');if(fb){fb.innerHTML=FEED.map(feedLineHTML).join('');fb.scrollTop=fb.scrollHeight;}}},1000);}
 function stopWarLive(){clearInterval(wrTimer);}
-function triggerIncident(){incidentActive=true;wrStart=Date.now();FEED=FEED_SEED.slice();icChecks={};icCalled={};icPlaybook=false;var b=document.getElementById('warBtn');if(b){b.classList.add('alarm');b.textContent='⚠ LIVE INCIDENT';}startAlarm();renderWar();startWarLive();renderCisoWarRoom();renderCisoOps();}
-function containIncident(){incidentActive=false;stopAlarm();stopWarLive();var b=document.getElementById('warBtn');if(b){b.classList.remove('alarm');b.textContent='⚠ War Room';}renderWar();renderCisoWarRoom();renderCisoOps();}
+function triggerIncident(){incidentActive=true;wrStart=Date.now();FEED=FEED_SEED.slice();icChecks={};icCalled={};icPlaybook=false;
+  var top=currentCjList()[0];incidentAsset=top?top.name:null; // the crown jewel under attack
+  var b=document.getElementById('warBtn');if(b){b.classList.add('alarm');b.textContent='⚠ LIVE INCIDENT';}
+  startAlarm();renderWar();startWarLive();startCjIncident();renderChain();renderCisoWarRoom();renderCisoOps();}
+function containIncident(){incidentActive=false;incidentAsset=null;stopAlarm();stopWarLive();stopCjIncident();var b=document.getElementById('warBtn');if(b){b.classList.remove('alarm');b.textContent='⚠ War Room';}renderChain();renderWar();renderCisoWarRoom();renderCisoOps();}
+function startCjIncident(){clearInterval(cjIncidentTimer);cjIncidentTimer=setInterval(updateCjIncident,1000);updateCjIncident();}
+function stopCjIncident(){clearInterval(cjIncidentTimer);}
 function wrOpen(){ensureAudio();renderWar();document.getElementById('wrModal').classList.add('open');document.getElementById('wrScrim').classList.add('open');}
 function wrCloseFn(){document.getElementById('wrModal').classList.remove('open');document.getElementById('wrScrim').classList.remove('open');}
 document.getElementById('warBtn').addEventListener('click',wrOpen);
