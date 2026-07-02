@@ -474,7 +474,7 @@ function renderTrend(){
     '<div class="cn" style="margin-top:6px">'+(down?'Down ':'Up ')+usd(Math.abs(delta))+' ('+(pc<=0?'':'+')+pc+'%) across '+n+' recorded points, '+new Date(t[0].date).toLocaleDateString()+' → '+new Date(t[n-1].date).toLocaleDateString()+'.</div></div>';
 }
 function applyLive(){if(!LIVE)return;var e=LIVE.economics||{},r=e.ratios||{},ap=e.appetite||{},ins=e.insurance||{};var ale=Number(e.ale)||0,tail=Number(e.tail)||ale;
-  if(ale>0){setTxt('lvSpineExpo',usd(ale));setTxt('lvSpineTail',usd(tail));setTxt('lvExpo',usd(ale));setTxt('lvTail',usd(tail));setTxt('lvExpoCfo',usd(ale));setTxt('lvTailCfo',usd(tail));
+  if(ale>0){setTxt('lvSpineExpo',usd(ale));setTxt('lvSpineTail',usd(tail));setTxt('lvExpo',usd(ale));setTxt('lvTail',usd(tail));setTxt('lvExpoCfo',usd(ale));setTxt('lvTailCfo',usd(tail));setTxt('lvExpoCiso',usd(ale));
     // CEO/board financial framing — % of revenue, appetite status, materiality
     if(r.pct_of_revenue!=null)setTxt('lvPctRev','≈'+pct(r.pct_of_revenue,r.pct_of_revenue<0.01?2:1)+' of revenue');
     if(ap&&ap.appetite){setTxt('lvAppetite',usd(ap.appetite));
@@ -680,7 +680,18 @@ function renderGov(){
     '<div style="margin-top:8px">'+items.map(function(i){return govRow(i.k,i.v,i.ok);}).join('')+'</div>'+
     '<div class="cn" style="margin-top:8px">These are the exact governance disclosures Item 106(c) requires in your 10-K. Fill any gaps in onboarding to make this filing-ready.</div></div>';
 }
-function renderBoard(){renderStress();renderReadiness();renderThirdParty();renderGov();renderMateriality();renderAiRisk();renderCisoOps();}
+function renderBoard(){renderStress();renderReadiness();renderThirdParty();renderGov();renderMateriality();renderAiRisk();renderCisoOps();renderCisoWarRoom();}
+/* War Room, integrated into the CISO seat — shows current incident state with a
+   one-click entry, so incident command lives inside the cockpit, not beside it. */
+function renderCisoWarRoom(){
+  var host=document.getElementById('cisoWarRoom');if(!host)return;
+  var active=(typeof incidentActive!=='undefined')&&incidentActive;
+  host.innerHTML='<div class="card" style="'+(active?'border-color:var(--crit)':'')+'"><div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap"><div style="flex:1;min-width:220px"><div class="ck">Incident command · War Room</div><div class="cn" style="margin-top:5px">'+(active
+      ?'⚠ <b style="color:var(--crit)">LIVE INCIDENT</b> — the command center is streaming from your connected systems, automated containment is running, and the C-suite is convened around one shared set of facts.'
+      :'● <b style="color:var(--good)">No active incident.</b> The moment a qualifying attack is confirmed, this room goes live automatically — the alarm sounds, containment runs, regulatory clocks start, and each executive gets a role-specific decision.')+'</div></div>'+
+    '<button class="wr-btn'+(active?'':' gh')+'" data-enterwar="1"'+(active?' style="background:var(--crit);border-color:var(--crit);color:#fff"':'')+'>'+(active?'⚠ Enter War Room':'Open War Room')+'</button></div></div>';
+  var b=host.querySelector('[data-enterwar]');if(b)b.onclick=function(){try{wrOpen();}catch(_){}};
+}
 /* CISO operational command center — the "when I log in" view. Under-attack status,
    tool health, MITRE ATT&CK tactic coverage (derived from connected tool categories),
    key-vendor watch, and an attention list of gaps + what's being done. */
@@ -968,8 +979,8 @@ function renderWar(){
 }
 function startWarLive(){clearInterval(wrTimer);wrTick=0;wrTimer=setInterval(function(){wrTick++;var el=document.getElementById('wrElapsed');if(el)el.textContent=elapsedStr();var icc=document.getElementById('icClock');if(icc)icc.textContent=elapsedStr();document.querySelectorAll('[data-sysmetric]').forEach(function(n){n.textContent=(180+Math.floor(Math.random()*70))+' alerts/min';});if(wrTick%3===0){var p=FEED_POOL[Math.floor(Math.random()*FEED_POOL.length)];var ts='14:'+String(2+Math.floor(wrTick/20)).padStart(2,'0')+':'+String((wrTick*7)%60).padStart(2,'0');FEED.push([ts,p[0],p[1],p[2]]);if(FEED.length>16)FEED.shift();var fb=document.getElementById('wrFeed');if(fb){fb.innerHTML=FEED.map(feedLineHTML).join('');fb.scrollTop=fb.scrollHeight;}}},1000);}
 function stopWarLive(){clearInterval(wrTimer);}
-function triggerIncident(){incidentActive=true;wrStart=Date.now();FEED=FEED_SEED.slice();icChecks={};icCalled={};icPlaybook=false;var b=document.getElementById('warBtn');b.classList.add('alarm');b.textContent='⚠ LIVE INCIDENT';startAlarm();renderWar();startWarLive();}
-function containIncident(){incidentActive=false;stopAlarm();stopWarLive();var b=document.getElementById('warBtn');b.classList.remove('alarm');b.textContent='⚠ War Room';renderWar();}
+function triggerIncident(){incidentActive=true;wrStart=Date.now();FEED=FEED_SEED.slice();icChecks={};icCalled={};icPlaybook=false;var b=document.getElementById('warBtn');if(b){b.classList.add('alarm');b.textContent='⚠ LIVE INCIDENT';}startAlarm();renderWar();startWarLive();renderCisoWarRoom();renderCisoOps();}
+function containIncident(){incidentActive=false;stopAlarm();stopWarLive();var b=document.getElementById('warBtn');if(b){b.classList.remove('alarm');b.textContent='⚠ War Room';}renderWar();renderCisoWarRoom();renderCisoOps();}
 function wrOpen(){ensureAudio();renderWar();document.getElementById('wrModal').classList.add('open');document.getElementById('wrScrim').classList.add('open');}
 function wrCloseFn(){document.getElementById('wrModal').classList.remove('open');document.getElementById('wrScrim').classList.remove('open');}
 document.getElementById('warBtn').addEventListener('click',wrOpen);
