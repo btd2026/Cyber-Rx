@@ -48,8 +48,8 @@ async function loadOrgSetup(orgId) {
     const rows = await db.query('SELECT setup_json FROM orgs WHERE id=$1', [orgId]);
     const sj = rows[0] && rows[0].setup_json;
     const parsed = typeof sj === 'string' ? JSON.parse(sj) : (sj || {});
-    return { economics: (parsed && parsed.economics) || {}, resilience: (parsed && parsed.resilience) || {}, governance: (parsed && parsed.governance) || {}, aiGovernance: (parsed && parsed.aiGovernance) || {} };
-  } catch (_) { return { economics: {}, resilience: {}, governance: {}, aiGovernance: {} }; }
+    return { economics: (parsed && parsed.economics) || {}, resilience: (parsed && parsed.resilience) || {}, governance: (parsed && parsed.governance) || {}, aiGovernance: (parsed && parsed.aiGovernance) || {}, growth: (parsed && parsed.growth) || {} };
+  } catch (_) { return { economics: {}, resilience: {}, governance: {}, aiGovernance: {}, growth: {} }; }
 }
 
 // materialExposure() reads snake_case, but Risk._transformFromDb returns camelCase.
