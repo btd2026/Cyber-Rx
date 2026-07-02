@@ -85,11 +85,11 @@ var SEATS = {
   sub:'Cyber as legal exposure: disclosure standing, notification duties by country, and the modeled liability if an event occurs — with the clock on each.',
   brief:'Legally, we are defensible across every jurisdiction we operate in today — no reportable events, and evidence is preserved. The clocks to watch are the seventy-two-hour European deadline and the four-business-day S.E.C. rule. If an incident became material, the determination process and the draft filings are already pre-staged, which is what protects the directors.',
   body:function(){return (
-   sec('01','Are we legally defensible right now?','Disclosure standing, notification readiness, and litigation posture.',
+   sec('01','Are we legally defensible right now?','Disclosure standing, notification readiness, and litigation posture — clocks and liability computed from your regions, data classes and record count.',
      tiles([
-      {k:'Open notifications',v:'0',cls:'good',ev:'notifications',note:'across US, EU, UK, APAC'},
-      {k:'Materiality standing',v:'No reportable event',cls:'good',ev:'materiality',note:'SEC clock not running; 8-K pre-staged'},
-      {k:'Modeled liability',v:'$22M',cls:'warn',ev:'liability',note:'class-action + regulatory, modeled'},
+      {k:'Open notifications',v:'0',cls:'good',ev:'notifications',note:'<span id="lvCloNotif">no material incident open</span>'},
+      {k:'Materiality standing',v:'No reportable event',cls:'good',ev:'materiality',note:'SEC clock not running until an event clears the threshold'},
+      {k:'Class-action exposure',v:'<span id="lvCloLiability">$22M</span>',cls:'warn',ev:'liability',note:'<span id="lvCloLiabNote">records × per-record cost</span>'},
       {k:'Fastest clock',v:'<span id="lvClock">72 hours</span>',ev:'clock',note:'the binding notification deadline today'}]))
    +sec('02','Where are we exposed by jurisdiction — duty, clock, penalty?','Where we operate, the binding obligation, and the ceiling. Click a jurisdiction for the rule.',
      '<div id="cloJuris">'+jtable([
@@ -105,8 +105,8 @@ var SEATS = {
        {tag:'C · External breach counsel on retainer',on:'Option C · Retainer',osum:'counsel on call',pros:['Specialist breach counsel on demand','Privilege established before an incident'],cons:['Annual retainer cost','Slower first hours vs. a standing internal committee']}]}]))
    +sec('04','Is an incident material — and are we covered by contract?','The two calls the General Counsel owns beyond disclosure: the materiality determination (who signs, by when, on the record) and the contract/DPA obligations to customers.',
      '<div class="cols">'
-     +kvcard('Materiality determination',[{k:'Threshold (reportable at)',v:'$53M',ev:'materiality'},{k:'Sign-off',v:'CFO · GC · CISO · CIO'},{k:'SEC clock once material',v:'4 business days',ev:'clock'},{k:'Evidenced &amp; logged',v:'Yes — D&amp;O defense',cls:'good',ev:'oversight'}])
-     +kvcard('Customer contract / DPA obligations',[{k:'Contracts with notice clauses',v:'—',ev:'contracts'},{k:'Tightest customer deadline',v:'often 24–72h',ev:'contracts'},{k:'Modeled liability',v:'$22M',cls:'warn',ev:'liability'},{k:'Status',v:'Add DPAs to quantify',cls:'warn'}])+'</div>')
+     +kvcard('Materiality determination',[{k:'Threshold (reportable at)',v:'<span id="lvCloMateriality">$53M</span>',ev:'materiality'},{k:'Sign-off',v:'CFO · GC · CISO · CIO'},{k:'SEC clock once material',v:'4 business days',ev:'clock'},{k:'Evidenced &amp; logged',v:'Yes — D&amp;O defense',cls:'good',ev:'oversight'}])
+     +kvcard('Customer contract / DPA obligations',[{k:'Contracts with notice clauses',v:'—',ev:'contracts'},{k:'Tightest customer deadline',v:'often 24–72h',ev:'contracts'},{k:'Class-action exposure',v:'<span id="lvCloLiability2">$22M</span>',cls:'warn',ev:'liability'},{k:'Status',v:'Add DPAs to quantify',cls:'warn'}])+'</div>')
   );}
  },
 
@@ -328,11 +328,11 @@ var EV = {
   inputs:[['Active material incidents','0','Incident register / SIEM'],['Jurisdictions in scope','US, EU, UK, APAC','Onboarding']],
   steps:[['1','No material incident is open','0 required'],['T','Open notifications','0']],
   sources:['Incident register','Jurisdiction ruleset'],conf:'Clean today; the moment an incident is material, the jurisdiction clocks start.'},
- liability:{claim:'Modeled legal liability exposure',result:'$22M',cls:'warn',
-  formula:'liability  =  modeled class-action exposure  +  probability-weighted regulatory fines',
-  inputs:[['Records at risk','2.4M','Data inventory'],['Per-record class-action','modeled band','Legal model'],['Regulatory fine ceiling','up to 4% revenue','Jurisdiction ruleset']],
-  steps:[['1','Records × modeled per-record','class-action band'],['2','Add probability-weighted fines','+ regulatory'],['T','Modeled liability','$22M']],
-  sources:['Data inventory','Legal & regulatory model'],conf:'Modeled; concentration is the customer-data platform.'},
+ liability:{claim:'Legal liability — class-action / notification exposure',result:'$22M',cls:'warn',
+  formula:'class-action exposure  =  sensitive records held  ×  cost per record\nregulatory ceiling  =  the binding jurisdiction’s maximum penalty (shown separately)',
+  inputs:[['Sensitive records held','from onboarding','Onboarding — data footprint'],['Cost per record','$165','IBM Cost of a Data Breach (benchmark)'],['Regulatory ceiling','from jurisdiction','Jurisdiction ruleset']],
+  steps:[['1','records × $165 per record','class-action / notification cost'],['2','Add the binding regulatory penalty ceiling','+ regulatory'],['T','Liability exposure','records × $165 (+ fines)']],
+  sources:['Your record count (onboarding)','IBM Cost of a Data Breach per-record benchmark','Jurisdiction ruleset'],conf:'The class-action/notification figure is computed from your own record count; regulatory fines are the statutory ceiling for your binding jurisdiction.'},
  techdebt:{claim:'Tech-debt exposure (end-of-life systems)',result:'$12M',cls:'warn',
   formula:'tech-debt exposure  =  Σ open-risk exposure on EOL / unsupported assets',
   inputs:[['EOL / unsupported assets','from inventory','Onboarding — EOL column'],['Their open-risk exposure','summed','Risk register']],

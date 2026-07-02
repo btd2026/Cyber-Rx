@@ -228,6 +228,7 @@
     </div>
     <div class="row c3" style="margin-top:14px">
       <div class="field"><label>Shares outstanding <span style="color:var(--muted)">(for EPS impact)</span></label><div class="moneyf"><span class="cur">#</span><input type="number" step="any" class="mnum" id="finShares" placeholder="500"><select class="munit" id="finShares_u"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div></div>
+      <div class="field"><label>Sensitive records held <span style="color:var(--muted)">(PII/PHI data subjects — for legal liability)</span></label><div class="moneyf"><span class="cur">#</span><input type="number" step="any" class="mnum" id="finRecords" placeholder="2.4"><select class="munit" id="finRecords_u"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div></div>
     </div>
   </div>
 
@@ -584,7 +585,7 @@
     var payload={
       org_name:org,org_id:orgId,industry:v('industry'),regions:REGIONS,currency:CUR_CODE,
       financials:{revenue:mval('finRevenue'),operatingIncome:mval('finOpInc'),netIncome:mval('finNetInc'),enterpriseValue:mval('finEV'),sharesOutstanding:mval('finShares')},
-      appetite:mval('finAppetite'),budget:mval('finBudget'),
+      appetite:mval('finAppetite'),budget:mval('finBudget'),dataRecords:mval('finRecords'),
       insurance:{limit:mval('insLimit'),premium:mval('insPrem'),renewal:v('insRenew')},
       processes:PROC.map(function(p){return {name:p.name,data:p.data,rev:p.revenue,revenue:p.revenue,rto:p.rto,criticality:p.criticality};}),
       apps:APP.map(function(a){return {name:a.name,host:a.host,data:a.data,vendor:a.vendor,eol:a.eol,recovery:a.recovery,processes:Array.isArray(a.processes)?a.processes:[]};}),

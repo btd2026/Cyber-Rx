@@ -268,6 +268,7 @@ function liveResult(key){if(!LIVE||!LIVE.economics)return null;var e=LIVE.econom
   if(key==='materiality')return e.materiality&&e.materiality.value?usd(e.materiality.value):null;
   if(key==='insgap')return ins.gap!=null?usd(ins.gap):null;
   if(key==='transfer')return ins.transfer_efficiency!=null?(Math.round(ins.transfer_efficiency*100)+'%'):null;
+  if(key==='liability'){var lg=LIVE.legal;return (lg&&lg.liability&&lg.liability.class_action_exposure)?usd(lg.liability.class_action_exposure):null;}
   return null;}
 function openEv(key){var e=EV[key];if(!e)return;
   var lr=liveResult(key);
@@ -480,8 +481,13 @@ function applyLive(){if(!LIVE)return;var e=LIVE.economics||{},r=e.ratios||{},ap=
     }
   }
   renderTrend();
-  // CLO seat — render the org's real jurisdiction obligations + binding clock.
+  // CLO seat — legal liability (from records) + materiality + jurisdiction table.
   var lg=LIVE.legal;
+  if(lg&&lg.liability&&lg.liability.class_action_exposure){
+    var la=lg.liability;setTxt('lvCloLiability',usd(la.class_action_exposure));setTxt('lvCloLiability2',usd(la.class_action_exposure));
+    setTxt('lvCloLiabNote',usd(la.records).replace('$','')+' records × $'+la.cost_per_record+'/record'+(la.regulatory_ceiling?(' + '+la.regulatory_ceiling):''));
+  }
+  if(LIVE.economics&&LIVE.economics.materiality&&LIVE.economics.materiality.value)setTxt('lvCloMateriality',usd(LIVE.economics.materiality.value));
   if(lg&&lg.obligations&&lg.obligations.length){
     if(lg.binding)setTxt('lvClock',lg.binding.clock);
     var jt=document.getElementById('cloJuris');
