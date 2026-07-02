@@ -270,6 +270,38 @@ function decKey(dec){return 'cyberrx_dec_'+orgId()+'_'+CUR+'_'+dec;}
 function loadDec(dec){try{return JSON.parse(localStorage.getItem(decKey(dec))||'null');}catch(_){return null;}}
 function saveDec(dec,d){try{localStorage.setItem(decKey(dec),JSON.stringify(d));}catch(_){}}
 function fmtWhen(ts){try{return new Date(ts).toLocaleString();}catch(_){return '';}}
+function itsmVendor(){try{var j=JSON.parse(localStorage.getItem('cyberrx_itsm')||'null');return j&&j.vendor||'';}catch(_){return '';}}
+function srcRef(dec,d){return d.ts+'-'+d.seat+'-'+dec;}
+/* Normalize an external ticket status to a short label + step (0-3). */
+function statusStep(st){var s=String(st||'').toLowerCase();
+  if(/done|closed|complete|resolved|3|4|-3/.test(s))return {t:'Done',n:4};
+  if(/progress|implement|work|active|2/.test(s))return {t:'In progress',n:3};
+  if(/review|assess|approv/.test(s))return {t:'In review',n:2};
+  return {t:'Open',n:2};
+}
+/* Push the decision to the org's ticketing system as a project. */
+function pushDecision(dec){
+  var d=loadDec(dec);if(!d||d.ticket)return;var o=orgId(),base=apiBase();
+  d.pushing=true;saveDec(dec,d);renderDecStatus(dec);
+  var body={title:'[Cyber decision · '+SEAT_LABEL[d.seat]+'] '+d.title,desc:'Option '+d.opt+' — decided by '+d.by+' ('+SEAT_LABEL[d.seat]+') via the CyberRx executive cockpit. Managed as a project; tracked to completion.',sourceRef:srcRef(dec,d),type:'project'};
+  if(!o||!base){d.pushing=false;saveDec(dec,d);renderDecStatus(dec);return;}
+  try{
+    fetch(base+'/api/itsm/open?org_id='+encodeURIComponent(o),{method:'POST',headers:{'Content-Type':'application/json','X-Org-Id':o},body:JSON.stringify(body)})
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(res){d.pushing=false;if(res&&(res.ticket_id||res.number||res.id||res.key||res.ticket)){d.ticket=res.ticket_id||res.number||res.id||res.key||res.ticket;d.system=res.label||itsmVendor()||'ServiceNow';d.url=res.url||res.link||null;d.demoTicket=!!res.demo;}saveDec(dec,d);renderDecStatus(dec);renderInitiatives();})
+      .catch(function(){d.pushing=false;saveDec(dec,d);renderDecStatus(dec);});
+  }catch(_){d.pushing=false;saveDec(dec,d);renderDecStatus(dec);}
+}
+/* Pull the live ticket status from Jira/ServiceNow and reflect it on refresh. */
+function pullStatus(dec){
+  var d=loadDec(dec);if(!d||!d.ticket)return;var o=orgId(),base=apiBase();if(!o||!base)return;
+  try{
+    fetch(base+'/api/itsm/status?org_id='+encodeURIComponent(o)+'&ref='+encodeURIComponent(srcRef(dec,d)),{headers:{'X-Org-Id':o}})
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(res){if(res&&res.status){var cur=loadDec(dec);if(cur&&cur.ticket){cur.status=res.status;saveDec(dec,cur);renderDecStatus(dec);renderInitiatives();}}})
+      .catch(function(){});
+  }catch(_){}
+}
 function renderDecStatus(dec){
   var s=document.getElementById('dstatus-'+dec);if(!s)return;var d=loadDec(dec);
   var box=document.querySelector('.decision[data-dec="'+dec+'"]');
@@ -277,16 +309,24 @@ function renderDecStatus(dec){
   var committed=(Date.now()-d.ts)>=EDIT_WINDOW_MS;
   if(box){box.querySelectorAll('.opt').forEach(function(o){o.classList.remove('chosen');});if(box.querySelector('.choose[data-opt="'+CSS.escape(d.opt)+'"]'))box.querySelector('.choose[data-opt="'+CSS.escape(d.opt)+'"]').closest('.opt').classList.add('chosen');
     box.querySelectorAll('.choose').forEach(function(b){b.disabled=committed;});}
-  var tk=d.ticket?('<b style="color:#fff">'+d.ticket+'</b>'+(d.system?(' in '+d.system):'')):'queued (connect a ticketing system to sync)';
   var editLeft=Math.max(0,EDIT_WINDOW_MS-(Date.now()-d.ts));var hrs=Math.floor(editLeft/3.6e6),mins=Math.floor((editLeft%3.6e6)/6e4);
-  s.innerHTML='<div class="st-h">'+(committed?'🔒 Committed':'✓ Recorded')+' · project '+tk+'</div>'+
-    '<div class="st-b">Decision by <b style="color:#fff">'+d.by+'</b> ('+SEAT_LABEL[CUR]+') · Option '+d.opt+' · '+fmtWhen(d.ts)+'</div>'+
-    '<div class="track"><div class="tstep done"></div><div class="tstep done"></div><div class="tstep'+(committed?' done':'')+'"></div><div class="tstep"></div></div>'+
+  // Project / ticketing line
+  var proj;
+  if(d.ticket){var lnk=d.url?('<a href="'+d.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+d.ticket+'</a>'):('<b style="color:#fff">'+d.ticket+'</b>');
+    var stp=statusStep(d.status);proj='Project '+lnk+(d.system?(' in '+d.system):'')+(d.demoTicket?' <span class="tag warn" style="font-size:10px">demo</span>':'')+' · <span class="tag '+(stp.n>=4?'good':'')+'" style="font-size:10.5px">'+(d.status?stp.t:'Open')+'</span>';}
+  else if(d.pushing)proj='<span style="color:var(--muted)">opening project…</span>';
+  else proj='<span style="color:var(--muted)">not yet a project</span> <button class="wr-btn" style="padding:5px 12px;font-size:11.5px;margin-left:6px" data-push="'+dec+'">▶ Push to ticketing — start project</button>';
+  var stepN=d.ticket?statusStep(d.status).n:(committed?3:2);
+  s.innerHTML='<div class="st-h">'+(committed?'🔒 Committed':'✓ Recorded')+' · '+proj+'</div>'+
+    '<div class="st-b">Decision by <b style="color:#fff">'+d.by+'</b> ('+SEAT_LABEL[d.seat]+') · Option '+d.opt+' · '+fmtWhen(d.ts)+'</div>'+
+    '<div class="track"><div class="tstep done"></div><div class="tstep'+(stepN>=2?' done':'')+'"></div><div class="tstep'+(stepN>=3?' done':'')+'"></div><div class="tstep'+(stepN>=4?' done':'')+'"></div></div>'+
     (committed
-      ? '<div class="st-b" style="margin-top:7px">🔒 <b style="color:#fff">Committed</b> — the 24-hour change window has closed. Tracked to completion in your ticketing system.</div>'
+      ? '<div class="st-b" style="margin-top:7px">🔒 <b style="color:#fff">Committed</b> — the 24-hour change window has closed.'+(d.ticket?' Status above is pulled live from '+(d.system||'your ticketing system')+' on refresh.':'')+'</div>'
       : '<div class="st-b" style="margin-top:7px">Editable for <b style="color:#fff">'+hrs+'h '+mins+'m</b> more — pick another option to change it. After 24h it commits automatically. <button class="wr-btn gh" style="padding:4px 10px;font-size:11px;margin-left:6px" data-undo="'+dec+'">Undo</button></div>');
   s.classList.add('show');
-  var ub=s.querySelector('[data-undo]');if(ub)ub.onclick=function(){try{localStorage.removeItem(decKey(dec));}catch(_){}renderDecStatus(dec);};
+  var ub=s.querySelector('[data-undo]');if(ub)ub.onclick=function(){try{localStorage.removeItem(decKey(dec));}catch(_){}renderDecStatus(dec);renderInitiatives();};
+  var pb=s.querySelector('[data-push]');if(pb)pb.onclick=function(){pushDecision(dec);};
+  if(d.ticket)pullStatus(dec);
 }
 function wireChoose(){
   document.querySelectorAll('.decision').forEach(function(box){renderDecStatus(box.dataset.dec);});
@@ -297,17 +337,11 @@ function wireChoose(){
       var existing=loadDec(dec);
       if(existing&&(Date.now()-existing.ts)>=EDIT_WINDOW_MS)return; // committed
       var by=leaderName();
-      var rec={opt:opt,title:title,by:by,seat:CUR,osum:osum,ts:(existing&&(Date.now()-existing.ts)<EDIT_WINDOW_MS)?existing.ts:Date.now(),ticket:existing&&existing.ticket||null,system:existing&&existing.system||null};
+      // Record locally only. Pushing to ticketing is an explicit action so the
+      // leader can still change the option within the 24h window first.
+      var rec={opt:opt,title:title,by:by,seat:CUR,osum:osum,ts:(existing&&(Date.now()-existing.ts)<EDIT_WINDOW_MS)?existing.ts:Date.now(),
+        ticket:existing&&existing.ticket||null,system:existing&&existing.system||null,url:existing&&existing.url||null,status:existing&&existing.status||null,demoTicket:existing&&existing.demoTicket||false};
       saveDec(dec,rec);renderDecStatus(dec);renderInitiatives();
-      var s=document.getElementById('dstatus-'+dec);var o=orgId(),base=apiBase();
-      var body={title:'[Cyber decision · '+SEAT_LABEL[CUR]+'] '+title,desc:'Option '+opt+' — decided by '+by+' ('+SEAT_LABEL[CUR]+') via the CyberRx executive cockpit. Managed as a project; tracked to completion.',sourceRef:rec.ts+'-'+CUR+'-'+dec,type:'project'};
-      if(!o||!base)return;
-      try{
-        fetch(base+'/api/itsm/open?org_id='+encodeURIComponent(o),{method:'POST',headers:{'Content-Type':'application/json','X-Org-Id':o},body:JSON.stringify(body)})
-          .then(function(r){return r.ok?r.json():null;})
-          .then(function(d){if(d&&(d.number||d.id||d.key||d.ticket)){rec.ticket=d.number||d.id||d.key||d.ticket;rec.system=d.label||'ServiceNow';rec.url=d.url||d.link||null;saveDec(dec,rec);renderDecStatus(dec);}})
-          .catch(function(){});
-      }catch(_){}
     };
   });
 }
@@ -330,8 +364,10 @@ function renderInitiatives(){
   var rows=list.map(function(d){
     var committed=(Date.now()-(d.ts||0))>=EDIT_WINDOW_MS;
     var cost=extractCost(d.osum),roi=extractROI(d.osum);
-    var tk=d.ticket?(d.url?('<a href="'+d.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+d.ticket+'</a>'):('<b style="color:#fff">'+d.ticket+'</b>'))+(d.system?(' · '+d.system):''):'<span style="color:var(--muted)">queued</span>';
-    var st=committed?'<span class="tag crit">Committed</span>':'<span class="tag warn">In 24h review</span>';
+    var tk=d.ticket?(d.url?('<a href="'+d.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+d.ticket+'</a>'):('<b style="color:#fff">'+d.ticket+'</b>'))+(d.system?(' · '+d.system):''):'<span style="color:var(--muted)">not pushed</span>';
+    var st;
+    if(d.ticket){var sp=statusStep(d.status);st='<span class="tag '+(sp.n>=4?'good':'')+'">'+(d.status?sp.t:'Open')+'</span>';}
+    else st=committed?'<span class="tag crit">Committed</span>':'<span class="tag warn">In 24h review</span>';
     return '<tr><td style="max-width:280px">'+d.title+'<div style="color:var(--muted);font-size:11.5px;margin-top:2px">Option '+d.opt+'</div></td>'+
       '<td>'+(d.by||'—')+'<div style="color:var(--muted);font-size:11.5px">'+(SEAT_LABEL[d.seat]||'')+'</div></td>'+
       '<td style="font-weight:600">'+cost+'</td>'+
