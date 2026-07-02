@@ -141,9 +141,14 @@ async function run(orgId) {
     return { name: p.name, revenue: rev, rtoHours: info.rto };
   });
   const riskExpoByAsset = {};
+  const topRiskByAsset = {};
   for (const r of risks) {
     if (r.status && String(r.status).toLowerCase() !== 'open') continue;
-    if (r.asset_id) riskExpoByAsset[r.asset_id] = (riskExpoByAsset[r.asset_id] || 0) + num(r.financial_exposure);
+    if (!r.asset_id) continue;
+    const exp = num(r.financial_exposure);
+    riskExpoByAsset[r.asset_id] = (riskExpoByAsset[r.asset_id] || 0) + exp;
+    const cur = topRiskByAsset[r.asset_id];
+    if (!cur || exp > cur.exposure_usd) topRiskByAsset[r.asset_id] = { title: r.title, exposure_usd: exp, severity: r.severity || null };
   }
   const resilAssets = scored.map((a) => {
     const info = ra[a.name] || {};
@@ -240,6 +245,15 @@ async function run(orgId) {
       crown_jewels: crownAssets.slice(0, 12).map((a) => ({
         id: a.id, name: a.name, type: a.type, tier: a.crown_jewel_tier,
         score: Math.round(a.criticality_score * 100), breakdown: a.criticality_breakdown, rationale: a.rationale,
+        // CISO-facing detail per crown jewel: today's $ exposure, its top open
+        // risk, data sensitivity, exposure surface, recovery, and owner.
+        exposure_usd: riskExpoByAsset[a.id] || 0,
+        top_risk: topRiskByAsset[a.id] || null,
+        data_classification: a.data_classification || [],
+        internet_facing: isInternet(a),
+        recovery_hours: (ra[a.name] && ra[a.name].recovery != null) ? Number(ra[a.name].recovery) : null,
+        owner: a.owner || null,
+        open_risk_count: risks.filter((r) => r.asset_id === a.id && (!r.status || String(r.status).toLowerCase() === 'open')).length,
       })),
       economics,
       earnings,

@@ -105,6 +105,11 @@
   .cjrow .cjscore-n{font-size:19px;font-weight:800;color:#e6c25a;line-height:1}
   .cjrow .cjbar{height:5px;background:#2a2a28;border-radius:3px;margin-top:6px;overflow:hidden}
   .cjrow .cjbar i{display:block;height:100%;background:#e6c25a;border-radius:3px}
+  .cjrow .cjscore-l{font-size:9px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-top:4px}
+  .cjmeta{display:flex;flex-wrap:wrap;gap:10px 22px;margin-top:10px}
+  .cjm{display:flex;flex-direction:column;line-height:1.3}
+  .cjm b{font-size:12.5px;font-weight:700;color:var(--ink-2)}.cjm.hot b{color:var(--crit)}.cjm.warn b{color:var(--warn)}.cjm.rtag b{color:var(--serious,#e0a94a);font-weight:600}
+  .cjm i{font-size:9.5px;font-style:normal;color:var(--muted);letter-spacing:.03em;text-transform:uppercase;margin-top:1px}
   .qoq{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;margin-bottom:16px}
   .qtbl{width:100%;border-collapse:collapse;font-size:12.5px}.qtbl th{text-align:left;color:var(--muted);font-weight:600;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;padding:0 8px 9px 0;border-bottom:1px solid var(--line)}
   .qtbl td{padding:10px 8px 10px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}.qtbl tr:last-child td{border:none;font-weight:700}.qtbl .up{color:var(--good)}
@@ -389,36 +394,52 @@ function allDecisions(){
 function importedInits(){
   try{var a=JSON.parse(localStorage.getItem('cyberrx_initiatives')||'[]');return Array.isArray(a)?a:[];}catch(_){return [];}
 }
+function parseUsdNum(s){var m=String(s||'').match(/([\d.]+)\s*([KMB])?/i);if(!m)return 0;var n=parseFloat(m[1])||0;var u=(m[2]||'').toUpperCase();return n*(u==='B'?1e9:u==='M'?1e6:u==='K'?1e3:1);}
+function deliveredBar(p){return '<div style="display:flex;align-items:center;gap:6px"><div style="flex:1;height:5px;background:#2a2a28;border-radius:3px;min-width:38px;overflow:hidden"><i style="display:block;height:100%;width:'+p+'%;background:'+(p>=100?'var(--good)':'var(--blue)')+'"></i></div><span style="font-size:11px;color:var(--muted)">'+p+'%</span></div>';}
+function projProgress(d){ // schedule progress from real ticket status (or committed state)
+  if(d&&d.ticket){var n=statusStep(d.status).n;return n>=4?100:n>=3?55:n>=2?20:0;}
+  var committed=(Date.now()-((d&&d.ts)||0))>=EDIT_WINDOW_MS;return committed?40:10;
+}
 function renderInitiatives(){
   var host=document.getElementById('initiatives-panel');if(!host)return;
   var list=allDecisions();var imp=importedInits();
-  if(!list.length&&!imp.length){host.innerHTML='<div class="card"><div class="cn">No cyber initiatives yet. Import your in-flight projects at onboarding (upload or pull from Jira/ServiceNow), and every decision an executive commits in their seat is added here — cost, ROI, owner and ticket — so the CISO and CFO manage new cyber spend in one place.</div></div>';return;}
+  if(!list.length&&!imp.length){host.innerHTML='<div class="card"><div class="cn">No cyber initiatives yet. Import your in-flight projects at onboarding (upload or pull from Jira/ServiceNow), and every decision an executive commits in their seat is added here — budget, target ROI, delivered-to-date, owner and ticket — so the CISO and CFO manage new cyber spend in one place.</div></div>';return;}
+  var totBudget=0,roiVals=[],progVals=[];
   var decRows=list.map(function(d){
     var committed=(Date.now()-(d.ts||0))>=EDIT_WINDOW_MS;
-    var cost=extractCost(d.osum),roi=extractROI(d.osum);
+    var cost=extractCost(d.osum),roi=extractROI(d.osum),prog=projProgress(d);
+    totBudget+=parseUsdNum(cost);if(roi!=='—')roiVals.push(parseFloat(roi));progVals.push(prog);
     var tk=d.ticket?(d.url?('<a href="'+d.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+d.ticket+'</a>'):('<b style="color:#fff">'+d.ticket+'</b>'))+(d.system?(' · '+d.system):''):'<span style="color:var(--muted)">not sent yet</span>';
-    var st;
-    if(d.ticket){var sp=statusStep(d.status);st='<span class="tag '+(sp.n>=4?'good':'')+'">'+(d.status?sp.t:'Open')+'</span>';}
+    var st;if(d.ticket){var sp=statusStep(d.status);st='<span class="tag '+(sp.n>=4?'good':'')+'">'+(d.status?sp.t:'Open')+'</span>';}
     else st=committed?'<span class="tag crit">Committed</span>':'<span class="tag warn">In 24h review</span>';
-    return '<tr><td style="max-width:280px">'+d.title+'<div style="color:var(--muted);font-size:11.5px;margin-top:2px">Cockpit decision · Option '+d.opt+'</div></td>'+
+    return '<tr><td style="max-width:260px">'+d.title+'<div style="color:var(--muted);font-size:11.5px;margin-top:2px">Cockpit decision · Option '+d.opt+'</div></td>'+
       '<td>'+(d.by||'—')+'<div style="color:var(--muted);font-size:11.5px">'+(SEAT_LABEL[d.seat]||'')+'</div></td>'+
       '<td style="font-weight:600">'+cost+'</td>'+
       '<td style="font-weight:700;color:'+(roi==='—'?'var(--muted)':'var(--good)')+'">'+roi+'</td>'+
-      '<td>'+st+'</td>'+
-      '<td>'+tk+'</td></tr>';
+      '<td style="min-width:100px">'+deliveredBar(prog)+'</td>'+
+      '<td>'+st+'</td><td>'+tk+'</td></tr>';
   }).join('');
   var impRows=imp.map(function(p){
-    var roi=String(p.roi||'').trim()||'—',cost=String(p.cost||'').trim()||'—';
+    var roi=String(p.roi||'').trim()||'—',cost=String(p.cost||'').trim()||'—',prog=projProgress(p);
+    totBudget+=parseUsdNum(cost);if(roi!=='—')roiVals.push(parseFloat(roi));progVals.push(prog);
     var tk=p.ticket?(p.url?('<a href="'+p.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+p.ticket+'</a>'):('<b style="color:#fff">'+p.ticket+'</b>'))+(p.system?(' · '+p.system):''):'<span style="color:var(--muted)">—</span>';
     var sp=statusStep(p.status);var st='<span class="tag '+(sp.n>=4?'good':'')+'">'+(p.status?(p.ticket?sp.t:p.status):'—')+'</span>';
-    return '<tr><td style="max-width:280px">'+(p.name||'—')+'<div style="color:var(--muted);font-size:11.5px;margin-top:2px">In-flight · '+(p.source==='ticketing'?'from ticketing':'imported')+'</div></td>'+
+    return '<tr><td style="max-width:260px">'+(p.name||'—')+'<div style="color:var(--muted);font-size:11.5px;margin-top:2px">In-flight · '+(p.source==='ticketing'?'from ticketing':'imported')+'</div></td>'+
       '<td>'+(p.owner||'—')+'</td><td style="font-weight:600">'+cost+'</td>'+
       '<td style="font-weight:700;color:'+(roi==='—'?'var(--muted)':'var(--good)')+'">'+roi+'</td>'+
+      '<td style="min-width:100px">'+deliveredBar(prog)+'</td>'+
       '<td>'+st+'</td><td>'+tk+'</td></tr>';
   }).join('');
   var total=list.length+imp.length;
-  host.innerHTML='<div class="card"><table class="tbl"><thead><tr><th>Initiative</th><th>Owner</th><th>Cost</th><th>Return</th><th>Status</th><th>Project</th></tr></thead><tbody>'+decRows+impRows+'</tbody></table>'+
-    '<div class="cn" style="margin-top:10px">'+total+' active '+(total===1?'initiative':'initiatives')+(imp.length?(' · '+imp.length+' in-flight from onboarding'):'')+(list.length?(' · '+list.length+' from cockpit decisions'):'')+' · committed items are locked and tracked to completion in your ticketing system.</div></div>';
+  var blendedRoi=roiVals.length?(Math.round(roiVals.reduce(function(s,x){return s+x;},0)/roiVals.length)):null;
+  var portProg=progVals.length?Math.round(progVals.reduce(function(s,x){return s+x;},0)/progVals.length):0;
+  var summary='<div style="display:flex;gap:26px;margin-top:12px;flex-wrap:wrap">'+
+    '<div><div class="cv" style="font-size:18px">'+(totBudget>0?usd(totBudget):'—')+'</div><div class="cn">total budget committed</div></div>'+
+    (blendedRoi?('<div><div class="cv" style="font-size:18px;color:var(--good)">'+blendedRoi+'×</div><div class="cn">blended target ROI (end of project)</div></div>'):'')+
+    '<div><div class="cv" style="font-size:18px">'+portProg+'%</div><div class="cn">portfolio delivered to date</div></div>'+
+    '</div>';
+  host.innerHTML='<div class="card"><table class="tbl"><thead><tr><th>Initiative</th><th>Owner</th><th>Budget</th><th>Target ROI</th><th>Delivered</th><th>Status</th><th>Project</th></tr></thead><tbody>'+decRows+impRows+'</tbody></table>'+summary+
+    '<div class="cn" style="margin-top:10px">'+total+' active '+(total===1?'initiative':'initiatives')+'. Delivered % tracks each project’s real ticket status; ROI is the target at completion. Connect your PM/finance system for spent-to-date actuals.</div></div>';
 }
 
 /* ---- live economics ---- */
@@ -530,7 +551,7 @@ function renderSignals(){
     var pcts=['edr_pct','mfa_pct','pam_pct'].map(sig).filter(function(x){return x!=null;});
     if(pcts.length){var avg=Math.round(pcts.reduce(function(s,x){return s+x;},0)/pcts.length);setTxt('lvCovTile',avg+'%');var tn=document.getElementById('lvCovTileNote');if(tn)tn.innerHTML='<span class="pill good">live</span> from '+pcts.length+' connected tool'+(pcts.length>1?'s':'');}
   }
-  renderAiRisk();
+  renderAiRisk();renderCisoOps();
 }
 function loadSignals(){var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}}).catch(function(){});}catch(_){}}
@@ -547,10 +568,10 @@ var GRAPH=null;
    /summary), each with its tier, score, the process(es) it supports, and a
    concise rationale. No per-process repetition. */
 var ILLU_CJ=[
-  {name:'Claims &amp; payments database',tier:'Tier 1',score:83,procs:['Claims &amp; payments processing'],why:'Holds PHI + cardholder data; single point of failure for a critical revenue process; internet-reachable.'},
-  {name:'Member portal',tier:'Tier 2',score:76,procs:['Member portal &amp; servicing'],why:'Customer PII at scale; internet-facing; high transaction volume.'},
-  {name:'Settlement engine',tier:'Tier 2',score:72,procs:['Trading &amp; settlement'],why:'Moves funds; time-critical recovery window.'},
-  {name:'Policy administration system',tier:'Tier 3',score:64,procs:['Policy administration'],why:'System of record for policies; sensitive data; high availability need.'}
+  {name:'Claims &amp; payments database',tier:'Tier 1',score:83,procs:['Claims &amp; payments processing'],why:'Holds PHI + cardholder data; single point of failure for a critical revenue process; internet-reachable.',exposure:34e6,topRisk:{title:'Ransomware → payments halt'},data:['PHI','PCI'],internet:true,recovery:74,riskCount:3},
+  {name:'Member portal',tier:'Tier 2',score:76,procs:['Member portal &amp; servicing'],why:'Customer PII at scale; internet-facing; high transaction volume.',exposure:18e6,topRisk:{title:'Account takeover / breach'},data:['PII'],internet:true,recovery:40,riskCount:2},
+  {name:'Settlement engine',tier:'Tier 2',score:72,procs:['Trading &amp; settlement'],why:'Moves funds; time-critical recovery window.',exposure:11e6,topRisk:{title:'Settlement disruption'},data:['Financial'],internet:false,recovery:28,riskCount:1},
+  {name:'Policy administration system',tier:'Tier 3',score:64,procs:['Policy administration'],why:'System of record for policies; sensitive data; high availability need.',exposure:5e6,topRisk:{title:'Data exposure'},data:['PII'],internet:false,recovery:12,riskCount:1}
 ];
 function tierLabel(t){t=String(t||'').toLowerCase().replace('tier','').trim();if(t==='1')return 'Tier 1';if(t==='2')return 'Tier 2';if(t==='3')return 'Tier 3';return t?('Tier '+t):'';}
 function cleanWhy(name,why){why=String(why||'').trim();var n=String(name||'').trim();
@@ -563,17 +584,28 @@ function crownList(){
     (GRAPH.edges||[]).forEach(function(e){if(e.type==='supports'){var an=byId[e.target],pn=byId[e.source];if(an&&pn){(procsOfAsset[an.label]=procsOfAsset[an.label]||[]).push(pn.label);}}});}
   return LIVE.crown_jewels.map(function(c){
     var seen={},procs=[];(procsOfAsset[c.name]||[]).forEach(function(p){if(!seen[p]){seen[p]=1;procs.push(p);}});
-    return {name:c.name,tier:tierLabel(c.tier),score:c.score,procs:procs.slice(0,3),moreProcs:Math.max(0,procs.length-3),why:cleanWhy(c.name,c.rationale)};
+    return {name:c.name,tier:tierLabel(c.tier),score:c.score,procs:procs.slice(0,3),moreProcs:Math.max(0,procs.length-3),why:cleanWhy(c.name,c.rationale),
+      exposure:c.exposure_usd||0,topRisk:c.top_risk||null,data:c.data_classification||[],internet:!!c.internet_facing,recovery:c.recovery_hours,riskCount:c.open_risk_count||0};
   });
 }
+function cjMetric(val,label,cls){return '<span class="cjm'+(cls?' '+cls:'')+'"><b>'+val+'</b><i>'+label+'</i></span>';}
 function cjRow(c,i){
   var maxScore=100;var pct=Math.round(Math.min(100,(c.score||60))/maxScore*100);
   var procs=c.procs&&c.procs.length?('Supports: '+c.procs.join(' · ')+(c.moreProcs?(' +'+c.moreProcs+' more'):'')):'';
+  // CISO columns: today's $ exposure, top open risk, data class, exposure surface, recovery
+  var meta='<div class="cjmeta">'+
+    cjMetric(c.exposure>0?usd(c.exposure):'—','exposure today',c.exposure>0?'hot':'')+
+    cjMetric(c.topRisk&&c.topRisk.title?c.topRisk.title:'—','top open risk','rtag')+
+    cjMetric((c.data&&c.data.length)?c.data.slice(0,2).join(', '):'—','data')+
+    cjMetric(c.internet?'Internet-facing':'Internal',(c.internet?'exposure surface':'exposure surface'),c.internet?'warn':'')+
+    cjMetric(c.recovery!=null?hrsToStr(c.recovery):'—','recovery (RTO)')+
+    (c.riskCount?cjMetric(c.riskCount,'open risks'):'')+
+    '</div>';
   return '<div class="cjrow"><div class="cjrank">#'+(i+1)+'</div>'+
     '<div class="cjmain"><div class="cjname">'+c.name+(c.tier?'<span class="cjtier">'+c.tier+'</span>':'')+'</div>'+
-    (procs?'<div class="cjprocs">'+procs+'</div>':'')+
+    (procs?'<div class="cjprocs">'+procs+'</div>':'')+meta+
     (c.why?'<div class="cjwhy">'+c.why+'</div>':'')+'</div>'+
-    '<div class="cjscore"><div class="cjscore-n">'+(c.score!=null?c.score:'')+'</div><div class="cjbar"><i style="width:'+pct+'%"></i></div></div></div>';
+    '<div class="cjscore"><div class="cjscore-n">'+(c.score!=null?c.score:'')+'</div><div class="cjbar"><i style="width:'+pct+'%"></i></div><div class="cjscore-l">criticality</div></div></div>';
 }
 /* CEO "which business processes carry the risk" — real per-process exposure from
    /summary (process_exposure), ranked. Keeps illustrative bars until live. */
@@ -648,7 +680,53 @@ function renderGov(){
     '<div style="margin-top:8px">'+items.map(function(i){return govRow(i.k,i.v,i.ok);}).join('')+'</div>'+
     '<div class="cn" style="margin-top:8px">These are the exact governance disclosures Item 106(c) requires in your 10-K. Fill any gaps in onboarding to make this filing-ready.</div></div>';
 }
-function renderBoard(){renderStress();renderReadiness();renderThirdParty();renderGov();renderMateriality();renderAiRisk();}
+function renderBoard(){renderStress();renderReadiness();renderThirdParty();renderGov();renderMateriality();renderAiRisk();renderCisoOps();}
+/* CISO operational command center — the "when I log in" view. Under-attack status,
+   tool health, MITRE ATT&CK tactic coverage (derived from connected tool categories),
+   key-vendor watch, and an attention list of gaps + what's being done. */
+var ATTCK_TACTICS=['Reconnaissance','Resource Development','Initial Access','Execution','Persistence','Privilege Escalation','Defense Evasion','Credential Access','Discovery','Lateral Movement','Collection','Command & Control','Exfiltration','Impact'];
+function attckCoverage(){
+  var covered={};function cov(list){list.forEach(function(t){covered[t]=1;});}
+  if(sig('edr_pct')!=null)cov(['Execution','Persistence','Privilege Escalation','Defense Evasion','Discovery','Lateral Movement','Collection','Impact']);
+  if(sig('mfa_pct')!=null||sig('pam_pct')!=null)cov(['Initial Access','Credential Access','Privilege Escalation']);
+  if(sig('open_incidents')!=null||sig('mttd_hrs')!=null)cov(['Discovery','Lateral Movement','Collection','Command & Control','Exfiltration','Impact']);
+  if(sig('patch_pct')!=null)cov(['Initial Access','Execution']);
+  if(sig('phishing_pct')!=null)cov(['Initial Access']);
+  var gaps=ATTCK_TACTICS.filter(function(t){return !covered[t];});
+  return {covered:ATTCK_TACTICS.length-gaps.length,total:ATTCK_TACTICS.length,gaps:gaps};
+}
+function opTile(label,val,cls,sub){return '<div class="card"><div class="ck">'+label+'</div><div class="cv" style="font-size:17px;margin-top:6px;line-height:1.3'+(cls?';color:var(--'+cls+')':'')+'">'+val+'</div>'+(sub?'<div class="cn" style="margin-top:5px">'+sub+'</div>':'')+'</div>';}
+function renderCisoOps(){
+  var host=document.getElementById('cisoOps');if(!host)return;
+  if(!SIGNALS){
+    host.innerHTML='<div class="cn" style="margin-bottom:10px">◐ <b style="color:var(--warn)">Illustrative</b> — connect your security tools at onboarding to make this live.</div><div class="grid4">'+
+      opTile('Are we under attack?','No active compromise','','live from your SIEM once connected')+
+      opTile('Security tools','98% avg coverage','','EDR · MFA · PAM · config baseline: connect a STIG scanner')+
+      opTile('MITRE ATT&CK coverage','11 / 14 tactics','good','gaps: Reconnaissance, Resource Development, Exfiltration')+
+      opTile('Key-vendor incident watch','no incident reported','good','connect a third-party status feed for live')+'</div>';
+    return;
+  }
+  var connected=Object.keys(SIGNALS).length;var oi=sig('open_incidents');var underAttack=oi!=null&&oi>0;
+  var attack=oi!=null?(underAttack?(oi+' open incident'+(oi>1?'s':'')):'No active compromise'):'connect your SIEM';
+  var pcts=['edr_pct','mfa_pct','pam_pct'].map(sig).filter(function(x){return x!=null;});
+  var below=pcts.filter(function(x){return x<90;}).length;
+  var toolHealth=pcts.length?(Math.round(pcts.reduce(function(s,x){return s+x;},0)/pcts.length)+'% avg coverage'):(connected+' connected');
+  var ac=attckCoverage();
+  var vendor=(LIVE&&LIVE.resilience&&LIVE.resilience.top_vendor_blast)?LIVE.resilience.top_vendor_blast.vendor:null;
+  var tiles='<div class="grid4">'+
+    opTile('Are we under attack?',attack,underAttack?'crit':(oi!=null?'good':''),underAttack?'<a href="#" data-openwar="1" style="color:var(--blue)">Open War Room →</a>':(oi!=null?('<span class="pill good" style="font-size:9px">live</span> '+connected+' tools streaming'):''))+
+    opTile('Security tools',toolHealth,below?'warn':'good',(below?(below+' below target · '):'')+'config vs DISA STIG: connect a scanner')+
+    opTile('MITRE ATT&CK coverage',ac.covered+' / '+ac.total+' tactics',ac.covered>=11?'good':ac.covered>=7?'warn':'crit',ac.gaps.length?('gaps: '+ac.gaps.slice(0,3).join(', ')+(ac.gaps.length>3?'…':'')):'full tactic coverage')+
+    opTile('Key-vendor incident watch',vendor?(vendor+' — none reported'):'—',vendor?'good':'',vendor?'connect a third-party status feed for live':'add vendors in onboarding')+'</div>';
+  var att=[];
+  if(sig('pam_pct')!=null&&sig('pam_pct')<80)att.push('Privileged-access coverage at '+sig('pam_pct')+'% — the top exposure driver; PAM rollout in flight.');
+  if(sig('mfa_pct')!=null&&sig('mfa_pct')<95)att.push('MFA at '+sig('mfa_pct')+'% — '+(100-sig('mfa_pct'))+'% legacy accounts remain.');
+  if(sig('phishing_pct')!=null&&sig('phishing_pct')>5)att.push('Phishing-prone rate at '+sig('phishing_pct')+'% — above the 5% target.');
+  if(ac.gaps.length)att.push('No tool coverage for ATT&CK: '+ac.gaps.join(', ')+' — evaluate detection/controls.');
+  var attList=att.length?('<div class="card" style="margin-top:14px"><div class="ck">Attention needed — and what’s being done</div><div style="margin-top:8px">'+att.map(function(a){return '<div class="list-row"><div class="lic w">▲</div><div class="ltxt"><b>'+a+'</b></div></div>';}).join('')+'</div></div>'):'<div class="card" style="margin-top:14px"><div class="ck">Attention needed</div><div class="cn" style="margin-top:6px">✓ Nothing off — tools within target and full ATT&CK tactic coverage.</div></div>';
+  host.innerHTML=tiles+attList;
+  var wl=host.querySelector('[data-openwar]');if(wl)wl.onclick=function(e){e.preventDefault();try{wrOpen();}catch(_){}};
+}
 /* AI risk (CEO + CISO) — exposure to AI-accelerated attacks (frontier models like
    Anthropic's Mythos that auto-discover/exploit vulnerabilities) + governance of
    the AI we run. Threat readiness combines the real attack surface with live
@@ -682,7 +760,18 @@ function renderAiRisk(){
   var gov='<div class="card"><div class="ck">Governance of the AI we run <span class="tag '+(ready>=4?'good':'warn')+'" style="font-size:10px;margin-left:6px">'+ready+' / '+items.length+' evidenced</span></div>'+
     '<div style="margin-top:8px">'+items.map(function(i){return govRow(i.k,i.v,i.ok);}).join('')+'</div>'+
     '<div class="cn" style="margin-top:8px">Anchored to NIST AI RMF / ISO 42001 and the EU AI Act. Fill gaps in onboarding to make this board- and audit-ready.</div></div>';
-  var html='<div class="cols">'+threat+gov+'</div>';
+  // Priority actions — derived from the real gaps, highest-impact first. Turns the
+  // panel from a summary into a to-do the CISO can act on and take to the board.
+  var acts=[];
+  if(patch!=null&&patch<90&&surface>0)acts.push({p:1,t:'Accelerate patching on the '+surface+' internet-facing crown jewel'+(surface>1?'s':'')+' — the largest lever on the '+(premium>0?usd(premium):'AI-accelerated')+' premium.'});
+  else if(patch==null&&surface>0)acts.push({p:1,t:'Connect vulnerability management to measure patch velocity on '+surface+' internet-facing crown jewel'+(surface>1?'s':'')+'.'});
+  if(/yes|pilot/i.test(g.decisioning||'')&&!/board-approved/i.test(g.policy||''))acts.push({p:1,t:'AI runs in customer-facing/decisioning without a board-approved policy — close this governance gap.'});
+  if(!/NIST|ISO|Both/i.test(g.framework||''))acts.push({p:2,t:'Adopt an AI governance framework (NIST AI RMF / ISO 42001) — the AI you run is currently ungoverned.'});
+  if(!/inventoried/i.test(g.inventory||''))acts.push({p:2,t:'Complete the AI-systems inventory so nothing runs unmonitored.'});
+  if(/high-risk/i.test(g.euAiAct||''))acts.push({p:2,t:'EU AI Act high-risk obligations apply — ensure the conformity assessment and technical documentation are in place.'});
+  acts.sort(function(a,b){return a.p-b.p;});
+  var actCard=acts.length?('<div class="card" style="margin-top:14px"><div class="ck">Priority actions <span class="pill warn" style="font-size:10px">'+acts.length+'</span></div><div style="margin-top:8px">'+acts.slice(0,4).map(function(a){return '<div class="list-row"><div class="lic '+(a.p===1?'c':'w')+'">'+(a.p===1?'!':'▲')+'</div><div class="ltxt"><b>'+a.t+'</b></div></div>';}).join('')+'</div></div>'):'<div class="card" style="margin-top:14px"><div class="ck">Priority actions</div><div class="cn" style="margin-top:6px">✓ No open AI-risk gaps — governance evidenced and internet-facing crown jewels are well-patched.</div></div>';
+  var html='<div class="cols">'+threat+gov+'</div>'+actCard;
   ['ceoAiRisk','cisoAiRisk'].forEach(function(hid){var host=document.getElementById(hid);if(host)host.innerHTML=html;});
 }
 /* CLO materiality-determination workbench — a timed, evidenced determination.
