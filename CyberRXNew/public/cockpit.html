@@ -6,550 +6,197 @@
 <title>CyberRx · Executive Cockpit</title>
 <style>
   :root{
-    --plane:#0d0d0d; --surface:#1a1a19; --surface-2:#211f1d;
-    --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
-    --line:#2c2c2a;
+    --plane:#0d0d0d; --surface:#1a1a19; --surface-2:#211f1d; --line:#2c2c2a; --line-2:#3a3a37;
+    --ink:#fff; --ink-2:#c3c2b7; --muted:#898781;
     --blue:#3987e5; --blue-soft:rgba(57,135,229,.14);
     --good:#0ca30c; --warn:#fab219; --serious:#ec835a; --crit:#d03b3b; --gold:#c79e3a;
-    --good-soft:rgba(12,163,12,.14); --warn-soft:rgba(250,178,25,.14); --crit-soft:rgba(208,59,59,.14); --ser-soft:rgba(236,131,90,.14);
+    --good-soft:rgba(12,163,12,.14); --warn-soft:rgba(250,178,25,.14); --crit-soft:rgba(208,59,59,.14);
+    --mono:"SFMono-Regular",Consolas,Menlo,monospace;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--plane);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}
-  .wrap{max-width:1180px;margin:0 auto;padding:0 26px}
-
-  .top{border-bottom:1px solid var(--line);background:linear-gradient(180deg,#111 0%,var(--plane) 100%)}
+  body{background:var(--plane);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 26px}
+  .top{border-bottom:1px solid var(--line);background:linear-gradient(180deg,#111,#0d0d0d)}
   .top-in{display:flex;align-items:center;gap:14px;height:60px}
   .logo{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#4F90FF,#0A4DC4);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
-  .brand{font-weight:700;font-size:16px;letter-spacing:-.01em}
-  .brand span{color:var(--muted);font-weight:500;font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin-left:10px}
-  .top-r{margin-left:auto;display:flex;align-items:center;gap:14px;color:var(--muted);font-size:12px}
-  .live{display:flex;align-items:center;gap:6px}
-  .dot{width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 0 3px var(--good-soft)}
-  .lens{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:99px;padding:4px 11px}
+  .brand{font-weight:700;font-size:16px}.brand span{color:var(--muted);font-weight:500;font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin-left:10px}
+  .top-r{margin-left:auto;display:flex;align-items:center;gap:13px;color:var(--muted);font-size:12px}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--good)}
   .mocktag{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--warn);border:1px solid rgba(250,178,25,.4);border-radius:99px;padding:3px 9px}
-
-  .seats{border-bottom:1px solid var(--line);background:var(--plane);position:sticky;top:0;z-index:5}
-  .seats-in{display:flex;align-items:center;gap:6px;height:52px;overflow-x:auto}
+  .seats{border-bottom:1px solid var(--line);background:var(--plane);position:sticky;top:0;z-index:9}
+  .seats-in{display:flex;align-items:center;gap:6px;height:50px;overflow-x:auto}
   .seatlbl{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-right:8px;white-space:nowrap}
-  .seat{font-weight:600;font-size:13px;color:var(--ink-2);background:none;border:1px solid transparent;border-radius:99px;padding:7px 15px;cursor:pointer;white-space:nowrap}
-  .seat:hover{background:var(--surface)}
+  .seat{font-weight:600;font-size:13px;color:var(--ink-2);background:none;border:1px solid transparent;border-radius:99px;padding:6px 14px;cursor:pointer;white-space:nowrap}
   .seat.on{color:#fff;background:var(--blue-soft);border-color:rgba(57,135,229,.4)}
-
-  .hero{padding:32px 0 6px}
-  .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);font-weight:600;margin-bottom:13px}
-  .verdict{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.2;max-width:920px}
+  #dataModeBar{display:none}
+  .hero{padding:30px 0 4px}
+  .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);font-weight:600;margin-bottom:12px}
+  .verdict{font-size:26px;font-weight:700;letter-spacing:-.02em;line-height:1.2;max-width:900px}
   .verdict .em{color:var(--good)} .verdict .emw{color:var(--warn)}
-  .sub{color:var(--ink-2);font-size:14.5px;margin-top:11px;max-width:840px}
-
-  .position{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-top:24px}
-  .pcell{background:var(--surface);padding:18px 20px}
-  .pk{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-  .pv{font-size:27px;font-weight:700;letter-spacing:-.02em}
-  .pv small{font-size:14px;color:var(--muted);font-weight:600}
-  .pv.good{color:var(--good)} .pv.warn{color:var(--warn)} .pv.crit{color:var(--crit)}
-  .pnote{font-size:12.5px;margin-top:8px;color:var(--muted);display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-  .pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px}
-  .pill.good{background:var(--good-soft);color:var(--good)} .pill.warn{background:var(--warn-soft);color:var(--warn)} .pill.crit{background:var(--crit-soft);color:var(--crit)}
-
-  .sec{margin-top:34px}
-  .sec-h{display:flex;align-items:baseline;gap:12px;margin-bottom:15px}
-  .sec-h h2{font-size:13px;letter-spacing:.1em;text-transform:uppercase}
-  .sec-h .meta{font-size:12.5px;color:var(--muted)}
-
-  .quad{display:grid;grid-template-columns:repeat(4,1fr);gap:13px}
-  .qcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 16px 15px}
-  .qcard .qh{font-size:12px;color:var(--ink-2);font-weight:600;margin-bottom:11px;display:flex;align-items:center;gap:7px}
-  .qcard .qbig{font-size:21px;font-weight:700;letter-spacing:-.02em}
-  .qcard .qbig.good{color:var(--good)} .qcard .qbig.warn{color:var(--warn)} .qcard .qbig.crit{color:var(--crit)}
-  .qcard .qsub{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5}
-  .stat-ic{width:25px;height:25px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;background:var(--blue-soft);flex:none}
-
-  .cols{display:grid;grid-template-columns:1.25fr 1fr;gap:18px;margin-top:14px}
-  .col1{display:grid;grid-template-columns:1fr;gap:18px}
-  .panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:19px 21px}
-  .panel h3{font-size:13.5px;margin-bottom:3px}
-  .panel .ph-sub{font-size:12px;color:var(--muted);margin-bottom:16px}
-
-  .dec{margin:-4px} .decrow{display:grid;grid-template-columns:22px 1fr auto auto;gap:15px;align-items:center;padding:15px 4px;border-bottom:1px solid var(--line)}
-  .decrow:last-child{border-bottom:none}
-  .decn{width:22px;height:22px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);font-weight:700}
-  .dect{font-weight:600;font-size:14px} .decd{font-size:12px;color:var(--muted);margin-top:2px}
-  .decmoney{text-align:right} .decmoney .cost{font-size:12.5px;color:var(--ink-2)} .decmoney .buys{font-size:12.5px;color:var(--good);font-weight:700;margin-top:2px}
-  .decbtn{font-size:12px;font-weight:700;padding:7px 13px;border-radius:8px;border:none;cursor:pointer;white-space:nowrap}
-  .decbtn.rec{background:var(--blue);color:#fff} .decbtn.gh{background:none;border:1px solid var(--line);color:var(--ink-2)}
-  .recflag{font-size:9.5px;font-weight:700;color:var(--blue);letter-spacing:.06em;text-transform:uppercase;margin-left:7px}
-
-  .bar-row{display:grid;grid-template-columns:160px 1fr 74px;gap:11px;align-items:center;margin-bottom:12px}
-  .bar-lbl{font-size:12.5px;color:var(--ink-2)}
-  .bar-track{height:20px;background:#222220;border-radius:5px;overflow:hidden}
-  .bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,#256abf,#3987e5)}
-  .bar-fill.hot{background:linear-gradient(90deg,#a83232,#d03b3b)}
-  .bar-fill.g{background:linear-gradient(90deg,#0a7a0a,#0ca30c)}
+  .sub{color:var(--ink-2);font-size:14px;margin-top:11px;max-width:820px}
+  .hint{color:var(--muted);font-size:12px;margin-top:12px}.hint .fx{cursor:default}
+  .spine{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:11px 15px;margin-top:18px}
+  .spine .lk{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);font-weight:700}
+  .spine .num b{color:#fff}.spine .num span{color:var(--muted)}.spine .arrow{color:var(--muted);font-size:12px;margin-left:auto}.spine .arrow b{color:var(--ink-2)}
+  .section{margin-top:14px;padding-top:28px;border-top:1px solid var(--line)}
+  .rubric{display:flex;align-items:flex-start;gap:15px;margin-bottom:18px}
+  .rubric .no{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--blue);background:var(--blue-soft);border:1px solid rgba(57,135,229,.35);border-radius:9px;padding:6px 10px;line-height:1}
+  .rubric .rt{font-size:18px;font-weight:700;letter-spacing:-.01em}.rubric .rd{font-size:13px;color:var(--muted);margin-top:3px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.cols{display:grid;grid-template-columns:1.25fr 1fr;gap:16px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:17px 19px}
+  .card .ck{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+  .card .cv{font-size:24px;font-weight:700;letter-spacing:-.02em}.card .cv.good{color:var(--good)}.card .cv.warn{color:var(--warn)}.card .cv.crit{color:var(--crit)}
+  .card .cn{font-size:12px;color:var(--muted);margin-top:8px}
+  .pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;display:inline-block}
+  .pill.good{background:var(--good-soft);color:var(--good)}.pill.warn{background:var(--warn-soft);color:var(--warn)}.pill.crit{background:var(--crit-soft);color:var(--crit)}
+  .claim{cursor:pointer;border-bottom:1px dashed var(--line-2)}.claim:hover{border-bottom-color:var(--blue)}
+  .fx{font-family:var(--mono);font-size:10px;color:var(--blue);background:var(--blue-soft);border-radius:5px;padding:1px 5px;margin-left:5px;vertical-align:middle;white-space:nowrap}
+  .bar-row{display:grid;grid-template-columns:190px 1fr 66px;gap:11px;align-items:center;margin-bottom:12px}
+  .bar-lbl{font-size:12.5px;color:var(--ink-2)}.bar-track{height:20px;background:#222220;border-radius:5px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,#256abf,#3987e5)}.bar-fill.hot{background:linear-gradient(90deg,#a83232,#d03b3b)}
   .bar-val{font-size:12.5px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
-  .conc{font-size:12.5px;color:var(--ink-2);margin-top:13px;padding-top:13px;border-top:1px solid var(--line)}
-  .conc b{color:#fff}
-
-  .kv{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:9px 0;border-bottom:1px solid var(--line)}
-  .kv:last-child{border-bottom:none} .kv .k{color:var(--muted)} .kv .v{font-weight:600;text-align:right}
-  .kv .v.good{color:var(--good)} .kv .v.warn{color:var(--warn)} .kv .v.crit{color:var(--crit)}
-
-  .list-row{display:flex;gap:13px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}
-  .list-row:last-child{border-bottom:none}
+  .list-row{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}.list-row:last-child{border:none}
   .lic{flex:none;width:27px;height:27px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px}
-  .lic.b{background:var(--blue-soft);color:var(--blue)} .lic.g{background:var(--good-soft);color:var(--good)} .lic.w{background:var(--warn-soft);color:var(--warn)} .lic.c{background:var(--crit-soft);color:var(--crit)} .lic.s{background:var(--ser-soft);color:var(--serious)}
-  .ltxt{font-size:13px} .ltxt b{color:#fff} .ltxt .s{color:var(--muted);font-size:12px;display:block;margin-top:2px}
-
+  .lic.g{background:var(--good-soft);color:var(--good)}.lic.w{background:var(--warn-soft);color:var(--warn)}.lic.b{background:var(--blue-soft);color:var(--blue)}.lic.c{background:var(--crit-soft);color:var(--crit)}
+  .ltxt{font-size:13px}.ltxt b{color:#fff}.ltxt .s{color:var(--muted);font-size:12px;display:block;margin-top:2px}
   table.tbl{width:100%;border-collapse:collapse;font-size:12.5px}
   table.tbl th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding:0 10px 10px 0;border-bottom:1px solid var(--line)}
-  table.tbl td{padding:11px 10px 11px 0;border-bottom:1px solid var(--line);vertical-align:top}
-  table.tbl tr:last-child td{border-bottom:none}
+  table.tbl td{padding:11px 10px 11px 0;border-bottom:1px solid var(--line);vertical-align:top}table.tbl tr:last-child td{border:none}
   .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap}
-  .tag.good{background:var(--good-soft);color:var(--good)} .tag.warn{background:var(--warn-soft);color:var(--warn)} .tag.crit{background:var(--crit-soft);color:var(--crit)} .tag.ser{background:var(--ser-soft);color:var(--serious)}
+  .tag.good{background:var(--good-soft);color:var(--good)}.tag.warn{background:var(--warn-soft);color:var(--warn)}.tag.crit{background:var(--crit-soft);color:var(--crit)}
   .flag{font-size:15px;margin-right:7px}
-
-  .gap-bar{position:relative;height:42px;margin:20px 0 6px}
-  .gap-track{position:absolute;inset:0;background:#222220;border-radius:8px}
-  .gap-cov{position:absolute;top:0;bottom:0;left:0;background:var(--good-soft);border:1px solid rgba(12,163,12,.5);border-radius:8px}
-  .gap-gap{position:absolute;top:0;bottom:0;background:var(--crit-soft);border:1px solid rgba(208,59,59,.5);border-radius:0 8px 8px 0}
-  .gap-mark{position:absolute;top:-19px;transform:translateX(-50%);font-size:11px;color:var(--ink-2);white-space:nowrap} .gap-mark b{color:#fff}
-  .gap-in{position:absolute;top:50%;transform:translateY(-50%);left:12px;font-size:12px;font-weight:700;color:var(--good)}
-
-  .scn{padding:13px 0;border-bottom:1px solid var(--line)} .scn:last-child{border-bottom:none}
-  .scn-q{font-weight:600;font-size:13.5px;display:flex;gap:9px;align-items:center}
-  .scn-badge{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:6px}
-  .scn-impact{font-size:12.5px;margin-top:6px} .scn-impact b{color:#fff}
-  .scn-body{font-size:12px;color:var(--muted);margin-top:4px}
-
-  .foot{color:var(--muted);font-size:12px;text-align:center;padding:30px 0;border-top:1px solid var(--line);margin-top:40px}
-  .foot b{color:var(--ink-2)}
-  .rev{background:linear-gradient(180deg,rgba(57,135,229,.08),transparent);border:1px solid rgba(57,135,229,.25)}
-  .rev .ph-sub .revtag{color:var(--blue);font-weight:700}
-
-  /* shared spine — the one number, re-lensed per seat */
-  .spine{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-top:22px}
-  .spine .lk{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);font-weight:700;display:flex;align-items:center;gap:6px}
-  .spine .num{font-weight:700;font-size:14px} .spine .num b{color:#fff} .spine .num span{color:var(--muted);font-weight:500}
-  .spine .arrow{color:var(--muted);font-size:13px;margin-left:auto}
-  .spine .arrow b{color:var(--ink-2)}
-
-  /* materiality workbench */
-  .mw{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  .mw-clock{background:var(--crit-soft);border:1px solid rgba(208,59,59,.4);border-radius:11px;padding:16px;text-align:center}
-  .mw-clock .t{font-size:34px;font-weight:700;color:var(--crit);letter-spacing:-.02em}
-  .mw-clock .l{font-size:12px;color:var(--ink-2);margin-top:4px}
-  .mw-steps .st{display:flex;gap:10px;align-items:center;font-size:12.5px;padding:7px 0;border-bottom:1px solid var(--line)}
-  .mw-steps .st:last-child{border:none}
-  .mw-steps .ck{width:18px;height:18px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
-  .ck.done{background:var(--good-soft);color:var(--good)} .ck.now{background:var(--warn-soft);color:var(--warn)} .ck.wait{background:#26261f;color:var(--muted)}
-
-  /* budget simulator */
-  .sim-btns{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
-  .sim-btn{font-size:12.5px;font-weight:600;padding:8px 14px;border-radius:9px;border:1px solid var(--line);background:none;color:var(--ink-2);cursor:pointer}
-  .sim-btn.on{background:var(--blue);color:#fff;border-color:var(--blue)}
-  .sim-out{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
-  .sim-cell{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:13px 15px}
-  .sim-cell .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
-  .sim-cell .v{font-size:20px;font-weight:700;margin-top:5px}
-  .sim-verdict{font-size:13px;padding:11px 14px;border-radius:10px;font-weight:600}
+  /* scenario decisions */
+  .decision{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:16px}
+  .dh{font-size:15px;font-weight:700}.dh .dn{color:var(--muted);font-weight:600;margin-right:6px}
+  .dsit{font-size:13px;color:var(--ink-2);margin:7px 0 16px;line-height:1.6}
+  .opts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .opt{border:1px solid var(--line);border-radius:11px;padding:14px;display:flex;flex-direction:column}
+  .opt.rec{border-color:rgba(57,135,229,.5);background:var(--blue-soft)}.opt.chosen{border-color:var(--good);box-shadow:0 0 0 1px var(--good)}
+  .opt .orec{font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--blue);margin-bottom:5px}
+  .opt .on{font-weight:700;font-size:13.5px;margin-bottom:3px}.opt .osum{font-size:12px;color:var(--muted);margin-bottom:11px}
+  .pc{font-size:12px;line-height:1.5;flex:1}.pc .lbl{font-weight:700;font-size:11px;letter-spacing:.03em;text-transform:uppercase;margin:8px 0 4px}
+  .pc .lbl.p{color:var(--good)}.pc .lbl.c{color:var(--serious)}.pc ul{margin:0;padding-left:16px;color:var(--ink-2)}.pc li{margin-bottom:3px}
+  .choose{margin-top:12px;width:100%;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px;font-weight:700;font-size:12.5px;cursor:pointer}.choose.gh{background:none;border:1px solid var(--line);color:var(--ink-2)}
+  .dstatus{display:none;margin-top:14px;padding:13px 15px;border-radius:10px;background:var(--good-soft);border:1px solid rgba(12,163,12,.4);font-size:13px}.dstatus.show{display:block}
+  .dstatus .st-h{font-weight:700;color:var(--good);display:flex;align-items:center;gap:8px}.dstatus .st-b{color:var(--ink-2);font-size:12.5px;margin-top:6px}
+  .track{display:flex;gap:6px;margin-top:10px}.track .tstep{flex:1;height:5px;border-radius:3px;background:#2a2a28}.track .tstep.done{background:var(--good)}
+  .qoq{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;margin-bottom:16px}
+  .qtbl{width:100%;border-collapse:collapse;font-size:12.5px}.qtbl th{text-align:left;color:var(--muted);font-weight:600;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;padding:0 8px 9px 0;border-bottom:1px solid var(--line)}
+  .qtbl td{padding:10px 8px 10px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}.qtbl tr:last-child td{border:none;font-weight:700}.qtbl .up{color:var(--good)}
+  /* evidence slide-over */
+  .ev-scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .18s;z-index:40}.ev-scrim.open{opacity:1;pointer-events:auto}
+  .ev{position:fixed;top:0;right:0;height:100%;width:560px;max-width:94vw;background:var(--surface);border-left:1px solid var(--line-2);transform:translateX(100%);transition:transform .22s;z-index:41;overflow-y:auto}.ev.open{transform:none}
+  .ev-h{position:sticky;top:0;background:var(--surface);border-bottom:1px solid var(--line);padding:18px 24px;display:flex;align-items:center;gap:12px}
+  .ev-h .eb{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);font-weight:700}.ev-x{margin-left:auto;background:none;border:1px solid var(--line);color:var(--ink-2);border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:16px}
+  .ev-b{padding:22px 24px 40px}.ev-claim{font-size:16px;font-weight:600;line-height:1.4}.ev-result{font-size:32px;font-weight:700;margin:8px 0 4px}.ev-result.good{color:var(--good)}.ev-result.warn{color:var(--warn)}.ev-result.crit{color:var(--crit)}
+  .ev-sec{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:26px 0 11px}
+  .formula{font-family:var(--mono);font-size:13px;line-height:1.7;background:var(--plane);border:1px solid var(--line);border-radius:10px;padding:15px 16px;color:var(--ink-2);white-space:pre-wrap}.formula .hl{color:var(--blue);font-weight:700}
+  .itbl{width:100%;border-collapse:collapse;font-size:13px}.itbl th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;padding:0 8px 9px 0;border-bottom:1px solid var(--line)}.itbl td{padding:10px 8px 10px 0;border-bottom:1px solid var(--line);vertical-align:top}.itbl td.v{font-weight:600;white-space:nowrap}.itbl td.src{color:var(--muted);font-size:12px}
+  .step{display:grid;grid-template-columns:22px 1fr auto;gap:11px;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}.step:last-child{border:none}.step .sn{font-family:var(--mono);font-size:11px;color:var(--muted)}.step .sv{font-family:var(--mono);font-weight:700;text-align:right;white-space:nowrap}.step.total .sv{color:var(--good)}
+  .src-row{display:flex;gap:9px;align-items:center;font-size:12.5px;color:var(--ink-2);padding:7px 0}.src-row .sd{width:6px;height:6px;border-radius:50%;background:var(--blue);flex:none}
+  .conf{font-size:12.5px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:8px}
+  .foot{color:var(--muted);font-size:12px;text-align:center;padding:30px 0;border-top:1px solid var(--line);margin-top:40px}.foot b{color:var(--ink-2)}
 </style>
 </head>
 <body>
-
 <div class="top"><div class="wrap top-in">
-  <div class="logo">Rx</div>
-  <div class="brand">CyberRx <span>Cybersecurity Operating System</span></div>
-  <div class="top-r">
-    <span class="mocktag" id="dataBadge">Illustrative</span>
-    <span class="lens">🏦 Financial services · 🌎 US · EU · UK · APAC</span>
-    <span class="live" id="orgLive"><span class="dot"></span>Sample workspace</span>
-  </div>
+  <div class="logo">Rx</div><div class="brand">CyberRx <span>Cybersecurity Operating System</span></div>
+  <div class="top-r"><span class="mocktag" id="dataBadge">Illustrative</span><span class="lens">🏦 Financial services · 🌎 US · EU · UK · APAC</span><span id="orgLive"><span class="dot" style="background:var(--muted)"></span>Sample workspace</span></div>
 </div></div>
-
-<!-- Honest data-mode banner: illustrative until the org's real inventory + financials exist -->
-<div id="dataModeBar" style="display:none"><div class="wrap" id="dataModeInner" style="padding:8px 0;font-size:12px;font-weight:600"></div></div>
-
 <div class="seats"><div class="wrap seats-in">
   <span class="seatlbl">Speaking to</span>
-  <button class="seat on" data-seat="ceo">CEO / Board</button>
-  <button class="seat" data-seat="cfo">CFO</button>
-  <button class="seat" data-seat="clo">CLO / General Counsel</button>
-  <button class="seat" data-seat="cro">CRO</button>
-  <button class="seat" data-seat="cio">CIO</button>
-  <button class="seat" data-seat="ciso">CISO</button>
+  <button class="seat on" data-seat="ceo">CEO / Board</button><button class="seat" data-seat="cfo">CFO</button><button class="seat" data-seat="clo">CLO / General Counsel</button><button class="seat" data-seat="cro">CRO</button><button class="seat" data-seat="cio">CIO</button><button class="seat" data-seat="ciso">CISO</button>
 </div></div>
-
+<div id="dataModeBar"><div class="wrap" id="dataModeInner" style="padding:8px 0;font-size:12px;font-weight:600"></div></div>
 <div class="wrap" id="app"></div>
+<div class="foot"><b>CyberRx</b> — every figure traces to your data or is clearly labeled modeled · build 2026-07-02 · headline economics are live from your data; sections labeled illustrative fill in as their intake sources connect.</div>
 
-<div class="foot">
-  <b>CyberRx</b> — cybersecurity, expressed in money, continuity, obligation, and decisions.<br>
-  build 2026-07-02 · headline economics are live from your data; sections labeled illustrative fill in as their data sources connect · every figure traces to your data or is clearly labeled modeled.
-</div>
+<div class="ev-scrim" id="scrim"></div>
+<aside class="ev" id="ev"><div class="ev-h"><span class="eb">How this is calculated</span><button class="ev-x" id="evx">×</button></div><div class="ev-b" id="evb"></div></aside>
 
 <script>
-/* ---------- tiny renderers ---------- */
-function tiles(arr){return '<div class="quad">'+arr.map(t=>'<div class="qcard"><div class="qh"><span class="stat-ic">'+t.ic+'</span>'+t.h+'</div><div class="qbig '+(t.cls||'')+'">'+t.big+'</div><div class="qsub">'+t.sub+'</div></div>').join('')+'</div>';}
-function bars(rows){return rows.map(r=>'<div class="bar-row"><div class="bar-lbl">'+r.l+'</div><div class="bar-track"><div class="bar-fill '+(r.cls||'')+'" style="width:'+r.pct+'%"></div></div><div class="bar-val">'+r.v+'</div></div>').join('');}
-function kvs(rows){return rows.map(r=>'<div class="kv"><span class="k">'+r.k+'</span><span class="v '+(r.cls||'')+'">'+r.v+'</span></div>').join('');}
-function lists(rows){return rows.map(r=>'<div class="list-row"><div class="lic '+r.c+'">'+r.ic+'</div><div class="ltxt"><b>'+r.t+'</b><span class="s">'+r.s+'</span></div></div>').join('');}
-function decisions(rows){return '<div class="dec">'+rows.map(d=>'<div class="decrow"><div class="decn">'+d.n+'</div><div><div class="dect">'+d.t+(d.rec?'<span class="recflag">Recommended</span>':'')+'</div><div class="decd">'+d.d+'</div></div><div class="decmoney"><div class="cost">'+d.cost+'</div><div class="buys">'+d.buys+'</div></div><button class="decbtn '+(d.rec?'rec':'gh')+'">'+(d.btn||'Review')+'</button></div>').join('')+'</div>';}
-function scns(rows){return rows.map(function(s){return '<div class="scn"><div class="scn-q"><span class="scn-badge tag '+s.cls+'">'+s.badge+'</span>'+s.q+'</div><div class="scn-impact">'+s.impact+'</div><div class="scn-body">'+s.body+'</div></div>';}).join('');}
-function juris(rows){return '<table class="tbl"><thead><tr><th>Jurisdiction</th><th>Obligation</th><th>Clock</th><th>Max penalty exposure</th></tr></thead><tbody>'+rows.map(r=>'<tr><td><span class="flag">'+r.flag+'</span>'+r.c+'</td><td>'+r.o+'</td><td><span class="tag '+r.clockCls+'">'+r.clock+'</span></td><td style="font-weight:600">'+r.pen+'</td></tr>').join('')+'</tbody></table>';}
-function gap(g){return '<div class="gap-bar"><div class="gap-track"></div><div class="gap-cov" style="width:'+g.covPct+'%"><span class="gap-in">'+g.covLbl+'</span></div><div class="gap-gap" style="left:'+g.covPct+'%;right:0"></div><div class="gap-mark" style="left:'+g.covPct+'%"><b>'+g.limit+'</b></div><div class="gap-mark" style="left:100%;color:var(--crit)"><b>'+g.max+'</b></div></div><div style="text-align:right;color:var(--crit);font-weight:700;font-size:12.5px;margin-bottom:12px">'+g.gapLbl+'</div>'+kvs(g.kv);}
+/* ---------- renderers ---------- */
+function C(v){return v||'';}
+function tiles(a){return '<div class="grid'+(a.length===4?'4':'3')+'">'+a.map(function(t){return '<div class="card"><div class="ck">'+t.k+'</div><div class="cv '+C(t.cls)+(t.ev?' claim" data-ev="'+t.ev:'')+'">'+t.v+(t.ev?' <span class="fx">ƒ</span>':'')+'</div><div class="cn">'+C(t.note)+'</div></div>';}).join('')+'</div>';}
+function bars(a){return '<div class="card">'+a.map(function(r){return '<div class="bar-row"><div class="bar-lbl'+(r.ev?' claim" data-ev="'+r.ev:'')+'">'+r.l+(r.ev?' <span class="fx">ƒ</span>':'')+'</div><div class="bar-track"><div class="bar-fill '+C(r.cls)+'" style="width:'+r.pct+'%"></div></div><div class="bar-val">'+r.v+'</div></div>';}).join('')+'</div>';}
+function lists(a){return '<div class="card">'+a.map(function(r){return '<div class="list-row"><div class="lic '+r.c+'">'+r.ic+'</div><div class="ltxt'+(r.ev?' claim" data-ev="'+r.ev:'')+'"><b>'+r.t+'</b>'+(r.ev?' <span class="fx">ƒ</span>':'')+'<span class="s">'+r.s+'</span></div></div>';}).join('')+'</div>';}
+function kvcard(title,rows){return '<div class="card"><div class="ck">'+title+'</div>'+rows.map(function(r){return '<div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:9px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted)">'+r.k+'</span><span style="font-weight:600;text-align:right'+(r.cls?';color:var(--'+r.cls+')':'')+'"'+(r.ev?' class="claim" data-ev="'+r.ev+'"':'')+'>'+r.v+(r.ev?' <span class="fx">ƒ</span>':'')+'</span></div>';}).join('')+'</div>';}
+function jtable(rows){return '<div class="card"><table class="tbl"><thead><tr><th>Jurisdiction</th><th>Obligation</th><th>Clock</th><th>Max penalty</th></tr></thead><tbody>'+rows.map(function(r){return '<tr><td'+(r.ev?' class="claim" data-ev="'+r.ev+'"':'')+'><span class="flag">'+r.flag+'</span>'+r.c+(r.ev?' <span class="fx">ƒ</span>':'')+'</td><td>'+r.o+'</td><td><span class="tag '+r.cc+'">'+r.clock+'</span></td><td style="font-weight:600">'+r.pen+'</td></tr>';}).join('')+'</tbody></table></div>';}
+function decisions(a){return a.map(function(d){return '<div class="decision" data-dec="'+d.n+'"><div class="dh"><span class="dn">Decision '+d.n+' ·</span>'+d.q+'</div><div class="dsit">'+d.sit+'</div><div class="opts">'+d.opts.map(function(o){return '<div class="opt'+(o.rec?' rec':'')+'">'+(o.rec?'<div class="orec">Recommended</div>':'')+'<div class="on">'+o.on+'</div><div class="osum">'+o.osum+'</div><div class="pc"><div class="lbl p">Pros</div><ul>'+o.pros.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul><div class="lbl c">Cons</div><ul>'+o.cons.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></div><button class="choose'+(o.rec?'':' gh')+'" data-dec="'+d.n+'" data-title="'+d.q.replace(/"/g,'')+'" data-opt="'+o.tag+'">Choose &amp; record</button></div>';}).join('')+'</div><div class="dstatus" id="dstatus-'+d.n+'"></div></div>';}).join('');}
+function sec(no,q,desc,inner){return '<div class="section"><div class="rubric"><div class="no">'+no+'</div><div><div class="rt">'+q+'</div><div class="rd">'+desc+'</div></div></div>'+inner+'</div>';}
 
-function panel(p){
-  var body = p.type==='bars'?bars(p.rows): p.type==='kv'?kvs(p.rows): p.type==='list'?lists(p.rows):
-             p.type==='decisions'?decisions(p.rows): p.type==='scn'?scns(p.rows): p.type==='juris'?juris(p.rows):
-             p.type==='gap'?gap(p.g): (p.html||'');
-  var extra = p.conc?'<div class="conc">'+p.conc+'</div>':'';
-  return '<div class="panel'+(p.rev?' rev':'')+'"><h3>'+p.title+'</h3><div class="ph-sub">'+(p.rev?'<span class="revtag">New capability · </span>':'')+p.sub+'</div>'+body+extra+'</div>';
-}
-function positionStrip(cells){return '<div class="position">'+cells.map(c=>'<div class="pcell"><div class="pk">'+c.k+'</div><div class="pv '+(c.cls||'')+'">'+c.v+'</div><div class="pnote">'+(c.pill?'<span class="pill '+c.pill.c+'">'+c.pill.t+'</span>':'')+c.note+'</div></div>').join('')+'</div>';}
-
-/* panels can be laid out: full-width stack, or two-column. We use: hero, position,
-   tiles, then a list of "rows" each being either [oneFullPanel] or [leftPanel,rightPanel]. */
 var SEAT_LABEL={ceo:'CEO / Board',cfo:'CFO',clo:'CLO / General Counsel',cro:'CRO',cio:'CIO',ciso:'CISO'};
-var CUR_SEAT='ceo';
+var CUR='ceo';
 function render(seat){
-  CUR_SEAT=seat;
-  var s=SEATS[seat];
-  var h='<div class="hero"><div class="eyebrow">'+s.eyebrow+'</div><div class="verdict">'+s.verdict+'</div><div class="sub">'+s.sub+'</div></div>';
-  h+='<div class="spine"><span class="lk">⛓ One source of truth</span><span class="num"><b id="lvSpineExpo">$68M</b> <span>expected annual loss ·</span> <b id="lvSpineTail">$180M</b> <span>tail</span></span><span class="arrow">the same number every seat sees — now in the <b>'+SEAT_LABEL[seat]+'</b> lens ↓</span></div>';
-  h+=positionStrip(s.position);
-  h+='<div class="sec"><div class="sec-h"><h2>'+s.tilesTitle+'</h2><span class="meta">'+s.tilesMeta+'</span></div>'+tiles(s.tiles)+'</div>';
-  (s.rows||[]).forEach(function(row){
-    h+='<div class="sec">';
-    if(row.title)h+='<div class="sec-h"><h2>'+row.title+'</h2><span class="meta">'+(row.meta||'')+'</span></div>';
-    if(row.panels.length===2)h+='<div class="cols">'+panel(row.panels[0])+panel(row.panels[1])+'</div>';
-    else h+='<div class="col1">'+row.panels.map(panel).join('')+'</div>';
-    h+='</div>';
-  });
+  CUR=seat;var s=SEATS[seat];
+  var h='<div class="hero"><div class="eyebrow">'+s.eyebrow+'</div><div class="verdict">'+s.verdict+'</div><div class="sub">'+s.sub+'</div><div class="hint">Tip: click any value with a <span class="fx">ƒ</span> chip to see the formula, inputs and math.</div>';
+  h+='<div class="spine"><span class="lk">⛓ One source of truth</span><span class="num"><b id="lvSpineExpo">$68M</b> <span>expected annual loss ·</span> <b id="lvSpineTail">$180M</b> <span>tail</span></span><span class="arrow">the same number every seat sees — in the <b>'+SEAT_LABEL[seat]+'</b> lens ↓</span></div></div>';
+  h+=s.body();
   document.getElementById('app').innerHTML=h;
-  if(seat==='cfo')wireSim();
-  applyLive();
+  wireChoose();applyLive();window.scrollTo({top:0});
 }
+</script>
+<script src="cockpit-seats.js"></script>
+<script>
+/* evidence + live + ticketing wiring */
+function openEv(key){var e=EV[key];if(!e)return;
+  var h='<div class="ev-claim">'+e.claim+'</div><div class="ev-result '+C(e.cls)+'">'+e.result+'</div>';
+  h+='<div class="ev-sec">The formula</div><div class="formula">'+e.formula.replace(/(ALE|VaR₉₅|Monte-Carlo|Beta-PERT|Σ)/g,'<span class="hl">$1</span>')+'</div>';
+  h+='<div class="ev-sec">Inputs used</div><table class="itbl"><thead><tr><th>Input</th><th>Value</th><th>Source</th></tr></thead><tbody>'+e.inputs.map(function(i){return '<tr><td>'+i[0]+'</td><td class="v">'+i[1]+'</td><td class="src">'+i[2]+'</td></tr>';}).join('')+'</tbody></table>';
+  h+='<div class="ev-sec">The calculation</div>'+e.steps.map(function(st){return '<div class="step'+(st[0]==='T'?' total':'')+'"><span class="sn">'+(st[0]==='T'?'=':st[0])+'</span><span>'+st[1]+'</span><span class="sv">'+st[2]+'</span></div>';}).join('');
+  h+='<div class="ev-sec">Where the data comes from</div>'+e.sources.map(function(x){return '<div class="src-row"><span class="sd"></span>'+x+'</div>';}).join('');
+  h+='<div class="ev-sec">Confidence &amp; freshness</div><div class="conf">🛡 '+e.conf+'</div>';
+  document.getElementById('evb').innerHTML=h;document.getElementById('ev').classList.add('open');document.getElementById('scrim').classList.add('open');}
+function closeEv(){document.getElementById('ev').classList.remove('open');document.getElementById('scrim').classList.remove('open');}
+document.addEventListener('click',function(e){var c=e.target.closest('.claim');if(c&&c.dataset.ev)openEv(c.dataset.ev);});
+document.getElementById('evx').addEventListener('click',closeEv);document.getElementById('scrim').addEventListener('click',closeEv);
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeEv();});
 
-/* CFO budget simulator — answers "what happens to exposure + insurance if I change the budget" */
-var SIM={
-  cut:{label:'Cut budget −20%',exp:'$114M',tail:'$214M',prem:'+18% at renewal',vcls:'crit',v:'False economy — the cut adds ~$46M of exposure and a premium increase that exceeds the savings.'},
-  hold:{label:'Hold budget (flat)',exp:'$68M',tail:'$180M',prem:'flat',vcls:'warn',v:'Within appetite on expected loss; the $180M tail still sits above the $120M appetite.'},
-  fund:{label:'Fund the top decision (+$1.4M)',exp:'$16M',tail:'$148M',prem:'−8% at renewal',vcls:'good',v:'37× return — closes the payments driver, brings the tail back inside appetite, and improves the insurance position.'}
-};
-function drawSim(key){
-  var d=SIM[key];
-  document.querySelectorAll('.sim-btn').forEach(function(b){b.classList.toggle('on',b.dataset.k===key);});
-  var vc=d.vcls==='crit'?'var(--crit-soft)':d.vcls==='good'?'var(--good-soft)':'var(--warn-soft)';
-  var tc=d.vcls==='crit'?'var(--crit)':d.vcls==='good'?'var(--good)':'var(--warn)';
-  document.getElementById('simOut').innerHTML=
-    '<div class="sim-cell"><div class="k">Expected annual loss</div><div class="v" style="color:'+tc+'">'+d.exp+'</div></div>'+
-    '<div class="sim-cell"><div class="k">Worst-case tail</div><div class="v" style="color:'+tc+'">'+d.tail+'</div></div>'+
-    '<div class="sim-cell"><div class="k">Insurance premium</div><div class="v">'+d.prem+'</div></div>';
-  document.getElementById('simVerdict').style.background=vc;
-  document.getElementById('simVerdict').style.color=tc;
-  document.getElementById('simVerdict').textContent=d.v;
-}
-function wireSim(){
-  var el=document.getElementById('simBox'); if(!el)return;
-  document.querySelectorAll('.sim-btn').forEach(function(b){b.addEventListener('click',function(){drawSim(b.dataset.k);});});
-  drawSim('hold');
-}
-
-/* ================= SEAT CONTENT ================= */
-var SEATS={
- ceo:{
-  eyebrow:'Executive summary · CEO / Board',
-  verdict:'Cyber risk is <span class="em">managed and within the board’s approved tolerance.</span> The worst-case tail currently sits above appetite, and one funded decision this quarter brings it back in line.',
-  sub:'Your cyber position, presented in the same terms as every other enterprise risk: the dollars at stake, the business’s ability to operate, your legal standing, and the return on what you invest.',
-  position:[
-   {k:'Money at risk (expected annual loss)',v:'<span id="lvExpo">$68M</span> <small>· <span id="lvTail">$180M</span> worst case</small>',pill:{c:'good',t:'Within appetite'},note:'<span id="lvCeoNote">appetite $120M · ≈0.8% of revenue</span>'},
-   {k:'Trend vs last quarter',v:'−$14M',cls:'good',pill:{c:'good',t:'Improving'},note:'privileged-access rollout + training'},
-   {k:'Business operating status',v:'All clear',cls:'good',pill:{c:'good',t:'0 stoppages'},note:'worst-case downtime 3.1 days'}
-  ],
-  tilesTitle:'Board-level questions, answered', tilesMeta:'select any tile to see the evidence behind it',
-  tiles:[
-   {ic:'$',h:'How much is at stake?',big:'$68M',sub:'Expected annual loss; $180M at the 1-in-20-year tail. Concentrated in payments.'},
-   {ic:'◈',h:'Can we keep operating?',big:'Yes',cls:'good',sub:'No revenue operation can be forced down today. Slowest recovery is 3.1 days.'},
-   {ic:'§',h:'Are we legally defensible?',big:'Defensible',cls:'good',sub:'Zero open notifications; no reportable event across any operating jurisdiction.'},
-   {ic:'↗',h:'Is our spend working?',big:'$1 → $9',sub:'Each dollar of security investment has removed ~$9 of exposure; $210M over 3 years.'}
-  ],
-  rows:[
-   {title:'Decisions awaiting your approval',meta:'each with its cost, the exposure it removes, and a clear owner',panels:[
-     {type:'decisions',title:'',sub:'',rows:[
-       {n:1,t:'Close the privileged path into payments',rec:true,d:'The single largest driver of the $68M. Owned by CISO; funding decision sits with the CFO.',cost:'costs $1.4M',buys:'removes $52M exposure',btn:'Approve & record'},
-       {n:2,t:'Modernize recovery for revenue systems',d:'Cuts worst-case downtime from 3.1 days to under 6 hours and brings the tail below appetite.',cost:'costs $3.2M',buys:'−$40M worst case'},
-       {n:3,t:'Set the AI-decisioning risk posture',d:'New this quarter — automated decisions on customer data. Govern in-house or transfer to the insurer.',cost:'$25M limit vs. in-house',buys:'bounds a rising $8M'}
-     ]}
-   ]},
-   {title:'Position & protection',meta:'',panels:[
-     {type:'bars',title:'Where the exposure sits',sub:'By business operation, in dollars — so investment is directed where it reduces the most risk.',
-      rows:[{l:'Payments processing',v:'$34M',pct:100,cls:'hot'},{l:'Customer data platform',v:'$18M',pct:53},{l:'Trading & settlement',v:'$11M',pct:32},{l:'Corporate IT',v:'$5M',pct:15}],
-      conc:'<b>About half of the exposure sits in one operation — payments.</b> Addressing it (Decision 1) reduces the total substantially in a single step.'},
-     {type:'gap',title:'Insurance position',sub:'Does coverage match the risk? The worst case currently runs past the limit.',
-      g:{covPct:83.3,covLbl:'Covered $150M',limit:'$150M limit',max:'$180M worst case',gapLbl:'$30M uninsured tail',
-         kv:[{k:'Annual premium',v:'$4.2M'},{k:'Renewal',v:'in 92 days'},{k:'Decision 2 impact',v:'closes the gap',cls:'good'}]}}
-   ]},
-   {title:'What changed since your last board meeting',meta:'a concise quarter-over-quarter summary',panels:[
-     {type:'list',title:'',sub:'',rows:[
-       {c:'g',ic:'↓',t:'Exposure fell $14M',s:'Privileged-access rollout reached 88% and phishing-failure rate dropped from 9% to 3% — the approved investment is measurably working.'},
-       {c:'w',ic:'✦',t:'One new risk emerged: AI decisioning on customer data (+$8M, rising)',s:'Now a board decision — govern it in-house, or transfer it to the insurer (Decision 3).'},
-       {c:'b',ic:'◑',t:'More resilient than 72% of peers in financial services at your revenue scale',s:'Closing the gap to the top quartile is ~$22M of avoidable exposure and a stronger renewal position.'}
-     ]}
-   ]},
-   {title:'Questions leaders couldn’t answer before',meta:'now answered on demand',panels:[
-     {rev:true,type:'scn',title:'Enterprise scenarios',sub:'strategic “what-if” questions, answered in enterprise terms',
-      rows:[
-       {badge:'M&A',cls:'good',q:'What cyber exposure would acquiring Company X add?',impact:'<b>+$31M expected exposure, +$70M to the tail</b> — driven by an unsegmented payment stack and two unnotified prior incidents.',body:'Diligence-ready before the LOI; re-priced into the deal or made a closing condition.'},
-       {badge:'Shock',cls:'crit',q:'What would a major breach do to enterprise value?',impact:'<b>Modeled 4–9% equity impact</b> on disclosure, before recovery.',body:'Based on realized market reactions for comparable events at your scale and sector.'},
-       {badge:'Board',cls:'warn',q:'Are we spending the right amount on cyber — not too little, not too much?',impact:'<b>At the efficient frontier.</b> The next $1.4M returns 37×; spend beyond ~$9M/yr returns under 2×.',body:'So the board can size the program to risk, not to a peer benchmark.'}
-      ]}
-   ]}
-  ]
- },
-
- cfo:{
-  eyebrow:'Financial view · CFO',
-  verdict:'Cyber loss is <span class="em">quantified, insured, and returning ~9× on spend.</span> A $30M uninsured tail and $92M of exposure carried on deferred decisions are the open financial items.',
-  sub:'Cyber as a line on the risk-adjusted balance sheet: expected loss, capital at risk, the economics of your insurance program, and the marginal return on the next dollar of security spend.',
-  position:[
-   {k:'Expected annual loss',v:'<span id="lvExpoCfo">$68M</span>',pill:{c:'good',t:'Provisioned'},note:'<span id="lvCfoNote">modeled, FAIR-based · ≈0.8% of revenue</span>'},
-   {k:'Value-at-Risk (95%)',v:'<span id="lvTailCfo">$180M</span>',cls:'warn',pill:{c:'warn',t:'Above limit'},note:'0.6% of enterprise value'},
-   {k:'Uninsured tail',v:'<span id="lvGap">$30M</span>',cls:'crit',pill:{c:'crit',t:'Open'},note:'worst case beyond $150M cover'}
-  ],
-  tilesTitle:'The CFO’s questions, answered', tilesMeta:'in dollars and returns, not scores',
-  tiles:[
-   {ic:'$',h:'Capital at risk',big:'$180M',cls:'warn',sub:'1-in-20-year loss. 0.6% of enterprise value; within tolerance except the $30M tail.'},
-   {ic:'↗',h:'Return on security spend',big:'$1 → $9',sub:'Program-wide. The next funded decision returns 37× on $1.4M.'},
-   {ic:'🛡',h:'Insurance economics',big:'$150M / $4.2M',sub:'Cover vs. premium. Renewal in 92 days; loss ratio supports a rate hold.'},
-   {ic:'⧗',h:'Cost of inaction',big:'+$92M',cls:'warn',sub:'Exposure carried on decisions deferred this quarter — the price of waiting.'}
-  ],
-  rows:[
-   {title:'Where the next dollar works hardest',meta:'',panels:[
-     {type:'bars',title:'Spend vs. risk reduced, by program',sub:'Each dollar mapped to the exposure it removes — so budget follows return.',
-      rows:[{l:'Privileged access',v:'37×',pct:100,cls:'g'},{l:'Recovery / DR',v:'13×',pct:52,cls:'g'},{l:'Data protection',v:'8×',pct:34,cls:'g'},{l:'Awareness training',v:'6×',pct:26,cls:'g'},{l:'Endpoint (saturated)',v:'1.4×',pct:8}],
-      conc:'<b>The program is past saturation on endpoint and under-funded on privileged access.</b> Reallocating the next $1.4M lifts blended return, not just coverage.'},
-     {type:'gap',title:'Insurance vs. exposure',sub:'The financial gap and the renewal clock.',
-      g:{covPct:83.3,covLbl:'Covered $150M',limit:'$150M',max:'$180M',gapLbl:'$30M uninsured',
-         kv:[{k:'Premium',v:'$4.2M / yr'},{k:'Loss ratio (3-yr)',v:'11% — favorable',cls:'good'},{k:'Renewal',v:'92 days'},{k:'Raise limit to $180M',v:'+$0.9M premium'}]}}
-   ]},
-   {title:'Questions leaders couldn’t answer before',meta:'model the financial consequence before you commit',panels:[
-     {rev:true,type:'html',title:'Budget simulator — what does changing the spend actually do?',sub:'the counterfactual, answered: move the budget and watch exposure, the tail, and the premium move together',
-      html:'<div id="simBox"><div class="sim-btns"><button class="sim-btn" data-k="cut">Cut −20%</button><button class="sim-btn" data-k="hold">Hold (flat)</button><button class="sim-btn" data-k="fund">Fund top decision +$1.4M</button></div><div class="sim-out" id="simOut"></div><div class="sim-verdict" id="simVerdict"></div></div>'},
-     {type:'scn',title:'Disclosure &amp; capital',sub:'the other two questions finance owns',
-      rows:[
-       {badge:'Disclosure',cls:'warn',q:'If an incident happened today, is it financially material?',impact:'<b>Materiality threshold: $53M.</b> A payments-path event clears it; a corporate-IT event does not.',body:'The 4-business-day SEC clock and draft 8-K language are prepared in advance.'},
-       {badge:'Capital',cls:'good',q:'How much capital should we reserve against cyber?',impact:'<b>$68M expected, $30M unfunded tail</b> — reserve or transfer the $30M; the rest is provisioned.',body:'Cyber sized like any other quantified enterprise risk.'}
-      ]}
-   ]}
-  ]
- },
-
- clo:{
-  eyebrow:'Legal & regulatory view · CLO / General Counsel',
-  verdict:'The organization is <span class="em">defensible across all operating jurisdictions</span> today — no reportable events and evidence preserved. Two obligations have clocks worth watching this quarter.',
-  sub:'Cyber as legal exposure: your disclosure standing, notification duties by country, contractual and privacy obligations, and the modeled liability if an event occurs — with the clock on each.',
-  position:[
-   {k:'Open notifications',v:'0',cls:'good',pill:{c:'good',t:'None active'},note:'across US, EU, UK, APAC'},
-   {k:'Regulatory obligations met',v:'96%',pill:{c:'warn',t:'2 in progress'},note:'evidence current & preserved'},
-   {k:'Modeled liability exposure',v:'$22M',cls:'warn',pill:{c:'warn',t:'Contained'},note:'class-action + regulatory, modeled'}
-  ],
-  tilesTitle:'The General Counsel’s questions, answered', tilesMeta:'obligation, clock, and consequence',
-  tiles:[
-   {ic:'§',h:'Disclosure standing',big:'No reportable event',cls:'good',sub:'SEC materiality clock is not running. Draft 8-K and decision log are pre-staged.'},
-   {ic:'⧗',h:'Notification readiness',big:'Fastest clock 72h',sub:'If an event occurred today, the tightest duty is GDPR (EU) at 72 hours — we can meet it.'},
-   {ic:'📄',h:'Contract & privacy duties',big:'0 in breach',cls:'good',sub:'340 customer contracts with security terms; all current. 6 DPAs renew this quarter.'},
-   {ic:'⚖',h:'Litigation posture',big:'Defensible',cls:'good',sub:'Evidence chain intact and privileged. Reasonable-security standard demonstrably met.'}
-  ],
-  rows:[
-   {title:'Regulatory exposure by jurisdiction',meta:'where you operate — the duty, the clock, and the ceiling',panels:[
-     {type:'juris',title:'',sub:'',rows:[
-       {flag:'🇺🇸',c:'United States',o:'SEC 8-K (material incident) + 54 state breach laws',clock:'4 business days',clockCls:'warn',pen:'Disclosure + enforcement'},
-       {flag:'🇪🇺',c:'European Union',o:'GDPR breach notice · NIS2 · DORA (financial entities)',clock:'72 hours',clockCls:'crit',pen:'Up to 4% of global revenue'},
-       {flag:'🇬🇧',c:'United Kingdom',o:'UK GDPR / ICO notification',clock:'72 hours',clockCls:'crit',pen:'Up to £17.5M or 4%'},
-       {flag:'🇸🇬',c:'Singapore',o:'PDPA · MAS TRM (financial)',clock:'72 hours / 1 hour (MAS)',clockCls:'crit',pen:'Up to S$1M'},
-       {flag:'🇦🇺',c:'Australia',o:'Privacy Act · APRA CPS 234',clock:'72 hours',clockCls:'warn',pen:'Up to A$50M'},
-       {flag:'🇨🇦',c:'Canada',o:'PIPEDA · OSFI (financial)',clock:'“as soon as feasible”',clockCls:'good',pen:'Reputational + fines'}
-     ],conc:'<b>The binding constraint is the 72-hour EU/UK clock and the 1-hour MAS notice.</b> Our incident runbook is timed to meet the tightest of these, not the average.'}
-   ]},
-   {title:'Materiality workbench',meta:'a cross-functional, evidenced determination — not a judgment call reconstructed later',panels:[
-     {rev:true,type:'html',title:'Is it material? Who decided? Is the clock running?',sub:'the SEC determination as a documented, defensible workflow across CFO · GC · CISO · CIO',
-      html:'<div class="mw"><div class="mw-clock"><div class="t">4 days</div><div class="l">SEC 8-K clock — begins when materiality is <b>determined</b>, and only then</div></div><div class="mw-steps"><div class="st"><span class="ck done">✓</span>Incident detected &amp; scoped — CISO</div><div class="st"><span class="ck done">✓</span>Financial impact modeled in $ — CFO</div><div class="st"><span class="ck now">●</span>Materiality determination — GC + disclosure committee</div><div class="st"><span class="ck wait">4</span>Draft 8-K + jurisdiction notifications — GC</div><div class="st"><span class="ck wait">5</span>File &amp; preserve the decision record — GC</div></div></div>'},
-     {type:'list',title:'Director &amp; officer defensibility',sub:'the evidence that protects the board and officers',
-      rows:[
-       {c:'g',ic:'✓',t:'Board oversight is documented and continuous',s:'Funded decisions, owners, and dates — an evidenced trail, not one reconstructed under subpoena.'},
-       {c:'g',ic:'✓',t:'Reasonable-security standard demonstrably met',s:'Supports the business-judgment defense against director liability.'},
-       {c:'g',ic:'🔒',t:'Evidence chain intact and privileged',s:'Every figure traces to a source; determinations are timestamped and preserved.'}
-      ]}
-   ]},
-   {title:'Questions leaders couldn’t answer before',meta:'legal scenarios on demand',panels:[
-     {rev:true,type:'scn',title:'Legal & regulatory scenarios',sub:'the consequence and the clock, per situation and country',
-      rows:[
-       {badge:'Incident',cls:'crit',q:'If customer data in Germany were exposed today, what must we do, by when?',impact:'<b>Notify the lead DPA within 72h; notify affected individuals “without undue delay.” Max exposure ~4% of global revenue.</b>',body:'The runbook, notification templates, and decision log are generated for that exact jurisdiction and data type.'},
-       {badge:'Materiality',cls:'warn',q:'Is this event “material” for SEC purposes — and who decides?',impact:'<b>Above the $53M materiality line → reportable; a documented committee decision starts the 4-day clock.</b>',body:'The determination is evidenced and defensible, not a judgment call after the fact.'},
-       {badge:'D&O',cls:'ser',q:'Are the directors personally exposed here?',impact:'<b>No — documented oversight, funded decisions, and a demonstrated reasonable-security standard</b> support the business-judgment defense.',body:'Board oversight of cyber is now evidenced continuously, not reconstructed under subpoena.'}
-      ]}
-   ]}
-  ]
- },
-
- cro:{
-  eyebrow:'Enterprise risk view · CRO',
-  verdict:'Cyber is <span class="em">within appetite and fully quantified,</span> and now sits alongside your other principal risks on one scale. The watch item is where it correlates with third-party and operational risk at the tail.',
-  sub:'Cyber inside the enterprise risk portfolio: measured in the same currency as every other risk, tested for correlation and aggregation, and tracked against appetite — with an emerging-risk radar.',
-  position:[
-   {k:'Cyber vs. appetite',v:'$68M / $120M',pill:{c:'good',t:'Within'},note:'57% of allocated appetite'},
-   {k:'Correlation flag',v:'2 risks',cls:'warn',pill:{c:'warn',t:'Watch'},note:'couples with third-party + operational'},
-   {k:'Risk transferred',v:'83%',pill:{c:'good',t:'Efficient'},note:'of the tail, via insurance'}
-  ],
-  tilesTitle:'The CRO’s questions, answered', tilesMeta:'one scale, all risks',
-  tiles:[
-   {ic:'⚖',h:'Position vs. appetite',big:'Within',cls:'good',sub:'$68M against a $120M allocation. The tail ($180M) is the only breach point.'},
-   {ic:'◈',h:'Concentration',big:'50% in payments',cls:'warn',sub:'A single operation carries half the exposure — a concentration to govern.'},
-   {ic:'🔗',h:'Correlation',big:'Couples with 2',cls:'warn',sub:'A payments event co-occurs with third-party and operational risk — aggregation risk.'},
-   {ic:'🛡',h:'Transfer efficiency',big:'83% of tail',sub:'Insured cost-effectively; the residual $30M is the retained tail.'}
-  ],
-  rows:[
-   {title:'Cyber in the enterprise risk portfolio',meta:'the same currency as every other principal risk',panels:[
-     {type:'bars',title:'Top enterprise risks, in dollars',sub:'Cyber is no longer a color on a heat map — it is a quantified peer of your other risks.',
-      rows:[{l:'Credit / market',v:'$210M',pct:100},{l:'Operational',v:'$140M',pct:67},{l:'Cyber',v:'$68M',pct:32,cls:'hot'},{l:'Third-party',v:'$54M',pct:26},{l:'Compliance',v:'$30M',pct:14}],
-      conc:'<b>Cyber ranks third — but it is the most correlated.</b> A payments-path event pulls operational and third-party risk with it, which is where aggregation can breach appetite.'},
-     {type:'scn',title:'Aggregation & tail',sub:'the combinations that matter',
-      rows:[
-       {badge:'Aggregation',cls:'crit',q:'Which combination breaches appetite?',impact:'<b>A payments outage + top-vendor failure = $205M</b>, over the $180M enterprise tail.',body:'The model treats these as correlated, not independent — so the tail is real, not theoretical.'},
-       {badge:'Mitigant',cls:'good',q:'What brings it back inside?',impact:'<b>Decisions 1 + 2 remove $92M</b> and de-correlate the payments path.',body:'One quarter of action moves the aggregate below appetite.'}
-      ]}
-   ]},
-   {title:'Questions leaders couldn’t answer before',meta:'forward risk on demand',panels:[
-     {rev:true,type:'list',title:'Emerging-risk radar',sub:'ranked by velocity and by how well we’re adapting — not by last year’s losses',
-      rows:[
-       {c:'c',ic:'▲',t:'AI / automated decisioning on regulated data — velocity: high, our adaptation: forming',s:'+$8M this quarter and accelerating. Governance decision is on the CEO board (Decision 3).'},
-       {c:'w',ic:'▲',t:'Third-party & cloud concentration — velocity: high, our adaptation: partial',s:'One provider underpins three revenue systems; a failure is the top aggregation driver.'},
-       {c:'b',ic:'◐',t:'Quantum / cryptographic obsolescence — velocity: medium, our adaptation: planned',s:'No near-term loss, but long-dated data is exposed; migration roadmap staged.'},
-       {c:'s',ic:'◐',t:'Geopolitical / sanctions-driven disruption — velocity: variable',s:'Modeled against your operating regions; contained under current footprint.'}
-      ]}
-   ]}
-  ]
- },
-
- cio:{
-  eyebrow:'Operational resilience view · CIO',
-  verdict:'Every revenue-critical system is <span class="em">operating and recoverable.</span> The slowest recovery is 3.1 days and one investment cuts it to hours; a single vendor underpinning three systems is the concentration to address.',
-  sub:'Cyber and resilience for the systems that carry the business: what each revenue system is worth per hour, how fast it recovers, where you depend on a single provider, and where technical debt threatens continuity.',
-  position:[
-   {k:'Revenue systems operating',v:'100%',cls:'good',pill:{c:'good',t:'All up'},note:'0 unplanned outages this quarter'},
-   {k:'Worst-case recovery',v:'3.1 days',cls:'warn',pill:{c:'warn',t:'Above target'},note:'target < 6 hours (Decision 2)'},
-   {k:'Revenue at risk / hour',v:'$2.3M',cls:'warn',pill:{c:'warn',t:'Payments'},note:'highest-value dependency'}
-  ],
-  tilesTitle:'The CIO’s questions, answered', tilesMeta:'resilience in revenue terms',
-  tiles:[
-   {ic:'◈',h:'What does downtime cost?',big:'$2.3M / hr',cls:'warn',sub:'On payments — the most valuable operational dependency. Corporate IT is <$40K/hr.'},
-   {ic:'↻',h:'How fast do we recover?',big:'3.1 days → <6h',sub:'Worst case today; the DR investment (Decision 2) closes the gap for revenue systems.'},
-   {ic:'🔗',h:'Where are we concentrated?',big:'1 vendor, 3 systems',cls:'warn',sub:'A single provider underpins payments, portal, and settlement — a single point of failure.'},
-   {ic:'⌛',h:'What’s aging out?',big:'4 systems EOL',cls:'warn',sub:'Past vendor support; carry $12M of avoidable exposure until modernized.'}
-  ],
-  rows:[
-   {title:'Revenue systems & their resilience',meta:'value per hour vs. how fast each recovers',panels:[
-     {type:'bars',title:'Recovery time by revenue system',sub:'Ranked by business value at risk — recovery investment follows revenue, not asset count.',
-      rows:[{l:'Payments ($2.3M/hr)',v:'74 hrs',pct:100,cls:'hot'},{l:'Member portal ($0.6M/hr)',v:'40 hrs',pct:54},{l:'Settlement ($0.9M/hr)',v:'28 hrs',pct:38},{l:'Corporate IT (<$40K/hr)',v:'8 hrs',pct:11}],
-      conc:'<b>The system worth the most per hour also recovers the slowest.</b> Decision 2 inverts that — protecting revenue first.'},
-     {type:'kv',title:'Third-party concentration',sub:'the dependency that turns one failure into three',
-      rows:[{k:'Cloud provider “A” underpins',v:'3 revenue systems',cls:'warn'},{k:'Combined revenue exposure',v:'$3.8M / hr',cls:'crit'},{k:'Provider’s own resilience (SLA)',v:'99.9% — single region'},{k:'Mitigation',v:'multi-region: $2.1M',cls:'good'}]}
-   ]},
-   {title:'Questions leaders couldn’t answer before',meta:'continuity scenarios on demand',panels:[
-     {rev:true,type:'scn',title:'Continuity scenarios',sub:'exactly what stops, and what it costs, per event',
-      rows:[
-       {badge:'Vendor',cls:'crit',q:'If cloud provider “A” has a regional outage, what stops — and at what cost?',impact:'<b>Payments, portal, and settlement all degrade: $3.8M/hr, ~$91M/day.</b>',body:'Multi-region ($2.1M) removes the shared failure — the specific systems and dollars are known in advance.'},
-       {badge:'Ransomware',cls:'crit',q:'If our most critical system were encrypted tonight, when are we back?',impact:'<b>Today: 74 hours. After Decision 2: under 6 hours.</b>',body:'Recovery is expressed in revenue-hours restored, not RTO/RPO jargon.'},
-       {badge:'Tech debt',cls:'warn',q:'Which aging systems are actually putting revenue at risk?',impact:'<b>4 end-of-life systems carry $12M of avoidable exposure</b>, two on the payments path.',body:'Modernization is prioritized by revenue protected per dollar, not by age.'}
-      ]}
-   ]}
-  ]
- },
-
- ciso:{
-  eyebrow:'Security operating view · CISO',
-  verdict:'<span class="em">No active compromise, and the program is improving.</span> The largest single exposure driver has a funded decision ready; control effectiveness is expressed as the dollars of risk it removes.',
-  sub:'The operator’s seat — still in business terms: what is driving exposure, which decisions close it, how effective controls are measured as risk removed, and live threat activity mapped to business impact.',
-  position:[
-   {k:'Live threat status',v:'No active compromise',cls:'good',pill:{c:'good',t:'Clear'},note:'312,400 events correlated · 0 matches'},
-   {k:'Top exposure driver',v:'$52M',cls:'crit',pill:{c:'crit',t:'Actionable'},note:'privileged path to payments'},
-   {k:'Program trajectory',v:'82 → improving',cls:'good',pill:{c:'good',t:'+4 QoQ'},note:'recovery + AI governance are the drags'}
-  ],
-  tilesTitle:'The CISO’s questions, answered', tilesMeta:'effectiveness as risk removed, not maturity scores',
-  tiles:[
-   {ic:'🛡',h:'Are we compromised?',big:'No',cls:'good',sub:'4,102 attacks blocked in 24h; one elevated phishing campaign aimed at payments staff.'},
-   {ic:'$',h:'What’s driving exposure?',big:'Privileged access',cls:'crit',sub:'The path into payments carries $52M — the single highest-leverage fix.'},
-   {ic:'↗',h:'Are controls working?',big:'$210M removed',sub:'Control effectiveness measured as exposure bought down over 3 years, not a 1–5 score.'},
-   {ic:'◑',h:'Coverage from tools',big:'99.4%',sub:'Live signals from connected tools; gaps are named, owned, and costed.'}
-  ],
-  rows:[
-   {title:'Exposure drivers & the decision to close each',meta:'ranked by dollars, each with a fix',panels:[
-     {type:'bars',title:'What is driving the $68M',sub:'Each driver carries a funded decision — so the list is a plan, not a backlog.',
-      rows:[{l:'Privileged path → payments',v:'$52M',pct:100,cls:'hot'},{l:'Recovery not yet proven',v:'$40M',pct:77,cls:'hot'},{l:'AI decisioning (new)',v:'$8M',pct:15},{l:'Third-party concentration',v:'$6M',pct:12}],
-      conc:'<b>Two decisions cover the top two drivers.</b> This is the same money the board and CFO see — one language, one number, top to bottom.'},
-     {type:'kv',title:'Coverage from connected tools',sub:'live signals — real values, named gaps',
-      rows:[{k:'Endpoint detection (EDR)',v:'98.1%',cls:'good'},{k:'Multi-factor (MFA)',v:'96% — 4% legacy',cls:'warn'},{k:'Privileged accounts managed',v:'60% — the driver',cls:'crit'},{k:'Vulnerabilities within SLA',v:'94%',cls:'good'},{k:'Phishing-prone rate',v:'3% (was 9%)',cls:'good'}]}
-   ]},
-   {title:'Questions leaders couldn’t answer before',meta:'operations mapped to business impact',panels:[
-     {rev:true,type:'scn',title:'Operational scenarios',sub:'threat activity and control gaps, in business consequence',
-      rows:[
-       {badge:'Threat',cls:'warn',q:'The live phishing campaign on payments staff — what is actually at risk?',impact:'<b>It targets the credentials behind the $52M privileged path.</b>',body:'The threat is linked directly to the exposure it threatens and the decision that closes it — not reported as an isolated alert.'},
-       {badge:'Gap',cls:'crit',q:'Which single control gap is costing the most?',impact:'<b>Privileged-access management at 60% → the $52M driver.</b>',body:'The gap is expressed as dollars of exposure, with the exact spend to close it.'},
-       {badge:'Proof',cls:'good',q:'Can I prove the program is getting better?',impact:'<b>+4 to 82 this quarter; $14M of exposure removed, every point evidenced.</b>',body:'Trajectory is backed by traceable signals, defensible to the board and an auditor alike.'}
-      ]}
-   ]}
-  ]
- }
-};
-
-document.querySelectorAll('.seat').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.seat').forEach(function(x){x.classList.remove('on');});b.classList.add('on');render(b.dataset.seat);window.scrollTo({top:0,behavior:'smooth'});});});
-
-/* ===== Live data layer — headline economics from the real engine ===== */
-var LIVE=null;
+/* Choose an option → record to the org's connected ticketing system (ITSM). */
 function apiBase(){try{return (window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'https://cyber-rx.onrender.com').replace(/\/+$/,'');}catch(_){return 'https://cyber-rx.onrender.com';}}
 function orgId(){try{return window.CYBERRX_ORG_ID||localStorage.getItem('cyberrx_org_id')||'';}catch(_){return '';}}
 function orgName(){try{return localStorage.getItem('cyberrx_org_name')||'';}catch(_){return '';}}
+function wireChoose(){
+  document.querySelectorAll('.choose').forEach(function(btn){
+    btn.onclick=function(){
+      var dec=btn.dataset.dec,opt=btn.dataset.opt,title=btn.dataset.title;
+      var box=btn.closest('.decision');box.querySelectorAll('.opt').forEach(function(o){o.classList.remove('chosen');});btn.closest('.opt').classList.add('chosen');
+      var s=document.getElementById('dstatus-'+dec);
+      s.innerHTML='<div class="st-h">⧗ Recording to your ticketing system…</div>';s.classList.add('show');
+      var o=orgId(),base=apiBase();
+      var body={title:'[Board decision] '+title,desc:'Chosen option: '+opt+'. Recorded from the CyberRx executive cockpit.',sourceRef:'cockpit-decision-'+dec+'-'+CUR};
+      var done=function(ticket,sysLabel,ok){
+        s.innerHTML='<div class="st-h">'+(ok?'✓':'◹')+' '+(ok?('Recorded to '+(sysLabel||'your ticketing system')+(ticket?' · '+ticket:'')):'Recorded (queued — connect a ticketing system in onboarding to sync)')+'</div>'+
+          '<div class="st-b">Chosen: <b style="color:#fff">Option '+opt+'</b> · owner assigned · SLA started. Tracked to completion below.</div>'+
+          '<div class="track"><div class="tstep done"></div><div class="tstep done"></div><div class="tstep"></div><div class="tstep"></div></div>'+
+          '<div class="st-b" style="margin-top:7px">Status: <b style="color:#fff">Open → In progress</b> · Raised · Assigned · <span style="opacity:.6">Implementation · Verified closed</span></div>';
+      };
+      if(!o||!base){done(null,null,false);return;}
+      try{
+        fetch(base+'/api/itsm/open?org_id='+encodeURIComponent(o),{method:'POST',headers:{'Content-Type':'application/json','X-Org-Id':o},body:JSON.stringify(body)})
+          .then(function(r){return r.ok?r.json():null;})
+          .then(function(d){if(d&&(d.id||d.number||d.key||d.ticket)){done(d.number||d.id||d.key||d.ticket,d.label||'ServiceNow',true);}else{done(null,null,false);}})
+          .catch(function(){done(null,null,false);});
+      }catch(_){done(null,null,false);}
+    };
+  });
+}
+
+/* ---- live economics ---- */
+var LIVE=null;
 function usd(n){n=Number(n)||0;var neg=n<0;n=Math.abs(n);var s;if(n>=1e9)s='$'+(n/1e9).toFixed(n>=1e10?0:1)+'B';else if(n>=1e6)s='$'+Math.round(n/1e6)+'M';else if(n>=1e3)s='$'+Math.round(n/1e3)+'K';else s='$'+Math.round(n);return (neg?'−':'')+s;}
 function setTxt(id,v){var e=document.getElementById(id);if(e)e.textContent=v;}
-function badge(live){var b=document.getElementById('dataBadge');if(b){b.textContent=live?'Live data':'Illustrative';b.style.color=live?'var(--good)':'var(--warn)';b.style.borderColor=live?'rgba(12,163,12,.5)':'rgba(250,178,25,.4)';}}
-function setBar(live,econ){
-  var bar=document.getElementById('dataModeBar'),inner=document.getElementById('dataModeInner');if(!bar)return;bar.style.display='block';bar.style.borderBottom='1px solid';
-  var nm=orgName()||'your organization';
-  if(live){bar.style.background='rgba(12,163,12,.10)';bar.style.borderBottomColor='rgba(12,163,12,.35)';inner.style.color='var(--good)';
-    inner.innerHTML='● <b>Live · '+nm+'</b> — headline exposure &amp; financials are computed from your inventory and figures. Sections still marked illustrative fill in as their data sources connect.';}
-  else{bar.style.background='rgba(250,178,25,.12)';bar.style.borderBottomColor='rgba(250,178,25,.4)';inner.style.color='var(--warn,#b7791f)';
-    inner.innerHTML='◐ <b>Illustrative</b> — sample figures shown. Complete onboarding (inventory + financials → Go live) to compute your live cockpit.';}
-  var ol=document.getElementById('orgLive');if(ol)ol.innerHTML='<span class="dot" style="background:'+(live?'var(--good)':'var(--muted)')+'"></span>'+(live?('Live · '+nm):'Sample workspace');
-}
-// Patch the headline numbers (spine + CEO + CFO) from the real economics block.
-function applyLive(){
-  if(!LIVE){return;}
-  var e=LIVE.economics||{},r=(e.ratios||{}),ap=(e.appetite||{}),ins=(e.insurance||{});
-  var ale=Number(e.ale)||0,tail=Number(e.tail)||ale;
-  if(ale>0){
-    setTxt('lvSpineExpo',usd(ale));setTxt('lvSpineTail',usd(tail));
-    setTxt('lvExpo',usd(ale));setTxt('lvTail',usd(tail));
-    setTxt('lvExpoCfo',usd(ale));setTxt('lvTailCfo',usd(tail));
-    if(ins&&ins.gap!=null)setTxt('lvGap',usd(ins.gap));
-    var pct=r.pct_of_revenue!=null?(' · '+(r.pct_of_revenue*100).toFixed(r.pct_of_revenue<0.01?2:1)+'% of revenue'):'';
-    var apt=ap&&ap.appetite!=null?('appetite '+usd(ap.appetite)):'appetite not set';
-    setTxt('lvCeoNote',apt+pct);
-    setTxt('lvCfoNote','modeled (FAIR) '+pct);
-  }
-}
-function loadLive(){
-  var base=apiBase(),o=orgId();badge(false);setBar(false);
-  if(!base||!o)return;
-  try{
-    fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}})
-      .then(function(r){return r.ok?r.json():null;})
-      .then(function(d){
-        if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){
-          LIVE=d;badge(true);setBar(true,d.economics);applyLive();
-        }else{LIVE=null;badge(false);setBar(false);}
-      }).catch(function(){badge(false);setBar(false);});
-  }catch(_){badge(false);setBar(false);}
-}
-render('ceo');
-loadLive();
+function badge(live){var b=document.getElementById('dataBadge');if(b){b.textContent=live?'Live data':'Illustrative';b.style.color=live?'var(--good)':'var(--warn)';b.style.borderColor=live?'rgba(12,163,12,.5)':'rgba(250,178,25,.4)';}var ol=document.getElementById('orgLive');if(ol)ol.innerHTML='<span class="dot" style="background:'+(live?'var(--good)':'var(--muted)')+'"></span>'+(live?('Live · '+(orgName()||'your organization')):'Sample workspace');}
+function setBar(live){var bar=document.getElementById('dataModeBar'),inner=document.getElementById('dataModeInner');if(!bar)return;bar.style.display='block';bar.style.borderBottom='1px solid';var nm=orgName()||'your organization';
+  if(live){bar.style.background='rgba(12,163,12,.10)';bar.style.borderBottomColor='rgba(12,163,12,.35)';inner.style.color='var(--good)';inner.innerHTML='● <b>Live · '+nm+'</b> — headline economics computed from your data. Sections labeled illustrative fill in as their intake sources connect.';}
+  else{bar.style.background='rgba(250,178,25,.12)';bar.style.borderBottomColor='rgba(250,178,25,.4)';inner.style.color='var(--warn,#b7791f)';inner.innerHTML='◐ <b>Illustrative</b> — sample figures. Complete onboarding (inventory + financials → Go live) to compute your live cockpit.';}}
+function applyLive(){if(!LIVE)return;var e=LIVE.economics||{},r=e.ratios||{},ap=e.appetite||{},ins=e.insurance||{};var ale=Number(e.ale)||0,tail=Number(e.tail)||ale;
+  if(ale>0){setTxt('lvSpineExpo',usd(ale));setTxt('lvSpineTail',usd(tail));setTxt('lvExpo',usd(ale));setTxt('lvTail',usd(tail));setTxt('lvExpoCfo',usd(ale));setTxt('lvTailCfo',usd(tail));if(ins&&ins.gap!=null){setTxt('lvGap',usd(ins.gap));setTxt('lvGapCeo',usd(ins.gap));}}}
+function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}}
+
+document.querySelectorAll('.seat').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.seat').forEach(function(x){x.classList.remove('on');});b.classList.add('on');render(b.dataset.seat);});});
+render('ceo');loadLive();
 </script>
 </body>
 </html>
