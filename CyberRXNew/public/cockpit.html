@@ -394,36 +394,52 @@ function allDecisions(){
 function importedInits(){
   try{var a=JSON.parse(localStorage.getItem('cyberrx_initiatives')||'[]');return Array.isArray(a)?a:[];}catch(_){return [];}
 }
+function parseUsdNum(s){var m=String(s||'').match(/([\d.]+)\s*([KMB])?/i);if(!m)return 0;var n=parseFloat(m[1])||0;var u=(m[2]||'').toUpperCase();return n*(u==='B'?1e9:u==='M'?1e6:u==='K'?1e3:1);}
+function deliveredBar(p){return '<div style="display:flex;align-items:center;gap:6px"><div style="flex:1;height:5px;background:#2a2a28;border-radius:3px;min-width:38px;overflow:hidden"><i style="display:block;height:100%;width:'+p+'%;background:'+(p>=100?'var(--good)':'var(--blue)')+'"></i></div><span style="font-size:11px;color:var(--muted)">'+p+'%</span></div>';}
+function projProgress(d){ // schedule progress from real ticket status (or committed state)
+  if(d&&d.ticket){var n=statusStep(d.status).n;return n>=4?100:n>=3?55:n>=2?20:0;}
+  var committed=(Date.now()-((d&&d.ts)||0))>=EDIT_WINDOW_MS;return committed?40:10;
+}
 function renderInitiatives(){
   var host=document.getElementById('initiatives-panel');if(!host)return;
   var list=allDecisions();var imp=importedInits();
-  if(!list.length&&!imp.length){host.innerHTML='<div class="card"><div class="cn">No cyber initiatives yet. Import your in-flight projects at onboarding (upload or pull from Jira/ServiceNow), and every decision an executive commits in their seat is added here — cost, ROI, owner and ticket — so the CISO and CFO manage new cyber spend in one place.</div></div>';return;}
+  if(!list.length&&!imp.length){host.innerHTML='<div class="card"><div class="cn">No cyber initiatives yet. Import your in-flight projects at onboarding (upload or pull from Jira/ServiceNow), and every decision an executive commits in their seat is added here — budget, target ROI, delivered-to-date, owner and ticket — so the CISO and CFO manage new cyber spend in one place.</div></div>';return;}
+  var totBudget=0,roiVals=[],progVals=[];
   var decRows=list.map(function(d){
     var committed=(Date.now()-(d.ts||0))>=EDIT_WINDOW_MS;
-    var cost=extractCost(d.osum),roi=extractROI(d.osum);
+    var cost=extractCost(d.osum),roi=extractROI(d.osum),prog=projProgress(d);
+    totBudget+=parseUsdNum(cost);if(roi!=='—')roiVals.push(parseFloat(roi));progVals.push(prog);
     var tk=d.ticket?(d.url?('<a href="'+d.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+d.ticket+'</a>'):('<b style="color:#fff">'+d.ticket+'</b>'))+(d.system?(' · '+d.system):''):'<span style="color:var(--muted)">not sent yet</span>';
-    var st;
-    if(d.ticket){var sp=statusStep(d.status);st='<span class="tag '+(sp.n>=4?'good':'')+'">'+(d.status?sp.t:'Open')+'</span>';}
+    var st;if(d.ticket){var sp=statusStep(d.status);st='<span class="tag '+(sp.n>=4?'good':'')+'">'+(d.status?sp.t:'Open')+'</span>';}
     else st=committed?'<span class="tag crit">Committed</span>':'<span class="tag warn">In 24h review</span>';
-    return '<tr><td style="max-width:280px">'+d.title+'<div style="color:var(--muted);font-size:11.5px;margin-top:2px">Cockpit decision · Option '+d.opt+'</div></td>'+
+    return '<tr><td style="max-width:260px">'+d.title+'<div style="color:var(--muted);font-size:11.5px;margin-top:2px">Cockpit decision · Option '+d.opt+'</div></td>'+
       '<td>'+(d.by||'—')+'<div style="color:var(--muted);font-size:11.5px">'+(SEAT_LABEL[d.seat]||'')+'</div></td>'+
       '<td style="font-weight:600">'+cost+'</td>'+
       '<td style="font-weight:700;color:'+(roi==='—'?'var(--muted)':'var(--good)')+'">'+roi+'</td>'+
-      '<td>'+st+'</td>'+
-      '<td>'+tk+'</td></tr>';
+      '<td style="min-width:100px">'+deliveredBar(prog)+'</td>'+
+      '<td>'+st+'</td><td>'+tk+'</td></tr>';
   }).join('');
   var impRows=imp.map(function(p){
-    var roi=String(p.roi||'').trim()||'—',cost=String(p.cost||'').trim()||'—';
+    var roi=String(p.roi||'').trim()||'—',cost=String(p.cost||'').trim()||'—',prog=projProgress(p);
+    totBudget+=parseUsdNum(cost);if(roi!=='—')roiVals.push(parseFloat(roi));progVals.push(prog);
     var tk=p.ticket?(p.url?('<a href="'+p.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+p.ticket+'</a>'):('<b style="color:#fff">'+p.ticket+'</b>'))+(p.system?(' · '+p.system):''):'<span style="color:var(--muted)">—</span>';
     var sp=statusStep(p.status);var st='<span class="tag '+(sp.n>=4?'good':'')+'">'+(p.status?(p.ticket?sp.t:p.status):'—')+'</span>';
-    return '<tr><td style="max-width:280px">'+(p.name||'—')+'<div style="color:var(--muted);font-size:11.5px;margin-top:2px">In-flight · '+(p.source==='ticketing'?'from ticketing':'imported')+'</div></td>'+
+    return '<tr><td style="max-width:260px">'+(p.name||'—')+'<div style="color:var(--muted);font-size:11.5px;margin-top:2px">In-flight · '+(p.source==='ticketing'?'from ticketing':'imported')+'</div></td>'+
       '<td>'+(p.owner||'—')+'</td><td style="font-weight:600">'+cost+'</td>'+
       '<td style="font-weight:700;color:'+(roi==='—'?'var(--muted)':'var(--good)')+'">'+roi+'</td>'+
+      '<td style="min-width:100px">'+deliveredBar(prog)+'</td>'+
       '<td>'+st+'</td><td>'+tk+'</td></tr>';
   }).join('');
   var total=list.length+imp.length;
-  host.innerHTML='<div class="card"><table class="tbl"><thead><tr><th>Initiative</th><th>Owner</th><th>Cost</th><th>Return</th><th>Status</th><th>Project</th></tr></thead><tbody>'+decRows+impRows+'</tbody></table>'+
-    '<div class="cn" style="margin-top:10px">'+total+' active '+(total===1?'initiative':'initiatives')+(imp.length?(' · '+imp.length+' in-flight from onboarding'):'')+(list.length?(' · '+list.length+' from cockpit decisions'):'')+' · committed items are locked and tracked to completion in your ticketing system.</div></div>';
+  var blendedRoi=roiVals.length?(Math.round(roiVals.reduce(function(s,x){return s+x;},0)/roiVals.length)):null;
+  var portProg=progVals.length?Math.round(progVals.reduce(function(s,x){return s+x;},0)/progVals.length):0;
+  var summary='<div style="display:flex;gap:26px;margin-top:12px;flex-wrap:wrap">'+
+    '<div><div class="cv" style="font-size:18px">'+(totBudget>0?usd(totBudget):'—')+'</div><div class="cn">total budget committed</div></div>'+
+    (blendedRoi?('<div><div class="cv" style="font-size:18px;color:var(--good)">'+blendedRoi+'×</div><div class="cn">blended target ROI (end of project)</div></div>'):'')+
+    '<div><div class="cv" style="font-size:18px">'+portProg+'%</div><div class="cn">portfolio delivered to date</div></div>'+
+    '</div>';
+  host.innerHTML='<div class="card"><table class="tbl"><thead><tr><th>Initiative</th><th>Owner</th><th>Budget</th><th>Target ROI</th><th>Delivered</th><th>Status</th><th>Project</th></tr></thead><tbody>'+decRows+impRows+'</tbody></table>'+summary+
+    '<div class="cn" style="margin-top:10px">'+total+' active '+(total===1?'initiative':'initiatives')+'. Delivered % tracks each project’s real ticket status; ROI is the target at completion. Connect your PM/finance system for spent-to-date actuals.</div></div>';
 }
 
 /* ---- live economics ---- */
