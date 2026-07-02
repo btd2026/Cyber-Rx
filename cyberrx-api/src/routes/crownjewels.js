@@ -61,13 +61,35 @@ router.post('/ingest', optionalJWT, async (req, res) => {
   try {
     const mapped = IngestMapper.mapOnboarding({ org_id: orgId, org_name: orgName || orgId, processes, apps });
 
+    // Economics inputs (financials, board appetite, insurance, budget) — stored on
+    // the org and used by the cockpit's financial translation layer. All optional.
+    const money = (v) => IngestMapper.money(v);
+    const fin = b.financials || {};
+    const ins = b.insurance || {};
+    const economics = {
+      financials: {
+        revenue: money(fin.revenue), operatingIncome: money(fin.operatingIncome),
+        netIncome: money(fin.netIncome), enterpriseValue: money(fin.enterpriseValue),
+      },
+      appetite: money(b.appetite),
+      insurance: {
+        limit: money(ins.limit), premium: money(ins.premium),
+        retention: money(ins.retention), renewal: ins.renewal || null,
+      },
+      budget: money(b.budget),
+      industry: b.industry || null,
+      regions: Array.isArray(b.regions) ? b.regions : (b.regions ? [b.regions] : []),
+    };
+
     // Ensure the org row exists so the FK on business_processes/assets is satisfied.
+    // JSONB-merge economics into setup_json so re-ingest overlays without clobbering.
     step = 'upsert_org';
     await db.query(
       `INSERT INTO orgs (id, name, type, setup_json, created_at)
-       VALUES ($1,$2,$3,$4,NOW())
-       ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name`,
-      [mapped.org.id, mapped.org.name, '', '{}']);
+       VALUES ($1,$2,$3,$4::jsonb,NOW())
+       ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name,
+         setup_json = COALESCE(orgs.setup_json,'{}'::jsonb) || EXCLUDED.setup_json`,
+      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics })]);
 
     // Idempotent replace: clear the org's prior inventory, then insert the mapped rows.
     step = 'clear_inventory';

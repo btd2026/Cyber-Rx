@@ -13,10 +13,12 @@
  */
 
 const logger = require('../../utils/logger');
+const db = require('../../utils/db');
 const Asset = require('../../models/Asset');
 const BusinessProcess = require('../../models/BusinessProcess');
 const Risk = require('../../models/Risk');
 const Criticality = require('./CriticalityService');
+const Economics = require('./EconomicsService');
 const Graph = require('./GraphModelService');
 const EntityResolution = require('./EntityResolutionService');
 const DependencyMapping = require('./DependencyMappingService');
@@ -38,6 +40,16 @@ function normAsset(a) {
   };
 }
 
+// Load the org's economics inputs (financials/appetite/insurance) from setup_json.
+async function loadOrgEconomics(orgId) {
+  try {
+    const rows = await db.query('SELECT setup_json FROM orgs WHERE id=$1', [orgId]);
+    const sj = rows[0] && rows[0].setup_json;
+    const parsed = typeof sj === 'string' ? JSON.parse(sj) : (sj || {});
+    return (parsed && parsed.economics) || {};
+  } catch (_) { return {}; }
+}
+
 // materialExposure() reads snake_case, but Risk._transformFromDb returns camelCase.
 function normRisk(r) {
   return {
@@ -49,10 +61,11 @@ function normRisk(r) {
 }
 
 async function run(orgId) {
-  const [rawAssets, processes, rawRisks] = await Promise.all([
+  const [rawAssets, processes, rawRisks, econIn] = await Promise.all([
     Asset.findByOrganization(orgId).catch(() => []),
     BusinessProcess.findByOrganization(orgId).catch(() => []),
     Risk.findByOrganization(orgId).catch(() => []),
+    loadOrgEconomics(orgId),
   ]);
   if (!rawAssets.length) return empty(orgId);
   const assets = rawAssets.map(normAsset);
@@ -74,6 +87,17 @@ async function run(orgId) {
   const expo = materialExposure(crownAssets, risks);
   const graph = Graph.build({ processes, assets: scored, risks, controls: [] });
 
+  // Financial translation for the business-language cockpit (materiality,
+  // %-of-revenue, appetite, insurance gap, Monte-Carlo tail). Uses the org's
+  // financials from setup_json + the risk register; graceful when absent.
+  const economics = Economics.compose({
+    ale: expo.total,
+    financials: (econIn && econIn.financials) || {},
+    appetite: econIn && econIn.appetite,
+    insurance: (econIn && econIn.insurance) || {},
+    risks,
+  });
+
   return {
     org_id: orgId,
     generated_at: new Date().toISOString(),
@@ -86,6 +110,7 @@ async function run(orgId) {
         id: a.id, name: a.name, type: a.type, tier: a.crown_jewel_tier,
         score: Math.round(a.criticality_score * 100), breakdown: a.criticality_breakdown, rationale: a.rationale,
       })),
+      economics,
     },
     graph,
     assets: scored,
