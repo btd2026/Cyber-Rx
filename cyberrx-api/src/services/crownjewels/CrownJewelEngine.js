@@ -138,6 +138,10 @@ async function run(orgId) {
   });
   const resilience = Resilience.compute({ processes: resilProcesses, assets: resilAssets });
 
+  // Per-process exposure — the dollars each business process carries (the CEO's
+  // "which business processes carry the risk?"). Derived from the org's inventory.
+  const process_exposure = processExposure(scored, risks, processes).slice(0, 10);
+
   return {
     org_id: orgId,
     generated_at: new Date().toISOString(),
@@ -145,6 +149,7 @@ async function run(orgId) {
       material_exposure_usd: expo.total,
       material_exposure_basis: expo.basis,
       material_exposure_items: expo.items.slice(0, 10),
+      process_exposure,
       counts: { assets: assets.length, processes: processes.length, risks: risks.length, crown_jewels: crownAssets.length },
       crown_jewels: crownAssets.slice(0, 12).map((a) => ({
         id: a.id, name: a.name, type: a.type, tier: a.crown_jewel_tier,
@@ -327,6 +332,30 @@ async function runPipeline(orgId, { runId, meter, anthropic } = {}) {
   };
 }
 
+/**
+ * Per-process exposure — attributes each open risk's dollar exposure to the
+ * business processes its asset supports (falling back to the risk's own linked
+ * processes). Ranked desc. Pure + deterministic so it is unit-tested.
+ * @param {Array} scoredAssets  assets with business_process_ids + crown_jewel
+ * @param {Array} risks         normalized risks (snake_case fields)
+ * @param {Array} processes     business processes ({id,name,criticality,tier})
+ */
+function processExposure(scoredAssets, risks, processes) {
+  const assetById = {}; (scoredAssets || []).forEach((a) => { assetById[a.id] = a; });
+  const acc = {};
+  (processes || []).forEach((p) => { acc[p.id] = { id: p.id, name: p.name, criticality: p.criticality || null, tier: p.tier || null, exposure_usd: 0, crown_jewel: false }; });
+  (scoredAssets || []).forEach((a) => { if (a.crown_jewel) (a.business_process_ids || []).forEach((pid) => { if (acc[pid]) acc[pid].crown_jewel = true; }); });
+  for (const r of (risks || [])) {
+    if (r.status && String(r.status).toLowerCase() !== 'open') continue;
+    const exp = num(r.financial_exposure); if (exp <= 0) continue;
+    let pids = [];
+    if (r.asset_id && assetById[r.asset_id]) pids = assetById[r.asset_id].business_process_ids || [];
+    if ((!pids || !pids.length) && Array.isArray(r.business_process_ids)) pids = r.business_process_ids;
+    Array.from(new Set(pids)).filter((pid) => acc[pid]).forEach((pid) => { acc[pid].exposure_usd += exp; });
+  }
+  return Object.values(acc).filter((p) => p.exposure_usd > 0).sort((a, b) => b.exposure_usd - a.exposure_usd);
+}
+
 function materialExposure(crownAssets, risks) {
   const cj = new Set(crownAssets.map((a) => a.id));
   let total = 0; const items = [];
@@ -347,4 +376,4 @@ function empty(orgId) {
     graph: { nodes: [], edges: [] }, assets: [] };
 }
 
-module.exports = { run, runPipeline, materialExposure, normAsset, normRisk };
+module.exports = { run, runPipeline, materialExposure, processExposure, normAsset, normRisk };

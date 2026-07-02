@@ -238,7 +238,7 @@ function render(seat){
   h+='<div class="spine"><span class="lk">⛓ One source of truth</span><span class="num"><b id="lvSpineExpo">$68M</b> <span>expected annual loss ·</span> <b id="lvSpineTail">$180M</b> <span>tail</span></span><span class="arrow">the same number every seat sees — in the <b>'+SEAT_LABEL[seat]+'</b> lens ↓</span></div></div>';
   h+=s.body();
   document.getElementById('app').innerHTML=h;
-  wireChoose();renderInitiatives();renderChain();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderProcBars();applyLive();window.scrollTo({top:0});
 }
 </script>
 <script src="cockpit-seats.js"></script>
@@ -372,7 +372,7 @@ function applyLive(){if(!LIVE)return;var e=LIVE.economics||{},r=e.ratios||{},ap=
     if(rs.tech_debt&&rs.tech_debt.exposure)setTxt('lvTechDebt',usd(rs.tech_debt.exposure));
   }}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderProcBars();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -421,6 +421,19 @@ function chainCard(c){
     '<div class="chain-step"><div class="cs-k">③ Risk on the application</div><div class="cs-v">'+risks+'</div></div>'+
     '<div class="chain-step"><div class="cs-k">④ Controls on the risk</div><div class="cs-v">'+ctrls+'</div></div>'+
     '</div>'+(c.why?('<div class="cj-why"><b>Why it’s a crown jewel:</b> '+c.why+'</div>'):'')+'</div>';
+}
+/* CEO "which business processes carry the risk" — real per-process exposure from
+   /summary (process_exposure), ranked. Keeps illustrative bars until live. */
+function renderProcBars(){
+  var host=document.getElementById('ceoProcBars');if(!host)return;
+  var pe=LIVE&&LIVE.process_exposure;if(!pe||!pe.length)return;
+  var max=pe[0].exposure_usd||1;
+  host.innerHTML='<div class="card">'+pe.map(function(p){
+    var pct=Math.max(6,Math.round(p.exposure_usd/max*100));
+    var cls=p.crown_jewel?'hot':'';
+    var lbl=p.name+(p.crown_jewel?' <span class="cj-badge" style="margin-left:6px">crown jewel</span>':'');
+    return '<div class="bar-row"><div class="bar-lbl claim" data-ev="procexpo">'+lbl+' <span class="fx">ƒ</span></div><div class="bar-track"><div class="bar-fill '+cls+'" style="width:'+pct+'%"></div></div><div class="bar-val">'+usd(p.exposure_usd)+'</div></div>';
+  }).join('')+'</div>';
 }
 function renderChain(){
   var host=document.getElementById('cjchain');if(!host)return;

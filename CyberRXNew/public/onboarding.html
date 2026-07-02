@@ -37,6 +37,10 @@
   input,select{width:100%;background:var(--plane);border:1px solid var(--line-2);border-radius:9px;padding:10px 12px;color:var(--ink);font-family:inherit;font-size:13.5px;outline:none}
   input:focus,select:focus{border-color:var(--blue)}
   input::placeholder{color:#5f5d58}
+  /* dark-mode date picker: make the native calendar affordance visible + clickable */
+  input[type=date]{color-scheme:dark;cursor:pointer;position:relative}
+  input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.85);opacity:.9;cursor:pointer;font-size:16px}
+  input[type=date]::-webkit-calendar-picker-indicator:hover{opacity:1}
   .chips{display:flex;flex-wrap:wrap;gap:8px}
   .chip{font-size:12.5px;font-weight:600;color:var(--ink-2);background:var(--plane);border:1px solid var(--line-2);border-radius:99px;padding:7px 13px;cursor:pointer}
   .chip.on{color:#fff;background:var(--blue-soft);border-color:var(--blue)}
@@ -225,6 +229,8 @@
   function updateEq(id){var eq=document.getElementById(id+'_eq');if(!eq)return;var val=mval(id);eq.innerHTML=val>0?('= <b>'+fmtMoney(val)+'</b>'):'';}
   document.querySelectorAll('.money').forEach(function(inp){var id=inp.id;inp.addEventListener('input',function(){updateEq(id);updateSummary();});var u=document.getElementById(id+'_u');if(u)u.addEventListener('change',function(){updateEq(id);});});
   document.getElementById('currency').addEventListener('change',function(){var p=this.value.split('|');CUR_SYM=p[0];CUR_CODE=p[1]||'USD';document.querySelectorAll('.mcur').forEach(function(c){c.textContent=CUR_SYM;});document.querySelectorAll('.money').forEach(function(i){updateEq(i.id);});});
+  // date fields: open the native calendar on click anywhere in the field
+  document.querySelectorAll('input[type=date]').forEach(function(dt){dt.addEventListener('click',function(){try{if(this.showPicker)this.showPicker();}catch(_){}});});
 
   // ---- CSV/TSV parsing ----
   function parseDelim(text){
