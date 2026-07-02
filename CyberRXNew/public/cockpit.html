@@ -212,8 +212,18 @@ function applyLive(){if(!LIVE)return;var e=LIVE.economics||{},r=e.ratios||{},ap=
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
   try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}}
 
-document.querySelectorAll('.seat').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.seat').forEach(function(x){x.classList.remove('on');});b.classList.add('on');render(b.dataset.seat);});});
+function selectSeat(seat){document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===seat);});render(seat);}
+document.querySelectorAll('.seat').forEach(function(b){b.addEventListener('click',function(){selectSeat(b.dataset.seat);});});
 render('ceo');loadLive();
+
+/* Wired into the product launcher (index.html): pick up the org chosen at go-live,
+   open the seat the user signed in as, and (re)load live data when shown. */
+window.addEventListener('message',function(e){
+  var d=e.data;
+  if(d&&d.type==='cyberrx-golive'){try{if(d.orgId)localStorage.setItem('cyberrx_org_id',d.orgId);if(d.org)localStorage.setItem('cyberrx_org_name',d.org);}catch(_){}loadLive();}
+  else if(d==='cyberrx-os-active'){loadLive();}
+  else if(d&&d.type==='cyberrx-auth'){var map={ceo:'ceo',board:'ceo',cfo:'cfo',cio:'cio',clo:'clo',cro:'cro',ciso:'ciso'};selectSeat(map[d.role]||'ceo');}
+});
 </script>
 </body>
 </html>
