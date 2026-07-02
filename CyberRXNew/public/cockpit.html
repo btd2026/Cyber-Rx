@@ -252,7 +252,7 @@ render('ceo');loadLive();
 var VOICE_MUTED=true;
 function strip(h){var d=document.createElement('div');d.innerHTML=String(h||'');return (d.textContent||'').replace(/\s+/g,' ').trim();}
 function speak(text){text=strip(text);if(!text)return;try{window.parent.postMessage({type:'cyberrx-speak',text:text,rate:1.0,voicePref:['Samantha','Google US English','Microsoft Aria','female']},'*');}catch(_){try{var u=new SpeechSynthesisUtterance(text);window.speechSynthesis.cancel();window.speechSynthesis.speak(u);}catch(e){}}}
-function speakSeat(seat){var s=SEATS[seat];if(!s)return;speak(s.verdict);}
+function speakSeat(seat){var s=SEATS[seat];if(!s)return;speak(s.brief||s.verdict);}
 document.getElementById('voiceBtn').addEventListener('click',function(){
   VOICE_MUTED=!VOICE_MUTED;this.classList.toggle('on',!VOICE_MUTED);this.textContent=VOICE_MUTED?'🔊 Brief me':'🔈 Muted';
   if(!VOICE_MUTED)speakSeat(CUR); else{try{window.parent.postMessage({type:'cyberrx-speak-cancel'},'*');window.speechSynthesis.cancel();}catch(_){}}

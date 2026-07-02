@@ -6,6 +6,7 @@ var SEATS = {
   eyebrow:'Executive summary · CEO / Board',
   verdict:'Cyber risk is <span class="em">managed and within the board’s approved tolerance.</span> The worst-case tail sits above appetite, and one funded decision this quarter brings it back in line.',
   sub:'Your cyber position in the same terms as every other enterprise risk. Every figure is clickable — open it to see the exact formula, the inputs used, and the math.',
+  brief:'Here is where we stand. Cyber risk is a managed business risk, and today it is within the board’s approved tolerance. Our expected annual loss is about sixty-eight million dollars — under one percent of revenue. The one thing to watch is the worst-case tail, which sits above appetite; one funded decision this quarter brings it back in line. Every figure on the screen traces to your own data.',
   body:function(){return (
    sec('01','How much is at stake — and are we within the board’s limit?','Cyber risk in dollars, measured against the appetite the board approved.',
      tiles([
@@ -47,6 +48,7 @@ var SEATS = {
   eyebrow:'Financial view · CFO',
   verdict:'Cyber loss is <span class="em">quantified, insured, and returning ~9× on spend.</span> A $30M uninsured tail and $92M carried on deferred decisions are the open financial items.',
   sub:'Cyber as a line on the risk-adjusted balance sheet: expected loss, capital at risk, insurance economics, and the marginal return on the next dollar. Click any figure for the math.',
+  brief:'From a finance view: our capital at risk is quantified — sixty-eight million expected, and a hundred and eighty million at the tail. Every dollar of security spend is returning about nine dollars of risk reduction. The two open items are a thirty-million uninsured tail, and ninety-two million of exposure we are carrying on decisions we have not funded yet. Funding the top decision returns thirty-seven to one.',
   body:function(){return (
    sec('01','What is our capital at risk — and is our spend working?','The dollars, and the return on what we invest in security.',
      tiles([
@@ -63,6 +65,11 @@ var SEATS = {
       {c:'c',ic:'↓',t:'Cut budget −20% → +$46M exposure, tail $214M, premium +18%',ev:'budgetcut',s:'Net of premium, the cut costs more than it saves.'},
       {c:'g',ic:'↑',t:'Fund the top decision (+$1.4M) → exposure $16M, 37× return',ev:'roicfo',s:'Closes the payments driver; tail returns within appetite.'},
       {c:'w',ic:'§',t:'Materiality threshold $53M — a payments-path event is reportable',ev:'materiality',s:'The 4-business-day SEC clock and draft 8-K are pre-staged.'}]))
+   +sec('04','What decision needs the CFO — and what does it cost or buy?','A costed choice with options; choosing one records to your ticketing system and is tracked to completion.',
+     decisions([{n:1,q:'How should we fund cyber-risk reduction this year?',sit:'Two funded decisions would remove $92M of exposure and strengthen the insurance renewal. How much do we commit this year?',opts:[
+       {rec:true,tag:'A · Fund both ($4.6M)',on:'Option A · Fund both',osum:'$4.6M · 20× blended',pros:['Removes ~$92M of exposure','Brings the tail within appetite','Stronger insurance renewal position'],cons:['$4.6M capital this year']},
+       {tag:'B · Highest-ROI only ($1.4M)',on:'Option B · Top driver only',osum:'$1.4M · 37×',pros:['37× return on the payments driver','Minimal spend'],cons:['$40M tail remains over appetite']},
+       {tag:'C · Hold flat',on:'Option C · Hold',osum:'$0 new',pros:['No new spend this year'],cons:['$92M carried as exposure','Likely premium increase at renewal']}]}]))
   );}
  },
 
@@ -70,12 +77,13 @@ var SEATS = {
   eyebrow:'Legal & regulatory view · CLO / General Counsel',
   verdict:'The organization is <span class="em">defensible across all operating jurisdictions</span> today — no reportable events, evidence preserved. Two obligations have clocks to watch.',
   sub:'Cyber as legal exposure: disclosure standing, notification duties by country, and the modeled liability if an event occurs — with the clock on each.',
+  brief:'Legally, we are defensible across every jurisdiction we operate in today — no reportable events, and evidence is preserved. The clocks to watch are the seventy-two-hour European deadline and the four-business-day S.E.C. rule. If an incident became material, the determination process and the draft filings are already pre-staged, which is what protects the directors.',
   body:function(){return (
    sec('01','Are we legally defensible right now?','Disclosure standing, notification readiness, and litigation posture.',
      tiles([
-      {k:'Open notifications',v:'0',cls:'good',note:'across US, EU, UK, APAC'},
+      {k:'Open notifications',v:'0',cls:'good',ev:'notifications',note:'across US, EU, UK, APAC'},
       {k:'Materiality standing',v:'No reportable event',cls:'good',ev:'materiality',note:'SEC clock not running; 8-K pre-staged'},
-      {k:'Modeled liability',v:'$22M',cls:'warn',note:'class-action + regulatory, modeled'},
+      {k:'Modeled liability',v:'$22M',cls:'warn',ev:'liability',note:'class-action + regulatory, modeled'},
       {k:'Fastest clock',v:'<span id="lvClock">72 hours</span>',ev:'clock',note:'the binding notification deadline today'}]))
    +sec('02','Where are we exposed by jurisdiction — duty, clock, penalty?','Where we operate, the binding obligation, and the ceiling. Click a jurisdiction for the rule.',
      '<div id="cloJuris">'+jtable([
@@ -84,6 +92,11 @@ var SEATS = {
       {flag:'🇬🇧',c:'United Kingdom',o:'UK GDPR / ICO',clock:'72 hours',cc:'crit',pen:'£17.5M or 4%'},
       {flag:'🇸🇬',c:'Singapore',o:'PDPA · MAS TRM',clock:'72h / 1h (MAS)',cc:'crit',pen:'Up to S$1M'},
       {flag:'🇦🇺',c:'Australia',o:'Privacy Act · APRA CPS 234',clock:'72 hours',cc:'warn',pen:'Up to A$50M'}])+'</div>')
+   +sec('03','What decision needs the General Counsel?','How we run disclosure & notification. Choosing one records to your ticketing system.',
+     decisions([{n:1,q:'How do we run the disclosure & notification process?',sit:'If an incident is material we face a 4-business-day SEC clock and a 72-hour GDPR clock. How do we prepare?',opts:[
+       {rec:true,tag:'A · Standing disclosure committee',on:'Option A · Pre-authorize',osum:'committee + pre-drafted filings',pros:['Meets the tightest clocks','Defensible, documented materiality call','Protects directors (D&O)'],cons:['Setup effort now']},
+       {tag:'B · Ad-hoc at incident time',on:'Option B · Ad-hoc',osum:'no upfront work',pros:['Nothing to do until an incident'],cons:['Risk of missing a clock','Weaker legal defense']},
+       {tag:'C · External breach counsel on retainer',on:'Option C · Retainer',osum:'counsel on call',pros:['Expertise on demand'],cons:['Retainer cost','Slower first hours']}]}]))
   );}
  },
 
@@ -91,6 +104,7 @@ var SEATS = {
   eyebrow:'Enterprise risk view · CRO',
   verdict:'Cyber is <span class="em">within appetite and fully quantified,</span> and now sits alongside your other principal risks on one scale. The watch item is correlation at the tail.',
   sub:'Cyber inside the enterprise risk portfolio: measured in the same currency as every other risk, tested for correlation and aggregation, tracked against appetite.',
+  brief:'Cyber now sits on the same dollar scale as our other principal risks, and it is within appetite at sixty-eight million. The item to watch is correlation: a payments event couples with third-party and operational risk, and together they can breach appetite at the tail. Two decisions bring that back inside. Our emerging-risk radar flags A.I. decisioning and vendor concentration as the fastest movers.',
   body:function(){return (
    sec('01','Where does cyber sit against appetite and our other risks?','One dollar scale for every principal risk.',
      tiles([
@@ -104,6 +118,11 @@ var SEATS = {
       {c:'c',ic:'▲',t:'AI / automated decisioning — velocity high, adaptation forming',s:'+$8M this quarter and accelerating.'},
       {c:'w',ic:'▲',t:'Third-party & cloud concentration — velocity high, adaptation partial',ev:'correlation',s:'One provider underpins three revenue systems.'},
       {c:'b',ic:'◐',t:'Quantum / crypto obsolescence — velocity medium, planned',s:'Long-dated data exposed; migration staged.'}]))
+   +sec('03','What decision needs the CRO?','How we bring the correlated tail within appetite. Choosing one records to your ticketing system.',
+     decisions([{n:1,q:'How do we bring the correlated tail within appetite?',sit:'A correlated payments + top-vendor event models at $205M — above the $180M enterprise tail. Three levers:',opts:[
+       {rec:true,tag:'A · Reduce (fund PAM + DR)',on:'Option A · Reduce',osum:'$4.6M · removes $92M',pros:['Cuts likelihood and impact','De-correlates the payments path','Tail returns within appetite'],cons:['$4.6M capital']},
+       {tag:'B · Transfer (raise insurance limit)',on:'Option B · Transfer',osum:'+premium',pros:['Caps the financial tail'],cons:['Higher premium','Does not reduce likelihood']},
+       {tag:'C · Accept the tail',on:'Option C · Accept',osum:'$0',pros:['No spend'],cons:['Requires documented board risk-acceptance','Stays over appetite']}]}]))
   );}
  },
 
@@ -111,15 +130,21 @@ var SEATS = {
   eyebrow:'Operational resilience view · CIO',
   verdict:'Every revenue-critical system is <span class="em">operating and recoverable.</span> The slowest recovery is 3.1 days; one investment cuts it to hours. A single vendor underpins three systems.',
   sub:'Cyber and resilience for the systems that carry the business: what each is worth per hour, how fast it recovers, and where a single provider is a point of failure.',
+  brief:'Operationally, every revenue system is running and recoverable. The slowest one recovers in about three days, and that drives most of our worst case — a single investment cuts it to under six hours. The concentration to fix is one cloud vendor that underpins three revenue systems; if it fails, all three degrade at roughly three point eight million dollars an hour.',
   body:function(){return (
    sec('01','Can the business keep operating — and recover fast enough?','Resilience in revenue terms, not RTO jargon.',
      tiles([
       {k:'What downtime costs',v:'<span id="lvDowntime">$2.3M / hr</span>',cls:'warn',ev:'downtime',note:'on the top revenue dependency'},
       {k:'Worst-case recovery',v:'<span id="lvRecovery">3.1 days</span>',cls:'warn',ev:'recovery',note:'target <6h (Decision 2)'},
       {k:'Vendor concentration',v:'<span id="lvVendor">1 vendor, 3 systems</span>',cls:'warn',ev:'vendor',note:'a single point of failure'},
-      {k:'Tech-debt exposure',v:'<span id="lvTechDebt">$12M</span>',cls:'warn',note:'end-of-life systems on revenue paths'}]))
+      {k:'Tech-debt exposure',v:'<span id="lvTechDebt">$12M</span>',cls:'warn',ev:'techdebt',note:'end-of-life systems on revenue paths'}]))
    +sec('02','Which systems carry the business, and how fast do they recover?','Ranked by value at risk — recovery investment follows revenue.',
-     bars([{l:'Payments ($2.3M/hr)',v:'74 hrs',pct:100,cls:'hot'},{l:'Member portal ($0.6M/hr)',v:'40 hrs',pct:54},{l:'Settlement ($0.9M/hr)',v:'28 hrs',pct:38},{l:'Corporate IT (<$40K/hr)',v:'8 hrs',pct:11}]))
+     bars([{l:'Payments ($2.3M/hr)',v:'74 hrs',pct:100,cls:'hot',ev:'recovery'},{l:'Member portal ($0.6M/hr)',v:'40 hrs',pct:54},{l:'Settlement ($0.9M/hr)',v:'28 hrs',pct:38},{l:'Corporate IT (<$40K/hr)',v:'8 hrs',pct:11}]))
+   +sec('03','What decision needs the CIO?','How much recovery resilience we fund. Choosing one records to your ticketing system.',
+     decisions([{n:1,q:'How much recovery resilience do we fund?',sit:'Our slowest revenue system recovers in ~3.1 days, driving most of the worst-case tail. Three levels:',opts:[
+       {rec:true,tag:'A · Full modernization',on:'Option A · Full',osum:'$3.2M · <6h recovery',pros:['Cuts worst case by ~$40M','Meets regulatory recovery expectations','Removes the single-vendor risk (multi-region)'],cons:['$3.2M capital','One-quarter program']},
+       {tag:'B · Critical systems only',on:'Option B · Critical only',osum:'$1.6M',pros:['Protects payments & settlement','Half the cost'],cons:['Portal recovery stays slow','Removes ~$24M of $40M']},
+       {tag:'C · Defer',on:'Option C · Defer',osum:'$0 this year',pros:['No spend now'],cons:['Recovery stays 3.1 days','Tail stays $180M']}]}]))
   );}
  },
 
@@ -127,16 +152,22 @@ var SEATS = {
   eyebrow:'Security operating view · CISO',
   verdict:'<span class="em">No active compromise, and the program is improving.</span> The largest exposure driver has a funded decision ready; control effectiveness is measured as dollars of risk removed.',
   sub:'The operator’s seat — still in business terms: what drives exposure, which decisions close it, and control effectiveness as risk removed, not maturity scores. This number rolls up to the board.',
+  brief:'No active compromise, and the program is improving. The biggest dollar driver is the privileged path into payments — fifty-two million — and it has a funded decision ready to close it. We measure our controls by the risk they remove, not by a maturity score, and this is the same number that rolls straight up to the board and the C.F.O.',
   body:function(){return (
    sec('01','Are we compromised — and what is driving our exposure?','Live status, and the dollar drivers each with a fix.',
      tiles([
-      {k:'Live threat status',v:'No active compromise',cls:'good',note:'312,400 events correlated · 0 matches'},
+      {k:'Live threat status',v:'No active compromise',cls:'good',ev:'threatstatus',note:'312,400 events correlated · 0 matches'},
       {k:'Top exposure driver',v:'$52M',cls:'crit',ev:'proc-claims',note:'privileged path to payments'},
       {k:'Controls effectiveness',v:'$210M removed',ev:'roicfo',note:'risk bought down over 3 yrs (not CMMI)'},
-      {k:'Coverage from tools',v:'99.4%',note:'live signals; gaps named &amp; costed'}]))
+      {k:'Coverage from tools',v:'99.4%',ev:'coverage',note:'live signals; gaps named &amp; costed'}]))
    +sec('02','What is driving the $68M — and how good is our coverage?','Each driver carries a funded decision, so the list is a plan, not a backlog.',
      bars([{l:'Privileged path → payments',v:'$52M',pct:100,cls:'hot',ev:'roicfo'},{l:'Recovery not yet proven',v:'$40M',pct:77,cls:'hot',ev:'recovery'},{l:'AI decisioning (new)',v:'$8M',pct:15},{l:'Third-party concentration',v:'$6M',pct:12,ev:'vendor'}])
      +kvcard('Coverage from connected tools (live signals)',[{k:'Endpoint detection (EDR)',v:'98.1%',cls:'good'},{k:'Multi-factor (MFA)',v:'96% — 4% legacy',cls:'warn'},{k:'Privileged accounts managed',v:'60% — the driver',cls:'crit'},{k:'Phishing-prone rate',v:'3% (was 9%)',cls:'good'}]))
+   +sec('03','What decision needs the CISO?','Where the next dollar of security spend goes. Choosing one records to your ticketing system.',
+     decisions([{n:1,q:'Which control gap do we close first?',sit:'The biggest dollar driver is the privileged path into payments. Where do we direct the next dollar?',opts:[
+       {rec:true,tag:'A · Privileged access (PAM)',on:'Option A · PAM',osum:'$1.4M · 37×',pros:['Closes the $52M driver','Highest return available','Improves board posture immediately'],cons:['$1.4M','3 weeks of IAM effort']},
+       {tag:'B · Prove recovery (DR test)',on:'Option B · DR',osum:'$3.2M',pros:['Removes ~$40M of tail risk','Meets regulatory recovery expectations'],cons:['Larger program','Does not close the #1 driver']},
+       {tag:'C · AI-decisioning governance',on:'Option C · AI governance',osum:'standard + oversight',pros:['Addresses the fastest-rising risk'],cons:['Does not touch the top driver yet']}]}]))
   );}
  }
 };
@@ -252,5 +283,30 @@ var EV = {
   formula:'blast radius  =  Σ ( revenue/hr of every system that depends on this vendor )',
   inputs:[['Cloud provider “A” underpins','Payments, Portal, Settlement','Asset→vendor map'],['Combined revenue/hr','$3.8M','Downtime model']],
   steps:[['1','Find systems depending on vendor A','3'],['2','Sum their revenue/hr','$3.8M/hr'],['T','Blast radius','$3.8M/hr (≈$91M/day)']],
-  sources:['Asset→vendor mapping (onboarding)','Downtime model'],conf:'Multi-region ($2.1M) removes the shared point of failure.'}
+  sources:['Asset→vendor mapping (onboarding)','Downtime model'],conf:'Multi-region ($2.1M) removes the shared point of failure.'},
+ notifications:{claim:'Open regulatory notifications',result:'0',cls:'good',
+  formula:'open notifications  =  count( incidents where notice is required AND not yet filed )',
+  inputs:[['Active material incidents','0','Incident register / SIEM'],['Jurisdictions in scope','US, EU, UK, APAC','Onboarding']],
+  steps:[['1','No material incident is open','0 required'],['T','Open notifications','0']],
+  sources:['Incident register','Jurisdiction ruleset'],conf:'Clean today; the moment an incident is material, the jurisdiction clocks start.'},
+ liability:{claim:'Modeled legal liability exposure',result:'$22M',cls:'warn',
+  formula:'liability  =  modeled class-action exposure  +  probability-weighted regulatory fines',
+  inputs:[['Records at risk','2.4M','Data inventory'],['Per-record class-action','modeled band','Legal model'],['Regulatory fine ceiling','up to 4% revenue','Jurisdiction ruleset']],
+  steps:[['1','Records × modeled per-record','class-action band'],['2','Add probability-weighted fines','+ regulatory'],['T','Modeled liability','$22M']],
+  sources:['Data inventory','Legal & regulatory model'],conf:'Modeled; concentration is the customer-data platform.'},
+ techdebt:{claim:'Tech-debt exposure (end-of-life systems)',result:'$12M',cls:'warn',
+  formula:'tech-debt exposure  =  Σ open-risk exposure on EOL / unsupported assets',
+  inputs:[['EOL / unsupported assets','from inventory','Onboarding — EOL column'],['Their open-risk exposure','summed','Risk register']],
+  steps:[['1','Flag EOL/unsupported assets','n'],['2','Sum their open-risk exposure','$12M'],['T','Tech-debt exposure','$12M']],
+  sources:['Systems inventory (EOL)','Risk register'],conf:'Prioritize modernization by revenue protected per dollar.'},
+ threatstatus:{claim:'Live threat status',result:'No active compromise',cls:'good',
+  formula:'status  =  correlate live events vs. compromise patterns; flag if any match',
+  inputs:[['Events correlated (24h)','312,400','Connected SIEM'],['Compromise-pattern matches','0','Detection engine']],
+  steps:[['1','Correlate live events','312,400'],['2','Match to compromise patterns','0 matched'],['T','Status','no active compromise']],
+  sources:['Connected SIEM / EDR (live signals)'],conf:'Live from connected tools — real the moment a SIEM/EDR is connected.'},
+ coverage:{claim:'Control coverage from connected tools',result:'99.4%',cls:'',
+  formula:'coverage  =  covered in-scope assets  ÷  total in-scope assets  (across connected tools)',
+  inputs:[['EDR coverage','98.1%','Connected EDR'],['MFA adoption','96%','Connected IdP'],['Named gaps','listed & costed','Signals']],
+  steps:[['1','Aggregate per-tool coverage','weighted'],['T','Coverage','99.4%']],
+  sources:['Connected security tools (live signals)'],conf:'Live once tools are connected; gaps are named and costed, never hidden.'}
 };
