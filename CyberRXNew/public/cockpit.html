@@ -96,12 +96,40 @@
   .src-row{display:flex;gap:9px;align-items:center;font-size:12.5px;color:var(--ink-2);padding:7px 0}.src-row .sd{width:6px;height:6px;border-radius:50%;background:var(--blue);flex:none}
   .conf{font-size:12.5px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:8px}
   .foot{color:var(--muted);font-size:12px;text-align:center;padding:30px 0;border-top:1px solid var(--line);margin-top:40px}.foot b{color:var(--ink-2)}
+  .tbtn{background:none;border:1px solid var(--line-2);color:var(--ink-2);border-radius:8px;padding:6px 11px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+  .tbtn:hover{border-color:var(--blue);color:#fff}.tbtn.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .tbtn.war{border-color:rgba(208,59,59,.5);color:#e88}.tbtn.war:hover{background:var(--crit-soft)}
+  .modal-scrim{position:fixed;inset:0;background:rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .18s;z-index:50}.modal-scrim.open{opacity:1;pointer-events:auto}
+  .modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-46%);width:820px;max-width:94vw;max-height:88vh;overflow-y:auto;background:var(--surface);border:1px solid var(--line-2);border-radius:16px;z-index:51;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}
+  .modal.open{opacity:1;pointer-events:auto;transform:translate(-50%,-50%)}
+  .modal-h{position:sticky;top:0;background:var(--surface);border-bottom:1px solid var(--line);padding:18px 24px;display:flex;align-items:center;gap:12px}
+  .modal-h .mt{font-weight:700;font-size:16px}.modal-h .mtag{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#e88;border:1px solid rgba(208,59,59,.5);border-radius:99px;padding:3px 9px}
+  .modal-x{margin-left:auto;background:none;border:1px solid var(--line);color:var(--ink-2);border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:16px}
+  .modal-b{padding:20px 24px 28px}
+  .wr-lead{font-size:14px;color:var(--ink-2);margin-bottom:18px}
+  .wr-cta{display:flex;gap:10px;margin-bottom:8px}
+  .wr-btn{border:none;border-radius:9px;padding:10px 18px;font-weight:700;font-size:13px;cursor:pointer}
+  .wr-btn.dec{background:var(--crit);color:#fff}.wr-btn.gh{background:none;border:1px solid var(--line-2);color:var(--ink-2)}
+  .wr-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:6px}
+  .wr-panel{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:15px 17px}
+  .wr-panel h4{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+  .wr-item{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}.wr-item:last-child{border:none}
+  .wr-item .v{margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums}
+  .wr-step{display:flex;gap:11px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px}.wr-step:last-child{border:none}
+  .wr-ck{width:19px;height:19px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;background:#26261f;color:var(--muted);cursor:pointer}
+  .wr-ck.done{background:var(--good-soft);color:var(--good)}
+  .wr-clock{font-family:var(--mono);color:#e88;font-weight:700;margin-left:auto;white-space:nowrap}
 </style>
 </head>
 <body>
 <div class="top"><div class="wrap top-in">
   <div class="logo">Rx</div><div class="brand">CyberRx <span>Cybersecurity Operating System</span></div>
-  <div class="top-r"><span class="mocktag" id="dataBadge">Illustrative</span><span class="lens">🏦 Financial services · 🌎 US · EU · UK · APAC</span><span id="orgLive"><span class="dot" style="background:var(--muted)"></span>Sample workspace</span></div>
+  <div class="top-r">
+    <button class="tbtn war" id="warBtn">⚠ War Room</button>
+    <button class="tbtn" id="voiceBtn" title="Advisor voice">🔊 Brief me</button>
+    <span class="mocktag" id="dataBadge">Illustrative</span>
+    <span id="orgLive"><span class="dot" style="background:var(--muted)"></span>Sample workspace</span>
+  </div>
 </div></div>
 <div class="seats"><div class="wrap seats-in">
   <span class="seatlbl">Speaking to</span>
@@ -113,6 +141,10 @@
 
 <div class="ev-scrim" id="scrim"></div>
 <aside class="ev" id="ev"><div class="ev-h"><span class="eb">How this is calculated</span><button class="ev-x" id="evx">×</button></div><div class="ev-b" id="evb"></div></aside>
+
+<!-- War Room — real-data incident command (crown jewels + jurisdiction clocks) -->
+<div class="modal-scrim" id="wrScrim"></div>
+<div class="modal" id="wrModal"><div class="modal-h"><span class="mt">War Room</span><span class="mtag" id="wrState">No active incident</span><button class="modal-x" id="wrX">×</button></div><div class="modal-b" id="wrBody"></div></div>
 
 <script>
 /* ---------- renderers ---------- */
@@ -212,9 +244,54 @@ function applyLive(){if(!LIVE)return;var e=LIVE.economics||{},r=e.ratios||{},ap=
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
   try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}}
 
-function selectSeat(seat){document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===seat);});render(seat);}
+function selectSeat(seat){document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===seat);});render(seat);if(!VOICE_MUTED)speakSeat(seat);}
 document.querySelectorAll('.seat').forEach(function(b){b.addEventListener('click',function(){selectSeat(b.dataset.seat);});});
 render('ceo');loadLive();
+
+/* ---- Advisor voice: speak the seat's verdict via the parent (autoplay-safe) ---- */
+var VOICE_MUTED=true;
+function strip(h){var d=document.createElement('div');d.innerHTML=String(h||'');return (d.textContent||'').replace(/\s+/g,' ').trim();}
+function speak(text){text=strip(text);if(!text)return;try{window.parent.postMessage({type:'cyberrx-speak',text:text,rate:1.0,voicePref:['Samantha','Google US English','Microsoft Aria','female']},'*');}catch(_){try{var u=new SpeechSynthesisUtterance(text);window.speechSynthesis.cancel();window.speechSynthesis.speak(u);}catch(e){}}}
+function speakSeat(seat){var s=SEATS[seat];if(!s)return;speak(s.verdict);}
+document.getElementById('voiceBtn').addEventListener('click',function(){
+  VOICE_MUTED=!VOICE_MUTED;this.classList.toggle('on',!VOICE_MUTED);this.textContent=VOICE_MUTED?'🔊 Brief me':'🔈 Muted';
+  if(!VOICE_MUTED)speakSeat(CUR); else{try{window.parent.postMessage({type:'cyberrx-speak-cancel'},'*');window.speechSynthesis.cancel();}catch(_){}}
+});
+
+/* ---- War Room: incident command grounded in the org's REAL crown jewels + jurisdiction clocks ---- */
+function money(n){n=Number(n)||0;if(n>=1e9)return '$'+(n/1e9).toFixed(1)+'B';if(n>=1e6)return '$'+Math.round(n/1e6)+'M';if(n>=1e3)return '$'+Math.round(n/1e3)+'K';return '$'+n;}
+function wrRender(active){
+  var body=document.getElementById('wrBody'),state=document.getElementById('wrState');
+  var cjs=(LIVE&&LIVE.crown_jewels)||[], legal=(LIVE&&LIVE.legal)||{}, exp=(LIVE&&LIVE.material_exposure_usd)||0;
+  if(!active){
+    state.textContent='No active incident';state.style.color='#7fd28a';state.style.borderColor='rgba(12,163,12,.5)';
+    body.innerHTML='<div class="wr-lead">All systems nominal — no active compromise. If an incident occurs, declare it here to run command with your <b>real crown jewels</b> as the blast radius and your <b>real notification clocks</b> per jurisdiction.</div>'+
+      '<div class="wr-cta"><button class="wr-btn dec" id="wrDeclare">⚠ Declare an incident</button><button class="wr-btn gh" id="wrClose2">Close</button></div>'+
+      '<div class="wr-grid" style="margin-top:16px"><div class="wr-panel"><h4>What would be at risk (your crown jewels)</h4>'+
+        (cjs.length?cjs.slice(0,6).map(function(a){return '<div class="wr-item"><span>♦ '+a.name+' <span style="color:var(--muted)">('+(a.type||'asset')+')</span></span><span class="v">'+(a.score||'')+'/100</span></div>';}).join(''):'<div class="wr-item"><span style="color:var(--muted)">Ingest inventory to populate</span></div>')+
+      '</div><div class="wr-panel"><h4>Modeled material exposure</h4><div style="font-size:26px;font-weight:700;color:#e88">'+(exp>0?money(exp):'—')+'</div><div style="font-size:12.5px;color:var(--muted);margin-top:6px">the dollars in play if the crown-jewel path is realized</div></div></div>';
+    document.getElementById('wrDeclare').onclick=function(){wrRender(true);};
+    document.getElementById('wrClose2').onclick=wrCloseFn;
+  }else{
+    state.textContent='● INCIDENT DECLARED';state.style.color='#e88';state.style.borderColor='rgba(208,59,59,.5)';
+    var obs=(legal.obligations||[]);
+    body.innerHTML='<div class="wr-lead" style="color:#e88"><b>Incident command is live.</b> The clocks below are your real regulatory deadlines from onboarding; work the checklist top to bottom.</div>'+
+      '<div class="wr-grid"><div class="wr-panel"><h4>Command checklist</h4>'+
+        ['Declare & convene the response team','Contain — isolate affected crown-jewel systems','Assess materiality (CFO + GC)','Notify regulators within the binding clock','Notify affected parties / customers','Recover & verify; file the decision record'].map(function(s,i){return '<div class="wr-step"><span class="wr-ck" data-ck="'+i+'">'+(i+1)+'</span><span>'+s+'</span></div>';}).join('')+
+      '</div><div class="wr-panel"><h4>Regulatory clocks (yours)</h4>'+
+        (obs.length?obs.slice(0,6).map(function(o){return '<div class="wr-item"><span>'+(o.flag||'')+' '+o.jurisdiction+'</span><span class="wr-clock">'+o.clock+'</span></div>';}).join(''):'<div class="wr-item"><span style="color:var(--muted)">Set operating regions in onboarding to populate</span></div>')+
+        (legal.binding?'<div style="margin-top:12px;font-size:12.5px;color:#e88"><b>Binding deadline: '+legal.binding.clock+'</b> — the runbook is timed to this.</div>':'')+
+      '</div></div>'+
+      '<div class="wr-cta" style="margin-top:16px"><button class="wr-btn gh" id="wrStand">Stand down (resolve)</button></div>';
+    body.querySelectorAll('.wr-ck').forEach(function(ck){ck.onclick=function(){ck.classList.toggle('done');ck.textContent=ck.classList.contains('done')?'✓':(Number(ck.dataset.ck)+1);};});
+    document.getElementById('wrStand').onclick=function(){wrRender(false);};
+  }
+}
+function wrOpen(){wrRender(false);document.getElementById('wrModal').classList.add('open');document.getElementById('wrScrim').classList.add('open');}
+function wrCloseFn(){document.getElementById('wrModal').classList.remove('open');document.getElementById('wrScrim').classList.remove('open');}
+document.getElementById('warBtn').addEventListener('click',wrOpen);
+document.getElementById('wrX').addEventListener('click',wrCloseFn);
+document.getElementById('wrScrim').addEventListener('click',wrCloseFn);
 
 /* Wired into the product launcher (index.html): pick up the org chosen at go-live,
    open the seat the user signed in as, and (re)load live data when shown. */
