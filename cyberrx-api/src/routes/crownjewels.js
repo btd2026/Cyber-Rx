@@ -117,6 +117,13 @@ router.post('/ingest', optionalJWT, async (req, res) => {
       },
     };
 
+    // AI risk & governance (frontier-AI threat exposure + AI-we-run governance).
+    const ai = b.aiGovernance || {};
+    const aiGovernance = {
+      systems: money(ai.systems), decisioning: ai.decisioning || null, framework: ai.framework || null,
+      policy: ai.policy || null, euAiAct: ai.euAiAct || null, inventory: ai.inventory || null,
+    };
+
     // Ensure the org row exists so the FK on business_processes/assets is satisfied.
     // JSONB-merge economics into setup_json so re-ingest overlays without clobbering.
     step = 'upsert_org';
@@ -125,7 +132,7 @@ router.post('/ingest', optionalJWT, async (req, res) => {
        VALUES ($1,$2,$3,$4::jsonb,NOW())
        ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name,
          setup_json = COALESCE(orgs.setup_json,'{}'::jsonb) || EXCLUDED.setup_json`,
-      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics, resilience, initiatives, governance })]);
+      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics, resilience, initiatives, governance, aiGovernance })]);
 
     // Idempotent replace: clear the org's prior inventory, then insert the mapped rows.
     step = 'clear_inventory';
