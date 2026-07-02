@@ -107,5 +107,18 @@ try {
   for (const k of keys) { try { vm.runInContext(`openEv(${JSON.stringify(k)})`, ctx); } catch (e) { problems.push(`[openEv ${k}] ${e.message}`); } }
 } catch (e) { problems.push(`[EV keys] ${e.message}`); }
 
+// ── Onboarding page: run its load-time wiring under a fresh stub ──────────────
+try {
+  const onboarding = fs.readFileSync(ROOT + '/onboarding.html', 'utf8');
+  const obInline = [...onboarding.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/gi)].map((m) => m[1]);
+  const obStore = {};
+  const obLocal = { getItem: (k) => (k in obStore ? obStore[k] : null), setItem: (k, v) => { obStore[k] = String(v); }, removeItem: (k) => { delete obStore[k]; }, key: (i) => Object.keys(obStore)[i] || null, get length() { return Object.keys(obStore).length; } };
+  const obSandbox = { ...sandbox, localStorage: obLocal };
+  obSandbox.window = { ...sandbox.window, localStorage: obLocal };
+  obSandbox.globalThis = obSandbox;
+  const obCtx = vm.createContext(obSandbox);
+  obInline.forEach((code, i) => { try { vm.runInContext(code, obCtx, { filename: `onboarding#${i + 1}` }); } catch (e) { problems.push(`[onboarding load #${i + 1}] ${e.message}`); } });
+} catch (e) { problems.push(`[onboarding] ${e.message}`); }
+
 if (problems.length) { console.log('SMOKE FAILURES (' + problems.length + '):'); problems.forEach((p) => console.log(' - ' + p)); process.exit(1); }
-else console.log('SMOKE OK — all 6 seats + live renderers + every evidence panel ran without throwing.');
+else console.log('SMOKE OK — 6 cockpit seats + live renderers + evidence panels + onboarding load ran without throwing.');
