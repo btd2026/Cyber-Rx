@@ -123,7 +123,7 @@ var SEATS = {
       {k:'Correlation flag',v:'2 risks',cls:'warn',ev:'correlation',note:'<span class="pill mod">modeled</span> couples with third-party + operational'},
       {k:'Risk transferred',v:'<span id="lvCroTransfer">83%</span>',ev:'transfer',note:'of the tail, via insurance'}]))
    +sec('02','What could breach appetite, and what is rising fastest?','Cyber on one scale beside your other principal risks. Your <b>cyber</b> figure is live; the other principal-risk values are your ERM inputs — <span class="pill mod">illustrative</span> until entered.',
-     bars([{l:'Credit / market',v:'$210M',pct:100},{l:'Operational',v:'$140M',pct:67},{l:'Cyber',v:'<span id="lvCroCyber">$68M</span>',pct:32,cls:'hot'},{l:'Third-party',v:'$54M',pct:26},{l:'Compliance',v:'$30M',pct:14}])
+     '<div id="croPortfolio">'+bars([{l:'Credit / market',v:'$210M',pct:100},{l:'Operational',v:'$140M',pct:67},{l:'Cyber',v:'<span id="lvCroCyber">$68M</span>',pct:32,cls:'hot'},{l:'Third-party',v:'$54M',pct:26},{l:'Compliance',v:'$30M',pct:14}])+'</div>'
      +lists([
       {c:'c',ic:'▲',t:'<span class="pill mod">modeled</span> AI / automated decisioning — velocity high, adaptation forming',s:'Emerging-risk radar — refine with your risk team.'},
       {c:'w',ic:'▲',t:'<span class="pill mod">modeled</span> Third-party &amp; cloud concentration — velocity high',ev:'vendor',s:'A single provider underpins multiple revenue systems.'},

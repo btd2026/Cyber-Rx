@@ -252,7 +252,7 @@ function render(seat){
   h+='<div class="spine"><span class="lk">⛓ One source of truth</span><span class="num"><b id="lvSpineExpo">$68M</b> <span>expected annual loss ·</span> <b id="lvSpineTail">$180M</b> <span>tail</span></span><span class="arrow">the same number every seat sees — in the <b>'+SEAT_LABEL[seat]+'</b> lens ↓</span></div></div>';
   h+=s.body();
   document.getElementById('app').innerHTML=h;
-  wireChoose();renderInitiatives();renderChain();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCroPortfolio();applyLive();window.scrollTo({top:0});
 }
 </script>
 <script src="cockpit-seats.js"></script>
@@ -511,7 +511,7 @@ function applyLive(){if(!LIVE)return;var e=LIVE.economics||{},r=e.ratios||{},ap=
     if(rs.tech_debt&&rs.tech_debt.exposure)setTxt('lvTechDebt',usd(rs.tech_debt.exposure));
   }}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderProcBars();renderCioSystems();renderBoard();renderEarnings();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderProcBars();renderCioSystems();renderBoard();renderEarnings();renderCroPortfolio();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -625,6 +625,16 @@ function renderGov(){
     '<div class="cn" style="margin-top:8px">These are the exact governance disclosures Item 106(c) requires in your 10-K. Fill any gaps in onboarding to make this filing-ready.</div></div>';
 }
 function renderBoard(){renderStress();renderReadiness();renderThirdParty();renderGov();}
+/* CRO: cyber on one scale beside the org's other principal risks (from /summary
+   portfolio). Cyber is live; the other values are the CRO's ERM inputs. */
+function renderCroPortfolio(){
+  var host=document.getElementById('croPortfolio');if(!host)return;var p=LIVE&&LIVE.portfolio;
+  if(!p||!p.has_data)return; // keep illustrative until ERM values are entered
+  var rows=[{l:'Credit / market',v:p.creditMarket},{l:'Operational',v:p.operational},{l:'Cyber',v:p.cyber,cyber:true},{l:'Third-party',v:p.thirdParty},{l:'Compliance',v:p.compliance}]
+    .filter(function(r){return r.v!=null&&r.v>0;}).sort(function(a,b){return b.v-a.v;});
+  if(!rows.length)return;var max=rows[0].v||1;
+  host.innerHTML='<div class="card">'+rows.map(function(r){var pct=Math.max(6,Math.round(r.v/max*100));return '<div class="bar-row"><div class="bar-lbl">'+r.l+'</div><div class="bar-track"><div class="bar-fill '+(r.cyber?'hot':'')+'" style="width:'+pct+'%"></div></div><div class="bar-val">'+usd(r.v)+'</div></div>';}).join('')+'</div>';
+}
 /* CFO: cyber loss translated into earnings / EPS / revenue-at-risk (from /summary
    earnings — net income, shares outstanding, downtime cost). */
 function renderEarnings(){

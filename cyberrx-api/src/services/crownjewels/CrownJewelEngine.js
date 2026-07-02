@@ -178,6 +178,18 @@ async function run(orgId) {
 
   const governance = setup.governance || {};
 
+  // Enterprise risk portfolio (CRO) — cyber on one scale beside the org's other
+  // principal risks, as entered from their ERM. Cyber is live; others are inputs.
+  const pr = (econIn && econIn.principalRisks) || {};
+  const portfolio = {
+    cyber: num(economics.ale) || 0,
+    creditMarket: num(pr.creditMarket) || null,
+    operational: num(pr.operational) || null,
+    thirdParty: num(pr.thirdParty) || null,
+    compliance: num(pr.compliance) || null,
+  };
+  portfolio.has_data = !!(portfolio.creditMarket || portfolio.operational || portfolio.thirdParty || portfolio.compliance);
+
   // CFO earnings translation — cyber loss in the terms the CFO uniquely owns:
   // % of annual earnings, EPS impact, and revenue at risk per day of downtime.
   // Derived from the org's net income, shares outstanding, and downtime $/hr.
@@ -211,6 +223,7 @@ async function run(orgId) {
       resilience,
       governance,
       stress,
+      portfolio,
     },
     graph,
     assets: scored,

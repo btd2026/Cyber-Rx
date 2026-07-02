@@ -30,7 +30,8 @@
   .st{font-size:16px;font-weight:700}.sd{font-size:12.5px;color:var(--muted);margin-top:3px}
   .badge{margin-left:auto;font-size:11px;font-weight:700;color:var(--muted)}
   .badge.done{color:var(--good)}
-  .row{display:grid;gap:14px}.row.c2{grid-template-columns:1fr 1fr}.row.c3{grid-template-columns:1fr 1fr 1fr}
+  .row{display:grid;gap:14px}.row.c2{grid-template-columns:1fr 1fr}.row.c3{grid-template-columns:1fr 1fr 1fr}.row.c4{grid-template-columns:1fr 1fr 1fr 1fr}
+  @media (max-width:720px){.row.c4{grid-template-columns:1fr 1fr}}
   .field{display:flex;flex-direction:column}
   label{font-size:12px;color:var(--ink-2);margin-bottom:6px;font-weight:600}
   label .h{color:var(--muted);font-weight:400}
@@ -229,6 +230,17 @@
     <div class="row c3" style="margin-top:14px">
       <div class="field"><label>Shares outstanding <span style="color:var(--muted)">(for EPS impact)</span></label><div class="moneyf"><span class="cur">#</span><input type="number" step="any" class="mnum" id="finShares" placeholder="500"><select class="munit" id="finShares_u"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div></div>
       <div class="field"><label>Sensitive records held <span style="color:var(--muted)">(PII/PHI data subjects — for legal liability)</span></label><div class="moneyf"><span class="cur">#</span><input type="number" step="any" class="mnum" id="finRecords" placeholder="2.4"><select class="munit" id="finRecords_u"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div></div>
+    </div>
+  </div>
+
+  <!-- 2b · Enterprise risk portfolio (CRO) -->
+  <div class="sec">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Enterprise risk portfolio <span style="color:var(--muted)">(for the CRO)</span></div><div class="sd">Your other principal risks in dollars, so cyber sits on one scale beside them. From your ERM / risk register — leave blank to keep the CRO comparison illustrative.</div></div><div class="badge" id="berm">optional</div></div>
+    <div class="row c4">
+      <div class="field"><label>Credit / market risk</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum money" id="ermCredit" placeholder="210"><select class="munit" id="ermCredit_u"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div><div class="money-eq" id="ermCredit_eq"></div></div>
+      <div class="field"><label>Operational risk</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum money" id="ermOps" placeholder="140"><select class="munit" id="ermOps_u"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div><div class="money-eq" id="ermOps_eq"></div></div>
+      <div class="field"><label>Third-party risk</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum money" id="ermTP" placeholder="54"><select class="munit" id="ermTP_u"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div><div class="money-eq" id="ermTP_eq"></div></div>
+      <div class="field"><label>Compliance / legal risk</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum money" id="ermComp" placeholder="30"><select class="munit" id="ermComp_u"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div><div class="money-eq" id="ermComp_eq"></div></div>
     </div>
   </div>
 
@@ -586,6 +598,7 @@
       org_name:org,org_id:orgId,industry:v('industry'),regions:REGIONS,currency:CUR_CODE,
       financials:{revenue:mval('finRevenue'),operatingIncome:mval('finOpInc'),netIncome:mval('finNetInc'),enterpriseValue:mval('finEV'),sharesOutstanding:mval('finShares')},
       appetite:mval('finAppetite'),budget:mval('finBudget'),dataRecords:mval('finRecords'),
+      principalRisks:{creditMarket:mval('ermCredit'),operational:mval('ermOps'),thirdParty:mval('ermTP'),compliance:mval('ermComp')},
       insurance:{limit:mval('insLimit'),premium:mval('insPrem'),renewal:v('insRenew')},
       processes:PROC.map(function(p){return {name:p.name,data:p.data,rev:p.revenue,revenue:p.revenue,rto:p.rto,criticality:p.criticality};}),
       apps:APP.map(function(a){return {name:a.name,host:a.host,data:a.data,vendor:a.vendor,eol:a.eol,recovery:a.recovery,processes:Array.isArray(a.processes)?a.processes:[]};}),
