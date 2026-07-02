@@ -48,8 +48,8 @@ async function loadOrgSetup(orgId) {
     const rows = await db.query('SELECT setup_json FROM orgs WHERE id=$1', [orgId]);
     const sj = rows[0] && rows[0].setup_json;
     const parsed = typeof sj === 'string' ? JSON.parse(sj) : (sj || {});
-    return { economics: (parsed && parsed.economics) || {}, resilience: (parsed && parsed.resilience) || {} };
-  } catch (_) { return { economics: {}, resilience: {} }; }
+    return { economics: (parsed && parsed.economics) || {}, resilience: (parsed && parsed.resilience) || {}, governance: (parsed && parsed.governance) || {} };
+  } catch (_) { return { economics: {}, resilience: {}, governance: {} }; }
 }
 
 // materialExposure() reads snake_case, but Risk._transformFromDb returns camelCase.
@@ -148,6 +148,24 @@ async function run(orgId) {
   // "which business processes carry the risk?"). Derived from the org's inventory.
   const process_exposure = processExposure(scored, risks, processes).slice(0, 10);
 
+  // Named board stress scenario — a concrete "worst realistic day" derived from
+  // the top crown jewel, its largest open risk, worst-case recovery, and the
+  // binding regulatory clock. All from the org's own data (no invented figures).
+  const topCj = crownAssets[0] || null;
+  const topItem = expo.items[0] || null;
+  const stress = topCj ? {
+    target: topCj.name,
+    scenario: (topItem && topItem.risk) || 'Ransomware on a crown-jewel system',
+    worst_case_usd: num(economics.tail) || expo.total || null,
+    expected_usd: topItem ? num(topItem.exposure_usd) : null,
+    recovery_hours: resilience.worst_recovery_hours != null ? resilience.worst_recovery_hours : null,
+    binding_clock: legal.binding ? legal.binding.clock : null,
+    binding_jurisdiction: legal.binding ? legal.binding.jurisdiction : null,
+    top_vendor: resilience.top_vendor_blast || null,
+  } : null;
+
+  const governance = setup.governance || {};
+
   return {
     org_id: orgId,
     generated_at: new Date().toISOString(),
@@ -164,6 +182,8 @@ async function run(orgId) {
       economics,
       legal,
       resilience,
+      governance,
+      stress,
     },
     graph,
     assets: scored,

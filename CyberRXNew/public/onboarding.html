@@ -193,6 +193,26 @@
     </div>
   </div>
 
+  <!-- 1b · Board governance & incident readiness -->
+  <div class="sec">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Board governance &amp; incident readiness</div><div class="sd">The board’s own oversight structure — what the SEC (Reg S-K Item 106) requires you to disclose, plus your response-and-recover readiness. Powers the CEO/Board governance panel.</div></div><div class="badge" id="bgov">recommended</div></div>
+    <div class="row c3">
+      <div class="field"><label>Board committee that owns cyber</label><select id="govCommittee"><option value="">Select…</option><option>Audit Committee</option><option>Risk Committee</option><option>Dedicated Cybersecurity Committee</option><option>Technology Committee</option><option>Full Board</option></select></div>
+      <div class="field"><label>Board reporting cadence</label><select id="govCadence"><option value="">Select…</option><option>Every board meeting</option><option>Quarterly</option><option>Semi-annually</option><option>Annually</option></select></div>
+      <div class="field"><label>CISO reports to</label><select id="govCisoLine"><option value="">Select…</option><option>CEO</option><option>CIO</option><option>CFO</option><option>CRO / Chief Risk</option><option>COO</option><option>General Counsel</option></select></div>
+    </div>
+    <div class="row c3" style="margin-top:14px">
+      <div class="field"><label>Board member with cyber expertise?</label><select id="govExpertise"><option value="">Select…</option><option>Yes</option><option>No</option></select></div>
+      <div class="field"><label>Cyber integrated into enterprise risk (ERM)?</label><select id="govErm"><option value="">Select…</option><option>Yes</option><option>Partially</option><option>No</option></select></div>
+      <div class="field"><label>Incident-response plan tested?</label><select id="govIrTested"><option value="">Select…</option><option>Yes — tabletop within 12 months</option><option>Yes — older than 12 months</option><option>Not tested</option></select></div>
+    </div>
+    <div class="row c3" style="margin-top:14px">
+      <div class="field"><label>Last tabletop exercise</label><input type="date" id="govTabletop"></div>
+      <div class="field"><label>IR / breach-counsel retainer?</label><select id="govRetainer"><option value="">Select…</option><option>Yes</option><option>No</option></select></div>
+      <div class="field"><label>Ransomware-payment policy?</label><select id="govRansom"><option value="">Select…</option><option>Board-approved policy</option><option>Informal</option><option>None</option></select></div>
+    </div>
+  </div>
+
   <!-- 2 · Financials -->
   <div class="sec">
     <div class="sh"><div class="sn">2</div><div><div class="st">Financials &amp; appetite</div><div class="sd">Turns cyber risk into board language — % of revenue, materiality, appetite, ROI. Enter a number and pick the unit (B/M/K).</div></div><div class="badge" id="b2">optional</div></div>
@@ -307,6 +327,8 @@
   document.getElementById('currency').addEventListener('change',function(){var p=this.value.split('|');CUR_SYM=p[0];CUR_CODE=p[1]||'USD';document.querySelectorAll('.mcur').forEach(function(c){c.textContent=CUR_SYM;});document.querySelectorAll('.money').forEach(function(i){updateEq(i.id);});});
   // date fields: open the native calendar on click anywhere in the field
   document.querySelectorAll('input[type=date]').forEach(function(dt){dt.addEventListener('click',function(){try{if(this.showPicker)this.showPicker();}catch(_){}});});
+  // board-governance section badge
+  ['govCommittee','govCadence','govCisoLine','govExpertise','govErm','govIrTested','govRetainer','govRansom'].forEach(function(id){var e=document.getElementById(id);if(e)e.addEventListener('change',function(){var any=['govCommittee','govCadence','govCisoLine','govExpertise','govErm','govIrTested'].some(function(k){var el=document.getElementById(k);return el&&el.value;});var b=document.getElementById('bgov');if(b&&any){b.textContent='✓ provided';b.classList.add('done');}});});
 
   // ---- CSV/TSV parsing ----
   function parseDelim(text){
@@ -564,7 +586,12 @@
       processes:PROC.map(function(p){return {name:p.name,data:p.data,rev:p.revenue,revenue:p.revenue,rto:p.rto,criticality:p.criticality};}),
       apps:APP.map(function(a){return {name:a.name,host:a.host,data:a.data,vendor:a.vendor,eol:a.eol,recovery:a.recovery,processes:Array.isArray(a.processes)?a.processes:[]};}),
       risks:RISK.map(function(r){return {title:r.title,severity:r.severity,asset:r.asset,status:r.status,financial_exposure:r.exposure};}),
-      initiatives:INIT
+      initiatives:INIT,
+      governance:{
+        committee:v('govCommittee'),cadence:v('govCadence'),cisoReportsTo:v('govCisoLine'),
+        boardExpertise:v('govExpertise'),ermIntegrated:v('govErm'),
+        ir:{tested:v('govIrTested'),lastTabletop:v('govTabletop'),retainer:v('govRetainer'),ransomwarePolicy:v('govRansom')}
+      }
     };
     btn.disabled=true;msg.textContent='Building your cockpit…';msg.style.color='var(--muted)';
     try{
