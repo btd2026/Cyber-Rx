@@ -226,6 +226,9 @@
       <div class="field"><label>Board cyber-risk appetite</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum money" id="finAppetite" placeholder="120"><select class="munit" id="finAppetite_u"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div><div class="money-eq" id="finAppetite_eq"></div></div>
       <div class="field"><label>Annual cyber budget</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum money" id="finBudget" placeholder="9"><select class="munit" id="finBudget_u"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div><div class="money-eq" id="finBudget_eq"></div></div>
     </div>
+    <div class="row c3" style="margin-top:14px">
+      <div class="field"><label>Shares outstanding <span style="color:var(--muted)">(for EPS impact)</span></label><div class="moneyf"><span class="cur">#</span><input type="number" step="any" class="mnum" id="finShares" placeholder="500"><select class="munit" id="finShares_u"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div></div>
+    </div>
   </div>
 
   <!-- 3 · Insurance -->
@@ -580,7 +583,7 @@
     var orgId='org_'+slug(org);
     var payload={
       org_name:org,org_id:orgId,industry:v('industry'),regions:REGIONS,currency:CUR_CODE,
-      financials:{revenue:mval('finRevenue'),operatingIncome:mval('finOpInc'),netIncome:mval('finNetInc'),enterpriseValue:mval('finEV')},
+      financials:{revenue:mval('finRevenue'),operatingIncome:mval('finOpInc'),netIncome:mval('finNetInc'),enterpriseValue:mval('finEV'),sharesOutstanding:mval('finShares')},
       appetite:mval('finAppetite'),budget:mval('finBudget'),
       insurance:{limit:mval('insLimit'),premium:mval('insPrem'),renewal:v('insRenew')},
       processes:PROC.map(function(p){return {name:p.name,data:p.data,rev:p.revenue,revenue:p.revenue,rto:p.rto,criticality:p.criticality};}),
