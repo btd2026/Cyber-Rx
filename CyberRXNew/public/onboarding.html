@@ -404,8 +404,8 @@
     org=(org||'').trim();
     var orgId=org?('org_'+cjSlug(org)):'';
     try{
-      var procs=(PROC_UP||[]).filter(function(p){return p&&p.n;}).map(function(p){return {name:p.n,data:p.data,rev:p.rev};});
-      var apps=(APP_UP||[]).filter(function(a){return a&&a.n;}).map(function(a){return {name:a.n,host:a.host,data:a.data};});
+      var procs=(PROC_UP||[]).filter(function(p){return p&&p.n;}).map(function(p){return {name:p.n,data:p.data,rev:p.rev,revenue:p.rev,rto:p.rto};});
+      var apps=(APP_UP||[]).filter(function(a){return a&&a.n;}).map(function(a){return {name:a.n,host:a.host,data:a.data,vendor:a.vendor,eol:a.eol,recovery:a.recovery};});
       var risks=(RISK_UP||[]).filter(function(x){return x&&x.title;}).map(function(x){return {title:x.title,severity:x.severity,asset:x.asset,status:x.status,financial_exposure:x.exposure};});
       function fv(id){var e=document.getElementById(id);return e?String(e.value||'').trim():'';}
       var financials={revenue:fv('finRevenue'),operatingIncome:fv('finOpInc'),netIncome:fv('finNetInc'),enterpriseValue:fv('finEV')};
@@ -859,11 +859,13 @@
       var nameCol=findCol(h,['process_name','name','title','process']);
       var domCol=findCol(h,['process_domain','domain','category','type']);
       var revCol=findCol(h,['revenue','rev','value']);
+      var rtoCol=findCol(h,['rto','recovery_time_objective','recovery objective','target recovery']);
       PROC_UP=parsed.rows.map(function(c){
         var nm=(nameCol>=0?c[nameCol]:null)||c[0];
         var data=(domCol>=0?c[domCol]:null)||c[1]||'Process';
         var rev=(revCol>=0?c[revCol]:null)||c[2]||'—';
-        return {n:nm,data:data,rev:rev,c:'m'};
+        var rto=rtoCol>=0?c[rtoCol]:null;
+        return {n:nm,data:data,rev:rev,rto:rto,c:'m'};
       });
       PROC_FN=file.name;GRAPH=null;setTimeout(function(){procExtracted=true;procLive=false;renderProc(false);},400);
     };
@@ -920,11 +922,14 @@
       var nameCol=findCol(h,['application_name','app_name','name','title','application']);
       var classCol=findCol(h,['ci_class','class','type','category','hosting']);
       var dataCol=findCol(h,['data','data_classification','sensitivity']);
+      var vendorCol=findCol(h,['vendor','provider','supplier','hosted_by','cloud']);
+      var eolCol=findCol(h,['eol','end_of_life','end of support','supported','lifecycle']);
+      var recCol=findCol(h,['recovery','recovery_hours','rto_actual','restore']);
       APP_UP=parsed.rows.map(function(c){
         var nm=(nameCol>=0?c[nameCol]:null)||c[0];
         var host=(classCol>=0?c[classCol]:null)||c[1]||'—';
         var data=(dataCol>=0?c[dataCol]:null)||c[2]||'—';
-        return {n:nm,host:host,data:data};
+        return {n:nm,host:host,data:data,vendor:vendorCol>=0?c[vendorCol]:null,eol:eolCol>=0?c[eolCol]:null,recovery:recCol>=0?c[recCol]:null};
       });
       APP_FN=file.name;GRAPH=null;setTimeout(function(){appExtracted=true;appLive=false;renderApp(false);},400);
     };
