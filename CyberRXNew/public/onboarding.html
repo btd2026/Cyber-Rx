@@ -101,6 +101,40 @@
   .mapedit{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
   .mapedit-h{font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
   @media (max-width:680px){.cjmap{grid-template-columns:1fr;gap:14px}.cjsvg{display:none}}
+  /* tool connectors + demo mode + credibility meter */
+  .demo-bar{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding:12px 16px;background:linear-gradient(90deg,rgba(57,135,229,.10),rgba(57,135,229,.03));border:1px solid rgba(57,135,229,.28);border-radius:10px}
+  .demo-bar .demo-label{flex:1;font-size:13px;color:var(--ink);font-weight:700}
+  .demo-bar .demo-sub{display:block;font-size:11.5px;color:var(--muted);font-weight:400;margin-top:2px}
+  .demo-btn{font-weight:700;font-size:12.5px;color:var(--blue);background:var(--blue-soft);border:1px solid rgba(57,135,229,.35);border-radius:8px;padding:8px 16px;cursor:pointer;white-space:nowrap;width:auto}
+  .demo-btn:hover{background:var(--blue);color:#fff}
+  .demo-btn.active{background:var(--good-soft);color:var(--good);border-color:var(--good)}
+  .demo-btn.loading{opacity:.6;pointer-events:none}
+  .cred{background:var(--surface);border:1px solid var(--line-2);border-radius:13px;padding:15px 17px;margin-bottom:16px}
+  .cred-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+  .cred-top .ct{font-weight:700;font-size:14px}
+  .cred-top .cv{font-size:11px;padding:3px 10px;border-radius:6px;font-weight:700}
+  .cred-top .cv.l0{color:var(--crit);background:var(--crit-soft)}.cred-top .cv.l1{color:var(--warn);background:var(--warn-soft)}.cred-top .cv.l2{color:var(--blue);background:var(--blue-soft)}.cred-top .cv.l3{color:var(--good);background:var(--good-soft)}
+  .cred-bar{height:9px;background:var(--line-2);border-radius:99px;overflow:hidden}
+  .cred-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--good));border-radius:99px;transition:width .6s}
+  .cred-meta{font-size:11px;color:var(--muted);margin-top:8px}.cred-meta b{color:var(--ink)}
+  #toolGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:720px){#toolGrid{grid-template-columns:1fr}}
+  .conn{background:var(--surface);border:1px solid var(--line-2);border-radius:12px;padding:14px 16px}
+  .conn-h{display:flex;align-items:center;gap:12px}
+  .conn-ic{width:34px;height:34px;border-radius:9px;background:var(--blue-soft);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:15px;flex:none}
+  .conn-t{flex:1;min-width:0}.conn-t .cn{font-size:14px;font-weight:700}.conn-t .cc{font-size:10.5px;color:var(--muted);margin-top:1px}
+  .conn-st{font-size:11px;padding:4px 10px;border-radius:6px;white-space:nowrap;font-weight:600}
+  .conn-st.no{color:var(--muted);background:var(--line)}.conn-st.on{color:var(--good);background:var(--good-soft)}
+  .conn-toggle{font-size:11px;color:var(--blue);cursor:pointer;margin-left:2px;white-space:nowrap}
+  .conn-body{display:none;margin-top:13px;padding-top:13px;border-top:1px solid var(--line)}
+  .conn.open .conn-body{display:block}
+  .conn-row{display:grid;grid-template-columns:1.3fr 1fr auto;gap:10px;align-items:end}
+  @media (max-width:560px){.conn-row{grid-template-columns:1fr}}
+  .conn-row .field label{font-size:11px}
+  .tb{font-weight:700;font-size:13px;color:#fff;background:var(--blue);border:none;border-radius:8px;padding:9px 16px;cursor:pointer;white-space:nowrap;width:auto}
+  .tb:hover{filter:brightness(1.08)}.tb.done{background:var(--good-soft);color:var(--good);cursor:default}.tb.amber{background:var(--warn-soft);color:var(--warn);cursor:default}
+  .conn-info{margin-top:12px;font-size:12px;line-height:1.55;color:var(--muted)}.conn-info .pl{color:var(--ink);font-weight:700}.conn-info .an{color:var(--blue);font-weight:700}
+  .livedot{width:6px;height:6px;border-radius:50%;background:var(--good);display:inline-block;margin-right:6px;vertical-align:middle}
   .note{font-size:12.5px;color:var(--muted);line-height:1.6}
   .note b{color:var(--ink-2)}
   .foot{position:sticky;bottom:0;background:linear-gradient(180deg,transparent,#0d0d0d 30%);padding:22px 0 26px;margin-top:24px}
@@ -223,9 +257,11 @@
 
   <!-- 7 · Connect tools -->
   <div class="sec">
-    <div class="sh"><div class="sn">7</div><div><div class="st">Connect your tools</div><div class="sd">Pick the tools you run — their live signals power real coverage figures, and your ticketing system tracks decisions to completion.</div></div><div class="badge" id="b7">optional</div></div>
-    <div class="toolgrid" id="toolGrid"></div>
-    <div class="note" style="margin-top:12px">Select a vendor and enter a key to connect now, or leave blank and finish in the cockpit’s <b>“Live data — connected sources”</b> panel after go-live. <b>Nothing is simulated</b> — a tool only shows live once it’s really connected.</div>
+    <div class="sh"><div class="sn">7</div><div><div class="st">Connect your tools</div><div class="sd">Most of your evidence is pulled live from here. Connect each system you run and CyberRx streams the data that answers your executives’ questions — the more you connect, the more credible every answer.</div></div><div class="badge" id="b7">optional</div></div>
+    <div class="demo-bar"><span class="demo-label">Demo mode<span class="demo-sub">Explore with simulated signals — no API keys. Clearly labeled “Demo”; never sent to the engine as real data.</span></span><button class="demo-btn" id="demoToggle" type="button">Enable demo mode</button></div>
+    <div class="cred"><div class="cred-top"><span class="ct">Evidence credibility</span><span class="cv l0" id="credLabel">Not yet credible</span></div><div class="cred-bar"><i id="credBar"></i></div><div class="cred-meta"><b id="credSig">0</b> live signals · <b id="credSys">0</b> systems connected · <b id="credCov">0%</b> coverage</div></div>
+    <div id="toolGrid"></div>
+    <div class="note" style="margin-top:12px">Expand a tool, pick your vendor and enter a key to connect now — or leave blank and finish in the cockpit’s <b>“Live data — connected sources”</b> panel after go-live. Real connections show <b>“Connected”</b>; demo-mode tools show <b>“Demo”</b> and are never counted as real.</div>
   </div>
 
   <div class="foot"><div class="wrap" style="padding:0"><div class="foot-in">
@@ -393,26 +429,61 @@
     var bd=document.getElementById(k==='proc'?'b4':'b5');bd.textContent='✓ CMDB connected';bd.classList.add('done');
   });});
 
-  // ---- tool connector selection (real /api/integrations on go-live) ----
+  // ---- tool connectors (real /api/integrations on go-live) with demo mode ----
   var TOOLS=[
-    {key:'okta',cat:'Identity / SSO',vendors:['Okta','Microsoft Entra ID','Ping Identity','Duo'],map:{'Microsoft Entra ID':'entra'}},
-    {key:'defender',cat:'Endpoint / EDR',vendors:['Microsoft Defender','CrowdStrike Falcon','SentinelOne'],map:{'CrowdStrike Falcon':'crowdstrike','SentinelOne':'sentinel'}},
-    {key:'qualys',cat:'Vulnerability management',vendors:['Qualys','Tenable'],map:{'Tenable':'tenable'}},
-    {key:'splunk',cat:'SIEM',vendors:['Splunk','Microsoft Sentinel'],map:{'Microsoft Sentinel':'sentinel'}},
-    {key:'cyberark',cat:'Privileged access',vendors:['CyberArk']},
-    {key:'knowbe4',cat:'Security awareness',vendors:['KnowBe4']},
-    {key:'servicenow',cat:'Ticketing / ITSM',vendors:['ServiceNow','Jira'],itsm:true}
+    {key:'okta',ic:'🔑',cat:'Identity / SSO',w:14,sig:240,vendors:['Okta','Microsoft Entra ID','Ping Identity','Duo'],map:{'Microsoft Entra ID':'entra'},pulls:'MFA coverage, privileged accounts, risky sign-ins, access reviews.',ans:'CISO control validation · CRO access risk · HIPAA evidence.'},
+    {key:'defender',ic:'🛡',cat:'Endpoint / EDR',w:16,sig:420,vendors:['Microsoft Defender','CrowdStrike Falcon','SentinelOne'],map:{'CrowdStrike Falcon':'crowdstrike','SentinelOne':'sentinel'},pulls:'Live detections, threats blocked, agent coverage, dwell time.',ans:'CISO “are we under attack” · CIO endpoint health.'},
+    {key:'qualys',ic:'🔍',cat:'Vulnerability management',w:12,sig:150,vendors:['Qualys','Tenable'],map:{'Tenable':'tenable'},pulls:'Critical vulns, internet-facing exposure, patch latency.',ans:'CISO material exposure · attack-path inputs.'},
+    {key:'splunk',ic:'📊',cat:'SIEM / Log analytics',w:16,sig:510,vendors:['Splunk','Microsoft Sentinel'],map:{'Microsoft Sentinel':'sentinel'},pulls:'Alerts, correlated incidents, MTTD/MTTC, log coverage.',ans:'CISO operational status & incident timeline · Board assurance.'},
+    {key:'cyberark',ic:'🔒',cat:'Privileged access (PAM)',w:14,sig:120,vendors:['CyberArk','BeyondTrust','Delinea'],pulls:'Privileged sessions, vaulted accounts, just-in-time access.',ans:'CISO top-driver control · closes the payments path.'},
+    {key:'knowbe4',ic:'🎓',cat:'Security awareness',w:6,sig:70,vendors:['KnowBe4','Proofpoint'],pulls:'Phishing-prone rate, campaign results, training completion.',ans:'CISO live threat (phishing → claims).'},
+    {key:'servicenow',ic:'🗂',cat:'Ticketing / ITSM',w:8,sig:40,vendors:['ServiceNow','Jira'],itsm:true,pulls:'Remediation status, change governance, decision & approval records.',ans:'Decisions become tracked projects · CLO defensibility · audit log.'}
   ];
+  var TOTAL_SIG=TOOLS.reduce(function(s,t){return s+t.sig;},0);
   var SELTOOLS={};
+  function tickTo(el,to,dur){if(!el)return;var from=parseInt((el.textContent||'0').replace(/,/g,''))||0,t0=performance.now();(function f(t){var p=Math.min(1,(t-t0)/dur);el.textContent=Math.round(from+(to-from)*p).toLocaleString();if(p<1)requestAnimationFrame(f);})(performance.now());}
+  function updateCred(){
+    var ids=Object.keys(SELTOOLS).filter(function(k){return SELTOOLS[k].on;});
+    var byRealKey={};TOOLS.forEach(function(t){byRealKey[t.key]=t;if(t.map)Object.keys(t.map).forEach(function(v){byRealKey[t.map[v]]=t;});});
+    var cov=Math.min(99,ids.reduce(function(s,id){return s+((byRealKey[id]&&byRealKey[id].w)||0);},0));
+    var sig=ids.reduce(function(s,id){return s+((byRealKey[id]&&byRealKey[id].sig)||0);},0);
+    var bar=document.getElementById('credBar');if(bar)bar.style.width=cov+'%';
+    tickTo(document.getElementById('credSig'),sig,900);
+    var sy=document.getElementById('credSys');if(sy)sy.textContent=ids.length;
+    var cv=document.getElementById('credCov');if(cv)cv.textContent=cov+'%';
+    var lab=document.getElementById('credLabel');
+    if(lab){var t,cl;if(cov===0){t='Not yet credible';cl='l0';}else if(cov<35){t='Building';cl='l1';}else if(cov<65){t='Moderate';cl='l2';}else if(cov<88){t='Strong';cl='l2';}else{t='Audit-ready';cl='l3';}lab.textContent=t;lab.className='cv '+cl;}
+    var bd=document.getElementById('b7');if(ids.length){bd.textContent='✓ '+ids.length+' tools';bd.classList.add('done');}else{bd.textContent='optional';bd.classList.remove('done');}
+  }
+  function markConnected(t,i,realKey,vend,key,demo){
+    SELTOOLS[realKey]={vendor:vend,key:key||'',itsm:!!t.itsm,demo:!!demo,on:true};
+    var st=document.getElementById('ts'+i);
+    if(st){st.className='conn-st on';st.innerHTML='<span class="livedot"></span>'+(demo?'Demo · ':'Connected · ')+'<span id="sigc'+i+'">0</span> signals';tickTo(document.getElementById('sigc'+i),t.sig,700);}
+    var go=document.querySelector('.tb[data-ti="'+i+'"]');if(go){go.classList.add(demo?'amber':'done');go.textContent=demo?'✓ Demo':'✓ Connected';}
+    updateCred();
+  }
   (function renderTools(){
     var g=document.getElementById('toolGrid');if(!g)return;
-    g.innerHTML=TOOLS.map(function(t,i){return '<div class="toolcard"><div class="th">'+t.cat+'<span class="tstat" id="ts'+i+'">not selected</span></div><div class="tf"><select class="tv">'+t.vendors.map(function(vn){return '<option>'+vn+'</option>';}).join('')+'</select><input class="tk" placeholder="'+(t.itsm?'instance / token':'API key / token')+'"><button class="tb" data-ti="'+i+'">Select</button></div></div>';}).join('');
+    g.className='';g.innerHTML=TOOLS.map(function(t,i){
+      return '<div class="conn" id="conn'+i+'"><div class="conn-h"><div class="conn-ic">'+t.ic+'</div><div class="conn-t"><div class="cn">'+t.cat+'</div><div class="cc">'+t.vendors.length+' supported · pulls '+t.sig+' signals</div></div><span class="conn-st no" id="ts'+i+'">not connected</span><span class="conn-toggle" data-tog="'+i+'">details ▾</span></div>'+
+        '<div class="conn-body"><div class="conn-row"><div class="field"><label>Vendor</label><select class="tv">'+t.vendors.map(function(vn){return '<option>'+vn+'</option>';}).join('')+'</select></div><div class="field"><label>'+(t.itsm?'Instance / token':'API key / token')+'</label><input class="tk" placeholder="'+(t.itsm?'https://yourorg.service-now.com · token':'API key, tenant ID, or OAuth')+'"></div><button class="tb" data-ti="'+i+'">Connect</button></div>'+
+        '<div class="conn-info"><span class="pl">Pulls:</span> '+t.pulls+'<br><span class="an">Answers:</span> '+t.ans+'</div></div></div>';
+    }).join('');
+    document.querySelectorAll('[data-tog]').forEach(function(tg){tg.addEventListener('click',function(){document.getElementById('conn'+tg.dataset.tog).classList.toggle('open');});});
     document.querySelectorAll('.tb').forEach(function(b){b.addEventListener('click',function(){
-      var i=b.dataset.ti,card=b.closest('.toolcard'),vend=card.querySelector('.tv').value,key=card.querySelector('.tk').value.trim(),t=TOOLS[i];
-      var realKey=(t.map&&t.map[vend])||t.key;SELTOOLS[realKey]={vendor:vend,key:key,itsm:!!t.itsm};
-      var s=document.getElementById('ts'+i);s.textContent='✓ selected';s.classList.add('on');b.textContent='✓';
-      var bd=document.getElementById('b7');bd.textContent='✓ '+Object.keys(SELTOOLS).length+' tools';bd.classList.add('done');
+      var i=b.dataset.ti,card=b.closest('.conn'),vend=card.querySelector('.tv').value,key=card.querySelector('.tk').value.trim(),t=TOOLS[i];
+      if(SELTOOLS[(t.map&&t.map[vend])||t.key]&&SELTOOLS[(t.map&&t.map[vend])||t.key].on)return;
+      var realKey=(t.map&&t.map[vend])||t.key;markConnected(t,i,realKey,vend,key,false);
     });});
+    var demoBtn=document.getElementById('demoToggle');
+    if(demoBtn)demoBtn.addEventListener('click',async function(){
+      if(demoBtn.classList.contains('active'))return;
+      demoBtn.classList.add('loading');demoBtn.textContent='Connecting…';
+      for(var i=0;i<TOOLS.length;i++){var t=TOOLS[i],realKey=t.key;if(!(SELTOOLS[realKey]&&SELTOOLS[realKey].on))markConnected(t,i,realKey,t.vendors[0],'',true);await new Promise(function(r){setTimeout(r,110);});}
+      demoBtn.classList.remove('loading');demoBtn.classList.add('active');demoBtn.textContent='✓ Demo mode active';
+      try{localStorage.setItem('cyberrx_demo_mode','1');}catch(_){}
+    });
+    updateCred();
   })();
 
   document.getElementById('goLive').addEventListener('click',async function(){
@@ -439,6 +510,9 @@
     }catch(e){/* offline: still hand off; cockpit shows illustrative */}
     var seatNames={};document.querySelectorAll('.seatname').forEach(function(i){if(i.value.trim())seatNames[i.dataset.seat]=i.value.trim();});
     try{localStorage.setItem('cyberrx_org_id',orgId);localStorage.setItem('cyberrx_org_name',org);localStorage.setItem('cyberrx_seat_names',JSON.stringify(seatNames));}catch(_){}
+    // Persist the chosen ticketing system so cockpit decisions open projects there.
+    var itsm=SELTOOLS.servicenow;
+    try{if(itsm&&itsm.on)localStorage.setItem('cyberrx_itsm',JSON.stringify({vendor:itsm.vendor||'ServiceNow',instance:itsm.key||'',demo:!!itsm.demo}));}catch(_){}
     payload.seatNames=seatNames;
     // Connect the selected security tools now that the org exists (best-effort, real).
     var toolKeys=Object.keys(SELTOOLS).filter(function(k){return SELTOOLS[k].key&&!SELTOOLS[k].itsm;});
