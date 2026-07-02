@@ -191,7 +191,16 @@ function setBar(live){var bar=document.getElementById('dataModeBar'),inner=docum
   if(live){bar.style.background='rgba(12,163,12,.10)';bar.style.borderBottomColor='rgba(12,163,12,.35)';inner.style.color='var(--good)';inner.innerHTML='● <b>Live · '+nm+'</b> — headline economics computed from your data. Sections labeled illustrative fill in as their intake sources connect.';}
   else{bar.style.background='rgba(250,178,25,.12)';bar.style.borderBottomColor='rgba(250,178,25,.4)';inner.style.color='var(--warn,#b7791f)';inner.innerHTML='◐ <b>Illustrative</b> — sample figures. Complete onboarding (inventory + financials → Go live) to compute your live cockpit.';}}
 function applyLive(){if(!LIVE)return;var e=LIVE.economics||{},r=e.ratios||{},ap=e.appetite||{},ins=e.insurance||{};var ale=Number(e.ale)||0,tail=Number(e.tail)||ale;
-  if(ale>0){setTxt('lvSpineExpo',usd(ale));setTxt('lvSpineTail',usd(tail));setTxt('lvExpo',usd(ale));setTxt('lvTail',usd(tail));setTxt('lvExpoCfo',usd(ale));setTxt('lvTailCfo',usd(tail));if(ins&&ins.gap!=null){setTxt('lvGap',usd(ins.gap));setTxt('lvGapCeo',usd(ins.gap));}}}
+  if(ale>0){setTxt('lvSpineExpo',usd(ale));setTxt('lvSpineTail',usd(tail));setTxt('lvExpo',usd(ale));setTxt('lvTail',usd(tail));setTxt('lvExpoCfo',usd(ale));setTxt('lvTailCfo',usd(tail));if(ins&&ins.gap!=null){setTxt('lvGap',usd(ins.gap));setTxt('lvGapCeo',usd(ins.gap));}}
+  // CLO seat — render the org's real jurisdiction obligations + binding clock.
+  var lg=LIVE.legal;
+  if(lg&&lg.obligations&&lg.obligations.length){
+    if(lg.binding)setTxt('lvClock',lg.binding.clock);
+    var jt=document.getElementById('cloJuris');
+    if(jt){var cc=function(h){return h<=24?'crit':h<=96?'warn':'good';};
+      jt.innerHTML='<div class="card"><table class="tbl"><thead><tr><th>Jurisdiction</th><th>Obligation</th><th>Clock</th><th>Max penalty</th></tr></thead><tbody>'+
+        lg.obligations.map(function(o){return '<tr><td><span class="flag">'+(o.flag||'')+'</span>'+o.jurisdiction+'</td><td>'+o.obligation+'</td><td><span class="tag '+cc(o.clock_hours)+'">'+o.clock+'</span></td><td style="font-weight:600">'+(o.penalty||'')+'</td></tr>';}).join('')+'</tbody></table></div>';}
+  }}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
   try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}}
 
