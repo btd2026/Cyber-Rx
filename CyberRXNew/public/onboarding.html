@@ -407,8 +407,12 @@
       var procs=(PROC_UP||[]).filter(function(p){return p&&p.n;}).map(function(p){return {name:p.n,data:p.data,rev:p.rev};});
       var apps=(APP_UP||[]).filter(function(a){return a&&a.n;}).map(function(a){return {name:a.n,host:a.host,data:a.data};});
       var risks=(RISK_UP||[]).filter(function(x){return x&&x.title;}).map(function(x){return {title:x.title,severity:x.severity,asset:x.asset,status:x.status,financial_exposure:x.exposure};});
+      function fv(id){var e=document.getElementById(id);return e?String(e.value||'').trim():'';}
+      var financials={revenue:fv('finRevenue'),operatingIncome:fv('finOpInc'),netIncome:fv('finNetInc'),enterpriseValue:fv('finEV')};
+      var insurance={limit:fv('finInsLimit'),premium:fv('finInsPrem'),renewal:fv('finInsRenew')};
+      var appetite=fv('finAppetite'),budget=fv('finBudget');
       if(org&&(procs.length||apps.length)){
-        var r=await fetch(cjApiBase()+'/api/crown-jewels/ingest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({org_name:org,org_id:orgId,processes:procs,apps:apps,risks:risks})});
+        var r=await fetch(cjApiBase()+'/api/crown-jewels/ingest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({org_name:org,org_id:orgId,processes:procs,apps:apps,risks:risks,financials:financials,appetite:appetite,insurance:insurance,budget:budget,industry:selectedIndustry})});
         if(r&&r.ok){var body=await r.json().catch(function(){return{};});if(body&&body.org_id)orgId=body.org_id;}
       }
     }catch(_){}
@@ -642,6 +646,12 @@
       <div class="seattabs" id="seatTabs"></div><div id="seatBody"></div>`,
     7:()=>`<div class="panel-h"><div class="step-of">Step 8 of 8</div><h2>Review &amp; go live</h2><p>Here's what we have. When you go live, CyberRx builds your executive seats, computes coverage, and drafts your first briefing.</p></div>
       <div class="rev-grid"><div class="rev"><div class="k">Organization</div><div class="v" id="revOrg">—</div></div><div class="rev"><div class="k">Systems connected</div><div class="v" id="revSys">0</div></div><div class="rev"><div class="k">Live signals</div><div class="v" id="revSig">0</div></div><div class="rev"><div class="k">Crown jewels</div><div class="v" id="revCj" style="color:var(--gold)">—</div></div><div class="rev"><div class="k">Documents</div><div class="v" id="revDocs">0</div></div><div class="rev"><div class="k">Evidence credibility</div><div class="v" id="revCred">—</div></div></div>
+      <div class="gen" style="border-color:var(--brand)"><h4>Executive-cockpit financials <span style="font-weight:400;color:var(--muted);font-size:13px">— power the board &amp; CFO views (optional, editable later)</span></h4>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.6">These turn cyber risk into your board's language — % of revenue, materiality, risk appetite, and the insurance gap. Approximate figures are fine; you can type values like <b>$8.4B</b> or <b>$120M</b>.</p>
+        <div class="row3"><div class="field"><label>Annual revenue</label><input id="finRevenue" placeholder="$8.4B"></div><div class="field"><label>Operating income</label><input id="finOpInc" placeholder="$1.4B"></div><div class="field"><label>Net income</label><input id="finNetInc" placeholder="$1.06B"></div></div>
+        <div class="row3"><div class="field"><label>Enterprise value / market cap</label><input id="finEV" placeholder="$30B"></div><div class="field"><label>Board cyber-risk appetite</label><input id="finAppetite" placeholder="$120M"></div><div class="field"><label>Annual cyber budget</label><input id="finBudget" placeholder="$9M"></div></div>
+        <div class="row3"><div class="field"><label>Cyber-insurance limit</label><input id="finInsLimit" placeholder="$150M"></div><div class="field"><label>Insurance premium</label><input id="finInsPrem" placeholder="$4.2M"></div><div class="field"><label>Insurance renewal date</label><input id="finInsRenew" placeholder="2026-09-30"></div></div>
+      </div>
       <div class="gen"><h4>What we'll generate from this</h4><ul><li>Seven executive seats, each framed to your business and fed by live evidence</li><li>Framework coverage with the source & freshness behind every control</li><li>Your crown-jewel map, attack paths, and vendor concentration</li><li>Your first board-ready briefing and the Executive Twin — grounded only in your data</li></ul></div>
       <div class="gen" style="border-color:var(--brand)"><h4>Peer benchmarking <span style="font-weight:400;color:var(--muted);font-size:13px">— optional &amp; reciprocal</span></h4><p style="font-size:13px;color:var(--muted);margin:0 0 11px;line-height:1.6">Compare your maturity against anonymized peers. Only high-level <b>CMMI maturity scores</b> leave your tenant — never findings, evidence, names, or identifiers. Cohorts under 8 are never shown. <b>It's reciprocal: you see peer benchmarks only if you contribute.</b></p><label style="display:flex;gap:9px;align-items:flex-start;font-size:13px;cursor:pointer"><input type="checkbox" id="benchConsent" style="margin-top:3px"> Contribute our anonymized maturity to the shared benchmark so we can see peer comparisons <span style="color:var(--muted)">(you can change this any time in the platform)</span></label></div>`
   };
