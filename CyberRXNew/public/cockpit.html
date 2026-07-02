@@ -96,6 +96,64 @@
   .src-row{display:flex;gap:9px;align-items:center;font-size:12.5px;color:var(--ink-2);padding:7px 0}.src-row .sd{width:6px;height:6px;border-radius:50%;background:var(--blue);flex:none}
   .conf{font-size:12.5px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:8px}
   .foot{color:var(--muted);font-size:12px;text-align:center;padding:30px 0;border-top:1px solid var(--line);margin-top:40px}.foot b{color:var(--ink-2)}
+  /* ===== full War Room (ported) ===== */
+  @keyframes warpulse{0%,100%{box-shadow:0 0 0 0 rgba(255,70,70,.7)}50%{box-shadow:0 0 0 7px rgba(255,70,70,0)}}
+  .tbtn.war.alarm{animation:warpulse .85s infinite;background:#8a1418;color:#fff}
+  .modal.warroom{width:96vw;max-width:1120px;background:#0B0F14;color:#E6EDF3;border:1px solid #2A1416;padding:0;overflow:hidden;max-height:90vh}
+  .wr-head{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:linear-gradient(90deg,#15090b,#0B0F14);border-bottom:1px solid #2A1416}
+  .wr-ttl{font-weight:700;font-size:17px;letter-spacing:.04em;color:#fff}
+  .wr-mode{font-family:var(--mono);font-size:10px;letter-spacing:.1em;padding:3px 8px;border-radius:5px;margin-left:10px;background:#16241c;color:#3FBF92;border:1px solid #214234}
+  .wr-mode.live{background:#2a0e10;color:#FF5C5C;border-color:#5a1d20;animation:warpulse 1s infinite}
+  .wr-act{display:flex;align-items:center;gap:9px}
+  .wr-sim{font-weight:600;font-size:12px;color:#fff;background:#b8242a;border:1px solid #d23b41;border-radius:7px;padding:7px 12px;cursor:pointer;font-family:inherit}
+  .wr-sim.contain{background:#16241c;border-color:#2c6a4d;color:#6fe0ad}
+  .wr-mute{background:#161c24;border:1px solid #283242;border-radius:7px;color:#cdd6e0;font-size:14px;padding:5px 9px;cursor:pointer}
+  .warroom .modal-x{color:#9aa6b2;font-size:22px;background:none;border:none;cursor:pointer}
+  .wr-body{padding:18px 20px;max-height:74vh;overflow-y:auto}
+  .wr-foot2{padding:11px 20px;border-top:1px solid #1b232d;font-size:11px;color:#7d8896;background:#0a0d12}
+  .wr-banner{display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:14px 16px;border-radius:11px;margin-bottom:16px}
+  .wr-banner.calm{background:#0d1813;border:1px solid #1d3a2c}.wr-banner.live{background:linear-gradient(90deg,#1c0a0c,#140a0d);border:1px solid #5a1d20}
+  .wr-binfo{flex:1;min-width:200px}.wr-binfo .h{font-weight:700;font-size:17px;color:#fff}.wr-binfo .s{font-family:var(--mono);font-size:11.5px;color:#9aa6b2;margin-top:3px}
+  .wr-stat{display:flex;gap:18px;flex-wrap:wrap}.wr-stat .it{text-align:right}.wr-stat .it .k{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#7d8896}
+  .wr-stat .it .v{font-weight:700;font-size:18px}.wr-stat .it .v.crit{color:#FF5C5C}.wr-stat .it .v.warn{color:#E0A968}.wr-stat .it .v.ok{color:#3FBF92}
+  .wr-sec{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#7d8896;margin:18px 0 10px}
+  .wr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}@media(max-width:760px){.wr-grid{grid-template-columns:1fr 1fr}}
+  .wr-feed-sys{background:#0f141b;border:1px solid #1b232d;border-radius:10px;padding:12px 13px}
+  .wr-feed-sys .sh{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .wr-feed-sys .nm{font-weight:600;font-size:13px;color:#E6EDF3}.wr-feed-sys .sub{font-family:var(--mono);font-size:9.5px;color:#7d8896}
+  .wr-dot{width:8px;height:8px;border-radius:50%;flex:none}.wr-dot.ok{background:#3FBF92}.wr-dot.warn{background:#E0A968}.wr-dot.crit{background:#FF5C5C;animation:warpulse 1s infinite}
+  .wr-feed-sys .mm{font-family:var(--mono);font-size:14px;font-weight:600;margin:9px 0 6px}.wr-feed-sys .mm.ok{color:#3FBF92}.wr-feed-sys .mm.warn{color:#E0A968}.wr-feed-sys .mm.crit{color:#FF5C5C}
+  .wr-feed-sys .ev{font-family:var(--mono);font-size:10.5px;color:#9aa6b2;line-height:1.6}
+  .wr-chain{display:flex;gap:7px;flex-wrap:wrap}.wr-stage{flex:1;min-width:120px;background:#0f141b;border:1px solid #1b232d;border-radius:9px;padding:10px 11px;border-left-width:3px;border-left-style:solid}
+  .wr-stage.done{border-left-color:#FF5C5C}.wr-stage.active{border-left-color:#E0A968;animation:warpulse 1.4s infinite}.wr-stage.blocked{border-left-color:#3FBF92}
+  .wr-stage .st{font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase}.wr-stage.done .st{color:#FF5C5C}.wr-stage.active .st{color:#E0A968}.wr-stage.blocked .st{color:#3FBF92}
+  .wr-stage .nm{font-weight:600;font-size:12.5px;color:#E6EDF3;margin:3px 0}.wr-stage .n2{font-family:var(--mono);font-size:10px;color:#7d8896;line-height:1.45}
+  .wr-blast{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}@media(max-width:640px){.wr-blast{grid-template-columns:1fr}}
+  .wr-bcell{display:flex;align-items:center;gap:10px;background:#0f141b;border:1px solid #1b232d;border-radius:9px;padding:10px 12px}
+  .wr-bcell .bn{flex:1}.wr-bcell .bn .t{font-weight:600;font-size:13px;color:#E6EDF3}.wr-bcell .bn .d{font-family:var(--mono);font-size:10px;color:#7d8896}
+  .wr-pill{font-family:var(--mono);font-size:9.5px;padding:3px 8px;border-radius:5px;white-space:nowrap}.wr-pill.atrisk{background:#2a0e10;color:#FF5C5C}.wr-pill.contained{background:#2a210e;color:#E0A968}.wr-pill.safe{background:#102a1d;color:#3FBF92}
+  .wr-logbox{background:#080b0f;border:1px solid #1b232d;border-radius:10px;padding:11px 13px;font-family:var(--mono);font-size:11px;color:#9aa6b2;max-height:170px;overflow-y:auto;line-height:1.85}
+  .wr-logbox .ln{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.wr-logbox .ln b{color:#cdd6e0;font-weight:600}.wr-logbox .ln.crit b{color:#FF5C5C}.wr-logbox .ln.act b{color:#3FBF92}
+  .wr-dec{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}@media(max-width:640px){.wr-dec{grid-template-columns:1fr}}
+  .wr-dcell{background:#0f141b;border:1px solid #1b232d;border-radius:9px;padding:10px 12px;border-left:3px solid #4F90FF}.wr-dcell .r{font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:#4F90FF;font-weight:600}.wr-dcell .d{font-size:12.5px;color:#E6EDF3;margin-top:3px;line-height:1.45}
+  .wr-comms{background:#0f141b;border:1px solid #1b232d;border-radius:10px;padding:12px 14px;font-size:12.5px;color:#9aa6b2;line-height:1.7}.wr-comms b{color:#E6EDF3}
+  .ic-console{border:2px solid #d03b3b;border-radius:12px;background:#12080a;margin:16px 0;overflow:hidden}
+  .ic-banner{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 18px;background:linear-gradient(90deg,rgba(208,59,59,.18),transparent);border-bottom:1px solid #2A1416}
+  .ic-t{font-weight:700;font-size:16px;letter-spacing:.03em;color:#FF5C5C}.ic-s{font-family:var(--mono);font-size:11px;color:#9aa6b2;margin-top:3px}
+  .ic-clock{font-weight:700;font-size:26px;color:#FF5C5C;font-variant-numeric:tabular-nums}
+  .ic-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:16px 18px}@media(max-width:720px){.ic-cols{grid-template-columns:1fr}}
+  .ic-h{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#7d8896;margin-bottom:9px;display:flex;align-items:center;gap:8px}
+  .ic-h .ic-note{text-transform:none;letter-spacing:0;font-size:10px;color:#7d8896}.ic-prog{font-family:var(--mono);color:#4F90FF;font-size:11px}
+  .ic-checks{display:flex;flex-direction:column;gap:5px}.ic-chk{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:#E6EDF3;cursor:pointer;padding:5px 7px;border-radius:7px}.ic-chk:hover{background:rgba(255,255,255,.04)}
+  .ic-chk .box{width:16px;height:16px;border:1.5px solid #3a3a37;border-radius:5px;flex:none;margin-top:1px}.ic-chk.done .box{background:#0ca30c;border-color:#0ca30c;position:relative}.ic-chk.done .box:after{content:"✓";color:#fff;font-size:11px;position:absolute;top:-2px;left:2px}.ic-chk.done{color:#9aa6b2;text-decoration:line-through}
+  .ic-pb{border:1px solid #1b232d;border-radius:10px;padding:11px 13px;margin-bottom:9px}.ic-pb.rec{border-color:#d03b3b;background:rgba(208,59,59,.06)}
+  .ic-pbtag{font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:#FF5C5C}.ic-pbh{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:600;font-size:14px;margin-top:3px;color:#fff}
+  .ic-pbtrig{font-weight:600;font-size:12px;color:#fff;background:#d03b3b;border:1px solid #d03b3b;border-radius:7px;padding:6px 11px;cursor:pointer;white-space:nowrap;font-family:inherit}.ic-pbtrig.on{background:#0ca30c;border-color:#0ca30c}
+  .ic-pbsteps{margin:9px 0 0;padding-left:18px;font-size:12.5px;color:#9aa6b2;line-height:1.65}
+  .ic-calls{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:0 18px 8px}@media(max-width:720px){.ic-calls{grid-template-columns:1fr}}
+  .ic-call{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid #1b232d;border-radius:9px;padding:9px 12px}.ic-call.called{border-color:#0ca30c;background:rgba(12,163,12,.14)}
+  .ic-call .role{font-family:var(--mono);font-size:10px;letter-spacing:.03em;color:#7d8896;display:flex;align-items:center;gap:7px}.ic-call .role .grp{padding:1px 6px;border-radius:4px;font-size:8.5px;letter-spacing:.05em}.ic-call .role .grp.internal{color:#4F90FF;background:rgba(57,135,229,.14)}.ic-call .role .grp.external{color:#E0A968;background:rgba(224,169,104,.14)}
+  .ic-call .who{font-weight:600;font-size:13px;color:#E6EDF3;margin-top:2px}.ic-call .callbtn{font-family:var(--mono);font-size:12px;font-weight:600;color:#4F90FF;text-decoration:none;border:1px solid #1b232d;border-radius:7px;padding:7px 11px;white-space:nowrap}.ic-call.called .callbtn{color:#0ca30c;border-color:#0ca30c}
   .tbtn{background:none;border:1px solid var(--line-2);color:var(--ink-2);border-radius:8px;padding:6px 11px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
   .tbtn:hover{border-color:var(--blue);color:#fff}.tbtn.on{background:var(--blue);color:#fff;border-color:var(--blue)}
   .tbtn.war{border-color:rgba(208,59,59,.5);color:#e88}.tbtn.war:hover{background:var(--crit-soft)}
@@ -142,9 +200,13 @@
 <div class="ev-scrim" id="scrim"></div>
 <aside class="ev" id="ev"><div class="ev-h"><span class="eb">How this is calculated</span><button class="ev-x" id="evx">×</button></div><div class="ev-b" id="evb"></div></aside>
 
-<!-- War Room — real-data incident command (crown jewels + jurisdiction clocks) -->
+<!-- War Room — full incident command center -->
 <div class="modal-scrim" id="wrScrim"></div>
-<div class="modal" id="wrModal"><div class="modal-h"><span class="mt">War Room</span><span class="mtag" id="wrState">No active incident</span><button class="modal-x" id="wrX">×</button></div><div class="modal-b" id="wrBody"></div></div>
+<div class="modal warroom" id="wrModal">
+  <div class="wr-head"><div class="wr-ttl">⚠ WAR ROOM <span class="wr-mode" id="wrMode">STANDBY</span></div><div class="wr-act"><button class="wr-sim" id="wrSim">▶ Simulate live incident</button><button class="wr-mute" id="wrMute" title="Mute alarm">🔊</button><button class="modal-x" id="wrX">×</button></div></div>
+  <div class="wr-body" id="wrBody"></div>
+  <div class="wr-foot2">Command center streams from your connected systems (SIEM, EDR, threat intel, identity, network).</div>
+</div>
 
 <script>
 /* ---------- renderers ---------- */
@@ -258,40 +320,84 @@ document.getElementById('voiceBtn').addEventListener('click',function(){
   if(!VOICE_MUTED)speakSeat(CUR); else{try{window.parent.postMessage({type:'cyberrx-speak-cancel'},'*');window.speechSynthesis.cancel();}catch(_){}}
 });
 
-/* ---- War Room: incident command grounded in the org's REAL crown jewels + jurisdiction clocks ---- */
-function money(n){n=Number(n)||0;if(n>=1e9)return '$'+(n/1e9).toFixed(1)+'B';if(n>=1e6)return '$'+Math.round(n/1e6)+'M';if(n>=1e3)return '$'+Math.round(n/1e3)+'K';return '$'+n;}
-function wrRender(active){
-  var body=document.getElementById('wrBody'),state=document.getElementById('wrState');
-  var cjs=(LIVE&&LIVE.crown_jewels)||[], legal=(LIVE&&LIVE.legal)||{}, exp=(LIVE&&LIVE.material_exposure_usd)||0;
-  if(!active){
-    state.textContent='No active incident';state.style.color='#7fd28a';state.style.borderColor='rgba(12,163,12,.5)';
-    body.innerHTML='<div class="wr-lead">All systems nominal — no active compromise. If an incident occurs, declare it here to run command with your <b>real crown jewels</b> as the blast radius and your <b>real notification clocks</b> per jurisdiction.</div>'+
-      '<div class="wr-cta"><button class="wr-btn dec" id="wrDeclare">⚠ Declare an incident</button><button class="wr-btn gh" id="wrClose2">Close</button></div>'+
-      '<div class="wr-grid" style="margin-top:16px"><div class="wr-panel"><h4>What would be at risk (your crown jewels)</h4>'+
-        (cjs.length?cjs.slice(0,6).map(function(a){return '<div class="wr-item"><span>♦ '+a.name+' <span style="color:var(--muted)">('+(a.type||'asset')+')</span></span><span class="v">'+(a.score||'')+'/100</span></div>';}).join(''):'<div class="wr-item"><span style="color:var(--muted)">Ingest inventory to populate</span></div>')+
-      '</div><div class="wr-panel"><h4>Modeled material exposure</h4><div style="font-size:26px;font-weight:700;color:#e88">'+(exp>0?money(exp):'—')+'</div><div style="font-size:12.5px;color:var(--muted);margin-top:6px">the dollars in play if the crown-jewel path is realized</div></div></div>';
-    document.getElementById('wrDeclare').onclick=function(){wrRender(true);};
-    document.getElementById('wrClose2').onclick=wrCloseFn;
-  }else{
-    state.textContent='● INCIDENT DECLARED';state.style.color='#e88';state.style.borderColor='rgba(208,59,59,.5)';
-    var obs=(legal.obligations||[]);
-    body.innerHTML='<div class="wr-lead" style="color:#e88"><b>Incident command is live.</b> The clocks below are your real regulatory deadlines from onboarding; work the checklist top to bottom.</div>'+
-      '<div class="wr-grid"><div class="wr-panel"><h4>Command checklist</h4>'+
-        ['Declare & convene the response team','Contain — isolate affected crown-jewel systems','Assess materiality (CFO + GC)','Notify regulators within the binding clock','Notify affected parties / customers','Recover & verify; file the decision record'].map(function(s,i){return '<div class="wr-step"><span class="wr-ck" data-ck="'+i+'">'+(i+1)+'</span><span>'+s+'</span></div>';}).join('')+
-      '</div><div class="wr-panel"><h4>Regulatory clocks (yours)</h4>'+
-        (obs.length?obs.slice(0,6).map(function(o){return '<div class="wr-item"><span>'+(o.flag||'')+' '+o.jurisdiction+'</span><span class="wr-clock">'+o.clock+'</span></div>';}).join(''):'<div class="wr-item"><span style="color:var(--muted)">Set operating regions in onboarding to populate</span></div>')+
-        (legal.binding?'<div style="margin-top:12px;font-size:12.5px;color:#e88"><b>Binding deadline: '+legal.binding.clock+'</b> — the runbook is timed to this.</div>':'')+
-      '</div></div>'+
-      '<div class="wr-cta" style="margin-top:16px"><button class="wr-btn gh" id="wrStand">Stand down (resolve)</button></div>';
-    body.querySelectorAll('.wr-ck').forEach(function(ck){ck.onclick=function(){ck.classList.toggle('done');ck.textContent=ck.classList.contains('done')?'✓':(Number(ck.dataset.ck)+1);};});
-    document.getElementById('wrStand').onclick=function(){wrRender(false);};
+/* ================= War Room — full incident command center (ported) ================= */
+var SEAT_NAMES=(function(){try{return JSON.parse(localStorage.getItem('cyberrx_seat_names')||'{}');}catch(_){return{};}})();
+var incidentActive=false,wrStart=0,wrTimer=null,wrTick=0,alarmMuted=false,audioCtx=null,alarmTO=null;
+function ciso(){return SEAT_NAMES.ciso||'CISO';}
+var SYS_CALM=[{nm:'SIEM',sub:'Splunk',st:'ok',m:'1.2B events/day',ev:['0 active correlations','ingest 100% · 0 gaps']},{nm:'Threat Intel',sub:'feeds + ISAC',st:'ok',m:'0 IOC matches',ev:['no actor activity','feeds current']},{nm:'EDR',sub:'CrowdStrike',st:'ok',m:'hosts clean',ev:['0 detections','coverage nominal']},{nm:'Identity',sub:'Okta',st:'ok',m:'MFA nominal',ev:['0 risky sign-ins','no privilege anomalies']},{nm:'Network',sub:'Firewall + WAF',st:'ok',m:'attacks blocked',ev:['no C2 traffic','segmentation intact']},{nm:'Email',sub:'Secure email',st:'warn',m:'phishing elevated',ev:['campaigns blocked','staff targeted']}];
+var SYS_LIVE=[{nm:'SIEM',sub:'Splunk',st:'crit',live:true,m:'alerts/min',ev:['ransomware playbook firing','mass file-encryption on a crown-jewel VLAN']},{nm:'Threat Intel',sub:'feeds + ISAC',st:'crit',m:'BlackCat / ALPHV',ev:['TTPs match known affiliate','ransom-note signature matched']},{nm:'EDR',sub:'CrowdStrike',st:'crit',m:'hosts encrypting',ev:['auto-isolation in progress','patient-zero identified']},{nm:'Identity',sub:'Okta',st:'warn',m:'1 priv acct abused',ev:['service account from new ASN','token revoked']},{nm:'Network',sub:'Firewall + WAF',st:'warn',m:'C2 egress blocked',ev:['egress to 91.211.x.x dropped','VLAN contained']},{nm:'Email',sub:'Secure email',st:'crit',m:'initial access: phish',ev:['malicious attachment opened','staff inbox']}];
+var CHAIN=[{nm:'Reconnaissance',st:'done',n:'targeted staff identified'},{nm:'Initial Access',st:'done',n:'phishing → credential + payload'},{nm:'Execution',st:'done',n:'ransomware ran on endpoint'},{nm:'Lateral Movement',st:'active',n:'attempting domain spread — being contained'},{nm:'Exfiltration / Impact',st:'blocked',n:'encryption held to isolated hosts'}];
+var CONTAIN=[{t:'Endpoints network-isolated',d:'EDR · auto-contained',st:'contained',lbl:'DONE'},{t:'Privileged tokens revoked',d:'Identity · sessions forced re-auth',st:'contained',lbl:'DONE'},{t:'C2 egress blocked',d:'Network · IPs + domains sinkholed',st:'contained',lbl:'DONE'},{t:'Crown-jewel VLAN segmented',d:'spread to other systems blocked',st:'safe',lbl:'HOLDING'},{t:'Immutable backup pinned',d:'clean copy locked & verified',st:'safe',lbl:'DONE'}];
+var RECOVERY=[{t:'Last clean backup',d:'pre-detonation',st:'safe',lbl:'GOOD'},{t:'Immutable / air-gapped copy',d:'verified uncorrupted',st:'safe',lbl:'VERIFIED'},{t:'RPO · data at risk',d:'≤ 30 min of transactions',st:'contained',lbl:'~30 MIN'},{t:'RTO · restore core',d:'recovery environment warming',st:'atrisk',lbl:'~3.5 DAYS'},{t:'Last restore test',d:'overdue',st:'atrisk',lbl:'OVERDUE'}];
+var ATTCK=['T1078 Valid Accounts','T1486 Data Encrypted for Impact','T1490 Inhibit System Recovery','T1021 Remote Services','T1567 Exfiltration over Web'];
+var READY=[{t:'IR retainer on call',d:'1-hour response SLA',st:'safe',lbl:'ARMED'},{t:'Immutable backups',d:'verified daily',st:'safe',lbl:'VERIFIED'},{t:'Auto-containment playbooks',d:'isolation · token-revoke · C2-block',st:'safe',lbl:'ARMED'},{t:'Regulatory clock automation',d:'mapped to your jurisdictions',st:'safe',lbl:'READY'},{t:'Last tabletop exercise',d:'ransomware scenario',st:'contained',lbl:'RECENT'}];
+var IC_CHECK=['Declare incident & assume command','Assemble the response team (call tree)','Contain & isolate affected systems','Preserve evidence — forensic images & logs','Assess scope, data impact & materiality','Notify per plan — exec, legal, insurer, regulators','Open the incident decision log','Set comms cadence — internal & external'];
+var IC_PLAYBOOKS=[{nm:'Ransomware response',rec:true,steps:['Isolate affected hosts; cut lateral paths','Revoke privileged tokens & rotate keys','Verify backup integrity BEFORE any restore','Engage IR retainer + breach counsel','Do NOT pay without counsel + an exec decision','Preserve ransom note & IOCs for attribution']},{nm:'Data exfiltration / breach',steps:[]},{nm:'Business email compromise',steps:[]}];
+function IC_CONTACTS(){return [{role:'Deputy IC',who:ciso(),ph:'',g:'Internal'},{role:'Comms / PR lead',who:SEAT_NAMES.comms||'Comms lead',ph:'',g:'Internal'},{role:'Breach counsel (external)',who:SEAT_NAMES.clo||'Breach counsel',ph:'',g:'External'},{role:'IR retainer / forensics (24/7)',who:'IR retainer',ph:'',g:'External'},{role:'Cyber-insurer claims hotline',who:'Insurer claims hotline',ph:'',g:'External'},{role:'Law enforcement (FBI field office)',who:'FBI field office',ph:'',g:'External'},{role:'Incident Commander',who:ciso(),ph:'',g:'Internal'}];}
+var FEED=[],icChecks={},icCalled={},icPlaybook=false;
+var FEED_SEED=[['14:02:11','EDR','ransomware behavior flagged on a crown-jewel host','crit'],['14:02:13','SOAR','auto-isolation triggered','act'],['14:02:19','SIEM','correlation: mass file-encryption on the VLAN','crit'],['14:02:24','TI','signature match → BlackCat/ALPHV affiliate','crit'],['14:02:31','IAM','privileged service-account token revoked','act'],['14:02:40','NET','egress to C2 91.211.x.x blocked at perimeter','act']];
+var FEED_POOL=[['EDR','host quarantined','act'],['SOAR','backup integrity check started','act'],['SIEM','encryption rate plateauing — containment holding','act'],['NET','additional C2 domain sinkholed','act'],['IAM','forced re-auth on privileged sessions','act'],['TI','affiliate infrastructure mapped · shared to ISAC','act'],['EDR','no spread to other VLANs','act'],['DR','recovery environment warming','act'],['SIEM','new encryption attempt blocked','crit'],['LEGAL','multi-state breach assessment opened','act']];
+function ensureAudio(){if(!audioCtx){try{audioCtx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(audioCtx&&audioCtx.state==='suspended'){try{audioCtx.resume();}catch(e){}}}
+function alarmBeep(){if(!audioCtx)return;var t=audioCtx.currentTime;[[920,0],[680,0.2]].forEach(function(p){var o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='square';o.frequency.value=p[0];o.connect(g);g.connect(audioCtx.destination);g.gain.setValueAtTime(0.0001,t+p[1]);g.gain.exponentialRampToValueAtTime(0.05,t+p[1]+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+p[1]+0.17);o.start(t+p[1]);o.stop(t+p[1]+0.2);});}
+function alarmLoop(){if(!incidentActive||alarmMuted)return;alarmBeep();alarmTO=setTimeout(alarmLoop,2300);}
+function startAlarm(){ensureAudio();clearTimeout(alarmTO);if(!alarmMuted)alarmLoop();}
+function stopAlarm(){clearTimeout(alarmTO);}
+function elapsedStr(){var s=Math.floor((Date.now()-wrStart)/1000);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+function wrUsd(n){n=Number(n)||0;if(n>=1e9)return '$'+(n/1e9).toFixed(1)+'B';if(n>=1e6)return '$'+Math.round(n/1e6)+'M';if(n>=1e3)return '$'+Math.round(n/1e3)+'K';return '$'+n;}
+function sysCard(s){var metric=s.live?(180+Math.floor(Math.random()*70))+' '+s.m:s.m;return '<div class="wr-feed-sys"><div class="sh"><div><div class="nm">'+s.nm+'</div><div class="sub">'+s.sub+'</div></div><span class="wr-dot '+s.st+'"></span></div><div class="mm '+s.st+'"'+(s.live?' data-sysmetric="1"':'')+'>'+metric+'</div><div class="ev">'+s.ev.map(function(e){return '• '+e;}).join('<br>')+'</div></div>';}
+function feedLineHTML(f){return '<div class="ln '+(f[3]||'')+'">'+f[0]+'  <b>'+f[1]+'</b>  '+f[2]+'</div>';}
+function bcell(b){return '<div class="wr-bcell"><div class="bn"><div class="t">'+b.t+'</div><div class="d">'+b.d+'</div></div><span class="wr-pill '+b.st+'">'+b.lbl+'</span></div>';}
+function attckChips(){return ATTCK.map(function(t){return '<span style="display:inline-block;font-family:var(--mono);font-size:10px;background:rgba(57,135,229,.14);color:#4F90FF;border-radius:4px;padding:2px 7px;margin:3px 4px 0 0">'+t+'</span>';}).join('');}
+// Blast radius + regulatory clocks come from the org's REAL crown jewels + jurisdictions when present.
+function blastCells(){var cjs=(LIVE&&LIVE.crown_jewels)||[];if(cjs.length)return cjs.slice(0,4).map(function(a,i){return {t:a.name,d:(a.type||'asset')+' · crown jewel',st:i===0?'atrisk':i===1?'contained':'safe',lbl:i===0?'AT RISK':i===1?'CONTAINED':'SAFE'};});return [{t:'Revenue-critical process',d:'affected hosts isolated',st:'atrisk',lbl:'AT RISK'},{t:'Primary database',d:'isolated · not yet encrypted',st:'contained',lbl:'CONTAINED'},{t:'Payments',d:'segmented · unaffected',st:'safe',lbl:'SAFE'},{t:'Customer portal',d:'unaffected',st:'safe',lbl:'SAFE'}];}
+function regClkCells(){var obs=(LIVE&&LIVE.legal&&LIVE.legal.obligations)||[];if(obs.length)return obs.slice(0,5).map(function(o){return {t:o.jurisdiction+' — '+o.obligation.split('—')[0].trim(),d:'max: '+(o.penalty||''),st:o.clock_hours<=24?'atrisk':o.clock_hours<=96?'contained':'safe',lbl:o.clock+' · CLOCK'};});return [{t:'SEC Item 1.05 — material?',d:'4 business days from determination',st:'atrisk',lbl:'CLOCK EVALUATING'},{t:'Breach notification',d:'per your jurisdictions',st:'atrisk',lbl:'ASSESSMENT OPEN'},{t:'Cyber-insurance notice',d:'“as soon as practicable”',st:'atrisk',lbl:'DRAFT — AWAITING CFO'}];}
+function icHTML(){
+  var h='<div class="ic-console"><div class="ic-banner"><div><div class="ic-t">⚠ INCIDENT COMMANDER — '+ciso()+'</div><div class="ic-s">You have command · INC-'+new Date().toISOString().slice(0,10).replace(/-/g,'')+'-001 · SEV-1</div></div><div class="ic-clock" id="icClock">'+elapsedStr()+'</div></div>';
+  h+='<div class="ic-cols"><div><div class="ic-h">Your command checklist <span class="ic-prog" id="icProg">'+Object.keys(icChecks).length+'/'+IC_CHECK.length+'</span></div><div class="ic-checks">'+IC_CHECK.map(function(c,i){return '<div class="ic-chk'+(icChecks[i]?' done':'')+'" data-ic="'+i+'"><span class="box"></span><span>'+c+'</span></div>';}).join('')+'</div></div>';
+  h+='<div><div class="ic-h">Playbooks to trigger</div>'+IC_PLAYBOOKS.map(function(p,i){return '<div class="ic-pb'+(p.rec?' rec':'')+'">'+(p.rec?'<span class="ic-pbtag">matches this incident</span>':'')+'<div class="ic-pbh">'+p.nm+(p.rec?'<button class="ic-pbtrig'+(icPlaybook?' on':'')+'" data-pb="'+i+'">'+(icPlaybook?'✓ Triggered':'Trigger playbook')+'</button>':'')+'</div>'+(p.rec?'<ul class="ic-pbsteps">'+p.steps.map(function(s){return '<li>'+s+'</li>';}).join('')+'</ul>':'')+'</div>';}).join('')+'</div></div>';
+  var CT=IC_CONTACTS();
+  h+='<div class="ic-h" style="margin:0 18px 9px">Call tree — who to call now <span class="ic-note">from your incident command plan · captured at onboarding</span></div><div class="ic-calls">'+CT.map(function(c,i){return '<div class="ic-call'+(icCalled[i]?' called':'')+'"><div><div class="role">'+c.role+' <span class="grp '+c.g.toLowerCase()+'">'+c.g+'</span></div><div class="who">'+c.who+'</div></div><a class="callbtn" href="#" data-call="'+i+'">📞 '+(icCalled[i]?'Called ✓':'Call')+'</a></div>';}).join('')+'</div></div>';
+  return h;
+}
+function renderWar(){
+  var mode=document.getElementById('wrMode'),sim=document.getElementById('wrSim'),body=document.getElementById('wrBody');if(!body)return;
+  if(incidentActive){
+    mode.textContent='● LIVE INCIDENT';mode.className='wr-mode live';sim.textContent='✓ Declare contained';sim.className='wr-sim contain';
+    var exp=(LIVE&&LIVE.material_exposure_usd)||0;
+    var h='<div class="wr-banner live"><div class="wr-binfo"><div class="h">RANSOMWARE — crown-jewel process</div><div class="s">SEV-1 · ACTIVE · INC-'+new Date().toISOString().slice(0,10).replace(/-/g,'')+'-001 · commander: '+ciso()+' · BlackCat/ALPHV</div></div><div class="wr-stat"><div class="it"><div class="k">Elapsed</div><div class="v crit" id="wrElapsed">'+elapsedStr()+'</div></div><div class="it"><div class="k">Modeled exposure</div><div class="v crit">'+(exp>0?wrUsd(exp):'$2.3M/hr')+'</div></div><div class="it"><div class="k">Recovery ETA</div><div class="v warn">~3.5 days</div></div><div class="it"><div class="k">Records exposed</div><div class="v ok">0 confirmed</div></div></div></div>';
+    h+=icHTML();
+    h+='<div class="wr-sec">Live system feeds — what each tool is reporting now</div><div class="wr-grid">'+SYS_LIVE.map(sysCard).join('')+'</div>';
+    h+='<div class="wr-sec">Attack path · kill chain</div><div class="wr-chain">'+CHAIN.map(function(c){return '<div class="wr-stage '+c.st+'"><div class="st">'+(c.st==='done'?'adversary reached':c.st==='active'?'in progress':'blocked')+'</div><div class="nm">'+c.nm+'</div><div class="n2">'+c.n+'</div></div>';}).join('')+'</div>';
+    h+='<div class="wr-sec">Automated containment — what the stack already executed</div><div class="wr-blast">'+CONTAIN.map(bcell).join('')+'</div>';
+    h+='<div class="wr-sec">Blast radius · your crown jewels</div><div class="wr-blast">'+blastCells().map(bcell).join('')+'</div>';
+    h+='<div class="wr-sec">Recovery &amp; resilience — can we restore, and how fast</div><div class="wr-blast">'+RECOVERY.map(bcell).join('')+'</div>';
+    h+='<div class="wr-sec">Threat intelligence &amp; attribution</div><div class="wr-comms"><b>Actor:</b> BlackCat/ALPHV affiliate · confidence <b>High</b> · financially motivated. <b>IOCs:</b> C2 91.211.x.x + affiliate domains — shared to ISAC. <b>MITRE ATT&amp;CK observed:</b><br>'+attckChips()+'</div>';
+    h+='<div class="wr-sec">Live event feed</div><div class="wr-logbox" id="wrFeed">'+FEED.map(feedLineHTML).join('')+'</div>';
+    h+='<div class="wr-sec">Regulatory exposure clocks — your deadlines now running</div><div class="wr-blast">'+regClkCells().map(bcell).join('')+'</div>';
+    body.innerHTML=h;
+    body.querySelectorAll('.ic-chk').forEach(function(chk){chk.onclick=function(){var i=chk.dataset.ic;if(icChecks[i])delete icChecks[i];else icChecks[i]=1;renderWar();};});
+    body.querySelectorAll('[data-pb]').forEach(function(pb){pb.onclick=function(){icPlaybook=true;FEED.push(['14:03:05','IC','ransomware playbook triggered by commander','act']);if(FEED.length>16)FEED.shift();renderWar();};});
+    body.querySelectorAll('[data-call]').forEach(function(cl){cl.onclick=function(e){e.preventDefault();icCalled[cl.dataset.call]=1;renderWar();};});
+  } else {
+    mode.textContent='STANDBY';mode.className='wr-mode';sim.textContent='▶ Simulate live incident';sim.className='wr-sim';
+    var h2='<div class="wr-banner calm"><div class="wr-binfo"><div class="h">● No active incident</div><div class="s">Continuous monitoring · all feeds streaming</div></div><div class="wr-stat"><div class="it"><div class="k">Active incidents</div><div class="v ok">0</div></div><div class="it"><div class="k">Systems online</div><div class="v ok">9 / 9</div></div><div class="it"><div class="k">MTTD (90d)</div><div class="v ok">8 min</div></div></div></div>';
+    h2+='<div class="wr-sec">Live system feeds — what each tool is reporting now</div><div class="wr-grid">'+SYS_CALM.map(sysCard).join('')+'</div>';
+    h2+='<div class="wr-sec">Response readiness — armed and ready</div><div class="wr-blast">'+READY.map(bcell).join('')+'</div>';
+    h2+='<div class="wr-comms" style="margin-top:16px">Connect your SIEM in onboarding to enable auto-detection. When a qualifying incident is confirmed, this room goes <b>live</b> automatically — the alarm sounds, the button flashes, and the C-suite is convened with shared facts and role-specific decisions.</div>';
+    body.innerHTML=h2;
   }
 }
-function wrOpen(){wrRender(false);document.getElementById('wrModal').classList.add('open');document.getElementById('wrScrim').classList.add('open');}
+function startWarLive(){clearInterval(wrTimer);wrTick=0;wrTimer=setInterval(function(){wrTick++;var el=document.getElementById('wrElapsed');if(el)el.textContent=elapsedStr();var icc=document.getElementById('icClock');if(icc)icc.textContent=elapsedStr();document.querySelectorAll('[data-sysmetric]').forEach(function(n){n.textContent=(180+Math.floor(Math.random()*70))+' alerts/min';});if(wrTick%3===0){var p=FEED_POOL[Math.floor(Math.random()*FEED_POOL.length)];var ts='14:'+String(2+Math.floor(wrTick/20)).padStart(2,'0')+':'+String((wrTick*7)%60).padStart(2,'0');FEED.push([ts,p[0],p[1],p[2]]);if(FEED.length>16)FEED.shift();var fb=document.getElementById('wrFeed');if(fb){fb.innerHTML=FEED.map(feedLineHTML).join('');fb.scrollTop=fb.scrollHeight;}}},1000);}
+function stopWarLive(){clearInterval(wrTimer);}
+function triggerIncident(){incidentActive=true;wrStart=Date.now();FEED=FEED_SEED.slice();icChecks={};icCalled={};icPlaybook=false;var b=document.getElementById('warBtn');b.classList.add('alarm');b.textContent='⚠ LIVE INCIDENT';startAlarm();renderWar();startWarLive();}
+function containIncident(){incidentActive=false;stopAlarm();stopWarLive();var b=document.getElementById('warBtn');b.classList.remove('alarm');b.textContent='⚠ War Room';renderWar();}
+function wrOpen(){ensureAudio();renderWar();document.getElementById('wrModal').classList.add('open');document.getElementById('wrScrim').classList.add('open');}
 function wrCloseFn(){document.getElementById('wrModal').classList.remove('open');document.getElementById('wrScrim').classList.remove('open');}
 document.getElementById('warBtn').addEventListener('click',wrOpen);
 document.getElementById('wrX').addEventListener('click',wrCloseFn);
 document.getElementById('wrScrim').addEventListener('click',wrCloseFn);
+document.getElementById('wrSim').addEventListener('click',function(){ensureAudio();if(incidentActive)containIncident();else triggerIncident();});
+document.getElementById('wrMute').addEventListener('click',function(){alarmMuted=!alarmMuted;this.textContent=alarmMuted?'🔇':'🔊';if(alarmMuted)stopAlarm();else if(incidentActive)startAlarm();});
 
 /* Wired into the product launcher (index.html): pick up the org chosen at go-live,
    open the seat the user signed in as, and (re)load live data when shown. */
