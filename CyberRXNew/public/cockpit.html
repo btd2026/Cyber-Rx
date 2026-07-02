@@ -252,7 +252,7 @@ function render(seat){
   h+='<div class="spine"><span class="lk">⛓ One source of truth</span><span class="num"><b id="lvSpineExpo">$68M</b> <span>expected annual loss ·</span> <b id="lvSpineTail">$180M</b> <span>tail</span></span><span class="arrow">the same number every seat sees — in the <b>'+SEAT_LABEL[seat]+'</b> lens ↓</span></div></div>';
   h+=s.body();
   document.getElementById('app').innerHTML=h;
-  wireChoose();renderInitiatives();renderChain();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCroPortfolio();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();renderSignals();applyLive();window.scrollTo({top:0});
 }
 </script>
 <script src="cockpit-seats.js"></script>
@@ -510,8 +510,30 @@ function applyLive(){if(!LIVE)return;var e=LIVE.economics||{},r=e.ratios||{},ap=
     if(rs.top_vendor_blast)setTxt('lvVendor','1 vendor, '+(rs.top_vendor_blast.systems||[]).length+' systems');
     if(rs.tech_debt&&rs.tech_debt.exposure)setTxt('lvTechDebt',usd(rs.tech_debt.exposure));
   }}
+/* CISO live signals — real coverage / threat status from the org's connected
+   tools (/api/integrations/signals). Renders live values when present. */
+var SIGNALS=null;
+function sig(k){if(!SIGNALS)return null;var s=SIGNALS[k];return (s&&s.value!=null&&isFinite(s.value))?Number(s.value):null;}
+function renderSignals(){
+  if(!SIGNALS)return;
+  var oi=sig('open_incidents');
+  if(oi!=null){var el=document.getElementById('lvThreatStatus');if(el)el.textContent=oi>0?(oi+' open incident'+(oi>1?'s':'')):'No active compromise';
+    var n=document.getElementById('lvThreatNote');if(n)n.innerHTML='<span class="pill good">live</span> from your SIEM'+(sig('mttd_hrs')!=null?(' · MTTD '+sig('mttd_hrs')+'h'):'');}
+  var host=document.getElementById('cisoCoverage');var rows=[];
+  if(sig('edr_pct')!=null)rows.push({k:'Endpoint detection (EDR)',v:sig('edr_pct')+'%',cls:sig('edr_pct')>=95?'good':'warn'});
+  if(sig('mfa_pct')!=null)rows.push({k:'Multi-factor (MFA)',v:sig('mfa_pct')+'%',cls:sig('mfa_pct')>=95?'good':'warn'});
+  if(sig('pam_pct')!=null)rows.push({k:'Privileged accounts managed',v:sig('pam_pct')+'%',cls:sig('pam_pct')>=80?'good':'crit'});
+  if(sig('phishing_pct')!=null)rows.push({k:'Phishing-prone rate',v:sig('phishing_pct')+'%',cls:sig('phishing_pct')<=5?'good':'warn'});
+  if(sig('training_pct')!=null)rows.push({k:'Security-awareness training',v:sig('training_pct')+'%',cls:sig('training_pct')>=90?'good':'warn'});
+  if(host&&rows.length){host.innerHTML=kvcard('Coverage from connected tools <span class="pill good">live</span>',rows);
+    var pcts=['edr_pct','mfa_pct','pam_pct'].map(sig).filter(function(x){return x!=null;});
+    if(pcts.length){var avg=Math.round(pcts.reduce(function(s,x){return s+x;},0)/pcts.length);setTxt('lvCovTile',avg+'%');var tn=document.getElementById('lvCovTileNote');if(tn)tn.innerHTML='<span class="pill good">live</span> from '+pcts.length+' connected tool'+(pcts.length>1?'s':'');}
+  }
+}
+function loadSignals(){var base=apiBase(),o=orgId();if(!base||!o)return;
+  try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}}).catch(function(){});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderProcBars();renderCioSystems();renderBoard();renderEarnings();renderCroPortfolio();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderProcBars();renderCioSystems();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -679,6 +701,15 @@ function renderEarnings(){
   cards=cards.slice(0,4);
   host.innerHTML='<div class="grid'+(cards.length>=4?'4':'3')+'">'+cards.map(function(c){return '<div class="card"><div class="ck">'+c.k+'</div><div class="cv" style="font-size:22px;margin-top:6px'+(c.warn?';color:var(--warn)':'')+'">'+c.v+'</div></div>';}).join('')+'</div>';
 }
+/* CFO return-on-spend — MEASURED once real posture history exists: risk removed
+   since baseline ÷ annual security budget. Stays modeled until ≥2 snapshots. */
+function renderRoi(){
+  var e=LIVE&&LIVE.economics,t=LIVE&&LIVE.trend;if(!e||!t||t.length<2||!e.budget)return;
+  var reduced=(Number(t[0].ale)||0)-(Number(t[t.length-1].ale)||0);if(reduced<=0||e.budget<=0)return;
+  var roi=reduced/e.budget;
+  setTxt('lvCfoRoiVal','$1 → $'+(roi>=1?roi.toFixed(1):roi.toFixed(2)));
+  var note=document.getElementById('lvCfoRoiNote');if(note)note.innerHTML='<span class="pill good">measured</span> '+usd(reduced)+' risk removed ÷ '+usd(e.budget)+' spend';
+}
 /* CIO "which systems carry the business" — the crown-jewel systems, ranked by
    $/hr of downtime (from /summary resilience.systems). Illustrative until live. */
 function renderCioSystems(){
@@ -704,7 +735,7 @@ function renderChain(){
 
 function selectSeat(seat){document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===seat);});render(seat);if(!VOICE_MUTED)speakSeat(seat);}
 document.querySelectorAll('.seat').forEach(function(b){b.addEventListener('click',function(){selectSeat(b.dataset.seat);});});
-render('ceo');loadLive();
+render('ceo');loadLive();loadSignals();
 
 /* ---- Advisor voice: speak the seat's verdict via the parent (autoplay-safe) ---- */
 var VOICE_MUTED=true;

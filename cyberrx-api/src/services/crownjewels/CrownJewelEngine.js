@@ -101,6 +101,9 @@ async function run(orgId) {
     insurance: (econIn && econIn.insurance) || {},
     risks,
   });
+  // Annual security budget — used with the real posture trend to compute a
+  // measured blended ROI (risk removed ÷ spend) once history has accrued.
+  economics.budget = num(econIn && econIn.budget) || null;
 
   // Legal/regulatory obligations (CLO seat) — derived from operating regions +
   // the data classes actually held on assets + industry. No hardcoded per-org rules.

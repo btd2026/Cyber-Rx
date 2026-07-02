@@ -56,7 +56,7 @@ var SEATS = {
      tiles([
       {k:'Expected annual loss',v:'<span id="lvExpoCfo">$68M</span>',ev:'ale',note:'<span id="lvCfoPctRev">≈0.8% of revenue</span> · provisioned'},
       {k:'Value-at-Risk (95%)',v:'<span id="lvTailCfo">$180M</span>',cls:'warn',ev:'tail',note:'<span id="lvCfoPctEV">0.6% of enterprise value</span>'},
-      {k:'Return on security spend',v:'$1 → $9',ev:'roicfo',note:'<span class="pill mod">modeled</span> risk reduced per dollar'},
+      {k:'Return on security spend',v:'<span id="lvCfoRoiVal">$1 → $9</span>',ev:'roicfo',note:'<span id="lvCfoRoiNote"><span class="pill mod">modeled</span> risk reduced per dollar</span>'},
       {k:'Cost of inaction',v:'+$92M',cls:'warn',ev:'inaction',note:'<span class="pill mod">modeled</span> exposure on deferred decisions'}]))
    +sec('02','What would a bad year do to earnings?','Cyber loss in the terms only finance can put in front of the board — share of annual earnings, EPS impact, and revenue at risk per day of downtime. Computed from your net income, shares outstanding and downtime cost.',
      '<div id="cfoEarnings"><div class="card"><div class="cn">◐ Add net income (and shares outstanding, for EPS) in onboarding to translate cyber loss into earnings and EPS impact.</div></div></div>')
@@ -166,15 +166,15 @@ var SEATS = {
   body:function(){return (
    sec('01','Are we compromised — and what is driving our exposure?','Live status, and the dollar drivers each with a fix.',
      tiles([
-      {k:'Live threat status',v:'No active compromise',cls:'good',ev:'threatstatus',note:'streams live from your SIEM/EDR once connected'},
+      {k:'Live threat status',v:'<span id="lvThreatStatus">No active compromise</span>',cls:'good',ev:'threatstatus',note:'<span id="lvThreatNote">streams live from your SIEM/EDR once connected</span>'},
       {k:'Top exposure driver',v:'$52M',cls:'crit',ev:'proc-claims',note:'<span class="pill mod">modeled</span> privileged path to payments'},
       {k:'Controls effectiveness',v:'$210M removed',ev:'controleff',note:'<span class="pill mod">modeled</span> risk bought down (not CMMI)'},
-      {k:'Coverage from tools',v:'99.4%',ev:'coverage',note:'live once your tools connect; gaps named &amp; costed'}]))
+      {k:'Coverage from tools',v:'<span id="lvCovTile">99.4%</span>',ev:'coverage',note:'<span id="lvCovTileNote">live once your tools connect; gaps named &amp; costed</span>'}]))
    +sec('02','Your crown jewels — and why','We map each business process to the applications that run it, then the risks and controls on each. That chain is what makes an application a crown jewel: the systems below are ranked by criticality — data sensitivity × exposure × the processes that depend on them.',
      '<div id="cjchain"></div>')
    +sec('03','What is driving the $68M — and how good is our coverage?','Each driver carries a funded decision, so the list is a plan, not a backlog. Coverage streams live from your connected tools.',
      bars([{l:'Privileged path → payments',v:'$52M',pct:100,cls:'hot',ev:'roicfo'},{l:'Recovery not yet proven',v:'$40M',pct:77,cls:'hot',ev:'recovery'},{l:'AI decisioning (new)',v:'$8M',pct:15},{l:'Third-party concentration',v:'$6M',pct:12,ev:'vendor'}])
-     +kvcard('Coverage from connected tools <span class="pill mod">live once connected</span>',[{k:'Endpoint detection (EDR)',v:'98.1%',cls:'good'},{k:'Multi-factor (MFA)',v:'96% — 4% legacy',cls:'warn'},{k:'Privileged accounts managed',v:'60% — the driver',cls:'crit'},{k:'Phishing-prone rate',v:'3% (was 9%)',cls:'good'}]))
+     +'<div id="cisoCoverage">'+kvcard('Coverage from connected tools <span class="pill mod">live once connected</span>',[{k:'Endpoint detection (EDR)',v:'98.1%',cls:'good'},{k:'Multi-factor (MFA)',v:'96% — 4% legacy',cls:'warn'},{k:'Privileged accounts managed',v:'60% — the driver',cls:'crit'},{k:'Phishing-prone rate',v:'3% (was 9%)',cls:'good'}])+'</div>')
    +sec('04','What decision needs the CISO?','Where the next dollar of security spend goes. Choosing one records to your ticketing system.',
      decisions([{n:1,q:'Which control gap do we close first?',sit:'The biggest dollar driver is the privileged path into payments. Where do we direct the next dollar?',opts:[
        {rec:true,tag:'A · Privileged access (PAM)',on:'Option A · PAM',osum:'$1.4M · 37×',pros:['Closes the $52M driver','Highest return available','Improves board posture immediately'],cons:['$1.4M','3 weeks of IAM effort']},
