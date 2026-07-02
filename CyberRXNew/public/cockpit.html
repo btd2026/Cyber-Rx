@@ -532,6 +532,30 @@ function stopAlarm(){clearTimeout(alarmTO);}
 function elapsedStr(){var s=Math.floor((Date.now()-wrStart)/1000);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
 function wrUsd(n){n=Number(n)||0;if(n>=1e9)return '$'+(n/1e9).toFixed(1)+'B';if(n>=1e6)return '$'+Math.round(n/1e6)+'M';if(n>=1e3)return '$'+Math.round(n/1e3)+'K';return '$'+n;}
 function sysCard(s){var metric=s.live?(180+Math.floor(Math.random()*70))+' '+s.m:s.m;return '<div class="wr-feed-sys"><div class="sh"><div><div class="nm">'+s.nm+'</div><div class="sub">'+s.sub+'</div></div><span class="wr-dot '+s.st+'"></span></div><div class="mm '+s.st+'"'+(s.live?' data-sysmetric="1"':'')+'>'+metric+'</div><div class="ev">'+s.ev.map(function(e){return '• '+e;}).join('<br>')+'</div></div>';}
+/* War-Room feeds sourced from the org's actually-connected tools (persisted at
+   onboarding). Each connected tool maps to its command-center category; falls
+   back to the illustrative stack when nothing is connected yet. */
+function connectedTools(){try{var t=JSON.parse(localStorage.getItem('cyberrx_tools')||'{}');return (t&&typeof t==='object')?t:{};}catch(_){return {};}}
+var WR_TOOLMAP={splunk:'SIEM',sentinel:'SIEM',defender:'EDR',crowdstrike:'EDR',okta:'Identity',entra:'Identity',qualys:'Vulnerability mgmt',tenable:'Vulnerability mgmt',cyberark:'Privileged access',knowbe4:'Email / Awareness',servicenow:'ITSM / Ticketing'};
+var WR_CAT_STATE={
+ 'SIEM':{calm:{st:'ok',m:'events streaming',ev:['0 active correlations','ingest 100% · 0 gaps']},live:{st:'crit',live:true,m:'alerts/min',ev:['ransomware playbook firing','mass file-encryption on a crown-jewel VLAN']}},
+ 'EDR':{calm:{st:'ok',m:'hosts clean',ev:['0 detections','coverage nominal']},live:{st:'crit',m:'hosts encrypting',ev:['auto-isolation in progress','patient-zero identified']}},
+ 'Identity':{calm:{st:'ok',m:'MFA nominal',ev:['0 risky sign-ins','no privilege anomalies']},live:{st:'warn',m:'1 priv acct abused',ev:['service account from new ASN','token revoked']}},
+ 'Vulnerability mgmt':{calm:{st:'ok',m:'exposure tracked',ev:['no new criticals','patch latency nominal']},live:{st:'warn',m:'exploited CVE in path',ev:['known-exploited CVE on an affected host','prioritized for patch']}},
+ 'Privileged access':{calm:{st:'ok',m:'vault healthy',ev:['sessions brokered','just-in-time enforced']},live:{st:'warn',m:'priv session flagged',ev:['anomalous privileged session','credential rotated']}},
+ 'Email / Awareness':{calm:{st:'warn',m:'phishing elevated',ev:['campaigns blocked','staff targeted']},live:{st:'crit',m:'initial access: phish',ev:['malicious attachment opened','staff inbox']}},
+ 'ITSM / Ticketing':{calm:{st:'ok',m:'change governed',ev:['remediation tracked','approvals current']},live:{st:'ok',m:'IR tickets opening',ev:['incident record created','tasks assigned']}}
+};
+function wrToolList(){var t=connectedTools();return Object.keys(t).filter(function(k){return t[k]&&t[k].on&&WR_TOOLMAP[k];});}
+function sysTiles(mode){
+  var t=connectedTools(),keys=wrToolList();
+  if(!keys.length)return (mode==='live'?SYS_LIVE:SYS_CALM).map(sysCard).join('');
+  var seen={},tiles=[];
+  keys.forEach(function(k){var cat=WR_TOOLMAP[k];if(seen[cat])return;seen[cat]=1;var stt=WR_CAT_STATE[cat];if(!stt)return;var base=stt[mode]||stt.calm;var demo=t[k].demo;
+    tiles.push(Object.assign({nm:cat,sub:(t[k].vendor||'')+(demo?' · demo':'')},base));});
+  return tiles.length?tiles.map(sysCard).join(''):(mode==='live'?SYS_LIVE:SYS_CALM).map(sysCard).join('');
+}
+function wrSysCount(){var n=(function(){var s={};wrToolList().forEach(function(k){s[WR_TOOLMAP[k]]=1;});return Object.keys(s).length;})();return n||9;}
 function feedLineHTML(f){return '<div class="ln '+(f[3]||'')+'">'+f[0]+'  <b>'+f[1]+'</b>  '+f[2]+'</div>';}
 function bcell(b){return '<div class="wr-bcell"><div class="bn"><div class="t">'+b.t+'</div><div class="d">'+b.d+'</div></div><span class="wr-pill '+b.st+'">'+b.lbl+'</span></div>';}
 function attckChips(){return ATTCK.map(function(t){return '<span style="display:inline-block;font-family:var(--mono);font-size:10px;background:rgba(57,135,229,.14);color:#4F90FF;border-radius:4px;padding:2px 7px;margin:3px 4px 0 0">'+t+'</span>';}).join('');}
@@ -553,7 +577,7 @@ function renderWar(){
     var exp=(LIVE&&LIVE.material_exposure_usd)||0;
     var h='<div class="wr-banner live"><div class="wr-binfo"><div class="h">RANSOMWARE — crown-jewel process</div><div class="s">SEV-1 · ACTIVE · INC-'+new Date().toISOString().slice(0,10).replace(/-/g,'')+'-001 · commander: '+ciso()+' · BlackCat/ALPHV</div></div><div class="wr-stat"><div class="it"><div class="k">Elapsed</div><div class="v crit" id="wrElapsed">'+elapsedStr()+'</div></div><div class="it"><div class="k">Modeled exposure</div><div class="v crit">'+(exp>0?wrUsd(exp):'$2.3M/hr')+'</div></div><div class="it"><div class="k">Recovery ETA</div><div class="v warn">~3.5 days</div></div><div class="it"><div class="k">Records exposed</div><div class="v ok">0 confirmed</div></div></div></div>';
     h+=icHTML();
-    h+='<div class="wr-sec">Live system feeds — what each tool is reporting now</div><div class="wr-grid">'+SYS_LIVE.map(sysCard).join('')+'</div>';
+    h+='<div class="wr-sec">Live system feeds — what each tool is reporting now</div><div class="wr-grid">'+sysTiles('live')+'</div>';
     h+='<div class="wr-sec">Attack path · kill chain</div><div class="wr-chain">'+CHAIN.map(function(c){return '<div class="wr-stage '+c.st+'"><div class="st">'+(c.st==='done'?'adversary reached':c.st==='active'?'in progress':'blocked')+'</div><div class="nm">'+c.nm+'</div><div class="n2">'+c.n+'</div></div>';}).join('')+'</div>';
     h+='<div class="wr-sec">Automated containment — what the stack already executed</div><div class="wr-blast">'+CONTAIN.map(bcell).join('')+'</div>';
     h+='<div class="wr-sec">Blast radius · your crown jewels</div><div class="wr-blast">'+blastCells().map(bcell).join('')+'</div>';
@@ -567,10 +591,11 @@ function renderWar(){
     body.querySelectorAll('[data-call]').forEach(function(cl){cl.onclick=function(e){e.preventDefault();icCalled[cl.dataset.call]=1;renderWar();};});
   } else {
     mode.textContent='STANDBY';mode.className='wr-mode';sim.textContent='▶ Simulate live incident';sim.className='wr-sim';
-    var h2='<div class="wr-banner calm"><div class="wr-binfo"><div class="h">● No active incident</div><div class="s">Continuous monitoring · all feeds streaming</div></div><div class="wr-stat"><div class="it"><div class="k">Active incidents</div><div class="v ok">0</div></div><div class="it"><div class="k">Systems online</div><div class="v ok">9 / 9</div></div><div class="it"><div class="k">MTTD (90d)</div><div class="v ok">8 min</div></div></div></div>';
-    h2+='<div class="wr-sec">Live system feeds — what each tool is reporting now</div><div class="wr-grid">'+SYS_CALM.map(sysCard).join('')+'</div>';
+    var nsys=wrSysCount();
+    var h2='<div class="wr-banner calm"><div class="wr-binfo"><div class="h">● No active incident</div><div class="s">Continuous monitoring · '+(wrToolList().length?'streaming from your connected tools':'all feeds streaming')+'</div></div><div class="wr-stat"><div class="it"><div class="k">Active incidents</div><div class="v ok">0</div></div><div class="it"><div class="k">Systems online</div><div class="v ok">'+nsys+' / '+nsys+'</div></div><div class="it"><div class="k">MTTD (90d)</div><div class="v ok">8 min</div></div></div></div>';
+    h2+='<div class="wr-sec">Live system feeds — what each tool is reporting now</div><div class="wr-grid">'+sysTiles('calm')+'</div>';
     h2+='<div class="wr-sec">Response readiness — armed and ready</div><div class="wr-blast">'+READY.map(bcell).join('')+'</div>';
-    h2+='<div class="wr-comms" style="margin-top:16px">Connect your SIEM in onboarding to enable auto-detection. When a qualifying incident is confirmed, this room goes <b>live</b> automatically — the alarm sounds, the button flashes, and the C-suite is convened with shared facts and role-specific decisions.</div>';
+    h2+='<div class="wr-comms" style="margin-top:16px">'+(wrToolList().length?'These feeds stream from the tools you connected at onboarding. ':'Connect your SIEM in onboarding to enable auto-detection. ')+'When a qualifying incident is confirmed, this room goes <b>live</b> automatically — the alarm sounds, the button flashes, and the C-suite is convened with shared facts and role-specific decisions.</div>';
     body.innerHTML=h2;
   }
 }
