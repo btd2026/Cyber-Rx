@@ -535,7 +535,7 @@ function renderSignals(){
     var pcts=['edr_pct','mfa_pct','pam_pct'].map(sig).filter(function(x){return x!=null;});
     if(pcts.length){var avg=Math.round(pcts.reduce(function(s,x){return s+x;},0)/pcts.length);setTxt('lvCovTile',avg+'%');var tn=document.getElementById('lvCovTileNote');if(tn)tn.innerHTML='<span class="pill good">live</span> from '+pcts.length+' connected tool'+(pcts.length>1?'s':'');}
   }
-  renderAiRisk();
+  renderAiRisk();renderCisoOps();
 }
 function loadSignals(){var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}}).catch(function(){});}catch(_){}}
@@ -664,7 +664,53 @@ function renderGov(){
     '<div style="margin-top:8px">'+items.map(function(i){return govRow(i.k,i.v,i.ok);}).join('')+'</div>'+
     '<div class="cn" style="margin-top:8px">These are the exact governance disclosures Item 106(c) requires in your 10-K. Fill any gaps in onboarding to make this filing-ready.</div></div>';
 }
-function renderBoard(){renderStress();renderReadiness();renderThirdParty();renderGov();renderMateriality();renderAiRisk();}
+function renderBoard(){renderStress();renderReadiness();renderThirdParty();renderGov();renderMateriality();renderAiRisk();renderCisoOps();}
+/* CISO operational command center — the "when I log in" view. Under-attack status,
+   tool health, MITRE ATT&CK tactic coverage (derived from connected tool categories),
+   key-vendor watch, and an attention list of gaps + what's being done. */
+var ATTCK_TACTICS=['Reconnaissance','Resource Development','Initial Access','Execution','Persistence','Privilege Escalation','Defense Evasion','Credential Access','Discovery','Lateral Movement','Collection','Command & Control','Exfiltration','Impact'];
+function attckCoverage(){
+  var covered={};function cov(list){list.forEach(function(t){covered[t]=1;});}
+  if(sig('edr_pct')!=null)cov(['Execution','Persistence','Privilege Escalation','Defense Evasion','Discovery','Lateral Movement','Collection','Impact']);
+  if(sig('mfa_pct')!=null||sig('pam_pct')!=null)cov(['Initial Access','Credential Access','Privilege Escalation']);
+  if(sig('open_incidents')!=null||sig('mttd_hrs')!=null)cov(['Discovery','Lateral Movement','Collection','Command & Control','Exfiltration','Impact']);
+  if(sig('patch_pct')!=null)cov(['Initial Access','Execution']);
+  if(sig('phishing_pct')!=null)cov(['Initial Access']);
+  var gaps=ATTCK_TACTICS.filter(function(t){return !covered[t];});
+  return {covered:ATTCK_TACTICS.length-gaps.length,total:ATTCK_TACTICS.length,gaps:gaps};
+}
+function opTile(label,val,cls,sub){return '<div class="card"><div class="ck">'+label+'</div><div class="cv" style="font-size:17px;margin-top:6px;line-height:1.3'+(cls?';color:var(--'+cls+')':'')+'">'+val+'</div>'+(sub?'<div class="cn" style="margin-top:5px">'+sub+'</div>':'')+'</div>';}
+function renderCisoOps(){
+  var host=document.getElementById('cisoOps');if(!host)return;
+  if(!SIGNALS){
+    host.innerHTML='<div class="cn" style="margin-bottom:10px">◐ <b style="color:var(--warn)">Illustrative</b> — connect your security tools at onboarding to make this live.</div><div class="grid4">'+
+      opTile('Are we under attack?','No active compromise','','live from your SIEM once connected')+
+      opTile('Security tools','98% avg coverage','','EDR · MFA · PAM · config baseline: connect a STIG scanner')+
+      opTile('MITRE ATT&CK coverage','11 / 14 tactics','good','gaps: Reconnaissance, Resource Development, Exfiltration')+
+      opTile('Key-vendor incident watch','no incident reported','good','connect a third-party status feed for live')+'</div>';
+    return;
+  }
+  var connected=Object.keys(SIGNALS).length;var oi=sig('open_incidents');var underAttack=oi!=null&&oi>0;
+  var attack=oi!=null?(underAttack?(oi+' open incident'+(oi>1?'s':'')):'No active compromise'):'connect your SIEM';
+  var pcts=['edr_pct','mfa_pct','pam_pct'].map(sig).filter(function(x){return x!=null;});
+  var below=pcts.filter(function(x){return x<90;}).length;
+  var toolHealth=pcts.length?(Math.round(pcts.reduce(function(s,x){return s+x;},0)/pcts.length)+'% avg coverage'):(connected+' connected');
+  var ac=attckCoverage();
+  var vendor=(LIVE&&LIVE.resilience&&LIVE.resilience.top_vendor_blast)?LIVE.resilience.top_vendor_blast.vendor:null;
+  var tiles='<div class="grid4">'+
+    opTile('Are we under attack?',attack,underAttack?'crit':(oi!=null?'good':''),underAttack?'<a href="#" data-openwar="1" style="color:var(--blue)">Open War Room →</a>':(oi!=null?('<span class="pill good" style="font-size:9px">live</span> '+connected+' tools streaming'):''))+
+    opTile('Security tools',toolHealth,below?'warn':'good',(below?(below+' below target · '):'')+'config vs DISA STIG: connect a scanner')+
+    opTile('MITRE ATT&CK coverage',ac.covered+' / '+ac.total+' tactics',ac.covered>=11?'good':ac.covered>=7?'warn':'crit',ac.gaps.length?('gaps: '+ac.gaps.slice(0,3).join(', ')+(ac.gaps.length>3?'…':'')):'full tactic coverage')+
+    opTile('Key-vendor incident watch',vendor?(vendor+' — none reported'):'—',vendor?'good':'',vendor?'connect a third-party status feed for live':'add vendors in onboarding')+'</div>';
+  var att=[];
+  if(sig('pam_pct')!=null&&sig('pam_pct')<80)att.push('Privileged-access coverage at '+sig('pam_pct')+'% — the top exposure driver; PAM rollout in flight.');
+  if(sig('mfa_pct')!=null&&sig('mfa_pct')<95)att.push('MFA at '+sig('mfa_pct')+'% — '+(100-sig('mfa_pct'))+'% legacy accounts remain.');
+  if(sig('phishing_pct')!=null&&sig('phishing_pct')>5)att.push('Phishing-prone rate at '+sig('phishing_pct')+'% — above the 5% target.');
+  if(ac.gaps.length)att.push('No tool coverage for ATT&CK: '+ac.gaps.join(', ')+' — evaluate detection/controls.');
+  var attList=att.length?('<div class="card" style="margin-top:14px"><div class="ck">Attention needed — and what’s being done</div><div style="margin-top:8px">'+att.map(function(a){return '<div class="list-row"><div class="lic w">▲</div><div class="ltxt"><b>'+a+'</b></div></div>';}).join('')+'</div></div>'):'<div class="card" style="margin-top:14px"><div class="ck">Attention needed</div><div class="cn" style="margin-top:6px">✓ Nothing off — tools within target and full ATT&CK tactic coverage.</div></div>';
+  host.innerHTML=tiles+attList;
+  var wl=host.querySelector('[data-openwar]');if(wl)wl.onclick=function(e){e.preventDefault();try{wrOpen();}catch(_){}};
+}
 /* AI risk (CEO + CISO) — exposure to AI-accelerated attacks (frontier models like
    Anthropic's Mythos that auto-discover/exploit vulnerabilities) + governance of
    the AI we run. Threat readiness combines the real attack surface with live
@@ -698,7 +744,18 @@ function renderAiRisk(){
   var gov='<div class="card"><div class="ck">Governance of the AI we run <span class="tag '+(ready>=4?'good':'warn')+'" style="font-size:10px;margin-left:6px">'+ready+' / '+items.length+' evidenced</span></div>'+
     '<div style="margin-top:8px">'+items.map(function(i){return govRow(i.k,i.v,i.ok);}).join('')+'</div>'+
     '<div class="cn" style="margin-top:8px">Anchored to NIST AI RMF / ISO 42001 and the EU AI Act. Fill gaps in onboarding to make this board- and audit-ready.</div></div>';
-  var html='<div class="cols">'+threat+gov+'</div>';
+  // Priority actions — derived from the real gaps, highest-impact first. Turns the
+  // panel from a summary into a to-do the CISO can act on and take to the board.
+  var acts=[];
+  if(patch!=null&&patch<90&&surface>0)acts.push({p:1,t:'Accelerate patching on the '+surface+' internet-facing crown jewel'+(surface>1?'s':'')+' — the largest lever on the '+(premium>0?usd(premium):'AI-accelerated')+' premium.'});
+  else if(patch==null&&surface>0)acts.push({p:1,t:'Connect vulnerability management to measure patch velocity on '+surface+' internet-facing crown jewel'+(surface>1?'s':'')+'.'});
+  if(/yes|pilot/i.test(g.decisioning||'')&&!/board-approved/i.test(g.policy||''))acts.push({p:1,t:'AI runs in customer-facing/decisioning without a board-approved policy — close this governance gap.'});
+  if(!/NIST|ISO|Both/i.test(g.framework||''))acts.push({p:2,t:'Adopt an AI governance framework (NIST AI RMF / ISO 42001) — the AI you run is currently ungoverned.'});
+  if(!/inventoried/i.test(g.inventory||''))acts.push({p:2,t:'Complete the AI-systems inventory so nothing runs unmonitored.'});
+  if(/high-risk/i.test(g.euAiAct||''))acts.push({p:2,t:'EU AI Act high-risk obligations apply — ensure the conformity assessment and technical documentation are in place.'});
+  acts.sort(function(a,b){return a.p-b.p;});
+  var actCard=acts.length?('<div class="card" style="margin-top:14px"><div class="ck">Priority actions <span class="pill warn" style="font-size:10px">'+acts.length+'</span></div><div style="margin-top:8px">'+acts.slice(0,4).map(function(a){return '<div class="list-row"><div class="lic '+(a.p===1?'c':'w')+'">'+(a.p===1?'!':'▲')+'</div><div class="ltxt"><b>'+a.t+'</b></div></div>';}).join('')+'</div></div>'):'<div class="card" style="margin-top:14px"><div class="ck">Priority actions</div><div class="cn" style="margin-top:6px">✓ No open AI-risk gaps — governance evidenced and internet-facing crown jewels are well-patched.</div></div>';
+  var html='<div class="cols">'+threat+gov+'</div>'+actCard;
   ['ceoAiRisk','cisoAiRisk'].forEach(function(hid){var host=document.getElementById(hid);if(host)host.innerHTML=html;});
 }
 /* CLO materiality-determination workbench — a timed, evidenced determination.
