@@ -59,6 +59,9 @@
   .moneyf select{border:none;border-radius:0;width:64px;background:var(--surface-2);color:var(--ink-2);border-left:1px solid var(--line)}
   .money-eq{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:5px;min-height:14px}
   .money-eq b{color:var(--ink-2)}
+  .certgrid{display:flex;flex-wrap:wrap;gap:6px}
+  .ckchip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--ink-2);background:var(--plane);border:1px solid var(--line);border-radius:7px;padding:5px 9px;cursor:pointer}
+  .ckchip input{accent-color:var(--good);margin:0}
   /* connect-a-system */
   .srcchoice{display:flex;gap:10px;margin-bottom:12px}
   .srcopt{flex:1;border:1px solid var(--line-2);border-radius:10px;padding:12px 14px;cursor:pointer}
@@ -256,6 +259,28 @@
       <div class="field"><label>Operational risk</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum money" id="ermOps" placeholder="140"><select class="munit" id="ermOps_u"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div><div class="money-eq" id="ermOps_eq"></div></div>
       <div class="field"><label>Third-party risk</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum money" id="ermTP" placeholder="54"><select class="munit" id="ermTP_u"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div><div class="money-eq" id="ermTP_eq"></div></div>
       <div class="field"><label>Compliance / legal risk</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum money" id="ermComp" placeholder="30"><select class="munit" id="ermComp_u"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div><div class="money-eq" id="ermComp_eq"></div></div>
+    </div>
+  </div>
+
+  <!-- 2c · Security as a growth engine (CISO revenue-enablement) -->
+  <div class="sec">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Security as a growth engine <span style="color:var(--muted)">(for the CISO)</span></div><div class="sd">The revenue your security program unlocks — pipeline in security review, how fast you clear deals, and the certifications that are the price of admission. Powers the CISO growth view. Leave blank to keep it illustrative.</div></div><div class="badge" id="bgrowth">optional</div></div>
+    <div class="row c3">
+      <div class="field"><label>Pipeline in security review</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum money" id="growthPipeline" placeholder="48"><select class="munit" id="growthPipeline_u"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div><div class="money-eq" id="growthPipeline_eq"></div></div>
+      <div class="field"><label>Security-review time — before <span style="color:var(--muted)">(weeks)</span></label><div class="moneyf"><span class="cur">wk</span><input type="number" step="any" class="mnum" id="growthBefore" placeholder="6"></div></div>
+      <div class="field"><label>Security-review time — now <span style="color:var(--muted)">(weeks)</span></label><div class="moneyf"><span class="cur">wk</span><input type="number" step="any" class="mnum" id="growthNow" placeholder="2"></div></div>
+    </div>
+    <div class="row c3" style="margin-top:14px">
+      <div class="field"><label>Deals gated by security / quarter</label><div class="moneyf"><span class="cur">#</span><input type="number" step="any" class="mnum" id="growthDeals" placeholder="11"></div></div>
+      <div class="field"><label>Customer trust reviews passed</label><div class="moneyf"><span class="cur">#</span><input type="number" step="any" class="mnum" id="growthTrust" placeholder="34"></div></div>
+      <div class="field"><label>Certifications held</label><div class="certgrid" id="growthCerts">
+        <label class="ckchip"><input type="checkbox" value="SOC 2 Type II"> SOC 2 Type II</label>
+        <label class="ckchip"><input type="checkbox" value="HITRUST CSF"> HITRUST CSF</label>
+        <label class="ckchip"><input type="checkbox" value="ISO 27001"> ISO 27001</label>
+        <label class="ckchip"><input type="checkbox" value="PCI DSS"> PCI DSS</label>
+        <label class="ckchip"><input type="checkbox" value="HIPAA attestation"> HIPAA attestation</label>
+        <label class="ckchip"><input type="checkbox" value="FedRAMP"> FedRAMP</label>
+      </div></div>
     </div>
   </div>
 
@@ -630,6 +655,11 @@
       aiGovernance:{
         systems:mval('aiSystems'),decisioning:v('aiDecisioning'),framework:v('aiFramework'),
         policy:v('aiPolicy'),euAiAct:v('aiEuAct'),inventory:v('aiInventory')
+      },
+      growth:{
+        pipelineUsd:mval('growthPipeline'),reviewBeforeWks:v('growthBefore'),reviewNowWks:v('growthNow'),
+        dealsGated:v('growthDeals'),trustReviews:v('growthTrust'),
+        certs:Array.prototype.slice.call(document.querySelectorAll('#growthCerts input:checked')).map(function(c){return c.value;})
       }
     };
     btn.disabled=true;msg.textContent='Building your cockpit…';msg.style.color='var(--muted)';

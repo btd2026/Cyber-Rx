@@ -175,6 +175,25 @@
   .cjincident.p75{animation:cjblink .62s ease-in-out infinite}
   .cjincident.p100{animation:cjblink .32s ease-in-out infinite}
   @keyframes cjblink{0%,100%{box-shadow:inset 0 0 0 0 rgba(208,59,59,0);background:transparent}50%{box-shadow:inset 0 0 44px 0 rgba(208,59,59,.30);background:rgba(208,59,59,.06)}}
+  /* growth engine + path-to-yes */
+  .gcert{display:inline-block;font-size:11.5px;font-weight:700;color:#7fd97f;background:rgba(12,163,12,.14);border:1px solid rgba(12,163,12,.3);border-radius:8px;padding:4px 11px;margin:0 7px 7px 0}
+  .en-list{display:flex;flex-direction:column;gap:12px}
+  .en-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+  .en-card.done{border-color:rgba(12,163,12,.4)}
+  .en-h{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline}
+  .en-ask{font-size:15px;font-weight:700}.en-owner{font-size:11.5px;color:var(--muted)}.en-owner b{color:var(--ink-2)}
+  .en-lbl{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--blue);font-weight:700;margin:12px 0 8px}
+  .en-conds{display:flex;flex-direction:column;gap:7px}
+  .en-cond{display:flex;gap:9px;font-size:12.5px;color:var(--ink-2);line-height:1.45}
+  .en-ck{color:var(--good);font-weight:800;flex:none}
+  .en-meta{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:13px 0;padding:11px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .en-up{font-size:12px;color:var(--good);flex:1;min-width:180px}
+  .en-res{font-size:12px;color:var(--ink-2)}.en-res b{color:#fff;font-size:13px}
+  .en-accept{width:100%;padding:11px;border:none;border-radius:9px;background:var(--good);color:#062a06;font-size:13px;font-weight:800;cursor:pointer}
+  .en-accept:hover{filter:brightness(1.08)}
+  .en-status{background:rgba(12,163,12,.08);border:1px solid rgba(12,163,12,.28);border-radius:9px;padding:12px 14px}
+  .en-status .st-h{font-size:12.5px;font-weight:800;color:var(--good)}
+  .en-status .st-b{font-size:12px;color:var(--ink-2);margin-top:4px}
   .qoq{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;margin-bottom:16px}
   .qtbl{width:100%;border-collapse:collapse;font-size:12.5px}.qtbl th{text-align:left;color:var(--muted);font-weight:600;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;padding:0 8px 9px 0;border-bottom:1px solid var(--line)}
   .qtbl td{padding:10px 8px 10px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}.qtbl tr:last-child td{border:none;font-weight:700}.qtbl .up{color:var(--good)}
@@ -322,13 +341,13 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=h;
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderEnablements();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
    trimmed title). Renderers still populate hidden sections' containers. */
 var TAB_LABELS={
- 'Are we under attack right now?':'Live status','What are we protecting — and what is each worth?':'Crown Jewels — Exposure','Are our controls actually working?':'Controls','The fastest-changing risk: AI':'AI risk','What decision needs you now?':'Decision','What are we spending — and what is the return?':'Projects',
+ 'Are we under attack right now?':'Live status','What are we protecting — and what is each worth?':'Crown Jewels — Exposure','How is security helping the business grow — and win deals?':'Growth','Are our controls actually working?':'Controls','The fastest-changing risk: AI':'AI risk','How do we say “yes” — safely?':'Path to yes','What decision needs you now?':'Decision','What are we spending — and what is the return?':'Projects',
  'How much is at stake — and are we within the board’s limit?':'At stake','Which business processes carry the risk?':'By process','What decisions need us — and what are the trade-offs?':'Decisions','Are we adequately insured against the worst case?':'Insurance','Are we getting better — quarter over quarter?':'Trend','Our worst realistic day — and are we ready to respond and recover?':'Worst day','Governance, oversight & SEC disclosure readiness':'Governance','AI risk — are we ready for AI-accelerated attacks, and is our own AI governed?':'AI risk',
  'What is our capital at risk — and is our spend working?':'Capital at risk','What would a bad year do to earnings?':'Earnings','Where does the next dollar work hardest, and are we insured?':'ROI & insurance','What if we change the budget — and is an incident material?':'Budget','What decision needs the CFO — and what does it cost or buy?':'Decision','Current cyber initiatives & their ROI':'Projects & ROI',
  'Are we legally defensible right now?':'Standing','Where are we exposed by jurisdiction — duty, clock, penalty?':'Jurisdictions','What decision needs the General Counsel?':'Decision','Is an incident material — and are we covered by contract?':'Materiality',
@@ -533,6 +552,86 @@ function renderInitiatives(){
     '<div class="cn" style="margin-top:10px">'+total+' active '+(total===1?'initiative':'initiatives')+'. Delivered % tracks each project’s real ticket status; ROI is the target at completion. Connect your PM/finance system for spent-to-date actuals.</div></div>';
 }
 
+/* ---- Security as a growth engine (CISO) — the revenue-enablement story.
+   Live from the growth block (CRM pipeline in security review, deal-review cycle
+   time, certifications, trust reviews) captured at onboarding; illustrative until
+   connected, always labeled. Reframes the seat from cost-center to growth-side. */
+function pctDrop(before,now){before=Number(before);now=Number(now);if(!(before>0)||!(now>=0))return null;return Math.round((1-now/before)*100);}
+function renderGrowth(){
+  var host=document.getElementById('cisoGrowth');if(!host)return;
+  var g=LIVE&&LIVE.growth;
+  var live=!!(g&&(Number(g.pipelineUsd)>0||g.reviewNowWks!=null||(g.certs&&g.certs.length)||Number(g.dealsGated)>0));
+  var d=live?g:{pipelineUsd:48e6,reviewBeforeWks:6,reviewNowWks:2,dealsGated:11,certs:['SOC 2 Type II','HITRUST CSF','ISO 27001','HIPAA attestation'],trustReviews:34};
+  var drop=pctDrop(d.reviewBeforeWks,d.reviewNowWks);
+  var banner=live
+    ? '<div class="cn" style="margin-bottom:12px">● <b style="color:var(--good)">Live</b> — the growth your security program is unlocking, from your CRM and deal-review data.</div>'
+    : '<div class="cn" style="margin-bottom:12px">◐ <b style="color:var(--warn)">Illustrative</b> — connect your CRM (Salesforce) and log deal security-reviews at onboarding to make this live. Example shown.</div>';
+  var t='<div class="grid4">'+
+    '<div class="card"><div class="ck">Pipeline in security review</div><div class="cv" style="font-size:22px;color:var(--good)">'+(Number(d.pipelineUsd)>0?usd(d.pipelineUsd):'—')+'</div><div class="cn">revenue that closes only if security clears it — you are the accelerant, not the tax</div></div>'+
+    '<div class="card"><div class="ck">Security-review cycle time</div><div class="cv" style="font-size:22px">'+((d.reviewBeforeWks!=null&&d.reviewNowWks!=null)?(d.reviewBeforeWks+' → <span style="color:var(--good)">'+d.reviewNowWks+'</span> wks'):'—')+'</div><div class="cn">'+(drop!=null?('<span class="pill good" style="font-size:10px">−'+drop+'%</span> deals clear faster'):'log review times to trend this')+'</div></div>'+
+    '<div class="card"><div class="ck">Deals gated by security / qtr</div><div class="cv" style="font-size:22px">'+(Number(d.dealsGated)>0?d.dealsGated:'—')+'</div><div class="cn">enterprise deals that need your sign-off — your throughput is their velocity</div></div>'+
+    '<div class="card"><div class="ck">Trust posture</div><div class="cv" style="font-size:22px;color:var(--good)">'+(d.trustReviews!=null?(d.trustReviews+' cleared'):'clean')+'</div><div class="cn">customer trust / due-diligence reviews passed — brand value worth more than the budget</div></div>'+
+    '</div>';
+  var certs=(d.certs&&d.certs.length)?d.certs.map(function(c){return '<span class="gcert">'+c+'</span>';}).join(''):'<span style="color:var(--muted)">none recorded — add your certifications at onboarding</span>';
+  var certCard='<div class="card" style="margin-top:12px"><div class="ck">Certifications held — the price of admission in your market</div><div style="margin-top:10px">'+certs+'</div><div class="cn" style="margin-top:10px">In healthcare, fintech and gov these are not badges — they are the gate. Each one you hold is a market you can enter and a customer questionnaire you clear on day one.</div></div>';
+  host.innerHTML=banner+t+certCard;
+}
+/* Path to yes (CISO) — the "department of how". Each enablement request carries the
+   conditions that make it safe + the residual risk in dollars; the business owner
+   accepts it on the record (optionally a formal risk-acceptance ticket). Turns the
+   CISO from gatekeeper into partner, and leaves an accountability trail. */
+var ENABLE_SEED=[
+  {id:'ai-triage',ask:'Ship the AI claims-triage assistant to production',owner:'VP, Claims Operations',residual:3200000,
+    upside:'Cuts claims handling time ~30% — faster member service, lower cost per claim',
+    conditions:['Human-in-the-loop required for any denial or adverse determination','PHI stays in-region; nothing leaves the BAA boundary','Model + prompts inventoried, red-teamed before launch and quarterly','Full audit log of model decisions retained per records policy']},
+  {id:'saas-analytics',ask:'Adopt a new SaaS analytics platform for member data',owner:'VP, Data & Analytics',residual:1200000,
+    upside:'Self-serve analytics for actuarial + growth — weeks of lead time removed',
+    conditions:['SOC 2 Type II report on file and reviewed','Signed BAA + DPA before any PHI flows','SSO + SCIM enforced; bulk export disabled','Vendor added to tier-1 monitoring']},
+  {id:'new-markets',ask:'Enter two new state markets next quarter',owner:'SVP, Growth',residual:2400000,
+    upside:'Opens ~$60M of addressable premium — security is the entry ticket, not the blocker',
+    conditions:['State breach-notification + insurance-reg obligations mapped','IR retainer scope expanded to the new jurisdictions','Data-residency + consent flows validated with counsel']}
+];
+function enableKey(id){return 'cyberrx_enable_'+orgId()+'_'+id;}
+function loadEnable(id){try{return JSON.parse(localStorage.getItem(enableKey(id))||'null');}catch(_){return null;}}
+function saveEnable(id,v){try{localStorage.setItem(enableKey(id),JSON.stringify(v));}catch(_){}}
+function pushEnable(id){
+  var acc=loadEnable(id),e=ENABLE_SEED.filter(function(x){return x.id===id;})[0];if(!acc||!e||acc.ticket)return;
+  var o=orgId(),base=apiBase();if(!o||!base)return;
+  acc.pushing=true;saveEnable(id,acc);renderEnablements();
+  var body={title:'[Risk acceptance] '+e.ask,desc:'Residual risk '+usd(e.residual)+' accepted by '+acc.by+' (business owner) via the CyberRx cockpit, under agreed security conditions: '+e.conditions.join('; '),sourceRef:'enable-'+id+'-'+acc.ts,type:'risk-acceptance'};
+  try{fetch(base+'/api/itsm/open?org_id='+encodeURIComponent(o),{method:'POST',headers:{'Content-Type':'application/json','X-Org-Id':o},body:JSON.stringify(body)})
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(res){acc.pushing=false;if(res){acc.ticket=res.ticket_id||res.number||res.id||res.key||res.ticket||('RA-'+String(acc.ts).slice(-5));acc.system=res.label||itsmVendor()||'ServiceNow';acc.url=res.url||res.link||null;acc.demoTicket=!!res.demo;}saveEnable(id,acc);renderEnablements();})
+    .catch(function(){acc.pushing=false;saveEnable(id,acc);renderEnablements();});}catch(_){acc.pushing=false;saveEnable(id,acc);renderEnablements();}
+}
+function renderEnablements(){
+  var host=document.getElementById('cisoEnable');if(!host)return;
+  var cleared=ENABLE_SEED.filter(function(e){return loadEnable(e.id);}).length;
+  var cards=ENABLE_SEED.map(function(e){
+    var acc=loadEnable(e.id);
+    var conds='<div class="en-conds">'+e.conditions.map(function(c){return '<div class="en-cond"><span class="en-ck">✓</span><span>'+c+'</span></div>';}).join('')+'</div>';
+    var head='<div class="en-h"><div class="en-ask">'+e.ask+'</div><div class="en-owner">Business owner · <b>'+e.owner+'</b></div></div>';
+    var meta='<div class="en-meta"><span class="en-up">▲ '+e.upside+'</span><span class="en-res">Residual risk under these conditions <b>'+usd(e.residual)+'</b> <span class="pill mod">modeled</span></span></div>';
+    var action;
+    if(acc){
+      var committed=(Date.now()-(acc.ts||0))>=EDIT_WINDOW_MS;
+      var tline=acc.ticket?('· risk-acceptance '+(acc.url?('<a href="'+acc.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+acc.ticket+'</a>'):('<b style="color:#fff">'+acc.ticket+'</b>'))+(acc.system?(' in '+acc.system):'')+(acc.demoTicket?' <span class="tag warn" style="font-size:10px">demo</span>':'')):(acc.pushing?'· opening ticket…':'');
+      action='<div class="en-status"><div class="st-h">✓ Cleared to proceed — residual risk owned by the business</div>'+
+        '<div class="st-b">Accepted by <b style="color:#fff">'+acc.by+'</b> · '+fmtWhen(acc.ts)+' '+tline+'</div>'+
+        (acc.ticket?'':'<div class="st-b" style="margin-top:6px"><button class="wr-btn" style="padding:5px 12px;font-size:11.5px" data-enpush="'+e.id+'">▶ Record a formal risk-acceptance in ticketing</button></div>')+
+        (committed?'<div class="st-b" style="margin-top:6px">🔒 Committed — the 24-hour change window has closed.</div>':'<div class="st-b" style="margin-top:6px">Editable for a limited time. <button class="wr-btn gh" style="padding:4px 10px;font-size:11px" data-enundo="'+e.id+'">Withdraw</button></div>')+
+        '</div>';
+    } else {
+      action='<button class="en-accept" data-enaccept="'+e.id+'">✓ Accept residual risk &amp; clear to proceed — as '+e.owner+'</button>';
+    }
+    return '<div class="en-card'+(acc?' done':'')+'">'+head+'<div class="en-lbl">Path to yes — the conditions that make it safe</div>'+conds+meta+action+'</div>';
+  }).join('');
+  var summary='<div class="cn" style="margin:2px 0 12px">The department of <b>how</b>: <b>'+cleared+' of '+ENABLE_SEED.length+'</b> requests cleared to proceed — each with the business owner accepting the residual risk on the record. This is how security says yes and keeps the accountability trail.</div>';
+  host.innerHTML=summary+'<div class="en-list">'+cards+'</div>';
+  host.querySelectorAll('[data-enaccept]').forEach(function(b){b.onclick=function(){var e=ENABLE_SEED.filter(function(x){return x.id===b.dataset.enaccept;})[0];saveEnable(b.dataset.enaccept,{by:e.owner,ts:Date.now()});renderEnablements();};});
+  host.querySelectorAll('[data-enundo]').forEach(function(b){b.onclick=function(){try{localStorage.removeItem(enableKey(b.dataset.enundo));}catch(_){}renderEnablements();};});
+  host.querySelectorAll('[data-enpush]').forEach(function(b){b.onclick=function(){pushEnable(b.dataset.enpush);};});
+}
 /* ---- live economics ---- */
 var LIVE=null;
 function usd(n){n=Number(n)||0;var neg=n<0;n=Math.abs(n);var s;if(n>=1e9)s='$'+(n/1e9).toFixed(n>=1e10?0:1)+'B';else if(n>=1e6)s='$'+Math.round(n/1e6)+'M';else if(n>=1e3)s='$'+Math.round(n/1e3)+'K';else s='$'+Math.round(n);return (neg?'−':'')+s;}
@@ -647,7 +746,7 @@ function renderSignals(){
 function loadSignals(){var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}}).catch(function(){});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderProcBars();renderCioSystems();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderProcBars();renderCioSystems();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----

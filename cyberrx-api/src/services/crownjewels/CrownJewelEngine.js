@@ -196,6 +196,11 @@ async function run(orgId) {
 
   const governance = setup.governance || {};
 
+  // Growth / revenue-enablement (CISO) — pipeline in security review, deal-review
+  // cycle time, certifications held and trust reviews. Straight from onboarding;
+  // null when not provided (the cockpit shows an illustrative, labeled fallback).
+  const growth = setup.growth && Object.keys(setup.growth).length ? setup.growth : null;
+
   // AI risk (CEO/CISO) — the attack surface exposed to AI-accelerated attackers
   // (internet-facing assets that autonomous scanners like Mythos-class models can
   // reach) plus the org's AI-governance answers. Patch velocity / detection speed
@@ -271,6 +276,7 @@ async function run(orgId) {
       legal,
       resilience,
       governance,
+      growth,
       stress,
       portfolio,
       aiRisk,
