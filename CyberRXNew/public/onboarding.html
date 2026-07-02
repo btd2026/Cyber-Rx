@@ -140,16 +140,30 @@
   <!-- 4 · Business processes -->
   <div class="sec">
     <div class="sh"><div class="sn">4</div><div><div class="st">Business processes</div><div class="sd">Your key revenue processes — drives crown jewels, downtime cost, and recovery.</div></div><div class="badge" id="b4">recommended</div></div>
-    <div class="drop" id="dropProc"><div class="ic">⤓</div><div class="t">Upload your process list (CSV or TSV)</div><div class="s">click to browse or drop a file</div><input type="file" id="fileProc" accept=".csv,.tsv,.txt" style="display:none"></div>
-    <div class="tmpl">columns: <b>name</b>, revenue, rto, data, criticality &nbsp;·&nbsp; e.g. &nbsp;Claims processing, $2.1B, 6, "PHI, Financial", Critical</div>
+    <div class="srcchoice"><div class="srcopt sel" data-choice="proc" data-mode="upload"><div class="so-h">⤓ Upload a file</div><div class="so-d">CSV or TSV snapshot</div></div><div class="srcopt" data-choice="proc" data-mode="connect"><div class="so-h">⚡ Connect a system</div><div class="so-d">ServiceNow / BIA — live</div></div></div>
+    <div id="procUpload">
+      <div class="drop" id="dropProc"><div class="ic">⤓</div><div class="t">Upload your process list (CSV or TSV)</div><div class="s">click to browse or drop a file</div><input type="file" id="fileProc" accept=".csv,.tsv,.txt" style="display:none"></div>
+      <div class="tmpl">columns: <b>name</b>, revenue, rto, data, criticality &nbsp;·&nbsp; e.g. &nbsp;Claims processing, $2.1B, 6, "PHI, Financial", Critical</div>
+    </div>
+    <div id="procConnect" style="display:none">
+      <div class="conn-row"><div class="field" style="min-width:200px"><label>System</label><select id="procSys"><option>ServiceNow CMDB (business services)</option><option>SAP GRC — BIA</option><option>Apptio</option><option>Archer</option></select></div><div class="field" style="flex:1;min-width:220px"><label>Instance URL / API token</label><input id="procCred" placeholder="https://yourorg.service-now.com · token"></div><button class="conn-go" data-conn="proc">Connect &amp; save</button></div>
+      <div class="conn-msg" id="procConnMsg"></div>
+    </div>
     <div class="result" id="resProc"></div>
   </div>
 
   <!-- 5 · Systems -->
   <div class="sec">
     <div class="sh"><div class="sn">5</div><div><div class="st">Systems &amp; applications</div><div class="sd">Your CMDB / app inventory — drives crown jewels, vendor concentration, tech-debt.</div></div><div class="badge" id="b5">recommended</div></div>
-    <div class="drop" id="dropApp"><div class="ic">⤓</div><div class="t">Upload your systems inventory (CSV or TSV)</div><div class="s">click to browse or drop a file</div><input type="file" id="fileApp" accept=".csv,.tsv,.txt" style="display:none"></div>
-    <div class="tmpl">columns: <b>name</b>, hosting, data, vendor, eol, recovery &nbsp;·&nbsp; e.g. &nbsp;ClaimsDB, "database on-prem", PHI, "Cloud A", no, 24</div>
+    <div class="srcchoice"><div class="srcopt sel" data-choice="app" data-mode="upload"><div class="so-h">⤓ Upload a file</div><div class="so-d">CSV or CMDB export</div></div><div class="srcopt" data-choice="app" data-mode="connect"><div class="so-h">⚡ Connect a system</div><div class="so-d">CMDB / discovery — live</div></div></div>
+    <div id="appUpload">
+      <div class="drop" id="dropApp"><div class="ic">⤓</div><div class="t">Upload your systems inventory (CSV or TSV)</div><div class="s">click to browse or drop a file</div><input type="file" id="fileApp" accept=".csv,.tsv,.txt" style="display:none"></div>
+      <div class="tmpl">columns: <b>name</b>, hosting, data, vendor, eol, recovery &nbsp;·&nbsp; e.g. &nbsp;ClaimsDB, "database on-prem", PHI, "Cloud A", no, 24</div>
+    </div>
+    <div id="appConnect" style="display:none">
+      <div class="conn-row"><div class="field" style="min-width:200px"><label>System</label><select id="appSys"><option>ServiceNow CMDB</option><option>Device42</option><option>BMC Helix Discovery</option><option>Tanium</option><option>Lansweeper</option></select></div><div class="field" style="flex:1;min-width:220px"><label>Instance URL / API token</label><input id="appCred" placeholder="https://yourorg.service-now.com · token"></div><button class="conn-go" data-conn="app">Connect &amp; save</button></div>
+      <div class="conn-msg" id="appConnMsg"></div>
+    </div>
     <div class="result" id="resApp"></div>
   </div>
 
@@ -163,8 +177,9 @@
 
   <!-- 7 · Connect tools -->
   <div class="sec">
-    <div class="sh"><div class="sn">7</div><div><div class="st">Connect your tools</div><div class="sd">Live security signals and your ticketing system — for real coverage figures and to track decisions to completion.</div></div><div class="badge">in the cockpit</div></div>
-    <div class="note">Once you go live, open <b>“Live data — connected sources”</b> from the cockpit’s top bar to connect Okta, Defender, Qualys, CrowdStrike, your SIEM, and your ticketing system (ServiceNow / Jira). Each connection lights up its signals and lets decisions be recorded to real tickets — <b>nothing is simulated</b>.</div>
+    <div class="sh"><div class="sn">7</div><div><div class="st">Connect your tools</div><div class="sd">Pick the tools you run — their live signals power real coverage figures, and your ticketing system tracks decisions to completion.</div></div><div class="badge" id="b7">optional</div></div>
+    <div class="toolgrid" id="toolGrid"></div>
+    <div class="note" style="margin-top:12px">Select a vendor and enter a key to connect now, or leave blank and finish in the cockpit’s <b>“Live data — connected sources”</b> panel after go-live. <b>Nothing is simulated</b> — a tool only shows live once it’s really connected.</div>
   </div>
 
   <div class="foot"><div class="wrap" style="padding:0"><div class="foot-in">
@@ -241,6 +256,44 @@
     document.getElementById('summary').innerHTML=parts.length?('Collected: <b>'+parts.join(' · ')+'</b>'):'Add at least your processes or systems to go live';
   }
 
+  // ---- source choice (upload vs connect a system) for processes & apps ----
+  var CMDB={};
+  document.querySelectorAll('.srcopt').forEach(function(o){o.addEventListener('click',function(){
+    var ch=o.dataset.choice,mode=o.dataset.mode;
+    document.querySelectorAll('.srcopt[data-choice="'+ch+'"]').forEach(function(x){x.classList.toggle('sel',x===o);});
+    var up=document.getElementById(ch+'Upload'),cn=document.getElementById(ch+'Connect');
+    if(up)up.style.display=mode==='upload'?'':'none';if(cn)cn.style.display=mode==='connect'?'':'none';
+  });});
+  document.querySelectorAll('[data-conn]').forEach(function(b){b.addEventListener('click',function(){
+    var k=b.dataset.conn,sys=v(k+'Sys'),cred=v(k+'Cred'),msg=document.getElementById(k+'ConnMsg');
+    if(!cred){msg.textContent='Enter the instance URL / token.';msg.style.color='var(--warn)';return;}
+    CMDB[k]={system:sys,cred:cred};b.textContent='✓ Saved';b.classList.add('done');
+    msg.innerHTML='✓ <b>'+sys+'</b> connection saved. Live sync runs from the cockpit’s integrations panel after go-live; switch to Upload to populate immediately.';msg.style.color='var(--good)';
+    var bd=document.getElementById(k==='proc'?'b4':'b5');bd.textContent='✓ CMDB connected';bd.classList.add('done');
+  });});
+
+  // ---- tool connector selection (real /api/integrations on go-live) ----
+  var TOOLS=[
+    {key:'okta',cat:'Identity / SSO',vendors:['Okta','Microsoft Entra ID','Ping Identity','Duo'],map:{'Microsoft Entra ID':'entra'}},
+    {key:'defender',cat:'Endpoint / EDR',vendors:['Microsoft Defender','CrowdStrike Falcon','SentinelOne'],map:{'CrowdStrike Falcon':'crowdstrike','SentinelOne':'sentinel'}},
+    {key:'qualys',cat:'Vulnerability management',vendors:['Qualys','Tenable'],map:{'Tenable':'tenable'}},
+    {key:'splunk',cat:'SIEM',vendors:['Splunk','Microsoft Sentinel'],map:{'Microsoft Sentinel':'sentinel'}},
+    {key:'cyberark',cat:'Privileged access',vendors:['CyberArk']},
+    {key:'knowbe4',cat:'Security awareness',vendors:['KnowBe4']},
+    {key:'servicenow',cat:'Ticketing / ITSM',vendors:['ServiceNow','Jira'],itsm:true}
+  ];
+  var SELTOOLS={};
+  (function renderTools(){
+    var g=document.getElementById('toolGrid');if(!g)return;
+    g.innerHTML=TOOLS.map(function(t,i){return '<div class="toolcard"><div class="th">'+t.cat+'<span class="tstat" id="ts'+i+'">not selected</span></div><div class="tf"><select class="tv">'+t.vendors.map(function(vn){return '<option>'+vn+'</option>';}).join('')+'</select><input class="tk" placeholder="'+(t.itsm?'instance / token':'API key / token')+'"><button class="tb" data-ti="'+i+'">Select</button></div></div>';}).join('');
+    document.querySelectorAll('.tb').forEach(function(b){b.addEventListener('click',function(){
+      var i=b.dataset.ti,card=b.closest('.toolcard'),vend=card.querySelector('.tv').value,key=card.querySelector('.tk').value.trim(),t=TOOLS[i];
+      var realKey=(t.map&&t.map[vend])||t.key;SELTOOLS[realKey]={vendor:vend,key:key,itsm:!!t.itsm};
+      var s=document.getElementById('ts'+i);s.textContent='✓ selected';s.classList.add('on');b.textContent='✓';
+      var bd=document.getElementById('b7');bd.textContent='✓ '+Object.keys(SELTOOLS).length+' tools';bd.classList.add('done');
+    });});
+  })();
+
   document.getElementById('goLive').addEventListener('click',async function(){
     var btn=this,msg=document.getElementById('glmsg');
     var org=v('orgName');
@@ -264,6 +317,13 @@
       else if(!r.ok){msg.textContent='Setup error: '+(body.error||('HTTP '+r.status));msg.style.color='var(--warn)';btn.disabled=false;return;}
     }catch(e){/* offline: still hand off; cockpit shows illustrative */}
     try{localStorage.setItem('cyberrx_org_id',orgId);localStorage.setItem('cyberrx_org_name',org);}catch(_){}
+    // Connect the selected security tools now that the org exists (best-effort, real).
+    var toolKeys=Object.keys(SELTOOLS).filter(function(k){return SELTOOLS[k].key&&!SELTOOLS[k].itsm;});
+    if(toolKeys.length){msg.textContent='Connecting your tools…';
+      await Promise.all(toolKeys.map(function(k){
+        return fetch(apiBase()+'/api/integrations/'+encodeURIComponent(k)+'/connect?org_id='+encodeURIComponent(orgId),{method:'POST',headers:{'Content-Type':'application/json','X-Org-Id':orgId},body:JSON.stringify({apiToken:SELTOOLS[k].key,token:SELTOOLS[k].key,apiKey:SELTOOLS[k].key})}).catch(function(){});
+      }));
+    }
     try{window.parent.postMessage({type:'cyberrx-golive',org:org,orgId:orgId,industry:v('industry')},'*');}catch(_){}
     msg.textContent='✓ Live';msg.style.color='var(--good)';
   });
