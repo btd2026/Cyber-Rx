@@ -114,10 +114,10 @@ var SEATS = {
   body:function(){return (
    sec('01','Can the business keep operating — and recover fast enough?','Resilience in revenue terms, not RTO jargon.',
      tiles([
-      {k:'What downtime costs',v:'$2.3M / hr',cls:'warn',ev:'downtime',note:'on payments — the top dependency'},
-      {k:'Worst-case recovery',v:'3.1 days',cls:'warn',ev:'recovery',note:'target <6h (Decision 2)'},
-      {k:'Vendor concentration',v:'1 vendor, 3 systems',cls:'warn',ev:'vendor',note:'a single point of failure'},
-      {k:'Tech-debt exposure',v:'$12M',cls:'warn',note:'4 end-of-life systems on revenue paths'}]))
+      {k:'What downtime costs',v:'<span id="lvDowntime">$2.3M / hr</span>',cls:'warn',ev:'downtime',note:'on the top revenue dependency'},
+      {k:'Worst-case recovery',v:'<span id="lvRecovery">3.1 days</span>',cls:'warn',ev:'recovery',note:'target <6h (Decision 2)'},
+      {k:'Vendor concentration',v:'<span id="lvVendor">1 vendor, 3 systems</span>',cls:'warn',ev:'vendor',note:'a single point of failure'},
+      {k:'Tech-debt exposure',v:'<span id="lvTechDebt">$12M</span>',cls:'warn',note:'end-of-life systems on revenue paths'}]))
    +sec('02','Which systems carry the business, and how fast do they recover?','Ranked by value at risk — recovery investment follows revenue.',
      bars([{l:'Payments ($2.3M/hr)',v:'74 hrs',pct:100,cls:'hot'},{l:'Member portal ($0.6M/hr)',v:'40 hrs',pct:54},{l:'Settlement ($0.9M/hr)',v:'28 hrs',pct:38},{l:'Corporate IT (<$40K/hr)',v:'8 hrs',pct:11}]))
   );}

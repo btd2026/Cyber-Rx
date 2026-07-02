@@ -20,6 +20,7 @@ const Risk = require('../../models/Risk');
 const Criticality = require('./CriticalityService');
 const Economics = require('./EconomicsService');
 const Jurisdiction = require('./JurisdictionService');
+const Resilience = require('./ResilienceService');
 const Graph = require('./GraphModelService');
 const EntityResolution = require('./EntityResolutionService');
 const DependencyMapping = require('./DependencyMappingService');
@@ -41,14 +42,14 @@ function normAsset(a) {
   };
 }
 
-// Load the org's economics inputs (financials/appetite/insurance) from setup_json.
-async function loadOrgEconomics(orgId) {
+// Load the org's setup_json (economics + resilience inputs) in one read.
+async function loadOrgSetup(orgId) {
   try {
     const rows = await db.query('SELECT setup_json FROM orgs WHERE id=$1', [orgId]);
     const sj = rows[0] && rows[0].setup_json;
     const parsed = typeof sj === 'string' ? JSON.parse(sj) : (sj || {});
-    return (parsed && parsed.economics) || {};
-  } catch (_) { return {}; }
+    return { economics: (parsed && parsed.economics) || {}, resilience: (parsed && parsed.resilience) || {} };
+  } catch (_) { return { economics: {}, resilience: {} }; }
 }
 
 // materialExposure() reads snake_case, but Risk._transformFromDb returns camelCase.
@@ -62,15 +63,17 @@ function normRisk(r) {
 }
 
 async function run(orgId) {
-  const [rawAssets, processes, rawRisks, econIn] = await Promise.all([
+  const [rawAssets, processes, rawRisks, setup] = await Promise.all([
     Asset.findByOrganization(orgId).catch(() => []),
     BusinessProcess.findByOrganization(orgId).catch(() => []),
     Risk.findByOrganization(orgId).catch(() => []),
-    loadOrgEconomics(orgId),
+    loadOrgSetup(orgId),
   ]);
   if (!rawAssets.length) return empty(orgId);
   const assets = rawAssets.map(normAsset);
   const risks = rawRisks.map(normRisk);
+  const econIn = setup.economics || {};
+  const resilIn = setup.resilience || {};
 
   const procById = {}; processes.forEach((p) => { procById[p.id] = p; });
 
@@ -108,6 +111,33 @@ async function run(orgId) {
     industry: (econIn && econIn.industry) || '',
   });
 
+  // Operational resilience (CIO/CRO seats) — assembled from per-process revenue
+  // and per-asset vendor/EOL/recovery attributes captured at onboarding
+  // (setup_json.resilience). $/hr per asset = Σ its processes' revenue ÷ hours;
+  // asset exposure = its linked open-risk exposure. Degrades to empty gracefully.
+  const rp = (resilIn && resilIn.processes) || {};
+  const ra = (resilIn && resilIn.assets) || {};
+  const OP_HOURS = 8760;
+  const procRevPerHr = {};
+  const resilProcesses = processes.map((p) => {
+    const info = rp[p.name] || {};
+    const rev = Number(info.revenue) || 0;
+    if (rev > 0) procRevPerHr[p.id] = rev / OP_HOURS;
+    return { name: p.name, revenue: rev, rtoHours: info.rto };
+  });
+  const riskExpoByAsset = {};
+  for (const r of risks) {
+    if (r.status && String(r.status).toLowerCase() !== 'open') continue;
+    if (r.asset_id) riskExpoByAsset[r.asset_id] = (riskExpoByAsset[r.asset_id] || 0) + num(r.financial_exposure);
+  }
+  const resilAssets = scored.map((a) => {
+    const info = ra[a.name] || {};
+    const perHr = (a.business_process_ids || []).reduce((s, pid) => s + (procRevPerHr[pid] || 0), 0);
+    return { name: a.name, vendor: info.vendor || null, eol: info.eol != null ? info.eol : null,
+      recoveryHours: info.recovery, perHr, exposure: riskExpoByAsset[a.id] || 0 };
+  });
+  const resilience = Resilience.compute({ processes: resilProcesses, assets: resilAssets });
+
   return {
     org_id: orgId,
     generated_at: new Date().toISOString(),
@@ -122,6 +152,7 @@ async function run(orgId) {
       })),
       economics,
       legal,
+      resilience,
     },
     graph,
     assets: scored,

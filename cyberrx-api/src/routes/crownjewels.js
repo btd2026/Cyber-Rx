@@ -81,6 +81,24 @@ router.post('/ingest', optionalJWT, async (req, res) => {
       regions: Array.isArray(b.regions) ? b.regions : (b.regions ? [b.regions] : []),
     };
 
+    // Operational-resilience inputs (per-process revenue/RTO, per-asset vendor/
+    // EOL/recovery) — stored by name; used by the CIO/CRO seats. All optional.
+    const eolOf = (v) => (v === true || /eol|end.of.life|unsupported|past support|true|yes/i.test(String(v || '')) ? true : (v == null || v === '' ? null : false));
+    const resilience = { processes: {}, assets: {} };
+    processes.forEach((p) => {
+      if (!p || !p.name) return;
+      const rev = money(p.revenue != null ? p.revenue : p.rev);
+      const rto = p.rto != null ? Number(String(p.rto).replace(/[^0-9.]/g, '')) : null;
+      if (rev || rto) resilience.processes[String(p.name).trim()] = { revenue: rev, rto: Number.isFinite(rto) ? rto : null };
+    });
+    apps.forEach((a) => {
+      if (!a || !a.name) return;
+      const vendor = a.vendor || null;
+      const eol = eolOf(a.eol);
+      const recovery = a.recovery != null ? Number(String(a.recovery).replace(/[^0-9.]/g, '')) : null;
+      if (vendor || eol != null || recovery != null) resilience.assets[String(a.name).trim()] = { vendor, eol, recovery: Number.isFinite(recovery) ? recovery : null };
+    });
+
     // Ensure the org row exists so the FK on business_processes/assets is satisfied.
     // JSONB-merge economics into setup_json so re-ingest overlays without clobbering.
     step = 'upsert_org';
@@ -89,7 +107,7 @@ router.post('/ingest', optionalJWT, async (req, res) => {
        VALUES ($1,$2,$3,$4::jsonb,NOW())
        ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name,
          setup_json = COALESCE(orgs.setup_json,'{}'::jsonb) || EXCLUDED.setup_json`,
-      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics })]);
+      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics, resilience })]);
 
     // Idempotent replace: clear the org's prior inventory, then insert the mapped rows.
     step = 'clear_inventory';
