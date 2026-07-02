@@ -38,7 +38,15 @@
   .spine{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:11px 15px;margin-top:18px}
   .spine .lk{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);font-weight:700}
   .spine .num b{color:#fff}.spine .num span{color:var(--muted)}.spine .arrow{color:var(--muted);font-size:12px;margin-left:auto}.spine .arrow b{color:var(--ink-2)}
-  .section{margin-top:14px;padding-top:28px;border-top:1px solid var(--line)}
+  /* section tabs — one per section, only the active shown */
+  .sectabs{display:flex;gap:7px;overflow-x:auto;padding:16px 0 4px;margin-bottom:2px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+  .sectabs::-webkit-scrollbar{height:5px}.sectabs::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:9px}
+  .sectab{flex:none;display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line-2);color:var(--muted);border-radius:99px;padding:8px 15px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .12s}
+  .sectab:hover{color:var(--ink-2);border-color:var(--ink-2)}
+  .sectab.on{color:#fff;background:var(--blue);border-color:var(--blue)}
+  .sectab .stno{font-family:var(--mono);font-size:10px;font-weight:800;opacity:.75}
+  .sectab.on .stno{opacity:.9}
+  .section{margin-top:0;padding-top:10px;border-top:none}
   .rubric{display:flex;align-items:flex-start;gap:15px;margin-bottom:18px}
   .rubric .no{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--blue);background:var(--blue-soft);border:1px solid rgba(57,135,229,.35);border-radius:9px;padding:6px 10px;line-height:1}
   .rubric .rt{font-size:18px;font-weight:700;letter-spacing:-.01em}.rubric .rd{font-size:13px;color:var(--muted);margin-top:3px}
@@ -264,9 +272,30 @@ function render(seat){
   CUR=seat;var s=SEATS[seat];
   var h='<div class="hero"><div class="eyebrow">'+s.eyebrow+'</div><div class="verdict">'+s.verdict+'</div><div class="sub">'+s.sub+'</div><div class="hint">Tip: click any value with a <span class="fx">ƒ</span> chip to see the formula, inputs and math.</div>';
   h+='<div class="spine"><span class="lk">⛓ One source of truth</span><span class="num"><b id="lvSpineExpo">$68M</b> <span>expected annual loss ·</span> <b id="lvSpineTail">$180M</b> <span>tail</span></span><span class="arrow">the same number every seat sees — in the <b>'+SEAT_LABEL[seat]+'</b> lens ↓</span></div></div>';
-  h+=s.body();
+  h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=h;
+  buildTabs();
   wireChoose();renderInitiatives();renderChain();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();renderSignals();applyLive();window.scrollTo({top:0});
+}
+/* Turn the seat's stacked sections into tabs — one tab per section, only the
+   active section shown. Short tab labels come from a lookup (falls back to a
+   trimmed title). Renderers still populate hidden sections' containers. */
+var TAB_LABELS={
+ 'Are we under attack right now?':'Live status','What are we protecting — and what is each worth?':'Crown jewels','What is driving our exposure — and in dollars?':'Exposure','Are our controls actually working?':'Controls','The fastest-changing risk: AI':'AI risk','What decision needs you now?':'Decision','What are we spending — and what is the return?':'Projects',
+ 'How much is at stake — and are we within the board’s limit?':'At stake','Which business processes carry the risk?':'By process','What decisions need us — and what are the trade-offs?':'Decisions','Are we adequately insured against the worst case?':'Insurance','Are we getting better — quarter over quarter?':'Trend','Our worst realistic day — and are we ready to respond and recover?':'Worst day','Governance, oversight & SEC disclosure readiness':'Governance','AI risk — are we ready for AI-accelerated attacks, and is our own AI governed?':'AI risk',
+ 'What is our capital at risk — and is our spend working?':'Capital at risk','What would a bad year do to earnings?':'Earnings','Where does the next dollar work hardest, and are we insured?':'ROI & insurance','What if we change the budget — and is an incident material?':'Budget','What decision needs the CFO — and what does it cost or buy?':'Decision','Current cyber initiatives & their ROI':'Projects & ROI',
+ 'Are we legally defensible right now?':'Standing','Where are we exposed by jurisdiction — duty, clock, penalty?':'Jurisdictions','What decision needs the General Counsel?':'Decision','Is an incident material — and are we covered by contract?':'Materiality',
+ 'Where does cyber sit against appetite and our other risks?':'Vs appetite','What could breach appetite, and what is rising fastest?':'Aggregation','What decision needs the CRO?':'Decision',
+ 'Can the business keep operating — and recover fast enough?':'Resilience','Which systems carry the business, and how fast do they recover?':'Systems','What decision needs the CIO?':'Decision'
+};
+function tabLabel(title){var raw=String(title||'').trim();if(TAB_LABELS[raw])return TAB_LABELS[raw];var t=raw.replace(/\?+\s*$/,'').trim();if(TAB_LABELS[t])return TAB_LABELS[t];t=t.split(/\s+[—–-]\s+/)[0].trim();if(t.length>26)t=t.slice(0,24).replace(/\s+\S*$/,'')+'…';return t;}
+function buildTabs(){
+  var wrap=document.getElementById('secWrap'),tabs=document.getElementById('secTabs');if(!wrap||!tabs)return;
+  var secs=[].slice.call(wrap.querySelectorAll('.section'));if(secs.length<2){tabs.style.display='none';return;}
+  tabs.style.display='';
+  secs.forEach(function(sc,i){sc.style.display=i===0?'':'none';});
+  tabs.innerHTML=secs.map(function(sc,i){var rt=sc.querySelector('.rt'),no=sc.querySelector('.no');return '<button class="sectab'+(i===0?' on':'')+'" data-sec="'+i+'"><span class="stno">'+(no?no.textContent:(i+1))+'</span>'+tabLabel(rt?rt.textContent:('Section '+(i+1)))+'</button>';}).join('');
+  tabs.querySelectorAll('.sectab').forEach(function(b){b.onclick=function(){var idx=+b.dataset.sec;secs.forEach(function(sc,i){sc.style.display=i===idx?'':'none';});tabs.querySelectorAll('.sectab').forEach(function(x){x.classList.toggle('on',x===b);});window.scrollTo({top:0});};});
 }
 </script>
 <script src="cockpit-seats.js"></script>
