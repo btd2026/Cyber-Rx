@@ -8,18 +8,18 @@ var SEATS = {
   sub:'Your cyber position in the same terms as every other enterprise risk. Every figure is clickable — open it to see the exact formula, the inputs used, and the math.',
   brief:'Here is where we stand. Cyber risk is a managed business risk, and today it is within the board’s approved tolerance. Our expected annual loss is about sixty-eight million dollars — under one percent of revenue. The one thing to watch is the worst-case tail, which sits above appetite; one funded decision this quarter brings it back in line. Every figure on the screen traces to your own data.',
   body:function(){return (
-   sec('01','How much is at stake — and are we within the board’s limit?','Cyber risk in dollars, measured against the appetite the board approved.',
+   sec('01','How much is at stake — and are we within the board’s limit?','Cyber risk in dollars, measured against the appetite the board approved. Every figure is computed from your financials and risk register.',
      tiles([
-      {k:'Expected annual loss',v:'<span id="lvExpo">$68M</span>',ev:'ale',note:'<span class="pill good">Within appetite</span> &nbsp;<span class="claim" data-ev="pctrev">≈0.8% of revenue <span class="fx">ƒ</span></span>'},
-      {k:'Worst-case tail (95%)',v:'<span id="lvTail">$180M</span>',cls:'warn',ev:'tail',note:'<span class="pill warn">Above appetite</span> &nbsp;vs appetite <span class="claim" data-ev="appetite">$120M <span class="fx">ƒ</span></span>'},
-      {k:'Materiality threshold',v:'$53M',ev:'materiality',note:'a payments-path event clears it; corporate-IT does not'}]))
+      {k:'Expected annual loss',v:'<span id="lvExpo">$68M</span>',ev:'ale',note:'<span class="pill good" id="lvAleWithin">Within appetite</span> &nbsp;<span class="claim" data-ev="pctrev"><span id="lvPctRev">≈0.8% of revenue</span> <span class="fx">ƒ</span></span>'},
+      {k:'Worst-case tail (95%)',v:'<span id="lvTail">$180M</span>',cls:'warn',ev:'tail',note:'<span class="pill warn" id="lvTailWithin">Above appetite</span> &nbsp;vs appetite <span class="claim" data-ev="appetite"><span id="lvAppetite">$120M</span> <span class="fx">ƒ</span></span>'},
+      {k:'Materiality threshold',v:'<span id="lvMateriality">$53M</span>',ev:'materiality',note:'<span id="lvMatBasis">the loss large enough to be financially material to disclose</span>'}]))
    +sec('02','Which business processes carry the risk?','Your key processes from onboarding, ranked by the dollars of exposure each carries. Click any process for the math.',
      '<div id="ceoProcBars">'+bars([
       {l:'Claims &amp; payments processing',ev:'proc-claims',v:'$34M',pct:100,cls:'hot'},
       {l:'Policy administration',ev:'proc-policy',v:'$18M',pct:53},
       {l:'Trading &amp; settlement',ev:'proc-settlement',v:'$11M',pct:32},
       {l:'Member portal &amp; servicing',ev:'proc-member',v:'$5M',pct:15}])+'</div>')
-   +sec('03','What decisions need us — and what are the trade-offs?','Each decision is a plain-English choice with options, pros and cons. Choose one and it’s recorded to your ticketing system and tracked to completion.',
+   +sec('03','What decisions need us — and what are the trade-offs?','Each decision is a plain-English choice with options, pros and cons. Choosing one records it to your ticketing system and tracks it to completion. Option costs and returns are modeled estimates your security team refines against these live exposure figures.',
      decisions([
       {n:1,q:'Should we close the privileged path into payments?',sit:'A few over-privileged IT accounts can reach the payments database directly — the single biggest reason exposure is $68M. Three ways to handle it:',
        opts:[
@@ -31,16 +31,11 @@ var SEATS = {
         {rec:true,tag:'A · Full modernization',on:'Option A · Full',osum:'$3.2M · <6h recovery',pros:['Cuts worst case by ~$40M','Tail below appetite','Meets regulatory recovery expectations'],cons:['$3.2M capital','One-quarter program']},
         {tag:'B · Critical systems only',on:'Option B · Critical only',osum:'$1.6M',pros:['Protects the two highest-value systems','Half the cost'],cons:['Portal recovery stays slow','Removes ~$24M of $40M']},
         {tag:'C · Defer',on:'Option C · Defer',osum:'$0 this year',pros:['Zero capital this year'],cons:['Worst-case tail stays $180M — above the $120M appetite','Insurer likely raises premium at renewal']}]}]))
-   +sec('04','Are we adequately insured against the worst case?','Whether our cyber-insurance coverage matches the modeled worst case — and the renewal position.',
-     '<div class="cols"><div class="card"><div class="ck">Answer</div><div class="cv" style="font-size:20px;line-height:1.35">Mostly — <span class="warn">a $30M tail is uninsured</span></div><div style="display:flex;gap:24px;margin-top:14px"><div><div class="cv" style="font-size:20px">$150M</div><div class="cn">coverage limit</div></div><div><div class="cv crit claim" data-ev="insgap" style="font-size:20px"><span id="lvGapCeo">$30M</span> <span class="fx">ƒ</span></div><div class="cn">uninsured tail</div></div><div><div class="cv" style="font-size:20px">$4.2M</div><div class="cn">premium · renews 92d</div></div></div></div>'
-     +kvcard('How much of the risk is transferred?',[{k:'Transfer efficiency',v:'83%',ev:'transfer'},{k:'Retained tail',v:'$30M',cls:'crit'},{k:'Decision 2 impact',v:'closes the gap',cls:'good'}])+'</div>')
-   +sec('05','Are we getting better — quarter over quarter?','The trend the board tracks: exposure and posture across the last four quarters, with what drove each move.',
-     '<div class="qoq"><div class="card"><div class="ck">Expected loss by quarter</div><svg width="100%" height="120" viewBox="0 0 340 120" preserveAspectRatio="none" style="margin-top:8px"><polyline points="10,30 120,42 230,58 330,86" fill="none" stroke="#0ca30c" stroke-width="2.5"/><circle cx="10" cy="30" r="3.5" fill="#0ca30c"/><circle cx="120" cy="42" r="3.5" fill="#0ca30c"/><circle cx="230" cy="58" r="3.5" fill="#0ca30c"/><circle cx="330" cy="86" r="4.5" fill="#0ca30c"/><text x="10" y="108" fill="#898781" font-size="10">Q3’25</text><text x="112" y="108" fill="#898781" font-size="10">Q4’25</text><text x="222" y="108" fill="#898781" font-size="10">Q1’26</text><text x="316" y="108" fill="#898781" font-size="10">Q2’26</text></svg><div class="cn">Exposure down $96M → $68M over four quarters (−29%).</div></div>'
-     +'<div class="card"><table class="qtbl"><thead><tr><th>Quarter</th><th>Expected loss</th><th>Posture</th><th>Key change</th></tr></thead><tbody><tr><td>Q3’25</td><td>$96M</td><td>74</td><td>baseline</td></tr><tr><td>Q4’25</td><td>$88M</td><td>77</td><td>MFA rollout</td></tr><tr><td>Q1’26</td><td>$82M</td><td>79</td><td>EDR coverage ↑</td></tr><tr><td>Q2’26</td><td class="up">$68M</td><td class="up">82</td><td>PAM + training</td></tr></tbody></table></div></div>'
-     +lists([
-       {c:'g',ic:'↓',t:'Exposure fell $14M this quarter',s:'Privileged-access rollout reached 88%; phishing-failure rate 9% → 3%.'},
-       {c:'w',ic:'✦',t:'New risk: AI decisioning on customer data (+$8M, rising)',s:'Now a board decision — govern in-house or transfer to the insurer.'},
-       {c:'b',ic:'◑',t:'More resilient than 72% of peers at your revenue scale',ev:'peer',s:'Closing the gap to the top quartile ≈ $22M of avoidable exposure.'}]))
+   +sec('04','Are we adequately insured against the worst case?','Whether your cyber-insurance coverage matches the modeled worst case — and the renewal position. From the policy you entered at onboarding.',
+     '<div class="cols"><div class="card"><div class="ck">Answer</div><div class="cv" id="lvInsAnswer" style="font-size:20px;line-height:1.35">Mostly — <span class="warn">a $30M tail is uninsured</span></div><div style="display:flex;gap:24px;margin-top:14px"><div><div class="cv" style="font-size:20px" id="lvCoverage">$150M</div><div class="cn">coverage limit</div></div><div><div class="cv crit claim" data-ev="insgap" style="font-size:20px"><span id="lvGapCeo">$30M</span> <span class="fx">ƒ</span></div><div class="cn">uninsured tail</div></div><div><div class="cv" style="font-size:20px" id="lvPremium">$4.2M</div><div class="cn" id="lvRenewalNote">annual premium</div></div></div></div>'
+     +kvcard('How much of the risk is transferred?',[{k:'Transfer efficiency',v:'<span id="lvTransfer">83%</span>',ev:'transfer'},{k:'Retained (uninsured) tail',v:'<span id="lvRetained">$30M</span>',cls:'crit'},{k:'Funding recovery',v:'narrows the gap',cls:'good'}])+'</div>')
+   +sec('05','Are we getting better — quarter over quarter?','The board’s trend line: your expected loss over time. CyberRx records your position on every analysis, so this is your <b>real</b> history — it builds from your first go-live. Nothing here is back-filled.',
+     '<div id="ceoTrend"></div>')
    +sec('06','Can we prove we exercised proper oversight?','The board’s personal-liability question. Every funded decision is logged with the deciding leader, the date, and its ticket — your documented D&amp;O / SEC-oversight defense.',
      '<div id="ceoOversight">'+kvcard('Oversight &amp; decision record',[{k:'Funded decisions logged',v:'from your decisions',ev:'oversight'},{k:'Each carries',v:'leader · date · ticket',ev:'oversight'},{k:'Board-appetite reviewed',v:'this quarter',cls:'good'},{k:'Defensibility',v:'evidenced trail',cls:'good',ev:'oversight'}])+'</div>')
   );}
@@ -241,11 +236,6 @@ var EV = {
   inputs:[['Coverage limit','$150M','Insurance policy'],['Worst-case tail','$180M','computed']],
   steps:[['1','min(150,180) ÷ 180','150 ÷ 180'],['T','Share of tail transferred','83%']],
   sources:['Insurance policy','Engine (VaR)'],conf:'The remaining 17% ($30M) is retained risk.'},
- peer:{claim:'Resilience vs. peers',result:'72nd percentile',cls:'',
-  formula:'percentile  =  rank of your normalized exposure within the peer cohort\ngap to top-quartile  =  your exposure  −  p25 cohort exposure',
-  inputs:[['Peer cohort','Financial services · $5–10B','Benchmark dataset (opt-in)'],['Your normalized exposure','0.81% of revenue','computed'],['Cohort size','34 orgs','Benchmark (k-anonymous ≥8)']],
-  steps:[['1','Rank your exposure in cohort','above 72%'],['2','Distance to top quartile','≈ $22M'],['T','Position','72nd percentile']],
-  sources:['Reciprocal peer benchmark (anonymized)','Your computed exposure'],conf:'Only high-level figures leave your tenant; cohorts under 8 are never shown.'},
  roicfo:{claim:'Return on the top decision (privileged-access closure)',result:'37×',cls:'good',
   formula:'exposure removed  =  exposure(before)  −  exposure(after)\nreturn on spend  =  exposure removed  ÷  cost',
   inputs:[['Before (open path)','$52M','Risk register'],['After (path closed)','~$0','Control model'],['Cost','$1.4M','Decision estimate']],

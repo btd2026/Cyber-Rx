@@ -251,14 +251,26 @@ function render(seat){
   h+='<div class="spine"><span class="lk">⛓ One source of truth</span><span class="num"><b id="lvSpineExpo">$68M</b> <span>expected annual loss ·</span> <b id="lvSpineTail">$180M</b> <span>tail</span></span><span class="arrow">the same number every seat sees — in the <b>'+SEAT_LABEL[seat]+'</b> lens ↓</span></div></div>';
   h+=s.body();
   document.getElementById('app').innerHTML=h;
-  wireChoose();renderInitiatives();renderChain();renderProcBars();renderCioSystems();renderOversight();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderProcBars();renderCioSystems();renderOversight();renderTrend();applyLive();window.scrollTo({top:0});
 }
 </script>
 <script src="cockpit-seats.js"></script>
 <script>
 /* evidence + live + ticketing wiring */
+// When live data is present, the evidence headline shows the org's real figure
+// (computed from its own inputs) rather than the illustrative example result.
+function liveResult(key){if(!LIVE||!LIVE.economics)return null;var e=LIVE.economics,r=e.ratios||{},ap=e.appetite||{},ins=e.insurance||{};
+  if(key==='ale')return e.ale?usd(e.ale):null;
+  if(key==='tail')return e.tail?usd(e.tail):null;
+  if(key==='pctrev')return r.pct_of_revenue!=null?('≈'+pct(r.pct_of_revenue,r.pct_of_revenue<0.01?2:1)+' of revenue'):null;
+  if(key==='appetite')return ap.appetite?usd(ap.appetite):null;
+  if(key==='materiality')return e.materiality&&e.materiality.value?usd(e.materiality.value):null;
+  if(key==='insgap')return ins.gap!=null?usd(ins.gap):null;
+  if(key==='transfer')return ins.transfer_efficiency!=null?(Math.round(ins.transfer_efficiency*100)+'%'):null;
+  return null;}
 function openEv(key){var e=EV[key];if(!e)return;
-  var h='<div class="ev-claim">'+e.claim+'</div><div class="ev-result '+C(e.cls)+'">'+e.result+'</div>';
+  var lr=liveResult(key);
+  var h='<div class="ev-claim">'+e.claim+(lr?' <span class="tag good" style="font-size:10px;vertical-align:middle">computed from your data</span>':'')+'</div><div class="ev-result '+C(e.cls)+'">'+(lr||e.result)+'</div>';
   h+='<div class="ev-sec">The formula</div><div class="formula">'+e.formula.replace(/(ALE|VaR₉₅|Monte-Carlo|Beta-PERT|Σ)/g,'<span class="hl">$1</span>')+'</div>';
   h+='<div class="ev-sec">Inputs used</div><table class="itbl"><thead><tr><th>Input</th><th>Value</th><th>Source</th></tr></thead><tbody>'+e.inputs.map(function(i){return '<tr><td>'+i[0]+'</td><td class="v">'+i[1]+'</td><td class="src">'+i[2]+'</td></tr>';}).join('')+'</tbody></table>';
   h+='<div class="ev-sec">The calculation</div>'+e.steps.map(function(st){return '<div class="step'+(st[0]==='T'?' total':'')+'"><span class="sn">'+(st[0]==='T'?'=':st[0])+'</span><span>'+st[1]+'</span><span class="sv">'+st[2]+'</span></div>';}).join('');
@@ -414,8 +426,48 @@ function badge(live){var b=document.getElementById('dataBadge');if(b){b.textCont
 function setBar(live){var bar=document.getElementById('dataModeBar'),inner=document.getElementById('dataModeInner');if(!bar)return;bar.style.display='block';bar.style.borderBottom='1px solid';var nm=orgName()||'your organization';
   if(live){bar.style.background='rgba(12,163,12,.10)';bar.style.borderBottomColor='rgba(12,163,12,.35)';inner.style.color='var(--good)';inner.innerHTML='● <b>Live · '+nm+'</b> — headline economics computed from your data. Sections labeled illustrative fill in as their intake sources connect.';}
   else{bar.style.background='rgba(250,178,25,.12)';bar.style.borderBottomColor='rgba(250,178,25,.4)';inner.style.color='var(--warn,#b7791f)';inner.innerHTML='◐ <b>Illustrative</b> — sample figures. Complete onboarding (inventory + financials → Go live) to compute your live cockpit.';}}
+function renewalDays(d){if(!d)return null;var t=Date.parse(d);if(isNaN(t))return null;return Math.round((t-Date.now())/86400000);}
+function pct(n,dp){return (n*100).toFixed(dp==null?1:dp)+'%';}
+/* Board trend — rendered from the org's REAL recorded posture history (/summary
+   trend). No back-filled quarters: a single baseline until history accrues. */
+function renderTrend(){
+  var host=document.getElementById('ceoTrend');if(!host)return;
+  var t=(LIVE&&LIVE.trend)||[];
+  if(!LIVE){host.innerHTML='<div class="card"><div class="ck">Expected loss — trend</div><div class="cn" style="margin-top:8px">◐ <b style="color:var(--warn)">Illustrative.</b> Once you go live, CyberRx records your position on every analysis and this becomes your <b>real</b> quarter-over-quarter trend line — no back-filled history.</div></div>';return;}
+  if(t.length<2){
+    var cur=(LIVE&&LIVE.economics&&Number(LIVE.economics.ale))||0;
+    host.innerHTML='<div class="card"><div class="ck">Expected loss — baseline</div><div class="cv" style="font-size:26px;margin-top:6px">'+(cur?usd(cur):'—')+'</div><div class="cn" style="margin-top:8px">This is your <b>baseline</b>'+(t[0]?(', recorded '+new Date(t[0].date).toLocaleDateString()):'')+'. CyberRx records your position on every analysis, so your quarter-over-quarter trend line builds from here — <b>no history is invented</b>.</div></div>';
+    return;
+  }
+  var vals=t.map(function(p){return Number(p.ale)||0;});var max=Math.max.apply(null,vals),min=Math.min.apply(null,vals);var range=(max-min)||1;
+  var W=340,H=120,n=t.length;
+  var pts=t.map(function(p,i){var x=10+(i/(n-1))*(W-20);var y=20+(1-((Number(p.ale)||0)-min)/range)*(H-50);return [x,y];});
+  var down=(vals[n-1]<=vals[0]);var col=down?'#0ca30c':'#e5484d';
+  var poly=pts.map(function(p){return p[0].toFixed(0)+','+p[1].toFixed(0);}).join(' ');
+  var dots=pts.map(function(p,i){return '<circle cx="'+p[0].toFixed(0)+'" cy="'+p[1].toFixed(0)+'" r="'+(i===n-1?4.5:3.2)+'" fill="'+col+'"/>';}).join('');
+  var delta=vals[n-1]-vals[0];var pc=vals[0]?Math.round(delta/vals[0]*100):0;
+  host.innerHTML='<div class="card"><div class="ck">Expected loss over time — your recorded history</div><svg width="100%" height="120" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" style="margin-top:8px"><polyline points="'+poly+'" fill="none" stroke="'+col+'" stroke-width="2.5"/>'+dots+'</svg>'+
+    '<div class="cn" style="margin-top:6px">'+(down?'Down ':'Up ')+usd(Math.abs(delta))+' ('+(pc<=0?'':'+')+pc+'%) across '+n+' recorded points, '+new Date(t[0].date).toLocaleDateString()+' → '+new Date(t[n-1].date).toLocaleDateString()+'.</div></div>';
+}
 function applyLive(){if(!LIVE)return;var e=LIVE.economics||{},r=e.ratios||{},ap=e.appetite||{},ins=e.insurance||{};var ale=Number(e.ale)||0,tail=Number(e.tail)||ale;
-  if(ale>0){setTxt('lvSpineExpo',usd(ale));setTxt('lvSpineTail',usd(tail));setTxt('lvExpo',usd(ale));setTxt('lvTail',usd(tail));setTxt('lvExpoCfo',usd(ale));setTxt('lvTailCfo',usd(tail));if(ins&&ins.gap!=null){setTxt('lvGap',usd(ins.gap));setTxt('lvGapCeo',usd(ins.gap));}}
+  if(ale>0){setTxt('lvSpineExpo',usd(ale));setTxt('lvSpineTail',usd(tail));setTxt('lvExpo',usd(ale));setTxt('lvTail',usd(tail));setTxt('lvExpoCfo',usd(ale));setTxt('lvTailCfo',usd(tail));
+    // CEO/board financial framing — % of revenue, appetite status, materiality
+    if(r.pct_of_revenue!=null)setTxt('lvPctRev','≈'+pct(r.pct_of_revenue,r.pct_of_revenue<0.01?2:1)+' of revenue');
+    if(ap&&ap.appetite){setTxt('lvAppetite',usd(ap.appetite));
+      var aw=document.getElementById('lvAleWithin');if(aw){aw.textContent=ap.within?'Within appetite':'Above appetite';aw.className='pill '+(ap.within?'good':'warn');}
+      var tw=document.getElementById('lvTailWithin');if(tw){tw.textContent=ap.tail_within?'Within appetite':'Above appetite';tw.className='pill '+(ap.tail_within?'good':'warn');}}
+    if(e.materiality&&e.materiality.value){setTxt('lvMateriality',usd(e.materiality.value));if(e.materiality.basis)setTxt('lvMatBasis','the loss large enough to disclose · '+e.materiality.basis);}
+    // Insurance — coverage, premium, renewal countdown, transfer efficiency, retained tail
+    if(ins){
+      if(ins.limit)setTxt('lvCoverage',usd(ins.limit));
+      if(ins.premium)setTxt('lvPremium',usd(ins.premium));
+      if(ins.transfer_efficiency!=null)setTxt('lvTransfer',Math.round(ins.transfer_efficiency*100)+'%');
+      if(ins.gap!=null){setTxt('lvGap',usd(ins.gap));setTxt('lvGapCeo',usd(ins.gap));setTxt('lvRetained',usd(ins.gap));
+        var ansEl=document.getElementById('lvInsAnswer');if(ansEl){ansEl.innerHTML=ins.gap>0?('Mostly — <span class="warn">a '+usd(ins.gap)+' tail is uninsured</span>'):'<span style="color:var(--good)">Yes — coverage meets the modeled tail</span>';}}
+      var rn=document.getElementById('lvRenewalNote');if(rn){var days=renewalDays(ins.renewal);rn.textContent=days!=null?('annual premium · renews in '+days+'d'):'annual premium';}
+    }
+  }
+  renderTrend();
   // CLO seat — render the org's real jurisdiction obligations + binding clock.
   var lg=LIVE.legal;
   if(lg&&lg.obligations&&lg.obligations.length){
