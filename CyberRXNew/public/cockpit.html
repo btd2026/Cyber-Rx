@@ -269,6 +269,7 @@ function liveResult(key){if(!LIVE||!LIVE.economics)return null;var e=LIVE.econom
   if(key==='insgap')return ins.gap!=null?usd(ins.gap):null;
   if(key==='transfer')return ins.transfer_efficiency!=null?(Math.round(ins.transfer_efficiency*100)+'%'):null;
   if(key==='liability'){var lg=LIVE.legal;return (lg&&lg.liability&&lg.liability.class_action_exposure)?usd(lg.liability.class_action_exposure):null;}
+  if(key==='airisk'){var ai=LIVE.aiRisk;if(!ai||!ai.exposure_internet_facing)return null;var pp=sig('patch_pct');var un=pp!=null?(1-pp/100):0.4;var wb=ai.window_base_days||30,wa=ai.window_ai_days||5;var dl=Math.min(0.5,Math.max(0,un*(1-wa/wb)));return '+'+usd(Math.round(ai.exposure_internet_facing*dl));}
   return null;}
 function openEv(key){var e=EV[key];if(!e)return;
   var lr=liveResult(key);
@@ -656,9 +657,16 @@ function renderAiRisk(){
   var ai=LIVE&&LIVE.aiRisk;if(!ai)return;var g=ai.governance||{};
   var patch=sig('patch_pct'),mttd=sig('mttd_hrs');
   var surface=ai.crown_jewels_internet_facing||0,allIf=ai.internet_facing_assets||0;
+  // Quantified AI risk premium (modeled): the incremental expected loss from the
+  // AI-compressed exploit window on the unpatched share of internet-facing crown jewels.
+  var expIF=ai.exposure_internet_facing||0,wb=ai.window_base_days||30,wa=ai.window_ai_days||5;
+  var unpatched=patch!=null?(1-patch/100):0.4;
+  var dLike=Math.min(0.5,Math.max(0,unpatched*(1-wa/wb)));
+  var premium=Math.round(expIF*dLike);
+  var premiumCard=expIF>0?('<div style="margin-right:6px"><div class="cv claim" data-ev="airisk" style="font-size:22px;color:var(--crit)">+'+usd(premium)+' <span class="fx">ƒ</span></div><div class="cn"><span class="pill mod">modeled</span> AI-accelerated expected loss</div></div>'):'';
   var threat='<div class="card"><div class="ck">Exposure to AI-accelerated attacks</div>'+
-    '<div class="cn" style="margin-top:6px">Frontier models (e.g. Anthropic’s <b>Mythos</b>) can autonomously discover and exploit vulnerabilities, collapsing the window between disclosure and attack. Our readiness:</div>'+
-    '<div style="display:flex;gap:22px;margin-top:12px;flex-wrap:wrap">'+
+    '<div class="cn" style="margin-top:6px">Frontier models (e.g. Anthropic’s <b>Mythos</b>) can autonomously discover and exploit vulnerabilities, collapsing the disclosure→exploit window from ~'+wb+' to ~'+wa+' days. That raises the exploitation likelihood on your unpatched, internet-facing crown jewels:</div>'+
+    '<div style="display:flex;gap:22px;margin-top:12px;flex-wrap:wrap">'+premiumCard+
     '<div><div class="cv" style="font-size:20px;color:'+(surface>0?'var(--warn)':'var(--good)')+'">'+surface+' / '+allIf+'</div><div class="cn">internet-facing crown jewels / assets (attack surface)</div></div>'+
     '<div><div class="cv" style="font-size:20px'+(patch!=null?'':';color:var(--muted)')+'">'+(patch!=null?patch+'%':'connect vuln mgmt')+'</div><div class="cn">patch coverage'+(patch!=null?' <span class="pill good" style="font-size:9px">live</span>':'')+'</div></div>'+
     (mttd!=null?'<div><div class="cv" style="font-size:20px">'+mttd+'h</div><div class="cn">mean time to detect <span class="pill good" style="font-size:9px">live</span></div></div>':'')+
