@@ -186,11 +186,20 @@ async function run(orgId) {
   // reach) plus the org's AI-governance answers. Patch velocity / detection speed
   // are combined on the frontend from live tool signals.
   const isInternet = (a) => /internet/i.test(String(a.exposure || ''));
+  const cjInternet = scored.filter((a) => a.crown_jewel && isInternet(a)).length;
+  const cjCount = crownAssets.length;
   const aiRisk = {
     governance: setup.aiGovernance || {},
     internet_facing_assets: scored.filter(isInternet).length,
-    crown_jewels_internet_facing: scored.filter((a) => a.crown_jewel && isInternet(a)).length,
+    crown_jewels_internet_facing: cjInternet,
     total_assets: scored.length,
+    // Expected loss attributable to internet-facing crown jewels — the surface an
+    // autonomous, AI-assisted attacker reaches. The AI "risk premium" (incremental
+    // expected loss from the compressed exploit window) is applied on the frontend
+    // using live patch coverage. Windows are modeled assumptions (see evidence).
+    exposure_internet_facing: cjCount > 0 ? Math.round(expo.total * (cjInternet / cjCount)) : 0,
+    window_base_days: 30, // historical median disclosure → weaponized exploit
+    window_ai_days: 5, // frontier-AI-assisted exploitation (modeled)
   };
 
   // Enterprise risk portfolio (CRO) — cyber on one scale beside the org's other
