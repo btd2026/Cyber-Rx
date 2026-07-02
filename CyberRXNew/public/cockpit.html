@@ -569,6 +569,19 @@ function pctDrop(before,now){
   if(!isFinite(before)||!isFinite(now)||before<=0||now<0)return null;
   return Math.round((1-now/before)*100); // may be negative if the review got slower
 }
+/* Engaged-early (theme #4): from the engagement stage tagged on imported initiatives.
+   design = security in at planning/architecture; gate = bolted on at the last review.
+   Returns null (→ gated card) when nothing is tagged — never a fabricated %. */
+function engagementStage(s){s=String(s||'').toLowerCase();
+  if(/design|plan|architect|early|discovery|proactive|inception|kickoff/.test(s))return 'design';
+  if(/gate|late|review|final|pre-?launch|bolt|last-?minute|sign-?off/.test(s))return 'gate';
+  return null;}
+function earlyEngagement(){
+  var stages=importedInits().map(function(p){return engagementStage(p.engagement);}).filter(Boolean);
+  if(!stages.length)return null;
+  var design=stages.filter(function(x){return x==='design';}).length;
+  return {pct:Math.round(design/stages.length*100),n:stages.length,design:design};
+}
 function renderGrowth(){
   var host=document.getElementById('cisoGrowth');if(!host)return;
   var g=LIVE&&LIVE.growth;
@@ -602,7 +615,10 @@ function renderGrowth(){
     '</div><div class="cn" style="margin-top:10px">The CISOs who get a seat at the table are the ones who make their peers successful. This is your work, mapped to what each of them is measured on.</div></div>';
   // Engaged-early (theme: embed at design, not at the last gate). Gated honestly —
   // no fake %: tag each initiative's engagement stage to make it live.
-  var earlyCard='<div class="card" style="margin-top:12px"><div class="ck">Engaged early — not at the last gate</div><div class="cv" style="font-size:19px;margin-top:4px;color:var(--muted)">◐ tag stage to measure</div><div class="cn" style="margin-top:6px">Security shapes outcomes cheaply when it is in the room at <b>design</b> — architecture, product planning, M&amp;A — not bolted on at the final gate. Tag each initiative’s engagement stage (design vs. gate) to turn this into a live % — a strong program runs <b>≥ 70%</b> at design.</div></div>';
+  var ee=earlyEngagement();
+  var earlyCard=ee
+    ? '<div class="card" style="margin-top:12px"><div class="ck">Engaged early — not at the last gate</div><div class="cv" style="font-size:22px;margin-top:4px;color:'+(ee.pct>=70?'var(--good)':ee.pct>=40?'var(--warn)':'var(--crit)')+'">'+ee.pct+'%</div><div class="cn" style="margin-top:6px">of your <b>'+ee.n+'</b> tagged initiatives had security in at <b>design</b> (architecture / product planning / M&amp;A), not bolted on at the final gate. A strong program runs <b>≥ 70%</b> — that is where security shapes outcomes cheaply and is seen as a builder.</div></div>'
+    : '<div class="card" style="margin-top:12px"><div class="ck">Engaged early — not at the last gate</div><div class="cv" style="font-size:19px;margin-top:4px;color:var(--muted)">◐ tag stage to measure</div><div class="cn" style="margin-top:6px">Security shapes outcomes cheaply when it is in the room at <b>design</b> — architecture, product planning, M&amp;A — not bolted on at the final gate. Tag each initiative’s engagement stage (add an <b>engagement</b> column: design vs. gate) to turn this into a live % — a strong program runs <b>≥ 70%</b> at design.</div></div>';
   host.innerHTML=banner+t+certCard+peerCard+earlyCard;
 }
 /* Path to yes (CISO) — the "department of how". Each enablement request carries the
