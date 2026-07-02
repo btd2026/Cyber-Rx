@@ -76,14 +76,14 @@ var SEATS = {
       {k:'Open notifications',v:'0',cls:'good',note:'across US, EU, UK, APAC'},
       {k:'Materiality standing',v:'No reportable event',cls:'good',ev:'materiality',note:'SEC clock not running; 8-K pre-staged'},
       {k:'Modeled liability',v:'$22M',cls:'warn',note:'class-action + regulatory, modeled'},
-      {k:'Fastest clock',v:'72 hours',ev:'clock',note:'EU/UK GDPR if an event occurred today'}]))
+      {k:'Fastest clock',v:'<span id="lvClock">72 hours</span>',ev:'clock',note:'the binding notification deadline today'}]))
    +sec('02','Where are we exposed by jurisdiction — duty, clock, penalty?','Where we operate, the binding obligation, and the ceiling. Click a jurisdiction for the rule.',
-     jtable([
+     '<div id="cloJuris">'+jtable([
       {flag:'🇺🇸',c:'United States',ev:'juris-us',o:'SEC 8-K + 54 state breach laws',clock:'4 business days',cc:'warn',pen:'Disclosure + enforcement'},
       {flag:'🇪🇺',c:'European Union',ev:'juris-eu',o:'GDPR · NIS2 · DORA',clock:'72 hours',cc:'crit',pen:'Up to 4% of global revenue'},
       {flag:'🇬🇧',c:'United Kingdom',o:'UK GDPR / ICO',clock:'72 hours',cc:'crit',pen:'£17.5M or 4%'},
       {flag:'🇸🇬',c:'Singapore',o:'PDPA · MAS TRM',clock:'72h / 1h (MAS)',cc:'crit',pen:'Up to S$1M'},
-      {flag:'🇦🇺',c:'Australia',o:'Privacy Act · APRA CPS 234',clock:'72 hours',cc:'warn',pen:'Up to A$50M'}]))
+      {flag:'🇦🇺',c:'Australia',o:'Privacy Act · APRA CPS 234',clock:'72 hours',cc:'warn',pen:'Up to A$50M'}])+'</div>')
   );}
  },
 

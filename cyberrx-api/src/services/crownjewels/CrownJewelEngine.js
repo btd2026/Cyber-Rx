@@ -19,6 +19,7 @@ const BusinessProcess = require('../../models/BusinessProcess');
 const Risk = require('../../models/Risk');
 const Criticality = require('./CriticalityService');
 const Economics = require('./EconomicsService');
+const Jurisdiction = require('./JurisdictionService');
 const Graph = require('./GraphModelService');
 const EntityResolution = require('./EntityResolutionService');
 const DependencyMapping = require('./DependencyMappingService');
@@ -98,6 +99,15 @@ async function run(orgId) {
     risks,
   });
 
+  // Legal/regulatory obligations (CLO seat) — derived from operating regions +
+  // the data classes actually held on assets + industry. No hardcoded per-org rules.
+  const dataClasses = Array.from(new Set(scored.flatMap((a) => a.data_classification || [])));
+  const legal = Jurisdiction.derive({
+    regions: (econIn && econIn.regions) || [],
+    dataClasses,
+    industry: (econIn && econIn.industry) || '',
+  });
+
   return {
     org_id: orgId,
     generated_at: new Date().toISOString(),
@@ -111,6 +121,7 @@ async function run(orgId) {
         score: Math.round(a.criticality_score * 100), breakdown: a.criticality_breakdown, rationale: a.rationale,
       })),
       economics,
+      legal,
     },
     graph,
     assets: scored,
