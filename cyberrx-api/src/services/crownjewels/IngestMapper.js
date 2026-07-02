@@ -51,14 +51,22 @@ function mapOnboarding(input = {}) {
     criticality: critFromRevData(p.rev, p.data), owner: p.owner || '—',
     _dataTokens: String(p.data || '').toUpperCase().split(/[^A-Z]+/).filter((t) => t.length > 1),
   }));
+  const procIdByName = {}; procRows.forEach((p) => { procIdByName[norm(p.name)] = p.id; });
   const assetRows = (input.apps || []).filter((a) => a && a.name).map((a, i) => {
-    const dtoks = String(a.data || '').toUpperCase().split(/[^A-Z]+/).filter((t) => t.length > 1);
-    let linked = procRows.filter((p) => dtoks.some((t) => p._dataTokens.includes(t))).map((p) => p.id);
+    // Explicit process→app mapping from onboarding wins (the user drew the chain);
+    // fall back to the shared-data-class heuristic, then to the most critical process.
+    let linked = (Array.isArray(a.processes) ? a.processes : [])
+      .map((n) => procIdByName[norm(n)]).filter(Boolean);
+    if (!linked.length) {
+      const dtoks = String(a.data || '').toUpperCase().split(/[^A-Z]+/).filter((t) => t.length > 1);
+      linked = procRows.filter((p) => dtoks.some((t) => p._dataTokens.includes(t))).map((p) => p.id);
+    }
     if (!linked.length && procRows.length) {
       // fall back to the most critical process
       const rank = { Critical: 0, High: 1, Medium: 2, Low: 3 };
       linked = [procRows.slice().sort((x, y) => rank[x.criticality] - rank[y.criticality])[0].id];
     }
+    linked = Array.from(new Set(linked));
     return {
       id: `${orgId}_A${i + 1}`, name: String(a.name).trim(), type: typeFromHost(a.host),
       organizationId: orgId, dataClassification: dataClasses(a.data), exposure: expoFromHost(a.host),

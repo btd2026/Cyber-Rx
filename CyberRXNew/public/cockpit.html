@@ -80,6 +80,17 @@
   .dstatus{display:none;margin-top:14px;padding:13px 15px;border-radius:10px;background:var(--good-soft);border:1px solid rgba(12,163,12,.4);font-size:13px}.dstatus.show{display:block}
   .dstatus .st-h{font-weight:700;color:var(--good);display:flex;align-items:center;gap:8px}.dstatus .st-b{color:var(--ink-2);font-size:12.5px;margin-top:6px}
   .track{display:flex;gap:6px;margin-top:10px}.track .tstep{flex:1;height:5px;border-radius:3px;background:#2a2a28}.track .tstep.done{background:var(--good)}
+  /* crown-jewel determination chain */
+  .chain{display:flex;flex-direction:column;gap:14px}
+  .chain-card{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:16px 18px}
+  .chain-flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:0}
+  .chain-step{flex:1;min-width:150px;padding:0 14px;border-left:2px solid var(--line)}.chain-step:first-child{border-left:none;padding-left:0}
+  .chain-step .cs-k{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .chain-step .cs-v{font-size:13px;font-weight:600;line-height:1.5}.chain-step .cs-v .sub{display:block;color:var(--muted);font-weight:500;font-size:11.5px}
+  .cj-badge{display:inline-block;font-size:10px;font-weight:700;color:var(--crit);background:var(--crit-soft);border-radius:99px;padding:2px 8px;margin-left:6px}
+  .ctag{display:inline-block;font-size:11.5px;font-weight:600;color:var(--ink-2);background:var(--plane);border:1px solid var(--line);border-radius:7px;padding:3px 8px;margin:0 5px 5px 0}
+  .rtag{color:var(--serious)}
+  .cj-why{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}.cj-why b{color:var(--ink-2)}
   .qoq{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;margin-bottom:16px}
   .qtbl{width:100%;border-collapse:collapse;font-size:12.5px}.qtbl th{text-align:left;color:var(--muted);font-weight:600;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;padding:0 8px 9px 0;border-bottom:1px solid var(--line)}
   .qtbl td{padding:10px 8px 10px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}.qtbl tr:last-child td{border:none;font-weight:700}.qtbl .up{color:var(--good)}
@@ -227,7 +238,7 @@ function render(seat){
   h+='<div class="spine"><span class="lk">⛓ One source of truth</span><span class="num"><b id="lvSpineExpo">$68M</b> <span>expected annual loss ·</span> <b id="lvSpineTail">$180M</b> <span>tail</span></span><span class="arrow">the same number every seat sees — in the <b>'+SEAT_LABEL[seat]+'</b> lens ↓</span></div></div>';
   h+=s.body();
   document.getElementById('app').innerHTML=h;
-  wireChoose();renderInitiatives();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();applyLive();window.scrollTo({top:0});
 }
 </script>
 <script src="cockpit-seats.js"></script>
@@ -361,7 +372,64 @@ function applyLive(){if(!LIVE)return;var e=LIVE.economics||{},r=e.ratios||{},ap=
     if(rs.tech_debt&&rs.tech_debt.exposure)setTxt('lvTechDebt',usd(rs.tech_debt.exposure));
   }}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
+
+/* ---- crown-jewel determination chain: process → application → risk → control ----
+   The differentiator. Built from the org's real /graph (process→asset→risk edges,
+   crown-jewel scoring from /summary). Falls back to an illustrative example so the
+   method is always visible; the section header states which is showing. */
+var GRAPH=null;
+var ILLU_CHAIN=[
+  {asset:'Claims &amp; payments database',tier:'Tier 1',score:78,procs:['Claims &amp; payments processing'],risks:[{t:'Ransomware → payments halt',x:'$34M'}],ctrls:['Privileged access (PAM)','Immutable backups','Network segmentation'],why:'Holds PHI + cardholder data · the single application a critical revenue process depends on (single point of failure) · internet-reachable'},
+  {asset:'Member portal &amp; servicing',tier:'Tier 2',score:75,procs:['Member portal &amp; servicing'],risks:[{t:'Account takeover / data breach',x:'$18M'}],ctrls:['Multi-factor auth','Web application firewall','Endpoint detection'],why:'Customer PII at scale · internet-facing · high transaction volume'}
+];
+function chainFromGraph(){
+  if(!GRAPH||!GRAPH.nodes||!GRAPH.nodes.length)return null;
+  var byId={};GRAPH.nodes.forEach(function(n){byId[n.id]=n;});
+  var procOf={},riskOf={},ctrlOf={};
+  (GRAPH.edges||[]).forEach(function(e){
+    if(e.type==='supports'){(procOf[e.target]=procOf[e.target]||[]).push(byId[e.source]);}
+    else if(e.type==='threatens'){(riskOf[e.target]=riskOf[e.target]||[]).push(byId[e.source]);}
+    else if(e.type==='mitigates'||e.type==='applies_to'){(ctrlOf[e.target]=ctrlOf[e.target]||[]).push(byId[e.source]);}
+  });
+  var whyByName={};if(LIVE&&LIVE.crown_jewels)LIVE.crown_jewels.forEach(function(c){whyByName[c.name]=c;});
+  var xByAsset={};if(LIVE&&LIVE.material_exposure_items)LIVE.material_exposure_items.forEach(function(i){if(i.asset_id)xByAsset[i.asset_id]=usd(i.exposure_usd);});
+  var assets=GRAPH.nodes.filter(function(n){return n.type==='asset';});
+  assets.sort(function(a,b){var ta=(a.attrs&&a.attrs.crown_jewel_tier&&a.attrs.crown_jewel_tier!=='none')?0:1,tb=(b.attrs&&b.attrs.crown_jewel_tier&&b.attrs.crown_jewel_tier!=='none')?0:1;if(ta!==tb)return ta-tb;return ((b.attrs&&b.attrs.score)||0)-((a.attrs&&a.attrs.score)||0);});
+  return assets.slice(0,6).map(function(a){
+    var cj=whyByName[a.label]||{};var aid=a.id.replace(/^asset:/,'');
+    return {
+      asset:a.label,
+      tier:(a.attrs&&a.attrs.crown_jewel_tier&&a.attrs.crown_jewel_tier!=='none')?('Tier '+a.attrs.crown_jewel_tier):null,
+      score:cj.score||(a.attrs&&a.attrs.score!=null?Math.round(a.attrs.score*100):null),
+      procs:(procOf[a.id]||[]).map(function(n){return n?n.label:'';}).filter(Boolean),
+      risks:(riskOf[a.id]||[]).map(function(n){return {t:n?n.label:'',x:xByAsset[aid]||''};}),
+      ctrls:(ctrlOf[a.id]||[]).map(function(n){return n?n.label:'';}).filter(Boolean),
+      why:cj.rationale||''
+    };
+  });
+}
+function chainCard(c){
+  var procs=(c.procs&&c.procs.length)?c.procs.map(function(p){return '<div>'+p+'</div>';}).join(''):'<span class="sub">no linked process</span>';
+  var risks=(c.risks&&c.risks.length)?c.risks.map(function(r){return '<div class="rtag">'+r.t+(r.x?(' <b>'+r.x+'</b>'):'')+'</div>';}).join(''):'<span class="sub">no open risk mapped</span>';
+  var ctrls=(c.ctrls&&c.ctrls.length)?c.ctrls.map(function(x){return '<span class="ctag">'+x+'</span>';}).join(''):'<span class="sub">controls determined at analysis</span>';
+  var badge=c.tier?('<span class="cj-badge">Crown jewel · '+c.tier+(c.score?(' · '+c.score):'')+'</span>'):'';
+  return '<div class="chain-card"><div class="chain-flow">'+
+    '<div class="chain-step"><div class="cs-k">① Business process</div><div class="cs-v">'+procs+'</div></div>'+
+    '<div class="chain-step"><div class="cs-k">② Application that runs it</div><div class="cs-v">'+c.asset+badge+'</div></div>'+
+    '<div class="chain-step"><div class="cs-k">③ Risk on the application</div><div class="cs-v">'+risks+'</div></div>'+
+    '<div class="chain-step"><div class="cs-k">④ Controls on the risk</div><div class="cs-v">'+ctrls+'</div></div>'+
+    '</div>'+(c.why?('<div class="cj-why"><b>Why it’s a crown jewel:</b> '+c.why+'</div>'):'')+'</div>';
+}
+function renderChain(){
+  var host=document.getElementById('cjchain');if(!host)return;
+  var live=chainFromGraph();var chain=(live&&live.length)?live:ILLU_CHAIN;
+  var note=(live&&live.length)
+    ? '<div class="cn" style="margin-bottom:12px">● <b style="color:var(--good)">Live</b> — drawn from the process→application links you mapped at onboarding, the risks on each application, and the crown-jewel scoring engine.</div>'
+    : '<div class="cn" style="margin-bottom:12px">◐ <b style="color:var(--warn)">Illustrative</b> — an example of the chain. Map your applications to their processes at onboarding to see your own.</div>';
+  host.innerHTML=note+'<div class="chain">'+chain.map(chainCard).join('')+'</div>';
+}
 
 function selectSeat(seat){document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===seat);});render(seat);if(!VOICE_MUTED)speakSeat(seat);}
 document.querySelectorAll('.seat').forEach(function(b){b.addEventListener('click',function(){selectSeat(b.dataset.seat);});});
