@@ -99,6 +99,9 @@ router.post('/ingest', optionalJWT, async (req, res) => {
       if (vendor || eol != null || recovery != null) resilience.assets[String(a.name).trim()] = { vendor, eol, recovery: Number.isFinite(recovery) ? recovery : null };
     });
 
+    // Optional in-flight cyber projects/initiatives imported at onboarding.
+    const initiatives = Array.isArray(b.initiatives) ? b.initiatives.filter((i) => i && (i.name || i.title)) : [];
+
     // Ensure the org row exists so the FK on business_processes/assets is satisfied.
     // JSONB-merge economics into setup_json so re-ingest overlays without clobbering.
     step = 'upsert_org';
@@ -107,7 +110,7 @@ router.post('/ingest', optionalJWT, async (req, res) => {
        VALUES ($1,$2,$3,$4::jsonb,NOW())
        ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name,
          setup_json = COALESCE(orgs.setup_json,'{}'::jsonb) || EXCLUDED.setup_json`,
-      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics, resilience })]);
+      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics, resilience, initiatives })]);
 
     // Idempotent replace: clear the org's prior inventory, then insert the mapped rows.
     step = 'clear_inventory';

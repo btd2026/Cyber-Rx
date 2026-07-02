@@ -255,6 +255,21 @@
     <div class="result" id="resRisk"></div>
   </div>
 
+  <!-- 6b · Cyber projects & initiatives -->
+  <div class="sec">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Current cyber projects &amp; initiatives</div><div class="sd">Your in-flight cyber spend — each with its cost and expected return. The CISO and CFO manage these alongside new decisions in the cockpit. Upload a list, or pull them from your ticketing system.</div></div><div class="badge" id="binit">optional</div></div>
+    <div class="srcchoice"><div class="srcopt sel" data-choice="init" data-mode="upload"><div class="so-h">⤓ Upload a file</div><div class="so-d">CSV or TSV</div></div><div class="srcopt" data-choice="init" data-mode="connect"><div class="so-h">⚡ Pull from ticketing</div><div class="so-d">Jira / ServiceNow — live</div></div></div>
+    <div id="initUpload">
+      <div class="drop" id="dropInit"><div class="ic">⤓</div><div class="t">Upload your cyber project list (CSV or TSV)</div><div class="s">click to browse or drop a file</div><input type="file" id="fileInit" accept=".csv,.tsv,.txt" style="display:none"></div>
+      <div class="tmpl">columns: <b>name</b>, owner, cost, roi, status &nbsp;·&nbsp; e.g. &nbsp;Privileged access rollout, CISO, $1.4M, 37×, in progress</div>
+    </div>
+    <div id="initConnect" style="display:none">
+      <div class="conn-row" style="grid-template-columns:1fr auto"><div class="field"><label>Ticketing system</label><input id="initSys" value="Selected in step 7 (Jira / ServiceNow)" disabled></div><button class="conn-go" id="pullInit" type="button">Pull cyber projects</button></div>
+      <div class="conn-msg" id="initConnMsg"></div>
+    </div>
+    <div class="result" id="resInit"></div>
+  </div>
+
   <!-- 7 · Connect tools -->
   <div class="sec">
     <div class="sh"><div class="sn">7</div><div><div class="st">Connect your tools</div><div class="sd">Most of your evidence is pulled live from here. Connect each system you run and CyberRx streams the data that answers your executives’ questions — the more you connect, the more credible every answer.</div></div><div class="badge" id="b7">optional</div></div>
@@ -327,6 +342,27 @@
     RISK=p.rows.map(function(c){return {title:get(c,tc)||c[0],severity:get(c,sc)||'High',asset:get(c,ac)||'',exposure:get(c,ec)||'',status:get(c,stc)||'open'};}).filter(function(x){return x.title;});
     showRows(document.getElementById('resRisk'),RISK,function(x){return '<div class="xrow"><span class="nm">'+x.title+'</span><span class="mt">'+(x.asset||'')+(x.exposure?(' · '+x.exposure):'')+' · '+(x.severity||'')+'</span></div>';});
     var b=document.getElementById('b6');b.dataset.n=RISK.length;badgeDone('b6');updateSummary();});});
+  // ---- cyber projects / initiatives (upload or pull from ticketing) ----
+  var INIT=[];
+  function storeInit(){try{localStorage.setItem('cyberrx_initiatives',JSON.stringify(INIT));}catch(_){}}
+  wireDrop('dropInit','fileInit',function(file){readFile(file,function(p){var h=p.headers;
+    var nc=findCol(h,['name','project','initiative','title']),oc=findCol(h,['owner','lead','sponsor']),cc=findCol(h,['cost','budget','spend','amount']),rc=findCol(h,['roi','return','multiple']),stc=findCol(h,['status','state','stage']);
+    INIT=p.rows.map(function(c){return {name:get(c,nc)||c[0],owner:get(c,oc)||'',cost:get(c,cc)||'',roi:get(c,rc)||'',status:get(c,stc)||'in progress',source:'imported'};}).filter(function(x){return x.name;});
+    showRows(document.getElementById('resInit'),INIT,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.owner||'')+(x.cost?(' · '+x.cost):'')+(x.roi?(' · '+x.roi):'')+' · '+(x.status||'')+'</span></div>';});
+    storeInit();var b=document.getElementById('binit');b.textContent='✓ '+INIT.length+' initiatives';b.classList.add('done');});});
+  var pullBtn=document.getElementById('pullInit');
+  if(pullBtn)pullBtn.addEventListener('click',function(){
+    var msg=document.getElementById('initConnMsg'),org=v('orgName'),o=org?('org_'+slug(org)):'';
+    if(!o){msg.textContent='Enter your organization name first.';msg.style.color='var(--warn)';return;}
+    msg.textContent='Pulling from your ticketing system…';msg.style.color='var(--muted)';
+    fetch(apiBase()+'/api/itsm/projects?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){
+      if(d&&d.projects&&d.projects.length){INIT=d.projects.map(function(pj){return {name:pj.name,owner:pj.owner||'',cost:'',roi:'',status:pj.status||'open',ticket:pj.ticket||'',url:pj.url||'',system:pj.system||d.source||'',source:'ticketing'};});storeInit();
+        showRows(document.getElementById('resInit'),INIT,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.ticket||'')+' · '+(x.status||'')+'</span></div>';});
+        msg.innerHTML='✓ Pulled <b>'+INIT.length+'</b> cyber projects from '+(d.source||'your ticketing system')+'.';msg.style.color='var(--good)';var b=document.getElementById('binit');b.textContent='✓ '+INIT.length+' initiatives';b.classList.add('done');}
+      else if(d&&d.connected===false){msg.innerHTML='Connect '+(d.source||'a ticketing system')+' in step 7 first, then pull.';msg.style.color='var(--warn)';}
+      else{msg.textContent='No cyber-labeled projects found (or system unreachable). You can upload a list instead.';msg.style.color='var(--warn)';}
+    }).catch(function(){msg.textContent='Could not reach your ticketing system. Upload a list instead.';msg.style.color='var(--warn)';});
+  });
 
   // ---- crown-jewel chain: process → application → crown jewels ----
   // A visual, editable map: each application is linked to the process(es) it
@@ -499,7 +535,8 @@
       insurance:{limit:mval('insLimit'),premium:mval('insPrem'),renewal:v('insRenew')},
       processes:PROC.map(function(p){return {name:p.name,data:p.data,rev:p.revenue,revenue:p.revenue,rto:p.rto,criticality:p.criticality};}),
       apps:APP.map(function(a){return {name:a.name,host:a.host,data:a.data,vendor:a.vendor,eol:a.eol,recovery:a.recovery,processes:Array.isArray(a.processes)?a.processes:[]};}),
-      risks:RISK.map(function(r){return {title:r.title,severity:r.severity,asset:r.asset,status:r.status,financial_exposure:r.exposure};})
+      risks:RISK.map(function(r){return {title:r.title,severity:r.severity,asset:r.asset,status:r.status,financial_exposure:r.exposure};}),
+      initiatives:INIT
     };
     btn.disabled=true;msg.textContent='Building your cockpit…';msg.style.color='var(--muted)';
     try{

@@ -199,6 +199,33 @@ router.get('/status', optionalJWT, demoOrg, async (req, res) => {
   }
 });
 
+// Pull the org's existing cyber projects/initiatives from the connected ticketing
+// system (Jira issues labeled security/cyber, or ServiceNow Cybersecurity changes)
+// so the CISO/CFO can manage them alongside cockpit decisions. Best-effort.
+router.get('/projects', optionalJWT, demoOrg, async (req, res) => {
+  const orgId = req.orgId; if (!orgId) return res.status(400).json({ error: 'Organization required.' });
+  try {
+    const sys = await resolveSelectedSystem(orgId);
+    if (!sys || !sys.code) return res.json({ projects: [], source: null, connected: false });
+    const creds = await vault.get(orgId, sys.code).catch(() => null);
+    if (!creds) return res.json({ projects: [], source: sys.label, connected: false });
+    let projects = [];
+    if (sys.code === 'jira') {
+      const jql = encodeURIComponent('labels in (cyber, security, cyberrx) ORDER BY created DESC');
+      const r = await fetch(`https://${creds.instance}.atlassian.net/rest/api/3/search?jql=${jql}&maxResults=50&fields=summary,status,assignee`,
+        { headers: { Authorization: 'Basic ' + Buffer.from(`${creds.email}:${creds.token}`).toString('base64') } });
+      const d = await r.json();
+      projects = (d.issues || []).map((is) => ({ name: is.fields.summary, ticket: is.key, status: is.fields.status && is.fields.status.name, owner: is.fields.assignee && is.fields.assignee.displayName, url: `https://${creds.instance}.atlassian.net/browse/${is.key}`, system: 'Jira' }));
+    } else if (sys.code === 'snow') {
+      const r = await fetch(`https://${creds.instance}.service-now.com/api/now/table/change_request?sysparm_query=category=Cybersecurity&sysparm_limit=50&sysparm_fields=number,short_description,state,assigned_to`,
+        { headers: { Authorization: 'Basic ' + Buffer.from(`${creds.user}:${creds.password}`).toString('base64') } });
+      const d = await r.json();
+      projects = (d.result || []).map((cr) => ({ name: cr.short_description, ticket: cr.number, status: cr.state, owner: cr.assigned_to && cr.assigned_to.display_value, system: 'ServiceNow' }));
+    }
+    res.json({ projects, source: sys.label, connected: true });
+  } catch (e) { logger.warn('itsm projects failed', { error: e.message }); res.json({ projects: [], error: 'pull failed' }); }
+});
+
 // Legacy direct creation endpoint (kept).
 router.post('/:system/ticket', authenticateJWT, async (req, res) => {
   const orgId = req.orgId || 'demo';

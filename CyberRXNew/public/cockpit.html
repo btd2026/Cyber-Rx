@@ -357,27 +357,40 @@ function allDecisions(){
   try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf(pre)===0){var d=null;try{d=JSON.parse(localStorage.getItem(k));}catch(_){}if(d&&d.title)out.push(d);}}}catch(_){}
   out.sort(function(a,b){return (b.ts||0)-(a.ts||0);});return out;
 }
+/* Cyber projects imported at onboarding (uploaded or pulled from Jira/SNOW). */
+function importedInits(){
+  try{var a=JSON.parse(localStorage.getItem('cyberrx_initiatives')||'[]');return Array.isArray(a)?a:[];}catch(_){return [];}
+}
 function renderInitiatives(){
   var host=document.getElementById('initiatives-panel');if(!host)return;
-  var list=allDecisions();
-  if(!list.length){host.innerHTML='<div class="card"><div class="cn">No cyber initiatives yet. Each decision an executive commits in their seat becomes a funded project here — with its cost, ROI, owner and ticket — so the CISO and CFO manage new cyber spend in one place.</div></div>';return;}
-  var rows=list.map(function(d){
+  var list=allDecisions();var imp=importedInits();
+  if(!list.length&&!imp.length){host.innerHTML='<div class="card"><div class="cn">No cyber initiatives yet. Import your in-flight projects at onboarding (upload or pull from Jira/ServiceNow), and every decision an executive commits in their seat is added here — cost, ROI, owner and ticket — so the CISO and CFO manage new cyber spend in one place.</div></div>';return;}
+  var decRows=list.map(function(d){
     var committed=(Date.now()-(d.ts||0))>=EDIT_WINDOW_MS;
     var cost=extractCost(d.osum),roi=extractROI(d.osum);
     var tk=d.ticket?(d.url?('<a href="'+d.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+d.ticket+'</a>'):('<b style="color:#fff">'+d.ticket+'</b>'))+(d.system?(' · '+d.system):''):'<span style="color:var(--muted)">not pushed</span>';
     var st;
     if(d.ticket){var sp=statusStep(d.status);st='<span class="tag '+(sp.n>=4?'good':'')+'">'+(d.status?sp.t:'Open')+'</span>';}
     else st=committed?'<span class="tag crit">Committed</span>':'<span class="tag warn">In 24h review</span>';
-    return '<tr><td style="max-width:280px">'+d.title+'<div style="color:var(--muted);font-size:11.5px;margin-top:2px">Option '+d.opt+'</div></td>'+
+    return '<tr><td style="max-width:280px">'+d.title+'<div style="color:var(--muted);font-size:11.5px;margin-top:2px">Cockpit decision · Option '+d.opt+'</div></td>'+
       '<td>'+(d.by||'—')+'<div style="color:var(--muted);font-size:11.5px">'+(SEAT_LABEL[d.seat]||'')+'</div></td>'+
       '<td style="font-weight:600">'+cost+'</td>'+
       '<td style="font-weight:700;color:'+(roi==='—'?'var(--muted)':'var(--good)')+'">'+roi+'</td>'+
       '<td>'+st+'</td>'+
       '<td>'+tk+'</td></tr>';
   }).join('');
-  var totalRoi=list.filter(function(d){return extractROI(d.osum)!=='—';}).length;
-  host.innerHTML='<div class="card"><table class="tbl"><thead><tr><th>Initiative</th><th>Owner</th><th>Cost</th><th>Return</th><th>Status</th><th>Project</th></tr></thead><tbody>'+rows+'</tbody></table>'+
-    '<div class="cn" style="margin-top:10px">'+list.length+' active '+(list.length===1?'initiative':'initiatives')+(totalRoi?(' · '+totalRoi+' with a modeled return'):'')+' · committed items are locked and tracked to completion in your ticketing system.</div></div>';
+  var impRows=imp.map(function(p){
+    var roi=String(p.roi||'').trim()||'—',cost=String(p.cost||'').trim()||'—';
+    var tk=p.ticket?(p.url?('<a href="'+p.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+p.ticket+'</a>'):('<b style="color:#fff">'+p.ticket+'</b>'))+(p.system?(' · '+p.system):''):'<span style="color:var(--muted)">—</span>';
+    var sp=statusStep(p.status);var st='<span class="tag '+(sp.n>=4?'good':'')+'">'+(p.status?(p.ticket?sp.t:p.status):'—')+'</span>';
+    return '<tr><td style="max-width:280px">'+(p.name||'—')+'<div style="color:var(--muted);font-size:11.5px;margin-top:2px">In-flight · '+(p.source==='ticketing'?'from ticketing':'imported')+'</div></td>'+
+      '<td>'+(p.owner||'—')+'</td><td style="font-weight:600">'+cost+'</td>'+
+      '<td style="font-weight:700;color:'+(roi==='—'?'var(--muted)':'var(--good)')+'">'+roi+'</td>'+
+      '<td>'+st+'</td><td>'+tk+'</td></tr>';
+  }).join('');
+  var total=list.length+imp.length;
+  host.innerHTML='<div class="card"><table class="tbl"><thead><tr><th>Initiative</th><th>Owner</th><th>Cost</th><th>Return</th><th>Status</th><th>Project</th></tr></thead><tbody>'+decRows+impRows+'</tbody></table>'+
+    '<div class="cn" style="margin-top:10px">'+total+' active '+(total===1?'initiative':'initiatives')+(imp.length?(' · '+imp.length+' in-flight from onboarding'):'')+(list.length?(' · '+list.length+' from cockpit decisions'):'')+' · committed items are locked and tracked to completion in your ticketing system.</div></div>';
 }
 
 /* ---- live economics ---- */
