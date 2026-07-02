@@ -160,9 +160,44 @@ router.post('/ingest', optionalJWT, async (req, res) => {
 router.get('/summary', optionalJWT, async (req, res) => {
   const orgId = orgOf(req);
   if (!orgId) return res.status(400).json({ error: 'org_id is required' });
-  try { const out = await CrownJewelEngine.run(orgId); res.json({ org_id: orgId, generated_at: out.generated_at, empty: !!out.empty, ...out.summary }); }
-  catch (e) { res.status(500).json({ error: e.message }); }
+  try {
+    const out = await CrownJewelEngine.run(orgId);
+    // Record a real posture snapshot (expected loss, tail, posture, crown jewels)
+    // so the board's quarter-over-quarter trend is genuine history — not authored.
+    // Throttled to one point per ~day; capped to the last 12.
+    if (!out.empty && out.summary && out.summary.economics) {
+      out.summary.trend = await recordPostureSnapshot(orgId, out.summary);
+    }
+    res.json({ org_id: orgId, generated_at: out.generated_at, empty: !!out.empty, ...out.summary });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
+
+// Append a daily posture snapshot to setup_json.posture_history and return the
+// series. The trend is built from the org's own computed positions over time.
+async function recordPostureSnapshot(orgId, summary) {
+  try {
+    const row = (await db.query('SELECT setup_json FROM orgs WHERE id=$1', [orgId]))[0];
+    const sj = row && (typeof row.setup_json === 'string' ? JSON.parse(row.setup_json) : row.setup_json) || {};
+    const hist = Array.isArray(sj.posture_history) ? sj.posture_history.slice() : [];
+    const ale = Number(summary.economics && summary.economics.ale) || 0;
+    if (ale <= 0) return hist;
+    const now = Date.now();
+    const last = hist[hist.length - 1];
+    const DAY = 86400000;
+    if (!last || (now - Date.parse(last.date)) >= DAY) {
+      hist.push({
+        date: new Date(now).toISOString(),
+        ale,
+        tail: Number(summary.economics.tail) || ale,
+        crown_jewels: (summary.counts && summary.counts.crown_jewels) || 0,
+      });
+      while (hist.length > 12) hist.shift();
+      await db.query("UPDATE orgs SET setup_json = COALESCE(setup_json,'{}'::jsonb) || $2::jsonb WHERE id=$1",
+        [orgId, JSON.stringify({ posture_history: hist })]);
+    }
+    return hist;
+  } catch (_) { return []; }
+}
 
 // Full process -> asset -> risk -> control GraphModel for the visualization.
 router.get('/graph', optionalJWT, async (req, res) => {
