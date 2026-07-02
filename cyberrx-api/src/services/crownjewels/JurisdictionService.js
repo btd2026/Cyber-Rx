@@ -9,11 +9,21 @@
 
 const RULES = require('../../config/jurisdictions');
 
-const norm = (s) => String(s || '').toLowerCase();
-
+const norm = (s) => String(s || '').toLowerCase().trim();
+const esc = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+// Whole-word containment — avoids substring false positives like 'us' matching
+// 'aUStralia' or 'RUSsia'. A match requires the needle to appear on token
+// boundaries within the haystack (or be exactly equal).
+function wordHit(hay, needle) {
+  if (!hay || !needle) return false;
+  if (hay === needle) return true;
+  return new RegExp('(^|[^a-z0-9])' + esc(needle) + '([^a-z0-9]|$)').test(hay);
+}
 function regionMatches(rule, regions) {
   const rs = regions.map(norm);
-  return rule.matchers.some((m) => rs.some((r) => r.includes(m) || m.includes(r)));
+  // A rule matches a region when the region and matcher are equal, or either
+  // contains the other as a whole word (e.g. region "north america" ⊇ matcher).
+  return rule.matchers.some((m) => rs.some((r) => r === m || wordHit(r, m) || wordHit(m, r)));
 }
 function dataMatches(rule, dataClasses) {
   if (rule.appliesTo.includes('*')) return true;

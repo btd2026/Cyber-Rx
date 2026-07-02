@@ -41,6 +41,8 @@ var SEATS = {
        {c:'g',ic:'↓',t:'Exposure fell $14M this quarter',s:'Privileged-access rollout reached 88%; phishing-failure rate 9% → 3%.'},
        {c:'w',ic:'✦',t:'New risk: AI decisioning on customer data (+$8M, rising)',s:'Now a board decision — govern in-house or transfer to the insurer.'},
        {c:'b',ic:'◑',t:'More resilient than 72% of peers at your revenue scale',ev:'peer',s:'Closing the gap to the top quartile ≈ $22M of avoidable exposure.'}]))
+   +sec('06','Can we prove we exercised proper oversight?','The board’s personal-liability question. Every funded decision is logged with the deciding leader, the date, and its ticket — your documented D&amp;O / SEC-oversight defense.',
+     '<div id="ceoOversight">'+kvcard('Oversight &amp; decision record',[{k:'Funded decisions logged',v:'from your decisions',ev:'oversight'},{k:'Each carries',v:'leader · date · ticket',ev:'oversight'},{k:'Board-appetite reviewed',v:'this quarter',cls:'good'},{k:'Defensibility',v:'evidenced trail',cls:'good',ev:'oversight'}])+'</div>')
   );}
  },
 
@@ -99,6 +101,10 @@ var SEATS = {
        {rec:true,tag:'A · Standing disclosure committee',on:'Option A · Pre-authorize',osum:'committee + pre-drafted filings',pros:['Meets the 4-business-day SEC and 72-hour GDPR clocks','Defensible, documented materiality determination','Protects directors under D&amp;O'],cons:['Requires setup effort this quarter (charter + templates)']},
        {tag:'B · Ad-hoc at incident time',on:'Option B · Ad-hoc',osum:'no upfront work',pros:['No setup cost today'],cons:['High risk of missing the 4-day / 72-hour clock','Weaker legal defense on the materiality call','Filings drafted under time pressure']},
        {tag:'C · External breach counsel on retainer',on:'Option C · Retainer',osum:'counsel on call',pros:['Specialist breach counsel on demand','Privilege established before an incident'],cons:['Annual retainer cost','Slower first hours vs. a standing internal committee']}]}]))
+   +sec('04','Is an incident material — and are we covered by contract?','The two calls the General Counsel owns beyond disclosure: the materiality determination (who signs, by when, on the record) and the contract/DPA obligations to customers.',
+     '<div class="cols">'
+     +kvcard('Materiality determination',[{k:'Threshold (reportable at)',v:'$53M',ev:'materiality'},{k:'Sign-off',v:'CFO · GC · CISO · CIO'},{k:'SEC clock once material',v:'4 business days',ev:'clock'},{k:'Evidenced &amp; logged',v:'Yes — D&amp;O defense',cls:'good',ev:'oversight'}])
+     +kvcard('Customer contract / DPA obligations',[{k:'Contracts with notice clauses',v:'—',ev:'contracts'},{k:'Tightest customer deadline',v:'often 24–72h',ev:'contracts'},{k:'Modeled liability',v:'$22M',cls:'warn',ev:'liability'},{k:'Status',v:'Add DPAs to quantify',cls:'warn'}])+'</div>')
   );}
  },
 
@@ -140,8 +146,8 @@ var SEATS = {
       {k:'Worst-case recovery',v:'<span id="lvRecovery">3.1 days</span>',cls:'warn',ev:'recovery',note:'target <6h (Decision 2)'},
       {k:'Vendor concentration',v:'<span id="lvVendor">1 vendor, 3 systems</span>',cls:'warn',ev:'vendor',note:'a single point of failure'},
       {k:'Tech-debt exposure',v:'<span id="lvTechDebt">$12M</span>',cls:'warn',ev:'techdebt',note:'end-of-life systems on revenue paths'}]))
-   +sec('02','Which systems carry the business, and how fast do they recover?','Ranked by value at risk — recovery investment follows revenue.',
-     bars([{l:'Payments ($2.3M/hr)',v:'74 hrs',pct:100,cls:'hot',ev:'recovery'},{l:'Member portal ($0.6M/hr)',v:'40 hrs',pct:54},{l:'Settlement ($0.9M/hr)',v:'28 hrs',pct:38},{l:'Corporate IT (<$40K/hr)',v:'8 hrs',pct:11}]))
+   +sec('02','Which systems carry the business, and how fast do they recover?','These are your <b>crown-jewel systems</b> — ranked by what an hour of downtime costs. Recovery investment follows revenue.',
+     '<div id="cioSystems">'+bars([{l:'Payments ($2.3M/hr)',v:'74 hrs',pct:100,cls:'hot',ev:'recovery'},{l:'Member portal ($0.6M/hr)',v:'40 hrs',pct:54},{l:'Settlement ($0.9M/hr)',v:'28 hrs',pct:38},{l:'Corporate IT (<$40K/hr)',v:'8 hrs',pct:11}])+'</div>')
    +sec('03','What decision needs the CIO?','How much recovery resilience we fund. Choosing one records to your ticketing system.',
      decisions([{n:1,q:'How much recovery resilience do we fund?',sit:'Our slowest revenue system recovers in ~3.1 days, driving most of the worst-case tail. Three levels:',opts:[
        {rec:true,tag:'A · Full modernization',on:'Option A · Full',osum:'$3.2M · <6h recovery',pros:['Cuts worst case by ~$40M','Meets regulatory recovery expectations','Removes the single-vendor risk (multi-region)'],cons:['$3.2M capital','One-quarter program']},
@@ -265,6 +271,16 @@ var EV = {
     ['T','Risk removed by controls','$210M']],
   sources:['Control effectiveness model (inherent → residual)','Risk register','Live control telemetry from connected tools (identity, EDR, backup, email)'],
   conf:'Effectiveness is measured as dollars of expected loss removed — not a maturity/CMMI score. Each control’s reduction is the modeled delta between inherent and residual exposure, cross-checked against live coverage from the connected tool.'},
+ oversight:{claim:'Oversight & decision record (D&O / SEC defense)',result:'evidenced trail',cls:'good',
+  formula:'oversight record  =  every funded decision  →  { deciding leader, option chosen, timestamp, ticket, status }\n(the same decision ledger the CFO and CISO manage — one source of truth)',
+  inputs:[['Decisions logged','from the cockpit decision ledger','Your decisions'],['Attributes per decision','leader · date · option · ticket','Decision + ticketing'],['Board appetite review','recorded each quarter','Governance']],
+  steps:[['1','Each executive decision is recorded by name','decision ledger'],['2','Pushed to ticketing as a tracked project','Jira / ServiceNow'],['T','A documented, timestamped oversight trail','the D&O / SEC-oversight defense']],
+  sources:['Cockpit decision ledger','Connected ticketing system'],conf:'Regulators and plaintiffs test whether the board exercised oversight. This is the contemporaneous, evidenced record of the decisions it made.'},
+ contracts:{claim:'Customer contract / DPA notification obligations',result:'add DPAs to quantify',cls:'warn',
+  formula:'per-contract duty  =  min( notification window across your customer DPAs )\nliability outlook  =  Σ contractual + regulatory exposure on affected data',
+  inputs:[['Contracts with breach-notice clauses','from your DPA register','Upload / legal system'],['Typical customer window','24–72 hours','Contract norms'],['Data under contract','PII / PHI held for customers','Your inventory']],
+  steps:[['1','Collect DPAs with notification clauses','legal register'],['2','Take the tightest customer deadline','min()'],['T','Contractual notification duty','often tighter than regulation']],
+  sources:['Customer DPAs / MSAs','Your data inventory'],conf:'Contractual clocks often run tighter than regulators’. Upload your DPA register to quantify the binding customer deadline and liability.'},
  inaction:{claim:'Cost of inaction (deferred decisions)',result:'+$92M',cls:'warn',
   formula:'cost of inaction  =  Σ exposure removed by decisions that are NOT yet funded',
   inputs:[['Decision 1 (unfunded)','$52M','Decision ledger'],['Decision 2 (unfunded)','$40M','Decision ledger']],

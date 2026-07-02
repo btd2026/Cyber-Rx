@@ -134,9 +134,15 @@ async function run(orgId) {
     const info = ra[a.name] || {};
     const perHr = (a.business_process_ids || []).reduce((s, pid) => s + (procRevPerHr[pid] || 0), 0);
     return { name: a.name, vendor: info.vendor || null, eol: info.eol != null ? info.eol : null,
-      recoveryHours: info.recovery, perHr, exposure: riskExpoByAsset[a.id] || 0 };
+      recoveryHours: info.recovery, perHr, exposure: riskExpoByAsset[a.id] || 0, crown_jewel: !!a.crown_jewel, tier: a.crown_jewel_tier || null };
   });
   const resilience = Resilience.compute({ processes: resilProcesses, assets: resilAssets });
+  // Per-system detail for the CIO seat ("which systems carry the business" — the
+  // crown jewels, ranked by $/hr of downtime). Crown jewels first, then by $/hr.
+  resilience.systems = resilAssets
+    .map((a) => ({ name: a.name, per_hr: a.perHr || 0, recovery_hours: a.recoveryHours != null ? a.recoveryHours : null, vendor: a.vendor, eol: a.eol === true, crown_jewel: a.crown_jewel, tier: a.tier, exposure_usd: a.exposure || 0 }))
+    .sort((x, y) => (y.crown_jewel - x.crown_jewel) || (y.per_hr - x.per_hr) || (y.exposure_usd - x.exposure_usd))
+    .slice(0, 10);
 
   // Per-process exposure — the dollars each business process carries (the CEO's
   // "which business processes carry the risk?"). Derived from the org's inventory.
