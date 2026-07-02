@@ -251,7 +251,7 @@ function render(seat){
   h+='<div class="spine"><span class="lk">⛓ One source of truth</span><span class="num"><b id="lvSpineExpo">$68M</b> <span>expected annual loss ·</span> <b id="lvSpineTail">$180M</b> <span>tail</span></span><span class="arrow">the same number every seat sees — in the <b>'+SEAT_LABEL[seat]+'</b> lens ↓</span></div></div>';
   h+=s.body();
   document.getElementById('app').innerHTML=h;
-  wireChoose();renderInitiatives();renderChain();renderProcBars();renderCioSystems();renderOversight();renderTrend();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();applyLive();window.scrollTo({top:0});
 }
 </script>
 <script src="cockpit-seats.js"></script>
@@ -486,7 +486,7 @@ function applyLive(){if(!LIVE)return;var e=LIVE.economics||{},r=e.ratios||{},ap=
     if(rs.tech_debt&&rs.tech_debt.exposure)setTxt('lvTechDebt',usd(rs.tech_debt.exposure));
   }}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderProcBars();renderCioSystems();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderProcBars();renderCioSystems();renderBoard();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -549,6 +549,57 @@ function renderOversight(){
     {k:'Each carries',v:'leader · date · ticket'},
     {k:'Board appetite reviewed',v:'this quarter',cls:'good'}]);
 }
+/* Board: worst realistic day (named stress scenario) — from /summary stress. */
+function hrsToStr(h){return h==null?'—':(h>=24?(Math.round(h/2.4)/10+' days'):(h+' hrs'));}
+function govRow(label,val,ok){return '<div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:8px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted)">'+label+'</span><span style="font-weight:600;color:'+(ok===true?'var(--good)':ok===false?'var(--crit)':'var(--ink-2)')+'">'+val+'</span></div>';}
+function renderStress(){
+  var host=document.getElementById('ceoStress');if(!host)return;var s=LIVE&&LIVE.stress;if(!s||!s.target)return;
+  host.innerHTML='<div class="ck">Severe-but-plausible scenario</div>'+
+    '<div class="cv" style="font-size:18px;margin-top:8px;line-height:1.35">'+s.scenario+' → <span style="color:var(--crit)">'+s.target+'</span></div>'+
+    '<div style="display:flex;gap:22px;margin-top:12px;flex-wrap:wrap">'+
+    '<div><div class="cv" style="font-size:20px;color:var(--crit)">'+(s.worst_case_usd?usd(s.worst_case_usd):'—')+'</div><div class="cn">worst-case loss</div></div>'+
+    '<div><div class="cv" style="font-size:20px">'+hrsToStr(s.recovery_hours)+'</div><div class="cn">to recover</div></div>'+
+    (s.binding_clock?'<div><div class="cv" style="font-size:20px;color:var(--warn)">'+s.binding_clock+'</div><div class="cn">disclosure clock'+(s.binding_jurisdiction?(' · '+s.binding_jurisdiction):'')+'</div></div>':'')+
+    '</div><div class="cn" style="margin-top:10px">Modeled from your top crown jewel, its largest open risk, worst-case recovery and your binding regulatory deadline.</div>';
+}
+function renderReadiness(){
+  var host=document.getElementById('ceoReadiness');if(!host)return;var g=LIVE&&LIVE.governance;var ir=(g&&g.ir)||null;var rs=LIVE&&LIVE.resilience;
+  if(!ir||!(ir.tested||ir.retainer||ir.ransomwarePolicy||ir.lastTabletop))if(!(rs&&rs.worst_recovery_hours!=null))return;
+  ir=ir||{};
+  var tested=ir.tested||'—',testedOk=/within 12/i.test(tested)?true:(/not tested/i.test(tested)?false:null);
+  var ret=ir.retainer||'—',ranp=ir.ransomwarePolicy||'—';
+  host.innerHTML='<div class="ck">Response &amp; recovery readiness</div><div style="margin-top:8px">'+
+    govRow('IR plan tested',tested,testedOk)+
+    govRow('Last tabletop',ir.lastTabletop?new Date(ir.lastTabletop).toLocaleDateString():'—',ir.lastTabletop?null:false)+
+    govRow('IR / breach-counsel retainer',ret,/yes/i.test(ret)?true:(/no/i.test(ret)?false:null))+
+    govRow('Ransomware-payment policy',ranp,/board-approved/i.test(ranp)?true:(/none/i.test(ranp)?false:null))+
+    govRow('Crown-jewel worst recovery',(rs&&rs.worst_recovery_hours!=null)?hrsToStr(rs.worst_recovery_hours):'—',null)+
+    '</div>';
+}
+function renderThirdParty(){
+  var host=document.getElementById('ceoThirdParty');if(!host)return;
+  var tv=LIVE&&LIVE.resilience&&LIVE.resilience.top_vendor_blast;if(!tv||!tv.vendor){host.innerHTML='';return;}
+  var n=(tv.systems||[]).length;
+  host.innerHTML='<div class="card"><div class="ck">Third-party concentration — a systemic single point of failure</div>'+
+    '<div class="cv" style="font-size:18px;margin-top:8px"><b>'+tv.vendor+'</b> underpins <b>'+n+'</b> revenue system'+(n===1?'':'s')+(tv.per_hr?(' · '+usd(tv.per_hr)+'/hr at risk if it fails'):'')+'</div>'+
+    '<div class="cn" style="margin-top:8px">'+(tv.systems||[]).join(' · ')+'. A single provider failure cascades across these systems — a top board and regulatory (DORA) concern.</div></div>';
+}
+function renderGov(){
+  var host=document.getElementById('ceoGov');if(!host)return;var g=LIVE&&LIVE.governance;
+  if(!g||!(g.committee||g.cadence||g.cisoReportsTo||g.ermIntegrated||g.boardExpertise))return;
+  var items=[
+    {k:'Board committee that owns cyber',v:g.committee||'not set',ok:!!g.committee},
+    {k:'How the board is informed (cadence)',v:g.cadence||'not set',ok:!!g.cadence},
+    {k:'Board member with cyber expertise',v:g.boardExpertise||'not set',ok:/yes/i.test(g.boardExpertise||'')},
+    {k:'Management role (CISO reporting line)',v:g.cisoReportsTo?('reports to '+g.cisoReportsTo):'not set',ok:!!g.cisoReportsTo},
+    {k:'Integrated into enterprise risk (ERM)',v:g.ermIntegrated||'not set',ok:/yes/i.test(g.ermIntegrated||'')}
+  ];
+  var ready=items.filter(function(i){return i.ok;}).length;
+  host.innerHTML='<div class="card"><div class="ck">Board oversight structure · SEC Reg S-K Item 106 readiness <span class="tag '+(ready>=4?'good':'warn')+'" style="font-size:10px;margin-left:6px">'+ready+' / '+items.length+' evidenced</span></div>'+
+    '<div style="margin-top:8px">'+items.map(function(i){return govRow(i.k,i.v,i.ok);}).join('')+'</div>'+
+    '<div class="cn" style="margin-top:8px">These are the exact governance disclosures Item 106(c) requires in your 10-K. Fill any gaps in onboarding to make this filing-ready.</div></div>';
+}
+function renderBoard(){renderStress();renderReadiness();renderThirdParty();renderGov();}
 /* CIO "which systems carry the business" — the crown-jewel systems, ranked by
    $/hr of downtime (from /summary resilience.systems). Illustrative until live. */
 function renderCioSystems(){

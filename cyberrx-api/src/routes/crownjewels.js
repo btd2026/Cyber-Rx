@@ -102,6 +102,18 @@ router.post('/ingest', optionalJWT, async (req, res) => {
     // Optional in-flight cyber projects/initiatives imported at onboarding.
     const initiatives = Array.isArray(b.initiatives) ? b.initiatives.filter((i) => i && (i.name || i.title)) : [];
 
+    // Board governance & incident-readiness (SEC Reg S-K Item 106) — powers the
+    // CEO/Board governance panel. All optional; stored verbatim on the org.
+    const g = b.governance || {};
+    const governance = {
+      committee: g.committee || null, cadence: g.cadence || null, cisoReportsTo: g.cisoReportsTo || null,
+      boardExpertise: g.boardExpertise || null, ermIntegrated: g.ermIntegrated || null,
+      ir: {
+        tested: (g.ir && g.ir.tested) || null, lastTabletop: (g.ir && g.ir.lastTabletop) || null,
+        retainer: (g.ir && g.ir.retainer) || null, ransomwarePolicy: (g.ir && g.ir.ransomwarePolicy) || null,
+      },
+    };
+
     // Ensure the org row exists so the FK on business_processes/assets is satisfied.
     // JSONB-merge economics into setup_json so re-ingest overlays without clobbering.
     step = 'upsert_org';
@@ -110,7 +122,7 @@ router.post('/ingest', optionalJWT, async (req, res) => {
        VALUES ($1,$2,$3,$4::jsonb,NOW())
        ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name,
          setup_json = COALESCE(orgs.setup_json,'{}'::jsonb) || EXCLUDED.setup_json`,
-      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics, resilience, initiatives })]);
+      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics, resilience, initiatives, governance })]);
 
     // Idempotent replace: clear the org's prior inventory, then insert the mapped rows.
     step = 'clear_inventory';
