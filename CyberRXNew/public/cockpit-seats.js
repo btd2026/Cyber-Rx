@@ -168,7 +168,7 @@ var SEATS = {
       {k:'Top exposure driver',v:'$52M',cls:'crit',ev:'proc-claims',note:'privileged path to payments'},
       {k:'Controls effectiveness',v:'$210M removed',ev:'controleff',note:'risk bought down over 3 yrs (not CMMI)'},
       {k:'Coverage from tools',v:'99.4%',ev:'coverage',note:'live signals; gaps named &amp; costed'}]))
-   +sec('02','How we determine your crown jewels — process → application → risk → control','The chain no other tool draws: each revenue process, the applications that run it, the risks on those applications, and the controls on each risk. That chain is what makes an application a crown jewel — and where the dollars come from.',
+   +sec('02','Your crown jewels — and why','We map each business process to the applications that run it, then the risks and controls on each. That chain is what makes an application a crown jewel: the systems below are ranked by criticality — data sensitivity × exposure × the processes that depend on them.',
      '<div id="cjchain"></div>')
    +sec('03','What is driving the $68M — and how good is our coverage?','Each driver carries a funded decision, so the list is a plan, not a backlog.',
      bars([{l:'Privileged path → payments',v:'$52M',pct:100,cls:'hot',ev:'roicfo'},{l:'Recovery not yet proven',v:'$40M',pct:77,cls:'hot',ev:'recovery'},{l:'AI decisioning (new)',v:'$8M',pct:15},{l:'Third-party concentration',v:'$6M',pct:12,ev:'vendor'}])
