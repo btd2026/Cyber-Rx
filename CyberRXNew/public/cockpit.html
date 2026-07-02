@@ -250,28 +250,53 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeEv();})
 function apiBase(){try{return (window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'https://cyber-rx.onrender.com').replace(/\/+$/,'');}catch(_){return 'https://cyber-rx.onrender.com';}}
 function orgId(){try{return window.CYBERRX_ORG_ID||localStorage.getItem('cyberrx_org_id')||'';}catch(_){return '';}}
 function orgName(){try{return localStorage.getItem('cyberrx_org_name')||'';}catch(_){return '';}}
+/* Decisions: named leader, records a PROJECT in the ticketing system, editable
+   for 24h then committed (locked). Persisted per org+seat+decision. */
+var EDIT_WINDOW_MS=24*60*60*1000;
+function seatNames(){try{return JSON.parse(localStorage.getItem('cyberrx_seat_names')||'{}');}catch(_){return{};}}
+function leaderName(){var n=seatNames()[CUR];return n||SEAT_LABEL[CUR]||CUR.toUpperCase();}
+function decKey(dec){return 'cyberrx_dec_'+orgId()+'_'+CUR+'_'+dec;}
+function loadDec(dec){try{return JSON.parse(localStorage.getItem(decKey(dec))||'null');}catch(_){return null;}}
+function saveDec(dec,d){try{localStorage.setItem(decKey(dec),JSON.stringify(d));}catch(_){}}
+function fmtWhen(ts){try{return new Date(ts).toLocaleString();}catch(_){return '';}}
+function renderDecStatus(dec){
+  var s=document.getElementById('dstatus-'+dec);if(!s)return;var d=loadDec(dec);
+  var box=document.querySelector('.decision[data-dec="'+dec+'"]');
+  if(!d){if(box)box.querySelectorAll('.opt').forEach(function(o){o.classList.remove('chosen');o.querySelectorAll('.choose').forEach(function(b){b.disabled=false;});});s.classList.remove('show');return;}
+  var committed=(Date.now()-d.ts)>=EDIT_WINDOW_MS;
+  if(box){box.querySelectorAll('.opt').forEach(function(o){o.classList.remove('chosen');});if(box.querySelector('.choose[data-opt="'+CSS.escape(d.opt)+'"]'))box.querySelector('.choose[data-opt="'+CSS.escape(d.opt)+'"]').closest('.opt').classList.add('chosen');
+    box.querySelectorAll('.choose').forEach(function(b){b.disabled=committed;});}
+  var tk=d.ticket?('<b style="color:#fff">'+d.ticket+'</b>'+(d.system?(' in '+d.system):'')):'queued (connect a ticketing system to sync)';
+  var editLeft=Math.max(0,EDIT_WINDOW_MS-(Date.now()-d.ts));var hrs=Math.floor(editLeft/3.6e6),mins=Math.floor((editLeft%3.6e6)/6e4);
+  s.innerHTML='<div class="st-h">'+(committed?'🔒 Committed':'✓ Recorded')+' · project '+tk+'</div>'+
+    '<div class="st-b">Decision by <b style="color:#fff">'+d.by+'</b> ('+SEAT_LABEL[CUR]+') · Option '+d.opt+' · '+fmtWhen(d.ts)+'</div>'+
+    '<div class="track"><div class="tstep done"></div><div class="tstep done"></div><div class="tstep'+(committed?' done':'')+'"></div><div class="tstep"></div></div>'+
+    (committed
+      ? '<div class="st-b" style="margin-top:7px">🔒 <b style="color:#fff">Committed</b> — the 24-hour change window has closed. Tracked to completion in your ticketing system.</div>'
+      : '<div class="st-b" style="margin-top:7px">Editable for <b style="color:#fff">'+hrs+'h '+mins+'m</b> more — pick another option to change it. After 24h it commits automatically. <button class="wr-btn gh" style="padding:4px 10px;font-size:11px;margin-left:6px" data-undo="'+dec+'">Undo</button></div>');
+  s.classList.add('show');
+  var ub=s.querySelector('[data-undo]');if(ub)ub.onclick=function(){try{localStorage.removeItem(decKey(dec));}catch(_){}renderDecStatus(dec);};
+}
 function wireChoose(){
+  document.querySelectorAll('.decision').forEach(function(box){renderDecStatus(box.dataset.dec);});
   document.querySelectorAll('.choose').forEach(function(btn){
     btn.onclick=function(){
+      if(btn.disabled)return;
       var dec=btn.dataset.dec,opt=btn.dataset.opt,title=btn.dataset.title;
-      var box=btn.closest('.decision');box.querySelectorAll('.opt').forEach(function(o){o.classList.remove('chosen');});btn.closest('.opt').classList.add('chosen');
-      var s=document.getElementById('dstatus-'+dec);
-      s.innerHTML='<div class="st-h">⧗ Recording to your ticketing system…</div>';s.classList.add('show');
-      var o=orgId(),base=apiBase();
-      var body={title:'[Board decision] '+title,desc:'Chosen option: '+opt+'. Recorded from the CyberRx executive cockpit.',sourceRef:'cockpit-decision-'+dec+'-'+CUR};
-      var done=function(ticket,sysLabel,ok){
-        s.innerHTML='<div class="st-h">'+(ok?'✓':'◹')+' '+(ok?('Recorded to '+(sysLabel||'your ticketing system')+(ticket?' · '+ticket:'')):'Recorded (queued — connect a ticketing system in onboarding to sync)')+'</div>'+
-          '<div class="st-b">Chosen: <b style="color:#fff">Option '+opt+'</b> · owner assigned · SLA started. Tracked to completion below.</div>'+
-          '<div class="track"><div class="tstep done"></div><div class="tstep done"></div><div class="tstep"></div><div class="tstep"></div></div>'+
-          '<div class="st-b" style="margin-top:7px">Status: <b style="color:#fff">Open → In progress</b> · Raised · Assigned · <span style="opacity:.6">Implementation · Verified closed</span></div>';
-      };
-      if(!o||!base){done(null,null,false);return;}
+      var existing=loadDec(dec);
+      if(existing&&(Date.now()-existing.ts)>=EDIT_WINDOW_MS)return; // committed
+      var by=leaderName();
+      var rec={opt:opt,title:title,by:by,seat:CUR,ts:(existing&&(Date.now()-existing.ts)<EDIT_WINDOW_MS)?existing.ts:Date.now(),ticket:existing&&existing.ticket||null,system:existing&&existing.system||null};
+      saveDec(dec,rec);renderDecStatus(dec);
+      var s=document.getElementById('dstatus-'+dec);var o=orgId(),base=apiBase();
+      var body={title:'[Cyber decision · '+SEAT_LABEL[CUR]+'] '+title,desc:'Option '+opt+' — decided by '+by+' ('+SEAT_LABEL[CUR]+') via the CyberRx executive cockpit. Managed as a project; tracked to completion.',sourceRef:rec.ts+'-'+CUR+'-'+dec,type:'project'};
+      if(!o||!base)return;
       try{
         fetch(base+'/api/itsm/open?org_id='+encodeURIComponent(o),{method:'POST',headers:{'Content-Type':'application/json','X-Org-Id':o},body:JSON.stringify(body)})
           .then(function(r){return r.ok?r.json():null;})
-          .then(function(d){if(d&&(d.id||d.number||d.key||d.ticket)){done(d.number||d.id||d.key||d.ticket,d.label||'ServiceNow',true);}else{done(null,null,false);}})
-          .catch(function(){done(null,null,false);});
-      }catch(_){done(null,null,false);}
+          .then(function(d){if(d&&(d.number||d.id||d.key||d.ticket)){rec.ticket=d.number||d.id||d.key||d.ticket;rec.system=d.label||'ServiceNow';rec.url=d.url||d.link||null;saveDec(dec,rec);renderDecStatus(dec);}})
+          .catch(function(){});
+      }catch(_){}
     };
   });
 }

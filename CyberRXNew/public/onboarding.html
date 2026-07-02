@@ -110,6 +110,18 @@
         <div class="chips" id="regions"><span class="chip" data-r="US">US</span><span class="chip" data-r="EU">EU</span><span class="chip" data-r="UK">UK</span><span class="chip" data-r="Canada">Canada</span><span class="chip" data-r="Singapore">Singapore</span><span class="chip" data-r="Australia">Australia</span><span class="chip" data-r="APAC">APAC</span><span class="chip" data-r="Global">Global</span></div>
       </div>
     </div>
+    <div style="margin-top:16px"><label style="display:block;margin-bottom:8px">Leadership <span class="h">— each seat’s cockpit is addressed to them, and their name is stamped on every decision they make</span></label>
+      <div class="row c3">
+        <div class="field"><label>CEO</label><input class="seatname" data-seat="ceo" placeholder="Full name"></div>
+        <div class="field"><label>CFO</label><input class="seatname" data-seat="cfo" placeholder="Full name"></div>
+        <div class="field"><label>CISO</label><input class="seatname" data-seat="ciso" placeholder="Full name"></div>
+      </div>
+      <div class="row c3" style="margin-top:12px">
+        <div class="field"><label>CIO</label><input class="seatname" data-seat="cio" placeholder="Full name"></div>
+        <div class="field"><label>General Counsel (CLO)</label><input class="seatname" data-seat="clo" placeholder="Full name"></div>
+        <div class="field"><label>CRO</label><input class="seatname" data-seat="cro" placeholder="Full name"></div>
+      </div>
+    </div>
   </div>
 
   <!-- 2 · Financials -->
@@ -316,7 +328,9 @@
       if(r.ok&&body&&body.org_id)orgId=body.org_id;
       else if(!r.ok){msg.textContent='Setup error: '+(body.error||('HTTP '+r.status));msg.style.color='var(--warn)';btn.disabled=false;return;}
     }catch(e){/* offline: still hand off; cockpit shows illustrative */}
-    try{localStorage.setItem('cyberrx_org_id',orgId);localStorage.setItem('cyberrx_org_name',org);}catch(_){}
+    var seatNames={};document.querySelectorAll('.seatname').forEach(function(i){if(i.value.trim())seatNames[i.dataset.seat]=i.value.trim();});
+    try{localStorage.setItem('cyberrx_org_id',orgId);localStorage.setItem('cyberrx_org_name',org);localStorage.setItem('cyberrx_seat_names',JSON.stringify(seatNames));}catch(_){}
+    payload.seatNames=seatNames;
     // Connect the selected security tools now that the org exists (best-effort, real).
     var toolKeys=Object.keys(SELTOOLS).filter(function(k){return SELTOOLS[k].key&&!SELTOOLS[k].itsm;});
     if(toolKeys.length){msg.textContent='Connecting your tools…';
