@@ -73,6 +73,12 @@
   .xlist{margin-top:10px;max-height:150px;overflow-y:auto;border:1px solid var(--line);border-radius:9px}
   .xrow{display:flex;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);font-size:12.5px}.xrow:last-child{border:none}
   .xrow .nm{font-weight:600}.xrow .mt{color:var(--muted);margin-left:auto;font-size:12px}
+  .maprow{display:flex;gap:14px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--line)}.maprow:last-child{border:none}
+  .mapapp{min-width:160px;font-weight:700;font-size:13px;padding-top:3px}.mapapp .mapv{display:block;font-weight:500;color:var(--muted);font-size:11.5px;margin-top:1px}
+  .mapchips{display:flex;flex-wrap:wrap;gap:6px;flex:1}
+  .mchip{font-size:11.5px;font-weight:600;color:var(--muted);background:var(--plane);border:1px dashed var(--line-2);border-radius:99px;padding:5px 11px;cursor:pointer}
+  .mchip.on{color:#fff;background:var(--blue-soft);border:1px solid var(--blue)}
+  .mapempty{font-size:12.5px;color:var(--muted)}
   .note{font-size:12.5px;color:var(--muted);line-height:1.6}
   .note b{color:var(--ink-2)}
   .foot{position:sticky;bottom:0;background:linear-gradient(180deg,transparent,#0d0d0d 30%);padding:22px 0 26px;margin-top:24px}
@@ -108,6 +114,18 @@
       </select></div>
       <div class="field"><label>Operating regions <span class="h">— sets notification clocks &amp; penalties</span></label>
         <div class="chips" id="regions"><span class="chip" data-r="US">US</span><span class="chip" data-r="EU">EU</span><span class="chip" data-r="UK">UK</span><span class="chip" data-r="Canada">Canada</span><span class="chip" data-r="Singapore">Singapore</span><span class="chip" data-r="Australia">Australia</span><span class="chip" data-r="APAC">APAC</span><span class="chip" data-r="Global">Global</span></div>
+      </div>
+    </div>
+    <div style="margin-top:16px"><label style="display:block;margin-bottom:8px">Leadership <span class="h">— each seat’s cockpit is addressed to them, and their name is stamped on every decision they make</span></label>
+      <div class="row c3">
+        <div class="field"><label>CEO</label><input class="seatname" data-seat="ceo" placeholder="Full name"></div>
+        <div class="field"><label>CFO</label><input class="seatname" data-seat="cfo" placeholder="Full name"></div>
+        <div class="field"><label>CISO</label><input class="seatname" data-seat="ciso" placeholder="Full name"></div>
+      </div>
+      <div class="row c3" style="margin-top:12px">
+        <div class="field"><label>CIO</label><input class="seatname" data-seat="cio" placeholder="Full name"></div>
+        <div class="field"><label>General Counsel (CLO)</label><input class="seatname" data-seat="clo" placeholder="Full name"></div>
+        <div class="field"><label>CRO</label><input class="seatname" data-seat="cro" placeholder="Full name"></div>
       </div>
     </div>
   </div>
@@ -165,6 +183,12 @@
       <div class="conn-msg" id="appConnMsg"></div>
     </div>
     <div class="result" id="resApp"></div>
+  </div>
+
+  <!-- 5b · Map applications → the processes they support (crown-jewel chain) -->
+  <div class="sec" id="mapSec" style="display:none">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Map applications → the processes they support</div><div class="sd">This is the chain that determines your crown jewels: <b>process → the applications that run it → risk → control</b>. We auto-map by shared data class — click a chip to add or remove any link.</div></div><div class="badge" id="bmap">auto-mapped</div></div>
+    <div id="mapBody"><div class="mapempty">Load your processes and systems above and the mapping appears here.</div></div>
   </div>
 
   <!-- 6 · Risk register -->
@@ -232,17 +256,40 @@
     var nc=findCol(h,['process_name','name','title','process']),rvc=findCol(h,['revenue','rev','value']),rtc=findCol(h,['rto','recovery']),dc=findCol(h,['data','domain','sensitivity','category']),cc=findCol(h,['criticality','crit','tier','priority']);
     PROC=p.rows.map(function(c){return {name:get(c,nc)||c[0],revenue:get(c,rvc)||get(c,2),rto:get(c,rtc),data:get(c,dc)||get(c,1)||'Process',criticality:get(c,cc)};}).filter(function(x){return x.name;});
     showRows(document.getElementById('resProc'),PROC,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.data||'')+(x.revenue?(' · '+x.revenue):'')+(x.rto?(' · RTO '+x.rto+'h'):'')+'</span></div>';});
-    var b=document.getElementById('b4');b.dataset.n=PROC.length;badgeDone('b4');updateSummary();});});
+    var b=document.getElementById('b4');b.dataset.n=PROC.length;badgeDone('b4');updateSummary();renderMap();});});
   wireDrop('dropApp','fileApp',function(file){readFile(file,function(p){var h=p.headers;
     var nc=findCol(h,['application_name','app_name','name','title','application']),hc=findCol(h,['ci_class','hosting','host','class','type']),dc=findCol(h,['data','sensitivity','classification']),vc=findCol(h,['vendor','provider','supplier','cloud']),ec=findCol(h,['eol','end_of_life','supported','lifecycle']),rc=findCol(h,['recovery','recovery_hours','restore','rto']);
     APP=p.rows.map(function(c){return {name:get(c,nc)||c[0],host:get(c,hc)||get(c,1)||'—',data:get(c,dc)||get(c,2)||'—',vendor:get(c,vc),eol:get(c,ec),recovery:get(c,rc)};}).filter(function(x){return x.name;});
     showRows(document.getElementById('resApp'),APP,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.host||'')+(x.vendor?(' · '+x.vendor):'')+'</span></div>';});
-    var b=document.getElementById('b5');b.dataset.n=APP.length;badgeDone('b5');updateSummary();});});
+    var b=document.getElementById('b5');b.dataset.n=APP.length;badgeDone('b5');updateSummary();renderMap();});});
   wireDrop('dropRisk','fileRisk',function(file){readFile(file,function(p){var h=p.headers;
     var tc=findCol(h,['title','risk','name','description']),sc=findCol(h,['severity','sev','priority','rating']),ac=findCol(h,['asset','system','application','app','ci']),ec=findCol(h,['exposure','financial','impact','loss','ale','amount']),stc=findCol(h,['status','state']);
     RISK=p.rows.map(function(c){return {title:get(c,tc)||c[0],severity:get(c,sc)||'High',asset:get(c,ac)||'',exposure:get(c,ec)||'',status:get(c,stc)||'open'};}).filter(function(x){return x.title;});
     showRows(document.getElementById('resRisk'),RISK,function(x){return '<div class="xrow"><span class="nm">'+x.title+'</span><span class="mt">'+(x.asset||'')+(x.exposure?(' · '+x.exposure):'')+' · '+(x.severity||'')+'</span></div>';});
     var b=document.getElementById('b6');b.dataset.n=RISK.length;badgeDone('b6');updateSummary();});});
+
+  // ---- crown-jewel chain: map each application to the processes it supports ----
+  function mtok(s){return String(s||'').toUpperCase().split(/[^A-Z0-9]+/).filter(function(t){return t.length>1;});}
+  function autoMap(app){
+    var at=mtok(app.data);
+    var m=PROC.filter(function(p){var pt=mtok(p.data);return at.some(function(t){return pt.indexOf(t)>=0;});}).map(function(p){return p.name;});
+    if(!m.length&&PROC.length){var rank={critical:0,high:1,medium:2,low:3};m=[PROC.slice().sort(function(x,y){var rx=rank[String(x.criticality||'').toLowerCase()],ry=rank[String(y.criticality||'').toLowerCase()];return (rx==null?2:rx)-(ry==null?2:ry);})[0].name];}
+    return m;
+  }
+  function renderMap(){
+    var sec=document.getElementById('mapSec'),body=document.getElementById('mapBody');
+    if(!PROC.length||!APP.length){sec.style.display='none';return;}
+    sec.style.display='';
+    body.innerHTML=APP.map(function(a,i){
+      if(!Array.isArray(a.processes))a.processes=autoMap(a);
+      return '<div class="maprow"><div class="mapapp">'+a.name+(a.vendor?('<span class="mapv">'+a.vendor+'</span>'):'')+'</div><div class="mapchips">'+PROC.map(function(p){var on=a.processes.indexOf(p.name)>=0;return '<span class="mchip'+(on?' on':'')+'" data-ai="'+i+'" data-pn="'+encodeURIComponent(p.name)+'">'+p.name+'</span>';}).join('')+'</div></div>';
+    }).join('');
+    body.querySelectorAll('.mchip').forEach(function(c){c.addEventListener('click',function(){
+      var ai=+c.dataset.ai,pn=decodeURIComponent(c.dataset.pn),arr=APP[ai].processes,idx=arr.indexOf(pn);
+      if(idx>=0)arr.splice(idx,1);else arr.push(pn);c.classList.toggle('on');
+    });});
+    var bd=document.getElementById('bmap');bd.textContent='✓ '+APP.length+' mapped';bd.classList.add('done');
+  }
 
   // regions chips
   document.querySelectorAll('#regions .chip').forEach(function(c){c.addEventListener('click',function(){c.classList.toggle('on');REGIONS=[...document.querySelectorAll('#regions .chip.on')].map(function(x){return x.dataset.r;});var b=document.getElementById('b1');if(REGIONS.length){b.textContent='✓ '+REGIONS.length+' regions';b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}updateSummary();});});
@@ -306,7 +353,7 @@
       appetite:mval('finAppetite'),budget:mval('finBudget'),
       insurance:{limit:mval('insLimit'),premium:mval('insPrem'),renewal:v('insRenew')},
       processes:PROC.map(function(p){return {name:p.name,data:p.data,rev:p.revenue,revenue:p.revenue,rto:p.rto,criticality:p.criticality};}),
-      apps:APP.map(function(a){return {name:a.name,host:a.host,data:a.data,vendor:a.vendor,eol:a.eol,recovery:a.recovery};}),
+      apps:APP.map(function(a){return {name:a.name,host:a.host,data:a.data,vendor:a.vendor,eol:a.eol,recovery:a.recovery,processes:Array.isArray(a.processes)?a.processes:[]};}),
       risks:RISK.map(function(r){return {title:r.title,severity:r.severity,asset:r.asset,status:r.status,financial_exposure:r.exposure};})
     };
     btn.disabled=true;msg.textContent='Building your cockpit…';msg.style.color='var(--muted)';
@@ -316,7 +363,9 @@
       if(r.ok&&body&&body.org_id)orgId=body.org_id;
       else if(!r.ok){msg.textContent='Setup error: '+(body.error||('HTTP '+r.status));msg.style.color='var(--warn)';btn.disabled=false;return;}
     }catch(e){/* offline: still hand off; cockpit shows illustrative */}
-    try{localStorage.setItem('cyberrx_org_id',orgId);localStorage.setItem('cyberrx_org_name',org);}catch(_){}
+    var seatNames={};document.querySelectorAll('.seatname').forEach(function(i){if(i.value.trim())seatNames[i.dataset.seat]=i.value.trim();});
+    try{localStorage.setItem('cyberrx_org_id',orgId);localStorage.setItem('cyberrx_org_name',org);localStorage.setItem('cyberrx_seat_names',JSON.stringify(seatNames));}catch(_){}
+    payload.seatNames=seatNames;
     // Connect the selected security tools now that the org exists (best-effort, real).
     var toolKeys=Object.keys(SELTOOLS).filter(function(k){return SELTOOLS[k].key&&!SELTOOLS[k].itsm;});
     if(toolKeys.length){msg.textContent='Connecting your tools…';

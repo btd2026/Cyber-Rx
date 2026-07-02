@@ -80,6 +80,17 @@
   .dstatus{display:none;margin-top:14px;padding:13px 15px;border-radius:10px;background:var(--good-soft);border:1px solid rgba(12,163,12,.4);font-size:13px}.dstatus.show{display:block}
   .dstatus .st-h{font-weight:700;color:var(--good);display:flex;align-items:center;gap:8px}.dstatus .st-b{color:var(--ink-2);font-size:12.5px;margin-top:6px}
   .track{display:flex;gap:6px;margin-top:10px}.track .tstep{flex:1;height:5px;border-radius:3px;background:#2a2a28}.track .tstep.done{background:var(--good)}
+  /* crown-jewel determination chain */
+  .chain{display:flex;flex-direction:column;gap:14px}
+  .chain-card{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:16px 18px}
+  .chain-flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:0}
+  .chain-step{flex:1;min-width:150px;padding:0 14px;border-left:2px solid var(--line)}.chain-step:first-child{border-left:none;padding-left:0}
+  .chain-step .cs-k{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .chain-step .cs-v{font-size:13px;font-weight:600;line-height:1.5}.chain-step .cs-v .sub{display:block;color:var(--muted);font-weight:500;font-size:11.5px}
+  .cj-badge{display:inline-block;font-size:10px;font-weight:700;color:var(--crit);background:var(--crit-soft);border-radius:99px;padding:2px 8px;margin-left:6px}
+  .ctag{display:inline-block;font-size:11.5px;font-weight:600;color:var(--ink-2);background:var(--plane);border:1px solid var(--line);border-radius:7px;padding:3px 8px;margin:0 5px 5px 0}
+  .rtag{color:var(--serious)}
+  .cj-why{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}.cj-why b{color:var(--ink-2)}
   .qoq{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;margin-bottom:16px}
   .qtbl{width:100%;border-collapse:collapse;font-size:12.5px}.qtbl th{text-align:left;color:var(--muted);font-weight:600;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;padding:0 8px 9px 0;border-bottom:1px solid var(--line)}
   .qtbl td{padding:10px 8px 10px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}.qtbl tr:last-child td{border:none;font-weight:700}.qtbl .up{color:var(--good)}
@@ -216,7 +227,7 @@ function bars(a){return '<div class="card">'+a.map(function(r){return '<div clas
 function lists(a){return '<div class="card">'+a.map(function(r){return '<div class="list-row"><div class="lic '+r.c+'">'+r.ic+'</div><div class="ltxt'+(r.ev?' claim" data-ev="'+r.ev:'')+'"><b>'+r.t+'</b>'+(r.ev?' <span class="fx">ƒ</span>':'')+'<span class="s">'+r.s+'</span></div></div>';}).join('')+'</div>';}
 function kvcard(title,rows){return '<div class="card"><div class="ck">'+title+'</div>'+rows.map(function(r){return '<div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:9px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted)">'+r.k+'</span><span style="font-weight:600;text-align:right'+(r.cls?';color:var(--'+r.cls+')':'')+'"'+(r.ev?' class="claim" data-ev="'+r.ev+'"':'')+'>'+r.v+(r.ev?' <span class="fx">ƒ</span>':'')+'</span></div>';}).join('')+'</div>';}
 function jtable(rows){return '<div class="card"><table class="tbl"><thead><tr><th>Jurisdiction</th><th>Obligation</th><th>Clock</th><th>Max penalty</th></tr></thead><tbody>'+rows.map(function(r){return '<tr><td'+(r.ev?' class="claim" data-ev="'+r.ev+'"':'')+'><span class="flag">'+r.flag+'</span>'+r.c+(r.ev?' <span class="fx">ƒ</span>':'')+'</td><td>'+r.o+'</td><td><span class="tag '+r.cc+'">'+r.clock+'</span></td><td style="font-weight:600">'+r.pen+'</td></tr>';}).join('')+'</tbody></table></div>';}
-function decisions(a){return a.map(function(d){return '<div class="decision" data-dec="'+d.n+'"><div class="dh"><span class="dn">Decision '+d.n+' ·</span>'+d.q+'</div><div class="dsit">'+d.sit+'</div><div class="opts">'+d.opts.map(function(o){return '<div class="opt'+(o.rec?' rec':'')+'">'+(o.rec?'<div class="orec">Recommended</div>':'')+'<div class="on">'+o.on+'</div><div class="osum">'+o.osum+'</div><div class="pc"><div class="lbl p">Pros</div><ul>'+o.pros.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul><div class="lbl c">Cons</div><ul>'+o.cons.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></div><button class="choose'+(o.rec?'':' gh')+'" data-dec="'+d.n+'" data-title="'+d.q.replace(/"/g,'')+'" data-opt="'+o.tag+'">Choose &amp; record</button></div>';}).join('')+'</div><div class="dstatus" id="dstatus-'+d.n+'"></div></div>';}).join('');}
+function decisions(a){return a.map(function(d){return '<div class="decision" data-dec="'+d.n+'"><div class="dh"><span class="dn">Decision '+d.n+' ·</span>'+d.q+'</div><div class="dsit">'+d.sit+'</div><div class="opts">'+d.opts.map(function(o){return '<div class="opt'+(o.rec?' rec':'')+'">'+(o.rec?'<div class="orec">Recommended</div>':'')+'<div class="on">'+o.on+'</div><div class="osum">'+o.osum+'</div><div class="pc"><div class="lbl p">Pros</div><ul>'+o.pros.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul><div class="lbl c">Cons</div><ul>'+o.cons.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></div><button class="choose'+(o.rec?'':' gh')+'" data-dec="'+d.n+'" data-title="'+d.q.replace(/"/g,'')+'" data-opt="'+o.tag+'" data-osum="'+String(o.osum||'').replace(/"/g,'')+'">Choose &amp; record</button></div>';}).join('')+'</div><div class="dstatus" id="dstatus-'+d.n+'"></div></div>';}).join('');}
 function sec(no,q,desc,inner){return '<div class="section"><div class="rubric"><div class="no">'+no+'</div><div><div class="rt">'+q+'</div><div class="rd">'+desc+'</div></div></div>'+inner+'</div>';}
 
 var SEAT_LABEL={ceo:'CEO / Board',cfo:'CFO',clo:'CLO / General Counsel',cro:'CRO',cio:'CIO',ciso:'CISO'};
@@ -227,7 +238,7 @@ function render(seat){
   h+='<div class="spine"><span class="lk">⛓ One source of truth</span><span class="num"><b id="lvSpineExpo">$68M</b> <span>expected annual loss ·</span> <b id="lvSpineTail">$180M</b> <span>tail</span></span><span class="arrow">the same number every seat sees — in the <b>'+SEAT_LABEL[seat]+'</b> lens ↓</span></div></div>';
   h+=s.body();
   document.getElementById('app').innerHTML=h;
-  wireChoose();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();applyLive();window.scrollTo({top:0});
 }
 </script>
 <script src="cockpit-seats.js"></script>
@@ -250,30 +261,87 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeEv();})
 function apiBase(){try{return (window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'https://cyber-rx.onrender.com').replace(/\/+$/,'');}catch(_){return 'https://cyber-rx.onrender.com';}}
 function orgId(){try{return window.CYBERRX_ORG_ID||localStorage.getItem('cyberrx_org_id')||'';}catch(_){return '';}}
 function orgName(){try{return localStorage.getItem('cyberrx_org_name')||'';}catch(_){return '';}}
+/* Decisions: named leader, records a PROJECT in the ticketing system, editable
+   for 24h then committed (locked). Persisted per org+seat+decision. */
+var EDIT_WINDOW_MS=24*60*60*1000;
+function seatNames(){try{return JSON.parse(localStorage.getItem('cyberrx_seat_names')||'{}');}catch(_){return{};}}
+function leaderName(){var n=seatNames()[CUR];return n||SEAT_LABEL[CUR]||CUR.toUpperCase();}
+function decKey(dec){return 'cyberrx_dec_'+orgId()+'_'+CUR+'_'+dec;}
+function loadDec(dec){try{return JSON.parse(localStorage.getItem(decKey(dec))||'null');}catch(_){return null;}}
+function saveDec(dec,d){try{localStorage.setItem(decKey(dec),JSON.stringify(d));}catch(_){}}
+function fmtWhen(ts){try{return new Date(ts).toLocaleString();}catch(_){return '';}}
+function renderDecStatus(dec){
+  var s=document.getElementById('dstatus-'+dec);if(!s)return;var d=loadDec(dec);
+  var box=document.querySelector('.decision[data-dec="'+dec+'"]');
+  if(!d){if(box)box.querySelectorAll('.opt').forEach(function(o){o.classList.remove('chosen');o.querySelectorAll('.choose').forEach(function(b){b.disabled=false;});});s.classList.remove('show');return;}
+  var committed=(Date.now()-d.ts)>=EDIT_WINDOW_MS;
+  if(box){box.querySelectorAll('.opt').forEach(function(o){o.classList.remove('chosen');});if(box.querySelector('.choose[data-opt="'+CSS.escape(d.opt)+'"]'))box.querySelector('.choose[data-opt="'+CSS.escape(d.opt)+'"]').closest('.opt').classList.add('chosen');
+    box.querySelectorAll('.choose').forEach(function(b){b.disabled=committed;});}
+  var tk=d.ticket?('<b style="color:#fff">'+d.ticket+'</b>'+(d.system?(' in '+d.system):'')):'queued (connect a ticketing system to sync)';
+  var editLeft=Math.max(0,EDIT_WINDOW_MS-(Date.now()-d.ts));var hrs=Math.floor(editLeft/3.6e6),mins=Math.floor((editLeft%3.6e6)/6e4);
+  s.innerHTML='<div class="st-h">'+(committed?'🔒 Committed':'✓ Recorded')+' · project '+tk+'</div>'+
+    '<div class="st-b">Decision by <b style="color:#fff">'+d.by+'</b> ('+SEAT_LABEL[CUR]+') · Option '+d.opt+' · '+fmtWhen(d.ts)+'</div>'+
+    '<div class="track"><div class="tstep done"></div><div class="tstep done"></div><div class="tstep'+(committed?' done':'')+'"></div><div class="tstep"></div></div>'+
+    (committed
+      ? '<div class="st-b" style="margin-top:7px">🔒 <b style="color:#fff">Committed</b> — the 24-hour change window has closed. Tracked to completion in your ticketing system.</div>'
+      : '<div class="st-b" style="margin-top:7px">Editable for <b style="color:#fff">'+hrs+'h '+mins+'m</b> more — pick another option to change it. After 24h it commits automatically. <button class="wr-btn gh" style="padding:4px 10px;font-size:11px;margin-left:6px" data-undo="'+dec+'">Undo</button></div>');
+  s.classList.add('show');
+  var ub=s.querySelector('[data-undo]');if(ub)ub.onclick=function(){try{localStorage.removeItem(decKey(dec));}catch(_){}renderDecStatus(dec);};
+}
 function wireChoose(){
+  document.querySelectorAll('.decision').forEach(function(box){renderDecStatus(box.dataset.dec);});
   document.querySelectorAll('.choose').forEach(function(btn){
     btn.onclick=function(){
-      var dec=btn.dataset.dec,opt=btn.dataset.opt,title=btn.dataset.title;
-      var box=btn.closest('.decision');box.querySelectorAll('.opt').forEach(function(o){o.classList.remove('chosen');});btn.closest('.opt').classList.add('chosen');
-      var s=document.getElementById('dstatus-'+dec);
-      s.innerHTML='<div class="st-h">⧗ Recording to your ticketing system…</div>';s.classList.add('show');
-      var o=orgId(),base=apiBase();
-      var body={title:'[Board decision] '+title,desc:'Chosen option: '+opt+'. Recorded from the CyberRx executive cockpit.',sourceRef:'cockpit-decision-'+dec+'-'+CUR};
-      var done=function(ticket,sysLabel,ok){
-        s.innerHTML='<div class="st-h">'+(ok?'✓':'◹')+' '+(ok?('Recorded to '+(sysLabel||'your ticketing system')+(ticket?' · '+ticket:'')):'Recorded (queued — connect a ticketing system in onboarding to sync)')+'</div>'+
-          '<div class="st-b">Chosen: <b style="color:#fff">Option '+opt+'</b> · owner assigned · SLA started. Tracked to completion below.</div>'+
-          '<div class="track"><div class="tstep done"></div><div class="tstep done"></div><div class="tstep"></div><div class="tstep"></div></div>'+
-          '<div class="st-b" style="margin-top:7px">Status: <b style="color:#fff">Open → In progress</b> · Raised · Assigned · <span style="opacity:.6">Implementation · Verified closed</span></div>';
-      };
-      if(!o||!base){done(null,null,false);return;}
+      if(btn.disabled)return;
+      var dec=btn.dataset.dec,opt=btn.dataset.opt,title=btn.dataset.title,osum=btn.dataset.osum||'';
+      var existing=loadDec(dec);
+      if(existing&&(Date.now()-existing.ts)>=EDIT_WINDOW_MS)return; // committed
+      var by=leaderName();
+      var rec={opt:opt,title:title,by:by,seat:CUR,osum:osum,ts:(existing&&(Date.now()-existing.ts)<EDIT_WINDOW_MS)?existing.ts:Date.now(),ticket:existing&&existing.ticket||null,system:existing&&existing.system||null};
+      saveDec(dec,rec);renderDecStatus(dec);renderInitiatives();
+      var s=document.getElementById('dstatus-'+dec);var o=orgId(),base=apiBase();
+      var body={title:'[Cyber decision · '+SEAT_LABEL[CUR]+'] '+title,desc:'Option '+opt+' — decided by '+by+' ('+SEAT_LABEL[CUR]+') via the CyberRx executive cockpit. Managed as a project; tracked to completion.',sourceRef:rec.ts+'-'+CUR+'-'+dec,type:'project'};
+      if(!o||!base)return;
       try{
         fetch(base+'/api/itsm/open?org_id='+encodeURIComponent(o),{method:'POST',headers:{'Content-Type':'application/json','X-Org-Id':o},body:JSON.stringify(body)})
           .then(function(r){return r.ok?r.json():null;})
-          .then(function(d){if(d&&(d.id||d.number||d.key||d.ticket)){done(d.number||d.id||d.key||d.ticket,d.label||'ServiceNow',true);}else{done(null,null,false);}})
-          .catch(function(){done(null,null,false);});
-      }catch(_){done(null,null,false);}
+          .then(function(d){if(d&&(d.number||d.id||d.key||d.ticket)){rec.ticket=d.number||d.id||d.key||d.ticket;rec.system=d.label||'ServiceNow';rec.url=d.url||d.link||null;saveDec(dec,rec);renderDecStatus(dec);}})
+          .catch(function(){});
+      }catch(_){}
     };
   });
+}
+
+/* ---- cyber initiatives portfolio ----
+   Every recorded decision is a funded cyber project. This reads the org's own
+   decision ledger and shows the live portfolio of new spend — cost, ROI, owner,
+   status, ticket — the list the CISO and CFO manage together. No authored data. */
+function extractCost(osum){var m=String(osum||'').match(/\$[\d.,]+\s*(?:[KMB]|thousand|million|billion)?/i);return m?m[0].replace(/\s+/g,''):'—';}
+function extractROI(osum){var m=String(osum||'').match(/([\d.]+)\s*×/);return m?(m[1]+'×'):'—';}
+function allDecisions(){
+  var out=[],pre='cyberrx_dec_'+orgId()+'_';
+  try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf(pre)===0){var d=null;try{d=JSON.parse(localStorage.getItem(k));}catch(_){}if(d&&d.title)out.push(d);}}}catch(_){}
+  out.sort(function(a,b){return (b.ts||0)-(a.ts||0);});return out;
+}
+function renderInitiatives(){
+  var host=document.getElementById('initiatives-panel');if(!host)return;
+  var list=allDecisions();
+  if(!list.length){host.innerHTML='<div class="card"><div class="cn">No cyber initiatives yet. Each decision an executive commits in their seat becomes a funded project here — with its cost, ROI, owner and ticket — so the CISO and CFO manage new cyber spend in one place.</div></div>';return;}
+  var rows=list.map(function(d){
+    var committed=(Date.now()-(d.ts||0))>=EDIT_WINDOW_MS;
+    var cost=extractCost(d.osum),roi=extractROI(d.osum);
+    var tk=d.ticket?(d.url?('<a href="'+d.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+d.ticket+'</a>'):('<b style="color:#fff">'+d.ticket+'</b>'))+(d.system?(' · '+d.system):''):'<span style="color:var(--muted)">queued</span>';
+    var st=committed?'<span class="tag crit">Committed</span>':'<span class="tag warn">In 24h review</span>';
+    return '<tr><td style="max-width:280px">'+d.title+'<div style="color:var(--muted);font-size:11.5px;margin-top:2px">Option '+d.opt+'</div></td>'+
+      '<td>'+(d.by||'—')+'<div style="color:var(--muted);font-size:11.5px">'+(SEAT_LABEL[d.seat]||'')+'</div></td>'+
+      '<td style="font-weight:600">'+cost+'</td>'+
+      '<td style="font-weight:700;color:'+(roi==='—'?'var(--muted)':'var(--good)')+'">'+roi+'</td>'+
+      '<td>'+st+'</td>'+
+      '<td>'+tk+'</td></tr>';
+  }).join('');
+  var totalRoi=list.filter(function(d){return extractROI(d.osum)!=='—';}).length;
+  host.innerHTML='<div class="card"><table class="tbl"><thead><tr><th>Initiative</th><th>Owner</th><th>Cost</th><th>Return</th><th>Status</th><th>Project</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+    '<div class="cn" style="margin-top:10px">'+list.length+' active '+(list.length===1?'initiative':'initiatives')+(totalRoi?(' · '+totalRoi+' with a modeled return'):'')+' · committed items are locked and tracked to completion in your ticketing system.</div></div>';
 }
 
 /* ---- live economics ---- */
@@ -304,7 +372,64 @@ function applyLive(){if(!LIVE)return;var e=LIVE.economics||{},r=e.ratios||{},ap=
     if(rs.tech_debt&&rs.tech_debt.exposure)setTxt('lvTechDebt',usd(rs.tech_debt.exposure));
   }}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
+
+/* ---- crown-jewel determination chain: process → application → risk → control ----
+   The differentiator. Built from the org's real /graph (process→asset→risk edges,
+   crown-jewel scoring from /summary). Falls back to an illustrative example so the
+   method is always visible; the section header states which is showing. */
+var GRAPH=null;
+var ILLU_CHAIN=[
+  {asset:'Claims &amp; payments database',tier:'Tier 1',score:78,procs:['Claims &amp; payments processing'],risks:[{t:'Ransomware → payments halt',x:'$34M'}],ctrls:['Privileged access (PAM)','Immutable backups','Network segmentation'],why:'Holds PHI + cardholder data · the single application a critical revenue process depends on (single point of failure) · internet-reachable'},
+  {asset:'Member portal &amp; servicing',tier:'Tier 2',score:75,procs:['Member portal &amp; servicing'],risks:[{t:'Account takeover / data breach',x:'$18M'}],ctrls:['Multi-factor auth','Web application firewall','Endpoint detection'],why:'Customer PII at scale · internet-facing · high transaction volume'}
+];
+function chainFromGraph(){
+  if(!GRAPH||!GRAPH.nodes||!GRAPH.nodes.length)return null;
+  var byId={};GRAPH.nodes.forEach(function(n){byId[n.id]=n;});
+  var procOf={},riskOf={},ctrlOf={};
+  (GRAPH.edges||[]).forEach(function(e){
+    if(e.type==='supports'){(procOf[e.target]=procOf[e.target]||[]).push(byId[e.source]);}
+    else if(e.type==='threatens'){(riskOf[e.target]=riskOf[e.target]||[]).push(byId[e.source]);}
+    else if(e.type==='mitigates'||e.type==='applies_to'){(ctrlOf[e.target]=ctrlOf[e.target]||[]).push(byId[e.source]);}
+  });
+  var whyByName={};if(LIVE&&LIVE.crown_jewels)LIVE.crown_jewels.forEach(function(c){whyByName[c.name]=c;});
+  var xByAsset={};if(LIVE&&LIVE.material_exposure_items)LIVE.material_exposure_items.forEach(function(i){if(i.asset_id)xByAsset[i.asset_id]=usd(i.exposure_usd);});
+  var assets=GRAPH.nodes.filter(function(n){return n.type==='asset';});
+  assets.sort(function(a,b){var ta=(a.attrs&&a.attrs.crown_jewel_tier&&a.attrs.crown_jewel_tier!=='none')?0:1,tb=(b.attrs&&b.attrs.crown_jewel_tier&&b.attrs.crown_jewel_tier!=='none')?0:1;if(ta!==tb)return ta-tb;return ((b.attrs&&b.attrs.score)||0)-((a.attrs&&a.attrs.score)||0);});
+  return assets.slice(0,6).map(function(a){
+    var cj=whyByName[a.label]||{};var aid=a.id.replace(/^asset:/,'');
+    return {
+      asset:a.label,
+      tier:(a.attrs&&a.attrs.crown_jewel_tier&&a.attrs.crown_jewel_tier!=='none')?('Tier '+a.attrs.crown_jewel_tier):null,
+      score:cj.score||(a.attrs&&a.attrs.score!=null?Math.round(a.attrs.score*100):null),
+      procs:(procOf[a.id]||[]).map(function(n){return n?n.label:'';}).filter(Boolean),
+      risks:(riskOf[a.id]||[]).map(function(n){return {t:n?n.label:'',x:xByAsset[aid]||''};}),
+      ctrls:(ctrlOf[a.id]||[]).map(function(n){return n?n.label:'';}).filter(Boolean),
+      why:cj.rationale||''
+    };
+  });
+}
+function chainCard(c){
+  var procs=(c.procs&&c.procs.length)?c.procs.map(function(p){return '<div>'+p+'</div>';}).join(''):'<span class="sub">no linked process</span>';
+  var risks=(c.risks&&c.risks.length)?c.risks.map(function(r){return '<div class="rtag">'+r.t+(r.x?(' <b>'+r.x+'</b>'):'')+'</div>';}).join(''):'<span class="sub">no open risk mapped</span>';
+  var ctrls=(c.ctrls&&c.ctrls.length)?c.ctrls.map(function(x){return '<span class="ctag">'+x+'</span>';}).join(''):'<span class="sub">controls determined at analysis</span>';
+  var badge=c.tier?('<span class="cj-badge">Crown jewel · '+c.tier+(c.score?(' · '+c.score):'')+'</span>'):'';
+  return '<div class="chain-card"><div class="chain-flow">'+
+    '<div class="chain-step"><div class="cs-k">① Business process</div><div class="cs-v">'+procs+'</div></div>'+
+    '<div class="chain-step"><div class="cs-k">② Application that runs it</div><div class="cs-v">'+c.asset+badge+'</div></div>'+
+    '<div class="chain-step"><div class="cs-k">③ Risk on the application</div><div class="cs-v">'+risks+'</div></div>'+
+    '<div class="chain-step"><div class="cs-k">④ Controls on the risk</div><div class="cs-v">'+ctrls+'</div></div>'+
+    '</div>'+(c.why?('<div class="cj-why"><b>Why it’s a crown jewel:</b> '+c.why+'</div>'):'')+'</div>';
+}
+function renderChain(){
+  var host=document.getElementById('cjchain');if(!host)return;
+  var live=chainFromGraph();var chain=(live&&live.length)?live:ILLU_CHAIN;
+  var note=(live&&live.length)
+    ? '<div class="cn" style="margin-bottom:12px">● <b style="color:var(--good)">Live</b> — drawn from the process→application links you mapped at onboarding, the risks on each application, and the crown-jewel scoring engine.</div>'
+    : '<div class="cn" style="margin-bottom:12px">◐ <b style="color:var(--warn)">Illustrative</b> — an example of the chain. Map your applications to their processes at onboarding to see your own.</div>';
+  host.innerHTML=note+'<div class="chain">'+chain.map(chainCard).join('')+'</div>';
+}
 
 function selectSeat(seat){document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===seat);});render(seat);if(!VOICE_MUTED)speakSeat(seat);}
 document.querySelectorAll('.seat').forEach(function(b){b.addEventListener('click',function(){selectSeat(b.dataset.seat);});});

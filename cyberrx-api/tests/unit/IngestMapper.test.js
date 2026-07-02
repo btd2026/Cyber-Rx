@@ -50,6 +50,31 @@ describe('IngestMapper.mapOnboarding', () => {
     const out = M.mapOnboarding({ org_name: 'X', processes: [{ name: 'Claims', data: 'PHI', rev: '$1/day' }], apps: [{ name: 'Mystery', host: 'cloud', data: 'Unknown' }] });
     expect(out.assets[0].businessProcessIds).toEqual([out.processes[0].id]);
   });
+
+  test('explicit process→app mapping (by name) overrides the data-class heuristic', () => {
+    const out = M.mapOnboarding({
+      org_name: 'X',
+      processes: [
+        { name: 'Claims', data: 'PHI' },
+        { name: 'Settlement', data: 'Financial' },
+      ],
+      // data overlaps Claims (PHI), but the user explicitly linked it to Settlement.
+      apps: [{ name: 'ClaimsDB', host: 'db', data: 'PHI', processes: ['Settlement'] }],
+    });
+    const idByName = {}; out.processes.forEach((p) => { idByName[p.name] = p.id; });
+    expect(out.assets[0].businessProcessIds).toEqual([idByName.Settlement]);
+    expect(out.assets[0].businessProcessIds).not.toContain(idByName.Claims);
+  });
+
+  test('explicit mapping supports multiple processes and is case-insensitive by name', () => {
+    const out = M.mapOnboarding({
+      org_name: 'X',
+      processes: [{ name: 'Claims', data: 'PHI' }, { name: 'Settlement', data: 'Financial' }],
+      apps: [{ name: 'Core', host: 'server', data: '—', processes: ['claims', 'SETTLEMENT'] }],
+    });
+    expect(out.assets[0].businessProcessIds).toHaveLength(2);
+    expect(out.assets[0].businessProcessIds).toEqual(out.processes.map((p) => p.id));
+  });
 });
 
 describe('IngestMapper.mapRisks', () => {

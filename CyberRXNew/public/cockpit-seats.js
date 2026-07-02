@@ -70,6 +70,8 @@ var SEATS = {
        {rec:true,tag:'A · Fund both ($4.6M)',on:'Option A · Fund both',osum:'$4.6M · 20× blended',pros:['Removes ~$92M of exposure','Brings the tail within appetite','Stronger insurance renewal position'],cons:['$4.6M capital this year']},
        {tag:'B · Highest-ROI only ($1.4M)',on:'Option B · Top driver only',osum:'$1.4M · 37×',pros:['37× return on the payments driver','Minimal spend'],cons:['$40M tail remains over appetite']},
        {tag:'C · Hold flat',on:'Option C · Hold',osum:'$0 new',pros:['No new spend this year'],cons:['$92M carried as exposure','Likely premium increase at renewal']}]}]))
+   +sec('05','Current cyber initiatives & their ROI','Every funded decision becomes a tracked project. This is the live portfolio of new cyber spend — cost, return, owner and status — that the CISO and CFO manage together.',
+     '<div id="initiatives-panel"></div>')
   );}
  },
 
@@ -160,14 +162,18 @@ var SEATS = {
       {k:'Top exposure driver',v:'$52M',cls:'crit',ev:'proc-claims',note:'privileged path to payments'},
       {k:'Controls effectiveness',v:'$210M removed',ev:'roicfo',note:'risk bought down over 3 yrs (not CMMI)'},
       {k:'Coverage from tools',v:'99.4%',ev:'coverage',note:'live signals; gaps named &amp; costed'}]))
-   +sec('02','What is driving the $68M — and how good is our coverage?','Each driver carries a funded decision, so the list is a plan, not a backlog.',
+   +sec('02','How we determine your crown jewels — process → application → risk → control','The chain no other tool draws: each revenue process, the applications that run it, the risks on those applications, and the controls on each risk. That chain is what makes an application a crown jewel — and where the dollars come from.',
+     '<div id="cjchain"></div>')
+   +sec('03','What is driving the $68M — and how good is our coverage?','Each driver carries a funded decision, so the list is a plan, not a backlog.',
      bars([{l:'Privileged path → payments',v:'$52M',pct:100,cls:'hot',ev:'roicfo'},{l:'Recovery not yet proven',v:'$40M',pct:77,cls:'hot',ev:'recovery'},{l:'AI decisioning (new)',v:'$8M',pct:15},{l:'Third-party concentration',v:'$6M',pct:12,ev:'vendor'}])
      +kvcard('Coverage from connected tools (live signals)',[{k:'Endpoint detection (EDR)',v:'98.1%',cls:'good'},{k:'Multi-factor (MFA)',v:'96% — 4% legacy',cls:'warn'},{k:'Privileged accounts managed',v:'60% — the driver',cls:'crit'},{k:'Phishing-prone rate',v:'3% (was 9%)',cls:'good'}]))
-   +sec('03','What decision needs the CISO?','Where the next dollar of security spend goes. Choosing one records to your ticketing system.',
+   +sec('04','What decision needs the CISO?','Where the next dollar of security spend goes. Choosing one records to your ticketing system.',
      decisions([{n:1,q:'Which control gap do we close first?',sit:'The biggest dollar driver is the privileged path into payments. Where do we direct the next dollar?',opts:[
        {rec:true,tag:'A · Privileged access (PAM)',on:'Option A · PAM',osum:'$1.4M · 37×',pros:['Closes the $52M driver','Highest return available','Improves board posture immediately'],cons:['$1.4M','3 weeks of IAM effort']},
        {tag:'B · Prove recovery (DR test)',on:'Option B · DR',osum:'$3.2M',pros:['Removes ~$40M of tail risk','Meets regulatory recovery expectations'],cons:['Larger program','Does not close the #1 driver']},
        {tag:'C · AI-decisioning governance',on:'Option C · AI governance',osum:'standard + oversight',pros:['Addresses the fastest-rising risk'],cons:['Does not touch the top driver yet']}]}]))
+   +sec('05','Current cyber initiatives & their ROI','The live portfolio of funded cyber projects — every committed decision, its cost, its return and its ticket — that you own jointly with the CFO. These are new spends to manage closely.',
+     '<div id="initiatives-panel"></div>')
   );}
  }
 };
