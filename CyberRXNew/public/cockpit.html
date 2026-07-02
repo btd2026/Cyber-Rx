@@ -49,6 +49,7 @@
   .card .cn{font-size:12px;color:var(--muted);margin-top:8px}
   .pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;display:inline-block}
   .pill.good{background:var(--good-soft);color:var(--good)}.pill.warn{background:var(--warn-soft);color:var(--warn)}.pill.crit{background:var(--crit-soft);color:var(--crit)}
+  .pill.mod{background:rgba(137,135,129,.18);color:var(--muted);font-weight:600;font-size:10px;letter-spacing:.03em;text-transform:uppercase}
   .claim{cursor:pointer;border-bottom:1px dashed var(--line-2)}.claim:hover{border-bottom-color:var(--blue)}
   .fx{font-family:var(--mono);font-size:10px;color:var(--blue);background:var(--blue-soft);border-radius:5px;padding:1px 5px;margin-left:5px;vertical-align:middle;white-space:nowrap}
   .bar-row{display:grid;grid-template-columns:190px 1fr 66px;gap:11px;align-items:center;margin-bottom:12px}
@@ -465,6 +466,17 @@ function applyLive(){if(!LIVE)return;var e=LIVE.economics||{},r=e.ratios||{},ap=
       if(ins.gap!=null){setTxt('lvGap',usd(ins.gap));setTxt('lvGapCeo',usd(ins.gap));setTxt('lvRetained',usd(ins.gap));
         var ansEl=document.getElementById('lvInsAnswer');if(ansEl){ansEl.innerHTML=ins.gap>0?('Mostly — <span class="warn">a '+usd(ins.gap)+' tail is uninsured</span>'):'<span style="color:var(--good)">Yes — coverage meets the modeled tail</span>';}}
       var rn=document.getElementById('lvRenewalNote');if(rn){var days=renewalDays(ins.renewal);rn.textContent=days!=null?('annual premium · renews in '+days+'d'):'annual premium';}
+    }
+    // CFO seat — %-of-revenue / %-of-enterprise-value, materiality, insurance card
+    if(r.pct_of_revenue!=null)setTxt('lvCfoPctRev','≈'+pct(r.pct_of_revenue,r.pct_of_revenue<0.01?2:1)+' of revenue');
+    if(r.pct_of_enterprise_value!=null)setTxt('lvCfoPctEV',pct(r.pct_of_enterprise_value,r.pct_of_enterprise_value<0.01?2:1)+' of enterprise value');
+    if(e.materiality&&e.materiality.value)setTxt('lvCfoMateriality',usd(e.materiality.value));
+    if(ins){
+      if(ins.limit)setTxt('lvCfoCoverage',usd(ins.limit));
+      if(ins.gap!=null)setTxt('lvCfoGap',usd(ins.gap));
+      if(ins.premium)setTxt('lvCfoPremium',usd(ins.premium)+' / yr');
+      if(ins.transfer_efficiency!=null)setTxt('lvCfoTransfer',Math.round(ins.transfer_efficiency*100)+'%');
+      if(ins.renewal){var cd=renewalDays(ins.renewal);setTxt('lvCfoRenewal',cd!=null?(cd+' days'):ins.renewal);}
     }
   }
   renderTrend();

@@ -52,21 +52,21 @@ var SEATS = {
   sub:'Cyber as a line on the risk-adjusted balance sheet: expected loss, capital at risk, insurance economics, and the marginal return on the next dollar. Click any figure for the math.',
   brief:'From a finance view: our capital at risk is quantified — sixty-eight million expected, and a hundred and eighty million at the tail. Every dollar of security spend is returning about nine dollars of risk reduction. The two open items are a thirty-million uninsured tail, and ninety-two million of exposure we are carrying on decisions we have not funded yet. Funding the top decision returns thirty-seven to one.',
   body:function(){return (
-   sec('01','What is our capital at risk — and is our spend working?','The dollars, and the return on what we invest in security.',
+   sec('01','What is our capital at risk — and is our spend working?','Capital at risk from your financials and risk register; return figures are modeled from your control data and refined with your team.',
      tiles([
-      {k:'Expected annual loss',v:'<span id="lvExpoCfo">$68M</span>',ev:'ale',note:'≈0.8% of revenue · provisioned'},
-      {k:'Value-at-Risk (95%)',v:'<span id="lvTailCfo">$180M</span>',cls:'warn',ev:'tail',note:'0.6% of enterprise value'},
-      {k:'Return on security spend',v:'$1 → $9',ev:'roicfo',note:'next funded decision returns 37×'},
-      {k:'Cost of inaction',v:'+$92M',cls:'warn',ev:'inaction',note:'exposure carried on deferred decisions'}]))
-   +sec('02','Where does the next dollar work hardest, and are we insured?','Marginal return by program, and whether coverage matches the tail.',
+      {k:'Expected annual loss',v:'<span id="lvExpoCfo">$68M</span>',ev:'ale',note:'<span id="lvCfoPctRev">≈0.8% of revenue</span> · provisioned'},
+      {k:'Value-at-Risk (95%)',v:'<span id="lvTailCfo">$180M</span>',cls:'warn',ev:'tail',note:'<span id="lvCfoPctEV">0.6% of enterprise value</span>'},
+      {k:'Return on security spend',v:'$1 → $9',ev:'roicfo',note:'<span class="pill mod">modeled</span> risk reduced per dollar'},
+      {k:'Cost of inaction',v:'+$92M',cls:'warn',ev:'inaction',note:'<span class="pill mod">modeled</span> exposure on deferred decisions'}]))
+   +sec('02','Where does the next dollar work hardest, and are we insured?','Marginal return by program (modeled from your control effectiveness), and whether your insurance coverage matches the modeled tail.',
      '<div class="cols">'
      +bars([{l:'Privileged access',v:'37×',pct:100,cls:''},{l:'Recovery / DR',v:'13×',pct:52},{l:'Data protection',v:'8×',pct:34},{l:'Awareness training',v:'6×',pct:26},{l:'Endpoint (saturated)',v:'1.4×',pct:8}])
-     +kvcard('Insurance economics',[{k:'Coverage limit',v:'$150M'},{k:'Uninsured tail',v:'$30M',cls:'crit',ev:'insgap'},{k:'Premium',v:'$4.2M / yr'},{k:'Loss ratio (3-yr)',v:'11% — favorable',cls:'good'},{k:'Renewal',v:'92 days'}])+'</div>')
-   +sec('03','What if we change the budget — and is an incident material?','The two questions finance owns: the budget trade-off, and disclosure.',
+     +kvcard('Insurance economics',[{k:'Coverage limit',v:'<span id="lvCfoCoverage">$150M</span>'},{k:'Uninsured tail',v:'<span id="lvCfoGap">$30M</span>',cls:'crit',ev:'insgap'},{k:'Annual premium',v:'<span id="lvCfoPremium">$4.2M / yr</span>'},{k:'Transfer efficiency',v:'<span id="lvCfoTransfer">83%</span>',ev:'transfer'},{k:'Renewal',v:'<span id="lvCfoRenewal">92 days</span>'}])+'</div>')
+   +sec('03','What if we change the budget — and is an incident material?','The two questions finance owns: the budget trade-off (a modeled scenario) and the disclosure threshold (computed from your financials).',
      lists([
-      {c:'c',ic:'↓',t:'Cut budget −20% → +$46M exposure, tail $214M, premium +18%',ev:'budgetcut',s:'Net of premium, the cut costs more than it saves.'},
-      {c:'g',ic:'↑',t:'Fund the top decision (+$1.4M) → exposure $16M, 37× return',ev:'roicfo',s:'Closes the payments driver; tail returns within appetite.'},
-      {c:'w',ic:'§',t:'Materiality threshold $53M — a payments-path event is reportable',ev:'materiality',s:'The 4-business-day SEC clock and draft 8-K are pre-staged.'}]))
+      {c:'c',ic:'↓',t:'<span class="pill mod">modeled</span> Cut budget −20% → +$46M exposure, tail $214M, premium +18%',ev:'budgetcut',s:'Net of premium, the cut costs more than it saves.'},
+      {c:'g',ic:'↑',t:'<span class="pill mod">modeled</span> Fund the top decision (+$1.4M) → exposure $16M, 37× return',ev:'roicfo',s:'Closes the payments driver; tail returns within appetite.'},
+      {c:'w',ic:'§',t:'Materiality threshold <span id="lvCfoMateriality">$53M</span> — a crown-jewel event is reportable',ev:'materiality',s:'The 4-business-day SEC clock and a pre-staged 8-K keep the disclosure defensible.'}]))
    +sec('04','What decision needs the CFO — and what does it cost or buy?','A costed choice with options; choosing one records to your ticketing system and is tracked to completion.',
      decisions([{n:1,q:'How should we fund cyber-risk reduction this year?',sit:'Two funded decisions would remove $92M of exposure and strengthen the insurance renewal. How much do we commit this year?',opts:[
        {rec:true,tag:'A · Fund both ($4.6M)',on:'Option A · Fund both',osum:'$4.6M · 20× blended',pros:['Removes ~$92M of exposure','Brings the tail within appetite','Stronger insurance renewal position'],cons:['$4.6M capital this year']},
