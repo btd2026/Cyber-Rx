@@ -556,7 +556,8 @@
     {key:'splunk',ic:'📊',cat:'SIEM / Log analytics',w:16,sig:510,vendors:['Splunk','Microsoft Sentinel'],map:{'Microsoft Sentinel':'sentinel'},pulls:'Alerts, correlated incidents, MTTD/MTTC, log coverage.',ans:'CISO operational status & incident timeline · Board assurance.'},
     {key:'cyberark',ic:'🔒',cat:'Privileged access (PAM)',w:14,sig:120,vendors:['CyberArk','BeyondTrust','Delinea'],pulls:'Privileged sessions, vaulted accounts, just-in-time access.',ans:'CISO top-driver control · closes the payments path.'},
     {key:'knowbe4',ic:'🎓',cat:'Security awareness',w:6,sig:70,vendors:['KnowBe4','Proofpoint'],pulls:'Phishing-prone rate, campaign results, training completion.',ans:'CISO live threat (phishing → claims).'},
-    {key:'servicenow',ic:'🗂',cat:'Ticketing / ITSM',w:8,sig:40,vendors:['ServiceNow','Jira'],itsm:true,pulls:'Remediation status, change governance, decision & approval records.',ans:'Decisions become tracked projects · CLO defensibility · audit log.'}
+    {key:'servicenow',ic:'🗂',cat:'Ticketing / ITSM',w:8,sig:40,vendors:['ServiceNow','Jira'],itsm:true,pulls:'Remediation status, change governance, decision & approval records.',ans:'Decisions become tracked projects · CLO defensibility · audit log.'},
+    {key:'securityscorecard',ic:'🛰',cat:'Third-party / vendor monitoring',w:8,sig:60,vendors:['SecurityScorecard','BitSight','UpGuard','Panorays','Black Kite'],vmon:true,pulls:'Security ratings & incident signals for your tier-1 vendors, refreshed daily.',ans:'CISO tier-1 vendor watch · CRO third-party risk · Board DORA readiness.'}
   ];
   var TOTAL_SIG=TOOLS.reduce(function(s,t){return s+t.sig;},0);
   var SELTOOLS={};
@@ -575,7 +576,7 @@
     var bd=document.getElementById('b7');if(ids.length){bd.textContent='✓ '+ids.length+' tools';bd.classList.add('done');}else{bd.textContent='optional';bd.classList.remove('done');}
   }
   function markConnected(t,i,realKey,vend,key,demo){
-    SELTOOLS[realKey]={vendor:vend,key:key||'',itsm:!!t.itsm,demo:!!demo,on:true};
+    SELTOOLS[realKey]={vendor:vend,key:key||'',itsm:!!t.itsm,vmon:!!t.vmon,demo:!!demo,on:true};
     var st=document.getElementById('ts'+i);
     if(st){st.className='conn-st on';st.innerHTML='<span class="livedot"></span>'+(demo?'Demo · ':'Connected · ')+'<span id="sigc'+i+'">0</span> signals';tickTo(document.getElementById('sigc'+i),t.sig,700);}
     var go=document.querySelector('.tb[data-ti="'+i+'"]');if(go){go.classList.add(demo?'amber':'done');go.textContent=demo?'✓ Demo':'✓ Connected';}
@@ -643,11 +644,14 @@
     // Persist the chosen ticketing system so cockpit decisions open projects there.
     var itsm=SELTOOLS.servicenow;
     try{if(itsm&&itsm.on)localStorage.setItem('cyberrx_itsm',JSON.stringify({vendor:itsm.vendor||'ServiceNow',instance:itsm.key||'',demo:!!itsm.demo}));}catch(_){}
+    // Persist the chosen vendor-monitoring service so the CISO tier-1 vendor tile goes live.
+    var vmonKey=Object.keys(SELTOOLS).filter(function(k){return SELTOOLS[k].vmon&&SELTOOLS[k].on;})[0];
+    try{if(vmonKey)localStorage.setItem('cyberrx_vendor_monitor',JSON.stringify({vendor:SELTOOLS[vmonKey].vendor||'SecurityScorecard',demo:!!SELTOOLS[vmonKey].demo}));}catch(_){}
     // Persist connected tools so the War Room streams from the systems you run.
     try{localStorage.setItem('cyberrx_tools',JSON.stringify(SELTOOLS));}catch(_){}
     payload.seatNames=seatNames;
     // Connect the selected security tools now that the org exists (best-effort, real).
-    var toolKeys=Object.keys(SELTOOLS).filter(function(k){return SELTOOLS[k].key&&!SELTOOLS[k].itsm;});
+    var toolKeys=Object.keys(SELTOOLS).filter(function(k){return SELTOOLS[k].key&&!SELTOOLS[k].itsm&&!SELTOOLS[k].vmon;});
     if(toolKeys.length){msg.textContent='Connecting your tools…';
       await Promise.all(toolKeys.map(function(k){
         return fetch(apiBase()+'/api/integrations/'+encodeURIComponent(k)+'/connect?org_id='+encodeURIComponent(orgId),{method:'POST',headers:{'Content-Type':'application/json','X-Org-Id':orgId},body:JSON.stringify({apiToken:SELTOOLS[k].key,token:SELTOOLS[k].key,apiKey:SELTOOLS[k].key})}).catch(function(){});

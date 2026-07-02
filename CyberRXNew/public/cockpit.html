@@ -59,6 +59,19 @@
   .pill.good{background:var(--good-soft);color:var(--good)}.pill.warn{background:var(--warn-soft);color:var(--warn)}.pill.crit{background:var(--crit-soft);color:var(--crit)}
   .pill.mod{background:rgba(137,135,129,.18);color:var(--muted);font-weight:600;font-size:10px;letter-spacing:.03em;text-transform:uppercase}
   .claim{cursor:pointer;border-bottom:1px dashed var(--line-2)}.claim:hover{border-bottom-color:var(--blue)}
+  .optile{cursor:pointer;transition:border-color .15s,transform .12s}.optile:hover{border-color:var(--blue);transform:translateY(-1px)}
+  .drill-cta{color:var(--blue);font-weight:700;white-space:nowrap}
+  .dotstrip{display:flex;gap:4px;margin-top:9px;flex-wrap:wrap}.dotstrip .ds{width:13px;height:13px;border-radius:3px;display:inline-block}
+  .drow{padding:12px 0;border-top:1px solid var(--line)}.drow:first-child{border-top:none}
+  .drow-h{display:flex;align-items:center;gap:8px;margin-bottom:7px;flex-wrap:wrap}.drow-h b{font-size:13.5px}
+  .drow-tool{margin-left:auto;font-size:11px;color:var(--muted)}
+  .drow-need{font-size:12px;color:var(--ink-2);margin-top:7px;line-height:1.5}
+  .drow-proj{font-size:12px;margin-top:8px;color:var(--ink-2)}.drow-proj.none{color:var(--muted)}
+  .cap-dot{width:11px;height:11px;border-radius:50%;display:inline-block;flex:none}
+  .tac-caps{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
+  .tac-cap{font-size:11.5px;color:var(--ink-2);display:inline-flex;align-items:center;gap:5px;background:rgba(137,135,129,.1);padding:4px 9px;border-radius:8px}
+  .drill-hero{font-size:19px;font-weight:700;margin-bottom:4px}.drill-hero.good{color:var(--good)}.drill-hero.muted{color:var(--muted)}
+  .drill-p{font-size:12.5px;color:var(--ink-2);line-height:1.6;margin:8px 0 14px}
   .fx{font-family:var(--mono);font-size:10px;color:var(--blue);background:var(--blue-soft);border-radius:5px;padding:1px 5px;margin-left:5px;vertical-align:middle;white-space:nowrap}
   .bar-row{display:grid;grid-template-columns:190px 1fr 66px;gap:11px;align-items:center;margin-bottom:12px}
   .bar-lbl{font-size:12.5px;color:var(--ink-2)}.bar-track{height:20px;background:#222220;border-radius:5px;overflow:hidden}
@@ -270,8 +283,7 @@ var SEAT_LABEL={ceo:'CEO / Board',cfo:'CFO',clo:'CLO / General Counsel',cro:'CRO
 var CUR='ceo';
 function render(seat){
   CUR=seat;var s=SEATS[seat];
-  var h='<div class="hero"><div class="eyebrow">'+s.eyebrow+'</div><div class="verdict">'+s.verdict+'</div><div class="sub">'+s.sub+'</div><div class="hint">Tip: click any value with a <span class="fx">ƒ</span> chip to see the formula, inputs and math.</div>';
-  h+='<div class="spine"><span class="lk">⛓ One source of truth</span><span class="num"><b id="lvSpineExpo">$68M</b> <span>expected annual loss ·</span> <b id="lvSpineTail">$180M</b> <span>tail</span></span><span class="arrow">the same number every seat sees — in the <b>'+SEAT_LABEL[seat]+'</b> lens ↓</span></div></div>';
+  var h='<div class="hero"><div class="eyebrow">'+s.eyebrow+'</div><div class="verdict">'+s.verdict+'</div><div class="sub">'+s.sub+'</div><div class="hint">Tip: click any value with a <span class="fx">ƒ</span> chip to see the formula, inputs and math.</div></div>';
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=h;
   buildTabs();
@@ -315,6 +327,7 @@ function liveResult(key){if(!LIVE||!LIVE.economics)return null;var e=LIVE.econom
   if(key==='airisk'){var p=aiPremiumUsd();return p>0?('+'+usd(p)):null;}
   return null;}
 function openEv(key){var e=EV[key];if(!e)return;
+  var eb=document.querySelector('#ev .eb');if(eb)eb.textContent='How this is calculated';
   var lr=liveResult(key);
   var h='<div class="ev-claim">'+e.claim+(lr?' <span class="tag good" style="font-size:10px;vertical-align:middle">computed from your data</span>':'')+'</div><div class="ev-result '+C(e.cls)+'">'+(lr||e.result)+'</div>';
   h+='<div class="ev-sec">The formula</div><div class="formula">'+e.formula.replace(/(ALE|VaR₉₅|Monte-Carlo|Beta-PERT|Σ)/g,'<span class="hl">$1</span>')+'</div>';
@@ -324,7 +337,12 @@ function openEv(key){var e=EV[key];if(!e)return;
   h+='<div class="ev-sec">Confidence &amp; freshness</div><div class="conf">🛡 '+e.conf+'</div>';
   document.getElementById('evb').innerHTML=h;document.getElementById('ev').classList.add('open');document.getElementById('scrim').classList.add('open');}
 function closeEv(){document.getElementById('ev').classList.remove('open');document.getElementById('scrim').classList.remove('open');}
+/* Drill-downs reuse the evidence slide-over shell with a custom title + body. */
+function openDrill(title,html){var eb=document.querySelector('#ev .eb');if(eb)eb.textContent=title||'Details';
+  document.getElementById('evb').innerHTML=html;
+  document.getElementById('ev').classList.add('open');document.getElementById('scrim').classList.add('open');}
 document.addEventListener('click',function(e){var c=e.target.closest('.claim');if(c&&c.dataset.ev)openEv(c.dataset.ev);});
+document.addEventListener('click',function(e){var w=e.target.closest('[data-openwar]');if(w){e.preventDefault();try{wrOpen();}catch(_){}}});
 document.getElementById('evx').addEventListener('click',closeEv);document.getElementById('scrim').addEventListener('click',closeEv);
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeEv();});
 
@@ -730,51 +748,164 @@ function renderCisoWarRoom(){
     '<button class="wr-btn'+(active?'':' gh')+'" data-enterwar="1"'+(active?' style="background:var(--crit);border-color:var(--crit);color:#fff"':'')+'>'+(active?'⚠ Enter War Room':'Open War Room')+'</button></div></div>';
   var b=host.querySelector('[data-enterwar]');if(b)b.onclick=function(){try{wrOpen();}catch(_){}};
 }
-/* CISO operational command center — the "when I log in" view. Under-attack status,
-   tool health, MITRE ATT&CK tactic coverage (derived from connected tool categories),
-   key-vendor watch, and an attention list of gaps + what's being done. */
+/* CISO operational command center — the "when I log in" view. Four clickable
+   status tiles, each opening a drill-down: (1) are we under attack → War Room,
+   (2) top-10 capability health, (3) ATT&CK tactic defence, (4) tier-1 vendor risk.
+   Every % is derived from real connected signals; unconnected reads grey. */
 var ATTCK_TACTICS=['Reconnaissance','Resource Development','Initial Access','Execution','Persistence','Privilege Escalation','Defense Evasion','Credential Access','Discovery','Lateral Movement','Collection','Command & Control','Exfiltration','Impact'];
-function attckCoverage(){
-  var covered={};function cov(list){list.forEach(function(t){covered[t]=1;});}
-  if(sig('edr_pct')!=null)cov(['Execution','Persistence','Privilege Escalation','Defense Evasion','Discovery','Lateral Movement','Collection','Impact']);
-  if(sig('mfa_pct')!=null||sig('pam_pct')!=null)cov(['Initial Access','Credential Access','Privilege Escalation']);
-  if(sig('open_incidents')!=null||sig('mttd_hrs')!=null)cov(['Discovery','Lateral Movement','Collection','Command & Control','Exfiltration','Impact']);
-  if(sig('patch_pct')!=null)cov(['Initial Access','Execution']);
-  if(sig('phishing_pct')!=null)cov(['Initial Access']);
-  var gaps=ATTCK_TACTICS.filter(function(t){return !covered[t];});
-  return {covered:ATTCK_TACTICS.length-gaps.length,total:ATTCK_TACTICS.length,gaps:gaps};
+/* The 10 capabilities we score. `proj` matches an in-flight project (a cockpit
+   decision or a ticket imported from Jira/ServiceNow) that is moving the score. */
+var CAPS=[
+  {k:'edr',name:'Endpoint Detection & Response (EDR)',tool:'CrowdStrike / Defender',proj:/edr|endpoint|crowdstrike|defender|sentinel ?one|containment/i,need:'push agents to the remaining uncovered endpoints and turn on automated containment.',connect:'connect your EDR (CrowdStrike, Defender, SentinelOne).'},
+  {k:'mfa',name:'Multi-Factor Authentication (MFA)',tool:'Okta / Entra ID',proj:/mfa|multi-?factor|identity|okta|entra|single ?sign|\bsso\b/i,need:'enforce MFA on legacy, service and VPN accounts.',connect:'connect your identity provider (Okta, Entra ID).'},
+  {k:'pam',name:'Privileged Access Management (PAM)',tool:'CyberArk / BeyondTrust',proj:/\bpam\b|privileged|cyberark|beyondtrust|delinea|vault|just-?in-?time/i,need:'vault the remaining privileged accounts and switch to just-in-time access.',connect:'connect your PAM (CyberArk, BeyondTrust, Delinea).'},
+  {k:'vuln',name:'Vulnerability & Patch Management',tool:'Qualys / Tenable',proj:/patch|vuln|qualys|tenable|remediat|exposure manage/i,need:'shorten the critical-vuln remediation SLA on internet-facing assets.',connect:'connect your VM scanner (Qualys, Tenable).'},
+  {k:'aware',name:'Security Awareness & Anti-Phishing',tool:'KnowBe4 / Proofpoint',proj:/aware|phish|training|knowbe4|proofpoint/i,need:'run targeted simulations for the highest-click departments.',connect:'connect your awareness platform (KnowBe4, Proofpoint).'},
+  {k:'siem',name:'SIEM / Detection & Response',tool:'Splunk / Sentinel',proj:/siem|splunk|sentinel|\bsoc\b|\bmdr\b|log coverage|correlation|detection engineer/i,need:'expand log coverage and tune correlation rules to cut MTTD.',connect:'connect your SIEM (Splunk, Microsoft Sentinel).'},
+  {k:'dlp',name:'Data Loss Prevention (DLP)',tool:'Purview / Forcepoint',proj:/\bdlp\b|data loss|data protection|purview|forcepoint|egress/i,need:'deploy DLP across email, web and endpoint egress channels.',connect:'connect a DLP tool to measure coverage.'},
+  {k:'seg',name:'Network Segmentation / Zero-Trust',tool:'Illumio / firewall',proj:/segment|micro-?segment|zero.?trust|illumio|isolation|east-?west/i,need:'segment crown-jewel systems and enforce east-west controls.',connect:'connect your segmentation / NAC tooling.'},
+  {k:'backup',name:'Backup & Recovery Resilience',tool:'Rubrik / Veeam',proj:/backup|recover|immutable|rubrik|veeam|disaster|resilien|\bdr\b/i,need:'verify immutable backups and test restore for every crown jewel.',connect:'connect your backup platform (Rubrik, Veeam).'},
+  {k:'cspm',name:'Cloud Security Posture (CSPM)',tool:'Wiz / Prisma',proj:/cspm|cloud security|posture|misconfig|\bwiz\b|prisma|\borca\b/i,need:'baseline cloud misconfigurations and remediate public exposure.',connect:'connect a CSPM tool (Wiz, Prisma, Orca).'}
+];
+var CAP_BY_KEY={};CAPS.forEach(function(c){CAP_BY_KEY[c.k]=c;});
+/* Capabilities that must be deployed to protect against / detect each ATT&CK tactic. */
+var TACTIC_CAPS={
+  'Reconnaissance':['vuln','siem'],'Resource Development':['siem','aware'],
+  'Initial Access':['mfa','aware','vuln','edr'],'Execution':['edr','aware'],
+  'Persistence':['edr','pam'],'Privilege Escalation':['pam','edr','vuln'],
+  'Defense Evasion':['edr','siem'],'Credential Access':['mfa','pam','edr'],
+  'Discovery':['edr','seg','siem'],'Lateral Movement':['seg','pam','edr'],
+  'Collection':['dlp','edr'],'Command & Control':['siem','edr','seg'],
+  'Exfiltration':['dlp','siem','seg'],'Impact':['backup','edr','siem']
+};
+/* Deployment % for a capability, from live signals; null = not connected/measured. */
+function capDeploy(c){
+  if(c.k==='edr')return sig('edr_pct');
+  if(c.k==='mfa')return sig('mfa_pct');
+  if(c.k==='pam')return sig('pam_pct');
+  if(c.k==='vuln')return sig('patch_pct');
+  if(c.k==='aware'){var t=sig('training_pct');if(t!=null)return t;var ph=sig('phishing_pct');return ph!=null?Math.max(0,100-ph):null;}
+  if(c.k==='siem')return (sig('open_incidents')!=null||sig('mttd_hrs')!=null)?90:null;
+  return null; // dlp, seg, backup, cspm — no live signal yet
 }
-function opTile(label,val,cls,sub){return '<div class="card"><div class="ck">'+label+'</div><div class="cv" style="font-size:17px;margin-top:6px;line-height:1.3'+(cls?';color:var(--'+cls+')':'')+'">'+val+'</div>'+(sub?'<div class="cn" style="margin-top:5px">'+sub+'</div>':'')+'</div>';}
+/* User's colour scale: green ≥90, blue ≥75, yellow ≥50, red <50, grey = not connected. */
+function capColor(p){return p==null?'muted':p>=90?'good':p>=75?'blue':p>=50?'warn':'crit';}
+function capBar(p){var cls=capColor(p),w=p==null?0:Math.max(0,Math.min(100,p));
+  return '<div style="display:flex;align-items:center;gap:9px"><div style="flex:1;height:7px;background:#2a2a28;border-radius:4px;overflow:hidden;min-width:60px"><i style="display:block;height:100%;width:'+w+'%;background:var(--'+cls+')"></i></div><span style="font-size:12.5px;font-weight:700;color:var(--'+cls+')">'+(p==null?'—':p+'%')+'</span></div>';}
+/* The in-flight project (if any) moving a capability's score. */
+function capProject(c){
+  var re=c.proj,i,d,sp;
+  var decs=allDecisions();for(i=0;i<decs.length;i++){d=decs[i];if(re.test(d.title||'')){sp=statusStep(d.status);return {name:d.title,prog:projProgress(d),status:d.ticket?sp.t:'Recorded in cockpit',done:!!(d.ticket&&sp.n>=4),ticket:d.ticket?((d.system||'ticket')+' '+d.ticket):''};}}
+  var imp=importedInits();for(i=0;i<imp.length;i++){d=imp[i];if(re.test(d.name||'')){sp=statusStep(d.status);return {name:d.name,prog:projProgress(d),status:d.status?(d.ticket?sp.t:d.status):'In flight',done:!!(d.ticket&&sp.n>=4),ticket:d.ticket?((d.system||'ticket')+' '+d.ticket):''};}}
+  return null;
+}
+function tacticPct(keys){var vals=(keys||[]).map(function(k){return capDeploy(CAP_BY_KEY[k]);}).filter(function(x){return x!=null;});if(!vals.length)return null;return Math.round(vals.reduce(function(s,x){return s+x;},0)/vals.length);}
+/* Vendor monitoring service chosen at onboarding (SecurityScorecard / BitSight / …). */
+function vendorService(){try{var j=JSON.parse(localStorage.getItem('cyberrx_vendor_monitor')||'null');return (j&&j.vendor)?j:null;}catch(_){return null;}}
+/* Top tier-1 vendors + security ratings. Illustrative until the monitoring API is
+   wired to the tenant; the shape is exactly what goes live once connected. */
+function vendorList(){return [
+  {a:'NASCO',n:'NASCO — claims processing platform',s:88},
+  {a:'OPTM',n:'Optum — clinical & PBM services',s:74},
+  {a:'CHC',n:'Change Healthcare — clearinghouse',s:41},
+  {a:'AVAL',n:'Availity — EDI gateway',s:82},
+  {a:'COGN',n:'Cognizant — BPO / IT services',s:69},
+  {a:'ZELIS',n:'Zelis — claims payments',s:79},
+  {a:'COTV',n:'Cotiviti — payment integrity',s:85},
+  {a:'EPIC',n:'Epic Systems — EHR interoperability',s:91},
+  {a:'WIPRO',n:'Wipro — managed services',s:66},
+  {a:'SFDC',n:'Salesforce — member CRM',s:93}
+];}
+function dotStrip(clsList){return '<div class="dotstrip">'+clsList.map(function(cls){return '<span class="ds" style="background:var(--'+cls+')"></span>';}).join('')+'</div>';}
+/* ---- drill-down bodies ---- */
+function drillAttack(){
+  var connected=SIGNALS?Object.keys(SIGNALS).length:0;
+  return '<div class="drill-hero good">✓ No active compromise</div>'+
+    '<div class="drill-p">No qualifying attack is in progress right now. '+(connected
+      ?('Your SIEM and '+connected+' connected signal source'+(connected>1?'s are':' is')+' streaming continuously. The moment a confirmed attack crosses the materiality line this tile turns red and the War Room opens automatically — the alarm sounds, containment runs, regulatory clocks start, and every executive gets a role-specific decision.')
+      :'Connect your SIEM at onboarding to make this a live watch.')+'</div>'+
+    (sig('mttd_hrs')!=null?'<div class="drow"><div class="drow-h"><b>Mean time to detect (MTTD)</b><span class="drow-tool">'+sig('mttd_hrs')+' h</span></div><div class="drow-need">How fast a real attack would surface here.</div></div>':'')+
+    (sig('open_incidents')!=null?'<div class="drow"><div class="drow-h"><b>Open incidents</b><span class="drow-tool">'+sig('open_incidents')+'</span></div><div class="drow-need">None are at attack/materiality level.</div></div>':'')+
+    '<div class="drill-p"><button class="wr-btn gh" data-openwar="1">Open the War Room</button></div>';
+}
+function drillCapabilities(){
+  var rows=CAPS.slice().map(function(c){return {c:c,p:capDeploy(c)};})
+    .sort(function(a,b){var av=a.p==null?-1:a.p,bv=b.p==null?-1:b.p;return av-bv;})
+    .map(function(o){var c=o.c,p=o.p,cls=capColor(p),pr=capProject(c);
+      var proj=pr
+        ?'<div class="drow-proj"><span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> Project: <b style="color:#fff">'+pr.name+'</b>'+(pr.ticket?(' · '+pr.ticket):'')+' · '+pr.prog+'% delivered</div>'
+        :'<div class="drow-proj none">No portfolio project is currently addressing this. Raise one — it will appear here once it is in your ticketing system.</div>';
+      return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+cls+')"></span><b>'+c.name+'</b><span class="drow-tool">'+c.tool+'</span></div>'+
+        capBar(p)+
+        '<div class="drow-need">'+(p!=null?('<b>To move the score higher:</b> '+c.need):('Not connected — '+c.connect))+'</div>'+
+        proj+'</div>';
+    }).join('');
+  return '<div class="drill-p">Each capability is scored on how much of the estate it actually covers, on your colour scale — <b style="color:var(--good)">green ≥90%</b>, <b style="color:var(--blue)">blue ≥75%</b>, <b style="color:var(--warn)">yellow ≥50%</b>, <b style="color:var(--crit)">red &lt;50%</b>, grey = not yet connected. Ordered weakest first.</div>'+rows;
+}
+function drillTactics(){
+  var rows=ATTCK_TACTICS.map(function(t){var keys=TACTIC_CAPS[t]||[];var tp=tacticPct(keys);var tcls=capColor(tp);
+    var caps=keys.map(function(k){var c=CAP_BY_KEY[k];var p=capDeploy(c);var cls=capColor(p);return '<span class="tac-cap"><span class="cap-dot" style="background:var(--'+cls+')"></span>'+c.name.replace(/ *\(.*\)/,'')+' <b style="color:var(--'+cls+')">'+(p==null?'—':p+'%')+'</b></span>';}).join('');
+    return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+tcls+')"></span><b>'+t+'</b><span class="drow-tool">'+(tp==null?'not measured':tp+'% defended')+'</span></div><div class="tac-caps">'+caps+'</div></div>';
+  }).join('');
+  return '<div class="drill-p">For each of the 14 MITRE ATT&CK tactics an adversary can use, these are the capabilities that must be deployed to <b>protect against and detect</b> it, with live deployment % on the same colour scale as your top-10.</div>'+rows;
+}
+function drillVendors(){
+  var vs=vendorService();var list=vendorList().slice().sort(function(a,b){return a.s-b.s;});
+  var head=vs
+    ?'<div class="drill-p"><span class="pill mod">modeled</span> Ratings are illustrative until the <b>'+vs.vendor+'</b> API is wired to your tenant — the layout is exactly what goes live once connected. Higher is safer, on your top-10 colour scale.</div>'
+    :'<div class="drill-hero muted">No monitoring service connected</div><div class="drill-p">Choose a third-party monitoring service at onboarding — <b>SecurityScorecard</b>, <b>BitSight</b>, <b>UpGuard</b>, <b>Panorays</b> or <b>Black Kite</b> — and your top-10 tier-1 vendors appear here, scored and colour-coded, refreshed daily. Below is an illustrative preview.</div>';
+  var rows=list.map(function(vd){var cls=capColor(vd.s);
+    return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+cls+')"></span><b>'+vd.a+'</b><span class="drow-tool">'+vd.n+'</span></div>'+capBar(vd.s)+
+      (vd.s<75?'<div class="drow-need">'+(vd.s<50?'⚠ Elevated risk today — request remediation evidence and review the exposure you carry through this vendor.':'Below target — monitor open findings and confirm remediation timelines.')+'</div>':'')+'</div>';
+  }).join('');
+  return head+rows;
+}
+/* ---- the four tiles ---- */
 function renderCisoOps(){
   var host=document.getElementById('cisoOps');if(!host)return;
-  if(!SIGNALS){
-    host.innerHTML='<div class="cn" style="margin-bottom:10px">◐ <b style="color:var(--warn)">Illustrative</b> — connect your security tools at onboarding to make this live.</div><div class="grid4">'+
-      opTile('Are we under attack?','No active compromise','','live from your SIEM once connected')+
-      opTile('Security tools','98% avg coverage','','EDR · MFA · PAM · config baseline: connect a STIG scanner')+
-      opTile('MITRE ATT&CK coverage','11 / 14 tactics','good','gaps: Reconnaissance, Resource Development, Exfiltration')+
-      opTile('Key-vendor incident watch','no incident reported','good','connect a third-party status feed for live')+'</div>';
-    return;
-  }
-  var connected=Object.keys(SIGNALS).length;var oi=sig('open_incidents');var underAttack=oi!=null&&oi>0;
-  var attack=oi!=null?(underAttack?(oi+' open incident'+(oi>1?'s':'')):'No active compromise'):'connect your SIEM';
-  var pcts=['edr_pct','mfa_pct','pam_pct'].map(sig).filter(function(x){return x!=null;});
-  var below=pcts.filter(function(x){return x<90;}).length;
-  var toolHealth=pcts.length?(Math.round(pcts.reduce(function(s,x){return s+x;},0)/pcts.length)+'% avg coverage'):(connected+' connected');
-  var ac=attckCoverage();
-  var vendor=(LIVE&&LIVE.resilience&&LIVE.resilience.top_vendor_blast)?LIVE.resilience.top_vendor_blast.vendor:null;
-  var tiles='<div class="grid4">'+
-    opTile('Are we under attack?',attack,underAttack?'crit':(oi!=null?'good':''),underAttack?'<a href="#" data-openwar="1" style="color:var(--blue)">Open War Room →</a>':(oi!=null?('<span class="pill good" style="font-size:9px">live</span> '+connected+' tools streaming'):''))+
-    opTile('Security tools',toolHealth,below?'warn':'good',(below?(below+' below target · '):'')+'config vs DISA STIG: connect a scanner')+
-    opTile('MITRE ATT&CK coverage',ac.covered+' / '+ac.total+' tactics',ac.covered>=11?'good':ac.covered>=7?'warn':'crit',ac.gaps.length?('gaps: '+ac.gaps.slice(0,3).join(', ')+(ac.gaps.length>3?'…':'')):'full tactic coverage')+
-    opTile('Key-vendor incident watch',vendor?(vendor+' — none reported'):'—',vendor?'good':'',vendor?'connect a third-party status feed for live':'add vendors in onboarding')+'</div>';
-  var att=[];
-  if(sig('pam_pct')!=null&&sig('pam_pct')<80)att.push('Privileged-access coverage at '+sig('pam_pct')+'% — the top exposure driver; PAM rollout in flight.');
-  if(sig('mfa_pct')!=null&&sig('mfa_pct')<95)att.push('MFA at '+sig('mfa_pct')+'% — '+(100-sig('mfa_pct'))+'% legacy accounts remain.');
-  if(sig('phishing_pct')!=null&&sig('phishing_pct')>5)att.push('Phishing-prone rate at '+sig('phishing_pct')+'% — above the 5% target.');
-  if(ac.gaps.length)att.push('No tool coverage for ATT&CK: '+ac.gaps.join(', ')+' — evaluate detection/controls.');
-  var attList=att.length?('<div class="card" style="margin-top:14px"><div class="ck">Attention needed — and what’s being done</div><div style="margin-top:8px">'+att.map(function(a){return '<div class="list-row"><div class="lic w">▲</div><div class="ltxt"><b>'+a+'</b></div></div>';}).join('')+'</div></div>'):'<div class="card" style="margin-top:14px"><div class="ck">Attention needed</div><div class="cn" style="margin-top:6px">✓ Nothing off — tools within target and full ATT&CK tactic coverage.</div></div>';
-  host.innerHTML=tiles+attList;
-  var wl=host.querySelector('[data-openwar]');if(wl)wl.onclick=function(e){e.preventDefault();try{wrOpen();}catch(_){}};
+  var live=!!SIGNALS;
+  var oi=sig('open_incidents');var underAttack=oi!=null&&oi>0;
+  // Tile 1 — under attack?
+  var t1v=underAttack?(oi+' active incident'+(oi>1?'s':'')):(oi!=null?'No active compromise':'Connect your SIEM');
+  var t1c=underAttack?'crit':(oi!=null?'good':'muted');
+  var t1s=underAttack?'<b style="color:var(--blue)">Enter the War Room →</b>':(oi!=null?'✓ nothing burning right now':'live from your SIEM once connected');
+  var t1=drillTile('attack','Are we under attack?',(underAttack?'':'✓ ')+t1v,t1c,t1s,'');
+  // Tile 2 — top-10 capability health
+  var capStates=CAPS.map(function(c){return capColor(capDeploy(c));});
+  var measured=CAPS.filter(function(c){return capDeploy(c)!=null;}).length;
+  var healthy=CAPS.filter(function(c){var p=capDeploy(c);return p!=null&&p>=75;}).length;
+  var anyCrit=CAPS.some(function(c){var p=capDeploy(c);return p!=null&&p<50;});
+  var anyWarn=CAPS.some(function(c){var p=capDeploy(c);return p!=null&&p<75;});
+  var t2c=measured?(anyCrit?'crit':anyWarn?'warn':'good'):'muted';
+  var t2v=measured?(healthy+' / 10 healthy'):'Connect your tools';
+  var t2s=measured?(measured+' of 10 connected · click for each %'):'connect EDR, MFA, PAM… to score these';
+  var t2=drillTile('caps','Current health of my top 10 capabilities',t2v,t2c,t2s,dotStrip(capStates));
+  // Tile 3 — ATT&CK defence
+  var defended=0,tmeasured=0;var tstates=ATTCK_TACTICS.map(function(t){var tp=tacticPct(TACTIC_CAPS[t]);if(tp!=null){tmeasured++;if(tp>=75)defended++;}return capColor(tp);});
+  var t3c=!tmeasured?'muted':defended>=11?'good':defended>=7?'warn':'crit';
+  var t3v=tmeasured?(defended+' / 14 tactics defended'):'Connect your tools';
+  var t3s=tmeasured?'click for each tactic + the capabilities behind it':'connect your controls to score the 14 tactics';
+  var t3=drillTile('tactics','Are we successfully defending against attacks?',t3v,t3c,t3s,dotStrip(tstates));
+  // Tile 4 — tier-1 vendor risk
+  var vs=vendorService();var vl=vendorList();
+  var atRisk=vl.filter(function(x){return x.s<75;}).length;var vCrit=vl.some(function(x){return x.s<50;});
+  var t4c=vs?(atRisk?(vCrit?'crit':'warn'):'good'):'muted';
+  var t4v=vs?(atRisk?(atRisk+' of 10 posing risk today'):'All 10 tier-1 clear'):'No monitor connected';
+  var t4s=vs?('via '+vs.vendor+' · click for the list'):'pick a monitoring service at onboarding';
+  var t4=drillTile('vendors','Are any tier-1 vendors posing a risk today?',t4v,t4c,t4s,dotStrip(vl.slice().sort(function(a,b){return a.s-b.s;}).map(function(x){return capColor(x.s);})));
+  host.innerHTML='<div class="grid4">'+t1+t2+t3+t4+'</div>';
+  host.querySelectorAll('.optile').forEach(function(el){el.onclick=function(){var d=el.dataset.drill;
+    if(d==='attack'){if(underAttack){try{wrOpen();}catch(_){}}else openDrill('Are we under attack?',drillAttack());}
+    else if(d==='caps')openDrill('Top-10 capability health',drillCapabilities());
+    else if(d==='tactics')openDrill('Defending against attacks — MITRE ATT&CK',drillTactics());
+    else if(d==='vendors')openDrill('Tier-1 vendor risk today',drillVendors());
+  };});
+}
+function drillTile(id,q,val,cls,sub,extra){
+  return '<div class="card optile" data-drill="'+id+'"><div class="ck">'+q+'</div>'+
+    '<div class="cv" style="font-size:16px;margin-top:6px;line-height:1.3;color:var(--'+cls+')">'+val+'</div>'+
+    (extra||'')+
+    '<div class="cn" style="margin-top:8px">'+sub+' <span class="drill-cta">details ▸</span></div></div>';
 }
 /* AI risk (CEO + CISO) — exposure to AI-accelerated attacks (frontier models like
    Anthropic's Mythos that auto-discover/exploit vulnerabilities) + governance of
