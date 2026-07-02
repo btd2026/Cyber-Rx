@@ -106,6 +106,15 @@
   .cjrow .cjbar{height:5px;background:#2a2a28;border-radius:3px;margin-top:6px;overflow:hidden}
   .cjrow .cjbar i{display:block;height:100%;background:#e6c25a;border-radius:3px}
   .cjrow .cjscore-l{font-size:9px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-top:4px}
+  /* AI risk view */
+  .ai-hero{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:14px}
+  .ai-hero .ai-verdict{font-size:17px;font-weight:600;line-height:1.4;flex:1;min-width:240px}.ai-hero .ai-verdict b{color:var(--blue)}
+  .ai-hero .ai-premium{font-size:26px;font-weight:800;color:var(--crit);cursor:pointer;text-align:right;white-space:nowrap}
+  .ai-hero .ai-premium>span:last-child{display:block;font-size:11px;font-weight:600;color:var(--muted);white-space:normal}
+  .ai-leaders{display:flex;flex-direction:column}
+  .ai-leader{display:flex;gap:12px;align-items:baseline;font-size:12.5px;color:var(--ink-2);padding:8px 0;border-bottom:1px solid var(--line);line-height:1.5}.ai-leader:last-child{border:none}
+  .ai-leader .ai-lseat{flex:none;width:48px;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--blue)}
+  .ai-leader b{color:#fff}
   .cjmeta{display:flex;flex-wrap:wrap;gap:10px 22px;margin-top:10px}
   .cjm{display:flex;flex-direction:column;line-height:1.3}
   .cjm b{font-size:12.5px;font-weight:700;color:var(--ink-2)}.cjm.hot b{color:var(--crit)}.cjm.warn b{color:var(--warn)}.cjm.rtag b{color:var(--serious,#e0a94a);font-weight:600}
@@ -274,7 +283,7 @@ function liveResult(key){if(!LIVE||!LIVE.economics)return null;var e=LIVE.econom
   if(key==='insgap')return ins.gap!=null?usd(ins.gap):null;
   if(key==='transfer')return ins.transfer_efficiency!=null?(Math.round(ins.transfer_efficiency*100)+'%'):null;
   if(key==='liability'){var lg=LIVE.legal;return (lg&&lg.liability&&lg.liability.class_action_exposure)?usd(lg.liability.class_action_exposure):null;}
-  if(key==='airisk'){var ai=LIVE.aiRisk;if(!ai||!ai.exposure_internet_facing)return null;var pp=sig('patch_pct');var un=pp!=null?(1-pp/100):0.4;var wb=ai.window_base_days||30,wa=ai.window_ai_days||5;var dl=Math.min(0.5,Math.max(0,un*(1-wa/wb)));return '+'+usd(Math.round(ai.exposure_internet_facing*dl));}
+  if(key==='airisk'){var p=aiPremiumUsd();return p>0?('+'+usd(p)):null;}
   return null;}
 function openEv(key){var e=EV[key];if(!e)return;
   var lr=liveResult(key);
@@ -742,24 +751,31 @@ function renderCisoOps(){
    Anthropic's Mythos that auto-discover/exploit vulnerabilities) + governance of
    the AI we run. Threat readiness combines the real attack surface with live
    patch-velocity / detection signals; governance from the onboarding answers. */
+/* AI-risk model — the exploit window collapses under frontier AI; your
+   remediation speed vs that window is the exposure. All derived from real data;
+   the window compression is the one labeled-modeled assumption. */
+function aiWin(){var ai=(LIVE&&LIVE.aiRisk)||{};return {wb:ai.window_base_days||30,wa:ai.window_ai_days||5};}
+function aiPatchDays(){var p=sig('patch_pct');return p!=null?Math.max(aiWin().wa,Math.round(5+(1-p/100)*40)):21;}
+function aiGap(){return Math.max(0,aiPatchDays()-aiWin().wa);}
+function aiPremiumUsd(){var ale=(LIVE&&LIVE.economics&&Number(LIVE.economics.ale))||0;if(ale<=0)return 0;return Math.round(ale*Math.min(0.5,aiGap()/aiWin().wb)*0.4);}
+function aiClockSvg(){
+  var w=aiWin(),wa=w.wa,wb=w.wb,pd=aiPatchDays(),gap=aiGap();
+  var maxDays=Math.max(pd,wb)+4,W=720,H=94,padL=68,padR=68,y=52;
+  function x(d){return padL+(d/maxDays)*(W-padL-padR);}
+  var s='<svg width="100%" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" style="margin-top:6px">';
+  s+='<line x1="'+x(0)+'" y1="'+y+'" x2="'+x(wa)+'" y2="'+y+'" stroke="#2f7d32" stroke-width="7" stroke-linecap="round"/>';
+  if(gap>0){s+='<rect x="'+x(wa).toFixed(1)+'" y="'+(y-9)+'" width="'+(x(pd)-x(wa)).toFixed(1)+'" height="18" rx="3" fill="rgba(229,72,77,.22)"/>';
+    s+='<line x1="'+x(wa)+'" y1="'+y+'" x2="'+x(pd)+'" y2="'+y+'" stroke="#e5484d" stroke-width="7" stroke-linecap="round"/>';}
+  s+='<line x1="'+x(pd)+'" y1="'+y+'" x2="'+x(maxDays)+'" y2="'+y+'" stroke="#2f7d32" stroke-width="7" stroke-linecap="round" opacity=".4"/>';
+  s+='<circle cx="'+x(0)+'" cy="'+y+'" r="5" fill="#898781"/><text x="'+x(0)+'" y="'+(y+21)+'" fill="#898781" font-size="10" text-anchor="middle">disclosed</text>';
+  if(gap>0)s+='<text x="'+((x(wa)+x(pd))/2)+'" y="'+(y-19)+'" fill="#e5484d" font-size="12" text-anchor="middle" font-weight="800">'+gap+' days exposed</text>';
+  s+='<circle cx="'+x(wa)+'" cy="'+y+'" r="6" fill="#e5a94a"/><text x="'+x(wa)+'" y="'+(y+21)+'" fill="#e5a94a" font-size="11" text-anchor="middle" font-weight="700">⚡ AI weaponizes · '+wa+'d</text>';
+  s+='<circle cx="'+x(pd)+'" cy="'+y+'" r="6" fill="#0ca30c"/><text x="'+x(pd)+'" y="'+(y-13)+'" fill="#0ca30c" font-size="11" text-anchor="middle" font-weight="700">✓ you remediate · '+pd+'d</text>';
+  s+='</svg>';return s;
+}
 function renderAiRisk(){
   var ai=LIVE&&LIVE.aiRisk;if(!ai)return;var g=ai.governance||{};
-  var patch=sig('patch_pct'),mttd=sig('mttd_hrs');
-  var surface=ai.crown_jewels_internet_facing||0,allIf=ai.internet_facing_assets||0;
-  // Quantified AI risk premium (modeled): the incremental expected loss from the
-  // AI-compressed exploit window on the unpatched share of internet-facing crown jewels.
-  var expIF=ai.exposure_internet_facing||0,wb=ai.window_base_days||30,wa=ai.window_ai_days||5;
-  var unpatched=patch!=null?(1-patch/100):0.4;
-  var dLike=Math.min(0.5,Math.max(0,unpatched*(1-wa/wb)));
-  var premium=Math.round(expIF*dLike);
-  var premiumCard=expIF>0?('<div style="margin-right:6px"><div class="cv claim" data-ev="airisk" style="font-size:22px;color:var(--crit)">+'+usd(premium)+' <span class="fx">ƒ</span></div><div class="cn"><span class="pill mod">modeled</span> AI-accelerated expected loss</div></div>'):'';
-  var threat='<div class="card"><div class="ck">Exposure to AI-accelerated attacks</div>'+
-    '<div class="cn" style="margin-top:6px">Frontier models (e.g. Anthropic’s <b>Mythos</b>) can autonomously discover and exploit vulnerabilities, collapsing the disclosure→exploit window from ~'+wb+' to ~'+wa+' days. That raises the exploitation likelihood on your unpatched, internet-facing crown jewels:</div>'+
-    '<div style="display:flex;gap:22px;margin-top:12px;flex-wrap:wrap">'+premiumCard+
-    '<div><div class="cv" style="font-size:20px;color:'+(surface>0?'var(--warn)':'var(--good)')+'">'+surface+' / '+allIf+'</div><div class="cn">internet-facing crown jewels / assets (attack surface)</div></div>'+
-    '<div><div class="cv" style="font-size:20px'+(patch!=null?'':';color:var(--muted)')+'">'+(patch!=null?patch+'%':'connect vuln mgmt')+'</div><div class="cn">patch coverage'+(patch!=null?' <span class="pill good" style="font-size:9px">live</span>':'')+'</div></div>'+
-    (mttd!=null?'<div><div class="cv" style="font-size:20px">'+mttd+'h</div><div class="cn">mean time to detect <span class="pill good" style="font-size:9px">live</span></div></div>':'')+
-    '</div></div>';
+  var w=aiWin(),wa=w.wa,wb=w.wb,pd=aiPatchDays(),gap=aiGap(),premium=aiPremiumUsd(),patchLive=sig('patch_pct')!=null;
   var items=[
     {k:'AI governance framework',v:g.framework||'not set',ok:/NIST|ISO|Both/i.test(g.framework||'')},
     {k:'AI acceptable-use &amp; risk policy',v:g.policy||'not set',ok:/board-approved/i.test(g.policy||'')},
@@ -768,21 +784,38 @@ function renderAiRisk(){
     {k:'AI in customer-facing / decisioning',v:g.decisioning||'not set',ok:!!g.decisioning}
   ];
   var ready=items.filter(function(i){return i.ok;}).length;
-  var gov='<div class="card"><div class="ck">Governance of the AI we run <span class="tag '+(ready>=4?'good':'warn')+'" style="font-size:10px;margin-left:6px">'+ready+' / '+items.length+' evidenced</span></div>'+
-    '<div style="margin-top:8px">'+items.map(function(i){return govRow(i.k,i.v,i.ok);}).join('')+'</div>'+
-    '<div class="cn" style="margin-top:8px">Anchored to NIST AI RMF / ISO 42001 and the EU AI Act. Fill gaps in onboarding to make this board- and audit-ready.</div></div>';
-  // Priority actions — derived from the real gaps, highest-impact first. Turns the
-  // panel from a summary into a to-do the CISO can act on and take to the board.
+  var hero='<div class="ai-hero"><div class="ai-verdict">AI has collapsed the attacker’s timeline. <b>Speed is now the control.</b></div>'+
+    (premium>0?'<div class="ai-premium claim" data-ev="airisk">+'+usd(premium)+' <span class="fx">ƒ</span><span>modeled AI-accelerated expected loss</span></div>':'')+'</div>';
+  var clock='<div class="card"><div class="ck">The AI threat clock — attacker speed vs. your speed</div>'+aiClockSvg()+
+    '<div class="cn" style="margin-top:6px;line-height:1.65">An unpatched critical vulnerability used to give you <b>~'+wb+' days</b> before it was weaponized. Frontier models (e.g. Anthropic’s <b>Mythos</b>) have cut that to <b>~'+wa+' days</b>. You remediate critical vulnerabilities in <b>~'+pd+' days</b>'+(patchLive?' <span class="pill good" style="font-size:9px">live</span>':' <span class="pill mod">modeled</span>')+' — leaving a <b style="color:var(--crit)">~'+gap+'-day window</b> on every new critical vulnerability where an autonomous attacker can get in. Across your crown jewels that is a modeled <b>+'+usd(premium)+'</b> of expected loss. The lever is simple: <b>get faster</b> — cut remediation time or shrink the internet-facing surface.</div></div>';
+  var against='<div class="card"><div class="ck">The race: AI attacker vs. us</div><div style="margin-top:8px">'+
+    govRow('Attacker weaponization window','~'+wa+' days',false)+
+    govRow('Our remediation time','~'+pd+' days'+(patchLive?'':' (modeled)'),gap<=3)+
+    govRow('Exposure gap per critical vuln','~'+gap+' days',gap<=3)+
+    govRow('Internet-facing crown jewels',(ai.crown_jewels_internet_facing||0)+' of '+(ai.total_assets||0)+' assets',(ai.crown_jewels_internet_facing||0)===0)+
+    govRow('Detection speed (MTTD)',sig('mttd_hrs')!=null?(sig('mttd_hrs')+'h'):'connect SIEM',null)+
+    '</div></div>';
+  var gov='<div class="card"><div class="ck">The AI we run <span class="tag '+(ready>=4?'good':'warn')+'" style="font-size:10px;margin-left:6px">'+ready+' / '+items.length+' governed</span></div>'+
+    '<div style="margin-top:8px">'+items.map(function(i){return govRow(i.k,i.v,i.ok);}).join('')+'</div></div>';
+  var leaders=[
+    {s:'Board',t:'AI is your fastest-rising risk. Own-AI governance is <b>'+ready+'/5</b> evidenced — '+(ready>=4?'board-ready':'gaps to close before it is defensible')+'.'},
+    {s:'CFO',t:premium>0?('<b>+'+usd(premium)+'</b> modeled expected loss from the AI-accelerated window; closing it is the highest-leverage spend.'):'Quantified once your exposure and patch velocity are live.'},
+    {s:'CISO',t:'Attacker window <b>~'+wa+'d</b> vs your <b>~'+pd+'d</b> remediation → <b>~'+gap+'d</b> exposure on every critical vuln. Get faster.'},
+    {s:'CLO',t:'EU AI Act: <b>'+(g.euAiAct||'not set')+'</b>. AI in decisioning (<b>'+(g.decisioning||'—')+'</b>) creates liability wherever PHI or automated decisions are involved.'},
+    {s:'CRO',t:'Velocity <b>high</b>; adaptation '+(/(NIST|ISO|Both)/i.test(g.framework||'')?'<b>framework adopted</b>':'<b>no framework yet</b>')+'. Correlates with third-party and data risk.'},
+    {s:'CIO',t:(g.systems?('<b>'+g.systems+'</b> AI/LLM system'+(g.systems>1?'s':'')+' in production to secure and monitor.'):'Inventory your AI/LLM systems to size the operational surface.')}
+  ];
+  var leaderCard='<div class="card" style="margin-top:14px"><div class="ck">What this means for each leader</div><div class="ai-leaders" style="margin-top:6px">'+leaders.map(function(l){return '<div class="ai-leader"><span class="ai-lseat">'+l.s+'</span><span>'+l.t+'</span></div>';}).join('')+'</div></div>';
   var acts=[];
-  if(patch!=null&&patch<90&&surface>0)acts.push({p:1,t:'Accelerate patching on the '+surface+' internet-facing crown jewel'+(surface>1?'s':'')+' — the largest lever on the '+(premium>0?usd(premium):'AI-accelerated')+' premium.'});
-  else if(patch==null&&surface>0)acts.push({p:1,t:'Connect vulnerability management to measure patch velocity on '+surface+' internet-facing crown jewel'+(surface>1?'s':'')+'.'});
+  if(gap>3)acts.push({p:1,t:'Cut critical-vuln remediation from ~'+pd+' toward '+wa+' days on internet-facing crown jewels — this closes the ~'+gap+'-day window and the '+usd(premium)+' premium.'});
+  if(!patchLive)acts.push({p:1,t:'Connect vulnerability management so remediation velocity is measured, not modeled.'});
   if(/yes|pilot/i.test(g.decisioning||'')&&!/board-approved/i.test(g.policy||''))acts.push({p:1,t:'AI runs in customer-facing/decisioning without a board-approved policy — close this governance gap.'});
-  if(!/NIST|ISO|Both/i.test(g.framework||''))acts.push({p:2,t:'Adopt an AI governance framework (NIST AI RMF / ISO 42001) — the AI you run is currently ungoverned.'});
+  if(!/NIST|ISO|Both/i.test(g.framework||''))acts.push({p:2,t:'Adopt an AI governance framework (NIST AI RMF / ISO 42001).'});
   if(!/inventoried/i.test(g.inventory||''))acts.push({p:2,t:'Complete the AI-systems inventory so nothing runs unmonitored.'});
-  if(/high-risk/i.test(g.euAiAct||''))acts.push({p:2,t:'EU AI Act high-risk obligations apply — ensure the conformity assessment and technical documentation are in place.'});
+  if(/high-risk/i.test(g.euAiAct||''))acts.push({p:2,t:'EU AI Act high-risk obligations apply — ensure conformity assessment and technical documentation.'});
   acts.sort(function(a,b){return a.p-b.p;});
-  var actCard=acts.length?('<div class="card" style="margin-top:14px"><div class="ck">Priority actions <span class="pill warn" style="font-size:10px">'+acts.length+'</span></div><div style="margin-top:8px">'+acts.slice(0,4).map(function(a){return '<div class="list-row"><div class="lic '+(a.p===1?'c':'w')+'">'+(a.p===1?'!':'▲')+'</div><div class="ltxt"><b>'+a.t+'</b></div></div>';}).join('')+'</div></div>'):'<div class="card" style="margin-top:14px"><div class="ck">Priority actions</div><div class="cn" style="margin-top:6px">✓ No open AI-risk gaps — governance evidenced and internet-facing crown jewels are well-patched.</div></div>';
-  var html='<div class="cols">'+threat+gov+'</div>'+actCard;
+  var actCard=acts.length?('<div class="card" style="margin-top:14px"><div class="ck">Priority actions <span class="pill warn" style="font-size:10px">'+acts.length+'</span></div><div style="margin-top:8px">'+acts.slice(0,4).map(function(a){return '<div class="list-row"><div class="lic '+(a.p===1?'c':'w')+'">'+(a.p===1?'!':'▲')+'</div><div class="ltxt"><b>'+a.t+'</b></div></div>';}).join('')+'</div></div>'):'<div class="card" style="margin-top:14px"><div class="ck">Priority actions</div><div class="cn" style="margin-top:6px">✓ You are ahead of the window — remediation beats the AI exploit clock and your own AI is governed.</div></div>';
+  var html=hero+clock+'<div class="cols" style="margin-top:14px">'+against+gov+'</div>'+leaderCard+actCard;
   ['ceoAiRisk','cisoAiRisk'].forEach(function(hid){var host=document.getElementById(hid);if(host)host.innerHTML=html;});
 }
 /* CLO materiality-determination workbench — a timed, evidenced determination.
