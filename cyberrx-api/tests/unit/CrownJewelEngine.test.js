@@ -4,7 +4,7 @@
 
 const Crit = require('../../src/services/crownjewels/CriticalityService');
 const Graph = require('../../src/services/crownjewels/GraphModelService');
-const { materialExposure, normAsset, normRisk } = require('../../src/services/crownjewels/CrownJewelEngine');
+const { materialExposure, processExposure, normAsset, normRisk } = require('../../src/services/crownjewels/CrownJewelEngine');
 
 describe('CriticalityService.scoreAsset', () => {
   test('internet-facing PHI asset, sole supporter of a critical process => crown jewel with explainable breakdown', () => {
@@ -69,6 +69,37 @@ describe('materialExposure', () => {
   });
   test('reports a clear basis when no quantified risks exist', () => {
     expect(materialExposure(cj, []).basis).toMatch(/No quantified risks/);
+  });
+});
+
+describe('processExposure', () => {
+  const processes = [
+    { id: 'P1', name: 'Claims', criticality: 'Critical' },
+    { id: 'P2', name: 'Settlement', criticality: 'High' },
+    { id: 'P3', name: 'Intranet', criticality: 'Low' },
+  ];
+  const scored = [
+    { id: 'A1', business_process_ids: ['P1'], crown_jewel: true },
+    { id: 'A2', business_process_ids: ['P2'], crown_jewel: false },
+  ];
+  test('attributes each open risk to the processes its asset supports, ranked desc', () => {
+    const risks = [
+      { title: 'Ransomware', asset_id: 'A1', status: 'open', financial_exposure: 34000000 },
+      { title: 'Breach', asset_id: 'A2', status: 'open', financial_exposure: 11000000 },
+      { title: 'Closed', asset_id: 'A1', status: 'closed', financial_exposure: 9000000 },
+    ];
+    const pe = processExposure(scored, risks, processes);
+    expect(pe.map((p) => p.name)).toEqual(['Claims', 'Settlement']); // ranked; Intranet has no risk → excluded
+    expect(pe[0].exposure_usd).toBe(34000000);
+    expect(pe[0].crown_jewel).toBe(true);
+    expect(pe[1].crown_jewel).toBe(false);
+  });
+  test('falls back to the risk’s own linked processes when it has no asset', () => {
+    const risks = [{ title: 'AI risk', business_process_ids: ['P2'], status: 'open', financial_exposure: 8000000 }];
+    const pe = processExposure(scored, risks, processes);
+    expect(pe).toHaveLength(1);
+    expect(pe[0].name).toBe('Settlement');
+    expect(pe[0].exposure_usd).toBe(8000000);
   });
 });
 
