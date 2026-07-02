@@ -48,8 +48,8 @@ async function loadOrgSetup(orgId) {
     const rows = await db.query('SELECT setup_json FROM orgs WHERE id=$1', [orgId]);
     const sj = rows[0] && rows[0].setup_json;
     const parsed = typeof sj === 'string' ? JSON.parse(sj) : (sj || {});
-    return { economics: (parsed && parsed.economics) || {}, resilience: (parsed && parsed.resilience) || {}, governance: (parsed && parsed.governance) || {} };
-  } catch (_) { return { economics: {}, resilience: {}, governance: {} }; }
+    return { economics: (parsed && parsed.economics) || {}, resilience: (parsed && parsed.resilience) || {}, governance: (parsed && parsed.governance) || {}, aiGovernance: (parsed && parsed.aiGovernance) || {} };
+  } catch (_) { return { economics: {}, resilience: {}, governance: {}, aiGovernance: {} }; }
 }
 
 // materialExposure() reads snake_case, but Risk._transformFromDb returns camelCase.
@@ -181,6 +181,18 @@ async function run(orgId) {
 
   const governance = setup.governance || {};
 
+  // AI risk (CEO/CISO) — the attack surface exposed to AI-accelerated attackers
+  // (internet-facing assets that autonomous scanners like Mythos-class models can
+  // reach) plus the org's AI-governance answers. Patch velocity / detection speed
+  // are combined on the frontend from live tool signals.
+  const isInternet = (a) => /internet/i.test(String(a.exposure || ''));
+  const aiRisk = {
+    governance: setup.aiGovernance || {},
+    internet_facing_assets: scored.filter(isInternet).length,
+    crown_jewels_internet_facing: scored.filter((a) => a.crown_jewel && isInternet(a)).length,
+    total_assets: scored.length,
+  };
+
   // Enterprise risk portfolio (CRO) — cyber on one scale beside the org's other
   // principal risks, as entered from their ERM. Cyber is live; others are inputs.
   const pr = (econIn && econIn.principalRisks) || {};
@@ -227,6 +239,7 @@ async function run(orgId) {
       governance,
       stress,
       portfolio,
+      aiRisk,
     },
     graph,
     assets: scored,

@@ -214,6 +214,21 @@
     </div>
   </div>
 
+  <!-- 1c · AI risk & governance -->
+  <div class="sec">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">AI risk &amp; governance</div><div class="sd">Two sides the board now asks about: our exposure to <b>AI-accelerated attacks</b> (frontier models like Anthropic’s Mythos can auto-discover and exploit vulnerabilities), and how we govern the <b>AI we run</b>. Powers the CEO &amp; CISO AI-risk panels.</div></div><div class="badge" id="bai">recommended</div></div>
+    <div class="row c3">
+      <div class="field"><label>AI / LLM systems in production</label><div class="moneyf"><span class="cur">#</span><input type="number" step="1" class="mnum" id="aiSystems" placeholder="0"><select class="munit" id="aiSystems_u"><option value="1" selected>—</option><option value="1000">K</option></select></div></div>
+      <div class="field"><label>AI in customer-facing / automated decisioning?</label><select id="aiDecisioning"><option value="">Select…</option><option>Yes</option><option>Piloting</option><option>No</option></select></div>
+      <div class="field"><label>AI governance framework adopted</label><select id="aiFramework"><option value="">Select…</option><option>NIST AI RMF</option><option>ISO/IEC 42001</option><option>Both</option><option>None yet</option></select></div>
+    </div>
+    <div class="row c3" style="margin-top:14px">
+      <div class="field"><label>AI acceptable-use &amp; risk policy?</label><select id="aiPolicy"><option value="">Select…</option><option>Board-approved</option><option>Drafted</option><option>None</option></select></div>
+      <div class="field"><label>EU AI Act in scope?</label><select id="aiEuAct"><option value="">Select…</option><option>Yes — high-risk system</option><option>Yes — limited-risk</option><option>Not in scope</option><option>Unsure</option></select></div>
+      <div class="field"><label>AI systems inventoried &amp; monitored?</label><select id="aiInventory"><option value="">Select…</option><option>Yes — inventoried</option><option>Partially</option><option>No</option></select></div>
+    </div>
+  </div>
+
   <!-- 2 · Financials -->
   <div class="sec">
     <div class="sh"><div class="sn">2</div><div><div class="st">Financials &amp; appetite</div><div class="sd">Turns cyber risk into board language — % of revenue, materiality, appetite, ROI. Enter a number and pick the unit (B/M/K).</div></div><div class="badge" id="b2">optional</div></div>
@@ -345,6 +360,8 @@
   document.querySelectorAll('input[type=date]').forEach(function(dt){dt.addEventListener('click',function(){try{if(this.showPicker)this.showPicker();}catch(_){}});});
   // board-governance section badge
   ['govCommittee','govCadence','govCisoLine','govExpertise','govErm','govIrTested','govRetainer','govRansom'].forEach(function(id){var e=document.getElementById(id);if(e)e.addEventListener('change',function(){var any=['govCommittee','govCadence','govCisoLine','govExpertise','govErm','govIrTested'].some(function(k){var el=document.getElementById(k);return el&&el.value;});var b=document.getElementById('bgov');if(b&&any){b.textContent='✓ provided';b.classList.add('done');}});});
+  // AI risk & governance section badge
+  ['aiSystems','aiDecisioning','aiFramework','aiPolicy','aiEuAct','aiInventory'].forEach(function(id){var e=document.getElementById(id);if(e)e.addEventListener('change',function(){var b=document.getElementById('bai');if(b){b.textContent='✓ provided';b.classList.add('done');}});});
 
   // ---- CSV/TSV parsing ----
   function parseDelim(text){
@@ -608,6 +625,10 @@
         committee:v('govCommittee'),cadence:v('govCadence'),cisoReportsTo:v('govCisoLine'),
         boardExpertise:v('govExpertise'),ermIntegrated:v('govErm'),
         ir:{tested:v('govIrTested'),lastTabletop:v('govTabletop'),retainer:v('govRetainer'),ransomwarePolicy:v('govRansom')}
+      },
+      aiGovernance:{
+        systems:mval('aiSystems'),decisioning:v('aiDecisioning'),framework:v('aiFramework'),
+        policy:v('aiPolicy'),euAiAct:v('aiEuAct'),inventory:v('aiInventory')
       }
     };
     btn.disabled=true;msg.textContent='Building your cockpit…';msg.style.color='var(--muted)';

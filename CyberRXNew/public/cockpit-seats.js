@@ -43,6 +43,8 @@ var SEATS = {
    +sec('07','Governance, oversight &amp; SEC disclosure readiness','How the board oversees cyber — the structure SEC Reg S-K Item 106 requires you to disclose — plus the evidenced decision log that is your D&amp;O defense.',
      '<div id="ceoGov"><div class="card"><div class="ck">Board oversight structure · SEC Item 106</div><div class="cn" style="margin-top:8px">◐ Add your board-governance answers in onboarding to make this filing-ready.</div></div></div>'
      +'<div id="ceoOversight" style="margin-top:14px">'+kvcard('Oversight &amp; decision record',[{k:'Funded decisions logged',v:'from your decisions',ev:'oversight'},{k:'Each carries',v:'leader · date · ticket',ev:'oversight'},{k:'Board-appetite reviewed',v:'this quarter',cls:'good'},{k:'Defensibility',v:'evidenced trail',cls:'good',ev:'oversight'}])+'</div>')
+   +sec('08','AI risk — are we ready for AI-accelerated attacks, and is our own AI governed?','The board’s two AI questions: our exposure as frontier models (e.g. Anthropic’s <b>Mythos</b>) make attackers faster at finding and exploiting weaknesses, and whether the AI we run is governed and compliant (NIST AI RMF · ISO 42001 · EU AI Act).',
+     '<div id="ceoAiRisk"><div class="card"><div class="cn">◐ Add your AI-governance answers in onboarding, and connect vulnerability management, to populate this from live data.</div></div></div>')
   );}
  },
 
@@ -182,6 +184,8 @@ var SEATS = {
        {tag:'C · AI-decisioning governance',on:'Option C · AI governance',osum:'standard + oversight',pros:['Addresses the fastest-rising risk (+$8M/qtr)','Gets ahead of the AI board decision'],cons:['Does not touch the $52M top driver yet','Benefit is preventive, not immediate risk removed']}]}]))
    +sec('05','Current cyber initiatives & their ROI','The live portfolio of funded cyber projects — every committed decision, its cost, its return and its ticket — that you own jointly with the CFO. These are new spends to manage closely.',
      '<div id="initiatives-panel"></div>')
+   +sec('06','AI: our exposure to AI-accelerated attack, and our AI governance','Operator lens on the board’s AI question — the attack surface reachable by autonomous exploitation (frontier models like <b>Mythos</b>), patch velocity vs the collapsing exploit window, and governance of the AI we run (NIST AI RMF · OWASP LLM).',
+     '<div id="cisoAiRisk"><div class="card"><div class="cn">◐ Add AI-governance answers in onboarding and connect vulnerability management for live data.</div></div></div>')
   );}
  }
 };

@@ -529,6 +529,7 @@ function renderSignals(){
     var pcts=['edr_pct','mfa_pct','pam_pct'].map(sig).filter(function(x){return x!=null;});
     if(pcts.length){var avg=Math.round(pcts.reduce(function(s,x){return s+x;},0)/pcts.length);setTxt('lvCovTile',avg+'%');var tn=document.getElementById('lvCovTileNote');if(tn)tn.innerHTML='<span class="pill good">live</span> from '+pcts.length+' connected tool'+(pcts.length>1?'s':'');}
   }
+  renderAiRisk();
 }
 function loadSignals(){var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}}).catch(function(){});}catch(_){}}
@@ -646,7 +647,36 @@ function renderGov(){
     '<div style="margin-top:8px">'+items.map(function(i){return govRow(i.k,i.v,i.ok);}).join('')+'</div>'+
     '<div class="cn" style="margin-top:8px">These are the exact governance disclosures Item 106(c) requires in your 10-K. Fill any gaps in onboarding to make this filing-ready.</div></div>';
 }
-function renderBoard(){renderStress();renderReadiness();renderThirdParty();renderGov();renderMateriality();}
+function renderBoard(){renderStress();renderReadiness();renderThirdParty();renderGov();renderMateriality();renderAiRisk();}
+/* AI risk (CEO + CISO) — exposure to AI-accelerated attacks (frontier models like
+   Anthropic's Mythos that auto-discover/exploit vulnerabilities) + governance of
+   the AI we run. Threat readiness combines the real attack surface with live
+   patch-velocity / detection signals; governance from the onboarding answers. */
+function renderAiRisk(){
+  var ai=LIVE&&LIVE.aiRisk;if(!ai)return;var g=ai.governance||{};
+  var patch=sig('patch_pct'),mttd=sig('mttd_hrs');
+  var surface=ai.crown_jewels_internet_facing||0,allIf=ai.internet_facing_assets||0;
+  var threat='<div class="card"><div class="ck">Exposure to AI-accelerated attacks</div>'+
+    '<div class="cn" style="margin-top:6px">Frontier models (e.g. Anthropic’s <b>Mythos</b>) can autonomously discover and exploit vulnerabilities, collapsing the window between disclosure and attack. Our readiness:</div>'+
+    '<div style="display:flex;gap:22px;margin-top:12px;flex-wrap:wrap">'+
+    '<div><div class="cv" style="font-size:20px;color:'+(surface>0?'var(--warn)':'var(--good)')+'">'+surface+' / '+allIf+'</div><div class="cn">internet-facing crown jewels / assets (attack surface)</div></div>'+
+    '<div><div class="cv" style="font-size:20px'+(patch!=null?'':';color:var(--muted)')+'">'+(patch!=null?patch+'%':'connect vuln mgmt')+'</div><div class="cn">patch coverage'+(patch!=null?' <span class="pill good" style="font-size:9px">live</span>':'')+'</div></div>'+
+    (mttd!=null?'<div><div class="cv" style="font-size:20px">'+mttd+'h</div><div class="cn">mean time to detect <span class="pill good" style="font-size:9px">live</span></div></div>':'')+
+    '</div></div>';
+  var items=[
+    {k:'AI governance framework',v:g.framework||'not set',ok:/NIST|ISO|Both/i.test(g.framework||'')},
+    {k:'AI acceptable-use &amp; risk policy',v:g.policy||'not set',ok:/board-approved/i.test(g.policy||'')},
+    {k:'AI systems inventoried &amp; monitored',v:g.inventory||'not set',ok:/inventoried/i.test(g.inventory||'')},
+    {k:'EU AI Act position',v:g.euAiAct||'not set',ok:!!g.euAiAct&&!/unsure/i.test(g.euAiAct||'')},
+    {k:'AI in customer-facing / decisioning',v:g.decisioning||'not set',ok:!!g.decisioning}
+  ];
+  var ready=items.filter(function(i){return i.ok;}).length;
+  var gov='<div class="card"><div class="ck">Governance of the AI we run <span class="tag '+(ready>=4?'good':'warn')+'" style="font-size:10px;margin-left:6px">'+ready+' / '+items.length+' evidenced</span></div>'+
+    '<div style="margin-top:8px">'+items.map(function(i){return govRow(i.k,i.v,i.ok);}).join('')+'</div>'+
+    '<div class="cn" style="margin-top:8px">Anchored to NIST AI RMF / ISO 42001 and the EU AI Act. Fill gaps in onboarding to make this board- and audit-ready.</div></div>';
+  var html='<div class="cols">'+threat+gov+'</div>';
+  ['ceoAiRisk','cisoAiRisk'].forEach(function(hid){var host=document.getElementById(hid);if(host)host.innerHTML=html;});
+}
 /* CLO materiality-determination workbench — a timed, evidenced determination.
    Records material/not-material with the deciding leader + timestamp, then shows
    the live SEC 4-business-day and binding-jurisdiction countdowns. The D&O defense. */
