@@ -166,6 +166,20 @@ async function run(orgId) {
 
   const governance = setup.governance || {};
 
+  // CFO earnings translation — cyber loss in the terms the CFO uniquely owns:
+  // % of annual earnings, EPS impact, and revenue at risk per day of downtime.
+  // Derived from the org's net income, shares outstanding, and downtime $/hr.
+  const finIn = (econIn && econIn.financials) || {};
+  const netIncome = num(finIn.netIncome);
+  const shares = num(finIn.sharesOutstanding);
+  const earnings = {
+    expected_pct_of_earnings: netIncome > 0 ? economics.ale / netIncome : null,
+    worst_case_pct_of_earnings: netIncome > 0 ? num(economics.tail) / netIncome : null,
+    eps_impact_worst: shares > 0 ? num(economics.tail) / shares : null,
+    eps_impact_expected: shares > 0 ? economics.ale / shares : null,
+    revenue_at_risk_per_day: resilience.top_downtime_per_hr != null ? resilience.top_downtime_per_hr * 24 : null,
+  };
+
   return {
     org_id: orgId,
     generated_at: new Date().toISOString(),
@@ -180,6 +194,7 @@ async function run(orgId) {
         score: Math.round(a.criticality_score * 100), breakdown: a.criticality_breakdown, rationale: a.rationale,
       })),
       economics,
+      earnings,
       legal,
       resilience,
       governance,

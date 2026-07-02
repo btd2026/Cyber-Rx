@@ -70,6 +70,7 @@ router.post('/ingest', optionalJWT, async (req, res) => {
       financials: {
         revenue: money(fin.revenue), operatingIncome: money(fin.operatingIncome),
         netIncome: money(fin.netIncome), enterpriseValue: money(fin.enterpriseValue),
+        sharesOutstanding: money(fin.sharesOutstanding),
       },
       appetite: money(b.appetite),
       insurance: {

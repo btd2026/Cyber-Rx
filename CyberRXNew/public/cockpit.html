@@ -252,7 +252,7 @@ function render(seat){
   h+='<div class="spine"><span class="lk">⛓ One source of truth</span><span class="num"><b id="lvSpineExpo">$68M</b> <span>expected annual loss ·</span> <b id="lvSpineTail">$180M</b> <span>tail</span></span><span class="arrow">the same number every seat sees — in the <b>'+SEAT_LABEL[seat]+'</b> lens ↓</span></div></div>';
   h+=s.body();
   document.getElementById('app').innerHTML=h;
-  wireChoose();renderInitiatives();renderChain();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();applyLive();window.scrollTo({top:0});
 }
 </script>
 <script src="cockpit-seats.js"></script>
@@ -498,7 +498,7 @@ function applyLive(){if(!LIVE)return;var e=LIVE.economics||{},r=e.ratios||{},ap=
     if(rs.tech_debt&&rs.tech_debt.exposure)setTxt('lvTechDebt',usd(rs.tech_debt.exposure));
   }}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderProcBars();renderCioSystems();renderBoard();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderProcBars();renderCioSystems();renderBoard();renderEarnings();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -612,6 +612,19 @@ function renderGov(){
     '<div class="cn" style="margin-top:8px">These are the exact governance disclosures Item 106(c) requires in your 10-K. Fill any gaps in onboarding to make this filing-ready.</div></div>';
 }
 function renderBoard(){renderStress();renderReadiness();renderThirdParty();renderGov();}
+/* CFO: cyber loss translated into earnings / EPS / revenue-at-risk (from /summary
+   earnings — net income, shares outstanding, downtime cost). */
+function renderEarnings(){
+  var host=document.getElementById('cfoEarnings');if(!host)return;var e=LIVE&&LIVE.earnings;if(!e)return;
+  var cards=[];
+  if(e.worst_case_pct_of_earnings!=null)cards.push({k:'Worst case = share of annual earnings',v:pct(e.worst_case_pct_of_earnings,e.worst_case_pct_of_earnings<0.1?1:0),warn:e.worst_case_pct_of_earnings>=0.1});
+  if(e.eps_impact_worst!=null)cards.push({k:'Worst-case EPS impact',v:'−$'+e.eps_impact_worst.toFixed(e.eps_impact_worst<1?2:2),warn:true});
+  if(e.revenue_at_risk_per_day!=null)cards.push({k:'Revenue at risk / day of downtime',v:usd(e.revenue_at_risk_per_day)});
+  if(e.expected_pct_of_earnings!=null)cards.push({k:'Expected loss = share of earnings',v:pct(e.expected_pct_of_earnings,1)});
+  if(!cards.length)return;
+  cards=cards.slice(0,4);
+  host.innerHTML='<div class="grid'+(cards.length>=4?'4':'3')+'">'+cards.map(function(c){return '<div class="card"><div class="ck">'+c.k+'</div><div class="cv" style="font-size:22px;margin-top:6px'+(c.warn?';color:var(--warn)':'')+'">'+c.v+'</div></div>';}).join('')+'</div>';
+}
 /* CIO "which systems carry the business" — the crown-jewel systems, ranked by
    $/hr of downtime (from /summary resilience.systems). Illustrative until live. */
 function renderCioSystems(){
