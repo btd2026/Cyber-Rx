@@ -105,6 +105,11 @@
   .cjrow .cjscore-n{font-size:19px;font-weight:800;color:#e6c25a;line-height:1}
   .cjrow .cjbar{height:5px;background:#2a2a28;border-radius:3px;margin-top:6px;overflow:hidden}
   .cjrow .cjbar i{display:block;height:100%;background:#e6c25a;border-radius:3px}
+  .cjrow .cjscore-l{font-size:9px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-top:4px}
+  .cjmeta{display:flex;flex-wrap:wrap;gap:10px 22px;margin-top:10px}
+  .cjm{display:flex;flex-direction:column;line-height:1.3}
+  .cjm b{font-size:12.5px;font-weight:700;color:var(--ink-2)}.cjm.hot b{color:var(--crit)}.cjm.warn b{color:var(--warn)}.cjm.rtag b{color:var(--serious,#e0a94a);font-weight:600}
+  .cjm i{font-size:9.5px;font-style:normal;color:var(--muted);letter-spacing:.03em;text-transform:uppercase;margin-top:1px}
   .qoq{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;margin-bottom:16px}
   .qtbl{width:100%;border-collapse:collapse;font-size:12.5px}.qtbl th{text-align:left;color:var(--muted);font-weight:600;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;padding:0 8px 9px 0;border-bottom:1px solid var(--line)}
   .qtbl td{padding:10px 8px 10px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}.qtbl tr:last-child td{border:none;font-weight:700}.qtbl .up{color:var(--good)}
@@ -547,10 +552,10 @@ var GRAPH=null;
    /summary), each with its tier, score, the process(es) it supports, and a
    concise rationale. No per-process repetition. */
 var ILLU_CJ=[
-  {name:'Claims &amp; payments database',tier:'Tier 1',score:83,procs:['Claims &amp; payments processing'],why:'Holds PHI + cardholder data; single point of failure for a critical revenue process; internet-reachable.'},
-  {name:'Member portal',tier:'Tier 2',score:76,procs:['Member portal &amp; servicing'],why:'Customer PII at scale; internet-facing; high transaction volume.'},
-  {name:'Settlement engine',tier:'Tier 2',score:72,procs:['Trading &amp; settlement'],why:'Moves funds; time-critical recovery window.'},
-  {name:'Policy administration system',tier:'Tier 3',score:64,procs:['Policy administration'],why:'System of record for policies; sensitive data; high availability need.'}
+  {name:'Claims &amp; payments database',tier:'Tier 1',score:83,procs:['Claims &amp; payments processing'],why:'Holds PHI + cardholder data; single point of failure for a critical revenue process; internet-reachable.',exposure:34e6,topRisk:{title:'Ransomware → payments halt'},data:['PHI','PCI'],internet:true,recovery:74,riskCount:3},
+  {name:'Member portal',tier:'Tier 2',score:76,procs:['Member portal &amp; servicing'],why:'Customer PII at scale; internet-facing; high transaction volume.',exposure:18e6,topRisk:{title:'Account takeover / breach'},data:['PII'],internet:true,recovery:40,riskCount:2},
+  {name:'Settlement engine',tier:'Tier 2',score:72,procs:['Trading &amp; settlement'],why:'Moves funds; time-critical recovery window.',exposure:11e6,topRisk:{title:'Settlement disruption'},data:['Financial'],internet:false,recovery:28,riskCount:1},
+  {name:'Policy administration system',tier:'Tier 3',score:64,procs:['Policy administration'],why:'System of record for policies; sensitive data; high availability need.',exposure:5e6,topRisk:{title:'Data exposure'},data:['PII'],internet:false,recovery:12,riskCount:1}
 ];
 function tierLabel(t){t=String(t||'').toLowerCase().replace('tier','').trim();if(t==='1')return 'Tier 1';if(t==='2')return 'Tier 2';if(t==='3')return 'Tier 3';return t?('Tier '+t):'';}
 function cleanWhy(name,why){why=String(why||'').trim();var n=String(name||'').trim();
@@ -563,17 +568,28 @@ function crownList(){
     (GRAPH.edges||[]).forEach(function(e){if(e.type==='supports'){var an=byId[e.target],pn=byId[e.source];if(an&&pn){(procsOfAsset[an.label]=procsOfAsset[an.label]||[]).push(pn.label);}}});}
   return LIVE.crown_jewels.map(function(c){
     var seen={},procs=[];(procsOfAsset[c.name]||[]).forEach(function(p){if(!seen[p]){seen[p]=1;procs.push(p);}});
-    return {name:c.name,tier:tierLabel(c.tier),score:c.score,procs:procs.slice(0,3),moreProcs:Math.max(0,procs.length-3),why:cleanWhy(c.name,c.rationale)};
+    return {name:c.name,tier:tierLabel(c.tier),score:c.score,procs:procs.slice(0,3),moreProcs:Math.max(0,procs.length-3),why:cleanWhy(c.name,c.rationale),
+      exposure:c.exposure_usd||0,topRisk:c.top_risk||null,data:c.data_classification||[],internet:!!c.internet_facing,recovery:c.recovery_hours,riskCount:c.open_risk_count||0};
   });
 }
+function cjMetric(val,label,cls){return '<span class="cjm'+(cls?' '+cls:'')+'"><b>'+val+'</b><i>'+label+'</i></span>';}
 function cjRow(c,i){
   var maxScore=100;var pct=Math.round(Math.min(100,(c.score||60))/maxScore*100);
   var procs=c.procs&&c.procs.length?('Supports: '+c.procs.join(' · ')+(c.moreProcs?(' +'+c.moreProcs+' more'):'')):'';
+  // CISO columns: today's $ exposure, top open risk, data class, exposure surface, recovery
+  var meta='<div class="cjmeta">'+
+    cjMetric(c.exposure>0?usd(c.exposure):'—','exposure today',c.exposure>0?'hot':'')+
+    cjMetric(c.topRisk&&c.topRisk.title?c.topRisk.title:'—','top open risk','rtag')+
+    cjMetric((c.data&&c.data.length)?c.data.slice(0,2).join(', '):'—','data')+
+    cjMetric(c.internet?'Internet-facing':'Internal',(c.internet?'exposure surface':'exposure surface'),c.internet?'warn':'')+
+    cjMetric(c.recovery!=null?hrsToStr(c.recovery):'—','recovery (RTO)')+
+    (c.riskCount?cjMetric(c.riskCount,'open risks'):'')+
+    '</div>';
   return '<div class="cjrow"><div class="cjrank">#'+(i+1)+'</div>'+
     '<div class="cjmain"><div class="cjname">'+c.name+(c.tier?'<span class="cjtier">'+c.tier+'</span>':'')+'</div>'+
-    (procs?'<div class="cjprocs">'+procs+'</div>':'')+
+    (procs?'<div class="cjprocs">'+procs+'</div>':'')+meta+
     (c.why?'<div class="cjwhy">'+c.why+'</div>':'')+'</div>'+
-    '<div class="cjscore"><div class="cjscore-n">'+(c.score!=null?c.score:'')+'</div><div class="cjbar"><i style="width:'+pct+'%"></i></div></div></div>';
+    '<div class="cjscore"><div class="cjscore-n">'+(c.score!=null?c.score:'')+'</div><div class="cjbar"><i style="width:'+pct+'%"></i></div><div class="cjscore-l">criticality</div></div></div>';
 }
 /* CEO "which business processes carry the risk" — real per-process exposure from
    /summary (process_exposure), ranked. Keeps illustrative bars until live. */
