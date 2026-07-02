@@ -47,6 +47,29 @@
   .tmpl b{color:var(--ink-2)}
   .result{margin-top:12px;font-size:12.5px}
   .result .ok{color:var(--good);font-weight:600}
+  .moneyf{display:flex;align-items:stretch;border:1px solid var(--line-2);border-radius:9px;overflow:hidden;background:var(--plane)}
+  .moneyf:focus-within{border-color:var(--blue)}
+  .moneyf .cur{display:flex;align-items:center;padding:0 11px;color:var(--muted);font-weight:600;font-size:13.5px;border-right:1px solid var(--line)}
+  .moneyf input{border:none;border-radius:0;flex:1;background:transparent}
+  .moneyf select{border:none;border-radius:0;width:64px;background:var(--surface-2);color:var(--ink-2);border-left:1px solid var(--line)}
+  .money-eq{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:5px;min-height:14px}
+  .money-eq b{color:var(--ink-2)}
+  /* connect-a-system */
+  .srcchoice{display:flex;gap:10px;margin-bottom:12px}
+  .srcopt{flex:1;border:1px solid var(--line-2);border-radius:10px;padding:12px 14px;cursor:pointer}
+  .srcopt.sel{border-color:var(--blue);background:var(--blue-soft)}
+  .srcopt .so-h{font-weight:600;font-size:13px}.srcopt .so-d{font-size:11.5px;color:var(--muted);margin-top:3px}
+  .conn-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-top:10px}
+  .conn-go{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:12.5px;cursor:pointer}
+  .conn-go.done{background:var(--good)}
+  .conn-msg{font-size:12px;color:var(--muted);margin-top:8px}
+  .toolgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .toolcard{border:1px solid var(--line-2);border-radius:10px;padding:12px 14px}
+  .toolcard .th{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px}
+  .toolcard .tstat{margin-left:auto;font-size:11px;font-weight:700;color:var(--muted)}.toolcard .tstat.on{color:var(--good)}
+  .toolcard .tf{display:flex;gap:8px;margin-top:9px}
+  .toolcard input{font-size:12px;padding:7px 9px}
+  .toolcard .tb{background:var(--blue);color:#fff;border:none;border-radius:7px;padding:7px 12px;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap}
   .xlist{margin-top:10px;max-height:150px;overflow-y:auto;border:1px solid var(--line);border-radius:9px}
   .xrow{display:flex;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);font-size:12.5px}.xrow:last-child{border:none}
   .xrow .nm{font-weight:600}.xrow .mt{color:var(--muted);margin-left:auto;font-size:12px}
@@ -79,23 +102,28 @@
         <option value="">Select…</option><option>Financial services</option><option>Banking</option><option>Insurance</option><option>Healthcare</option><option>Technology / SaaS</option><option>Manufacturing</option><option>Retail / e-commerce</option><option>Energy / Utilities</option><option>Telecommunications</option><option>Transportation / Logistics</option><option>Government / Public sector</option><option>Professional services</option><option>Other</option>
       </select></div>
     </div>
-    <div class="field" style="margin-top:14px"><label>Operating regions <span class="h">— sets notification clocks &amp; penalties</span></label>
-      <div class="chips" id="regions"><span class="chip" data-r="US">United States</span><span class="chip" data-r="EU">European Union</span><span class="chip" data-r="UK">United Kingdom</span><span class="chip" data-r="Canada">Canada</span><span class="chip" data-r="Singapore">Singapore</span><span class="chip" data-r="Australia">Australia</span><span class="chip" data-r="APAC">APAC (other)</span><span class="chip" data-r="Global">Global</span></div>
+    <div class="row c2" style="margin-top:14px">
+      <div class="field"><label>Reporting currency</label><select id="currency">
+        <option value="$|USD">$ — US Dollar (USD)</option><option value="€|EUR">€ — Euro (EUR)</option><option value="£|GBP">£ — British Pound (GBP)</option><option value="C$|CAD">C$ — Canadian Dollar (CAD)</option><option value="A$|AUD">A$ — Australian Dollar (AUD)</option><option value="S$|SGD">S$ — Singapore Dollar (SGD)</option><option value="¥|JPY">¥ — Japanese Yen (JPY)</option><option value="CHF|CHF">CHF — Swiss Franc</option><option value="₹|INR">₹ — Indian Rupee (INR)</option>
+      </select></div>
+      <div class="field"><label>Operating regions <span class="h">— sets notification clocks &amp; penalties</span></label>
+        <div class="chips" id="regions"><span class="chip" data-r="US">US</span><span class="chip" data-r="EU">EU</span><span class="chip" data-r="UK">UK</span><span class="chip" data-r="Canada">Canada</span><span class="chip" data-r="Singapore">Singapore</span><span class="chip" data-r="Australia">Australia</span><span class="chip" data-r="APAC">APAC</span><span class="chip" data-r="Global">Global</span></div>
+      </div>
     </div>
   </div>
 
   <!-- 2 · Financials -->
   <div class="sec">
-    <div class="sh"><div class="sn">2</div><div><div class="st">Financials &amp; appetite</div><div class="sd">Turns cyber risk into board language — % of revenue, materiality, appetite, ROI. Type values like $8.4B or $120M.</div></div><div class="badge" id="b2">optional</div></div>
+    <div class="sh"><div class="sn">2</div><div><div class="st">Financials &amp; appetite</div><div class="sd">Turns cyber risk into board language — % of revenue, materiality, appetite, ROI. Enter a number and pick the unit (B/M/K).</div></div><div class="badge" id="b2">optional</div></div>
     <div class="row c3">
-      <div class="field"><label>Annual revenue</label><input id="finRevenue" placeholder="$8.4B"></div>
-      <div class="field"><label>Operating income</label><input id="finOpInc" placeholder="$1.4B"></div>
-      <div class="field"><label>Net income</label><input id="finNetInc" placeholder="$1.06B"></div>
+      <div class="field"><label>Annual revenue</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum money" id="finRevenue" placeholder="8.4"><select class="munit" id="finRevenue_u"><option value="1000000000" selected>B</option><option value="1000000">M</option><option value="1000">K</option><option value="1">—</option></select></div><div class="money-eq" id="finRevenue_eq"></div></div>
+      <div class="field"><label>Operating income</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum money" id="finOpInc" placeholder="1.4"><select class="munit" id="finOpInc_u"><option value="1000000000" selected>B</option><option value="1000000">M</option><option value="1000">K</option></select></div><div class="money-eq" id="finOpInc_eq"></div></div>
+      <div class="field"><label>Net income</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum money" id="finNetInc" placeholder="1.06"><select class="munit" id="finNetInc_u"><option value="1000000000" selected>B</option><option value="1000000">M</option><option value="1000">K</option></select></div><div class="money-eq" id="finNetInc_eq"></div></div>
     </div>
     <div class="row c3" style="margin-top:14px">
-      <div class="field"><label>Enterprise value / market cap</label><input id="finEV" placeholder="$30B"></div>
-      <div class="field"><label>Board cyber-risk appetite</label><input id="finAppetite" placeholder="$120M"></div>
-      <div class="field"><label>Annual cyber budget</label><input id="finBudget" placeholder="$9M"></div>
+      <div class="field"><label>Enterprise value / market cap</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum money" id="finEV" placeholder="30"><select class="munit" id="finEV_u"><option value="1000000000" selected>B</option><option value="1000000">M</option></select></div><div class="money-eq" id="finEV_eq"></div></div>
+      <div class="field"><label>Board cyber-risk appetite</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum money" id="finAppetite" placeholder="120"><select class="munit" id="finAppetite_u"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div><div class="money-eq" id="finAppetite_eq"></div></div>
+      <div class="field"><label>Annual cyber budget</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum money" id="finBudget" placeholder="9"><select class="munit" id="finBudget_u"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div><div class="money-eq" id="finBudget_eq"></div></div>
     </div>
   </div>
 
@@ -103,9 +131,9 @@
   <div class="sec">
     <div class="sh"><div class="sn">3</div><div><div class="st">Cyber insurance</div><div class="sd">Powers the coverage-vs-worst-case gap and the renewal position.</div></div><div class="badge" id="b3">optional</div></div>
     <div class="row c3">
-      <div class="field"><label>Coverage limit</label><input id="insLimit" placeholder="$150M"></div>
-      <div class="field"><label>Annual premium</label><input id="insPrem" placeholder="$4.2M"></div>
-      <div class="field"><label>Renewal date</label><input id="insRenew" placeholder="2026-09-30"></div>
+      <div class="field"><label>Coverage limit</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum money" id="insLimit" placeholder="150"><select class="munit" id="insLimit_u"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div><div class="money-eq" id="insLimit_eq"></div></div>
+      <div class="field"><label>Annual premium</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum money" id="insPrem" placeholder="4.2"><select class="munit" id="insPrem_u"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div><div class="money-eq" id="insPrem_eq"></div></div>
+      <div class="field"><label>Renewal date</label><input type="date" id="insRenew"></div>
     </div>
   </div>
 
@@ -150,6 +178,14 @@
   function apiBase(){try{return (window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'https://cyber-rx.onrender.com').replace(/\/+$/,'');}catch(_){return 'https://cyber-rx.onrender.com';}}
   function slug(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,32)||'org';}
   var PROC=[],APP=[],RISK=[],REGIONS=[];
+  var CUR_SYM='$',CUR_CODE='USD';
+
+  // ---- money fields: number + unit → value, with a formatted equivalent ----
+  function mval(id){var e=document.getElementById(id),u=document.getElementById(id+'_u');if(!e||!e.value)return 0;var n=Number(e.value);if(!isFinite(n))return 0;return n*(u?Number(u.value):1);}
+  function fmtMoney(n){return CUR_SYM+Math.round(n).toLocaleString('en-US');}
+  function updateEq(id){var eq=document.getElementById(id+'_eq');if(!eq)return;var val=mval(id);eq.innerHTML=val>0?('= <b>'+fmtMoney(val)+'</b>'):'';}
+  document.querySelectorAll('.money').forEach(function(inp){var id=inp.id;inp.addEventListener('input',function(){updateEq(id);updateSummary();});var u=document.getElementById(id+'_u');if(u)u.addEventListener('change',function(){updateEq(id);});});
+  document.getElementById('currency').addEventListener('change',function(){var p=this.value.split('|');CUR_SYM=p[0];CUR_CODE=p[1]||'USD';document.querySelectorAll('.mcur').forEach(function(c){c.textContent=CUR_SYM;});document.querySelectorAll('.money').forEach(function(i){updateEq(i.id);});});
 
   // ---- CSV/TSV parsing ----
   function parseDelim(text){
@@ -197,10 +233,10 @@
   document.querySelectorAll('#regions .chip').forEach(function(c){c.addEventListener('click',function(){c.classList.toggle('on');REGIONS=[...document.querySelectorAll('#regions .chip.on')].map(function(x){return x.dataset.r;});var b=document.getElementById('b1');if(REGIONS.length){b.textContent='✓ '+REGIONS.length+' regions';b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}updateSummary();});});
   ['orgName','industry','finRevenue','finAppetite','insLimit'].forEach(function(id){var e=document.getElementById(id);if(e)e.addEventListener('input',updateSummary);});
   function v(id){var e=document.getElementById(id);return e?String(e.value||'').trim():'';}
-  function anyFin(){return v('finRevenue')||v('finOpInc')||v('finNetInc')||v('finEV')||v('finAppetite')||v('finBudget');}
+  function anyFin(){return mval('finRevenue')||mval('finOpInc')||mval('finNetInc')||mval('finEV')||mval('finAppetite')||mval('finBudget');}
   function updateSummary(){
     if(anyFin()){document.getElementById('b2').textContent='✓ provided';document.getElementById('b2').classList.add('done');}
-    if(v('insLimit')||v('insPrem')){document.getElementById('b3').textContent='✓ provided';document.getElementById('b3').classList.add('done');}
+    if(mval('insLimit')||mval('insPrem')){document.getElementById('b3').textContent='✓ provided';document.getElementById('b3').classList.add('done');}
     var parts=[];if(PROC.length)parts.push(PROC.length+' processes');if(APP.length)parts.push(APP.length+' systems');if(RISK.length)parts.push(RISK.length+' risks');if(anyFin())parts.push('financials');
     document.getElementById('summary').innerHTML=parts.length?('Collected: <b>'+parts.join(' · ')+'</b>'):'Add at least your processes or systems to go live';
   }
@@ -212,10 +248,10 @@
     if(!PROC.length&&!APP.length){msg.textContent='Upload your processes or systems first.';msg.style.color='var(--warn)';return;}
     var orgId='org_'+slug(org);
     var payload={
-      org_name:org,org_id:orgId,industry:v('industry'),regions:REGIONS,
-      financials:{revenue:v('finRevenue'),operatingIncome:v('finOpInc'),netIncome:v('finNetInc'),enterpriseValue:v('finEV')},
-      appetite:v('finAppetite'),budget:v('finBudget'),
-      insurance:{limit:v('insLimit'),premium:v('insPrem'),renewal:v('insRenew')},
+      org_name:org,org_id:orgId,industry:v('industry'),regions:REGIONS,currency:CUR_CODE,
+      financials:{revenue:mval('finRevenue'),operatingIncome:mval('finOpInc'),netIncome:mval('finNetInc'),enterpriseValue:mval('finEV')},
+      appetite:mval('finAppetite'),budget:mval('finBudget'),
+      insurance:{limit:mval('insLimit'),premium:mval('insPrem'),renewal:v('insRenew')},
       processes:PROC.map(function(p){return {name:p.name,data:p.data,rev:p.revenue,revenue:p.revenue,rto:p.rto,criticality:p.criticality};}),
       apps:APP.map(function(a){return {name:a.name,host:a.host,data:a.data,vendor:a.vendor,eol:a.eol,recovery:a.recovery};}),
       risks:RISK.map(function(r){return {title:r.title,severity:r.severity,asset:r.asset,status:r.status,financial_exposure:r.exposure};})
