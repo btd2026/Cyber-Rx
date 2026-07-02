@@ -8,7 +8,7 @@
   :root{
     --plane:#0d0d0d; --surface:#1a1a19; --surface-2:#211f1d; --line:#2c2c2a; --line-2:#3a3a37;
     --ink:#fff; --ink-2:#c3c2b7; --muted:#898781;
-    --blue:#3987e5; --blue-soft:rgba(57,135,229,.14); --good:#0ca30c; --good-soft:rgba(12,163,12,.14); --warn:#fab219; --gold:#c79e3a;
+    --blue:#3987e5; --blue-soft:rgba(57,135,229,.14); --good:#0ca30c; --good-soft:rgba(12,163,12,.14); --warn:#fab219; --warn-soft:rgba(250,178,25,.14); --crit:#e5484d; --crit-soft:rgba(229,72,77,.14); --gold:#c79e3a; --gold-soft:rgba(199,158,58,.13);
     --mono:"SFMono-Regular",Consolas,Menlo,monospace;
   }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -83,6 +83,24 @@
   .mchip{font-size:11.5px;font-weight:600;color:var(--muted);background:var(--plane);border:1px dashed var(--line-2);border-radius:99px;padding:5px 11px;cursor:pointer}
   .mchip.on{color:#fff;background:var(--blue-soft);border:1px solid var(--blue)}
   .mapempty{font-size:12.5px;color:var(--muted)}
+  /* crown-jewel column graph (process → application → crown jewel) */
+  .cjmap{position:relative;display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-bottom:8px}
+  .colh{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:11px;text-align:center;font-weight:700}
+  .cjcol{display:flex;flex-direction:column;gap:10px}
+  .node{background:var(--surface);border:1px solid var(--line-2);border-radius:8px;padding:8px 10px;position:relative;z-index:2}
+  .node .nn{font-size:11.5px;font-weight:700;line-height:1.2}.node .nd{font-size:9.5px;color:var(--muted);margin-top:3px}
+  .node.proc{border-left:3px solid var(--muted)}.node.proc.h{border-left-color:var(--crit)}.node.proc.m{border-left-color:var(--warn)}.node.proc.l{border-left-color:var(--good)}
+  .node.cjwel{border-color:var(--gold);background:var(--gold-soft)}
+  .node.cjwel .badge{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);margin-bottom:4px;font-weight:700}
+  .node.cjwel .score{font-size:10px;color:var(--gold);float:right;font-weight:700}
+  .node.cjwel .why{font-size:10.5px;color:var(--ink-2);margin-top:5px;line-height:1.4}
+  .crit{font-size:9.5px;padding:2px 7px;border-radius:5px;font-weight:700}
+  .crit.h{color:var(--crit);background:var(--crit-soft)}.crit.m{color:var(--warn);background:var(--warn-soft)}.crit.l{color:var(--good);background:var(--good-soft)}
+  .cjsvg{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;overflow:visible}
+  .ln{fill:none;stroke:var(--blue);opacity:.32;stroke-width:1.5}.ln.id{stroke-dasharray:4 4;opacity:.22}.ln.cj{stroke:var(--gold);opacity:.6;stroke-width:2}
+  .mapedit{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+  .mapedit-h{font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  @media (max-width:680px){.cjmap{grid-template-columns:1fr;gap:14px}.cjsvg{display:none}}
   .note{font-size:12.5px;color:var(--muted);line-height:1.6}
   .note b{color:var(--ink-2)}
   .foot{position:sticky;bottom:0;background:linear-gradient(180deg,transparent,#0d0d0d 30%);padding:22px 0 26px;margin-top:24px}
@@ -274,7 +292,10 @@
     showRows(document.getElementById('resRisk'),RISK,function(x){return '<div class="xrow"><span class="nm">'+x.title+'</span><span class="mt">'+(x.asset||'')+(x.exposure?(' · '+x.exposure):'')+' · '+(x.severity||'')+'</span></div>';});
     var b=document.getElementById('b6');b.dataset.n=RISK.length;badgeDone('b6');updateSummary();});});
 
-  // ---- crown-jewel chain: map each application to the processes it supports ----
+  // ---- crown-jewel chain: process → application → crown jewels ----
+  // A visual, editable map: each application is linked to the process(es) it
+  // supports; we score a preview crown-jewel set (data sensitivity × exposure ×
+  // process criticality). The authoritative scoring runs on the engine at go-live.
   function mtok(s){return String(s||'').toUpperCase().split(/[^A-Z0-9]+/).filter(function(t){return t.length>1;});}
   function autoMap(app){
     var at=mtok(app.data);
@@ -282,20 +303,67 @@
     if(!m.length&&PROC.length){var rank={critical:0,high:1,medium:2,low:3};m=[PROC.slice().sort(function(x,y){var rx=rank[String(x.criticality||'').toLowerCase()],ry=rank[String(y.criticality||'').toLowerCase()];return (rx==null?2:rx)-(ry==null?2:ry);})[0].name];}
     return m;
   }
+  function dataRank(d){d=(d||'').toUpperCase();var s=0;if(/PHI/.test(d))s=Math.max(s,3);if(/PCI|CARDHOLDER/.test(d))s=Math.max(s,3);if(/CLASSIFIED|CUI/.test(d))s=Math.max(s,3);if(/FINANCIAL/.test(d))s=Math.max(s,2.5);if(/PII|PERSONAL/.test(d))s=Math.max(s,2);if(/IDENTITY|CREDENTIAL|SECRET/.test(d))s=Math.max(s,2.5);if(/INTERNAL|DOC|PUBLIC/.test(d)&&s===0)s=0.5;return s||1;}
+  function exposureOf(host){host=(host||'').toLowerCase();if(/internet|public|saas|cloud|aws|azure|gcp|portal|web|api|external/.test(host))return {x:1,l:'internet-facing'};if(/on-?prem|single|legacy|mainframe/.test(host))return {x:0.7,l:'on-prem'};if(/server|business_app|cmdb/.test(host))return {x:0.6,l:'business app'};return {x:0.4,l:'internal'};}
+  function procCritClass(p){var c=String(p.criticality||'').toLowerCase();if(/crit|high/.test(c))return 'h';if(/med/.test(c))return 'm';if(/low/.test(c))return 'l';var r=dataRank(p.data);return r>=3?'h':r<=0.5?'l':'m';}
+  function critWeight(cl){return cl==='h'?1:cl==='m'?0.6:0.3;}
+  var DATASENS={PHI:'Critical',PII:'High',PCI:'Critical',FINANCIAL:'High',IDENTITY:'Critical',IP:'High',CUI:'Critical',CLASSIFIED:'Critical',INTERNAL:'Low',PUBLIC:'Low'};
+  function sensLabel(data){var t=mtok(data)[0]||'';return DATASENS[t]||'Medium';}
+  // Build the graph model {procs, apps} with preview crown-jewel scoring.
+  function buildGraph(){
+    var procs=PROC.map(function(p,i){return {id:'P'+(i+1),n:p.name,cl:procCritClass(p),data:p.data||'Process',rev:p.revenue||''};});
+    var nameToId={};procs.forEach(function(p){nameToId[p.n.toLowerCase()]=p.id;});
+    var apps=APP.map(function(a,i){
+      if(!Array.isArray(a.processes))a.processes=autoMap(a);
+      var pids=a.processes.map(function(n){return nameToId[String(n).toLowerCase()];}).filter(Boolean);
+      var e=exposureOf(a.host),dr=dataRank(a.data);
+      var maxPC=pids.length?Math.max.apply(null,pids.map(function(id){var p=procs.filter(function(x){return x.id===id;})[0];return critWeight(p?p.cl:'l');})):0.3;
+      var core=/claim|billing|payment|erp|identity|sso|okta|active.?dir|portal|member|patient|enroll|ehr|core|ledger/i.test(a.name)?8:0;
+      var multi=pids.length>1?Math.min(pids.length*3,12):0;
+      var score=Math.round((dr/3)*30+e.x*20+maxPC*20+multi+core);
+      var lp=procs.filter(function(x){return x.id===pids[0];})[0];
+      var why=[];if(dr>=2)why.push('Holds '+a.data);why.push(e.l);if(pids.length>1)why.push('supports '+pids.length+' processes');else if(lp)why.push('runs '+lp.n);
+      return {id:'A'+(i+1),n:a.name,host:a.host||'—',data:a.data||'—',pids:pids,score:score,why:why.join(' · '),cj:false};
+    });
+    var sorted=apps.slice().sort(function(x,y){return y.score-x.score;});
+    var cjN=Math.min(apps.length,Math.max(2,Math.ceil(apps.length*0.3)));
+    sorted.forEach(function(a,i){a.cj=i<cjN&&a.score>0;});
+    return {procs:procs,apps:apps};
+  }
   function renderMap(){
-    var sec=document.getElementById('mapSec'),body=document.getElementById('mapBody');
+    var sec=document.getElementById('mapSec');
     if(!PROC.length||!APP.length){sec.style.display='none';return;}
     sec.style.display='';
-    body.innerHTML=APP.map(function(a,i){
-      if(!Array.isArray(a.processes))a.processes=autoMap(a);
+    var G=buildGraph();
+    var cjs=G.apps.filter(function(a){return a.cj;}).sort(function(x,y){return y.score-x.score;});
+    // 3-column visual graph
+    var graph='<div class="cjmap" id="cjmap">'+
+      '<div><div class="colh">Business processes</div><div class="cjcol">'+G.procs.map(function(p){return '<div class="node proc '+p.cl+'" id="n-'+p.id+'"><div class="nn">'+p.n+'</div><div class="nd">'+p.data+(p.rev?(' · '+CUR_SYM+p.rev):'')+'</div></div>';}).join('')+'</div></div>'+
+      '<div><div class="colh">Applications that run them</div><div class="cjcol">'+G.apps.map(function(a){var sens=sensLabel(a.data),sc=sens==='Critical'?'h':sens==='High'?'m':'l';return '<div class="node'+(a.cj?' cjwel':'')+'" id="n-'+a.id+'"><div class="nn">'+a.n+'</div><div class="nd">'+a.data+' · <span class="crit '+sc+'">'+sens+'</span></div></div>';}).join('')+'</div></div>'+
+      '<div><div class="colh">Crown jewels (preview)</div><div class="cjcol">'+(cjs.length?cjs.map(function(a,i){return '<div class="node cjwel" id="c-'+a.id+'"><span class="score">'+a.score+'</span><div class="badge">⬥ #'+(i+1)+'</div><div class="nn">'+a.n+'</div><div class="why">'+a.why+'</div></div>';}).join(''):'<div class="mapempty">map applications to a process to deduce crown jewels</div>')+'</div></div>'+
+      '<svg class="cjsvg" id="cjsvg"></svg></div>';
+    // editable chips
+    var editor='<div class="mapedit-h">Adjust which processes each application supports</div>'+APP.map(function(a,i){
       return '<div class="maprow"><div class="mapapp">'+a.name+(a.vendor?('<span class="mapv">'+a.vendor+'</span>'):'')+'</div><div class="mapchips">'+PROC.map(function(p){var on=a.processes.indexOf(p.name)>=0;return '<span class="mchip'+(on?' on':'')+'" data-ai="'+i+'" data-pn="'+encodeURIComponent(p.name)+'">'+p.name+'</span>';}).join('')+'</div></div>';
     }).join('');
-    body.querySelectorAll('.mchip').forEach(function(c){c.addEventListener('click',function(){
+    document.getElementById('mapBody').innerHTML=graph+'<div class="mapedit">'+editor+'</div>';
+    document.querySelectorAll('#mapBody .mchip').forEach(function(c){c.addEventListener('click',function(){
       var ai=+c.dataset.ai,pn=decodeURIComponent(c.dataset.pn),arr=APP[ai].processes,idx=arr.indexOf(pn);
-      if(idx>=0)arr.splice(idx,1);else arr.push(pn);c.classList.toggle('on');
+      if(idx>=0)arr.splice(idx,1);else arr.push(pn);renderMap();
     });});
-    var bd=document.getElementById('bmap');bd.textContent='✓ '+APP.length+' mapped';bd.classList.add('done');
+    requestAnimationFrame(drawMap);
+    var bd=document.getElementById('bmap');bd.textContent='✓ '+cjs.length+' crown jewels';bd.classList.add('done');
   }
+  function drawMap(){
+    var G=buildGraph();var map=document.getElementById('cjmap'),svg=document.getElementById('cjsvg');if(!map||!svg)return;
+    var c=map.getBoundingClientRect();svg.setAttribute('viewBox','0 0 '+c.width+' '+c.height);
+    function pt(id,side){var el=document.getElementById(id);if(!el)return null;var r=el.getBoundingClientRect();return {x:(side==='r'?r.right:r.left)-c.left,y:r.top-c.top+r.height/2};}
+    function path(a,b,cls){if(!a||!b)return '';var dx=Math.max(30,(b.x-a.x)*0.45);return '<path class="ln '+cls+'" d="M '+a.x+' '+a.y+' C '+(a.x+dx)+' '+a.y+', '+(b.x-dx)+' '+b.y+', '+b.x+' '+b.y+'"/>';}
+    var s='';G.apps.forEach(function(a){a.pids.forEach(function(pid){s+=path(pt('n-'+pid,'r'),pt('n-'+a.id,'l'),a.pids.length>1?'id':'');});});
+    G.apps.filter(function(a){return a.cj;}).forEach(function(a){s+=path(pt('n-'+a.id,'r'),pt('c-'+a.id,'l'),'cj');});
+    svg.innerHTML=s;
+  }
+  window.addEventListener('resize',function(){if(document.getElementById('cjmap'))drawMap();});
 
   // regions chips
   document.querySelectorAll('#regions .chip').forEach(function(c){c.addEventListener('click',function(){c.classList.toggle('on');REGIONS=[...document.querySelectorAll('#regions .chip.on')].map(function(x){return x.dataset.r;});var b=document.getElementById('b1');if(REGIONS.length){b.textContent='✓ '+REGIONS.length+' regions';b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}updateSummary();});});
