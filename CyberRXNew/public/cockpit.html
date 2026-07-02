@@ -246,7 +246,7 @@ function render(seat){
   h+='<div class="spine"><span class="lk">⛓ One source of truth</span><span class="num"><b id="lvSpineExpo">$68M</b> <span>expected annual loss ·</span> <b id="lvSpineTail">$180M</b> <span>tail</span></span><span class="arrow">the same number every seat sees — in the <b>'+SEAT_LABEL[seat]+'</b> lens ↓</span></div></div>';
   h+=s.body();
   document.getElementById('app').innerHTML=h;
-  wireChoose();renderInitiatives();renderChain();renderProcBars();renderCioSystems();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderProcBars();renderCioSystems();renderOversight();applyLive();window.scrollTo({top:0});
 }
 </script>
 <script src="cockpit-seats.js"></script>
@@ -497,6 +497,16 @@ function renderProcBars(){
     var lbl=p.name+(p.crown_jewel?' <span class="cj-badge" style="margin-left:6px">crown jewel</span>':'');
     return '<div class="bar-row"><div class="bar-lbl claim" data-ev="procexpo">'+lbl+' <span class="fx">ƒ</span></div><div class="bar-track"><div class="bar-fill '+cls+'" style="width:'+pct+'%"></div></div><div class="bar-val">'+usd(p.exposure_usd)+'</div></div>';
   }).join('')+'</div>';
+}
+/* CEO oversight card — the real decision-ledger count (D&O / SEC defense). */
+function renderOversight(){
+  var host=document.getElementById('ceoOversight');if(!host)return;
+  var list=allDecisions();var pushed=list.filter(function(d){return d.ticket;}).length;
+  host.innerHTML=kvcard('Oversight &amp; decision record',[
+    {k:'Funded decisions logged',v:String(list.length),ev:'oversight'},
+    {k:'Sent to ticketing (tracked)',v:pushed+' / '+list.length,ev:'oversight'},
+    {k:'Each carries',v:'leader · date · ticket'},
+    {k:'Board appetite reviewed',v:'this quarter',cls:'good'}]);
 }
 /* CIO "which systems carry the business" — the crown-jewel systems, ranked by
    $/hr of downtime (from /summary resilience.systems). Illustrative until live. */
