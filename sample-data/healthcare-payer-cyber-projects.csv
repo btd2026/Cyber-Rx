@@ -1,0 +1,18 @@
+name,owner,cost,roi,status,start_date,target_date,milestone
+Privileged Access Management (PAM) rollout,IAM Team,$1.4M,37x,in progress,2026-01-15,2026-04-30,PAM enforced on payments and DBA paths
+Multi-factor authentication for legacy and clinical apps,IAM Team,$0.6M,18x,in progress,2026-02-01,2026-05-15,Legacy 4% remediated to phishing-resistant MFA
+Endpoint detection and response (EDR) expansion to servers,SecOps,$1.1M,13x,in progress,2026-01-10,2026-06-01,98% host coverage including data-center fleet
+Immutable backup and ransomware resilience,Infrastructure,$2.8M,22x,planned,2026-05-01,2026-09-30,Air-gapped copies verified for claims and EDW
+Zero Trust segmentation of the claims VLAN,Network Security,$3.2M,15x,in progress,2026-02-15,2026-08-15,Crown-jewel VLAN isolated with policy enforcement
+PHI Data Loss Prevention (DLP) program,Data Security,$1.6M,9x,in progress,2026-03-01,2026-07-31,DLP on email, endpoints and cloud storage
+HITRUST CSF r2 certification,GRC,$0.9M,6x,in progress,2026-01-05,2026-10-31,Interim assessment passed; validated assessment scheduled
+Third-party and BAA risk management program,Vendor Risk,$0.7M,11x,planned,2026-06-01,2026-11-30,Tiered assessments for all PHI-touching vendors
+SIEM/SOC modernization (Microsoft Sentinel),SecOps,$2.4M,10x,in progress,2026-02-01,2026-07-15,MTTD under 8 hours; 24x7 detection coverage
+Cloud Security Posture Management (CSPM),Cloud Security,$1.2M,14x,in progress,2026-03-10,2026-06-30,Zero critical misconfigurations on PHI stores
+Prior-authorization AI governance and bias monitoring,AI Governance,$0.8M,5x,planned,2026-07-01,2026-12-15,NIST AI RMF profile and model monitoring live
+Security awareness and phishing program,Security Awareness,$0.3M,8x,completed,2025-09-01,2026-02-28,Phishing-prone rate reduced 9% to 3%
+Legacy mainframe claims modernization,Enterprise Architecture,$6.5M,4x,blocked,2026-01-20,2027-03-31,Blocked on vendor contract and code conversion
+Identity Governance and Administration (IGA),IAM Team,$1.9M,12x,planned,2026-05-15,2026-12-31,Automated joiner-mover-leaver and access reviews
+Vulnerability management SLA and patch acceleration,SecOps,$0.9M,16x,in progress,2026-02-10,2026-06-15,Critical internet-facing patch SLA cut to 5 days
+API security gateway for claims and provider APIs,App Security,$1.3M,9x,in progress,2026-03-01,2026-08-31,Schema validation and abuse detection on all APIs
+Disaster recovery for claims adjudication (sub-6h RTO),Resilience,$3.2M,13x,planned,2026-06-01,2026-11-30,Warm recovery site with proven failover
