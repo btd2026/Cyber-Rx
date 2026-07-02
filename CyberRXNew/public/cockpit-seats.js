@@ -70,6 +70,8 @@ var SEATS = {
        {rec:true,tag:'A · Fund both ($4.6M)',on:'Option A · Fund both',osum:'$4.6M · 20× blended',pros:['Removes ~$92M of exposure','Brings the tail within appetite','Stronger insurance renewal position'],cons:['$4.6M capital this year']},
        {tag:'B · Highest-ROI only ($1.4M)',on:'Option B · Top driver only',osum:'$1.4M · 37×',pros:['37× return on the payments driver','Minimal spend'],cons:['$40M tail remains over appetite']},
        {tag:'C · Hold flat',on:'Option C · Hold',osum:'$0 new',pros:['No new spend this year'],cons:['$92M carried as exposure','Likely premium increase at renewal']}]}]))
+   +sec('05','Current cyber initiatives & their ROI','Every funded decision becomes a tracked project. This is the live portfolio of new cyber spend — cost, return, owner and status — that the CISO and CFO manage together.',
+     '<div id="initiatives-panel"></div>')
   );}
  },
 
@@ -168,6 +170,8 @@ var SEATS = {
        {rec:true,tag:'A · Privileged access (PAM)',on:'Option A · PAM',osum:'$1.4M · 37×',pros:['Closes the $52M driver','Highest return available','Improves board posture immediately'],cons:['$1.4M','3 weeks of IAM effort']},
        {tag:'B · Prove recovery (DR test)',on:'Option B · DR',osum:'$3.2M',pros:['Removes ~$40M of tail risk','Meets regulatory recovery expectations'],cons:['Larger program','Does not close the #1 driver']},
        {tag:'C · AI-decisioning governance',on:'Option C · AI governance',osum:'standard + oversight',pros:['Addresses the fastest-rising risk'],cons:['Does not touch the top driver yet']}]}]))
+   +sec('04','Current cyber initiatives & their ROI','The live portfolio of funded cyber projects — every committed decision, its cost, its return and its ticket — that you own jointly with the CFO. These are new spends to manage closely.',
+     '<div id="initiatives-panel"></div>')
   );}
  }
 };

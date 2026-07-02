@@ -216,7 +216,7 @@ function bars(a){return '<div class="card">'+a.map(function(r){return '<div clas
 function lists(a){return '<div class="card">'+a.map(function(r){return '<div class="list-row"><div class="lic '+r.c+'">'+r.ic+'</div><div class="ltxt'+(r.ev?' claim" data-ev="'+r.ev:'')+'"><b>'+r.t+'</b>'+(r.ev?' <span class="fx">ƒ</span>':'')+'<span class="s">'+r.s+'</span></div></div>';}).join('')+'</div>';}
 function kvcard(title,rows){return '<div class="card"><div class="ck">'+title+'</div>'+rows.map(function(r){return '<div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:9px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted)">'+r.k+'</span><span style="font-weight:600;text-align:right'+(r.cls?';color:var(--'+r.cls+')':'')+'"'+(r.ev?' class="claim" data-ev="'+r.ev+'"':'')+'>'+r.v+(r.ev?' <span class="fx">ƒ</span>':'')+'</span></div>';}).join('')+'</div>';}
 function jtable(rows){return '<div class="card"><table class="tbl"><thead><tr><th>Jurisdiction</th><th>Obligation</th><th>Clock</th><th>Max penalty</th></tr></thead><tbody>'+rows.map(function(r){return '<tr><td'+(r.ev?' class="claim" data-ev="'+r.ev+'"':'')+'><span class="flag">'+r.flag+'</span>'+r.c+(r.ev?' <span class="fx">ƒ</span>':'')+'</td><td>'+r.o+'</td><td><span class="tag '+r.cc+'">'+r.clock+'</span></td><td style="font-weight:600">'+r.pen+'</td></tr>';}).join('')+'</tbody></table></div>';}
-function decisions(a){return a.map(function(d){return '<div class="decision" data-dec="'+d.n+'"><div class="dh"><span class="dn">Decision '+d.n+' ·</span>'+d.q+'</div><div class="dsit">'+d.sit+'</div><div class="opts">'+d.opts.map(function(o){return '<div class="opt'+(o.rec?' rec':'')+'">'+(o.rec?'<div class="orec">Recommended</div>':'')+'<div class="on">'+o.on+'</div><div class="osum">'+o.osum+'</div><div class="pc"><div class="lbl p">Pros</div><ul>'+o.pros.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul><div class="lbl c">Cons</div><ul>'+o.cons.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></div><button class="choose'+(o.rec?'':' gh')+'" data-dec="'+d.n+'" data-title="'+d.q.replace(/"/g,'')+'" data-opt="'+o.tag+'">Choose &amp; record</button></div>';}).join('')+'</div><div class="dstatus" id="dstatus-'+d.n+'"></div></div>';}).join('');}
+function decisions(a){return a.map(function(d){return '<div class="decision" data-dec="'+d.n+'"><div class="dh"><span class="dn">Decision '+d.n+' ·</span>'+d.q+'</div><div class="dsit">'+d.sit+'</div><div class="opts">'+d.opts.map(function(o){return '<div class="opt'+(o.rec?' rec':'')+'">'+(o.rec?'<div class="orec">Recommended</div>':'')+'<div class="on">'+o.on+'</div><div class="osum">'+o.osum+'</div><div class="pc"><div class="lbl p">Pros</div><ul>'+o.pros.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul><div class="lbl c">Cons</div><ul>'+o.cons.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></div><button class="choose'+(o.rec?'':' gh')+'" data-dec="'+d.n+'" data-title="'+d.q.replace(/"/g,'')+'" data-opt="'+o.tag+'" data-osum="'+String(o.osum||'').replace(/"/g,'')+'">Choose &amp; record</button></div>';}).join('')+'</div><div class="dstatus" id="dstatus-'+d.n+'"></div></div>';}).join('');}
 function sec(no,q,desc,inner){return '<div class="section"><div class="rubric"><div class="no">'+no+'</div><div><div class="rt">'+q+'</div><div class="rd">'+desc+'</div></div></div>'+inner+'</div>';}
 
 var SEAT_LABEL={ceo:'CEO / Board',cfo:'CFO',clo:'CLO / General Counsel',cro:'CRO',cio:'CIO',ciso:'CISO'};
@@ -227,7 +227,7 @@ function render(seat){
   h+='<div class="spine"><span class="lk">⛓ One source of truth</span><span class="num"><b id="lvSpineExpo">$68M</b> <span>expected annual loss ·</span> <b id="lvSpineTail">$180M</b> <span>tail</span></span><span class="arrow">the same number every seat sees — in the <b>'+SEAT_LABEL[seat]+'</b> lens ↓</span></div></div>';
   h+=s.body();
   document.getElementById('app').innerHTML=h;
-  wireChoose();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();applyLive();window.scrollTo({top:0});
 }
 </script>
 <script src="cockpit-seats.js"></script>
@@ -282,12 +282,12 @@ function wireChoose(){
   document.querySelectorAll('.choose').forEach(function(btn){
     btn.onclick=function(){
       if(btn.disabled)return;
-      var dec=btn.dataset.dec,opt=btn.dataset.opt,title=btn.dataset.title;
+      var dec=btn.dataset.dec,opt=btn.dataset.opt,title=btn.dataset.title,osum=btn.dataset.osum||'';
       var existing=loadDec(dec);
       if(existing&&(Date.now()-existing.ts)>=EDIT_WINDOW_MS)return; // committed
       var by=leaderName();
-      var rec={opt:opt,title:title,by:by,seat:CUR,ts:(existing&&(Date.now()-existing.ts)<EDIT_WINDOW_MS)?existing.ts:Date.now(),ticket:existing&&existing.ticket||null,system:existing&&existing.system||null};
-      saveDec(dec,rec);renderDecStatus(dec);
+      var rec={opt:opt,title:title,by:by,seat:CUR,osum:osum,ts:(existing&&(Date.now()-existing.ts)<EDIT_WINDOW_MS)?existing.ts:Date.now(),ticket:existing&&existing.ticket||null,system:existing&&existing.system||null};
+      saveDec(dec,rec);renderDecStatus(dec);renderInitiatives();
       var s=document.getElementById('dstatus-'+dec);var o=orgId(),base=apiBase();
       var body={title:'[Cyber decision · '+SEAT_LABEL[CUR]+'] '+title,desc:'Option '+opt+' — decided by '+by+' ('+SEAT_LABEL[CUR]+') via the CyberRx executive cockpit. Managed as a project; tracked to completion.',sourceRef:rec.ts+'-'+CUR+'-'+dec,type:'project'};
       if(!o||!base)return;
@@ -299,6 +299,38 @@ function wireChoose(){
       }catch(_){}
     };
   });
+}
+
+/* ---- cyber initiatives portfolio ----
+   Every recorded decision is a funded cyber project. This reads the org's own
+   decision ledger and shows the live portfolio of new spend — cost, ROI, owner,
+   status, ticket — the list the CISO and CFO manage together. No authored data. */
+function extractCost(osum){var m=String(osum||'').match(/\$[\d.,]+\s*(?:[KMB]|thousand|million|billion)?/i);return m?m[0].replace(/\s+/g,''):'—';}
+function extractROI(osum){var m=String(osum||'').match(/([\d.]+)\s*×/);return m?(m[1]+'×'):'—';}
+function allDecisions(){
+  var out=[],pre='cyberrx_dec_'+orgId()+'_';
+  try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf(pre)===0){var d=null;try{d=JSON.parse(localStorage.getItem(k));}catch(_){}if(d&&d.title)out.push(d);}}}catch(_){}
+  out.sort(function(a,b){return (b.ts||0)-(a.ts||0);});return out;
+}
+function renderInitiatives(){
+  var host=document.getElementById('initiatives-panel');if(!host)return;
+  var list=allDecisions();
+  if(!list.length){host.innerHTML='<div class="card"><div class="cn">No cyber initiatives yet. Each decision an executive commits in their seat becomes a funded project here — with its cost, ROI, owner and ticket — so the CISO and CFO manage new cyber spend in one place.</div></div>';return;}
+  var rows=list.map(function(d){
+    var committed=(Date.now()-(d.ts||0))>=EDIT_WINDOW_MS;
+    var cost=extractCost(d.osum),roi=extractROI(d.osum);
+    var tk=d.ticket?(d.url?('<a href="'+d.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+d.ticket+'</a>'):('<b style="color:#fff">'+d.ticket+'</b>'))+(d.system?(' · '+d.system):''):'<span style="color:var(--muted)">queued</span>';
+    var st=committed?'<span class="tag crit">Committed</span>':'<span class="tag warn">In 24h review</span>';
+    return '<tr><td style="max-width:280px">'+d.title+'<div style="color:var(--muted);font-size:11.5px;margin-top:2px">Option '+d.opt+'</div></td>'+
+      '<td>'+(d.by||'—')+'<div style="color:var(--muted);font-size:11.5px">'+(SEAT_LABEL[d.seat]||'')+'</div></td>'+
+      '<td style="font-weight:600">'+cost+'</td>'+
+      '<td style="font-weight:700;color:'+(roi==='—'?'var(--muted)':'var(--good)')+'">'+roi+'</td>'+
+      '<td>'+st+'</td>'+
+      '<td>'+tk+'</td></tr>';
+  }).join('');
+  var totalRoi=list.filter(function(d){return extractROI(d.osum)!=='—';}).length;
+  host.innerHTML='<div class="card"><table class="tbl"><thead><tr><th>Initiative</th><th>Owner</th><th>Cost</th><th>Return</th><th>Status</th><th>Project</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+    '<div class="cn" style="margin-top:10px">'+list.length+' active '+(list.length===1?'initiative':'initiatives')+(totalRoi?(' · '+totalRoi+' with a modeled return'):'')+' · committed items are locked and tracked to completion in your ticketing system.</div></div>';
 }
 
 /* ---- live economics ---- */
