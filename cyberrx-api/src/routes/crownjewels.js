@@ -107,7 +107,15 @@ router.post('/ingest', optionalJWT, async (req, res) => {
       const vendor = a.vendor || null;
       const eol = eolOf(a.eol);
       const recovery = a.recovery != null ? Number(String(a.recovery).replace(/[^0-9.]/g, '')) : null;
-      if (vendor || eol != null || recovery != null) resilience.assets[String(a.name).trim()] = { vendor, eol, recovery: Number.isFinite(recovery) ? recovery : null };
+      // Optional per-system operating figures (the CISO crown-jewel cards) — provided
+      // directly on the inventory row so each system's numbers trace to it, not to a
+      // process estimate. tx/day and value/day override the process-derived fallback.
+      const txRaw = a.txPerDay != null ? a.txPerDay : a.transactionsPerDay;
+      const tx = txRaw != null ? Number(String(txRaw).replace(/[^0-9.]/g, '')) : null;
+      const val = money(a.valuePerDay != null ? a.valuePerDay : a.dailyValue);
+      if (vendor || eol != null || recovery != null || tx || val) resilience.assets[String(a.name).trim()] = {
+        vendor, eol, recovery: Number.isFinite(recovery) ? recovery : null,
+        txPerDay: Number.isFinite(tx) && tx > 0 ? tx : null, valuePerDay: val || null };
     });
 
     // Optional in-flight cyber projects/initiatives imported at onboarding.

@@ -142,6 +142,17 @@ describe('crownEconomics', () => {
     expect(e.A3.tx_per_day).toBeNull();
     expect(e.A3.tolerance_usd).toBeNull();
   });
+
+  test('per-system inventory values override the process-derived fallback', () => {
+    const ra = { ClaimsDB: { valuePerDay: 1200000, txPerDay: 480000 } };
+    const e = crownEconomics(scored, processes, rp, ra);
+    expect(e.A1.daily_value_usd).toBe(1200000); // inventory wins over $1.2M/day process-derived
+    expect(e.A1.daily_value_source).toBe('inventory');
+    expect(e.A1.tx_per_day).toBe(480000);
+    expect(e.A1.tx_per_day_source).toBe('inventory');
+    // A2 has no inventory override → still process-derived
+    expect(e.A2.daily_value_source).toBe('process_revenue');
+  });
 });
 
 // Regression guard: models return camelCase (businessProcessIds/dataClassification/

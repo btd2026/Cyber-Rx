@@ -176,7 +176,7 @@ async function run(orgId) {
   //    supporting process ($ loss tolerated before it breaches board appetite)
   //  • impact_radius    — the other systems that share a business process with it
   //    (the blast radius if it fails; from the process→system graph)
-  const cjEcon = crownEconomics(scored, processes, rp);
+  const cjEcon = crownEconomics(scored, processes, rp, ra);
 
   // Named board stress scenario — a concrete "worst realistic day" derived from
   // the top crown jewel, its largest open risk, worst-case recovery, and the
@@ -487,8 +487,8 @@ function processExposure(scoredAssets, risks, processes) {
  * @returns {Object} map assetId → {daily_value_usd, tx_per_day, tolerance_usd,
  *                                  tolerance_process, impact_radius}
  */
-function crownEconomics(scoredAssets, processes, rp) {
-  rp = rp || {};
+function crownEconomics(scoredAssets, processes, rp, ra) {
+  rp = rp || {}; ra = ra || {};
   const pidName = {}; (processes || []).forEach((p) => { pidName[p.id] = p.name; });
   const assetsByPid = {};
   (scoredAssets || []).forEach((a) => { (a.business_process_ids || []).forEach((pid) => { (assetsByPid[pid] = assetsByPid[pid] || []).push(a.name); }); });
@@ -504,10 +504,19 @@ function crownEconomics(scoredAssets, processes, rp) {
       const tv = Number(info.tolerance) || 0;
       if (tv > 0 && (tol == null || tv < tol)) { tol = tv; tolProc = pidName[pid]; } // most-binding
     });
+    // Per-system inventory values (if supplied) OVERRIDE the process-derived fallback,
+    // so each crown jewel's transactions/day and value/day come from its own CMDB row.
+    const inv = ra[a.name] || {};
+    const invTx = Number(inv.txPerDay) || 0;
+    const invVal = Number(inv.valuePerDay) || 0;
+    const finalTx = invTx > 0 ? invTx : tx;
+    const finalDaily = invVal > 0 ? invVal : daily;
     const radius = Array.from(new Set([].concat(...pids.map((pid) => assetsByPid[pid] || [])))).filter((n) => n !== a.name);
     out[a.id] = {
-      daily_value_usd: daily > 0 ? Math.round(daily) : null,
-      tx_per_day: tx > 0 ? Math.round(tx) : null,
+      daily_value_usd: finalDaily > 0 ? Math.round(finalDaily) : null,
+      daily_value_source: invVal > 0 ? 'inventory' : (daily > 0 ? 'process_revenue' : null),
+      tx_per_day: finalTx > 0 ? Math.round(finalTx) : null,
+      tx_per_day_source: invTx > 0 ? 'inventory' : (tx > 0 ? 'process' : null),
       tolerance_usd: tol,
       tolerance_process: tolProc,
       impact_radius: radius.slice(0, 8),
