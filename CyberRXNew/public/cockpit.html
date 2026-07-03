@@ -585,20 +585,56 @@ function earlyEngagement(){
   var design=stages.filter(function(x){return x==='design';}).length;
   return {pct:Math.round(design/stages.length*100),n:stages.length,design:design};
 }
-function renderGrowth(){
-  var host=document.getElementById('cisoGrowth');if(!host)return;
+/* One source for the growth figures — live from the onboarding growth block, else
+   a labelled illustrative example. Shared by the tiles and their drill-downs so
+   every detail traces back to the same numbers. */
+function growthData(){
   var g=LIVE&&LIVE.growth;
   var live=!!(g&&(Number(g.pipelineUsd)>0||g.reviewNowWks!=null||(g.certs&&g.certs.length)||Number(g.dealsGated)>0));
   var d=live?g:{pipelineUsd:48e6,reviewBeforeWks:6,reviewNowWks:2,dealsGated:11,certs:['SOC 2 Type II','HITRUST CSF','ISO 27001','HIPAA attestation'],trustReviews:34};
+  return {live:live,d:d};
+}
+function gRow(k,v){return '<div class="drow"><div class="drow-h"><b>'+k+'</b><span class="drow-tool">'+v+'</span></div></div>';}
+function gProvHtml(live){return '<div class="ev-sec">Where this comes from</div><div class="drill-p">'+(live
+  ? 'You entered these at onboarding (<b>Security as a growth engine</b>) — <span class="srcpill self">○ self-reported</span> today. Connect <b>Salesforce</b> and your deal-review tracker (ServiceNow / Jira) to upgrade them to <span class="srcpill conn">● live</span> from the CRM, refreshed per deal.'
+  : '<span class="pill mod">illustrative</span> — an example so you can see the shape. Enter your figures at onboarding or connect your CRM, and every number here becomes yours and traceable to a deal record.')+'</div>';}
+function drillGrowthPipeline(){var x=growthData(),d=x.d;var deals=Number(d.dealsGated)||0,pipe=Number(d.pipelineUsd)||0,avg=deals>0?pipe/deals:null;
+  return '<div class="drill-hero good">'+(pipe>0?usd(pipe):'—')+'</div>'+
+    '<div class="drill-p">Total contract value of deals that <b>cannot close until security signs off</b> — vendor security reviews, questionnaires, SOC 2 / HITRUST evidence requests and customer due diligence. This is revenue your program directly unblocks, so it belongs on the growth side of the ledger.</div>'+
+    '<div class="ev-sec">The numbers</div>'+gRow('Deals in security review',deals?deals:'—')+gRow('Total value gated',usd(pipe))+(avg?gRow('Average deal in review','≈'+usd(avg)):'')+
+    gProvHtml(x.live)+
+    '<div class="ev-sec">Why it matters</div><div class="drill-p">Enterprise deals increasingly die or stall in security review. A program that clears them fast is a <b>sales accelerant</b>, not a cost line — this is the number that proves it.</div>';}
+function drillGrowthCycle(){var x=growthData(),d=x.d,b=Number(d.reviewBeforeWks),n=Number(d.reviewNowWks),drop=pctDrop(d.reviewBeforeWks,d.reviewNowWks),pipe=Number(d.pipelineUsd)||0;
+  return '<div class="drill-hero">'+((isFinite(b)&&isFinite(n))?(b+' → <span style="color:var(--good)">'+n+'</span> weeks'):'—')+(drop!=null&&drop>0?(' <span class="pill good">−'+drop+'%</span>'):'')+'</div>'+
+    '<div class="drill-p">Average elapsed time to clear a deal’s security review, <b>then vs now</b>. Faster reviews pull revenue forward and stop security being the bottleneck the sales team routes around.</div>'+
+    '<div class="ev-sec">The math</div>'+gRow('Before',isFinite(b)?b+' weeks':'—')+gRow('Now',isFinite(n)?n+' weeks':'—')+(drop!=null?gRow('Improvement',(drop>0?'−'+drop+'%':drop<0?'+'+Math.abs(drop)+'% (slower)':'no change')):'')+(pipe>0&&isFinite(b)&&isFinite(n)&&b>n?gRow('Revenue pulled forward','~'+(b-n)+' wks earlier on '+usd(pipe)+' of pipeline'):'')+
+    '<div class="ev-sec">What drives it</div><div class="drill-p">Certifications on file (SOC 2 Type II, HITRUST) auto-answer most of a questionnaire, and a library of standard responses removes the back-and-forth. Every cert you hold shortens this further.</div>'+
+    gProvHtml(x.live)+'<div class="drill-p" style="color:var(--muted)">Make it live: cycle time is computed from the open→approved timestamps on each deal-review ticket once your ticketing system is connected.</div>';}
+function drillGrowthDeals(){var x=growthData(),d=x.d;var deals=Number(d.dealsGated)||0,pipe=Number(d.pipelineUsd)||0,avg=deals>0?pipe/deals:null;
+  return '<div class="drill-hero">'+(deals?deals+' / quarter':'—')+'</div>'+
+    '<div class="drill-p">Enterprise deals per quarter that <b>require security sign-off</b> before they can close. Your throughput on these is the sales team’s velocity — a queue here is stalled revenue.</div>'+
+    '<div class="ev-sec">The numbers</div>'+gRow('Deals gated / quarter',deals?deals:'—')+gRow('Value they represent',usd(pipe))+(avg?gRow('Average deal size','≈'+usd(avg)):'')+
+    gProvHtml(x.live)+
+    '<div class="ev-sec">How to evidence it</div><div class="drill-p">Tag opportunities in Salesforce that route through security review (typically regulated buyers or deals above a size threshold); the count and value then update live from the CRM.</div>';}
+function drillGrowthTrust(){var x=growthData(),d=x.d;var certs=(d.certs&&d.certs.length)?d.certs:[];
+  return '<div class="drill-hero good">'+(d.trustReviews!=null?(d.trustReviews+' cleared'):'clean')+'</div>'+
+    '<div class="drill-p">Customer trust and due-diligence reviews passed, backed by the certifications that are the <b>price of admission</b> in regulated markets. Trust is a brand asset — a clean track record protects value worth far more than the security budget.</div>'+
+    '<div class="ev-sec">Certifications held</div><div style="margin:4px 0 10px">'+(certs.length?certs.map(function(c){return '<span class="gcert">'+c+'</span>';}).join(''):'<span style="color:var(--muted)">none recorded — add them at onboarding</span>')+'</div>'+
+    gRow('Trust reviews passed',d.trustReviews!=null?d.trustReviews:'—')+gRow('Certifications held',certs.length||'—')+
+    gProvHtml(x.live)+
+    '<div class="ev-sec">What each unlocks</div><div class="drill-p">SOC 2 Type II and HITRUST clear most healthcare-payer questionnaires on day one; ISO 27001 opens international buyers; a HIPAA attestation is table stakes for PHI. Each cert is a market you can enter and a review you skip.</div>';}
+function renderGrowth(){
+  var host=document.getElementById('cisoGrowth');if(!host)return;
+  var gx=growthData(),live=gx.live,d=gx.d;
   var drop=pctDrop(d.reviewBeforeWks,d.reviewNowWks);
   var banner=live
     ? '<div class="cn" style="margin-bottom:12px">● <b style="color:var(--good)">Live</b> — the growth your security program is unlocking, from your CRM and deal-review data.</div>'
     : '<div class="cn" style="margin-bottom:12px">◐ <b style="color:var(--warn)">Illustrative</b> — connect your CRM (Salesforce) and log deal security-reviews at onboarding to make this live. Example shown.</div>';
   var t='<div class="grid4">'+
-    '<div class="card"><div class="ck">Pipeline in security review</div><div class="cv" style="font-size:22px;color:var(--good)">'+(Number(d.pipelineUsd)>0?usd(d.pipelineUsd):'—')+'</div><div class="cn">revenue that closes only if security clears it — you are the accelerant, not the tax</div></div>'+
-    '<div class="card"><div class="ck">Security-review cycle time</div><div class="cv" style="font-size:22px">'+((d.reviewBeforeWks!=null&&d.reviewNowWks!=null)?(d.reviewBeforeWks+' → <span style="color:var(--good)">'+d.reviewNowWks+'</span> wks'):'—')+'</div><div class="cn">'+(drop==null?'log review times to trend this':drop>0?('<span class="pill good" style="font-size:10px">−'+drop+'%</span> deals clear faster'):drop<0?('<span class="pill warn" style="font-size:10px">+'+Math.abs(drop)+'%</span> slower — investigate'):'no change vs baseline')+'</div></div>'+
-    '<div class="card"><div class="ck">Deals gated by security / qtr</div><div class="cv" style="font-size:22px">'+(Number(d.dealsGated)>0?d.dealsGated:'—')+'</div><div class="cn">enterprise deals that need your sign-off — your throughput is their velocity</div></div>'+
-    '<div class="card"><div class="ck">Trust posture</div><div class="cv" style="font-size:22px;color:var(--good)">'+(d.trustReviews!=null?(d.trustReviews+' cleared'):'clean')+'</div><div class="cn">customer trust / due-diligence reviews passed — brand value worth more than the budget</div></div>'+
+    '<div class="card optile gtile" data-gdrill="pipeline"><div class="ck">Pipeline in security review</div><div class="cv" style="font-size:22px;color:var(--good)">'+(Number(d.pipelineUsd)>0?usd(d.pipelineUsd):'—')+'</div><div class="cn">revenue that closes only if security clears it — you are the accelerant, not the tax <span class="drill-cta">details ▸</span></div></div>'+
+    '<div class="card optile gtile" data-gdrill="cycle"><div class="ck">Security-review cycle time</div><div class="cv" style="font-size:22px">'+((d.reviewBeforeWks!=null&&d.reviewNowWks!=null)?(d.reviewBeforeWks+' → <span style="color:var(--good)">'+d.reviewNowWks+'</span> wks'):'—')+'</div><div class="cn">'+(drop==null?'log review times to trend this':drop>0?('<span class="pill good" style="font-size:10px">−'+drop+'%</span> deals clear faster'):drop<0?('<span class="pill warn" style="font-size:10px">+'+Math.abs(drop)+'%</span> slower — investigate'):'no change vs baseline')+' <span class="drill-cta">details ▸</span></div></div>'+
+    '<div class="card optile gtile" data-gdrill="deals"><div class="ck">Deals gated by security / qtr</div><div class="cv" style="font-size:22px">'+(Number(d.dealsGated)>0?d.dealsGated:'—')+'</div><div class="cn">enterprise deals that need your sign-off — your throughput is their velocity <span class="drill-cta">details ▸</span></div></div>'+
+    '<div class="card optile gtile" data-gdrill="trust"><div class="ck">Trust posture</div><div class="cv" style="font-size:22px;color:var(--good)">'+(d.trustReviews!=null?(d.trustReviews+' cleared'):'clean')+'</div><div class="cn">customer trust / due-diligence reviews passed — brand value worth more than the budget <span class="drill-cta">details ▸</span></div></div>'+
     '</div>';
   var certs=(d.certs&&d.certs.length)?d.certs.map(function(c){return '<span class="gcert">'+c+'</span>';}).join(''):'<span style="color:var(--muted)">none recorded — add your certifications at onboarding</span>';
   var certCard='<div class="card" style="margin-top:12px"><div class="ck">Certifications held — the price of admission in your market</div><div style="margin-top:10px">'+certs+'</div><div class="cn" style="margin-top:10px">In healthcare, fintech and gov these are not badges — they are the gate. Each one you hold is a market you can enter and a customer questionnaire you clear on day one.</div></div>';
@@ -623,6 +659,12 @@ function renderGrowth(){
     ? '<div class="card" style="margin-top:12px"><div class="ck">Engaged early — not at the last gate</div><div class="cv" style="font-size:22px;margin-top:4px;color:'+(ee.pct>=70?'var(--good)':ee.pct>=40?'var(--warn)':'var(--crit)')+'">'+ee.pct+'%</div><div class="cn" style="margin-top:6px">of your <b>'+ee.n+'</b> tagged initiatives had security in at <b>design</b> (architecture / product planning / M&amp;A), not bolted on at the final gate. A strong program runs <b>≥ 70%</b> — that is where security shapes outcomes cheaply and is seen as a builder.</div></div>'
     : '<div class="card" style="margin-top:12px"><div class="ck">Engaged early — not at the last gate</div><div class="cv" style="font-size:19px;margin-top:4px;color:var(--muted)">◐ tag stage to measure</div><div class="cn" style="margin-top:6px">Security shapes outcomes cheaply when it is in the room at <b>design</b> — architecture, product planning, M&amp;A — not bolted on at the final gate. Tag each initiative’s engagement stage (add an <b>engagement</b> column: design vs. gate) to turn this into a live % — a strong program runs <b>≥ 70%</b> at design.</div></div>';
   host.innerHTML=banner+t+certCard+peerCard+earlyCard;
+  host.querySelectorAll('.gtile').forEach(function(el){el.onclick=function(){var k=el.dataset.gdrill;
+    if(k==='pipeline')openDrill('Pipeline in security review',drillGrowthPipeline());
+    else if(k==='cycle')openDrill('Security-review cycle time',drillGrowthCycle());
+    else if(k==='deals')openDrill('Deals gated by security',drillGrowthDeals());
+    else if(k==='trust')openDrill('Trust posture',drillGrowthTrust());
+  };});
 }
 /* Path to yes (CISO) — the "department of how". Each enablement request carries the
    conditions that make it safe + the residual risk in dollars; the business owner
