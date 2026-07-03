@@ -59,6 +59,9 @@
   .moneyf select{border:none;border-radius:0;width:64px;background:var(--surface-2);color:var(--ink-2);border-left:1px solid var(--line)}
   .money-eq{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:5px;min-height:14px}
   .money-eq b{color:var(--ink-2)}
+  .certgrid{display:flex;flex-wrap:wrap;gap:6px}
+  .ckchip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--ink-2);background:var(--plane);border:1px solid var(--line);border-radius:7px;padding:5px 9px;cursor:pointer}
+  .ckchip input{accent-color:var(--good);margin:0}
   /* connect-a-system */
   .srcchoice{display:flex;gap:10px;margin-bottom:12px}
   .srcopt{flex:1;border:1px solid var(--line-2);border-radius:10px;padding:12px 14px;cursor:pointer}
@@ -259,6 +262,28 @@
     </div>
   </div>
 
+  <!-- 2c · Security as a growth engine (CISO revenue-enablement) -->
+  <div class="sec">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Security as a growth engine <span style="color:var(--muted)">(for the CISO)</span></div><div class="sd">The revenue your security program unlocks — pipeline in security review, how fast you clear deals, and the certifications that are the price of admission. Powers the CISO growth view. Leave blank to keep it illustrative.</div></div><div class="badge" id="bgrowth">optional</div></div>
+    <div class="row c3">
+      <div class="field"><label>Pipeline in security review</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum money" id="growthPipeline" placeholder="48"><select class="munit" id="growthPipeline_u"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div><div class="money-eq" id="growthPipeline_eq"></div></div>
+      <div class="field"><label>Security-review time — before <span style="color:var(--muted)">(weeks)</span></label><div class="moneyf"><span class="cur">wk</span><input type="number" step="any" class="mnum" id="growthBefore" placeholder="6"></div></div>
+      <div class="field"><label>Security-review time — now <span style="color:var(--muted)">(weeks)</span></label><div class="moneyf"><span class="cur">wk</span><input type="number" step="any" class="mnum" id="growthNow" placeholder="2"></div></div>
+    </div>
+    <div class="row c3" style="margin-top:14px">
+      <div class="field"><label>Deals gated by security / quarter</label><div class="moneyf"><span class="cur">#</span><input type="number" step="any" class="mnum" id="growthDeals" placeholder="11"></div></div>
+      <div class="field"><label>Customer trust reviews passed</label><div class="moneyf"><span class="cur">#</span><input type="number" step="any" class="mnum" id="growthTrust" placeholder="34"></div></div>
+      <div class="field"><label>Certifications held</label><div class="certgrid" id="growthCerts">
+        <label class="ckchip"><input type="checkbox" value="SOC 2 Type II"> SOC 2 Type II</label>
+        <label class="ckchip"><input type="checkbox" value="HITRUST CSF"> HITRUST CSF</label>
+        <label class="ckchip"><input type="checkbox" value="ISO 27001"> ISO 27001</label>
+        <label class="ckchip"><input type="checkbox" value="PCI DSS"> PCI DSS</label>
+        <label class="ckchip"><input type="checkbox" value="HIPAA attestation"> HIPAA attestation</label>
+        <label class="ckchip"><input type="checkbox" value="FedRAMP"> FedRAMP</label>
+      </div></div>
+    </div>
+  </div>
+
   <!-- 3 · Insurance -->
   <div class="sec">
     <div class="sh"><div class="sn">3</div><div><div class="st">Cyber insurance</div><div class="sd">Powers the coverage-vs-worst-case gap and the renewal position.</div></div><div class="badge" id="b3">optional</div></div>
@@ -275,7 +300,7 @@
     <div class="srcchoice"><div class="srcopt sel" data-choice="proc" data-mode="upload"><div class="so-h">⤓ Upload a file</div><div class="so-d">CSV or TSV snapshot</div></div><div class="srcopt" data-choice="proc" data-mode="connect"><div class="so-h">⚡ Connect a system</div><div class="so-d">ServiceNow / BIA — live</div></div></div>
     <div id="procUpload">
       <div class="drop" id="dropProc"><div class="ic">⤓</div><div class="t">Upload your process list (CSV or TSV)</div><div class="s">click to browse or drop a file</div><input type="file" id="fileProc" accept=".csv,.tsv,.txt" style="display:none"></div>
-      <div class="tmpl">columns: <b>name</b>, revenue, rto, data, criticality &nbsp;·&nbsp; e.g. &nbsp;Claims processing, $2.1B, 6, "PHI, Financial", Critical</div>
+      <div class="tmpl">columns: <b>name</b>, revenue, rto, data, criticality, transactions_per_day, downtime_tolerance &nbsp;·&nbsp; e.g. &nbsp;Claims processing, $2.1B, 6, "PHI, Financial", Critical, 480000, $3M<br><span style="color:var(--muted)">transactions_per_day &amp; downtime_tolerance are optional — leave blank to pull volume from observability later and default tolerance to your board risk appetite.</span></div>
     </div>
     <div id="procConnect" style="display:none">
       <div class="conn-row"><div class="field" style="min-width:200px"><label>System</label><select id="procSys"><option>ServiceNow CMDB (business services)</option><option>SAP GRC — BIA</option><option>Apptio</option><option>Archer</option></select></div><div class="field" style="flex:1;min-width:220px"><label>Instance URL / API token</label><input id="procCred" placeholder="https://yourorg.service-now.com · token"></div><button class="conn-go" data-conn="proc">Connect &amp; save</button></div>
@@ -319,7 +344,7 @@
     <div class="srcchoice"><div class="srcopt sel" data-choice="init" data-mode="upload"><div class="so-h">⤓ Upload a file</div><div class="so-d">CSV or TSV</div></div><div class="srcopt" data-choice="init" data-mode="connect"><div class="so-h">⚡ Pull from ticketing</div><div class="so-d">Jira / ServiceNow — live</div></div></div>
     <div id="initUpload">
       <div class="drop" id="dropInit"><div class="ic">⤓</div><div class="t">Upload your cyber project list (CSV or TSV)</div><div class="s">click to browse or drop a file</div><input type="file" id="fileInit" accept=".csv,.tsv,.txt" style="display:none"></div>
-      <div class="tmpl">columns: <b>name</b>, owner, cost, roi, status &nbsp;·&nbsp; e.g. &nbsp;Privileged access rollout, CISO, $1.4M, 37×, in progress</div>
+      <div class="tmpl">columns: <b>name</b>, owner, cost, roi, status, engagement &nbsp;·&nbsp; e.g. &nbsp;Privileged access rollout, CISO, $1.4M, 37×, in progress, design<br><span style="color:var(--muted)">engagement (design / gate) is optional — when set, it powers the CISO “engaged early” metric.</span></div>
     </div>
     <div id="initConnect" style="display:none">
       <div class="conn-row" style="grid-template-columns:1fr auto"><div class="field"><label>Ticketing system</label><input id="initSys" value="Selected in step 7 (Jira / ServiceNow)" disabled></div><button class="conn-go" id="pullInit" type="button">Pull cyber projects</button></div>
@@ -390,8 +415,8 @@
     f.addEventListener('change',function(){if(f.files[0])handler(f.files[0]);});
   }
   wireDrop('dropProc','fileProc',function(file){readFile(file,function(p){var h=p.headers;
-    var nc=findCol(h,['process_name','name','title','process']),rvc=findCol(h,['revenue','rev','value']),rtc=findCol(h,['rto','recovery']),dc=findCol(h,['data','domain','sensitivity','category']),cc=findCol(h,['criticality','crit','tier','priority']);
-    PROC=p.rows.map(function(c){return {name:get(c,nc)||c[0],revenue:get(c,rvc)||get(c,2),rto:get(c,rtc),data:get(c,dc)||get(c,1)||'Process',criticality:get(c,cc)};}).filter(function(x){return x.name;});
+    var nc=findCol(h,['process_name','name','title','process']),rvc=findCol(h,['revenue','rev','value']),rtc=findCol(h,['rto','recovery']),dc=findCol(h,['data','domain','sensitivity','category']),cc=findCol(h,['criticality','crit','tier','priority']),txc=findCol(h,['transactions_per_day','transactions','tx_per_day','daily_transactions','volume','throughput']),tlc=findCol(h,['downtime_tolerance','tolerance','board_tolerance','loss_tolerance']);
+    PROC=p.rows.map(function(c){return {name:get(c,nc)||c[0],revenue:get(c,rvc)||get(c,2),rto:get(c,rtc),data:get(c,dc)||get(c,1)||'Process',criticality:get(c,cc),tx:get(c,txc),tolerance:get(c,tlc)};}).filter(function(x){return x.name;});
     showRows(document.getElementById('resProc'),PROC,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.data||'')+(x.revenue?(' · '+x.revenue):'')+(x.rto?(' · RTO '+x.rto+'h'):'')+'</span></div>';});
     var b=document.getElementById('b4');b.dataset.n=PROC.length;badgeDone('b4');updateSummary();renderMap();});});
   wireDrop('dropApp','fileApp',function(file){readFile(file,function(p){var h=p.headers;
@@ -408,8 +433,8 @@
   var INIT=[];
   function storeInit(){try{localStorage.setItem('cyberrx_initiatives',JSON.stringify(INIT));}catch(_){}}
   wireDrop('dropInit','fileInit',function(file){readFile(file,function(p){var h=p.headers;
-    var nc=findCol(h,['name','project','initiative','title']),oc=findCol(h,['owner','lead','sponsor']),cc=findCol(h,['cost','budget','spend','amount']),rc=findCol(h,['roi','return','multiple']),stc=findCol(h,['status','state','stage']);
-    INIT=p.rows.map(function(c){return {name:get(c,nc)||c[0],owner:get(c,oc)||'',cost:get(c,cc)||'',roi:get(c,rc)||'',status:get(c,stc)||'in progress',source:'imported'};}).filter(function(x){return x.name;});
+    var nc=findCol(h,['name','project','initiative','title']),oc=findCol(h,['owner','lead','sponsor']),cc=findCol(h,['cost','budget','spend','amount']),rc=findCol(h,['roi','return','multiple']),stc=findCol(h,['status','state']),egc=findCol(h,['engagement','security_engagement','sec_stage','engaged_at','stage']);
+    INIT=p.rows.map(function(c){return {name:get(c,nc)||c[0],owner:get(c,oc)||'',cost:get(c,cc)||'',roi:get(c,rc)||'',status:get(c,stc)||'in progress',engagement:get(c,egc)||'',source:'imported'};}).filter(function(x){return x.name;});
     showRows(document.getElementById('resInit'),INIT,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.owner||'')+(x.cost?(' · '+x.cost):'')+(x.roi?(' · '+x.roi):'')+' · '+(x.status||'')+'</span></div>';});
     storeInit();var b=document.getElementById('binit');b.textContent='✓ '+INIT.length+' initiatives';b.classList.add('done');});});
   var pullBtn=document.getElementById('pullInit');
@@ -556,7 +581,8 @@
     {key:'splunk',ic:'📊',cat:'SIEM / Log analytics',w:16,sig:510,vendors:['Splunk','Microsoft Sentinel'],map:{'Microsoft Sentinel':'sentinel'},pulls:'Alerts, correlated incidents, MTTD/MTTC, log coverage.',ans:'CISO operational status & incident timeline · Board assurance.'},
     {key:'cyberark',ic:'🔒',cat:'Privileged access (PAM)',w:14,sig:120,vendors:['CyberArk','BeyondTrust','Delinea'],pulls:'Privileged sessions, vaulted accounts, just-in-time access.',ans:'CISO top-driver control · closes the payments path.'},
     {key:'knowbe4',ic:'🎓',cat:'Security awareness',w:6,sig:70,vendors:['KnowBe4','Proofpoint'],pulls:'Phishing-prone rate, campaign results, training completion.',ans:'CISO live threat (phishing → claims).'},
-    {key:'servicenow',ic:'🗂',cat:'Ticketing / ITSM',w:8,sig:40,vendors:['ServiceNow','Jira'],itsm:true,pulls:'Remediation status, change governance, decision & approval records.',ans:'Decisions become tracked projects · CLO defensibility · audit log.'}
+    {key:'servicenow',ic:'🗂',cat:'Ticketing / ITSM',w:8,sig:40,vendors:['ServiceNow','Jira'],itsm:true,pulls:'Remediation status, change governance, decision & approval records.',ans:'Decisions become tracked projects · CLO defensibility · audit log.'},
+    {key:'securityscorecard',ic:'🛰',cat:'Third-party / vendor monitoring',w:8,sig:60,vendors:['SecurityScorecard','BitSight','UpGuard','Panorays','Black Kite'],vmon:true,pulls:'Security ratings & incident signals for your tier-1 vendors, refreshed daily.',ans:'CISO tier-1 vendor watch · CRO third-party risk · Board DORA readiness.'}
   ];
   var TOTAL_SIG=TOOLS.reduce(function(s,t){return s+t.sig;},0);
   var SELTOOLS={};
@@ -575,7 +601,7 @@
     var bd=document.getElementById('b7');if(ids.length){bd.textContent='✓ '+ids.length+' tools';bd.classList.add('done');}else{bd.textContent='optional';bd.classList.remove('done');}
   }
   function markConnected(t,i,realKey,vend,key,demo){
-    SELTOOLS[realKey]={vendor:vend,key:key||'',itsm:!!t.itsm,demo:!!demo,on:true};
+    SELTOOLS[realKey]={vendor:vend,key:key||'',itsm:!!t.itsm,vmon:!!t.vmon,demo:!!demo,on:true};
     var st=document.getElementById('ts'+i);
     if(st){st.className='conn-st on';st.innerHTML='<span class="livedot"></span>'+(demo?'Demo · ':'Connected · ')+'<span id="sigc'+i+'">0</span> signals';tickTo(document.getElementById('sigc'+i),t.sig,700);}
     var go=document.querySelector('.tb[data-ti="'+i+'"]');if(go){go.classList.add(demo?'amber':'done');go.textContent=demo?'✓ Demo':'✓ Connected';}
@@ -617,7 +643,7 @@
       appetite:mval('finAppetite'),budget:mval('finBudget'),dataRecords:mval('finRecords'),
       principalRisks:{creditMarket:mval('ermCredit'),operational:mval('ermOps'),thirdParty:mval('ermTP'),compliance:mval('ermComp')},
       insurance:{limit:mval('insLimit'),premium:mval('insPrem'),renewal:v('insRenew')},
-      processes:PROC.map(function(p){return {name:p.name,data:p.data,rev:p.revenue,revenue:p.revenue,rto:p.rto,criticality:p.criticality};}),
+      processes:PROC.map(function(p){return {name:p.name,data:p.data,rev:p.revenue,revenue:p.revenue,rto:p.rto,criticality:p.criticality,txPerDay:p.tx,tolerance:p.tolerance};}),
       apps:APP.map(function(a){return {name:a.name,host:a.host,data:a.data,vendor:a.vendor,eol:a.eol,recovery:a.recovery,processes:Array.isArray(a.processes)?a.processes:[]};}),
       risks:RISK.map(function(r){return {title:r.title,severity:r.severity,asset:r.asset,status:r.status,financial_exposure:r.exposure};}),
       initiatives:INIT,
@@ -629,6 +655,11 @@
       aiGovernance:{
         systems:mval('aiSystems'),decisioning:v('aiDecisioning'),framework:v('aiFramework'),
         policy:v('aiPolicy'),euAiAct:v('aiEuAct'),inventory:v('aiInventory')
+      },
+      growth:{
+        pipelineUsd:mval('growthPipeline'),reviewBeforeWks:v('growthBefore'),reviewNowWks:v('growthNow'),
+        dealsGated:v('growthDeals'),trustReviews:v('growthTrust'),
+        certs:Array.prototype.slice.call(document.querySelectorAll('#growthCerts input:checked')).map(function(c){return c.value;})
       }
     };
     btn.disabled=true;msg.textContent='Building your cockpit…';msg.style.color='var(--muted)';
@@ -643,11 +674,14 @@
     // Persist the chosen ticketing system so cockpit decisions open projects there.
     var itsm=SELTOOLS.servicenow;
     try{if(itsm&&itsm.on)localStorage.setItem('cyberrx_itsm',JSON.stringify({vendor:itsm.vendor||'ServiceNow',instance:itsm.key||'',demo:!!itsm.demo}));}catch(_){}
+    // Persist the chosen vendor-monitoring service so the CISO tier-1 vendor tile goes live.
+    var vmonKey=Object.keys(SELTOOLS).filter(function(k){return SELTOOLS[k].vmon&&SELTOOLS[k].on;})[0];
+    try{if(vmonKey)localStorage.setItem('cyberrx_vendor_monitor',JSON.stringify({vendor:SELTOOLS[vmonKey].vendor||'SecurityScorecard',demo:!!SELTOOLS[vmonKey].demo}));}catch(_){}
     // Persist connected tools so the War Room streams from the systems you run.
     try{localStorage.setItem('cyberrx_tools',JSON.stringify(SELTOOLS));}catch(_){}
     payload.seatNames=seatNames;
     // Connect the selected security tools now that the org exists (best-effort, real).
-    var toolKeys=Object.keys(SELTOOLS).filter(function(k){return SELTOOLS[k].key&&!SELTOOLS[k].itsm;});
+    var toolKeys=Object.keys(SELTOOLS).filter(function(k){return SELTOOLS[k].key&&!SELTOOLS[k].itsm&&!SELTOOLS[k].vmon;});
     if(toolKeys.length){msg.textContent='Connecting your tools…';
       await Promise.all(toolKeys.map(function(k){
         return fetch(apiBase()+'/api/integrations/'+encodeURIComponent(k)+'/connect?org_id='+encodeURIComponent(orgId),{method:'POST',headers:{'Content-Type':'application/json','X-Org-Id':orgId},body:JSON.stringify({apiToken:SELTOOLS[k].key,token:SELTOOLS[k].key,apiKey:SELTOOLS[k].key})}).catch(function(){});

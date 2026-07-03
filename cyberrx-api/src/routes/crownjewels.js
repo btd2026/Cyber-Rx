@@ -92,7 +92,15 @@ router.post('/ingest', optionalJWT, async (req, res) => {
       if (!p || !p.name) return;
       const rev = money(p.revenue != null ? p.revenue : p.rev);
       const rto = p.rto != null ? Number(String(p.rto).replace(/[^0-9.]/g, '')) : null;
-      if (rev || rto) resilience.processes[String(p.name).trim()] = { revenue: rev, rto: Number.isFinite(rto) ? rto : null };
+      // Optional: transactions/day (from the process file or an observability feed)
+      // and board-approved downtime tolerance ($ loss the board will tolerate for an
+      // outage of this process). Both power the CISO crown-jewel cards.
+      const txRaw = p.txPerDay != null ? p.txPerDay : p.tx;
+      const tx = txRaw != null ? Number(String(txRaw).replace(/[^0-9.]/g, '')) : null;
+      const tol = money(p.tolerance != null ? p.tolerance : p.downtimeTolerance);
+      if (rev || rto || tx || tol) resilience.processes[String(p.name).trim()] = {
+        revenue: rev, rto: Number.isFinite(rto) ? rto : null,
+        txPerDay: Number.isFinite(tx) && tx > 0 ? tx : null, tolerance: tol || null };
     });
     apps.forEach((a) => {
       if (!a || !a.name) return;
@@ -124,6 +132,21 @@ router.post('/ingest', optionalJWT, async (req, res) => {
       policy: ai.policy || null, euAiAct: ai.euAiAct || null, inventory: ai.inventory || null,
     };
 
+    // Security-as-a-growth-engine (CISO revenue-enablement) — pipeline in security
+    // review, deal-review cycle time, certifications held, trust reviews. Optional;
+    // stored verbatim and echoed in /summary. null-safe so the cockpit can gate it.
+    const gr = b.growth || {};
+    const numOf = (v) => { const n = Number(String(v == null ? '' : v).replace(/[^0-9.]/g, '')); return Number.isFinite(n) && n > 0 ? n : null; };
+    const growthRaw = {
+      pipelineUsd: money(gr.pipelineUsd),
+      reviewBeforeWks: numOf(gr.reviewBeforeWks),
+      reviewNowWks: gr.reviewNowWks != null && String(gr.reviewNowWks) !== '' ? Number(String(gr.reviewNowWks).replace(/[^0-9.]/g, '')) : null,
+      dealsGated: numOf(gr.dealsGated),
+      trustReviews: numOf(gr.trustReviews),
+      certs: Array.isArray(gr.certs) ? gr.certs.filter((c) => c && String(c).trim()).map((c) => String(c).trim()) : [],
+    };
+    const growth = (growthRaw.pipelineUsd || growthRaw.reviewNowWks != null || growthRaw.dealsGated || growthRaw.certs.length) ? growthRaw : {};
+
     // Ensure the org row exists so the FK on business_processes/assets is satisfied.
     // JSONB-merge economics into setup_json so re-ingest overlays without clobbering.
     step = 'upsert_org';
@@ -132,7 +155,7 @@ router.post('/ingest', optionalJWT, async (req, res) => {
        VALUES ($1,$2,$3,$4::jsonb,NOW())
        ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name,
          setup_json = COALESCE(orgs.setup_json,'{}'::jsonb) || EXCLUDED.setup_json`,
-      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics, resilience, initiatives, governance, aiGovernance })]);
+      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics, resilience, initiatives, governance, aiGovernance, growth })]);
 
     // Idempotent replace: clear the org's prior inventory, then insert the mapped rows.
     step = 'clear_inventory';

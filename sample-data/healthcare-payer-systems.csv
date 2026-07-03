@@ -1,0 +1,24 @@
+name,hosting,data,vendor,eol,recovery
+Claims Adjudication Platform,on-prem application,"PHI, PCI, Financial",Core Claims Vendor,no,6
+Claims API Gateway,cloud service,"PHI, Financial",Apigee,no,6
+EDI Clearinghouse Gateway,internet-facing gateway,"Claims EDI, PHI",Availity,no,8
+Mainframe Claims Interface,mainframe,"PHI, Financial",IBM zSystems,yes,12
+Premium Billing System,on-prem application,"PCI, Financial, PII",Billing Suite,no,8
+Payment Gateway Integration,internet-facing service,"PCI, Financial",Zelis,no,8
+Pharmacy Benefits System,vendor SaaS,"PHI, PII",PBM Partner,no,8
+Member Portal,internet-facing web app,"PHI, PII",In-house,no,4
+Eligibility Verification Service,cloud service,"PHI, PII",In-house,no,4
+Prior Authorization Engine,cloud application,"PHI, PII",Auth Vendor,no,12
+Care Management Platform,vendor SaaS,"PHI, PII",Care Mgmt Vendor,no,8
+Telehealth Gateway,internet-facing service,"Telehealth PHI",Telehealth Vendor,no,8
+Contact Center Member Support,cloud contact center,"PHI, PII",Genesys,no,8
+Call Recording Platform,cloud service,"PHI, PII, Voice",NICE,no,12
+Provider Directory Portal,internet-facing web app,"PII, Provider",In-house,no,12
+Actuarial Modeling Workspace,internal analytics,"PHI, Risk Adjustment",SAS,no,24
+Enterprise Data Warehouse,on-prem data platform,"PHI, PII, Financial",Snowflake,no,24
+Identity Provider (Okta),cloud identity,"PII, Credentials",Okta,no,4
+Remote Access Gateway,internet-facing VPN,"Credentials, PII",Palo Alto,no,8
+Endpoint Fleet,managed endpoints,"PHI, PII",CrowdStrike,no,12
+Backup Infrastructure,on-prem + immutable copies,"Operational, PHI",Rubrik,no,24
+Cloud Platform,public cloud,"PHI, PII, Operational",AWS,no,12
+Governance and Compliance,GRC platform,"Audit, PII",ServiceNow GRC,no,72

@@ -1,0 +1,14 @@
+name,revenue,rto,data,criticality,transactions_per_day,downtime_tolerance
+Claims Intake and Adjudication,$4.2B,6,"PHI, PCI, Financial",Critical,480000,$9M
+Premium Billing and Payment Processing,$2.8B,8,"PCI, Financial, PII",Critical,210000,$6M
+Pharmacy Benefits Coordination,$1.6B,8,"PHI, PII",High,340000,$5M
+Member Enrollment and Eligibility,$900M,4,"PHI, PII",Critical,260000,$6M
+Risk Adjustment Data Submission,$600M,24,"PHI, Financial",High,30000,$4M
+Prior Authorization Management,$500M,12,"PHI, PII",High,120000,$3M
+Care Management Case Coordination,$400M,8,"PHI, PII",High,42000,$3M
+Contact Center Member Support,$300M,8,"PHI, PII",High,85000,$2M
+Provider Portal Access and Claims Inquiry,$250M,12,"PHI, PII",Medium,190000,$2M
+Enterprise Identity and Access Lifecycle,$120M,12,"PII, Credentials",High,60000,$2M
+Data Classification and PHI Discovery,$60M,48,"PHI, PII",Medium,5000,$1M
+Business Continuity and Disaster Recovery,$50M,24,"Operational",High,2000,$2M
+Regulatory Compliance Evidence Management,$30M,72,"Audit, PII",Medium,3000,$1M
