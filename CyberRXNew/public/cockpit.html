@@ -201,6 +201,9 @@
   .peer-v{font-size:17px;font-weight:800;margin-top:5px}
   .peer-m{font-size:11px;color:var(--ink-2);margin-top:3px}
   .peer-g{font-size:10.5px;color:var(--muted);margin-top:5px;line-height:1.4}
+  .srcpill{font-size:9.5px;font-weight:600;letter-spacing:.02em;padding:1px 6px;border-radius:5px;white-space:nowrap;display:inline-block}
+  .srcpill.self{background:rgba(137,135,129,.16);color:var(--muted)}
+  .srcpill.conn{background:var(--good-soft);color:var(--good)}
   .qoq{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;margin-bottom:16px}
   .qtbl{width:100%;border-collapse:collapse;font-size:12.5px}.qtbl th{text-align:left;color:var(--muted);font-weight:600;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;padding:0 8px 9px 0;border-bottom:1px solid var(--line)}
   .qtbl td{padding:10px 8px 10px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}.qtbl tr:last-child td{border:none;font-weight:700}.qtbl .up{color:var(--good)}
@@ -949,7 +952,10 @@ function renderOversight(){
 }
 /* Board: worst realistic day (named stress scenario) — from /summary stress. */
 function hrsToStr(h){return h==null?'—':(h>=24?(Math.round(h/2.4)/10+' days'):(h+' hrs'));}
-function govRow(label,val,ok){return '<div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:8px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted)">'+label+'</span><span style="font-weight:600;color:'+(ok===true?'var(--good)':ok===false?'var(--crit)':'var(--ink-2)')+'">'+val+'</span></div>';}
+function govRow(label,val,ok,src){return '<div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:8px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted)">'+label+'</span><span style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:3px"><span style="font-weight:600;color:'+(ok===true?'var(--good)':ok===false?'var(--crit)':'var(--ink-2)')+'">'+val+'</span>'+(src||'')+'</span></div>';}
+/* Provenance chip: is this field self-reported at onboarding, or evidenced from a
+   connected source? Honest by default — self-reported until a real source is wired. */
+function srcChip(via,connected){return connected?('<span class="srcpill conn">● '+connected+'</span>'):('<span class="srcpill self">○ self-reported'+(via?(' · evidence via '+via):'')+'</span>');}
 function renderStress(){
   var host=document.getElementById('ceoStress');if(!host)return;var s=LIVE&&LIVE.stress;if(!s||!s.target)return;
   host.innerHTML='<div class="ck">Severe-but-plausible scenario</div>'+
@@ -967,12 +973,12 @@ function renderReadiness(){
   var tested=ir.tested||'—',testedOk=/within 12/i.test(tested)?true:(/not tested/i.test(tested)?false:null);
   var ret=ir.retainer||'—',ranp=ir.ransomwarePolicy||'—';
   host.innerHTML='<div class="ck">Response &amp; recovery readiness</div><div style="margin-top:8px">'+
-    govRow('IR plan tested',tested,testedOk)+
-    govRow('Last tabletop',ir.lastTabletop?new Date(ir.lastTabletop).toLocaleDateString():'—',ir.lastTabletop?null:false)+
-    govRow('IR / breach-counsel retainer',ret,/yes/i.test(ret)?true:(/no/i.test(ret)?false:null))+
-    govRow('Ransomware-payment policy',ranp,/board-approved/i.test(ranp)?true:(/none/i.test(ranp)?false:null))+
-    govRow('Crown-jewel worst recovery',(rs&&rs.worst_recovery_hours!=null)?hrsToStr(rs.worst_recovery_hours):'—',null)+
-    '</div>';
+    govRow('IR plan tested',tested,testedOk,srcChip('GRC (ServiceNow)'))+
+    govRow('Last tabletop',ir.lastTabletop?new Date(ir.lastTabletop).toLocaleDateString():'—',ir.lastTabletop?null:false,srcChip('GRC (ServiceNow)'))+
+    govRow('IR / breach-counsel retainer',ret,/yes/i.test(ret)?true:(/no/i.test(ret)?false:null),srcChip('contracts / DPA system'))+
+    govRow('Ransomware-payment policy',ranp,/board-approved/i.test(ranp)?true:(/none/i.test(ranp)?false:null),srcChip('policy register'))+
+    govRow('Crown-jewel worst recovery',(rs&&rs.worst_recovery_hours!=null)?hrsToStr(rs.worst_recovery_hours):'—',null,srcChip(null,'computed from your inventory'))+
+    '</div><div class="cn" style="margin-top:8px"><span class="srcpill self">○ self-reported</span> vs <span class="srcpill conn">● connected</span> — connect your GRC, contract and policy systems to evidence these instead of self-attesting.</div>';
 }
 function renderThirdParty(){
   var host=document.getElementById('ceoThirdParty');if(!host)return;
@@ -986,16 +992,16 @@ function renderGov(){
   var host=document.getElementById('ceoGov');if(!host)return;var g=LIVE&&LIVE.governance;
   if(!g||!(g.committee||g.cadence||g.cisoReportsTo||g.ermIntegrated||g.boardExpertise))return;
   var items=[
-    {k:'Board committee that owns cyber',v:g.committee||'not set',ok:!!g.committee},
-    {k:'How the board is informed (cadence)',v:g.cadence||'not set',ok:!!g.cadence},
-    {k:'Board member with cyber expertise',v:g.boardExpertise||'not set',ok:/yes/i.test(g.boardExpertise||'')},
-    {k:'Management role (CISO reporting line)',v:g.cisoReportsTo?('reports to '+g.cisoReportsTo):'not set',ok:!!g.cisoReportsTo},
-    {k:'Integrated into enterprise risk (ERM)',v:g.ermIntegrated||'not set',ok:/yes/i.test(g.ermIntegrated||'')}
+    {k:'Board committee that owns cyber',v:g.committee||'not set',ok:!!g.committee,via:'board portal / GRC'},
+    {k:'How the board is informed (cadence)',v:g.cadence||'not set',ok:!!g.cadence,via:'board portal / GRC'},
+    {k:'Board member with cyber expertise',v:g.boardExpertise||'not set',ok:/yes/i.test(g.boardExpertise||''),via:'board roster / HRIS'},
+    {k:'Management role (CISO reporting line)',v:g.cisoReportsTo?('reports to '+g.cisoReportsTo):'not set',ok:!!g.cisoReportsTo,via:'HRIS / org chart'},
+    {k:'Integrated into enterprise risk (ERM)',v:g.ermIntegrated||'not set',ok:/yes/i.test(g.ermIntegrated||''),via:'GRC / ERM system'}
   ];
   var ready=items.filter(function(i){return i.ok;}).length;
-  host.innerHTML='<div class="card"><div class="ck">Board oversight structure · SEC Reg S-K Item 106 readiness <span class="tag '+(ready>=4?'good':'warn')+'" style="font-size:10px;margin-left:6px">'+ready+' / '+items.length+' evidenced</span></div>'+
-    '<div style="margin-top:8px">'+items.map(function(i){return govRow(i.k,i.v,i.ok);}).join('')+'</div>'+
-    '<div class="cn" style="margin-top:8px">These are the exact governance disclosures Item 106(c) requires in your 10-K. Fill any gaps in onboarding to make this filing-ready.</div></div>';
+  host.innerHTML='<div class="card"><div class="ck">Board oversight structure · SEC Reg S-K Item 106 readiness <span class="tag '+(ready>=4?'good':'warn')+'" style="font-size:10px;margin-left:6px">'+ready+' / '+items.length+' answered</span></div>'+
+    '<div style="margin-top:8px">'+items.map(function(i){return govRow(i.k,i.v,i.ok,srcChip(i.via));}).join('')+'</div>'+
+    '<div class="cn" style="margin-top:8px">These are the exact governance disclosures Item 106(c) requires in your 10-K. All are <span class="srcpill self">○ self-reported</span> today — connect your board portal, HRIS and GRC to <span class="srcpill conn">● evidence</span> them and make this filing-ready and audit-defensible.</div></div>';
 }
 function renderBoard(){renderStress();renderReadiness();renderThirdParty();renderGov();renderMateriality();renderAiRisk();renderCisoOps();renderCisoWarRoom();}
 /* War Room, integrated into the CISO seat — shows current incident state with a
