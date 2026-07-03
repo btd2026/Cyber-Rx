@@ -955,12 +955,32 @@ var GRAPH=null;
 /* Clean, ranked list of the DISTINCT crown jewels (authoritative top set from
    /summary), each with its tier, score, the process(es) it supports, and a
    concise rationale. No per-process repetition. */
-var ILLU_CJ=[
-  {name:'Claims &amp; payments database',tier:'Tier 1',score:83,procs:['Claims &amp; payments processing'],why:'Holds PHI + cardholder data; single point of failure for a critical revenue process; internet-reachable.',exposure:34e6,topRisk:{title:'Ransomware → payments halt'},data:['PHI','PCI'],internet:true,recovery:74,riskCount:3,dailyValue:5.8e6,txPerDay:480000,tolerance:9e6,toleranceProc:'Claims &amp; payments processing',impactRadius:['Member portal','Settlement engine','EDI gateway']},
-  {name:'Member portal',tier:'Tier 2',score:76,procs:['Member portal &amp; servicing'],why:'Customer PII at scale; internet-facing; high transaction volume.',exposure:18e6,topRisk:{title:'Account takeover / breach'},data:['PII'],internet:true,recovery:40,riskCount:2,dailyValue:2.1e6,txPerDay:260000,tolerance:6e6,toleranceProc:'Member portal &amp; servicing',impactRadius:['Claims &amp; payments database','Eligibility service']},
-  {name:'Settlement engine',tier:'Tier 2',score:72,procs:['Trading &amp; settlement'],why:'Moves funds; time-critical recovery window.',exposure:11e6,topRisk:{title:'Settlement disruption'},data:['Financial'],internet:false,recovery:28,riskCount:1,dailyValue:3.4e6,txPerDay:95000,tolerance:5e6,toleranceProc:'Trading &amp; settlement',impactRadius:['Claims &amp; payments database']},
-  {name:'Policy administration system',tier:'Tier 3',score:64,procs:['Policy administration'],why:'System of record for policies; sensitive data; high availability need.',exposure:5e6,topRisk:{title:'Data exposure'},data:['PII'],internet:false,recovery:12,riskCount:1,dailyValue:0.9e6,txPerDay:40000,tolerance:3e6,toleranceProc:'Policy administration',impactRadius:['Member portal']}
-];
+/* Industry-appropriate illustrative examples — so a technology company never sees
+   healthcare crown jewels. The org's real uploaded data always overrides these;
+   this only shapes the labelled illustrative state, keyed off the onboarding industry. */
+var IND_PROFILES={
+  health:{procs:['Claims & payments processing','Member enrolment & eligibility','Pharmacy benefits','Care management'],systems:['Claims platform','Member portal','Eligibility service','Care management platform'],data:['PHI','PCI','PII'],topRisk:'Ransomware halting claims processing'},
+  tech:{procs:['Customer transactions & billing','Product API platform','Authentication & identity','Analytics data pipeline'],systems:['Production database','Public API gateway','Authentication service','Customer data warehouse'],data:['Customer PII','Source code','Secrets'],topRisk:'Breach of the customer database'},
+  fin:{procs:['Payments & settlement','Trading','Loan origination','Account servicing'],systems:['Core banking platform','Payments gateway','Trading system','Customer portal'],data:['Cardholder data','Financial','PII'],topRisk:'Payments fraud / settlement disruption'},
+  retail:{procs:['Checkout & payments','E-commerce storefront','Order fulfilment','Loyalty & CRM'],systems:['Payment platform','E-commerce storefront','Order management','Customer database'],data:['Cardholder data','PII'],topRisk:'Card-data breach (PCI)'},
+  gov:{procs:['Citizen services','Benefits processing','Records management','Case management'],systems:['Citizen portal','Benefits system','Records database','Case management platform'],data:['PII','Sensitive records'],topRisk:'Breach of citizen records'},
+  mfg:{procs:['Order-to-cash','Production / MES','Supply chain & procurement','Product engineering'],systems:['ERP','Plant control / MES','Supplier portal','PLM / design system'],data:['Design IP','Operational','PII'],topRisk:'OT ransomware halting production'},
+  energy:{procs:['Grid operations','Billing & metering','Field operations','Energy trading'],systems:['SCADA / control system','Billing platform','Field-ops system','Trading platform'],data:['Operational','PII','Financial'],topRisk:'OT attack disrupting operations'}
+};
+function indKey(){var i=String(industry()||'').toLowerCase();
+  if(/health/.test(i))return 'health';if(/tech|saas|software/.test(i))return 'tech';if(/financ|bank|insur/.test(i))return 'fin';
+  if(/retail|commerce/.test(i))return 'retail';if(/gov|public/.test(i))return 'gov';if(/manufactur/.test(i))return 'mfg';if(/energy|utilit/.test(i))return 'energy';return 'tech';}
+function indProfile(){return IND_PROFILES[indKey()]||IND_PROFILES.tech;}
+function illuCJ(){var p=indProfile();
+  var tiers=['Tier 1','Tier 2','Tier 2','Tier 3'],scores=[83,76,72,64],exps=[34e6,18e6,11e6,5e6],recs=[74,40,28,12],dvs=[5.8e6,2.1e6,3.4e6,0.9e6],txs=[480000,260000,95000,40000],tols=[9e6,6e6,5e6,3e6],nets=[true,true,false,false],rcs=[3,2,1,1];
+  return p.systems.map(function(name,i){return {name:name,tier:tiers[i],score:scores[i],procs:[p.procs[i]],
+    why:'Holds '+p.data.slice(0,2).join(' + ')+'; single point of failure for a critical revenue process'+(nets[i]?'; internet-reachable':'')+'.',
+    exposure:exps[i],topRisk:{title:i===0?p.topRisk:'Data exposure / service disruption'},data:p.data,internet:nets[i],recovery:recs[i],riskCount:rcs[i],
+    dailyValue:dvs[i],txPerDay:txs[i],tolerance:tols[i],toleranceProc:p.procs[i],impactRadius:p.systems.filter(function(_,j){return j!==i;}).slice(0,3)};});}
+function illuProcBars(){var p=indProfile();var exps=[34e6,18e6,11e6,5e6];var max=exps[0];
+  return '<div class="card">'+p.procs.map(function(n,i){var pct=Math.max(6,Math.round(exps[i]/max*100));return '<div class="bar-row"><div class="bar-lbl">'+n+(i===0?' <span class="cj-badge" style="margin-left:6px">crown jewel</span>':'')+'</div><div class="bar-track"><div class="bar-fill '+(i===0?'hot':'')+'" style="width:'+pct+'%"></div></div><div class="bar-val">'+usd(exps[i])+'</div></div>';}).join('')+'<div class="cn" style="margin-top:8px">◐ <b style="color:var(--warn)">Illustrative</b> for '+(indKey()==='tech'?'technology':indKey())+' — upload your processes to see your own.</div></div>';}
+function illuSysBars(){var p=indProfile();var hrs=[2.3e6,0.9e6,0.6e6,0.04e6];var recs=['74 hrs','28 hrs','40 hrs','8 hrs'];var max=hrs[0];
+  return '<div class="card">'+p.systems.map(function(n,i){var pct=Math.max(8,Math.round(hrs[i]/max*100));return '<div class="bar-row"><div class="bar-lbl">'+n+' ('+usd(hrs[i])+'/hr)'+(i===0?' <span class="cj-badge" style="margin-left:6px">crown jewel</span>':'')+'</div><div class="bar-track"><div class="bar-fill '+(i===0?'hot':'')+'" style="width:'+pct+'%"></div></div><div class="bar-val">'+recs[i]+'</div></div>';}).join('')+'<div class="cn" style="margin-top:8px">◐ <b style="color:var(--warn)">Illustrative</b> — upload your systems to rank by real downtime cost.</div></div>';}
 function tierLabel(t){t=String(t||'').toLowerCase().replace('tier','').trim();if(t==='1')return 'Tier 1';if(t==='2')return 'Tier 2';if(t==='3')return 'Tier 3';return t?('Tier '+t):'';}
 function cleanWhy(name,why){why=String(why||'').trim();var n=String(name||'').trim();
   if(n)why=why.replace(new RegExp('^'+n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*[—:\\-]\\s*','i'),'');
@@ -997,7 +1017,7 @@ function cjLoss(c){return Math.round((c.dailyValue||0)*incidentDays());}
 function cjTolPct(c){var tol=cjTolerance(c);if(!tol||!(c.dailyValue>0))return 0;return (cjLoss(c)/tol)*100;}
 function tolPhase(pct){return pct>=100?100:pct>=75?75:pct>=50?50:0;}
 function cjBreachDay(c){var tol=cjTolerance(c);return (tol&&c.dailyValue>0)?(tol/c.dailyValue):null;}
-function currentCjList(){var live=crownList();return (live&&live.length)?live:ILLU_CJ;}
+function currentCjList(){var live=crownList();return (live&&live.length)?live:illuCJ();}
 function cjRadiusOf(name){var l=currentCjList();for(var i=0;i<l.length;i++)if(l[i].name===name)return l[i].impactRadius||[];return [];}
 function cjIsPrimary(c){return (typeof incidentActive!=='undefined')&&incidentActive&&incidentAsset&&c.name===incidentAsset;}
 function cjInRadius(c){return (typeof incidentActive!=='undefined')&&incidentActive&&incidentAsset&&cjRadiusOf(incidentAsset).indexOf(c.name)>=0;}
@@ -1053,7 +1073,7 @@ function updateCjIncident(){
    /summary (process_exposure), ranked. Keeps illustrative bars until live. */
 function renderProcBars(){
   var host=document.getElementById('ceoProcBars');if(!host)return;
-  var pe=LIVE&&LIVE.process_exposure;if(!pe||!pe.length)return;
+  var pe=LIVE&&LIVE.process_exposure;if(!pe||!pe.length){host.innerHTML=illuProcBars();return;}
   var max=pe[0].exposure_usd||1;
   host.innerHTML='<div class="card">'+pe.map(function(p){
     var pct=Math.max(6,Math.round(p.exposure_usd/max*100));
@@ -1490,7 +1510,7 @@ function renderRoi(){
    $/hr of downtime (from /summary resilience.systems). Illustrative until live. */
 function renderCioSystems(){
   var host=document.getElementById('cioSystems');if(!host)return;
-  var sy=LIVE&&LIVE.resilience&&LIVE.resilience.systems;if(!sy||!sy.length)return;
+  var sy=LIVE&&LIVE.resilience&&LIVE.resilience.systems;if(!sy||!sy.length){host.innerHTML=illuSysBars();return;}
   var withHr=sy.filter(function(s){return s.per_hr>0;});var list=withHr.length?withHr:sy;
   var max=list[0].per_hr||list[0].exposure_usd||1;
   host.innerHTML='<div class="card">'+list.map(function(s){
@@ -1502,7 +1522,7 @@ function renderCioSystems(){
 }
 function renderChain(){
   var host=document.getElementById('cjchain');if(!host)return;
-  var live=crownList();var list=(live&&live.length)?live:ILLU_CJ;
+  var live=crownList();var list=(live&&live.length)?live:illuCJ();
   var note=(live&&live.length)
     ? '<div class="cn" style="margin-bottom:14px">● <b style="color:var(--good)">Live</b> — your <b>'+list.length+'</b> crown-jewel '+(list.length===1?'system':'systems')+', ranked by criticality (data sensitivity × exposure × the processes that depend on them). Each shows the transactions and dollar value it carries every day, how exposed it is, and how fast it recovers.</div>'
     : '<div class="cn" style="margin-bottom:14px">◐ <b style="color:var(--warn)">Illustrative</b> — an example. Complete onboarding to see your own crown jewels.</div>';
