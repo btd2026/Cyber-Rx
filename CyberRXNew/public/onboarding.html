@@ -24,6 +24,12 @@
   h1{font-size:26px;font-weight:700;letter-spacing:-.02em}
   .lede{color:var(--ink-2);font-size:14.5px;margin-top:10px;max-width:680px}
   .lede b{color:#fff}
+  .obtabs{position:sticky;top:0;z-index:20;display:flex;gap:8px;flex-wrap:wrap;padding:12px 0;margin-top:8px;background:var(--bg,#0b0b0d);border-bottom:1px solid var(--line)}
+  .obtab{font-size:12.5px;font-weight:600;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:7px 15px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:7px}
+  .obtab:hover{color:var(--ink,#fff)}
+  .obtab.on{color:#fff;border-color:var(--accent,#3987e5);background:var(--accent-soft,rgba(57,135,229,.14))}
+  .obtab .obn{font-size:10px;font-weight:700;opacity:.6}
+  .obtab.done .obn{color:var(--good,#0ca30c);opacity:1}
   .sec{margin-top:26px;background:var(--surface);border:1px solid var(--line);border-radius:15px;padding:22px 24px}
   .sh{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px}
   .sn{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--blue);background:var(--blue-soft);border:1px solid rgba(57,135,229,.35);border-radius:9px;padding:6px 10px;line-height:1}
@@ -165,6 +171,8 @@
     <h1>Give CyberRx your business, and it returns your cyber position — in dollars.</h1>
     <div class="lede">A focused setup. Fields are optional, but the more you provide the more of the cockpit is <b>live from your data</b> instead of illustrative. Everything can be edited later.</div>
   </div>
+
+  <div class="obtabs" id="obtabs"></div>
 
   <!-- 1 · Organization -->
   <div class="sec">
@@ -509,7 +517,7 @@
   function renderMap(){
     var sec=document.getElementById('mapSec');
     if(!PROC.length||!APP.length){sec.style.display='none';return;}
-    sec.style.display='';
+    sec.style.display=(typeof OB_ACTIVE==='undefined'||OB_ACTIVE==='inv')?'':'none';
     var G=buildGraph();
     var cjs=G.apps.filter(function(a){return a.cj;}).sort(function(x,y){return y.score-x.score;});
     // 3-column visual graph
@@ -634,8 +642,8 @@
   document.getElementById('goLive').addEventListener('click',async function(){
     var btn=this,msg=document.getElementById('glmsg');
     var org=v('orgName');
-    if(!org){msg.textContent='Enter an organization name.';msg.style.color='var(--warn)';return;}
-    if(!PROC.length&&!APP.length){msg.textContent='Upload your processes or systems first.';msg.style.color='var(--warn)';return;}
+    if(!org){msg.textContent='Enter an organization name.';msg.style.color='var(--warn)';try{obShow('org');}catch(_){}return;}
+    if(!PROC.length&&!APP.length){msg.textContent='Upload your processes or systems first.';msg.style.color='var(--warn)';try{obShow('inv');}catch(_){}return;}
     var orgId='org_'+slug(org);
     var payload={
       org_name:org,org_id:orgId,industry:v('industry'),regions:REGIONS,currency:CUR_CODE,
@@ -690,6 +698,38 @@
     try{window.parent.postMessage({type:'cyberrx-golive',org:org,orgId:orgId,industry:v('industry')},'*');}catch(_){}
     msg.textContent='✓ Live';msg.style.color='var(--good)';
   });
+
+  /* ---- Section tabs — one section at a time instead of a long scroll. Every
+     section stays in the DOM (hidden, not removed) so go-live still reads every
+     field; we only toggle visibility. Sections are grouped by their title. ---- */
+  var OB_TABS=[
+    {k:'org',l:'Organization',m:['organization']},
+    {k:'gov',l:'Governance & AI',m:['board governance','ai risk']},
+    {k:'fin',l:'Financials',m:['financials','enterprise risk','growth engine','insurance']},
+    {k:'inv',l:'Inventory',m:['business processes','systems','map applications']},
+    {k:'risk',l:'Risks & projects',m:['risk register','cyber projects','initiatives']},
+    {k:'tools',l:'Connect tools',m:['connect your tools']}
+  ];
+  var OB_ACTIVE='org';
+  function obSecs(){return Array.prototype.slice.call(document.querySelectorAll('.wrap > .sec'));}
+  function obTabOf(sec){var st=sec.querySelector('.st');var h=(st?st.textContent:'').toLowerCase();
+    for(var i=0;i<OB_TABS.length;i++){for(var j=0;j<OB_TABS[i].m.length;j++){if(h.indexOf(OB_TABS[i].m[j])>=0)return OB_TABS[i].k;}}return null;}
+  function obShow(key){OB_ACTIVE=key;
+    obSecs().forEach(function(sec){var tk=obTabOf(sec);var vis=(tk===key);
+      if(sec.id==='mapSec')vis=vis&&PROC.length&&APP.length; // map only when built
+      sec.style.display=vis?'':'none';});
+    document.querySelectorAll('.obtab').forEach(function(b){b.classList.toggle('on',b.dataset.k===key);});
+    try{window.scrollTo({top:0});}catch(_){}}
+  (function buildObTabs(){
+    var host=document.getElementById('obtabs');if(!host)return;
+    // Only render tabs that actually have a matching section present.
+    var present={};obSecs().forEach(function(sec){var k=obTabOf(sec);if(k)present[k]=1;});
+    host.innerHTML=OB_TABS.filter(function(t){return present[t.k];}).map(function(t,i){
+      return '<button type="button" class="obtab'+(i===0?' on':'')+'" data-k="'+t.k+'"><span class="obn">'+String(i+1).padStart(2,'0')+'</span>'+t.l+'</button>';
+    }).join('');
+    host.querySelectorAll('.obtab').forEach(function(b){b.addEventListener('click',function(){obShow(b.dataset.k);});});
+    obShow('org');
+  })();
 </script>
 </body>
 </html>
