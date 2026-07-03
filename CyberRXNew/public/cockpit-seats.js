@@ -181,7 +181,7 @@ var SEATS = {
        {rec:true,tag:'A · Privileged access (PAM)',on:'Option A · PAM',osum:'$1.4M · 37×',pros:['Closes the $52M driver','Highest return available','Improves board posture immediately'],cons:['$1.4M','3 weeks of IAM effort']},
        {tag:'B · Prove recovery (DR test)',on:'Option B · DR',osum:'$3.2M · <6h recovery',pros:['Removes ~$40M of the recovery tail','Meets regulatory recovery expectations'],cons:['$3.2M — larger program than PAM','Leaves the #1 driver (the $52M privileged path) open']},
        {tag:'C · AI-decisioning governance',on:'Option C · AI governance',osum:'standard + oversight',pros:['Addresses the fastest-rising risk (+$8M/qtr)','Gets ahead of the AI board decision'],cons:['Does not touch the $52M top driver yet','Benefit is preventive, not immediate risk removed']}]}]))
-   +sec('07','What are we spending — and what is the return?','The live portfolio of funded cyber projects you manage with the CFO: budget, target ROI, and delivered-to-date — tracked to completion in your ticketing system.',
+   +sec('07','How does our security investment move the business?','Not a project tracker — that lives in your ticketing system. This is the board view of the same portfolio: every funded initiative mapped to the business outcome it buys and the dollars of risk it removes, grouped by whether it protects the business, meets our obligations, or enables growth. Spend → risk removed → business result.',
      '<div id="initiatives-panel"></div>')
   );}
  }
