@@ -1290,8 +1290,15 @@ function renderCroPortfolio(){
    earnings — net income, shares outstanding, downtime cost). */
 function renderEarnings(){
   var host=document.getElementById('cfoEarnings');if(!host)return;var e=LIVE&&LIVE.earnings;if(!e)return;
+  var ec=(LIVE&&LIVE.economics)||{},r=ec.ratios||{},ale=Number(ec.ale)||0,tail=Number(ec.tail)||ale;
   var cards=[];
   if(e.worst_case_pct_of_earnings!=null)cards.push({k:'Worst case = share of annual earnings',v:pct(e.worst_case_pct_of_earnings,e.worst_case_pct_of_earnings<0.1?1:0),warn:e.worst_case_pct_of_earnings>=0.1});
+  // Days of operating income — the board line: a severe cyber year in days the
+  // business runs on. days scale linearly with loss, so worst-case = expected × tail/ale.
+  if(r.days_of_operating_income!=null&&ale>0){
+    var worstDays=r.days_of_operating_income*(tail/ale);
+    cards.push({k:'A severe cyber year = days of operating income',v:(worstDays>=10?Math.round(worstDays):worstDays.toFixed(1))+' day'+(worstDays>=1.5||worstDays<1?'s':''),warn:worstDays>=5});
+  }
   if(e.eps_impact_worst!=null)cards.push({k:'Worst-case EPS impact',v:'−$'+e.eps_impact_worst.toFixed(e.eps_impact_worst<1?2:2),warn:true});
   if(e.revenue_at_risk_per_day!=null)cards.push({k:'Revenue at risk / day of downtime',v:usd(e.revenue_at_risk_per_day)});
   if(e.expected_pct_of_earnings!=null)cards.push({k:'Expected loss = share of earnings',v:pct(e.expected_pct_of_earnings,1)});

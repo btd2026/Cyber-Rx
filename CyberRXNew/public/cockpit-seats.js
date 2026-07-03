@@ -60,8 +60,8 @@ var SEATS = {
       {k:'Value-at-Risk (95%)',v:'<span id="lvTailCfo">$180M</span>',cls:'warn',ev:'tail',note:'<span id="lvCfoPctEV">0.6% of enterprise value</span>'},
       {k:'Return on security spend',v:'<span id="lvCfoRoiVal">$1 → $9</span>',ev:'roicfo',note:'<span id="lvCfoRoiNote"><span class="pill mod">modeled</span> risk reduced per dollar</span>'},
       {k:'Cost of inaction',v:'+$92M',cls:'warn',ev:'inaction',note:'<span class="pill mod">modeled</span> exposure on deferred decisions'}]))
-   +sec('02','What would a bad year do to earnings?','Cyber loss in the terms only finance can put in front of the board — share of annual earnings, EPS impact, and revenue at risk per day of downtime. Computed from your net income, shares outstanding and downtime cost.',
-     '<div id="cfoEarnings"><div class="card"><div class="cn">◐ Add net income (and shares outstanding, for EPS) in onboarding to translate cyber loss into earnings and EPS impact.</div></div></div>')
+   +sec('02','What would a bad year do to earnings?','Cyber loss in the terms only finance can put in front of the board — share of annual earnings, EPS impact, days of operating income, and revenue at risk per day of downtime. Computed from your net income, operating income, shares outstanding and downtime cost.',
+     '<div id="cfoEarnings"><div class="card"><div class="cn">◐ Add net income, operating income (for days-of-operating-income) and shares outstanding (for EPS) in onboarding to translate cyber loss into earnings, days and EPS impact.</div></div></div>')
    +sec('03','Where does the next dollar work hardest, and are we insured?','Marginal return by program (modeled from your control effectiveness), and whether your insurance coverage matches the modeled tail.',
      '<div class="cols">'
      +bars([{l:'Privileged access',v:'37×',pct:100,cls:''},{l:'Recovery / DR',v:'13×',pct:52},{l:'Data protection',v:'8×',pct:34},{l:'Awareness training',v:'6×',pct:26},{l:'Endpoint (saturated)',v:'1.4×',pct:8}])
