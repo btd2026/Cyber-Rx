@@ -172,12 +172,8 @@ var SEATS = {
      '<div id="cjchain"></div>')
    +sec('03','How is security helping the business grow — and win deals?','Security is not only a cost that avoids loss — it is a sales accelerant. Here is the pipeline moving through security review, how fast we clear it, the certifications that are the price of admission in our market, and the trust we can sell. This is the growth side of the ledger.',
      '<div id="cisoGrowth"></div>')
-   +sec('04','Are our controls actually working — and is the program improving?','We judge controls by the dollars of risk they remove — not by a maturity score. Here is the program scorecard the board wants: expected loss over time, risk bought down, detection speed and crown-jewel coverage — plus the live control coverage streaming from your tools, with any gaps named.',
-     '<div id="cisoScorecard" style="margin-bottom:14px"></div>'
-     +tiles([
-      {k:'Controls effectiveness',v:'$210M removed',ev:'controleff',note:'<span class="pill mod">modeled</span> risk bought down (not CMMI)'},
-      {k:'Coverage from tools',v:'<span id="lvCovTile">99.4%</span>',ev:'coverage',note:'<span id="lvCovTileNote">live once your tools connect; gaps named &amp; costed</span>'}])
-     +'<div id="cisoCoverage">'+kvcard('Coverage from connected tools <span class="pill mod">live once connected</span>',[{k:'Endpoint detection (EDR)',v:'98.1%',cls:'good'},{k:'Multi-factor (MFA)',v:'96% — 4% legacy',cls:'warn'},{k:'Privileged accounts managed',v:'60% — the driver',cls:'crit'},{k:'Phishing-prone rate',v:'3% (was 9%)',cls:'good'}])+'</div>')
+   +sec('04','Are our controls actually working — and is the program improving?','Three questions the board actually asks: is our security spend working (the dollars of risk our controls have removed), are we getting better (expected loss over time), and how fast do we detect and respond. Then the live control gaps that still carry risk — each with the funded project closing it. Click any card for the math and the source.',
+     '<div id="cisoControls"></div>')
    +sec('05','The fastest-changing risk: AI','As frontier models (e.g. Anthropic’s <b>Mythos</b>) make attackers faster at finding and exploiting weaknesses, here is our exposure, the dollars at stake, and the priority actions — alongside governance of the AI we run (NIST AI RMF · OWASP LLM).',
      '<div id="cisoAiRisk"><div class="card"><div class="cn">◐ Add AI-governance answers in onboarding and connect vulnerability management for live data.</div></div></div>')
    +sec('06','How do we say “yes” — safely?','The department of <b>how</b>, not <b>no</b>. When the business wants to ship a feature, adopt a tool, or enter a market, security gives a path to yes: the conditions that make it safe and the residual risk in dollars — accepted, on the record, by the business owner who owns the upside. That is partnership, and it is also your accountability trail.',

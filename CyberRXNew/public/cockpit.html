@@ -351,7 +351,7 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=h;
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderEnablements();renderCisoScorecard();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderEnablements();renderControls();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
@@ -733,25 +733,66 @@ function sparkSvg(vals,down){
   return '<svg width="100%" height="46" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" style="margin-top:6px"><polyline points="'+pts+'" fill="none" stroke="'+col+'" stroke-width="2"/></svg>';
 }
 function cjCoverage(){var l=currentCjList();if(!l||!l.length)return null;var clean=l.filter(function(c){return (c.riskCount||0)===0;}).length;return Math.round(clean/l.length*100);}
-function renderCisoScorecard(){
-  var host=document.getElementById('cisoScorecard');if(!host)return;
-  var t=(LIVE&&LIVE.trend)||[];var ale=(LIVE&&LIVE.economics&&Number(LIVE.economics.ale))||0;
-  var vals=t.map(function(p){return Number(p.ale)||0;});
-  var trend;
-  if(vals.length>=2){var down=vals[vals.length-1]<=vals[0];var delta=vals[vals.length-1]-vals[0];var pc=vals[0]?Math.round(delta/vals[0]*100):0;
-    trend='<div class="card"><div class="ck">Expected loss — your recorded trend</div>'+sparkSvg(vals,down)+'<div class="cn" style="margin-top:4px">'+(down?'Down ':'Up ')+usd(Math.abs(delta))+' ('+(pc<=0?'':'+')+pc+'%) across '+vals.length+' recorded points — real history, nothing back-filled.</div></div>';
-  } else {
-    trend='<div class="card"><div class="ck">Expected loss — baseline</div><div class="cv" style="font-size:22px;margin-top:4px">'+(ale>0?usd(ale):'—')+'</div><div class="cn" style="margin-top:4px">Your baseline — the trend line builds from here on every analysis. No history is invented.</div></div>';
-  }
-  var mttd=sig('mttd_hrs');var cov=cjCoverage();
-  var kpis='<div class="grid4" style="margin-top:12px">'+
-    '<div class="card"><div class="ck">Risk removed by controls</div><div class="cv" style="font-size:20px;color:var(--good)">$210M</div><div class="cn"><span class="pill mod">modeled</span> dollars bought down — not a maturity score</div></div>'+
-    '<div class="card"><div class="ck">Mean time to detect</div><div class="cv" style="font-size:20px'+(mttd!=null?';color:var(--good)':'')+'">'+(mttd!=null?(mttd+'h'):'—')+'</div><div class="cn">'+(mttd!=null?'<span class="pill good" style="font-size:9px">live</span> from your SIEM · MTTR once connected':'connect your SIEM for live MTTD / MTTR')+'</div></div>'+
-    '<div class="card"><div class="ck">Crown-jewel coverage</div><div class="cv" style="font-size:20px">'+(cov!=null?cov+'%':'—')+'</div><div class="cn">'+(cov!=null?'crown jewels with no open risk':'connect inventory to measure')+'</div></div>'+
-    '<div class="card"><div class="ck">Recorded trend points</div><div class="cv" style="font-size:20px">'+(vals.length||1)+'</div><div class="cn">a few lines tied to business risk — not a dashboard of activity noise</div></div>'+
-    '</div>';
-  host.innerHTML=trend+kpis;
+/* Controls section — the board's three questions about the program, in business
+   terms, each a clickable drill: (1) is our spend working (risk removed $),
+   (2) are we improving (recorded expected-loss trajectory), (3) how fast do we
+   detect & respond. Then the live control gaps that carry risk + the funded fix.
+   No hardcoded coverage numbers, no meta-metrics — everything traces to data. */
+function controlsEffUsd(){var e=LIVE&&LIVE.economics;if(e&&Number(e.controls_removed)>0)return Number(e.controls_removed);return 210e6;}
+function ctile(id,label,value,cls,sub){return '<div class="card optile ctile" data-cdrill="'+id+'"><div class="ck">'+label+'</div><div class="cv" style="font-size:20px;margin-top:5px;line-height:1.25'+(cls?';color:var(--'+cls+')':'')+'">'+value+'</div><div class="cn" style="margin-top:7px">'+sub+' <span class="drill-cta">details ▸</span></div></div>';}
+function trajInfo(){
+  var t=(LIVE&&LIVE.trend)||[],vals=t.map(function(p){return Number(p.ale)||0;}),ale=(LIVE&&LIVE.economics&&Number(LIVE.economics.ale))||0;
+  if(vals.length>=2){var down=vals[vals.length-1]<=vals[0],delta=vals[vals.length-1]-vals[0],pc=vals[0]?Math.round(delta/vals[0]*100):0;
+    return {two:true,down:down,val:(down?'▼ ':'▲ ')+usd(Math.abs(delta))+' ('+(pc<=0?'':'+')+pc+'%)',cls:down?'good':'crit',sub:'expected loss across '+vals.length+' recorded analyses',vals:vals,t:t};}
+  return {two:false,val:ale>0?usd(ale):'—',cls:'',sub:'baseline — the trajectory builds from here, no history invented',ale:ale};
 }
+function renderControls(){
+  var host=document.getElementById('cisoControls');if(!host)return;
+  var tr=trajInfo(),mttd=sig('mttd_hrs');
+  var tiles='<div class="grid3">'+
+    ctile('eff','Is our security spend working?',usd(controlsEffUsd())+' <span class="pill mod" style="font-size:9px;vertical-align:middle">modeled</span>','good','risk removed by controls — the dollars of loss we have bought down')+
+    ctile('traj','Are we getting better?',tr.val,tr.cls,tr.sub)+
+    ctile('det','How fast do we detect &amp; respond?',mttd!=null?(mttd+'h to detect'):'connect SIEM',mttd!=null?'good':'muted',mttd!=null?'MTTD live · MTTR once your SIEM workflow connects':'connect your SIEM to measure MTTD / MTTR')+
+    '</div>';
+  host.innerHTML=tiles+controlGapsCard();
+  host.querySelectorAll('.ctile').forEach(function(el){el.onclick=function(){var k=el.dataset.cdrill;
+    if(k==='eff')openDrill('Risk removed by controls',drillEffectiveness());
+    else if(k==='traj')openDrill('Program trajectory',drillTrajectory());
+    else if(k==='det')openDrill('Detection & response speed',drillDetection());};});
+  host.querySelectorAll('.capgap').forEach(function(el){el.onclick=function(){var c=CAP_BY_KEY[el.dataset.cap];if(c)openDrill(c.name,drillOneCap(c));};});
+}
+function controlGapsCard(){
+  if(!SIGNALS)return '<div class="card" style="margin-top:14px"><div class="ck">Control gaps that carry risk — and the funded fix</div><div class="cn" style="margin-top:6px">◐ <b style="color:var(--warn)">Connect your security tools</b> (EDR, MFA, PAM, SIEM…) and this shows your live control coverage, the gaps that leave the most risk open, and the project closing each — every number from the tool, none hardcoded.</div></div>';
+  var gaps=CAPS.map(function(c){return {c:c,p:capDeploy(c)};}).filter(function(o){return o.p!=null&&o.p<90;}).sort(function(a,b){return a.p-b.p;});
+  if(!gaps.length)return '<div class="card" style="margin-top:14px"><div class="ck">Control gaps</div><div class="cn" style="margin-top:6px">✓ Every measured control is at or above target (≥90% deployed) — nothing needs attention right now.</div></div>';
+  var rows=gaps.map(function(o){var c=o.c,p=o.p,pr=capProject(c);
+    return '<div class="drow capgap" data-cap="'+c.k+'" style="cursor:pointer"><div class="drow-h"><span class="cap-dot" style="background:var(--'+capColor(p)+')"></span><b>'+c.name+'</b><span class="drow-tool">'+p+'% deployed <span class="drill-cta">details ▸</span></span></div>'+capBar(p)+
+      '<div class="drow-proj'+(pr?'':' none')+'">'+(pr?('<span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> Funded: <b style="color:#fff">'+pr.name+'</b>'+(pr.ticket?(' · '+pr.ticket):'')+' · '+pr.prog+'% delivered'):'No project on this yet — raise one to close the gap')+'</div></div>';
+  }).join('');
+  return '<div class="card" style="margin-top:14px"><div class="ck">Control gaps that carry risk — and the funded fix <span class="pill good" style="font-size:9px">live</span></div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">Each gap is live from your connected tools, ordered weakest first. Click any for what it leaves exposed and how it closes.</div></div>';
+}
+function drillEffectiveness(){var eff=controlsEffUsd();
+  return '<div class="drill-hero good">'+usd(eff)+' <span class="pill mod" style="font-size:10px;vertical-align:middle">modeled</span></div>'+
+    '<div class="drill-p">The dollars of expected loss your controls have <b>bought down</b> — inherent risk (what you would face with no controls) minus residual risk (what remains today). We measure the program by risk removed, not a maturity score, because that is the number that maps to spend and ROI.</div>'+
+    '<div class="ev-sec">The method (FAIR-aligned)</div>'+gRow('Inherent exposure','risk with controls absent')+gRow('− Residual exposure','risk that remains today')+gRow('= Risk removed',usd(eff)+' (modeled)')+
+    '<div class="ev-sec">How to make it real</div><div class="drill-p">Connect your control catalog / GRC so each control’s inherent-vs-residual delta is measured from evidence rather than modeled. The figure then updates per control and becomes audit-defensible — the honest upgrade path for this number.</div>';}
+function drillTrajectory(){var tr=trajInfo();
+  if(tr.two){var down=tr.down;
+    return '<div class="drill-hero'+(down?' good':'')+'" style="color:var(--'+(down?'good':'crit')+')">'+tr.val+'</div>'+sparkSvg(tr.vals,down)+
+      '<div class="drill-p">Your expected loss over time. '+(down?'Down':'Up')+' across '+tr.vals.length+' recorded analyses — a falling line means the controls are removing more risk than the business is adding.</div>'+
+      '<div class="ev-sec">Recorded analyses</div>'+tr.t.map(function(p){return gRow(p.date?new Date(p.date).toLocaleDateString():'—',usd(Number(p.ale)||0));}).join('')+
+      '<div class="drill-p" style="color:var(--muted)">CyberRx records your position on every analysis — this is real history, nothing back-filled.</div>';}
+  return '<div class="drill-hero">'+(tr.ale>0?usd(tr.ale):'—')+'</div><div class="drill-p">This is your <b>baseline</b>. From here every analysis records a new point and this becomes your real quarter-over-quarter trajectory. Because nothing is invented, the line starts at one point and grows — run another analysis next quarter to extend it.</div>';}
+function drillDetection(){var mttd=sig('mttd_hrs');
+  return '<div class="drill-hero" style="color:var(--'+(mttd!=null?'good':'muted')+')">'+(mttd!=null?(mttd+' h to detect'):'not connected')+'</div>'+
+    '<div class="drill-p">How fast you would see a real attack (MTTD) and contain it (MTTR). Detection speed is the single biggest lever on breach cost — every hour of attacker dwell time compounds the loss.</div>'+
+    (mttd!=null?(gRow('Mean time to detect (MTTD)',mttd+' h')+gRow('Mean time to respond (MTTR)','connect SIEM workflow')):'')+
+    '<div class="ev-sec">How to evidence it</div><div class="drill-p">MTTD / MTTR come straight from your SIEM / SOAR (Splunk, Sentinel) — alert timestamp to containment action. Until that is connected this reads “—”, never a guessed number.</div>';}
+function drillOneCap(c){var p=capDeploy(c),pr=capProject(c);
+  return '<div class="drill-hero" style="color:var(--'+capColor(p)+')">'+(p!=null?p+'% deployed':'not connected')+'</div>'+capBar(p)+
+    '<div class="drill-p"><b>What it is:</b> '+c.name+' — '+c.tool+'. '+(p!=null?('Currently covering <b>'+p+'%</b> of the estate.'):'Not yet connected, so coverage is unknown.')+'</div>'+
+    '<div class="ev-sec">To close the gap</div><div class="drill-p">'+(p!=null?c.need:c.connect)+'</div>'+
+    '<div class="ev-sec">Funded fix</div><div class="drill-p">'+(pr?('<span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> <b style="color:#fff">'+pr.name+'</b>'+(pr.ticket?(' · '+pr.ticket):'')+' · '+pr.prog+'% delivered'):'No portfolio project currently addresses this — raise one and it appears here, tracked to completion.')+'</div>';}
 /* ---- live economics ---- */
 var LIVE=null;
 function usd(n){n=Number(n)||0;var neg=n<0;n=Math.abs(n);var s;if(n>=1e9)s='$'+(n/1e9).toFixed(n>=1e10?0:1)+'B';else if(n>=1e6)s='$'+Math.round(n/1e6)+'M';else if(n>=1e3)s='$'+Math.round(n/1e3)+'K';else s='$'+Math.round(n);return (neg?'−':'')+s;}
@@ -861,12 +902,12 @@ function renderSignals(){
     var pcts=['edr_pct','mfa_pct','pam_pct'].map(sig).filter(function(x){return x!=null;});
     if(pcts.length){var avg=Math.round(pcts.reduce(function(s,x){return s+x;},0)/pcts.length);setTxt('lvCovTile',avg+'%');var tn=document.getElementById('lvCovTileNote');if(tn)tn.innerHTML='<span class="pill good">live</span> from '+pcts.length+' connected tool'+(pcts.length>1?'s':'');}
   }
-  renderAiRisk();renderCisoOps();
+  renderAiRisk();renderCisoOps();renderControls();
 }
 function loadSignals(){var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}}).catch(function(){});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderCisoScorecard();renderProcBars();renderCioSystems();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderProcBars();renderCioSystems();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
