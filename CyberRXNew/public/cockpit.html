@@ -357,7 +357,7 @@ function render(seat){
    active section shown. Short tab labels come from a lookup (falls back to a
    trimmed title). Renderers still populate hidden sections' containers. */
 var TAB_LABELS={
- 'Are we under attack right now?':'Live status','What are we protecting — and what is each worth?':'Crown Jewels — Exposure','How is security helping the business grow — and win deals?':'Business Growth','Are our controls actually working — and is the program improving?':'Controls','AI risk — two fronts: securing the AI we run, and using AI to defend':'AI risk','What decision needs you now?':'Decision','What are we spending — and what is the return?':'Projects',
+ 'Are we under attack right now?':'Live status','What are we protecting — and what is each worth?':'Crown Jewels — Exposure','How is security helping the business grow — and win deals?':'Business Growth','Are our controls actually working — and is the program improving?':'Controls','AI risk — two fronts: securing the AI we run, and using AI to defend':'AI risk','What decision needs you now?':'Decision','How does our security investment move the business?':'Investment',
  'How much is at stake — and are we within the board’s limit?':'At stake','Which business processes carry the risk?':'By process','What decisions need us — and what are the trade-offs?':'Decisions','Are we adequately insured against the worst case?':'Insurance','Are we getting better — quarter over quarter?':'Trend','Our worst realistic day — and are we ready to respond and recover?':'Worst day','Governance, oversight & SEC disclosure readiness':'Governance','AI risk — are we ready for AI-accelerated attacks, and is our own AI governed?':'AI risk',
  'What is our capital at risk — and is our spend working?':'Capital at risk','What would a bad year do to earnings?':'Earnings','Where does the next dollar work hardest, and are we insured?':'ROI & insurance','What if we change the budget — and is an incident material?':'Budget','What decision needs the CFO — and what does it cost or buy?':'Decision','Current cyber initiatives & their ROI':'Projects & ROI',
  'Are we legally defensible right now?':'Standing','Where are we exposed by jurisdiction — duty, clock, penalty?':'Jurisdictions','What decision needs the General Counsel?':'Decision','Is an incident material — and are we covered by contract?':'Materiality',
@@ -520,46 +520,70 @@ function projProgress(d){ // schedule progress from real ticket status (or commi
   if(d&&d.ticket){var n=statusStep(d.status).n;return n>=4?100:n>=3?55:n>=2?20:0;}
   var committed=(Date.now()-((d&&d.ts)||0))>=EDIT_WINDOW_MS;return committed?40:10;
 }
+/* Security-investment portfolio in a BUSINESS lens (Gartner outcome-driven /
+   "income-statement" view): every funded initiative — pulled from your ticketing
+   system + cockpit decisions — mapped to the business outcome it buys and the $
+   of risk it removes, grouped by whether it protects, complies, or grows. Project
+   progress lives in the ticketing system; this is the value story on top of it. */
+function roiNum(s){var m=String(s||'').match(/([\d.]+)/);return m?parseFloat(m[1]):0;}
+function objColor(cls){return cls==='good'?'var(--good)':cls==='blue'?'var(--blue)':'var(--warn)';}
+function objBadge(cls,txt){var c=objColor(cls);return '<span style="font-size:10px;font-weight:700;color:'+c+';background:rgba(255,255,255,.04);border:1px solid '+c+';border-radius:99px;padding:2px 9px;white-space:nowrap">'+txt+'</span>';}
+/* Classify a security investment by the business outcome it delivers, industry-aware. */
+function initBusiness(name){var n=String(name||'').toLowerCase();var ig=industryGrowth(industry());
+  if(/hitrust|iso ?2700?1|iso ?42001|soc ?2|soc2|\bpci\b|fedramp|hipaa|certif|attestation/.test(n))return {obj:'Enable growth',cls:'good',outcome:'Clears the certifications '+ig.buyer+' require — keeps and opens revenue in '+ig.market+'.'};
+  if(/ai gov|ai governance|\bai\b|\bllm\b|genai|generative|model risk|bias monitor/.test(n))return {obj:'Enable growth',cls:'good',outcome:'Lets the business adopt AI safely — governance and guardrails before scale.'};
+  if(/api security|api gateway/.test(n))return {obj:'Enable growth',cls:'good',outcome:'Lets us safely expose the APIs that partners and products depend on.'};
+  if(/\bdlp\b|data loss|data protection|encryption|purview/.test(n))return {obj:'Meet obligations',cls:'blue',outcome:'Protects regulated data from loss — and the penalties that follow a breach.'};
+  if(/compliance|\baudit\b|regulat|evidence management/.test(n))return {obj:'Meet obligations',cls:'blue',outcome:'Keeps us audit-ready and out of regulatory trouble.'};
+  if(/\bpam\b|privileged|\bmfa\b|identity|\biga\b|okta|entra|zero ?trust|segment/.test(n))return {obj:'Protect the business',cls:'warn',outcome:'Closes a privileged path to crown-jewel systems — how attackers reach the money.'};
+  if(/backup|recover|resilience|disaster|\bdr\b|immutable/.test(n))return {obj:'Protect the business',cls:'warn',outcome:'Keeps the business running and recoverable through an incident.'};
+  if(/\bedr\b|\bsiem\b|\bsoc\b|\bmdr\b|detection|response|sentinel|splunk|crowdstrike/.test(n))return {obj:'Protect the business',cls:'warn',outcome:'Cuts detection and response time — less attacker dwell, less loss.'};
+  if(/vuln|patch|exposure/.test(n))return {obj:'Protect the business',cls:'warn',outcome:'Shrinks the window attackers and AI can exploit on internet-facing systems.'};
+  if(/aware|phish|training/.test(n))return {obj:'Protect the business',cls:'warn',outcome:'Reduces the human attack surface — the number-one entry point.'};
+  return {obj:'Protect the business',cls:'warn',outcome:'Reduces risk to the business.'};
+}
+var PORTFOLIO_ITEMS=[];
+function ticketHtml(it){return it.ticket?(it.url?('<a href="'+it.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+it.ticket+'</a>'):('<b style="color:#fff">'+it.ticket+'</b>'))+(it.system?(' · '+it.system):''):'<span style="color:var(--muted)">not sent yet</span>';}
+function drillInit(idx){var it=PORTFOLIO_ITEMS[idx];if(!it)return '';
+  return '<div class="drill-hero">'+it.name+'</div>'+
+    '<div class="drill-p">'+objBadge(it.biz.cls,it.biz.obj)+' '+it.biz.outcome+'</div>'+
+    '<div class="ev-sec">The business value it buys</div>'+gRow('Investment',it.cost||'—')+gRow('Target return',it.roi>0?(it.roi+'×'):'—')+gRow('Risk removed',it.riskRemoved>0?usd(it.riskRemoved):'—')+
+    '<div class="drill-p"><b>Risk removed = target return × investment</b> — the dollars of exposure this initiative buys down. This is the outcome-driven view boards ask for: spend tied to risk reduced, not activity.</div>'+
+    '<div class="ev-sec">Delivery (from ticketing)</div><div class="drill-p">Status <b>'+it.status+'</b> · '+(it.ticket?('tracked as '+ticketHtml(it)):'not sent to your ticketing system yet')+'. Task-level progress lives in your ticketing system — this cockpit is the business lens on top of it.</div>';}
 function renderInitiatives(){
   var host=document.getElementById('initiatives-panel');if(!host)return;
   var list=allDecisions();var imp=importedInits();
-  if(!list.length&&!imp.length){host.innerHTML='<div class="card"><div class="cn">No cyber initiatives yet. Import your in-flight projects at onboarding (upload or pull from Jira/ServiceNow), and every decision an executive commits in their seat is added here — budget, target ROI, delivered-to-date, owner and ticket — so the CISO and CFO manage new cyber spend in one place.</div></div>';return;}
-  var totBudget=0,roiVals=[],progVals=[];
-  var decRows=list.map(function(d){
-    var committed=(Date.now()-(d.ts||0))>=EDIT_WINDOW_MS;
-    var cost=extractCost(d.osum),roi=extractROI(d.osum),prog=projProgress(d);
-    totBudget+=parseUsdNum(cost);if(roi!=='—')roiVals.push(parseFloat(roi));progVals.push(prog);
-    var tk=d.ticket?(d.url?('<a href="'+d.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+d.ticket+'</a>'):('<b style="color:#fff">'+d.ticket+'</b>'))+(d.system?(' · '+d.system):''):'<span style="color:var(--muted)">not sent yet</span>';
-    var st;if(d.ticket){var sp=statusStep(d.status);st='<span class="tag '+(sp.n>=4?'good':'')+'">'+(d.status?sp.t:'Open')+'</span>';}
-    else st=committed?'<span class="tag crit">Committed</span>':'<span class="tag warn">In 24h review</span>';
-    return '<tr><td style="max-width:260px">'+d.title+'<div style="color:var(--muted);font-size:11.5px;margin-top:2px">Cockpit decision · Option '+d.opt+'</div></td>'+
-      '<td>'+(d.by||'—')+'<div style="color:var(--muted);font-size:11.5px">'+(SEAT_LABEL[d.seat]||'')+'</div></td>'+
-      '<td style="font-weight:600">'+cost+'</td>'+
-      '<td style="font-weight:700;color:'+(roi==='—'?'var(--muted)':'var(--good)')+'">'+roi+'</td>'+
-      '<td style="min-width:100px">'+deliveredBar(prog)+'</td>'+
-      '<td>'+st+'</td><td>'+tk+'</td></tr>';
-  }).join('');
-  var impRows=imp.map(function(p){
-    var roi=String(p.roi||'').trim()||'—',cost=String(p.cost||'').trim()||'—',prog=projProgress(p);
-    totBudget+=parseUsdNum(cost);if(roi!=='—')roiVals.push(parseFloat(roi));progVals.push(prog);
-    var tk=p.ticket?(p.url?('<a href="'+p.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+p.ticket+'</a>'):('<b style="color:#fff">'+p.ticket+'</b>'))+(p.system?(' · '+p.system):''):'<span style="color:var(--muted)">—</span>';
-    var sp=statusStep(p.status);var st='<span class="tag '+(sp.n>=4?'good':'')+'">'+(p.status?(p.ticket?sp.t:p.status):'—')+'</span>';
-    return '<tr><td style="max-width:260px">'+(p.name||'—')+'<div style="color:var(--muted);font-size:11.5px;margin-top:2px">In-flight · '+(p.source==='ticketing'?'from ticketing':'imported')+'</div></td>'+
-      '<td>'+(p.owner||'—')+'</td><td style="font-weight:600">'+cost+'</td>'+
-      '<td style="font-weight:700;color:'+(roi==='—'?'var(--muted)':'var(--good)')+'">'+roi+'</td>'+
-      '<td style="min-width:100px">'+deliveredBar(prog)+'</td>'+
-      '<td>'+st+'</td><td>'+tk+'</td></tr>';
-  }).join('');
-  var total=list.length+imp.length;
-  var blendedRoi=roiVals.length?(Math.round(roiVals.reduce(function(s,x){return s+x;},0)/roiVals.length)):null;
-  var portProg=progVals.length?Math.round(progVals.reduce(function(s,x){return s+x;},0)/progVals.length):0;
-  var summary='<div style="display:flex;gap:26px;margin-top:12px;flex-wrap:wrap">'+
-    '<div><div class="cv" style="font-size:18px">'+(totBudget>0?usd(totBudget):'—')+'</div><div class="cn">total budget committed</div></div>'+
-    (blendedRoi?('<div><div class="cv" style="font-size:18px;color:var(--good)">'+blendedRoi+'×</div><div class="cn">blended target ROI (end of project)</div></div>'):'')+
-    '<div><div class="cv" style="font-size:18px">'+portProg+'%</div><div class="cn">portfolio delivered to date</div></div>'+
+  if(!list.length&&!imp.length){host.innerHTML='<div class="card"><div class="cn">No cyber initiatives yet. Import your in-flight projects at onboarding (upload or pull from Jira/ServiceNow), and every decision an executive commits is added here — each mapped to the business outcome it buys and the risk it removes.</div></div>';return;}
+  var items=[];
+  list.forEach(function(d){var committed=(Date.now()-(d.ts||0))>=EDIT_WINDOW_MS;var cost=extractCost(d.osum),roi=extractROI(d.osum);
+    items.push({name:d.title,sub:'Decision · '+(d.by||'')+(d.seat?(' ('+(SEAT_LABEL[d.seat]||d.seat)+')'):''),cost:cost==='—'?'':cost,costUsd:parseUsdNum(cost),roi:roi==='—'?0:parseFloat(roi),status:d.ticket?statusStep(d.status).t:(committed?'Committed':'In 24h review'),ticket:d.ticket,url:d.url,system:d.system});});
+  imp.forEach(function(p){items.push({name:p.name||'—',sub:'In-flight · '+(p.source==='ticketing'?'from ticketing':'imported')+(p.owner?(' · '+p.owner):''),cost:String(p.cost||'').trim(),costUsd:parseUsdNum(p.cost),roi:roiNum(p.roi),status:p.ticket?statusStep(p.status).t:(p.status||'—'),ticket:p.ticket,url:p.url,system:p.system});});
+  items.forEach(function(it){it.biz=initBusiness(it.name);it.riskRemoved=(it.roi>0&&it.costUsd>0)?Math.round(it.roi*it.costUsd):0;});
+  items.sort(function(a,b){return b.riskRemoved-a.riskRemoved;});
+  PORTFOLIO_ITEMS=items;
+  var invested=items.reduce(function(s,it){return s+it.costUsd;},0);
+  var riskRemoved=items.reduce(function(s,it){return s+it.riskRemoved;},0);
+  var ret=invested>0?(riskRemoved/invested):0;
+  var OBJS=[{k:'Enable growth',cls:'good'},{k:'Meet obligations',cls:'blue'},{k:'Protect the business',cls:'warn'}];
+  var byObj={};items.forEach(function(it){byObj[it.biz.obj]=(byObj[it.biz.obj]||0)+it.riskRemoved;});
+  var split=OBJS.map(function(o){var v=byObj[o.k]||0;var pc=riskRemoved>0?Math.round(v/riskRemoved*100):0;return '<div style="flex:1;min-width:150px"><div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:4px"><span>'+objBadge(o.cls,o.k)+'</span><span style="font-weight:700">'+(v>0?usd(v):'—')+'</span></div><div style="height:6px;background:#2a2a28;border-radius:4px;overflow:hidden"><i style="display:block;height:100%;width:'+pc+'%;background:'+objColor(o.cls)+'"></i></div><div class="cn" style="margin-top:3px">'+pc+'% of risk removed</div></div>';}).join('');
+  var summary='<div class="grid4" style="margin-top:2px">'+
+    '<div class="card"><div class="ck">Invested</div><div class="cv" style="font-size:22px">'+(invested>0?usd(invested):'—')+'</div><div class="cn">committed across the portfolio</div></div>'+
+    '<div class="card"><div class="ck">Risk removed</div><div class="cv" style="font-size:22px;color:var(--good)">'+(riskRemoved>0?usd(riskRemoved):'—')+'</div><div class="cn">business value bought down (return × spend)</div></div>'+
+    '<div class="card"><div class="ck">Return on security spend</div><div class="cv" style="font-size:22px;color:var(--good)">'+(ret>0?(Math.round(ret)+'×'):'—')+'</div><div class="cn">risk removed per dollar invested</div></div>'+
+    '<div class="card"><div class="ck">Initiatives</div><div class="cv" style="font-size:22px">'+items.length+'</div><div class="cn">funded, from ticketing + decisions</div></div>'+
     '</div>';
-  host.innerHTML='<div class="card"><table class="tbl"><thead><tr><th>Initiative</th><th>Owner</th><th>Budget</th><th>Target ROI</th><th>Delivered</th><th>Status</th><th>Project</th></tr></thead><tbody>'+decRows+impRows+'</tbody></table>'+summary+
-    '<div class="cn" style="margin-top:10px">'+total+' active '+(total===1?'initiative':'initiatives')+'. Delivered % tracks each project’s real ticket status; ROI is the target at completion. Connect your PM/finance system for spent-to-date actuals.</div></div>';
+  var splitCard='<div class="card" style="margin-top:12px"><div class="ck">Where the value goes — every dollar mapped to a business objective</div><div style="display:flex;gap:22px;flex-wrap:wrap;margin-top:12px">'+split+'</div></div>';
+  var rows=items.map(function(it,i){return '<tr class="initrow" data-init="'+i+'" style="cursor:pointer"><td style="max-width:250px"><b>'+it.name+'</b><div style="color:var(--muted);font-size:11.5px;margin-top:2px">'+it.sub+'</div></td>'+
+    '<td style="max-width:280px;color:var(--ink-2);font-size:12.5px">'+it.biz.outcome+'</td>'+
+    '<td>'+objBadge(it.biz.cls,it.biz.obj)+'</td>'+
+    '<td style="font-weight:700;color:var(--good)">'+(it.riskRemoved>0?usd(it.riskRemoved):'—')+'</td>'+
+    '<td style="font-weight:600">'+(it.cost||'—')+'</td>'+
+    '<td><span class="tag'+(/done|complete|resolved/i.test(it.status)?' good':'')+'" style="font-size:10.5px">'+it.status+'</span> <span class="drill-cta">details ▸</span></td></tr>';}).join('');
+  var table='<div class="card" style="margin-top:12px"><table class="tbl"><thead><tr><th>Initiative</th><th>What it lets us do safely</th><th>Serves</th><th>Risk removed</th><th>Invested</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+    '<div class="cn" style="margin-top:10px">Pulled from your ticketing system + cockpit decisions, presented as the board wants it (Gartner outcome-driven view): spend → risk removed → business outcome. Click any initiative for the value it buys. Task-level progress stays in ticketing.</div></div>';
+  host.innerHTML=summary+splitCard+table;
+  host.querySelectorAll('.initrow').forEach(function(el){el.onclick=function(){openDrill(PORTFOLIO_ITEMS[el.dataset.init].name,drillInit(+el.dataset.init));};});
 }
 
 /* ---- Security as a growth engine (CISO) — the revenue-enablement story.
@@ -713,62 +737,6 @@ function renderGrowth(){
     else if(k==='cycle')openDrill('Faster security-review process',drillGrowthCycle());
     else if(k==='trust')openDrill('Customer trust program',drillGrowthTrust());
   };});
-}
-/* Path to yes (CISO) — the "department of how". Each enablement request carries the
-   conditions that make it safe + the residual risk in dollars; the business owner
-   accepts it on the record (optionally a formal risk-acceptance ticket). Turns the
-   CISO from gatekeeper into partner, and leaves an accountability trail. */
-var ENABLE_SEED=[
-  {id:'ai-triage',ask:'Ship the AI claims-triage assistant to production',owner:'VP, Claims Operations',residual:3200000,
-    upside:'Cuts claims handling time ~30% — faster member service, lower cost per claim',
-    conditions:['Human-in-the-loop required for any denial or adverse determination','PHI stays in-region; nothing leaves the BAA boundary','Model + prompts inventoried, red-teamed before launch and quarterly','Full audit log of model decisions retained per records policy']},
-  {id:'saas-analytics',ask:'Adopt a new SaaS analytics platform for member data',owner:'VP, Data & Analytics',residual:1200000,
-    upside:'Self-serve analytics for actuarial + growth — weeks of lead time removed',
-    conditions:['SOC 2 Type II report on file and reviewed','Signed BAA + DPA before any PHI flows','SSO + SCIM enforced; bulk export disabled','Vendor added to tier-1 monitoring']},
-  {id:'new-markets',ask:'Enter two new state markets next quarter',owner:'SVP, Growth',residual:2400000,
-    upside:'Opens ~$60M of addressable premium — security is the entry ticket, not the blocker',
-    conditions:['State breach-notification + insurance-reg obligations mapped','IR retainer scope expanded to the new jurisdictions','Data-residency + consent flows validated with counsel']}
-];
-function enableKey(id){return 'cyberrx_enable_'+orgId()+'_'+id;}
-function loadEnable(id){try{return JSON.parse(localStorage.getItem(enableKey(id))||'null');}catch(_){return null;}}
-function saveEnable(id,v){try{localStorage.setItem(enableKey(id),JSON.stringify(v));}catch(_){}}
-function pushEnable(id){
-  var acc=loadEnable(id),e=ENABLE_SEED.filter(function(x){return x.id===id;})[0];if(!acc||!e||acc.ticket)return;
-  var o=orgId(),base=apiBase();if(!o||!base)return;
-  acc.pushing=true;saveEnable(id,acc);renderEnablements();
-  var body={title:'[Risk acceptance] '+e.ask,desc:'Residual risk '+usd(e.residual)+' accepted by '+acc.by+' (business owner) via the CyberRx cockpit, under agreed security conditions: '+e.conditions.join('; '),sourceRef:'enable-'+id+'-'+acc.ts,type:'risk-acceptance'};
-  try{fetch(base+'/api/itsm/open?org_id='+encodeURIComponent(o),{method:'POST',headers:{'Content-Type':'application/json','X-Org-Id':o},body:JSON.stringify(body)})
-    .then(function(r){return r.ok?r.json():null;})
-    .then(function(res){acc.pushing=false;if(res){acc.ticket=res.ticket_id||res.number||res.id||res.key||res.ticket||('RA-'+String(acc.ts).slice(-5));acc.system=res.label||itsmVendor()||'ServiceNow';acc.url=res.url||res.link||null;acc.demoTicket=!!res.demo;}saveEnable(id,acc);renderEnablements();})
-    .catch(function(){acc.pushing=false;saveEnable(id,acc);renderEnablements();});}catch(_){acc.pushing=false;saveEnable(id,acc);renderEnablements();}
-}
-function renderEnablements(){
-  var host=document.getElementById('cisoEnable');if(!host)return;
-  var cleared=ENABLE_SEED.filter(function(e){return loadEnable(e.id);}).length;
-  var cards=ENABLE_SEED.map(function(e){
-    var acc=loadEnable(e.id);
-    var conds='<div class="en-conds">'+e.conditions.map(function(c){return '<div class="en-cond"><span class="en-ck">✓</span><span>'+c+'</span></div>';}).join('')+'</div>';
-    var head='<div class="en-h"><div class="en-ask">'+e.ask+'</div><div class="en-owner">Business owner · <b>'+e.owner+'</b></div></div>';
-    var meta='<div class="en-meta"><span class="en-up">▲ '+e.upside+'</span><span class="en-res">Residual risk under these conditions <b>'+usd(e.residual)+'</b> <span class="pill mod">modeled</span></span></div>';
-    var action;
-    if(acc){
-      var committed=(Date.now()-(acc.ts||0))>=EDIT_WINDOW_MS;
-      var tline=acc.ticket?('· risk-acceptance '+(acc.url?('<a href="'+acc.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+acc.ticket+'</a>'):('<b style="color:#fff">'+acc.ticket+'</b>'))+(acc.system?(' in '+acc.system):'')+(acc.demoTicket?' <span class="tag warn" style="font-size:10px">demo</span>':'')):(acc.pushing?'· opening ticket…':'');
-      action='<div class="en-status"><div class="st-h">✓ Cleared to proceed — residual risk owned by the business</div>'+
-        '<div class="st-b">Accepted by <b style="color:#fff">'+acc.by+'</b> · '+fmtWhen(acc.ts)+' '+tline+'</div>'+
-        (acc.ticket?'':'<div class="st-b" style="margin-top:6px"><button class="wr-btn" style="padding:5px 12px;font-size:11.5px" data-enpush="'+e.id+'">▶ Record a formal risk-acceptance in ticketing</button></div>')+
-        (committed?'<div class="st-b" style="margin-top:6px">🔒 Committed — the 24-hour change window has closed.</div>':'<div class="st-b" style="margin-top:6px">Editable for a limited time. <button class="wr-btn gh" style="padding:4px 10px;font-size:11px" data-enundo="'+e.id+'">Withdraw</button></div>')+
-        '</div>';
-    } else {
-      action='<button class="en-accept" data-enaccept="'+e.id+'">✓ Accept residual risk &amp; clear to proceed — as '+e.owner+'</button>';
-    }
-    return '<div class="en-card'+(acc?' done':'')+'">'+head+'<div class="en-lbl">Path to yes — the conditions that make it safe</div>'+conds+meta+action+'</div>';
-  }).join('');
-  var summary='<div class="cn" style="margin:2px 0 12px">The department of <b>how</b>: <b>'+cleared+' of '+ENABLE_SEED.length+'</b> requests cleared to proceed — each with the business owner accepting the residual risk on the record. This is how security says yes and keeps the accountability trail.</div>';
-  host.innerHTML=summary+'<div class="en-list">'+cards+'</div>';
-  host.querySelectorAll('[data-enaccept]').forEach(function(b){b.onclick=function(){var e=ENABLE_SEED.filter(function(x){return x.id===b.dataset.enaccept;})[0];saveEnable(b.dataset.enaccept,{by:e.owner,ts:Date.now()});renderEnablements();};});
-  host.querySelectorAll('[data-enundo]').forEach(function(b){b.onclick=function(){try{localStorage.removeItem(enableKey(b.dataset.enundo));}catch(_){}renderEnablements();};});
-  host.querySelectorAll('[data-enpush]').forEach(function(b){b.onclick=function(){pushEnable(b.dataset.enpush);};});
 }
 /* Program scorecard (CISO) — the board-grade trend lines, not activity metrics:
    expected-loss trajectory (real recorded history), risk removed by controls,
