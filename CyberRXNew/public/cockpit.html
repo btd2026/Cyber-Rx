@@ -351,13 +351,13 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=h;
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderEnablements();renderControls();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
    trimmed title). Renderers still populate hidden sections' containers. */
 var TAB_LABELS={
- 'Are we under attack right now?':'Live status','What are we protecting — and what is each worth?':'Crown Jewels — Exposure','How is security helping the business grow — and win deals?':'Business Growth','Are our controls actually working — and is the program improving?':'Controls','The fastest-changing risk: AI':'AI risk','How do we say “yes” — safely?':'Path to yes','What decision needs you now?':'Decision','What are we spending — and what is the return?':'Projects',
+ 'Are we under attack right now?':'Live status','What are we protecting — and what is each worth?':'Crown Jewels — Exposure','How is security helping the business grow — and win deals?':'Business Growth','Are our controls actually working — and is the program improving?':'Controls','AI risk — two fronts: securing the AI we run, and using AI to defend':'AI risk','What decision needs you now?':'Decision','What are we spending — and what is the return?':'Projects',
  'How much is at stake — and are we within the board’s limit?':'At stake','Which business processes carry the risk?':'By process','What decisions need us — and what are the trade-offs?':'Decisions','Are we adequately insured against the worst case?':'Insurance','Are we getting better — quarter over quarter?':'Trend','Our worst realistic day — and are we ready to respond and recover?':'Worst day','Governance, oversight & SEC disclosure readiness':'Governance','AI risk — are we ready for AI-accelerated attacks, and is our own AI governed?':'AI risk',
  'What is our capital at risk — and is our spend working?':'Capital at risk','What would a bad year do to earnings?':'Earnings','Where does the next dollar work hardest, and are we insured?':'ROI & insurance','What if we change the budget — and is an incident material?':'Budget','What decision needs the CFO — and what does it cost or buy?':'Decision','Current cyber initiatives & their ROI':'Projects & ROI',
  'Are we legally defensible right now?':'Standing','Where are we exposed by jurisdiction — duty, clock, penalty?':'Jurisdictions','What decision needs the General Counsel?':'Decision','Is an incident material — and are we covered by contract?':'Materiality',
@@ -1365,50 +1365,86 @@ function aiClockSvg(){
   s+='<circle cx="'+x(pd)+'" cy="'+y+'" r="6" fill="#0ca30c"/><text x="'+x(pd)+'" y="'+(y-13)+'" fill="#0ca30c" font-size="11" text-anchor="middle" font-weight="700">✓ you remediate · '+pd+'d</text>';
   s+='</svg>';return s;
 }
+/* The recognised AI-security frameworks (grounded 2026): NIST AI RMF (governance),
+   ISO/IEC 42001 (certifiable management system), OWASP LLM & Agentic Top 10
+   (engineering baseline), MITRE ATLAS (adversarial threat modelling), EU AI Act
+   (regulation). Adoption is read from the onboarding AI-governance answers. */
+var AI_FRAMEWORKS=[
+  {n:'NIST AI RMF',d:'the governance model — govern, map, measure, manage AI risk',ok:function(g){return /nist|both/i.test(g.framework||'');},how:'Adopt the NIST AI RMF and build a profile for each AI system.'},
+  {n:'ISO/IEC 42001',d:'a certifiable AI management system for external verification',ok:function(g){return /iso|both|42001/i.test(g.framework||'');},how:'Pursue ISO/IEC 42001 certification of your AI management system.'},
+  {n:'OWASP LLM & Agentic Top 10',d:'engineering baseline for LLM + agent vulnerabilities',ok:function(g){return /owasp/i.test((g.framework||'')+' '+(g.policy||''));},how:'Test every AI app against the OWASP LLM & Agentic Top 10 (prompt injection, tool misuse, memory poisoning).'},
+  {n:'MITRE ATLAS',d:'adversarial AI threat modelling & red-teaming (16 tactics)',ok:function(g){return /atlas|red.?team/i.test((g.framework||'')+' '+(g.inventory||''));},how:'Red-team your AI systems against MITRE ATLAS techniques.'},
+  {n:'EU AI Act',d:'regulatory conformity for the EU market',ok:function(g){return !!g.euAiAct&&!/unsure|out of scope|^no/i.test(g.euAiAct||'');},how:'Confirm your EU AI Act risk tier and conformity obligations.'}
+];
+/* Which connected security tools ship AI capabilities (the "AI for defence" front). */
+var AI_IN_SEC={
+  defender:{tool:'Microsoft Defender',ai:'Security Copilot',does:'AI alert triage, investigation & guided response'},
+  crowdstrike:{tool:'CrowdStrike Falcon',ai:'Charlotte AI',does:'agentic analyst — natural-language threat hunting & auto-triage'},
+  splunk:{tool:'Splunk',ai:'Splunk AI',does:'anomaly detection & AI-assisted investigation'},
+  sentinel:{tool:'Microsoft Sentinel',ai:'Security Copilot',does:'AI correlation, investigation & automated response'},
+  okta:{tool:'Okta',ai:'AI risk-based auth',does:'AI-scored sign-in risk & identity threat protection'},
+  entra:{tool:'Entra ID',ai:'Entra AI Protection',does:'AI-scored risky sign-ins & identity protection'},
+  knowbe4:{tool:'KnowBe4',ai:'AIDA',does:'AI-adaptive phishing training tuned to each user'},
+  qualys:{tool:'Qualys',ai:'TruRisk AI',does:'AI vulnerability prioritisation by real-world risk'},
+  tenable:{tool:'Tenable',ai:'ExposureAI',does:'AI exposure prioritisation & remediation guidance'},
+  cyberark:{tool:'CyberArk',ai:'session-analytics AI',does:'AI anomaly detection on privileged sessions'}
+};
+function aiIndustryLine(ind){ind=String(ind||'').toLowerCase();
+  if(/health/.test(ind))return 'AI in claims / clinical decisioning creates liability wherever PHI or automated adverse determinations are involved (HIPAA + emerging state AI laws).';
+  if(/financ|bank|insur/.test(ind))return 'AI in credit, underwriting or fraud decisions carries fair-lending, model-bias and explainability exposure (SR 11-7 · ECOA).';
+  if(/gov|public/.test(ind))return 'AI in public-facing decisions carries transparency, bias and due-process obligations (OMB M-24-10 · state AI acts).';
+  if(/retail|commerce/.test(ind))return 'AI in pricing, recommendations and fraud decisions carries consumer-protection and data-use exposure.';
+  if(/manufactur/.test(ind))return 'AI in quality, safety or supply decisions carries product-liability and IP-leakage exposure if training data is unmanaged.';
+  return 'AI in customer-facing or automated decisions carries bias, explainability and data-use liability — govern it before it scales.';
+}
+function aiConnectedTools(){var t=connectedTools();return Object.keys(AI_IN_SEC).filter(function(k){return t[k]&&t[k].on;});}
+function drillAiFw(i){var g=(LIVE&&LIVE.aiRisk&&LIVE.aiRisk.governance)||{};var f=AI_FRAMEWORKS[i];if(!f)return '';var ok=f.ok(g);
+  return '<div class="drill-hero" style="color:var(--'+(ok?'good':'muted')+')">'+f.n+' — '+(ok?'adopted':'not yet adopted')+'</div>'+
+    '<div class="drill-p">'+f.d+'.</div>'+
+    '<div class="ev-sec">'+(ok?'You have this':'How to adopt')+'</div><div class="drill-p">'+(ok?'Recorded in your AI-governance answers at onboarding.':f.how)+'</div>'+
+    '<div class="ev-sec">Where this comes from</div><div class="drill-p"><span class="srcpill self">○ self-reported</span> at onboarding. Connect your AI-governance / GRC platform to <span class="srcpill conn">● evidence</span> adoption with the actual profile, policy and test results.</div>';}
+function drillAiTool(key){var m=AI_IN_SEC[key];if(!m)return '';var on=aiConnectedTools().indexOf(key)>=0;
+  return '<div class="drill-hero" style="color:var(--'+(on?'good':'muted')+')">'+m.tool+' → '+m.ai+'</div>'+
+    '<div class="drill-p">'+m.does+'.</div>'+
+    '<div class="ev-sec">Status</div><div class="drill-p">'+(on?('<span class="srcpill conn">● connected</span> — this tool is in your stack; enable its AI capability to cut triage and investigation time.'):'<span class="srcpill self">○ not connected</span> — connect '+m.tool+' to bring its AI capability into your defence.')+'</div>'+
+    '<div class="ev-sec">The measure</div><div class="drill-p">Track the impact where it lands: detection speed (MTTD) and analyst hours returned. AI triage agents are reported to save 40+ analyst-hours/week and 200+ hours/month in large SOCs — measured, not assumed.</div>';}
 function renderAiRisk(){
   var ai=LIVE&&LIVE.aiRisk;if(!ai)return;var g=ai.governance||{};
   var w=aiWin(),wa=w.wa,wb=w.wb,pd=aiPatchDays(),gap=aiGap(),premium=aiPremiumUsd(),patchLive=sig('patch_pct')!=null;
-  var items=[
-    {k:'AI governance framework',v:g.framework||'not set',ok:/NIST|ISO|Both/i.test(g.framework||'')},
-    {k:'AI acceptable-use &amp; risk policy',v:g.policy||'not set',ok:/board-approved/i.test(g.policy||'')},
-    {k:'AI systems inventoried &amp; monitored',v:g.inventory||'not set',ok:/inventoried/i.test(g.inventory||'')},
-    {k:'EU AI Act position',v:g.euAiAct||'not set',ok:!!g.euAiAct&&!/unsure/i.test(g.euAiAct||'')},
-    {k:'AI in customer-facing / decisioning',v:g.decisioning||'not set',ok:!!g.decisioning}
-  ];
-  var ready=items.filter(function(i){return i.ok;}).length;
-  var hero='<div class="ai-hero"><div class="ai-verdict">AI has collapsed the attacker’s timeline. <b>Speed is now the control.</b></div>'+
+  var fwOk=AI_FRAMEWORKS.filter(function(f){return f.ok(g);}).length;
+  var aiTools=aiConnectedTools();var mttd=sig('mttd_hrs');
+  var hero='<div class="ai-hero"><div class="ai-verdict">AI cuts both ways: attackers weaponise faster, and our defences must run AI to keep up. Two jobs — <b>secure the AI we run</b>, and <b>use AI to defend</b>.</div>'+
     (premium>0?'<div class="ai-premium claim" data-ev="airisk">+'+usd(premium)+' <span class="fx">ƒ</span><span>modeled AI-accelerated expected loss</span></div>':'')+'</div>';
-  var clock='<div class="card"><div class="ck">The AI threat clock — attacker speed vs. your speed</div>'+aiClockSvg()+
-    '<div class="cn" style="margin-top:6px;line-height:1.65">An unpatched critical vulnerability used to give you <b>~'+wb+' days</b> before it was weaponized. Frontier models (e.g. Anthropic’s <b>Mythos</b>) have cut that to <b>~'+wa+' days</b>. You remediate critical vulnerabilities in <b>~'+pd+' days</b>'+(patchLive?' '+liveTag():' <span class="pill mod">modeled</span>')+' — leaving a <b style="color:var(--crit)">~'+gap+'-day window</b> on every new critical vulnerability where an autonomous attacker can get in. Across your crown jewels that is a modeled <b>+'+usd(premium)+'</b> of expected loss. The lever is simple: <b>get faster</b> — cut remediation time or shrink the internet-facing surface.</div></div>';
-  var against='<div class="card"><div class="ck">The race: AI attacker vs. us</div><div style="margin-top:8px">'+
-    govRow('Attacker weaponization window','~'+wa+' days',false)+
-    govRow('Our remediation time','~'+pd+' days'+(patchLive?'':' (modeled)'),gap<=3)+
-    govRow('Exposure gap per critical vuln','~'+gap+' days',gap<=3)+
-    govRow('Internet-facing crown jewels',(ai.crown_jewels_internet_facing||0)+' of '+(ai.total_assets||0)+' assets',(ai.crown_jewels_internet_facing||0)===0)+
-    govRow('Detection speed (MTTD)',sig('mttd_hrs')!=null?(sig('mttd_hrs')+'h'):'connect SIEM',null)+
-    '</div></div>';
-  var gov='<div class="card"><div class="ck">The AI we run <span class="tag '+(ready>=4?'good':'warn')+'" style="font-size:10px;margin-left:6px">'+ready+' / '+items.length+' governed</span></div>'+
-    '<div style="margin-top:8px">'+items.map(function(i){return govRow(i.k,i.v,i.ok);}).join('')+'</div></div>';
-  var leaders=[
-    {s:'Board',t:'AI is your fastest-rising risk. Own-AI governance is <b>'+ready+'/5</b> evidenced — '+(ready>=4?'board-ready':'gaps to close before it is defensible')+'.'},
-    {s:'CFO',t:premium>0?('<b>+'+usd(premium)+'</b> modeled expected loss from the AI-accelerated window; closing it is the highest-leverage spend.'):'Quantified once your exposure and patch velocity are live.'},
-    {s:'CISO',t:'Attacker window <b>~'+wa+'d</b> vs your <b>~'+pd+'d</b> remediation → <b>~'+gap+'d</b> exposure on every critical vuln. Get faster.'},
-    {s:'CLO',t:'EU AI Act: <b>'+(g.euAiAct||'not set')+'</b>. AI in decisioning (<b>'+(g.decisioning||'—')+'</b>) creates liability wherever PHI or automated decisions are involved.'},
-    {s:'CRO',t:'Velocity <b>high</b>; adaptation '+(/(NIST|ISO|Both)/i.test(g.framework||'')?'<b>framework adopted</b>':'<b>no framework yet</b>')+'. Correlates with third-party and data risk.'},
-    {s:'CIO',t:(g.systems?('<b>'+g.systems+'</b> AI/LLM system'+(g.systems>1?'s':'')+' in production to secure and monitor.'):'Inventory your AI/LLM systems to size the operational surface.')}
-  ];
-  var leaderCard='<div class="card" style="margin-top:14px"><div class="ck">What this means for each leader</div><div class="ai-leaders" style="margin-top:6px">'+leaders.map(function(l){return '<div class="ai-leader"><span class="ai-lseat">'+l.s+'</span><span>'+l.t+'</span></div>';}).join('')+'</div></div>';
+  // FRONT 1 — securing the AI we build & run
+  var invLine=g.systems?('<b>'+g.systems+'</b> AI/LLM system'+(g.systems>1?'s':'')+' in production — agents, generative-AI apps and AI coding assistants (e.g. Claude Code, Copilot) to secure & monitor.'):'AI-systems inventory not set — count your agents, GenAI apps and AI coding assistants so nothing runs unmonitored.';
+  var fwRows=AI_FRAMEWORKS.map(function(f,i){var ok=f.ok(g);return '<div class="drow aifw" data-aifw="'+i+'" style="cursor:pointer;padding:9px 0"><div class="drow-h"><span class="cap-dot" style="background:var(--'+(ok?'good':'muted')+')"></span><b>'+f.n+'</b><span class="drow-tool" style="color:var(--'+(ok?'good':'muted')+')">'+(ok?'adopted':'not yet')+' <span class="drill-cta">details ▸</span></span></div><div class="drow-need">'+f.d+'</div></div>';}).join('');
+  var front1='<div class="card" style="margin-top:14px"><div class="ck">① Securing the AI we build &amp; run <span class="tag '+(fwOk>=3?'good':'warn')+'" style="font-size:10px;margin-left:6px">'+fwOk+' / '+AI_FRAMEWORKS.length+' frameworks adopted</span></div>'+
+    '<div class="cn" style="margin-top:8px;color:var(--ink-2)">'+invLine+'</div>'+
+    '<div class="en-lbl" style="margin:12px 0 6px">Have we adopted the recognised AI frameworks?</div>'+fwRows+
+    '<div class="drow" style="padding:9px 0"><div class="drow-h"><span class="cap-dot" style="background:var(--muted)"></span><b>AI-security monitoring (guardrails / AI-SPM)</b><span class="drow-tool" style="color:var(--muted)">not connected</span></div><div class="drow-need">Connect an AI-security tool (Lakera · Protect AI · Prompt Security · CrowdStrike AI Detection) to watch prompt injection, data leakage and shadow AI at runtime — human-in-the-loop review does not scale to agent speed.</div></div>'+
+    '<div class="cn" style="margin-top:8px">'+aiIndustryLine(industry())+'</div></div>';
+  // FRONT 2 — using AI to strengthen our defences
+  var toolRows=aiTools.length?aiTools.map(function(k){var m=AI_IN_SEC[k];return '<div class="drow aitool" data-aitool="'+k+'" style="cursor:pointer;padding:9px 0"><div class="drow-h"><span class="cap-dot" style="background:var(--good)"></span><b>'+m.tool+' → '+m.ai+'</b><span class="drow-tool">'+liveTag()+' <span class="drill-cta">details ▸</span></span></div><div class="drow-need">'+m.does+'</div></div>';}).join(''):'<div class="cn" style="margin-top:6px">◐ Connect your security tools (EDR, SIEM, identity…) — CyberRx then shows which run AI (Charlotte AI, Security Copilot, Purple AI…) and how much they cut detection and triage time.</div>';
+  var clockNote='<div class="cn" style="margin-top:6px;line-height:1.6">Frontier models have cut the weaponisation window to <b>~'+wa+' days</b>; you remediate critical vulns in <b>~'+pd+' days</b>'+(patchLive?' '+liveTag():' <span class="pill mod">modeled</span>')+' → a <b style="color:var(--crit)">~'+gap+'-day</b> exposure per critical vuln. <b>Speed is the control</b> — AI in your defences is how you close it.</div>';
+  var front2='<div class="card" style="margin-top:14px"><div class="ck">② Using AI to strengthen our defences <span class="tag '+(aiTools.length?'good':'warn')+'" style="font-size:10px;margin-left:6px">'+aiTools.length+' tool'+(aiTools.length===1?'':'s')+' AI-augmented</span></div>'+
+    aiClockSvg()+clockNote+
+    '<div class="en-lbl" style="margin:12px 0 6px">AI running in our security stack</div>'+toolRows+
+    '<div style="margin-top:10px">'+govRow('Detection speed (MTTD)',mttd!=null?(mttd+' h '+liveTag()):'connect SIEM',mttd!=null?(mttd<=12):null)+govRow('Exposure gap per critical vuln','~'+gap+' days',gap<=3)+'</div></div>';
+  // Priority actions — spanning both fronts
   var acts=[];
-  if(gap>3)acts.push({p:1,t:'Cut critical-vuln remediation from ~'+pd+' toward '+wa+' days on internet-facing crown jewels — this closes the ~'+gap+'-day window and the '+usd(premium)+' premium.'});
-  if(!patchLive)acts.push({p:1,t:'Connect vulnerability management so remediation velocity is measured, not modeled.'});
+  if(fwOk<2)acts.push({p:1,t:'Adopt an AI governance framework (NIST AI RMF + ISO 42001) — you are at '+fwOk+' of '+AI_FRAMEWORKS.length+'.'});
   if(/yes|pilot/i.test(g.decisioning||'')&&!/board-approved/i.test(g.policy||''))acts.push({p:1,t:'AI runs in customer-facing/decisioning without a board-approved policy — close this governance gap.'});
-  if(!/NIST|ISO|Both/i.test(g.framework||''))acts.push({p:2,t:'Adopt an AI governance framework (NIST AI RMF / ISO 42001).'});
-  if(!/inventoried/i.test(g.inventory||''))acts.push({p:2,t:'Complete the AI-systems inventory so nothing runs unmonitored.'});
-  if(/high-risk/i.test(g.euAiAct||''))acts.push({p:2,t:'EU AI Act high-risk obligations apply — ensure conformity assessment and technical documentation.'});
+  if(!aiTools.length)acts.push({p:1,t:'Connect your EDR/SIEM/identity tools so their AI capabilities (auto-triage, investigation) actually reduce your MTTD.'});
+  if(gap>3)acts.push({p:1,t:'Cut critical-vuln remediation from ~'+pd+' toward '+wa+' days on internet-facing crown jewels — closes the ~'+gap+'-day AI window.'});
+  if(!AI_FRAMEWORKS[2].ok(g)||!AI_FRAMEWORKS[3].ok(g))acts.push({p:2,t:'Add OWASP LLM/Agentic Top 10 testing and MITRE ATLAS red-teaming to your AI program.'});
+  if(/high-risk/i.test(g.euAiAct||''))acts.push({p:2,t:'EU AI Act high-risk obligations apply — conformity assessment + technical documentation.'});
   acts.sort(function(a,b){return a.p-b.p;});
-  var actCard=acts.length?('<div class="card" style="margin-top:14px"><div class="ck">Priority actions <span class="pill warn" style="font-size:10px">'+acts.length+'</span></div><div style="margin-top:8px">'+acts.slice(0,4).map(function(a){return '<div class="list-row"><div class="lic '+(a.p===1?'c':'w')+'">'+(a.p===1?'!':'▲')+'</div><div class="ltxt"><b>'+a.t+'</b></div></div>';}).join('')+'</div></div>'):'<div class="card" style="margin-top:14px"><div class="ck">Priority actions</div><div class="cn" style="margin-top:6px">✓ You are ahead of the window — remediation beats the AI exploit clock and your own AI is governed.</div></div>';
-  var html=hero+clock+'<div class="cols" style="margin-top:14px">'+against+gov+'</div>'+leaderCard+actCard;
-  ['ceoAiRisk','cisoAiRisk'].forEach(function(hid){var host=document.getElementById(hid);if(host)host.innerHTML=html;});
+  var actCard=acts.length?('<div class="card" style="margin-top:14px"><div class="ck">Priority actions <span class="pill warn" style="font-size:10px">'+acts.length+'</span></div><div style="margin-top:8px">'+acts.slice(0,5).map(function(a){return '<div class="list-row"><div class="lic '+(a.p===1?'c':'w')+'">'+(a.p===1?'!':'▲')+'</div><div class="ltxt"><b>'+a.t+'</b></div></div>';}).join('')+'</div></div>'):'<div class="card" style="margin-top:14px"><div class="ck">Priority actions</div><div class="cn" style="margin-top:6px">✓ AI we run is governed to the frameworks, AI is working in our defences, and remediation beats the exploit clock.</div></div>';
+  var html=hero+front1+front2+actCard;
+  ['ceoAiRisk','cisoAiRisk'].forEach(function(hid){var host=document.getElementById(hid);if(!host)return;host.innerHTML=html;
+    host.querySelectorAll('.aifw').forEach(function(el){el.onclick=function(){openDrill(AI_FRAMEWORKS[el.dataset.aifw].n,drillAiFw(+el.dataset.aifw));};});
+    host.querySelectorAll('.aitool').forEach(function(el){el.onclick=function(){var m=AI_IN_SEC[el.dataset.aitool];openDrill(m.tool+' → '+m.ai,drillAiTool(el.dataset.aitool));};});
+  });
 }
 /* CLO materiality-determination workbench — a timed, evidenced determination.
    Records material/not-material with the deciding leader + timestamp, then shows
