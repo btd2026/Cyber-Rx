@@ -961,7 +961,7 @@ function crownList(){
     var daily=(c.daily_value_usd!=null&&c.daily_value_usd>0)?c.daily_value_usd:((perHrByName[c.name]||0)>0?Math.round(perHrByName[c.name]*24):null);
     return {name:c.name,tier:tierLabel(c.tier),score:c.score,procs:procs.slice(0,3),moreProcs:Math.max(0,procs.length-3),why:cleanWhy(c.name,c.rationale),
       exposure:c.exposure_usd||0,topRisk:c.top_risk||null,data:c.data_classification||[],internet:!!c.internet_facing,recovery:c.recovery_hours,riskCount:c.open_risk_count||0,
-      dailyValue:daily,txPerDay:(c.tx_per_day!=null&&c.tx_per_day>0)?c.tx_per_day:null,tolerance:(c.tolerance_usd!=null&&c.tolerance_usd>0)?c.tolerance_usd:null,toleranceProc:c.tolerance_process||null,
+      dailyValue:daily,dailyValueSrc:c.daily_value_source||((daily!=null&&!(c.daily_value_usd>0))?'process_downtime':null),txPerDay:(c.tx_per_day!=null&&c.tx_per_day>0)?c.tx_per_day:null,txSrc:c.tx_per_day_source||null,tolerance:(c.tolerance_usd!=null&&c.tolerance_usd>0)?c.tolerance_usd:null,toleranceProc:c.tolerance_process||null,
       impactRadius:Array.isArray(c.impact_radius)?c.impact_radius:[]};
   });
 }
@@ -988,9 +988,11 @@ function cjInRadius(c){return (typeof incidentActive!=='undefined')&&incidentAct
 function cjRow(c,i){
   var involved=cjIsPrimary(c)||cjInRadius(c);
   var supports=c.procs&&c.procs.length?('Supports: <b>'+c.procs.join('</b> · <b>')+'</b>'+(c.moreProcs?(' +'+c.moreProcs+' more'):'')):'Supports: <span style="color:var(--muted)">—</span>';
+  var vSrc=c.dailyValueSrc==='inventory'?' · from inventory':c.dailyValueSrc==='process_revenue'?' · from process revenue':c.dailyValueSrc==='process_downtime'?' · modeled from downtime cost':'';
+  var txSrc=c.txSrc==='inventory'?' · from inventory':c.txSrc==='process'?' · from process':'';
   var grid='<div class="cjgrid">'+
-    cjMet(c.txPerDay!=null?numCommas(c.txPerDay):'—',c.txPerDay!=null?'transactions / day':'tx/day — connect observability',c.txPerDay!=null?'':'mut')+
-    cjMet(c.dailyValue!=null?usd(c.dailyValue):'—','value processed / day',c.dailyValue!=null?'good':'mut')+
+    cjMet(c.txPerDay!=null?numCommas(c.txPerDay):'—',c.txPerDay!=null?('transactions / day'+txSrc):'tx/day — add to inventory or connect observability',c.txPerDay!=null?'':'mut')+
+    cjMet(c.dailyValue!=null?usd(c.dailyValue):'—','value processed / day'+vSrc,c.dailyValue!=null?'good':'mut')+
     cjMet(c.internet?'External-facing':'Internal',c.internet?'exposure · internet-reachable':'exposure · internal only',c.internet?'warn':'')+
     cjMet(c.recovery!=null?hrsToStr(c.recovery):'—','recovery target (RTO)',c.recovery!=null&&c.recovery>=48?'warn':'')+
     '</div>';
@@ -1055,7 +1057,7 @@ function renderOversight(){
     {k:'Board appetite reviewed',v:'this quarter',cls:'good'}]);
 }
 /* Board: worst realistic day (named stress scenario) — from /summary stress. */
-function hrsToStr(h){return h==null?'—':(h>=24?(Math.round(h/2.4)/10+' days'):(h+' hrs'));}
+function hrsToStr(h){if(h==null)return '—';if(h>=24){var d=Math.round(h/2.4)/10;return d+' day'+(d===1?'':'s');}return h+' hr'+(h===1?'':'s');}
 function govRow(label,val,ok,src){return '<div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:8px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted)">'+label+'</span><span style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:3px"><span style="font-weight:600;color:'+(ok===true?'var(--good)':ok===false?'var(--crit)':'var(--ink-2)')+'">'+val+'</span>'+(src||'')+'</span></div>';}
 /* Provenance chip: is this field self-reported at onboarding, or evidenced from a
    connected source? Honest by default — self-reported until a real source is wired. */
@@ -1176,17 +1178,26 @@ function vendorService(){try{var j=JSON.parse(localStorage.getItem('cyberrx_vend
 /* Top tier-1 vendors + security ratings. Illustrative until the monitoring API is
    wired to the tenant; the shape is exactly what goes live once connected. */
 function vendorList(){return [
-  {a:'NASCO',n:'NASCO — claims processing platform',s:88},
-  {a:'OPTM',n:'Optum — clinical & PBM services',s:74},
-  {a:'CHC',n:'Change Healthcare — clearinghouse',s:41},
-  {a:'AVAL',n:'Availity — EDI gateway',s:82},
-  {a:'COGN',n:'Cognizant — BPO / IT services',s:69},
-  {a:'ZELIS',n:'Zelis — claims payments',s:79},
-  {a:'COTV',n:'Cotiviti — payment integrity',s:85},
-  {a:'EPIC',n:'Epic Systems — EHR interoperability',s:91},
-  {a:'WIPRO',n:'Wipro — managed services',s:66},
-  {a:'SFDC',n:'Salesforce — member CRM',s:93}
+  {a:'NASCO',n:'NASCO — claims processing platform',s:88,dom:'nasco.com'},
+  {a:'OPTM',n:'Optum — clinical & PBM services',s:74,dom:'optum.com'},
+  {a:'CHC',n:'Change Healthcare — clearinghouse',s:41,dom:'changehealthcare.com'},
+  {a:'AVAL',n:'Availity — EDI gateway',s:82,dom:'availity.com'},
+  {a:'COGN',n:'Cognizant — BPO / IT services',s:69,dom:'cognizant.com'},
+  {a:'ZELIS',n:'Zelis — claims payments',s:79,dom:'zelis.com'},
+  {a:'COTV',n:'Cotiviti — payment integrity',s:85,dom:'cotiviti.com'},
+  {a:'EPIC',n:'Epic Systems — EHR interoperability',s:91,dom:'epic.com'},
+  {a:'WIPRO',n:'Wipro — managed services',s:66,dom:'wipro.com'},
+  {a:'SFDC',n:'Salesforce — member CRM',s:93,dom:'salesforce.com'}
 ];}
+/* Deep-link to a vendor's page on the connected monitoring service. SecurityScorecard
+   exposes a public per-company rating URL; others resolve to their ratings portal. */
+function vendorUrl(service,dom){var s=String(service||'').toLowerCase();
+  if(/securityscorecard/.test(s))return 'https://securityscorecard.com/security-rating/'+dom;
+  if(/bitsight/.test(s))return 'https://www.bitsight.com/security-ratings?company='+encodeURIComponent(dom);
+  if(/upguard/.test(s))return 'https://www.upguard.com/security-report/'+dom.split('.')[0];
+  if(/panorays/.test(s))return 'https://panorays.com/';
+  if(/black ?kite/.test(s))return 'https://blackkite.com/';
+  return 'https://'+dom;}
 function dotStrip(clsList){return '<div class="dotstrip">'+clsList.map(function(cls){return '<span class="ds" style="background:var(--'+cls+')"></span>';}).join('')+'</div>';}
 /* ---- drill-down bodies ---- */
 function drillAttack(){
@@ -1222,12 +1233,14 @@ function drillTactics(){
 }
 function drillVendors(){
   var vs=vendorService();var list=vendorList().slice().sort(function(a,b){return a.s-b.s;});
+  var tag=vs?(vs.demo?'<span class="pill warn">demo</span>':'<span class="pill mod">modeled</span>'):'';
   var head=vs
-    ?'<div class="drill-p"><span class="pill mod">modeled</span> Ratings are illustrative until the <b>'+vs.vendor+'</b> API is wired to your tenant — the layout is exactly what goes live once connected. Higher is safer, on your top-10 colour scale.</div>'
+    ?'<div class="drill-p">'+tag+' Your top-10 tier-1 vendors and their security ratings from <b>'+vs.vendor+'</b>'+(vs.demo?' <b>(demo data)</b>':' — illustrative until the '+vs.vendor+' API is wired to your tenant')+'. <b>Click any vendor</b> to open its page in '+vs.vendor+'. Higher is safer, on your top-10 colour scale.</div>'
     :'<div class="drill-hero muted">No monitoring service connected</div><div class="drill-p">Choose a third-party monitoring service at onboarding — <b>SecurityScorecard</b>, <b>BitSight</b>, <b>UpGuard</b>, <b>Panorays</b> or <b>Black Kite</b> — and your top-10 tier-1 vendors appear here, scored and colour-coded, refreshed daily. Below is an illustrative preview.</div>';
-  var rows=list.map(function(vd){var cls=capColor(vd.s);
-    return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+cls+')"></span><b>'+vd.a+'</b><span class="drow-tool">'+vd.n+'</span></div>'+capBar(vd.s)+
-      (vd.s<75?'<div class="drow-need">'+(vd.s<50?'⚠ Elevated risk today — request remediation evidence and review the exposure you carry through this vendor.':'Below target — monitor open findings and confirm remediation timelines.')+'</div>':'')+'</div>';
+  var rows=list.map(function(vd){var cls=capColor(vd.s);var url=vs?vendorUrl(vs.vendor,vd.dom):null;
+    var inner='<div class="drow-h"><span class="cap-dot" style="background:var(--'+cls+')"></span><b>'+vd.a+'</b><span class="drow-tool">'+vd.n+(url?' <span class="drill-cta">open in '+vs.vendor+' ↗</span>':'')+'</span></div>'+capBar(vd.s)+
+      (vd.s<75?'<div class="drow-need">'+(vd.s<50?'⚠ Elevated risk today — request remediation evidence and review the exposure you carry through this vendor.':'Below target — monitor open findings and confirm remediation timelines.')+'</div>':'');
+    return url?('<a class="drow" href="'+url+'" target="_blank" rel="noopener" style="display:block;text-decoration:none;color:inherit;cursor:pointer">'+inner+'</a>'):('<div class="drow">'+inner+'</div>');
   }).join('');
   return head+rows;
 }
