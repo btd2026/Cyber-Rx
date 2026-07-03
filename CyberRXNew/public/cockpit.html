@@ -754,7 +754,7 @@ function renderControls(){
     ctile('traj','Are we getting better?',tr.val,tr.cls,tr.sub)+
     ctile('det','How fast do we detect &amp; respond?',mttd!=null?(mttd+'h to detect'):'connect SIEM',mttd!=null?'good':'muted',mttd!=null?'MTTD live · MTTR once your SIEM workflow connects':'connect your SIEM to measure MTTD / MTTR')+
     '</div>';
-  host.innerHTML=tiles+controlGapsCard();
+  host.innerHTML=demoBanner()+tiles+controlGapsCard();
   host.querySelectorAll('.ctile').forEach(function(el){el.onclick=function(){var k=el.dataset.cdrill;
     if(k==='eff')openDrill('Risk removed by controls',drillEffectiveness());
     else if(k==='traj')openDrill('Program trajectory',drillTrajectory());
@@ -769,7 +769,7 @@ function controlGapsCard(){
     return '<div class="drow capgap" data-cap="'+c.k+'" style="cursor:pointer"><div class="drow-h"><span class="cap-dot" style="background:var(--'+capColor(p)+')"></span><b>'+c.name+'</b><span class="drow-tool">'+p+'% deployed <span class="drill-cta">details ▸</span></span></div>'+capBar(p)+
       '<div class="drow-proj'+(pr?'':' none')+'">'+(pr?('<span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> Funded: <b style="color:#fff">'+pr.name+'</b>'+(pr.ticket?(' · '+pr.ticket):'')+' · '+pr.prog+'% delivered'):'No project on this yet — raise one to close the gap')+'</div></div>';
   }).join('');
-  return '<div class="card" style="margin-top:14px"><div class="ck">Control gaps that carry risk — and the funded fix <span class="pill good" style="font-size:9px">live</span></div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">Each gap is live from your connected tools, ordered weakest first. Click any for what it leaves exposed and how it closes.</div></div>';
+  return '<div class="card" style="margin-top:14px"><div class="ck">Control gaps that carry risk — and the funded fix '+liveTag()+'</div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">Each gap is from your connected tools, ordered weakest first. Click any for what it leaves exposed and how it closes.</div></div>';
 }
 function drillEffectiveness(){var eff=controlsEffUsd();
   return '<div class="drill-hero good">'+usd(eff)+' <span class="pill mod" style="font-size:10px;vertical-align:middle">modeled</span></div>'+
@@ -887,6 +887,27 @@ function applyLive(){if(!LIVE)return;var e=LIVE.economics||{},r=e.ratios||{},ap=
    tools (/api/integrations/signals). Renders live values when present. */
 var SIGNALS=null;
 function sig(k){if(!SIGNALS)return null;var s=SIGNALS[k];return (s&&s.value!=null&&isFinite(s.value))?Number(s.value):null;}
+/* Demo mode — chosen at onboarding — should exercise the whole cockpit without
+   connecting real tools (for trials). Demo tools carry no API key so no live
+   telemetry flows; here we synthesise realistic signals for the tool categories
+   the user demo-connected, clearly flagged demo so nothing reads as live. */
+function demoActive(){try{return localStorage.getItem('cyberrx_demo_mode')==='1';}catch(_){return false;}}
+function demoSignals(){
+  var t=connectedTools(),s={},any=false;
+  function set(k,v){s[k]={key:k,value:v,demo:true};any=true;}
+  function has(keys){return keys.some(function(k){return t[k]&&t[k].on;});}
+  if(has(['defender','crowdstrike']))set('edr_pct',98);
+  if(has(['okta','entra']))set('mfa_pct',96);
+  if(has(['cyberark','beyondtrust','delinea']))set('pam_pct',60);
+  if(has(['qualys','tenable']))set('patch_pct',88);
+  if(has(['knowbe4','proofpoint'])){set('phishing_pct',3);set('training_pct',94);}
+  if(has(['splunk','sentinel'])){set('open_incidents',0);set('mttd_hrs',8);}
+  return any?s:null;
+}
+function applyDemoSignals(){if(!demoActive()||SIGNALS)return;var s=demoSignals();if(s){SIGNALS=s;renderSignals();}}
+function signalsAreDemo(){try{return !!(SIGNALS&&Object.keys(SIGNALS).some(function(k){return SIGNALS[k]&&SIGNALS[k].demo;}));}catch(_){return false;}}
+function liveTag(){return signalsAreDemo()?'<span class="pill warn" style="font-size:9px">demo</span>':'<span class="pill good" style="font-size:9px">live</span>';}
+function demoBanner(){return signalsAreDemo()?'<div class="cn" style="margin-bottom:10px">◐ <b style="color:var(--warn)">Demo data</b> — synthesised for the tools you connected in demo mode, so you can trial the full cockpit. Values are illustrative; connect live tools to replace them.</div>':'';}
 function renderSignals(){
   if(!SIGNALS)return;
   var oi=sig('open_incidents');
@@ -904,8 +925,8 @@ function renderSignals(){
   }
   renderAiRisk();renderCisoOps();renderControls();
 }
-function loadSignals(){var base=apiBase(),o=orgId();if(!base||!o)return;
-  try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}}).catch(function(){});}catch(_){}}
+function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
+  try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
   try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderProcBars();renderCioSystems();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
@@ -1243,7 +1264,7 @@ function renderCisoOps(){
   var t4v=vs?(atRisk?(atRisk+' of 10 posing risk today'):'All 10 tier-1 clear'):'No monitor connected';
   var t4s=vs?('via '+vs.vendor+' · click for the list'):'pick a monitoring service at onboarding';
   var t4=drillTile('vendors','Are any tier-1 vendors posing a risk today?',t4v,t4c,t4s,dotStrip(vl.slice().sort(function(a,b){return a.s-b.s;}).map(function(x){return capColor(x.s);})));
-  host.innerHTML='<div class="grid4">'+t1+t2+t3+t4+'</div>';
+  host.innerHTML=demoBanner()+'<div class="grid4">'+t1+t2+t3+t4+'</div>';
   host.querySelectorAll('.optile').forEach(function(el){el.onclick=function(){var d=el.dataset.drill;
     if(d==='attack'){if(underAttack){try{wrOpen();}catch(_){}}else openDrill('Are we under attack?',drillAttack());}
     else if(d==='caps')openDrill('Top-10 capability health',drillCapabilities());
@@ -1297,7 +1318,7 @@ function renderAiRisk(){
   var hero='<div class="ai-hero"><div class="ai-verdict">AI has collapsed the attacker’s timeline. <b>Speed is now the control.</b></div>'+
     (premium>0?'<div class="ai-premium claim" data-ev="airisk">+'+usd(premium)+' <span class="fx">ƒ</span><span>modeled AI-accelerated expected loss</span></div>':'')+'</div>';
   var clock='<div class="card"><div class="ck">The AI threat clock — attacker speed vs. your speed</div>'+aiClockSvg()+
-    '<div class="cn" style="margin-top:6px;line-height:1.65">An unpatched critical vulnerability used to give you <b>~'+wb+' days</b> before it was weaponized. Frontier models (e.g. Anthropic’s <b>Mythos</b>) have cut that to <b>~'+wa+' days</b>. You remediate critical vulnerabilities in <b>~'+pd+' days</b>'+(patchLive?' <span class="pill good" style="font-size:9px">live</span>':' <span class="pill mod">modeled</span>')+' — leaving a <b style="color:var(--crit)">~'+gap+'-day window</b> on every new critical vulnerability where an autonomous attacker can get in. Across your crown jewels that is a modeled <b>+'+usd(premium)+'</b> of expected loss. The lever is simple: <b>get faster</b> — cut remediation time or shrink the internet-facing surface.</div></div>';
+    '<div class="cn" style="margin-top:6px;line-height:1.65">An unpatched critical vulnerability used to give you <b>~'+wb+' days</b> before it was weaponized. Frontier models (e.g. Anthropic’s <b>Mythos</b>) have cut that to <b>~'+wa+' days</b>. You remediate critical vulnerabilities in <b>~'+pd+' days</b>'+(patchLive?' '+liveTag():' <span class="pill mod">modeled</span>')+' — leaving a <b style="color:var(--crit)">~'+gap+'-day window</b> on every new critical vulnerability where an autonomous attacker can get in. Across your crown jewels that is a modeled <b>+'+usd(premium)+'</b> of expected loss. The lever is simple: <b>get faster</b> — cut remediation time or shrink the internet-facing surface.</div></div>';
   var against='<div class="card"><div class="ck">The race: AI attacker vs. us</div><div style="margin-top:8px">'+
     govRow('Attacker weaponization window','~'+wa+' days',false)+
     govRow('Our remediation time','~'+pd+' days'+(patchLive?'':' (modeled)'),gap<=3)+
