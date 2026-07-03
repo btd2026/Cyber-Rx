@@ -678,7 +678,7 @@
       else if(!r.ok){msg.textContent='Setup error: '+(body.error||('HTTP '+r.status));msg.style.color='var(--warn)';btn.disabled=false;return;}
     }catch(e){/* offline: still hand off; cockpit shows illustrative */}
     var seatNames={};document.querySelectorAll('.seatname').forEach(function(i){if(i.value.trim())seatNames[i.dataset.seat]=i.value.trim();});
-    try{localStorage.setItem('cyberrx_org_id',orgId);localStorage.setItem('cyberrx_org_name',org);localStorage.setItem('cyberrx_seat_names',JSON.stringify(seatNames));}catch(_){}
+    try{localStorage.setItem('cyberrx_org_id',orgId);localStorage.setItem('cyberrx_org_name',org);localStorage.setItem('cyberrx_seat_names',JSON.stringify(seatNames));localStorage.setItem('cyberrx_industry',v('industry')||'');}catch(_){}
     // Persist the chosen ticketing system so cockpit decisions open projects there.
     var itsm=SELTOOLS.servicenow;
     try{if(itsm&&itsm.on)localStorage.setItem('cyberrx_itsm',JSON.stringify({vendor:itsm.vendor||'ServiceNow',instance:itsm.key||'',demo:!!itsm.demo}));}catch(_){}

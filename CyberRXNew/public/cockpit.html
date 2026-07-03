@@ -357,7 +357,7 @@ function render(seat){
    active section shown. Short tab labels come from a lookup (falls back to a
    trimmed title). Renderers still populate hidden sections' containers. */
 var TAB_LABELS={
- 'Are we under attack right now?':'Live status','What are we protecting — and what is each worth?':'Crown Jewels — Exposure','How is security helping the business grow — and win deals?':'Growth','Are our controls actually working — and is the program improving?':'Controls','The fastest-changing risk: AI':'AI risk','How do we say “yes” — safely?':'Path to yes','What decision needs you now?':'Decision','What are we spending — and what is the return?':'Projects',
+ 'Are we under attack right now?':'Live status','What are we protecting — and what is each worth?':'Crown Jewels — Exposure','How is security helping the business grow — and win deals?':'Business Growth','Are our controls actually working — and is the program improving?':'Controls','The fastest-changing risk: AI':'AI risk','How do we say “yes” — safely?':'Path to yes','What decision needs you now?':'Decision','What are we spending — and what is the return?':'Projects',
  'How much is at stake — and are we within the board’s limit?':'At stake','Which business processes carry the risk?':'By process','What decisions need us — and what are the trade-offs?':'Decisions','Are we adequately insured against the worst case?':'Insurance','Are we getting better — quarter over quarter?':'Trend','Our worst realistic day — and are we ready to respond and recover?':'Worst day','Governance, oversight & SEC disclosure readiness':'Governance','AI risk — are we ready for AI-accelerated attacks, and is our own AI governed?':'AI risk',
  'What is our capital at risk — and is our spend working?':'Capital at risk','What would a bad year do to earnings?':'Earnings','Where does the next dollar work hardest, and are we insured?':'ROI & insurance','What if we change the budget — and is an incident material?':'Budget','What decision needs the CFO — and what does it cost or buy?':'Decision','Current cyber initiatives & their ROI':'Projects & ROI',
  'Are we legally defensible right now?':'Standing','Where are we exposed by jurisdiction — duty, clock, penalty?':'Jurisdictions','What decision needs the General Counsel?':'Decision','Is an incident material — and are we covered by contract?':'Materiality',
@@ -585,6 +585,36 @@ function earlyEngagement(){
   var design=stages.filter(function(x){return x==='design';}).length;
   return {pct:Math.round(design/stages.length*100),n:stages.length,design:design};
 }
+/* Industry lens for the Business Growth story — the market, buyer and gating
+   certifications differ by sector, so the narrative adapts to the industry chosen
+   at onboarding (no healthcare language for a tech company). Grounded in how
+   procurement actually gates B2B deals (SOC 2 = US enterprise ticket-to-play,
+   HITRUST = healthcare, FedRAMP = government, PCI = payments, ISO 27001 = EU). */
+function industry(){try{return (LIVE&&LIVE.industry)||localStorage.getItem('cyberrx_industry')||'';}catch(_){return '';}}
+var CERT_UNLOCK={
+  'SOC 2 Type II':'The credential US enterprise procurement asks for — a ticket-to-play most Tier-1 buyers require before they will even negotiate.',
+  'HITRUST CSF':'The benchmark most US health systems and payers require of any vendor that touches PHI — no HITRUST, no shortlist.',
+  'ISO 27001':'What European and international enterprise procurement expects — it opens EU and global buyers.',
+  'HIPAA attestation':'Table stakes to sell to any US healthcare buyer that handles PHI.',
+  'PCI DSS':'Required by the card networks to process payments at scale — without it you cannot handle card revenue.',
+  'FedRAMP':'Authorizes you to sell cloud services to US federal agencies — the single gate to the government market.'
+};
+function industryGrowth(ind){ind=String(ind||'').toLowerCase();
+  if(/health/.test(ind))return {label:'healthcare',market:'health systems, payers and providers',buyer:'health-system security & procurement teams',gate:['HITRUST CSF','HIPAA attestation'],lever:'HITRUST is the procurement gate — vendors without it are screened out before the first call.'};
+  if(/financ|bank|insur/.test(ind))return {label:'financial services',market:'banks, institutional clients and regulators',buyer:'third-party-risk teams at financial institutions',gate:['SOC 2 Type II','ISO 27001'],lever:'Institutional buyers run the deepest due diligence — strong attestations clear it in days, not months.'};
+  if(/tech|saas|software/.test(ind))return {label:'technology / SaaS',market:'the enterprise segment',buyer:'enterprise security & procurement teams',gate:['SOC 2 Type II','ISO 27001'],lever:'SOC 2 Type II is the ticket-to-play — without it you are filtered out by automated vendor-vetting before a human sees you.'};
+  if(/gov|public/.test(ind))return {label:'government',market:'US federal and state agencies',buyer:'agency authorizing officials',gate:['FedRAMP'],lever:'FedRAMP authorization is the gate to the entire government cloud market — it is worth a dedicated program.'};
+  if(/retail|commerce/.test(ind))return {label:'retail / e-commerce',market:'payment partners and card networks',buyer:'payment-risk and partner-security teams',gate:['PCI DSS','SOC 2 Type II'],lever:'PCI DSS is forced by card-processing volume — it is the price of handling payments at scale.'};
+  if(/manufactur/.test(ind))return {label:'manufacturing',market:'OEMs and supply-chain partners',buyer:'supplier-security and procurement teams',gate:['ISO 27001'],lever:'Supply-chain security requirements gate you into large OEM programs; protecting design IP is the differentiator.'};
+  if(/energy|utilit/.test(ind))return {label:'energy / utilities',market:'grid operators, regulators and industrial buyers',buyer:'critical-infrastructure security teams',gate:['ISO 27001'],lever:'Critical-infrastructure trust (NERC CIP / IEC 62443) is the entry ticket to industrial and regulated buyers.'};
+  return {label:'',market:'your enterprise buyers',buyer:'enterprise security & procurement teams',gate:['SOC 2 Type II','ISO 27001'],lever:'The right attestations clear procurement fast and keep you off the "filtered out" list.'};
+}
+function drillCert(cert){var ig=industryGrowth(industry());var isGate=ig.gate.indexOf(cert)>=0;var x=growthData();
+  return '<div class="drill-hero good">'+cert+(isGate?' <span class="pill good" style="font-size:10px;vertical-align:middle">market gate</span>':'')+'</div>'+
+    '<div class="drill-p">'+(CERT_UNLOCK[cert]||'A trust credential buyers check during vendor review.')+'</div>'+
+    '<div class="ev-sec">What it unlocks for you</div><div class="drill-p">'+(isGate?('For a <b>'+(ig.label||'business')+'</b> business this is a <b>gate</b> to '+ig.market+' — holding it means you clear that requirement on day one and stay on the shortlist.'):('It strengthens your standing with '+ig.buyer+' and shortens the vendor-review back-and-forth.'))+'</div>'+
+    '<div class="ev-sec">Where this comes from</div><div class="drill-p"><span class="srcpill '+(x.live?'self':'self')+'">○ self-reported</span> — the certifications you recorded at onboarding. Connect your GRC / compliance platform (Vanta, Drata, OneTrust) to <span class="srcpill conn">● evidence</span> each one with its live attestation and renewal date.</div>';
+}
 /* One source for the growth figures — live from the onboarding growth block, else
    a labelled illustrative example. Shared by the tiles and their drill-downs so
    every detail traces back to the same numbers. */
@@ -627,17 +657,30 @@ function renderGrowth(){
   var host=document.getElementById('cisoGrowth');if(!host)return;
   var gx=growthData(),live=gx.live,d=gx.d;
   var drop=pctDrop(d.reviewBeforeWks,d.reviewNowWks);
+  var ig=industryGrowth(industry());
   var banner=live
     ? '<div class="cn" style="margin-bottom:12px">● <b style="color:var(--good)">Live</b> — the growth your security program is unlocking, from your CRM and deal-review data.</div>'
     : '<div class="cn" style="margin-bottom:12px">◐ <b style="color:var(--warn)">Illustrative</b> — connect your CRM (Salesforce) and log deal security-reviews at onboarding to make this live. Example shown.</div>';
+  // Hero verdict — the one-sentence story, adapted to the industry.
+  var pipe=Number(d.pipelineUsd)>0?usd(d.pipelineUsd):null;
+  var hero='<div class="ai-hero" style="margin-bottom:14px"><div class="ai-verdict">Security is not a cost here — it is how we reach '+ig.market+'.</div>'+
+    '<div class="cn" style="margin-top:6px;line-height:1.6">'+(pipe?('Your security investments are clearing <b style="color:var(--good)">'+pipe+'</b> of pipeline that would otherwise stall, and shortening the review that gates it. '):'')+ig.lever+' Below is <b>which specific investment won which business</b>.</div></div>';
   var t='<div class="grid4">'+
-    '<div class="card optile gtile" data-gdrill="pipeline"><div class="ck">Pipeline in security review</div><div class="cv" style="font-size:22px;color:var(--good)">'+(Number(d.pipelineUsd)>0?usd(d.pipelineUsd):'—')+'</div><div class="cn">revenue that closes only if security clears it — you are the accelerant, not the tax <span class="drill-cta">details ▸</span></div></div>'+
-    '<div class="card optile gtile" data-gdrill="cycle"><div class="ck">Security-review cycle time</div><div class="cv" style="font-size:22px">'+((d.reviewBeforeWks!=null&&d.reviewNowWks!=null)?(d.reviewBeforeWks+' → <span style="color:var(--good)">'+d.reviewNowWks+'</span> wks'):'—')+'</div><div class="cn">'+(drop==null?'log review times to trend this':drop>0?('<span class="pill good" style="font-size:10px">−'+drop+'%</span> deals clear faster'):drop<0?('<span class="pill warn" style="font-size:10px">+'+Math.abs(drop)+'%</span> slower — investigate'):'no change vs baseline')+' <span class="drill-cta">details ▸</span></div></div>'+
-    '<div class="card optile gtile" data-gdrill="deals"><div class="ck">Deals gated by security / qtr</div><div class="cv" style="font-size:22px">'+(Number(d.dealsGated)>0?d.dealsGated:'—')+'</div><div class="cn">enterprise deals that need your sign-off — your throughput is their velocity <span class="drill-cta">details ▸</span></div></div>'+
-    '<div class="card optile gtile" data-gdrill="trust"><div class="ck">Trust posture</div><div class="cv" style="font-size:22px;color:var(--good)">'+(d.trustReviews!=null?(d.trustReviews+' cleared'):'clean')+'</div><div class="cn">customer trust / due-diligence reviews passed — brand value worth more than the budget <span class="drill-cta">details ▸</span></div></div>'+
+    '<div class="card optile gtile" data-gdrill="pipeline"><div class="ck">Pipeline in security review</div><div class="cv" style="font-size:22px;color:var(--good)">'+(pipe||'—')+'</div><div class="cn">revenue into '+ig.market+' that closes only once security clears it <span class="drill-cta">details ▸</span></div></div>'+
+    '<div class="card optile gtile" data-gdrill="cycle"><div class="ck">Security-review cycle time</div><div class="cv" style="font-size:22px">'+((d.reviewBeforeWks!=null&&d.reviewNowWks!=null)?(d.reviewBeforeWks+' → <span style="color:var(--good)">'+d.reviewNowWks+'</span> wks'):'—')+'</div><div class="cn">'+(drop==null?'log review times to trend this':drop>0?('<span class="pill good" style="font-size:10px">−'+drop+'%</span> faster to a signed deal'):drop<0?('<span class="pill warn" style="font-size:10px">+'+Math.abs(drop)+'%</span> slower — investigate'):'no change vs baseline')+' <span class="drill-cta">details ▸</span></div></div>'+
+    '<div class="card optile gtile" data-gdrill="deals"><div class="ck">Deals gated by security / qtr</div><div class="cv" style="font-size:22px">'+(Number(d.dealsGated)>0?d.dealsGated:'—')+'</div><div class="cn">deals with '+ig.buyer+' that need your sign-off to close <span class="drill-cta">details ▸</span></div></div>'+
+    '<div class="card optile gtile" data-gdrill="trust"><div class="ck">Trust posture</div><div class="cv" style="font-size:22px;color:var(--good)">'+(d.trustReviews!=null?(d.trustReviews+' cleared'):'clean')+'</div><div class="cn">customer due-diligence reviews passed — deals kept, not lost to security concerns <span class="drill-cta">details ▸</span></div></div>'+
     '</div>';
-  var certs=(d.certs&&d.certs.length)?d.certs.map(function(c){return '<span class="gcert">'+c+'</span>';}).join(''):'<span style="color:var(--muted)">none recorded — add your certifications at onboarding</span>';
-  var certCard='<div class="card" style="margin-top:12px"><div class="ck">Certifications held — the price of admission in your market</div><div style="margin-top:10px">'+certs+'</div><div class="cn" style="margin-top:10px">In healthcare, fintech and gov these are not badges — they are the gate. Each one you hold is a market you can enter and a customer questionnaire you clear on day one.</div></div>';
+  // The causal story the C-suite wants: which specific security investment won business.
+  var held=(d.certs&&d.certs.length)?d.certs:[];
+  var invRows=held.map(function(c){var isGate=ig.gate.indexOf(c)>=0;
+    return '<div class="drow ginv" data-ginv="cert::'+c+'" style="cursor:pointer"><div class="drow-h"><span class="cap-dot" style="background:var(--good)"></span><b>'+c+'</b><span class="drow-tool">'+(isGate?('opens '+ig.market):'trust signal')+' <span class="drill-cta">details ▸</span></span></div><div class="drow-need">'+(CERT_UNLOCK[c]||'A trust credential buyers check during vendor review.')+'</div></div>';
+  }).join('');
+  if(drop!=null&&drop>0)invRows+='<div class="drow ginv" data-ginv="cycle" style="cursor:pointer"><div class="drow-h"><span class="cap-dot" style="background:var(--good)"></span><b>Faster security-review process</b><span class="drow-tool"><span class="pill good" style="font-size:9px">−'+drop+'%</span> <span class="drill-cta">details ▸</span></span></div><div class="drow-need">Cut deal security-review from '+d.reviewBeforeWks+'→'+d.reviewNowWks+' weeks — revenue pulled forward and security stops being the bottleneck sales route around.</div></div>';
+  if(d.trustReviews!=null)invRows+='<div class="drow ginv" data-ginv="trust" style="cursor:pointer"><div class="drow-h"><span class="cap-dot" style="background:var(--good)"></span><b>Customer trust program</b><span class="drow-tool">'+d.trustReviews+' passed <span class="drill-cta">details ▸</span></span></div><div class="drow-need">'+d.trustReviews+' due-diligence reviews cleared — deals that would otherwise have stalled on security, kept.</div></div>';
+  var certCard='<div class="card" style="margin-top:12px"><div class="ck">What specific security investments won us business'+(ig.label?' — in '+ig.label:'')+'</div>'+
+    (invRows?('<div style="margin-top:8px">'+invRows+'</div>'):'<div class="cn" style="margin-top:6px">Record your certifications and deal-review data at onboarding to show which investment unlocked which market.</div>')+
+    '<div class="cn" style="margin-top:10px">These are not badges — for a <b>'+(ig.label||'B2B')+'</b> business they are the gate to '+ig.market+'. '+ig.lever+' Click any to see what it unlocks and how it is evidenced.</div></div>';
   // Peer-alignment (theme: make your peers successful). What the program delivers
   // for each C-suite partner, tied to what THEY are measured on — live where we have it.
   var ale=(LIVE&&LIVE.economics&&Number(LIVE.economics.ale))||0;
@@ -658,12 +701,17 @@ function renderGrowth(){
   var earlyCard=ee
     ? '<div class="card" style="margin-top:12px"><div class="ck">Engaged early — not at the last gate</div><div class="cv" style="font-size:22px;margin-top:4px;color:'+(ee.pct>=70?'var(--good)':ee.pct>=40?'var(--warn)':'var(--crit)')+'">'+ee.pct+'%</div><div class="cn" style="margin-top:6px">of your <b>'+ee.n+'</b> tagged initiatives had security in at <b>design</b> (architecture / product planning / M&amp;A), not bolted on at the final gate. A strong program runs <b>≥ 70%</b> — that is where security shapes outcomes cheaply and is seen as a builder.</div></div>'
     : '<div class="card" style="margin-top:12px"><div class="ck">Engaged early — not at the last gate</div><div class="cv" style="font-size:19px;margin-top:4px;color:var(--muted)">◐ tag stage to measure</div><div class="cn" style="margin-top:6px">Security shapes outcomes cheaply when it is in the room at <b>design</b> — architecture, product planning, M&amp;A — not bolted on at the final gate. Tag each initiative’s engagement stage (add an <b>engagement</b> column: design vs. gate) to turn this into a live % — a strong program runs <b>≥ 70%</b> at design.</div></div>';
-  host.innerHTML=banner+t+certCard+peerCard+earlyCard;
+  host.innerHTML=banner+hero+t+certCard+peerCard+earlyCard;
   host.querySelectorAll('.gtile').forEach(function(el){el.onclick=function(){var k=el.dataset.gdrill;
     if(k==='pipeline')openDrill('Pipeline in security review',drillGrowthPipeline());
     else if(k==='cycle')openDrill('Security-review cycle time',drillGrowthCycle());
     else if(k==='deals')openDrill('Deals gated by security',drillGrowthDeals());
     else if(k==='trust')openDrill('Trust posture',drillGrowthTrust());
+  };});
+  host.querySelectorAll('.ginv').forEach(function(el){el.onclick=function(){var k=el.dataset.ginv;
+    if(k.indexOf('cert::')===0)openDrill(k.slice(6),drillCert(k.slice(6)));
+    else if(k==='cycle')openDrill('Faster security-review process',drillGrowthCycle());
+    else if(k==='trust')openDrill('Customer trust program',drillGrowthTrust());
   };});
 }
 /* Path to yes (CISO) — the "department of how". Each enablement request carries the
@@ -1604,7 +1652,7 @@ document.getElementById('wrMute').addEventListener('click',function(){alarmMuted
    open the seat the user signed in as, and (re)load live data when shown. */
 window.addEventListener('message',function(e){
   var d=e.data;
-  if(d&&d.type==='cyberrx-golive'){try{if(d.orgId)localStorage.setItem('cyberrx_org_id',d.orgId);if(d.org)localStorage.setItem('cyberrx_org_name',d.org);}catch(_){}loadLive();}
+  if(d&&d.type==='cyberrx-golive'){try{if(d.orgId)localStorage.setItem('cyberrx_org_id',d.orgId);if(d.org)localStorage.setItem('cyberrx_org_name',d.org);if(d.industry)localStorage.setItem('cyberrx_industry',d.industry);}catch(_){}loadLive();}
   else if(d==='cyberrx-os-active'){loadLive();}
   else if(d&&d.type==='cyberrx-auth'){var map={ceo:'ceo',board:'ceo',cfo:'cfo',cio:'cio',clo:'clo',cro:'cro',ciso:'ciso'};selectSeat(map[d.role]||'ceo');}
 });
