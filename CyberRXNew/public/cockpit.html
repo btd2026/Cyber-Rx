@@ -349,7 +349,7 @@ function render(seat){
   CUR=seat;var s=SEATS[seat];
   var h='<div class="hero"><div class="eyebrow">'+s.eyebrow+'</div><div class="verdict">'+s.verdict+'</div><div class="sub">'+s.sub+'</div><div class="hint">Tip: click any value with a <span class="fx">ƒ</span> chip to see the formula, inputs and math.</div></div>';
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
-  document.getElementById('app').innerHTML=h;
+  document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
   wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();renderSignals();applyLive();window.scrollTo({top:0});
 }
@@ -399,11 +399,11 @@ function openEv(key){var e=EV[key];if(!e)return;
   h+='<div class="ev-sec">The calculation</div>'+e.steps.map(function(st){return '<div class="step'+(st[0]==='T'?' total':'')+'"><span class="sn">'+(st[0]==='T'?'=':st[0])+'</span><span>'+st[1]+'</span><span class="sv">'+st[2]+'</span></div>';}).join('');
   h+='<div class="ev-sec">Where the data comes from</div>'+e.sources.map(function(x){return '<div class="src-row"><span class="sd"></span>'+x+'</div>';}).join('');
   h+='<div class="ev-sec">Confidence &amp; freshness</div><div class="conf">🛡 '+e.conf+'</div>';
-  document.getElementById('evb').innerHTML=h;document.getElementById('ev').classList.add('open');document.getElementById('scrim').classList.add('open');}
+  document.getElementById('evb').innerHTML=localizeInd(h);document.getElementById('ev').classList.add('open');document.getElementById('scrim').classList.add('open');}
 function closeEv(){document.getElementById('ev').classList.remove('open');document.getElementById('scrim').classList.remove('open');}
 /* Drill-downs reuse the evidence slide-over shell with a custom title + body. */
 function openDrill(title,html){var eb=document.querySelector('#ev .eb');if(eb)eb.textContent=title||'Details';
-  document.getElementById('evb').innerHTML=html;
+  document.getElementById('evb').innerHTML=localizeInd(html);
   document.getElementById('ev').classList.add('open');document.getElementById('scrim').classList.add('open');}
 document.addEventListener('click',function(e){var c=e.target.closest('.claim');if(c&&c.dataset.ev)openEv(c.dataset.ev);});
 document.addEventListener('click',function(e){var w=e.target.closest('[data-openwar]');if(w){e.preventDefault();try{wrOpen();}catch(_){}}});
@@ -981,6 +981,35 @@ function illuProcBars(){var p=indProfile();var exps=[34e6,18e6,11e6,5e6];var max
   return '<div class="card">'+p.procs.map(function(n,i){var pct=Math.max(6,Math.round(exps[i]/max*100));return '<div class="bar-row"><div class="bar-lbl">'+n+(i===0?' <span class="cj-badge" style="margin-left:6px">crown jewel</span>':'')+'</div><div class="bar-track"><div class="bar-fill '+(i===0?'hot':'')+'" style="width:'+pct+'%"></div></div><div class="bar-val">'+usd(exps[i])+'</div></div>';}).join('')+'<div class="cn" style="margin-top:8px">◐ <b style="color:var(--warn)">Illustrative</b> for '+(indKey()==='tech'?'technology':indKey())+' — upload your processes to see your own.</div></div>';}
 function illuSysBars(){var p=indProfile();var hrs=[2.3e6,0.9e6,0.6e6,0.04e6];var recs=['74 hrs','28 hrs','40 hrs','8 hrs'];var max=hrs[0];
   return '<div class="card">'+p.systems.map(function(n,i){var pct=Math.max(8,Math.round(hrs[i]/max*100));return '<div class="bar-row"><div class="bar-lbl">'+n+' ('+usd(hrs[i])+'/hr)'+(i===0?' <span class="cj-badge" style="margin-left:6px">crown jewel</span>':'')+'</div><div class="bar-track"><div class="bar-fill '+(i===0?'hot':'')+'" style="width:'+pct+'%"></div></div><div class="bar-val">'+recs[i]+'</div></div>';}).join('')+'<div class="cn" style="margin-top:8px">◐ <b style="color:var(--warn)">Illustrative</b> — upload your systems to rank by real downtime cost.</div></div>';}
+/* Industry vocabulary — the static illustrative decisions, verdicts and evidence
+   panels were written in healthcare terms; localizeInd() rewrites them to the
+   chosen industry's language so nothing hardcoded-healthcare ever shows for a
+   non-healthcare company. Health keeps its own; real uploaded names are unaffected. */
+var IND_NOUNS={
+  tech:{money:'transactions',Money:'Transactions',data:'customer data',db:'production database',portal:'product platform',p0:'Customer transactions &amp; billing',p1:'Product / API platform',p2:'Analytics pipeline',p3:'Account management',dbShort:'ProdDB',gwShort:'APIGateway',engShort:'DataPipeline',portalShort:'ProductApp',settle:'data pipeline'},
+  fin:{money:'payments',Money:'Payments',data:'cardholder data',db:'core banking platform',portal:'client portal',p0:'Payments &amp; settlement',p1:'Trading',p2:'Loan origination',p3:'Account servicing',dbShort:'CoreBankDB',gwShort:'PayGateway',engShort:'SettlementEngine',portalShort:'ClientPortal',settle:'settlement'},
+  retail:{money:'checkout',Money:'Checkout',data:'cardholder data',db:'payment platform',portal:'storefront',p0:'Checkout &amp; payments',p1:'E-commerce storefront',p2:'Order fulfilment',p3:'Loyalty &amp; CRM',dbShort:'PayDB',gwShort:'PayGateway',engShort:'OrderEngine',portalShort:'Storefront',settle:'fulfilment'},
+  gov:{money:'benefits processing',Money:'Benefits processing',data:'citizen records',db:'benefits system',portal:'citizen portal',p0:'Benefits processing',p1:'Citizen services',p2:'Records management',p3:'Case management',dbShort:'BenefitsDB',gwShort:'ServiceGateway',engShort:'CaseEngine',portalShort:'CitizenPortal',settle:'processing'},
+  mfg:{money:'orders',Money:'Orders',data:'design IP',db:'ERP system',portal:'supplier portal',p0:'Order-to-cash',p1:'Production / MES',p2:'Supply chain',p3:'Product engineering',dbShort:'ERP',gwShort:'OrderGateway',engShort:'MES',portalShort:'SupplierPortal',settle:'fulfilment'},
+  energy:{money:'billing',Money:'Billing',data:'operational data',db:'control system',portal:'billing platform',p0:'Grid operations',p1:'Billing &amp; metering',p2:'Field operations',p3:'Energy trading',dbShort:'SCADA',gwShort:'MeterGateway',engShort:'TradingEngine',portalShort:'BillingApp',settle:'metering'}
+};
+function localizeInd(html){var k=indKey();if(k==='health'||!html)return html;var v=IND_NOUNS[k];if(!v)return html;
+  // Single pass (no cascade): longest/most-specific patterns first; the callback
+  // output is not re-scanned, so inserted words never trigger later rules.
+  var map=[
+    ['Claims &amp; payments processing',v.p0],['Claims & payments processing',v.p0],
+    ['Member portal &amp; servicing',v.p1],['Member portal & servicing',v.p1],
+    ['Trading &amp; settlement',v.p2],['Trading & settlement',v.p2],
+    ['privileged path into payments','privileged path into '+v.money],
+    ['Policy administration',v.p3],['payments database',v.db],['payments path',v.money+' path'],
+    ['SettlementEngine',v.engShort],['Member portal',v.portal],['ClaimsDB',v.dbShort],['PayGateway',v.gwShort],['MemberWeb',v.portalShort],
+    ['Settlement',v.settle],['Payments',v.Money],['payments',v.money],['Claims',v.Money],['claims',v.money],['PHI',v.data],['clinical','business-critical']
+  ];
+  map.sort(function(a,b){return b[0].length-a[0].length;});
+  var lut={};map.forEach(function(m){lut[m[0]]=m[1];});
+  var pats=map.map(function(m){return m[0].replace(/[.*+?^${}()|[\]\\]/g,'\\$&');});
+  try{return html.replace(new RegExp('('+pats.join('|')+')','g'),function(x){return lut[x];});}catch(_){return html;}
+}
 function tierLabel(t){t=String(t||'').toLowerCase().replace('tier','').trim();if(t==='1')return 'Tier 1';if(t==='2')return 'Tier 2';if(t==='3')return 'Tier 3';return t?('Tier '+t):'';}
 function cleanWhy(name,why){why=String(why||'').trim();var n=String(name||'').trim();
   if(n)why=why.replace(new RegExp('^'+n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*[—:\\-]\\s*','i'),'');
@@ -1537,7 +1566,7 @@ render('ceo');loadLive();loadSignals();
 var VOICE_MUTED=true;
 function strip(h){var d=document.createElement('div');d.innerHTML=String(h||'');return (d.textContent||'').replace(/\s+/g,' ').trim();}
 function speak(text){text=strip(text);if(!text)return;try{window.parent.postMessage({type:'cyberrx-speak',text:text,rate:1.0,voicePref:['Samantha','Google US English','Microsoft Aria','female']},'*');}catch(_){try{var u=new SpeechSynthesisUtterance(text);window.speechSynthesis.cancel();window.speechSynthesis.speak(u);}catch(e){}}}
-function speakSeat(seat){var s=SEATS[seat];if(!s)return;speak(s.brief||s.verdict);}
+function speakSeat(seat){var s=SEATS[seat];if(!s)return;speak(localizeInd(s.brief||s.verdict));}
 document.getElementById('voiceBtn').addEventListener('click',function(){
   VOICE_MUTED=!VOICE_MUTED;this.classList.toggle('on',!VOICE_MUTED);this.textContent=VOICE_MUTED?'🔊 Brief me':'🔈 Muted';
   if(!VOICE_MUTED)speakSeat(CUR); else{try{window.parent.postMessage({type:'cyberrx-speak-cancel'},'*');window.speechSynthesis.cancel();}catch(_){}}
