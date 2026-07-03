@@ -6,19 +6,22 @@
 <title>CyberRx · Executive Cockpit</title>
 <style>
   :root{
-    --plane:#0d0d0d; --surface:#1a1a19; --surface-2:#211f1d; --line:#2c2c2a; --line-2:#3a3a37;
-    --ink:#fff; --ink-2:#c3c2b7; --muted:#898781;
-    --blue:#3987e5; --blue-soft:rgba(57,135,229,.14);
-    --good:#0ca30c; --warn:#fab219; --serious:#ec835a; --crit:#d03b3b; --gold:#c79e3a;
-    --good-soft:rgba(12,163,12,.14); --warn-soft:rgba(250,178,25,.14); --crit-soft:rgba(208,59,59,.14);
+    /* Advisory theme — DTNK Shield deck palette (navy / steel / ice, serif headings) */
+    --plane:#F4F7FB; --surface:#FFFFFF; --surface-2:#E8F0FB; --line:#D9E1EC; --line-2:#CADCFC;
+    --ink:#1E2A4A; --ink-2:#44546A; --muted:#8A93A2;
+    --blue:#4A6FA5; --blue-soft:#E8F0FB;
+    --good:#2E8B6B; --warn:#C9A227; --serious:#C4703A; --crit:#B23A3A; --gold:#C9A227;
+    --good-soft:rgba(46,139,107,.12); --warn-soft:rgba(201,162,39,.16); --crit-soft:rgba(178,58,58,.12);
     --mono:"SFMono-Regular",Consolas,Menlo,monospace;
+    --serif:Cambria,Georgia,"Times New Roman",serif;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--plane);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,.verdict,.rubric .rt,.ai-verdict,.drill-hero{font-family:var(--serif)}
   .wrap{max-width:1120px;margin:0 auto;padding:0 26px}
-  .top{border-bottom:1px solid var(--line);background:linear-gradient(180deg,#111,#0d0d0d)}
+  .top{border-bottom:1px solid var(--line);background:var(--surface)}
   .top-in{display:flex;align-items:center;gap:14px;height:60px}
-  .logo{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#4F90FF,#0A4DC4);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
+  .logo{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#4A6FA5,#1E2A4A);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
   .brand{font-weight:700;font-size:16px}.brand span{color:var(--muted);font-weight:500;font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin-left:10px}
   .top-r{margin-left:auto;display:flex;align-items:center;gap:13px;color:var(--muted);font-size:12px}
   .dot{width:7px;height:7px;border-radius:50%;background:var(--good)}
@@ -27,7 +30,7 @@
   .seats-in{display:flex;align-items:center;gap:6px;height:50px;overflow-x:auto}
   .seatlbl{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-right:8px;white-space:nowrap}
   .seat{font-weight:600;font-size:13px;color:var(--ink-2);background:none;border:1px solid transparent;border-radius:99px;padding:6px 14px;cursor:pointer;white-space:nowrap}
-  .seat.on{color:#fff;background:var(--blue-soft);border-color:rgba(57,135,229,.4)}
+  .seat.on{color:var(--ink);background:var(--surface-2);border-color:var(--blue)}
   #dataModeBar{display:none}
   .hero{padding:30px 0 4px}
   .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);font-weight:600;margin-bottom:12px}
@@ -37,7 +40,7 @@
   .hint{color:var(--muted);font-size:12px;margin-top:12px}.hint .fx{cursor:default}
   .spine{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:11px 15px;margin-top:18px}
   .spine .lk{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);font-weight:700}
-  .spine .num b{color:#fff}.spine .num span{color:var(--muted)}.spine .arrow{color:var(--muted);font-size:12px;margin-left:auto}.spine .arrow b{color:var(--ink-2)}
+  .spine .num b{color:var(--ink)}.spine .num span{color:var(--muted)}.spine .arrow{color:var(--muted);font-size:12px;margin-left:auto}.spine .arrow b{color:var(--ink-2)}
   /* section tabs — one per section, only the active shown */
   .sectabs{display:flex;gap:7px;overflow-x:auto;padding:16px 0 4px;margin-bottom:2px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
   .sectabs::-webkit-scrollbar{height:5px}.sectabs::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:9px}
@@ -74,13 +77,13 @@
   .drill-p{font-size:12.5px;color:var(--ink-2);line-height:1.6;margin:8px 0 14px}
   .fx{font-family:var(--mono);font-size:10px;color:var(--blue);background:var(--blue-soft);border-radius:5px;padding:1px 5px;margin-left:5px;vertical-align:middle;white-space:nowrap}
   .bar-row{display:grid;grid-template-columns:190px 1fr 66px;gap:11px;align-items:center;margin-bottom:12px}
-  .bar-lbl{font-size:12.5px;color:var(--ink-2)}.bar-track{height:20px;background:#222220;border-radius:5px;overflow:hidden}
-  .bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,#256abf,#3987e5)}.bar-fill.hot{background:linear-gradient(90deg,#a83232,#d03b3b)}
+  .bar-lbl{font-size:12.5px;color:var(--ink-2)}.bar-track{height:20px;background:var(--surface-2);border-radius:5px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,#4A6FA5,#1E2A4A)}.bar-fill.hot{background:linear-gradient(90deg,#C4703A,#B23A3A)}
   .bar-val{font-size:12.5px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
   .list-row{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}.list-row:last-child{border:none}
   .lic{flex:none;width:27px;height:27px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px}
   .lic.g{background:var(--good-soft);color:var(--good)}.lic.w{background:var(--warn-soft);color:var(--warn)}.lic.b{background:var(--blue-soft);color:var(--blue)}.lic.c{background:var(--crit-soft);color:var(--crit)}
-  .ltxt{font-size:13px}.ltxt b{color:#fff}.ltxt .s{color:var(--muted);font-size:12px;display:block;margin-top:2px}
+  .ltxt{font-size:13px}.ltxt b{color:var(--ink)}.ltxt .s{color:var(--muted);font-size:12px;display:block;margin-top:2px}
   table.tbl{width:100%;border-collapse:collapse;font-size:12.5px}
   table.tbl th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding:0 10px 10px 0;border-bottom:1px solid var(--line)}
   table.tbl td{padding:11px 10px 11px 0;border-bottom:1px solid var(--line);vertical-align:top}table.tbl tr:last-child td{border:none}
@@ -101,7 +104,7 @@
   .choose{margin-top:12px;width:100%;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px;font-weight:700;font-size:12.5px;cursor:pointer}.choose.gh{background:none;border:1px solid var(--line);color:var(--ink-2)}
   .dstatus{display:none;margin-top:14px;padding:13px 15px;border-radius:10px;background:var(--good-soft);border:1px solid rgba(12,163,12,.4);font-size:13px}.dstatus.show{display:block}
   .dstatus .st-h{font-weight:700;color:var(--good);display:flex;align-items:center;gap:8px}.dstatus .st-b{color:var(--ink-2);font-size:12.5px;margin-top:6px}
-  .track{display:flex;gap:6px;margin-top:10px}.track .tstep{flex:1;height:5px;border-radius:3px;background:#2a2a28}.track .tstep.done{background:var(--good)}
+  .track{display:flex;gap:6px;margin-top:10px}.track .tstep{flex:1;height:5px;border-radius:3px;background:var(--line)}.track .tstep.done{background:var(--good)}
   /* crown-jewel determination chain */
   .chain{display:flex;flex-direction:column;gap:14px}
   .chain-card{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:16px 18px}
@@ -124,7 +127,7 @@
   .cjrow .cjwhy{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.5}
   .cjrow .cjscore{width:96px;flex:none;text-align:right}
   .cjrow .cjscore-n{font-size:19px;font-weight:800;color:#e6c25a;line-height:1}
-  .cjrow .cjbar{height:5px;background:#2a2a28;border-radius:3px;margin-top:6px;overflow:hidden}
+  .cjrow .cjbar{height:5px;background:var(--line);border-radius:3px;margin-top:6px;overflow:hidden}
   .cjrow .cjbar i{display:block;height:100%;background:#e6c25a;border-radius:3px}
   .cjrow .cjscore-l{font-size:9px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-top:4px}
   /* AI risk view */
@@ -135,7 +138,7 @@
   .ai-leaders{display:flex;flex-direction:column}
   .ai-leader{display:flex;gap:12px;align-items:baseline;font-size:12.5px;color:var(--ink-2);padding:8px 0;border-bottom:1px solid var(--line);line-height:1.5}.ai-leader:last-child{border:none}
   .ai-leader .ai-lseat{flex:none;width:48px;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--blue)}
-  .ai-leader b{color:#fff}
+  .ai-leader b{color:var(--ink)}
   .cjmeta{display:flex;flex-wrap:wrap;gap:10px 22px;margin-top:10px}
   .cjm{display:flex;flex-direction:column;line-height:1.3}
   .cjm b{font-size:12.5px;font-weight:700;color:var(--ink-2)}.cjm.hot b{color:var(--crit)}.cjm.warn b{color:var(--warn)}.cjm.rtag b{color:var(--serious,#e0a94a);font-weight:600}
@@ -163,11 +166,11 @@
   .cjir{font-size:11px;color:var(--ink-2);margin-top:7px}
   .cjchip{display:inline-block;font-size:10.5px;background:rgba(208,59,59,.16);color:#ff9b9b;border-radius:6px;padding:2px 8px;margin:4px 5px 0 0}
   .cjloss-row{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;color:var(--ink-2);margin-top:11px}
-  .cjloss-row b{color:#fff;font-size:13px}.cjloss-row i{font-style:normal;color:var(--muted)}
+  .cjloss-row b{color:var(--ink);font-size:13px}.cjloss-row i{font-style:normal;color:var(--muted)}
   .cjtolbar{height:12px;background:#2a2a28;border-radius:6px;overflow:hidden;margin-top:6px}
   .cjtolbar i{display:block;height:100%;width:0;background:var(--warn);border-radius:6px;transition:width .5s linear}
   .cjih-sub{font-size:10.5px;color:var(--muted);margin-top:8px;line-height:1.55}
-  .cjradius-tag{margin-top:11px;font-size:11px;color:var(--warn);border-top:1px solid var(--line);padding-top:9px}.cjradius-tag b{color:#fff}
+  .cjradius-tag{margin-top:11px;font-size:11px;color:var(--warn);border-top:1px solid var(--line);padding-top:9px}.cjradius-tag b{color:var(--ink)}
   .cjincident.p50 .cjtolbar i{background:var(--warn)}
   .cjincident.p75 .cjtolbar i{background:var(--serious,#ec835a)}
   .cjincident.p100 .cjtolbar i{background:var(--crit)}
@@ -301,6 +304,14 @@
   .wr-ck{width:19px;height:19px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;background:#26261f;color:var(--muted);cursor:pointer}
   .wr-ck.done{background:var(--good-soft);color:var(--good)}
   .wr-clock{font-family:var(--mono);color:#e88;font-weight:700;margin-left:auto;white-space:nowrap}
+
+  /* War Room — kept as a dark incident command centre, isolated from the light theme */
+  #wrModal{background:#0b0f14;color:#E6EDF3;border-color:#1b232d}
+  #wrModal .card,#wrModal .wr-panel{background:#0f141b !important;border-color:#1b232d !important;color:#E6EDF3}
+  #wrModal .ck,#wrModal .cn,#wrModal .drow-tool{color:#8a93a2}
+  #wrModal [style*="color:var(--ink)"]{color:#E6EDF3 !important}
+  #wrModal [style*="background:var(--surface-2)"],#wrModal [style*="background:var(--surface)"]{background:#0f141b !important}
+  #wrModal b{color:#E6EDF3}
 </style>
 </head>
 <body>
@@ -465,17 +476,17 @@ function renderDecStatus(dec){
   var editLeft=Math.max(0,EDIT_WINDOW_MS-(Date.now()-d.ts));var hrs=Math.floor(editLeft/3.6e6),mins=Math.floor((editLeft%3.6e6)/6e4);
   // Project / ticketing line
   var proj;
-  if(d.ticket){var lnk=d.url?('<a href="'+d.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+d.ticket+'</a>'):('<b style="color:#fff">'+d.ticket+'</b>');
+  if(d.ticket){var lnk=d.url?('<a href="'+d.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+d.ticket+'</a>'):('<b style="color:var(--ink)">'+d.ticket+'</b>');
     var stp=statusStep(d.status);proj='Project '+lnk+(d.system?(' in '+d.system):'')+(d.demoTicket?' <span class="tag warn" style="font-size:10px">demo</span>':'')+' · <span class="tag '+(stp.n>=4?'good':'')+'" style="font-size:10.5px">'+(d.status?stp.t:'Open')+'</span>';}
   else if(d.pushing)proj='<span style="color:var(--muted)">opening the project in your ticketing system…</span>';
   else proj='<span style="color:var(--muted)">recorded here · not sent to your ticketing system yet</span> <button class="wr-btn" style="padding:5px 12px;font-size:11.5px;margin-left:6px" data-push="'+dec+'">▶ Send to ticketing → open project</button>';
   var stepN=d.ticket?statusStep(d.status).n:(committed?3:2);
   s.innerHTML='<div class="st-h">'+(committed?'🔒 Committed':'✓ Recorded')+'</div><div class="st-b" style="margin-top:4px">'+proj+'</div>'+
-    '<div class="st-b">Decision by <b style="color:#fff">'+d.by+'</b> ('+SEAT_LABEL[d.seat]+') · Option '+d.opt+' · '+fmtWhen(d.ts)+'</div>'+
+    '<div class="st-b">Decision by <b style="color:var(--ink)">'+d.by+'</b> ('+SEAT_LABEL[d.seat]+') · Option '+d.opt+' · '+fmtWhen(d.ts)+'</div>'+
     '<div class="track"><div class="tstep done"></div><div class="tstep'+(stepN>=2?' done':'')+'"></div><div class="tstep'+(stepN>=3?' done':'')+'"></div><div class="tstep'+(stepN>=4?' done':'')+'"></div></div>'+
     (committed
-      ? '<div class="st-b" style="margin-top:7px">🔒 <b style="color:#fff">Committed</b> — the 24-hour change window has closed.'+(d.ticket?' Status above is pulled live from '+(d.system||'your ticketing system')+' on refresh.':'')+'</div>'
-      : '<div class="st-b" style="margin-top:7px">Editable for <b style="color:#fff">'+hrs+'h '+mins+'m</b> more — pick another option to change it. After 24h it commits automatically. <button class="wr-btn gh" style="padding:4px 10px;font-size:11px;margin-left:6px" data-undo="'+dec+'">Undo</button></div>');
+      ? '<div class="st-b" style="margin-top:7px">🔒 <b style="color:var(--ink)">Committed</b> — the 24-hour change window has closed.'+(d.ticket?' Status above is pulled live from '+(d.system||'your ticketing system')+' on refresh.':'')+'</div>'
+      : '<div class="st-b" style="margin-top:7px">Editable for <b style="color:var(--ink)">'+hrs+'h '+mins+'m</b> more — pick another option to change it. After 24h it commits automatically. <button class="wr-btn gh" style="padding:4px 10px;font-size:11px;margin-left:6px" data-undo="'+dec+'">Undo</button></div>');
   s.classList.add('show');
   var ub=s.querySelector('[data-undo]');if(ub)ub.onclick=function(){try{localStorage.removeItem(decKey(dec));}catch(_){}renderDecStatus(dec);renderInitiatives();};
   var pb=s.querySelector('[data-push]');if(pb)pb.onclick=function(){pushDecision(dec);};
@@ -515,7 +526,7 @@ function importedInits(){
   try{var a=JSON.parse(localStorage.getItem('cyberrx_initiatives')||'[]');return Array.isArray(a)?a:[];}catch(_){return [];}
 }
 function parseUsdNum(s){var m=String(s||'').match(/([\d.]+)\s*([KMB])?/i);if(!m)return 0;var n=parseFloat(m[1])||0;var u=(m[2]||'').toUpperCase();return n*(u==='B'?1e9:u==='M'?1e6:u==='K'?1e3:1);}
-function deliveredBar(p){return '<div style="display:flex;align-items:center;gap:6px"><div style="flex:1;height:5px;background:#2a2a28;border-radius:3px;min-width:38px;overflow:hidden"><i style="display:block;height:100%;width:'+p+'%;background:'+(p>=100?'var(--good)':'var(--blue)')+'"></i></div><span style="font-size:11px;color:var(--muted)">'+p+'%</span></div>';}
+function deliveredBar(p){return '<div style="display:flex;align-items:center;gap:6px"><div style="flex:1;height:5px;background:var(--surface-2);border-radius:3px;min-width:38px;overflow:hidden"><i style="display:block;height:100%;width:'+p+'%;background:'+(p>=100?'var(--good)':'var(--blue)')+'"></i></div><span style="font-size:11px;color:var(--muted)">'+p+'%</span></div>';}
 function projProgress(d){ // schedule progress from real ticket status (or committed state)
   if(d&&d.ticket){var n=statusStep(d.status).n;return n>=4?100:n>=3?55:n>=2?20:0;}
   var committed=(Date.now()-((d&&d.ts)||0))>=EDIT_WINDOW_MS;return committed?40:10;
@@ -543,7 +554,7 @@ function initBusiness(name){var n=String(name||'').toLowerCase();var ig=industry
   return {obj:'Protect the business',cls:'warn',outcome:'Reduces risk to the business.'};
 }
 var PORTFOLIO_ITEMS=[];
-function ticketHtml(it){return it.ticket?(it.url?('<a href="'+it.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+it.ticket+'</a>'):('<b style="color:#fff">'+it.ticket+'</b>'))+(it.system?(' · '+it.system):''):'<span style="color:var(--muted)">not sent yet</span>';}
+function ticketHtml(it){return it.ticket?(it.url?('<a href="'+it.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+it.ticket+'</a>'):('<b style="color:var(--ink)">'+it.ticket+'</b>'))+(it.system?(' · '+it.system):''):'<span style="color:var(--muted)">not sent yet</span>';}
 function drillInit(idx){var it=PORTFOLIO_ITEMS[idx];if(!it)return '';
   return '<div class="drill-hero">'+it.name+'</div>'+
     '<div class="drill-p">'+objBadge(it.biz.cls,it.biz.obj)+' '+it.biz.outcome+'</div>'+
@@ -566,7 +577,7 @@ function renderInitiatives(){
   var ret=invested>0?(riskRemoved/invested):0;
   var OBJS=[{k:'Enable growth',cls:'good'},{k:'Meet obligations',cls:'blue'},{k:'Protect the business',cls:'warn'}];
   var byObj={};items.forEach(function(it){byObj[it.biz.obj]=(byObj[it.biz.obj]||0)+it.riskRemoved;});
-  var split=OBJS.map(function(o){var v=byObj[o.k]||0;var pc=riskRemoved>0?Math.round(v/riskRemoved*100):0;return '<div style="flex:1;min-width:150px"><div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:4px"><span>'+objBadge(o.cls,o.k)+'</span><span style="font-weight:700">'+(v>0?usd(v):'—')+'</span></div><div style="height:6px;background:#2a2a28;border-radius:4px;overflow:hidden"><i style="display:block;height:100%;width:'+pc+'%;background:'+objColor(o.cls)+'"></i></div><div class="cn" style="margin-top:3px">'+pc+'% of risk removed</div></div>';}).join('');
+  var split=OBJS.map(function(o){var v=byObj[o.k]||0;var pc=riskRemoved>0?Math.round(v/riskRemoved*100):0;return '<div style="flex:1;min-width:150px"><div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:4px"><span>'+objBadge(o.cls,o.k)+'</span><span style="font-weight:700">'+(v>0?usd(v):'—')+'</span></div><div style="height:6px;background:var(--surface-2);border-radius:4px;overflow:hidden"><i style="display:block;height:100%;width:'+pc+'%;background:'+objColor(o.cls)+'"></i></div><div class="cn" style="margin-top:3px">'+pc+'% of risk removed</div></div>';}).join('');
   var summary='<div class="grid4" style="margin-top:2px">'+
     '<div class="card"><div class="ck">Invested</div><div class="cv" style="font-size:22px">'+(invested>0?usd(invested):'—')+'</div><div class="cn">committed across the portfolio</div></div>'+
     '<div class="card"><div class="ck">Risk removed</div><div class="cv" style="font-size:22px;color:var(--good)">'+(riskRemoved>0?usd(riskRemoved):'—')+'</div><div class="cn">business value bought down (return × spend)</div></div>'+
@@ -783,7 +794,7 @@ function controlGapsCard(){
   if(!gaps.length)return '<div class="card" style="margin-top:14px"><div class="ck">Control gaps</div><div class="cn" style="margin-top:6px">✓ Every measured control is at or above target (≥90% deployed) — nothing needs attention right now.</div></div>';
   var rows=gaps.map(function(o){var c=o.c,p=o.p,pr=capProject(c);
     return '<div class="drow capgap" data-cap="'+c.k+'" style="cursor:pointer"><div class="drow-h"><span class="cap-dot" style="background:var(--'+capColor(p)+')"></span><b>'+c.name+'</b><span class="drow-tool">'+p+'% deployed <span class="drill-cta">details ▸</span></span></div>'+capBar(p)+
-      '<div class="drow-proj'+(pr?'':' none')+'">'+(pr?('<span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> Funded: <b style="color:#fff">'+pr.name+'</b>'+(pr.ticket?(' · '+pr.ticket):'')+' · '+pr.prog+'% delivered'):'No project on this yet — raise one to close the gap')+'</div></div>';
+      '<div class="drow-proj'+(pr?'':' none')+'">'+(pr?('<span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> Funded: <b style="color:var(--ink)">'+pr.name+'</b>'+(pr.ticket?(' · '+pr.ticket):'')+' · '+pr.prog+'% delivered'):'No project on this yet — raise one to close the gap')+'</div></div>';
   }).join('');
   return '<div class="card" style="margin-top:14px"><div class="ck">Control gaps that carry risk — and the funded fix '+liveTag()+'</div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">Each gap is from your connected tools, ordered weakest first. Click any for what it leaves exposed and how it closes.</div></div>';
 }
@@ -808,7 +819,7 @@ function drillOneCap(c){var p=capDeploy(c),pr=capProject(c);
   return '<div class="drill-hero" style="color:var(--'+capColor(p)+')">'+(p!=null?p+'% deployed':'not connected')+'</div>'+capBar(p)+
     '<div class="drill-p"><b>What it is:</b> '+c.name+' — '+c.tool+'. '+(p!=null?('Currently covering <b>'+p+'%</b> of the estate.'):'Not yet connected, so coverage is unknown.')+'</div>'+
     '<div class="ev-sec">To close the gap</div><div class="drill-p">'+(p!=null?c.need:c.connect)+'</div>'+
-    '<div class="ev-sec">Funded fix</div><div class="drill-p">'+(pr?('<span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> <b style="color:#fff">'+pr.name+'</b>'+(pr.ticket?(' · '+pr.ticket):'')+' · '+pr.prog+'% delivered'):'No portfolio project currently addresses this — raise one and it appears here, tracked to completion.')+'</div>';}
+    '<div class="ev-sec">Funded fix</div><div class="drill-p">'+(pr?('<span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> <b style="color:var(--ink)">'+pr.name+'</b>'+(pr.ticket?(' · '+pr.ticket):'')+' · '+pr.prog+'% delivered'):'No portfolio project currently addresses this — raise one and it appears here, tracked to completion.')+'</div>';}
 /* ---- live economics ---- */
 var LIVE=null;
 function usd(n){n=Number(n)||0;var neg=n<0;n=Math.abs(n);var s;if(n>=1e9)s='$'+(n/1e9).toFixed(n>=1e10?0:1)+'B';else if(n>=1e6)s='$'+Math.round(n/1e6)+'M';else if(n>=1e3)s='$'+Math.round(n/1e3)+'K';else s='$'+Math.round(n);return (neg?'−':'')+s;}
@@ -1070,7 +1081,7 @@ function cjRow(c,i){
     var chips=(c.impactRadius&&c.impactRadius.length)?c.impactRadius.map(function(n){return '<span class="cjchip">'+n+'</span>';}).join(''):'<span style="color:var(--muted)">no mapped downstream systems — map dependencies in your CMDB</span>';
     incident='<div class="cjincident'+(ph?' p'+ph:'')+'" id="cjpanel-'+i+'">'+
       '<div class="cjih">⚠ IN THIS INCIDENT — system down, transaction flow halted</div>'+
-      '<div class="cjir"><b style="color:#fff">Impact radius</b> — systems that interface with it and are exposed to spread:<br>'+chips+'</div>'+
+      '<div class="cjir"><b style="color:var(--ink)">Impact radius</b> — systems that interface with it and are exposed to spread:<br>'+chips+'</div>'+
       '<div class="cjloss-row"><span>Aggregate loss so far <b id="cjloss-'+i+'">'+usd(loss)+'</b> <i>· day <span id="cjday-'+i+'">'+incidentDays().toFixed(1)+'</span> of outage</i></span>'+
         '<span style="text-align:right">tolerance <b>'+(tol?usd(tol):'—')+'</b><br><i style="font-size:9px">'+cjToleranceSrc(c)+'</i></span></div>'+
       '<div class="cjtolbar"><i id="cjbarfill-'+i+'" style="width:'+Math.min(100,pct).toFixed(1)+'%"></i></div>'+
@@ -1183,7 +1194,7 @@ function renderCisoWarRoom(){
   host.innerHTML='<div class="card" style="'+(active?'border-color:var(--crit)':'')+'"><div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap"><div style="flex:1;min-width:220px"><div class="ck">Incident command · War Room</div><div class="cn" style="margin-top:5px">'+(active
       ?'⚠ <b style="color:var(--crit)">LIVE INCIDENT</b> — the command center is streaming from your connected systems, automated containment is running, and the C-suite is convened around one shared set of facts.'
       :'● <b style="color:var(--good)">No active incident.</b> The moment a qualifying attack is confirmed, this room goes live automatically — the alarm sounds, containment runs, regulatory clocks start, and each executive gets a role-specific decision.')+'</div></div>'+
-    '<button class="wr-btn'+(active?'':' gh')+'" data-enterwar="1"'+(active?' style="background:var(--crit);border-color:var(--crit);color:#fff"':'')+'>'+(active?'⚠ Enter War Room':'Open War Room')+'</button></div></div>';
+    '<button class="wr-btn'+(active?'':' gh')+'" data-enterwar="1"'+(active?' style="background:var(--crit);border-color:var(--crit);color:var(--ink)"':'')+'>'+(active?'⚠ Enter War Room':'Open War Room')+'</button></div></div>';
   var b=host.querySelector('[data-enterwar]');if(b)b.onclick=function(){try{wrOpen();}catch(_){}};
 }
 /* CISO operational command center — the "when I log in" view. Four clickable
@@ -1229,7 +1240,7 @@ function capDeploy(c){
 /* User's colour scale: green ≥90, blue ≥75, yellow ≥50, red <50, grey = not connected. */
 function capColor(p){return p==null?'muted':p>=90?'good':p>=75?'blue':p>=50?'warn':'crit';}
 function capBar(p){var cls=capColor(p),w=p==null?0:Math.max(0,Math.min(100,p));
-  return '<div style="display:flex;align-items:center;gap:9px"><div style="flex:1;height:7px;background:#2a2a28;border-radius:4px;overflow:hidden;min-width:60px"><i style="display:block;height:100%;width:'+w+'%;background:var(--'+cls+')"></i></div><span style="font-size:12.5px;font-weight:700;color:var(--'+cls+')">'+(p==null?'—':p+'%')+'</span></div>';}
+  return '<div style="display:flex;align-items:center;gap:9px"><div style="flex:1;height:7px;background:var(--surface-2);border-radius:4px;overflow:hidden;min-width:60px"><i style="display:block;height:100%;width:'+w+'%;background:var(--'+cls+')"></i></div><span style="font-size:12.5px;font-weight:700;color:var(--'+cls+')">'+(p==null?'—':p+'%')+'</span></div>';}
 /* The in-flight project (if any) moving a capability's score. */
 function capProject(c){
   var re=c.proj,i,d,sp;
@@ -1280,7 +1291,7 @@ function drillCapabilities(){
     .sort(function(a,b){var av=a.p==null?-1:a.p,bv=b.p==null?-1:b.p;return av-bv;})
     .map(function(o){var c=o.c,p=o.p,cls=capColor(p),pr=capProject(c);
       var proj=pr
-        ?'<div class="drow-proj"><span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> Project: <b style="color:#fff">'+pr.name+'</b>'+(pr.ticket?(' · '+pr.ticket):'')+' · '+pr.prog+'% delivered</div>'
+        ?'<div class="drow-proj"><span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> Project: <b style="color:var(--ink)">'+pr.name+'</b>'+(pr.ticket?(' · '+pr.ticket):'')+' · '+pr.prog+'% delivered</div>'
         :'<div class="drow-proj none">No portfolio project is currently addressing this. Raise one — it will appear here once it is in your ticketing system.</div>';
       return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+cls+')"></span><b>'+c.name+'</b><span class="drow-tool">'+c.tool+'</span></div>'+
         capBar(p)+
@@ -1476,7 +1487,7 @@ function renderMateriality(){
   var cloName=(seatNames()['clo']||SEAT_LABEL['clo']||'General Counsel');
   if(!m){
     host.innerHTML='<div class="card"><div class="ck">Materiality determination</div><div class="cn" style="margin-top:6px">When an incident occurs, record the board’s materiality call here — it starts the SEC 4-business-day clock and becomes the evidenced, timestamped record for your disclosure defense.</div>'+
-      '<div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap"><button class="wr-btn" style="background:var(--crit);border-color:var(--crit);color:#fff" data-mat="material">⚠ Material — start the clock</button><button class="wr-btn gh" data-mat="not">Not material — record &amp; close</button></div></div>';
+      '<div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap"><button class="wr-btn" style="background:var(--crit);border-color:var(--crit);color:var(--ink)" data-mat="material">⚠ Material — start the clock</button><button class="wr-btn gh" data-mat="not">Not material — record &amp; close</button></div></div>';
     host.querySelectorAll('[data-mat]').forEach(function(b){b.onclick=function(){saveMat({determination:b.dataset.mat,by:cloName,ts:Date.now(),basis:''});renderMateriality();};});
     return;
   }
@@ -1490,7 +1501,7 @@ function renderMateriality(){
     (bind?('<div><div class="cn">'+bind.jurisdiction+' — '+bind.obligation+'</div><div style="font-size:16px">'+countdown(bindLeft)+' left</div></div>'):'')+
     '</div>'):'';
   host.innerHTML='<div class="card"><div class="ck">Materiality determination · '+head+'</div>'+
-    '<div class="st-b" style="margin-top:8px;color:var(--ink-2)">Determined by <b style="color:#fff">'+m.by+'</b> ('+SEAT_LABEL['clo']+') · '+new Date(m.ts).toLocaleString()+'</div>'+clocks+
+    '<div class="st-b" style="margin-top:8px;color:var(--ink-2)">Determined by <b style="color:var(--ink)">'+m.by+'</b> ('+SEAT_LABEL['clo']+') · '+new Date(m.ts).toLocaleString()+'</div>'+clocks+
     '<div style="margin-top:14px"><button class="wr-btn gh" style="padding:5px 12px;font-size:11.5px" data-matreset="1">Reopen / change determination</button></div></div>';
   var rb=host.querySelector('[data-matreset]');if(rb)rb.onclick=function(){saveMat(null);renderMateriality();};
 }
