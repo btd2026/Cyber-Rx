@@ -8,19 +8,13 @@ var SEATS = {
   sub:'Your cyber position in the same terms as every other enterprise risk. Every figure is clickable — open it to see the exact formula, the inputs used, and the math.',
   brief:'Here is where we stand. Cyber risk is a managed business risk, and today it is within the board’s approved tolerance. Our expected annual loss is about sixty-eight million dollars — under one percent of revenue. The one thing to watch is the worst-case tail, which sits above appetite; one funded decision this quarter brings it back in line. Every figure on the screen traces to your own data.',
   body:function(){return (
-   sec('01','How much is at stake — and are we within the board’s limit?','Cyber risk in dollars, measured against the appetite the board approved. Every figure is computed from your financials and risk register.',
-     tiles([
-      {k:'Expected annual loss',v:'<span id="lvExpo">$68M</span>',ev:'ale',note:'<span class="pill good" id="lvAleWithin">Within appetite</span> &nbsp;<span class="claim" data-ev="pctrev"><span id="lvPctRev">≈0.8% of revenue</span> <span class="fx">ƒ</span></span>'},
-      {k:'Worst-case tail (95%)',v:'<span id="lvTail">$180M</span>',cls:'warn',ev:'tail',note:'<span class="pill warn" id="lvTailWithin">Above appetite</span> &nbsp;vs appetite <span class="claim" data-ev="appetite"><span id="lvAppetite">$120M</span> <span class="fx">ƒ</span></span>'},
-      {k:'Materiality threshold',v:'<span id="lvMateriality">$53M</span>',ev:'materiality',note:'<span id="lvMatBasis">the loss large enough to be financially material to disclose</span>'}]))
-   +sec('02','Which business processes carry the risk?','Your key processes from onboarding, ranked by the dollars of exposure each carries. Click any process for the math.',
-     '<div id="ceoProcBars">'+bars([
-      {l:'Claims &amp; payments processing',ev:'proc-claims',v:'$34M',pct:100,cls:'hot'},
-      {l:'Policy administration',ev:'proc-policy',v:'$18M',pct:53},
-      {l:'Trading &amp; settlement',ev:'proc-settlement',v:'$11M',pct:32},
-      {l:'Member portal &amp; servicing',ev:'proc-member',v:'$5M',pct:15}])+'</div>')
-   +sec('03','What decisions need us — and what are the trade-offs?','Each decision is a plain-English choice with options, pros and cons. Choosing one records it to your ticketing system and tracks it to completion. Option costs and returns are modeled estimates your security team refines against these live exposure figures.',
-     decisions([
+   sec('01','Strategic Go / No-Go Control Panel','Leads security assessments, threat modeling and risk reviews for new initiatives (M&amp;A · cloud · AI · expansion) before approval — so you can tell the board whether a strategy is safe to pursue.',
+     '<div id="ceoGoNoGo"></div>'
+     +'<div id="ceoAiRisk" style="margin-top:14px"><div class="card"><div class="cn">◐ Add your AI-governance answers in onboarding, and connect vulnerability management, to populate the AI-initiative gate from live data.</div></div></div>')
+   +sec('02','Decision Intelligence View','Produces executive risk briefs, scenario analysis and business-impact assessments — clear risk-based recommendations in dollars, not technical detail, with the recommended decision highlighted.',
+     '<div class="cols"><div class="card" id="ceoStress"><div class="ck">Severe-but-plausible scenario</div><div class="cn" style="margin-top:8px">◐ Illustrative until go-live — modeled from your top crown jewel, its largest open risk, worst-case recovery and your binding regulatory clock.</div></div>'
+     +'<div class="card" id="ceoReadiness"><div class="ck">Response &amp; recovery readiness</div><div class="cn" style="margin-top:8px">◐ Add your incident-readiness answers in onboarding (IR plan tested, tabletop, retainer, ransomware policy).</div></div></div>'
+     +decisions([
       {n:1,q:'Should we close the privileged path into payments?',sit:'A few over-privileged IT accounts can reach the payments database directly — the single biggest reason exposure is $68M. Three ways to handle it:',
        opts:[
         {rec:true,tag:'A · Fund it now',on:'Option A · Fund it now',osum:'$1.4M · 3 weeks',pros:['Removes ~$52M of exposure (37× return)','Brings the worst case within appetite','Strengthens insurance renewal'],cons:['Requires $1.4M of capital this quarter','3 weeks of identity-team effort']},
@@ -31,21 +25,29 @@ var SEATS = {
         {rec:true,tag:'A · Full modernization',on:'Option A · Full',osum:'$3.2M · <6h recovery',pros:['Cuts worst case by ~$40M','Tail below appetite','Meets regulatory recovery expectations'],cons:['Requires $3.2M of capital','One-quarter program']},
         {tag:'B · Critical systems only',on:'Option B · Critical only',osum:'$1.6M',pros:['Protects the two highest-value systems','Half the cost'],cons:['Portal recovery stays slow','Removes ~$24M of $40M']},
         {tag:'C · Defer',on:'Option C · Defer',osum:'$0 this year',pros:['Zero capital this year'],cons:['Worst-case tail stays $180M — above the $120M appetite','Insurer likely raises premium at renewal']}]}]))
-   +sec('04','Are we adequately insured against the worst case?','Whether your cyber-insurance coverage matches the modeled worst case — and the renewal position. From the policy you entered at onboarding.',
-     '<div class="cols"><div class="card"><div class="ck">Answer</div><div class="cv" id="lvInsAnswer" style="font-size:20px;line-height:1.35">Mostly — <span class="warn">a $30M tail is uninsured</span></div><div style="display:flex;gap:24px;margin-top:14px"><div><div class="cv" style="font-size:20px" id="lvCoverage">$150M</div><div class="cn">coverage limit</div></div><div><div class="cv crit claim" data-ev="insgap" style="font-size:20px"><span id="lvGapCeo">$30M</span> <span class="fx">ƒ</span></div><div class="cn">uninsured tail</div></div><div><div class="cv" style="font-size:20px" id="lvPremium">$4.2M</div><div class="cn" id="lvRenewalNote">annual premium</div></div></div></div>'
-     +kvcard('How much of the risk is transferred?',[{k:'Transfer efficiency',v:'<span id="lvTransfer">83%</span>',ev:'transfer'},{k:'Retained (uninsured) tail',v:'<span id="lvRetained">$30M</span>',cls:'crit'},{k:'Funding recovery',v:'narrows the gap',cls:'good'}])+'</div>')
-   +sec('05','Are we getting better — quarter over quarter?','The board’s trend line: your expected loss over time. CyberRx records your position on every analysis, so this is your <b>real</b> history — it builds from your first go-live. Nothing here is back-filled.',
-     '<div id="ceoTrend"></div><div id="ceoPeer" style="margin-top:12px"></div>')
-   +sec('06','Our worst realistic day — and are we ready to respond and recover?','A concrete severe-but-plausible scenario in dollars and days, our steady-state response readiness, and where a single provider is a systemic point of failure.',
-     '<div class="cols"><div class="card" id="ceoStress"><div class="ck">Severe-but-plausible scenario</div><div class="cn" style="margin-top:8px">◐ Illustrative until go-live — modeled from your top crown jewel, its largest open risk, worst-case recovery and your binding regulatory clock.</div></div>'
-     +'<div class="card" id="ceoReadiness"><div class="ck">Response &amp; recovery readiness</div><div class="cn" style="margin-top:8px">◐ Add your incident-readiness answers in onboarding (IR plan tested, tabletop, retainer, ransomware policy).</div></div></div>'
-     +'<div id="ceoThirdParty" style="margin-top:14px"></div>')
-   +sec('07','Governance, oversight &amp; SEC disclosure readiness','How the board oversees cyber — the structure SEC Reg S-K Item 106 requires you to disclose — plus the evidenced decision log that is your D&amp;O defense.',
-     '<div id="ceoGov"><div class="card"><div class="ck">Board oversight structure · SEC Item 106</div><div class="cn" style="margin-top:8px">◐ Add your board-governance answers in onboarding to make this filing-ready.</div></div></div>'
+   +sec('03','Revenue Enablement Dashboard','Supports SOC 2, ISO 27001, HITRUST, FedRAMP, CMMC certifications and secure sales deals — certification readiness + deal clearance, so we win deals without adding cyber risk.',
+     '<div id="cisoGrowth"></div><div id="ceoPeer" style="margin-top:12px"></div>')
+   +sec('04','Executive Accountability Heatmap','Defines the RACI for cybersecurity across business units and executive scorecards — every leader’s accountabilities, plus the governance structure SEC Reg S-K Item 106 requires you to disclose and the evidenced decision log that is your D&amp;O defense.',
+     '<div id="opmodel-ceo"></div>'
+     +'<div id="ceoGov" style="margin-top:14px"><div class="card"><div class="ck">Board oversight structure · SEC Item 106</div><div class="cn" style="margin-top:8px">◐ Add your board-governance answers in onboarding to make this filing-ready.</div></div></div>'
      +'<div id="ceoOversight" style="margin-top:14px">'+kvcard('Oversight &amp; decision record',[{k:'Funded decisions logged',v:'from your decisions',ev:'oversight'},{k:'Each carries',v:'leader · date · ticket',ev:'oversight'},{k:'Board-appetite reviewed',v:'this quarter',cls:'good'},{k:'Defensibility',v:'evidenced trail',cls:'good',ev:'oversight'}])+'</div>')
-   +sec('08','AI risk — are we ready for AI-accelerated attacks, and is our own AI governed?','The board’s two AI questions: our exposure as frontier models (e.g. Anthropic’s <b>Mythos</b>) make attackers faster at finding and exploiting weaknesses, and whether the AI we run is governed and compliant (NIST AI RMF · ISO 42001 · EU AI Act).',
-     '<div id="ceoAiRisk"><div class="card"><div class="cn">◐ Add your AI-governance answers in onboarding, and connect vulnerability management, to populate this from live data.</div></div></div>')
-   +sec('09','What are my responsibilities — and how does security enable each?','The Fortune-100 CISO operating model for your seat: every accountability you own, what the CISO does to enable it, the CyberX-Ray panel that shows it, and the systems behind it — connected or not. This is the platform mapped directly to your responsibilities.','<div id="opmodel-ceo"></div>')
+   +sec('05','Business Impact Live Board','Implements SOC monitoring, SIEM dashboards and KPI/KRI tracking — real-time revenue-at-risk, the processes that carry the risk, the trend over time, and insurance coverage against the worst case.',
+     tiles([
+      {k:'Expected annual loss',v:'<span id="lvExpo">$68M</span>',ev:'ale',note:'<span class="pill good" id="lvAleWithin">Within appetite</span> &nbsp;<span class="claim" data-ev="pctrev"><span id="lvPctRev">≈0.8% of revenue</span> <span class="fx">ƒ</span></span>'},
+      {k:'Worst-case tail (95%)',v:'<span id="lvTail">$180M</span>',cls:'warn',ev:'tail',note:'<span class="pill warn" id="lvTailWithin">Above appetite</span> &nbsp;vs appetite <span class="claim" data-ev="appetite"><span id="lvAppetite">$120M</span> <span class="fx">ƒ</span></span>'},
+      {k:'Materiality threshold',v:'<span id="lvMateriality">$53M</span>',ev:'materiality',note:'<span id="lvMatBasis">the loss large enough to be financially material to disclose</span>'}])
+     +'<div id="ceoProcBars" style="margin-top:14px">'+bars([
+      {l:'Claims &amp; payments processing',ev:'proc-claims',v:'$34M',pct:100,cls:'hot'},
+      {l:'Policy administration',ev:'proc-policy',v:'$18M',pct:53},
+      {l:'Trading &amp; settlement',ev:'proc-settlement',v:'$11M',pct:32},
+      {l:'Member portal &amp; servicing',ev:'proc-member',v:'$5M',pct:15}])+'</div>'
+     +'<div id="ceoTrend" style="margin-top:14px"></div>'
+     +'<div class="cols" style="margin-top:14px"><div class="card"><div class="ck">Insurance — covered against the worst case?</div><div class="cv" id="lvInsAnswer" style="font-size:19px;line-height:1.35;margin-top:6px">Mostly — <span class="warn">a $30M tail is uninsured</span></div><div style="display:flex;gap:24px;margin-top:14px"><div><div class="cv" style="font-size:19px" id="lvCoverage">$150M</div><div class="cn">coverage limit</div></div><div><div class="cv crit claim" data-ev="insgap" style="font-size:19px"><span id="lvGapCeo">$30M</span> <span class="fx">ƒ</span></div><div class="cn">uninsured tail</div></div><div><div class="cv" style="font-size:19px" id="lvPremium">$4.2M</div><div class="cn" id="lvRenewalNote">annual premium</div></div></div></div>'
+     +kvcard('How much of the risk is transferred?',[{k:'Transfer efficiency',v:'<span id="lvTransfer">83%</span>',ev:'transfer'},{k:'Retained (uninsured) tail',v:'<span id="lvRetained">$30M</span>',cls:'crit'},{k:'Funding recovery',v:'narrows the gap',cls:'good'}])+'</div>')
+   +sec('06','Cyber Investment Optimizer','Builds risk-based roadmaps from vulnerability data, threat intelligence and audit findings — the ranked portfolio of security investments by ROI vs risk reduction, so you fund where the dollar works hardest.',
+     '<div id="initiatives-panel"></div>')
+   +sec('07','Crisis Simulation Command Center','Runs incident-response tabletop exercises, crisis simulations and executive playbooks — steady-state response readiness, single-provider systemic risk, and the War Room command centre (⚠ top bar) for a live incident.',
+     '<div id="ceoThirdParty"></div>')
   );}
  },
 
