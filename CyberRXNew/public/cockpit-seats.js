@@ -158,7 +158,9 @@ var SEATS = {
       {k:'Tech-debt exposure',v:'<span id="lvTechDebt">$12M</span>',cls:'warn',ev:'techdebt',note:'end-of-life systems on revenue paths'}]))
    +sec('02','Which systems carry the business, and how fast do they recover?','These are your <b>crown-jewel systems</b> — ranked by what an hour of downtime costs. Recovery investment follows revenue.',
      '<div id="cioSystems">'+bars([{l:'Payments ($2.3M/hr)',v:'74 hrs',pct:100,cls:'hot',ev:'recovery'},{l:'Member portal ($0.6M/hr)',v:'40 hrs',pct:54},{l:'Settlement ($0.9M/hr)',v:'28 hrs',pct:38},{l:'Corporate IT (<$40K/hr)',v:'8 hrs',pct:11}])+'</div>')
-   +sec('03','What decision needs the CIO?','How much recovery resilience we fund. Choosing one records to your ticketing system.',
+   +sec('03','Could we actually recover from ransomware — is our BCP/DR real?','Recovery only counts if it is tested. Immutable backups that survive an attack, a recovery-point objective (how much data you would lose), the date of your last full DR test, and whether a single vendor failure leaves you with no failover. From your backup platform and resilience data.',
+     '<div id="cioDr"></div>')
+   +sec('04','What decision needs the CIO?','How much recovery resilience we fund. Choosing one records to your ticketing system.',
      decisions([{n:1,q:'How much recovery resilience do we fund?',sit:'Our slowest revenue system recovers in ~3.1 days, driving most of the worst-case tail. Three levels:',opts:[
        {rec:true,tag:'A · Full modernization',on:'Option A · Full',osum:'$3.2M · <6h recovery',pros:['Cuts worst case by ~$40M','Meets regulatory recovery expectations','Removes the single-vendor risk (multi-region)'],cons:['$3.2M capital','One-quarter program']},
        {tag:'B · Critical systems only',on:'Option B · Critical only',osum:'$1.6M',pros:['Protects payments &amp; settlement (the top $/hr systems)','Half the capital of full modernization'],cons:['Member-portal recovery stays at ~40 hrs','Removes only ~$24M of the $40M tail driver']},
@@ -191,7 +193,7 @@ var SEATS = {
   brief:'No active compromise, and the program is improving. The biggest dollar driver is the privileged path into payments — fifty-two million — and it has a funded decision ready to close it. We measure our controls by the risk they remove, not by a maturity score, and this is the same number that rolls straight up to the board and the C.F.O.',
   body:function(){return (
    sec('01','Are we under attack right now?','The first question every morning — is anything on fire? This is your live operating picture: active incidents, the health of your security tools, how much of the attacker playbook (MITRE ATT&CK) you can see, and any key-vendor trouble — each with what the team is doing about it. If an incident is confirmed, the War Room opens here.',
-     '<div id="cisoWarRoom" style="margin-bottom:14px"></div><div id="cisoOps"></div>')
+     '<div id="cisoWarRoom" style="margin-bottom:14px"></div><div id="cisoOps"></div><div id="cisoThreat" style="margin-top:14px"></div>')
    +sec('02','What are we protecting — and what is each worth?','Before controls or spend, the thing that matters: your crown jewels — the systems whose loss would hurt the business most. Each shows the transactions and dollars it carries every day, today’s open-risk exposure, how exposed it is to attack, and how fast it recovers — so exposure lives here, on the assets themselves.',
      '<div id="cjchain"></div>')
    +sec('03','How is security helping the business grow — and win deals?','Security is not only a cost that avoids loss — it is a sales accelerant. Here is the pipeline moving through security review, how fast we clear it, the certifications that are the price of admission in our market, and the trust we can sell. This is the growth side of the ledger.',
