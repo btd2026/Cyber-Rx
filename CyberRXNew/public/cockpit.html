@@ -1768,7 +1768,8 @@ function renderCeoGoNoGo(){
     {n:'Expected loss within board appetite',ok:(LIVE&&ap.appetite)?(ap.within!==false):null,d:'ALE ≤ the appetite the board approved'},
     {n:'Worst-case tail within appetite',ok:(LIVE&&ap.appetite)?(ap.tail_within===true):null,d:'95% Value-at-Risk ≤ appetite'},
     {n:'Program trajectory improving',ok:tr.two?tr.down:null,d:'expected loss trending down over recorded analyses'},
-    {n:'Incident response tested',ok:(ir.retainer||ir.tested)?(/yes/i.test(ir.retainer||'')&&/yes|within 12|tested/i.test(ir.tested||'')):null,d:'retainer in place + tabletop within 12 months'}
+    {n:'Incident response tested',ok:(ir.retainer||ir.tested)?(/yes/i.test(ir.retainer||'')&&/yes|within 12|tested/i.test(ir.tested||'')):null,d:'retainer in place + tabletop within 12 months'},
+    {n:'Board governance structure sound',ok:(function(){var gm=govMaturity(g,['committee','cadence','boardExpertise','cisoReportsTo','ermIntegrated']);return (gm&&gm.pct!=null)?(gm.pct>=62):null;})(),d:'committee ownership, cadence, board expertise, CISO independence & ERM integration'}
   ];
   var scored=gates.filter(function(x){return x.ok!=null;}),green=gates.filter(function(x){return x.ok===true;}).length,red=gates.filter(function(x){return x.ok===false;}).length;
   var v=red>0?{t:'STOP / PROCEED WITH CONDITIONS',c:'crit'}:(scored.length&&green===scored.length?{t:'PROCEED',c:'good'}:(scored.length?{t:'PROCEED WITH CONDITIONS',c:'warn'}:{t:'CONNECT DATA TO SCORE',c:'muted'}));
@@ -1808,10 +1809,10 @@ function renderReadiness(){
   var tested=ir.tested||'—',testedOk=/within 12/i.test(tested)?true:(/not tested/i.test(tested)?false:null);
   var ret=ir.retainer||'—',ranp=ir.ransomwarePolicy||'—';
   host.innerHTML='<div class="ck">Response &amp; recovery readiness</div><div style="margin-top:8px">'+
-    govRow('IR plan tested',tested,testedOk,srcChip('GRC (ServiceNow)'))+
+    govRow('IR plan tested',tested,testedOk,srcChip('GRC (ServiceNow)'))+govNote('ir_tested',ir.tested)+
     govRow('Last tabletop',ir.lastTabletop?new Date(ir.lastTabletop).toLocaleDateString():'—',ir.lastTabletop?null:false,srcChip('GRC (ServiceNow)'))+
-    govRow('IR / breach-counsel retainer',ret,/yes/i.test(ret)?true:(/no/i.test(ret)?false:null),srcChip('contracts / DPA system'))+
-    govRow('Ransomware-payment policy',ranp,/board-approved/i.test(ranp)?true:(/none/i.test(ranp)?false:null),srcChip('policy register'))+
+    govRow('IR / breach-counsel retainer',ret,/yes/i.test(ret)?true:(/no/i.test(ret)?false:null),srcChip('contracts / DPA system'))+govNote('retainer',ir.retainer)+
+    govRow('Ransomware-payment policy',ranp,/board-approved/i.test(ranp)?true:(/none/i.test(ranp)?false:null),srcChip('policy register'))+govNote('ransomwarePolicy',ir.ransomwarePolicy)+
     govRow('Crown-jewel worst recovery',(rs&&rs.worst_recovery_hours!=null)?hrsToStr(rs.worst_recovery_hours):'—',null,srcChip(null,'computed from your inventory'))+
     '</div><div class="cn" style="margin-top:8px"><span class="srcpill self">○ self-reported</span> vs <span class="srcpill conn">● connected</span> — connect your GRC, contract and policy systems to evidence these instead of self-attesting.</div>';
 }
@@ -1823,19 +1824,88 @@ function renderThirdParty(){
     '<div class="cv" style="font-size:18px;margin-top:8px"><b>'+tv.vendor+'</b> underpins <b>'+n+'</b> revenue system'+(n===1?'':'s')+(tv.per_hr?(' · '+usd(tv.per_hr)+'/hr at risk if it fails'):'')+'</div>'+
     '<div class="cn" style="margin-top:8px">'+(tv.systems||[]).join(' · ')+'. A single provider failure cascades across these systems — a top board and regulatory (DORA) concern.</div></div>';
 }
+/* ---- Governance-maturity model ---------------------------------------------
+   Each governance answer from onboarding is not just "answered / not answered":
+   the *specific* choice carries a real maturity signal. This maps every option
+   to a tier (leading / solid / watch / gap) and a concrete, sourced posture note,
+   so choosing "Full Board" vs "Dedicated Cyber Committee" — or "Annually" vs
+   "Every board meeting" — actually moves the Item 106 card, the CEO go/no-go
+   gate and the Board Pack. All still self-reported until a GRC/board portal is
+   connected; this scores the structure, it does not invent a number. */
+var GOV_TIER={lead:{c:'good',lbl:'Leading',s:1},solid:{c:'good',lbl:'Solid',s:.72},watch:{c:'warn',lbl:'Watch',s:.4},gap:{c:'crit',lbl:'Gap',s:0}};
+var GOV_MODEL={
+ committee:{label:'Board committee that owns cyber',via:'board portal / GRC',opts:{
+   'Dedicated Cybersecurity Committee':{t:'lead',n:'A standing cyber committee is the leading-practice signal — the board gives cyber dedicated airtime and treats it as a first-class risk.'},
+   'Risk Committee':{t:'solid',n:'Risk-committee ownership gives cyber genuine risk-based oversight — the structure regulators expect of financial-sector and large-cap boards.'},
+   'Audit Committee':{t:'solid',n:'The most common home for cyber oversight and SEC-recognized. Watch for audit-committee overload — cyber competes with financial-reporting for attention.'},
+   'Technology Committee':{t:'watch',n:'Good technical oversight, but a technology committee is often lighter on risk & controls rigor than an audit or risk committee — pair it with a risk-committee reporting line.'},
+   'Full Board':{t:'watch',n:'No committee holds delegated ownership. Workable for a small board, but undifferentiated “full board” ownership is exactly what regulators and plaintiffs probe — confirm it is a deliberate choice, not a gap.'}}},
+ cadence:{label:'How the board is informed (cadence)',via:'board portal / GRC',opts:{
+   'Every board meeting':{t:'lead',n:'Cyber on every board agenda is a top-quartile cadence — oversight is continuous, not episodic.'},
+   'Quarterly':{t:'solid',n:'Quarterly reporting meets the mainstream board-oversight expectation post-SEC-rule.'},
+   'Semi-annually':{t:'watch',n:'Twice-a-year briefings risk the board learning of a material shift too late — quarterly is now the emerging norm.'},
+   'Annually':{t:'gap',n:'Annual-only cyber reporting is below the current oversight bar; a fast-moving risk needs at least quarterly board visibility.'}}},
+ boardExpertise:{label:'Board member with cyber expertise',via:'board roster / HRIS',opts:{
+   'Yes':{t:'lead',n:'Cyber expertise on the board enables informed challenge of management and a credible Item 106(a) disclosure.'},
+   'No':{t:'gap',n:'No board-level cyber expertise. Item 106 no longer mandates naming a cyber expert, but its absence weakens informed oversight — consider a qualified director or a standing board advisor.'}}},
+ cisoReportsTo:{label:'Management role (CISO reporting line)',via:'HRIS / org chart',opts:{
+   'CEO':{t:'lead',n:'A CISO reporting to the CEO has independence from IT delivery — it avoids the “security answers to the team it must audit” conflict.'},
+   'CRO / Chief Risk':{t:'lead',n:'Reporting into the Chief Risk Officer gives security independence from IT and a direct risk-governance line.'},
+   'General Counsel':{t:'solid',n:'A legal reporting line strengthens privilege and disclosure discipline, though it can distance security from engineering delivery.'},
+   'COO':{t:'solid',n:'An operations reporting line keeps security close to the business with reasonable independence from IT build.'},
+   'CFO':{t:'watch',n:'A finance reporting line can subordinate security spend to cost control — make sure the CISO retains direct board access.'},
+   'CIO':{t:'watch',n:'CISO-reports-to-CIO is the classic independence conflict: security reports to the very function it must hold to account. Give the CISO a dotted line to the board/risk committee to compensate.'}}},
+ ermIntegrated:{label:'Integrated into enterprise risk (ERM)',via:'GRC / ERM system',opts:{
+   'Yes':{t:'lead',n:'Cyber sits on one scale beside every other principal risk — the board sees it in enterprise-risk terms, not as a siloed IT issue.'},
+   'Partially':{t:'watch',n:'Partial ERM integration means cyber is quantified but not yet ranked consistently against other principal risks — finish the integration so the board compares like-for-like.'},
+   'No':{t:'gap',n:'Cyber outside ERM is governed in a silo — the board cannot weigh it against credit, market or operational risk. A common root cause of chronic under-investment.'}}},
+ ir_tested:{label:'Incident-response plan tested',via:'GRC / IR runbook',opts:{
+   'Yes — tabletop within 12 months':{t:'lead',n:'A tabletop within 12 months is the expected evidence that response is rehearsed, not theoretical.'},
+   'Yes — older than 12 months':{t:'watch',n:'A tested plan, but the last exercise is stale — regulators and cyber insurers look for a tabletop inside 12 months.'},
+   'Not tested':{t:'gap',n:'An untested IR plan is an assumption, not a capability — the single most common finding after a breach. Schedule a tabletop this quarter.'}}},
+ retainer:{label:'IR / breach-counsel retainer',via:'contracts / DPA system',opts:{
+   'Yes':{t:'lead',n:'Breach counsel on retainer establishes legal privilege before an incident and buys back the first hours that matter most.'},
+   'No':{t:'gap',n:'No retainer means privilege and forensics are arranged under fire — slower first hours and a weaker legal position exactly when speed counts.'}}},
+ ransomwarePolicy:{label:'Ransomware-payment policy',via:'policy register',opts:{
+   'Board-approved policy':{t:'lead',n:'A board-approved payment position means the pay / no-pay call is made in daylight, not under extortion pressure with the clock running.'},
+   'Informal':{t:'watch',n:'An informal stance leaves the highest-stakes decision to be improvised mid-incident — formalize it and have the board approve it.'},
+   'None':{t:'gap',n:'No ransomware-payment policy means the board faces a pay / no-pay call for the first time during the crisis, with OFAC-sanctions exposure unassessed.'}}}
+};
+function govLookup(field,val){var f=GOV_MODEL[field];if(!f||!val)return null;return f.opts[val]||null;}
+function govTierChip(t){if(!t)return '';var m=GOV_TIER[t];return '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:var(--'+m.c+');color:#fff;margin-left:6px;white-space:nowrap">'+m.lbl+'</span>';}
+/* Overall governance maturity across a set of fields — the score-weighted average
+   of each answered field's tier. fields defaults to all eight. */
+function govMaturity(g,fields){
+  if(!g)return null;var ir=g.ir||{};
+  var val={committee:g.committee,cadence:g.cadence,boardExpertise:g.boardExpertise,cisoReportsTo:g.cisoReportsTo,ermIntegrated:g.ermIntegrated,ir_tested:ir.tested,retainer:ir.retainer,ransomwarePolicy:ir.ransomwarePolicy};
+  var keys=fields||Object.keys(GOV_MODEL);
+  var rows=keys.map(function(k){var o=govLookup(k,val[k]);var f=GOV_MODEL[k];return {field:k,label:f.label,val:val[k]||'not set',tier:o?o.t:null,note:o?o.n:null,via:f.via};});
+  var scored=rows.filter(function(r){return r.tier;});
+  var pct=scored.length?Math.round(scored.reduce(function(s,r){return s+GOV_TIER[r.tier].s;},0)/scored.length*100):null;
+  var label=pct==null?'Not set':pct>=85?'Leading':pct>=62?'Solid':pct>=38?'Developing':'Needs work';
+  var cls=pct==null?'muted':pct>=62?'good':pct>=38?'warn':'crit';
+  return {pct:pct,label:label,cls:cls,rows:rows,answered:scored.length,total:rows.length};
+}
+/* A rich Item-106 row: value coloured by tier, tier chip, the posture note, source. */
+function govRowRich(r){
+  var m=r.tier?GOV_TIER[r.tier]:null,col=m?('var(--'+m.c+')'):'var(--ink-2)';
+  return '<div style="padding:10px 0;border-bottom:1px solid var(--line)">'+
+    '<div style="display:flex;justify-content:space-between;gap:12px;align-items:baseline">'+
+    '<span style="color:var(--muted);font-size:13px">'+r.label+'</span>'+
+    '<span style="text-align:right;font-weight:600;color:'+col+';font-size:13px">'+r.val+govTierChip(r.tier)+'</span></div>'+
+    (r.note?'<div style="font-size:12px;color:var(--ink-2);margin-top:5px;line-height:1.45">'+r.note+'</div>':'')+
+    '<div style="margin-top:5px">'+srcChip(r.via)+'</div></div>';
+}
+/* Short posture note for the IR-readiness card (reuses the same model). */
+function govNote(field,val){var o=govLookup(field,val);return o?('<div style="font-size:11.5px;color:var(--ink-2);margin:-2px 0 9px;line-height:1.45">'+o.n+'</div>'):'';}
 function renderGov(){
   var host=document.getElementById('ceoGov');if(!host)return;var g=LIVE&&LIVE.governance;
   if(!g||!(g.committee||g.cadence||g.cisoReportsTo||g.ermIntegrated||g.boardExpertise))return;
-  var items=[
-    {k:'Board committee that owns cyber',v:g.committee||'not set',ok:!!g.committee,via:'board portal / GRC'},
-    {k:'How the board is informed (cadence)',v:g.cadence||'not set',ok:!!g.cadence,via:'board portal / GRC'},
-    {k:'Board member with cyber expertise',v:g.boardExpertise||'not set',ok:/yes/i.test(g.boardExpertise||''),via:'board roster / HRIS'},
-    {k:'Management role (CISO reporting line)',v:g.cisoReportsTo?('reports to '+g.cisoReportsTo):'not set',ok:!!g.cisoReportsTo,via:'HRIS / org chart'},
-    {k:'Integrated into enterprise risk (ERM)',v:g.ermIntegrated||'not set',ok:/yes/i.test(g.ermIntegrated||''),via:'GRC / ERM system'}
-  ];
-  var ready=items.filter(function(i){return i.ok;}).length;
-  host.innerHTML='<div class="card"><div class="ck">Board oversight structure · SEC Reg S-K Item 106 readiness <span class="tag '+(ready>=4?'good':'warn')+'" style="font-size:10px;margin-left:6px">'+ready+' / '+items.length+' answered</span></div>'+
-    '<div style="margin-top:8px">'+items.map(function(i){return govRow(i.k,i.v,i.ok,srcChip(i.via));}).join('')+'</div>'+
+  var m=govMaturity(g,['committee','cadence','boardExpertise','cisoReportsTo','ermIntegrated']);
+  var head=m.pct!=null?('<span class="tag '+(m.cls==='crit'?'warn':m.cls)+'" style="font-size:10px;margin-left:6px">'+m.label+' · '+m.pct+'%</span>'):'';
+  host.innerHTML='<div class="card"><div class="ck">Board oversight structure · SEC Reg S-K Item 106 readiness '+head+'</div>'+
+    '<div class="cn" style="margin:6px 0 4px"><b style="color:var(--'+m.cls+')">Governance maturity '+(m.pct!=null?(m.pct+'%'):'—')+' — '+m.label+'</b>. Each answer below is scored on its <b>specific</b> choice, not just whether it was filled in: your committee, cadence, board expertise, CISO independence and ERM integration each carry a real maturity signal.</div>'+
+    '<div style="margin-top:6px">'+m.rows.map(govRowRich).join('')+'</div>'+
     '<div class="cn" style="margin-top:8px">These are the exact governance disclosures Item 106(c) requires in your 10-K. All are <span class="srcpill self">○ self-reported</span> today — connect your board portal, HRIS and GRC to <span class="srcpill conn">● evidence</span> them and make this filing-ready and audit-defensible.</div></div>';
 }
 function renderBoard(){renderStress();renderReadiness();renderThirdParty();renderGov();renderMateriality();renderCloOps();renderAiRisk();renderCisoOps();renderCisoWarRoom();}
@@ -2409,16 +2479,20 @@ function renderBoardPack(){
     bpFinRow('Insurance limit',ins.limit!=null?usd(ins.limit):null)+
     bpFinRow('Uninsured tail (coverage gap)',ins.gap!=null?usd(ins.gap):null,'exposure above the policy limit')+
     '</tbody></table>';
-  // 3 · Governance & disclosure readiness (SEC Item 106)
-  var gov=bpKv([
-    {k:'Board oversight committee',v:g.committee},
-    {k:'Cadence',v:g.cadence},
-    {k:'Cyber expertise on the board',v:g.boardExpertise},
-    {k:'CISO reports to',v:g.cisoReportsTo},
-    {k:'Integrated with enterprise risk (ERM)',v:g.ermIntegrated},
-    {k:'Incident-response plan tested',v:ir.tested},
-    {k:'Breach counsel / forensics on retainer',v:ir.retainer},
-    {k:'Board-approved ransomware policy',v:ir.ransomwarePolicy}
+  // 3 · Governance & disclosure readiness (SEC Item 106) — each answer coloured by
+  // its maturity tier, with an overall governance-maturity headline.
+  var gm=govMaturity(g);
+  function govKvRow(k,field,val){var o=govLookup(field,val);return {k:k,v:val||null,cls:o?GOV_TIER[o.t].c:''};}
+  var govHead=(gm&&gm.pct!=null)?('<div style="font-size:12.5px;margin-bottom:8px">Governance maturity: <b style="color:var(--'+gm.cls+')">'+gm.label+' ('+gm.pct+'%)</b> — scored on the specific choices below, '+gm.answered+' of '+gm.total+' structures assessed.</div>'):'';
+  var gov=govHead+bpKv([
+    govKvRow('Board oversight committee','committee',g.committee),
+    govKvRow('Cadence','cadence',g.cadence),
+    govKvRow('Cyber expertise on the board','boardExpertise',g.boardExpertise),
+    govKvRow('CISO reports to','cisoReportsTo',g.cisoReportsTo),
+    govKvRow('Integrated with enterprise risk (ERM)','ermIntegrated',g.ermIntegrated),
+    govKvRow('Incident-response plan tested','ir_tested',ir.tested),
+    govKvRow('Breach counsel / forensics on retainer','retainer',ir.retainer),
+    govKvRow('Board-approved ransomware policy','ransomwarePolicy',ir.ransomwarePolicy)
   ]);
   // 4 · Key Risk Indicators
   var kris=kriEval(),kriBlock;
