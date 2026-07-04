@@ -57,34 +57,36 @@ var SEATS = {
   sub:'Cyber as a line on the risk-adjusted balance sheet: expected loss, capital at risk, insurance economics, and the marginal return on the next dollar. Click any figure for the math.',
   brief:'From a finance view: our capital at risk is quantified — sixty-eight million expected, and a hundred and eighty million at the tail. Every dollar of security spend is returning about nine dollars of risk reduction. The two open items are a thirty-million uninsured tail, and ninety-two million of exposure we are carrying on decisions we have not funded yet. Funding the top decision returns thirty-seven to one.',
   body:function(){return (
-   sec('01','What is our capital at risk — and is our spend working?','Capital at risk from your financials and risk register; return figures are modeled from your control data and refined with your team.',
+   sec('01','Cyber Financial Exposure Engine','Quantifies cyber risk in financial terms — FAIR cyber-risk quantification, loss-expectancy modeling and insurance analysis. Real-time expected annual loss, worst-case loss and the insurance-coverage gap, in dollars.',
      tiles([
       {k:'Expected annual loss',v:'<span id="lvExpoCfo">$68M</span>',ev:'ale',note:'<span id="lvCfoPctRev">≈0.8% of revenue</span> · provisioned'},
       {k:'Value-at-Risk (95%)',v:'<span id="lvTailCfo">$180M</span>',cls:'warn',ev:'tail',note:'<span id="lvCfoPctEV">0.6% of enterprise value</span>'},
       {k:'Return on security spend',v:'<span id="lvCfoRoiVal">$1 → $9</span>',ev:'roicfo',note:'<span id="lvCfoRoiNote"><span class="pill mod">modeled</span> risk reduced per dollar</span>'},
-      {k:'Cost of inaction',v:'+$92M',cls:'warn',ev:'inaction',note:'<span class="pill mod">modeled</span> exposure on deferred decisions'}]))
-   +sec('02','What would a bad year do to earnings?','Cyber loss in the terms only finance can put in front of the board — share of annual earnings, EPS impact, days of operating income, and revenue at risk per day of downtime. Computed from your net income, operating income, shares outstanding and downtime cost.',
-     '<div id="cfoEarnings"><div class="card"><div class="cn">◐ Add net income, operating income (for days-of-operating-income) and shares outstanding (for EPS) in onboarding to translate cyber loss into earnings, days and EPS impact.</div></div></div>')
-   +sec('03','Where does the next dollar work hardest, and are we insured?','Where the marginal dollar buys the most risk reduction, and whether your insurance coverage matches the modeled tail. The return ranking below is <span class="pill mod">illustrative</span> — your live per-control risk-removed dollars are in the CISO <b>control-value ledger</b>.',
-     '<div class="cols">'
+      {k:'Cost of inaction',v:'+$92M',cls:'warn',ev:'inaction',note:'<span class="pill mod">modeled</span> exposure on deferred decisions'}])
+     +'<div style="margin-top:14px">'+kvcard('Insurance coverage gap',[{k:'Coverage limit',v:'<span id="lvCfoCoverage">$150M</span>'},{k:'Uninsured tail',v:'<span id="lvCfoGap">$30M</span>',cls:'crit',ev:'insgap'},{k:'Annual premium',v:'<span id="lvCfoPremium">$4.2M / yr</span>'},{k:'Transfer efficiency',v:'<span id="lvCfoTransfer">83%</span>',ev:'transfer'},{k:'Renewal',v:'<span id="lvCfoRenewal">92 days</span>'}])+'</div>')
+   +sec('02','Financial Systems Integrity View','Protects financial integrity — secures the ERP (SAP / Oracle), financial-data encryption, access controls and SOX IT general controls. An ERP access-risk map plus a SOX control-health score with audit-ready evidence.',
+     '<div id="cfoSox"></div>')
+   +sec('03','Cyber Budget Decision Board','Aligns security spending with risk — program budgeting, ROI analysis and control-effectiveness reporting. The spend-vs-risk-reduction curve with a clear fund / defer / reject recommendation on every dollar.',
+     '<div id="initiatives-panel"></div>'
+     +'<div class="cols" style="margin-top:14px">'
      +bars([{l:'Privileged access',v:'37×',pct:100,cls:''},{l:'Recovery / DR',v:'13×',pct:52},{l:'Data protection',v:'8×',pct:34},{l:'Awareness training',v:'6×',pct:26},{l:'Endpoint (saturated)',v:'1.4×',pct:8}])
-     +kvcard('Insurance economics',[{k:'Coverage limit',v:'<span id="lvCfoCoverage">$150M</span>'},{k:'Uninsured tail',v:'<span id="lvCfoGap">$30M</span>',cls:'crit',ev:'insgap'},{k:'Annual premium',v:'<span id="lvCfoPremium">$4.2M / yr</span>'},{k:'Transfer efficiency',v:'<span id="lvCfoTransfer">83%</span>',ev:'transfer'},{k:'Renewal',v:'<span id="lvCfoRenewal">92 days</span>'}])+'</div>'
-     +'<div class="cn" style="margin-top:8px"><span class="pill mod">illustrative</span> Marginal return by program is an example ranking to show the shape — the live, per-control dollars of risk removed (summing to the org total) are on the CISO <b>Controls → Control value ledger</b>.</div>')
-   +sec('04','What if we change the budget — and is an incident material?','The two questions finance owns: the budget trade-off (a modeled scenario) and the disclosure threshold (computed from your financials).',
-     lists([
-      {c:'c',ic:'↓',t:'<span class="pill mod">modeled</span> Cut budget −20% → +$46M exposure, tail $214M, premium +18%',ev:'budgetcut',s:'Net of premium, the cut costs more than it saves.'},
-      {c:'g',ic:'↑',t:'<span class="pill mod">modeled</span> Fund the top decision (+$1.4M) → exposure $16M, 37× return',ev:'roicfo',s:'Closes the payments driver; tail returns within appetite.'},
-      {c:'w',ic:'§',t:'Materiality threshold <span id="lvCfoMateriality">$53M</span> — a crown-jewel event is reportable',ev:'materiality',s:'The 4-business-day SEC clock and a pre-staged 8-K keep the disclosure defensible.'}]))
-   +sec('05','Are we protected against financial crime — and will we pass the SOX audit?','The two finance-owned control questions beyond loss: our live defense against payment fraud and business email compromise, and the state of the SOX IT general controls the external auditor tests. From your email security, ERP and identity systems.',
-     '<div id="cfoFraud"></div>')
-   +sec('06','What decision needs the CFO — and what does it cost or buy?','A costed choice with options; choosing one records to your ticketing system and is tracked to completion.',
-     decisions([{n:1,q:'How should we fund cyber-risk reduction this year?',sit:'Two funded decisions would remove $92M of exposure and strengthen the insurance renewal. How much do we commit this year?',opts:[
+     +'<div class="card"><div class="ck">How to read this board</div><div class="cn" style="margin-top:6px"><span class="pill mod">illustrative</span> Marginal return by program is an example ranking to show the shape — the live, per-control dollars of risk removed (summing to the org total) are on the CISO <b>Controls → Control value ledger</b>. The funded portfolio above is your real spend, tracked to your ticketing system.</div></div>'
+     +'</div>'
+     +decisions([{n:1,q:'How should we fund cyber-risk reduction this year?',sit:'Two funded decisions would remove $92M of exposure and strengthen the insurance renewal. How much do we commit this year?',opts:[
        {rec:true,tag:'A · Fund both ($4.6M)',on:'Option A · Fund both',osum:'$4.6M · 20× blended',pros:['Removes ~$92M of exposure','Brings the tail within appetite','Stronger insurance renewal position'],cons:['Requires $4.6M of capital this year']},
        {tag:'B · Highest-ROI only ($1.4M)',on:'Option B · Top driver only',osum:'$1.4M · 37×',pros:['37× return — closes the $52M payments driver','Only $1.4M of capital this year'],cons:['Leaves the $40M recovery tail over appetite','Insurance renewal position improves only partially']},
        {tag:'C · Hold flat',on:'Option C · Hold',osum:'$0 new',pros:['No new spend this year'],cons:['Carries the full $92M as open exposure','Likely 15–18% premium increase at renewal','Two known drivers stay unfunded']}]}]))
-   +sec('07','Current cyber initiatives & their ROI','Every funded decision becomes a tracked project. This is the live portfolio of new cyber spend — cost, return, owner and status — that the CISO and CFO manage together.',
-     '<div id="initiatives-panel"></div>')
-   +sec('08','What are my responsibilities — and how does security enable each?','The Fortune-100 CISO operating model for your seat: every accountability you own, what the CISO does to enable it, the CyberX-Ray panel that shows it, and the systems behind it — connected or not. This is the platform mapped directly to your responsibilities.','<div id="opmodel-cfo"></div>')
+   +sec('04','Financial Threat Shield','Prevents financial fraud and disruption — email security (BEC protection), MFA for banking, wire-transfer controls and fraud monitoring. Real-time transaction-anomaly alerts and high-risk-payment blocking indicators.',
+     '<div id="cfoFraud"></div>')
+   +sec('05','Audit Readiness Command Center','Ensures audit readiness — SOX audits, PCI DSS assessments, evidence-collection automation and GRC. A live compliance score with evidence auto-collected against each requirement, plus the responsibilities you own mapped to the systems behind them.',
+     '<div id="cisoFrameworks"></div><div id="cisoCompliance" style="margin-top:14px"></div>'
+     +'<div id="opmodel-cfo" style="margin-top:14px"></div>')
+   +sec('06','Cyber Risk Scenario Simulator','Reduces financial exposure — cyber-insurance coordination, risk-transfer strategies and scenario modeling. What a cyber event does to earnings under multiple scenarios: EPS impact, days of operating income and the disclosure threshold.',
+     '<div id="cfoEarnings"><div class="card"><div class="cn">◐ Add net income, operating income (for days-of-operating-income) and shares outstanding (for EPS) in onboarding to translate cyber loss into earnings, days and EPS impact.</div></div></div>'
+     +'<div style="margin-top:14px">'+lists([
+      {c:'c',ic:'↓',t:'<span class="pill mod">modeled</span> Cut budget −20% → +$46M exposure, tail $214M, premium +18%',ev:'budgetcut',s:'Net of premium, the cut costs more than it saves.'},
+      {c:'g',ic:'↑',t:'<span class="pill mod">modeled</span> Fund the top decision (+$1.4M) → exposure $16M, 37× return',ev:'roicfo',s:'Closes the payments driver; tail returns within appetite.'},
+      {c:'w',ic:'§',t:'Materiality threshold <span id="lvCfoMateriality">$53M</span> — a crown-jewel event is reportable',ev:'materiality',s:'The 4-business-day SEC clock and a pre-staged 8-K keep the disclosure defensible.'}])+'</div>')
   );}
  },
 
@@ -94,31 +96,35 @@ var SEATS = {
   sub:'Cyber as legal exposure: disclosure standing, notification duties by country, and the modeled liability if an event occurs — with the clock on each.',
   brief:'Legally, we are defensible across every jurisdiction we operate in today — no reportable events, and evidence is preserved. The clocks to watch are the seventy-two-hour European deadline and the four-business-day S.E.C. rule. If an incident became material, the determination process and the draft filings are already pre-staged, which is what protects the directors.',
   body:function(){return (
-   sec('01','Are we legally defensible right now?','Disclosure standing, notification readiness, and litigation posture — clocks and liability computed from your regions, data classes and record count.',
+   sec('01','Legal Risk &amp; Compliance Tracker','Ensures legal protection from cyber risk — privacy compliance programs (GDPR, CCPA) and breach-notification planning. A jurisdiction-based compliance map with breach-obligation timeline alerts, computed from your regions, data classes and record count.',
      tiles([
       {k:'Open notifications',v:'0',cls:'good',ev:'notifications',note:'<span id="lvCloNotif">no material incident open</span>'},
       {k:'Materiality standing',v:'No reportable event',cls:'good',ev:'materiality',note:'SEC clock not running until an event clears the threshold'},
       {k:'Class-action exposure',v:'<span id="lvCloLiability">$22M</span>',cls:'warn',ev:'liability',note:'<span id="lvCloLiabNote">records × per-record cost</span>'},
-      {k:'Fastest clock',v:'<span id="lvClock">72 hours</span>',ev:'clock',note:'the binding notification deadline today'}]))
-   +sec('02','Where are we exposed by jurisdiction — duty, clock, penalty?','Where we operate, the binding obligation, and the ceiling. Click a jurisdiction for the rule.',
-     '<div id="cloJuris">'+jtable([
+      {k:'Fastest clock',v:'<span id="lvClock">72 hours</span>',ev:'clock',note:'the binding notification deadline today'}])
+     +'<div id="cloJuris" style="margin-top:14px">'+jtable([
       {flag:'🇺🇸',c:'United States',ev:'juris-us',o:'SEC 8-K + 54 state breach laws',clock:'4 business days',cc:'warn',pen:'Disclosure + enforcement'},
       {flag:'🇪🇺',c:'European Union',ev:'juris-eu',o:'GDPR · NIS2 · DORA',clock:'72 hours',cc:'crit',pen:'Up to 4% of global revenue'},
       {flag:'🇬🇧',c:'United Kingdom',o:'UK GDPR / ICO',clock:'72 hours',cc:'crit',pen:'£17.5M or 4%'},
       {flag:'🇸🇬',c:'Singapore',o:'PDPA · MAS TRM',clock:'72h / 1h (MAS)',cc:'crit',pen:'Up to S$1M'},
       {flag:'🇦🇺',c:'Australia',o:'Privacy Act · APRA CPS 234',clock:'72 hours',cc:'warn',pen:'Up to A$50M'}])+'</div>')
-   +sec('03','What decision needs the General Counsel?','How we run disclosure & notification. Choosing one records to your ticketing system.',
-     decisions([{n:1,q:'How do we run the disclosure & notification process?',sit:'If an incident is material we face a 4-business-day SEC clock and a 72-hour GDPR clock. How do we prepare?',opts:[
+   +sec('02','Governance Control Center','Strengthens cybersecurity governance — policy enforcement, board-reporting structures and audit coordination. Policy → control → executive-accountability, with board reporting automated.',
+     '<div class="card"><div class="ck">Policy → control → accountability</div><div class="cn" style="margin-top:6px">◐ Connect your GRC and policy-management systems and board materials to visualize each policy, the control that enforces it and the executive accountable — and to auto-assemble the board governance report SEC Item 106 requires you to disclose. <span class="pill mod" style="font-size:8px">planned</span></div></div>')
+   +sec('03','Contract Risk Intelligence Engine','Reduces contractual cyber risk — security clauses in contracts, DPAs and vendor legal reviews. Contracts auto-scanned for security-clause compliance, and your tightest customer breach-notification deadline surfaced.',
+     '<div class="card"><div class="ck">Customer contract / DPA obligations</div><div class="cn" style="margin-top:6px">◐ Connect your contract-management system (<b>Ironclad · DocuSign CLM · Conga</b>) to auto-scan contracts for security-clause compliance and quantify how many customer contracts carry a breach-notification clause and your <b>tightest contractual deadline</b> — frequently 24–72h, ahead of the SEC and GDPR clocks. This is the contractual exposure the statutory clocks do not capture, and the first thing customer counsel invokes after an incident.</div></div>')
+   +sec('04','Unified Compliance Command Center','Maintains regulatory compliance — HIPAA, PCI DSS, SOX, ISO 27001, HITRUST programs. A multi-framework compliance posture with real-time gap tracking across every regulation in scope.',
+     '<div id="cisoCompliance"></div><div id="cisoFrameworks" style="margin-top:14px"></div>')
+   +sec('05','Cyber Legal Response Hub','Manages the legal response to a cyber incident — digital-forensics coordination, eDiscovery and breach-response legal workflows. Incident-to-litigation tracking with forensic chain-of-custody, the materiality determination, and the disclosure decision.',
+     '<div class="cn" style="margin-bottom:12px">Reportable at <b class="claim" data-ev="materiality" style="cursor:pointer"><span id="lvCloMateriality">$53M</span> <span class="fx">ƒ</span></b> — a crown-jewel event above this threshold is material and starts the 4-business-day SEC clock. Record the determination below; it is timed, evidenced and logged for the D&amp;O defense.</div>'
+     +'<div id="cloMateriality" style="margin-bottom:16px"></div>'
+     +'<div id="cloOps"></div>'
+     +decisions([{n:1,q:'How do we run the disclosure & notification process?',sit:'If an incident is material we face a 4-business-day SEC clock and a 72-hour GDPR clock. How do we prepare?',opts:[
        {rec:true,tag:'A · Standing disclosure committee',on:'Option A · Pre-authorize',osum:'committee + pre-drafted filings',pros:['Meets the 4-business-day SEC and 72-hour GDPR clocks','Defensible, documented materiality determination','Protects directors under D&amp;O'],cons:['Requires setup effort this quarter (charter + templates)']},
        {tag:'B · Ad-hoc at incident time',on:'Option B · Ad-hoc',osum:'no upfront work',pros:['No setup cost today'],cons:['High risk of missing the 4-day / 72-hour clock','Weaker legal defense on the materiality call','Filings drafted under time pressure']},
        {tag:'C · External breach counsel on retainer',on:'Option C · Retainer',osum:'counsel on call',pros:['Specialist breach counsel on demand','Privilege established before an incident'],cons:['Annual retainer cost','Slower first hours vs. a standing internal committee']}]}]))
-   +sec('04','Litigation hold, data-subject rights & IP — are we operationally defensible?','The legal operations the General Counsel owns day-to-day beyond disclosure: preserving evidence under a defensible litigation hold, clearing data-subject requests inside the statutory clock, and protecting the intellectual property a breach count never captures. From your privacy-ops, resilience and crown-jewel data.',
-     '<div id="cloOps"></div>')
-   +sec('05','Is an incident material — and are we covered by contract?','The two calls the General Counsel owns beyond disclosure: the materiality determination (recorded, timed and evidenced in the workbench below) and the contractual breach-notice obligations to customers — which often run ahead of the statutory clock.',
-     '<div class="cn" style="margin-bottom:12px">Reportable at <b class="claim" data-ev="materiality" style="cursor:pointer"><span id="lvCloMateriality">$53M</span> <span class="fx">ƒ</span></b> — a crown-jewel event above this threshold is material and starts the 4-business-day SEC clock. Record the determination below; it is timed, evidenced and logged for the D&amp;O defense.</div>'
-     +'<div id="cloMateriality" style="margin-bottom:16px"></div>'
-     +'<div class="card"><div class="ck">Customer contract / DPA obligations</div><div class="cn" style="margin-top:6px">◐ Connect your contract-management system (<b>Ironclad · DocuSign CLM · Conga</b>) to quantify how many customer contracts carry a breach-notification clause and your <b>tightest contractual deadline</b> — frequently 24–72h, ahead of the SEC and GDPR clocks. This is the contractual exposure the materiality workbench above does not capture, and the first thing customer counsel invokes after an incident.</div></div>')
-   +sec('06','What are my responsibilities — and how does security enable each?','The Fortune-100 CISO operating model for your seat: every accountability you own, what the CISO does to enable it, the CyberX-Ray panel that shows it, and the systems behind it — connected or not. This is the platform mapped directly to your responsibilities.','<div id="opmodel-clo"></div>')
+   +sec('06','Intellectual Property Protection System','Prevents data and IP theft — Data Loss Prevention (DLP), insider-threat monitoring, encryption and access controls. A sensitive-data map with insider-threat detection and exfiltration-risk alerts, plus your legal accountabilities mapped to the systems behind them.',
+     '<div class="card"><div class="ck">Sensitive-data map · insider-threat · exfiltration alerts</div><div class="cn" style="margin-top:6px">◐ Connect your DLP, IAM (<b>Okta · Entra</b>), endpoint monitoring and data-classification tools to map where your most sensitive data and IP lives, detect insider-threat behaviour and alert on exfiltration — the loss a breach-record count never captures. <span class="pill mod" style="font-size:8px">planned</span></div></div>'
+     +'<div id="opmodel-clo" style="margin-top:14px"></div>')
   );}
  },
 
@@ -128,25 +134,32 @@ var SEATS = {
   sub:'Cyber inside the enterprise risk portfolio: measured in the same currency as every other risk, tested for correlation and aggregation, tracked against appetite.',
   brief:'Cyber now sits on the same dollar scale as our other principal risks, and it is within appetite at sixty-eight million. The item to watch is correlation: a payments event couples with third-party and operational risk, and together they can breach appetite at the tail. Two decisions bring that back inside. Our emerging-risk radar flags A.I. decisioning and vendor concentration as the fastest movers.',
   body:function(){return (
-   sec('01','Where does cyber sit against appetite and our other risks?','Cyber measured in the same dollars as every other principal risk — computed from your risk register and board appetite.',
+   sec('01','Enterprise Risk Portfolio View','Integrates cybersecurity into enterprise risk management — risk registers, control frameworks and threat-intel integration. Cyber placed on one scale beside every other principal risk, with prioritization scoring.',
+     '<div id="croPortfolio">'+bars([{l:'Credit / market',v:'$210M',pct:100},{l:'Operational',v:'$140M',pct:67},{l:'Cyber',v:'<span id="lvCroCyber">$68M</span>',pct:32,cls:'hot'},{l:'Third-party',v:'$54M',pct:26},{l:'Compliance',v:'$30M',pct:14}])+'</div>'
+     +'<div class="cn" style="margin:10px 0">Your <b>cyber</b> figure is live; the other principal-risk values are your ERM inputs — <span class="pill mod">illustrative</span> until entered.</div>'
+     +lists([
+      {c:'c',ic:'▲',t:'<span class="pill mod">modeled</span> AI / automated decisioning — velocity high, adaptation forming',s:'Fastest-rising exposure — tracked live in the AI-risk view.'},
+      {c:'w',ic:'▲',t:'<span class="pill mod">modeled</span> Third-party &amp; cloud concentration — velocity high',ev:'vendor',s:'A single provider underpins multiple revenue systems.'}]))
+   +sec('02','Threat Exposure Intelligence Map','Detects cyber threats and vulnerabilities — penetration testing, vulnerability assessments, threat modeling and red teaming. The attack surface with exploit-likelihood scoring, mapped to your live control coverage.',
+     '<div id="cisoThreat"></div>'
+     +'<div class="card" style="margin-top:12px"><div class="cn">◐ Connect your pentest tooling and vulnerability scanners (<b>Qualys · Tenable</b>) to overlay exploit-likelihood scoring and red-team findings on the actor map above.</div></div>')
+   +sec('03','Live Risk Intelligence Board','Provides continuous risk visibility — SIEM (Splunk, Sentinel), SOC dashboards and KRI reporting, with an executive-level summarization layer. Each KRI measured live against a board-set threshold; breaches flagged and the funded mitigation tracked.',
+     '<div id="croKri"></div>')
+   +sec('04','Risk Appetite Control Panel','Defines acceptable risk thresholds — risk-scoring models, control-maturity mapping and exception tracking. Tolerance vs actual exposure with automated breach alerts, and the decision that brings a breach back inside.',
      tiles([
       {k:'Cyber vs. appetite',v:'<span id="lvCroAle">$68M</span> / <span id="lvCroAppetite">$120M</span>',cls:'good',ev:'appetite',note:'<span id="lvCroAppetitePct">57% of allocated appetite</span>'},
       {k:'Concentration',v:'<span id="lvCroConc">50% in payments</span>',cls:'warn',ev:'procexpo',note:'one process carries most of the risk'},
       {k:'Correlation flag',v:'2 risks',cls:'warn',ev:'correlation',note:'<span class="pill mod">modeled</span> couples with third-party + operational'},
-      {k:'Risk transferred',v:'<span id="lvCroTransfer">83%</span>',ev:'transfer',note:'of the tail, via insurance'}]))
-   +sec('02','Which Key Risk Indicators are breaching tolerance — and what is being done?','The ERM control panel: each KRI measured live against a board-set threshold, breaches flagged red, and the funded mitigation tracked to completion. This is what goes to the risk committee.',
-     '<div id="croKri"></div>')
-   +sec('03','What could breach appetite, and what is rising fastest?','Cyber on one scale beside your other principal risks. Your <b>cyber</b> figure is live; the other principal-risk values are your ERM inputs — <span class="pill mod">illustrative</span> until entered.',
-     '<div id="croPortfolio">'+bars([{l:'Credit / market',v:'$210M',pct:100},{l:'Operational',v:'$140M',pct:67},{l:'Cyber',v:'<span id="lvCroCyber">$68M</span>',pct:32,cls:'hot'},{l:'Third-party',v:'$54M',pct:26},{l:'Compliance',v:'$30M',pct:14}])+'</div>'
-     +lists([
-      {c:'c',ic:'▲',t:'<span class="pill mod">modeled</span> AI / automated decisioning — velocity high, adaptation forming',s:'Fastest-rising exposure — tracked live in the AI-risk view.'},
-      {c:'w',ic:'▲',t:'<span class="pill mod">modeled</span> Third-party &amp; cloud concentration — velocity high',ev:'vendor',s:'A single provider underpins multiple revenue systems.'}]))
-   +sec('04','What decision needs the CRO?','How we bring the correlated tail within appetite. Choosing one records to your ticketing system.',
-     decisions([{n:1,q:'How do we bring the correlated tail within appetite?',sit:'A correlated payments + top-vendor event models at $205M — above the $180M enterprise tail. Three levers:',opts:[
+      {k:'Risk transferred',v:'<span id="lvCroTransfer">83%</span>',ev:'transfer',note:'of the tail, via insurance'}])
+     +decisions([{n:1,q:'How do we bring the correlated tail within appetite?',sit:'A correlated payments + top-vendor event models at $205M — above the $180M enterprise tail. Three levers:',opts:[
        {rec:true,tag:'A · Reduce (fund PAM + DR)',on:'Option A · Reduce',osum:'$4.6M · removes $92M',pros:['Cuts likelihood and impact','De-correlates the payments path','Tail returns within appetite'],cons:['Requires $4.6M of capital']},
        {tag:'B · Transfer (raise insurance limit)',on:'Option B · Transfer',osum:'+$1.1M premium',pros:['Caps the financial tail via a higher limit','Fast to execute at renewal'],cons:['~$1.1M higher annual premium','Does not reduce likelihood or de-correlate the path','Coverage still excludes some tail scenarios']},
        {tag:'C · Accept the tail',on:'Option C · Accept',osum:'$0',pros:['No capital spend'],cons:['Correlated tail stays $205M — above the $180M enterprise limit','Requires a documented board risk-acceptance']}]}]))
-   +sec('05','What are my responsibilities — and how does security enable each?','The Fortune-100 CISO operating model for your seat: every accountability you own, what the CISO does to enable it, the CyberX-Ray panel that shows it, and the systems behind it — connected or not. This is the platform mapped directly to your responsibilities.','<div id="opmodel-cro"></div>')
+   +sec('05','Risk Remediation Tracker','Drives remediation of the highest risks — patch-management tracking, remediation SLAs and security-control testing. The funded portfolio closing each risk, with cost, owner, status and the dollars of exposure it removes.',
+     '<div id="initiatives-panel"></div>')
+   +sec('06','Board Risk Intelligence Pack','Provides executive risk reporting — a board-ready pack with heatmaps, trends and narrative, assembled from the same live data as every seat. This is also where your ERM accountabilities map to the systems behind them.',
+     '<div class="card"><div class="ck">Board-ready risk report</div><div class="cn" style="margin-top:6px">A one-click board / regulator report — the financial statement of cyber risk, SEC Item 106 governance readiness, the KRI board, decisions on the table and the trajectory — assembled from the same live model as this cockpit, every figure carrying its provenance.</div><div style="margin-top:12px"><button class="bp-btn primary" onclick="openBoardPack()">Open the board pack →</button></div></div>'
+     +'<div id="opmodel-cro" style="margin-top:14px"></div>')
   );}
  },
 
@@ -156,22 +169,30 @@ var SEATS = {
   sub:'Cyber and resilience for the systems that carry the business: what each is worth per hour, how fast it recovers, and where a single provider is a point of failure.',
   brief:'Operationally, every revenue system is running and recoverable. The slowest one recovers in about three days, and that drives most of our worst case — a single investment cuts it to under six hours. The concentration to fix is one cloud vendor that underpins three revenue systems; if it fails, all three degrade at roughly three point eight million dollars an hour.',
   body:function(){return (
-   sec('01','Can the business keep operating — and recover fast enough?','Resilience in revenue terms, not RTO jargon.',
+   sec('01','Secure Architecture Blueprint Viewer','Designs and reviews secure architecture — embeds security controls, compliance overlays and a risk-per-system view into the application &amp; cloud map, so every new system ships secure by design.',
+     '<div class="card"><div class="ck">Application &amp; cloud architecture — risk per system</div><div class="cn" style="margin-top:6px">◐ Connect your cloud providers (<b>AWS · Azure · GCP</b>), <b>CMDB</b> and DevSecOps pipelines (<b>GitHub · GitLab</b>) to map every application and cloud service with its embedded security controls, compliance overlay and a live <b>risk-per-system</b> score — so architecture review is evidenced, not a slide. <span class="pill mod" style="font-size:8px">planned</span></div></div>')
+   +sec('02','Infrastructure Risk Map','Protects systems, networks and cloud through vulnerability scanning, patch management and configuration hardening (CIS) — a real-time asset heatmap of exposure, patch compliance and critical-system risk clustering, ranked by what an hour of downtime costs.',
+     '<div id="cioSystems">'+bars([{l:'Payments ($2.3M/hr)',v:'74 hrs',pct:100,cls:'hot',ev:'recovery'},{l:'Member portal ($0.6M/hr)',v:'40 hrs',pct:54},{l:'Settlement ($0.9M/hr)',v:'28 hrs',pct:38},{l:'Corporate IT (<$40K/hr)',v:'8 hrs',pct:11}])+'</div>'
+     +'<div class="card" style="margin-top:12px"><div class="cn">◐ Connect your vulnerability scanners (<b>Qualys · Tenable</b>), endpoint management (<b>Intune · SCCM</b>) and CMDB to overlay live <b>vulnerability exposure</b> and <b>patch-compliance %</b> on each asset above.</div></div>')
+   +sec('03','Third-Party Exposure Radar','Reduces third-party security risk through vendor risk assessments, security questionnaires and continuous monitoring — vendors auto-ranked by a critical-vendor exposure index.',
+     '<div id="ceoThirdParty"></div>'
+     +'<div class="card" style="margin-top:12px"><div class="cn">◐ Connect security ratings (<b>BitSight · SecurityScorecard</b>) and your vendor-questionnaire tool to auto-rank every supplier by exposure and flag the vendors that underpin the most revenue. The single-vendor blast radius above is computed live from your asset→vendor map.</div></div>')
+   +sec('04','Resilience Operations Dashboard','Ensures uptime and resilience through disaster recovery, business-continuity planning, backup testing and failover architecture — RTO/RPO compliance, DR-test outcomes and a time-to-recover model, in revenue terms.',
      tiles([
       {k:'What downtime costs',v:'<span id="lvDowntime">$2.3M / hr</span>',cls:'warn',ev:'downtime',note:'on the top revenue dependency'},
-      {k:'Worst-case recovery',v:'<span id="lvRecovery">3.1 days</span>',cls:'warn',ev:'recovery',note:'target <6h (Decision 2)'},
+      {k:'Worst-case recovery',v:'<span id="lvRecovery">3.1 days</span>',cls:'warn',ev:'recovery',note:'target <6h (decision below)'},
       {k:'Vendor concentration',v:'<span id="lvVendor">1 vendor, 3 systems</span>',cls:'warn',ev:'vendor',note:'a single point of failure'},
-      {k:'Tech-debt exposure',v:'<span id="lvTechDebt">$12M</span>',cls:'warn',ev:'techdebt',note:'end-of-life systems on revenue paths'}]))
-   +sec('02','Which systems carry the business, and how fast do they recover?','These are your <b>crown-jewel systems</b> — ranked by what an hour of downtime costs. Recovery investment follows revenue.',
-     '<div id="cioSystems">'+bars([{l:'Payments ($2.3M/hr)',v:'74 hrs',pct:100,cls:'hot',ev:'recovery'},{l:'Member portal ($0.6M/hr)',v:'40 hrs',pct:54},{l:'Settlement ($0.9M/hr)',v:'28 hrs',pct:38},{l:'Corporate IT (<$40K/hr)',v:'8 hrs',pct:11}])+'</div>')
-   +sec('03','Could we actually recover from ransomware — is our BCP/DR real?','Recovery only counts if it is tested. Immutable backups that survive an attack, a recovery-point objective (how much data you would lose), the date of your last full DR test, and whether a single vendor failure leaves you with no failover. From your backup platform and resilience data.',
-     '<div id="cioDr"></div>')
-   +sec('04','What decision needs the CIO?','How much recovery resilience we fund. Choosing one records to your ticketing system.',
-     decisions([{n:1,q:'How much recovery resilience do we fund?',sit:'Our slowest revenue system recovers in ~3.1 days, driving most of the worst-case tail. Three levels:',opts:[
+      {k:'Tech-debt exposure',v:'<span id="lvTechDebt">$12M</span>',cls:'warn',ev:'techdebt',note:'end-of-life systems on revenue paths'}])
+     +'<div id="cioDr" style="margin-top:14px"></div>'
+     +decisions([{n:1,q:'How much recovery resilience do we fund?',sit:'Our slowest revenue system recovers in ~3.1 days, driving most of the worst-case tail. Three levels:',opts:[
        {rec:true,tag:'A · Full modernization',on:'Option A · Full',osum:'$3.2M · <6h recovery',pros:['Cuts worst case by ~$40M','Meets regulatory recovery expectations','Removes the single-vendor risk (multi-region)'],cons:['Requires $3.2M of capital','One-quarter program']},
        {tag:'B · Critical systems only',on:'Option B · Critical only',osum:'$1.6M',pros:['Protects payments &amp; settlement (the top $/hr systems)','Half the capital of full modernization'],cons:['Member-portal recovery stays at ~40 hrs','Removes only ~$24M of the $40M tail driver']},
        {tag:'C · Defer',on:'Option C · Defer',osum:'$0 this year',pros:['Zero capital this year'],cons:['Worst-case recovery stays 3.1 days','Tail stays $180M — above the $120M appetite','Weakens the insurance renewal position']}]}]))
-   +sec('05','What are my responsibilities — and how does security enable each?','The Fortune-100 CISO operating model for your seat: every accountability you own, what the CISO does to enable it, the CyberX-Ray panel that shows it, and the systems behind it — connected or not. This is the platform mapped directly to your responsibilities.','<div id="opmodel-cio"></div>')
+   +sec('05','Transformation Security Tracker','Enables secure cloud and digital adoption through cloud security posture management (CSPM), identity &amp; access management and DevSecOps pipelines — cloud/AI/DevOps projects gated on embedded security readiness.',
+     '<div class="card"><div class="ck">Transformation projects — security readiness gates</div><div class="cn" style="margin-top:6px">◐ Connect your CSPM (<b>Wiz</b>), CI/CD pipelines, IAM (<b>Okta · Entra</b>) and cloud providers to track every cloud, AI and DevOps initiative through embedded security-readiness gates — so transformation moves fast without shipping unmanaged risk. <span class="pill mod" style="font-size:8px">planned</span></div></div>')
+   +sec('06','Control Compliance Cockpit','Enforces security standards and policies — policy management, control frameworks (NIST CSF, ISO 27001) and audit readiness, with drill-down to the exact control gap per business unit. This is also where your IT-governance accountabilities map to the systems behind them.',
+     '<div id="cisoFrameworks"></div><div id="cisoCompliance" style="margin-top:14px"></div>'
+     +'<div id="opmodel-cio" style="margin-top:14px"></div>')
   );}
  },
 
@@ -181,16 +202,21 @@ var SEATS = {
   sub:'Can the business keep delivering through a cyber disruption? Your critical services, what an hour of downtime costs, how fast each recovers, and where a single point of failure could stop operations.',
   brief:'Operationally we are running, and no incident is disrupting service delivery right now. The continuity gap to close is recovery — our slowest critical service takes too long to restore, beyond tolerance, and one vendor is a single point of failure for three services. One resilience investment brings both inside tolerance and protects our service-delivery commitments.',
   body:function(){return (
-   sec('01','Are operations running — is anything disrupting the business right now?','Your live operating picture: incidents affecting business processes, how fast a disruption would surface, and where a single point of failure could stop service delivery. From your SIEM and resilience data.',
+   sec('01','Operational Continuity Map','Protects operational continuity — SOC monitoring, endpoint detection &amp; response (EDR) and incident-response playbooks. Business services linked to cyber threats with a real-time disruption-probability score.',
      '<div id="cooStatus"></div>')
-   +sec('02','Which critical services carry the operation — and can we keep them running?','Your revenue- and service-critical processes ranked by what an hour of downtime costs, how fast each recovers, and whether that is inside your continuity tolerance.',
-     '<div id="cooContinuity"></div>')
-   +sec('03','What decision needs the COO?','How much operational resilience we fund so the business keeps delivering through a disruption. Choosing one records to your ticketing system as a tracked project.',
-     decisions([{n:1,q:'How do we keep operations running through a disruption?',sit:'Our slowest critical service recovers beyond tolerance and one vendor is a single point of failure for three services. Three ways to close the continuity gap:',opts:[
+   +sec('02','Execution Security Layer','Enables secure execution of operations — security embedded into workflows, production systems and business applications, as checkpoints inside the process rather than a gate beside it.',
+     '<div class="card"><div class="ck">Security checkpoints embedded in operational workflows</div><div class="cn" style="margin-top:6px">◐ Connect your ITSM &amp; workflow systems (<b>ServiceNow · Jira</b>), IAM (<b>Okta · Entra</b>) and application logs to show where security checkpoints sit inside each operational process — so execution stays fast and controls are met without a separate approval step. <span class="pill mod" style="font-size:8px">planned</span></div></div>')
+   +sec('03','Security Automation Efficiency Board','Reduces operational friction — security automation (SOAR), ticketing integration and automated patching. Percent automated vs manual, with the operational savings that buys back.',
+     '<div class="card"><div class="ck">Automated vs manual security work</div><div class="cn" style="margin-top:6px">◐ Connect your SOAR platform, ITSM (<b>ServiceNow</b>) and patch tooling to track the share of security work that runs automatically vs by hand — and the hours and cost that automation returns to operations. <span class="pill mod" style="font-size:8px">planned</span></div></div>')
+   +sec('04','Service Availability Shield','Ensures service uptime — DDoS protection, network-security monitoring and redundancy architecture. Live uptime with a cyber-disruption overlay and the customer-impact indicator, ranked by what an hour down costs.',
+     '<div id="cooContinuity"></div>'
+     +decisions([{n:1,q:'How do we keep operations running through a disruption?',sit:'Our slowest critical service recovers beyond tolerance and one vendor is a single point of failure for three services. Three ways to close the continuity gap:',opts:[
        {rec:true,tag:'A · Fund resilience + remove the SPOF',on:'Option A · Resilience',osum:'$3.2M · within tolerance',pros:['Brings the slowest critical service inside recovery tolerance','Removes the single-vendor point of failure (multi-region)','Protects service-delivery SLAs and customer trust'],cons:['Requires $3.2M of capital','A one-quarter program']},
        {tag:'B · Critical services only',on:'Option B · Critical only',osum:'$1.6M',pros:['Protects the top revenue-critical services','Half the capital'],cons:['Lower-tier services stay over tolerance','Vendor concentration remains']},
        {tag:'C · Accept &amp; monitor',on:'Option C · Accept',osum:'$0 this year',pros:['No capital this year'],cons:['The slowest service stays over recovery tolerance','A vendor failure still degrades three services at once','Requires a documented operational risk-acceptance']}]}]))
-   +sec('04','What are my responsibilities — and how does security enable each?','The Fortune-100 CISO operating model for your seat: every accountability you own, what the CISO does to enable it, the CyberX-Ray panel that shows it, and the systems behind it — connected or not. This is the platform mapped directly to your responsibilities.','<div id="opmodel-coo"></div>')
+   +sec('05','Crisis Orchestration Hub','Aligns response across the organization — incident-response coordination across IT, Legal, HR, PR and Finance, and crisis management. A real-time war-room with role-based action tracking and escalation paths, plus the responsibilities you own mapped to the systems behind them.',
+     '<div class="card"><div class="ck">Incident war-room — role-based orchestration</div><div class="cn" style="margin-top:6px">When an incident is confirmed, the <b>⚠ War Room</b> opens from the top bar: a live command centre coordinating IT, Legal, HR, PR and Finance with role-based actions and escalation paths, driven from your ITSM and SIEM. Connect <b>ServiceNow / Jira</b> and paging (<b>PagerDuty · Opsgenie</b>) to track each role’s actions live during a crisis.</div></div>'
+     +'<div id="opmodel-coo" style="margin-top:14px"></div>')
   );}
  },
 
