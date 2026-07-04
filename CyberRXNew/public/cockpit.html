@@ -109,6 +109,15 @@
   .docup select,.docup input[type=file]{font-size:12px;padding:6px 9px;border:1px solid var(--line-2);border-radius:7px;background:var(--surface);color:var(--ink);max-width:100%}
   .docbtn{font-size:12px;font-weight:700;color:#fff;background:var(--ink);border:none;border-radius:7px;padding:7px 14px;cursor:pointer}
   .docrow{display:flex;align-items:center;gap:9px;padding:6px 0;border-top:1px solid var(--line);font-size:12px}.docrow:first-child{border-top:none}
+  /* Operating model — per-executive responsibilities → panel → data sources */
+  .omrow{padding:11px 0;border-top:1px solid var(--line)}.omrow:first-child{border-top:none}
+  .omr-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.omr-h b{font-size:13px;color:var(--ink)}
+  .omtab{font-size:10.5px;font-weight:700;color:var(--blue)}
+  .omr-x{font-size:12px;color:var(--ink-2);font-style:italic;margin-top:3px}
+  .omr-p{font-size:12px;color:var(--ink-2);margin-top:4px}
+  .omr-s{font-size:11px;color:var(--muted);margin-top:5px}
+  .omsrc{display:inline-block;font-size:10px;font-weight:600;color:var(--muted);background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:1px 7px;margin:2px 4px 0 0}
+  .omsrc.on{color:var(--good);border-color:rgba(46,139,107,.35);background:var(--good-soft)}
   .tac-caps{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
   .tac-cap{font-size:11.5px;color:var(--ink-2);display:inline-flex;align-items:center;gap:5px;background:rgba(137,135,129,.1);padding:4px 9px;border-radius:8px}
   .drill-hero{font-size:19px;font-weight:700;margin-bottom:4px}.drill-hero.good{color:var(--good)}.drill-hero.muted{color:var(--muted)}
@@ -462,13 +471,13 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
    trimmed title). Renderers still populate hidden sections' containers. */
 var TAB_LABELS={
- 'Are we under attack right now?':'Live status','What are we protecting — and what is each worth?':'Crown Jewels — Exposure','How is security helping the business grow — and win deals?':'Business Growth','Are our controls actually working — and is the program improving?':'Controls','Which framework controls do our tools satisfy? — NIST CSF 2.0 & 800-53':'Frameworks','AI risk — two fronts: securing the AI we run, and using AI to defend':'AI risk','Are we audit-ready? — compliance framework readiness':'Compliance','What decision needs you now?':'Decision','How does our security investment move the business?':'ROI',
+ 'Are we under attack right now?':'Live status','What are we protecting — and what is each worth?':'Crown Jewels — Exposure','How is security helping the business grow — and win deals?':'Business Growth','Are our controls actually working — and is the program improving?':'Controls','Which framework controls do our tools satisfy? — NIST CSF 2.0 & 800-53':'Frameworks','AI risk — two fronts: securing the AI we run, and using AI to defend':'AI risk','Are we audit-ready? — compliance framework readiness':'Compliance','What decision needs you now?':'Decision','How does our security investment move the business?':'ROI','What are my responsibilities — and how does security enable each?':'Operating model',
  'How much is at stake — and are we within the board’s limit?':'At stake','Which business processes carry the risk?':'By process','What decisions need us — and what are the trade-offs?':'Decisions','Are we adequately insured against the worst case?':'Insurance','Are we getting better — quarter over quarter?':'Trend','Our worst realistic day — and are we ready to respond and recover?':'Worst day','Governance, oversight & SEC disclosure readiness':'Governance','AI risk — are we ready for AI-accelerated attacks, and is our own AI governed?':'AI risk',
  'What is our capital at risk — and is our spend working?':'Capital at risk','What would a bad year do to earnings?':'Earnings','Where does the next dollar work hardest, and are we insured?':'ROI & insurance','What if we change the budget — and is an incident material?':'Budget','Are we protected against financial crime — and will we pass the SOX audit?':'Fraud & SOX','What decision needs the CFO — and what does it cost or buy?':'Decision','Current cyber initiatives & their ROI':'ROI',
  'Are we legally defensible right now?':'Standing','Where are we exposed by jurisdiction — duty, clock, penalty?':'Jurisdictions','What decision needs the General Counsel?':'Decision','Litigation hold, data-subject rights & IP — are we operationally defensible?':'Hold · DSAR · IP','Is an incident material — and are we covered by contract?':'Materiality',
@@ -1671,6 +1680,74 @@ function renderProcBars(){
   }).join('')+'</div>';
 }
 /* CEO oversight card — the real decision-ledger count (D&O / SEC defense). */
+/* ---- Fortune-100 CISO Operating Model — the responsibilities of each executive,
+   how security enables each, what they expect, the CyberX-Ray panel that delivers
+   it, and the data sources behind it (shown connected / not, for traceability).
+   Mirrors the operating-model table so each leader sees their own accountabilities. ---- */
+var OM_SRC={SIEM:['splunk','sentinel'],EDR:['crowdstrike','defender'],GRC:['onetrust','servicenow'],CRM:['salesforce','hubspot'],ERP:['sap','oracle','workday','netsuite'],CMDB:['servicenow'],ITSM:['servicenow','jira'],IAM:['okta','entra'],Vuln:['qualys','tenable'],CSPM:['wiz','aws','azure','prisma','gcp'],Backup:['rubrik','veeam','cohesity','commvault'],'Threat intel':['recordedfuture','mandiant','anomali','otx','cisa'],Email:['proofpoint','abnormal'],Ratings:['securityscorecard'],Awareness:['knowbe4','proofpoint'],'Trust Center':['whistic'],HR:['workday'],eDiscovery:['relativity','exterro'],Cloud:['aws','azure','gcp','wiz'],CLM:[],Insurance:[],FAIR:[],'Risk register':[],DLP:[],Pentest:[],Policy:[],Audit:[]};
+function omSrcOn(s){var keys=OM_SRC[s]||[];var t=connectedTools();return keys.some(function(k){return t[k]&&t[k].on;});}
+var OPERATING_MODEL={
+ ceo:[
+  {r:'Sets company vision & strategy',x:'Tell me if this strategy is safe to pursue.',p:'Strategic go/no-go — readiness + recommendation on M&A / cloud / AI',built:false,tab:'Decision',s:['GRC','Threat intel','Risk register']},
+  {r:'Makes final business decisions',x:'Give me clear risk-based recommendations, not technical detail.',p:'Decision intelligence — best / expected / worst case in dollars',built:true,tab:'Decision',s:['FAIR','SIEM']},
+  {r:'Drives growth & profitability',x:'Help us win deals without increasing cyber risk.',p:'Revenue-enablement — certification readiness + deal clearance',built:true,tab:'Business Growth',s:['GRC','CRM','Trust Center']},
+  {r:'Oversees the executive team',x:'Make sure every leader is accountable for cyber risk.',p:'Executive accountability — this operating model, per leader',built:true,tab:'ROI',s:['HR','IAM','GRC']},
+  {r:'Ensures organizational performance',x:'Warn me early if cyber issues impact operations.',p:'Business-impact live board — revenue-at-risk + active threats',built:true,tab:'At stake',s:['SIEM','EDR','ITSM']},
+  {r:'Allocates resources across the business',x:'Show me where to invest for maximum risk reduction.',p:'Cyber investment optimizer — ROI vs risk-reduction, top priorities',built:true,tab:'ROI',s:['Vuln','Risk register','CMDB']},
+  {r:'Accountable for overall success',x:'Ensure we are prepared for major cyber crises.',p:'Crisis simulation command centre — War Room tabletop',built:true,tab:'War Room',s:['SIEM','ITSM']}],
+ cio:[
+  {r:'Leads IT strategy & operations',x:'Keep IT secure without slowing delivery.',p:'Secure-architecture blueprint — risk per system',built:false,tab:null,s:['Cloud','CMDB']},
+  {r:'Oversees applications & infrastructure',x:'Ensure systems are secure and patched.',p:'Infrastructure risk map — vuln exposure + patch %',built:true,tab:'Controls',s:['Vuln','CMDB']},
+  {r:'Manages IT budgets & vendors',x:'Make sure vendors don’t introduce risk.',p:'Third-party exposure radar — vendor risk scoring',built:true,tab:'Vendor',s:['Ratings','Threat intel']},
+  {r:'Ensures availability & reliability',x:'Keep systems running and recover fast.',p:'Resilience operations — RTO/RPO + BCP/DR',built:true,tab:'BCP / DR',s:['Backup','CMDB']},
+  {r:'Leads digital transformation',x:'Secure new tech without slowing transformation.',p:'Transformation security tracker — cloud/AI readiness gates',built:false,tab:null,s:['CSPM','IAM','Cloud']},
+  {r:'Oversees IT governance',x:'Ensure IT follows consistent security rules.',p:'Control-compliance cockpit — NIST/ISO/HITRUST + gaps',built:true,tab:'Frameworks',s:['GRC','Policy','Audit']}],
+ cfo:[
+  {r:'Leads financial strategy & planning',x:'Translate cyber risk into financial impact.',p:'Cyber financial exposure — expected + worst-case loss, insurance gap',built:true,tab:'Capital at risk',s:['ERP','FAIR','Insurance']},
+  {r:'Oversees accounting & reporting',x:'Protect financial systems and reporting accuracy.',p:'Financial-systems integrity — ERP access + SOX ITGC health',built:true,tab:'Fraud & SOX',s:['ERP','IAM','SIEM']},
+  {r:'Manages budgeting & forecasting',x:'Justify cybersecurity spend clearly.',p:'Cyber budget board — spend vs risk-reduction, ROSI',built:true,tab:'ROI',s:['GRC','Risk register','ITSM']},
+  {r:'Controls cash flow & capital',x:'Prevent financial fraud and ransomware losses.',p:'Financial threat shield — BEC + payment-anomaly detection',built:true,tab:'Fraud & SOX',s:['Email','IAM']},
+  {r:'Ensures compliance & audits',x:'Keep audits clean and efficient.',p:'Audit-readiness command centre — live score + evidence',built:true,tab:'Frameworks',s:['GRC','Audit','SIEM']},
+  {r:'Manages financial risk',x:'Avoid surprise financial losses.',p:'Cyber risk scenario simulator — loss under multiple scenarios',built:true,tab:'Worst day',s:['Insurance','FAIR']}],
+ coo:[
+  {r:'Oversees daily operations',x:'Keep operations running during attacks.',p:'Operational-continuity map — services × threats, disruption score',built:true,tab:'Operations',s:['SIEM','EDR','CMDB']},
+  {r:'Executes business strategy',x:'Don’t let security block execution.',p:'Execution security layer — checkpoints embedded in workflows',built:false,tab:null,s:['ITSM','IAM']},
+  {r:'Improves operational efficiency',x:'Make security efficient, not manual.',p:'Security-automation board — % automated vs manual',built:false,tab:null,s:['ITSM','SIEM']},
+  {r:'Oversees service delivery',x:'Maintain service availability to customers.',p:'Service-availability shield — uptime + cyber-disruption overlay',built:true,tab:'Continuity',s:['SIEM']},
+  {r:'Coordinates cross-functional teams',x:'Coordinate response during incidents.',p:'Crisis orchestration hub — War Room, role-based actions',built:true,tab:'War Room',s:['ITSM','SIEM']}],
+ cro:[
+  {r:'Develops enterprise risk strategy',x:'Show cyber risk in enterprise risk terms.',p:'Enterprise risk portfolio — cyber on one scale with other risks',built:true,tab:'Aggregation',s:['GRC','Threat intel']},
+  {r:'Identifies & assesses risks',x:'Identify risks before attackers do.',p:'Threat-exposure map — attack surface + exploit likelihood',built:true,tab:'Live status',s:['Pentest','Vuln','Threat intel']},
+  {r:'Monitors operational & cyber risk',x:'Give me real-time risk visibility.',p:'Live risk intelligence — SIEM + KRI with exec summary',built:true,tab:'KRI board',s:['SIEM','EDR']},
+  {r:'Establishes risk appetite & tolerance',x:'Keep risk within approved limits.',p:'Risk-appetite panel — tolerance vs exposure, breach alerts',built:true,tab:'Vs appetite',s:['GRC','Risk register']},
+  {r:'Oversees risk mitigation',x:'Fix high-risk issues quickly.',p:'Remediation tracker — SLA-driven closure + escalation',built:true,tab:'KRI board',s:['Vuln','ITSM']},
+  {r:'Reports risk posture to the board',x:'Give me board-ready risk reporting.',p:'Board risk pack — heatmaps, trends, narrative',built:true,tab:'Board Pack',s:['GRC','SIEM','Risk register']}],
+ clo:[
+  {r:'Leads legal strategy',x:'Keep us legally protected.',p:'Legal risk & compliance tracker — jurisdiction map + breach clocks',built:true,tab:'Jurisdictions',s:['Policy','GRC']},
+  {r:'Oversees corporate governance',x:'Ensure strong governance and accountability.',p:'Governance control centre — policy → control → accountability',built:true,tab:'Standing',s:['GRC','Audit']},
+  {r:'Manages contracts & negotiations',x:'Ensure contracts protect us from liability.',p:'Contract-risk engine — security-clause compliance scoring',built:false,tab:'Hold · DSAR · IP',s:['CLM']},
+  {r:'Ensures regulatory compliance',x:'Avoid fines and regulatory exposure.',p:'Unified compliance centre — multi-framework posture + gaps',built:true,tab:'Materiality',s:['GRC','Audit']},
+  {r:'Handles litigation & disputes',x:'Be ready to defend us legally after an incident.',p:'Cyber legal response hub — forensics + chain-of-custody',built:true,tab:'Hold · DSAR · IP',s:['eDiscovery','SIEM']},
+  {r:'Protects intellectual property',x:'Protect our most sensitive data and IP.',p:'IP protection — sensitive-data map + insider-threat + exfil alerts',built:true,tab:'Hold · DSAR · IP',s:['DLP','IAM']}]
+};
+function renderOpModel(seat){
+  var host=document.getElementById('opmodel-'+seat);if(!host)return;
+  var rows=OPERATING_MODEL[seat]||[];if(!rows.length){host.innerHTML='';return;}
+  var built=rows.filter(function(r){return r.built;}).length;
+  var body=rows.map(function(r){
+    var chips=r.s.map(function(s){var on=omSrcOn(s);return '<span class="omsrc'+(on?' on':'')+'">'+(on?'● ':'○ ')+s+'</span>';}).join('');
+    var panelTag=r.built?'<span class="pill good" style="font-size:8px">live</span>':'<span class="pill mod" style="font-size:8px">planned</span>';
+    var tab=r.tab?('<span class="omtab">'+(r.built?'→ ':'')+r.tab+'</span>'):'';
+    return '<div class="omrow"><div class="omr-h"><b>'+r.r+'</b>'+tab+'</div>'+
+      '<div class="omr-x">“'+r.x+'”</div>'+
+      '<div class="omr-p">'+panelTag+' '+r.p+'</div>'+
+      '<div class="omr-s">Data sources: '+chips+'</div></div>';
+  }).join('');
+  var connSrc=(function(){var set={};rows.forEach(function(r){r.s.forEach(function(s){if(omSrcOn(s))set[s]=1;});});return Object.keys(set).length;})();
+  host.innerHTML='<div class="card"><div class="ck">Your operating model — '+SEAT_LABEL[seat]+' · '+rows.length+' responsibilities</div>'+
+    '<div class="cn" style="margin:6px 0 10px"><b style="color:var(--ink)">'+built+' of '+rows.length+'</b> represented by a live CyberX-Ray panel · '+connSrc+' data-source categories connected. Each row is one of your accountabilities, what the CISO does to enable it, the panel that shows it, and the systems behind it — <b>● connected</b>, <b>○ connect to light up</b>.</div>'+
+    body+'</div>';
+}
 function renderOversight(){
   var host=document.getElementById('ceoOversight');if(!host)return;
   var list=allDecisions();var pushed=list.filter(function(d){return d.ticket;}).length;
