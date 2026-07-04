@@ -83,6 +83,20 @@
   .fwid.r53{background:var(--good-soft);color:var(--good);border:1px solid rgba(46,139,107,.3)}
   .capval-total{margin-top:12px;padding-top:11px;border-top:2px solid var(--ink);display:flex;justify-content:space-between;align-items:baseline;font-size:13px;font-weight:600;color:var(--ink)}
   .capval-total b{color:var(--good);font-size:18px}
+  /* Framework posture — NIST CSF 2.0 / 800-53 control catalog + tool-evidenced coverage */
+  .fwseg{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+  .fwsegb{font-size:12px;font-weight:600;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:6px 14px;cursor:pointer}
+  .fwsegb.on{color:#fff;background:var(--ink);border-color:var(--ink)}
+  .fwfn{border:1px solid var(--line);border-radius:8px;margin-top:8px;overflow:hidden}
+  .fwfn>summary{cursor:pointer;padding:10px 12px;font-weight:700;font-size:13px;background:var(--surface-2);list-style:none;color:var(--ink)}
+  .fwfn>summary::-webkit-details-marker{display:none}
+  .fwfn>summary::before{content:'▸';margin-right:8px;color:var(--muted)}
+  .fwfn[open]>summary::before{content:'▾'}
+  .fwcount{float:right;font-size:11px;font-weight:700;color:var(--good)}
+  .fwcat{font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:9px 12px 3px}
+  .fwrow{display:flex;align-items:center;gap:9px;padding:5px 12px;font-size:12px;border-top:1px solid var(--line)}
+  .fwid2{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--ink-2);min-width:72px;flex:none}
+  .fwname{color:var(--ink-2)}
   .tac-caps{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
   .tac-cap{font-size:11.5px;color:var(--ink-2);display:inline-flex;align-items:center;gap:5px;background:rgba(137,135,129,.1);padding:4px 9px;border-radius:8px}
   .drill-hero{font-size:19px;font-weight:700;margin-bottom:4px}.drill-hero.good{color:var(--good)}.drill-hero.muted{color:var(--muted)}
@@ -430,13 +444,13 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
    trimmed title). Renderers still populate hidden sections' containers. */
 var TAB_LABELS={
- 'Are we under attack right now?':'Live status','What are we protecting — and what is each worth?':'Crown Jewels — Exposure','How is security helping the business grow — and win deals?':'Business Growth','Are our controls actually working — and is the program improving?':'Controls','AI risk — two fronts: securing the AI we run, and using AI to defend':'AI risk','Are we audit-ready? — compliance framework readiness':'Compliance','What decision needs you now?':'Decision','How does our security investment move the business?':'Investment',
+ 'Are we under attack right now?':'Live status','What are we protecting — and what is each worth?':'Crown Jewels — Exposure','How is security helping the business grow — and win deals?':'Business Growth','Are our controls actually working — and is the program improving?':'Controls','Which framework controls do our tools satisfy? — NIST CSF 2.0 & 800-53':'Frameworks','AI risk — two fronts: securing the AI we run, and using AI to defend':'AI risk','Are we audit-ready? — compliance framework readiness':'Compliance','What decision needs you now?':'Decision','How does our security investment move the business?':'Investment',
  'How much is at stake — and are we within the board’s limit?':'At stake','Which business processes carry the risk?':'By process','What decisions need us — and what are the trade-offs?':'Decisions','Are we adequately insured against the worst case?':'Insurance','Are we getting better — quarter over quarter?':'Trend','Our worst realistic day — and are we ready to respond and recover?':'Worst day','Governance, oversight & SEC disclosure readiness':'Governance','AI risk — are we ready for AI-accelerated attacks, and is our own AI governed?':'AI risk',
  'What is our capital at risk — and is our spend working?':'Capital at risk','What would a bad year do to earnings?':'Earnings','Where does the next dollar work hardest, and are we insured?':'ROI & insurance','What if we change the budget — and is an incident material?':'Budget','Are we protected against financial crime — and will we pass the SOX audit?':'Fraud & SOX','What decision needs the CFO — and what does it cost or buy?':'Decision','Current cyber initiatives & their ROI':'Projects & ROI',
  'Are we legally defensible right now?':'Standing','Where are we exposed by jurisdiction — duty, clock, penalty?':'Jurisdictions','What decision needs the General Counsel?':'Decision','Litigation hold, data-subject rights & IP — are we operationally defensible?':'Hold · DSAR · IP','Is an incident material — and are we covered by contract?':'Materiality',
@@ -944,6 +958,69 @@ function drillOneCap(c){var p=capDeploy(c),pr=capProject(c),fw=CAP_FRAMEWORK[c.k
     fwSec+
     '<div class="ev-sec">To close the gap</div><div class="drill-p">'+(p!=null?c.need:c.connect)+'</div>'+
     '<div class="ev-sec">Funded fix</div><div class="drill-p">'+(pr?('<span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> <b style="color:var(--ink)">'+pr.name+'</b>'+(pr.ticket?(' · '+pr.ticket):'')+' · '+pr.prog+'% delivered'):'No portfolio project currently addresses this — raise one and it appears here, tracked to completion.')+'</div>';}
+/* ---- Framework posture — the full NIST CSF 2.0 (6 functions, 22 categories, 106
+   subcategories) and NIST SP 800-53 Rev 5 (20 families, base controls) catalogs,
+   with each control's coverage evidenced live from the connected tools via the
+   same CAP_FRAMEWORK mapping the control-value ledger uses. Real control IDs. ---- */
+var CSF_RAW={
+ 'Govern (GV)':{
+  'Organizational Context (GV.OC)':[['GV.OC-01','Organizational mission is understood and informs cyber risk management'],['GV.OC-02','Internal & external stakeholders are understood'],['GV.OC-03','Legal, regulatory & contractual requirements are understood and managed'],['GV.OC-04','Critical objectives, capabilities & services are understood'],['GV.OC-05','Outcomes, capabilities & services the org depends on are understood']],
+  'Risk Management Strategy (GV.RM)':[['GV.RM-01','Risk management objectives are established and agreed'],['GV.RM-02','Risk appetite & tolerance statements are established'],['GV.RM-03','Cyber risk is included in enterprise risk management'],['GV.RM-04','Strategic direction for risk response is established'],['GV.RM-05','Lines of communication for cyber risk are established'],['GV.RM-06','Standardized method to calculate & prioritize risk'],['GV.RM-07','Strategic opportunities (positive risks) are characterized']],
+  'Roles, Responsibilities & Authorities (GV.RR)':[['GV.RR-01','Leadership is accountable for cybersecurity risk'],['GV.RR-02','Roles, responsibilities & authorities are established and enforced'],['GV.RR-03','Adequate resources are allocated to the risk strategy'],['GV.RR-04','Cybersecurity is included in human-resources practices']],
+  'Policy (GV.PO)':[['GV.PO-01','Policy for managing cyber risk is established'],['GV.PO-02','Policy is reviewed, updated, communicated & enforced']],
+  'Oversight (GV.OV)':[['GV.OV-01','Risk strategy outcomes are reviewed to inform strategy'],['GV.OV-02','Risk strategy is reviewed to cover requirements & risks'],['GV.OV-03','Risk management performance is evaluated & reviewed']],
+  'Supply Chain Risk Management (GV.SC)':[['GV.SC-01','A C-SCRM program & strategy is established'],['GV.SC-02','Cyber roles for suppliers & partners are established'],['GV.SC-03','C-SCRM is integrated into cyber & enterprise risk'],['GV.SC-04','Suppliers are known and prioritized by criticality'],['GV.SC-05','Supply-chain requirements are integrated into contracts'],['GV.SC-06','Due diligence is performed before supplier relationships'],['GV.SC-07','Supplier risks are assessed, recorded & monitored'],['GV.SC-08','Suppliers are included in incident planning & recovery'],['GV.SC-09','Supply-chain security is integrated across the lifecycle'],['GV.SC-10','C-SCRM plans cover post-partnership activities']]
+ },
+ 'Identify (ID)':{
+  'Asset Management (ID.AM)':[['ID.AM-01','Hardware inventories are maintained'],['ID.AM-02','Software, services & systems inventories are maintained'],['ID.AM-03','Network communication & data flows are maintained'],['ID.AM-04','Inventories of supplier-provided services are maintained'],['ID.AM-05','Assets are prioritized by classification & criticality'],['ID.AM-07','Inventories of data & metadata are maintained'],['ID.AM-08','Assets are managed throughout their lifecycle']],
+  'Risk Assessment (ID.RA)':[['ID.RA-01','Vulnerabilities in assets are identified & recorded'],['ID.RA-02','Cyber threat intelligence is received from sources'],['ID.RA-03','Internal & external threats are identified & recorded'],['ID.RA-04','Impacts & likelihoods of threats are identified'],['ID.RA-05','Threats, vulns, likelihoods & impacts inform risk'],['ID.RA-06','Risk responses are chosen, prioritized & tracked'],['ID.RA-07','Changes & exceptions are managed & tracked'],['ID.RA-08','Vulnerability disclosure processes are established'],['ID.RA-09','Authenticity & integrity of hw/sw are assessed'],['ID.RA-10','Critical suppliers are assessed prior to acquisition']],
+  'Improvement (ID.IM)':[['ID.IM-01','Improvements are identified from evaluations'],['ID.IM-02','Improvements are identified from tests & exercises'],['ID.IM-03','Improvements are identified from operations'],['ID.IM-04','Incident response & other plans are maintained & improved']]
+ },
+ 'Protect (PR)':{
+  'Identity, Authentication & Access Control (PR.AA)':[['PR.AA-01','Identities & credentials are managed'],['PR.AA-02','Identities are proofed & bound to credentials'],['PR.AA-03','Users, services & hardware are authenticated'],['PR.AA-04','Identity assertions are protected & verified'],['PR.AA-05','Access enforces least privilege & separation of duties'],['PR.AA-06','Physical access to assets is managed & monitored']],
+  'Awareness & Training (PR.AT)':[['PR.AT-01','Personnel receive awareness & training'],['PR.AT-02','Specialized roles receive role-based training']],
+  'Data Security (PR.DS)':[['PR.DS-01','Data-at-rest is protected'],['PR.DS-02','Data-in-transit is protected'],['PR.DS-10','Data-in-use is protected'],['PR.DS-11','Backups are created, protected & tested']],
+  'Platform Security (PR.PS)':[['PR.PS-01','Configuration management practices are applied'],['PR.PS-02','Software is maintained, replaced & removed by risk'],['PR.PS-03','Hardware is maintained, replaced & removed by risk'],['PR.PS-04','Log records are generated for monitoring'],['PR.PS-05','Unauthorized software execution is prevented'],['PR.PS-06','Secure software development practices are integrated']],
+  'Technology Infrastructure Resilience (PR.IR)':[['PR.IR-01','Networks are protected from unauthorized access'],['PR.IR-02','Assets are protected from environmental threats'],['PR.IR-03','Mechanisms achieve resilience requirements'],['PR.IR-04','Adequate resource capacity is maintained']]
+ },
+ 'Detect (DE)':{
+  'Continuous Monitoring (DE.CM)':[['DE.CM-01','Networks & services are monitored'],['DE.CM-02','The physical environment is monitored'],['DE.CM-03','Personnel activity & technology usage are monitored'],['DE.CM-06','External service-provider activities are monitored'],['DE.CM-09','Computing hardware, software & data are monitored']],
+  'Adverse Event Analysis (DE.AE)':[['DE.AE-02','Potentially adverse events are analyzed'],['DE.AE-03','Information is correlated from multiple sources'],['DE.AE-04','Impact & scope of adverse events are understood'],['DE.AE-06','Event information is provided to authorized staff'],['DE.AE-07','Threat intelligence is integrated into analysis'],['DE.AE-08','Incidents are declared when criteria are met']]
+ },
+ 'Respond (RS)':{
+  'Incident Management (RS.MA)':[['RS.MA-01','The incident response plan is executed'],['RS.MA-02','Incident reports are triaged & validated'],['RS.MA-03','Incidents are categorized & prioritized'],['RS.MA-04','Incidents are escalated or elevated as needed'],['RS.MA-05','Criteria for initiating recovery are applied']],
+  'Incident Analysis (RS.AN)':[['RS.AN-03','Root cause & sequence of events are established'],['RS.AN-06','Investigation actions are recorded with integrity'],['RS.AN-07','Incident data & metadata are preserved'],['RS.AN-08','An incident magnitude is estimated & validated']],
+  'Reporting & Communication (RS.CO)':[['RS.CO-02','Stakeholders are notified of incidents'],['RS.CO-03','Information is shared with designated stakeholders']],
+  'Incident Mitigation (RS.MI)':[['RS.MI-01','Incidents are contained'],['RS.MI-02','Incidents are eradicated']]
+ },
+ 'Recover (RC)':{
+  'Incident Recovery Plan Execution (RC.RP)':[['RC.RP-01','The recovery plan is executed'],['RC.RP-02','Recovery actions are selected, scoped & performed'],['RC.RP-03','Integrity of backups is verified before restoration'],['RC.RP-04','Post-incident operational norms are established'],['RC.RP-05','Integrity of restored assets is verified'],['RC.RP-06','End of recovery is declared & documented']],
+  'Recovery Communication (RC.CO)':[['RC.CO-03','Recovery progress is communicated to stakeholders'],['RC.CO-04','Public updates are shared via approved methods']]
+ }
+};
+var R53_RAW=[['AC','Access Control',25],['AT','Awareness & Training',6],['AU','Audit & Accountability',16],['CA','Assessment, Authorization & Monitoring',9],['CM','Configuration Management',14],['CP','Contingency Planning',13],['IA','Identification & Authentication',12],['IR','Incident Response',10],['MA','Maintenance',7],['MP','Media Protection',8],['PE','Physical & Environmental Protection',23],['PL','Planning',11],['PM','Program Management',32],['PS','Personnel Security',9],['PT','PII Processing & Transparency',8],['RA','Risk Assessment',10],['SA','System & Services Acquisition',23],['SC','System & Communications Protection',51],['SI','System & Information Integrity',23],['SR','Supply Chain Risk Management',12]];
+var FW_SEL='csf';
+/* Control IDs evidenced by connected tools → max deployment %, from CAP_FRAMEWORK. */
+function fwDeployedIds(){var m={};CAPS.forEach(function(c){var fw=CAP_FRAMEWORK[c.k];if(!fw)return;var p=capDeploy(c);if(p==null)return;fw.csf.concat(fw.r53).forEach(function(id){if(m[id]==null||p>m[id])m[id]=p;});});return m;}
+function fwDot(id,cov){var p=cov[id];var cls=p==null?'muted':p>=75?'good':p>=50?'blue':'warn';return '<span class="cap-dot" style="width:9px;height:9px;background:var(--'+cls+')"></span>';}
+function renderFrameworks(){
+  var host=document.getElementById('cisoFrameworks');if(!host)return;
+  var cov=fwDeployedIds(),totalIds=0,covIds=0,body='';
+  var sel='<div class="fwseg">'+[['csf','NIST CSF 2.0'],['r53','NIST SP 800-53 Rev 5']].map(function(o){return '<button class="fwsegb'+(FW_SEL===o[0]?' on':'')+'" data-fw="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
+  if(FW_SEL==='csf'){
+    body=Object.keys(CSF_RAW).map(function(fn){var cats=CSF_RAW[fn],catHtml='',fnCov=0;
+      Object.keys(cats).forEach(function(cat){var rows=cats[cat].map(function(s){var id=s[0];totalIds++;if(cov[id]!=null){covIds++;fnCov++;}return '<div class="fwrow">'+fwDot(id,cov)+'<span class="fwid2">'+id+'</span><span class="fwname">'+s[1]+'</span></div>';}).join('');
+        catHtml+='<div class="fwcat">'+cat+'</div>'+rows;});
+      return '<details class="fwfn"><summary>'+fn+'<span class="fwcount">'+fnCov+' tool-evidenced</span></summary>'+catHtml+'</details>';
+    }).join('');
+  } else {
+    body=R53_RAW.map(function(f){var fam=f[0],name=f[1],n=f[2],rows='',famCov=0;for(var i=1;i<=n;i++){var id=fam+'-'+i;totalIds++;if(cov[id]!=null){covIds++;famCov++;}rows+='<div class="fwrow">'+fwDot(id,cov)+'<span class="fwid2">'+id+'</span><span class="fwname">'+name+'</span></div>';}return '<details class="fwfn"><summary>'+fam+' · '+name+'<span class="fwcount">'+famCov+' tool-evidenced</span></summary>'+rows+'</details>';}).join('');
+  }
+  host.innerHTML=demoBanner()+'<div class="card"><div class="ck">Framework posture '+liveTag()+'</div>'+sel+
+    '<div class="cn" style="margin:9px 0"><b style="color:var(--ink)">'+covIds+' of '+totalIds+'</b> controls are <b>evidenced live from your connected tools</b> — <span style="color:var(--good)">●</span> ≥75% deployed · <span style="color:var(--blue)">●</span> ≥50% · <span style="color:var(--warn)">●</span> below · <span style="color:var(--muted)">●</span> evidenced through governance / policy / process (connect more tools or record governance answers to light these up). Each mapping is the same one behind the control-value ledger on the Controls tab.</div>'+
+    body+'</div>';
+  host.querySelectorAll('.fwsegb').forEach(function(b){b.onclick=function(){FW_SEL=b.dataset.fw;renderFrameworks();};});
+}
 /* ---- GRC / compliance — audit readiness per framework, computed from the tools
    you actually connect (continuous-control-monitoring model, like Vanta/Drata):
    each control domain is evidenced by a connected tool or a governance answer,
@@ -1147,12 +1224,12 @@ function renderSignals(){
     var pcts=['edr_pct','mfa_pct','pam_pct'].map(sig).filter(function(x){return x!=null;});
     if(pcts.length){var avg=Math.round(pcts.reduce(function(s,x){return s+x;},0)/pcts.length);setTxt('lvCovTile',avg+'%');var tn=document.getElementById('lvCovTileNote');if(tn)tn.innerHTML='<span class="pill good">live</span> from '+pcts.length+' connected tool'+(pcts.length>1?'s':'');}
   }
-  renderAiRisk();renderCisoOps();renderControls();renderCompliance();renderCooStatus();renderCfoFraud();renderCroKri();renderCloOps();renderThreatIntel();renderDrReadiness();renderPeerBench();
+  renderAiRisk();renderCisoOps();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCfoFraud();renderCroKri();renderCloOps();renderThreatIntel();renderDrReadiness();renderPeerBench();
 }
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderBoard();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderBoard();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
