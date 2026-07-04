@@ -383,6 +383,10 @@
     <div class="note" style="margin-top:12px">Expand a tool, pick your vendor and enter a key to connect now — or leave blank and finish in the cockpit’s <b>“Live data — connected sources”</b> panel after go-live. Real connections show <b>“Connected”</b>; demo-mode tools show <b>“Demo”</b> and are never counted as real.</div>
   </div>
 
+  <div class="wrap" id="obNav" style="display:none;margin-top:20px;text-align:right">
+    <button type="button" class="golive" id="obNextBtn" style="margin-left:0">Continue →</button>
+  </div>
+
   <div class="foot"><div class="wrap" style="padding:0"><div class="foot-in">
     <div class="sum" id="summary">Nothing collected yet</div>
     <span class="glmsg" id="glmsg"></span>
@@ -756,11 +760,16 @@
   function obSecs(){return Array.prototype.slice.call(document.querySelectorAll('.wrap > .sec'));}
   function obTabOf(sec){var st=sec.querySelector('.st');var h=(st?st.textContent:'').toLowerCase();
     for(var i=0;i<OB_TABS.length;i++){for(var j=0;j<OB_TABS[i].m.length;j++){if(h.indexOf(OB_TABS[i].m[j])>=0)return OB_TABS[i].k;}}return null;}
+  function obPresentTabs(){var present={};obSecs().forEach(function(sec){var k=obTabOf(sec);if(k)present[k]=1;});return OB_TABS.filter(function(t){return present[t.k];});}
   function obShow(key){OB_ACTIVE=key;
     obSecs().forEach(function(sec){var tk=obTabOf(sec);var vis=(tk===key);
       if(sec.id==='mapSec')vis=vis&&PROC.length&&APP.length; // map only when built
       sec.style.display=vis?'':'none';});
     document.querySelectorAll('.obtab').forEach(function(b){b.classList.toggle('on',b.dataset.k===key);});
+    // Per-page "Next" button — advances to the next tab, hidden on the last tab.
+    var tabs=obPresentTabs(),idx=-1;for(var i=0;i<tabs.length;i++){if(tabs[i].k===key)idx=i;}
+    var nav=document.getElementById('obNav'),btn=document.getElementById('obNextBtn');
+    if(nav&&btn){if(idx>=0&&idx<tabs.length-1){var nx=tabs[idx+1];btn.textContent='Continue to '+nx.l+' →';btn.onclick=function(){obShow(nx.k);};nav.style.display='';}else{nav.style.display='none';}}
     try{window.scrollTo({top:0});}catch(_){}}
   (function buildObTabs(){
     var host=document.getElementById('obtabs');if(!host)return;
