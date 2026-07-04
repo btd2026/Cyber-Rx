@@ -229,7 +229,7 @@ router.get('/projects', optionalJWT, demoOrg, async (req, res) => {
 // Legacy direct creation endpoint (kept).
 router.post('/:system/ticket', authenticateJWT, async (req, res) => {
   const orgId = req.orgId || 'demo';
-  const { title = 'CyberRx Security Finding', desc = '', actId = '', finding = null } = req.body || {};
+  const { title = 'CyberX-Ray Security Finding', desc = '', actId = '', finding = null } = req.body || {};
   const result = await openTicket(req.params.system, orgId, { title, desc, finding, actId });
   res.json(result);
 });

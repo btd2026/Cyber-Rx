@@ -17,7 +17,7 @@ const colorFor = (s) => (s === 'green' ? GREEN : s === 'amber' ? AMBER : s === '
 const ratingColor = (r) => (r === 'strong' ? GREEN : r === 'adequate' ? AMBER : r === 'weak' ? RED : MUTE);
 
 function header(doc, title, sub) {
-  doc.fillColor(INK).fontSize(20).text('CyberRx', { continued: false });
+  doc.fillColor(INK).fontSize(20).text('CyberX-Ray', { continued: false });
   doc.fillColor(MUTE).fontSize(9).text(sub || '');
   doc.moveDown(0.3);
   doc.fillColor(INK).fontSize(15).text(title);
