@@ -616,6 +616,9 @@ function wireChoose(){
    status, ticket — the list the CISO and CFO manage together. No authored data. */
 function extractCost(osum){var m=String(osum||'').match(/\$[\d.,]+\s*(?:[KMB]|thousand|million|billion)?/i);return m?m[0].replace(/\s+/g,''):'—';}
 function extractROI(osum){var m=String(osum||'').match(/([\d.]+)\s*×/);return m?(m[1]+'×'):'—';}
+/* The exposure ($) an initiative buys down, if it is stated in the text — "removes
+   $52M", "reduces $40M of exposure", "buys down $X". Returns '' when not stated. */
+function extractRiskReduced(text){var m=String(text||'').match(/(?:removes?|reduces?|buys? down|cuts?|of exposure)[^$]*(\$[\d.,]+\s*[KMB])/i);return m?m[1].replace(/\s+/g,''):'';}
 function allDecisions(){
   var out=[],pre='cyberrx_dec_'+orgId()+'_';
   try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf(pre)===0){var d=null;try{d=JSON.parse(localStorage.getItem(k));}catch(_){}if(d&&d.title)out.push(d);}}}catch(_){}
@@ -656,45 +659,55 @@ function initBusiness(name){var n=String(name||'').toLowerCase();var ig=industry
 var PORTFOLIO_ITEMS=[],ROI_STATE={};
 function ticketHtml(it){return it.ticket?(it.url?('<a href="'+it.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+it.ticket+'</a>'):('<b style="color:var(--ink)">'+it.ticket+'</b>'))+(it.system?(' · '+it.system):''):'<span style="color:var(--muted)">not sent yet</span>';}
 function initSrc(it){return /^Decision/.test(it.sub||'')?'a decision recorded in this cockpit':(/from ticketing/.test(it.sub||'')?'pulled from your ticketing system (Jira / ServiceNow)':'imported at onboarding');}
+function riskSrcLabel(it){return it.riskSrc==='stated'?('the exposure this project buys down, stated in '+initSrc(it)):it.riskSrc==='ratio'?('modeled — the owner’s stated return ('+(it.roi||'?')+'×) × the '+(it.cost||'cost')+' implementation cost; refine against your risk register'):'not quantified yet';}
 function drillInit(idx){var it=PORTFOLIO_ITEMS[idx];if(!it)return '';
+  var rosiPct=Math.round(it.rosi*100);
   return '<div class="drill-hero">'+it.name+'</div>'+
     '<div class="drill-p">'+objBadge(it.biz.cls,it.biz.obj)+' '+it.biz.outcome+'</div>'+
-    '<div class="ev-sec">The business value it buys — and where each number comes from</div>'+
-    gRow('Invested',(it.cost||'—')+' · from '+initSrc(it))+
-    gRow('Target return',(it.roi>0?(it.roi+'×'):'—')+' · the project’s stated ROI (self-reported by the owner)')+
-    gRow('Risk removed',(it.riskRemoved>0?usd(it.riskRemoved):'—')+' · calculated: return × invested')+
-    '<div class="drill-p"><b>Risk removed = target return × invested.</b> The <b>invested</b> figure comes from your ticketing system / the recorded decision; the <b>return</b> is the initiative owner’s stated ROI (a modeled input your team can refine); the <b>risk removed</b> is the product — a calculation, not an invented number. This is the outcome-driven view boards ask for: spend tied to risk reduced, not activity.</div>'+
+    '<div class="ev-sec">The ROI — and where each number comes from</div>'+
+    gRow('Risk reduced',(it.riskRemoved>0?usd(it.riskRemoved):'—')+' · '+riskSrcLabel(it))+
+    gRow('Cost of implementation',(it.cost||'—')+' · from '+initSrc(it))+
+    gRow('Return on security spend (ROSI)',(it.costUsd>0&&it.riskRemoved>0)?('('+usd(it.riskRemoved)+' − '+(it.cost||usd(it.costUsd))+') ÷ '+(it.cost||usd(it.costUsd))+' = <b>'+it.rosi.toFixed(it.rosi<10?1:0)+'× net</b> of cost  ('+it.grossRoi.toFixed(it.grossRoi<10?1:0)+'× gross)'):'—')+
+    '<div class="drill-p"><b>ROSI = ( risk reduced − cost ) ÷ cost</b> — the standard Return-on-Security-Investment formula (ENISA / NIST). <b>Risk reduced</b> is the annual loss exposure this initiative buys down (from your risk register / the project’s stated benefit); <b>cost</b> is the implementation spend from your ticketing system. The ROI is <i>derived from</i> those two — not a return multiple asserted without a denominator.</div>'+
     '<div class="ev-sec">Delivery (from ticketing)</div><div class="drill-p">Status <b>'+it.status+'</b> · '+(it.ticket?('tracked as '+ticketHtml(it)):'not sent to your ticketing system yet')+'. Task-level progress lives in your ticketing system — this cockpit is the business lens on top of it.</div>';}
-function drillRoi(k){var s=ROI_STATE||{};var src='Every figure comes from your ticketing system (initiative cost) and the initiatives’ stated returns — no invented numbers. '+(s.fromTicketing||0)+' initiatives pulled from ticketing · '+(s.fromDecisions||0)+' from recorded decisions.';
+function drillRoi(k){var s=ROI_STATE||{};var src='Costs come from your ticketing system (each project’s budget). Risk reduced is the exposure each initiative buys down — stated by the project or modeled from the owner’s return estimate, refined against your risk register. '+(s.fromTicketing||0)+' from ticketing · '+(s.fromDecisions||0)+' from recorded decisions.';
   if(k==='invested')return '<div class="drill-hero">'+(s.invested>0?usd(s.invested):'—')+'</div>'+
-    '<div class="drill-p"><b>Invested = the sum of every initiative’s cost.</b> Each cost is pulled from your ticketing system (the project’s budget field) or the recorded decision that funded it — click any initiative to see its own source.</div><div class="ev-sec">Source</div><div class="drill-p">'+src+'</div>';
+    '<div class="drill-p"><b>Invested = Σ every initiative’s implementation cost.</b> Each cost is pulled from your ticketing system (the project’s budget field) or the recorded decision that funded it — click any initiative for its own source.</div><div class="ev-sec">Source</div><div class="drill-p">'+src+'</div>';
   if(k==='risk')return '<div class="drill-hero" style="color:var(--good)">'+(s.riskRemoved>0?usd(s.riskRemoved):'—')+'</div>'+
-    '<div class="drill-p"><b>Risk removed = Σ (each initiative’s return × its invested).</b> Per initiative: return is the owner’s stated ROI (a modeled input); invested is the real cost from ticketing; the product is a calculation. The total is the exposure the portfolio buys down.</div><div class="ev-sec">Source</div><div class="drill-p">'+src+'</div>';
-  if(k==='ret')return '<div class="drill-hero" style="color:var(--good)">'+(s.ret>0?(Math.round(s.ret)+'×'):'—')+'</div>'+
-    '<div class="drill-p"><b>Return on security spend = total risk removed ÷ total invested = '+(s.riskRemoved>0?usd(s.riskRemoved):'—')+' ÷ '+(s.invested>0?usd(s.invested):'—')+'.</b> The blended dollars of risk bought down per dollar spent across the whole portfolio.</div><div class="ev-sec">Source</div><div class="drill-p">'+src+'</div>';
+    '<div class="drill-p"><b>Risk reduced = Σ the annual loss exposure each initiative buys down.</b> Per initiative this is the exposure the project states it removes, or (when only a return estimate is given) the owner’s return × the real cost — a modeled input, refined against your risk register. It is the <i>input</i> to ROI, not derived from it.</div><div class="ev-sec">Source</div><div class="drill-p">'+src+'</div>';
+  if(k==='ret')return '<div class="drill-hero" style="color:var(--good)">'+(s.rosiNet>0?(s.rosiNet.toFixed(s.rosiNet<10?1:0)+'× net'):'—')+'</div>'+
+    '<div class="drill-p"><b>Total cyber ROI (ROSI) = ( Σ risk reduced − Σ invested ) ÷ Σ invested = ( '+(s.riskRemoved>0?usd(s.riskRemoved):'—')+' − '+(s.invested>0?usd(s.invested):'—')+' ) ÷ '+(s.invested>0?usd(s.invested):'—')+' = '+(s.rosiNet>0?(s.rosiNet.toFixed(s.rosiNet<10?1:0)+'× net of cost ('+Math.round(s.rosiNet*100)+'%)'):'—')+'.</b></div>'+
+    '<div class="drill-p" style="color:var(--muted)">Note: a portfolio ROI is computed on the <b>totals</b>, not by adding individual ROI ratios (you can’t sum percentages). The headline tile shows the gross multiple ('+(s.ret>0?(Math.round(s.ret)+'×'):'—')+' = risk reduced ÷ invested — every $1 buys down that many $ of exposure); this is the net ROSI. Both are real, standard framings.</div><div class="ev-sec">Source</div><div class="drill-p">'+src+'</div>';
   return '<div class="drill-hero">'+(s.n||0)+' initiatives</div>'+
-    '<div class="drill-p"><b>'+(s.fromTicketing||0)+'</b> in-flight projects pulled from your ticketing system + <b>'+(s.fromDecisions||0)+'</b> decisions recorded in this cockpit — every funded item, one list. Click any row for its own cost, return and delivery status.</div>';}
+    '<div class="drill-p"><b>'+(s.fromTicketing||0)+'</b> in-flight projects pulled from your ticketing system + <b>'+(s.fromDecisions||0)+'</b> decisions recorded in this cockpit — every funded item, one list. Click any row for its own cost, risk reduced and ROI.</div>';}
 function renderInitiatives(){
   var host=document.getElementById('initiatives-panel');if(!host)return;
   var list=allDecisions();var imp=importedInits();
   if(!list.length&&!imp.length){host.innerHTML='<div class="card"><div class="cn">No cyber initiatives yet. Import your in-flight projects at onboarding (upload or pull from Jira/ServiceNow), and every decision an executive commits is added here — each mapped to the business outcome it buys and the risk it removes.</div></div>';return;}
   var items=[];
   list.forEach(function(d){var committed=(Date.now()-(d.ts||0))>=EDIT_WINDOW_MS;var cost=extractCost(d.osum),roi=extractROI(d.osum);
-    items.push({name:d.title,sub:'Decision · '+(d.by||'')+(d.seat?(' ('+(SEAT_LABEL[d.seat]||d.seat)+')'):''),cost:cost==='—'?'':cost,costUsd:parseUsdNum(cost),roi:roi==='—'?0:parseFloat(roi),status:d.ticket?statusStep(d.status).t:(committed?'Committed':'In 24h review'),ticket:d.ticket,url:d.url,system:d.system});});
-  imp.forEach(function(p){items.push({name:p.name||'—',sub:'In-flight · '+(p.source==='ticketing'?'from ticketing':'imported')+(p.owner?(' · '+p.owner):''),cost:String(p.cost||'').trim(),costUsd:parseUsdNum(p.cost),roi:roiNum(p.roi),status:p.ticket?statusStep(p.status).t:(p.status||'—'),ticket:p.ticket,url:p.url,system:p.system});});
-  items.forEach(function(it){it.biz=initBusiness(it.name);it.riskRemoved=(it.roi>0&&it.costUsd>0)?Math.round(it.roi*it.costUsd):0;});
+    items.push({name:d.title,sub:'Decision · '+(d.by||'')+(d.seat?(' ('+(SEAT_LABEL[d.seat]||d.seat)+')'):''),cost:cost==='—'?'':cost,costUsd:parseUsdNum(cost),roi:roi==='—'?0:parseFloat(roi),riskDirect:parseUsdNum(extractRiskReduced(d.osum+' '+(d.title||''))),status:d.ticket?statusStep(d.status).t:(committed?'Committed':'In 24h review'),ticket:d.ticket,url:d.url,system:d.system});});
+  imp.forEach(function(p){items.push({name:p.name||'—',sub:'In-flight · '+(p.source==='ticketing'?'from ticketing':'imported')+(p.owner?(' · '+p.owner):''),cost:String(p.cost||'').trim(),costUsd:parseUsdNum(p.cost),roi:roiNum(p.roi),riskDirect:parseUsdNum(p.riskReduced||p.benefit||p.exposureRemoved||''),status:p.ticket?statusStep(p.status).t:(p.status||'—'),ticket:p.ticket,url:p.url,system:p.system});});
+  // Real ROSI (ENISA/NIST): risk reduced is the INPUT (stated exposure it buys down,
+  // else the owner's stated return × cost). ROI is DERIVED, never circular.
+  items.forEach(function(it){it.biz=initBusiness(it.name);
+    if(it.riskDirect>0){it.riskRemoved=Math.round(it.riskDirect);it.riskSrc='stated';}
+    else if(it.roi>0&&it.costUsd>0){it.riskRemoved=Math.round(it.roi*it.costUsd);it.riskSrc='ratio';}
+    else{it.riskRemoved=0;it.riskSrc='none';}
+    it.rosi=(it.costUsd>0&&it.riskRemoved>0)?((it.riskRemoved-it.costUsd)/it.costUsd):0;
+    it.grossRoi=(it.costUsd>0&&it.riskRemoved>0)?(it.riskRemoved/it.costUsd):0;});
   items.sort(function(a,b){return b.riskRemoved-a.riskRemoved;});
   PORTFOLIO_ITEMS=items;
   var invested=items.reduce(function(s,it){return s+it.costUsd;},0);
   var riskRemoved=items.reduce(function(s,it){return s+it.riskRemoved;},0);
-  var ret=invested>0?(riskRemoved/invested):0;
+  var ret=invested>0?(riskRemoved/invested):0,rosiNet=invested>0?((riskRemoved-invested)/invested):0;
   var OBJS=[{k:'Enable growth',cls:'good'},{k:'Meet obligations',cls:'blue'},{k:'Protect the business',cls:'warn'}];
   var byObj={};items.forEach(function(it){byObj[it.biz.obj]=(byObj[it.biz.obj]||0)+it.riskRemoved;});
   var split=OBJS.map(function(o){var v=byObj[o.k]||0;var pc=riskRemoved>0?Math.round(v/riskRemoved*100):0;return '<div style="flex:1;min-width:150px"><div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:4px"><span>'+objBadge(o.cls,o.k)+'</span><span style="font-weight:700">'+(v>0?usd(v):'—')+'</span></div><div style="height:6px;background:var(--surface-2);border-radius:4px;overflow:hidden"><i style="display:block;height:100%;width:'+pc+'%;background:'+objColor(o.cls)+'"></i></div><div class="cn" style="margin-top:3px">'+pc+'% of risk removed</div></div>';}).join('');
-  ROI_STATE={invested:invested,riskRemoved:riskRemoved,ret:ret,n:items.length,fromTicketing:imp.length,fromDecisions:list.length};
+  ROI_STATE={invested:invested,riskRemoved:riskRemoved,ret:ret,rosiNet:rosiNet,n:items.length,fromTicketing:imp.length,fromDecisions:list.length};
   var summary='<div class="grid4" style="margin-top:2px">'+
     '<div class="card optile" data-idrill="invested"><div class="ck">Invested</div><div class="cv" style="font-size:22px">'+(invested>0?usd(invested):'—')+'</div><div class="cn">committed across the portfolio <span class="drill-cta">details ▸</span></div></div>'+
-    '<div class="card optile" data-idrill="risk"><div class="ck">Risk removed</div><div class="cv" style="font-size:22px;color:var(--good)">'+(riskRemoved>0?usd(riskRemoved):'—')+'</div><div class="cn">business value bought down (return × spend) <span class="drill-cta">details ▸</span></div></div>'+
+    '<div class="card optile" data-idrill="risk"><div class="ck">Risk reduced</div><div class="cv" style="font-size:22px;color:var(--good)">'+(riskRemoved>0?usd(riskRemoved):'—')+'</div><div class="cn">annual loss exposure the portfolio buys down <span class="drill-cta">details ▸</span></div></div>'+
     '<div class="card optile" data-idrill="ret"><div class="ck">Return on security spend</div><div class="cv" style="font-size:22px;color:var(--good)">'+(ret>0?(Math.round(ret)+'×'):'—')+'</div><div class="cn">risk removed per dollar invested <span class="drill-cta">details ▸</span></div></div>'+
     '<div class="card optile" data-idrill="n"><div class="ck">Initiatives</div><div class="cv" style="font-size:22px">'+items.length+'</div><div class="cn">funded, from ticketing + decisions <span class="drill-cta">details ▸</span></div></div>'+
     '</div>';
