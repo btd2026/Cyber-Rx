@@ -53,14 +53,30 @@ async function fetchSignals(creds) {
       signals.push({ key: 'access_review_pct', value: Math.round((completed / total) * 100), asOf: nowIso(), raw: { campaigns: campaigns.length, completed, total } });
     }
   } catch (_) { /* confirm the token can read certification-campaigns */ }
+  // Dormant / orphaned accounts — uncorrelated accounts + accounts disabled or
+  // with no sign-in in 90 days are the standing breach surface periodic reviews
+  // exist to clear (NIST CSF PR.AA-05). Sourced from the accounts search.
+  try {
+    const cutoff = Date.now() - 90 * 864e5;
+    const accounts = (await jsonOrThrow(await http(`${base(creds)}/v3/accounts?limit=250`, { headers: H }), 'SailPoint')) || [];
+    if (accounts.length) {
+      const dormant = accounts.filter((a) => {
+        if (a.uncorrelated === true || a.disabled === true) return true;
+        const last = a.lastLogin || a.lastLoginTimestamp;
+        const t = last ? Date.parse(last) : NaN;
+        return Number.isFinite(t) && t < cutoff;
+      }).length;
+      signals.push({ key: 'dormant_accounts', value: dormant, asOf: nowIso(), raw: { sampled: accounts.length, dormant } });
+    }
+  } catch (_) { /* confirm the token can read accounts */ }
   if (!signals.length) throw new Error('Authenticated, but no readable signals — confirm there are active certification campaigns and the token can read them.');
   return { signals, meta: { vendor: 'SailPoint' } };
 }
 
 module.exports = {
   key: 'sailpoint', label: 'SailPoint Identity Security Cloud', vendor: 'SailPoint', category: 'Identity Governance',
-  signals: ['access_review_pct'],
-  scopes: ['idn:certification-campaigns:read'],
+  signals: ['access_review_pct', 'dormant_accounts'],
+  scopes: ['idn:certification-campaigns:read', 'idn:accounts:read'],
   fields: [
     { key: 'tenant', label: 'Tenant (yourorg in https://yourorg.api.identitynow.com)' },
     { key: 'baseUrl', label: 'Base URL (optional — overrides tenant)', optional: true },

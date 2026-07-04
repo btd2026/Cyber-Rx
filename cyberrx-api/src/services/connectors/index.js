@@ -16,6 +16,12 @@ const RAW_REGISTRY = {
   knowbe4: require('./knowbe4'),
   azure_openai: require('./azure_openai'),
   langsmith: require('./langsmith'),
+  wiz: require('./wiz'),
+  proofpoint: require('./proofpoint'),
+  onetrust: require('./onetrust'),
+  recordedfuture: require('./recordedfuture'),
+  rubrik: require('./rubrik'),
+  sap: require('./sap'),
 };
 
 // Per-connector demo mode state. Defaults to false (live).

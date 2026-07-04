@@ -1,0 +1,8 @@
+{
+  "signals": [
+    { "key": "dsar_open", "value": 12, "asOf": "2026-06-28T12:00:00Z", "raw": { "total": 148, "open": 12 } },
+    { "key": "dsar_overdue", "value": 0, "asOf": "2026-06-28T12:00:00Z", "raw": { "open": 12, "overdue": 0 } },
+    { "key": "legal_holds", "value": 2, "asOf": "2026-06-28T12:00:00Z", "raw": { "total": 5, "active": 2 } }
+  ],
+  "meta": { "vendor": "OneTrust" }
+}

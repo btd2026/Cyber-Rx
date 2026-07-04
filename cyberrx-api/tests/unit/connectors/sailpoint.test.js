@@ -74,7 +74,27 @@ describe('sailpoint connector', () => {
   test('fetchSignals() throws when there are no campaign totals', async () => {
     global.fetch
       .mockResolvedValueOnce(tokenResp())
-      .mockResolvedValueOnce(ok([]));
+      .mockResolvedValueOnce(ok([]))
+      .mockResolvedValueOnce(ok([])); // no accounts either → nothing readable
     await expect(sailpoint.fetchSignals(creds)).rejects.toThrow(/no readable signals/i);
+  });
+
+  test('advertises dormant_accounts and computes it from uncorrelated/disabled/stale accounts', async () => {
+    expect(sailpoint.signals).toContain('dormant_accounts');
+    const stale = new Date(Date.now() - 120 * 864e5).toISOString();
+    const recent = new Date(Date.now() - 5 * 864e5).toISOString();
+    global.fetch
+      .mockResolvedValueOnce(tokenResp())
+      .mockResolvedValueOnce(ok([{ id: '1', completedCertifications: 80, totalCertifications: 100 }]))
+      .mockResolvedValueOnce(ok([
+        { uncorrelated: true },        // orphaned
+        { disabled: true },            // disabled
+        { lastLogin: stale },          // no login in 90d
+        { lastLogin: recent },         // active — excluded
+      ]));
+    const r = await sailpoint.fetchSignals(creds);
+    const d = r.signals.find((s) => s.key === 'dormant_accounts');
+    expect(d.value).toBe(3);
+    expect(d.raw).toEqual({ sampled: 4, dormant: 3 });
   });
 });

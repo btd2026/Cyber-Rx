@@ -58,7 +58,26 @@ describe('cyberark connector', () => {
   });
 
   test('fetchSignals() throws when no accounts are readable', async () => {
-    global.fetch.mockResolvedValueOnce(logonResp()).mockResolvedValueOnce(ok({ value: [], count: 0 }));
+    global.fetch
+      .mockResolvedValueOnce(logonResp())
+      .mockResolvedValueOnce(ok({ value: [], count: 0 }))
+      .mockResolvedValueOnce(ok({ LiveSessions: [] })); // no sessions either → nothing readable
     await expect(cyberark.fetchSignals(creds)).rejects.toThrow(/no readable signals/i);
+  });
+
+  test('advertises priv_sessions_flagged and counts risky/flagged PSM sessions', async () => {
+    expect(cyberark.signals).toContain('priv_sessions_flagged');
+    global.fetch
+      .mockResolvedValueOnce(logonResp())
+      .mockResolvedValueOnce(ok({ value: [{ secretManagement: { automaticManagementEnabled: true } }], count: 1 }))
+      .mockResolvedValueOnce(ok({ LiveSessions: [
+        { riskScore: 80 },                                 // risky → flagged
+        { riskScore: 10 },                                 // fine
+        { rawProperties: { status: 'Suspended for review' } }, // flagged by status
+      ] }));
+    const r = await cyberark.fetchSignals(creds);
+    const s = r.signals.find((x) => x.key === 'priv_sessions_flagged');
+    expect(s.value).toBe(2);
+    expect(s.raw).toEqual({ sessions: 3, flagged: 2 });
   });
 });

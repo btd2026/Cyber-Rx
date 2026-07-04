@@ -1,6 +1,7 @@
 {
   "signals": [
-    { "key": "pam_pct", "value": 73, "asOf": "2026-06-28T12:00:00Z", "raw": { "vaulted": 410, "autoManaged": 299 } }
+    { "key": "pam_pct", "value": 73, "asOf": "2026-06-28T12:00:00Z", "raw": { "vaulted": 410, "autoManaged": 299 } },
+    { "key": "priv_sessions_flagged", "value": 2, "asOf": "2026-06-28T12:00:00Z", "raw": { "sessions": 48, "flagged": 2 } }
   ],
   "meta": { "vendor": "CyberArk" }
 }
