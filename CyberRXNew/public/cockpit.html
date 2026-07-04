@@ -1209,7 +1209,7 @@ function grcDomainMet(key){var d=GRC_DOMAINS[key];if(!d)return false;var t=conne
   if(d.gov){var g=(LIVE&&LIVE.governance)||{};return !!g.committee&&/yes/i.test(g.ermIntegrated||'');}
   return false;}
 /* Human label for a connector key, so evidence attributes to a named source. */
-var TOOL_LABELS={okta:'Okta',entra:'Microsoft Entra',crowdstrike:'CrowdStrike',defender:'Microsoft Defender',cyberark:'CyberArk',beyondtrust:'BeyondTrust',delinea:'Delinea',qualys:'Qualys',tenable:'Tenable',splunk:'Splunk',sentinel:'Microsoft Sentinel',knowbe4:'KnowBe4',proofpoint:'Proofpoint',servicenow:'ServiceNow',jira:'Jira',aws:'AWS Security Hub',azure:'Defender for Cloud',wiz:'Wiz',prisma:'Prisma Cloud',gcp:'Google SCC',rubrik:'Rubrik',veeam:'Veeam',onetrust:'OneTrust',azure_openai:'Azure OpenAI',langsmith:'LangSmith'};
+var TOOL_LABELS={okta:'Okta',entra:'Microsoft Entra',crowdstrike:'CrowdStrike',defender:'Microsoft Defender',cyberark:'CyberArk',beyondtrust:'BeyondTrust',delinea:'Delinea',qualys:'Qualys',tenable:'Tenable',splunk:'Splunk',sentinel:'Microsoft Sentinel',knowbe4:'KnowBe4',proofpoint:'Proofpoint',servicenow:'ServiceNow',jira:'Jira',aws:'AWS Security Hub',azure:'Defender for Cloud',wiz:'Wiz',prisma:'Prisma Cloud',gcp:'Google SCC',rubrik:'Rubrik',veeam:'Veeam',onetrust:'OneTrust',azure_openai:'Azure OpenAI',langsmith:'LangSmith',workday:'Workday',sap:'SAP',oracle:'Oracle',netsuite:'NetSuite'};
 function toolLabel(k){return TOOL_LABELS[k]||k;}
 /* WHAT evidenced a control domain — the named tool(s) or governance record, so the
    "evidenced" state is traceable rather than a bare label. */
@@ -1898,6 +1898,7 @@ var EVIDENCE_MAP={
  committee:{keys:['servicenow','onetrust'],cat:'board portal / GRC'},
  cadence:{keys:['servicenow','onetrust'],cat:'board portal / GRC'},
  ermIntegrated:{keys:['servicenow','onetrust'],cat:'GRC / ERM system'},
+ cisoReportsTo:{keys:['workday'],cat:'HRIS / org chart'},
  ir_tested:{keys:['servicenow'],cat:'GRC / IR runbook'},
  framework:{keys:['servicenow','onetrust'],cat:'AI GRC / policy platform'},
  policy:{keys:['servicenow','onetrust'],cat:'policy register'},
@@ -2730,7 +2731,13 @@ function sysCard(s){var metric=s.live?(180+Math.floor(Math.random()*70))+' '+s.m
 /* War-Room feeds sourced from the org's actually-connected tools (persisted at
    onboarding). Each connected tool maps to its command-center category; falls
    back to the illustrative stack when nothing is connected yet. */
-function connectedTools(){try{var t=JSON.parse(localStorage.getItem('cyberrx_tools')||'{}');return (t&&typeof t==='object')?t:{};}catch(_){return {};}}
+/* The full demo tool set — the canonical keys the demo signals key off. Used as a
+   fallback so "Enable demo mode" always shows a fully-connected cockpit, even if
+   the tools were not persisted to cyberrx_tools (e.g. demo enabled without go-live). */
+var DEMO_TOOLSET=['okta','defender','qualys','splunk','cyberark','knowbe4','proofpoint','wiz','sap','servicenow','salesforce','whistic','securityscorecard','onetrust','recordedfuture','rubrik'];
+function connectedTools(){try{var t=JSON.parse(localStorage.getItem('cyberrx_tools')||'{}');if(!t||typeof t!=='object')t={};
+  if(!Object.keys(t).length&&demoActive()){var d={};DEMO_TOOLSET.forEach(function(k){d[k]={on:true,demo:true,vendor:'Demo'};});return d;}
+  return t;}catch(_){return {};}}
 var WR_TOOLMAP={splunk:'SIEM',sentinel:'SIEM',defender:'EDR',crowdstrike:'EDR',okta:'Identity',entra:'Identity',qualys:'Vulnerability mgmt',tenable:'Vulnerability mgmt',cyberark:'Privileged access',knowbe4:'Email / Awareness',servicenow:'ITSM / Ticketing'};
 var WR_CAT_STATE={
  'SIEM':{calm:{st:'ok',m:'events streaming',ev:['0 active correlations','ingest 100% · 0 gaps']},live:{st:'crit',live:true,m:'alerts/min',ev:['ransomware playbook firing','mass file-encryption on a crown-jewel VLAN']}},
