@@ -1320,18 +1320,24 @@ function tacticPct(keys){var vals=(keys||[]).map(function(k){return capDeploy(CA
 function vendorService(){try{var j=JSON.parse(localStorage.getItem('cyberrx_vendor_monitor')||'null');return (j&&j.vendor)?j:null;}catch(_){return null;}}
 /* Top tier-1 vendors + security ratings. Illustrative until the monitoring API is
    wired to the tenant; the shape is exactly what goes live once connected. */
-function vendorList(){return [
-  {a:'NASCO',n:'NASCO — claims processing platform',s:88,dom:'nasco.com'},
-  {a:'OPTM',n:'Optum — clinical & PBM services',s:74,dom:'optum.com'},
-  {a:'CHC',n:'Change Healthcare — clearinghouse',s:41,dom:'changehealthcare.com'},
-  {a:'AVAL',n:'Availity — EDI gateway',s:82,dom:'availity.com'},
-  {a:'COGN',n:'Cognizant — BPO / IT services',s:69,dom:'cognizant.com'},
-  {a:'ZELIS',n:'Zelis — claims payments',s:79,dom:'zelis.com'},
-  {a:'COTV',n:'Cotiviti — payment integrity',s:85,dom:'cotiviti.com'},
-  {a:'EPIC',n:'Epic Systems — EHR interoperability',s:91,dom:'epic.com'},
-  {a:'WIPRO',n:'Wipro — managed services',s:66,dom:'wipro.com'},
-  {a:'SFDC',n:'Salesforce — member CRM',s:93,dom:'salesforce.com'}
-];}
+function vendorAbbr(name){var w=String(name||'').replace(/[^A-Za-z0-9 ]/g,'').split(/\s+/).filter(Boolean);if(!w.length)return '—';if(w.length===1)return w[0].slice(0,5).toUpperCase();return w.map(function(x){return x[0];}).join('').slice(0,5).toUpperCase();}
+function vendorDomain(name){return String(name||'').toLowerCase().replace(/\b(inc|llc|corp|ltd|co|the)\b/g,'').replace(/[^a-z0-9]/g,'').slice(0,24)+'.com';}
+function vendorDemoScore(name){var s=2166136261>>>0;name=String(name||'');for(var i=0;i<name.length;i++){s^=name.charCodeAt(i);s=Math.imul(s,16777619)>>>0;}return 42+(s%57);} // stable 42–98
+/* Tier-1 vendors are the org's ACTUAL vendors (from the systems inventory), each
+   rated by the connected monitoring service. Names are real per-org; ratings are
+   demo/modeled until the SecurityScorecard/BitSight API is wired (labelled). */
+function vendorList(){
+  var sys=(LIVE&&LIVE.resilience&&LIVE.resilience.systems)||[],seen={},out=[];
+  sys.forEach(function(s){var v=s.vendor;if(v&&String(v).trim()&&!seen[v.toLowerCase()]){seen[v.toLowerCase()]=1;out.push({a:vendorAbbr(v),n:v+(s.name?(' — supports '+s.name):''),s:vendorDemoScore(v),dom:vendorDomain(v),live:false});}});
+  if(out.length)return out.slice(0,10);
+  // Industry-neutral illustrative fallback (no org inventory yet)
+  return [
+    {a:'AWS',n:'Amazon Web Services — cloud',s:93,dom:'aws.amazon.com'},{a:'MSFT',n:'Microsoft — cloud & productivity',s:90,dom:'microsoft.com'},
+    {a:'SFDC',n:'Salesforce — CRM',s:88,dom:'salesforce.com'},{a:'SNOW',n:'ServiceNow — ITSM',s:85,dom:'servicenow.com'},
+    {a:'OKTA',n:'Okta — identity',s:82,dom:'okta.com'},{a:'CRWD',n:'CrowdStrike — endpoint',s:91,dom:'crowdstrike.com'},
+    {a:'ORCL',n:'Oracle — ERP / database',s:71,dom:'oracle.com'},{a:'SAP',n:'SAP — ERP',s:74,dom:'sap.com'},
+    {a:'GOOG',n:'Google Cloud',s:89,dom:'cloud.google.com'},{a:'WORK',n:'Workday — HR / finance',s:80,dom:'workday.com'}
+  ];}
 /* Deep-link to a vendor's page on the connected monitoring service. SecurityScorecard
    exposes a public per-company rating URL; others resolve to their ratings portal. */
 function vendorUrl(service,dom){var s=String(service||'').toLowerCase();
@@ -1378,7 +1384,7 @@ function drillVendors(){
   var vs=vendorService();var list=vendorList().slice().sort(function(a,b){return a.s-b.s;});
   var tag=vs?(vs.demo?'<span class="pill warn">demo</span>':'<span class="pill mod">modeled</span>'):'';
   var head=vs
-    ?'<div class="drill-p">'+tag+' Your top-10 tier-1 vendors and their security ratings from <b>'+vs.vendor+'</b>'+(vs.demo?' <b>(demo data)</b>':' — illustrative until the '+vs.vendor+' API is wired to your tenant')+'. <b>Click any vendor</b> to open its page in '+vs.vendor+'. Higher is safer, on your top-10 colour scale.</div>'
+    ?'<div class="drill-p">'+tag+' Your tier-1 vendors — <b>the real providers from your systems inventory</b> — rated by <b>'+vs.vendor+'</b>. '+(vs.demo?'Ratings are <b>demo data</b>':'Ratings are illustrative until the '+vs.vendor+' API is wired to your tenant; the names are your own')+'. <b>Click any vendor</b> to open its page in '+vs.vendor+'. Higher is safer, on your top-10 colour scale.</div>'
     :'<div class="drill-hero muted">No monitoring service connected</div><div class="drill-p">Choose a third-party monitoring service at onboarding — <b>SecurityScorecard</b>, <b>BitSight</b>, <b>UpGuard</b>, <b>Panorays</b> or <b>Black Kite</b> — and your top-10 tier-1 vendors appear here, scored and colour-coded, refreshed daily. Below is an illustrative preview.</div>';
   var rows=list.map(function(vd){var cls=capColor(vd.s);var url=vs?vendorUrl(vs.vendor,vd.dom):null;
     var inner='<div class="drow-h"><span class="cap-dot" style="background:var(--'+cls+')"></span><b>'+vd.a+'</b><span class="drow-tool">'+vd.n+(url?' <span class="drill-cta">open in '+vs.vendor+' ↗</span>':'')+'</span></div>'+capBar(vd.s)+

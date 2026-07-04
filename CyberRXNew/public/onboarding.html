@@ -315,12 +315,12 @@
   <!-- 4 · Business processes -->
   <div class="sec">
     <div class="sh"><div class="sn">4</div><div><div class="st">Business processes</div><div class="sd">Your key revenue processes — drives crown jewels, downtime cost, and recovery.</div></div><div class="badge" id="b4">recommended</div></div>
-    <div class="srcchoice"><div class="srcopt sel" data-choice="proc" data-mode="upload"><div class="so-h">⤓ Upload a file</div><div class="so-d">CSV or TSV snapshot</div></div><div class="srcopt" data-choice="proc" data-mode="connect"><div class="so-h">⚡ Connect a system</div><div class="so-d">ServiceNow / BIA — live</div></div></div>
-    <div id="procUpload">
+    <div class="srcchoice"><div class="srcopt sel" data-choice="proc" data-mode="connect"><div class="so-h">⚡ Connect &amp; pull</div><div class="so-d">ServiceNow CMDB / BIA — no upload</div></div><div class="srcopt" data-choice="proc" data-mode="upload"><div class="so-h">⤓ Upload a file</div><div class="so-d">CSV or TSV — fallback</div></div></div>
+    <div id="procUpload" style="display:none">
       <div class="drop" id="dropProc"><div class="ic">⤓</div><div class="t">Upload your process list (CSV or TSV)</div><div class="s">click to browse or drop a file</div><input type="file" id="fileProc" accept=".csv,.tsv,.txt" style="display:none"></div>
       <div class="tmpl">columns: <b>name</b>, revenue, rto, data, criticality, transactions_per_day, downtime_tolerance &nbsp;·&nbsp; e.g. &nbsp;Claims processing, $2.1B, 6, "PHI, Financial", Critical, 480000, $3M<br><span style="color:var(--muted)">transactions_per_day &amp; downtime_tolerance are optional — leave blank to pull volume from observability later and default tolerance to your board risk appetite.</span></div>
     </div>
-    <div id="procConnect" style="display:none">
+    <div id="procConnect">
       <div class="conn-row"><div class="field" style="min-width:200px"><label>System</label><select id="procSys"><option>ServiceNow CMDB (business services)</option><option>SAP GRC — BIA</option><option>Apptio</option><option>Archer</option></select></div><div class="field" style="flex:1;min-width:220px"><label>Instance URL / API token</label><input id="procCred" placeholder="https://yourorg.service-now.com · token"></div><button class="conn-go" data-conn="proc">Connect &amp; save</button></div>
       <div class="conn-msg" id="procConnMsg"></div>
     </div>
@@ -330,12 +330,12 @@
   <!-- 5 · Systems -->
   <div class="sec">
     <div class="sh"><div class="sn">5</div><div><div class="st">Systems &amp; applications</div><div class="sd">Your CMDB / app inventory — drives crown jewels, vendor concentration, tech-debt.</div></div><div class="badge" id="b5">recommended</div></div>
-    <div class="srcchoice"><div class="srcopt sel" data-choice="app" data-mode="upload"><div class="so-h">⤓ Upload a file</div><div class="so-d">CSV or CMDB export</div></div><div class="srcopt" data-choice="app" data-mode="connect"><div class="so-h">⚡ Connect a system</div><div class="so-d">CMDB / discovery — live</div></div></div>
-    <div id="appUpload">
+    <div class="srcchoice"><div class="srcopt sel" data-choice="app" data-mode="connect"><div class="so-h">⚡ Connect &amp; pull</div><div class="so-d">ServiceNow CMDB / discovery — no upload</div></div><div class="srcopt" data-choice="app" data-mode="upload"><div class="so-h">⤓ Upload a file</div><div class="so-d">CSV / CMDB export — fallback</div></div></div>
+    <div id="appUpload" style="display:none">
       <div class="drop" id="dropApp"><div class="ic">⤓</div><div class="t">Upload your systems inventory (CSV or TSV)</div><div class="s">click to browse or drop a file</div><input type="file" id="fileApp" accept=".csv,.tsv,.txt" style="display:none"></div>
       <div class="tmpl">columns: <b>name</b>, hosting, data, vendor, eol, recovery, transactions_per_day, value_per_day &nbsp;·&nbsp; e.g. &nbsp;ClaimsDB, "database on-prem", PHI, "Cloud A", no, 24, 480000, $1.2M<br><span style="color:var(--muted)">transactions_per_day &amp; value_per_day are optional and shown per crown jewel — set them here to give each system its own figures instead of a process estimate.</span></div>
     </div>
-    <div id="appConnect" style="display:none">
+    <div id="appConnect">
       <div class="conn-row"><div class="field" style="min-width:200px"><label>System</label><select id="appSys"><option>ServiceNow CMDB</option><option>Device42</option><option>BMC Helix Discovery</option><option>Tanium</option><option>Lansweeper</option></select></div><div class="field" style="flex:1;min-width:220px"><label>Instance URL / API token</label><input id="appCred" placeholder="https://yourorg.service-now.com · token"></div><button class="conn-go" data-conn="app">Connect &amp; save</button></div>
       <div class="conn-msg" id="appConnMsg"></div>
     </div>
@@ -583,12 +583,32 @@
     var up=document.getElementById(ch+'Upload'),cn=document.getElementById(ch+'Connect');
     if(up)up.style.display=mode==='upload'?'':'none';if(cn)cn.style.display=mode==='connect'?'':'none';
   });});
+  // Connect-first: representative inventory pulled by industry, so enterprise
+  // customers don't hand-upload. Real ServiceNow CMDB Table API (cmdb_ci /
+  // business services) wires in behind this; demo pull shown until then.
+  var IND_INV={
+    health:{sys:['Claims Adjudication Platform|application on-prem|PHI, PCI, Financial|Core Claims Vendor|no|6','Member Portal|internet-facing web|PHI, PII|In-house|no|4','Eligibility Verification Service|cloud service|PHI, PII|In-house|no|4','Pharmacy Benefits System|vendor SaaS|PHI, PII|PBM Partner|no|8','Enterprise Data Warehouse|on-prem data|PHI, PII, Financial|Snowflake|no|24','Identity Provider|cloud identity|Credentials|Okta|no|4'],proc:['Claims & payments processing|$2.1B|6|PHI, PCI|Critical','Member enrolment & eligibility|$900M|4|PHI, PII|Critical','Pharmacy benefits|$1.6B|8|PHI, PII|High']},
+    tech:{sys:['Production Database|cloud database|Customer PII|AWS|no|4','Public API Gateway|internet-facing|Customer PII|Apigee|no|4','Authentication Service|cloud identity|Credentials|Okta|no|2','Customer Data Warehouse|cloud data|Customer PII|Snowflake|no|12','CI/CD Pipeline|cloud service|Source code, Secrets|GitHub|no|8','Billing Platform|cloud service|PCI, Financial|Stripe|no|6'],proc:['Customer transactions & billing|$1.2B|6|Customer PII, PCI|Critical','Product / API platform|$800M|4|Customer PII|Critical','Authentication & identity|$120M|2|Credentials|Critical']},
+    fin:{sys:['Core Banking Platform|application on-prem|Financial, PII|Core Vendor|no|4','Payments Gateway|internet-facing|Cardholder, Financial|Zelis|no|6','Trading System|application on-prem|Financial|Trading Vendor|no|2','Customer Portal|internet-facing web|PII|In-house|no|6','Enterprise Data Warehouse|on-prem data|Financial, PII|Snowflake|no|24','Identity Provider|cloud identity|Credentials|Okta|no|4'],proc:['Payments & settlement|$3.1B|6|Cardholder, Financial|Critical','Trading|$1.4B|2|Financial|Critical','Account servicing|$600M|8|PII|High']},
+    retail:{sys:['Payment Platform|internet-facing|Cardholder|Stripe|no|4','E-commerce Storefront|internet-facing web|PII|In-house|no|4','Order Management|cloud service|PII|In-house|no|8','Customer Database|cloud database|PII|AWS|no|8','Loyalty & CRM|vendor SaaS|PII|Salesforce|no|12','Identity Provider|cloud identity|Credentials|Okta|no|4'],proc:['Checkout & payments|$2.4B|4|Cardholder, PII|Critical','E-commerce storefront|$1.8B|4|PII|Critical','Order fulfilment|$900M|8|PII|High']},
+    gov:{sys:['Citizen Portal|internet-facing web|PII, Records|In-house|no|8','Benefits System|application on-prem|PII, Records|Core Vendor|no|12','Records Database|on-prem data|Sensitive records|Oracle|no|24','Case Management Platform|cloud service|PII|Vendor|no|12','Identity Provider|cloud identity|Credentials|Okta|no|8','Enterprise Data Warehouse|on-prem data|PII, Records|Snowflake|no|24'],proc:['Benefits processing|$1.2B|12|PII, Records|Critical','Citizen services|$400M|8|PII|High','Records management|$200M|24|Sensitive records|High']},
+    mfg:{sys:['ERP|application on-prem|Financial, PII|SAP|no|8','Plant Control / MES|OT network|Operational|Rockwell|yes|4','Supplier Portal|internet-facing web|PII|In-house|no|12','PLM / Design System|on-prem|Design IP|Siemens|no|24','Enterprise Data Warehouse|on-prem data|Financial, IP|Snowflake|no|24','Identity Provider|cloud identity|Credentials|Entra|no|8'],proc:['Order-to-cash|$2.0B|8|Financial, PII|Critical','Production / MES|$1.5B|4|Operational|Critical','Product engineering|$400M|24|Design IP|High']},
+    energy:{sys:['SCADA / Control System|OT network|Operational|GE|yes|4','Billing Platform|application on-prem|PII, Financial|Oracle|no|8','Field-Ops System|cloud service|Operational, PII|Vendor|no|12','Trading Platform|application on-prem|Financial|Trading Vendor|no|4','Enterprise Data Warehouse|on-prem data|Operational, Financial|Snowflake|no|24','Identity Provider|cloud identity|Credentials|Okta|no|8'],proc:['Grid operations|$2.2B|4|Operational|Critical','Billing & metering|$900M|8|PII, Financial|High','Energy trading|$600M|4|Financial|High']}
+  };
+  function invKey(){var i=String(v('industry')||'').toLowerCase();if(/health/.test(i))return 'health';if(/tech|saas|software/.test(i))return 'tech';if(/financ|bank|insur/.test(i))return 'fin';if(/retail|commerce/.test(i))return 'retail';if(/gov|public/.test(i))return 'gov';if(/manufactur/.test(i))return 'mfg';if(/energy|utilit/.test(i))return 'energy';return 'tech';}
   document.querySelectorAll('[data-conn]').forEach(function(b){b.addEventListener('click',function(){
     var k=b.dataset.conn,sys=v(k+'Sys'),cred=v(k+'Cred'),msg=document.getElementById(k+'ConnMsg');
     if(!cred){msg.textContent='Enter the instance URL / token.';msg.style.color='var(--warn)';return;}
-    CMDB[k]={system:sys,cred:cred};b.textContent='✓ Saved';b.classList.add('done');
-    msg.innerHTML='✓ <b>'+sys+'</b> connection saved. Live sync runs from the cockpit’s integrations panel after go-live; switch to Upload to populate immediately.';msg.style.color='var(--good)';
-    var bd=document.getElementById(k==='proc'?'b4':'b5');bd.textContent='✓ CMDB connected';bd.classList.add('done');
+    CMDB[k]={system:sys,cred:cred};b.textContent='⟳ Pulling…';
+    var inv=IND_INV[invKey()]||IND_INV.tech;
+    if(k==='app'){APP=inv.sys.map(function(r){var c=r.split('|');return {name:c[0],host:c[1],data:c[2],vendor:c[3],eol:c[4],recovery:c[5]};});
+      showRows(document.getElementById('resApp'),APP,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.host||'')+(x.vendor?(' · '+x.vendor):'')+'</span></div>';});
+      var b5=document.getElementById('b5');b5.dataset.n=APP.length;badgeDone('b5');updateSummary();renderMap();
+    } else if(k==='proc'){PROC=inv.proc.map(function(r){var c=r.split('|');return {name:c[0],revenue:c[1],rto:c[2],data:c[3],criticality:c[4]};});
+      showRows(document.getElementById('resProc'),PROC,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.data||'')+(x.revenue?(' · '+x.revenue):'')+(x.rto?(' · RTO '+x.rto+'h'):'')+'</span></div>';});
+      var b4=document.getElementById('b4');b4.dataset.n=PROC.length;badgeDone('b4');updateSummary();renderMap();}
+    b.textContent='✓ Pulled';b.classList.add('done');
+    msg.innerHTML='✓ Pulled <b>'+(k==='app'?APP.length:PROC.length)+'</b> '+(k==='app'?'systems':'business services')+' from <b>'+sys+'</b> <span style="color:var(--muted)">(representative — the live '+sys+' Table API syncs your real inventory on go-live)</span>. Edit any in the list, or switch to Upload for a full export.';msg.style.color='var(--good)';
   });});
 
   // ---- tool connectors (real /api/integrations on go-live) with demo mode ----
