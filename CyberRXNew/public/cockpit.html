@@ -1209,7 +1209,7 @@ function grcDomainMet(key){var d=GRC_DOMAINS[key];if(!d)return false;var t=conne
   if(d.gov){var g=(LIVE&&LIVE.governance)||{};return !!g.committee&&/yes/i.test(g.ermIntegrated||'');}
   return false;}
 /* Human label for a connector key, so evidence attributes to a named source. */
-var TOOL_LABELS={okta:'Okta',entra:'Microsoft Entra',crowdstrike:'CrowdStrike',defender:'Microsoft Defender',cyberark:'CyberArk',beyondtrust:'BeyondTrust',delinea:'Delinea',qualys:'Qualys',tenable:'Tenable',splunk:'Splunk',sentinel:'Microsoft Sentinel',knowbe4:'KnowBe4',proofpoint:'Proofpoint',servicenow:'ServiceNow',jira:'Jira',aws:'AWS Security Hub',azure:'Defender for Cloud',wiz:'Wiz',prisma:'Prisma Cloud',gcp:'Google SCC',rubrik:'Rubrik',veeam:'Veeam'};
+var TOOL_LABELS={okta:'Okta',entra:'Microsoft Entra',crowdstrike:'CrowdStrike',defender:'Microsoft Defender',cyberark:'CyberArk',beyondtrust:'BeyondTrust',delinea:'Delinea',qualys:'Qualys',tenable:'Tenable',splunk:'Splunk',sentinel:'Microsoft Sentinel',knowbe4:'KnowBe4',proofpoint:'Proofpoint',servicenow:'ServiceNow',jira:'Jira',aws:'AWS Security Hub',azure:'Defender for Cloud',wiz:'Wiz',prisma:'Prisma Cloud',gcp:'Google SCC',rubrik:'Rubrik',veeam:'Veeam',onetrust:'OneTrust',azure_openai:'Azure OpenAI',langsmith:'LangSmith'};
 function toolLabel(k){return TOOL_LABELS[k]||k;}
 /* WHAT evidenced a control domain — the named tool(s) or governance record, so the
    "evidenced" state is traceable rather than a bare label. */
@@ -1810,7 +1810,7 @@ function renderReadiness(){
   var tested=ir.tested||'—',testedOk=/within 12/i.test(tested)?true:(/not tested/i.test(tested)?false:null);
   var ret=ir.retainer||'—',ranp=ir.ransomwarePolicy||'—';
   host.innerHTML='<div class="ck">Response &amp; recovery readiness</div><div style="margin-top:8px">'+
-    govRow('IR plan tested',tested,testedOk,srcChip('GRC (ServiceNow)'))+govNote('ir_tested',ir.tested)+
+    govRow('IR plan tested',tested,testedOk,evChip('ir_tested','GRC (ServiceNow)'))+govNote('ir_tested',ir.tested)+
     govRow('Last tabletop',ir.lastTabletop?new Date(ir.lastTabletop).toLocaleDateString():'—',ir.lastTabletop?null:false,srcChip('GRC (ServiceNow)'))+
     govRow('IR / breach-counsel retainer',ret,/yes/i.test(ret)?true:(/no/i.test(ret)?false:null),srcChip('contracts / DPA system'))+govNote('retainer',ir.retainer)+
     govRow('Ransomware-payment policy',ranp,/board-approved/i.test(ranp)?true:(/none/i.test(ranp)?false:null),srcChip('policy register'))+govNote('ransomwarePolicy',ir.ransomwarePolicy)+
@@ -1887,6 +1887,36 @@ function govMaturity(g,fields){
   var cls=pct==null?'muted':pct>=62?'good':pct>=38?'warn':'crit';
   return {pct:pct,label:label,cls:cls,rows:rows,answered:scored.length,total:rows.length};
 }
+/* ---- Evidence layer: flip an attestation from ○ self-reported to ● evidenced ---
+   Each governance/AI answer names the system of record that can back it. When that
+   system is connected, the chip flips: for most fields to "● source connected"
+   (the attestation is now auditable against the system of record), and for the AI
+   inventory to a genuine "● evidenced (live)" — an AI-gateway connector (Azure
+   OpenAI / LangSmith) actually reports whether AI is monitored and how many
+   deployments exist, which corroborates (or contradicts) the self-reported count. */
+var EVIDENCE_MAP={
+ committee:{keys:['servicenow','onetrust'],cat:'board portal / GRC'},
+ cadence:{keys:['servicenow','onetrust'],cat:'board portal / GRC'},
+ ermIntegrated:{keys:['servicenow','onetrust'],cat:'GRC / ERM system'},
+ ir_tested:{keys:['servicenow'],cat:'GRC / IR runbook'},
+ framework:{keys:['servicenow','onetrust'],cat:'AI GRC / policy platform'},
+ policy:{keys:['servicenow','onetrust'],cat:'policy register'},
+ euAiAct:{keys:['onetrust','servicenow'],cat:'legal / compliance system'},
+ inventory:{keys:['azure_openai','langsmith'],cat:'AI-BOM / model registry',live:true}
+};
+function evSource(keys){var t=connectedTools();for(var i=0;i<keys.length;i++){if(t[keys[i]]&&t[keys[i]].on)return TOOL_LABELS[keys[i]]||keys[i];}return null;}
+function evChip(field,via){
+  var m=EVIDENCE_MAP[field];
+  if(!m)return srcChip(via||null);
+  var src=evSource(m.keys);
+  if(!src)return srcChip(m.cat);
+  if(m.live){
+    var dep=sig('ai_deployments'),mon=sig('ai_monitored');
+    var extra=dep!=null?(' · '+dep+' deployment'+(dep===1?'':'s')+' seen'):(mon===1?' · monitored':'');
+    return '<span class="srcpill conn">● evidenced · '+src+extra+' <span style="opacity:.7">(live)</span></span>';
+  }
+  return '<span class="srcpill conn">● source connected · '+src+'</span>';
+}
 /* A rich Item-106 row: value coloured by tier, tier chip, the posture note, source. */
 function govRowRich(r){
   var m=r.tier?GOV_TIER[r.tier]:null,col=m?('var(--'+m.c+')'):'var(--ink-2)';
@@ -1895,7 +1925,7 @@ function govRowRich(r){
     '<span style="color:var(--muted);font-size:13px">'+r.label+'</span>'+
     '<span style="text-align:right;font-weight:600;color:'+col+';font-size:13px">'+r.val+govTierChip(r.tier)+'</span></div>'+
     (r.note?'<div style="font-size:12px;color:var(--ink-2);margin-top:5px;line-height:1.45">'+r.note+'</div>':'')+
-    '<div style="margin-top:5px">'+srcChip(r.via)+'</div></div>';
+    '<div style="margin-top:5px">'+evChip(r.field,r.via)+'</div></div>';
 }
 /* Short posture note for the IR-readiness card (reuses the same model). */
 function govNote(field,val){var o=govLookup(field,val);return o?('<div style="font-size:11.5px;color:var(--ink-2);margin:-2px 0 9px;line-height:1.45">'+o.n+'</div>'):'';}
@@ -1907,7 +1937,10 @@ function renderGov(){
   host.innerHTML='<div class="card"><div class="ck">Board oversight structure · SEC Reg S-K Item 106 readiness '+head+'</div>'+
     '<div class="cn" style="margin:6px 0 4px"><b style="color:var(--'+m.cls+')">Governance maturity '+(m.pct!=null?(m.pct+'%'):'—')+' — '+m.label+'</b>. Each answer below is scored on its <b>specific</b> choice, not just whether it was filled in: your committee, cadence, board expertise, CISO independence and ERM integration each carry a real maturity signal.</div>'+
     '<div style="margin-top:6px">'+m.rows.map(govRowRich).join('')+'</div>'+
-    '<div class="cn" style="margin-top:8px">These are the exact governance disclosures Item 106(c) requires in your 10-K. All are <span class="srcpill self">○ self-reported</span> today — connect your board portal, HRIS and GRC to <span class="srcpill conn">● evidence</span> them and make this filing-ready and audit-defensible.</div></div>';
+    (function(){var ev=m.rows.filter(function(r){var e=EVIDENCE_MAP[r.field];return e&&evSource(e.keys);}).length;
+      return '<div class="cn" style="margin-top:8px">These are the exact governance disclosures Item 106(c) requires in your 10-K. '+
+      (ev>0?('<b style="color:var(--good)">'+ev+' of '+m.rows.length+'</b> are now <span class="srcpill conn">● source-connected</span> (auditable against the system of record); the rest are <span class="srcpill self">○ self-reported</span>. '):'All are <span class="srcpill self">○ self-reported</span> today — ')+
+      'connect your board portal, HRIS and GRC to evidence every line and make this filing-ready and audit-defensible.</div></div>';})();
 }
 function renderBoard(){renderStress();renderReadiness();renderThirdParty();renderGov();renderMateriality();renderCloOps();renderAiRisk();renderCisoOps();renderCisoWarRoom();}
 /* War Room, integrated into the CISO seat — shows current incident state with a
@@ -2220,6 +2253,15 @@ function renderAiRisk(){
   var aim=aiMaturity(g);
   var invSurface=g.systems?(/^yes/i.test(g.inventory||'')?' all inventoried with a named owner.':/partial/i.test(g.inventory||'')?' but only <b>some are inventoried</b> — the rest run as shadow AI, unmonitored.':/^no/i.test(g.inventory||'')?' and <b>none are inventoried</b> — shadow AI is almost certainly running with access to company data.':' (set “AI systems inventoried?” to track shadow AI).'):'';
   var invLine=g.systems?('<b>'+g.systems+'</b> AI/LLM system'+(g.systems>1?'s':'')+' in production — agents, generative-AI apps and AI coding assistants (e.g. Claude Code, Copilot) are the attack surface an AI-accelerated adversary probes;'+invSurface):'AI-systems count not set — count your agents, GenAI apps and AI coding assistants so nothing runs unmonitored.';
+  // Live corroboration from a connected AI gateway (Azure OpenAI / LangSmith): the
+  // real deployment count and whether AI is monitored — checked against the self-
+  // reported figure so a mismatch (shadow AI) surfaces instead of being taken on trust.
+  var aiSrc=evSource(EVIDENCE_MAP.inventory.keys),aiDep=sig('ai_deployments'),aiMon=sig('ai_monitored');
+  if(aiSrc){var rep=Number(g.systems)||null,disc=(rep!=null&&aiDep!=null&&aiDep>rep);
+    invLine+=' <span class="srcpill conn">● '+aiSrc+' (live)</span> '+
+      (aiDep!=null?('reports <b>'+aiDep+'</b> live AI deployment'+(aiDep===1?'':'s')):'confirms AI is running')+
+      (aiMon===1?', monitored/traced':'')+
+      (disc?(' — <b style="color:var(--warn)">'+(aiDep-rep)+' more than the '+rep+' self-reported</b>, likely shadow AI to bring under governance.'):(rep!=null&&aiDep!=null&&aiDep===rep?' — matches your self-reported count.':'.'));}
   var aiPostureRows=aim.rows.map(govRowRich).join('');
   var fwRows=AI_FRAMEWORKS.map(function(f,i){var ok=f.ok(g);return '<div class="drow aifw" data-aifw="'+i+'" style="cursor:pointer;padding:9px 0"><div class="drow-h"><span class="cap-dot" style="background:var(--'+(ok?'good':'muted')+')"></span><b>'+f.n+'</b><span class="drow-tool" style="color:var(--'+(ok?'good':'muted')+')">'+(ok?'adopted':'not yet')+' <span class="drill-cta">details ▸</span></span></div><div class="drow-need">'+f.d+'</div></div>';}).join('');
   var aimHead=aim.pct!=null?('<span class="tag '+(aim.cls==='crit'?'warn':aim.cls)+'" style="font-size:10px;margin-left:6px">AI governance '+aim.label+' · '+aim.pct+'%</span>'):('<span class="tag warn" style="font-size:10px;margin-left:6px">'+fwOk+' / '+AI_FRAMEWORKS.length+' frameworks</span>');
