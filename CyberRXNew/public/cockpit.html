@@ -96,7 +96,19 @@
   .fwcat{font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:9px 12px 3px}
   .fwrow{display:flex;align-items:center;gap:9px;padding:5px 12px;font-size:12px;border-top:1px solid var(--line)}
   .fwid2{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--ink-2);min-width:72px;flex:none}
-  .fwname{color:var(--ink-2)}
+  .fwname{color:var(--ink-2);flex:1}
+  .fwrow.drill{cursor:pointer}.fwrow.drill:hover{background:var(--surface-2)}
+  .fwprov{font-size:11px;margin-left:auto;flex:none;color:var(--muted)}
+  .fwscore{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink-2);flex:none}
+  /* CMMI maturity badge (0–5) + legend + document-evidence module */
+  .cmmi-badge{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:5px;font-family:var(--mono);font-size:11px;font-weight:700;color:#fff;flex:none}
+  .cmmi0{background:var(--muted)}.cmmi1{background:var(--crit)}.cmmi2{background:var(--serious,#C4703A)}.cmmi3{background:var(--blue)}.cmmi4{background:var(--good)}.cmmi5{background:#1E7A54}
+  .cmmi-legend{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin:8px 0;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);font-size:11px;color:var(--muted)}
+  .cmmi-legend b{font-family:var(--mono);color:var(--ink);margin-right:3px}.cmmi-legend .cl-t{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2);margin-right:2px}
+  .docup{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:2px}
+  .docup select,.docup input[type=file]{font-size:12px;padding:6px 9px;border:1px solid var(--line-2);border-radius:7px;background:var(--surface);color:var(--ink);max-width:100%}
+  .docbtn{font-size:12px;font-weight:700;color:#fff;background:var(--ink);border:none;border-radius:7px;padding:7px 14px;cursor:pointer}
+  .docrow{display:flex;align-items:center;gap:9px;padding:6px 0;border-top:1px solid var(--line);font-size:12px}.docrow:first-child{border-top:none}
   .tac-caps{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
   .tac-cap{font-size:11.5px;color:var(--ink-2);display:inline-flex;align-items:center;gap:5px;background:rgba(137,135,129,.1);padding:4px 9px;border-radius:8px}
   .drill-hero{font-size:19px;font-weight:700;margin-bottom:4px}.drill-hero.good{color:var(--good)}.drill-hero.muted{color:var(--muted)}
@@ -1002,24 +1014,113 @@ var R53_RAW=[['AC','Access Control',25],['AT','Awareness & Training',6],['AU','A
 var FW_SEL='csf';
 /* Control IDs evidenced by connected tools → max deployment %, from CAP_FRAMEWORK. */
 function fwDeployedIds(){var m={};CAPS.forEach(function(c){var fw=CAP_FRAMEWORK[c.k];if(!fw)return;var p=capDeploy(c);if(p==null)return;fw.csf.concat(fw.r53).forEach(function(id){if(m[id]==null||p>m[id])m[id]=p;});});return m;}
-function fwDot(id,cov){var p=cov[id];var cls=p==null?'muted':p>=75?'good':p>=50?'blue':'warn';return '<span class="cap-dot" style="width:9px;height:9px;background:var(--'+cls+')"></span>';}
+/* ---- CMMI maturity + document-evidence module. Each control's maturity (0–5) is
+   the higher of its live tool coverage and its document-review score, so the
+   framework rolls up a real CMMI per subcategory → category → function, and every
+   score shows its source (🔌 system telemetry vs 📄 document review). ---- */
+var CMMI_LABELS={0:'Non-existent',1:'Initial',2:'Managed',3:'Defined',4:'Quantitatively Managed',5:'Optimizing'};
+var DOC_TYPES=[
+  {k:'d1',l:'Information Security Policy'},{k:'d2',l:'Risk Assessment / Register'},
+  {k:'d3',l:'Third-Party / Supply-Chain Policy'},{k:'d4',l:'Access Control Policy'},
+  {k:'d5',l:'Identity & Authentication Policy'},{k:'d6',l:'Incident Response Plan'},
+  {k:'d7',l:'Business Continuity / DR Plan'},{k:'d8',l:'Change Management Policy'},
+  {k:'d9',l:'Configuration Management Policy'},{k:'d10',l:'Data Protection Policy'}
+];
+function docScores(){try{return JSON.parse(localStorage.getItem('cyberrx_doc_scores')||'{}')||{};}catch(_){return {};}}
+function saveDocScore(id,o){var m=docScores();m[id]=o;try{localStorage.setItem('cyberrx_doc_scores',JSON.stringify(m));}catch(_){}}
+function docList(){try{return JSON.parse(localStorage.getItem('cyberrx_docs')||'[]')||[];}catch(_){return [];}}
+function saveDocList(a){try{localStorage.setItem('cyberrx_docs',JSON.stringify(a.slice(0,20)));}catch(_){}}
+function pctToCmmi(p){return p==null?null:p>=90?5:p>=75?4:p>=50?3:p>=25?2:p>0?1:0;}
+function cmmiColor(s){return s>=4?'good':s>=3?'blue':s>=2?'serious':s>=1?'crit':'muted';}
+/* Blended CMMI for a control: best of document-review score and live tool score. */
+function controlCmmi(id,cov){
+  var ds=docScores()[id],docS=ds?Number(ds.cmmi):null;
+  var toolPct=(cov&&cov[id]!=null)?cov[id]:null,toolS=pctToCmmi(toolPct);
+  var best=Math.max(docS!=null?docS:-1,toolS!=null?toolS:-1);
+  if(best<0)return {score:0,src:'none',toolPct:null,doc:null};
+  var src=(docS!=null&&docS>=(toolS!=null?toolS:-1))?'document':'system';
+  return {score:best,src:src,toolPct:toolPct,doc:ds};
+}
+function cmmiBadge(s){return '<span class="cmmi-badge cmmi'+s+'">'+s+'</span>';}
+function fwProvIcon(src){return src==='document'?'<span class="fwprov" title="from document review">📄 doc</span>':src==='system'?'<span class="fwprov" title="from connected tool">🔌 system</span>':'<span class="fwprov" title="not yet evidenced">— none</span>';}
+function avg(a){return a.length?a.reduce(function(s,x){return s+x;},0)/a.length:0;}
+function fwRow(id,name,cov){var cc=controlCmmi(id,cov);
+  return {score:cc.score,html:'<div class="fwrow drill" data-fid="'+id+'" data-fname="'+String(name).replace(/"/g,'&quot;')+'">'+cmmiBadge(cc.score)+'<span class="fwid2">'+id+'</span><span class="fwname">'+name+'</span>'+fwProvIcon(cc.src)+'</div>'};
+}
 function renderFrameworks(){
   var host=document.getElementById('cisoFrameworks');if(!host)return;
-  var cov=fwDeployedIds(),totalIds=0,covIds=0,body='';
+  var cov=fwDeployedIds(),all=[],body='';
   var sel='<div class="fwseg">'+[['csf','NIST CSF 2.0'],['r53','NIST SP 800-53 Rev 5']].map(function(o){return '<button class="fwsegb'+(FW_SEL===o[0]?' on':'')+'" data-fw="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
   if(FW_SEL==='csf'){
-    body=Object.keys(CSF_RAW).map(function(fn){var cats=CSF_RAW[fn],catHtml='',fnCov=0;
-      Object.keys(cats).forEach(function(cat){var rows=cats[cat].map(function(s){var id=s[0];totalIds++;if(cov[id]!=null){covIds++;fnCov++;}return '<div class="fwrow">'+fwDot(id,cov)+'<span class="fwid2">'+id+'</span><span class="fwname">'+s[1]+'</span></div>';}).join('');
-        catHtml+='<div class="fwcat">'+cat+'</div>'+rows;});
-      return '<details class="fwfn"><summary>'+fn+'<span class="fwcount">'+fnCov+' tool-evidenced</span></summary>'+catHtml+'</details>';
+    body=Object.keys(CSF_RAW).map(function(fn){var cats=CSF_RAW[fn],catHtml='',fnScores=[];
+      Object.keys(cats).forEach(function(cat){var catScores=[],rows=cats[cat].map(function(s){var r=fwRow(s[0],s[1],cov);catScores.push(r.score);fnScores.push(r.score);all.push(r.score);return r.html;}).join('');
+        catHtml+='<div class="fwcat">'+cat+' <span class="fwscore" style="color:var(--'+cmmiColor(Math.round(avg(catScores)))+')">CMMI '+avg(catScores).toFixed(1)+'</span></div>'+rows;});
+      var fnAvg=avg(fnScores);
+      return '<details class="fwfn"><summary>'+fn+'<span class="fwcount" style="color:var(--'+cmmiColor(Math.round(fnAvg))+')">CMMI '+fnAvg.toFixed(1)+' · '+(CMMI_LABELS[Math.round(fnAvg)]||'')+'</span></summary>'+catHtml+'</details>';
     }).join('');
   } else {
-    body=R53_RAW.map(function(f){var fam=f[0],name=f[1],n=f[2],rows='',famCov=0;for(var i=1;i<=n;i++){var id=fam+'-'+i;totalIds++;if(cov[id]!=null){covIds++;famCov++;}rows+='<div class="fwrow">'+fwDot(id,cov)+'<span class="fwid2">'+id+'</span><span class="fwname">'+name+'</span></div>';}return '<details class="fwfn"><summary>'+fam+' · '+name+'<span class="fwcount">'+famCov+' tool-evidenced</span></summary>'+rows+'</details>';}).join('');
+    body=R53_RAW.map(function(f){var fam=f[0],name=f[1],n=f[2],rows='',famScores=[];for(var i=1;i<=n;i++){var r=fwRow(fam+'-'+i,name,cov);famScores.push(r.score);all.push(r.score);rows+=r.html;}var fa=avg(famScores);return '<details class="fwfn"><summary>'+fam+' · '+name+'<span class="fwcount" style="color:var(--'+cmmiColor(Math.round(fa))+')">CMMI '+fa.toFixed(1)+'</span></summary>'+rows+'</details>';}).join('');
   }
-  host.innerHTML=demoBanner()+'<div class="card"><div class="ck">Framework posture '+liveTag()+'</div>'+sel+
-    '<div class="cn" style="margin:9px 0"><b style="color:var(--ink)">'+covIds+' of '+totalIds+'</b> controls are <b>evidenced live from your connected tools</b> — <span style="color:var(--good)">●</span> ≥75% deployed · <span style="color:var(--blue)">●</span> ≥50% · <span style="color:var(--warn)">●</span> below · <span style="color:var(--muted)">●</span> evidenced through governance / policy / process (connect more tools or record governance answers to light these up). Each mapping is the same one behind the control-value ledger on the Controls tab.</div>'+
+  var overall=avg(all),scored=all.filter(function(x){return x>0;}).length;
+  var legend='<div class="cmmi-legend"><span class="cl-t">CMMI</span><span><b>0</b>None</span><span><b>1</b>Initial</span><span><b>2</b>Managed</span><span><b>3</b>Defined</span><span><b>4</b>Quant. Managed</span><span><b>5</b>Optimizing</span></div>';
+  host.innerHTML=demoBanner()+docModuleCard()+
+    '<div class="card"><div class="ck">Framework posture '+liveTag()+' — overall CMMI <b style="color:var(--'+cmmiColor(Math.round(overall))+')">'+overall.toFixed(1)+' / 5</b></div>'+sel+legend+
+    '<div class="cn" style="margin:6px 0"><b style="color:var(--ink)">'+scored+' of '+all.length+'</b> controls are evidenced (by a connected tool or an analyzed policy). Each control’s maturity is the higher of its live tool coverage and its document-review score; the icon shows the source — <b>🔌 system</b> telemetry or <b>📄 document</b> review. Click any control for the exact evidence and the math.</div>'+
     body+'</div>';
   host.querySelectorAll('.fwsegb').forEach(function(b){b.onclick=function(){FW_SEL=b.dataset.fw;renderFrameworks();};});
+  host.querySelectorAll('.fwrow[data-fid]').forEach(function(el){el.onclick=function(){openDrill(el.dataset.fid+' — '+el.dataset.fname,drillFwControl(el.dataset.fid,el.dataset.fname));};});
+  wireDocModule();
+}
+/* Document-evidence module — upload a policy, score its controls' CMMI via the
+   backend /api/documents/analyze, and store per-control scores that feed the tree. */
+function docModuleCard(){
+  var docs=docList();
+  var opts=DOC_TYPES.map(function(d){return '<option value="'+d.k+'">'+d.l+'</option>';}).join('');
+  var rows=docs.length?docs.map(function(d){return '<div class="docrow">'+cmmiBadge(d.cmmi)+'<b>'+d.name+'</b><span class="drow-tool" style="margin-left:auto">'+d.type+' · '+d.matched+'/'+d.total+' attrs · CMMI '+d.cmmi+' ('+(CMMI_LABELS[d.cmmi]||'')+')</span></div>';}).join(''):'<div class="cn">No policies analyzed yet — upload one to evidence controls by document review, alongside your live tool telemetry.</div>';
+  return '<div class="card" style="margin-bottom:12px"><div class="ck">Document evidence — policy → control maturity</div>'+
+    '<div class="cn" style="margin:6px 0 10px">Upload a policy (PDF · DOCX · TXT). CyberX-Ray reads it against the NIST control catalog and scores each control’s CMMI maturity from the policy language it contains — the <b>📄 document-review</b> source behind your framework scores.</div>'+
+    '<div class="docup"><select id="docType">'+opts+'</select><input type="file" id="docFile" accept=".pdf,.docx,.doc,.txt,.md,.csv"><button type="button" class="docbtn" id="docAnalyze">Analyze policy</button><span id="docMsg" class="cn" style="margin:0"></span></div>'+
+    '<div style="margin-top:10px">'+rows+'</div>'+
+    (docs.length?'<div style="margin-top:8px"><button type="button" class="fwsegb" id="docClear">Clear analyzed documents</button></div>':(demoActive()?'<div style="margin-top:8px"><button type="button" class="fwsegb" id="docSample">Load a sample analysis (demo)</button></div>':''))+
+    '</div>';
+}
+function wireDocModule(){
+  var a=document.getElementById('docAnalyze');if(a)a.onclick=analyzeDoc;
+  var s=document.getElementById('docSample');if(s)s.onclick=loadSampleDocScores;
+  var c=document.getElementById('docClear');if(c)c.onclick=function(){try{localStorage.removeItem('cyberrx_doc_scores');localStorage.removeItem('cyberrx_docs');}catch(_){}renderFrameworks();};
+}
+function analyzeDoc(){
+  var fi=document.getElementById('docFile'),ty=document.getElementById('docType'),msg=document.getElementById('docMsg');
+  if(!fi||!fi.files||!fi.files[0]){if(msg)msg.textContent='Choose a file first.';return;}
+  var file=fi.files[0],dt=ty.value,base=apiBase(),o=orgId();
+  if(msg)msg.textContent='Analyzing '+file.name+'…';
+  var fd=new FormData();fd.append('file',file);fd.append('doc_type',dt);
+  fetch(base+'/api/documents/analyze',{method:'POST',headers:o?{'X-Org-Id':o}:{},body:fd})
+    .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||('HTTP '+r.status));return j;});})
+    .then(function(res){
+      (res.controls||[]).forEach(function(c){saveDocScore(c.id,{cmmi:c.cmmi,doc:file.name,matched:c.matched,total:c.total,attrs:c.attrs||[]});});
+      var docs=docList(),lbl=(DOC_TYPES.filter(function(d){return d.k===dt;})[0]||{}).l||dt;
+      docs.unshift({name:file.name,type:lbl,cmmi:res.cmmi,matched:res.matched||0,total:res.total||0});saveDocList(docs);
+      renderFrameworks();
+    })
+    .catch(function(e){var m=document.getElementById('docMsg');if(m)m.textContent='✗ '+e.message;});
+}
+function loadSampleDocScores(){
+  var sample={'GV.OC-01':4,'GV.OC-03':3,'GV.RM-01':3,'GV.PO-01':4,'GV.PO-02':3,'PR.AA-01':4,'PR.AA-05':3,'PR.AT-01':3,'ID.RA-01':3,'ID.RA-05':2,'DE.CM-01':2,'RS.MA-01':3};
+  Object.keys(sample).forEach(function(id){saveDocScore(id,{cmmi:sample[id],doc:'Information Security Policy (sample).pdf',matched:Math.min(6,sample[id]+2),total:6,attrs:[{label:'Policy purpose statement',found:true},{label:'Scope definition',found:true},{label:'Roles & responsibilities',found:sample[id]>=3},{label:'Enforcement provisions',found:sample[id]>=3},{label:'Review cadence',found:sample[id]>=4},{label:'Exception process',found:sample[id]>=4}]});});
+  var docs=docList();docs.unshift({name:'Information Security Policy (sample).pdf',type:'Information Security Policy',cmmi:4,matched:5,total:6});saveDocList(docs);
+  renderFrameworks();
+}
+function drillFwControl(id,name){
+  var cov=fwDeployedIds(),cc=controlCmmi(id,cov);
+  var h='<div class="drill-hero" style="color:var(--'+cmmiColor(cc.score)+')">CMMI '+cc.score+' · '+(CMMI_LABELS[cc.score]||'')+'</div>'+
+    '<div class="drill-p"><b>'+id+'</b> — '+name+'</div><div class="ev-sec">Where this score came from</div>';
+  if(cc.src==='none'){h+='<div class="drill-p">Not yet evidenced — no connected tool covers this control and no analyzed policy addresses it. Connect the relevant tool, or upload the policy that governs it, to score it.</div>';}
+  if(cc.toolPct!=null){h+=gRow('🔌 System telemetry',cc.toolPct+'% deployed → CMMI '+pctToCmmi(cc.toolPct));}
+  if(cc.doc){var d=cc.doc;h+=gRow('📄 Document review',d.doc+' → CMMI '+d.cmmi+' ('+d.matched+'/'+d.total+' attributes)');
+    if(d.attrs&&d.attrs.length){h+='<div class="ev-sec">Policy attributes checked</div>'+d.attrs.map(function(a){return gRow((a.found?'✓ ':'✗ ')+a.label,a.found?'found':'missing');}).join('');}}
+  h+='<div class="drill-p" style="color:var(--muted);margin-top:8px">The control’s CMMI is the <b>higher</b> of its live tool coverage and its document-review score — best available evidence wins, and the source is shown so every score is auditable back to a system or a document.</div>';
+  return h;
 }
 /* ---- GRC / compliance — audit readiness per framework, computed from the tools
    you actually connect (continuous-control-monitoring model, like Vanta/Drata):
