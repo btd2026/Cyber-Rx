@@ -23,12 +23,12 @@ var SEATS = {
      decisions([
       {n:1,q:'Should we close the privileged path into payments?',sit:'A few over-privileged IT accounts can reach the payments database directly — the single biggest reason exposure is $68M. Three ways to handle it:',
        opts:[
-        {rec:true,tag:'A · Fund it now',on:'Option A · Fund it now',osum:'$1.4M · 3 weeks',pros:['Removes ~$52M of exposure (37× return)','Brings the worst case within appetite','Strengthens insurance renewal'],cons:['$1.4M this quarter','3 weeks of identity-team effort']},
+        {rec:true,tag:'A · Fund it now',on:'Option A · Fund it now',osum:'$1.4M · 3 weeks',pros:['Removes ~$52M of exposure (37× return)','Brings the worst case within appetite','Strengthens insurance renewal'],cons:['Requires $1.4M of capital this quarter','3 weeks of identity-team effort']},
         {tag:'B · Phase over 2 quarters',on:'Option B · Phase it',osum:'$1.4M spread',pros:['Spreads the $1.4M across two quarters','Less disruption to the identity team now'],cons:['~$26M of the $52M stays open for 6 months','Worst-case tail stays above the $120M appetite until done']},
         {tag:'C · Accept &amp; monitor',on:'Option C · Accept',osum:'$0 · formal acceptance',pros:['No capital spend this quarter'],cons:['Leaves the full $52M exposure open','Requires a documented board risk-acceptance (D&O exposure)','Insurer likely re-rates the payments path at renewal']}]},
       {n:2,q:'How fast should we be able to recover our revenue systems?',sit:'Our slowest revenue system takes ~3.1 days to recover, driving most of the tail. Three investment levels:',
        opts:[
-        {rec:true,tag:'A · Full modernization',on:'Option A · Full',osum:'$3.2M · <6h recovery',pros:['Cuts worst case by ~$40M','Tail below appetite','Meets regulatory recovery expectations'],cons:['$3.2M capital','One-quarter program']},
+        {rec:true,tag:'A · Full modernization',on:'Option A · Full',osum:'$3.2M · <6h recovery',pros:['Cuts worst case by ~$40M','Tail below appetite','Meets regulatory recovery expectations'],cons:['Requires $3.2M of capital','One-quarter program']},
         {tag:'B · Critical systems only',on:'Option B · Critical only',osum:'$1.6M',pros:['Protects the two highest-value systems','Half the cost'],cons:['Portal recovery stays slow','Removes ~$24M of $40M']},
         {tag:'C · Defer',on:'Option C · Defer',osum:'$0 this year',pros:['Zero capital this year'],cons:['Worst-case tail stays $180M — above the $120M appetite','Insurer likely raises premium at renewal']}]}]))
    +sec('04','Are we adequately insured against the worst case?','Whether your cyber-insurance coverage matches the modeled worst case — and the renewal position. From the policy you entered at onboarding.',
@@ -76,7 +76,7 @@ var SEATS = {
      '<div id="cfoFraud"></div>')
    +sec('06','What decision needs the CFO — and what does it cost or buy?','A costed choice with options; choosing one records to your ticketing system and is tracked to completion.',
      decisions([{n:1,q:'How should we fund cyber-risk reduction this year?',sit:'Two funded decisions would remove $92M of exposure and strengthen the insurance renewal. How much do we commit this year?',opts:[
-       {rec:true,tag:'A · Fund both ($4.6M)',on:'Option A · Fund both',osum:'$4.6M · 20× blended',pros:['Removes ~$92M of exposure','Brings the tail within appetite','Stronger insurance renewal position'],cons:['$4.6M capital this year']},
+       {rec:true,tag:'A · Fund both ($4.6M)',on:'Option A · Fund both',osum:'$4.6M · 20× blended',pros:['Removes ~$92M of exposure','Brings the tail within appetite','Stronger insurance renewal position'],cons:['Requires $4.6M of capital this year']},
        {tag:'B · Highest-ROI only ($1.4M)',on:'Option B · Top driver only',osum:'$1.4M · 37×',pros:['37× return — closes the $52M payments driver','Only $1.4M of capital this year'],cons:['Leaves the $40M recovery tail over appetite','Insurance renewal position improves only partially']},
        {tag:'C · Hold flat',on:'Option C · Hold',osum:'$0 new',pros:['No new spend this year'],cons:['Carries the full $92M as open exposure','Likely 15–18% premium increase at renewal','Two known drivers stay unfunded']}]}]))
    +sec('07','Current cyber initiatives & their ROI','Every funded decision becomes a tracked project. This is the live portfolio of new cyber spend — cost, return, owner and status — that the CISO and CFO manage together.',
@@ -138,7 +138,7 @@ var SEATS = {
       {c:'w',ic:'▲',t:'<span class="pill mod">modeled</span> Third-party &amp; cloud concentration — velocity high',ev:'vendor',s:'A single provider underpins multiple revenue systems.'}]))
    +sec('04','What decision needs the CRO?','How we bring the correlated tail within appetite. Choosing one records to your ticketing system.',
      decisions([{n:1,q:'How do we bring the correlated tail within appetite?',sit:'A correlated payments + top-vendor event models at $205M — above the $180M enterprise tail. Three levers:',opts:[
-       {rec:true,tag:'A · Reduce (fund PAM + DR)',on:'Option A · Reduce',osum:'$4.6M · removes $92M',pros:['Cuts likelihood and impact','De-correlates the payments path','Tail returns within appetite'],cons:['$4.6M capital']},
+       {rec:true,tag:'A · Reduce (fund PAM + DR)',on:'Option A · Reduce',osum:'$4.6M · removes $92M',pros:['Cuts likelihood and impact','De-correlates the payments path','Tail returns within appetite'],cons:['Requires $4.6M of capital']},
        {tag:'B · Transfer (raise insurance limit)',on:'Option B · Transfer',osum:'+$1.1M premium',pros:['Caps the financial tail via a higher limit','Fast to execute at renewal'],cons:['~$1.1M higher annual premium','Does not reduce likelihood or de-correlate the path','Coverage still excludes some tail scenarios']},
        {tag:'C · Accept the tail',on:'Option C · Accept',osum:'$0',pros:['No capital spend'],cons:['Correlated tail stays $205M — above the $180M enterprise limit','Requires a documented board risk-acceptance']}]}]))
   );}
@@ -162,7 +162,7 @@ var SEATS = {
      '<div id="cioDr"></div>')
    +sec('04','What decision needs the CIO?','How much recovery resilience we fund. Choosing one records to your ticketing system.',
      decisions([{n:1,q:'How much recovery resilience do we fund?',sit:'Our slowest revenue system recovers in ~3.1 days, driving most of the worst-case tail. Three levels:',opts:[
-       {rec:true,tag:'A · Full modernization',on:'Option A · Full',osum:'$3.2M · <6h recovery',pros:['Cuts worst case by ~$40M','Meets regulatory recovery expectations','Removes the single-vendor risk (multi-region)'],cons:['$3.2M capital','One-quarter program']},
+       {rec:true,tag:'A · Full modernization',on:'Option A · Full',osum:'$3.2M · <6h recovery',pros:['Cuts worst case by ~$40M','Meets regulatory recovery expectations','Removes the single-vendor risk (multi-region)'],cons:['Requires $3.2M of capital','One-quarter program']},
        {tag:'B · Critical systems only',on:'Option B · Critical only',osum:'$1.6M',pros:['Protects payments &amp; settlement (the top $/hr systems)','Half the capital of full modernization'],cons:['Member-portal recovery stays at ~40 hrs','Removes only ~$24M of the $40M tail driver']},
        {tag:'C · Defer',on:'Option C · Defer',osum:'$0 this year',pros:['Zero capital this year'],cons:['Worst-case recovery stays 3.1 days','Tail stays $180M — above the $120M appetite','Weakens the insurance renewal position']}]}]))
   );}
@@ -180,7 +180,7 @@ var SEATS = {
      '<div id="cooContinuity"></div>')
    +sec('03','What decision needs the COO?','How much operational resilience we fund so the business keeps delivering through a disruption. Choosing one records to your ticketing system as a tracked project.',
      decisions([{n:1,q:'How do we keep operations running through a disruption?',sit:'Our slowest critical service recovers beyond tolerance and one vendor is a single point of failure for three services. Three ways to close the continuity gap:',opts:[
-       {rec:true,tag:'A · Fund resilience + remove the SPOF',on:'Option A · Resilience',osum:'$3.2M · within tolerance',pros:['Brings the slowest critical service inside recovery tolerance','Removes the single-vendor point of failure (multi-region)','Protects service-delivery SLAs and customer trust'],cons:['$3.2M capital','A one-quarter program']},
+       {rec:true,tag:'A · Fund resilience + remove the SPOF',on:'Option A · Resilience',osum:'$3.2M · within tolerance',pros:['Brings the slowest critical service inside recovery tolerance','Removes the single-vendor point of failure (multi-region)','Protects service-delivery SLAs and customer trust'],cons:['Requires $3.2M of capital','A one-quarter program']},
        {tag:'B · Critical services only',on:'Option B · Critical only',osum:'$1.6M',pros:['Protects the top revenue-critical services','Half the capital'],cons:['Lower-tier services stay over tolerance','Vendor concentration remains']},
        {tag:'C · Accept &amp; monitor',on:'Option C · Accept',osum:'$0 this year',pros:['No capital this year'],cons:['The slowest service stays over recovery tolerance','A vendor failure still degrades three services at once','Requires a documented operational risk-acceptance']}]}]))
   );}
@@ -208,7 +208,7 @@ var SEATS = {
      '<div id="cisoCompliance"></div>')
    +sec('08','What decision needs you now?','Where the next security dollar goes — a plain-English, costed choice. Pick one and it records to your ticketing system as a tracked project, so the decision and its owner are on the record.',
      decisions([{n:1,q:'Which control gap do we close first?',sit:'The biggest dollar driver is the privileged path into payments. Where do we direct the next dollar?',opts:[
-       {rec:true,tag:'A · Privileged access (PAM)',on:'Option A · PAM',osum:'$1.4M · 37×',pros:['Closes the $52M driver','Highest return available','Improves board posture immediately'],cons:['$1.4M','3 weeks of IAM effort']},
+       {rec:true,tag:'A · Privileged access (PAM)',on:'Option A · PAM',osum:'$1.4M · 37×',pros:['Closes the $52M driver','Highest return available','Improves board posture immediately'],cons:['Requires $1.4M of capital this year','~3 weeks of IAM engineering effort']},
        {tag:'B · Prove recovery (DR test)',on:'Option B · DR',osum:'$3.2M · <6h recovery',pros:['Removes ~$40M of the recovery tail','Meets regulatory recovery expectations'],cons:['$3.2M — larger program than PAM','Leaves the #1 driver (the $52M privileged path) open']},
        {tag:'C · AI-decisioning governance',on:'Option C · AI governance',osum:'standard + oversight',pros:['Addresses the fastest-rising risk (+$8M/qtr)','Gets ahead of the AI board decision'],cons:['Does not touch the $52M top driver yet','Benefit is preventive, not immediate risk removed']}]}]))
    +sec('09','How does our security investment move the business?','Not a project tracker — that lives in your ticketing system. This is the board view of the same portfolio: every funded initiative mapped to the business outcome it buys and the dollars of risk it removes, grouped by whether it protects the business, meets our obligations, or enables growth. Spend → risk removed → business result.',
