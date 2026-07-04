@@ -140,6 +140,16 @@ router.post('/ingest', optionalJWT, async (req, res) => {
       policy: ai.policy || null, euAiAct: ai.euAiAct || null, inventory: ai.inventory || null,
     };
 
+    // Strategic initiatives (CEO per-initiative go/no-go safety check + decision brief).
+    const strategicInitiatives = Array.isArray(b.strategicInitiatives)
+      ? b.strategicInitiatives.filter((s) => s && s.name).slice(0, 20).map((s) => ({
+          name: String(s.name).slice(0, 140),
+          type: s.type ? String(s.type).slice(0, 60) : null,
+          valueUsd: money(s.valueUsd) || null,
+          horizon: s.horizon ? String(s.horizon).slice(0, 40) : null,
+        }))
+      : [];
+
     // Security-as-a-growth-engine (CISO revenue-enablement) — pipeline in security
     // review, deal-review cycle time, certifications held, trust reviews. Optional;
     // stored verbatim and echoed in /summary. null-safe so the cockpit can gate it.
@@ -163,7 +173,7 @@ router.post('/ingest', optionalJWT, async (req, res) => {
        VALUES ($1,$2,$3,$4::jsonb,NOW())
        ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name,
          setup_json = COALESCE(orgs.setup_json,'{}'::jsonb) || EXCLUDED.setup_json`,
-      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics, resilience, initiatives, governance, aiGovernance, growth })]);
+      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics, resilience, initiatives, governance, aiGovernance, growth, strategicInitiatives })]);
 
     // Idempotent replace: clear the org's prior inventory, then insert the mapped rows.
     step = 'clear_inventory';

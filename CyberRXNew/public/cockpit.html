@@ -471,7 +471,7 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
@@ -1434,7 +1434,7 @@ function renderSignals(){
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderBoard();renderCeoGoNoGo();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -1758,25 +1758,98 @@ function renderOpModel(seat){
     '<div class="cn" style="margin:6px 0 10px"><b style="color:var(--ink)">'+built+' of '+rows.length+'</b> represented by a live CyberX-Ray panel · '+connSrc+' data-source categories connected. Each row is one of your accountabilities, what the CISO does to enable it, the panel that shows it, and the systems behind it — <b>● connected</b>, <b>○ connect to light up</b>.</div>'+
     body+'</div>';
 }
-/* Strategic Go/No-Go — CEO panel (operating-model column F). A single readiness
-   verdict (Proceed / Proceed with conditions / Stop) from real posture gates, so
-   the board can decide whether a strategic initiative is safe to pursue. */
+/* ---- Strategic initiatives — the CEO's major moves, each with its OWN go/no-go.
+   Per the operating model, the "New-Initiative Safety Check" is per initiative:
+   every move (M&A, cloud, AI, expansion…) is scored on the safety gates that
+   matter for ITS type, so different moves get different verdicts — never one
+   global "Proceed". Gates read live posture; nothing self-attested. ---- */
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function strategicInits(){return (LIVE&&Array.isArray(LIVE.strategic_initiatives))?LIVE.strategic_initiatives:[];}
+function initType(t){t=String(t||'').toLowerCase();
+  if(/acqui|m&a|merg|divest/.test(t))return 'ma';
+  if(/cloud|migrat|data ?cent|infra/.test(t))return 'cloud';
+  if(/\bai\b|a\.i|artificial|\bml\b|model|genai|llm/.test(t))return 'ai';
+  if(/expansion|geograph|market|factory|country|region|vietnam|offshore|new ?market/.test(t))return 'expansion';
+  if(/outsourc|offshor|managed|third.?party|supplier/.test(t))return 'outsourcing';
+  if(/data|analytic/.test(t))return 'data';
+  return 'product';
+}
+/* The safety gates for one initiative, from its type + live posture. ok=true|false|null. */
+function initGates(init){
+  var k=initType(init.type),g=[],ec=(LIVE&&LIVE.economics)||{},ap=ec.appetite||{};
+  g.push({n:'Enterprise cyber risk within appetite',ok:ap.appetite?(ap.within!==false&&ap.tail_within===true):null,d:'the business is inside the board’s approved tolerance before taking on this move'});
+  if(k==='cloud'){var c=sig('cspm_pct'),m=sig('mfa_pct');
+    g.push({n:'Cloud security posture proven',ok:c!=null?(c>=80):null,d:'CSPM shows the target cloud is configured securely — misconfiguration, public exposure and identity risk in range'});
+    g.push({n:'Identity controls enforced',ok:m!=null?(m>=95):null,d:'MFA enforced on the accounts that will reach the new platform'});
+  } else if(k==='ai'){var ar=(LIVE&&LIVE.aiRisk&&LIVE.aiRisk.governance),am=ar?aiMaturity(ar):null;
+    g.push({n:'AI governance in place',ok:(am&&am.pct!=null)?(am.pct>=62):null,d:'a recognised AI framework, an approved acceptable-use policy and an AI inventory before shipping AI in a product'});
+    g.push({n:'AI acceptable-use policy board-approved',ok:ar?(/board-approved/i.test(ar.policy||'')):null,d:'the board has approved how AI may be used and its guardrails'});
+  } else if(k==='ma'){var tv=LIVE&&LIVE.resilience&&LIVE.resilience.top_vendor_blast;
+    g.push({n:'Target security due-diligence evidenced',ok:null,d:'connect the diligence data-room / target security assessment — not yet evidenced, so this gates the deal'});
+    g.push({n:'No new single-provider concentration',ok:(tv&&tv.vendor)?false:null,d:'the acquisition should not deepen an existing single-vendor dependency'});
+  } else if(k==='expansion'){var lg=(LIVE&&LIVE.legal)||{};
+    g.push({n:'New-jurisdiction obligations mapped',ok:lg.binding?true:null,d:'the breach-notification clocks and penalties of the new market are known (see CLO jurisdictions)'});
+    g.push({n:'Data-residency & transfer plan',ok:null,d:'where the new market’s data will live and how it transfers legally — confirm before committing'});
+  } else if(k==='outsourcing'){
+    g.push({n:'Provider security assessed',ok:null,d:'the provider’s security rating and questionnaire cleared — connect vendor monitoring to evidence'});
+    g.push({n:'Data-handling & exit plan defined',ok:null,d:'what data the provider touches and how you exit if it fails — confirm before signing'});
+  } else if(k==='data'){
+    g.push({n:'Data protection & DLP ready',ok:null,d:'classification, DLP and access controls for the new data flows — connect data-protection tooling'});
+    g.push({n:'Lawful-basis & privacy review',ok:null,d:'the privacy/lawful-basis review for the new analytics use is complete'});
+  } else {
+    g.push({n:'Secure-by-design review passed',ok:null,d:'the new product cleared a security-architecture and application-security review'});
+  }
+  return g;
+}
+function initVerdict(gates){
+  var red=gates.filter(function(x){return x.ok===false;}).length;
+  var unknown=gates.filter(function(x){return x.ok==null;}).length;
+  var scored=gates.filter(function(x){return x.ok!=null;}).length;
+  if(red>0)return {t:'HOLD',c:'crit'};
+  if(unknown>0)return {t:'CONDITIONS',c:'warn'};
+  if(scored)return {t:'PROCEED',c:'good'};
+  return {t:'CONNECT DATA',c:'muted'};
+}
+function initWeak(gates){return gates.filter(function(g){return g.ok===false||g.ok==null;});}
 function renderCeoGoNoGo(){
   var host=document.getElementById('ceoGoNoGo');if(!host)return;
-  var ec=(LIVE&&LIVE.economics)||{},ap=ec.appetite||{},g=(LIVE&&LIVE.governance)||{},ir=g.ir||{},tr=trajInfo();
-  var gates=[
-    {n:'Expected loss within board appetite',ok:(LIVE&&ap.appetite)?(ap.within!==false):null,d:'ALE ≤ the appetite the board approved'},
-    {n:'Worst-case tail within appetite',ok:(LIVE&&ap.appetite)?(ap.tail_within===true):null,d:'95% Value-at-Risk ≤ appetite'},
-    {n:'Program trajectory improving',ok:tr.two?tr.down:null,d:'expected loss trending down over recorded analyses'},
-    {n:'Incident response tested',ok:(ir.retainer||ir.tested)?(/yes/i.test(ir.retainer||'')&&/yes|within 12|tested/i.test(ir.tested||'')):null,d:'retainer in place + tabletop within 12 months'},
-    {n:'Board governance structure sound',ok:(function(){var gm=govMaturity(g,['committee','cadence','boardExpertise','cisoReportsTo','ermIntegrated']);return (gm&&gm.pct!=null)?(gm.pct>=62):null;})(),d:'committee ownership, cadence, board expertise, CISO independence & ERM integration'},
-    {n:'The AI we run is governed',ok:(function(){var ar=(LIVE&&LIVE.aiRisk&&LIVE.aiRisk.governance);if(!ar)return null;var am=aiMaturity(ar);return am.pct!=null?(am.pct>=62):null;})(),d:'AI framework adopted, acceptable-use policy board-approved, AI systems inventoried'}
-  ];
-  var scored=gates.filter(function(x){return x.ok!=null;}),green=gates.filter(function(x){return x.ok===true;}).length,red=gates.filter(function(x){return x.ok===false;}).length;
-  var v=red>0?{t:'STOP / PROCEED WITH CONDITIONS',c:'crit'}:(scored.length&&green===scored.length?{t:'PROCEED',c:'good'}:(scored.length?{t:'PROCEED WITH CONDITIONS',c:'warn'}:{t:'CONNECT DATA TO SCORE',c:'muted'}));
-  var rows=gates.map(function(x){var cls=x.ok===true?'good':x.ok===false?'crit':'muted';return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+cls+')"></span><b>'+x.n+'</b><span class="drow-tool" style="color:var(--'+cls+')">'+(x.ok===true?'✓ green':x.ok===false?'gate':'—')+'</span></div><div class="drow-need">'+x.d+'</div></div>';}).join('');
-  host.innerHTML='<div class="card"><div class="ck">Is this strategy safe to pursue? '+liveTag()+'</div><div class="cv" style="font-size:23px;margin-top:6px;color:var(--'+v.c+')">'+v.t+'</div>'+
-    '<div class="cn" style="margin:6px 0 8px"><b>'+green+' of '+gates.length+'</b> readiness gates green — the single-screen go/no-go the board acts on. Each gate is a real posture check from your data (economics, trend, governance), not a self-attestation. Run this before approving M&amp;A, a cloud migration, a new AI system or a market expansion.</div>'+rows+'</div>';
+  var inits=strategicInits();
+  if(!inits.length){
+    host.innerHTML='<div class="card"><div class="ck">New-initiative safety check '+liveTag()+'</div><div class="cn" style="margin-top:6px">◐ Add your <b>strategic initiatives</b> — the major moves in front of the board (an acquisition, a cloud platform, an AI product, a market or factory expansion) — in onboarding. CyberX-Ray then runs a <b>go / no-go per initiative</b>: for each move, the risks, exactly where it’s weak, and a clear Proceed / Conditions / Hold before the business commits. A single global verdict would be meaningless — each move carries different risk.</div></div>';
+    return;
+  }
+  var rows=inits.map(function(it){
+    var gates=initGates(it),v=initVerdict(gates),weak=initWeak(gates);
+    var gr=gates.map(function(g){var cls=g.ok===true?'good':g.ok===false?'crit':'muted';return '<div class="drow" style="padding:6px 0"><div class="drow-h"><span class="cap-dot" style="background:var(--'+cls+')"></span><span>'+g.n+'</span><span class="drow-tool" style="color:var(--'+cls+')">'+(g.ok===true?'✓':g.ok===false?'gap':'—')+'</span></div><div class="drow-need">'+g.d+'</div></div>';}).join('');
+    return '<div class="card" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px"><div><b style="font-size:15px">'+esc(it.name)+'</b> '+(it.type?('<span class="pill mod" style="font-size:9px">'+esc(it.type)+'</span>'):'')+(it.valueUsd?(' <span class="cn">· '+usd(it.valueUsd)+' at stake'+(it.horizon?(' · '+esc(it.horizon)):'')+'</span>'):'')+'</div><span style="font-weight:800;font-size:15px;color:var(--'+v.c+');white-space:nowrap">'+v.t+'</span></div>'+
+      '<div style="margin-top:8px">'+gr+'</div>'+
+      (weak.length?('<div class="cn" style="margin-top:8px"><b>Where it’s weak:</b> '+weak.map(function(g){return g.n.toLowerCase();}).join(' · ')+'.</div>'):'<div class="cn" style="margin-top:8px;color:var(--good)">All safety gates green — safe to pursue.</div>')+'</div>';
+  }).join('');
+  host.innerHTML='<div class="cn" style="margin-bottom:10px">A <b>go / no-go for each strategic initiative</b> — every major move scored on the safety gates that matter for its type, so the verdicts differ by move. '+liveTag()+'</div>'+rows;
+}
+/* Decision Intelligence — a one-page decision brief PER strategic initiative:
+   best / likely / worst outcome in dollars + a clear recommendation, tied to the
+   move's value-at-stake and its live safety verdict. Not the CISO's control
+   decisions — the strategic moves the CEO actually signs off. */
+function renderCeoDecisionBrief(){
+  var host=document.getElementById('ceoDecisionBrief');if(!host)return;
+  var inits=strategicInits();
+  if(!inits.length){host.innerHTML='<div class="card"><div class="ck">Decision brief</div><div class="cn" style="margin-top:6px">◐ Add your strategic initiatives in onboarding. Each gets a one-page decision brief — best / likely / worst outcome and the dollar impact, in business terms, with a clear recommendation.</div></div>';return;}
+  host.innerHTML=inits.map(function(it){
+    var gates=initGates(it),v=initVerdict(gates),weak=initWeak(gates),val=it.valueUsd||null;
+    var wf=v.c==='crit'?0.25:v.c==='warn'?0.12:0.04,lf=v.c==='crit'?0.08:v.c==='warn'?0.03:0.01;
+    var worst=val?Math.round(val*wf):null,likely=val?Math.round(val*lf):null;
+    var rec=v.c==='good'?'Proceed — the safety gates for this move are green.':v.c==='crit'?'Hold until the gap below is closed; the modeled downside is material against the value at stake.':'Proceed with conditions — close the open items in parallel; they gate the move rather than block it.';
+    return '<div class="card" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:baseline"><b style="font-size:15px">'+esc(it.name)+'</b><span style="font-weight:800;color:var(--'+v.c+')">'+v.t+'</span></div>'+
+      (val?('<div class="cols" style="margin-top:10px;gap:14px">'+
+        '<div><div class="cv" style="font-size:17px;color:var(--good)">'+usd(val)+'</div><div class="cn">value at stake — best case, fully realised</div></div>'+
+        '<div><div class="cv" style="font-size:17px">−'+(likely!=null?usd(likely):'—')+'</div><div class="cn"><span class="pill mod">modeled</span> likely cyber cost proceeding as-is</div></div>'+
+        '<div><div class="cv" style="font-size:17px;color:var(--crit)">−'+(worst!=null?usd(worst):'—')+'</div><div class="cn"><span class="pill mod">modeled</span> worst case if the weak gate is exploited</div></div>'+
+        '</div>'):'<div class="cn" style="margin-top:8px">Add a value-at-stake for this initiative in onboarding to quantify the best / likely / worst outcome in dollars.</div>')+
+      '<div class="cn" style="margin-top:10px"><b>Recommendation:</b> '+rec+(weak.length?(' <b>Open items:</b> '+weak.map(function(g){return g.n.toLowerCase();}).join('; ')+'.'):'')+'</div>'+
+      (val?'<div class="cn" style="margin-top:6px"><span class="pill mod" style="font-size:8px">modeled</span> Downside = the share of value-at-stake exposed if this move’s weakest safety gate is exploited (Hold 25% · Conditions 12% · Proceed 4%) — an illustrative planning range, not a forecast. The verdict and gates come from your live posture.</div>':'')+
+      '</div>';
+  }).join('');
 }
 function renderOversight(){
   var host=document.getElementById('ceoOversight');if(!host)return;
