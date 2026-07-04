@@ -6,15 +6,18 @@
 <title>CyberRx · Setup</title>
 <style>
   :root{
-    --plane:#0d0d0d; --surface:#1a1a19; --surface-2:#211f1d; --line:#2c2c2a; --line-2:#3a3a37;
-    --ink:#fff; --ink-2:#c3c2b7; --muted:#898781;
-    --blue:#3987e5; --blue-soft:rgba(57,135,229,.14); --good:#0ca30c; --good-soft:rgba(12,163,12,.14); --warn:#fab219; --warn-soft:rgba(250,178,25,.14); --crit:#e5484d; --crit-soft:rgba(229,72,77,.14); --gold:#c79e3a; --gold-soft:rgba(199,158,58,.13);
+    /* Advisory theme — matches the executive cockpit (navy / steel / ice, serif headings) */
+    --plane:#F4F7FB; --surface:#FFFFFF; --surface-2:#E8F0FB; --line:#D9E1EC; --line-2:#CADCFC;
+    --ink:#1E2A4A; --ink-2:#44546A; --muted:#8A93A2;
+    --blue:#4A6FA5; --blue-soft:#E8F0FB; --good:#2E8B6B; --good-soft:rgba(46,139,107,.12); --warn:#C9A227; --warn-soft:rgba(201,162,39,.16); --crit:#B23A3A; --crit-soft:rgba(178,58,58,.12); --gold:#C9A227; --gold-soft:rgba(201,162,39,.13);
     --mono:"SFMono-Regular",Consolas,Menlo,monospace;
+    --serif:Cambria,Georgia,"Times New Roman",serif;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--plane);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,.st{font-family:var(--serif)}
   .wrap{max-width:900px;margin:0 auto;padding:0 24px}
-  .top{border-bottom:1px solid var(--line);background:linear-gradient(180deg,#111,#0d0d0d)}
+  .top{border-bottom:1px solid var(--line);background:var(--surface)}
   .top-in{display:flex;align-items:center;gap:13px;height:58px}
   .logo{width:29px;height:29px;border-radius:8px;background:linear-gradient(135deg,#4F90FF,#0A4DC4);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
   .brand{font-weight:700;font-size:16px}.brand span{color:var(--muted);font-weight:500;font-size:11px;letter-spacing:.13em;text-transform:uppercase;margin-left:9px}
@@ -23,11 +26,11 @@
   .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);font-weight:600;margin-bottom:11px}
   h1{font-size:26px;font-weight:700;letter-spacing:-.02em}
   .lede{color:var(--ink-2);font-size:14.5px;margin-top:10px;max-width:680px}
-  .lede b{color:#fff}
-  .obtabs{position:sticky;top:0;z-index:20;display:flex;gap:8px;flex-wrap:wrap;padding:12px 0;margin-top:8px;background:var(--bg,#0b0b0d);border-bottom:1px solid var(--line)}
+  .lede b{color:var(--ink)}
+  .obtabs{position:sticky;top:0;z-index:20;display:flex;gap:8px;flex-wrap:wrap;padding:12px 0;margin-top:8px;background:var(--plane);border-bottom:1px solid var(--line)}
   .obtab{font-size:12.5px;font-weight:600;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:7px 15px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:7px}
   .obtab:hover{color:var(--ink,#fff)}
-  .obtab.on{color:#fff;border-color:var(--accent,#3987e5);background:var(--accent-soft,rgba(57,135,229,.14))}
+  .obtab.on{color:#fff;border-color:var(--ink);background:var(--ink)}
   .obtab .obn{font-size:10px;font-weight:700;opacity:.6}
   .obtab.done .obn{color:var(--good,#0ca30c);opacity:1}
   .sec{margin-top:26px;background:var(--surface);border:1px solid var(--line);border-radius:15px;padding:22px 24px}
@@ -43,14 +46,14 @@
   label .h{color:var(--muted);font-weight:400}
   input,select{width:100%;background:var(--plane);border:1px solid var(--line-2);border-radius:9px;padding:10px 12px;color:var(--ink);font-family:inherit;font-size:13.5px;outline:none}
   input:focus,select:focus{border-color:var(--blue)}
-  input::placeholder{color:#5f5d58}
+  input::placeholder{color:var(--muted)}
   /* dark-mode date picker: make the native calendar affordance visible + clickable */
-  input[type=date]{color-scheme:dark;cursor:pointer;position:relative}
-  input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.85);opacity:.9;cursor:pointer;font-size:16px}
+  input[type=date]{color-scheme:light;cursor:pointer;position:relative}
+  input[type=date]::-webkit-calendar-picker-indicator{opacity:.7;cursor:pointer;font-size:16px}
   input[type=date]::-webkit-calendar-picker-indicator:hover{opacity:1}
   .chips{display:flex;flex-wrap:wrap;gap:8px}
   .chip{font-size:12.5px;font-weight:600;color:var(--ink-2);background:var(--plane);border:1px solid var(--line-2);border-radius:99px;padding:7px 13px;cursor:pointer}
-  .chip.on{color:#fff;background:var(--blue-soft);border-color:var(--blue)}
+  .chip.on{color:#fff;background:var(--blue);border-color:var(--blue)}
   .drop{border:1.5px dashed var(--line-2);border-radius:11px;padding:20px;text-align:center;cursor:pointer;transition:border-color .12s}
   .drop:hover{border-color:var(--blue)}
   .drop .ic{font-size:22px;color:var(--blue)}.drop .t{font-weight:600;font-size:13.5px;margin-top:6px}.drop .s{font-size:12px;color:var(--muted);margin-top:3px}
@@ -91,7 +94,7 @@
   .mapapp{min-width:160px;font-weight:700;font-size:13px;padding-top:3px}.mapapp .mapv{display:block;font-weight:500;color:var(--muted);font-size:11.5px;margin-top:1px}
   .mapchips{display:flex;flex-wrap:wrap;gap:6px;flex:1}
   .mchip{font-size:11.5px;font-weight:600;color:var(--muted);background:var(--plane);border:1px dashed var(--line-2);border-radius:99px;padding:5px 11px;cursor:pointer}
-  .mchip.on{color:#fff;background:var(--blue-soft);border:1px solid var(--blue)}
+  .mchip.on{color:#fff;background:var(--blue);border:1px solid var(--blue)}
   .mapempty{font-size:12.5px;color:var(--muted)}
   /* crown-jewel column graph (process → application → crown jewel) */
   .cjmap{position:relative;display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-bottom:8px}
@@ -114,8 +117,8 @@
   .mapedit-body{margin-top:12px;max-height:340px;overflow-y:auto;padding-right:4px}
   .maprow2{display:flex;gap:14px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)}.maprow2:last-child{border:none}
   .maptags{display:flex;flex-wrap:wrap;gap:6px;flex:1;align-items:center}
-  .mtag{font-size:11.5px;font-weight:600;color:#fff;background:var(--blue-soft);border:1px solid var(--blue);border-radius:99px;padding:4px 10px;cursor:pointer}
-  .mtag b{color:var(--muted);font-weight:700}
+  .mtag{font-size:11.5px;font-weight:600;color:#fff;background:var(--blue);border:1px solid var(--blue);border-radius:99px;padding:4px 10px;cursor:pointer}
+  .mtag b{color:rgba(255,255,255,.72);font-weight:700}
   .mapadd{width:auto;font-size:11.5px;padding:5px 8px;background:var(--plane);border:1px dashed var(--line-2);border-radius:8px;color:var(--muted)}
   @media (max-width:680px){.cjmap{grid-template-columns:1fr;gap:14px}.cjsvg{display:none}}
   /* tool connectors + demo mode + credibility meter */
@@ -154,11 +157,11 @@
   .livedot{width:6px;height:6px;border-radius:50%;background:var(--good);display:inline-block;margin-right:6px;vertical-align:middle}
   .note{font-size:12.5px;color:var(--muted);line-height:1.6}
   .note b{color:var(--ink-2)}
-  .foot{position:sticky;bottom:0;background:linear-gradient(180deg,transparent,#0d0d0d 30%);padding:22px 0 26px;margin-top:24px}
+  .foot{position:sticky;bottom:0;background:linear-gradient(180deg,transparent,var(--plane) 30%);padding:22px 0 26px;margin-top:24px}
   .foot-in{display:flex;align-items:center;gap:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 20px}
-  .foot .sum{font-size:12.5px;color:var(--muted)}.foot .sum b{color:#fff}
+  .foot .sum{font-size:12.5px;color:var(--muted)}.foot .sum b{color:var(--ink)}
   .golive{margin-left:auto;background:var(--blue);color:#fff;border:none;border-radius:10px;padding:12px 24px;font-weight:700;font-size:14px;cursor:pointer}
-  .golive:hover{background:#1e5fd6}.golive:disabled{opacity:.5;cursor:not-allowed}
+  .golive:hover{filter:brightness(1.08)}.golive:disabled{opacity:.5;cursor:not-allowed}
   .glmsg{font-size:12.5px}
 </style>
 </head>
