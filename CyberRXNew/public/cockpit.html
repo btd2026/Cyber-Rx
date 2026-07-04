@@ -362,7 +362,7 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCfoFraud();renderCroPortfolio();renderRoi();renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
@@ -370,7 +370,7 @@ function render(seat){
 var TAB_LABELS={
  'Are we under attack right now?':'Live status','What are we protecting — and what is each worth?':'Crown Jewels — Exposure','How is security helping the business grow — and win deals?':'Business Growth','Are our controls actually working — and is the program improving?':'Controls','AI risk — two fronts: securing the AI we run, and using AI to defend':'AI risk','Are we audit-ready? — compliance framework readiness':'Compliance','What decision needs you now?':'Decision','How does our security investment move the business?':'Investment',
  'How much is at stake — and are we within the board’s limit?':'At stake','Which business processes carry the risk?':'By process','What decisions need us — and what are the trade-offs?':'Decisions','Are we adequately insured against the worst case?':'Insurance','Are we getting better — quarter over quarter?':'Trend','Our worst realistic day — and are we ready to respond and recover?':'Worst day','Governance, oversight & SEC disclosure readiness':'Governance','AI risk — are we ready for AI-accelerated attacks, and is our own AI governed?':'AI risk',
- 'What is our capital at risk — and is our spend working?':'Capital at risk','What would a bad year do to earnings?':'Earnings','Where does the next dollar work hardest, and are we insured?':'ROI & insurance','What if we change the budget — and is an incident material?':'Budget','What decision needs the CFO — and what does it cost or buy?':'Decision','Current cyber initiatives & their ROI':'Projects & ROI',
+ 'What is our capital at risk — and is our spend working?':'Capital at risk','What would a bad year do to earnings?':'Earnings','Where does the next dollar work hardest, and are we insured?':'ROI & insurance','What if we change the budget — and is an incident material?':'Budget','Are we protected against financial crime — and will we pass the SOX audit?':'Fraud & SOX','What decision needs the CFO — and what does it cost or buy?':'Decision','Current cyber initiatives & their ROI':'Projects & ROI',
  'Are we legally defensible right now?':'Standing','Where are we exposed by jurisdiction — duty, clock, penalty?':'Jurisdictions','What decision needs the General Counsel?':'Decision','Is an incident material — and are we covered by contract?':'Materiality',
  'Where does cyber sit against appetite and our other risks?':'Vs appetite','What could breach appetite, and what is rising fastest?':'Aggregation','What decision needs the CRO?':'Decision',
  'Can the business keep operating — and recover fast enough?':'Resilience','Which systems carry the business, and how fast do they recover?':'Systems','What decision needs the CIO?':'Decision'
@@ -1008,8 +1008,10 @@ function demoSignals(){
   if(has(['cyberark','beyondtrust','delinea'])){set('pam_pct',60);set('priv_sessions_flagged',2);}
   if(has(['qualys','tenable']))set('patch_pct',88);
   if(has(['knowbe4','proofpoint'])){set('phishing_pct',3);set('training_pct',94);}
+  if(has(['proofpoint']))set('bec_blocked',14);
   if(has(['splunk','sentinel'])){set('open_incidents',0);set('mttd_hrs',8);}
   if(has(['aws','azure','wiz','prisma','gcp']))set('cspm_pct',82);
+  if(has(['sap','oracle','workday','netsuite','sapgrc'])){set('sod_conflicts',3);set('change_pass_pct',94);set('payment_anomalies',2);}
   return any?s:null;
 }
 function applyDemoSignals(){if(!demoActive()||SIGNALS)return;var s=demoSignals();if(s){SIGNALS=s;renderSignals();}}
@@ -1031,12 +1033,12 @@ function renderSignals(){
     var pcts=['edr_pct','mfa_pct','pam_pct'].map(sig).filter(function(x){return x!=null;});
     if(pcts.length){var avg=Math.round(pcts.reduce(function(s,x){return s+x;},0)/pcts.length);setTxt('lvCovTile',avg+'%');var tn=document.getElementById('lvCovTileNote');if(tn)tn.innerHTML='<span class="pill good">live</span> from '+pcts.length+' connected tool'+(pcts.length>1?'s':'');}
   }
-  renderAiRisk();renderCisoOps();renderControls();renderCompliance();renderCooStatus();
+  renderAiRisk();renderCisoOps();renderControls();renderCompliance();renderCooStatus();renderCfoFraud();
 }
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderBoard();renderEarnings();renderCfoFraud();renderCroPortfolio();renderRoi();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -1633,6 +1635,35 @@ function renderRoi(){
   var roi=reduced/e.budget;
   setTxt('lvCfoRoiVal','$1 → $'+(roi>=1?roi.toFixed(1):roi.toFixed(2)));
   var note=document.getElementById('lvCfoRoiNote');if(note)note.innerHTML='<span class="pill good">measured</span> '+usd(reduced)+' risk removed ÷ '+usd(e.budget)+' spend';
+}
+/* CFO — financial-crime / payment-fraud posture + SOX IT general controls (ITGC).
+   Fraud signals from email security + ERP; ITGC from identity + change management +
+   ERP GRC. Every row live/demo-tagged; nothing self-attested unless labeled. BEC and
+   payment fraud are the fraud vectors that hit finance directly (FBI IC3: #1 dollar-
+   loss crime), and SOX 404 ITGC is the control set the external auditor tests yearly. */
+function renderCfoFraud(){
+  var host=document.getElementById('cfoFraud');if(!host)return;
+  var bec=sig('bec_blocked'),pf=sig('payment_anomalies'),sod=sig('sod_conflicts'),chg=sig('change_pass_pct');
+  var mfa=sig('mfa_pct'),rev=sig('access_review_pct');
+  var g=(LIVE&&LIVE.governance)||{},dual=g.paymentDualAuth||null;
+  if(bec==null&&pf==null&&sod==null&&chg==null&&mfa==null){
+    host.innerHTML='<div class="card"><div class="ck">Financial-crime &amp; SOX IT controls</div><div class="cn" style="margin-top:6px">◐ Connect your email security (Proofpoint / Abnormal), ERP (SAP / Oracle / Workday / NetSuite) and identity provider to evidence payment-fraud defenses and the SOX IT general controls — access, change, segregation-of-duties — your external auditor tests every year, instead of self-attesting them in a spreadsheet.</div></div>';return;}
+  var fRows=iamGovRow('BEC / impersonation attempts blocked',bec!=null?(bec+' / 90d'):'—',bec!=null?true:null,bec!=null?'Business email compromise is the #1 dollar-loss cyber crime (FBI IC3) — payment-redirect and invoice fraud aimed straight at finance.':'')+
+    iamGovRow('Payment / vendor-master anomalies',pf!=null?(pf+' flagged'):'—',pf!=null?(pf<=3):null,(pf!=null&&pf>0)?'Duplicate payees, changed bank details or out-of-pattern payments — review before the payment run releases.':'')+
+    iamGovRow('Dual authorization on payments',dual||'—',dual!=null?(/yes/i.test(dual)):null,'Segregation on the payment run is the primary control against internal and BEC-driven wire fraud.');
+  function met(v,th,inv){return v==null?null:(inv?v<=th:v>=th);}
+  var domains=[
+    {label:'Access management (ITGC)',val:mfa!=null?(mfa+'% MFA'+(rev!=null?(' · '+rev+'% reviewed'):'')):'—',ok:mfa!=null?met(mfa,95):null,sub:'Provisioning, deprovisioning and periodic access review of financially-significant systems.'},
+    {label:'Change management (ITGC)',val:chg!=null?(chg+'% controlled'):'—',ok:chg!=null?met(chg,90):null,sub:'Changes to financial systems approved, tested and segregated from the developer who wrote them.'},
+    {label:'Segregation of duties (SoD)',val:sod!=null?(sod+' conflicts'):'—',ok:sod!=null?met(sod,0,true):null,sub:'A user who can both create and pay a vendor is a material-weakness risk — resolve or compensate.'}
+  ];
+  var sRows=domains.map(function(d){return iamGovRow(d.label,d.val,d.ok,d.sub);}).join('');
+  var scored=domains.filter(function(d){return d.ok!=null;});
+  var passN=scored.filter(function(d){return d.ok===true;}).length;
+  host.innerHTML='<div class="cols">'+
+    '<div class="card"><div class="ck">Financial-crime &amp; payment-fraud posture '+liveTag()+'</div><div style="margin-top:8px">'+fRows+'</div><div class="cn" style="margin-top:8px">Evidenced from your email security + ERP — the fraud vectors that hit finance directly. This is your live defense posture, not a policy statement.</div></div>'+
+    '<div class="card"><div class="ck">SOX IT general controls (ITGC) '+liveTag()+(scored.length?(' · '+passN+'/'+scored.length+' passing'):'')+'</div><div style="margin-top:8px">'+sRows+'</div><div class="cn" style="margin-top:8px">The IT controls your external auditor tests for the SOX 404 opinion — evidenced continuously from your identity, change-management and ERP systems, instead of a year-end evidence scramble.</div></div>'+
+    '</div>';
 }
 /* CIO "which systems carry the business" — the crown-jewel systems, ranked by
    $/hr of downtime (from /summary resilience.systems). Illustrative until live. */
