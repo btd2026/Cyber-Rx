@@ -40,6 +40,8 @@ const RAW_REGISTRY = {
   abnormal: require('./abnormal'),
   otx: require('./otx'),
   cisa: require('./cisa'),
+  salesforce: require('./salesforce'),
+  whistic: require('./whistic'),
 };
 
 // Per-connector demo mode state. Defaults to false (live).

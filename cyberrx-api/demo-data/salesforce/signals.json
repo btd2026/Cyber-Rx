@@ -1,0 +1,7 @@
+{
+  "signals": [
+    { "key": "pipeline_in_review_usd", "value": 500000000, "asOf": "2026-06-28T12:00:00Z", "raw": { "source": "default" } },
+    { "key": "deals_gated_qtr", "value": 10, "asOf": "2026-06-28T12:00:00Z", "raw": { "source": "default" } }
+  ],
+  "meta": { "vendor": "Salesforce" }
+}
