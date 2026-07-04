@@ -126,13 +126,15 @@ var SEATS = {
       {k:'Concentration',v:'<span id="lvCroConc">50% in payments</span>',cls:'warn',ev:'procexpo',note:'one process carries most of the risk'},
       {k:'Correlation flag',v:'2 risks',cls:'warn',ev:'correlation',note:'<span class="pill mod">modeled</span> couples with third-party + operational'},
       {k:'Risk transferred',v:'<span id="lvCroTransfer">83%</span>',ev:'transfer',note:'of the tail, via insurance'}]))
-   +sec('02','What could breach appetite, and what is rising fastest?','Cyber on one scale beside your other principal risks. Your <b>cyber</b> figure is live; the other principal-risk values are your ERM inputs — <span class="pill mod">illustrative</span> until entered.',
+   +sec('02','Which Key Risk Indicators are breaching tolerance — and what is being done?','The ERM control panel: each KRI measured live against a board-set threshold, breaches flagged red, and the funded mitigation tracked to completion. This is what goes to the risk committee.',
+     '<div id="croKri"></div>')
+   +sec('03','What could breach appetite, and what is rising fastest?','Cyber on one scale beside your other principal risks. Your <b>cyber</b> figure is live; the other principal-risk values are your ERM inputs — <span class="pill mod">illustrative</span> until entered.',
      '<div id="croPortfolio">'+bars([{l:'Credit / market',v:'$210M',pct:100},{l:'Operational',v:'$140M',pct:67},{l:'Cyber',v:'<span id="lvCroCyber">$68M</span>',pct:32,cls:'hot'},{l:'Third-party',v:'$54M',pct:26},{l:'Compliance',v:'$30M',pct:14}])+'</div>'
      +lists([
       {c:'c',ic:'▲',t:'<span class="pill mod">modeled</span> AI / automated decisioning — velocity high, adaptation forming',s:'Emerging-risk radar — refine with your risk team.'},
       {c:'w',ic:'▲',t:'<span class="pill mod">modeled</span> Third-party &amp; cloud concentration — velocity high',ev:'vendor',s:'A single provider underpins multiple revenue systems.'},
       {c:'b',ic:'◐',t:'<span class="pill mod">modeled</span> Quantum / crypto obsolescence — velocity medium, planned',s:'Long-dated data exposed; migration staged.'}]))
-   +sec('03','What decision needs the CRO?','How we bring the correlated tail within appetite. Choosing one records to your ticketing system.',
+   +sec('04','What decision needs the CRO?','How we bring the correlated tail within appetite. Choosing one records to your ticketing system.',
      decisions([{n:1,q:'How do we bring the correlated tail within appetite?',sit:'A correlated payments + top-vendor event models at $205M — above the $180M enterprise tail. Three levers:',opts:[
        {rec:true,tag:'A · Reduce (fund PAM + DR)',on:'Option A · Reduce',osum:'$4.6M · removes $92M',pros:['Cuts likelihood and impact','De-correlates the payments path','Tail returns within appetite'],cons:['$4.6M capital']},
        {tag:'B · Transfer (raise insurance limit)',on:'Option B · Transfer',osum:'+$1.1M premium',pros:['Caps the financial tail via a higher limit','Fast to execute at renewal'],cons:['~$1.1M higher annual premium','Does not reduce likelihood or de-correlate the path','Coverage still excludes some tail scenarios']},

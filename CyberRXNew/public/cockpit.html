@@ -362,7 +362,7 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCfoFraud();renderCroPortfolio();renderRoi();renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
@@ -372,7 +372,7 @@ var TAB_LABELS={
  'How much is at stake — and are we within the board’s limit?':'At stake','Which business processes carry the risk?':'By process','What decisions need us — and what are the trade-offs?':'Decisions','Are we adequately insured against the worst case?':'Insurance','Are we getting better — quarter over quarter?':'Trend','Our worst realistic day — and are we ready to respond and recover?':'Worst day','Governance, oversight & SEC disclosure readiness':'Governance','AI risk — are we ready for AI-accelerated attacks, and is our own AI governed?':'AI risk',
  'What is our capital at risk — and is our spend working?':'Capital at risk','What would a bad year do to earnings?':'Earnings','Where does the next dollar work hardest, and are we insured?':'ROI & insurance','What if we change the budget — and is an incident material?':'Budget','Are we protected against financial crime — and will we pass the SOX audit?':'Fraud & SOX','What decision needs the CFO — and what does it cost or buy?':'Decision','Current cyber initiatives & their ROI':'Projects & ROI',
  'Are we legally defensible right now?':'Standing','Where are we exposed by jurisdiction — duty, clock, penalty?':'Jurisdictions','What decision needs the General Counsel?':'Decision','Is an incident material — and are we covered by contract?':'Materiality',
- 'Where does cyber sit against appetite and our other risks?':'Vs appetite','What could breach appetite, and what is rising fastest?':'Aggregation','What decision needs the CRO?':'Decision',
+ 'Where does cyber sit against appetite and our other risks?':'Vs appetite','Which Key Risk Indicators are breaching tolerance — and what is being done?':'KRI board','What could breach appetite, and what is rising fastest?':'Aggregation','What decision needs the CRO?':'Decision',
  'Can the business keep operating — and recover fast enough?':'Resilience','Which systems carry the business, and how fast do they recover?':'Systems','What decision needs the CIO?':'Decision'
 };
 function tabLabel(title){var raw=String(title||'').trim();if(TAB_LABELS[raw])return TAB_LABELS[raw];var t=raw.replace(/\?+\s*$/,'').trim();if(TAB_LABELS[t])return TAB_LABELS[t];t=t.split(/\s+[—–-]\s+/)[0].trim();if(t.length>26)t=t.slice(0,24).replace(/\s+\S*$/,'')+'…';return t;}
@@ -1033,12 +1033,12 @@ function renderSignals(){
     var pcts=['edr_pct','mfa_pct','pam_pct'].map(sig).filter(function(x){return x!=null;});
     if(pcts.length){var avg=Math.round(pcts.reduce(function(s,x){return s+x;},0)/pcts.length);setTxt('lvCovTile',avg+'%');var tn=document.getElementById('lvCovTileNote');if(tn)tn.innerHTML='<span class="pill good">live</span> from '+pcts.length+' connected tool'+(pcts.length>1?'s':'');}
   }
-  renderAiRisk();renderCisoOps();renderControls();renderCompliance();renderCooStatus();renderCfoFraud();
+  renderAiRisk();renderCisoOps();renderControls();renderCompliance();renderCooStatus();renderCfoFraud();renderCroKri();
 }
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderBoard();renderEarnings();renderCfoFraud();renderCroPortfolio();renderRoi();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderBoard();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -1597,6 +1597,45 @@ function renderMateriality(){
 }
 /* CRO: cyber on one scale beside the org's other principal risks (from /summary
    portfolio). Cyber is live; the other values are the CRO's ERM inputs. */
+/* CRO — Key Risk Indicator (KRI) board with board-set thresholds + live mitigation
+   tracking. Each KRI reads a connected-tool signal, is scored red/amber/green against
+   its threshold, and — when breached — shows the funded project mitigating it (from the
+   decision portfolio / imported initiatives). This is the ERM control-panel a CRO takes
+   to the risk committee: indicator, current, tolerance, status, and what's being done. */
+function kriStatus(v,th,dir){
+  if(dir==='up')return v<th?'crit':(v<th+5?'warn':'good');
+  return v>th?'crit':(v>Math.max(0,th-2)?'warn':'good');
+}
+function renderCroKri(){
+  var host=document.getElementById('croKri');if(!host)return;
+  var defs=[
+    {sk:'mfa_pct',cap:'mfa',n:'Identity — MFA coverage',th:95,dir:'up',fmt:function(v){return v+'%';},tol:'≥95%'},
+    {sk:'pam_pct',cap:'pam',n:'Privileged access managed',th:80,dir:'up',fmt:function(v){return v+'%';},tol:'≥80%'},
+    {sk:'patch_pct',cap:'vuln',n:'Critical patch currency',th:90,dir:'up',fmt:function(v){return v+'%';},tol:'≥90%'},
+    {sk:'edr_pct',cap:'edr',n:'Endpoint detection coverage',th:95,dir:'up',fmt:function(v){return v+'%';},tol:'≥95%'},
+    {sk:'cspm_pct',cap:'cspm',n:'Cloud posture compliant',th:85,dir:'up',fmt:function(v){return v+'%';},tol:'≥85%'},
+    {sk:'phishing_pct',cap:'aware',n:'Phishing-prone rate',th:5,dir:'down',fmt:function(v){return v+'%';},tol:'≤5%'},
+    {sk:'open_incidents',cap:null,n:'Open security incidents',th:0,dir:'down',fmt:function(v){return String(v);},tol:'0 active'}
+  ];
+  var live=[];
+  defs.forEach(function(d){var v=sig(d.sk);if(v==null)return;
+    var st=kriStatus(v,d.th,d.dir),breach=st!=='good';
+    var pr=d.cap?capProject(CAP_BY_KEY[d.cap]):null;
+    var mit=!breach?'<span style="color:var(--good)">Within tolerance</span>'
+      :pr?('<span class="tag'+(pr.done?' good':'')+'" style="font-size:10px">'+pr.status+'</span> '+pr.name+(pr.ticket?(' · '+pr.ticket):'')+' · '+pr.prog+'%')
+      :'<span style="color:var(--crit)">No mitigation funded — raise one</span>';
+    live.push({d:d,v:v,st:st,breach:breach,mit:mit});
+  });
+  if(!live.length){host.innerHTML='<div class="card"><div class="ck">Key Risk Indicators</div><div class="cn" style="margin-top:6px">◐ Connect your security tools (identity, EDR, vulnerability, cloud, SIEM) and this becomes your live KRI board — each indicator scored against a board-set threshold, breaches flagged, and the funded mitigation tracked to completion. The control panel you take to the risk committee.</div></div>';return;}
+  var breaches=live.filter(function(r){return r.breach;}).length;
+  var rows=live.map(function(r){var d=r.d,dot='var(--'+r.st+')';
+    return '<tr><td><span class="cap-dot" style="background:'+dot+'"></span> '+d.n+'</td><td style="font-weight:700;color:'+dot+'">'+d.fmt(r.v)+'</td><td style="color:var(--muted)">'+d.tol+'</td><td><span class="pill '+(r.st==='good'?'good':r.st==='warn'?'warn':'')+'" style="font-size:9px'+(r.st==='crit'?';background:var(--crit);color:#fff':'')+'">'+(r.st==='good'?'Within':r.st==='warn'?'Watch':'Breach')+'</span></td><td style="font-size:11.5px">'+r.mit+'</td></tr>';
+  }).join('');
+  var hdr=breaches===0?'<span style="color:var(--good)">All '+live.length+' KRIs within tolerance</span>':'<span style="color:var(--crit)">'+breaches+' of '+live.length+' KRIs breaching tolerance</span>';
+  host.innerHTML=demoBanner()+'<div class="card"><div class="ck">Key Risk Indicators '+liveTag()+' — '+hdr+'</div>'+
+    '<table class="tbl" style="margin-top:8px"><thead><tr><th>Indicator</th><th>Current</th><th>Tolerance</th><th>Status</th><th>Mitigation</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+    '<div class="cn" style="margin-top:8px">Each indicator is measured live from a connected tool and scored against the board-set tolerance. A breach shows the funded project closing it — or flags that none exists yet. Thresholds are the ERM defaults; set your own in onboarding.</div></div>';
+}
 function renderCroPortfolio(){
   var host=document.getElementById('croPortfolio');if(!host)return;var p=LIVE&&LIVE.portfolio;
   if(!p||!p.has_data)return; // keep illustrative until ERM values are entered
