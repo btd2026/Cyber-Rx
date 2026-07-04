@@ -165,6 +165,15 @@
   .cjih{font-size:12px;font-weight:800;color:var(--crit);letter-spacing:.02em}
   .cjir{font-size:11px;color:var(--ink-2);margin-top:7px}
   .cjchip{display:inline-block;font-size:10.5px;background:rgba(208,59,59,.16);color:#ff9b9b;border-radius:6px;padding:2px 8px;margin:4px 5px 0 0}
+  /* Crown-jewel blast radius — the dollar impact on connected systems + customers */
+  .cjblast{margin-top:11px;padding:10px 12px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px}
+  .cjblast-h{font-size:10.5px;font-weight:800;letter-spacing:.04em;color:var(--ink);text-transform:uppercase;margin-bottom:8px}
+  .cjblast-row{display:flex;justify-content:space-between;gap:12px;font-size:12px;padding:3px 0;line-height:1.4}
+  .cjblast-k{color:var(--muted);white-space:nowrap}
+  .cjblast-v{font-weight:600;text-align:right;color:var(--ink-2)}.cjblast-v b{color:var(--ink)}
+  .cjbchip{display:inline-block;font-size:10px;background:var(--blue-soft);color:var(--blue);border:1px solid var(--line-2);border-radius:6px;padding:1px 7px;margin:4px 5px 0 0}
+  .cjblast-total{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);font-size:12.5px;display:flex;justify-content:space-between;align-items:baseline}
+  .cjblast-total b{color:var(--crit);font-size:14px}.cjblast-total i{color:var(--muted);font-style:normal;font-size:10px}
   .cjloss-row{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;color:var(--ink-2);margin-top:11px}
   .cjloss-row b{color:var(--ink);font-size:13px}.cjloss-row i{font-style:normal;color:var(--muted)}
   .cjtolbar{height:12px;background:#2a2a28;border-radius:6px;overflow:hidden;margin-top:6px}
@@ -1172,11 +1181,13 @@ function renderPeerBench(){
   host.innerHTML='<div class="card"><div class="ck">How we compare to published benchmarks</div><div class="peerrow" style="margin-top:10px">'+body+'</div>'+gated+'</div>';
 }
 function illuCJ(){var p=indProfile();
-  var tiers=['Tier 1','Tier 2','Tier 2','Tier 3'],scores=[83,76,72,64],exps=[34e6,18e6,11e6,5e6],recs=[74,40,28,12],dvs=[5.8e6,2.1e6,3.4e6,0.9e6],txs=[480000,260000,95000,40000],tols=[9e6,6e6,5e6,3e6],nets=[true,true,false,false],rcs=[3,2,1,1];
+  var tiers=['Tier 1','Tier 2','Tier 2','Tier 3'],scores=[83,76,72,64],exps=[34e6,18e6,11e6,5e6],recs=[74,40,28,12],dvs=[5.8e6,2.1e6,3.4e6,0.9e6],txs=[480000,260000,95000,40000],tols=[9e6,6e6,5e6,3e6],nets=[true,true,false,false],rcs=[3,2,1,1],uss=[2400000,1100000,600000,400000];
   return p.systems.map(function(name,i){return {name:name,tier:tiers[i],score:scores[i],procs:[p.procs[i]],
     why:'Holds '+p.data.slice(0,2).join(' + ')+'; single point of failure for a critical revenue process'+(nets[i]?'; internet-reachable':'')+'.',
     exposure:exps[i],topRisk:{title:i===0?p.topRisk:'Data exposure / service disruption'},data:p.data,internet:nets[i],recovery:recs[i],riskCount:rcs[i],
-    dailyValue:dvs[i],txPerDay:txs[i],tolerance:tols[i],toleranceProc:p.procs[i],impactRadius:p.systems.filter(function(_,j){return j!==i;}).slice(0,3)};});}
+    dailyValue:dvs[i],txPerDay:txs[i],usersServed:uss[i],tolerance:tols[i],toleranceProc:p.procs[i],impactRadius:p.systems.filter(function(_,j){return j!==i;}).slice(0,3)};});}
+/* What the org's end users are called, per industry — for the customer-impact line. */
+function indUserNoun(){return {health:'members',fin:'customers',retail:'customers',gov:'citizens',mfg:'customers',energy:'customers',tech:'users'}[indKey()]||'customers';}
 function illuProcBars(){var p=indProfile();var exps=[34e6,18e6,11e6,5e6];var max=exps[0];
   return '<div class="card">'+p.procs.map(function(n,i){var pct=Math.max(6,Math.round(exps[i]/max*100));return '<div class="bar-row"><div class="bar-lbl">'+n+(i===0?' <span class="cj-badge" style="margin-left:6px">crown jewel</span>':'')+'</div><div class="bar-track"><div class="bar-fill '+(i===0?'hot':'')+'" style="width:'+pct+'%"></div></div><div class="bar-val">'+usd(exps[i])+'</div></div>';}).join('')+'<div class="cn" style="margin-top:8px">◐ <b style="color:var(--warn)">Illustrative</b> for '+(indKey()==='tech'?'technology':indKey())+' — upload your processes to see your own.</div></div>';}
 function illuSysBars(){var p=indProfile();var hrs=[2.3e6,0.9e6,0.6e6,0.04e6];var recs=['74 hrs','28 hrs','40 hrs','8 hrs'];var max=hrs[0];
@@ -1226,7 +1237,7 @@ function crownList(){
     var daily=(c.daily_value_usd!=null&&c.daily_value_usd>0)?c.daily_value_usd:((perHrByName[c.name]||0)>0?Math.round(perHrByName[c.name]*24):null);
     return {name:c.name,tier:tierLabel(c.tier),score:c.score,procs:procs.slice(0,3),moreProcs:Math.max(0,procs.length-3),why:cleanWhy(c.name,c.rationale),
       exposure:c.exposure_usd||0,topRisk:c.top_risk||null,data:c.data_classification||[],internet:!!c.internet_facing,recovery:c.recovery_hours,riskCount:c.open_risk_count||0,
-      dailyValue:daily,dailyValueSrc:c.daily_value_source||((daily!=null&&!(c.daily_value_usd>0))?'process_downtime':null),txPerDay:(c.tx_per_day!=null&&c.tx_per_day>0)?c.tx_per_day:null,txSrc:c.tx_per_day_source||null,tolerance:(c.tolerance_usd!=null&&c.tolerance_usd>0)?c.tolerance_usd:null,toleranceProc:c.tolerance_process||null,
+      dailyValue:daily,dailyValueSrc:c.daily_value_source||((daily!=null&&!(c.daily_value_usd>0))?'process_downtime':null),txPerDay:(c.tx_per_day!=null&&c.tx_per_day>0)?c.tx_per_day:null,txSrc:c.tx_per_day_source||null,usersServed:(c.users_served!=null&&c.users_served>0)?c.users_served:null,tolerance:(c.tolerance_usd!=null&&c.tolerance_usd>0)?c.tolerance_usd:null,toleranceProc:c.tolerance_process||null,
       impactRadius:Array.isArray(c.impact_radius)?c.impact_radius:[]};
   });
 }
@@ -1248,6 +1259,35 @@ function tolPhase(pct){return pct>=100?100:pct>=75?75:pct>=50?50:0;}
 function cjBreachDay(c){var tol=cjTolerance(c);return (tol&&c.dailyValue>0)?(tol/c.dailyValue):null;}
 function currentCjList(){var live=crownList();return (live&&live.length)?live:illuCJ();}
 function cjRadiusOf(name){var l=currentCjList();for(var i=0;i<l.length;i++)if(l[i].name===name)return l[i].impactRadius||[];return [];}
+function cjDailyOf(name){var l=currentCjList();for(var i=0;i<l.length;i++)if(l[i].name===name)return l[i].dailyValue||0;return 0;}
+/* The blast, in dollars: if this crown jewel fails, the value at risk across the
+   systems that connect to it PLUS the customers who depend on it. Systems value =
+   this system's daily value + the daily value of every system in its impact radius,
+   carried over the recovery window. Customer impact = the users served and the
+   service value/day that stops for them. All from the same sources as the card. */
+function cjBlast(c){
+  var radius=(c.impactRadius||[]),sysDaily=(c.dailyValue||0);
+  radius.forEach(function(n){sysDaily+=cjDailyOf(n);});
+  var recDays=c.recovery!=null?(c.recovery/24):null;
+  var overRec=(recDays!=null&&sysDaily>0)?Math.round(sysDaily*recDays):null;
+  var users=(c.usersServed!=null)?c.usersServed:(c.txPerDay!=null?c.txPerDay:null);
+  return {radius:radius,n:radius.length,sysDaily:sysDaily,recDays:recDays,overRec:overRec,
+    users:users,usersModeled:(c.usersServed==null&&c.txPerDay!=null),custValueDay:(c.dailyValue||0)};
+}
+function cjBlastBlock(c){
+  var b=cjBlast(c);if(!(b.sysDaily>0))return '';
+  var chips=b.n?b.radius.map(function(n){return '<span class="cjbchip">'+n+'</span>';}).join(''):'<span style="color:var(--muted);font-size:11px">no mapped downstream systems — map dependencies in your CMDB</span>';
+  var usersLine=(b.users!=null)?('<div class="cjblast-row"><span class="cjblast-k">'+cap1(indUserNoun())+' affected</span><span class="cjblast-v">~<b>'+numCommas(Math.round(b.users))+'</b>'+(b.usersModeled?' <span class="pill mod" style="font-size:8px">modeled from tx/day</span>':'')+' · '+usd(b.custValueDay)+'/day of service stops</span></div>'):'';
+  return '<div class="cjblast">'+
+    '<div class="cjblast-h">◎ If this fails — the blast, in dollars</div>'+
+    '<div class="cjblast-row"><span class="cjblast-k">Connected systems</span><span class="cjblast-v"><b>'+b.n+'</b> degrade with it</span></div>'+
+    '<div class="cjblast-chips">'+chips+'</div>'+
+    '<div class="cjblast-row"><span class="cjblast-k">Systems value at risk</span><span class="cjblast-v"><b>'+usd(b.sysDaily)+'</b>/day'+(b.overRec!=null?(' · '+usd(b.overRec)+' over '+hrsToStr(c.recovery)+' recovery'):'')+'</span></div>'+
+    usersLine+
+    '<div class="cjblast-total">Total incident impact <span><b>'+usd(b.overRec!=null?b.overRec:b.sysDaily)+'</b> <i>'+(b.overRec!=null?'over full recovery':'per day down')+'</i></span></div>'+
+    '</div>';
+}
+function cap1(s){s=String(s||'');return s.charAt(0).toUpperCase()+s.slice(1);}
 function cjIsPrimary(c){return (typeof incidentActive!=='undefined')&&incidentActive&&incidentAsset&&c.name===incidentAsset;}
 function cjInRadius(c){return (typeof incidentActive!=='undefined')&&incidentActive&&incidentAsset&&cjRadiusOf(incidentAsset).indexOf(c.name)>=0;}
 function cjRow(c,i){
@@ -1283,7 +1323,7 @@ function cjRow(c,i){
     '<div class="cjtop"><span class="cjrank">#'+(i+1)+'</span><div class="cjname">'+c.name+(c.tier?'<span class="cjtier">'+c.tier+'</span>':'')+'</div>'+
       '<div class="cjcrit"><b>'+(c.score!=null?c.score:'—')+'</b><span>criticality</span></div></div>'+
     '<div class="cjsupports">'+supports+'</div>'+grid+sub+
-    (c.why?'<div class="cjwhy">'+c.why+'</div>':'')+incident+'</div>';
+    (c.why?'<div class="cjwhy">'+c.why+'</div>':'')+cjBlastBlock(c)+incident+'</div>';
 }
 /* Per-second update of the live incident panels — moves the loss counter and the
    tolerance bar and escalates the phase (blink+sound) without rebuilding the DOM. */
