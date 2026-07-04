@@ -471,18 +471,28 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
    trimmed title). Renderers still populate hidden sections' containers. */
 var TAB_LABELS={
  'Are we under attack right now?':'Live status','What are we protecting — and what is each worth?':'Crown Jewels — Exposure','How is security helping the business grow — and win deals?':'Business Growth','Are our controls actually working — and is the program improving?':'Controls','Which framework controls do our tools satisfy? — NIST CSF 2.0 & 800-53':'Frameworks','AI risk — two fronts: securing the AI we run, and using AI to defend':'AI risk','Are we audit-ready? — compliance framework readiness':'Compliance','What decision needs you now?':'Decision','How does our security investment move the business?':'ROI','What are my responsibilities — and how does security enable each?':'Operating model',
- 'How much is at stake — and are we within the board’s limit?':'At stake','Which business processes carry the risk?':'By process','What decisions need us — and what are the trade-offs?':'Decisions','Are we adequately insured against the worst case?':'Insurance','Are we getting better — quarter over quarter?':'Trend','Our worst realistic day — and are we ready to respond and recover?':'Worst day','Governance, oversight & SEC disclosure readiness':'Governance','AI risk — are we ready for AI-accelerated attacks, and is our own AI governed?':'AI risk',
+ 'How much is at stake — and are we within the board’s limit?':'At stake','Strategic Go / No-Go Control Panel':'Go / No-Go','Decision Intelligence View':'Decision Intelligence','Revenue Enablement Dashboard':'Revenue Enablement','Executive Accountability Heatmap':'Accountability','Business Impact Live Board':'Business Impact','Cyber Investment Optimizer':'Investment Optimizer','Crisis Simulation Command Center':'Crisis Simulation','Which business processes carry the risk?':'By process','What decisions need us — and what are the trade-offs?':'Decisions','Are we adequately insured against the worst case?':'Insurance','Are we getting better — quarter over quarter?':'Trend','Our worst realistic day — and are we ready to respond and recover?':'Worst day','Governance, oversight & SEC disclosure readiness':'Governance','AI risk — are we ready for AI-accelerated attacks, and is our own AI governed?':'AI risk',
  'What is our capital at risk — and is our spend working?':'Capital at risk','What would a bad year do to earnings?':'Earnings','Where does the next dollar work hardest, and are we insured?':'ROI & insurance','What if we change the budget — and is an incident material?':'Budget','Are we protected against financial crime — and will we pass the SOX audit?':'Fraud & SOX','What decision needs the CFO — and what does it cost or buy?':'Decision','Current cyber initiatives & their ROI':'ROI',
  'Are we legally defensible right now?':'Standing','Where are we exposed by jurisdiction — duty, clock, penalty?':'Jurisdictions','What decision needs the General Counsel?':'Decision','Litigation hold, data-subject rights & IP — are we operationally defensible?':'Hold · DSAR · IP','Is an incident material — and are we covered by contract?':'Materiality',
  'Where does cyber sit against appetite and our other risks?':'Vs appetite','Which Key Risk Indicators are breaching tolerance — and what is being done?':'KRI board','What could breach appetite, and what is rising fastest?':'Aggregation','What decision needs the CRO?':'Decision',
- 'Can the business keep operating — and recover fast enough?':'Resilience','Which systems carry the business, and how fast do they recover?':'Systems','Could we actually recover from ransomware — is our BCP/DR real?':'BCP / DR','What decision needs the CIO?':'Decision'
+ 'Can the business keep operating — and recover fast enough?':'Resilience','Which systems carry the business, and how fast do they recover?':'Systems','Could we actually recover from ransomware — is our BCP/DR real?':'BCP / DR','What decision needs the CIO?':'Decision',
+ // Operating-model Column-F panels — CIO
+ 'Secure Architecture Blueprint Viewer':'Architecture','Infrastructure Risk Map':'Infra Risk','Third-Party Exposure Radar':'Third-Party','Resilience Operations Dashboard':'Resilience','Transformation Security Tracker':'Transformation','Control Compliance Cockpit':'Control Compliance',
+ // CFO
+ 'Cyber Financial Exposure Engine':'Financial Exposure','Financial Systems Integrity View':'Systems Integrity','Cyber Budget Decision Board':'Budget Board','Financial Threat Shield':'Threat Shield','Audit Readiness Command Center':'Audit Readiness','Cyber Risk Scenario Simulator':'Scenario Simulator',
+ // COO
+ 'Operational Continuity Map':'Continuity Map','Execution Security Layer':'Execution Security','Security Automation Efficiency Board':'Automation','Service Availability Shield':'Availability','Crisis Orchestration Hub':'Crisis Hub',
+ // CRO
+ 'Enterprise Risk Portfolio View':'Risk Portfolio','Threat Exposure Intelligence Map':'Threat Exposure','Live Risk Intelligence Board':'Live Risk','Risk Appetite Control Panel':'Risk Appetite','Risk Remediation Tracker':'Remediation','Board Risk Intelligence Pack':'Board Pack',
+ // CLO
+ 'Legal Risk & Compliance Tracker':'Legal & Compliance','Governance Control Center':'Governance','Contract Risk Intelligence Engine':'Contract Risk','Unified Compliance Command Center':'Compliance','Cyber Legal Response Hub':'Legal Response','Intellectual Property Protection System':'IP Protection'
 };
 function tabLabel(title){var raw=String(title||'').trim();if(TAB_LABELS[raw])return TAB_LABELS[raw];var t=raw.replace(/\?+\s*$/,'').trim();if(TAB_LABELS[t])return TAB_LABELS[t];t=t.split(/\s+[—–-]\s+/)[0].trim();if(t.length>26)t=t.slice(0,24).replace(/\s+\S*$/,'')+'…';return t;}
 function buildTabs(){
@@ -1424,7 +1434,7 @@ function renderSignals(){
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderBoard();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderBoard();renderCeoGoNoGo();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -1747,6 +1757,24 @@ function renderOpModel(seat){
   host.innerHTML='<div class="card"><div class="ck">Your operating model — '+SEAT_LABEL[seat]+' · '+rows.length+' responsibilities</div>'+
     '<div class="cn" style="margin:6px 0 10px"><b style="color:var(--ink)">'+built+' of '+rows.length+'</b> represented by a live CyberX-Ray panel · '+connSrc+' data-source categories connected. Each row is one of your accountabilities, what the CISO does to enable it, the panel that shows it, and the systems behind it — <b>● connected</b>, <b>○ connect to light up</b>.</div>'+
     body+'</div>';
+}
+/* Strategic Go/No-Go — CEO panel (operating-model column F). A single readiness
+   verdict (Proceed / Proceed with conditions / Stop) from real posture gates, so
+   the board can decide whether a strategic initiative is safe to pursue. */
+function renderCeoGoNoGo(){
+  var host=document.getElementById('ceoGoNoGo');if(!host)return;
+  var ec=(LIVE&&LIVE.economics)||{},ap=ec.appetite||{},g=(LIVE&&LIVE.governance)||{},ir=g.ir||{},tr=trajInfo();
+  var gates=[
+    {n:'Expected loss within board appetite',ok:(LIVE&&ap.appetite)?(ap.within!==false):null,d:'ALE ≤ the appetite the board approved'},
+    {n:'Worst-case tail within appetite',ok:(LIVE&&ap.appetite)?(ap.tail_within===true):null,d:'95% Value-at-Risk ≤ appetite'},
+    {n:'Program trajectory improving',ok:tr.two?tr.down:null,d:'expected loss trending down over recorded analyses'},
+    {n:'Incident response tested',ok:(ir.retainer||ir.tested)?(/yes/i.test(ir.retainer||'')&&/yes|within 12|tested/i.test(ir.tested||'')):null,d:'retainer in place + tabletop within 12 months'}
+  ];
+  var scored=gates.filter(function(x){return x.ok!=null;}),green=gates.filter(function(x){return x.ok===true;}).length,red=gates.filter(function(x){return x.ok===false;}).length;
+  var v=red>0?{t:'STOP / PROCEED WITH CONDITIONS',c:'crit'}:(scored.length&&green===scored.length?{t:'PROCEED',c:'good'}:(scored.length?{t:'PROCEED WITH CONDITIONS',c:'warn'}:{t:'CONNECT DATA TO SCORE',c:'muted'}));
+  var rows=gates.map(function(x){var cls=x.ok===true?'good':x.ok===false?'crit':'muted';return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+cls+')"></span><b>'+x.n+'</b><span class="drow-tool" style="color:var(--'+cls+')">'+(x.ok===true?'✓ green':x.ok===false?'gate':'—')+'</span></div><div class="drow-need">'+x.d+'</div></div>';}).join('');
+  host.innerHTML='<div class="card"><div class="ck">Is this strategy safe to pursue? '+liveTag()+'</div><div class="cv" style="font-size:23px;margin-top:6px;color:var(--'+v.c+')">'+v.t+'</div>'+
+    '<div class="cn" style="margin:6px 0 8px"><b>'+green+' of '+gates.length+'</b> readiness gates green — the single-screen go/no-go the board acts on. Each gate is a real posture check from your data (economics, trend, governance), not a self-attestation. Run this before approving M&amp;A, a cloud migration, a new AI system or a market expansion.</div>'+rows+'</div>';
 }
 function renderOversight(){
   var host=document.getElementById('ceoOversight');if(!host)return;
@@ -2256,12 +2284,14 @@ function renderRoi(){
    payment fraud are the fraud vectors that hit finance directly (FBI IC3: #1 dollar-
    loss crime), and SOX 404 ITGC is the control set the external auditor tests yearly. */
 function renderCfoFraud(){
-  var host=document.getElementById('cfoFraud');if(!host)return;
+  var host=document.getElementById('cfoFraud'),soxHost=document.getElementById('cfoSox');if(!host&&!soxHost)return;
   var bec=sig('bec_blocked'),pf=sig('payment_anomalies'),sod=sig('sod_conflicts'),chg=sig('change_pass_pct');
   var mfa=sig('mfa_pct'),rev=sig('access_review_pct');
   var g=(LIVE&&LIVE.governance)||{},dual=g.paymentDualAuth||null;
   if(bec==null&&pf==null&&sod==null&&chg==null&&mfa==null){
-    host.innerHTML='<div class="card"><div class="ck">Financial-crime &amp; SOX IT controls</div><div class="cn" style="margin-top:6px">◐ Connect your email security (Proofpoint / Abnormal), ERP (SAP / Oracle / Workday / NetSuite) and identity provider to evidence payment-fraud defenses and the SOX IT general controls — access, change, segregation-of-duties — your external auditor tests every year, instead of self-attesting them in a spreadsheet.</div></div>';return;}
+    var fraudEmpty='<div class="card"><div class="ck">Financial-crime &amp; payment-fraud posture</div><div class="cn" style="margin-top:6px">◐ Connect your email security (Proofpoint / Abnormal) and ERP (SAP / Oracle / Workday / NetSuite) to evidence your live defense against BEC, payment-redirect and wire fraud — the crimes that hit finance directly — instead of a policy statement.</div></div>';
+    var soxEmpty='<div class="card"><div class="ck">Financial-systems integrity — SOX IT general controls</div><div class="cn" style="margin-top:6px">◐ Connect your ERP, identity provider and change-management system to evidence the SOX IT general controls — access, change, segregation-of-duties — your external auditor tests every year, instead of self-attesting them in a spreadsheet.</div></div>';
+    if(host)host.innerHTML=fraudEmpty;if(soxHost)soxHost.innerHTML=(host?'':fraudEmpty)+soxEmpty;return;}
   var fRows=iamGovRow('BEC / impersonation attempts blocked',bec!=null?(bec+' / 90d'):'—',bec!=null?true:null,bec!=null?'Business email compromise is the #1 dollar-loss cyber crime (FBI IC3) — payment-redirect and invoice fraud aimed straight at finance.':'')+
     iamGovRow('Payment / vendor-master anomalies',pf!=null?(pf+' flagged'):'—',pf!=null?(pf<=3):null,(pf!=null&&pf>0)?'Duplicate payees, changed bank details or out-of-pattern payments — review before the payment run releases.':'')+
     iamGovRow('Dual authorization on payments',dual||'—',dual!=null?(/yes/i.test(dual)):null,'Segregation on the payment run is the primary control against internal and BEC-driven wire fraud.');
@@ -2274,10 +2304,14 @@ function renderCfoFraud(){
   var sRows=domains.map(function(d){return iamGovRow(d.label,d.val,d.ok,d.sub);}).join('');
   var scored=domains.filter(function(d){return d.ok!=null;});
   var passN=scored.filter(function(d){return d.ok===true;}).length;
-  host.innerHTML='<div class="cols">'+
-    '<div class="card"><div class="ck">Financial-crime &amp; payment-fraud posture '+liveTag()+'</div><div style="margin-top:8px">'+fRows+'</div><div class="cn" style="margin-top:8px">Evidenced from your email security + ERP — the fraud vectors that hit finance directly. This is your live defense posture, not a policy statement.</div></div>'+
-    '<div class="card"><div class="ck">SOX IT general controls (ITGC) '+liveTag()+(scored.length?(' · '+passN+'/'+scored.length+' passing'):'')+'</div><div style="margin-top:8px">'+sRows+'</div><div class="cn" style="margin-top:8px">The IT controls your external auditor tests for the SOX 404 opinion — evidenced continuously from your identity, change-management and ERP systems, instead of a year-end evidence scramble.</div></div>'+
-    '</div>';
+  var fraudCard='<div class="card"><div class="ck">Financial-crime &amp; payment-fraud posture '+liveTag()+'</div><div style="margin-top:8px">'+fRows+'</div><div class="cn" style="margin-top:8px">Evidenced from your email security + ERP — the fraud vectors that hit finance directly. This is your live defense posture, not a policy statement.</div></div>';
+  var soxCard='<div class="card"><div class="ck">SOX IT general controls (ITGC) '+liveTag()+(scored.length?(' · '+passN+'/'+scored.length+' passing'):'')+'</div><div style="margin-top:8px">'+sRows+'</div><div class="cn" style="margin-top:8px">The IT controls your external auditor tests for the SOX 404 opinion — evidenced continuously from your identity, change-management and ERP systems, instead of a year-end evidence scramble.</div></div>';
+  // Split view: when a dedicated SOX host exists (CFO seat), the fraud posture and
+  // the SOX integrity controls render into their own Column-F panels; otherwise both
+  // render together in the single fraud host (older layouts / other seats).
+  if(host&&soxHost){host.innerHTML=fraudCard;soxHost.innerHTML=soxCard;}
+  else if(soxHost){soxHost.innerHTML='<div class="cols">'+fraudCard+soxCard+'</div>';}
+  else{host.innerHTML='<div class="cols">'+fraudCard+soxCard+'</div>';}
 }
 /* CISO threat intelligence — actors targeting this sector, each mapped to the LIVE
    coverage of the controls that stop their techniques. Industry-modeled from FREE
