@@ -1,0 +1,8 @@
+{
+  "signals": [
+    { "key": "sod_conflicts", "value": 3, "asOf": "2026-06-28T12:00:00Z", "raw": { "openViolations": 3 } },
+    { "key": "change_pass_pct", "value": 94, "asOf": "2026-06-28T12:00:00Z", "raw": { "tests": 120, "passed": 113 } },
+    { "key": "payment_anomalies", "value": 2, "asOf": "2026-06-28T12:00:00Z", "raw": { "openAlerts": 2 } }
+  ],
+  "meta": { "vendor": "SAP GRC" }
+}

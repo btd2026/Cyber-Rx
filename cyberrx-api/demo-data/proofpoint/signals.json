@@ -1,0 +1,6 @@
+{
+  "signals": [
+    { "key": "bec_blocked", "value": 14, "asOf": "2026-06-28T12:00:00Z", "raw": { "windowSeconds": 3600, "blockedTotal": 210, "impostorBlocked": 14 } }
+  ],
+  "meta": { "vendor": "Proofpoint" }
+}

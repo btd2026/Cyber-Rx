@@ -1,0 +1,8 @@
+{
+  "signals": [
+    { "key": "backup_immutable_pct", "value": 100, "asOf": "2026-06-28T12:00:00Z", "raw": { "protectedObjects": 640, "immutableObjects": 640 } },
+    { "key": "rpo_minutes", "value": 15, "asOf": "2026-06-28T12:00:00Z", "raw": { "tightestSlaMinutes": 15 } },
+    { "key": "dr_test_days", "value": 48, "asOf": "2026-06-28T12:00:00Z", "raw": { "lastRecovery": "2026-05-11T09:00:00Z" } }
+  ],
+  "meta": { "vendor": "Rubrik" }
+}

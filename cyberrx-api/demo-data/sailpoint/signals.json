@@ -1,6 +1,7 @@
 {
   "signals": [
-    { "key": "access_review_pct", "value": 82, "asOf": "2026-06-28T12:00:00Z", "raw": { "campaigns": 4, "completed": 164, "total": 200 } }
+    { "key": "access_review_pct", "value": 82, "asOf": "2026-06-28T12:00:00Z", "raw": { "campaigns": 4, "completed": 164, "total": 200 } },
+    { "key": "dormant_accounts", "value": 34, "asOf": "2026-06-28T12:00:00Z", "raw": { "sampled": 250, "dormant": 34 } }
   ],
   "meta": { "vendor": "SailPoint" }
 }

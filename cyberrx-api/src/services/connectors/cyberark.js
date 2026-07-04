@@ -43,14 +43,32 @@ async function fetchSignals(creds) {
       signals.push({ key: 'pam_pct', value: Math.round((managed / accounts.length) * 100), asOf: nowIso(), raw: { vaulted: accounts.length, autoManaged: managed } });
     }
   } catch (_) { /* confirm the account can list vault accounts */ }
+  // Flagged privileged sessions — PSM sessions in the last 24h scored risky /
+  // marked for review. Anomalous privileged sessions are the detection signal
+  // for credential misuse; sourced from the PSM live-sessions activity API.
+  try {
+    const from = Math.floor((Date.now() - 864e5) / 1000);
+    const j = await jsonOrThrow(await http(`${base(creds)}/API/LiveSessions?FromTime=${from}`, { headers: H }), 'CyberArk');
+    const sessions = (j && (j.LiveSessions || j.Sessions || j.value)) || [];
+    // Only emit when sessions were actually observed — an empty list is ambiguous
+    // (no activity vs. no permission) and must not mask an unreadable vault.
+    if (Array.isArray(sessions) && sessions.length) {
+      const flagged = sessions.filter((s) => {
+        const score = Number(s.riskScore != null ? s.riskScore : s.RiskScore);
+        if (Number.isFinite(score) && score >= 50) return true;
+        return /suspend|review|flag/i.test(String((s.rawProperties && s.rawProperties.status) || s.status || ''));
+      }).length;
+      signals.push({ key: 'priv_sessions_flagged', value: flagged, asOf: nowIso(), raw: { sessions: sessions.length, flagged } });
+    }
+  } catch (_) { /* PSM live-sessions not readable — pam_pct still returned */ }
   if (!signals.length) throw new Error('Authenticated, but no readable signals — confirm the account can list vault accounts.');
   return { signals, meta: { vendor: 'CyberArk' } };
 }
 
 module.exports = {
   key: 'cyberark', label: 'CyberArk', vendor: 'CyberArk', category: 'Privileged Access (PAM)',
-  signals: ['pam_pct'],
-  scopes: ['Vault auditor (read-only) — list accounts'],
+  signals: ['pam_pct', 'priv_sessions_flagged'],
+  scopes: ['Vault auditor (read-only) — list accounts', 'PSM — list live sessions'],
   fields: [
     { key: 'pvwaUrl', label: 'PVWA URL (https://pvwa.example.com)' },
     { key: 'username', label: 'Service account username' },

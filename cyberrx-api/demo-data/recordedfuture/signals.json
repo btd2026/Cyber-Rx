@@ -1,0 +1,6 @@
+{
+  "signals": [
+    { "key": "threat_actors_active", "value": 3, "asOf": "2026-06-28T12:00:00Z", "raw": { "alerts": 27, "distinctActors": 3 } }
+  ],
+  "meta": { "vendor": "Recorded Future" }
+}
