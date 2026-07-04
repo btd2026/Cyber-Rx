@@ -160,6 +160,24 @@ var SEATS = {
   );}
  },
 
+ coo:{
+  eyebrow:'Operational continuity view · COO',
+  verdict:'Operations are <span class="em">running</span> — cyber is not disrupting service delivery today. The exposure is continuity: our slowest critical service recovers beyond tolerance, and a single vendor is a point of failure for three of them.',
+  sub:'Can the business keep delivering through a cyber disruption? Your critical services, what an hour of downtime costs, how fast each recovers, and where a single point of failure could stop operations.',
+  brief:'Operationally we are running, and no incident is disrupting service delivery right now. The continuity gap to close is recovery — our slowest critical service takes too long to restore, beyond tolerance, and one vendor is a single point of failure for three services. One resilience investment brings both inside tolerance and protects our service-delivery commitments.',
+  body:function(){return (
+   sec('01','Are operations running — is anything disrupting the business right now?','Your live operating picture: incidents affecting business processes, how fast a disruption would surface, and where a single point of failure could stop service delivery. From your SIEM and resilience data.',
+     '<div id="cooStatus"></div>')
+   +sec('02','Which critical services carry the operation — and can we keep them running?','Your revenue- and service-critical processes ranked by what an hour of downtime costs, how fast each recovers, and whether that is inside your continuity tolerance.',
+     '<div id="cooContinuity"></div>')
+   +sec('03','What decision needs the COO?','How much operational resilience we fund so the business keeps delivering through a disruption. Choosing one records to your ticketing system as a tracked project.',
+     decisions([{n:1,q:'How do we keep operations running through a disruption?',sit:'Our slowest critical service recovers beyond tolerance and one vendor is a single point of failure for three services. Three ways to close the continuity gap:',opts:[
+       {rec:true,tag:'A · Fund resilience + remove the SPOF',on:'Option A · Resilience',osum:'$3.2M · within tolerance',pros:['Brings the slowest critical service inside recovery tolerance','Removes the single-vendor point of failure (multi-region)','Protects service-delivery SLAs and customer trust'],cons:['$3.2M capital','A one-quarter program']},
+       {tag:'B · Critical services only',on:'Option B · Critical only',osum:'$1.6M',pros:['Protects the top revenue-critical services','Half the capital'],cons:['Lower-tier services stay over tolerance','Vendor concentration remains']},
+       {tag:'C · Accept &amp; monitor',on:'Option C · Accept',osum:'$0 this year',pros:['No capital this year'],cons:['The slowest service stays over recovery tolerance','A vendor failure still degrades three services at once','Requires a documented operational risk-acceptance']}]}]))
+  );}
+ },
+
  ciso:{
   eyebrow:'Security operating view · CISO',
   verdict:'<span class="em">No active compromise, and the program is improving.</span> The largest exposure driver has a funded decision ready; control effectiveness is measured as dollars of risk removed.',
@@ -176,12 +194,14 @@ var SEATS = {
      '<div id="cisoControls"></div>')
    +sec('05','AI risk — two fronts: securing the AI we run, and using AI to defend','Two questions the board is asking about AI, both answered from your tools. <b>1 · Securing the AI we build & run</b> — the agents, generative-AI apps and AI coding assistants in production, and whether they are governed to the recognised frameworks (NIST AI RMF · ISO 42001 · OWASP LLM & Agentic Top 10 · MITRE ATLAS · EU AI Act). <b>2 · Using AI to strengthen our defences</b> — which of your security tools now run AI (Charlotte AI, Security Copilot, Purple AI…) and whether we are fast enough against AI-accelerated attackers.',
      '<div id="cisoAiRisk"><div class="card"><div class="cn">◐ Add AI-governance answers in onboarding and connect your security tools for live data.</div></div></div>')
-   +sec('06','What decision needs you now?','Where the next security dollar goes — a plain-English, costed choice. Pick one and it records to your ticketing system as a tracked project, so the decision and its owner are on the record.',
+   +sec('06','Are we audit-ready? — compliance framework readiness','The frameworks in scope for your business (by industry, certifications held, and your selection) with live audit-readiness — computed from the tools you actually connect and your governance records, not self-attestation. SOC 2 · ISO 27001 · HITRUST · FedRAMP · CMMC · PCI DSS · HIPAA · NIST CSF. Click any framework for its control domains and the exact gap to close.',
+     '<div id="cisoCompliance"></div>')
+   +sec('07','What decision needs you now?','Where the next security dollar goes — a plain-English, costed choice. Pick one and it records to your ticketing system as a tracked project, so the decision and its owner are on the record.',
      decisions([{n:1,q:'Which control gap do we close first?',sit:'The biggest dollar driver is the privileged path into payments. Where do we direct the next dollar?',opts:[
        {rec:true,tag:'A · Privileged access (PAM)',on:'Option A · PAM',osum:'$1.4M · 37×',pros:['Closes the $52M driver','Highest return available','Improves board posture immediately'],cons:['$1.4M','3 weeks of IAM effort']},
        {tag:'B · Prove recovery (DR test)',on:'Option B · DR',osum:'$3.2M · <6h recovery',pros:['Removes ~$40M of the recovery tail','Meets regulatory recovery expectations'],cons:['$3.2M — larger program than PAM','Leaves the #1 driver (the $52M privileged path) open']},
        {tag:'C · AI-decisioning governance',on:'Option C · AI governance',osum:'standard + oversight',pros:['Addresses the fastest-rising risk (+$8M/qtr)','Gets ahead of the AI board decision'],cons:['Does not touch the $52M top driver yet','Benefit is preventive, not immediate risk removed']}]}]))
-   +sec('07','How does our security investment move the business?','Not a project tracker — that lives in your ticketing system. This is the board view of the same portfolio: every funded initiative mapped to the business outcome it buys and the dollars of risk it removes, grouped by whether it protects the business, meets our obligations, or enables growth. Spend → risk removed → business result.',
+   +sec('08','How does our security investment move the business?','Not a project tracker — that lives in your ticketing system. This is the board view of the same portfolio: every funded initiative mapped to the business outcome it buys and the dollars of risk it removes, grouped by whether it protects the business, meets our obligations, or enables growth. Spend → risk removed → business result.',
      '<div id="initiatives-panel"></div>')
   );}
  }

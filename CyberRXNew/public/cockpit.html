@@ -6,19 +6,22 @@
 <title>CyberRx · Executive Cockpit</title>
 <style>
   :root{
-    --plane:#0d0d0d; --surface:#1a1a19; --surface-2:#211f1d; --line:#2c2c2a; --line-2:#3a3a37;
-    --ink:#fff; --ink-2:#c3c2b7; --muted:#898781;
-    --blue:#3987e5; --blue-soft:rgba(57,135,229,.14);
-    --good:#0ca30c; --warn:#fab219; --serious:#ec835a; --crit:#d03b3b; --gold:#c79e3a;
-    --good-soft:rgba(12,163,12,.14); --warn-soft:rgba(250,178,25,.14); --crit-soft:rgba(208,59,59,.14);
+    /* Advisory theme — DTNK Shield deck palette (navy / steel / ice, serif headings) */
+    --plane:#F4F7FB; --surface:#FFFFFF; --surface-2:#E8F0FB; --line:#D9E1EC; --line-2:#CADCFC;
+    --ink:#1E2A4A; --ink-2:#44546A; --muted:#8A93A2;
+    --blue:#4A6FA5; --blue-soft:#E8F0FB;
+    --good:#2E8B6B; --warn:#C9A227; --serious:#C4703A; --crit:#B23A3A; --gold:#C9A227;
+    --good-soft:rgba(46,139,107,.12); --warn-soft:rgba(201,162,39,.16); --crit-soft:rgba(178,58,58,.12);
     --mono:"SFMono-Regular",Consolas,Menlo,monospace;
+    --serif:Cambria,Georgia,"Times New Roman",serif;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--plane);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,.verdict,.rubric .rt,.ai-verdict,.drill-hero{font-family:var(--serif)}
   .wrap{max-width:1120px;margin:0 auto;padding:0 26px}
-  .top{border-bottom:1px solid var(--line);background:linear-gradient(180deg,#111,#0d0d0d)}
+  .top{border-bottom:1px solid var(--line);background:var(--surface)}
   .top-in{display:flex;align-items:center;gap:14px;height:60px}
-  .logo{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#4F90FF,#0A4DC4);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
+  .logo{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#4A6FA5,#1E2A4A);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
   .brand{font-weight:700;font-size:16px}.brand span{color:var(--muted);font-weight:500;font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin-left:10px}
   .top-r{margin-left:auto;display:flex;align-items:center;gap:13px;color:var(--muted);font-size:12px}
   .dot{width:7px;height:7px;border-radius:50%;background:var(--good)}
@@ -27,7 +30,7 @@
   .seats-in{display:flex;align-items:center;gap:6px;height:50px;overflow-x:auto}
   .seatlbl{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-right:8px;white-space:nowrap}
   .seat{font-weight:600;font-size:13px;color:var(--ink-2);background:none;border:1px solid transparent;border-radius:99px;padding:6px 14px;cursor:pointer;white-space:nowrap}
-  .seat.on{color:#fff;background:var(--blue-soft);border-color:rgba(57,135,229,.4)}
+  .seat.on{color:var(--ink);background:var(--surface-2);border-color:var(--blue)}
   #dataModeBar{display:none}
   .hero{padding:30px 0 4px}
   .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);font-weight:600;margin-bottom:12px}
@@ -37,7 +40,7 @@
   .hint{color:var(--muted);font-size:12px;margin-top:12px}.hint .fx{cursor:default}
   .spine{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:11px 15px;margin-top:18px}
   .spine .lk{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);font-weight:700}
-  .spine .num b{color:#fff}.spine .num span{color:var(--muted)}.spine .arrow{color:var(--muted);font-size:12px;margin-left:auto}.spine .arrow b{color:var(--ink-2)}
+  .spine .num b{color:var(--ink)}.spine .num span{color:var(--muted)}.spine .arrow{color:var(--muted);font-size:12px;margin-left:auto}.spine .arrow b{color:var(--ink-2)}
   /* section tabs — one per section, only the active shown */
   .sectabs{display:flex;gap:7px;overflow-x:auto;padding:16px 0 4px;margin-bottom:2px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
   .sectabs::-webkit-scrollbar{height:5px}.sectabs::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:9px}
@@ -74,13 +77,13 @@
   .drill-p{font-size:12.5px;color:var(--ink-2);line-height:1.6;margin:8px 0 14px}
   .fx{font-family:var(--mono);font-size:10px;color:var(--blue);background:var(--blue-soft);border-radius:5px;padding:1px 5px;margin-left:5px;vertical-align:middle;white-space:nowrap}
   .bar-row{display:grid;grid-template-columns:190px 1fr 66px;gap:11px;align-items:center;margin-bottom:12px}
-  .bar-lbl{font-size:12.5px;color:var(--ink-2)}.bar-track{height:20px;background:#222220;border-radius:5px;overflow:hidden}
-  .bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,#256abf,#3987e5)}.bar-fill.hot{background:linear-gradient(90deg,#a83232,#d03b3b)}
+  .bar-lbl{font-size:12.5px;color:var(--ink-2)}.bar-track{height:20px;background:var(--surface-2);border-radius:5px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,#4A6FA5,#1E2A4A)}.bar-fill.hot{background:linear-gradient(90deg,#C4703A,#B23A3A)}
   .bar-val{font-size:12.5px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
   .list-row{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}.list-row:last-child{border:none}
   .lic{flex:none;width:27px;height:27px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px}
   .lic.g{background:var(--good-soft);color:var(--good)}.lic.w{background:var(--warn-soft);color:var(--warn)}.lic.b{background:var(--blue-soft);color:var(--blue)}.lic.c{background:var(--crit-soft);color:var(--crit)}
-  .ltxt{font-size:13px}.ltxt b{color:#fff}.ltxt .s{color:var(--muted);font-size:12px;display:block;margin-top:2px}
+  .ltxt{font-size:13px}.ltxt b{color:var(--ink)}.ltxt .s{color:var(--muted);font-size:12px;display:block;margin-top:2px}
   table.tbl{width:100%;border-collapse:collapse;font-size:12.5px}
   table.tbl th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding:0 10px 10px 0;border-bottom:1px solid var(--line)}
   table.tbl td{padding:11px 10px 11px 0;border-bottom:1px solid var(--line);vertical-align:top}table.tbl tr:last-child td{border:none}
@@ -101,7 +104,7 @@
   .choose{margin-top:12px;width:100%;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px;font-weight:700;font-size:12.5px;cursor:pointer}.choose.gh{background:none;border:1px solid var(--line);color:var(--ink-2)}
   .dstatus{display:none;margin-top:14px;padding:13px 15px;border-radius:10px;background:var(--good-soft);border:1px solid rgba(12,163,12,.4);font-size:13px}.dstatus.show{display:block}
   .dstatus .st-h{font-weight:700;color:var(--good);display:flex;align-items:center;gap:8px}.dstatus .st-b{color:var(--ink-2);font-size:12.5px;margin-top:6px}
-  .track{display:flex;gap:6px;margin-top:10px}.track .tstep{flex:1;height:5px;border-radius:3px;background:#2a2a28}.track .tstep.done{background:var(--good)}
+  .track{display:flex;gap:6px;margin-top:10px}.track .tstep{flex:1;height:5px;border-radius:3px;background:var(--line)}.track .tstep.done{background:var(--good)}
   /* crown-jewel determination chain */
   .chain{display:flex;flex-direction:column;gap:14px}
   .chain-card{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:16px 18px}
@@ -124,7 +127,7 @@
   .cjrow .cjwhy{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.5}
   .cjrow .cjscore{width:96px;flex:none;text-align:right}
   .cjrow .cjscore-n{font-size:19px;font-weight:800;color:#e6c25a;line-height:1}
-  .cjrow .cjbar{height:5px;background:#2a2a28;border-radius:3px;margin-top:6px;overflow:hidden}
+  .cjrow .cjbar{height:5px;background:var(--line);border-radius:3px;margin-top:6px;overflow:hidden}
   .cjrow .cjbar i{display:block;height:100%;background:#e6c25a;border-radius:3px}
   .cjrow .cjscore-l{font-size:9px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-top:4px}
   /* AI risk view */
@@ -135,7 +138,7 @@
   .ai-leaders{display:flex;flex-direction:column}
   .ai-leader{display:flex;gap:12px;align-items:baseline;font-size:12.5px;color:var(--ink-2);padding:8px 0;border-bottom:1px solid var(--line);line-height:1.5}.ai-leader:last-child{border:none}
   .ai-leader .ai-lseat{flex:none;width:48px;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--blue)}
-  .ai-leader b{color:#fff}
+  .ai-leader b{color:var(--ink)}
   .cjmeta{display:flex;flex-wrap:wrap;gap:10px 22px;margin-top:10px}
   .cjm{display:flex;flex-direction:column;line-height:1.3}
   .cjm b{font-size:12.5px;font-weight:700;color:var(--ink-2)}.cjm.hot b{color:var(--crit)}.cjm.warn b{color:var(--warn)}.cjm.rtag b{color:var(--serious,#e0a94a);font-weight:600}
@@ -163,11 +166,11 @@
   .cjir{font-size:11px;color:var(--ink-2);margin-top:7px}
   .cjchip{display:inline-block;font-size:10.5px;background:rgba(208,59,59,.16);color:#ff9b9b;border-radius:6px;padding:2px 8px;margin:4px 5px 0 0}
   .cjloss-row{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;color:var(--ink-2);margin-top:11px}
-  .cjloss-row b{color:#fff;font-size:13px}.cjloss-row i{font-style:normal;color:var(--muted)}
+  .cjloss-row b{color:var(--ink);font-size:13px}.cjloss-row i{font-style:normal;color:var(--muted)}
   .cjtolbar{height:12px;background:#2a2a28;border-radius:6px;overflow:hidden;margin-top:6px}
   .cjtolbar i{display:block;height:100%;width:0;background:var(--warn);border-radius:6px;transition:width .5s linear}
   .cjih-sub{font-size:10.5px;color:var(--muted);margin-top:8px;line-height:1.55}
-  .cjradius-tag{margin-top:11px;font-size:11px;color:var(--warn);border-top:1px solid var(--line);padding-top:9px}.cjradius-tag b{color:#fff}
+  .cjradius-tag{margin-top:11px;font-size:11px;color:var(--warn);border-top:1px solid var(--line);padding-top:9px}.cjradius-tag b{color:var(--ink)}
   .cjincident.p50 .cjtolbar i{background:var(--warn)}
   .cjincident.p75 .cjtolbar i{background:var(--serious,#ec835a)}
   .cjincident.p100 .cjtolbar i{background:var(--crit)}
@@ -301,6 +304,14 @@
   .wr-ck{width:19px;height:19px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;background:#26261f;color:var(--muted);cursor:pointer}
   .wr-ck.done{background:var(--good-soft);color:var(--good)}
   .wr-clock{font-family:var(--mono);color:#e88;font-weight:700;margin-left:auto;white-space:nowrap}
+
+  /* War Room — kept as a dark incident command centre, isolated from the light theme */
+  #wrModal{background:#0b0f14;color:#E6EDF3;border-color:#1b232d}
+  #wrModal .card,#wrModal .wr-panel{background:#0f141b !important;border-color:#1b232d !important;color:#E6EDF3}
+  #wrModal .ck,#wrModal .cn,#wrModal .drow-tool{color:#8a93a2}
+  #wrModal [style*="color:var(--ink)"]{color:#E6EDF3 !important}
+  #wrModal [style*="background:var(--surface-2)"],#wrModal [style*="background:var(--surface)"]{background:#0f141b !important}
+  #wrModal b{color:#E6EDF3}
 </style>
 </head>
 <body>
@@ -315,7 +326,7 @@
 </div></div>
 <div class="seats"><div class="wrap seats-in">
   <span class="seatlbl">Speaking to</span>
-  <button class="seat on" data-seat="ceo">CEO / Board</button><button class="seat" data-seat="cfo">CFO</button><button class="seat" data-seat="clo">CLO / General Counsel</button><button class="seat" data-seat="cro">CRO</button><button class="seat" data-seat="cio">CIO</button><button class="seat" data-seat="ciso">CISO</button>
+  <button class="seat on" data-seat="ceo">CEO / Board</button><button class="seat" data-seat="cfo">CFO</button><button class="seat" data-seat="clo">CLO / General Counsel</button><button class="seat" data-seat="cro">CRO</button><button class="seat" data-seat="coo">COO</button><button class="seat" data-seat="cio">CIO</button><button class="seat" data-seat="ciso">CISO</button>
 </div></div>
 <div id="dataModeBar"><div class="wrap" id="dataModeInner" style="padding:8px 0;font-size:12px;font-weight:600"></div></div>
 <div class="wrap" id="app"></div>
@@ -343,7 +354,7 @@ function jtable(rows){return '<div class="card"><table class="tbl"><thead><tr><t
 function decisions(a){return a.map(function(d){return '<div class="decision" data-dec="'+d.n+'"><div class="dh"><span class="dn">Decision '+d.n+' ·</span>'+d.q+'</div><div class="dsit">'+d.sit+'</div><div class="opts">'+d.opts.map(function(o){return '<div class="opt'+(o.rec?' rec':'')+'">'+(o.rec?'<div class="orec">Recommended</div>':'')+'<div class="on">'+o.on+'</div><div class="osum">'+o.osum+'</div><div class="pc"><div class="lbl p">Pros</div><ul>'+o.pros.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul><div class="lbl c">Cons</div><ul>'+o.cons.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></div><button class="choose'+(o.rec?'':' gh')+'" data-dec="'+d.n+'" data-title="'+d.q.replace(/"/g,'')+'" data-opt="'+o.tag+'" data-osum="'+String(o.osum||'').replace(/"/g,'')+'">Choose &amp; record</button></div>';}).join('')+'</div><div class="dstatus" id="dstatus-'+d.n+'"></div></div>';}).join('');}
 function sec(no,q,desc,inner){return '<div class="section"><div class="rubric"><div class="no">'+no+'</div><div><div class="rt">'+q+'</div><div class="rd">'+desc+'</div></div></div>'+inner+'</div>';}
 
-var SEAT_LABEL={ceo:'CEO / Board',cfo:'CFO',clo:'CLO / General Counsel',cro:'CRO',cio:'CIO',ciso:'CISO'};
+var SEAT_LABEL={ceo:'CEO / Board',cfo:'CFO',coo:'COO',clo:'CLO / General Counsel',cro:'CRO',cio:'CIO',ciso:'CISO'};
 var CUR='ceo';
 function render(seat){
   CUR=seat;var s=SEATS[seat];
@@ -351,13 +362,13 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
    trimmed title). Renderers still populate hidden sections' containers. */
 var TAB_LABELS={
- 'Are we under attack right now?':'Live status','What are we protecting — and what is each worth?':'Crown Jewels — Exposure','How is security helping the business grow — and win deals?':'Business Growth','Are our controls actually working — and is the program improving?':'Controls','AI risk — two fronts: securing the AI we run, and using AI to defend':'AI risk','What decision needs you now?':'Decision','How does our security investment move the business?':'Investment',
+ 'Are we under attack right now?':'Live status','What are we protecting — and what is each worth?':'Crown Jewels — Exposure','How is security helping the business grow — and win deals?':'Business Growth','Are our controls actually working — and is the program improving?':'Controls','AI risk — two fronts: securing the AI we run, and using AI to defend':'AI risk','Are we audit-ready? — compliance framework readiness':'Compliance','What decision needs you now?':'Decision','How does our security investment move the business?':'Investment',
  'How much is at stake — and are we within the board’s limit?':'At stake','Which business processes carry the risk?':'By process','What decisions need us — and what are the trade-offs?':'Decisions','Are we adequately insured against the worst case?':'Insurance','Are we getting better — quarter over quarter?':'Trend','Our worst realistic day — and are we ready to respond and recover?':'Worst day','Governance, oversight & SEC disclosure readiness':'Governance','AI risk — are we ready for AI-accelerated attacks, and is our own AI governed?':'AI risk',
  'What is our capital at risk — and is our spend working?':'Capital at risk','What would a bad year do to earnings?':'Earnings','Where does the next dollar work hardest, and are we insured?':'ROI & insurance','What if we change the budget — and is an incident material?':'Budget','What decision needs the CFO — and what does it cost or buy?':'Decision','Current cyber initiatives & their ROI':'Projects & ROI',
  'Are we legally defensible right now?':'Standing','Where are we exposed by jurisdiction — duty, clock, penalty?':'Jurisdictions','What decision needs the General Counsel?':'Decision','Is an incident material — and are we covered by contract?':'Materiality',
@@ -465,17 +476,17 @@ function renderDecStatus(dec){
   var editLeft=Math.max(0,EDIT_WINDOW_MS-(Date.now()-d.ts));var hrs=Math.floor(editLeft/3.6e6),mins=Math.floor((editLeft%3.6e6)/6e4);
   // Project / ticketing line
   var proj;
-  if(d.ticket){var lnk=d.url?('<a href="'+d.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+d.ticket+'</a>'):('<b style="color:#fff">'+d.ticket+'</b>');
+  if(d.ticket){var lnk=d.url?('<a href="'+d.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+d.ticket+'</a>'):('<b style="color:var(--ink)">'+d.ticket+'</b>');
     var stp=statusStep(d.status);proj='Project '+lnk+(d.system?(' in '+d.system):'')+(d.demoTicket?' <span class="tag warn" style="font-size:10px">demo</span>':'')+' · <span class="tag '+(stp.n>=4?'good':'')+'" style="font-size:10.5px">'+(d.status?stp.t:'Open')+'</span>';}
   else if(d.pushing)proj='<span style="color:var(--muted)">opening the project in your ticketing system…</span>';
   else proj='<span style="color:var(--muted)">recorded here · not sent to your ticketing system yet</span> <button class="wr-btn" style="padding:5px 12px;font-size:11.5px;margin-left:6px" data-push="'+dec+'">▶ Send to ticketing → open project</button>';
   var stepN=d.ticket?statusStep(d.status).n:(committed?3:2);
   s.innerHTML='<div class="st-h">'+(committed?'🔒 Committed':'✓ Recorded')+'</div><div class="st-b" style="margin-top:4px">'+proj+'</div>'+
-    '<div class="st-b">Decision by <b style="color:#fff">'+d.by+'</b> ('+SEAT_LABEL[d.seat]+') · Option '+d.opt+' · '+fmtWhen(d.ts)+'</div>'+
+    '<div class="st-b">Decision by <b style="color:var(--ink)">'+d.by+'</b> ('+SEAT_LABEL[d.seat]+') · Option '+d.opt+' · '+fmtWhen(d.ts)+'</div>'+
     '<div class="track"><div class="tstep done"></div><div class="tstep'+(stepN>=2?' done':'')+'"></div><div class="tstep'+(stepN>=3?' done':'')+'"></div><div class="tstep'+(stepN>=4?' done':'')+'"></div></div>'+
     (committed
-      ? '<div class="st-b" style="margin-top:7px">🔒 <b style="color:#fff">Committed</b> — the 24-hour change window has closed.'+(d.ticket?' Status above is pulled live from '+(d.system||'your ticketing system')+' on refresh.':'')+'</div>'
-      : '<div class="st-b" style="margin-top:7px">Editable for <b style="color:#fff">'+hrs+'h '+mins+'m</b> more — pick another option to change it. After 24h it commits automatically. <button class="wr-btn gh" style="padding:4px 10px;font-size:11px;margin-left:6px" data-undo="'+dec+'">Undo</button></div>');
+      ? '<div class="st-b" style="margin-top:7px">🔒 <b style="color:var(--ink)">Committed</b> — the 24-hour change window has closed.'+(d.ticket?' Status above is pulled live from '+(d.system||'your ticketing system')+' on refresh.':'')+'</div>'
+      : '<div class="st-b" style="margin-top:7px">Editable for <b style="color:var(--ink)">'+hrs+'h '+mins+'m</b> more — pick another option to change it. After 24h it commits automatically. <button class="wr-btn gh" style="padding:4px 10px;font-size:11px;margin-left:6px" data-undo="'+dec+'">Undo</button></div>');
   s.classList.add('show');
   var ub=s.querySelector('[data-undo]');if(ub)ub.onclick=function(){try{localStorage.removeItem(decKey(dec));}catch(_){}renderDecStatus(dec);renderInitiatives();};
   var pb=s.querySelector('[data-push]');if(pb)pb.onclick=function(){pushDecision(dec);};
@@ -515,7 +526,7 @@ function importedInits(){
   try{var a=JSON.parse(localStorage.getItem('cyberrx_initiatives')||'[]');return Array.isArray(a)?a:[];}catch(_){return [];}
 }
 function parseUsdNum(s){var m=String(s||'').match(/([\d.]+)\s*([KMB])?/i);if(!m)return 0;var n=parseFloat(m[1])||0;var u=(m[2]||'').toUpperCase();return n*(u==='B'?1e9:u==='M'?1e6:u==='K'?1e3:1);}
-function deliveredBar(p){return '<div style="display:flex;align-items:center;gap:6px"><div style="flex:1;height:5px;background:#2a2a28;border-radius:3px;min-width:38px;overflow:hidden"><i style="display:block;height:100%;width:'+p+'%;background:'+(p>=100?'var(--good)':'var(--blue)')+'"></i></div><span style="font-size:11px;color:var(--muted)">'+p+'%</span></div>';}
+function deliveredBar(p){return '<div style="display:flex;align-items:center;gap:6px"><div style="flex:1;height:5px;background:var(--surface-2);border-radius:3px;min-width:38px;overflow:hidden"><i style="display:block;height:100%;width:'+p+'%;background:'+(p>=100?'var(--good)':'var(--blue)')+'"></i></div><span style="font-size:11px;color:var(--muted)">'+p+'%</span></div>';}
 function projProgress(d){ // schedule progress from real ticket status (or committed state)
   if(d&&d.ticket){var n=statusStep(d.status).n;return n>=4?100:n>=3?55:n>=2?20:0;}
   var committed=(Date.now()-((d&&d.ts)||0))>=EDIT_WINDOW_MS;return committed?40:10;
@@ -543,7 +554,7 @@ function initBusiness(name){var n=String(name||'').toLowerCase();var ig=industry
   return {obj:'Protect the business',cls:'warn',outcome:'Reduces risk to the business.'};
 }
 var PORTFOLIO_ITEMS=[];
-function ticketHtml(it){return it.ticket?(it.url?('<a href="'+it.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+it.ticket+'</a>'):('<b style="color:#fff">'+it.ticket+'</b>'))+(it.system?(' · '+it.system):''):'<span style="color:var(--muted)">not sent yet</span>';}
+function ticketHtml(it){return it.ticket?(it.url?('<a href="'+it.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+it.ticket+'</a>'):('<b style="color:var(--ink)">'+it.ticket+'</b>'))+(it.system?(' · '+it.system):''):'<span style="color:var(--muted)">not sent yet</span>';}
 function drillInit(idx){var it=PORTFOLIO_ITEMS[idx];if(!it)return '';
   return '<div class="drill-hero">'+it.name+'</div>'+
     '<div class="drill-p">'+objBadge(it.biz.cls,it.biz.obj)+' '+it.biz.outcome+'</div>'+
@@ -566,7 +577,7 @@ function renderInitiatives(){
   var ret=invested>0?(riskRemoved/invested):0;
   var OBJS=[{k:'Enable growth',cls:'good'},{k:'Meet obligations',cls:'blue'},{k:'Protect the business',cls:'warn'}];
   var byObj={};items.forEach(function(it){byObj[it.biz.obj]=(byObj[it.biz.obj]||0)+it.riskRemoved;});
-  var split=OBJS.map(function(o){var v=byObj[o.k]||0;var pc=riskRemoved>0?Math.round(v/riskRemoved*100):0;return '<div style="flex:1;min-width:150px"><div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:4px"><span>'+objBadge(o.cls,o.k)+'</span><span style="font-weight:700">'+(v>0?usd(v):'—')+'</span></div><div style="height:6px;background:#2a2a28;border-radius:4px;overflow:hidden"><i style="display:block;height:100%;width:'+pc+'%;background:'+objColor(o.cls)+'"></i></div><div class="cn" style="margin-top:3px">'+pc+'% of risk removed</div></div>';}).join('');
+  var split=OBJS.map(function(o){var v=byObj[o.k]||0;var pc=riskRemoved>0?Math.round(v/riskRemoved*100):0;return '<div style="flex:1;min-width:150px"><div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:4px"><span>'+objBadge(o.cls,o.k)+'</span><span style="font-weight:700">'+(v>0?usd(v):'—')+'</span></div><div style="height:6px;background:var(--surface-2);border-radius:4px;overflow:hidden"><i style="display:block;height:100%;width:'+pc+'%;background:'+objColor(o.cls)+'"></i></div><div class="cn" style="margin-top:3px">'+pc+'% of risk removed</div></div>';}).join('');
   var summary='<div class="grid4" style="margin-top:2px">'+
     '<div class="card"><div class="ck">Invested</div><div class="cv" style="font-size:22px">'+(invested>0?usd(invested):'—')+'</div><div class="cn">committed across the portfolio</div></div>'+
     '<div class="card"><div class="ck">Risk removed</div><div class="cv" style="font-size:22px;color:var(--good)">'+(riskRemoved>0?usd(riskRemoved):'—')+'</div><div class="cn">business value bought down (return × spend)</div></div>'+
@@ -783,7 +794,7 @@ function controlGapsCard(){
   if(!gaps.length)return '<div class="card" style="margin-top:14px"><div class="ck">Control gaps</div><div class="cn" style="margin-top:6px">✓ Every measured control is at or above target (≥90% deployed) — nothing needs attention right now.</div></div>';
   var rows=gaps.map(function(o){var c=o.c,p=o.p,pr=capProject(c);
     return '<div class="drow capgap" data-cap="'+c.k+'" style="cursor:pointer"><div class="drow-h"><span class="cap-dot" style="background:var(--'+capColor(p)+')"></span><b>'+c.name+'</b><span class="drow-tool">'+p+'% deployed <span class="drill-cta">details ▸</span></span></div>'+capBar(p)+
-      '<div class="drow-proj'+(pr?'':' none')+'">'+(pr?('<span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> Funded: <b style="color:#fff">'+pr.name+'</b>'+(pr.ticket?(' · '+pr.ticket):'')+' · '+pr.prog+'% delivered'):'No project on this yet — raise one to close the gap')+'</div></div>';
+      '<div class="drow-proj'+(pr?'':' none')+'">'+(pr?('<span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> Funded: <b style="color:var(--ink)">'+pr.name+'</b>'+(pr.ticket?(' · '+pr.ticket):'')+' · '+pr.prog+'% delivered'):'No project on this yet — raise one to close the gap')+'</div></div>';
   }).join('');
   return '<div class="card" style="margin-top:14px"><div class="ck">Control gaps that carry risk — and the funded fix '+liveTag()+'</div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">Each gap is from your connected tools, ordered weakest first. Click any for what it leaves exposed and how it closes.</div></div>';
 }
@@ -808,7 +819,74 @@ function drillOneCap(c){var p=capDeploy(c),pr=capProject(c);
   return '<div class="drill-hero" style="color:var(--'+capColor(p)+')">'+(p!=null?p+'% deployed':'not connected')+'</div>'+capBar(p)+
     '<div class="drill-p"><b>What it is:</b> '+c.name+' — '+c.tool+'. '+(p!=null?('Currently covering <b>'+p+'%</b> of the estate.'):'Not yet connected, so coverage is unknown.')+'</div>'+
     '<div class="ev-sec">To close the gap</div><div class="drill-p">'+(p!=null?c.need:c.connect)+'</div>'+
-    '<div class="ev-sec">Funded fix</div><div class="drill-p">'+(pr?('<span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> <b style="color:#fff">'+pr.name+'</b>'+(pr.ticket?(' · '+pr.ticket):'')+' · '+pr.prog+'% delivered'):'No portfolio project currently addresses this — raise one and it appears here, tracked to completion.')+'</div>';}
+    '<div class="ev-sec">Funded fix</div><div class="drill-p">'+(pr?('<span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> <b style="color:var(--ink)">'+pr.name+'</b>'+(pr.ticket?(' · '+pr.ticket):'')+' · '+pr.prog+'% delivered'):'No portfolio project currently addresses this — raise one and it appears here, tracked to completion.')+'</div>';}
+/* ---- GRC / compliance — audit readiness per framework, computed from the tools
+   you actually connect (continuous-control-monitoring model, like Vanta/Drata):
+   each control domain is evidenced by a connected tool or a governance answer,
+   never self-attested. Frameworks in scope = onboarding selection ∪ industry
+   default ∪ certifications held. ---- */
+var GRC_DOMAINS={
+  access:{n:'Access control &amp; identity',tools:['okta','entra','cyberark','beyondtrust','delinea'],gap:'Connect your identity provider (Okta / Entra) and PAM (CyberArk) to evidence MFA, least-privilege and access reviews.'},
+  endpoint:{n:'Endpoint protection',tools:['defender','crowdstrike'],gap:'Connect EDR (CrowdStrike / Defender).'},
+  vuln:{n:'Vulnerability &amp; patch management',tools:['qualys','tenable'],gap:'Connect a vulnerability scanner (Qualys / Tenable).'},
+  monitoring:{n:'Logging &amp; security monitoring',tools:['splunk','sentinel'],gap:'Connect a SIEM (Splunk / Microsoft Sentinel).'},
+  training:{n:'Security awareness &amp; training',tools:['knowbe4','proofpoint'],gap:'Connect an awareness platform (KnowBe4 / Proofpoint).'},
+  change:{n:'Change &amp; configuration governance',tools:['servicenow','jira'],gap:'Connect your ITSM (ServiceNow / Jira) for change and approval records.'},
+  vendor:{n:'Third-party / vendor risk',vendor:true,gap:'Connect a vendor-monitoring service (SecurityScorecard / BitSight).'},
+  incident:{n:'Incident response',ir:true,gap:'Record an IR retainer and a tested plan (tabletop within 12 months) at onboarding.'},
+  risk_gov:{n:'Risk management &amp; governance',gov:true,gap:'Set board oversight (committee + cadence) and ERM integration at onboarding.'},
+  data:{n:'Data protection &amp; DLP',tools:[],gap:'Connect a DLP tool (Purview / Forcepoint) to evidence data-loss controls.'},
+  config:{n:'Secure configuration &amp; hardening',tools:[],gap:'Connect a CSPM / configuration-compliance scanner (Wiz / Prisma, or a DISA STIG scan).'},
+  backup:{n:'Backup &amp; recovery',tools:[],gap:'Connect a backup platform (Rubrik / Veeam) to evidence recoverability.'}
+};
+var GRC_FW={
+  'SOC 2':{dom:['access','monitoring','change','incident','risk_gov','vendor','data']},
+  'ISO 27001':{dom:['access','endpoint','vuln','monitoring','change','incident','risk_gov','vendor','data','training']},
+  'HITRUST':{dom:['access','endpoint','data','monitoring','incident','risk_gov','vendor','training']},
+  'FedRAMP':{dom:['access','endpoint','vuln','monitoring','change','incident','risk_gov','config','data','backup']},
+  'CMMC':{dom:['access','config','incident','monitoring','training','risk_gov','vuln']},
+  'PCI DSS':{dom:['access','config','monitoring','vuln','data','vendor']},
+  'HIPAA':{dom:['access','data','incident','risk_gov','training']},
+  'NIST CSF':{dom:['access','endpoint','vuln','monitoring','incident','risk_gov','vendor','data','backup']}
+};
+var CERT_TO_FW={'SOC 2 Type II':'SOC 2','HITRUST CSF':'HITRUST','ISO 27001':'ISO 27001','HIPAA attestation':'HIPAA','PCI DSS':'PCI DSS','FedRAMP':'FedRAMP'};
+function grcDomainMet(key){var d=GRC_DOMAINS[key];if(!d)return false;var t=connectedTools();
+  if(d.tools&&d.tools.length&&d.tools.some(function(k){return t[k]&&t[k].on;}))return true;
+  if(d.vendor)return !!vendorService();
+  if(d.ir){var ir=(LIVE&&LIVE.governance&&LIVE.governance.ir)||{};return /yes/i.test(ir.retainer||'')&&/within 12|tested|yes/i.test(ir.tested||'');}
+  if(d.gov){var g=(LIVE&&LIVE.governance)||{};return !!g.committee&&/yes/i.test(g.ermIntegrated||'');}
+  return false;}
+function frameworksInScope(){var set={};
+  try{var f=JSON.parse(localStorage.getItem('cyberrx_frameworks')||'[]');if(Array.isArray(f))f.forEach(function(x){if(GRC_FW[x])set[x]=1;});}catch(_){}
+  var defs={health:['HITRUST','HIPAA','SOC 2'],tech:['SOC 2','ISO 27001'],fin:['SOC 2','ISO 27001','PCI DSS'],retail:['PCI DSS','SOC 2'],gov:['FedRAMP','CMMC','NIST CSF'],mfg:['ISO 27001','CMMC'],energy:['NIST CSF','ISO 27001']};
+  (defs[indKey()]||['SOC 2','ISO 27001']).forEach(function(x){set[x]=1;});
+  var certs=(LIVE&&LIVE.growth&&LIVE.growth.certs)||[];certs.forEach(function(c){if(CERT_TO_FW[c])set[CERT_TO_FW[c]]=1;});
+  return Object.keys(set);}
+function certHeld(fw){var certs=(LIVE&&LIVE.growth&&LIVE.growth.certs)||[];for(var c in CERT_TO_FW){if(CERT_TO_FW[c]===fw&&certs.indexOf(c)>=0)return true;}return false;}
+function fwReadiness(fw){var doms=(GRC_FW[fw]||{}).dom||[];var met=doms.filter(grcDomainMet).length;return {met:met,total:doms.length,pct:doms.length?Math.round(met/doms.length*100):0};}
+function drillFramework(fw){var doms=(GRC_FW[fw]||{}).dom||[];var r=fwReadiness(fw);
+  var rows=doms.map(function(k){var d=GRC_DOMAINS[k];var met=grcDomainMet(k);
+    return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+(met?'good':'crit')+')"></span><b>'+d.n+'</b><span class="drow-tool" style="color:var(--'+(met?'good':'muted')+')">'+(met?'evidenced':'gap')+'</span></div>'+(met?'':'<div class="drow-need">'+d.gap+'</div>')+'</div>';}).join('');
+  return '<div class="drill-hero" style="color:var(--'+capColor(r.pct)+')">'+r.pct+'% ready</div>'+capBar(r.pct)+
+    '<div class="drill-p">'+r.met+' of '+r.total+' control domains for <b>'+fw+'</b> are evidenced by a connected tool or a governance record. Close the gaps below to become audit-ready; each maps to a real control requirement.</div>'+
+    '<div class="ev-sec">Control domains</div>'+rows+
+    '<div class="ev-sec">How this is evidenced</div><div class="drill-p">Continuous-control-monitoring model: a domain is <span class="srcpill conn">● evidenced</span> when the tool that satisfies it is connected (or the governance record exists), never self-attested. Wire the gap tools to move to audit-ready, then export the evidence pack for your auditor.</div>';}
+function renderCompliance(){
+  var host=document.getElementById('cisoCompliance');if(!host)return;
+  var fws=frameworksInScope().filter(function(f){return GRC_FW[f];});
+  if(!fws.length){host.innerHTML='<div class="card"><div class="cn">Select the compliance frameworks in scope at onboarding (SOC 2 · ISO 27001 · HITRUST · FedRAMP · CMMC · PCI DSS · HIPAA · NIST CSF) to see live audit-readiness.</div></div>';return;}
+  var readyCount=fws.filter(function(f){return fwReadiness(f).pct>=90;}).length;
+  var avg=Math.round(fws.reduce(function(s,f){return s+fwReadiness(f).pct;},0)/fws.length);
+  var summary='<div class="grid3" style="margin-bottom:2px">'+
+    '<div class="card"><div class="ck">Frameworks in scope</div><div class="cv" style="font-size:22px">'+fws.length+'</div><div class="cn">by industry, certifications held and your selection</div></div>'+
+    '<div class="card"><div class="ck">Average audit readiness</div><div class="cv" style="font-size:22px;color:var(--'+capColor(avg)+')">'+avg+'%</div><div class="cn">control domains evidenced across frameworks</div></div>'+
+    '<div class="card"><div class="ck">Audit-ready (≥90%)</div><div class="cv" style="font-size:22px;color:var(--'+(readyCount?'good':'warn')+')">'+readyCount+' / '+fws.length+'</div><div class="cn">frameworks you could pass today</div></div>'+
+    '</div>';
+  var cards=fws.map(function(fw){var r=fwReadiness(fw);var cls=capColor(r.pct);var held=certHeld(fw);
+    return '<div class="card optile fwcard" data-fw="'+fw+'"><div class="ck">'+fw+(held?' <span class="pill good" style="font-size:9px">certified</span>':'')+'</div><div class="cv" style="font-size:21px;color:var(--'+cls+')">'+r.pct+'%</div>'+capBar(r.pct)+'<div class="cn" style="margin-top:7px">'+r.met+' / '+r.total+' control domains evidenced <span class="drill-cta">details ▸</span></div></div>';}).join('');
+  host.innerHTML=summary+'<div class="grid3" style="margin-top:12px">'+cards+'</div><div class="cn" style="margin-top:10px">Readiness is computed from the tools you connect and your governance records — not self-attestation. Click any framework for its control domains and the exact gap to close.</div>';
+  host.querySelectorAll('.fwcard').forEach(function(el){el.onclick=function(){openDrill(el.dataset.fw+' — audit readiness',drillFramework(el.dataset.fw));};});
+}
 /* ---- live economics ---- */
 var LIVE=null;
 function usd(n){n=Number(n)||0;var neg=n<0;n=Math.abs(n);var s;if(n>=1e9)s='$'+(n/1e9).toFixed(n>=1e10?0:1)+'B';else if(n>=1e6)s='$'+Math.round(n/1e6)+'M';else if(n>=1e3)s='$'+Math.round(n/1e3)+'K';else s='$'+Math.round(n);return (neg?'−':'')+s;}
@@ -939,12 +1017,12 @@ function renderSignals(){
     var pcts=['edr_pct','mfa_pct','pam_pct'].map(sig).filter(function(x){return x!=null;});
     if(pcts.length){var avg=Math.round(pcts.reduce(function(s,x){return s+x;},0)/pcts.length);setTxt('lvCovTile',avg+'%');var tn=document.getElementById('lvCovTileNote');if(tn)tn.innerHTML='<span class="pill good">live</span> from '+pcts.length+' connected tool'+(pcts.length>1?'s':'');}
   }
-  renderAiRisk();renderCisoOps();renderControls();
+  renderAiRisk();renderCisoOps();renderControls();renderCompliance();renderCooStatus();
 }
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderProcBars();renderCioSystems();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -1070,7 +1148,7 @@ function cjRow(c,i){
     var chips=(c.impactRadius&&c.impactRadius.length)?c.impactRadius.map(function(n){return '<span class="cjchip">'+n+'</span>';}).join(''):'<span style="color:var(--muted)">no mapped downstream systems — map dependencies in your CMDB</span>';
     incident='<div class="cjincident'+(ph?' p'+ph:'')+'" id="cjpanel-'+i+'">'+
       '<div class="cjih">⚠ IN THIS INCIDENT — system down, transaction flow halted</div>'+
-      '<div class="cjir"><b style="color:#fff">Impact radius</b> — systems that interface with it and are exposed to spread:<br>'+chips+'</div>'+
+      '<div class="cjir"><b style="color:var(--ink)">Impact radius</b> — systems that interface with it and are exposed to spread:<br>'+chips+'</div>'+
       '<div class="cjloss-row"><span>Aggregate loss so far <b id="cjloss-'+i+'">'+usd(loss)+'</b> <i>· day <span id="cjday-'+i+'">'+incidentDays().toFixed(1)+'</span> of outage</i></span>'+
         '<span style="text-align:right">tolerance <b>'+(tol?usd(tol):'—')+'</b><br><i style="font-size:9px">'+cjToleranceSrc(c)+'</i></span></div>'+
       '<div class="cjtolbar"><i id="cjbarfill-'+i+'" style="width:'+Math.min(100,pct).toFixed(1)+'%"></i></div>'+
@@ -1183,7 +1261,7 @@ function renderCisoWarRoom(){
   host.innerHTML='<div class="card" style="'+(active?'border-color:var(--crit)':'')+'"><div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap"><div style="flex:1;min-width:220px"><div class="ck">Incident command · War Room</div><div class="cn" style="margin-top:5px">'+(active
       ?'⚠ <b style="color:var(--crit)">LIVE INCIDENT</b> — the command center is streaming from your connected systems, automated containment is running, and the C-suite is convened around one shared set of facts.'
       :'● <b style="color:var(--good)">No active incident.</b> The moment a qualifying attack is confirmed, this room goes live automatically — the alarm sounds, containment runs, regulatory clocks start, and each executive gets a role-specific decision.')+'</div></div>'+
-    '<button class="wr-btn'+(active?'':' gh')+'" data-enterwar="1"'+(active?' style="background:var(--crit);border-color:var(--crit);color:#fff"':'')+'>'+(active?'⚠ Enter War Room':'Open War Room')+'</button></div></div>';
+    '<button class="wr-btn'+(active?'':' gh')+'" data-enterwar="1"'+(active?' style="background:var(--crit);border-color:var(--crit);color:var(--ink)"':'')+'>'+(active?'⚠ Enter War Room':'Open War Room')+'</button></div></div>';
   var b=host.querySelector('[data-enterwar]');if(b)b.onclick=function(){try{wrOpen();}catch(_){}};
 }
 /* CISO operational command center — the "when I log in" view. Four clickable
@@ -1229,7 +1307,7 @@ function capDeploy(c){
 /* User's colour scale: green ≥90, blue ≥75, yellow ≥50, red <50, grey = not connected. */
 function capColor(p){return p==null?'muted':p>=90?'good':p>=75?'blue':p>=50?'warn':'crit';}
 function capBar(p){var cls=capColor(p),w=p==null?0:Math.max(0,Math.min(100,p));
-  return '<div style="display:flex;align-items:center;gap:9px"><div style="flex:1;height:7px;background:#2a2a28;border-radius:4px;overflow:hidden;min-width:60px"><i style="display:block;height:100%;width:'+w+'%;background:var(--'+cls+')"></i></div><span style="font-size:12.5px;font-weight:700;color:var(--'+cls+')">'+(p==null?'—':p+'%')+'</span></div>';}
+  return '<div style="display:flex;align-items:center;gap:9px"><div style="flex:1;height:7px;background:var(--surface-2);border-radius:4px;overflow:hidden;min-width:60px"><i style="display:block;height:100%;width:'+w+'%;background:var(--'+cls+')"></i></div><span style="font-size:12.5px;font-weight:700;color:var(--'+cls+')">'+(p==null?'—':p+'%')+'</span></div>';}
 /* The in-flight project (if any) moving a capability's score. */
 function capProject(c){
   var re=c.proj,i,d,sp;
@@ -1242,18 +1320,24 @@ function tacticPct(keys){var vals=(keys||[]).map(function(k){return capDeploy(CA
 function vendorService(){try{var j=JSON.parse(localStorage.getItem('cyberrx_vendor_monitor')||'null');return (j&&j.vendor)?j:null;}catch(_){return null;}}
 /* Top tier-1 vendors + security ratings. Illustrative until the monitoring API is
    wired to the tenant; the shape is exactly what goes live once connected. */
-function vendorList(){return [
-  {a:'NASCO',n:'NASCO — claims processing platform',s:88,dom:'nasco.com'},
-  {a:'OPTM',n:'Optum — clinical & PBM services',s:74,dom:'optum.com'},
-  {a:'CHC',n:'Change Healthcare — clearinghouse',s:41,dom:'changehealthcare.com'},
-  {a:'AVAL',n:'Availity — EDI gateway',s:82,dom:'availity.com'},
-  {a:'COGN',n:'Cognizant — BPO / IT services',s:69,dom:'cognizant.com'},
-  {a:'ZELIS',n:'Zelis — claims payments',s:79,dom:'zelis.com'},
-  {a:'COTV',n:'Cotiviti — payment integrity',s:85,dom:'cotiviti.com'},
-  {a:'EPIC',n:'Epic Systems — EHR interoperability',s:91,dom:'epic.com'},
-  {a:'WIPRO',n:'Wipro — managed services',s:66,dom:'wipro.com'},
-  {a:'SFDC',n:'Salesforce — member CRM',s:93,dom:'salesforce.com'}
-];}
+function vendorAbbr(name){var w=String(name||'').replace(/[^A-Za-z0-9 ]/g,'').split(/\s+/).filter(Boolean);if(!w.length)return '—';if(w.length===1)return w[0].slice(0,5).toUpperCase();return w.map(function(x){return x[0];}).join('').slice(0,5).toUpperCase();}
+function vendorDomain(name){return String(name||'').toLowerCase().replace(/\b(inc|llc|corp|ltd|co|the)\b/g,'').replace(/[^a-z0-9]/g,'').slice(0,24)+'.com';}
+function vendorDemoScore(name){var s=2166136261>>>0;name=String(name||'');for(var i=0;i<name.length;i++){s^=name.charCodeAt(i);s=Math.imul(s,16777619)>>>0;}return 42+(s%57);} // stable 42–98
+/* Tier-1 vendors are the org's ACTUAL vendors (from the systems inventory), each
+   rated by the connected monitoring service. Names are real per-org; ratings are
+   demo/modeled until the SecurityScorecard/BitSight API is wired (labelled). */
+function vendorList(){
+  var sys=(LIVE&&LIVE.resilience&&LIVE.resilience.systems)||[],seen={},out=[];
+  sys.forEach(function(s){var v=s.vendor;if(v&&String(v).trim()&&!seen[v.toLowerCase()]){seen[v.toLowerCase()]=1;out.push({a:vendorAbbr(v),n:v+(s.name?(' — supports '+s.name):''),s:vendorDemoScore(v),dom:vendorDomain(v),live:false});}});
+  if(out.length)return out.slice(0,10);
+  // Industry-neutral illustrative fallback (no org inventory yet)
+  return [
+    {a:'AWS',n:'Amazon Web Services — cloud',s:93,dom:'aws.amazon.com'},{a:'MSFT',n:'Microsoft — cloud & productivity',s:90,dom:'microsoft.com'},
+    {a:'SFDC',n:'Salesforce — CRM',s:88,dom:'salesforce.com'},{a:'SNOW',n:'ServiceNow — ITSM',s:85,dom:'servicenow.com'},
+    {a:'OKTA',n:'Okta — identity',s:82,dom:'okta.com'},{a:'CRWD',n:'CrowdStrike — endpoint',s:91,dom:'crowdstrike.com'},
+    {a:'ORCL',n:'Oracle — ERP / database',s:71,dom:'oracle.com'},{a:'SAP',n:'SAP — ERP',s:74,dom:'sap.com'},
+    {a:'GOOG',n:'Google Cloud',s:89,dom:'cloud.google.com'},{a:'WORK',n:'Workday — HR / finance',s:80,dom:'workday.com'}
+  ];}
 /* Deep-link to a vendor's page on the connected monitoring service. SecurityScorecard
    exposes a public per-company rating URL; others resolve to their ratings portal. */
 function vendorUrl(service,dom){var s=String(service||'').toLowerCase();
@@ -1280,7 +1364,7 @@ function drillCapabilities(){
     .sort(function(a,b){var av=a.p==null?-1:a.p,bv=b.p==null?-1:b.p;return av-bv;})
     .map(function(o){var c=o.c,p=o.p,cls=capColor(p),pr=capProject(c);
       var proj=pr
-        ?'<div class="drow-proj"><span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> Project: <b style="color:#fff">'+pr.name+'</b>'+(pr.ticket?(' · '+pr.ticket):'')+' · '+pr.prog+'% delivered</div>'
+        ?'<div class="drow-proj"><span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> Project: <b style="color:var(--ink)">'+pr.name+'</b>'+(pr.ticket?(' · '+pr.ticket):'')+' · '+pr.prog+'% delivered</div>'
         :'<div class="drow-proj none">No portfolio project is currently addressing this. Raise one — it will appear here once it is in your ticketing system.</div>';
       return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+cls+')"></span><b>'+c.name+'</b><span class="drow-tool">'+c.tool+'</span></div>'+
         capBar(p)+
@@ -1300,7 +1384,7 @@ function drillVendors(){
   var vs=vendorService();var list=vendorList().slice().sort(function(a,b){return a.s-b.s;});
   var tag=vs?(vs.demo?'<span class="pill warn">demo</span>':'<span class="pill mod">modeled</span>'):'';
   var head=vs
-    ?'<div class="drill-p">'+tag+' Your top-10 tier-1 vendors and their security ratings from <b>'+vs.vendor+'</b>'+(vs.demo?' <b>(demo data)</b>':' — illustrative until the '+vs.vendor+' API is wired to your tenant')+'. <b>Click any vendor</b> to open its page in '+vs.vendor+'. Higher is safer, on your top-10 colour scale.</div>'
+    ?'<div class="drill-p">'+tag+' Your tier-1 vendors — <b>the real providers from your systems inventory</b> — rated by <b>'+vs.vendor+'</b>. '+(vs.demo?'Ratings are <b>demo data</b>':'Ratings are illustrative until the '+vs.vendor+' API is wired to your tenant; the names are your own')+'. <b>Click any vendor</b> to open its page in '+vs.vendor+'. Higher is safer, on your top-10 colour scale.</div>'
     :'<div class="drill-hero muted">No monitoring service connected</div><div class="drill-p">Choose a third-party monitoring service at onboarding — <b>SecurityScorecard</b>, <b>BitSight</b>, <b>UpGuard</b>, <b>Panorays</b> or <b>Black Kite</b> — and your top-10 tier-1 vendors appear here, scored and colour-coded, refreshed daily. Below is an illustrative preview.</div>';
   var rows=list.map(function(vd){var cls=capColor(vd.s);var url=vs?vendorUrl(vs.vendor,vd.dom):null;
     var inner='<div class="drow-h"><span class="cap-dot" style="background:var(--'+cls+')"></span><b>'+vd.a+'</b><span class="drow-tool">'+vd.n+(url?' <span class="drill-cta">open in '+vs.vendor+' ↗</span>':'')+'</span></div>'+capBar(vd.s)+
@@ -1476,7 +1560,7 @@ function renderMateriality(){
   var cloName=(seatNames()['clo']||SEAT_LABEL['clo']||'General Counsel');
   if(!m){
     host.innerHTML='<div class="card"><div class="ck">Materiality determination</div><div class="cn" style="margin-top:6px">When an incident occurs, record the board’s materiality call here — it starts the SEC 4-business-day clock and becomes the evidenced, timestamped record for your disclosure defense.</div>'+
-      '<div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap"><button class="wr-btn" style="background:var(--crit);border-color:var(--crit);color:#fff" data-mat="material">⚠ Material — start the clock</button><button class="wr-btn gh" data-mat="not">Not material — record &amp; close</button></div></div>';
+      '<div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap"><button class="wr-btn" style="background:var(--crit);border-color:var(--crit);color:var(--ink)" data-mat="material">⚠ Material — start the clock</button><button class="wr-btn gh" data-mat="not">Not material — record &amp; close</button></div></div>';
     host.querySelectorAll('[data-mat]').forEach(function(b){b.onclick=function(){saveMat({determination:b.dataset.mat,by:cloName,ts:Date.now(),basis:''});renderMateriality();};});
     return;
   }
@@ -1490,7 +1574,7 @@ function renderMateriality(){
     (bind?('<div><div class="cn">'+bind.jurisdiction+' — '+bind.obligation+'</div><div style="font-size:16px">'+countdown(bindLeft)+' left</div></div>'):'')+
     '</div>'):'';
   host.innerHTML='<div class="card"><div class="ck">Materiality determination · '+head+'</div>'+
-    '<div class="st-b" style="margin-top:8px;color:var(--ink-2)">Determined by <b style="color:#fff">'+m.by+'</b> ('+SEAT_LABEL['clo']+') · '+new Date(m.ts).toLocaleString()+'</div>'+clocks+
+    '<div class="st-b" style="margin-top:8px;color:var(--ink-2)">Determined by <b style="color:var(--ink)">'+m.by+'</b> ('+SEAT_LABEL['clo']+') · '+new Date(m.ts).toLocaleString()+'</div>'+clocks+
     '<div style="margin-top:14px"><button class="wr-btn gh" style="padding:5px 12px;font-size:11.5px" data-matreset="1">Reopen / change determination</button></div></div>';
   var rb=host.querySelector('[data-matreset]');if(rb)rb.onclick=function(){saveMat(null);renderMateriality();};
 }
@@ -1540,6 +1624,33 @@ function renderRoi(){
 function renderCioSystems(){
   var host=document.getElementById('cioSystems');if(!host)return;
   var sy=LIVE&&LIVE.resilience&&LIVE.resilience.systems;if(!sy||!sy.length){host.innerHTML=illuSysBars();return;}
+  renderCioSystemsBody(host,sy);
+}
+/* COO — operational continuity. Are operations running, can critical services keep
+   delivering, and where is a single point of failure? From SIEM + resilience. */
+function renderCooStatus(){
+  var host=document.getElementById('cooStatus');if(!host)return;
+  var oi=sig('open_incidents'),rs=(LIVE&&LIVE.resilience)||{},worst=rs.worst_recovery_hours,vc=rs.top_vendor_blast,mttd=sig('mttd_hrs');
+  var disrupted=oi!=null&&oi>0;
+  host.innerHTML=demoBanner()+'<div class="grid4">'+
+    '<div class="card"><div class="ck">Operations status</div><div class="cv" style="font-size:19px;color:var(--'+(disrupted?'crit':(oi!=null?'good':'muted'))+')">'+(disrupted?(oi+' disrupting ops'):(oi!=null?'Running normally':'Connect SIEM'))+'</div><div class="cn">'+(disrupted?'an incident is affecting a business process':(oi!=null?'no incident affecting service delivery '+liveTag():'live from your SIEM once connected'))+'</div></div>'+
+    '<div class="card"><div class="ck">Slowest service to recover</div><div class="cv" style="font-size:19px'+(worst!=null&&worst>=24?';color:var(--warn)':'')+'">'+(worst!=null?hrsToStr(worst):'—')+'</div><div class="cn">worst-case restore on a revenue-critical service</div></div>'+
+    '<div class="card"><div class="ck">Single point of failure</div><div class="cv" style="font-size:19px'+(vc&&vc.vendor?';color:var(--warn)':'')+'">'+(vc&&vc.vendor?('1 vendor · '+((vc.systems||[]).length)+' services'):'—')+'</div><div class="cn">'+(vc&&vc.vendor?('if '+vc.vendor+' fails, all degrade'):'map vendor concentration in onboarding')+'</div></div>'+
+    '<div class="card"><div class="ck">Disruption detection</div><div class="cv" style="font-size:19px'+(mttd!=null?';color:var(--good)':'')+'">'+(mttd!=null?(mttd+'h '+liveTag()):'Connect SIEM')+'</div><div class="cn">how fast an operational disruption surfaces</div></div>'+
+    '</div>';
+}
+function continuityCard(rows,live){return '<div class="card"><table class="tbl"><thead><tr><th>Critical service</th><th>Cost / hour down</th><th>Recovery (RTO)</th><th>Continuity</th></tr></thead><tbody>'+rows+'</tbody></table>'+(live?'<div class="cn" style="margin-top:8px">Ranked by what an hour of downtime costs · "within tolerance" = recovers under 24h. From your inventory + resilience data.</div>':'<div class="cn" style="margin-top:8px">◐ <b style="color:var(--warn)">Illustrative</b> — upload your systems &amp; recovery targets to see real continuity status.</div>')+'</div>';}
+function renderCooContinuity(){
+  var host=document.getElementById('cooContinuity');if(!host)return;
+  var sy=(LIVE&&LIVE.resilience&&LIVE.resilience.systems)||null;
+  if(sy&&sy.length){var rows=sy.filter(function(s){return (s.per_hr>0)||(s.recovery_hours!=null);}).slice(0,8).map(function(s){var rto=s.recovery_hours,atrisk=rto!=null&&rto>24;
+    return '<tr><td><b>'+s.name+'</b>'+(s.crown_jewel?' <span class="cj-badge">crown jewel</span>':'')+'</td><td style="font-weight:700;color:var(--warn)">'+(s.per_hr>0?(usd(s.per_hr)+'/hr'):'—')+'</td><td>'+(rto!=null?hrsToStr(rto):'—')+'</td><td><span class="tag '+(rto==null?'':atrisk?'warn':'good')+'">'+(rto==null?'—':atrisk?'over tolerance':'within tolerance')+'</span></td></tr>';}).join('');
+    host.innerHTML=continuityCard(rows,true);return;}
+  var p=indProfile(),hrs=[2.3e6,0.9e6,0.6e6,0.04e6],rto=[74,28,40,8];
+  var rows=p.systems.map(function(n,i){var atrisk=rto[i]>24;return '<tr><td><b>'+n+'</b>'+(i===0?' <span class="cj-badge">crown jewel</span>':'')+'</td><td style="font-weight:700;color:var(--warn)">'+usd(hrs[i])+'/hr</td><td>'+hrsToStr(rto[i])+'</td><td><span class="tag '+(atrisk?'warn':'good')+'">'+(atrisk?'over tolerance':'within tolerance')+'</span></td></tr>';}).join('');
+  host.innerHTML=continuityCard(rows,false);
+}
+function renderCioSystemsBody(host,sy){
   var withHr=sy.filter(function(s){return s.per_hr>0;});var list=withHr.length?withHr:sy;
   var max=list[0].per_hr||list[0].exposure_usd||1;
   host.innerHTML='<div class="card">'+list.map(function(s){
