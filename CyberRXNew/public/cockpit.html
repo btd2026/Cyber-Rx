@@ -71,6 +71,18 @@
   .drow-need{font-size:12px;color:var(--ink-2);margin-top:7px;line-height:1.5}
   .drow-proj{font-size:12px;margin-top:8px;color:var(--ink-2)}.drow-proj.none{color:var(--muted)}
   .cap-dot{width:11px;height:11px;border-radius:50%;display:inline-block;flex:none}
+  /* Control value ledger — capability → tool → frameworks satisfied → $ risk removed */
+  .capval{padding:10px 0;border-top:1px solid var(--line)}.capval:first-child{border-top:none}
+  .capval-h{display:flex;align-items:center;gap:8px;font-size:13px;flex-wrap:wrap}.capval-h b{color:var(--ink);font-size:13.5px}
+  .capval-tool{color:var(--muted);font-size:11.5px}
+  .capval-usd{margin-left:auto;font-weight:800;color:var(--good);font-size:13.5px}
+  .capval-fw{margin-top:6px;font-size:11px;color:var(--muted)}
+  .capval-sub{margin-top:5px;font-size:11px;color:var(--muted)}
+  .fwid{display:inline-block;font-size:9.5px;font-weight:700;font-family:var(--mono);padding:1px 6px;border-radius:5px;margin:0 4px 4px 0}
+  .fwid.csf{background:var(--blue-soft);color:var(--blue);border:1px solid var(--line-2)}
+  .fwid.r53{background:var(--good-soft);color:var(--good);border:1px solid rgba(46,139,107,.3)}
+  .capval-total{margin-top:12px;padding-top:11px;border-top:2px solid var(--ink);display:flex;justify-content:space-between;align-items:baseline;font-size:13px;font-weight:600;color:var(--ink)}
+  .capval-total b{color:var(--good);font-size:18px}
   .tac-caps{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
   .tac-cap{font-size:11.5px;color:var(--ink-2);display:inline-flex;align-items:center;gap:5px;background:rgba(137,135,129,.1);padding:4px 9px;border-radius:8px}
   .drill-hero{font-size:19px;font-weight:700;margin-bottom:4px}.drill-hero.good{color:var(--good)}.drill-hero.muted{color:var(--muted)}
@@ -842,6 +854,45 @@ function iamCard(){
   return '<div class="card" style="margin-top:14px"><div class="ck">Identity governance '+liveTag()+' — the #1 attacker path and the first control auditors check</div><div style="margin-top:8px">'+rows+
     '</div><div class="cn" style="margin-top:8px">Joiner-mover-leaver, access reviews and privileged-session monitoring are the identity controls SOC 2, ISO 27001, HITRUST and every auditor check first — evidenced live from your IdP + PAM.</div></div>';
 }
+/* Each core capability → the framework controls it satisfies (NIST CSF 2.0
+   subcategories + NIST SP 800-53 Rev 5 controls) and a risk weight. The dollars
+   each removes = the org's total control-removed risk distributed by weight ×
+   live deployment %, so the per-control amounts SUM to the whole — the
+   "risk vs control = saving" ledger the CISO takes to the board. */
+var CAP_FRAMEWORK={
+  mfa:{csf:['PR.AA-01','PR.AA-03'],r53:['IA-2','IA-5','AC-7'],weight:1.6},
+  pam:{csf:['PR.AA-05'],r53:['AC-2','AC-5','AC-6'],weight:1.5},
+  edr:{csf:['DE.CM-01','RS.MI-01'],r53:['SI-3','SI-4'],weight:1.5},
+  vuln:{csf:['ID.RA-01'],r53:['RA-5','SI-2'],weight:1.2},
+  siem:{csf:['DE.AE-03','DE.CM-09'],r53:['AU-6','SI-4'],weight:1.1},
+  cspm:{csf:['PR.PS-01'],r53:['CM-6','CM-2'],weight:1.1},
+  backup:{csf:['PR.DS-11','RC.RP-03'],r53:['CP-9','CP-10'],weight:1.0},
+  seg:{csf:['PR.IR-01'],r53:['SC-7'],weight:1.0},
+  dlp:{csf:['PR.DS-01','PR.DS-02'],r53:['SC-7','MP-6'],weight:0.9},
+  aware:{csf:['PR.AT-01'],r53:['AT-2'],weight:0.9}
+};
+function capRiskRemoved(){
+  var total=controlsEffUsd(),eff={},sum=0;
+  CAPS.forEach(function(c){var p=capDeploy(c),fw=CAP_FRAMEWORK[c.k],w=(fw&&fw.weight)||0,e=(p!=null&&w>0)?w*(p/100):0;eff[c.k]=e;sum+=e;});
+  var out={};CAPS.forEach(function(c){out[c.k]=sum>0?Math.round(total*(eff[c.k]/sum)):0;});
+  return {byCap:out,total:total,anyLive:sum>0};
+}
+function fwIdChips(fw){if(!fw)return '';return fw.csf.map(function(id){return '<span class="fwid csf">'+id+'</span>';}).join('')+fw.r53.map(function(id){return '<span class="fwid r53">'+id+'</span>';}).join('');}
+function capValueCard(){
+  var rr=capRiskRemoved();
+  if(!rr.anyLive)return '<div class="card" style="margin-top:14px"><div class="ck">Control value ledger — frameworks satisfied &amp; risk removed, per control</div><div class="cn" style="margin-top:6px">◐ Connect your security tools (EDR, MFA, PAM, vulnerability, SIEM, backup, cloud) to see, for each capability: the tool delivering it, the NIST CSF 2.0 + 800-53 controls it satisfies, and the dollars of risk it removes — summing to your organization’s total risk-vs-control saving.</div></div>';
+  var rows=CAPS.map(function(c){return {c:c,p:capDeploy(c),usd:rr.byCap[c.k]||0};})
+    .filter(function(o){return CAP_FRAMEWORK[o.c.k];})
+    .sort(function(a,b){return b.usd-a.usd;})
+    .map(function(o){var c=o.c,p=o.p,fw=CAP_FRAMEWORK[c.k],cls=capColor(p);
+      return '<div class="capval capgap" data-cap="'+c.k+'" style="cursor:pointer"><div class="capval-h"><span class="cap-dot" style="background:var(--'+cls+')"></span><b>'+c.name.replace(/ *\(.*\)/,'')+'</b> <span class="capval-tool">'+c.tool+'</span><span class="capval-usd">'+(p!=null?usd(o.usd):'<span style="color:var(--muted);font-weight:600">not connected</span>')+'</span></div>'+
+        '<div class="capval-fw">Satisfies '+fwIdChips(fw)+'</div>'+
+        '<div class="capval-sub">'+(p!=null?(p+'% deployed — removes '+usd(o.usd)+' of expected loss'):('connect to measure — '+c.connect))+' <span class="drill-cta">details ▸</span></div></div>';
+    }).join('');
+  return '<div class="card" style="margin-top:14px"><div class="ck">Control value ledger '+liveTag()+' — the frameworks each control satisfies &amp; the risk it removes</div><div style="margin-top:8px">'+rows+
+    '</div><div class="capval-total"><span>Organization risk removed by controls <span class="pill mod" style="font-size:9px">modeled</span></span><b>'+usd(rr.total)+'</b></div>'+
+    '<div class="cn" style="margin-top:6px">Each control’s share is its framework-weighted contribution scaled by how fully it’s deployed — the parts sum to the whole. Click any control for its framework mapping and the math.</div></div>';
+}
 function renderControls(){
   var host=document.getElementById('cisoControls');if(!host)return;
   var tr=trajInfo(),mttd=sig('mttd_hrs');
@@ -850,7 +901,7 @@ function renderControls(){
     ctile('traj','Are we getting better?',tr.val,tr.cls,tr.sub)+
     ctile('det','How fast do we detect &amp; respond?',mttd!=null?(mttd+'h to detect'):'connect SIEM',mttd!=null?'good':'muted',mttd!=null?'MTTD live · MTTR once your SIEM workflow connects':'connect your SIEM to measure MTTD / MTTR')+
     '</div>';
-  host.innerHTML=demoBanner()+tiles+controlGapsCard()+iamCard();
+  host.innerHTML=demoBanner()+tiles+capValueCard()+controlGapsCard()+iamCard();
   host.querySelectorAll('.ctile').forEach(function(el){el.onclick=function(){var k=el.dataset.cdrill;
     if(k==='eff')openDrill('Risk removed by controls',drillEffectiveness());
     else if(k==='traj')openDrill('Program trajectory',drillTrajectory());
@@ -884,9 +935,13 @@ function drillDetection(){var mttd=sig('mttd_hrs');
     '<div class="drill-p">How fast you would see a real attack (MTTD) and contain it (MTTR). Detection speed is the single biggest lever on breach cost — every hour of attacker dwell time compounds the loss.</div>'+
     (mttd!=null?(gRow('Mean time to detect (MTTD)',mttd+' h')+gRow('Mean time to respond (MTTR)','connect SIEM workflow')):'')+
     '<div class="ev-sec">How to evidence it</div><div class="drill-p">MTTD / MTTR come straight from your SIEM / SOAR (Splunk, Sentinel) — alert timestamp to containment action. Until that is connected this reads “—”, never a guessed number.</div>';}
-function drillOneCap(c){var p=capDeploy(c),pr=capProject(c);
+function drillOneCap(c){var p=capDeploy(c),pr=capProject(c),fw=CAP_FRAMEWORK[c.k],rr=capRiskRemoved(),saved=(rr.byCap&&rr.byCap[c.k])||0;
+  var fwSec=fw?('<div class="ev-sec">Frameworks this control satisfies</div><div class="drill-p">'+fwIdChips(fw)+'</div>'+
+    '<div class="ev-sec">Risk it removes</div>'+gRow('Deployment',p!=null?(p+'%'):'not connected')+gRow('Loss removed at this deployment',p!=null?usd(saved)+' (modeled)':'—')+gRow('Of the org total',usd(rr.total))+
+    '<div class="drill-p" style="color:var(--muted)">The dollar figure is this control’s framework-weighted share of the organization’s total control-removed risk, scaled by how fully it is deployed — so every control’s saving sums to the whole.</div>'):'';
   return '<div class="drill-hero" style="color:var(--'+capColor(p)+')">'+(p!=null?p+'% deployed':'not connected')+'</div>'+capBar(p)+
     '<div class="drill-p"><b>What it is:</b> '+c.name+' — '+c.tool+'. '+(p!=null?('Currently covering <b>'+p+'%</b> of the estate.'):'Not yet connected, so coverage is unknown.')+'</div>'+
+    fwSec+
     '<div class="ev-sec">To close the gap</div><div class="drill-p">'+(p!=null?c.need:c.connect)+'</div>'+
     '<div class="ev-sec">Funded fix</div><div class="drill-p">'+(pr?('<span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> <b style="color:var(--ink)">'+pr.name+'</b>'+(pr.ticket?(' · '+pr.ticket):'')+' · '+pr.prog+'% delivered'):'No portfolio project currently addresses this — raise one and it appears here, tracked to completion.')+'</div>';}
 /* ---- GRC / compliance — audit readiness per framework, computed from the tools
