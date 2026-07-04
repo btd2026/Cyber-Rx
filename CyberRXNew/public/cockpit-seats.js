@@ -11,20 +11,9 @@ var SEATS = {
    sec('01','Strategic Go / No-Go Control Panel','Leads security assessments, threat modeling and risk reviews for new initiatives (M&amp;A · cloud · AI · expansion) before approval — so you can tell the board whether a strategy is safe to pursue.',
      '<div id="ceoGoNoGo"></div>'
      +'<div id="ceoAiRisk" style="margin-top:14px"><div class="card"><div class="cn">◐ Add your AI-governance answers in onboarding, and connect vulnerability management, to populate the AI-initiative gate from live data.</div></div></div>')
-   +sec('02','Decision Intelligence View','Produces executive risk briefs, scenario analysis and business-impact assessments — clear risk-based recommendations in dollars, not technical detail, with the recommended decision highlighted.',
-     '<div class="cols"><div class="card" id="ceoStress"><div class="ck">Severe-but-plausible scenario</div><div class="cn" style="margin-top:8px">◐ Illustrative until go-live — modeled from your top crown jewel, its largest open risk, worst-case recovery and your binding regulatory clock.</div></div>'
-     +'<div class="card" id="ceoReadiness"><div class="ck">Response &amp; recovery readiness</div><div class="cn" style="margin-top:8px">◐ Add your incident-readiness answers in onboarding (IR plan tested, tabletop, retainer, ransomware policy).</div></div></div>'
-     +decisions([
-      {n:1,q:'Should we close the privileged path into payments?',sit:'A few over-privileged IT accounts can reach the payments database directly — the single biggest reason exposure is $68M. Three ways to handle it:',
-       opts:[
-        {rec:true,tag:'A · Fund it now',on:'Option A · Fund it now',osum:'$1.4M · 3 weeks',pros:['Removes ~$52M of exposure (37× return)','Brings the worst case within appetite','Strengthens insurance renewal'],cons:['Requires $1.4M of capital this quarter','3 weeks of identity-team effort']},
-        {tag:'B · Phase over 2 quarters',on:'Option B · Phase it',osum:'$1.4M spread',pros:['Spreads the $1.4M across two quarters','Less disruption to the identity team now'],cons:['~$26M of the $52M stays open for 6 months','Worst-case tail stays above the $120M appetite until done']},
-        {tag:'C · Accept &amp; monitor',on:'Option C · Accept',osum:'$0 · formal acceptance',pros:['No capital spend this quarter'],cons:['Leaves the full $52M exposure open','Requires a documented board risk-acceptance (D&O exposure)','Insurer likely re-rates the payments path at renewal']}]},
-      {n:2,q:'How fast should we be able to recover our revenue systems?',sit:'Our slowest revenue system takes ~3.1 days to recover, driving most of the tail. Three investment levels:',
-       opts:[
-        {rec:true,tag:'A · Full modernization',on:'Option A · Full',osum:'$3.2M · <6h recovery',pros:['Cuts worst case by ~$40M','Tail below appetite','Meets regulatory recovery expectations'],cons:['Requires $3.2M of capital','One-quarter program']},
-        {tag:'B · Critical systems only',on:'Option B · Critical only',osum:'$1.6M',pros:['Protects the two highest-value systems','Half the cost'],cons:['Portal recovery stays slow','Removes ~$24M of $40M']},
-        {tag:'C · Defer',on:'Option C · Defer',osum:'$0 this year',pros:['Zero capital this year'],cons:['Worst-case tail stays $180M — above the $120M appetite','Insurer likely raises premium at renewal']}]}]))
+   +sec('02','Decision Intelligence View','Produces executive risk briefs, scenario analysis and business-impact assessments — a one-page decision brief for each strategic initiative with best / likely / worst outcome in dollars and a clear recommendation, plus the severe-but-plausible scenario that frames every decision.',
+     '<div id="ceoDecisionBrief"></div>'
+     +'<div class="cols" style="margin-top:14px"><div class="card" id="ceoStress"><div class="ck">Severe-but-plausible scenario</div><div class="cn" style="margin-top:8px">◐ Illustrative until go-live — modeled from your top crown jewel, its largest open risk, worst-case recovery and your binding regulatory clock. This is the downside every strategic decision above is weighed against.</div></div></div>')
    +sec('03','Revenue Enablement Dashboard','Supports SOC 2, ISO 27001, HITRUST, FedRAMP, CMMC certifications and secure sales deals — certification readiness + deal clearance, so we win deals without adding cyber risk.',
      '<div id="cisoGrowth"></div><div id="ceoPeer" style="margin-top:12px"></div>')
    +sec('04','Executive Accountability Heatmap','Defines the RACI for cybersecurity across business units and executive scorecards — every leader’s accountabilities, plus the governance structure SEC Reg S-K Item 106 requires you to disclose and the evidenced decision log that is your D&amp;O defense.',
@@ -47,7 +36,8 @@ var SEATS = {
    +sec('06','Cyber Investment Optimizer','Builds risk-based roadmaps from vulnerability data, threat intelligence and audit findings — the ranked portfolio of security investments by ROI vs risk reduction, so you fund where the dollar works hardest.',
      '<div id="initiatives-panel"></div>')
    +sec('07','Crisis Simulation Command Center','Runs incident-response tabletop exercises, crisis simulations and executive playbooks — steady-state response readiness, single-provider systemic risk, and the War Room command centre (⚠ top bar) for a live incident.',
-     '<div id="ceoThirdParty"></div>')
+     '<div id="ceoReadiness" class="card"><div class="ck">Response &amp; recovery readiness</div><div class="cn" style="margin-top:8px">◐ Add your incident-readiness answers in onboarding (IR plan tested, tabletop, retainer, ransomware policy).</div></div>'
+     +'<div id="ceoThirdParty" style="margin-top:14px"></div>')
   );}
  },
 

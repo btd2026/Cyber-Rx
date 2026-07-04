@@ -48,8 +48,8 @@ async function loadOrgSetup(orgId) {
     const rows = await db.query('SELECT setup_json FROM orgs WHERE id=$1', [orgId]);
     const sj = rows[0] && rows[0].setup_json;
     const parsed = typeof sj === 'string' ? JSON.parse(sj) : (sj || {});
-    return { economics: (parsed && parsed.economics) || {}, resilience: (parsed && parsed.resilience) || {}, governance: (parsed && parsed.governance) || {}, aiGovernance: (parsed && parsed.aiGovernance) || {}, growth: (parsed && parsed.growth) || {} };
-  } catch (_) { return { economics: {}, resilience: {}, governance: {}, aiGovernance: {}, growth: {} }; }
+    return { economics: (parsed && parsed.economics) || {}, resilience: (parsed && parsed.resilience) || {}, governance: (parsed && parsed.governance) || {}, aiGovernance: (parsed && parsed.aiGovernance) || {}, growth: (parsed && parsed.growth) || {}, strategicInitiatives: (parsed && parsed.strategicInitiatives) || [] };
+  } catch (_) { return { economics: {}, resilience: {}, governance: {}, aiGovernance: {}, growth: {}, strategicInitiatives: [] }; }
 }
 
 // materialExposure() reads snake_case, but Risk._transformFromDb returns camelCase.
@@ -195,6 +195,7 @@ async function run(orgId) {
   } : null;
 
   const governance = setup.governance || {};
+  const strategicInitiatives = Array.isArray(setup.strategicInitiatives) ? setup.strategicInitiatives : [];
 
   // Growth / revenue-enablement (CISO) — pipeline in security review, deal-review
   // cycle time, certifications held and trust reviews. Straight from onboarding;
@@ -276,6 +277,7 @@ async function run(orgId) {
       legal,
       resilience,
       governance,
+      strategic_initiatives: strategicInitiatives,
       growth,
       stress,
       portfolio,

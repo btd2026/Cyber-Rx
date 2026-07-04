@@ -253,6 +253,13 @@
     </div>
   </div>
 
+  <!-- 1d · Strategic initiatives (CEO per-initiative safety check) -->
+  <div class="sec">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Strategic initiatives <span style="color:var(--muted)">(for the CEO / Board)</span></div><div class="sd">The major moves in front of the board — an acquisition, a new cloud platform, an AI product, a market or factory expansion. CyberX-Ray runs a <b>per-initiative go / no-go safety check</b> and a one-page decision brief for each, because every move carries different risk. Add the ones being weighed now.</div></div><div class="badge" id="bstrat">optional</div></div>
+    <div id="stratRows"></div>
+    <button class="conn-go" id="addStrat" type="button" style="margin-top:4px">+ Add a strategic initiative</button>
+  </div>
+
   <!-- 2 · Financials -->
   <div class="sec">
     <div class="sh"><div class="sn">2</div><div><div class="st">Financials &amp; appetite</div><div class="sd">Turns cyber risk into board language — % of revenue, materiality, appetite, ROI. Enter a number and pick the unit (B/M/K).</div></div><div class="badge" id="b2">optional</div></div>
@@ -454,6 +461,29 @@
     RISK=p.rows.map(function(c){return {title:get(c,tc)||c[0],severity:get(c,sc)||'High',asset:get(c,ac)||'',exposure:get(c,ec)||'',status:get(c,stc)||'open'};}).filter(function(x){return x.title;});
     showRows(document.getElementById('resRisk'),RISK,function(x){return '<div class="xrow"><span class="nm">'+x.title+'</span><span class="mt">'+(x.asset||'')+(x.exposure?(' · '+x.exposure):'')+' · '+(x.severity||'')+'</span></div>';});
     var b=document.getElementById('b6');b.dataset.n=RISK.length;badgeDone('b6');updateSummary();});});
+  // ---- strategic initiatives (CEO per-initiative go/no-go + decision brief) ----
+  var STRAT_TYPES=['Acquisition / M&A','Cloud platform or migration','AI product or feature','Market / geographic expansion','New digital product','Outsourcing / offshoring','Data / analytics initiative'];
+  function addStratRow(v){v=v||{};var wrap=document.getElementById('stratRows');if(!wrap)return;
+    var row=document.createElement('div');row.className='strat-row';row.style.cssText='display:grid;grid-template-columns:1.5fr 1.3fr 1fr 1fr auto;gap:10px;margin-bottom:10px;align-items:end';
+    row.innerHTML='<div class="field"><label>Initiative</label><input class="s-name" placeholder="e.g. Shift to AI PCs · New cloud platform · Factory move to Vietnam"></div>'+
+      '<div class="field"><label>Type</label><select class="s-type">'+STRAT_TYPES.map(function(t){return '<option>'+t+'</option>';}).join('')+'</select></div>'+
+      '<div class="field"><label>Value at stake</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum s-val" placeholder="500"><select class="munit s-valu"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div></div>'+
+      '<div class="field"><label>Horizon</label><select class="s-horizon"><option>This quarter</option><option selected>This year</option><option>Next 12–24 months</option></select></div>'+
+      '<button class="s-del" type="button" title="Remove" style="height:38px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;color:var(--muted)">✕</button>';
+    wrap.appendChild(row);
+    if(v.name)row.querySelector('.s-name').value=v.name;
+    row.querySelector('.s-del').addEventListener('click',function(){row.remove();updateStratBadge();});
+    ['input','change'].forEach(function(ev){row.addEventListener(ev,updateStratBadge);});
+    updateStratBadge();
+  }
+  function collectStrategic(){return Array.prototype.slice.call(document.querySelectorAll('#stratRows .strat-row')).map(function(r){
+    var name=(r.querySelector('.s-name').value||'').trim();if(!name)return null;
+    var val=parseFloat(r.querySelector('.s-val').value||'')||null,unit=parseFloat(r.querySelector('.s-valu').value)||1;
+    return {name:name,type:r.querySelector('.s-type').value,valueUsd:val!=null?Math.round(val*unit):null,horizon:r.querySelector('.s-horizon').value};
+  }).filter(Boolean);}
+  function updateStratBadge(){var n=collectStrategic().length,b=document.getElementById('bstrat');if(b){if(n){b.textContent='✓ '+n+' initiative'+(n>1?'s':'');b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}}
+  (function(){var a=document.getElementById('addStrat');if(a)a.addEventListener('click',function(){addStratRow();});})();
+
   // ---- cyber projects / initiatives (upload or pull from ticketing) ----
   var INIT=[];
   function storeInit(){try{localStorage.setItem('cyberrx_initiatives',JSON.stringify(INIT));}catch(_){}}
@@ -713,6 +743,7 @@
         systems:mval('aiSystems'),decisioning:v('aiDecisioning'),framework:v('aiFramework'),
         policy:v('aiPolicy'),euAiAct:v('aiEuAct'),inventory:v('aiInventory')
       },
+      strategicInitiatives:collectStrategic(),
       growth:{
         pipelineUsd:mval('growthPipeline'),reviewBeforeWks:v('growthBefore'),reviewNowWks:v('growthNow'),
         dealsGated:v('growthDeals'),trustReviews:v('growthTrust'),
@@ -754,7 +785,7 @@
      field; we only toggle visibility. Sections are grouped by their title. ---- */
   var OB_TABS=[
     {k:'org',l:'Organization',m:['organization']},
-    {k:'gov',l:'Governance & AI',m:['board governance','ai risk']},
+    {k:'gov',l:'Governance & AI',m:['board governance','ai risk','strategic initiatives']},
     {k:'fin',l:'Financials',m:['financials','enterprise risk','growth engine','insurance']},
     {k:'inv',l:'Inventory',m:['business processes','systems','map applications']},
     {k:'risk',l:'Risks & projects',m:['risk register','cyber projects','initiatives']},
