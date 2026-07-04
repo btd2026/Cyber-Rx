@@ -371,7 +371,7 @@ var TAB_LABELS={
  'Are we under attack right now?':'Live status','What are we protecting — and what is each worth?':'Crown Jewels — Exposure','How is security helping the business grow — and win deals?':'Business Growth','Are our controls actually working — and is the program improving?':'Controls','AI risk — two fronts: securing the AI we run, and using AI to defend':'AI risk','Are we audit-ready? — compliance framework readiness':'Compliance','What decision needs you now?':'Decision','How does our security investment move the business?':'Investment',
  'How much is at stake — and are we within the board’s limit?':'At stake','Which business processes carry the risk?':'By process','What decisions need us — and what are the trade-offs?':'Decisions','Are we adequately insured against the worst case?':'Insurance','Are we getting better — quarter over quarter?':'Trend','Our worst realistic day — and are we ready to respond and recover?':'Worst day','Governance, oversight & SEC disclosure readiness':'Governance','AI risk — are we ready for AI-accelerated attacks, and is our own AI governed?':'AI risk',
  'What is our capital at risk — and is our spend working?':'Capital at risk','What would a bad year do to earnings?':'Earnings','Where does the next dollar work hardest, and are we insured?':'ROI & insurance','What if we change the budget — and is an incident material?':'Budget','Are we protected against financial crime — and will we pass the SOX audit?':'Fraud & SOX','What decision needs the CFO — and what does it cost or buy?':'Decision','Current cyber initiatives & their ROI':'Projects & ROI',
- 'Are we legally defensible right now?':'Standing','Where are we exposed by jurisdiction — duty, clock, penalty?':'Jurisdictions','What decision needs the General Counsel?':'Decision','Is an incident material — and are we covered by contract?':'Materiality',
+ 'Are we legally defensible right now?':'Standing','Where are we exposed by jurisdiction — duty, clock, penalty?':'Jurisdictions','What decision needs the General Counsel?':'Decision','Litigation hold, data-subject rights & IP — are we operationally defensible?':'Hold · DSAR · IP','Is an incident material — and are we covered by contract?':'Materiality',
  'Where does cyber sit against appetite and our other risks?':'Vs appetite','Which Key Risk Indicators are breaching tolerance — and what is being done?':'KRI board','What could breach appetite, and what is rising fastest?':'Aggregation','What decision needs the CRO?':'Decision',
  'Can the business keep operating — and recover fast enough?':'Resilience','Which systems carry the business, and how fast do they recover?':'Systems','What decision needs the CIO?':'Decision'
 };
@@ -1012,6 +1012,7 @@ function demoSignals(){
   if(has(['splunk','sentinel'])){set('open_incidents',0);set('mttd_hrs',8);}
   if(has(['aws','azure','wiz','prisma','gcp']))set('cspm_pct',82);
   if(has(['sap','oracle','workday','netsuite','sapgrc'])){set('sod_conflicts',3);set('change_pass_pct',94);set('payment_anomalies',2);}
+  if(has(['onetrust','trustarc'])){set('dsar_open',12);set('dsar_overdue',0);set('legal_holds',2);}
   return any?s:null;
 }
 function applyDemoSignals(){if(!demoActive()||SIGNALS)return;var s=demoSignals();if(s){SIGNALS=s;renderSignals();}}
@@ -1033,7 +1034,7 @@ function renderSignals(){
     var pcts=['edr_pct','mfa_pct','pam_pct'].map(sig).filter(function(x){return x!=null;});
     if(pcts.length){var avg=Math.round(pcts.reduce(function(s,x){return s+x;},0)/pcts.length);setTxt('lvCovTile',avg+'%');var tn=document.getElementById('lvCovTileNote');if(tn)tn.innerHTML='<span class="pill good">live</span> from '+pcts.length+' connected tool'+(pcts.length>1?'s':'');}
   }
-  renderAiRisk();renderCisoOps();renderControls();renderCompliance();renderCooStatus();renderCfoFraud();renderCroKri();
+  renderAiRisk();renderCisoOps();renderControls();renderCompliance();renderCooStatus();renderCfoFraud();renderCroKri();renderCloOps();
 }
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
@@ -1268,7 +1269,7 @@ function renderGov(){
     '<div style="margin-top:8px">'+items.map(function(i){return govRow(i.k,i.v,i.ok,srcChip(i.via));}).join('')+'</div>'+
     '<div class="cn" style="margin-top:8px">These are the exact governance disclosures Item 106(c) requires in your 10-K. All are <span class="srcpill self">○ self-reported</span> today — connect your board portal, HRIS and GRC to <span class="srcpill conn">● evidence</span> them and make this filing-ready and audit-defensible.</div></div>';
 }
-function renderBoard(){renderStress();renderReadiness();renderThirdParty();renderGov();renderMateriality();renderAiRisk();renderCisoOps();renderCisoWarRoom();}
+function renderBoard(){renderStress();renderReadiness();renderThirdParty();renderGov();renderMateriality();renderCloOps();renderAiRisk();renderCisoOps();renderCisoWarRoom();}
 /* War Room, integrated into the CISO seat — shows current incident state with a
    one-click entry, so incident command lives inside the cockpit, not beside it. */
 function renderCisoWarRoom(){
@@ -1572,6 +1573,37 @@ function loadMat(){try{return JSON.parse(localStorage.getItem(matKey())||'null')
 function saveMat(d){try{if(d)localStorage.setItem(matKey(),JSON.stringify(d));else localStorage.removeItem(matKey());}catch(_){}}
 function addBusinessDays(ts,n){var d=new Date(ts),added=0;while(added<n){d.setDate(d.getDate()+1);var wd=d.getDay();if(wd!==0&&wd!==6)added++;}return d.getTime();}
 function countdown(msLeft){if(msLeft<=0)return '<b style="color:var(--crit)">elapsed</b>';var h=Math.floor(msLeft/3.6e6),d=Math.floor(h/24),hh=h%24;return d>0?('<b>'+d+'d '+hh+'h</b>'):('<b style="color:var(--warn)">'+hh+'h '+Math.floor((msLeft%3.6e6)/6e4)+'m</b>');}
+/* CLO — legal operations beyond disclosure: litigation-hold / evidence preservation,
+   data-subject rights (DSAR) with statutory clocks, and intellectual-property exposure.
+   Hold + DSAR volumes come from a connected privacy-ops / e-discovery tool (OneTrust,
+   Relativity); statutory clocks are law (fixed); IP exposure is derived from the crown-
+   jewel inventory and clearly labeled. Everything provenance-tagged, nothing invented. */
+function renderCloOps(){
+  var host=document.getElementById('cloOps');if(!host)return;
+  var g=(LIVE&&LIVE.governance)||{},ir=g.ir||{},leg=(LIVE&&LIVE.legal)||{},cj=(LIVE&&LIVE.crown_jewels)||[];
+  var rs=(LIVE&&LIVE.resilience)||{},ai=(LIVE&&LIVE.aiRisk)||{};
+  var holds=sig('legal_holds'),dsar=sig('dsar_open'),over=sig('dsar_overdue');
+  var retainer=ir.retainer||null,onCall=retainer!=null&&/yes/i.test(retainer);
+  var preserve=!!rs.has_data;
+  // ── Litigation hold & evidence preservation
+  var holdRows=iamGovRow('Active legal holds',holds!=null?(holds+' open'):'—',holds!=null?true:null,holds!=null?'Custodians and systems under preservation — releasable once the matter closes.':'Connect your e-discovery / privacy-ops tool (Relativity, OneTrust) to track holds live.')+
+    iamGovRow('Evidence preservation capability',preserve?'In place':'—',preserve?true:null,preserve?'Immutable backups let you preserve forensic evidence without tipping off an attacker.':'Map your backup / resilience data to evidence forensic-preservation capability.')+
+    iamGovRow('Forensics & breach counsel on retainer',retainer||'—',retainer!=null?onCall:null,onCall?'A pre-established retainer establishes privilege and speeds the first 24 hours.':'A retainer establishes legal privilege before an incident and speeds response.');
+  // ── Data-subject rights (DSAR) — statutory clocks are law; volume/backlog from privacy ops
+  var dsarRows=iamGovRow('Open data-subject requests (DSAR)',dsar!=null?(dsar+' open'):'—',dsar!=null?true:null,dsar!=null?'Access, deletion and portability requests in flight across your privacy regimes.':'Connect privacy ops (OneTrust / TrustArc) for live DSAR volume and SLA tracking.')+
+    iamGovRow('Requests past statutory clock',over!=null?(over+' overdue'):'—',over!=null?(over===0):null,(over!=null&&over>0)?'Missed DSAR deadlines are a direct regulatory penalty and a class-action hook — clear these first.':'GDPR: 30 days · CCPA/CPRA: 45 days · statutory response clocks.')+
+    iamGovRow('Statutory response clocks','GDPR 30d · CCPA 45d',null,'Fixed by law wherever you process resident data — the clock starts on receipt, not triage.');
+  // ── Intellectual-property exposure — derived from crown-jewel inventory, labeled
+  var cjN=cj.length,cjIF=ai.crown_jewels_internet_facing;
+  var ipRows=iamGovRow('Crown-jewel systems holding your most sensitive data',cjN?(cjN+' systems'):'—',null,'Classify which hold IP, source code, trade secrets or M&amp;A material in inventory to quantify IP loss.')+
+    iamGovRow('Of those, internet-reachable',cjIF!=null?(cjIF+' exposed'):'—',cjIF!=null?(cjIF===0):null,(cjIF!=null&&cjIF>0)?'Internet-facing crown jewels are the theft path for trade secrets and source code — prioritize segmentation.':'')+
+    iamGovRow('Trade-secret / IP protection program',g.ermIntegrated?'Governed':'—',null,'Trade-secret status depends on demonstrable protection — access control, NDAs and monitoring are the legal test.');
+  host.innerHTML='<div class="cols" style="margin-bottom:14px">'+
+    '<div class="card"><div class="ck">Litigation hold & evidence preservation '+liveTag()+'</div><div style="margin-top:8px">'+holdRows+'</div><div class="cn" style="margin-top:8px">When litigation is reasonably anticipated, the duty to preserve attaches immediately — a defensible hold + immutable evidence is what protects the company from spoliation sanctions.</div></div>'+
+    '<div class="card"><div class="ck">Data-subject rights (DSAR) '+liveTag()+'</div><div style="margin-top:8px">'+dsarRows+'</div><div class="cn" style="margin-top:8px">Every jurisdiction you process resident data in grants access/deletion rights on a statutory clock. Missing one is a direct penalty — this is your live queue against the deadline.</div></div>'+
+    '</div>'+
+    '<div class="card"><div class="ck">Intellectual-property exposure '+liveTag()+'</div><div style="margin-top:8px">'+ipRows+'</div><div class="cn" style="margin-top:8px">IP theft — source code, trade secrets, deal material — is loss that never shows in a breach-notification count. Derived from your crown-jewel inventory; classify data types in inventory to put a dollar on it.</div></div>';
+}
 function renderMateriality(){
   var host=document.getElementById('cloMateriality');if(!host)return;var m=loadMat();
   var cloName=(seatNames()['clo']||SEAT_LABEL['clo']||'General Counsel');
