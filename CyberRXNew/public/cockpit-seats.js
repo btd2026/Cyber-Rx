@@ -45,6 +45,7 @@ var SEATS = {
      +'<div id="ceoOversight" style="margin-top:14px">'+kvcard('Oversight &amp; decision record',[{k:'Funded decisions logged',v:'from your decisions',ev:'oversight'},{k:'Each carries',v:'leader · date · ticket',ev:'oversight'},{k:'Board-appetite reviewed',v:'this quarter',cls:'good'},{k:'Defensibility',v:'evidenced trail',cls:'good',ev:'oversight'}])+'</div>')
    +sec('08','AI risk — are we ready for AI-accelerated attacks, and is our own AI governed?','The board’s two AI questions: our exposure as frontier models (e.g. Anthropic’s <b>Mythos</b>) make attackers faster at finding and exploiting weaknesses, and whether the AI we run is governed and compliant (NIST AI RMF · ISO 42001 · EU AI Act).',
      '<div id="ceoAiRisk"><div class="card"><div class="cn">◐ Add your AI-governance answers in onboarding, and connect vulnerability management, to populate this from live data.</div></div></div>')
+   +sec('09','What are my responsibilities — and how does security enable each?','The Fortune-100 CISO operating model for your seat: every accountability you own, what the CISO does to enable it, the CyberX-Ray panel that shows it, and the systems behind it — connected or not. This is the platform mapped directly to your responsibilities.','<div id="opmodel-ceo"></div>')
   );}
  },
 
@@ -81,6 +82,7 @@ var SEATS = {
        {tag:'C · Hold flat',on:'Option C · Hold',osum:'$0 new',pros:['No new spend this year'],cons:['Carries the full $92M as open exposure','Likely 15–18% premium increase at renewal','Two known drivers stay unfunded']}]}]))
    +sec('07','Current cyber initiatives & their ROI','Every funded decision becomes a tracked project. This is the live portfolio of new cyber spend — cost, return, owner and status — that the CISO and CFO manage together.',
      '<div id="initiatives-panel"></div>')
+   +sec('08','What are my responsibilities — and how does security enable each?','The Fortune-100 CISO operating model for your seat: every accountability you own, what the CISO does to enable it, the CyberX-Ray panel that shows it, and the systems behind it — connected or not. This is the platform mapped directly to your responsibilities.','<div id="opmodel-cfo"></div>')
   );}
  },
 
@@ -114,6 +116,7 @@ var SEATS = {
      '<div class="cn" style="margin-bottom:12px">Reportable at <b class="claim" data-ev="materiality" style="cursor:pointer"><span id="lvCloMateriality">$53M</span> <span class="fx">ƒ</span></b> — a crown-jewel event above this threshold is material and starts the 4-business-day SEC clock. Record the determination below; it is timed, evidenced and logged for the D&amp;O defense.</div>'
      +'<div id="cloMateriality" style="margin-bottom:16px"></div>'
      +'<div class="card"><div class="ck">Customer contract / DPA obligations</div><div class="cn" style="margin-top:6px">◐ Connect your contract-management system (<b>Ironclad · DocuSign CLM · Conga</b>) to quantify how many customer contracts carry a breach-notification clause and your <b>tightest contractual deadline</b> — frequently 24–72h, ahead of the SEC and GDPR clocks. This is the contractual exposure the materiality workbench above does not capture, and the first thing customer counsel invokes after an incident.</div></div>')
+   +sec('06','What are my responsibilities — and how does security enable each?','The Fortune-100 CISO operating model for your seat: every accountability you own, what the CISO does to enable it, the CyberX-Ray panel that shows it, and the systems behind it — connected or not. This is the platform mapped directly to your responsibilities.','<div id="opmodel-clo"></div>')
   );}
  },
 
@@ -141,6 +144,7 @@ var SEATS = {
        {rec:true,tag:'A · Reduce (fund PAM + DR)',on:'Option A · Reduce',osum:'$4.6M · removes $92M',pros:['Cuts likelihood and impact','De-correlates the payments path','Tail returns within appetite'],cons:['Requires $4.6M of capital']},
        {tag:'B · Transfer (raise insurance limit)',on:'Option B · Transfer',osum:'+$1.1M premium',pros:['Caps the financial tail via a higher limit','Fast to execute at renewal'],cons:['~$1.1M higher annual premium','Does not reduce likelihood or de-correlate the path','Coverage still excludes some tail scenarios']},
        {tag:'C · Accept the tail',on:'Option C · Accept',osum:'$0',pros:['No capital spend'],cons:['Correlated tail stays $205M — above the $180M enterprise limit','Requires a documented board risk-acceptance']}]}]))
+   +sec('05','What are my responsibilities — and how does security enable each?','The Fortune-100 CISO operating model for your seat: every accountability you own, what the CISO does to enable it, the CyberX-Ray panel that shows it, and the systems behind it — connected or not. This is the platform mapped directly to your responsibilities.','<div id="opmodel-cro"></div>')
   );}
  },
 
@@ -165,6 +169,7 @@ var SEATS = {
        {rec:true,tag:'A · Full modernization',on:'Option A · Full',osum:'$3.2M · <6h recovery',pros:['Cuts worst case by ~$40M','Meets regulatory recovery expectations','Removes the single-vendor risk (multi-region)'],cons:['Requires $3.2M of capital','One-quarter program']},
        {tag:'B · Critical systems only',on:'Option B · Critical only',osum:'$1.6M',pros:['Protects payments &amp; settlement (the top $/hr systems)','Half the capital of full modernization'],cons:['Member-portal recovery stays at ~40 hrs','Removes only ~$24M of the $40M tail driver']},
        {tag:'C · Defer',on:'Option C · Defer',osum:'$0 this year',pros:['Zero capital this year'],cons:['Worst-case recovery stays 3.1 days','Tail stays $180M — above the $120M appetite','Weakens the insurance renewal position']}]}]))
+   +sec('05','What are my responsibilities — and how does security enable each?','The Fortune-100 CISO operating model for your seat: every accountability you own, what the CISO does to enable it, the CyberX-Ray panel that shows it, and the systems behind it — connected or not. This is the platform mapped directly to your responsibilities.','<div id="opmodel-cio"></div>')
   );}
  },
 
@@ -183,6 +188,7 @@ var SEATS = {
        {rec:true,tag:'A · Fund resilience + remove the SPOF',on:'Option A · Resilience',osum:'$3.2M · within tolerance',pros:['Brings the slowest critical service inside recovery tolerance','Removes the single-vendor point of failure (multi-region)','Protects service-delivery SLAs and customer trust'],cons:['Requires $3.2M of capital','A one-quarter program']},
        {tag:'B · Critical services only',on:'Option B · Critical only',osum:'$1.6M',pros:['Protects the top revenue-critical services','Half the capital'],cons:['Lower-tier services stay over tolerance','Vendor concentration remains']},
        {tag:'C · Accept &amp; monitor',on:'Option C · Accept',osum:'$0 this year',pros:['No capital this year'],cons:['The slowest service stays over recovery tolerance','A vendor failure still degrades three services at once','Requires a documented operational risk-acceptance']}]}]))
+   +sec('04','What are my responsibilities — and how does security enable each?','The Fortune-100 CISO operating model for your seat: every accountability you own, what the CISO does to enable it, the CyberX-Ray panel that shows it, and the systems behind it — connected or not. This is the platform mapped directly to your responsibilities.','<div id="opmodel-coo"></div>')
   );}
  },
 
