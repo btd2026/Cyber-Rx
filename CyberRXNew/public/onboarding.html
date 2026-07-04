@@ -678,7 +678,11 @@
       demoBtn.classList.add('loading');demoBtn.textContent='Connecting…';
       for(var i=0;i<TOOLS.length;i++){var t=TOOLS[i],realKey=t.key;if(!(SELTOOLS[realKey]&&SELTOOLS[realKey].on))markConnected(t,i,realKey,t.vendors[0],'',true);await new Promise(function(r){setTimeout(r,110);});}
       demoBtn.classList.remove('loading');demoBtn.classList.add('active');demoBtn.textContent='✓ Demo mode active';
-      try{localStorage.setItem('cyberrx_demo_mode','1');}catch(_){}
+      // Persist demo state immediately so the cockpit reads it even if the user
+      // opens a seat before pressing Go Live: the demo flag AND the demo-connected
+      // tools (connectedTools() drives every "is this connected?" panel, and the
+      // synthesised demo signals key off exactly these tools).
+      try{localStorage.setItem('cyberrx_demo_mode','1');localStorage.setItem('cyberrx_tools',JSON.stringify(SELTOOLS));}catch(_){}
     });
     updateCred();
   })();
