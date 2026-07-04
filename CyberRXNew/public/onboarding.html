@@ -260,6 +260,18 @@
     <button class="conn-go" id="addStrat" type="button" style="margin-top:4px">+ Add a strategic initiative</button>
   </div>
 
+  <!-- 1e · Policy & document evidence -->
+  <div class="sec">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Policy &amp; document evidence <span style="color:var(--muted)">(framework maturity)</span></div><div class="sd">Upload your security policies (PDF · DOCX · TXT). CyberX-Ray reads each against the NIST control catalog and scores every control’s CMMI maturity from the policy language it contains — the <b>📄 document-review</b> evidence behind your framework scores, alongside live tool telemetry. Do it here so the cockpit Framework tab opens fully evidenced.</div></div><div class="badge" id="bdoc">optional</div></div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <select id="obDocType" style="min-width:230px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#fff"></select>
+      <input type="file" id="obDocFile" accept=".pdf,.docx,.doc,.txt,.md,.csv">
+      <button class="conn-go" id="obDocAnalyze" type="button">Analyze policy</button>
+      <span id="obDocMsg" class="sd" style="margin:0"></span>
+    </div>
+    <div id="obDocList" style="margin-top:12px"></div>
+  </div>
+
   <!-- 2 · Financials -->
   <div class="sec">
     <div class="sh"><div class="sn">2</div><div><div class="st">Financials &amp; appetite</div><div class="sd">Turns cyber risk into board language — % of revenue, materiality, appetite, ROI. Enter a number and pick the unit (B/M/K).</div></div><div class="badge" id="b2">optional</div></div>
@@ -483,6 +495,40 @@
   }).filter(Boolean);}
   function updateStratBadge(){var n=collectStrategic().length,b=document.getElementById('bstrat');if(b){if(n){b.textContent='✓ '+n+' initiative'+(n>1?'s':'');b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}}
   (function(){var a=document.getElementById('addStrat');if(a)a.addEventListener('click',function(){addStratRow();});})();
+
+  // ---- policy & document evidence (framework CMMI via /api/documents/analyze) ----
+  // Writes the same localStorage keys the cockpit Framework tab reads
+  // (cyberrx_doc_scores + cyberrx_docs), so document review is captured here at
+  // onboarding instead of inside the cockpit.
+  var OB_DOC_TYPES=[{k:'d1',l:'Information Security Policy'},{k:'d2',l:'Risk Assessment / Register'},{k:'d3',l:'Third-Party / Supply-Chain Policy'},{k:'d4',l:'Access Control Policy'},{k:'d5',l:'Identity & Authentication Policy'},{k:'d6',l:'Incident Response Plan'},{k:'d7',l:'Business Continuity / DR Plan'},{k:'d8',l:'Change Management Policy'},{k:'d9',l:'Configuration Management Policy'},{k:'d10',l:'Data Protection Policy'}];
+  var CMMI_LBL={0:'None',1:'Initial',2:'Managed',3:'Defined',4:'Quant. Managed',5:'Optimizing'};
+  function obDocScores(){try{return JSON.parse(localStorage.getItem('cyberrx_doc_scores')||'{}')||{};}catch(_){return {};}}
+  function obSaveDocScore(id,o){var m=obDocScores();m[id]=o;try{localStorage.setItem('cyberrx_doc_scores',JSON.stringify(m));}catch(_){}}
+  function obDocDocs(){try{return JSON.parse(localStorage.getItem('cyberrx_docs')||'[]')||[];}catch(_){return [];}}
+  function obSaveDocs(a){try{localStorage.setItem('cyberrx_docs',JSON.stringify(a.slice(0,20)));}catch(_){}}
+  function updateDocBadge(){var n=obDocDocs().length,b=document.getElementById('bdoc');if(b){if(n){b.textContent='✓ '+n+' analyzed';b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}}
+  function obRenderDocList(){var docs=obDocDocs(),host=document.getElementById('obDocList');if(!host)return;
+    host.innerHTML=docs.length?(docs.map(function(d){return '<div class="xrow"><span class="nm">'+d.name+'</span><span class="mt">'+d.type+' · '+d.matched+'/'+d.total+' attributes · CMMI '+d.cmmi+' ('+(CMMI_LBL[d.cmmi]||'')+')</span></div>';}).join('')+'<div style="margin-top:8px"><button class="conn-go" id="obDocClear" type="button">Clear analyzed documents</button></div>'):'<div class="sd">No policies analyzed yet — upload one above to evidence controls by document review.</div>';
+    var c=document.getElementById('obDocClear');if(c)c.addEventListener('click',function(){try{localStorage.removeItem('cyberrx_doc_scores');localStorage.removeItem('cyberrx_docs');}catch(_){}updateDocBadge();obRenderDocList();});}
+  function obAnalyzeDoc(){var fi=document.getElementById('obDocFile'),ty=document.getElementById('obDocType'),msg=document.getElementById('obDocMsg');
+    if(!fi||!fi.files||!fi.files[0]){if(msg){msg.textContent='Choose a file first.';msg.style.color='var(--warn)';}return;}
+    var file=fi.files[0],dt=ty.value;if(msg){msg.textContent='Analyzing '+file.name+'…';msg.style.color='var(--muted)';}
+    var fd=new FormData();fd.append('file',file);fd.append('doc_type',dt);
+    var oid=localStorage.getItem('cyberrx_org_id')||'';
+    fetch(apiBase()+'/api/documents/analyze',{method:'POST',headers:oid?{'X-Org-Id':oid}:{},body:fd})
+      .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||('HTTP '+r.status));return j;});})
+      .then(function(res){(res.controls||[]).forEach(function(c){obSaveDocScore(c.id,{cmmi:c.cmmi,doc:file.name,matched:c.matched,total:c.total,attrs:c.attrs||[]});});
+        var docs=obDocDocs(),lbl=(OB_DOC_TYPES.filter(function(d){return d.k===dt;})[0]||{}).l||dt;
+        docs.unshift({name:file.name,type:lbl,cmmi:res.cmmi,matched:res.matched||0,total:res.total||0});obSaveDocs(docs);
+        if(msg){msg.textContent='✓ '+file.name+' — CMMI '+res.cmmi+' ('+(CMMI_LBL[res.cmmi]||'')+')';msg.style.color='var(--good)';}
+        updateDocBadge();obRenderDocList();})
+      .catch(function(e){if(msg){msg.textContent='✗ '+e.message;msg.style.color='var(--warn)';}});}
+  function obSeedSampleDocScores(){if(Object.keys(obDocScores()).length)return;
+    var sample={'GV.OC-01':4,'GV.OC-03':3,'GV.RM-01':3,'GV.PO-01':4,'GV.PO-02':3,'PR.AA-01':4,'PR.AA-05':3,'PR.AT-01':3,'ID.RA-01':3,'ID.RA-05':2,'DE.CM-01':2,'RS.MA-01':3};
+    Object.keys(sample).forEach(function(id){obSaveDocScore(id,{cmmi:sample[id],doc:'Information Security Policy (sample).pdf',matched:Math.min(6,sample[id]+2),total:6,attrs:[{label:'Policy purpose statement',found:true},{label:'Scope definition',found:true},{label:'Roles & responsibilities',found:sample[id]>=3},{label:'Enforcement provisions',found:sample[id]>=3},{label:'Review cadence',found:sample[id]>=4},{label:'Exception process',found:sample[id]>=4}]});});
+    var docs=obDocDocs();docs.unshift({name:'Information Security Policy (sample).pdf',type:'Information Security Policy',cmmi:4,matched:5,total:6});obSaveDocs(docs);updateDocBadge();obRenderDocList();}
+  (function(){var sel=document.getElementById('obDocType');if(sel)sel.innerHTML=OB_DOC_TYPES.map(function(d){return '<option value="'+d.k+'">'+d.l+'</option>';}).join('');
+    var a=document.getElementById('obDocAnalyze');if(a)a.addEventListener('click',obAnalyzeDoc);obRenderDocList();updateDocBadge();})();
 
   // ---- cyber projects / initiatives (upload or pull from ticketing) ----
   var INIT=[];
@@ -713,6 +759,7 @@
       // tools (connectedTools() drives every "is this connected?" panel, and the
       // synthesised demo signals key off exactly these tools).
       try{localStorage.setItem('cyberrx_demo_mode','1');localStorage.setItem('cyberrx_tools',JSON.stringify(SELTOOLS));}catch(_){}
+      try{obSeedSampleDocScores();}catch(_){}
     });
     updateCred();
   })();
@@ -785,7 +832,7 @@
      field; we only toggle visibility. Sections are grouped by their title. ---- */
   var OB_TABS=[
     {k:'org',l:'Organization',m:['organization']},
-    {k:'gov',l:'Governance & AI',m:['board governance','ai risk','strategic initiatives']},
+    {k:'gov',l:'Governance & AI',m:['board governance','ai risk','strategic initiatives','policy & document']},
     {k:'fin',l:'Financials',m:['financials','enterprise risk','growth engine','insurance']},
     {k:'inv',l:'Inventory',m:['business processes','systems','map applications']},
     {k:'risk',l:'Risks & projects',m:['risk register','cyber projects','initiatives']},
