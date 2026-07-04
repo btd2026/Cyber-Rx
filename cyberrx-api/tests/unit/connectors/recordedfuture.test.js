@@ -16,7 +16,7 @@ describe('recordedfuture connector', () => {
   test('exposes safe catalog metadata + is registered', () => {
     expect(rf.key).toBe('recordedfuture');
     expect(rf.category).toBe('Threat Intelligence');
-    expect(rf.signals).toEqual(['threat_actors_active']);
+    expect(rf.signals).toEqual(['threat_actors_active', 'threat_actors_json']);
     expect(rf.fields.find((f) => f.key === 'apiToken').secret).toBe(true);
     expect(registry.list().some((c) => c.key === 'recordedfuture')).toBe(true);
   });

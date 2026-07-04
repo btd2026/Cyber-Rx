@@ -11,6 +11,7 @@
  */
 
 const { http, jsonOrThrow, nowIso } = require('./http');
+const { actorObj, actorsSignal } = require('./threatpack');
 
 const base = (creds) => String(creds.apiUrl || 'https://api.threatstream.com').replace(/\/+$/, '');
 const authH = (creds) => ({ Authorization: `apikey ${creds.username}:${creds.apiKey}`, Accept: 'application/json' });
@@ -26,19 +27,23 @@ async function fetchSignals(creds) {
   const objects = j.objects || j.results || [];
   // Distinct active actors by name (status filter applied server-side; guard client-side too).
   const names = new Set();
+  const list = [];
   for (const a of objects) {
     if (a.status && String(a.status).toLowerCase() !== 'active') continue;
-    if (a.name) names.add(a.name);
+    if (a.name && !names.has(a.name)) { names.add(a.name); list.push(actorObj(a.name, 'Threat actor', a.description || 'Active threat model in your ThreatStream.')); }
   }
   const meta = j.meta || {};
   const count = names.size || (Number.isFinite(Number(meta.total_count)) ? Number(meta.total_count) : 0);
   if (!objects.length && !count) throw new Error('Authenticated, but no actor data was readable — confirm the key can read threat models.');
-  return { signals: [{ key: 'threat_actors_active', value: count, asOf: nowIso(), raw: { returned: objects.length, distinctActive: names.size } }], meta: { vendor: 'Anomali' } };
+  return { signals: [
+    { key: 'threat_actors_active', value: count, asOf: nowIso(), raw: { returned: objects.length, distinctActive: names.size } },
+    actorsSignal(list),
+  ], meta: { vendor: 'Anomali' } };
 }
 
 module.exports = {
-  key: 'anomali', label: 'Anomali ThreatStream', vendor: 'Anomali', category: 'Threat Intelligence',
-  signals: ['threat_actors_active'],
+  key: 'anomali', label: 'Anomali ThreatStream', vendor: 'Anomali', category: 'Threat Intelligence', tier: 'paid',
+  signals: ['threat_actors_active', 'threat_actors_json'],
   scopes: ['ThreatStream — threat models read'],
   fields: [
     { key: 'username', label: 'ThreatStream username / email' },

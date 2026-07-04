@@ -1,6 +1,23 @@
 {
   "signals": [
-    { "key": "threat_actors_active", "value": 3, "asOf": "2026-06-28T12:00:00Z", "raw": { "active": 3 } }
+    {
+      "key": "threat_actors_active",
+      "value": 3,
+      "asOf": "2026-06-28T12:00:00Z",
+      "raw": {
+        "active": 3
+      }
+    },
+    {
+      "key": "threat_actors_json",
+      "value": "[{\"n\": \"FIN7 / Carbanak\", \"t\": \"E-crime \\u00b7 financial intrusion\", \"m\": \"Targeted intrusion into payment and settlement systems for direct theft.\"}, {\"n\": \"LockBit\", \"t\": \"Ransomware-as-a-service\", \"m\": \"Encrypts core banking and settlement to force payment.\"}, {\"n\": \"Scattered Spider\", \"t\": \"E-crime \\u00b7 identity attack\", \"m\": \"Help-desk impersonation and MFA-fatigue to seize identity.\"}]",
+      "asOf": "2026-06-28T12:00:00Z",
+      "raw": {
+        "count": 3
+      }
+    }
   ],
-  "meta": { "vendor": "anomali" }
+  "meta": {
+    "vendor": "Anomali"
+  }
 }

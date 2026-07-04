@@ -16,6 +16,7 @@
  */
 
 const { http, jsonOrThrow, nowIso } = require('./http');
+const { actorObj, actorsSignal } = require('./threatpack');
 
 const base = (creds) => String(creds.apiUrl || 'https://api.recordedfuture.com').replace(/\/+$/, '');
 const authH = (creds) => ({ 'X-RFToken': creds.apiToken, Accept: 'application/json' });
@@ -50,14 +51,16 @@ async function fetchSignals(creds) {
     const actors = new Set();
     for (const a of alerts) actorNames(a).forEach((n) => actors.add(n));
     signals.push({ key: 'threat_actors_active', value: actors.size, asOf: nowIso(), raw: { alerts: alerts.length, distinctActors: actors.size } });
+    const list = [...actors].map((n) => actorObj(n, 'Threat actor · active alert', 'Generating triggered alerts in your Recorded Future watch list in the last 24h.'));
+    signals.push(actorsSignal(list));
   } catch (e) { if (/HTTP 4|HTTP 5/.test(e.message)) throw e; }
   if (!signals.length) throw new Error('Authenticated, but no alert data was readable — confirm the token has Connect API alert access.');
   return { signals, meta: { vendor: 'Recorded Future' } };
 }
 
 module.exports = {
-  key: 'recordedfuture', label: 'Recorded Future', vendor: 'Recorded Future', category: 'Threat Intelligence',
-  signals: ['threat_actors_active'],
+  key: 'recordedfuture', label: 'Recorded Future', vendor: 'Recorded Future', category: 'Threat Intelligence', tier: 'paid',
+  signals: ['threat_actors_active', 'threat_actors_json'],
   scopes: ['Connect API — alerts read'],
   fields: [
     { key: 'apiToken', label: 'API token', secret: true },
