@@ -97,7 +97,7 @@ for (const s of seatIds) {
   catch (e) { problems.push(`[render ${s}] ${e.message}`); }
 }
 // Exercise the live-only renderers directly too.
-for (const fn of ['applyLive', 'renderChain', 'renderProcBars', 'renderCioSystems', 'renderBoard', 'renderEarnings', 'renderCroPortfolio', 'renderRoi', 'renderSignals', 'renderAiRisk', 'renderTrend', 'renderInitiatives', 'renderOversight', 'renderMateriality']) {
+for (const fn of ['applyLive', 'renderChain', 'renderProcBars', 'renderCioSystems', 'renderBoard', 'renderEarnings', 'renderCroPortfolio', 'renderRoi', 'renderSignals', 'renderAiRisk', 'renderTrend', 'renderInitiatives', 'renderOversight', 'renderMateriality', 'renderCfoFraud', 'renderCroKri', 'renderCloOps', 'renderThreatIntel', 'renderDrReadiness', 'renderBoardPack', 'openBoardPack', 'closeBoardPack']) {
   try { vm.runInContext(`typeof ${fn}==='function' && ${fn}();`, ctx); }
   catch (e) { problems.push(`[${fn}] ${e.message}`); }
 }
