@@ -773,6 +773,19 @@ function trajInfo(){
     return {two:true,down:down,val:(down?'▼ ':'▲ ')+usd(Math.abs(delta))+' ('+(pc<=0?'':'+')+pc+'%)',cls:down?'good':'crit',sub:'expected loss across '+vals.length+' recorded analyses',vals:vals,t:t};}
   return {two:false,val:ale>0?usd(ale):'—',cls:'',sub:'baseline — the trajectory builds from here, no history invented',ale:ale};
 }
+function iamGovRow(label,val,ok,sub){return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+(ok===true?'good':ok===false?'crit':'muted')+')"></span><b>'+label+'</b><span class="drow-tool" style="color:var(--'+(ok===true?'good':ok===false?'crit':'ink-2')+')">'+val+'</span></div>'+(sub?'<div class="drow-need">'+sub+'</div>':'')+'</div>';}
+function iamCard(){
+  var mfa=sig('mfa_pct'),pam=sig('pam_pct'),rev=sig('access_review_pct'),dorm=sig('dormant_accounts'),priv=sig('priv_sessions_flagged');
+  if(mfa==null&&pam==null&&rev==null)return '<div class="card" style="margin-top:14px"><div class="ck">Identity governance</div><div class="cn" style="margin-top:6px">◐ Connect your identity provider (Okta / Entra) and PAM (CyberArk) to evidence MFA, least-privilege, access reviews, joiner-mover-leaver and privileged-session monitoring — the controls every framework and auditor asks for first.</div></div>';
+  var mfaSub=(mfa!=null&&mfa<95)?((100-mfa)+'% of accounts still without phishing-resistant MFA — close legacy/service accounts.'):'';
+  var rows=iamGovRow('Multi-factor authentication (MFA)',mfa!=null?(mfa+'%'):'—',mfa!=null?(mfa>=95):null,mfaSub)+
+    iamGovRow('Privileged access managed (PAM)',pam!=null?(pam+'%'):'—',pam!=null?(pam>=80):null,(pam!=null&&pam<80)?'Un-vaulted privileged accounts are the top path to crown jewels — enable just-in-time access.':'')+
+    iamGovRow('Access reviews current',rev!=null?(rev+'% certified'):'—',rev!=null?(rev>=90):null,(rev!=null&&rev<90)?'Stale entitlements accumulate risk and fail SOC 2 / ISO access-review controls.':'')+
+    iamGovRow('Dormant / orphaned accounts',dorm!=null?(dorm+' open'):'—',dorm!=null?(dorm<=10):null,(dorm!=null&&dorm>10)?'Disable accounts with no login in 90 days — a standing breach surface.':'')+
+    iamGovRow('Privileged sessions flagged',priv!=null?(priv+' anomalous'):'—',priv!=null?(priv===0):null,(priv!=null&&priv>0)?'Anomalous privileged sessions detected — review in your PAM session logs.':'');
+  return '<div class="card" style="margin-top:14px"><div class="ck">Identity governance '+liveTag()+' — the #1 attacker path and the first control auditors check</div><div style="margin-top:8px">'+rows+
+    '</div><div class="cn" style="margin-top:8px">Joiner-mover-leaver, access reviews and privileged-session monitoring are the identity controls SOC 2, ISO 27001, HITRUST and every auditor check first — evidenced live from your IdP + PAM.</div></div>';
+}
 function renderControls(){
   var host=document.getElementById('cisoControls');if(!host)return;
   var tr=trajInfo(),mttd=sig('mttd_hrs');
@@ -781,7 +794,7 @@ function renderControls(){
     ctile('traj','Are we getting better?',tr.val,tr.cls,tr.sub)+
     ctile('det','How fast do we detect &amp; respond?',mttd!=null?(mttd+'h to detect'):'connect SIEM',mttd!=null?'good':'muted',mttd!=null?'MTTD live · MTTR once your SIEM workflow connects':'connect your SIEM to measure MTTD / MTTR')+
     '</div>';
-  host.innerHTML=demoBanner()+tiles+controlGapsCard();
+  host.innerHTML=demoBanner()+tiles+controlGapsCard()+iamCard();
   host.querySelectorAll('.ctile').forEach(function(el){el.onclick=function(){var k=el.dataset.cdrill;
     if(k==='eff')openDrill('Risk removed by controls',drillEffectiveness());
     else if(k==='traj')openDrill('Program trajectory',drillTrajectory());
@@ -836,7 +849,7 @@ var GRC_DOMAINS={
   incident:{n:'Incident response',ir:true,gap:'Record an IR retainer and a tested plan (tabletop within 12 months) at onboarding.'},
   risk_gov:{n:'Risk management &amp; governance',gov:true,gap:'Set board oversight (committee + cadence) and ERM integration at onboarding.'},
   data:{n:'Data protection &amp; DLP',tools:[],gap:'Connect a DLP tool (Purview / Forcepoint) to evidence data-loss controls.'},
-  config:{n:'Secure configuration &amp; hardening',tools:[],gap:'Connect a CSPM / configuration-compliance scanner (Wiz / Prisma, or a DISA STIG scan).'},
+  config:{n:'Secure configuration &amp; hardening',tools:['aws','azure','wiz','prisma','gcp'],gap:'Connect a CSPM / configuration-compliance scanner (Wiz / Prisma, or a DISA STIG scan).'},
   backup:{n:'Backup &amp; recovery',tools:[],gap:'Connect a backup platform (Rubrik / Veeam) to evidence recoverability.'}
 };
 var GRC_FW={
@@ -991,11 +1004,12 @@ function demoSignals(){
   function set(k,v){s[k]={key:k,value:v,demo:true};any=true;}
   function has(keys){return keys.some(function(k){return t[k]&&t[k].on;});}
   if(has(['defender','crowdstrike']))set('edr_pct',98);
-  if(has(['okta','entra']))set('mfa_pct',96);
-  if(has(['cyberark','beyondtrust','delinea']))set('pam_pct',60);
+  if(has(['okta','entra'])){set('mfa_pct',96);set('access_review_pct',88);set('dormant_accounts',34);}
+  if(has(['cyberark','beyondtrust','delinea'])){set('pam_pct',60);set('priv_sessions_flagged',2);}
   if(has(['qualys','tenable']))set('patch_pct',88);
   if(has(['knowbe4','proofpoint'])){set('phishing_pct',3);set('training_pct',94);}
   if(has(['splunk','sentinel'])){set('open_incidents',0);set('mttd_hrs',8);}
+  if(has(['aws','azure','wiz','prisma','gcp']))set('cspm_pct',82);
   return any?s:null;
 }
 function applyDemoSignals(){if(!demoActive()||SIGNALS)return;var s=demoSignals();if(s){SIGNALS=s;renderSignals();}}
@@ -1302,7 +1316,8 @@ function capDeploy(c){
   if(c.k==='vuln')return sig('patch_pct');
   if(c.k==='aware'){var t=sig('training_pct');if(t!=null)return t;var ph=sig('phishing_pct');return ph!=null?Math.max(0,100-ph):null;}
   if(c.k==='siem')return (sig('open_incidents')!=null||sig('mttd_hrs')!=null)?90:null;
-  return null; // dlp, seg, backup, cspm — no live signal yet
+  if(c.k==='cspm')return sig('cspm_pct');
+  return null; // dlp, seg, backup — no live signal yet
 }
 /* User's colour scale: green ≥90, blue ≥75, yellow ≥50, red <50, grey = not connected. */
 function capColor(p){return p==null?'muted':p>=90?'good':p>=75?'blue':p>=50?'warn':'crit';}
