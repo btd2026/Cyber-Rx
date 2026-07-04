@@ -1,0 +1,7 @@
+{
+  "signals": [
+    { "key": "reviews_cleared_qtr", "value": 12, "asOf": "2026-06-28T12:00:00Z", "raw": { "thisQuarter": 12 } },
+    { "key": "review_cycle_wks", "value": 2, "asOf": "2026-06-28T12:00:00Z", "raw": { "measured": 12 } }
+  ],
+  "meta": { "vendor": "Whistic" }
+}

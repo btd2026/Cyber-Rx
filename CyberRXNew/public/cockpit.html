@@ -740,14 +740,31 @@ function drillCert(cert){var ig=industryGrowth(industry());var isGate=ig.gate.in
    every detail traces back to the same numbers. */
 function growthData(){
   var g=LIVE&&LIVE.growth;
-  var live=!!(g&&(Number(g.pipelineUsd)>0||g.reviewNowWks!=null||(g.certs&&g.certs.length)||Number(g.dealsGated)>0));
-  var d=live?g:{pipelineUsd:48e6,reviewBeforeWks:6,reviewNowWks:2,dealsGated:11,certs:['SOC 2 Type II','HITRUST CSF','ISO 27001','HIPAA attestation'],trustReviews:34};
-  return {live:live,d:d};
+  // Prefer live figures pulled from the CRM (Salesforce) + Trust Center (Whistic)
+  // over the values hand-entered at onboarding; fall back to onboarding, then to
+  // an illustrative example.
+  var sPipe=sig('pipeline_in_review_usd'),sDeals=sig('deals_gated_qtr'),sCycle=sig('review_cycle_wks'),sRev=sig('reviews_cleared_qtr');
+  var sigLive=(sPipe!=null||sDeals!=null||sCycle!=null||sRev!=null);
+  var obLive=!!(g&&(Number(g.pipelineUsd)>0||g.reviewNowWks!=null||(g.certs&&g.certs.length)||Number(g.dealsGated)>0));
+  var live=sigLive||obLive;
+  var base=live?(g||{}):{pipelineUsd:48e6,reviewBeforeWks:6,reviewNowWks:2,dealsGated:11,certs:['SOC 2 Type II','HITRUST CSF','ISO 27001','HIPAA attestation'],trustReviews:34};
+  var d={
+    pipelineUsd:sPipe!=null?sPipe:base.pipelineUsd,
+    reviewBeforeWks:base.reviewBeforeWks,
+    reviewNowWks:sCycle!=null?sCycle:base.reviewNowWks,
+    dealsGated:sDeals!=null?sDeals:base.dealsGated,
+    certs:base.certs,
+    trustReviews:sRev!=null?sRev:base.trustReviews
+  };
+  return {live:live,d:d,fromCrm:(sPipe!=null||sDeals!=null),fromTrust:(sCycle!=null||sRev!=null)};
 }
 function gRow(k,v){return '<div class="drow"><div class="drow-h"><b>'+k+'</b><span class="drow-tool">'+v+'</span></div></div>';}
-function gProvHtml(live){return '<div class="ev-sec">Where this comes from</div><div class="drill-p">'+(live
-  ? 'You entered these at onboarding (<b>Security as a growth engine</b>) — <span class="srcpill self">○ self-reported</span> today. Connect <b>Salesforce</b> and your deal-review tracker (ServiceNow / Jira) to upgrade them to <span class="srcpill conn">● live</span> from the CRM, refreshed per deal.'
-  : '<span class="pill mod">illustrative</span> — an example so you can see the shape. Enter your figures at onboarding or connect your CRM, and every number here becomes yours and traceable to a deal record.')+'</div>';}
+function gProvHtml(live){var x=growthData();return '<div class="ev-sec">Where this comes from</div><div class="drill-p">'+(
+  (x.fromCrm||x.fromTrust)
+  ? 'Pulled <span class="srcpill conn">● live</span> from '+(x.fromCrm?'<b>Salesforce</b> (pipeline &amp; deals gated)':'')+(x.fromCrm&&x.fromTrust?' and ':'')+(x.fromTrust?'<b>Whistic</b> / your Trust Center (review cycle &amp; reviews cleared)':'')+', refreshed on each sync — no longer hand-entered.'
+  : live
+  ? 'You entered these at onboarding (<b>Security as a growth engine</b>) — <span class="srcpill self">○ self-reported</span> today. Connect <b>Salesforce</b> (pipeline &amp; deals gated) and a <b>Trust Center</b> — Whistic / SafeBase / Conveyor — (review cycle &amp; reviews cleared) to make them <span class="srcpill conn">● live</span>, refreshed per deal.'
+  : '<span class="pill mod">illustrative</span> — an example so you can see the shape. Connect <b>Salesforce</b> + a <b>Trust Center</b> (Whistic / SafeBase / Conveyor), or enter your figures at onboarding, and every number here becomes yours and traceable to a deal record.')+'</div>';}
 function drillGrowthPipeline(){var x=growthData(),d=x.d;var deals=Number(d.dealsGated)||0,pipe=Number(d.pipelineUsd)||0,avg=deals>0?pipe/deals:null;
   return '<div class="drill-hero good">'+(pipe>0?usd(pipe):'—')+'</div>'+
     '<div class="drill-p">Total contract value of deals that <b>cannot close until security signs off</b> — vendor security reviews, questionnaires, SOC 2 / HITRUST evidence requests and customer due diligence. This is revenue your program directly unblocks, so it belongs on the growth side of the ledger.</div>'+
@@ -801,27 +818,7 @@ function renderGrowth(){
   var certCard='<div class="card" style="margin-top:12px"><div class="ck">What specific security investments won us business'+(ig.label?' — in '+ig.label:'')+'</div>'+
     (invRows?('<div style="margin-top:8px">'+invRows+'</div>'):'<div class="cn" style="margin-top:6px">Record your certifications and deal-review data at onboarding to show which investment unlocked which market.</div>')+
     '<div class="cn" style="margin-top:10px">These are not badges — for a <b>'+(ig.label||'B2B')+'</b> business they are the gate to '+ig.market+'. '+ig.lever+' Click any to see what it unlocks and how it is evidenced.</div></div>';
-  // Peer-alignment (theme: make your peers successful). What the program delivers
-  // for each C-suite partner, tied to what THEY are measured on — live where we have it.
-  var ale=(LIVE&&LIVE.economics&&Number(LIVE.economics.ale))||0;
-  var rec=(LIVE&&LIVE.resilience&&LIVE.resilience.worst_recovery_hours);
-  var decCount=allDecisions().length;
-  var peers=[
-    {s:'CFO',m:'risk in dollars &amp; ROI on spend',v:ale>0?usd(ale):'—',g:'the expected-loss number that rolls to the board'},
-    {s:'CIO',m:'resilience &amp; uptime',v:rec!=null?hrsToStr(rec):'—',g:'worst-case crown-jewel recovery time'},
-    {s:'General Counsel',m:'defensibility &amp; disclosure',v:decCount+' logged',g:'the decision trail that is your D&amp;O / SEC evidence'},
-    {s:'Revenue',m:'deals enabled',v:Number(d.pipelineUsd)>0?usd(d.pipelineUsd):'—',g:'pipeline your program clears through security review'}
-  ];
-  var peerCard='<div class="card" style="margin-top:12px"><div class="ck">What this program delivers for each peer — in their terms</div><div class="peerrow" style="margin-top:10px">'+
-    peers.map(function(p){return '<div class="peer"><div class="peer-s">'+p.s+'</div><div class="peer-v">'+p.v+'</div><div class="peer-m">'+p.m+'</div><div class="peer-g">'+p.g+'</div></div>';}).join('')+
-    '</div><div class="cn" style="margin-top:10px">The CISOs who get a seat at the table are the ones who make their peers successful. This is your work, mapped to what each of them is measured on.</div></div>';
-  // Engaged-early (theme: embed at design, not at the last gate). Gated honestly —
-  // no fake %: tag each initiative's engagement stage to make it live.
-  var ee=earlyEngagement();
-  var earlyCard=ee
-    ? '<div class="card" style="margin-top:12px"><div class="ck">Engaged early — not at the last gate</div><div class="cv" style="font-size:22px;margin-top:4px;color:'+(ee.pct>=70?'var(--good)':ee.pct>=40?'var(--warn)':'var(--crit)')+'">'+ee.pct+'%</div><div class="cn" style="margin-top:6px">of your <b>'+ee.n+'</b> tagged initiatives had security in at <b>design</b> (architecture / product planning / M&amp;A), not bolted on at the final gate. A strong program runs <b>≥ 70%</b> — that is where security shapes outcomes cheaply and is seen as a builder.</div></div>'
-    : '<div class="card" style="margin-top:12px"><div class="ck">Engaged early — not at the last gate</div><div class="cv" style="font-size:19px;margin-top:4px;color:var(--muted)">◐ tag stage to measure</div><div class="cn" style="margin-top:6px">Security shapes outcomes cheaply when it is in the room at <b>design</b> — architecture, product planning, M&amp;A — not bolted on at the final gate. Tag each initiative’s engagement stage (add an <b>engagement</b> column: design vs. gate) to turn this into a live % — a strong program runs <b>≥ 70%</b> at design.</div></div>';
-  host.innerHTML=banner+hero+t+certCard+peerCard+earlyCard;
+  host.innerHTML=banner+hero+t+certCard;
   host.querySelectorAll('.gtile').forEach(function(el){el.onclick=function(){var k=el.dataset.gdrill;
     if(k==='pipeline')openDrill('Pipeline in security review',drillGrowthPipeline());
     else if(k==='cycle')openDrill('Security-review cycle time',drillGrowthCycle());
@@ -1206,6 +1203,8 @@ function demoSignals(){
   if(has(['onetrust','trustarc','relativity','exterro'])){set('dsar_open',12);set('dsar_overdue',0);set('legal_holds',2);}
   if(has(['recordedfuture','mandiant','anomali','otx'])){set('threat_actors_active',3);set('threat_actors_json',JSON.stringify(demoActorList()));}
   if(has(['cisa','recordedfuture','mandiant','otx']))set('exploited_cves',18);
+  if(has(['salesforce','hubspot'])){set('pipeline_in_review_usd',500000000);set('deals_gated_qtr',10);}
+  if(has(['whistic','safebase','conveyor'])){set('reviews_cleared_qtr',12);set('review_cycle_wks',2);}
   if(has(['rubrik','veeam','cohesity','commvault'])){set('backup_immutable_pct',100);set('dr_test_days',48);set('rpo_minutes',15);}
   return any?s:null;
 }
