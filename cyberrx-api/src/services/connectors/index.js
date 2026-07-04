@@ -22,6 +22,22 @@ const RAW_REGISTRY = {
   recordedfuture: require('./recordedfuture'),
   rubrik: require('./rubrik'),
   sap: require('./sap'),
+  aws: require('./aws'),
+  azure: require('./azure'),
+  prisma: require('./prisma'),
+  gcp: require('./gcp'),
+  veeam: require('./veeam'),
+  cohesity: require('./cohesity'),
+  commvault: require('./commvault'),
+  mandiant: require('./mandiant'),
+  anomali: require('./anomali'),
+  oracle: require('./oracle'),
+  netsuite: require('./netsuite'),
+  workday: require('./workday'),
+  trustarc: require('./trustarc'),
+  relativity: require('./relativity'),
+  exterro: require('./exterro'),
+  abnormal: require('./abnormal'),
 };
 
 // Per-connector demo mode state. Defaults to false (live).

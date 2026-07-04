@@ -1,0 +1,6 @@
+{
+  "signals": [
+    { "key": "bec_blocked", "value": 14, "asOf": "2026-06-28T12:00:00Z", "raw": { "windowDays": 30, "threats": 14 } }
+  ],
+  "meta": { "vendor": "Abnormal Security" }
+}

@@ -1,0 +1,6 @@
+{
+  "signals": [
+    { "key": "payment_anomalies", "value": 2, "asOf": "2026-06-28T12:00:00Z", "raw": { "count": 2 } }
+  ],
+  "meta": { "vendor": "NetSuite" }
+}

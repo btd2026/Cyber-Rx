@@ -1,0 +1,6 @@
+{
+  "signals": [
+    { "key": "cspm_pct", "value": 82, "asOf": "2026-06-28T12:00:00Z", "raw": { "active": 1800, "inactive": 8200, "total": 10000 } }
+  ],
+  "meta": { "vendor": "gcp" }
+}
