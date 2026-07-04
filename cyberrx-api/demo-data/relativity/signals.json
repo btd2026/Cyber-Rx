@@ -1,0 +1,6 @@
+{
+  "signals": [
+    { "key": "legal_holds", "value": 2, "asOf": "2026-06-28T12:00:00Z", "raw": { "active": 2 } }
+  ],
+  "meta": { "vendor": "Relativity" }
+}

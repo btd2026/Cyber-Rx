@@ -1,0 +1,6 @@
+{
+  "signals": [
+    { "key": "backup_immutable_pct", "value": 100, "asOf": "2026-06-28T12:00:00Z", "raw": { "immutable": 8, "total": 8 } }
+  ],
+  "meta": { "vendor": "cohesity" }
+}

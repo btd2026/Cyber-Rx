@@ -1055,13 +1055,13 @@ function demoSignals(){
   if(has(['cyberark','beyondtrust','delinea'])){set('pam_pct',60);set('priv_sessions_flagged',2);}
   if(has(['qualys','tenable']))set('patch_pct',88);
   if(has(['knowbe4','proofpoint'])){set('phishing_pct',3);set('training_pct',94);}
-  if(has(['proofpoint']))set('bec_blocked',14);
+  if(has(['proofpoint','abnormal']))set('bec_blocked',14);
   if(has(['splunk','sentinel'])){set('open_incidents',0);set('mttd_hrs',8);}
   if(has(['aws','azure','wiz','prisma','gcp']))set('cspm_pct',82);
   if(has(['sap','oracle','workday','netsuite','sapgrc'])){set('sod_conflicts',3);set('change_pass_pct',94);set('payment_anomalies',2);}
-  if(has(['onetrust','trustarc'])){set('dsar_open',12);set('dsar_overdue',0);set('legal_holds',2);}
-  if(has(['recordedfuture','mandiant']))set('threat_actors_active',3);
-  if(has(['rubrik','veeam'])){set('backup_immutable_pct',100);set('dr_test_days',48);set('rpo_minutes',15);}
+  if(has(['onetrust','trustarc','relativity','exterro'])){set('dsar_open',12);set('dsar_overdue',0);set('legal_holds',2);}
+  if(has(['recordedfuture','mandiant','anomali']))set('threat_actors_active',3);
+  if(has(['rubrik','veeam','cohesity','commvault'])){set('backup_immutable_pct',100);set('dr_test_days',48);set('rpo_minutes',15);}
   return any?s:null;
 }
 function applyDemoSignals(){if(!demoActive()||SIGNALS)return;var s=demoSignals();if(s){SIGNALS=s;renderSignals();}}

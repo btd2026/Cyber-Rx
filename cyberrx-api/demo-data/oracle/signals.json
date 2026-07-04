@@ -1,0 +1,6 @@
+{
+  "signals": [
+    { "key": "sod_conflicts", "value": 3, "asOf": "2026-06-28T12:00:00Z", "raw": { "openIncidents": 3 } }
+  ],
+  "meta": { "vendor": "Oracle Risk Management Cloud" }
+}

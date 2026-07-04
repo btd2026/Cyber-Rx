@@ -1,0 +1,7 @@
+{
+  "signals": [
+    { "key": "dsar_open", "value": 12, "asOf": "2026-06-28T12:00:00Z", "raw": { "open": 12 } },
+    { "key": "dsar_overdue", "value": 0, "asOf": "2026-06-28T12:00:00Z", "raw": { "overdue": 0 } }
+  ],
+  "meta": { "vendor": "TrustArc" }
+}

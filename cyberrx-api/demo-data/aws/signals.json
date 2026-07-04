@@ -1,0 +1,6 @@
+{
+  "signals": [
+    { "key": "cspm_pct", "value": 82, "asOf": "2026-06-28T12:00:00Z", "raw": { "passed": 8200, "failed": 1800, "total": 10000, "sampledPages": 2, "truncated": false } }
+  ],
+  "meta": { "vendor": "aws" }
+}
