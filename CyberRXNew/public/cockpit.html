@@ -409,7 +409,7 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
@@ -1083,12 +1083,12 @@ function renderSignals(){
     var pcts=['edr_pct','mfa_pct','pam_pct'].map(sig).filter(function(x){return x!=null;});
     if(pcts.length){var avg=Math.round(pcts.reduce(function(s,x){return s+x;},0)/pcts.length);setTxt('lvCovTile',avg+'%');var tn=document.getElementById('lvCovTileNote');if(tn)tn.innerHTML='<span class="pill good">live</span> from '+pcts.length+' connected tool'+(pcts.length>1?'s':'');}
   }
-  renderAiRisk();renderCisoOps();renderControls();renderCompliance();renderCooStatus();renderCfoFraud();renderCroKri();renderCloOps();renderThreatIntel();renderDrReadiness();
+  renderAiRisk();renderCisoOps();renderControls();renderCompliance();renderCooStatus();renderCfoFraud();renderCroKri();renderCloOps();renderThreatIntel();renderDrReadiness();renderPeerBench();
 }
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderBoard();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderBoard();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -1143,6 +1143,34 @@ var IND_THREATS={
     {n:'Sandworm',t:'Nation-state · ICS attack',m:'Purpose-built malware to disrupt industrial control and grid operations.',caps:['seg','siem','backup']},
     {n:'BlackCat / ALPHV',t:'Ransomware',m:'Double-extortion against utilities and their billing systems.',caps:['backup','edr','seg']}]
 };
+/* Published external benchmarks — cited, not fabricated. Per-industry average breach
+   cost from IBM Cost of a Data Breach 2024 ($M); peer medians from Mandiant M-Trends
+   2024 (dwell time) and KnowBe4 Phishing-by-Industry (untrained baseline). We compare
+   the org's LIVE figure to the published median and cite the source; comparisons are
+   gated on the org actually having that live signal, so nothing is invented. */
+var IND_BENCH={health:9.77,fin:6.08,mfg:5.56,tech:5.45,energy:5.29,retail:3.48,gov:2.55};
+var PEER_DWELL_HRS=240; // Mandiant M-Trends 2024 global median dwell ≈ 10 days
+var PEER_PHISH_BASELINE=34; // KnowBe4 untrained baseline phish-prone ≈ 34%
+function renderPeerBench(){
+  var host=document.getElementById('ceoPeer');if(!host)return;
+  var cost=IND_BENCH[indKey()],tiles=[];
+  // Always-shown public context: industry average breach cost.
+  tiles.push({s:'Industry avg breach cost',v:'$'+cost.toFixed(2)+'M',m:indLabel()+' · per incident',g:'Published benchmark — IBM Cost of a Data Breach 2024.'});
+  // Gated: detection speed vs peer median (only if MTTD is live).
+  var mttd=sig('mttd_hrs');
+  if(mttd!=null){var days=(mttd/24),ahead=mttd<PEER_DWELL_HRS;
+    tiles.push({s:'Detection vs peer median',v:(days<1?(mttd+'h'):(days.toFixed(1)+'d'))+' vs 10d',m:ahead?'far ahead of the peer median '+liveTag():'behind the peer median '+liveTag(),g:'Your live MTTD vs Mandiant M-Trends 2024 median dwell (10 days).',cls:ahead?'good':'warn'});}
+  // Gated: phishing-prone vs untrained baseline (only if measured).
+  var ph=sig('phishing_pct');
+  if(ph!=null){var better=ph<PEER_PHISH_BASELINE;
+    tiles.push({s:'Phishing-prone vs baseline',v:ph+'% vs '+PEER_PHISH_BASELINE+'%',m:better?'below the untrained baseline '+liveTag():'at/above baseline '+liveTag(),g:'Your live phish-prone rate vs KnowBe4 untrained baseline (~34%).',cls:better?'good':'warn'});}
+  // Gated: your modeled expected loss in context of the industry average.
+  var ale=LIVE&&LIVE.economics&&Number(LIVE.economics.ale);
+  if(ale){tiles.push({s:'Your expected annual loss',v:usd(ale),m:'vs $'+cost.toFixed(1)+'M avg single breach',g:'Your live ALE (all risks, annualized) next to the industry average cost of one breach — different denominators, shown for scale.',cls:''});}
+  var body=tiles.map(function(t){return '<div class="peer"><div class="peer-s">'+t.s+'</div><div class="peer-v"'+(t.cls?' style="color:var(--'+t.cls+')"':'')+'>'+t.v+'</div><div class="peer-m">'+t.m+'</div><div class="peer-g">'+t.g+'</div></div>';}).join('');
+  var gated=(mttd==null&&ph==null)?'<div class="cn" style="margin-top:10px">◐ Connect your SIEM (for detection speed) and awareness platform (for phishing-prone rate) to add your live figures beside the peer medians. Only published, cited benchmarks are shown — no percentile is fabricated.</div>':'<div class="cn" style="margin-top:10px">Your live figures beside published external benchmarks (IBM · Mandiant · KnowBe4), each cited. We never fabricate a peer percentile — only compare to sourced medians.</div>';
+  host.innerHTML='<div class="card"><div class="ck">How we compare to published benchmarks</div><div class="peerrow" style="margin-top:10px">'+body+'</div>'+gated+'</div>';
+}
 function illuCJ(){var p=indProfile();
   var tiers=['Tier 1','Tier 2','Tier 2','Tier 3'],scores=[83,76,72,64],exps=[34e6,18e6,11e6,5e6],recs=[74,40,28,12],dvs=[5.8e6,2.1e6,3.4e6,0.9e6],txs=[480000,260000,95000,40000],tols=[9e6,6e6,5e6,3e6],nets=[true,true,false,false],rcs=[3,2,1,1];
   return p.systems.map(function(name,i){return {name:name,tier:tiers[i],score:scores[i],procs:[p.procs[i]],
@@ -1910,6 +1938,11 @@ function renderBoardPack(){
   if(decs.length){decBlock=decs.slice(0,6).map(function(d){var opt=d.option||d.opt||'';var tk=d.ticket?(' · '+((d.system||'ticket')+' '+d.ticket)):'';
     return '<div class="bp-li"><span class="d" style="background:var(--ink)"></span><div><b>'+d.title+'</b>'+(opt?(' — '+opt):'')+' <span class="bp-pill m">'+(d.status||'recorded')+'</span>'+tk+'</div></div>';}).join('');
   } else {decBlock='<div style="font-size:12.5px;color:var(--ink-2)">No board decisions recorded this period. Decisions chosen in any seat appear here with their owner, cost and ticket.</div>';}
+  // 7 · How we compare (published benchmarks)
+  var bcost=IND_BENCH[indKey()],bench=['<div class="bp-li"><span class="d" style="background:var(--ink)"></span><div>Industry average cost of a single breach: <b>$'+bcost.toFixed(2)+'M</b> ('+indLabel()+') <span class="bp-pill m">IBM 2024</span></div></div>'];
+  var bm=sig('mttd_hrs');if(bm!=null){var ahead=bm<PEER_DWELL_HRS;bench.push('<div class="bp-li"><span class="d" style="background:var(--'+(ahead?'good':'warn')+')"></span><div>Detection speed: <b>'+(bm<24?(bm+'h'):((bm/24).toFixed(1)+'d'))+'</b> vs the <b>10-day</b> peer median '+(ahead?'— <b style="color:var(--good)">far ahead</b>':'— <b style="color:var(--warn)">behind</b>')+' <span class="bp-pill m">Mandiant M-Trends 2024</span></div></div>');}
+  var bp2=sig('phishing_pct');if(bp2!=null){var pb=bp2<PEER_PHISH_BASELINE;bench.push('<div class="bp-li"><span class="d" style="background:var(--'+(pb?'good':'warn')+')"></span><div>Phishing-prone rate: <b>'+bp2+'%</b> vs the <b>~34%</b> untrained baseline '+(pb?'— <b style="color:var(--good)">well below</b>':'')+' <span class="bp-pill m">KnowBe4</span></div></div>');}
+  var benchBlock=bench.join('');
   // 6 · Trajectory
   var tr=trajInfo(),trajBlock;
   if(tr.two){trajBlock='Expected loss is <b style="color:var(--'+(tr.down?'good':'crit')+')">'+tr.val+'</b> across '+tr.vals.length+' recorded analyses — '+(tr.down?'the program is removing more risk than the business is adding.':'exposure is rising; the drivers are in the CISO controls view.');
@@ -1924,6 +1957,7 @@ function renderBoardPack(){
     '<div class="bp-sec"><h2>4 · Key Risk Indicators</h2>'+kriBlock+'</div>'+
     '<div class="bp-sec"><h2>5 · Decisions on the table</h2>'+decBlock+'</div>'+
     '<div class="bp-sec"><h2>6 · Trajectory</h2><div style="font-size:13px;line-height:1.5">'+trajBlock+'</div></div>'+
+    '<div class="bp-sec"><h2>7 · How we compare — published benchmarks</h2>'+benchBlock+'</div>'+
     '<div class="bp-meta" style="margin-top:26px;border-top:1px solid var(--line);padding-top:12px">CyberRx · every figure traces to your data or is labeled modeled / illustrative. This report is generated from the same live model as the executive cockpit — not a separate spreadsheet.</div>';
 }
 function bpToday(){try{return new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'});}catch(_){return '';}}
