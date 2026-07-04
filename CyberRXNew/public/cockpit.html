@@ -223,6 +223,45 @@
   .src-row{display:flex;gap:9px;align-items:center;font-size:12.5px;color:var(--ink-2);padding:7px 0}.src-row .sd{width:6px;height:6px;border-radius:50%;background:var(--blue);flex:none}
   .conf{font-size:12.5px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:8px}
   .foot{color:var(--muted);font-size:12px;text-align:center;padding:30px 0;border-top:1px solid var(--line);margin-top:40px}.foot b{color:var(--ink-2)}
+  /* ===== Board Pack — printable board report ===== */
+  #bpScrim{position:fixed;inset:0;background:rgba(20,33,72,.55);opacity:0;pointer-events:none;transition:opacity .18s;z-index:60}#bpScrim.open{opacity:1;pointer-events:auto}
+  #bpModal{position:fixed;top:3vh;left:50%;transform:translateX(-50%);width:min(920px,94vw);max-height:94vh;overflow:auto;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:0 24px 60px rgba(20,33,72,.35);z-index:61;opacity:0;pointer-events:none;transition:opacity .18s}
+  #bpModal.open{opacity:1;pointer-events:auto}
+  .bp-bar{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 22px;background:var(--ink);color:#fff;border-radius:10px 10px 0 0;z-index:2}
+  .bp-bar b{font-size:14px;letter-spacing:.02em}
+  .bp-actions{display:flex;gap:8px}
+  .bp-btn{border:1px solid rgba(255,255,255,.32);background:rgba(255,255,255,.1);color:#fff;padding:6px 13px;border-radius:6px;font-size:12.5px;font-weight:600;cursor:pointer}
+  .bp-btn.primary{background:var(--gold);border-color:var(--gold);color:#1E2A4A}
+  .bp-doc{padding:30px 42px 46px}
+  .bp-doc h1{font-family:var(--serif);font-size:25px;margin:0;color:var(--ink)}
+  .bp-meta{color:var(--ink-2);font-size:12.5px;margin-top:5px}
+  .bp-provo{margin-top:12px;font-size:11.5px;color:var(--ink-2);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .bp-sec{margin-top:26px}
+  .bp-sec h2{font-family:var(--serif);font-size:15px;border-bottom:2px solid var(--ink);padding-bottom:6px;margin:0 0 12px;color:var(--ink)}
+  .bp-verdict{font-size:15px;line-height:1.55;padding:14px 16px;border-left:4px solid var(--ink);background:var(--surface-2);border-radius:0 6px 6px 0}
+  .bp-fin{width:100%;border-collapse:collapse;font-size:13px}
+  .bp-fin td{padding:8px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+  .bp-fin td:last-child{text-align:right;font-weight:700;white-space:nowrap}
+  .bp-fin td .bp-note{display:block;font-weight:400;color:var(--muted);font-size:11px}
+  .bp-kv{display:grid;grid-template-columns:1fr 1fr;gap:6px 22px;font-size:12.5px}
+  .bp-kv .r{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)}
+  .bp-kv .r span:first-child{color:var(--ink-2)}
+  .bp-kv .r span:last-child{font-weight:600;text-align:right}
+  .bp-pill{display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:20px;vertical-align:middle}
+  .bp-pill.g{background:var(--good-soft);color:var(--good)}.bp-pill.w{background:var(--warn-soft);color:var(--warn)}.bp-pill.c{background:var(--crit-soft);color:var(--crit)}.bp-pill.m{background:var(--surface-2);color:var(--ink-2)}
+  .bp-li{font-size:13px;padding:7px 0;border-bottom:1px solid var(--line);display:flex;gap:9px}
+  .bp-li .d{flex:0 0 8px;height:8px;border-radius:50%;margin-top:5px}
+  @media print{
+    @page{margin:14mm}
+    body{background:#fff}
+    body *{visibility:hidden}
+    #bpScrim{display:none}
+    #bpModal,#bpModal *{visibility:visible}
+    #bpModal{position:absolute;top:0;left:0;transform:none;width:100%;max-height:none;box-shadow:none;border:0;overflow:visible;border-radius:0}
+    .bp-bar{display:none}
+    .bp-doc{padding:0}
+    .bp-sec{break-inside:avoid}
+  }
   /* ===== full War Room (ported) ===== */
   @keyframes warpulse{0%,100%{box-shadow:0 0 0 0 rgba(255,70,70,.7)}50%{box-shadow:0 0 0 7px rgba(255,70,70,0)}}
   .tbtn.war.alarm{animation:warpulse .85s infinite;background:#8a1418;color:#fff}
@@ -319,6 +358,7 @@
   <div class="logo">Rx</div><div class="brand">CyberRx <span>Cybersecurity Operating System</span></div>
   <div class="top-r">
     <button class="tbtn war" id="warBtn">⚠ War Room</button>
+    <button class="tbtn" id="boardBtn" title="Board-ready report">📋 Board Pack</button>
     <button class="tbtn" id="voiceBtn" title="Advisor voice">🔊 Brief me</button>
     <span class="mocktag" id="dataBadge">Illustrative</span>
     <span id="orgLive"><span class="dot" style="background:var(--muted)"></span>Sample workspace</span>
@@ -341,6 +381,13 @@
   <div class="wr-head"><div class="wr-ttl">⚠ WAR ROOM <span class="wr-mode" id="wrMode">STANDBY</span></div><div class="wr-act"><button class="wr-sim" id="wrSim">▶ Simulate live incident</button><button class="wr-mute" id="wrMute" title="Mute alarm">🔊</button><button class="modal-x" id="wrX">×</button></div></div>
   <div class="wr-body" id="wrBody"></div>
   <div class="wr-foot2">Command center streams from your connected systems (SIEM, EDR, threat intel, identity, network).</div>
+</div>
+
+<!-- Board Pack — one-click board/regulator-ready report -->
+<div id="bpScrim"></div>
+<div id="bpModal" role="dialog" aria-label="Board report">
+  <div class="bp-bar"><b>📋 Board Pack — Cyber Risk Report</b><div class="bp-actions"><button class="bp-btn primary" id="bpPrint">⬇ Export / Print</button><button class="bp-btn" id="bpClose">Close</button></div></div>
+  <div class="bp-doc" id="bpDoc"></div>
 </div>
 
 <script>
@@ -1669,25 +1716,26 @@ function kriStatus(v,th,dir){
   if(dir==='up')return v<th?'crit':(v<th+5?'warn':'good');
   return v>th?'crit':(v>Math.max(0,th-2)?'warn':'good');
 }
+/* Board-set Key Risk Indicators, shared by the CRO KRI board and the Board Pack. */
+var KRI_DEFS=[
+  {sk:'mfa_pct',cap:'mfa',n:'Identity — MFA coverage',th:95,dir:'up',fmt:function(v){return v+'%';},tol:'≥95%'},
+  {sk:'pam_pct',cap:'pam',n:'Privileged access managed',th:80,dir:'up',fmt:function(v){return v+'%';},tol:'≥80%'},
+  {sk:'patch_pct',cap:'vuln',n:'Critical patch currency',th:90,dir:'up',fmt:function(v){return v+'%';},tol:'≥90%'},
+  {sk:'edr_pct',cap:'edr',n:'Endpoint detection coverage',th:95,dir:'up',fmt:function(v){return v+'%';},tol:'≥95%'},
+  {sk:'cspm_pct',cap:'cspm',n:'Cloud posture compliant',th:85,dir:'up',fmt:function(v){return v+'%';},tol:'≥85%'},
+  {sk:'phishing_pct',cap:'aware',n:'Phishing-prone rate',th:5,dir:'down',fmt:function(v){return v+'%';},tol:'≤5%'},
+  {sk:'open_incidents',cap:null,n:'Open security incidents',th:0,dir:'down',fmt:function(v){return String(v);},tol:'0 active'}
+];
+function kriEval(){var out=[];KRI_DEFS.forEach(function(d){var v=sig(d.sk);if(v==null)return;var st=kriStatus(v,d.th,d.dir);out.push({d:d,v:v,st:st,breach:st!=='good'});});return out;}
 function renderCroKri(){
   var host=document.getElementById('croKri');if(!host)return;
-  var defs=[
-    {sk:'mfa_pct',cap:'mfa',n:'Identity — MFA coverage',th:95,dir:'up',fmt:function(v){return v+'%';},tol:'≥95%'},
-    {sk:'pam_pct',cap:'pam',n:'Privileged access managed',th:80,dir:'up',fmt:function(v){return v+'%';},tol:'≥80%'},
-    {sk:'patch_pct',cap:'vuln',n:'Critical patch currency',th:90,dir:'up',fmt:function(v){return v+'%';},tol:'≥90%'},
-    {sk:'edr_pct',cap:'edr',n:'Endpoint detection coverage',th:95,dir:'up',fmt:function(v){return v+'%';},tol:'≥95%'},
-    {sk:'cspm_pct',cap:'cspm',n:'Cloud posture compliant',th:85,dir:'up',fmt:function(v){return v+'%';},tol:'≥85%'},
-    {sk:'phishing_pct',cap:'aware',n:'Phishing-prone rate',th:5,dir:'down',fmt:function(v){return v+'%';},tol:'≤5%'},
-    {sk:'open_incidents',cap:null,n:'Open security incidents',th:0,dir:'down',fmt:function(v){return String(v);},tol:'0 active'}
-  ];
-  var live=[];
-  defs.forEach(function(d){var v=sig(d.sk);if(v==null)return;
-    var st=kriStatus(v,d.th,d.dir),breach=st!=='good';
+  var live=kriEval();
+  live.forEach(function(r){var d=r.d,breach=r.breach;
     var pr=d.cap?capProject(CAP_BY_KEY[d.cap]):null;
     var mit=!breach?'<span style="color:var(--good)">Within tolerance</span>'
       :pr?('<span class="tag'+(pr.done?' good':'')+'" style="font-size:10px">'+pr.status+'</span> '+pr.name+(pr.ticket?(' · '+pr.ticket):'')+' · '+pr.prog+'%')
       :'<span style="color:var(--crit)">No mitigation funded — raise one</span>';
-    live.push({d:d,v:v,st:st,breach:breach,mit:mit});
+    r.mit=mit;
   });
   if(!live.length){host.innerHTML='<div class="card"><div class="ck">Key Risk Indicators</div><div class="cn" style="margin-top:6px">◐ Connect your security tools (identity, EDR, vulnerability, cloud, SIEM) and this becomes your live KRI board — each indicator scored against a board-set threshold, breaches flagged, and the funded mitigation tracked to completion. The control panel you take to the risk committee.</div></div>';return;}
   var breaches=live.filter(function(r){return r.breach;}).length;
@@ -1804,6 +1852,83 @@ function renderDrReadiness(){
   var fail=vc&&vc.vendor?('<div class="card" style="margin-top:12px"><div class="ck" style="color:var(--warn)">Single-vendor failover gap</div><div class="cn" style="margin-top:6px"><b style="color:var(--ink)">'+vc.vendor+'</b> underpins '+((vc.systems||[]).length)+' critical service'+((vc.systems||[]).length===1?'':'s')+' with no independent failover — a single outage takes all of them down at once'+perhr+'. Multi-region or a second provider closes this.</div></div>'):'';
   host.innerHTML=demoBanner()+grid+fail;
 }
+/* ---- Board Pack — a one-click, print/export board-ready report assembled from the
+   same live data as the seats: the financial statement of cyber risk, governance &
+   SEC Item 106 disclosure readiness, the KRI board, decisions on the table, and the
+   trajectory. Every figure carries its provenance; nothing is invented. ---- */
+function bpProvenance(){
+  if(!LIVE)return {cls:'m',t:'Illustrative preview — figures populate from your data once onboarding go-live completes'};
+  if(signalsAreDemo())return {cls:'w',t:'Demo data — synthesized from the tools connected in demo mode'};
+  return {cls:'g',t:'Live — every figure computed from your connected data'};
+}
+function bpFinRow(label,val,note){return '<tr><td>'+label+(note?'<span class="bp-note">'+note+'</span>':'')+'</td><td>'+(val==null||val===''?'—':val)+'</td></tr>';}
+function bpKv(rows){return '<div class="bp-kv">'+rows.map(function(r){return '<div class="r"><span>'+r.k+'</span><span'+(r.cls?' style="color:var(--'+r.cls+')"':'')+'>'+(r.v||'—')+'</span></div>';}).join('')+'</div>';}
+function renderBoardPack(){
+  var doc=document.getElementById('bpDoc');if(!doc)return;
+  var org=orgName()||'Your organization',prov=bpProvenance();
+  var ec=(LIVE&&LIVE.economics)||{},r=ec.ratios||{},e=(LIVE&&LIVE.earnings)||{},g=(LIVE&&LIVE.governance)||{},ir=g.ir||{};
+  var ale=Number(ec.ale)||null,tail=Number(ec.tail)||null,ap=ec.appetite||{},ins=ec.insurance||{},mat=ec.materiality||{};
+  // 1 · Executive summary — cyber vs board appetite
+  var verdict;
+  if(ale!=null&&ap.appetite){var within=ap.within!==false,tailOk=ap.tail_within!==false;
+    verdict='Cyber loss exposure is <b>'+usd(ale)+'</b> expected against a board appetite of <b>'+usd(ap.appetite)+'</b> — '+(within?'<b style="color:var(--good)">within appetite</b>':'<b style="color:var(--crit)">over appetite</b>')+'. The tail (95% Value-at-Risk) is <b>'+(tail!=null?usd(tail):'—')+'</b>'+(tailOk?', within the enterprise tail limit.':' — <b style="color:var(--warn)">above the enterprise tail limit</b>, the open board item.');
+  } else if(ale!=null){verdict='Cyber loss exposure is quantified at <b>'+usd(ale)+'</b> expected, <b>'+(tail!=null?usd(tail):'—')+'</b> at the tail. Enter the board risk appetite in onboarding to state this against the limit.';
+  } else {verdict='Complete onboarding and go-live to quantify cyber loss exposure in dollars and state it against the board’s risk appetite. This report then fills in automatically.';}
+  // 2 · Financial statement of cyber risk
+  var worstDays=(r.days_of_operating_income!=null&&ale&&tail)?r.days_of_operating_income*(tail/ale):null;
+  var fin='<table class="bp-fin"><tbody>'+
+    bpFinRow('Expected annual loss (ALE)',ale!=null?usd(ale):null,'FAIR-aligned, from your risk register')+
+    bpFinRow('Value-at-Risk (95% / tail)',tail!=null?usd(tail):null,'the worst realistic year')+
+    bpFinRow('Share of annual revenue',r.pct_of_revenue!=null?pct(r.pct_of_revenue,r.pct_of_revenue<0.01?2:1):null)+
+    bpFinRow('Share of enterprise value',r.pct_of_enterprise_value!=null?pct(r.pct_of_enterprise_value,2):null)+
+    bpFinRow('A severe cyber year = days of operating income',worstDays!=null?((worstDays>=10?Math.round(worstDays):worstDays.toFixed(1))+' days'):null,'a bad year in the days the business runs on')+
+    bpFinRow('Worst-case EPS impact',e.eps_impact_worst!=null?('−$'+e.eps_impact_worst.toFixed(2)):null)+
+    bpFinRow('Materiality threshold (SEC reportable at)',mat.value!=null?usd(mat.value):null,mat.basis||'the 8-K disclosure trigger')+
+    bpFinRow('Insurance limit',ins.limit!=null?usd(ins.limit):null)+
+    bpFinRow('Uninsured tail (coverage gap)',ins.gap!=null?usd(ins.gap):null,'exposure above the policy limit')+
+    '</tbody></table>';
+  // 3 · Governance & disclosure readiness (SEC Item 106)
+  var gov=bpKv([
+    {k:'Board oversight committee',v:g.committee},
+    {k:'Cadence',v:g.cadence},
+    {k:'Cyber expertise on the board',v:g.boardExpertise},
+    {k:'CISO reports to',v:g.cisoReportsTo},
+    {k:'Integrated with enterprise risk (ERM)',v:g.ermIntegrated},
+    {k:'Incident-response plan tested',v:ir.tested},
+    {k:'Breach counsel / forensics on retainer',v:ir.retainer},
+    {k:'Board-approved ransomware policy',v:ir.ransomwarePolicy}
+  ]);
+  // 4 · Key Risk Indicators
+  var kris=kriEval(),kriBlock;
+  if(kris.length){var br=kris.filter(function(x){return x.breach;});
+    var hd=br.length?('<b style="color:var(--crit)">'+br.length+' of '+kris.length+' breaching tolerance</b>'):('<b style="color:var(--good)">all '+kris.length+' within tolerance</b>');
+    kriBlock='<div style="font-size:12.5px;margin-bottom:8px">Status: '+hd+'</div>'+kris.map(function(x){var c=x.st==='good'?'var(--good)':x.st==='warn'?'var(--warn)':'var(--crit)';
+      return '<div class="bp-li"><span class="d" style="background:'+c+'"></span><div><b>'+x.d.n+'</b> — '+x.d.fmt(x.v)+' <span style="color:var(--muted)">(tolerance '+x.d.tol+')</span> <span class="bp-pill '+(x.st==='good'?'g':x.st==='warn'?'w':'c')+'">'+(x.st==='good'?'within':x.st==='warn'?'watch':'breach')+'</span></div></div>';}).join('');
+  } else {kriBlock='<div style="font-size:12.5px;color:var(--ink-2)">Connect your security tools (identity, EDR, vulnerability, cloud, SIEM) to populate the live KRI board.</div>';}
+  // 5 · Decisions on the table
+  var decs=allDecisions(),decBlock;
+  if(decs.length){decBlock=decs.slice(0,6).map(function(d){var opt=d.option||d.opt||'';var tk=d.ticket?(' · '+((d.system||'ticket')+' '+d.ticket)):'';
+    return '<div class="bp-li"><span class="d" style="background:var(--ink)"></span><div><b>'+d.title+'</b>'+(opt?(' — '+opt):'')+' <span class="bp-pill m">'+(d.status||'recorded')+'</span>'+tk+'</div></div>';}).join('');
+  } else {decBlock='<div style="font-size:12.5px;color:var(--ink-2)">No board decisions recorded this period. Decisions chosen in any seat appear here with their owner, cost and ticket.</div>';}
+  // 6 · Trajectory
+  var tr=trajInfo(),trajBlock;
+  if(tr.two){trajBlock='Expected loss is <b style="color:var(--'+(tr.down?'good':'crit')+')">'+tr.val+'</b> across '+tr.vals.length+' recorded analyses — '+(tr.down?'the program is removing more risk than the business is adding.':'exposure is rising; the drivers are in the CISO controls view.');
+  } else {trajBlock='This is the baseline analysis. Each future analysis records a new point and this becomes your real quarter-over-quarter trajectory — nothing is back-filled.';}
+  doc.innerHTML=
+    '<h1>Cyber Risk — Board Report</h1>'+
+    '<div class="bp-meta">'+org+(industry()?(' · '+indLabel()):'')+' · prepared '+bpToday()+'</div>'+
+    '<div class="bp-provo"><span class="bp-pill '+prov.cls+'">'+({g:'live',w:'demo',m:'illustrative'}[prov.cls])+'</span> '+prov.t+'</div>'+
+    '<div class="bp-sec"><h2>1 · Executive summary</h2><div class="bp-verdict">'+verdict+'</div></div>'+
+    '<div class="bp-sec"><h2>2 · The financial statement of cyber risk</h2>'+fin+'</div>'+
+    '<div class="bp-sec"><h2>3 · Governance &amp; disclosure readiness — SEC Item 106</h2>'+gov+'</div>'+
+    '<div class="bp-sec"><h2>4 · Key Risk Indicators</h2>'+kriBlock+'</div>'+
+    '<div class="bp-sec"><h2>5 · Decisions on the table</h2>'+decBlock+'</div>'+
+    '<div class="bp-sec"><h2>6 · Trajectory</h2><div style="font-size:13px;line-height:1.5">'+trajBlock+'</div></div>'+
+    '<div class="bp-meta" style="margin-top:26px;border-top:1px solid var(--line);padding-top:12px">CyberRx · every figure traces to your data or is labeled modeled / illustrative. This report is generated from the same live model as the executive cockpit — not a separate spreadsheet.</div>';
+}
+function bpToday(){try{return new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'});}catch(_){return '';}}
+function openBoardPack(){renderBoardPack();var s=document.getElementById('bpScrim'),m=document.getElementById('bpModal');if(s)s.classList.add('open');if(m){m.classList.add('open');m.scrollTop=0;}}
+function closeBoardPack(){var s=document.getElementById('bpScrim'),m=document.getElementById('bpModal');if(s)s.classList.remove('open');if(m)m.classList.remove('open');}
 /* CIO "which systems carry the business" — the crown-jewel systems, ranked by
    $/hr of downtime (from /summary resilience.systems). Illustrative until live. */
 function renderCioSystems(){
@@ -1994,6 +2119,10 @@ function wrCloseFn(){document.getElementById('wrModal').classList.remove('open')
 document.getElementById('warBtn').addEventListener('click',wrOpen);
 document.getElementById('wrX').addEventListener('click',wrCloseFn);
 document.getElementById('wrScrim').addEventListener('click',wrCloseFn);
+(function(){var bb=document.getElementById('boardBtn');if(bb)bb.addEventListener('click',openBoardPack);
+  var bc=document.getElementById('bpClose');if(bc)bc.addEventListener('click',closeBoardPack);
+  var bs=document.getElementById('bpScrim');if(bs)bs.addEventListener('click',closeBoardPack);
+  var bp=document.getElementById('bpPrint');if(bp)bp.addEventListener('click',function(){try{window.print();}catch(_){}});})();
 document.getElementById('wrSim').addEventListener('click',function(){ensureAudio();if(incidentActive)containIncident();else triggerIncident();});
 document.getElementById('wrMute').addEventListener('click',function(){alarmMuted=!alarmMuted;this.textContent=alarmMuted?'🔇':'🔊';if(alarmMuted)stopAlarm();else if(incidentActive)startAlarm();});
 
