@@ -326,7 +326,7 @@
 </div></div>
 <div class="seats"><div class="wrap seats-in">
   <span class="seatlbl">Speaking to</span>
-  <button class="seat on" data-seat="ceo">CEO / Board</button><button class="seat" data-seat="cfo">CFO</button><button class="seat" data-seat="clo">CLO / General Counsel</button><button class="seat" data-seat="cro">CRO</button><button class="seat" data-seat="cio">CIO</button><button class="seat" data-seat="ciso">CISO</button>
+  <button class="seat on" data-seat="ceo">CEO / Board</button><button class="seat" data-seat="cfo">CFO</button><button class="seat" data-seat="clo">CLO / General Counsel</button><button class="seat" data-seat="cro">CRO</button><button class="seat" data-seat="coo">COO</button><button class="seat" data-seat="cio">CIO</button><button class="seat" data-seat="ciso">CISO</button>
 </div></div>
 <div id="dataModeBar"><div class="wrap" id="dataModeInner" style="padding:8px 0;font-size:12px;font-weight:600"></div></div>
 <div class="wrap" id="app"></div>
@@ -354,7 +354,7 @@ function jtable(rows){return '<div class="card"><table class="tbl"><thead><tr><t
 function decisions(a){return a.map(function(d){return '<div class="decision" data-dec="'+d.n+'"><div class="dh"><span class="dn">Decision '+d.n+' ·</span>'+d.q+'</div><div class="dsit">'+d.sit+'</div><div class="opts">'+d.opts.map(function(o){return '<div class="opt'+(o.rec?' rec':'')+'">'+(o.rec?'<div class="orec">Recommended</div>':'')+'<div class="on">'+o.on+'</div><div class="osum">'+o.osum+'</div><div class="pc"><div class="lbl p">Pros</div><ul>'+o.pros.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul><div class="lbl c">Cons</div><ul>'+o.cons.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></div><button class="choose'+(o.rec?'':' gh')+'" data-dec="'+d.n+'" data-title="'+d.q.replace(/"/g,'')+'" data-opt="'+o.tag+'" data-osum="'+String(o.osum||'').replace(/"/g,'')+'">Choose &amp; record</button></div>';}).join('')+'</div><div class="dstatus" id="dstatus-'+d.n+'"></div></div>';}).join('');}
 function sec(no,q,desc,inner){return '<div class="section"><div class="rubric"><div class="no">'+no+'</div><div><div class="rt">'+q+'</div><div class="rd">'+desc+'</div></div></div>'+inner+'</div>';}
 
-var SEAT_LABEL={ceo:'CEO / Board',cfo:'CFO',clo:'CLO / General Counsel',cro:'CRO',cio:'CIO',ciso:'CISO'};
+var SEAT_LABEL={ceo:'CEO / Board',cfo:'CFO',coo:'COO',clo:'CLO / General Counsel',cro:'CRO',cio:'CIO',ciso:'CISO'};
 var CUR='ceo';
 function render(seat){
   CUR=seat;var s=SEATS[seat];
@@ -362,7 +362,7 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
@@ -950,12 +950,12 @@ function renderSignals(){
     var pcts=['edr_pct','mfa_pct','pam_pct'].map(sig).filter(function(x){return x!=null;});
     if(pcts.length){var avg=Math.round(pcts.reduce(function(s,x){return s+x;},0)/pcts.length);setTxt('lvCovTile',avg+'%');var tn=document.getElementById('lvCovTileNote');if(tn)tn.innerHTML='<span class="pill good">live</span> from '+pcts.length+' connected tool'+(pcts.length>1?'s':'');}
   }
-  renderAiRisk();renderCisoOps();renderControls();
+  renderAiRisk();renderCisoOps();renderControls();renderCooStatus();
 }
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderProcBars();renderCioSystems();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -1551,6 +1551,33 @@ function renderRoi(){
 function renderCioSystems(){
   var host=document.getElementById('cioSystems');if(!host)return;
   var sy=LIVE&&LIVE.resilience&&LIVE.resilience.systems;if(!sy||!sy.length){host.innerHTML=illuSysBars();return;}
+  renderCioSystemsBody(host,sy);
+}
+/* COO — operational continuity. Are operations running, can critical services keep
+   delivering, and where is a single point of failure? From SIEM + resilience. */
+function renderCooStatus(){
+  var host=document.getElementById('cooStatus');if(!host)return;
+  var oi=sig('open_incidents'),rs=(LIVE&&LIVE.resilience)||{},worst=rs.worst_recovery_hours,vc=rs.top_vendor_blast,mttd=sig('mttd_hrs');
+  var disrupted=oi!=null&&oi>0;
+  host.innerHTML=demoBanner()+'<div class="grid4">'+
+    '<div class="card"><div class="ck">Operations status</div><div class="cv" style="font-size:19px;color:var(--'+(disrupted?'crit':(oi!=null?'good':'muted'))+')">'+(disrupted?(oi+' disrupting ops'):(oi!=null?'Running normally':'Connect SIEM'))+'</div><div class="cn">'+(disrupted?'an incident is affecting a business process':(oi!=null?'no incident affecting service delivery '+liveTag():'live from your SIEM once connected'))+'</div></div>'+
+    '<div class="card"><div class="ck">Slowest service to recover</div><div class="cv" style="font-size:19px'+(worst!=null&&worst>=24?';color:var(--warn)':'')+'">'+(worst!=null?hrsToStr(worst):'—')+'</div><div class="cn">worst-case restore on a revenue-critical service</div></div>'+
+    '<div class="card"><div class="ck">Single point of failure</div><div class="cv" style="font-size:19px'+(vc&&vc.vendor?';color:var(--warn)':'')+'">'+(vc&&vc.vendor?('1 vendor · '+((vc.systems||[]).length)+' services'):'—')+'</div><div class="cn">'+(vc&&vc.vendor?('if '+vc.vendor+' fails, all degrade'):'map vendor concentration in onboarding')+'</div></div>'+
+    '<div class="card"><div class="ck">Disruption detection</div><div class="cv" style="font-size:19px'+(mttd!=null?';color:var(--good)':'')+'">'+(mttd!=null?(mttd+'h '+liveTag()):'Connect SIEM')+'</div><div class="cn">how fast an operational disruption surfaces</div></div>'+
+    '</div>';
+}
+function continuityCard(rows,live){return '<div class="card"><table class="tbl"><thead><tr><th>Critical service</th><th>Cost / hour down</th><th>Recovery (RTO)</th><th>Continuity</th></tr></thead><tbody>'+rows+'</tbody></table>'+(live?'<div class="cn" style="margin-top:8px">Ranked by what an hour of downtime costs · "within tolerance" = recovers under 24h. From your inventory + resilience data.</div>':'<div class="cn" style="margin-top:8px">◐ <b style="color:var(--warn)">Illustrative</b> — upload your systems &amp; recovery targets to see real continuity status.</div>')+'</div>';}
+function renderCooContinuity(){
+  var host=document.getElementById('cooContinuity');if(!host)return;
+  var sy=(LIVE&&LIVE.resilience&&LIVE.resilience.systems)||null;
+  if(sy&&sy.length){var rows=sy.filter(function(s){return (s.per_hr>0)||(s.recovery_hours!=null);}).slice(0,8).map(function(s){var rto=s.recovery_hours,atrisk=rto!=null&&rto>24;
+    return '<tr><td><b>'+s.name+'</b>'+(s.crown_jewel?' <span class="cj-badge">crown jewel</span>':'')+'</td><td style="font-weight:700;color:var(--warn)">'+(s.per_hr>0?(usd(s.per_hr)+'/hr'):'—')+'</td><td>'+(rto!=null?hrsToStr(rto):'—')+'</td><td><span class="tag '+(rto==null?'':atrisk?'warn':'good')+'">'+(rto==null?'—':atrisk?'over tolerance':'within tolerance')+'</span></td></tr>';}).join('');
+    host.innerHTML=continuityCard(rows,true);return;}
+  var p=indProfile(),hrs=[2.3e6,0.9e6,0.6e6,0.04e6],rto=[74,28,40,8];
+  var rows=p.systems.map(function(n,i){var atrisk=rto[i]>24;return '<tr><td><b>'+n+'</b>'+(i===0?' <span class="cj-badge">crown jewel</span>':'')+'</td><td style="font-weight:700;color:var(--warn)">'+usd(hrs[i])+'/hr</td><td>'+hrsToStr(rto[i])+'</td><td><span class="tag '+(atrisk?'warn':'good')+'">'+(atrisk?'over tolerance':'within tolerance')+'</span></td></tr>';}).join('');
+  host.innerHTML=continuityCard(rows,false);
+}
+function renderCioSystemsBody(host,sy){
   var withHr=sy.filter(function(s){return s.per_hr>0;});var list=withHr.length?withHr:sy;
   var max=list[0].per_hr||list[0].exposure_usd||1;
   host.innerHTML='<div class="card">'+list.map(function(s){

@@ -160,6 +160,24 @@ var SEATS = {
   );}
  },
 
+ coo:{
+  eyebrow:'Operational continuity view · COO',
+  verdict:'Operations are <span class="em">running</span> — cyber is not disrupting service delivery today. The exposure is continuity: our slowest critical service recovers beyond tolerance, and a single vendor is a point of failure for three of them.',
+  sub:'Can the business keep delivering through a cyber disruption? Your critical services, what an hour of downtime costs, how fast each recovers, and where a single point of failure could stop operations.',
+  brief:'Operationally we are running, and no incident is disrupting service delivery right now. The continuity gap to close is recovery — our slowest critical service takes too long to restore, beyond tolerance, and one vendor is a single point of failure for three services. One resilience investment brings both inside tolerance and protects our service-delivery commitments.',
+  body:function(){return (
+   sec('01','Are operations running — is anything disrupting the business right now?','Your live operating picture: incidents affecting business processes, how fast a disruption would surface, and where a single point of failure could stop service delivery. From your SIEM and resilience data.',
+     '<div id="cooStatus"></div>')
+   +sec('02','Which critical services carry the operation — and can we keep them running?','Your revenue- and service-critical processes ranked by what an hour of downtime costs, how fast each recovers, and whether that is inside your continuity tolerance.',
+     '<div id="cooContinuity"></div>')
+   +sec('03','What decision needs the COO?','How much operational resilience we fund so the business keeps delivering through a disruption. Choosing one records to your ticketing system as a tracked project.',
+     decisions([{n:1,q:'How do we keep operations running through a disruption?',sit:'Our slowest critical service recovers beyond tolerance and one vendor is a single point of failure for three services. Three ways to close the continuity gap:',opts:[
+       {rec:true,tag:'A · Fund resilience + remove the SPOF',on:'Option A · Resilience',osum:'$3.2M · within tolerance',pros:['Brings the slowest critical service inside recovery tolerance','Removes the single-vendor point of failure (multi-region)','Protects service-delivery SLAs and customer trust'],cons:['$3.2M capital','A one-quarter program']},
+       {tag:'B · Critical services only',on:'Option B · Critical only',osum:'$1.6M',pros:['Protects the top revenue-critical services','Half the capital'],cons:['Lower-tier services stay over tolerance','Vendor concentration remains']},
+       {tag:'C · Accept &amp; monitor',on:'Option C · Accept',osum:'$0 this year',pros:['No capital this year'],cons:['The slowest service stays over recovery tolerance','A vendor failure still degrades three services at once','Requires a documented operational risk-acceptance']}]}]))
+  );}
+ },
+
  ciso:{
   eyebrow:'Security operating view · CISO',
   verdict:'<span class="em">No active compromise, and the program is improving.</span> The largest exposure driver has a funded decision ready; control effectiveness is measured as dollars of risk removed.',
