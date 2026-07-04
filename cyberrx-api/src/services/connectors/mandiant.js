@@ -11,6 +11,7 @@
  */
 
 const { http, jsonOrThrow, nowIso } = require('./http');
+const { actorObj, actorsSignal } = require('./threatpack');
 
 const base = (creds) => String(creds.apiUrl || 'https://api.intelligence.mandiant.com').replace(/\/+$/, '');
 
@@ -40,19 +41,19 @@ async function fetchSignals(creds) {
   const actors = j.threat_actors || j.actors || [];
   // "Active" = flagged as active by Mandiant, or updated within the last 90 days.
   const cutoff = Date.now() - 90 * 864e5;
-  const active = actors.filter((a) => {
-    if (a.is_active === true) return true;
-    const t = a.last_activity_time || a.last_updated;
-    const ms = t ? Date.parse(t) : NaN;
-    return Number.isFinite(ms) && ms >= cutoff;
-  }).length;
+  const isActive = (a) => a.is_active === true || (Date.parse(a.last_activity_time || a.last_updated || '') >= cutoff);
+  const activeActors = actors.filter(isActive);
   if (!actors.length) throw new Error('Authenticated, but no actor data was readable — confirm the subscription includes actor intelligence.');
-  return { signals: [{ key: 'threat_actors_active', value: active, asOf: nowIso(), raw: { actors: actors.length, active } }], meta: { vendor: 'Mandiant' } };
+  const list = activeActors.map((a) => actorObj(a.name, [].concat(a.motivations || []).map((m) => m.name || m).slice(0, 2).join(' / ') || 'Threat actor', (a.description || (a.audience || []).map((x) => x.name).join(', ') || 'Actively tracked by Mandiant.')));
+  return { signals: [
+    { key: 'threat_actors_active', value: activeActors.length, asOf: nowIso(), raw: { actors: actors.length, active: activeActors.length } },
+    actorsSignal(list),
+  ], meta: { vendor: 'Mandiant' } };
 }
 
 module.exports = {
-  key: 'mandiant', label: 'Mandiant Advantage', vendor: 'Mandiant (Google)', category: 'Threat Intelligence',
-  signals: ['threat_actors_active'],
+  key: 'mandiant', label: 'Mandiant Advantage', vendor: 'Mandiant (Google)', category: 'Threat Intelligence', tier: 'paid',
+  signals: ['threat_actors_active', 'threat_actors_json'],
   scopes: ['MATI — actor intelligence read'],
   fields: [
     { key: 'keyId', label: 'API key ID' },

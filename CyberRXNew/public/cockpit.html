@@ -200,6 +200,9 @@
   .cjbchip{display:inline-block;font-size:10px;background:var(--blue-soft);color:var(--blue);border:1px solid var(--line-2);border-radius:6px;padding:1px 7px;margin:4px 5px 0 0}
   .cjblast-total{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);font-size:12.5px;display:flex;justify-content:space-between;align-items:baseline}
   .cjblast-total b{color:var(--crit);font-size:14px}.cjblast-total i{color:var(--muted);font-style:normal;font-size:10px}
+  .cjcalc{margin-top:8px}.cjcalc>summary{cursor:pointer;font-size:10.5px;color:var(--blue);font-weight:700;list-style:none}
+  .cjcalc>summary::-webkit-details-marker{display:none}.cjcalc>summary::before{content:'ⓘ ';}
+  .cjcalc-b{font-size:10.5px;color:var(--muted);line-height:1.55;margin-top:6px}.cjcalc-b b{color:var(--ink-2)}
   .cjloss-row{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;color:var(--ink-2);margin-top:11px}
   .cjloss-row b{color:var(--ink);font-size:13px}.cjloss-row i{font-style:normal;color:var(--muted)}
   .cjtolbar{height:12px;background:#2a2a28;border-radius:6px;overflow:hidden;margin-top:6px}
@@ -1201,7 +1204,8 @@ function demoSignals(){
   if(has(['aws','azure','wiz','prisma','gcp']))set('cspm_pct',82);
   if(has(['sap','oracle','workday','netsuite','sapgrc'])){set('sod_conflicts',3);set('change_pass_pct',94);set('payment_anomalies',2);}
   if(has(['onetrust','trustarc','relativity','exterro'])){set('dsar_open',12);set('dsar_overdue',0);set('legal_holds',2);}
-  if(has(['recordedfuture','mandiant','anomali']))set('threat_actors_active',3);
+  if(has(['recordedfuture','mandiant','anomali','otx'])){set('threat_actors_active',3);set('threat_actors_json',JSON.stringify(demoActorList()));}
+  if(has(['cisa','recordedfuture','mandiant','otx']))set('exploited_cves',18);
   if(has(['rubrik','veeam','cohesity','commvault'])){set('backup_immutable_pct',100);set('dr_test_days',48);set('rpo_minutes',15);}
   return any?s:null;
 }
@@ -1417,6 +1421,7 @@ function cjBlastBlock(c){
     '<div class="cjblast-row"><span class="cjblast-k">Systems value at risk</span><span class="cjblast-v"><b>'+usd(b.sysDaily)+'</b>/day'+(b.overRec!=null?(' · '+usd(b.overRec)+' over '+hrsToStr(c.recovery)+' recovery'):'')+'</span></div>'+
     usersLine+
     '<div class="cjblast-total">Total incident impact <span><b>'+usd(b.overRec!=null?b.overRec:b.sysDaily)+'</b> <i>'+(b.overRec!=null?'over full recovery':'per day down')+'</i></span></div>'+
+    '<details class="cjcalc"><summary>How this is calculated</summary><div class="cjcalc-b"><b>Systems value at risk</b> = this system’s value/day + the value/day of every system in its impact radius. <b>Over recovery</b> = that × the recovery target (RTO) in days. <b>'+cap1(indUserNoun())+' affected</b> = users served'+(b.usersModeled?' (modeled from transactions/day when not in your inventory)':' (from your inventory)')+'; the service value that stops = this system’s value/day. Every input is a figure shown on the card above — standard downtime-cost math, nothing hidden or proprietary.</div></details>'+
     '</div>';
 }
 function cap1(s){s=String(s||'');return s.charAt(0).toUpperCase()+s.slice(1);}
@@ -2015,21 +2020,45 @@ function renderCfoFraud(){
     '<div class="card"><div class="ck">SOX IT general controls (ITGC) '+liveTag()+(scored.length?(' · '+passN+'/'+scored.length+' passing'):'')+'</div><div style="margin-top:8px">'+sRows+'</div><div class="cn" style="margin-top:8px">The IT controls your external auditor tests for the SOX 404 opinion — evidenced continuously from your identity, change-management and ERP systems, instead of a year-end evidence scramble.</div></div>'+
     '</div>';
 }
-/* CISO threat intelligence — the groups publicly reported to target this sector,
-   each mapped to the LIVE coverage of the controls that stop their known techniques.
-   Industry-modeled from public reporting until a threat-intel feed connects. */
+/* CISO threat intelligence — actors targeting this sector, each mapped to the LIVE
+   coverage of the controls that stop their techniques. Industry-modeled from FREE
+   public reporting until a threat-intel feed connects; a connected feed (free OTX /
+   CISA, or paid RF / Mandiant / Anomali) repopulates the list with real actors. */
 function threatCoverage(caps){var v=(caps||[]).map(function(k){return capDeploy(CAP_BY_KEY[k]);}).filter(function(x){return x!=null;});if(!v.length)return null;return Math.round(v.reduce(function(s,x){return s+x;},0)/v.length);}
+function demoActorList(){var a=IND_THREATS[indKey()]||IND_THREATS.tech;return a.map(function(x){return {n:x.n,t:x.t,m:x.m};});}
+/* A connected feed's actor list, from the threat_actors_json signal (JSON string). */
+function liveThreatActors(){try{var s=SIGNALS&&SIGNALS['threat_actors_json'];if(!s||s.value==null)return null;var a=JSON.parse(s.value);return (Array.isArray(a)&&a.length)?a:null;}catch(_){return null;}}
+/* Map a live actor to the defensive capabilities that counter it, by its category
+   keywords — the same CAPS the industry table uses, derived instead of curated. */
+function actorCaps(a){var s=((a.t||'')+' '+(a.m||'')).toLowerCase(),c=[];
+  if(/ransom|encrypt|lockbit|extort|wiper/.test(s))c.push('backup','edr','seg');
+  if(/phish|impersonat|\bbec\b|email|social/.test(s))c.push('aware','edr');
+  if(/identity|\bmfa\b|credential|sim-?swap|help-?desk|account/.test(s))c.push('mfa','pam');
+  if(/supply chain|dependenc|vuln|exploit|\bcve\b|patch/.test(s))c.push('vuln','cspm');
+  if(/espionage|nation|\bapt\b|living-off|stealth|dwell/.test(s))c.push('siem','seg','edr');
+  if(/data|exfil|theft|steal|skim/.test(s))c.push('dlp','edr');
+  if(!c.length)c=['edr','siem','seg'];
+  var seen={},out=[];c.forEach(function(k){if(!seen[k]&&CAP_BY_KEY[k]){seen[k]=1;out.push(k);}});return out.slice(0,3);
+}
 function renderThreatIntel(){
   var host=document.getElementById('cisoThreat');if(!host)return;
-  var actors=IND_THREATS[indKey()]||IND_THREATS.tech;
-  var live=sig('threat_actors_active')!=null;
+  var la=liveThreatActors(),live=!!la;
+  var actors=live?la.map(function(a){return {n:a.n,t:a.t,m:a.m,caps:actorCaps(a)};}):(IND_THREATS[indKey()]||IND_THREATS.tech);
   var rows=actors.map(function(a){var cov=threatCoverage(a.caps);
     var cls=cov==null?'muted':cov>=80?'good':cov>=50?'warn':'crit';
     var capNames=a.caps.map(function(k){return CAP_BY_KEY[k].name.replace(/ *\(.*\)/,'');}).join(' · ');
     return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+cls+')"></span><b>'+a.n+'</b><span class="drow-tool" style="color:var(--muted)">'+a.t+'</span></div><div class="drow-need">'+a.m+' <b>Your defense:</b> '+capNames+' — '+(cov==null?'connect these tools to measure coverage':'<b style="color:var(--'+cls+')">'+cov+'% covered</b>')+'.</div></div>';
   }).join('');
-  var src=live?'<span class="pill good" style="font-size:9px">live feed</span>':'<span class="pill mod" style="font-size:9px">industry</span>';
-  host.innerHTML='<div class="card"><div class="ck">Who is targeting '+indLabel()+' — and are we covered against how they operate? '+src+'</div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">'+(live?'From your connected threat-intel feed, matched to your sector and mapped to live control coverage.':'From public sector reporting (CISA / Mandiant / ISAC advisories), mapped to your live control coverage. Connect a threat-intel feed (Recorded Future / Mandiant / CrowdStrike Intel) to make this specific to your environment and current campaigns.')+'</div></div>';
+  var kev=sig('exploited_cves');
+  var src=live?'<span class="pill good" style="font-size:9px">live feed</span>':'<span class="pill mod" style="font-size:9px">industry · free</span>';
+  var kevLine=kev!=null?(' · <b style="color:var(--serious)">'+kev+'</b> CVEs added to CISA KEV in 30d <span class="pill good" style="font-size:8px">free</span>'):'';
+  host.innerHTML='<div class="card"><div class="ck">Who is targeting '+indLabel()+' — and are we covered against how they operate? '+src+'</div>'+
+    '<div style="margin-top:8px">'+rows+'</div>'+
+    '<div class="cn" style="margin-top:8px">'+
+    (live?'Actors are from your <b>connected threat-intel feed</b>, matched to your sector; each defense-coverage % is computed live.':'Actors are from <b>free public reporting</b> (CISA · Mandiant · ISAC advisories), mapped to your live control coverage.')+kevLine+
+    '<br><b>How “% covered” is computed:</b> the average live deployment of the controls that counter each actor’s known techniques, read from your connected tools. It is your own control data — no external data leaves your tenant, and the method is standard, not proprietary.'+
+    '<br><b>Feed options &amp; cost:</b> <span class="pill good" style="font-size:8px">free</span> AlienVault OTX · CISA KEV · public CISA / ISAC reporting — no cost. <span class="pill warn" style="font-size:8px">paid</span> Recorded Future · Mandiant · CrowdStrike · Anomali — a commercial subscription for tenant-specific, real-time actor tracking.'+
+    '</div></div>';
 }
 /* CIO / COO — BCP/DR depth. Recovery only counts if tested: immutable backups that
    survive an attack, recovery-point objective, last full DR test, and single-vendor

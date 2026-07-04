@@ -38,6 +38,8 @@ const RAW_REGISTRY = {
   relativity: require('./relativity'),
   exterro: require('./exterro'),
   abnormal: require('./abnormal'),
+  otx: require('./otx'),
+  cisa: require('./cisa'),
 };
 
 // Per-connector demo mode state. Defaults to false (live).
@@ -90,6 +92,7 @@ function list() {
   return Object.values(REGISTRY).map((c) => ({
     key: c.key, label: c.label, vendor: c.vendor, category: c.category,
     signals: c.signals, scopes: c.scopes, demoMode: c.demoMode,
+    tier: c.tier || null, // 'free' | 'paid' | null — the data-source cost, surfaced to the buyer
     hasDemoData: hasDemoData(c.key),
     fields: c.fields.map((f) => ({ key: f.key, label: f.label, secret: !!f.secret, optional: !!f.optional })),
   }));

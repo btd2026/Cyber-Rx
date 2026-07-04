@@ -1,0 +1,16 @@
+{
+  "signals": [
+    {
+      "key": "exploited_cves",
+      "value": 18,
+      "asOf": "2026-06-28T12:00:00Z",
+      "raw": {
+        "totalKev": 1100,
+        "addedLast30d": 18
+      }
+    }
+  ],
+  "meta": {
+    "vendor": "CISA KEV"
+  }
+}
