@@ -142,7 +142,7 @@ class PDFReportService {
 
     // Prepared by
     doc.fontSize(this.fontSize.body)
-       .text('Prepared by CyberRx Platform', centerX, centerY + 80, { align: 'center', width: doc.page.width - 100 });
+       .text('Prepared by CyberX-Ray Platform', centerX, centerY + 80, { align: 'center', width: doc.page.width - 100 });
 
     // Confidentiality notice
     doc.fontSize(this.fontSize.small)
