@@ -362,13 +362,13 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
    trimmed title). Renderers still populate hidden sections' containers. */
 var TAB_LABELS={
- 'Are we under attack right now?':'Live status','What are we protecting — and what is each worth?':'Crown Jewels — Exposure','How is security helping the business grow — and win deals?':'Business Growth','Are our controls actually working — and is the program improving?':'Controls','AI risk — two fronts: securing the AI we run, and using AI to defend':'AI risk','What decision needs you now?':'Decision','How does our security investment move the business?':'Investment',
+ 'Are we under attack right now?':'Live status','What are we protecting — and what is each worth?':'Crown Jewels — Exposure','How is security helping the business grow — and win deals?':'Business Growth','Are our controls actually working — and is the program improving?':'Controls','AI risk — two fronts: securing the AI we run, and using AI to defend':'AI risk','Are we audit-ready? — compliance framework readiness':'Compliance','What decision needs you now?':'Decision','How does our security investment move the business?':'Investment',
  'How much is at stake — and are we within the board’s limit?':'At stake','Which business processes carry the risk?':'By process','What decisions need us — and what are the trade-offs?':'Decisions','Are we adequately insured against the worst case?':'Insurance','Are we getting better — quarter over quarter?':'Trend','Our worst realistic day — and are we ready to respond and recover?':'Worst day','Governance, oversight & SEC disclosure readiness':'Governance','AI risk — are we ready for AI-accelerated attacks, and is our own AI governed?':'AI risk',
  'What is our capital at risk — and is our spend working?':'Capital at risk','What would a bad year do to earnings?':'Earnings','Where does the next dollar work hardest, and are we insured?':'ROI & insurance','What if we change the budget — and is an incident material?':'Budget','What decision needs the CFO — and what does it cost or buy?':'Decision','Current cyber initiatives & their ROI':'Projects & ROI',
  'Are we legally defensible right now?':'Standing','Where are we exposed by jurisdiction — duty, clock, penalty?':'Jurisdictions','What decision needs the General Counsel?':'Decision','Is an incident material — and are we covered by contract?':'Materiality',
@@ -820,6 +820,73 @@ function drillOneCap(c){var p=capDeploy(c),pr=capProject(c);
     '<div class="drill-p"><b>What it is:</b> '+c.name+' — '+c.tool+'. '+(p!=null?('Currently covering <b>'+p+'%</b> of the estate.'):'Not yet connected, so coverage is unknown.')+'</div>'+
     '<div class="ev-sec">To close the gap</div><div class="drill-p">'+(p!=null?c.need:c.connect)+'</div>'+
     '<div class="ev-sec">Funded fix</div><div class="drill-p">'+(pr?('<span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> <b style="color:var(--ink)">'+pr.name+'</b>'+(pr.ticket?(' · '+pr.ticket):'')+' · '+pr.prog+'% delivered'):'No portfolio project currently addresses this — raise one and it appears here, tracked to completion.')+'</div>';}
+/* ---- GRC / compliance — audit readiness per framework, computed from the tools
+   you actually connect (continuous-control-monitoring model, like Vanta/Drata):
+   each control domain is evidenced by a connected tool or a governance answer,
+   never self-attested. Frameworks in scope = onboarding selection ∪ industry
+   default ∪ certifications held. ---- */
+var GRC_DOMAINS={
+  access:{n:'Access control &amp; identity',tools:['okta','entra','cyberark','beyondtrust','delinea'],gap:'Connect your identity provider (Okta / Entra) and PAM (CyberArk) to evidence MFA, least-privilege and access reviews.'},
+  endpoint:{n:'Endpoint protection',tools:['defender','crowdstrike'],gap:'Connect EDR (CrowdStrike / Defender).'},
+  vuln:{n:'Vulnerability &amp; patch management',tools:['qualys','tenable'],gap:'Connect a vulnerability scanner (Qualys / Tenable).'},
+  monitoring:{n:'Logging &amp; security monitoring',tools:['splunk','sentinel'],gap:'Connect a SIEM (Splunk / Microsoft Sentinel).'},
+  training:{n:'Security awareness &amp; training',tools:['knowbe4','proofpoint'],gap:'Connect an awareness platform (KnowBe4 / Proofpoint).'},
+  change:{n:'Change &amp; configuration governance',tools:['servicenow','jira'],gap:'Connect your ITSM (ServiceNow / Jira) for change and approval records.'},
+  vendor:{n:'Third-party / vendor risk',vendor:true,gap:'Connect a vendor-monitoring service (SecurityScorecard / BitSight).'},
+  incident:{n:'Incident response',ir:true,gap:'Record an IR retainer and a tested plan (tabletop within 12 months) at onboarding.'},
+  risk_gov:{n:'Risk management &amp; governance',gov:true,gap:'Set board oversight (committee + cadence) and ERM integration at onboarding.'},
+  data:{n:'Data protection &amp; DLP',tools:[],gap:'Connect a DLP tool (Purview / Forcepoint) to evidence data-loss controls.'},
+  config:{n:'Secure configuration &amp; hardening',tools:[],gap:'Connect a CSPM / configuration-compliance scanner (Wiz / Prisma, or a DISA STIG scan).'},
+  backup:{n:'Backup &amp; recovery',tools:[],gap:'Connect a backup platform (Rubrik / Veeam) to evidence recoverability.'}
+};
+var GRC_FW={
+  'SOC 2':{dom:['access','monitoring','change','incident','risk_gov','vendor','data']},
+  'ISO 27001':{dom:['access','endpoint','vuln','monitoring','change','incident','risk_gov','vendor','data','training']},
+  'HITRUST':{dom:['access','endpoint','data','monitoring','incident','risk_gov','vendor','training']},
+  'FedRAMP':{dom:['access','endpoint','vuln','monitoring','change','incident','risk_gov','config','data','backup']},
+  'CMMC':{dom:['access','config','incident','monitoring','training','risk_gov','vuln']},
+  'PCI DSS':{dom:['access','config','monitoring','vuln','data','vendor']},
+  'HIPAA':{dom:['access','data','incident','risk_gov','training']},
+  'NIST CSF':{dom:['access','endpoint','vuln','monitoring','incident','risk_gov','vendor','data','backup']}
+};
+var CERT_TO_FW={'SOC 2 Type II':'SOC 2','HITRUST CSF':'HITRUST','ISO 27001':'ISO 27001','HIPAA attestation':'HIPAA','PCI DSS':'PCI DSS','FedRAMP':'FedRAMP'};
+function grcDomainMet(key){var d=GRC_DOMAINS[key];if(!d)return false;var t=connectedTools();
+  if(d.tools&&d.tools.length&&d.tools.some(function(k){return t[k]&&t[k].on;}))return true;
+  if(d.vendor)return !!vendorService();
+  if(d.ir){var ir=(LIVE&&LIVE.governance&&LIVE.governance.ir)||{};return /yes/i.test(ir.retainer||'')&&/within 12|tested|yes/i.test(ir.tested||'');}
+  if(d.gov){var g=(LIVE&&LIVE.governance)||{};return !!g.committee&&/yes/i.test(g.ermIntegrated||'');}
+  return false;}
+function frameworksInScope(){var set={};
+  try{var f=JSON.parse(localStorage.getItem('cyberrx_frameworks')||'[]');if(Array.isArray(f))f.forEach(function(x){if(GRC_FW[x])set[x]=1;});}catch(_){}
+  var defs={health:['HITRUST','HIPAA','SOC 2'],tech:['SOC 2','ISO 27001'],fin:['SOC 2','ISO 27001','PCI DSS'],retail:['PCI DSS','SOC 2'],gov:['FedRAMP','CMMC','NIST CSF'],mfg:['ISO 27001','CMMC'],energy:['NIST CSF','ISO 27001']};
+  (defs[indKey()]||['SOC 2','ISO 27001']).forEach(function(x){set[x]=1;});
+  var certs=(LIVE&&LIVE.growth&&LIVE.growth.certs)||[];certs.forEach(function(c){if(CERT_TO_FW[c])set[CERT_TO_FW[c]]=1;});
+  return Object.keys(set);}
+function certHeld(fw){var certs=(LIVE&&LIVE.growth&&LIVE.growth.certs)||[];for(var c in CERT_TO_FW){if(CERT_TO_FW[c]===fw&&certs.indexOf(c)>=0)return true;}return false;}
+function fwReadiness(fw){var doms=(GRC_FW[fw]||{}).dom||[];var met=doms.filter(grcDomainMet).length;return {met:met,total:doms.length,pct:doms.length?Math.round(met/doms.length*100):0};}
+function drillFramework(fw){var doms=(GRC_FW[fw]||{}).dom||[];var r=fwReadiness(fw);
+  var rows=doms.map(function(k){var d=GRC_DOMAINS[k];var met=grcDomainMet(k);
+    return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+(met?'good':'crit')+')"></span><b>'+d.n+'</b><span class="drow-tool" style="color:var(--'+(met?'good':'muted')+')">'+(met?'evidenced':'gap')+'</span></div>'+(met?'':'<div class="drow-need">'+d.gap+'</div>')+'</div>';}).join('');
+  return '<div class="drill-hero" style="color:var(--'+capColor(r.pct)+')">'+r.pct+'% ready</div>'+capBar(r.pct)+
+    '<div class="drill-p">'+r.met+' of '+r.total+' control domains for <b>'+fw+'</b> are evidenced by a connected tool or a governance record. Close the gaps below to become audit-ready; each maps to a real control requirement.</div>'+
+    '<div class="ev-sec">Control domains</div>'+rows+
+    '<div class="ev-sec">How this is evidenced</div><div class="drill-p">Continuous-control-monitoring model: a domain is <span class="srcpill conn">● evidenced</span> when the tool that satisfies it is connected (or the governance record exists), never self-attested. Wire the gap tools to move to audit-ready, then export the evidence pack for your auditor.</div>';}
+function renderCompliance(){
+  var host=document.getElementById('cisoCompliance');if(!host)return;
+  var fws=frameworksInScope().filter(function(f){return GRC_FW[f];});
+  if(!fws.length){host.innerHTML='<div class="card"><div class="cn">Select the compliance frameworks in scope at onboarding (SOC 2 · ISO 27001 · HITRUST · FedRAMP · CMMC · PCI DSS · HIPAA · NIST CSF) to see live audit-readiness.</div></div>';return;}
+  var readyCount=fws.filter(function(f){return fwReadiness(f).pct>=90;}).length;
+  var avg=Math.round(fws.reduce(function(s,f){return s+fwReadiness(f).pct;},0)/fws.length);
+  var summary='<div class="grid3" style="margin-bottom:2px">'+
+    '<div class="card"><div class="ck">Frameworks in scope</div><div class="cv" style="font-size:22px">'+fws.length+'</div><div class="cn">by industry, certifications held and your selection</div></div>'+
+    '<div class="card"><div class="ck">Average audit readiness</div><div class="cv" style="font-size:22px;color:var(--'+capColor(avg)+')">'+avg+'%</div><div class="cn">control domains evidenced across frameworks</div></div>'+
+    '<div class="card"><div class="ck">Audit-ready (≥90%)</div><div class="cv" style="font-size:22px;color:var(--'+(readyCount?'good':'warn')+')">'+readyCount+' / '+fws.length+'</div><div class="cn">frameworks you could pass today</div></div>'+
+    '</div>';
+  var cards=fws.map(function(fw){var r=fwReadiness(fw);var cls=capColor(r.pct);var held=certHeld(fw);
+    return '<div class="card optile fwcard" data-fw="'+fw+'"><div class="ck">'+fw+(held?' <span class="pill good" style="font-size:9px">certified</span>':'')+'</div><div class="cv" style="font-size:21px;color:var(--'+cls+')">'+r.pct+'%</div>'+capBar(r.pct)+'<div class="cn" style="margin-top:7px">'+r.met+' / '+r.total+' control domains evidenced <span class="drill-cta">details ▸</span></div></div>';}).join('');
+  host.innerHTML=summary+'<div class="grid3" style="margin-top:12px">'+cards+'</div><div class="cn" style="margin-top:10px">Readiness is computed from the tools you connect and your governance records — not self-attestation. Click any framework for its control domains and the exact gap to close.</div>';
+  host.querySelectorAll('.fwcard').forEach(function(el){el.onclick=function(){openDrill(el.dataset.fw+' — audit readiness',drillFramework(el.dataset.fw));};});
+}
 /* ---- live economics ---- */
 var LIVE=null;
 function usd(n){n=Number(n)||0;var neg=n<0;n=Math.abs(n);var s;if(n>=1e9)s='$'+(n/1e9).toFixed(n>=1e10?0:1)+'B';else if(n>=1e6)s='$'+Math.round(n/1e6)+'M';else if(n>=1e3)s='$'+Math.round(n/1e3)+'K';else s='$'+Math.round(n);return (neg?'−':'')+s;}
@@ -950,12 +1017,12 @@ function renderSignals(){
     var pcts=['edr_pct','mfa_pct','pam_pct'].map(sig).filter(function(x){return x!=null;});
     if(pcts.length){var avg=Math.round(pcts.reduce(function(s,x){return s+x;},0)/pcts.length);setTxt('lvCovTile',avg+'%');var tn=document.getElementById('lvCovTileNote');if(tn)tn.innerHTML='<span class="pill good">live</span> from '+pcts.length+' connected tool'+(pcts.length>1?'s':'');}
   }
-  renderAiRisk();renderCisoOps();renderControls();renderCooStatus();
+  renderAiRisk();renderCisoOps();renderControls();renderCompliance();renderCooStatus();
 }
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderBoard();renderEarnings();renderCroPortfolio();renderRoi();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----

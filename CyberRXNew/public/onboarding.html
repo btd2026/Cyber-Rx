@@ -223,6 +223,16 @@
       <div class="field"><label>IR / breach-counsel retainer?</label><select id="govRetainer"><option value="">Select…</option><option>Yes</option><option>No</option></select></div>
       <div class="field"><label>Ransomware-payment policy?</label><select id="govRansom"><option value="">Select…</option><option>Board-approved policy</option><option>Informal</option><option>None</option></select></div>
     </div>
+    <div class="row" style="margin-top:14px"><div class="field"><label>Compliance frameworks in scope <span style="color:var(--muted)">(drives live audit-readiness — leave blank to infer from your industry &amp; certifications)</span></label><div class="certgrid" id="scopeFrameworks">
+      <label class="ckchip"><input type="checkbox" value="SOC 2"> SOC 2</label>
+      <label class="ckchip"><input type="checkbox" value="ISO 27001"> ISO 27001</label>
+      <label class="ckchip"><input type="checkbox" value="HITRUST"> HITRUST</label>
+      <label class="ckchip"><input type="checkbox" value="FedRAMP"> FedRAMP</label>
+      <label class="ckchip"><input type="checkbox" value="CMMC"> CMMC</label>
+      <label class="ckchip"><input type="checkbox" value="PCI DSS"> PCI DSS</label>
+      <label class="ckchip"><input type="checkbox" value="HIPAA"> HIPAA</label>
+      <label class="ckchip"><input type="checkbox" value="NIST CSF"> NIST CSF</label>
+    </div></div></div>
   </div>
 
   <!-- 1c · AI risk & governance -->
@@ -645,6 +655,7 @@
     if(!org){msg.textContent='Enter an organization name.';msg.style.color='var(--warn)';try{obShow('org');}catch(_){}return;}
     if(!PROC.length&&!APP.length){msg.textContent='Upload your processes or systems first.';msg.style.color='var(--warn)';try{obShow('inv');}catch(_){}return;}
     var orgId='org_'+slug(org);
+    var frameworksInScope=Array.prototype.slice.call(document.querySelectorAll('#scopeFrameworks input:checked')).map(function(c){return c.value;});
     var payload={
       org_name:org,org_id:orgId,industry:v('industry'),regions:REGIONS,currency:CUR_CODE,
       financials:{revenue:mval('finRevenue'),operatingIncome:mval('finOpInc'),netIncome:mval('finNetInc'),enterpriseValue:mval('finEV'),sharesOutstanding:mval('finShares')},
@@ -668,7 +679,8 @@
         pipelineUsd:mval('growthPipeline'),reviewBeforeWks:v('growthBefore'),reviewNowWks:v('growthNow'),
         dealsGated:v('growthDeals'),trustReviews:v('growthTrust'),
         certs:Array.prototype.slice.call(document.querySelectorAll('#growthCerts input:checked')).map(function(c){return c.value;})
-      }
+      },
+      compliance:{frameworksInScope:frameworksInScope}
     };
     btn.disabled=true;msg.textContent='Building your cockpit…';msg.style.color='var(--muted)';
     try{
@@ -678,7 +690,7 @@
       else if(!r.ok){msg.textContent='Setup error: '+(body.error||('HTTP '+r.status));msg.style.color='var(--warn)';btn.disabled=false;return;}
     }catch(e){/* offline: still hand off; cockpit shows illustrative */}
     var seatNames={};document.querySelectorAll('.seatname').forEach(function(i){if(i.value.trim())seatNames[i.dataset.seat]=i.value.trim();});
-    try{localStorage.setItem('cyberrx_org_id',orgId);localStorage.setItem('cyberrx_org_name',org);localStorage.setItem('cyberrx_seat_names',JSON.stringify(seatNames));localStorage.setItem('cyberrx_industry',v('industry')||'');}catch(_){}
+    try{localStorage.setItem('cyberrx_org_id',orgId);localStorage.setItem('cyberrx_org_name',org);localStorage.setItem('cyberrx_seat_names',JSON.stringify(seatNames));localStorage.setItem('cyberrx_industry',v('industry')||'');localStorage.setItem('cyberrx_frameworks',JSON.stringify(frameworksInScope));}catch(_){}
     // Persist the chosen ticketing system so cockpit decisions open projects there.
     var itsm=SELTOOLS.servicenow;
     try{if(itsm&&itsm.on)localStorage.setItem('cyberrx_itsm',JSON.stringify({vendor:itsm.vendor||'ServiceNow',instance:itsm.key||'',demo:!!itsm.demo}));}catch(_){}
