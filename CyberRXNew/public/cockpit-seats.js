@@ -242,10 +242,10 @@ var SEATS = {
    sec('01','Are we secure right now — and is the program getting stronger?','The whole-program picture in business terms: the health of the security tools and how much of the attacker playbook we can see, and the crown jewels we protect with today’s exposure on each.',
      '<div id="cisoOps"></div>'
      +'<div id="cjchain" style="margin-top:14px"></div>')
-   +sec('02','Are we under attack?','Live attack status and the sector threats behind it. <b>Incident Command</b> is the war room for an active event; <b>Threat Mapping</b> shows who targets our sector and whether we are covered against how they operate.',
+   +sec('02','Are we under attack?','Live attack status and how a threat actor could reach us. <b>Incident Command</b> leads with the live attack status and, on an active event, the war room. <b>Threat Mapping</b> is a live attack-path map — how actors targeting our sector could reach each crown jewel from the internet, and where our controls stop them at each hop.',
      subtabs([
-       {key:'warroom',label:'Incident Command · War Room',on:true,html:'<div id="cisoWarRoom"></div>'},
-       {key:'threat',label:'Threat Mapping',html:'<div id="cisoThreat"></div><div id="cisoAiRisk" style="margin-top:14px"><div class="card"><div class="cn">◐ Add AI-governance answers in onboarding and connect your security tools for live AI-risk data.</div></div></div>'}
+       {key:'warroom',label:'Incident Command · War Room',on:true,html:'<div id="cisoUnderAttack"></div><div id="cisoWarRoom" style="margin-top:14px"></div>'},
+       {key:'threat',label:'Threat Mapping',html:'<div id="cisoThreatMap"></div>'}
      ]))
    +sec('03','Is our security program worth the spend — and can we prove it?','Two lenses on the same question. <b>Business</b> traces every dollar the program protects — business function → process → technology → cyber risk → the control that mitigates it — and what each control saves when it operates effectively. <b>Frameworks</b> is the continuous audit: posture across NIST CSF 2.0, NIST SP 800-53, CIS Controls, SOC 2 and HIPAA, evidenced live rather than at a point in time.',
      subtabs([
@@ -255,7 +255,9 @@ var SEATS = {
    +sec('04','Evidence collection','The live evidence behind every score — which tools are connected and what coverage they give, plus the policies analyzed by document review. This is what lets you walk an auditor from a number to its source.',
      '<div id="cisoCoverage"></div>'
      +'<div class="cn" style="margin-top:12px">Evidence is collected two ways: <b>🔌 live tool telemetry</b> (EDR, identity, vulnerability, cloud, SIEM, backup — the coverage above) and <b>📄 document review</b> (policies uploaded in onboarding, scored against the NIST catalog). Every framework score traces to one of these sources — no self-attestation.</div>')
-   +sec('05','Action tracking','Where the next security dollar goes and whether funded actions are on track — a costed decision that records to your ticketing system, the live portfolio of initiatives, and the one-click board / regulator report.',
+   +sec('05','AI risk','Cyber and AI on two fronts: <b>securing the AI we run</b> (the AI systems in production, the governance around them, and the attack surface they add) and <b>using AI to defend</b> (where our security tools already run AI to cut detection and response time).',
+     '<div id="cisoAiRisk"></div>')
+   +sec('06','Action tracking','Where the next security dollar goes and whether funded actions are on track — a costed decision that records to your ticketing system, the live portfolio of initiatives, and the one-click board / regulator report.',
      decisions([{n:1,q:'Which control gap do we close first?',sit:'The biggest dollar driver is the privileged path into payments. Where do we direct the next dollar?',opts:[
        {rec:true,tag:'A · Privileged access (PAM)',on:'Option A · PAM',osum:'$1.4M · 37×',pros:['Closes the $52M driver','Highest return available','Improves board posture immediately'],cons:['Requires $1.4M of capital this year','~3 weeks of IAM engineering effort']},
        {tag:'B · Prove recovery (DR test)',on:'Option B · DR',osum:'$3.2M · <6h recovery',pros:['Removes ~$40M of the recovery tail','Meets regulatory recovery expectations'],cons:['$3.2M — larger program than PAM','Leaves the #1 driver (the $52M privileged path) open']},
