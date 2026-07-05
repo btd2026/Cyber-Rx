@@ -110,6 +110,25 @@
   .fw-cmmi-lbl{font-size:12.5px;color:var(--ink-2);font-weight:700}
   .fw-trend{display:flex;align-items:center;gap:9px;margin-left:auto;flex-wrap:wrap}
   .fw-trend-d{font-size:14px;font-weight:800}.fw-trend-n{font-size:10.5px;color:var(--muted)}
+  /* DTNKSHIELD anonymous peer benchmark */
+  .peer-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+  .peer-badge{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:20px;background:var(--blue-soft);color:var(--blue);border:1px solid rgba(37,99,235,.3)}
+  .peer-cloud{margin-left:auto;display:flex;align-items:center;gap:8px}
+  .peer-toggle{font-size:11px;color:var(--muted);cursor:pointer;text-decoration:underline;background:none;border:none;padding:0}
+  .peer-hero{display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin:10px 0 4px;padding:15px 18px;background:var(--surface-2);border:1px solid var(--line-2);border-radius:12px}
+  .peer-hero-v{font-size:42px;font-weight:800;font-family:var(--serif);line-height:1}.peer-hero-v span{font-size:15px;color:var(--muted);font-weight:600}
+  .peer-hero-l{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .peer-hero-d{font-size:12.5px;color:var(--ink-2);font-weight:600;max-width:280px}
+  .peer-n{margin-left:auto;text-align:right;font-size:11px;color:var(--muted)}.peer-n b{font-size:22px;color:var(--ink);font-family:var(--serif);display:block}
+  .peer-bar-row{display:flex;align-items:center;gap:10px;margin:9px 0}
+  .peer-bar-lab{flex:0 0 130px;font-size:12px;font-weight:600;color:var(--ink);text-align:right}
+  .peer-bar-track{flex:1;position:relative;height:20px;background:var(--surface);border:1px solid var(--line);border-radius:6px;min-width:120px}
+  .peer-bar-band{position:absolute;top:0;bottom:0;background:var(--blue-soft);border-left:1px solid rgba(37,99,235,.35);border-right:1px solid rgba(37,99,235,.35)}
+  .peer-bar-med{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--blue);transform:translateX(-1px)}
+  .peer-bar-you{position:absolute;top:50%;width:13px;height:13px;border-radius:50%;border:2px solid var(--card,#fff);transform:translate(-50%,-50%);box-shadow:0 1px 3px rgba(0,0,0,.35);z-index:2}
+  .peer-bar-val{flex:0 0 88px;font-size:12.5px;font-weight:700;color:var(--ink)}.peer-bar-val span{font-size:10.5px;color:var(--muted);font-weight:500}
+  .peer-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:10.5px;color:var(--muted);margin-top:10px;align-items:center}
+  .peer-legend i{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:4px}
   .drill-cta{color:var(--blue);font-weight:700;white-space:nowrap}
   .dotstrip{display:flex;gap:4px;margin-top:9px;flex-wrap:wrap}.dotstrip .ds{width:13px;height:13px;border-radius:3px;display:inline-block}
   .drow{padding:12px 0;border-top:1px solid var(--line)}.drow:first-child{border-top:none}
@@ -544,7 +563,7 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
@@ -1453,6 +1472,8 @@ function renderFrameworks(){
     body=R53_RAW.map(function(f){var fam=f[0],name=f[1],n=f[2],rows='',famScores=[];for(var i=1;i<=n;i++){var r=fwRow(fam+'-'+i,name,cov);famScores.push(r.score);all.push(r.score);rows+=r.html;}var fa=avg(famScores);return '<details class="fwfn"><summary>'+fam+' · '+name+'<span class="fwcount" style="color:var(--'+cmmiColor(Math.round(fa))+')">CMMI '+fa.toFixed(1)+'</span></summary>'+rows+'</details>';}).join('');
   }
   var overall=avg(all),scored=all.filter(function(x){return x>0;}).length;
+  var fwFn={};Object.keys(CSF_RAW).forEach(function(fn){var sc=[];var cats=CSF_RAW[fn];Object.keys(cats).forEach(function(cat){cats[cat].forEach(function(s){sc.push(controlCmmi(s[0],cov).score);});});fwFn[fn.replace(/ *\(.*/,'')]=Math.round(avg(sc)*100)/100;});
+  window.FW_SNAPSHOT={overall:Math.round(overall*100)/100,functions:fwFn};
   var legend='<div class="cmmi-legend"><span class="cl-t">CMMI</span><span><b>0</b>None</span><span><b>1</b>Initial</span><span><b>2</b>Managed</span><span><b>3</b>Defined</span><span><b>4</b>Quant. Managed</span><span><b>5</b>Optimizing</span></div>';
   var docN=docList().length;
   // Record a cadence snapshot and build the trend graph from refresh to refresh.
@@ -1601,6 +1622,95 @@ function renderCompliance(){
     if(k==='scope')openDrill('Frameworks in scope — why these',drillFwScope());
     else if(k==='avg')openDrill('Average audit readiness — the breakdown',drillFwAvg());
     else if(k==='ready')openDrill('Audit-ready — which pass, and the path to all',drillFwReady());};});
+}
+/* ---- DTNKSHIELD anonymous peer benchmark — the ONLY internet-connected feature ----
+   Opt-in. Submits ONLY anonymized CMMI scores + industry / region / size band to the
+   shared DTNKSHIELD cohort table and reads back k-anonymity-gated percentiles. Nothing
+   identifying leaves the browser (server-side sanitize/aggregate enforce the gate). */
+var PEER_DATA=null,PEER_BUSY=false;
+function peerCid(){try{var c=localStorage.getItem('cyberrx_peer_cid');if(!c){c='pc_'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);localStorage.setItem('cyberrx_peer_cid',c);}return c;}catch(_){return 'pc_anon';}}
+function peerOptin(){try{return localStorage.getItem('cyberrx_peer_optin')==='1';}catch(_){return false;}}
+function peerRevenue(){var e=(LIVE&&LIVE.economics)||{},r=e.ratios||{};if(Number(e.revenue)>0)return Number(e.revenue);if(Number(e.ale)>0&&Number(r.pct_of_revenue)>0)return Number(e.ale)/Number(r.pct_of_revenue);return 0;}
+function peerSizeBand(){var r=peerRevenue();if(r>=100e9)return 'mega';if(r>=10e9)return 'large';if(r>=1e9)return 'mid';if(r>0)return 'small';return 'unknown';}
+function peerSizeLabel(){return {mega:'$100B+ revenue',large:'$10–100B',mid:'$1–10B',small:'under $1B',unknown:'all sizes'}[peerSizeBand()];}
+function peerRegion(){try{var lg=LIVE&&LIVE.legal;if(lg&&lg.obligations&&lg.obligations[0]&&lg.obligations[0].jurisdiction)return String(lg.obligations[0].jurisdiction).toLowerCase();}catch(_){}return 'global';}
+function peerSetOptin(on){try{localStorage.setItem('cyberrx_peer_optin',on?'1':'0');}catch(_){}if(on){PEER_DATA=null;peerSubmitAndFetch();}else{PEER_DATA=null;renderPeerCompare();}}
+function peerSubmitAndFetch(){
+  if(!peerOptin())return;
+  var snap=window.FW_SNAPSHOT;if(!snap||snap.overall==null)return;
+  PEER_BUSY=true;renderPeerCompare();
+  var ind=indKey(),size=peerSizeBand();
+  var body={client_id:peerCid(),industry:ind,region:peerRegion(),revenue:peerRevenue(),overall_cmmi:snap.overall,function_cmmi:snap.functions};
+  fetch(apiBase()+'/api/peer/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+    .then(function(){return fetch(apiBase()+'/api/peer/benchmark?industry='+encodeURIComponent(ind)+'&size='+encodeURIComponent(size));})
+    .then(function(r){return r.json();})
+    .then(function(d){PEER_DATA=d||{sufficient:false};PEER_BUSY=false;renderPeerCompare();})
+    .catch(function(){PEER_DATA={error:true};PEER_BUSY=false;renderPeerCompare();});
+}
+function peerPercentileOf(you,vals){if(you==null||!vals||!vals.length)return null;var s=vals.map(Number).filter(function(x){return !isNaN(x);}).sort(function(a,b){return a-b;});if(!s.length)return null;return Math.round(s.filter(function(v){return v<=you;}).length/s.length*100);}
+function peerOrdinal(n){var s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
+function peerBar(label,you,st){
+  if(!st)return '<div class="peer-bar-row"><div class="peer-bar-lab">'+label+'</div><div class="peer-bar-track"></div><div class="peer-bar-val" style="color:var(--muted);font-weight:500">not enough peers</div></div>';
+  var pos=function(v){return Math.max(0,Math.min(100,(Number(v)||0)/5*100));};
+  var youOk=you!=null&&!isNaN(you);
+  var youCol=youOk?(you>=st.p50?'good':(you>=st.p25?'warn':'crit')):'muted';
+  return '<div class="peer-bar-row">'+
+    '<div class="peer-bar-lab">'+label+'</div>'+
+    '<div class="peer-bar-track" title="peer band p25–p75; line = median">'+
+      '<div class="peer-bar-band" style="left:'+pos(st.p25)+'%;width:'+(pos(st.p75)-pos(st.p25))+'%"></div>'+
+      '<div class="peer-bar-med" style="left:'+pos(st.p50)+'%"></div>'+
+      (youOk?'<div class="peer-bar-you" style="left:'+pos(you)+'%;background:var(--'+youCol+')"></div>':'')+
+    '</div>'+
+    '<div class="peer-bar-val">'+(youOk?Number(you).toFixed(1):'—')+'<span> vs '+Number(st.p50).toFixed(1)+' med</span></div>'+
+  '</div>';
+}
+function peerOptinCard(snap){
+  var mine=snap&&snap.overall!=null?('<b>'+Number(snap.overall).toFixed(1)+' / 5</b> overall CMMI'):'your framework posture';
+  return '<div class="card">'+
+    '<div class="peer-head"><div class="ck">Anonymous peer benchmark</div><span class="peer-badge">DTNKSHIELD cloud</span></div>'+
+    '<div class="cn" style="margin-top:8px;line-height:1.55">See how your framework maturity compares to '+indLabel()+' peers of your size ('+peerSizeLabel()+'). This is the <b>only</b> feature that connects to the internet. If you opt in, Nerion shares <b>only</b> your anonymized scores — '+mine+' and per-function CMMI, plus your industry, region and revenue band. <b>No organization name, no inventory, no dollar figures, no IP addresses</b> ever leave your browser, and the cohort is only shown once at least '+ (typeof PEER_MIN!=='undefined'?PEER_MIN:5) +' organizations have joined (so no single peer can be identified).</div>'+
+    '<div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">'+
+      '<button class="bp-btn primary" id="peerOptinBtn">Opt in &amp; compare →</button>'+
+      '<span class="cn" style="color:var(--muted)">You can opt out any time; opting out deletes your shared row.</span>'+
+    '</div></div>';
+}
+var PEER_MIN=5;
+function renderPeerCompare(){
+  var host=document.getElementById('peerCompare');if(!host)return;
+  var snap=window.FW_SNAPSHOT||{overall:null,functions:{}};
+  if(!peerOptin()){
+    host.innerHTML=peerOptinCard(snap);
+    var b=document.getElementById('peerOptinBtn');if(b)b.onclick=function(){peerSetOptin(true);};
+    return;
+  }
+  var head='<div class="peer-head"><div class="ck">Anonymous peer benchmark</div><span class="peer-badge">DTNKSHIELD cloud</span>'+
+    '<div class="peer-cloud"><button class="peer-toggle" id="peerRefreshBtn">↻ refresh</button><button class="peer-toggle" id="peerOptoutBtn">opt out</button></div></div>'+
+    '<div class="cn" style="margin-top:4px">'+indLabel()+' · '+peerSizeLabel()+' cohort. Shared anonymously; refreshed on each audit cadence.</div>';
+  var body;
+  if(PEER_BUSY){body='<div class="cn" style="margin-top:14px;color:var(--muted)">⟳ Contacting the DTNKSHIELD cohort…</div>';}
+  else if(!PEER_DATA){peerSubmitAndFetch();body='<div class="cn" style="margin-top:14px;color:var(--muted)">⟳ Contacting the DTNKSHIELD cohort…</div>';}
+  else if(PEER_DATA.error){body='<div class="cn" style="margin-top:14px;color:var(--warn)">Couldn’t reach the DTNKSHIELD cloud. Your data is safe and nothing was shared beyond the anonymized scores. <button class="peer-toggle" id="peerRetryBtn">try again</button></div>';}
+  else if(!PEER_DATA.sufficient){var got=PEER_DATA.n||0,need=PEER_DATA.minCohort||PEER_MIN;
+    body='<div class="peer-hero"><div><div class="peer-hero-l">Building your cohort</div><div class="peer-hero-d" style="margin-top:6px">Your scores are shared. The comparison unlocks once <b>'+need+'</b> peers in this cohort have joined — so no single organization can be identified.</div></div><div class="peer-n"><b>'+got+' / '+need+'</b>peers joined</div></div>';}
+  else{
+    var youO=snap.overall,pctile=peerPercentileOf(youO,PEER_DATA.overall_values);
+    var ordCol=pctile==null?'ink':(pctile>=50?'good':(pctile>=25?'warn':'crit'));
+    var hero='<div class="peer-hero">'+
+      '<div><div class="peer-hero-l">Your overall CMMI vs peers</div><div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:2px"><div class="peer-hero-v" style="color:var(--'+cmmiColor(Math.round(youO))+')">'+Number(youO).toFixed(1)+'<span>/ 5</span></div>'+
+      (pctile!=null?'<div class="peer-hero-d">You rank in the <b style="color:var(--'+ordCol+')">'+peerOrdinal(pctile)+' percentile</b> — '+(pctile>=50?'ahead of':'behind')+' the peer median of '+Number(PEER_DATA.overall.p50).toFixed(1)+'.</div>':'')+'</div></div>'+
+      '<div class="peer-n"><b>'+(PEER_DATA.n||0)+'</b>organizations in cohort</div></div>';
+    var bars='<div style="margin-top:12px">'+peerBar('Overall',youO,PEER_DATA.overall);
+    var fns=PEER_DATA.functions||{},order=['Govern','Identify','Protect','Detect','Respond','Recover'];
+    order.forEach(function(fn){if(fns[fn])bars+=peerBar(fn,(snap.functions||{})[fn],fns[fn]);});
+    Object.keys(fns).forEach(function(fn){if(order.indexOf(fn)<0)bars+=peerBar(fn,(snap.functions||{})[fn],fns[fn]);});
+    bars+='</div>';
+    var legend='<div class="peer-legend"><span><i style="background:var(--blue-soft);border:1px solid rgba(37,99,235,.35)"></i>peer band (p25–p75)</span><span><i style="background:var(--blue);width:2px"></i>peer median</span><span><i style="background:var(--good)"></i>you ≥ median</span><span><i style="background:var(--warn)"></i>you 25–50th</span><span><i style="background:var(--crit)"></i>you below 25th</span></div>';
+    body=hero+bars+legend;
+  }
+  host.innerHTML='<div class="card">'+head+body+'</div>';
+  var ro=document.getElementById('peerOptoutBtn');if(ro)ro.onclick=function(){peerSetOptin(false);};
+  var rf=document.getElementById('peerRefreshBtn');if(rf)rf.onclick=function(){peerSubmitAndFetch();};
+  var rt=document.getElementById('peerRetryBtn');if(rt)rt.onclick=function(){peerSubmitAndFetch();};
 }
 /* ---- live economics ---- */
 var LIVE=null;
@@ -1753,12 +1863,12 @@ function renderSignals(){
     var pcts=['edr_pct','mfa_pct','pam_pct'].map(sig).filter(function(x){return x!=null;});
     if(pcts.length){var avg=Math.round(pcts.reduce(function(s,x){return s+x;},0)/pcts.length);setTxt('lvCovTile',avg+'%');var tn=document.getElementById('lvCovTileNote');if(tn)tn.innerHTML='<span class="pill good">live</span> from '+pcts.length+' connected tool'+(pcts.length>1?'s':'');}
   }
-  renderAiRisk();renderCisoOps();renderUnderAttack();renderThreatMap();renderControls();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderCooStatus();renderCfoFraud();renderCroKri();renderCloOps();renderThreatIntel();renderDrReadiness();renderPeerBench();
+  renderAiRisk();renderCisoOps();renderUnderAttack();renderThreatMap();renderControls();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCooStatus();renderCfoFraud();renderCroKri();renderCloOps();renderThreatIntel();renderDrReadiness();renderPeerBench();
 }
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();if(typeof renderCisoOps==='function'){renderCisoOps();renderUnderAttack();}}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----

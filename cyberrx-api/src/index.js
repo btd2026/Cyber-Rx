@@ -202,6 +202,7 @@ app.use('/api/cae',              [apiGetLimiter, apiPostLimiter, apiDeleteLimite
 app.use('/api/credentials',      [apiGetLimiter, apiPostLimiter, apiDeleteLimiter], require('./routes/credentials'));
 app.use('/api/credentials',      [apiGetLimiter, apiPostLimiter], require('./routes/credentialRotation'));
 app.use('/api/orgs',             [apiGetLimiter, apiPostLimiter], require('./routes/orgs'));
+app.use('/api/peer',             [apiGetLimiter, apiPostLimiter], require('./routes/peer'));
 
 // M3: Authentication Routes (public - no auth required for signup/login)
 app.use('/api/auth',             require('./routes/auth'));
