@@ -20,7 +20,8 @@ var SEATS = {
      '<div id="opmodel-ceo"></div>'
      +'<div id="ceoGov" style="margin-top:14px"><div class="card"><div class="ck">Board oversight structure · SEC Item 106</div><div class="cn" style="margin-top:8px">◐ Add your board-governance answers in onboarding to make this filing-ready.</div></div></div>'
      +'<div id="ceoOversight" style="margin-top:14px">'+kvcard('Oversight &amp; decision record',[{k:'Funded decisions logged',v:'from your decisions',ev:'oversight'},{k:'Each carries',v:'leader · date · ticket',ev:'oversight'},{k:'Board-appetite reviewed',v:'this quarter',cls:'good'},{k:'Defensibility',v:'evidenced trail',cls:'good',ev:'oversight'}])+'</div>')
-   +sec('05','Business Impact Live Board','Implements SOC monitoring, SIEM dashboards and KPI/KRI tracking — real-time revenue-at-risk, the processes that carry the risk, the trend over time, and insurance coverage against the worst case.',
+   +sec('05','Business Impact Live Board','Implements SOC monitoring, SIEM dashboards and KPI/KRI tracking — the board’s oversight lens for your sector first, then real-time revenue-at-risk, the processes that carry the risk, the trend over time, and insurance coverage against the worst case.',
+     '<div id="ceoBoardBrief" style="margin-bottom:16px"></div>'+
      tiles([
       {k:'Expected annual loss',v:'<span id="lvExpo">$68M</span>',ev:'ale',note:'<span class="pill good" id="lvAleWithin">Within appetite</span> &nbsp;<span class="claim" data-ev="pctrev"><span id="lvPctRev">≈0.8% of revenue</span> <span class="fx">ƒ</span></span>'},
       {k:'Worst-case tail (95%)',v:'<span id="lvTail">$180M</span>',cls:'warn',ev:'tail',note:'<span class="pill warn" id="lvTailWithin">Above appetite</span> &nbsp;vs appetite <span class="claim" data-ev="appetite"><span id="lvAppetite">$120M</span> <span class="fx">ƒ</span></span>'},
