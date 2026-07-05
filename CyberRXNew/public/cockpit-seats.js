@@ -239,29 +239,29 @@ var SEATS = {
   sub:'The operator’s seat — still in business terms: what drives exposure, which decisions close it, and control effectiveness as risk removed, not maturity scores. This number rolls up to the board.',
   brief:'No active compromise, and the program is improving. The biggest dollar driver is the privileged path into payments — fifty-two million — and it has a funded decision ready to close it. We measure our controls by the risk they remove, not by a maturity score, and this is the same number that rolls straight up to the board and the C.F.O.',
   body:function(){return (
-   sec('01','Cross-enterprise cyber business health','The state of the whole program in business terms — are we under attack right now, the health of the security tools and how much of the attacker playbook we can see, and the crown jewels we protect with today’s exposure on each.',
-     '<div id="cisoWarRoom" style="margin-bottom:14px"></div><div id="cisoOps"></div>'
+   sec('01','Are we secure right now — and is the program getting stronger?','The whole-program picture in business terms: the health of the security tools and how much of the attacker playbook we can see, and the crown jewels we protect with today’s exposure on each.',
+     '<div id="cisoOps"></div>'
      +'<div id="cjchain" style="margin-top:14px"></div>')
-   +sec('02','Control effectiveness','Is our security spend working? Control effectiveness measured as the dollars of risk our controls have removed — inherent vs residual — not a maturity score. This is the number that rolls straight up to the board and CFO, with the live control gaps that still carry risk.',
-     '<div id="cisoControls"></div>')
-   +sec('03','Threat-to-business mapping','Who is targeting our sector and whether we are covered against how they operate — each actor mapped to the live coverage of the controls that stop their techniques — plus the two AI fronts: securing the AI we run and using AI to defend.',
-     '<div id="cisoThreat"></div>'
-     +'<div id="cisoAiRisk" style="margin-top:14px"><div class="card"><div class="cn">◐ Add AI-governance answers in onboarding and connect your security tools for live AI-risk data.</div></div></div>')
+   +sec('02','Are we under attack?','Live attack status and the sector threats behind it. <b>Incident Command</b> is the war room for an active event; <b>Threat Mapping</b> shows who targets our sector and whether we are covered against how they operate.',
+     subtabs([
+       {key:'warroom',label:'Incident Command · War Room',on:true,html:'<div id="cisoWarRoom"></div>'},
+       {key:'threat',label:'Threat Mapping',html:'<div id="cisoThreat"></div><div id="cisoAiRisk" style="margin-top:14px"><div class="card"><div class="cn">◐ Add AI-governance answers in onboarding and connect your security tools for live AI-risk data.</div></div></div>'}
+     ]))
+   +sec('03','Is our security program worth the spend — and can we prove it?','Two lenses on the same question. <b>Business</b> traces every dollar the program protects — business function → process → technology → cyber risk → the control that mitigates it — and what each control saves when it operates effectively. <b>Frameworks</b> is the continuous audit: posture across NIST CSF 2.0, NIST SP 800-53, CIS Controls, SOC 2 and HIPAA, evidenced live rather than at a point in time.',
+     subtabs([
+       {key:'business',label:'Business',on:true,html:'<div id="valueChain"></div><div id="cisoControls" style="margin-top:14px"></div>'},
+       {key:'frameworks',label:'Frameworks · continuous audit',html:'<div id="cisoFrameworks"></div><div id="cisoCompliance" style="margin-top:14px"></div>'}
+     ]))
    +sec('04','Evidence collection','The live evidence behind every score — which tools are connected and what coverage they give, plus the policies analyzed by document review. This is what lets you walk an auditor from a number to its source.',
      '<div id="cisoCoverage"></div>'
-     +'<div class="cn" style="margin-top:12px">Evidence is collected two ways: <b>🔌 live tool telemetry</b> (EDR, identity, vulnerability, cloud, SIEM, backup — the coverage above) and <b>📄 document review</b> (policies uploaded in onboarding, scored against the NIST catalog). Every framework score in the next tab traces to one of these sources — no self-attestation.</div>')
-   +sec('05','Framework alignment','The business-to-control value chain and the full control catalogs. The value chain traces <b>business function → process → technology → cyber risk (in $) → the framework control that mitigates it</b>, so you can see exactly how much money each control saves when it operates effectively. Below it, NIST CSF 2.0 (6 functions · 22 categories · 106 subcategories) and NIST SP 800-53 Rev 5, each scored on the CMMI maturity scale (0–5) with the source (🔌 system / 📄 document) on every control.',
-     '<div id="valueChain"></div><div style="margin-top:14px"></div><div id="cisoFrameworks"></div>')
-   +sec('06','Executive risk reporting','What the CISO reports up — the audit-readiness posture across the frameworks in scope, the growth side of security (deals cleared, certifications, trust sold), and the one-click board / regulator report.',
-     '<div id="cisoCompliance"></div>'
-     +'<div id="cisoGrowth" style="margin-top:14px"></div>'
-     +'<div class="card" style="margin-top:14px"><div class="ck">Board-ready report</div><div class="cn" style="margin-top:6px">The one-click board / regulator report — the financial statement of cyber risk, Item 106 governance, KRIs, decisions and trajectory — assembled from the same live model, every figure carrying its provenance.</div><div style="margin-top:12px"><button class="bp-btn primary" onclick="openBoardPack()">Open the board pack →</button></div></div>')
-   +sec('07','Action tracking','Where the next security dollar goes and whether funded actions are on track — a costed decision that records to your ticketing system, and the live portfolio of initiatives with cost, owner, status and the dollars of risk each removes.',
+     +'<div class="cn" style="margin-top:12px">Evidence is collected two ways: <b>🔌 live tool telemetry</b> (EDR, identity, vulnerability, cloud, SIEM, backup — the coverage above) and <b>📄 document review</b> (policies uploaded in onboarding, scored against the NIST catalog). Every framework score traces to one of these sources — no self-attestation.</div>')
+   +sec('05','Action tracking','Where the next security dollar goes and whether funded actions are on track — a costed decision that records to your ticketing system, the live portfolio of initiatives, and the one-click board / regulator report.',
      decisions([{n:1,q:'Which control gap do we close first?',sit:'The biggest dollar driver is the privileged path into payments. Where do we direct the next dollar?',opts:[
        {rec:true,tag:'A · Privileged access (PAM)',on:'Option A · PAM',osum:'$1.4M · 37×',pros:['Closes the $52M driver','Highest return available','Improves board posture immediately'],cons:['Requires $1.4M of capital this year','~3 weeks of IAM engineering effort']},
        {tag:'B · Prove recovery (DR test)',on:'Option B · DR',osum:'$3.2M · <6h recovery',pros:['Removes ~$40M of the recovery tail','Meets regulatory recovery expectations'],cons:['$3.2M — larger program than PAM','Leaves the #1 driver (the $52M privileged path) open']},
        {tag:'C · AI-decisioning governance',on:'Option C · AI governance',osum:'standard + oversight',pros:['Addresses the fastest-rising risk (+$8M/qtr)','Gets ahead of the AI board decision'],cons:['Does not touch the $52M top driver yet','Benefit is preventive, not immediate risk removed']}]}])
-     +'<div id="initiatives-panel" style="margin-top:14px"></div>')
+     +'<div id="initiatives-panel" style="margin-top:14px"></div>'
+     +'<div class="card" style="margin-top:14px"><div class="ck">Board-ready report</div><div class="cn" style="margin-top:6px">The one-click board / regulator report — the financial statement of cyber risk, Item 106 governance, KRIs, decisions and trajectory — assembled from the same live model, every figure carrying its provenance.</div><div style="margin-top:12px"><button class="bp-btn primary" onclick="openBoardPack()">Open the board pack →</button></div></div>')
   );}
  },
 

@@ -112,6 +112,12 @@ for (const fn of ['applyLive', 'renderChain', 'renderProcBars', 'renderCioSystem
 // Exercise the value-chain by-control view + the control-$ calculation drill.
 try { vm.runInContext("VC_VIEW='ctrl'; renderValueChain(); drillControlValue('backup'); drillControlValue('mfa'); vcProtectedBy('edr'); VC_VIEW='func';", ctx); }
 catch (e) { problems.push(`[valueChain by-control/drill] ${e.message}`); }
+// Exercise the crosswalk framework views (CIS / SOC 2 / HIPAA) + continuous-audit cadence.
+try { vm.runInContext("['cis','soc2','hipaa','csf'].forEach(function(s){FW_SEL=s;renderFrameworks();}); localStorage.setItem('cyberrx_audit_cadence','weekly'); renderFrameworks();", ctx); }
+catch (e) { problems.push(`[frameworks crosswalk/cadence] ${e.message}`); }
+// Exercise the sub-tab toggle mechanism.
+try { vm.runInContext("typeof subtabs==='function' && subtabs([{key:'a',label:'A',on:true,html:'x'},{key:'b',label:'B',html:'y'}]);", ctx); }
+catch (e) { problems.push(`[subtabs] ${e.message}`); }
 // Exercise evidence panel for every EV key.
 try {
   const keys = vm.runInContext('Object.keys(EV)', ctx);
