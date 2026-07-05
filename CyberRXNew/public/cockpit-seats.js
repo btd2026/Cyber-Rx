@@ -249,7 +249,7 @@ var SEATS = {
      ]))
    +sec('03','Is our security program worth the spend — and can we prove it?','Two lenses on the same question. <b>Business</b> traces every dollar the program protects — business function → process → technology → cyber risk → the control that mitigates it — and what each control saves when it operates effectively. <b>Frameworks</b> is the continuous audit: posture across NIST CSF 2.0, NIST SP 800-53, CIS Controls, SOC 2 and HIPAA, evidenced live rather than at a point in time.',
      subtabs([
-       {key:'business',label:'Business',on:true,html:'<div id="valueChain"></div><div id="cisoControls" style="margin-top:14px"></div>'},
+       {key:'business',label:'Business',on:true,html:'<div id="cjFlow"></div><div id="cisoControls" style="margin-top:14px"></div>'},
        {key:'frameworks',label:'Frameworks · continuous audit',html:'<div id="cisoFrameworks"></div><div id="cisoCompliance" style="margin-top:14px"></div>'}
      ]))
    +sec('04','Evidence collection','The live evidence behind every score — which tools are connected and what coverage they give, plus the policies analyzed by document review. This is what lets you walk an auditor from a number to its source.',

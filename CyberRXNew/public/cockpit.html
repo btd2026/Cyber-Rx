@@ -89,6 +89,27 @@
   .tmp-gc{display:flex;flex-direction:column;gap:3px}
   .tmp-ctl{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--ink-2);white-space:nowrap}
   .tmp-note{font-size:11px;color:var(--ink-2);margin:0 0 6px 6px}.tmp-note.crit{color:var(--crit);font-weight:600}
+  /* Crown-jewel value chain — executive flow visual */
+  .cvf-head{display:flex;align-items:center;gap:6px;margin:14px 0 4px}
+  .cvf-hcol{flex:1;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;text-align:center;min-width:90px}
+  .cvf-hcol.s0{color:var(--ink)}.cvf-hcol.s1{color:var(--blue)}.cvf-hcol.s2{color:var(--gold)}.cvf-hcol.s3{color:var(--crit)}.cvf-hcol.s4{color:var(--good)}
+  .cvf-harrow{flex:0 0 16px;text-align:center;color:var(--line-2);font-size:13px}
+  .cvf-threads{display:flex;flex-direction:column;gap:9px;margin-top:4px}
+  .cvf-thread{display:flex;align-items:stretch;gap:6px;overflow-x:auto;padding:2px 0}
+  .cvf-arrow{flex:0 0 16px;align-self:center;text-align:center;color:var(--line-2);font-size:15px}
+  .cvf-stage{flex:1;min-width:110px;background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--line-2);border-radius:9px;padding:8px 11px;display:flex;flex-direction:column;justify-content:center}
+  .cvf-stage.s0{border-top-color:var(--ink)}.cvf-stage.s1{border-top-color:var(--blue)}.cvf-stage.s2{border-top-color:var(--gold);background:var(--gold-soft)}.cvf-stage.s3{border-top-color:var(--crit)}.cvf-stage.s4{border-top-color:var(--good)}
+  .cvf-stage.crit{border-top-color:var(--crit)}.cvf-stage.warn{border-top-color:var(--warn)}.cvf-stage.good{border-top-color:var(--good)}.cvf-stage.blue{border-top-color:var(--blue)}.cvf-stage.muted{border-top-color:var(--muted)}
+  .cvf-t{font-size:12px;font-weight:600;color:var(--ink);line-height:1.25}
+  .cvf-s{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.3}
+  .cvf-ctl{display:block;font-size:10px;color:var(--ink-2);margin-top:2px}
+  /* Framework posture — bold CMMI hero + refresh-to-refresh trend */
+  .fw-cmmi{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin:2px 0 12px;padding:13px 16px;background:var(--surface-2);border:1px solid var(--line-2);border-radius:12px}
+  .fw-cmmi-l{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:2px}
+  .fw-cmmi-v{font-size:38px;font-weight:800;font-family:var(--serif);line-height:1}.fw-cmmi-v span{font-size:16px;color:var(--muted);font-weight:600;margin-left:5px}
+  .fw-cmmi-lbl{font-size:12.5px;color:var(--ink-2);font-weight:700}
+  .fw-trend{display:flex;align-items:center;gap:9px;margin-left:auto;flex-wrap:wrap}
+  .fw-trend-d{font-size:14px;font-weight:800}.fw-trend-n{font-size:10.5px;color:var(--muted)}
   .drill-cta{color:var(--blue);font-weight:700;white-space:nowrap}
   .dotstrip{display:flex;gap:4px;margin-top:9px;flex-wrap:wrap}.dotstrip .ds{width:13px;height:13px;border-radius:3px;display:inline-block}
   .drow{padding:12px 0;border-top:1px solid var(--line)}.drow:first-child{border-top:none}
@@ -523,7 +544,7 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderValueChain();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
@@ -1253,6 +1274,51 @@ function illuValueChain(){
           risks:[{title:'Data integrity attack',severity:'High',exposure_usd:40e6,impact_fraction:0.6,impact_hours:12,process_stop_usd:41e6}]}]}]}
   ]};
 }
+/* ---- Crown-jewel value chain — a clean, executive (McKinsey-style) flow visual:
+   for each crown jewel, the unbroken left-to-right line Business function → Process
+   → Technology → Cyber risk → Control, with $ at each stage and control coverage on
+   the last. Replaces the value-chain dashboard in the Business sub-tab. ---- */
+function cjThreads(){
+  var vc=(LIVE&&LIVE.value_chain),out=[];
+  if(vc&&vc.functions)vc.functions.forEach(function(f){(f.processes||[]).forEach(function(p){(p.assets||[]).forEach(function(a){
+    if(!a.crown_jewel)return;var r=(a.risks||[])[0];
+    out.push({fn:f.name,fnAnnual:f.annual_usd,proc:p.name,procDaily:p.daily_usd,frac:p.fraction_of_function,tech:a.name,internet:a.internet_facing,tier:a.tier,
+      risk:r?r.title:null,riskStop:r?r.process_stop_usd:null,riskExp:r?r.exposure_usd:null,riskSev:r?r.severity:null});
+  });});});
+  return out.sort(function(x,y){return (y.riskStop||y.riskExp||0)-(x.riskStop||x.riskExp||0);});
+}
+function illuThreads(){return [
+  {fn:'Payments',fnAnnual:200e9,proc:'Transaction processing',procDaily:411e6,frac:0.75,tech:'Payments gateway',internet:true,tier:'tier1',risk:'Ransomware outage',riskStop:411e6,riskSev:'Critical'},
+  {fn:'Payments',fnAnnual:200e9,proc:'Settlement & reconciliation',procDaily:137e6,frac:0.25,tech:'Settlement engine',internet:false,tier:'tier2',risk:'Data-integrity attack',riskStop:41e6,riskSev:'High'}
+];}
+function cvfStage(i,title,sub,cls){return '<div class="cvf-stage s'+i+(cls?(' '+cls):'')+'"><div class="cvf-t">'+title+'</div>'+(sub?'<div class="cvf-s">'+sub+'</div>':'')+'</div>';}
+function renderCjFlow(){
+  var host=document.getElementById('cjFlow');if(!host)return;
+  var threads=cjThreads(),illu=false;
+  if(!threads.length){threads=illuThreads();illu=true;}
+  var stages=['Business function','Process','Technology','Cyber risk','Control'];
+  var head='<div class="cvf-head">'+stages.map(function(s,i){return '<div class="cvf-hcol s'+i+'">'+s+'</div>'+(i<4?'<div class="cvf-harrow">→</div>':'');}).join('')+'</div>';
+  var rows=threads.slice(0,6).map(function(t){
+    var caps=t.risk?riskCaps(t.risk,t.riskSev):[];
+    var ctlChips=caps.slice(0,3).map(function(k){var c=CAP_BY_KEY[k];if(!c)return '';var fw=CAP_FRAMEWORK[k],p=capDeploy(c);return '<span class="cvf-ctl"><span class="cap-dot" style="background:var(--'+capColor(p)+')"></span>'+(fw&&fw.csf[0]?('<span class="fwid csf" style="margin:0">'+fw.csf[0]+'</span> '):'')+c.name.replace(/ *\(.*\)/,'')+(p==null?'':' '+p+'%')+'</span>';}).join('');
+    var minP=caps.map(function(k){return capDeploy(CAP_BY_KEY[k]);}).filter(function(x){return x!=null;});
+    var ctlCls=minP.length?capColor(Math.min.apply(null,minP)):'muted';
+    var riskV=t.riskStop!=null?usd(t.riskStop)+' exposed':(t.riskExp?usd(t.riskExp)+' breach':'');
+    var A='<div class="cvf-arrow">→</div>';
+    return '<div class="cvf-thread">'+
+      cvfStage(0,'<b>'+t.fn+'</b>',t.fnAnnual?usd(t.fnAnnual)+'/yr':'')+A+
+      cvfStage(1,t.proc,(t.frac!=null?Math.round(t.frac*100)+'% · ':'')+(t.procDaily?usd(t.procDaily)+'/day':''))+A+
+      cvfStage(2,'🖥 <b>'+t.tech+'</b>',(t.internet?'internet-facing':'internal')+(t.tier?' · '+t.tier:''))+A+
+      cvfStage(3,'⚠ '+(t.risk||'—'),riskV,(t.riskSev&&/crit/i.test(t.riskSev))?'crit':'warn')+A+
+      cvfStage(4,'🛡 Controls',ctlChips||'<span style="color:var(--muted)">no mapped control — a gap</span>',ctlCls)+
+      '</div>';
+  }).join('');
+  host.innerHTML='<div class="card cvf-card"><div class="ck">Crown-jewel value chain'+(illu?' <span class="pill warn" style="font-size:9px">illustrative</span>':' '+liveTag())+'</div>'+
+    '<div class="cn" style="margin-top:6px">For each crown jewel, the unbroken line from <b>what the business does</b> to <b>the control that protects it</b>. Read any row left → right.</div>'+
+    head+'<div class="cvf-threads">'+rows+'</div>'+
+    (illu?'<div class="cn" style="margin-top:8px;color:var(--muted)">Illustrative — complete onboarding (add a business function to each process) to see your own crown-jewel value chains.</div>':'')+
+    '</div>';
+}
 function renderValueChain(){
   var host=document.getElementById('valueChain');if(!host)return;
   var vc=(LIVE&&LIVE.value_chain)||null,fns=(vc&&vc.functions)||[],illu=false;
@@ -1356,6 +1422,15 @@ function fwXwalk(map,cov){var all=[];
    live tool telemetry refreshes continuously, document/attestation evidence on this
    cadence. */
 function auditCadence(){return localStorage.getItem('cyberrx_audit_cadence')||'monthly';}
+/* Continuous-audit score history — a snapshot of the overall CMMI is recorded once
+   per cadence interval (weekly/monthly/quarterly), so the framework trend builds
+   over real refreshes. Stored per browser; last 24 kept. */
+var CADENCE_MS={weekly:7*864e5,monthly:30*864e5,quarterly:90*864e5};
+function fwHistory(){try{return JSON.parse(localStorage.getItem('cyberrx_fw_history')||'[]')||[];}catch(_){return[];}}
+function fwRecord(v){if(!(v>0))return fwHistory();var h=fwHistory();var last=h[h.length-1];
+  var due=!last||(Date.now()-(last.t||0))>=(CADENCE_MS[auditCadence()]||CADENCE_MS.monthly);
+  if(due){h.push({t:Date.now(),v:Math.round(v*100)/100});try{localStorage.setItem('cyberrx_fw_history',JSON.stringify(h.slice(-24)));}catch(_){}}
+  return fwHistory();}
 function cadenceUI(){var c=auditCadence();
   return '<div class="fwseg" style="margin:8px 0 2px"><span style="font-size:11px;color:var(--muted);align-self:center;margin-right:2px">Continuous audit · re-check evidence:</span>'+
     [['weekly','Weekly'],['monthly','Monthly'],['quarterly','Quarterly']].map(function(o){return '<button class="fwsegb'+(c===o[0]?' on':'')+'" data-cad="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>'+
@@ -1380,8 +1455,14 @@ function renderFrameworks(){
   var overall=avg(all),scored=all.filter(function(x){return x>0;}).length;
   var legend='<div class="cmmi-legend"><span class="cl-t">CMMI</span><span><b>0</b>None</span><span><b>1</b>Initial</span><span><b>2</b>Managed</span><span><b>3</b>Defined</span><span><b>4</b>Quant. Managed</span><span><b>5</b>Optimizing</span></div>';
   var docN=docList().length;
+  // Record a cadence snapshot and build the trend graph from refresh to refresh.
+  var hist=fwRecord(overall),trend;
+  if(hist.length>=2){var v0=hist[0].v,vN=hist[hist.length-1].v,delta=vN-v0,up=delta>=0;
+    trend='<div class="fw-trend">'+sparkSvg(hist.map(function(x){return x.v;}),up)+'<span class="fw-trend-d" style="color:var(--'+(up?'good':'crit')+')">'+(up?'▲':'▼')+' '+(delta>=0?'+':'')+delta.toFixed(1)+' CMMI</span><span class="fw-trend-n">across '+hist.length+' '+auditCadence()+' refreshes</span></div>';}
+  else trend='<div class="fw-trend"><span class="fw-trend-n">Baseline recorded — the trend builds from here on each '+auditCadence()+' refresh.</span></div>';
+  var cmmiHero='<div class="fw-cmmi"><div><div class="fw-cmmi-l">Framework posture — overall CMMI</div><div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><div class="fw-cmmi-v" style="color:var(--'+cmmiColor(Math.round(overall))+')">'+overall.toFixed(1)+'<span>/ 5</span></div><div class="fw-cmmi-lbl">'+(CMMI_LABELS[Math.round(overall)]||'')+' '+liveTag()+'</div></div></div>'+trend+'</div>';
   host.innerHTML=
-    '<div class="card"><div class="ck">Framework posture '+liveTag()+' — overall CMMI <b style="color:var(--'+cmmiColor(Math.round(overall))+')">'+overall.toFixed(1)+' / 5</b></div>'+sel+cadenceUI()+legend+xnote+
+    '<div class="card">'+cmmiHero+sel+cadenceUI()+legend+xnote+
     '<div class="cn" style="margin:6px 0"><b style="color:var(--ink)">'+scored+' of '+all.length+'</b> controls are evidenced (by a connected tool or an analyzed policy). Each control’s maturity is the higher of its live tool coverage and its document-review score; the icon shows the source — <b>🔌 system</b> telemetry or <b>📄 document</b> review. Click any control for the exact evidence and the math.<br>'+
     (docN?('<b style="color:var(--good)">'+docN+' polic'+(docN===1?'y':'ies')+'</b> analyzed by document review (uploaded in onboarding).'):'<span style="color:var(--ink-2)">Document-review evidence is captured in <b>onboarding → Policy &amp; document evidence</b>. Upload your policies there and each control gains a 📄 document score here.</span>')+'</div>'+
     body+'</div>';
@@ -1672,12 +1753,12 @@ function renderSignals(){
     var pcts=['edr_pct','mfa_pct','pam_pct'].map(sig).filter(function(x){return x!=null;});
     if(pcts.length){var avg=Math.round(pcts.reduce(function(s,x){return s+x;},0)/pcts.length);setTxt('lvCovTile',avg+'%');var tn=document.getElementById('lvCovTileNote');if(tn)tn.innerHTML='<span class="pill good">live</span> from '+pcts.length+' connected tool'+(pcts.length>1?'s':'');}
   }
-  renderAiRisk();renderCisoOps();renderUnderAttack();renderThreatMap();renderControls();renderFrameworks();renderValueChain();renderCompliance();renderCooStatus();renderCfoFraud();renderCroKri();renderCloOps();renderThreatIntel();renderDrReadiness();renderPeerBench();
+  renderAiRisk();renderCisoOps();renderUnderAttack();renderThreatMap();renderControls();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderCooStatus();renderCfoFraud();renderCroKri();renderCloOps();renderThreatIntel();renderDrReadiness();renderPeerBench();
 }
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();if(typeof renderCisoOps==='function'){renderCisoOps();renderUnderAttack();}}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderValueChain();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
