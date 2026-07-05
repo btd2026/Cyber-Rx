@@ -295,8 +295,8 @@ var SEATS = {
   body:function(){return (
    sec('01','Product launch readiness','Are we clear to ship? Each release gated on secure-by-design checks — threat model, application-security review and no unresolved critical findings — so a launch does not carry avoidable risk to customers.',
      '<div class="card"><div class="ck">Secure-launch gates</div><div class="cn" style="margin-top:6px">◐ Connect your CI/CD (<b>GitHub · GitLab · Azure DevOps</b>) and application-security tooling to show each release’s security-readiness gate — threat model complete, app-sec scan clean, no unresolved critical findings — so launch readiness is evidenced, not assumed. <span class="pill mod" style="font-size:8px">planned</span></div></div>')
-   +sec('02','Innovation velocity','Are we shipping fast without shipping risk? Deployment frequency and lead time alongside the security-review time, so security accelerates rather than blocks delivery.',
-     '<div class="card"><div class="ck">Velocity vs security friction</div><div class="cn" style="margin-top:6px">◐ Connect your CI/CD and issue tracker to show deployment frequency, lead time and how much time security review adds — so velocity and security are measured together, not traded off. <span class="pill mod" style="font-size:8px">planned</span></div></div>')
+   +sec('02','Innovation velocity','Are we shipping fast without shipping risk? Delivery throughput — changes shipped per week and the review backlog — so security keeps pace with delivery rather than blocking it. Live from your CI/CD.',
+     '<div id="cpoVelocity"></div>')
    +sec('03','Product quality risk','The security-quality of what we ship — open code-scanning (SAST) findings and critical dependency alerts in the product, and the exposure they create for customers. Live from your delivery pipeline.',
      '<div id="cpoQuality"></div>')
    +sec('04','AI product readiness','Are AI features in the product governed before they reach customers? AI systems live, the framework adopted, the acceptable-use policy and inventory — readiness to ship AI without shipping unmanaged risk.',

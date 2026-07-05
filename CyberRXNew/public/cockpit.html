@@ -471,7 +471,7 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderAuditRepeat();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
@@ -1400,7 +1400,7 @@ function demoSignals(){
   if(has(['salesforce','hubspot'])){set('pipeline_in_review_usd',500000000);set('deals_gated_qtr',10);}
   if(has(['whistic','safebase','conveyor'])){set('reviews_cleared_qtr',12);set('review_cycle_wks',2);}
   if(has(['rubrik','veeam','cohesity','commvault'])){set('backup_immutable_pct',100);set('dr_test_days',48);set('rpo_minutes',15);}
-  if(has(['github','snyk','gitlab'])){set('code_scanning_open',7);set('dependabot_critical',2);}
+  if(has(['github','snyk','gitlab'])){set('code_scanning_open',7);set('dependabot_critical',2);set('changes_merged_wk',42);set('changes_in_review',11);}
   if(has(['servicenow_grc','auditboard'])){set('audit_findings_open',14);set('audit_findings_repeat',3);}
   return any?s:null;
 }
@@ -1428,7 +1428,7 @@ function renderSignals(){
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderAuditRepeat();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -2794,6 +2794,27 @@ function renderCpoQuality(){
   var verdict=open===0?'<b style="color:var(--good)">No open critical product-security findings</b> — the current build carries no known-critical code or dependency vulnerabilities to customers.'
     :('<b style="color:var(--'+(open<=5?'warn':'crit')+')">'+open+' open product-security finding'+(open===1?'':'s')+'</b> — resolve or risk-accept before the next release; these are the security defects that ship to customers.');
   host.innerHTML='<div class="card"><div class="ck">Product security quality '+liveTag()+'</div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">'+verdict+' Evidenced live from your code-scanning and dependency scanners — the security-quality of what you ship, not a policy statement.</div></div>';
+}
+/* Chief Product · Innovation velocity — DORA-style delivery throughput from the
+   pipeline. changes_merged_wk = PRs merged org-wide in the last 7 days (deployment-
+   frequency proxy); changes_in_review = open PRs (work-in-progress / review backlog).
+   From the GitHub connector. No source connected → an honest connect card. True
+   deployment lead-time needs per-repo deployment events and is flagged as deferred,
+   not invented. */
+function renderCpoVelocity(){
+  var host=document.getElementById('cpoVelocity');if(!host)return;
+  var mg=sig('changes_merged_wk'),wip=sig('changes_in_review');
+  if(mg==null&&wip==null){
+    host.innerHTML='<div class="card"><div class="ck">Velocity vs security friction</div><div class="cn" style="margin-top:6px">◐ Connect your CI/CD (<b>GitHub · GitLab · Azure DevOps</b>) to show delivery throughput — changes shipped per week and the review backlog — so velocity and security are measured together, not traded off. <span class="pill mod" style="font-size:8px">planned</span></div></div>';
+    return;
+  }
+  var rows=iamGovRow('Changes shipped / week',mg!=null?(mg+' merged (7d)'):'—',mg!=null?(mg>0):null,mg!=null?'Pull requests merged org-wide in the last 7 days — a deployment-frequency proxy (DORA). High and steady is the signal of a healthy, secure-by-default pipeline where security keeps pace with delivery.':'')+
+    iamGovRow('Changes in review (WIP)',wip!=null?(wip+' open'):'—',wip!=null?(wip<=Math.max(20,(mg||0))):null,wip!=null?'Open pull requests awaiting review or merge — the work-in-progress backlog. A backlog far above weekly throughput signals review is the bottleneck, where security checks tend to get skipped under pressure.':'');
+  var ratio=(mg!=null&&mg>0&&wip!=null)?(wip/mg):null;
+  var verdict=mg==null?''
+    :(ratio!=null&&ratio>1.5?'<b style="color:var(--warn)">Review backlog exceeds weekly throughput</b> — WIP is piling up faster than it clears, the point where security review is most likely to be bypassed. Watch it.'
+    :'<b style="color:var(--good)">Delivery is flowing</b> — throughput is keeping ahead of the review backlog, so security checks can stay in the path without becoming the bottleneck.');
+  host.innerHTML='<div class="card"><div class="ck">Velocity vs security friction '+liveTag()+'</div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">'+verdict+' Evidenced live from your pipeline. <span style="color:var(--ink-2)">True deployment lead-time (commit→production) needs per-repo deployment events and is on the roadmap — not estimated here.</span></div></div>';
 }
 /* Internal Audit · Repeat findings — the findings that recur audit-over-audit,
    the systemic gaps closed on paper but not in practice. audit_findings_open =
