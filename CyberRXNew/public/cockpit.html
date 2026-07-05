@@ -471,7 +471,7 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
@@ -1400,6 +1400,7 @@ function demoSignals(){
   if(has(['salesforce','hubspot'])){set('pipeline_in_review_usd',500000000);set('deals_gated_qtr',10);}
   if(has(['whistic','safebase','conveyor'])){set('reviews_cleared_qtr',12);set('review_cycle_wks',2);}
   if(has(['rubrik','veeam','cohesity','commvault'])){set('backup_immutable_pct',100);set('dr_test_days',48);set('rpo_minutes',15);}
+  if(has(['github','snyk','gitlab'])){set('code_scanning_open',7);set('dependabot_critical',2);}
   return any?s:null;
 }
 function applyDemoSignals(){if(!demoActive()||SIGNALS)return;var s=demoSignals();if(s){SIGNALS=s;renderSignals();}}
@@ -1426,7 +1427,7 @@ function renderSignals(){
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -2774,6 +2775,25 @@ function renderCfoFraud(){
   else if(soxHost){soxHost.innerHTML='<div class="cols">'+fraudCard+soxCard+'</div>';}
   else{host.innerHTML='<div class="cols">'+fraudCard+soxCard+'</div>';}
 }
+/* Chief Product · Product-quality risk — the security-quality of what the product
+   ships, evidenced live from the delivery pipeline. code_scanning_open = open
+   code-scanning / SAST alerts across the org; dependabot_critical = open CRITICAL
+   Dependabot / dependency (SCA) alerts. From the GitHub connector (or Snyk / GitLab).
+   No source connected → an honest connect card, never an invented number. */
+function renderCpoQuality(){
+  var host=document.getElementById('cpoQuality');if(!host)return;
+  var css=sig('code_scanning_open'),dep=sig('dependabot_critical');
+  if(css==null&&dep==null){
+    host.innerHTML='<div class="card"><div class="ck">Product security quality</div><div class="cn" style="margin-top:6px">◐ Connect your application-security and dependency scanners (<b>GitHub Advanced Security · Snyk · GitLab</b>) to show the vulnerabilities and critical dependency alerts open in the product right now — the security defects that ship to customers if a release goes out on top of them. <span class="pill mod" style="font-size:8px">planned</span></div></div>';
+    return;
+  }
+  var rows=iamGovRow('Open code-scanning (SAST) alerts',css!=null?(css+' open'):'—',css!=null?(css<=10):null,css!=null?'Static-analysis findings in first-party code across the org — injection, auth, crypto and unsafe-handling flaws that would ship in the product if released now. Drive to zero on release branches.':'')+
+    iamGovRow('Critical dependency (Dependabot / SCA) alerts',dep!=null?(dep+' critical'):'—',dep!=null?(dep===0):null,dep!=null?'Known-critical vulnerabilities in the open-source components the product ships on — the software-supply-chain path that reaches customers. Any open critical is a release blocker.':'');
+  var open=(css||0)+(dep||0);
+  var verdict=open===0?'<b style="color:var(--good)">No open critical product-security findings</b> — the current build carries no known-critical code or dependency vulnerabilities to customers.'
+    :('<b style="color:var(--'+(open<=5?'warn':'crit')+')">'+open+' open product-security finding'+(open===1?'':'s')+'</b> — resolve or risk-accept before the next release; these are the security defects that ship to customers.');
+  host.innerHTML='<div class="card"><div class="ck">Product security quality '+liveTag()+'</div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">'+verdict+' Evidenced live from your code-scanning and dependency scanners — the security-quality of what you ship, not a policy statement.</div></div>';
+}
 /* CISO threat intelligence — actors targeting this sector, each mapped to the LIVE
    coverage of the controls that stop their techniques. Industry-modeled from FREE
    public reporting until a threat-intel feed connects; a connected feed (free OTX /
@@ -3028,7 +3048,7 @@ function sysCard(s){var metric=s.live?(180+Math.floor(Math.random()*70))+' '+s.m
 /* The full demo tool set — the canonical keys the demo signals key off. Used as a
    fallback so "Enable demo mode" always shows a fully-connected cockpit, even if
    the tools were not persisted to cyberrx_tools (e.g. demo enabled without go-live). */
-var DEMO_TOOLSET=['okta','defender','qualys','splunk','cyberark','knowbe4','proofpoint','wiz','sap','servicenow','salesforce','whistic','securityscorecard','onetrust','recordedfuture','rubrik'];
+var DEMO_TOOLSET=['okta','defender','qualys','splunk','cyberark','knowbe4','proofpoint','wiz','sap','servicenow','salesforce','whistic','securityscorecard','onetrust','recordedfuture','rubrik','github'];
 function connectedTools(){try{var t=JSON.parse(localStorage.getItem('cyberrx_tools')||'{}');if(!t||typeof t!=='object')t={};
   if(!Object.keys(t).length&&demoActive()){var d={};DEMO_TOOLSET.forEach(function(k){d[k]={on:true,demo:true,vendor:'Demo'};});return d;}
   return t;}catch(_){return {};}}
