@@ -471,7 +471,7 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
@@ -479,6 +479,8 @@ function render(seat){
 var TAB_LABELS={
  // CEO seat (outcome tabs)
  'Enterprise business health':'Business health','Strategic risk':'Strategic risk','Financial exposure':'Financial exposure','Brand & customer trust':'Customer trust','Board KPIs':'Board KPIs','Decisions required':'Decisions',
+ // CFO seat (outcome tabs)
+ 'Business interruption cost':'BI cost','Cyber investment ROI':'Investment ROI','Insurance effectiveness':'Insurance','Cost optimization':'Cost optimization','Risk-acceptance decisions':'Risk acceptance',
  // Board seat
  'Where do we stand? — the board brief':'Board brief','Our worst realistic day — could we survive it?':'Worst day','How do we compare — and which way are we heading?':'Peers & trend','Oversight & disclosure — SEC Reg S-K Item 106':'Oversight','What needs the board?':'Board decisions',
  'Are we under attack right now?':'Live status','What are we protecting — and what is each worth?':'Crown Jewels — Exposure','How is security helping the business grow — and win deals?':'Business Growth','Are our controls actually working — and is the program improving?':'Controls','Which framework controls do our tools satisfy? — NIST CSF 2.0 & 800-53':'Frameworks','AI risk — two fronts: securing the AI we run, and using AI to defend':'AI risk','Are we audit-ready? — compliance framework readiness':'Compliance','What decision needs you now?':'Decision','How does our security investment move the business?':'ROI','What are my responsibilities — and how does security enable each?':'Operating model',
@@ -1408,7 +1410,7 @@ function renderSignals(){
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -1552,13 +1554,28 @@ function renderCeoTrust(){
     '<div><div class="cv crit claim" data-ev="liability" style="font-size:20px">'+(exposure!=null?usd(exposure):'—')+(exposure!=null?' <span class="fx">ƒ</span>':'')+'</div><div class="cn">notification / class-action exposure if breached</div></div>'+
     '</div><div class="cn" style="margin-top:12px"><b>'+b.trust.charAt(0).toUpperCase()+b.trust.slice(1)+'</b> is the currency of this business — a breach converts directly into churn, brand damage and the liability above. The flip side is security as a <b>sales asset</b>: the certifications and cleared deals below turn that trust into revenue.</div></div>';
 }
+/* CFO business-interruption cost — what an outage of a revenue-critical service
+   costs per hour / per day / across worst-case recovery, plus days of operating
+   income. From resilience (downtime $/hr, recovery) + earnings ratios. */
+function renderCfoBI(){
+  var host=document.getElementById('cfoBI');if(!host)return;
+  var rs=(LIVE&&LIVE.resilience)||{},r=(LIVE&&LIVE.economics&&LIVE.economics.ratios)||{};
+  var perHr=rs.top_downtime_per_hr,worst=rs.worst_recovery_hours;
+  var perDay=perHr!=null?perHr*24:null,worstCost=(perHr!=null&&worst!=null)?perHr*worst:null;
+  host.innerHTML='<div class="grid4">'+
+    '<div class="card"><div class="ck">Cost of downtime</div><div class="cv" style="font-size:19px;margin-top:6px;color:var(--warn)">'+(perHr!=null?usd(perHr)+' / hr':'—')+'</div><div class="cn">on the top revenue-critical service</div></div>'+
+    '<div class="card"><div class="ck">Per day of outage</div><div class="cv" style="font-size:19px;margin-top:6px">'+(perDay!=null?usd(perDay)+' / day':'—')+'</div><div class="cn">direct revenue at risk</div></div>'+
+    '<div class="card"><div class="ck">Worst-case interruption</div><div class="cv" style="font-size:19px;margin-top:6px;color:var(--crit)">'+(worstCost!=null?usd(worstCost):'—')+'</div><div class="cn">'+(worst!=null?('slowest service · '+hrsToStr(worst)+' to restore'):'recovery × downtime cost')+'</div></div>'+
+    '<div class="card"><div class="ck">A severe year = days of income</div><div class="cv" style="font-size:19px;margin-top:6px">'+(r.days_of_operating_income!=null?(Math.round(r.days_of_operating_income)+' days'):'—')+'</div><div class="cn">a bad cyber year in days the business runs on</div></div>'+
+    '</div><div class="cn" style="margin-top:10px">Business-interruption cost is what an outage of a revenue-critical service costs per hour and per day — the figure finance needs to size recovery investment and insurance. From your business-process revenue (BIA) and per-system recovery capability; earnings translation is below.</div>';
+}
 /* Honest data-mode banner for the CEO $ tabs — the dollar figures are sector
    placeholders until go-live, then computed from the org's own data. Labels the
    illustrative state plainly so nothing reads as a fabricated claim. */
 function renderCeoMode(){
   var live=!!(LIVE&&LIVE.economics&&Number(LIVE.economics.ale)>0);
   var html=live?'':'<div class="cn" style="margin-bottom:14px;padding:11px 13px;background:var(--surface-2);border-radius:8px;line-height:1.5">◐ <b style="color:var(--warn)">Illustrative for '+indLabel()+'</b> — the dollar figures on this tab are sector placeholders until you complete go-live. After go-live every number is computed from <b>your own</b> financials and risk register, and each is clickable to its exact formula and inputs. Nothing here is a fixed or invented figure.</div>';
-  ['ceoModeA','ceoModeB'].forEach(function(id){var h=document.getElementById(id);if(h)h.innerHTML=html;});
+  ['ceoModeA','ceoModeB','cfoModeA','cfoModeB'].forEach(function(id){var h=document.getElementById(id);if(h)h.innerHTML=html;});
 }
 /* Industry-specific emerging risks — the moves a sector's board is warned about,
    replacing a generic note. Enriched with the org's own live concentration
