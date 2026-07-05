@@ -471,7 +471,7 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderCeoHealth();renderCeoTrust();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
@@ -1408,7 +1408,7 @@ function renderSignals(){
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderCeoHealth();renderCeoTrust();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -1551,6 +1551,36 @@ function renderCeoTrust(){
     '<div><div class="cv" style="font-size:20px">'+(recs!=null?recs.toLocaleString():'—')+'</div><div class="cn">sensitive '+noun+' records we hold</div></div>'+
     '<div><div class="cv crit claim" data-ev="liability" style="font-size:20px">'+(exposure!=null?usd(exposure):'—')+(exposure!=null?' <span class="fx">ƒ</span>':'')+'</div><div class="cn">notification / class-action exposure if breached</div></div>'+
     '</div><div class="cn" style="margin-top:12px"><b>'+b.trust.charAt(0).toUpperCase()+b.trust.slice(1)+'</b> is the currency of this business — a breach converts directly into churn, brand damage and the liability above. The flip side is security as a <b>sales asset</b>: the certifications and cleared deals below turn that trust into revenue.</div></div>';
+}
+/* Honest data-mode banner for the CEO $ tabs — the dollar figures are sector
+   placeholders until go-live, then computed from the org's own data. Labels the
+   illustrative state plainly so nothing reads as a fabricated claim. */
+function renderCeoMode(){
+  var live=!!(LIVE&&LIVE.economics&&Number(LIVE.economics.ale)>0);
+  var html=live?'':'<div class="cn" style="margin-bottom:14px;padding:11px 13px;background:var(--surface-2);border-radius:8px;line-height:1.5">◐ <b style="color:var(--warn)">Illustrative for '+indLabel()+'</b> — the dollar figures on this tab are sector placeholders until you complete go-live. After go-live every number is computed from <b>your own</b> financials and risk register, and each is clickable to its exact formula and inputs. Nothing here is a fixed or invented figure.</div>';
+  ['ceoModeA','ceoModeB'].forEach(function(id){var h=document.getElementById(id);if(h)h.innerHTML=html;});
+}
+/* Industry-specific emerging risks — the moves a sector's board is warned about,
+   replacing a generic note. Enriched with the org's own live concentration
+   (single-vendor blast) and AI-in-production count when present. */
+var IND_EMERGING={
+  health:[{n:'AI in clinical &amp; claims decisioning',w:'bias, explainability and liability as AI enters care and claims decisions'},{n:'Connected medical devices &amp; IoT',w:'unpatched clinical devices widen the attack surface into care delivery'}],
+  fin:[{n:'AI in credit, fraud &amp; trading decisions',w:'model risk and explainability as AI drives regulated decisions'},{n:'Real-time &amp; instant-payments fraud',w:'faster rails compress the window to stop a fraudulent transfer'}],
+  mfg:[{n:'OT / IT convergence',w:'plant and MES systems reachable from IT as factories digitize'},{n:'Supplier &amp; design-tool concentration',w:'one supplier or design-tool compromise halts the line or leaks IP'}],
+  retail:[{n:'Third-party checkout &amp; web scripts',w:'Magecart-style card skimming injected through code you don’t own'},{n:'AI pricing &amp; personalization',w:'data-use and consumer-protection exposure as AI drives offers'}],
+  gov:[{n:'Nation-state espionage &amp; pre-positioning',w:'long-dwell access to citizen records and essential services'},{n:'Legacy-system modernization risk',w:'end-of-life systems still running essential citizen services'}],
+  energy:[{n:'OT / ICS targeting &amp; geopolitics',w:'nation-state pre-positioning in grid and control systems'},{n:'Grid digitization &amp; distributed energy',w:'more connected endpoints across generation and distribution'}],
+  tech:[{n:'AI supply chain &amp; model risk',w:'poisoned dependencies, prompt injection and shadow AI in the product'},{n:'Customer-data concentration',w:'one platform holding many customers’ data raises the blast radius'}]
+};
+function renderCeoEmerging(){
+  var host=document.getElementById('ceoEmerging');if(!host)return;
+  var list=(IND_EMERGING[indKey()]||IND_EMERGING.tech);
+  var rows=list.map(function(e){return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--warn)"></span><b>'+e.n+'</b><span class="drow-tool" style="color:var(--muted)">sector</span></div><div class="drow-need">'+e.w+'.</div></div>';});
+  var aiSys=(LIVE&&LIVE.aiRisk&&LIVE.aiRisk.governance&&Number(LIVE.aiRisk.governance.systems))||0;
+  if(aiSys>0)rows.unshift('<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--serious)"></span><b>'+aiSys+' AI system'+(aiSys>1?'s':'')+' already in production</b><span class="drow-tool" style="color:var(--good)">live</span></div><div class="drow-need">AI is live in your environment — its governance is the fastest-moving new liability. Depth in the CISO AI-risk view.</div></div>');
+  var tv=LIVE&&LIVE.resilience&&LIVE.resilience.top_vendor_blast;
+  if(tv&&tv.vendor)rows.push('<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--crit)"></span><b>Third-party concentration — '+tv.vendor+'</b><span class="drow-tool" style="color:var(--crit)">live</span></div><div class="drow-need">Underpins '+((tv.systems||[]).length)+' revenue system'+((tv.systems||[]).length===1?'':'s')+(tv.per_hr?(' · '+usd(tv.per_hr)+'/hr at risk if it fails'):'')+' — a systemic single point of failure.</div></div>');
+  host.innerHTML='<div class="card"><div class="ck">What’s rising fastest — '+indLabel()+' '+liveTag()+'</div><div style="margin-top:8px">'+rows.join('')+'</div><div class="cn" style="margin-top:8px">The emerging risks specific to '+indLabel()+' (<b>sector</b>, from public reporting), plus any <b>live</b> concentration from your own environment. Not a generic list — it changes with your industry and your data.</div></div>';
 }
 /* Board decisions — the calls that are the board's to make: risk-acceptances
    above appetite, appetite reviews, and the funded decisions on the oversight

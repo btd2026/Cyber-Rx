@@ -36,7 +36,7 @@ var SEATS = {
   brief:'Here is your read as CEO. Cyber is a managed business risk, within the board’s approved tolerance, and I can show you the strategic moves it affects, what is financially at stake, what a breach would cost us in customer trust, the numbers you take to the board, and the few decisions that need you. Every figure traces to our own data.',
   body:function(){return (
    sec('01','Enterprise business health','Your one-glance read on whether cyber is helping or hurting the business — within the board’s appetite, getting better or worse, resilient, and trusted — then the processes carrying the most exposure.',
-     '<div id="ceoHealth"></div>'
+     '<div id="ceoModeA"></div><div id="ceoHealth"></div>'
      +'<div id="ceoProcBars" style="margin-top:16px">'+bars([
       {l:'Claims &amp; payments processing',ev:'proc-claims',v:'$34M',pct:100,cls:'hot'},
       {l:'Policy administration',ev:'proc-policy',v:'$18M',pct:53},
@@ -44,9 +44,10 @@ var SEATS = {
       {l:'Member portal &amp; servicing',ev:'proc-member',v:'$5M',pct:15}])+'</div>')
    +sec('02','Strategic risk','Is our strategy safe to pursue? A go / no-go per major move (M&amp;A · cloud · AI · expansion), the risks rising fastest, and where a single third-party is a systemic point of failure.',
      '<div id="ceoGoNoGo"></div>'
-     +'<div class="card" style="margin-top:14px"><div class="ck">What’s rising fastest</div><div class="cn" style="margin-top:6px"><span class="pill mod">modeled</span> The two fastest-rising strategic risks are <b>AI / automated decisioning</b> (new liability as AI scales into products and decisions) and <b>third-party &amp; cloud concentration</b> (a single provider underpinning multiple revenue systems). Depth is in the CISO <b>AI risk</b> view and below.</div></div>'
+     +'<div id="ceoEmerging" style="margin-top:14px"></div>'
      +'<div id="ceoThirdParty" style="margin-top:14px"></div>')
    +sec('03','Financial exposure','Cyber as dollars — expected annual loss and the worst realistic year against appetite, the disclosure threshold, insurance coverage against the tail, and where the next dollar of security spend works hardest.',
+     '<div id="ceoModeB"></div>'+
      tiles([
       {k:'Expected annual loss',v:'<span id="lvExpo">$68M</span>',ev:'ale',note:'<span class="pill good" id="lvAleWithin">Within appetite</span> &nbsp;<span class="claim" data-ev="pctrev"><span id="lvPctRev">≈0.8% of revenue</span> <span class="fx">ƒ</span></span>'},
       {k:'Worst-case tail (95%)',v:'<span id="lvTail">$180M</span>',cls:'warn',ev:'tail',note:'<span class="pill warn" id="lvTailWithin">Above appetite</span> &nbsp;vs appetite <span class="claim" data-ev="appetite"><span id="lvAppetite">$120M</span> <span class="fx">ƒ</span></span>'},
