@@ -697,10 +697,19 @@ function importedInits(){
 }
 function parseUsdNum(s){var m=String(s||'').match(/([\d.]+)\s*([KMB])?/i);if(!m)return 0;var n=parseFloat(m[1])||0;var u=(m[2]||'').toUpperCase();return n*(u==='B'?1e9:u==='M'?1e6:u==='K'?1e3:1);}
 function deliveredBar(p){return '<div style="display:flex;align-items:center;gap:6px"><div style="flex:1;height:5px;background:var(--surface-2);border-radius:3px;min-width:38px;overflow:hidden"><i style="display:block;height:100%;width:'+p+'%;background:'+(p>=100?'var(--good)':'var(--blue)')+'"></i></div><span style="font-size:11px;color:var(--muted)">'+p+'%</span></div>';}
-function projProgress(d){ // schedule progress from real ticket status (or committed state)
-  if(d&&d.ticket){var n=statusStep(d.status).n;return n>=4?100:n>=3?55:n>=2?20:0;}
-  var committed=(Date.now()-((d&&d.ts)||0))>=EDIT_WINDOW_MS;return committed?40:10;
+/* Real delivery % ONLY — from an explicit progress field the ticketing system
+   supplies (Jira % complete / SNOW percent_complete), or 100% for a done status.
+   No real number → null, and the UI shows the status word instead of a guess.
+   (Never fabricate a percentage from age/committed state.) */
+function projProgress(d){
+  if(!d)return null;
+  var raw=[d.progress,d.percentComplete,d.percent_complete,d.pctComplete,d.percent,d.percent_done].filter(function(v){return v!=null;})[0];
+  if(raw!=null){var n=parseFloat(String(raw).replace(/[^0-9.]/g,''));if(isFinite(n))return Math.max(0,Math.min(100,Math.round(n)));}
+  if(/\b(done|closed|complete|completed|resolved)\b/i.test(String(d.status||'')))return 100;
+  return null; // no real % available — show status, not a guessed number
 }
+/* " · N% delivered" only when N is a real number; otherwise nothing. */
+function progTxt(pr){return (pr&&pr.prog!=null)?(' · '+pr.prog+'% delivered'):'';}
 /* Security-investment portfolio in a BUSINESS lens (Gartner outcome-driven /
    "income-statement" view): every funded initiative — pulled from your ticketing
    system + cockpit decisions — mapped to the business outcome it buys and the $
@@ -1038,7 +1047,7 @@ function controlGapsCard(){
   if(!gaps.length)return '<div class="card" style="margin-top:14px"><div class="ck">Control gaps</div><div class="cn" style="margin-top:6px">✓ Every measured control is at or above target (≥90% deployed) — nothing needs attention right now.</div></div>';
   var rows=gaps.map(function(o){var c=o.c,p=o.p,pr=capProject(c);
     return '<div class="drow capgap" data-cap="'+c.k+'" style="cursor:pointer"><div class="drow-h"><span class="cap-dot" style="background:var(--'+capColor(p)+')"></span><b>'+c.name+'</b><span class="drow-tool">'+p+'% deployed <span class="drill-cta">details ▸</span></span></div>'+capBar(p)+
-      '<div class="drow-proj'+(pr?'':' none')+'">'+(pr?('<span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> Funded: <b style="color:var(--ink)">'+pr.name+'</b>'+(pr.ticket?(' · '+pr.ticket):'')+' · '+pr.prog+'% delivered'):'No project on this yet — raise one to close the gap')+'</div></div>';
+      '<div class="drow-proj'+(pr?'':' none')+'">'+(pr?('<span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> Funded: <b style="color:var(--ink)">'+pr.name+'</b>'+(pr.ticket?(' · '+pr.ticket):'')+progTxt(pr)):'No project on this yet — raise one to close the gap')+'</div></div>';
   }).join('');
   return '<div class="card" style="margin-top:14px"><div class="ck">Control gaps that carry risk — and the funded fix '+liveTag()+'</div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">Each gap is from your connected tools, ordered weakest first. Click any for what it leaves exposed and how it closes.</div></div>';
 }
@@ -1067,7 +1076,7 @@ function drillOneCap(c){var p=capDeploy(c),pr=capProject(c),fw=CAP_FRAMEWORK[c.k
     '<div class="drill-p"><b>What it is:</b> '+c.name+' — '+c.tool+'. '+(p!=null?('Currently covering <b>'+p+'%</b> of the estate.'):'Not yet connected, so coverage is unknown.')+'</div>'+
     fwSec+
     '<div class="ev-sec">To close the gap</div><div class="drill-p">'+(p!=null?c.need:c.connect)+'</div>'+
-    '<div class="ev-sec">Funded fix</div><div class="drill-p">'+(pr?('<span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> <b style="color:var(--ink)">'+pr.name+'</b>'+(pr.ticket?(' · '+pr.ticket):'')+' · '+pr.prog+'% delivered'):'No portfolio project currently addresses this — raise one and it appears here, tracked to completion.')+'</div>';}
+    '<div class="ev-sec">Funded fix</div><div class="drill-p">'+(pr?('<span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> <b style="color:var(--ink)">'+pr.name+'</b>'+(pr.ticket?(' · '+pr.ticket):'')+progTxt(pr)):'No portfolio project currently addresses this — raise one and it appears here, tracked to completion.')+'</div>';}
 /* ---- Framework posture — the full NIST CSF 2.0 (6 functions, 22 categories, 106
    subcategories) and NIST SP 800-53 Rev 5 (20 families, base controls) catalogs,
    with each control's coverage evidenced live from the connected tools via the
@@ -1197,7 +1206,7 @@ function drillControlValue(k){var c=CAP_BY_KEY[k];if(!c)return '';
     '<div class="drill-p"><b>'+c.name+'</b> — '+c.tool+'. The expected loss this control removes when it operates effectively — '+(p!=null?('<b>'+p+'%</b> deployed today'):'not yet connected')+'.</div>'+
     (fw?('<div class="ev-sec">Frameworks it satisfies</div><div class="drill-p">'+fwIdChips(fw)+'</div>'):'')+calc+protSec+
     '<div class="ev-sec">Make it audit-real</div><div class="drill-p">Connect your control catalog / GRC so each control’s inherent-vs-residual $ is measured from evidence rather than modeled — then it becomes audit-defensible and updates per control automatically.</div>'+
-    (pr?('<div class="ev-sec">Funded fix</div><div class="drill-p"><span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> <b>'+pr.name+'</b> · '+pr.prog+'% delivered</div>'):'');}
+    (pr?('<div class="ev-sec">Funded fix</div><div class="drill-p"><span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> <b>'+pr.name+'</b>'+progTxt(pr)+'</div>'):'');}
 function capChip(k,cv){var c=CAP_BY_KEY[k];if(!c)return '';var fw=CAP_FRAMEWORK[k],p=capDeploy(c),sv=(cv&&cv.now[k])||0;
   var ids=fw?fw.csf.slice(0,2).map(function(id){return '<span class="fwid csf">'+id+'</span>';}).join(''):'';
   var dep=p!=null?('<span style="color:var(--'+capColor(p)+');font-weight:700">'+p+'%</span>'):'<span style="color:var(--muted)">—</span>';
@@ -1595,7 +1604,7 @@ function demoSignals(){
   if(has(['qualys','tenable']))set('patch_pct',88);
   if(has(['knowbe4','proofpoint'])){set('phishing_pct',3);set('training_pct',94);}
   if(has(['proofpoint','abnormal']))set('bec_blocked',14);
-  if(has(['splunk','sentinel'])){set('open_incidents',0);set('mttd_hrs',8);}
+  if(has(['splunk','sentinel'])){set('open_incidents',0);set('mttd_hrs',8);set('siem_coverage_pct',92);}
   if(has(['aws','azure','wiz','prisma','gcp']))set('cspm_pct',82);
   if(has(['sap','oracle','workday','netsuite','sapgrc'])){set('sod_conflicts',3);set('change_pass_pct',94);set('payment_anomalies',2);}
   if(has(['onetrust','trustarc','relativity','exterro'])){set('dsar_open',12);set('dsar_overdue',0);set('legal_holds',2);}
@@ -2503,7 +2512,7 @@ function capDeploy(c){
   if(c.k==='pam')return sig('pam_pct');
   if(c.k==='vuln')return sig('patch_pct');
   if(c.k==='aware'){var t=sig('training_pct');if(t!=null)return t;var ph=sig('phishing_pct');return ph!=null?Math.max(0,100-ph):null;}
-  if(c.k==='siem')return (sig('open_incidents')!=null||sig('mttd_hrs')!=null)?90:null;
+  if(c.k==='siem')return sig('siem_coverage_pct'); // real log-source coverage from the SIEM; no fabricated fixed value
   if(c.k==='cspm')return sig('cspm_pct');
   if(c.k==='backup')return sig('backup_immutable_pct');
   return null; // dlp, seg — no live signal yet
@@ -2568,7 +2577,7 @@ function drillCapabilities(){
     .sort(function(a,b){var av=a.p==null?-1:a.p,bv=b.p==null?-1:b.p;return av-bv;})
     .map(function(o){var c=o.c,p=o.p,cls=capColor(p),pr=capProject(c);
       var proj=pr
-        ?'<div class="drow-proj"><span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> Project: <b style="color:var(--ink)">'+pr.name+'</b>'+(pr.ticket?(' · '+pr.ticket):'')+' · '+pr.prog+'% delivered</div>'
+        ?'<div class="drow-proj"><span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> Project: <b style="color:var(--ink)">'+pr.name+'</b>'+(pr.ticket?(' · '+pr.ticket):'')+progTxt(pr)+'</div>'
         :'<div class="drow-proj none">No portfolio project is currently addressing this. Raise one — it will appear here once it is in your ticketing system.</div>';
       return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+cls+')"></span><b>'+c.name+'</b><span class="drow-tool">'+c.tool+'</span></div>'+
         capBar(p)+
