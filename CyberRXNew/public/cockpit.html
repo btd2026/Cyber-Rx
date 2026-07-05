@@ -3286,7 +3286,9 @@ function renderChain(){
   var note=(live&&live.length)
     ? '<div class="cn" style="margin-bottom:14px">● <b style="color:var(--good)">Live</b> — your <b>'+list.length+'</b> crown-jewel '+(list.length===1?'system':'systems')+', ranked by criticality (data sensitivity × exposure × the processes that depend on them). Each shows the transactions and dollar value it carries every day, how exposed it is, and how fast it recovers.</div>'
     : '<div class="cn" style="margin-bottom:14px">◐ <b style="color:var(--warn)">Illustrative</b> — an example. Complete onboarding to see your own crown jewels.</div>';
-  host.innerHTML=note+'<div class="cjgridwrap">'+list.map(cjRow).join('')+'</div>';
+  // When Nerion proposed the risk register (no upload), say so plainly and label the exposures as estimates.
+  var proposed=(LIVE&&LIVE.risks_proposed)?'<div class="cn" style="margin-bottom:14px;padding:9px 11px;background:var(--warn-soft);border-radius:8px">◐ <b style="color:var(--warn)">Risks proposed by Nerion</b> — you didn’t upload a cyber risk register, so Nerion’s offline model proposed likely risks from each application’s data, exposure and end-of-life status. <b>Exposures are modelled estimates — review &amp; accept</b>, or upload your own register in onboarding to replace them.</div>':'';
+  host.innerHTML=note+proposed+'<div class="cjgridwrap">'+list.map(cjRow).join('')+'</div>';
 }
 
 function selectSeat(seat){document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===seat);});render(seat);if(!VOICE_MUTED)speakSeat(seat);}

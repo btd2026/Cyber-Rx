@@ -263,6 +263,9 @@ async function run(orgId) {
     summary: {
       material_exposure_usd: expo.total,
       material_exposure_basis: expo.basis,
+      // true when Nerion's offline proposer supplied the risk register (no upload) —
+      // the cockpit labels these risks "proposed · review & accept".
+      risks_proposed: !!(econIn && econIn.risks_proposed),
       material_exposure_items: expo.items.slice(0, 10),
       process_exposure,
       counts: { assets: assets.length, processes: processes.length, risks: risks.length, crown_jewels: crownAssets.length },
