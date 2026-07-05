@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CyberX-Ray · Business Command Center</title>
+<style>
+:root{
+  --plane:#F4F7FB; --surface:#FFFFFF; --surface-2:#E8F0FB; --line:#D9E1EC; --line-2:#CADCFC;
+  --ink:#1E2A4A; --ink-2:#44546A; --muted:#8A93A2; --brand:#2456C8;
+  --good:#2E8B6B; --warn:#C9A227; --serious:#C4703A; --crit:#B23A3A; --muted-c:#8A93A2;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--plane);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+a{color:inherit}
+.top{background:var(--surface);border-bottom:1px solid var(--line);padding:14px 26px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;position:sticky;top:0;z-index:20}
+.brand{font-weight:800;font-size:17px;letter-spacing:-.2px}
+.brand span{color:var(--brand)}
+.tagline{color:var(--muted);font-size:12.5px}
+.orgchip{margin-left:auto;display:flex;gap:10px;align-items:center;font-size:12.5px;color:var(--ink-2)}
+.orgchip select{padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:12.5px}
+.datachip{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:700}
+.datachip.live{background:rgba(46,139,107,.14);color:var(--good)} .datachip.demo{background:rgba(201,162,39,.16);color:var(--warn)} .datachip.illu{background:var(--surface-2);color:var(--ink-2)}
+.rolebar{background:var(--surface);border-bottom:1px solid var(--line);padding:0 20px;display:flex;gap:2px;overflow-x:auto}
+.rolebar button{border:0;background:none;padding:12px 14px;font-size:13px;font-weight:600;color:var(--ink-2);cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap}
+.rolebar button.on{color:var(--brand);border-bottom-color:var(--brand)}
+.wrap{max-width:1180px;margin:0 auto;padding:22px}
+.rolehead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+.rolehead h1{font-size:22px;margin:0;letter-spacing:-.3px}
+.rolefocus{color:var(--ink-2);font-size:13.5px;max-width:820px;margin:2px 0 16px}
+.tabs{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:18px}
+.tabs button{border:1px solid var(--line);background:#fff;padding:8px 13px;border-radius:20px;font-size:12.5px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.ck{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.cn{font-size:13px;color:var(--ink-2);line-height:1.5}
+.big{font-size:30px;font-weight:800;letter-spacing:-.5px;margin:6px 0 2px}
+.sub{font-size:12.5px;color:var(--muted)}
+.sec-h{font-size:13px;font-weight:800;margin:22px 0 10px;color:var(--ink)}
+.pill{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
+.pill.good{background:rgba(46,139,107,.14);color:var(--good)} .pill.warn{background:rgba(201,162,39,.18);color:var(--warn)} .pill.crit{background:rgba(178,58,58,.14);color:var(--crit)} .pill.mod{background:var(--surface-2);color:var(--ink-2)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr.click{cursor:pointer} tr.click:hover td{background:var(--surface-2)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:middle}
+.bar{height:8px;border-radius:6px;background:var(--surface-2);overflow:hidden;margin-top:6px}
+.bar>i{display:block;height:100%;border-radius:6px}
+.heat{display:grid;gap:6px}
+.heatrow{display:grid;grid-template-columns:190px 1fr;gap:8px;align-items:center}
+.heatcells{display:flex;gap:6px}
+.hc{flex:1;min-width:34px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;cursor:pointer}
+.action{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.action .an{min-width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:#fff}
+.mini{font-size:11.5px;color:var(--muted)}
+.scrim{position:fixed;inset:0;background:rgba(20,33,72,.4);opacity:0;pointer-events:none;transition:.15s;z-index:40}
+.scrim.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(560px,94vw);background:#fff;border-left:1px solid var(--line);box-shadow:-10px 0 40px rgba(20,33,72,.2);transform:translateX(100%);transition:.18s;z-index:41;overflow:auto;padding:24px}
+.drawer.open{transform:none}
+.drawer h2{font-size:18px;margin:0 0 4px}
+.chain{margin:14px 0}
+.chain .cl{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+.chain .cl b{min-width:150px;color:var(--muted);font-weight:700;font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+.x{position:absolute;top:16px;right:18px;border:0;background:none;font-size:22px;cursor:pointer;color:var(--muted)}
+.evrow{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.note{font-size:11.5px;color:var(--muted);margin-top:14px;line-height:1.5}
+@media(max-width:640px){.chain .cl b{min-width:110px}}
+</style>
+</head>
+<body>
+<div class="top">
+  <div><div class="brand">CyberX<span>-Ray</span> · Business Command Center</div><div class="tagline">Is cyber risk enabling or preventing our strategy? — a business operating platform powered by cybersecurity intelligence.</div></div>
+  <div class="orgchip">
+    <span id="orgName">—</span>
+    <label>Industry <select id="indSel"></select></label>
+    <span class="datachip illu" id="dataChip">illustrative</span>
+    <a href="cockpit.html" title="Detailed cockpit — the CISO / technical view with full framework mappings and evidence" style="color:var(--brand);font-weight:600;text-decoration:none">CISO detail →</a>
+  </div>
+</div>
+<div class="rolebar" id="roleBar"></div>
+<div class="wrap">
+  <div class="rolehead"><h1 id="roleTitle">CEO</h1><span class="pill mod" id="roleStrategy"></span></div>
+  <div class="rolefocus" id="roleFocus"></div>
+  <div class="tabs" id="tabBar"></div>
+  <div id="tabBody"></div>
+</div>
+<div class="scrim" id="scrim" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer"><button class="x" onclick="closeDrawer()">×</button><div id="drawerBody"></div></div>
+
+<script src="command-model.js"></script>
+<script>
+/* ---------- boot: reuse the same backend + org context as the cockpit ---------- */
+function apiBase(){try{return (window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'https://cyber-rx.onrender.com').replace(/\/+$/,'');}catch(_){return 'https://cyber-rx.onrender.com';}}
+function orgId(){try{return window.CYBERRX_ORG_ID||localStorage.getItem('cyberrx_org_id')||'';}catch(_){return '';}}
+function orgName(){try{return localStorage.getItem('cyberrx_org_name')||'';}catch(_){return '';}}
+function industry(){try{return (LIVE&&LIVE.industry)||localStorage.getItem('cyberrx_industry')||'';}catch(_){return '';}}
+function demoActive(){try{return localStorage.getItem('cyberrx_demo_mode')==='1';}catch(_){return false;}}
+var LIVE=null, SIGNALS=null, ROLE='ceo', TAB='summary', PACKKEY='tech';
+var TABS=[['summary','Executive Summary'],['objectives','Strategic Objectives'],['performance','Business Performance'],['risks','Business Risks'],['resilience','Operational Resilience'],['financial','Financial & Operational Impact'],['opportunities','Opportunities'],['actions','Recommended Actions'],['decisions','Decisions Required']];
+
+function pack(){return INDUSTRY_PACKS[PACKKEY]||INDUSTRY_PACKS.tech;}
+function sig(k){try{var s=SIGNALS&&SIGNALS[k];return s&&s.value!=null?Number(s.value):null;}catch(_){return null;}}
+function dataMode(){if(LIVE&&LIVE.economics&&Number(LIVE.economics.ale)>0)return 'live';if(demoActive())return 'demo';return 'illustrative';}
+function usd(n){if(n==null)return '—';var a=Math.abs(n);if(a>=1e9)return '$'+(n/1e9).toFixed(1)+'B';if(a>=1e6)return '$'+Math.round(n/1e6)+'M';if(a>=1e3)return '$'+Math.round(n/1e3)+'K';return '$'+Math.round(n);}
+function band(s){return s>=75?'good':s>=50?'warn':'crit';}
+function bandColor(s){return 'var(--'+band(s)+')';}
+function bandLabel(s){return s>=85?'Healthy':s>=75?'On track':s>=50?'Needs attention':s>=30?'At risk':'Critical';}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+/* ---------- scoring engine: telemetry (evidence) → business health ---------- */
+function capScore(cap){var vals=(cap.controls||[]).map(function(k){return sigToScore(k,sig(k));}).filter(function(x){return x!=null;});return vals.length?Math.round(vals.reduce(function(a,b){return a+b;},0)/vals.length):null;}
+function objScore(o){var cs=o.caps.map(function(cid){return capScore(capById(cid));}).filter(function(x){return x!=null;});if(!cs.length)return null;var avg=Math.round(cs.reduce(function(a,b){return a+b;},0)/cs.length);
+  // financial modifier: if the enterprise tail is over the board appetite, every
+  // objective carries more risk — reflect it (small, bounded, explainable).
+  var ap=(LIVE&&LIVE.economics&&LIVE.economics.appetite)||{};if(ap.appetite&&ap.tail_within===false)avg=Math.max(0,avg-8);
+  return avg;}
+function capById(id){var cs=pack().capabilities;for(var i=0;i<cs.length;i++)if(cs[i].id===id)return cs[i];return null;}
+function objById(id){var os=pack().objectives;for(var i=0;i<os.length;i++)if(os[i].id===id)return os[i];return null;}
+function overallHealth(){var os=pack().objectives.map(objScore).filter(function(x){return x!=null;});var ctrl=os.length?os.reduce(function(a,b){return a+b;},0)/os.length:70;
+  var fin=financialScore(),res=resilienceScore();
+  // weighted combination — control effectiveness, financial exposure, resilience
+  return Math.round(ctrl*0.5+fin*0.28+res*0.22);}
+function financialScore(){var e=(LIVE&&LIVE.economics)||{},ap=e.appetite||{};if(ap.appetite&&e.ale){var r=Number(e.ale)/Number(ap.appetite);var s=Math.round(100-Math.min(100,r*100));if(ap.tail_within===false)s=Math.min(s,58);return Math.max(5,s);}return 68;}
+function resilienceScore(){var rs=(LIVE&&LIVE.resilience)||{};var w=rs.worst_recovery_hours;var s=100;if(w!=null)s=w<=6?92:w<=24?78:w<=72?60:42;if(rs.top_vendor_blast&&rs.top_vendor_blast.vendor)s=Math.min(s,66);var bk=sig('backup_immutable_pct');if(bk!=null)s=Math.round((s+sigToScore('backup_immutable_pct',bk))/2);return s;}
+function customerTrustScore(){var caps=pack().capabilities.filter(function(c){return /portal|onboard|customer|member|storefront|banking|loyal/i.test(c.name+' '+c.service);});var cs=caps.map(capScore).filter(function(x){return x!=null;});var base=cs.length?Math.round(cs.reduce(function(a,b){return a+b;},0)/cs.length):72;var oi=sig('open_incidents');if(oi!=null&&oi>0)base=Math.max(0,base-oi*10);return base;}
+
+/* Named business scores for the summary + drill. */
+function namedScores(){return [
+  {k:'overall',n:'Overall Business Cyber Health',s:overallHealth(),d:'Weighted: objective control-effectiveness (50%), financial exposure (28%), operational resilience (22%).'},
+  {k:'fin',n:'Financial Exposure Score',s:financialScore(),d:'Expected loss vs the board’s approved risk appetite (higher = further inside appetite).'},
+  {k:'res',n:'Operational Resilience Score',s:resilienceScore(),d:'Worst-case recovery time, single-vendor concentration and recovery assurance (immutable backups).'},
+  {k:'trust',n:'Customer Trust Score',s:customerTrustScore(),d:'Health of the customer-facing capabilities plus any active business-disruption signals.'}
+];}
+
+/* ---------- role scoping — who owns / sees what ---------- */
+function enterpriseRole(){return ['board','ceo','ciso','crisk','audit'].indexOf(ROLE)>=0;}
+function roleObjectives(){var os=pack().objectives;if(enterpriseRole())return os;var mine=os.filter(function(o){return o.owner===ROLE;});
+  // also objectives that depend on a capability this role owns
+  os.forEach(function(o){if(mine.indexOf(o)<0&&o.caps.some(function(cid){var c=capById(cid);return c&&c.owner===ROLE;}))mine.push(o);});
+  return mine.length?mine:os;}
+function roleCaps(){var seen={},out=[];roleObjectives().forEach(function(o){o.caps.forEach(function(cid){if(!seen[cid]){seen[cid]=1;var c=capById(cid);if(c)out.push(c);}});});return out;}
+function roleRisks(){var oids={};roleObjectives().forEach(function(o){oids[o.id]=1;});return pack().risks.filter(function(r){return enterpriseRole()||oids[r.obj];});}
+
+/* ---------- the 9 universal tabs ---------- */
+function scoreCard(sc){return '<div class="card click" onclick="drillScore(\''+sc.k+'\')"><div class="ck">'+esc(sc.n)+'</div><div class="big" style="color:'+bandColor(sc.s)+'">'+sc.s+'<span style="font-size:15px;color:var(--muted)">/100</span></div><div class="bar"><i style="width:'+sc.s+'%;background:'+bandColor(sc.s)+'"></i></div><div class="sub" style="margin-top:8px">'+bandLabel(sc.s)+' · <span style="color:var(--brand)">see evidence →</span></div></div>';}
+function objRow(o){var s=objScore(o);var owner=roleByKey(o.owner);var risks=pack().risks.filter(function(r){return r.obj===o.id;});
+  return '<tr class="click" onclick="drillObjective(\''+o.id+'\')"><td><b>'+esc(o.name)+'</b><div class="mini">KPI: '+esc(o.kpi)+'</div></td><td><span class="dot" style="background:'+bandColor(s)+'"></span>'+bandLabel(s)+' <span class="mini">('+s+'/100)</span></td><td>'+esc(owner.label)+'</td><td>'+(risks.length?('<span class="pill '+(s<50?'crit':'warn')+'">'+risks.length+' cyber blocker'+(risks.length>1?'s':'')+'</span>'):'<span class="pill good">clear</span>')+'</td></tr>';}
+
+function tabSummary(){
+  var scs=namedScores();
+  var top=roleRisks().map(function(r){return {r:r,s:objScore(objById(r.obj))||60};}).sort(function(a,b){return a.s-b.s;}).slice(0,4);
+  var decs=roleDecisions();
+  return '<div class="grid">'+scs.map(scoreCard).join('')+'</div>'+
+    '<div class="sec-h">Strategic objective health'+(enterpriseRole()?'':' — yours')+'</div>'+
+    '<div class="card" style="padding:4px 0"><table><thead><tr><th>Objective</th><th>Health</th><th>Owner</th><th>Cyber blockers</th></tr></thead><tbody>'+roleObjectives().map(objRow).join('')+'</tbody></table></div>'+
+    '<div class="sec-h">Top risks requiring attention</div>'+
+    '<div class="card">'+(top.length?top.map(function(t){return '<div class="action click" onclick="drillRisk(\''+t.r.obj+'|'+encodeURIComponent(t.r.name)+'\')"><div class="an" style="background:'+bandColor(t.s)+'">!</div><div><b>'+esc(t.r.name)+'</b><div class="mini">'+esc(t.r.impact)+' · threatens “'+esc((objById(t.r.obj)||{}).name||'')+'”</div></div></div>';}).join(''):'<div class="cn">No cyber blockers on your objectives right now.</div>')+'</div>'+
+    '<div class="sec-h">Key decisions required</div>'+
+    '<div class="card">'+(decs.length?decs.slice(0,3).map(function(d){return '<div class="action"><div class="an" style="background:var(--brand)">▸</div><div><b>'+esc(d.name)+'</b><div class="mini">'+esc(d.kind)+' · owner '+esc(roleByKey(d.owner).label)+' · '+esc(d.benefit)+'</div></div></div>';}).join(''):'<div class="cn">No decisions awaiting you.</div>')+'</div>'+
+    provNote();
+}
+function tabObjectives(){
+  return '<div class="cn" style="margin-bottom:12px">The strategic objectives'+(enterpriseRole()?' across the enterprise':' you own or enable')+', each with its health, the cyber blockers threatening it, and the business capabilities it depends on.</div>'+
+    roleObjectives().map(function(o){var s=objScore(o);var risks=pack().risks.filter(function(r){return r.obj===o.id;});
+      return '<div class="card" style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;gap:12px"><div><b style="font-size:15px">'+esc(o.name)+'</b><div class="mini">Owner: '+esc(roleByKey(o.owner).label)+' · KPI: '+esc(o.kpi)+'</div></div><div style="text-align:right"><div class="big" style="font-size:22px;margin:0;color:'+bandColor(s)+'">'+s+'</div><div class="sub">'+bandLabel(s)+'</div></div></div>'+
+        '<div class="bar" style="margin:10px 0"><i style="width:'+s+'%;background:'+bandColor(s)+'"></i></div>'+
+        '<div class="mini" style="margin-bottom:4px"><b>Depends on:</b> '+o.caps.map(function(cid){var c=capById(cid),cs=capScore(c);return esc(c.name)+' <span style="color:'+bandColor(cs||60)+'">('+(cs==null?'—':cs)+')</span>';}).join(' · ')+'</div>'+
+        (risks.length?('<div class="mini"><b style="color:var(--crit)">Cyber blockers:</b> '+risks.map(function(r){return esc(r.name);}).join(' · ')+'</div>'):'<div class="mini" style="color:var(--good)">No cyber blockers.</div>')+
+        '<div style="margin-top:8px"><span class="pill mod" style="cursor:pointer" onclick="drillObjective(\''+o.id+'\')">trace the evidence →</span></div></div>';
+    }).join('')+provNote();
+}
+function tabPerformance(){
+  return '<div class="cn" style="margin-bottom:12px">Business capability & process health — how well the things that run the business are protected and available. Each rolls up from live control telemetry.</div>'+
+    '<div class="card" style="padding:4px 0"><table><thead><tr><th>Capability</th><th>Business service</th><th>Health</th><th>Key processes</th></tr></thead><tbody>'+
+    roleCaps().map(function(c){var s=capScore(c);return '<tr class="click" onclick="drillCapability(\''+c.id+'\')"><td><b>'+esc(c.name)+'</b></td><td>'+esc(c.service)+'</td><td><span class="dot" style="background:'+bandColor(s||60)+'"></span>'+(s==null?'—':s+'/100')+'</td><td class="mini">'+c.processes.map(esc).join(' · ')+'</td></tr>';}).join('')+
+    '</tbody></table></div>'+
+    '<div class="sec-h">Operational bottlenecks</div><div class="card">'+(function(){var weak=roleCaps().map(function(c){return {c:c,s:capScore(c)};}).filter(function(x){return x.s!=null&&x.s<75;}).sort(function(a,b){return a.s-b.s;});return weak.length?weak.map(function(w){return '<div class="action"><div class="an" style="background:'+bandColor(w.s)+'">'+w.s+'</div><div><b>'+esc(w.c.name)+'</b><div class="mini">'+esc(w.c.service)+' — below target; the weakest control evidence is dragging this capability. Drill in from Performance.</div></div></div>';}).join(''):'<div class="cn">All capabilities are at or above target.</div>';})()+'</div>'+provNote();
+}
+function tabRisks(){
+  var os=roleObjectives(),caps=roleCaps();
+  var heat='<div class="heat">'+os.map(function(o){return '<div class="heatrow"><div class="mini"><b>'+esc(o.name)+'</b></div><div class="heatcells">'+o.caps.map(function(cid){var c=capById(cid),s=capScore(c);return '<div class="hc" style="background:'+bandColor(s||60)+'" title="'+esc(c.name)+'" onclick="drillCapability(\''+cid+'\')">'+(s==null?'—':s)+'</div>';}).join('')+'</div></div>';}).join('')+'</div>';
+  return '<div class="cn" style="margin-bottom:12px">Risks threatening'+(enterpriseRole()?' the enterprise objectives':' your objectives')+' — in business terms. The heat map is objective × capability; darker red = a capability dragging an objective.</div>'+
+    '<div class="card">'+heat+'<div class="mini" style="margin-top:10px">Green ≥ 75 · amber ≥ 50 · red < 50. Click a cell to trace it to the control telemetry underneath.</div></div>'+
+    '<div class="sec-h">Business risks</div><div class="card" style="padding:4px 0"><table><thead><tr><th>Business risk</th><th>Threatens</th><th>Severity</th><th>Owner</th></tr></thead><tbody>'+
+    roleRisks().map(function(r){var o=objById(r.obj),s=objScore(o)||60;return '<tr class="click" onclick="drillRisk(\''+r.obj+'|'+encodeURIComponent(r.name)+'\')"><td><b>'+esc(r.name)+'</b><div class="mini">'+esc(r.impact)+'</div></td><td>'+esc((o||{}).name||'')+'</td><td><span class="pill '+(s<50?'crit':s<75?'warn':'good')+'">'+(s<50?'High':s<75?'Elevated':'Managed')+'</span></td><td>'+esc(roleByKey((o||{}).owner||'ceo').label)+'</td></tr>';}).join('')+
+    '</tbody></table></div>'+
+    '<div class="sec-h">Risk appetite</div><div class="card"><div class="cn">'+(function(){var ap=(LIVE&&LIVE.economics&&LIVE.economics.appetite)||{};if(ap.appetite)return 'Enterprise cyber exposure is <b>'+usd((LIVE.economics||{}).ale)+'</b> expected against a board appetite of <b>'+usd(ap.appetite)+'</b> — '+(ap.within!==false?'<b style="color:var(--good)">within appetite</b>':'<b style="color:var(--crit)">over appetite</b>')+(ap.tail_within===false?', with the worst-case tail <b style="color:var(--warn)">above the enterprise limit</b> — the open board item.':'.');return 'Enter the board’s cyber-risk appetite in onboarding to state every objective against the approved limit.';})()+'</div></div>'+provNote();
+}
+function tabResilience(){
+  var rs=(LIVE&&LIVE.resilience)||{};var sys=rs.systems||[];var tv=rs.top_vendor_blast;
+  var procRows=roleCaps().map(function(c){var s=capScore(c);return '<tr><td><b>'+esc(c.service)+'</b><div class="mini">'+esc(c.name)+'</div></td><td>'+c.processes.map(esc).join(' · ')+'</td><td><span class="dot" style="background:'+bandColor(s||60)+'"></span>'+(s==null?'—':s+'/100')+'</td></tr>';}).join('');
+  return '<div class="cn" style="margin-bottom:12px">Can the business keep delivering through a cyber disruption? Critical services, recovery readiness, and where a single dependency could stop operations.</div>'+
+    '<div class="grid">'+
+    '<div class="card"><div class="ck">Recovery Assurance</div><div class="big" style="color:'+bandColor(resilienceScore())+'">'+resilienceScore()+'</div><div class="sub">'+(rs.worst_recovery_hours!=null?('worst-case recovery '+(rs.worst_recovery_hours>=24?(Math.round(rs.worst_recovery_hours/2.4)/10+' days'):rs.worst_recovery_hours+'h')):'immutable-backup + recovery readiness')+'</div></div>'+
+    '<div class="card"><div class="ck">Single Point of Failure</div><div class="big" style="color:'+(tv&&tv.vendor?'var(--warn)':'var(--good)')+'">'+(tv&&tv.vendor?((tv.systems||[]).length+' svc'):'None')+'</div><div class="sub">'+(tv&&tv.vendor?('if '+esc(tv.vendor)+' fails, '+((tv.systems||[]).length)+' services degrade'):'no single-vendor concentration flagged')+'</div></div>'+
+    '<div class="card"><div class="ck">Business Disruption Signals</div><div class="big" style="color:'+bandColor(sigToScore('open_incidents',sig('open_incidents')))+'">'+(sig('open_incidents')!=null?sig('open_incidents'):0)+'</div><div class="sub">active incidents affecting a business process</div></div>'+
+    '</div>'+
+    '<div class="sec-h">Critical business services</div><div class="card" style="padding:4px 0"><table><thead><tr><th>Business service</th><th>Processes it carries</th><th>Protection health</th></tr></thead><tbody>'+procRows+'</tbody></table></div>'+
+    (tv&&tv.vendor?('<div class="sec-h">Third-party dependency</div><div class="card"><div class="cn"><b>'+esc(tv.vendor)+'</b> underpins <b>'+((tv.systems||[]).length)+'</b> critical service'+((tv.systems||[]).length>1?'s':'')+(tv.per_hr?(' · '+usd(tv.per_hr)+'/hr at risk if it fails'):'')+'. Multi-region or a second provider removes this systemic point of failure.</div></div>'):'')+
+    provNote();
+}
+function tabFinancial(){
+  var e=(LIVE&&LIVE.economics)||{},rs=(LIVE&&LIVE.resilience)||{},ins=e.insurance||{};
+  var perHr=rs.top_downtime_per_hr;
+  return '<div class="cn" style="margin-bottom:12px">Cyber risk in the terms the business runs on — revenue at risk, interruption cost, regulatory and customer impact.</div>'+
+    '<div class="grid">'+
+    '<div class="card"><div class="ck">Expected annual loss</div><div class="big">'+usd(e.ale)+'</div><div class="sub">'+(e.ratios&&e.ratios.pct_of_revenue!=null?('≈'+(e.ratios.pct_of_revenue*100).toFixed(1)+'% of revenue'):'material cyber exposure')+'</div></div>'+
+    '<div class="card"><div class="ck">Worst-case (95%) tail</div><div class="big" style="color:var(--warn)">'+usd(e.tail)+'</div><div class="sub">the worst realistic year</div></div>'+
+    '<div class="card"><div class="ck">Business-interruption cost</div><div class="big">'+(perHr!=null?usd(perHr)+'/hr':'—')+'</div><div class="sub">on the top revenue-critical service</div></div>'+
+    '<div class="card"><div class="ck">Uninsured tail</div><div class="big" style="color:'+(ins.gap?'var(--crit)':'var(--good)')+'">'+(ins.gap!=null?usd(ins.gap):'—')+'</div><div class="sub">exposure above the policy limit</div></div>'+
+    '</div>'+
+    '<div class="sec-h">Regulatory exposure</div><div class="card"><div class="cn">'+(function(){var lg=(LIVE&&LIVE.legal)||{};if(lg.binding)return 'Binding notification clock: <b>'+esc(lg.binding.clock)+'</b> ('+esc(lg.binding.jurisdiction)+'). Regulations in scope: <b>'+pack().regulations.join(' · ')+'</b>.';return 'Regulations in scope for '+pack().label+': <b>'+pack().regulations.join(' · ')+'</b>. Set operating regions in onboarding to compute the binding notification clock and penalty ceiling.';})()+'</div></div>'+
+    provNote();
+}
+function tabOpportunities(){
+  var weak=pack().capabilities.map(function(c){return {c:c,s:capScore(c)};}).filter(function(x){return x.s!=null;}).sort(function(a,b){return a.s-b.s;});
+  var opps=[];
+  weak.slice(0,3).forEach(function(w){if(w.s<80)opps.push({t:'Strengthen '+w.c.name+' (risk reduction)',b:'Raising its weakest control lifts every objective that depends on it — currently '+w.s+'/100.',k:'Risk reduction'});});
+  opps.push({t:'Automate control-evidence collection',b:'Connect your tools so control health updates continuously — less manual audit prep, faster board reporting.',k:'Automation'});
+  opps.push({t:'AI-assisted detection & triage',b:'AI in the security stack cuts detection and investigation time, protecting the objectives with the tightest recovery windows.',k:'AI'});
+  opps.push({t:'Consolidate single-vendor dependency',b:'Removing a systemic single point of failure improves the Operational Resilience score and protects continuity.',k:'Cost & resilience'});
+  return '<div class="cn" style="margin-bottom:12px">Where cyber can <b>enable</b> the business — automation, AI, productivity and risk-reduction opportunities, ranked by business benefit.</div>'+
+    '<div class="card">'+opps.map(function(o){return '<div class="action"><div class="an" style="background:var(--good)">↑</div><div><b>'+esc(o.t)+'</b> <span class="pill mod">'+esc(o.k)+'</span><div class="mini">'+esc(o.b)+'</div></div></div>';}).join('')+'</div>'+provNote();
+}
+function tabActions(){
+  var acts=roleRisks().map(function(r){var o=objById(r.obj),s=objScore(o)||60,cap=capById(r.cap),cs=cap?capScore(cap):null;
+    return {r:r,s:s,cap:cap,cs:cs,red:Math.max(6,Math.round((80-(cs==null?60:cs)))) };}).sort(function(a,b){return a.s-b.s;});
+  return '<div class="cn" style="margin-bottom:12px">The highest-priority actions to protect'+(enterpriseRole()?' the strategy':' your objectives')+' — each with its business justification, owner and expected benefit.</div>'+
+    '<div class="card" style="padding:4px 0"><table><thead><tr><th>Action</th><th>Why (business justification)</th><th>Owner</th><th>Expected benefit</th></tr></thead><tbody>'+
+    acts.map(function(a){return '<tr><td><b>Close: '+esc(a.r.name)+'</b><div class="mini">on '+esc((a.cap||{}).name||'')+'</div></td><td class="mini">Protects “'+esc((objById(a.r.obj)||{}).name||'')+'” — '+esc(a.r.impact)+'</td><td>'+esc(roleByKey((objById(a.r.obj)||{}).owner||'ciso').label)+'</td><td><span class="pill good">+'+a.red+' pts capability health</span></td></tr>';}).join('')+
+    '</tbody></table></div><div class="note">“Expected benefit” is the modeled improvement in the affected capability’s health once the weakest control is raised to target. It traces to the same telemetry the score is built on.</div>';
+}
+function tabDecisions(){
+  var decs=roleDecisions();
+  var ap=(LIVE&&LIVE.economics&&LIVE.economics.appetite)||{};
+  var extra=[];
+  if(ap.tail_within===false)extra.push({name:'Bring the worst-case tail within appetite',owner:'ceo',kind:'Risk acceptance / fund',benefit:'The tail is above the board limit — fund reduction or formally accept the residual.'});
+  return '<div class="cn" style="margin-bottom:12px">The decisions awaiting an executive — budget approvals, risk acceptances, policy sign-offs and tradeoffs, each tied to a business outcome.</div>'+
+    '<div class="card" style="padding:4px 0"><table><thead><tr><th>Decision</th><th>Type</th><th>Owner</th><th>Business rationale</th></tr></thead><tbody>'+
+    (decs.concat(extra).map(function(d){return '<tr><td><b>'+esc(d.name)+'</b></td><td><span class="pill mod">'+esc(d.kind)+'</span></td><td>'+esc(roleByKey(d.owner).label)+'</td><td class="mini">'+esc(d.benefit)+'</td></tr>';}).join('')||'<tr><td colspan="4" class="cn" style="padding:16px">No decisions awaiting you.</td></tr>')+
+    '</tbody></table></div>'+provNote();
+}
+function roleDecisions(){var ds=pack().decisions||[];if(enterpriseRole())return ds;return ds.filter(function(d){return d.owner===ROLE;});}
+
+function provNote(){var m=dataMode();var t=m==='live'?'Every score is computed live from your connected telemetry and financials.':m==='demo'?'Demo mode — scores are synthesised from the tools connected in demo, clearly for trialling the platform.':'Illustrative — scores use industry baselines until you complete onboarding / go-live. Connect tools to replace them with your own evidence.';
+  return '<div class="note">◐ <b>'+(m==='live'?'Live':m==='demo'?'Demo':'Illustrative')+'.</b> '+t+' Click any score, objective, capability or risk to trace it down the chain — capability → process → service → control → the exact telemetry source underneath.</div>';}
+
+/* ---------- drill-down evidence drawer (preserves technical depth) ---------- */
+function openDrawer(title,html){document.getElementById('drawerBody').innerHTML='<h2>'+title+'</h2>'+html;document.getElementById('scrim').classList.add('open');document.getElementById('drawer').classList.add('open');}
+function closeDrawer(){document.getElementById('scrim').classList.remove('open');document.getElementById('drawer').classList.remove('open');}
+function chain(rows){return '<div class="chain">'+rows.map(function(r){return '<div class="cl"><b>'+r[0]+'</b><div>'+r[1]+'</div></div>';}).join('')+'</div>';}
+function controlEvidence(controls){return '<div style="margin-top:6px">'+controls.map(function(k){var d=SIGNAL_BIZ[k];var v=sig(k);var s=sigToScore(k,v);var shown=v==null?('baseline '+(d.base)+d.unit):(v+d.unit);return '<div class="evrow"><span><b>'+esc(d.biz)+'</b> <span class="mini">('+esc(d.src)+')</span></span><span style="color:'+bandColor(s)+';font-weight:700">'+shown+' → '+s+'/100</span></div>';}).join('')+'</div>';}
+function drillScore(k){var sc=null;namedScores().forEach(function(x){if(x.k===k)sc=x;});if(!sc)return;
+  openDrawer(esc(sc.n),'<div class="big" style="color:'+bandColor(sc.s)+'">'+sc.s+'/100 · '+bandLabel(sc.s)+'</div><div class="cn">'+esc(sc.d)+'</div>'+
+    (k==='overall'?('<div class="sec-h">How it rolls up</div>'+pack().objectives.map(function(o){var s=objScore(o);return '<div class="evrow"><span>'+esc(o.name)+'</span><span style="color:'+bandColor(s||60)+';font-weight:700">'+(s==null?'—':s)+'/100</span></div>';}).join('')):'')+
+    '<div class="note">Business scores never show a raw security metric as the headline — but each one is built from real telemetry. The chain above is the evidence an auditor or the CISO can follow to the source system.</div>');}
+function drillObjective(id){var o=objById(id);if(!o)return;var s=objScore(o);var risks=pack().risks.filter(function(r){return r.obj===id;});
+  openDrawer(esc(o.name),'<div class="big" style="color:'+bandColor(s||60)+'">'+(s==null?'—':s)+'/100 · '+bandLabel(s||60)+'</div>'+
+    chain([['Industry',esc(pack().label)],['Strategy',esc(pack().strategy)],['Strategic objective','<b>'+esc(o.name)+'</b>'],['Executive owner',esc(roleByKey(o.owner).label)],['KPI',esc(o.kpi)],['Depends on capabilities',o.caps.map(function(cid){return esc(capById(cid).name);}).join(' · ')],['Cyber blockers',risks.length?risks.map(function(r){return esc(r.name);}).join(' · '):'none']])+
+    '<div class="sec-h">Evidence (control telemetry)</div>'+o.caps.map(function(cid){var c=capById(cid);return '<div class="cn" style="margin-top:6px"><b>'+esc(c.name)+'</b></div>'+controlEvidence(c.controls);}).join(''));}
+function drillCapability(id){var c=capById(id);if(!c)return;var s=capScore(c);
+  openDrawer(esc(c.name),'<div class="big" style="color:'+bandColor(s||60)+'">'+(s==null?'—':s)+'/100 · '+bandLabel(s||60)+'</div>'+
+    chain([['Business capability','<b>'+esc(c.name)+'</b>'],['Owner',esc(roleByKey(c.owner).label)],['Business processes',c.processes.map(esc).join(' · ')],['Business service',esc(c.service)],['Protected by controls',c.controls.map(function(k){return esc(SIGNAL_BIZ[k].biz);}).join(' · ')]])+
+    '<div class="sec-h">Evidence → this score</div>'+controlEvidence(c.controls)+
+    '<div class="note">Each control maps to a telemetry source (the technical detail the CISO & audit see). The capability health is the average of these — raise the weakest and the score, and every objective above it, improves.</div>');}
+function drillRisk(payload){var parts=payload.split('|');var oid=parts[0],name=decodeURIComponent(parts[1]);var r=null;pack().risks.forEach(function(x){if(x.obj===oid&&x.name===name)r=x;});if(!r)return;var o=objById(oid),c=capById(r.cap),s=objScore(o)||60;
+  openDrawer(esc(r.name),'<span class="pill '+(s<50?'crit':'warn')+'">'+(s<50?'High severity':'Elevated')+'</span>'+
+    chain([['Business risk','<b>'+esc(r.name)+'</b>'],['Business impact',esc(r.impact)],['Threatens objective',esc((o||{}).name||'')],['Through capability',esc((c||{}).name||'')],['Owner',esc(roleByKey((o||{}).owner||'ceo').label)],['Technical source',esc(r.tech)]])+
+    (c?('<div class="sec-h">Evidence (control telemetry)</div>'+controlEvidence(c.controls)):'')+
+    '<div class="note">This is the same risk a security team tracks technically (“'+esc(r.tech)+'”) — shown here as the business outcome it threatens, so the owning executive can decide.</div>');}
+
+/* ---------- render ---------- */
+function renderRoleBar(){document.getElementById('roleBar').innerHTML=ROLES.map(function(r){return '<button class="'+(r.key===ROLE?'on':'')+'" onclick="setRole(\''+r.key+'\')">'+esc(r.short)+'</button>';}).join('');}
+function renderTabs(){document.getElementById('tabBar').innerHTML=TABS.map(function(t){return '<button class="'+(t[0]===TAB?'on':'')+'" onclick="setTab(\''+t[0]+'\')">'+esc(t[1])+'</button>';}).join('');}
+function renderBody(){var fn={summary:tabSummary,objectives:tabObjectives,performance:tabPerformance,risks:tabRisks,resilience:tabResilience,financial:tabFinancial,opportunities:tabOpportunities,actions:tabActions,decisions:tabDecisions}[TAB]||tabSummary;
+  var r=roleByKey(ROLE);document.getElementById('roleTitle').textContent=r.label;document.getElementById('roleFocus').textContent=r.focus;document.getElementById('roleStrategy').textContent=pack().label+' · '+pack().strategy;
+  document.getElementById('tabBody').innerHTML=fn();}
+function setRole(k){ROLE=k;renderRoleBar();renderBody();window.scrollTo({top:0});}
+function setTab(k){TAB=k;renderTabs();renderBody();}
+function setIndustry(k){PACKKEY=k;renderBody();}
+function refreshChip(){var m=dataMode();var c=document.getElementById('dataChip');c.className='datachip '+(m==='live'?'live':m==='demo'?'demo':'illu');c.textContent=m;}
+
+function boot(){
+  document.getElementById('orgName').textContent=orgName()||'Your organization';
+  PACKKEY=packKeyFor(industry());
+  var sel=document.getElementById('indSel');sel.innerHTML=Object.keys(INDUSTRY_PACKS).map(function(k){return '<option value="'+k+'"'+(k===PACKKEY?' selected':'')+'>'+INDUSTRY_PACKS[k].label+'</option>';}).join('');
+  sel.onchange=function(){setIndustry(this.value);};
+  renderRoleBar();renderTabs();renderBody();refreshChip();
+  // pull live evidence (best-effort) — same backend as the cockpit
+  var base=apiBase(),o=orgId();
+  if(base&&o){
+    fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty){LIVE=d;if(d.industry){PACKKEY=packKeyFor(d.industry);sel.value=PACKKEY;}renderBody();refreshChip();}}).catch(function(){});
+    fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderBody();refreshChip();}else if(demoActive()){seedDemoSignals();renderBody();refreshChip();}}).catch(function(){if(demoActive()){seedDemoSignals();renderBody();refreshChip();}});
+  } else if(demoActive()){seedDemoSignals();renderBody();refreshChip();}
+}
+function seedDemoSignals(){SIGNALS={};var d={edr_pct:98,mfa_pct:96,pam_pct:60,patch_pct:82,cspm_pct:84,phishing_pct:3,backup_immutable_pct:100,open_incidents:0,sod_conflicts:2,bec_blocked:14,dsar_overdue:0};Object.keys(d).forEach(function(k){SIGNALS[k]={key:k,value:d[k],demo:true};});}
+boot();
+</script>
+</body>
+</html>
