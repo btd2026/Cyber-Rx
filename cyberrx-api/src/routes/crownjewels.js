@@ -14,6 +14,7 @@ const IngestMapper = require('../services/crownjewels/IngestMapper');
 const Asset = require('../models/Asset');
 const BusinessProcess = require('../models/BusinessProcess');
 const Risk = require('../models/Risk');
+const RiskProposer = require('../services/crownjewels/RiskProposer');
 const AnalystQueue = require('../services/assessment/AnalystQueueService');
 const { optionalJWT, requireAdmin } = require('../middleware/auth');
 
@@ -54,7 +55,12 @@ router.post('/ingest', optionalJWT, async (req, res) => {
   if (!orgId) return res.status(400).json({ error: 'org_name or org_id is required' });
   const processes = Array.isArray(b.processes) ? b.processes : [];
   const apps = Array.isArray(b.apps) ? b.apps : [];
-  const risks = Array.isArray(b.risks) ? b.risks : [];
+  // When the org has no cyber risk register, Nerion's offline proposer suggests a
+  // starter set from each application's characteristics (self-contained, no network).
+  // The org's own register always wins; proposed risks are flagged as estimates.
+  const uploadedRisks = Array.isArray(b.risks) ? b.risks.filter((r) => r && (r.title || r.name)) : [];
+  const risksProposed = uploadedRisks.length === 0 && apps.length > 0;
+  const risks = risksProposed ? RiskProposer.proposeRisks(apps, { industry: b.industry }) : uploadedRisks;
   if (!processes.length && !apps.length) return res.status(400).json({ error: 'processes and/or apps are required' });
 
   let step = 'map';
@@ -83,6 +89,7 @@ router.post('/ingest', optionalJWT, async (req, res) => {
       industry: b.industry || null,
       regions: Array.isArray(b.regions) ? b.regions : (b.regions ? [b.regions] : []),
       currency: (typeof b.currency === 'string' && b.currency.trim()) ? b.currency.trim().toUpperCase() : 'USD',
+      risks_proposed: risksProposed, // true when Nerion proposed the register (no upload)
     };
 
     // Operational-resilience inputs (per-process revenue/RTO, per-asset vendor/
