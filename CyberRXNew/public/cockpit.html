@@ -87,6 +87,11 @@
   .fwseg{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
   .fwsegb{font-size:12px;font-weight:600;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:6px 14px;cursor:pointer}
   .fwsegb.on{color:#fff;background:var(--ink);border-color:var(--ink)}
+  /* Sub-tabs within a section */
+  .subtabs{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 14px;border-bottom:1px solid var(--line);padding-bottom:10px}
+  .subtab{font-size:13px;font-weight:700;color:var(--muted);background:transparent;border:1px solid var(--line-2);border-radius:99px;padding:7px 16px;cursor:pointer}
+  .subtab:hover{color:var(--ink)}
+  .subtab.on{color:#fff;background:var(--blue);border-color:var(--blue)}
   /* Business → control value chain */
   .vc-fn{border:1px solid var(--line-2);border-radius:10px;margin-top:10px;overflow:hidden}
   .vc-fn-h{display:flex;align-items:baseline;gap:10px;justify-content:space-between;padding:10px 13px;background:var(--surface-2);border-bottom:1px solid var(--line)}
@@ -511,7 +516,7 @@ var TAB_LABELS={
  // Chief Risk seat (outcome tabs)
  'Enterprise risk appetite':'Risk appetite','Risk acceptance':'Risk acceptance','Risk trends':'Risk trends','Cross-functional risk ownership':'Risk ownership','Control assurance':'Control assurance','Residual risk':'Residual risk',
  // CISO seat (outcome tabs)
- 'Cross-enterprise cyber business health':'Program health','Control effectiveness':'Control effectiveness','Threat-to-business mapping':'Threat mapping','Evidence collection':'Evidence','Framework alignment':'Frameworks','Executive risk reporting':'Exec reporting','Action tracking':'Action tracking',
+ 'Are we secure right now — and is the program getting stronger?':'Program health','Are we under attack?':'Under attack?','Is our security program worth the spend — and can we prove it?':'Control value','Evidence collection':'Evidence','Action tracking':'Action tracking',
  // Chief Revenue seat
  'Revenue protection':'Revenue protection','Subscription / service availability':'Service availability','Fraud exposure':'Fraud','Customer-impacting incidents':'Customer incidents','Sales & renewal risk':'Sales & renewal',
  // Chief Product seat
@@ -1153,6 +1158,16 @@ function seedDemoDocScores(){if(!demoActive()||Object.keys(docScores()).length)r
    (LIVE.value_chain). The control layer reuses the existing control-value ledger:
    each cyber risk → the capabilities that counter it (same keyword map the threat
    panel uses) → their framework IDs, live deployment %, and modeled $ removed. ---- */
+/* Sub-tabs within a section: a scoped segmented control that shows one panel at a
+   time. Panels stay in the DOM (hidden), so their renderers still populate them. */
+function subtabs(items){
+  var tabs=items.map(function(it){return '<button class="subtab'+(it.on?' on':'')+'" onclick="subTab(this,\''+it.key+'\')">'+it.label+'</button>';}).join('');
+  var panels=items.map(function(it){return '<div class="subpanel" data-sub="'+it.key+'"'+(it.on?'':' style="display:none"')+'>'+it.html+'</div>';}).join('');
+  return '<div class="subwrap"><div class="subtabs">'+tabs+'</div>'+panels+'</div>';
+}
+function subTab(btn,key){var w=btn.closest('.subwrap');if(!w)return;
+  w.querySelectorAll('.subtab').forEach(function(b){b.classList.toggle('on',b===btn);});
+  w.querySelectorAll('.subpanel').forEach(function(p){p.style.display=(p.dataset.sub===key)?'':'none';});}
 var VC_VIEW='func';
 /* Per-control $ removed (current live-deployment allocation) — the accepted
    control-value model, reused so the chain shows no new/contradictory number. */
@@ -1254,12 +1269,70 @@ function vcByControl(fns,cvv){
       '<div class="vc-cc-prot">Protects <b>'+fnNames.length+'</b> function'+(fnNames.length===1?'':'s')+' · <b>'+prNames.length+'</b> process'+(prNames.length===1?'':'es')+' · counters <b>'+e.risks+'</b> risk'+(e.risks===1?'':'s')+': <span style="color:var(--ink-2)">'+fnNames.slice(0,4).join(', ')+(fnNames.length>4?'…':'')+'</span></div></div>';
   }).join('');
 }
+/* ---- Cross-framework mapping. To avoid reproducing licensed/copyrighted control
+   text, other frameworks are scored by CROSSWALK from your live NIST CSF 2.0
+   posture — the maturity of each mapped CSF subcategory rolls up to the framework’s
+   control. Sources: CIS Controls v8 ↔ CSF (CIS official mapping); SOC 2 Trust
+   Services Categories ↔ CSF (we show readiness by category, not the AICPA TSC text);
+   HIPAA Security Rule ↔ CSF via NIST SP 800-66 Rev 2 (public domain). ---- */
+var CIS_MAP=[
+  ['CIS 1','Inventory & Control of Enterprise Assets',['ID.AM-01','ID.AM-05']],
+  ['CIS 2','Inventory & Control of Software Assets',['ID.AM-02']],
+  ['CIS 3','Data Protection',['PR.DS-01','PR.DS-02','PR.DS-10']],
+  ['CIS 4','Secure Configuration of Assets & Software',['PR.PS-01']],
+  ['CIS 5','Account Management',['PR.AA-01']],
+  ['CIS 6','Access Control Management',['PR.AA-05']],
+  ['CIS 7','Continuous Vulnerability Management',['ID.RA-01']],
+  ['CIS 8','Audit Log Management',['PR.PS-04','DE.CM-01']],
+  ['CIS 9','Email & Web Browser Protections',['PR.PS-05']],
+  ['CIS 10','Malware Defenses',['DE.CM-01','RS.MI-01']],
+  ['CIS 11','Data Recovery',['PR.DS-11','RC.RP-03']],
+  ['CIS 12','Network Infrastructure Management',['PR.IR-01']],
+  ['CIS 13','Network Monitoring & Defense',['DE.CM-01','DE.AE-03']],
+  ['CIS 14','Security Awareness & Skills Training',['PR.AT-01','PR.AT-02']],
+  ['CIS 15','Service Provider Management',['GV.SC-01','GV.SC-04','GV.SC-07']],
+  ['CIS 16','Application Software Security',['PR.PS-06']],
+  ['CIS 17','Incident Response Management',['RS.MA-01','RS.MA-02']],
+  ['CIS 18','Penetration Testing',['ID.IM-02']]];
+var SOC2_MAP=[
+  ['CC','Security — Common Criteria',['GV.RM-01','PR.AA-01','PR.AA-05','DE.CM-01','RS.MA-01']],
+  ['A','Availability',['PR.IR-03','PR.IR-04','RC.RP-01']],
+  ['C','Confidentiality',['PR.DS-01','PR.DS-02']],
+  ['PI','Processing Integrity',['PR.PS-01','DE.AE-02']],
+  ['P','Privacy',['GV.OC-03','PR.DS-01']]];
+var HIPAA_MAP=[
+  ['§164.308','Administrative Safeguards',['GV.RM-01','GV.RR-02','ID.RA-01','PR.AT-01','RS.MA-01']],
+  ['§164.310','Physical Safeguards',['PR.AA-06','PR.IR-02']],
+  ['§164.312','Technical Safeguards',['PR.AA-01','PR.AA-03','PR.DS-01','PR.DS-02','DE.CM-01']],
+  ['§164.316','Policies, Procedures & Documentation',['GV.PO-01','GV.PO-02']]];
+var FW_XNOTE={
+  cis:'Scored by the official <b>CIS Controls v8 ↔ NIST CSF</b> mapping — each CIS Safeguard inherits the maturity of the CSF subcategories it maps to. We reference CIS by mapping and do not reproduce the CIS control text.',
+  soc2:'Readiness against the <b>AICPA Trust Services Categories</b>, scored by crosswalk from your CSF posture. This is a readiness indicator, not a SOC 2 opinion, and does not reproduce the copyrighted TSC text — your auditor issues the report.',
+  hipaa:'HIPAA Security Rule safeguards (45 CFR §164) scored via the <b>NIST SP 800-66 Rev 2</b> crosswalk to CSF (both public domain). Maps to the Rule’s citations directly.'};
+function fwXmap(sel){return sel==='cis'?CIS_MAP:sel==='soc2'?SOC2_MAP:HIPAA_MAP;}
+/* A crosswalk framework's rows: each control's maturity = avg of its mapped CSF
+   controls' CMMI, with the mapped CSF ids shown as the evidence trail. */
+function fwXwalk(map,cov){var all=[];
+  var body=map.map(function(it){var ids=it[2],scores=ids.map(function(id){return controlCmmi(id,cov).score;}),sc=avg(scores);all.push(sc);
+    var chips=ids.map(function(id){return '<span class="fwid csf" style="cursor:pointer" onclick="openDrill(\''+id+'\',drillFwControl(\''+id+'\',\'\'))">'+id+'</span>';}).join('');
+    return '<div class="fwrow" style="align-items:flex-start;cursor:default">'+cmmiBadge(Math.round(sc))+'<span class="fwid2">'+it[0]+'</span><span class="fwname">'+it[1]+'<div style="margin-top:4px">mapped ← '+chips+'</div></span></div>';}).join('');
+  return {body:body,all:all};}
+/* Continuous-audit cadence — replaces the point-in-time audit. Stored per browser;
+   live tool telemetry refreshes continuously, document/attestation evidence on this
+   cadence. */
+function auditCadence(){return localStorage.getItem('cyberrx_audit_cadence')||'monthly';}
+function cadenceUI(){var c=auditCadence();
+  return '<div class="fwseg" style="margin:8px 0 2px"><span style="font-size:11px;color:var(--muted);align-self:center;margin-right:2px">Continuous audit · re-check evidence:</span>'+
+    [['weekly','Weekly'],['monthly','Monthly'],['quarterly','Quarterly']].map(function(o){return '<button class="fwsegb'+(c===o[0]?' on':'')+'" data-cad="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>'+
+    '<div class="cn" style="margin:4px 0 8px">Point-in-time audit is <b>replaced by continuous control monitoring</b>: 🔌 live tool telemetry refreshes on every load, and 📄 document / attestation evidence is re-verified <b>'+c+'</b>. Every control below shows its source and freshness — no annual evidence scramble.</div>';}
 function renderFrameworks(){
   var host=document.getElementById('cisoFrameworks');if(!host)return;
   seedDemoDocScores();
   var cov=fwDeployedIds(),all=[],body='';
-  var sel='<div class="fwseg">'+[['csf','NIST CSF 2.0'],['r53','NIST SP 800-53 Rev 5']].map(function(o){return '<button class="fwsegb'+(FW_SEL===o[0]?' on':'')+'" data-fw="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
-  if(FW_SEL==='csf'){
+  var sel='<div class="fwseg">'+[['csf','NIST CSF 2.0'],['r53','NIST SP 800-53 Rev 5'],['cis','CIS Controls v8'],['soc2','SOC 2 (TSC)'],['hipaa','HIPAA Security Rule']].map(function(o){return '<button class="fwsegb'+(FW_SEL===o[0]?' on':'')+'" data-fw="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
+  var xnote='';
+  if(FW_SEL==='cis'||FW_SEL==='soc2'||FW_SEL==='hipaa'){var xw=fwXwalk(fwXmap(FW_SEL),cov);body=xw.body;all=xw.all;xnote='<div class="cn" style="margin:6px 0;padding:8px 10px;background:var(--blue-soft);border-radius:8px">🔗 '+FW_XNOTE[FW_SEL]+'</div>';}
+  else if(FW_SEL==='csf'){
     body=Object.keys(CSF_RAW).map(function(fn){var cats=CSF_RAW[fn],catHtml='',fnScores=[];
       Object.keys(cats).forEach(function(cat){var catScores=[],rows=cats[cat].map(function(s){var r=fwRow(s[0],s[1],cov);catScores.push(r.score);fnScores.push(r.score);all.push(r.score);return r.html;}).join('');
         catHtml+='<div class="fwcat">'+cat+' <span class="fwscore" style="color:var(--'+cmmiColor(Math.round(avg(catScores)))+')">CMMI '+avg(catScores).toFixed(1)+'</span></div>'+rows;});
@@ -1272,12 +1345,13 @@ function renderFrameworks(){
   var overall=avg(all),scored=all.filter(function(x){return x>0;}).length;
   var legend='<div class="cmmi-legend"><span class="cl-t">CMMI</span><span><b>0</b>None</span><span><b>1</b>Initial</span><span><b>2</b>Managed</span><span><b>3</b>Defined</span><span><b>4</b>Quant. Managed</span><span><b>5</b>Optimizing</span></div>';
   var docN=docList().length;
-  host.innerHTML=demoBanner()+
-    '<div class="card"><div class="ck">Framework posture '+liveTag()+' — overall CMMI <b style="color:var(--'+cmmiColor(Math.round(overall))+')">'+overall.toFixed(1)+' / 5</b></div>'+sel+legend+
+  host.innerHTML=
+    '<div class="card"><div class="ck">Framework posture '+liveTag()+' — overall CMMI <b style="color:var(--'+cmmiColor(Math.round(overall))+')">'+overall.toFixed(1)+' / 5</b></div>'+sel+cadenceUI()+legend+xnote+
     '<div class="cn" style="margin:6px 0"><b style="color:var(--ink)">'+scored+' of '+all.length+'</b> controls are evidenced (by a connected tool or an analyzed policy). Each control’s maturity is the higher of its live tool coverage and its document-review score; the icon shows the source — <b>🔌 system</b> telemetry or <b>📄 document</b> review. Click any control for the exact evidence and the math.<br>'+
     (docN?('<b style="color:var(--good)">'+docN+' polic'+(docN===1?'y':'ies')+'</b> analyzed by document review (uploaded in onboarding).'):'<span style="color:var(--ink-2)">Document-review evidence is captured in <b>onboarding → Policy &amp; document evidence</b>. Upload your policies there and each control gains a 📄 document score here.</span>')+'</div>'+
     body+'</div>';
-  host.querySelectorAll('.fwsegb').forEach(function(b){b.onclick=function(){FW_SEL=b.dataset.fw;renderFrameworks();};});
+  host.querySelectorAll('.fwsegb[data-fw]').forEach(function(b){b.onclick=function(){FW_SEL=b.dataset.fw;renderFrameworks();};});
+  host.querySelectorAll('.fwsegb[data-cad]').forEach(function(b){b.onclick=function(){try{localStorage.setItem('cyberrx_audit_cadence',b.dataset.cad);}catch(_){}renderFrameworks();};});
   host.querySelectorAll('.fwrow[data-fid]').forEach(function(el){el.onclick=function(){openDrill(el.dataset.fid+' — '+el.dataset.fname,drillFwControl(el.dataset.fid,el.dataset.fname));};});
 }
 /* The policy upload + document-review analysis now lives in onboarding
@@ -1537,7 +1611,10 @@ function demoSignals(){
 function applyDemoSignals(){if(!demoActive()||SIGNALS)return;var s=demoSignals();if(s){SIGNALS=s;renderSignals();}}
 function signalsAreDemo(){try{return !!(SIGNALS&&Object.keys(SIGNALS).some(function(k){return SIGNALS[k]&&SIGNALS[k].demo;}));}catch(_){return false;}}
 function liveTag(){return signalsAreDemo()?'<span class="pill warn" style="font-size:9px">demo</span>':'<span class="pill good" style="font-size:9px">live</span>';}
-function demoBanner(){return signalsAreDemo()?'<div class="cn" style="margin-bottom:10px">◐ <b style="color:var(--warn)">Demo data</b> — synthesised for the tools you connected in demo mode, so you can trial the full cockpit. Values are illustrative; connect live tools to replace them.</div>':'';}
+/* The full-width "Demo data" banner is retired — every card already carries its own
+   live/demo pill (liveTag), so the banner was redundant noise. Kept as a no-op so
+   existing call sites are unaffected. */
+function demoBanner(){return '';}
 function renderSignals(){
   if(!SIGNALS)return;
   var oi=sig('open_incidents');
