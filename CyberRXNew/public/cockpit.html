@@ -1708,24 +1708,87 @@ var AI_RMF=[
  ]}
 ];
 function aiProvIcon(src){return src==='system'?'<span class="fwprov" title="from connected AI signal">🔌 system</span>':src==='document'?'<span class="fwprov" title="from document review">📄 doc</span>':'<span class="fwprov" title="governance attestation (onboarding)">🧾 attested</span>';}
+/* Shared scorers/builders for the AI frameworks (attestation-first, telemetry when connected). */
+function aiMon(){return sig('ai_monitored')===1;}
+function aiHasOwasp(g){return /owasp/i.test((g.framework||'')+' '+(g.policy||''));}
+function aiHasAtlas(g){return /atlas|red.?team/i.test((g.framework||'')+' '+(g.inventory||''));}
+function aiAttestMethod(what){return '<b>Governance attestation review.</b> '+what+', recorded in the onboarding AI-governance intake, was assessed against this control\'s expected outcome. Self-reported until an AI GRC / model-registry platform is connected.';}
+function aiFieldFinding(g,field){return g[field]?('Attested as “<b>'+g[field]+'</b>”. '+((aiLookup(field,g[field])||{}).n||'')):'Not attested at onboarding — the control is unevidenced.';}
+function aiFC(id,name,field,what,lowRec,highRec){return {id:id,name:name,assess:function(g){var c=aiGovCmmi(field,g[field]);return {cmmi:c,src:'governance',method:aiAttestMethod(what),finding:aiFieldFinding(g,field),rec:c>=4?(highRec||'Maintain the control and retain evidence each audit cycle.'):lowRec};}};}
+function aiBC(id,name,detect,method,posF,negF,posR,negR,monBoost){return {id:id,name:name,assess:function(g){var has=detect(g),mon=monBoost&&aiMon(),c=has?(mon?5:4):(mon?3:1);return {cmmi:c,src:mon?'system':'governance',method:method,finding:(has?posF:negF)+(mon?' A connected AI source confirms runtime monitoring is active for this class of risk.':''),rec:c>=4?posR:negR};}};}
+var OWASP_M='<b>Governance attestation review.</b> Evidence that AI applications are tested against the OWASP Top 10 for LLM & Agentic Applications before release, and monitored at runtime, was assessed.';
+var ATLAS_M='<b>Governance attestation review.</b> Evidence that AI systems are red-teamed against MITRE ATLAS adversarial-ML techniques was assessed.';
+var AI_ISO=[{fn:'ISO/IEC 42001 — AI management system',controls:[
+  aiFC('42001-5.2','AI policy established & approved','policy','The AI acceptable-use & risk policy status','Establish an AI policy and obtain board approval.'),
+  aiFC('42001-5.3','AI roles, responsibilities & authorities','framework','The adopted AI governance framework','Assign AI accountability and define the AI management system under a recognized framework.'),
+  aiFC('42001-6.1','AI risk-assessment process','framework','The AI risk-management framework','Stand up a repeatable AI risk-assessment process (clause 6 / NIST AI RMF).'),
+  aiFC('42001-6.1.4','AI system impact assessment','euAiAct','The AI Act exposure / impact-assessment posture','Perform an AI system impact assessment for consequential use cases.'),
+  aiFC('42001-8.1','AI system lifecycle controls','inventory','The AI inventory (AI-BOM) coverage','Define lifecycle controls (design→deploy→retire) for every AI system in the AI-BOM.'),
+  {id:'42001-8.3',name:'Data governance for AI',assess:function(g){var c=Math.max(1,Math.min(aiGovCmmi('policy',g.policy),aiGovCmmi('inventory',g.inventory)));return {cmmi:c,src:'governance',method:aiAttestMethod('The AI data-handling policy and inventory coverage'),finding:'Data governance for AI (training/inference data provenance, quality, minimization) is inferred from the AI policy and inventory posture.',rec:c>=4?'Maintain documented data provenance and quality controls per AI system.':'Document training/inference data provenance, quality and minimization for each AI system.'};}},
+  {id:'42001-9.1',name:'AI performance monitoring & evaluation',assess:function(g){var mon=aiMon(),c=mon?4:1;return {cmmi:c,src:mon?'system':'governance',method:'<b>'+(mon?'Automated evidence.':'Evidence sufficiency check.')+'</b> Whether AI performance and safety are monitored in production was assessed'+(mon?' from the connected AI source.':'.'),finding:mon?'A connected AI source confirms AI runtime is monitored/evaluated.':'No AI performance/safety monitoring is connected.',rec:c>=4?'Maintain monitoring; review drift and alert into the SIEM.':'Connect AI runtime monitoring (guardrails / AI-SPM / eval harness) to evidence performance continuously.'};}},
+  {id:'42001-10.2',name:'AI incident & nonconformity management',assess:function(g){var ir=(LIVE&&LIVE.governance&&LIVE.governance.ir)||{},tested=/yes|tabletop/i.test(ir.tested||''),c=tested?3:1;return {cmmi:c,src:'governance',method:aiAttestMethod('The incident-response testing status and AI policy'),finding:tested?'IR capability is tested — extend it explicitly to AI nonconformities and incidents.':'No tested IR capability is evidenced for AI incidents.',rec:c>=4?'Maintain AI scenarios in the IR plan.':'Add AI incident & nonconformity handling to the IR plan and test it.'};}}
+]}];
+var AI_OWASP=[{fn:'OWASP Top 10 for LLM & Agentic Applications',controls:[
+  aiBC('LLM01','Prompt injection',aiHasOwasp,OWASP_M,'Prompt-injection testing is part of the AI program.','No prompt-injection testing is evidenced — the top LLM risk.','Automate prompt-injection tests in CI and enforce input/output guardrails.','Test every AI app for prompt injection and add runtime guardrails.',true),
+  aiBC('LLM02','Sensitive information disclosure',aiHasOwasp,OWASP_M,'Output/data-leakage testing is part of the AI program.','No sensitive-disclosure testing is evidenced — AI may leak PII/secrets.','Maintain output filtering and DLP on AI responses.','Test for sensitive-information disclosure and apply output DLP.',true),
+  aiBC('LLM03','Supply-chain vulnerabilities',aiHasOwasp,OWASP_M,'Model/dependency supply-chain review is part of the AI program.','No AI supply-chain review is evidenced (models, plugins, datasets).','Maintain provenance and scanning for models, plugins and datasets.','Review the AI supply chain — model, plugin and dataset provenance.',false),
+  aiBC('LLM04','Data & model poisoning',aiHasOwasp,OWASP_M,'Training-data/model-poisoning controls are part of the AI program.','No data/model-poisoning controls are evidenced.','Maintain data-integrity and provenance controls across the pipeline.','Add training-data integrity and poisoning defenses.',false),
+  aiBC('LLM05','Improper output handling',aiHasOwasp,OWASP_M,'Downstream output-handling controls are tested.','No output-handling controls are evidenced — outputs may reach systems unsanitized.','Maintain encoding/validation of AI outputs before downstream use.','Sanitize and validate AI outputs before they reach downstream systems.',true),
+  aiBC('LLM06','Excessive agency',function(g){return aiHasOwasp(g)||/board-approved/i.test(g.policy||'');},OWASP_M,'Agent permissions and human oversight are governed.','Agent tool-access and autonomy are not bounded by policy — excessive-agency risk.','Maintain least-privilege tool access and human-in-the-loop checkpoints.','Bound agent tool-access to least privilege; require human oversight for consequential actions.',false),
+  aiBC('LLM07','System-prompt leakage',aiHasOwasp,OWASP_M,'System-prompt handling is tested.','No system-prompt-leakage testing is evidenced.','Keep secrets out of system prompts; test for leakage.','Remove secrets from system prompts and test for leakage.',true),
+  aiBC('LLM08','Vector & embedding weaknesses',aiHasOwasp,OWASP_M,'RAG / vector-store access controls are reviewed.','No vector/embedding access controls are evidenced.','Maintain access controls and tenant isolation on vector stores.','Apply access control and isolation to RAG/vector stores.',false),
+  aiBC('LLM09','Misinformation / hallucination',aiHasOwasp,OWASP_M,'Grounding and accuracy controls are tested.','No hallucination/accuracy controls are evidenced.','Maintain grounding, citations and human review for high-stakes output.','Add grounding and accuracy checks; human-review high-stakes output.',true),
+  aiBC('LLM10','Unbounded consumption',function(g){return aiHasOwasp(g)||aiMon();},OWASP_M,'Rate/cost limits and abuse monitoring are in place.','No consumption limits are evidenced — denial-of-wallet / DoS risk.','Maintain rate/cost limits and abuse detection.','Add rate/cost limits and abuse monitoring to AI endpoints.',true)
+]}];
+var AI_ATLAS=[{fn:'MITRE ATLAS — adversarial ML tactics',controls:[
+  aiBC('AML.T-recon','Reconnaissance of AI systems',aiHasAtlas,ATLAS_M,'AI attack-surface reconnaissance is in red-team scope.','AI reconnaissance exposure is not red-teamed.','Maintain ATLAS reconnaissance coverage in red-team scope.','Red-team AI reconnaissance (exposed model info, docs, endpoints).',false),
+  aiBC('AML.T-access','ML model access control',function(g){return aiHasAtlas(g)||/board-approved/i.test(g.policy||'');},ATLAS_M,'Model/endpoint access is controlled and tested.','Model-access controls are not evidenced.','Maintain authN/Z and rate limits on model endpoints.','Enforce and test access controls on model endpoints.',true),
+  aiBC('AML.T-evade','Adversarial input (evasion)',aiHasAtlas,ATLAS_M,'Evasion / adversarial-example testing is part of red-teaming.','No adversarial-example testing is evidenced.','Maintain adversarial-robustness testing.','Test model robustness to adversarial inputs.',false),
+  aiBC('AML.T-poison','Data / model poisoning',aiHasAtlas,ATLAS_M,'Poisoning attack paths are red-teamed.','Poisoning attack paths are not tested.','Maintain pipeline integrity and poisoning tests.','Red-team data/model poisoning paths.',false),
+  aiBC('AML.T-extract','Model extraction / IP theft',aiHasAtlas,ATLAS_M,'Model-extraction risk is tested.','Model-extraction / theft risk is not tested.','Maintain query monitoring and extraction defenses.','Test for model extraction; add query monitoring.',true),
+  aiBC('AML.T-exfil','Exfiltration via AI',function(g){return aiHasAtlas(g)||aiMon();},ATLAS_M,'AI-mediated exfiltration paths are monitored/tested.','AI-mediated exfiltration is not covered.','Maintain output DLP and egress monitoring.','Monitor and test AI-mediated data exfiltration.',true),
+  aiBC('AML.T-impact','Impact on AI-dependent processes',aiHasAtlas,ATLAS_M,'Impact scenarios on AI-dependent processes are exercised.','Impact on AI-dependent processes is not exercised.','Maintain resilience/fallback for AI-dependent processes.','Exercise impact scenarios; define AI fallback paths.',false),
+  aiBC('AML.T-inject','Prompt-injection execution',function(g){return aiHasAtlas(g)||aiHasOwasp(g);},ATLAS_M,'Prompt-injection execution paths are red-teamed.','Prompt-injection execution is not red-teamed.','Maintain guardrails and injection tests.','Red-team prompt-injection execution paths.',true)
+]}];
+var AI_EU=[{fn:'EU AI Act — conformity obligations',controls:[
+  aiFC('EUAIA.CLS','AI risk classification determined','euAiAct','The EU AI Act exposure','Run a scoping assessment to determine the AI Act risk tier.'),
+  {id:'EUAIA.PRO',name:'Prohibited-practices screening',assess:function(g){var c=g.euAiAct?(/high-risk/i.test(g.euAiAct)?3:/not in scope|limited/i.test(g.euAiAct)?4:1):1;return {cmmi:c,src:'governance',method:aiAttestMethod('The EU AI Act exposure'),finding:g.euAiAct?('Exposure attested as “<b>'+g.euAiAct+'</b>”; screening should confirm no banned uses (social scoring, untargeted scraping, etc.).'):'No AI Act screening is evidenced.',rec:c>=4?'Maintain the screening as use cases change.':'Screen AI uses against the AI Act prohibited practices.'};}},
+  aiFC('EUAIA.RMS','Risk-management system (high-risk, Art. 9)','framework','The AI risk-management framework','Operate an Article 9 risk-management system for high-risk AI.'),
+  {id:'EUAIA.DAT',name:'Data & data-governance (Art. 10)',assess:function(g){var c=Math.max(1,aiGovCmmi('policy',g.policy)-1);return {cmmi:c,src:'governance',method:aiAttestMethod('The AI data-handling policy'),finding:'Training/validation/test data governance (relevance, representativeness, bias) is inferred from the AI policy posture.',rec:c>=4?'Maintain documented data-governance records.':'Document Article 10 data-governance for high-risk AI.'};}},
+  aiFC('EUAIA.DOC','Technical documentation (Art. 11)','framework','The AI governance framework','Produce Annex IV technical documentation for high-risk AI.'),
+  {id:'EUAIA.LOG',name:'Record-keeping / logging (Art. 12)',assess:function(g){var mon=aiMon(),c=mon?4:1;return {cmmi:c,src:mon?'system':'governance',method:'<b>'+(mon?'Automated evidence.':'Evidence sufficiency check.')+'</b> Automatic logging of high-risk AI operation was assessed'+(mon?' from the connected AI source.':'.'),finding:mon?'A connected AI source confirms AI operations are logged/traced.':'No automatic AI logging is connected.',rec:c>=4?'Retain logs for the required period.':'Enable automatic event logging for high-risk AI (Article 12).'};}},
+  {id:'EUAIA.HO',name:'Human oversight (Art. 14)',assess:function(g){var lowRisk=/^no/i.test(g.decisioning||''),boardPol=/board-approved/i.test(g.policy||''),c=lowRisk?5:(boardPol?4:2);return {cmmi:c,src:'governance',method:aiAttestMethod('The AI decisioning use and policy'),finding:lowRisk?'No production AI decisioning — human-oversight risk is minimal.':(boardPol?'A board-approved policy should mandate human oversight of AI decisions.':'Human oversight of AI decisions is not mandated by an approved policy.'),rec:c>=4?'Maintain documented human-oversight checkpoints.':'Mandate and document human oversight for high-risk AI (Article 14).'};}},
+  aiFC('EUAIA.TRN','Transparency to users (Art. 50)','policy','The AI policy status','Disclose AI interaction and AI-generated content to users (Article 50).'),
+  {id:'EUAIA.PMM',name:'Post-market monitoring (Art. 72)',assess:function(g){var mon=aiMon(),c=mon?4:1;return {cmmi:c,src:mon?'system':'governance',method:'<b>'+(mon?'Automated evidence.':'Evidence sufficiency check.')+'</b> Post-market monitoring of AI performance/incidents was assessed'+(mon?' from the connected AI source.':'.'),finding:mon?'A connected AI source supports post-market monitoring.':'No post-market monitoring is connected.',rec:c>=4?'Maintain post-market monitoring and incident reporting.':'Stand up post-market monitoring and serious-incident reporting (Articles 72–73).'};}}
+]}];
+var AI_FW_CATALOG={
+  rmf:{name:'NIST AI RMF 1.0',short:'NIST AI RMF',groups:AI_RMF},
+  iso:{name:'ISO/IEC 42001',short:'ISO/IEC 42001',groups:AI_ISO},
+  owasp:{name:'OWASP LLM & Agentic Top 10',short:'OWASP LLM Top 10',groups:AI_OWASP},
+  atlas:{name:'MITRE ATLAS',short:'MITRE ATLAS',groups:AI_ATLAS},
+  eu:{name:'EU AI Act',short:'EU AI Act',groups:AI_EU}
+};
+var AI_FW_ORDER=['rmf','iso','owasp','atlas','eu'],AI_FW_SEL='rmf';
 function renderAiFrameworks(){
   var host=document.getElementById('cisoAiFrameworks');if(!host)return;
-  var g=aiG(),all=[];
-  var body=AI_RMF.map(function(f){var rows='',sc=[];f.controls.forEach(function(c){var a=c.assess(g);sc.push(a.cmmi);all.push(a.cmmi);
+  var g=aiG(),fw=AI_FW_CATALOG[AI_FW_SEL]||AI_FW_CATALOG.rmf,all=[];
+  var sel='<div class="fwseg">'+AI_FW_ORDER.map(function(k){return '<button class="fwsegb'+(AI_FW_SEL===k?' on':'')+'" data-aifw2="'+k+'">'+AI_FW_CATALOG[k].short+'</button>';}).join('')+'</div>';
+  var body=fw.groups.map(function(f){var rows='',sc=[];f.controls.forEach(function(c){var a=c.assess(g);sc.push(a.cmmi);all.push(a.cmmi);
       rows+='<div class="fwrow drill" data-aid="'+c.id+'">'+cmmiBadge(a.cmmi)+'<span class="fwid2">'+c.id+'</span><span class="fwname">'+c.name+'</span>'+aiProvIcon(a.src)+'</div>';});
-    var fa=avg(sc);return '<details class="fwfn"><summary>'+f.fn+'<span class="fwcount" style="color:var(--'+cmmiColor(Math.round(fa))+')">CMMI '+fa.toFixed(1)+' · '+(CMMI_LABELS[Math.round(fa)]||'')+'</span></summary>'+rows+'</details>';}).join('');
+    var fa=avg(sc);return '<details class="fwfn" open><summary>'+f.fn+'<span class="fwcount" style="color:var(--'+cmmiColor(Math.round(fa))+')">CMMI '+fa.toFixed(1)+' · '+(CMMI_LABELS[Math.round(fa)]||'')+'</span></summary>'+rows+'</details>';}).join('');
   var overall=avg(all),scored=all.filter(function(x){return x>0;}).length;
   var legend='<div class="cmmi-legend"><span class="cl-t">CMMI</span><span><b>0</b>None</span><span><b>1</b>Initial</span><span><b>2</b>Managed</span><span><b>3</b>Defined</span><span><b>4</b>Quant. Managed</span><span><b>5</b>Optimizing</span></div>';
-  var cmmiHero='<div class="fw-cmmi"><div><div class="fw-cmmi-l">NIST AI RMF posture — overall CMMI</div><div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><div class="fw-cmmi-v" style="color:var(--'+cmmiColor(Math.round(overall))+')">'+overall.toFixed(1)+'<span>/ 5</span></div><div class="fw-cmmi-lbl">'+(CMMI_LABELS[Math.round(overall)]||'')+'</div></div></div></div>';
-  host.innerHTML='<div class="card"><div class="ck">Securing the AI we run — continuous audit against NIST AI RMF 1.0</div>'+cmmiHero+legend+
-    '<div class="cn" style="margin:6px 0"><b style="color:var(--ink)">'+scored+' of '+all.length+'</b> AI controls are evidenced, scored continuously from your onboarding AI-governance answers and any connected AI signals — the same evidence-first model as the security frameworks. Click any control for the auditor’s assessment (methodology, findings, recommendation) and a downloadable PDF workpaper.</div>'+body+'</div>';
-  host.querySelectorAll('.fwrow[data-aid]').forEach(function(el){el.onclick=function(){openDrill(el.dataset.aid+' — NIST AI RMF',drillAiControl(el.dataset.aid));};});
+  var cmmiHero='<div class="fw-cmmi"><div><div class="fw-cmmi-l">'+fw.name+' posture — overall CMMI</div><div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><div class="fw-cmmi-v" style="color:var(--'+cmmiColor(Math.round(overall))+')">'+overall.toFixed(1)+'<span>/ 5</span></div><div class="fw-cmmi-lbl">'+(CMMI_LABELS[Math.round(overall)]||'')+'</div></div></div></div>';
+  host.innerHTML='<div class="card"><div class="ck">Securing the AI we run — continuous audit</div>'+cmmiHero+sel+legend+
+    '<div class="cn" style="margin:6px 0"><b style="color:var(--ink)">'+scored+' of '+all.length+'</b> '+fw.short+' controls are evidenced, scored continuously from your onboarding AI-governance answers and any connected AI signals. Click any control for the auditor’s assessment (methodology, findings, recommendation) and a downloadable PDF workpaper.</div>'+body+'</div>';
+  host.querySelectorAll('.fwsegb[data-aifw2]').forEach(function(b){b.onclick=function(){AI_FW_SEL=b.dataset.aifw2;renderAiFrameworks();};});
+  host.querySelectorAll('.fwrow[data-aid]').forEach(function(el){el.onclick=function(){openDrill(el.dataset.aid+' — '+fw.short,drillAiControl(AI_FW_SEL,el.dataset.aid));};});
 }
-function drillAiControl(id){
-  var g=aiG(),found=null;AI_RMF.forEach(function(f){f.controls.forEach(function(c){if(c.id===id)found=c;});});
+function drillAiControl(fwKey,id){
+  var g=aiG(),fw=AI_FW_CATALOG[fwKey]||AI_FW_CATALOG.rmf,found=null;fw.groups.forEach(function(f){f.controls.forEach(function(c){if(c.id===id)found=c;});});
   if(!found)return '<div class="drill-p">Control not found.</div>';
   var a=found.assess(g);
-  return auditReport({id:id,name:found.name,framework:'NIST AI RMF 1.0',cmmi:a.cmmi,method:a.method,findings:a.finding,rec:a.rec,auto:(a.src==='system'),
+  return auditReport({id:id,name:found.name,framework:fw.name,cmmi:a.cmmi,method:a.method,findings:a.finding,rec:a.rec,auto:(a.src==='system'),
     evidence:[['Source',a.src==='system'?'🔌 live AI signal':a.src==='document'?'📄 document review':'🧾 governance attestation (onboarding)'],['Maturity','CMMI '+a.cmmi]]});
 }
 /* ---- GRC / compliance — audit readiness per framework, computed from the tools
@@ -3495,7 +3558,7 @@ function renderAiRisk(){
   }
   // CEO seat: the combined view. CISO seat: split across the two question sub-tabs.
   var ceo=document.getElementById('ceoAiRisk');if(ceo){ceo.innerHTML=hero+front1+front2+actCard;wireAi(ceo);}
-  var sec=document.getElementById('cisoAiSecure');if(sec){sec.innerHTML=hero+front1+actCard;wireAi(sec);}
+  var sec=document.getElementById('cisoAiSecure');if(sec){sec.innerHTML=hero;wireAi(sec);}
   var def=document.getElementById('cisoAiDefend');if(def){def.innerHTML=front2;wireAi(def);}
   renderAiFrameworks();
 }
