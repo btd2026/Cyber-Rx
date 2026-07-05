@@ -239,14 +239,13 @@ var SEATS = {
   sub:'',
   brief:'No active compromise, and the program is improving. The biggest dollar driver is the privileged path into payments — fifty-two million — and it has a funded decision ready to close it. We measure our controls by the risk they remove, not by a maturity score, and this is the same number that rolls straight up to the board and the C.F.O.',
   body:function(){return (
-   sec('01','Are we secure right now — and is the program getting stronger?','The whole-program picture in business terms: the health of the security tools and how much of the attacker playbook we can see, and the crown jewels we protect with today’s exposure on each. <b>Click any of the three tiles</b> to open its full detail below — where every number comes from, the exact formula, and the answers to the questions a CISO asks about the data.',
+   sec('01','Are we secure right now — and is the program getting stronger?','The whole-program picture in business terms: the health of the security tools and how much of the attacker playbook we can see. <b>Click any of the three tiles</b> to open its full detail below — where every number comes from, the exact formula, and the answers to the questions a CISO asks about the data.',
      '<div id="cisoOps"></div>'
-     +'<div id="cisoOpsDetail"></div>'
-     +'<div id="cjchain" style="margin-top:14px"></div>')
-   +sec('02','Are we under attack?','Live attack status and how a threat actor could reach us. <b>Incident Command</b> leads with the live attack status and, on an active event, the war room. <b>Threat Mapping</b> is a live attack-path map — how actors targeting our sector could reach each crown jewel from the internet, and where our controls stop them at each hop.',
+     +'<div id="cisoOpsDetail"></div>')
+   +sec('02','Are our crown jewels secure?','Are our most valuable systems under attack, and can an adversary reach them. <b>Live attack status</b> leads with whether we are under attack right now and, on an active event, the war room. <b>Crown-jewel threat map</b> shows the live threats from our threat-intel platform, and — per MITRE ATT&CK tactic — the controls deployed to stop each one before it reaches a crown jewel. Click any non-compliant control to see what’s causing it and the decision to close it.',
      subtabs([
-       {key:'warroom',label:'Incident Command · War Room',on:true,html:'<div id="cisoUnderAttack"></div><div id="cisoWarRoom" style="margin-top:14px"></div>'},
-       {key:'threat',label:'Threat Mapping',html:'<div id="cisoThreatMap"></div>'}
+       {key:'warroom',label:'Live attack status · War Room',on:true,html:'<div id="cisoUnderAttack"></div><div id="cisoWarRoom" style="margin-top:14px"></div>'},
+       {key:'threat',label:'Crown-jewel threat map',html:'<div id="cisoThreatMap"></div>'}
      ]))
    +sec('03','Is our security program worth the spend — and can we prove it?','Audit readiness across every compliance framework in scope leads — provable, not asserted. Below, two lenses on the same question. <b>Business</b> traces every dollar the program protects — business function → process → technology → cyber risk → the control that mitigates it — and what each control saves when it operates effectively. <b>Frameworks</b> is the continuous audit: posture across NIST CSF 2.0, NIST SP 800-53, CIS Controls, SOC 2 and HIPAA, evidenced live rather than at a point in time.',
      '<div id="cisoCompliance"></div>'

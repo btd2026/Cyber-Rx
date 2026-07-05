@@ -89,6 +89,20 @@
   .tmp-gc{display:flex;flex-direction:column;gap:3px}
   .tmp-ctl{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--ink-2);white-space:nowrap}
   .tmp-note{font-size:11px;color:var(--ink-2);margin:0 0 6px 6px}.tmp-note.crit{color:var(--crit);font-weight:600}
+  .tmp-gate.clickable{cursor:pointer;transition:box-shadow .12s,transform .12s}
+  .tmp-gate.clickable:hover{box-shadow:0 2px 10px rgba(0,0,0,.12);transform:translateY(-1px)}
+  .tmp-flag{color:var(--crit);font-weight:800}
+  /* Crown-jewel threat map — threats column (left) feeding the attack-path lanes (right) */
+  .tm2{display:flex;gap:14px;align-items:flex-start;margin-top:10px}
+  .tm2-threats{flex:0 0 172px;display:flex;flex-direction:column;gap:8px;padding:11px;background:var(--crit-soft);border:1px solid var(--line-2);border-radius:11px;align-self:stretch}
+  .tm2-th-h{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--crit)}
+  .tm-actor{background:var(--card,#fff);border:1px solid var(--line-2);border-left:3px solid var(--crit);border-radius:8px;padding:7px 9px}
+  .tm-actor-n{font-size:12px;font-weight:800;color:var(--ink);line-height:1.2}
+  .tm-actor-t{font-size:10px;color:var(--muted);margin:1px 0 4px}
+  .tm-actor-c{font-size:10.5px;color:var(--ink-2)}
+  .tm2-into{margin-top:auto;font-size:10px;font-weight:700;color:var(--muted);text-align:center;padding-top:4px}
+  .tm2-paths{flex:1;min-width:0}
+  @media(max-width:760px){.tm2{flex-direction:column}.tm2-threats{flex-basis:auto;flex-direction:row;flex-wrap:wrap;align-items:center}.tm2-into{margin:0}}
   /* Crown-jewel value chain — executive flow visual */
   .cvf-head{display:flex;align-items:center;gap:6px;margin:14px 0 4px}
   .cvf-hcol{flex:1;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;text-align:center;min-width:90px}
@@ -610,7 +624,7 @@ var TAB_LABELS={
  // Chief Risk seat (outcome tabs)
  'Enterprise risk appetite':'Risk appetite','Risk acceptance':'Risk acceptance','Risk trends':'Risk trends','Cross-functional risk ownership':'Risk ownership','Control assurance':'Control assurance','Residual risk':'Residual risk',
  // CISO seat (outcome tabs)
- 'Are we secure right now — and is the program getting stronger?':'Program health','Are we under attack?':'Under attack?','Is our security program worth the spend — and can we prove it?':'Control value','Evidence collection':'Evidence','AI risk':'AI risk','Action tracking':'Action tracking',
+ 'Are we secure right now — and is the program getting stronger?':'Program health','Are our crown jewels secure?':'Crown jewels','Is our security program worth the spend — and can we prove it?':'Control value','AI risk':'AI risk','Decision & Projections':'Decisions','Project ROI':'Project ROI',
  // Chief Revenue seat
  'Revenue protection':'Revenue protection','Subscription / service availability':'Service availability','Fraud exposure':'Fraud','Customer-impacting incidents':'Customer incidents','Sales & renewal risk':'Sales & renewal',
  // Chief Product seat
@@ -3605,18 +3619,66 @@ function tmLane(c){
   return '<div class="tmp-lane'+(exploit?' exploit':'')+'">'+lane+'</div>'+
     (weak&&weak.minP!=null?('<div class="tmp-note'+(exploit?' crit':'')+'">'+(exploit?'⚠ Exploitable path — ':'✓ Defended — ')+'weakest hop to <b>'+c.name+'</b> is at <b style="color:var(--'+weak.cls+')">'+weak.minP+'%</b>'+(exploit?'; raise it to close the path.':'.')+'</div>'):'');
 }
+/* The kill-chain tactics that matter to reach + damage this crown jewel. Internet-
+   facing jewels are hit at the perimeter; internal ones require lateral movement. */
+function tmPath(c){return c.internet?['Initial Access','Credential Access','Impact']:['Initial Access','Lateral Movement','Credential Access','Impact'];}
+/* A control gate for a MITRE tactic — the WEAKEST control sets its color (one gap
+   opens the path). Non-compliant gates (weakest < 75%) are clickable to the drill. */
+function tmGate2(tactic){
+  var keys=TACTIC_CAPS[tactic]||[];
+  var ctrls=keys.map(function(k){return {c:CAP_BY_KEY[k],p:capDeploy(CAP_BY_KEY[k])};}).filter(function(x){return x.c;});
+  var meas=ctrls.filter(function(x){return x.p!=null;}).map(function(x){return x.p;});
+  var minP=meas.length?Math.min.apply(null,meas):null,cls=capColor(minP),weak=minP!=null&&minP<75;
+  var chips=ctrls.map(function(x){return '<span class="tmp-ctl"><span class="cap-dot" style="background:var(--'+capColor(x.p)+')"></span>'+x.c.name.replace(/ *\(.*\)/,'')+' '+(x.p==null?'—':x.p+'%')+'</span>';}).join('');
+  return {cls:cls,minP:minP,weak:weak,html:'<div class="tmp-gate '+cls+(weak?' clickable':'')+'"'+(weak?(' data-gap="'+tactic+'" title="Click — what’s causing this and the decision to close it"'):'')+'><div class="tmp-gl">'+tactic+(weak?' <span class="tmp-flag">⚠</span>':'')+'</div><div class="tmp-gc">'+chips+'</div></div>'};
+}
+function tmLane2(c){
+  var net=tmNode('🌐','Internet','the perimeter','net');
+  var gates=tmPath(c).map(tmGate2);
+  var cjSub=(c.internet?'internet-facing':'internal')+' · crit '+(c.score!=null?c.score:'—')+(c.exposure>0?(' · '+usd(c.exposure)):'');
+  var cj=tmNode('🖥','<b>'+c.name+'</b>',cjSub,'cj');
+  var chain=net;gates.forEach(function(g){chain+=TM_ARROW+g.html;});chain+=TM_ARROW+cj;
+  var weak=gates.filter(function(g){return g.minP!=null;}).sort(function(a,b){return a.minP-b.minP;})[0];
+  var exploit=weak&&weak.minP!=null&&weak.minP<50;
+  return '<div class="tmp-lane'+(exploit?' exploit':'')+'">'+chain+'</div>'+
+    (weak&&weak.minP!=null?('<div class="tmp-note'+(exploit?' crit':'')+'">'+(exploit?'⚠ Exploitable — ':'✓ Defended — ')+'weakest control on the path to <b>'+c.name+'</b> is <b style="color:var(--'+weak.cls+')">'+weak.minP+'%</b>'+(weak.minP<75?'; click the ⚠ gate for the fix.':'.')+'</div>'):'');
+}
+/* Click-through for a non-compliant tactic gate: what's causing it (the weak
+   control, its live coverage + source), and the decision to close it (funded
+   project if one exists, else raise one). */
+function tmGapDrill(tactic){
+  var keys=TACTIC_CAPS[tactic]||[];
+  var ctrls=keys.map(function(k){return {c:CAP_BY_KEY[k],p:capDeploy(CAP_BY_KEY[k])};}).filter(function(x){return x.c;})
+    .sort(function(a,b){var av=a.p==null?999:a.p,bv=b.p==null?999:b.p;return av-bv;});
+  var head='<div class="drill-p">To stop <b>'+tactic+'</b> before it reaches a crown jewel, these controls must be deployed (MITRE ATT&CK Enterprise Mitigations). The gate is only as strong as its <b>weakest</b> control — on your scale '+scaleLegend()+'.</div>';
+  var rows=ctrls.map(function(x){var s=capSource(x.c),pr=capProject(x.c),cls=capColor(x.p),gap=x.p!=null&&x.p<75;
+    var cause=x.p==null?('<b>Cause:</b> not connected — '+x.c.connect):(gap?('<b>What’s causing it:</b> '+x.c.need+' <span class="src">('+(x.p+'% covered now, target ≥75%')+')</span>'):'Meeting target.');
+    var decision=gap?(pr
+      ?'<div class="drow-proj"><span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> Decision in motion: <b style="color:var(--ink)">'+pr.name+'</b>'+(pr.ticket?(' · '+pr.ticket):'')+progTxt(pr)+'</div>'
+      :'<div class="drow-proj none"><b>Decision needed:</b> no funded project is closing this. Raise a decision to fund it in <b>Decision &amp; Projections</b> — the return is the risk this control removes.</div>'):'';
+    return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+cls+')"></span><b>'+x.c.name.replace(/ *\(.*\)/,'')+'</b><span class="drow-tool">'+(x.p==null?'—':x.p+'%')+' · '+srcPill(s)+'</span></div>'+capBar(x.p)+'<div class="drow-need">'+cause+'</div>'+decision+'</div>';
+  }).join('');
+  return head+rows;
+}
 function renderThreatMap(){
   var host=document.getElementById('cisoThreatMap');if(!host)return;
   var a=tmActors(),feedOn=tmFeedOn();
   var tag=feedOn?'<span class="pill good" style="font-size:9px">live feed</span>':'<span class="pill warn" style="font-size:9px">industry-modeled</span>';
   var cjs=((crownList()&&crownList().length)?crownList():illuCJ()).slice(0,6);
-  var actorChips=a.list.slice(0,4).map(function(x){return '<span class="tmp-actor" title="'+String(x.m||'').replace(/"/g,'&quot;')+'"><b>'+x.n+'</b> · '+x.t+'</span>';}).join('');
   var reach=cjs.filter(function(c){return c.internet;}).length;
-  host.innerHTML='<div class="card"><div class="ck">Attack-path map '+tag+' — how a threat actor could reach your crown jewels</div>'+
-    '<div class="cn" style="margin-top:6px">The actors targeting <b>'+indLabel()+'</b>, the path each would take from the internet to a crown jewel, and the controls that stop them at each hop. <b>'+reach+' of '+cjs.length+'</b> crown jewels are <b>directly internet-reachable</b>. A gate’s colour is its <b>weakest</b> control — '+scaleLegend()+'. '+(feedOn?'Actors are live from your threat-intel feed.':'Actors are modelled from public sector reporting — connect a threat-intel feed (Recorded Future · Mandiant · OTX · CISA) in onboarding for your live actor set.')+'</div>'+
-    '<div class="tmp-actors">'+(actorChips||'<span style="color:var(--muted);font-size:11px">no actors — connect a threat-intel feed</span>')+'</div>'+
-    '<div class="tmp-lanes">'+cjs.map(tmLane).join('')+'</div>'+
-    '</div>';
+  var actors=a.list.slice(0,5);
+  var actorCards=actors.map(function(x){
+    var caps=(typeof actorCaps==='function')?actorCaps(x):(x.caps||[]);var cov=threatCoverage(caps);
+    var cls=cov==null?'muted':cov>=80?'good':cov>=50?'warn':'crit';
+    return '<div class="tm-actor" title="'+String(x.m||'').replace(/"/g,'&quot;')+'"><div class="tm-actor-n">'+x.n+'</div><div class="tm-actor-t">'+x.t+'</div><div class="tm-actor-c"><span class="cap-dot" style="background:var(--'+cls+')"></span>'+(cov==null?'coverage n/a':cov+'% defended')+'</div></div>';
+  }).join('');
+  host.innerHTML='<div class="card"><div class="ck">Crown-jewel threat map '+tag+' — are our crown jewels reachable, and do our controls stop the attack?</div>'+
+    '<div class="cn" style="margin-top:6px">On the <b>left</b>, the threat actors '+(feedOn?'live from your threat-intel feed':'modeled for '+indLabel())+'. To the <b>right</b>, for each crown jewel, the MITRE ATT&CK tactics an attacker runs and the <b>controls deployed to stop each one</b> — a gate’s color is its <b>weakest</b> control ('+scaleLegend()+'). <b>'+reach+' of '+cjs.length+'</b> crown jewels are directly internet-reachable. <b>Click any ⚠ amber/red gate</b> for what’s causing the gap and the decision to close it.'+(feedOn?'':' Connect a threat-intel feed (Recorded Future · Mandiant · OTX · CISA) for your live actor set.')+'</div>'+
+    '<div class="tm2">'+
+      '<div class="tm2-threats"><div class="tm2-th-h">Threats · '+(feedOn?'live':'modeled')+'</div>'+(actorCards||'<div class="cn" style="font-size:11px">connect a threat-intel feed</div>')+'<div class="tm2-into">▸ reach the internet</div></div>'+
+      '<div class="tm2-paths">'+cjs.map(tmLane2).join('')+'</div>'+
+    '</div></div>';
+  host.querySelectorAll('.tmp-gate.clickable').forEach(function(el){el.onclick=function(){var t=el.dataset.gap;openDrill(t+' — what’s causing the gap & the decision',tmGapDrill(t));};});
 }
 function renderThreatIntel(){
   var host=document.getElementById('cisoThreat');if(!host)return;
