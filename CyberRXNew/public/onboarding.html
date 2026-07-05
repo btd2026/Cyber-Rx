@@ -102,6 +102,9 @@
   .cjcol{display:flex;flex-direction:column;gap:10px}
   .node{background:var(--surface);border:1px solid var(--line-2);border-radius:8px;padding:8px 10px;position:relative;z-index:2}
   .node .nn{font-size:11.5px;font-weight:700;line-height:1.2}.node .nd{font-size:9.5px;color:var(--muted);margin-top:3px}
+  .colh-h{text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted);font-size:9.5px}
+  .node .procfn{width:100%;margin-top:6px;font-size:10px;padding:3px 6px;border:1px dashed var(--line-2);border-radius:6px;background:var(--plane);color:var(--ink-2)}
+  .node .procfn:focus{border-color:var(--blue);border-style:solid;outline:none}
   .node.proc{border-left:3px solid var(--muted)}.node.proc.h{border-left-color:var(--crit)}.node.proc.m{border-left-color:var(--warn)}.node.proc.l{border-left-color:var(--good)}
   .node.cjwel{border-color:var(--gold);background:var(--gold-soft)}
   .node.cjwel .badge{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);margin-bottom:4px;font-weight:700}
@@ -614,8 +617,9 @@
     var G=buildGraph();
     var cjs=G.apps.filter(function(a){return a.cj;}).sort(function(x,y){return y.score-x.score;});
     // 3-column visual graph
-    var graph='<div class="cjmap" id="cjmap">'+
-      '<div><div class="colh">Business processes</div><div class="cjcol">'+G.procs.map(function(p){return '<div class="node proc '+p.cl+'" id="n-'+p.id+'"><div class="nn">'+p.n+'</div><div class="nd">'+p.data+(p.rev?(' · '+CUR_SYM+p.rev):'')+'</div></div>';}).join('')+'</div></div>'+
+    var fnOpts=Array.from(new Set(PROC.map(function(p){return p.func;}).filter(Boolean))).map(function(f){return '<option value="'+String(f).replace(/"/g,'&quot;')+'">';}).join('');
+    var graph='<div class="cjmap" id="cjmap"><datalist id="fnlist">'+fnOpts+'</datalist>'+
+      '<div><div class="colh">Business processes <span class="colh-h">— group under a function</span></div><div class="cjcol">'+G.procs.map(function(p,pi){return '<div class="node proc '+p.cl+'" id="n-'+p.id+'"><div class="nn">'+p.n+'</div><div class="nd">'+p.data+(p.rev?(' · '+CUR_SYM+p.rev):'')+'</div><input class="procfn" list="fnlist" data-pi="'+pi+'" value="'+String((PROC[pi]&&PROC[pi].func)||'').replace(/"/g,'&quot;')+'" placeholder="＋ business function"></div>';}).join('')+'</div></div>'+
       '<div><div class="colh">Applications that run them</div><div class="cjcol">'+G.apps.map(function(a){var sens=sensLabel(a.data),sc=sens==='Critical'?'h':sens==='High'?'m':'l';return '<div class="node'+(a.cj?' cjwel':'')+'" id="n-'+a.id+'"><div class="nn">'+a.n+'</div><div class="nd">'+a.data+' · <span class="crit '+sc+'">'+sens+'</span></div></div>';}).join('')+'</div></div>'+
       '<div><div class="colh">Crown jewels (preview)</div><div class="cjcol">'+(cjs.length?cjs.map(function(a,i){return '<div class="node cjwel" id="c-'+a.id+'"><span class="score">'+a.score+'</span><div class="badge">⬥ #'+(i+1)+'</div><div class="nn">'+a.n+'</div><div class="why">'+a.why+'</div></div>';}).join(''):'<div class="mapempty">map applications to a process to deduce crown jewels</div>')+'</div></div>'+
       '<svg class="cjsvg" id="cjsvg"></svg></div>';
@@ -632,6 +636,7 @@
     var tgl=document.getElementById('mapEditToggle');if(tgl)tgl.addEventListener('click',function(){MAP_EDIT_OPEN=!MAP_EDIT_OPEN;renderMap();});
     document.querySelectorAll('#mapBody .mtag').forEach(function(t){t.addEventListener('click',function(){var ai=+t.dataset.ai,pn=decodeURIComponent(t.dataset.pn),arr=APP[ai].processes,idx=arr.indexOf(pn);if(idx>=0)arr.splice(idx,1);renderMap();});});
     document.querySelectorAll('#mapBody .mapadd').forEach(function(s){s.addEventListener('change',function(){if(!this.value)return;var ai=+this.dataset.ai,pn=decodeURIComponent(this.value);if(APP[ai].processes.indexOf(pn)<0)APP[ai].processes.push(pn);renderMap();});});
+    document.querySelectorAll('#mapBody .procfn').forEach(function(inp){inp.addEventListener('change',function(){var pi=+this.dataset.pi;if(PROC[pi])PROC[pi].func=this.value.trim()||null;renderMap();});});
     requestAnimationFrame(drawMap);
     var bd=document.getElementById('bmap');bd.textContent='✓ '+cjs.length+' crown jewels';bd.classList.add('done');
   }

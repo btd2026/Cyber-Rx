@@ -109,6 +109,9 @@ for (const fn of ['applyLive', 'renderChain', 'renderProcBars', 'renderCioSystem
   try { vm.runInContext(`typeof ${fn}==='function' && ${fn}();`, ctx); }
   catch (e) { problems.push(`[${fn}] ${e.message}`); }
 }
+// Exercise the value-chain by-control view + the control-$ calculation drill.
+try { vm.runInContext("VC_VIEW='ctrl'; renderValueChain(); drillControlValue('backup'); drillControlValue('mfa'); vcProtectedBy('edr'); VC_VIEW='func';", ctx); }
+catch (e) { problems.push(`[valueChain by-control/drill] ${e.message}`); }
 // Exercise evidence panel for every EV key.
 try {
   const keys = vm.runInContext('Object.keys(EV)', ctx);
