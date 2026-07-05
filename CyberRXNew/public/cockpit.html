@@ -167,6 +167,8 @@
   .opsd-tbl th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:800;padding:5px 8px;border-bottom:1px solid var(--line)}
   .opsd-tbl td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
   .opsd-tbl td.v{font-weight:800;font-size:12.5px}
+  .opsd-tbl td.opsd-cov:hover{text-decoration:underline}
+  .opsd-covcta{color:var(--blue);font-weight:700;font-size:10px}
   .opsd-tbl td.src code{font-size:10.5px;color:var(--ink-2);background:var(--surface-2);padding:1px 5px;border-radius:4px}
   .opsd-tbl .cap-dot{margin-right:6px}
   .opsd-faq{display:flex;flex-direction:column;gap:8px}
@@ -3071,6 +3073,7 @@ function renderCisoOpsDetail(scroll){
   else{title='Are any tier-1 vendors posing a risk today?';body=opsDetailVendors();}
   host.innerHTML='<div class="card ops-detail" style="margin-top:14px"><div class="opsd-head"><div class="ck" style="font-size:14px">'+title+' — the full detail</div><button class="opsd-close" id="opsdClose">✕ close</button></div>'+body+'</div>';
   var c=document.getElementById('opsdClose');if(c)c.onclick=function(){CISO_OPS_SEL='';renderCisoOps();};
+  host.querySelectorAll('.opsd-cov[data-cap]').forEach(function(el){el.style.cursor='pointer';el.onclick=function(){var k=el.dataset.cap,cc=CAP_BY_KEY[k];if(cc)openDrill(cc.name.replace(/ *\(.*\)/,'')+' — reaching green',capGreenDrill(k));};});
   if(scroll){var el=document.getElementById('cisoOpsDetail');if(el&&el.scrollIntoView)try{el.scrollIntoView({behavior:'smooth',block:'nearest'});}catch(_){el.scrollIntoView();}}
 }
 /* Reusable detail building blocks. */
@@ -3084,16 +3087,38 @@ function opsDetailCaps(){
   var healthy=CAPS.filter(function(c){var p=capDeploy(c);return p!=null&&p>=75;}).length;
   var rows=CAPS.map(function(c){var p=capDeploy(c),s=capSource(c),cls=capColor(p);
     return '<tr><td><span class="cap-dot" style="background:var(--'+cls+')"></span>'+c.name.replace(/ *\(.*\)/,'')+'</td>'+
-      '<td class="v" style="color:var(--'+cls+')">'+(p==null?'—':p+'%')+'</td>'+
+      '<td class="v opsd-cov" data-cap="'+c.k+'" style="color:var(--'+cls+')" title="Click — what’s needed to reach green">'+(p==null?'—':p+'%')+' <span class="opsd-covcta">▸</span></td>'+
       '<td>'+srcPill(s)+'</td>'+
       '<td class="src">'+(s.sigkey?('<code>'+s.sigkey+'</code>'):'no live signal yet')+'</td></tr>';
   }).join('');
-  return '<div class="opsd-intro">This tile answers <b>“how much of each core defense actually covers the estate.”</b> '+opsFreshTag()+' Every % is read from the tool that owns it — nothing here is typed in or hardcoded.</div>'+
+  return '<div class="opsd-intro">This tile answers <b>“how much of each core defense actually covers the estate.”</b> '+opsFreshTag()+' Every % is read from the tool that owns it — nothing here is typed in or hardcoded. <b>Click any coverage %</b> for the target and what it takes to reach green.</div>'+
     opsdSection('Where each number comes from (telemetry)')+
     '<div class="opsd-tblwrap"><table class="opsd-tbl"><thead><tr><th>Capability</th><th>Coverage</th><th>Source</th><th>Signal</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
     opsdSection('How the headline is calculated')+
-    opsdFormula('<b>Healthy</b> = capabilities whose live coverage is <b>≥ 75%</b> (blue/green on your scale).<br><span class="mono">healthy = count( capability where coverage% ≥ 75 )</span> = <b>'+healthy+' / 10</b><br><span class="mono">measured = '+measured+' of 10 connected</span> · grey capabilities have no connected tool yet, so they are shown but not scored.')+
-    opsdSection('Per-capability detail + the funded fix')+drillCapabilities();
+    opsdFormula('<b>Healthy</b> = capabilities whose live coverage is <b>≥ 75%</b> (blue/green on your scale).<br><span class="mono">healthy = count( capability where coverage% ≥ 75 )</span> = <b>'+healthy+' / 10</b><br><span class="mono">measured = '+measured+' of 10 connected</span> · grey capabilities have no connected tool yet, so they are shown but not scored.');
+}
+/* Click-through on a coverage % — the target to reach green, whether the current
+   number already suffices (green is ≥90%, so 98% is fine — 100% is not the goal),
+   and what it takes to close the gap. */
+function capGreenDrill(k){
+  var c=CAP_BY_KEY[k];if(!c)return '';
+  var p=capDeploy(c),cls=capColor(p),s=capSource(c),pr=capProject(c),GREEN=90;
+  var scale='<div class="drill-p">Your color scale: <b style="color:var(--good)">green ≥90%</b> · <b style="color:var(--blue)">blue ≥75%</b> · <b style="color:var(--warn)">yellow ≥50%</b> · <b style="color:var(--crit)">red &lt;50%</b>. <b>Green (≥90%) is the target</b> — it is the point at which residual gaps are exempt or accepted, not open risk.</div>';
+  var head='<div class="drill-hero '+cls+'">'+c.name.replace(/ *\(.*\)/,'')+' — '+(p==null?'not connected':p+'% covered')+'</div>';
+  if(p==null)return head+scale+'<div class="drill-p"><b>Not measured.</b> '+c.connect+' Once connected, its live coverage scores here and this shows the exact gap to green.</div>';
+  var body;
+  if(p>=GREEN){
+    body='<div class="drill-p"><b style="color:var(--good)">✓ Already green — this is sufficient.</b> At <b>'+p+'%</b> you are above the 90% target. '+
+      '<b>You should not chase 100%.</b> The last few percent are almost always legacy, third-party or exempt assets that carry accepted risk; forcing them to 100% costs far more than the risk it removes. Hold coverage here and spend the next dollar on a capability that is below green.</div>'+
+      '<div class="drill-p">Maintain by keeping new '+({edr:'endpoints enrolled as they are provisioned',mfa:'accounts enrolled at creation',pam:'privileged accounts vaulted',vuln:'assets in the scan scope',aware:'joiners into the training program',siem:'log sources onboarded',cspm:'cloud accounts onboarded',backup:'new systems in the backup policy'}[c.k]||'assets in scope')+' — so a one-off drop is caught fast.</div>';
+  } else {
+    var gap=GREEN-p;
+    body='<div class="drill-p"><b>To reach green:</b> lift coverage from <b style="color:var(--'+cls+')">'+p+'%</b> to <b>≥90%</b> — a <b>'+gap+'-point</b> gap.<br><b>What it takes:</b> '+c.need+'</div>'+
+      (pr
+        ?'<div class="drow-proj"><span class="tag '+(pr.done?'good':'')+'" style="font-size:10.5px">'+pr.status+'</span> Funded project already moving this: <b style="color:var(--ink)">'+pr.name+'</b>'+(pr.ticket?(' · '+pr.ticket):'')+progTxt(pr)+'</div>'
+        :'<div class="drow-proj none"><b>No funded project is closing this.</b> Raise a decision in <b>Decision &amp; Projections</b> — the return is the risk this control removes once it is green.</div>');
+  }
+  return head+scale+body+'<div class="drill-p" style="color:var(--muted);font-size:11px">Coverage is live from <b>'+s.vendor+'</b>'+(s.connected?(s.demo?' (demo)':''):' (not connected)')+(s.sigkey?(' · signal <code>'+s.sigkey+'</code>'):'')+'.</div>';
 }
 
 // ── Detail 2 · Defending against attacks (MITRE ATT&CK) ─────────────────────
