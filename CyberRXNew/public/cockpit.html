@@ -1078,11 +1078,22 @@ function cjCoverage(){var l=currentCjList();if(!l||!l.length)return null;var cle
    No hardcoded coverage numbers, no meta-metrics — everything traces to data. */
 function controlsEffUsd(){var e=LIVE&&LIVE.economics;if(e&&Number(e.controls_removed)>0)return Number(e.controls_removed);return 210e6;}
 function ctile(id,label,value,cls,sub){return '<div class="card optile ctile" data-cdrill="'+id+'"><div class="ck">'+label+'</div><div class="cv" style="font-size:20px;margin-top:5px;line-height:1.25'+(cls?';color:var(--'+cls+')':'')+'">'+value+'</div><div class="cn" style="margin-top:7px">'+sub+' <span class="drill-cta">details ▸</span></div></div>';}
+/* Bucket the org's recorded analyses into calendar quarters — one point per quarter
+   (the latest analysis recorded in it) — so the trajectory reads quarter-over-quarter,
+   not per analysis. Pure aggregation of the org's REAL recorded history; a week with
+   three analyses collapses to a single quarter point, not three. Nothing invented. */
+function fiscalQ(d){var dt=new Date(d);return {y:dt.getFullYear(),q:Math.floor(dt.getMonth()/3)+1};}
+function quarterLabel(d){var q=fiscalQ(d);return 'Q'+q.q+' '+q.y;}
+function quarterlyTrend(t){
+  var byQ={};(t||[]).forEach(function(p){if(!p||p.date==null)return;var ts=Date.parse(p.date);if(isNaN(ts))return;var q=fiscalQ(p.date),k=q.y+'Q'+q.q;
+    if(!byQ[k]||ts>=byQ[k].ts)byQ[k]={ts:ts,key:k,label:quarterLabel(p.date),date:p.date,ale:Number(p.ale)||0};});
+  return Object.keys(byQ).map(function(k){return byQ[k];}).sort(function(a,b){return a.ts-b.ts;});
+}
 function trajInfo(){
-  var t=(LIVE&&LIVE.trend)||[],vals=t.map(function(p){return Number(p.ale)||0;}),ale=(LIVE&&LIVE.economics&&Number(LIVE.economics.ale))||0;
+  var t=quarterlyTrend((LIVE&&LIVE.trend)||[]),vals=t.map(function(p){return p.ale;}),ale=(LIVE&&LIVE.economics&&Number(LIVE.economics.ale))||0;
   if(vals.length>=2){var down=vals[vals.length-1]<=vals[0],delta=vals[vals.length-1]-vals[0],pc=vals[0]?Math.round(delta/vals[0]*100):0;
-    return {two:true,down:down,val:(down?'▼ ':'▲ ')+usd(Math.abs(delta))+' ('+(pc<=0?'':'+')+pc+'%)',cls:down?'good':'crit',sub:'expected loss across '+vals.length+' recorded analyses',vals:vals,t:t};}
-  return {two:false,val:ale>0?usd(ale):'—',cls:'',sub:'baseline — the trajectory builds from here, no history invented',ale:ale};
+    return {two:true,down:down,val:(down?'▼ ':'▲ ')+usd(Math.abs(delta))+' ('+(pc<=0?'':'+')+pc+'%)',cls:down?'good':'crit',sub:'expected loss across '+vals.length+' quarters',vals:vals,t:t};}
+  return {two:false,val:ale>0?usd(ale):'—',cls:'',sub:(t.length===1?('this quarter ('+t[0].label+') — the trajectory builds quarter over quarter from here'):'baseline — the trajectory builds quarter over quarter from here, no history invented'),ale:ale,t:t};
 }
 function iamGovRow(label,val,ok,sub){return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+(ok===true?'good':ok===false?'crit':'muted')+')"></span><b>'+label+'</b><span class="drow-tool" style="color:var(--'+(ok===true?'good':ok===false?'crit':'ink-2')+')">'+val+'</span></div>'+(sub?'<div class="drow-need">'+sub+'</div>':'')+'</div>';}
 function iamCard(){
@@ -1168,10 +1179,10 @@ function drillEffectiveness(){var eff=controlsEffUsd();
 function drillTrajectory(){var tr=trajInfo();
   if(tr.two){var down=tr.down;
     return '<div class="drill-hero'+(down?' good':'')+'" style="color:var(--'+(down?'good':'crit')+')">'+tr.val+'</div>'+sparkSvg(tr.vals,down)+
-      '<div class="drill-p">Your expected loss over time. '+(down?'Down':'Up')+' across '+tr.vals.length+' recorded analyses — a falling line means the controls are removing more risk than the business is adding.</div>'+
-      '<div class="ev-sec">Recorded analyses</div>'+tr.t.map(function(p){return gRow(p.date?new Date(p.date).toLocaleDateString():'—',usd(Number(p.ale)||0));}).join('')+
-      '<div class="drill-p" style="color:var(--muted)">Nerion records your position on every analysis — this is real history, nothing back-filled.</div>';}
-  return '<div class="drill-hero">'+(tr.ale>0?usd(tr.ale):'—')+'</div><div class="drill-p">This is your <b>baseline</b>. From here every analysis records a new point and this becomes your real quarter-over-quarter trajectory. Because nothing is invented, the line starts at one point and grows — run another analysis next quarter to extend it.</div>';}
+      '<div class="drill-p">Your expected loss <b>quarter over quarter</b>. '+(down?'Down':'Up')+' across '+tr.vals.length+' quarters — a falling line means the controls are removing more risk than the business is adding.</div>'+
+      '<div class="ev-sec">Recorded quarters</div>'+tr.t.map(function(p){return gRow(p.label,usd(p.ale));}).join('')+
+      '<div class="drill-p" style="color:var(--muted)">Each quarter is the latest analysis recorded in it — Nerion records your position on every analysis, then rolls them up by quarter. Real history, nothing back-filled.</div>';}
+  return '<div class="drill-hero">'+(tr.ale>0?usd(tr.ale):'—')+'</div><div class="drill-p">This is your <b>'+((tr.t&&tr.t.length===1)?('current quarter ('+tr.t[0].label+')'):'baseline')+'</b>. From here each quarter records a point and this becomes your real <b>quarter-over-quarter</b> trajectory. Because nothing is invented, the line starts at one point and grows — it extends when the next quarter is recorded.</div>';}
 function drillDetection(){var mttd=sig('mttd_hrs');
   return '<div class="drill-hero" style="color:var(--'+(mttd!=null?'good':'muted')+')">'+(mttd!=null?(mttd+' h to detect'):'not connected')+'</div>'+
     '<div class="drill-p">How fast you would see a real attack (MTTD) and contain it (MTTR). Detection speed is the single biggest lever on breach cost — every hour of attacker dwell time compounds the loss.</div>'+
@@ -1776,22 +1787,22 @@ function pct(n,dp){return (n*100).toFixed(dp==null?1:dp)+'%';}
    trend). No back-filled quarters: a single baseline until history accrues. */
 function renderTrend(){
   var host=document.getElementById('ceoTrend');if(!host)return;
-  var t=(LIVE&&LIVE.trend)||[];
+  var t=quarterlyTrend((LIVE&&LIVE.trend)||[]);
   if(!LIVE){host.innerHTML='<div class="card"><div class="ck">Expected loss — trend</div><div class="cn" style="margin-top:8px">◐ <b style="color:var(--warn)">Illustrative.</b> Once you go live, Nerion records your position on every analysis and this becomes your <b>real</b> quarter-over-quarter trend line — no back-filled history.</div></div>';return;}
   if(t.length<2){
     var cur=(LIVE&&LIVE.economics&&Number(LIVE.economics.ale))||0;
-    host.innerHTML='<div class="card"><div class="ck">Expected loss — baseline</div><div class="cv" style="font-size:26px;margin-top:6px">'+(cur?usd(cur):'—')+'</div><div class="cn" style="margin-top:8px">This is your <b>baseline</b>'+(t[0]?(', recorded '+new Date(t[0].date).toLocaleDateString()):'')+'. Nerion records your position on every analysis, so your quarter-over-quarter trend line builds from here — <b>no history is invented</b>.</div></div>';
+    host.innerHTML='<div class="card"><div class="ck">Expected loss — '+(t[0]?t[0].label:'baseline')+'</div><div class="cv" style="font-size:26px;margin-top:6px">'+(cur?usd(cur):'—')+'</div><div class="cn" style="margin-top:8px">This is your <b>'+(t[0]?('current quarter ('+t[0].label+')'):'baseline')+'</b>. Nerion records your position on every analysis and rolls them up by quarter, so your <b>quarter-over-quarter</b> trend line builds from here — <b>no history is invented</b>.</div></div>';
     return;
   }
-  var vals=t.map(function(p){return Number(p.ale)||0;});var max=Math.max.apply(null,vals),min=Math.min.apply(null,vals);var range=(max-min)||1;
+  var vals=t.map(function(p){return p.ale;});var max=Math.max.apply(null,vals),min=Math.min.apply(null,vals);var range=(max-min)||1;
   var W=340,H=120,n=t.length;
-  var pts=t.map(function(p,i){var x=10+(i/(n-1))*(W-20);var y=20+(1-((Number(p.ale)||0)-min)/range)*(H-50);return [x,y];});
+  var pts=t.map(function(p,i){var x=10+(i/(n-1))*(W-20);var y=20+(1-(p.ale-min)/range)*(H-50);return [x,y];});
   var down=(vals[n-1]<=vals[0]);var col=down?'#0ca30c':'#e5484d';
   var poly=pts.map(function(p){return p[0].toFixed(0)+','+p[1].toFixed(0);}).join(' ');
   var dots=pts.map(function(p,i){return '<circle cx="'+p[0].toFixed(0)+'" cy="'+p[1].toFixed(0)+'" r="'+(i===n-1?4.5:3.2)+'" fill="'+col+'"/>';}).join('');
   var delta=vals[n-1]-vals[0];var pc=vals[0]?Math.round(delta/vals[0]*100):0;
-  host.innerHTML='<div class="card"><div class="ck">Expected loss over time — your recorded history</div><svg width="100%" height="120" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" style="margin-top:8px"><polyline points="'+poly+'" fill="none" stroke="'+col+'" stroke-width="2.5"/>'+dots+'</svg>'+
-    '<div class="cn" style="margin-top:6px">'+(down?'Down ':'Up ')+usd(Math.abs(delta))+' ('+(pc<=0?'':'+')+pc+'%) across '+n+' recorded points, '+new Date(t[0].date).toLocaleDateString()+' → '+new Date(t[n-1].date).toLocaleDateString()+'.</div></div>';
+  host.innerHTML='<div class="card"><div class="ck">Expected loss by quarter — your recorded history</div><svg width="100%" height="120" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" style="margin-top:8px"><polyline points="'+poly+'" fill="none" stroke="'+col+'" stroke-width="2.5"/>'+dots+'</svg>'+
+    '<div class="cn" style="margin-top:6px">'+(down?'Down ':'Up ')+usd(Math.abs(delta))+' ('+(pc<=0?'':'+')+pc+'%) across '+n+' quarters, '+t[0].label+' → '+t[n-1].label+'.</div></div>';
 }
 function applyLive(){if(!LIVE)return;var e=LIVE.economics||{},r=e.ratios||{},ap=e.appetite||{},ins=e.insurance||{};var ale=Number(e.ale)||0,tail=Number(e.tail)||ale;
   if(ale>0){setTxt('lvSpineExpo',usd(ale));setTxt('lvSpineTail',usd(tail));setTxt('lvExpo',usd(ale));setTxt('lvTail',usd(tail));setTxt('lvExpoCfo',usd(ale));setTxt('lvTailCfo',usd(tail));setTxt('lvExpoCiso',usd(ale));
