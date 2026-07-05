@@ -150,32 +150,29 @@ var SEATS = {
   sub:'Cyber inside the enterprise risk portfolio: measured in the same currency as every other risk, tested for correlation and aggregation, tracked against appetite.',
   brief:'Cyber now sits on the same dollar scale as our other principal risks, and it is within appetite at sixty-eight million. The item to watch is correlation: a payments event couples with third-party and operational risk, and together they can breach appetite at the tail. Two decisions bring that back inside. Our emerging-risk radar flags A.I. decisioning and vendor concentration as the fastest movers.',
   body:function(){return (
-   sec('01','Enterprise Risk Portfolio View','Integrates cybersecurity into enterprise risk management — risk registers, control frameworks and threat-intel integration. Cyber placed on one scale beside every other principal risk, with prioritization scoring.',
-     '<div id="croPortfolio">'+bars([{l:'Credit / market',v:'$210M',pct:100},{l:'Operational',v:'$140M',pct:67},{l:'Cyber',v:'<span id="lvCroCyber">$68M</span>',pct:32,cls:'hot'},{l:'Third-party',v:'$54M',pct:26},{l:'Compliance',v:'$30M',pct:14}])+'</div>'
-     +'<div class="cn" style="margin:10px 0">Your <b>cyber</b> figure is live; the other principal-risk values are your ERM inputs — <span class="pill mod">illustrative</span> until entered.</div>'
-     +lists([
-      {c:'c',ic:'▲',t:'<span class="pill mod">modeled</span> AI / automated decisioning — velocity high, adaptation forming',s:'Fastest-rising exposure — tracked live in the AI-risk view.'},
-      {c:'w',ic:'▲',t:'<span class="pill mod">modeled</span> Third-party &amp; cloud concentration — velocity high',ev:'vendor',s:'A single provider underpins multiple revenue systems.'}]))
-   +sec('02','Threat Exposure Intelligence Map','Detects cyber threats and vulnerabilities — penetration testing, vulnerability assessments, threat modeling and red teaming. The attack surface with exploit-likelihood scoring, mapped to your live control coverage.',
-     '<div id="cisoThreat"></div>'
-     +'<div class="card" style="margin-top:12px"><div class="cn">◐ Connect your pentest tooling and vulnerability scanners (<b>Qualys · Tenable</b>) to overlay exploit-likelihood scoring and red-team findings on the actor map above.</div></div>')
-   +sec('03','Live Risk Intelligence Board','Provides continuous risk visibility — SIEM (Splunk, Sentinel), SOC dashboards and KRI reporting, with an executive-level summarization layer. Each KRI measured live against a board-set threshold; breaches flagged and the funded mitigation tracked.',
-     '<div id="croKri"></div>')
-   +sec('04','Risk Appetite Control Panel','Defines acceptable risk thresholds — risk-scoring models, control-maturity mapping and exception tracking. Tolerance vs actual exposure with automated breach alerts, and the decision that brings a breach back inside.',
+   sec('01','Enterprise risk appetite','Cyber measured in the same dollars as every other principal risk, against the tolerance the board approved — where we sit vs appetite, the concentration, the correlated tail, and how much is transferred.',
      tiles([
       {k:'Cyber vs. appetite',v:'<span id="lvCroAle">$68M</span> / <span id="lvCroAppetite">$120M</span>',cls:'good',ev:'appetite',note:'<span id="lvCroAppetitePct">57% of allocated appetite</span>'},
       {k:'Concentration',v:'<span id="lvCroConc">50% in payments</span>',cls:'warn',ev:'procexpo',note:'one process carries most of the risk'},
       {k:'Correlation flag',v:'2 risks',cls:'warn',ev:'correlation',note:'<span class="pill mod">modeled</span> couples with third-party + operational'},
       {k:'Risk transferred',v:'<span id="lvCroTransfer">83%</span>',ev:'transfer',note:'of the tail, via insurance'}])
-     +decisions([{n:1,q:'How do we bring the correlated tail within appetite?',sit:'A correlated payments + top-vendor event models at $205M — above the $180M enterprise tail. Three levers:',opts:[
+     +'<div id="croPortfolio" style="margin-top:14px">'+bars([{l:'Credit / market',v:'$210M',pct:100},{l:'Operational',v:'$140M',pct:67},{l:'Cyber',v:'<span id="lvCroCyber">$68M</span>',pct:32,cls:'hot'},{l:'Third-party',v:'$54M',pct:26},{l:'Compliance',v:'$30M',pct:14}])+'</div>'
+     +'<div class="cn" style="margin:10px 0">Your <b>cyber</b> figure is live; the other principal-risk values are your ERM inputs — <span class="pill mod">illustrative</span> until entered.</div>')
+   +sec('02','Risk acceptance','The residual risk the board must formally accept — or fund down. The correlated tail above appetite, the three levers (reduce / transfer / accept), and the decision recorded for the risk committee.',
+     decisions([{n:1,q:'How do we bring the correlated tail within appetite?',sit:'A correlated payments + top-vendor event models at $205M — above the $180M enterprise tail. Three levers:',opts:[
        {rec:true,tag:'A · Reduce (fund PAM + DR)',on:'Option A · Reduce',osum:'$4.6M · removes $92M',pros:['Cuts likelihood and impact','De-correlates the payments path','Tail returns within appetite'],cons:['Requires $4.6M of capital']},
        {tag:'B · Transfer (raise insurance limit)',on:'Option B · Transfer',osum:'+$1.1M premium',pros:['Caps the financial tail via a higher limit','Fast to execute at renewal'],cons:['~$1.1M higher annual premium','Does not reduce likelihood or de-correlate the path','Coverage still excludes some tail scenarios']},
        {tag:'C · Accept the tail',on:'Option C · Accept',osum:'$0',pros:['No capital spend'],cons:['Correlated tail stays $205M — above the $180M enterprise limit','Requires a documented board risk-acceptance']}]}]))
-   +sec('05','Risk Remediation Tracker','Drives remediation of the highest risks — patch-management tracking, remediation SLAs and security-control testing. The funded portfolio closing each risk, with cost, owner, status and the dollars of exposure it removes.',
+   +sec('03','Risk trends','Which Key Risk Indicators are breaching tolerance, the direction of travel over time, and the emerging risks rising fastest for your sector.',
+     '<div id="croKri"></div>'
+     +'<div id="ceoTrend" style="margin-top:14px"></div>'
+     +'<div id="ceoEmerging" style="margin-top:14px"></div>')
+   +sec('04','Cross-functional risk ownership','Who owns which cyber risk across the business — the operating model mapping each accountability to a leader and the systems behind it, so no material risk is unowned.',
+     '<div id="opmodel-cro"></div>')
+   +sec('05','Control assurance','Are the controls actually working? Control effectiveness measured as dollars of risk removed — inherent vs residual — cross-checked against live coverage from the connected tools.',
+     '<div id="cisoControls"></div>')
+   +sec('06','Residual risk','What remains after the controls we run — the residual exposure, and the funded remediation portfolio closing each remaining driver, with the dollars of exposure it removes.',
      '<div id="initiatives-panel"></div>')
-   +sec('06','Board Risk Intelligence Pack','Provides executive risk reporting — a board-ready pack with heatmaps, trends and narrative, assembled from the same live data as every seat. This is also where your ERM accountabilities map to the systems behind them.',
-     '<div class="card"><div class="ck">Board-ready risk report</div><div class="cn" style="margin-top:6px">A one-click board / regulator report — the financial statement of cyber risk, SEC Item 106 governance readiness, the KRI board, decisions on the table and the trajectory — assembled from the same live model as this cockpit, every figure carrying its provenance.</div><div style="margin-top:12px"><button class="bp-btn primary" onclick="openBoardPack()">Open the board pack →</button></div></div>'
-     +'<div id="opmodel-cro" style="margin-top:14px"></div>')
   );}
  },
 
