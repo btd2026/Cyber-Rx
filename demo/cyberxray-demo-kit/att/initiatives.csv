@@ -1,0 +1,5 @@
+name,owner,cost,roi,status,engagement
+Network segmentation & signaling hardening,CISO,$30M,17×,in progress,gate
+Lawful-intercept isolation & monitoring,CISO,$12M,15×,in progress,gate
+CPNI data-protection & DLP,CISO,$16M,13×,in progress,design
+Legacy SS7 retirement / Diameter migration,CIO,$18M,8×,planned,design

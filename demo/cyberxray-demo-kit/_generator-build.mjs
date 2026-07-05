@@ -227,11 +227,11 @@ console.log('\\nDone. Then paste <org>/browser-localStorage.js into the app cons
 
 // ── master README ──
 const matrix = ORGS.map((o) => `| ${o.org_name} | ${o.industry} | \`${o.key}\` | ${o.apps.length} sys · ${o.risks.length} risks | ${o.tools.length} demo tools |`).join('\n');
-fs.writeFileSync(path.join(OUT, 'README.md'), `# CyberX-Ray — Executive Demo Kit (7 industry leaders)
+fs.writeFileSync(path.join(OUT, 'README.md'), `# CyberX-Ray — Executive Demo Kit (${ORGS.length} industry leaders)
 
-Production-realistic onboarding data for **one recognized leader in each industry**, so you can test the whole platform end-to-end — **without any connector API keys**. Every mapping and calculation runs offline; connectors run in **demo mode** with representative telemetry.
+Production-realistic onboarding data for **one recognized leader in each of ${ORGS.length} industries**, so you can test the whole platform end-to-end — **without any connector API keys**. Every mapping and calculation runs offline; connectors run in **demo mode** with representative telemetry.
 
-## The 7 orgs
+## The ${ORGS.length} orgs
 | Organization | Sector | Folder | Inventory | Tools |
 |---|---|---|---|---|
 ${matrix}
@@ -252,14 +252,14 @@ API_BASE=http://localhost:3001 node load-all.mjs
 - **Material exposure ($)** — open risks link to systems by name; each org has 5 linked risks.
 - **Economics** — ALE, tail, appetite headroom, insurance gap, %-of-revenue / %-of-EV ratios (all orgs).
 - **Earnings / EPS impact** — orgs with net income + shares. *(State of California has none → tests graceful null-handling; Boeing has a **net loss** → tests negative-earnings handling.)*
-- **Legal / jurisdiction clocks** — HIPAA (UnitedHealth), SEC + GLBA (JPMorgan), GDPR/EU (Microsoft), state breach law (California), PCI (Walmart), ITAR (Boeing), NERC CIP (Duke).
+- **Legal / jurisdiction clocks** — binding clock varies by footprint: US SEC 8-K 4-day (UnitedHealth, Walmart, Boeing, Duke, California, AT&T), **DORA** (JPMorgan — EU/UK), **NIS2** (Microsoft — EU/Global); sector regimes layered on (HIPAA, PCI, ITAR, NERC CIP, FCC CPNI).
 - **Governance maturity** — deliberately varied: strong (Microsoft, Duke's dedicated cyber committee) vs weaker (California: semi-annual, no retainer, informal ransomware policy).
 - **AI governance maturity** — from full (Microsoft: Both frameworks, EU AI Act high-risk) to nascent (Boeing/California: piloting, drafted).
 - **Resilience / vendor concentration** — single-provider blast radius (UnitedHealth ↔ Change Healthcare; Duke ↔ SCADA vendor).
 - **CRO enterprise-risk portfolio** — cyber vs credit/operational/third-party/compliance, on one scale.
 - **Strategic-initiative Go/No-Go (CEO)** — 3 per org with value-at-stake.
 - **Connectors / demo mode + evidence layer** — each org seeds a sector-appropriate tool stack (\`demo:true\`) and NIST-CSF document-evidence scores (\`cyberrx_doc_scores\`) so the ○ self-reported → ● evidenced flip is visible.
-- **Industry localization** — all 7 buckets (health / tech / fin / retail / gov / mfg / energy) so per-sector threats, regulators, continuity and framing all change.
+- **Industry localization** — every cockpit bucket exercised: health / tech / fin / retail / gov / mfg / energy (Telecommunications reuses the technology lens) so per-sector threats, regulators, continuity and framing all change.
 
 ## Per-org contents
 Each folder has: \`ingest.json\` (ready-to-POST payload), \`processes.csv\` · \`systems.csv\` · \`risks.csv\` · \`initiatives.csv\` (onboarding upload templates), \`browser-localStorage.js\` (one-paste cockpit loader), and \`README.md\` (the full data sheet — every dropdown value).
@@ -268,6 +268,22 @@ Each folder has: \`ingest.json\` (ready-to-POST payload), \`processes.csv\` · \
 - Financials are illustrative, grounded in each company's most recent public filings; cyber-specific figures (appetite, budget, insurance, risk exposures, inventory) are sector-modelled, not disclosed.
 - Executive names are placeholders.
 - The ingest payload matches the exact contract the onboarding "Go live" button POSTs to \`/api/crown-jewels/ingest\`.
+
+## Prove the calculations offline (no API, no DB, no keys)
+\`verify-offline.mjs\` runs every org's \`ingest.json\` through the **real** engine modules
+(mapping → crown-jewel scoring → economics → jurisdiction) and re-parses the CSVs with the
+onboarding's exact parser — so you can confirm the mapping and math before ever standing up a server:
+\`\`\`bash
+# from the repo, with the kit at <repo>/demo/cyberxray-demo-kit (default path):
+node demo/cyberxray-demo-kit/verify-offline.mjs
+# or point it anywhere:
+CJ_DIR=/abs/path/cyberrx-api/src/services/crownjewels node verify-offline.mjs
+\`\`\`
+It prints, per org: processes/systems/crown-jewels counts, material exposure, ALE, tail, %-of-revenue, top crown jewels, and the binding legal clock — and exits non-zero if any check fails.
 `);
+
+// Ship the offline verifier alongside the kit (source-of-truth lives next to this build).
+try { fs.copyFileSync(new URL('./verify-offline.mjs', import.meta.url), path.join(OUT, 'verify-offline.mjs')); }
+catch (e) { console.warn('verify-offline.mjs not copied: ' + e.message); }
 
 console.log('Emitted kit to ' + OUT + ' (' + ORGS.length + ' orgs).');

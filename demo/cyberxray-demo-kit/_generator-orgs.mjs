@@ -7,8 +7,8 @@
 // be sector-plausible, not disclosed. Every money value is a RAW dollar integer
 // (the onboarding "unit" multiplier is already applied). See README for sources.
 //
-// The 7 sectors map onto the cockpit's industry buckets:
-//   health · tech · fin · retail · gov · mfg · energy
+// 8 sectors across the cockpit's industry buckets:
+//   health · tech · fin · retail · gov · mfg · energy  (+ Telecommunications → tech lens)
 // ─────────────────────────────────────────────────────────────────────────────
 
 const B = 1e9, M = 1e6, K = 1e3;
@@ -397,5 +397,60 @@ export const ORGS = [
     ],
     frameworks: ['NERC CIP', 'NIST CSF 2.0', 'IEC 62443', 'SOC 2', 'TSA Pipeline Security'],
     docMaturity: 4,
+  },
+
+  // ═══════════════════════════ 8 · TELECOMMUNICATIONS ═══════════════════════════
+  {
+    key: 'att',
+    org_name: 'AT&T Inc.',
+    industry: 'Telecommunications',     // → tech lens (no distinct telecom bucket)
+    regions: ['US'],
+    currency: 'USD',
+    story: 'Largest U.S. wireless & fiber carrier (~118M wireless subscribers). Crown jewels are the mobile/network core, subscriber CPNI, and lawful-intercept infrastructure — the 2024 Salt Typhoon telecom intrusions and CPNI/call-records breaches are the defining sector scenarios.',
+    financials: { revenue: 122.3 * B, operatingIncome: 23 * B, netIncome: 10.7 * B, enterpriseValue: 160 * B, sharesOutstanding: 7.18 * B },
+    appetite: 300 * M, budget: 500 * M, dataRecords: 110 * M,
+    principalRisks: { creditMarket: 130 * B, operational: 25 * B, thirdParty: 8 * B, compliance: 6 * B },
+    insurance: { limit: 150 * M, premium: 9 * M, retention: 25 * M, renewal: '2026-10-15' },
+    governance: { committee: 'Audit Committee', cadence: 'Quarterly', cisoReportsTo: 'CIO', boardExpertise: 'Yes', ermIntegrated: 'Yes',
+      ir: { tested: 'Yes — tabletop within 12 months', lastTabletop: '2026-02-20', retainer: 'Yes', ransomwarePolicy: 'Board-approved policy' } },
+    aiGovernance: { systems: 25, decisioning: 'Piloting', framework: 'NIST AI RMF', policy: 'Drafted', euAiAct: 'Not in scope', inventory: 'Partially' },
+    growth: { pipelineUsd: 5 * B, reviewBeforeWks: '5', reviewNowWks: '3', dealsGated: '8', trustReviews: '12', certs: ['SOC 2 Type II', 'ISO 27001', 'NIST CSF 2.0'] },
+    seatNames: { ceo: 'J. Stanwick', cfo: 'P. Deschenes', ciso: 'R. Boyer', cio: 'J. McElfresh', clo: 'D. McAtee II', cro: 'S. Krishnan' },
+    tools: ['okta', 'defender', 'splunk', 'cyberark', 'qualys', 'knowbe4', 'wiz', 'rubrik', 'servicenow', 'recordedfuture', 'onetrust', 'securityscorecard'],
+    processes: [
+      { name: 'Mobile network operations (5G/wireless)', revenue: '$80B', rto: '1', data: 'PII, CPNI, OT', criticality: 'Critical', tx: '500000000', tolerance: '$18M' },
+      { name: 'Broadband & fiber (consumer/business)', revenue: '$30B', rto: '2', data: 'PII, CPNI', criticality: 'Critical', tx: '100000000', tolerance: '$8M' },
+      { name: 'Business & enterprise connectivity', revenue: '$30B', rto: '2', data: 'PII, Confidential', criticality: 'Critical', tx: '20000000', tolerance: '$6M' },
+      { name: 'Billing & customer care', revenue: '$10B', rto: '6', data: 'PII, PCI, Financial', criticality: 'High', tx: '120000000', tolerance: '$4M' },
+      { name: 'Interconnection & signaling (SS7/roaming)', revenue: '$5B', rto: '1', data: 'CPNI, OT', criticality: 'Critical', tx: '50000000', tolerance: '$5M' },
+    ],
+    apps: [
+      { name: '5G wireless core (EPC/5GC)', host: 'application on-prem', data: 'PII, CPNI, OT', vendor: 'Ericsson', eol: 'no', recovery: '2', tx: '500000000', value: '$180M', processes: ['Mobile network operations (5G/wireless)', 'Interconnection & signaling (SS7/roaming)', 'Business & enterprise connectivity'] },
+      { name: 'Lawful-intercept & provisioning', host: 'application on-prem', data: 'CPNI, CUI, Confidential', vendor: 'In-house', eol: 'no', recovery: '4', tx: '1000000', value: '$120M', processes: ['Interconnection & signaling (SS7/roaming)', 'Mobile network operations (5G/wireless)'] },
+      { name: 'SS7 / Diameter signaling gateway', host: 'internet-facing', data: 'PII, CPNI, OT', vendor: 'Oracle Communications', eol: 'yes', recovery: '2', tx: '50000000', value: '$60M', processes: ['Interconnection & signaling (SS7/roaming)', 'Mobile network operations (5G/wireless)'] },
+      { name: 'Customer data platform (CRM)', host: 'database on-prem', data: 'PII, CPNI, Financial', vendor: 'Oracle', eol: 'no', recovery: '8', tx: '120000000', value: '$70M', processes: ['Billing & customer care', 'Mobile network operations (5G/wireless)'] },
+      { name: 'Broadband & fiber access network', host: 'internet-facing', data: 'PII, CPNI', vendor: 'Nokia', eol: 'no', recovery: '4', tx: '100000000', value: '$70M', processes: ['Broadband & fiber (consumer/business)'] },
+      { name: 'Billing / OSS-BSS', host: 'application cloud', data: 'PII, PCI, Financial', vendor: 'Amdocs', eol: 'no', recovery: '6', tx: '120000000', value: '$40M', processes: ['Billing & customer care'] },
+    ],
+    risks: [
+      { title: 'Nation-state intrusion into signaling / call records', severity: 'Critical', asset: 'SS7 / Diameter signaling gateway', exposure: '$180M', status: 'open' },
+      { title: 'Lawful-intercept system compromise', severity: 'Critical', asset: 'Lawful-intercept & provisioning', exposure: '$150M', status: 'open' },
+      { title: 'Subscriber CPNI / call-records breach', severity: 'Critical', asset: 'Customer data platform (CRM)', exposure: '$120M', status: 'open' },
+      { title: '5G core disruption / mass outage', severity: 'Critical', asset: '5G wireless core (EPC/5GC)', exposure: '$110M', status: 'open' },
+      { title: 'Broadband access DDoS / outage', severity: 'High', asset: 'Broadband & fiber access network', exposure: '$40M', status: 'open' },
+    ],
+    initiatives: [
+      { name: 'Network segmentation & signaling hardening', owner: 'CISO', cost: '$30M', roi: '17×', status: 'in progress', engagement: 'gate' },
+      { name: 'Lawful-intercept isolation & monitoring', owner: 'CISO', cost: '$12M', roi: '15×', status: 'in progress', engagement: 'gate' },
+      { name: 'CPNI data-protection & DLP', owner: 'CISO', cost: '$16M', roi: '13×', status: 'in progress', engagement: 'design' },
+      { name: 'Legacy SS7 retirement / Diameter migration', owner: 'CIO', cost: '$18M', roi: '8×', status: 'planned', engagement: 'design' },
+    ],
+    strategicInitiatives: [
+      { name: 'AI network-ops & customer care', type: 'AI product or feature', valueUsd: 1.5 * B, horizon: 'This year' },
+      { name: 'Fiber expansion to 60M locations', type: 'Market / geographic expansion', valueUsd: 4 * B, horizon: 'Next 12–24 months' },
+      { name: '5G standalone core rollout', type: 'Cloud platform or migration', valueUsd: 2 * B, horizon: 'Next 12–24 months' },
+    ],
+    frameworks: ['NIST CSF 2.0', 'FCC CPNI Rules', 'CISA Cross-Sector', 'SOC 2', 'ISO 27001'],
+    docMaturity: 3,
   },
 ];

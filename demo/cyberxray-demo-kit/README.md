@@ -1,8 +1,8 @@
-# CyberX-Ray — Executive Demo Kit (7 industry leaders)
+# CyberX-Ray — Executive Demo Kit (8 industry leaders)
 
-Production-realistic onboarding data for **one recognized leader in each industry**, so you can test the whole platform end-to-end — **without any connector API keys**. Every mapping and calculation runs offline; connectors run in **demo mode** with representative telemetry.
+Production-realistic onboarding data for **one recognized leader in each of 8 industries**, so you can test the whole platform end-to-end — **without any connector API keys**. Every mapping and calculation runs offline; connectors run in **demo mode** with representative telemetry.
 
-## The 7 orgs
+## The 8 orgs
 | Organization | Sector | Folder | Inventory | Tools |
 |---|---|---|---|---|
 | UnitedHealth Group | Healthcare | `unitedhealth` | 6 sys · 5 risks | 12 demo tools |
@@ -12,6 +12,7 @@ Production-realistic onboarding data for **one recognized leader in each industr
 | State of California | Government / Public sector | `state-california` | 6 sys · 5 risks | 10 demo tools |
 | The Boeing Company | Manufacturing | `boeing` | 6 sys · 5 risks | 12 demo tools |
 | Duke Energy Corporation | Energy / Utilities | `duke-energy` | 6 sys · 5 risks | 12 demo tools |
+| AT&T Inc. | Telecommunications | `att` | 6 sys · 5 risks | 12 demo tools |
 
 ## Quick start (full end-to-end)
 ```bash
@@ -29,14 +30,14 @@ API_BASE=http://localhost:3001 node load-all.mjs
 - **Material exposure ($)** — open risks link to systems by name; each org has 5 linked risks.
 - **Economics** — ALE, tail, appetite headroom, insurance gap, %-of-revenue / %-of-EV ratios (all orgs).
 - **Earnings / EPS impact** — orgs with net income + shares. *(State of California has none → tests graceful null-handling; Boeing has a **net loss** → tests negative-earnings handling.)*
-- **Legal / jurisdiction clocks** — HIPAA (UnitedHealth), SEC + GLBA (JPMorgan), GDPR/EU (Microsoft), state breach law (California), PCI (Walmart), ITAR (Boeing), NERC CIP (Duke).
+- **Legal / jurisdiction clocks** — binding clock varies by footprint: US SEC 8-K 4-day (UnitedHealth, Walmart, Boeing, Duke, California, AT&T), **DORA** (JPMorgan — EU/UK), **NIS2** (Microsoft — EU/Global); sector regimes layered on (HIPAA, PCI, ITAR, NERC CIP, FCC CPNI).
 - **Governance maturity** — deliberately varied: strong (Microsoft, Duke's dedicated cyber committee) vs weaker (California: semi-annual, no retainer, informal ransomware policy).
 - **AI governance maturity** — from full (Microsoft: Both frameworks, EU AI Act high-risk) to nascent (Boeing/California: piloting, drafted).
 - **Resilience / vendor concentration** — single-provider blast radius (UnitedHealth ↔ Change Healthcare; Duke ↔ SCADA vendor).
 - **CRO enterprise-risk portfolio** — cyber vs credit/operational/third-party/compliance, on one scale.
 - **Strategic-initiative Go/No-Go (CEO)** — 3 per org with value-at-stake.
 - **Connectors / demo mode + evidence layer** — each org seeds a sector-appropriate tool stack (`demo:true`) and NIST-CSF document-evidence scores (`cyberrx_doc_scores`) so the ○ self-reported → ● evidenced flip is visible.
-- **Industry localization** — all 7 buckets (health / tech / fin / retail / gov / mfg / energy) so per-sector threats, regulators, continuity and framing all change.
+- **Industry localization** — every cockpit bucket exercised: health / tech / fin / retail / gov / mfg / energy (Telecommunications reuses the technology lens) so per-sector threats, regulators, continuity and framing all change.
 
 ## Per-org contents
 Each folder has: `ingest.json` (ready-to-POST payload), `processes.csv` · `systems.csv` · `risks.csv` · `initiatives.csv` (onboarding upload templates), `browser-localStorage.js` (one-paste cockpit loader), and `README.md` (the full data sheet — every dropdown value).
