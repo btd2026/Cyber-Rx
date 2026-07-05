@@ -2,6 +2,33 @@
    Every claim (data-ev) has an EV entry: formula, inputs (value+source), math. */
 
 var SEATS = {
+ board:{
+  eyebrow:'Board oversight · Directors',
+  verdict:'Cyber risk is <span class="em">a managed business risk under active board oversight</span> — within the appetite you approved. This is the director’s one-screen brief: material exposure, the worst realistic day, peer standing, and the decisions that are the board’s to make.',
+  sub:'The board’s oversight lens — the six questions a Fortune-100 director asks, in your sector’s terms, each tracing to the evidence. Every figure is clickable.',
+  brief:'Here is the board’s view. Cyber is a managed business risk, within the appetite you approved. I can show you the one event that would hurt us most, how we compare to our sector, and the few decisions that need the board. Every number traces to our own data.',
+  body:function(){return (
+   sec('01','Where do we stand? — the board brief','Your sector’s one-screen oversight brief: are we within the appetite the board approved, what single event would hurt us most, who regulates us, how we compare to peers, and the direction of travel.',
+     '<div id="ceoBoardBrief"></div>'
+     +'<div style="margin-top:14px">'+tiles([
+      {k:'Expected annual loss',v:'<span id="lvExpo">$68M</span>',ev:'ale',note:'<span class="pill good" id="lvAleWithin">Within appetite</span> &nbsp;<span class="claim" data-ev="pctrev"><span id="lvPctRev">≈0.8% of revenue</span> <span class="fx">ƒ</span></span>'},
+      {k:'Worst-case tail (95%)',v:'<span id="lvTail">$180M</span>',cls:'warn',ev:'tail',note:'<span class="pill warn" id="lvTailWithin">Above appetite</span> &nbsp;vs appetite <span class="claim" data-ev="appetite"><span id="lvAppetite">$120M</span> <span class="fx">ƒ</span></span>'},
+      {k:'Materiality threshold',v:'<span id="lvMateriality">$53M</span>',ev:'materiality',note:'<span id="lvMatBasis">the loss large enough to be financially material to disclose</span>'}])+'</div>')
+   +sec('02','Our worst realistic day — could we survive it?','The severe-but-plausible scenario for your sector, what it would cost, how fast we could recover, and where a single third-party is a systemic point of failure — the resilience question the board owns.',
+     '<div class="cols"><div class="card" id="ceoStress"><div class="ck">Severe-but-plausible scenario</div><div class="cn" style="margin-top:8px">◐ Illustrative until go-live — modeled from your top crown jewel, its largest open risk, worst-case recovery and your binding regulatory clock.</div></div>'
+     +'<div class="card" id="ceoReadiness"><div class="ck">Response &amp; recovery readiness</div><div class="cn" style="margin-top:8px">◐ Add your incident-readiness answers in onboarding (IR plan tested, tabletop, retainer, ransomware policy).</div></div></div>'
+     +'<div id="ceoThirdParty" style="margin-top:14px"></div>')
+   +sec('03','How do we compare — and which way are we heading?','Where we stand against our sector’s peers on the measures the board tracks, and the direction of travel over time. Am I ahead or behind, getting better or worse?',
+     '<div id="ceoPeer"></div><div id="ceoTrend" style="margin-top:14px"></div>')
+   +sec('04','Oversight &amp; disclosure — SEC Reg S-K Item 106','The governance structure the board must disclose (committee, cadence, board expertise, CISO independence, ERM integration), the evidenced decision record that is your D&amp;O defense, and the one-click board / regulator report.',
+     '<div id="ceoGov"></div>'
+     +'<div id="ceoOversight" style="margin-top:14px"></div>'
+     +'<div class="card" style="margin-top:14px"><div class="ck">Board-ready report</div><div class="cn" style="margin-top:6px">A one-click board / regulator report — the financial statement of cyber risk, Item 106 governance readiness, the KRI board, decisions and trajectory — assembled from the same live model, every figure carrying its provenance.</div><div style="margin-top:12px"><button class="bp-btn primary" onclick="openBoardPack()">Open the board pack →</button></div></div>')
+   +sec('05','What needs the board?','The decisions that are the board’s to make — risk-acceptances above appetite, appetite reviews, and major funding calls — each recorded for the oversight trail.',
+     '<div id="ceoBoardDecisions"></div>')
+  );}
+ },
+
  ceo:{
   eyebrow:'Executive summary · CEO / Board',
   verdict:'Cyber risk is <span class="em">managed and within the board’s approved tolerance.</span> The worst-case tail sits above appetite, and one funded decision this quarter brings it back in line.',
