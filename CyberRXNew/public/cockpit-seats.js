@@ -219,21 +219,23 @@ var SEATS = {
   sub:'Can the business keep delivering through a cyber disruption? Your critical services, what an hour of downtime costs, how fast each recovers, and where a single point of failure could stop operations.',
   brief:'Operationally we are running, and no incident is disrupting service delivery right now. The continuity gap to close is recovery — our slowest critical service takes too long to restore, beyond tolerance, and one vendor is a single point of failure for three services. One resilience investment brings both inside tolerance and protects our service-delivery commitments.',
   body:function(){return (
-   sec('01','Operational Continuity Map','Protects operational continuity — SOC monitoring, endpoint detection &amp; response (EDR) and incident-response playbooks. Business services linked to cyber threats with a real-time disruption-probability score.',
+   sec('01','Operational resilience','Are operations running, and could they keep running through a cyber disruption? Your live operating picture — incidents affecting business processes, how fast a disruption surfaces, and where a single point of failure could stop service delivery.',
      '<div id="cooStatus"></div>')
-   +sec('02','Execution Security Layer','Enables secure execution of operations — security embedded into workflows, production systems and business applications, as checkpoints inside the process rather than a gate beside it.',
-     '<div class="card"><div class="ck">Security checkpoints embedded in operational workflows</div><div class="cn" style="margin-top:6px">◐ Connect your ITSM &amp; workflow systems (<b>ServiceNow · Jira</b>), IAM (<b>Okta · Entra</b>) and application logs to show where security checkpoints sit inside each operational process — so execution stays fast and controls are met without a separate approval step. <span class="pill mod" style="font-size:8px">planned</span></div></div>')
-   +sec('03','Security Automation Efficiency Board','Reduces operational friction — security automation (SOAR), ticketing integration and automated patching. Percent automated vs manual, with the operational savings that buys back.',
-     '<div class="card"><div class="ck">Automated vs manual security work</div><div class="cn" style="margin-top:6px">◐ Connect your SOAR platform, ITSM (<b>ServiceNow</b>) and patch tooling to track the share of security work that runs automatically vs by hand — and the hours and cost that automation returns to operations. <span class="pill mod" style="font-size:8px">planned</span></div></div>')
-   +sec('04','Service Availability Shield','Ensures service uptime — DDoS protection, network-security monitoring and redundancy architecture. Live uptime with a cyber-disruption overlay and the customer-impact indicator, ranked by what an hour down costs.',
-     '<div id="cooContinuity"></div>'
+   +sec('02','Critical process health','The revenue- and service-critical processes ranked by what an hour of downtime costs, how fast each recovers, and whether that is inside your continuity tolerance.',
+     '<div id="cooContinuity"></div>')
+   +sec('03','Manufacturing / service continuity','The continuity that actually matters for your sector — the services whose disruption stops the business — framed in your industry’s terms, including operational-technology (OT) continuity where it applies.',
+     '<div id="cooSector"></div>')
+   +sec('04','Supply-chain reliability','Where a third-party or single provider is a point of failure for your operations — the vendor concentration that can stop multiple services at once, and the supplier risk to monitor.',
+     '<div id="ceoThirdParty"></div>'
+     +'<div class="card" style="margin-top:12px"><div class="cn">◐ Connect security ratings (<b>BitSight · SecurityScorecard</b>) and your vendor-monitoring tool to rank suppliers by operational risk. The single-provider blast radius above is computed live from your asset→vendor map.</div></div>')
+   +sec('05','Recovery readiness','Could we actually recover? Immutable backups that survive an attack, the recovery-point objective (how much data you would lose), the date of the last full DR test, and whether a single vendor failure leaves no failover.',
+     '<div id="cioDr"></div>')
+   +sec('06','Business continuity gaps','The specific gaps between where continuity is today and where board tolerance requires it — and the resilience decision that closes them.',
+     '<div id="cooGaps"></div>'
      +decisions([{n:1,q:'How do we keep operations running through a disruption?',sit:'Our slowest critical service recovers beyond tolerance and one vendor is a single point of failure for three services. Three ways to close the continuity gap:',opts:[
        {rec:true,tag:'A · Fund resilience + remove the SPOF',on:'Option A · Resilience',osum:'$3.2M · within tolerance',pros:['Brings the slowest critical service inside recovery tolerance','Removes the single-vendor point of failure (multi-region)','Protects service-delivery SLAs and customer trust'],cons:['Requires $3.2M of capital','A one-quarter program']},
        {tag:'B · Critical services only',on:'Option B · Critical only',osum:'$1.6M',pros:['Protects the top revenue-critical services','Half the capital'],cons:['Lower-tier services stay over tolerance','Vendor concentration remains']},
        {tag:'C · Accept &amp; monitor',on:'Option C · Accept',osum:'$0 this year',pros:['No capital this year'],cons:['The slowest service stays over recovery tolerance','A vendor failure still degrades three services at once','Requires a documented operational risk-acceptance']}]}]))
-   +sec('05','Crisis Orchestration Hub','Aligns response across the organization — incident-response coordination across IT, Legal, HR, PR and Finance, and crisis management. A real-time war-room with role-based action tracking and escalation paths, plus the responsibilities you own mapped to the systems behind them.',
-     '<div class="card"><div class="ck">Incident war-room — role-based orchestration</div><div class="cn" style="margin-top:6px">When an incident is confirmed, the <b>⚠ War Room</b> opens from the top bar: a live command centre coordinating IT, Legal, HR, PR and Finance with role-based actions and escalation paths, driven from your ITSM and SIEM. Connect <b>ServiceNow / Jira</b> and paging (<b>PagerDuty · Opsgenie</b>) to track each role’s actions live during a crisis.</div></div>'
-     +'<div id="opmodel-coo" style="margin-top:14px"></div>')
   );}
  },
 
