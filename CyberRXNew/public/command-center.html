@@ -176,25 +176,48 @@ function roleSummaryScores(){return (ROLE_SUMMARY_KEYS[ROLE]||['overall','fin','
 
 /* ---------- role scoping — who owns / sees what ---------- */
 function enterpriseRole(){return ['board','ceo','ciso','crisk','audit'].indexOf(ROLE)>=0;}
-function roleObjectives(){var os=pack().objectives;if(enterpriseRole())return os;var mine=os.filter(function(o){return o.owner===ROLE;});
-  // also objectives that depend on a capability this role owns
-  os.forEach(function(o){if(mine.indexOf(o)<0&&o.caps.some(function(cid){var c=capById(cid);return c&&c.owner===ROLE;}))mine.push(o);});
-  return mine.length?mine:os;}
+/* The control domains each functional executive is accountable for — used to link
+   an objective to a leader even when they don't formally "own" it (they support it). */
+var ROLE_CONCERN={
+  cfo:['sod_conflicts','bec_blocked'], cio:['cspm_pct','patch_pct'], chro:['mfa_pct','phishing_pct'],
+  clo:['dsar_overdue'], coo:['backup_immutable_pct','open_incidents','edr_pct'],
+  ccro:['cspm_pct','mfa_pct'], cpo:['pam_pct','patch_pct'], cpso:['patch_pct','phishing_pct']
+};
+/* How a given role relates to an objective: own / contribute / support / null. */
+function objRelation(o,role){role=role||ROLE;
+  if(o.owner===role)return 'own';
+  var caps=o.caps.map(capById);
+  if(caps.some(function(c){return c&&c.owner===role;}))return 'contribute';
+  var con=ROLE_CONCERN[role]||[];
+  if(con.length&&caps.some(function(c){return c&&c.controls.some(function(k){return con.indexOf(k)>=0;});}))return 'support';
+  if(role==='cpso'&&caps.some(function(c){return /suppl|procure|vendor|third/i.test(c.name+' '+c.processes.join(' '));}))return 'support';
+  if(enterpriseRole())return 'oversee';
+  return null;
+}
+function relationLabel(rel){return {own:'You own this',contribute:'You contribute to this',support:'You support this',oversee:'You oversee this'}[rel]||'Enterprise objective';}
+function roleObjectives(){var os=pack().objectives;if(enterpriseRole())return os;var mine=os.filter(function(o){return objRelation(o,ROLE);});return mine.length?mine:os;}
+/* $ at risk on an objective — the enterprise expected loss distributed across
+   objectives by how much risk + health-gap each carries. Modeled from real
+   financials; null (shown as “—”) until financials are entered at onboarding. */
+function objRiskCount(o){return pack().risks.filter(function(r){return r.obj===o.id;}).length;}
+function objWeight(o){var s=objScore(o)||70;return (objRiskCount(o)+0.3)*(1+(100-s)/100);}
+function totalObjWeight(){return pack().objectives.reduce(function(s,o){return s+objWeight(o);},0);}
+function objAtRisk(o){var e=(LIVE&&LIVE.economics)||{};var ale=Number(e.ale);if(!ale)return null;var tw=totalObjWeight();return tw?Math.round(ale*(objWeight(o)/tw)):null;}
 function roleCaps(){var seen={},out=[];roleObjectives().forEach(function(o){o.caps.forEach(function(cid){if(!seen[cid]){seen[cid]=1;var c=capById(cid);if(c)out.push(c);}});});return out;}
 function roleRisks(){var oids={};roleObjectives().forEach(function(o){oids[o.id]=1;});return pack().risks.filter(function(r){return enterpriseRole()||oids[r.obj];});}
 
 /* ---------- the 9 universal tabs ---------- */
 function scoreCard(sc){return '<div class="card click" onclick="drillScore(\''+sc.k+'\')"><div class="ck">'+esc(sc.n)+'</div><div class="big" style="color:'+bandColor(sc.s)+'">'+sc.s+'<span style="font-size:15px;color:var(--muted)">/100</span></div><div class="bar"><i style="width:'+sc.s+'%;background:'+bandColor(sc.s)+'"></i></div><div class="sub" style="margin-top:8px">'+bandLabel(sc.s)+' · <span style="color:var(--brand)">see evidence →</span></div></div>';}
-function objRow(o){var s=objScore(o);var owner=roleByKey(o.owner);var risks=pack().risks.filter(function(r){return r.obj===o.id;});
-  return '<tr class="click" onclick="drillObjective(\''+o.id+'\')"><td><b>'+esc(o.name)+'</b><div class="mini">KPI: '+esc(o.kpi)+'</div></td><td><span class="dot" style="background:'+bandColor(s)+'"></span>'+bandLabel(s)+' <span class="mini">('+s+'/100)</span></td><td>'+esc(owner.label)+'</td><td>'+(risks.length?('<span class="pill '+(s<50?'crit':'warn')+'">'+risks.length+' cyber blocker'+(risks.length>1?'s':'')+'</span>'):'<span class="pill good">clear</span>')+'</td></tr>';}
+function objRow(o){var s=objScore(o);var risks=pack().risks.filter(function(r){return r.obj===o.id;});var rel=objRelation(o,ROLE);var ar=objAtRisk(o);
+  return '<tr class="click" onclick="drillObjective(\''+o.id+'\')"><td><b>'+esc(o.name)+'</b><div class="mini">'+esc(relationLabel(rel))+' · KPI: '+esc(o.kpi)+'</div></td><td><span class="dot" style="background:'+bandColor(s)+'"></span>'+bandLabel(s)+' <span class="mini">('+s+'/100)</span></td><td style="font-weight:700;color:'+(ar!=null?'var(--ink)':'var(--muted)')+'">'+(ar!=null?usd(ar):'—')+'</td><td>'+(risks.length?('<span class="pill '+(s<50?'crit':'warn')+'">'+risks.length+' cyber blocker'+(risks.length>1?'s':'')+'</span>'):'<span class="pill good">clear</span>')+'</td></tr>';}
 
 function tabSummary(){
   var scs=roleSummaryScores();
   var top=roleRisks().map(function(r){return {r:r,s:objScore(objById(r.obj))||60};}).sort(function(a,b){return a.s-b.s;}).slice(0,4);
   var decs=roleDecisions();
   return '<div class="grid">'+scs.map(scoreCard).join('')+'</div>'+
-    '<div class="sec-h">Strategic objective health'+(enterpriseRole()?'':' — yours')+'</div>'+
-    '<div class="card" style="padding:4px 0"><table><thead><tr><th>Objective</th><th>Health</th><th>Owner</th><th>Cyber blockers</th></tr></thead><tbody>'+roleObjectives().map(objRow).join('')+'</tbody></table></div>'+
+    '<div class="sec-h">Strategic objectives'+(enterpriseRole()?' — enterprise':' — yours')+'</div>'+
+    '<div class="card" style="padding:4px 0"><table><thead><tr><th>Objective</th><th>Health</th><th>$ at risk</th><th>Cyber blockers</th></tr></thead><tbody>'+roleObjectives().map(objRow).join('')+'</tbody></table></div>'+
     '<div class="sec-h">Top risks requiring attention</div>'+
     '<div class="card">'+(top.length?top.map(function(t){return '<div class="action click" onclick="drillRisk(\''+t.r.obj+'|'+encodeURIComponent(t.r.name)+'\')"><div class="an" style="background:'+bandColor(t.s)+'">!</div><div><b>'+esc(t.r.name)+'</b><div class="mini">'+esc(t.r.impact)+' · threatens “'+esc((objById(t.r.obj)||{}).name||'')+'”</div></div></div>';}).join(''):'<div class="cn">No cyber blockers on your objectives right now.</div>')+'</div>'+
     '<div class="sec-h">Key decisions required</div>'+
@@ -202,10 +225,12 @@ function tabSummary(){
     provNote();
 }
 function tabObjectives(){
-  return '<div class="cn" style="margin-bottom:12px">The strategic objectives'+(enterpriseRole()?' across the enterprise':' you own or enable')+', each with its health, the cyber blockers threatening it, and the business capabilities it depends on.</div>'+
-    roleObjectives().map(function(o){var s=objScore(o);var risks=pack().risks.filter(function(r){return r.obj===o.id;});
-      return '<div class="card" style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;gap:12px"><div><b style="font-size:15px">'+esc(o.name)+'</b><div class="mini">Owner: '+esc(roleByKey(o.owner).label)+' · KPI: '+esc(o.kpi)+'</div></div><div style="text-align:right"><div class="big" style="font-size:22px;margin:0;color:'+bandColor(s)+'">'+s+'</div><div class="sub">'+bandLabel(s)+'</div></div></div>'+
+  return '<div class="cn" style="margin-bottom:12px">The strategic objectives'+(enterpriseRole()?' across the enterprise you oversee':' you own or support')+' — each with its health, the <b>$ at risk</b>, the cyber blockers threatening it, and <b>your specific contribution</b>.</div>'+
+    roleObjectives().map(function(o){var s=objScore(o);var risks=pack().risks.filter(function(r){return r.obj===o.id;});var rel=objRelation(o,ROLE);var ar=objAtRisk(o);
+      var mine=o.caps.map(capById).filter(function(c){return c&&(c.owner===ROLE||(ROLE_CONCERN[ROLE]||[]).some(function(k){return c.controls.indexOf(k)>=0;}));});
+      return '<div class="card" style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;gap:12px"><div><b style="font-size:15px">'+esc(o.name)+'</b> <span class="pill mod">'+esc(relationLabel(rel))+'</span><div class="mini">Lead owner: '+esc(roleByKey(o.owner).label)+' · KPI: '+esc(o.kpi)+'</div></div><div style="text-align:right"><div class="big" style="font-size:22px;margin:0;color:'+bandColor(s)+'">'+s+'</div><div class="sub">'+bandLabel(s)+(ar!=null?(' · <b style="color:var(--ink)">'+usd(ar)+'</b> at risk'):'')+'</div></div></div>'+
         '<div class="bar" style="margin:10px 0"><i style="width:'+s+'%;background:'+bandColor(s)+'"></i></div>'+
+        (!enterpriseRole()&&mine.length?('<div class="mini" style="margin-bottom:4px"><b style="color:var(--brand)">Your contribution:</b> '+mine.map(function(c){return esc(c.name);}).join(' · ')+'</div>'):'')+
         '<div class="mini" style="margin-bottom:4px"><b>Depends on:</b> '+o.caps.map(function(cid){var c=capById(cid),cs=capScore(c);return esc(c.name)+' <span style="color:'+bandColor(cs||60)+'">('+(cs==null?'—':cs)+')</span>';}).join(' · ')+'</div>'+
         (risks.length?('<div class="mini"><b style="color:var(--crit)">Cyber blockers:</b> '+risks.map(function(r){return esc(r.name);}).join(' · ')+'</div>'):'<div class="mini" style="color:var(--good)">No cyber blockers.</div>')+
         '<div style="margin-top:8px"><span class="pill mod" style="cursor:pointer" onclick="drillObjective(\''+o.id+'\')">trace the evidence →</span></div></div>';
@@ -296,8 +321,8 @@ function drillScore(k){var sc=scoreByKey(k);if(!sc)return;
   openDrawer(esc(sc.n),'<div class="big" style="color:'+bandColor(sc.s)+'">'+sc.s+'/100 · '+bandLabel(sc.s)+'</div><div class="cn">'+esc(sc.d)+'</div>'+
     (k==='overall'?('<div class="sec-h">How it rolls up</div>'+pack().objectives.map(function(o){var s=objScore(o);return '<div class="evrow"><span>'+esc(o.name)+'</span><span style="color:'+bandColor(s||60)+';font-weight:700">'+(s==null?'—':s)+'/100</span></div>';}).join('')):'')+
     '<div class="note">Business scores never show a raw security metric as the headline — but each one is built from real telemetry. The chain above is the evidence an auditor or the CISO can follow to the source system.</div>');}
-function drillObjective(id){var o=objById(id);if(!o)return;var s=objScore(o);var risks=pack().risks.filter(function(r){return r.obj===id;});
-  openDrawer(esc(o.name),'<div class="big" style="color:'+bandColor(s||60)+'">'+(s==null?'—':s)+'/100 · '+bandLabel(s||60)+'</div>'+
+function drillObjective(id){var o=objById(id);if(!o)return;var s=objScore(o);var risks=pack().risks.filter(function(r){return r.obj===id;});var ar=objAtRisk(o);
+  openDrawer(esc(o.name),'<div class="big" style="color:'+bandColor(s||60)+'">'+(s==null?'—':s)+'/100 · '+bandLabel(s||60)+(ar!=null?(' <span style="font-size:16px;color:var(--ink)">· '+usd(ar)+' at risk</span>'):'')+'</div>'+
     chain([['Industry',esc(pack().label)],['Strategy',esc(pack().strategy)],['Strategic objective','<b>'+esc(o.name)+'</b>'],['Executive owner',esc(roleByKey(o.owner).label)],['KPI',esc(o.kpi)],['Depends on capabilities',o.caps.map(function(cid){return esc(capById(cid).name);}).join(' · ')],['Cyber blockers',risks.length?risks.map(function(r){return esc(r.name);}).join(' · '):'none']])+
     '<div class="sec-h">Evidence (control telemetry)</div>'+o.caps.map(function(cid){var c=capById(cid);return '<div class="cn" style="margin-top:6px"><b>'+esc(c.name)+'</b></div>'+controlEvidence(c.controls);}).join(''));}
 function drillCapability(id){var c=capById(id);if(!c)return;var s=capScore(c);
