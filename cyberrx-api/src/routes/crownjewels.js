@@ -82,6 +82,7 @@ router.post('/ingest', optionalJWT, async (req, res) => {
       principalRisks: (function () { const p = b.principalRisks || {}; return { creditMarket: money(p.creditMarket), operational: money(p.operational), thirdParty: money(p.thirdParty), compliance: money(p.compliance) }; })(),
       industry: b.industry || null,
       regions: Array.isArray(b.regions) ? b.regions : (b.regions ? [b.regions] : []),
+      currency: (typeof b.currency === 'string' && b.currency.trim()) ? b.currency.trim().toUpperCase() : 'USD',
     };
 
     // Operational-resilience inputs (per-process revenue/RTO, per-asset vendor/
@@ -116,9 +117,12 @@ router.post('/ingest', optionalJWT, async (req, res) => {
       const txRaw = a.txPerDay != null ? a.txPerDay : a.transactionsPerDay;
       const tx = txRaw != null ? Number(String(txRaw).replace(/[^0-9.]/g, '')) : null;
       const val = money(a.valuePerDay != null ? a.valuePerDay : a.dailyValue);
-      if (vendor || eol != null || recovery != null || tx || val) resilience.assets[String(a.name).trim()] = {
+      // Annual transaction volume ($/currency per year) — Nerion derives value/day
+      // (÷365) and value/hour (÷8760) from it. A direct valuePerDay overrides.
+      const valYear = money(a.valuePerYear != null ? a.valuePerYear : a.annualValue);
+      if (vendor || eol != null || recovery != null || tx || val || valYear) resilience.assets[String(a.name).trim()] = {
         vendor, eol, recovery: Number.isFinite(recovery) ? recovery : null,
-        txPerDay: Number.isFinite(tx) && tx > 0 ? tx : null, valuePerDay: val || null };
+        txPerDay: Number.isFinite(tx) && tx > 0 ? tx : null, valuePerDay: val || null, valuePerYear: valYear || null };
     });
 
     // Optional in-flight cyber projects/initiatives imported at onboarding.
