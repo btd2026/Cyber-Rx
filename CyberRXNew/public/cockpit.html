@@ -3076,7 +3076,6 @@ function renderCisoOpsDetail(scroll){
 /* Reusable detail building blocks. */
 function opsdSection(t){return '<div class="opsd-sec">'+t+'</div>';}
 function opsdFormula(html){return '<div class="opsd-formula">'+html+'</div>';}
-function opsdFaq(rows){return '<div class="opsd-faq">'+rows.map(function(r){return '<div class="opsd-q"><b>'+r[0]+'</b><span>'+r[1]+'</span></div>';}).join('')+'</div>';}
 function opsFreshTag(){return SIGNALS?(signalsAreDemo()?'<span class="pill warn" style="font-size:9px">demo telemetry</span>':'<span class="pill good" style="font-size:9px">live telemetry</span>'):'<span class="pill" style="font-size:9px;background:var(--surface-2)">no tools connected</span>';}
 
 // ── Detail 1 · Top-10 capability health ─────────────────────────────────────
@@ -3094,40 +3093,12 @@ function opsDetailCaps(){
     '<div class="opsd-tblwrap"><table class="opsd-tbl"><thead><tr><th>Capability</th><th>Coverage</th><th>Source</th><th>Signal</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
     opsdSection('How the headline is calculated')+
     opsdFormula('<b>Healthy</b> = capabilities whose live coverage is <b>≥ 75%</b> (blue/green on your scale).<br><span class="mono">healthy = count( capability where coverage% ≥ 75 )</span> = <b>'+healthy+' / 10</b><br><span class="mono">measured = '+measured+' of 10 connected</span> · grey capabilities have no connected tool yet, so they are shown but not scored.')+
-    opsdSection('Questions a CISO asks')+
-    opsdFaq([
-      ['What is a “capability”?','One of the 10 controls that carry the most risk-reduction — EDR, MFA, PAM, vulnerability mgmt, awareness, SIEM, DLP, segmentation, backup, CSPM.'],
-      ['What does the % mean?','The share of the in-scope estate the tool actually covers — e.g. MFA% is enforced accounts ÷ all accounts, EDR% is protected endpoints ÷ all endpoints, patch% is assets inside the remediation SLA. It is the tool’s own figure, pulled via its API.'],
-      ['Why is one grey?','No tool is connected for it (DLP and segmentation have no live signal yet). Connect one and it starts scoring here — it is never assumed.'],
-      ['How fresh is it?','As fresh as the last sync from each tool. '+(signalsAreDemo()?'Right now these are <b>demo</b> signals (labeled), not your production data.':'These are live values from your connected tools.')],
-      ['How do I move a number up?','Each capability’s drill shows the specific action and the funded project (if any) already working it — click a capability in the list below.']
-    ])+
     opsdSection('Per-capability detail + the funded fix')+drillCapabilities();
 }
 
 // ── Detail 2 · Defending against attacks (MITRE ATT&CK) ─────────────────────
-function opsDetailTactics(){
-  var defended=0,tmeasured=0;ATTCK_TACTICS.forEach(function(t){var tp=tacticPct(TACTIC_CAPS[t]);if(tp!=null){tmeasured++;if(tp>=75)defended++;}});
-  var toolset={};ATTCK_TACTICS.forEach(function(t){(TACTIC_CAPS[t]||[]).forEach(function(k){toolset[k]=1;});});
-  var srcRows=Object.keys(toolset).map(function(k){var c=CAP_BY_KEY[k];if(!c)return '';var s=capSource(c),p=capDeploy(c);
-    return '<tr><td>'+c.name.replace(/ *\(.*\)/,'')+'</td><td class="v" style="color:var(--'+capColor(p)+')">'+(p==null?'—':p+'%')+'</td><td>'+srcPill(s)+'</td><td class="src">'+(s.sigkey?('<code>'+s.sigkey+'</code>'):'—')+'</td></tr>';
-  }).join('');
-  return '<div class="opsd-intro">This tile answers <b>“of the whole attacker playbook, how much can we stop or see.”</b> '+opsFreshTag()+' It maps your live control coverage onto the <b>14 MITRE ATT&CK tactics</b>, using MITRE’s own Enterprise Mitigations — no invented mapping.</div>'+
-    opsdSection('Where each number comes from (telemetry)')+
-    '<div class="opsd-intro" style="margin-bottom:8px">Tactic scores are built only from the capabilities below — each read from its connected tool (same sources as capability health):</div>'+
-    '<div class="opsd-tblwrap"><table class="opsd-tbl"><thead><tr><th>Capability</th><th>Coverage</th><th>Source</th><th>Signal</th></tr></thead><tbody>'+srcRows+'</tbody></table></div>'+
-    opsdSection('How the headline is calculated')+
-    opsdFormula('<b>Tactic coverage</b> = the average live coverage of the capabilities MITRE maps to that tactic.<br><span class="mono">tacticCoverage(T) = avg( coverage% of caps mapped to T )</span><br><b>Defended</b> = tactic coverage <b>≥ 75%</b>.<br><span class="mono">defended = count( tactic where coverage ≥ 75 )</span> = <b>'+defended+' / 14</b> ('+tmeasured+' measured).')+
-    opsdSection('Questions a CISO asks')+
-    opsdFaq([
-      ['Where does the tactic→control mapping come from?','MITRE ATT&CK Enterprise <b>Mitigations</b> (attack.mitre.org) — e.g. MFA = M1032, network segmentation = M1030, PAM = M1026, EDR = M1040/M1049, backup = M1053, user training = M1017. It is not our opinion.'],
-      ['Why are Reconnaissance & Resource Development “defended” without blocking controls?','Those tactics are largely pre-compromise (M1056). What applies is attack-surface reduction, awareness and detection — so those are what we score there.'],
-      ['What counts as “defended”?','A tactic whose contributing controls average ≥ 75% live coverage. Below that it is a visible gap on your color scale.'],
-      ['Is this real or theoretical?','Real — every tactic score moves only when a connected tool’s coverage changes. '+(signalsAreDemo()?'Currently demo-labeled signals.':'Currently live.')],
-      ['How do I close a weak tactic?','Open the tactic in the list below to see exactly which capability is dragging it down and the project addressing it.']
-    ])+
-    opsdSection('Per-tactic detail + the capabilities behind each')+drillTactics();
-}
+// Per-tactic detail only — each of the 14 tactics with the capabilities behind it.
+function opsDetailTactics(){return drillTactics();}
 
 // ── Detail 3 · Tier-1 vendor risk ───────────────────────────────────────────
 function opsDetailVendors(){
@@ -3142,13 +3113,6 @@ function opsDetailVendors(){
     opsdFormula('Each provider’s native scale is normalized to <b>0–100, higher = safer</b>:<br><span class="mono">BitSight: (score−250)/(900−250)×100 · letter grades A–F → 97…35 · SecurityScorecard / UpGuard / Panorays / Black Kite: native 0–100</span><br><b>Posing risk</b> = normalized rating <b>&lt; 75</b> (below “adequate”); <b>critical</b> = &lt; 50.<br><span class="mono">atRisk = count( vendor where rating &lt; 75 )</span> = <b>'+(p.at_risk||0)+' / '+(p.count||0)+'</b>.')+
     opsdSection('Is there a dollar figure behind a vendor?')+
     opsdFormula('The rating is a security score, not a dollar. The <b>dollar exposure</b> you carry through a vendor is modeled separately as the value of the crown-jewel systems it supports:<br><span class="mono">vendorExposure = Σ (value/day of each crown-jewel system this vendor supports)</span><br>See the full picture in the <b>“Which third parties could take us down?”</b> section.')+
-    opsdSection('Questions a CISO asks')+
-    opsdFaq([
-      ['Whose vendors are these?','Your tier-1/2 vendors from onboarding (CSV or a TPRM pull), or the vendors named in your systems inventory.'],
-      ['Is the score the same as the provider portal?','Yes once the provider API is connected — we display the provider’s rating, only rescaled to 0–100. Until then it is modeled and labeled as such.'],
-      ['Why “< 75 = risk”?','75 is the “adequate” line on your shared color scale (green ≥90, blue ≥75, yellow ≥50, red <50) — the same thresholds used everywhere in the cockpit.'],
-      ['How often does it update?','Automatically each week, and immediately when you click “Refresh now” in the third-party section.']
-    ])+
     opsdSection('The vendor list, worst-first')+drillVendors();
 }
 function drillTile(id,q,val,cls,sub,extra,opts){opts=opts||{};
