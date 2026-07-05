@@ -42,6 +42,7 @@ const RAW_REGISTRY = {
   cisa: require('./cisa'),
   salesforce: require('./salesforce'),
   whistic: require('./whistic'),
+  github: require('./github'),
 };
 
 // Per-connector demo mode state. Defaults to false (live).

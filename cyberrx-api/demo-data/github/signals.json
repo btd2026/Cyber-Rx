@@ -1,0 +1,7 @@
+{
+  "signals": [
+    { "key": "code_scanning_open", "value": 7, "asOf": "2026-06-30T12:00:00Z", "raw": { "state": "open", "tool": "CodeQL" } },
+    { "key": "dependabot_critical", "value": 2, "asOf": "2026-06-30T12:00:00Z", "raw": { "severity": "critical", "state": "open" } }
+  ],
+  "meta": { "vendor": "GitHub", "org": "demo-org" }
+}
