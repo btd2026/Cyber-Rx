@@ -426,7 +426,7 @@
 </div></div>
 <div class="seats"><div class="wrap seats-in">
   <span class="seatlbl">Speaking to</span>
-  <button class="seat" data-seat="board">Board</button><button class="seat on" data-seat="ceo">CEO</button><button class="seat" data-seat="cfo">CFO</button><button class="seat" data-seat="clo">CLO / General Counsel</button><button class="seat" data-seat="cro">CRO</button><button class="seat" data-seat="coo">COO</button><button class="seat" data-seat="cio">CIO</button><button class="seat" data-seat="ciso">CISO</button>
+  <button class="seat" data-seat="board">Board</button><button class="seat on" data-seat="ceo">CEO</button><button class="seat" data-seat="cfo">CFO</button><button class="seat" data-seat="coo">COO</button><button class="seat" data-seat="cio">CIO</button><button class="seat" data-seat="ciso">CISO</button><button class="seat" data-seat="cpo">Chief Product</button><button class="seat" data-seat="crev">Chief Revenue</button><button class="seat" data-seat="cro">Chief Risk</button><button class="seat" data-seat="clo">Chief Legal</button><button class="seat" data-seat="audit">Internal Audit</button>
 </div></div>
 <div id="dataModeBar"><div class="wrap" id="dataModeInner" style="padding:8px 0;font-size:12px;font-weight:600"></div></div>
 <div class="wrap" id="app"></div>
@@ -463,7 +463,7 @@ function decisions(a){return a.map(function(d){return '<div class="decision" dat
   '<div class="dstatus" id="dstatus-'+d.n+'"></div></div>';}).join('');}
 function sec(no,q,desc,inner){return '<div class="section"><div class="rubric"><div class="no">'+no+'</div><div><div class="rt">'+q+'</div><div class="rd">'+desc+'</div></div></div>'+inner+'</div>';}
 
-var SEAT_LABEL={board:'Board of Directors',ceo:'CEO',cfo:'CFO',coo:'COO',clo:'CLO / General Counsel',cro:'CRO',cio:'CIO',ciso:'CISO'};
+var SEAT_LABEL={board:'Board of Directors',ceo:'CEO',cfo:'CFO',coo:'COO',clo:'Chief Legal Officer',cro:'Chief Risk Officer',cio:'CIO',ciso:'CISO',cpo:'Chief Product Officer',crev:'Chief Revenue Officer',audit:'Internal Audit'};
 var CUR='ceo';
 function render(seat){
   CUR=seat;var s=SEATS[seat];
@@ -491,6 +491,12 @@ var TAB_LABELS={
  'Enterprise risk appetite':'Risk appetite','Risk acceptance':'Risk acceptance','Risk trends':'Risk trends','Cross-functional risk ownership':'Risk ownership','Control assurance':'Control assurance','Residual risk':'Residual risk',
  // CISO seat (outcome tabs)
  'Cross-enterprise cyber business health':'Program health','Control effectiveness':'Control effectiveness','Threat-to-business mapping':'Threat mapping','Evidence collection':'Evidence','Framework alignment':'Frameworks','Executive risk reporting':'Exec reporting','Action tracking':'Action tracking',
+ // Chief Revenue seat
+ 'Revenue protection':'Revenue protection','Subscription / service availability':'Service availability','Fraud exposure':'Fraud','Customer-impacting incidents':'Customer incidents','Sales & renewal risk':'Sales & renewal',
+ // Chief Product seat
+ 'Product launch readiness':'Launch readiness','Innovation velocity':'Innovation velocity','Product quality risk':'Product quality','AI product readiness':'AI product','Secure-by-design adoption':'Secure-by-design','Software & supplier dependency risk':'Dependencies',
+ // Internal Audit seat
+ 'Audit universe':'Audit universe','Evidence readiness':'Evidence readiness','Control testing status':'Control testing','Management action plans':'Action plans','Repeat findings':'Repeat findings','Audit coverage':'Audit coverage',
  // Board seat
  'Where do we stand? — the board brief':'Board brief','Our worst realistic day — could we survive it?':'Worst day','How do we compare — and which way are we heading?':'Peers & trend','Oversight & disclosure — SEC Reg S-K Item 106':'Oversight','What needs the board?':'Board decisions',
  'Are we under attack right now?':'Live status','What are we protecting — and what is each worth?':'Crown Jewels — Exposure','How is security helping the business grow — and win deals?':'Business Growth','Are our controls actually working — and is the program improving?':'Controls','Which framework controls do our tools satisfy? — NIST CSF 2.0 & 800-53':'Frameworks','AI risk — two fronts: securing the AI we run, and using AI to defend':'AI risk','Are we audit-ready? — compliance framework readiness':'Compliance','What decision needs you now?':'Decision','How does our security investment move the business?':'ROI','What are my responsibilities — and how does security enable each?':'Operating model',
