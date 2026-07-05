@@ -1,0 +1,7 @@
+{
+  "signals": [
+    { "key": "audit_findings_open", "value": 14, "asOf": "2026-06-30T12:00:00Z", "raw": { "table": "sn_audit_finding", "query": "active=true" } },
+    { "key": "audit_findings_repeat", "value": 3, "asOf": "2026-06-30T12:00:00Z", "raw": { "table": "sn_audit_finding", "query": "active=true^repeat=true" } }
+  ],
+  "meta": { "vendor": "ServiceNow GRC", "table": "sn_audit_finding" }
+}

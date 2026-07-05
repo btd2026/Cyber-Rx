@@ -43,6 +43,7 @@ const RAW_REGISTRY = {
   salesforce: require('./salesforce'),
   whistic: require('./whistic'),
   github: require('./github'),
+  servicenow_grc: require('./servicenow_grc'),
 };
 
 // Per-connector demo mode state. Defaults to false (live).
