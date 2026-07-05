@@ -104,6 +104,7 @@ async function run(orgId) {
   // Annual security budget — used with the real posture trend to compute a
   // measured blended ROI (risk removed ÷ spend) once history has accrued.
   economics.budget = num(econIn && econIn.budget) || null;
+  economics.currency = (econIn && econIn.currency) || 'USD';
 
   // Legal/regulatory obligations (CLO seat) — derived from operating regions +
   // the data classes actually held on assets + industry. No hardcoded per-org rules.
@@ -519,12 +520,18 @@ function crownEconomics(scoredAssets, processes, rp, ra) {
     const inv = ra[a.name] || {};
     const invTx = Number(inv.txPerDay) || 0;
     const invVal = Number(inv.valuePerDay) || 0;
+    // Annual transaction volume → value/day (÷365). A direct valuePerDay wins; else
+    // the annual figure; else the process-revenue fallback.
+    const invYear = Number(inv.valuePerYear) || 0;
+    const invDailyFromYear = invYear > 0 ? invYear / 365 : 0;
     const finalTx = invTx > 0 ? invTx : tx;
-    const finalDaily = invVal > 0 ? invVal : daily;
+    const finalDaily = invVal > 0 ? invVal : (invDailyFromYear > 0 ? invDailyFromYear : daily);
     const radius = Array.from(new Set([].concat(...pids.map((pid) => assetsByPid[pid] || [])))).filter((n) => n !== a.name);
     out[a.id] = {
       daily_value_usd: finalDaily > 0 ? Math.round(finalDaily) : null,
-      daily_value_source: invVal > 0 ? 'inventory' : (daily > 0 ? 'process_revenue' : null),
+      value_per_hour_usd: finalDaily > 0 ? Math.round(finalDaily / 24) : null,
+      annual_value_usd: invYear > 0 ? invYear : null,
+      daily_value_source: invVal > 0 ? 'inventory' : (invDailyFromYear > 0 ? 'inventory_annual' : (daily > 0 ? 'process_revenue' : null)),
       tx_per_day: finalTx > 0 ? Math.round(finalTx) : null,
       tx_per_day_source: invTx > 0 ? 'inventory' : (tx > 0 ? 'process' : null),
       tolerance_usd: tol,

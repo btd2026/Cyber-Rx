@@ -1504,7 +1504,14 @@ function renderCompliance(){
 }
 /* ---- live economics ---- */
 var LIVE=null;
-function usd(n){n=Number(n)||0;var neg=n<0;n=Math.abs(n);var s;if(n>=1e9)s='$'+(n/1e9).toFixed(n>=1e10?0:1)+'B';else if(n>=1e6)s='$'+Math.round(n/1e6)+'M';else if(n>=1e3)s='$'+Math.round(n/1e3)+'K';else s='$'+Math.round(n);return (neg?'−':'')+s;}
+/* The org's reporting-currency symbol, chosen at onboarding (falls back to $).
+   Read from the live summary first, then the onboarding-persisted value. */
+var CUR_SYMBOLS={USD:'$',EUR:'€',GBP:'£',CAD:'C$',AUD:'A$',SGD:'S$',JPY:'¥',CHF:'CHF',INR:'₹'};
+function curSym(){
+  try{var c=(LIVE&&LIVE.economics&&LIVE.economics.currency);if(c&&CUR_SYMBOLS[c])return CUR_SYMBOLS[c];
+    var s=localStorage.getItem('cyberrx_currency');if(s){var p=s.split('|');if(p[0])return p[0];if(p[1]&&CUR_SYMBOLS[p[1]])return CUR_SYMBOLS[p[1]];}}catch(_){}
+  return '$';}
+function usd(n){n=Number(n)||0;var neg=n<0;n=Math.abs(n);var c=curSym(),s;if(n>=1e9)s=c+(n/1e9).toFixed(n>=1e10?0:1)+'B';else if(n>=1e6)s=c+Math.round(n/1e6)+'M';else if(n>=1e3)s=c+Math.round(n/1e3)+'K';else s=c+Math.round(n);return (neg?'−':'')+s;}
 function setTxt(id,v){var e=document.getElementById(id);if(e)e.textContent=v;}
 function badge(live){var b=document.getElementById('dataBadge');if(b){b.textContent=live?'Live data':'Illustrative';b.style.color=live?'var(--good)':'var(--warn)';b.style.borderColor=live?'rgba(12,163,12,.5)':'rgba(250,178,25,.4)';}var ol=document.getElementById('orgLive');if(ol)ol.innerHTML='<span class="dot" style="background:'+(live?'var(--good)':'var(--muted)')+'"></span>'+(live?('Live · '+(orgName()||'your organization')):'Sample workspace');}
 function setBar(live){var bar=document.getElementById('dataModeBar'),inner=document.getElementById('dataModeInner');if(!bar)return;bar.style.display='block';bar.style.borderBottom='1px solid';var nm=orgName()||'your organization';
@@ -2067,11 +2074,11 @@ function cjBlast(c){
 }
 function cjBlastBlock(c){
   var b=cjBlast(c);if(!(b.sysDaily>0))return '';
-  var chips=b.n?b.radius.map(function(n){return '<span class="cjbchip">'+n+'</span>';}).join(''):'<span style="color:var(--muted);font-size:11px">no mapped downstream systems — map dependencies in your CMDB</span>';
+  var chips=b.n?b.radius.map(function(n){var dv=cjDailyOf(n);return '<span class="cjbchip">'+n+(dv>0?(' · <b>'+usd(dv)+'/day</b>'):'')+'</span>';}).join(''):'<span style="color:var(--muted);font-size:11px">no mapped downstream systems — map dependencies in your CMDB</span>';
   var usersLine=(b.users!=null)?('<div class="cjblast-row"><span class="cjblast-k">'+cap1(indUserNoun())+' affected</span><span class="cjblast-v">~<b>'+numCommas(Math.round(b.users))+'</b>'+(b.usersModeled?' <span class="pill mod" style="font-size:8px">modeled from tx/day</span>':'')+' · '+usd(b.custValueDay)+'/day of service stops</span></div>'):'';
   return '<div class="cjblast">'+
-    '<div class="cjblast-h">◎ If this fails — the blast, in dollars</div>'+
-    '<div class="cjblast-row"><span class="cjblast-k">Connected systems</span><span class="cjblast-v"><b>'+b.n+'</b> degrade with it</span></div>'+
+    '<div class="cjblast-h">◎ If this fails — the blast</div>'+
+    '<div class="cjblast-row"><span class="cjblast-k">Connected systems (from your inventory)</span><span class="cjblast-v"><b>'+b.n+'</b> degrade with it</span></div>'+
     '<div class="cjblast-chips">'+chips+'</div>'+
     '<div class="cjblast-row"><span class="cjblast-k">Systems value at risk</span><span class="cjblast-v"><b>'+usd(b.sysDaily)+'</b>/day'+(b.overRec!=null?(' · '+usd(b.overRec)+' over '+hrsToStr(c.recovery)+' recovery'):'')+'</span></div>'+
     usersLine+
@@ -2085,11 +2092,11 @@ function cjInRadius(c){return (typeof incidentActive!=='undefined')&&incidentAct
 function cjRow(c,i){
   var involved=cjIsPrimary(c)||cjInRadius(c);
   var supports=c.procs&&c.procs.length?('Supports: <b>'+c.procs.join('</b> · <b>')+'</b>'+(c.moreProcs?(' +'+c.moreProcs+' more'):'')):'Supports: <span style="color:var(--muted)">—</span>';
-  var vSrc=c.dailyValueSrc==='inventory'?' · from inventory':c.dailyValueSrc==='process_revenue'?' · from process revenue':c.dailyValueSrc==='process_downtime'?' · modeled from downtime cost':'';
+  var vSrc=c.dailyValueSrc==='inventory'?' · from inventory':c.dailyValueSrc==='inventory_annual'?' · from annual volume ÷365':c.dailyValueSrc==='process_revenue'?' · from process revenue':c.dailyValueSrc==='process_downtime'?' · modeled from downtime cost':'';
   var txSrc=c.txSrc==='inventory'?' · from inventory':c.txSrc==='process'?' · from process':'';
   var grid='<div class="cjgrid">'+
     cjMet(c.txPerDay!=null?numCommas(c.txPerDay):'—',c.txPerDay!=null?('transactions / day'+txSrc):'tx/day — add to inventory or connect observability',c.txPerDay!=null?'':'mut')+
-    cjMet(c.dailyValue!=null?usd(c.dailyValue):'—','value processed / day'+vSrc,c.dailyValue!=null?'good':'mut')+
+    cjMet(c.dailyValue!=null?usd(c.dailyValue):'—',c.dailyValue!=null?('value / day · '+usd(Math.round(c.dailyValue/24))+' / hr'+vSrc):('value processed / day'+vSrc),c.dailyValue!=null?'good':'mut')+
     cjMet(c.internet?'External-facing':'Internal',c.internet?'exposure · internet-reachable':'exposure · internal only',c.internet?'warn':'')+
     cjMet(c.recovery!=null?hrsToStr(c.recovery):'—','recovery target (RTO)',c.recovery!=null&&c.recovery>=48?'warn':'')+
     '</div>';

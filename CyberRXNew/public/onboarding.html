@@ -358,7 +358,7 @@
     <div class="srcchoice"><div class="srcopt sel" data-choice="app" data-mode="connect"><div class="so-h">⚡ Connect &amp; pull</div><div class="so-d">ServiceNow CMDB / discovery — no upload</div></div><div class="srcopt" data-choice="app" data-mode="upload"><div class="so-h">⤓ Upload a file</div><div class="so-d">CSV / CMDB export — fallback</div></div></div>
     <div id="appUpload" style="display:none">
       <div class="drop" id="dropApp"><div class="ic">⤓</div><div class="t">Upload your systems inventory (CSV or TSV)</div><div class="s">click to browse or drop a file</div><input type="file" id="fileApp" accept=".csv,.tsv,.txt" style="display:none"></div>
-      <div class="tmpl">columns: <b>name</b>, hosting, data, vendor, eol, recovery, transactions_per_day, value_per_day &nbsp;·&nbsp; e.g. &nbsp;ClaimsDB, "database on-prem", PHI, "Cloud A", no, 24, 480000, $1.2M<br><span style="color:var(--muted)">transactions_per_day &amp; value_per_day are optional and shown per crown jewel — set them here to give each system its own figures instead of a process estimate.</span></div>
+      <div class="tmpl">columns: <b>name</b>, hosting, data, vendor, eol, recovery, transactions_per_day, value_per_day, value_per_year &nbsp;·&nbsp; e.g. &nbsp;ClaimsDB, "database on-prem", PHI, "Cloud A", no, 24, 480000, $1.2M, $438M<br><span style="color:var(--muted)"><b>hosting</b> sets external-facing exposure and <b>recovery</b> is the RTO. <b>transactions_per_day</b> and the transaction <b>value_per_year</b> ($/currency) are what Nerion uses to compute each crown jewel's value/day (÷365) and value/hour (÷8760); value_per_day is an optional direct override.</span></div>
     </div>
     <div id="appConnect">
       <div class="conn-row"><div class="field" style="min-width:200px"><label>System</label><select id="appSys"><option>ServiceNow CMDB</option><option>Device42</option><option>BMC Helix Discovery</option><option>Tanium</option><option>Lansweeper</option></select></div><div class="field" style="flex:1;min-width:220px"><label>Instance URL / API token</label><input id="appCred" placeholder="https://yourorg.service-now.com · token"></div><button class="conn-go" data-conn="app">Connect &amp; save</button></div>
@@ -467,8 +467,8 @@
     showRows(document.getElementById('resProc'),PROC,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.data||'')+(x.revenue?(' · '+x.revenue):'')+(x.rto?(' · RTO '+x.rto+'h'):'')+'</span></div>';});
     var b=document.getElementById('b4');b.dataset.n=PROC.length;badgeDone('b4');updateSummary();renderMap();});});
   wireDrop('dropApp','fileApp',function(file){readFile(file,function(p){var h=p.headers;
-    var nc=findCol(h,['application_name','app_name','name','title','application']),hc=findCol(h,['ci_class','hosting','host','class','type']),dc=findCol(h,['data','sensitivity','classification']),vc=findCol(h,['vendor','provider','supplier','cloud']),ec=findCol(h,['eol','end_of_life','supported','lifecycle']),rc=findCol(h,['recovery','recovery_hours','restore','rto']),txc=findCol(h,['transactions_per_day','transactions','tx_per_day','daily_transactions','volume']),vlc=findCol(h,['value_per_day','daily_value','value_processed','daily_revenue']);
-    APP=p.rows.map(function(c){return {name:get(c,nc)||c[0],host:get(c,hc)||get(c,1)||'—',data:get(c,dc)||get(c,2)||'—',vendor:get(c,vc),eol:get(c,ec),recovery:get(c,rc),tx:get(c,txc),value:get(c,vlc)};}).filter(function(x){return x.name;});
+    var nc=findCol(h,['application_name','app_name','name','title','application']),hc=findCol(h,['ci_class','hosting','host','class','type']),dc=findCol(h,['data','sensitivity','classification']),vc=findCol(h,['vendor','provider','supplier','cloud']),ec=findCol(h,['eol','end_of_life','supported','lifecycle']),rc=findCol(h,['recovery','recovery_hours','restore','rto']),txc=findCol(h,['transactions_per_day','transactions','tx_per_day','daily_transactions','volume']),vlc=findCol(h,['value_per_day','daily_value','value_processed','daily_revenue']),vyc=findCol(h,['value_per_year','annual_value','annual_volume','yearly_value','value_per_annum']);
+    APP=p.rows.map(function(c){return {name:get(c,nc)||c[0],host:get(c,hc)||get(c,1)||'—',data:get(c,dc)||get(c,2)||'—',vendor:get(c,vc),eol:get(c,ec),recovery:get(c,rc),tx:get(c,txc),value:get(c,vlc),valueYear:get(c,vyc)};}).filter(function(x){return x.name;});
     showRows(document.getElementById('resApp'),APP,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.host||'')+(x.vendor?(' · '+x.vendor):'')+'</span></div>';});
     var b=document.getElementById('b5');b.dataset.n=APP.length;badgeDone('b5');updateSummary();renderMap();});});
   wireDrop('dropRisk','fileRisk',function(file){readFile(file,function(p){var h=p.headers;
@@ -785,7 +785,7 @@
       principalRisks:{creditMarket:mval('ermCredit'),operational:mval('ermOps'),thirdParty:mval('ermTP'),compliance:mval('ermComp')},
       insurance:{limit:mval('insLimit'),premium:mval('insPrem'),renewal:v('insRenew')},
       processes:PROC.map(function(p){return {name:p.name,data:p.data,rev:p.revenue,revenue:p.revenue,rto:p.rto,criticality:p.criticality,txPerDay:p.tx,tolerance:p.tolerance,function:p.func||null};}),
-      apps:APP.map(function(a){return {name:a.name,host:a.host,data:a.data,vendor:a.vendor,eol:a.eol,recovery:a.recovery,txPerDay:a.tx,valuePerDay:a.value,processes:Array.isArray(a.processes)?a.processes:[]};}),
+      apps:APP.map(function(a){return {name:a.name,host:a.host,data:a.data,vendor:a.vendor,eol:a.eol,recovery:a.recovery,txPerDay:a.tx,valuePerDay:a.value,valuePerYear:a.valueYear,processes:Array.isArray(a.processes)?a.processes:[]};}),
       risks:RISK.map(function(r){return {title:r.title,severity:r.severity,asset:r.asset,status:r.status,financial_exposure:r.exposure};}),
       initiatives:INIT,
       governance:{
@@ -813,7 +813,7 @@
       else if(!r.ok){msg.textContent='Setup error: '+(body.error||('HTTP '+r.status));msg.style.color='var(--warn)';btn.disabled=false;return;}
     }catch(e){/* offline: still hand off; cockpit shows illustrative */}
     var seatNames={};document.querySelectorAll('.seatname').forEach(function(i){if(i.value.trim())seatNames[i.dataset.seat]=i.value.trim();});
-    try{localStorage.setItem('cyberrx_org_id',orgId);localStorage.setItem('cyberrx_org_name',org);localStorage.setItem('cyberrx_seat_names',JSON.stringify(seatNames));localStorage.setItem('cyberrx_industry',v('industry')||'');localStorage.setItem('cyberrx_frameworks',JSON.stringify(frameworksInScope));}catch(_){}
+    try{localStorage.setItem('cyberrx_org_id',orgId);localStorage.setItem('cyberrx_org_name',org);localStorage.setItem('cyberrx_seat_names',JSON.stringify(seatNames));localStorage.setItem('cyberrx_industry',v('industry')||'');localStorage.setItem('cyberrx_frameworks',JSON.stringify(frameworksInScope));localStorage.setItem('cyberrx_currency',CUR_SYM+'|'+CUR_CODE);}catch(_){}
     // Persist the chosen ticketing system so cockpit decisions open projects there.
     var itsm=SELTOOLS.servicenow;
     try{if(itsm&&itsm.on)localStorage.setItem('cyberrx_itsm',JSON.stringify({vendor:itsm.vendor||'ServiceNow',instance:itsm.key||'',demo:!!itsm.demo}));}catch(_){}
