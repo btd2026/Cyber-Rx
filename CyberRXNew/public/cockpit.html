@@ -471,7 +471,7 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
@@ -481,6 +481,8 @@ var TAB_LABELS={
  'Enterprise business health':'Business health','Strategic risk':'Strategic risk','Financial exposure':'Financial exposure','Brand & customer trust':'Customer trust','Board KPIs':'Board KPIs','Decisions required':'Decisions',
  // CFO seat (outcome tabs)
  'Business interruption cost':'BI cost','Cyber investment ROI':'Investment ROI','Insurance effectiveness':'Insurance','Cost optimization':'Cost optimization','Risk-acceptance decisions':'Risk acceptance',
+ // COO seat (outcome tabs)
+ 'Operational resilience':'Op. resilience','Critical process health':'Process health','Manufacturing / service continuity':'Continuity','Supply-chain reliability':'Supply chain','Recovery readiness':'Recovery','Business continuity gaps':'Continuity gaps',
  // Board seat
  'Where do we stand? — the board brief':'Board brief','Our worst realistic day — could we survive it?':'Worst day','How do we compare — and which way are we heading?':'Peers & trend','Oversight & disclosure — SEC Reg S-K Item 106':'Oversight','What needs the board?':'Board decisions',
  'Are we under attack right now?':'Live status','What are we protecting — and what is each worth?':'Crown Jewels — Exposure','How is security helping the business grow — and win deals?':'Business Growth','Are our controls actually working — and is the program improving?':'Controls','Which framework controls do our tools satisfy? — NIST CSF 2.0 & 800-53':'Frameworks','AI risk — two fronts: securing the AI we run, and using AI to defend':'AI risk','Are we audit-ready? — compliance framework readiness':'Compliance','What decision needs you now?':'Decision','How does our security investment move the business?':'ROI','What are my responsibilities — and how does security enable each?':'Operating model',
@@ -1410,7 +1412,7 @@ function renderSignals(){
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -1568,6 +1570,36 @@ function renderCfoBI(){
     '<div class="card"><div class="ck">Worst-case interruption</div><div class="cv" style="font-size:19px;margin-top:6px;color:var(--crit)">'+(worstCost!=null?usd(worstCost):'—')+'</div><div class="cn">'+(worst!=null?('slowest service · '+hrsToStr(worst)+' to restore'):'recovery × downtime cost')+'</div></div>'+
     '<div class="card"><div class="ck">A severe year = days of income</div><div class="cv" style="font-size:19px;margin-top:6px">'+(r.days_of_operating_income!=null?(Math.round(r.days_of_operating_income)+' days'):'—')+'</div><div class="cn">a bad cyber year in days the business runs on</div></div>'+
     '</div><div class="cn" style="margin-top:10px">Business-interruption cost is what an outage of a revenue-critical service costs per hour and per day — the figure finance needs to size recovery investment and insurance. From your business-process revenue (BIA) and per-system recovery capability; earnings translation is below.</div>';
+}
+/* COO sector continuity — the services whose disruption stops THIS business,
+   framed in the industry's terms (OT/plant for mfg & energy, care for health,
+   storefront for retail…). From IND profile + live resilience. */
+var IND_CONTINUITY={
+  health:{svc:'care delivery, claims and the member portal',w:'patients can’t be treated and claims stop',ot:false},
+  fin:{svc:'payments, settlement and digital banking',w:'money stops moving and customers can’t transact',ot:false},
+  mfg:{svc:'plant / OT production, MES and shipping',w:'the line stops and orders are missed',ot:true},
+  retail:{svc:'checkout, the storefront and fulfilment',w:'sales stop — acutely in peak season',ot:false},
+  gov:{svc:'citizen services and benefits processing',w:'citizens can’t access essential services',ot:false},
+  energy:{svc:'grid / OT operations and field service',w:'service is disrupted with safety and regulatory impact',ot:true},
+  tech:{svc:'the production platform and customer APIs',w:'SLAs breach and customers churn',ot:false}
+};
+function renderCooSector(){
+  var host=document.getElementById('cooSector');if(!host)return;
+  var c=IND_CONTINUITY[indKey()]||IND_CONTINUITY.tech,rs=(LIVE&&LIVE.resilience)||{},worst=rs.worst_recovery_hours,tv=rs.top_vendor_blast;
+  var otLine=c.ot?' <b>Operational-technology (OT) continuity</b> is the board-level concern here — a bridge from IT into plant / grid systems is the highest-impact path, and recovery of control systems is slower than IT.':'';
+  host.innerHTML='<div class="card"><div class="ck">'+(indKey()==='mfg'?'Manufacturing continuity':(indKey()==='energy'?'Service &amp; OT continuity':'Service continuity'))+' — '+indLabel()+' '+liveTag()+'</div>'+
+    '<div class="cn" style="margin-top:6px">The continuity that matters for '+indLabel()+' is <b>'+c.svc+'</b>. A cyber disruption here means <b>'+c.w+'</b>.'+otLine+'</div>'+
+    '<div class="cn" style="margin-top:8px">'+(worst!=null?('Your slowest critical service restores in <b>'+hrsToStr(worst)+'</b>'+(worst>24?' — beyond a same-day tolerance.':'.')):'Upload your systems &amp; recovery targets to see real continuity timing.')+(tv&&tv.vendor?(' A single provider (<b>'+tv.vendor+'</b>) underpins '+((tv.systems||[]).length)+' of these services.'):'')+'</div></div>';
+}
+/* COO business-continuity gaps — the specific gaps between today's posture and
+   board tolerance, from live resilience + backup signals. */
+function renderCooGaps(){
+  var host=document.getElementById('cooGaps');if(!host)return;
+  var rs=(LIVE&&LIVE.resilience)||{},worst=rs.worst_recovery_hours,tv=rs.top_vendor_blast,gaps=[];
+  if(worst!=null&&worst>24)gaps.push({t:'Slowest critical service recovers in '+hrsToStr(worst),d:'beyond a same-day continuity tolerance — the top driver of the worst-case tail.',c:'crit'});
+  if(tv&&tv.vendor)gaps.push({t:'Single-vendor point of failure — '+tv.vendor,d:'underpins '+((tv.systems||[]).length)+' service'+((tv.systems||[]).length===1?'':'s')+(tv.per_hr?(' · '+usd(tv.per_hr)+'/hr at risk'):'')+'; no independent failover.',c:'warn'});
+  var imm=sig('backup_immutable_pct');if(imm!=null&&imm<95)gaps.push({t:'Backups not fully immutable ('+imm+'%)',d:'recovery may not survive a ransomware event that reaches the backup system.',c:'warn'});
+  host.innerHTML='<div class="card"><div class="ck">Business-continuity gaps '+liveTag()+'</div>'+(gaps.length?('<div style="margin-top:8px">'+gaps.map(function(g){return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+g.c+')"></span><b>'+g.t+'</b></div><div class="drow-need">'+g.d+'</div></div>';}).join('')+'</div>'):'<div class="cn" style="margin-top:6px">No continuity gaps flagged from your current data — upload systems &amp; recovery targets, and connect your backup platform, to surface them.</div>')+'<div class="cn" style="margin-top:8px">The specific gaps between where continuity is and where board tolerance requires it — each closed by the resilience decision below.</div></div>';
 }
 /* Honest data-mode banner for the CEO $ tabs — the dollar figures are sector
    placeholders until go-live, then computed from the org's own data. Labels the
