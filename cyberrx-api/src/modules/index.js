@@ -3,7 +3,7 @@
 /**
  * Core module registry.
  *
- * CyberRX's analysis pipeline is built from five clearly-defined modules. This
+ * Nerion's analysis pipeline is built from five clearly-defined modules. This
  * registry names them, points to the service that implements each, exposes the
  * primary entry function, and reports health (does the service load, is the LLM
  * enabled). It is the single place that answers "what does the backend do".

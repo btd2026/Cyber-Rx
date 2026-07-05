@@ -1,4 +1,4 @@
-/* CyberRx cockpit — seat content + evidence, rendered by cockpit.html's helpers.
+/* Nerion cockpit — seat content + evidence, rendered by cockpit.html's helpers.
    Every claim (data-ev) has an EV entry: formula, inputs (value+source), math. */
 
 var SEATS = {
@@ -145,7 +145,7 @@ var SEATS = {
      '<div id="cloPrivacy"></div>')
    +sec('06','Evidence readiness','Can we produce the evidence — for a regulator, an auditor or a court — on demand? Compliance posture across the frameworks in scope, and the preserved, timestamped record behind every determination and decision.',
      '<div id="cisoCompliance"></div>'
-     +'<div class="cn" style="margin-top:12px">Evidence readiness is the ability to show, on demand, that a control was in place and a determination was made properly. The compliance posture above is your framework evidence; every materiality determination and executive decision in CyberX-Ray is timestamped and logged as the contemporaneous record a court or regulator expects.</div>')
+     +'<div class="cn" style="margin-top:12px">Evidence readiness is the ability to show, on demand, that a control was in place and a determination was made properly. The compliance posture above is your framework evidence; every materiality determination and executive decision in Nerion is timestamped and logged as the contemporaneous record a court or regulator expects.</div>')
   );}
  },
 

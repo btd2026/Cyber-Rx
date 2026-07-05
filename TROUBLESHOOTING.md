@@ -1,6 +1,6 @@
-# CyberRx Troubleshooting Guide
+# Nerion Troubleshooting Guide
 
-Common issues and solutions for CyberRx deployment and operation.
+Common issues and solutions for Nerion deployment and operation.
 
 ## Table of Contents
 

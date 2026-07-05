@@ -1,6 +1,6 @@
 # Database Migrations
 
-This directory contains PostgreSQL migrations for the CyberRx database schema.
+This directory contains PostgreSQL migrations for the Nerion database schema.
 
 ## Migration Files
 

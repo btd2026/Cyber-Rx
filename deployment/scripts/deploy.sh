@@ -1,5 +1,5 @@
 #!/bin/bash
-# CyberRx Deployment Script
+# Nerion Deployment Script
 # This script handles zero-downtime deployments to production
 
 set -e
@@ -172,7 +172,7 @@ rollback() {
 
 # Main deployment flow
 main() {
-    log_info "Starting CyberRx deployment to $ENVIRONMENT..."
+    log_info "Starting Nerion deployment to $ENVIRONMENT..."
     log_info "Branch: $BRANCH"
     
     # Check prerequisites

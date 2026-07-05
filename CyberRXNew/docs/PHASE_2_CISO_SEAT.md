@@ -1,4 +1,4 @@
-# CyberRx — Phase 2: Executive shell + the CISO seat
+# Nerion — Phase 2: Executive shell + the CISO seat
 
 **Status:** Complete (sub-steps 2a, 2b, 2c), pending founder approval.
 

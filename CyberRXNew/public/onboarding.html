@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CyberX-Ray · Setup</title>
+<title>Nerion · Setup</title>
 <style>
   :root{
     /* Advisory theme — matches the executive cockpit (navy / steel / ice, serif headings) */
@@ -166,12 +166,12 @@
 </style>
 </head>
 <body>
-<div class="top"><div class="wrap top-in"><div class="logo">X</div><div class="brand">CyberX-Ray <span>Setup</span></div><div class="top-r">Only what your executive cockpit needs — nothing more.</div></div></div>
+<div class="top"><div class="wrap top-in"><div class="logo">N</div><div class="brand">Nerion <span>Setup</span></div><div class="top-r">Only what your executive cockpit needs — nothing more.</div></div></div>
 
 <div class="wrap">
   <div class="head">
     <div class="eyebrow">Set up your organization</div>
-    <h1>Give CyberX-Ray your business, and it returns your cyber position — in dollars.</h1>
+    <h1>Give Nerion your business, and it returns your cyber position — in dollars.</h1>
     <div class="lede">A focused setup. Fields are optional, but the more you provide the more of the cockpit is <b>live from your data</b> instead of illustrative. Everything can be edited later.</div>
   </div>
 
@@ -255,14 +255,14 @@
 
   <!-- 1d · Strategic initiatives (CEO per-initiative safety check) -->
   <div class="sec">
-    <div class="sh"><div class="sn">✦</div><div><div class="st">Strategic initiatives <span style="color:var(--muted)">(for the CEO / Board)</span></div><div class="sd">The major moves in front of the board — an acquisition, a new cloud platform, an AI product, a market or factory expansion. CyberX-Ray runs a <b>per-initiative go / no-go safety check</b> and a one-page decision brief for each, because every move carries different risk. Add the ones being weighed now.</div></div><div class="badge" id="bstrat">optional</div></div>
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Strategic initiatives <span style="color:var(--muted)">(for the CEO / Board)</span></div><div class="sd">The major moves in front of the board — an acquisition, a new cloud platform, an AI product, a market or factory expansion. Nerion runs a <b>per-initiative go / no-go safety check</b> and a one-page decision brief for each, because every move carries different risk. Add the ones being weighed now.</div></div><div class="badge" id="bstrat">optional</div></div>
     <div id="stratRows"></div>
     <button class="conn-go" id="addStrat" type="button" style="margin-top:4px">+ Add a strategic initiative</button>
   </div>
 
   <!-- 1e · Policy & document evidence -->
   <div class="sec">
-    <div class="sh"><div class="sn">✦</div><div><div class="st">Policy &amp; document evidence <span style="color:var(--muted)">(framework maturity)</span></div><div class="sd">Upload your security policies (PDF · DOCX · TXT). CyberX-Ray reads each against the NIST control catalog and scores every control’s CMMI maturity from the policy language it contains — the <b>📄 document-review</b> evidence behind your framework scores, alongside live tool telemetry. Do it here so the cockpit Framework tab opens fully evidenced.</div></div><div class="badge" id="bdoc">optional</div></div>
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Policy &amp; document evidence <span style="color:var(--muted)">(framework maturity)</span></div><div class="sd">Upload your security policies (PDF · DOCX · TXT). Nerion reads each against the NIST control catalog and scores every control’s CMMI maturity from the policy language it contains — the <b>📄 document-review</b> evidence behind your framework scores, alongside live tool telemetry. Do it here so the cockpit Framework tab opens fully evidenced.</div></div><div class="badge" id="bdoc">optional</div></div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
       <select id="obDocType" style="min-width:230px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#fff"></select>
       <input type="file" id="obDocFile" accept=".pdf,.docx,.doc,.txt,.md,.csv">
@@ -395,7 +395,7 @@
 
   <!-- 7 · Connect tools -->
   <div class="sec">
-    <div class="sh"><div class="sn">7</div><div><div class="st">Connect your tools</div><div class="sd">Most of your evidence is pulled live from here. Connect each system you run and CyberX-Ray streams the data that answers your executives’ questions — the more you connect, the more credible every answer.</div></div><div class="badge" id="b7">optional</div></div>
+    <div class="sh"><div class="sn">7</div><div><div class="st">Connect your tools</div><div class="sd">Most of your evidence is pulled live from here. Connect each system you run and Nerion streams the data that answers your executives’ questions — the more you connect, the more credible every answer.</div></div><div class="badge" id="b7">optional</div></div>
     <div class="demo-bar"><span class="demo-label">Demo mode<span class="demo-sub">Explore with simulated signals — no API keys. Clearly labeled “Demo”; never sent to the engine as real data.</span></span><button class="demo-btn" id="demoToggle" type="button">Enable demo mode</button></div>
     <div class="cred"><div class="cred-top"><span class="ct">Evidence credibility</span><span class="cv l0" id="credLabel">Not yet credible</span></div><div class="cred-bar"><i id="credBar"></i></div><div class="cred-meta"><b id="credSig">0</b> live signals · <b id="credSys">0</b> systems connected · <b id="credCov">0%</b> coverage</div></div>
     <div id="toolGrid"></div>

@@ -1,5 +1,5 @@
 /**
- * Monitoring Configuration for CyberRx API
+ * Monitoring Configuration for Nerion API
  *
  * Provides monitoring setup for Prometheus/Grafana and CloudWatch
  * Health check metrics are exposed via /health endpoints
@@ -46,7 +46,7 @@ const prometheusConfig = {
 const cloudWatchConfig = {
   enabled: process.env.CLOUDWATCH_ENABLED === 'true',
   region: process.env.AWS_REGION || 'us-east-1',
-  namespace: 'CyberRx/API',
+  namespace: 'Nerion/API',
 
   metrics: [
     {

@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * routes/industries — the industry registry that makes CyberRX industry-agnostic.
+ * routes/industries — the industry registry that makes Nerion industry-agnostic.
  *   GET /api/industries        list selectable industries (for the setup form)
  *   GET /api/industries/:id     full profile (processes, tech, regs, questions)
  */

@@ -1,4 +1,4 @@
-# AT&T Inc. — CyberX-Ray demo org
+# AT&T Inc. — Nerion demo org
 
 **Sector:** Telecommunications  ·  **Regions:** US  ·  **Org ID:** `org_att`
 

@@ -1,4 +1,4 @@
--- CyberRx — Phase 1 acceptance test: TENANT ISOLATION, proven at the DB level.
+-- Nerion — Phase 1 acceptance test: TENANT ISOLATION, proven at the DB level.
 --
 -- Sets up two tenants (A and B) with structurally OVERLAPPING data, then logs in
 -- as a user of tenant A (via JWT claims, as Supabase does) and proves that NONE

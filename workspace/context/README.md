@@ -34,8 +34,8 @@ read only that range.
     "rules": [...]
   },
   "navigation":       { "nav_line_range": [113,132], "pages": {...} },
-  "shared_state_root":{ "component": "CyberRxApp", "useState_line_range": [23525,23849], ... },
-  "export_default":   { "name": "CyberRxApp", "line": 24019, "note": "..." },
+  "shared_state_root":{ "component": "NerionApp", "useState_line_range": [23525,23849], ... },
+  "export_default":   { "name": "NerionApp", "line": 24019, "note": "..." },
   "constants":        [ { "name":"NAV", "line_range":[113,132], ... }, ... ],
   "components":       [ { "name":"CISODash", "line_range":[7326,8407], ... }, ... ],
   "coverage":         { "covered_lines": 24556, "uncovered_ranges": [[1,3]], ... },
@@ -96,7 +96,7 @@ is merged. Wire it into CI for M6.
 - Filled the 17,333 → 18,519 "gap": that's `SetupBot`'s 1,186-line body, now
   bounded with a real `line_range`.
 - Added 14 components the seed missed, including the **root component**
-  (`CyberRxApp` @ 23,524–24,197), `BrianaBar`, the Attack-Path subcomponents
+  (`NerionApp` @ 23,524–24,197), `BrianaBar`, the Attack-Path subcomponents
   (`Atk*`), the Crown-Jewels Discovery subcomponents (`Cjd*`), and the two
   CFO `Exposure*` components that live AFTER the `export default` (hoisting
   makes it work, but it's a footgun the M6 split must respect).
@@ -106,7 +106,7 @@ is merged. Wire it into CI for M6.
   symbol referenced) per component — the data needed to schedule a clean
   extraction order.
 - Added `split_risk` per component plus a `split_planning.recommended_order`
-  that sorts LOW → HIGH → CyberRxApp.
+  that sorts LOW → HIGH → NerionApp.
 - Added `coverage` accounting: 24,556 of 24,559 lines fall inside a known
   top-level definition. The 3 uncovered lines are the file header (`import
   React, ...` + blank + the first comment).

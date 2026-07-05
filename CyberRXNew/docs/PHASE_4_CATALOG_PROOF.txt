@@ -1,4 +1,4 @@
-CyberRx — Phase 4a catalog-load proof (NIST 800-53 Rev 5 OSCAL → Phase 1 schema)
+Nerion — Phase 4a catalog-load proof (NIST 800-53 Rev 5 OSCAL → Phase 1 schema)
 Generated against local PostgreSQL 16 (the engine Supabase uses).
 
       key       |                 name                  |     version      

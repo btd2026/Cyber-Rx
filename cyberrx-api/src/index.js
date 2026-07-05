@@ -430,7 +430,7 @@ db.init()
 
 const PORT = process.env.PORT || 3001;
 const server = app.listen(PORT, () => {
-  logger.info('CyberRx API started', {
+  logger.info('Nerion API started', {
     port: PORT,
     environment: process.env.NODE_ENV || 'development',
     version: process.env.npm_package_version || '1.0.0'

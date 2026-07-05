@@ -1,4 +1,4 @@
-// CyberRx — signed exports (Phase 4d)
+// Nerion — signed exports (Phase 4d)
 //
 // Generates REAL downloadable artifacts (auditor report + evidence manifest) and
 // signs them with a SHA-256 hash, mirroring the signed decision ledger. In demo
@@ -66,7 +66,7 @@ export async function exportAuditorReport(frameworkLabel: string, fns: ScoredFun
   }
   const when = stamp()
   const lines: string[] = []
-  lines.push(`# CyberRx — Auditor Report`)
+  lines.push(`# Nerion — Auditor Report`)
   lines.push(`Framework: **${frameworkLabel}**  ·  Generated: ${when}`)
   lines.push('')
   lines.push(`> CMMI maturity is computed by the deterministic engine from evidence coverage and freshness — not generated. Each figure traces to cited evidence.`)

@@ -1,4 +1,4 @@
-// Sample test data fixtures for CyberRx API tests
+// Sample test data fixtures for Nerion API tests
 
 // Sample organization (BCBS plan)
 exports.sampleOrganization = {

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CyberX-Ray · Executive Cockpit</title>
+<title>Nerion · Executive Cockpit</title>
 <style>
   :root{
     /* Advisory theme — DTNK Shield deck palette (navy / steel / ice, serif headings) */
@@ -415,7 +415,7 @@
 </head>
 <body>
 <div class="top"><div class="wrap top-in">
-  <div class="logo">X</div><div class="brand">CyberX-Ray <span>Cybersecurity Operating System</span></div>
+  <div class="logo">N</div><div class="brand">Nerion <span>Cybersecurity Operating System</span></div>
   <div class="top-r">
     <button class="tbtn war" id="warBtn">⚠ War Room</button>
     <button class="tbtn" id="boardBtn" title="Board-ready report">📋 Board Pack</button>
@@ -430,7 +430,7 @@
 </div></div>
 <div id="dataModeBar"><div class="wrap" id="dataModeInner" style="padding:8px 0;font-size:12px;font-weight:600"></div></div>
 <div class="wrap" id="app"></div>
-<div class="foot"><b>CyberX-Ray</b> — every figure traces to your data or is clearly labeled modeled · build 2026-07-02c · economics · jurisdictions · resilience all compute from your data; sections labeled illustrative fill in as their intake sources connect.</div>
+<div class="foot"><b>Nerion</b> — every figure traces to your data or is clearly labeled modeled · build 2026-07-02c · economics · jurisdictions · resilience all compute from your data; sections labeled illustrative fill in as their intake sources connect.</div>
 
 <div class="ev-scrim" id="scrim"></div>
 <aside class="ev" id="ev"><div class="ev-h"><span class="eb">How this is calculated</span><button class="ev-x" id="evx">×</button></div><div class="ev-b" id="evb"></div></aside>
@@ -588,7 +588,7 @@ function statusStep(st){var s=String(st||'').toLowerCase();
 function pushDecision(dec){
   var d=loadDec(dec);if(!d||d.ticket)return;var o=orgId(),base=apiBase();
   d.pushing=true;saveDec(dec,d);renderDecStatus(dec);
-  var body={title:'[Cyber decision · '+SEAT_LABEL[d.seat]+'] '+d.title,desc:'Option '+d.opt+' — decided by '+d.by+' ('+SEAT_LABEL[d.seat]+') via the CyberX-Ray executive cockpit. Managed as a project; tracked to completion.',sourceRef:srcRef(dec,d),type:'project'};
+  var body={title:'[Cyber decision · '+SEAT_LABEL[d.seat]+'] '+d.title,desc:'Option '+d.opt+' — decided by '+d.by+' ('+SEAT_LABEL[d.seat]+') via the Nerion executive cockpit. Managed as a project; tracked to completion.',sourceRef:srcRef(dec,d),type:'project'};
   if(!o||!base){d.pushing=false;saveDec(dec,d);renderDecStatus(dec);return;}
   try{
     fetch(base+'/api/itsm/open?org_id='+encodeURIComponent(o),{method:'POST',headers:{'Content-Type':'application/json','X-Org-Id':o},body:JSON.stringify(body)})
@@ -1026,7 +1026,7 @@ function drillTrajectory(){var tr=trajInfo();
     return '<div class="drill-hero'+(down?' good':'')+'" style="color:var(--'+(down?'good':'crit')+')">'+tr.val+'</div>'+sparkSvg(tr.vals,down)+
       '<div class="drill-p">Your expected loss over time. '+(down?'Down':'Up')+' across '+tr.vals.length+' recorded analyses — a falling line means the controls are removing more risk than the business is adding.</div>'+
       '<div class="ev-sec">Recorded analyses</div>'+tr.t.map(function(p){return gRow(p.date?new Date(p.date).toLocaleDateString():'—',usd(Number(p.ale)||0));}).join('')+
-      '<div class="drill-p" style="color:var(--muted)">CyberX-Ray records your position on every analysis — this is real history, nothing back-filled.</div>';}
+      '<div class="drill-p" style="color:var(--muted)">Nerion records your position on every analysis — this is real history, nothing back-filled.</div>';}
   return '<div class="drill-hero">'+(tr.ale>0?usd(tr.ale):'—')+'</div><div class="drill-p">This is your <b>baseline</b>. From here every analysis records a new point and this becomes your real quarter-over-quarter trajectory. Because nothing is invented, the line starts at one point and grows — run another analysis next quarter to extend it.</div>';}
 function drillDetection(){var mttd=sig('mttd_hrs');
   return '<div class="drill-hero" style="color:var(--'+(mttd!=null?'good':'muted')+')">'+(mttd!=null?(mttd+' h to detect'):'not connected')+'</div>'+
@@ -1297,10 +1297,10 @@ function pct(n,dp){return (n*100).toFixed(dp==null?1:dp)+'%';}
 function renderTrend(){
   var host=document.getElementById('ceoTrend');if(!host)return;
   var t=(LIVE&&LIVE.trend)||[];
-  if(!LIVE){host.innerHTML='<div class="card"><div class="ck">Expected loss — trend</div><div class="cn" style="margin-top:8px">◐ <b style="color:var(--warn)">Illustrative.</b> Once you go live, CyberX-Ray records your position on every analysis and this becomes your <b>real</b> quarter-over-quarter trend line — no back-filled history.</div></div>';return;}
+  if(!LIVE){host.innerHTML='<div class="card"><div class="ck">Expected loss — trend</div><div class="cn" style="margin-top:8px">◐ <b style="color:var(--warn)">Illustrative.</b> Once you go live, Nerion records your position on every analysis and this becomes your <b>real</b> quarter-over-quarter trend line — no back-filled history.</div></div>';return;}
   if(t.length<2){
     var cur=(LIVE&&LIVE.economics&&Number(LIVE.economics.ale))||0;
-    host.innerHTML='<div class="card"><div class="ck">Expected loss — baseline</div><div class="cv" style="font-size:26px;margin-top:6px">'+(cur?usd(cur):'—')+'</div><div class="cn" style="margin-top:8px">This is your <b>baseline</b>'+(t[0]?(', recorded '+new Date(t[0].date).toLocaleDateString()):'')+'. CyberX-Ray records your position on every analysis, so your quarter-over-quarter trend line builds from here — <b>no history is invented</b>.</div></div>';
+    host.innerHTML='<div class="card"><div class="ck">Expected loss — baseline</div><div class="cv" style="font-size:26px;margin-top:6px">'+(cur?usd(cur):'—')+'</div><div class="cn" style="margin-top:8px">This is your <b>baseline</b>'+(t[0]?(', recorded '+new Date(t[0].date).toLocaleDateString()):'')+'. Nerion records your position on every analysis, so your quarter-over-quarter trend line builds from here — <b>no history is invented</b>.</div></div>';
     return;
   }
   var vals=t.map(function(p){return Number(p.ale)||0;});var max=Math.max.apply(null,vals),min=Math.min.apply(null,vals);var range=(max-min)||1;
@@ -1458,7 +1458,7 @@ function indKey(){var i=String(industry()||'').toLowerCase();
 function indProfile(){return IND_PROFILES[indKey()]||IND_PROFILES.tech;}
 function indLabel(){return {health:'healthcare',tech:'technology',fin:'financial services',retail:'retail',gov:'government',mfg:'manufacturing',energy:'energy & utilities',telecom:'telecommunications'}[indKey()]||'your sector';}
 /* Threat groups publicly reported (CISA / Mandiant / sector-ISAC advisories) to
-   target each sector, with the CyberX-Ray capabilities that defend against their known
+   target each sector, with the Nerion capabilities that defend against their known
    techniques. Industry-modeled from public reporting until a threat-intel feed
    (Recorded Future / Mandiant) connects and makes it specific to the environment. */
 var IND_THREATS={
@@ -1922,7 +1922,7 @@ function renderProcBars(){
 }
 /* CEO oversight card — the real decision-ledger count (D&O / SEC defense). */
 /* ---- Fortune-100 CISO Operating Model — the responsibilities of each executive,
-   how security enables each, what they expect, the CyberX-Ray panel that delivers
+   how security enables each, what they expect, the Nerion panel that delivers
    it, and the data sources behind it (shown connected / not, for traceability).
    Mirrors the operating-model table so each leader sees their own accountabilities. ---- */
 var OM_SRC={SIEM:['splunk','sentinel'],EDR:['crowdstrike','defender'],GRC:['onetrust','servicenow'],CRM:['salesforce','hubspot'],ERP:['sap','oracle','workday','netsuite'],CMDB:['servicenow'],ITSM:['servicenow','jira'],IAM:['okta','entra'],Vuln:['qualys','tenable'],CSPM:['wiz','aws','azure','prisma','gcp'],Backup:['rubrik','veeam','cohesity','commvault'],'Threat intel':['recordedfuture','mandiant','anomali','otx','cisa'],Email:['proofpoint','abnormal'],Ratings:['securityscorecard'],Awareness:['knowbe4','proofpoint'],'Trust Center':['whistic'],HR:['workday'],eDiscovery:['relativity','exterro'],Cloud:['aws','azure','gcp','wiz'],CLM:[],Insurance:[],FAIR:[],'Risk register':[],DLP:[],Pentest:[],Policy:[],Audit:[]};
@@ -1986,7 +1986,7 @@ function renderOpModel(seat){
   }).join('');
   var connSrc=(function(){var set={};rows.forEach(function(r){r.s.forEach(function(s){if(omSrcOn(s))set[s]=1;});});return Object.keys(set).length;})();
   host.innerHTML='<div class="card"><div class="ck">Your operating model — '+SEAT_LABEL[seat]+' · '+rows.length+' responsibilities</div>'+
-    '<div class="cn" style="margin:6px 0 10px"><b style="color:var(--ink)">'+built+' of '+rows.length+'</b> represented by a live CyberX-Ray panel · '+connSrc+' data-source categories connected. Each row is one of your accountabilities, what the CISO does to enable it, the panel that shows it, and the systems behind it — <b>● connected</b>, <b>○ connect to light up</b>.</div>'+
+    '<div class="cn" style="margin:6px 0 10px"><b style="color:var(--ink)">'+built+' of '+rows.length+'</b> represented by a live Nerion panel · '+connSrc+' data-source categories connected. Each row is one of your accountabilities, what the CISO does to enable it, the panel that shows it, and the systems behind it — <b>● connected</b>, <b>○ connect to light up</b>.</div>'+
     body+'</div>';
 }
 /* ---- Strategic initiatives — the CEO's major moves, each with its OWN go/no-go.
@@ -2046,7 +2046,7 @@ function renderCeoGoNoGo(){
   var host=document.getElementById('ceoGoNoGo');if(!host)return;
   var inits=strategicInits();
   if(!inits.length){
-    host.innerHTML='<div class="card"><div class="ck">New-initiative safety check '+liveTag()+'</div><div class="cn" style="margin-top:6px">◐ Add your <b>strategic initiatives</b> — the major moves in front of the board (an acquisition, a cloud platform, an AI product, a market or factory expansion) — in onboarding. CyberX-Ray then runs a <b>go / no-go per initiative</b>: for each move, the risks, exactly where it’s weak, and a clear Proceed / Conditions / Hold before the business commits. A single global verdict would be meaningless — each move carries different risk.</div></div>';
+    host.innerHTML='<div class="card"><div class="ck">New-initiative safety check '+liveTag()+'</div><div class="cn" style="margin-top:6px">◐ Add your <b>strategic initiatives</b> — the major moves in front of the board (an acquisition, a cloud platform, an AI product, a market or factory expansion) — in onboarding. Nerion then runs a <b>go / no-go per initiative</b>: for each move, the risks, exactly where it’s weak, and a clear Proceed / Conditions / Hold before the business commits. A single global verdict would be meaningless — each move carries different risk.</div></div>';
     return;
   }
   var rows=inits.map(function(it){
@@ -2577,7 +2577,7 @@ function renderAiRisk(){
     '<div class="drow" style="padding:9px 0"><div class="drow-h"><span class="cap-dot" style="background:var(--muted)"></span><b>AI-security monitoring (guardrails / AI-SPM)</b><span class="drow-tool" style="color:var(--muted)">not connected</span></div><div class="drow-need">Connect an AI-security tool (Lakera · Protect AI · Prompt Security · CrowdStrike AI Detection) to watch prompt injection, data leakage and shadow AI at runtime — human-in-the-loop review does not scale to agent speed.</div></div>'+
     '<div class="cn" style="margin-top:8px">'+aiIndustryLine(industry())+'</div></div>';
   // FRONT 2 — using AI to strengthen our defences
-  var toolRows=aiTools.length?aiTools.map(function(k){var m=AI_IN_SEC[k];return '<div class="drow aitool" data-aitool="'+k+'" style="cursor:pointer;padding:9px 0"><div class="drow-h"><span class="cap-dot" style="background:var(--good)"></span><b>'+m.tool+' → '+m.ai+'</b><span class="drow-tool">'+liveTag()+' <span class="drill-cta">details ▸</span></span></div><div class="drow-need">'+m.does+'</div></div>';}).join(''):'<div class="cn" style="margin-top:6px">◐ Connect your security tools (EDR, SIEM, identity…) — CyberX-Ray then shows which run AI (Charlotte AI, Security Copilot, Purple AI…) and how much they cut detection and triage time.</div>';
+  var toolRows=aiTools.length?aiTools.map(function(k){var m=AI_IN_SEC[k];return '<div class="drow aitool" data-aitool="'+k+'" style="cursor:pointer;padding:9px 0"><div class="drow-h"><span class="cap-dot" style="background:var(--good)"></span><b>'+m.tool+' → '+m.ai+'</b><span class="drow-tool">'+liveTag()+' <span class="drill-cta">details ▸</span></span></div><div class="drow-need">'+m.does+'</div></div>';}).join(''):'<div class="cn" style="margin-top:6px">◐ Connect your security tools (EDR, SIEM, identity…) — Nerion then shows which run AI (Charlotte AI, Security Copilot, Purple AI…) and how much they cut detection and triage time.</div>';
   var clockNote='<div class="cn" style="margin-top:6px;line-height:1.6">Frontier models have cut the weaponisation window to <b>~'+wa+' days</b>; you remediate critical vulns in <b>~'+pd+' days</b>'+(patchLive?' '+liveTag():' <span class="pill mod">modeled</span>')+' → a <b style="color:var(--crit)">~'+gap+'-day</b> exposure per critical vuln. <b>Speed is the control</b> — AI in your defences is how you close it.</div>';
   var front2='<div class="card" style="margin-top:14px"><div class="ck">② Using AI to strengthen our defences <span class="tag '+(aiTools.length?'good':'warn')+'" style="font-size:10px;margin-left:6px">'+aiTools.length+' tool'+(aiTools.length===1?'':'s')+' AI-augmented</span></div>'+
     aiClockSvg()+clockNote+
@@ -2986,7 +2986,7 @@ function renderBoardPack(){
     '<div class="bp-sec"><h2>5 · Decisions on the table</h2>'+decBlock+'</div>'+
     '<div class="bp-sec"><h2>6 · Trajectory</h2><div style="font-size:13px;line-height:1.5">'+trajBlock+'</div></div>'+
     '<div class="bp-sec"><h2>7 · How we compare — published benchmarks</h2>'+benchBlock+'</div>'+
-    '<div class="bp-meta" style="margin-top:26px;border-top:1px solid var(--line);padding-top:12px">CyberX-Ray · every figure traces to your data or is labeled modeled / illustrative. This report is generated from the same live model as the executive cockpit — not a separate spreadsheet.</div>';
+    '<div class="bp-meta" style="margin-top:26px;border-top:1px solid var(--line);padding-top:12px">Nerion · every figure traces to your data or is labeled modeled / illustrative. This report is generated from the same live model as the executive cockpit — not a separate spreadsheet.</div>';
 }
 function bpToday(){try{return new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'});}catch(_){return '';}}
 function openBoardPack(){renderBoardPack();var s=document.getElementById('bpScrim'),m=document.getElementById('bpModal');if(s)s.classList.add('open');if(m){m.classList.add('open');m.scrollTop=0;}}

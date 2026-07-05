@@ -1,4 +1,4 @@
-# The Boeing Company — CyberX-Ray demo org
+# The Boeing Company — Nerion demo org
 
 **Sector:** Manufacturing  ·  **Regions:** US  ·  **Org ID:** `org_boeing`
 

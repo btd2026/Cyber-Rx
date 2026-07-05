@@ -2,7 +2,7 @@
 
 ## Overview
 
-Comprehensive end-to-end testing infrastructure has been implemented for the CyberRx vendor monitoring system using Playwright. The test suite covers all critical user journeys with 86+ test scenarios across 6 major test suites.
+Comprehensive end-to-end testing infrastructure has been implemented for the Nerion vendor monitoring system using Playwright. The test suite covers all critical user journeys with 86+ test scenarios across 6 major test suites.
 
 ## Implementation Status
 

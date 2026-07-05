@@ -1,8 +1,8 @@
-# CyberRx API Security Hardening Summary
+# Nerion API Security Hardening Summary
 
 ## Overview
 
-This document summarizes the production-grade security enhancements implemented for the CyberRx API to protect healthcare cybersecurity data.
+This document summarizes the production-grade security enhancements implemented for the Nerion API to protect healthcare cybersecurity data.
 
 ## Implementation Date
 
@@ -438,4 +438,4 @@ REDIS_URL=<redis-url>
 
 ## Contact
 
-For security questions or concerns, contact the CyberRx security team.
+For security questions or concerns, contact the Nerion security team.

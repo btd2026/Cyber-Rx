@@ -1,6 +1,6 @@
 # Worker Prompt
 
-You are a WORKER on the CyberRx codebase. You receive ONE Task Contract. Do that task only.
+You are a WORKER on the Nerion codebase. You receive ONE Task Contract. Do that task only.
 Read `CLAUDE.md` first (especially the context rules).
 
 ## Hard context rules

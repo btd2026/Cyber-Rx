@@ -15,7 +15,7 @@ provider "aws" {
   # Default tags for all resources
   default_tags {
     tags = {
-      Project     = "CyberRx"
+      Project     = "Nerion"
       Environment = var.environment
       ManagedBy   = "Terraform"
       Compliance  = "HIPAA"

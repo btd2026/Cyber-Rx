@@ -41,7 +41,7 @@ What's actually in the repo today, grounded in a code read (not the assessment's
 ### 1.2 Frontend (`frontend/`)
 
 - React 19 + Vite 8. Single `src/App.jsx`, **24,559 lines** (matches the assessment's "24,539" within rounding — the file has grown since).
-- Routing is a switch on `page` state inside `CyberRxApp()` (line ~23987). Pages: `home`, `setup`, `hub`, `bizlines`, `appmap`, `dashboard` (CISO), `cro`, `cfo`, `boarddash`, `controls`, `assets`, `vendormap`, `scoring`, `evidence`, `board`, `bizmap`, `apiadapter`, `processflow`, `docdash`, `crown`, `execution`, `crownjewels`, `attackpaths`. 18 entries in `NAV` + a few unlisted ones.
+- Routing is a switch on `page` state inside `NerionApp()` (line ~23987). Pages: `home`, `setup`, `hub`, `bizlines`, `appmap`, `dashboard` (CISO), `cro`, `cfo`, `boarddash`, `controls`, `assets`, `vendormap`, `scoring`, `evidence`, `board`, `bizmap`, `apiadapter`, `processflow`, `docdash`, `crown`, `execution`, `crownjewels`, `attackpaths`. 18 entries in `NAV` + a few unlisted ones.
 - The four existing executive dashboards correspond to: `CISODash` (L7326), `CRODash` (L8408), `CFODash` (L9321), `BoardDash` (L9977). All four live in `App.jsx`.
 - The BCBS template (L185–L202) already enumerates the twelve crown-jewel processes the assessment names. The IDs match what we want to use for seed data (`claims`, `enroll`, `provider_net`, `care_mgmt`, `fwa`, `member_svc`, `actuarial`, `govt_ma`, `govt_fep`, `govt_mcaid`, `pharmacy_pbm`, `compliance`, `identity`, `data_platform`). That's actually **fourteen leaves** if you count the three Government Programs sub-entries (MA, FEP, Medicaid) separately; thirteen if Identity and Data Platform are split; twelve if Government Programs collapses to one row. The "10 vs 12" reconciliation in §3 is even messier than the assessment indicates.
 - `loadBCBSDemoPreset()` at L22656 is the BCBS demo data entrypoint. Smoke-testing the demo flow means hitting this function and then walking the dashboards.
@@ -564,7 +564,7 @@ correlate(findingId, orgId):
 - Page id: `risknarrative`. New entry in `NAV` (after `boarddash`, before `controls`). Visible only when `props.demo === true` OR a feature-flag query `?risk_narrative=1` is set, until reviewed (per `PRODUCTION_PROMPT.md` stop condition #3: no new dashboard route to production without a feature flag).
 - Two URL shapes:
   - `page=risknarrative` (no finding selected) → renders a finding picker (list view of `GET /api/risk-engine/findings`).
-  - `page=risknarrative&findingId=f_001_demo_nasco_cve` → renders the narrative card. (Since the codebase uses `setPage("foo")` state and not the URL, "URL shape" really means `page` plus a `findingId` value held alongside in `CyberRxApp` state. The plan uses query-string style for clarity in PR descriptions.)
+  - `page=risknarrative&findingId=f_001_demo_nasco_cve` → renders the narrative card. (Since the codebase uses `setPage("foo")` state and not the URL, "URL shape" really means `page` plus a `findingId` value held alongside in `NerionApp` state. The plan uses query-string style for clarity in PR descriptions.)
 
 ### 5.2 Component tree
 
@@ -822,7 +822,7 @@ These are decision gates the user must clear before code starts on the indicated
 | Stop condition | Affected PR | Status |
 |---|---|---|
 | "Changing pricing or positioning copy in the product" | None — no copy changes | Cleared |
-| "Adding any user-facing claim about regulatory compliance status (HIPAA, SOC2, etc.)" | PR-10 (UI) — the narrative cites HIPAA §164.308(a)(5) and CMS 42 CFR §422.306(c)(1). These are **citations of the customer's obligations**, not claims about CyberRx's own SOC2/HIPAA status. Confirm this distinction is acceptable before PR-10 ships, and add a disclaimer footer to `RiskNarrative` if not. | **Needs confirmation** |
+| "Adding any user-facing claim about regulatory compliance status (HIPAA, SOC2, etc.)" | PR-10 (UI) — the narrative cites HIPAA §164.308(a)(5) and CMS 42 CFR §422.306(c)(1). These are **citations of the customer's obligations**, not claims about Nerion's own SOC2/HIPAA status. Confirm this distinction is acceptable before PR-10 ships, and add a disclaimer footer to `RiskNarrative` if not. | **Needs confirmation** |
 | "Shipping a new dashboard route to production without a feature flag" | PR-10 — `risknarrative` is behind `VITE_FEATURE_RISK_NARRATIVE`, default off in production. Confirm flag mechanism is acceptable. | **Needs confirmation** |
 | "Migrating data that affects the BCBS demo tenant" | PR-3 through PR-6 all write seed rows to `org_id = 'bcbs-demo'`. This **is** migrating data that affects the BCBS demo tenant. Confirm before PR-3 runs against the demo deployment. | **Needs confirmation** |
 

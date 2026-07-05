@@ -1,4 +1,4 @@
-# CyberX-Ray — Executive Demo Kit (8 industry leaders)
+# Nerion — Executive Demo Kit (8 industry leaders)
 
 Production-realistic onboarding data for **one recognized leader in each of 8 industries**, so you can test the whole platform end-to-end — **without any connector API keys**. Every mapping and calculation runs offline; connectors run in **demo mode** with representative telemetry.
 

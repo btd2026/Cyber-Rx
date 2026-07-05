@@ -1,5 +1,5 @@
 # Task Board Structure Review
-**Strategic Alignment Assessment for CyberRx Task Board**
+**Strategic Alignment Assessment for Nerion Task Board**
 
 **Date:** 2026-05-30
 **Context:** Post-strategic refocusing assessment
@@ -196,7 +196,7 @@
     "Evidence reorganized by control effectiveness → business impact, not framework → document",
     "Policy data model deleted (not valuable for MVP)"
   ],
-  "business_outcome": "CyberRx analyzes cyber data, doesn't manage documents. Focus on control effectiveness.",
+  "business_outcome": "Nerion analyzes cyber data, doesn't manage documents. Focus on control effectiveness.",
   "max_retries": 1,
   "status": "pending"
 }
@@ -600,7 +600,7 @@
   },
   "acceptance_criteria": [
     "10 healthcare payer outreach emails sent (BCBS network, Medicare Advantage, Commercial)",
-    "Press release distributed: 'CyberRx Launches Executive Cyber Responsibility Platform'",
+    "Press release distributed: 'Nerion Launches Executive Cyber Responsibility Platform'",
     "Demo webinars scheduled (2 per week for 4 weeks)",
     "Success metrics dashboard created (track: signups, correlations, executive adoption, retention)",
     "Sales pipeline: 10 prospects → 3 design partners → 10 early customers",
@@ -623,7 +623,7 @@
   "milestone": "M-CATEGORY - Category Creation",
   "title": "Competitive intelligence: Track Vanta/Drata/Archer/SecurityScorecard positioning",
   "depends_on": [],
-  "objective": "Continuously monitor GRC competitor positioning. Ensure CyberRx differentiation remains clear.",
+  "objective": "Continuously monitor GRC competitor positioning. Ensure Nerion differentiation remains clear.",
   "context_manifest": {
     "code_files": [],
     "doc_chunks": [],
@@ -638,7 +638,7 @@
     "Quarterly competitive review completed (Vanta, Drata, Archer, ServiceNow GRC, SecurityScorecard, OneTrust)",
     "Competitor messaging analyzed (landing pages, pitch decks, pricing)",
     "Differentiation matrix updated: 'What we do that they don't'",
-    "Executive testimonials collected: 'How is CyberRx different from Vanta?'",
+    "Executive testimonials collected: 'How is Nerion different from Vanta?'",
     "Product roadmap reviewed: Ensure no GRC drift (avoid commodity features)"
   ],
   "business_outcome": "Category positioning maintained. Clear differentiation vs. GRC tools.",

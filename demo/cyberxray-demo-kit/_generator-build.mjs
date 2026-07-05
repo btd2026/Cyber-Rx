@@ -1,4 +1,4 @@
-// Emits the CyberX-Ray executive demo kit from orgs.mjs.
+// Emits the Nerion executive demo kit from orgs.mjs.
 import fs from 'node:fs';
 import path from 'node:path';
 import { ORGS } from './orgs.mjs';
@@ -70,8 +70,8 @@ function ingestPayload(o) {
 
 function browserSnippet(o) {
   const set = (k, v) => `localStorage.setItem(${JSON.stringify(k)}, ${JSON.stringify(typeof v === 'string' ? v : JSON.stringify(v))});`;
-  return `/* CyberX-Ray demo loader — ${o.org_name}
-   1. Open the CyberX-Ray app in your browser and log in.
+  return `/* Nerion demo loader — ${o.org_name}
+   1. Open the Nerion app in your browser and log in.
    2. Open DevTools → Console (F12).
    3. Paste this whole file and press Enter. The page reloads into this org's cockpit.
    (Assumes the backend was seeded via load-all.mjs — or the cockpit will still show
@@ -86,7 +86,7 @@ ${set('cyberrx_tools', toolsMap(o.tools))}
 ${set('cyberrx_initiatives', o.initiatives)}
 ${set('cyberrx_doc_scores', docScores(o.docMaturity))}
 ${set('cyberrx_docs', docsList(o.docMaturity))}
-console.log('CyberX-Ray demo loaded: ${o.org_name} (${orgId(o)}). Reloading…');
+console.log('Nerion demo loaded: ${o.org_name} (${orgId(o)}). Reloading…');
 location.reload();
 `;
 }
@@ -95,7 +95,7 @@ function orgReadme(o) {
   const p = ingestPayload(o);
   const gv = o.governance, ai = o.aiGovernance, f = o.financials;
   const line = (k, v) => `| ${k} | ${v} |`;
-  return `# ${o.org_name} — CyberX-Ray demo org
+  return `# ${o.org_name} — Nerion demo org
 
 **Sector:** ${o.industry}  ·  **Regions:** ${o.regions.join(', ')}  ·  **Org ID:** \`${orgId(o)}\`
 
@@ -196,7 +196,7 @@ for (const o of ORGS) {
 }
 
 // ── loader ──
-fs.writeFileSync(path.join(OUT, 'load-all.mjs'), `// Seed the CyberX-Ray backend with the demo orgs (no API keys required).
+fs.writeFileSync(path.join(OUT, 'load-all.mjs'), `// Seed the Nerion backend with the demo orgs (no API keys required).
 //   API_BASE=http://localhost:3001 node load-all.mjs           # all 7 orgs
 //   API_BASE=http://localhost:3001 node load-all.mjs boeing    # one org by folder name
 import fs from 'node:fs';
@@ -227,7 +227,7 @@ console.log('\\nDone. Then paste <org>/browser-localStorage.js into the app cons
 
 // ── master README ──
 const matrix = ORGS.map((o) => `| ${o.org_name} | ${o.industry} | \`${o.key}\` | ${o.apps.length} sys · ${o.risks.length} risks | ${o.tools.length} demo tools |`).join('\n');
-fs.writeFileSync(path.join(OUT, 'README.md'), `# CyberX-Ray — Executive Demo Kit (${ORGS.length} industry leaders)
+fs.writeFileSync(path.join(OUT, 'README.md'), `# Nerion — Executive Demo Kit (${ORGS.length} industry leaders)
 
 Production-realistic onboarding data for **one recognized leader in each of ${ORGS.length} industries**, so you can test the whole platform end-to-end — **without any connector API keys**. Every mapping and calculation runs offline; connectors run in **demo mode** with representative telemetry.
 

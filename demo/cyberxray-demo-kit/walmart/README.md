@@ -1,4 +1,4 @@
-# Walmart Inc. — CyberX-Ray demo org
+# Walmart Inc. — Nerion demo org
 
 **Sector:** Retail / e-commerce  ·  **Regions:** US  ·  **Org ID:** `org_walmart`
 

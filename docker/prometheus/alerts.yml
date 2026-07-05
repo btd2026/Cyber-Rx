@@ -1,4 +1,4 @@
-# Prometheus Alert Rules for CyberRx
+# Prometheus Alert Rules for Nerion
 groups:
   - name: api_alerts
     interval: 30s

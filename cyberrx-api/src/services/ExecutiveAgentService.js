@@ -3,10 +3,10 @@
 /**
  * ExecutiveAgentService
  * ---------------------
- * The CyberRX AI agent layer.
+ * The Nerion AI agent layer.
  *
  * Product vision (from the deck):
- *   "Attacks move at machine speed. CyberRX deploys AI agents that continuously
+ *   "Attacks move at machine speed. Nerion deploys AI agents that continuously
  *    read your security stack and deliver each executive the live, role-specific
  *    intelligence they need to act."
  *
@@ -613,7 +613,7 @@ async function aiBrief(role, ctx) {
 
   const system =
     `${def.persona}\n\n` +
-    'You are one agent in the CyberRX Executive Cyber Operating System. You run continuously inside the customer\'s perimeter, reading primary sources directly. ' +
+    'You are one agent in the Nerion Executive Cyber Operating System. You run continuously inside the customer\'s perimeter, reading primary sources directly. ' +
     'You produce a single, decision-ready brief for your executive that answers the one question they own. ' +
     'VOICE: Write like a trusted, sharp human advisor briefing this executive face-to-face — warm, confident, and plain-spoken, never a robotic data readout. ' +
     'Lead with the story and what it means for them, then back it with the numbers; weave figures into sentences instead of listing them. Use natural contractions and second person ("here\'s where you stand", "what I\'d watch"). ' +
@@ -781,7 +781,7 @@ async function aiAnswer(role, ctx, question) {
   const def = ROLES[role];
   const system =
     `${def.persona}\n\n` +
-    'You are this executive\'s dedicated CyberRX agent. Answer their question using ONLY the provided live context. ' +
+    'You are this executive\'s dedicated Nerion agent. Answer their question using ONLY the provided live context. ' +
     'VOICE: Speak like a trusted human advisor — warm, confident, conversational, never a robotic readout. Use contractions and second person, lead with what it means for them, and weave figures into sentences rather than listing them. ' +
     'Be specific and quantitative; quantify in dollars where the data supports it. Never invent numbers. ' +
     'Respond with: (1) a concise 2-3 sentence executive summary that directly answers the question, and ' +

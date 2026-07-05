@@ -1,4 +1,4 @@
-# Variables for CyberRx Infrastructure
+# Variables for Nerion Infrastructure
 
 variable "aws_region" {
   description = "AWS region for resources"

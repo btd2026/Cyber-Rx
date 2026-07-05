@@ -37,7 +37,7 @@ test.describe('@smoke Smoke Tests', () => {
     await page.goto('/');
 
     // Check that page loads without errors
-    await expect(page).toHaveTitle(/CyberRx/);
+    await expect(page).toHaveTitle(/Nerion/);
 
     // Check for critical elements
     await expect(page.locator('nav, .navigation')).toBeVisible({ timeout: 10000 });

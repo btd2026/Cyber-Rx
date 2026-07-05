@@ -1,4 +1,4 @@
-# Microsoft Corporation — CyberX-Ray demo org
+# Microsoft Corporation — Nerion demo org
 
 **Sector:** Technology / SaaS  ·  **Regions:** US, EU, Global  ·  **Org ID:** `org_microsoft`
 

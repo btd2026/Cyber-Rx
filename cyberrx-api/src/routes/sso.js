@@ -233,8 +233,8 @@ router.post('/mfa/enable', authenticateJWT, async (req, res) => {
 
     // Generate TOTP secret
     const secret = speakeasy.generateSecret({
-      name: `CyberRx (${user.email})`,
-      issuer: 'CyberRx',
+      name: `Nerion (${user.email})`,
+      issuer: 'Nerion',
       length: 32
     });
 
@@ -375,7 +375,7 @@ router.get('/mfa/qrcode', authenticateJWT, async (req, res) => {
     }
 
     // Generate QR code
-    const otpauth = `otpauth://totp/CyberRx:${user.email}?secret=${user.mfa_secret}&issuer=CyberRx`;
+    const otpauth = `otpauth://totp/Nerion:${user.email}?secret=${user.mfa_secret}&issuer=Nerion`;
     const qrCodeUrl = await QRCode.toDataURL(otpauth);
 
     res.json({

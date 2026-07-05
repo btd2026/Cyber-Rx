@@ -217,7 +217,7 @@ const TOOLS = [
       {
         purpose: 'Host vulnerability detections (patch/SLA)',
         method: 'GET', path: '/api/2.0/fo/asset/host/vm/detection/?action=list&severities=4-5',
-        headers: { Authorization: 'Basic ${QUALYS_B64}', 'X-Requested-With': 'CyberRx' },
+        headers: { Authorization: 'Basic ${QUALYS_B64}', 'X-Requested-With': 'Nerion' },
         sample: '<HOST_LIST><HOST><DETECTION><QID>105...</QID><SEVERITY>5</SEVERITY><STATUS>Active</STATUS></DETECTION></HOST></HOST_LIST>',
         extract: 'Active high/critical detections vs fixed → patch_pct / vuln_sla_pct (XML response).',
         signal: 'vuln_sla_pct', controls: ['ID.RA-01', 'PR.PS-02', 'PR.PS-01'],

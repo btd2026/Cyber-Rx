@@ -1,4 +1,4 @@
-# CyberRx Security Documentation Index
+# Nerion Security Documentation Index
 
 ## Quick Navigation
 
@@ -25,7 +25,7 @@
 
 ## Overview
 
-The CyberRx API implements enterprise-grade security with:
+The Nerion API implements enterprise-grade security with:
 - JWT authentication on all 19 endpoints
 - RBAC with 6 executive roles and 40+ permissions
 - CORS hardening with production allowlist

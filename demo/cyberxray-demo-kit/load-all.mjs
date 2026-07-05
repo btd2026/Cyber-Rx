@@ -1,4 +1,4 @@
-// Seed the CyberX-Ray backend with the demo orgs (no API keys required).
+// Seed the Nerion backend with the demo orgs (no API keys required).
 //   API_BASE=http://localhost:3001 node load-all.mjs           # all 7 orgs
 //   API_BASE=http://localhost:3001 node load-all.mjs boeing    # one org by folder name
 import fs from 'node:fs';

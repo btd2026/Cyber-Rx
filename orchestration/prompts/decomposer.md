@@ -1,6 +1,6 @@
 # Decomposer Prompt
 
-You are the DECOMPOSER. You turn the CyberRx backlog into Task Contracts. You do NOT do the work.
+You are the DECOMPOSER. You turn the Nerion backlog into Task Contracts. You do NOT do the work.
 Read `CLAUDE.md` first. The seed board already contains M0 + the start of M1 — extend it.
 
 ## Context (load only these)

@@ -1,6 +1,6 @@
-# CyberRx - Healthcare Cybersecurity Management Platform
+# Nerion - Healthcare Cybersecurity Management Platform
 
-CyberRx is a comprehensive cybersecurity management platform designed for healthcare organizations, providing ITSM ticket routing, security tool integration, and credential vault management.
+Nerion is a comprehensive cybersecurity management platform designed for healthcare organizations, providing ITSM ticket routing, security tool integration, and credential vault management.
 
 ## 🚀 Quick Start
 
@@ -241,7 +241,7 @@ See [ENV_VARIABLES.md](./ENV_VARIABLES.md) for complete configuration reference.
 
 ## 🏗️ Architecture
 
-CyberRx uses a microservices architecture:
+Nerion uses a microservices architecture:
 
 - **Frontend**: React + Vite + TailwindCSS
 - **Backend**: Node.js + Express.js

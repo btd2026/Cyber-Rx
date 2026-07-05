@@ -4,7 +4,7 @@
  * Authentication Routes
  * Task: T-304, T-305
  *
- * Provides JWT-based authentication for the CyberRx API
+ * Provides JWT-based authentication for the Nerion API
  * - POST /api/auth/login - Rate-limited login with JWT issuance
  * - POST /api/auth/signup - Org-scoped user creation
  */

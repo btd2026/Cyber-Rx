@@ -177,7 +177,7 @@ async function buildGraph(orgId) {
       description: f.description || '', remediation: f.remediation_plan || '', nodeId,
       // Wiz-style enrichment: ATT&CK technique, CIS control, detecting source, system.
       mitre: atk.mitre, cis: atk.cis,
-      source: f.tool || f.source || 'CyberRx Scan',
+      source: f.tool || f.source || 'Nerion Scan',
       system: node.label || null,
       systemLayer: node.layer || null,
     };

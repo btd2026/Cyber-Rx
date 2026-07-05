@@ -935,7 +935,7 @@
     },
     "integration_with_cyber_rx": {
       "risk_mitigation_product_mapping": [
-        "Identify CyberRx use cases that detect these risks",
+        "Identify Nerion use cases that detect these risks",
         "Map correlation rules to risk indicators",
         "Create remediation playbooks for high-impact risks",
         "Design monitoring dashboards for crown-jewel processes"

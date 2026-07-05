@@ -4,7 +4,7 @@
  * scripts/genPilotEvidence.js
  * ---------------------------
  * Generates realistic, upload-ready sample evidence documents — one for every
- * document the CyberRx setup asks an organization to upload (the 19 NIST CSF
+ * document the Nerion setup asks an organization to upload (the 19 NIST CSF
  * evidence slots in NistCsfService.EVIDENCE_QUESTIONS).
  *
  * Each document is written for the pilot org "Meridian Health Plan" and
@@ -262,7 +262,7 @@ function render(doc, meta) {
   });
   doc.moveDown(1);
   doc.fontSize(8).fillColor('#94a3b8')
-    .text('Sample document generated for CyberRx pilot testing. Fictional organization; not real PHI. ' +
+    .text('Sample document generated for Nerion pilot testing. Fictional organization; not real PHI. ' +
       'This document intentionally omits some required elements so reviewers can verify gap detection.', { lineGap: 1 });
 }
 
@@ -286,10 +286,10 @@ function manifest() {
       `- **Intentionally omitted (the gap to verify):** ${d.omits.join('; ')}\n`;
   }).join('\n');
   const header = [
-    '# Pilot Sample Evidence — CyberRx',
+    '# Pilot Sample Evidence — Nerion',
     '',
     `Nineteen sample evidence documents for the pilot org **${ORG}** (fictional — no real PHI),`,
-    'one for every document the CyberRx setup asks you to upload (the NIST CSF evidence interview).',
+    'one for every document the Nerion setup asks you to upload (the NIST CSF evidence interview).',
     '',
     '**How to test:** for each item below, on the CSF scorecard answer the question with the',
     'listed answer and upload the matching PDF. Then open the post-intake document review',

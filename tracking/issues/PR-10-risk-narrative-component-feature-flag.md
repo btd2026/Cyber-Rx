@@ -69,7 +69,7 @@ Per plan §5.1–§5.7 and §6 PR-10:
 ## Risks & Stop Conditions
 
 - **Stop condition (plan §10):** *"Shipping a new dashboard route to production without a feature flag."* This PR's whole protection is the `VITE_FEATURE_RISK_NARRATIVE` flag with default `0` in production. Confirm the mechanism (Vercel env var per environment) is acceptable before PR-10 ships.
-- **Stop condition (plan §10):** *"Adding any user-facing claim about regulatory compliance status (HIPAA, SOC2, etc.)."* The narrative cites HIPAA §164.308(a)(5) and CMS 42 CFR §422.306(c)(1). These are **citations of the customer's obligations**, not claims about CyberRx's compliance status. Confirm with user before PR-10 ships; add a disclaimer footer to `RiskNarrative` if not (plan §10 explicit ask).
+- **Stop condition (plan §10):** *"Adding any user-facing claim about regulatory compliance status (HIPAA, SOC2, etc.)."* The narrative cites HIPAA §164.308(a)(5) and CMS 42 CFR §422.306(c)(1). These are **citations of the customer's obligations**, not claims about Nerion's compliance status. Confirm with user before PR-10 ships; add a disclaimer footer to `RiskNarrative` if not (plan §10 explicit ask).
 - Risk: the new feature-flag mechanism (`VITE_FEATURE_RISK_NARRATIVE`) sets a precedent. Document the env-var naming convention in `docs/ui/risk-narrative.md`.
 
 ## History

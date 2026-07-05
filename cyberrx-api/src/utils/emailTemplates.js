@@ -198,7 +198,7 @@ Signal ${i + 1}:
 
 View details: ${frontendUrl}/vendors/${data.vendorId}
 
-This is an automated alert from CyberRx.
+This is an automated alert from Nerion.
     `.trim(),
     html: `
 <!DOCTYPE html>
@@ -249,7 +249,7 @@ This is an automated alert from CyberRx.
       </div>
     </div>
     <div class="footer">
-      <p>This is an automated alert from <a href="${frontendUrl}">CyberRx</a>.</p>
+      <p>This is an automated alert from <a href="${frontendUrl}">Nerion</a>.</p>
       <p>To manage your alert preferences, visit your <a href="${frontendUrl}/settings">settings</a>.</p>
     </div>
   </div>
@@ -278,7 +278,7 @@ Change: +${change} points
 
 View details: ${frontendUrl}/vendors/${data.vendorId}
 
-This is an automated alert from CyberRx.
+This is an automated alert from Nerion.
     `.trim(),
     html: `
 <!DOCTYPE html>
@@ -333,7 +333,7 @@ This is an automated alert from CyberRx.
       </div>
     </div>
     <div class="footer">
-      <p>This is an automated alert from <a href="${frontendUrl}">CyberRx</a>.</p>
+      <p>This is an automated alert from <a href="${frontendUrl}">Nerion</a>.</p>
       <p>To manage your alert preferences, visit your <a href="${frontendUrl}/settings">settings</a>.</p>
     </div>
   </div>
@@ -363,7 +363,7 @@ This indicates a decline in security posture. Review vendor signals for details.
 
 View details: ${frontendUrl}/vendors/${data.vendorId}
 
-This is an automated alert from CyberRx.
+This is an automated alert from Nerion.
     `.trim(),
     html: `
 <!DOCTYPE html>
@@ -419,7 +419,7 @@ This is an automated alert from CyberRx.
       </div>
     </div>
     <div class="footer">
-      <p>This is an automated alert from <a href="${frontendUrl}">CyberRx</a>.</p>
+      <p>This is an automated alert from <a href="${frontendUrl}">Nerion</a>.</p>
       <p>To manage your alert preferences, visit your <a href="${frontendUrl}/settings">settings</a>.</p>
     </div>
   </div>
@@ -453,7 +453,7 @@ Multi-provider confirmation increases confidence in these signals.
 
 View details: ${frontendUrl}/vendors/${data.vendorId}
 
-This is an automated alert from CyberRx.
+This is an automated alert from Nerion.
     `.trim(),
     html: `
 <!DOCTYPE html>
@@ -504,7 +504,7 @@ This is an automated alert from CyberRx.
       </div>
     </div>
     <div class="footer">
-      <p>This is an automated alert from <a href="${frontendUrl}">CyberRx</a>.</p>
+      <p>This is an automated alert from <a href="${frontendUrl}">Nerion</a>.</p>
       <p>To manage your alert preferences, visit your <a href="${frontendUrl}/settings">settings</a>.</p>
     </div>
   </div>
@@ -538,7 +538,7 @@ ${i + 1}. ${failure.vendorName}
 
 View all failures: ${frontendUrl}/admin/sync-failures
 
-This is an automated alert from CyberRx.
+This is an automated alert from Nerion.
     `.trim(),
     html: `
 <!DOCTYPE html>
@@ -589,7 +589,7 @@ This is an automated alert from CyberRx.
       </div>
     </div>
     <div class="footer">
-      <p>This is an automated alert from <a href="${frontendUrl}">CyberRx</a>.</p>
+      <p>This is an automated alert from <a href="${frontendUrl}">Nerion</a>.</p>
       <p>To manage your alert preferences, visit your <a href="${frontendUrl}/settings">settings</a>.</p>
     </div>
   </div>

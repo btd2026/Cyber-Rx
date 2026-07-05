@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-**Challenge:** Execute 7 M-STRAT tasks to remove GRC drift and reposition CyberRx as an Executive Cyber Responsibility Platform.
+**Challenge:** Execute 7 M-STRAT tasks to remove GRC drift and reposition Nerion as an Executive Cyber Responsibility Platform.
 
 **Technical Constraint:** App.jsx is 24,539 lines (larger than context window). Cannot load entire file.
 

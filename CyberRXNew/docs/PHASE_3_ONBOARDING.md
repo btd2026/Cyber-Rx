@@ -1,4 +1,4 @@
-# CyberRx — Phase 3: Onboarding / intake
+# Nerion — Phase 3: Onboarding / intake
 
 **Status:** Complete, pending approval. The full intake wizard is live at
 `/app/onboarding` (⚙ Onboarding in the top bar).

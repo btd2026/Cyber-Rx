@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-CyberRx now supports enterprise Single Sign-On (SSO) authentication using Passport.js with both SAML (Okta) and OIDC (Azure AD) protocols. This implementation enables secure, standards-based authentication for healthcare payer organizations with automatic user provisioning and multi-factor authentication (MFA) support.
+Nerion now supports enterprise Single Sign-On (SSO) authentication using Passport.js with both SAML (Okta) and OIDC (Azure AD) protocols. This implementation enables secure, standards-based authentication for healthcare payer organizations with automatic user provisioning and multi-factor authentication (MFA) support.
 
 ---
 
@@ -406,9 +406,9 @@ DEFAULT_SSO_ORG_ID=default-org
 5. **MFA Enforcement Optional:** MFA is not enforced by default
 
 ### Future Enhancements
-1. **Group-based Role Mapping:** Map IdP groups to CyberRx roles
+1. **Group-based Role Mapping:** Map IdP groups to Nerion roles
 2. **Multiple IdP Support:** Allow users to link multiple SSO providers
-3. **JIT De-provisioning:** Automatically disable users in IdP when disabled in CyberRx
+3. **JIT De-provisioning:** Automatically disable users in IdP when disabled in Nerion
 4. **MFA Enforcement:** Require MFA for admin roles
 5. **Hardware Token Support:** Add YubiKey support for MFA
 6. **Advanced Org Mapping:** Support custom org mapping logic
@@ -519,5 +519,5 @@ The SSO integration is **complete and production-ready**. All core features have
 
 **Document Version:** 1.0
 **Last Updated:** 2026-06-11
-**Maintainer:** CyberRx Security Team
+**Maintainer:** Nerion Security Team
 **Status:** ✅ Complete

@@ -1,5 +1,5 @@
 /**
- * TypeScript interfaces for CyberRx connector signal schema.
+ * TypeScript interfaces for Nerion connector signal schema.
  * Used to validate that demo JSON files match real API response shapes.
  */
 

@@ -1,4 +1,4 @@
-# CyberRx — Phase 0 Plan
+# Nerion — Phase 0 Plan
 
 **Status:** Draft for founder approval. No application code has been written.
 **Scope of this document:** repo structure, full data model with `tenant_id` +
@@ -18,7 +18,7 @@ The four non-negotiables are baked into everything below:
 
 ## 1. What we're building (one paragraph)
 
-CyberRx is an executive operating system for defensible cybersecurity
+Nerion is an executive operating system for defensible cybersecurity
 decisions: seven executive "seats" (CEO/CISO/CFO/CIO/CLO/CRO/Board) that each
 answer "what's true right now, what does it mean in dollars, what do I decide,"
 and produce a **signed, append-only record** that the executive acted

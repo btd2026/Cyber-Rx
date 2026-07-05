@@ -4,7 +4,7 @@
 
 ## What the platform does
 
-CyberRX records executive risk decisions to a shared **decision/evidence ledger**
+Nerion records executive risk decisions to a shared **decision/evidence ledger**
 (`decision_ledger`). When a leader chooses **"Accept & monitor"** (or, in the CIO
 lens, **"Ship on time"** deferring a security control), the platform **requires a
 written rationale** and stores it with the decider, role, timestamp, and the

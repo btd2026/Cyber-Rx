@@ -1,4 +1,4 @@
-# JPMorgan Chase & Co. — CyberX-Ray demo org
+# JPMorgan Chase & Co. — Nerion demo org
 
 **Sector:** Financial services  ·  **Regions:** US, EU, UK  ·  **Org ID:** `org_jpmorgan`
 

@@ -52,7 +52,7 @@ function ShellInner() {
         <div className="wrap topbar-in">
           <div className="brand">
             <div className="logo">Rx</div>
-            <b>CyberRx</b>
+            <b>Nerion</b>
             <span className="ctx">{seat.label} · OPERATING SYSTEM</span>
           </div>
           <div className="topbar-right">

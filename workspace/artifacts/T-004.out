@@ -8,7 +8,7 @@ The scheduler.js has been successfully wired up as a Render Background Worker.
 
 ### Why Deploy (Not Remove)
 
-1. **Core Business Value**: The scheduler automates collection of critical security metrics (MFA, EDR, patching, phishing, training) which is central to CyberRx's value proposition.
+1. **Core Business Value**: The scheduler automates collection of critical security metrics (MFA, EDR, patching, phishing, training) which is central to Nerion's value proposition.
 
 2. **Endpoints Are Implemented**: The sync endpoints (`/api/tools/{tool}/sync`) are fully implemented in `cyberrx-api/src/routes/tools.js` with real API integrations for:
    - Okta (MFA percentage)

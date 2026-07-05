@@ -56,7 +56,7 @@ async function summary(orgId) {
   ];
 
   const narrative =
-    `CyberRX has governed ${decisions.length} executive decision(s), putting ${usd(exposureTreated)} of modeled exposure under active treatment` +
+    `Nerion has governed ${decisions.length} executive decision(s), putting ${usd(exposureTreated)} of modeled exposure under active treatment` +
     `${exposureAccepted ? ` and documenting ${usd(exposureAccepted)} as formally accepted` : ''}. ` +
     `${closureRate != null ? `Decision closure is ${closureRate}%${criticalClosure != null ? ` (${criticalClosure}% on critical events)` : ''}. ` : ''}` +
     `${findings.length} blind spot(s) were surfaced from how decisions are actually being made. ` +

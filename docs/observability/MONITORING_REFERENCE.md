@@ -1,6 +1,6 @@
-# CyberRx Monitoring Reference Guide
+# Nerion Monitoring Reference Guide
 
-This reference guide provides detailed information about monitoring, alerting, and operational procedures for the CyberRx platform.
+This reference guide provides detailed information about monitoring, alerting, and operational procedures for the Nerion platform.
 
 ## Table of Contents
 
@@ -19,7 +19,7 @@ This reference guide provides detailed information about monitoring, alerting, a
 
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   CyberRx API   │────▶│  DataDog Agent   │────▶│   DataDog Cloud │
+│   Nerion API   │────▶│  DataDog Agent   │────▶│   DataDog Cloud │
 │   (Backend)     │     │   (Server Side)  │     │   (SaaS)        │
 └─────────────────┘     └──────────────────┘     └─────────────────┘
         │                       │
@@ -324,7 +324,7 @@ docker-compose logs -f prometheus
 | Prometheus | http://localhost:9090 | None |
 | Grafana | http://localhost:3001 | admin/admin |
 | Alertmanager | http://localhost:9093 | None |
-| CyberRx Health | http://localhost:3001/health | None |
+| Nerion Health | http://localhost:3001/health | None |
 
 ### Checking Service Health
 

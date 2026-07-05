@@ -1,7 +1,7 @@
-# Pilot Sample Evidence — CyberRx
+# Pilot Sample Evidence — Nerion
 
 Nineteen sample evidence documents for the pilot org **Meridian Health Plan** (fictional — no real PHI),
-one for every document the CyberRx setup asks you to upload (the NIST CSF evidence interview).
+one for every document the Nerion setup asks you to upload (the NIST CSF evidence interview).
 
 **How to test:** for each item below, on the CSF scorecard answer the question with the
 listed answer and upload the matching PDF. Then open the post-intake document review

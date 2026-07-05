@@ -1,4 +1,4 @@
-# State of California — CyberX-Ray demo org
+# State of California — Nerion demo org
 
 **Sector:** Government / Public sector  ·  **Regions:** US  ·  **Org ID:** `org_state_california`
 

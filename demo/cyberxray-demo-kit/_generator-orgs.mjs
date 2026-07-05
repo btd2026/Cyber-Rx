@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// CyberX-Ray — production-realistic demo dataset: one industry leader per sector.
+// Nerion — production-realistic demo dataset: one industry leader per sector.
 //
 // Financials are grounded in each company's most recent public filings (FY2024 /
 // FY2025 10-K / annual report) and are ILLUSTRATIVE — rounded, and cyber-specific

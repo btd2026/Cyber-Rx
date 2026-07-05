@@ -254,10 +254,10 @@ m3 = {
     "should_not_read": ["frontend/src/App.jsx in full"],
   },
   "tasks": [
-    {"id": "T-201", "title": "Add NAV entries: CIODash (F08e), CLODash (F08f); update routing in CyberRxApp",
+    {"id": "T-201", "title": "Add NAV entries: CIODash (F08e), CLODash (F08f); update routing in NerionApp",
                        "depends_on": [], "blocks": ["T-202","T-209"], "owner_role": "worker",
-                       "context_manifest": {"must_read": [slice_ref("CyberRxApp","Page routing happens in renderPage() here")]},
-                       "artifact_paths": ["frontend/src/App.jsx (NAV + CyberRxApp.renderPage)"],
+                       "context_manifest": {"must_read": [slice_ref("NerionApp","Page routing happens in renderPage() here")]},
+                       "artifact_paths": ["frontend/src/App.jsx (NAV + NerionApp.renderPage)"],
                        "git_branch": "task/T-201-nav-entries", "estimated_effort": "0.5d", "risk": "LOW", "acceptance": []},
     {"id": "T-202", "title": "CIODash shell + KPI strip",                            "depends_on": ["T-201"],  "blocks": ["T-203","T-207"], "owner_role": "worker", "artifact_paths": ["frontend/src/pages/CIODash.jsx"], "git_branch": "task/T-202-ciodash-shell", "estimated_effort": "1d", "risk": "LOW",    "acceptance": []},
     {"id": "T-203", "title": "CIODash asset inventory table",                         "depends_on": ["T-202"],  "blocks": ["T-205"],         "owner_role": "worker", "artifact_paths": ["frontend/src/pages/CIODash.jsx"], "git_branch": "task/T-203-asset-table", "estimated_effort": "1d", "risk": "LOW",    "acceptance": ["ACC-03-01"]},
@@ -552,7 +552,7 @@ m6 = {
               "production_prompt_clause": "Sequence step 5"},
   "goal": "Move every extractable component out of App.jsx, ship exportable Board reports, write the docs, and stand up the SOC2-readiness checklist. By month-end App.jsx is a router shell.",
   "definition_of_done": [
-    "App.jsx contains only: imports, NAV, the root CyberRxApp component, and JSX route routing.",
+    "App.jsx contains only: imports, NAV, the root NerionApp component, and JSX route routing.",
     "All LOW + MEDIUM split-risk components live in frontend/src/components/.",
     "All four executive dashboards (CISO, CRO, CFO, Board) export a one-page PDF.",
     "OpenAPI spec generated; data-model docs and onboarding guide live in docs/.",
@@ -634,7 +634,7 @@ m6 = {
     {"risk": "SOC2 readiness reveals undocumented prod access paths",                 "mitigation": "Time-boxed evidence-gathering sweep; raise gaps to assessment §9 backlog"},
   ],
   "out_of_scope": [
-    "HIGH-split-risk components (Setup, CISODash, CFODash, DashHub, Execution, CrownJewelsModule, CyberRxApp) — they stay in App.jsx until Phase 2",
+    "HIGH-split-risk components (Setup, CISODash, CFODash, DashHub, Execution, CrownJewelsModule, NerionApp) — they stay in App.jsx until Phase 2",
     "AI executive summaries (Phase 2)",
     "Predictive breach likelihood model (Phase 3)",
   ],

@@ -2,7 +2,7 @@
 
 ## Overview
 
-CyberRx API implements production-grade, distributed rate limiting using Redis backend. The system protects against abuse, DoS attacks, and ensures fair resource allocation across all API endpoints.
+Nerion API implements production-grade, distributed rate limiting using Redis backend. The system protects against abuse, DoS attacks, and ensures fair resource allocation across all API endpoints.
 
 ## Architecture
 
@@ -486,7 +486,7 @@ const MAX_LOGIN_ATTEMPTS = 5;
 
 ## Summary
 
-The CyberRx API rate limiting system provides:
+The Nerion API rate limiting system provides:
 
 - **Distributed rate limiting** via Redis backend
 - **Multiple strategies** for different endpoint types

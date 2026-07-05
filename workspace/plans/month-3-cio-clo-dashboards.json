@@ -162,7 +162,7 @@
   "tasks": [
     {
       "id": "T-201",
-      "title": "Add NAV entries: CIODash (F08e), CLODash (F08f); update routing in CyberRxApp",
+      "title": "Add NAV entries: CIODash (F08e), CLODash (F08f); update routing in NerionApp",
       "depends_on": [],
       "blocks": [
         "T-202",
@@ -177,14 +177,14 @@
               23524,
               24021
             ],
-            "anchor": "function CyberRxApp() {",
-            "component": "CyberRxApp",
+            "anchor": "function NerionApp() {",
+            "component": "NerionApp",
             "reason": "Page routing happens in renderPage() here"
           }
         ]
       },
       "artifact_paths": [
-        "frontend/src/App.jsx (NAV + CyberRxApp.renderPage)"
+        "frontend/src/App.jsx (NAV + NerionApp.renderPage)"
       ],
       "git_branch": "task/T-201-nav-entries",
       "estimated_effort": "0.5d",

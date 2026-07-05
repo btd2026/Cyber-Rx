@@ -1,5 +1,5 @@
 /* ============================================================================
-   CyberX-Ray — Business Command Center: the operating-model knowledge graph.
+   Nerion — Business Command Center: the operating-model knowledge graph.
 
    This is the backbone the platform is repositioning around: it turns cyber
    posture into BUSINESS outcomes. The hierarchy is:

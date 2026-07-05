@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the implementation of the RiskRecon connector with real API integration for the CyberRx Third-Party Cyber Intelligence system.
+This document describes the implementation of the RiskRecon connector with real API integration for the Nerion Third-Party Cyber Intelligence system.
 
 **Task**: T-009 - RiskRecon Connector with Real API Integration
 **Status**: Complete
@@ -499,7 +499,7 @@ node src/index.js
 
 ## Conclusion
 
-The RiskRecon connector is now production-ready with real API integration, comprehensive error handling, and extensive test coverage. The implementation follows CyberRx best practices for signal normalization, error handling, and graceful degradation.
+The RiskRecon connector is now production-ready with real API integration, comprehensive error handling, and extensive test coverage. The implementation follows Nerion best practices for signal normalization, error handling, and graceful degradation.
 
 **Test Results**: 46/46 tests passing (100% success rate)
 **Code Quality**: Comprehensive inline documentation

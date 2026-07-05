@@ -1,6 +1,6 @@
-# Security Tool Integration Research for CyberRx
+# Security Tool Integration Research for Nerion
 
-**Comprehensive research on data integration requirements for security tools shown in the CyberRx platform**
+**Comprehensive research on data integration requirements for security tools shown in the Nerion platform**
 
 **Last Updated:** 2026-05-31
 **Purpose:** Reference document for understanding what integration methods each security tool supports
@@ -640,7 +640,7 @@
 
 ---
 
-## Key Recommendations for CyberRx Implementation
+## Key Recommendations for Nerion Implementation
 
 ### Connection Method Priority
 
@@ -680,5 +680,5 @@
 
 **Document Version:** 1.0
 **Last Updated:** 2026-05-31
-**Maintained By:** CyberRx Development Team
+**Maintained By:** Nerion Development Team
 **Purpose:** Internal reference for security tool integration capabilities

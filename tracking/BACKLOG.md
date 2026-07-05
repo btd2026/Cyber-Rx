@@ -1,4 +1,4 @@
-# CyberRx — Production Readiness Backlog
+# Nerion — Production Readiness Backlog
 
 **Branch under work:** `feat/month-1-risk-correlation-engine`
 **Active phase:** Month 1 — Risk Correlation Engine
@@ -69,7 +69,7 @@ The plan's §11 surfaces twelve open questions; five are actively blocking work 
 | Q3 | Add a `findings` table this month, or defer it to Month 2? | PR-02 (schema), PR-06 (seed), all downstream | Add now. Engine cannot function otherwise. | Awaiting user decision |
 | Q5 | Calibrate the `financialModelV1` demo to ~$217M for the BCBS hero example? | PR-08 | Yes. Closed-form placeholder, replaced by `FinancialImpact` in Month 5. | Awaiting user decision |
 | Q11 | BCBS demo deployment placement — separate Render service vs `SEED_BCBS_DEMO=1` flag on the main service? | PR-03, PR-04, PR-05, PR-06 | Separate Render service. | Awaiting user decision |
-| Stop conditions §10 | (a) HIPAA/CMS citations in the UI as a "compliance claim"? (b) feature-flag mechanism for new dashboard routes? (c) BCBS-demo data migrations? | PR-03 onward (c), PR-10 (a + b) | (a) Citations are of the customer's obligations, not CyberRx claims — add disclaimer footer if needed. (b) `VITE_FEATURE_RISK_NARRATIVE` flag, default off in prod. (c) Confirm per-PR. | Awaiting user decision |
+| Stop conditions §10 | (a) HIPAA/CMS citations in the UI as a "compliance claim"? (b) feature-flag mechanism for new dashboard routes? (c) BCBS-demo data migrations? | PR-03 onward (c), PR-10 (a + b) | (a) Citations are of the customer's obligations, not Nerion claims — add disclaimer footer if needed. (b) `VITE_FEATURE_RISK_NARRATIVE` flag, default off in prod. (c) Confirm per-PR. | Awaiting user decision |
 
 The other seven questions (Q2, Q4, Q6, Q7, Q8, Q9, Q10, Q12) are non-blocking — the plan has a recommended answer and the work can proceed with that recommendation if the user is silent — but they should still be reviewed.
 

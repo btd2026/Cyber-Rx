@@ -8,7 +8,7 @@
 
 ## Overview
 
-Successfully implemented the three core entities that complete the CyberRx workflow: Controls, Remediation Tasks, and Evidence. These entities enable healthcare executives to manage security controls, assign remediation work, and collect audit evidence.
+Successfully implemented the three core entities that complete the Nerion workflow: Controls, Remediation Tasks, and Evidence. These entities enable healthcare executives to manage security controls, assign remediation work, and collect audit evidence.
 
 ---
 

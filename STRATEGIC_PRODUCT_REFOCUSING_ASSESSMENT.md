@@ -1,4 +1,4 @@
-# CyberRx Strategic Product Refocusing Assessment
+# Nerion Strategic Product Refocusing Assessment
 
 **Date:** 2026-05-30
 **Assessment Type:** Executive Cyber Responsibility Platform Transformation
@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-**Bottom Line:** CyberRx has accidentally built a generic GRC platform (Vanta/Archer/ServiceNow GRC clone) when it should be a focused **Executive Cyber Responsibility Platform** for healthcare payers. The product has drifted toward commodity compliance features rather than maintaining differentiation as a business-outcome-focused executive decision support system.
+**Bottom Line:** Nerion has accidentally built a generic GRC platform (Vanta/Archer/ServiceNow GRC clone) when it should be a focused **Executive Cyber Responsibility Platform** for healthcare payers. The product has drifted toward commodity compliance features rather than maintaining differentiation as a business-outcome-focused executive decision support system.
 
 **The Good News:** 80% of the existing codebase can be preserved and repurposed. The correlation engine, executive dashboards, and financial modeling are strong foundations. The issue is strategic positioning, not technical capability.
 
@@ -194,37 +194,37 @@ Security Tools → Findings → Correlation Engine → Executive Narrative → D
 
 **1. Risk Correlation Engine** ⭐⭐⭐⭐⭐
 - **Why:** Translates "CVE on NASCO server" → "Claims Adjudication at risk → $340M exposure → HIPAA/NIST citations → CIO owns remediation"
-- **Differentiation:** Only CyberRx connects technical findings to business outcomes
+- **Differentiation:** Only Nerion connects technical findings to business outcomes
 - **Verdict:** THIS IS THE MOAT. No GRC tool does this.
 
 **2. Crown Jewel Framework** ⭐⭐⭐⭐⭐
 - **Why:** Identifies what actually matters (Claims & Payment Operations, Membership & Enrollment, Provider Networks, Care Management)
-- **Differentiation:** GRC tools treat all assets equally. CyberRx prioritizes by business impact.
+- **Differentiation:** GRC tools treat all assets equally. Nerion prioritizes by business impact.
 - **Verdict:** Keep as-is. This is the organizing principle.
 
 **3. Financial Impact Modeling** ⭐⭐⭐⭐⭐
 - **Why:** CFO dashboard with $285M exposure, RBC impact, ROSI = 311%, peer benchmarking
-- **Differentiation:** GRC tools show "25 open vulnerabilities." CyberRx shows "$15M exposure from unpatched Crown Jewels."
+- **Differentiation:** GRC tools show "25 open vulnerabilities." Nerion shows "$15M exposure from unpatched Crown Jewels."
 - **Verdict:** Keep and expand. This is how executives think.
 
 **4. Executive Persona Dashboards** ⭐⭐⭐⭐
 - **Why:** 7 role-specific views (CISO, CIO, CLO, CFO, CRO, Audit, Board)
-- **Differentiation:** GRC tools have "one dashboard for everyone." CyberRx has "different dashboard for each executive's responsibility."
+- **Differentiation:** GRC tools have "one dashboard for everyone." Nerion has "different dashboard for each executive's responsibility."
 - **Verdict:** Keep but refine messaging. Emphasize "YOUR part of cyber responsibility."
 
 **5. Healthcare-Specific Regulatory Maps** ⭐⭐⭐⭐
 - **Why:** HIPAA, CMS 42 CFR, BCBSA Plan Performance, State DOI regulations, FEP/OPM requirements
-- **Differentiation:** Generic GRC has NIST/SOC2. CyberRx has healthcare payer specificity.
+- **Differentiation:** Generic GRC has NIST/SOC2. Nerion has healthcare payer specificity.
 - **Verdict:** Keep but make more visible. This shouldn't be hidden in compliance drill-downs.
 
 **6. Executive Ownership Assignment** ⭐⭐⭐⭐
 - **Why:** Every risk has an executive owner (remediation, process, financial)
-- **Differentiation:** GRC tools assign to IT. CyberRx assigns to C-level executives.
+- **Differentiation:** GRC tools assign to IT. Nerion assigns to C-level executives.
 - **Verdict:** Keep and amplify. This is "cybersecurity is everyone's responsibility" operationalized.
 
 **7. Business Process Organizing Structure** ⭐⭐⭐⭐
 - **Why:** Claims & Payment Operations, Membership & Enrollment, Provider Operations, Care Management, Payment Integrity/FWA
-- **Differentiation:** GRC tools organize by framework controls. CyberRx organizes by business process.
+- **Differentiation:** GRC tools organize by framework controls. Nerion organizes by business process.
 - **Verdict:** Keep as primary navigation. This is the right mental model for executives.
 
 ### B. PARTIAL ALIGNMENT (Repurpose with Modest Changes)
@@ -270,13 +270,13 @@ Security Tools → Findings → Correlation Engine → Executive Narrative → D
 **14. Compliance Grid Drift** ⚠️⚠️⚠️
 - **Issue:** CISO dashboard has SOC2, NIST, HIPAA, CMS, CIS, GDPR grids side-by-side
 - **Problem:** This is exactly what Vanta/Drata/Archer do. Commodity feature.
-- **Impact:** Weakens differentiation. Makes CyberRx look like "just another compliance tool."
+- **Impact:** Weakens differentiation. Makes Nerion look like "just another compliance tool."
 - **Fix:** Collapse into single "Regulatory Compliance Score" that shows status across all frameworks. Don't show detailed grids unless drilled in.
 
 **15. Framework Cross-Checklists** ⚠️⚠️⚠️
 - **Issue:** NIST 800-53 Rev 5, CIS v8, HIPAA Security Rule, SOC2 controls all listed
 - **Problem:** This is generic GRC. Every tool has this.
-- **Impact:** Positions CyberRx as "compliance checklist tool" not "business outcome protector."
+- **Impact:** Positions Nerion as "compliance checklist tool" not "business outcome protector."
 - **Fix:** Hide framework details. Show only "Controls Effective" summary. Framework details available on drill-down.
 
 **16. Policy Libraries** ⚠️⚠️
@@ -287,7 +287,7 @@ Security Tools → Findings → Correlation Engine → Executive Narrative → D
 
 **17. Annual Assessment Cadence** ⚠️⚠️
 - **Issue:** Some features feel like "annual compliance review" not continuous monitoring
-- **Problem:** Vanta/Drata are annual. CyberRx should be continuous.
+- **Problem:** Vanta/Drata are annual. Nerion should be continuous.
 - **Impact:** Undermines "continuous cyber assurance" differentiation.
 - **Fix:** Remove all annual/timelanguage. Emphasize "real-time" and "continuous."
 
@@ -307,7 +307,7 @@ Security Tools → Findings → Correlation Engine → Executive Narrative → D
 **20. Attack Path Analyzer** ❌
 - **Issue:** MITRE ATT&CK attack path visualization
 - **Problem:** Cool feature, but wrong product. This is threat intel platform territory (CyberCube, ThreatConnect).
-- **Verdict:** HIDE FROM MVP. Great feature, but wrong focus. CyberRx is about business impact, not technical attack analysis.
+- **Verdict:** HIDE FROM MVP. Great feature, but wrong focus. Nerion is about business impact, not technical attack analysis.
 
 **21. Generic Questionnaires** ❌
 - **Issue:** Vendor and internal questionnaires
@@ -317,7 +317,7 @@ Security Tools → Findings → Correlation Engine → Executive Narrative → D
 **22. Document Ingestion OCR** ❌
 - **Issue:** PDF OCR for evidence (deferred in M5)
 - **Problem:** This is manual work. Not the product wedge.
-- **Verdict:** REMOVE from roadmap. Let auditors handle documents. CyberRx should analyze cyber data, not process PDFs.
+- **Verdict:** REMOVE from roadmap. Let auditors handle documents. Nerion should analyze cyber data, not process PDFs.
 
 **23. Exception Approval Workflow** ❌
 - **Issue:** Policy exception request/approval (deferred in M5)
@@ -351,7 +351,7 @@ Security Tools → Findings → Correlation Engine → Executive Narrative → D
 ### 1. KEEP AS-IS (7 Core Features)
 
 **Risk Correlation Engine**
-- **Why:** Core differentiator. Only CyberRx does technical → business narrative transformation.
+- **Why:** Core differentiator. Only Nerion does technical → business narrative transformation.
 - **Change:** None. This is perfect.
 - **Emphasis:** Make this the hero of every demo. "Show me the correlation" should be the first click.
 
@@ -477,7 +477,7 @@ Security Tools → Findings → Correlation Engine → Executive Narrative → D
 **Policy Libraries**
 - **Current:** Policy document catalogs in evidence repository
 - **Simplify To:** Remove entirely
-- **Why:** Policies are inputs. CyberRx should analyze execution, not manage documents.
+- **Why:** Policies are inputs. Nerion should analyze execution, not manage documents.
 - **Preserve:** Nothing (this is commodity feature)
 - **Remove:** All policy UI. Delete.
 
@@ -550,7 +550,7 @@ Security Tools → Findings → Correlation Engine → Executive Narrative → D
 ### PRIMARY NAVIGATION (Reorganized)
 
 ```
-CyberRx — Executive Cyber Responsibility Platform
+Nerion — Executive Cyber Responsibility Platform
 │
 ├── Home
 │   └── Executive Summary (Real-time cyber responsibility status)
@@ -918,13 +918,13 @@ Process: Claims & Payment Operations
 - ❌ "Annual compliance review" → Annual cadence. Right: "Continuous cyber assurance"
 
 **Differentiation vs. GRC Tools:**
-- **Vanta/Drata:** "Automate compliance" → CyberRx: "Protect business operations"
-- **Archer/ServiceNow GRC:** "Manage risk and compliance" → CyberRx: "Operationalize cyber responsibility"
-- **SecurityScorecard:** "External cyber ratings" → CyberRx: "Internal business impact"
-- **OneTrust:** "Trust management software" → CyberRx: "Executive accountability platform"
+- **Vanta/Drata:** "Automate compliance" → Nerion: "Protect business operations"
+- **Archer/ServiceNow GRC:** "Manage risk and compliance" → Nerion: "Operationalize cyber responsibility"
+- **SecurityScorecard:** "External cyber ratings" → Nerion: "Internal business impact"
+- **OneTrust:** "Trust management software" → Nerion: "Executive accountability platform"
 
 **The One-Line Pitch:**
-"CyberRx translates cyber technical data into business impact so C-level executives can protect their organization's most critical operations."
+"Nerion translates cyber technical data into business impact so C-level executives can protect their organization's most critical operations."
 
 ---
 
@@ -936,7 +936,7 @@ Process: Claims & Payment Operations
 - **Location:** CISO Dashboard (App.jsx lines 198-305)
 - **Current State:** Separate detailed grids for SOC2, NIST, HIPAA, CMS, CIS, GDPR
 - **Problem:** This is exactly what Vanta/Drata/Archer do. Commodity feature.
-- **Impact:** Weakens differentiation. Makes CyberRx look like "just another compliance tool."
+- **Impact:** Weakens differentiation. Makes Nerion look like "just another compliance tool."
 - **Minimum Surgical Fix:**
   - Collapse all grids into single "Regulatory Compliance Score" card
   - Keep detailed framework data in backend
@@ -948,7 +948,7 @@ Process: Claims & Payment Operations
 - **Location:** Compliance Report + Framework Catalog (App.jsx lines 1683-1766)
 - **Current State:** Browseable NIST 800-53 Rev 5, CIS v8, HIPAA Security Rule controls
 - **Problem:** This is generic GRC. Every tool has this.
-- **Impact:** Positions CyberRx as "compliance checklist tool" not "business outcome protector."
+- **Impact:** Positions Nerion as "compliance checklist tool" not "business outcome protector."
 - **Minimum Surgical Fix:**
   - Remove framework browse UI entirely
   - Keep framework selection in Setup wizard only
@@ -971,7 +971,7 @@ Process: Claims & Payment Operations
 **Drift 4: Annual Assessment Language**
 - **Location:** Throughout documentation and some UI text
 - **Current State:** References to "annual compliance review," "annual assessment"
-- **Problem:** Vanta/Drata are annual. CyberRx should be continuous.
+- **Problem:** Vanta/Drata are annual. Nerion should be continuous.
 - **Impact:** Undermines "continuous cyber assurance" differentiation.
 - **Minimum Surgical Fix:**
   - Global search for "annual" in UI text
@@ -996,7 +996,7 @@ Process: Claims & Payment Operations
 - **Location:** Vendor Ecosystem Map (App.jsx lines 10657+)
 - **Current State:** Questionnaire creation, distribution, response tracking
 - **Problem:** This is OneTrust territory. Questionnaire management is not the wedge.
-- **Impact:** Positions CyberRx as "vendor compliance tool" not "business dependency risk platform."
+- **Impact:** Positions Nerion as "vendor compliance tool" not "business dependency risk platform."
 - **Minimum Surgical Fix:**
   - Hide questionnaire management UI from MVP
   - Keep questionnaire data structure (risk calculation input)
@@ -1019,13 +1019,13 @@ Process: Claims & Payment Operations
 - **Location:** Evidence Repository (deferred M5 feature)
 - **Current State:** Planned PDF OCR, control extraction, document processing
 - **Problem:** This is manual GRC work. Not the product wedge.
-- **Impact:** Positions CyberRx as "audit tool" not "decision platform."
+- **Impact:** Positions Nerion as "audit tool" not "decision platform."
 - **Minimum Surgical Fix:**
   - Remove PDF OCR from roadmap entirely
   - Remove evidence ingestion automation from roadmap
   - Keep evidence repository (manual upload only)
   - Focus on "control effectiveness monitoring" not "document processing"
-  - Let auditors handle documents. CyberRx analyzes cyber data.
+  - Let auditors handle documents. Nerion analyzes cyber data.
 
 ### GRC DRIFT FIX SUMMARY
 
@@ -1355,8 +1355,8 @@ No platform translates cyber technical data → business process impact → exec
 
 ### SOLUTION
 
-**What CyberRx Does:**
-CyberRx is an Executive Cyber Responsibility Platform that continuously collects cybersecurity, technology, legal, financial, and audit evidence; correlates it to business processes; and routes role-specific insights and actions to six executive roles (CIO, CISO, CFO, CLO, CRO, Internal Audit).
+**What Nerion Does:**
+Nerion is an Executive Cyber Responsibility Platform that continuously collects cybersecurity, technology, legal, financial, and audit evidence; correlates it to business processes; and routes role-specific insights and actions to six executive roles (CIO, CISO, CFO, CLO, CRO, Internal Audit).
 
 **How It Works:**
 1. **Ingest:** Technical data from security tools (Okta, CrowdStrike, Splunk, Tenable, etc.)
@@ -1447,28 +1447,28 @@ Healthcare payers' 10 critical processes are the organizing principle:
 
 **Vs. Vanta/Drata (Compliance Automation):**
 - Vanta/Drata: "Automate SOC2 and HIPAA compliance"
-- CyberRx: "Protect your business operations from cyber risk"
-- Difference: Compliance is input, not output. Vanta shows checklists. CyberRx shows business impact.
+- Nerion: "Protect your business operations from cyber risk"
+- Difference: Compliance is input, not output. Vanta shows checklists. Nerion shows business impact.
 
 **Vs. Archer/ServiceNow GRC (GRC Platforms):**
 - Archer/ServiceNow: "Manage risk and compliance across the enterprise"
-- CyberRx: "Operationalize cyber responsibility for each executive"
-- Difference: GRC tools are for compliance teams. CyberRx is for C-level executives.
+- Nerion: "Operationalize cyber responsibility for each executive"
+- Difference: GRC tools are for compliance teams. Nerion is for C-level executives.
 
 **Vs. SecurityScorecard/BitSight (Security Ratings):**
 - SecurityScorecard/BitSight: "External cyber ratings and peer benchmarking"
-- CyberRx: "Internal business impact and control effectiveness"
+- Nerion: "Internal business impact and control effectiveness"
 - Difference: External scores vs. internal protection. Peer comparison vs. own performance.
 
 **Vs. OneTrust (Vendor Risk Management):**
 - OneTrust: "Trust management platform for GRC, privacy, vendor risk"
-- CyberRx: "Business process dependency risk and executive accountability"
+- Nerion: "Business process dependency risk and executive accountability"
 - Difference: Generic vendor risk vs. business process-specific vendor dependency impact.
 
 **Vs. Tenable/Qualys (Vulnerability Management):**
 - Tenable/Qualys: "Find and fix vulnerabilities"
-- CyberRx: "Understand which vulnerabilities threaten your business operations"
-- Difference: Technical tools show CVSS scores. CyberRx shows business impact.
+- Nerion: "Understand which vulnerabilities threaten your business operations"
+- Difference: Technical tools show CVSS scores. Nerion shows business impact.
 
 **The Moat:**
 1. **Process-Aware Risk:** Only platform organized by business process, not framework
@@ -1542,7 +1542,7 @@ Healthcare payers' 10 critical processes are the organizing principle:
 **Elevator Pitch (30 seconds):**
 "Healthcare payers spend $500M annually on cybersecurity tools, but C-level executives still can't answer the most important question: 'How do cyber risks threaten MY business operations today?'
 
-CyberRx is an Executive Cyber Responsibility Platform that solves this. We ingest data from security tools like CrowdStrike and Splunk, correlate it to business processes like Claims & Payment Operations, and translate technical vulnerabilities into business impact narratives.
+Nerion is an Executive Cyber Responsibility Platform that solves this. We ingest data from security tools like CrowdStrike and Splunk, correlate it to business processes like Claims & Payment Operations, and translate technical vulnerabilities into business impact narratives.
 
 So instead of seeing '25 critical vulnerabilities,' the CIO sees '3 vulnerabilities threaten Claims operations with $45M exposure.' Instead of '87% NIST compliant,' the CISO sees 'Identity controls at 65% for Membership systems—below our 80% target.'
 
@@ -1559,10 +1559,10 @@ We're already production-ready with 7 executive dashboards, a risk correlation e
 - "Continuous Cyber Assurance"
 
 **Competitive Response:**
-- Vanta/Drata: "We automate compliance. CyberRx protects business operations."
-- Archer/ServiceNow: "We manage risk and compliance. CyberRx operationalizes responsibility."
-- SecurityScorecard: "We rate your external security. CyberRx measures internal protection."
-- Tenable/Qualys: "We find vulnerabilities. CyberRx shows which ones matter."
+- Vanta/Drata: "We automate compliance. Nerion protects business operations."
+- Archer/ServiceNow: "We manage risk and compliance. Nerion operationalizes responsibility."
+- SecurityScorecard: "We rate your external security. Nerion measures internal protection."
+- Tenable/Qualys: "We find vulnerabilities. Nerion shows which ones matter."
 
 **Vision Statement:**
 "A world where every C-level executive can answer, 'How do cyber risks threaten MY part of the business?'—in 5 minutes, not 5 weeks."
@@ -1573,7 +1573,7 @@ We're already production-ready with 7 executive dashboards, a risk correlation e
 
 ### EXECUTIVE SUMMARY
 
-**Bottom Line:** CyberRx has accidentally built a generic GRC platform when it should be a focused **Executive Cyber Responsibility Platform** for healthcare payers. The product has drifted toward commodity compliance features rather than maintaining differentiation as a business-outcome-focused executive decision support system.
+**Bottom Line:** Nerion has accidentally built a generic GRC platform when it should be a focused **Executive Cyber Responsibility Platform** for healthcare payers. The product has drifted toward commodity compliance features rather than maintaining differentiation as a business-outcome-focused executive decision support system.
 
 **The Good News:** 80% of existing code can be preserved and repurposed. The correlation engine, executive dashboards, and financial modeling are strong foundations. The issue is strategic positioning, not technical capability.
 
@@ -1661,7 +1661,7 @@ We're already production-ready with 7 executive dashboards, a risk correlation e
 
 | Feature | Current State | Strategic Decision | Rationale | Action |
 |---------|--------------|-------------------|-----------|--------|
-| **Risk Correlation Engine** | ✅ Complete | KEEP AS-IS | Core differentiator. Only CyberRx does technical → business narrative. | None. This is perfect. |
+| **Risk Correlation Engine** | ✅ Complete | KEEP AS-IS | Core differentiator. Only Nerion does technical → business narrative. | None. This is perfect. |
 | **Crown Jewel Framework** | ✅ Complete | KEEP AS-IS | Right mental model. Organize by business process, not framework. | None. Emphasize in navigation. |
 | **Financial Impact Modeling** | ✅ Complete | KEEP AS-IS | Executives think in dollars, not CVSS scores. | None. Put dollar figures front and center. |
 | **Executive Dashboards (7)** | ✅ Complete | KEEP AS-IS | Right segmentation by persona. | None. Customize messaging per dashboard. |
@@ -1686,7 +1686,7 @@ We're already production-ready with 7 executive dashboards, a risk correlation e
 | **Document OCR** | ❌ Not Built | REMOVE FROM ROADMAP | Manual work, not the product wedge | Remove from task board, documentation |
 | **Predictive Breach** | ❌ Not Built | REMOVE FROM ROADMAP | This is SecurityScorecard territory | Remove from task board, documentation |
 | **Peer Benchmarking** | ✅ Complete | HIDE | Wrong question. Should be "Are OUR controls effective?" | Remove from dashboard UI, keep data |
-| **Annual Language** | ✅ Complete | UPDATE | Vanta/Drata are annual. CyberRx should be continuous. | Global text replacement |
+| **Annual Language** | ✅ Complete | UPDATE | Vanta/Drata are annual. Nerion should be continuous. | Global text replacement |
 
 ---
 
@@ -1694,7 +1694,7 @@ We're already production-ready with 7 executive dashboards, a risk correlation e
 
 **NEW NAVIGATION STRUCTURE:**
 ```
-CyberRx — Executive Cyber Responsibility Platform
+Nerion — Executive Cyber Responsibility Platform
 │
 ├── Home
 │   └── Executive Summary (Real-time cyber responsibility status)

@@ -1,7 +1,7 @@
 # T-016: Signal Correlation Logic - Implementation Summary
 
 ## Overview
-This document describes the implementation of intelligent signal correlation across multiple cyber intelligence providers (SecurityScorecard, BitSight, RiskRecon) for the CyberRx vendor risk management platform.
+This document describes the implementation of intelligent signal correlation across multiple cyber intelligence providers (SecurityScorecard, BitSight, RiskRecon) for the Nerion vendor risk management platform.
 
 ## Architecture
 
@@ -459,7 +459,7 @@ All correlation operations include:
 
 ## Conclusion
 
-The Signal Correlation Service provides a robust, scalable solution for combining signals from multiple cyber intelligence providers. With 4 conflict resolution strategies, intelligent composite scoring, and comprehensive test coverage, it forms the foundation of CyberRx's vendor risk intelligence capabilities.
+The Signal Correlation Service provides a robust, scalable solution for combining signals from multiple cyber intelligence providers. With 4 conflict resolution strategies, intelligent composite scoring, and comprehensive test coverage, it forms the foundation of Nerion's vendor risk intelligence capabilities.
 
 For questions or issues, refer to:
 - Test suite: `tests/services/SignalCorrelationService.test.js`

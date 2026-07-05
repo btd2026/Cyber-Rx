@@ -11,7 +11,7 @@ Adds, vs. the seed index:
   * anchor_signature (first ~80 chars of the function-definition line)
   * complete coverage including post-export region (lines 24,021-24,559)
   * SetupBot range (filled in — was a gap in the seed)
-  * BrianaBar, Atk*, Cjd*, CyberRxApp (root!), ExposureColumnChart,
+  * BrianaBar, Atk*, Cjd*, NerionApp (root!), ExposureColumnChart,
     ExposureModelCard — missing from the seed
   * concrete local_state (useState/useRef names) per component
   * concrete shared_state_used (props.X destructuring)
@@ -205,12 +205,12 @@ ROUTE_MAP = {
     "CrownJewelsModule": ("crownjewels","page==='crownjewels'"),
     "AttackPathsModule": ("attackpaths","page==='attackpaths'"),
     "BusinessMapDash":("bizmap",        "page==='bizmap'"),
-    "CyberRxAPIAdapter":("apiadapter",  "page==='apiadapter'"),
+    "NerionAPIAdapter":("apiadapter",  "page==='apiadapter'"),
     "ProcessFlowDash":("processflow",   "page==='processflow'"),
     "DocDash":        ("docdash",       "page==='docdash'"),
     "CrownJewelMap":  ("crown",         "page==='crown'"),
     "WelcomePage":    (None,            "phase==='welcome'"),
-    "CyberRxApp":     ("__root__",      "root component (default export)"),
+    "NerionApp":     ("__root__",      "root component (default export)"),
 }
 
 # Components that are utility, not routed pages
@@ -240,7 +240,7 @@ for idx, (lineno, name) in enumerate(functions):
     nav_id   = ROUTE_MAP.get(name, (None, None))[0]
     role = "page" if name in ROUTE_MAP and ROUTE_MAP[name][0] not in (None, "__root__") \
         else "auth_flow" if name in {"Landing", "Login", "MFA"} \
-        else "root" if name == "CyberRxApp" \
+        else "root" if name == "NerionApp" \
         else "utility"
 
     nav_info = nav_map.get(nav_id, {}) if nav_id and nav_id != "__root__" else {}
@@ -316,9 +316,9 @@ while k <= total_lines:
 
 # ----------------------------------------------------------------------
 # Find the root component's shared-state location precisely.
-# CyberRxApp body holds all useState calls for the root state.
+# NerionApp body holds all useState calls for the root state.
 # ----------------------------------------------------------------------
-root = next((c for c in components if c["name"] == "CyberRxApp"), None)
+root = next((c for c in components if c["name"] == "NerionApp"), None)
 shared_state_root = None
 if root:
     s, e = root["line_range"]
@@ -328,7 +328,7 @@ if root:
     state_lines = [s + i for i, ln in enumerate(body_lines) if "useState(" in ln]
     if state_lines:
         shared_state_root = {
-            "component": "CyberRxApp",
+            "component": "NerionApp",
             "useState_line_range": [state_lines[0], state_lines[-1]],
             "useState_count": len(state_lines),
             "function_range": [s, e],
@@ -346,7 +346,7 @@ doc = {
             "exact line_ranges, concrete local_state/props_used/cross_refs, "
             "split_risk classification, full coverage including post-export "
             "region (lines 24021-24559), and missing components "
-            "(SetupBot, BrianaBar, CyberRxApp, Atk*, Cjd*, Exposure*)."
+            "(SetupBot, BrianaBar, NerionApp, Atk*, Cjd*, Exposure*)."
         ),
         "file_path": "frontend/src/App.jsx",
         "total_lines": total_lines,
@@ -393,7 +393,7 @@ doc = {
     "deprecations_vs_seed": [
         "Seed metadata.total_lines was 24559 but timestamp dated 2025-01-19 — both replaced.",
         "Seed listed SetupBot only as a utility with line=17333 — now has full range [17333, 18518].",
-        "Seed omitted CyberRxApp (root component) — included.",
+        "Seed omitted NerionApp (root component) — included.",
         "Seed omitted BrianaBar (20796), Atk* (21853-22059), Cjd* (22188-22576), "
         "ExposureColumnChart (24198), ExposureModelCard (24344) — included.",
         "Seed's local_state and shared_state_used were placeholder strings — replaced with extracted arrays.",
@@ -415,7 +415,7 @@ doc["split_planning"] = {
     "do_not_extract_yet": [c["name"] for c in components if c["split_risk"] == "HIGH"],
     "method": (
         "Components are ordered LOW → MEDIUM → HIGH split-risk, then by LOC asc. "
-        "Start at extract_first; finish at extract_last; CyberRxApp stays in App.jsx "
+        "Start at extract_first; finish at extract_last; NerionApp stays in App.jsx "
         "until everything else has been moved."
     ),
 }

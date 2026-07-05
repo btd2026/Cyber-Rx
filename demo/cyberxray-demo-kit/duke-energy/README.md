@@ -1,4 +1,4 @@
-# Duke Energy Corporation — CyberX-Ray demo org
+# Duke Energy Corporation — Nerion demo org
 
 **Sector:** Energy / Utilities  ·  **Regions:** US  ·  **Org ID:** `org_duke_energy`
 

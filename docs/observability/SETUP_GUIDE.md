@@ -1,6 +1,6 @@
-# CyberRx Observability Setup Guide
+# Nerion Observability Setup Guide
 
-This guide explains how to set up and configure observability and monitoring for the CyberRx platform.
+This guide explains how to set up and configure observability and monitoring for the Nerion platform.
 
 ## Table of Contents
 
@@ -18,7 +18,7 @@ This guide explains how to set up and configure observability and monitoring for
 
 ## Overview
 
-The CyberRx observability system provides:
+The Nerion observability system provides:
 
 - **Structured Logging**: JSON-formatted logs with Winston and daily rotation
 - **Error Tracking**: Real-time error monitoring with Sentry
@@ -281,7 +281,7 @@ DD_VERSION=1.0.0
 
 ### Custom Metrics
 
-CyberRx automatically collects:
+Nerion automatically collects:
 
 - **API Response Times**: p50, p95, p99 latencies
 - **Request Rates**: Requests per second by endpoint
@@ -349,7 +349,7 @@ docker-compose up -d prometheus grafana
 
 Prometheus is configured to scrape metrics from:
 
-- CyberRx Backend API: `backend:3001/metrics`
+- Nerion Backend API: `backend:3001/metrics`
 - PostgreSQL Exporter: `postgres-exporter:9187`
 - Redis Exporter: `redis-exporter:9121`
 - Node Exporter: `node-exporter:9100`
@@ -436,7 +436,7 @@ receivers:
     slack_configs:
       - api_url: 'https://hooks.slack.com/services/YOUR/WEBHOOK/URL'
         channel: '#ops-alerts'
-        title: 'CyberRx Alert: {{ .GroupLabels.alertname }}'
+        title: 'Nerion Alert: {{ .GroupLabels.alertname }}'
         text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
 ```
 

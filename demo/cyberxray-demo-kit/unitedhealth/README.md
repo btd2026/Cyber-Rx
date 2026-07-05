@@ -1,4 +1,4 @@
-# UnitedHealth Group — CyberX-Ray demo org
+# UnitedHealth Group — Nerion demo org
 
 **Sector:** Healthcare  ·  **Regions:** US  ·  **Org ID:** `org_unitedhealth`
 

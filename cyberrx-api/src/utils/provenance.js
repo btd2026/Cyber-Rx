@@ -8,7 +8,7 @@
  *
  *   mode:       'live'     directly measured (connected system or attested intake)
  *               'derived'  computed from other live signals
- *               'modeled'  produced by a CyberRX model (e.g. loss Monte Carlo)
+ *               'modeled'  produced by a Nerion model (e.g. loss Monte Carlo)
  *               'demo'     sample/placeholder — the org hasn't supplied input yet
  *   source:     human-readable origin ('Okta', 'CISA KEV', 'Posture engine', ...)
  *   confidence: 0–100, how much to trust the value (defaulted by mode, tunable)
@@ -27,7 +27,7 @@ function prov(mode, source, opts = {}) {
   const m = MODES.includes(mode) ? mode : 'modeled';
   return {
     mode: m,
-    source: source || (m === 'demo' ? 'Sample data' : m === 'modeled' ? 'CyberRX model' : 'Unspecified'),
+    source: source || (m === 'demo' ? 'Sample data' : m === 'modeled' ? 'Nerion model' : 'Unspecified'),
     confidence: clampConf(opts.confidence != null ? opts.confidence : DEFAULT_CONFIDENCE[m]),
     asOf: opts.asOf || null,
     lineage: opts.lineage || null,

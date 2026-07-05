@@ -48,7 +48,7 @@ Produced workspace/context/appjsx-index.json mapping 26 pages/components to line
 20. **execution** → Execution (lines 15492-17332) - Execution Layer
 21. **docdash** → DocDash (lines 18519-18882) - Document Dashboard
 22. **bizmap** → BusinessMapDash (lines 18883-19762) - Business Map
-23. **apiadapter** → CyberRxAPIAdapter (lines 19763-20254) - CyberRx API Adapter
+23. **apiadapter** → NerionAPIAdapter (lines 19763-20254) - Nerion API Adapter
 24. **processflow** → ProcessFlowDash (lines 20255-22060) - Process Flow
 25. **attackpaths** → AttackPathsModule (lines 22061-22576) - Attack Path Analyzer
 26. **crownjewels** → CrownJewelsModule (lines 22577-22683) - Crown Jewels Discovery

@@ -15,7 +15,7 @@ The CIO and CLO executive dashboards are complete and validated. Both dashboards
 - **Changes:**
   - Added CIO Dashboard entry to DashNav and QuickNav
   - Added CLO / Legal entry to DashNav and QuickNav
-  - Updated routing in CyberRxApp.renderPage()
+  - Updated routing in NerionApp.renderPage()
 - **Files Modified:** `/Users/briandibassinga/Github/Cyber-Rx/frontend/src/App.jsx`
 
 ### 2. CIO Dashboard (CIODash)

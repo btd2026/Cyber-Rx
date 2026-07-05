@@ -1,4 +1,4 @@
-# CyberRx — Phase 5: the Executive Twin (anti-hallucination)
+# Nerion — Phase 5: the Executive Twin (anti-hallucination)
 
 **Status:** 5a/5b core complete & proven, pending approval. 5c (editable leaf
 rule) and 5d (voice) are the next sub-steps.

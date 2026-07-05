@@ -2,7 +2,7 @@
 
 ## Overview
 
-The CyberRx API now implements a clean service layer architecture that separates business logic from HTTP handling. This refactoring improves maintainability, testability, and follows the Single Responsibility Principle.
+The Nerion API now implements a clean service layer architecture that separates business logic from HTTP handling. This refactoring improves maintainability, testability, and follows the Single Responsibility Principle.
 
 ## Architecture
 

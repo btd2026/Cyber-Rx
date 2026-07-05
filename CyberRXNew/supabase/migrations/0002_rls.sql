@@ -1,4 +1,4 @@
--- CyberRx — Phase 1 Foundation: RLS, role model, append-only + signed ledger
+-- Nerion — Phase 1 Foundation: RLS, role model, append-only + signed ledger
 --
 -- Model: a caller (auth.uid()) sees ONLY rows whose tenant_id is one of their
 -- memberships. Writes additionally require an allowed role. The decision ledger
