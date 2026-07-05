@@ -240,6 +240,16 @@
   .cmmi-badge{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:5px;font-family:var(--mono);font-size:11px;font-weight:700;color:#fff;flex:none}
   .cmmi0{background:var(--muted)}.cmmi1{background:var(--crit)}.cmmi2{background:var(--serious,#C4703A)}.cmmi3{background:var(--blue)}.cmmi4{background:var(--good)}.cmmi5{background:#1E7A54}
   .cmmi-legend{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin:8px 0;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);font-size:11px;color:var(--muted)}
+  /* Auditor-grade control assessment (drill) */
+  .aud-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:4px}
+  .aud-fw{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .aud-name{font-size:15px;color:var(--ink);margin-top:2px;line-height:1.3}
+  .aud-badge{flex:0 0 auto;font-size:11px;font-weight:800;padding:4px 11px;border-radius:6px;color:#fff;white-space:nowrap}
+  .aud-badge.good{background:var(--good)}.aud-badge.blue{background:var(--blue)}.aud-badge.serious{background:var(--serious,#d98324)}.aud-badge.crit{background:var(--crit)}.aud-badge.muted{background:var(--muted)}
+  .aud-meta{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:11.5px;color:var(--muted);margin:8px 0 4px;padding:8px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .aud-p{font-size:13px;line-height:1.6;color:var(--ink-2);margin:2px 0}
+  .aud-actions{margin-top:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .aud-note{font-size:11px;color:var(--muted)}
   .cmmi-legend b{font-family:var(--mono);color:var(--ink);margin-right:3px}.cmmi-legend .cl-t{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2);margin-right:2px}
   .docup{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:2px}
   .docup select,.docup input[type=file]{font-size:12px;padding:6px 9px;border:1px solid var(--line-2);border-radius:7px;background:var(--surface);color:var(--ink);max-width:100%}
@@ -1548,16 +1558,158 @@ function renderFrameworks(){
 /* The policy upload + document-review analysis now lives in onboarding
    (Policy & document evidence). The cockpit only READS the resulting scores
    (docScores / controlCmmi) to blend document review with live tool telemetry. */
+/* ---- Auditor-grade control assessment report — shared by the framework controls
+   (NIST CSF/800-53/CIS/SOC 2/HIPAA) and the NIST AI RMF controls. Reads like a
+   control test in an audit workpaper: result, test methodology, findings,
+   recommendation, evidence — and exports to a print/PDF workpaper for auditors. ---- */
+var AUDIT_CTX=null;
+function auditResult(c){return c>=4?{t:'Compliant',cls:'good'}:c>=2?{t:'Partially compliant',cls:'serious'}:c>0?{t:'Non-compliant',cls:'crit'}:{t:'Not evidenced',cls:'muted'};}
+function auditReport(o){
+  AUDIT_CTX=o;
+  var r=auditResult(o.cmmi),org=orgName()||'Your organization',today=new Date().toLocaleDateString();
+  var ev=(o.evidence||[]).map(function(e){return gRow(e[0],e[1]);}).join('');
+  return '<div class="aud">'+
+    '<div class="aud-top"><div><div class="aud-fw">'+o.framework+'</div><div class="aud-name"><b>'+o.id+'</b> — '+o.name+'</div></div><span class="aud-badge '+r.cls+'">'+r.t+'</span></div>'+
+    '<div class="aud-meta"><span>Maturity <b style="color:var(--'+cmmiColor(o.cmmi)+')">CMMI '+o.cmmi+' · '+(CMMI_LABELS[o.cmmi]||'')+'</b></span><span>Method <b>'+(o.auto?'Automated (continuous)':'Attestation / review')+'</b></span><span>Assessed <b>'+today+'</b></span><span>'+org+'</span></div>'+
+    '<div class="ev-sec">Test methodology</div><div class="aud-p">'+o.method+'</div>'+
+    '<div class="ev-sec">Findings</div><div class="aud-p">'+o.findings+'</div>'+
+    '<div class="ev-sec">Recommendation</div><div class="aud-p">'+o.rec+'</div>'+
+    (ev?('<div class="ev-sec">Evidence</div>'+ev):'')+
+    '<div class="aud-actions"><button class="bp-btn primary" onclick="downloadAuditPdf()">⭳ Download PDF for auditors</button><span class="aud-note">Opens a print-ready control workpaper — choose “Save as PDF”.</span></div>'+
+    '</div>';
+}
+/* Export the current control assessment to a clean, print-ready workpaper (PDF via
+   the browser's Save-as-PDF). Self-contained; no external libraries. */
+function downloadAuditPdf(){
+  var o=AUDIT_CTX;if(!o||typeof window==='undefined'||typeof window.open!=='function')return;
+  var r=auditResult(o.cmmi),org=orgName()||'Your organization',today=new Date().toLocaleDateString();
+  var badge={good:'#0ca30c',blue:'#2563eb',serious:'#d98324',crit:'#e5484d',muted:'#888'}[r.cls]||'#888';
+  var ev=(o.evidence||[]).map(function(e){return '<tr><td>'+e[0]+'</td><td>'+e[1]+'</td></tr>';}).join('');
+  var doc='<!doctype html><html><head><meta charset="utf-8"><title>'+o.id+' — control workpaper</title>'+
+    '<style>body{font-family:Georgia,\'Times New Roman\',serif;color:#111;margin:44px;line-height:1.55}'+
+    'h1{font-size:19px;margin:2px 0 0}h2{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#555;border-bottom:1px solid #ccc;padding-bottom:4px;margin:24px 0 8px}'+
+    '.eyebrow{font-size:10px;letter-spacing:.14em;color:#999}.badge{display:inline-block;padding:4px 12px;border-radius:5px;font-weight:bold;color:#fff;font-family:Arial,sans-serif;font-size:12px}'+
+    '.meta{font-size:12px;color:#333;margin:12px 0 4px}.meta b{color:#111}p{font-size:13px}table{border-collapse:collapse;font-size:12px;margin-top:4px}td{border:1px solid #ddd;padding:6px 10px}'+
+    '.foot{margin-top:34px;padding-top:10px;border-top:1px solid #eee;font-size:10px;color:#999}</style></head><body>'+
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px">'+
+      '<div><div class="eyebrow">CONTROL ASSESSMENT WORKPAPER · '+o.framework+'</div><h1>'+o.id+' — '+o.name+'</h1></div>'+
+      '<span class="badge" style="background:'+badge+'">'+r.t+'</span></div>'+
+    '<div class="meta">Organization: <b>'+org+'</b> &nbsp;·&nbsp; Assessed: <b>'+today+'</b> &nbsp;·&nbsp; Maturity: <b>CMMI '+o.cmmi+' ('+(CMMI_LABELS[o.cmmi]||'')+')</b> &nbsp;·&nbsp; Test method: <b>'+(o.auto?'Automated continuous control monitoring':'Attestation / document review')+'</b></div>'+
+    '<h2>Test methodology</h2><p>'+o.method+'</p>'+
+    '<h2>Findings</h2><p>'+o.findings+'</p>'+
+    '<h2>Recommendation</h2><p>'+o.rec+'</p>'+
+    (ev?('<h2>Evidence</h2><table><tbody>'+ev+'</tbody></table>'):'')+
+    '<div class="foot">Generated by Nerion — continuous control monitoring. Every result traces to a connected system or an analyzed document; nothing is self-attested without provenance. This workpaper reflects the control state at the time of generation ('+today+').</div>'+
+    '</body></html>';
+  var w=window.open('','_blank');if(!w)return;w.document.write(doc);w.document.close();w.focus();setTimeout(function(){try{w.print();}catch(_){}},300);
+}
+var FW_NAMES={csf:'NIST CSF 2.0',r53:'NIST SP 800-53 Rev 5',cis:'CIS Controls v8',soc2:'SOC 2 (TSC)',hipaa:'HIPAA Security Rule'};
 function drillFwControl(id,name){
-  var cov=fwDeployedIds(),cc=controlCmmi(id,cov);
-  var h='<div class="drill-hero" style="color:var(--'+cmmiColor(cc.score)+')">CMMI '+cc.score+' · '+(CMMI_LABELS[cc.score]||'')+'</div>'+
-    '<div class="drill-p"><b>'+id+'</b> — '+name+'</div><div class="ev-sec">Where this score came from</div>';
-  if(cc.src==='none'){h+='<div class="drill-p">Not yet evidenced — no connected tool covers this control and no analyzed policy addresses it. Connect the relevant tool, or upload the policy that governs it, to score it.</div>';}
-  if(cc.toolPct!=null){h+=gRow('🔌 System telemetry',cc.toolPct+'% deployed → CMMI '+pctToCmmi(cc.toolPct));}
-  if(cc.doc){var d=cc.doc;h+=gRow('📄 Document review',d.doc+' → CMMI '+d.cmmi+' ('+d.matched+'/'+d.total+' attributes)');
-    if(d.attrs&&d.attrs.length){h+='<div class="ev-sec">Policy attributes checked</div>'+d.attrs.map(function(a){return gRow((a.found?'✓ ':'✗ ')+a.label,a.found?'found':'missing');}).join('');}}
-  h+='<div class="drill-p" style="color:var(--muted);margin-top:8px">The control’s CMMI is the <b>higher</b> of its live tool coverage and its document-review score — best available evidence wins, and the source is shown so every score is auditable back to a system or a document.</div>';
-  return h;
+  var cov=fwDeployedIds(),cc=controlCmmi(id,cov),fwName=FW_NAMES[FW_SEL]||'Framework',method,findings,rec,auto=false,ev=[];
+  if(cc.src==='system'){auto=true;
+    method='<b>Automated continuous control monitoring (CCM).</b> Nerion queried the connected security tool\'s API for this control\'s live coverage across the in-scope estate and mapped the coverage percentage to a CMMI maturity level (0–5). No manual attestation was relied upon.';
+    findings='The connected tool reports <b>'+cc.toolPct+'%</b> effective coverage for this control, assessed at <b>CMMI '+cc.score+' ('+(CMMI_LABELS[cc.score]||'')+')</b>.'+(cc.toolPct<90?' Coverage is below the 90% threshold required for full maturity, leaving a residual population outside the control.':' Coverage meets the maturity threshold for this control.');
+    rec=cc.score>=5?'Maintain current coverage and retain the tool\'s evidence export for each audit period.':'Raise effective coverage toward ≥90% to reach CMMI 5, extending the control to the assets currently outside its scope; retain the coverage report as evidence.';
+    ev.push(['Source','🔌 live tool telemetry']);ev.push(['Measured coverage',cc.toolPct+'%']);ev.push(['Maturity','CMMI '+cc.score]);
+  } else if(cc.src==='document'){var d=cc.doc;
+    method='<b>Document review.</b> The governing policy analyzed at onboarding was assessed against this control\'s expected attributes; the proportion of required attributes present was mapped to a CMMI maturity level.';
+    var missing=(d.attrs&&d.attrs.filter(function(a){return !a.found;}))||[];
+    findings='<b>'+d.doc+'</b> addresses this control with <b>'+d.matched+' of '+d.total+'</b> expected attributes present, assessed at <b>CMMI '+d.cmmi+'</b>.'+(missing.length?(' Missing attribute'+(missing.length>1?'s':'')+': '+missing.map(function(a){return a.label;}).join(', ')+'.'):' All reviewed attributes were present.');
+    rec=d.cmmi>=4?'Operationalize the policy with connected tooling so the control is evidenced continuously rather than at a point in time; retain the policy version as evidence.':'Remediate the missing policy attributes above, then connect the enforcing tool so the control is continuously evidenced.';
+    ev.push(['Source','📄 document review']);ev.push(['Document',d.doc]);ev.push(['Attributes present',d.matched+' / '+d.total]);
+  } else {
+    method='<b>Evidence sufficiency check.</b> Nerion looked for an automated evidence source (a connected security tool covering this control) and an analyzed governing policy. Neither was found, so the control is unevidenced.';
+    findings='This control is <b>not currently evidenced</b> by any connected system or analyzed policy, and is therefore assessed at CMMI 0. It cannot be relied upon for assurance in its current state.';
+    rec='Connect the security tool that enforces this control, or upload the governing policy at onboarding, so the control is continuously evidenced rather than assumed.';
+    ev.push(['Source','— none connected']);
+  }
+  return auditReport({id:id,name:name,framework:fwName,cmmi:cc.score,method:method,findings:findings,rec:rec,auto:auto,evidence:ev});
+}
+/* ---- NIST AI RMF 1.0 — continuous audit of the AI we run. Controls organized by
+   the four RMF functions (GOVERN · MAP · MEASURE · MANAGE) and scored CMMI 0–5 from
+   the org's onboarding AI-governance answers + any connected AI signals — the same
+   telemetry-first, evidence-backed model as the security frameworks. ---- */
+var AI_TIER_CMMI={lead:5,solid:4,watch:2,gap:1};
+function aiG(){return (LIVE&&LIVE.aiRisk&&LIVE.aiRisk.governance)||{};}
+function aiGovCmmi(field,val){var o=aiLookup(field,val);return o?(AI_TIER_CMMI[o.t]||0):0;}
+var AI_RMF=[
+ {fn:'GOVERN',controls:[
+   {id:'GV.PL-01',name:'AI acceptable-use & risk policy, board-approved',assess:function(g){var c=aiGovCmmi('policy',g.policy);
+     return {cmmi:c,src:'governance',method:'<b>Governance attestation review.</b> The AI acceptable-use & risk policy status recorded at onboarding was assessed against the NIST AI RMF GOVERN outcome for a documented, accountable AI policy.',
+       finding:g.policy?('AI policy status attested as “<b>'+g.policy+'</b>”. '+((aiLookup('policy',g.policy)||{}).n||'')):'No AI policy status was attested at onboarding — the control is unevidenced.',
+       rec:c>=4?'Maintain the board-approved policy; review annually and after any material change to AI use.':(c>=3?'Take the drafted policy to the board so it becomes enforceable.':'Draft an AI acceptable-use & risk policy and obtain board approval.')};}},
+   {id:'GV.RM-01',name:'AI risk-management framework adopted (RMF / 42001)',assess:function(g){var c=aiGovCmmi('framework',g.framework);
+     return {cmmi:c,src:'governance',method:'<b>Governance attestation review.</b> The adopted AI governance framework(s) recorded at onboarding were assessed against the RMF GOVERN outcome for a recognized, operating AI risk-management process.',
+       finding:g.framework?('Framework attested as “<b>'+g.framework+'</b>”. '+((aiLookup('framework',g.framework)||{}).n||'')):'No AI governance framework was attested.',
+       rec:c>=5?'Maintain both the RMF risk process and the ISO/IEC 42001 management system; keep profiles current per AI system.':'Adopt NIST AI RMF for the risk process and pursue ISO/IEC 42001 for external certifiability.'};}},
+   {id:'GV.IM-01',name:'AI inventory (AI-BOM) maintained with owners',assess:function(g){var c=aiGovCmmi('inventory',g.inventory),dep=sig('ai_deployments'),rep=Number(g.systems)||null,src='governance',method='<b>Governance attestation review.</b> The AI-inventory (AI-BOM) status recorded at onboarding was assessed against the RMF outcome for a complete, owned inventory of AI systems.',finding=g.inventory?('Inventory attested as “<b>'+g.inventory+'</b>”'+(rep!=null?(' ('+rep+' self-reported system'+(rep===1?'':'s')+')'):'')+'. '+((aiLookup('inventory',g.inventory)||{}).n||'')):'No AI inventory status was attested.';
+     if(dep!=null){src='system';method='<b>Automated corroboration.</b> A connected AI gateway/registry was queried for live AI deployments and cross-checked against the self-reported inventory; a discrepancy indicates shadow AI outside governance.';
+       var disc=(rep!=null&&dep>rep);finding='A connected AI source reports <b>'+dep+'</b> live AI deployment'+(dep===1?'':'s')+(rep!=null?(' vs '+rep+' self-reported'):'')+(disc?(' — <b>'+(dep-rep)+' more than reported</b>, i.e. likely shadow AI to bring under governance.'):' — consistent with the reported inventory.');if(disc)c=Math.min(c,2);}
+     return {cmmi:c,src:src,method:method,finding:finding,rec:c>=4?'Maintain the AI-BOM with a named owner per system; reconcile against the AI gateway each cycle.':'Complete the AI bill-of-materials — every agent, GenAI app and coding assistant with a named owner — and reconcile it against live AI telemetry to eliminate shadow AI.'};}},
+   {id:'GV.LG-01',name:'Legal & regulatory exposure assessed (EU AI Act)',assess:function(g){var c=aiGovCmmi('euAiAct',g.euAiAct);
+     return {cmmi:c,src:'governance',method:'<b>Governance attestation review.</b> The EU AI Act exposure recorded at onboarding was assessed against the RMF GOVERN outcome for identified and managed legal/regulatory obligations.',
+       finding:g.euAiAct?('EU AI Act exposure attested as “<b>'+g.euAiAct+'</b>”. '+((aiLookup('euAiAct',g.euAiAct)||{}).n||'')):'EU AI Act exposure was not assessed at onboarding.',
+       rec:c>=4?'Maintain the classification; re-confirm when AI use or markets change.':(/high-risk/i.test(g.euAiAct||'')?'Stand up the high-risk conformity programme — conformity assessment, technical documentation, human oversight and post-market monitoring.':'Run an EU AI Act scoping assessment to determine the risk tier and obligations.')};}}
+ ]},
+ {fn:'MAP',controls:[
+   {id:'MP.CT-01',name:'AI use contexts categorized by risk',assess:function(g){var c=aiGovCmmi('decisioning',g.decisioning);if(/^yes/i.test(g.decisioning||'')&&/board-approved/i.test(g.policy||''))c=Math.max(c,3);
+     return {cmmi:c,src:'governance',method:'<b>Governance attestation review.</b> Whether AI is used in customer-facing / automated decisioning (recorded at onboarding) was assessed against the RMF MAP outcome for risk-categorized AI use contexts.',
+       finding:g.decisioning?('Decisioning use attested as “<b>'+g.decisioning+'</b>”. '+((aiLookup('decisioning',g.decisioning)||{}).n||'')):'AI decisioning use was not attested.',
+       rec:c>=4?'Maintain the risk categorization per AI use case; re-map when new use cases are added.':'Categorize each AI use case by risk and place production decisioning under an approved policy with human oversight before it scales.'};}},
+   {id:'MP.IN-01',name:'AI systems mapped to owners, data & purpose',assess:function(g){var c=aiGovCmmi('inventory',g.inventory);
+     return {cmmi:c,src:'governance',method:'<b>Governance attestation review.</b> The completeness of the AI inventory mapping (systems → owner, data, purpose) was assessed against the RMF MAP outcome.',
+       finding:g.inventory?('Inventory mapping attested as “<b>'+g.inventory+'</b>”. Each system should carry an owner, its data classes and its business purpose.'):'AI systems are not mapped to owners/data/purpose.',
+       rec:c>=4?'Maintain the mapping as systems change.':'Map every AI system to a named owner, the data it can access, and its business purpose.'};}}
+ ]},
+ {fn:'MEASURE',controls:[
+   {id:'MS.TE-01',name:'AI evaluation & testing (OWASP LLM/Agentic Top 10)',assess:function(g){var has=/owasp/i.test((g.framework||'')+' '+(g.policy||'')),c=has?4:1;
+     return {cmmi:c,src:'governance',method:'<b>Governance attestation review.</b> Evidence of pre-deployment AI evaluation against the OWASP LLM & Agentic Top 10 (prompt injection, tool misuse, data leakage, memory poisoning) was assessed.',
+       finding:has?'OWASP LLM/Agentic testing is referenced in the AI programme.':'No OWASP LLM/Agentic Top 10 testing is evidenced — AI apps may reach production without adversarial evaluation.',
+       rec:has?'Automate OWASP LLM/Agentic tests in the AI CI/CD pipeline and retain results as evidence.':'Test every AI application against the OWASP LLM & Agentic Top 10 before release and on change.'};}},
+   {id:'MS.RT-01',name:'Adversarial testing / red-team (MITRE ATLAS)',assess:function(g){var has=/atlas|red.?team/i.test((g.framework||'')+' '+(g.inventory||'')),c=has?4:1;
+     return {cmmi:c,src:'governance',method:'<b>Governance attestation review.</b> Evidence of adversarial red-teaming of AI systems against MITRE ATLAS techniques was assessed.',
+       finding:has?'AI red-teaming against MITRE ATLAS is part of the programme.':'No adversarial AI testing (MITRE ATLAS) is evidenced.',
+       rec:has?'Schedule recurring ATLAS red-team exercises and track remediation.':'Red-team your AI systems against MITRE ATLAS techniques and remediate findings.'};}},
+   {id:'MS.MO-01',name:'Runtime AI monitoring (AI-SPM / guardrails)',assess:function(g){var mon=sig('ai_monitored'),c=mon===1?4:1;
+     return {cmmi:c,src:mon!=null?'system':'governance',method:'<b>'+(mon!=null?'Automated evidence.':'Evidence sufficiency check.')+'</b> Whether AI runtime is monitored by an AI-security tool (guardrails / AI-SPM watching prompt injection, data leakage and shadow AI) was assessed'+(mon!=null?' from the connected AI source.':'.'),
+       finding:mon===1?'A connected AI source confirms AI runtime is monitored/traced.':'No runtime AI-security monitoring is connected — prompt injection, data leakage and shadow AI are not watched at machine speed.',
+       rec:c>=4?'Maintain guardrail/AI-SPM coverage across all AI apps; alert into the SIEM.':'Connect an AI-security tool (Lakera · Protect AI · Prompt Security · CrowdStrike AI Detection) to monitor AI at runtime — human review does not scale to agent speed.'};}}
+ ]},
+ {fn:'MANAGE',controls:[
+   {id:'MG.HO-01',name:'Human oversight of AI decisions',assess:function(g){var boardPol=/board-approved/i.test(g.policy||''),lowRisk=/^no/i.test(g.decisioning||''),c=lowRisk?5:(boardPol?4:(/pilot/i.test(g.decisioning||'')?2:1));
+     return {cmmi:c,src:'governance',method:'<b>Governance attestation review.</b> The presence of human oversight over AI decisions was assessed from the decisioning use and whether an approved policy mandates oversight.',
+       finding:lowRisk?'No AI decisioning in production — oversight risk is minimal.':(boardPol?'AI decisioning operates under a board-approved policy that should mandate human oversight.':'AI decisioning is in use without a board-approved policy mandating human oversight.'),
+       rec:c>=4?'Maintain documented human-in-the-loop checkpoints for consequential AI decisions.':'Define and enforce human-in-the-loop oversight for consequential AI decisions under an approved policy.'};}},
+   {id:'MG.IR-01',name:'AI incident response integrated',assess:function(g){var ir=(LIVE&&LIVE.governance&&LIVE.governance.ir)||{},tested=/yes|tabletop/i.test(ir.tested||''),pol=!/^none/i.test(g.policy||'')&&!!g.policy,c=(tested&&pol)?4:(tested||pol)?2:1;
+     return {cmmi:c,src:'governance',method:'<b>Governance attestation review.</b> Whether AI-specific incidents (model failure, prompt-injection compromise, data leakage) are covered by a tested incident-response capability was assessed.',
+       finding:(tested?'IR capability is tested'+(ir.lastTabletop?(' (last tabletop '+ir.lastTabletop+')'):'')+'. ':'IR capability is not evidenced as tested. ')+(pol?'An AI policy exists to anchor AI-incident handling.':'No AI policy anchors AI-incident handling.'),
+       rec:c>=4?'Maintain AI scenarios in the IR plan and exercise them in tabletops.':'Add AI-specific scenarios (prompt-injection, model compromise, data leakage) to the incident-response plan and test them.'};}},
+   {id:'MG.TP-01',name:'Third-party / model supply-chain risk',assess:function(g){var fw=aiGovCmmi('framework',g.framework),c=Math.max(1,Math.min(4,fw-1));
+     return {cmmi:c,src:'governance',method:'<b>Governance attestation review.</b> Whether third-party models, AI vendors and training-data provenance are governed under the AI risk process was assessed.',
+       finding:c>=3?'An AI governance framework is adopted that should cover third-party model and data supply-chain risk.':'Third-party AI/model supply-chain risk is not clearly governed.',
+       rec:c>=4?'Maintain model/vendor due-diligence and provenance records for each third-party AI component.':'Extend the AI risk process to third-party models and vendors — due-diligence, provenance and monitoring of the model supply chain.'};}}
+ ]}
+];
+function aiProvIcon(src){return src==='system'?'<span class="fwprov" title="from connected AI signal">🔌 system</span>':src==='document'?'<span class="fwprov" title="from document review">📄 doc</span>':'<span class="fwprov" title="governance attestation (onboarding)">🧾 attested</span>';}
+function renderAiFrameworks(){
+  var host=document.getElementById('cisoAiFrameworks');if(!host)return;
+  var g=aiG(),all=[];
+  var body=AI_RMF.map(function(f){var rows='',sc=[];f.controls.forEach(function(c){var a=c.assess(g);sc.push(a.cmmi);all.push(a.cmmi);
+      rows+='<div class="fwrow drill" data-aid="'+c.id+'">'+cmmiBadge(a.cmmi)+'<span class="fwid2">'+c.id+'</span><span class="fwname">'+c.name+'</span>'+aiProvIcon(a.src)+'</div>';});
+    var fa=avg(sc);return '<details class="fwfn"><summary>'+f.fn+'<span class="fwcount" style="color:var(--'+cmmiColor(Math.round(fa))+')">CMMI '+fa.toFixed(1)+' · '+(CMMI_LABELS[Math.round(fa)]||'')+'</span></summary>'+rows+'</details>';}).join('');
+  var overall=avg(all),scored=all.filter(function(x){return x>0;}).length;
+  var legend='<div class="cmmi-legend"><span class="cl-t">CMMI</span><span><b>0</b>None</span><span><b>1</b>Initial</span><span><b>2</b>Managed</span><span><b>3</b>Defined</span><span><b>4</b>Quant. Managed</span><span><b>5</b>Optimizing</span></div>';
+  var cmmiHero='<div class="fw-cmmi"><div><div class="fw-cmmi-l">NIST AI RMF posture — overall CMMI</div><div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><div class="fw-cmmi-v" style="color:var(--'+cmmiColor(Math.round(overall))+')">'+overall.toFixed(1)+'<span>/ 5</span></div><div class="fw-cmmi-lbl">'+(CMMI_LABELS[Math.round(overall)]||'')+'</div></div></div></div>';
+  host.innerHTML='<div class="card"><div class="ck">Securing the AI we run — continuous audit against NIST AI RMF 1.0</div>'+cmmiHero+legend+
+    '<div class="cn" style="margin:6px 0"><b style="color:var(--ink)">'+scored+' of '+all.length+'</b> AI controls are evidenced, scored continuously from your onboarding AI-governance answers and any connected AI signals — the same evidence-first model as the security frameworks. Click any control for the auditor’s assessment (methodology, findings, recommendation) and a downloadable PDF workpaper.</div>'+body+'</div>';
+  host.querySelectorAll('.fwrow[data-aid]').forEach(function(el){el.onclick=function(){openDrill(el.dataset.aid+' — NIST AI RMF',drillAiControl(el.dataset.aid));};});
+}
+function drillAiControl(id){
+  var g=aiG(),found=null;AI_RMF.forEach(function(f){f.controls.forEach(function(c){if(c.id===id)found=c;});});
+  if(!found)return '<div class="drill-p">Control not found.</div>';
+  var a=found.assess(g);
+  return auditReport({id:id,name:found.name,framework:'NIST AI RMF 1.0',cmmi:a.cmmi,method:a.method,findings:a.finding,rec:a.rec,auto:(a.src==='system'),
+    evidence:[['Source',a.src==='system'?'🔌 live AI signal':a.src==='document'?'📄 document review':'🧾 governance attestation (onboarding)'],['Maturity','CMMI '+a.cmmi]]});
 }
 /* ---- GRC / compliance — audit readiness per framework, computed from the tools
    you actually connect (continuous-control-monitoring model, like Vanta/Drata):
@@ -3320,11 +3472,15 @@ function renderAiRisk(){
   else if(/unsure/i.test(g.euAiAct||''))acts.push({p:2,t:'EU AI Act applicability is unassessed — run a scoping assessment; the Act reaches any AI touching the EU market.'});
   acts.sort(function(a,b){return a.p-b.p;});
   var actCard=acts.length?('<div class="card" style="margin-top:14px"><div class="ck">Priority actions <span class="pill warn" style="font-size:10px">'+acts.length+'</span></div><div style="margin-top:8px">'+acts.slice(0,5).map(function(a){return '<div class="list-row"><div class="lic '+(a.p===1?'c':'w')+'">'+(a.p===1?'!':'▲')+'</div><div class="ltxt"><b>'+a.t+'</b></div></div>';}).join('')+'</div></div>'):'<div class="card" style="margin-top:14px"><div class="ck">Priority actions</div><div class="cn" style="margin-top:6px">✓ AI we run is governed to the frameworks, AI is working in our defences, and remediation beats the exploit clock.</div></div>';
-  var html=hero+front1+front2+actCard;
-  ['ceoAiRisk','cisoAiRisk'].forEach(function(hid){var host=document.getElementById(hid);if(!host)return;host.innerHTML=html;
+  function wireAi(host){if(!host)return;
     host.querySelectorAll('.aifw').forEach(function(el){el.onclick=function(){openDrill(AI_FRAMEWORKS[el.dataset.aifw].n,drillAiFw(+el.dataset.aifw));};});
     host.querySelectorAll('.aitool').forEach(function(el){el.onclick=function(){var m=AI_IN_SEC[el.dataset.aitool];openDrill(m.tool+' → '+m.ai,drillAiTool(el.dataset.aitool));};});
-  });
+  }
+  // CEO seat: the combined view. CISO seat: split across the two question sub-tabs.
+  var ceo=document.getElementById('ceoAiRisk');if(ceo){ceo.innerHTML=hero+front1+front2+actCard;wireAi(ceo);}
+  var sec=document.getElementById('cisoAiSecure');if(sec){sec.innerHTML=hero+front1+actCard;wireAi(sec);}
+  var def=document.getElementById('cisoAiDefend');if(def){def.innerHTML=front2;wireAi(def);}
+  renderAiFrameworks();
 }
 /* CLO materiality-determination workbench — a timed, evidenced determination.
    Records material/not-material with the deciding leader + timestamp, then shows

@@ -115,6 +115,9 @@ catch (e) { problems.push(`[valueChain by-control/drill] ${e.message}`); }
 // Exercise the crosswalk framework views (CIS / SOC 2 / HIPAA) + continuous-audit cadence.
 try { vm.runInContext("['cis','soc2','hipaa','csf'].forEach(function(s){FW_SEL=s;renderFrameworks();}); localStorage.setItem('cyberrx_audit_cadence','weekly'); renderFrameworks();", ctx); }
 catch (e) { problems.push(`[frameworks crosswalk/cadence] ${e.message}`); }
+// Exercise the auditor-style control drill for framework controls (each FW_SEL) + AI RMF.
+try { vm.runInContext("['csf','r53','cis','soc2','hipaa'].forEach(function(s){FW_SEL=s;drillFwControl('GV.OC-01','Organizational context');}); renderAiFrameworks(); AI_RMF.forEach(function(f){f.controls.forEach(function(c){drillAiControl(c.id);});}); typeof auditReport==='function'&&auditReport({id:'X',name:'Y',framework:'Z',cmmi:3,method:'m',findings:'f',rec:'r',auto:false,evidence:[['a','b']]});", ctx); }
+catch (e) { problems.push(`[auditor drills + AI RMF] ${e.message}`); }
 // Exercise the crown-jewel threat map gap drill for every MITRE tactic.
 try { vm.runInContext("renderThreatMap(); Object.keys(TACTIC_CAPS).forEach(function(t){ typeof tmGapDrill==='function'&&tmGapDrill(t); });", ctx); }
 catch (e) { problems.push(`[threat map gap drill] ${e.message}`); }
