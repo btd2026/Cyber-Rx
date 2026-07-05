@@ -115,6 +115,9 @@ catch (e) { problems.push(`[valueChain by-control/drill] ${e.message}`); }
 // Exercise the crosswalk framework views (CIS / SOC 2 / HIPAA) + continuous-audit cadence.
 try { vm.runInContext("['cis','soc2','hipaa','csf'].forEach(function(s){FW_SEL=s;renderFrameworks();}); localStorage.setItem('cyberrx_audit_cadence','weekly'); renderFrameworks();", ctx); }
 catch (e) { problems.push(`[frameworks crosswalk/cadence] ${e.message}`); }
+// Exercise the crown-jewel threat map gap drill for every MITRE tactic.
+try { vm.runInContext("renderThreatMap(); Object.keys(TACTIC_CAPS).forEach(function(t){ typeof tmGapDrill==='function'&&tmGapDrill(t); });", ctx); }
+catch (e) { problems.push(`[threat map gap drill] ${e.message}`); }
 // Exercise the CISO top-3 inline detail (telemetry + formula + FAQ) for each tile.
 try { vm.runInContext("['caps','tactics','vendors',''].forEach(function(k){CISO_OPS_SEL=k;renderCisoOpsDetail(false);}); CISO_OPS_SEL='caps'; renderCisoOps(); renderCisoOpsDetail(true); typeof opsDetailCaps==='function'&&opsDetailCaps(); typeof opsDetailTactics==='function'&&opsDetailTactics(); typeof opsDetailVendors==='function'&&opsDetailVendors(); CISO_OPS_SEL='';", ctx); }
 catch (e) { problems.push(`[ciso ops detail] ${e.message}`); }
