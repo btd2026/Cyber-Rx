@@ -239,8 +239,9 @@ var SEATS = {
   sub:'',
   brief:'No active compromise, and the program is improving. The biggest dollar driver is the privileged path into payments — fifty-two million — and it has a funded decision ready to close it. We measure our controls by the risk they remove, not by a maturity score, and this is the same number that rolls straight up to the board and the C.F.O.',
   body:function(){return (
-   sec('01','Are we secure right now — and is the program getting stronger?','The whole-program picture in business terms: the health of the security tools and how much of the attacker playbook we can see, and the crown jewels we protect with today’s exposure on each.',
+   sec('01','Are we secure right now — and is the program getting stronger?','The whole-program picture in business terms: the health of the security tools and how much of the attacker playbook we can see, and the crown jewels we protect with today’s exposure on each. <b>Click any of the three tiles</b> to open its full detail below — where every number comes from, the exact formula, and the answers to the questions a CISO asks about the data.',
      '<div id="cisoOps"></div>'
+     +'<div id="cisoOpsDetail"></div>'
      +'<div id="cjchain" style="margin-top:14px"></div>')
    +sec('02','Are we under attack?','Live attack status and how a threat actor could reach us. <b>Incident Command</b> leads with the live attack status and, on an active event, the war room. <b>Threat Mapping</b> is a live attack-path map — how actors targeting our sector could reach each crown jewel from the internet, and where our controls stop them at each hop.',
      subtabs([

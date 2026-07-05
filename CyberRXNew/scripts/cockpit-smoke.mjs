@@ -115,6 +115,9 @@ catch (e) { problems.push(`[valueChain by-control/drill] ${e.message}`); }
 // Exercise the crosswalk framework views (CIS / SOC 2 / HIPAA) + continuous-audit cadence.
 try { vm.runInContext("['cis','soc2','hipaa','csf'].forEach(function(s){FW_SEL=s;renderFrameworks();}); localStorage.setItem('cyberrx_audit_cadence','weekly'); renderFrameworks();", ctx); }
 catch (e) { problems.push(`[frameworks crosswalk/cadence] ${e.message}`); }
+// Exercise the CISO top-3 inline detail (telemetry + formula + FAQ) for each tile.
+try { vm.runInContext("['caps','tactics','vendors',''].forEach(function(k){CISO_OPS_SEL=k;renderCisoOpsDetail(false);}); CISO_OPS_SEL='caps'; renderCisoOps(); renderCisoOpsDetail(true); typeof opsDetailCaps==='function'&&opsDetailCaps(); typeof opsDetailTactics==='function'&&opsDetailTactics(); typeof opsDetailVendors==='function'&&opsDetailVendors(); CISO_OPS_SEL='';", ctx); }
+catch (e) { problems.push(`[ciso ops detail] ${e.message}`); }
 // Exercise the DTNKSHIELD peer benchmark opt-in / opt-out + all render states.
 try { vm.runInContext("renderFrameworks(); peerSetOptin(true); PEER_BUSY=false; PEER_DATA=null; renderPeerCompare(); PEER_DATA={sufficient:false,n:2,minCohort:5}; renderPeerCompare(); PEER_DATA={sufficient:true,n:8,overall:{p25:2.1,p50:3,p75:3.8,min:1,max:4.6},overall_values:[2,2.5,3,3.2,3.5,3.8,4,4.6],functions:{Govern:{p25:2,p50:2.9,p75:3.6,min:1.5,max:4},Protect:{p25:2.2,p50:3.1,p75:3.9,min:2,max:4.5}}}; renderPeerCompare(); PEER_DATA={error:true}; renderPeerCompare(); peerSetOptin(false); renderPeerCompare();", ctx); }
 catch (e) { problems.push(`[peer benchmark] ${e.message}`); }
