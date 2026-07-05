@@ -113,11 +113,11 @@ var SEATS = {
   sub:'Cyber as legal exposure: disclosure standing, notification duties by country, and the modeled liability if an event occurs — with the clock on each.',
   brief:'Legally, we are defensible across every jurisdiction we operate in today — no reportable events, and evidence is preserved. The clocks to watch are the seventy-two-hour European deadline and the four-business-day S.E.C. rule. If an incident became material, the determination process and the draft filings are already pre-staged, which is what protects the directors.',
   body:function(){return (
-   sec('01','Legal Risk &amp; Compliance Tracker','Ensures legal protection from cyber risk — privacy compliance programs (GDPR, CCPA) and breach-notification planning. A jurisdiction-based compliance map with breach-obligation timeline alerts, computed from your regions, data classes and record count.',
+   sec('01','Regulatory exposure','Where we are exposed by jurisdiction — the binding notification obligation, the clock and the penalty ceiling for each region we operate in, plus whether any event is currently reportable. Computed from your regions, data classes and record count.',
      tiles([
       {k:'Open notifications',v:'0',cls:'good',ev:'notifications',note:'<span id="lvCloNotif">no material incident open</span>'},
       {k:'Materiality standing',v:'No reportable event',cls:'good',ev:'materiality',note:'SEC clock not running until an event clears the threshold'},
-      {k:'Class-action exposure',v:'<span id="lvCloLiability">$22M</span>',cls:'warn',ev:'liability',note:'<span id="lvCloLiabNote">records × per-record cost</span>'},
+      {k:'Regulatory ceiling',v:'<span id="lvCloLiability">$22M</span>',cls:'warn',ev:'liability',note:'<span id="lvCloLiabNote">the binding jurisdiction’s maximum penalty</span>'},
       {k:'Fastest clock',v:'<span id="lvClock">72 hours</span>',ev:'clock',note:'the binding notification deadline today'}])
      +'<div id="cloJuris" style="margin-top:14px">'+jtable([
       {flag:'🇺🇸',c:'United States',ev:'juris-us',o:'SEC 8-K + 54 state breach laws',clock:'4 business days',cc:'warn',pen:'Disclosure + enforcement'},
@@ -125,23 +125,22 @@ var SEATS = {
       {flag:'🇬🇧',c:'United Kingdom',o:'UK GDPR / ICO',clock:'72 hours',cc:'crit',pen:'£17.5M or 4%'},
       {flag:'🇸🇬',c:'Singapore',o:'PDPA · MAS TRM',clock:'72h / 1h (MAS)',cc:'crit',pen:'Up to S$1M'},
       {flag:'🇦🇺',c:'Australia',o:'Privacy Act · APRA CPS 234',clock:'72 hours',cc:'warn',pen:'Up to A$50M'}])+'</div>')
-   +sec('02','Governance Control Center','Strengthens cybersecurity governance — policy enforcement, board-reporting structures and audit coordination. Policy → control → executive-accountability, with board reporting automated.',
-     '<div class="card"><div class="ck">Policy → control → accountability</div><div class="cn" style="margin-top:6px">◐ Connect your GRC and policy-management systems and board materials to visualize each policy, the control that enforces it and the executive accountable — and to auto-assemble the board governance report SEC Item 106 requires you to disclose. <span class="pill mod" style="font-size:8px">planned</span></div></div>')
-   +sec('03','Contract Risk Intelligence Engine','Reduces contractual cyber risk — security clauses in contracts, DPAs and vendor legal reviews. Contracts auto-scanned for security-clause compliance, and your tightest customer breach-notification deadline surfaced.',
-     '<div class="card"><div class="ck">Customer contract / DPA obligations</div><div class="cn" style="margin-top:6px">◐ Connect your contract-management system (<b>Ironclad · DocuSign CLM · Conga</b>) to auto-scan contracts for security-clause compliance and quantify how many customer contracts carry a breach-notification clause and your <b>tightest contractual deadline</b> — frequently 24–72h, ahead of the SEC and GDPR clocks. This is the contractual exposure the statutory clocks do not capture, and the first thing customer counsel invokes after an incident.</div></div>')
-   +sec('04','Unified Compliance Command Center','Maintains regulatory compliance — HIPAA, PCI DSS, SOX, ISO 27001, HITRUST programs. A multi-framework compliance posture with real-time gap tracking across every regulation in scope.',
-     '<div id="cisoCompliance"></div><div id="cisoFrameworks" style="margin-top:14px"></div>')
-   +sec('05','Cyber Legal Response Hub','Manages the legal response to a cyber incident — digital-forensics coordination, eDiscovery and breach-response legal workflows. Incident-to-litigation tracking with forensic chain-of-custody, the materiality determination, and the disclosure decision.',
+   +sec('02','Contractual risk','The contractual cyber obligations statutory clocks miss — customer DPAs with breach-notification clauses, and your tightest contractual deadline (frequently 24–72h, ahead of the SEC and GDPR clocks). The first thing customer counsel invokes after an incident.',
+     '<div class="card"><div class="ck">Customer contract / DPA obligations</div><div class="cn" style="margin-top:6px">◐ Connect your contract-management system (<b>Ironclad · DocuSign CLM · Conga</b>) to auto-scan contracts for security-clause compliance and quantify how many customer contracts carry a breach-notification clause and your <b>tightest contractual deadline</b>. This is the contractual exposure the statutory clocks do not capture. <span class="pill mod" style="font-size:8px">planned</span></div></div>')
+   +sec('03','Breach-notification readiness','If an incident is material, are we ready to notify in time? The materiality determination — recorded, timed and evidenced — the live SEC and binding-jurisdiction countdowns, and the decision on how we run disclosure.',
      '<div class="cn" style="margin-bottom:12px">Reportable at <b class="claim" data-ev="materiality" style="cursor:pointer"><span id="lvCloMateriality">$53M</span> <span class="fx">ƒ</span></b> — a crown-jewel event above this threshold is material and starts the 4-business-day SEC clock. Record the determination below; it is timed, evidenced and logged for the D&amp;O defense.</div>'
      +'<div id="cloMateriality" style="margin-bottom:16px"></div>'
-     +'<div id="cloOps"></div>'
      +decisions([{n:1,q:'How do we run the disclosure & notification process?',sit:'If an incident is material we face a 4-business-day SEC clock and a 72-hour GDPR clock. How do we prepare?',opts:[
        {rec:true,tag:'A · Standing disclosure committee',on:'Option A · Pre-authorize',osum:'committee + pre-drafted filings',pros:['Meets the 4-business-day SEC and 72-hour GDPR clocks','Defensible, documented materiality determination','Protects directors under D&amp;O'],cons:['Requires setup effort this quarter (charter + templates)']},
        {tag:'B · Ad-hoc at incident time',on:'Option B · Ad-hoc',osum:'no upfront work',pros:['No setup cost today'],cons:['High risk of missing the 4-day / 72-hour clock','Weaker legal defense on the materiality call','Filings drafted under time pressure']},
        {tag:'C · External breach counsel on retainer',on:'Option C · Retainer',osum:'counsel on call',pros:['Specialist breach counsel on demand','Privilege established before an incident'],cons:['Annual retainer cost','Slower first hours vs. a standing internal committee']}]}]))
-   +sec('06','Intellectual Property Protection System','Prevents data and IP theft — Data Loss Prevention (DLP), insider-threat monitoring, encryption and access controls. A sensitive-data map with insider-threat detection and exfiltration-risk alerts, plus your legal accountabilities mapped to the systems behind them.',
-     '<div class="card"><div class="ck">Sensitive-data map · insider-threat · exfiltration alerts</div><div class="cn" style="margin-top:6px">◐ Connect your DLP, IAM (<b>Okta · Entra</b>), endpoint monitoring and data-classification tools to map where your most sensitive data and IP lives, detect insider-threat behaviour and alert on exfiltration — the loss a breach-record count never captures. <span class="pill mod" style="font-size:8px">planned</span></div></div>'
-     +'<div id="opmodel-clo" style="margin-top:14px"></div>')
+   +sec('04','Litigation exposure','If an event becomes litigation — the class-action / notification exposure from the records we hold, the litigation hold that preserves evidence, and the forensic chain-of-custody that protects the case.',
+     '<div id="cloOps"></div>')
+   +sec('05','Privacy risk','The exposure from the sensitive data we hold and our ability to meet data-subject rights inside the statutory clock — the privacy obligations that run continuously, not just after an incident.',
+     '<div id="cloPrivacy"></div>')
+   +sec('06','Evidence readiness','Can we produce the evidence — for a regulator, an auditor or a court — on demand? Compliance posture across the frameworks in scope, and the preserved, timestamped record behind every determination and decision.',
+     '<div id="cisoCompliance"></div>'
+     +'<div class="cn" style="margin-top:12px">Evidence readiness is the ability to show, on demand, that a control was in place and a determination was made properly. The compliance posture above is your framework evidence; every materiality determination and executive decision in CyberX-Ray is timestamped and logged as the contemporaneous record a court or regulator expects.</div>')
   );}
  },
 
