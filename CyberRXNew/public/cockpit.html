@@ -471,7 +471,7 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
@@ -1404,7 +1404,7 @@ function renderSignals(){
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -1467,6 +1467,51 @@ var IND_THREATS={
 var IND_BENCH={health:9.77,fin:6.08,mfg:5.56,tech:5.45,energy:5.29,retail:3.48,gov:2.55};
 var PEER_DWELL_HRS=240; // Mandiant M-Trends 2024 global median dwell ≈ 10 days
 var PEER_PHISH_BASELINE=34; // KnowBe4 untrained baseline phish-prone ≈ 34%
+/* ---- The Fortune-100 board lens, per industry --------------------------------
+   A board's questions are the same everywhere — Are we exposed to a material,
+   business-threatening event? Are we within the appetite we approved? How do we
+   compare to peers? Could we survive the worst realistic day? Who regulates us
+   and are we disclosure-ready? What decision needs us? — but the ANSWERS are
+   sector-specific: the nightmare scenario, the regulator, and the trust at stake
+   differ by industry. This drives the board brief so it reads in the board's
+   own sector language, not generic security terms. */
+var IND_BOARD={
+  health:{regulator:'HHS OCR (HIPAA) · CMS · state AGs',scenario:'Ransomware halts claims and clinical systems — patients can’t be treated and providers go unpaid',protect:'patient safety and PHI',trust:'patient &amp; member trust',material:'a PHI breach or a care-disrupting outage'},
+  fin:{regulator:'SEC · OCC / Federal Reserve · FinCEN · DORA (EU)',scenario:'A payments / settlement outage or large-scale fraud stops money moving',protect:'transaction integrity and customer funds',trust:'customer &amp; counterparty trust',material:'a payments outage, fraud loss or data breach'},
+  mfg:{regulator:'CMMC / NIST 800-171 · export controls · SEC',scenario:'OT ransomware halts a plant — production stops and orders are missed',protect:'production continuity and design IP',trust:'delivery commitments to customers',material:'a plant outage or theft of design IP'},
+  retail:{regulator:'PCI DSS · FTC · state privacy laws',scenario:'A card-data breach, or a storefront outage during peak season',protect:'cardholder data and storefront uptime',trust:'brand and customer loyalty',material:'a card-data breach or a peak-season outage'},
+  gov:{regulator:'FISMA · FedRAMP · CISA · state privacy',scenario:'A breach of citizen records, or an outage of essential citizen services',protect:'citizen records and service availability',trust:'public trust',material:'a records breach or a service outage'},
+  energy:{regulator:'NERC CIP · TSA directives · FERC',scenario:'An OT / ICS attack disrupts grid or service operations',protect:'operational reliability and public safety',trust:'reliability and public safety',material:'an operational-disruption or safety event'},
+  tech:{regulator:'SEC · SOC 2 / ISO 27001 · GDPR / CCPA',scenario:'A customer-data breach, or a platform outage that breaches SLAs',protect:'platform uptime and customer data',trust:'customer trust and retention',material:'a customer-data breach or a major outage'}
+};
+function indBoard(){return IND_BOARD[indKey()]||IND_BOARD.tech;}
+function boardRow(k,v){return '<div style="display:flex;gap:14px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px"><span style="min-width:200px;color:var(--muted);font-weight:700;font-size:11px;letter-spacing:.03em;text-transform:uppercase">'+k+'</span><span style="color:var(--ink-2);line-height:1.5">'+v+'</span></div>';}
+/* The board brief — the one screen a Fortune-100 director opens to. Answers the
+   board's questions in this sector's language, from live economics + appetite +
+   trend + the sector board frame. Illustrative (labelled) until go-live. */
+function renderBoardBrief(){
+  var host=document.getElementById('ceoBoardBrief');if(!host)return;
+  var b=indBoard(),ec=(LIVE&&LIVE.economics)||{},ap=ec.appetite||{},tr=trajInfo();
+  var ale=Number(ec.ale)||null,tail=Number(ec.tail)||null,mat=ec.materiality||{};
+  var within=ap.appetite?(ap.within!==false):null,tailOk=ap.appetite?(ap.tail_within!==false):null;
+  var verdict,vc;
+  if(ale!=null&&ap.appetite){if(within&&tailOk){verdict='Cyber risk is within the board’s approved appetite';vc='good';}else if(within){verdict='Within appetite on expected loss — worst-case tail is above the limit';vc='warn';}else{verdict='Cyber risk is over the board’s approved appetite';vc='crit';}}
+  else{verdict='Complete go-live to state cyber exposure against your board appetite';vc='muted';}
+  var bench=IND_BENCH[indKey()];
+  var trendLine=tr.two?(tr.down?'<span style="color:var(--good)">Improving</span> — removing more risk than the business is adding':'<span style="color:var(--crit)">Rising</span> — exposure trending up; drivers in the controls view'):'Baseline — this is your first analysis; the trend builds from here';
+  var decs=allDecisions(),decN=decs.length;
+  var expLine=ale!=null?('Expected annual loss <b style="color:var(--ink)">'+usd(ale)+'</b>'+(tail!=null?(' · worst realistic year <b style="color:var(--warn)">'+usd(tail)+'</b>'):'')+(ap.appetite?(' · board appetite <b>'+usd(ap.appetite)+'</b>'):'')):'<span class="pill mod">illustrative</span> figures populate from your data at go-live';
+  host.innerHTML='<div class="card"><div class="ck">Board brief — '+indLabel()+' '+liveTag()+'</div>'+
+    '<div class="cv" style="font-size:20px;margin-top:8px;line-height:1.3;color:var(--'+vc+')">'+verdict+'</div>'+
+    '<div class="cn" style="margin:6px 0 10px">'+expLine+'</div>'+
+    boardRow('The event that would hurt us most',b.scenario+'.')+
+    boardRow('What we are protecting',indProfile().systems.slice(0,2).join(' · ')+' — and '+b.trust)+
+    boardRow('Who regulates us',b.regulator+' — reportable at '+(mat.value?('<b>'+usd(mat.value)+'</b>'):'the materiality threshold')+' ('+b.material+')')+
+    boardRow('How we compare',bench?('The average '+indLabel()+' breach costs <b>$'+bench.toFixed(1)+'M</b> — IBM Cost of a Data Breach 2024'):'peer benchmark shown once a live signal is connected')+
+    boardRow('Direction of travel',trendLine)+
+    boardRow('What needs the board',decN?('<b>'+decN+'</b> funded decision'+(decN>1?'s':'')+' on record; risk-acceptance &amp; appetite reviews are the board’s to approve'):'no open board decisions this period')+
+    '<div class="cn" style="margin-top:10px">This is the board’s oversight lens for '+indLabel()+' — the six questions a director asks, in your sector’s terms. Everything below drills to the evidence.</div></div>';
+}
 function renderPeerBench(){
   var host=document.getElementById('ceoPeer');if(!host)return;
   var cost=IND_BENCH[indKey()],tiles=[];
