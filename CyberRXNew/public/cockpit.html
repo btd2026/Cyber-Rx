@@ -1251,6 +1251,18 @@ var R53_RAW=[['AC','Access Control',25],['AT','Awareness & Training',6],['AU','A
 var FW_SEL='csf';
 /* Control IDs evidenced by connected tools → max deployment %, from CAP_FRAMEWORK. */
 function fwDeployedIds(){var m={};CAPS.forEach(function(c){var fw=CAP_FRAMEWORK[c.k];if(!fw)return;var p=capDeploy(c);if(p==null)return;fw.csf.concat(fw.r53).forEach(function(id){if(m[id]==null||p>m[id])m[id]=p;});});return m;}
+/* Which capability (and therefore which connected tool) produced a control's live
+   coverage — so the auditor evidence names the exact source (Splunk, CrowdStrike…),
+   only from the tools the user selected and connected at onboarding. Returns the
+   winning capability + its real connected vendor, or null if none scores it. */
+function fwControlTool(id){
+  var best=null;
+  CAPS.forEach(function(c){var fw=CAP_FRAMEWORK[c.k];if(!fw)return;
+    if(fw.csf.indexOf(id)<0&&fw.r53.indexOf(id)<0)return;
+    var p=capDeploy(c);if(p==null)return;
+    if(!best||p>best.p)best={cap:c,p:p,src:capSource(c)};});
+  return best;
+}
 /* ---- CMMI maturity + document-evidence module. Each control's maturity (0–5) is
    the higher of its live tool coverage and its document-review score, so the
    framework rolls up a real CMMI per subcategory → category → function, and every
@@ -1607,10 +1619,15 @@ var FW_NAMES={csf:'NIST CSF 2.0',r53:'NIST SP 800-53 Rev 5',cis:'CIS Controls v8
 function drillFwControl(id,name){
   var cov=fwDeployedIds(),cc=controlCmmi(id,cov),fwName=FW_NAMES[FW_SEL]||'Framework',method,findings,rec,auto=false,ev=[];
   if(cc.src==='system'){auto=true;
-    method='<b>Automated continuous control monitoring (CCM).</b> Nerion queried the connected security tool\'s API for this control\'s live coverage across the in-scope estate and mapped the coverage percentage to a CMMI maturity level (0–5). No manual attestation was relied upon.';
-    findings='The connected tool reports <b>'+cc.toolPct+'%</b> effective coverage for this control, assessed at <b>CMMI '+cc.score+' ('+(CMMI_LABELS[cc.score]||'')+')</b>.'+(cc.toolPct<90?' Coverage is below the 90% threshold required for full maturity, leaving a residual population outside the control.':' Coverage meets the maturity threshold for this control.');
-    rec=cc.score>=5?'Maintain current coverage and retain the tool\'s evidence export for each audit period.':'Raise effective coverage toward ≥90% to reach CMMI 5, extending the control to the assets currently outside its scope; retain the coverage report as evidence.';
-    ev.push(['Source','🔌 live tool telemetry']);ev.push(['Measured coverage',cc.toolPct+'%']);ev.push(['Maturity','CMMI '+cc.score]);
+    var tl=fwControlTool(id),rawV=(tl&&tl.src&&tl.src.vendor)||'',vendor=(rawV&&rawV.toLowerCase()!=='demo')?rawV:(tl?tl.cap.tool:'the connected tool'),capName=tl?tl.cap.name.replace(/ *\(.*\)/,''):'',sigk=tl&&tl.src&&tl.src.sigkey,demo=!!(tl&&tl.src&&tl.src.demo),notConn=!!(tl&&tl.src&&!tl.src.connected);
+    var live=demo?'<span class="pill warn" style="font-size:9px">demo</span>':(notConn?'':'<span class="pill good" style="font-size:9px">live</span>');
+    method='<b>Automated continuous control monitoring (CCM).</b> Nerion pulled this control\'s live coverage directly from <b>'+vendor+'</b>'+(capName?(' — the '+capName+' capability you connected at onboarding'):'')+', via its API, and mapped the coverage percentage across the in-scope estate to a CMMI maturity level (0–5). No manual attestation was relied upon'+(demo?'; the connection is currently in <b>demo</b> mode, so figures are simulated and labeled.':'.');
+    findings='<b>'+vendor+'</b> reports <b>'+cc.toolPct+'%</b> effective coverage for this control, assessed at <b>CMMI '+cc.score+' ('+(CMMI_LABELS[cc.score]||'')+')</b>.'+(cc.toolPct<90?' Coverage is below the 90% threshold required for full maturity, leaving a residual population outside the control.':' Coverage meets the maturity threshold for this control.');
+    rec=cc.score>=5?('Maintain current coverage and retain '+vendor+'\'s evidence export for each audit period.'):('Raise effective coverage toward ≥90% to reach CMMI 5, extending the control to the assets currently outside its scope; retain the '+vendor+' coverage report as evidence.');
+    ev.push(['Source (tool)',vendor+' '+live]);
+    if(capName)ev.push(['Capability',capName]);
+    if(sigk)ev.push(['Signal','<code>'+sigk+'</code>']);
+    ev.push(['Measured coverage',cc.toolPct+'%']);ev.push(['Maturity','CMMI '+cc.score]);
   } else if(cc.src==='document'){var d=cc.doc;
     method='<b>Document review.</b> The governing policy analyzed at onboarding was assessed against this control\'s expected attributes; the proportion of required attributes present was mapped to a CMMI maturity level.';
     var missing=(d.attrs&&d.attrs.filter(function(a){return !a.found;}))||[];
