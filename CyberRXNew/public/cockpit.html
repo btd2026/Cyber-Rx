@@ -2621,12 +2621,18 @@ function drillVendors(){
 function renderCisoOps(){
   var host=document.getElementById('cisoOps');if(!host)return;
   var live=!!SIGNALS;
-  var oi=sig('open_incidents');var underAttack=oi!=null&&oi>0;
+  var oi=sig('open_incidents');
+  // Under attack if the SIEM reports open incidents OR a live incident is running
+  // in the War Room (incidentActive). Either flips this tile to the alarm state.
+  var wrActive=(typeof incidentActive!=='undefined')&&incidentActive;
+  var underAttack=(oi!=null&&oi>0)||wrActive;
   // Tile 1 — under attack?
-  var t1v=underAttack?(oi+' active incident'+(oi>1?'s':'')):(oi!=null?'No active compromise':'Connect your SIEM');
+  var t1v=underAttack
+    ?(((oi!=null&&oi>0)?(oi+' active incident'+(oi>1?'s':'')):'Active incident')+(wrActive&&incidentAsset?(' · '+incidentAsset):''))
+    :(oi!=null?'No active compromise':'Connect your SIEM');
   var t1c=underAttack?'crit':(oi!=null?'good':'muted');
   var t1s=underAttack?'<b style="color:var(--blue)">Enter the War Room →</b>':(oi!=null?'✓ nothing burning right now':'live from your SIEM once connected');
-  var t1=drillTile('attack','Are we under attack?',(underAttack?'':'✓ ')+t1v,t1c,t1s,'');
+  var t1=drillTile('attack','Are we under attack?',(underAttack?'⚠ ':'✓ ')+t1v,t1c,t1s,'');
   // Tile 2 — top-10 capability health
   var capStates=CAPS.map(function(c){return capColor(capDeploy(c));});
   var measured=CAPS.filter(function(c){return capDeploy(c)!=null;}).length;
