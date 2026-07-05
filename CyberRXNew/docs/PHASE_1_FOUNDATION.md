@@ -1,4 +1,4 @@
-# CyberRx — Phase 1: Foundation (built & proven)
+# Nerion — Phase 1: Foundation (built & proven)
 
 **Status:** Complete, pending founder approval. The hard acceptance test —
 **tenant isolation proven at the database level** — passes.

@@ -1,0 +1,6 @@
+title,severity,asset,exposure,status
+Resident PII breach (benefits),Critical,Benefits eligibility system (CalSAWS),$60M,open
+Tax-records exfiltration,Critical,Tax filing & records (FTB),$70M,open
+Unemployment-fraud / claims takeover,Critical,Unemployment claims platform (EDD),$45M,open
+Legacy mainframe ransomware,High,Legacy COBOL benefits mainframe,$25M,open
+911 / dispatch service disruption,Critical,Statewide 911 / dispatch,$30M,open

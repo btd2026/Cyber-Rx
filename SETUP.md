@@ -1,6 +1,6 @@
-# CyberRx Setup Guide
+# Nerion Setup Guide
 
-Complete setup instructions for developers and operators deploying CyberRx.
+Complete setup instructions for developers and operators deploying Nerion.
 
 ## Table of Contents
 
@@ -113,7 +113,7 @@ npm run dev
 
 2. **Frontend Access**
    - Open browser: http://localhost:5173
-   - Should load CyberRx dashboard
+   - Should load Nerion dashboard
 
 ## Production Deployment
 
@@ -204,7 +204,7 @@ Railway provides managed PostgreSQL with automatic connection string:
 
 ### Supported Tools
 
-CyberRx integrates with the following security tools:
+Nerion integrates with the following security tools:
 
 #### ITSM Systems
 - **ServiceNow**: Incident ticket creation and management

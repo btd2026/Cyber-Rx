@@ -1,6 +1,6 @@
 # Vercel + Render Deployment Guide
 
-Complete deployment guide for CyberRx using Vercel (frontend) and Render (backend + database).
+Complete deployment guide for Nerion using Vercel (frontend) and Render (backend + database).
 
 ## Table of Contents
 

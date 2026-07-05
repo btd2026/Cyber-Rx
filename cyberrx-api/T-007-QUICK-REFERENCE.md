@@ -141,7 +141,7 @@ All sync jobs are queued via BullMQ:
 Scheduler operations are logged with winston:
 
 ```
-[scheduler] CyberRx scheduler initialized
+[scheduler] Nerion scheduler initialized
 [scheduler] Starting vendor sync scheduling
 [scheduler] Processing 15 vendors for org abc-123
 [scheduler] Scheduling 3 critical vendors with interval: 0 2 * * *

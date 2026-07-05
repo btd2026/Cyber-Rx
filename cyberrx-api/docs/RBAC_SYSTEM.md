@@ -1,8 +1,8 @@
-# CyberRx RBAC System Documentation
+# Nerion RBAC System Documentation
 
 ## Overview
 
-The CyberRx API implements a comprehensive Role-Based Access Control (RBAC) system with 6 executive roles and 40+ granular permissions across multiple domains.
+The Nerion API implements a comprehensive Role-Based Access Control (RBAC) system with 6 executive roles and 40+ granular permissions across multiple domains.
 
 ## Executive Roles
 

@@ -1,6 +1,6 @@
-# CyberRx — In-Repo Tracking System
+# Nerion — In-Repo Tracking System
 
-This directory is the lightweight project-management layer for CyberRx production-readiness work. It exists because the team doesn't currently have a GitHub Issues / Linear / Jira integration wired in, but still wants the discipline of issue-per-PR, kanban status, manager-facing weekly status, and a changelog. Every file here is plain Markdown; every issue is one command away from becoming a real GitHub Issue if/when that becomes useful.
+This directory is the lightweight project-management layer for Nerion production-readiness work. It exists because the team doesn't currently have a GitHub Issues / Linear / Jira integration wired in, but still wants the discipline of issue-per-PR, kanban status, manager-facing weekly status, and a changelog. Every file here is plain Markdown; every issue is one command away from becoming a real GitHub Issue if/when that becomes useful.
 
 ## Layout
 

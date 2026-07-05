@@ -1,4 +1,4 @@
-# CyberRx — Master Build Brief for Claude Code
+# Nerion — Master Build Brief for Claude Code
 
 **Purpose:** Build a production platform from the approved mock. This brief is the single source of truth. The mock (`cyberrx-platform.html`) shows the *intended experience*; this document explains *what must be true underneath it*.
 
@@ -26,9 +26,9 @@ Start by having Claude Code do **Phase 0 only** (a plan), and approve that befor
 
 ## 1. What we're building
 
-**CyberRx is an executive operating system for defensible cybersecurity decisions.** It is sold to Fortune-100-class organizations (beachhead: large healthcare payers) at enterprise pricing.
+**Nerion is an executive operating system for defensible cybersecurity decisions.** It is sold to Fortune-100-class organizations (beachhead: large healthcare payers) at enterprise pricing.
 
-It is **not** a GRC tool, not Vanta, not a security dashboard. Those tell you compliance status bottom-up. CyberRx works top-down from the decisions each executive must defend: it tells a CEO/CISO/CFO/CIO/CLO/CRO/Board what's true right now, what it means in dollars, what to decide, and — critically — produces the **defensible record** that they acted reasonably.
+It is **not** a GRC tool, not Vanta, not a security dashboard. Those tell you compliance status bottom-up. Nerion works top-down from the decisions each executive must defend: it tells a CEO/CISO/CFO/CIO/CLO/CRO/Board what's true right now, what it means in dollars, what to decide, and — critically — produces the **defensible record** that they acted reasonably.
 
 **Three moats (build the product around these, not around feature parity):**
 1. **The decision ledger** — decisions are first-class objects with rationale, the evidence known at the time, an owner, a timestamp, a residual-risk value, and a re-review trigger. This is institutional memory and legal defensibility. It is the wedge.
@@ -191,7 +191,7 @@ Financial leaves come from financial connectors (cloud bills, HRIS, contracts) o
 
 ## 11. First message to paste into Claude Code
 
-> I'm building **CyberRx**, an executive cybersecurity decision platform (full brief attached as `cyberrx-build-brief.md`; the approved UX is `cyberrx-platform.html`). I'm non-technical, so we work in phases: after each phase you stop, explain in plain English, give me a live URL to look at, and wait for my approval.
+> I'm building **Nerion**, an executive cybersecurity decision platform (full brief attached as `cyberrx-build-brief.md`; the approved UX is `cyberrx-platform.html`). I'm non-technical, so we work in phases: after each phase you stop, explain in plain English, give me a live URL to look at, and wait for my approval.
 >
 > **Do Phase 0 only right now: produce the plan — repo structure, the data model with `tenant_id` + RLS on every table, the auth/MFA approach, the connector strategy, how secrets stay server-side, and the phase-by-phase plan.** Do not write application code yet. The non-negotiables: tenant isolation (RLS) proven with two test orgs before any real data; the Anthropic API server-side only; every user-facing number must trace to pulled evidence or an owned assumption; one security review before launch.
 >

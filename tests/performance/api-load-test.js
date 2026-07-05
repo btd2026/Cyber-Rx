@@ -1,4 +1,4 @@
-// CyberRx API Load Test
+// Nerion API Load Test
 // Run with: k6 run tests/performance/api-load-test.js
 
 import http from 'k6/http';

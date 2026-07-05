@@ -1,6 +1,6 @@
-# CyberRx E2E Test Suite
+# Nerion E2E Test Suite
 
-Comprehensive end-to-end testing for the CyberRx vendor monitoring system using Playwright.
+Comprehensive end-to-end testing for the Nerion vendor monitoring system using Playwright.
 
 ## Overview
 

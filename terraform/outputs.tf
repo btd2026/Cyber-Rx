@@ -1,4 +1,4 @@
-# Outputs for CyberRx Infrastructure
+# Outputs for Nerion Infrastructure
 
 output "api_gateway_url" {
   description = "API Gateway URL"
@@ -77,7 +77,7 @@ output "monitoring_dashboard_url" {
 output "deployment_instructions" {
   description = "Deployment instructions"
   value = <<-EOT
-    CyberRx infrastructure deployed successfully!
+    Nerion infrastructure deployed successfully!
     
     Access URLs:
     - Frontend: ${module.cdn.frontend_url}

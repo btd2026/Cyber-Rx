@@ -2,7 +2,7 @@
 
 ## Overview
 
-The CyberRx API now features production-grade, Redis-backed rate limiting to protect against abuse, DoS attacks, and ensure fair resource allocation. This implementation replaces the previous in-memory rate limiting with a distributed, scalable solution.
+The Nerion API now features production-grade, Redis-backed rate limiting to protect against abuse, DoS attacks, and ensure fair resource allocation. This implementation replaces the previous in-memory rate limiting with a distributed, scalable solution.
 
 ## What's New
 

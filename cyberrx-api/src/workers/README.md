@@ -2,7 +2,7 @@
 
 ## Overview
 
-This module implements a Redis-backed BullMQ job queue for processing vendor sync operations asynchronously in the CyberRx system. The queue handles background jobs for vendor data synchronization, connector syncing, and risk assessments.
+This module implements a Redis-backed BullMQ job queue for processing vendor sync operations asynchronously in the Nerion system. The queue handles background jobs for vendor data synchronization, connector syncing, and risk assessments.
 
 ## Architecture
 

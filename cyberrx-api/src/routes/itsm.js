@@ -46,11 +46,11 @@ async function finalizeSystem(orgId, s) {
   return { ...s, connected };
 }
 
-// Compose a clear, structured ticket body from CyberRX-collected information.
+// Compose a clear, structured ticket body from Nerion-collected information.
 function composeTicket(payload = {}) {
   const { title, action, finding, process, application, owner, dueDate, evidence, recommendation, whyNow, severity } = payload;
   const lines = [];
-  lines.push(payload.summary || (finding && finding.title) || action || 'Security remediation required by CyberRX.');
+  lines.push(payload.summary || (finding && finding.title) || action || 'Security remediation required by Nerion.');
   lines.push('');
   if (whyNow) lines.push(`Why now: ${whyNow}`);
   if (severity) lines.push(`Severity: ${severity}`);
@@ -61,8 +61,8 @@ function composeTicket(payload = {}) {
   if (evidence) lines.push('', `Evidence: ${evidence}`);
   if (owner) lines.push('', `Suggested owner: ${owner}`);
   if (dueDate) lines.push(`Target date: ${dueDate}`);
-  lines.push('', '— Opened automatically by CyberRX from live assessment data.');
-  return { title: title || (finding && finding.title) || action || 'CyberRX security finding', desc: lines.join('\n') };
+  lines.push('', '— Opened automatically by Nerion from live assessment data.');
+  return { title: title || (finding && finding.title) || action || 'Nerion security finding', desc: lines.join('\n') };
 }
 
 // Core ticket creation against a system using vaulted creds. Returns the result
@@ -115,7 +115,7 @@ async function record(orgId, system, result, payload) {
        VALUES ($1,$2,'cyberrx',$3,$4,$5,$6,$7,$8,'open',NOW())
        ON CONFLICT (organization_id, source_ref)
        DO UPDATE SET ticket_id=EXCLUDED.ticket_id, ticket_url=EXCLUDED.ticket_url, system=EXCLUDED.system, updated_at=NOW()`,
-      [`rt_${orgId}_${Date.now()}`, orgId, sourceRef, payload.title || 'CyberRX ticket', payload.severity || null, system, result.ticket_id || null, result.url || null]);
+      [`rt_${orgId}_${Date.now()}`, orgId, sourceRef, payload.title || 'Nerion ticket', payload.severity || null, system, result.ticket_id || null, result.url || null]);
   } catch (e) { logger.debug('remediation_tickets record skipped', { error: e.message }); }
 }
 
@@ -137,7 +137,7 @@ router.post('/credentials', optionalJWT, demoOrg, async (req, res) => {
   catch (e) { res.status(500).json({ error: 'Unable to store credentials.' }); }
 });
 
-// Open a ticket in the selected system, with a CyberRX-composed body.
+// Open a ticket in the selected system, with a Nerion-composed body.
 router.post('/open', optionalJWT, demoOrg, async (req, res) => {
   const orgId = req.orgId; if (!orgId) return res.status(400).json({ error: 'Organization required.' });
   const payload = req.body || {};
@@ -154,7 +154,7 @@ router.post('/open', optionalJWT, demoOrg, async (req, res) => {
   }
 });
 
-// Pull the live status of CyberRX-opened tickets so the cockpit (CISO dashboard)
+// Pull the live status of Nerion-opened tickets so the cockpit (CISO dashboard)
 // can track each decision's project on refresh. Refreshes from Jira/ServiceNow
 // when credentials exist; otherwise returns the last stored status.
 async function liveStatus(orgId, row) {
@@ -229,7 +229,7 @@ router.get('/projects', optionalJWT, demoOrg, async (req, res) => {
 // Legacy direct creation endpoint (kept).
 router.post('/:system/ticket', authenticateJWT, async (req, res) => {
   const orgId = req.orgId || 'demo';
-  const { title = 'CyberX-Ray Security Finding', desc = '', actId = '', finding = null } = req.body || {};
+  const { title = 'Nerion Security Finding', desc = '', actId = '', finding = null } = req.body || {};
   const result = await openTicket(req.params.system, orgId, { title, desc, finding, actId });
   res.json(result);
 });

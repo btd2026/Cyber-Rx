@@ -1,4 +1,4 @@
-# CyberRx — Phase 2B: the other six seats
+# Nerion — Phase 2B: the other six seats
 
 **Status:** Complete, pending approval. CEO, CFO, CIO, CLO, CRO, and Board seats
 are live in the React app, generalized from the CISO reference.

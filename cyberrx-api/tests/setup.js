@@ -1,4 +1,4 @@
-// Test setup for CyberRx API tests
+// Test setup for Nerion API tests
 const { Pool } = require('pg');
 
 // Test database configuration

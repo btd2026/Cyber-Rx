@@ -1,0 +1,6 @@
+title,severity,asset,exposure,status
+Ransomware on claims clearinghouse,Critical,Change Healthcare clearinghouse,$180M,open
+PHI exfiltration from claims database,Critical,Claims adjudication DB,$95M,open
+Third-party breach via pharmacy cloud,High,OptumRx pharmacy platform,$40M,open
+Credential stuffing on member portal,High,Member portal,$25M,open
+Legacy EDI gateway exploit,High,EDI gateway,$22M,open

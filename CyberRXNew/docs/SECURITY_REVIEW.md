@@ -1,4 +1,4 @@
-# CyberRx — Security Review (Phase 6d · launch gate)
+# Nerion — Security Review (Phase 6d · launch gate)
 
 **Result: PASS** (with documented production prerequisites). This is the
 brief's non-negotiable launch gate. Checks were run against the real code and a

@@ -1,9 +1,9 @@
 'use strict';
 
 /**
- * industryProfiles — the industry-agnostic backbone of CyberRX.
+ * industryProfiles — the industry-agnostic backbone of Nerion.
  *
- * CyberRX used to be hard-wired to a health-insurance payer. This registry makes
+ * Nerion used to be hard-wired to a health-insurance payer. This registry makes
  * the platform adapt to ANY industry the customer selects during setup. Each
  * profile drives:
  *   - the industry-specific intake questions added to the base interview,

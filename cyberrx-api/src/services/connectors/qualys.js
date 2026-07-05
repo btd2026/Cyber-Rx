@@ -16,7 +16,7 @@ const parser = new XMLParser({ ignoreAttributes: true });
 const base = (creds) => String(creds.baseUrl || (creds.pod ? `https://qualysapi.${creds.pod}.apps.qualys.com` : '')).replace(/\/+$/, '');
 const authH = (creds) => ({
   Authorization: `Basic ${Buffer.from(`${creds.username}:${creds.password}`).toString('base64')}`,
-  'X-Requested-With': 'CyberRx',
+  'X-Requested-With': 'Nerion',
 });
 
 async function getXml(creds, path) {

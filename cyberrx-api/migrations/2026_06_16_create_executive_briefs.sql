@@ -1,6 +1,6 @@
 -- Executive Agent Briefs
 -- Stores the latest continuously-generated, role-specific executive intelligence
--- produced by the CyberRX AI agent layer. One row per (organization, role).
+-- produced by the Nerion AI agent layer. One row per (organization, role).
 --
 -- Vision: "AI agents that continuously read your security stack and deliver each
 -- executive the live, role-specific intelligence they need to act."

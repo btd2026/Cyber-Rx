@@ -1,4 +1,4 @@
-/* CyberRx cockpit — seat content + evidence, rendered by cockpit.html's helpers.
+/* Nerion cockpit — seat content + evidence, rendered by cockpit.html's helpers.
    Every claim (data-ev) has an EV entry: formula, inputs (value+source), math. */
 
 var SEATS = {
@@ -145,7 +145,7 @@ var SEATS = {
      '<div id="cloPrivacy"></div>')
    +sec('06','Evidence readiness','Can we produce the evidence — for a regulator, an auditor or a court — on demand? Compliance posture across the frameworks in scope, and the preserved, timestamped record behind every determination and decision.',
      '<div id="cisoCompliance"></div>'
-     +'<div class="cn" style="margin-top:12px">Evidence readiness is the ability to show, on demand, that a control was in place and a determination was made properly. The compliance posture above is your framework evidence; every materiality determination and executive decision in CyberX-Ray is timestamped and logged as the contemporaneous record a court or regulator expects.</div>')
+     +'<div class="cn" style="margin-top:12px">Evidence readiness is the ability to show, on demand, that a control was in place and a determination was made properly. The compliance posture above is your framework evidence; every materiality determination and executive decision in Nerion is timestamped and logged as the contemporaneous record a court or regulator expects.</div>')
   );}
  },
 
@@ -250,8 +250,8 @@ var SEATS = {
    +sec('04','Evidence collection','The live evidence behind every score — which tools are connected and what coverage they give, plus the policies analyzed by document review. This is what lets you walk an auditor from a number to its source.',
      '<div id="cisoCoverage"></div>'
      +'<div class="cn" style="margin-top:12px">Evidence is collected two ways: <b>🔌 live tool telemetry</b> (EDR, identity, vulnerability, cloud, SIEM, backup — the coverage above) and <b>📄 document review</b> (policies uploaded in onboarding, scored against the NIST catalog). Every framework score in the next tab traces to one of these sources — no self-attestation.</div>')
-   +sec('05','Framework alignment','The full control catalogs — NIST CSF 2.0 (6 functions · 22 categories · 106 subcategories) and NIST SP 800-53 Rev 5 (20 families) — each scored on the CMMI maturity scale (0–5) and rolled up per subcategory → category → function → overall, with the source (🔌 system / 📄 document) on every control.',
-     '<div id="cisoFrameworks"></div>')
+   +sec('05','Framework alignment','The business-to-control value chain and the full control catalogs. The value chain traces <b>business function → process → technology → cyber risk (in $) → the framework control that mitigates it</b>, so you can see exactly how much money each control saves when it operates effectively. Below it, NIST CSF 2.0 (6 functions · 22 categories · 106 subcategories) and NIST SP 800-53 Rev 5, each scored on the CMMI maturity scale (0–5) with the source (🔌 system / 📄 document) on every control.',
+     '<div id="valueChain"></div><div style="margin-top:14px"></div><div id="cisoFrameworks"></div>')
    +sec('06','Executive risk reporting','What the CISO reports up — the audit-readiness posture across the frameworks in scope, the growth side of security (deals cleared, certifications, trust sold), and the one-click board / regulator report.',
      '<div id="cisoCompliance"></div>'
      +'<div id="cisoGrowth" style="margin-top:14px"></div>'

@@ -2,7 +2,7 @@
 
 ## Status: COMPLETE
 
-The ConnectorCredentialModal component has been successfully built and integrated into the CyberRx frontend. This is the critical blocker for the entire third-party monitoring system.
+The ConnectorCredentialModal component has been successfully built and integrated into the Nerion frontend. This is the critical blocker for the entire third-party monitoring system.
 
 ## What Was Built
 
@@ -162,7 +162,7 @@ Changes:
 ## UI/UX Design
 
 ### Visual Design
-- Follows CyberRx healthcare BCBS professional palette
+- Follows Nerion healthcare BCBS professional palette
 - Primary Blue: `#2563EB` (actions)
 - Success Green: `#0FBB80` (verified)
 - Error Red: `#EF4545` (errors)

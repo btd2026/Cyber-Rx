@@ -1,4 +1,4 @@
-# CyberRx — Claude Code Prompt Pack (paste one at a time, in order)
+# Nerion — Claude Code Prompt Pack (paste one at a time, in order)
 
 **Before you start:** put `cyberrx-build-brief.md` and `cyberrx-platform.html` (the mock) in the Claude Code project folder so every prompt can reference them. Work through these **in order**. After each one, Claude Code should stop, explain in plain English, give you a **live URL**, and wait for your approval before you paste the next.
 
@@ -9,7 +9,7 @@ If a phase says "break this into sub-steps," let Claude Code pause and show you 
 ## ▶ PROMPT 0 — Plan only (paste first)
 
 ```
-I'm building CyberRx, an executive cybersecurity decision platform. The full brief is cyberrx-build-brief.md and the approved UX is cyberrx-platform.html — read both before responding.
+I'm building Nerion, an executive cybersecurity decision platform. The full brief is cyberrx-build-brief.md and the approved UX is cyberrx-platform.html — read both before responding.
 
 I'm non-technical, so we work in phases. After each phase you STOP, explain in plain English what you built and decided, give me a live URL to look at, and wait for my approval before continuing.
 

@@ -1,4 +1,4 @@
-# CyberRx — Phase 6: orchestration, War Room, Incident Commander, launch gate
+# Nerion — Phase 6: orchestration, War Room, Incident Commander, launch gate
 
 **Status:** Complete (6a–6d). This is the final phase; 6d is the launch gate.
 

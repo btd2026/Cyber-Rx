@@ -1,0 +1,306 @@
+{
+  "org_name": "AT&T Inc.",
+  "org_id": "org_att",
+  "industry": "Telecommunications",
+  "regions": [
+    "US"
+  ],
+  "currency": "USD",
+  "financials": {
+    "revenue": 122300000000,
+    "operatingIncome": 23000000000,
+    "netIncome": 10700000000,
+    "enterpriseValue": 160000000000,
+    "sharesOutstanding": 7180000000
+  },
+  "appetite": 300000000,
+  "budget": 500000000,
+  "dataRecords": 110000000,
+  "principalRisks": {
+    "creditMarket": 130000000000,
+    "operational": 25000000000,
+    "thirdParty": 8000000000,
+    "compliance": 6000000000
+  },
+  "insurance": {
+    "limit": 150000000,
+    "premium": 9000000,
+    "retention": 25000000,
+    "renewal": "2026-10-15"
+  },
+  "processes": [
+    {
+      "name": "Mobile network operations (5G/wireless)",
+      "data": "PII, CPNI, OT",
+      "rev": "$80B",
+      "revenue": "$80B",
+      "rto": "1",
+      "criticality": "Critical",
+      "txPerDay": "500000000",
+      "tolerance": "$18M",
+      "function": "Mobility"
+    },
+    {
+      "name": "Broadband & fiber (consumer/business)",
+      "data": "PII, CPNI",
+      "rev": "$30B",
+      "revenue": "$30B",
+      "rto": "2",
+      "criticality": "Critical",
+      "txPerDay": "100000000",
+      "tolerance": "$8M",
+      "function": "Broadband"
+    },
+    {
+      "name": "Business & enterprise connectivity",
+      "data": "PII, Confidential",
+      "rev": "$30B",
+      "revenue": "$30B",
+      "rto": "2",
+      "criticality": "Critical",
+      "txPerDay": "20000000",
+      "tolerance": "$6M",
+      "function": "Enterprise"
+    },
+    {
+      "name": "Billing & customer care",
+      "data": "PII, PCI, Financial",
+      "rev": "$10B",
+      "revenue": "$10B",
+      "rto": "6",
+      "criticality": "High",
+      "txPerDay": "120000000",
+      "tolerance": "$4M",
+      "function": "Customer care"
+    },
+    {
+      "name": "Interconnection & signaling (SS7/roaming)",
+      "data": "CPNI, OT",
+      "rev": "$5B",
+      "revenue": "$5B",
+      "rto": "1",
+      "criticality": "Critical",
+      "txPerDay": "50000000",
+      "tolerance": "$5M",
+      "function": "Network core"
+    }
+  ],
+  "apps": [
+    {
+      "name": "5G wireless core (EPC/5GC)",
+      "host": "application on-prem",
+      "data": "PII, CPNI, OT",
+      "vendor": "Ericsson",
+      "eol": "no",
+      "recovery": "2",
+      "txPerDay": "500000000",
+      "valuePerDay": "$180M",
+      "processes": [
+        "Mobile network operations (5G/wireless)",
+        "Interconnection & signaling (SS7/roaming)",
+        "Business & enterprise connectivity"
+      ]
+    },
+    {
+      "name": "Lawful-intercept & provisioning",
+      "host": "application on-prem",
+      "data": "CPNI, CUI, Confidential",
+      "vendor": "In-house",
+      "eol": "no",
+      "recovery": "4",
+      "txPerDay": "1000000",
+      "valuePerDay": "$120M",
+      "processes": [
+        "Interconnection & signaling (SS7/roaming)",
+        "Mobile network operations (5G/wireless)"
+      ]
+    },
+    {
+      "name": "SS7 / Diameter signaling gateway",
+      "host": "internet-facing",
+      "data": "PII, CPNI, OT",
+      "vendor": "Oracle Communications",
+      "eol": "yes",
+      "recovery": "2",
+      "txPerDay": "50000000",
+      "valuePerDay": "$60M",
+      "processes": [
+        "Interconnection & signaling (SS7/roaming)",
+        "Mobile network operations (5G/wireless)"
+      ]
+    },
+    {
+      "name": "Customer data platform (CRM)",
+      "host": "database on-prem",
+      "data": "PII, CPNI, Financial",
+      "vendor": "Oracle",
+      "eol": "no",
+      "recovery": "8",
+      "txPerDay": "120000000",
+      "valuePerDay": "$70M",
+      "processes": [
+        "Billing & customer care",
+        "Mobile network operations (5G/wireless)"
+      ]
+    },
+    {
+      "name": "Broadband & fiber access network",
+      "host": "internet-facing",
+      "data": "PII, CPNI",
+      "vendor": "Nokia",
+      "eol": "no",
+      "recovery": "4",
+      "txPerDay": "100000000",
+      "valuePerDay": "$70M",
+      "processes": [
+        "Broadband & fiber (consumer/business)"
+      ]
+    },
+    {
+      "name": "Billing / OSS-BSS",
+      "host": "application cloud",
+      "data": "PII, PCI, Financial",
+      "vendor": "Amdocs",
+      "eol": "no",
+      "recovery": "6",
+      "txPerDay": "120000000",
+      "valuePerDay": "$40M",
+      "processes": [
+        "Billing & customer care"
+      ]
+    }
+  ],
+  "risks": [
+    {
+      "title": "Nation-state intrusion into signaling / call records",
+      "severity": "Critical",
+      "asset": "SS7 / Diameter signaling gateway",
+      "status": "open",
+      "financial_exposure": "$180M"
+    },
+    {
+      "title": "Lawful-intercept system compromise",
+      "severity": "Critical",
+      "asset": "Lawful-intercept & provisioning",
+      "status": "open",
+      "financial_exposure": "$150M"
+    },
+    {
+      "title": "Subscriber CPNI / call-records breach",
+      "severity": "Critical",
+      "asset": "Customer data platform (CRM)",
+      "status": "open",
+      "financial_exposure": "$120M"
+    },
+    {
+      "title": "5G core disruption / mass outage",
+      "severity": "Critical",
+      "asset": "5G wireless core (EPC/5GC)",
+      "status": "open",
+      "financial_exposure": "$110M"
+    },
+    {
+      "title": "Broadband access DDoS / outage",
+      "severity": "High",
+      "asset": "Broadband & fiber access network",
+      "status": "open",
+      "financial_exposure": "$40M"
+    }
+  ],
+  "initiatives": [
+    {
+      "name": "Network segmentation & signaling hardening",
+      "owner": "CISO",
+      "cost": "$30M",
+      "roi": "17×",
+      "status": "in progress",
+      "engagement": "gate"
+    },
+    {
+      "name": "Lawful-intercept isolation & monitoring",
+      "owner": "CISO",
+      "cost": "$12M",
+      "roi": "15×",
+      "status": "in progress",
+      "engagement": "gate"
+    },
+    {
+      "name": "CPNI data-protection & DLP",
+      "owner": "CISO",
+      "cost": "$16M",
+      "roi": "13×",
+      "status": "in progress",
+      "engagement": "design"
+    },
+    {
+      "name": "Legacy SS7 retirement / Diameter migration",
+      "owner": "CIO",
+      "cost": "$18M",
+      "roi": "8×",
+      "status": "planned",
+      "engagement": "design"
+    }
+  ],
+  "governance": {
+    "committee": "Audit Committee",
+    "cadence": "Quarterly",
+    "cisoReportsTo": "CIO",
+    "boardExpertise": "Yes",
+    "ermIntegrated": "Yes",
+    "ir": {
+      "tested": "Yes — tabletop within 12 months",
+      "lastTabletop": "2026-02-20",
+      "retainer": "Yes",
+      "ransomwarePolicy": "Board-approved policy"
+    }
+  },
+  "aiGovernance": {
+    "systems": 25,
+    "decisioning": "Piloting",
+    "framework": "NIST AI RMF",
+    "policy": "Drafted",
+    "euAiAct": "Not in scope",
+    "inventory": "Partially"
+  },
+  "strategicInitiatives": [
+    {
+      "name": "AI network-ops & customer care",
+      "type": "AI product or feature",
+      "valueUsd": 1500000000,
+      "horizon": "This year"
+    },
+    {
+      "name": "Fiber expansion to 60M locations",
+      "type": "Market / geographic expansion",
+      "valueUsd": 4000000000,
+      "horizon": "Next 12–24 months"
+    },
+    {
+      "name": "5G standalone core rollout",
+      "type": "Cloud platform or migration",
+      "valueUsd": 2000000000,
+      "horizon": "Next 12–24 months"
+    }
+  ],
+  "growth": {
+    "pipelineUsd": 5000000000,
+    "reviewBeforeWks": "5",
+    "reviewNowWks": "3",
+    "dealsGated": "8",
+    "trustReviews": "12",
+    "certs": [
+      "SOC 2 Type II",
+      "ISO 27001",
+      "NIST CSF 2.0"
+    ]
+  },
+  "compliance": {
+    "frameworksInScope": [
+      "NIST CSF 2.0",
+      "FCC CPNI Rules",
+      "CISA Cross-Sector",
+      "SOC 2",
+      "ISO 27001"
+    ]
+  }
+}

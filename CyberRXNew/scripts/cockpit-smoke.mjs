@@ -85,6 +85,14 @@ const LIVE = {
   material_exposure_items: [{ risk: 'Ransomware', asset_id: 'A1', exposure_usd: 34e6 }],
   trend: [{ date: '2026-05-01T00:00:00Z', ale: 96e6 }, { date: '2026-06-01T00:00:00Z', ale: 82e6 }, { date: '2026-07-01T00:00:00Z', ale: 68e6 }],
   counts: { crown_jewels: 2, processes: 4, assets: 40, risks: 7 },
+  value_chain: { method: { severity_impact: { critical: 1, high: 0.6, medium: 0.3, low: 0.15 }, operating_hours_per_year: 8760, note: 'modeled' },
+    functions: [
+      { name: 'Claims', annual_usd: 230e9, daily_usd: 630e6, process_count: 2, processes: [
+        { id: 'P1', name: 'Claims processing', criticality: 'Critical', function: 'Claims', annual_usd: 200e9, daily_usd: 548e6, per_hr: 22.8e6, fraction_of_function: 0.87,
+          assets: [ { id: 'A1', name: 'ClaimsDB', internet_facing: true, crown_jewel: true, tier: 'tier1', recovery_hours: 48,
+            risks: [ { title: 'Ransomware on claims', severity: 'Critical', exposure_usd: 180e6, impact_fraction: 1, impact_hours: 48, process_stop_usd: 1095e6 } ] } ] },
+        { id: 'P2', name: 'Provider payments', criticality: 'High', function: 'Claims', annual_usd: 30e9, daily_usd: 82e6, per_hr: 3.4e6, fraction_of_function: 0.13, assets: [] } ] },
+    ] },
 };
 const GRAPH = { nodes: [{ id: 'proc:P1', type: 'process', label: 'Claims', attrs: { criticality: 'Critical' } }, { id: 'asset:A1', type: 'asset', label: 'ClaimsDB', attrs: { crown_jewel_tier: 'tier1', score: 0.83 } }, { id: 'risk:R1', type: 'risk', label: 'Ransomware' }], edges: [{ source: 'proc:P1', target: 'asset:A1', type: 'supports' }, { source: 'risk:R1', target: 'asset:A1', type: 'threatens' }] };
 const SIGNALS = { edr_pct: { value: 98 }, mfa_pct: { value: 96 }, pam_pct: { value: 60 }, phishing_pct: { value: 3 }, open_incidents: { value: 0 }, mttd_hrs: { value: 8 }, patch_pct: { value: 72 }, code_scanning_open: { value: 7 }, dependabot_critical: { value: 2 }, changes_merged_wk: { value: 42 }, changes_in_review: { value: 11 }, audit_findings_open: { value: 14 }, audit_findings_repeat: { value: 3 } };
@@ -97,7 +105,7 @@ for (const s of seatIds) {
   catch (e) { problems.push(`[render ${s}] ${e.message}`); }
 }
 // Exercise the live-only renderers directly too.
-for (const fn of ['applyLive', 'renderChain', 'renderProcBars', 'renderCioSystems', 'renderCpoQuality', 'renderCpoVelocity', 'renderAuditRepeat', 'renderBoard', 'renderEarnings', 'renderCroPortfolio', 'renderRoi', 'renderSignals', 'renderAiRisk', 'renderTrend', 'renderInitiatives', 'renderOversight', 'renderMateriality', 'renderCfoFraud', 'renderCroKri', 'renderCloOps', 'renderThreatIntel', 'renderDrReadiness', 'renderPeerBench', 'renderBoardPack', 'openBoardPack', 'closeBoardPack']) {
+for (const fn of ['applyLive', 'renderChain', 'renderProcBars', 'renderCioSystems', 'renderCpoQuality', 'renderCpoVelocity', 'renderAuditRepeat', 'renderValueChain', 'renderBoard', 'renderEarnings', 'renderCroPortfolio', 'renderRoi', 'renderSignals', 'renderAiRisk', 'renderTrend', 'renderInitiatives', 'renderOversight', 'renderMateriality', 'renderCfoFraud', 'renderCroKri', 'renderCloOps', 'renderThreatIntel', 'renderDrReadiness', 'renderPeerBench', 'renderBoardPack', 'openBoardPack', 'closeBoardPack']) {
   try { vm.runInContext(`typeof ${fn}==='function' && ${fn}();`, ctx); }
   catch (e) { problems.push(`[${fn}] ${e.message}`); }
 }

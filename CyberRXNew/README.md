@@ -1,6 +1,6 @@
-# CyberRx (CyberRXNew)
+# Nerion (CyberRXNew)
 
-The new **CyberRx** executive cybersecurity decision platform — built fresh and
+The new **Nerion** executive cybersecurity decision platform — built fresh and
 kept fully separate from the legacy app at the repo root (`frontend/`,
 `cyberrx-api/`), which is untouched.
 

@@ -2,7 +2,7 @@
 
 ## Migration Status: COMPLETED
 
-Successfully migrated CyberRx deployment from Railway to Vercel (frontend) + Render (backend + database).
+Successfully migrated Nerion deployment from Railway to Vercel (frontend) + Render (backend + database).
 
 **Date:** May 29, 2026
 **Commit:** 04f6783
@@ -533,7 +533,7 @@ https://github.com/btd2026/Cyber-Rx/issues
 
 ✅ **Migration Complete**
 
-The CyberRx application has been successfully migrated from Railway to Vercel (frontend) + Render (backend + database). All configuration files have been updated, documentation has been created, and the changes have been committed to the GitHub repository.
+The Nerion application has been successfully migrated from Railway to Vercel (frontend) + Render (backend + database). All configuration files have been updated, documentation has been created, and the changes have been committed to the GitHub repository.
 
 **Key Achievements:**
 - Removed Railway-specific configurations

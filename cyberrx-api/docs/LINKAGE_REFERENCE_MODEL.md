@@ -1,6 +1,6 @@
 # Linkage & Multi-Tenant Reference Model
 
-Implements the CyberRX linkage chain and the configuration-driven, multi-tenant
+Implements the Nerion linkage chain and the configuration-driven, multi-tenant
 reference model. No per-tenant code forks — all differences are data/config.
 
 ```

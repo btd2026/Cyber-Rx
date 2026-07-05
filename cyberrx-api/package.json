@@ -1,7 +1,7 @@
 {
   "name": "cyberrx-api",
   "version": "1.0.0",
-  "description": "CyberRx backend API proxy — ITSM routing, security tool sync, credentials vault",
+  "description": "Nerion backend API proxy — ITSM routing, security tool sync, credentials vault",
   "main": "src/index.js",
   "overrides": {
     "form-data": "^4.0.6"

@@ -8,7 +8,7 @@
 
 ## Overview
 
-CyberRx now supports enterprise Single Sign-On (SSO) authentication using Passport.js with both SAML (Okta) and OIDC (Azure AD) protocols. This integration enables secure, standards-based authentication for healthcare payer organizations.
+Nerion now supports enterprise Single Sign-On (SSO) authentication using Passport.js with both SAML (Okta) and OIDC (Azure AD) protocols. This integration enables secure, standards-based authentication for healthcare payer organizations.
 
 ---
 
@@ -30,7 +30,7 @@ CyberRx now supports enterprise Single Sign-On (SSO) authentication using Passpo
 
 ```
 ┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
-│   Frontend      │      │   CyberRx API   │      │  Identity       │
+│   Frontend      │      │   Nerion API   │      │  Identity       │
 │   (React)       │      │   (Express)     │      │  Provider       │
 │                 │      │                 │      │  (Okta/Azure)   │
 └─────────────────┘      └─────────────────┘      └─────────────────┘
@@ -331,7 +331,7 @@ When a user authenticates via SSO for the first time:
 
 ### Time-based One-Time Password (TOTP)
 
-CyberRx uses TOTP for multi-factor authentication:
+Nerion uses TOTP for multi-factor authentication:
 
 1. **Secret Generation:**
    - 32-byte base32 secret
@@ -339,7 +339,7 @@ CyberRx uses TOTP for multi-factor authentication:
    - User-specific (includes email in issuer name)
 
 2. **QR Code Generation:**
-   - `otpauth://totp/CyberRx:user@example.com?secret=...&issuer=CyberRx`
+   - `otpauth://totp/Nerion:user@example.com?secret=...&issuer=Nerion`
    - Compatible with Google Authenticator, Authy, Microsoft Authenticator
 
 3. **Token Verification:**
@@ -351,7 +351,7 @@ CyberRx uses TOTP for multi-factor authentication:
 
 ```
 ┌─────────────────┐      ┌─────────────────┐
-│   User Device   │      │   CyberRx API    │
+│   User Device   │      │   Nerion API    │
 │   (Auth App)    │      │                  │
 └─────────────────┘      └─────────────────┘
          │                        │
@@ -706,7 +706,7 @@ Track these metrics in your observability system:
 1. **Configure IdP Applications:** Set up Okta/Azure AD applications in production
 2. **Custom User Provisioning:** Implement org-specific logic for user mapping
 3. **Admin Approval Workflow:** Add optional admin approval for new users
-4. **Role Mapping:** Map IdP groups to CyberRx roles
+4. **Role Mapping:** Map IdP groups to Nerion roles
 5. **Advanced MFA:** Add hardware token (YubiKey) support
 6. **Audit Dashboard:** Create admin dashboard for SSO analytics
 7. **Rate Limiting:** Add rate limiting to SSO endpoints
@@ -720,10 +720,10 @@ For issues or questions:
 - Check troubleshooting section above
 - Review audit logs in application logs
 - Consult IdP documentation (Okta/Azure AD)
-- Contact CyberRx security team
+- Contact Nerion security team
 
 ---
 
 **Document Version:** 1.0
 **Last Updated:** 2026-06-11
-**Maintainer:** CyberRx Security Team
+**Maintainer:** Nerion Security Team

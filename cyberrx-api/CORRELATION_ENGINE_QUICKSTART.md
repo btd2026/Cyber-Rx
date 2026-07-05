@@ -9,7 +9,7 @@ This guide will help you implement the Correlation Engine performance optimizati
 - Redis server (local or cloud)
 - PostgreSQL database with admin access
 - Node.js 20+
-- Existing CyberRx API installation
+- Existing Nerion API installation
 
 ## Installation Steps
 

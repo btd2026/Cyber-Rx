@@ -2,7 +2,7 @@
 
 ## Implementation Complete
 
-The CyberRx API now features production-grade, Redis-backed rate limiting with graceful fallback to in-memory operation.
+The Nerion API now features production-grade, Redis-backed rate limiting with graceful fallback to in-memory operation.
 
 ## What Was Implemented
 

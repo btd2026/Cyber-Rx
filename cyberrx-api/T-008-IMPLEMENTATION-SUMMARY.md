@@ -3,7 +3,7 @@
 ## Task Completion Status: ✅ COMPLETE
 
 ### Overview
-Successfully implemented real BitSight API integration for the CyberRx Third-Party Cyber Intelligence system. The connector replaces mock data with production-ready API calls, comprehensive error handling, and signal normalization.
+Successfully implemented real BitSight API integration for the Nerion Third-Party Cyber Intelligence system. The connector replaces mock data with production-ready API calls, comprehensive error handling, and signal normalization.
 
 ## Files Modified/Created
 

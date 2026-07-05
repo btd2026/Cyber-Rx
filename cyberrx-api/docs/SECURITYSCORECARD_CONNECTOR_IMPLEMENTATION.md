@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the implementation of the SecurityScorecard connector with real API integration for CyberRx's Third-Party Cyber Intelligence system.
+This document describes the implementation of the SecurityScorecard connector with real API integration for Nerion's Third-Party Cyber Intelligence system.
 
 ## Implementation Details
 
@@ -14,7 +14,7 @@ This document describes the implementation of the SecurityScorecard connector wi
 #### 1. Real API Integration
 - Direct integration with SecurityScorecard API (https://api.securityscorecard.com)
 - Fetches company security scores and factor grades
-- Maps API responses to CyberRx signal schema
+- Maps API responses to Nerion signal schema
 
 #### 2. Signal Collection
 The connector collects the following signals:
@@ -370,7 +370,7 @@ When SecurityScorecard releases API updates:
 
 ### Support
 - SecurityScorecard Support: support@securityscorecard.com
-- CyberRx Documentation: See project README
+- Nerion Documentation: See project README
 
 ## Changelog
 

@@ -554,7 +554,7 @@ function questions(role, c) {
       ];
       break;
   }
-  return out.map((q) => ({ ...q, confidence: q.confidence || 'Medium', dataSources: q.dataSources || ['CyberRX primary sources'] }));
+  return out.map((q) => ({ ...q, confidence: q.confidence || 'Medium', dataSources: q.dataSources || ['Nerion primary sources'] }));
 }
 
 // ---- role-specific sub-tab LAYOUT ------------------------------------------

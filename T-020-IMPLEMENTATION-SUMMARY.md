@@ -2,7 +2,7 @@
 
 ## Overview
 
-Successfully implemented comprehensive mobile-responsive features for the CyberRx Vendor Portfolio Dashboard, enabling optimal user experience across mobile, tablet, and desktop devices.
+Successfully implemented comprehensive mobile-responsive features for the Nerion Vendor Portfolio Dashboard, enabling optimal user experience across mobile, tablet, and desktop devices.
 
 ## Implementation Status: ✅ COMPLETE
 

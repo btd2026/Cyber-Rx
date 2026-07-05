@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the implementation of the BullMQ worker process for handling async vendor sync operations in the CyberRx system.
+This document describes the implementation of the BullMQ worker process for handling async vendor sync operations in the Nerion system.
 
 ## Architecture
 

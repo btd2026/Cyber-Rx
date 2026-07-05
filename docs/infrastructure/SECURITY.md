@@ -1,8 +1,8 @@
-# CyberRx Security Documentation
+# Nerion Security Documentation
 
 ## Overview
 
-CyberRx is a healthcare cybersecurity platform handling sensitive healthcare data. Security is our top priority. This document outlines our security policies, procedures, and best practices.
+Nerion is a healthcare cybersecurity platform handling sensitive healthcare data. Security is our top priority. This document outlines our security policies, procedures, and best practices.
 
 ## Compliance
 

@@ -1,4 +1,4 @@
-// CyberRx — Executive Twin core (Phase 5, anti-hallucination per brief §2)
+// Nerion — Executive Twin core (Phase 5, anti-hallucination per brief §2)
 //
 // The Twin is a TRANSLATOR on a locked spec sheet — it never introduces facts.
 // Two gates run before any answer:

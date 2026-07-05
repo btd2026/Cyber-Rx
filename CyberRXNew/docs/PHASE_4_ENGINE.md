@@ -1,4 +1,4 @@
-# CyberRx — Phase 4 (4a + 4b): catalogs + deterministic engine
+# Nerion — Phase 4 (4a + 4b): catalogs + deterministic engine
 
 **Status:** Sub-steps 4a and 4b complete & proven, pending approval. 4c (full
 catalog UI + benchmark) and 4d (signed exports) are the next sub-steps.

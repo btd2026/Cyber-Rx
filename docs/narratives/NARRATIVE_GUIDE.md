@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Executive Narratives Generation System is the **CORE VALUE PROPOSITION** of CyberRx. It transforms technical security findings into executive-ready narratives that C-level stakeholders can understand and act upon.
+The Executive Narratives Generation System is the **CORE VALUE PROPOSITION** of Nerion. It transforms technical security findings into executive-ready narratives that C-level stakeholders can understand and act upon.
 
 ### What It Does
 

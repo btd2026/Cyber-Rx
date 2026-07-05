@@ -1,6 +1,6 @@
-# CyberRx — Status Report
+# Nerion — Status Report
 
-**Project:** CyberRx Production Readiness
+**Project:** Nerion Production Readiness
 **Phase:** Month 1 — Risk Correlation Engine (Weeks 1–4)
 **Reporting period:** Session-01, 2026-05-29
 **Branch under work:** `feat/month-1-risk-correlation-engine`
@@ -41,7 +41,7 @@ Three additional questions block downstream PRs but not PR-01 itself:
 
 Three stop-condition confirmations (per `PRODUCTION_PROMPT.md`) need user sign-off:
 
-6. HIPAA/CMS citations in the narrative UI — are these citations of the customer's obligations (fine) or claims about CyberRx's compliance (not fine)? Blocks PR-10.
+6. HIPAA/CMS citations in the narrative UI — are these citations of the customer's obligations (fine) or claims about Nerion's compliance (not fine)? Blocks PR-10.
 7. Feature-flag mechanism (`VITE_FEATURE_RISK_NARRATIVE`, default off in prod) acceptable for new dashboard routes? Blocks PR-10.
 8. Per-PR sign-off on BCBS demo data migrations? Blocks PR-03 onward.
 
@@ -62,7 +62,7 @@ Surfaced from plan §10 (stop conditions) and §11 (risks/open questions):
 |------|---------------|---------------------|-------|
 | Treating `financialModelV1`'s $217M as a real loss estimate | Plan §4.3 step 5; Q5 | Response includes `financialExposureBasis: "ransomware_default_model_v1"` and the architecture doc flags the placeholder status | Engineering |
 | New UI route shipped to production without a flag | `PRODUCTION_PROMPT.md` §47 stop conditions | `VITE_FEATURE_RISK_NARRATIVE` default off in production environments | Engineering + product |
-| HIPAA / CMS citations read as compliance claims about CyberRx | `PRODUCTION_PROMPT.md` §47 stop conditions | Plan §10 — confirm with user; add disclaimer footer to `RiskNarrative` if interpretation is at all ambiguous | Product + legal |
+| HIPAA / CMS citations read as compliance claims about Nerion | `PRODUCTION_PROMPT.md` §47 stop conditions | Plan §10 — confirm with user; add disclaimer footer to `RiskNarrative` if interpretation is at all ambiguous | Product + legal |
 | BCBS demo regression during Month 2 refactor churn | `PRODUCTION_PROMPT.md` §24 quality bar; plan §7.4 | PR-11 ships a smoke regression suite that gates every subsequent merge | Engineering |
 | `App.jsx` 24,559 lines becomes harder to split as Month 1 work lands new component imports | Plan §1.2 + §5.5 | PR-10 lands `RiskNarrative` outside `App.jsx` from day one; PR-12 (optional) starts the helper-extraction; full split is Month 6 | Engineering |
 | JWT enforcement deferred to Month 4 — new engine endpoints rely on `X-Org-Id` header only | Plan §1.1, Q6 | Document the conscious deferral in every PR description; Month 4 is the hardening phase | Engineering + security |

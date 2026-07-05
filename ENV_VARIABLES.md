@@ -1,6 +1,6 @@
 # Environment Variables Reference
 
-Complete reference for all environment variables used in CyberRx.
+Complete reference for all environment variables used in Nerion.
 
 ## Table of Contents
 

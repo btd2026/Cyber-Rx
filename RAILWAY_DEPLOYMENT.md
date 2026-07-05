@@ -1,6 +1,6 @@
 # Railway Deployment Guide
 
-Step-by-step guide for deploying CyberRx to Railway.
+Step-by-step guide for deploying Nerion to Railway.
 
 ## Table of Contents
 
@@ -44,7 +44,7 @@ git init
 git add .
 
 # Create initial commit
-git commit -m "Initial commit: CyberRx application ready for Railway deployment"
+git commit -m "Initial commit: Nerion application ready for Railway deployment"
 
 # Create main branch
 git branch -M main
@@ -181,7 +181,7 @@ openssl rand -base64 32
 
 1. Click "Deploy" button
 2. Wait for deployment to complete (~2-3 minutes)
-3. Check logs for success message: "CyberRx API running on port 3001"
+3. Check logs for success message: "Nerion API running on port 3001"
 
 ### Step 5: Verify API Deployment
 
@@ -245,7 +245,7 @@ VITE_API_URL=https://your-api-url.railway.app
 
 1. Go to Frontend service → "Networking"
 2. Copy the generated URL
-3. Open in browser - should load CyberRx dashboard
+3. Open in browser - should load Nerion dashboard
 
 ### Step 6: Update API CORS Configuration
 
@@ -518,4 +518,4 @@ For additional configuration, see:
 - [ ] Monitoring enabled
 - [ ] Documentation updated
 
-**Your CyberRx application is now live on Railway!**
+**Your Nerion application is now live on Railway!**

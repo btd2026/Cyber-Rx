@@ -1,0 +1,7 @@
+name,hosting,data,vendor,eol,recovery,transactions_per_day,value_per_day
+Entra ID identity plane,internet-facing,"PII, Credentials",Microsoft,no,2,80000000,$200M
+Code-signing infrastructure,application on-prem,"IP, CUI, Signing Keys",Microsoft,no,4,100000,$150M
+Source-code repositories (GitHub),internet-facing,"IP, Source Code",GitHub,no,4,8000000,$120M
+Azure control plane,internet-facing,"Confidential, PII",Microsoft,no,2,50000000,$180M
+Customer support case system,application cloud,"PII, Confidential",Salesforce,no,12,2000000,$14M
+Xbox Live services,internet-facing web,"PII, PCI",Microsoft,no,8,5000000,$12M

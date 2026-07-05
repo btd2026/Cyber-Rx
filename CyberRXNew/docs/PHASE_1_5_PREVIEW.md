@@ -1,4 +1,4 @@
-# CyberRx — Phase 1.5: Live preview & sign-in
+# Nerion — Phase 1.5: Live preview & sign-in
 
 **Status:** Code complete and building. Standing up *your* live URL is a short
 guided step we do together (it needs your Supabase + Vercel accounts).

@@ -1,4 +1,4 @@
-// CyberRx — Executive Twin (server-side, Phase 5). Supabase Edge Function (Deno).
+// Nerion — Executive Twin (server-side, Phase 5). Supabase Edge Function (Deno).
 //
 // The ONLY place the Anthropic API is ever called. The key lives in a server
 // secret and never reaches the browser. The function enforces both gates, then

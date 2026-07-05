@@ -2,7 +2,7 @@
 
 ## Overview
 
-This implementation adds a credential validation API endpoint to the CyberRx backend. Users can now validate vendor connector credentials before saving them to the vault, preventing invalid API keys from being stored.
+This implementation adds a credential validation API endpoint to the Nerion backend. Users can now validate vendor connector credentials before saving them to the vault, preventing invalid API keys from being stored.
 
 ## What Was Built
 

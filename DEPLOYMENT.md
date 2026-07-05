@@ -1,6 +1,6 @@
 # Deployment
 
-CyberRx ships as two services that deploy independently from this monorepo:
+Nerion ships as two services that deploy independently from this monorepo:
 
 | Part | Platform | Source dir | Config in repo |
 |------|----------|-----------|----------------|

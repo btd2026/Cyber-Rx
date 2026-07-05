@@ -1,4 +1,4 @@
-# CyberRX — Architecture Audit vs. Target ("Decision OS")
+# Nerion — Architecture Audit vs. Target ("Decision OS")
 
 **Scope:** read-only audit. No code changed. All claims cite files under
 `cyberrx-api/src` (backend) and `frontend/src` (frontend).
@@ -14,7 +14,7 @@ coaching, blind-spot, confidence everywhere). "Decisions, not dashboards."
 ## STEP 1 — What actually exists
 
 ### Layering (as built)
-CyberRX is a **Node/Express + Postgres backend** and a **React/Vite frontend**.
+Nerion is a **Node/Express + Postgres backend** and a **React/Vite frontend**.
 There is no formal data/prediction/presentation separation; the de-facto layers
 are:
 

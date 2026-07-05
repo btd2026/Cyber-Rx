@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CyberRx · Onboarding</title>
+<title>Nerion · Onboarding</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -331,7 +331,7 @@
 <body>
 <div class="app">
   <header>
-    <div class="brand"><span class="dot"></span>CyberRx <span class="sub">Onboarding</span></div>
+    <div class="brand"><span class="dot"></span>Nerion <span class="sub">Onboarding</span></div>
     <div class="hright"><span class="saved"><span class="d"></span>Saved · just now</span><button class="toggle" id="toOS" title="Jump to the Operating System">⌂ Operating System →</button><button class="toggle" id="themeBtn">◐</button></div>
   </header>
   <div class="hero">
@@ -362,7 +362,7 @@
     {t:'Auto-map & crown jewels',d:'The core intelligence',why:'We infer which app supports which process, you confirm, and we deduce your crown jewels — the systems whose loss would hurt the business most.'},
     {t:'Documents',d:'Evidence in files',why:'Your policies and reports are evidence. We extract, tag, and map their contents to controls automatically.'},
     {t:'Executive data needs',d:'Per-seat inputs',why:'Working backwards from each executive\'s decisions: we show what\'s already covered by your systems and documents, and collect only the few things no system can report — like insurance, appetite, and board structure.'},
-    {t:'Review & go live',d:'Confirm and launch',why:'A final check. Once you go live, CyberRx generates your seats, framework coverage, crown-jewel map, and your first briefing.'}
+    {t:'Review & go live',d:'Confirm and launch',why:'A final check. Once you go live, Nerion generates your seats, framework coverage, crown-jewel map, and your first briefing.'}
   ];
 
   // ---- connectors ----
@@ -589,7 +589,7 @@
       <div class="${(selectedArch==='healthcare'||selectedIndustry==='insurance'||selectedIndustry==='credit-union'||selectedIndustry==='telecommunications')?'row3':'row2'}"><div class="field"><label>Employees</label><input class="numfmt" id="empNum" inputmode="numeric" value="12,400"></div><div class="field"><label>Annual revenue</label><div class="moneyf"><span class="cur" id="revCur">$</span><input class="mnum" id="revNum" inputmode="decimal" value="4.2"><span class="unit">B</span></div><div class="money-eq" id="revEq">= $4,200,000,000</div></div>${(selectedArch==='healthcare'||selectedIndustry==='insurance'||selectedIndustry==='credit-union'||selectedIndustry==='telecommunications')?'<div class="field"><label>'+(selectedArch==='healthcare'?'Members':(selectedIndustry==='telecommunications'?'Subscribers':'Members / Policyholders'))+'</label><div class="moneyf nocur"><input class="mnum" id="memNum" inputmode="decimal" value="2.4"><span class="unit">M</span></div><div class="money-eq" id="memEq">= 2,400,000</div></div>':''}</div>
       <div class="field"><label>Operating regions <span class="hint">drives breach-law & privacy obligations</span></label><div class="region-dd" id="regionDD"><button type="button" class="dd-toggle" id="regionToggle">Select regions…</button><div class="dd-menu" id="regionMenu"></div></div></div>
       <div class="field"><label>Regulated data you handle</label><div class="chips" data-group id="dataChips">${chipsHTML()}</div></div>`,
-    1:()=>`<div class="panel-h"><div class="step-of">Step 2 of 8</div><h2>Connect your systems</h2><p>Most of your evidence is pulled live from here. Pick each system you run, provide its connection details, and CyberRx streams the data that answers your executives' questions. The more you connect, the more credible — and defensible — every answer.</p></div>
+    1:()=>`<div class="panel-h"><div class="step-of">Step 2 of 8</div><h2>Connect your systems</h2><p>Most of your evidence is pulled live from here. Pick each system you run, provide its connection details, and Nerion streams the data that answers your executives' questions. The more you connect, the more credible — and defensible — every answer.</p></div>
       <div class="demo-bar"><span class="demo-label">Demo Mode<span class="demo-sub">Auto-connect all systems with simulated data — no API keys needed</span></span><button class="demo-btn" id="demoToggle">Enable Demo Mode</button></div>
       <div class="cred"><div class="cred-top"><span class="ct">Evidence credibility</span><span class="cv l0" id="credLabel">Not yet credible</span></div><div class="cred-bar"><i id="credBar"></i></div><div class="cred-meta"><b id="credSig">0</b> live signals · <b id="credSys">0</b> systems connected · <b id="credCov">0%</b> coverage</div></div>
       <div id="connList"></div>`,
@@ -599,17 +599,17 @@
     3:()=>`<div class="panel-h"><div class="step-of">Step 4 of 8</div><h2>Applications & systems</h2><p>Connect directly to your CMDB or discovery tool and we fetch every system automatically — or upload an inventory. Live discovery keeps your asset list current as things change.</p></div>
       <div class="srcchoice" id="appChoice"><button class="srcopt" data-src="app-connect"><div class="so-h">⚡ Connect a system <span class="rec-tag">recommended</span></div><div class="so-d">ServiceNow CMDB, Device42, BMC Helix, Tanium, Lansweeper — live discovery.</div></button><button class="srcopt" data-src="app-upload"><div class="so-h">⤓ Upload a file</div><div class="so-d">CSV or XLSX — an app inventory or CMDB export (snapshot).</div></button></div>
       <div id="appSource"></div><div id="appResult"></div>`,
-    4:()=>`<div class="panel-h"><div class="step-of">Step 5 of 8</div><h2>Auto-mapping & crown jewels</h2><p>CyberRx infers which application supports which process. Review the mappings below — confirm, reassign, or reject each one. Then we deduce your crown jewels.</p></div>
+    4:()=>`<div class="panel-h"><div class="step-of">Step 5 of 8</div><h2>Auto-mapping & crown jewels</h2><p>Nerion infers which application supports which process. Review the mappings below — confirm, reassign, or reject each one. Then we deduce your crown jewels.</p></div>
       <div class="map-toolbar" id="mapToolbar"></div>
       <div id="mapList"></div><button class="mapbtn" id="deduceBtn">✦ Confirm remaining &amp; deduce crown jewels</button>
-      <div class="cjwrap" id="cjwrap"><div class="cj-sum">Crown jewels identified</div><div class="cj-sub">From <b>6 systems</b> across <b>5 processes</b>, CyberRx deduced <b>4 crown jewels</b> — scored by process criticality × data sensitivity × exposure.</div><div class="cjmap" id="cjmap"></div></div>`,
-    5:()=>`<div class="panel-h"><div class="step-of">Step 6 of 8</div><h2>Documents — evidence for non-automated controls</h2><p>Some controls can't be read from a system — they live in your policies and plans. We know exactly which documents score which controls. Upload what you have; CyberRx reads each one, aligns it to control requirements, flags gaps as findings, and scores maturity. <b>Results appear in your platform, not here.</b></p></div>
+      <div class="cjwrap" id="cjwrap"><div class="cj-sum">Crown jewels identified</div><div class="cj-sub">From <b>6 systems</b> across <b>5 processes</b>, Nerion deduced <b>4 crown jewels</b> — scored by process criticality × data sensitivity × exposure.</div><div class="cjmap" id="cjmap"></div></div>`,
+    5:()=>`<div class="panel-h"><div class="step-of">Step 6 of 8</div><h2>Documents — evidence for non-automated controls</h2><p>Some controls can't be read from a system — they live in your policies and plans. We know exactly which documents score which controls. Upload what you have; Nerion reads each one, aligns it to control requirements, flags gaps as findings, and scores maturity. <b>Results appear in your platform, not here.</b></p></div>
       <div class="docnote">✦ Every document below maps to specific control requirements across your frameworks. Anything you don't provide becomes a flagged gap to resolve later — not a guess.</div>
       <div class="docprog" id="docProg"></div>
       <div id="keydocs"></div>`,
     6:()=>`<div class="panel-h"><div class="step-of">Step 7 of 8</div><h2>Executive data needs</h2><p>Working backwards from each executive's decisions. Green is already covered by your connected systems and documents; amber is the handful of things only you can tell us. Switch seats to see each.</p></div>
       <div class="seattabs" id="seatTabs"></div><div id="seatBody"></div>`,
-    7:()=>`<div class="panel-h"><div class="step-of">Step 8 of 8</div><h2>Review &amp; go live</h2><p>Here's what we have. When you go live, CyberRx builds your executive seats, computes coverage, and drafts your first briefing.</p></div>
+    7:()=>`<div class="panel-h"><div class="step-of">Step 8 of 8</div><h2>Review &amp; go live</h2><p>Here's what we have. When you go live, Nerion builds your executive seats, computes coverage, and drafts your first briefing.</p></div>
       <div class="rev-grid"><div class="rev"><div class="k">Organization</div><div class="v" id="revOrg">—</div></div><div class="rev"><div class="k">Systems connected</div><div class="v" id="revSys">0</div></div><div class="rev"><div class="k">Live signals</div><div class="v" id="revSig">0</div></div><div class="rev"><div class="k">Crown jewels</div><div class="v" id="revCj" style="color:var(--gold)">—</div></div><div class="rev"><div class="k">Documents</div><div class="v" id="revDocs">0</div></div><div class="rev"><div class="k">Evidence credibility</div><div class="v" id="revCred">—</div></div></div>
       <div class="gen"><h4>What we'll generate from this</h4><ul><li>Seven executive seats, each framed to your business and fed by live evidence</li><li>Framework coverage with the source & freshness behind every control</li><li>Your crown-jewel map, attack paths, and vendor concentration</li><li>Your first board-ready briefing and the Executive Twin — grounded only in your data</li></ul></div>
       <div class="gen" style="border-color:var(--brand)"><h4>Peer benchmarking <span style="font-weight:400;color:var(--muted);font-size:13px">— optional &amp; reciprocal</span></h4><p style="font-size:13px;color:var(--muted);margin:0 0 11px;line-height:1.6">Compare your maturity against anonymized peers. Only high-level <b>CMMI maturity scores</b> leave your tenant — never findings, evidence, names, or identifiers. Cohorts under 8 are never shown. <b>It's reciprocal: you see peer benchmarks only if you contribute.</b></p><label style="display:flex;gap:9px;align-items:flex-start;font-size:13px;cursor:pointer"><input type="checkbox" id="benchConsent" style="margin-top:3px"> Contribute our anonymized maturity to the shared benchmark so we can see peer comparisons <span style="color:var(--muted)">(you can change this any time in the platform)</span></label></div>`
@@ -966,7 +966,7 @@
   }
   function renderMap(){
     const G=liveGraph();const cjs=G.apps.filter(a=>a.cj).sort((x,y)=>y.score-x.score);
-    const sub=document.querySelector('#cjwrap .cj-sub');if(sub)sub.innerHTML='From <b>'+G.apps.length+' system'+(G.apps.length===1?'':'s')+'</b> across <b>'+G.procs.length+' process'+(G.procs.length===1?'':'es')+'</b>, CyberRx deduced <b>'+cjs.length+' crown jewel'+(cjs.length===1?'':'s')+'</b> — scored by process criticality × data sensitivity × exposure.';
+    const sub=document.querySelector('#cjwrap .cj-sub');if(sub)sub.innerHTML='From <b>'+G.apps.length+' system'+(G.apps.length===1?'':'s')+'</b> across <b>'+G.procs.length+' process'+(G.procs.length===1?'':'es')+'</b>, Nerion deduced <b>'+cjs.length+' crown jewel'+(cjs.length===1?'':'s')+'</b> — scored by process criticality × data sensitivity × exposure.';
     const dataSens={'PHI':'Critical','PII':'High','Personal Data':'High','PCI':'Critical','Financial':'High','Identity':'Critical','IP':'High','OT':'Critical','CUI':'Critical','Classified':'Critical','Internal docs':'Low','Internal':'Low'};
     document.getElementById('cjmap').innerHTML='<div><div class="colh">Processes</div><div class="cjcol">'+G.procs.map(p=>'<div class="node proc '+p.c+'" id="n-'+p.id+'"><div class="nn">'+p.n+'</div><div class="nd">'+p.data+(p.rev!=='—'?' · '+p.rev:'')+'</div></div>').join('')+'</div></div><div><div class="colh">Systems</div><div class="cjcol">'+G.apps.map(a=>{const sens=dataSens[a.data.split(',')[0].trim()]||'Medium';const sensCls=sens==='Critical'?'h':sens==='High'?'m':'l';return '<div class="node'+(a.cj?' cjwel':'')+'" id="n-'+a.id+'"><div class="nn">'+a.n+'</div><div class="nd">'+a.data+' · <span class="crit '+sensCls+'">'+sens+'</span></div></div>';}).join('')+'</div></div><div><div class="colh">Crown jewels</div><div class="cjcol">'+cjs.map((a,i)=>'<div class="node cjwel" id="c-'+a.id+'"><span class="score">'+a.score+'</span><div class="badge">⬥ #'+(i+1)+'</div><div class="nn">'+a.n+'</div><div class="why">'+a.why+'</div></div>').join('')+'</div></div><svg class="cjsvg" id="cjsvg"></svg>';
     requestAnimationFrame(drawMap);

@@ -1,0 +1,300 @@
+{
+  "org_name": "Walmart Inc.",
+  "org_id": "org_walmart",
+  "industry": "Retail / e-commerce",
+  "regions": [
+    "US"
+  ],
+  "currency": "USD",
+  "financials": {
+    "revenue": 681000000000,
+    "operatingIncome": 29000000000,
+    "netIncome": 20200000000,
+    "enterpriseValue": 780000000000,
+    "sharesOutstanding": 8029999999.999999
+  },
+  "appetite": 300000000,
+  "budget": 600000000,
+  "dataRecords": 255000000,
+  "principalRisks": {
+    "creditMarket": 25000000000,
+    "operational": 22000000000,
+    "thirdParty": 12000000000,
+    "compliance": 6000000000
+  },
+  "insurance": {
+    "limit": 150000000,
+    "premium": 9000000,
+    "retention": 20000000,
+    "renewal": "2026-08-15"
+  },
+  "processes": [
+    {
+      "name": "Store checkout & payments (POS)",
+      "data": "PCI, Financial",
+      "rev": "$380B",
+      "revenue": "$380B",
+      "rto": "2",
+      "criticality": "Critical",
+      "txPerDay": "250000000",
+      "tolerance": "$15M",
+      "function": "Stores"
+    },
+    {
+      "name": "E-commerce & fulfillment",
+      "data": "PCI, PII",
+      "rev": "$120B",
+      "revenue": "$120B",
+      "rto": "4",
+      "criticality": "Critical",
+      "txPerDay": "40000000",
+      "tolerance": "$10M",
+      "function": "Digital commerce"
+    },
+    {
+      "name": "Supply chain & logistics",
+      "data": "Confidential",
+      "rev": "$90B",
+      "revenue": "$90B",
+      "rto": "6",
+      "criticality": "Critical",
+      "txPerDay": "20000000",
+      "tolerance": "$8M",
+      "function": "Supply chain"
+    },
+    {
+      "name": "Merchandising & pricing",
+      "data": "Confidential",
+      "rev": "$50B",
+      "revenue": "$50B",
+      "rto": "12",
+      "criticality": "High",
+      "txPerDay": "5000000",
+      "tolerance": "$3M",
+      "function": "Merchandising"
+    },
+    {
+      "name": "Membership & loyalty (Walmart+)",
+      "data": "PII, PCI",
+      "rev": "$8B",
+      "revenue": "$8B",
+      "rto": "12",
+      "criticality": "High",
+      "txPerDay": "10000000",
+      "tolerance": "$2M",
+      "function": "Membership"
+    }
+  ],
+  "apps": [
+    {
+      "name": "POS payment estate",
+      "host": "internet-facing",
+      "data": "PCI, Financial",
+      "vendor": "In-house",
+      "eol": "no",
+      "recovery": "4",
+      "txPerDay": "250000000",
+      "valuePerDay": "$150M",
+      "processes": [
+        "Store checkout & payments (POS)"
+      ]
+    },
+    {
+      "name": "E-commerce platform",
+      "host": "internet-facing web",
+      "data": "PCI, PII",
+      "vendor": "In-house / Azure",
+      "eol": "no",
+      "recovery": "4",
+      "txPerDay": "40000000",
+      "valuePerDay": "$110M",
+      "processes": [
+        "E-commerce & fulfillment",
+        "Membership & loyalty (Walmart+)"
+      ]
+    },
+    {
+      "name": "Order-management system",
+      "host": "application cloud",
+      "data": "PII, PCI",
+      "vendor": "Azure",
+      "eol": "no",
+      "recovery": "6",
+      "txPerDay": "40000000",
+      "valuePerDay": "$40M",
+      "processes": [
+        "E-commerce & fulfillment"
+      ]
+    },
+    {
+      "name": "Supply-chain control tower",
+      "host": "application on-prem",
+      "data": "Confidential",
+      "vendor": "SAP",
+      "eol": "no",
+      "recovery": "8",
+      "txPerDay": "20000000",
+      "valuePerDay": "$60M",
+      "processes": [
+        "Supply chain & logistics"
+      ]
+    },
+    {
+      "name": "Customer data platform",
+      "host": "database on-prem",
+      "data": "PII, PCI",
+      "vendor": "Snowflake",
+      "eol": "no",
+      "recovery": "12",
+      "txPerDay": "5000000",
+      "valuePerDay": "$25M",
+      "processes": [
+        "Membership & loyalty (Walmart+)"
+      ]
+    },
+    {
+      "name": "Legacy pricing mainframe",
+      "host": "application on-prem",
+      "data": "Confidential",
+      "vendor": "IBM",
+      "eol": "yes",
+      "recovery": "24",
+      "txPerDay": "5000000",
+      "valuePerDay": "$18M",
+      "processes": [
+        "Merchandising & pricing"
+      ]
+    }
+  ],
+  "risks": [
+    {
+      "title": "POS malware / cardholder-data theft",
+      "severity": "Critical",
+      "asset": "POS payment estate",
+      "status": "open",
+      "financial_exposure": "$150M"
+    },
+    {
+      "title": "E-commerce peak-season outage",
+      "severity": "Critical",
+      "asset": "E-commerce platform",
+      "status": "open",
+      "financial_exposure": "$90M"
+    },
+    {
+      "title": "Supply-chain ransomware",
+      "severity": "High",
+      "asset": "Supply-chain control tower",
+      "status": "open",
+      "financial_exposure": "$55M"
+    },
+    {
+      "title": "Customer-data breach (loyalty)",
+      "severity": "High",
+      "asset": "Customer data platform",
+      "status": "open",
+      "financial_exposure": "$28M"
+    },
+    {
+      "title": "Legacy mainframe end-of-life exploit",
+      "severity": "High",
+      "asset": "Legacy pricing mainframe",
+      "status": "open",
+      "financial_exposure": "$18M"
+    }
+  ],
+  "initiatives": [
+    {
+      "name": "POS tokenization & segmentation",
+      "owner": "CISO",
+      "cost": "$22M",
+      "roi": "17×",
+      "status": "in progress",
+      "engagement": "gate"
+    },
+    {
+      "name": "Peak-season resilience program",
+      "owner": "CIO",
+      "cost": "$16M",
+      "roi": "12×",
+      "status": "in progress",
+      "engagement": "design"
+    },
+    {
+      "name": "Third-party / supplier risk uplift",
+      "owner": "CRO",
+      "cost": "$8M",
+      "roi": "9×",
+      "status": "planned",
+      "engagement": "design"
+    },
+    {
+      "name": "Mainframe decommission",
+      "owner": "CIO",
+      "cost": "$11M",
+      "roi": "7×",
+      "status": "planned",
+      "engagement": "design"
+    }
+  ],
+  "governance": {
+    "committee": "Technology Committee",
+    "cadence": "Quarterly",
+    "cisoReportsTo": "CIO",
+    "boardExpertise": "Yes",
+    "ermIntegrated": "Partially",
+    "ir": {
+      "tested": "Yes — tabletop within 12 months",
+      "lastTabletop": "2026-01-30",
+      "retainer": "Yes",
+      "ransomwarePolicy": "Board-approved policy"
+    }
+  },
+  "aiGovernance": {
+    "systems": 35,
+    "decisioning": "Yes",
+    "framework": "NIST AI RMF",
+    "policy": "Drafted",
+    "euAiAct": "Not in scope",
+    "inventory": "Partially"
+  },
+  "strategicInitiatives": [
+    {
+      "name": "AI-driven personalization & search",
+      "type": "AI product or feature",
+      "valueUsd": 2000000000,
+      "horizon": "This year"
+    },
+    {
+      "name": "Marketplace / advertising expansion",
+      "type": "New digital product",
+      "valueUsd": 3000000000,
+      "horizon": "Next 12–24 months"
+    },
+    {
+      "name": "Warehouse automation rollout",
+      "type": "Data / analytics initiative",
+      "valueUsd": 1500000000,
+      "horizon": "This year"
+    }
+  ],
+  "growth": {
+    "pipelineUsd": 6000000000,
+    "reviewBeforeWks": "5",
+    "reviewNowWks": "3",
+    "dealsGated": "10",
+    "trustReviews": "18",
+    "certs": [
+      "PCI DSS",
+      "SOC 2 Type II"
+    ]
+  },
+  "compliance": {
+    "frameworksInScope": [
+      "PCI DSS",
+      "NIST CSF 2.0",
+      "SOC 2",
+      "CCPA"
+    ]
+  }
+}

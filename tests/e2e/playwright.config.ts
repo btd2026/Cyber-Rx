@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * Playwright configuration for CyberRx E2E tests
+ * Playwright configuration for Nerion E2E tests
  *
  * This configuration supports:
  * - Multiple browsers (Chrome, Firefox, Safari, Edge)

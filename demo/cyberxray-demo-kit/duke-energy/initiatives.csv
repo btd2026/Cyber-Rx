@@ -1,0 +1,5 @@
+name,owner,cost,roi,status,engagement
+OT network segmentation (NERC CIP),CISO,$30M,18×,in progress,gate
+SCADA anomaly-detection (Dragos),CISO,$14M,15×,in progress,gate
+Gas-SCADA EOL replacement,CIO,$20M,9×,planned,design
+Grid-resilience & black-start program,COO,$18M,11×,in progress,design

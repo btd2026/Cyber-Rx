@@ -1,4 +1,4 @@
-# HANDOFF — CyberRx (changes since last session + how to continue)
+# HANDOFF — Nerion (changes since last session + how to continue)
 
 This is the narrative companion to `CLAUDE.md`. Read `CLAUDE.md` first for the rules and the
 architecture map; this file is the **what changed**, **why**, and **what to do first**.
@@ -56,7 +56,7 @@ Paste this as your first message in Claude Code, in the repo that contains the t
 files + `build.js` + `CLAUDE.md` + `HANDOFF.md`:
 
 > Read `CLAUDE.md` and `HANDOFF.md` in full before doing anything. This repo is the reference
-> spec for CyberRx, an executive cyber-risk decision platform (not a GRC tool). We are now
+> spec for Nerion, an executive cyber-risk decision platform (not a GRC tool). We are now
 > building the real product.
 >
 > First, confirm you understand: (1) the build/validate workflow and the `</script>` data-URI

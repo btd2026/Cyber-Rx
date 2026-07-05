@@ -1,4 +1,4 @@
-# CyberRx Production Infrastructure
+# Nerion Production Infrastructure
 # Main Terraform configuration
 
 terraform {
@@ -30,7 +30,7 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Project     = "CyberRx"
+      Project     = "Nerion"
       Environment = var.environment
       ManagedBy   = "Terraform"
       Compliance  = "HIPAA"

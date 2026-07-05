@@ -1,0 +1,6 @@
+name,revenue,rto,data,criticality,transactions_per_day,downtime_tolerance,function
+Health & human services benefits,$150B,6,"PII, PHI",Critical,8000000,$4M,Health & human services
+Tax collection & revenue (FTB),$120B,8,"PII, Financial",Critical,3000000,$5M,Revenue
+Unemployment & disability (EDD),$40B,6,"PII, Financial",Critical,5000000,$3M,Labor & employment
+Motor vehicles & licensing (DMV),$8B,12,PII,High,2000000,$1M,Motor vehicles
+Emergency services & public safety,$5B,2,"PII, Confidential",Critical,1000000,$2M,Public safety

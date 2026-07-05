@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CyberX-Ray · Setup</title>
+<title>Nerion · Setup</title>
 <style>
   :root{
     /* Advisory theme — matches the executive cockpit (navy / steel / ice, serif headings) */
@@ -166,12 +166,12 @@
 </style>
 </head>
 <body>
-<div class="top"><div class="wrap top-in"><div class="logo">X</div><div class="brand">CyberX-Ray <span>Setup</span></div><div class="top-r">Only what your executive cockpit needs — nothing more.</div></div></div>
+<div class="top"><div class="wrap top-in"><div class="logo">N</div><div class="brand">Nerion <span>Setup</span></div><div class="top-r">Only what your executive cockpit needs — nothing more.</div></div></div>
 
 <div class="wrap">
   <div class="head">
     <div class="eyebrow">Set up your organization</div>
-    <h1>Give CyberX-Ray your business, and it returns your cyber position — in dollars.</h1>
+    <h1>Give Nerion your business, and it returns your cyber position — in dollars.</h1>
     <div class="lede">A focused setup. Fields are optional, but the more you provide the more of the cockpit is <b>live from your data</b> instead of illustrative. Everything can be edited later.</div>
   </div>
 
@@ -255,14 +255,14 @@
 
   <!-- 1d · Strategic initiatives (CEO per-initiative safety check) -->
   <div class="sec">
-    <div class="sh"><div class="sn">✦</div><div><div class="st">Strategic initiatives <span style="color:var(--muted)">(for the CEO / Board)</span></div><div class="sd">The major moves in front of the board — an acquisition, a new cloud platform, an AI product, a market or factory expansion. CyberX-Ray runs a <b>per-initiative go / no-go safety check</b> and a one-page decision brief for each, because every move carries different risk. Add the ones being weighed now.</div></div><div class="badge" id="bstrat">optional</div></div>
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Strategic initiatives <span style="color:var(--muted)">(for the CEO / Board)</span></div><div class="sd">The major moves in front of the board — an acquisition, a new cloud platform, an AI product, a market or factory expansion. Nerion runs a <b>per-initiative go / no-go safety check</b> and a one-page decision brief for each, because every move carries different risk. Add the ones being weighed now.</div></div><div class="badge" id="bstrat">optional</div></div>
     <div id="stratRows"></div>
     <button class="conn-go" id="addStrat" type="button" style="margin-top:4px">+ Add a strategic initiative</button>
   </div>
 
   <!-- 1e · Policy & document evidence -->
   <div class="sec">
-    <div class="sh"><div class="sn">✦</div><div><div class="st">Policy &amp; document evidence <span style="color:var(--muted)">(framework maturity)</span></div><div class="sd">Upload your security policies (PDF · DOCX · TXT). CyberX-Ray reads each against the NIST control catalog and scores every control’s CMMI maturity from the policy language it contains — the <b>📄 document-review</b> evidence behind your framework scores, alongside live tool telemetry. Do it here so the cockpit Framework tab opens fully evidenced.</div></div><div class="badge" id="bdoc">optional</div></div>
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Policy &amp; document evidence <span style="color:var(--muted)">(framework maturity)</span></div><div class="sd">Upload your security policies (PDF · DOCX · TXT). Nerion reads each against the NIST control catalog and scores every control’s CMMI maturity from the policy language it contains — the <b>📄 document-review</b> evidence behind your framework scores, alongside live tool telemetry. Do it here so the cockpit Framework tab opens fully evidenced.</div></div><div class="badge" id="bdoc">optional</div></div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
       <select id="obDocType" style="min-width:230px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#fff"></select>
       <input type="file" id="obDocFile" accept=".pdf,.docx,.doc,.txt,.md,.csv">
@@ -340,7 +340,7 @@
     <div class="srcchoice"><div class="srcopt sel" data-choice="proc" data-mode="connect"><div class="so-h">⚡ Connect &amp; pull</div><div class="so-d">ServiceNow CMDB / BIA — no upload</div></div><div class="srcopt" data-choice="proc" data-mode="upload"><div class="so-h">⤓ Upload a file</div><div class="so-d">CSV or TSV — fallback</div></div></div>
     <div id="procUpload" style="display:none">
       <div class="drop" id="dropProc"><div class="ic">⤓</div><div class="t">Upload your process list (CSV or TSV)</div><div class="s">click to browse or drop a file</div><input type="file" id="fileProc" accept=".csv,.tsv,.txt" style="display:none"></div>
-      <div class="tmpl">columns: <b>name</b>, revenue, rto, data, criticality, transactions_per_day, downtime_tolerance &nbsp;·&nbsp; e.g. &nbsp;Claims processing, $2.1B, 6, "PHI, Financial", Critical, 480000, $3M<br><span style="color:var(--muted)">transactions_per_day &amp; downtime_tolerance are optional — leave blank to pull volume from observability later and default tolerance to your board risk appetite.</span></div>
+      <div class="tmpl">columns: <b>name</b>, revenue, rto, data, criticality, transactions_per_day, downtime_tolerance, function &nbsp;·&nbsp; e.g. &nbsp;Claims processing, $2.1B, 6, "PHI, Financial", Critical, 480000, $3M, Claims<br><span style="color:var(--muted)">transactions_per_day &amp; downtime_tolerance are optional. <b>function</b> (optional) groups processes under a business function — the macro layer in the Framework value chain (Function → Process → Technology → Cyber risk → Control); leave blank and each process stands alone.</span></div>
     </div>
     <div id="procConnect">
       <div class="conn-row"><div class="field" style="min-width:200px"><label>System</label><select id="procSys"><option>ServiceNow CMDB (business services)</option><option>SAP GRC — BIA</option><option>Apptio</option><option>Archer</option></select></div><div class="field" style="flex:1;min-width:220px"><label>Instance URL / API token</label><input id="procCred" placeholder="https://yourorg.service-now.com · token"></div><button class="conn-go" data-conn="proc">Connect &amp; save</button></div>
@@ -395,7 +395,7 @@
 
   <!-- 7 · Connect tools -->
   <div class="sec">
-    <div class="sh"><div class="sn">7</div><div><div class="st">Connect your tools</div><div class="sd">Most of your evidence is pulled live from here. Connect each system you run and CyberX-Ray streams the data that answers your executives’ questions — the more you connect, the more credible every answer.</div></div><div class="badge" id="b7">optional</div></div>
+    <div class="sh"><div class="sn">7</div><div><div class="st">Connect your tools</div><div class="sd">Most of your evidence is pulled live from here. Connect each system you run and Nerion streams the data that answers your executives’ questions — the more you connect, the more credible every answer.</div></div><div class="badge" id="b7">optional</div></div>
     <div class="demo-bar"><span class="demo-label">Demo mode<span class="demo-sub">Explore with simulated signals — no API keys. Clearly labeled “Demo”; never sent to the engine as real data.</span></span><button class="demo-btn" id="demoToggle" type="button">Enable demo mode</button></div>
     <div class="cred"><div class="cred-top"><span class="ct">Evidence credibility</span><span class="cv l0" id="credLabel">Not yet credible</span></div><div class="cred-bar"><i id="credBar"></i></div><div class="cred-meta"><b id="credSig">0</b> live signals · <b id="credSys">0</b> systems connected · <b id="credCov">0%</b> coverage</div></div>
     <div id="toolGrid"></div>
@@ -459,8 +459,8 @@
     f.addEventListener('change',function(){if(f.files[0])handler(f.files[0]);});
   }
   wireDrop('dropProc','fileProc',function(file){readFile(file,function(p){var h=p.headers;
-    var nc=findCol(h,['process_name','name','title','process']),rvc=findCol(h,['revenue','rev','value']),rtc=findCol(h,['rto','recovery']),dc=findCol(h,['data','domain','sensitivity','category']),cc=findCol(h,['criticality','crit','tier','priority']),txc=findCol(h,['transactions_per_day','transactions','tx_per_day','daily_transactions','volume','throughput']),tlc=findCol(h,['downtime_tolerance','tolerance','board_tolerance','loss_tolerance']);
-    PROC=p.rows.map(function(c){return {name:get(c,nc)||c[0],revenue:get(c,rvc)||get(c,2),rto:get(c,rtc),data:get(c,dc)||get(c,1)||'Process',criticality:get(c,cc),tx:get(c,txc),tolerance:get(c,tlc)};}).filter(function(x){return x.name;});
+    var nc=findCol(h,['process_name','name','title','process']),rvc=findCol(h,['revenue','rev','value']),rtc=findCol(h,['rto','recovery']),dc=findCol(h,['data','domain','sensitivity','category']),cc=findCol(h,['criticality','crit','tier','priority']),txc=findCol(h,['transactions_per_day','transactions','tx_per_day','daily_transactions','volume','throughput']),tlc=findCol(h,['downtime_tolerance','tolerance','board_tolerance','loss_tolerance']),fnc=findCol(h,['function','business_function','biz_function','capability','area']);
+    PROC=p.rows.map(function(c){return {name:get(c,nc)||c[0],revenue:get(c,rvc)||get(c,2),rto:get(c,rtc),data:get(c,dc)||get(c,1)||'Process',criticality:get(c,cc),tx:get(c,txc),tolerance:get(c,tlc),func:get(c,fnc)};}).filter(function(x){return x.name;});
     showRows(document.getElementById('resProc'),PROC,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.data||'')+(x.revenue?(' · '+x.revenue):'')+(x.rto?(' · RTO '+x.rto+'h'):'')+'</span></div>';});
     var b=document.getElementById('b4');b.dataset.n=PROC.length;badgeDone('b4');updateSummary();renderMap();});});
   wireDrop('dropApp','fileApp',function(file){readFile(file,function(p){var h=p.headers;
@@ -779,7 +779,7 @@
       appetite:mval('finAppetite'),budget:mval('finBudget'),dataRecords:mval('finRecords'),
       principalRisks:{creditMarket:mval('ermCredit'),operational:mval('ermOps'),thirdParty:mval('ermTP'),compliance:mval('ermComp')},
       insurance:{limit:mval('insLimit'),premium:mval('insPrem'),renewal:v('insRenew')},
-      processes:PROC.map(function(p){return {name:p.name,data:p.data,rev:p.revenue,revenue:p.revenue,rto:p.rto,criticality:p.criticality,txPerDay:p.tx,tolerance:p.tolerance};}),
+      processes:PROC.map(function(p){return {name:p.name,data:p.data,rev:p.revenue,revenue:p.revenue,rto:p.rto,criticality:p.criticality,txPerDay:p.tx,tolerance:p.tolerance,function:p.func||null};}),
       apps:APP.map(function(a){return {name:a.name,host:a.host,data:a.data,vendor:a.vendor,eol:a.eol,recovery:a.recovery,txPerDay:a.tx,valuePerDay:a.value,processes:Array.isArray(a.processes)?a.processes:[]};}),
       risks:RISK.map(function(r){return {title:r.title,severity:r.severity,asset:r.asset,status:r.status,financial_exposure:r.exposure};}),
       initiatives:INIT,

@@ -1,4 +1,4 @@
-# CyberRx Observability Production Deployment Checklist
+# Nerion Observability Production Deployment Checklist
 
 **Purpose**: Ensure all observability components are properly configured for production deployment
 

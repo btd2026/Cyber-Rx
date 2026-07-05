@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CyberRx — Cyber-Risk Accountability Platform</title>
+<title>Nerion — Cyber-Risk Accountability Platform</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -768,7 +768,7 @@
 
 <div class="topbar">
   <div class="wrap topbar-in">
-    <div class="brand"><div class="logo">Rx</div><b>CyberRx</b><span class="ctx">CISO · OPERATING SYSTEM</span></div>
+    <div class="brand"><div class="logo">Rx</div><b>Nerion</b><span class="ctx">CISO · OPERATING SYSTEM</span></div>
     <div class="topbar-right">
       <span class="trust" id="dataBtn" style="cursor:pointer" title="Live data &amp; connected sources"><span class="pulse"></span><span id="liveClock">LIVE · streaming</span><span class="tdiv"></span><span class="integ" id="dataSrc">🛡 Integrity verified</span></span>
       <span class="authpill" id="authPill"><span class="lk">🔓</span> <span id="authName">Sarah</span> · <span class="role" id="authRoleLbl">CISO</span><span class="so" id="signOut" title="Sign out">⏻</span></span>
@@ -1146,7 +1146,7 @@
   </div>
 </div>
 
-<div class="wrap"><footer>CyberRx · personal accountability, defensible by design</footer></div>
+<div class="wrap"><footer>Nerion · personal accountability, defensible by design</footer></div>
 
 <!-- BOARD PACKAGE MODAL -->
 <!-- EVIDENCE DRAWER — what justifies a value -->
@@ -1182,7 +1182,7 @@
         </select>
       </div>
     </div>
-    <div class="modal-f"><button class="tbtn primary" id="tkCreate">Create ticket</button><span class="sp">Pushes to your connected ticketing system · status syncs back to CyberRx</span></div>
+    <div class="modal-f"><button class="tbtn primary" id="tkCreate">Create ticket</button><span class="sp">Pushes to your connected ticketing system · status syncs back to Nerion</span></div>
   </div>
 </div>
 
@@ -1239,7 +1239,7 @@
   <div class="modal" style="max-width:780px">
     <div class="modal-h"><div class="t">Live data — connected sources <span class="badge">streaming · read-only</span></div><button class="modal-x" data-close>×</button></div>
     <div class="modal-b">
-      <p class="ae-intro">Every number in CyberRx traces to live signals from your own stack — not a questionnaire. This is the data layer the decisions stand on: what's connected, how fresh it is, how complete, and what each feed drives.</p>
+      <p class="ae-intro">Every number in Nerion traces to live signals from your own stack — not a questionnaire. This is the data layer the decisions stand on: what's connected, how fresh it is, how complete, and what each feed drives.</p>
       <div class="dt-sum">
         <div class="dt-kpi"><div class="k">Coverage</div><div class="v ok">99.4%</div></div>
         <div class="dt-kpi"><div class="k">Live signals</div><div class="v">1,240</div></div>
@@ -2030,7 +2030,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
   tickClock();setInterval(tickClock,1000);
 
   // ===== Platform data layer =====
-  // Pulls live metrics from the CyberRx API; gracefully falls back to the mock's
+  // Pulls live metrics from the Nerion API; gracefully falls back to the mock's
   // seeded numbers. The data-source badge shows which is in effect, so it's
   // always clear whether a figure is live or sample. PLATFORM.api is the single
   // seam — point it at any backend for real per-org data.
@@ -2874,7 +2874,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
       '<div class="twin-loss">'+s.loss+'</div>';
     openModal('twinModal');
   }
-  // ===== Scoped Executive Twin — each tab answers only its own topic, grounded in CyberRx evidence =====
+  // ===== Scoped Executive Twin — each tab answers only its own topic, grounded in Nerion evidence =====
   const ORGNAME=USER_ORG||(typeof ORG_PROFILE!=='undefined'&&ORG_PROFILE.name)||'your organization';
   const TABSCOPE={
    'ciso:exec':{t:'Security Overview',kw:['overview','summary','posture','status','today','brief','headline','overall','stand','snapshot','need me','secure','security','safe','protected','at risk','healthy'],ex:['Where do we stand right now?','What needs me today?','Give me the headline.'],a:['No active compromise; every revenue process is operating.','One open ransomware path to {data} and ungoverned AI on {process} — $94M modeled exposure.','Posture 82/100 (+4), improving; recovery and AI governance are the drags.'],al:['overall','ok','fine','trouble','worried','sleep at night','bottom line','state of play','how are we doing','red flags']},
@@ -2930,8 +2930,8 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
   function twRank(prefix,qt){var out=[];Object.keys(TABSCOPE).forEach(function(k){if(prefix&&k.indexOf(prefix)!==0)return;out.push([k,twScore(k,qt)]);});out.sort(function(a,b){return b[1]-a[1];});return out;}
   function escTw(s){return (s||'').replace(/[<>&]/g,function(c){return c==='<'?'&lt;':c==='>'?'&gt;':'&amp;';});}
   function twinFoot(show){var mf=document.querySelector('#twinModal .modal-f');if(mf)mf.style.display=show?'':'none';}
-  function openTwinGrounded(sc,q,qt){twinFoot(false);var fa=(sc.a||[]).slice();if(qt&&qt.length){fa=fa.map(function(f){var ft={};twToks(fillTok(f)).forEach(function(t){ft[t]=1;});var ov=0;qt.forEach(function(t){if(ft[t])ov+=(TWIN_IDF[t]||0.15);});return [f,ov];}).sort(function(a,b){return b[1]-a[1];}).map(function(x){return x[0];});}var facts=fa.map(function(x){return '<div class="twin-fact">'+fillTok(x)+'</div>';}).join('');document.getElementById('twinBody').innerHTML='<div class="twin-sub">'+sc.t+' twin \u00b7 grounded in CyberRx evidence for '+(USER_ORG||ORGNAME)+'</div><div class="twin-q" style="font-size:17px">On \u201c'+escTw(q)+'\u201d</div>'+(facts?'<div class="twin-facts">'+facts+'</div>':'')+'<div class="twin-conf">Answered from the <b>'+sc.t+'</b> evidence \u00b7 '+fa.length+' grounded items \u00b7 no figure is used that isn\u2019t in this tab\u2019s evidence.</div>';openModal('twinModal');}
-  function openTwinRefuse(sc,info){twinFoot(false);var ex=(sc.ex||[]).map(function(x){return '<button class="chip" data-ex="'+escTw(fillTok(x))+'">'+fillTok(x)+'</button>';}).join('');var head;if(info.other&&info.other.cross){head='That looks like a <b>'+info.other.t+'</b> question \u2014 handled under the <b>'+info.other.seat.toUpperCase()+'</b> seat. This twin is scoped to <b>'+sc.t+'</b>.';}else if(info.other){head='That\u2019s a <b>'+info.other.t+'</b> question \u2014 switch to the <b>'+info.other.t+'</b> tab to ask it. This twin is scoped to <b>'+sc.t+'</b>.';}else if(info.inDomain){head='That\u2019s outside what the <b>'+sc.t+'</b> tab covers.';}else{head='I\u2019m the <b>'+sc.t+'</b> twin for '+(USER_ORG||ORGNAME)+'. I only answer <b>'+sc.t+'</b> questions, grounded in CyberRx evidence \u2014 not general questions, and nothing beyond your data.';}document.getElementById('twinBody').innerHTML='<div class="twin-deny">\u2298 Out of scope</div><div class="twin-q" style="font-size:16px;line-height:1.4">'+head+'</div><div class="twin-sub">'+sc.t+' twin \u00b7 '+(USER_ORG||ORGNAME)+'</div><div class="twin-sublabel">What I can answer on this tab</div><div class="cp-chips" style="margin-top:0">'+ex+'</div><div class="twin-conf">This twin only answers <b>'+sc.t+'</b> questions, grounded in connected CyberRx evidence \u2014 no guesses, no unrelated topics.</div>';openModal('twinModal');}
+  function openTwinGrounded(sc,q,qt){twinFoot(false);var fa=(sc.a||[]).slice();if(qt&&qt.length){fa=fa.map(function(f){var ft={};twToks(fillTok(f)).forEach(function(t){ft[t]=1;});var ov=0;qt.forEach(function(t){if(ft[t])ov+=(TWIN_IDF[t]||0.15);});return [f,ov];}).sort(function(a,b){return b[1]-a[1];}).map(function(x){return x[0];});}var facts=fa.map(function(x){return '<div class="twin-fact">'+fillTok(x)+'</div>';}).join('');document.getElementById('twinBody').innerHTML='<div class="twin-sub">'+sc.t+' twin \u00b7 grounded in Nerion evidence for '+(USER_ORG||ORGNAME)+'</div><div class="twin-q" style="font-size:17px">On \u201c'+escTw(q)+'\u201d</div>'+(facts?'<div class="twin-facts">'+facts+'</div>':'')+'<div class="twin-conf">Answered from the <b>'+sc.t+'</b> evidence \u00b7 '+fa.length+' grounded items \u00b7 no figure is used that isn\u2019t in this tab\u2019s evidence.</div>';openModal('twinModal');}
+  function openTwinRefuse(sc,info){twinFoot(false);var ex=(sc.ex||[]).map(function(x){return '<button class="chip" data-ex="'+escTw(fillTok(x))+'">'+fillTok(x)+'</button>';}).join('');var head;if(info.other&&info.other.cross){head='That looks like a <b>'+info.other.t+'</b> question \u2014 handled under the <b>'+info.other.seat.toUpperCase()+'</b> seat. This twin is scoped to <b>'+sc.t+'</b>.';}else if(info.other){head='That\u2019s a <b>'+info.other.t+'</b> question \u2014 switch to the <b>'+info.other.t+'</b> tab to ask it. This twin is scoped to <b>'+sc.t+'</b>.';}else if(info.inDomain){head='That\u2019s outside what the <b>'+sc.t+'</b> tab covers.';}else{head='I\u2019m the <b>'+sc.t+'</b> twin for '+(USER_ORG||ORGNAME)+'. I only answer <b>'+sc.t+'</b> questions, grounded in Nerion evidence \u2014 not general questions, and nothing beyond your data.';}document.getElementById('twinBody').innerHTML='<div class="twin-deny">\u2298 Out of scope</div><div class="twin-q" style="font-size:16px;line-height:1.4">'+head+'</div><div class="twin-sub">'+sc.t+' twin \u00b7 '+(USER_ORG||ORGNAME)+'</div><div class="twin-sublabel">What I can answer on this tab</div><div class="cp-chips" style="margin-top:0">'+ex+'</div><div class="twin-conf">This twin only answers <b>'+sc.t+'</b> questions, grounded in connected Nerion evidence \u2014 no guesses, no unrelated topics.</div>';openModal('twinModal');}
   var TWIN_TH=1.1;
   function askTwin(){var inp=document.getElementById('cpIn');var raw=(inp.value||'').trim();if(!raw){inp.focus();return;}var v=raw.toLowerCase();var sc=curScope();
     if(OFFDOMAIN.some(function(k){return v.indexOf(k)>=0;}))return openTwinRefuse(sc,{inDomain:false});
@@ -2947,7 +2947,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     var inDom=DOMAIN.some(function(k){return v.indexOf(k)>=0;})||qt.some(function(t){return TWIN_IDF[t]!==undefined;});
     if(inDom){return openTwinGrounded(view==='exec'?(TABSCOPE[curSeat+':exec']||sc):sc,raw,qt);}
     return openTwinRefuse(sc,{inDomain:false});}
-  function updateTwinScope(){var sc=curScope();var lab=document.querySelector('.cp-label');if(lab)lab.innerHTML='Ask the '+sc.t+' twin <span style="color:var(--subtle);font-weight:400;text-transform:none;letter-spacing:0">\u00b7 answers limited to this tab, from CyberRx evidence</span>';var inp=document.getElementById('cpIn');if(inp)inp.placeholder='Ask about '+sc.t+' \u2014 e.g. \u201c'+fillTok((sc.ex&&sc.ex[0])||'')+'\u201d';var chips=document.getElementById('cpChips');if(chips)chips.innerHTML=(sc.ex||[]).map(function(x){return '<button class="chip" data-ex="'+escTw(fillTok(x))+'">'+fillTok(x)+'</button>';}).join('')+'<div class="chip-note">Scoped to '+sc.t+' \u00b7 grounded in your CyberRx evidence</div>';}
+  function updateTwinScope(){var sc=curScope();var lab=document.querySelector('.cp-label');if(lab)lab.innerHTML='Ask the '+sc.t+' twin <span style="color:var(--subtle);font-weight:400;text-transform:none;letter-spacing:0">\u00b7 answers limited to this tab, from Nerion evidence</span>';var inp=document.getElementById('cpIn');if(inp)inp.placeholder='Ask about '+sc.t+' \u2014 e.g. \u201c'+fillTok((sc.ex&&sc.ex[0])||'')+'\u201d';var chips=document.getElementById('cpChips');if(chips)chips.innerHTML=(sc.ex||[]).map(function(x){return '<button class="chip" data-ex="'+escTw(fillTok(x))+'">'+fillTok(x)+'</button>';}).join('')+'<div class="chip-note">Scoped to '+sc.t+' \u00b7 grounded in your Nerion evidence</div>';}
   document.getElementById('cpChips').addEventListener('click',function(e){var c=e.target.closest('[data-ex]');if(!c)return;document.getElementById('cpIn').value=c.dataset.ex;askTwin();});
   document.addEventListener('click',function(e){var c=e.target.closest('#twinBody [data-ex]');if(c){document.getElementById('cpIn').value=c.dataset.ex;askTwin();}});
   document.getElementById('cpGo').addEventListener('click',askTwin);
@@ -3376,7 +3376,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     'RS.MA-01,RESPOND,Incident management,3,system,CrowdStrike + runbook,2026-06-23,41m,sha256:5d22…e803,approved',
     'RC.RP-01,RECOVER,Recovery planning,2,document,DR Plan 2025 (test overdue),2025-11-02,233d,sha256:8b13…77c0,flagged-gap',
     'GV.SC-07,GOVERN,Third-party risk,2,system,SecurityScorecard,2026-06-22,1d,sha256:e91a…2d55,flagged-gap'].join('\\n');}
-  document.getElementById('aeDownEvidence').addEventListener('click',()=>dl('CyberRx_Evidence_Manifest_'+curFwName.replace(/[^A-Za-z0-9]+/g,'_')+'.csv',evidenceCSVlive(),'text/csv'));
+  document.getElementById('aeDownEvidence').addEventListener('click',()=>dl('Nerion_Evidence_Manifest_'+curFwName.replace(/[^A-Za-z0-9]+/g,'_')+'.csv',evidenceCSVlive(),'text/csv'));
 
   // ===== Multi-format export — every download offers PowerPoint AND PDF =====
   // Real .pptx (PptxGenJS) and .pdf (jsPDF), bundled in-file. Content is pulled from
@@ -3426,7 +3426,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
       t.addShape('rect',{x:0,y:3.95,w:13.33,h:0.06,fill:{color:'0A4DC4'}});
       t.addText(doc.title,{x:0.7,y:2.3,w:12,h:1.3,fontFace:'Arial',fontSize:34,bold:true,color:'FFFFFF'});
       if(doc.subtitle)t.addText(doc.subtitle,{x:0.7,y:3.5,w:12,h:0.7,fontFace:'Arial',fontSize:16,color:'9DB6E8'});
-      t.addText('CyberRx'+(doc.meta?'    ·    '+doc.meta:''),{x:0.7,y:6.7,w:12,h:0.4,fontFace:'Arial',fontSize:11,color:'5E9BFF'});
+      t.addText('Nerion'+(doc.meta?'    ·    '+doc.meta:''),{x:0.7,y:6.7,w:12,h:0.4,fontFace:'Arial',fontSize:11,color:'5E9BFF'});
       (doc.sections||[]).forEach(sec=>{
         const s=p.addSlide();
         s.addShape('rect',{x:0,y:0,w:13.33,h:0.5,fill:{color:'0A4DC4'}});
@@ -3454,7 +3454,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     gaps.sort((a,b)=>a.c.level-b.c.level);
     sections.push({h:'Gaps, risks & prioritized recommendations',lines:gaps.length?gaps.slice(0,16).map((x,i)=>(i+1)+'. '+x.c.id+' '+x.c.name+' — '+statusLabel(x.c.status)+' (CMMI '+x.c.level+'; '+x.g+')'):['No gaps — every control met.']});
     sections.push({h:'Attestation',bullet:false,lines:['Every score and claim traces to the evidence manifest. Evidence is cryptographically signed and chain-verified; this report regenerates as evidence changes.']});
-    return {file:'CyberRx_Assessment_'+curFwName.replace(/[^A-Za-z0-9]+/g,'_'),title:'Auditor Assessment — '+r.name,subtitle:_orgName()+'  ·  '+_indLabel(),meta:r.total+' '+r.unit+' · overall '+r.overall.toFixed(1)+'/5',sections};
+    return {file:'Nerion_Assessment_'+curFwName.replace(/[^A-Za-z0-9]+/g,'_'),title:'Auditor Assessment — '+r.name,subtitle:_orgName()+'  ·  '+_indLabel(),meta:r.total+' '+r.unit+' · overall '+r.overall.toFixed(1)+'/5',sections};
   }
   function evidenceCSVlive(){
     const r=frameworkResults();const rows=['control_id,group,control,cmmi_level,status,evidence_source,method,result'];
@@ -3465,14 +3465,14 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     const r=frameworkResults();const sections=[];
     r.groups.forEach(g=>{const ctrls=g.controls.map(c=>{const sm=srcFor(c.id,c.name);return c.id+' · '+c.name+' · CMMI '+c.level+' · '+statusLabel(c.status)+' · '+sm[0];});
       _chunk(ctrls,16).forEach((ch,i,arr)=>sections.push({h:g.name+' — '+g.maturity.toFixed(1)+'/5'+(arr.length>1?'  ('+(i+1)+'/'+arr.length+')':''),lines:ch}));});
-    return {file:'CyberRx_Evidence_Manifest_'+curFwName.replace(/[^A-Za-z0-9]+/g,'_'),title:'Evidence Manifest — '+r.name,subtitle:'Control → maturity → evidence mapping · '+r.total+' '+r.unit,meta:r.met+' met · '+r.partial+' partial · '+r.gap+' gap · cryptographically signed & chain-verified',sections};
+    return {file:'Nerion_Evidence_Manifest_'+curFwName.replace(/[^A-Za-z0-9]+/g,'_'),title:'Evidence Manifest — '+r.name,subtitle:'Control → maturity → evidence mapping · '+r.total+' '+r.unit,meta:r.met+' met · '+r.partial+' partial · '+r.gap+' gap · cryptographically signed & chain-verified',sections};
   }
   function _scrapeSecs(modalId){const m=document.getElementById(modalId);const out=[];if(!m)return out;m.querySelectorAll('.rep-sec').forEach(rs=>{const h=rs.querySelector('h5');const lines=[];rs.querySelectorAll('li').forEach(li=>lines.push(li.textContent.trim()));rs.querySelectorAll('p').forEach(pp=>lines.push(pp.textContent.trim()));out.push({h:h?h.textContent.trim():'',lines});});return out;}
-  function boardDoc(){const m=document.getElementById('boardModal');const v=m&&m.querySelector('.rep-verdict');const sections=[];if(v)sections.push({h:'Bottom line',lines:[v.textContent.trim()],bullet:false});_scrapeSecs('boardModal').forEach(x=>sections.push(x));return {file:'CyberRx_Board_Pack_'+_orgName().replace(/[^A-Za-z0-9]+/g,'_'),title:'Board-Ready Cyber Report',subtitle:_orgName()+'  ·  '+_indLabel(),meta:'Generated '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+' · '+ROLE_LBL[authRole]+' seat · evidence-backed',sections};}
-  function auditDoc(){const lines=[];document.querySelectorAll('#auditModal .ai').forEach(ai=>{const w=ai.querySelector('.when'),b=ai.querySelector('.body2');if(b)lines.push((w?w.textContent.trim()+' — ':'')+b.textContent.replace(/\s+/g,' ').trim());});return {file:'CyberRx_Audit_Trail',title:'Activity & Assurance Log',subtitle:_orgName()+'  ·  tamper-evident · retained 7 yrs',meta:'Immutable · every entry keeps its evidence',sections:[{h:'Log entries',lines:lines.length?lines:['No entries.']}]};}
-  function ledgerDoc(){const lines=[];document.querySelectorAll('#dlList .dec2, #dlList .dl-item, #dlList > div').forEach(d=>{const tx=d.textContent.replace(/\s+/g,' ').trim();if(tx)lines.push(tx.slice(0,240));});if(!lines.length)lines.push('No decisions recorded yet.');return {file:'CyberRx_Decision_Ledger',title:'Decision Ledger',subtitle:_orgName()+'  ·  system of record',meta:'Immutable · every decision keeps the evidence it was made on',sections:[{h:'Decisions',lines}]};}
+  function boardDoc(){const m=document.getElementById('boardModal');const v=m&&m.querySelector('.rep-verdict');const sections=[];if(v)sections.push({h:'Bottom line',lines:[v.textContent.trim()],bullet:false});_scrapeSecs('boardModal').forEach(x=>sections.push(x));return {file:'Nerion_Board_Pack_'+_orgName().replace(/[^A-Za-z0-9]+/g,'_'),title:'Board-Ready Cyber Report',subtitle:_orgName()+'  ·  '+_indLabel(),meta:'Generated '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+' · '+ROLE_LBL[authRole]+' seat · evidence-backed',sections};}
+  function auditDoc(){const lines=[];document.querySelectorAll('#auditModal .ai').forEach(ai=>{const w=ai.querySelector('.when'),b=ai.querySelector('.body2');if(b)lines.push((w?w.textContent.trim()+' — ':'')+b.textContent.replace(/\s+/g,' ').trim());});return {file:'Nerion_Audit_Trail',title:'Activity & Assurance Log',subtitle:_orgName()+'  ·  tamper-evident · retained 7 yrs',meta:'Immutable · every entry keeps its evidence',sections:[{h:'Log entries',lines:lines.length?lines:['No entries.']}]};}
+  function ledgerDoc(){const lines=[];document.querySelectorAll('#dlList .dec2, #dlList .dl-item, #dlList > div').forEach(d=>{const tx=d.textContent.replace(/\s+/g,' ').trim();if(tx)lines.push(tx.slice(0,240));});if(!lines.length)lines.push('No decisions recorded yet.');return {file:'Nerion_Decision_Ledger',title:'Decision Ledger',subtitle:_orgName()+'  ·  system of record',meta:'Immutable · every decision keeps the evidence it was made on',sections:[{h:'Decisions',lines}]};}
   const DOC_BUILDERS={board:boardDoc,assessment:assessmentDoc,evidence:evidenceDoc,audit:auditDoc,ledger:ledgerDoc};
-  document.addEventListener('click',function(e){const b=e.target.closest('[data-dl]');if(!b)return;e.preventDefault();const fn=DOC_BUILDERS[b.dataset.doc]||boardDoc;let doc;try{doc=fn();}catch(_){doc={file:'CyberRx_Export',title:'CyberRx Export',sections:[]};}if(b.dataset.dl==='pptx')dlPPTX(doc);else dlPDF(doc);});
+  document.addEventListener('click',function(e){const b=e.target.closest('[data-dl]');if(!b)return;e.preventDefault();const fn=DOC_BUILDERS[b.dataset.doc]||boardDoc;let doc;try{doc=fn();}catch(_){doc={file:'Nerion_Export',title:'Nerion Export',sections:[]};}if(b.dataset.dl==='pptx')dlPPTX(doc);else dlPDF(doc);});
 
   // ===== Peer benchmarking — reciprocal: no share, no benchmark =====
   let benchShare=false; // set at onboarding (forwarded from intake); default off to demonstrate the gate
@@ -3514,7 +3514,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     const pe=document.getElementById('benchPct');if(pe)pe.innerHTML=pct+'<span>th</span>';
     const bv=document.getElementById('benchVerdict');if(bv)bv.textContent=(pct>=66?'Above peer median · top third':pct>=50?'Around peer median':'Below peer median')+' · on '+FW_LABEL[fw];
     const bn=document.querySelector('#benchModal .bench-n');if(bn)bn.innerHTML='peer set: <b>'+cohort+'</b> on '+FW_LABEL[fw];
-    const note=document.getElementById('benchFwNote');if(note)note.innerHTML=(extra>0?('Showing 7 of '+total+' domains · +'+extra+' more benchmarked. '):'')+'Peers are matched on the <b>same framework</b> — you\u2019re compared only against organizations assessed on '+FW_LABEL[fw]+'. NIST CSF has the widest adoption ('+COHORT.csf+' peers); where a framework has fewer than 8 peers, CyberRx falls back to overall CMMI maturity so no organization can be re-identified.';
+    const note=document.getElementById('benchFwNote');if(note)note.innerHTML=(extra>0?('Showing 7 of '+total+' domains · +'+extra+' more benchmarked. '):'')+'Peers are matched on the <b>same framework</b> — you\u2019re compared only against organizations assessed on '+FW_LABEL[fw]+'. NIST CSF has the widest adoption ('+COHORT.csf+' peers); where a framework has fewer than 8 peers, Nerion falls back to overall CMMI maturity so no organization can be re-identified.';
   }
   function getC(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()||'#888';}
 

@@ -1,0 +1,6 @@
+name,revenue,rto,data,criticality,transactions_per_day,downtime_tolerance,function
+Store checkout & payments (POS),$380B,2,"PCI, Financial",Critical,250000000,$15M,Stores
+E-commerce & fulfillment,$120B,4,"PCI, PII",Critical,40000000,$10M,Digital commerce
+Supply chain & logistics,$90B,6,Confidential,Critical,20000000,$8M,Supply chain
+Merchandising & pricing,$50B,12,Confidential,High,5000000,$3M,Merchandising
+Membership & loyalty (Walmart+),$8B,12,"PII, PCI",High,10000000,$2M,Membership

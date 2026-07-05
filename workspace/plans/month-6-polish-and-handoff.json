@@ -25,7 +25,7 @@
   },
   "goal": "Move every extractable component out of App.jsx, ship exportable Board reports, write the docs, and stand up the SOC2-readiness checklist. By month-end App.jsx is a router shell.",
   "definition_of_done": [
-    "App.jsx contains only: imports, NAV, the root CyberRxApp component, and JSX route routing.",
+    "App.jsx contains only: imports, NAV, the root NerionApp component, and JSX route routing.",
     "All LOW + MEDIUM split-risk components live in frontend/src/components/.",
     "All four executive dashboards (CISO, CRO, CFO, Board) export a one-page PDF.",
     "OpenAPI spec generated; data-model docs and onboarding guide live in docs/.",
@@ -2009,7 +2009,7 @@
     },
     {
       "id": "T-651",
-      "title": "Extract CyberRxAPIAdapter \u2192 frontend/src/components/CyberRxAPIAdapter.jsx",
+      "title": "Extract NerionAPIAdapter \u2192 frontend/src/components/NerionAPIAdapter.jsx",
       "depends_on": [],
       "blocks": [],
       "owner_role": "worker",
@@ -2021,20 +2021,20 @@
               19763,
               20254
             ],
-            "anchor": "function CyberRxAPIAdapter(props) {",
-            "component": "CyberRxAPIAdapter",
+            "anchor": "function NerionAPIAdapter(props) {",
+            "component": "NerionAPIAdapter",
             "reason": "Lift this slice into its own file; preserve all behavior"
           }
         ]
       },
       "artifact_paths": [
-        "frontend/src/components/CyberRxAPIAdapter.jsx",
+        "frontend/src/components/NerionAPIAdapter.jsx",
         "frontend/src/App.jsx (remove extracted block)"
       ],
-      "git_branch": "task/T-651-extract-CyberRxAPIAdapter",
+      "git_branch": "task/T-651-extract-NerionAPIAdapter",
       "estimated_effort": "1d",
       "risk": "MEDIUM",
-      "anchor": "function CyberRxAPIAdapter(props) {",
+      "anchor": "function NerionAPIAdapter(props) {",
       "line_range_at_plan_time": [
         19763,
         20254
@@ -2569,7 +2569,7 @@
     }
   ],
   "out_of_scope": [
-    "HIGH-split-risk components (Setup, CISODash, CFODash, DashHub, Execution, CrownJewelsModule, CyberRxApp) \u2014 they stay in App.jsx until Phase 2",
+    "HIGH-split-risk components (Setup, CISODash, CFODash, DashHub, Execution, CrownJewelsModule, NerionApp) \u2014 they stay in App.jsx until Phase 2",
     "AI executive summaries (Phase 2)",
     "Predictive breach likelihood model (Phase 3)"
   ],

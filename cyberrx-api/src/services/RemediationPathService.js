@@ -117,7 +117,7 @@ async function runSweep(orgId, system = 'demo') {
   const created = [];
   for (const f of findings) {
     if (have.has(f.sourceRef)) continue;
-    const description = `${f.title}\n\nRecommended remediation (high level):\n${f.recommendation}\n\nOpened automatically by the CyberX-Ray remediation path. Source: ${f.source}.`;
+    const description = `${f.title}\n\nRecommended remediation (high level):\n${f.recommendation}\n\nOpened automatically by the Nerion remediation path. Source: ${f.source}.`;
     const t = await createTicket(orgId, system, { title: f.title, description, severity: f.severity });
     await db.query(
       `INSERT INTO remediation_tickets
@@ -160,7 +160,7 @@ async function ticketOne(orgId, { sourceRef, source, title, recommendation, seve
     `SELECT * FROM remediation_tickets WHERE organization_id=$1 AND source_ref=$2`, [orgId, sourceRef]);
   if (existing.length) return { existed: true, ...enrich(existing[0]) };
 
-  const description = `${title}\n\nRecommended remediation (high level):\n${recommendation || 'Investigate and remediate this finding.'}\n\nOpened from the CyberX-Ray CISO dashboard. Source: ${source || 'Finding'}.`;
+  const description = `${title}\n\nRecommended remediation (high level):\n${recommendation || 'Investigate and remediate this finding.'}\n\nOpened from the Nerion CISO dashboard. Source: ${source || 'Finding'}.`;
   const t = await createTicket(orgId, system, { title, description, severity });
   const id = uid('rt');
   // Default SLA from severity when the caller didn't pass an explicit due date.

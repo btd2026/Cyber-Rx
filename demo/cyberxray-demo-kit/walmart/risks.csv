@@ -1,0 +1,6 @@
+title,severity,asset,exposure,status
+POS malware / cardholder-data theft,Critical,POS payment estate,$150M,open
+E-commerce peak-season outage,Critical,E-commerce platform,$90M,open
+Supply-chain ransomware,High,Supply-chain control tower,$55M,open
+Customer-data breach (loyalty),High,Customer data platform,$28M,open
+Legacy mainframe end-of-life exploit,High,Legacy pricing mainframe,$18M,open

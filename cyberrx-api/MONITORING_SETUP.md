@@ -1,6 +1,6 @@
-# Monitoring Setup Guide for CyberRx API
+# Monitoring Setup Guide for Nerion API
 
-This guide provides step-by-step instructions for setting up monitoring for the CyberRx API using Prometheus/Grafana or AWS CloudWatch.
+This guide provides step-by-step instructions for setting up monitoring for the Nerion API using Prometheus/Grafana or AWS CloudWatch.
 
 ## Health Check Endpoints
 
@@ -92,13 +92,13 @@ groups:
   - name: cyberrx_alerts
     interval: 30s
     rules:
-      - alert: CyberRxAPIUnhealthy
+      - alert: NerionAPIUnhealthy
         expr: cyberrx_health_status == 0
         for: 1m
         labels:
           severity: critical
         annotations:
-          summary: "CyberRx API is unhealthy"
+          summary: "Nerion API is unhealthy"
 ```
 
 ### Step 3: Configure Grafana

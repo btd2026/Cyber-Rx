@@ -385,7 +385,7 @@ async function checkCredentialRotations() {
  */
 async function runScheduler() {
   await db.init();
-  logger.info('[scheduler] CyberRx scheduler initialized');
+  logger.info('[scheduler] Nerion scheduler initialized');
 
   // Start legacy metric sync
   logger.info('[scheduler] Starting legacy metric sync');

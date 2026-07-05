@@ -1,4 +1,4 @@
--- CyberRx — Phase 1 Foundation: core schema
+-- Nerion — Phase 1 Foundation: core schema
 -- Every tenant-scoped table carries `tenant_id`. Authoritative framework
 -- catalogs (frameworks, controls) are deliberately global reference data with
 -- NO tenant_id — they contain no customer information and are shared verbatim

@@ -1,8 +1,8 @@
-# CyberRx Production Infrastructure
+# Nerion Production Infrastructure
 
 ## Overview
 
-CyberRx is a healthcare cybersecurity platform designed for healthcare payers. This infrastructure is built with HIPAA compliance, high availability, and security as top priorities.
+Nerion is a healthcare cybersecurity platform designed for healthcare payers. This infrastructure is built with HIPAA compliance, high availability, and security as top priorities.
 
 **Stack:**
 - Frontend: React 19 + Vite → Vercel (CDN)

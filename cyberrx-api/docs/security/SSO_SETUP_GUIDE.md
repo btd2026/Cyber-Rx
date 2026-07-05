@@ -25,8 +25,8 @@
 ### Step 2: Configure General Settings
 
 ```
-App Name: CyberRx
-App logo: (upload CyberRx logo if available)
+App Name: Nerion
+App logo: (upload Nerion logo if available)
 App type: Single Page App (SPA) or Web Application
 ```
 
@@ -82,7 +82,7 @@ SAML Version: 2.0
 2. Scroll to **SAML Signing Certificate**
 3. Click **View Certificate** or download PEM file
 
-### Step 6: Configure CyberRx Environment Variables
+### Step 6: Configure Nerion Environment Variables
 
 Add to your `.env` file:
 
@@ -104,13 +104,13 @@ SAML_CALLBACK_URL=https://api.cyberrx.com/sso/saml/callback
 
 1. Navigate to **Assignments** tab
 2. Click **Assign** > **Assign to People**
-3. Select users who should have access to CyberRx
+3. Select users who should have access to Nerion
 4. Click **Confirm**
 
 ### Step 8: Test SAML Login
 
 ```bash
-# Start your CyberRx API
+# Start your Nerion API
 npm run dev
 
 # Visit SAML login URL
@@ -132,7 +132,7 @@ https://api.cyberrx.com/sso/saml
 ### Step 2: Configure Application
 
 ```
-Name: CyberRx
+Name: Nerion
 Supported account types:
   - Accounts in this organizational directory only (Single tenant)
   - Accounts in any organizational directory (Any Azure AD directory - Multitenant)
@@ -176,7 +176,7 @@ Copy the **Application (client) ID** and **Directory (tenant) ID**.
 2. Click **New client secret**
 3. Add description:
    ```
-   Description: CyberRx API Secret
+   Description: Nerion API Secret
    Expires: 24 months (or your preference)
    ```
 4. Click **Add**
@@ -190,7 +190,7 @@ Copy the **Application (client) ID** and **Directory (tenant) ID**.
    - **ID tokens**: Email, Given Name, Family Name
    - **Access tokens**: (if needed)
 
-### Step 7: Configure CyberRx Environment Variables
+### Step 7: Configure Nerion Environment Variables
 
 Add to your `.env` file:
 
@@ -214,7 +214,7 @@ AZURE_AD_CALLBACK_URL=https://api.cyberrx.com/sso/azure/callback
 ### Step 9: Test OIDC Login
 
 ```bash
-# Start your CyberRx API
+# Start your Nerion API
 npm run dev
 
 # Visit Azure AD login URL
@@ -435,7 +435,7 @@ curl -X POST http://localhost:3001/sso/mfa/verify \
 - [Azure AD OIDC Documentation](https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-protocols-oidc)
 - [Azure AD Application Registration](https://docs.microsoft.com/en-us/azure/active-directory/develop/quickstart-register-app)
 
-### CyberRx Documentation
+### Nerion Documentation
 - [SSO Integration Guide](./SSO_INTEGRATION.md)
 - [API Documentation](https://api.cyberrx.com/docs)
 - [Security Documentation](../security/)
@@ -444,4 +444,4 @@ curl -X POST http://localhost:3001/sso/mfa/verify \
 
 **Document Version:** 1.0
 **Last Updated:** 2026-06-11
-**Maintainer:** CyberRx Security Team
+**Maintainer:** Nerion Security Team

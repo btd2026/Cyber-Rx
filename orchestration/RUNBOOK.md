@@ -1,4 +1,4 @@
-# RUNBOOK — CyberRx Orchestration
+# RUNBOOK — Nerion Orchestration
 
 ## What's in this bundle
 ```
@@ -17,7 +17,7 @@ workspace/
 ```
 
 ## One-time setup
-1. Clone your CyberRx repo locally.
+1. Clone your Nerion repo locally.
 2. Copy `CLAUDE.md`, `orchestration/`, and `workspace/` from this bundle into the **repo root**.
    (If you already have a `CLAUDE.md`, merge this one's content into it.)
 3. Install the Claude Code CLI and make sure `git` is set up in the repo.

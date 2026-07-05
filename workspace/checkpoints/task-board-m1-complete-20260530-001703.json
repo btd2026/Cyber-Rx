@@ -1,5 +1,5 @@
 {
-  "project": "CyberRx Production-Readiness",
+  "project": "Nerion Production-Readiness",
   "context_rules": "No task may load src/App.jsx in full or the full assessment doc. Use appjsx-index.json line ranges and assessment-chunks/ only.",
   "tasks": [
     {

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the implementation of the BitSight Connector for CyberRx's Third-Party Cyber Intelligence system. The connector integrates with BitSight's API to collect security ratings and vulnerability intelligence for vendor risk assessment.
+This document describes the implementation of the BitSight Connector for Nerion's Third-Party Cyber Intelligence system. The connector integrates with BitSight's API to collect security ratings and vulnerability intelligence for vendor risk assessment.
 
 ## Implementation Details
 
@@ -494,7 +494,7 @@ const connector = new BitSightConnector({
 ## References
 
 - [BitSight API Documentation](https://www.bitsighttech.com/resources/api_documentation/)
-- [CyberRx BaseConnector](/cyberrx-api/src/connectors/BaseConnector.js)
+- [Nerion BaseConnector](/cyberrx-api/src/connectors/BaseConnector.js)
 - [VendorRiskSignal Model](/cyberrx-api/src/models/VendorRiskSignal.js)
 - [Vault Implementation](/cyberrx-api/src/utils/vault.js)
 

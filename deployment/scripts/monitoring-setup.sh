@@ -1,5 +1,5 @@
 #!/bin/bash
-# CyberRx Monitoring Setup Script
+# Nerion Monitoring Setup Script
 # Configures DataDog, Sentry, and Grafana monitoring
 
 set -e
@@ -106,7 +106,7 @@ setup_grafana() {
     cat > "$PROJECT_ROOT/docker/grafana/dashboards/api-performance.json" <<'EOF'
 {
   "dashboard": {
-    "title": "CyberRx API Performance",
+    "title": "Nerion API Performance",
     "panels": [
       {
         "title": "Request Rate",
@@ -141,7 +141,7 @@ EOF
     cat > "$PROJECT_ROOT/docker/grafana/dashboards/database-performance.json" <<'EOF'
 {
   "dashboard": {
-    "title": "CyberRx Database Performance",
+    "title": "Nerion Database Performance",
     "panels": [
       {
         "title": "Connection Pool Usage",
@@ -203,7 +203,7 @@ EOF
 
 # Main setup
 main() {
-    log_info "Setting up CyberRx monitoring stack..."
+    log_info "Setting up Nerion monitoring stack..."
     
     setup_datadog
     setup_sentry

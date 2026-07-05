@@ -8,7 +8,7 @@
  *   agents(orgId)       least-privilege analysis for autonomous agents: the
  *                       tools / data / actions each can reach, human-approval on
  *                       high-impact actions, and a kill-switch.
- *   platformAiUse()     how CyberRX itself uses LLMs (a buyer-trust artifact).
+ *   platformAiUse()     how Nerion itself uses LLMs (a buyer-trust artifact).
  *
  * Everything is assessed deterministically from the inventory until a runtime
  * AI-gateway feed exists (that upgrade is the integration-layer workstream), so
@@ -131,12 +131,12 @@ async function agents(orgId) {
   };
 }
 
-// ---- D6: how CyberRX itself uses LLMs (buyer-trust transparency) ------------
+// ---- D6: how Nerion itself uses LLMs (buyer-trust transparency) ------------
 function platformAiUse() {
   const summaryModel = process.env.ANTHROPIC_SUMMARY_MODEL || 'claude-opus-4-8';
   const reviewModel = process.env.ANTHROPIC_REVIEW_MODEL || 'claude-haiku-4-5-20251001';
   return {
-    statement: 'CyberRX uses LLMs as a governed, human-in-the-loop drafting aid — never as an unattended decision-maker.',
+    statement: 'Nerion uses LLMs as a governed, human-in-the-loop drafting aid — never as an unattended decision-maker.',
     uses: [
       { task: 'Executive summary drafting', model: summaryModel, humanReview: true, note: 'Generated as a DRAFT, stored for consultant review, and never auto-published.' },
       { task: 'Inventory / document extraction', model: reviewModel, humanReview: true, note: 'Structured extraction at temperature 0; falls back to deterministic parsing with no key.' },
@@ -148,7 +148,7 @@ function platformAiUse() {
       'Every AI feature degrades to a deterministic, grounded fallback with no API key.',
       'No autonomous actions: the platform recommends; people decide and the decision is logged.',
     ],
-    provenance: prov('live', 'CyberRX platform configuration'),
+    provenance: prov('live', 'Nerion platform configuration'),
   };
 }
 

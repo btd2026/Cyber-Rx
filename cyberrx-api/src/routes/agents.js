@@ -3,7 +3,7 @@
 /**
  * Executive AI Agent API
  * ----------------------
- * Exposes the CyberRX agent layer: continuous, role-specific executive briefs.
+ * Exposes the Nerion agent layer: continuous, role-specific executive briefs.
  *
  *   GET  /api/agents/status              - agent layer status (AI live? roles)
  *   GET  /api/agents/briefs              - latest briefs for all six personas

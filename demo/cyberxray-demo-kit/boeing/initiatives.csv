@@ -1,0 +1,5 @@
+name,owner,cost,roi,status,engagement
+OT/IT segmentation (factory),CISO,$34M,16×,in progress,gate
+CMMC L2 remediation program,CISO,$26M,10×,in progress,design
+Design-vault DLP & isolation,CISO,$19M,14×,in progress,gate
+Factory-OT patch & EOL retirement,CIO,$15M,9×,planned,design

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CyberX-Ray · Executive Cockpit</title>
+<title>Nerion · Executive Cockpit</title>
 <style>
   :root{
     /* Advisory theme — DTNK Shield deck palette (navy / steel / ice, serif headings) */
@@ -87,6 +87,27 @@
   .fwseg{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
   .fwsegb{font-size:12px;font-weight:600;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:6px 14px;cursor:pointer}
   .fwsegb.on{color:#fff;background:var(--ink);border-color:var(--ink)}
+  /* Business → control value chain */
+  .vc-fn{border:1px solid var(--line-2);border-radius:10px;margin-top:10px;overflow:hidden}
+  .vc-fn-h{display:flex;align-items:baseline;gap:10px;justify-content:space-between;padding:10px 13px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+  .vc-fn-t{font-weight:800;font-size:14px;color:var(--ink);font-family:var(--serif)}
+  .vc-fn-v{font-family:var(--mono);font-size:11.5px;color:var(--ink-2);font-weight:600}
+  .vc-proc{padding:10px 13px;border-top:1px dashed var(--line)}.vc-proc:first-child{border-top:none}
+  .vc-proc-h{display:flex;align-items:baseline;gap:8px;justify-content:space-between;margin-bottom:6px}
+  .vc-proc-v{font-family:var(--mono);font-size:10.5px;color:var(--muted);font-weight:600}
+  .vc-tech{margin:6px 0 4px 12px;padding-left:11px;border-left:2px solid var(--line-2)}
+  .vc-tech-h{font-size:12.5px;color:var(--ink-2);margin:5px 0 3px}
+  .vc-risk{margin:4px 0 8px 12px;padding:7px 9px;background:var(--plane);border:1px solid var(--line);border-radius:7px}
+  .vc-risk-h{display:flex;align-items:center;gap:7px;font-size:12.5px}
+  .vc-sev{margin-left:auto;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+  .vc-risk-m{font-size:11.5px;color:var(--ink-2);margin:3px 0 5px}
+  .vc-ctrls{font-size:11px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .vc-ctrls-l{color:var(--muted);font-weight:700;text-transform:uppercase;font-size:9.5px;letter-spacing:.04em}
+  .vc-ctrl{display:inline-flex;align-items:center;gap:3px;background:var(--surface);border:1px solid var(--line-2);border-radius:6px;padding:2px 7px;font-size:11px;color:var(--ink-2)}
+  .vc-ctrlcard{padding:10px 0;border-top:1px solid var(--line)}.vc-ctrlcard:first-of-type{border-top:none}
+  .vc-cc-h{display:flex;align-items:center;gap:8px}
+  .vc-cc-tool{font-size:10.5px;color:var(--muted)}.vc-cc-usd{margin-left:auto;font-family:var(--mono);font-weight:700;font-size:12.5px;color:var(--good)}
+  .vc-cc-fw{margin:6px 0 4px}.vc-cc-sub{font-size:12px;color:var(--ink-2)}.vc-cc-prot{font-size:11.5px;color:var(--muted);margin-top:4px}
   .fwfn{border:1px solid var(--line);border-radius:8px;margin-top:8px;overflow:hidden}
   .fwfn>summary{cursor:pointer;padding:10px 12px;font-weight:700;font-size:13px;background:var(--surface-2);list-style:none;color:var(--ink)}
   .fwfn>summary::-webkit-details-marker{display:none}
@@ -415,7 +436,7 @@
 </head>
 <body>
 <div class="top"><div class="wrap top-in">
-  <div class="logo">X</div><div class="brand">CyberX-Ray <span>Cybersecurity Operating System</span></div>
+  <div class="logo">N</div><div class="brand">Nerion <span>Cybersecurity Operating System</span></div>
   <div class="top-r">
     <button class="tbtn war" id="warBtn">⚠ War Room</button>
     <button class="tbtn" id="boardBtn" title="Board-ready report">📋 Board Pack</button>
@@ -430,7 +451,7 @@
 </div></div>
 <div id="dataModeBar"><div class="wrap" id="dataModeInner" style="padding:8px 0;font-size:12px;font-weight:600"></div></div>
 <div class="wrap" id="app"></div>
-<div class="foot"><b>CyberX-Ray</b> — every figure traces to your data or is clearly labeled modeled · build 2026-07-02c · economics · jurisdictions · resilience all compute from your data; sections labeled illustrative fill in as their intake sources connect.</div>
+<div class="foot"><b>Nerion</b> — every figure traces to your data or is clearly labeled modeled · build 2026-07-02c · economics · jurisdictions · resilience all compute from your data; sections labeled illustrative fill in as their intake sources connect.</div>
 
 <div class="ev-scrim" id="scrim"></div>
 <aside class="ev" id="ev"><div class="ev-h"><span class="eb">How this is calculated</span><button class="ev-x" id="evx">×</button></div><div class="ev-b" id="evb"></div></aside>
@@ -471,7 +492,7 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderValueChain();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
@@ -588,7 +609,7 @@ function statusStep(st){var s=String(st||'').toLowerCase();
 function pushDecision(dec){
   var d=loadDec(dec);if(!d||d.ticket)return;var o=orgId(),base=apiBase();
   d.pushing=true;saveDec(dec,d);renderDecStatus(dec);
-  var body={title:'[Cyber decision · '+SEAT_LABEL[d.seat]+'] '+d.title,desc:'Option '+d.opt+' — decided by '+d.by+' ('+SEAT_LABEL[d.seat]+') via the CyberX-Ray executive cockpit. Managed as a project; tracked to completion.',sourceRef:srcRef(dec,d),type:'project'};
+  var body={title:'[Cyber decision · '+SEAT_LABEL[d.seat]+'] '+d.title,desc:'Option '+d.opt+' — decided by '+d.by+' ('+SEAT_LABEL[d.seat]+') via the Nerion executive cockpit. Managed as a project; tracked to completion.',sourceRef:srcRef(dec,d),type:'project'};
   if(!o||!base){d.pushing=false;saveDec(dec,d);renderDecStatus(dec);return;}
   try{
     fetch(base+'/api/itsm/open?org_id='+encodeURIComponent(o),{method:'POST',headers:{'Content-Type':'application/json','X-Org-Id':o},body:JSON.stringify(body)})
@@ -1026,7 +1047,7 @@ function drillTrajectory(){var tr=trajInfo();
     return '<div class="drill-hero'+(down?' good':'')+'" style="color:var(--'+(down?'good':'crit')+')">'+tr.val+'</div>'+sparkSvg(tr.vals,down)+
       '<div class="drill-p">Your expected loss over time. '+(down?'Down':'Up')+' across '+tr.vals.length+' recorded analyses — a falling line means the controls are removing more risk than the business is adding.</div>'+
       '<div class="ev-sec">Recorded analyses</div>'+tr.t.map(function(p){return gRow(p.date?new Date(p.date).toLocaleDateString():'—',usd(Number(p.ale)||0));}).join('')+
-      '<div class="drill-p" style="color:var(--muted)">CyberX-Ray records your position on every analysis — this is real history, nothing back-filled.</div>';}
+      '<div class="drill-p" style="color:var(--muted)">Nerion records your position on every analysis — this is real history, nothing back-filled.</div>';}
   return '<div class="drill-hero">'+(tr.ale>0?usd(tr.ale):'—')+'</div><div class="drill-p">This is your <b>baseline</b>. From here every analysis records a new point and this becomes your real quarter-over-quarter trajectory. Because nothing is invented, the line starts at one point and grows — run another analysis next quarter to extend it.</div>';}
 function drillDetection(){var mttd=sig('mttd_hrs');
   return '<div class="drill-hero" style="color:var(--'+(mttd!=null?'good':'muted')+')">'+(mttd!=null?(mttd+' h to detect'):'not connected')+'</div>'+
@@ -1124,6 +1145,74 @@ function fwRow(id,name,cov){var cc=controlCmmi(id,cov);
 function seedDemoDocScores(){if(!demoActive()||Object.keys(docScores()).length)return;
   var sample={'GV.OC-01':4,'GV.OC-03':3,'GV.RM-01':3,'GV.PO-01':4,'GV.PO-02':3,'PR.AA-01':4,'PR.AA-05':3,'PR.AT-01':3,'ID.RA-01':3,'ID.RA-05':2,'DE.CM-01':2,'RS.MA-01':3};
   Object.keys(sample).forEach(function(id){saveDocScore(id,{cmmi:sample[id],doc:'Information Security Policy (sample).pdf',matched:Math.min(6,sample[id]+2),total:6,attrs:[]});});}
+/* ---- Business → cyber value chain (Framework report) ----------------------------
+   Joins the two halves the platform already computes into one line:
+     Function ($/yr,$/day) → Process (fraction) → Technology → Cyber risk ($ stop) →
+     Control (NIST CSF/800-53) → $ the control removes when operating effectively.
+   Business layers + the partial/complete stoppage $ come live from the engine
+   (LIVE.value_chain). The control layer reuses the existing control-value ledger:
+   each cyber risk → the capabilities that counter it (same keyword map the threat
+   panel uses) → their framework IDs, live deployment %, and modeled $ removed. ---- */
+var VC_VIEW='func';
+/* Per-control $ removed (current live-deployment allocation) — the accepted
+   control-value model, reused so the chain shows no new/contradictory number. */
+function controlValue(){var rr=capRiskRemoved();return {now:rr.byCap||{},total:rr.total,anyLive:rr.anyLive};}
+/* A cyber risk → the capabilities that mitigate it (reuses the threat-panel map). */
+function riskCaps(title,sev){try{return actorCaps({t:String(title||''),m:String(sev||'')});}catch(_){return [];}}
+function capChip(k,cv){var c=CAP_BY_KEY[k];if(!c)return '';var fw=CAP_FRAMEWORK[k],p=capDeploy(c);
+  var ids=fw?fw.csf.slice(0,2).map(function(id){return '<span class="fwid csf">'+id+'</span>';}).join(''):'';
+  var dep=p!=null?('<span style="color:var(--'+capColor(p)+');font-weight:700">'+p+'%</span>'):'<span style="color:var(--muted)">—</span>';
+  return '<span class="vc-ctrl" title="'+c.name+(cv&&cv.now[k]?(' · removes '+usd(cv.now[k])):'')+'">'+ids+' '+c.name.replace(/ *\(.*\)/,'')+' · '+dep+'</span>';}
+function vcSeg(){return '<div class="fwseg" style="margin-bottom:12px">'+[['func','By business function'],['ctrl','By control']].map(function(o){return '<button class="fwsegb'+(VC_VIEW===o[0]?' on':'')+'" data-vc="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';}
+function renderValueChain(){
+  var host=document.getElementById('valueChain');if(!host)return;
+  var vc=(LIVE&&LIVE.value_chain)||null,fns=(vc&&vc.functions)||[];
+  if(!fns.length){host.innerHTML='<div class="card"><div class="ck">Business → control value chain</div><div class="cn" style="margin-top:6px">◐ <b style="color:var(--warn)">Complete onboarding</b> to trace <b>business function → process → technology → cyber risk ($) → the framework control that mitigates it</b>, and see how much each control saves when it operates effectively. Add a <b>function</b> to your process list to group processes under the business functions they support.</div></div>';return;}
+  var cvv=controlValue();
+  var totalFn=fns.reduce(function(s,f){return s+(f.annual_usd||0);},0);
+  var head='<div class="card"><div class="ck">Business → control value chain '+liveTag()+'</div>'+
+    '<div class="cn" style="margin-top:6px">How the money flows from what the business does to the controls that protect it: <b>function → process → technology → cyber risk → control</b>. '+usd(totalFn)+'/yr of business value across <b>'+fns.length+'</b> function'+(fns.length===1?'':'s')+' is mapped to the framework controls that defend it'+(cvv.anyLive?(', which remove <b>'+usd(cvv.total)+'</b> of expected loss when operating effectively <span class="pill mod" style="font-size:9px">modeled</span>'):'')+'.</div>'+vcSeg()+
+    (VC_VIEW==='func'?vcByFunction(fns,cvv):vcByControl(fns,cvv))+
+    '<div class="cn" style="margin-top:10px;color:var(--muted)">Business $ are from your inventory. The cyber-risk figure is the <b>process-stoppage cost</b> = process $/hr × recovery hours × a severity impact-fraction (partial → complete) <span class="pill mod" style="font-size:8px">modeled</span> — the revenue exposed while the process is down, distinct from the breach/liability exposure. Control $ is each control’s framework-weighted share of risk removed, scaled by live deployment.</div></div>';
+  host.innerHTML=head;
+  host.querySelectorAll('.fwsegb[data-vc]').forEach(function(el){el.onclick=function(){VC_VIEW=el.dataset.vc;renderValueChain();};});
+}
+function vcByFunction(fns,cvv){
+  return fns.map(function(f){
+    var procs=(f.processes||[]).map(function(p){
+      var assets=(p.assets||[]).filter(function(a){return a.risks&&a.risks.length;}).map(function(a){
+        var risks=a.risks.map(function(r){
+          var caps=riskCaps(r.title,r.severity),chips=caps.map(function(k){return capChip(k,cvv);}).join(' ');
+          var stop=r.process_stop_usd!=null?usd(r.process_stop_usd):'—';
+          var frac=Math.round((r.impact_fraction||0)*100),mode=frac>=100?'full stop':frac+'% degraded';
+          return '<div class="vc-risk"><div class="vc-risk-h"><span class="cap-dot" style="background:var(--'+(r.severity&&/crit/i.test(r.severity)?'crit':'serious')+')"></span><b>'+r.title+'</b> <span class="vc-sev">'+(r.severity||'')+'</span></div>'+
+            '<div class="vc-risk-m">≈<b>'+stop+'</b> revenue exposed ('+mode+' · '+(r.impact_hours!=null?r.impact_hours+'h recovery':'recovery n/a')+')'+(r.exposure_usd?(' · breach/liability '+usd(r.exposure_usd)):'')+'</div>'+
+            (chips?'<div class="vc-ctrls"><span class="vc-ctrls-l">Mitigated by</span> '+chips+'</div>':'<div class="vc-ctrls"><span style="color:var(--muted)">No mapped control — a coverage gap.</span></div>')+'</div>';
+        }).join('');
+        return '<div class="vc-tech"><div class="vc-tech-h">🖥 <b>'+a.name+'</b>'+(a.internet_facing?' <span class="tag" style="font-size:9px">internet-facing</span>':'')+(a.crown_jewel?' <span class="tag good" style="font-size:9px">crown jewel</span>':'')+'</div>'+risks+'</div>';
+      }).join('');
+      var frac=p.fraction_of_function!=null?(' · '+Math.round(p.fraction_of_function*100)+'% of function'):'';
+      return '<div class="vc-proc"><div class="vc-proc-h"><b>'+p.name+'</b> <span class="vc-proc-v">'+usd(p.annual_usd)+'/yr'+frac+' · '+usd(p.daily_usd)+'/day · '+usd(p.per_hr)+'/hr</span></div>'+(assets||'<div class="vc-ctrls"><span style="color:var(--muted)">No mapped technology / open risk.</span></div>')+'</div>';
+    }).join('');
+    return '<div class="vc-fn"><div class="vc-fn-h"><span class="vc-fn-t">'+f.name+'</span><span class="vc-fn-v">'+usd(f.annual_usd)+'/yr · '+usd(f.daily_usd)+'/day · '+f.process_count+' process'+(f.process_count===1?'':'es')+'</span></div>'+procs+'</div>';
+  }).join('');
+}
+function vcByControl(fns,cvv){
+  // reverse index: cap → {csf ids, functions set, processes set, risks count}
+  var idx={};
+  fns.forEach(function(f){(f.processes||[]).forEach(function(p){(p.assets||[]).forEach(function(a){(a.risks||[]).forEach(function(r){
+    riskCaps(r.title,r.severity).forEach(function(k){var e=idx[k]||(idx[k]={fns:{},procs:{},risks:0});e.fns[f.name]=1;e.procs[p.name]=1;e.risks++;});
+  });});});});
+  var keys=Object.keys(idx).filter(function(k){return CAP_FRAMEWORK[k];}).sort(function(a,b){return (cvv.now[b]||0)-(cvv.now[a]||0);});
+  if(!keys.length)return '<div class="cn" style="margin-top:8px;color:var(--muted)">No controls mapped to open risks yet.</div>';
+  return keys.map(function(k){var c=CAP_BY_KEY[k],fw=CAP_FRAMEWORK[k],p=capDeploy(c),e=idx[k];
+    var fnNames=Object.keys(e.fns),prNames=Object.keys(e.procs);
+    return '<div class="vc-ctrlcard"><div class="vc-cc-h"><span class="cap-dot" style="background:var(--'+capColor(p)+')"></span><b>'+c.name.replace(/ *\(.*\)/,'')+'</b> <span class="vc-cc-tool">'+c.tool+'</span><span class="vc-cc-usd">'+(cvv.now[k]?usd(cvv.now[k]):'—')+'<span class="pill mod" style="font-size:8px;margin-left:4px">modeled</span></span></div>'+
+      '<div class="vc-cc-fw">'+fwIdChips(fw)+'</div>'+
+      '<div class="vc-cc-sub">'+(p!=null?('<b style="color:var(--'+capColor(p)+')">'+p+'% deployed</b> — removes '+usd(cvv.now[k]||0)+' of expected loss when effective'):('<span style="color:var(--muted)">not connected — '+c.connect+'</span>'))+'</div>'+
+      '<div class="vc-cc-prot">Protects <b>'+fnNames.length+'</b> function'+(fnNames.length===1?'':'s')+' · <b>'+prNames.length+'</b> process'+(prNames.length===1?'':'es')+' · counters <b>'+e.risks+'</b> risk'+(e.risks===1?'':'s')+': <span style="color:var(--ink-2)">'+fnNames.slice(0,4).join(', ')+(fnNames.length>4?'…':'')+'</span></div></div>';
+  }).join('');
+}
 function renderFrameworks(){
   var host=document.getElementById('cisoFrameworks');if(!host)return;
   seedDemoDocScores();
@@ -1297,10 +1386,10 @@ function pct(n,dp){return (n*100).toFixed(dp==null?1:dp)+'%';}
 function renderTrend(){
   var host=document.getElementById('ceoTrend');if(!host)return;
   var t=(LIVE&&LIVE.trend)||[];
-  if(!LIVE){host.innerHTML='<div class="card"><div class="ck">Expected loss — trend</div><div class="cn" style="margin-top:8px">◐ <b style="color:var(--warn)">Illustrative.</b> Once you go live, CyberX-Ray records your position on every analysis and this becomes your <b>real</b> quarter-over-quarter trend line — no back-filled history.</div></div>';return;}
+  if(!LIVE){host.innerHTML='<div class="card"><div class="ck">Expected loss — trend</div><div class="cn" style="margin-top:8px">◐ <b style="color:var(--warn)">Illustrative.</b> Once you go live, Nerion records your position on every analysis and this becomes your <b>real</b> quarter-over-quarter trend line — no back-filled history.</div></div>';return;}
   if(t.length<2){
     var cur=(LIVE&&LIVE.economics&&Number(LIVE.economics.ale))||0;
-    host.innerHTML='<div class="card"><div class="ck">Expected loss — baseline</div><div class="cv" style="font-size:26px;margin-top:6px">'+(cur?usd(cur):'—')+'</div><div class="cn" style="margin-top:8px">This is your <b>baseline</b>'+(t[0]?(', recorded '+new Date(t[0].date).toLocaleDateString()):'')+'. CyberX-Ray records your position on every analysis, so your quarter-over-quarter trend line builds from here — <b>no history is invented</b>.</div></div>';
+    host.innerHTML='<div class="card"><div class="ck">Expected loss — baseline</div><div class="cv" style="font-size:26px;margin-top:6px">'+(cur?usd(cur):'—')+'</div><div class="cn" style="margin-top:8px">This is your <b>baseline</b>'+(t[0]?(', recorded '+new Date(t[0].date).toLocaleDateString()):'')+'. Nerion records your position on every analysis, so your quarter-over-quarter trend line builds from here — <b>no history is invented</b>.</div></div>';
     return;
   }
   var vals=t.map(function(p){return Number(p.ale)||0;});var max=Math.max.apply(null,vals),min=Math.min.apply(null,vals);var range=(max-min)||1;
@@ -1423,12 +1512,12 @@ function renderSignals(){
     var pcts=['edr_pct','mfa_pct','pam_pct'].map(sig).filter(function(x){return x!=null;});
     if(pcts.length){var avg=Math.round(pcts.reduce(function(s,x){return s+x;},0)/pcts.length);setTxt('lvCovTile',avg+'%');var tn=document.getElementById('lvCovTileNote');if(tn)tn.innerHTML='<span class="pill good">live</span> from '+pcts.length+' connected tool'+(pcts.length>1?'s':'');}
   }
-  renderAiRisk();renderCisoOps();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCfoFraud();renderCroKri();renderCloOps();renderThreatIntel();renderDrReadiness();renderPeerBench();
+  renderAiRisk();renderCisoOps();renderControls();renderFrameworks();renderValueChain();renderCompliance();renderCooStatus();renderCfoFraud();renderCroKri();renderCloOps();renderThreatIntel();renderDrReadiness();renderPeerBench();
 }
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderValueChain();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -1449,15 +1538,16 @@ var IND_PROFILES={
   retail:{procs:['Checkout & payments','E-commerce storefront','Order fulfilment','Loyalty & CRM'],systems:['Payment platform','E-commerce storefront','Order management','Customer database'],data:['Cardholder data','PII'],topRisk:'Card-data breach (PCI)'},
   gov:{procs:['Citizen services','Benefits processing','Records management','Case management'],systems:['Citizen portal','Benefits system','Records database','Case management platform'],data:['PII','Sensitive records'],topRisk:'Breach of citizen records'},
   mfg:{procs:['Order-to-cash','Production / MES','Supply chain & procurement','Product engineering'],systems:['ERP','Plant control / MES','Supplier portal','PLM / design system'],data:['Design IP','Operational','PII'],topRisk:'OT ransomware halting production'},
-  energy:{procs:['Grid operations','Billing & metering','Field operations','Energy trading'],systems:['SCADA / control system','Billing platform','Field-ops system','Trading platform'],data:['Operational','PII','Financial'],topRisk:'OT attack disrupting operations'}
+  energy:{procs:['Grid operations','Billing & metering','Field operations','Energy trading'],systems:['SCADA / control system','Billing platform','Field-ops system','Trading platform'],data:['Operational','PII','Financial'],topRisk:'OT attack disrupting operations'},
+  telecom:{procs:['Mobile network operations','Broadband & fiber access','Interconnection & signaling','Billing & customer care'],systems:['Mobile / 5G core','Signaling gateway (SS7/Diameter)','Subscriber data / CRM','Billing / OSS-BSS'],data:['Subscriber PII','CPNI','Financial'],topRisk:'Network / signaling compromise exposing call records'}
 };
 function indKey(){var i=String(industry()||'').toLowerCase();
-  if(/health/.test(i))return 'health';if(/tech|saas|software/.test(i))return 'tech';if(/financ|bank|insur/.test(i))return 'fin';
+  if(/health/.test(i))return 'health';if(/telecom|communication/.test(i))return 'telecom';if(/tech|saas|software/.test(i))return 'tech';if(/financ|bank|insur/.test(i))return 'fin';
   if(/retail|commerce/.test(i))return 'retail';if(/gov|public/.test(i))return 'gov';if(/manufactur/.test(i))return 'mfg';if(/energy|utilit/.test(i))return 'energy';return 'tech';}
 function indProfile(){return IND_PROFILES[indKey()]||IND_PROFILES.tech;}
-function indLabel(){return {health:'healthcare',tech:'technology',fin:'financial services',retail:'retail',gov:'government',mfg:'manufacturing',energy:'energy & utilities'}[indKey()]||'your sector';}
+function indLabel(){return {health:'healthcare',tech:'technology',fin:'financial services',retail:'retail',gov:'government',mfg:'manufacturing',energy:'energy & utilities',telecom:'telecommunications'}[indKey()]||'your sector';}
 /* Threat groups publicly reported (CISA / Mandiant / sector-ISAC advisories) to
-   target each sector, with the CyberX-Ray capabilities that defend against their known
+   target each sector, with the Nerion capabilities that defend against their known
    techniques. Industry-modeled from public reporting until a threat-intel feed
    (Recorded Future / Mandiant) connects and makes it specific to the environment. */
 var IND_THREATS={
@@ -1481,14 +1571,17 @@ var IND_THREATS={
     {n:'Black Basta',t:'Ransomware',m:'Phishing and vendor-access abuse against manufacturers.',caps:['aware','pam','edr']}],
   energy:[{n:'Volt Typhoon',t:'Nation-state · grid pre-positioning',m:'Living-off-the-land access to critical infrastructure for future disruption.',caps:['siem','seg','edr']},
     {n:'Sandworm',t:'Nation-state · ICS attack',m:'Purpose-built malware to disrupt industrial control and grid operations.',caps:['seg','siem','backup']},
-    {n:'BlackCat / ALPHV',t:'Ransomware',m:'Double-extortion against utilities and their billing systems.',caps:['backup','edr','seg']}]
+    {n:'BlackCat / ALPHV',t:'Ransomware',m:'Double-extortion against utilities and their billing systems.',caps:['backup','edr','seg']}],
+  telecom:[{n:'Salt Typhoon',t:'Nation-state · telecom espionage',m:'Compromises carrier networks and lawful-intercept systems to reach call records and metadata.',caps:['siem','seg','pam']},
+    {n:'LightBasin (UNC1945)',t:'Nation-state · telecom-focused',m:'Targets signaling, GPRS and eDNS infrastructure to intercept subscriber traffic.',caps:['seg','siem','edr']},
+    {n:'Scattered Spider',t:'E-crime · SIM-swap & social engineering',m:'Help-desk impersonation and SIM-swap to hijack identity and numbers.',caps:['mfa','aware','pam']}]
 };
 /* Published external benchmarks — cited, not fabricated. Per-industry average breach
    cost from IBM Cost of a Data Breach 2024 ($M); peer medians from Mandiant M-Trends
    2024 (dwell time) and KnowBe4 Phishing-by-Industry (untrained baseline). We compare
    the org's LIVE figure to the published median and cite the source; comparisons are
    gated on the org actually having that live signal, so nothing is invented. */
-var IND_BENCH={health:9.77,fin:6.08,mfg:5.56,tech:5.45,energy:5.29,retail:3.48,gov:2.55};
+var IND_BENCH={health:9.77,fin:6.08,mfg:5.56,tech:5.45,energy:5.29,telecom:3.63,retail:3.48,gov:2.55};
 var PEER_DWELL_HRS=240; // Mandiant M-Trends 2024 global median dwell ≈ 10 days
 var PEER_PHISH_BASELINE=34; // KnowBe4 untrained baseline phish-prone ≈ 34%
 /* ---- The Fortune-100 board lens, per industry --------------------------------
@@ -1506,7 +1599,8 @@ var IND_BOARD={
   retail:{regulator:'PCI DSS · FTC · state privacy laws',scenario:'A card-data breach, or a storefront outage during peak season',protect:'cardholder data and storefront uptime',trust:'brand and customer loyalty',material:'a card-data breach or a peak-season outage'},
   gov:{regulator:'FISMA · FedRAMP · CISA · state privacy',scenario:'A breach of citizen records, or an outage of essential citizen services',protect:'citizen records and service availability',trust:'public trust',material:'a records breach or a service outage'},
   energy:{regulator:'NERC CIP · TSA directives · FERC',scenario:'An OT / ICS attack disrupts grid or service operations',protect:'operational reliability and public safety',trust:'reliability and public safety',material:'an operational-disruption or safety event'},
-  tech:{regulator:'SEC · SOC 2 / ISO 27001 · GDPR / CCPA',scenario:'A customer-data breach, or a platform outage that breaches SLAs',protect:'platform uptime and customer data',trust:'customer trust and retention',material:'a customer-data breach or a major outage'}
+  tech:{regulator:'SEC · SOC 2 / ISO 27001 · GDPR / CCPA',scenario:'A customer-data breach, or a platform outage that breaches SLAs',protect:'platform uptime and customer data',trust:'customer trust and retention',material:'a customer-data breach or a major outage'},
+  telecom:{regulator:'FCC (CPNI) · CISA · state privacy · FTC',scenario:'A network / signaling intrusion exposes call records, or a core outage drops service for millions',protect:'network availability and subscriber data (CPNI)',trust:'subscriber trust and service reliability',material:'a CPNI / call-records breach or a mass service outage'}
 };
 function indBoard(){return IND_BOARD[indKey()]||IND_BOARD.tech;}
 function boardRow(k,v){return '<div style="display:flex;gap:14px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px"><span style="min-width:200px;color:var(--muted);font-weight:700;font-size:11px;letter-spacing:.03em;text-transform:uppercase">'+k+'</span><span style="color:var(--ink-2);line-height:1.5">'+v+'</span></div>';}
@@ -1597,7 +1691,8 @@ var IND_CONTINUITY={
   retail:{svc:'checkout, the storefront and fulfilment',w:'sales stop — acutely in peak season',ot:false},
   gov:{svc:'citizen services and benefits processing',w:'citizens can’t access essential services',ot:false},
   energy:{svc:'grid / OT operations and field service',w:'service is disrupted with safety and regulatory impact',ot:true},
-  tech:{svc:'the production platform and customer APIs',w:'SLAs breach and customers churn',ot:false}
+  tech:{svc:'the production platform and customer APIs',w:'SLAs breach and customers churn',ot:false},
+  telecom:{svc:'the mobile / 5G core, broadband access and signaling',w:'service drops for millions and emergency calling is at risk',ot:false}
 };
 function renderCooSector(){
   var host=document.getElementById('cooSector');if(!host)return;
@@ -1684,7 +1779,8 @@ var IND_EMERGING={
   retail:[{n:'Third-party checkout &amp; web scripts',w:'Magecart-style card skimming injected through code you don’t own'},{n:'AI pricing &amp; personalization',w:'data-use and consumer-protection exposure as AI drives offers'}],
   gov:[{n:'Nation-state espionage &amp; pre-positioning',w:'long-dwell access to citizen records and essential services'},{n:'Legacy-system modernization risk',w:'end-of-life systems still running essential citizen services'}],
   energy:[{n:'OT / ICS targeting &amp; geopolitics',w:'nation-state pre-positioning in grid and control systems'},{n:'Grid digitization &amp; distributed energy',w:'more connected endpoints across generation and distribution'}],
-  tech:[{n:'AI supply chain &amp; model risk',w:'poisoned dependencies, prompt injection and shadow AI in the product'},{n:'Customer-data concentration',w:'one platform holding many customers’ data raises the blast radius'}]
+  tech:[{n:'AI supply chain &amp; model risk',w:'poisoned dependencies, prompt injection and shadow AI in the product'},{n:'Customer-data concentration',w:'one platform holding many customers’ data raises the blast radius'}],
+  telecom:[{n:'Nation-state pre-positioning in carrier networks',w:'long-dwell access to signaling and lawful-intercept exposes call records'},{n:'5G core &amp; network virtualization',w:'a cloud-native, software-defined core widens the attack surface across the network'}]
 };
 function renderCeoEmerging(){
   var host=document.getElementById('ceoEmerging');if(!host)return;
@@ -1762,7 +1858,8 @@ var IND_NOUNS={
   retail:{money:'checkout',Money:'Checkout',data:'cardholder data',db:'payment platform',portal:'storefront',p0:'Checkout &amp; payments',p1:'E-commerce storefront',p2:'Order fulfilment',p3:'Loyalty &amp; CRM',dbShort:'PayDB',gwShort:'PayGateway',engShort:'OrderEngine',portalShort:'Storefront',settle:'fulfilment'},
   gov:{money:'benefits processing',Money:'Benefits processing',data:'citizen records',db:'benefits system',portal:'citizen portal',p0:'Benefits processing',p1:'Citizen services',p2:'Records management',p3:'Case management',dbShort:'BenefitsDB',gwShort:'ServiceGateway',engShort:'CaseEngine',portalShort:'CitizenPortal',settle:'processing'},
   mfg:{money:'orders',Money:'Orders',data:'design IP',db:'ERP system',portal:'supplier portal',p0:'Order-to-cash',p1:'Production / MES',p2:'Supply chain',p3:'Product engineering',dbShort:'ERP',gwShort:'OrderGateway',engShort:'MES',portalShort:'SupplierPortal',settle:'fulfilment'},
-  energy:{money:'billing',Money:'Billing',data:'operational data',db:'control system',portal:'billing platform',p0:'Grid operations',p1:'Billing &amp; metering',p2:'Field operations',p3:'Energy trading',dbShort:'SCADA',gwShort:'MeterGateway',engShort:'TradingEngine',portalShort:'BillingApp',settle:'metering'}
+  energy:{money:'billing',Money:'Billing',data:'operational data',db:'control system',portal:'billing platform',p0:'Grid operations',p1:'Billing &amp; metering',p2:'Field operations',p3:'Energy trading',dbShort:'SCADA',gwShort:'MeterGateway',engShort:'TradingEngine',portalShort:'BillingApp',settle:'metering'},
+  telecom:{money:'traffic',Money:'Traffic',data:'subscriber data',db:'subscriber data platform',portal:'self-service app',p0:'Mobile network operations',p1:'Broadband &amp; fiber access',p2:'Interconnection &amp; signaling',p3:'Billing &amp; customer care',dbShort:'SubscriberDB',gwShort:'SignalingGW',engShort:'BillingEngine',portalShort:'SelfServiceApp',settle:'billing'}
 };
 function localizeInd(html){var k=indKey();if(k==='health'||!html)return html;var v=IND_NOUNS[k];if(!v)return html;
   // Single pass (no cascade): longest/most-specific patterns first; the callback
@@ -1914,7 +2011,7 @@ function renderProcBars(){
 }
 /* CEO oversight card — the real decision-ledger count (D&O / SEC defense). */
 /* ---- Fortune-100 CISO Operating Model — the responsibilities of each executive,
-   how security enables each, what they expect, the CyberX-Ray panel that delivers
+   how security enables each, what they expect, the Nerion panel that delivers
    it, and the data sources behind it (shown connected / not, for traceability).
    Mirrors the operating-model table so each leader sees their own accountabilities. ---- */
 var OM_SRC={SIEM:['splunk','sentinel'],EDR:['crowdstrike','defender'],GRC:['onetrust','servicenow'],CRM:['salesforce','hubspot'],ERP:['sap','oracle','workday','netsuite'],CMDB:['servicenow'],ITSM:['servicenow','jira'],IAM:['okta','entra'],Vuln:['qualys','tenable'],CSPM:['wiz','aws','azure','prisma','gcp'],Backup:['rubrik','veeam','cohesity','commvault'],'Threat intel':['recordedfuture','mandiant','anomali','otx','cisa'],Email:['proofpoint','abnormal'],Ratings:['securityscorecard'],Awareness:['knowbe4','proofpoint'],'Trust Center':['whistic'],HR:['workday'],eDiscovery:['relativity','exterro'],Cloud:['aws','azure','gcp','wiz'],CLM:[],Insurance:[],FAIR:[],'Risk register':[],DLP:[],Pentest:[],Policy:[],Audit:[]};
@@ -1978,7 +2075,7 @@ function renderOpModel(seat){
   }).join('');
   var connSrc=(function(){var set={};rows.forEach(function(r){r.s.forEach(function(s){if(omSrcOn(s))set[s]=1;});});return Object.keys(set).length;})();
   host.innerHTML='<div class="card"><div class="ck">Your operating model — '+SEAT_LABEL[seat]+' · '+rows.length+' responsibilities</div>'+
-    '<div class="cn" style="margin:6px 0 10px"><b style="color:var(--ink)">'+built+' of '+rows.length+'</b> represented by a live CyberX-Ray panel · '+connSrc+' data-source categories connected. Each row is one of your accountabilities, what the CISO does to enable it, the panel that shows it, and the systems behind it — <b>● connected</b>, <b>○ connect to light up</b>.</div>'+
+    '<div class="cn" style="margin:6px 0 10px"><b style="color:var(--ink)">'+built+' of '+rows.length+'</b> represented by a live Nerion panel · '+connSrc+' data-source categories connected. Each row is one of your accountabilities, what the CISO does to enable it, the panel that shows it, and the systems behind it — <b>● connected</b>, <b>○ connect to light up</b>.</div>'+
     body+'</div>';
 }
 /* ---- Strategic initiatives — the CEO's major moves, each with its OWN go/no-go.
@@ -2038,7 +2135,7 @@ function renderCeoGoNoGo(){
   var host=document.getElementById('ceoGoNoGo');if(!host)return;
   var inits=strategicInits();
   if(!inits.length){
-    host.innerHTML='<div class="card"><div class="ck">New-initiative safety check '+liveTag()+'</div><div class="cn" style="margin-top:6px">◐ Add your <b>strategic initiatives</b> — the major moves in front of the board (an acquisition, a cloud platform, an AI product, a market or factory expansion) — in onboarding. CyberX-Ray then runs a <b>go / no-go per initiative</b>: for each move, the risks, exactly where it’s weak, and a clear Proceed / Conditions / Hold before the business commits. A single global verdict would be meaningless — each move carries different risk.</div></div>';
+    host.innerHTML='<div class="card"><div class="ck">New-initiative safety check '+liveTag()+'</div><div class="cn" style="margin-top:6px">◐ Add your <b>strategic initiatives</b> — the major moves in front of the board (an acquisition, a cloud platform, an AI product, a market or factory expansion) — in onboarding. Nerion then runs a <b>go / no-go per initiative</b>: for each move, the risks, exactly where it’s weak, and a clear Proceed / Conditions / Hold before the business commits. A single global verdict would be meaningless — each move carries different risk.</div></div>';
     return;
   }
   var rows=inits.map(function(it){
@@ -2569,7 +2666,7 @@ function renderAiRisk(){
     '<div class="drow" style="padding:9px 0"><div class="drow-h"><span class="cap-dot" style="background:var(--muted)"></span><b>AI-security monitoring (guardrails / AI-SPM)</b><span class="drow-tool" style="color:var(--muted)">not connected</span></div><div class="drow-need">Connect an AI-security tool (Lakera · Protect AI · Prompt Security · CrowdStrike AI Detection) to watch prompt injection, data leakage and shadow AI at runtime — human-in-the-loop review does not scale to agent speed.</div></div>'+
     '<div class="cn" style="margin-top:8px">'+aiIndustryLine(industry())+'</div></div>';
   // FRONT 2 — using AI to strengthen our defences
-  var toolRows=aiTools.length?aiTools.map(function(k){var m=AI_IN_SEC[k];return '<div class="drow aitool" data-aitool="'+k+'" style="cursor:pointer;padding:9px 0"><div class="drow-h"><span class="cap-dot" style="background:var(--good)"></span><b>'+m.tool+' → '+m.ai+'</b><span class="drow-tool">'+liveTag()+' <span class="drill-cta">details ▸</span></span></div><div class="drow-need">'+m.does+'</div></div>';}).join(''):'<div class="cn" style="margin-top:6px">◐ Connect your security tools (EDR, SIEM, identity…) — CyberX-Ray then shows which run AI (Charlotte AI, Security Copilot, Purple AI…) and how much they cut detection and triage time.</div>';
+  var toolRows=aiTools.length?aiTools.map(function(k){var m=AI_IN_SEC[k];return '<div class="drow aitool" data-aitool="'+k+'" style="cursor:pointer;padding:9px 0"><div class="drow-h"><span class="cap-dot" style="background:var(--good)"></span><b>'+m.tool+' → '+m.ai+'</b><span class="drow-tool">'+liveTag()+' <span class="drill-cta">details ▸</span></span></div><div class="drow-need">'+m.does+'</div></div>';}).join(''):'<div class="cn" style="margin-top:6px">◐ Connect your security tools (EDR, SIEM, identity…) — Nerion then shows which run AI (Charlotte AI, Security Copilot, Purple AI…) and how much they cut detection and triage time.</div>';
   var clockNote='<div class="cn" style="margin-top:6px;line-height:1.6">Frontier models have cut the weaponisation window to <b>~'+wa+' days</b>; you remediate critical vulns in <b>~'+pd+' days</b>'+(patchLive?' '+liveTag():' <span class="pill mod">modeled</span>')+' → a <b style="color:var(--crit)">~'+gap+'-day</b> exposure per critical vuln. <b>Speed is the control</b> — AI in your defences is how you close it.</div>';
   var front2='<div class="card" style="margin-top:14px"><div class="ck">② Using AI to strengthen our defences <span class="tag '+(aiTools.length?'good':'warn')+'" style="font-size:10px;margin-left:6px">'+aiTools.length+' tool'+(aiTools.length===1?'':'s')+' AI-augmented</span></div>'+
     aiClockSvg()+clockNote+
@@ -2978,7 +3075,7 @@ function renderBoardPack(){
     '<div class="bp-sec"><h2>5 · Decisions on the table</h2>'+decBlock+'</div>'+
     '<div class="bp-sec"><h2>6 · Trajectory</h2><div style="font-size:13px;line-height:1.5">'+trajBlock+'</div></div>'+
     '<div class="bp-sec"><h2>7 · How we compare — published benchmarks</h2>'+benchBlock+'</div>'+
-    '<div class="bp-meta" style="margin-top:26px;border-top:1px solid var(--line);padding-top:12px">CyberX-Ray · every figure traces to your data or is labeled modeled / illustrative. This report is generated from the same live model as the executive cockpit — not a separate spreadsheet.</div>';
+    '<div class="bp-meta" style="margin-top:26px;border-top:1px solid var(--line);padding-top:12px">Nerion · every figure traces to your data or is labeled modeled / illustrative. This report is generated from the same live model as the executive cockpit — not a separate spreadsheet.</div>';
 }
 function bpToday(){try{return new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'});}catch(_){return '';}}
 function openBoardPack(){renderBoardPack();var s=document.getElementById('bpScrim'),m=document.getElementById('bpModal');if(s)s.classList.add('open');if(m){m.classList.add('open');m.scrollTop=0;}}

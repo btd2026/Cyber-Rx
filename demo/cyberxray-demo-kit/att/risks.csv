@@ -1,0 +1,6 @@
+title,severity,asset,exposure,status
+Nation-state intrusion into signaling / call records,Critical,SS7 / Diameter signaling gateway,$180M,open
+Lawful-intercept system compromise,Critical,Lawful-intercept & provisioning,$150M,open
+Subscriber CPNI / call-records breach,Critical,Customer data platform (CRM),$120M,open
+5G core disruption / mass outage,Critical,5G wireless core (EPC/5GC),$110M,open
+Broadband access DDoS / outage,High,Broadband & fiber access network,$40M,open

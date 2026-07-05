@@ -1,0 +1,6 @@
+name,revenue,rto,data,criticality,transactions_per_day,downtime_tolerance,function
+Mobile network operations (5G/wireless),$80B,1,"PII, CPNI, OT",Critical,500000000,$18M,Mobility
+Broadband & fiber (consumer/business),$30B,2,"PII, CPNI",Critical,100000000,$8M,Broadband
+Business & enterprise connectivity,$30B,2,"PII, Confidential",Critical,20000000,$6M,Enterprise
+Billing & customer care,$10B,6,"PII, PCI, Financial",High,120000000,$4M,Customer care
+Interconnection & signaling (SS7/roaming),$5B,1,"CPNI, OT",Critical,50000000,$5M,Network core

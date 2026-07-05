@@ -1,0 +1,290 @@
+{
+  "org_name": "State of California",
+  "org_id": "org_state_california",
+  "industry": "Government / Public sector",
+  "regions": [
+    "US"
+  ],
+  "currency": "USD",
+  "financials": {
+    "revenue": 413800000000,
+    "operatingIncome": null,
+    "netIncome": null,
+    "enterpriseValue": null,
+    "sharesOutstanding": null
+  },
+  "appetite": 200000000,
+  "budget": 250000000,
+  "dataRecords": 39500000,
+  "principalRisks": {
+    "creditMarket": null,
+    "operational": 12000000000,
+    "thirdParty": 4000000000,
+    "compliance": 3000000000
+  },
+  "insurance": {
+    "limit": 50000000,
+    "premium": 4000000,
+    "retention": 10000000,
+    "renewal": "2026-07-01"
+  },
+  "processes": [
+    {
+      "name": "Health & human services benefits",
+      "data": "PII, PHI",
+      "rev": "$150B",
+      "revenue": "$150B",
+      "rto": "6",
+      "criticality": "Critical",
+      "txPerDay": "8000000",
+      "tolerance": "$4M",
+      "function": "Health & human services"
+    },
+    {
+      "name": "Tax collection & revenue (FTB)",
+      "data": "PII, Financial",
+      "rev": "$120B",
+      "revenue": "$120B",
+      "rto": "8",
+      "criticality": "Critical",
+      "txPerDay": "3000000",
+      "tolerance": "$5M",
+      "function": "Revenue"
+    },
+    {
+      "name": "Unemployment & disability (EDD)",
+      "data": "PII, Financial",
+      "rev": "$40B",
+      "revenue": "$40B",
+      "rto": "6",
+      "criticality": "Critical",
+      "txPerDay": "5000000",
+      "tolerance": "$3M",
+      "function": "Labor & employment"
+    },
+    {
+      "name": "Motor vehicles & licensing (DMV)",
+      "data": "PII",
+      "rev": "$8B",
+      "revenue": "$8B",
+      "rto": "12",
+      "criticality": "High",
+      "txPerDay": "2000000",
+      "tolerance": "$1M",
+      "function": "Motor vehicles"
+    },
+    {
+      "name": "Emergency services & public safety",
+      "data": "PII, Confidential",
+      "rev": "$5B",
+      "revenue": "$5B",
+      "rto": "2",
+      "criticality": "Critical",
+      "txPerDay": "1000000",
+      "tolerance": "$2M",
+      "function": "Public safety"
+    }
+  ],
+  "apps": [
+    {
+      "name": "Benefits eligibility system (CalSAWS)",
+      "host": "internet-facing web",
+      "data": "PII, PHI",
+      "vendor": "Accenture",
+      "eol": "no",
+      "recovery": "12",
+      "txPerDay": "8000000",
+      "valuePerDay": "$30M",
+      "processes": [
+        "Health & human services benefits"
+      ]
+    },
+    {
+      "name": "Tax filing & records (FTB)",
+      "host": "internet-facing",
+      "data": "PII, Financial",
+      "vendor": "In-house",
+      "eol": "no",
+      "recovery": "12",
+      "txPerDay": "3000000",
+      "valuePerDay": "$40M",
+      "processes": [
+        "Tax collection & revenue (FTB)"
+      ]
+    },
+    {
+      "name": "Unemployment claims platform (EDD)",
+      "host": "internet-facing web",
+      "data": "PII, Financial",
+      "vendor": "Deloitte",
+      "eol": "no",
+      "recovery": "8",
+      "txPerDay": "5000000",
+      "valuePerDay": "$25M",
+      "processes": [
+        "Unemployment & disability (EDD)"
+      ]
+    },
+    {
+      "name": "DMV records system",
+      "host": "application on-prem",
+      "data": "PII",
+      "vendor": "In-house",
+      "eol": "yes",
+      "recovery": "24",
+      "txPerDay": "2000000",
+      "valuePerDay": "$12M",
+      "processes": [
+        "Motor vehicles & licensing (DMV)"
+      ]
+    },
+    {
+      "name": "Statewide 911 / dispatch",
+      "host": "application on-prem",
+      "data": "PII, Confidential",
+      "vendor": "Motorola",
+      "eol": "no",
+      "recovery": "2",
+      "txPerDay": "1000000",
+      "valuePerDay": "$20M",
+      "processes": [
+        "Emergency services & public safety"
+      ]
+    },
+    {
+      "name": "Legacy COBOL benefits mainframe",
+      "host": "application on-prem",
+      "data": "PII, Financial",
+      "vendor": "IBM",
+      "eol": "yes",
+      "recovery": "48",
+      "txPerDay": "4000000",
+      "valuePerDay": "$15M",
+      "processes": [
+        "Unemployment & disability (EDD)"
+      ]
+    }
+  ],
+  "risks": [
+    {
+      "title": "Resident PII breach (benefits)",
+      "severity": "Critical",
+      "asset": "Benefits eligibility system (CalSAWS)",
+      "status": "open",
+      "financial_exposure": "$60M"
+    },
+    {
+      "title": "Tax-records exfiltration",
+      "severity": "Critical",
+      "asset": "Tax filing & records (FTB)",
+      "status": "open",
+      "financial_exposure": "$70M"
+    },
+    {
+      "title": "Unemployment-fraud / claims takeover",
+      "severity": "Critical",
+      "asset": "Unemployment claims platform (EDD)",
+      "status": "open",
+      "financial_exposure": "$45M"
+    },
+    {
+      "title": "Legacy mainframe ransomware",
+      "severity": "High",
+      "asset": "Legacy COBOL benefits mainframe",
+      "status": "open",
+      "financial_exposure": "$25M"
+    },
+    {
+      "title": "911 / dispatch service disruption",
+      "severity": "Critical",
+      "asset": "Statewide 911 / dispatch",
+      "status": "open",
+      "financial_exposure": "$30M"
+    }
+  ],
+  "initiatives": [
+    {
+      "name": "Statewide MFA & identity modernization",
+      "owner": "CISO",
+      "cost": "$18M",
+      "roi": "13×",
+      "status": "in progress",
+      "engagement": "design"
+    },
+    {
+      "name": "Legacy mainframe migration",
+      "owner": "CIO",
+      "cost": "$22M",
+      "roi": "8×",
+      "status": "planned",
+      "engagement": "design"
+    },
+    {
+      "name": "Cal-CSIC threat-monitoring uplift",
+      "owner": "CISO",
+      "cost": "$9M",
+      "roi": "10×",
+      "status": "in progress",
+      "engagement": "gate"
+    },
+    {
+      "name": "IR retainer & tabletop program",
+      "owner": "CISO",
+      "cost": "$4M",
+      "roi": "12×",
+      "status": "planned",
+      "engagement": "design"
+    }
+  ],
+  "governance": {
+    "committee": "Technology Committee",
+    "cadence": "Semi-annually",
+    "cisoReportsTo": "CIO",
+    "boardExpertise": "No",
+    "ermIntegrated": "Partially",
+    "ir": {
+      "tested": "Yes — older than 12 months",
+      "lastTabletop": "2024-11-01",
+      "retainer": "No",
+      "ransomwarePolicy": "Informal"
+    }
+  },
+  "aiGovernance": {
+    "systems": 15,
+    "decisioning": "Piloting",
+    "framework": "NIST AI RMF",
+    "policy": "Drafted",
+    "euAiAct": "Not in scope",
+    "inventory": "Partially"
+  },
+  "strategicInitiatives": [
+    {
+      "name": "GenAI resident-services pilots",
+      "type": "AI product or feature",
+      "valueUsd": 500000000,
+      "horizon": "This year"
+    },
+    {
+      "name": "Benefits-systems cloud migration",
+      "type": "Cloud platform or migration",
+      "valueUsd": 1200000000,
+      "horizon": "Next 12–24 months"
+    },
+    {
+      "name": "Digital-identity (mDL) program",
+      "type": "New digital product",
+      "valueUsd": 300000000,
+      "horizon": "Next 12–24 months"
+    }
+  ],
+  "growth": null,
+  "compliance": {
+    "frameworksInScope": [
+      "NIST CSF 2.0",
+      "NIST 800-53",
+      "FedRAMP",
+      "CCPA",
+      "State breach-notification law"
+    ]
+  }
+}

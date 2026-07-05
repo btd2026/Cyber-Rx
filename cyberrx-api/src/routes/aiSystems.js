@@ -76,7 +76,7 @@ router.get('/agents', async (req, res) => {
   try { res.json(await AiSec.agents(orgId)); } catch (e) { logger.warn('ai agents failed', { error: e.message }); res.status(500).json({ error: 'Unable to analyze agents.' }); }
 });
 
-// How CyberRX itself uses LLMs (buyer-trust transparency).
+// How Nerion itself uses LLMs (buyer-trust transparency).
 router.get('/platform-ai-use', async (req, res) => {
   try { res.json(AiSec.platformAiUse()); } catch (e) { res.status(500).json({ error: 'Unable to load platform AI use.' }); }
 });

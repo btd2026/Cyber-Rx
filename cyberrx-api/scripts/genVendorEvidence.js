@@ -130,7 +130,7 @@ function render(doc, meta) {
     doc.moveDown(0.5);
   });
   doc.moveDown(1);
-  doc.fontSize(8).fillColor('#94a3b8').text('Fictional vendor document generated for CyberRx pilot testing. ' +
+  doc.fontSize(8).fillColor('#94a3b8').text('Fictional vendor document generated for Nerion pilot testing. ' +
     'Intentionally omits some required elements so the review agent (Saraqael) flags the gap and scores completeness/accuracy.', { lineGap: 1 });
 }
 
