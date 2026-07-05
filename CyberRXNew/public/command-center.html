@@ -6,65 +6,75 @@
 <title>CyberX-Ray · Business Command Center</title>
 <style>
 :root{
-  --plane:#F4F7FB; --surface:#FFFFFF; --surface-2:#E8F0FB; --line:#D9E1EC; --line-2:#CADCFC;
-  --ink:#1E2A4A; --ink-2:#44546A; --muted:#8A93A2; --brand:#2456C8;
-  --good:#2E8B6B; --warn:#C9A227; --serious:#C4703A; --crit:#B23A3A; --muted-c:#8A93A2;
+  --bg:#0A1A2F; --panel:#0E2140; --card:#12294C; --card-2:#16305A; --card-h:#183462; --line:#22406E;
+  --ink:#EAF1FB; --ink-2:#B6C5DD; --muted:#7C8FAD; --brand:#4F90FF;
+  --gold:#E7B24B; --good:#57CF93; --warn:#E7B24B; --serious:#E1904E; --crit:#E56C6C;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--plane);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
 a{color:inherit}
-.top{background:var(--surface);border-bottom:1px solid var(--line);padding:14px 26px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;position:sticky;top:0;z-index:20}
+.top{background:var(--panel);border-bottom:1px solid var(--line);padding:14px 26px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;position:sticky;top:0;z-index:20}
 .brand{font-weight:800;font-size:17px;letter-spacing:-.2px}
 .brand span{color:var(--brand)}
 .tagline{color:var(--muted);font-size:12.5px}
-.orgchip{margin-left:auto;display:flex;gap:10px;align-items:center;font-size:12.5px;color:var(--ink-2)}
-.orgchip select{padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:12.5px}
+.orgchip{margin-left:auto;display:flex;gap:12px;align-items:center;font-size:12.5px;color:var(--ink-2)}
+.orgchip select{padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-size:12.5px}
 .datachip{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:700}
-.datachip.live{background:rgba(46,139,107,.14);color:var(--good)} .datachip.demo{background:rgba(201,162,39,.16);color:var(--warn)} .datachip.illu{background:var(--surface-2);color:var(--ink-2)}
-.rolebar{background:var(--surface);border-bottom:1px solid var(--line);padding:0 20px;display:flex;gap:2px;overflow-x:auto}
-.rolebar button{border:0;background:none;padding:12px 14px;font-size:13px;font-weight:600;color:var(--ink-2);cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap}
-.rolebar button.on{color:var(--brand);border-bottom-color:var(--brand)}
-.wrap{max-width:1180px;margin:0 auto;padding:22px}
+.datachip.live{background:rgba(87,207,147,.16);color:var(--good)} .datachip.demo{background:rgba(231,178,75,.18);color:var(--gold)} .datachip.illu{background:rgba(124,143,173,.16);color:var(--ink-2)}
+.rolebar{background:var(--panel);border-bottom:1px solid var(--line);padding:10px 20px;display:flex;gap:8px;overflow-x:auto}
+.rolebar button{border:1px solid var(--line);background:var(--card);padding:7px 15px;font-size:12.5px;font-weight:700;color:var(--ink-2);cursor:pointer;border-radius:22px;white-space:nowrap}
+.rolebar button.on{color:#20140A;background:var(--gold);border-color:var(--gold)}
+.wrap{max-width:1200px;margin:0 auto;padding:24px}
 .rolehead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px}
-.rolehead h1{font-size:22px;margin:0;letter-spacing:-.3px}
-.rolefocus{color:var(--ink-2);font-size:13.5px;max-width:820px;margin:2px 0 16px}
-.tabs{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:18px}
-.tabs button{border:1px solid var(--line);background:#fff;padding:8px 13px;border-radius:20px;font-size:12.5px;font-weight:600;color:var(--ink-2);cursor:pointer}
-.tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.rolehead h1{font-size:24px;margin:0;letter-spacing:-.4px}
+.rolefocus{color:var(--ink-2);font-size:13.5px;max-width:840px;margin:4px 0 18px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+.tabs button{border:1px solid var(--line);background:var(--card);padding:8px 14px;border-radius:22px;font-size:12.5px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.tabs button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+/* Business Health board — the executive hero */
+.hgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+.hcard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;cursor:pointer;transition:.14s}
+.hcard:hover{border-color:var(--brand);background:var(--card-h);transform:translateY(-2px)}
+.hicon{width:46px;height:46px;border-radius:13px;background:rgba(231,178,75,.15);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--gold);margin-bottom:16px}
+.htitle{font-weight:700;font-size:16.5px;margin-bottom:5px;letter-spacing:-.2px}
+.hstatus{font-size:13.5px;font-weight:600}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.card.click{cursor:pointer;transition:.14s} .card.click:hover{border-color:var(--brand);background:var(--card-h)}
 .ck{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.cn{font-size:13px;color:var(--ink-2);line-height:1.5}
+.cn{font-size:13px;color:var(--ink-2);line-height:1.55}
 .big{font-size:30px;font-weight:800;letter-spacing:-.5px;margin:6px 0 2px}
 .sub{font-size:12.5px;color:var(--muted)}
-.sec-h{font-size:13px;font-weight:800;margin:22px 0 10px;color:var(--ink)}
+.sec-h{font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;margin:26px 0 12px;color:var(--muted)}
 .pill{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
-.pill.good{background:rgba(46,139,107,.14);color:var(--good)} .pill.warn{background:rgba(201,162,39,.18);color:var(--warn)} .pill.crit{background:rgba(178,58,58,.14);color:var(--crit)} .pill.mod{background:var(--surface-2);color:var(--ink-2)}
+.pill.good{background:rgba(87,207,147,.16);color:var(--good)} .pill.warn{background:rgba(231,178,75,.2);color:var(--gold)} .pill.crit{background:rgba(229,108,108,.16);color:var(--crit)} .pill.mod{background:rgba(124,143,173,.18);color:var(--ink-2)}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th{text-align:left;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:8px 10px;border-bottom:1px solid var(--line)}
-td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
-tr.click{cursor:pointer} tr.click:hover td{background:var(--surface-2)}
+th{text-align:left;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:9px 12px;border-bottom:1px solid var(--line)}
+td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+tr.click{cursor:pointer} tr.click:hover td{background:var(--card-h)}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:middle}
-.bar{height:8px;border-radius:6px;background:var(--surface-2);overflow:hidden;margin-top:6px}
+.bar{height:8px;border-radius:6px;background:rgba(124,143,173,.18);overflow:hidden;margin-top:6px}
 .bar>i{display:block;height:100%;border-radius:6px}
 .heat{display:grid;gap:6px}
-.heatrow{display:grid;grid-template-columns:190px 1fr;gap:8px;align-items:center}
+.heatrow{display:grid;grid-template-columns:200px 1fr;gap:8px;align-items:center}
 .heatcells{display:flex;gap:6px}
-.hc{flex:1;min-width:34px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;cursor:pointer}
+.hc{flex:1;min-width:34px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#0A1A2F;cursor:pointer}
 .action{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
-.action .an{min-width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:#fff}
+.action:last-child{border-bottom:0}
+.action .an{min-width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:#0A1A2F}
 .mini{font-size:11.5px;color:var(--muted)}
-.scrim{position:fixed;inset:0;background:rgba(20,33,72,.4);opacity:0;pointer-events:none;transition:.15s;z-index:40}
+.scrim{position:fixed;inset:0;background:rgba(4,10,20,.6);opacity:0;pointer-events:none;transition:.15s;z-index:40}
 .scrim.open{opacity:1;pointer-events:auto}
-.drawer{position:fixed;top:0;right:0;height:100%;width:min(560px,94vw);background:#fff;border-left:1px solid var(--line);box-shadow:-10px 0 40px rgba(20,33,72,.2);transform:translateX(100%);transition:.18s;z-index:41;overflow:auto;padding:24px}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(580px,94vw);background:var(--panel);border-left:1px solid var(--line);box-shadow:-14px 0 50px rgba(0,0,0,.5);transform:translateX(100%);transition:.18s;z-index:41;overflow:auto;padding:26px}
 .drawer.open{transform:none}
-.drawer h2{font-size:18px;margin:0 0 4px}
+.drawer h2{font-size:19px;margin:0 0 4px}
 .chain{margin:14px 0}
 .chain .cl{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
 .chain .cl b{min-width:150px;color:var(--muted);font-weight:700;font-size:11px;letter-spacing:.04em;text-transform:uppercase}
-.x{position:absolute;top:16px;right:18px;border:0;background:none;font-size:22px;cursor:pointer;color:var(--muted)}
+.x{position:absolute;top:18px;right:20px;border:0;background:none;font-size:24px;cursor:pointer;color:var(--muted)}
 .evrow{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px}
-.note{font-size:11.5px;color:var(--muted);margin-top:14px;line-height:1.5}
+.note{font-size:11.5px;color:var(--muted);margin-top:16px;line-height:1.55}
 @media(max-width:640px){.chain .cl b{min-width:110px}}
 </style>
 </head>
@@ -212,17 +222,36 @@ function objRow(o){var s=objScore(o);var risks=pack().risks.filter(function(r){r
   return '<tr class="click" onclick="drillObjective(\''+o.id+'\')"><td><b>'+esc(o.name)+'</b><div class="mini">'+esc(relationLabel(rel))+' · KPI: '+esc(o.kpi)+'</div></td><td><span class="dot" style="background:'+bandColor(s)+'"></span>'+bandLabel(s)+' <span class="mini">('+s+'/100)</span></td><td style="font-weight:700;color:'+(ar!=null?'var(--ink)':'var(--muted)')+'">'+(ar!=null?usd(ar):'—')+'</td><td>'+(risks.length?('<span class="pill '+(s<50?'crit':'warn')+'">'+risks.length+' cyber blocker'+(risks.length>1?'s':'')+'</span>'):'<span class="pill good">clear</span>')+'</td></tr>';}
 
 function tabSummary(){
-  var scs=roleSummaryScores();
-  var top=roleRisks().map(function(r){return {r:r,s:objScore(objById(r.obj))||60};}).sort(function(a,b){return a.s-b.s;}).slice(0,4);
+  var cards=healthCards();
+  var top=roleRisks().map(function(r){return {r:r,s:objScore(objById(r.obj))||60};}).sort(function(a,b){return a.s-b.s;}).slice(0,3);
   var decs=roleDecisions();
-  return '<div class="grid">'+scs.map(scoreCard).join('')+'</div>'+
-    '<div class="sec-h">Strategic objectives'+(enterpriseRole()?' — enterprise':' — yours')+'</div>'+
-    '<div class="card" style="padding:4px 0"><table><thead><tr><th>Objective</th><th>Health</th><th>$ at risk</th><th>Cyber blockers</th></tr></thead><tbody>'+roleObjectives().map(objRow).join('')+'</tbody></table></div>'+
-    '<div class="sec-h">Top risks requiring attention</div>'+
-    '<div class="card">'+(top.length?top.map(function(t){return '<div class="action click" onclick="drillRisk(\''+t.r.obj+'|'+encodeURIComponent(t.r.name)+'\')"><div class="an" style="background:'+bandColor(t.s)+'">!</div><div><b>'+esc(t.r.name)+'</b><div class="mini">'+esc(t.r.impact)+' · threatens “'+esc((objById(t.r.obj)||{}).name||'')+'”</div></div></div>';}).join(''):'<div class="cn">No cyber blockers on your objectives right now.</div>')+'</div>'+
-    '<div class="sec-h">Key decisions required</div>'+
-    '<div class="card">'+(decs.length?decs.slice(0,3).map(function(d){return '<div class="action"><div class="an" style="background:var(--brand)">▸</div><div><b>'+esc(d.name)+'</b><div class="mini">'+esc(d.kind)+' · owner '+esc(roleByKey(d.owner).label)+' · '+esc(d.benefit)+'</div></div></div>';}).join(''):'<div class="cn">No decisions awaiting you.</div>')+'</div>'+
+  return '<div class="hgrid">'+cards.map(function(c){return '<div class="hcard" onclick="setTab(\''+c.tab+'\')"><div class="hicon">'+c.icon+'</div><div class="htitle">'+esc(c.title)+'</div><div class="hstatus" style="color:var(--'+c.tone+')">'+esc(c.status)+'</div></div>';}).join('')+'</div>'+
+    '<div class="sec-h">What needs attention</div>'+
+    '<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(340px,1fr))">'+
+    '<div class="card"><div class="ck">Top risks to your objectives</div><div style="margin-top:8px">'+(top.length?top.map(function(t){return '<div class="action click" onclick="drillRisk(\''+t.r.obj+'|'+encodeURIComponent(t.r.name)+'\')"><div class="an" style="background:'+bandColor(t.s)+'">!</div><div><b>'+esc(t.r.name)+'</b><div class="mini">'+esc(t.r.impact)+'</div></div></div>';}).join(''):'<div class="cn">No cyber blockers on your objectives right now.</div>')+'</div></div>'+
+    '<div class="card"><div class="ck">Decisions that need you</div><div style="margin-top:8px">'+(decs.length?decs.slice(0,3).map(function(d){return '<div class="action"><div class="an" style="background:var(--gold)">▸</div><div><b>'+esc(d.name)+'</b><div class="mini">'+esc(d.kind)+' · '+esc(d.benefit)+'</div></div></div>';}).join(''):'<div class="cn">No decisions awaiting you.</div>')+'</div></div>'+
+    '</div>'+
     provNote();
+}
+/* The six Business-Health cards — the executive hero, in plain language, scoped
+   to the current role. Each is a door into the tab with the detail + evidence. */
+function healthCards(){
+  var objs=roleObjectives(),onTrack=objs.filter(function(o){return objScore(o)>=75;}).length;
+  var weak=roleCaps().filter(function(c){var s=capScore(c);return s!=null&&s<75;}).length;
+  var ct=customerTrustScore(),ai=aiReadinessScore();
+  var e=(LIVE&&LIVE.economics&&LIVE.economics.appetite)||{};
+  var finS,finT;
+  if(e.appetite){if(e.within!==false&&e.tail_within!==false){finS='$ within appetite';finT='good';}else if(e.within!==false){finS='$ tail over appetite';finT='warn';}else{finS='$ over appetite';finT='crit';}}
+  else{var f=financialScore();finS=f>=75?'Within tolerance':'Watch';finT=f>=75?'good':'warn';}
+  var decN=roleDecisions().length+((e.tail_within===false)?1:0);
+  return [
+    {icon:'◎',title:'Strategic Objectives',status:onTrack+' of '+objs.length+' on track',tone:(objs.length&&onTrack>=Math.ceil(objs.length*0.6))?'good':'warn',tab:'objectives'},
+    {icon:'✦',title:'Innovation Readiness',status:ai>=75?'Ready to launch':ai>=50?'In progress':'Early stage',tone:ai>=75?'good':'warn',tab:'opportunities'},
+    {icon:'♥',title:'Customer Trust',status:ct>=80?'Strong':ct>=65?'Stable':ct>=50?'Watch':'At risk',tone:ct>=65?'good':'warn',tab:'performance'},
+    {icon:'❖',title:'Operational Resilience',status:weak===0?'Strong':(weak+' area'+(weak>1?'s':'')+' to watch'),tone:weak===0?'good':'warn',tab:'resilience'},
+    {icon:'$',title:'Financial Exposure',status:finS,tone:finT,tab:'financial'},
+    {icon:'✔',title:'Decisions Required',status:decN>0?(decN+' need'+(decN===1?'s':'')+' you'):'None pending',tone:decN>0?'warn':'good',tab:'decisions'}
+  ];
 }
 function tabObjectives(){
   return '<div class="cn" style="margin-bottom:12px">The strategic objectives'+(enterpriseRole()?' across the enterprise you oversee':' you own or support')+' — each with its health, the <b>$ at risk</b>, the cyber blockers threatening it, and <b>your specific contribution</b>.</div>'+
