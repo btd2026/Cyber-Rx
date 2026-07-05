@@ -70,6 +70,25 @@
   @keyframes wrBlink{50%{opacity:.18}}
   .optile.alarm{border-color:var(--crit)!important;animation:tileAlarm 1.1s ease-in-out infinite}
   @keyframes tileAlarm{0%,100%{box-shadow:none}50%{box-shadow:0 0 0 3px var(--crit-soft)}}
+  /* Threat Mapping — attack-path graphic */
+  .tmp-actors{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 6px}
+  .tmp-actor{font-size:11px;color:var(--ink-2);background:var(--plane);border:1px solid var(--line-2);border-radius:7px;padding:4px 9px}
+  .tmp-actor b{color:var(--crit)}
+  .tmp-lanes{margin-top:8px}
+  .tmp-lane{display:flex;align-items:stretch;gap:6px;overflow-x:auto;padding:10px 4px 4px}
+  .tmp-lane.exploit{background:var(--crit-soft);border-radius:9px}
+  .tmp-arrow{align-self:center;color:var(--muted);font-size:15px;flex:0 0 auto}
+  .tmp-node{display:flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--line-2);border-radius:9px;padding:7px 10px;flex:0 0 auto;min-width:0}
+  .tmp-node.net{background:var(--blue-soft);border-color:var(--line-2)}
+  .tmp-node.cj{border-color:var(--gold);background:var(--gold-soft)}
+  .tmp-node.entry{border-style:dashed}
+  .tmp-node .tmp-ni{font-size:17px}.tmp-node .tmp-nt{font-size:12.5px;font-weight:700;color:var(--ink);white-space:nowrap}.tmp-node .tmp-ns{font-size:9.5px;color:var(--muted);white-space:nowrap}
+  .tmp-gate{flex:0 0 auto;border:1.5px solid var(--line-2);border-top-width:4px;border-radius:9px;padding:6px 9px;min-width:120px;background:var(--surface)}
+  .tmp-gate.good{border-top-color:var(--good)}.tmp-gate.blue{border-top-color:var(--blue)}.tmp-gate.warn{border-top-color:var(--warn)}.tmp-gate.crit{border-top-color:var(--crit)}.tmp-gate.muted{border-top-color:var(--muted)}
+  .tmp-gl{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:4px}
+  .tmp-gc{display:flex;flex-direction:column;gap:3px}
+  .tmp-ctl{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--ink-2);white-space:nowrap}
+  .tmp-note{font-size:11px;color:var(--ink-2);margin:0 0 6px 6px}.tmp-note.crit{color:var(--crit);font-weight:600}
   .drill-cta{color:var(--blue);font-weight:700;white-space:nowrap}
   .dotstrip{display:flex;gap:4px;margin-top:9px;flex-wrap:wrap}.dotstrip .ds{width:13px;height:13px;border-radius:3px;display:inline-block}
   .drow{padding:12px 0;border-top:1px solid var(--line)}.drow:first-child{border-top:none}
@@ -523,7 +542,7 @@ var TAB_LABELS={
  // Chief Risk seat (outcome tabs)
  'Enterprise risk appetite':'Risk appetite','Risk acceptance':'Risk acceptance','Risk trends':'Risk trends','Cross-functional risk ownership':'Risk ownership','Control assurance':'Control assurance','Residual risk':'Residual risk',
  // CISO seat (outcome tabs)
- 'Are we secure right now — and is the program getting stronger?':'Program health','Are we under attack?':'Under attack?','Is our security program worth the spend — and can we prove it?':'Control value','Evidence collection':'Evidence','Action tracking':'Action tracking',
+ 'Are we secure right now — and is the program getting stronger?':'Program health','Are we under attack?':'Under attack?','Is our security program worth the spend — and can we prove it?':'Control value','Evidence collection':'Evidence','AI risk':'AI risk','Action tracking':'Action tracking',
  // Chief Revenue seat
  'Revenue protection':'Revenue protection','Subscription / service availability':'Service availability','Fraud exposure':'Fraud','Customer-impacting incidents':'Customer incidents','Sales & renewal risk':'Sales & renewal',
  // Chief Product seat
@@ -1653,10 +1672,10 @@ function renderSignals(){
     var pcts=['edr_pct','mfa_pct','pam_pct'].map(sig).filter(function(x){return x!=null;});
     if(pcts.length){var avg=Math.round(pcts.reduce(function(s,x){return s+x;},0)/pcts.length);setTxt('lvCovTile',avg+'%');var tn=document.getElementById('lvCovTileNote');if(tn)tn.innerHTML='<span class="pill good">live</span> from '+pcts.length+' connected tool'+(pcts.length>1?'s':'');}
   }
-  renderAiRisk();renderCisoOps();renderControls();renderFrameworks();renderValueChain();renderCompliance();renderCooStatus();renderCfoFraud();renderCroKri();renderCloOps();renderThreatIntel();renderDrReadiness();renderPeerBench();
+  renderAiRisk();renderCisoOps();renderUnderAttack();renderThreatMap();renderControls();renderFrameworks();renderValueChain();renderCompliance();renderCooStatus();renderCfoFraud();renderCroKri();renderCloOps();renderThreatIntel();renderDrReadiness();renderPeerBench();
 }
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
-  try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();if(typeof renderCisoOps==='function')renderCisoOps();}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
+  try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();if(typeof renderCisoOps==='function'){renderCisoOps();renderUnderAttack();}}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
   try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderValueChain();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
@@ -2477,7 +2496,7 @@ function renderGov(){
       (ev>0?('<b style="color:var(--good)">'+ev+' of '+m.rows.length+'</b> are now <span class="srcpill conn">● source-connected</span> (auditable against the system of record); the rest are <span class="srcpill self">○ self-reported</span>. '):'All are <span class="srcpill self">○ self-reported</span> today — ')+
       'connect your board portal, HRIS and GRC to evidence every line and make this filing-ready and audit-defensible.</div></div>';})();
 }
-function renderBoard(){renderStress();renderReadiness();renderThirdParty();renderGov();renderMateriality();renderCloOps();renderCloPrivacy();renderAiRisk();renderCisoOps();renderCisoWarRoom();}
+function renderBoard(){renderStress();renderReadiness();renderThirdParty();renderGov();renderMateriality();renderCloOps();renderCloPrivacy();renderAiRisk();renderCisoOps();renderUnderAttack();renderThreatMap();renderCisoWarRoom();}
 /* War Room, integrated into the CISO seat — shows current incident state with a
    one-click entry, so incident command lives inside the cockpit, not beside it. */
 function renderCisoWarRoom(){
@@ -2632,21 +2651,27 @@ function drillVendors(){
   return head+rows;
 }
 /* ---- the four tiles ---- */
-function renderCisoOps(){
-  var host=document.getElementById('cisoOps');if(!host)return;
-  var live=!!SIGNALS;
+/* The "Are we under attack?" status tile — lives in the Under-attack tab's War
+   Room sub-tab (moved out of Program Health). Green when calm, red-blinking on an
+   active incident (SIEM open_incidents OR a live War Room incident). Clicking it
+   enters the War Room during an incident, else opens the all-clear detail. */
+function renderUnderAttack(){
+  var host=document.getElementById('cisoUnderAttack');if(!host)return;
   var oi=sig('open_incidents');
-  // Under attack if the SIEM reports open incidents OR a live incident is running
-  // in the War Room (incidentActive). Either flips this tile to the alarm state.
   var wrActive=(typeof incidentActive!=='undefined')&&incidentActive;
   var underAttack=(oi!=null&&oi>0)||wrActive;
-  // Tile 1 — under attack?
   var t1v=underAttack
     ?(((oi!=null&&oi>0)?(oi+' active incident'+(oi>1?'s':'')):'Active incident')+(wrActive&&incidentAsset?(' · '+incidentAsset):''))
     :(oi!=null?'No active compromise':'Connect your SIEM');
   var t1c=underAttack?'crit':(oi!=null?'good':'muted');
   var t1s=underAttack?'<b style="color:var(--blue)">Enter the War Room →</b>':(oi!=null?'✓ nothing burning right now':'live from your SIEM once connected');
-  var t1=drillTile('attack','Are we under attack?',(underAttack?'⚠ ':'✓ ')+t1v,t1c,t1s,'',{wrIcon:true,alarm:underAttack});
+  host.innerHTML=drillTile('attack','Are we under attack?',(underAttack?'⚠ ':'✓ ')+t1v,t1c,t1s,'',{wrIcon:true,alarm:underAttack});
+  host.querySelectorAll('.optile').forEach(function(el){el.onclick=function(){
+    if(underAttack){try{wrOpen();}catch(_){}}else openDrill('Are we under attack?',drillAttack());};});
+}
+function renderCisoOps(){
+  var host=document.getElementById('cisoOps');if(!host)return;
+  var live=!!SIGNALS;
   // Tile 2 — top-10 capability health
   var capStates=CAPS.map(function(c){return capColor(capDeploy(c));});
   var measured=CAPS.filter(function(c){return capDeploy(c)!=null;}).length;
@@ -2670,10 +2695,9 @@ function renderCisoOps(){
   var t4v=vs?(atRisk?(atRisk+' of 10 posing risk today'):'All 10 tier-1 clear'):'No monitor connected';
   var t4s=vs?('via '+vs.vendor+' · click for the list'):'pick a monitoring service at onboarding';
   var t4=drillTile('vendors','Are any tier-1 vendors posing a risk today?',t4v,t4c,t4s,dotStrip(vl.slice().sort(function(a,b){return a.s-b.s;}).map(function(x){return capColor(x.s);})));
-  host.innerHTML=demoBanner()+'<div class="grid4">'+t1+t2+t3+t4+'</div>';
+  host.innerHTML='<div class="grid3">'+t2+t3+t4+'</div>';
   host.querySelectorAll('.optile').forEach(function(el){el.onclick=function(){var d=el.dataset.drill;
-    if(d==='attack'){if(underAttack){try{wrOpen();}catch(_){}}else openDrill('Are we under attack?',drillAttack());}
-    else if(d==='caps')openDrill('Top-10 capability health',drillCapabilities());
+    if(d==='caps')openDrill('Top-10 capability health',drillCapabilities());
     else if(d==='tactics')openDrill('Defending against attacks — MITRE ATT&CK',drillTactics());
     else if(d==='vendors')openDrill('Tier-1 vendor risk today',drillVendors());
   };});
@@ -3111,6 +3135,54 @@ function actorCaps(a){var s=((a.t||'')+' '+(a.m||'')).toLowerCase(),c=[];
   if(!c.length)c=['edr','siem','seg'];
   var seen={},out=[];c.forEach(function(k){if(!seen[k]&&CAP_BY_KEY[k]){seen[k]=1;out.push(k);}});return out.slice(0,3);
 }
+/* ---- Threat Mapping — a live ATTACK-PATH graphic (not a table). For each crown
+   jewel it draws the path a sector threat actor would take from the internet to it
+   (Initial Access → [Lateral Movement] → the crown jewel), with a CONTROL GATE on
+   each hop coloured by its weakest control — so you see, visually, how each crown
+   jewel can be reached and where we stop the attack. Actors come from the connected
+   threat-intel feed when present, else industry-modelled. (Attack-path model, per
+   MITRE ATT&CK — the security equivalent of "traceroute" is the kill-chain, not
+   network hops: the hops are Initial Access → Lateral Movement → Impact.) ---- */
+function tmActors(){var live=(typeof liveThreatActors==='function')&&liveThreatActors();
+  if(live&&live.length)return {list:live.map(function(a){return {n:a.n,t:a.t,m:a.m};}),live:true};
+  return {list:(IND_THREATS[indKey()]||IND_THREATS.tech),live:false};}
+function tmFeedOn(){var t=connectedTools();return ['recordedfuture','mandiant','anomali','otx','cisa'].some(function(k){return t[k]&&t[k].on;});}
+/* A control gate on a hop — its strength = the WEAKEST control (a single gap opens the path). */
+function tmGate(label,keys){
+  var ctrls=(keys||[]).map(function(k){return {c:CAP_BY_KEY[k],p:capDeploy(CAP_BY_KEY[k])};}).filter(function(x){return x.c;});
+  var meas=ctrls.filter(function(x){return x.p!=null;}).map(function(x){return x.p;});
+  var minP=meas.length?Math.min.apply(null,meas):null,cls=capColor(minP);
+  var chips=ctrls.map(function(x){return '<span class="tmp-ctl"><span class="cap-dot" style="background:var(--'+capColor(x.p)+')"></span>'+x.c.name.replace(/ *\(.*\)/,'')+' '+(x.p==null?'—':x.p+'%')+'</span>';}).join('');
+  return {cls:cls,minP:minP,html:'<div class="tmp-gate '+cls+'"><div class="tmp-gl">'+label+'</div><div class="tmp-gc">'+chips+'</div></div>'};}
+function tmNode(icon,title,sub,cls){return '<div class="tmp-node '+(cls||'')+'"><div class="tmp-ni">'+icon+'</div><div><div class="tmp-nt">'+title+'</div>'+(sub?'<div class="tmp-ns">'+sub+'</div>':'')+'</div></div>';}
+var TM_ARROW='<span class="tmp-arrow">▸</span>';
+function tmLane(c){
+  var g1=tmGate('Initial Access',TACTIC_CAPS['Initial Access']);
+  var net=tmNode('🌐','Internet','the perimeter','net');
+  var cjSub=(c.internet?'internet-facing':'internal')+' · crit '+(c.score!=null?c.score:'—')+(c.exposure>0?(' · '+usd(c.exposure)):'');
+  var cj=tmNode('🖥','<b>'+c.name+'</b>',cjSub,'cj');
+  var gates=[g1],lane;
+  if(c.internet){ lane=net+TM_ARROW+g1.html+TM_ARROW+cj; }
+  else { var g2=tmGate('Lateral Movement',TACTIC_CAPS['Lateral Movement']);gates.push(g2);
+    lane=net+TM_ARROW+g1.html+TM_ARROW+tmNode('🖧','Internet-facing entry','a reachable system','entry')+TM_ARROW+g2.html+TM_ARROW+cj; }
+  var weak=gates.filter(function(g){return g.minP!=null;}).sort(function(a,b){return a.minP-b.minP;})[0];
+  var exploit=weak&&weak.minP!=null&&weak.minP<50;
+  return '<div class="tmp-lane'+(exploit?' exploit':'')+'">'+lane+'</div>'+
+    (weak&&weak.minP!=null?('<div class="tmp-note'+(exploit?' crit':'')+'">'+(exploit?'⚠ Exploitable path — ':'✓ Defended — ')+'weakest hop to <b>'+c.name+'</b> is at <b style="color:var(--'+weak.cls+')">'+weak.minP+'%</b>'+(exploit?'; raise it to close the path.':'.')+'</div>'):'');
+}
+function renderThreatMap(){
+  var host=document.getElementById('cisoThreatMap');if(!host)return;
+  var a=tmActors(),feedOn=tmFeedOn();
+  var tag=feedOn?'<span class="pill good" style="font-size:9px">live feed</span>':'<span class="pill warn" style="font-size:9px">industry-modeled</span>';
+  var cjs=((crownList()&&crownList().length)?crownList():illuCJ()).slice(0,6);
+  var actorChips=a.list.slice(0,4).map(function(x){return '<span class="tmp-actor" title="'+String(x.m||'').replace(/"/g,'&quot;')+'"><b>'+x.n+'</b> · '+x.t+'</span>';}).join('');
+  var reach=cjs.filter(function(c){return c.internet;}).length;
+  host.innerHTML='<div class="card"><div class="ck">Attack-path map '+tag+' — how a threat actor could reach your crown jewels</div>'+
+    '<div class="cn" style="margin-top:6px">The actors targeting <b>'+indLabel()+'</b>, the path each would take from the internet to a crown jewel, and the controls that stop them at each hop. <b>'+reach+' of '+cjs.length+'</b> crown jewels are <b>directly internet-reachable</b>. A gate’s colour is its <b>weakest</b> control — '+scaleLegend()+'. '+(feedOn?'Actors are live from your threat-intel feed.':'Actors are modelled from public sector reporting — connect a threat-intel feed (Recorded Future · Mandiant · OTX · CISA) in onboarding for your live actor set.')+'</div>'+
+    '<div class="tmp-actors">'+(actorChips||'<span style="color:var(--muted);font-size:11px">no actors — connect a threat-intel feed</span>')+'</div>'+
+    '<div class="tmp-lanes">'+cjs.map(tmLane).join('')+'</div>'+
+    '</div>';
+}
 function renderThreatIntel(){
   var host=document.getElementById('cisoThreat');if(!host)return;
   var la=liveThreatActors(),live=!!la;
@@ -3432,8 +3504,8 @@ function stopWarLive(){clearInterval(wrTimer);}
 function triggerIncident(){incidentActive=true;wrStart=Date.now();FEED=FEED_SEED.slice();icChecks={};icCalled={};icPlaybook=false;
   var top=currentCjList()[0];incidentAsset=top?top.name:null; // the crown jewel under attack
   var b=document.getElementById('warBtn');if(b){b.classList.add('alarm');b.textContent='⚠ LIVE INCIDENT';}
-  startAlarm();renderWar();startWarLive();startCjIncident();renderChain();renderCisoWarRoom();renderCisoOps();}
-function containIncident(){incidentActive=false;incidentAsset=null;stopAlarm();stopWarLive();stopCjIncident();var b=document.getElementById('warBtn');if(b){b.classList.remove('alarm');b.textContent='⚠ War Room';}renderChain();renderWar();renderCisoWarRoom();renderCisoOps();}
+  startAlarm();renderWar();startWarLive();startCjIncident();renderChain();renderCisoWarRoom();renderCisoOps();renderUnderAttack();}
+function containIncident(){incidentActive=false;incidentAsset=null;stopAlarm();stopWarLive();stopCjIncident();var b=document.getElementById('warBtn');if(b){b.classList.remove('alarm');b.textContent='⚠ War Room';}renderChain();renderWar();renderCisoWarRoom();renderCisoOps();renderUnderAttack();}
 function startCjIncident(){clearInterval(cjIncidentTimer);cjIncidentTimer=setInterval(updateCjIncident,1000);updateCjIncident();}
 function stopCjIncident(){clearInterval(cjIncidentTimer);}
 function wrOpen(){ensureAudio();renderWar();document.getElementById('wrModal').classList.add('open');document.getElementById('wrScrim').classList.add('open');}

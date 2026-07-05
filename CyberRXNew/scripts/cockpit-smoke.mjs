@@ -105,7 +105,7 @@ for (const s of seatIds) {
   catch (e) { problems.push(`[render ${s}] ${e.message}`); }
 }
 // Exercise the live-only renderers directly too.
-for (const fn of ['applyLive', 'renderChain', 'renderProcBars', 'renderCioSystems', 'renderCpoQuality', 'renderCpoVelocity', 'renderAuditRepeat', 'renderValueChain', 'renderBoard', 'renderEarnings', 'renderCroPortfolio', 'renderRoi', 'renderSignals', 'renderAiRisk', 'renderTrend', 'renderInitiatives', 'renderOversight', 'renderMateriality', 'renderCfoFraud', 'renderCroKri', 'renderCloOps', 'renderThreatIntel', 'renderDrReadiness', 'renderPeerBench', 'renderBoardPack', 'openBoardPack', 'closeBoardPack']) {
+for (const fn of ['applyLive', 'renderChain', 'renderProcBars', 'renderCioSystems', 'renderUnderAttack', 'renderThreatMap', 'renderCpoQuality', 'renderCpoVelocity', 'renderAuditRepeat', 'renderValueChain', 'renderBoard', 'renderEarnings', 'renderCroPortfolio', 'renderRoi', 'renderSignals', 'renderAiRisk', 'renderTrend', 'renderInitiatives', 'renderOversight', 'renderMateriality', 'renderCfoFraud', 'renderCroKri', 'renderCloOps', 'renderThreatIntel', 'renderDrReadiness', 'renderPeerBench', 'renderBoardPack', 'openBoardPack', 'closeBoardPack']) {
   try { vm.runInContext(`typeof ${fn}==='function' && ${fn}();`, ctx); }
   catch (e) { problems.push(`[${fn}] ${e.message}`); }
 }
