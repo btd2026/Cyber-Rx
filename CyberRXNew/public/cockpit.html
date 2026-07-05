@@ -2438,7 +2438,7 @@ function evChip(field,via){
   }
   return '<span class="srcpill conn">● source connected · '+src+'</span>';
 }
-/* A rich Item-106 row: value coloured by tier, tier chip, the posture note, source. */
+/* A rich Item-106 row: value colored by tier, tier chip, the posture note, source. */
 function govRowRich(r){
   var m=r.tier?GOV_TIER[r.tier]:null,col=m?('var(--'+m.c+')'):'var(--ink-2)';
   return '<div style="padding:10px 0;border-bottom:1px solid var(--line)">'+
@@ -2496,14 +2496,23 @@ var CAPS=[
 ];
 var CAP_BY_KEY={};CAPS.forEach(function(c){CAP_BY_KEY[c.k]=c;});
 /* Capabilities that must be deployed to protect against / detect each ATT&CK tactic. */
+/* Tactic → the capabilities that defend & detect it, mapped to MITRE ATT&CK
+   Enterprise Mitigations (attack.mitre.org/mitigations/enterprise):
+   mfa=M1032 · seg=M1030/M1037 network segmentation & traffic filtering ·
+   pam=M1026/M1018 privileged/account mgmt · edr=M1040/M1049/M1038 behavior-
+   prevention/AV/execution-prevention · vuln=M1051/M1016 update & scan ·
+   aware=M1017 user training · backup=M1053 data backup · dlp=M1057 ·
+   siem=detection/audit (M1047). Reconnaissance & Resource Development are
+   largely pre-compromise (M1056) — defenses shown are attack-surface reduction,
+   awareness and detection, which is all that applies. */
 var TACTIC_CAPS={
-  'Reconnaissance':['vuln','siem'],'Resource Development':['siem','aware'],
+  'Reconnaissance':['vuln','aware','siem'],'Resource Development':['siem','aware'],
   'Initial Access':['mfa','aware','vuln','edr'],'Execution':['edr','aware'],
-  'Persistence':['edr','pam'],'Privilege Escalation':['pam','edr','vuln'],
-  'Defense Evasion':['edr','siem'],'Credential Access':['mfa','pam','edr'],
-  'Discovery':['edr','seg','siem'],'Lateral Movement':['seg','pam','edr'],
-  'Collection':['dlp','edr'],'Command & Control':['siem','edr','seg'],
-  'Exfiltration':['dlp','siem','seg'],'Impact':['backup','edr','siem']
+  'Persistence':['edr','pam','siem'],'Privilege Escalation':['pam','edr','vuln'],
+  'Defense Evasion':['edr','siem'],'Credential Access':['mfa','pam','edr','aware'],
+  'Discovery':['edr','siem','seg'],'Lateral Movement':['seg','mfa','pam','edr'],
+  'Collection':['dlp','edr','siem'],'Command & Control':['seg','siem','edr'],
+  'Exfiltration':['dlp','seg','siem'],'Impact':['backup','edr','seg']
 };
 /* Deployment % for a capability, from live signals; null = not connected/measured. */
 function capDeploy(c){
@@ -2517,7 +2526,7 @@ function capDeploy(c){
   if(c.k==='backup')return sig('backup_immutable_pct');
   return null; // dlp, seg — no live signal yet
 }
-/* User's colour scale: green ≥90, blue ≥75, yellow ≥50, red <50, grey = not connected. */
+/* User's color scale: green ≥90, blue ≥75, yellow ≥50, red <50, grey = not connected. */
 function capColor(p){return p==null?'muted':p>=90?'good':p>=75?'blue':p>=50?'warn':'crit';}
 function capBar(p){var cls=capColor(p),w=p==null?0:Math.max(0,Math.min(100,p));
   return '<div style="display:flex;align-items:center;gap:9px"><div style="flex:1;height:7px;background:var(--surface-2);border-radius:4px;overflow:hidden;min-width:60px"><i style="display:block;height:100%;width:'+w+'%;background:var(--'+cls+')"></i></div><span style="font-size:12.5px;font-weight:700;color:var(--'+cls+')">'+(p==null?'—':p+'%')+'</span></div>';}
@@ -2584,21 +2593,23 @@ function drillCapabilities(){
         '<div class="drow-need">'+(p!=null?('<b>To move the score higher:</b> '+c.need):('Not connected — '+c.connect))+'</div>'+
         proj+'</div>';
     }).join('');
-  return '<div class="drill-p">Each capability is scored on how much of the estate it actually covers, on your colour scale — <b style="color:var(--good)">green ≥90%</b>, <b style="color:var(--blue)">blue ≥75%</b>, <b style="color:var(--warn)">yellow ≥50%</b>, <b style="color:var(--crit)">red &lt;50%</b>, grey = not yet connected. Ordered weakest first.</div>'+rows;
+  return '<div class="drill-p">Each capability is scored on how much of the estate it actually covers, on your color scale — '+scaleLegend()+'. Ordered weakest first.</div>'+rows;
 }
+/* The shared coverage color scale, repeated wherever a % bar appears. */
+function scaleLegend(){return '<b style="color:var(--good)">green ≥90%</b>, <b style="color:var(--blue)">blue ≥75%</b>, <b style="color:var(--warn)">yellow ≥50%</b>, <b style="color:var(--crit)">red &lt;50%</b>, grey = not connected';}
 function drillTactics(){
   var rows=ATTCK_TACTICS.map(function(t){var keys=TACTIC_CAPS[t]||[];var tp=tacticPct(keys);var tcls=capColor(tp);
     var caps=keys.map(function(k){var c=CAP_BY_KEY[k];var p=capDeploy(c);var cls=capColor(p);return '<span class="tac-cap"><span class="cap-dot" style="background:var(--'+cls+')"></span>'+c.name.replace(/ *\(.*\)/,'')+' <b style="color:var(--'+cls+')">'+(p==null?'—':p+'%')+'</b></span>';}).join('');
     return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+tcls+')"></span><b>'+t+'</b><span class="drow-tool">'+(tp==null?'not measured':tp+'% defended')+'</span></div><div class="tac-caps">'+caps+'</div></div>';
   }).join('');
-  return '<div class="drill-p">For each of the 14 MITRE ATT&CK tactics an adversary can use, these are the capabilities that must be deployed to <b>protect against and detect</b> it, with live deployment % on the same colour scale as your top-10.</div>'+rows;
+  return '<div class="drill-p">For each of the 14 MITRE ATT&CK tactics an adversary can use, these are the capabilities that must be deployed to <b>protect against and detect</b> it, mapped to MITRE ATT&CK Enterprise Mitigations. Live deployment % on the color scale — '+scaleLegend()+'.</div>'+rows;
 }
 function drillVendors(){
   var vs=vendorService();var list=vendorList().slice().sort(function(a,b){return a.s-b.s;});
   var tag=vs?(vs.demo?'<span class="pill warn">demo</span>':'<span class="pill mod">modeled</span>'):'';
   var head=vs
-    ?'<div class="drill-p">'+tag+' Your tier-1 vendors — <b>the real providers from your systems inventory</b> — rated by <b>'+vs.vendor+'</b>. '+(vs.demo?'Ratings are <b>demo data</b>':'Ratings are illustrative until the '+vs.vendor+' API is wired to your tenant; the names are your own')+'. <b>Click any vendor</b> to open its page in '+vs.vendor+'. Higher is safer, on your top-10 colour scale.</div>'
-    :'<div class="drill-hero muted">No monitoring service connected</div><div class="drill-p">Choose a third-party monitoring service at onboarding — <b>SecurityScorecard</b>, <b>BitSight</b>, <b>UpGuard</b>, <b>Panorays</b> or <b>Black Kite</b> — and your top-10 tier-1 vendors appear here, scored and colour-coded, refreshed daily. Below is an illustrative preview.</div>';
+    ?'<div class="drill-p">'+tag+' Your tier-1 vendors — <b>the real providers from your systems inventory</b> — rated by <b>'+vs.vendor+'</b>. '+(vs.demo?'Ratings are <b>demo data</b>':'Ratings are illustrative until the '+vs.vendor+' API is wired to your tenant; the names are your own')+'. <b>Click any vendor</b> to open its page in '+vs.vendor+'. Higher is safer, on your top-10 color scale.</div>'
+    :'<div class="drill-hero muted">No monitoring service connected</div><div class="drill-p">Choose a third-party monitoring service at onboarding — <b>SecurityScorecard</b>, <b>BitSight</b>, <b>UpGuard</b>, <b>Panorays</b> or <b>Black Kite</b> — and your top-10 tier-1 vendors appear here, scored and color-coded, refreshed daily. Below is an illustrative preview.</div>';
   var rows=list.map(function(vd){var cls=capColor(vd.s);var url=vs?vendorUrl(vs.vendor,vd.dom):null;
     var inner='<div class="drow-h"><span class="cap-dot" style="background:var(--'+cls+')"></span><b>'+vd.a+'</b><span class="drow-tool">'+vd.n+(url?' <span class="drill-cta">open in '+vs.vendor+' ↗</span>':'')+'</span></div>'+capBar(vd.s)+
       (vd.s<75?'<div class="drow-need">'+(vd.s<50?'⚠ Elevated risk today — request remediation evidence and review the exposure you carry through this vendor.':'Below target — monitor open findings and confirm remediation timelines.')+'</div>':'');
@@ -3155,7 +3166,7 @@ function renderBoardPack(){
     bpFinRow('Insurance limit',ins.limit!=null?usd(ins.limit):null)+
     bpFinRow('Uninsured tail (coverage gap)',ins.gap!=null?usd(ins.gap):null,'exposure above the policy limit')+
     '</tbody></table>';
-  // 3 · Governance & disclosure readiness (SEC Item 106) — each answer coloured by
+  // 3 · Governance & disclosure readiness (SEC Item 106) — each answer colored by
   // its maturity tier, with an overall governance-maturity headline.
   var gm=govMaturity(g);
   function govKvRow(k,field,val){var o=govLookup(field,val);return {k:k,v:val||null,cls:o?GOV_TIER[o.t].c:''};}
