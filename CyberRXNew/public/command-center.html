@@ -125,13 +125,54 @@ function financialScore(){var e=(LIVE&&LIVE.economics)||{},ap=e.appetite||{};if(
 function resilienceScore(){var rs=(LIVE&&LIVE.resilience)||{};var w=rs.worst_recovery_hours;var s=100;if(w!=null)s=w<=6?92:w<=24?78:w<=72?60:42;if(rs.top_vendor_blast&&rs.top_vendor_blast.vendor)s=Math.min(s,66);var bk=sig('backup_immutable_pct');if(bk!=null)s=Math.round((s+sigToScore('backup_immutable_pct',bk))/2);return s;}
 function customerTrustScore(){var caps=pack().capabilities.filter(function(c){return /portal|onboard|customer|member|storefront|banking|loyal/i.test(c.name+' '+c.service);});var cs=caps.map(capScore).filter(function(x){return x!=null;});var base=cs.length?Math.round(cs.reduce(function(a,b){return a+b;},0)/cs.length):72;var oi=sig('open_incidents');if(oi!=null&&oi>0)base=Math.max(0,base-oi*10);return base;}
 
-/* Named business scores for the summary + drill. */
-function namedScores(){return [
-  {k:'overall',n:'Overall Business Cyber Health',s:overallHealth(),d:'Weighted: objective control-effectiveness (50%), financial exposure (28%), operational resilience (22%).'},
-  {k:'fin',n:'Financial Exposure Score',s:financialScore(),d:'Expected loss vs the board’s approved risk appetite (higher = further inside appetite).'},
-  {k:'res',n:'Operational Resilience Score',s:resilienceScore(),d:'Worst-case recovery time, single-vendor concentration and recovery assurance (immutable backups).'},
-  {k:'trust',n:'Customer Trust Score',s:customerTrustScore(),d:'Health of the customer-facing capabilities plus any active business-disruption signals.'}
-];}
+/* Extra business scores so each executive sees the ones relevant to THEIR seat. */
+function capAvgFor(pred){var cs=pack().capabilities.filter(pred).map(capScore).filter(function(x){return x!=null;});return cs.length?Math.round(cs.reduce(function(a,b){return a+b;},0)/cs.length):null;}
+function controlScore(){var cs=pack().capabilities.map(capScore).filter(function(x){return x!=null;});return cs.length?Math.round(cs.reduce(function(a,b){return a+b;},0)/cs.length):72;}
+function digitalScore(){var s=sig('cspm_pct'),c=capAvgFor(function(c){return /portal|platform|storefront|cloud|api|banking|digital|e-commerce/i.test(c.service+' '+c.name);});if(s!=null&&c!=null)return Math.round((sigToScore('cspm_pct',s)+c)/2);return c!=null?c:(s!=null?sigToScore('cspm_pct',s):80);}
+function processScore(){var c=capAvgFor(function(c){return c.owner==='coo'||/production|claims|operation|grid|checkout|manufactur|\bot\b|mes|settlement/i.test((c.name+' '+c.processes.join(' ')).toLowerCase());});return c!=null?c:controlScore();}
+function revenueScore(){return customerTrustScore();}
+function workforceScore(){var vals=[sigToScore('mfa_pct',sig('mfa_pct')),sigToScore('phishing_pct',sig('phishing_pct')),sigToScore('pam_pct',sig('pam_pct'))].filter(function(x){return x!=null;});return vals.length?Math.round(vals.reduce(function(a,b){return a+b;},0)/vals.length):85;}
+function thirdPartyScore(){var rs=(LIVE&&LIVE.resilience)||{};return (rs.top_vendor_blast&&rs.top_vendor_blast.vendor)?58:82;}
+function regulatoryScore(){var c=capAvgFor(function(c){return /privacy|complian|data protection|record|reporting|card|phi/i.test((c.name+' '+c.processes.join(' ')).toLowerCase());});var base=c!=null?c:76;var ap=(LIVE&&LIVE.economics&&LIVE.economics.appetite)||{};if(ap.tail_within===false)base=Math.min(base,64);return base;}
+function auditReadinessScore(){return controlScore();}
+function aiReadinessScore(){var g=(LIVE&&LIVE.aiRisk&&LIVE.aiRisk.governance)||null;if(!g)return 62;var s=60;if(/both/i.test(g.framework||''))s=90;else if(/nist|iso/i.test(g.framework||''))s=74;if(/board-approved/i.test(g.policy||''))s+=6;if(/^no/i.test(g.inventory||''))s-=15;return Math.max(10,Math.min(100,s));}
+
+/* The full score catalog — each explainable on drill-down. */
+var SCORE_DEFS={
+  overall:{n:'Overall Business Cyber Health',d:'Weighted: objective control-effectiveness (50%), financial exposure (28%), operational resilience (22%).',fn:overallHealth},
+  fin:{n:'Financial Exposure Score',d:'Expected loss vs the board’s approved risk appetite (higher = further inside appetite).',fn:financialScore},
+  res:{n:'Operational Resilience Score',d:'Worst-case recovery time, single-vendor concentration and recovery assurance.',fn:resilienceScore},
+  trust:{n:'Customer Trust Score',d:'Health of the customer-facing capabilities plus any active business-disruption signals.',fn:customerTrustScore},
+  control:{n:'Control Effectiveness',d:'Average protection health across every business capability — the CISO’s cross-enterprise view.',fn:controlScore},
+  digital:{n:'Digital Service Reliability',d:'Health of the customer-facing digital services and cloud posture.',fn:digitalScore},
+  process:{n:'Critical Process Health',d:'Protection health of the operational processes that run the business.',fn:processScore},
+  revenue:{n:'Revenue Protection',d:'Health of the revenue-generating, customer-facing capabilities.',fn:revenueScore},
+  workforce:{n:'Workforce Access Confidence',d:'Identity, privileged-access and awareness posture across the workforce.',fn:workforceScore},
+  thirdparty:{n:'Third-Party Dependency Health',d:'Concentration risk from single-vendor / supplier dependencies.',fn:thirdPartyScore},
+  regulatory:{n:'Regulatory Exposure',d:'Compliance & privacy posture against the regulations in scope for this industry.',fn:regulatoryScore},
+  audit:{n:'Evidence Readiness',d:'Control evidence available across the enterprise for audit and assurance.',fn:auditReadinessScore},
+  ai:{n:'AI Adoption Readiness',d:'Governance of the AI we run — framework, policy and inventory.',fn:aiReadinessScore}
+};
+function scoreByKey(k){var d=SCORE_DEFS[k];if(!d)return null;return {k:k,n:d.n,s:d.fn(),d:d.d};}
+
+/* Which four scores each executive sees on their Executive Summary — their seat,
+   not the enterprise average. Every role gets a distinct, relevant set. */
+var ROLE_SUMMARY_KEYS={
+  board:['overall','fin','res','regulatory'],
+  ceo:['overall','fin','trust','res'],
+  cfo:['fin','res','regulatory','overall'],
+  coo:['res','process','thirdparty','overall'],
+  cio:['digital','res','ai','control'],
+  ciso:['control','overall','res','audit'],
+  cpo:['digital','ai','control','trust'],
+  ccro:['revenue','trust','digital','res'],
+  crisk:['overall','fin','res','thirdparty'],
+  clo:['regulatory','trust','audit','fin'],
+  chro:['workforce','control','trust','overall'],
+  cpso:['thirdparty','res','regulatory','overall'],
+  audit:['audit','control','regulatory','overall']
+};
+function roleSummaryScores(){return (ROLE_SUMMARY_KEYS[ROLE]||['overall','fin','res','trust']).map(scoreByKey).filter(Boolean);}
 
 /* ---------- role scoping — who owns / sees what ---------- */
 function enterpriseRole(){return ['board','ceo','ciso','crisk','audit'].indexOf(ROLE)>=0;}
@@ -148,7 +189,7 @@ function objRow(o){var s=objScore(o);var owner=roleByKey(o.owner);var risks=pack
   return '<tr class="click" onclick="drillObjective(\''+o.id+'\')"><td><b>'+esc(o.name)+'</b><div class="mini">KPI: '+esc(o.kpi)+'</div></td><td><span class="dot" style="background:'+bandColor(s)+'"></span>'+bandLabel(s)+' <span class="mini">('+s+'/100)</span></td><td>'+esc(owner.label)+'</td><td>'+(risks.length?('<span class="pill '+(s<50?'crit':'warn')+'">'+risks.length+' cyber blocker'+(risks.length>1?'s':'')+'</span>'):'<span class="pill good">clear</span>')+'</td></tr>';}
 
 function tabSummary(){
-  var scs=namedScores();
+  var scs=roleSummaryScores();
   var top=roleRisks().map(function(r){return {r:r,s:objScore(objById(r.obj))||60};}).sort(function(a,b){return a.s-b.s;}).slice(0,4);
   var decs=roleDecisions();
   return '<div class="grid">'+scs.map(scoreCard).join('')+'</div>'+
@@ -251,7 +292,7 @@ function openDrawer(title,html){document.getElementById('drawerBody').innerHTML=
 function closeDrawer(){document.getElementById('scrim').classList.remove('open');document.getElementById('drawer').classList.remove('open');}
 function chain(rows){return '<div class="chain">'+rows.map(function(r){return '<div class="cl"><b>'+r[0]+'</b><div>'+r[1]+'</div></div>';}).join('')+'</div>';}
 function controlEvidence(controls){return '<div style="margin-top:6px">'+controls.map(function(k){var d=SIGNAL_BIZ[k];var v=sig(k);var s=sigToScore(k,v);var shown=v==null?('baseline '+(d.base)+d.unit):(v+d.unit);return '<div class="evrow"><span><b>'+esc(d.biz)+'</b> <span class="mini">('+esc(d.src)+')</span></span><span style="color:'+bandColor(s)+';font-weight:700">'+shown+' → '+s+'/100</span></div>';}).join('')+'</div>';}
-function drillScore(k){var sc=null;namedScores().forEach(function(x){if(x.k===k)sc=x;});if(!sc)return;
+function drillScore(k){var sc=scoreByKey(k);if(!sc)return;
   openDrawer(esc(sc.n),'<div class="big" style="color:'+bandColor(sc.s)+'">'+sc.s+'/100 · '+bandLabel(sc.s)+'</div><div class="cn">'+esc(sc.d)+'</div>'+
     (k==='overall'?('<div class="sec-h">How it rolls up</div>'+pack().objectives.map(function(o){var s=objScore(o);return '<div class="evrow"><span>'+esc(o.name)+'</span><span style="color:'+bandColor(s||60)+';font-weight:700">'+(s==null?'—':s)+'/100</span></div>';}).join('')):'')+
     '<div class="note">Business scores never show a raw security metric as the headline — but each one is built from real telemetry. The chain above is the evidence an auditor or the CISO can follow to the source system.</div>');}
