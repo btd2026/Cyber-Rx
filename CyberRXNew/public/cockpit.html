@@ -1144,12 +1144,11 @@ function renderControls(){
     ctile('traj','Are we getting better?',tr.val,tr.cls,tr.sub)+
     ctile('det','How fast do we detect &amp; respond?',mttd!=null?(mttd+'h to detect'):'connect SIEM',mttd!=null?'good':'muted',mttd!=null?'MTTD live · MTTR once your SIEM workflow connects':'connect your SIEM to measure MTTD / MTTR')+
     '</div>';
-  host.innerHTML=demoBanner()+tiles+capValueCard()+controlGapsCard()+iamCard();
+  host.innerHTML=demoBanner()+tiles;
   host.querySelectorAll('.ctile').forEach(function(el){el.onclick=function(){var k=el.dataset.cdrill;
     if(k==='eff')openDrill('Risk removed by controls',drillEffectiveness());
     else if(k==='traj')openDrill('Program trajectory',drillTrajectory());
     else if(k==='det')openDrill('Detection & response speed',drillDetection());};});
-  host.querySelectorAll('.capgap').forEach(function(el){el.onclick=function(){var c=CAP_BY_KEY[el.dataset.cap];if(c)openDrill(c.name,drillOneCap(c));};});
 }
 function controlGapsCard(){
   if(!SIGNALS)return '<div class="card" style="margin-top:14px"><div class="ck">Control gaps that carry risk — and the funded fix</div><div class="cn" style="margin-top:6px">◐ <b style="color:var(--warn)">Connect your security tools</b> (EDR, MFA, PAM, SIEM…) and this shows your live control coverage, the gaps that leave the most risk open, and the project closing each — every number from the tool, none hardcoded.</div></div>';

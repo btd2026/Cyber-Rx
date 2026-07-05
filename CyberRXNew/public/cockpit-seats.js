@@ -247,9 +247,8 @@ var SEATS = {
        {key:'warroom',label:'Live attack status · War Room',on:true,html:'<div id="cisoUnderAttack"></div><div id="cisoWarRoom" style="margin-top:14px"></div>'},
        {key:'threat',label:'Crown-jewel threat map',html:'<div id="cisoThreatMap"></div>'}
      ]))
-   +sec('03','Is our security program worth the spend — and can we prove it?','Audit readiness across every compliance framework in scope leads — provable, not asserted. Below, two lenses on the same question. <b>Business</b> traces every dollar the program protects — business function → process → technology → cyber risk → the control that mitigates it — and what each control saves when it operates effectively. <b>Frameworks</b> is the continuous audit: posture across NIST CSF 2.0, NIST SP 800-53, CIS Controls, SOC 2 and HIPAA, evidenced live rather than at a point in time.',
-     '<div id="cisoCompliance"></div>'
-     +subtabs([
+   +sec('03','Is our security program worth the spend — and can we prove it?','Two lenses on the same question. <b>Business</b> traces every dollar the program protects — business function → process → technology → cyber risk → the control that mitigates it — and what each control saves when it operates effectively. <b>Frameworks</b> is the continuous audit: posture across NIST CSF 2.0, NIST SP 800-53, CIS Controls, SOC 2 and HIPAA, evidenced live rather than at a point in time.',
+     subtabs([
        {key:'business',label:'Business',on:true,html:'<div id="cjFlow"></div><div id="cisoControls" style="margin-top:14px"></div>'},
        {key:'frameworks',label:'Frameworks · continuous audit',html:'<div id="cisoFrameworks"></div><div id="peerCompare" style="margin-top:14px"></div>'}
      ]))
