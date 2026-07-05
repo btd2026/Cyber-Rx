@@ -131,13 +131,18 @@
   <div class="switcher" id="switcher">
     <span class="swlbl">View</span>
     <button id="swIntake">Onboarding</button>
-    <button id="swOS" class="on">Operating System</button>
+    <button id="swCmd" class="on">Command Center</button>
+    <button id="swOS">CISO Detail</button>
   </div>
   <iframe class="frame" id="fIntake"></iframe>
+  <iframe class="frame" id="fCmd"></iframe>
   <iframe class="frame" id="fOS" allow="autoplay; speaker-selection"></iframe>
 <script>
   document.getElementById("fIntake").src="onboarding.html";
-  // The Operating System view is the new business-language executive cockpit.
+  // The primary view is the Business Command Center — the executive business
+  // operating platform. The detailed executive cockpit (CISO / technical depth
+  // with full framework mappings) is the "CISO Detail" view underneath it.
+  document.getElementById("fCmd").src="command-center.html";
   document.getElementById("fOS").src="cockpit.html";
   // Pre-load voices so they're ready when the OS iframe requests speech
   if('speechSynthesis' in window){window.speechSynthesis.getVoices();window.speechSynthesis.onvoiceschanged=function(){window.speechSynthesis.getVoices();};}
@@ -169,7 +174,10 @@
   function enterPlatform(){
     document.getElementById("login").classList.add("hide");
     document.getElementById("switcher").classList.add("show");
-    show("intake");
+    // Returning org (already onboarded) lands on the Business Command Center;
+    // a fresh org starts in Onboarding, then go-live opens the Command Center.
+    var hasOrg=false;try{hasOrg=!!localStorage.getItem("cyberrx_org_id");}catch(_){}
+    if(hasOrg){reloadCmd();show("command");}else{show("intake");}
     setTimeout(function(){osMsg({type:"cyberrx-auth",role:pickedRole,name:pickedName});},300);
   }
   // ===== One-time, role-aware orientation (manifesto, not a tutorial) =====
@@ -220,6 +228,15 @@
   document.getElementById("verify").addEventListener("click",afterSignIn);
 
   function show(which){
+    document.getElementById("fIntake").classList.toggle("show",which==="intake");
+    document.getElementById("fCmd").classList.toggle("show",which==="command");
+    document.getElementById("fOS").classList.toggle("show",which==="os");
+    document.getElementById("swIntake").classList.toggle("on",which==="intake");
+    document.getElementById("swCmd").classList.toggle("on",which==="command");
+    document.getElementById("swOS").classList.toggle("on",which==="os");
+    return;
+  }
+  function _showLegacy(which){
     var i=which==="intake";
     document.getElementById("fIntake").classList.toggle("show",i);
     document.getElementById("fOS").classList.toggle("show",!i);
@@ -228,10 +245,17 @@
     osMsg(i?"cyberrx-os-inactive":"cyberrx-os-active");
   }
   document.getElementById("swIntake").addEventListener("click",function(){show("intake");});
+  document.getElementById("swCmd").addEventListener("click",function(){reloadCmd();show("command");});
   document.getElementById("swOS").addEventListener("click",function(){show("os");});
+  // Reload the Command Center iframe so it re-reads the org context + live data
+  // (it boots on load; a go-live or view-switch after onboarding should refresh it).
+  function reloadCmd(){try{var f=document.getElementById("fCmd");if(f&&f.contentWindow)f.contentWindow.location.reload();else if(f)f.src="command-center.html";}catch(_){var f2=document.getElementById("fCmd");if(f2)f2.src="command-center.html";}}
   window.addEventListener("message",function(e){
-    if(e.data && e.data.type==="cyberrx-golive"){ try{if(e.data.orgId)localStorage.setItem("cyberrx_org_id",e.data.orgId);if(e.data.org)localStorage.setItem("cyberrx_org_name",e.data.org);}catch(_){} osMsg({type:"cyberrx-golive",names:e.data.names,industry:e.data.industry,org:e.data.org,orgId:e.data.orgId,benchShare:e.data.benchShare,currency:e.data.currency,profile:e.data.profile,docResults:e.data.docResults}); setTimeout(function(){show("os");},600); }
-    else if(e.data==="cyberrx-golive"){ setTimeout(function(){show("os");},600); }
+    if(e.data && e.data.type==="cyberrx-golive"){ try{if(e.data.orgId)localStorage.setItem("cyberrx_org_id",e.data.orgId);if(e.data.org)localStorage.setItem("cyberrx_org_name",e.data.org);if(e.data.industry)localStorage.setItem("cyberrx_industry",e.data.industry);}catch(_){} osMsg({type:"cyberrx-golive",names:e.data.names,industry:e.data.industry,org:e.data.org,orgId:e.data.orgId,benchShare:e.data.benchShare,currency:e.data.currency,profile:e.data.profile,docResults:e.data.docResults}); setTimeout(function(){reloadCmd();show("command");},600); }
+    else if(e.data==="cyberrx-golive"){ setTimeout(function(){reloadCmd();show("command");},600); }
+    else if(e.data==="cyberrx-view-command"){ reloadCmd();show("command"); }
+    else if(e.data==="cyberrx-view-os"){ show("os"); }
+    else if(e.data==="cyberrx-view-onboarding"){ show("intake"); }
     else if(e.data && e.data.type==="cyberrx-speak"){
       try{
         var _wasSpeaking=window.speechSynthesis.speaking||window.speechSynthesis.pending;
@@ -268,6 +292,7 @@
     else if(e.data==="cyberrx-signout"){
       document.getElementById("switcher").classList.remove("show");
       document.getElementById("fIntake").classList.remove("show");
+      document.getElementById("fCmd").classList.remove("show");
       document.getElementById("fOS").classList.remove("show");
       document.getElementById("login").classList.remove("hide");
       document.getElementById("step2").classList.remove("on");
