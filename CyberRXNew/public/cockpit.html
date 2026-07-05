@@ -129,6 +129,13 @@
   .peer-bar-val{flex:0 0 88px;font-size:12.5px;font-weight:700;color:var(--ink)}.peer-bar-val span{font-size:10.5px;color:var(--muted);font-weight:500}
   .peer-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:10.5px;color:var(--muted);margin-top:10px;align-items:center}
   .peer-legend i{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:4px}
+  /* Third-party vendor risk */
+  .vend-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;margin:10px 0;padding:9px 13px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px}
+  .vend-prov{font-size:12px;color:var(--ink-2)}
+  .vend-refresh{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .vend-btn{font-size:11.5px;font-weight:700;color:var(--blue);background:none;border:1px solid var(--line-2);border-radius:7px;padding:5px 11px;cursor:pointer}
+  .vend-btn:disabled{color:var(--muted);cursor:default}
+  .vend-tier{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:var(--surface-2);border:1px solid var(--line);border-radius:20px;padding:1px 6px}
   .drill-cta{color:var(--blue);font-weight:700;white-space:nowrap}
   .dotstrip{display:flex;gap:4px;margin-top:9px;flex-wrap:wrap}.dotstrip .ds{width:13px;height:13px;border-radius:3px;display:inline-block}
   .drow{padding:12px 0;border-top:1px solid var(--line)}.drow:first-child{border-top:none}
@@ -563,7 +570,7 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
@@ -1863,12 +1870,12 @@ function renderSignals(){
     var pcts=['edr_pct','mfa_pct','pam_pct'].map(sig).filter(function(x){return x!=null;});
     if(pcts.length){var avg=Math.round(pcts.reduce(function(s,x){return s+x;},0)/pcts.length);setTxt('lvCovTile',avg+'%');var tn=document.getElementById('lvCovTileNote');if(tn)tn.innerHTML='<span class="pill good">live</span> from '+pcts.length+' connected tool'+(pcts.length>1?'s':'');}
   }
-  renderAiRisk();renderCisoOps();renderUnderAttack();renderThreatMap();renderControls();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCooStatus();renderCfoFraud();renderCroKri();renderCloOps();renderThreatIntel();renderDrReadiness();renderPeerBench();
+  renderAiRisk();renderCisoOps();renderUnderAttack();renderThreatMap();renderControls();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCfoFraud();renderCroKri();renderCloOps();renderThreatIntel();renderDrReadiness();renderPeerBench();
 }
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();if(typeof renderCisoOps==='function'){renderCisoOps();renderUnderAttack();}}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -2832,14 +2839,94 @@ function drillVendors(){
   var vs=vendorService();var list=vendorList().slice().sort(function(a,b){return a.s-b.s;});
   var tag=vs?(vs.demo?'<span class="pill warn">demo</span>':'<span class="pill mod">modeled</span>'):'';
   var head=vs
-    ?'<div class="drill-p">'+tag+' Your tier-1 vendors — <b>the real providers from your systems inventory</b> — rated by <b>'+vs.vendor+'</b>. '+(vs.demo?'Ratings are <b>demo data</b>':'Ratings are illustrative until the '+vs.vendor+' API is wired to your tenant; the names are your own')+'. <b>Click any vendor</b> to open its page in '+vs.vendor+'. Higher is safer, on your top-10 color scale.</div>'
-    :'<div class="drill-hero muted">No monitoring service connected</div><div class="drill-p">Choose a third-party monitoring service at onboarding — <b>SecurityScorecard</b>, <b>BitSight</b>, <b>UpGuard</b>, <b>Panorays</b> or <b>Black Kite</b> — and your top-10 tier-1 vendors appear here, scored and color-coded, refreshed daily. Below is an illustrative preview.</div>';
+    ?'<div class="drill-p">'+tag+' Your tier-1 vendors — <b>the real providers from your systems inventory</b> — rated by <b>'+vs.vendor+'</b>. '+(vs.demo?'Ratings are <b>demo data</b>':'Ratings are illustrative until the '+vs.vendor+' API is wired to your tenant; the names are your own')+'. <b>Click any vendor</b> to open its page in '+vs.vendor+'. Higher is safer, on your color scale — '+scaleLegend()+'.</div>'
+    :'<div class="drill-hero muted">No monitoring service connected</div><div class="drill-p">Choose a third-party monitoring service at onboarding — <b>SecurityScorecard</b>, <b>BitSight</b>, <b>UpGuard</b>, <b>Panorays</b> or <b>Black Kite</b> — and your tier-1 vendors appear here, scored and color-coded, refreshed weekly. Colors follow your scale — '+scaleLegend()+'. Below is an illustrative preview.</div>';
   var rows=list.map(function(vd){var cls=capColor(vd.s);var url=vs?vendorUrl(vs.vendor,vd.dom):null;
     var inner='<div class="drow-h"><span class="cap-dot" style="background:var(--'+cls+')"></span><b>'+vd.a+'</b><span class="drow-tool">'+vd.n+(url?' <span class="drill-cta">open in '+vs.vendor+' ↗</span>':'')+'</span></div>'+capBar(vd.s)+
       (vd.s<75?'<div class="drow-need">'+(vd.s<50?'⚠ Elevated risk today — request remediation evidence and review the exposure you carry through this vendor.':'Below target — monitor open findings and confirm remediation timelines.')+'</div>':'');
     return url?('<a class="drow" href="'+url+'" target="_blank" rel="noopener" style="display:block;text-decoration:none;color:inherit;cursor:pointer">'+inner+'</a>'):('<div class="drow">'+inner+'</div>');
   }).join('');
   return head+rows;
+}
+/* ---- Third-party & supply-chain risk section (CISO "which third parties could
+   take us down?") — the org's tier-1/2 vendors rated live by the connected
+   monitoring service, normalized to one 0–100 scale by /api/vendors/portfolio,
+   worst-first. Weekly auto-refresh + on-demand. Modeled + labeled until a provider
+   is credentialed; then the score equals the one on that provider's portal. ---- */
+var VENDOR_PORT=null,VENDOR_BUSY=false,VENDOR_SEEDSIG='';
+/* The tier-1/2 vendor list captured at onboarding (cyberrx_vendors); falls back to
+   the vendors named in the systems inventory so the panel is never empty. */
+function vendorSeed(){
+  var out=[];
+  try{var raw=JSON.parse(localStorage.getItem('cyberrx_vendors')||'[]');if(Array.isArray(raw))out=raw.map(function(x){var n=x.name||x.vendor;return {name:n,tier:String(x.tier||'2'),domain:x.domain||vendorDomain(n),criticality:x.criticality||''};}).filter(function(x){return x.name;});}catch(_){}
+  if(out.length)return out.slice(0,500);
+  return vendorList().map(function(v){return {name:String(v.n||'').replace(/ *—.*/,''),tier:'1',domain:v.dom,criticality:''};});
+}
+function vendorRefreshTs(){try{return Number(JSON.parse(localStorage.getItem('cyberrx_vendor_refresh')||'0'))||0;}catch(_){return 0;}}
+function vendorSetRefreshTs(t){try{localStorage.setItem('cyberrx_vendor_refresh',JSON.stringify(t));}catch(_){}}
+function vendorDue(){var t=vendorRefreshTs();return !t||(Date.now()-t)>=7*864e5;}
+function vendorAgo(t){if(!t)return 'never';var d=Math.floor((Date.now()-t)/864e5);return d<=0?'today':(d===1?'yesterday':(d+' days ago'));}
+/* Client-side portfolio (same shape as the backend) — used before the first fetch
+   returns and as an offline fallback. Modeled scores, clearly labeled live:false. */
+function vendorLocalPortfolio(seed,vs){
+  var scored=(seed||[]).map(function(v){var s=vendorDemoScore(v.name);return {name:v.name,domain:v.domain,tier:(/1/.test(v.tier)?'tier1':'tier2'),score:s,color:capColor(s),live:false,at_risk:s<75,critical:s<50};});
+  var ranked=scored.slice().sort(function(a,b){return a.score-b.score;});
+  var rated=ranked.filter(function(v){return v.score!=null;});
+  return {provider:vs?vs.vendor:null,count:ranked.length,tier1:ranked.filter(function(v){return v.tier==='tier1';}).length,
+    tier2:ranked.filter(function(v){return v.tier==='tier2';}).length,at_risk:rated.filter(function(v){return v.at_risk;}).length,
+    critical:rated.filter(function(v){return v.critical;}).length,avg_score:rated.length?Math.round(rated.reduce(function(s,v){return s+v.score;},0)/rated.length):null,
+    any_live:false,top:ranked.slice(0,5),vendors:ranked};
+}
+function vendorFetch(force){
+  var seed=vendorSeed();if(!seed.length)return;
+  var sig=seed.map(function(x){return x.name;}).join('|');
+  if(!force&&VENDOR_PORT&&VENDOR_SEEDSIG===sig&&!vendorDue())return;
+  if(VENDOR_BUSY)return;
+  var vs=vendorService();
+  VENDOR_BUSY=true;VENDOR_SEEDSIG=sig;renderCisoVendors();
+  fetch(apiBase()+'/api/vendors/portfolio',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider:vs?vs.vendor:'',vendors:seed,topN:5})})
+    .then(function(r){return r.json();})
+    .then(function(d){VENDOR_PORT=(d&&d.top)?d:vendorLocalPortfolio(seed,vs);VENDOR_BUSY=false;vendorSetRefreshTs(Date.now());renderCisoVendors();})
+    .catch(function(){VENDOR_PORT=vendorLocalPortfolio(seed,vs);VENDOR_BUSY=false;vendorSetRefreshTs(Date.now());renderCisoVendors();});
+}
+function vendorScoreRow(v,vs){
+  var cls=v.color||capColor(v.score),tier=(v.tier==='tier1'||/1/.test(v.tier))?'1':'2';
+  var url=vs?vendorUrl(vs.vendor,v.domain||vendorDomain(v.name)):null;
+  var tag=v.live?'<span class="pill good" style="font-size:9px">live</span>':'<span class="pill mod" style="font-size:9px">modeled</span>';
+  var note=v.score<75?('<div class="drow-need">'+(v.score<50?'⚠ Elevated risk today — request remediation evidence and review the exposure you carry through this vendor.':'Below target — monitor open findings and confirm remediation timelines.')+'</div>'):'';
+  var inner='<div class="drow-h"><span class="cap-dot" style="background:var(--'+cls+')"></span><b>'+v.name+'</b> <span class="vend-tier">tier '+tier+'</span> '+tag+
+    '<span class="drow-tool" style="color:var(--'+cls+')">'+(v.score!=null?v.score:'—')+'/100'+(url?' <span class="drill-cta">open in '+vs.vendor+' ↗</span>':'')+'</span></div>'+capBar(v.score||0)+note;
+  return url?('<a class="drow" href="'+url+'" target="_blank" rel="noopener" style="display:block;text-decoration:none;color:inherit;cursor:pointer">'+inner+'</a>'):('<div class="drow">'+inner+'</div>');
+}
+function renderCisoVendors(){
+  var host=document.getElementById('cisoVendors');if(!host)return;
+  var vs=vendorService(),seed=vendorSeed();
+  if(!seed.length){
+    host.innerHTML='<div class="card"><div class="ck">Third-party vendors</div><div class="cn" style="margin-top:8px">Add your tier-1 / tier-2 vendors in <b>onboarding → Third-party vendors</b> (CSV or a TPRM pull from AuditBoard / OneTrust / ProcessUnity), then connect a monitoring service — <b>SecurityScorecard · BitSight · UpGuard · Panorays · Black Kite</b> — in step 7. Each vendor is then rated live here, worst-first, on your color scale.</div></div>';
+    return;
+  }
+  vendorFetch(false);
+  var p=VENDOR_PORT||vendorLocalPortfolio(seed,vs);
+  var top=(p.top||[]).slice(0,5);
+  var live=p.any_live;
+  var provLine=vs
+    ?('Rated by <b>'+vs.vendor+'</b>'+(live?' — <b style="color:var(--good)">live</b>, the same score on their portal':' <span class="pill mod" style="font-size:9px">modeled</span> until the '+vs.vendor+' API is credentialed for your tenant'))
+    :'<span class="pill mod" style="font-size:9px">modeled</span> No monitoring service connected — connect <b>SecurityScorecard · BitSight · UpGuard · Panorays · Black Kite</b> at onboarding for live ratings';
+  var refreshedTs=vendorRefreshTs();
+  var summary='<div class="grid3" style="margin-bottom:2px">'+
+    '<div class="card"><div class="ck">Vendors monitored</div><div class="cv" style="font-size:22px">'+p.count+'</div><div class="cn">'+p.tier1+' tier-1 · '+p.tier2+' tier-2</div></div>'+
+    '<div class="card"><div class="ck">Posing risk today</div><div class="cv" style="font-size:22px;color:var(--'+(p.critical?'crit':(p.at_risk?'warn':'good'))+')">'+p.at_risk+' / '+p.count+'</div><div class="cn">below adequate ('+(p.critical?p.critical+' critical':'none critical')+')</div></div>'+
+    '<div class="card"><div class="ck">Average rating</div><div class="cv" style="font-size:22px;color:var(--'+capColor(p.avg_score)+')">'+(p.avg_score!=null?p.avg_score+'/100':'—')+'</div><div class="cn">across your portfolio</div></div>'+
+    '</div>';
+  var bar='<div class="vend-bar"><div class="vend-prov">'+provLine+'</div>'+
+    '<div class="vend-refresh"><span class="cn">Refreshed <b>'+vendorAgo(refreshedTs)+'</b> · auto-refreshes weekly'+(vendorDue()&&!VENDOR_BUSY?' <span style="color:var(--warn)">· due</span>':'')+'</span>'+
+    '<button class="vend-btn" id="vendRefreshBtn"'+(VENDOR_BUSY?' disabled':'')+'>'+(VENDOR_BUSY?'⟳ refreshing…':'↻ Refresh now')+'</button></div></div>';
+  var listHtml=top.map(function(v){return vendorScoreRow(v,vs);}).join('');
+  host.innerHTML='<div class="card"><div class="ck">Top third-party risk — worst-rated first</div>'+
+    '<div class="cn" style="margin-top:4px">'+provLine.replace(/<span class="pill[^>]*>[^<]*<\/span> /,'')+'.</div>'+
+    bar+summary+'<div style="margin-top:10px">'+listHtml+'</div>'+
+    '<div class="cn" style="margin-top:10px">Higher is safer, on your color scale — '+scaleLegend()+'. Every provider’s native scale (BitSight 250–900, letter grades, 0–100) is normalized to one 0–100 axis so vendors are directly comparable. Showing the 5 worst of '+p.count+'.</div></div>';
+  var rb=document.getElementById('vendRefreshBtn');if(rb)rb.onclick=function(){vendorFetch(true);};
 }
 /* ---- the four tiles ---- */
 /* The "Are we under attack?" status tile — lives in the Under-attack tab's War

@@ -105,7 +105,7 @@ for (const s of seatIds) {
   catch (e) { problems.push(`[render ${s}] ${e.message}`); }
 }
 // Exercise the live-only renderers directly too.
-for (const fn of ['applyLive', 'renderChain', 'renderProcBars', 'renderCioSystems', 'renderUnderAttack', 'renderThreatMap', 'renderCjFlow', 'renderCpoQuality', 'renderCpoVelocity', 'renderAuditRepeat', 'renderValueChain', 'renderBoard', 'renderEarnings', 'renderCroPortfolio', 'renderRoi', 'renderSignals', 'renderAiRisk', 'renderTrend', 'renderInitiatives', 'renderOversight', 'renderMateriality', 'renderCfoFraud', 'renderCroKri', 'renderCloOps', 'renderThreatIntel', 'renderDrReadiness', 'renderPeerBench', 'renderPeerCompare', 'renderBoardPack', 'openBoardPack', 'closeBoardPack']) {
+for (const fn of ['applyLive', 'renderChain', 'renderProcBars', 'renderCioSystems', 'renderUnderAttack', 'renderThreatMap', 'renderCjFlow', 'renderCpoQuality', 'renderCpoVelocity', 'renderAuditRepeat', 'renderValueChain', 'renderBoard', 'renderEarnings', 'renderCroPortfolio', 'renderRoi', 'renderSignals', 'renderAiRisk', 'renderTrend', 'renderInitiatives', 'renderOversight', 'renderMateriality', 'renderCfoFraud', 'renderCroKri', 'renderCloOps', 'renderThreatIntel', 'renderDrReadiness', 'renderPeerBench', 'renderPeerCompare', 'renderCisoVendors', 'renderBoardPack', 'openBoardPack', 'closeBoardPack']) {
   try { vm.runInContext(`typeof ${fn}==='function' && ${fn}();`, ctx); }
   catch (e) { problems.push(`[${fn}] ${e.message}`); }
 }
@@ -118,6 +118,9 @@ catch (e) { problems.push(`[frameworks crosswalk/cadence] ${e.message}`); }
 // Exercise the DTNKSHIELD peer benchmark opt-in / opt-out + all render states.
 try { vm.runInContext("renderFrameworks(); peerSetOptin(true); PEER_BUSY=false; PEER_DATA=null; renderPeerCompare(); PEER_DATA={sufficient:false,n:2,minCohort:5}; renderPeerCompare(); PEER_DATA={sufficient:true,n:8,overall:{p25:2.1,p50:3,p75:3.8,min:1,max:4.6},overall_values:[2,2.5,3,3.2,3.5,3.8,4,4.6],functions:{Govern:{p25:2,p50:2.9,p75:3.6,min:1.5,max:4},Protect:{p25:2.2,p50:3.1,p75:3.9,min:2,max:4.5}}}; renderPeerCompare(); PEER_DATA={error:true}; renderPeerCompare(); peerSetOptin(false); renderPeerCompare();", ctx); }
 catch (e) { problems.push(`[peer benchmark] ${e.message}`); }
+// Exercise the third-party vendor panel: onboarding seed, local + backend portfolio, refresh.
+try { vm.runInContext("localStorage.setItem('cyberrx_vendors',JSON.stringify([{name:'Amazon Web Services',tier:'1',domain:'aws.amazon.com'},{name:'Okta',tier:'2',domain:'okta.com'},{name:'Weak Vendor',tier:'1',domain:'weak.com'}])); localStorage.setItem('cyberrx_vendor_monitor',JSON.stringify({vendor:'SecurityScorecard'})); renderCisoVendors(); VENDOR_PORT=vendorLocalPortfolio(vendorSeed(),vendorService()); renderCisoVendors(); vendorFetch(true); renderCisoVendors();", ctx); }
+catch (e) { problems.push(`[vendor risk] ${e.message}`); }
 // Exercise the sub-tab toggle mechanism.
 try { vm.runInContext("typeof subtabs==='function' && subtabs([{key:'a',label:'A',on:true,html:'x'},{key:'b',label:'B',html:'y'}]);", ctx); }
 catch (e) { problems.push(`[subtabs] ${e.message}`); }

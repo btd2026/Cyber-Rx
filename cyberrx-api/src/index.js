@@ -216,6 +216,7 @@ app.use('/sso',                  require('./routes/sso'));
 // M1: Risk Correlation Engine Routes with rate limiting
 app.use('/api/business-processes', [apiGetLimiter, apiPostLimiter, apiPutLimiter, apiDeleteLimiter], require('./routes/business-processes'));
 app.use('/api/assets',            [apiGetLimiter, apiPostLimiter, apiPutLimiter, apiDeleteLimiter], require('./routes/assets'));
+app.use('/api/vendors',           [apiGetLimiter, apiPostLimiter], require('./routes/vendorPortfolio'));
 app.use('/api/vendors',           [apiGetLimiter, apiPostLimiter, apiPutLimiter, apiDeleteLimiter], require('./routes/vendors'));
 app.use('/api/data-objects',      [apiGetLimiter, apiPostLimiter, apiPutLimiter, apiDeleteLimiter], require('./routes/data-objects'));
 app.use('/api/threat-scenarios',   [apiGetLimiter, apiPostLimiter, apiPutLimiter, apiDeleteLimiter], require('./routes/threat-scenarios'));
