@@ -76,36 +76,34 @@ var SEATS = {
   sub:'Cyber as a line on the risk-adjusted balance sheet: expected loss, capital at risk, insurance economics, and the marginal return on the next dollar. Click any figure for the math.',
   brief:'From a finance view: our capital at risk is quantified — sixty-eight million expected, and a hundred and eighty million at the tail. Every dollar of security spend is returning about nine dollars of risk reduction. The two open items are a thirty-million uninsured tail, and ninety-two million of exposure we are carrying on decisions we have not funded yet. Funding the top decision returns thirty-seven to one.',
   body:function(){return (
-   sec('01','Cyber Financial Exposure Engine','Quantifies cyber risk in financial terms — FAIR cyber-risk quantification, loss-expectancy modeling and insurance analysis. Real-time expected annual loss, worst-case loss and the insurance-coverage gap, in dollars.',
+   sec('01','Financial exposure','Cyber as capital at risk — expected annual loss and the worst realistic year in dollars, the return on security spend, the cost of carrying deferred decisions, and the live payment-fraud &amp; SOX-control posture that hits finance directly.',
+     '<div id="cfoModeA"></div>'+
      tiles([
       {k:'Expected annual loss',v:'<span id="lvExpoCfo">$68M</span>',ev:'ale',note:'<span id="lvCfoPctRev">≈0.8% of revenue</span> · provisioned'},
       {k:'Value-at-Risk (95%)',v:'<span id="lvTailCfo">$180M</span>',cls:'warn',ev:'tail',note:'<span id="lvCfoPctEV">0.6% of enterprise value</span>'},
       {k:'Return on security spend',v:'<span id="lvCfoRoiVal">$1 → $9</span>',ev:'roicfo',note:'<span id="lvCfoRoiNote"><span class="pill mod">modeled</span> risk reduced per dollar</span>'},
       {k:'Cost of inaction',v:'+$92M',cls:'warn',ev:'inaction',note:'<span class="pill mod">modeled</span> exposure on deferred decisions'}])
-     +'<div style="margin-top:14px">'+kvcard('Insurance coverage gap',[{k:'Coverage limit',v:'<span id="lvCfoCoverage">$150M</span>'},{k:'Uninsured tail',v:'<span id="lvCfoGap">$30M</span>',cls:'crit',ev:'insgap'},{k:'Annual premium',v:'<span id="lvCfoPremium">$4.2M / yr</span>'},{k:'Transfer efficiency',v:'<span id="lvCfoTransfer">83%</span>',ev:'transfer'},{k:'Renewal',v:'<span id="lvCfoRenewal">92 days</span>'}])+'</div>')
-   +sec('02','Financial Systems Integrity View','Protects financial integrity — secures the ERP (SAP / Oracle), financial-data encryption, access controls and SOX IT general controls. An ERP access-risk map plus a SOX control-health score with audit-ready evidence.',
-     '<div id="cfoSox"></div>')
-   +sec('03','Cyber Budget Decision Board','Aligns security spending with risk — program budgeting, ROI analysis and control-effectiveness reporting. The spend-vs-risk-reduction curve with a clear fund / defer / reject recommendation on every dollar.',
-     '<div id="initiatives-panel"></div>'
-     +'<div class="cols" style="margin-top:14px">'
+     +'<div id="cfoFraud" style="margin-top:14px"></div>')
+   +sec('02','Business interruption cost','What an outage of a revenue-critical service costs — per hour, per day, and across the worst-case recovery — plus what a severe cyber year does to earnings, EPS and days of operating income. The numbers finance needs to size recovery and insurance.',
+     '<div id="cfoBI"></div>'
+     +'<div id="cfoEarnings" style="margin-top:14px"><div class="card"><div class="cn">◐ Add net income, operating income (for days-of-operating-income) and shares outstanding (for EPS) in onboarding to translate cyber loss into earnings, days and EPS impact.</div></div></div>')
+   +sec('03','Cyber investment ROI','Every funded security decision as a return — dollars of risk removed ÷ dollars invested (ROSI), per initiative and blended — so cyber spend is defensible in the same terms as any other investment.',
+     '<div id="initiatives-panel"></div>')
+   +sec('04','Insurance effectiveness','Is our cyber-insurance matched to the modeled tail? Coverage limit vs worst-case loss, the uninsured gap, transfer efficiency, premium and the renewal clock — so coverage is sized to real exposure, not last year’s.',
+     '<div id="cfoModeB"></div>'+
+     kvcard('Insurance economics',[{k:'Coverage limit',v:'<span id="lvCfoCoverage">$150M</span>'},{k:'Uninsured tail',v:'<span id="lvCfoGap">$30M</span>',cls:'crit',ev:'insgap'},{k:'Annual premium',v:'<span id="lvCfoPremium">$4.2M / yr</span>'},{k:'Transfer efficiency',v:'<span id="lvCfoTransfer">83%</span>',ev:'transfer'},{k:'Renewal',v:'<span id="lvCfoRenewal">92 days</span>'}])
+     +'<div class="cn" style="margin-top:10px">Transfer efficiency is the share of the worst-case tail your policy actually covers. A gap means the tail exceeds the limit — funding recovery lowers the tail and narrows the gap; raising the limit transfers more but costs premium. Both levers are in <b>Cost optimization</b> and <b>Risk-acceptance decisions</b>.</div>')
+   +sec('05','Cost optimization','Where the marginal security dollar buys the most risk reduction — and the false economy of cutting. The return ranking by program, and the modeled effect of a budget cut once the insurer re-rates.',
+     '<div class="cols">'
      +bars([{l:'Privileged access',v:'37×',pct:100,cls:''},{l:'Recovery / DR',v:'13×',pct:52},{l:'Data protection',v:'8×',pct:34},{l:'Awareness training',v:'6×',pct:26},{l:'Endpoint (saturated)',v:'1.4×',pct:8}])
-     +'<div class="card"><div class="ck">How to read this board</div><div class="cn" style="margin-top:6px"><span class="pill mod">illustrative</span> Marginal return by program is an example ranking to show the shape — the live, per-control dollars of risk removed (summing to the org total) are on the CISO <b>Controls → Control value ledger</b>. The funded portfolio above is your real spend, tracked to your ticketing system.</div></div>'
-     +'</div>'
-     +decisions([{n:1,q:'How should we fund cyber-risk reduction this year?',sit:'Two funded decisions would remove $92M of exposure and strengthen the insurance renewal. How much do we commit this year?',opts:[
+     +'<div class="card"><div class="ck">The false economy of a cut</div>'+lists([{c:'c',ic:'↓',t:'<span class="pill mod">modeled</span> Cut budget −20% → +$46M exposure, tail $214M, premium +18%',ev:'budgetcut',s:'Net of the premium re-rate, the cut costs more than it saves.'}])+'</div>'
+     +'</div><div class="cn" style="margin-top:8px"><span class="pill mod">illustrative</span> Marginal return by program is an example ranking to show the shape; the live, per-control dollars of risk removed (summing to the org total) are on the CISO <b>Controls → Control value ledger</b>.</div>')
+   +sec('06','Risk-acceptance decisions','The financial decisions that need the CFO — how much to fund this year and the residual to formally accept — each with the dollars removed, the ROI, and the disclosure threshold that makes an event reportable.',
+     decisions([{n:1,q:'How should we fund cyber-risk reduction this year?',sit:'Two funded decisions would remove $92M of exposure and strengthen the insurance renewal. How much do we commit this year?',opts:[
        {rec:true,tag:'A · Fund both ($4.6M)',on:'Option A · Fund both',osum:'$4.6M · 20× blended',pros:['Removes ~$92M of exposure','Brings the tail within appetite','Stronger insurance renewal position'],cons:['Requires $4.6M of capital this year']},
        {tag:'B · Highest-ROI only ($1.4M)',on:'Option B · Top driver only',osum:'$1.4M · 37×',pros:['37× return — closes the $52M payments driver','Only $1.4M of capital this year'],cons:['Leaves the $40M recovery tail over appetite','Insurance renewal position improves only partially']},
-       {tag:'C · Hold flat',on:'Option C · Hold',osum:'$0 new',pros:['No new spend this year'],cons:['Carries the full $92M as open exposure','Likely 15–18% premium increase at renewal','Two known drivers stay unfunded']}]}]))
-   +sec('04','Financial Threat Shield','Prevents financial fraud and disruption — email security (BEC protection), MFA for banking, wire-transfer controls and fraud monitoring. Real-time transaction-anomaly alerts and high-risk-payment blocking indicators.',
-     '<div id="cfoFraud"></div>')
-   +sec('05','Audit Readiness Command Center','Ensures audit readiness — SOX audits, PCI DSS assessments, evidence-collection automation and GRC. A live compliance score with evidence auto-collected against each requirement, plus the responsibilities you own mapped to the systems behind them.',
-     '<div id="cisoFrameworks"></div><div id="cisoCompliance" style="margin-top:14px"></div>'
-     +'<div id="opmodel-cfo" style="margin-top:14px"></div>')
-   +sec('06','Cyber Risk Scenario Simulator','Reduces financial exposure — cyber-insurance coordination, risk-transfer strategies and scenario modeling. What a cyber event does to earnings under multiple scenarios: EPS impact, days of operating income and the disclosure threshold.',
-     '<div id="cfoEarnings"><div class="card"><div class="cn">◐ Add net income, operating income (for days-of-operating-income) and shares outstanding (for EPS) in onboarding to translate cyber loss into earnings, days and EPS impact.</div></div></div>'
-     +'<div style="margin-top:14px">'+lists([
-      {c:'c',ic:'↓',t:'<span class="pill mod">modeled</span> Cut budget −20% → +$46M exposure, tail $214M, premium +18%',ev:'budgetcut',s:'Net of premium, the cut costs more than it saves.'},
-      {c:'g',ic:'↑',t:'<span class="pill mod">modeled</span> Fund the top decision (+$1.4M) → exposure $16M, 37× return',ev:'roicfo',s:'Closes the payments driver; tail returns within appetite.'},
-      {c:'w',ic:'§',t:'Materiality threshold <span id="lvCfoMateriality">$53M</span> — a crown-jewel event is reportable',ev:'materiality',s:'The 4-business-day SEC clock and a pre-staged 8-K keep the disclosure defensible.'}])+'</div>')
+       {tag:'C · Hold flat',on:'Option C · Hold',osum:'$0 new',pros:['No new spend this year'],cons:['Carries the full $92M as open exposure','Likely 15–18% premium increase at renewal','Two known drivers stay unfunded']}]}])
+     +'<div style="margin-top:14px">'+lists([{c:'w',ic:'§',t:'Materiality threshold <span id="lvCfoMateriality">$53M</span> — a crown-jewel event is reportable',ev:'materiality',s:'The 4-business-day SEC clock and a pre-staged 8-K keep the disclosure defensible.'}])+'</div>')
   );}
  },
 
