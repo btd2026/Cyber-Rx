@@ -87,7 +87,7 @@ const LIVE = {
   counts: { crown_jewels: 2, processes: 4, assets: 40, risks: 7 },
 };
 const GRAPH = { nodes: [{ id: 'proc:P1', type: 'process', label: 'Claims', attrs: { criticality: 'Critical' } }, { id: 'asset:A1', type: 'asset', label: 'ClaimsDB', attrs: { crown_jewel_tier: 'tier1', score: 0.83 } }, { id: 'risk:R1', type: 'risk', label: 'Ransomware' }], edges: [{ source: 'proc:P1', target: 'asset:A1', type: 'supports' }, { source: 'risk:R1', target: 'asset:A1', type: 'threatens' }] };
-const SIGNALS = { edr_pct: { value: 98 }, mfa_pct: { value: 96 }, pam_pct: { value: 60 }, phishing_pct: { value: 3 }, open_incidents: { value: 0 }, mttd_hrs: { value: 8 }, patch_pct: { value: 72 }, code_scanning_open: { value: 7 }, dependabot_critical: { value: 2 } };
+const SIGNALS = { edr_pct: { value: 98 }, mfa_pct: { value: 96 }, pam_pct: { value: 60 }, phishing_pct: { value: 3 }, open_incidents: { value: 0 }, mttd_hrs: { value: 8 }, patch_pct: { value: 72 }, code_scanning_open: { value: 7 }, dependabot_critical: { value: 2 }, audit_findings_open: { value: 14 }, audit_findings_repeat: { value: 3 } };
 
 vm.runInContext('this.LIVE = arguments0; this.GRAPH = arguments1; this.SIGNALS = arguments2;'.replace('arguments0', JSON.stringify(LIVE)).replace('arguments1', JSON.stringify(GRAPH)).replace('arguments2', JSON.stringify(SIGNALS)), ctx);
 
@@ -97,7 +97,7 @@ for (const s of seatIds) {
   catch (e) { problems.push(`[render ${s}] ${e.message}`); }
 }
 // Exercise the live-only renderers directly too.
-for (const fn of ['applyLive', 'renderChain', 'renderProcBars', 'renderCioSystems', 'renderCpoQuality', 'renderBoard', 'renderEarnings', 'renderCroPortfolio', 'renderRoi', 'renderSignals', 'renderAiRisk', 'renderTrend', 'renderInitiatives', 'renderOversight', 'renderMateriality', 'renderCfoFraud', 'renderCroKri', 'renderCloOps', 'renderThreatIntel', 'renderDrReadiness', 'renderPeerBench', 'renderBoardPack', 'openBoardPack', 'closeBoardPack']) {
+for (const fn of ['applyLive', 'renderChain', 'renderProcBars', 'renderCioSystems', 'renderCpoQuality', 'renderAuditRepeat', 'renderBoard', 'renderEarnings', 'renderCroPortfolio', 'renderRoi', 'renderSignals', 'renderAiRisk', 'renderTrend', 'renderInitiatives', 'renderOversight', 'renderMateriality', 'renderCfoFraud', 'renderCroKri', 'renderCloOps', 'renderThreatIntel', 'renderDrReadiness', 'renderPeerBench', 'renderBoardPack', 'openBoardPack', 'closeBoardPack']) {
   try { vm.runInContext(`typeof ${fn}==='function' && ${fn}();`, ctx); }
   catch (e) { problems.push(`[${fn}] ${e.message}`); }
 }

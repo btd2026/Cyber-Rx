@@ -324,8 +324,8 @@ var SEATS = {
      '<div id="cisoFrameworks"></div>')
    +sec('04','Management action plans','The funded remediation closing each control gap — cost, owner, status and the dollars of risk it removes — the management actions internal audit tracks to closure.',
      '<div id="initiatives-panel"></div>')
-   +sec('05','Repeat findings','The findings that recur audit-over-audit — the systemic gaps that were not truly closed. From your audit / GRC system.',
-     '<div class="card"><div class="ck">Recurring findings</div><div class="cn" style="margin-top:6px">◐ Connect your audit / GRC platform (<b>ServiceNow GRC · AuditBoard · OneTrust</b>) to surface findings that recur across audit cycles — the systemic control gaps that were closed on paper but not in practice, and the highest-priority ones to escalate. <span class="pill mod" style="font-size:8px">planned</span></div></div>')
+   +sec('05','Repeat findings','The findings that recur audit-over-audit — the systemic gaps that were not truly closed. Live from your audit / GRC system.',
+     '<div id="auditRepeat"></div>')
    +sec('06','Audit coverage','How much of the audit universe is actually evidenced — the share of controls with live or document evidence vs those still self-attested or untested.',
      '<div class="card"><div class="ck">Coverage of the universe</div><div class="cn" style="margin-top:6px">Audit coverage is the share of the control universe backed by evidence rather than self-attestation. The <b>Control testing status</b> tab shows, per control, whether it is evidenced by 🔌 live telemetry, 📄 document review, or not yet — connect more tools and upload more policies to raise coverage. Connect your audit-management platform to track the formal audit plan against this universe.</div></div>')
   );}

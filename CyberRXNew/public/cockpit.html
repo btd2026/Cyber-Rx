@@ -471,7 +471,7 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderAuditRepeat();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
@@ -1401,6 +1401,7 @@ function demoSignals(){
   if(has(['whistic','safebase','conveyor'])){set('reviews_cleared_qtr',12);set('review_cycle_wks',2);}
   if(has(['rubrik','veeam','cohesity','commvault'])){set('backup_immutable_pct',100);set('dr_test_days',48);set('rpo_minutes',15);}
   if(has(['github','snyk','gitlab'])){set('code_scanning_open',7);set('dependabot_critical',2);}
+  if(has(['servicenow_grc','auditboard'])){set('audit_findings_open',14);set('audit_findings_repeat',3);}
   return any?s:null;
 }
 function applyDemoSignals(){if(!demoActive()||SIGNALS)return;var s=demoSignals();if(s){SIGNALS=s;renderSignals();}}
@@ -1427,7 +1428,7 @@ function renderSignals(){
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderAuditRepeat();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -2794,6 +2795,25 @@ function renderCpoQuality(){
     :('<b style="color:var(--'+(open<=5?'warn':'crit')+')">'+open+' open product-security finding'+(open===1?'':'s')+'</b> — resolve or risk-accept before the next release; these are the security defects that ship to customers.');
   host.innerHTML='<div class="card"><div class="ck">Product security quality '+liveTag()+'</div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">'+verdict+' Evidenced live from your code-scanning and dependency scanners — the security-quality of what you ship, not a policy statement.</div></div>';
 }
+/* Internal Audit · Repeat findings — the findings that recur audit-over-audit,
+   the systemic gaps closed on paper but not in practice. audit_findings_open =
+   open findings backlog; audit_findings_repeat = open findings flagged recurring.
+   From the ServiceNow GRC / Audit connector (or AuditBoard). No source connected
+   → an honest connect card, never an invented number. */
+function renderAuditRepeat(){
+  var host=document.getElementById('auditRepeat');if(!host)return;
+  var open=sig('audit_findings_open'),rep=sig('audit_findings_repeat');
+  if(open==null&&rep==null){
+    host.innerHTML='<div class="card"><div class="ck">Recurring findings</div><div class="cn" style="margin-top:6px">◐ Connect your audit / GRC platform (<b>ServiceNow GRC · AuditBoard · OneTrust</b>) to surface findings that recur across audit cycles — the systemic control gaps that were closed on paper but not in practice, and the highest-priority ones to escalate. <span class="pill mod" style="font-size:8px">planned</span></div></div>';
+    return;
+  }
+  var pct=(open!=null&&open>0&&rep!=null)?Math.round(rep/open*100):null;
+  var rows=iamGovRow('Open audit findings',open!=null?(open+' open'):'—',open!=null?(open<=10):null,open!=null?'The current control-gap backlog across the audit universe — the findings management has committed to remediate.':'')+
+    iamGovRow('Recurring (repeat) findings',rep!=null?(rep+(pct!=null?(' · '+pct+'% of open'):'')):'—',rep!=null?(rep===0):null,rep!=null?'Findings that reappeared in a later audit — the gap was reported closed but the underlying control did not hold. Each is a governance flag: escalate to the audit committee.':'');
+  var verdict=(rep!=null&&rep===0)?'<b style="color:var(--good)">No repeat findings</b> — every closed finding stayed closed, evidence that remediation is durable, not cosmetic.'
+    :(rep!=null?('<b style="color:var(--'+((pct==null||pct<=15)?'warn':'crit')+')">'+rep+' recurring finding'+(rep===1?'':'s')+'</b> — systemic gaps that were not truly closed. These are the ones to escalate to the audit committee.'):'');
+  host.innerHTML='<div class="card"><div class="ck">Recurring findings '+liveTag()+'</div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">'+verdict+' Evidenced live from your audit / GRC system — the systemic control gaps, not a self-reported closure rate.</div></div>';
+}
 /* CISO threat intelligence — actors targeting this sector, each mapped to the LIVE
    coverage of the controls that stop their techniques. Industry-modeled from FREE
    public reporting until a threat-intel feed connects; a connected feed (free OTX /
@@ -3048,7 +3068,7 @@ function sysCard(s){var metric=s.live?(180+Math.floor(Math.random()*70))+' '+s.m
 /* The full demo tool set — the canonical keys the demo signals key off. Used as a
    fallback so "Enable demo mode" always shows a fully-connected cockpit, even if
    the tools were not persisted to cyberrx_tools (e.g. demo enabled without go-live). */
-var DEMO_TOOLSET=['okta','defender','qualys','splunk','cyberark','knowbe4','proofpoint','wiz','sap','servicenow','salesforce','whistic','securityscorecard','onetrust','recordedfuture','rubrik','github'];
+var DEMO_TOOLSET=['okta','defender','qualys','splunk','cyberark','knowbe4','proofpoint','wiz','sap','servicenow','salesforce','whistic','securityscorecard','onetrust','recordedfuture','rubrik','github','servicenow_grc'];
 function connectedTools(){try{var t=JSON.parse(localStorage.getItem('cyberrx_tools')||'{}');if(!t||typeof t!=='object')t={};
   if(!Object.keys(t).length&&demoActive()){var d={};DEMO_TOOLSET.forEach(function(k){d[k]={on:true,demo:true,vendor:'Demo'};});return d;}
   return t;}catch(_){return {};}}
