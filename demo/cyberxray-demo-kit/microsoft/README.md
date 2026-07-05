@@ -9,7 +9,7 @@ Global platform & cloud provider (Azure, M365, GitHub). Crown jewels are source 
 **Option A — full end-to-end (recommended):** seed the backend, then point the browser at it.
 ```bash
 # from the kit root, with the API running (default http://localhost:3001):
-API_BASE=http://localhost:3001 node load-all.mjs        # seeds ALL 7 orgs
+API_BASE=http://localhost:3001 node load-all.mjs        # seeds ALL orgs
 # or just this one:
 API_BASE=http://localhost:3001 node load-all.mjs microsoft
 ```

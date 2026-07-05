@@ -8,7 +8,7 @@
 // (the onboarding "unit" multiplier is already applied). See README for sources.
 //
 // 8 sectors across the cockpit's industry buckets:
-//   health · tech · fin · retail · gov · mfg · energy  (+ Telecommunications → tech lens)
+//   health · tech · fin · retail · gov · mfg · energy · telecom
 // ─────────────────────────────────────────────────────────────────────────────
 
 const B = 1e9, M = 1e6, K = 1e3;
@@ -403,7 +403,7 @@ export const ORGS = [
   {
     key: 'att',
     org_name: 'AT&T Inc.',
-    industry: 'Telecommunications',     // → tech lens (no distinct telecom bucket)
+    industry: 'Telecommunications',     // → telecom lens
     regions: ['US'],
     currency: 'USD',
     story: 'Largest U.S. wireless & fiber carrier (~118M wireless subscribers). Crown jewels are the mobile/network core, subscriber CPNI, and lawful-intercept infrastructure — the 2024 Salt Typhoon telecom intrusions and CPNI/call-records breaches are the defining sector scenarios.',

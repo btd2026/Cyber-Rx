@@ -106,7 +106,7 @@ ${o.story}
 **Option A — full end-to-end (recommended):** seed the backend, then point the browser at it.
 \`\`\`bash
 # from the kit root, with the API running (default http://localhost:3001):
-API_BASE=http://localhost:3001 node load-all.mjs        # seeds ALL 7 orgs
+API_BASE=http://localhost:3001 node load-all.mjs        # seeds ALL orgs
 # or just this one:
 API_BASE=http://localhost:3001 node load-all.mjs ${o.key}
 \`\`\`
@@ -259,7 +259,7 @@ API_BASE=http://localhost:3001 node load-all.mjs
 - **CRO enterprise-risk portfolio** — cyber vs credit/operational/third-party/compliance, on one scale.
 - **Strategic-initiative Go/No-Go (CEO)** — 3 per org with value-at-stake.
 - **Connectors / demo mode + evidence layer** — each org seeds a sector-appropriate tool stack (\`demo:true\`) and NIST-CSF document-evidence scores (\`cyberrx_doc_scores\`) so the ○ self-reported → ● evidenced flip is visible.
-- **Industry localization** — every cockpit bucket exercised: health / tech / fin / retail / gov / mfg / energy (Telecommunications reuses the technology lens) so per-sector threats, regulators, continuity and framing all change.
+- **Industry localization** — all 8 cockpit buckets exercised: health / tech / fin / retail / gov / mfg / energy / telecom, so per-sector threats, regulators, continuity and framing all change.
 
 ## Per-org contents
 Each folder has: \`ingest.json\` (ready-to-POST payload), \`processes.csv\` · \`systems.csv\` · \`risks.csv\` · \`initiatives.csv\` (onboarding upload templates), \`browser-localStorage.js\` (one-paste cockpit loader), and \`README.md\` (the full data sheet — every dropdown value).

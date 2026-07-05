@@ -1449,13 +1449,14 @@ var IND_PROFILES={
   retail:{procs:['Checkout & payments','E-commerce storefront','Order fulfilment','Loyalty & CRM'],systems:['Payment platform','E-commerce storefront','Order management','Customer database'],data:['Cardholder data','PII'],topRisk:'Card-data breach (PCI)'},
   gov:{procs:['Citizen services','Benefits processing','Records management','Case management'],systems:['Citizen portal','Benefits system','Records database','Case management platform'],data:['PII','Sensitive records'],topRisk:'Breach of citizen records'},
   mfg:{procs:['Order-to-cash','Production / MES','Supply chain & procurement','Product engineering'],systems:['ERP','Plant control / MES','Supplier portal','PLM / design system'],data:['Design IP','Operational','PII'],topRisk:'OT ransomware halting production'},
-  energy:{procs:['Grid operations','Billing & metering','Field operations','Energy trading'],systems:['SCADA / control system','Billing platform','Field-ops system','Trading platform'],data:['Operational','PII','Financial'],topRisk:'OT attack disrupting operations'}
+  energy:{procs:['Grid operations','Billing & metering','Field operations','Energy trading'],systems:['SCADA / control system','Billing platform','Field-ops system','Trading platform'],data:['Operational','PII','Financial'],topRisk:'OT attack disrupting operations'},
+  telecom:{procs:['Mobile network operations','Broadband & fiber access','Interconnection & signaling','Billing & customer care'],systems:['Mobile / 5G core','Signaling gateway (SS7/Diameter)','Subscriber data / CRM','Billing / OSS-BSS'],data:['Subscriber PII','CPNI','Financial'],topRisk:'Network / signaling compromise exposing call records'}
 };
 function indKey(){var i=String(industry()||'').toLowerCase();
-  if(/health/.test(i))return 'health';if(/tech|saas|software/.test(i))return 'tech';if(/financ|bank|insur/.test(i))return 'fin';
+  if(/health/.test(i))return 'health';if(/telecom|communication/.test(i))return 'telecom';if(/tech|saas|software/.test(i))return 'tech';if(/financ|bank|insur/.test(i))return 'fin';
   if(/retail|commerce/.test(i))return 'retail';if(/gov|public/.test(i))return 'gov';if(/manufactur/.test(i))return 'mfg';if(/energy|utilit/.test(i))return 'energy';return 'tech';}
 function indProfile(){return IND_PROFILES[indKey()]||IND_PROFILES.tech;}
-function indLabel(){return {health:'healthcare',tech:'technology',fin:'financial services',retail:'retail',gov:'government',mfg:'manufacturing',energy:'energy & utilities'}[indKey()]||'your sector';}
+function indLabel(){return {health:'healthcare',tech:'technology',fin:'financial services',retail:'retail',gov:'government',mfg:'manufacturing',energy:'energy & utilities',telecom:'telecommunications'}[indKey()]||'your sector';}
 /* Threat groups publicly reported (CISA / Mandiant / sector-ISAC advisories) to
    target each sector, with the CyberX-Ray capabilities that defend against their known
    techniques. Industry-modeled from public reporting until a threat-intel feed
@@ -1481,14 +1482,17 @@ var IND_THREATS={
     {n:'Black Basta',t:'Ransomware',m:'Phishing and vendor-access abuse against manufacturers.',caps:['aware','pam','edr']}],
   energy:[{n:'Volt Typhoon',t:'Nation-state · grid pre-positioning',m:'Living-off-the-land access to critical infrastructure for future disruption.',caps:['siem','seg','edr']},
     {n:'Sandworm',t:'Nation-state · ICS attack',m:'Purpose-built malware to disrupt industrial control and grid operations.',caps:['seg','siem','backup']},
-    {n:'BlackCat / ALPHV',t:'Ransomware',m:'Double-extortion against utilities and their billing systems.',caps:['backup','edr','seg']}]
+    {n:'BlackCat / ALPHV',t:'Ransomware',m:'Double-extortion against utilities and their billing systems.',caps:['backup','edr','seg']}],
+  telecom:[{n:'Salt Typhoon',t:'Nation-state · telecom espionage',m:'Compromises carrier networks and lawful-intercept systems to reach call records and metadata.',caps:['siem','seg','pam']},
+    {n:'LightBasin (UNC1945)',t:'Nation-state · telecom-focused',m:'Targets signaling, GPRS and eDNS infrastructure to intercept subscriber traffic.',caps:['seg','siem','edr']},
+    {n:'Scattered Spider',t:'E-crime · SIM-swap & social engineering',m:'Help-desk impersonation and SIM-swap to hijack identity and numbers.',caps:['mfa','aware','pam']}]
 };
 /* Published external benchmarks — cited, not fabricated. Per-industry average breach
    cost from IBM Cost of a Data Breach 2024 ($M); peer medians from Mandiant M-Trends
    2024 (dwell time) and KnowBe4 Phishing-by-Industry (untrained baseline). We compare
    the org's LIVE figure to the published median and cite the source; comparisons are
    gated on the org actually having that live signal, so nothing is invented. */
-var IND_BENCH={health:9.77,fin:6.08,mfg:5.56,tech:5.45,energy:5.29,retail:3.48,gov:2.55};
+var IND_BENCH={health:9.77,fin:6.08,mfg:5.56,tech:5.45,energy:5.29,telecom:3.63,retail:3.48,gov:2.55};
 var PEER_DWELL_HRS=240; // Mandiant M-Trends 2024 global median dwell ≈ 10 days
 var PEER_PHISH_BASELINE=34; // KnowBe4 untrained baseline phish-prone ≈ 34%
 /* ---- The Fortune-100 board lens, per industry --------------------------------
@@ -1506,7 +1510,8 @@ var IND_BOARD={
   retail:{regulator:'PCI DSS · FTC · state privacy laws',scenario:'A card-data breach, or a storefront outage during peak season',protect:'cardholder data and storefront uptime',trust:'brand and customer loyalty',material:'a card-data breach or a peak-season outage'},
   gov:{regulator:'FISMA · FedRAMP · CISA · state privacy',scenario:'A breach of citizen records, or an outage of essential citizen services',protect:'citizen records and service availability',trust:'public trust',material:'a records breach or a service outage'},
   energy:{regulator:'NERC CIP · TSA directives · FERC',scenario:'An OT / ICS attack disrupts grid or service operations',protect:'operational reliability and public safety',trust:'reliability and public safety',material:'an operational-disruption or safety event'},
-  tech:{regulator:'SEC · SOC 2 / ISO 27001 · GDPR / CCPA',scenario:'A customer-data breach, or a platform outage that breaches SLAs',protect:'platform uptime and customer data',trust:'customer trust and retention',material:'a customer-data breach or a major outage'}
+  tech:{regulator:'SEC · SOC 2 / ISO 27001 · GDPR / CCPA',scenario:'A customer-data breach, or a platform outage that breaches SLAs',protect:'platform uptime and customer data',trust:'customer trust and retention',material:'a customer-data breach or a major outage'},
+  telecom:{regulator:'FCC (CPNI) · CISA · state privacy · FTC',scenario:'A network / signaling intrusion exposes call records, or a core outage drops service for millions',protect:'network availability and subscriber data (CPNI)',trust:'subscriber trust and service reliability',material:'a CPNI / call-records breach or a mass service outage'}
 };
 function indBoard(){return IND_BOARD[indKey()]||IND_BOARD.tech;}
 function boardRow(k,v){return '<div style="display:flex;gap:14px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px"><span style="min-width:200px;color:var(--muted);font-weight:700;font-size:11px;letter-spacing:.03em;text-transform:uppercase">'+k+'</span><span style="color:var(--ink-2);line-height:1.5">'+v+'</span></div>';}
@@ -1597,7 +1602,8 @@ var IND_CONTINUITY={
   retail:{svc:'checkout, the storefront and fulfilment',w:'sales stop — acutely in peak season',ot:false},
   gov:{svc:'citizen services and benefits processing',w:'citizens can’t access essential services',ot:false},
   energy:{svc:'grid / OT operations and field service',w:'service is disrupted with safety and regulatory impact',ot:true},
-  tech:{svc:'the production platform and customer APIs',w:'SLAs breach and customers churn',ot:false}
+  tech:{svc:'the production platform and customer APIs',w:'SLAs breach and customers churn',ot:false},
+  telecom:{svc:'the mobile / 5G core, broadband access and signaling',w:'service drops for millions and emergency calling is at risk',ot:false}
 };
 function renderCooSector(){
   var host=document.getElementById('cooSector');if(!host)return;
@@ -1684,7 +1690,8 @@ var IND_EMERGING={
   retail:[{n:'Third-party checkout &amp; web scripts',w:'Magecart-style card skimming injected through code you don’t own'},{n:'AI pricing &amp; personalization',w:'data-use and consumer-protection exposure as AI drives offers'}],
   gov:[{n:'Nation-state espionage &amp; pre-positioning',w:'long-dwell access to citizen records and essential services'},{n:'Legacy-system modernization risk',w:'end-of-life systems still running essential citizen services'}],
   energy:[{n:'OT / ICS targeting &amp; geopolitics',w:'nation-state pre-positioning in grid and control systems'},{n:'Grid digitization &amp; distributed energy',w:'more connected endpoints across generation and distribution'}],
-  tech:[{n:'AI supply chain &amp; model risk',w:'poisoned dependencies, prompt injection and shadow AI in the product'},{n:'Customer-data concentration',w:'one platform holding many customers’ data raises the blast radius'}]
+  tech:[{n:'AI supply chain &amp; model risk',w:'poisoned dependencies, prompt injection and shadow AI in the product'},{n:'Customer-data concentration',w:'one platform holding many customers’ data raises the blast radius'}],
+  telecom:[{n:'Nation-state pre-positioning in carrier networks',w:'long-dwell access to signaling and lawful-intercept exposes call records'},{n:'5G core &amp; network virtualization',w:'a cloud-native, software-defined core widens the attack surface across the network'}]
 };
 function renderCeoEmerging(){
   var host=document.getElementById('ceoEmerging');if(!host)return;
@@ -1762,7 +1769,8 @@ var IND_NOUNS={
   retail:{money:'checkout',Money:'Checkout',data:'cardholder data',db:'payment platform',portal:'storefront',p0:'Checkout &amp; payments',p1:'E-commerce storefront',p2:'Order fulfilment',p3:'Loyalty &amp; CRM',dbShort:'PayDB',gwShort:'PayGateway',engShort:'OrderEngine',portalShort:'Storefront',settle:'fulfilment'},
   gov:{money:'benefits processing',Money:'Benefits processing',data:'citizen records',db:'benefits system',portal:'citizen portal',p0:'Benefits processing',p1:'Citizen services',p2:'Records management',p3:'Case management',dbShort:'BenefitsDB',gwShort:'ServiceGateway',engShort:'CaseEngine',portalShort:'CitizenPortal',settle:'processing'},
   mfg:{money:'orders',Money:'Orders',data:'design IP',db:'ERP system',portal:'supplier portal',p0:'Order-to-cash',p1:'Production / MES',p2:'Supply chain',p3:'Product engineering',dbShort:'ERP',gwShort:'OrderGateway',engShort:'MES',portalShort:'SupplierPortal',settle:'fulfilment'},
-  energy:{money:'billing',Money:'Billing',data:'operational data',db:'control system',portal:'billing platform',p0:'Grid operations',p1:'Billing &amp; metering',p2:'Field operations',p3:'Energy trading',dbShort:'SCADA',gwShort:'MeterGateway',engShort:'TradingEngine',portalShort:'BillingApp',settle:'metering'}
+  energy:{money:'billing',Money:'Billing',data:'operational data',db:'control system',portal:'billing platform',p0:'Grid operations',p1:'Billing &amp; metering',p2:'Field operations',p3:'Energy trading',dbShort:'SCADA',gwShort:'MeterGateway',engShort:'TradingEngine',portalShort:'BillingApp',settle:'metering'},
+  telecom:{money:'traffic',Money:'Traffic',data:'subscriber data',db:'subscriber data platform',portal:'self-service app',p0:'Mobile network operations',p1:'Broadband &amp; fiber access',p2:'Interconnection &amp; signaling',p3:'Billing &amp; customer care',dbShort:'SubscriberDB',gwShort:'SignalingGW',engShort:'BillingEngine',portalShort:'SelfServiceApp',settle:'billing'}
 };
 function localizeInd(html){var k=indKey();if(k==='health'||!html)return html;var v=IND_NOUNS[k];if(!v)return html;
   // Single pass (no cascade): longest/most-specific patterns first; the callback
