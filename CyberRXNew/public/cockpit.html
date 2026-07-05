@@ -3330,12 +3330,11 @@ function opsDetailCaps(){
   var rows=CAPS.map(function(c){var p=capDeploy(c),s=capSource(c),cls=capColor(p);
     return '<tr><td><span class="cap-dot" style="background:var(--'+cls+')"></span>'+c.name.replace(/ *\(.*\)/,'')+'</td>'+
       '<td class="v opsd-cov" data-cap="'+c.k+'" style="color:var(--'+cls+')" title="Click — what’s needed to reach green">'+(p==null?'—':p+'%')+' <span class="opsd-covcta">▸</span></td>'+
-      '<td>'+srcPill(s)+'</td>'+
-      '<td class="src">'+(s.sigkey?('<code>'+s.sigkey+'</code>'):'no live signal yet')+'</td></tr>';
+      '<td>'+srcPill(s)+'</td></tr>';
   }).join('');
   return '<div class="opsd-intro">This tile answers <b>“how much of each core defense actually covers the estate.”</b> '+opsFreshTag()+' Every % is read from the tool that owns it — nothing here is typed in or hardcoded. <b>Click any coverage %</b> for the target and what it takes to reach green.</div>'+
     opsdSection('Where each number comes from (telemetry)')+
-    '<div class="opsd-tblwrap"><table class="opsd-tbl"><thead><tr><th>Capability</th><th>Coverage</th><th>Source</th><th>Signal</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<div class="opsd-tblwrap"><table class="opsd-tbl"><thead><tr><th>Capability</th><th>Coverage</th><th>Source</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
     opsdSection('How the headline is calculated')+
     opsdFormula('<b>Healthy</b> = capabilities whose live coverage is <b>≥ 75%</b> (blue/green on your scale).<br><span class="mono">healthy = count( capability where coverage% ≥ 75 )</span> = <b>'+healthy+' / 10</b><br><span class="mono">measured = '+measured+' of 10 connected</span> · grey capabilities have no connected tool yet, so they are shown but not scored.');
 }
