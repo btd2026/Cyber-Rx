@@ -254,8 +254,11 @@ var SEATS = {
      ]))
    +sec('04','Which third parties could take us down?','Your tier-1 and tier-2 vendors, rated live by your third-party monitoring service — the same score showing on the provider’s portal. The worst-rated vendors lead, so the exposure you carry through someone else’s security is on top. Refreshes automatically each week, or on demand.',
      '<div id="cisoVendors"></div>')
-   +sec('05','Is AI making us safer or more exposed?','Cyber and AI on two fronts: <b>securing the AI we run</b> (the AI systems in production, the governance around them, and the attack surface they add) and <b>using AI to defend</b> (where our security tools already run AI to cut detection and response time).',
-     '<div id="cisoAiRisk"></div>')
+   +sec('05','Is AI making us safer or more exposed?','Cyber and AI on two fronts. <b>Is the AI we run secure?</b> covers the AI systems in production and their governance, scored continuously against the NIST AI RMF. <b>Is AI helping us defend?</b> covers where our security tools already run AI to cut detection and response time.',
+     subtabs([
+       {key:'aisecure',label:'Is the AI we run secure?',on:true,html:'<div id="cisoAiSecure"></div><div id="cisoAiFrameworks" style="margin-top:14px"></div>'},
+       {key:'aidefend',label:'Is AI helping us defend?',html:'<div id="cisoAiDefend"></div>'}
+     ]))
    +sec('06','Where does the next dollar go — and where are we heading?','Where the next security dollar goes and the projected return — a costed decision that records to your ticketing system, and the one-click board / regulator report that projects the trajectory.',
      decisions([{n:1,q:'Which control gap do we close first?',sit:'The biggest dollar driver is the privileged path into payments. Where do we direct the next dollar?',opts:[
        {rec:true,tag:'A · Privileged access (PAM)',on:'Option A · PAM',osum:'$1.4M · 37×',pros:['Closes the $52M driver','Highest return available','Improves board posture immediately'],cons:['Requires $1.4M of capital this year','~3 weeks of IAM engineering effort']},
