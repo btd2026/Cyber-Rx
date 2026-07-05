@@ -62,7 +62,14 @@
   .pill.good{background:var(--good-soft);color:var(--good)}.pill.warn{background:var(--warn-soft);color:var(--warn)}.pill.crit{background:var(--crit-soft);color:var(--crit)}
   .pill.mod{background:rgba(137,135,129,.18);color:var(--muted);font-weight:600;font-size:10px;letter-spacing:.03em;text-transform:uppercase}
   .claim{cursor:pointer;border-bottom:1px dashed var(--line-2)}.claim:hover{border-bottom-color:var(--blue)}
-  .optile{cursor:pointer;transition:border-color .15s,transform .12s}.optile:hover{border-color:var(--blue);transform:translateY(-1px)}
+  .optile{cursor:pointer;position:relative;transition:border-color .15s,transform .12s}.optile:hover{border-color:var(--blue);transform:translateY(-1px)}
+  /* War Room state badge on the "Are we under attack?" tile: green when calm, red-blinking on an active incident */
+  .wr-badge{position:absolute;top:11px;right:13px;display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--good)}
+  .wr-badge svg{width:14px;height:14px;display:block}
+  .wr-badge.on{color:var(--crit);animation:wrBlink .7s steps(1,end) infinite}
+  @keyframes wrBlink{50%{opacity:.18}}
+  .optile.alarm{border-color:var(--crit)!important;animation:tileAlarm 1.1s ease-in-out infinite}
+  @keyframes tileAlarm{0%,100%{box-shadow:none}50%{box-shadow:0 0 0 3px var(--crit-soft)}}
   .drill-cta{color:var(--blue);font-weight:700;white-space:nowrap}
   .dotstrip{display:flex;gap:4px;margin-top:9px;flex-wrap:wrap}.dotstrip .ds{width:13px;height:13px;border-radius:3px;display:inline-block}
   .drow{padding:12px 0;border-top:1px solid var(--line)}.drow:first-child{border-top:none}
@@ -1642,7 +1649,7 @@ function renderSignals(){
   renderAiRisk();renderCisoOps();renderControls();renderFrameworks();renderValueChain();renderCompliance();renderCooStatus();renderCfoFraud();renderCroKri();renderCloOps();renderThreatIntel();renderDrReadiness();renderPeerBench();
 }
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
-  try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
+  try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();if(typeof renderCisoOps==='function')renderCisoOps();}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
   try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderValueChain();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
@@ -2632,7 +2639,7 @@ function renderCisoOps(){
     :(oi!=null?'No active compromise':'Connect your SIEM');
   var t1c=underAttack?'crit':(oi!=null?'good':'muted');
   var t1s=underAttack?'<b style="color:var(--blue)">Enter the War Room →</b>':(oi!=null?'✓ nothing burning right now':'live from your SIEM once connected');
-  var t1=drillTile('attack','Are we under attack?',(underAttack?'⚠ ':'✓ ')+t1v,t1c,t1s,'');
+  var t1=drillTile('attack','Are we under attack?',(underAttack?'⚠ ':'✓ ')+t1v,t1c,t1s,'',{wrIcon:true,alarm:underAttack});
   // Tile 2 — top-10 capability health
   var capStates=CAPS.map(function(c){return capColor(capDeploy(c));});
   var measured=CAPS.filter(function(c){return capDeploy(c)!=null;}).length;
@@ -2664,8 +2671,9 @@ function renderCisoOps(){
     else if(d==='vendors')openDrill('Tier-1 vendor risk today',drillVendors());
   };});
 }
-function drillTile(id,q,val,cls,sub,extra){
-  return '<div class="card optile" data-drill="'+id+'"><div class="ck">'+q+'</div>'+
+function drillTile(id,q,val,cls,sub,extra,opts){opts=opts||{};
+  var badge=opts.wrIcon?('<span class="wr-badge'+(opts.alarm?' on':'')+'" title="War Room"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3z"/></svg>War Room</span>'):'';
+  return '<div class="card optile'+(opts.alarm?' alarm':'')+'" data-drill="'+id+'"><div class="ck">'+q+'</div>'+badge+
     '<div class="cv" style="font-size:16px;margin-top:6px;line-height:1.3;color:var(--'+cls+')">'+val+'</div>'+
     (extra||'')+
     '<div class="cn" style="margin-top:8px">'+sub+' <span class="drill-cta">details ▸</span></div></div>';
@@ -3277,6 +3285,10 @@ function renderChain(){
 function selectSeat(seat){document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===seat);});render(seat);if(!VOICE_MUTED)speakSeat(seat);}
 document.querySelectorAll('.seat').forEach(function(b){b.addEventListener('click',function(){selectSeat(b.dataset.seat);});});
 render('ciso');loadLive();loadSignals();
+/* Auto-poll live signals so the "Are we under attack?" tile surfaces a new SIEM
+   incident on its own (~every 60s) — no manual refresh needed. The War Room's own
+   incidents flip it instantly via triggerIncident/containIncident. */
+setInterval(function(){try{loadSignals();}catch(_){}},60000);
 
 /* ---- Advisor voice: speak the seat's verdict via the parent (autoplay-safe) ---- */
 var VOICE_MUTED=true;
