@@ -1,0 +1,6 @@
+title,severity,asset,exposure,status
+Design-IP theft (nation-state),Critical,PLM / design-data vault (CATIA/Teamcenter),$140M,open
+Defense-program / ITAR data breach,Critical,Defense-program enclave,$160M,open
+OT ransomware halting production,Critical,Factory OT / MES,$95M,open
+Supplier-portal compromise,High,Supplier collaboration portal,$30M,open
+ERP financial-data exposure,High,ERP (SAP),$25M,open

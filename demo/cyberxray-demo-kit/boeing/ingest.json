@@ -1,0 +1,299 @@
+{
+  "org_name": "The Boeing Company",
+  "org_id": "org_boeing",
+  "industry": "Manufacturing",
+  "regions": [
+    "US"
+  ],
+  "currency": "USD",
+  "financials": {
+    "revenue": 66500000000,
+    "operatingIncome": -10700000000,
+    "netIncome": -11800000000,
+    "enterpriseValue": 130000000000,
+    "sharesOutstanding": 750000000
+  },
+  "appetite": 250000000,
+  "budget": 400000000,
+  "dataRecords": 12000000,
+  "principalRisks": {
+    "creditMarket": 55000000000,
+    "operational": 30000000000,
+    "thirdParty": 15000000000,
+    "compliance": 8000000000
+  },
+  "insurance": {
+    "limit": 150000000,
+    "premium": 10000000,
+    "retention": 25000000,
+    "renewal": "2026-11-01"
+  },
+  "processes": [
+    {
+      "name": "Commercial airplane production",
+      "data": "IP, Confidential",
+      "rev": "$22B",
+      "revenue": "$22B",
+      "rto": "8",
+      "criticality": "Critical",
+      "txPerDay": "50000",
+      "tolerance": "$12M"
+    },
+    {
+      "name": "Defense, space & security programs",
+      "data": "IP, ITAR, Classified",
+      "rev": "$24B",
+      "revenue": "$24B",
+      "rto": "6",
+      "criticality": "Critical",
+      "txPerDay": "30000",
+      "tolerance": "$15M"
+    },
+    {
+      "name": "Global services & MRO",
+      "data": "Confidential, PII",
+      "rev": "$20B",
+      "revenue": "$20B",
+      "rto": "12",
+      "criticality": "High",
+      "txPerDay": "200000",
+      "tolerance": "$4M"
+    },
+    {
+      "name": "Engineering & design",
+      "data": "IP, Design Data",
+      "rev": "$0",
+      "revenue": "$0",
+      "rto": "8",
+      "criticality": "Critical",
+      "txPerDay": "100000",
+      "tolerance": "$10M"
+    },
+    {
+      "name": "Supply chain & procurement",
+      "data": "Confidential",
+      "rev": "$40B",
+      "revenue": "$40B",
+      "rto": "12",
+      "criticality": "High",
+      "txPerDay": "500000",
+      "tolerance": "$3M"
+    }
+  ],
+  "apps": [
+    {
+      "name": "PLM / design-data vault (CATIA/Teamcenter)",
+      "host": "application on-prem",
+      "data": "IP, CUI, Design Data",
+      "vendor": "Siemens",
+      "eol": "no",
+      "recovery": "8",
+      "txPerDay": "100000",
+      "valuePerDay": "$90M",
+      "processes": [
+        "Engineering & design",
+        "Commercial airplane production"
+      ]
+    },
+    {
+      "name": "Defense-program enclave",
+      "host": "application on-prem",
+      "data": "Classified, CUI, ITAR",
+      "vendor": "In-house",
+      "eol": "no",
+      "recovery": "6",
+      "txPerDay": "30000",
+      "valuePerDay": "$120M",
+      "processes": [
+        "Defense, space & security programs",
+        "Engineering & design"
+      ]
+    },
+    {
+      "name": "Factory OT / MES",
+      "host": "application on-prem",
+      "data": "CUI, Confidential, OT",
+      "vendor": "Rockwell",
+      "eol": "yes",
+      "recovery": "12",
+      "txPerDay": "80000",
+      "valuePerDay": "$70M",
+      "processes": [
+        "Commercial airplane production"
+      ]
+    },
+    {
+      "name": "ERP (SAP)",
+      "host": "application on-prem",
+      "data": "Financial, Confidential",
+      "vendor": "SAP",
+      "eol": "no",
+      "recovery": "12",
+      "txPerDay": "500000",
+      "valuePerDay": "$40M",
+      "processes": [
+        "Supply chain & procurement"
+      ]
+    },
+    {
+      "name": "Supplier collaboration portal",
+      "host": "internet-facing web",
+      "data": "Confidential",
+      "vendor": "In-house",
+      "eol": "no",
+      "recovery": "12",
+      "txPerDay": "200000",
+      "valuePerDay": "$14M",
+      "processes": [
+        "Supply chain & procurement",
+        "Global services & MRO"
+      ]
+    },
+    {
+      "name": "Fleet-services data platform",
+      "host": "application cloud",
+      "data": "Confidential, PII",
+      "vendor": "AWS",
+      "eol": "no",
+      "recovery": "12",
+      "txPerDay": "200000",
+      "valuePerDay": "$18M",
+      "processes": [
+        "Global services & MRO"
+      ]
+    }
+  ],
+  "risks": [
+    {
+      "title": "Design-IP theft (nation-state)",
+      "severity": "Critical",
+      "asset": "PLM / design-data vault (CATIA/Teamcenter)",
+      "status": "open",
+      "financial_exposure": "$140M"
+    },
+    {
+      "title": "Defense-program / ITAR data breach",
+      "severity": "Critical",
+      "asset": "Defense-program enclave",
+      "status": "open",
+      "financial_exposure": "$160M"
+    },
+    {
+      "title": "OT ransomware halting production",
+      "severity": "Critical",
+      "asset": "Factory OT / MES",
+      "status": "open",
+      "financial_exposure": "$95M"
+    },
+    {
+      "title": "Supplier-portal compromise",
+      "severity": "High",
+      "asset": "Supplier collaboration portal",
+      "status": "open",
+      "financial_exposure": "$30M"
+    },
+    {
+      "title": "ERP financial-data exposure",
+      "severity": "High",
+      "asset": "ERP (SAP)",
+      "status": "open",
+      "financial_exposure": "$25M"
+    }
+  ],
+  "initiatives": [
+    {
+      "name": "OT/IT segmentation (factory)",
+      "owner": "CISO",
+      "cost": "$34M",
+      "roi": "16×",
+      "status": "in progress",
+      "engagement": "gate"
+    },
+    {
+      "name": "CMMC L2 remediation program",
+      "owner": "CISO",
+      "cost": "$26M",
+      "roi": "10×",
+      "status": "in progress",
+      "engagement": "design"
+    },
+    {
+      "name": "Design-vault DLP & isolation",
+      "owner": "CISO",
+      "cost": "$19M",
+      "roi": "14×",
+      "status": "in progress",
+      "engagement": "gate"
+    },
+    {
+      "name": "Factory-OT patch & EOL retirement",
+      "owner": "CIO",
+      "cost": "$15M",
+      "roi": "9×",
+      "status": "planned",
+      "engagement": "design"
+    }
+  ],
+  "governance": {
+    "committee": "Audit Committee",
+    "cadence": "Quarterly",
+    "cisoReportsTo": "CIO",
+    "boardExpertise": "Yes",
+    "ermIntegrated": "Yes",
+    "ir": {
+      "tested": "Yes — tabletop within 12 months",
+      "lastTabletop": "2026-05-05",
+      "retainer": "Yes",
+      "ransomwarePolicy": "Board-approved policy"
+    }
+  },
+  "aiGovernance": {
+    "systems": 10,
+    "decisioning": "Piloting",
+    "framework": "NIST AI RMF",
+    "policy": "Drafted",
+    "euAiAct": "Not in scope",
+    "inventory": "Partially"
+  },
+  "strategicInitiatives": [
+    {
+      "name": "Digital-twin manufacturing",
+      "type": "Data / analytics initiative",
+      "valueUsd": 2000000000,
+      "horizon": "Next 12–24 months"
+    },
+    {
+      "name": "777X production ramp",
+      "type": "New digital product",
+      "valueUsd": 4000000000,
+      "horizon": "This year"
+    },
+    {
+      "name": "Defense-cloud (IL5) migration",
+      "type": "Cloud platform or migration",
+      "valueUsd": 1000000000,
+      "horizon": "Next 12–24 months"
+    }
+  ],
+  "growth": {
+    "pipelineUsd": 435000000000,
+    "reviewBeforeWks": "8",
+    "reviewNowWks": "4",
+    "dealsGated": "6",
+    "trustReviews": "12",
+    "certs": [
+      "CMMC L2",
+      "AS9100",
+      "ISO 27001"
+    ]
+  },
+  "compliance": {
+    "frameworksInScope": [
+      "CMMC 2.0",
+      "NIST 800-171",
+      "ITAR",
+      "AS9100",
+      "NIST CSF 2.0"
+    ]
+  }
+}

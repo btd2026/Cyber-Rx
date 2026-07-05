@@ -1,0 +1,297 @@
+{
+  "org_name": "UnitedHealth Group",
+  "org_id": "org_unitedhealth",
+  "industry": "Healthcare",
+  "regions": [
+    "US"
+  ],
+  "currency": "USD",
+  "financials": {
+    "revenue": 400300000000,
+    "operatingIncome": 32299999999.999996,
+    "netIncome": 14400000000,
+    "enterpriseValue": 374000000000,
+    "sharesOutstanding": 920000000
+  },
+  "appetite": 500000000,
+  "budget": 750000000,
+  "dataRecords": 152000000,
+  "principalRisks": {
+    "creditMarket": 15000000000,
+    "operational": 9000000000,
+    "thirdParty": 5000000000,
+    "compliance": 4000000000
+  },
+  "insurance": {
+    "limit": 200000000,
+    "premium": 12000000,
+    "retention": 25000000,
+    "renewal": "2026-10-01"
+  },
+  "processes": [
+    {
+      "name": "Claims processing & payment",
+      "data": "PHI, Financial",
+      "rev": "$200B",
+      "revenue": "$200B",
+      "rto": "4",
+      "criticality": "Critical",
+      "txPerDay": "12000000",
+      "tolerance": "$8M"
+    },
+    {
+      "name": "Pharmacy benefit management (OptumRx)",
+      "data": "PHI, PCI",
+      "rev": "$120B",
+      "revenue": "$120B",
+      "rto": "6",
+      "criticality": "Critical",
+      "txPerDay": "5000000",
+      "tolerance": "$5M"
+    },
+    {
+      "name": "Care delivery & clinical (Optum Health)",
+      "data": "PHI",
+      "rev": "$100B",
+      "revenue": "$100B",
+      "rto": "8",
+      "criticality": "Critical",
+      "txPerDay": "2000000",
+      "tolerance": "$3M"
+    },
+    {
+      "name": "Eligibility & enrollment",
+      "data": "PHI, PII",
+      "rev": "$40B",
+      "revenue": "$40B",
+      "rto": "12",
+      "criticality": "High",
+      "txPerDay": "900000",
+      "tolerance": "$1.5M"
+    },
+    {
+      "name": "Provider network payments",
+      "data": "Financial",
+      "rev": "$30B",
+      "revenue": "$30B",
+      "rto": "12",
+      "criticality": "High",
+      "txPerDay": "600000",
+      "tolerance": "$1M"
+    }
+  ],
+  "apps": [
+    {
+      "name": "Change Healthcare clearinghouse",
+      "host": "internet-facing",
+      "data": "PHI, Financial",
+      "vendor": "Optum / Change Healthcare",
+      "eol": "no",
+      "recovery": "48",
+      "txPerDay": "12000000",
+      "valuePerDay": "$120M",
+      "processes": [
+        "Claims processing & payment",
+        "Provider network payments"
+      ]
+    },
+    {
+      "name": "Claims adjudication DB",
+      "host": "database on-prem",
+      "data": "PHI, Financial",
+      "vendor": "Oracle",
+      "eol": "no",
+      "recovery": "24",
+      "txPerDay": "12000000",
+      "valuePerDay": "$90M",
+      "processes": [
+        "Claims processing & payment"
+      ]
+    },
+    {
+      "name": "OptumRx pharmacy platform",
+      "host": "application cloud",
+      "data": "PHI, PCI",
+      "vendor": "AWS",
+      "eol": "no",
+      "recovery": "12",
+      "txPerDay": "5000000",
+      "valuePerDay": "$60M",
+      "processes": [
+        "Pharmacy benefit management (OptumRx)"
+      ]
+    },
+    {
+      "name": "Member portal",
+      "host": "internet-facing web",
+      "data": "PHI, PII",
+      "vendor": "Azure",
+      "eol": "no",
+      "recovery": "8",
+      "txPerDay": "3000000",
+      "valuePerDay": "$18M",
+      "processes": [
+        "Eligibility & enrollment",
+        "Care delivery & clinical (Optum Health)"
+      ]
+    },
+    {
+      "name": "EDI gateway",
+      "host": "internet-facing",
+      "data": "PHI",
+      "vendor": "IBM",
+      "eol": "yes",
+      "recovery": "24",
+      "txPerDay": "4000000",
+      "valuePerDay": "$22M",
+      "processes": [
+        "Claims processing & payment"
+      ]
+    },
+    {
+      "name": "Clinical data warehouse",
+      "host": "database on-prem",
+      "data": "PHI",
+      "vendor": "Snowflake",
+      "eol": "no",
+      "recovery": "36",
+      "txPerDay": "500000",
+      "valuePerDay": "$30M",
+      "processes": [
+        "Care delivery & clinical (Optum Health)"
+      ]
+    }
+  ],
+  "risks": [
+    {
+      "title": "Ransomware on claims clearinghouse",
+      "severity": "Critical",
+      "asset": "Change Healthcare clearinghouse",
+      "status": "open",
+      "financial_exposure": "$180M"
+    },
+    {
+      "title": "PHI exfiltration from claims database",
+      "severity": "Critical",
+      "asset": "Claims adjudication DB",
+      "status": "open",
+      "financial_exposure": "$95M"
+    },
+    {
+      "title": "Third-party breach via pharmacy cloud",
+      "severity": "High",
+      "asset": "OptumRx pharmacy platform",
+      "status": "open",
+      "financial_exposure": "$40M"
+    },
+    {
+      "title": "Credential stuffing on member portal",
+      "severity": "High",
+      "asset": "Member portal",
+      "status": "open",
+      "financial_exposure": "$25M"
+    },
+    {
+      "title": "Legacy EDI gateway exploit",
+      "severity": "High",
+      "asset": "EDI gateway",
+      "status": "open",
+      "financial_exposure": "$22M"
+    }
+  ],
+  "initiatives": [
+    {
+      "name": "Segment & isolate clearinghouse",
+      "owner": "CISO",
+      "cost": "$28M",
+      "roi": "22×",
+      "status": "in progress",
+      "engagement": "gate"
+    },
+    {
+      "name": "Zero-trust for PHI systems",
+      "owner": "CISO",
+      "cost": "$18M",
+      "roi": "15×",
+      "status": "in progress",
+      "engagement": "design"
+    },
+    {
+      "name": "Third-party risk program",
+      "owner": "CRO",
+      "cost": "$9M",
+      "roi": "8×",
+      "status": "planned",
+      "engagement": "design"
+    },
+    {
+      "name": "Immutable backup & rapid recovery",
+      "owner": "CIO",
+      "cost": "$14M",
+      "roi": "19×",
+      "status": "in progress",
+      "engagement": "gate"
+    }
+  ],
+  "governance": {
+    "committee": "Risk Committee",
+    "cadence": "Quarterly",
+    "cisoReportsTo": "CEO",
+    "boardExpertise": "Yes",
+    "ermIntegrated": "Yes",
+    "ir": {
+      "tested": "Yes — tabletop within 12 months",
+      "lastTabletop": "2026-02-15",
+      "retainer": "Yes",
+      "ransomwarePolicy": "Board-approved policy"
+    }
+  },
+  "aiGovernance": {
+    "systems": 20,
+    "decisioning": "Yes",
+    "framework": "NIST AI RMF",
+    "policy": "Board-approved",
+    "euAiAct": "Not in scope",
+    "inventory": "Yes — inventoried"
+  },
+  "strategicInitiatives": [
+    {
+      "name": "Optum AI clinical documentation",
+      "type": "AI product or feature",
+      "valueUsd": 2500000000,
+      "horizon": "This year"
+    },
+    {
+      "name": "Value-based care expansion",
+      "type": "Market / geographic expansion",
+      "valueUsd": 5000000000,
+      "horizon": "Next 12–24 months"
+    },
+    {
+      "name": "Change Healthcare re-platform",
+      "type": "Cloud platform or migration",
+      "valueUsd": 1200000000,
+      "horizon": "This year"
+    }
+  ],
+  "growth": {
+    "pipelineUsd": 8000000000,
+    "reviewBeforeWks": "6",
+    "reviewNowWks": "2",
+    "dealsGated": "14",
+    "trustReviews": "20",
+    "certs": [
+      "HITRUST",
+      "SOC 2 Type II",
+      "ISO 27001"
+    ]
+  },
+  "compliance": {
+    "frameworksInScope": [
+      "HIPAA Security Rule",
+      "HITRUST CSF",
+      "NIST CSF 2.0",
+      "SOC 2"
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+name,revenue,rto,data,criticality,transactions_per_day,downtime_tolerance
+Claims processing & payment,$200B,4,"PHI, Financial",Critical,12000000,$8M
+Pharmacy benefit management (OptumRx),$120B,6,"PHI, PCI",Critical,5000000,$5M
+Care delivery & clinical (Optum Health),$100B,8,PHI,Critical,2000000,$3M
+Eligibility & enrollment,$40B,12,"PHI, PII",High,900000,$1.5M
+Provider network payments,$30B,12,Financial,High,600000,$1M

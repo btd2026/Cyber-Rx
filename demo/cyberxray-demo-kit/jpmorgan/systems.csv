@@ -1,0 +1,7 @@
+name,hosting,data,vendor,eol,recovery,transactions_per_day,value_per_day
+Fedwire / RTGS payment gateway,internet-facing,"Financial, PII",In-house,no,2,10000000,$300M
+Trade settlement engine,application on-prem,"Financial, MNPI",In-house,no,2,8000000,$260M
+Core deposit ledger,database on-prem,"PII, Financial",IBM,no,4,60000000,$180M
+Online & mobile banking,internet-facing web,"PII, PCI, Financial",In-house,no,4,50000000,$120M
+Card authorization switch,internet-facing,"PCI, Financial",Visa/MC,no,2,40000000,$140M
+Wealth advisory platform,application cloud,"PII, Financial",AWS,no,8,2000000,$20M

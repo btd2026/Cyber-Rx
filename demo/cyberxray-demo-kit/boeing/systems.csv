@@ -1,0 +1,7 @@
+name,hosting,data,vendor,eol,recovery,transactions_per_day,value_per_day
+PLM / design-data vault (CATIA/Teamcenter),application on-prem,"IP, CUI, Design Data",Siemens,no,8,100000,$90M
+Defense-program enclave,application on-prem,"Classified, CUI, ITAR",In-house,no,6,30000,$120M
+Factory OT / MES,application on-prem,"CUI, Confidential, OT",Rockwell,yes,12,80000,$70M
+ERP (SAP),application on-prem,"Financial, Confidential",SAP,no,12,500000,$40M
+Supplier collaboration portal,internet-facing web,Confidential,In-house,no,12,200000,$14M
+Fleet-services data platform,application cloud,"Confidential, PII",AWS,no,12,200000,$18M

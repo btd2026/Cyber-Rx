@@ -1,0 +1,6 @@
+title,severity,asset,exposure,status
+Nation-state intrusion into identity plane,Critical,Entra ID identity plane,$220M,open
+Code-signing key compromise,Critical,Code-signing infrastructure,$160M,open
+Source-code theft / supply-chain implant,Critical,Source-code repositories (GitHub),$110M,open
+Azure control-plane privilege escalation,High,Azure control plane,$70M,open
+Support-system token abuse,High,Customer support case system,$18M,open

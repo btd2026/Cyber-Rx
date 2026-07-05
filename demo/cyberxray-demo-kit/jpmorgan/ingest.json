@@ -1,0 +1,299 @@
+{
+  "org_name": "JPMorgan Chase & Co.",
+  "org_id": "org_jpmorgan",
+  "industry": "Financial services",
+  "regions": [
+    "US",
+    "EU",
+    "UK"
+  ],
+  "currency": "USD",
+  "financials": {
+    "revenue": 177600000000,
+    "operatingIncome": 61000000000,
+    "netIncome": 58500000000,
+    "enterpriseValue": 670000000000,
+    "sharesOutstanding": 2860000000
+  },
+  "appetite": 750000000,
+  "budget": 1500000000,
+  "dataRecords": 80000000,
+  "principalRisks": {
+    "creditMarket": 210000000000,
+    "operational": 45000000000,
+    "thirdParty": 18000000000,
+    "compliance": 25000000000
+  },
+  "insurance": {
+    "limit": 400000000,
+    "premium": 20000000,
+    "retention": 75000000,
+    "renewal": "2026-12-01"
+  },
+  "processes": [
+    {
+      "name": "Wholesale payments & wire",
+      "data": "Financial, PII",
+      "rev": "$45B",
+      "revenue": "$45B",
+      "rto": "1",
+      "criticality": "Critical",
+      "txPerDay": "10000000",
+      "tolerance": "$25M"
+    },
+    {
+      "name": "Markets — trading & settlement",
+      "data": "Financial, MNPI",
+      "rev": "$50B",
+      "revenue": "$50B",
+      "rto": "2",
+      "criticality": "Critical",
+      "txPerDay": "8000000",
+      "tolerance": "$30M"
+    },
+    {
+      "name": "Consumer & community banking",
+      "data": "PII, PCI, Financial",
+      "rev": "$55B",
+      "revenue": "$55B",
+      "rto": "4",
+      "criticality": "Critical",
+      "txPerDay": "60000000",
+      "tolerance": "$12M"
+    },
+    {
+      "name": "Asset & wealth management",
+      "data": "PII, Financial",
+      "rev": "$20B",
+      "revenue": "$20B",
+      "rto": "8",
+      "criticality": "High",
+      "txPerDay": "2000000",
+      "tolerance": "$4M"
+    },
+    {
+      "name": "Card & merchant services",
+      "data": "PCI, Financial",
+      "rev": "$8B",
+      "revenue": "$8B",
+      "rto": "6",
+      "criticality": "High",
+      "txPerDay": "40000000",
+      "tolerance": "$6M"
+    }
+  ],
+  "apps": [
+    {
+      "name": "Fedwire / RTGS payment gateway",
+      "host": "internet-facing",
+      "data": "Financial, PII",
+      "vendor": "In-house",
+      "eol": "no",
+      "recovery": "2",
+      "txPerDay": "10000000",
+      "valuePerDay": "$300M",
+      "processes": [
+        "Wholesale payments & wire"
+      ]
+    },
+    {
+      "name": "Trade settlement engine",
+      "host": "application on-prem",
+      "data": "Financial, MNPI",
+      "vendor": "In-house",
+      "eol": "no",
+      "recovery": "2",
+      "txPerDay": "8000000",
+      "valuePerDay": "$260M",
+      "processes": [
+        "Markets — trading & settlement"
+      ]
+    },
+    {
+      "name": "Core deposit ledger",
+      "host": "database on-prem",
+      "data": "PII, Financial",
+      "vendor": "IBM",
+      "eol": "no",
+      "recovery": "4",
+      "txPerDay": "60000000",
+      "valuePerDay": "$180M",
+      "processes": [
+        "Consumer & community banking"
+      ]
+    },
+    {
+      "name": "Online & mobile banking",
+      "host": "internet-facing web",
+      "data": "PII, PCI, Financial",
+      "vendor": "In-house",
+      "eol": "no",
+      "recovery": "4",
+      "txPerDay": "50000000",
+      "valuePerDay": "$120M",
+      "processes": [
+        "Consumer & community banking"
+      ]
+    },
+    {
+      "name": "Card authorization switch",
+      "host": "internet-facing",
+      "data": "PCI, Financial",
+      "vendor": "Visa/MC",
+      "eol": "no",
+      "recovery": "2",
+      "txPerDay": "40000000",
+      "valuePerDay": "$140M",
+      "processes": [
+        "Card & merchant services"
+      ]
+    },
+    {
+      "name": "Wealth advisory platform",
+      "host": "application cloud",
+      "data": "PII, Financial",
+      "vendor": "AWS",
+      "eol": "no",
+      "recovery": "8",
+      "txPerDay": "2000000",
+      "valuePerDay": "$20M",
+      "processes": [
+        "Asset & wealth management"
+      ]
+    }
+  ],
+  "risks": [
+    {
+      "title": "Wire-fraud / payment-rail compromise",
+      "severity": "Critical",
+      "asset": "Fedwire / RTGS payment gateway",
+      "status": "open",
+      "financial_exposure": "$260M"
+    },
+    {
+      "title": "Settlement engine outage / manipulation",
+      "severity": "Critical",
+      "asset": "Trade settlement engine",
+      "status": "open",
+      "financial_exposure": "$210M"
+    },
+    {
+      "title": "Core-ledger data breach",
+      "severity": "Critical",
+      "asset": "Core deposit ledger",
+      "status": "open",
+      "financial_exposure": "$140M"
+    },
+    {
+      "title": "Cardholder-data (PCI) exfiltration",
+      "severity": "High",
+      "asset": "Card authorization switch",
+      "status": "open",
+      "financial_exposure": "$85M"
+    },
+    {
+      "title": "Account-takeover on mobile banking",
+      "severity": "High",
+      "asset": "Online & mobile banking",
+      "status": "open",
+      "financial_exposure": "$55M"
+    }
+  ],
+  "initiatives": [
+    {
+      "name": "Payments fraud-detection uplift",
+      "owner": "CISO",
+      "cost": "$60M",
+      "roi": "20×",
+      "status": "in progress",
+      "engagement": "gate"
+    },
+    {
+      "name": "Privileged-access rollout (markets)",
+      "owner": "CISO",
+      "cost": "$32M",
+      "roi": "16×",
+      "status": "in progress",
+      "engagement": "gate"
+    },
+    {
+      "name": "DORA operational-resilience program",
+      "owner": "CRO",
+      "cost": "$40M",
+      "roi": "9×",
+      "status": "in progress",
+      "engagement": "design"
+    },
+    {
+      "name": "Quantum-safe crypto pilot",
+      "owner": "CISO",
+      "cost": "$15M",
+      "roi": "6×",
+      "status": "planned",
+      "engagement": "design"
+    }
+  ],
+  "governance": {
+    "committee": "Risk Committee",
+    "cadence": "Every board meeting",
+    "cisoReportsTo": "CRO / Chief Risk",
+    "boardExpertise": "Yes",
+    "ermIntegrated": "Yes",
+    "ir": {
+      "tested": "Yes — tabletop within 12 months",
+      "lastTabletop": "2026-03-20",
+      "retainer": "Yes",
+      "ransomwarePolicy": "Board-approved policy"
+    }
+  },
+  "aiGovernance": {
+    "systems": 60,
+    "decisioning": "Yes",
+    "framework": "NIST AI RMF",
+    "policy": "Board-approved",
+    "euAiAct": "Yes — limited-risk",
+    "inventory": "Yes — inventoried"
+  },
+  "strategicInitiatives": [
+    {
+      "name": "AI fraud & underwriting models",
+      "type": "AI product or feature",
+      "valueUsd": 4000000000,
+      "horizon": "This year"
+    },
+    {
+      "name": "Core-banking cloud migration",
+      "type": "Cloud platform or migration",
+      "valueUsd": 3000000000,
+      "horizon": "Next 12–24 months"
+    },
+    {
+      "name": "UK/EU digital-bank expansion",
+      "type": "Market / geographic expansion",
+      "valueUsd": 2000000000,
+      "horizon": "Next 12–24 months"
+    }
+  ],
+  "growth": {
+    "pipelineUsd": 12000000000,
+    "reviewBeforeWks": "5",
+    "reviewNowWks": "2",
+    "dealsGated": "22",
+    "trustReviews": "35",
+    "certs": [
+      "SOC 2 Type II",
+      "ISO 27001",
+      "PCI DSS"
+    ]
+  },
+  "compliance": {
+    "frameworksInScope": [
+      "NIST CSF 2.0",
+      "PCI DSS",
+      "SOC 2",
+      "DORA",
+      "GLBA",
+      "SEC Cyber Disclosure"
+    ]
+  }
+}

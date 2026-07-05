@@ -1,0 +1,5 @@
+name,owner,cost,roi,status,engagement
+Segment & isolate clearinghouse,CISO,$28M,22×,in progress,gate
+Zero-trust for PHI systems,CISO,$18M,15×,in progress,design
+Third-party risk program,CRO,$9M,8×,planned,design
+Immutable backup & rapid recovery,CIO,$14M,19×,in progress,gate

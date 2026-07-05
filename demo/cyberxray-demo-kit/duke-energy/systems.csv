@@ -1,0 +1,7 @@
+name,hosting,data,vendor,eol,recovery,transactions_per_day,value_per_day
+SCADA / EMS grid control,application on-prem,"OT, CUI, Critical Infrastructure",GE / OSIsoft,no,2,1000000,$140M
+Generation plant DCS/OT,application on-prem,"OT, CUI, Confidential",Emerson,no,2,200000,$90M
+DERMS / grid-edge platform,application cloud,"OT, Confidential",Schneider,no,4,100000,$30M
+AMI meter head-end,internet-facing,"PII, OT",Itron,no,8,8400000,$25M
+Customer billing (CIS),application cloud,"PII, Financial",SAP,no,8,8400000,$18M
+Gas SCADA,application on-prem,"OT, CUI, Critical Infrastructure",Honeywell,yes,2,500000,$60M

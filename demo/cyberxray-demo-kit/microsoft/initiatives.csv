@@ -1,0 +1,5 @@
+name,owner,cost,roi,status,engagement
+Secure Future Initiative — identity hardening,CISO,$120M,18×,in progress,gate
+Signing-key HSM & isolation,CISO,$45M,14×,in progress,gate
+Supply-chain integrity (SLSA) rollout,CTO,$30M,11×,in progress,design
+Tenant isolation & token-theft defense,CISO,$28M,13×,planned,design

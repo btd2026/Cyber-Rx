@@ -1,0 +1,6 @@
+title,severity,asset,exposure,status
+Grid-control (SCADA) compromise / blackout,Critical,SCADA / EMS grid control,$200M,open
+Generation-plant OT sabotage,Critical,Generation plant DCS/OT,$110M,open
+Gas-SCADA safety incident,Critical,Gas SCADA,$90M,open
+AMI / customer-data breach,High,AMI meter head-end,$25M,open
+Billing-system fraud / outage,High,Customer billing (CIS),$18M,open

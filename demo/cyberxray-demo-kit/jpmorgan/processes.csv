@@ -1,0 +1,6 @@
+name,revenue,rto,data,criticality,transactions_per_day,downtime_tolerance
+Wholesale payments & wire,$45B,1,"Financial, PII",Critical,10000000,$25M
+Markets — trading & settlement,$50B,2,"Financial, MNPI",Critical,8000000,$30M
+Consumer & community banking,$55B,4,"PII, PCI, Financial",Critical,60000000,$12M
+Asset & wealth management,$20B,8,"PII, Financial",High,2000000,$4M
+Card & merchant services,$8B,6,"PCI, Financial",High,40000000,$6M

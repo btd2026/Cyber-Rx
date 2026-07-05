@@ -1,0 +1,302 @@
+{
+  "org_name": "Microsoft Corporation",
+  "org_id": "org_microsoft",
+  "industry": "Technology / SaaS",
+  "regions": [
+    "US",
+    "EU",
+    "Global"
+  ],
+  "currency": "USD",
+  "financials": {
+    "revenue": 245100000000,
+    "operatingIncome": 109400000000,
+    "netIncome": 88100000000,
+    "enterpriseValue": 3000000000000,
+    "sharesOutstanding": 7430000000
+  },
+  "appetite": 1000000000,
+  "budget": 2000000000,
+  "dataRecords": 1400000000,
+  "principalRisks": {
+    "creditMarket": 20000000000,
+    "operational": 14000000000,
+    "thirdParty": 8000000000,
+    "compliance": 10000000000
+  },
+  "insurance": {
+    "limit": 500000000,
+    "premium": 25000000,
+    "retention": 100000000,
+    "renewal": "2026-09-01"
+  },
+  "processes": [
+    {
+      "name": "Azure cloud platform operations",
+      "data": "PII, Confidential, IP",
+      "rev": "$110B",
+      "revenue": "$110B",
+      "rto": "2",
+      "criticality": "Critical",
+      "txPerDay": "50000000",
+      "tolerance": "$20M"
+    },
+    {
+      "name": "M365 productivity & identity",
+      "data": "PII, Confidential",
+      "rev": "$80B",
+      "revenue": "$80B",
+      "rto": "2",
+      "criticality": "Critical",
+      "txPerDay": "40000000",
+      "tolerance": "$15M"
+    },
+    {
+      "name": "Developer platform (GitHub)",
+      "data": "IP, Source Code",
+      "rev": "$20B",
+      "revenue": "$20B",
+      "rto": "4",
+      "criticality": "Critical",
+      "txPerDay": "8000000",
+      "tolerance": "$6M"
+    },
+    {
+      "name": "Gaming & consumer (Xbox)",
+      "data": "PII, PCI",
+      "rev": "$22B",
+      "revenue": "$22B",
+      "rto": "8",
+      "criticality": "High",
+      "txPerDay": "5000000",
+      "tolerance": "$3M"
+    },
+    {
+      "name": "Commercial licensing & billing",
+      "data": "Financial, PII",
+      "rev": "$13B",
+      "revenue": "$13B",
+      "rto": "12",
+      "criticality": "High",
+      "txPerDay": "1000000",
+      "tolerance": "$2M"
+    }
+  ],
+  "apps": [
+    {
+      "name": "Entra ID identity plane",
+      "host": "internet-facing",
+      "data": "PII, Credentials",
+      "vendor": "Microsoft",
+      "eol": "no",
+      "recovery": "2",
+      "txPerDay": "80000000",
+      "valuePerDay": "$200M",
+      "processes": [
+        "M365 productivity & identity",
+        "Azure cloud platform operations"
+      ]
+    },
+    {
+      "name": "Code-signing infrastructure",
+      "host": "application on-prem",
+      "data": "IP, CUI, Signing Keys",
+      "vendor": "Microsoft",
+      "eol": "no",
+      "recovery": "4",
+      "txPerDay": "100000",
+      "valuePerDay": "$150M",
+      "processes": [
+        "Developer platform (GitHub)",
+        "Azure cloud platform operations"
+      ]
+    },
+    {
+      "name": "Source-code repositories (GitHub)",
+      "host": "internet-facing",
+      "data": "IP, Source Code",
+      "vendor": "GitHub",
+      "eol": "no",
+      "recovery": "4",
+      "txPerDay": "8000000",
+      "valuePerDay": "$120M",
+      "processes": [
+        "Developer platform (GitHub)"
+      ]
+    },
+    {
+      "name": "Azure control plane",
+      "host": "internet-facing",
+      "data": "Confidential, PII",
+      "vendor": "Microsoft",
+      "eol": "no",
+      "recovery": "2",
+      "txPerDay": "50000000",
+      "valuePerDay": "$180M",
+      "processes": [
+        "Azure cloud platform operations"
+      ]
+    },
+    {
+      "name": "Customer support case system",
+      "host": "application cloud",
+      "data": "PII, Confidential",
+      "vendor": "Salesforce",
+      "eol": "no",
+      "recovery": "12",
+      "txPerDay": "2000000",
+      "valuePerDay": "$14M",
+      "processes": [
+        "Commercial licensing & billing"
+      ]
+    },
+    {
+      "name": "Xbox Live services",
+      "host": "internet-facing web",
+      "data": "PII, PCI",
+      "vendor": "Microsoft",
+      "eol": "no",
+      "recovery": "8",
+      "txPerDay": "5000000",
+      "valuePerDay": "$12M",
+      "processes": [
+        "Gaming & consumer (Xbox)"
+      ]
+    }
+  ],
+  "risks": [
+    {
+      "title": "Nation-state intrusion into identity plane",
+      "severity": "Critical",
+      "asset": "Entra ID identity plane",
+      "status": "open",
+      "financial_exposure": "$220M"
+    },
+    {
+      "title": "Code-signing key compromise",
+      "severity": "Critical",
+      "asset": "Code-signing infrastructure",
+      "status": "open",
+      "financial_exposure": "$160M"
+    },
+    {
+      "title": "Source-code theft / supply-chain implant",
+      "severity": "Critical",
+      "asset": "Source-code repositories (GitHub)",
+      "status": "open",
+      "financial_exposure": "$110M"
+    },
+    {
+      "title": "Azure control-plane privilege escalation",
+      "severity": "High",
+      "asset": "Azure control plane",
+      "status": "open",
+      "financial_exposure": "$70M"
+    },
+    {
+      "title": "Support-system token abuse",
+      "severity": "High",
+      "asset": "Customer support case system",
+      "status": "open",
+      "financial_exposure": "$18M"
+    }
+  ],
+  "initiatives": [
+    {
+      "name": "Secure Future Initiative — identity hardening",
+      "owner": "CISO",
+      "cost": "$120M",
+      "roi": "18×",
+      "status": "in progress",
+      "engagement": "gate"
+    },
+    {
+      "name": "Signing-key HSM & isolation",
+      "owner": "CISO",
+      "cost": "$45M",
+      "roi": "14×",
+      "status": "in progress",
+      "engagement": "gate"
+    },
+    {
+      "name": "Supply-chain integrity (SLSA) rollout",
+      "owner": "CTO",
+      "cost": "$30M",
+      "roi": "11×",
+      "status": "in progress",
+      "engagement": "design"
+    },
+    {
+      "name": "Tenant isolation & token-theft defense",
+      "owner": "CISO",
+      "cost": "$28M",
+      "roi": "13×",
+      "status": "planned",
+      "engagement": "design"
+    }
+  ],
+  "governance": {
+    "committee": "Audit Committee",
+    "cadence": "Every board meeting",
+    "cisoReportsTo": "CEO",
+    "boardExpertise": "Yes",
+    "ermIntegrated": "Yes",
+    "ir": {
+      "tested": "Yes — tabletop within 12 months",
+      "lastTabletop": "2026-04-10",
+      "retainer": "Yes",
+      "ransomwarePolicy": "Board-approved policy"
+    }
+  },
+  "aiGovernance": {
+    "systems": 120,
+    "decisioning": "Yes",
+    "framework": "Both",
+    "policy": "Board-approved",
+    "euAiAct": "Yes — high-risk system",
+    "inventory": "Yes — inventoried"
+  },
+  "strategicInitiatives": [
+    {
+      "name": "Copilot enterprise expansion",
+      "type": "AI product or feature",
+      "valueUsd": 10000000000,
+      "horizon": "This year"
+    },
+    {
+      "name": "Sovereign cloud (EU) buildout",
+      "type": "Market / geographic expansion",
+      "valueUsd": 6000000000,
+      "horizon": "Next 12–24 months"
+    },
+    {
+      "name": "Activision integration",
+      "type": "Acquisition / M&A",
+      "valueUsd": 3000000000,
+      "horizon": "This year"
+    }
+  ],
+  "growth": {
+    "pipelineUsd": 40000000000,
+    "reviewBeforeWks": "4",
+    "reviewNowWks": "1",
+    "dealsGated": "30",
+    "trustReviews": "60",
+    "certs": [
+      "SOC 2 Type II",
+      "ISO 27001",
+      "FedRAMP High",
+      "ISO 42001"
+    ]
+  },
+  "compliance": {
+    "frameworksInScope": [
+      "NIST CSF 2.0",
+      "ISO 27001",
+      "SOC 2",
+      "FedRAMP",
+      "EU AI Act",
+      "ISO 42001"
+    ]
+  }
+}

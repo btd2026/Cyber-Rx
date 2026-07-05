@@ -1,0 +1,7 @@
+name,hosting,data,vendor,eol,recovery,transactions_per_day,value_per_day
+Change Healthcare clearinghouse,internet-facing,"PHI, Financial",Optum / Change Healthcare,no,48,12000000,$120M
+Claims adjudication DB,database on-prem,"PHI, Financial",Oracle,no,24,12000000,$90M
+OptumRx pharmacy platform,application cloud,"PHI, PCI",AWS,no,12,5000000,$60M
+Member portal,internet-facing web,"PHI, PII",Azure,no,8,3000000,$18M
+EDI gateway,internet-facing,PHI,IBM,yes,24,4000000,$22M
+Clinical data warehouse,database on-prem,PHI,Snowflake,no,36,500000,$30M

@@ -1,0 +1,6 @@
+title,severity,asset,exposure,status
+Wire-fraud / payment-rail compromise,Critical,Fedwire / RTGS payment gateway,$260M,open
+Settlement engine outage / manipulation,Critical,Trade settlement engine,$210M,open
+Core-ledger data breach,Critical,Core deposit ledger,$140M,open
+Cardholder-data (PCI) exfiltration,High,Card authorization switch,$85M,open
+Account-takeover on mobile banking,High,Online & mobile banking,$55M,open

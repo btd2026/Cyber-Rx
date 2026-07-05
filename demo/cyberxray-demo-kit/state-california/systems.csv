@@ -1,0 +1,7 @@
+name,hosting,data,vendor,eol,recovery,transactions_per_day,value_per_day
+Benefits eligibility system (CalSAWS),internet-facing web,"PII, PHI",Accenture,no,12,8000000,$30M
+Tax filing & records (FTB),internet-facing,"PII, Financial",In-house,no,12,3000000,$40M
+Unemployment claims platform (EDD),internet-facing web,"PII, Financial",Deloitte,no,8,5000000,$25M
+DMV records system,application on-prem,PII,In-house,yes,24,2000000,$12M
+Statewide 911 / dispatch,application on-prem,"PII, Confidential",Motorola,no,2,1000000,$20M
+Legacy COBOL benefits mainframe,application on-prem,"PII, Financial",IBM,yes,48,4000000,$15M
