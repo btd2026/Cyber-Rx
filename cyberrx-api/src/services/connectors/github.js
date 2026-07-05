@@ -8,6 +8,11 @@
  *                           GET /orgs/{org}/code-scanning/alerts?state=open
  *  - dependabot_critical  — open CRITICAL Dependabot (SCA) alerts across the org:
  *                           GET /orgs/{org}/dependabot/alerts?state=open&severity=critical
+ *  - changes_merged_wk    — pull requests merged org-wide in the last 7 days (a
+ *                           DORA-style delivery-velocity / change-throughput proxy):
+ *                           GET /search/issues?q=org:{org} type:pr is:merged merged:>=DATE
+ *  - changes_in_review    — open pull requests org-wide (work-in-progress / review
+ *                           backlog): GET /search/issues?q=org:{org} type:pr state:open
  *
  * Both are documented GitHub REST endpoints (GitHub Advanced Security /
  * Dependabot). Counts are obtained by paging the list (capped) since GitHub
@@ -22,6 +27,15 @@ const { http, jsonOrThrow, nowIso } = require('./http');
 const api = (c) => String(c.apiUrl || 'https://api.github.com').replace(/\/+$/, '');
 function hdr(c) {
   return { Authorization: `Bearer ${c.token}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
+}
+
+// Org-wide count via the Search API — one call, returns total_count. Used for
+// change-throughput (velocity) signals that would otherwise need a per-repo fan-out.
+async function searchCount(creds, q) {
+  const r = await http(`${api(creds)}/search/issues?q=${encodeURIComponent(q)}&per_page=1`, { headers: hdr(creds) });
+  const j = await jsonOrThrow(r, 'GitHub');
+  const n = Number(j && j.total_count);
+  return isFinite(n) ? n : 0;
 }
 
 // Page the list endpoint and count items (capped so a huge org can't hang us).
@@ -57,13 +71,24 @@ async function fetchSignals(creds) {
     const db = await countList(creds, `/orgs/${org}/dependabot/alerts?state=open&severity=critical`);
     signals.push({ key: 'dependabot_critical', value: db, asOf: nowIso(), raw: { severity: 'critical', state: 'open' } });
   } catch (e) { /* Dependabot may be disabled for the org */ }
-  if (!signals.length) throw new Error('Authenticated, but neither code-scanning nor Dependabot alerts were readable — enable GitHub Advanced Security / Dependabot and grant the security_events scope.');
+  // Delivery velocity (DORA-style change throughput), org-wide, one Search call each.
+  // Best-effort: if search over the org's repos isn't authorized, the signal is omitted.
+  try {
+    const since = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
+    const merged = await searchCount(creds, `org:${creds.org} type:pr is:merged merged:>=${since}`);
+    signals.push({ key: 'changes_merged_wk', value: merged, asOf: nowIso(), raw: { window: '7d', since } });
+  } catch (e) { /* search not authorized for the org's repos */ }
+  try {
+    const inReview = await searchCount(creds, `org:${creds.org} type:pr state:open`);
+    signals.push({ key: 'changes_in_review', value: inReview, asOf: nowIso(), raw: { state: 'open' } });
+  } catch (e) { /* search not authorized for the org's repos */ }
+  if (!signals.length) throw new Error('Authenticated, but no signals were readable — enable GitHub Advanced Security / Dependabot (security_events) or grant repo scope for delivery-velocity search.');
   return { signals, meta: { vendor: 'GitHub', org: creds.org } };
 }
 
 module.exports = {
   key: 'github', label: 'GitHub', vendor: 'GitHub', category: 'Product Security (DevSecOps)',
-  signals: ['code_scanning_open', 'dependabot_critical'],
+  signals: ['code_scanning_open', 'dependabot_critical', 'changes_merged_wk', 'changes_in_review'],
   scopes: ['security_events', 'repo (private repos)'],
   fields: [
     { key: 'org', label: 'GitHub organization' },

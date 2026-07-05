@@ -1,7 +1,9 @@
 {
   "signals": [
     { "key": "code_scanning_open", "value": 7, "asOf": "2026-06-30T12:00:00Z", "raw": { "state": "open", "tool": "CodeQL" } },
-    { "key": "dependabot_critical", "value": 2, "asOf": "2026-06-30T12:00:00Z", "raw": { "severity": "critical", "state": "open" } }
+    { "key": "dependabot_critical", "value": 2, "asOf": "2026-06-30T12:00:00Z", "raw": { "severity": "critical", "state": "open" } },
+    { "key": "changes_merged_wk", "value": 42, "asOf": "2026-06-30T12:00:00Z", "raw": { "window": "7d", "since": "2026-06-23" } },
+    { "key": "changes_in_review", "value": 11, "asOf": "2026-06-30T12:00:00Z", "raw": { "state": "open" } }
   ],
   "meta": { "vendor": "GitHub", "org": "demo-org" }
 }
