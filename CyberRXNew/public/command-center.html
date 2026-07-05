@@ -225,7 +225,7 @@ function tabSummary(){
   var cards=healthCards();
   var top=roleRisks().map(function(r){return {r:r,s:objScore(objById(r.obj))||60};}).sort(function(a,b){return a.s-b.s;}).slice(0,3);
   var decs=roleDecisions();
-  return '<div class="hgrid">'+cards.map(function(c){return '<div class="hcard" onclick="setTab(\''+c.tab+'\')"><div class="hicon">'+c.icon+'</div><div class="htitle">'+esc(c.title)+'</div><div class="hstatus" style="color:var(--'+c.tone+')">'+esc(c.status)+'</div></div>';}).join('')+'</div>'+
+  return '<div class="hgrid">'+cards.map(function(c){return '<div class="hcard" onclick="setTab(\''+c.tab+'\')"><div class="hicon">'+(ICONS[c.icon]||'')+'</div><div class="htitle">'+esc(c.title)+'</div><div class="hstatus" style="color:var(--'+c.tone+')">'+esc(c.status)+'</div></div>';}).join('')+'</div>'+
     '<div class="sec-h">What needs attention</div>'+
     '<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(340px,1fr))">'+
     '<div class="card"><div class="ck">Top risks to your objectives</div><div style="margin-top:8px">'+(top.length?top.map(function(t){return '<div class="action click" onclick="drillRisk(\''+t.r.obj+'|'+encodeURIComponent(t.r.name)+'\')"><div class="an" style="background:'+bandColor(t.s)+'">!</div><div><b>'+esc(t.r.name)+'</b><div class="mini">'+esc(t.r.impact)+'</div></div></div>';}).join(''):'<div class="cn">No cyber blockers on your objectives right now.</div>')+'</div></div>'+
@@ -245,14 +245,24 @@ function healthCards(){
   else{var f=financialScore();finS=f>=75?'Within tolerance':'Watch';finT=f>=75?'good':'warn';}
   var decN=roleDecisions().length+((e.tail_within===false)?1:0);
   return [
-    {icon:'◎',title:'Strategic Objectives',status:onTrack+' of '+objs.length+' on track',tone:(objs.length&&onTrack>=Math.ceil(objs.length*0.6))?'good':'warn',tab:'objectives'},
-    {icon:'✦',title:'Innovation Readiness',status:ai>=75?'Ready to launch':ai>=50?'In progress':'Early stage',tone:ai>=75?'good':'warn',tab:'opportunities'},
-    {icon:'♥',title:'Customer Trust',status:ct>=80?'Strong':ct>=65?'Stable':ct>=50?'Watch':'At risk',tone:ct>=65?'good':'warn',tab:'performance'},
-    {icon:'❖',title:'Operational Resilience',status:weak===0?'Strong':(weak+' area'+(weak>1?'s':'')+' to watch'),tone:weak===0?'good':'warn',tab:'resilience'},
-    {icon:'$',title:'Financial Exposure',status:finS,tone:finT,tab:'financial'},
-    {icon:'✔',title:'Decisions Required',status:decN>0?(decN+' need'+(decN===1?'s':'')+' you'):'None pending',tone:decN>0?'warn':'good',tab:'decisions'}
+    {icon:'target',title:'Strategic Objectives',status:onTrack+' of '+objs.length+' on track',tone:(objs.length&&onTrack>=Math.ceil(objs.length*0.6))?'good':'warn',tab:'objectives'},
+    {icon:'spark',title:'Innovation Readiness',status:ai>=75?'Ready to launch':ai>=50?'In progress':'Early stage',tone:ai>=75?'good':'warn',tab:'opportunities'},
+    {icon:'heart',title:'Customer Trust',status:ct>=80?'Strong':ct>=65?'Stable':ct>=50?'Watch':'At risk',tone:ct>=65?'good':'warn',tab:'performance'},
+    {icon:'shield',title:'Operational Resilience',status:weak===0?'Strong':(weak+' area'+(weak>1?'s':'')+' to watch'),tone:weak===0?'good':'warn',tab:'resilience'},
+    {icon:'dollar',title:'Financial Exposure',status:finS,tone:finT,tab:'financial'},
+    {icon:'check',title:'Decisions Required',status:decN>0?(decN+' need'+(decN===1?'s':'')+' you'):'None pending',tone:decN>0?'warn':'good',tab:'decisions'}
   ];
 }
+/* Inline SVG icon set for the Business Health board — filled/stroked, inherit the
+   gold accent via currentColor. Self-contained (no external requests). */
+var ICONS={
+  target:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/></svg>',
+  spark:'<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2 5.8L20 9.6l-4.8 3.4L17 19 12 15.5 7 19l1.8-6L4 9.6l6-1.8z"/></svg>',
+  heart:'<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21S3.6 15.4 3.6 9.4C3.6 6.4 5.8 4.5 8.3 4.5c1.7 0 3 .9 3.7 2.1.7-1.2 2-2.1 3.7-2.1 2.5 0 4.7 1.9 4.7 4.9 0 6-8.4 11.6-8.4 11.6z"/></svg>',
+  shield:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l7 3v5.2c0 4.4-3 8-7 9.8-4-1.8-7-5.4-7-9.8V6z"/></svg>',
+  dollar:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8v18.4"/><path d="M16.2 6.6C16.2 4.9 14.3 3.8 12 3.8S7.8 4.9 7.8 6.6s1.9 2.9 4.2 2.9 4.2 1.2 4.2 2.9-1.9 2.9-4.2 2.9-4.2-1.2-4.2-2.9"/></svg>',
+  check:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.2l2.4 2.4 4.6-4.8"/></svg>'
+};
 function tabObjectives(){
   return '<div class="cn" style="margin-bottom:12px">The strategic objectives'+(enterpriseRole()?' across the enterprise you oversee':' you own or support')+' — each with its health, the <b>$ at risk</b>, the cyber blockers threatening it, and <b>your specific contribution</b>.</div>'+
     roleObjectives().map(function(o){var s=objScore(o);var risks=pack().risks.filter(function(r){return r.obj===o.id;});var rel=objRelation(o,ROLE);var ar=objAtRisk(o);
