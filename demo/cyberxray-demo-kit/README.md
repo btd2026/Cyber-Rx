@@ -37,6 +37,7 @@ API_BASE=http://localhost:3001 node load-all.mjs
 - **CRO enterprise-risk portfolio** — cyber vs credit/operational/third-party/compliance, on one scale.
 - **Strategic-initiative Go/No-Go (CEO)** — 3 per org with value-at-stake.
 - **Connectors / demo mode + evidence layer** — each org seeds a sector-appropriate tool stack (`demo:true`) and NIST-CSF document-evidence scores (`cyberrx_doc_scores`) so the ○ self-reported → ● evidenced flip is visible.
+- **Business → control value chain (Framework report)** — every org groups its processes under business **functions** (the `function` column in processes.csv), so the Framework tab traces **function ($/yr,$/day) → process (fraction) → technology → cyber risk ($ stoppage) → the NIST CSF control that mitigates it**, showing how much each control saves when effective.
 - **Industry localization** — all 8 cockpit buckets exercised: health / tech / fin / retail / gov / mfg / energy / telecom, so per-sector threats, regulators, continuity and framing all change.
 
 ## Per-org contents

@@ -56,7 +56,7 @@ function ingestPayload(o) {
     appetite: o.appetite, budget: o.budget, dataRecords: o.dataRecords,
     principalRisks: o.principalRisks,
     insurance: o.insurance,
-    processes: o.processes.map((p) => ({ name: p.name, data: p.data, rev: p.revenue, revenue: p.revenue, rto: p.rto, criticality: p.criticality, txPerDay: p.tx, tolerance: p.tolerance })),
+    processes: o.processes.map((p) => ({ name: p.name, data: p.data, rev: p.revenue, revenue: p.revenue, rto: p.rto, criticality: p.criticality, txPerDay: p.tx, tolerance: p.tolerance, function: (o.functions && o.functions[p.name]) || null })),
     apps: o.apps.map((a) => ({ name: a.name, host: a.host, data: a.data, vendor: a.vendor, eol: a.eol, recovery: a.recovery, txPerDay: a.tx, valuePerDay: a.value, processes: a.processes })),
     risks: o.risks.map((r) => ({ title: r.title, severity: r.severity, asset: r.asset, status: r.status, financial_exposure: r.exposure })),
     initiatives: o.initiatives,
@@ -166,6 +166,7 @@ ${line('AI systems inventoried', ai.inventory)}
 - **${o.risks.length} risks** → \`risks.csv\`  (each links to a system by name; open risks drive material exposure)
 - **${o.initiatives.length} cyber initiatives** → \`initiatives.csv\`  (per-initiative ROI for CISO/CFO)
 - **${o.strategicInitiatives.length} strategic initiatives** (CEO Go/No-Go): ${o.strategicInitiatives.map((s) => s.name + ' (' + usd(s.valueUsd) + ')').join('; ')}
+- **Business functions** (Framework value chain): ${o.functions ? Array.from(new Set(Object.values(o.functions))).join(', ') : '— (each process stands alone)'}
 
 ## Frameworks in scope
 ${o.frameworks.map((x) => '`' + x + '`').join(' · ')}
@@ -180,8 +181,8 @@ for (const o of ORGS) {
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, 'ingest.json'), JSON.stringify(ingestPayload(o), null, 2) + '\n');
   fs.writeFileSync(path.join(dir, 'processes.csv'),
-    csv(['name', 'revenue', 'rto', 'data', 'criticality', 'transactions_per_day', 'downtime_tolerance'],
-      o.processes.map((p) => [p.name, p.revenue, p.rto, p.data, p.criticality, p.tx, p.tolerance])));
+    csv(['name', 'revenue', 'rto', 'data', 'criticality', 'transactions_per_day', 'downtime_tolerance', 'function'],
+      o.processes.map((p) => [p.name, p.revenue, p.rto, p.data, p.criticality, p.tx, p.tolerance, (o.functions && o.functions[p.name]) || ''])));
   fs.writeFileSync(path.join(dir, 'systems.csv'),
     csv(['name', 'hosting', 'data', 'vendor', 'eol', 'recovery', 'transactions_per_day', 'value_per_day'],
       o.apps.map((a) => [a.name, a.host, a.data, a.vendor, a.eol, a.recovery, a.tx, a.value])));
@@ -259,6 +260,7 @@ API_BASE=http://localhost:3001 node load-all.mjs
 - **CRO enterprise-risk portfolio** — cyber vs credit/operational/third-party/compliance, on one scale.
 - **Strategic-initiative Go/No-Go (CEO)** — 3 per org with value-at-stake.
 - **Connectors / demo mode + evidence layer** — each org seeds a sector-appropriate tool stack (\`demo:true\`) and NIST-CSF document-evidence scores (\`cyberrx_doc_scores\`) so the ○ self-reported → ● evidenced flip is visible.
+- **Business → control value chain (Framework report)** — every org groups its processes under business **functions** (the \`function\` column in processes.csv), so the Framework tab traces **function ($/yr,$/day) → process (fraction) → technology → cyber risk ($ stoppage) → the NIST CSF control that mitigates it**, showing how much each control saves when effective.
 - **Industry localization** — all 8 cockpit buckets exercised: health / tech / fin / retail / gov / mfg / energy / telecom, so per-sector threats, regulators, continuity and framing all change.
 
 ## Per-org contents

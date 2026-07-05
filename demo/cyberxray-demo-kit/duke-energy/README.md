@@ -69,6 +69,7 @@ Then paste `duke-energy/browser-localStorage.js` into the app's DevTools console
 - **5 risks** → `risks.csv`  (each links to a system by name; open risks drive material exposure)
 - **4 cyber initiatives** → `initiatives.csv`  (per-initiative ROI for CISO/CFO)
 - **3 strategic initiatives** (CEO Go/No-Go): AI grid-optimization & forecasting ($800M); Grid modernization (DER/EV) ($4B); Customer-platform cloud migration ($600M)
+- **Business functions** (Framework value chain): Grid operations, Generation, Customer, Gas, Grid modernization
 
 ## Frameworks in scope
 `NERC CIP` · `NIST CSF 2.0` · `IEC 62443` · `SOC 2` · `TSA Pipeline Security`

@@ -178,6 +178,13 @@ async function run(orgId) {
   //    (the blast radius if it fails; from the process→system graph)
   const cjEcon = crownEconomics(scored, processes, rp, ra);
 
+  // Business → cyber value chain (Framework report): Function → Process → Technology
+  // → Cyber risk, with $ at each layer. The cyber-risk layer models the partial /
+  // complete process-stoppage cost (process $/hr × recovery hours × severity impact-
+  // fraction). The control layer ($ saved when operating effectively) is joined in the
+  // cockpit from live control coverage. All business $ are from the org's own inventory.
+  const value_chain = valueChain(scored, processes, risks, rp, ra);
+
   // Named board stress scenario — a concrete "worst realistic day" derived from
   // the top crown jewel, its largest open risk, worst-case recovery, and the
   // binding regulatory clock. All from the org's own data (no invented figures).
@@ -282,6 +289,7 @@ async function run(orgId) {
       stress,
       portfolio,
       aiRisk,
+      value_chain,
     },
     graph,
     assets: scored,
@@ -527,6 +535,80 @@ function crownEconomics(scoredAssets, processes, rp, ra) {
   return out;
 }
 
+// Severity → share of the process a cyber event takes down (partial vs complete
+// stoppage). Modeled defaults, applied when no measured per-risk figure exists.
+const SEV_IMPACT = { critical: 1.0, high: 0.6, medium: 0.3, low: 0.15 };
+function severityImpact(sev) {
+  const k = String(sev || '').toLowerCase();
+  return SEV_IMPACT[k] != null ? SEV_IMPACT[k] : 0.3;
+}
+
+/**
+ * Business → cyber value chain: Function → Process → Technology → Cyber risk, with
+ * the dollars carried at each layer. Function = grouping of processes (from the
+ * optional onboarding "function" field; each process is its own function when
+ * absent). Cyber-risk layer = the (partial/complete) process-stoppage cost:
+ *   process_stop_usd = process $/hr × recovery hours × severity impact-fraction
+ * Pure + deterministic (no DB) so it is unit-tested. The control layer ($ saved) is
+ * joined in the cockpit from live control coverage.
+ * @param {Array} scored     scored assets ({id,name,exposure,business_process_ids,crown_jewel,crown_jewel_tier})
+ * @param {Array} processes  business processes ({id,name,criticality})
+ * @param {Array} risks      normalized risks (snake_case: {title,severity,status,asset_id,financial_exposure})
+ * @param {Object} rp        resilience.processes keyed by NAME ({revenue,rto,function})
+ * @param {Object} ra        resilience.assets keyed by NAME ({recovery})
+ */
+function valueChain(scored, processes, risks, rp, ra) {
+  rp = rp || {}; ra = ra || {};
+  const OP_HOURS = 8760;
+  const assetsByPid = {};
+  (scored || []).forEach((a) => (a.business_process_ids || []).forEach((pid) => { (assetsByPid[pid] = assetsByPid[pid] || []).push(a); }));
+  const risksByAsset = {};
+  (risks || []).forEach((r) => {
+    if (r.status && String(r.status).toLowerCase() !== 'open') return;
+    if (!r.asset_id) return;
+    (risksByAsset[r.asset_id] = risksByAsset[r.asset_id] || []).push(r);
+  });
+
+  const procNodes = (processes || []).map((p) => {
+    const info = rp[p.name] || {};
+    const annual = Number(info.revenue) || 0;
+    const perHr = annual > 0 ? annual / OP_HOURS : 0;
+    const daily = annual > 0 ? annual / 365 : 0;
+    const assets = (assetsByPid[p.id] || []).map((a) => {
+      const arec = (ra[a.name] && ra[a.name].recovery != null) ? Number(ra[a.name].recovery) : null;
+      const rks = (risksByAsset[a.id] || []).map((r) => {
+        const frac = severityImpact(r.severity);
+        const stop = (perHr > 0 && arec != null) ? Math.round(perHr * arec * frac) : null;
+        return { title: r.title, severity: r.severity || null, exposure_usd: num(r.financial_exposure),
+          impact_fraction: frac, impact_hours: arec, process_stop_usd: stop };
+      }).sort((x, y) => (y.process_stop_usd || 0) - (x.process_stop_usd || 0) || (y.exposure_usd || 0) - (x.exposure_usd || 0));
+      return { id: a.id, name: a.name, internet_facing: /internet/i.test(String(a.exposure || '')),
+        crown_jewel: !!a.crown_jewel, tier: a.crown_jewel_tier || null, recovery_hours: arec, risks: rks.slice(0, 5) };
+    }).sort((x, y) => (y.crown_jewel - x.crown_jewel));
+    return { id: p.id, name: p.name, criticality: p.criticality || null, function: info.function || null,
+      annual_usd: annual || null, daily_usd: daily > 0 ? Math.round(daily) : null, per_hr: perHr > 0 ? Math.round(perHr) : null, assets };
+  }).filter((p) => p.annual_usd || p.assets.length);
+
+  const byFn = {};
+  procNodes.forEach((p) => { const key = p.function || p.name; (byFn[key] = byFn[key] || []).push(p); });
+  const functions = Object.keys(byFn).map((name) => {
+    const procs = byFn[name];
+    const annual = procs.reduce((s, p) => s + (p.annual_usd || 0), 0);
+    const daily = procs.reduce((s, p) => s + (p.daily_usd || 0), 0);
+    procs.forEach((p) => { p.fraction_of_function = (annual > 0 && p.annual_usd) ? p.annual_usd / annual : null; });
+    return { name, annual_usd: annual || null, daily_usd: daily > 0 ? daily : null, process_count: procs.length,
+      processes: procs.sort((a, b) => (b.annual_usd || 0) - (a.annual_usd || 0)).slice(0, 8) };
+  }).sort((a, b) => (b.annual_usd || 0) - (a.annual_usd || 0)).slice(0, 12);
+
+  return {
+    method: {
+      severity_impact: SEV_IMPACT, operating_hours_per_year: OP_HOURS,
+      note: 'Cyber-risk layer = process $/hr × recovery hours × severity impact-fraction (partial → complete stoppage). Modeled; a measured per-risk figure overrides it when supplied.',
+    },
+    functions,
+  };
+}
+
 function materialExposure(crownAssets, risks) {
   const cj = new Set(crownAssets.map((a) => a.id));
   let total = 0; const items = [];
@@ -547,4 +629,4 @@ function empty(orgId) {
     graph: { nodes: [], edges: [] }, assets: [] };
 }
 
-module.exports = { run, runPipeline, materialExposure, processExposure, crownEconomics, normAsset, normRisk };
+module.exports = { run, runPipeline, materialExposure, processExposure, crownEconomics, valueChain, severityImpact, normAsset, normRisk };

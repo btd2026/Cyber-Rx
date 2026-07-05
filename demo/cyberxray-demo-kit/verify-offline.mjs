@@ -4,14 +4,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
-// Point CJ_DIR at <repo>/cyberrx-api/src/services/crownjewels (default assumes
-// the kit sits two levels below the repo root). Override: CJ_DIR=/path node verify-offline.mjs
 const CJ = (process.env.CJ_DIR || new URL('../../cyberrx-api/src/services/crownjewels/', import.meta.url).pathname).replace(/\/?$/, '/');
 const require = createRequire('file://' + CJ);
-const { mapOnboarding, mapRisks } = require(CJ + 'IngestMapper.js');
+const { mapOnboarding, mapRisks, money } = require(CJ + 'IngestMapper.js');
 const Criticality = require(CJ + 'CriticalityService.js');
 const Economics = require(CJ + 'EconomicsService.js');
 const Jurisdiction = require(CJ + 'JurisdictionService.js');
+const Engine = require(CJ + 'CrownJewelEngine.js');
 
 const KIT = process.argv[2] || new URL('.', import.meta.url).pathname;
 
@@ -81,11 +80,31 @@ for (const key of fs.readdirSync(KIT).filter((d) => fs.statSync(path.join(KIT, d
   const legal = Jurisdiction.derive({ regions: payload.regions, dataClasses, industry: payload.industry });
   flag(legal && (legal.binding || (legal.obligations && legal.obligations.length)), 'jurisdiction obligations derived');
 
+  // 6. Business → cyber value chain (Function → Process → Tech → Cyber risk $)
+  const scoredFull = mapped.assets.map((a) => {
+    const s = Criticality.scoreAsset({ name: a.name, data_classification: a.dataClassification, exposure: a.exposure }, { processes: (a.businessProcessIds || []).map((id) => procById[id]).filter(Boolean) });
+    return { id: a.id, name: a.name, exposure: a.exposure, business_process_ids: a.businessProcessIds, crown_jewel: s.crown_jewel, crown_jewel_tier: s.crown_jewel_tier };
+  });
+  const risksSnake = risks.map((r) => ({ title: r.title, severity: r.severity, status: r.status, asset_id: r.assetId, financial_exposure: r.financialExposure }));
+  const rp = {}, ra = {};
+  payload.processes.forEach((p) => { rp[p.name] = { revenue: money(p.revenue), rto: p.rto, function: p.function || null }; });
+  payload.apps.forEach((a) => { ra[a.name] = { recovery: Number(String(a.recovery).replace(/[^0-9.]/g, '')) }; });
+  const vc = Engine.valueChain(scoredFull, mapped.processes, risksSnake, rp, ra);
+  flag(vc.functions.length > 0, 'value chain produced functions');
+  const declaredFns = new Set(Object.values(payload.processes.reduce((m, p) => (p.function ? (m[p.name] = p.function) : 0, m), {})));
+  flag(vc.functions.length === declaredFns.size, `functions grouped (${vc.functions.length}) match declared (${declaredFns.size})`);
+  const allRisks = vc.functions.flatMap((f) => f.processes.flatMap((p) => p.assets.flatMap((a) => a.risks)));
+  flag(allRisks.some((r) => r.process_stop_usd > 0), 'value chain computed a process-stoppage $');
+  vc.functions.forEach((f) => { const sum = f.processes.reduce((s, p) => s + (p.fraction_of_function || 0), 0); flag(!f.annual_usd || Math.abs(sum - 1) < 0.02, `function "${f.name}" process fractions sum to 1`); });
+  const topFn = vc.functions[0];
+  const topStop = allRisks.slice().sort((a, b) => (b.process_stop_usd || 0) - (a.process_stop_usd || 0))[0];
+
   const topCrowns = scored.filter((s) => s.crown).sort((a, b) => b.score - a.score).slice(0, 3).map((s) => `${s.name} (${s.score}/${s.tier})`).join(', ');
   console.log(`   ✓ ${mapped.processes.length} processes · ${mapped.assets.length} systems · ${crowns} crown jewels`);
   console.log(`   ✓ material exposure ${usd(exposureOnCrowns)} · ALE ${usd(econ.ale)} · tail ${usd(econ.tail)}` + (payload.financials.revenue ? ` · ${(econ.ratios.pct_of_revenue * 100).toFixed(2)}% of revenue` : ' · (no revenue ratio — public sector)'));
   console.log(`   ✓ top crowns: ${topCrowns}`);
   console.log(`   ✓ legal: ${legal.binding ? (legal.binding.obligation || legal.binding.jurisdiction) + ' / ' + (legal.binding.clock || '?') : (legal.obligations || []).length + ' obligations'}`);
+  console.log(`   ✓ value chain: ${vc.functions.length} functions · top "${topFn.name}" ${usd(topFn.annual_usd)}/yr · worst process-stop ${topStop ? topStop.title + ' = ' + usd(topStop.process_stop_usd) : '—'}`);
 }
 
 console.log('\n' + (fail ? '❌ ' + fail + ' check(s) FAILED' : '✅ ALL CHECKS PASSED — every org maps, scores crown jewels, computes economics & legal from the real engine.'));

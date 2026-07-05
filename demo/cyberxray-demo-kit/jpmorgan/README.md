@@ -69,6 +69,7 @@ Then paste `jpmorgan/browser-localStorage.js` into the app's DevTools console. T
 - **5 risks** → `risks.csv`  (each links to a system by name; open risks drive material exposure)
 - **4 cyber initiatives** → `initiatives.csv`  (per-initiative ROI for CISO/CFO)
 - **3 strategic initiatives** (CEO Go/No-Go): AI fraud & underwriting models ($4B); Core-banking cloud migration ($3B); UK/EU digital-bank expansion ($2B)
+- **Business functions** (Framework value chain): Payments, Markets, Consumer banking, Wealth management, Cards & merchant
 
 ## Frameworks in scope
 `NIST CSF 2.0` · `PCI DSS` · `SOC 2` · `DORA` · `GLBA` · `SEC Cyber Disclosure`

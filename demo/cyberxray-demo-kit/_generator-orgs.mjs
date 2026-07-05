@@ -17,6 +17,7 @@ export const ORGS = [
   // ═══════════════════════════ 1 · HEALTHCARE ═══════════════════════════
   {
     key: 'unitedhealth',
+    functions: { 'Claims processing & payment': 'Claims', 'Provider network payments': 'Claims', 'Pharmacy benefit management (OptumRx)': 'Pharmacy', 'Care delivery & clinical (Optum Health)': 'Care delivery', 'Eligibility & enrollment': 'Member services' },
     org_name: 'UnitedHealth Group',
     industry: 'Healthcare',            // → health
     regions: ['US'],
@@ -72,6 +73,7 @@ export const ORGS = [
   // ═══════════════════════════ 2 · TECHNOLOGY ═══════════════════════════
   {
     key: 'microsoft',
+    functions: { 'Azure cloud platform operations': 'Cloud platform', 'M365 productivity & identity': 'Productivity & identity', 'Developer platform (GitHub)': 'Developer platform', 'Gaming & consumer (Xbox)': 'Consumer', 'Commercial licensing & billing': 'Commercial' },
     org_name: 'Microsoft Corporation',
     industry: 'Technology / SaaS',      // → tech
     regions: ['US', 'EU', 'Global'],
@@ -127,6 +129,7 @@ export const ORGS = [
   // ═══════════════════════════ 3 · FINANCIAL SERVICES ═══════════════════════════
   {
     key: 'jpmorgan',
+    functions: { 'Wholesale payments & wire': 'Payments', 'Markets — trading & settlement': 'Markets', 'Consumer & community banking': 'Consumer banking', 'Asset & wealth management': 'Wealth management', 'Card & merchant services': 'Cards & merchant' },
     org_name: 'JPMorgan Chase & Co.',
     industry: 'Financial services',     // → fin
     regions: ['US', 'EU', 'UK'],
@@ -182,6 +185,7 @@ export const ORGS = [
   // ═══════════════════════════ 4 · RETAIL ═══════════════════════════
   {
     key: 'walmart',
+    functions: { 'Store checkout & payments (POS)': 'Stores', 'E-commerce & fulfillment': 'Digital commerce', 'Supply chain & logistics': 'Supply chain', 'Merchandising & pricing': 'Merchandising', 'Membership & loyalty (Walmart+)': 'Membership' },
     org_name: 'Walmart Inc.',
     industry: 'Retail / e-commerce',    // → retail
     regions: ['US'],
@@ -237,6 +241,7 @@ export const ORGS = [
   // ═══════════════════════════ 5 · GOVERNMENT ═══════════════════════════
   {
     key: 'state-california',
+    functions: { 'Health & human services benefits': 'Health & human services', 'Tax collection & revenue (FTB)': 'Revenue', 'Unemployment & disability (EDD)': 'Labor & employment', 'Motor vehicles & licensing (DMV)': 'Motor vehicles', 'Emergency services & public safety': 'Public safety' },
     org_name: 'State of California',
     industry: 'Government / Public sector',  // → gov
     regions: ['US'],
@@ -292,6 +297,7 @@ export const ORGS = [
   // ═══════════════════════════ 6 · MANUFACTURING ═══════════════════════════
   {
     key: 'boeing',
+    functions: { 'Commercial airplane production': 'Commercial aircraft', 'Defense, space & security programs': 'Defense & space', 'Global services & MRO': 'Global services', 'Engineering & design': 'Engineering', 'Supply chain & procurement': 'Supply chain' },
     org_name: 'The Boeing Company',
     industry: 'Manufacturing',          // → mfg
     regions: ['US'],
@@ -347,6 +353,7 @@ export const ORGS = [
   // ═══════════════════════════ 7 · ENERGY ═══════════════════════════
   {
     key: 'duke-energy',
+    functions: { 'Electric grid operations (T&D)': 'Grid operations', 'Power generation (nuclear/gas/renew)': 'Generation', 'Customer billing & metering (AMI)': 'Customer', 'Gas distribution': 'Gas', 'Grid modernization & DER': 'Grid modernization' },
     org_name: 'Duke Energy Corporation',
     industry: 'Energy / Utilities',     // → energy
     regions: ['US'],
@@ -402,6 +409,7 @@ export const ORGS = [
   // ═══════════════════════════ 8 · TELECOMMUNICATIONS ═══════════════════════════
   {
     key: 'att',
+    functions: { 'Mobile network operations (5G/wireless)': 'Mobility', 'Broadband & fiber (consumer/business)': 'Broadband', 'Business & enterprise connectivity': 'Enterprise', 'Billing & customer care': 'Customer care', 'Interconnection & signaling (SS7/roaming)': 'Network core' },
     org_name: 'AT&T Inc.',
     industry: 'Telecommunications',     // → telecom lens
     regions: ['US'],

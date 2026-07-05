@@ -39,7 +39,8 @@
       "rto": "2",
       "criticality": "Critical",
       "txPerDay": "50000000",
-      "tolerance": "$20M"
+      "tolerance": "$20M",
+      "function": "Cloud platform"
     },
     {
       "name": "M365 productivity & identity",
@@ -49,7 +50,8 @@
       "rto": "2",
       "criticality": "Critical",
       "txPerDay": "40000000",
-      "tolerance": "$15M"
+      "tolerance": "$15M",
+      "function": "Productivity & identity"
     },
     {
       "name": "Developer platform (GitHub)",
@@ -59,7 +61,8 @@
       "rto": "4",
       "criticality": "Critical",
       "txPerDay": "8000000",
-      "tolerance": "$6M"
+      "tolerance": "$6M",
+      "function": "Developer platform"
     },
     {
       "name": "Gaming & consumer (Xbox)",
@@ -69,7 +72,8 @@
       "rto": "8",
       "criticality": "High",
       "txPerDay": "5000000",
-      "tolerance": "$3M"
+      "tolerance": "$3M",
+      "function": "Consumer"
     },
     {
       "name": "Commercial licensing & billing",
@@ -79,7 +83,8 @@
       "rto": "12",
       "criticality": "High",
       "txPerDay": "1000000",
-      "tolerance": "$2M"
+      "tolerance": "$2M",
+      "function": "Commercial"
     }
   ],
   "apps": [

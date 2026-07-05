@@ -69,6 +69,7 @@ Then paste `walmart/browser-localStorage.js` into the app's DevTools console. Th
 - **5 risks** → `risks.csv`  (each links to a system by name; open risks drive material exposure)
 - **4 cyber initiatives** → `initiatives.csv`  (per-initiative ROI for CISO/CFO)
 - **3 strategic initiatives** (CEO Go/No-Go): AI-driven personalization & search ($2B); Marketplace / advertising expansion ($3B); Warehouse automation rollout ($1.5B)
+- **Business functions** (Framework value chain): Stores, Digital commerce, Supply chain, Merchandising, Membership
 
 ## Frameworks in scope
 `PCI DSS` · `NIST CSF 2.0` · `SOC 2` · `CCPA`

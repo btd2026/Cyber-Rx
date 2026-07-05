@@ -69,6 +69,7 @@ Then paste `state-california/browser-localStorage.js` into the app's DevTools co
 - **5 risks** → `risks.csv`  (each links to a system by name; open risks drive material exposure)
 - **4 cyber initiatives** → `initiatives.csv`  (per-initiative ROI for CISO/CFO)
 - **3 strategic initiatives** (CEO Go/No-Go): GenAI resident-services pilots ($500M); Benefits-systems cloud migration ($1.2B); Digital-identity (mDL) program ($300M)
+- **Business functions** (Framework value chain): Health & human services, Revenue, Labor & employment, Motor vehicles, Public safety
 
 ## Frameworks in scope
 `NIST CSF 2.0` · `NIST 800-53` · `FedRAMP` · `CCPA` · `State breach-notification law`

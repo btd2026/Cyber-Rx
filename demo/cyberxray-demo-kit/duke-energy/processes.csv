@@ -1,6 +1,6 @@
-name,revenue,rto,data,criticality,transactions_per_day,downtime_tolerance
-Electric grid operations (T&D),$20B,1,"OT, Confidential",Critical,1000000,$20M
-Power generation (nuclear/gas/renew),$8B,2,"OT, Confidential",Critical,200000,$12M
-Customer billing & metering (AMI),$2B,8,"PII, Financial",High,8400000,$3M
-Gas distribution,$3B,2,"OT, Confidential",Critical,500000,$8M
-Grid modernization & DER,$1B,8,"OT, Confidential",High,100000,$2M
+name,revenue,rto,data,criticality,transactions_per_day,downtime_tolerance,function
+Electric grid operations (T&D),$20B,1,"OT, Confidential",Critical,1000000,$20M,Grid operations
+Power generation (nuclear/gas/renew),$8B,2,"OT, Confidential",Critical,200000,$12M,Generation
+Customer billing & metering (AMI),$2B,8,"PII, Financial",High,8400000,$3M,Customer
+Gas distribution,$3B,2,"OT, Confidential",Critical,500000,$8M,Gas
+Grid modernization & DER,$1B,8,"OT, Confidential",High,100000,$2M,Grid modernization

@@ -37,7 +37,8 @@
       "rto": "4",
       "criticality": "Critical",
       "txPerDay": "12000000",
-      "tolerance": "$8M"
+      "tolerance": "$8M",
+      "function": "Claims"
     },
     {
       "name": "Pharmacy benefit management (OptumRx)",
@@ -47,7 +48,8 @@
       "rto": "6",
       "criticality": "Critical",
       "txPerDay": "5000000",
-      "tolerance": "$5M"
+      "tolerance": "$5M",
+      "function": "Pharmacy"
     },
     {
       "name": "Care delivery & clinical (Optum Health)",
@@ -57,7 +59,8 @@
       "rto": "8",
       "criticality": "Critical",
       "txPerDay": "2000000",
-      "tolerance": "$3M"
+      "tolerance": "$3M",
+      "function": "Care delivery"
     },
     {
       "name": "Eligibility & enrollment",
@@ -67,7 +70,8 @@
       "rto": "12",
       "criticality": "High",
       "txPerDay": "900000",
-      "tolerance": "$1.5M"
+      "tolerance": "$1.5M",
+      "function": "Member services"
     },
     {
       "name": "Provider network payments",
@@ -77,7 +81,8 @@
       "rto": "12",
       "criticality": "High",
       "txPerDay": "600000",
-      "tolerance": "$1M"
+      "tolerance": "$1M",
+      "function": "Claims"
     }
   ],
   "apps": [

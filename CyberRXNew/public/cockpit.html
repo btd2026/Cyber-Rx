@@ -87,6 +87,27 @@
   .fwseg{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
   .fwsegb{font-size:12px;font-weight:600;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:6px 14px;cursor:pointer}
   .fwsegb.on{color:#fff;background:var(--ink);border-color:var(--ink)}
+  /* Business → control value chain */
+  .vc-fn{border:1px solid var(--line-2);border-radius:10px;margin-top:10px;overflow:hidden}
+  .vc-fn-h{display:flex;align-items:baseline;gap:10px;justify-content:space-between;padding:10px 13px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+  .vc-fn-t{font-weight:800;font-size:14px;color:var(--ink);font-family:var(--serif)}
+  .vc-fn-v{font-family:var(--mono);font-size:11.5px;color:var(--ink-2);font-weight:600}
+  .vc-proc{padding:10px 13px;border-top:1px dashed var(--line)}.vc-proc:first-child{border-top:none}
+  .vc-proc-h{display:flex;align-items:baseline;gap:8px;justify-content:space-between;margin-bottom:6px}
+  .vc-proc-v{font-family:var(--mono);font-size:10.5px;color:var(--muted);font-weight:600}
+  .vc-tech{margin:6px 0 4px 12px;padding-left:11px;border-left:2px solid var(--line-2)}
+  .vc-tech-h{font-size:12.5px;color:var(--ink-2);margin:5px 0 3px}
+  .vc-risk{margin:4px 0 8px 12px;padding:7px 9px;background:var(--plane);border:1px solid var(--line);border-radius:7px}
+  .vc-risk-h{display:flex;align-items:center;gap:7px;font-size:12.5px}
+  .vc-sev{margin-left:auto;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+  .vc-risk-m{font-size:11.5px;color:var(--ink-2);margin:3px 0 5px}
+  .vc-ctrls{font-size:11px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .vc-ctrls-l{color:var(--muted);font-weight:700;text-transform:uppercase;font-size:9.5px;letter-spacing:.04em}
+  .vc-ctrl{display:inline-flex;align-items:center;gap:3px;background:var(--surface);border:1px solid var(--line-2);border-radius:6px;padding:2px 7px;font-size:11px;color:var(--ink-2)}
+  .vc-ctrlcard{padding:10px 0;border-top:1px solid var(--line)}.vc-ctrlcard:first-of-type{border-top:none}
+  .vc-cc-h{display:flex;align-items:center;gap:8px}
+  .vc-cc-tool{font-size:10.5px;color:var(--muted)}.vc-cc-usd{margin-left:auto;font-family:var(--mono);font-weight:700;font-size:12.5px;color:var(--good)}
+  .vc-cc-fw{margin:6px 0 4px}.vc-cc-sub{font-size:12px;color:var(--ink-2)}.vc-cc-prot{font-size:11.5px;color:var(--muted);margin-top:4px}
   .fwfn{border:1px solid var(--line);border-radius:8px;margin-top:8px;overflow:hidden}
   .fwfn>summary{cursor:pointer;padding:10px 12px;font-weight:700;font-size:13px;background:var(--surface-2);list-style:none;color:var(--ink)}
   .fwfn>summary::-webkit-details-marker{display:none}
@@ -471,7 +492,7 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderValueChain();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
@@ -1124,6 +1145,74 @@ function fwRow(id,name,cov){var cc=controlCmmi(id,cov);
 function seedDemoDocScores(){if(!demoActive()||Object.keys(docScores()).length)return;
   var sample={'GV.OC-01':4,'GV.OC-03':3,'GV.RM-01':3,'GV.PO-01':4,'GV.PO-02':3,'PR.AA-01':4,'PR.AA-05':3,'PR.AT-01':3,'ID.RA-01':3,'ID.RA-05':2,'DE.CM-01':2,'RS.MA-01':3};
   Object.keys(sample).forEach(function(id){saveDocScore(id,{cmmi:sample[id],doc:'Information Security Policy (sample).pdf',matched:Math.min(6,sample[id]+2),total:6,attrs:[]});});}
+/* ---- Business → cyber value chain (Framework report) ----------------------------
+   Joins the two halves the platform already computes into one line:
+     Function ($/yr,$/day) → Process (fraction) → Technology → Cyber risk ($ stop) →
+     Control (NIST CSF/800-53) → $ the control removes when operating effectively.
+   Business layers + the partial/complete stoppage $ come live from the engine
+   (LIVE.value_chain). The control layer reuses the existing control-value ledger:
+   each cyber risk → the capabilities that counter it (same keyword map the threat
+   panel uses) → their framework IDs, live deployment %, and modeled $ removed. ---- */
+var VC_VIEW='func';
+/* Per-control $ removed (current live-deployment allocation) — the accepted
+   control-value model, reused so the chain shows no new/contradictory number. */
+function controlValue(){var rr=capRiskRemoved();return {now:rr.byCap||{},total:rr.total,anyLive:rr.anyLive};}
+/* A cyber risk → the capabilities that mitigate it (reuses the threat-panel map). */
+function riskCaps(title,sev){try{return actorCaps({t:String(title||''),m:String(sev||'')});}catch(_){return [];}}
+function capChip(k,cv){var c=CAP_BY_KEY[k];if(!c)return '';var fw=CAP_FRAMEWORK[k],p=capDeploy(c);
+  var ids=fw?fw.csf.slice(0,2).map(function(id){return '<span class="fwid csf">'+id+'</span>';}).join(''):'';
+  var dep=p!=null?('<span style="color:var(--'+capColor(p)+');font-weight:700">'+p+'%</span>'):'<span style="color:var(--muted)">—</span>';
+  return '<span class="vc-ctrl" title="'+c.name+(cv&&cv.now[k]?(' · removes '+usd(cv.now[k])):'')+'">'+ids+' '+c.name.replace(/ *\(.*\)/,'')+' · '+dep+'</span>';}
+function vcSeg(){return '<div class="fwseg" style="margin-bottom:12px">'+[['func','By business function'],['ctrl','By control']].map(function(o){return '<button class="fwsegb'+(VC_VIEW===o[0]?' on':'')+'" data-vc="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';}
+function renderValueChain(){
+  var host=document.getElementById('valueChain');if(!host)return;
+  var vc=(LIVE&&LIVE.value_chain)||null,fns=(vc&&vc.functions)||[];
+  if(!fns.length){host.innerHTML='<div class="card"><div class="ck">Business → control value chain</div><div class="cn" style="margin-top:6px">◐ <b style="color:var(--warn)">Complete onboarding</b> to trace <b>business function → process → technology → cyber risk ($) → the framework control that mitigates it</b>, and see how much each control saves when it operates effectively. Add a <b>function</b> to your process list to group processes under the business functions they support.</div></div>';return;}
+  var cvv=controlValue();
+  var totalFn=fns.reduce(function(s,f){return s+(f.annual_usd||0);},0);
+  var head='<div class="card"><div class="ck">Business → control value chain '+liveTag()+'</div>'+
+    '<div class="cn" style="margin-top:6px">How the money flows from what the business does to the controls that protect it: <b>function → process → technology → cyber risk → control</b>. '+usd(totalFn)+'/yr of business value across <b>'+fns.length+'</b> function'+(fns.length===1?'':'s')+' is mapped to the framework controls that defend it'+(cvv.anyLive?(', which remove <b>'+usd(cvv.total)+'</b> of expected loss when operating effectively <span class="pill mod" style="font-size:9px">modeled</span>'):'')+'.</div>'+vcSeg()+
+    (VC_VIEW==='func'?vcByFunction(fns,cvv):vcByControl(fns,cvv))+
+    '<div class="cn" style="margin-top:10px;color:var(--muted)">Business $ are from your inventory. The cyber-risk figure is the <b>process-stoppage cost</b> = process $/hr × recovery hours × a severity impact-fraction (partial → complete) <span class="pill mod" style="font-size:8px">modeled</span> — the revenue exposed while the process is down, distinct from the breach/liability exposure. Control $ is each control’s framework-weighted share of risk removed, scaled by live deployment.</div></div>';
+  host.innerHTML=head;
+  host.querySelectorAll('.fwsegb[data-vc]').forEach(function(el){el.onclick=function(){VC_VIEW=el.dataset.vc;renderValueChain();};});
+}
+function vcByFunction(fns,cvv){
+  return fns.map(function(f){
+    var procs=(f.processes||[]).map(function(p){
+      var assets=(p.assets||[]).filter(function(a){return a.risks&&a.risks.length;}).map(function(a){
+        var risks=a.risks.map(function(r){
+          var caps=riskCaps(r.title,r.severity),chips=caps.map(function(k){return capChip(k,cvv);}).join(' ');
+          var stop=r.process_stop_usd!=null?usd(r.process_stop_usd):'—';
+          var frac=Math.round((r.impact_fraction||0)*100),mode=frac>=100?'full stop':frac+'% degraded';
+          return '<div class="vc-risk"><div class="vc-risk-h"><span class="cap-dot" style="background:var(--'+(r.severity&&/crit/i.test(r.severity)?'crit':'serious')+')"></span><b>'+r.title+'</b> <span class="vc-sev">'+(r.severity||'')+'</span></div>'+
+            '<div class="vc-risk-m">≈<b>'+stop+'</b> revenue exposed ('+mode+' · '+(r.impact_hours!=null?r.impact_hours+'h recovery':'recovery n/a')+')'+(r.exposure_usd?(' · breach/liability '+usd(r.exposure_usd)):'')+'</div>'+
+            (chips?'<div class="vc-ctrls"><span class="vc-ctrls-l">Mitigated by</span> '+chips+'</div>':'<div class="vc-ctrls"><span style="color:var(--muted)">No mapped control — a coverage gap.</span></div>')+'</div>';
+        }).join('');
+        return '<div class="vc-tech"><div class="vc-tech-h">🖥 <b>'+a.name+'</b>'+(a.internet_facing?' <span class="tag" style="font-size:9px">internet-facing</span>':'')+(a.crown_jewel?' <span class="tag good" style="font-size:9px">crown jewel</span>':'')+'</div>'+risks+'</div>';
+      }).join('');
+      var frac=p.fraction_of_function!=null?(' · '+Math.round(p.fraction_of_function*100)+'% of function'):'';
+      return '<div class="vc-proc"><div class="vc-proc-h"><b>'+p.name+'</b> <span class="vc-proc-v">'+usd(p.annual_usd)+'/yr'+frac+' · '+usd(p.daily_usd)+'/day · '+usd(p.per_hr)+'/hr</span></div>'+(assets||'<div class="vc-ctrls"><span style="color:var(--muted)">No mapped technology / open risk.</span></div>')+'</div>';
+    }).join('');
+    return '<div class="vc-fn"><div class="vc-fn-h"><span class="vc-fn-t">'+f.name+'</span><span class="vc-fn-v">'+usd(f.annual_usd)+'/yr · '+usd(f.daily_usd)+'/day · '+f.process_count+' process'+(f.process_count===1?'':'es')+'</span></div>'+procs+'</div>';
+  }).join('');
+}
+function vcByControl(fns,cvv){
+  // reverse index: cap → {csf ids, functions set, processes set, risks count}
+  var idx={};
+  fns.forEach(function(f){(f.processes||[]).forEach(function(p){(p.assets||[]).forEach(function(a){(a.risks||[]).forEach(function(r){
+    riskCaps(r.title,r.severity).forEach(function(k){var e=idx[k]||(idx[k]={fns:{},procs:{},risks:0});e.fns[f.name]=1;e.procs[p.name]=1;e.risks++;});
+  });});});});
+  var keys=Object.keys(idx).filter(function(k){return CAP_FRAMEWORK[k];}).sort(function(a,b){return (cvv.now[b]||0)-(cvv.now[a]||0);});
+  if(!keys.length)return '<div class="cn" style="margin-top:8px;color:var(--muted)">No controls mapped to open risks yet.</div>';
+  return keys.map(function(k){var c=CAP_BY_KEY[k],fw=CAP_FRAMEWORK[k],p=capDeploy(c),e=idx[k];
+    var fnNames=Object.keys(e.fns),prNames=Object.keys(e.procs);
+    return '<div class="vc-ctrlcard"><div class="vc-cc-h"><span class="cap-dot" style="background:var(--'+capColor(p)+')"></span><b>'+c.name.replace(/ *\(.*\)/,'')+'</b> <span class="vc-cc-tool">'+c.tool+'</span><span class="vc-cc-usd">'+(cvv.now[k]?usd(cvv.now[k]):'—')+'<span class="pill mod" style="font-size:8px;margin-left:4px">modeled</span></span></div>'+
+      '<div class="vc-cc-fw">'+fwIdChips(fw)+'</div>'+
+      '<div class="vc-cc-sub">'+(p!=null?('<b style="color:var(--'+capColor(p)+')">'+p+'% deployed</b> — removes '+usd(cvv.now[k]||0)+' of expected loss when effective'):('<span style="color:var(--muted)">not connected — '+c.connect+'</span>'))+'</div>'+
+      '<div class="vc-cc-prot">Protects <b>'+fnNames.length+'</b> function'+(fnNames.length===1?'':'s')+' · <b>'+prNames.length+'</b> process'+(prNames.length===1?'':'es')+' · counters <b>'+e.risks+'</b> risk'+(e.risks===1?'':'s')+': <span style="color:var(--ink-2)">'+fnNames.slice(0,4).join(', ')+(fnNames.length>4?'…':'')+'</span></div></div>';
+  }).join('');
+}
 function renderFrameworks(){
   var host=document.getElementById('cisoFrameworks');if(!host)return;
   seedDemoDocScores();
@@ -1423,12 +1512,12 @@ function renderSignals(){
     var pcts=['edr_pct','mfa_pct','pam_pct'].map(sig).filter(function(x){return x!=null;});
     if(pcts.length){var avg=Math.round(pcts.reduce(function(s,x){return s+x;},0)/pcts.length);setTxt('lvCovTile',avg+'%');var tn=document.getElementById('lvCovTileNote');if(tn)tn.innerHTML='<span class="pill good">live</span> from '+pcts.length+' connected tool'+(pcts.length>1?'s':'');}
   }
-  renderAiRisk();renderCisoOps();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCfoFraud();renderCroKri();renderCloOps();renderThreatIntel();renderDrReadiness();renderPeerBench();
+  renderAiRisk();renderCisoOps();renderControls();renderFrameworks();renderValueChain();renderCompliance();renderCooStatus();renderCfoFraud();renderCroKri();renderCloOps();renderThreatIntel();renderDrReadiness();renderPeerBench();
 }
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderValueChain();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----

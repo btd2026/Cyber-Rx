@@ -1,6 +1,6 @@
-name,revenue,rto,data,criticality,transactions_per_day,downtime_tolerance
-Azure cloud platform operations,$110B,2,"PII, Confidential, IP",Critical,50000000,$20M
-M365 productivity & identity,$80B,2,"PII, Confidential",Critical,40000000,$15M
-Developer platform (GitHub),$20B,4,"IP, Source Code",Critical,8000000,$6M
-Gaming & consumer (Xbox),$22B,8,"PII, PCI",High,5000000,$3M
-Commercial licensing & billing,$13B,12,"Financial, PII",High,1000000,$2M
+name,revenue,rto,data,criticality,transactions_per_day,downtime_tolerance,function
+Azure cloud platform operations,$110B,2,"PII, Confidential, IP",Critical,50000000,$20M,Cloud platform
+M365 productivity & identity,$80B,2,"PII, Confidential",Critical,40000000,$15M,Productivity & identity
+Developer platform (GitHub),$20B,4,"IP, Source Code",Critical,8000000,$6M,Developer platform
+Gaming & consumer (Xbox),$22B,8,"PII, PCI",High,5000000,$3M,Consumer
+Commercial licensing & billing,$13B,12,"Financial, PII",High,1000000,$2M,Commercial

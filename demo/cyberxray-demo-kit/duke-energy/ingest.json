@@ -37,7 +37,8 @@
       "rto": "1",
       "criticality": "Critical",
       "txPerDay": "1000000",
-      "tolerance": "$20M"
+      "tolerance": "$20M",
+      "function": "Grid operations"
     },
     {
       "name": "Power generation (nuclear/gas/renew)",
@@ -47,7 +48,8 @@
       "rto": "2",
       "criticality": "Critical",
       "txPerDay": "200000",
-      "tolerance": "$12M"
+      "tolerance": "$12M",
+      "function": "Generation"
     },
     {
       "name": "Customer billing & metering (AMI)",
@@ -57,7 +59,8 @@
       "rto": "8",
       "criticality": "High",
       "txPerDay": "8400000",
-      "tolerance": "$3M"
+      "tolerance": "$3M",
+      "function": "Customer"
     },
     {
       "name": "Gas distribution",
@@ -67,7 +70,8 @@
       "rto": "2",
       "criticality": "Critical",
       "txPerDay": "500000",
-      "tolerance": "$8M"
+      "tolerance": "$8M",
+      "function": "Gas"
     },
     {
       "name": "Grid modernization & DER",
@@ -77,7 +81,8 @@
       "rto": "8",
       "criticality": "High",
       "txPerDay": "100000",
-      "tolerance": "$2M"
+      "tolerance": "$2M",
+      "function": "Grid modernization"
     }
   ],
   "apps": [

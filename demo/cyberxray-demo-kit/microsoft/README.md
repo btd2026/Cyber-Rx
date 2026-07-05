@@ -69,6 +69,7 @@ Then paste `microsoft/browser-localStorage.js` into the app's DevTools console. 
 - **5 risks** → `risks.csv`  (each links to a system by name; open risks drive material exposure)
 - **4 cyber initiatives** → `initiatives.csv`  (per-initiative ROI for CISO/CFO)
 - **3 strategic initiatives** (CEO Go/No-Go): Copilot enterprise expansion ($10B); Sovereign cloud (EU) buildout ($6B); Activision integration ($3B)
+- **Business functions** (Framework value chain): Cloud platform, Productivity & identity, Developer platform, Consumer, Commercial
 
 ## Frameworks in scope
 `NIST CSF 2.0` · `ISO 27001` · `SOC 2` · `FedRAMP` · `EU AI Act` · `ISO 42001`

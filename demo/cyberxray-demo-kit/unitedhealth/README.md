@@ -69,6 +69,7 @@ Then paste `unitedhealth/browser-localStorage.js` into the app's DevTools consol
 - **5 risks** → `risks.csv`  (each links to a system by name; open risks drive material exposure)
 - **4 cyber initiatives** → `initiatives.csv`  (per-initiative ROI for CISO/CFO)
 - **3 strategic initiatives** (CEO Go/No-Go): Optum AI clinical documentation ($2.5B); Value-based care expansion ($5B); Change Healthcare re-platform ($1.2B)
+- **Business functions** (Framework value chain): Claims, Pharmacy, Care delivery, Member services
 
 ## Frameworks in scope
 `HIPAA Security Rule` · `HITRUST CSF` · `NIST CSF 2.0` · `SOC 2`

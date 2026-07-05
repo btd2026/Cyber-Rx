@@ -69,6 +69,7 @@ Then paste `att/browser-localStorage.js` into the app's DevTools console. The co
 - **5 risks** → `risks.csv`  (each links to a system by name; open risks drive material exposure)
 - **4 cyber initiatives** → `initiatives.csv`  (per-initiative ROI for CISO/CFO)
 - **3 strategic initiatives** (CEO Go/No-Go): AI network-ops & customer care ($1.5B); Fiber expansion to 60M locations ($4B); 5G standalone core rollout ($2B)
+- **Business functions** (Framework value chain): Mobility, Broadband, Enterprise, Customer care, Network core
 
 ## Frameworks in scope
 `NIST CSF 2.0` · `FCC CPNI Rules` · `CISA Cross-Sector` · `SOC 2` · `ISO 27001`

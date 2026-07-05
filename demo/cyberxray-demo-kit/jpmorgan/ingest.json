@@ -39,7 +39,8 @@
       "rto": "1",
       "criticality": "Critical",
       "txPerDay": "10000000",
-      "tolerance": "$25M"
+      "tolerance": "$25M",
+      "function": "Payments"
     },
     {
       "name": "Markets — trading & settlement",
@@ -49,7 +50,8 @@
       "rto": "2",
       "criticality": "Critical",
       "txPerDay": "8000000",
-      "tolerance": "$30M"
+      "tolerance": "$30M",
+      "function": "Markets"
     },
     {
       "name": "Consumer & community banking",
@@ -59,7 +61,8 @@
       "rto": "4",
       "criticality": "Critical",
       "txPerDay": "60000000",
-      "tolerance": "$12M"
+      "tolerance": "$12M",
+      "function": "Consumer banking"
     },
     {
       "name": "Asset & wealth management",
@@ -69,7 +72,8 @@
       "rto": "8",
       "criticality": "High",
       "txPerDay": "2000000",
-      "tolerance": "$4M"
+      "tolerance": "$4M",
+      "function": "Wealth management"
     },
     {
       "name": "Card & merchant services",
@@ -79,7 +83,8 @@
       "rto": "6",
       "criticality": "High",
       "txPerDay": "40000000",
-      "tolerance": "$6M"
+      "tolerance": "$6M",
+      "function": "Cards & merchant"
     }
   ],
   "apps": [

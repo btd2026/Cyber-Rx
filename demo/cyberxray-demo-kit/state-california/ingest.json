@@ -37,7 +37,8 @@
       "rto": "6",
       "criticality": "Critical",
       "txPerDay": "8000000",
-      "tolerance": "$4M"
+      "tolerance": "$4M",
+      "function": "Health & human services"
     },
     {
       "name": "Tax collection & revenue (FTB)",
@@ -47,7 +48,8 @@
       "rto": "8",
       "criticality": "Critical",
       "txPerDay": "3000000",
-      "tolerance": "$5M"
+      "tolerance": "$5M",
+      "function": "Revenue"
     },
     {
       "name": "Unemployment & disability (EDD)",
@@ -57,7 +59,8 @@
       "rto": "6",
       "criticality": "Critical",
       "txPerDay": "5000000",
-      "tolerance": "$3M"
+      "tolerance": "$3M",
+      "function": "Labor & employment"
     },
     {
       "name": "Motor vehicles & licensing (DMV)",
@@ -67,7 +70,8 @@
       "rto": "12",
       "criticality": "High",
       "txPerDay": "2000000",
-      "tolerance": "$1M"
+      "tolerance": "$1M",
+      "function": "Motor vehicles"
     },
     {
       "name": "Emergency services & public safety",
@@ -77,7 +81,8 @@
       "rto": "2",
       "criticality": "Critical",
       "txPerDay": "1000000",
-      "tolerance": "$2M"
+      "tolerance": "$2M",
+      "function": "Public safety"
     }
   ],
   "apps": [

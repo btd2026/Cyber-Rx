@@ -98,9 +98,12 @@ router.post('/ingest', optionalJWT, async (req, res) => {
       const txRaw = p.txPerDay != null ? p.txPerDay : p.tx;
       const tx = txRaw != null ? Number(String(txRaw).replace(/[^0-9.]/g, '')) : null;
       const tol = money(p.tolerance != null ? p.tolerance : p.downtimeTolerance);
-      if (rev || rto || tx || tol) resilience.processes[String(p.name).trim()] = {
+      // Optional business-function grouping — the macro layer above processes in the
+      // Framework value chain (Function → Process → Technology → Cyber risk → Control).
+      const func = (p.function != null ? String(p.function) : (p.businessFunction != null ? String(p.businessFunction) : '')).trim() || null;
+      if (rev || rto || tx || tol || func) resilience.processes[String(p.name).trim()] = {
         revenue: rev, rto: Number.isFinite(rto) ? rto : null,
-        txPerDay: Number.isFinite(tx) && tx > 0 ? tx : null, tolerance: tol || null };
+        txPerDay: Number.isFinite(tx) && tx > 0 ? tx : null, tolerance: tol || null, function: func };
     });
     apps.forEach((a) => {
       if (!a || !a.name) return;

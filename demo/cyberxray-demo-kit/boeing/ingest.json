@@ -37,7 +37,8 @@
       "rto": "8",
       "criticality": "Critical",
       "txPerDay": "50000",
-      "tolerance": "$12M"
+      "tolerance": "$12M",
+      "function": "Commercial aircraft"
     },
     {
       "name": "Defense, space & security programs",
@@ -47,7 +48,8 @@
       "rto": "6",
       "criticality": "Critical",
       "txPerDay": "30000",
-      "tolerance": "$15M"
+      "tolerance": "$15M",
+      "function": "Defense & space"
     },
     {
       "name": "Global services & MRO",
@@ -57,7 +59,8 @@
       "rto": "12",
       "criticality": "High",
       "txPerDay": "200000",
-      "tolerance": "$4M"
+      "tolerance": "$4M",
+      "function": "Global services"
     },
     {
       "name": "Engineering & design",
@@ -67,7 +70,8 @@
       "rto": "8",
       "criticality": "Critical",
       "txPerDay": "100000",
-      "tolerance": "$10M"
+      "tolerance": "$10M",
+      "function": "Engineering"
     },
     {
       "name": "Supply chain & procurement",
@@ -77,7 +81,8 @@
       "rto": "12",
       "criticality": "High",
       "txPerDay": "500000",
-      "tolerance": "$3M"
+      "tolerance": "$3M",
+      "function": "Supply chain"
     }
   ],
   "apps": [

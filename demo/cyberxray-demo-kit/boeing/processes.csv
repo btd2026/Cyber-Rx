@@ -1,6 +1,6 @@
-name,revenue,rto,data,criticality,transactions_per_day,downtime_tolerance
-Commercial airplane production,$22B,8,"IP, Confidential",Critical,50000,$12M
-"Defense, space & security programs",$24B,6,"IP, ITAR, Classified",Critical,30000,$15M
-Global services & MRO,$20B,12,"Confidential, PII",High,200000,$4M
-Engineering & design,$0,8,"IP, Design Data",Critical,100000,$10M
-Supply chain & procurement,$40B,12,Confidential,High,500000,$3M
+name,revenue,rto,data,criticality,transactions_per_day,downtime_tolerance,function
+Commercial airplane production,$22B,8,"IP, Confidential",Critical,50000,$12M,Commercial aircraft
+"Defense, space & security programs",$24B,6,"IP, ITAR, Classified",Critical,30000,$15M,Defense & space
+Global services & MRO,$20B,12,"Confidential, PII",High,200000,$4M,Global services
+Engineering & design,$0,8,"IP, Design Data",Critical,100000,$10M,Engineering
+Supply chain & procurement,$40B,12,Confidential,High,500000,$3M,Supply chain

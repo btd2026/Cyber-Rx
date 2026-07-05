@@ -69,6 +69,7 @@ Then paste `boeing/browser-localStorage.js` into the app's DevTools console. The
 - **5 risks** → `risks.csv`  (each links to a system by name; open risks drive material exposure)
 - **4 cyber initiatives** → `initiatives.csv`  (per-initiative ROI for CISO/CFO)
 - **3 strategic initiatives** (CEO Go/No-Go): Digital-twin manufacturing ($2B); 777X production ramp ($4B); Defense-cloud (IL5) migration ($1B)
+- **Business functions** (Framework value chain): Commercial aircraft, Defense & space, Global services, Engineering, Supply chain
 
 ## Frameworks in scope
 `CMMC 2.0` · `NIST 800-171` · `ITAR` · `AS9100` · `NIST CSF 2.0`
