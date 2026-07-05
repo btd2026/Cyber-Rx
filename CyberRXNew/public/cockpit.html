@@ -136,6 +136,9 @@
   .vend-btn{font-size:11.5px;font-weight:700;color:var(--blue);background:none;border:1px solid var(--line-2);border-radius:7px;padding:5px 11px;cursor:pointer}
   .vend-btn:disabled{color:var(--muted);cursor:default}
   .vend-tier{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:var(--surface-2);border:1px solid var(--line);border-radius:20px;padding:1px 6px}
+  .vend-conn{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;width:100%;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+  .vend-conn .field label{display:block;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:3px}
+  .vend-conn select,.vend-conn input{width:100%;padding:6px 9px;border:1px solid var(--line-2);border-radius:7px;font-size:12.5px;background:var(--card,#fff);color:var(--ink)}
   .drill-cta{color:var(--blue);font-weight:700;white-space:nowrap}
   .dotstrip{display:flex;gap:4px;margin-top:9px;flex-wrap:wrap}.dotstrip .ds{width:13px;height:13px;border-radius:3px;display:inline-block}
   .drow{padding:12px 0;border-top:1px solid var(--line)}.drow:first-child{border-top:none}
@@ -2853,7 +2856,30 @@ function drillVendors(){
    monitoring service, normalized to one 0–100 scale by /api/vendors/portfolio,
    worst-first. Weekly auto-refresh + on-demand. Modeled + labeled until a provider
    is credentialed; then the score equals the one on that provider's portal. ---- */
-var VENDOR_PORT=null,VENDOR_BUSY=false,VENDOR_SEEDSIG='';
+var VENDOR_PORT=null,VENDOR_BUSY=false,VENDOR_SEEDSIG='',VENDOR_SHOWCONNECT=false,VENDOR_CONNMSG='';
+var VENDOR_PROVIDERS=['SecurityScorecard','BitSight','UpGuard','Panorays','Black Kite'];
+/* Connect a monitoring provider from inside the section — stores the key server-side
+   in the vault (never held in the browser) so ratings pull live; falls back to a
+   local provider selection (modeled, labeled) if the vault is unavailable. */
+function vendorConnect(provider,key){
+  VENDOR_CONNMSG='connecting';renderCisoVendors();
+  fetch(apiBase()+'/api/vendors/monitor/connect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider:provider,credentials:{apiKey:key}})})
+    .then(function(r){return r.json().catch(function(){return {};});})
+    .then(function(d){
+      try{localStorage.setItem('cyberrx_vendor_monitor',JSON.stringify({vendor:provider,connected:!!(d&&d.connected)}));}catch(_){}
+      VENDOR_CONNMSG=(d&&d.connected)?'ok':'stored';VENDOR_SHOWCONNECT=false;VENDOR_PORT=null;VENDOR_SEEDSIG='';vendorFetch(true);
+    })
+    .catch(function(){try{localStorage.setItem('cyberrx_vendor_monitor',JSON.stringify({vendor:provider,connected:false}));}catch(_){}VENDOR_CONNMSG='stored';VENDOR_SHOWCONNECT=false;VENDOR_PORT=null;VENDOR_SEEDSIG='';vendorFetch(true);});
+}
+function vendorConnectForm(vs){
+  var opts=VENDOR_PROVIDERS.map(function(p){return '<option'+(vs&&vs.vendor===p?' selected':'')+'>'+p+'</option>';}).join('');
+  var msg=VENDOR_CONNMSG==='connecting'?'<span class="cn" style="color:var(--muted)">⟳ connecting…</span>':
+    (VENDOR_CONNMSG==='ok'?'<span class="cn" style="color:var(--good)">✓ live ratings connected</span>':
+    (VENDOR_CONNMSG==='stored'?'<span class="cn" style="color:var(--warn)">saved — ratings stay modeled until the provider API validates</span>':''));
+  return '<div class="vend-conn"><div class="field" style="min-width:150px"><label>Monitoring service</label><select id="vendProvSel">'+opts+'</select></div>'+
+    '<div class="field" style="flex:1;min-width:180px"><label>API key</label><input id="vendKeyInp" type="password" placeholder="paste the provider API key"></div>'+
+    '<button class="vend-btn" id="vendConnGo">Connect</button> <button class="vend-btn" id="vendConnCancel">Cancel</button> '+msg+'</div>';
+}
 /* The tier-1/2 vendor list captured at onboarding (cyberrx_vendors); falls back to
    the vendors named in the systems inventory so the panel is never empty. */
 function vendorSeed(){
@@ -2920,13 +2946,18 @@ function renderCisoVendors(){
     '</div>';
   var bar='<div class="vend-bar"><div class="vend-prov">'+provLine+'</div>'+
     '<div class="vend-refresh"><span class="cn">Refreshed <b>'+vendorAgo(refreshedTs)+'</b> · auto-refreshes weekly'+(vendorDue()&&!VENDOR_BUSY?' <span style="color:var(--warn)">· due</span>':'')+'</span>'+
-    '<button class="vend-btn" id="vendRefreshBtn"'+(VENDOR_BUSY?' disabled':'')+'>'+(VENDOR_BUSY?'⟳ refreshing…':'↻ Refresh now')+'</button></div></div>';
+    '<button class="vend-btn" id="vendConnBtn">'+(vs?'⚙ Change key':'🔌 Connect a service')+'</button>'+
+    '<button class="vend-btn" id="vendRefreshBtn"'+(VENDOR_BUSY?' disabled':'')+'>'+(VENDOR_BUSY?'⟳ refreshing…':'↻ Refresh now')+'</button></div></div>'+
+    (VENDOR_SHOWCONNECT?vendorConnectForm(vs):'');
   var listHtml=top.map(function(v){return vendorScoreRow(v,vs);}).join('');
   host.innerHTML='<div class="card"><div class="ck">Top third-party risk — worst-rated first</div>'+
     '<div class="cn" style="margin-top:4px">'+provLine.replace(/<span class="pill[^>]*>[^<]*<\/span> /,'')+'.</div>'+
     bar+summary+'<div style="margin-top:10px">'+listHtml+'</div>'+
     '<div class="cn" style="margin-top:10px">Higher is safer, on your color scale — '+scaleLegend()+'. Every provider’s native scale (BitSight 250–900, letter grades, 0–100) is normalized to one 0–100 axis so vendors are directly comparable. Showing the 5 worst of '+p.count+'.</div></div>';
   var rb=document.getElementById('vendRefreshBtn');if(rb)rb.onclick=function(){vendorFetch(true);};
+  var cb=document.getElementById('vendConnBtn');if(cb)cb.onclick=function(){VENDOR_SHOWCONNECT=!VENDOR_SHOWCONNECT;VENDOR_CONNMSG='';renderCisoVendors();};
+  var cc=document.getElementById('vendConnCancel');if(cc)cc.onclick=function(){VENDOR_SHOWCONNECT=false;VENDOR_CONNMSG='';renderCisoVendors();};
+  var cg=document.getElementById('vendConnGo');if(cg)cg.onclick=function(){var sel=document.getElementById('vendProvSel'),k=document.getElementById('vendKeyInp');var prov=sel?sel.value:'';var key=k?String(k.value||'').trim():'';if(!key){VENDOR_CONNMSG='stored';}vendorConnect(prov,key);};
 }
 /* ---- the four tiles ---- */
 /* The "Are we under attack?" status tile — lives in the Under-attack tab's War

@@ -79,6 +79,31 @@ async function livePull(pkey, vendorDomain, orgId) {
   }
 }
 
+// POST /api/vendors/monitor/connect — store the org-level monitoring-provider
+// credential in the vault so livePull() can read the provider's real ratings. The
+// key never returns to the client. Best-effort: reports connected:false (not a hard
+// error) when the vault is unavailable, so the cockpit can fall back to modeled.
+router.post('/monitor/connect', async (req, res) => {
+  try {
+    const orgId = req.orgId || 'demo';
+    const body = req.body || {};
+    const pkey = providerKey(body.provider);
+    const creds = body.credentials || (body.apiKey ? { apiKey: body.apiKey } : {});
+    if (!pkey) return res.status(400).json({ error: 'provider required' });
+    if (!creds || !Object.keys(creds).length) return res.status(400).json({ error: 'credential required' });
+    try {
+      await vault.set(orgId, pkey, creds);
+    } catch (e) {
+      if (logger && logger.warn) logger.warn('vendor monitor vault set failed: ' + e.message);
+      return res.json({ connected: false, provider: pkey, reason: 'credential store unavailable' });
+    }
+    res.json({ connected: true, provider: pkey });
+  } catch (e) {
+    if (logger && logger.error) logger.error('vendor monitor connect failed: ' + e.message);
+    res.status(500).json({ error: 'connect failed' });
+  }
+});
+
 // POST /api/vendors/portfolio — score + rank the org's tier-1/2 vendors.
 router.post('/portfolio', async (req, res) => {
   try {

@@ -257,13 +257,14 @@ var SEATS = {
      '<div id="cisoVendors"></div>')
    +sec('05','AI risk','Cyber and AI on two fronts: <b>securing the AI we run</b> (the AI systems in production, the governance around them, and the attack surface they add) and <b>using AI to defend</b> (where our security tools already run AI to cut detection and response time).',
      '<div id="cisoAiRisk"></div>')
-   +sec('06','My Decisions','Where the next security dollar goes and whether funded actions are on track — a costed decision that records to your ticketing system, the live portfolio of initiatives, and the one-click board / regulator report.',
+   +sec('06','Decision &amp; Projections','Where the next security dollar goes and the projected return — a costed decision that records to your ticketing system, and the one-click board / regulator report that projects the trajectory.',
      decisions([{n:1,q:'Which control gap do we close first?',sit:'The biggest dollar driver is the privileged path into payments. Where do we direct the next dollar?',opts:[
        {rec:true,tag:'A · Privileged access (PAM)',on:'Option A · PAM',osum:'$1.4M · 37×',pros:['Closes the $52M driver','Highest return available','Improves board posture immediately'],cons:['Requires $1.4M of capital this year','~3 weeks of IAM engineering effort']},
        {tag:'B · Prove recovery (DR test)',on:'Option B · DR',osum:'$3.2M · <6h recovery',pros:['Removes ~$40M of the recovery tail','Meets regulatory recovery expectations'],cons:['$3.2M — larger program than PAM','Leaves the #1 driver (the $52M privileged path) open']},
        {tag:'C · AI-decisioning governance',on:'Option C · AI governance',osum:'standard + oversight',pros:['Addresses the fastest-rising risk (+$8M/qtr)','Gets ahead of the AI board decision'],cons:['Does not touch the $52M top driver yet','Benefit is preventive, not immediate risk removed']}]}])
-     +'<div id="initiatives-panel" style="margin-top:14px"></div>'
      +'<div class="card" style="margin-top:14px"><div class="ck">Board-ready report</div><div class="cn" style="margin-top:6px">The one-click board / regulator report — the financial statement of cyber risk, Item 106 governance, KRIs, decisions and trajectory — assembled from the same live model, every figure carrying its provenance.</div><div style="margin-top:12px"><button class="bp-btn primary" onclick="openBoardPack()">Open the board pack →</button></div></div>')
+   +sec('07','Project ROI','The live portfolio of funded cyber initiatives — every dollar invested, the annual loss exposure it buys down, and the return per dollar. Each initiative maps to a business objective and carries its status live from your ticketing system.',
+     '<div id="initiatives-panel"></div>')
   );}
  },
 
