@@ -89,10 +89,7 @@
   .tmp-gc{display:flex;flex-direction:column;gap:3px}
   .tmp-ctl{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--ink-2);white-space:nowrap}
   .tmp-note{font-size:11px;color:var(--ink-2);margin:0 0 6px 6px}.tmp-note.crit{color:var(--crit);font-weight:600}
-  .tmp-gate.clickable{cursor:pointer;transition:box-shadow .12s,transform .12s}
-  .tmp-gate.clickable:hover{box-shadow:0 2px 10px rgba(0,0,0,.12);transform:translateY(-1px)}
-  .tmp-flag{color:var(--crit);font-weight:800}
-  /* Crown-jewel threat map — threats column (left) feeding the attack-path lanes (right) */
+  /* Crown-jewel threat map — threats column (left) + ATT&CK grid (right) */
   .tm2{display:flex;gap:14px;align-items:flex-start;margin-top:10px}
   .tm2-threats{flex:0 0 172px;display:flex;flex-direction:column;gap:8px;padding:11px;background:var(--crit-soft);border:1px solid var(--line-2);border-radius:11px;align-self:stretch}
   .tm2-th-h{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--crit)}
@@ -102,6 +99,20 @@
   .tm-actor-c{font-size:10.5px;color:var(--ink-2)}
   .tm2-into{margin-top:auto;font-size:10px;font-weight:700;color:var(--muted);text-align:center;padding-top:4px}
   .tm2-paths{flex:1;min-width:0}
+  .tmg-wrap{overflow-x:auto;padding-bottom:4px}
+  .tmg{border-collapse:separate;border-spacing:3px}
+  .tmg-th{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;color:var(--muted);padding:2px 2px 6px;text-align:center;white-space:nowrap;vertical-align:bottom;line-height:1.15}
+  .tmg-cjh{text-align:left}
+  .tmg-cj{text-align:left;white-space:nowrap;padding:3px 10px 3px 2px}
+  .tmg-cj b{font-size:12px;color:var(--ink);display:block;line-height:1.15}.tmg-cj span{font-size:9.5px;color:var(--muted)}
+  .tmg-cell{width:38px;height:30px;text-align:center;font-weight:800;font-size:11.5px;border-radius:6px;color:#fff}
+  .tmg-cell.good{background:var(--good)}.tmg-cell.blue{background:var(--blue)}.tmg-cell.warn{background:var(--warn);color:#4a3800}.tmg-cell.crit{background:var(--crit)}.tmg-cell.muted{background:var(--surface-2);color:var(--muted)}
+  .tmg-cell.offpath{opacity:.24}
+  .tmg-cell.entry{box-shadow:inset 0 0 0 2px var(--ink);position:relative}
+  .tmg-cell.entry::after{content:'◆';position:absolute;top:-1px;right:2px;font-size:7px;color:var(--ink)}
+  .tmg-cell.clickable{cursor:pointer}
+  .tmg-cell.clickable:hover{outline:2px solid var(--ink);outline-offset:1px}
+  .tmg-weak{font-weight:800;text-align:center;font-size:12.5px;padding:0 4px}
   @media(max-width:760px){.tm2{flex-direction:column}.tm2-threats{flex-basis:auto;flex-direction:row;flex-wrap:wrap;align-items:center}.tm2-into{margin:0}}
   /* Crown-jewel value chain — executive flow visual */
   .cvf-head{display:flex;align-items:center;gap:6px;margin:14px 0 4px}
@@ -3622,26 +3633,15 @@ function tmLane(c){
 /* The kill-chain tactics that matter to reach + damage this crown jewel. Internet-
    facing jewels are hit at the perimeter; internal ones require lateral movement. */
 function tmPath(c){return c.internet?['Initial Access','Credential Access','Impact']:['Initial Access','Lateral Movement','Credential Access','Impact'];}
-/* A control gate for a MITRE tactic — the WEAKEST control sets its color (one gap
-   opens the path). Non-compliant gates (weakest < 75%) are clickable to the drill. */
-function tmGate2(tactic){
+/* Short column labels for the ATT&CK grid. */
+var TACTIC_ABBR={'Reconnaissance':'Recon','Resource Development':'Res-Dev','Initial Access':'Init Access','Execution':'Exec','Persistence':'Persist','Privilege Escalation':'Priv Esc','Defense Evasion':'Def Evade','Credential Access':'Cred Access','Discovery':'Discovery','Lateral Movement':'Lateral','Collection':'Collection','Command & Control':'C2','Exfiltration':'Exfil','Impact':'Impact'};
+/* Org-wide control state for a MITRE tactic — the WEAKEST mapped control sets it
+   (one gap opens the path). Non-compliant = weakest < 75%. */
+function tmTacticState(tactic){
   var keys=TACTIC_CAPS[tactic]||[];
-  var ctrls=keys.map(function(k){return {c:CAP_BY_KEY[k],p:capDeploy(CAP_BY_KEY[k])};}).filter(function(x){return x.c;});
-  var meas=ctrls.filter(function(x){return x.p!=null;}).map(function(x){return x.p;});
-  var minP=meas.length?Math.min.apply(null,meas):null,cls=capColor(minP),weak=minP!=null&&minP<75;
-  var chips=ctrls.map(function(x){return '<span class="tmp-ctl"><span class="cap-dot" style="background:var(--'+capColor(x.p)+')"></span>'+x.c.name.replace(/ *\(.*\)/,'')+' '+(x.p==null?'—':x.p+'%')+'</span>';}).join('');
-  return {cls:cls,minP:minP,weak:weak,html:'<div class="tmp-gate '+cls+(weak?' clickable':'')+'"'+(weak?(' data-gap="'+tactic+'" title="Click — what’s causing this and the decision to close it"'):'')+'><div class="tmp-gl">'+tactic+(weak?' <span class="tmp-flag">⚠</span>':'')+'</div><div class="tmp-gc">'+chips+'</div></div>'};
-}
-function tmLane2(c){
-  var net=tmNode('🌐','Internet','the perimeter','net');
-  var gates=tmPath(c).map(tmGate2);
-  var cjSub=(c.internet?'internet-facing':'internal')+' · crit '+(c.score!=null?c.score:'—')+(c.exposure>0?(' · '+usd(c.exposure)):'');
-  var cj=tmNode('🖥','<b>'+c.name+'</b>',cjSub,'cj');
-  var chain=net;gates.forEach(function(g){chain+=TM_ARROW+g.html;});chain+=TM_ARROW+cj;
-  var weak=gates.filter(function(g){return g.minP!=null;}).sort(function(a,b){return a.minP-b.minP;})[0];
-  var exploit=weak&&weak.minP!=null&&weak.minP<50;
-  return '<div class="tmp-lane'+(exploit?' exploit':'')+'">'+chain+'</div>'+
-    (weak&&weak.minP!=null?('<div class="tmp-note'+(exploit?' crit':'')+'">'+(exploit?'⚠ Exploitable — ':'✓ Defended — ')+'weakest control on the path to <b>'+c.name+'</b> is <b style="color:var(--'+weak.cls+')">'+weak.minP+'%</b>'+(weak.minP<75?'; click the ⚠ gate for the fix.':'.')+'</div>'):'');
+  var vals=keys.map(function(k){return capDeploy(CAP_BY_KEY[k]);}).filter(function(x){return x!=null;});
+  var minP=vals.length?Math.min.apply(null,vals):null;
+  return {minP:minP,cls:capColor(minP),weak:minP!=null&&minP<75,keys:keys};
 }
 /* Click-through for a non-compliant tactic gate: what's causing it (the weak
    control, its live coverage + source), and the decision to close it (funded
@@ -3672,13 +3672,26 @@ function renderThreatMap(){
     var cls=cov==null?'muted':cov>=80?'good':cov>=50?'warn':'crit';
     return '<div class="tm-actor" title="'+String(x.m||'').replace(/"/g,'&quot;')+'"><div class="tm-actor-n">'+x.n+'</div><div class="tm-actor-t">'+x.t+'</div><div class="tm-actor-c"><span class="cap-dot" style="background:var(--'+cls+')"></span>'+(cov==null?'coverage n/a':cov+'% defended')+'</div></div>';
   }).join('');
+  // Org-wide control state per tactic (computed once, reused across every row).
+  var states={};ATTCK_TACTICS.forEach(function(t){states[t]=tmTacticState(t);});
+  var header='<tr><th class="tmg-cjh">Crown jewel</th>'+ATTCK_TACTICS.map(function(t){return '<th class="tmg-th" title="'+t+'">'+(TACTIC_ABBR[t]||t)+'</th>';}).join('')+'<th class="tmg-th">Weakest<br>on path</th></tr>';
+  var body=cjs.map(function(c){
+    var path=tmPath(c),entry=c.internet?'Initial Access':'Lateral Movement',pathSet={};path.forEach(function(t){pathSet[t]=1;});
+    var weak=path.map(function(t){return states[t];}).filter(function(s){return s.minP!=null;}).sort(function(x,y){return x.minP-y.minP;})[0];
+    var cells=ATTCK_TACTICS.map(function(t){var s=states[t],on=!!pathSet[t],isEntry=(t===entry),clickable=s.weak;
+      return '<td class="tmg-cell '+s.cls+(on?' onpath':' offpath')+(isEntry?' entry':'')+(clickable?' clickable':'')+'"'+(clickable?(' data-gap="'+t+'"'):'')+' title="'+t+' — '+(s.minP==null?'not measured':s.minP+'% (weakest control)')+(on?(isEntry?' · entry point for this crown jewel':' · on the attack path'):' · not on this jewel’s path')+(clickable?' · click for the fix':'')+'">'+(s.minP==null?'·':s.minP)+'</td>';
+    }).join('');
+    var vcls=weak?weak.cls:'muted';
+    return '<tr><td class="tmg-cj"><b>'+c.name+'</b><span>'+(c.internet?'internet-facing':'internal')+' · crit '+(c.score!=null?c.score:'—')+(c.exposure>0?(' · '+usd(c.exposure)):'')+'</span></td>'+cells+'<td class="tmg-weak" style="color:var(--'+vcls+')">'+(weak&&weak.minP!=null?weak.minP+'%':'—')+'</td></tr>';
+  }).join('');
+  var grid='<div class="tmg-wrap"><table class="tmg"><thead>'+header+'</thead><tbody>'+body+'</tbody></table></div>';
   host.innerHTML='<div class="card"><div class="ck">Crown-jewel threat map '+tag+' — are our crown jewels reachable, and do our controls stop the attack?</div>'+
-    '<div class="cn" style="margin-top:6px">On the <b>left</b>, the threat actors '+(feedOn?'live from your threat-intel feed':'modeled for '+indLabel())+'. To the <b>right</b>, for each crown jewel, the MITRE ATT&CK tactics an attacker runs and the <b>controls deployed to stop each one</b> — a gate’s color is its <b>weakest</b> control ('+scaleLegend()+'). <b>'+reach+' of '+cjs.length+'</b> crown jewels are directly internet-reachable. <b>Click any ⚠ amber/red gate</b> for what’s causing the gap and the decision to close it.'+(feedOn?'':' Connect a threat-intel feed (Recorded Future · Mandiant · OTX · CISA) for your live actor set.')+'</div>'+
+    '<div class="cn" style="margin-top:6px">On the <b>left</b>, the threat actors '+(feedOn?'live from your threat-intel feed':'modeled for '+indLabel())+'. To the <b>right</b>, a grid of every crown jewel (rows) against all 14 MITRE ATT&CK tactics (columns). Each cell is the <b>weakest control</b> deployed against that tactic, on your scale ('+scaleLegend()+'). Cells <b>on this jewel’s attack path</b> are solid; the <b>◆ ring</b> marks the entry point; off-path tactics are dimmed. <b>'+reach+' of '+cjs.length+'</b> crown jewels are directly internet-reachable. <b>Click any amber/red cell</b> for what’s causing the gap and the decision to close it.'+(feedOn?'':' Connect a threat-intel feed (Recorded Future · Mandiant · OTX · CISA) for your live actor set.')+'</div>'+
     '<div class="tm2">'+
       '<div class="tm2-threats"><div class="tm2-th-h">Threats · '+(feedOn?'live':'modeled')+'</div>'+(actorCards||'<div class="cn" style="font-size:11px">connect a threat-intel feed</div>')+'<div class="tm2-into">▸ reach the internet</div></div>'+
-      '<div class="tm2-paths">'+cjs.map(tmLane2).join('')+'</div>'+
+      '<div class="tm2-paths">'+grid+'</div>'+
     '</div></div>';
-  host.querySelectorAll('.tmp-gate.clickable').forEach(function(el){el.onclick=function(){var t=el.dataset.gap;openDrill(t+' — what’s causing the gap & the decision',tmGapDrill(t));};});
+  host.querySelectorAll('.tmg-cell.clickable').forEach(function(el){el.onclick=function(){var t=el.dataset.gap;openDrill(t+' — what’s causing the gap & the decision',tmGapDrill(t));};});
 }
 function renderThreatIntel(){
   var host=document.getElementById('cisoThreat');if(!host)return;
