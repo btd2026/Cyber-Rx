@@ -236,7 +236,7 @@ var SEATS = {
  ciso:{
   eyebrow:'Security operating view · CISO',
   verdict:'<span class="em">No active compromise, and the program is improving.</span> The largest exposure driver has a funded decision ready; control effectiveness is measured as dollars of risk removed.',
-  sub:'The operator’s seat — still in business terms: what drives exposure, which decisions close it, and control effectiveness as risk removed, not maturity scores. This number rolls up to the board.',
+  sub:'',
   brief:'No active compromise, and the program is improving. The biggest dollar driver is the privileged path into payments — fifty-two million — and it has a funded decision ready to close it. We measure our controls by the risk they remove, not by a maturity score, and this is the same number that rolls straight up to the board and the C.F.O.',
   body:function(){return (
    sec('01','Are we secure right now — and is the program getting stronger?','The whole-program picture in business terms: the health of the security tools and how much of the attacker playbook we can see, and the crown jewels we protect with today’s exposure on each.',
