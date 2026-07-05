@@ -485,6 +485,8 @@ var TAB_LABELS={
  'Operational resilience':'Op. resilience','Critical process health':'Process health','Manufacturing / service continuity':'Continuity','Supply-chain reliability':'Supply chain','Recovery readiness':'Recovery','Business continuity gaps':'Continuity gaps',
  // CIO seat (outcome tabs)
  'Technology enablement of business objectives':'Tech enablement','Digital service reliability':'Service reliability','AI adoption readiness':'AI readiness','Workforce productivity':'Workforce','Application modernization risk':'Modernization','Service availability':'Availability',
+ // CLO seat (outcome tabs)
+ 'Regulatory exposure':'Regulatory','Contractual risk':'Contractual','Breach-notification readiness':'Notification','Litigation exposure':'Litigation','Privacy risk':'Privacy','Evidence readiness':'Evidence',
  // Board seat
  'Where do we stand? — the board brief':'Board brief','Our worst realistic day — could we survive it?':'Worst day','How do we compare — and which way are we heading?':'Peers & trend','Oversight & disclosure — SEC Reg S-K Item 106':'Oversight','What needs the board?':'Board decisions',
  'Are we under attack right now?':'Live status','What are we protecting — and what is each worth?':'Crown Jewels — Exposure','How is security helping the business grow — and win deals?':'Business Growth','Are our controls actually working — and is the program improving?':'Controls','Which framework controls do our tools satisfy? — NIST CSF 2.0 & 800-53':'Frameworks','AI risk — two fronts: securing the AI we run, and using AI to defend':'AI risk','Are we audit-ready? — compliance framework readiness':'Compliance','What decision needs you now?':'Decision','How does our security investment move the business?':'ROI','What are my responsibilities — and how does security enable each?':'Operating model',
@@ -1640,6 +1642,18 @@ function renderCioModern(){
     '<div class="card"><div class="ck">Slowest legacy recovery</div><div class="cv" style="font-size:19px;margin-top:6px'+(worst!=null&&worst>24?';color:var(--warn)':'')+'">'+(worst!=null?hrsToStr(worst):'—')+'</div><div class="cn">older systems recover slowest, driving the tail</div></div>'+
     '</div><div class="cn" style="margin-top:10px">Application-modernization risk is the exposure carried by end-of-life and unsupported systems still on revenue paths — they patch slower, recover slower, and drive the worst-case tail. Prioritize modernization by revenue protected per dollar. Upload your systems inventory (with EOL status) to quantify this.</div>';
 }
+/* CLO privacy risk — the exposure from sensitive data held + data-subject-rights
+   timeliness. From privacy signals (DSAR) + legal liability + sector data classes. */
+function renderCloPrivacy(){
+  var host=document.getElementById('cloPrivacy');if(!host)return;
+  var open=sig('dsar_open'),over=sig('dsar_overdue'),lg=(LIVE&&LIVE.legal)||{},liab=lg.liability||{};
+  var dataClasses=(indProfile().data||[]).join(' · ');
+  host.innerHTML='<div class="grid4">'+
+    '<div class="card"><div class="ck">Data-subject requests open</div><div class="cv" style="font-size:19px;margin-top:6px">'+(open!=null?open:'—')+'</div><div class="cn">privacy requests in the response window '+(open!=null?liveTag():'connect OneTrust')+'</div></div>'+
+    '<div class="card"><div class="ck">Overdue (SLA breached)</div><div class="cv" style="font-size:19px;margin-top:6px;color:'+(over!=null?(over>0?'var(--crit)':'var(--good)'):'var(--muted)')+'">'+(over!=null?over:'—')+'</div><div class="cn">past the statutory clock — direct exposure</div></div>'+
+    '<div class="card"><div class="ck">Records we hold</div><div class="cv" style="font-size:19px;margin-top:6px">'+(liab.records!=null?liab.records.toLocaleString():'—')+'</div><div class="cn">sensitive records under privacy law</div></div>'+
+    '</div><div class="cn" style="margin-top:10px">Privacy risk is the exposure from the sensitive data you hold (<b>'+dataClasses+'</b>) and your ability to meet data-subject rights inside the statutory clock. Connect your privacy platform (<b>OneTrust · TrustArc</b>) to make DSAR timeliness live; the binding jurisdiction clocks are in <b>Regulatory exposure</b>.</div>';
+}
 /* Honest data-mode banner for the CEO $ tabs — the dollar figures are sector
    placeholders until go-live, then computed from the org's own data. Labels the
    illustrative state plainly so nothing reads as a fabricated claim. */
@@ -2203,7 +2217,7 @@ function renderGov(){
       (ev>0?('<b style="color:var(--good)">'+ev+' of '+m.rows.length+'</b> are now <span class="srcpill conn">● source-connected</span> (auditable against the system of record); the rest are <span class="srcpill self">○ self-reported</span>. '):'All are <span class="srcpill self">○ self-reported</span> today — ')+
       'connect your board portal, HRIS and GRC to evidence every line and make this filing-ready and audit-defensible.</div></div>';})();
 }
-function renderBoard(){renderStress();renderReadiness();renderThirdParty();renderGov();renderMateriality();renderCloOps();renderAiRisk();renderCisoOps();renderCisoWarRoom();}
+function renderBoard(){renderStress();renderReadiness();renderThirdParty();renderGov();renderMateriality();renderCloOps();renderCloPrivacy();renderAiRisk();renderCisoOps();renderCisoWarRoom();}
 /* War Room, integrated into the CISO seat — shows current incident state with a
    one-click entry, so incident command lives inside the cockpit, not beside it. */
 function renderCisoWarRoom(){
