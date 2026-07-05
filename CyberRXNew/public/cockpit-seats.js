@@ -258,6 +258,72 @@ var SEATS = {
        {tag:'C · AI-decisioning governance',on:'Option C · AI governance',osum:'standard + oversight',pros:['Addresses the fastest-rising risk (+$8M/qtr)','Gets ahead of the AI board decision'],cons:['Does not touch the $52M top driver yet','Benefit is preventive, not immediate risk removed']}]}])
      +'<div id="initiatives-panel" style="margin-top:14px"></div>')
   );}
+ },
+
+ crev:{
+  eyebrow:'Revenue &amp; customer view · Chief Revenue Officer',
+  verdict:'Cyber is <span class="em">protecting the revenue and customer trust that drive growth</span> — the systems that carry revenue are recoverable, and security clears deals rather than blocking them. The watch items are fraud exposure and any customer-impacting incident.',
+  sub:'Cyber through the revenue lens: the systems that carry revenue, the trust customers buy, service availability, fraud, and the security that wins or loses deals.',
+  brief:'From the revenue seat: cyber is protecting the systems that carry our revenue and the trust our customers pay for. Security is clearing deals through certifications, not blocking them. The items to watch are fraud exposure and any incident that reaches customers.',
+  body:function(){return (
+   sec('01','Revenue protection','The systems that carry revenue, ranked by what an hour of downtime costs — so we protect the ones the top line depends on, and know the revenue at risk if they fail.',
+     '<div id="cioSystems"></div>'
+     +'<div class="cn" style="margin-top:8px">These are the revenue-critical systems; an outage on the top one costs the most per hour. Recovery investment should follow revenue.</div>')
+   +sec('02','Customer trust','What a breach would cost in customer trust and liability — and the flip side, security as a sales asset that turns trust into revenue.',
+     '<div id="ceoTrust"></div>')
+   +sec('03','Subscription / service availability','Can customers reach the service they pay for? The service-critical processes ranked by what an hour of downtime costs, how fast each recovers, and whether that is inside tolerance.',
+     '<div id="cooContinuity"></div>')
+   +sec('04','Fraud exposure','Our live defense against the financial crime that hits revenue directly — payment fraud, business email compromise and account takeover.',
+     '<div id="cfoFraud"></div>')
+   +sec('05','Customer-impacting incidents','Is anything reaching customers right now? Active incidents affecting a customer-facing service, and how fast a disruption would surface.',
+     '<div id="cooStatus"></div>')
+   +sec('06','Sales &amp; renewal risk','Where security helps or hinders the deal — the pipeline moving through security review, how fast we clear it, and the certifications that are the price of admission in our market.',
+     '<div id="cisoGrowth"></div>')
+  );}
+ },
+
+ cpo:{
+  eyebrow:'Product &amp; engineering view · Chief Product Officer',
+  verdict:'Product ships <span class="em">with security built in, not bolted on</span> — launches gated on secure-by-design, AI features governed, and supplier &amp; software dependencies watched. The open work is instrumenting launch readiness and secure-SDLC coverage from your pipeline.',
+  sub:'Cyber through the product lens: launch readiness, innovation velocity, product-quality risk, AI-product readiness, secure-by-design adoption, and the software &amp; supplier dependencies your product ships on.',
+  brief:'From the product seat: the goal is to ship fast with security built in — launches gated on secure-by-design, AI features governed before they reach customers, and our software and supplier dependencies watched. Connect the delivery pipeline and this fills with live launch-readiness and secure-SDLC coverage.',
+  body:function(){return (
+   sec('01','Product launch readiness','Are we clear to ship? Each release gated on secure-by-design checks — threat model, application-security review and no unresolved critical findings — so a launch does not carry avoidable risk to customers.',
+     '<div class="card"><div class="ck">Secure-launch gates</div><div class="cn" style="margin-top:6px">◐ Connect your CI/CD (<b>GitHub · GitLab · Azure DevOps</b>) and application-security tooling to show each release’s security-readiness gate — threat model complete, app-sec scan clean, no unresolved critical findings — so launch readiness is evidenced, not assumed. <span class="pill mod" style="font-size:8px">planned</span></div></div>')
+   +sec('02','Innovation velocity','Are we shipping fast without shipping risk? Deployment frequency and lead time alongside the security-review time, so security accelerates rather than blocks delivery.',
+     '<div class="card"><div class="ck">Velocity vs security friction</div><div class="cn" style="margin-top:6px">◐ Connect your CI/CD and issue tracker to show deployment frequency, lead time and how much time security review adds — so velocity and security are measured together, not traded off. <span class="pill mod" style="font-size:8px">planned</span></div></div>')
+   +sec('03','Product quality risk','The security-quality of what we ship — vulnerabilities in the product, escaped defects, and the exposure they create for customers.',
+     '<div class="card"><div class="ck">Product security quality</div><div class="cn" style="margin-top:6px">◐ Connect your application-security and dependency scanners (<b>Snyk · GitHub Advanced Security</b>) to show vulnerabilities shipped in the product, escaped defects and the customer exposure they create. <span class="pill mod" style="font-size:8px">planned</span></div></div>')
+   +sec('04','AI product readiness','Are AI features in the product governed before they reach customers? AI systems live, the framework adopted, the acceptable-use policy and inventory — readiness to ship AI without shipping unmanaged risk.',
+     '<div id="cioAi"></div>')
+   +sec('05','Secure-by-design adoption','How deeply secure-by-design is adopted across engineering — threat-modeling coverage, secure-SDLC practices, and security embedded in the pipeline rather than a gate beside it.',
+     '<div class="card"><div class="ck">Secure-by-design coverage</div><div class="cn" style="margin-top:6px">◐ Connect your SDLC tooling to show threat-modeling coverage, secure-coding checks and the share of teams with security embedded in the pipeline — so secure-by-design is measured, not aspired to. <span class="pill mod" style="font-size:8px">planned</span></div></div>')
+   +sec('06','Software &amp; supplier dependency risk','What the product ships on — the third-party components and suppliers a compromise of which reaches your customers, and the concentration to watch.',
+     '<div id="ceoThirdParty"></div>'
+     +'<div class="card" style="margin-top:12px"><div class="cn">◐ Connect your SBOM / dependency scanner (<b>Snyk · GitHub</b>) and vendor monitoring to rank the software components and suppliers your product depends on by exposure — the supply-chain path that reaches customers. The single-provider blast radius above is computed live from your asset→vendor map.</div></div>')
+  );}
+ },
+
+ audit:{
+  eyebrow:'Assurance view · Internal Audit',
+  verdict:'The control environment is <span class="em">evidenced and testable</span> — the audit universe maps to live evidence, control maturity is scored from telemetry and document review, and management actions are tracked to closure.',
+  sub:'Cyber for assurance: the audit universe, the evidence behind every control, control-testing status, management action plans, repeat findings and coverage.',
+  brief:'From the assurance seat: the control environment is evidenced and testable. The audit universe maps to live evidence, control maturity is scored from tool telemetry and document review rather than self-attestation, and management actions are tracked to closure.',
+  body:function(){return (
+   sec('01','Audit universe','The frameworks and regulations in scope for the business — the universe internal audit covers — with live readiness computed from connected tools and governance records, not self-attestation.',
+     '<div id="cisoCompliance"></div>')
+   +sec('02','Evidence readiness','Can we produce the evidence on demand? The live tool coverage behind control scores, plus the policies analyzed by document review — the source an auditor can trace every number to.',
+     '<div id="cisoCoverage"></div>'
+     +'<div class="cn" style="margin-top:12px">Evidence is <b>🔌 live tool telemetry</b> (the coverage above) and <b>📄 document review</b> (policies uploaded in onboarding, scored against the NIST catalog). Every framework score traces to one of these — the walk from a maturity score to its source system or document.</div>')
+   +sec('03','Control testing status','The full control catalog scored on the CMMI maturity scale — the tested state of every control, rolled up per subcategory → category → function → overall, with the evidence source on each.',
+     '<div id="cisoFrameworks"></div>')
+   +sec('04','Management action plans','The funded remediation closing each control gap — cost, owner, status and the dollars of risk it removes — the management actions internal audit tracks to closure.',
+     '<div id="initiatives-panel"></div>')
+   +sec('05','Repeat findings','The findings that recur audit-over-audit — the systemic gaps that were not truly closed. From your audit / GRC system.',
+     '<div class="card"><div class="ck">Recurring findings</div><div class="cn" style="margin-top:6px">◐ Connect your audit / GRC platform (<b>ServiceNow GRC · AuditBoard · OneTrust</b>) to surface findings that recur across audit cycles — the systemic control gaps that were closed on paper but not in practice, and the highest-priority ones to escalate. <span class="pill mod" style="font-size:8px">planned</span></div></div>')
+   +sec('06','Audit coverage','How much of the audit universe is actually evidenced — the share of controls with live or document evidence vs those still self-attested or untested.',
+     '<div class="card"><div class="ck">Coverage of the universe</div><div class="cn" style="margin-top:6px">Audit coverage is the share of the control universe backed by evidence rather than self-attestation. The <b>Control testing status</b> tab shows, per control, whether it is evidenced by 🔌 live telemetry, 📄 document review, or not yet — connect more tools and upload more policies to raise coverage. Connect your audit-management platform to track the formal audit plan against this universe.</div></div>')
+  );}
  }
 };
 
