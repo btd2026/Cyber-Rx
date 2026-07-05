@@ -471,12 +471,14 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderCeoHealth();renderCeoTrust();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
    trimmed title). Renderers still populate hidden sections' containers. */
 var TAB_LABELS={
+ // CEO seat (outcome tabs)
+ 'Enterprise business health':'Business health','Strategic risk':'Strategic risk','Financial exposure':'Financial exposure','Brand & customer trust':'Customer trust','Board KPIs':'Board KPIs','Decisions required':'Decisions',
  // Board seat
  'Where do we stand? — the board brief':'Board brief','Our worst realistic day — could we survive it?':'Worst day','How do we compare — and which way are we heading?':'Peers & trend','Oversight & disclosure — SEC Reg S-K Item 106':'Oversight','What needs the board?':'Board decisions',
  'Are we under attack right now?':'Live status','What are we protecting — and what is each worth?':'Crown Jewels — Exposure','How is security helping the business grow — and win deals?':'Business Growth','Are our controls actually working — and is the program improving?':'Controls','Which framework controls do our tools satisfy? — NIST CSF 2.0 & 800-53':'Frameworks','AI risk — two fronts: securing the AI we run, and using AI to defend':'AI risk','Are we audit-ready? — compliance framework readiness':'Compliance','What decision needs you now?':'Decision','How does our security investment move the business?':'ROI','What are my responsibilities — and how does security enable each?':'Operating model',
@@ -1406,7 +1408,7 @@ function renderSignals(){
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderProcBars();renderCioSystems();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderCeoHealth();renderCeoTrust();renderEarnings();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -1513,6 +1515,42 @@ function renderBoardBrief(){
     boardRow('Direction of travel',trendLine)+
     boardRow('What needs the board',decN?('<b>'+decN+'</b> funded decision'+(decN>1?'s':'')+' on record; risk-acceptance &amp; appetite reviews are the board’s to approve'):'no open board decisions this period')+
     '<div class="cn" style="margin-top:10px">This is the board’s oversight lens for '+indLabel()+' — the six questions a director asks, in your sector’s terms. Everything below drills to the evidence.</div></div>';
+}
+/* CEO enterprise business-health — the one-glance read: within appetite? getting
+   better? resilient? trusted? and how many decisions need you. From live
+   economics + trend + resilience + incident signal. */
+function renderCeoHealth(){
+  var host=document.getElementById('ceoHealth');if(!host)return;
+  var ec=(LIVE&&LIVE.economics)||{},ap=ec.appetite||{},rs=(LIVE&&LIVE.resilience)||{},tr=trajInfo();
+  function c(label,s,t,note){return '<div class="card"><div class="ck">'+label+'</div><div class="cv" style="font-size:18px;margin-top:6px;color:var(--'+t+')">'+s+'</div><div class="cn" style="margin-top:4px">'+note+'</div></div>';}
+  var appt=ap.appetite?(ap.within!==false&&ap.tail_within!==false?{s:'Within appetite',t:'good'}:(ap.within!==false?{s:'Tail over appetite',t:'warn'}:{s:'Over appetite',t:'crit'})):{s:'Set appetite',t:'muted'};
+  var trend=tr.two?(tr.down?{s:'Improving',t:'good'}:{s:'Rising',t:'crit'}):{s:'Baseline',t:'muted'};
+  var worst=rs.worst_recovery_hours,resil=worst!=null?(worst<=24?{s:'Recoverable',t:'good'}:{s:'Slow to recover',t:'warn'}):{s:'Map recovery',t:'muted'};
+  if(rs.top_vendor_blast&&rs.top_vendor_blast.vendor&&resil.t==='good')resil={s:'Vendor single-point',t:'warn'};
+  var oi=sig('open_incidents'),trust=oi!=null?(oi>0?{s:'Incident active',t:'crit'}:{s:'Intact',t:'good'}):{s:'Connect SIEM',t:'muted'};
+  var decN=allDecisions().length;
+  host.innerHTML='<div class="grid4">'+
+    c('Cyber risk vs appetite',appt.s,appt.t,ec.ale?('expected '+usd(ec.ale)+' this year'):'against the board’s approved tolerance')+
+    c('Program trajectory',trend.s,trend.t,'removing vs adding risk over time')+
+    c('Operational resilience',resil.s,resil.t,worst!=null?('worst recovery '+hrsToStr(worst)):'can we keep operating &amp; recover')+
+    c('Customer trust',trust.s,trust.t,'no active reputational incident')+
+    '</div><div class="cn" style="margin-top:12px">'+(decN?('<b>'+decN+'</b> decision'+(decN>1?'s':'')+' need you — see the <b>Decisions</b> tab. '):'')+'Your one-glance business-health read; every item drills to the evidence, and the tabs above break it down.</div>';
+}
+/* CEO brand & customer trust — the trust at stake in this sector (records held,
+   liability if breached) plus the trust currency. Security as both a risk and a
+   sales asset (the growth panel below). */
+function renderCeoTrust(){
+  var host=document.getElementById('ceoTrust');if(!host)return;
+  var b=indBoard(),lg=(LIVE&&LIVE.legal)||{},liab=lg.liability||{},oi=sig('open_incidents');
+  var recs=liab.records!=null?liab.records:null,exposure=liab.class_action_exposure!=null?liab.class_action_exposure:null;
+  var noun=({health:'member',fin:'customer',retail:'customer',gov:'citizen',mfg:'customer',energy:'customer',tech:'customer'}[indKey()]||'customer');
+  var head=oi!=null?(oi>0?'<span class="warn">A live incident is in progress — trust exposure is active</span>':'No active incident — '+b.trust+' intact'):b.trust+' is what a breach would put at risk';
+  host.innerHTML='<div class="card"><div class="ck">Trust at stake — '+indLabel()+' '+liveTag()+'</div>'+
+    '<div class="cv" style="font-size:18px;margin-top:6px;line-height:1.35">'+head+'</div>'+
+    '<div style="display:flex;gap:28px;margin-top:14px;flex-wrap:wrap">'+
+    '<div><div class="cv" style="font-size:20px">'+(recs!=null?recs.toLocaleString():'—')+'</div><div class="cn">sensitive '+noun+' records we hold</div></div>'+
+    '<div><div class="cv crit claim" data-ev="liability" style="font-size:20px">'+(exposure!=null?usd(exposure):'—')+(exposure!=null?' <span class="fx">ƒ</span>':'')+'</div><div class="cn">notification / class-action exposure if breached</div></div>'+
+    '</div><div class="cn" style="margin-top:12px"><b>'+b.trust.charAt(0).toUpperCase()+b.trust.slice(1)+'</b> is the currency of this business — a breach converts directly into churn, brand damage and the liability above. The flip side is security as a <b>sales asset</b>: the certifications and cleared deals below turn that trust into revenue.</div></div>';
 }
 /* Board decisions — the calls that are the board's to make: risk-acceptances
    above appetite, appetite reviews, and the funded decisions on the oversight

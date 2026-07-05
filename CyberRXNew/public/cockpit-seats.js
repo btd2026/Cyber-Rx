@@ -30,42 +30,42 @@ var SEATS = {
  },
 
  ceo:{
-  eyebrow:'Executive summary · CEO / Board',
-  verdict:'Cyber risk is <span class="em">managed and within the board’s approved tolerance.</span> The worst-case tail sits above appetite, and one funded decision this quarter brings it back in line.',
-  sub:'Your cyber position in the same terms as every other enterprise risk. Every figure is clickable — open it to see the exact formula, the inputs used, and the math.',
-  brief:'Here is where we stand. Cyber risk is a managed business risk, and today it is within the board’s approved tolerance. Our expected annual loss is about sixty-eight million dollars — under one percent of revenue. The one thing to watch is the worst-case tail, which sits above appetite; one funded decision this quarter brings it back in line. Every figure on the screen traces to your own data.',
+  eyebrow:'Executive summary · CEO',
+  verdict:'Cyber is <span class="em">a managed business risk within the board’s approved tolerance</span> — and, run well, a lever for growth. This seat is your six-question read: health, strategic risk, financial exposure, customer trust, board KPIs, and the decisions that need you.',
+  sub:'Cyber in the terms you run the business by — clickable to the exact formula, inputs and math behind every figure.',
+  brief:'Here is your read as CEO. Cyber is a managed business risk, within the board’s approved tolerance, and I can show you the strategic moves it affects, what is financially at stake, what a breach would cost us in customer trust, the numbers you take to the board, and the few decisions that need you. Every figure traces to our own data.',
   body:function(){return (
-   sec('01','Strategic Go / No-Go Control Panel','Leads security assessments, threat modeling and risk reviews for new initiatives (M&amp;A · cloud · AI · expansion) before approval — so you can tell the board whether a strategy is safe to pursue.',
+   sec('01','Enterprise business health','Your one-glance read on whether cyber is helping or hurting the business — within the board’s appetite, getting better or worse, resilient, and trusted — then the processes carrying the most exposure.',
+     '<div id="ceoHealth"></div>'
+     +'<div id="ceoProcBars" style="margin-top:16px">'+bars([
+      {l:'Claims &amp; payments processing',ev:'proc-claims',v:'$34M',pct:100,cls:'hot'},
+      {l:'Policy administration',ev:'proc-policy',v:'$18M',pct:53},
+      {l:'Trading &amp; settlement',ev:'proc-settlement',v:'$11M',pct:32},
+      {l:'Member portal &amp; servicing',ev:'proc-member',v:'$5M',pct:15}])+'</div>')
+   +sec('02','Strategic risk','Is our strategy safe to pursue? A go / no-go per major move (M&amp;A · cloud · AI · expansion), the risks rising fastest, and where a single third-party is a systemic point of failure.',
      '<div id="ceoGoNoGo"></div>'
-     +'<div id="ceoAiRisk" style="margin-top:14px"><div class="card"><div class="cn">◐ Add your AI-governance answers in onboarding, and connect vulnerability management, to populate the AI-initiative gate from live data.</div></div></div>')
-   +sec('02','Decision Intelligence View','Produces executive risk briefs, scenario analysis and business-impact assessments — a one-page decision brief for each strategic initiative with best / likely / worst outcome in dollars and a clear recommendation, plus the severe-but-plausible scenario that frames every decision.',
-     '<div id="ceoDecisionBrief"></div>'
-     +'<div class="cols" style="margin-top:14px"><div class="card" id="ceoStress"><div class="ck">Severe-but-plausible scenario</div><div class="cn" style="margin-top:8px">◐ Illustrative until go-live — modeled from your top crown jewel, its largest open risk, worst-case recovery and your binding regulatory clock. This is the downside every strategic decision above is weighed against.</div></div></div>')
-   +sec('03','Revenue Enablement Dashboard','Supports SOC 2, ISO 27001, HITRUST, FedRAMP, CMMC certifications and secure sales deals — certification readiness + deal clearance, so we win deals without adding cyber risk.',
-     '<div id="cisoGrowth"></div><div id="ceoPeer" style="margin-top:12px"></div>')
-   +sec('04','Executive Accountability Heatmap','Defines the RACI for cybersecurity across business units and executive scorecards — every leader’s accountabilities, plus the governance structure SEC Reg S-K Item 106 requires you to disclose and the evidenced decision log that is your D&amp;O defense.',
-     '<div id="opmodel-ceo"></div>'
-     +'<div id="ceoGov" style="margin-top:14px"><div class="card"><div class="ck">Board oversight structure · SEC Item 106</div><div class="cn" style="margin-top:8px">◐ Add your board-governance answers in onboarding to make this filing-ready.</div></div></div>'
-     +'<div id="ceoOversight" style="margin-top:14px">'+kvcard('Oversight &amp; decision record',[{k:'Funded decisions logged',v:'from your decisions',ev:'oversight'},{k:'Each carries',v:'leader · date · ticket',ev:'oversight'},{k:'Board-appetite reviewed',v:'this quarter',cls:'good'},{k:'Defensibility',v:'evidenced trail',cls:'good',ev:'oversight'}])+'</div>')
-   +sec('05','Business Impact Live Board','Implements SOC monitoring, SIEM dashboards and KPI/KRI tracking — the board’s oversight lens for your sector first, then real-time revenue-at-risk, the processes that carry the risk, the trend over time, and insurance coverage against the worst case.',
-     '<div id="ceoBoardBrief" style="margin-bottom:16px"></div>'+
+     +'<div class="card" style="margin-top:14px"><div class="ck">What’s rising fastest</div><div class="cn" style="margin-top:6px"><span class="pill mod">modeled</span> The two fastest-rising strategic risks are <b>AI / automated decisioning</b> (new liability as AI scales into products and decisions) and <b>third-party &amp; cloud concentration</b> (a single provider underpinning multiple revenue systems). Depth is in the CISO <b>AI risk</b> view and below.</div></div>'
+     +'<div id="ceoThirdParty" style="margin-top:14px"></div>')
+   +sec('03','Financial exposure','Cyber as dollars — expected annual loss and the worst realistic year against appetite, the disclosure threshold, insurance coverage against the tail, and where the next dollar of security spend works hardest.',
      tiles([
       {k:'Expected annual loss',v:'<span id="lvExpo">$68M</span>',ev:'ale',note:'<span class="pill good" id="lvAleWithin">Within appetite</span> &nbsp;<span class="claim" data-ev="pctrev"><span id="lvPctRev">≈0.8% of revenue</span> <span class="fx">ƒ</span></span>'},
       {k:'Worst-case tail (95%)',v:'<span id="lvTail">$180M</span>',cls:'warn',ev:'tail',note:'<span class="pill warn" id="lvTailWithin">Above appetite</span> &nbsp;vs appetite <span class="claim" data-ev="appetite"><span id="lvAppetite">$120M</span> <span class="fx">ƒ</span></span>'},
       {k:'Materiality threshold',v:'<span id="lvMateriality">$53M</span>',ev:'materiality',note:'<span id="lvMatBasis">the loss large enough to be financially material to disclose</span>'}])
-     +'<div id="ceoProcBars" style="margin-top:14px">'+bars([
-      {l:'Claims &amp; payments processing',ev:'proc-claims',v:'$34M',pct:100,cls:'hot'},
-      {l:'Policy administration',ev:'proc-policy',v:'$18M',pct:53},
-      {l:'Trading &amp; settlement',ev:'proc-settlement',v:'$11M',pct:32},
-      {l:'Member portal &amp; servicing',ev:'proc-member',v:'$5M',pct:15}])+'</div>'
-     +'<div id="ceoTrend" style="margin-top:14px"></div>'
      +'<div class="cols" style="margin-top:14px"><div class="card"><div class="ck">Insurance — covered against the worst case?</div><div class="cv" id="lvInsAnswer" style="font-size:19px;line-height:1.35;margin-top:6px">Mostly — <span class="warn">a $30M tail is uninsured</span></div><div style="display:flex;gap:24px;margin-top:14px"><div><div class="cv" style="font-size:19px" id="lvCoverage">$150M</div><div class="cn">coverage limit</div></div><div><div class="cv crit claim" data-ev="insgap" style="font-size:19px"><span id="lvGapCeo">$30M</span> <span class="fx">ƒ</span></div><div class="cn">uninsured tail</div></div><div><div class="cv" style="font-size:19px" id="lvPremium">$4.2M</div><div class="cn" id="lvRenewalNote">annual premium</div></div></div></div>'
-     +kvcard('How much of the risk is transferred?',[{k:'Transfer efficiency',v:'<span id="lvTransfer">83%</span>',ev:'transfer'},{k:'Retained (uninsured) tail',v:'<span id="lvRetained">$30M</span>',cls:'crit'},{k:'Funding recovery',v:'narrows the gap',cls:'good'}])+'</div>')
-   +sec('06','Cyber Investment Optimizer','Builds risk-based roadmaps from vulnerability data, threat intelligence and audit findings — the ranked portfolio of security investments by ROI vs risk reduction, so you fund where the dollar works hardest.',
-     '<div id="initiatives-panel"></div>')
-   +sec('07','Crisis Simulation Command Center','Runs incident-response tabletop exercises, crisis simulations and executive playbooks — steady-state response readiness, single-provider systemic risk, and the War Room command centre (⚠ top bar) for a live incident.',
-     '<div id="ceoReadiness" class="card"><div class="ck">Response &amp; recovery readiness</div><div class="cn" style="margin-top:8px">◐ Add your incident-readiness answers in onboarding (IR plan tested, tabletop, retainer, ransomware policy).</div></div>'
-     +'<div id="ceoThirdParty" style="margin-top:14px"></div>')
+     +kvcard('How much of the risk is transferred?',[{k:'Transfer efficiency',v:'<span id="lvTransfer">83%</span>',ev:'transfer'},{k:'Retained (uninsured) tail',v:'<span id="lvRetained">$30M</span>',cls:'crit'},{k:'Funding recovery',v:'narrows the gap',cls:'good'}])+'</div>'
+     +'<div class="en-lbl" style="margin:18px 0 8px">Where the next dollar works hardest</div><div id="initiatives-panel"></div>')
+   +sec('04','Brand &amp; customer trust','Trust is this business’s currency — what a breach would cost in customer trust and liability, and the flip side: security as a sales asset that wins deals through certifications and cleared reviews.',
+     '<div id="ceoTrust"></div><div id="cisoGrowth" style="margin-top:14px"></div>')
+   +sec('05','Board KPIs','Your report-up scorecard — the numbers you take to the board: where we sit vs sector peers, the trajectory over time, the SEC Reg S-K Item 106 governance you must disclose, every leader’s accountability, and the evidenced decision record.',
+     '<div id="ceoPeer"></div>'
+     +'<div id="ceoTrend" style="margin-top:14px"></div>'
+     +'<div id="ceoGov" style="margin-top:14px"><div class="card"><div class="ck">Board oversight structure · SEC Item 106</div><div class="cn" style="margin-top:8px">◐ Add your board-governance answers in onboarding to make this filing-ready.</div></div></div>'
+     +'<div id="opmodel-ceo" style="margin-top:14px"></div>'
+     +'<div id="ceoOversight" style="margin-top:14px">'+kvcard('Oversight &amp; decision record',[{k:'Funded decisions logged',v:'from your decisions',ev:'oversight'},{k:'Each carries',v:'leader · date · ticket',ev:'oversight'},{k:'Board-appetite reviewed',v:'this quarter',cls:'good'},{k:'Defensibility',v:'evidenced trail',cls:'good',ev:'oversight'}])+'</div>')
+   +sec('06','Decisions required','The decisions that need you — a one-page brief for each strategic initiative with best / likely / worst outcome in dollars and a clear recommendation, plus the severe-but-plausible scenario every decision is weighed against.',
+     '<div id="ceoDecisionBrief"></div>'
+     +'<div class="cols" style="margin-top:14px"><div class="card" id="ceoStress"><div class="ck">Severe-but-plausible scenario</div><div class="cn" style="margin-top:8px">◐ Illustrative until go-live — modeled from your top crown jewel, its largest open risk, worst-case recovery and your binding regulatory clock.</div></div>'
+     +'<div class="card" id="ceoReadiness"><div class="ck">Response &amp; recovery readiness</div><div class="cn" style="margin-top:8px">◐ Add your incident-readiness answers in onboarding (IR plan tested, tabletop, retainer, ransomware policy).</div></div></div>')
   );}
  },
 
