@@ -186,30 +186,23 @@ var SEATS = {
   sub:'Cyber and resilience for the systems that carry the business: what each is worth per hour, how fast it recovers, and where a single provider is a point of failure.',
   brief:'Operationally, every revenue system is running and recoverable. The slowest one recovers in about three days, and that drives most of our worst case — a single investment cuts it to under six hours. The concentration to fix is one cloud vendor that underpins three revenue systems; if it fails, all three degrade at roughly three point eight million dollars an hour.',
   body:function(){return (
-   sec('01','Secure Architecture Blueprint Viewer','Designs and reviews secure architecture — embeds security controls, compliance overlays and a risk-per-system view into the application &amp; cloud map, so every new system ships secure by design.',
-     '<div class="card"><div class="ck">Application &amp; cloud architecture — risk per system</div><div class="cn" style="margin-top:6px">◐ Connect your cloud providers (<b>AWS · Azure · GCP</b>), <b>CMDB</b> and DevSecOps pipelines (<b>GitHub · GitLab</b>) to map every application and cloud service with its embedded security controls, compliance overlay and a live <b>risk-per-system</b> score — so architecture review is evidenced, not a slide. <span class="pill mod" style="font-size:8px">planned</span></div></div>')
-   +sec('02','Infrastructure Risk Map','Protects systems, networks and cloud through vulnerability scanning, patch management and configuration hardening (CIS) — a real-time asset heatmap of exposure, patch compliance and critical-system risk clustering, ranked by what an hour of downtime costs.',
-     '<div id="cioSystems">'+bars([{l:'Payments ($2.3M/hr)',v:'74 hrs',pct:100,cls:'hot',ev:'recovery'},{l:'Member portal ($0.6M/hr)',v:'40 hrs',pct:54},{l:'Settlement ($0.9M/hr)',v:'28 hrs',pct:38},{l:'Corporate IT (<$40K/hr)',v:'8 hrs',pct:11}])+'</div>'
-     +'<div class="card" style="margin-top:12px"><div class="cn">◐ Connect your vulnerability scanners (<b>Qualys · Tenable</b>), endpoint management (<b>Intune · SCCM</b>) and CMDB to overlay live <b>vulnerability exposure</b> and <b>patch-compliance %</b> on each asset above.</div></div>')
-   +sec('03','Third-Party Exposure Radar','Reduces third-party security risk through vendor risk assessments, security questionnaires and continuous monitoring — vendors auto-ranked by a critical-vendor exposure index.',
-     '<div id="ceoThirdParty"></div>'
-     +'<div class="card" style="margin-top:12px"><div class="cn">◐ Connect security ratings (<b>BitSight · SecurityScorecard</b>) and your vendor-questionnaire tool to auto-rank every supplier by exposure and flag the vendors that underpin the most revenue. The single-vendor blast radius above is computed live from your asset→vendor map.</div></div>')
-   +sec('04','Resilience Operations Dashboard','Ensures uptime and resilience through disaster recovery, business-continuity planning, backup testing and failover architecture — RTO/RPO compliance, DR-test outcomes and a time-to-recover model, in revenue terms.',
-     tiles([
-      {k:'What downtime costs',v:'<span id="lvDowntime">$2.3M / hr</span>',cls:'warn',ev:'downtime',note:'on the top revenue dependency'},
-      {k:'Worst-case recovery',v:'<span id="lvRecovery">3.1 days</span>',cls:'warn',ev:'recovery',note:'target <6h (decision below)'},
-      {k:'Vendor concentration',v:'<span id="lvVendor">1 vendor, 3 systems</span>',cls:'warn',ev:'vendor',note:'a single point of failure'},
-      {k:'Tech-debt exposure',v:'<span id="lvTechDebt">$12M</span>',cls:'warn',ev:'techdebt',note:'end-of-life systems on revenue paths'}])
-     +'<div id="cioDr" style="margin-top:14px"></div>'
+   sec('01','Technology enablement of business objectives','Technology carries the business — here are the systems that run it, ranked by what an hour of downtime costs, so investment and protection follow revenue. This is where cyber either enables the objectives or blocks them.',
+     '<div id="cioSystems"></div>'
+     +'<div class="cn" style="margin-top:8px">These are your crown-jewel systems — the ones the strategy depends on. Recovery and security investment should follow the systems that carry the most revenue.</div>')
+   +sec('02','Digital service reliability','The security posture of the cloud and applications your customers depend on — misconfiguration, public exposure and identity risk on the services they touch, plus any live disruption and what an outage costs.',
+     '<div id="cioDigital"></div>')
+   +sec('03','AI adoption readiness','Can we adopt AI into products and operations securely and at speed? AI systems already live, the governance framework, the acceptable-use policy and the inventory — the readiness to scale AI without scaling unmanaged risk.',
+     '<div id="cioAi"></div>')
+   +sec('04','Workforce productivity','How security affects the productivity of the people who run the business — access provisioned fast, low friction, and hours not lost to downtime or manual security steps.',
+     '<div class="card"><div class="ck">Security’s effect on workforce productivity</div><div class="cn" style="margin-top:6px">◐ Connect your identity (<b>Okta · Entra</b>), ITSM (<b>ServiceNow</b>) and endpoint tooling to show how fast access is provisioned, how much friction security adds, and the hours lost to downtime or manual steps — so security is measured as an enabler of productivity, not only a cost. <span class="pill mod" style="font-size:8px">planned</span></div></div>')
+   +sec('05','Application modernization risk','The exposure carried by end-of-life and unsupported systems still on revenue paths — they patch slower, recover slower, and drive the worst-case tail. Prioritized by revenue protected per dollar.',
+     '<div id="cioModern"></div>')
+   +sec('06','Service availability','Could the systems that carry the business keep running and recover fast enough? Immutable backups, recovery-point objective, last DR test, and where a single vendor failure leaves no failover.',
+     '<div id="cioDr"></div>'
      +decisions([{n:1,q:'How much recovery resilience do we fund?',sit:'Our slowest revenue system recovers in ~3.1 days, driving most of the worst-case tail. Three levels:',opts:[
        {rec:true,tag:'A · Full modernization',on:'Option A · Full',osum:'$3.2M · <6h recovery',pros:['Cuts worst case by ~$40M','Meets regulatory recovery expectations','Removes the single-vendor risk (multi-region)'],cons:['Requires $3.2M of capital','One-quarter program']},
        {tag:'B · Critical systems only',on:'Option B · Critical only',osum:'$1.6M',pros:['Protects payments &amp; settlement (the top $/hr systems)','Half the capital of full modernization'],cons:['Member-portal recovery stays at ~40 hrs','Removes only ~$24M of the $40M tail driver']},
        {tag:'C · Defer',on:'Option C · Defer',osum:'$0 this year',pros:['Zero capital this year'],cons:['Worst-case recovery stays 3.1 days','Tail stays $180M — above the $120M appetite','Weakens the insurance renewal position']}]}]))
-   +sec('05','Transformation Security Tracker','Enables secure cloud and digital adoption through cloud security posture management (CSPM), identity &amp; access management and DevSecOps pipelines — cloud/AI/DevOps projects gated on embedded security readiness.',
-     '<div class="card"><div class="ck">Transformation projects — security readiness gates</div><div class="cn" style="margin-top:6px">◐ Connect your CSPM (<b>Wiz</b>), CI/CD pipelines, IAM (<b>Okta · Entra</b>) and cloud providers to track every cloud, AI and DevOps initiative through embedded security-readiness gates — so transformation moves fast without shipping unmanaged risk. <span class="pill mod" style="font-size:8px">planned</span></div></div>')
-   +sec('06','Control Compliance Cockpit','Enforces security standards and policies — policy management, control frameworks (NIST CSF, ISO 27001) and audit readiness, with drill-down to the exact control gap per business unit. This is also where your IT-governance accountabilities map to the systems behind them.',
-     '<div id="cisoFrameworks"></div><div id="cisoCompliance" style="margin-top:14px"></div>'
-     +'<div id="opmodel-cio" style="margin-top:14px"></div>')
   );}
  },
 

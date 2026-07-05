@@ -471,7 +471,7 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
@@ -483,6 +483,8 @@ var TAB_LABELS={
  'Business interruption cost':'BI cost','Cyber investment ROI':'Investment ROI','Insurance effectiveness':'Insurance','Cost optimization':'Cost optimization','Risk-acceptance decisions':'Risk acceptance',
  // COO seat (outcome tabs)
  'Operational resilience':'Op. resilience','Critical process health':'Process health','Manufacturing / service continuity':'Continuity','Supply-chain reliability':'Supply chain','Recovery readiness':'Recovery','Business continuity gaps':'Continuity gaps',
+ // CIO seat (outcome tabs)
+ 'Technology enablement of business objectives':'Tech enablement','Digital service reliability':'Service reliability','AI adoption readiness':'AI readiness','Workforce productivity':'Workforce','Application modernization risk':'Modernization','Service availability':'Availability',
  // Board seat
  'Where do we stand? — the board brief':'Board brief','Our worst realistic day — could we survive it?':'Worst day','How do we compare — and which way are we heading?':'Peers & trend','Oversight & disclosure — SEC Reg S-K Item 106':'Oversight','What needs the board?':'Board decisions',
  'Are we under attack right now?':'Live status','What are we protecting — and what is each worth?':'Crown Jewels — Exposure','How is security helping the business grow — and win deals?':'Business Growth','Are our controls actually working — and is the program improving?':'Controls','Which framework controls do our tools satisfy? — NIST CSF 2.0 & 800-53':'Frameworks','AI risk — two fronts: securing the AI we run, and using AI to defend':'AI risk','Are we audit-ready? — compliance framework readiness':'Compliance','What decision needs you now?':'Decision','How does our security investment move the business?':'ROI','What are my responsibilities — and how does security enable each?':'Operating model',
@@ -1412,7 +1414,7 @@ function renderSignals(){
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderCompliance();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -1600,6 +1602,43 @@ function renderCooGaps(){
   if(tv&&tv.vendor)gaps.push({t:'Single-vendor point of failure — '+tv.vendor,d:'underpins '+((tv.systems||[]).length)+' service'+((tv.systems||[]).length===1?'':'s')+(tv.per_hr?(' · '+usd(tv.per_hr)+'/hr at risk'):'')+'; no independent failover.',c:'warn'});
   var imm=sig('backup_immutable_pct');if(imm!=null&&imm<95)gaps.push({t:'Backups not fully immutable ('+imm+'%)',d:'recovery may not survive a ransomware event that reaches the backup system.',c:'warn'});
   host.innerHTML='<div class="card"><div class="ck">Business-continuity gaps '+liveTag()+'</div>'+(gaps.length?('<div style="margin-top:8px">'+gaps.map(function(g){return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+g.c+')"></span><b>'+g.t+'</b></div><div class="drow-need">'+g.d+'</div></div>';}).join('')+'</div>'):'<div class="cn" style="margin-top:6px">No continuity gaps flagged from your current data — upload systems &amp; recovery targets, and connect your backup platform, to surface them.</div>')+'<div class="cn" style="margin-top:8px">The specific gaps between where continuity is and where board tolerance requires it — each closed by the resilience decision below.</div></div>';
+}
+/* CIO digital-service reliability — cloud posture on customer-facing services +
+   live disruptions + downtime cost. From CSPM + SIEM + resilience. */
+function renderCioDigital(){
+  var host=document.getElementById('cioDigital');if(!host)return;
+  var cspm=sig('cspm_pct'),oi=sig('open_incidents'),rs=(LIVE&&LIVE.resilience)||{},perHr=rs.top_downtime_per_hr;
+  host.innerHTML='<div class="grid4">'+
+    '<div class="card"><div class="ck">Digital service reliability</div><div class="cv" style="font-size:19px;margin-top:6px;color:'+(cspm!=null?(cspm>=85?'var(--good)':cspm>=60?'var(--warn)':'var(--crit)'):'var(--muted)')+'">'+(cspm!=null?cspm+'%':'Connect CSPM')+'</div><div class="cn">cloud posture on the services customers touch '+(cspm!=null?liveTag():'')+'</div></div>'+
+    '<div class="card"><div class="ck">Active disruptions</div><div class="cv" style="font-size:19px;margin-top:6px;color:'+(oi!=null?(oi>0?'var(--crit)':'var(--good)'):'var(--muted)')+'">'+(oi!=null?(oi>0?oi+' affecting service':'None'):'Connect SIEM')+'</div><div class="cn">incidents degrading a digital service now</div></div>'+
+    '<div class="card"><div class="ck">Cost if a service is down</div><div class="cv" style="font-size:19px;margin-top:6px;color:var(--warn)">'+(perHr!=null?usd(perHr)+'/hr':'—')+'</div><div class="cn">on the top revenue-critical service</div></div>'+
+    '</div><div class="cn" style="margin-top:10px">Digital service reliability is the security posture of the cloud and applications your customers depend on — misconfiguration, public exposure and identity risk on those services. Connect your CSPM (<b>Wiz · Prisma · Defender for Cloud</b>) and SIEM to make this live.</div>';
+}
+/* CIO AI-adoption readiness — can we scale AI into products & operations securely?
+   From the org's AI-governance answers (systems, framework, policy, inventory). */
+function renderCioAi(){
+  var host=document.getElementById('cioAi');if(!host)return;
+  var g=(LIVE&&LIVE.aiRisk&&LIVE.aiRisk.governance)||null;
+  if(!g||!(g.framework||g.policy||g.inventory||g.systems)){host.innerHTML='<div class="card"><div class="ck">AI adoption readiness</div><div class="cn" style="margin-top:6px">◐ Add your AI-governance answers in onboarding — AI systems in production, framework adopted (NIST AI RMF / ISO 42001), acceptable-use policy and inventory — to score whether we can adopt AI into products and operations securely and at speed.</div></div>';return;}
+  var m=(typeof aiMaturity==='function')?aiMaturity(g):null,sys=Number(g.systems)||0;
+  var rows=[
+    ['AI systems in production',sys>0?(sys+' live'):'none recorded',sys>0?'serious':'muted'],
+    ['Governance framework',/both/i.test(g.framework||'')?'NIST + ISO':(/nist|iso/i.test(g.framework||'')?g.framework:'none yet'),/both|nist|iso/i.test(g.framework||'')?'good':'crit'],
+    ['Acceptable-use policy',/board-approved/i.test(g.policy||'')?'board-approved':(/drafted/i.test(g.policy||'')?'drafted':'none'),/board-approved/i.test(g.policy||'')?'good':/drafted/i.test(g.policy||'')?'warn':'crit'],
+    ['AI inventory',/yes/i.test(g.inventory||'')?'inventoried':(/partial/i.test(g.inventory||'')?'partial':'none'),/yes/i.test(g.inventory||'')?'good':'warn']
+  ];
+  host.innerHTML='<div class="card"><div class="ck">AI adoption readiness'+(m&&m.pct!=null?(' <span class="tag '+(m.cls==='crit'?'warn':m.cls)+'" style="font-size:10px;margin-left:6px">'+m.label+' · '+m.pct+'%</span>'):'')+'</div>'+
+    '<div style="margin-top:8px">'+rows.map(function(r){return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+r[2]+')"></span><b>'+r[0]+'</b><span class="drow-tool" style="color:var(--'+r[2]+')">'+r[1]+'</span></div></div>';}).join('')+'</div>'+
+    '<div class="cn" style="margin-top:8px">Readiness is governance in place before AI scales into products and operations — the depth (frameworks, OWASP LLM/Agentic, EU AI Act) is in the CISO <b>AI risk</b> view.</div></div>';
+}
+/* CIO application-modernization risk — exposure carried by end-of-life systems. */
+function renderCioModern(){
+  var host=document.getElementById('cioModern');if(!host)return;
+  var rs=(LIVE&&LIVE.resilience)||{},td=rs.tech_debt||{},exp=td.exposure,worst=rs.worst_recovery_hours;
+  host.innerHTML='<div class="grid4">'+
+    '<div class="card"><div class="ck">Tech-debt exposure</div><div class="cv" style="font-size:19px;margin-top:6px;color:'+(exp?'var(--warn)':'var(--muted)')+'">'+(exp!=null?usd(exp):'—')+'</div><div class="cn">open risk on end-of-life systems on revenue paths</div></div>'+
+    '<div class="card"><div class="ck">Slowest legacy recovery</div><div class="cv" style="font-size:19px;margin-top:6px'+(worst!=null&&worst>24?';color:var(--warn)':'')+'">'+(worst!=null?hrsToStr(worst):'—')+'</div><div class="cn">older systems recover slowest, driving the tail</div></div>'+
+    '</div><div class="cn" style="margin-top:10px">Application-modernization risk is the exposure carried by end-of-life and unsupported systems still on revenue paths — they patch slower, recover slower, and drive the worst-case tail. Prioritize modernization by revenue protected per dollar. Upload your systems inventory (with EOL status) to quantify this.</div>';
 }
 /* Honest data-mode banner for the CEO $ tabs — the dollar figures are sector
    placeholders until go-live, then computed from the org's own data. Labels the
