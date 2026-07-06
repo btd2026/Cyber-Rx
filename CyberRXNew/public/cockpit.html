@@ -644,7 +644,7 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderCisoDecisions();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderAuditCoverage();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoRiskScore();renderCeoTopThreats();renderCeoTopIssues();renderCeoStrategyRisks();renderCeoCustomerProtect();renderCeoBoardKpis();renderCeoExecDecisions();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderCisoDecisions();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderAuditCoverage();renderAuditReadiness();renderAuditFailed();renderAuditDecisions();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoRiskScore();renderCeoTopThreats();renderCeoTopIssues();renderCeoStrategyRisks();renderCeoCustomerProtect();renderCeoBoardKpis();renderCeoExecDecisions();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
@@ -2283,7 +2283,7 @@ function renderSignals(){
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();if(typeof renderCisoOps==='function'){renderCisoOps();renderUnderAttack();}}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderCisoDecisions();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderAuditCoverage();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoRiskScore();renderCeoTopThreats();renderCeoTopIssues();renderCeoStrategyRisks();renderCeoCustomerProtect();renderCeoBoardKpis();renderCeoExecDecisions();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderCisoDecisions();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderAuditCoverage();renderAuditReadiness();renderAuditFailed();renderAuditDecisions();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoRiskScore();renderCeoTopThreats();renderCeoTopIssues();renderCeoStrategyRisks();renderCeoCustomerProtect();renderCeoBoardKpis();renderCeoExecDecisions();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -4078,12 +4078,52 @@ function renderCpoVelocity(){
    evidenced (🔌 live telemetry or 📄 document review) vs still unevidenced. Computed
    from the same per-control evidence the Control-testing tab walks — the marquee number
    a Head of Internal Audit reports, not a prose placeholder. */
+/* Shared audit stats over the NIST CSF control universe — evidenced count, breakdown,
+   and the failing controls (CMMI ≤ 1). Used by every Internal Audit panel. */
+function auditStats(){
+  seedDemoDocScores();
+  var cov=fwDeployedIds(),total=0,evid=0,sys=0,doc=0,fail=[];
+  Object.keys(CSF_RAW).forEach(function(fn){var cats=CSF_RAW[fn];Object.keys(cats).forEach(function(cat){cats[cat].forEach(function(s){total++;var cc=controlCmmi(s[0],cov);if(cc.src==='system'){evid++;sys++;}else if(cc.src==='document'){evid++;doc++;}if(cc.score<=1)fail.push({id:s[0],name:s[1],score:cc.score,src:cc.src});});});});
+  return {total:total,evid:evid,sys:sys,doc:doc,fail:fail,pct:total?Math.round(evid/total*100):0};
+}
+/* Audit Readiness — two headline reads: overall readiness + evidence completeness. */
+function renderAuditReadiness(){
+  var host=document.getElementById('auditReadiness');if(!host)return;
+  var s=auditStats(),pct=s.pct;
+  var ready=pct>=80?{s:'Audit-ready',c:'good'}:pct>=50?{s:'Partially ready',c:'warn'}:{s:'Gaps to close',c:'crit'};
+  var ec=pct>=90?'good':pct>=75?'blue':pct>=50?'warn':'crit';
+  function tile(k,big,sub,c){return '<div class="card"><div class="ck">'+k+'</div><div class="cv" style="font-size:24px;font-family:var(--serif);margin-top:4px;color:var(--'+c+')">'+big+'</div><div class="cn" style="margin-top:2px">'+sub+'</div></div>';}
+  host.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
+    tile('Audit readiness',ready.s,'controls evidenced, not self-attested '+liveTag(),ready.c)+
+    tile('Evidence completeness',pct+'%',s.evid+' of '+s.total+' controls have evidence on file',ec)+
+    '</div>';
+}
+/* Control Assurance — the controls currently failing (unevidenced or below CMMI 2). */
+function renderAuditFailed(){
+  var host=document.getElementById('auditFailed');if(!host)return;
+  var s=auditStats(),fail=s.fail.slice().sort(function(a,b){return a.score-b.score;});
+  if(!fail.length){host.innerHTML='<div class="card"><div class="ck">Failed controls</div><div class="cn" style="margin-top:6px;color:var(--good)">✓ No control is failing — every control in the universe is evidenced at CMMI 2 (Managed) or above.</div></div>';return;}
+  var rows=fail.slice(0,8).map(function(f){var cls=cmmiColor(f.score);return '<div class="drow" data-fid="'+f.id+'" data-fname="'+String(f.name).replace(/"/g,'&quot;')+'" style="cursor:pointer"><div class="drow-h"><span class="cap-dot" style="background:var(--'+cls+')"></span><b>'+f.id+'</b><span class="drow-tool" style="color:var(--'+cls+')">CMMI '+f.score+(f.score===0?' · not evidenced':' · failing')+' <span class="drill-cta">details ▸</span></span></div><div class="drow-need">'+f.name+'</div></div>';}).join('');
+  host.innerHTML='<div class="card"><div class="ck">Failed controls '+liveTag()+'</div><div class="cv" style="font-size:22px;margin-top:4px;color:var(--crit)">'+fail.length+'</div><div class="cn">controls failing — not evidenced or below a passing standard (CMMI ≤ 1)</div><div style="margin-top:10px">'+rows+'</div>'+(fail.length>8?('<div class="cn" style="margin-top:6px">+ '+(fail.length-8)+' more — see the full control-testing catalog below.</div>'):'')+'<div class="cn" style="margin-top:8px">Click any control for the auditor’s assessment — methodology, findings, recommendation — and a downloadable PDF workpaper.</div></div>';
+  host.querySelectorAll('.drow[data-fid]').forEach(function(el){el.onclick=function(){FW_SEL='csf';openDrill(el.dataset.fid+' — '+el.dataset.fname,drillFwControl(el.dataset.fid,el.dataset.fname));};});
+}
+/* Executive Decisions — audit priorities (where to test next) + escalations. */
+function renderAuditDecisions(){
+  var host=document.getElementById('auditDecisions');if(!host)return;
+  var s=auditStats(),fail=s.fail.slice().sort(function(a,b){return a.score-b.score;}),rep=sig('audit_findings_repeat');
+  var pri=fail.slice(0,4).map(function(f){return '<div class="list-row"><div class="lic w">▸</div><div class="ltxt"><b>'+f.name+'</b><div class="cn">'+f.id+' — '+(f.score===0?'no evidence on file; make this a priority to test and evidence.':'evidenced but below a passing standard; retest and remediate.')+'</div></div></div>';}).join('');
+  if(!pri)pri='<div class="cn" style="color:var(--good)">✓ No failing control to prioritize — the audit plan can rotate on its normal cadence.</div>';
+  var esc='',crit=s.fail.filter(function(f){return f.score===0;}).length;
+  if(rep!=null&&rep>0)esc+='<div class="list-row"><div class="lic c">!</div><div class="ltxt"><b>'+rep+' repeat finding'+(rep>1?'s':'')+'</b><div class="cn">Findings recurring audit-over-audit — systemic gaps not truly closed; escalate to the audit committee.</div></div></div>';
+  if(crit>0)esc+='<div class="list-row"><div class="lic c">!</div><div class="ltxt"><b>'+crit+' unevidenced control'+(crit>1?'s':'')+'</b><div class="cn">Controls with no evidence on file — assurance cannot be given until they are evidenced; escalate for tooling or a policy owner.</div></div></div>';
+  if(!esc)esc='<div class="cn" style="color:var(--good)">✓ Nothing requires escalation right now.</div>';
+  host.innerHTML='<div class="card"><div class="ck">Audit priorities</div><div style="margin-top:8px">'+pri+'</div><div class="cn" style="margin-top:8px">Where to point the next audit — ranked by the controls least able to give assurance today.</div></div>'+
+    '<div class="card" style="margin-top:12px"><div class="ck">Escalations</div><div style="margin-top:8px">'+esc+'</div></div>';
+}
 function renderAuditCoverage(){
   var host=document.getElementById('auditCoverage');if(!host)return;
-  seedDemoDocScores();
-  var cov=fwDeployedIds(),total=0,evid=0,sys=0,doc=0;
-  Object.keys(CSF_RAW).forEach(function(fn){var cats=CSF_RAW[fn];Object.keys(cats).forEach(function(cat){cats[cat].forEach(function(s){total++;var cc=controlCmmi(s[0],cov);if(cc.src==='system'){evid++;sys++;}else if(cc.src==='document'){evid++;doc++;}});});});
-  var pct=total?Math.round(evid/total*100):0,cls=pct>=75?'good':pct>=50?'blue':pct>=25?'serious':'crit';
+  var s=auditStats(),total=s.total,evid=s.evid,sys=s.sys,doc=s.doc;
+  var pct=s.pct,cls=pct>=75?'good':pct>=50?'blue':pct>=25?'serious':'crit';
   host.innerHTML='<div class="card"><div class="ck">Coverage of the universe '+liveTag()+'</div>'+
     '<div style="display:flex;align-items:baseline;gap:12px;margin-top:8px"><div class="cv" style="font-size:32px;font-family:var(--serif);color:var(--'+cls+')">'+pct+'%</div><div class="cn"><b>'+evid+' of '+total+'</b> controls evidenced — not self-attested</div></div>'+
     capBar(pct)+

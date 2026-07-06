@@ -318,23 +318,24 @@ var SEATS = {
 
  audit:{
   eyebrow:'Assurance view · Internal Audit',
-  verdict:'The control environment is <span class="em">evidenced and testable</span> — the audit universe maps to live evidence, control maturity is scored from telemetry and document review, and management actions are tracked to closure.',
-  sub:'Cyber for assurance: the audit universe, the evidence behind every control, control-testing status, management action plans, repeat findings and coverage.',
-  brief:'From the assurance seat: the control environment is evidenced and testable. The audit universe maps to live evidence, control maturity is scored from tool telemetry and document review rather than self-attestation, and management actions are tracked to closure.',
+  verdict:'The control environment is <span class="em">evidenced and testable</span> — audit readiness and evidence completeness are measured, control testing is scored from live telemetry and document review, and every management action is tracked to closure.',
+  sub:'Cyber for assurance, in five reads: audit readiness, control assurance, management actions, compliance, and the calls internal audit brings to the committee.',
+  brief:'From the assurance seat: the control environment is evidenced and testable. Audit readiness and evidence completeness are measured from live tool coverage and document review, not self-attestation; the controls that fail are flagged; open findings and remediation are tracked to closure; and the audit priorities and escalations for the committee are surfaced.',
   body:function(){return (
-   sec('01','Audit universe','The frameworks and regulations in scope for the business — the universe internal audit covers — with live readiness computed from connected tools and governance records, not self-attestation.',
+   sec('01','Audit Readiness','Are we ready for an audit and can we produce the evidence on demand — overall audit readiness, and how complete the evidence behind our controls is.',
+     '<div id="auditReadiness"></div>'
+     +'<div id="auditCoverage" style="margin-top:14px"></div>'
+     +'<div id="cisoCoverage" style="margin-top:14px"></div>')
+   +sec('02','Control Assurance','The tested state of every control, and the controls currently failing — not evidenced, or below a passing standard.',
+     '<div id="auditFailed"></div>'
+     +'<div id="cisoFrameworks" style="margin-top:14px"></div>')
+   +sec('03','Management Actions','Open findings and how remediation is progressing — the management actions internal audit tracks to closure.',
+     '<div id="auditRepeat"></div>'
+     +'<div id="initiatives-panel" style="margin-top:14px"></div>')
+   +sec('04','Compliance','Where we stand against each compliance framework in scope — audit-readiness per framework, evidenced live rather than self-attested.',
      '<div id="cisoCompliance"></div>')
-   +sec('02','Evidence readiness','Can we produce the evidence on demand? The live tool coverage behind control scores, plus the policies analyzed by document review — the source an auditor can trace every number to.',
-     '<div id="cisoCoverage"></div>'
-     +'<div class="cn" style="margin-top:12px">Evidence is <b>🔌 live tool telemetry</b> (the coverage above) and <b>📄 document review</b> (policies uploaded in onboarding, scored against the NIST catalog). Every framework score traces to one of these — the walk from a maturity score to its source system or document.</div>')
-   +sec('03','Control testing status','The full control catalog scored on the CMMI maturity scale — the tested state of every control, rolled up per subcategory → category → function → overall, with the evidence source on each.',
-     '<div id="cisoFrameworks"></div>')
-   +sec('04','Management action plans','The funded remediation closing each control gap — cost, owner, status and the dollars of risk it removes — the management actions internal audit tracks to closure.',
-     '<div id="initiatives-panel"></div>')
-   +sec('05','Repeat findings','The findings that recur audit-over-audit — the systemic gaps that were not truly closed. Live from your audit / GRC system.',
-     '<div id="auditRepeat"></div>')
-   +sec('06','Audit coverage','How much of the audit universe is actually evidenced — the share of controls with live or document evidence vs those still self-attested or untested.',
-     '<div id="auditCoverage"></div>')
+   +sec('05','Executive Decisions','The calls internal audit brings to the committee — where to point the next audit, and the findings that need escalation.',
+     '<div id="auditDecisions"></div>')
   );}
  }
 };
