@@ -2527,7 +2527,7 @@ function renderCloPrivacy(){
 function renderCeoMode(){
   var live=!!(LIVE&&LIVE.economics&&Number(LIVE.economics.ale)>0);
   var html=live?'':'<div class="cn" style="margin-bottom:14px;padding:11px 13px;background:var(--surface-2);border-radius:8px;line-height:1.5">◐ <b style="color:var(--warn)">Illustrative for '+indLabel()+'</b> — the dollar figures on this tab are sector placeholders until you complete go-live. After go-live every number is computed from <b>your own</b> financials and risk register, and each is clickable to its exact formula and inputs. Nothing here is a fixed or invented figure.</div>';
-  ['ceoModeA','ceoModeB','cfoModeA','cfoModeB'].forEach(function(id){var h=document.getElementById(id);if(h)h.innerHTML=html;});
+  ['ceoModeA','ceoModeB','cfoModeA','cfoModeB','boardMode'].forEach(function(id){var h=document.getElementById(id);if(h)h.innerHTML=html;});
 }
 /* Industry-specific emerging risks — the moves a sector's board is warned about,
    replacing a generic note. Enriched with the org's own live concentration
@@ -2934,11 +2934,12 @@ function renderCeoDecisionBrief(){
 function renderOversight(){
   var host=document.getElementById('ceoOversight');if(!host)return;
   var list=allDecisions();var pushed=list.filter(function(d){return d.ticket;}).length;
+  var g=(LIVE&&LIVE.governance)||{};
   host.innerHTML=kvcard('Oversight &amp; decision record',[
     {k:'Funded decisions logged',v:String(list.length),ev:'oversight'},
     {k:'Sent to ticketing (tracked)',v:pushed+' / '+list.length,ev:'oversight'},
     {k:'Each carries',v:'leader · date · ticket'},
-    {k:'Board appetite reviewed',v:'this quarter',cls:'good'}]);
+    {k:'Board review cadence',v:(g.cadence?g.cadence:'set in onboarding'),cls:(g.cadence?'good':'')}]);
 }
 /* Board: worst realistic day (named stress scenario) — from /summary stress. */
 function hrsToStr(h){if(h==null)return '—';if(h>=24){var d=Math.round(h/2.4)/10;return d+' day'+(d===1?'':'s');}return h+' hr'+(h===1?'':'s');}
@@ -4220,8 +4221,8 @@ function renderCooStatus(){
   var disrupted=oi!=null&&oi>0;
   host.innerHTML=demoBanner()+'<div class="grid4">'+
     '<div class="card"><div class="ck">Operations status</div><div class="cv" style="font-size:19px;color:var(--'+(disrupted?'crit':(oi!=null?'good':'muted'))+')">'+(disrupted?(oi+' disrupting ops'):(oi!=null?'Running normally':'Connect SIEM'))+'</div><div class="cn">'+(disrupted?'an incident is affecting a business process':(oi!=null?'no incident affecting service delivery '+liveTag():'live from your SIEM once connected'))+'</div></div>'+
-    '<div class="card"><div class="ck">Slowest service to recover</div><div class="cv" style="font-size:19px'+(worst!=null&&worst>=24?';color:var(--warn)':'')+'">'+(worst!=null?hrsToStr(worst):'—')+'</div><div class="cn">worst-case restore on a revenue-critical service</div></div>'+
-    '<div class="card"><div class="ck">Single point of failure</div><div class="cv" style="font-size:19px'+(vc&&vc.vendor?';color:var(--warn)':'')+'">'+(vc&&vc.vendor?('1 vendor · '+((vc.systems||[]).length)+' services'):'—')+'</div><div class="cn">'+(vc&&vc.vendor?('if '+vc.vendor+' fails, all degrade'):'map vendor concentration in onboarding')+'</div></div>'+
+    '<div class="card"><div class="ck">Slowest service to recover</div><div class="cv claim" data-ev="recovery" style="font-size:19px;cursor:pointer'+(worst!=null&&worst>=24?';color:var(--warn)':'')+'">'+(worst!=null?hrsToStr(worst):'—')+' <span class="drill-cta" style="font-size:11px">details ▸</span></div><div class="cn">worst-case restore on a revenue-critical service</div></div>'+
+    '<div class="card"><div class="ck">Single point of failure</div><div class="cv claim" data-ev="vendor" style="font-size:19px;cursor:pointer'+(vc&&vc.vendor?';color:var(--warn)':'')+'">'+(vc&&vc.vendor?('1 vendor · '+((vc.systems||[]).length)+' services'):'—')+' <span class="drill-cta" style="font-size:11px">details ▸</span></div><div class="cn">'+(vc&&vc.vendor?('if '+vc.vendor+' fails, all degrade'):'map vendor concentration in onboarding')+'</div></div>'+
     '<div class="card"><div class="ck">Disruption detection</div><div class="cv" style="font-size:19px'+(mttd!=null?';color:var(--good)':'')+'">'+(mttd!=null?(mttd+'h '+liveTag()):'Connect SIEM')+'</div><div class="cn">how fast an operational disruption surfaces</div></div>'+
     '</div>';
 }
