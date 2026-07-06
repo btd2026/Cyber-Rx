@@ -215,6 +215,8 @@ class Asset {
       dataClassification: row.data_classification || [],
       cloudProvider: row.cloud_provider,
       location: row.location,
+      exposure: row.exposure,
+      criticality: row.criticality,
       createdAt: row.created_at,
       updatedAt: row.updated_at
     };
