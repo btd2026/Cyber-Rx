@@ -130,7 +130,7 @@ var SEATS = {
       {flag:'🇦🇺',c:'Australia',ev:'juris-au',o:'Privacy Act · APRA CPS 234',clock:'72 hours',cc:'warn',pen:'Up to A$50M'}])+'</div>'
      +'<div class="cn" style="margin-top:8px"><span class="pill mod" style="font-size:8px">statutory</span> Obligations, clocks and penalty ceilings are the published jurisdiction rulesets — not your data. The row that binds <b>you</b> is set by the regions you operate in (from onboarding); click any row for the trigger, the deadline and the source.</div>')
    +sec('02','Contractual risk','The contractual cyber obligations statutory clocks miss — customer DPAs with breach-notification clauses, and your tightest contractual deadline (frequently 24–72h, ahead of the SEC and GDPR clocks). The first thing customer counsel invokes after an incident.',
-     '<div class="card"><div class="ck">Customer contract / DPA obligations</div><div class="cn" style="margin-top:6px">◐ Connect your contract-management system (<b>Ironclad · DocuSign CLM · Conga</b>) to auto-scan contracts for security-clause compliance and quantify how many customer contracts carry a breach-notification clause and your <b>tightest contractual deadline</b>. This is the contractual exposure the statutory clocks do not capture. <span class="pill mod" style="font-size:8px">planned</span></div></div>')
+     '<div id="cloContract"></div>')
    +sec('03','Breach-notification readiness','If an incident is material, are we ready to notify in time? The materiality determination — recorded, timed and evidenced — the live SEC and binding-jurisdiction countdowns, and the decision on how we run disclosure.',
      '<div class="cn" style="margin-bottom:12px">Reportable at <b class="claim" data-ev="materiality" style="cursor:pointer"><span id="lvCloMateriality">$53M</span> <span class="fx">ƒ</span></b> — a crown-jewel event above this threshold is material and starts the 4-business-day SEC clock. Record the determination below; it is timed, evidenced and logged for the D&amp;O defense.</div>'
      +'<div id="cloMateriality" style="margin-bottom:16px"></div>'
@@ -211,7 +211,7 @@ var SEATS = {
      '<div id="cooSector"></div>')
    +sec('04','Supply-chain reliability','Where a third-party or single provider is a point of failure for your operations — the vendor concentration that can stop multiple services at once, and the supplier risk to monitor.',
      '<div id="ceoThirdParty"></div>'
-     +'<div class="card" style="margin-top:12px"><div class="cn">◐ Connect security ratings (<b>BitSight · SecurityScorecard</b>) and your vendor-monitoring tool to rank suppliers by operational risk. The single-provider blast radius above is computed live from your asset→vendor map.</div></div>')
+     +'<div id="cooSupply" style="margin-top:12px"></div>')
    +sec('05','Recovery readiness','Could we actually recover? Immutable backups that survive an attack, the recovery-point objective (how much data you would lose), the date of the last full DR test, and whether a single vendor failure leaves no failover.',
      '<div id="cioDr"></div>')
    +sec('06','Business continuity gaps','The specific gaps between where continuity is today and where board tolerance requires it — and the resilience decision that closes them.',
@@ -294,7 +294,7 @@ var SEATS = {
      +'<div id="cpoDecision" style="margin-top:14px"></div>')
    +sec('06','Software &amp; supplier dependency risk','What the product ships on — the third-party components and suppliers a compromise of which reaches your customers, and the concentration to watch.',
      '<div id="ceoThirdParty"></div>'
-     +'<div class="card" style="margin-top:12px"><div class="cn">◐ Connect your SBOM / dependency scanner (<b>Snyk · GitHub</b>) and vendor monitoring to rank the software components and suppliers your product depends on by exposure — the supply-chain path that reaches customers. The single-provider blast radius above is computed live from your asset→vendor map.</div></div>')
+     +'<div id="cpoSupply" style="margin-top:12px"></div>')
   );}
  },
 
