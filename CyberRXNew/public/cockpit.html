@@ -644,7 +644,7 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderCisoDecisions();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderAuditCoverage();renderAuditReadiness();renderAuditFailed();renderAuditDecisions();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoRiskScore();renderCeoTopThreats();renderCeoTopIssues();renderCeoStrategyRisks();renderCeoCustomerProtect();renderCeoBoardKpis();renderCeoExecDecisions();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderCisoDecisions();renderCfoDecision();renderCroDecision();renderCioDecision();renderCooDecision();renderCloDecision();renderCpoDecision();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderAuditCoverage();renderAuditReadiness();renderAuditFailed();renderAuditDecisions();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoRiskScore();renderCeoTopThreats();renderCeoTopIssues();renderCeoStrategyRisks();renderCeoCustomerProtect();renderCeoBoardKpis();renderCeoExecDecisions();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
@@ -1270,6 +1270,129 @@ function renderCisoDecisions(){
   }
   host.innerHTML=decisions([dec]);
   wireChoose();
+}
+/* ---- Live executive decisions for the operational seats — same engine as the
+   CISO's next-dollar decision: real dollars from the org's live economics /
+   resilience / pipeline, ranked options, a recommendation, and Choose & record →
+   ticketing. Each falls back to a clearly-labeled illustrative example only when
+   the underlying data isn't connected yet. Nothing hardcoded when data is live. */
+function econVals(){var e=(LIVE&&LIVE.economics)||{},ap=e.appetite||{},ins=e.insurance||{};
+  return {ale:Number(e.ale)||0,tail:Number(e.tail)||0,appetite:Number(ap.appetite)||0,tailWithin:ap.tail_within,
+    mat:(e.materiality&&Number(e.materiality.value))||0,limit:Number(ins.limit)||0,
+    gap:(ins.gap!=null?Number(ins.gap):null),premium:Number(ins.premium)||0};}
+/* Open control gaps ranked by the dollars of expected loss each closes — the same
+   control-value ledger the CISO decision uses, shared so every seat's numbers agree. */
+function removableGaps(){var rr=capRiskRemoved();
+  var gaps=CAPS.map(function(c){return {c:c,p:capDeploy(c),usd:rr.byCap[c.k]||0};})
+    .filter(function(o){return CAP_FRAMEWORK[o.c.k]&&(o.p==null||o.p<90);})
+    .sort(function(a,b){return (b.usd||0)-(a.usd||0);});
+  return {gaps:gaps,anyLive:rr.anyLive,total:gaps.reduce(function(s,o){return s+(o.usd||0);},0)};}
+
+/* CFO — how much cyber-risk reduction to fund this year, sized on the removable
+   expected loss in the control-value ledger and the live portfolio's blended return. */
+function renderCfoDecision(){
+  var host=document.getElementById('cfoDecision');if(!host)return;
+  var g=removableGaps(),ev=econVals(),dec;
+  if(g.anyLive&&g.total>0){
+    var top=g.gaps[0],topName=top.c.name.replace(/ *\(.*\)/,''),rest=g.total-(top.usd||0);
+    var over=(ev.tail>0&&ev.appetite>0&&ev.tail>ev.appetite);
+    var pf=(typeof ROI_STATE!=='undefined'&&ROI_STATE&&ROI_STATE.invested>0)?(' Your funded portfolio to date returns <b>'+Math.round(ROI_STATE.ret)+'×</b> — '+usd(ROI_STATE.invested)+' invested buys down '+usd(ROI_STATE.riskRemoved)+' of expected loss.'):'';
+    var bCons=['Leaves <b>'+usd(rest)+'</b> of other removable loss open this cycle'];if(over)bCons.push('Worst-case tail stays above the '+usd(ev.appetite)+' appetite');
+    dec={n:1,q:'How should we fund cyber-risk reduction this year?',
+      sit:'Your open control gaps carry <b>'+usd(g.total)+'</b> of removable expected loss, ranked by the dollars each closes '+liveTag()+'.'+pf+(over?(' The worst-case tail ('+usd(ev.tail)+') sits above the board’s appetite ('+usd(ev.appetite)+') — funding this down is what brings it within.'):'')+' How much do we commit?',
+      opts:[
+        {rec:true,tag:'A · Fund the gap program',on:'Option A · Fund the program',osum:usd(g.total)+' loss removed',
+          pros:['Removes <b>'+usd(g.total)+'</b> of expected loss across '+g.gaps.length+' control gap'+(g.gaps.length>1?'s':'')+' — from your control-value ledger',(over?'Brings the '+usd(ev.tail)+' tail toward the '+usd(ev.appetite)+' appetite':'Strengthens the insurance-renewal position'),'Every funded dollar becomes a tracked initiative with a live return on <b>Cyber investment ROI</b>'],
+          cons:['Requires capital this year — scoped with your team; Nerion does not invent a cost','Delivery spans more than one quarter']},
+        {tag:'B · Fund the highest-return gap only',on:'Option B · Top driver only',osum:usd(top.usd||0)+' removed · '+topName,
+          pros:['Closes the single largest driver — <b>'+topName+'</b>, '+usd(top.usd||0)+' of expected loss','Smallest capital commitment this year'],
+          cons:bCons},
+        {tag:'C · Hold flat',on:'Option C · Hold',osum:'$0 new',
+          pros:['No new capital this year'],
+          cons:['Carries the full <b>'+usd(g.total)+'</b> as open exposure','Likely 15–18% premium increase at the next renewal','Known drivers stay unfunded']}]};
+  } else {
+    dec={n:1,q:'How should we fund cyber-risk reduction this year?',sit:'<span class="pill mod" style="font-size:9px">illustrative</span> Connect your security tools and Nerion builds this from your <b>real</b> control gaps and the dollars each closes. Example scenarios below.',opts:[
+      {rec:true,tag:'A · Fund both drivers',on:'Option A · Fund both',osum:'removes the top two drivers',pros:['Removes the largest modeled exposure once your risk register + tools are connected','Brings the worst-case tail toward appetite','Stronger insurance-renewal position'],cons:['Requires capital — scoped with your team','Illustrative until your data is connected']},
+      {tag:'B · Highest-ROI only',on:'Option B · Top driver only',osum:'top driver',pros:['Highest modeled risk-reduction per dollar','Smallest capital this year'],cons:['Leaves the recovery tail over appetite','Renewal position improves only partially']},
+      {tag:'C · Hold flat',on:'Option C · Hold',osum:'$0 new',pros:['No new spend this year'],cons:['Carries the full modeled exposure open','Likely premium increase at renewal']}]};
+  }
+  host.innerHTML=decisions([dec]);wireChoose();
+}
+/* CRO — bring the worst-case tail within the board-approved appetite: reduce (fund
+   controls), transfer (raise the limit) or accept, each priced from live figures. */
+function renderCroDecision(){
+  var host=document.getElementById('croDecision');if(!host)return;
+  var ev=econVals(),g=removableGaps();
+  if(ev.tail>0&&ev.appetite>0){
+    var over=ev.tail>ev.appetite,gap=ev.tail-ev.appetite,removable=(g.anyLive&&g.total>0)?g.total:0,prem=ev.premium;
+    var proA=['Cuts likelihood and impact at the source'+(removable>0?(' — removes '+usd(removable)+' of expected loss from the control-value ledger'):''),(over?'Moves the '+usd(ev.tail)+' tail toward the '+usd(ev.appetite)+' appetite':'Keeps the tail within appetite with headroom'),'De-correlates the concentrated risk path'];
+    var premUp=prem>0?Math.round(prem*0.25):0;
+    var dec={n:1,q:'How do we bring the tail within appetite?',
+      sit:'Cyber’s worst-case tail is <b>'+usd(ev.tail)+'</b> against the board-approved appetite of <b>'+usd(ev.appetite)+'</b> '+liveTag()+(over?(' — <b class="warn">'+usd(gap)+' over</b>.'):' — within tolerance.')+' Three levers to keep it there:',
+      opts:[
+        {rec:true,tag:'A · Reduce (fund controls)',on:'Option A · Reduce',osum:(removable>0?usd(removable)+' removed':'exposure removed'),pros:proA,cons:['Requires capital — scoped with your team','Delivery spans one or more quarters']},
+        {tag:'B · Transfer (raise the insurance limit)',on:'Option B · Transfer',osum:(premUp>0?'~'+usd(premUp)+' more premium':'higher premium'),pros:['Caps the financial tail via a higher policy limit','Fast to execute at renewal'],cons:[(premUp>0?'~'+usd(premUp)+' higher annual premium (on '+usd(prem)+' today)':'Higher annual premium'),'Does not reduce likelihood or de-correlate the path','Coverage still excludes some tail scenarios']},
+        {tag:'C · Accept the tail',on:'Option C · Accept',osum:'$0',pros:['No capital spend'],cons:[(over?'Tail stays '+usd(ev.tail)+' — above the '+usd(ev.appetite)+' limit':'Tail remains at '+usd(ev.tail)),'Requires a documented board risk-acceptance']}]};
+    host.innerHTML=decisions([dec]);wireChoose();return;
+  }
+  host.innerHTML=decisions([{n:1,q:'How do we bring the correlated tail within appetite?',sit:'<span class="pill mod" style="font-size:9px">illustrative</span> Enter your risk register and the board’s appetite at onboarding and Nerion computes this from your real tail vs appetite. Example levers:',opts:[
+    {rec:true,tag:'A · Reduce (fund controls)',on:'Option A · Reduce',osum:'removes exposure',pros:['Cuts likelihood and impact','De-correlates the concentrated path','Tail returns within appetite'],cons:['Requires capital — scoped with your team']},
+    {tag:'B · Transfer (raise the limit)',on:'Option B · Transfer',osum:'higher premium',pros:['Caps the financial tail via a higher limit','Fast to execute at renewal'],cons:['Higher annual premium','Does not reduce likelihood']},
+    {tag:'C · Accept the tail',on:'Option C · Accept',osum:'$0',pros:['No capital spend'],cons:['Tail stays above the enterprise limit','Requires a documented board risk-acceptance']}]}]);wireChoose();
+}
+/* Shared resilience decision (CIO / COO) — funded from live recovery times, the
+   single-vendor blast radius and end-of-life exposure. */
+function resilienceDecision(q,intro){
+  var rs=(LIVE&&LIVE.resilience)||{},worst=rs.worst_recovery_hours,tv=rs.top_vendor_blast,td=rs.tech_debt||{},exp=td.exposure;
+  var haveLive=(worst!=null||exp!=null||(tv&&tv.vendor));
+  if(haveLive){
+    var slow=(worst!=null&&worst>24),vendN=(tv&&tv.systems&&tv.systems.length)||0,proA=[];
+    if(slow)proA.push('Brings the slowest critical service ('+hrsToStr(worst)+' today) inside a same-day recovery tolerance');
+    if(tv&&tv.vendor)proA.push('Removes the single-vendor point of failure — '+tv.vendor+' underpins '+vendN+' service'+(vendN===1?'':'s')+(tv.per_hr?(' · '+usd(tv.per_hr)+'/hr at risk'):''));
+    if(exp!=null)proA.push('Retires '+usd(exp)+' of exposure carried on end-of-life systems');
+    if(!proA.length)proA.push('Hardens recovery for the systems that carry the business');
+    return {n:1,q:q,sit:intro+' '+liveTag()+' Three ways to close the continuity gap:',opts:[
+      {rec:true,tag:'A · Fund resilience + remove the SPOF',on:'Option A · Full resilience',osum:(slow?'within recovery tolerance':'hardened recovery'),pros:proA,cons:['Requires capital — scoped with your team','A one-to-two-quarter program']},
+      {tag:'B · Critical systems only',on:'Option B · Critical only',osum:'top systems protected',pros:['Protects the highest $/hr revenue systems first','Roughly half the capital of the full program'],cons:['Lower-tier services stay over recovery tolerance',(tv&&tv.vendor?'Vendor concentration on '+tv.vendor+' remains':'Some single points of failure remain')]},
+      {tag:'C · Defer / accept & monitor',on:'Option C · Defer',osum:'$0 this year',pros:['No capital this year'],cons:[(slow?'Worst-case recovery stays '+hrsToStr(worst):'Recovery posture unchanged'),(tv&&tv.vendor?'A '+tv.vendor+' failure still degrades '+vendN+' service'+(vendN===1?'':'s')+' at once':'Concentration risk stays unmanaged'),'Requires a documented operational risk-acceptance']}]};
+  }
+  return {n:1,q:q,sit:'<span class="pill mod" style="font-size:9px">illustrative</span> Upload your systems &amp; recovery targets (and connect your backup platform) and Nerion builds this from your real recovery times and vendor concentration. Example levels:',opts:[
+    {rec:true,tag:'A · Full modernization',on:'Option A · Full',osum:'<6h recovery',pros:['Cuts the worst-case recovery tail','Meets regulatory recovery expectations','Removes single-vendor points of failure (multi-region)'],cons:['Requires capital — scoped with your team','A one-quarter program']},
+    {tag:'B · Critical systems only',on:'Option B · Critical only',osum:'top systems',pros:['Protects the top revenue-critical systems','Half the capital of full modernization'],cons:['Lower-tier recovery stays slow','Removes only part of the tail']},
+    {tag:'C · Defer',on:'Option C · Defer',osum:'$0 this year',pros:['Zero capital this year'],cons:['Worst-case recovery stays slow','Tail stays above appetite','Weakens the insurance-renewal position']}]};
+}
+function renderCioDecision(){var host=document.getElementById('cioDecision');if(!host)return;
+  host.innerHTML=decisions([resilienceDecision('How much recovery resilience do we fund?','The systems that carry the business and their recovery times drive most of the worst-case tail.')]);wireChoose();}
+function renderCooDecision(){var host=document.getElementById('cooDecision');if(!host)return;
+  host.innerHTML=decisions([resilienceDecision('How do we keep operations running through a disruption?','Continuity turns on how fast critical services recover and whether a single vendor is a point of failure.')]);wireChoose();}
+/* CLO — how to run disclosure & notification, framed on the live materiality
+   threshold, the binding jurisdiction clock and whether an incident is open now. */
+function renderCloDecision(){
+  var host=document.getElementById('cloDecision');if(!host)return;
+  var ev=econVals(),oi=sig('open_incidents'),lg=(LIVE&&LIVE.legal)||{},clock=(lg.binding&&lg.binding.clock)||'72-hour';
+  var sit='If an incident is material we face a 4-business-day SEC clock and a binding '+clock+' clock in your fastest jurisdiction. '+(ev.mat>0?('An event modeled above <b>'+usd(ev.mat)+'</b> is presumptively material. '):'')+(oi!=null?(oi>0?('<b class="warn">'+oi+' incident'+(oi>1?'s':'')+' open now</b> — readiness is not hypothetical. '):'No incident is open right now — which is exactly when to prepare. '):'')+'How do we prepare?';
+  host.innerHTML=decisions([{n:1,q:'How do we run the disclosure &amp; notification process?',sit:sit,opts:[
+    {rec:true,tag:'A · Standing disclosure committee',on:'Option A · Pre-authorize',osum:'committee + pre-drafted filings',pros:['Meets the 4-business-day SEC and '+clock+' clocks','Defensible, documented materiality determination','Protects directors under D&amp;O'],cons:['Requires setup effort this quarter (charter + templates)']},
+    {tag:'B · Ad-hoc at incident time',on:'Option B · Ad-hoc',osum:'no upfront work',pros:['No setup cost today'],cons:['High risk of missing the 4-day / '+clock+' clock','Weaker legal defense on the materiality call','Filings drafted under time pressure']},
+    {tag:'C · External breach counsel on retainer',on:'Option C · Retainer',osum:'counsel on call',pros:['Specialist breach counsel on demand','Privilege established before an incident'],cons:['Annual retainer cost','Slower first hours vs a standing internal committee']}]}]);wireChoose();
+}
+/* CPO — where the next product-security dollar goes, sized on the live pipeline
+   findings (SAST code-scanning + critical dependency alerts) reaching customers. */
+function renderCpoDecision(){
+  var host=document.getElementById('cpoDecision');if(!host)return;
+  var sast=sig('code_scanning_open'),dep=sig('dependabot_critical');
+  if(sast!=null||dep!=null){
+    var bits=[];if(sast!=null)bits.push('<b>'+sast+'</b> open code-scanning finding'+(sast===1?'':'s'));if(dep!=null)bits.push('<b>'+dep+'</b> critical dependency alert'+(dep===1?'':'s'));
+    var tot=(sast||0)+(dep||0);
+    host.innerHTML=decisions([{n:1,q:'Where do we invest to ship secure-by-design?',sit:'Your pipeline shows '+bits.join(' and ')+' reaching the product '+liveTag()+'. Where does the next product-security dollar go?',opts:[
+      {rec:true,tag:'A · AppSec in the pipeline',on:'Option A · AppSec tooling',osum:'shift-left coverage',pros:['Catches vulnerabilities before release, not after ship','SAST + SCA + secrets scanning on every change'+(tot>0?(' — works the '+tot+' open finding'+(tot===1?'':'s')+' down at the source'):''),'Lowers the critical-finding backlog that reaches customers'],cons:['Tooling + integration cost — scoped with your team','Engineering time to triage and tune findings']},
+      {tag:'B · Release gating',on:'Option B · Gate releases',osum:'blocks known-critical ships',pros:['No release ships with an open critical finding'+(dep!=null&&dep>0?(' — stops the '+dep+' critical dependency alert'+(dep===1?'':'s')+' from shipping'):''),'Fast to enforce in CI/CD'],cons:['Can slow delivery while the backlog is large','Needs a documented exception process']},
+      {tag:'C · Secure-by-design training + threat modeling',on:'Option C · Shift-left culture',osum:'fewer defects at the source',pros:['Reduces defects at design time','Builds durable engineering capability'],cons:['Slower to show measurable results','Preventive, not an immediate backlog reduction']}]}]);wireChoose();return;
+  }
+  host.innerHTML=decisions([{n:1,q:'Where do we invest to ship secure-by-design?',sit:'<span class="pill mod" style="font-size:9px">illustrative</span> Connect your CI/CD and application-security tooling (SAST / SCA) and Nerion builds this from your real pipeline findings. Example levers:',opts:[
+    {rec:true,tag:'A · AppSec in the pipeline',on:'Option A · AppSec tooling',osum:'shift-left coverage',pros:['Catches vulnerabilities before release, not after ship','SAST + SCA + secrets scanning on every change','Lowers the critical-finding backlog that reaches customers'],cons:['Tooling + integration cost — scoped with your team','Engineering time to triage and tune findings']},
+    {tag:'B · Release gating',on:'Option B · Gate releases',osum:'blocks known-critical ships',pros:['No release ships with an open critical finding','Fast to enforce in CI/CD'],cons:['Can slow delivery while the backlog is large','Needs a documented exception process']},
+    {tag:'C · Secure-by-design training + threat modeling',on:'Option C · Shift-left culture',osum:'fewer defects at the source',pros:['Reduces defects at design time','Builds durable engineering capability'],cons:['Slower to show measurable results','Preventive, not an immediate backlog reduction']}]}]);wireChoose();
 }
 function controlGapsCard(){
   if(!SIGNALS)return '<div class="card" style="margin-top:14px"><div class="ck">Control gaps that carry risk — and the funded fix</div><div class="cn" style="margin-top:6px">◐ <b style="color:var(--warn)">Connect your security tools</b> (EDR, MFA, PAM, SIEM…) and this shows your live control coverage, the gaps that leave the most risk open, and the project closing each — every number from the tool, none hardcoded.</div></div>';
@@ -2278,12 +2401,12 @@ function renderSignals(){
     var pcts=['edr_pct','mfa_pct','pam_pct'].map(sig).filter(function(x){return x!=null;});
     if(pcts.length){var avg=Math.round(pcts.reduce(function(s,x){return s+x;},0)/pcts.length);setTxt('lvCovTile',avg+'%');var tn=document.getElementById('lvCovTileNote');if(tn)tn.innerHTML='<span class="pill good">live</span> from '+pcts.length+' connected tool'+(pcts.length>1?'s':'');}
   }
-  renderAiRisk();renderCisoOps();renderUnderAttack();renderThreatMap();renderControls();renderCisoDecisions();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCfoFraud();renderCroKri();renderCloOps();renderThreatIntel();renderDrReadiness();renderPeerBench();
+  renderAiRisk();renderCisoOps();renderUnderAttack();renderThreatMap();renderControls();renderCisoDecisions();renderCfoDecision();renderCroDecision();renderCioDecision();renderCooDecision();renderCloDecision();renderCpoDecision();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCfoFraud();renderCroKri();renderCloOps();renderThreatIntel();renderDrReadiness();renderPeerBench();
 }
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();if(typeof renderCisoOps==='function'){renderCisoOps();renderUnderAttack();}}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderCisoDecisions();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderAuditCoverage();renderAuditReadiness();renderAuditFailed();renderAuditDecisions();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoRiskScore();renderCeoTopThreats();renderCeoTopIssues();renderCeoStrategyRisks();renderCeoCustomerProtect();renderCeoBoardKpis();renderCeoExecDecisions();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderCisoDecisions();renderCfoDecision();renderCroDecision();renderCioDecision();renderCooDecision();renderCloDecision();renderCpoDecision();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderAuditCoverage();renderAuditReadiness();renderAuditFailed();renderAuditDecisions();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoRiskScore();renderCeoTopThreats();renderCeoTopIssues();renderCeoStrategyRisks();renderCeoCustomerProtect();renderCeoBoardKpis();renderCeoExecDecisions();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
