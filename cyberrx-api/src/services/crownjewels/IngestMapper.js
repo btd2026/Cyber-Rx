@@ -48,7 +48,10 @@ function mapOnboarding(input = {}) {
   const orgId = input.org_id || `org_${slug(input.org_name)}`;
   const procRows = (input.processes || []).filter((p) => p && p.name).map((p, i) => ({
     id: `${orgId}_P${i + 1}`, name: String(p.name).trim(), tier: 'Primary',
-    criticality: critFromRevData(p.rev, p.data), owner: p.owner || '—',
+    // Respect the user's explicit criticality when set; otherwise derive it from
+    // revenue + data sensitivity.
+    criticality: (p.criticality && String(p.criticality).trim()) ? String(p.criticality).trim() : critFromRevData(p.rev, p.data),
+    owner: p.owner || '—',
     _dataTokens: String(p.data || '').toUpperCase().split(/[^A-Z]+/).filter((t) => t.length > 1),
   }));
   const procIdByName = {}; procRows.forEach((p) => { procIdByName[norm(p.name)] = p.id; });
