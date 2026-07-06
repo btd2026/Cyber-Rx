@@ -179,6 +179,23 @@ router.post('/ingest', optionalJWT, async (req, res) => {
     };
     const growth = (growthRaw.pipelineUsd || growthRaw.reviewNowWks != null || growthRaw.dealsGated || growthRaw.certs.length) ? growthRaw : {};
 
+    // CEO strategic objectives (each tagged with the cyber driver it depends on) — powers
+    // the CEO "objectives protected" metric. Persisted so it survives a new device/browser.
+    const objectives = Array.isArray(b.objectives)
+      ? b.objectives.filter((o) => o && (o.name || typeof o === 'string')).slice(0, 20)
+          .map((o) => ({ name: String(o.name || o).slice(0, 140), map: o.map ? String(o.map).slice(0, 40) : '' }))
+      : [];
+
+    // Executive names by seat id — each seat's decisions are stamped with the leader's
+    // name. Stored server-side so the cockpit shows them on any device.
+    const seatNames = {};
+    if (b.seatNames && typeof b.seatNames === 'object') {
+      Object.keys(b.seatNames).forEach((k) => {
+        const v = b.seatNames[k];
+        if (typeof v === 'string' && v.trim()) seatNames[String(k).slice(0, 20)] = v.trim().slice(0, 80);
+      });
+    }
+
     // Ensure the org row exists so the FK on business_processes/assets is satisfied.
     // JSONB-merge economics into setup_json so re-ingest overlays without clobbering.
     step = 'upsert_org';
@@ -187,7 +204,7 @@ router.post('/ingest', optionalJWT, async (req, res) => {
        VALUES ($1,$2,$3,$4::jsonb,NOW())
        ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name,
          setup_json = COALESCE(orgs.setup_json,'{}'::jsonb) || EXCLUDED.setup_json`,
-      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics, resilience, initiatives, governance, aiGovernance, growth, strategicInitiatives })]);
+      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics, resilience, initiatives, governance, aiGovernance, growth, strategicInitiatives, objectives, seatNames })]);
 
     // Idempotent replace: clear the org's prior inventory, then insert the mapped rows.
     step = 'clear_inventory';

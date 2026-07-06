@@ -862,6 +862,7 @@
     if(!PROC.length&&!APP.length){msg.textContent='Upload your processes or systems first.';msg.style.color='var(--warn)';try{obShow('inv');}catch(_){}return;}
     var orgId='org_'+slug(org);
     var frameworksInScope=Array.prototype.slice.call(document.querySelectorAll('#scopeFrameworks input:checked')).map(function(c){return c.value;});
+    var seatNames={};document.querySelectorAll('.seatname').forEach(function(i){if(i.value.trim())seatNames[i.dataset.seat]=i.value.trim();});
     var payload={
       org_name:org,org_id:orgId,industry:v('industry'),regions:REGIONS,currency:CUR_CODE,
       financials:{revenue:mval('finRevenue'),operatingIncome:mval('finOpInc'),netIncome:mval('finNetInc'),enterpriseValue:mval('finEV'),sharesOutstanding:mval('finShares')},
@@ -883,6 +884,7 @@
       },
       strategicInitiatives:collectStrategic(),
       objectives:collectObjectives(),
+      seatNames:seatNames,
       growth:{
         pipelineUsd:mval('growthPipeline'),reviewBeforeWks:v('growthBefore'),reviewNowWks:v('growthNow'),
         dealsGated:v('growthDeals'),trustReviews:v('growthTrust'),
@@ -897,7 +899,6 @@
       if(r.ok&&body&&body.org_id)orgId=body.org_id;
       else if(!r.ok){msg.textContent='Setup error: '+(body.error||('HTTP '+r.status));msg.style.color='var(--warn)';btn.disabled=false;return;}
     }catch(e){/* offline: still hand off; cockpit shows illustrative */}
-    var seatNames={};document.querySelectorAll('.seatname').forEach(function(i){if(i.value.trim())seatNames[i.dataset.seat]=i.value.trim();});
     try{localStorage.setItem('cyberrx_org_id',orgId);localStorage.setItem('cyberrx_org_name',org);localStorage.setItem('cyberrx_seat_names',JSON.stringify(seatNames));localStorage.setItem('cyberrx_industry',v('industry')||'');localStorage.setItem('cyberrx_frameworks',JSON.stringify(frameworksInScope));localStorage.setItem('cyberrx_currency',CUR_SYM+'|'+CUR_CODE);localStorage.setItem('cyberrx_objectives',JSON.stringify(collectObjectives()));}catch(_){}
     // Persist the chosen ticketing system so cockpit decisions open projects there.
     var itsm=SELTOOLS.servicenow;
@@ -907,7 +908,6 @@
     try{if(vmonKey)localStorage.setItem('cyberrx_vendor_monitor',JSON.stringify({vendor:SELTOOLS[vmonKey].vendor||'SecurityScorecard',demo:!!SELTOOLS[vmonKey].demo}));}catch(_){}
     // Persist connected tools so the War Room streams from the systems you run.
     try{localStorage.setItem('cyberrx_tools',JSON.stringify(SELTOOLS));}catch(_){}
-    payload.seatNames=seatNames;
     // Connect the selected security tools now that the org exists (best-effort, real).
     var toolKeys=Object.keys(SELTOOLS).filter(function(k){return SELTOOLS[k].key&&!SELTOOLS[k].itsm&&!SELTOOLS[k].vmon;});
     if(toolKeys.length){msg.textContent='Connecting your tools…';

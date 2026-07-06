@@ -758,7 +758,7 @@ function orgName(){try{return localStorage.getItem('cyberrx_org_name')||'';}catc
 /* Decisions: named leader, records a PROJECT in the ticketing system, editable
    for 24h then committed (locked). Persisted per org+seat+decision. */
 var EDIT_WINDOW_MS=24*60*60*1000;
-function seatNames(){try{return JSON.parse(localStorage.getItem('cyberrx_seat_names')||'{}');}catch(_){return{};}}
+function seatNames(){var L=(typeof LIVE!=='undefined'&&LIVE&&LIVE.seatNames&&Object.keys(LIVE.seatNames).length)?LIVE.seatNames:null;if(L)return L;try{return JSON.parse(localStorage.getItem('cyberrx_seat_names')||'{}');}catch(_){return{};}}
 function leaderName(){var n=seatNames()[CUR];return n||SEAT_LABEL[CUR]||CUR.toUpperCase();}
 function decKey(dec){return 'cyberrx_dec_'+orgId()+'_'+CUR+'_'+dec;}
 function loadDec(dec){try{return JSON.parse(localStorage.getItem(decKey(dec))||'null');}catch(_){return null;}}
@@ -861,6 +861,7 @@ function allDecisions(){
 }
 /* Cyber projects imported at onboarding (uploaded or pulled from Jira/SNOW). */
 function importedInits(){
+  var L=(typeof LIVE!=='undefined'&&LIVE&&Array.isArray(LIVE.initiatives)&&LIVE.initiatives.length)?LIVE.initiatives:null;if(L)return L;
   try{var a=JSON.parse(localStorage.getItem('cyberrx_initiatives')||'[]');return Array.isArray(a)?a:[];}catch(_){return [];}
 }
 function parseUsdNum(s){var m=String(s||'').match(/([\d.]+)\s*([KMB])?/i);if(!m)return 0;var n=parseFloat(m[1])||0;var u=(m[2]||'').toUpperCase();return n*(u==='B'?1e9:u==='M'?1e6:u==='K'?1e3:1);}
@@ -1147,7 +1148,15 @@ function cjCoverage(){var l=currentCjList();if(!l||!l.length)return null;var cle
    (2) are we improving (recorded expected-loss trajectory), (3) how fast do we
    detect & respond. Then the live control gaps that carry risk + the funded fix.
    No hardcoded coverage numbers, no meta-metrics — everything traces to data. */
-function controlsEffUsd(){var e=LIVE&&LIVE.economics;if(e&&Number(e.controls_removed)>0)return Number(e.controls_removed);return 210e6;}
+/* Risk bought down by controls, in dollars. Prefer the backend figure; otherwise a
+   modeled estimate tied to THIS org's data — its expected loss (ALE) scaled by how much
+   of its weighted control set is actually deployed. Returns 0 when there's no ALE or no
+   deployed control (so downstream shows the honest not-connected state, never a
+   fabricated constant). */
+function controlsEffUsd(){var e=LIVE&&LIVE.economics;if(e&&Number(e.controls_removed)>0)return Number(e.controls_removed);
+  var ale=(e&&Number(e.ale)>0)?Number(e.ale):0;if(ale<=0)return 0;
+  var sumW=0,sumEff=0;CAPS.forEach(function(c){var fw=CAP_FRAMEWORK[c.k],w=(fw&&fw.weight)||0;if(w>0){sumW+=w;var p=capDeploy(c);if(p!=null)sumEff+=w*(p/100);}});
+  return sumW>0?Math.round(ale*(sumEff/sumW)):0;}
 function ctile(id,label,value,cls,sub){return '<div class="card optile ctile" data-cdrill="'+id+'"><div class="ck">'+label+'</div><div class="cv" style="font-size:20px;margin-top:5px;line-height:1.25'+(cls?';color:var(--'+cls+')':'')+'">'+value+'</div><div class="cn" style="margin-top:7px">'+sub+' <span class="drill-cta">details ▸</span></div></div>';}
 /* Bucket the org's recorded analyses into calendar quarters — one point per quarter
    (the latest analysis recorded in it) — so the trajectory reads quarter-over-quarter,

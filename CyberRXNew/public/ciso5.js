@@ -961,7 +961,8 @@ function c5Owners(){
    when a material exposure driver maps to it (identity → the platform), so the "1 at
    risk" emerges from the real exposure model, not a hardcode. */
 function c5Objectives(){
-  var stored=null;try{stored=JSON.parse(localStorage.getItem('cyberrx_objectives')||'null');}catch(_){}
+  var stored=(typeof LIVE!=='undefined'&&LIVE&&Array.isArray(LIVE.objectives)&&LIVE.objectives.length)?LIVE.objectives:null;
+  if(!stored){try{stored=JSON.parse(localStorage.getItem('cyberrx_objectives')||'null');}catch(_){}}
   var base=(Array.isArray(stored)&&stored.length)?stored.map(function(x){return {name:(x.name||x),map:(x.map||'')};}):[
     {name:'Grow the customer platform',map:'identity'},{name:'Expand into new markets',map:''},
     {name:'Launch the new product line',map:'product'},{name:'Improve margins',map:'cost'},
