@@ -304,8 +304,12 @@ var SEATS = {
      '<div id="cpoQuality"></div>')
    +sec('04','AI product readiness','Are AI features in the product governed before they reach customers? AI systems live, the framework adopted, the acceptable-use policy and inventory — readiness to ship AI without shipping unmanaged risk.',
      '<div id="cioAi"></div>')
-   +sec('05','Secure-by-design adoption','How deeply secure-by-design is adopted across engineering — threat-modeling coverage, secure-SDLC practices, and security embedded in the pipeline rather than a gate beside it.',
-     '<div class="card"><div class="ck">Secure-by-design coverage</div><div class="cn" style="margin-top:6px">◐ Connect your SDLC tooling to show threat-modeling coverage, secure-coding checks and the share of teams with security embedded in the pipeline — so secure-by-design is measured, not aspired to. <span class="pill mod" style="font-size:8px">planned</span></div></div>')
+   +sec('05','Secure-by-design adoption','How deeply secure-by-design is adopted across engineering — threat-modeling coverage, secure-SDLC practices, and security embedded in the pipeline rather than a gate beside it. Plus the product-security investment decision the Chief Product Officer owns.',
+     '<div class="card"><div class="ck">Secure-by-design coverage</div><div class="cn" style="margin-top:6px">◐ Connect your SDLC tooling to show threat-modeling coverage, secure-coding checks and the share of teams with security embedded in the pipeline — so secure-by-design is measured, not aspired to. <span class="pill mod" style="font-size:8px">planned</span></div></div>'
+     +decisions([{n:1,q:'Where do we invest to ship secure-by-design?',sit:'<span class="pill mod">illustrative example</span> The tradeoff below is framed on product-security posture; your live figures compute from your pipeline (SAST / SCA findings, review backlog and delivery velocity) once connected. Three levers:',opts:[
+       {rec:true,tag:'A · AppSec in the pipeline',on:'Option A · AppSec tooling',osum:'shift-left coverage',pros:['Catches vulnerabilities before release, not after ship','SAST + SCA + secrets scanning on every change','Lowers the critical-finding backlog that reaches customers'],cons:['Tooling + integration cost — scoped with your team','Engineering time to triage and tune findings']},
+       {tag:'B · Release gating',on:'Option B · Gate releases',osum:'blocks known-critical ships',pros:['No release ships with an open critical finding','Fast to enforce in CI/CD'],cons:['Can slow delivery while the backlog is large','Needs a documented exception process']},
+       {tag:'C · Secure-by-design training + threat modeling',on:'Option C · Shift-left culture',osum:'fewer defects at the source',pros:['Reduces defects at design time','Builds durable engineering capability'],cons:['Slower to show measurable results','Preventive, not an immediate backlog reduction']}]}]))
    +sec('06','Software &amp; supplier dependency risk','What the product ships on — the third-party components and suppliers a compromise of which reaches your customers, and the concentration to watch.',
      '<div id="ceoThirdParty"></div>'
      +'<div class="card" style="margin-top:12px"><div class="cn">◐ Connect your SBOM / dependency scanner (<b>Snyk · GitHub</b>) and vendor monitoring to rank the software components and suppliers your product depends on by exposure — the supply-chain path that reaches customers. The single-provider blast radius above is computed live from your asset→vendor map.</div></div>')
@@ -330,7 +334,7 @@ var SEATS = {
    +sec('05','Repeat findings','The findings that recur audit-over-audit — the systemic gaps that were not truly closed. Live from your audit / GRC system.',
      '<div id="auditRepeat"></div>')
    +sec('06','Audit coverage','How much of the audit universe is actually evidenced — the share of controls with live or document evidence vs those still self-attested or untested.',
-     '<div class="card"><div class="ck">Coverage of the universe</div><div class="cn" style="margin-top:6px">Audit coverage is the share of the control universe backed by evidence rather than self-attestation. The <b>Control testing status</b> tab shows, per control, whether it is evidenced by 🔌 live telemetry, 📄 document review, or not yet — connect more tools and upload more policies to raise coverage. Connect your audit-management platform to track the formal audit plan against this universe.</div></div>')
+     '<div id="auditCoverage"></div>')
   );}
  }
 };
