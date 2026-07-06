@@ -136,25 +136,16 @@ var SEATS = {
  },
 
  coo:{
-  eyebrow:'Operational continuity view · COO',
-  verdict:'Operations are <span class="em">running</span> — cyber is not disrupting service delivery today. The exposure is continuity: our slowest critical service recovers beyond tolerance, and a single vendor is a point of failure for three of them.',
-  sub:'Can the business keep delivering through a cyber disruption? Your critical services, what an hour of downtime costs, how fast each recovers, and where a single point of failure could stop operations.',
-  brief:'Operationally we are running, and no incident is disrupting service delivery right now. The continuity gap to close is recovery — our slowest critical service takes too long to restore, beyond tolerance, and one vendor is a single point of failure for three services. One resilience investment brings both inside tolerance and protects our service-delivery commitments.',
+  eyebrow:'COO · Executive cockpit',
+  verdict:'Can the business keep running through a cyber disruption? Five tabs: <span class="em">resilience</span> at a glance, cyber risk by critical <span class="em">process</span>, the <span class="em">supply chain</span> that could stop us, <span class="em">recovery</span> readiness, and the operational calls that need you — every figure traceable to source.',
+  sub:'Tap any tile, process, vendor or decision to open the inspector — its basis, inputs and source. The same engine as the other seats; the shared cyber and vendor figures match exactly.',
+  brief:'From the operations seat, in five tabs. Resilience: operations are healthy and continuity-ready, with one critical process — the customer platform — carrying an identity exposure. Processes: most critical processes are cyber-safe; one is at risk and one on watch through a vendor. Supply chain: your worst-rated Tier-1 vendor is a single point of failure to reduce. Recovery: RTO/RPO against target from the last test, with identity restoration the weak link. Decisions: one to fund, one to shore up. The shared figures match the other seats exactly.',
   body:function(){return (
-   sec('01','Operational resilience','Are operations running, and could they keep running through a cyber disruption? Your live operating picture — incidents affecting business processes, how fast a disruption surfaces, and where a single point of failure could stop service delivery.',
-     '<div id="cooStatus"></div>')
-   +sec('02','Critical process health','The revenue- and service-critical processes ranked by what an hour of downtime costs, how fast each recovers, and whether that is inside your continuity tolerance.',
-     '<div id="cooContinuity"></div>')
-   +sec('03','Manufacturing / service continuity','The continuity that actually matters for your sector — the services whose disruption stops the business — framed in your industry’s terms, including operational-technology (OT) continuity where it applies.',
-     '<div id="cooSector"></div>')
-   +sec('04','Supply-chain reliability','Where a third-party or single provider is a point of failure for your operations — the vendor concentration that can stop multiple services at once, and the supplier risk to monitor.',
-     '<div id="ceoThirdParty"></div>'
-     +'<div id="cooSupply" style="margin-top:12px"></div>')
-   +sec('05','Recovery readiness','Could we actually recover? Immutable backups that survive an attack, the recovery-point objective (how much data you would lose), the date of the last full DR test, and whether a single vendor failure leaves no failover.',
-     '<div id="cioDr"></div>')
-   +sec('06','Business continuity gaps','The specific gaps between where continuity is today and where board tolerance requires it — and the resilience decision that closes them.',
-     '<div id="cooGaps"></div>'
-     +'<div id="cooDecision" style="margin-top:14px"></div>')
+   sec('01','Resilience','','<div id="co-resilience"></div>')
+   +sec('02','Processes','','<div id="co-processes"></div>')
+   +sec('03','Supply chain','','<div id="co-supply"></div>')
+   +sec('04','Recovery','','<div id="co-recovery"></div>')
+   +sec('05','Decisions','','<div id="co-decisions"></div>')
   );}
  },
 
