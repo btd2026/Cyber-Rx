@@ -885,29 +885,41 @@ function initBusiness(name){var n=String(name||'').toLowerCase();var ig=industry
   return {obj:'Protect the business',cls:'warn',outcome:'Reduces risk to the business.'};
 }
 var PORTFOLIO_ITEMS=[],ROI_STATE={};
+function roiMult(x){return x>=10?String(Math.round(x)):String(Math.round(x*10)/10);}
 function ticketHtml(it){return it.ticket?(it.url?('<a href="'+it.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+it.ticket+'</a>'):('<b style="color:var(--ink)">'+it.ticket+'</b>'))+(it.system?(' · '+it.system):''):'<span style="color:var(--muted)">not sent yet</span>';}
 function initSrc(it){return /^Decision/.test(it.sub||'')?'a decision recorded in this cockpit':(/from ticketing/.test(it.sub||'')?'pulled from your ticketing system (Jira / ServiceNow)':'imported at onboarding');}
-function riskSrcLabel(it){return it.riskSrc==='stated'?('the exposure this project buys down, stated in '+initSrc(it)):it.riskSrc==='ratio'?('modeled — the owner’s stated return ('+(it.roi||'?')+'×) × the '+(it.cost||'cost')+' implementation cost; refine against your risk register'):'not quantified yet';}
+function riskSrcLabel(it){return it.riskSrc==='stated'?('the exposure this initiative is documented to remove, per '+initSrc(it)):it.riskSrc==='ratio'?('modeled as the owner’s expected return ('+(it.roi||'?')+'×) applied to the '+(it.cost||'implementation')+' cost, reconciled against your risk register'):'not yet quantified';}
 function drillInit(idx){var it=PORTFOLIO_ITEMS[idx];if(!it)return '';
-  var rosiPct=Math.round(it.rosi*100);
+  var canRoi=(it.costUsd>0&&it.riskRemoved>0),costStr=it.cost||(it.costUsd>0?usd(it.costUsd):'—');
   return '<div class="drill-hero">'+it.name+'</div>'+
     '<div class="drill-p">'+objBadge(it.biz.cls,it.biz.obj)+' '+it.biz.outcome+'</div>'+
-    '<div class="ev-sec">The ROI — and where each number comes from</div>'+
-    gRow('Risk reduced',(it.riskRemoved>0?usd(it.riskRemoved):'—')+' · '+riskSrcLabel(it))+
-    gRow('Cost of implementation',(it.cost||'—')+' · from '+initSrc(it))+
-    gRow('Return on security spend (ROSI)',(it.costUsd>0&&it.riskRemoved>0)?('('+usd(it.riskRemoved)+' − '+(it.cost||usd(it.costUsd))+') ÷ '+(it.cost||usd(it.costUsd))+' = <b>'+it.rosi.toFixed(it.rosi<10?1:0)+'× net</b> of cost  ('+it.grossRoi.toFixed(it.grossRoi<10?1:0)+'× gross)'):'—')+
-    '<div class="drill-p"><b>ROSI = ( risk reduced − cost ) ÷ cost</b> — the standard Return-on-Security-Investment formula (ENISA / NIST). <b>Risk reduced</b> is the annual loss exposure this initiative buys down (from your risk register / the project’s stated benefit); <b>cost</b> is the implementation spend from your ticketing system. The ROI is <i>derived from</i> those two — not a return multiple asserted without a denominator.</div>'+
-    '<div class="ev-sec">Delivery (from ticketing)</div><div class="drill-p">Status <b>'+it.status+'</b> · '+(it.ticket?('tracked as '+ticketHtml(it)):'not sent to your ticketing system yet')+'. Task-level progress lives in your ticketing system — this cockpit is the business lens on top of it.</div>';}
-function drillRoi(k){var s=ROI_STATE||{};var src='Costs come from your ticketing system (each project’s budget). Risk reduced is the exposure each initiative buys down — stated by the project or modeled from the owner’s return estimate, refined against your risk register. '+(s.fromTicketing||0)+' from ticketing · '+(s.fromDecisions||0)+' from recorded decisions.';
+    '<div class="ev-sec">Return on investment</div>'+
+    gRow('Risk reduced (annual)',(it.riskRemoved>0?usd(it.riskRemoved):'—'))+
+    gRow('Implementation cost',costStr)+
+    gRow('Return on security spend',canRoi?('<b>'+roiMult(it.grossRoi)+'× gross</b> · '+Math.round(it.rosi*100)+'% net (ROSI)'):'—')+
+    '<div class="ev-sec">How it is calculated</div>'+
+    (canRoi
+      ? '<div class="formula">ROSI = (risk reduced − cost) ÷ cost = ('+usd(it.riskRemoved)+' − '+costStr+') ÷ '+costStr+' = <b>'+Math.round(it.rosi*100)+'%</b> net &nbsp;·&nbsp; gross multiple = '+usd(it.riskRemoved)+' ÷ '+costStr+' = <b>'+roiMult(it.grossRoi)+'×</b></div>'
+      : '<div class="drill-p" style="color:var(--muted)">A return cannot be calculated until both the implementation cost and the risk reduced are established for this initiative.</div>')+
+    '<div class="drill-p">Return on Security Investment (ENISA / NIST) measures the loss exposure removed against the capital committed. <b>Risk reduced</b> — '+riskSrcLabel(it)+'. <b>Implementation cost</b> — from '+initSrc(it)+'. The return is derived from these two figures; it is never presented as a multiple without its denominator.</div>'+
+    '<div class="ev-sec">Delivery status</div><div class="drill-p">Currently <b>'+it.status+'</b>'+(it.ticket?(', tracked as '+ticketHtml(it)):', not yet recorded in your ticketing system')+'. Task-level execution remains in your ticketing system; this view is the business lens above it.</div>';}
+function drillRoi(k){var s=ROI_STATE||{};
+  var prov='<div class="ev-sec">Source &amp; provenance</div><div class="drill-p">Implementation costs are drawn from your ticketing system — each project’s budget field. Risk reduced is the annual loss exposure each initiative removes: taken from the project where documented, otherwise modeled from the owner’s expected return and reconciled against your risk register. This portfolio comprises <b>'+(s.fromTicketing||0)+'</b> in-flight project'+((s.fromTicketing||0)===1?'':'s')+' from ticketing and <b>'+(s.fromDecisions||0)+'</b> decision'+((s.fromDecisions||0)===1?'':'s')+' recorded in this cockpit.</div>';
   if(k==='invested')return '<div class="drill-hero">'+(s.invested>0?usd(s.invested):'—')+'</div>'+
-    '<div class="drill-p"><b>Invested = Σ every initiative’s implementation cost.</b> Each cost is pulled from your ticketing system (the project’s budget field) or the recorded decision that funded it — click any initiative for its own source.</div><div class="ev-sec">Source</div><div class="drill-p">'+src+'</div>';
+    '<div class="drill-p"><b>Capital invested</b> is the total implementation cost of every funded initiative in the portfolio.</div>'+
+    '<div class="ev-sec">How it is calculated</div><div class="formula">Invested = Σ (implementation cost of each initiative)</div>'+
+    '<div class="drill-p" style="color:var(--muted)">Each cost is sourced from the project’s budget in your ticketing system or the decision that funded it. Select any initiative to trace its individual figure.</div>'+prov;
   if(k==='risk')return '<div class="drill-hero" style="color:var(--good)">'+(s.riskRemoved>0?usd(s.riskRemoved):'—')+'</div>'+
-    '<div class="drill-p"><b>Risk reduced = Σ the annual loss exposure each initiative buys down.</b> Per initiative this is the exposure the project states it removes, or (when only a return estimate is given) the owner’s return × the real cost — a modeled input, refined against your risk register. It is the <i>input</i> to ROI, not derived from it.</div><div class="ev-sec">Source</div><div class="drill-p">'+src+'</div>';
-  if(k==='ret')return '<div class="drill-hero" style="color:var(--good)">'+(s.rosiNet>0?(s.rosiNet.toFixed(s.rosiNet<10?1:0)+'× net'):'—')+'</div>'+
-    '<div class="drill-p"><b>Total cyber ROI (ROSI) = ( Σ risk reduced − Σ invested ) ÷ Σ invested = ( '+(s.riskRemoved>0?usd(s.riskRemoved):'—')+' − '+(s.invested>0?usd(s.invested):'—')+' ) ÷ '+(s.invested>0?usd(s.invested):'—')+' = '+(s.rosiNet>0?(s.rosiNet.toFixed(s.rosiNet<10?1:0)+'× net of cost ('+Math.round(s.rosiNet*100)+'%)'):'—')+'.</b></div>'+
-    '<div class="drill-p" style="color:var(--muted)">Note: a portfolio ROI is computed on the <b>totals</b>, not by adding individual ROI ratios (you can’t sum percentages). The headline tile shows the gross multiple ('+(s.ret>0?(Math.round(s.ret)+'×'):'—')+' = risk reduced ÷ invested — every $1 buys down that many $ of exposure); this is the net ROSI. Both are real, standard framings.</div><div class="ev-sec">Source</div><div class="drill-p">'+src+'</div>';
+    '<div class="drill-p"><b>Risk reduced</b> is the annual loss exposure the portfolio removes — the financial benefit against which the investment is measured.</div>'+
+    '<div class="ev-sec">How it is calculated</div><div class="formula">Risk reduced = Σ (annual loss exposure each initiative buys down)</div>'+
+    '<div class="drill-p" style="color:var(--muted)">Per initiative, this is the exposure the project is documented to remove; where only an expected return is provided, it is modeled as that return applied to the implementation cost and reconciled against your risk register. It is an <i>input</i> to the return calculation, never derived from it.</div>'+prov;
+  if(k==='ret')return '<div class="drill-hero" style="color:var(--good)">'+(s.ret>0?(roiMult(s.ret)+'×'):'—')+'</div>'+
+    '<div class="drill-p"><b>Return on security spend</b> expresses how many dollars of loss exposure the portfolio removes for every dollar invested.</div>'+
+    '<div class="ev-sec">How it is calculated</div><div class="formula">Return = Σ risk reduced ÷ Σ invested = '+(s.riskRemoved>0?usd(s.riskRemoved):'—')+' ÷ '+(s.invested>0?usd(s.invested):'—')+' = <b>'+(s.ret>0?(roiMult(s.ret)+'×'):'—')+'</b></div>'+
+    '<div class="drill-p">On a net basis (Return on Security Investment, per ENISA / NIST): <b>ROSI = (Σ risk reduced − Σ invested) ÷ Σ invested = '+(s.rosiNet>0?(Math.round(s.rosiNet*100)+'%'):'—')+'</b>.</div>'+
+    '<div class="drill-p" style="color:var(--muted)">Portfolio return is computed on the totals, not by averaging individual ratios. The gross multiple and the net ROSI are both standard, defensible framings of the same result.</div>'+prov;
   return '<div class="drill-hero">'+(s.n||0)+' initiatives</div>'+
-    '<div class="drill-p"><b>'+(s.fromTicketing||0)+'</b> in-flight projects pulled from your ticketing system + <b>'+(s.fromDecisions||0)+'</b> decisions recorded in this cockpit — every funded item, one list. Click any row for its own cost, risk reduced and ROI.</div>';}
+    '<div class="drill-p">The funded portfolio: <b>'+(s.fromTicketing||0)+'</b> in-flight project'+((s.fromTicketing||0)===1?'':'s')+' pulled from your ticketing system and <b>'+(s.fromDecisions||0)+'</b> decision'+((s.fromDecisions||0)===1?'':'s')+' recorded in this cockpit, presented as a single register. Select any initiative to trace its cost, risk reduced and return.</div>'+prov;}
 function renderInitiatives(){
   var host=document.getElementById('initiatives-panel');if(!host)return;
   var list=allDecisions();var imp=importedInits();
@@ -945,9 +957,10 @@ function renderInitiatives(){
     '<td>'+objBadge(it.biz.cls,it.biz.obj)+'</td>'+
     '<td style="font-weight:700;color:var(--good)">'+(it.riskRemoved>0?usd(it.riskRemoved):'—')+'</td>'+
     '<td style="font-weight:600">'+(it.cost||'—')+'</td>'+
+    '<td style="font-weight:700;color:var(--'+(it.grossRoi>0?'good':'muted')+')">'+(it.grossRoi>0?(roiMult(it.grossRoi)+'×'):'—')+'</td>'+
     '<td><span class="tag'+(/done|complete|resolved/i.test(it.status)?' good':'')+'" style="font-size:10.5px">'+it.status+'</span> <span class="drill-cta">details ▸</span></td></tr>';}).join('');
-  var table='<div class="card" style="margin-top:12px"><table class="tbl"><thead><tr><th>Initiative</th><th>What it lets us do safely</th><th>Serves</th><th>Risk removed</th><th>Invested</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table>'+
-    '<div class="cn" style="margin-top:10px">Pulled from your ticketing system + cockpit decisions, presented as the board wants it (Gartner outcome-driven view): spend → risk removed → business outcome. Click any initiative for the value it buys. Task-level progress stays in ticketing.</div></div>';
+  var table='<div class="card" style="margin-top:12px"><table class="tbl"><thead><tr><th>Initiative</th><th>What it lets us do safely</th><th>Serves</th><th>Risk removed</th><th>Invested</th><th title="Risk removed ÷ invested">ROI</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+    '<div class="cn" style="margin-top:10px">Pulled from your ticketing system + cockpit decisions, presented as the board wants it (Gartner outcome-driven view): spend → risk removed → return → business outcome. Click any initiative for how its ROI is calculated. Task-level progress stays in ticketing.</div></div>';
   host.innerHTML=summary+splitCard+table;
   host.querySelectorAll('.initrow').forEach(function(el){el.onclick=function(){openDrill(PORTFOLIO_ITEMS[el.dataset.init].name,drillInit(+el.dataset.init));};});
   host.querySelectorAll('[data-idrill]').forEach(function(el){el.onclick=function(){openDrill('ROI portfolio — where this number comes from',drillRoi(el.dataset.idrill));};});
