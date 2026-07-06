@@ -1724,36 +1724,133 @@ function vcByControl(fns,cvv){
    control. Sources: CIS Controls v8 ↔ CSF (CIS official mapping); SOC 2 Trust
    Services Categories ↔ CSF (we show readiness by category, not the AICPA TSC text);
    HIPAA Security Rule ↔ CSF via NIST SP 800-66 Rev 2 (public domain). ---- */
-var CIS_MAP=[
-  ['CIS 1','Inventory & Control of Enterprise Assets',['ID.AM-01','ID.AM-05']],
-  ['CIS 2','Inventory & Control of Software Assets',['ID.AM-02']],
-  ['CIS 3','Data Protection',['PR.DS-01','PR.DS-02','PR.DS-10']],
-  ['CIS 4','Secure Configuration of Assets & Software',['PR.PS-01']],
-  ['CIS 5','Account Management',['PR.AA-01']],
-  ['CIS 6','Access Control Management',['PR.AA-05']],
-  ['CIS 7','Continuous Vulnerability Management',['ID.RA-01']],
-  ['CIS 8','Audit Log Management',['PR.PS-04','DE.CM-01']],
-  ['CIS 9','Email & Web Browser Protections',['PR.PS-05']],
-  ['CIS 10','Malware Defenses',['DE.CM-01','RS.MI-01']],
-  ['CIS 11','Data Recovery',['PR.DS-11','RC.RP-03']],
-  ['CIS 12','Network Infrastructure Management',['PR.IR-01']],
-  ['CIS 13','Network Monitoring & Defense',['DE.CM-01','DE.AE-03']],
-  ['CIS 14','Security Awareness & Skills Training',['PR.AT-01','PR.AT-02']],
-  ['CIS 15','Service Provider Management',['GV.SC-01','GV.SC-04','GV.SC-07']],
-  ['CIS 16','Application Software Security',['PR.PS-06']],
-  ['CIS 17','Incident Response Management',['RS.MA-01','RS.MA-02']],
-  ['CIS 18','Penetration Testing',['ID.IM-02']]];
+/* Mapped frameworks — hierarchical [groupId, groupName, [[itemId, itemName, [csfIds]] …]].
+   Each item's maturity = mean CMMI of the CSF 2.0 subcategories it crosswalks to. We
+   reference these frameworks by number/criterion + mapping only; control text is not
+   reproduced. Mappings use SP 800-66 Rev2 (HIPAA) and the published CIS↔CSF / TSC↔CSF
+   crosswalks. */
+// CIS Controls v8 — all 18 Controls expanded to their 153 Safeguards (v8 counts).
+var CIS_CTRLS=[
+  ['CIS 1','Inventory & Control of Enterprise Assets',['ID.AM-01','ID.AM-05'],5],
+  ['CIS 2','Inventory & Control of Software Assets',['ID.AM-02'],7],
+  ['CIS 3','Data Protection',['PR.DS-01','PR.DS-02','PR.DS-10'],14],
+  ['CIS 4','Secure Configuration of Assets & Software',['PR.PS-01'],12],
+  ['CIS 5','Account Management',['PR.AA-01'],6],
+  ['CIS 6','Access Control Management',['PR.AA-05'],8],
+  ['CIS 7','Continuous Vulnerability Management',['ID.RA-01'],7],
+  ['CIS 8','Audit Log Management',['PR.PS-04','DE.CM-01'],12],
+  ['CIS 9','Email & Web Browser Protections',['PR.PS-05'],7],
+  ['CIS 10','Malware Defenses',['DE.CM-01','RS.MI-01'],7],
+  ['CIS 11','Data Recovery',['PR.DS-11','RC.RP-03'],5],
+  ['CIS 12','Network Infrastructure Management',['PR.IR-01'],8],
+  ['CIS 13','Network Monitoring & Defense',['DE.CM-01','DE.AE-03'],11],
+  ['CIS 14','Security Awareness & Skills Training',['PR.AT-01','PR.AT-02'],9],
+  ['CIS 15','Service Provider Management',['GV.SC-01','GV.SC-04','GV.SC-07'],7],
+  ['CIS 16','Application Software Security',['PR.PS-06'],14],
+  ['CIS 17','Incident Response Management',['RS.MA-01','RS.MA-02'],9],
+  ['CIS 18','Penetration Testing',['ID.IM-02'],5]];
+var CIS_MAP=CIS_CTRLS.map(function(c){var num=c[0].split(' ')[1],sgs=[];for(var i=1;i<=c[3];i++)sgs.push([num+'.'+i,'Safeguard '+num+'.'+i,c[2]]);return [c[0],c[0]+' · '+c[1],sgs];});
+// SOC 2 — AICPA Trust Services Criteria (2017, rev. 2022): Common Criteria + A/C/PI/P.
 var SOC2_MAP=[
-  ['CC','Security — Common Criteria',['GV.RM-01','PR.AA-01','PR.AA-05','DE.CM-01','RS.MA-01']],
-  ['A','Availability',['PR.IR-03','PR.IR-04','RC.RP-01']],
-  ['C','Confidentiality',['PR.DS-01','PR.DS-02']],
-  ['PI','Processing Integrity',['PR.PS-01','DE.AE-02']],
-  ['P','Privacy',['GV.OC-03','PR.DS-01']]];
+  ['CC1','CC1 · Control Environment',[
+    ['CC1.1','Integrity & ethical values',['GV.OC-01','GV.RR-01']],
+    ['CC1.2','Board oversight & independence',['GV.RR-01','GV.OV-01']],
+    ['CC1.3','Structures, reporting lines & authority',['GV.RR-02','GV.RR-03']],
+    ['CC1.4','Commitment to competence',['GV.RR-04','PR.AT-02']],
+    ['CC1.5','Accountability enforcement',['GV.RR-02','GV.OV-03']]]],
+  ['CC2','CC2 · Communication & Information',[
+    ['CC2.1','Quality information',['GV.OC-04','ID.AM-01']],
+    ['CC2.2','Internal control communication',['GV.PO-01','PR.AT-01']],
+    ['CC2.3','External communication',['GV.OC-02','RS.CO-02']]]],
+  ['CC3','CC3 · Risk Assessment',[
+    ['CC3.1','Objectives specified',['GV.RM-01','ID.RA-04']],
+    ['CC3.2','Risk identification & analysis',['ID.RA-01','ID.RA-05']],
+    ['CC3.3','Fraud risk considered',['ID.RA-03']],
+    ['CC3.4','Assessment of change',['ID.IM-03','GV.RM-03']]]],
+  ['CC4','CC4 · Monitoring Activities',[
+    ['CC4.1','Ongoing & separate evaluations',['GV.OV-01','ID.IM-01']],
+    ['CC4.2','Evaluate & communicate deficiencies',['GV.IM-01','ID.IM-02']]]],
+  ['CC5','CC5 · Control Activities',[
+    ['CC5.1','Control selection & development',['GV.RM-06','PR.PS-01']],
+    ['CC5.2','Technology general controls',['PR.PS-01','PR.IR-01']],
+    ['CC5.3','Policies & procedures',['GV.PO-01','GV.PO-02']]]],
+  ['CC6','CC6 · Logical & Physical Access',[
+    ['CC6.1','Logical access security',['PR.AA-01','PR.AA-05']],
+    ['CC6.2','User registration & authorization',['PR.AA-01','PR.AA-04']],
+    ['CC6.3','Role-based access & least privilege',['PR.AA-05']],
+    ['CC6.4','Physical access restriction',['PR.AA-06']],
+    ['CC6.5','Asset & media disposal',['ID.AM-08','PR.DS-11']],
+    ['CC6.6','Protection from external threats',['PR.IR-01','DE.CM-01']],
+    ['CC6.7','Data transmission & movement',['PR.DS-02']],
+    ['CC6.8','Malicious software prevention',['DE.CM-01','RS.MI-01']]]],
+  ['CC7','CC7 · System Operations',[
+    ['CC7.1','Vulnerability detection',['ID.RA-01','DE.CM-09']],
+    ['CC7.2','Monitoring for anomalies',['DE.CM-01','DE.AE-02']],
+    ['CC7.3','Security incident evaluation',['DE.AE-06','RS.MA-02']],
+    ['CC7.4','Incident response',['RS.MA-01','RS.MI-01']],
+    ['CC7.5','Recovery from incidents',['RC.RP-01','RC.RP-02']]]],
+  ['CC8','CC8 · Change Management',[
+    ['CC8.1','Change authorization, testing & approval',['PR.PS-01','ID.IM-03']]]],
+  ['CC9','CC9 · Risk Mitigation',[
+    ['CC9.1','Risk mitigation activities',['GV.RM-06','ID.RA-06']],
+    ['CC9.2','Vendor & business partner risk',['GV.SC-01','GV.SC-04','GV.SC-07']]]],
+  ['A1','A1 · Availability',[
+    ['A1.1','Capacity management',['PR.IR-04','ID.AM-03']],
+    ['A1.2','Environmental protection & backup',['PR.IR-03','PR.DS-11']],
+    ['A1.3','Recovery testing',['RC.RP-01','ID.IM-02']]]],
+  ['C1','C1 · Confidentiality',[
+    ['C1.1','Identify confidential information',['GV.OC-03','ID.AM-05']],
+    ['C1.2','Dispose of confidential information',['PR.DS-01','PR.DS-11']]]],
+  ['PI1','PI1 · Processing Integrity',[
+    ['PI1.1','Processing definitions & data',['GV.OC-04']],
+    ['PI1.2','Input completeness & accuracy',['PR.DS-01','PR.PS-01']],
+    ['PI1.3','Processing completeness & accuracy',['PR.PS-01','DE.AE-02']],
+    ['PI1.4','Output completeness & accuracy',['PR.DS-02']],
+    ['PI1.5','Storage completeness & accuracy',['PR.DS-01','PR.DS-11']]]],
+  ['P','P · Privacy',[
+    ['P1.1','Privacy notice',['GV.OC-03']],
+    ['P2.1','Choice & consent',['GV.OC-03','GV.OC-02']],
+    ['P3.1','Collection consistent with notice',['PR.DS-01']],
+    ['P3.2','Explicit consent for sensitive data',['GV.OC-02']],
+    ['P4.1','Use limited to stated purpose',['PR.DS-01']],
+    ['P4.2','Retention of personal information',['PR.DS-01']],
+    ['P4.3','Disposal of personal information',['PR.DS-11']],
+    ['P5.1','Access to personal information',['PR.AA-05']],
+    ['P5.2','Correction of personal information',['PR.DS-01']],
+    ['P6.1','Disclosure to third parties',['GV.SC-07']],
+    ['P6.2','Record of authorized disclosures',['RS.CO-02']],
+    ['P6.3','Unauthorized disclosure handling',['RS.MA-01']],
+    ['P7.1','Data quality & accuracy',['PR.DS-01']],
+    ['P8.1','Privacy monitoring & complaints',['GV.IM-01','RS.MA-01']]]]];
+// HIPAA Security Rule (45 CFR §164 Subpart C) — implementation specifications, via SP 800-66r2.
 var HIPAA_MAP=[
-  ['§164.308','Administrative Safeguards',['GV.RM-01','GV.RR-02','ID.RA-01','PR.AT-01','RS.MA-01']],
-  ['§164.310','Physical Safeguards',['PR.AA-06','PR.IR-02']],
-  ['§164.312','Technical Safeguards',['PR.AA-01','PR.AA-03','PR.DS-01','PR.DS-02','DE.CM-01']],
-  ['§164.316','Policies, Procedures & Documentation',['GV.PO-01','GV.PO-02']]];
+  ['§164.308','§164.308 · Administrative Safeguards',[
+    ['308(a)(1)','Security management process (risk analysis & management)',['ID.RA-01','GV.RM-01']],
+    ['308(a)(2)','Assigned security responsibility',['GV.RR-02']],
+    ['308(a)(3)','Workforce security',['PR.AA-05','GV.RR-04']],
+    ['308(a)(4)','Information access management',['PR.AA-01','PR.AA-05']],
+    ['308(a)(5)','Security awareness & training',['PR.AT-01','PR.AT-02']],
+    ['308(a)(6)','Security incident procedures',['RS.MA-01','RS.MA-02']],
+    ['308(a)(7)','Contingency plan',['RC.RP-01','PR.DS-11']],
+    ['308(a)(8)','Evaluation',['ID.IM-01']],
+    ['308(b)(1)','Business associate contracts',['GV.SC-04','GV.SC-07']]]],
+  ['§164.310','§164.310 · Physical Safeguards',[
+    ['310(a)(1)','Facility access controls',['PR.AA-06']],
+    ['310(b)','Workstation use',['PR.PS-01']],
+    ['310(c)','Workstation security',['PR.AA-06']],
+    ['310(d)(1)','Device & media controls',['ID.AM-08','PR.DS-11']]]],
+  ['§164.312','§164.312 · Technical Safeguards',[
+    ['312(a)(1)','Access control',['PR.AA-01','PR.AA-05']],
+    ['312(b)','Audit controls',['PR.PS-04','DE.CM-01']],
+    ['312(c)(1)','Integrity',['PR.DS-01']],
+    ['312(d)','Person or entity authentication',['PR.AA-03']],
+    ['312(e)(1)','Transmission security',['PR.DS-02']]]],
+  ['§164.314','§164.314 · Organizational Requirements',[
+    ['314(a)(1)','Business associate contracts',['GV.SC-04']],
+    ['314(b)(1)','Group health plan requirements',['GV.SC-07']]]],
+  ['§164.316','§164.316 · Policies, Procedures & Documentation',[
+    ['316(a)','Policies & procedures',['GV.PO-01']],
+    ['316(b)(1)','Documentation',['GV.PO-02']]]]];
 var FW_XNOTE={
   cis:'Scored by the official <b>CIS Controls v8 ↔ NIST CSF</b> mapping — each CIS Safeguard inherits the maturity of the CSF subcategories it maps to. We reference CIS by mapping and do not reproduce the CIS control text.',
   soc2:'Readiness against the <b>AICPA Trust Services Categories</b>, scored by crosswalk from your CSF posture. This is a readiness indicator, not a SOC 2 opinion, and does not reproduce the copyrighted TSC text — your auditor issues the report.',

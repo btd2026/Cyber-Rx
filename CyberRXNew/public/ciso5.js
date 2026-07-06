@@ -2047,9 +2047,11 @@ function c5fwTree(sel,cov){
     R53_RAW.forEach(function(f){var fam=f[0],nm=f[1],n=f[2],ctls=[];for(var i=1;i<=n;i++)ctls.push(ctl(fam+'-'+i,nm));
       groups.push({type:'grp',id:fam,name:fam+' · '+nm,score:c5fwMean(ctls.map(function(c){return c.score;})),children:ctls,rollup:ctls.map(function(c){return {id:c.id,score:c.score};})});});
   } else if(typeof fwXmap==='function'){
-    var map=fwXmap(sel);var ctls=map.map(function(it){var ids=it[2],scores=ids.map(function(id){return controlCmmi(id,cov).score;}),sc=c5fwMean(scores);all.push(sc);evidenced++;
-      return {type:'ctl',id:it[0],name:it[1],score:sc,src:'mapped',mapped:ids};});
-    groups.push({type:'grp',id:sel.toUpperCase(),name:(FW_NAMES[sel]||sel),score:c5fwMean(ctls.map(function(c){return c.score;})),children:ctls,rollup:ctls.map(function(c){return {id:c.id,score:c.score};})});
+    fwXmap(sel).forEach(function(g){var gid=g[0],gname=g[1],items=g[2]||[];
+      var ctls=items.map(function(it){var ids=it[2]||[],scores=ids.map(function(id){return controlCmmi(id,cov).score;}),sc=c5fwMean(scores);all.push(sc);if(ids.length)evidenced++;
+        return {type:'ctl',id:it[0],name:it[1],score:sc,src:'mapped',mapped:ids};});
+      groups.push({type:'grp',id:gid,name:gname,score:c5fwMean(ctls.map(function(c){return c.score;})),children:ctls,rollup:ctls.map(function(c){return {id:c.id,score:c.score};})});
+    });
   }
   var failing=all.filter(function(s){return s<C5FW_FLOOR;}).length;
   return {groups:groups,overall:c5fwMean(all),coverage:all.length?Math.round(evidenced/all.length*100):0,failing:failing,total:all.length,evidenced:evidenced};
@@ -2148,7 +2150,7 @@ function c5Frameworks(){
   var sel=FW_SEL,cov=(typeof fwDeployedIds==='function')?fwDeployedIds():{};
   var T=c5fwTree(sel,cov);
   // default deep-link: identity path expanded, PR.AA-03 selected (CSF only)
-  if(C5FW_EXP==null){C5FW_EXP=(sel==='csf')?{PR:1,'PR.AA':1}:{};}
+  if(C5FW_EXP==null){if(sel==='csf'){C5FW_EXP={PR:1,'PR.AA':1};}else{C5FW_EXP={};if(T.groups[0])C5FW_EXP[T.groups[0].id]=1;}}
   if(C5FW_CTRL==null&&sel==='csf'){C5FW_CTRL='PR.AA-03';}
   // find selected node
   var selNode=null;
