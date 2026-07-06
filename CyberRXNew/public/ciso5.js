@@ -1886,3 +1886,178 @@ function c5cpDecisions(){
     c5bl('Bottom line','One call, three product wins.',null,(ec.connected?('The identity/access fix is the rare decision that makes the product more secure, the experience smoother, and delivery faster — all at once ('+ec.displayValue+' removed). It’s the highest-leverage product-security call on your desk.'):'The identity/access fix is the rare decision that makes the product more secure, the experience smoother, and delivery faster — all at once. It’s the highest-leverage product-security call on your desk.'),{mid:'exp_identity',txt:'Fund the identity/access fix'})+
     '<div class="c5foot">Each decision links to its product area and source.</div>';
 }
+
+/* ================= CISO seat · Tab 06 — Frameworks & compliance =================
+   Continuous, auditor-grade assessment. Left = finding & recommendation panel (the
+   CISO asked for it on the left); right = expand/collapse control tree. Every score
+   is computed from controlCmmi; group scores are the evidence-weighted mean of their
+   children (roll-up shown truthfully). Mapped frameworks (CIS/SOC2/HIPAA) derive from
+   the CSF scores via the public crosswalk — no re-entered numbers, no proprietary text. */
+(function(){var css=[
+  '.c5fw-controls{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px}',
+  '.c5fw-cad{display:flex;gap:4px;align-items:center;flex-wrap:wrap}',
+  '.c5fw-cadb{font-size:11px;font-weight:500;padding:5px 11px;border-radius:20px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);cursor:pointer}',
+  '.c5fw-cadb.on{background:var(--blue);color:#fff;border-color:var(--blue)}',
+  '.c5fw-pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}',
+  '.c5fw-pill{font-size:12px;font-weight:500;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);cursor:pointer}',
+  '.c5fw-pill.on{background:var(--ink);color:#fff;border-color:var(--ink)}',
+  '.c5fw-refresh{font-size:11px;color:var(--muted);margin-top:10px}',
+  '.c5fw-wrap{display:flex;gap:16px;margin-top:14px;align-items:flex-start}',
+  '.c5fw-left{flex:0 0 400px;max-width:420px}',
+  '.c5fw-right{flex:1;min-width:0}',
+  '@media(max-width:900px){.c5fw-wrap{flex-direction:column}.c5fw-left{flex:1 1 auto;max-width:none}}',
+  '.c5fw-detail{border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:var(--surface)}',
+  '.c5fw-dtop{display:flex;justify-content:space-between;align-items:center;gap:8px}',
+  '.c5fw-tree{border:1px solid var(--line);border-radius:12px;overflow:hidden}',
+  '.c5fw-grow{display:flex;align-items:center;gap:9px;padding:10px 14px;cursor:pointer;background:var(--surface-2);border-top:1px solid var(--line)}',
+  '.c5fw-grow:first-child{border-top:0}',
+  '.c5fw-cat{padding:7px 14px 3px 30px;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}',
+  '.c5fw-crow{display:flex;align-items:center;gap:9px;padding:8px 14px 8px 34px;cursor:pointer;border-top:1px solid var(--line)}',
+  '.c5fw-crow:hover{background:var(--surface-2)}.c5fw-crow.sel{background:rgba(74,111,165,.1)}',
+  '.c5fw-tw{width:11px;font-size:10px;color:var(--muted);flex:0 0 auto}',
+  '.c5fw-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}',
+  '.c5fw-id{font-size:12px;font-weight:500;font-family:var(--serif);flex:0 0 auto}',
+  '.c5fw-nm{flex:1;min-width:0;font-size:12.5px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+  '.c5fw-lvl{font-size:9px;font-weight:500;padding:1px 6px;border-radius:20px;background:var(--surface);border:1px solid var(--line);flex:0 0 auto}',
+  '.c5fw-sc{font-size:13px;font-weight:500;width:30px;text-align:right;flex:0 0 auto}',
+  '.c5fw-map{font-size:10px;color:var(--muted);margin-top:3px}',
+  '.c5fw-chip{font-size:9px;font-weight:500;background:var(--surface-2);color:var(--blue);border-radius:4px;padding:0 4px;margin-right:3px;cursor:pointer}'
+].join('');try{var s=document.createElement('style');s.textContent=css;document.head.appendChild(s);}catch(_){}})();
+
+var C5FW_CTRL=null, C5FW_EXP=null, C5FW_TARGET=3.5, C5FW_FLOOR=2.5;
+function c5fwCadence(){try{return localStorage.getItem('cyberrx_audit_cadence')||'monthly';}catch(_){return 'monthly';}}
+function c5fwStatus(sc){if(sc>=C5FW_TARGET)return {t:'Meets target',cls:'good',key:'meets'};if(sc>=C5FW_FLOOR)return {t:'Observation',cls:'warn',key:'obs'};return {t:'Deficiency',cls:'crit',key:'def'};}
+function c5fwLvl(sc){var L=(typeof CMMI_LABELS!=='undefined')?CMMI_LABELS:{0:'None',1:'Initial',2:'Managed',3:'Defined',4:'Quant. Managed',5:'Optimizing'};return L[Math.round(sc)]||'';}
+function c5fwCol(sc){return (typeof cmmiColor==='function')?cmmiColor(Math.round(sc)):'ink';}
+function c5fwMean(arr){if(!arr.length)return 0;return arr.reduce(function(a,b){return a+b;},0)/arr.length;}
+/* Build the framework tree with real roll-ups. Returns {groups, overall, coverage, failing, all}. */
+function c5fwTree(sel,cov){
+  var groups=[],all=[],evidenced=0;
+  function ctl(id,name,mapped){var cc=controlCmmi(id,cov);all.push(cc.score);if(cc.src!=='none')evidenced++;
+    return {type:'ctl',id:id,name:name,score:cc.score,src:cc.src,toolPct:cc.toolPct,doc:cc.doc,mapped:mapped||null};}
+  if(sel==='csf'&&typeof CSF_RAW!=='undefined'){
+    Object.keys(CSF_RAW).forEach(function(fnName){var m=fnName.match(/\(([^)]+)\)/),fid=m?m[1]:fnName;var cats=CSF_RAW[fnName],catNodes=[],fnScores=[];
+      Object.keys(cats).forEach(function(catName){var cm=catName.match(/\(([^)]+)\)/),cid=cm?cm[1]:catName;var ctls=cats[catName].map(function(r){return ctl(r[0],r[1]);}),cScore=c5fwMean(ctls.map(function(c){return c.score;}));
+        ctls.forEach(function(c){fnScores.push(c.score);});
+        catNodes.push({type:'cat',id:cid,name:catName.replace(/ *\(.*/,''),score:cScore,children:ctls});});
+      groups.push({type:'grp',id:fid,name:fnName.replace(/ *\(.*/,''),score:c5fwMean(fnScores),children:catNodes,rollup:catNodes.map(function(c){return {id:c.id,score:c.score};})});});
+  } else if(sel==='r53'&&typeof R53_RAW!=='undefined'){
+    R53_RAW.forEach(function(f){var fam=f[0],nm=f[1],n=f[2],ctls=[];for(var i=1;i<=n;i++)ctls.push(ctl(fam+'-'+i,nm));
+      groups.push({type:'grp',id:fam,name:fam+' · '+nm,score:c5fwMean(ctls.map(function(c){return c.score;})),children:ctls,rollup:ctls.map(function(c){return {id:c.id,score:c.score};})});});
+  } else if(typeof fwXmap==='function'){
+    var map=fwXmap(sel);var ctls=map.map(function(it){var ids=it[2],scores=ids.map(function(id){return controlCmmi(id,cov).score;}),sc=c5fwMean(scores);all.push(sc);evidenced++;
+      return {type:'ctl',id:it[0],name:it[1],score:sc,src:'mapped',mapped:ids};});
+    groups.push({type:'grp',id:sel.toUpperCase(),name:(FW_NAMES[sel]||sel),score:c5fwMean(ctls.map(function(c){return c.score;})),children:ctls,rollup:ctls.map(function(c){return {id:c.id,score:c.score};})});
+  }
+  var failing=all.filter(function(s){return s<C5FW_FLOOR;}).length;
+  return {groups:groups,overall:c5fwMean(all),coverage:all.length?Math.round(evidenced/all.length*100):0,failing:failing,total:all.length,evidenced:evidenced};
+}
+/* Left panel — auditor finding for the selected node. Public-standard text is fine
+   for CSF/800-53/HIPAA; CIS/SOC2 render numbers/titles/mappings only (no proprietary text). */
+function c5fwFinding(sel,node){
+  if(!node)return '<div class="c5fw-detail"><div class="c5kick">Finding &amp; recommendation</div><div class="c5intro" style="margin-top:8px">Select a control on the right to open its auditor finding — the score roll-up, what was tested, why it scored below target, the recommendation with a target uplift, and the cross-framework mappings. Every number traces to its evidence.</div></div>';
+  var st=c5fwStatus(node.score),col=c5fwCol(node.score);
+  var h='<div class="c5fw-detail"><div class="c5fw-dtop"><div><div class="c5kick">Finding &amp; recommendation</div><div style="font-size:15px;font-weight:500;margin-top:4px"><b>'+node.id+'</b> — '+node.name+'</div></div><span class="c5pill '+(st.cls==='good'?'g':st.cls==='warn'?'a':'r')+'">'+st.t+'</span></div>';
+  h+='<div style="display:flex;align-items:baseline;gap:8px;margin-top:10px"><div style="font-size:26px;font-weight:500;font-family:var(--serif);color:var(--'+col+')">'+node.score.toFixed(1)+'<span style="font-size:14px;color:var(--muted)"> / 5</span></div><div class="c5intro" style="margin:0">'+c5fwLvl(node.score)+' · target '+C5FW_TARGET.toFixed(1)+'</div></div>';
+  if(node.type!=='ctl'&&node.rollup){var parts=node.rollup.slice(0,8).map(function(r){return r.id+' ('+r.score.toFixed(1)+')';}).join(', ');
+    h+='<div class="ev-sec">Score roll-up</div><div class="formula">'+node.id+' ('+node.score.toFixed(1)+') = evidence-weighted mean of '+parts+(node.rollup.length>8?', …':'')+'</div>';
+    h+='<div class="drow-need" style="margin-top:6px;font-size:12px;color:var(--muted)">A group score is the mean of its children — computed, not entered. Every child traces to its own evidence.</div>';
+    h+='<div class="ev-sec">Where this comes from</div><div class="drill-p">Rolled up from '+node.rollup.length+' assessed items below. Expand the group on the right to test each one.</div></div>';
+    return h;
+  }
+  // control-level auditor finding
+  var pct=(node.toolPct!=null)?node.toolPct:null;
+  var cond,crit,cause,effect,rec,uplift;
+  crit='Control '+node.id+' ('+node.name+') is assessed against a maturity target of CMMI '+C5FW_TARGET.toFixed(1)+' (Defined+).';
+  if(node.src==='mapped'){
+    cond='Derived by crosswalk: this control inherits the maturity of the '+((node.mapped||[]).length)+' NIST CSF 2.0 subcategor'+((node.mapped||[]).length===1?'y':'ies')+' it maps to, assessed at CMMI '+node.score.toFixed(1)+'.';
+    cause='The mapped CSF controls carry the deficiency; this framework reflects it through the public crosswalk.';
+    effect=st.key==='def'?'A deficiency in the mapped controls leaves this requirement below assurance level.':(st.key==='obs'?'The mapped posture is below target — an observation to raise toward the goal.':'The mapped posture meets the target.');
+    rec='Uplift the underlying CSF controls (see mapping); this requirement rises with them. Refer to your organization’s own '+(sel==='cis'?'CIS Controls license':'framework license')+' for implementation-tier detail.';
+  } else if(node.src==='system'){
+    cond='Automated continuous monitoring measured '+(pct!=null?(pct+'% effective coverage across the in-scope population'):'coverage')+' — '+(pct!=null?((100-pct)+'% of the population is outside the control'):'a residual population remains outside the control')+'. Assessed at CMMI '+node.score.toFixed(1)+'.';
+    cause=st.key==='meets'?'Coverage meets the maturity threshold.':'Coverage sits below the ≥90% threshold required for full maturity, leaving a residual population unprotected.';
+    effect=st.key==='def'?'The uncovered population is a control deficiency — exploitable exposure until remediated.':(st.key==='obs'?'The residual population is an observation — a gap to close toward target.':'No material exposure at current coverage.');
+    rec=st.key==='meets'?'Maintain coverage and retain the tool’s evidence export each cycle.':'Extend the control to the residual population to raise coverage toward ≥90%';
+  } else if(node.src==='document'){
+    cond='Document review found '+(node.doc&&node.doc.attrs?('the governing policy present '+(node.doc.attrs.filter(function(a){return a.found;}).length)+' of '+node.doc.attrs.length+' expected control attributes'):'the governing policy partially satisfies the expected attributes')+'. Assessed at CMMI '+node.score.toFixed(1)+'.';
+    cause=st.key==='meets'?'The policy evidences the required attributes.':'Some expected attributes are absent from the analyzed policy, capping maturity below target.';
+    effect=st.key==='meets'?'Documented control operating as designed.':'Design gap — the control may not operate consistently until the policy is completed.';
+    rec=st.key==='meets'?'Maintain the policy and re-verify on the '+c5fwCadence()+' cadence.':'Complete the missing policy attributes and re-submit for document review';
+  } else {
+    cond='No evidence is on file for this control — neither connected-tool telemetry nor an analyzed policy. Assessed at CMMI 0 (Not evidenced).';
+    cause='The control’s source tool is not connected and no governing policy has been analyzed.';
+    effect='Assurance cannot be given for this control until it is evidenced — a deficiency by default.';
+    rec='Connect the control’s tool or upload the governing policy so the control gains an evidenced maturity score';
+  }
+  var cur=Math.round(node.score),tgt=Math.min(5,Math.max(cur+1,Math.ceil(C5FW_TARGET)));
+  uplift=(node.score<C5FW_TARGET)?(' — target uplift L'+cur+' → L'+tgt+' within one '+c5fwCadence()+' cycle.'):'';
+  h+='<div class="ev-sec">Condition (what was tested)</div><div class="drill-p">'+cond+'</div>';
+  h+='<div class="ev-sec">Criteria</div><div class="drill-p">'+crit+'</div>';
+  h+='<div class="ev-sec">Cause</div><div class="drill-p">'+cause+'</div>';
+  h+='<div class="ev-sec">Effect (risk)</div><div class="drill-p">'+effect+'</div>';
+  h+='<div class="ev-sec">Recommendation</div><div class="drill-p">'+rec+uplift+'</div>';
+  if(node.mapped&&node.mapped.length){h+='<div class="ev-sec">Cross-framework</div><div class="drill-p">'+node.mapped.map(function(id){return '<span class="c5fw-chip">'+id+'</span>';}).join('')+'</div>';}
+  else if(node.src!=='mapped'&&typeof fwCrosswalkFor==='function'){}
+  h+='<div class="c5foot" style="margin-top:14px">Documented to AICPA attestation rigor · traceable to source evidence · our own wording, not reproduced standard text. Continuous management self-assessment, not an independent audit opinion.</div></div>';
+  return h;
+}
+function c5fwExport(){var base=(typeof apiBase==='function')?apiBase():'';var o=(typeof orgId==='function')?orgId():'';
+  var url=base+'/api/ciso/report.pptx?fw='+encodeURIComponent(FW_SEL)+(o?('&org_id='+encodeURIComponent(o)):'');
+  try{window.open(url,'_blank');}catch(_){}}
+function c5Frameworks(){
+  var host=document.getElementById('c5-frameworks');if(!host)return;
+  if(typeof seedDemoDocScores==='function'){try{seedDemoDocScores();}catch(_){}}
+  if(typeof FW_SEL==='undefined'){window.FW_SEL='csf';}
+  var sel=FW_SEL,cov=(typeof fwDeployedIds==='function')?fwDeployedIds():{};
+  var T=c5fwTree(sel,cov);
+  // default deep-link: identity path expanded, PR.AA-03 selected (CSF only)
+  if(C5FW_EXP==null){C5FW_EXP=(sel==='csf')?{PR:1,'PR.AA':1}:{};}
+  if(C5FW_CTRL==null&&sel==='csf'){C5FW_CTRL='PR.AA-03';}
+  // find selected node
+  var selNode=null;
+  T.groups.forEach(function(g){if(g.id===C5FW_CTRL)selNode=g;(g.children||[]).forEach(function(c){if(c.id===C5FW_CTRL)selNode=c;(c.children||[]).forEach(function(x){if(x.id===C5FW_CTRL)selNode=x;});});});
+  // cadence + refresh
+  var cad=c5fwCadence();var now=new Date();var nextD=new Date(now.getTime()+((CADENCE_MS&&CADENCE_MS[cad])||30*864e5));
+  var fmt=function(d){try{return d.toLocaleDateString();}catch(_){return '';}};
+  var st=c5fwStatus(T.overall);
+  var cards='<div class="c5cards">'+
+    '<div class="c5card" data-c5fwcard="overall"><div class="c5card-top"><span class="c5card-l">Overall maturity</span><span class="c5chip c5-computed">computed</span></div><div class="c5card-v" style="color:var(--'+c5fwCol(T.overall)+')">'+T.overall.toFixed(1)+' / 5</div><div class="cn">'+c5fwLvl(T.overall)+' · target '+C5FW_TARGET.toFixed(1)+'</div></div>'+
+    '<div class="c5card" data-c5fwcard="coverage"><div class="c5card-top"><span class="c5card-l">Coverage</span><span class="c5chip c5-computed">computed</span></div><div class="c5card-v" style="color:var(--'+(T.coverage>=75?'good':T.coverage>=50?'warn':'crit')+')">'+T.coverage+'%</div><div class="cn">'+T.evidenced+' of '+T.total+' controls evidenced</div></div>'+
+    '<div class="c5card" data-c5fwcard="trend"><div class="c5card-top"><span class="c5card-l">Trend · vs last refresh</span><span class="c5chip c5-computed">computed</span></div><div class="c5card-v">'+(function(){var h=(typeof fwHistory==='function')?fwHistory():[];if(h.length>=2){var d=h[h.length-1].v-h[0].v;return (d>=0?'+':'')+d.toFixed(1);}return 'Baseline';})()+'</div><div class="cn">CMMI across '+cad+' refreshes</div></div>'+
+    '<div class="c5card" data-c5fwcard="failing"><div class="c5card-top"><span class="c5card-l">Controls failing</span><span class="c5chip c5-computed">computed</span></div><div class="c5card-v" style="color:var(--'+(T.failing>0?'crit':'good')+')">'+T.failing+'</div><div class="cn">deficiencies (below CMMI '+C5FW_FLOOR+')</div></div>'+
+    '</div>';
+  var pills='<div class="c5fw-pills">'+[['csf','NIST CSF 2.0'],['r53','NIST 800-53'],['soc2','SOC 2'],['hipaa','HIPAA'],['cis','CIS v8 (mapped)']].map(function(o){return '<button class="c5fw-pill'+(sel===o[0]?' on':'')+'" data-c5fwsel="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
+  var cadCtrl='<div class="c5fw-controls"><div class="c5fw-cad"><span style="font-size:11px;color:var(--muted);margin-right:2px">Reassess:</span>'+[['weekly','Weekly'],['monthly','Monthly'],['quarterly','Quarterly']].map(function(o){return '<button class="c5fw-cadb'+(cad===o[0]?' on':'')+'" data-c5fwcad="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div><button class="c5btn" onclick="c5fwExport()">Generate auditor pack (PPTX)</button></div>';
+  // tree
+  var tree='<div class="c5fw-tree">'+T.groups.map(function(g){var open=!!C5FW_EXP[g.id];var gc=c5fwCol(g.score),gs=c5fwStatus(g.score);
+    var inner='';
+    if(open){(g.children||[]).forEach(function(c){
+      if(c.type==='cat'){inner+='<div class="c5fw-cat">'+c.name+' · '+c.id+' <b style="color:var(--'+c5fwCol(c.score)+')">'+c.score.toFixed(1)+'</b></div>';
+        (c.children||[]).forEach(function(x){inner+=c5fwCtlRow(x);});}
+      else inner+=c5fwCtlRow(c);
+    });}
+    return '<div class="c5fw-g"><div class="c5fw-grow" data-c5fwexp="'+g.id+'"><span class="c5fw-tw">'+(open?'▾':'▸')+'</span><span class="c5fw-dot" style="background:var(--'+gc+')"></span><span class="c5fw-id">'+g.id+'</span><span class="c5fw-nm">'+g.name+'</span><span class="c5fw-lvl">'+c5fwLvl(g.score)+'</span><span class="c5fw-sc" style="color:var(--'+gc+')">'+g.score.toFixed(1)+'</span></div>'+inner+'</div>';
+  }).join('')+'</div>';
+  var xnote=(typeof FW_XNOTE!=='undefined'&&FW_XNOTE[sel])?('<div class="c5note" style="margin-top:12px">🔗 '+FW_XNOTE[sel]+'</div>'):'';
+  host.innerHTML=c5header()+
+    c5shell('Frameworks &amp; compliance · continuous, auditor-grade assessment','Assessed against every framework you care about — refreshed on your cadence.',null,'Every control scored on the CMMI 0–5 scale from your live telemetry and analyzed policies, rolled up to category, function and family — with auditor-grade findings you can hand to an assessor. Public standards quote control text; CIS and SOC 2 are referenced by number/criterion and mapping only.')+
+    cadCtrl+
+    '<div class="c5fw-refresh">Refreshed <b>'+cad+'</b> · last assessed <b>'+fmt(now)+'</b> · next refresh <b>'+fmt(nextD)+'</b></div>'+
+    pills+
+    cards+
+    xnote+
+    '<div class="c5fw-wrap"><div class="c5fw-left" id="c5fw-detail">'+c5fwFinding(sel,selNode)+'</div><div class="c5fw-right">'+tree+'</div></div>'+
+    '<div class="c5foot">CMMI 0 None · 1 Initial · 2 Managed · 3 Defined · 4 Quant. Managed · 5 Optimizing. Meets target ≥ '+C5FW_TARGET.toFixed(1)+' (green) · Observation ≥ '+C5FW_FLOOR+' (amber) · Deficiency &lt; '+C5FW_FLOOR+' (red). Documented to AICPA rigor; continuous management self-assessment, not an independent audit opinion. CIS by number/title/mapping only; SOC 2 by criterion ID.</div>';
+  // record cadence snapshot
+  if(typeof fwRecord==='function'){try{fwRecord(T.overall);}catch(_){}}
+  // wiring
+  host.querySelectorAll('[data-c5fwsel]').forEach(function(b){b.onclick=function(){window.FW_SEL=b.getAttribute('data-c5fwsel');C5FW_EXP=null;C5FW_CTRL=null;c5Frameworks();};});
+  host.querySelectorAll('[data-c5fwcad]').forEach(function(b){b.onclick=function(){try{localStorage.setItem('cyberrx_audit_cadence',b.getAttribute('data-c5fwcad'));}catch(_){}c5Frameworks();};});
+  host.querySelectorAll('[data-c5fwexp]').forEach(function(b){b.onclick=function(){var id=b.getAttribute('data-c5fwexp');C5FW_EXP[id]=!C5FW_EXP[id];c5Frameworks();};});
+  host.querySelectorAll('[data-c5fwctl]').forEach(function(b){b.onclick=function(){C5FW_CTRL=b.getAttribute('data-c5fwctl');c5Frameworks();};});
+}
+function c5fwCtlRow(c){var col=c5fwCol(c.score),selc=(C5FW_CTRL===c.id)?' sel':'';
+  var mapped=(c.mapped&&c.mapped.length)?('<div class="c5fw-map">mapped ← '+c.mapped.slice(0,6).map(function(id){return id;}).join(' · ')+'</div>'):'';
+  return '<div class="c5fw-crow'+selc+'" data-c5fwctl="'+c.id+'"><span class="c5fw-tw"></span><span class="c5fw-dot" style="background:var(--'+col+')"></span><span class="c5fw-id">'+c.id+'</span><span class="c5fw-nm">'+c.name+mapped+'</span><span class="c5fw-lvl">'+c5fwLvl(c.score)+'</span><span class="c5fw-sc" style="color:var(--'+col+')">'+c.score.toFixed(1)+'</span></div>';
+}

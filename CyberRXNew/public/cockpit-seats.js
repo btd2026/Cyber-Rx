@@ -111,6 +111,7 @@ var SEATS = {
    +sec('03','Effectiveness','','<div id="c5-effect"></div>')
    +sec('04','Threats','','<div id="c5-threats"></div>')
    +sec('05','Peers','','<div id="c5-peers"></div>')
+   +sec('06','Frameworks','','<div id="c5-frameworks"></div>')
   );}
  },
 
