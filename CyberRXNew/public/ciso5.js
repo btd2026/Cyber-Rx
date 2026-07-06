@@ -89,7 +89,25 @@
     '.c5btn{margin-top:12px;font-size:13.5px;font-weight:500;padding:9px 15px;border-radius:8px;border:0;background:var(--blue-fill);color:#fff;cursor:pointer}',
     '.c5btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink);margin-left:8px}',
     '.c5foot{font-size:11px;color:var(--muted);margin-top:14px}',
-    '@media(max-width:720px){.c5tiles{grid-template-columns:1fr}.c5attgrid{grid-template-columns:repeat(2,1fr)}.c5prow-n{width:120px}}'
+    '.c5mc{background:var(--surface-2);border-radius:8px;padding:12px 14px;cursor:pointer}',
+    '.c5mc-l{font-size:12px;color:var(--ink-2)}',
+    '.c5mc-v{font-size:22px;font-weight:500;margin-top:2px;color:var(--ink)}',
+    '.c5statgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:16px;margin-bottom:18px}',
+    '.c5seclab{font-size:12px;color:var(--ink-2);margin-bottom:4px}',
+    '.c5erow{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:.5px solid var(--line);cursor:pointer}',
+    '.c5erow:hover{background:var(--surface-2)}',
+    '.c5exp{font-size:14px;font-weight:500;line-height:1.3;color:var(--ink)}',
+    '.c5esub{font-size:12px;color:var(--ink-2);margin-top:1px}',
+    '.c5etrack{width:88px;height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden;flex-shrink:0}',
+    '.c5emult{font-size:14px;font-weight:500;width:48px;text-align:right;color:var(--ink)}',
+    '.c5drow{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:.5px solid var(--line);cursor:pointer}',
+    '.c5drow:hover{background:var(--surface-2)}',
+    '.c5dn{font-size:14px;font-weight:500;color:var(--ink)}',
+    '.c5trk{position:relative;width:118px;height:8px;background:var(--surface-2);border-radius:4px;flex-shrink:0}',
+    '.c5delta{font-size:13px;font-weight:500;width:52px;text-align:right}',
+    '.c5kanon{display:flex;align-items:flex-start;gap:8px;background:var(--surface-2);border-radius:8px;padding:10px 13px;margin-top:14px;font-size:12px;color:var(--ink-2);line-height:1.5}',
+    '.c5kanon svg{width:15px;height:15px;color:var(--ink-2);flex:none;margin-top:1px}',
+    '@media(max-width:720px){.c5tiles{grid-template-columns:1fr}.c5attgrid{grid-template-columns:repeat(2,1fr)}.c5prow-n{width:120px}.c5statgrid{grid-template-columns:1fr}}'
   ].join('');
   try{var s=document.createElement('style');s.textContent=css;document.head.appendChild(s);}catch(_){}
 })();
@@ -1146,25 +1164,34 @@ function c5Exposure(){
 }
 
 /* ---------- Tab 03 — Control effectiveness ---------- */
+function c5mc(mid,label,valHtml,color){
+  return '<div class="c5mc"'+(mid?(' data-c5m="'+mid+'"'):'')+'><div class="c5mc-l">'+label+'</div><div class="c5mc-v"'+(color?(' style="color:var(--'+color+')"'):'')+'>'+valHtml+'</div></div>';
+}
 function c5Effect(){
   var host=document.getElementById('c5-effect');if(!host)return;
   var ids=['ctl_identity','ctl_email','ctl_edr','ctl_vuln','ctl_dlp'];
   var ms=ids.map(function(id){return c5get(id);});
   var maxR=Math.max.apply(null,ms.map(function(m){return m.removed||0;}).concat([1]));
   var minM=null;ms.forEach(function(m){if(m.connected&&(minM==null||m.removed<minM.removed))minM=m;});
-  var rows='<div class="c5rank"><div class="c5rank-h">Where your dollars work hardest — risk removed this quarter</div>'+ms.map(function(m){
-    var review=(minM&&m.id===minM.id&&ms.filter(function(x){return x.connected;}).length>1);
-    var pctFill=maxR>0?Math.round((m.removed||0)/maxR*100):0;
-    return '<div class="c5row" data-c5m="'+m.id+'"><div class="c5row-main"><div class="c5row-t">'+m.name+(review?'<span class="c5tag rev">Review</span>':'')+'</div><div class="c5row-s">'+(m.connected?(usd(m.removed)+' removed · return per dollar needs per-control spend'):'connect this control')+'</div><div class="c5retbar"><i class="'+(review?'a':'')+'" style="width:'+pctFill+'%"></i></div></div><div class="c5row-v">'+(m.connected?usd(m.removed):'—')+'</div></div>';
-  }).join('')+'</div>';
-  var st=(typeof ROI_STATE!=='undefined')?ROI_STATE:null;
-  var haveReturn=!!(st&&st.invested>0&&st.riskRemoved>0);
+  var connCount=ms.filter(function(x){return x.connected;}).length;
+  var rows=ms.map(function(m){
+    var review=(minM&&m.id===minM.id&&connCount>1);
+    var pct=maxR>0?Math.round((m.removed||0)/maxR*100):0;if(m.connected&&pct<6)pct=6;
+    var bc=review?'warn':'good';
+    var right=(m.mult!=null)?(m.mult.toFixed(1)+'×'):'—';
+    return '<div class="c5erow" data-c5m="'+m.id+'">'+
+      '<div style="flex:1;min-width:0"><div class="c5exp">'+m.name+(review?' <span class="c5pill a" style="margin-left:4px">Review</span>':'')+'</div><div class="c5esub">'+(m.connected?(usd(m.removed)+' removed this quarter'):'connect this control')+'</div></div>'+
+      '<div class="c5etrack"><div style="width:'+(m.connected?pct:0)+'%;height:100%;background:var(--'+bc+')"></div></div>'+
+      '<div class="c5emult"'+(review?' style="color:var(--warn)"':'')+'>'+right+'</div></div>';
+  }).join('');
+  var rem=c5get('eff_removed'),spend=c5get('eff_spend'),ret=c5get('eff_return');
   host.innerHTML=c5header()+
-    c5shell('Control effectiveness · is the program worth the spend?','Every dollar is removing risk — and you can prove it.',null,'Below, the dollars each control removes — live from your control-value ledger — and your program-level return. Tap any control for the risk-removed formula. Per-control return multiples light up once you attribute spend by control.')+
-    '<div class="c5cards">'+c5card('eff_removed')+c5card('eff_spend')+c5card('eff_return')+'</div>'+
-    rows+
-    c5bl('Bottom line','Your best next dollar goes to identity.',null,(haveReturn?('Your program returns '+((typeof roiMult==='function'?roiMult(st.ret):Math.round(st.ret)))+'× on '+usd(st.invested)+' invested. Identity removes the most risk and is where your largest exposure sits — expand it first.'):'Identity removes the most risk and is where your largest exposure sits. Import your funded initiatives (spend) to compute return per dollar.'),{mid:'ctl_identity',txt:'Expand identity'},{mid:'ctl_dlp',txt:'Review lowest-return control'})+
-    '<div class="c5foot">Return = risk removed ÷ control spend. Every figure traces to its source.</div>';
+    c5shell('Control effectiveness · is the program worth the spend?','Every dollar is removing risk — and you can prove it.',null,'This quarter your controls removed '+(rem.connected?rem.displayValue:'—')+' of risk against '+(spend.connected?spend.displayValue:'—')+' of spend — a '+(ret.connected?ret.displayValue:'—')+' return. Below, where your dollars work hardest, and the one control worth retiring. Tap any control for the risk-removed formula.')+
+    '<div class="c5statgrid">'+c5mc('eff_removed','Risk removed',rem.connected?rem.displayValue:'Not connected',rem.connected?'good':null)+c5mc('eff_spend','Security spend',spend.connected?spend.displayValue:'Not connected',null)+c5mc('eff_return','Return per dollar',ret.connected?ret.displayValue:'Not connected',ret.connected?'good':null)+'</div>'+
+    '<div class="c5seclab">Where your dollars work hardest · risk removed per dollar</div>'+
+    '<div>'+rows+'</div>'+
+    c5bl('Bottom line','Your best next dollar goes to identity.',null,'Identity removes the most risk and is where your largest exposure sits — expand it first. Meanwhile the lowest-return control is a candidate to retire and redeploy at near-zero added risk.',{mid:'ctl_identity',txt:'Expand identity'},{mid:'ctl_dlp',txt:'Review legacy DLP'})+
+    '<div class="c5foot">Return = risk removed ÷ control spend. Every figure traces to its source. Figures shown are illustrative.</div>';
 }
 
 /* ---------- Tab 04 — Threats (MITRE ATT&CK) ---------- */
@@ -1196,21 +1223,23 @@ function c5Peers(){
   if(typeof peerSubmitAndFetch==='function'&&c5peerOptin()&&!c5peer()){try{peerSubmitAndFetch();}catch(_){}}
   var doms=['asset','iam','edp','detect','ir','tpr'];
   var rows=doms.map(function(k){var m=c5domainMetric(k);
-    var minePos=m.mine!=null?Math.max(2,Math.min(98,m.mine/5*100)):0;
-    var medPos=m.med!=null?Math.max(2,Math.min(98,m.med/5*100)):null;
-    var dotColor=m.delta==null?'muted':m.delta>=0?'good':'warn';
-    var track='<div class="c5track">'+(medPos!=null?('<span class="c5track-tick" style="left:'+medPos+'%"></span>'):'')+(m.mine!=null?('<span class="c5track-dot" style="left:'+minePos+'%;background:var(--'+dotColor+')"></span>'):'')+'</div>';
-    var deltaTxt=m.delta==null?(c5peerOptin()?'—':'opt in'):((m.delta>=0?'+':'')+m.delta.toFixed(1));
-    return '<div class="c5prow" data-c5m="dom_'+k+'"><div class="c5prow-n">'+m.name+'</div>'+track+'<div class="c5prow-v">'+(m.mine!=null?Number(m.mine).toFixed(1):'—')+'</div><div class="c5prow-d" style="color:var(--'+dotColor+')">'+deltaTxt+'</div></div>';
+    var yp=m.mine!=null?Math.max(2,Math.min(98,m.mine/5*100)):0;
+    var mp=m.med!=null?Math.max(2,Math.min(98,m.med/5*100)):null;
+    var yc=m.delta==null?'muted':(m.delta>=0?'good':'warn');
+    var dtxt=m.delta==null?(c5peerOptin()?'—':'opt in'):((m.delta>=0?'+':'−')+Math.abs(m.delta).toFixed(1));
+    var trk='<div class="c5trk">'+(mp!=null?('<div style="position:absolute;left:'+mp+'%;top:-3px;width:2px;height:14px;background:var(--muted)"></div>'):'')+(m.mine!=null?('<div style="position:absolute;left:calc('+yp+'% - 6px);top:-2px;width:12px;height:12px;border-radius:50%;background:var(--'+yc+');border:2px solid var(--surface)"></div>'):'')+'</div>';
+    return '<div class="c5drow" data-c5m="dom_'+k+'"><div style="flex:1;min-width:0"><div class="c5dn">'+m.name+'</div></div>'+trk+'<div style="font-size:14px;font-weight:500;width:28px;text-align:right;color:var(--ink)">'+(m.mine!=null?Number(m.mine).toFixed(1):'—')+'</div><div class="c5delta" style="color:var(--'+yc+')">'+dtxt+'</div></div>';
   }).join('');
-  var privacy='<div class="c5note">🔒 Anonymous and opt-in. Cohorts use k-anonymity and are suppressed below a minimum size — nothing identifying leaves your environment. This is the only part of Nerion that reaches the internet.</div>';
+  var mat=c5get('peer_maturity'),med=c5get('peer_median'),pos=c5get('peer_position');
+  var kanon='<div class="c5kanon">'+c5icon('lock')+'<div>Anonymous and opt-in. Cohorts use k-anonymity and are suppressed below a minimum size — nothing identifying leaves your environment. This is the only part of Nerion that reaches the internet.</div></div>';
   host.innerHTML=c5header()+
-    c5shell('Peer benchmark · how do we compare?','Benchmarked against anonymized peers your size.',null,'Your framework maturity next to same-size, same-industry peers. You lead where detection and data protection are strong; you trail where identity and access thin out — the same gap driving your exposure. Tap any domain to see the comparison and its sources.')+
-    '<div class="c5cards">'+c5card('peer_maturity')+c5card('peer_median')+c5card('peer_position')+'</div>'+
-    '<div class="c5rank" style="padding:4px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">By domain · your score vs. peer median <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">(| = peer median)</span></div>'+rows+'</div>'+
-    privacy+
+    c5shell('Peer benchmark · how do we compare?','Ahead of your peers overall — with one domain you trail.',null,'Benchmarked against same-size, same-industry peers, your maturity sits in the top third. You lead on detection and data protection; you trail on identity and access — the same gap driving your exposure. Tap any domain to see the comparison.')+
+    '<div class="c5statgrid">'+c5mc('peer_maturity','Your maturity',(mat.connected?mat.displayValue:'—'),null)+c5mc('peer_median','Peer median',(med.connected?med.displayValue:'—'),'ink-2')+c5mc('peer_position','Your position',(pos.connected?pos.displayValue:'—'),pos.connected?'good':null)+'</div>'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px"><span class="c5seclab" style="margin:0">By domain · your score vs. peer median</span><span style="font-size:11.5px;color:var(--muted)">▏ peer median</span></div>'+
+    '<div>'+rows+'</div>'+
+    kanon+
     c5bl('Bottom line','Close the one domain where peers beat you.',null,'Identity and access is your only real gap versus peers — and it’s your largest exposure. Closing it moves you from below-median to top-quartile there, and removes your single largest exposure.',{mid:'exp_identity',txt:'Close the identity gap'})+
-    '<div class="c5foot">Benchmark is opt-in and anonymized against same-size industry peers.</div>';
+    '<div class="c5foot">Benchmark is opt-in and anonymized against same-size industry peers. Figures shown are illustrative.</div>';
 }
 
 /* ================= CFO seat — same engine, financial lens ================= */
