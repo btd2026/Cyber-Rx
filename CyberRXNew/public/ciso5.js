@@ -1175,7 +1175,7 @@ function c5cfExposure(){
     c5shell('Financial exposure · are we within appetite?','Cyber exposure is within appetite — and one move keeps it there.',null,'Your modeled cyber exposure sits against the board-approved appetite, with the headroom shown below. The largest driver is a single identity gap; funding its fix protects the headroom and trims your tail. Tap any figure for the model, its inputs, and its source.')+
     '<div class="c5cards">'+c5card('exp_total')+c5card('cf_appetite')+c5card('cf_headroom')+'</div>'+
     '<div class="c5tiles">'+
-      c5tile('exp_total',alePill,aleTxt,'Your modeled cyber loss this year')+
+      c5tile('exp_identity','a','Largest',(ec.connected?'the single biggest driver — the CISO’s top ask':'the single biggest driver'))+
       c5tile('cf_tail','a','Watch',(covGap.connected?('Exceeds your insured limit by '+covGap.displayValue):'the severe-but-plausible bad year'))+
       c5tile('cf_bi','b','If down','If the customer platform is down')+
       c5tile('cf_ins_cov','a','Gap',(covGap.connected?('of the tail covered · '+covGap.displayValue+' residual gap'):'of the modeled tail covered'))+
