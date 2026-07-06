@@ -635,8 +635,93 @@ function c5get(id){
         inputs:[{name:'Build signing',value:'not connected',source:'CI/CD signing (Sigstore / cosign)'}],
         sources:[{tool:'CI/CD signing',connector:'cicd',field:'signed_builds',lastRefresh:c5ago()}],
         note:'Whether every release is signed and verifiable — connect your CI/CD signing to confirm.',connectTool:'your CI/CD build-signing'});}
+    /* ---- Internal Audit metrics (independent assurance; no fund/approve — schedule/test/escalate/assure) ---- */
+    case 'ia_areas':{var n=0;if(typeof CSF_RAW!=='undefined'){Object.keys(CSF_RAW).forEach(function(fn){n+=Object.keys(CSF_RAW[fn]).length;});}var conn=n>0;
+      return c5obj({id:id,name:'Auditable areas',connected:conn,displayValue:conn?String(n):'—',label:'computed',color:'ink',
+        formula:'auditable areas = control categories in the cyber audit universe (NIST CSF 2.0 categories)',
+        inputs:[{name:'Control categories',value:n,source:'audit universe · NIST CSF 2.0'}],
+        sources:[{tool:'Audit plan',connector:'audit',field:'universe',lastRefresh:c5ago()}],
+        note:'The auditable cyber areas in your universe — the scope Internal Audit plans coverage against.',connectTool:'your audit plan (universe + risk ratings)'});}
+    case 'ia_coverage':{var s=(typeof auditStats==='function')?auditStats():{pct:null};var conn=s.pct!=null;
+      return c5obj({id:id,name:'Coverage · evidence',connected:conn,displayValue:conn?(s.pct+'%'):'—',label:'computed',color:conn?(s.pct>=75?'good':s.pct>=50?'warn':'crit'):'muted',
+        formula:'coverage = auditable controls with evidence on file ÷ total control universe',
+        method:'A proxy for audit coverage from live evidence; last-covered dates come from your audit plan/history when connected.',
+        inputs:[{name:'Evidenced controls',value:conn?(s.evid+' of '+s.total):'—',source:'control universe'}],
+        sources:[{tool:'Audit plan + GRC',connector:'audit',field:'coverage',lastRefresh:c5ago()}],
+        note:'How much of the audit universe is currently backed by evidence — the coverage the board asks about.',connectTool:'your audit plan + GRC'});}
+    case 'ia_overdue':{var M=c5expModel();var idMat=M.drivers.some(function(d){return d.id==='exp_identity'&&d.usd>0;});var conn=M.drivers.length>0;
+      return c5obj({id:id,name:'Overdue high-risk',connected:conn,displayValue:conn?(idMat?'1':'0'):'—',label:'computed',color:conn?(idMat?'warn':'good'):'muted',
+        formula:'overdue high-risk = high-risk areas whose top-exposure driver is unaddressed — flagged for priority review',
+        inputs:[{name:'Top exposure driver',value:M.drivers[0]?M.drivers[0].name:'—',source:'exposure model'}],
+        sources:[{tool:'Audit plan',connector:'audit',field:'risk_vs_coverage',lastRefresh:c5ago()}],
+        note:'The high-risk area most out of step with coverage — where audit attention aligns with enterprise risk.',connectTool:'your audit plan (last-covered dates)'});}
+    case 'ia_tested':{var s2=(typeof auditStats==='function')?auditStats():{pct:null};var conn=s2.pct!=null;
+      return c5obj({id:id,name:'Controls tested',connected:conn,displayValue:conn?(s2.pct+'%'):'—',label:'computed',color:conn?(s2.pct>=75?'good':'warn'):'muted',
+        formula:'controls tested = controls with test evidence (telemetry or document review) ÷ total controls',
+        inputs:[{name:'Evidenced (tested)',value:conn?(s2.evid+' of '+s2.total):'—',source:'audit workpapers'}],
+        sources:[{tool:'Audit workpapers',connector:'audit',field:'test_status',lastRefresh:c5ago()}],
+        note:'How far through the control-testing plan this cycle you are — from the workpapers.',connectTool:'your audit workpapers'});}
+    case 'ia_passrate':{var s3=(typeof auditStats==='function')?auditStats():{total:0,fail:[]};var conn=(s3.total>0);var pass=s3.total>0?Math.round((s3.total-s3.fail.length)/s3.total*100):null;
+      return c5obj({id:id,name:'Pass rate',connected:conn,displayValue:conn?(pass+'%'):'—',label:'computed',color:conn?(pass>=90?'good':pass>=75?'warn':'crit'):'muted',
+        formula:'pass rate = controls at a passing standard (CMMI ≥ 2) ÷ total controls',
+        inputs:[{name:'Controls at CMMI ≥ 2',value:conn?((s3.total-s3.fail.length)+' of '+s3.total):'—',source:'control testing'},{name:'Failing / unevidenced',value:conn?s3.fail.length:'—',source:'control testing'}],
+        sources:[{tool:'Audit workpapers',connector:'audit',field:'test_results',lastRefresh:c5ago()}],
+        note:'Of the controls tested, how many pass — the assurance the results give.',connectTool:'your audit workpapers'});}
+    case 'ia_open_findings':{var of=sig('audit_findings_open');var conn=of!=null;
+      return c5obj({id:id,name:'Open findings',connected:conn,displayValue:conn?String(of):'—',label:'live',color:conn?(of<=10?'good':'warn'):'muted',
+        formula:'open findings = cyber findings currently open in the issue-tracking system',
+        inputs:[{name:'Open findings',value:conn?of:'—',source:'issue tracking · audit_findings_open'}],
+        sources:[{tool:'Issue-tracking / GRC',connector:'grc',field:'audit_findings_open',lastRefresh:c5ago()}],
+        note:'The control-gap backlog management has committed to remediate — the open audit findings.',connectTool:'your issue-tracking / GRC platform'});}
+    case 'ia_repeat':{var rf=sig('audit_findings_repeat');var conn=rf!=null;
+      return c5obj({id:id,name:'Repeat findings',connected:conn,displayValue:conn?String(rf):'—',label:'live',color:conn?(rf>0?'warn':'good'):'muted',
+        formula:'repeat findings = findings that reappeared in a later audit (reported closed but the control did not hold)',
+        inputs:[{name:'Repeat findings',value:conn?rf:'—',source:'issue tracking · audit_findings_repeat'}],
+        sources:[{tool:'Issue-tracking / GRC',connector:'grc',field:'audit_findings_repeat',lastRefresh:c5ago()}],
+        note:'The systemic gaps closed on paper but not in practice — the ones to escalate to the committee.',connectTool:'your issue-tracking / GRC platform'});}
+    case 'ia_closed_ontime':{return c5obj({id:id,name:'Closed on time',connected:false,displayValue:'—',label:'computed',color:'muted',
+        formula:'closed on time = findings remediated by their action-plan due date ÷ closed findings',
+        inputs:[{name:'Action-plan due dates',value:'not connected',source:'issue-tracking system'}],
+        sources:[{tool:'Issue-tracking system',connector:'grc',field:'action_plans',lastRefresh:c5ago()}],
+        note:'How reliably action plans land on time — needs your issue-tracking action-plan dates.',connectTool:'your issue-tracking action plans'});}
+    case 'ia_automated':{var s4=(typeof auditStats==='function')?auditStats():{evid:0,sys:0};var conn=(s4.evid>0);var auto=s4.evid>0?Math.round(s4.sys/s4.evid*100):null;
+      return c5obj({id:id,name:'Evidence automated',connected:conn,displayValue:conn?(auto+'%'):'—',label:'computed',color:conn?(auto>=75?'good':'warn'):'muted',
+        formula:'evidence automated = controls evidenced by live tool telemetry ÷ all evidenced controls',
+        inputs:[{name:'Telemetry-evidenced',value:conn?s4.sys:'—',source:'control monitoring'},{name:'Document-evidenced',value:conn?s4.doc:'—',source:'document review'}],
+        sources:[{tool:'GRC / control monitoring',connector:'grc',field:'evidence_automation',lastRefresh:c5ago()}],
+        note:'How much control evidence is automated (telemetry) vs manually gathered — the audit-efficiency signal.',connectTool:'your GRC / control-monitoring systems'});}
+    case 'ia_evidence_current':{return c5obj({id:id,name:'Current · under 90 days',connected:false,displayValue:'—',label:'computed',color:'muted',
+        formula:'current evidence = control evidence refreshed within 90 days ÷ all evidence',
+        inputs:[{name:'Evidence timestamps',value:'not connected',source:'GRC / control-monitoring'}],
+        sources:[{tool:'GRC',connector:'grc',field:'evidence_freshness',lastRefresh:c5ago()}],
+        note:'How fresh your control evidence is — needs evidence timestamps from your GRC system.',connectTool:'your GRC / control-monitoring systems'});}
   }
   return c5obj({id:id,name:id,connected:false,displayValue:'—',color:'muted',note:'No metric definition.'});
+}
+/* Audit areas / control sets / evidence areas — the same underlying control families
+   seen through four audit lenses; identity is where the signals converge (it maps to
+   the top exposure driver, so it reads overdue / outstanding / repeat / gap). */
+function c5AuditAreas(kind){
+  var M=c5expModel();var idMat=M.drivers.some(function(d){return d.id==='exp_identity'&&d.usd>0;});
+  var base=[
+    {k:'identity',l:(kind==='test'?'Identity controls':(kind==='evid'?'Identity controls':'Identity & access management')),risk:'High'},
+    {k:'thirdparty',l:(kind==='test'?'Access provisioning':(kind==='evid'?'Access reviews':'Third-party risk')),risk:'High'},
+    {k:'data',l:(kind==='test'?'Logging & monitoring':(kind==='evid'?'Change records':'Data protection')),risk:'High'},
+    {k:'ir',l:(kind==='test'?'Encryption':(kind==='evid'?'Incident records':'Incident response')),risk:'Medium'},
+    {k:'access',l:(kind==='test'?'Backup & recovery':(kind==='evid'?'Vendor assessments':'Access recertification')),risk:'High'}
+  ];
+  base.forEach(function(a){
+    if(a.k==='identity'&&idMat){
+      a.converge=true;a.c='warn';
+      a.status=(kind==='test'?'Outstanding':(kind==='evid'?'Gap':(kind==='find'?'Escalate':'Overdue')));
+      a.sub=(kind==='test'?'Testing incomplete · exceptions open':(kind==='evid'?'Evidence incomplete · manual to gather':(kind==='find'?'Repeat · not fully remediated last cycle':'High-risk · overdue for review')));
+    } else {
+      a.converge=false;a.c=(a.k==='thirdparty'&&kind==='find')?'blue':'good';
+      a.status=(kind==='test'?'Passed':(kind==='evid'?'Ready':(kind==='find'?(a.k==='thirdparty'?'On track':'On track'):'Current')));
+      a.sub=(kind==='test'?'Tested · passed':(kind==='evid'?'Current · automated':(kind==='find'?'Remediation on track':'Reviewed within cycle')));
+    }
+  });
+  return base;
 }
 /* Customer-facing services from the crown-jewel systems; the top one carries the
    identity/access risk (the same shared exposure), the rest read secure. */
@@ -1449,4 +1534,69 @@ function c5ctDecisions(){
     q+
     c5bl('Bottom line','One call closes the biggest gap.',null,(ec.connected?('Funding the identity fix closes the largest architecture gap in your stack — the customer platform’s access model ('+ec.displayValue+') — and simplifies it. Patching the auth-library advisory is the urgent tactical fix alongside it.'):'Funding the identity fix closes the largest architecture gap in your stack. Patching the auth-library advisory is the urgent tactical fix alongside it.'),{mid:'exp_identity',txt:'Fund the identity fix — closes the gap'})+
     '<div class="c5foot">Each decision links to its component and source.</div>';
+}
+
+/* ================= Internal Audit seat — same engine, independent-assurance lens ================= */
+/* No fund/approve — Audit assures, management funds. The audit action opens the
+   inspector on the converging area; the buttons are schedule/test/escalate/assure. */
+function c5iaAreaRows(kind,mid){
+  return c5AuditAreas(kind).map(function(a){var pill=a.converge?'a':(a.c==='blue'?'b':'g');
+    var tag=(kind==='universe')?('<span class="c5tag'+(a.risk==='High'?' rev':'')+'">'+a.risk+'</span>'):(kind==='find'&&a.converge?'<span class="c5tag rev">Repeat</span>':'');
+    return '<div class="c5prow" data-c5m="'+mid+'"><span class="c5sq '+(a.c==='warn'?'a':a.c==='blue'?'b':'g')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+a.l+tag+'</div><div class="c5row-s">'+a.sub+'</div></div><span class="c5pill '+pill+'">'+a.status+'</span></div>';
+  }).join('');
+}
+/* Tab 01 — Audit universe & coverage */
+function c5iaCoverage(){
+  var host=document.getElementById('ia-coverage');if(!host)return;
+  host.innerHTML=c5header()+
+    c5shell('Audit universe & coverage · what’s in scope and covered?','Your cyber audit universe is well covered — one high-risk area needs review.',null,'The auditable cyber areas, their risk rating, and their coverage. Coverage is strong; identity & access — a high-risk area and the enterprise’s top exposure — is the one out of step. Tap any area for its scope and evidence. Last-covered dates come from your audit plan when connected.')+
+    '<div class="c5cards">'+c5card('ia_areas')+c5card('ia_coverage')+c5card('ia_overdue')+'</div>'+
+    '<div class="c5rank" style="padding:4px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Audit universe · risk rating and status</div>'+c5iaAreaRows('universe','ia_coverage')+'</div>'+
+    c5bl('Bottom line','Schedule the overdue high-risk review.',null,'Identity &amp; access is a high-risk area and the enterprise’s top exposure, yet it’s the one out of step with coverage. Prioritizing it aligns coverage with risk — and lets you independently assure the board that management’s fix is real.',{mid:'exp_identity',txt:'Prioritize the identity audit'})+
+    '<div class="c5foot">Universe and coverage from your audit plan and history.</div>';
+}
+/* Tab 02 — Control-testing status */
+function c5iaTesting(){
+  var host=document.getElementById('ia-testing');if(!host)return;
+  host.innerHTML=c5header()+
+    c5shell('Control-testing status · what’s tested, what’s outstanding?','Testing is on plan — identity controls are the outstanding set.',null,'Your cyber control-testing progress this cycle. Most control sets are tested and passing; identity controls are the main outstanding set, and the last test found exceptions. Tap any control set for test results and evidence.')+
+    '<div class="c5cards">'+c5card('ia_tested')+c5card('ia_passrate')+c5card('ia_overdue')+'</div>'+
+    '<div class="c5rank" style="padding:4px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Control sets · test status and result</div>'+c5iaAreaRows('test','ia_tested')+'</div>'+
+    c5bl('Bottom line','Close testing on the identity controls.',null,'Identity controls are the main outstanding set and carry open exceptions. Completing their testing gives you the evidence to assure the fix — and closes the biggest gap in this cycle’s coverage.',{mid:'exp_identity',txt:'Complete identity control testing'})+
+    '<div class="c5foot">Testing status from your audit workpapers.</div>';
+}
+/* Tab 03 — Findings & action plans */
+function c5iaFindings(){
+  var host=document.getElementById('ia-findings');if(!host)return;
+  host.innerHTML=c5header()+
+    c5shell('Findings & action plans · open, closed, and repeat?','Findings are closing — one repeat finding to escalate.',null,'Your open and closed cyber findings and their action plans. One finding — identity access — is a repeat from last cycle, which raises its priority. Tap any finding for its plan and owner.')+
+    '<div class="c5cards">'+c5card('ia_open_findings')+c5card('ia_closed_ontime')+c5card('ia_repeat')+'</div>'+
+    '<div class="c5rank" style="padding:4px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Findings · severity and status</div>'+c5iaAreaRows('find','ia_repeat')+'</div>'+
+    c5bl('Bottom line','Escalate the repeat identity finding.',null,'Identity over-permissioning is a repeat finding — it wasn’t fully remediated last cycle. It’s now funded by management; escalating it ensures the action plan lands and the repeat closes for good.',{mid:'ia_repeat',txt:'Escalate the repeat finding'})+
+    '<div class="c5foot">Findings and action plans from your issue-tracking system.</div>';
+}
+/* Tab 04 — Evidence readiness */
+function c5iaEvidence(){
+  var host=document.getElementById('ia-evidence');if(!host)return;
+  host.innerHTML=c5header()+
+    c5shell('Evidence readiness · can we prove it?','You can evidence most controls on demand — identity is the thin spot.',null,'Whether you can produce evidence for auditors and regulators on demand. Most control evidence is current and automated; identity-control evidence is incomplete — the same area driving your top risk. Tap any area for its evidence and freshness.')+
+    '<div class="c5cards">'+c5card('ia_automated')+c5card('ia_evidence_current')+c5card('ia_overdue')+'</div>'+
+    '<div class="c5rank" style="padding:4px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Evidence by area · freshness and readiness</div>'+c5iaAreaRows('evid','ia_automated')+'</div>'+
+    c5bl('Bottom line','Close the identity evidence gap.',null,'Identity-control evidence is the one area you couldn’t fully produce on demand — and it’s your top risk. Closing it (management’s fix improves logging) makes the control both effective and provable.',{mid:'exp_identity',txt:'Close the identity evidence gap'})+
+    '<div class="c5foot">Evidence readiness from your GRC and control-monitoring systems.</div>';
+}
+/* Tab 05 — Attention for Internal Audit (schedule / assure / track — no fund/approve) */
+function c5iaAttention(){
+  var host=document.getElementById('ia-attention');if(!host)return;
+  var tp=c5get('thirdparty_risk');
+  var q='<div class="c5rank"><div class="c5rank-h">Audit actions · schedule, assure, track — Audit assures, management funds</div>'+
+    '<div class="c5row" data-c5m="exp_identity"><div class="c5row-main"><div class="c5row-t"><span class="c5pill b" style="margin-right:8px">Prioritize</span>Audit identity &amp; access</div><div class="c5row-s">Overdue review, open test exceptions, repeat finding, and evidence gap — all identity</div></div><div class="c5row-v">4 signals</div><span class="c5pill g" style="align-self:center">Recommended</span></div>'+
+    '<div class="c5row" data-c5m="ia_coverage"><div class="c5row-main"><div class="c5row-t"><span class="c5pill n" style="margin-right:8px">Assure</span>Board assurance statement</div><div class="c5row-s">Independently confirm management’s fix is real and on track</div></div><div class="c5row-v">—</div><span class="c5pill n" style="align-self:center">Informational</span></div>'+
+    '<div class="c5row" data-c5m="thirdparty_risk"><div class="c5row-main"><div class="c5row-t"><span class="c5pill a" style="margin-right:8px">Track</span>Acme vendor assessment</div><div class="c5row-s">Falling-rated vendor · confirm assessment cadence</div></div><div class="c5row-v">'+(tp.connected?tp.displayValue:'—')+'</div><span class="c5pill a" style="align-self:center">Advised</span></div>'+
+    '</div>';
+  host.innerHTML=c5header()+
+    c5shell('Attention for Internal Audit · what needs follow-up?','One area ties the cycle together — plus board assurance to give.',null,'The audit actions on your desk. One area — identity — is your overdue review, outstanding test, repeat finding, and evidence gap at once. Internal Audit does not fund or fix; it schedules, tests, escalates and assures. Tap any for the full picture and source.')+
+    q+
+    c5bl('Bottom line','One area, four audit signals.',null,'Identity is simultaneously your overdue review, your outstanding test, your repeat finding, and your evidence gap. Prioritizing it is the highest-leverage audit action — and lets you give the board independent assurance that management’s fix is landing.',{mid:'exp_identity',txt:'Prioritize the identity audit'})+
+    '<div class="c5foot">Each item links to its plan, test, or finding. Internal Audit provides independent assurance — it does not fund or approve.</div>';
 }

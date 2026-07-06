@@ -157,25 +157,16 @@ var SEATS = {
  },
 
  audit:{
-  eyebrow:'Assurance view · Internal Audit',
-  verdict:'The control environment is <span class="em">evidenced and testable</span> — audit readiness and evidence completeness are measured, control testing is scored from live telemetry and document review, and every management action is tracked to closure.',
-  sub:'Cyber for assurance, in five reads: audit readiness, control assurance, management actions, compliance, and the calls internal audit brings to the committee.',
-  brief:'From the assurance seat: the control environment is evidenced and testable. Audit readiness and evidence completeness are measured from live tool coverage and document review, not self-attestation; the controls that fail are flagged; open findings and remediation are tracked to closure; and the audit priorities and escalations for the committee are surfaced.',
+  eyebrow:'Internal Audit · Executive cockpit',
+  verdict:'Independent assurance, in five tabs: audit universe &amp; <span class="em">coverage</span>, control-<span class="em">testing</span> status, <span class="em">findings</span> &amp; action plans, <span class="em">evidence</span> readiness, and where the cycle needs attention — Internal Audit assures, it does not fund or fix.',
+  sub:'Tap any area, control set, finding or evidence item to open the inspector — its source system and evidence. The same engine as the other seats; the shared cyber figures match exactly.',
+  brief:'From the assurance seat, in five tabs. Coverage: the audit universe is well covered, with identity &amp; access the high-risk area out of step. Testing: on plan, with identity controls the outstanding set. Findings: closing on track, with one repeat identity finding to escalate. Evidence: most controls evidenced on demand, identity the thin spot. Attention: identity is your overdue review, outstanding test, repeat finding and evidence gap at once — the highest-leverage audit action, and the basis for independent board assurance. Audit assures; management funds.',
   body:function(){return (
-   sec('01','Audit Readiness','Are we ready for an audit and can we produce the evidence on demand — overall audit readiness, and how complete the evidence behind our controls is.',
-     '<div id="auditReadiness"></div>'
-     +'<div id="auditCoverage" style="margin-top:14px"></div>'
-     +'<div id="cisoCoverage" style="margin-top:14px"></div>')
-   +sec('02','Control Assurance','The tested state of every control, and the controls currently failing — not evidenced, or below a passing standard.',
-     '<div id="auditFailed"></div>'
-     +'<div id="cisoFrameworks" style="margin-top:14px"></div>')
-   +sec('03','Management Actions','Open findings and how remediation is progressing — the management actions internal audit tracks to closure.',
-     '<div id="auditRepeat"></div>'
-     +'<div id="initiatives-panel" style="margin-top:14px"></div>')
-   +sec('04','Compliance','Where we stand against each compliance framework in scope — audit-readiness per framework, evidenced live rather than self-attested.',
-     '<div id="cisoCompliance"></div>')
-   +sec('05','Executive Decisions','The calls internal audit brings to the committee — where to point the next audit, and the findings that need escalation.',
-     '<div id="auditDecisions"></div>')
+   sec('01','Coverage','','<div id="ia-coverage"></div>')
+   +sec('02','Testing','','<div id="ia-testing"></div>')
+   +sec('03','Findings','','<div id="ia-findings"></div>')
+   +sec('04','Evidence','','<div id="ia-evidence"></div>')
+   +sec('05','Attention','','<div id="ia-attention"></div>')
   );}
  }
 };
