@@ -632,7 +632,7 @@ function lists(a){return '<div class="card">'+a.map(function(r){return '<div cla
 function kvcard(title,rows){return '<div class="card"><div class="ck">'+title+'</div>'+rows.map(function(r){return '<div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:9px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted)">'+r.k+'</span><span style="font-weight:600;text-align:right'+(r.cls?';color:var(--'+r.cls+')':'')+'"'+(r.ev?' class="claim" data-ev="'+r.ev+'"':'')+'>'+r.v+(r.ev?' <span class="fx">ƒ</span>':'')+'</span></div>';}).join('')+'</div>';}
 function jtable(rows){return '<div class="card"><table class="tbl"><thead><tr><th>Jurisdiction</th><th>Obligation</th><th>Clock</th><th>Max penalty</th></tr></thead><tbody>'+rows.map(function(r){return '<tr><td'+(r.ev?' class="claim" data-ev="'+r.ev+'"':'')+'><span class="flag">'+r.flag+'</span>'+r.c+(r.ev?' <span class="fx">ƒ</span>':'')+'</td><td>'+r.o+'</td><td><span class="tag '+r.cc+'">'+r.clock+'</span></td><td style="font-weight:600">'+r.pen+'</td></tr>';}).join('')+'</tbody></table></div>';}
 function decisions(a){return a.map(function(d){return '<div class="decision" data-dec="'+d.n+'"><div class="dh"><span class="dn">Decision '+d.n+' ·</span>'+d.q+'</div><div class="dsit">'+d.sit+'</div><div class="opts">'+d.opts.map(function(o){return '<div class="opt'+(o.rec?' rec':'')+'">'+(o.rec?'<div class="orec">Recommended</div>':'')+'<div class="on">'+o.on+'</div><div class="osum">'+o.osum+'</div><div class="pc"><div class="lbl p">Pros</div><ul>'+o.pros.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul><div class="lbl c">Cons</div><ul>'+o.cons.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></div><button class="choose'+(o.rec?'':' gh')+'" data-dec="'+d.n+'" data-title="'+d.q.replace(/"/g,'')+'" data-opt="'+o.tag+'" data-osum="'+String(o.osum||'').replace(/"/g,'')+'">Choose &amp; record</button></div>';}).join('')+'</div>'+
-  '<div class="dnote">◈ <b>How this decision is built:</b> the dollars each option removes are <span class="pill mod">modeled</span> from your exposure model — your risk register × the control-value ledger — <b>not hardcoded</b>, and <b>no AI/LLM</b> at run-time. The recommendation is the option with the highest modeled risk-reduction per dollar. <b>Choosing one records it in Nerion and automatically opens a project in your connected ticketing system</b> (Jira / ServiceNow); its status is pulled back on the weekly refresh.</div>'+
+  '<div class="dnote">◈ <b>How this decision is built:</b> the tradeoff is framed on your exposure model — your risk register × the control-value ledger — with <b>no AI/LLM</b> at run-time. Figures already computed from live data carry a <span class="tag good" style="font-size:9px">live</span> tag; any not yet wired to your data are <span class="pill mod">modeled</span> illustrative examples of the tradeoff, to refine against your live exposure. <b>Choosing one records it in Nerion and, where a ticketing system is connected, automatically opens a project</b> (Jira / ServiceNow) whose status is pulled back on refresh.</div>'+
   '<div class="dstatus" id="dstatus-'+d.n+'"></div></div>';}).join('');}
 function sec(no,q,desc,inner){return '<div class="section"><div class="rubric"><div class="no">'+no+'</div><div><div class="rt">'+q+'</div><div class="rd">'+desc+'</div></div></div>'+inner+'</div>';}
 
@@ -704,7 +704,7 @@ function buildTabs(){
 /* evidence + live + ticketing wiring */
 // When live data is present, the evidence headline shows the org's real figure
 // (computed from its own inputs) rather than the illustrative example result.
-function liveResult(key){if(!LIVE||!LIVE.economics)return null;var e=LIVE.economics,r=e.ratios||{},ap=e.appetite||{},ins=e.insurance||{};
+function liveResult(key){if(!LIVE)return null;var e=LIVE.economics||{},r=e.ratios||{},ap=e.appetite||{},ins=e.insurance||{},rs=LIVE.resilience||{},lg=LIVE.legal||{};
   if(key==='ale')return e.ale?usd(e.ale):null;
   if(key==='tail')return e.tail?usd(e.tail):null;
   if(key==='pctrev')return r.pct_of_revenue!=null?('≈'+pct(r.pct_of_revenue,r.pct_of_revenue<0.01?2:1)+' of revenue'):null;
@@ -712,13 +712,28 @@ function liveResult(key){if(!LIVE||!LIVE.economics)return null;var e=LIVE.econom
   if(key==='materiality')return e.materiality&&e.materiality.value?usd(e.materiality.value):null;
   if(key==='insgap')return ins.gap!=null?usd(ins.gap):null;
   if(key==='transfer')return ins.transfer_efficiency!=null?(Math.round(ins.transfer_efficiency*100)+'%'):null;
-  if(key==='liability'){var lg=LIVE.legal;return (lg&&lg.liability&&lg.liability.class_action_exposure)?usd(lg.liability.class_action_exposure):null;}
+  if(key==='liability')return (lg.liability&&lg.liability.class_action_exposure)?usd(lg.liability.class_action_exposure):null;
   if(key==='airisk'){var p=aiPremiumUsd();return p>0?('+'+usd(p)):null;}
+  // Resilience-sourced drills (CIO / COO / CRev seats)
+  if(key==='recovery')return rs.worst_recovery_hours!=null?(rs.worst_recovery_hours>=24?(Math.round(rs.worst_recovery_hours/2.4)/10+' days'):(rs.worst_recovery_hours+' hrs')):null;
+  if(key==='downtime')return rs.top_downtime_per_hr?(usd(rs.top_downtime_per_hr)+' / hr'):null;
+  if(key==='vendor')return (rs.top_vendor_blast&&rs.top_vendor_blast.per_hr)?(usd(rs.top_vendor_blast.per_hr)+' / hr'):null;
+  if(key==='techdebt')return (rs.tech_debt&&rs.tech_debt.exposure)?usd(rs.tech_debt.exposure):null;
+  // Legal / risk drills (CLO / CRO seats)
+  if(key==='clock')return (lg.binding&&lg.binding.clock)?lg.binding.clock:null;
+  if(key==='notifications'){var oi=sig('open_incidents');return oi!=null?(oi+' open'):null;}
+  if(key==='correlation')return e.tail?usd(e.tail):null;
+  if(key==='procexpo'){var pe=(LIVE.process_exposure||[])[0];return (pe&&pe.exposure_usd)?usd(pe.exposure_usd):null;}
   return null;}
 function openEv(key){var e=EV[key];if(!e)return;
   var eb=document.querySelector('#ev .eb');if(eb)eb.textContent='How this is calculated';
   var lr=liveResult(key);
-  var h='<div class="ev-claim">'+e.claim+(lr?' <span class="tag good" style="font-size:10px;vertical-align:middle">computed from your data</span>':'')+'</div><div class="ev-result '+C(e.cls)+'">'+(lr||e.result)+'</div>';
+  // When the org is live but this specific metric has no live figure yet, the example
+  // result stays — but it must never read as the org's real number, so it is labeled.
+  // Statutory-law drills (jurisdiction clocks/penalties) are fixed law, not examples.
+  var STATUTORY_EV={'juris-us':1,'juris-eu':1,'juris-uk':1,'juris-sg':1,'juris-au':1,'clock':1};
+  var resTag=lr?' <span class="tag good" style="font-size:10px;vertical-align:middle">computed from your data</span>':((LIVE&&!STATUTORY_EV[key])?' <span class="pill mod" style="font-size:10px;vertical-align:middle">illustrative example</span>':'');
+  var h='<div class="ev-claim">'+e.claim+resTag+'</div><div class="ev-result '+C(e.cls)+'">'+(lr||e.result)+'</div>';
   h+='<div class="ev-sec">The formula</div><div class="formula">'+e.formula.replace(/(ALE|VaR₉₅|Monte-Carlo|Beta-PERT|Σ)/g,'<span class="hl">$1</span>')+'</div>';
   h+='<div class="ev-sec">Inputs used</div><table class="itbl"><thead><tr><th>Input</th><th>Value</th><th>Source</th></tr></thead><tbody>'+e.inputs.map(function(i){return '<tr><td>'+i[0]+'</td><td class="v">'+i[1]+'</td><td class="src">'+i[2]+'</td></tr>';}).join('')+'</tbody></table>';
   h+='<div class="ev-sec">The calculation</div>'+e.steps.map(function(st){return '<div class="step'+(st[0]==='T'?' total':'')+'"><span class="sn">'+(st[0]==='T'?'=':st[0])+'</span><span>'+st[1]+'</span><span class="sv">'+st[2]+'</span></div>';}).join('');
