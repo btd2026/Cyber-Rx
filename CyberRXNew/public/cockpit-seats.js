@@ -77,16 +77,16 @@ var SEATS = {
 
  cfo:{
   eyebrow:'Financial view · CFO',
-  verdict:'Cyber loss is <span class="em">quantified, insured, and returning ~9× on spend.</span> A $30M uninsured tail and $92M carried on deferred decisions are the open financial items.',
+  verdict:'Cyber loss is <span class="em">quantified in dollars, insured against the modeled tail, and defensible as an investment.</span> The open financial items are the uninsured tail and the exposure carried on decisions not yet funded — both quantified below, each figure clickable to its math.',
   sub:'Cyber as a line on the risk-adjusted balance sheet: expected loss, capital at risk, insurance economics, and the marginal return on the next dollar. Click any figure for the math.',
-  brief:'From a finance view: our capital at risk is quantified — sixty-eight million expected, and a hundred and eighty million at the tail. Every dollar of security spend is returning about nine dollars of risk reduction. The two open items are a thirty-million uninsured tail, and ninety-two million of exposure we are carrying on decisions we have not funded yet. Funding the top decision returns thirty-seven to one.',
+  brief:'From a finance view: our capital at risk is quantified — an expected annual loss and a worst-case tail, both in dollars against the balance sheet. Security spend is defensible in return-on-investment terms, the same as any other capital allocation. The two open financial items are the uninsured portion of the tail and the exposure we are carrying on risk-reduction decisions not yet funded. Every figure on this seat is clickable to its calculation and its source.',
   body:function(){return (
    sec('01','Financial exposure','Cyber as capital at risk — expected annual loss and the worst realistic year in dollars, the return on security spend, the cost of carrying deferred decisions, and the live payment-fraud &amp; SOX-control posture that hits finance directly.',
      '<div id="cfoModeA"></div>'+
      tiles([
       {k:'Expected annual loss',v:'<span id="lvExpoCfo">$68M</span>',ev:'ale',note:'<span id="lvCfoPctRev">≈0.8% of revenue</span> · provisioned'},
       {k:'Value-at-Risk (95%)',v:'<span id="lvTailCfo">$180M</span>',cls:'warn',ev:'tail',note:'<span id="lvCfoPctEV">0.6% of enterprise value</span>'},
-      {k:'Return on security spend',v:'<span id="lvCfoRoiVal">$1 → $9</span>',ev:'roicfo',note:'<span id="lvCfoRoiNote"><span class="pill mod">modeled</span> risk reduced per dollar</span>'},
+      {k:'Return on security spend',v:'<span id="lvCfoRoiVal">$1 → —</span>',ev:'roicfo',note:'<span id="lvCfoRoiNote"><span class="pill mod">modeled</span> risk reduced per dollar</span>'},
       {k:'Cost of inaction',v:'+$92M',cls:'warn',ev:'inaction',note:'<span class="pill mod">modeled</span> exposure on deferred decisions'}])
      +'<div id="cfoFraud" style="margin-top:14px"></div>')
    +sec('02','Business interruption cost','What an outage of a revenue-critical service costs — per hour, per day, and across the worst-case recovery — plus what a severe cyber year does to earnings, EPS and days of operating income. The numbers finance needs to size recovery and insurance.',
@@ -96,7 +96,7 @@ var SEATS = {
      '<div id="initiatives-panel"></div>')
    +sec('04','Insurance effectiveness','Is our cyber-insurance matched to the modeled tail? Coverage limit vs worst-case loss, the uninsured gap, transfer efficiency, premium and the renewal clock — so coverage is sized to real exposure, not last year’s.',
      '<div id="cfoModeB"></div>'+
-     kvcard('Insurance economics',[{k:'Coverage limit',v:'<span id="lvCfoCoverage">$150M</span>'},{k:'Uninsured tail',v:'<span id="lvCfoGap">$30M</span>',cls:'crit',ev:'insgap'},{k:'Annual premium',v:'<span id="lvCfoPremium">$4.2M / yr</span>'},{k:'Transfer efficiency',v:'<span id="lvCfoTransfer">83%</span>',ev:'transfer'},{k:'Renewal',v:'<span id="lvCfoRenewal">92 days</span>'}])
+     kvcard('Insurance economics',[{k:'Coverage limit',v:'<span id="lvCfoCoverage">$150M</span>',ev:'inslimit'},{k:'Uninsured tail',v:'<span id="lvCfoGap">$30M</span>',cls:'crit',ev:'insgap'},{k:'Annual premium',v:'<span id="lvCfoPremium">$4.2M / yr</span>',ev:'inspremium'},{k:'Transfer efficiency',v:'<span id="lvCfoTransfer">83%</span>',ev:'transfer'},{k:'Renewal',v:'<span id="lvCfoRenewal">92 days</span>'}])
      +'<div class="cn" style="margin-top:10px">Transfer efficiency is the share of the worst-case tail your policy actually covers. A gap means the tail exceeds the limit — funding recovery lowers the tail and narrows the gap; raising the limit transfers more but costs premium. Both levers are in <b>Cost optimization</b> and <b>Risk-acceptance decisions</b>.</div>')
    +sec('05','Cost optimization','Where the marginal security dollar buys the most risk reduction — and the false economy of cutting. The return ranking by program, and the modeled effect of a budget cut once the insurer re-rates.',
      '<div class="cols">'
@@ -104,7 +104,7 @@ var SEATS = {
      +'<div class="card"><div class="ck">The false economy of a cut</div>'+lists([{c:'c',ic:'↓',t:'<span class="pill mod">modeled</span> Cut budget −20% → +$46M exposure, tail $214M, premium +18%',ev:'budgetcut',s:'Net of the premium re-rate, the cut costs more than it saves.'}])+'</div>'
      +'</div><div class="cn" style="margin-top:8px"><span class="pill mod">illustrative</span> Marginal return by program is an example ranking to show the shape; the live, per-control dollars of risk removed (summing to the org total) are on the CISO <b>Controls → Control value ledger</b>.</div>')
    +sec('06','Risk-acceptance decisions','The financial decisions that need the CFO — how much to fund this year and the residual to formally accept — each with the dollars removed, the ROI, and the disclosure threshold that makes an event reportable.',
-     decisions([{n:1,q:'How should we fund cyber-risk reduction this year?',sit:'Two funded decisions would remove $92M of exposure and strengthen the insurance renewal. How much do we commit this year?',opts:[
+     decisions([{n:1,q:'How should we fund cyber-risk reduction this year?',sit:'<span class="pill mod">illustrative example</span> The figures below show the shape of the funding tradeoff; your live option economics compute from your risk register and the control-value ledger once tools are connected. How much do we commit this year?',opts:[
        {rec:true,tag:'A · Fund both ($4.6M)',on:'Option A · Fund both',osum:'$4.6M · 20× blended',pros:['Removes ~$92M of exposure','Brings the tail within appetite','Stronger insurance renewal position'],cons:['Requires $4.6M of capital this year']},
        {tag:'B · Highest-ROI only ($1.4M)',on:'Option B · Top driver only',osum:'$1.4M · 37×',pros:['37× return — closes the $52M payments driver','Only $1.4M of capital this year'],cons:['Leaves the $40M recovery tail over appetite','Insurance renewal position improves only partially']},
        {tag:'C · Hold flat',on:'Option C · Hold',osum:'$0 new',pros:['No new spend this year'],cons:['Carries the full $92M as open exposure','Likely 15–18% premium increase at renewal','Two known drivers stay unfunded']}]}])
@@ -380,6 +380,16 @@ var EV = {
   inputs:[['Supporting assets','MemberWeb','Dependency map'],['Internet exposure → MemberWeb','$5M','Risk register']],
   steps:[['1','Assets supporting the process','1'],['2','Sum open-risk exposure','$5M'],['T','Process exposure','$5M']],
   sources:['Business processes','Risk register','Dependency map'],conf:'Internet-facing but lower-value data; smallest of the four.'},
+ inslimit:{claim:'Cyber-insurance coverage limit',result:'$150M',cls:'',
+  formula:'coverage limit  =  the aggregate policy limit purchased for cyber',
+  inputs:[['Policy aggregate limit','$150M','Onboarding — insurance policy']],
+  steps:[['1','Policy aggregate limit','$150M'],['T','Coverage limit','$150M']],
+  sources:['Insurance policy (captured at onboarding)'],conf:'Compared against the modeled worst-case tail (VaR₉₅) to size the uninsured gap.'},
+ inspremium:{claim:'Annual cyber-insurance premium',result:'$4.2M / yr',cls:'',
+  formula:'premium  =  the annual premium payable for the cyber policy',
+  inputs:[['Annual premium','$4.2M','Onboarding — insurance policy']],
+  steps:[['1','Annual premium','$4.2M'],['T','Premium','$4.2M / yr']],
+  sources:['Insurance policy (captured at onboarding)'],conf:'Read alongside transfer efficiency — premium per dollar of tail actually transferred.'},
  insgap:{claim:'Uninsured tail (insurance gap)',result:'$30M',cls:'crit',
   formula:'insurance gap  =  max( 0 ,  worst-case tail  −  coverage limit )',
   inputs:[['Worst-case tail (VaR₉₅)','$180M','computed'],['Coverage limit','$150M','Onboarding — insurance policy']],
