@@ -3,35 +3,16 @@
 
 var SEATS = {
  board:{
-  eyebrow:'Board oversight · Directors',
-  verdict:'Cyber risk is <span class="em">a managed business risk under active board oversight</span> — within the appetite you approved. This is the director’s one-screen brief: material exposure, the worst realistic day, peer standing, and the decisions that are the board’s to make.',
-  sub:'The board’s oversight lens — the six questions a Fortune-100 director asks, in your sector’s terms, each tracing to the evidence. Every figure is clickable.',
-  brief:'Here is the board’s view. Cyber is a managed business risk, within the appetite you approved. I can show you the one event that would hurt us most, how we compare to our sector, and the few decisions that need the board. Every number traces to our own data.',
+  eyebrow:'Board · Executive cockpit',
+  verdict:'Cyber as governance, in five tabs: enterprise <span class="em">cyber health</span>, what is <span class="em">material</span> for disclosure, the <span class="em">trend</span> over time, whether investment is proportionate, and the <span class="em">governance</span> items to note — oversight, not operations. The board notes, confirms and endorses; management funds and fixes.',
+  sub:'Tap any figure to open the inspector — its basis and source. The same engine as the other seats; the shared figures match exactly. Governance-grade, plain language, traceable to Item 106.',
+  brief:'Here is the board’s view, in five tabs and governance-grade plain language. Cyber health: a managed risk, improving, with nothing currently material. Material risk: no matter crosses the disclosure threshold this quarter, and the process to decide is sound. Trend: cyber residual risk is falling quarter over quarter and ahead of peers. Investment: the program pays for itself, and the one investment that sustains the trend is funded by management. Governance: oversight is functioning — the board’s role is to note management’s funded action and confirm the process, nothing to approve. Every number traces to source.',
   body:function(){return (
-   sec('01','Enterprise cyber business health','Your sector’s one-screen oversight brief: are we within the appetite the board approved, what single event would hurt us most, who regulates us, how we compare to peers, and the direction of travel — plus what is financially at stake.',
-     '<div id="ceoBoardBrief"></div>'
-     +'<div id="boardMode" style="margin-top:14px"></div>'
-     +'<div>'+tiles([
-      {k:'Expected annual loss',v:'<span id="lvExpo">$68M</span>',ev:'ale',note:'<span class="pill good" id="lvAleWithin">Within appetite</span> &nbsp;<span class="claim" data-ev="pctrev"><span id="lvPctRev">≈0.8% of revenue</span> <span class="fx">ƒ</span></span>'},
-      {k:'Worst-case tail (95%)',v:'<span id="lvTail">$180M</span>',cls:'warn',ev:'tail',note:'<span class="pill warn" id="lvTailWithin">Above appetite</span> &nbsp;vs appetite <span class="claim" data-ev="appetite"><span id="lvAppetite">$120M</span> <span class="fx">ƒ</span></span>'},
-      {k:'Materiality threshold',v:'<span id="lvMateriality">$53M</span>',ev:'materiality',note:'<span id="lvMatBasis">the loss large enough to be financially material to disclose</span>'}])+'</div>')
-   +sec('02','Material risk','The single event that would hurt us most — the severe-but-plausible scenario for our sector, what it would cost, and the threshold at which it becomes financially material and reportable.',
-     '<div class="card" id="ceoStress"><div class="ck">Severe-but-plausible scenario</div><div class="cn" style="margin-top:8px">◐ Illustrative until go-live — modeled from your top crown jewel, its largest open risk, worst-case recovery and your binding regulatory clock.</div></div>'
-     +'<div class="cn" style="margin-top:12px">Reportable at the <b class="claim" data-ev="materiality" style="cursor:pointer">materiality threshold <span class="fx">ƒ</span></b> — an event modeled above it is presumptively material and starts the 4-business-day SEC disclosure clock. The board is briefed the moment a scenario clears this line.</div>')
-   +sec('03','Trend over time','Are we getting better or worse? The direction of travel in expected loss across recorded analyses, and where we stand against our sector’s peers.',
-     '<div id="ceoTrend"></div><div id="ceoPeer" style="margin-top:14px"></div>')
-   +sec('04','Major incidents','Is anything material happening now? The current state of any incident material enough for the board to be aware of — and what happens when one is confirmed.',
-     '<div id="ceoIncidents"></div>')
-   +sec('05','Resilience posture','Could we survive the worst realistic day? Response &amp; recovery readiness — is the IR plan tested, is recovery fast enough — and where a single third-party is a systemic point of failure.',
-     '<div id="ceoReadiness" class="card"><div class="ck">Response &amp; recovery readiness</div><div class="cn" style="margin-top:8px">◐ Add your incident-readiness answers in onboarding (IR plan tested, tabletop, retainer, ransomware policy).</div></div>'
-     +'<div id="ceoThirdParty" style="margin-top:14px"></div>')
-   +sec('06','Investment needs','What still needs funding to bring risk within appetite — the ranked portfolio of security investment by dollars of risk removed, and the cost of carrying the unfunded decisions.',
-     '<div id="initiatives-panel"></div>')
-   +sec('07','Decisions requiring board awareness','The calls that are the board’s to make — risk-acceptances above appetite, appetite reviews and major funding — plus the SEC Item 106 governance the board must disclose and the evidenced decision record that is your D&amp;O defense.',
-     '<div id="ceoBoardDecisions"></div>'
-     +'<div id="ceoGov" style="margin-top:14px"></div>'
-     +'<div id="ceoOversight" style="margin-top:14px"></div>'
-     +'<div class="card" style="margin-top:14px"><div class="ck">Board-ready report</div><div class="cn" style="margin-top:6px">A one-click board / regulator report — the financial statement of cyber risk, Item 106 governance readiness, the KRI board, decisions and trajectory — from the same live model, every figure carrying its provenance.</div><div style="margin-top:12px"><button class="bp-btn primary" onclick="openBoardPack()">Open the board pack →</button></div></div>')
+   sec('01','Cyber health','','<div id="bd-health"></div>')
+   +sec('02','Material risk','','<div id="bd-material"></div>')
+   +sec('03','Trend','','<div id="bd-trend"></div>')
+   +sec('04','Investment','','<div id="bd-investment"></div>')
+   +sec('05','Governance','','<div id="bd-governance"></div>')
   );}
  },
 

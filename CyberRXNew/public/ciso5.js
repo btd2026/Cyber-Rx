@@ -695,6 +695,59 @@ function c5get(id){
         inputs:[{name:'Evidence timestamps',value:'not connected',source:'GRC / control-monitoring'}],
         sources:[{tool:'GRC',connector:'grc',field:'evidence_freshness',lastRefresh:c5ago()}],
         note:'How fresh your control evidence is — needs evidence timestamps from your GRC system.',connectTool:'your GRC / control-monitoring systems'});}
+    /* ---- Board metrics (oversight, not operations; frames shared figures for governance) ---- */
+    case 'bd_material':{var oi=sig('open_incidents');var conn=oi!=null;var none=(oi==null||oi===0);
+      return c5obj({id:id,name:'Material items',connected:conn,displayValue:conn?(none?'None':'Under review'):'—',label:'computed',color:conn?(none?'good':'warn'):'muted',
+        formula:'material items = cyber matters assessed as material for disclosure under SEC Item 106 this quarter',
+        method:'Surfaces the assessment and its basis; the disclosure determination is management’s and counsel’s, not asserted here.',
+        inputs:[{name:'Open incidents assessed',value:conn?oi:'—',source:'SIEM · open_incidents'},{name:'Materiality threshold',value:(LIVE&&LIVE.economics&&LIVE.economics.materiality&&LIVE.economics.materiality.value)?usd(LIVE.economics.materiality.value):'—',source:'Item 106 assessment'}],
+        sources:[{tool:'Materiality assessment (Item 106)',connector:'materiality',field:'material_items',lastRefresh:c5ago()}],
+        note:'Whether any cyber matter is currently material for disclosure — the board’s first governance question.',connectTool:'your materiality assessment (onboarding)'});}
+    case 'bd_reportable':{var oi2=sig('open_incidents');var conn=oi2!=null;
+      return c5obj({id:id,name:'Reportable incidents · qtr',connected:conn,displayValue:conn?(oi2>0?String(oi2):'0'):'—',label:'live',color:conn?(oi2>0?'warn':'good'):'muted',
+        formula:'reportable incidents = incidents that crossed the disclosure threshold this quarter',
+        inputs:[{name:'Incidents this quarter',value:conn?oi2:'—',source:'SIEM · open_incidents'}],sources:[c5capSrc('siem')],
+        note:'How many cyber incidents were reportable this quarter — from the incident record.',connectTool:'your SIEM'});}
+    case 'bd_mat_process':{var m=(LIVE&&LIVE.economics&&LIVE.economics.materiality)||{};var conn=(m.value!=null);
+      return c5obj({id:id,name:'Materiality process',connected:conn,displayValue:conn?'Documented':'—',label:'self-reported',color:conn?'good':'muted',
+        formula:'materiality process = whether a documented threshold and method are applied consistently',
+        inputs:[{name:'Threshold',value:m.value!=null?usd(m.value):'—',source:'Item 106 assessment'},{name:'Basis',value:m.basis||'—',source:'materiality policy'}],
+        sources:[{tool:'Materiality assessment',connector:'materiality',field:'basis',lastRefresh:c5ago()}],
+        note:'Whether the process to decide materiality is documented and sound — the board confirms the process, not each call.',connectTool:'your materiality basis (onboarding)'});}
+    case 'bd_incidents_assessed':{var oi3=sig('open_incidents');var conn=oi3!=null;
+      return c5obj({id:id,name:'Incidents assessed',connected:conn,displayValue:conn?(oi3+' assessed'):'—',label:'live',color:conn?'good':'muted',
+        formula:'incidents assessed = incidents run through the materiality assessment this quarter',
+        inputs:[{name:'Incidents',value:conn?oi3:'—',source:'SIEM · open_incidents'}],sources:[c5capSrc('siem')],
+        note:'That every incident was assessed against the threshold — none met it this quarter.',connectTool:'your SIEM + materiality assessment'});}
+    case 'bd_disclosure_controls':{var ir=(LIVE&&LIVE.governance&&LIVE.governance.ir)||{};var tested=/yes|tested|tabletop/i.test(ir.tested||'');var conn=!!ir.tested;
+      return c5obj({id:id,name:'Disclosure controls',connected:conn,displayValue:conn?(tested?'Effective':'Not tested'):'—',label:'self-reported',color:conn?(tested?'good':'warn'):'muted',
+        formula:'disclosure controls = whether controls over cyber disclosure are documented and tested',
+        inputs:[{name:'IR / disclosure process tested',value:ir.tested||'—',source:'governance'}],
+        sources:[{tool:'Governance',connector:'governance',field:'disclosure_controls',lastRefresh:c5ago()}],
+        note:'Whether the controls that ensure timely, accurate disclosure are operating — an Item 106 expectation.',connectTool:'your governance answers (onboarding)'});}
+    case 'bd_threshold_basis':{var m2=(LIVE&&LIVE.economics&&LIVE.economics.materiality)||{};var conn=(m2.basis!=null||m2.value!=null);
+      return c5obj({id:id,name:'Threshold basis',connected:conn,displayValue:conn?'Documented':'—',label:'self-reported',color:conn?'good':'muted',
+        formula:'threshold basis = the quantitative + qualitative basis for the materiality threshold',
+        inputs:[{name:'Basis',value:m2.basis||'—',source:'materiality policy'},{name:'Threshold',value:m2.value!=null?usd(m2.value):'—',source:'Item 106'}],
+        sources:[{tool:'Materiality assessment',connector:'materiality',field:'basis',lastRefresh:c5ago()}],
+        note:'That the threshold rests on a documented, consistent basis — not an ad-hoc judgment.',connectTool:'your materiality basis (onboarding)'});}
+    case 'bd_spend_peers':{return c5obj({id:id,name:'Spend vs. peers',connected:false,displayValue:'—',label:'modeled',color:'muted',
+        formula:'spend proportionality = cyber spend vs the anonymized peer benchmark for your size/sector',
+        inputs:[{name:'Peer spend benchmark',value:'not connected',source:'peer cohort'}],
+        sources:[{tool:'DTNKSHIELD peer cohort',connector:'peer',field:'spend_benchmark',lastRefresh:c5ago()}],
+        note:'Whether the enterprise is over- or under-spending on cyber vs peers — needs the peer spend benchmark.',connectTool:'the anonymous peer benchmark'});}
+    case 'bd_funded':{var st=(typeof ROI_STATE!=='undefined'&&ROI_STATE)?ROI_STATE:null;var conn=!!(st&&st.n>0);var yes=!!(st&&st.invested>0);
+      return c5obj({id:id,name:'Funded to sustain',connected:conn||true,displayValue:(st&&st.invested>0)?'Yes':'Management to fund',label:'computed',color:(st&&st.invested>0)?'good':'warn',
+        formula:'funded to sustain = whether the funded initiative portfolio covers the top exposure driver',
+        inputs:[{name:'Funded initiatives',value:st?st.n:'—',source:'initiatives portfolio'},{name:'Invested',value:(st&&st.invested>0)?usd(st.invested):'—',source:'ticketing + decisions'}],
+        sources:[{tool:'Program model',connector:'nerion',field:'funded_portfolio',lastRefresh:c5ago()}],
+        note:'Whether management has funded the action that sustains the improving trend — the board notes, it does not fund.',connectTool:'your funded initiatives (import)'});}
+    case 'bd_resilience_inv':{var d=sig('dr_test_days');var imm=sig('backup_immutable_pct');var conn=(d!=null||imm!=null);var ok=((d==null||d<=90)&&(imm==null||imm>=95));
+      return c5obj({id:id,name:'Resilience investment',connected:conn,displayValue:conn?(ok?'On track':'Gaps'):'—',label:'computed',color:conn?(ok?'good':'warn'):'muted',
+        formula:'resilience investment = recovery tested recently and backups verified',
+        inputs:[{name:'Days since DR test',value:d!=null?(d+' days'):'—',source:'BC/DR · dr_test_days'},{name:'Immutable backups',value:imm!=null?(imm+'%'):'—',source:'backup'}],
+        sources:[{tool:'BC/DR records',connector:'bcdr',field:'recovery',lastRefresh:c5ago()}],
+        note:'That recovery is tested and within targets — resilience the board can rely on.',connectTool:'your BC/DR + backup platform'});}
   }
   return c5obj({id:id,name:id,connected:false,displayValue:'—',color:'muted',note:'No metric definition.'});
 }
@@ -917,8 +970,9 @@ function c5card(mid){var m=c5get(mid);
   return '<div class="c5card" data-c5m="'+mid+'"><div class="c5card-top"><span class="c5card-l">'+m.name+'</span>'+c5chip(m.label)+'</div><div class="c5card-v" style="color:var(--'+(m.color==='ink'?'ink':m.color)+')">'+(m.connected?m.displayValue:'Not connected')+'</div></div>';
 }
 function c5bl(kick,head,headColor,para,btn,ghost){
+  function b(x,cls){if(!x)return '';return '<button class="c5btn'+cls+'" '+(x.act?('onclick="'+x.act+'"'):('data-c5m="'+x.mid+'"'))+'>'+x.txt+'</button>';}
   return '<div class="c5bl"><div class="c5bl-k">'+kick+'</div><div class="c5bl-h"'+(headColor?(' style="color:var(--'+headColor+')"'):'')+'>'+head+'</div><div class="c5bl-p">'+para+'</div>'+
-    (btn?('<button class="c5btn" data-c5m="'+btn.mid+'">'+btn.txt+'</button>'):'')+(ghost?('<button class="c5btn ghost" data-c5m="'+ghost.mid+'">'+ghost.txt+'</button>'):'')+'</div>';
+    b(btn,'')+b(ghost,' ghost')+'</div>';
 }
 function c5legend(items){return '<div class="c5legend">'+items.map(function(i){return '<span><i style="background:var(--'+i.c+')"></i>'+i.t+'</span>';}).join('')+'</div>';}
 
@@ -1599,4 +1653,92 @@ function c5iaAttention(){
     q+
     c5bl('Bottom line','One area, four audit signals.',null,'Identity is simultaneously your overdue review, your outstanding test, your repeat finding, and your evidence gap. Prioritizing it is the highest-leverage audit action — and lets you give the board independent assurance that management’s fix is landing.',{mid:'exp_identity',txt:'Prioritize the identity audit'})+
     '<div class="c5foot">Each item links to its plan, test, or finding. Internal Audit provides independent assurance — it does not fund or approve.</div>';
+}
+
+/* ================= Board seat — same engine, oversight (not operations) lens ================= */
+/* The board notes / confirms / endorses / supports and opens the pack — never funds,
+   approves, patches, or sees a control/ATT&CK detail. Identity appears only as
+   "management's funded top action, not currently material". */
+/* Tab 01 — Cyber-business health */
+function c5bdHealth(){
+  var host=document.getElementById('bd-health');if(!host)return;
+  var ec=c5get('exp_identity'),O=c5Objectives();
+  host.innerHTML=c5header()+
+    c5shell('Cyber-business health · is the enterprise secure and resilient?','Cyber is a managed risk — improving, with nothing currently material.',null,'The enterprise is resilient this quarter, cyber risk is trending down, and no matter is currently material for disclosure. Management has funded the top exposure. Tap any figure for its basis and source.')+
+    '<div class="c5cards">'+c5card('ceo_health')+c5card('bd_material')+c5card('direction')+'</div>'+
+    '<div class="c5tiles">'+
+      c5tile('ceo_objectives','g','Resilient',(O.protected+' of '+O.total+' objectives protected · one carries a funded action'))+
+      c5tile('bd_material','g','Assessed','Materiality reviewed this quarter (Item 106)')+
+      c5tile('direction','g','Improving','Cyber residual risk quarter over quarter')+
+      c5tile('exp_identity','a','Action underway',(ec.connected?('Identity gap · '+ec.displayValue+' · management action underway'):'top exposure · management action underway'))+
+    '</div>'+
+    c5bl('For the board','Note and support management’s top action.',null,(ec.connected?('The largest exposure — an identity gap, '+ec.displayValue+' — has a funded fix underway. It is not currently material, and closing it improves resilience. Nothing requires board action beyond awareness.'):'The largest exposure has a funded action underway. It is not currently material. Nothing requires board action beyond awareness.'),{act:'openBoardPack()',txt:'Open the board pack'})+
+    '<div class="c5foot">Board figures are governance-grade and traceable to source (SEC Item 106).</div>';
+}
+/* Tab 02 — Material risk & disclosure */
+function c5bdMaterial(){
+  var host=document.getElementById('bd-material');if(!host)return;
+  var ec=c5get('exp_identity'),m=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.materiality)||{};
+  var below=(ec.connected&&m.value!=null);
+  host.innerHTML=c5header()+
+    c5shell('Material risk & disclosure · anything the board must know?','Nothing is currently material — and the process to decide is sound.',null,'Whether any cyber matter is material for disclosure under SEC Item 106. Nothing crosses the threshold this quarter; the materiality process is documented and applied. The board confirms the process; the disclosure call is management’s and counsel’s. Tap any item for the assessment and basis.')+
+    '<div class="c5cards">'+c5card('bd_material')+c5card('bd_reportable')+c5card('bd_mat_process')+'</div>'+
+    '<div class="c5tiles">'+
+      c5tile('bd_incidents_assessed','g','None material','None met the materiality threshold')+
+      c5tile('exp_identity','g','Below threshold',(below?('Identity · '+ec.displayValue+' · below the '+usd(m.value)+' threshold · monitored and funded'):'below threshold · monitored and funded'))+
+      c5tile('bd_disclosure_controls','g','Effective','Controls over disclosure operating')+
+      c5tile('bd_threshold_basis','g','Documented','Quantitative + qualitative basis, applied consistently')+
+    '</div>'+
+    c5bl('For the board','Note the assessment; confirm the process.',null,'No cyber matter is currently material for disclosure. The largest exposure sits below threshold and is being managed. The board’s role is to confirm the materiality process is sound — which the documented basis supports.',{mid:'bd_mat_process',txt:'Review the materiality assessment'})+
+    '<div class="c5foot">Materiality assessed under SEC Item 106; basis documented and traceable. Not disclosure advice.</div>';
+}
+/* Tab 03 — Trend over time */
+function c5bdTrend(){
+  var host=document.getElementById('bd-trend');if(!host)return;
+  var tr=trajInfo();var vals=(tr.vals||[]).slice(-6);var maxV=Math.max.apply(null,vals.concat([1]));
+  var bars='<div class="c5bars" style="height:44px">'+(vals.length?vals.map(function(v,i){var h=Math.round(8+(maxV>0?v/maxV:0)*34);var last=(i===vals.length-1);return '<i style="height:'+h+'px'+(last?';background:var(--blue)':'')+'"></i>';}).join(''):[1,2,3,4,5,6].map(function(){return '<i class="n" style="height:8px"></i>';}).join(''))+'</div>';
+  var er=c5get('eff_return');
+  var drivers='<div class="c5rank" style="padding:4px 15px;margin-top:14px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">What’s driving the improvement</div>'+
+    '<div class="c5prow" data-c5m="eff_return"><span class="c5sq g" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Control effectiveness up</div><div class="c5row-s">Return on controls '+(er.connected?('is '+er.displayValue):'improving')+' — risk removed per dollar</div></div><span class="c5pill g">Improving</span></div>'+
+    '<div class="c5prow" data-c5m="capability_coverage"><span class="c5sq g" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Coverage expanded</div><div class="c5row-s">More assets monitored, fewer blind spots</div></div><span class="c5pill g">Improving</span></div>'+
+    '<div class="c5prow" data-c5m="exp_identity"><span class="c5sq a" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Identity — still elevated</div><div class="c5row-s">The one remaining driver · funded, being addressed</div></div><span class="c5pill a">Addressing</span></div>'+
+    '</div>';
+  host.innerHTML=c5header()+
+    c5shell('Trend over time · are we improving?','Cyber risk is falling — and ahead of peers.',null,'The board’s favorite question, answered over time. Cyber residual risk is falling quarter over quarter, and you sit in the top third of peers. Tap any point for the drivers.')+
+    '<div class="c5cards">'+c5card('direction')+c5card('cr_consec')+c5card('peer_position')+'</div>'+
+    '<div class="c5rank" style="padding:12px 15px;margin-top:14px"><div class="c5rank-h" style="border:0;background:transparent;padding:0 0 8px">Residual cyber risk · last 6 quarters</div>'+bars+'</div>'+
+    drivers+
+    c5bl('For the board','Support the program’s trajectory.',null,'Consecutive quarters of improvement, ahead of peers. The one remaining driver — identity — is funded by management. Sustaining the trajectory is a matter of continued board support for the program.',{mid:'direction',txt:'Support the program trajectory'})+
+    '<div class="c5foot">Trend from the residual-risk series; peer comparison anonymized.</div>';
+}
+/* Tab 04 — Investment & resilience */
+function c5bdInvestment(){
+  var host=document.getElementById('bd-investment');if(!host)return;
+  var er=c5get('eff_return'),ec=c5get('exp_identity');
+  host.innerHTML=c5header()+
+    c5shell('Investment & resilience · are we investing wisely?','The program pays for itself — one funded investment sustains it.',null,'Whether cyber investment is proportionate and effective. The program returns risk removed per dollar, spend is benchmarked against peers, and one funded investment — identity — sustains the improvement. Tap any figure for the basis.')+
+    '<div class="c5cards">'+c5card('eff_return')+c5card('bd_spend_peers')+c5card('bd_funded')+'</div>'+
+    '<div class="c5tiles">'+
+      c5tile('eff_return','g','Strong','Risk removed per dollar of cyber spend')+
+      c5tile('bd_spend_peers','n','Benchmark','Peer-benchmarked · connect the peer spend benchmark')+
+      c5tile('bd_resilience_inv','g','On track','Recovery tested · within RTO/RPO targets')+
+      c5tile('exp_identity','b','Funded',(ec.connected?('Identity fix · sustains the trend · '+ec.displayValue+' removed'):'the funded investment that sustains the trend'))+
+    '</div>'+
+    c5bl('For the board','Endorse the investment direction.',null,(er.connected?('Cyber spend returns '+er.displayValue+' and the one investment that sustains the improving trend — the identity fix — is funded by management. The board’s role is to endorse the direction, which the numbers support.'):'Cyber spend is proportionate and the investment that sustains the improving trend is funded. The board’s role is to endorse the direction.'),{mid:'eff_return',txt:'Endorse the investment direction'})+
+    '<div class="c5foot">Return and spend from the program model; peer benchmark anonymized.</div>';
+}
+/* Tab 05 — Governance */
+function c5bdGovernance(){
+  var host=document.getElementById('bd-governance');if(!host)return;
+  var ec=c5get('exp_identity'),tp=c5get('thirdparty_risk');
+  var q='<div class="c5rank"><div class="c5rank-h">Governance items · note, confirm, be aware — nothing to approve</div>'+
+    '<div class="c5row" data-c5m="exp_identity"><div class="c5row-main"><div class="c5row-t"><span class="c5pill b" style="margin-right:8px">Note</span>Management’s top action</div><div class="c5row-s">Identity fix funded and underway · not material · improves resilience</div></div><div class="c5row-v">'+(ec.connected?ec.displayValue:'—')+'</div><span class="c5pill g" style="align-self:center">For awareness</span></div>'+
+    '<div class="c5row" data-c5m="bd_mat_process"><div class="c5row-main"><div class="c5row-t"><span class="c5pill n" style="margin-right:8px">Confirm</span>Oversight is functioning</div><div class="c5row-s">Risk owned, reported, and trending down · process sound</div></div><div class="c5row-v">—</div><span class="c5pill n" style="align-self:center">Informational</span></div>'+
+    '<div class="c5row" data-c5m="thirdparty_risk"><div class="c5row-main"><div class="c5row-t"><span class="c5pill a" style="margin-right:8px">Aware</span>Acme vendor</div><div class="c5row-s">Falling-rated payments vendor · management is mitigating</div></div><div class="c5row-v">'+(tp.connected?tp.displayValue:'—')+'</div><span class="c5pill a" style="align-self:center">Watch</span></div>'+
+    '</div>';
+  host.innerHTML=c5header()+
+    c5shell('Governance · what needs oversight or awareness?','Governance is sound — one item to note, nothing to approve.',null,'The board’s cyber governance items this quarter. Oversight is functioning: management is accountable, the top risk is owned and funded, and nothing is material. One item to note; nothing requires board approval. Tap any for detail.')+
+    q+
+    c5bl('For the board','Note and support — no approval required.',null,'Cyber is a managed, improving risk with clear accountability and nothing material. The board’s role this quarter is to note management’s funded action on the top exposure and confirm oversight is working. No approval is required.',{act:'openBoardPack()',txt:'Open the board pack'})+
+    '<div class="c5foot">Governance items from the cyber program and risk register.</div>';
 }
