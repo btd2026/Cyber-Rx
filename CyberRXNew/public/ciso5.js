@@ -35,12 +35,13 @@
     '.c5tile-h{font-size:16px;font-weight:500;margin-top:8px;line-height:1.3;color:var(--ink)}',
     '.c5tile-h.c5muted{color:var(--muted)}',
     '.c5ic svg{width:18px;height:18px;display:block}',
+    '.c5tile-ic{display:inline-flex;color:var(--muted);flex:none}.c5tile-ic svg{width:15px;height:15px;display:block}',
     '.c5tile-s{font-size:12.5px;color:var(--ink-2);margin-top:3px}',
     '.c5sqrow{display:flex;gap:4px;margin-top:11px;flex-wrap:wrap}',
     '.c5sq{width:13px;height:13px;border-radius:3px;background:var(--line)}',
     '.c5sq.g{background:var(--good)}.c5sq.a{background:var(--warn)}.c5sq.b{background:var(--blue)}.c5sq.r{background:var(--crit)}.c5sq.n{background:var(--line)}',
-    '.c5bars{display:flex;gap:4px;align-items:flex-end;margin-top:11px;height:26px}',
-    '.c5bars i{flex:1;background:var(--good);border-radius:2px;min-height:3px}.c5bars i.n{background:var(--line)}',
+    '.c5bars{display:flex;gap:5px;align-items:flex-end;margin-top:11px;height:26px}',
+    '.c5bars i{width:9px;background:var(--good);border-radius:2px 2px 0 0;min-height:3px}.c5bars i.n{background:var(--line-2)}',
     '.c5cards{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}',
     '.c5card{flex:1;min-width:150px;border:1px solid var(--line);border-radius:12px;padding:13px 15px;cursor:pointer;background:var(--surface)}',
     '.c5card:hover{border-color:var(--blue)}',
@@ -1034,7 +1035,11 @@ var C5ICON={
   cpu:'<rect x="7" y="7" width="10" height="10" rx="1.5"/><rect x="10" y="10" width="4" height="4"/><path d="M10 3v3M14 3v3M10 18v3M14 18v3M3 10h3M3 14h3M18 10h3M18 14h3"/>',
   clipboard:'<path d="M9 4.5h6v3H9z"/><path d="M9 6H7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2"/><path d="M9 14l2 2 4-4"/>',
   bank:'<path d="M3 21h18"/><path d="M5 21V10M19 21V10"/><path d="M9 21V10M15 21V10"/><path d="M3.5 10 12 4l8.5 6z"/>',
-  box:'<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4.2 7.6 12 12l7.8-4.4"/><path d="M12 12v9"/>'
+  box:'<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4.2 7.6 12 12l7.8-4.4"/><path d="M12 12v9"/>',
+  pulse:'<path d="M3 12h3.5l2-6 3.5 12 2.5-9 1.5 3H21"/>',
+  checklist:'<path d="M10 6h10M10 12h10M10 18h7"/><path d="M3.5 6l1.2 1.2L7 5M3.5 12l1.2 1.2L7 11M3.5 18l1.2 1.2L7 17"/>',
+  store:'<path d="M3.5 21h17"/><path d="M5 21V11M19 21V11"/><path d="M4 7l1.4-3.5h13.2L20 7"/><path d="M4 7a2.4 2.4 0 0 0 4.8 0 2.4 2.4 0 0 0 4.8 0 2.4 2.4 0 0 0 4.8 0"/><path d="M9.5 21v-5.5h5V21"/>',
+  trend:'<path d="M3 17l6-6 4 4 8-8"/><path d="M16 7h5v5"/>'
 };
 var C5SEAT={ciso:{ic:'shield',nm:'CISO'},cfo:{ic:'dollar',nm:'CFO'},ceo:{ic:'tower',nm:'CEO'},cro:{ic:'scale',nm:'CRO'},coo:{ic:'factory',nm:'COO'},clo:{ic:'gavel',nm:'CLO'},cio:{ic:'cpu',nm:'CTO'},cpo:{ic:'box',nm:'CPO'},audit:{ic:'clipboard',nm:'Internal Audit'},board:{ic:'bank',nm:'Board'}};
 function c5icon(k){return '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(C5ICON[k]||C5ICON.shield)+'</svg>';}
@@ -1048,9 +1053,10 @@ function c5shell(kick,verdict,verdictColor,intro){
   return '<div class="c5kick">'+kick+'</div><div class="c5verdict"'+(verdictColor?(' style="color:var(--'+verdictColor+')"'):'')+'>'+verdict+'</div><div class="c5intro">'+intro+'</div>';
 }
 function c5squares(arr){return '<div class="c5sqrow">'+arr.map(function(c){return '<span class="c5sq '+c+'" title="'+c+'"></span>';}).join('')+'</div>';}
-function c5tile(mid,pillCls,pillTxt,subHtml,extraHtml){var m=c5get(mid);
+function c5tile(mid,pillCls,pillTxt,subHtml,extraHtml,iconKey){var m=c5get(mid);
   var head=m.connected?m.displayValue:'Not connected';var pc=m.connected?pillCls:'n';var pt=m.connected?pillTxt:'—';
-  return '<div class="c5tile'+(m.connected?'':' c5off')+'" data-c5m="'+mid+'"><div class="c5tile-top"><span class="c5tile-l">'+m.name+'</span><span class="c5pill '+pc+'">'+pt+'</span></div>'+
+  var ic=iconKey?('<span class="c5tile-ic">'+c5icon(iconKey)+'</span>'):'';
+  return '<div class="c5tile'+(m.connected?'':' c5off')+'" data-c5m="'+mid+'"><div class="c5tile-top"><span class="c5tile-l">'+ic+m.name+'</span><span class="c5pill '+pc+'">'+pt+'</span></div>'+
     '<div class="c5tile-h'+(m.connected?'':' c5muted')+'">'+head+'</div>'+
     (subHtml?('<div class="c5tile-s">'+subHtml+'</div>'):'')+(extraHtml||'')+'</div>';
 }
@@ -1073,14 +1079,15 @@ function c5Health(){
   var sq1=sqCaps.map(function(k){return c5sqClass(capColor(capDeploy(CAP_BY_KEY[k])));});
   var sq2=CAPS.map(function(c){return c5sqClass(capColor(capDeploy(c)));});
   var V=c5vendors();var sq3=(V.p&&V.p.vendors?V.p.vendors.slice(0,8):[]).map(function(v){return c5sqClass(v.color||capColor(v.score));});
-  var tr=trajInfo();var vals=(tr.vals||[]).slice(-6);var maxV=Math.max.apply(null,vals.concat([1]));
-  var bars='<div class="c5bars">'+(vals.length?vals.map(function(v,i){var h=Math.round(6+ (maxV>0?(1-v/maxV):0)*20);return '<i class="'+(i<Math.max(0,vals.length-tr.vals.length+ (6-vals.length))?'':'')+'" style="height:'+h+'px"></i>';}).join(''):[1,2,3,4,5,6].map(function(){return '<i class="n" style="height:6px"></i>';}).join(''))+'</div>';
+  var tr=trajInfo();var vals=(tr.vals||[]).slice(-6);var maxV=Math.max.apply(null,vals.concat([1]));var minV=vals.length?Math.min.apply(null,vals):0;var rng=(maxV-minV)||1;
+  // Ascending mini bar-chart: taller = better (lower modeled loss). Height maps posture, not ALE.
+  var bars='<div class="c5bars">'+(vals.length?vals.map(function(v,i){var h=Math.round(8+((maxV-v)/rng)*15);return '<i style="height:'+h+'px"></i>';}).join(''):[1,2,3,4,5,6].map(function(){return '<i class="n" style="height:8px"></i>';}).join(''))+'</div>';
   var inv=c5get('investigations'),am=c5get('assets_monitored'),tp=c5get('thirdparty_risk'),dir=c5get('direction'),ec=c5get('exp_identity');
   var tiles='<div class="c5tiles">'+
-    c5tile('active_compromise',(oi!=null&&oi>0)?'r':'g',(oi==null)?'—':(oi>0?'Active':'Clear'),(inv.connected?inv.displayValue:'connect SIEM'),c5squares(sq1))+
-    c5tile('capability_coverage','a','Watch',(am.connected?am.displayValue:'connect SIEM for asset coverage'),c5squares(sq2))+
-    c5tile('thirdparty_risk','a','Watch',(tp.connected?(tp.note||''):'add your tier-1/2 vendors'),c5squares(sq3))+
-    c5tile('direction','g','Improving',(dir.connected?dir.displayValue:'builds as quarters record'),bars)+
+    c5tile('active_compromise',(oi!=null&&oi>0)?'r':'g',(oi==null)?'—':(oi>0?'Active':'Clear'),(inv.connected?inv.displayValue:'connect SIEM'),c5squares(sq1),'pulse')+
+    c5tile('capability_coverage','a','Watch',(am.connected?am.displayValue:'connect SIEM for asset coverage'),c5squares(sq2),'checklist')+
+    c5tile('thirdparty_risk','a','Watch',(tp.connected?(tp.note||''):'add your tier-1/2 vendors'),c5squares(sq3),'store')+
+    c5tile('direction','g','Improving',(dir.connected?dir.displayValue:'builds as quarters record'),bars,'trend')+
     '</div>';
   var blPara=ec.connected?('Your largest exposure is <b>'+ec.name.toLowerCase()+'</b> — '+ec.displayValue+' modeled, threatening '+ec.threatens+'. The fix is scoped and funded and waiting for your sign-off.'):'Connect your identity and control tools and Nerion surfaces your largest exposure here, with the scoped, funded fix ready for sign-off.';
   var blBtn=ec.connected?('Approve — removes '+ec.displayValue+' of risk'):'Approve the top fix';
