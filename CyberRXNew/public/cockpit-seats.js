@@ -221,35 +221,16 @@ var SEATS = {
  },
 
  ciso:{
-  eyebrow:'Security operating view · CISO',
-  verdict:'<span class="em">No active compromise, and the program is improving.</span> The largest exposure driver has a funded decision ready; control effectiveness is measured as dollars of risk removed.',
-  sub:'',
-  brief:'No active compromise, and the program is improving. The biggest dollar driver is the privileged path into payments — fifty-two million — and it has a funded decision ready to close it. We measure our controls by the risk they remove, not by a maturity score, and this is the same number that rolls straight up to the board and the C.F.O.',
+  eyebrow:'CISO · Executive cockpit',
+  verdict:'A story in five tabs: the plain-language <span class="em">verdict</span> up top, the few things that matter in the middle, and one <span class="em">funded decision</span> at the bottom — every number real and traceable to its source.',
+  sub:'Tap any tile, row, square, ATT&CK cell, control or peer marker to open the inspector — the exact formula, inputs, source tools and why it matters.',
+  brief:'Here is the CISO read in five tabs. Program health: no active compromise and the program is improving. Top exposure: one driver is a third of our risk, and it is funded to fix. Effectiveness: every dollar is removing risk and we can prove it. Threats: covered across the kill chain with a soft spot in identity. Peers: ahead overall, trailing on identity — the same gap driving our exposure. Every number is traceable to its source.',
   body:function(){return (
-   sec('01','Are we secure right now — and is the program getting stronger?','The whole-program picture in business terms: the health of the security tools and how much of the attacker playbook we can see. <b>Click any of the three tiles</b> to open its full detail below — where every number comes from, the exact formula, and the answers to the questions a CISO asks about the data.',
-     '<div id="cisoOps"></div>'
-     +'<div id="cisoOpsDetail"></div>')
-   +sec('02','Are our crown jewels secure?','Are our most valuable systems under attack, and can an adversary reach them. <b>Live attack status</b> leads with whether we are under attack right now and, on an active event, the war room. <b>Crown-jewel threat map</b> shows the live threats from our threat-intel platform, and — per MITRE ATT&CK tactic — the controls deployed to stop each one before it reaches a crown jewel. Click any non-compliant control to see what’s causing it and the decision to close it.',
-     subtabs([
-       {key:'warroom',label:'Live attack status · War Room',on:true,html:'<div id="cisoUnderAttack"></div><div id="cisoWarRoom" style="margin-top:14px"></div>'},
-       {key:'threat',label:'Crown-jewel threat map',html:'<div id="cisoThreatMap"></div>'}
-     ]))
-   +sec('03','Is our security program worth the spend — and can we prove it?','Two lenses on the same question. <b>Business</b> traces every dollar the program protects — business function → process → technology → cyber risk → the control that mitigates it — and what each control saves when it operates effectively. <b>Frameworks</b> is the continuous audit: posture across NIST CSF 2.0, NIST SP 800-53, CIS Controls, SOC 2 and HIPAA, evidenced live rather than at a point in time.',
-     subtabs([
-       {key:'business',label:'Business',on:true,html:'<div id="cjFlow"></div><div id="cisoControls" style="margin-top:14px"></div>'},
-       {key:'frameworks',label:'Frameworks · continuous audit',html:'<div id="cisoFrameworks"></div><div id="peerCompare" style="margin-top:14px"></div>'}
-     ]))
-   +sec('04','Which third parties could take us down?','Your tier-1 and tier-2 vendors, rated live by your third-party monitoring service — the same score showing on the provider’s portal. The worst-rated vendors lead, so the exposure you carry through someone else’s security is on top. Refreshes automatically each week, or on demand.',
-     '<div id="cisoVendors"></div>')
-   +sec('05','Is AI making us safer or more exposed?','Cyber and AI on two fronts. <b>Is the AI we run secure?</b> covers the AI systems in production and their governance, scored continuously against the NIST AI RMF. <b>Is AI helping us defend?</b> covers where our security tools already run AI to cut detection and response time.',
-     subtabs([
-       {key:'aisecure',label:'Is the AI we run secure?',on:true,html:'<div id="cisoAiSecure"></div><div id="cisoAiFrameworks" style="margin-top:14px"></div>'},
-       {key:'aidefend',label:'Is AI helping us defend?',html:'<div id="cisoAiDefend"></div>'}
-     ]))
-   +sec('06','Where does the next dollar go — and where are we heading?','The next security dollar as a costed decision. Each option is a clear scenario — what it buys down and what it leaves open, in dollars from your exposure model. Choosing one records it in Nerion <b>and</b> opens a project in your connected ticketing system, then pulls the status back on a weekly refresh.',
-     '<div id="cisoDecisions"></div>')
-   +sec('07','Are our security investments paying off?','The live portfolio of funded cyber initiatives — every dollar invested, the annual loss exposure it buys down, and the return per dollar. Each initiative maps to a business objective and carries its status live from your ticketing system.',
-     '<div id="initiatives-panel"></div>')
+   sec('01','Program health','','<div id="c5-health"></div>')
+   +sec('02','Top exposure','','<div id="c5-exposure"></div>')
+   +sec('03','Effectiveness','','<div id="c5-effect"></div>')
+   +sec('04','Threats','','<div id="c5-threats"></div>')
+   +sec('05','Peers','','<div id="c5-peers"></div>')
   );}
  },
 
