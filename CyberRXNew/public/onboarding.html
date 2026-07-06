@@ -268,6 +268,13 @@
     <button class="conn-go" id="addStrat" type="button" style="margin-top:4px">+ Add a strategic initiative</button>
   </div>
 
+  <!-- 1d-2 · Strategic objectives (CEO "objectives protected" metric) -->
+  <div class="sec">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Strategic objectives <span style="color:var(--muted)">(for the CEO / Board)</span></div><div class="sd">The enduring goals the board holds you to — grow the platform, enter a market, launch a product, protect margins. Tag each with the cyber capability it leans on, and the CEO cockpit reports <b>how many objectives are cyber-safe</b> and which one needs attention — live from your strategy, instead of a sector-default list.</div></div><div class="badge" id="bobj">optional</div></div>
+    <div id="objRows"></div>
+    <button class="conn-go" id="addObj" type="button" style="margin-top:4px">+ Add a strategic objective</button>
+  </div>
+
   <!-- 1e · Policy & document evidence -->
   <div class="sec">
     <div class="sh"><div class="sn">✦</div><div><div class="st">Policy &amp; document evidence <span style="color:var(--muted)">(framework maturity)</span></div><div class="sd">Upload your security policies (PDF · DOCX · TXT). Nerion reads each against the NIST control catalog and scores every control’s CMMI maturity from the policy language it contains — the <b>📄 document-review</b> evidence behind your framework scores, alongside live tool telemetry. Do it here so the cockpit Framework tab opens fully evidenced.</div></div><div class="badge" id="bdoc">optional</div></div>
@@ -518,6 +525,28 @@
   }).filter(Boolean);}
   function updateStratBadge(){var n=collectStrategic().length,b=document.getElementById('bstrat');if(b){if(n){b.textContent='✓ '+n+' initiative'+(n>1?'s':'');b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}}
   (function(){var a=document.getElementById('addStrat');if(a)a.addEventListener('click',function(){addStratRow();});})();
+
+  // ---- strategic objectives (CEO "objectives protected" — cyber mapped to strategy) ----
+  // map values are the cyber-driver keys c5Objectives() recognizes ('' = no material driver).
+  var OBJ_DEP=[['','No direct cyber dependency'],['identity','Customer platform · identity & access'],['product','New product · secure-by-design'],['cost','Margins · cost efficiency'],['vendor','M&A · third-party estate'],['workforce','Workforce · people']];
+  function addObjRow(v){v=v||{};var wrap=document.getElementById('objRows');if(!wrap)return;
+    var row=document.createElement('div');row.className='obj-row';row.style.cssText='display:grid;grid-template-columns:2fr 1.6fr auto;gap:10px;margin-bottom:10px;align-items:end';
+    row.innerHTML='<div class="field"><label>Objective</label><input class="o-name" placeholder="e.g. Grow the customer platform · Enter a new market · Launch the product line"></div>'+
+      '<div class="field"><label>Cyber dependency</label><select class="o-map">'+OBJ_DEP.map(function(d){return '<option value="'+d[0]+'">'+d[1]+'</option>';}).join('')+'</select></div>'+
+      '<button class="o-del" type="button" title="Remove" style="height:38px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;color:var(--muted)">✕</button>';
+    wrap.appendChild(row);
+    if(v.name)row.querySelector('.o-name').value=v.name;
+    if(v.map)row.querySelector('.o-map').value=v.map;
+    row.querySelector('.o-del').addEventListener('click',function(){row.remove();updateObjBadge();});
+    ['input','change'].forEach(function(ev){row.addEventListener(ev,updateObjBadge);});
+    updateObjBadge();
+  }
+  function collectObjectives(){return Array.prototype.slice.call(document.querySelectorAll('#objRows .obj-row')).map(function(r){
+    var name=(r.querySelector('.o-name').value||'').trim();if(!name)return null;
+    return {name:name,map:r.querySelector('.o-map').value||''};
+  }).filter(Boolean);}
+  function updateObjBadge(){var n=collectObjectives().length,b=document.getElementById('bobj');if(b){if(n){b.textContent='✓ '+n+' objective'+(n>1?'s':'');b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}}
+  (function(){var a=document.getElementById('addObj');if(a)a.addEventListener('click',function(){addObjRow();});})();
 
   // ---- policy & document evidence (framework CMMI via /api/documents/analyze) ----
   // Writes the same localStorage keys the cockpit Framework tab reads
@@ -853,6 +882,7 @@
         policy:v('aiPolicy'),euAiAct:v('aiEuAct'),inventory:v('aiInventory')
       },
       strategicInitiatives:collectStrategic(),
+      objectives:collectObjectives(),
       growth:{
         pipelineUsd:mval('growthPipeline'),reviewBeforeWks:v('growthBefore'),reviewNowWks:v('growthNow'),
         dealsGated:v('growthDeals'),trustReviews:v('growthTrust'),
@@ -868,7 +898,7 @@
       else if(!r.ok){msg.textContent='Setup error: '+(body.error||('HTTP '+r.status));msg.style.color='var(--warn)';btn.disabled=false;return;}
     }catch(e){/* offline: still hand off; cockpit shows illustrative */}
     var seatNames={};document.querySelectorAll('.seatname').forEach(function(i){if(i.value.trim())seatNames[i.dataset.seat]=i.value.trim();});
-    try{localStorage.setItem('cyberrx_org_id',orgId);localStorage.setItem('cyberrx_org_name',org);localStorage.setItem('cyberrx_seat_names',JSON.stringify(seatNames));localStorage.setItem('cyberrx_industry',v('industry')||'');localStorage.setItem('cyberrx_frameworks',JSON.stringify(frameworksInScope));localStorage.setItem('cyberrx_currency',CUR_SYM+'|'+CUR_CODE);}catch(_){}
+    try{localStorage.setItem('cyberrx_org_id',orgId);localStorage.setItem('cyberrx_org_name',org);localStorage.setItem('cyberrx_seat_names',JSON.stringify(seatNames));localStorage.setItem('cyberrx_industry',v('industry')||'');localStorage.setItem('cyberrx_frameworks',JSON.stringify(frameworksInScope));localStorage.setItem('cyberrx_currency',CUR_SYM+'|'+CUR_CODE);localStorage.setItem('cyberrx_objectives',JSON.stringify(collectObjectives()));}catch(_){}
     // Persist the chosen ticketing system so cockpit decisions open projects there.
     var itsm=SELTOOLS.servicenow;
     try{if(itsm&&itsm.on)localStorage.setItem('cyberrx_itsm',JSON.stringify({vendor:itsm.vendor||'ServiceNow',instance:itsm.key||'',demo:!!itsm.demo}));}catch(_){}
