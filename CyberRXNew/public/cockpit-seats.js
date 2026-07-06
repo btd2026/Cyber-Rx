@@ -92,25 +92,16 @@ var SEATS = {
  },
 
  cio:{
-  eyebrow:'Operational resilience view · CIO',
-  verdict:'Every revenue-critical system is <span class="em">operating and recoverable.</span> The items to close are the slowest-recovering system on the worst-case tail and a single vendor that underpins multiple systems — both quantified below, each figure clickable to its math.',
-  sub:'Cyber and resilience for the systems that carry the business: what each is worth per hour, how fast it recovers, and where a single provider is a point of failure.',
-  brief:'Operationally, every revenue system is running and recoverable. Two items drive the resilience picture: the slowest-recovering system, which carries most of our worst-case tail, and a concentration where one provider underpins several revenue systems. Both are quantified on this seat in dollars per hour and recovery time, and each number is clickable to how it was calculated and where the data comes from.',
+  eyebrow:'CTO · Executive cockpit',
+  verdict:'The technology estate, in five tabs: <span class="em">tech risk</span> across the stack, digital-service <span class="em">reliability</span>, <span class="em">AI</span> &amp; innovation risk, the software <span class="em">supply chain</span>, and the engineering calls that need you — every figure traceable to its scanner, registry or record.',
+  sub:'Tap any tile, service, model or dependency to open the inspector — its basis, inputs and source. The same engine as the other seats; the shared identity, platform and vendor figures match exactly.',
+  brief:'From the technology seat, in five tabs. Tech risk: the stack is largely secure and modernizing, with the customer-platform identity architecture the biggest gap. Reliability: services are available and secure, with the platform’s access path the one risk. AI risk: models inventoried and shipping under governance, with AI data access relying on the identity controls that carry the gap. Supply chain: a high-severity auth-library advisory to patch on the critical path. Decisions: one to fund, one to patch. The shared figures match the other seats exactly.',
   body:function(){return (
-   sec('01','Technology enablement of business objectives','Technology carries the business — here are the systems that run it, ranked by what an hour of downtime costs, so investment and protection follow revenue. This is where cyber either enables the objectives or blocks them.',
-     '<div id="cioSystems"></div>'
-     +'<div class="cn" style="margin-top:8px">These are your crown-jewel systems — the ones the strategy depends on. Recovery and security investment should follow the systems that carry the most revenue.</div>')
-   +sec('02','Digital service reliability','The security posture of the cloud and applications your customers depend on — misconfiguration, public exposure and identity risk on the services they touch, plus any live disruption and what an outage costs.',
-     '<div id="cioDigital"></div>')
-   +sec('03','AI adoption readiness','Can we adopt AI into products and operations securely and at speed? AI systems already live, the governance framework, the acceptable-use policy and the inventory — the readiness to scale AI without scaling unmanaged risk.',
-     '<div id="cioAi"></div>')
-   +sec('04','Workforce productivity','How security affects the productivity of the people who run the business — access provisioned fast, low friction, and hours not lost to downtime or manual security steps.',
-     '<div id="cioWorkforce"></div>')
-   +sec('05','Application modernization risk','The exposure carried by end-of-life and unsupported systems still on revenue paths — they patch slower, recover slower, and drive the worst-case tail. Prioritized by revenue protected per dollar.',
-     '<div id="cioModern"></div>')
-   +sec('06','Service availability','Could the systems that carry the business keep running and recover fast enough? Immutable backups, recovery-point objective, last DR test, and where a single vendor failure leaves no failover.',
-     '<div id="cioDr"></div>'
-     +'<div id="cioDecision" style="margin-top:14px"></div>')
+   sec('01','Tech risk','','<div id="ct-tech"></div>')
+   +sec('02','Reliability','','<div id="ct-reliability"></div>')
+   +sec('03','AI risk','','<div id="ct-ai"></div>')
+   +sec('04','Supply chain','','<div id="ct-supply"></div>')
+   +sec('05','Decisions','','<div id="ct-decisions"></div>')
   );}
  },
 
