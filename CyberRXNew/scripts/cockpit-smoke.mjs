@@ -99,7 +99,7 @@ const SIGNALS = { edr_pct: { value: 98 }, mfa_pct: { value: 96 }, pam_pct: { val
 
 vm.runInContext('this.LIVE = arguments0; this.GRAPH = arguments1; this.SIGNALS = arguments2;'.replace('arguments0', JSON.stringify(LIVE)).replace('arguments1', JSON.stringify(GRAPH)).replace('arguments2', JSON.stringify(SIGNALS)), ctx);
 
-const seatIds = ['board', 'ceo', 'cfo', 'coo', 'clo', 'cro', 'cio', 'ciso', 'crev', 'cpo', 'audit'];
+const seatIds = ['board', 'ceo', 'cfo', 'coo', 'clo', 'cro', 'cio', 'ciso', 'cpo', 'audit'];
 for (const s of seatIds) {
   try { vm.runInContext(`render(${JSON.stringify(s)});`, ctx); }
   catch (e) { problems.push(`[render ${s}] ${e.message}`); }
