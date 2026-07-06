@@ -7,11 +7,15 @@
    the element renders the gray "not connected" state, never a placeholder number. */
 (function(){
   var css=[
-    '.c5head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:2px}',
-    '.c5asof{font-size:11px;color:var(--muted)}',
-    '.c5kick{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--blue);font-weight:500}',
-    '.c5verdict{font-size:22px;font-weight:500;margin-top:8px;line-height:1.3}',
-    '.c5intro{font-size:13px;color:var(--ink-2);margin-top:8px;line-height:1.55;max-width:780px}',
+    '.c5head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}',
+    '.c5id{display:flex;align-items:center;gap:10px}',
+    '.c5ic{width:34px;height:34px;border-radius:50%;background:var(--blue-soft);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:18px;flex:none}',
+    '.c5id-n{font-size:15px;font-weight:500;color:var(--ink);line-height:1.2}',
+    '.c5id-s{font-size:12px;color:var(--ink-2)}',
+    '.c5asof{font-size:12px;color:var(--muted);white-space:nowrap}',
+    '.c5kick{font-size:12px;color:var(--blue);font-weight:500}',
+    '.c5verdict{font-size:22px;font-weight:500;margin-top:4px;line-height:1.3;color:var(--ink)}',
+    '.c5intro{font-size:14px;color:var(--ink-2);margin-top:6px;line-height:1.6;max-width:620px}',
     '.c5chip{font-size:9px;font-weight:500;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:20px;border:1px solid var(--line);white-space:nowrap}',
     '.c5-live{color:var(--good);border-color:rgba(46,139,107,.35);background:rgba(46,139,107,.08)}',
     '.c5-computed{color:var(--blue);border-color:rgba(74,111,165,.35);background:rgba(74,111,165,.08)}',
@@ -19,16 +23,19 @@
     '.c5-modeled{color:var(--warn);border-color:rgba(201,162,39,.4);background:rgba(201,162,39,.1)}',
     '.c5legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--ink-2);margin-top:12px}',
     '.c5legend i{width:11px;height:11px;border-radius:3px;display:inline-block;vertical-align:-1px;margin-right:5px}',
-    '.c5tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px}',
-    '.c5tile{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--surface);cursor:pointer;transition:border-color .15s}',
-    '.c5tile:hover{border-color:var(--blue)}',
+    '.c5tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:16px}',
+    '.c5tile{border:.5px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--surface);cursor:pointer;transition:border-color .15s}',
+    '.c5tile:hover{border-color:var(--line-2)}',
     '.c5tile.c5off{opacity:.72}',
     '.c5tile-top{display:flex;justify-content:space-between;align-items:center;gap:8px}',
-    '.c5tile-l{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}',
-    '.c5pill{font-size:10px;font-weight:500;padding:1px 8px;border-radius:20px}',
+    '.c5tile-l{font-size:12px;font-weight:400;color:var(--ink-2);display:inline-flex;align-items:center;gap:5px}',
+    '.c5tile-l .ti{font-size:15px;color:var(--muted)}',
+    '.c5pill{font-size:11px;font-weight:500;padding:2px 9px;border-radius:999px}',
     '.c5pill.g{color:var(--good);background:rgba(46,139,107,.1)}.c5pill.a{color:var(--warn);background:rgba(201,162,39,.12)}.c5pill.b{color:var(--blue);background:rgba(74,111,165,.1)}.c5pill.n{color:var(--muted);background:var(--surface-2)}.c5pill.r{color:var(--crit);background:rgba(178,58,58,.1)}',
-    '.c5tile-h{font-size:17px;font-weight:500;margin-top:9px;line-height:1.3}',
-    '.c5tile-s{font-size:12px;color:var(--ink-2);margin-top:4px}',
+    '.c5tile-h{font-size:16px;font-weight:500;margin-top:8px;line-height:1.3;color:var(--ink)}',
+    '.c5tile-h.c5muted{color:var(--muted)}',
+    '.c5ic svg{width:18px;height:18px;display:block}',
+    '.c5tile-s{font-size:12.5px;color:var(--ink-2);margin-top:3px}',
     '.c5sqrow{display:flex;gap:4px;margin-top:11px;flex-wrap:wrap}',
     '.c5sq{width:13px;height:13px;border-radius:3px;background:var(--line)}',
     '.c5sq.g{background:var(--good)}.c5sq.a{background:var(--warn)}.c5sq.b{background:var(--blue)}.c5sq.r{background:var(--crit)}.c5sq.n{background:var(--line)}',
@@ -74,11 +81,11 @@
     '.c5prow-v{width:56px;text-align:right;font-size:13px;font-weight:500;flex:0 0 auto}',
     '.c5prow-d{width:52px;text-align:right;font-size:12px;flex:0 0 auto}',
     '.c5note{border:1px solid var(--line);border-radius:10px;padding:11px 14px;font-size:12px;color:var(--ink-2);margin-top:14px;line-height:1.5}',
-    '.c5bl{border:1px solid rgba(74,111,165,.3);background:rgba(74,111,165,.05);border-radius:12px;padding:16px 18px;margin-top:18px}',
-    '.c5bl-k{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--blue);font-weight:500}',
-    '.c5bl-h{font-size:15px;font-weight:500;margin-top:6px}',
-    '.c5bl-p{font-size:13px;color:var(--ink-2);margin-top:6px;line-height:1.55}',
-    '.c5btn{margin-top:12px;font-size:13px;font-weight:500;padding:9px 16px;border-radius:8px;border:0;background:var(--blue);color:#fff;cursor:pointer}',
+    '.c5bl{border:.5px solid var(--border-accent);background:var(--blue-soft);border-radius:12px;padding:14px 18px;margin-top:18px}',
+    '.c5bl-k{font-size:12px;color:var(--blue);font-weight:500}',
+    '.c5bl-h{font-size:15px;font-weight:500;margin-top:3px;color:var(--ink)}',
+    '.c5bl-p{font-size:13px;color:var(--ink-2);margin-top:3px;line-height:1.5;max-width:560px}',
+    '.c5btn{margin-top:12px;font-size:13.5px;font-weight:500;padding:9px 15px;border-radius:8px;border:0;background:var(--blue-fill);color:#fff;cursor:pointer}',
     '.c5btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink);margin-left:8px}',
     '.c5foot{font-size:11px;color:var(--muted);margin-top:14px}',
     '@media(max-width:720px){.c5tiles{grid-template-columns:1fr}.c5attgrid{grid-template-columns:repeat(2,1fr)}.c5prow-n{width:120px}}'
@@ -1016,7 +1023,27 @@ document.addEventListener('click',function(e){var el=e.target.closest('[data-c5m
 
 /* ---------- shared render helpers ---------- */
 function c5chip(label){return '<span class="c5chip c5-'+String(label).replace(/[^a-z]/g,'')+'">'+label+'</span>';}
-function c5header(){return '<div class="c5head"><div></div><div class="c5asof">as of '+c5ago()+'</div></div>';}
+/* Inline seat glyphs (Tabler-style, no CDN) — stroke inherits the badge color. */
+var C5ICON={
+  shield:'<path d="M12 3 5 6v5c0 4.2 3 7 7 8.5 4-1.5 7-4.3 7-8.5V6z"/><path d="M12 3.5v15.3"/>',
+  dollar:'<path d="M12 3v18"/><path d="M16 8.3C16 6.5 14.2 5.4 12 5.4S8 6.5 8 8.3s1.8 3 4 3.5 4 1.7 4 3.5-1.8 3-4 3-4-1.1-4-2.9"/>',
+  tower:'<path d="M4 21h16"/><path d="M7 21V6l6-3v18"/><path d="M13 9l5 2.5V21"/><path d="M9.5 8h0M9.5 12h0M9.5 16h0"/>',
+  scale:'<path d="M12 4v17"/><path d="M7.5 21h9"/><path d="M5 7h14"/><path d="M9.2 4.4a2.8 2.8 0 0 0 5.6 0"/><path d="M2.6 13l2.4-6 2.4 6a2.7 2.7 0 0 1-4.8 0z"/><path d="M16.6 13l2.4-6 2.4 6a2.7 2.7 0 0 1-4.8 0z"/>',
+  factory:'<path d="M3 21V11l5 3v-3l5 3V7l8 4v10z"/><path d="M8 21v-4M13 21v-4M18 21v-4"/>',
+  gavel:'<path d="M4 20l6.5-6.5"/><path d="M13.2 4.2l6.6 6.6-2.4 2.4-6.6-6.6z"/><path d="M9.5 7.9l6.6 6.6"/><path d="M13.5 21h7.5"/>',
+  cpu:'<rect x="7" y="7" width="10" height="10" rx="1.5"/><rect x="10" y="10" width="4" height="4"/><path d="M10 3v3M14 3v3M10 18v3M14 18v3M3 10h3M3 14h3M18 10h3M18 14h3"/>',
+  clipboard:'<path d="M9 4.5h6v3H9z"/><path d="M9 6H7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2"/><path d="M9 14l2 2 4-4"/>',
+  bank:'<path d="M3 21h18"/><path d="M5 21V10M19 21V10"/><path d="M9 21V10M15 21V10"/><path d="M3.5 10 12 4l8.5 6z"/>',
+  box:'<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4.2 7.6 12 12l7.8-4.4"/><path d="M12 12v9"/>'
+};
+var C5SEAT={ciso:{ic:'shield',nm:'CISO'},cfo:{ic:'dollar',nm:'CFO'},ceo:{ic:'tower',nm:'CEO'},cro:{ic:'scale',nm:'CRO'},coo:{ic:'factory',nm:'COO'},clo:{ic:'gavel',nm:'CLO'},cio:{ic:'cpu',nm:'CTO'},cpo:{ic:'box',nm:'CPO'},audit:{ic:'clipboard',nm:'Internal Audit'},board:{ic:'bank',nm:'Board'}};
+function c5icon(k){return '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(C5ICON[k]||C5ICON.shield)+'</svg>';}
+/* The seat header (icon badge · seat · timestamp) renders once in the hero, above the
+   tab bar — matching the mockbook. c5header() inside each tab is intentionally empty
+   so the header isn't duplicated below the tabs. */
+function c5seatHeader(){var id=(typeof CUR!=='undefined'&&CUR)?CUR:'ciso';var m=C5SEAT[id]||{ic:'shield',nm:((typeof SEAT_LABEL!=='undefined'&&SEAT_LABEL[id])||String(id).toUpperCase())};
+  return '<div class="c5head"><div class="c5id"><div class="c5ic">'+c5icon(m.ic)+'</div><div><div class="c5id-n">'+m.nm+'</div><div class="c5id-s">Executive cockpit</div></div></div><div class="c5asof">as of '+c5ago()+'</div></div>';}
+function c5header(){return '';}
 function c5shell(kick,verdict,verdictColor,intro){
   return '<div class="c5kick">'+kick+'</div><div class="c5verdict"'+(verdictColor?(' style="color:var(--'+verdictColor+')"'):'')+'>'+verdict+'</div><div class="c5intro">'+intro+'</div>';
 }
@@ -1024,7 +1051,7 @@ function c5squares(arr){return '<div class="c5sqrow">'+arr.map(function(c){retur
 function c5tile(mid,pillCls,pillTxt,subHtml,extraHtml){var m=c5get(mid);
   var head=m.connected?m.displayValue:'Not connected';var pc=m.connected?pillCls:'n';var pt=m.connected?pillTxt:'—';
   return '<div class="c5tile'+(m.connected?'':' c5off')+'" data-c5m="'+mid+'"><div class="c5tile-top"><span class="c5tile-l">'+m.name+'</span><span class="c5pill '+pc+'">'+pt+'</span></div>'+
-    '<div class="c5tile-h" style="color:var(--'+(m.color==='ink'?'ink':m.color)+')">'+head+'</div>'+
+    '<div class="c5tile-h'+(m.connected?'':' c5muted')+'">'+head+'</div>'+
     (subHtml?('<div class="c5tile-s">'+subHtml+'</div>'):'')+(extraHtml||'')+'</div>';
 }
 function c5card(mid){var m=c5get(mid);
@@ -1175,7 +1202,7 @@ function c5cfExposure(){
     c5shell('Financial exposure · are we within appetite?','Cyber exposure is within appetite — and one move keeps it there.',null,'Your modeled cyber exposure sits against the board-approved appetite, with the headroom shown below. The largest driver is a single identity gap; funding its fix protects the headroom and trims your tail. Tap any figure for the model, its inputs, and its source.')+
     '<div class="c5cards">'+c5card('exp_total')+c5card('cf_appetite')+c5card('cf_headroom')+'</div>'+
     '<div class="c5tiles">'+
-      c5tile('exp_total',alePill,aleTxt,'Your modeled cyber loss this year')+
+      c5tile('exp_identity','a','Largest',(ec.connected?'the single biggest driver — the CISO’s top ask':'the single biggest driver'))+
       c5tile('cf_tail','a','Watch',(covGap.connected?('Exceeds your insured limit by '+covGap.displayValue):'the severe-but-plausible bad year'))+
       c5tile('cf_bi','b','If down','If the customer platform is down')+
       c5tile('cf_ins_cov','a','Gap',(covGap.connected?('of the tail covered · '+covGap.displayValue+' residual gap'):'of the modeled tail covered'))+
