@@ -117,6 +117,33 @@
   .cvf-t{font-size:12px;font-weight:600;color:var(--ink);line-height:1.25}
   .cvf-s{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.3}
   .cvf-ctl{display:block;font-size:10px;color:var(--ink-2);margin-top:2px}
+  /* Crown-jewel value chain — premium flow ribbon */
+  .cvx-hero{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 2px}
+  .cvx-stat{flex:1;min-width:150px;padding:13px 15px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);border-top:3px solid var(--line-2)}
+  .cvx-stat.biz{border-top-color:var(--ink)}.cvx-stat.proc{border-top-color:var(--blue)}.cvx-stat.risk{border-top-color:var(--crit)}.cvx-stat.ctl{border-top-color:var(--good)}.cvx-stat.muted{border-top-color:var(--muted)}
+  .cvx-stat-v{font-size:23px;font-weight:800;font-family:var(--serif);line-height:1;color:var(--ink)}
+  .cvx-stat.risk .cvx-stat-v{color:var(--crit)}.cvx-stat.ctl .cvx-stat-v{color:var(--good)}
+  .cvx-stat-l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:6px;font-weight:800}
+  .cvx-list{display:flex;flex-direction:column;gap:14px;margin-top:14px}
+  .cvx-cj{border:1px solid var(--line-2);border-radius:14px;overflow:hidden;background:var(--card,#fff);box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .cvx-cjhead{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:11px 16px;background:linear-gradient(90deg,var(--surface-2),transparent);border-bottom:1px solid var(--line)}
+  .cvx-jewel{font-size:14px;font-weight:800;color:var(--ink)}
+  .cvx-tag{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:2px 9px}
+  .cvx-exposed{margin-left:auto;font-size:12.5px;font-weight:800;color:var(--crit);background:var(--crit-soft);border:1px solid rgba(229,72,77,.28);border-radius:8px;padding:3px 11px}
+  .cvx-flow{display:flex;align-items:stretch;gap:3px;overflow-x:auto;padding:15px 16px}
+  .cvx-node{flex:1;min-width:158px;background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--line-2);border-radius:11px;padding:10px 12px;display:flex;flex-direction:column}
+  .cvx-node.s-biz{border-top-color:var(--ink)}.cvx-node.s-proc{border-top-color:var(--blue)}.cvx-node.s-tech{border-top-color:var(--gold);background:var(--gold-soft)}.cvx-node.s-risk{border-top-color:var(--crit);background:var(--crit-soft)}.cvx-node.s-ctl{border-top-color:var(--good);background:var(--good-soft)}
+  .cvx-ntop{display:flex;align-items:center;gap:6px;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:6px}
+  .cvx-num{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;background:var(--ink);color:#fff;font-size:9.5px;font-weight:800;flex:0 0 auto}
+  .cvx-node.s-proc .cvx-num{background:var(--blue)}.cvx-node.s-tech .cvx-num{background:var(--gold);color:#3a2c00}.cvx-node.s-risk .cvx-num{background:var(--crit)}.cvx-node.s-ctl .cvx-num{background:var(--good)}
+  .cvx-title{font-size:12.5px;font-weight:700;color:var(--ink);line-height:1.28}
+  .cvx-sub{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.3}
+  .cvx-node.s-risk .cvx-sub{color:var(--crit);font-weight:700}
+  .cvx-ctls{display:flex;flex-direction:column;gap:3px;margin-top:1px}
+  .cvx-arrow{align-self:center;flex:0 0 15px;text-align:center;color:var(--line-2);font-size:16px;font-weight:800}
+  .cvx-shield{font-size:8.5px;font-weight:800;padding:2px 7px;border-radius:20px;margin-left:auto}
+  .cvx-shield.ok{background:var(--good);color:#fff}.cvx-shield.warn{background:var(--warn);color:#3a2c00}
+  @media(max-width:640px){.cvx-arrow{transform:rotate(90deg)}.cvx-flow{flex-direction:column}}
   /* Framework posture — bold CMMI hero + refresh-to-refresh trend */
   .fw-cmmi{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin:2px 0 12px;padding:13px 16px;background:var(--surface-2);border:1px solid var(--line-2);border-radius:12px}
   .fw-cmmi-l{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:2px}
@@ -1386,32 +1413,50 @@ function illuThreads(){return [
   {fn:'Payments',fnAnnual:200e9,proc:'Transaction processing',procDaily:411e6,frac:0.75,tech:'Payments gateway',internet:true,tier:'tier1',risk:'Ransomware outage',riskStop:411e6,riskSev:'Critical'},
   {fn:'Payments',fnAnnual:200e9,proc:'Settlement & reconciliation',procDaily:137e6,frac:0.25,tech:'Settlement engine',internet:false,tier:'tier2',risk:'Data-integrity attack',riskStop:41e6,riskSev:'High'}
 ];}
-function cvfStage(i,title,sub,cls){return '<div class="cvf-stage s'+i+(cls?(' '+cls):'')+'"><div class="cvf-t">'+title+'</div>'+(sub?'<div class="cvf-s">'+sub+'</div>':'')+'</div>';}
+function cvxStat(label,val,cls){return '<div class="cvx-stat '+cls+'"><div class="cvx-stat-v">'+val+'</div><div class="cvx-stat-l">'+label+'</div></div>';}
+function cvxNode(n,stage,title,sub,cls){return '<div class="cvx-node '+cls+'"><div class="cvx-ntop"><span class="cvx-num">'+n+'</span>'+stage+'</div><div class="cvx-title">'+title+'</div>'+(sub?'<div class="cvx-sub">'+sub+'</div>':'')+'</div>';}
+var CVX_ARROW='<div class="cvx-arrow">→</div>';
 function renderCjFlow(){
   var host=document.getElementById('cjFlow');if(!host)return;
   var threads=cjThreads(),illu=false;
   if(!threads.length){threads=illuThreads();illu=true;}
-  var stages=['Business function','Process','Technology','Cyber risk','Control'];
-  var head='<div class="cvf-head">'+stages.map(function(s,i){return '<div class="cvf-hcol s'+i+'">'+s+'</div>'+(i<4?'<div class="cvf-harrow">→</div>':'');}).join('')+'</div>';
-  var rows=threads.slice(0,6).map(function(t){
+  threads=threads.slice(0,6);
+  // Headline economics of the whole chain — the numbers a CISO leads a board with.
+  var fnMap={},daily=0,exposed=0,covAll=[];
+  threads.forEach(function(t){if(t.fn&&t.fnAnnual)fnMap[t.fn]=t.fnAnnual;daily+=Number(t.procDaily)||0;exposed+=Number(t.riskStop||t.riskExp||0);
+    var caps=t.risk?riskCaps(t.risk,t.riskSev):[];var cv=caps.map(function(k){return capDeploy(CAP_BY_KEY[k]);}).filter(function(x){return x!=null;});if(cv.length)covAll.push(Math.min.apply(null,cv));});
+  var annual=Object.keys(fnMap).reduce(function(s,k){return s+fnMap[k];},0);
+  var cov=covAll.length?Math.round(covAll.reduce(function(s,x){return s+x;},0)/covAll.length):null;
+  var hero='<div class="cvx-hero">'+
+    cvxStat('Business value protected',annual?usd(annual)+' /yr':'—','biz')+
+    cvxStat('Value flowing / day',daily?usd(daily):'—','proc')+
+    cvxStat('Exposed if unprotected',exposed?usd(exposed):'—','risk')+
+    cvxStat('Control coverage',cov!=null?cov+'%':'—',cov!=null?(cov>=75?'ctl':'risk'):'muted')+
+  '</div>';
+  var body=threads.map(function(t){
     var caps=t.risk?riskCaps(t.risk,t.riskSev):[];
-    var ctlChips=caps.slice(0,3).map(function(k){var c=CAP_BY_KEY[k];if(!c)return '';var fw=CAP_FRAMEWORK[k],p=capDeploy(c);return '<span class="cvf-ctl"><span class="cap-dot" style="background:var(--'+capColor(p)+')"></span>'+(fw&&fw.csf[0]?('<span class="fwid csf" style="margin:0">'+fw.csf[0]+'</span> '):'')+c.name.replace(/ *\(.*\)/,'')+(p==null?'':' '+p+'%')+'</span>';}).join('');
-    var minP=caps.map(function(k){return capDeploy(CAP_BY_KEY[k]);}).filter(function(x){return x!=null;});
-    var ctlCls=minP.length?capColor(Math.min.apply(null,minP)):'muted';
-    var riskV=t.riskStop!=null?usd(t.riskStop)+' exposed':(t.riskExp?usd(t.riskExp)+' breach':'');
-    var A='<div class="cvf-arrow">→</div>';
-    return '<div class="cvf-thread">'+
-      cvfStage(0,'<b>'+t.fn+'</b>',t.fnAnnual?usd(t.fnAnnual)+'/yr':'')+A+
-      cvfStage(1,t.proc,(t.frac!=null?Math.round(t.frac*100)+'% · ':'')+(t.procDaily?usd(t.procDaily)+'/day':''))+A+
-      cvfStage(2,'🖥 <b>'+t.tech+'</b>',(t.internet?'internet-facing':'internal')+(t.tier?' · '+t.tier:''))+A+
-      cvfStage(3,'⚠ '+(t.risk||'—'),riskV,(t.riskSev&&/crit/i.test(t.riskSev))?'crit':'warn')+A+
-      cvfStage(4,'🛡 Controls',ctlChips||'<span style="color:var(--muted)">no mapped control — a gap</span>',ctlCls)+
-      '</div>';
+    var chips=caps.slice(0,3).map(function(k){var c=CAP_BY_KEY[k];if(!c)return '';var fw=CAP_FRAMEWORK[k],p=capDeploy(c);return '<span class="cvf-ctl"><span class="cap-dot" style="background:var(--'+capColor(p)+')"></span>'+(fw&&fw.csf[0]?('<span class="fwid csf" style="margin:0">'+fw.csf[0]+'</span> '):'')+c.name.replace(/ *\(.*\)/,'')+(p==null?'':' '+p+'%')+'</span>';}).join('');
+    var covs=caps.map(function(k){return capDeploy(CAP_BY_KEY[k]);}).filter(function(x){return x!=null;});
+    var minCov=covs.length?Math.min.apply(null,covs):null;
+    var tag=minCov==null?'':(minCov>=75?'<span class="cvx-shield ok">✓ protected</span>':'<span class="cvx-shield warn">⚠ gap</span>');
+    var riskV=t.riskStop!=null?usd(t.riskStop):(t.riskExp?usd(t.riskExp):'');
+    var ctlNode='<div class="cvx-node s-ctl"><div class="cvx-ntop"><span class="cvx-num">5</span>🛡 Control'+tag+'</div><div class="cvx-ctls">'+(chips||'<span style="color:var(--muted);font-size:11px">no mapped control — a gap</span>')+'</div></div>';
+    return '<div class="cvx-cj">'+
+      '<div class="cvx-cjhead"><span class="cvx-jewel">🖥 '+t.tech+'</span>'+
+        (t.tier?'<span class="cvx-tag">'+t.tier+'</span>':'')+'<span class="cvx-tag">'+(t.internet?'internet-facing':'internal')+'</span>'+
+        (riskV?'<span class="cvx-exposed">'+riskV+' at risk</span>':'')+'</div>'+
+      '<div class="cvx-flow">'+
+        cvxNode(1,'Business function','<b>'+t.fn+'</b>',t.fnAnnual?usd(t.fnAnnual)+' /yr':'','s-biz')+CVX_ARROW+
+        cvxNode(2,'Process',t.proc,(t.frac!=null?Math.round(t.frac*100)+'% · ':'')+(t.procDaily?usd(t.procDaily)+'/day':''),'s-proc')+CVX_ARROW+
+        cvxNode(3,'Technology','<b>'+t.tech+'</b>',(t.internet?'internet-facing':'internal')+(t.tier?' · '+t.tier:''),'s-tech')+CVX_ARROW+
+        cvxNode(4,'Cyber risk','⚠ '+(t.risk||'—'),riskV?riskV+' exposed':'','s-risk')+CVX_ARROW+
+        ctlNode+
+      '</div></div>';
   }).join('');
-  host.innerHTML='<div class="card cvf-card"><div class="ck">Crown-jewel value chain'+(illu?' <span class="pill warn" style="font-size:9px">illustrative</span>':' '+liveTag())+'</div>'+
-    '<div class="cn" style="margin-top:6px">For each crown jewel, the unbroken line from <b>what the business does</b> to <b>the control that protects it</b>. Read any row left → right.</div>'+
-    head+'<div class="cvf-threads">'+rows+'</div>'+
-    (illu?'<div class="cn" style="margin-top:8px;color:var(--muted)">Illustrative — complete onboarding (add a business function to each process) to see your own crown-jewel value chains.</div>':'')+
+  host.innerHTML='<div class="card"><div class="ck">Crown-jewel value chain'+(illu?' <span class="pill warn" style="font-size:9px">illustrative</span>':' '+liveTag())+'</div>'+
+    '<div class="cn" style="margin-top:6px">From <b>what the business earns</b> to <b>the control that protects it</b> — one unbroken line per crown jewel, with the dollars on every link.</div>'+
+    hero+'<div class="cvx-list">'+body+'</div>'+
+    (illu?'<div class="cn" style="margin-top:10px;color:var(--muted)">Illustrative — complete onboarding (add a business function to each process) to see your own crown-jewel value chains.</div>':'')+
     '</div>';
 }
 function renderValueChain(){
