@@ -118,6 +118,9 @@ catch (e) { problems.push(`[frameworks crosswalk/cadence] ${e.message}`); }
 // Exercise the auditor-style control drill for framework controls (each FW_SEL) + AI RMF.
 try { vm.runInContext("['csf','r53','cis','soc2','hipaa'].forEach(function(s){FW_SEL=s;drillFwControl('DE.CM-01','Continuous monitoring');drillFwControl('GV.OC-01','Organizational context');}); AI_FW_ORDER.forEach(function(k){AI_FW_SEL=k;renderAiFrameworks();AI_FW_CATALOG[k].groups.forEach(function(f){f.controls.forEach(function(c){drillAiControl(k,c.id);});});}); AI_FW_SEL='rmf'; typeof auditReport==='function'&&auditReport({id:'X',name:'Y',framework:'Z',cmmi:3,method:'m',findings:'f',rec:'r',auto:false,evidence:[['a','b']]});", ctx); }
 catch (e) { problems.push(`[auditor drills + AI frameworks] ${e.message}`); }
+// Exercise the board-decision + audit-finding detail drills.
+try { vm.runInContext("typeof drillBoardAppetite==='function'&&drillBoardAppetite(); typeof drillBoardCadence==='function'&&drillBoardCadence(); typeof drillBoardRecorded==='function'&&drillBoardRecorded(0); typeof drillAuditBacklog==='function'&&drillAuditBacklog(); typeof drillAuditRecurring==='function'&&drillAuditRecurring();", ctx); }
+catch (e) { problems.push(`[board/audit detail drills] ${e.message}`); }
 // Exercise the crown-jewel threat map gap drill for every MITRE tactic.
 try { vm.runInContext("renderThreatMap(); Object.keys(TACTIC_CAPS).forEach(function(t){ typeof tmGapDrill==='function'&&tmGapDrill(t); });", ctx); }
 catch (e) { problems.push(`[threat map gap drill] ${e.message}`); }
