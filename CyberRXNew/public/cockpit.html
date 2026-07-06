@@ -4110,15 +4110,15 @@ function renderAuditFailed(){
 /* Executive Decisions — audit priorities (where to test next) + escalations. */
 function renderAuditDecisions(){
   var host=document.getElementById('auditDecisions');if(!host)return;
-  var s=auditStats(),fail=s.fail.slice().sort(function(a,b){return a.score-b.score;}),rep=sig('audit_findings_repeat');
-  var pri=fail.slice(0,4).map(function(f){return '<div class="list-row"><div class="lic w">▸</div><div class="ltxt"><b>'+f.name+'</b><div class="cn">'+f.id+' — '+(f.score===0?'no evidence on file; make this a priority to test and evidence.':'evidenced but below a passing standard; retest and remediate.')+'</div></div></div>';}).join('');
-  if(!pri)pri='<div class="cn" style="color:var(--good)">✓ No failing control to prioritize — the audit plan can rotate on its normal cadence.</div>';
-  var esc='',crit=s.fail.filter(function(f){return f.score===0;}).length;
-  if(rep!=null&&rep>0)esc+='<div class="list-row"><div class="lic c">!</div><div class="ltxt"><b>'+rep+' repeat finding'+(rep>1?'s':'')+'</b><div class="cn">Findings recurring audit-over-audit — systemic gaps not truly closed; escalate to the audit committee.</div></div></div>';
-  if(crit>0)esc+='<div class="list-row"><div class="lic c">!</div><div class="ltxt"><b>'+crit+' unevidenced control'+(crit>1?'s':'')+'</b><div class="cn">Controls with no evidence on file — assurance cannot be given until they are evidenced; escalate for tooling or a policy owner.</div></div></div>';
-  if(!esc)esc='<div class="cn" style="color:var(--good)">✓ Nothing requires escalation right now.</div>';
-  host.innerHTML='<div class="card"><div class="ck">Audit priorities</div><div style="margin-top:8px">'+pri+'</div><div class="cn" style="margin-top:8px">Where to point the next audit — ranked by the controls least able to give assurance today.</div></div>'+
-    '<div class="card" style="margin-top:12px"><div class="ck">Escalations</div><div style="margin-top:8px">'+esc+'</div></div>';
+  var s=auditStats(),fail=s.fail.slice().sort(function(a,b){return a.score-b.score;}),rep=sig('audit_findings_repeat'),crit=s.fail.filter(function(f){return f.score===0;}).length,top=fail[0];
+  var priV=fail.length?(fail.length+' to test'):'On cadence',priC=fail.length?'warn':'good';
+  var priD=top?('Point the next audit at the controls least able to give assurance today — starting with <b>'+top.id+' '+top.name+'</b>'+(fail.length>1?(' and '+(fail.length-1)+' other'+(fail.length-1>1?'s':'')):'')+'.'):'No failing control to prioritize — the audit plan can rotate on its normal cadence.';
+  var escN=(rep||0)+crit,escV=escN>0?(escN+' to escalate'):'None',escC=escN>0?'crit':'good';
+  var escD=escN>0?((rep>0?(rep+' repeat finding'+(rep>1?'s':'')+' recurring audit-over-audit — systemic gaps not truly closed'):'')+(rep>0&&crit>0?' · ':'')+(crit>0?(crit+' unevidenced control'+(crit>1?'s':'')+' that cannot give assurance until evidenced'):'')+' — escalate to the audit committee.'):'Nothing requires escalation right now.';
+  host.innerHTML='<div class="card"><div class="ck">Decisions internal audit brings to the committee</div><div style="margin-top:8px">'+
+    ceoRow('Audit priorities',priV,priC,priD)+
+    ceoRow('Escalations',escV,escC,escD)+
+    '</div><div class="cn" style="margin-top:8px">Where to point the next audit and what to escalate — ranked by the controls least able to give assurance today, evidenced live from the control universe.</div></div>';
 }
 function renderAuditCoverage(){
   var host=document.getElementById('auditCoverage');if(!host)return;
