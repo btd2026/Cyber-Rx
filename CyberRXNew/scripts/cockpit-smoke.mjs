@@ -64,6 +64,9 @@ const problems = [];
 function run(label, code) { try { vm.runInContext(code, ctx, { filename: label }); } catch (e) { problems.push(`[load ${label}] ${e.message}`); } }
 
 run('cockpit-seats.js', seats);
+// ciso5.js loads (in the browser) right after cockpit-seats.js and before the
+// second inline block — which calls c5Health() at top level. Match that order.
+run('ciso5.js', fs.readFileSync(ROOT + '/ciso5.js', 'utf8'));
 inline.forEach((code, i) => run(`inline#${i + 1}`, code));
 
 // Realistic live payload exercising every branch.
@@ -105,7 +108,7 @@ for (const s of seatIds) {
   catch (e) { problems.push(`[render ${s}] ${e.message}`); }
 }
 // Exercise the live-only renderers directly too.
-for (const fn of ['applyLive', 'renderChain', 'renderProcBars', 'renderCioSystems', 'renderUnderAttack', 'renderThreatMap', 'renderCjFlow', 'renderCpoQuality', 'renderCpoVelocity', 'renderCioWorkforce', 'renderCpoLaunch', 'renderCpoSbd', 'renderCooSupply', 'renderCpoSupply', 'renderCloContract', 'renderAuditRepeat', 'renderValueChain', 'renderBoard', 'renderEarnings', 'renderCroPortfolio', 'renderRoi', 'renderSignals', 'renderAiRisk', 'renderTrend', 'renderInitiatives', 'renderOversight', 'renderMateriality', 'renderCfoFraud', 'renderCroKri', 'renderCloOps', 'renderThreatIntel', 'renderDrReadiness', 'renderPeerBench', 'renderPeerCompare', 'renderCisoVendors', 'renderCisoDecisions', 'renderCfoDecision', 'renderCroDecision', 'renderCioDecision', 'renderCooDecision', 'renderCloDecision', 'renderCpoDecision', 'renderAuditCoverage', 'renderAuditReadiness', 'renderAuditFailed', 'renderAuditDecisions', 'renderCeoRiskScore', 'renderCeoTopThreats', 'renderCeoTopIssues', 'renderCeoStrategyRisks', 'renderCeoCustomerProtect', 'renderCeoBoardKpis', 'renderCeoExecDecisions', 'renderBoardPack', 'openBoardPack', 'closeBoardPack']) {
+for (const fn of ['applyLive', 'renderChain', 'renderProcBars', 'renderCioSystems', 'renderUnderAttack', 'renderThreatMap', 'renderCjFlow', 'renderCpoQuality', 'renderCpoVelocity', 'renderCioWorkforce', 'renderCpoLaunch', 'renderCpoSbd', 'renderCooSupply', 'renderCpoSupply', 'renderCloContract', 'renderAuditRepeat', 'renderValueChain', 'renderBoard', 'renderEarnings', 'renderCroPortfolio', 'renderRoi', 'renderSignals', 'renderAiRisk', 'renderTrend', 'renderInitiatives', 'renderOversight', 'renderMateriality', 'renderCfoFraud', 'renderCroKri', 'renderCloOps', 'renderThreatIntel', 'renderDrReadiness', 'renderPeerBench', 'renderPeerCompare', 'renderCisoVendors', 'renderCisoDecisions', 'c5Health', 'c5Exposure', 'c5Effect', 'c5Threats', 'c5Peers', 'renderCfoDecision', 'renderCroDecision', 'renderCioDecision', 'renderCooDecision', 'renderCloDecision', 'renderCpoDecision', 'renderAuditCoverage', 'renderAuditReadiness', 'renderAuditFailed', 'renderAuditDecisions', 'renderCeoRiskScore', 'renderCeoTopThreats', 'renderCeoTopIssues', 'renderCeoStrategyRisks', 'renderCeoCustomerProtect', 'renderCeoBoardKpis', 'renderCeoExecDecisions', 'renderBoardPack', 'openBoardPack', 'closeBoardPack']) {
   try { vm.runInContext(`typeof ${fn}==='function' && ${fn}();`, ctx); }
   catch (e) { problems.push(`[${fn}] ${e.message}`); }
 }
@@ -118,6 +121,9 @@ catch (e) { problems.push(`[frameworks crosswalk/cadence] ${e.message}`); }
 // Exercise the auditor-style control drill for framework controls (each FW_SEL) + AI RMF.
 try { vm.runInContext("['csf','r53','cis','soc2','hipaa'].forEach(function(s){FW_SEL=s;drillFwControl('DE.CM-01','Continuous monitoring');drillFwControl('GV.OC-01','Organizational context');}); AI_FW_ORDER.forEach(function(k){AI_FW_SEL=k;renderAiFrameworks();AI_FW_CATALOG[k].groups.forEach(function(f){f.controls.forEach(function(c){drillAiControl(k,c.id);});});}); AI_FW_SEL='rmf'; typeof auditReport==='function'&&auditReport({id:'X',name:'Y',framework:'Z',cmmi:3,method:'m',findings:'f',rec:'r',auto:false,evidence:[['a','b']]});", ctx); }
 catch (e) { problems.push(`[auditor drills + AI frameworks] ${e.message}`); }
+// Exercise the CISO five-tab metric registry + inspector for every metric id.
+try { vm.runInContext("var C5IDS=['active_compromise','investigations','capability_coverage','assets_monitored','thirdparty_risk','direction','exp_total','exp_conc','exp_identity','exp_patch','exp_vendor','exp_endpoint','exp_email','eff_removed','eff_spend','eff_return','ctl_identity','ctl_email','ctl_edr','ctl_vuln','ctl_dlp','threat_status','peer_maturity','peer_median','peer_position','dom_asset','dom_iam','dom_edp','dom_detect','dom_ir','dom_tpr']; C5IDS.forEach(function(id){ var m=c5get(id); if(!m||typeof m.displayValue==='undefined') throw new Error('c5get('+id+') bad'); c5Inspect(id); }); Object.keys(TACTIC_CAPS).forEach(function(t){ c5get('tac_'+t); c5Inspect('tac_'+t); }); c5Connect('EDR');", ctx); }
+catch (e) { problems.push(`[c5 metrics + inspector] ${e.message}`); }
 // Exercise the board-decision + audit-finding detail drills.
 try { vm.runInContext("typeof drillBoardAppetite==='function'&&drillBoardAppetite(); typeof drillBoardCadence==='function'&&drillBoardCadence(); typeof drillBoardRecorded==='function'&&drillBoardRecorded(0); typeof drillAuditBacklog==='function'&&drillAuditBacklog(); typeof drillAuditRecurring==='function'&&drillAuditRecurring();", ctx); }
 catch (e) { problems.push(`[board/audit detail drills] ${e.message}`); }
