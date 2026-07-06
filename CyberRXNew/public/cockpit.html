@@ -2260,7 +2260,8 @@ function renderSignals(){
   if(!SIGNALS)return;
   var oi=sig('open_incidents');
   if(oi!=null){var el=document.getElementById('lvThreatStatus');if(el)el.textContent=oi>0?(oi+' open incident'+(oi>1?'s':'')):'No active compromise';
-    var n=document.getElementById('lvThreatNote');if(n)n.innerHTML='<span class="pill good">live</span> from your SIEM'+(sig('mttd_hrs')!=null?(' · MTTD '+sig('mttd_hrs')+'h'):'');}
+    var n=document.getElementById('lvThreatNote');if(n)n.innerHTML='<span class="pill good">live</span> from your SIEM'+(sig('mttd_hrs')!=null?(' · MTTD '+sig('mttd_hrs')+'h'):'');
+    setTxt('lvCloNotifCount',String(oi));}
   var host=document.getElementById('cisoCoverage');var rows=[];
   if(sig('edr_pct')!=null)rows.push({k:'Endpoint detection (EDR)',v:sig('edr_pct')+'%',cls:sig('edr_pct')>=95?'good':'warn'});
   if(sig('mfa_pct')!=null)rows.push({k:'Multi-factor (MFA)',v:sig('mfa_pct')+'%',cls:sig('mfa_pct')>=95?'good':'warn'});
@@ -3762,6 +3763,8 @@ function renderCloOps(){
 }
 function renderMateriality(){
   var host=document.getElementById('cloMateriality');if(!host)return;var m=loadMat();
+  // Drive the §01 "Materiality standing" tile from the actual determination (not a fixed claim).
+  setTxt('lvCloMatStanding', m?(m.determination==='material'?'Material — clock running':'Not material — recorded'):'Not yet determined');
   var cloName=(seatNames()['clo']||SEAT_LABEL['clo']||'General Counsel');
   if(!m){
     host.innerHTML='<div class="card"><div class="ck">Materiality determination</div><div class="cn" style="margin-top:6px">When an incident occurs, record the board’s materiality call here — it starts the SEC 4-business-day clock and becomes the evidenced, timestamped record for your disclosure defense.</div>'+
