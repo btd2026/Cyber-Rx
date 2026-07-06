@@ -1214,12 +1214,16 @@ function drillEffectiveness(){var eff=controlsEffUsd();
     '<div class="ev-sec">The method (FAIR-aligned)</div>'+gRow('Inherent exposure','risk with controls absent')+gRow('− Residual exposure','risk that remains today')+gRow('= Risk removed',usd(eff)+' (modeled)')+
     '<div class="ev-sec">How to make it real</div><div class="drill-p">Connect your control catalog / GRC so each control’s inherent-vs-residual delta is measured from evidence rather than modeled. The figure then updates per control and becomes audit-defensible — the honest upgrade path for this number.</div>';}
 function drillTrajectory(){var tr=trajInfo();
+  var howNote='<div class="ev-sec">How this is measured</div><div class="drill-p" style="color:var(--muted)">Nerion records your expected loss on every analysis and rolls the points up by calendar quarter — a quarter’s value is the latest analysis recorded in it. Two or more quarters produce the trend line and the up/down delta. Real history, nothing back-filled or invented.</div>';
   if(tr.two){var down=tr.down;
     return '<div class="drill-hero'+(down?' good':'')+'" style="color:var(--'+(down?'good':'crit')+')">'+tr.val+'</div>'+sparkSvg(tr.vals,down)+
-      '<div class="drill-p">Your expected loss <b>quarter over quarter</b>. '+(down?'Down':'Up')+' across '+tr.vals.length+' quarters — a falling line means the controls are removing more risk than the business is adding.</div>'+
-      '<div class="ev-sec">Recorded quarters</div>'+tr.t.map(function(p){return gRow(p.label,usd(p.ale));}).join('')+
-      '<div class="drill-p" style="color:var(--muted)">Each quarter is the latest analysis recorded in it — Nerion records your position on every analysis, then rolls them up by quarter. Real history, nothing back-filled.</div>';}
-  return '<div class="drill-hero">'+(tr.ale>0?usd(tr.ale):'—')+'</div><div class="drill-p">This is your <b>'+((tr.t&&tr.t.length===1)?('current quarter ('+tr.t[0].label+')'):'baseline')+'</b>. From here each quarter records a point and this becomes your real <b>quarter-over-quarter</b> trajectory. Because nothing is invented, the line starts at one point and grows — it extends when the next quarter is recorded.</div>';}
+      '<div class="drill-p">Your expected loss <b>quarter over quarter</b>. '+(down?'<b style="color:var(--good)">Down</b>':'<b style="color:var(--crit)">Up</b>')+' across '+tr.vals.length+' quarters — a falling line means your controls are removing more risk than the business is adding.</div>'+
+      '<div class="ev-sec">Recorded quarters</div>'+tr.t.map(function(p){return gRow(p.label,usd(p.ale));}).join('')+howNote;}
+  var single=!!(tr.t&&tr.t.length===1),label=single?tr.t[0].label:null;
+  return '<div class="drill-hero">'+(tr.ale>0?usd(tr.ale):'—')+'</div>'+
+    '<div class="drill-p"><span class="tag" style="font-size:10px;background:var(--surface-2);color:var(--ink-2);padding:2px 8px;border-radius:20px">'+(single?'Current quarter · '+label:'Baseline')+'</span> This is your expected loss for '+(single?('the current quarter (<b>'+label+'</b>)'):'the baseline period')+'. From here each quarter records one point and this becomes your real <b>quarter-over-quarter</b> trajectory — the line starts at one point and grows when the next quarter is recorded.</div>'+
+    (single?('<div class="ev-sec">Recorded quarters</div>'+gRow(label,usd(tr.ale))):'')+
+    howNote;}
 function drillDetection(){var mttd=sig('mttd_hrs');
   return '<div class="drill-hero" style="color:var(--'+(mttd!=null?'good':'muted')+')">'+(mttd!=null?(mttd+' h to detect'):'not connected')+'</div>'+
     '<div class="drill-p">How fast you would see a real attack (MTTD) and contain it (MTTR). Detection speed is the single biggest lever on breach cost — every hour of attacker dwell time compounds the loss.</div>'+
@@ -3274,24 +3278,62 @@ function renderCisoVendors(){
     :'<span class="pill mod" style="font-size:9px">modeled</span> No monitoring service connected — connect <b>SecurityScorecard · BitSight · UpGuard · Panorays · Black Kite</b> at onboarding for live ratings';
   var refreshedTs=vendorRefreshTs();
   var summary='<div class="grid3" style="margin-bottom:2px">'+
-    '<div class="card"><div class="ck">Vendors monitored</div><div class="cv" style="font-size:22px">'+p.count+'</div><div class="cn">'+p.tier1+' tier-1 · '+p.tier2+' tier-2</div></div>'+
-    '<div class="card"><div class="ck">Posing risk today</div><div class="cv" style="font-size:22px;color:var(--'+(p.critical?'crit':(p.at_risk?'warn':'good'))+')">'+p.at_risk+' / '+p.count+'</div><div class="cn">below adequate ('+(p.critical?p.critical+' critical':'none critical')+')</div></div>'+
-    '<div class="card"><div class="ck">Average rating</div><div class="cv" style="font-size:22px;color:var(--'+capColor(p.avg_score)+')">'+(p.avg_score!=null?p.avg_score+'/100':'—')+'</div><div class="cn">across your portfolio</div></div>'+
+    '<div class="card optile" data-vdrill="all"><div class="ck">Vendors monitored</div><div class="cv" style="font-size:22px">'+p.count+'</div><div class="cn">'+p.tier1+' tier-1 · '+p.tier2+' tier-2 <span class="drill-cta">details ▸</span></div></div>'+
+    '<div class="card optile" data-vdrill="risk"><div class="ck">Posing risk today</div><div class="cv" style="font-size:22px;color:var(--'+(p.critical?'crit':(p.at_risk?'warn':'good'))+')">'+p.at_risk+' / '+p.count+'</div><div class="cn">below adequate ('+(p.critical?p.critical+' critical':'none critical')+') <span class="drill-cta">details ▸</span></div></div>'+
+    '<div class="card optile" data-vdrill="avg"><div class="ck">Average rating</div><div class="cv" style="font-size:22px;color:var(--'+capColor(p.avg_score)+')">'+(p.avg_score!=null?p.avg_score+'/100':'—')+'</div><div class="cn">across your portfolio <span class="drill-cta">details ▸</span></div></div>'+
     '</div>';
   var bar='<div class="vend-bar"><div class="vend-prov">'+provLine+'</div>'+
     '<div class="vend-refresh"><span class="cn">Refreshed <b>'+vendorAgo(refreshedTs)+'</b> · auto-refreshes weekly'+(vendorDue()&&!VENDOR_BUSY?' <span style="color:var(--warn)">· due</span>':'')+'</span>'+
     '<button class="vend-btn" id="vendConnBtn">'+(vs?'⚙ Change key':'🔌 Connect a service')+'</button>'+
     '<button class="vend-btn" id="vendRefreshBtn"'+(VENDOR_BUSY?' disabled':'')+'>'+(VENDOR_BUSY?'⟳ refreshing…':'↻ Refresh now')+'</button></div></div>'+
     (VENDOR_SHOWCONNECT?vendorConnectForm(vs):'');
-  var listHtml=top.map(function(v){return vendorScoreRow(v,vs);}).join('');
-  host.innerHTML='<div class="card"><div class="ck">Top third-party risk — worst-rated first</div>'+
-    '<div class="cn" style="margin-top:4px">'+provLine.replace(/<span class="pill[^>]*>[^<]*<\/span> /,'')+'.</div>'+
-    bar+summary+'<div style="margin-top:10px">'+listHtml+'</div>'+
-    '<div class="cn" style="margin-top:10px">Higher is safer, on your color scale — '+scaleLegend()+'. Every provider’s native scale (BitSight 250–900, letter grades, 0–100) is normalized to one 0–100 axis so vendors are directly comparable. Showing the 5 worst of '+p.count+'.</div></div>';
+  // Only the vendors posing risk today (below the adequate line, <75) — worst first,
+  // so the count and the list always agree. Each row deep-links to the monitoring tool.
+  var atRisk=(p.vendors||[]).filter(function(v){return v.score!=null&&v.score<75;}).sort(function(a,b){return a.score-b.score;});
+  var listHtml=atRisk.length
+    ? atRisk.map(function(v){return vendorScoreRow(v,vs);}).join('')
+    : '<div class="card" style="margin-top:2px"><div class="cn" style="color:var(--good)">✓ All '+p.count+' monitored vendors are at or above the adequate line (≥75). Nothing posing risk today.</div></div>';
+  host.innerHTML='<div class="card"><div class="ck">Third-party risk — vendors posing risk today</div>'+
+    '<div class="cn" style="margin-top:4px">'+provLine.replace(/<span class="pill[^>]*>[^<]*<\/span> /,'')+'. '+(vs?'Click any vendor to open its live page in '+vs.vendor+'.':'')+'</div>'+
+    bar+summary+'<div class="en-lbl" style="margin:14px 0 6px">'+atRisk.length+' vendor'+(atRisk.length===1?'':'s')+' below the adequate line — act on the worst first</div><div>'+listHtml+'</div>'+
+    '<div class="cn" style="margin-top:10px">Higher is safer, on your color scale — '+scaleLegend()+'. Every provider’s native scale (BitSight 250–900, letter grades, 0–100) is normalized to one 0–100 axis so vendors are directly comparable. The tiles above open the full portfolio and the calculation.</div></div>';
+  host.querySelectorAll('[data-vdrill]').forEach(function(el){el.onclick=function(){var k=el.dataset.vdrill;
+    if(k==='all')openDrill('All monitored vendors',drillVendorAll(p,vs));
+    else if(k==='risk')openDrill('Vendors posing risk today',drillVendorRisk(p,vs));
+    else if(k==='avg')openDrill('Average rating — how it’s computed',drillVendorAvg(p,vs));};});
   var rb=document.getElementById('vendRefreshBtn');if(rb)rb.onclick=function(){vendorFetch(true);};
   var cb=document.getElementById('vendConnBtn');if(cb)cb.onclick=function(){VENDOR_SHOWCONNECT=!VENDOR_SHOWCONNECT;VENDOR_CONNMSG='';renderCisoVendors();};
   var cc=document.getElementById('vendConnCancel');if(cc)cc.onclick=function(){VENDOR_SHOWCONNECT=false;VENDOR_CONNMSG='';renderCisoVendors();};
   var cg=document.getElementById('vendConnGo');if(cg)cg.onclick=function(){var sel=document.getElementById('vendProvSel'),k=document.getElementById('vendKeyInp');var prov=sel?sel.value:'';var key=k?String(k.value||'').trim():'';if(!key){VENDOR_CONNMSG='stored';}vendorConnect(prov,key);};
+}
+/* Deep-link a vendor name to its page on the connected monitoring tool. */
+function vendorProviderUrl(v,vs){return vs?vendorUrl(vs.vendor,v.domain||vendorDomain(v.name)):null;}
+function vendorLink(v,vs){var u=vendorProviderUrl(v,vs);return u?('<a href="'+u+'" target="_blank" rel="noopener" style="color:var(--blue);font-weight:800;text-decoration:none">'+v.name+' ↗</a>'):('<b>'+v.name+'</b>');}
+function vendorTierN(v){return (/1/.test(v.tier))?'1':'2';}
+/* Tile drill — the full monitored portfolio, worst-first, each opening the provider. */
+function drillVendorAll(p,vs){
+  var rows=(p.vendors||[]).map(function(v){var cls=v.color||capColor(v.score);
+    return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+cls+')"></span>'+vendorLink(v,vs)+' <span class="vend-tier">tier '+vendorTierN(v)+'</span><span class="drow-tool" style="color:var(--'+cls+')">'+(v.score!=null?v.score+'/100':'—')+'</span></div>'+capBar(v.score||0)+'</div>';}).join('');
+  return '<div class="drill-p">All <b>'+p.count+'</b> tier-1/2 vendors you monitor ('+p.tier1+' tier-1 · '+p.tier2+' tier-2), worst-rated first. '+(vs?('Ratings via <b>'+vs.vendor+'</b>'+(p.any_live?' — live from their portal.':' — modeled until the '+vs.vendor+' API is credentialed.')):'No monitoring service connected.')+' <b>Click any vendor</b> to open its page in '+(vs?vs.vendor:'the provider')+' for the findings to act on.</div>'+rows;
+}
+/* Tile drill — only the vendors posing risk today, with the CISO action per vendor. */
+function drillVendorRisk(p,vs){
+  var at=(p.vendors||[]).filter(function(v){return v.score!=null&&v.score<75;}).sort(function(a,b){return a.score-b.score;});
+  if(!at.length)return '<div class="drill-hero good">✓ No vendor posing risk today</div><div class="drill-p">All '+p.count+' monitored vendors are at or above the adequate line (≥75).</div>';
+  var rows=at.map(function(v){var cls=v.color||capColor(v.score),crit=v.score<50,u=vendorProviderUrl(v,vs);
+    return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+cls+')"></span>'+vendorLink(v,vs)+' <span class="vend-tier">tier '+vendorTierN(v)+'</span><span class="drow-tool" style="color:var(--'+cls+')">'+v.score+'/100</span></div>'+capBar(v.score)+
+      '<div class="drow-need">'+(crit?'⚠ <b>Critical</b> — request remediation evidence now, review the exposure you carry through this vendor, and consider a compensating control or contractual action.':'Below target — monitor open findings and confirm remediation timelines; re-review at the next refresh.')+(u?(' <a href="'+u+'" target="_blank" rel="noopener" style="color:var(--blue);font-weight:800">Open the findings in '+vs.vendor+' ↗</a>'):'')+'</div></div>';}).join('');
+  return '<div class="drill-p"><b>'+at.length+'</b> of '+p.count+' monitored vendors are below the adequate line (score &lt; 75) — the exposure you carry through someone else’s security. Act on the worst first; each opens the live findings in '+(vs?vs.vendor:'the provider')+'.</div>'+rows;
+}
+/* Tile drill — how the average rating is computed + the portfolio distribution. */
+function drillVendorAvg(p,vs){
+  var bands={good:0,blue:0,warn:0,crit:0};(p.vendors||[]).forEach(function(v){if(v.score==null)return;bands[capColor(v.score)]++;});
+  return '<div class="drill-hero" style="color:var(--'+capColor(p.avg_score)+')">'+(p.avg_score!=null?p.avg_score+'/100':'—')+'</div>'+
+    '<div class="drill-p">The mean of every monitored vendor’s normalized rating. Each provider’s native scale is converted to one <b>0–100</b> axis (higher = safer) so vendors are directly comparable:</div>'+
+    '<div class="formula" style="margin:6px 0">BitSight (score−250)/650×100 · letter grades A–F → 97…35 · SecurityScorecard / UpGuard / Panorays / Black Kite native 0–100</div>'+
+    '<div class="ev-sec">Portfolio distribution</div>'+
+    gRow('🟢 Strong (≥90)',bands.good)+gRow('🔵 Adequate (75–89)',bands.blue)+gRow('🟡 Watch (50–74)',bands.warn)+gRow('🔴 At risk (&lt;50)',bands.crit)+
+    '<div class="drill-p" style="color:var(--muted);margin-top:8px">'+(vs?('Ratings via '+vs.vendor+(p.any_live?' — live from the portal.':' — modeled until the API is credentialed.')):'No monitoring service connected.')+'</div>';
 }
 /* ---- the four tiles ---- */
 /* The "Are we under attack?" status tile — lives in the Under-attack tab's War
