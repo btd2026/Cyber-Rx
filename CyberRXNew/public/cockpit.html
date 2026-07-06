@@ -644,7 +644,7 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderCisoDecisions();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderAuditCoverage();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTopThreats();renderCeoTopIssues();renderCeoStrategyRisks();renderCeoCustomerProtect();renderCeoBoardKpis();renderCeoExecDecisions();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderCisoDecisions();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderAuditCoverage();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoRiskScore();renderCeoTopThreats();renderCeoTopIssues();renderCeoStrategyRisks();renderCeoCustomerProtect();renderCeoBoardKpis();renderCeoExecDecisions();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
@@ -2164,6 +2164,7 @@ function applyLive(){if(!LIVE)return;var e=LIVE.economics||{},r=e.ratios||{},ap=
   var revDay=earn.revenue_at_risk_per_day!=null?earn.revenue_at_risk_per_day:(rsx.top_downtime_per_hr?rsx.top_downtime_per_hr*24:null);
   if(revDay!=null)setTxt('lvRevRisk',usd(revDay)+' / day');
   if(st.worst_case_usd)setTxt('lvRansom',usd(st.worst_case_usd));
+  if(ins.limit)setTxt('lvCoverageTile',usd(ins.limit));
   if(ale>0){setTxt('lvSpineExpo',usd(ale));setTxt('lvSpineTail',usd(tail));setTxt('lvExpo',usd(ale));setTxt('lvTail',usd(tail));setTxt('lvExpoCfo',usd(ale));setTxt('lvTailCfo',usd(tail));setTxt('lvExpoCiso',usd(ale));
     // CEO/board financial framing — % of revenue, appetite status, materiality
     if(r.pct_of_revenue!=null)setTxt('lvPctRev','≈'+pct(r.pct_of_revenue,r.pct_of_revenue<0.01?2:1)+' of revenue');
@@ -2282,7 +2283,7 @@ function renderSignals(){
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();if(typeof renderCisoOps==='function'){renderCisoOps();renderUnderAttack();}}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderCisoDecisions();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderAuditCoverage();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTopThreats();renderCeoTopIssues();renderCeoStrategyRisks();renderCeoCustomerProtect();renderCeoBoardKpis();renderCeoExecDecisions();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderCisoDecisions();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderAuditCoverage();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoRiskScore();renderCeoTopThreats();renderCeoTopIssues();renderCeoStrategyRisks();renderCeoCustomerProtect();renderCeoBoardKpis();renderCeoExecDecisions();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -2418,6 +2419,30 @@ function renderCeoHealth(){
 /* ---- CEO seat, business-language panels (no jargon) — each computes from LIVE and
    degrades to an honest connect/illustrative state, never a fabricated number. ---- */
 function ceoRow(k,v,c,d){return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+c+')"></span><b>'+k+'</b><span class="drow-tool" style="color:var(--'+c+')">'+v+'</span></div><div class="drow-need">'+d+'</div></div>';}
+/* Overall cyber risk score · resilience · trend — the three headline reads. The score
+   is a modeled 0-100 blend of appetite posture, control coverage, resilience and
+   active incidents (higher = safer); labeled modeled, every part drills to evidence. */
+function renderCeoRiskScore(){
+  var host=document.getElementById('ceoRiskScore');if(!host)return;
+  var ec=(LIVE&&LIVE.economics)||{},ap=ec.appetite||{},rs=(LIVE&&LIVE.resilience)||{},oi=sig('open_incidents'),tr=trajInfo(),parts=[];
+  if(ap.appetite)parts.push(ap.within!==false&&ap.tail_within!==false?1:(ap.within!==false?0.6:0.3));
+  var cvs=(typeof CAPS!=='undefined')?CAPS.map(function(c){return capDeploy(c);}).filter(function(x){return x!=null;}):[];
+  if(cvs.length)parts.push(Math.min(1,cvs.reduce(function(s,x){return s+x;},0)/cvs.length/100));
+  if(rs.worst_recovery_hours!=null)parts.push(rs.worst_recovery_hours<=24?1:rs.worst_recovery_hours<=72?0.6:0.3);
+  if(oi!=null)parts.push(oi>0?0.3:1);
+  var score=parts.length?Math.round(parts.reduce(function(s,x){return s+x;},0)/parts.length*100):null;
+  var sc=score==null?'muted':score>=80?'good':score>=60?'blue':score>=40?'warn':'crit';
+  var slab=score==null?'—':score>=80?'Strong':score>=60?'Moderate':score>=40?'Elevated risk':'High risk';
+  var resil=rs.worst_recovery_hours!=null?(rs.worst_recovery_hours<=24?{s:'Strong',c:'good'}:{s:'Slow to recover',c:'warn'}):{s:'Map recovery',c:'muted'};
+  if(rs.top_vendor_blast&&rs.top_vendor_blast.vendor&&resil.c==='good')resil={s:'Vendor single-point',c:'warn'};
+  var trend=tr.two?(tr.down?{s:'Improving',c:'good'}:{s:'Declining',c:'crit'}):{s:'Baseline',c:'muted'};
+  function tile(k,big,sub,c){return '<div class="card"><div class="ck">'+k+'</div><div class="cv" style="font-size:26px;font-family:var(--serif);margin-top:4px;color:var(--'+c+')">'+big+'</div><div class="cn" style="margin-top:2px">'+sub+'</div></div>';}
+  host.innerHTML='<div class="grid3">'+
+    tile('Overall cyber risk score',(score!=null?score+'<span style="font-size:14px;color:var(--muted)"> / 100</span>':'—'),(score!=null?(slab+' <span class="pill mod" style="font-size:8px">modeled</span>'):'complete go-live to score'),sc)+
+    tile('Overall resilience',resil.s,rs.worst_recovery_hours!=null?('worst recovery '+hrsToStr(rs.worst_recovery_hours)):'can we keep operating &amp; recover',resil.c)+
+    tile('Trend',trend.s,tr.two?'expected loss over time':'builds as quarters record',trend.c)+
+    '</div><div class="cn" style="margin-top:8px">The score blends where we sit vs the board’s appetite, how much of our core defenses are deployed, how fast we recover, and whether any incident is active — higher is safer, and every part drills to its evidence.</div>';
+}
 /* Top cyber threats to the business — sector threat activity in business terms. */
 function renderCeoTopThreats(){
   var host=document.getElementById('ceoTopThreats');if(!host)return;
@@ -2447,21 +2472,32 @@ function renderCeoTopIssues(){
 function renderCeoStrategyRisks(){
   var host=document.getElementById('ceoStrategyRisks');if(!host)return;
   var ai=(LIVE&&LIVE.aiRisk&&LIVE.aiRisk.governance)||null,rs=(LIVE&&LIVE.resilience)||{},rows='';
-  if(ai){var ung=/none/i.test(ai.framework||'');rows+=ceoRow('AI initiatives',ung?'Ungoverned':'Governed',ung?'crit':'good',ai.systems?(ai.systems+' AI system'+(ai.systems>1?'s':'')+' in production — '+(ung?'no governance framework adopted yet; the fastest-rising risk to get ahead of.':'operating under a recognized governance framework.')):'AI governance is in place.');}
-  else rows+=ceoRow('AI initiatives','Not assessed','muted','Add your AI-governance answers in onboarding to see whether AI in the business is governed before it scales.');
-  rows+=ceoRow('Product launches','Connect pipeline','muted','Connect your delivery pipeline (GitHub / Snyk) to flag any launch shipping with open critical security findings — so a release never ships known risk to customers.');
-  if(rs.top_vendor_blast&&rs.top_vendor_blast.vendor){var v=rs.top_vendor_blast;rows+=ceoRow('Supply chain &amp; critical dependencies','Concentration','warn',v.vendor+' underpins '+((v.systems||[]).length)+' critical systems'+(v.per_hr?(' · '+usd(v.per_hr)+'/hr at risk if it fails'):'')+' — a single point of failure to de-risk.');}
-  else rows+=ceoRow('Supply chain &amp; critical dependencies','Add vendors','muted','Add your tier-1/2 vendors in onboarding to see where a single supplier is a systemic dependency.');
-  host.innerHTML='<div class="card"><div class="ck">Where cyber puts the strategy at risk</div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">The parts of the plan carrying cyber risk — AI adoption, product launches, and the supply-chain dependencies that could take critical systems down.</div></div>';
+  // 1 · Strategic initiatives at cyber risk
+  rows+=ceoRow('Strategic initiatives at cyber risk','See go / no-go below','blue','A cyber go / no-go on each major move — M&amp;A, market expansion, a new product — so cyber is weighed into the decision, not bolted on after. Detailed below.');
+  // 2 · AI initiatives at risk
+  if(ai){var ung=/none/i.test(ai.framework||'');rows+=ceoRow('AI initiatives at risk',ung?'Ungoverned':'Governed',ung?'crit':'good',ai.systems?(ai.systems+' AI system'+(ai.systems>1?'s':'')+' in production — '+(ung?'no governance framework adopted yet; the fastest-rising risk to get ahead of.':'operating under a recognized governance framework.')):'AI governance is in place.');}
+  else rows+=ceoRow('AI initiatives at risk','Not assessed','muted','Add your AI-governance answers in onboarding to see whether AI is governed before it scales.');
+  // 3 · Product launch risks
+  rows+=ceoRow('Product launch risks','Connect pipeline','muted','Connect your delivery pipeline (GitHub / Snyk) to flag any launch shipping with open critical security findings — so a release never ships known risk to customers.');
+  // 4 · Supply chain cyber risks
+  if(rs.top_vendor_blast&&rs.top_vendor_blast.vendor){var v=rs.top_vendor_blast;rows+=ceoRow('Supply chain cyber risks','Concentration','warn',v.vendor+' underpins '+((v.systems||[]).length)+' critical systems — a compromise or outage there reaches us.');}
+  else rows+=ceoRow('Supply chain cyber risks','Add vendors','muted','Add your tier-1/2 vendors in onboarding to rank supply-chain cyber risk.');
+  // 5 · Critical dependencies
+  var cjN=(typeof crownList==='function'&&crownList())?crownList().length:0;
+  if(rs.top_vendor_blast&&rs.top_vendor_blast.vendor){var v2=rs.top_vendor_blast;rows+=ceoRow('Critical dependencies','1 single point','warn',v2.vendor+' is a single point of failure for '+((v2.systems||[]).length)+' critical systems'+(v2.per_hr?(' · '+usd(v2.per_hr)+'/hr at risk if it fails'):'')+'.');}
+  else if(cjN)rows+=ceoRow('Critical dependencies',cjN+' crown jewels','blue',cjN+' systems the business depends on most — mapped, with their exposure detailed on the CIO seat.');
+  else rows+=ceoRow('Critical dependencies','Map systems','muted','Map your crown-jewel systems in onboarding to see the dependencies a failure of which would hurt most.');
+  host.innerHTML='<div class="card"><div class="ck">Where cyber puts the strategy at risk</div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">Each of the five strategy risks, in plain terms — the detail (go / no-go, supply-chain blast radius, rising risks) is below.</div></div>';
 }
 /* Customer & brand protection status — incidents, breach, data-rights, notifications. */
 function renderCeoCustomerProtect(){
   var host=document.getElementById('ceoCustomerProtect');if(!host)return;
-  var oi=sig('open_incidents'),lg=(LIVE&&LIVE.legal)||{},dsarOpen=sig('dsar_open'),dsarOver=sig('dsar_overdue'),rows='';
-  rows+=ceoRow('Customer-impacting incidents',oi!=null?(oi>0?(oi+' active'):'None'):'Connect SIEM',oi!=null?(oi>0?'crit':'good'):'muted',oi!=null?(oi>0?'An incident is currently affecting service — customer communications and regulatory clocks may apply.':'No incident is currently reaching customers.'):'Connect your SIEM to see customer-impacting incidents live.');
-  rows+=ceoRow('Data-breach status',oi!=null?(oi>0?'Under review':'No reportable breach'):'Connect SIEM',oi!=null?(oi>0?'warn':'good'):'muted',oi!=null?(oi>0?'Materiality and notification are assessed on the Legal seat the moment an event qualifies.':'No breach currently meets a reporting threshold.'):'Breach status becomes live once your SIEM is connected.');
-  if(dsarOpen!=null){var over=dsarOver||0;rows+=ceoRow('Customer-data protection',over>0?'Behind on rights':'Healthy',over>0?'warn':'good',dsarOpen+' data-rights request'+(dsarOpen===1?'':'s')+' in flight'+(over>0?(', '+over+' past the statutory clock — a compliance exposure.'):', all within the statutory clock.'));}
-  else rows+=ceoRow('Customer-data protection','Connect privacy tool','muted','Connect your privacy platform (OneTrust / TrustArc) to show how well we honor customers’ data-rights requests on time.');
+  var oi=sig('open_incidents'),lg=(LIVE&&LIVE.legal)||{},liab=lg.liability||{},dsarOpen=sig('dsar_open'),dsarOver=sig('dsar_overdue'),rows='';
+  rows+=ceoRow('Customer-impacting cyber incidents',oi!=null?(oi>0?(oi+' active'):'None'):'Connect SIEM',oi!=null?(oi>0?'crit':'good'):'muted',oi!=null?(oi>0?'An incident is currently affecting service — customer communications and regulatory clocks may apply.':'No incident is currently reaching customers.'):'Connect your SIEM to see customer-impacting incidents live.');
+  rows+=ceoRow('Data breach status',oi!=null?(oi>0?'Under review':'No reportable breach'):'Connect SIEM',oi!=null?(oi>0?'warn':'good'):'muted',oi!=null?(oi>0?'Materiality and notification are assessed on the Legal seat the moment an event qualifies.':'No breach currently meets a reporting threshold.'):'Breach status becomes live once your SIEM is connected.');
+  if(dsarOpen!=null){var over=dsarOver||0;rows+=ceoRow('Customer data protection health',over>0?'Behind on rights':'Healthy',over>0?'warn':'good',dsarOpen+' data-rights request'+(dsarOpen===1?'':'s')+' in flight'+(over>0?(', '+over+' past the statutory clock — a compliance exposure.'):', all within the statutory clock.'));}
+  else rows+=ceoRow('Customer data protection health','Connect privacy tool','muted','Connect your privacy platform (OneTrust / TrustArc) to show how well we honor customers’ data-rights requests on time.');
+  rows+=ceoRow('Brand reputation risks',liab.class_action_exposure?usd(liab.class_action_exposure)+' at stake':(liab.records?'exposure held':'Add records'),liab.class_action_exposure?'warn':'muted',liab.class_action_exposure?('A major breach would put ≈'+usd(liab.class_action_exposure)+' of liability and the customer trust behind it at risk'+(liab.records?(' ('+Number(liab.records).toLocaleString()+' records held)'):'')+'.'):'Add the customer records you hold in onboarding to size the reputational and liability exposure of a breach.');
   var bind=lg.binding;rows+=ceoRow('Regulatory notifications',bind?(bind.clock||'mapped'):'Set regions',bind?'blue':'muted',bind?('If an event is material, the binding notification is '+(bind.jurisdiction?bind.jurisdiction+' — ':'')+(bind.obligation||'')+' within '+(bind.clock||'the statutory clock')+' — pre-staged and defensible.'):'Set your operating regions in onboarding to map the regulators you would notify.');
   host.innerHTML='<div class="card"><div class="ck">Customer &amp; brand protection status '+((oi!=null||dsarOpen!=null)?liveTag():'')+'</div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">What stands between a cyber event and our customers and reputation — incident status, breach standing, how well we honor data rights, and who we would notify.</div></div>';
 }
@@ -2480,8 +2516,8 @@ function renderCeoBoardKpis(){
   var topRisks=pe.length?{s:pe.length+' tracked',c:'blue'}:{s:'Add register',c:'muted'};
   function kpi(k,v,c){return '<div class="card"><div class="ck">'+k+'</div><div class="cv" style="font-size:16px;margin-top:6px;line-height:1.25;color:var(--'+c+')">'+v+'</div></div>';}
   host.innerHTML='<div class="grid3">'+
-    kpi('Overall cyber posture',posture.s,posture.c)+kpi('Critical incidents',inc.s,inc.c)+kpi('Operational resilience',resil.s,resil.c)+
-    kpi('Regulatory compliance',comp.s,comp.c)+kpi('Third-party cyber risk',tp.s,tp.c)+kpi('Top enterprise risks',topRisks.s,topRisks.c)+
+    kpi('Overall cyber posture',posture.s,posture.c)+kpi('Top enterprise cyber risks',topRisks.s,topRisks.c)+kpi('Critical incidents',inc.s,inc.c)+
+    kpi('Regulatory compliance status',comp.s,comp.c)+kpi('Third-party cyber risk',tp.s,tp.c)+kpi('Operational resilience score',resil.s,resil.c)+
     '</div><div class="cn" style="margin-top:8px">The six indicators the board tracks — each from your live data. The peer benchmark, the trend and the SEC Item 106 governance you must disclose are below.</div>';
 }
 /* The five kinds of decision that reach a CEO — flagged when one actually needs them. */
@@ -2490,13 +2526,14 @@ function renderCeoExecDecisions(){
   var oi=sig('open_incidents'),ai=(LIVE&&LIVE.aiRisk&&LIVE.aiRisk.governance)||{},ap=(LIVE&&LIVE.economics&&LIVE.economics.appetite)||{},pending=allDecisions().filter(function(d){return !d.ticket;}).length;
   var crisis=(oi!=null&&oi>0),policyGap=(/drafted/i.test(ai.policy||'')||/^none/i.test(ai.policy||'')),acceptNeeded=(ap.tail_within===false);
   function cat(k,need,detail){return ceoRow(k,need?'needs you':'clear',need?'warn':'good',detail);}
-  var rows=(crisis
-    ? ceoRow('Crisis decision','active now','crit','An incident is live — the War Room holds the CEO calls (public disclosure, customer notification, ransom stance). Go to the Legal seat and the incident view.')
-    : cat('Crisis decisions',false,'None active — CEO crisis calls (disclosure, notification) surface here the moment an incident is declared.'))+
-    cat('Risks to formally accept',acceptNeeded,acceptNeeded?'The worst-case loss is above the board’s appetite — a residual risk to fund down or formally accept. See Financial Exposure.':'No residual risk is currently above the board’s approved tolerance.')+
-    cat('Investments to approve',pending>0,pending>0?(pending+' funded decision'+(pending>1?'s':'')+' recorded and awaiting approval — the recommendation is in the brief below.'):'No investment currently awaiting your approval.')+
-    cat('Policies to approve',policyGap,policyGap?'An AI acceptable-use policy is drafted but not board-approved — the highest-liability governance gap to close.':'No policy is currently awaiting board approval.')+
-    cat('Critical remediation',false,'Funded remediation is tracked to closure on the CISO seat; anything needing a CEO-level call surfaces here.');
+  var rows=
+    cat('Risks requiring acceptance',acceptNeeded,acceptNeeded?'The worst-case loss is above the board’s appetite — a residual risk to fund down or formally accept. See Financial Exposure.':'No residual risk is currently above the board’s approved tolerance.')+
+    cat('Investments requiring approval',pending>0,pending>0?(pending+' funded decision'+(pending>1?'s':'')+' recorded and awaiting approval — the recommendation is in the brief below.'):'No investment currently awaiting your approval.')+
+    cat('Policies requiring approval',policyGap,policyGap?'An AI acceptable-use policy is drafted but not board-approved — the highest-liability governance gap to close.':'No policy is currently awaiting board approval.')+
+    cat('Critical remediation decisions',false,'Funded remediation is tracked to closure on the CISO seat; anything needing a CEO-level call surfaces here.')+
+    (crisis
+      ? ceoRow('Crisis decisions requiring CEO involvement','active now','crit','An incident is live — the War Room holds the CEO calls (public disclosure, customer notification, ransom stance). Go to the Legal seat and the incident view.')
+      : cat('Crisis decisions requiring CEO involvement',false,'None active — the CEO crisis calls (public disclosure, customer notification, ransom stance) surface here the moment an incident is declared.'));
   host.innerHTML='<div class="card"><div class="ck">Decisions that need the CEO</div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">The five kinds of decision that reach you — flagged when one actually needs you, so nothing material waits unseen.</div></div>';
 }
 /* CEO brand & customer trust — the trust at stake in this sector (records held,

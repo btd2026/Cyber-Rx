@@ -42,21 +42,22 @@ var SEATS = {
   brief:'Here is your read as CEO, in business terms. Cyber is a managed risk within the board’s approved tolerance. I can show you the health of the company against that tolerance, which parts of the strategy carry cyber risk, what is financially at stake, what protects our customers and brand, the numbers you take to the board, and the few decisions that need you. Every figure traces to our own data — nothing invented.',
   body:function(){return (
    sec('01','Enterprise Cyber Health','Your one-glance read: the company’s overall cyber risk, the top threats to the business, how resilient we are, whether we are getting better or worse, and the handful of issues most worth your attention.',
-     '<div id="ceoModeA"></div><div id="ceoHealth"></div>'
+     '<div id="ceoModeA"></div><div id="ceoRiskScore"></div>'
      +'<div id="ceoTopThreats" style="margin-top:14px"></div>'
      +'<div id="ceoTopIssues" style="margin-top:14px"></div>')
    +sec('02','Cyber Risk to Strategy','Where cyber puts the strategy at risk — the major moves (M&amp;A · expansion · new products), your AI initiatives, product launches, the supply chain, and the single dependencies a failure of which would hurt most.',
-     '<div id="ceoGoNoGo"></div>'
-     +'<div id="ceoStrategyRisks" style="margin-top:14px"></div>'
+     '<div id="ceoStrategyRisks"></div>'
+     +'<div id="ceoGoNoGo" style="margin-top:14px"></div>'
      +'<div id="ceoThirdParty" style="margin-top:14px"></div>'
      +'<div id="ceoEmerging" style="margin-top:14px"></div>')
    +sec('03','Cyber Financial Exposure','Cyber as money — our estimated financial exposure, the revenue at risk, what a ransomware event could cost, how much insurance covers, and the expected annual cyber loss.',
      '<div id="ceoModeB"></div>'+
      tiles([
-      {k:'Expected annual cyber loss',v:'<span id="lvExpo">$68M</span>',ev:'ale',note:'<span class="pill good" id="lvAleWithin">Within appetite</span> &nbsp;<span class="claim" data-ev="pctrev"><span id="lvPctRev">≈0.8% of revenue</span> <span class="fx">ƒ</span></span>'},
-      {k:'Estimated exposure (worst realistic year)',v:'<span id="lvTail">$180M</span>',cls:'warn',ev:'tail',note:'<span class="pill warn" id="lvTailWithin">Above appetite</span> &nbsp;vs appetite <span class="claim" data-ev="appetite"><span id="lvAppetite">$120M</span> <span class="fx">ƒ</span></span>'},
+      {k:'Estimated financial exposure',v:'<span id="lvTail">$180M</span>',cls:'warn',ev:'tail',note:'<span class="pill warn" id="lvTailWithin">Above appetite</span> &nbsp;the worst realistic year'},
       {k:'Revenue at risk',v:'<span id="lvRevRisk">—</span>',cls:'warn',ev:'downtime',note:'per day the top revenue system is down'},
-      {k:'Ransomware exposure',v:'<span id="lvRansom">—</span>',cls:'warn',ev:'materiality',note:'<span class="pill mod">modeled</span> worst-case cost of a ransomware event'}])
+      {k:'Ransomware exposure',v:'<span id="lvRansom">—</span>',cls:'warn',ev:'materiality',note:'<span class="pill mod">modeled</span> worst-case cost of a ransomware event'},
+      {k:'Cyber insurance coverage',v:'<span id="lvCoverageTile">$150M</span>',ev:'inslimit',note:'policy limit against the tail'},
+      {k:'Expected annual cyber loss',v:'<span id="lvExpo">$68M</span>',ev:'ale',note:'<span class="pill good" id="lvAleWithin">Within appetite</span> &nbsp;<span class="claim" data-ev="pctrev"><span id="lvPctRev">≈0.8% of revenue</span> <span class="fx">ƒ</span></span>'}])
      +'<div class="cols" style="margin-top:14px"><div class="card"><div class="ck">Cyber insurance — covered against the worst case?</div><div class="cv" id="lvInsAnswer" style="font-size:19px;line-height:1.35;margin-top:6px">Mostly — <span class="warn">a $30M tail is uninsured</span></div><div style="display:flex;gap:24px;margin-top:14px"><div><div class="cv claim" data-ev="inslimit" style="font-size:19px;cursor:pointer" id="lvCoverage">$150M <span class="fx">ƒ</span></div><div class="cn">coverage limit</div></div><div><div class="cv crit claim" data-ev="insgap" style="font-size:19px"><span id="lvGapCeo">$30M</span> <span class="fx">ƒ</span></div><div class="cn">uninsured</div></div><div><div class="cv claim" data-ev="inspremium" style="font-size:19px;cursor:pointer" id="lvPremium">$4.2M <span class="fx">ƒ</span></div><div class="cn" id="lvRenewalNote">annual premium</div></div></div></div>'
      +kvcard('How much of the risk is transferred?',[{k:'Transfer efficiency',v:'<span id="lvTransfer">83%</span>',ev:'transfer'},{k:'Retained (uninsured)',v:'<span id="lvRetained">$30M</span>',cls:'crit',ev:'insgap'},{k:'Funding recovery',v:'narrows the gap',cls:'good'}])+'</div>')
    +sec('04','Customer &amp; Brand Protection','What protects our customers and our name — any customer-impacting incident or breach, the health of how we protect customer data, the reputational risk at stake, and any regulator we would have to notify.',
