@@ -6,6 +6,7 @@ const AiControlsService = require('../services/AiControlsService');
 const CisoDashboardService = require('../services/CisoDashboardService');
 const ExecReportService = require('../services/ExecReportService');
 const CisoReportBuilder = require('../services/CisoReportBuilder');
+const AuditorPackBuilder = require('../services/AuditorPackBuilder');
 const ExecutiveSummaryService = require('../services/ExecutiveSummaryService');
 const ReportBuilderService = require('../services/ReportBuilderService');
 const MetricsEngine = require('../services/MetricsEngine');
@@ -101,6 +102,23 @@ router.get('/report.pptx', optionalJWT, async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="cyberrx-ciso-posture-deck.pptx"`);
     res.end(buf);
   } catch (err) { logger.error('CISO pptx error', { error: err.message }); res.status(500).json({ error: 'Failed to build PPTX', message: err.message }); }
+});
+
+// Per-framework auditor pack (PPTX). The Frameworks tab posts the SAME computed
+// assessment it renders (scores + findings + roadmap + mapping + evidence), so the
+// deck matches the tab exactly. Body-driven — no server recompute, no re-typed numbers.
+router.post('/auditor-pack.pptx', optionalJWT, express.json({ limit: '4mb' }), async (req, res) => {
+  try {
+    const payload = req.body || {};
+    if (!payload || typeof payload !== 'object' || !Array.isArray(payload.register)) {
+      return res.status(400).json({ error: 'assessment payload required (register[])' });
+    }
+    const buf = await AuditorPackBuilder.buildPptxBuffer(payload);
+    const fw = String(payload.fw || 'framework').replace(/[^a-z0-9]/gi, '').toLowerCase() || 'framework';
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
+    res.setHeader('Content-Disposition', `attachment; filename="nerion-auditor-pack-${fw}.pptx"`);
+    res.end(buf);
+  } catch (err) { logger.error('CISO auditor-pack error', { error: err.message }); res.status(500).json({ error: 'Failed to build auditor pack', message: err.message }); }
 });
 
 // ---- Executive summary — intake-driven, LLM-generated, human-in-the-loop -----
