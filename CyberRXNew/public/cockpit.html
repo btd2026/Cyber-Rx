@@ -6,14 +6,14 @@
 <title>Nerion · Executive Cockpit</title>
 <style>
   :root{
-    /* Advisory theme — DTNK Shield deck palette (navy / steel / ice, serif headings) */
-    --plane:#F4F7FB; --surface:#FFFFFF; --surface-2:#E8F0FB; --line:#D9E1EC; --line-2:#CADCFC;
-    --ink:#1E2A4A; --ink-2:#44546A; --muted:#8A93A2;
-    --blue:#4A6FA5; --blue-soft:#E8F0FB;
-    --good:#2E8B6B; --warn:#C9A227; --serious:#C4703A; --crit:#B23A3A; --gold:#C9A227;
-    --good-soft:rgba(46,139,107,.12); --warn-soft:rgba(201,162,39,.16); --crit-soft:rgba(178,58,58,.12);
+    /* Nerion cockpit — mockbook design tokens (warm neutrals, bright accent, all-sans) */
+    --plane:#F0EEE8; --surface:#FFFFFF; --surface-2:#F6F5F2; --line:#E6E4DE; --line-2:#D6D4CC;
+    --ink:#1F1E1C; --ink-2:#5F5E5A; --muted:#8F8D85;
+    --blue:#1A5FA0; --blue-fill:#2B7FD0; --blue-soft:#E7F0F9; --border-accent:#BCD8F0;
+    --good:#1E8E5A; --warn:#B7791F; --serious:#C4703A; --crit:#C0392B; --gold:#B7791F;
+    --good-soft:rgba(30,142,90,.12); --warn-soft:rgba(183,121,31,.14); --crit-soft:rgba(192,57,43,.10);
     --mono:"SFMono-Regular",Consolas,Menlo,monospace;
-    --serif:Cambria,Georgia,"Times New Roman",serif;
+    --serif:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--plane);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
@@ -42,13 +42,13 @@
   .spine .lk{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);font-weight:700}
   .spine .num b{color:var(--ink)}.spine .num span{color:var(--muted)}.spine .arrow{color:var(--muted);font-size:12px;margin-left:auto}.spine .arrow b{color:var(--ink-2)}
   /* section tabs — one per section, only the active shown */
-  .sectabs{display:flex;gap:7px;overflow-x:auto;padding:16px 0 4px;margin-bottom:2px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+  .sectabs{display:flex;gap:2px;overflow-x:auto;padding:0;margin-bottom:18px;border-bottom:1px solid var(--line);scrollbar-width:thin;-webkit-overflow-scrolling:touch}
   .sectabs::-webkit-scrollbar{height:5px}.sectabs::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:9px}
-  .sectab{flex:none;display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line-2);color:var(--muted);border-radius:99px;padding:8px 15px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .12s}
-  .sectab:hover{color:var(--ink-2);border-color:var(--ink-2)}
-  .sectab.on{color:#fff;background:var(--blue);border-color:var(--blue)}
-  .sectab .stno{font-family:var(--mono);font-size:10px;font-weight:800;opacity:.75}
-  .sectab.on .stno{opacity:.9}
+  .sectab{flex:none;display:inline-flex;align-items:center;gap:6px;background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);border-radius:0;padding:9px 10px;margin-bottom:-1px;font-family:inherit;font-size:12.5px;font-weight:500;cursor:pointer;white-space:nowrap;transition:color .12s,border-color .12s}
+  .sectab:hover{color:var(--ink-2)}
+  .sectab.on{color:var(--ink);background:none;border-bottom-color:var(--blue)}
+  .sectab .stno{font-family:inherit;font-size:12.5px;font-weight:500;opacity:.55;margin-right:1px}
+  .sectab.on .stno{opacity:.85}
   .section{margin-top:0;padding-top:10px;border-top:none}
   .rubric{display:flex;align-items:flex-start;gap:15px;margin-bottom:18px}
   .rubric .no{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--blue);background:var(--blue-soft);border:1px solid rgba(57,135,229,.35);border-radius:9px;padding:6px 10px;line-height:1}
@@ -640,7 +640,7 @@ var SEAT_LABEL={board:'Board of Directors',ceo:'CEO',cfo:'CFO',coo:'COO',clo:'Ch
 var CUR='ceo';
 function render(seat){
   CUR=seat;var s=SEATS[seat];
-  var h='<div class="hero"><div class="eyebrow">'+s.eyebrow+'</div>'+(s.sub?('<div class="sub">'+s.sub+'</div>'):'')+'<div class="hint">Tip: click any value with a <span class="fx">ƒ</span> chip to see the formula, inputs and math.</div></div>';
+  var h=(typeof c5seatHeader==='function')?c5seatHeader():('<div class="hero"><div class="eyebrow">'+s.eyebrow+'</div></div>');
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
