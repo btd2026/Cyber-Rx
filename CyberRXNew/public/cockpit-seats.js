@@ -115,25 +115,16 @@ var SEATS = {
  },
 
  cpo:{
-  eyebrow:'Product &amp; engineering view · Chief Product Officer',
-  verdict:'Product ships <span class="em">with security built in, not bolted on</span> — launches gated on secure-by-design, AI features governed, and supplier &amp; software dependencies watched. The open work is instrumenting launch readiness and secure-SDLC coverage from your pipeline.',
-  sub:'Cyber through the product lens: launch readiness, innovation velocity, product-quality risk, AI-product readiness, secure-by-design adoption, and the software &amp; supplier dependencies your product ships on.',
-  brief:'From the product seat: the goal is to ship fast with security built in — launches gated on secure-by-design, AI features governed before they reach customers, and our software and supplier dependencies watched. Connect the delivery pipeline and this fills with live launch-readiness and secure-SDLC coverage.',
+  eyebrow:'CPO · Executive cockpit · Product',
+  verdict:'Cyber through the product lens, in five tabs: product-<span class="em">security</span> posture, customer <span class="em">trust</span>, ship <span class="em">velocity</span> vs security, the product-risk <span class="em">backlog</span>, and the calls that need you — where the identity fix is a <span class="em">product opportunity</span>, not just a risk.',
+  sub:'Tap any tile, item or decision to open the inspector — its basis and source. The same engine as the other seats; the identity, auth-library and platform figures match exactly.',
+  brief:'From the product seat, in five tabs. Product security: the product ships secure-by-design, with the customer-platform identity/access model the one real gap. Customer trust: users are safe and confident, with the access experience the one soft spot. Velocity: security clears the path more than it taxes it; the recurring blocker is identity. Backlog: healthy, with the identity/access remediation leading and funded. Decisions: one product call does triple duty — safer, smoother, faster. Identity is three faces of one issue — a security gap, access friction, and a release blocker — and the same funded fix closes all three.',
   body:function(){return (
-   sec('01','Product launch readiness','Are we clear to ship? Each release gated on secure-by-design checks — threat model, application-security review and no unresolved critical findings — so a launch does not carry avoidable risk to customers.',
-     '<div id="cpoLaunch"></div>')
-   +sec('02','Innovation velocity','Are we shipping fast without shipping risk? Delivery throughput — changes shipped per week and the review backlog — so security keeps pace with delivery rather than blocking it. Live from your CI/CD.',
-     '<div id="cpoVelocity"></div>')
-   +sec('03','Product quality risk','The security-quality of what we ship — open code-scanning (SAST) findings and critical dependency alerts in the product, and the exposure they create for customers. Live from your delivery pipeline.',
-     '<div id="cpoQuality"></div>')
-   +sec('04','AI product readiness','Are AI features in the product governed before they reach customers? AI systems live, the framework adopted, the acceptable-use policy and inventory — readiness to ship AI without shipping unmanaged risk.',
-     '<div id="cioAi"></div>')
-   +sec('05','Secure-by-design adoption','How deeply secure-by-design is adopted across engineering — threat-modeling coverage, secure-SDLC practices, and security embedded in the pipeline rather than a gate beside it. Plus the product-security investment decision the Chief Product Officer owns.',
-     '<div id="cpoSbd"></div>'
-     +'<div id="cpoDecision" style="margin-top:14px"></div>')
-   +sec('06','Software &amp; supplier dependency risk','What the product ships on — the third-party components and suppliers a compromise of which reaches your customers, and the concentration to watch.',
-     '<div id="ceoThirdParty"></div>'
-     +'<div id="cpoSupply" style="margin-top:12px"></div>')
+   sec('01','Product security','','<div id="cp-security"></div>')
+   +sec('02','Customer trust','','<div id="cp-trust"></div>')
+   +sec('03','Velocity','','<div id="cp-velocity"></div>')
+   +sec('04','Backlog','','<div id="cp-backlog"></div>')
+   +sec('05','Decisions','','<div id="cp-decisions"></div>')
   );}
  },
 

@@ -748,6 +748,67 @@ function c5get(id){
         inputs:[{name:'Days since DR test',value:d!=null?(d+' days'):'—',source:'BC/DR · dr_test_days'},{name:'Immutable backups',value:imm!=null?(imm+'%'):'—',source:'backup'}],
         sources:[{tool:'BC/DR records',connector:'bcdr',field:'recovery',lastRefresh:c5ago()}],
         note:'That recovery is tested and within targets — resilience the board can rely on.',connectTool:'your BC/DR + backup platform'});}
+    /* ---- CPO (Chief Product Officer) metrics; identity framed as a product opportunity ---- */
+    case 'cp_product_security':{var oi=sig('open_incidents');var dep=sig('dependabot_critical');var css=sig('code_scanning_open');var conn=(oi!=null||dep!=null||css!=null);var strong=(oi==null||oi===0);
+      return c5obj({id:id,name:'Product security',connected:conn,displayValue:conn?(strong?'Strong':'Watch'):'—',label:'computed',color:conn?(strong?'good':'warn'):'muted',
+        formula:'product security = secure across the product surface with no active incident on a shipped feature',
+        inputs:[{name:'Active incidents',value:oi!=null?(oi>0?oi:'none'):'—',source:'SIEM · open_incidents'},{name:'Open critical findings',value:dep!=null?dep:'—',source:'SCA · dependabot_critical'}],
+        sources:[{tool:'SDLC gates + product scans',connector:'appsec',field:'product_security',lastRefresh:c5ago()}],
+        note:'The one-glance read on whether the product ships secure — across features and dependencies.',connectTool:'your SDLC gates + product scanners'});}
+    case 'cp_sbd_coverage':{var css2=sig('code_scanning_open'),dep2=sig('dependabot_critical'),mg=sig('changes_merged_wk');
+      var practices=[css2!=null,dep2!=null,mg!=null,false,false];var inPlace=practices.filter(Boolean).length;var conn=inPlace>0;var pct=Math.round(inPlace/practices.length*100);
+      return c5obj({id:id,name:'Secure-by-design coverage',connected:conn,displayValue:conn?(pct+'%'):'—',label:'computed',color:conn?(pct>=80?'good':pct>=50?'warn':'crit'):'muted',
+        formula:'secure-by-design coverage = secure-SDLC practices evidenced in the pipeline ÷ target practices',
+        method:'A practice counts only when its telemetry is present (SAST, SCA, review, secrets, threat-modeling).',
+        inputs:[{name:'Static analysis (SAST)',value:css2!=null?'evidenced':'not connected',source:'code scanning'},{name:'Dependency (SCA)',value:dep2!=null?'evidenced':'not connected',source:'Dependabot / Snyk'},{name:'Change review',value:mg!=null?'evidenced':'not connected',source:'CI/CD'}],
+        sources:[{tool:'SDLC tooling',connector:'sdlc',field:'secure_by_design',lastRefresh:c5ago()}],
+        note:'How deeply secure-by-design is running in the pipeline for new features — measured, not asserted.',connectTool:'your SDLC / application-security tooling'});}
+    case 'cp_open_risks':{var dep3=sig('dependabot_critical');var conn=dep3!=null;
+      return c5obj({id:id,name:'Open product risks',connected:conn,displayValue:conn?(dep3+' high'):'—',label:'live',color:conn?(dep3>0?'warn':'good'):'muted',
+        formula:'open product risks = high/critical security findings open in shipped product',
+        inputs:[{name:'Critical findings',value:conn?dep3:'—',source:'SCA · dependabot_critical'}],
+        sources:[{tool:'Product scanners',connector:'appsec',field:'dependabot_critical',lastRefresh:c5ago()}],
+        note:'The high-priority security risks currently in the product surface.',connectTool:'your product scanners'});}
+    case 'cp_mfa':{var m=sig('mfa_pct');var conn=m!=null;
+      return c5obj({id:id,name:'MFA adoption',connected:conn,displayValue:conn?(m+'%'):'—',label:'live',color:conn?(m>=80?'good':'warn'):'muted',
+        formula:'MFA adoption = share of user accounts with multi-factor authentication enabled',
+        inputs:[{name:'Accounts on MFA',value:conn?(m+'%'):'—',source:'identity · mfa_pct'}],
+        sources:[c5capSrc('mfa')],
+        note:'How strongly users have adopted account security — a product-trust signal, and a lever the identity fix raises.',connectTool:'your identity provider'});}
+    case 'cp_pass_rate':{return c5obj({id:id,name:'Releases passing security first-time',connected:false,displayValue:'—',label:'computed',color:'muted',
+        formula:'security-gate pass rate = releases clearing the security gate on the first attempt ÷ releases',
+        inputs:[{name:'Gate pass/fail records',value:'not connected',source:'CI/CD security gates'}],
+        sources:[{tool:'CI/CD security gates',connector:'cicd',field:'gate_pass_rate',lastRefresh:c5ago()}],
+        note:'How often releases clear security first-time — needs your CI/CD security-gate records.',connectTool:'your CI/CD security-gate records'});}
+    case 'cp_cycle_time':{return c5obj({id:id,name:'Added cycle time',connected:false,displayValue:'—',label:'computed',color:'muted',
+        formula:'added cycle time = extra lead-time added by security gates per release',
+        inputs:[{name:'Deployment lead-time',value:'not connected',source:'CI/CD deployment events'}],
+        sources:[{tool:'CI/CD',connector:'cicd',field:'lead_time',lastRefresh:c5ago()}],
+        note:'How much time security gates add to delivery — needs your CI/CD deployment lead-time.',connectTool:'your CI/CD deployment events'});}
+    case 'cp_blocker':{var M=c5expModel();var idMat=M.drivers.some(function(d){return d.id==='exp_identity'&&d.usd>0;});var conn=M.drivers.length>0;
+      return c5obj({id:id,name:'Recurring blocker',connected:conn,displayValue:conn?(idMat?'Identity/access':'None'):'—',label:'computed',color:conn?(idMat?'warn':'good'):'muted',
+        formula:'recurring blocker = the exposure that repeatedly gates releases — from the top exposure driver',
+        inputs:[{name:'Top exposure driver',value:M.drivers[0]?M.drivers[0].name:'—',source:'exposure model'}],
+        sources:[{tool:'Product + security backlog',connector:'backlog',field:'recurring_blocker',lastRefresh:c5ago()}],
+        note:'The one thing that keeps coming back in the pipeline — the identity/access model, fixable once.',connectTool:'your controls + backlog'});}
+    case 'cp_open_items':{var css4=sig('code_scanning_open'),dep4=sig('dependabot_critical');var conn=(css4!=null||dep4!=null);var n=(css4||0)+(dep4||0);
+      return c5obj({id:id,name:'Open security items',connected:conn,displayValue:conn?String(n):'—',label:'live',color:conn?(n<=15?'good':'warn'):'muted',
+        formula:'open security items = product-security work queued (open SAST findings + critical dependency alerts)',
+        inputs:[{name:'Open SAST findings',value:css4!=null?css4:'—',source:'code scanning'},{name:'Critical dependency alerts',value:dep4!=null?dep4:'—',source:'SCA'}],
+        sources:[{tool:'Product + security issue trackers',connector:'backlog',field:'open_items',lastRefresh:c5ago()}],
+        note:'The product-security backlog — the work queued against the product surface.',connectTool:'your product + security issue trackers'});}
+    case 'cp_high_priority':{var dep5=sig('dependabot_critical');var conn=dep5!=null;
+      return c5obj({id:id,name:'High-priority',connected:conn,displayValue:conn?String(dep5):'—',label:'live',color:conn?(dep5>0?'warn':'good'):'muted',
+        formula:'high-priority items = critical-severity security items leading the backlog',
+        inputs:[{name:'Critical items',value:conn?dep5:'—',source:'SCA · dependabot_critical'}],
+        sources:[{tool:'Issue trackers',connector:'backlog',field:'high_priority',lastRefresh:c5ago()}],
+        note:'How many product-security items are high-priority — the ones to sequence first.',connectTool:'your product + security issue trackers'});}
+    case 'cp_funded':{var st=(typeof ROI_STATE!=='undefined'&&ROI_STATE)?ROI_STATE:null;var yes=!!(st&&st.invested>0);
+      return c5obj({id:id,name:'Funded',connected:true,displayValue:yes?'Yes':'To fund',label:'computed',color:yes?'good':'warn',
+        formula:'funded = whether the top product-security item is covered by the funded initiative portfolio',
+        inputs:[{name:'Funded initiatives',value:st?st.n:'—',source:'initiatives portfolio'},{name:'Invested',value:yes?usd(st.invested):'—',source:'ticketing + decisions'}],
+        sources:[{tool:'Program model',connector:'nerion',field:'funded_portfolio',lastRefresh:c5ago()}],
+        note:'Whether the top backlog item is funded — the identity/access remediation.',connectTool:'your funded initiatives (import)'});}
   }
   return c5obj({id:id,name:id,connected:false,displayValue:'—',color:'muted',note:'No metric definition.'});
 }
@@ -1741,4 +1802,87 @@ function c5bdGovernance(){
     q+
     c5bl('For the board','Note and support — no approval required.',null,'Cyber is a managed, improving risk with clear accountability and nothing material. The board’s role this quarter is to note management’s funded action on the top exposure and confirm oversight is working. No approval is required.',{act:'openBoardPack()',txt:'Open the board pack'})+
     '<div class="c5foot">Governance items from the cyber program and risk register.</div>';
+}
+
+/* ================= CPO (Chief Product Officer) seat — identity as a product opportunity ================= */
+/* Tab 01 — Product security posture */
+function c5cpSecurity(){
+  var host=document.getElementById('cp-security');if(!host)return;
+  var ec=c5get('exp_identity'),adv=c5get('ct_advisories');
+  host.innerHTML=c5header()+
+    c5shell('Product security posture · is the product secure by design?','The product is secure by design — one part of the platform carries the risk.',null,'Security across your product surface. New features ship secure-by-design and most of the platform is healthy; the one real exposure is the customer platform’s identity/access model. Tap any figure for its basis and source.')+
+    '<div class="c5cards">'+c5card('cp_product_security')+c5card('cp_sbd_coverage')+c5card('cp_open_risks')+'</div>'+
+    '<div class="c5tiles">'+
+      c5tile('cp_sbd_coverage','g','Embedded','Security gates on new features')+
+      c5tile('cp_open_risks','g','Low','In shipped features · none critical open')+
+      c5tile('exp_identity','a','Gap','The customer-platform exposure')+
+      c5tile('ct_advisories','b','Watch',(adv.connected?'Auth-library advisory · a dependency to patch':'connect your SCA scanner'))+
+    '</div>'+
+    c5bl('Bottom line','Fix the access model in your flagship product.',null,(ec.connected?('The identity/access model behind the customer platform is your product’s one real security gap ('+ec.displayValue+'). The fix is funded — it closes the exposure and gives users a cleaner, safer access experience.'):'Connect your controls and the product’s one real security gap — the customer-platform access model — surfaces here with its funded fix.'),{mid:'exp_identity',txt:'Fund the identity fix — hardens the product'})+
+    '<div class="c5foot">Product posture from your SDLC gates and product scans.</div>';
+}
+/* Tab 02 — Customer trust in the product */
+function c5cpTrust(){
+  var host=document.getElementById('cp-trust');if(!host)return;
+  var ec=c5get('exp_identity');
+  host.innerHTML=c5header()+
+    c5shell('Customer trust in the product · are users safe and confident?','Users trust the product — the access experience is the one soft spot.',null,'How secure and confident your users are. No customer-impacting incidents, strong security-feature adoption, trust signals steady. The one soft spot is the identity/access experience — friction and risk in the same place. Tap any figure for its source.')+
+    '<div class="c5cards">'+c5card('ceo_cust_incidents')+c5card('cp_mfa')+c5card('ceo_trust_signal')+'</div>'+
+    '<div class="c5tiles">'+
+      c5tile('cp_mfa','g','Adopted','Strong security-feature uptake')+
+      c5tile('ceo_customer_data','g','Protected','No customer data at risk this quarter')+
+      c5tile('exp_identity','a','Watch','The identity gap shows up here — friction + risk')+
+      c5tile('ceo_trust_signal','g','Steady','No security-driven churn signals')+
+    '</div>'+
+    c5bl('Bottom line','Turn the access pain point into a trust win.',null,(ec.connected?('The identity gap is both a security risk and a source of user friction. Fixing it ('+ec.displayValue+') removes the exposure and smooths the access experience — safer and better for customers at once.'):'Connect your controls and the access pain point — both risk and friction — surfaces here, with the fix that improves both.'),{mid:'exp_identity',txt:'Fund the identity fix — improves trust'})+
+    '<div class="c5foot">Trust and adoption from your product analytics and incident records.</div>';
+}
+/* Tab 03 — Ship velocity vs. security */
+function c5cpVelocity(){
+  var host=document.getElementById('cp-velocity');if(!host)return;
+  var ec=c5get('exp_identity');
+  host.innerHTML=c5header()+
+    c5shell('Ship velocity vs. security · is security a tax or an enabler?','Security isn’t slowing you down — it’s clearing your path.',null,'Whether security helps or hinders delivery. The one recurring blocker is — again — the identity/access model; tech debt is roadmapped. Gate pass-rate and cycle-time light up when your CI/CD security-gate records connect. Tap any figure for its basis.')+
+    '<div class="c5cards">'+c5card('cp_pass_rate')+c5card('cp_cycle_time')+c5card('cp_blocker')+'</div>'+
+    '<div class="c5tiles">'+
+      c5tile('cp_pass_rate','n','Connect CI','Security-gate first-time pass rate')+
+      c5tile('cp_cycle_time','n','Connect CI','Cycle time added by security gates')+
+      c5tile('cp_blocker','a','Watch','The one thing that keeps coming back')+
+      c5tile('ct_techdebt','b','Managed','Legacy access debt mapped · roadmapped')+
+    '</div>'+
+    c5bl('Bottom line','Remove the one blocker that keeps recurring.',null,(ec.connected?('The identity/access model is the recurring blocker in your release pipeline. Fixing it once ('+ec.displayValue+') removes friction from future features — security stops being a repeat tax on velocity.'):'Connect your controls and the recurring release blocker — the identity/access model — surfaces here, fixable once.'),{mid:'exp_identity',txt:'Fund the identity fix — unblocks delivery'})+
+    '<div class="c5foot">Delivery metrics from your CI/CD and security-gate records.</div>';
+}
+/* Tab 04 — Product risk backlog */
+function c5cpBacklog(){
+  var host=document.getElementById('cp-backlog');if(!host)return;
+  var ec=c5get('exp_identity'),adv=c5get('ct_advisories'),td=c5get('ct_techdebt');
+  var rows='<div class="c5rank"><div class="c5rank-h">Backlog · priority and status</div>'+
+    '<div class="c5prow" data-c5m="exp_identity"><span class="c5sq a" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Identity/access remediation <span class="c5tag rev">High</span></div><div class="c5row-s">Funded · leads the backlog'+(ec.connected?(' · '+ec.displayValue+' of exposure'):'')+'</div></div><span class="c5pill a">Leads</span></div>'+
+    '<div class="c5prow" data-c5m="ct_advisories"><span class="c5sq b" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Auth-library patch <span class="c5tag rev">High</span></div><div class="c5row-s">'+(adv.connected?('Used in the customer platform · '+adv.displayValue+' open'):'used in the customer platform')+'</div></div><span class="c5pill b">Scheduled</span></div>'+
+    '<div class="c5prow" data-c5m="exp_identity"><span class="c5sq b" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Session-management hardening <span class="c5tag">Medium</span></div><div class="c5row-s">Depends on the access remediation</div></div><span class="c5pill b">Scheduled</span></div>'+
+    '<div class="c5prow" data-c5m="ct_techdebt"><span class="c5sq g" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Deprecate legacy access paths <span class="c5tag">Medium</span></div><div class="c5row-s">Reduces access debt'+(td.connected?(' · '+td.displayValue+' mapped'):'')+'</div></div><span class="c5pill g">Roadmapped</span></div>'+
+    '<div class="c5prow" data-c5m="cp_mfa"><span class="c5sq n" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Security-feature UX polish <span class="c5tag">Low</span></div><div class="c5row-s">Improves adoption</div></div><span class="c5pill n">Backlog</span></div>'+
+    '</div>';
+  host.innerHTML=c5header()+
+    c5shell('Product risk backlog · what security work is queued?','The backlog is healthy — one high-priority item leads it.',null,'The security work queued against your product. Most is routine and scheduled; one high-priority item — the identity/access remediation — leads the backlog and is funded. Tap any item for scope and owner.')+
+    '<div class="c5cards">'+c5card('cp_open_items')+c5card('cp_high_priority')+c5card('cp_funded')+'</div>'+
+    rows+
+    c5bl('Bottom line','Land the item at the top of the backlog.',null,(ec.connected?('The identity/access remediation leads your product-security backlog and is funded. Landing it ('+ec.displayValue+') clears the largest product risk and unblocks several dependent items below it.'):'The identity/access remediation leads your product-security backlog. Landing it clears the largest product risk and unblocks the dependent items below it.'),{mid:'exp_identity',txt:'Prioritize the identity remediation'})+
+    '<div class="c5foot">Backlog from your product and security issue trackers.</div>';
+}
+/* Tab 05 — Decisions for the CPO */
+function c5cpDecisions(){
+  var host=document.getElementById('cp-decisions');if(!host)return;
+  var ec=c5get('exp_identity'),adv=c5get('ct_advisories');
+  var q='<div class="c5rank"><div class="c5rank-h">Decision queue · each tied to a product area</div>'+
+    '<div class="c5row" data-c5m="exp_identity"><div class="c5row-main"><div class="c5row-t"><span class="c5pill b" style="margin-right:8px">Fund</span>Fund the identity/access fix</div><div class="c5row-s">Closes the product’s top security gap, smooths the access experience, and unblocks delivery</div></div><div class="c5row-v">'+(ec.connected?('−'+ec.displayValue):'—')+'</div><span class="c5pill g" style="align-self:center">Recommended</span></div>'+
+    '<div class="c5row" data-c5m="ct_advisories"><div class="c5row-main"><div class="c5row-t"><span class="c5pill a" style="margin-right:8px">Patch</span>Patch the auth-library dependency</div><div class="c5row-s">High-severity · used in the customer platform</div></div><div class="c5row-v">'+(adv.connected?(adv.displayValue+' open'):'—')+'</div><span class="c5pill a" style="align-self:center">Urgent</span></div>'+
+    '<div class="c5row" data-c5m="cp_sbd_coverage"><div class="c5row-main"><div class="c5row-t"><span class="c5pill n" style="margin-right:8px">Maintain</span>Secure-by-design cadence</div><div class="c5row-s">Working well · maintain the gates</div></div><div class="c5row-v">—</div><span class="c5pill n" style="align-self:center">On track</span></div>'+
+    '</div>';
+  host.innerHTML=c5header()+
+    c5shell('Decisions for the CPO · what needs your call?','One product call does triple duty — safer, smoother, faster.',null,'The product decisions on your desk. One action improves security, customer trust, and delivery velocity at once. Tap any for the full picture and source.')+
+    q+
+    c5bl('Bottom line','One call, three product wins.',null,(ec.connected?('The identity/access fix is the rare decision that makes the product more secure, the experience smoother, and delivery faster — all at once ('+ec.displayValue+' removed). It’s the highest-leverage product-security call on your desk.'):'The identity/access fix is the rare decision that makes the product more secure, the experience smoother, and delivery faster — all at once. It’s the highest-leverage product-security call on your desk.'),{mid:'exp_identity',txt:'Fund the identity/access fix'})+
+    '<div class="c5foot">Each decision links to its product area and source.</div>';
 }
