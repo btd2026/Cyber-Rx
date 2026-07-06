@@ -416,8 +416,92 @@ function c5get(id){
         inputs:O.rows.map(function(r){return {name:r.risk,value:r.status+' · '+r.owner,source:'risk register (owner) + cyber model (status)'};}),
         sources:[{tool:'Enterprise risk register',connector:'erm',field:'risk_owners',lastRefresh:c5ago()}],
         note:'Whether every material risk has an accountable owner — the governance question, in one number.',connectTool:'your risk register (owners)'});}
+    /* ---- COO metrics (operations & continuity lens; shared exposure/vendor objects reused) ---- */
+    case 'coo_resilience':{var oi=sig('open_incidents');var rs=(typeof LIVE!=='undefined'&&LIVE&&LIVE.resilience)||{};var worst=rs.worst_recovery_hours;var conn=(oi!=null||worst!=null);var strong=(oi==null||oi===0);
+      return c5obj({id:id,name:'Operational resilience',connected:conn,displayValue:conn?(strong?'Strong':'Watch'):'—',label:'computed',color:conn?(strong?'good':'warn'):'muted',
+        formula:'operational resilience = strong when no active compromise is disrupting a business process',
+        inputs:[{name:'Active incidents',value:oi!=null?(oi>0?oi:'none'):'—',source:'SIEM · open_incidents'},{name:'Slowest recovery',value:worst!=null?hrsToStr(worst):'—',source:'resilience · worst_recovery_hours'}],
+        sources:[{tool:'Nerion engine',connector:'nerion',field:'operational_resilience',lastRefresh:c5ago()}],
+        note:'Whether operations are running and could keep running through a cyber disruption.',connectTool:'your SIEM + resilience data'});}
+    case 'coo_processes':{var P=c5Processes();var conn=P.total>0;
+      return c5obj({id:id,name:'Processes protected',connected:conn,displayValue:conn?(P.protected+' of '+P.total):'—',label:'computed',color:conn?(P.atRisk>0?'warn':'good'):'muted',
+        formula:'processes protected = critical processes − those carrying a material cyber exposure',
+        method:'A process is flagged at-risk when a material exposure driver maps to it (identity → the customer platform).',
+        inputs:P.list.map(function(p){return {name:p.name,value:p.status,source:'operations model · process_exposure'};}),
+        sources:[{tool:'Operations model',connector:'ops',field:'process_exposure',lastRefresh:c5ago()}],
+        note:'Cyber mapped to your critical processes — how many are continuity-safe, and which needs attention.',connectTool:'your critical processes (onboarding)'});}
+    case 'coo_bc':{var d=sig('dr_test_days');var conn=d!=null;var ok=(d!=null&&d<=90);
+      return c5obj({id:id,name:'Business continuity',connected:conn,displayValue:conn?(ok?'Plans tested':'Test overdue'):'—',label:'computed',color:conn?(ok?'good':'warn'):'muted',
+        formula:'business continuity = recovery plans tested within the last 90 days',
+        inputs:[{name:'Days since last DR test',value:conn?(d+' days'):'—',source:'BC/DR records · dr_test_days'}],
+        sources:[{tool:'BC/DR records',connector:'bcdr',field:'dr_test_days',lastRefresh:c5ago()}],
+        note:'Whether continuity plans are tested and current, not just written.',connectTool:'your BC/DR test records'});}
+    case 'coo_recovery_ready':{var d2=sig('dr_test_days');var imm=sig('backup_immutable_pct');var conn=(d2!=null||imm!=null);var ready=((d2==null||d2<=90)&&(imm==null||imm>=95));
+      return c5obj({id:id,name:'Recovery readiness',connected:conn,displayValue:conn?(ready?'Ready':'Gaps'):'—',label:'computed',color:conn?(ready?'good':'warn'):'muted',
+        formula:'recovery readiness = recent DR test passed and backups verified immutable',
+        inputs:[{name:'Days since DR test',value:d2!=null?(d2+' days'):'—',source:'BC/DR · dr_test_days'},{name:'Immutable backups',value:imm!=null?(imm+'%'):'—',source:'backup · backup_immutable_pct'}],
+        sources:[{tool:'BC/DR records',connector:'bcdr',field:'recovery_readiness',lastRefresh:c5ago()}],
+        note:'Whether you could actually recover the business from a severe cyber event.',connectTool:'your BC/DR + backup platform'});}
+    case 'coo_rto':{var rs2=(typeof LIVE!=='undefined'&&LIVE&&LIVE.resilience)||{};var w=rs2.worst_recovery_hours;var conn=w!=null;var tgt=4;
+      return c5obj({id:id,name:'Time to recover (RTO)',connected:conn,displayValue:conn?(hrsToStr(w)+' vs '+tgt+'h target'):'—',label:'live',color:conn?(w<=tgt?'good':'warn'):'muted',
+        formula:'RTO = worst-case recovery time of a critical service, against your '+tgt+'-hour target',
+        inputs:[{name:'Worst-case recovery',value:conn?hrsToStr(w):'—',source:'resilience · worst_recovery_hours'},{name:'Target RTO',value:tgt+'h',source:'BC/DR policy'}],
+        sources:[{tool:'BC/DR records',connector:'bcdr',field:'worst_recovery_hours',lastRefresh:c5ago()}],
+        note:'How fast the slowest critical service comes back — the number continuity is judged on.',connectTool:'your recovery-test results'});}
+    case 'coo_rpo':{var r=sig('rpo_minutes');var conn=r!=null;var tgt2=60;
+      return c5obj({id:id,name:'Data-loss window (RPO)',connected:conn,displayValue:conn?((r>=60?(Math.round(r/6)/10+'h'):(r+'m'))+' vs '+tgt2+'m target'):'—',label:'live',color:conn?(r<=tgt2?'good':'warn'):'muted',
+        formula:'RPO = maximum data loss window from your backup cadence, against the '+tgt2+'-minute target',
+        inputs:[{name:'Recovery-point objective',value:conn?(r+' min'):'—',source:'backup · rpo_minutes'},{name:'Target RPO',value:tgt2+'m',source:'BC/DR policy'}],
+        sources:[{tool:'Backup platform',connector:'backup',field:'rpo_minutes',lastRefresh:c5ago()}],
+        note:'How much data you would lose in a recovery — the window backups have to beat.',connectTool:'your backup platform'});}
+    case 'coo_backups':{var imm2=sig('backup_immutable_pct');var conn=imm2!=null;
+      return c5obj({id:id,name:'Backups',connected:conn,displayValue:conn?(imm2>=95?'Verified':(imm2+'% immutable')):'—',label:'live',color:conn?(imm2>=95?'good':'warn'):'muted',
+        formula:'backups = share of backups that are immutable and restore-verified',
+        inputs:[{name:'Immutable backups',value:conn?(imm2+'%'):'—',source:'backup · backup_immutable_pct'}],
+        sources:[{tool:'Backup platform',connector:'backup',field:'backup_immutable_pct',lastRefresh:c5ago()}],
+        note:'Whether backups would survive a ransomware event and actually restore.',connectTool:'your backup platform'});}
+    case 'coo_last_test':{var d3=sig('dr_test_days');var conn=d3!=null;
+      return c5obj({id:id,name:'Last recovery test',connected:conn,displayValue:conn?(d3<=90?'Passed':'Overdue'):'—',label:'live',color:conn?(d3<=90?'good':'warn'):'muted',
+        formula:'last recovery test = result and recency of your most recent DR test',
+        inputs:[{name:'Days since last test',value:conn?(d3+' days ago'):'—',source:'BC/DR · dr_test_days'}],
+        sources:[{tool:'BC/DR records',connector:'bcdr',field:'dr_test_days',lastRefresh:c5ago()}],
+        note:'A recovery plan is only real if it has been tested recently.',connectTool:'your BC/DR test records'});}
+    case 'coo_identity_recovery':{var p=c5avgDeploy(['mfa','pam']);var conn=(p!=null);var gap=(p!=null&&p<90);
+      return c5obj({id:id,name:'Identity recovery',connected:conn,displayValue:conn?(gap?'Gap':'Ready'):'—',label:'computed',color:conn?(gap?'warn':'good'):'muted',
+        formula:'identity recovery = readiness to restore access quickly, from identity-control deployment',
+        inputs:[{name:'Identity controls deployed',value:conn?(p+'%'):'—',source:'MFA + PAM telemetry'}],
+        sources:[c5capSrc('mfa'),c5capSrc('pam')],
+        note:'Restoring access is often the slowest link in a customer-platform recovery — the same identity gap that drives your top exposure.',connectTool:'your identity + PAM tools'});}
+    case 'coo_tier1':{var V=c5vendors();var t1=(V.p&&V.p.tier1!=null)?V.p.tier1:((V.seed||[]).filter(function(x){return /1/.test(x.tier);}).length);var conn=V.seed.length>0;
+      return c5obj({id:id,name:'Tier-1 vendors',connected:conn,displayValue:conn?String(t1):'—',label:'self-reported',color:'ink',
+        formula:'tier-1 vendors = suppliers you classified tier-1 at onboarding',
+        inputs:[{name:'Tier-1 count',value:conn?t1:'—',source:'vendor intake'}],
+        sources:[{tool:'Vendor intake',connector:'vendors',field:'tier',lastRefresh:c5ago()}],
+        note:'The suppliers whose failure would hurt operations most — the ones to monitor closest.',connectTool:'your tier-1/2 vendors (onboarding)'});}
+    case 'coo_spof':{var rs3=(typeof LIVE!=='undefined'&&LIVE&&LIVE.resilience)||{};var tv=rs3.top_vendor_blast;var n=(tv&&tv.systems&&tv.systems.length>=2)?1:0;var conn=(tv&&tv.vendor)||false;
+      return c5obj({id:id,name:'Single points of failure',connected:!!conn,displayValue:conn?String(n):'—',label:'computed',color:conn?(n>0?'warn':'good'):'muted',
+        formula:'single points of failure = vendors that underpin two or more critical systems with no independent failover',
+        inputs:[{name:tv&&tv.vendor?tv.vendor:'top vendor',value:tv&&tv.systems?((tv.systems.length)+' systems'):'—',source:'asset→vendor map'}],
+        sources:[{tool:'Operations model',connector:'ops',field:'top_vendor_blast',lastRefresh:c5ago()}],
+        note:'Where one supplier failing takes down multiple operations at once — the concentration to reduce.',connectTool:'your asset→vendor map'});}
   }
   return c5obj({id:id,name:id,connected:false,displayValue:'—',color:'muted',note:'No metric definition.'});
+}
+/* Critical processes from the operations model; at-risk status computed from whether
+   a material exposure driver / flagged vendor maps to the process. */
+function c5Processes(){
+  var pe=(typeof LIVE!=='undefined'&&LIVE&&LIVE.process_exposure)||[];
+  var rs=(typeof LIVE!=='undefined'&&LIVE&&LIVE.resilience)||{};var blast=(rs.top_vendor_blast&&rs.top_vendor_blast.systems)||[];var tvName=(rs.top_vendor_blast&&rs.top_vendor_blast.vendor)||null;
+  var M=c5expModel();var idMat=M.drivers.some(function(d){return d.id==='exp_identity'&&d.usd>0;});
+  var list=pe.slice().map(function(p){return {name:p.name,exposure_usd:p.exposure_usd,crown_jewel:p.crown_jewel,criticality:p.criticality};}).sort(function(a,b){return (b.exposure_usd||0)-(a.exposure_usd||0);});
+  list.forEach(function(p,i){
+    var touches=blast.some(function(s){return String(s).toLowerCase().indexOf(String(p.name).toLowerCase())>=0||String(p.name).toLowerCase().indexOf(String(s).toLowerCase())>=0;});
+    if(i===0&&idMat){p.status='At risk';p.c='warn';p.sub='Identity gap threatens uptime';}
+    else if(touches&&tvName){p.status='Watch';p.c='blue';p.sub='Depends on '+tvName+' · rating to watch';}
+    else{p.status='Safe';p.c='good';p.sub='No material cyber exposure';}
+  });
+  var atRisk=list.filter(function(p){return p.status==='At risk';}).length;
+  return {list:list,total:list.length,atRisk:atRisk,protected:list.length-atRisk};
 }
 /* Principal risks on one scale — from the enterprise risk register (LIVE.portfolio);
    cyber's value is the shared exposure object so it matches the other seats. */
@@ -956,4 +1040,88 @@ function c5crDecisions(){
     q+
     c5bl('Bottom line','One risk needs treating today.',null,(ec.connected?('The identity gap is the only principal-risk driver over its appetite share, and treating it is the single biggest reduction available ('+ec.displayValue+'). The other two are appropriately monitored or accepted.'):'The identity gap is the driver over its appetite share, and treating it is the biggest reduction available. The other two are appropriately monitored or accepted.'),{mid:'exp_identity',txt:ec.connected?('Treat the identity risk — removes '+ec.displayValue):'Treat the identity risk'})+
     '<div class="c5foot">Each decision carries its residual, appetite, and source.</div>';
+}
+
+/* ================= COO seat — same engine, operations & continuity lens ================= */
+/* Tab 01 — Operational resilience */
+function c5coResilience(){
+  var host=document.getElementById('co-resilience');if(!host)return;
+  var P=c5Processes(),ec=c5get('exp_identity'),tp=c5get('thirdparty_risk');var V=c5vendors();var tvName=V.worst?V.worst.name:'a vendor';
+  var atPill=P.atRisk>0?'a':'g';
+  host.innerHTML=c5header()+
+    c5shell('Operational resilience · can we keep running?','Operations are resilient — one process carries the only real risk.',null,'Your critical operations are healthy and continuity-ready. Of your critical processes, most are fully protected; the customer platform carries a single cyber exposure — identity. Tap any figure for its basis and source.')+
+    '<div class="c5cards">'+c5card('coo_resilience')+c5card('coo_processes')+c5card('coo_recovery_ready')+'</div>'+
+    '<div class="c5tiles">'+
+      c5tile('coo_bc','g','Ready','Recovery plans tested this quarter')+
+      c5tile('coo_processes',atPill,(P.atRisk>0?(P.atRisk+' at risk'):'All protected'),(P.atRisk>0?'One carries a cyber exposure':'All processes continuity-safe'))+
+      c5tile('thirdparty_risk','a','Flagged',(tp.connected?('Rating to watch · touches operations'):'add your tier-1/2 vendors'))+
+      c5tile('coo_rto','g','Recovery','Time to recover the slowest critical service')+
+    '</div>'+
+    c5bl('Bottom line','Protect the one process that can’t go down.',null,(ec.connected?('The customer platform is your most critical process, and its only real cyber exposure is an identity gap ('+ec.displayValue+'). The fix is funded — it protects both uptime and recovery.'):'Connect your controls and the one exposure to your most critical process — an identity gap — surfaces here, with its funded fix.'),{mid:'exp_identity',txt:'Fund the identity fix — protects uptime'})+
+    '<div class="c5foot">Resilience and recovery figures trace to source.</div>';
+}
+/* Tab 02 — Critical process health */
+function c5coProcesses(){
+  var host=document.getElementById('co-processes');if(!host)return;
+  var P=c5Processes();
+  var body;
+  if(!P.total){body='<div class="c5note">◐ Map your critical business processes in onboarding (or connect your CMDB) to see cyber risk per process. Until then this stays honestly empty rather than showing placeholder processes.</div>';}
+  else{body='<div class="c5rank" style="padding:4px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Critical processes · cyber status</div>'+P.list.map(function(p){var pill=p.status==='At risk'?'a':p.status==='Watch'?'b':'g';
+    return '<div class="c5prow" data-c5m="coo_processes"><span class="c5sq '+(p.c==='warn'?'a':p.c==='blue'?'b':'g')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+p.name+'</div><div class="c5row-s">'+p.sub+'</div></div><span class="c5pill '+pill+'">'+p.status+'</span></div>';
+  }).join('')+'</div>';}
+  var ec=c5get('exp_identity');
+  host.innerHTML=c5header()+
+    c5shell('Critical process health · which processes are exposed?','Most critical processes are cyber-safe — one needs attention.',null,'Cyber risk mapped to your critical operational processes. Only the customer platform carries real exposure; a payments process is on watch through a vendor. Tap any process for its drivers and dependencies.')+
+    body+
+    c5bl('Bottom line','Protect the process customers touch.',null,(ec.connected?('The customer platform is your only at-risk critical process — the identity gap threatens its uptime. The fix is funded.'):'Connect your controls and the at-risk process — the customer platform — surfaces here with its funded fix.'),{mid:'exp_identity',txt:'Fund the identity fix — protects the platform'})+
+    '<div class="c5foot">Processes and dependencies mapped from your operations model; exposure traces to source.</div>';
+}
+/* Tab 03 — Supply chain & third parties · PRIMARY decision is the Acme mitigation, NOT identity */
+function c5coSupply(){
+  var host=document.getElementById('co-supply');if(!host)return;
+  var V=c5vendors();var seed=V.seed;
+  var rows;
+  if(!seed.length){rows='<div class="c5note">◐ Add your tier-1/2 vendors (CSV or a TPRM pull) and connect a monitoring service to rank suppliers by live rating and flag single points of failure. Until then this stays honestly empty.</div>';}
+  else{var rs=(typeof LIVE!=='undefined'&&LIVE&&LIVE.resilience)||{};var blastVendor=(rs.top_vendor_blast&&rs.top_vendor_blast.vendor)||null;var blastSys=(rs.top_vendor_blast&&rs.top_vendor_blast.systems)||[];
+    var vs=V.vs;var list=((V.p&&V.p.vendors)||[]).slice().sort(function(a,b){return (a.score||100)-(b.score||100);}).slice(0,6);
+    rows='<div class="c5rank"><div class="c5rank-h">Tier-1 vendors · rating and the processes they touch</div>'+list.map(function(v){var cls=v.color||capColor(v.score);var spof=(blastVendor&&String(v.name).toLowerCase().indexOf(String(blastVendor).toLowerCase())>=0)?'<span class="c5tag rev">SPOF</span>':'';
+      return '<div class="c5row" data-c5m="thirdparty_risk"><div class="c5row-main"><div class="c5row-t">'+v.name+spof+'</div><div class="c5row-s">'+(spof?(blastSys.slice(0,2).join(' · ')+' · '):'')+(v.score!=null&&v.score<75?'rating falling':'healthy')+'</div></div><div class="c5row-v" style="color:var(--'+cls+')">'+(v.score!=null?v.score:'—')+'</div></div>';
+    }).join('')+'</div>';}
+  host.innerHTML=c5header()+
+    c5shell('Supply chain & third parties · can a vendor stop us?','Your supply chain is steady — one Tier-1 vendor needs watching.',null,'Third-party risk to your operations. Among your Tier-1 vendors, the worst-rated is a single point of failure for a critical process. The rest are healthy. Tap any vendor for its rating and the processes it touches.')+
+    '<div class="c5cards">'+c5card('coo_tier1')+c5card('thirdparty_risk')+c5card('coo_spof')+'</div>'+
+    rows+
+    c5bl('Bottom line','Reduce the one dependency that touches your critical process.',null,'Your worst-rated Tier-1 vendor is a falling-rated single point of failure. Add a resilience option — a backup provider or a contractual SLA. Separately, closing the identity gap limits how far a compromised vendor could reach.',{mid:'thirdparty_risk',txt:'Mitigate the vendor dependency'},{mid:'exp_identity',txt:'Fund identity — limits blast radius'})+
+    '<div class="c5foot">Vendor ratings from your third-party monitoring; dependencies from your operations model.</div>';
+}
+/* Tab 04 — Recovery readiness */
+function c5coRecovery(){
+  var host=document.getElementById('co-recovery');if(!host)return;
+  var ir=c5get('coo_identity_recovery'),ec=c5get('exp_identity');
+  host.innerHTML=c5header()+
+    c5shell('Recovery readiness · can we bounce back?','Recovery is tested — watch the identity path.',null,'Your recovery posture: RTO and RPO against target from the last test, backups verified. The one gap — restoring identity and access quickly — could slow a customer-platform restore. Tap any figure for the test evidence.')+
+    '<div class="c5cards">'+c5card('coo_rto')+c5card('coo_rpo')+c5card('coo_last_test')+'</div>'+
+    '<div class="c5tiles">'+
+      c5tile('coo_backups','g','Verified','Restore-tested this quarter')+
+      c5tile('coo_rto','g','Recovery time','Slowest critical service, vs target')+
+      c5tile('coo_rpo','g','Data-loss window','Backup cadence, vs target')+
+      c5tile('coo_identity_recovery',(ir.connected&&ir.color==='warn')?'a':'g',(ir.connected&&ir.color==='warn')?'Gap':'Ready','Access recovery — often the weak link')+
+    '</div>'+
+    c5bl('Bottom line','Close the recovery gap in your critical path.',null,(ec.connected?('Recovery meets targets where measured, but slow identity restoration could delay a customer-platform recovery. The identity fix improves recovery too — resilient access means a faster restore.'):'Connect your identity tools and the recovery weak link — access restoration — surfaces here, tied to the funded identity fix.'),{mid:'exp_identity',txt:'Fund the identity fix — faster recovery'})+
+    '<div class="c5foot">RTO/RPO and backup results from your last recovery test.</div>';
+}
+/* Tab 05 — Decisions for the COO */
+function c5coDecisions(){
+  var host=document.getElementById('co-decisions');if(!host)return;
+  var ec=c5get('exp_identity'),tp=c5get('thirdparty_risk');
+  var q='<div class="c5rank"><div class="c5rank-h">Decision queue · each tied to a critical process</div>'+
+    '<div class="c5row" data-c5m="exp_identity"><div class="c5row-main"><div class="c5row-t"><span class="c5pill b" style="margin-right:8px">Fund</span>Fund the identity fix</div><div class="c5row-s">Protects customer-platform uptime and recovery — your most critical process</div></div><div class="c5row-v">'+(ec.connected?('−'+ec.displayValue):'—')+'</div><span class="c5pill g" style="align-self:center">Recommended</span></div>'+
+    '<div class="c5row" data-c5m="thirdparty_risk"><div class="c5row-main"><div class="c5row-t"><span class="c5pill a" style="margin-right:8px">Mitigate</span>Reduce the vendor single point of failure</div><div class="c5row-s">Falling rating on a critical-process vendor · add resilience</div></div><div class="c5row-v">'+(tp.connected?tp.displayValue:'—')+'</div><span class="c5pill n" style="align-self:center">Advised</span></div>'+
+    '<div class="c5row" data-c5m="coo_bc"><div class="c5row-main"><div class="c5row-t"><span class="c5pill n" style="margin-right:8px">Maintain</span>Continuity plans</div><div class="c5row-s">Tested and current · maintain the cadence</div></div><div class="c5row-v">—</div><span class="c5pill n" style="align-self:center">On track</span></div>'+
+    '</div>';
+  host.innerHTML=c5header()+
+    c5shell('Decisions for the COO · what needs your call?','Two operational calls — one to fund, one to shore up.',null,'The operational cyber decisions on your desk, each tied to a critical process. Tap any for the full picture and source.')+
+    q+
+    c5bl('Bottom line','One call protects what can’t go down.',null,(ec.connected?('Funding the identity fix protects your most critical process — the customer platform — for both uptime and recovery ('+ec.displayValue+' removed). Shoring up the vendor dependency is the next priority.'):'Funding the identity fix protects your most critical process for both uptime and recovery. Shoring up the vendor dependency is the next priority.'),{mid:'exp_identity',txt:'Fund the identity fix — protects uptime'})+
+    '<div class="c5foot">Each decision links to its critical process and source.</div>';
 }
