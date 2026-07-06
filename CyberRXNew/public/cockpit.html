@@ -640,7 +640,7 @@ var SEAT_LABEL={board:'Board of Directors',ceo:'CEO',cfo:'CFO',coo:'COO',clo:'Ch
 var CUR='ceo';
 function render(seat){
   CUR=seat;var s=SEATS[seat];
-  var h='<div class="hero"><div class="eyebrow">'+s.eyebrow+'</div><div class="verdict">'+s.verdict+'</div>'+(s.sub?('<div class="sub">'+s.sub+'</div>'):'')+'<div class="hint">Tip: click any value with a <span class="fx">ƒ</span> chip to see the formula, inputs and math.</div></div>';
+  var h='<div class="hero"><div class="eyebrow">'+s.eyebrow+'</div>'+(s.sub?('<div class="sub">'+s.sub+'</div>'):'')+'<div class="hint">Tip: click any value with a <span class="fx">ƒ</span> chip to see the formula, inputs and math.</div></div>';
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
