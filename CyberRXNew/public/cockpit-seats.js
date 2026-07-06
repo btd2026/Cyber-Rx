@@ -253,28 +253,6 @@ var SEATS = {
   );}
  },
 
- crev:{
-  eyebrow:'Revenue &amp; customer view · Chief Revenue Officer',
-  verdict:'Cyber is <span class="em">protecting the revenue and customer trust that drive growth</span> — the systems that carry revenue are recoverable, and security clears deals rather than blocking them. The watch items are fraud exposure and any customer-impacting incident.',
-  sub:'Cyber through the revenue lens: the systems that carry revenue, the trust customers buy, service availability, fraud, and the security that wins or loses deals.',
-  brief:'From the revenue seat: cyber is protecting the systems that carry our revenue and the trust our customers pay for. Security is clearing deals through certifications, not blocking them. The items to watch are fraud exposure and any incident that reaches customers.',
-  body:function(){return (
-   sec('01','Revenue protection','The systems that carry revenue, ranked by what an hour of downtime costs — so we protect the ones the top line depends on, and know the revenue at risk if they fail.',
-     '<div id="cioSystems"></div>'
-     +'<div class="cn" style="margin-top:8px">These are the revenue-critical systems; an outage on the top one costs the most per hour. Recovery investment should follow revenue.</div>')
-   +sec('02','Customer trust','What a breach would cost in customer trust and liability — and the flip side, security as a sales asset that turns trust into revenue.',
-     '<div id="ceoTrust"></div>')
-   +sec('03','Subscription / service availability','Can customers reach the service they pay for? The service-critical processes ranked by what an hour of downtime costs, how fast each recovers, and whether that is inside tolerance.',
-     '<div id="cooContinuity"></div>')
-   +sec('04','Fraud exposure','Our live defense against the financial crime that hits revenue directly — payment fraud, business email compromise and account takeover.',
-     '<div id="cfoFraud"></div>')
-   +sec('05','Customer-impacting incidents','Is anything reaching customers right now? Active incidents affecting a customer-facing service, and how fast a disruption would surface.',
-     '<div id="cooStatus"></div>')
-   +sec('06','Sales &amp; renewal risk','Where security helps or hinders the deal — the pipeline moving through security review, how fast we clear it, and the certifications that are the price of admission in our market.',
-     '<div id="cisoGrowth"></div>')
-  );}
- },
-
  cpo:{
   eyebrow:'Product &amp; engineering view · Chief Product Officer',
   verdict:'Product ships <span class="em">with security built in, not bolted on</span> — launches gated on secure-by-design, AI features governed, and supplier &amp; software dependencies watched. The open work is instrumenting launch readiness and secure-SDLC coverage from your pipeline.',

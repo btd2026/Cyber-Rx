@@ -599,7 +599,7 @@
 </div></div>
 <div class="seats"><div class="wrap seats-in">
   <span class="seatlbl">Speaking to</span>
-  <button class="seat on" data-seat="ciso">CISO</button><button class="seat" data-seat="ceo">CEO</button><button class="seat" data-seat="cfo">CFO</button><button class="seat" data-seat="coo">COO</button><button class="seat" data-seat="cio">CIO</button><button class="seat" data-seat="cpo">Chief Product</button><button class="seat" data-seat="crev">Chief Revenue</button><button class="seat" data-seat="cro">Chief Risk</button><button class="seat" data-seat="clo">Chief Legal</button><button class="seat" data-seat="audit">Internal Audit</button><button class="seat" data-seat="board">Board</button>
+  <button class="seat on" data-seat="ciso">CISO</button><button class="seat" data-seat="ceo">CEO</button><button class="seat" data-seat="cfo">CFO</button><button class="seat" data-seat="coo">COO</button><button class="seat" data-seat="cio">CIO</button><button class="seat" data-seat="cpo">Chief Product</button><button class="seat" data-seat="cro">Chief Risk</button><button class="seat" data-seat="clo">Chief Legal</button><button class="seat" data-seat="audit">Internal Audit</button><button class="seat" data-seat="board">Board</button>
 </div></div>
 <div id="dataModeBar"><div class="wrap" id="dataModeInner" style="padding:8px 0;font-size:12px;font-weight:600"></div></div>
 <div class="wrap" id="app"></div>
@@ -636,7 +636,7 @@ function decisions(a){return a.map(function(d){return '<div class="decision" dat
   '<div class="dstatus" id="dstatus-'+d.n+'"></div></div>';}).join('');}
 function sec(no,q,desc,inner){return '<div class="section"><div class="rubric"><div class="no">'+no+'</div><div><div class="rt">'+q+'</div><div class="rd">'+desc+'</div></div></div>'+inner+'</div>';}
 
-var SEAT_LABEL={board:'Board of Directors',ceo:'CEO',cfo:'CFO',coo:'COO',clo:'Chief Legal Officer',cro:'Chief Risk Officer',cio:'CIO',ciso:'CISO',cpo:'Chief Product Officer',crev:'Chief Revenue Officer',audit:'Internal Audit'};
+var SEAT_LABEL={board:'Board of Directors',ceo:'CEO',cfo:'CFO',coo:'COO',clo:'Chief Legal Officer',cro:'Chief Risk Officer',cio:'CIO',ciso:'CISO',cpo:'Chief Product Officer',audit:'Internal Audit'};
 var CUR='ceo';
 function render(seat){
   CUR=seat;var s=SEATS[seat];
@@ -664,8 +664,6 @@ var TAB_LABELS={
  'Enterprise risk appetite':'Risk appetite','Risk acceptance':'Risk acceptance','Risk trends':'Risk trends','Cross-functional risk ownership':'Risk ownership','Control assurance':'Control assurance','Residual risk':'Residual risk',
  // CISO seat (outcome tabs)
  'Are we secure right now — and is the program getting stronger?':'Program health','Are our crown jewels secure?':'Crown jewels','Is our security program worth the spend — and can we prove it?':'Control value','Is AI making us safer or more exposed?':'AI risk','Where does the next dollar go — and where are we heading?':'Decisions','Are our security investments paying off?':'Project ROI',
- // Chief Revenue seat
- 'Revenue protection':'Revenue protection','Subscription / service availability':'Service availability','Fraud exposure':'Fraud','Customer-impacting incidents':'Customer incidents','Sales & renewal risk':'Sales & renewal',
  // Chief Product seat
  'Product launch readiness':'Launch readiness','Innovation velocity':'Innovation velocity','Product quality risk':'Product quality','AI product readiness':'AI product','Secure-by-design adoption':'Secure-by-design','Software & supplier dependency risk':'Dependencies',
  // Internal Audit seat
