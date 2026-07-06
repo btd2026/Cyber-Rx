@@ -1030,8 +1030,9 @@ function c5domainMetric(k){
 }
 
 /* ---------- the inspector (right-side #ev panel) ---------- */
-function c5Inspect(id){
-  var m=c5get(id);if(!m)return;
+function c5Inspect(id){var m=c5get(id);if(!m)return;c5InspectObj(m);}
+function c5InspectObj(m){
+  if(!m)return;
   var chip='<span class="c5chip c5-'+String(m.label).replace(/[^a-z]/g,'')+'">'+m.label+'</span>';
   var h='<div class="ev-claim">'+m.name+' '+chip+'</div>';
   h+='<div class="ev-result '+(m.color==='good'?'':m.color==='crit'?'crit':m.color==='warn'?'warn':'')+'">'+(m.connected?m.displayValue:'Not connected')+'</div>';
@@ -2191,6 +2192,45 @@ function c5Frameworks(){
   host.querySelectorAll('[data-c5fwcad]').forEach(function(b){b.onclick=function(){try{localStorage.setItem('cyberrx_audit_cadence',b.getAttribute('data-c5fwcad'));}catch(_){}c5Frameworks();};});
   host.querySelectorAll('[data-c5fwexp]').forEach(function(b){b.onclick=function(){var id=b.getAttribute('data-c5fwexp');C5FW_EXP[id]=!C5FW_EXP[id];c5Frameworks();};});
   host.querySelectorAll('[data-c5fwctl]').forEach(function(b){b.onclick=function(){C5FW_CTRL=b.getAttribute('data-c5fwctl');c5Frameworks();};});
+  host.querySelectorAll('[data-c5fwcard]').forEach(function(b){b.style.cursor='pointer';b.onclick=function(){c5fwInspect(b.getAttribute('data-c5fwcard'),T,sel,cad);};});
+}
+/* The four Frameworks summary cards open the same inspector as every other metric,
+   built from real assessment data (roll-up, coverage, trend history, deficiencies). */
+function c5fwInspect(card,T,sel,cad){
+  var fwName=(typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'the framework';
+  var trendH=(typeof fwHistory==='function')?fwHistory():[];
+  var trendDelta=(trendH.length>=2)?(trendH[trendH.length-1].v-trendH[0].v):null;
+  var m;
+  if(card==='overall'){
+    m=c5obj({name:'Overall maturity · '+fwName,displayValue:T.overall.toFixed(1)+' / 5',label:'computed',color:c5fwCol(T.overall),
+      formula:'overall maturity = evidence-weighted mean CMMI across the '+T.total+' controls in '+fwName+', rolled up through category → function → overall',
+      method:'Each control is scored 0–5 from live tool telemetry and analyzed policy documents; every group is the evidence-weighted mean of its children.',
+      inputs:[{name:'Controls evidenced',value:T.evidenced+' of '+T.total,source:'tool telemetry + document review'},{name:'Target',value:C5FW_TARGET.toFixed(1),source:'program target'},{name:'Status',value:c5fwStatus(T.overall).t,source:'meets ≥'+C5FW_TARGET.toFixed(1)+' · observation ≥'+C5FW_FLOOR+' · deficiency <'+C5FW_FLOOR}],
+      sources:[{tool:'Nerion assessment engine',connector:'nerion',field:'framework_cmmi.overall',lastRefresh:c5ago()}],
+      note:'Your continuous, auditor-grade maturity against '+fwName+'. '+(T.overall<C5FW_TARGET?('Below the '+C5FW_TARGET.toFixed(1)+' target — the deficiencies in the register on the right are where to focus.'):'At or above target.')});
+  } else if(card==='coverage'){
+    m=c5obj({name:'Evidence coverage · '+fwName,displayValue:T.coverage+'%',label:'computed',color:(T.coverage>=75?'good':T.coverage>=50?'warn':'crit'),
+      formula:'coverage = controls with evidence (tool telemetry or analyzed policy) ÷ total controls in '+fwName,
+      inputs:[{name:'Evidenced',value:String(T.evidenced),source:'tools + documents'},{name:'Total controls',value:String(T.total),source:fwName+' control universe'},{name:'Unevidenced',value:String(T.total-T.evidenced),source:'connect tools / upload policies to raise'}],
+      sources:[{tool:'Nerion assessment engine',connector:'nerion',field:'framework_cmmi.coverage',lastRefresh:c5ago()}],
+      note:'How much of '+fwName+' you can actually evidence today. Connect more tools or upload more policies to raise it.'});
+  } else if(card==='trend'){
+    m=c5obj({name:'Trend vs last refresh',displayValue:(trendDelta!=null?((trendDelta>=0?'+':'')+trendDelta.toFixed(1)):'Baseline'),label:'computed',color:(trendDelta==null?'ink':trendDelta>=0?'good':'crit'),
+      formula:'trend = overall CMMI this refresh − overall CMMI at the first recorded '+cad+' refresh',
+      method:trendDelta==null?('This is your first recorded refresh — the baseline. The trend appears after the next '+cad+' reassessment.'):('Recorded each '+cad+' reassessment.'),
+      inputs:trendH.length?trendH.slice(-6).map(function(h,i){return {name:'Refresh '+(i+1),value:Number(h.v).toFixed(1),source:h.date||h.at||''};}):[{name:'History',value:'baseline only',source:'records build each '+cad+' refresh'}],
+      sources:[{tool:'Nerion assessment engine',connector:'nerion',field:'fw_history',lastRefresh:c5ago()}],
+      note:'The board’s “are we improving?” answered on your reassessment cadence ('+cad+').'});
+  } else {
+    var defs=[];T.groups.forEach(function(g){(g.children||[]).forEach(function(c){if(c.type==='cat'){(c.children||[]).forEach(function(x){if(x.score<C5FW_FLOOR)defs.push(x);});}else if(c.score<C5FW_FLOOR)defs.push(c);});});
+    m=c5obj({name:'Controls failing · '+fwName,displayValue:String(T.failing),label:'computed',color:(T.failing>0?'crit':'good'),
+      formula:'failing = controls scoring below the deficiency floor (CMMI '+C5FW_FLOOR+') in '+fwName,
+      method:'Each is a finding in the register on the right — with its evidence, gap and remediation — and flows into the auditor pack.',
+      inputs:defs.length?defs.slice(0,10).map(function(x){return {name:x.id,value:Number(x.score).toFixed(1),source:x.name};}):[{name:'None',value:'0',source:'no control below CMMI '+C5FW_FLOOR}],
+      sources:[{tool:'Nerion assessment engine',connector:'nerion',field:'framework_cmmi.deficiencies',lastRefresh:c5ago()}],
+      note:(T.failing>0?(T.failing+' control'+(T.failing>1?'s':'')+' below CMMI '+C5FW_FLOOR+'. Tap a red control in the register for its finding, or Generate the auditor pack for the full deficiency list.'):'No controls below the deficiency floor.')});
+  }
+  c5InspectObj(m);
 }
 function c5fwCtlRow(c){var col=c5fwCol(c.score),selc=(C5FW_CTRL===c.id)?' sel':'';
   var mapped=(c.mapped&&c.mapped.length)?('<div class="c5fw-map">mapped ← '+c.mapped.slice(0,6).map(function(id){return id;}).join(' · ')+'</div>'):'';
