@@ -10,6 +10,21 @@ const { passport } = require('./config/passport');
 const { sessionMiddleware, closeSessionStore } = require('./config/session');
 const app = express();
 
+// Security headers (DAST remediation) — no external dep. Removes the framework
+// fingerprint and adds the standard hardening headers on every response.
+app.disable('x-powered-by');
+app.use(function (req, res, next) {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
+    res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains');
+  }
+  next();
+});
+
 // Initialize Sentry if configured
 if (process.env.SENTRY_DSN) {
   const Sentry = require('@sentry/node');
