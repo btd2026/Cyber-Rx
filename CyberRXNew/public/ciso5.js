@@ -372,8 +372,109 @@ function c5get(id){
         inputs:[{name:'Uptime %',value:'not connected',source:'monitoring / SRE (Datadog · Pingdom)'}],
         sources:[{tool:'Monitoring / SRE',connector:'uptime',field:'availability',lastRefresh:c5ago()}],
         note:'Customer-platform uptime — the availability customers feel. Connect monitoring to make it live.',connectTool:'your monitoring / SRE tool'});}
+    /* ---- CRO metrics (enterprise-risk lens; shared exposure objects reused) ---- */
+    case 'cr_rank':{var P=c5Principal();var conn=P.rows.length>0&&P.cyberRank!=null;
+      return c5obj({id:id,name:'Cyber rank',connected:conn,displayValue:conn?(P.cyberRank+' of '+P.rows.length):'—',label:'computed',color:'ink',
+        formula:'cyber rank = position of cyber residual among your principal risks, on one normalized scale',
+        inputs:P.rows.map(function(r){return {name:r.l,value:usd(r.v),source:r.cyber?'cyber model (exp_total)':'ERM input · portfolio.'+r.k};}),
+        sources:[{tool:'Enterprise risk register',connector:'erm',field:'principal_risks',lastRefresh:c5ago()}],
+        note:'Where cyber sits against market, credit, operational and the rest — the CRO’s one-scale view.',connectTool:'your ERM / risk register (principal risks)'});}
+    case 'cr_trend':{var tr=trajInfo();var conn=tr.two;
+      return c5obj({id:id,name:'Cyber trend',connected:conn||true,displayValue:tr.two?(tr.down?'Falling':'Rising'):'Baseline',label:'computed',color:tr.two?(tr.down?'good':'warn'):'muted',
+        formula:'cyber trend = direction of cyber residual quarter over quarter',
+        inputs:[{name:'Quarters recorded',value:tr.t?tr.t.length:0,source:'Nerion posture history'},{name:'Latest change',value:tr.two?tr.val.replace(/^[▲▼]\s*/,''):'baseline',source:'direction'}],
+        sources:[{tool:'Nerion engine',connector:'nerion',field:'residual_trend',lastRefresh:c5ago()}],
+        note:'Whether cyber is the principal risk that is rising or falling — the one the risk committee watches.',connectTool:'more recorded quarters'});}
+    case 'cr_families':{var A=c5Assurance();var conn=A.fams.some(function(f){return f.connected;});
+      return c5obj({id:id,name:'Families assured',connected:conn,displayValue:conn?(A.assured+' of '+A.fams.length):'—',label:'computed',color:conn?(A.gaps>0?'warn':'good'):'muted',
+        formula:'families assured = control families evidenced at or above the assurance threshold by tests + telemetry',
+        method:'Assurance is evidence-based — deployment telemetry and last-test signals, never a self-attested flag.',
+        inputs:A.fams.map(function(f){return {name:f.l,value:f.status+(f.deploy!=null?(' · '+f.deploy+'% deployed'):''),source:f.evidence};}),
+        sources:[{tool:'Control tools + GRC',connector:'assurance',field:'test_evidence',lastRefresh:c5ago()}],
+        note:'How many control families are actually assured by evidence — not how many are claimed.',connectTool:'your control tools + GRC test evidence'});}
+    case 'cr_gaps':{var A2=c5Assurance();var conn=A2.fams.some(function(f){return f.connected;});
+      return c5obj({id:id,name:'Assurance gaps',connected:conn,displayValue:conn?String(A2.gaps):'—',label:'computed',color:conn?(A2.gaps>0?'warn':'good'):'muted',
+        formula:'assurance gaps = control families with only partial or missing evidence',
+        inputs:A2.fams.filter(function(f){return f.status!=='Assured';}).map(function(f){return {name:f.l,value:f.status,source:f.evidence};}),
+        sources:[{tool:'Control tools + GRC',connector:'assurance',field:'test_evidence',lastRefresh:c5ago()}],
+        note:'The control families where assurance is incomplete — where a control could be failing unseen.',connectTool:'your control tools + GRC'});}
+    case 'cr_evidence':{var s=(typeof auditStats==='function')?auditStats():{pct:null};var conn=s.pct!=null;
+      return c5obj({id:id,name:'Evidence coverage',connected:conn,displayValue:conn?(s.pct+'%'):'—',label:'computed',color:conn?(s.pct>=75?'good':s.pct>=50?'warn':'crit'):'muted',
+        formula:'evidence coverage = controls evidenced (tools + documents) ÷ total control universe',
+        inputs:[{name:'Evidenced controls',value:conn?(s.evid+' of '+s.total):'—',source:'framework posture'}],
+        sources:[{tool:'Nerion engine',connector:'nerion',field:'evidence_coverage',lastRefresh:c5ago()}],
+        note:'How much of the control universe is backed by evidence rather than self-attestation.',connectTool:'your control tools + policies'});}
+    case 'cr_consec':{var tr2=trajInfo();var vals=(tr2.vals||[]);var run=0;for(var i=vals.length-1;i>0;i--){if(vals[i]<=vals[i-1])run++;else break;}var conn=vals.length>=2;
+      return c5obj({id:id,name:'Consecutive quarters',connected:conn,displayValue:conn?String(run):'—',label:'computed',color:conn?(run>=1?'good':'warn'):'muted',
+        formula:'consecutive quarters = the run of quarters, most recent first, where residual did not rise',
+        inputs:[{name:'Quarterly residuals',value:vals.length?vals.map(function(v){return usd(v);}).join(' → '):'—',source:'residual-risk series'}],
+        sources:[{tool:'Nerion engine',connector:'nerion',field:'residual_series',lastRefresh:c5ago()}],
+        note:'How durable the improvement is — a multi-quarter fall is the evidence the risk committee wants.',connectTool:'more recorded quarters'});}
+    case 'cr_owned':{var O=c5Owners();
+      return c5obj({id:id,name:'Owned actions',connected:true,displayValue:O.owned+' of '+O.total,label:'computed',color:O.owned>=O.total?'good':'warn',
+        formula:'owned actions = top risks with a named owner and an action, from the risk register',
+        inputs:O.rows.map(function(r){return {name:r.risk,value:r.status+' · '+r.owner,source:'risk register (owner) + cyber model (status)'};}),
+        sources:[{tool:'Enterprise risk register',connector:'erm',field:'risk_owners',lastRefresh:c5ago()}],
+        note:'Whether every material risk has an accountable owner — the governance question, in one number.',connectTool:'your risk register (owners)'});}
   }
   return c5obj({id:id,name:id,connected:false,displayValue:'—',color:'muted',note:'No metric definition.'});
+}
+/* Principal risks on one scale — from the enterprise risk register (LIVE.portfolio);
+   cyber's value is the shared exposure object so it matches the other seats. */
+function c5Principal(){
+  var p=(typeof LIVE!=='undefined'&&LIVE&&LIVE.portfolio)||{};var M=c5expModel();var cyberV=M.total||Number(p.cyber)||0;
+  var tr=trajInfo();var cyberTrend=tr.two?(tr.down?'Falling':'Rising'):'Steady',cyberTC=tr.two?(tr.down?'dn':'up'):'st';
+  var rows=[{k:'creditMarket',l:'Credit / market',v:Number(p.creditMarket)||0,tr:'Steady',tc:'st'},
+    {k:'operational',l:'Operational risk',v:Number(p.operational)||0,tr:'Steady',tc:'st'},
+    {k:'cyber',l:'Cyber risk',v:cyberV,cyber:true,tr:cyberTrend,tc:cyberTC},
+    {k:'thirdParty',l:'Third-party risk',v:Number(p.thirdParty)||0,tr:'Steady',tc:'st'},
+    {k:'compliance',l:'Compliance & regulatory',v:Number(p.compliance)||0,tr:'Steady',tc:'st'}]
+    .filter(function(r){return r.v>0;}).sort(function(a,b){return b.v-a.v;});
+  var cyberRank=null;rows.forEach(function(r,i){if(r.cyber)cyberRank=i+1;});
+  return {rows:rows,max:rows.length?rows[0].v:1,cyberRank:cyberRank,cyberV:cyberV};
+}
+/* Per-category residual vs an even allocation of appetite (labeled) — identity, the
+   largest driver, naturally exceeds its share, so 'over limit' emerges from data. */
+function c5Categories(){
+  var M=c5expModel();var ap=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.appetite&&Number(LIVE.economics.appetite.appetite))||0;
+  var n=M.drivers.length;var limit=(ap>0&&n>0)?ap/n:0;
+  return {drivers:M.drivers,limit:limit,appetite:ap,max:M.drivers.length?Math.max(M.drivers[0].usd,limit)*1.1:1};
+}
+/* Evidence-based control-family assurance — deployment telemetry + last-test signals. */
+function c5Assurance(){
+  var fams=[
+    {k:'identity',l:'Identity & access',caps:['mfa','pam'],test:'access_review_pct'},
+    {k:'thirdparty',l:'Third-party',caps:['__vendor']},
+    {k:'detect',l:'Detection & response',caps:['siem','edr']},
+    {k:'data',l:'Data protection',caps:['dlp']},
+    {k:'endpoint',l:'Endpoint',caps:['edr']},
+    {k:'network',l:'Network & perimeter',caps:['seg']}
+  ];
+  fams.forEach(function(f){
+    if(f.caps[0]==='__vendor'){var V=c5vendors();var w=V.worst?V.worst.score:null;f.deploy=w;f.connected=V.seed.length>0;
+      f.status=(w==null)?'Not connected':(w>=75?'Assured':'Partial');f.evidence=V.vs?('Live rating · '+V.vs.vendor):'monitoring service';f.sub=(w!=null?('Monitoring live · worst rating '+w+'/100'):'add your tier-1/2 vendors');}
+    else{var d=c5avgDeploy(f.caps);f.deploy=d;f.connected=(d!=null);
+      f.status=(d==null)?'Not connected':(d>=90?'Assured':(d>=50?'Partial':'Gap'));
+      var t=f.test?sig(f.test):null;
+      f.evidence=(d!=null?('Telemetry live · '+d+'% deployed'):'connect the control tool')+(t!=null?(' · reviews '+t+'%'):'');
+      f.sub=(d!=null?((t!=null?('Reviews '+t+'% · '):'')+'telemetry live · '+d+'% deployed'):'connect the control tool');}
+  });
+  var assured=fams.filter(function(f){return f.status==='Assured';}).length;
+  var gaps=fams.filter(function(f){return f.connected&&f.status!=='Assured';}).length;
+  return {fams:fams,assured:assured,gaps:gaps};
+}
+/* Top risks with owners (role defaults from the risk register) + status from the model. */
+function c5Owners(){
+  var M=c5expModel();var idMat=M.drivers.some(function(d){return d.id==='exp_identity'&&d.usd>0;});
+  var V=c5vendors();var tvName=V.worst?V.worst.name:'top vendor';
+  var rows=[
+    {risk:'Identity gap',owner:'CISO',status:idMat?'Push needed':'On track',c:idMat?'a':'g',act:'action funded, needs your push'},
+    {risk:'Third-party — '+tvName,owner:'Procurement + CISO',status:'Monitoring',c:'b',act:'monitoring'},
+    {risk:'Unpatched systems',owner:'IT Ops',status:'On track',c:'g',act:'remediation on track'},
+    {risk:'Endpoint coverage',owner:'CISO',status:'On track',c:'g',act:'improving'},
+    {risk:'Phishing & email',owner:'CISO + HR',status:'Accepted',c:'n',act:'risk accepted'}
+  ];
+  return {rows:rows,total:rows.length,owned:rows.length};
 }
 /* Strategic objectives — from an onboarding strategy input when present, else a
    labeled sector-default set. Each objective's at-risk status is COMPUTED: flagged
@@ -779,4 +880,80 @@ function c5ceDecisions(){
     q+
     c5bl('Bottom line','One call, clearly worth making.',null,(ec.connected?('Backing the identity fix protects your #1 growth objective and your customer trust, at a fraction of the exposure it removes ('+ec.displayValue+'). Everything else is on track and can wait for the next review.'):'Backing the identity fix protects your #1 growth objective and your customer trust. Everything else is on track and can wait for the next review.'),{mid:'exp_identity',txt:'Back the identity fix'})+
     '<div class="c5foot">Each decision links to its underlying model and source.</div>';
+}
+
+/* ================= CRO seat — same engine, enterprise-risk lens ================= */
+/* Tab 01 — Cyber on one scale */
+function c5crScale(){
+  var host=document.getElementById('cr-scale');if(!host)return;
+  var P=c5Principal(),ec=c5get('exp_identity');
+  var rows=P.rows.map(function(r){var pf=Math.max(6,Math.round(r.v/P.max*100));var barCls=r.cyber?'a':'';
+    return '<div class="c5row" data-c5m="'+(r.cyber?'exp_total':'cr_rank')+'"><div class="c5row-main"><div class="c5row-t">'+r.l+(r.cyber?'<span class="c5tag">You are here</span>':'')+'</div><div class="c5retbar" style="width:100%;max-width:340px"><i class="'+barCls+'" style="width:'+pf+'%"></i></div></div><div class="c5row-v">'+usd(r.v)+'</div><span class="c5tr '+r.tc+'">'+r.tr+'</span></div>';
+  }).join('');
+  host.innerHTML=c5header()+
+    c5shell('Cyber on one scale · how does it compare to our other risks?','Cyber sits mid-pack among your principal risks — watch its direction.',null,'On one enterprise scale, cyber sits against market, credit, operational and compliance risk. Its direction — not just its size — is what the risk committee tracks; a single identity gap drives most of it. Tap any risk for its basis.')+
+    '<div class="c5cards">'+c5card('cr_rank')+c5card('exp_total')+c5card('cr_trend')+'</div>'+
+    '<div class="c5rank"><div class="c5rank-h">Principal risks · residual on one scale</div>'+rows+'</div>'+
+    c5bl('Bottom line','The one lever that moves cyber down the scale.',null,(ec.connected?('A single identity gap drives most of cyber’s residual. Treating it removes '+ec.displayValue+' — moving cyber down the enterprise scale.'):'Connect your controls and the single identity gap driving most of cyber’s residual surfaces here, with its funded treatment.'),{mid:'exp_identity',txt:ec.connected?('Treat the identity risk — removes '+ec.displayValue):'Treat the identity risk'})+
+    '<div class="c5foot">Risks are normalized to one residual-loss scale; cyber traces to its model, the rest to your ERM inputs.</div>';
+}
+/* Tab 02 — Risk appetite & acceptance */
+function c5crAppetite(){
+  var host=document.getElementById('cr-appetite');if(!host)return;
+  var C=c5Categories(),ec=c5get('exp_identity');
+  var rows=C.drivers.map(function(d){var over=(C.limit>0&&d.usd>C.limit);var rp=Math.max(4,Math.min(98,d.usd/C.max*100));var lp=C.limit>0?Math.max(2,Math.min(98,C.limit/C.max*100)):null;
+    return '<div class="c5prow" data-c5m="'+d.id+'"><div class="c5prow-n">'+d.name.replace(/ — .*/,'')+(over?'<span class="c5tag rev">Over limit</span>':'')+'</div><div class="c5track">'+(lp!=null?('<span class="c5track-tick" style="left:'+lp+'%"></span>'):'')+'<span class="c5track-dot" style="left:'+rp+'%;background:var(--'+(over?'warn':'good')+')"></span></div><div class="c5prow-v">'+usd(d.usd)+'</div><div class="c5prow-d" style="color:var(--muted)">'+(C.limit>0?('/ '+usd(C.limit)):'—')+'</div></div>';
+  }).join('');
+  host.innerHTML=c5header()+
+    c5shell('Risk appetite & acceptance · are we within tolerance?','Within appetite overall — but one category is over its limit.',null,'Cyber residual sits against the board’s appetite with headroom overall. By category, the largest driver is over its share of that appetite. Tap any category for its appetite basis and residual model.')+
+    '<div class="c5cards">'+c5card('exp_total')+c5card('cf_appetite')+c5card('cf_headroom')+'</div>'+
+    '<div class="c5rank" style="padding:4px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">By category · residual vs. limit <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">(| = category limit · even allocation of appetite until your framework’s limits connect)</span></div>'+rows+'</div>'+
+    c5bl('Bottom line','One category is over its limit.',null,(ec.connected?('Identity residual ('+ec.displayValue+') exceeds its category share of appetite. Treating it brings the category back within tolerance and restores category-level headroom.'):'Connect your controls and the over-limit category — identity — surfaces here with its funded treatment.'),{mid:'exp_identity',txt:'Bring identity within appetite'})+
+    '<div class="c5foot">Overall appetite from your risk framework; category limits are an even allocation (labeled) until your framework’s category limits connect; residuals from the cyber model.</div>';
+}
+/* Tab 03 — Control assurance */
+function c5crAssurance(){
+  var host=document.getElementById('cr-assurance');if(!host)return;
+  var A=c5Assurance();
+  var rows=A.fams.map(function(f){var pill=f.status==='Assured'?'g':f.status==='Partial'?'a':f.status==='Gap'?'r':'n';
+    return '<div class="c5prow" data-c5m="cr_families"><span class="c5sq '+(pill==='g'?'g':pill==='a'?'a':pill==='r'?'r':'n')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+f.l+'</div><div class="c5row-s">'+f.sub+'</div></div><span class="c5pill '+pill+'">'+f.status+'</span></div>';
+  }).join('');
+  host.innerHTML=c5header()+
+    c5shell('Control assurance · are the controls working?','Controls are largely assured — with gaps where it matters.',null,'Assurance across your control families — evidenced from tests and telemetry, not self-attestation. Most are assured; identity and third-party carry a partial-assurance gap. Tap any family for its evidence and last test.')+
+    '<div class="c5cards">'+c5card('cr_families')+c5card('cr_gaps')+c5card('cr_evidence')+'</div>'+
+    '<div class="c5rank" style="padding:4px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Control families · evidence-based assurance</div>'+rows+'</div>'+
+    c5bl('Bottom line','Close the assurance gap where it matters most.',null,'Identity controls are only partially assured — and they drive your largest residual risk. The funded fix closes the control gap and the assurance gap together.',{mid:'exp_identity',txt:'Close the identity control gap'})+
+    '<div class="c5foot">Assurance is evidence-based (tests and telemetry), not self-attestation.</div>';
+}
+/* Tab 04 — Trend & ownership */
+function c5crTrend(){
+  var host=document.getElementById('cr-trend');if(!host)return;
+  var tr=trajInfo();var vals=(tr.vals||[]).slice(-6);var maxV=Math.max.apply(null,vals.concat([1]));
+  var bars='<div class="c5bars" style="height:40px">'+(vals.length?vals.map(function(v){var h=Math.round(6+(maxV>0?v/maxV:0)*32);return '<i style="height:'+h+'px"></i>';}).join(''):[1,2,3,4,5,6].map(function(){return '<i class="n" style="height:8px"></i>';}).join(''))+'</div>';
+  var O=c5Owners();
+  var rows=O.rows.map(function(r){var pill=r.c;var pt=r.status;
+    return '<div class="c5prow" data-c5m="cr_owned"><span class="c5sq '+(r.c==='a'?'a':r.c==='b'?'b':r.c==='n'?'n':'g')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+r.risk+'</div><div class="c5row-s">Owner: '+r.owner+' · '+r.act+'</div></div><span class="c5pill '+pill+'">'+pt+'</span></div>';
+  }).join('');
+  host.innerHTML=c5header()+
+    c5shell('Trend & ownership · are we improving, and who owns what?','The direction is good — with clear owners.',null,'Direction and accountability. Cyber residual’s quarter-over-quarter trend is below, and every top risk has a named owner and an action; one — identity — needs your governance push. Tap any item for detail.')+
+    '<div class="c5cards">'+c5card('direction')+c5card('cr_consec')+c5card('cr_owned')+'</div>'+
+    '<div class="c5rank" style="padding:12px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:0 0 8px">Residual risk, last 6 quarters</div>'+bars+'</div>'+
+    '<div class="c5rank" style="padding:4px 15px;margin-top:14px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Top risks · owner and action</div>'+rows+'</div>'+
+    c5bl('Bottom line','The trend is good — keep the one action moving.',null,'Every top risk is owned and moving. The identity action is funded but needs your governance push to land this quarter — it’s the biggest single reduction available.',{mid:'exp_identity',txt:'Sponsor the identity action'})+
+    '<div class="c5foot">Trend from the residual-risk series; owners from your risk register.</div>';
+}
+/* Tab 05 — Decisions for the CRO */
+function c5crDecisions(){
+  var host=document.getElementById('cr-decisions');if(!host)return;
+  var ec=c5get('exp_identity'),ev=c5get('exp_vendor'),em=c5get('exp_email');var V=c5vendors();var tvName=V.worst?V.worst.name:'top vendor';
+  var q='<div class="c5rank"><div class="c5rank-h">Decision queue · each with residual, appetite and a recommendation</div>'+
+    '<div class="c5row" data-c5m="exp_identity"><div class="c5row-main"><div class="c5row-t"><span class="c5pill b" style="margin-right:8px">Treat</span>Identity gap</div><div class="c5row-s">Over its category share of appetite · treating removes '+(ec.connected?ec.displayValue:'the residual')+'</div></div><div class="c5row-v">'+(ec.connected?('−'+ec.displayValue):'—')+'</div><span class="c5pill g" style="align-self:center">Recommended</span></div>'+
+    '<div class="c5row" data-c5m="exp_vendor"><div class="c5row-main"><div class="c5row-t"><span class="c5pill a" style="margin-right:8px">Monitor</span>Third-party concentration — '+tvName+'</div><div class="c5row-s">Within limit but rating to watch · keep monitoring</div></div><div class="c5row-v">'+(ev.connected?ev.displayValue:'—')+'</div><span class="c5pill n" style="align-self:center">Watch</span></div>'+
+    '<div class="c5row" data-c5m="exp_email"><div class="c5row-main"><div class="c5row-t"><span class="c5pill n" style="margin-right:8px">Accept</span>Residual phishing risk</div><div class="c5row-s">Modeled and falling · within tolerance</div></div><div class="c5row-v">'+(em.connected?em.displayValue:'—')+'</div><span class="c5pill n" style="align-self:center">Reasonable</span></div>'+
+    '</div>';
+  host.innerHTML=c5header()+
+    c5shell('Decisions for the CRO · what needs your call?','Three risk decisions — one to treat, one to monitor, one to accept.',null,'The risk decisions on your desk, each with its residual, appetite, and a recommendation. Only one needs treating now. Tap any for the full risk picture and source.')+
+    q+
+    c5bl('Bottom line','One risk needs treating today.',null,(ec.connected?('The identity gap is the only principal-risk driver over its appetite share, and treating it is the single biggest reduction available ('+ec.displayValue+'). The other two are appropriately monitored or accepted.'):'The identity gap is the driver over its appetite share, and treating it is the biggest reduction available. The other two are appropriately monitored or accepted.'),{mid:'exp_identity',txt:ec.connected?('Treat the identity risk — removes '+ec.displayValue):'Treat the identity risk'})+
+    '<div class="c5foot">Each decision carries its residual, appetite, and source.</div>';
 }
