@@ -183,9 +183,9 @@ var SEATS = {
 
  cio:{
   eyebrow:'Operational resilience view · CIO',
-  verdict:'Every revenue-critical system is <span class="em">operating and recoverable.</span> The slowest recovery is 3.1 days; one investment cuts it to hours. A single vendor underpins three systems.',
+  verdict:'Every revenue-critical system is <span class="em">operating and recoverable.</span> The items to close are the slowest-recovering system on the worst-case tail and a single vendor that underpins multiple systems — both quantified below, each figure clickable to its math.',
   sub:'Cyber and resilience for the systems that carry the business: what each is worth per hour, how fast it recovers, and where a single provider is a point of failure.',
-  brief:'Operationally, every revenue system is running and recoverable. The slowest one recovers in about three days, and that drives most of our worst case — a single investment cuts it to under six hours. The concentration to fix is one cloud vendor that underpins three revenue systems; if it fails, all three degrade at roughly three point eight million dollars an hour.',
+  brief:'Operationally, every revenue system is running and recoverable. Two items drive the resilience picture: the slowest-recovering system, which carries most of our worst-case tail, and a concentration where one provider underpins several revenue systems. Both are quantified on this seat in dollars per hour and recovery time, and each number is clickable to how it was calculated and where the data comes from.',
   body:function(){return (
    sec('01','Technology enablement of business objectives','Technology carries the business — here are the systems that run it, ranked by what an hour of downtime costs, so investment and protection follow revenue. This is where cyber either enables the objectives or blocks them.',
      '<div id="cioSystems"></div>'
@@ -200,7 +200,7 @@ var SEATS = {
      '<div id="cioModern"></div>')
    +sec('06','Service availability','Could the systems that carry the business keep running and recover fast enough? Immutable backups, recovery-point objective, last DR test, and where a single vendor failure leaves no failover.',
      '<div id="cioDr"></div>'
-     +decisions([{n:1,q:'How much recovery resilience do we fund?',sit:'Our slowest revenue system recovers in ~3.1 days, driving most of the worst-case tail. Three levels:',opts:[
+     +decisions([{n:1,q:'How much recovery resilience do we fund?',sit:'<span class="pill mod">illustrative example</span> The slowest revenue system drives most of the worst-case tail; your live recovery times and tail figures compute from your resilience data and risk register. Three levels:',opts:[
        {rec:true,tag:'A · Full modernization',on:'Option A · Full',osum:'$3.2M · <6h recovery',pros:['Cuts worst case by ~$40M','Meets regulatory recovery expectations','Removes the single-vendor risk (multi-region)'],cons:['Requires $3.2M of capital','One-quarter program']},
        {tag:'B · Critical systems only',on:'Option B · Critical only',osum:'$1.6M',pros:['Protects payments &amp; settlement (the top $/hr systems)','Half the capital of full modernization'],cons:['Member-portal recovery stays at ~40 hrs','Removes only ~$24M of the $40M tail driver']},
        {tag:'C · Defer',on:'Option C · Defer',osum:'$0 this year',pros:['Zero capital this year'],cons:['Worst-case recovery stays 3.1 days','Tail stays $180M — above the $120M appetite','Weakens the insurance renewal position']}]}]))
