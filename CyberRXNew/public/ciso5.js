@@ -1965,46 +1965,80 @@ function c5fwFinding(sel,node){
     h+='<div class="ev-sec">Where this comes from</div><div class="drill-p">Rolled up from '+node.rollup.length+' assessed items below. Expand the group on the right to test each one.</div></div>';
     return h;
   }
-  // control-level auditor finding
-  var pct=(node.toolPct!=null)?node.toolPct:null;
-  var cond,crit,cause,effect,rec,uplift;
-  crit='Control '+node.id+' ('+node.name+') is assessed against a maturity target of CMMI '+C5FW_TARGET.toFixed(1)+' (Defined+).';
+  // control-level auditor finding (fields come from c5fwFindingData so the deck matches the tab)
+  var F=c5fwFindingData(sel,node);
+  h+='<div class="ev-sec">Condition (what was tested)</div><div class="drill-p">'+F.condition+'</div>';
+  h+='<div class="ev-sec">Criteria</div><div class="drill-p">'+F.criteria+'</div>';
+  h+='<div class="ev-sec">Cause</div><div class="drill-p">'+F.cause+'</div>';
+  h+='<div class="ev-sec">Effect (risk)</div><div class="drill-p">'+F.effect+'</div>';
+  h+='<div class="ev-sec">Recommendation</div><div class="drill-p">'+F.recommendation+(F.targetUplift?(' — target uplift '+F.targetUplift+'.'):'')+'</div>';
+  if(F.mappings&&F.mappings.length){h+='<div class="ev-sec">Cross-framework</div><div class="drill-p">'+F.mappings.map(function(id){return '<span class="c5fw-chip">'+id+'</span>';}).join('')+'</div>';}
+  h+='<div class="c5foot" style="margin-top:14px">Documented to AICPA attestation rigor · traceable to source evidence · our own wording, not reproduced standard text. Continuous management self-assessment, not an independent audit opinion.</div></div>';
+  return h;
+}
+/* Plain-text finding fields for a control — the single source used by both the tab
+   (left panel) and the auditor-pack PPTX, so the deck matches the tab exactly. */
+function c5fwFindingData(sel,node){
+  var st=c5fwStatus(node.score),pct=(node.toolPct!=null)?node.toolPct:null;
+  var crit='Control '+node.id+' ('+node.name+') is assessed against a maturity target of CMMI '+C5FW_TARGET.toFixed(1)+' (Defined+).';
+  var cond,cause,effect,rec,ev=[];
   if(node.src==='mapped'){
     cond='Derived by crosswalk: this control inherits the maturity of the '+((node.mapped||[]).length)+' NIST CSF 2.0 subcategor'+((node.mapped||[]).length===1?'y':'ies')+' it maps to, assessed at CMMI '+node.score.toFixed(1)+'.';
     cause='The mapped CSF controls carry the deficiency; this framework reflects it through the public crosswalk.';
     effect=st.key==='def'?'A deficiency in the mapped controls leaves this requirement below assurance level.':(st.key==='obs'?'The mapped posture is below target — an observation to raise toward the goal.':'The mapped posture meets the target.');
     rec='Uplift the underlying CSF controls (see mapping); this requirement rises with them. Refer to your organization’s own '+(sel==='cis'?'CIS Controls license':'framework license')+' for implementation-tier detail.';
+    ev.push(['Derivation','Public CSF 2.0 crosswalk']);ev.push(['Mapped controls',(node.mapped||[]).join(', ')]);
   } else if(node.src==='system'){
     cond='Automated continuous monitoring measured '+(pct!=null?(pct+'% effective coverage across the in-scope population'):'coverage')+' — '+(pct!=null?((100-pct)+'% of the population is outside the control'):'a residual population remains outside the control')+'. Assessed at CMMI '+node.score.toFixed(1)+'.';
     cause=st.key==='meets'?'Coverage meets the maturity threshold.':'Coverage sits below the ≥90% threshold required for full maturity, leaving a residual population unprotected.';
     effect=st.key==='def'?'The uncovered population is a control deficiency — exploitable exposure until remediated.':(st.key==='obs'?'The residual population is an observation — a gap to close toward target.':'No material exposure at current coverage.');
     rec=st.key==='meets'?'Maintain coverage and retain the tool’s evidence export each cycle.':'Extend the control to the residual population to raise coverage toward ≥90%';
+    ev.push(['Method','Automated continuous control monitoring']);if(pct!=null)ev.push(['Measured coverage',pct+'%']);ev.push(['Maturity','CMMI '+node.score]);
   } else if(node.src==='document'){
     cond='Document review found '+(node.doc&&node.doc.attrs?('the governing policy present '+(node.doc.attrs.filter(function(a){return a.found;}).length)+' of '+node.doc.attrs.length+' expected control attributes'):'the governing policy partially satisfies the expected attributes')+'. Assessed at CMMI '+node.score.toFixed(1)+'.';
     cause=st.key==='meets'?'The policy evidences the required attributes.':'Some expected attributes are absent from the analyzed policy, capping maturity below target.';
     effect=st.key==='meets'?'Documented control operating as designed.':'Design gap — the control may not operate consistently until the policy is completed.';
     rec=st.key==='meets'?'Maintain the policy and re-verify on the '+c5fwCadence()+' cadence.':'Complete the missing policy attributes and re-submit for document review';
+    ev.push(['Method','Document review']);ev.push(['Maturity','CMMI '+node.score]);
   } else {
     cond='No evidence is on file for this control — neither connected-tool telemetry nor an analyzed policy. Assessed at CMMI 0 (Not evidenced).';
     cause='The control’s source tool is not connected and no governing policy has been analyzed.';
     effect='Assurance cannot be given for this control until it is evidenced — a deficiency by default.';
     rec='Connect the control’s tool or upload the governing policy so the control gains an evidenced maturity score';
+    ev.push(['Evidence','None on file']);
   }
   var cur=Math.round(node.score),tgt=Math.min(5,Math.max(cur+1,Math.ceil(C5FW_TARGET)));
-  uplift=(node.score<C5FW_TARGET)?(' — target uplift L'+cur+' → L'+tgt+' within one '+c5fwCadence()+' cycle.'):'';
-  h+='<div class="ev-sec">Condition (what was tested)</div><div class="drill-p">'+cond+'</div>';
-  h+='<div class="ev-sec">Criteria</div><div class="drill-p">'+crit+'</div>';
-  h+='<div class="ev-sec">Cause</div><div class="drill-p">'+cause+'</div>';
-  h+='<div class="ev-sec">Effect (risk)</div><div class="drill-p">'+effect+'</div>';
-  h+='<div class="ev-sec">Recommendation</div><div class="drill-p">'+rec+uplift+'</div>';
-  if(node.mapped&&node.mapped.length){h+='<div class="ev-sec">Cross-framework</div><div class="drill-p">'+node.mapped.map(function(id){return '<span class="c5fw-chip">'+id+'</span>';}).join('')+'</div>';}
-  else if(node.src!=='mapped'&&typeof fwCrosswalkFor==='function'){}
-  h+='<div class="c5foot" style="margin-top:14px">Documented to AICPA attestation rigor · traceable to source evidence · our own wording, not reproduced standard text. Continuous management self-assessment, not an independent audit opinion.</div></div>';
-  return h;
+  return {ref:node.id,name:node.name,classification:st.t,score:node.score,condition:cond,criteria:crit,cause:cause,effect:effect,recommendation:rec,
+    targetUplift:(node.score<C5FW_TARGET)?('L'+cur+' → L'+tgt+' within one '+c5fwCadence()+' cycle'):'',mappings:node.mapped||[],evidence:ev};
 }
-function c5fwExport(){var base=(typeof apiBase==='function')?apiBase():'';var o=(typeof orgId==='function')?orgId():'';
-  var url=base+'/api/ciso/report.pptx?fw='+encodeURIComponent(FW_SEL)+(o?('&org_id='+encodeURIComponent(o)):'');
-  try{window.open(url,'_blank');}catch(_){}}
+/* Build the full assessment payload from the tree + findings and POST it to the
+   auditor-pack builder — the deck is a rendering of the same Metric/Finding data. */
+function c5fwExport(){
+  var sel=FW_SEL,cov=(typeof fwDeployedIds==='function')?fwDeployedIds():{},T=c5fwTree(sel,cov);
+  var controls=[];T.groups.forEach(function(g){(g.children||[]).forEach(function(c){if(c.type==='cat'){(c.children||[]).forEach(function(x){controls.push(x);});}else controls.push(c);});});
+  var nm=(typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||sel;var mapped=(sel==='cis'||sel==='soc2'||sel==='hipaa');
+  var register=controls.map(function(c){var st=c5fwStatus(c.score);return {ref:c.id,name:c.name,derivedFrom:(c.mapped&&c.mapped.length)?('CSF '+c.mapped.slice(0,3).join(', ')):nm,score:c.score,target:C5FW_TARGET,classification:st.t};});
+  var findings=controls.filter(function(c){return c.score<C5FW_TARGET;}).sort(function(a,b){return a.score-b.score;}).map(function(c){var F=c5fwFindingData(sel,c);return {ref:F.ref,name:F.name,classification:F.classification,condition:F.condition,criteria:F.criteria,cause:F.cause,effect:F.effect,recommendation:F.recommendation,targetUplift:F.targetUplift,mappings:F.mappings,evidence:(F.evidence||[]).map(function(e){return e[0]+': '+e[1];})};});
+  var groups=T.groups.map(function(g){var st=c5fwStatus(g.score);return {id:g.id,name:g.name,score:g.score,level:c5fwLvl(g.score),status:st.t};});
+  var roadmap=findings.filter(function(f){return /deficiency/i.test(f.classification);}).slice(0,12).map(function(f){return {action:'Remediate '+f.ref+' — '+f.name,owner:'Control owner',effort:'1 cycle',uplift:f.targetUplift,timeframe:'This '+c5fwCadence()+' cycle'};});
+  var mapping=mapped?controls.map(function(c){return {ref:c.id,name:c.name,sources:c.mapped||[]};}):[];
+  var evidence=[['Tool telemetry','Live coverage % from connected control tools (EDR · identity · SIEM · CNAPP)'],['Document review','Analyzed policies mapped to expected control attributes'],['Crosswalk','Public CSF ↔ framework mapping for derived scores']].map(function(e){return {area:e[0],evidence:e[1]};});
+  var trendDelta=(function(){var h=(typeof fwHistory==='function')?fwHistory():[];if(h.length>=2){var d=h[h.length-1].v-h[0].v;return (d>=0?'+':'')+d.toFixed(1)+' CMMI';}return 'Baseline';})();
+  var licensing=[(typeof FW_XNOTE!=='undefined'&&FW_XNOTE[sel])?FW_XNOTE[sel].replace(/<[^>]+>/g,''):null].filter(Boolean);
+  var payload={fw:sel,standard:nm,client:((typeof orgName==='function'&&orgName())||'Your organization'),period:new Date().toISOString().slice(0,10),cadence:c5fwCadence(),
+    overall:T.overall,overallLevel:c5fwLvl(T.overall),overallStatus:c5fwStatus(T.overall).key,target:C5FW_TARGET,coverage:T.coverage,evidenced:T.evidenced,total:T.total,failing:T.failing,trendDelta:trendDelta,
+    verdict:nm+' is assessed at CMMI '+T.overall.toFixed(1)+' of 5 against a '+C5FW_TARGET.toFixed(1)+' target, from continuous evidence. '+findings.filter(function(f){return /deficiency/i.test(f.classification);}).length+' deficiencies and '+findings.filter(function(f){return /observation/i.test(f.classification);}).length+' observations identified.',
+    headlineRec:'Prioritize the deficiencies below (worst-first); each carries a target uplift and fits within one '+c5fwCadence()+' cycle.',
+    licensing:licensing,demoNote:(typeof signalsAreDemo==='function')?signalsAreDemo():false,
+    derivedLabel:mapped?'Derived from (CSF)':'Source',groupNoun:(sel==='csf')?'Function':(sel==='r53')?'Family':'Criteria',mappingNote:mapped?('Each '+nm+' requirement inherits the mean maturity of the NIST CSF 2.0 controls it maps to via the public crosswalk. No proprietary control text is reproduced.'):null,
+    groups:groups,register:register,findings:findings,roadmap:roadmap,mapping:mapping,evidence:evidence};
+  var base=(typeof apiBase==='function')?apiBase():'',o=(typeof orgId==='function')?orgId():'';
+  if(typeof fetch!=='function'){return;}
+  fetch(base+'/api/ciso/auditor-pack.pptx'+(o?('?org_id='+encodeURIComponent(o)):''),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+    .then(function(r){if(!r.ok)throw new Error('export failed');return r.blob();})
+    .then(function(blob){var u=URL.createObjectURL(blob);var a=document.createElement('a');a.href=u;a.download='nerion-auditor-pack-'+sel+'.pptx';document.body.appendChild(a);a.click();setTimeout(function(){try{URL.revokeObjectURL(u);a.remove();}catch(_){}},1000);})
+    .catch(function(){try{window.open(base+'/api/ciso/report.pptx'+(o?('?org_id='+encodeURIComponent(o)):''),'_blank');}catch(_){}});
+}
 function c5Frameworks(){
   var host=document.getElementById('c5-frameworks');if(!host)return;
   if(typeof seedDemoDocScores==='function'){try{seedDemoDocScores();}catch(_){}}
