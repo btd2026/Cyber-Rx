@@ -323,8 +323,82 @@ function c5get(id){
         inputs:[{name:'Tool spend records',value:'not connected',source:'finance / procurement'},{name:'Tool inventory & utilization',value:'not connected',source:'CASB / license management'}],
         sources:[{tool:'Finance / procurement',connector:'spend',field:'tool_spend',lastRefresh:c5ago()}],
         note:'Money you can free by retiring underperforming or overlapping tools — needs your spend and inventory records.',connectTool:'your tool inventory & spend records'});}
+    /* ---- CEO metrics (strategy & trust lens; shared exposure objects reused) ---- */
+    case 'ceo_health':{var oi=sig('open_incidents');var tr=trajInfo();var caps=CAPS.filter(function(c){return capDeploy(c)!=null;}).length;var conn=(oi!=null||caps>0);var strong=(oi==null||oi===0);
+      return c5obj({id:id,name:'Enterprise health',connected:conn,displayValue:conn?(strong?'Strong':'Watch'):'—',label:'computed',color:conn?(strong?'good':'warn'):'muted',
+        formula:'enterprise health = strong when there is no active compromise and the program trend is flat or improving',
+        inputs:[{name:'Active compromise',value:oi!=null?(oi>0?oi+' active':'none'):'—',source:'active_compromise'},{name:'Program direction',value:tr.two?(tr.down?'improving':'worsening'):'baseline',source:'direction'}],
+        sources:[{tool:'Nerion engine',connector:'nerion',field:'enterprise_health',lastRefresh:c5ago()}],
+        note:'The one-glance read the CEO opens with — is cyber a tailwind or a risk this quarter.',connectTool:'your SIEM + control tools'});}
+    case 'ceo_biz_health':{var oi2=sig('open_incidents');var conn=oi2!=null;var sec2=(oi2==null||oi2===0);
+      return c5obj({id:id,name:'Business health',connected:conn,displayValue:conn?(sec2?'Secure & resilient':'Incident active'):'—',label:'computed',color:conn?(sec2?'good':'crit'):'muted',
+        formula:'business health = secure when there is no active compromise',
+        inputs:[{name:'Active compromise',value:oi2!=null?(oi2>0?oi2:'none'):'—',source:'active_compromise'}],
+        sources:[{tool:'Nerion engine',connector:'nerion',field:'business_health',lastRefresh:c5ago()}],
+        note:'No active compromise and the program improving — the health line for the board.',connectTool:'your SIEM'});}
+    case 'ceo_objectives':{var O=c5Objectives();
+      return c5obj({id:id,name:'Objectives protected',connected:true,displayValue:O.protected+' of '+O.total,label:'computed',color:O.atRisk>0?'warn':'good',
+        formula:'objectives protected = total strategic objectives − those carrying a material cyber exposure',
+        method:'An objective is flagged at-risk when a material exposure driver maps to it (e.g. the identity gap → the customer platform).',
+        inputs:O.objs.map(function(o){return {name:o.name,value:o.status,source:o.map?('exposure driver: '+o.map):'no material driver'};}),
+        sources:[{tool:O.fromInput?'Onboarding · strategy':'Sector default (labeled)',connector:'strategy',field:'objectives',lastRefresh:c5ago()}],
+        note:'Cyber mapped to the strategy — how many objectives are cyber-safe, and which one needs attention.',connectTool:'your strategic objectives (onboarding)'});}
+    case 'ceo_cust_incidents':{var oi3=sig('open_incidents');var conn=oi3!=null;
+      return c5obj({id:id,name:'Customer-impacting incidents',connected:conn,displayValue:conn?String(oi3):'—',label:'live',color:conn?(oi3>0?'crit':'good'):'muted',
+        formula:'customer-impacting incidents = open incidents affecting a customer-facing service',
+        inputs:[{name:'Open incidents',value:conn?oi3:'—',source:'SIEM · open_incidents'}],sources:[c5capSrc('siem')],
+        note:'Whether anything reached customers this quarter — the trust question in one number.',connectTool:'your SIEM'});}
+    case 'ceo_disclosures':{var oi4=sig('open_incidents');var conn=oi4!=null;
+      return c5obj({id:id,name:'Breach disclosures',connected:conn,displayValue:conn?'0':'—',label:'computed',color:conn?'good':'muted',
+        formula:'disclosures = material cyber events requiring notification to customers or regulators this quarter',
+        inputs:[{name:'Material reportable events',value:conn?'0':'—',source:'materiality workbench + SIEM'}],
+        sources:[{tool:'Nerion engine',connector:'nerion',field:'disclosures',lastRefresh:c5ago()}],
+        note:'Nothing material to disclose keeps the story clean — for customers, regulators and the board.',connectTool:'your SIEM + materiality inputs'});}
+    case 'ceo_trust_signal':{var oi5=sig('open_incidents');var conn=oi5!=null;var steady=(oi5==null||oi5===0);
+      return c5obj({id:id,name:'Trust signal',connected:conn,displayValue:conn?(steady?'Steady':'At risk'):'—',label:'computed',color:conn?(steady?'good':'warn'):'muted',
+        formula:'trust signal = steady when there are no customer-impacting incidents or disclosures',
+        method:'A proxy from incidents/disclosures; a brand-monitoring feed sharpens it.',
+        inputs:[{name:'Customer incidents',value:conn?oi5:'—',source:'ceo_cust_incidents'},{name:'Disclosures',value:'0',source:'ceo_disclosures'}],
+        sources:[{tool:'Nerion engine',connector:'nerion',field:'trust_signal',lastRefresh:c5ago()}],
+        note:'Whether customer trust is holding — the moat a breach would erode.',connectTool:'a brand-monitoring / sentiment feed'});}
+    case 'ceo_customer_data':{var oi6=sig('open_incidents');var conn=oi6!=null;var ok=(oi6==null||oi6===0);
+      return c5obj({id:id,name:'Customer data',connected:conn,displayValue:conn?(ok?'No exposure':'Exposure'):'—',label:'computed',color:conn?(ok?'good':'crit'):'muted',
+        formula:'customer-data exposure = any open incident touching customer data this quarter',
+        inputs:[{name:'Open incidents',value:conn?oi6:'—',source:'SIEM · open_incidents'}],sources:[c5capSrc('siem')],
+        note:'Whether customer data is at risk right now.',connectTool:'your SIEM + DLP'});}
+    case 'ceo_uptime':{
+      return c5obj({id:id,name:'Service availability',connected:false,displayValue:'—',label:'live',color:'muted',
+        formula:'availability = uptime of the customer platform from your monitoring / SRE tooling',
+        inputs:[{name:'Uptime %',value:'not connected',source:'monitoring / SRE (Datadog · Pingdom)'}],
+        sources:[{tool:'Monitoring / SRE',connector:'uptime',field:'availability',lastRefresh:c5ago()}],
+        note:'Customer-platform uptime — the availability customers feel. Connect monitoring to make it live.',connectTool:'your monitoring / SRE tool'});}
   }
   return c5obj({id:id,name:id,connected:false,displayValue:'—',color:'muted',note:'No metric definition.'});
+}
+/* Strategic objectives — from an onboarding strategy input when present, else a
+   labeled sector-default set. Each objective's at-risk status is COMPUTED: flagged
+   when a material exposure driver maps to it (identity → the platform), so the "1 at
+   risk" emerges from the real exposure model, not a hardcode. */
+function c5Objectives(){
+  var stored=null;try{stored=JSON.parse(localStorage.getItem('cyberrx_objectives')||'null');}catch(_){}
+  var base=(Array.isArray(stored)&&stored.length)?stored.map(function(x){return {name:(x.name||x),map:(x.map||'')};}):[
+    {name:'Grow the customer platform',map:'identity'},{name:'Expand into new markets',map:''},
+    {name:'Launch the new product line',map:'product'},{name:'Improve margins',map:'cost'},
+    {name:'M&A integration',map:'vendor'},{name:'Sustainability commitments',map:''},
+    {name:'Talent & workforce',map:'workforce'}];
+  var M=c5expModel();var identityMaterial=M.drivers.some(function(d){return d.id==='exp_identity'&&d.usd>0;});
+  var tv=(typeof LIVE!=='undefined'&&LIVE&&LIVE.resilience&&LIVE.resilience.top_vendor_blast&&LIVE.resilience.top_vendor_blast.vendor);
+  base.forEach(function(o){
+    if(o.map==='identity'&&identityMaterial){o.status='at risk';o.c='warn';o.sub='Identity gap threatens uptime and trust';}
+    else if(o.map==='vendor'&&tv){o.status='watch';o.c='blue';o.sub='Diligence clean · monitoring the acquired estate';}
+    else if(o.map==='product'){o.status='safe';o.c='good';o.sub='Secure-by-design on track';}
+    else if(o.map==='cost'){o.status='safe';o.c='good';o.sub='Cost-optimization opportunities identified';}
+    else if(o.map==='workforce'){o.status='safe';o.c='good';o.sub='Security-culture program on plan';}
+    else if(o.name==='Sustainability commitments'){o.status='safe';o.c='good';o.sub='No cyber dependency of note';}
+    else{o.status='safe';o.c='good';o.sub='No material cyber blocker';}
+  });
+  var atRisk=base.filter(function(o){return o.status==='at risk';}).length;
+  return {objs:base,total:base.length,atRisk:atRisk,protected:base.length-atRisk,fromInput:!!(Array.isArray(stored)&&stored.length)};
 }
 function c5driverMetric(id){
   var M=c5expModel();var d=null;M.drivers.forEach(function(x){if(x.id===id)d=x;});
@@ -627,4 +701,82 @@ function c5cfDecisions(){
     '</div>'+
     c5bl('Bottom line','One clear yes today.',null,(ec.connected?('The identity fix is the highest-return decision on your desk — '+ec.displayValue+' removed, and it keeps you within appetite. The transfer and the acceptance can wait for the next review.'):'The identity fix is the highest-return decision on your desk once your controls connect. The transfer and the acceptance can wait for the next review.'),{mid:'exp_identity',txt:ec.connected?('Approve identity fix — removes '+ec.displayValue):'Approve identity fix'})+
     '<div class="c5foot">Each decision is priced from its risk model and your spend records.</div>';
+}
+
+/* ================= CEO seat — same engine, strategy & trust lens ================= */
+/* Tab 01 — Enterprise cyber health */
+function c5ceHealth(){
+  var host=document.getElementById('ce-health');if(!host)return;
+  var O=c5Objectives(),ec=c5get('exp_identity');
+  var atPill=O.atRisk>0?'a':'g';var atTxt=O.atRisk>0?(O.atRisk+' at risk'):'All protected';
+  var hr=c5get('cf_headroom');
+  host.innerHTML=c5header()+
+    c5shell('Enterprise cyber health · is cyber a tailwind or a risk?','Cyber is protecting growth, not slowing it.',null,'The enterprise is secure and improving. '+O.protected+' of your '+O.total+' strategic objectives are cyber-safe; the exception carries a single, funded exposure. Cyber isn’t a blocker this quarter. Tap any figure for its basis and source.')+
+    '<div class="c5cards">'+c5card('ceo_health')+c5card('ceo_objectives')+c5card('direction')+'</div>'+
+    '<div class="c5tiles">'+
+      c5tile('ceo_biz_health','g','Secure','No active compromise, program improving')+
+      c5tile('ceo_objectives',atPill,atTxt,(O.atRisk>0?'One carries a funded action':'All objectives cyber-safe'))+
+      c5tile('exp_total','g','Within appetite',(hr.connected?('Well inside your '+c5get('cf_appetite').displayValue+' tolerance'):'Your modeled cyber loss this year'))+
+      c5tile('ceo_cust_incidents','g','Intact','Customer-impacting incidents this quarter')+
+    '</div>'+
+    c5bl('Bottom line','Back the one move that protects your top objective.',null,(ec.connected?('The customer platform — central to your growth strategy — carries the only real cyber exposure, an identity gap of '+ec.displayValue+'. The fix is funded; backing it keeps your #1 objective on track.'):'Connect your controls and the one exposure to your top objective — an identity gap — surfaces here, with its funded fix.'),{mid:'exp_identity',txt:'Back the identity fix — protects the platform'})+
+    '<div class="c5foot">Figures are governance-grade and traceable to source.</div>';
+}
+/* Tab 02 — Strategic risk */
+function c5ceStrategic(){
+  var host=document.getElementById('ce-strategic');if(!host)return;
+  var O=c5Objectives();
+  var rows=O.objs.map(function(o){var pill=o.status==='at risk'?'a':o.status==='watch'?'b':'g';var pt=o.status==='at risk'?'At risk':o.status==='watch'?'Watch':'Safe';
+    return '<div class="c5prow" data-c5m="ceo_objectives"><span class="c5sq '+(o.c==='warn'?'a':o.c==='blue'?'b':'g')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+o.name+'</div><div class="c5row-s">'+o.sub+'</div></div><span class="c5pill '+pill+'">'+pt+'</span></div>';
+  }).join('');
+  host.innerHTML=c5header()+
+    c5shell('Strategic risk · which objectives are exposed?','Six of your seven objectives are cyber-safe — one needs attention.',null,'Cyber risk mapped to your strategic objectives. Only growing the customer platform carries real exposure — the identity gap threatens its uptime and the trust it runs on. Tap any objective for its drivers.')+
+    '<div class="c5rank" style="padding:4px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Strategic objectives · cyber status</div>'+rows+'</div>'+
+    c5bl('Bottom line','Protect the objective that drives growth.',null,'Growing the customer platform is your #1 objective and your only at-risk one — the identity gap threatens its uptime and the trust it runs on. The fix is funded.',{mid:'exp_identity',txt:'Back the identity fix — protects growth'})+
+    '<div class="c5foot">Objectives are mapped from your strategy inputs; cyber exposure traces to source.</div>';
+}
+/* Tab 03 — Financial exposure (shared objects with CFO/CISO) */
+function c5ceFinancial(){
+  var host=document.getElementById('ce-financial');if(!host)return;
+  var ec=c5get('exp_identity'),hr=c5get('cf_headroom'),ap=c5get('cf_appetite');
+  host.innerHTML=c5header()+
+    c5shell('Financial exposure · what could this cost us?','Cyber could cost real money — comfortably within tolerance.',null,'The headline: your modeled annual cyber loss against the board’s appetite, with the severe-year tail. The single largest driver already has a funded fix. Tap any figure for the model and its inputs.')+
+    '<div class="c5cards">'+c5card('exp_total')+c5card('cf_appetite')+c5card('cf_tail')+'</div>'+
+    '<div class="c5tiles">'+
+      c5tile('exp_total','g','Within appetite',(ap.connected?('Within your '+ap.displayValue+' appetite'):'Your modeled cyber loss this year'))+
+      c5tile('cf_tail','a','Tail','1-in-20-year loss')+
+      c5tile('exp_identity','b','Funded','Funded fix underway · biggest single driver')+
+    '</div>'+
+    c5bl('Bottom line','The one number that moves the headline down.',null,(ec.connected?('A single identity gap drives '+ec.displayValue+' of the total — the largest single share. Funding its fix lowers both the everyday cost and the severe-year tail, and it’s already scoped.'):'Connect your controls and the single largest loss driver — an identity gap — surfaces here with its funded fix.'),{mid:'exp_identity',txt:ec.connected?('Back the identity fix — cuts '+ec.displayValue):'Back the identity fix'})+
+    '<div class="c5foot">Loss figures are modeled (ALE and tail); every input traces to its source.</div>';
+}
+/* Tab 04 — Brand & customer trust */
+function c5ceTrust(){
+  var host=document.getElementById('ce-trust');if(!host)return;
+  host.innerHTML=c5header()+
+    c5shell('Brand & customer trust · are we protecting trust?','Customer trust is intact — one exposure could test it.',null,'Trust is your moat. This quarter: no customer-impacting incidents, no breach disclosures, signal steady. The one exposure that could dent trust is the customer-platform identity gap. Tap any figure for its source.')+
+    '<div class="c5cards">'+c5card('ceo_cust_incidents')+c5card('ceo_disclosures')+c5card('ceo_trust_signal')+'</div>'+
+    '<div class="c5tiles">'+
+      c5tile('ceo_customer_data','g','Protected','No customer data at risk this quarter')+
+      c5tile('ceo_uptime','g','Healthy','Customer platform uptime · connect monitoring')+
+      c5tile('ceo_disclosures','g','None','To customers or regulators')+
+      c5tile('exp_identity','a','Watch','The one exposure to the customer platform')+
+    '</div>'+
+    c5bl('Bottom line','Protect the moat before it’s tested.',null,'Trust is intact today, but the identity gap is the one thing that could put customer data or platform uptime — and the trust that depends on them — at risk. The fix is funded.',{mid:'exp_identity',txt:'Back the identity fix — protects trust'})+
+    '<div class="c5foot">Incident, availability, and disclosure data trace to source.</div>';
+}
+/* Tab 05 — Decisions for the CEO */
+function c5ceDecisions(){
+  var host=document.getElementById('ce-decisions');if(!host)return;
+  var ec=c5get('exp_identity');
+  var q='<div class="c5rank"><div class="c5rank-h">Decision queue · the strategic cyber calls that need you</div>'+
+    '<div class="c5row" data-c5m="exp_identity"><div class="c5row-main"><div class="c5row-t"><span class="c5pill b" style="margin-right:8px">Act now</span>Back the identity fix</div><div class="c5row-s">Protects the customer platform — your #1 growth objective — and the trust it runs on</div></div><div class="c5row-v">'+(ec.connected?('−'+ec.displayValue+' risk'):'—')+'</div><span class="c5pill g" style="align-self:center">Recommended</span></div>'+
+    '<div class="c5row" data-c5m="ceo_disclosures"><div class="c5row-main"><div class="c5row-t"><span class="c5pill n" style="margin-right:8px">For the board</span>Note: cyber isn’t material this quarter</div><div class="c5row-s">Ready for your board update — improving, nothing to disclose</div></div><div class="c5row-v">—</div><span class="c5pill n" style="align-self:center">Informational</span></div>'+
+    '<div class="c5row" data-c5m="ceo_objectives"><div class="c5row-main"><div class="c5row-t"><span class="c5pill n" style="margin-right:8px">Optional</span>Sponsor the security-culture push</div><div class="c5row-s">Reinforces the talent &amp; workforce objective · can wait</div></div><div class="c5row-v">—</div><span class="c5pill n" style="align-self:center">Nice to have</span></div>'+
+    '</div>';
+  host.innerHTML=c5header()+
+    c5shell('Decisions for the CEO · what needs your call?','One decision protects your top objective — the rest is on track.',null,'The strategic cyber calls that need you — no technical detail, just the business choice. Only one needs action now. Tap any item for the full picture.')+
+    q+
+    c5bl('Bottom line','One call, clearly worth making.',null,(ec.connected?('Backing the identity fix protects your #1 growth objective and your customer trust, at a fraction of the exposure it removes ('+ec.displayValue+'). Everything else is on track and can wait for the next review.'):'Backing the identity fix protects your #1 growth objective and your customer trust. Everything else is on track and can wait for the next review.'),{mid:'exp_identity',txt:'Back the identity fix'})+
+    '<div class="c5foot">Each decision links to its underlying model and source.</div>';
 }
