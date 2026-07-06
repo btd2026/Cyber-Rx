@@ -1,7 +1,7 @@
 'use strict';
 
 const BaseService = require('../../BaseService');
-const MitreAttckService = require('../../services/MitreAttckService');
+const MitreAttckService = require('../../../services/MitreAttckService');
 
 /**
  * Threat Scenario Service
