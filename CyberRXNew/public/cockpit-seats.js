@@ -188,7 +188,7 @@ var SEATS = {
    +sec('03','AI adoption readiness','Can we adopt AI into products and operations securely and at speed? AI systems already live, the governance framework, the acceptable-use policy and the inventory — the readiness to scale AI without scaling unmanaged risk.',
      '<div id="cioAi"></div>')
    +sec('04','Workforce productivity','How security affects the productivity of the people who run the business — access provisioned fast, low friction, and hours not lost to downtime or manual security steps.',
-     '<div class="card"><div class="ck">Security’s effect on workforce productivity</div><div class="cn" style="margin-top:6px">◐ Connect your identity (<b>Okta · Entra</b>), ITSM (<b>ServiceNow</b>) and endpoint tooling to show how fast access is provisioned, how much friction security adds, and the hours lost to downtime or manual steps — so security is measured as an enabler of productivity, not only a cost. <span class="pill mod" style="font-size:8px">planned</span></div></div>')
+     '<div id="cioWorkforce"></div>')
    +sec('05','Application modernization risk','The exposure carried by end-of-life and unsupported systems still on revenue paths — they patch slower, recover slower, and drive the worst-case tail. Prioritized by revenue protected per dollar.',
      '<div id="cioModern"></div>')
    +sec('06','Service availability','Could the systems that carry the business keep running and recover fast enough? Immutable backups, recovery-point objective, last DR test, and where a single vendor failure leaves no failover.',
@@ -282,7 +282,7 @@ var SEATS = {
   brief:'From the product seat: the goal is to ship fast with security built in — launches gated on secure-by-design, AI features governed before they reach customers, and our software and supplier dependencies watched. Connect the delivery pipeline and this fills with live launch-readiness and secure-SDLC coverage.',
   body:function(){return (
    sec('01','Product launch readiness','Are we clear to ship? Each release gated on secure-by-design checks — threat model, application-security review and no unresolved critical findings — so a launch does not carry avoidable risk to customers.',
-     '<div class="card"><div class="ck">Secure-launch gates</div><div class="cn" style="margin-top:6px">◐ Connect your CI/CD (<b>GitHub · GitLab · Azure DevOps</b>) and application-security tooling to show each release’s security-readiness gate — threat model complete, app-sec scan clean, no unresolved critical findings — so launch readiness is evidenced, not assumed. <span class="pill mod" style="font-size:8px">planned</span></div></div>')
+     '<div id="cpoLaunch"></div>')
    +sec('02','Innovation velocity','Are we shipping fast without shipping risk? Delivery throughput — changes shipped per week and the review backlog — so security keeps pace with delivery rather than blocking it. Live from your CI/CD.',
      '<div id="cpoVelocity"></div>')
    +sec('03','Product quality risk','The security-quality of what we ship — open code-scanning (SAST) findings and critical dependency alerts in the product, and the exposure they create for customers. Live from your delivery pipeline.',
@@ -290,7 +290,7 @@ var SEATS = {
    +sec('04','AI product readiness','Are AI features in the product governed before they reach customers? AI systems live, the framework adopted, the acceptable-use policy and inventory — readiness to ship AI without shipping unmanaged risk.',
      '<div id="cioAi"></div>')
    +sec('05','Secure-by-design adoption','How deeply secure-by-design is adopted across engineering — threat-modeling coverage, secure-SDLC practices, and security embedded in the pipeline rather than a gate beside it. Plus the product-security investment decision the Chief Product Officer owns.',
-     '<div class="card"><div class="ck">Secure-by-design coverage</div><div class="cn" style="margin-top:6px">◐ Connect your SDLC tooling to show threat-modeling coverage, secure-coding checks and the share of teams with security embedded in the pipeline — so secure-by-design is measured, not aspired to. <span class="pill mod" style="font-size:8px">planned</span></div></div>'
+     '<div id="cpoSbd"></div>'
      +'<div id="cpoDecision" style="margin-top:14px"></div>')
    +sec('06','Software &amp; supplier dependency risk','What the product ships on — the third-party components and suppliers a compromise of which reaches your customers, and the concentration to watch.',
      '<div id="ceoThirdParty"></div>'
