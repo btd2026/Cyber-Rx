@@ -99,31 +99,16 @@ var SEATS = {
  },
 
  cro:{
-  eyebrow:'Enterprise risk view · CRO',
-  verdict:'Cyber is <span class="em">within appetite and fully quantified,</span> and now sits alongside your other principal risks on one scale. The watch item is correlation at the tail.',
-  sub:'Cyber inside the enterprise risk portfolio: measured in the same currency as every other risk, tested for correlation and aggregation, tracked against appetite.',
-  brief:'Cyber now sits on the same dollar scale as our other principal risks, and it is within appetite at sixty-eight million. The item to watch is correlation: a payments event couples with third-party and operational risk, and together they can breach appetite at the tail. Two decisions bring that back inside. Our emerging-risk radar flags A.I. decisioning and vendor concentration as the fastest movers.',
+  eyebrow:'CRO · Executive cockpit',
+  verdict:'Cyber inside the enterprise risk portfolio, in five tabs: <span class="em">one scale</span> against your other principal risks, <span class="em">appetite</span> by category, evidence-based <span class="em">assurance</span>, the trend and who owns what, and the risk decisions that need your call — every figure traceable to source.',
+  sub:'Tap any risk, category, control family or decision to open the inspector — its basis, inputs and source. The same engine as the CISO, CFO and CEO seats; the shared cyber figures match exactly.',
+  brief:'From the risk seat, in five tabs. One scale: cyber sits among your principal risks on one normalized residual scale, with its direction the thing to watch. Appetite: cyber is within tolerance overall, but the identity category is over its share. Assurance: most control families are assured by evidence; identity and third-party carry a gap. Trend & ownership: the residual trend is falling and every top risk has a named owner — identity needs your governance push. Decisions: one risk to treat, one to monitor, one to accept. Every cyber figure matches the other seats exactly.',
   body:function(){return (
-   sec('01','Enterprise risk appetite','Cyber measured in the same dollars as every other principal risk, against the tolerance the board approved — where we sit vs appetite, the concentration, the correlated tail, and how much is transferred.',
-     tiles([
-      {k:'Cyber vs. appetite',v:'<span id="lvCroAle">$68M</span> / <span id="lvCroAppetite">$120M</span>',cls:'good',ev:'appetite',note:'<span id="lvCroAppetitePct">57% of allocated appetite</span>'},
-      {k:'Concentration',v:'<span id="lvCroConc">50% in payments</span>',cls:'warn',ev:'procexpo',note:'one process carries most of the risk'},
-      {k:'Correlation flag',v:'2 risks',cls:'warn',ev:'correlation',note:'<span class="pill mod">modeled</span> couples with third-party + operational'},
-      {k:'Risk transferred',v:'<span id="lvCroTransfer">83%</span>',ev:'transfer',note:'of the tail, via insurance'}])
-     +'<div id="croPortfolio" style="margin-top:14px">'+bars([{l:'Credit / market',v:'$210M',pct:100},{l:'Operational',v:'$140M',pct:67},{l:'Cyber',v:'<span id="lvCroCyber">$68M</span>',pct:32,cls:'hot',ev:'ale'},{l:'Third-party',v:'$54M',pct:26},{l:'Compliance',v:'$30M',pct:14}])+'</div>'
-     +'<div class="cn" style="margin:10px 0">Your <b>cyber</b> figure is live; the other principal-risk values are your ERM inputs — <span class="pill mod">illustrative</span> until entered.</div>')
-   +sec('02','Risk acceptance','The residual risk the board must formally accept — or fund down. The correlated tail above appetite, the three levers (reduce / transfer / accept), and the decision recorded for the risk committee.',
-     '<div id="croDecision"></div>')
-   +sec('03','Risk trends','Which Key Risk Indicators are breaching tolerance, the direction of travel over time, and the emerging risks rising fastest for your sector.',
-     '<div id="croKri"></div>'
-     +'<div id="ceoTrend" style="margin-top:14px"></div>'
-     +'<div id="ceoEmerging" style="margin-top:14px"></div>')
-   +sec('04','Cross-functional risk ownership','Who owns which cyber risk across the business — the operating model mapping each accountability to a leader and the systems behind it, so no material risk is unowned.',
-     '<div id="opmodel-cro"></div>')
-   +sec('05','Control assurance','Are the controls actually working? Control effectiveness measured as dollars of risk removed — inherent vs residual — cross-checked against live coverage from the connected tools.',
-     '<div id="cisoControls"></div>')
-   +sec('06','Residual risk','What remains after the controls we run — the residual exposure, and the funded remediation portfolio closing each remaining driver, with the dollars of exposure it removes.',
-     '<div id="initiatives-panel"></div>')
+   sec('01','One scale','','<div id="cr-scale"></div>')
+   +sec('02','Appetite','','<div id="cr-appetite"></div>')
+   +sec('03','Assurance','','<div id="cr-assurance"></div>')
+   +sec('04','Trend & ownership','','<div id="cr-trend"></div>')
+   +sec('05','Decisions','','<div id="cr-decisions"></div>')
   );}
  },
 
