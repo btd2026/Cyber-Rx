@@ -268,6 +268,61 @@ function c5get(id){
         inputs:[{name:'Your CMMI',value:ov2!=null?Number(ov2).toFixed(1):'—',source:'peer_maturity'},{name:'Cohort',value:(pd2&&pd2.n)||0,source:'DTNKSHIELD cohort'}],
         sources:[{tool:'DTNKSHIELD peer cohort',connector:'peer',field:'overall_values',lastRefresh:c5ago()}],
         note:'Where you stand against peers your size — top-third is the target.',connectTool:'the anonymous peer benchmark (opt in)'});}
+    /* ---- CFO metrics (same engine, financial lens; shared objects reused where they exist) ---- */
+    case 'cf_appetite':{var ap=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.appetite)||{};var v=Number(ap.appetite)||0;var conn=v>0;
+      return c5obj({id:id,name:'Risk appetite',connected:conn,displayValue:conn?usd(v):'—',label:'self-reported',color:'ink',
+        formula:'risk appetite = the maximum annual cyber loss the board has approved',
+        inputs:[{name:'Board-approved appetite',value:conn?usd(v):'—',source:'onboarding · board appetite statement'}],
+        sources:[{tool:'Onboarding',connector:'onboarding',field:'economics.appetite',lastRefresh:c5ago()}],
+        note:'The line every exposure figure is measured against — the board sets it.',connectTool:'the board appetite (onboarding)'});}
+    case 'cf_headroom':{var ap2=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.appetite)||{};var appV=Number(ap2.appetite)||0;var ale=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&Number(LIVE.economics.ale))||0;var conn=appV>0&&ale>0;var hr=appV-ale;
+      return c5obj({id:id,name:'Headroom',connected:conn,displayValue:conn?usd(hr):'—',label:'computed',color:conn?(hr>=0?'good':'crit'):'muted',
+        formula:'headroom = risk appetite − expected annual loss (ALE)',
+        inputs:[{name:'Risk appetite',value:appV?usd(appV):'—',source:'cf_appetite'},{name:'Expected annual loss',value:ale?usd(ale):'—',source:'exp_total / ALE'}],
+        sources:[{tool:'Nerion engine',connector:'nerion',field:'appetite_minus_ale',lastRefresh:c5ago()}],
+        note:'How much room you have before cyber loss reaches the board’s limit.',connectTool:'your risk register + board appetite'});}
+    case 'cf_tail':{var t=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&Number(LIVE.economics.tail))||0;var conn=t>0;
+      return c5obj({id:id,name:'Tail risk · 1-in-20 year',connected:conn,displayValue:conn?usd(t):'—',label:'modeled',color:conn?'warn':'muted',
+        formula:'tail = 95th-percentile annual loss (VaR₉₅) from the Monte-Carlo loss simulation',
+        inputs:[{name:'Worst-case tail (VaR 95%)',value:conn?usd(t):'—',source:'risk model · Monte-Carlo'}],
+        sources:[{tool:'Nerion risk model',connector:'nerion',field:'economics.tail',lastRefresh:c5ago()}],
+        note:'The severe-but-plausible bad year — what insurance and retained capital have to cover.',connectTool:'your risk register + financials'});}
+    case 'cf_bi':{var rs=(typeof LIVE!=='undefined'&&LIVE&&LIVE.resilience)||{};var ph=Number(rs.top_downtime_per_hr)||0;var conn=ph>0;var day=ph*24;
+      return c5obj({id:id,name:'Business interruption',connected:conn,displayValue:conn?(usd(day)+' / day'):'—',label:'modeled',color:conn?'warn':'muted',
+        formula:'interruption = downtime cost per hour of the top revenue system × 24',
+        inputs:[{name:'Downtime cost / hr',value:conn?(usd(ph)+' / hr'):'—',source:'resilience · top_downtime_per_hr'}],
+        sources:[{tool:'Nerion engine',connector:'nerion',field:'resilience.top_downtime_per_hr',lastRefresh:c5ago()}],
+        note:'What a day of outage on the customer platform costs — the number finance sizes recovery against.',connectTool:'your systems & revenue (BIA)'});}
+    case 'cf_ins_limit':{var ins=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.insurance)||{};var v=Number(ins.limit)||0;var conn=v>0;
+      return c5obj({id:id,name:'Insured limit',connected:conn,displayValue:conn?usd(v):'—',label:'self-reported',color:'ink',
+        formula:'insured limit = the coverage cap on your cyber policy',
+        inputs:[{name:'Policy limit',value:conn?usd(v):'—',source:'policy record · limit'}],
+        sources:[{tool:'Cyber-insurance policy',connector:'insurance',field:'limit',lastRefresh:c5ago()}],
+        note:'The most your policy pays on a covered loss.',connectTool:'your policy record (onboarding)'});}
+    case 'cf_ins_gap':{var ins2=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.insurance)||{};var lim=Number(ins2.limit)||0;var tail=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&Number(LIVE.economics.tail))||0;var gap=(ins2.gap!=null)?Number(ins2.gap):((tail>0&&lim>0)?Math.max(0,tail-lim):null);var conn=gap!=null&&tail>0;
+      return c5obj({id:id,name:'Residual gap',connected:conn,displayValue:conn?usd(gap):'—',label:'computed',color:conn?(gap>0?'warn':'good'):'muted',
+        formula:'residual gap = modeled tail − insured limit (the uninsured portion of the bad year)',
+        inputs:[{name:'Modeled tail',value:tail?usd(tail):'—',source:'cf_tail'},{name:'Insured limit',value:lim?usd(lim):'—',source:'cf_ins_limit'}],
+        sources:[{tool:'Nerion engine',connector:'nerion',field:'tail_minus_limit',lastRefresh:c5ago()}],
+        note:'The part of a severe year your policy would not cover — retained on the balance sheet.',connectTool:'your policy record + risk model'});}
+    case 'cf_ins_cov':{var ins3=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.insurance)||{};var lim3=Number(ins3.limit)||0;var tail3=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&Number(LIVE.economics.tail))||0;var conn=lim3>0&&tail3>0;var covp=conn?Math.round(lim3/tail3*100):0;
+      return c5obj({id:id,name:'Insurance coverage',connected:conn,displayValue:conn?(covp+'%'):'—',label:'computed',color:conn?(covp>=90?'good':'warn'):'muted',
+        formula:'coverage = insured limit ÷ modeled tail',
+        inputs:[{name:'Insured limit',value:lim3?usd(lim3):'—',source:'cf_ins_limit'},{name:'Modeled tail',value:tail3?usd(tail3):'—',source:'cf_tail'}],
+        sources:[{tool:'Nerion engine',connector:'nerion',field:'limit_over_tail',lastRefresh:c5ago()}],
+        note:'How much of a severe year your policy actually transfers off the balance sheet.',connectTool:'your policy record + risk model'});}
+    case 'cf_premium':{var ins4=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.insurance)||{};var v=Number(ins4.premium)||0;var conn=v>0;
+      return c5obj({id:id,name:'Premium',connected:conn,displayValue:conn?(usd(v)+' / yr'):'—',label:'self-reported',color:'ink',
+        formula:'premium = annual cost of your cyber policy',
+        inputs:[{name:'Annual premium',value:conn?(usd(v)+' / yr'):'—',source:'policy record · premium'}],
+        sources:[{tool:'Cyber-insurance policy',connector:'insurance',field:'premium',lastRefresh:c5ago()}],
+        note:'Priced on last year’s posture — a lever at renewal as your posture improves.',connectTool:'your policy record (onboarding)'});}
+    case 'cf_savings':{
+      return c5obj({id:id,name:'Redeployable savings',connected:false,displayValue:'—',label:'self-reported',color:'muted',
+        formula:'redeployable savings = Σ(spend on retire/consolidate/right-size candidates at near-zero added risk)',
+        inputs:[{name:'Tool spend records',value:'not connected',source:'finance / procurement'},{name:'Tool inventory & utilization',value:'not connected',source:'CASB / license management'}],
+        sources:[{tool:'Finance / procurement',connector:'spend',field:'tool_spend',lastRefresh:c5ago()}],
+        note:'Money you can free by retiring underperforming or overlapping tools — needs your spend and inventory records.',connectTool:'your tool inventory & spend records'});}
   }
   return c5obj({id:id,name:id,connected:false,displayValue:'—',color:'muted',note:'No metric definition.'});
 }
@@ -382,12 +437,16 @@ function c5Health(){
     '</div>';
   var blPara=ec.connected?('Your largest exposure is <b>'+ec.name.toLowerCase()+'</b> — '+ec.displayValue+' modeled, threatening '+ec.threatens+'. The fix is scoped and funded and waiting for your sign-off.'):'Connect your identity and control tools and Nerion surfaces your largest exposure here, with the scoped, funded fix ready for sign-off.';
   var blBtn=ec.connected?('Approve — removes '+ec.displayValue+' of risk'):'Approve the top fix';
+  var war='<div style="margin-top:18px"><div class="c5kick" style="color:var(--muted)">Live attack status · War Room</div><div id="cisoUnderAttack" style="margin-top:8px"></div><div id="cisoWarRoom" style="margin-top:14px"></div></div>';
   host.innerHTML=c5header()+
-    c5shell('Program health · are we secure right now?','You’re secure, and improving.',(oi!=null&&oi>0)?'warn':null,'No active compromise this morning, and your program is stronger than it was last month. Three live reads below — tap any tile for the exact formula and the source behind the number.')+
+    c5shell('Program health · are we secure right now?','You’re secure, and improving.',(oi!=null&&oi>0)?'warn':null,'No active compromise this morning, and your program is stronger than it was last month. Three live reads below, then live attack status and the War Room — tap any tile for the exact formula and the source behind the number.')+
     c5legend([{c:'good',t:'Healthy'},{c:'warn',t:'At risk'},{c:'blue',t:'Monitoring'},{c:'line',t:'Not connected'}])+
     tiles+
+    war+
     c5bl('Bottom line','Secure and improving — one decision on your desk.',null,blPara,{mid:'exp_identity',txt:blBtn})+
     '<div class="c5foot">Every square and number traces to its source.</div>';
+  if(typeof renderUnderAttack==='function'){try{renderUnderAttack();}catch(_){}}
+  if(typeof renderCisoWarRoom==='function'){try{renderCisoWarRoom();}catch(_){}}
 }
 
 /* ---------- Tab 02 — Top exposure ---------- */
@@ -472,4 +531,100 @@ function c5Peers(){
     privacy+
     c5bl('Bottom line','Close the one domain where peers beat you.',null,'Identity and access is your only real gap versus peers — and it’s your largest exposure. Closing it moves you from below-median to top-quartile there, and removes your single largest exposure.',{mid:'exp_identity',txt:'Close the identity gap'})+
     '<div class="c5foot">Benchmark is opt-in and anonymized against same-size industry peers.</div>';
+}
+
+/* ================= CFO seat — same engine, financial lens ================= */
+/* Shared control-return rows (identical objects to the CISO Effectiveness tab). */
+function c5ctlRankRows(){
+  var ids=['ctl_identity','ctl_email','ctl_edr','ctl_vuln','ctl_dlp'];
+  var ms=ids.map(function(id){return c5get(id);});
+  var maxR=Math.max.apply(null,ms.map(function(m){return m.removed||0;}).concat([1]));
+  var minM=null;ms.forEach(function(m){if(m.connected&&(minM==null||m.removed<minM.removed))minM=m;});
+  return ms.map(function(m){var review=(minM&&m.id===minM.id&&ms.filter(function(x){return x.connected;}).length>1);var pf=maxR>0?Math.round((m.removed||0)/maxR*100):0;
+    return '<div class="c5row" data-c5m="'+m.id+'"><div class="c5row-main"><div class="c5row-t">'+m.name+(review?'<span class="c5tag rev">Review</span>':'')+'</div><div class="c5row-s">'+(m.connected?(usd(m.removed)+' removed · return per dollar needs per-control spend'):'connect this control')+'</div><div class="c5retbar"><i class="'+(review?'a':'')+'" style="width:'+pf+'%"></i></div></div><div class="c5row-v">'+(m.connected?usd(m.removed):'—')+'</div></div>';
+  }).join('');
+}
+/* Tab 01 — Financial exposure */
+function c5cfExposure(){
+  var host=document.getElementById('cf-exposure');if(!host)return;
+  var hr=c5get('cf_headroom'),cov=c5get('cf_ins_cov'),ec=c5get('exp_identity');
+  var alePill=hr.connected?(hr.value>=0||/^[^−-]/.test(hr.displayValue)?'g':'r'):'n';
+  var aleTxt=hr.connected?'Within appetite':'—';
+  var covGap=c5get('cf_ins_gap');
+  host.innerHTML=c5header()+
+    c5shell('Financial exposure · are we within appetite?','Cyber exposure is within appetite — and one move keeps it there.',null,'Your modeled cyber exposure sits against the board-approved appetite, with the headroom shown below. The largest driver is a single identity gap; funding its fix protects the headroom and trims your tail. Tap any figure for the model, its inputs, and its source.')+
+    '<div class="c5cards">'+c5card('exp_total')+c5card('cf_appetite')+c5card('cf_headroom')+'</div>'+
+    '<div class="c5tiles">'+
+      c5tile('exp_total',alePill,aleTxt,'Your modeled cyber loss this year')+
+      c5tile('cf_tail','a','Watch',(covGap.connected?('Exceeds your insured limit by '+covGap.displayValue):'the severe-but-plausible bad year'))+
+      c5tile('cf_bi','b','If down','If the customer platform is down')+
+      c5tile('cf_ins_cov','a','Gap',(covGap.connected?('of the tail covered · '+covGap.displayValue+' residual gap'):'of the modeled tail covered'))+
+    '</div>'+
+    c5bl('Bottom line','One fix protects your headroom.',null,(ec.connected?('The identity gap drives '+ec.displayValue+' of your exposure — the CISO’s top ask, in your terms. Funding it keeps you comfortably within appetite and trims the tail.'):'Connect your identity controls and the top exposure driver — the CISO’s top ask — surfaces here in dollars.'),{mid:'exp_identity',txt:ec.connected?('Approve identity fix — removes '+ec.displayValue):'Approve identity fix'})+
+    '<div class="c5foot">Exposure is modeled (ALE and tail); every input traces to its source.</div>';
+}
+/* Tab 02 — Cyber ROI */
+function c5cfRoi(){
+  var host=document.getElementById('cf-roi');if(!host)return;
+  var st=(typeof ROI_STATE!=='undefined')?ROI_STATE:null;var haveReturn=!!(st&&st.invested>0&&st.riskRemoved>0);
+  host.innerHTML=c5header()+
+    c5shell('Cyber ROI · is the spend paying off?','Every dollar of cyber spend is removing risk — and you can prove it.',null,'The dollars each budget area removes — live from your control-value ledger — and your program-level return. Tap any figure for the risk-removed model and its inputs. Per-area return multiples light up once you attribute spend by area.')+
+    '<div class="c5cards">'+c5card('eff_removed')+c5card('eff_spend')+c5card('eff_return')+'</div>'+
+    '<div class="c5rank"><div class="c5rank-h">Return by budget area · risk removed this quarter</div>'+c5ctlRankRows()+'</div>'+
+    c5bl('Bottom line','Your best next dollar is identity — and one line is worth reviewing.',null,(haveReturn?('Your program returns '+((typeof roiMult==='function'?roiMult(st.ret):Math.round(st.ret)))+'× on '+usd(st.invested)+' invested. Identity removes the most risk per dollar — shift spend there. The lowest-return line is a retire/consolidate candidate on Cost optimization.'):'Identity removes the most risk per dollar. Import your funded initiatives (spend) to compute return per dollar, and see the retire/consolidate candidates on Cost optimization.'),{mid:'ctl_identity',txt:'Shift budget to identity'},{mid:'ctl_dlp',txt:'Review lowest-return line'})+
+    '<div class="c5foot">Return = risk removed ÷ spend.</div>';
+}
+/* Tab 03 — Insurance & risk transfer */
+function c5covBar(){
+  var ins=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.insurance)||{},lim=Number(ins.limit)||0,tail=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&Number(LIVE.economics.tail))||0;
+  if(!(lim>0&&tail>0))return '<div class="c5note">◐ Connect your policy record and risk model to see cover vs the modeled tail.</div>';
+  var covp=Math.min(100,Math.round(lim/tail*100)),gp=Math.max(0,100-covp);
+  return '<div style="margin-top:14px"><div style="display:flex;height:34px;border-radius:8px;overflow:hidden;border:1px solid var(--line)">'+
+    '<div data-c5m="cf_ins_limit" style="width:'+covp+'%;background:rgba(46,139,107,.85);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;cursor:pointer">Insured '+usd(lim)+'</div>'+
+    (gp>0?('<div data-c5m="cf_ins_gap" style="width:'+gp+'%;background:rgba(201,162,39,.9);color:#3a2c00;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;cursor:pointer">Gap '+usd(tail-lim)+'</div>'):'')+
+    '</div><div class="c5foot">Full bar = '+usd(tail)+' modeled tail loss</div></div>';
+}
+function c5cfInsurance(){
+  var host=document.getElementById('cf-insurance');if(!host)return;
+  var gap=c5get('cf_ins_gap'),ec=c5get('exp_identity');
+  host.innerHTML=c5header()+
+    c5shell('Insurance & risk transfer · are we covered efficiently?','Covered for the everyday — watch the tail.',null,'Your policy covers a limit against the modeled tail; any shortfall is retained on the balance sheet. Your premium is priced on last year’s posture, which has since improved. You can transfer more, or reduce the tail. Tap any figure for the model and your policy record.')+
+    '<div class="c5cards">'+c5card('cf_tail')+c5card('cf_ins_limit')+c5card('cf_ins_gap')+'</div>'+
+    c5covBar()+
+    '<div class="c5tiles" style="margin-top:16px">'+
+      c5tile('cf_premium','g','Renewal leverage','Priced on last year’s posture — now improved')+
+      c5tile('exp_identity','a','Tail driver','Largest single contributor to the tail')+
+    '</div>'+
+    c5bl('Bottom line','Close the gap two ways — buy up, or reduce the tail.',null,(gap.connected?('Raise the limit by '+gap.displayValue+', or reduce the tail by closing the identity gap — its largest driver. Reducing the tail is cheaper than the extra premium, and it improves your renewal position.'):'Connect your policy record and risk model to size the gap; the cheapest close is usually reducing the tail by fixing its largest driver.'),{mid:'exp_identity',txt:'Reduce the tail — fund identity'},{mid:'cf_ins_gap',txt:'Model buying up cover'})+
+    '<div class="c5foot">Cover vs. modeled tail; premium and limits from your policy record.</div>';
+}
+/* Tab 04 — Cost optimization */
+function c5cfCost(){
+  var host=document.getElementById('cf-cost');if(!host)return;
+  var dlp=c5get('ctl_dlp');
+  var candidate=dlp.connected?('<div class="c5rank"><div class="c5rank-h">What we can see today · from the control-value ledger</div><div class="c5row" data-c5m="ctl_dlp"><div class="c5row-main"><div class="c5row-t">'+dlp.name+'<span class="c5tag rev">Review</span></div><div class="c5row-s">Lowest risk removed of your controls — a retire / consolidate candidate. Attribute its spend to confirm it is underwater.</div></div><div class="c5row-v">'+dlp.displayValue+'</div></div></div>'):'';
+  host.innerHTML=c5header()+
+    c5shell('Cost optimization · where can we save?','Savings need your spend records — one candidate is already visible.',null,'Redeployable savings come from retiring underperforming or overlapping tools at near-zero added risk. Quantifying the dollars needs your tool inventory and spend records; until they connect, Nerion shows the honest not-connected state and surfaces the one candidate it can already see from the control-value ledger. Tap any item for the overlap and utilization model.')+
+    '<div class="c5cards">'+c5card('cf_savings')+c5card('cf_savings')+c5card('cf_savings')+'</div>'+
+    candidate+
+    '<div class="c5note">Connect your <b>tool inventory & spend records</b> (finance / procurement + license management) and Nerion quantifies each retire / consolidate / right-size candidate, the dollars it frees, and the risk it adds — then lets you redeploy the savings to the highest-return control.</div>'+
+    c5bl('Bottom line','Free spend and put it where it works.',null,'Retiring or consolidating underperforming and overlapping tools frees spend at near-zero risk. Redeployed to identity — the highest-return control — it can more than cover the top exposure fix, a self-funding move. Connect spend records to size it.',{mid:'ctl_identity',txt:'Redeploy savings to identity'})+
+    '<div class="c5foot">Overlap and utilization from your tool inventory and spend records.</div>';
+}
+/* Tab 05 — Risk decisions */
+function c5dqRow(type,typeCls,name,mid,sub,rec,recCls){var m=c5get(mid);
+  return '<div class="c5row" data-c5m="'+mid+'"><div class="c5row-main"><div class="c5row-t"><span class="c5pill '+typeCls+'" style="margin-right:8px">'+type+'</span>'+name+'</div><div class="c5row-s">'+sub+'</div></div><div class="c5row-v">'+(m.connected?m.displayValue:'—')+'</div><span class="c5pill '+recCls+'" style="align-self:center">'+rec+'</span></div>';
+}
+function c5cfDecisions(){
+  var host=document.getElementById('cf-decisions');if(!host)return;
+  var ec=c5get('exp_identity'),gap=c5get('cf_ins_gap'),em=c5get('exp_email');
+  host.innerHTML=c5header()+
+    c5shell('Risk decisions · what needs my sign-off?','Three decisions are waiting — one clear yes, one to weigh, one to accept.',null,'Nerion surfaces the cyber choices that need a financial call — each priced, each a clean invest, transfer, or accept. Here’s what’s on your desk. Tap any decision for the full economics and its source.')+
+    '<div class="c5rank"><div class="c5rank-h">Decision queue · priced from your risk model + spend records</div>'+
+      c5dqRow('Invest','b','Fund the identity fix','exp_identity',(ec.connected?('Removes '+ec.displayValue+' · keeps you within appetite'):'the CISO’s top ask, in dollars'),'Recommended','g')+
+      c5dqRow('Transfer','b','Buy up tail cover','cf_ins_gap',(gap.connected?('Closes the insurance gap · weigh vs reducing the tail'):'closes the insurance gap'),'Weigh','a')+
+      c5dqRow('Accept','n','Accept residual phishing risk','exp_email',(em.connected?('Modeled and falling · well within tolerance'):'well within tolerance'),'Reasonable','n')+
+    '</div>'+
+    c5bl('Bottom line','One clear yes today.',null,(ec.connected?('The identity fix is the highest-return decision on your desk — '+ec.displayValue+' removed, and it keeps you within appetite. The transfer and the acceptance can wait for the next review.'):'The identity fix is the highest-return decision on your desk once your controls connect. The transfer and the acceptance can wait for the next review.'),{mid:'exp_identity',txt:ec.connected?('Approve identity fix — removes '+ec.displayValue):'Approve identity fix'})+
+    '<div class="c5foot">Each decision is priced from its risk model and your spend records.</div>';
 }

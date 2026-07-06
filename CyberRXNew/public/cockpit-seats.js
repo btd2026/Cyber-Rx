@@ -77,36 +77,16 @@ var SEATS = {
  },
 
  cfo:{
-  eyebrow:'Financial view · CFO',
-  verdict:'Cyber loss is <span class="em">quantified in dollars, insured against the modeled tail, and defensible as an investment.</span> The open financial items are the uninsured tail and the exposure carried on decisions not yet funded — both quantified below, each figure clickable to its math.',
-  sub:'Cyber as a line on the risk-adjusted balance sheet: expected loss, capital at risk, insurance economics, and the marginal return on the next dollar. Click any figure for the math.',
-  brief:'From a finance view: our capital at risk is quantified — an expected annual loss and a worst-case tail, both in dollars against the balance sheet. Security spend is defensible in return-on-investment terms, the same as any other capital allocation. The two open financial items are the uninsured portion of the tail and the exposure we are carrying on risk-reduction decisions not yet funded. Every figure on this seat is clickable to its calculation and its source.',
+  eyebrow:'CFO · Executive cockpit',
+  verdict:'Cyber as money, in five tabs: <span class="em">financial exposure</span> against appetite, the <span class="em">return</span> on the spend, insurance efficiency, where to save, and the priced decisions that need your sign-off — every figure traceable to its source.',
+  sub:'Tap any card, tile, row, bar or decision to open the inspector — the model, its inputs and their sources. The same engine as the CISO seat; shared figures are one source of truth.',
+  brief:'From the finance seat, in five tabs. Financial exposure: cyber loss is within the board’s appetite, with headroom, and one identity fix protects it. Cyber ROI: the spend returns more than it costs, and identity returns the most per dollar. Insurance: covered for the everyday, with a tail gap to close by buying up or reducing the tail. Cost optimization: spend you can free and redeploy. Risk decisions: three priced calls on your desk — one clear yes. Every number traces to its source, and the shared figures match the CISO seat exactly.',
   body:function(){return (
-   sec('01','Financial exposure','Cyber as capital at risk — expected annual loss and the worst realistic year in dollars, the return on security spend, the cost of carrying deferred decisions, and the live payment-fraud &amp; SOX-control posture that hits finance directly.',
-     '<div id="cfoModeA"></div>'+
-     tiles([
-      {k:'Expected annual loss',v:'<span id="lvExpoCfo">$68M</span>',ev:'ale',note:'<span id="lvCfoPctRev">≈0.8% of revenue</span> · provisioned'},
-      {k:'Value-at-Risk (95%)',v:'<span id="lvTailCfo">$180M</span>',cls:'warn',ev:'tail',note:'<span id="lvCfoPctEV">0.6% of enterprise value</span>'},
-      {k:'Return on security spend',v:'<span id="lvCfoRoiVal">$1 → —</span>',ev:'roicfo',note:'<span id="lvCfoRoiNote"><span class="pill mod">modeled</span> risk reduced per dollar</span>'},
-      {k:'Cost of inaction',v:'+$92M',cls:'warn',ev:'inaction',note:'<span class="pill mod">modeled</span> exposure on deferred decisions'}])
-     +'<div id="cfoFraud" style="margin-top:14px"></div>')
-   +sec('02','Business interruption cost','What an outage of a revenue-critical service costs — per hour, per day, and across the worst-case recovery — plus what a severe cyber year does to earnings, EPS and days of operating income. The numbers finance needs to size recovery and insurance.',
-     '<div id="cfoBI"></div>'
-     +'<div id="cfoEarnings" style="margin-top:14px"><div class="card"><div class="cn">◐ Add net income, operating income (for days-of-operating-income) and shares outstanding (for EPS) in onboarding to translate cyber loss into earnings, days and EPS impact.</div></div></div>')
-   +sec('03','Cyber investment ROI','Every funded security decision as a return — dollars of risk removed ÷ dollars invested (ROSI), per initiative and blended — so cyber spend is defensible in the same terms as any other investment.',
-     '<div id="initiatives-panel"></div>')
-   +sec('04','Insurance effectiveness','Is our cyber-insurance matched to the modeled tail? Coverage limit vs worst-case loss, the uninsured gap, transfer efficiency, premium and the renewal clock — so coverage is sized to real exposure, not last year’s.',
-     '<div id="cfoModeB"></div>'+
-     kvcard('Insurance economics',[{k:'Coverage limit',v:'<span id="lvCfoCoverage">$150M</span>',ev:'inslimit'},{k:'Uninsured tail',v:'<span id="lvCfoGap">$30M</span>',cls:'crit',ev:'insgap'},{k:'Annual premium',v:'<span id="lvCfoPremium">$4.2M / yr</span>',ev:'inspremium'},{k:'Transfer efficiency',v:'<span id="lvCfoTransfer">83%</span>',ev:'transfer'},{k:'Renewal',v:'<span id="lvCfoRenewal">92 days</span>'}])
-     +'<div class="cn" style="margin-top:10px">Transfer efficiency is the share of the worst-case tail your policy actually covers. A gap means the tail exceeds the limit — funding recovery lowers the tail and narrows the gap; raising the limit transfers more but costs premium. Both levers are in <b>Cost optimization</b> and <b>Risk-acceptance decisions</b>.</div>')
-   +sec('05','Cost optimization','Where the marginal security dollar buys the most risk reduction — and the false economy of cutting. The return ranking by program, and the modeled effect of a budget cut once the insurer re-rates.',
-     '<div class="cols">'
-     +bars([{l:'Privileged access',v:'37×',pct:100,cls:''},{l:'Recovery / DR',v:'13×',pct:52},{l:'Data protection',v:'8×',pct:34},{l:'Awareness training',v:'6×',pct:26},{l:'Endpoint (saturated)',v:'1.4×',pct:8}])
-     +'<div class="card"><div class="ck">The false economy of a cut</div>'+lists([{c:'c',ic:'↓',t:'<span class="pill mod">modeled</span> Cut budget −20% → +$46M exposure, tail $214M, premium +18%',ev:'budgetcut',s:'Net of the premium re-rate, the cut costs more than it saves.'}])+'</div>'
-     +'</div><div class="cn" style="margin-top:8px"><span class="pill mod">illustrative</span> Marginal return by program is an example ranking to show the shape; the live, per-control dollars of risk removed (summing to the org total) are on the CISO <b>Controls → Control value ledger</b>.</div>')
-   +sec('06','Risk-acceptance decisions','The financial decisions that need the CFO — how much to fund this year and the residual to formally accept — each with the dollars removed, the ROI, and the disclosure threshold that makes an event reportable.',
-     '<div id="cfoDecision"></div>'
-     +'<div style="margin-top:14px">'+lists([{c:'w',ic:'§',t:'Materiality threshold <span id="lvCfoMateriality">$53M</span> — a crown-jewel event is reportable',ev:'materiality',s:'The 4-business-day SEC clock and a pre-staged 8-K keep the disclosure defensible.'}])+'</div>')
+   sec('01','Financial exposure','','<div id="cf-exposure"></div>')
+   +sec('02','Cyber ROI','','<div id="cf-roi"></div>')
+   +sec('03','Insurance','','<div id="cf-insurance"></div>')
+   +sec('04','Cost optimization','','<div id="cf-cost"></div>')
+   +sec('05','Risk decisions','','<div id="cf-decisions"></div>')
   );}
  },
 
