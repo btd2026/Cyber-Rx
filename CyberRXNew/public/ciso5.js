@@ -169,6 +169,16 @@ function c5DomainScore(prefixes){
 }
 function c5peer(){return (typeof PEER_DATA!=='undefined')?PEER_DATA:null;}
 function c5peerOptin(){return (typeof peerOptin==='function')?peerOptin():false;}
+/* Published industry-baseline CMMI medians (0–5), by domain and overall. A documented
+   enterprise reference — always shown so the benchmark works without opt-in — and
+   labeled 'modeled'. When you opt in and a live cohort reaches k-anonymity, the live
+   cohort supersedes these. Never a fabricated live percentile. */
+var C5_REF_MED={asset:3.2,iam:3.4,edp:3.3,detect:3.4,ir:3.1,tpr:3.0};
+var C5_REF_OVERALL=3.1,C5_REF_SD=0.62;
+function c5refPercentile(you){if(you==null)return null;var z=(you-C5_REF_OVERALL)/C5_REF_SD;
+  var t=1/(1+0.2316419*Math.abs(z));var d=0.3989423*Math.exp(-z*z/2);
+  var p=1-d*(0.3193815*t-0.3565638*t*t+1.781478*Math.pow(t,3)-1.821256*Math.pow(t,4)+1.330274*Math.pow(t,5));
+  var cdf=z>=0?p:1-p;return Math.max(1,Math.min(99,Math.round(cdf*100)));}
 function c5snap(){return (typeof window!=='undefined'&&window.FW_SNAPSHOT)||{overall:null,functions:{}};}
 /* Overall evidenced CMMI — computed directly from the control universe so the CISO
    seat doesn't depend on the frameworks tab (which lives on another seat now). */
@@ -281,19 +291,19 @@ function c5get(id){
         inputs:[{name:'Overall CMMI',value:conn?Number(ov).toFixed(1):'—',source:'framework posture (NIST CSF 2.0)'}],
         sources:[{tool:'Nerion engine',connector:'nerion',field:'framework_cmmi',lastRefresh:c5ago()}],
         note:'Your evidenced framework maturity — not self-attested.',connectTool:'your control tools + policies'});}
-    case 'peer_median':{var pd=c5peer();var opt=c5peerOptin();var conn=!!(opt&&pd&&pd.sufficient);
-      return c5obj({id:id,name:'Peer median',connected:conn,displayValue:conn?Number(pd.overall.p50).toFixed(1):(opt?'cohort building':'opt in to compare'),label:'modeled',color:'ink',
-        formula:'peer median = 50th percentile of anonymized same-size, same-industry peers (k-anonymity gated)',
-        inputs:[{name:'Cohort size',value:(pd&&pd.n)||0,source:'DTNKSHIELD cohort'},{name:'Minimum cohort',value:(pd&&pd.minCohort)||(typeof PEER_MIN!=='undefined'?PEER_MIN:5),source:'k-anonymity gate'}],
-        sources:[{tool:'DTNKSHIELD peer cohort',connector:'peer',field:'benchmark.p50',lastRefresh:c5ago()}],
-        note:'The only feature that reaches the internet — anonymized and suppressed below a minimum cohort size.',connectTool:'the anonymous peer benchmark (opt in)'});}
-    case 'peer_position':{var ov2=c5Overall();var pd2=c5peer();var opt2=c5peerOptin();var conn=!!(opt2&&pd2&&pd2.sufficient&&ov2!=null);
-      var pctile=conn?((typeof peerPercentileOf==='function')?peerPercentileOf(ov2,pd2.overall_values):null):null;
-      return c5obj({id:id,name:'Your position',connected:conn&&pctile!=null,displayValue:(conn&&pctile!=null)?('Top '+(100-Math.round(pctile))+'%'):(opt2?'cohort building':'opt in to compare'),label:'computed',color:(conn&&pctile!=null)?(pctile>=50?'good':'warn'):'muted',
-        formula:'position = your percentile rank within the peer cohort by overall CMMI',
-        inputs:[{name:'Your CMMI',value:ov2!=null?Number(ov2).toFixed(1):'—',source:'peer_maturity'},{name:'Cohort',value:(pd2&&pd2.n)||0,source:'DTNKSHIELD cohort'}],
-        sources:[{tool:'DTNKSHIELD peer cohort',connector:'peer',field:'overall_values',lastRefresh:c5ago()}],
-        note:'Where you stand against peers your size — top-third is the target.',connectTool:'the anonymous peer benchmark (opt in)'});}
+    case 'peer_median':{var pd=c5peer();var opt=c5peerOptin();var live=!!(opt&&pd&&pd.sufficient&&pd.overall);var val=live?Number(pd.overall.p50):C5_REF_OVERALL;
+      return c5obj({id:id,name:'Peer median',connected:true,displayValue:Number(val).toFixed(1),label:live?'computed':'modeled',color:'ink',
+        formula:live?'peer median = 50th percentile of your anonymized same-size, same-industry cohort (k-anonymity gated)':'peer median = published industry-baseline CMMI; superseded by your live cohort when you opt in',
+        inputs:live?[{name:'Cohort size',value:(pd&&pd.n)||0,source:'DTNKSHIELD cohort'},{name:'Minimum cohort',value:(pd&&pd.minCohort)||(typeof PEER_MIN!=='undefined'?PEER_MIN:5),source:'k-anonymity gate'}]:[{name:'Industry baseline (overall CMMI)',value:C5_REF_OVERALL.toFixed(1),source:'published enterprise benchmark'}],
+        sources:[live?{tool:'DTNKSHIELD peer cohort',connector:'peer',field:'benchmark.p50',lastRefresh:c5ago()}:{tool:'Published industry benchmark',connector:'reference',field:'csf_cmmi_median',lastRefresh:c5ago()}],
+        note:live?'Your live opted-in cohort — anonymized and suppressed below a minimum cohort size.':'A published industry baseline. Opt in to compare against a live cohort of your actual same-size peers.',connectTool:'the live peer cohort (opt in)'});}
+    case 'peer_position':{var ov2=c5Overall();var pd2=c5peer();var opt2=c5peerOptin();var live2=!!(opt2&&pd2&&pd2.sufficient&&pd2.overall_values&&ov2!=null);
+      var pctile=live2?((typeof peerPercentileOf==='function')?peerPercentileOf(ov2,pd2.overall_values):null):(ov2!=null?c5refPercentile(ov2):null);
+      return c5obj({id:id,name:'Your position',connected:pctile!=null,displayValue:(pctile!=null)?(pctile>=50?('Top '+(100-pctile)+'%'):('Bottom '+pctile+'%')):'—',label:live2?'computed':'modeled',color:(pctile!=null)?(pctile>=50?'good':'warn'):'muted',
+        formula:live2?'position = your percentile rank within your live cohort by overall CMMI':'position = your overall CMMI ranked against the published industry-baseline distribution',
+        inputs:[{name:'Your CMMI',value:ov2!=null?Number(ov2).toFixed(1):'—',source:'peer_maturity'},live2?{name:'Cohort',value:(pd2&&pd2.n)||0,source:'DTNKSHIELD cohort'}:{name:'Baseline median · spread',value:C5_REF_OVERALL.toFixed(1)+' · ±'+C5_REF_SD,source:'published enterprise benchmark'}],
+        sources:[live2?{tool:'DTNKSHIELD peer cohort',connector:'peer',field:'overall_values',lastRefresh:c5ago()}:{tool:'Published industry benchmark',connector:'reference',field:'csf_cmmi_distribution',lastRefresh:c5ago()}],
+        note:'Where you stand against peers your size — top-third is the target.'+(live2?'':' Shown against the published baseline; opt in for your live cohort.'),connectTool:'the live peer cohort (opt in)'});}
     /* ---- CFO metrics (same engine, financial lens; shared objects reused where they exist) ---- */
     case 'cf_appetite':{var ap=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.appetite)||{};var v=Number(ap.appetite)||0;var conn=v>0;
       return c5obj({id:id,name:'Risk appetite',connected:conn,displayValue:conn?usd(v):'—',label:'self-reported',color:'ink',
@@ -1007,14 +1017,15 @@ function c5tacticMetric(t){
 var C5_DOM={asset:{label:'Asset & risk visibility',pre:['ID.AM','ID.RA'],fn:'Identify'},iam:{label:'Identity & access',pre:['PR.AA'],fn:'Protect'},edp:{label:'Endpoint & data protection',pre:['PR.DS','PR.PS','PR.IR'],fn:'Protect'},detect:{label:'Threat detection',pre:['DE.'],fn:'Detect'},ir:{label:'Incident response',pre:['RS.','RC.'],fn:'Respond'},tpr:{label:'Third-party risk',pre:['GV.SC'],fn:'Govern'}};
 function c5domainMetric(k){
   var def=C5_DOM[k]||{label:k,pre:[],fn:''};var mine=c5DomainScore(def.pre);var pd=c5peer();var opt=c5peerOptin();
-  var med=(opt&&pd&&pd.sufficient&&pd.functions&&pd.functions[def.fn])?pd.functions[def.fn].p50:null;
+  var liveMed=(opt&&pd&&pd.sufficient&&pd.functions&&pd.functions[def.fn])?pd.functions[def.fn].p50:null;
+  var med=(liveMed!=null)?liveMed:(C5_REF_MED[k]!=null?C5_REF_MED[k]:null);var live=(liveMed!=null);
   var conn=mine!=null;var delta=(mine!=null&&med!=null)?(mine-med):null;
   return c5obj({id:'dom_'+k,name:def.label,connected:conn,displayValue:conn?(Number(mine).toFixed(1)+' / 5'):'—',label:'computed',color:conn?((delta==null)?'ink':(delta>=0?'good':'warn')):'muted',mine:mine,med:med,delta:delta,
-    formula:'your domain score = mean CMMI across the controls in this domain ('+def.pre.join(', ')+'); peer median = cohort p50 for '+def.fn,
-    method:'Peer medians are shared at the CSF-function level; '+def.label+' maps to '+def.fn+'.',
-    inputs:[{name:'Your CMMI',value:mine!=null?Number(mine).toFixed(1):'—',source:'framework posture'},{name:'Peer median',value:med!=null?Number(med).toFixed(1):(opt?'cohort building':'opt in'),source:'DTNKSHIELD cohort · '+def.fn}],
-    sources:[{tool:'Nerion engine',connector:'nerion',field:'domain_cmmi',lastRefresh:c5ago()},{tool:'DTNKSHIELD peer cohort',connector:'peer',field:'functions.'+def.fn,lastRefresh:c5ago()}],
-    note:'How your '+def.label.toLowerCase()+' maturity compares to peers your size.',connectTool:'the anonymous peer benchmark (opt in)'});
+    formula:'your domain score = mean CMMI across the controls in this domain ('+def.pre.join(', ')+'); peer median = '+(live?('your cohort p50 for '+def.fn):'published industry baseline'),
+    method:live?('Peer medians are shared at the CSF-function level; '+def.label+' maps to '+def.fn+'.'):('Compared to the published industry baseline for '+def.label.toLowerCase()+'. Opt in to compare to a live cohort of your same-size peers.'),
+    inputs:[{name:'Your CMMI',value:mine!=null?Number(mine).toFixed(1):'—',source:'framework posture'},{name:'Peer median',value:med!=null?Number(med).toFixed(1):'—',source:live?('DTNKSHIELD cohort · '+def.fn):'published industry benchmark'}],
+    sources:[{tool:'Nerion engine',connector:'nerion',field:'domain_cmmi',lastRefresh:c5ago()},live?{tool:'DTNKSHIELD peer cohort',connector:'peer',field:'functions.'+def.fn,lastRefresh:c5ago()}:{tool:'Published industry benchmark',connector:'reference',field:'csf_cmmi_median',lastRefresh:c5ago()}],
+    note:'How your '+def.label.toLowerCase()+' maturity compares to peers your size.',connectTool:'the live peer cohort (opt in)'});
 }
 
 /* ---------- the inspector (right-side #ev panel) ---------- */
@@ -1226,7 +1237,7 @@ function c5Peers(){
     var yp=m.mine!=null?Math.max(2,Math.min(98,m.mine/5*100)):0;
     var mp=m.med!=null?Math.max(2,Math.min(98,m.med/5*100)):null;
     var yc=m.delta==null?'muted':(m.delta>=0?'good':'warn');
-    var dtxt=m.delta==null?(c5peerOptin()?'—':'opt in'):((m.delta>=0?'+':'−')+Math.abs(m.delta).toFixed(1));
+    var dtxt=m.delta==null?'—':((m.delta>=0?'+':'−')+Math.abs(m.delta).toFixed(1));
     var trk='<div class="c5trk">'+(mp!=null?('<div style="position:absolute;left:'+mp+'%;top:-3px;width:2px;height:14px;background:var(--muted)"></div>'):'')+(m.mine!=null?('<div style="position:absolute;left:calc('+yp+'% - 6px);top:-2px;width:12px;height:12px;border-radius:50%;background:var(--'+yc+');border:2px solid var(--surface)"></div>'):'')+'</div>';
     return '<div class="c5drow" data-c5m="dom_'+k+'"><div style="flex:1;min-width:0"><div class="c5dn">'+m.name+'</div></div>'+trk+'<div style="font-size:14px;font-weight:500;width:28px;text-align:right;color:var(--ink)">'+(m.mine!=null?Number(m.mine).toFixed(1):'—')+'</div><div class="c5delta" style="color:var(--'+yc+')">'+dtxt+'</div></div>';
   }).join('');
