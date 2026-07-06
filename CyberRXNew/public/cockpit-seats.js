@@ -37,40 +37,39 @@ var SEATS = {
 
  ceo:{
   eyebrow:'Executive summary · CEO',
-  verdict:'Cyber is <span class="em">a managed business risk within the board’s approved tolerance</span> — and, run well, a lever for growth. This seat is your six-question read: health, strategic risk, financial exposure, customer trust, board KPIs, and the decisions that need you.',
-  sub:'Cyber in the terms you run the business by — clickable to the exact formula, inputs and math behind every figure.',
-  brief:'Here is your read as CEO. Cyber is a managed business risk, within the board’s approved tolerance, and I can show you the strategic moves it affects, what is financially at stake, what a breach would cost us in customer trust, the numbers you take to the board, and the few decisions that need you. Every figure traces to our own data.',
+  verdict:'Cyber is <span class="em">a managed business risk, within the board’s approved tolerance</span> — and, run well, a lever for growth. Six plain-English views: your enterprise cyber health, the risk to your strategy, the money at stake, customer and brand protection, the numbers you take to the board, and the decisions that need you.',
+  sub:'Cyber in the language you run the business by — no jargon. Click any figure for the plain-English math behind it.',
+  brief:'Here is your read as CEO, in business terms. Cyber is a managed risk within the board’s approved tolerance. I can show you the health of the company against that tolerance, which parts of the strategy carry cyber risk, what is financially at stake, what protects our customers and brand, the numbers you take to the board, and the few decisions that need you. Every figure traces to our own data — nothing invented.',
   body:function(){return (
-   sec('01','Enterprise business health','Your one-glance read on whether cyber is helping or hurting the business — within the board’s appetite, getting better or worse, resilient, and trusted — then the processes carrying the most exposure.',
+   sec('01','Enterprise Cyber Health','Your one-glance read: the company’s overall cyber risk, the top threats to the business, how resilient we are, whether we are getting better or worse, and the handful of issues most worth your attention.',
      '<div id="ceoModeA"></div><div id="ceoHealth"></div>'
-     +'<div id="ceoProcBars" style="margin-top:16px">'+bars([
-      {l:'Claims &amp; payments processing',ev:'proc-claims',v:'$34M',pct:100,cls:'hot'},
-      {l:'Policy administration',ev:'proc-policy',v:'$18M',pct:53},
-      {l:'Trading &amp; settlement',ev:'proc-settlement',v:'$11M',pct:32},
-      {l:'Member portal &amp; servicing',ev:'proc-member',v:'$5M',pct:15}])+'</div>')
-   +sec('02','Strategic risk','Is our strategy safe to pursue? A go / no-go per major move (M&amp;A · cloud · AI · expansion), the risks rising fastest, and where a single third-party is a systemic point of failure.',
+     +'<div id="ceoTopThreats" style="margin-top:14px"></div>'
+     +'<div id="ceoTopIssues" style="margin-top:14px"></div>')
+   +sec('02','Cyber Risk to Strategy','Where cyber puts the strategy at risk — the major moves (M&amp;A · expansion · new products), your AI initiatives, product launches, the supply chain, and the single dependencies a failure of which would hurt most.',
      '<div id="ceoGoNoGo"></div>'
-     +'<div id="ceoEmerging" style="margin-top:14px"></div>'
-     +'<div id="ceoThirdParty" style="margin-top:14px"></div>')
-   +sec('03','Financial exposure','Cyber as dollars — expected annual loss and the worst realistic year against appetite, the disclosure threshold, insurance coverage against the tail, and where the next dollar of security spend works hardest.',
+     +'<div id="ceoStrategyRisks" style="margin-top:14px"></div>'
+     +'<div id="ceoThirdParty" style="margin-top:14px"></div>'
+     +'<div id="ceoEmerging" style="margin-top:14px"></div>')
+   +sec('03','Cyber Financial Exposure','Cyber as money — our estimated financial exposure, the revenue at risk, what a ransomware event could cost, how much insurance covers, and the expected annual cyber loss.',
      '<div id="ceoModeB"></div>'+
      tiles([
-      {k:'Expected annual loss',v:'<span id="lvExpo">$68M</span>',ev:'ale',note:'<span class="pill good" id="lvAleWithin">Within appetite</span> &nbsp;<span class="claim" data-ev="pctrev"><span id="lvPctRev">≈0.8% of revenue</span> <span class="fx">ƒ</span></span>'},
-      {k:'Worst-case tail (95%)',v:'<span id="lvTail">$180M</span>',cls:'warn',ev:'tail',note:'<span class="pill warn" id="lvTailWithin">Above appetite</span> &nbsp;vs appetite <span class="claim" data-ev="appetite"><span id="lvAppetite">$120M</span> <span class="fx">ƒ</span></span>'},
-      {k:'Materiality threshold',v:'<span id="lvMateriality">$53M</span>',ev:'materiality',note:'<span id="lvMatBasis">the loss large enough to be financially material to disclose</span>'}])
-     +'<div class="cols" style="margin-top:14px"><div class="card"><div class="ck">Insurance — covered against the worst case?</div><div class="cv" id="lvInsAnswer" style="font-size:19px;line-height:1.35;margin-top:6px">Mostly — <span class="warn">a $30M tail is uninsured</span></div><div style="display:flex;gap:24px;margin-top:14px"><div><div class="cv claim" data-ev="inslimit" style="font-size:19px;cursor:pointer" id="lvCoverage">$150M <span class="fx">ƒ</span></div><div class="cn">coverage limit</div></div><div><div class="cv crit claim" data-ev="insgap" style="font-size:19px"><span id="lvGapCeo">$30M</span> <span class="fx">ƒ</span></div><div class="cn">uninsured tail</div></div><div><div class="cv claim" data-ev="inspremium" style="font-size:19px;cursor:pointer" id="lvPremium">$4.2M <span class="fx">ƒ</span></div><div class="cn" id="lvRenewalNote">annual premium</div></div></div></div>'
-     +kvcard('How much of the risk is transferred?',[{k:'Transfer efficiency',v:'<span id="lvTransfer">83%</span>',ev:'transfer'},{k:'Retained (uninsured) tail',v:'<span id="lvRetained">$30M</span>',cls:'crit',ev:'insgap'},{k:'Funding recovery',v:'narrows the gap',cls:'good'}])+'</div>'
-     +'<div class="en-lbl" style="margin:18px 0 8px">Where the next dollar works hardest</div><div id="initiatives-panel"></div>')
-   +sec('04','Brand &amp; customer trust','Trust is this business’s currency — what a breach would cost in customer trust and liability, and the flip side: security as a sales asset that wins deals through certifications and cleared reviews.',
-     '<div id="ceoTrust"></div><div id="cisoGrowth" style="margin-top:14px"></div>')
-   +sec('05','Board KPIs','Your report-up scorecard — the numbers you take to the board: where we sit vs sector peers, the trajectory over time, the SEC Reg S-K Item 106 governance you must disclose, every leader’s accountability, and the evidenced decision record.',
-     '<div id="ceoPeer"></div>'
+      {k:'Expected annual cyber loss',v:'<span id="lvExpo">$68M</span>',ev:'ale',note:'<span class="pill good" id="lvAleWithin">Within appetite</span> &nbsp;<span class="claim" data-ev="pctrev"><span id="lvPctRev">≈0.8% of revenue</span> <span class="fx">ƒ</span></span>'},
+      {k:'Estimated exposure (worst realistic year)',v:'<span id="lvTail">$180M</span>',cls:'warn',ev:'tail',note:'<span class="pill warn" id="lvTailWithin">Above appetite</span> &nbsp;vs appetite <span class="claim" data-ev="appetite"><span id="lvAppetite">$120M</span> <span class="fx">ƒ</span></span>'},
+      {k:'Revenue at risk',v:'<span id="lvRevRisk">—</span>',cls:'warn',ev:'downtime',note:'per day the top revenue system is down'},
+      {k:'Ransomware exposure',v:'<span id="lvRansom">—</span>',cls:'warn',ev:'materiality',note:'<span class="pill mod">modeled</span> worst-case cost of a ransomware event'}])
+     +'<div class="cols" style="margin-top:14px"><div class="card"><div class="ck">Cyber insurance — covered against the worst case?</div><div class="cv" id="lvInsAnswer" style="font-size:19px;line-height:1.35;margin-top:6px">Mostly — <span class="warn">a $30M tail is uninsured</span></div><div style="display:flex;gap:24px;margin-top:14px"><div><div class="cv claim" data-ev="inslimit" style="font-size:19px;cursor:pointer" id="lvCoverage">$150M <span class="fx">ƒ</span></div><div class="cn">coverage limit</div></div><div><div class="cv crit claim" data-ev="insgap" style="font-size:19px"><span id="lvGapCeo">$30M</span> <span class="fx">ƒ</span></div><div class="cn">uninsured</div></div><div><div class="cv claim" data-ev="inspremium" style="font-size:19px;cursor:pointer" id="lvPremium">$4.2M <span class="fx">ƒ</span></div><div class="cn" id="lvRenewalNote">annual premium</div></div></div></div>'
+     +kvcard('How much of the risk is transferred?',[{k:'Transfer efficiency',v:'<span id="lvTransfer">83%</span>',ev:'transfer'},{k:'Retained (uninsured)',v:'<span id="lvRetained">$30M</span>',cls:'crit',ev:'insgap'},{k:'Funding recovery',v:'narrows the gap',cls:'good'}])+'</div>')
+   +sec('04','Customer &amp; Brand Protection','What protects our customers and our name — any customer-impacting incident or breach, the health of how we protect customer data, the reputational risk at stake, and any regulator we would have to notify.',
+     '<div id="ceoTrust"></div>'
+     +'<div id="ceoCustomerProtect" style="margin-top:14px"></div>')
+   +sec('05','Board Cyber KPIs','The scorecard you take to the board — overall cyber posture, the top enterprise cyber risks, critical incidents, regulatory-compliance status, third-party cyber risk, and our operational-resilience score — plus the peer benchmark, the trend, and the SEC Item 106 governance you must disclose.',
+     '<div id="ceoBoardKpis"></div>'
+     +'<div id="ceoPeer" style="margin-top:14px"></div>'
      +'<div id="ceoTrend" style="margin-top:14px"></div>'
-     +'<div id="ceoGov" style="margin-top:14px"><div class="card"><div class="ck">Board oversight structure · SEC Item 106</div><div class="cn" style="margin-top:8px">◐ Add your board-governance answers in onboarding to make this filing-ready.</div></div></div>'
-     +'<div id="opmodel-ceo" style="margin-top:14px"></div>'
-     +'<div id="ceoOversight" style="margin-top:14px">'+kvcard('Oversight &amp; decision record',[{k:'Funded decisions logged',v:'from your decisions',ev:'oversight'},{k:'Each carries',v:'leader · date · ticket',ev:'oversight'},{k:'Board-appetite reviewed',v:'this quarter',cls:'good'},{k:'Defensibility',v:'evidenced trail',cls:'good',ev:'oversight'}])+'</div>')
-   +sec('06','Decisions required','The decisions that need you — a one-page brief for each strategic initiative with best / likely / worst outcome in dollars and a clear recommendation, plus the severe-but-plausible scenario every decision is weighed against.',
-     '<div id="ceoDecisionBrief"></div>'
+     +'<div id="ceoGov" style="margin-top:14px"><div class="card"><div class="ck">Board oversight structure · SEC Item 106</div><div class="cn" style="margin-top:8px">◐ Add your board-governance answers in onboarding to make this filing-ready.</div></div></div>')
+   +sec('06','Executive Decisions','The decisions that need you — risks to formally accept, investments to approve, policies to approve, critical remediation calls, and any crisis decision that requires the CEO — each with the plain-English tradeoff and a recommendation.',
+     '<div id="ceoExecDecisions"></div>'
+     +'<div id="ceoDecisionBrief" style="margin-top:14px"></div>'
      +'<div class="cols" style="margin-top:14px"><div class="card" id="ceoStress"><div class="ck">Severe-but-plausible scenario</div><div class="cn" style="margin-top:8px">◐ Illustrative until go-live — modeled from your top crown jewel, its largest open risk, worst-case recovery and your binding regulatory clock.</div></div>'
      +'<div class="card" id="ceoReadiness"><div class="ck">Response &amp; recovery readiness</div><div class="cn" style="margin-top:8px">◐ Add your incident-readiness answers in onboarding (IR plan tested, tabletop, retainer, ransomware policy).</div></div></div>')
   );}
