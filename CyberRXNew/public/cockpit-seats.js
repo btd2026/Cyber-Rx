@@ -64,37 +64,16 @@ var SEATS = {
  },
 
  clo:{
-  eyebrow:'Legal & regulatory view · CLO / General Counsel',
-  verdict:'The organization is <span class="em">defensible across all operating jurisdictions</span> today — no reportable events, evidence preserved. Two obligations have clocks to watch.',
-  sub:'Cyber as legal exposure: disclosure standing, notification duties by country, and the modeled liability if an event occurs — with the clock on each.',
-  brief:'Legally, we are defensible across every jurisdiction we operate in today — no reportable events, and evidence is preserved. The clocks to watch are the seventy-two-hour European deadline and the four-business-day S.E.C. rule. If an incident became material, the determination process and the draft filings are already pre-staged, which is what protects the directors.',
+  eyebrow:'CLO · Executive cockpit',
+  verdict:'Cyber as legal exposure, in five tabs: your <span class="em">regulatory</span> obligations by jurisdiction, breach-<span class="em">notification</span> readiness, <span class="em">contractual</span> &amp; litigation liability, <span class="em">privacy</span> &amp; DSAR, and the legal calls that need you — obligations and evidence surfaced, never a legal conclusion asserted.',
+  sub:'Tap any regime, clock, contract or record to open the inspector — its source system and evidence. The same engine as the other seats; the identity, vendor and platform figures match exactly. Not legal advice.',
+  brief:'From the legal seat, in five tabs. Regulatory: your obligations by jurisdiction, each with its clock and penalty — surfaced, not judged. Notification: you can meet the clocks if the evidence is ready; identity is the thin forensic spot. Contracts: enterprise uptime warranties an identity-driven outage could breach — counts need your CLM. Privacy: DSARs on SLA, with access hygiene the soft spot. Decisions: one action reduces your disclosure, contractual and privacy exposures at once. The shared figures match the other seats exactly.',
   body:function(){return (
-   sec('01','Regulatory exposure','Where we are exposed by jurisdiction — the binding notification obligation, the clock and the penalty ceiling for each region we operate in, plus whether any event is currently reportable. Computed from your regions, data classes and record count.',
-     tiles([
-      {k:'Open notifications',v:'<span id="lvCloNotifCount">—</span>',cls:'good',ev:'notifications',note:'<span id="lvCloNotif">reportable incidents currently open · from your SIEM</span>'},
-      {k:'Materiality standing',v:'<span id="lvCloMatStanding">Not yet determined</span>',cls:'',ev:'materiality',note:'set by the materiality workbench in §05; the SEC clock runs only once an event clears the threshold'},
-      {k:'Class-action / notification exposure',v:'<span id="lvCloLiability">—</span>',cls:'warn',ev:'liability',note:'<span id="lvCloLiabNote">modeled liability from a breach of your record count (records × cost/record)</span>'},
-      {k:'Fastest clock',v:'<span id="lvClock">72 hours</span>',ev:'clock',note:'the binding statutory notification deadline for your regions'}])
-     +'<div id="cloJuris" style="margin-top:14px">'+jtable([
-      {flag:'🇺🇸',c:'United States',ev:'juris-us',o:'SEC 8-K + 54 state breach laws',clock:'4 business days',cc:'warn',pen:'Disclosure + enforcement'},
-      {flag:'🇪🇺',c:'European Union',ev:'juris-eu',o:'GDPR · NIS2 · DORA',clock:'72 hours',cc:'crit',pen:'Up to 4% of global revenue'},
-      {flag:'🇬🇧',c:'United Kingdom',ev:'juris-uk',o:'UK GDPR / ICO',clock:'72 hours',cc:'crit',pen:'£17.5M or 4%'},
-      {flag:'🇸🇬',c:'Singapore',ev:'juris-sg',o:'PDPA · MAS TRM',clock:'72h / 1h (MAS)',cc:'crit',pen:'Up to S$1M'},
-      {flag:'🇦🇺',c:'Australia',ev:'juris-au',o:'Privacy Act · APRA CPS 234',clock:'72 hours',cc:'warn',pen:'Up to A$50M'}])+'</div>'
-     +'<div class="cn" style="margin-top:8px"><span class="pill mod" style="font-size:8px">statutory</span> Obligations, clocks and penalty ceilings are the published jurisdiction rulesets — not your data. The row that binds <b>you</b> is set by the regions you operate in (from onboarding); click any row for the trigger, the deadline and the source.</div>')
-   +sec('02','Contractual risk','The contractual cyber obligations statutory clocks miss — customer DPAs with breach-notification clauses, and your tightest contractual deadline (frequently 24–72h, ahead of the SEC and GDPR clocks). The first thing customer counsel invokes after an incident.',
-     '<div id="cloContract"></div>')
-   +sec('03','Breach-notification readiness','If an incident is material, are we ready to notify in time? The materiality determination — recorded, timed and evidenced — the live SEC and binding-jurisdiction countdowns, and the decision on how we run disclosure.',
-     '<div class="cn" style="margin-bottom:12px">Reportable at <b class="claim" data-ev="materiality" style="cursor:pointer"><span id="lvCloMateriality">$53M</span> <span class="fx">ƒ</span></b> — a crown-jewel event above this threshold is material and starts the 4-business-day SEC clock. Record the determination below; it is timed, evidenced and logged for the D&amp;O defense.</div>'
-     +'<div id="cloMateriality" style="margin-bottom:16px"></div>'
-     +'<div id="cloDecision"></div>')
-   +sec('04','Litigation exposure','If an event becomes litigation — the class-action / notification exposure from the records we hold, the litigation hold that preserves evidence, and the forensic chain-of-custody that protects the case.',
-     '<div id="cloOps"></div>')
-   +sec('05','Privacy risk','The exposure from the sensitive data we hold and our ability to meet data-subject rights inside the statutory clock — the privacy obligations that run continuously, not just after an incident.',
-     '<div id="cloPrivacy"></div>')
-   +sec('06','Evidence readiness','Can we produce the evidence — for a regulator, an auditor or a court — on demand? Compliance posture across the frameworks in scope, and the preserved, timestamped record behind every determination and decision.',
-     '<div id="cisoCompliance"></div>'
-     +'<div class="cn" style="margin-top:12px">Evidence readiness is the ability to show, on demand, that a control was in place and a determination was made properly. The compliance posture above is your framework evidence; every materiality determination and executive decision in Nerion is timestamped and logged as the contemporaneous record a court or regulator expects.</div>')
+   sec('01','Regulatory','','<div id="cl-regulatory"></div>')
+   +sec('02','Notification','','<div id="cl-notification"></div>')
+   +sec('03','Contracts','','<div id="cl-contracts"></div>')
+   +sec('04','Privacy','','<div id="cl-privacy"></div>')
+   +sec('05','Decisions','','<div id="cl-decisions"></div>')
   );}
  },
 
