@@ -210,6 +210,16 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Offline license status/fingerprint — always reachable (even when gated) so the
+// expiry banner and re-key path work on an expired appliance. Mounted BEFORE the
+// enforcement gate.
+app.use('/api/license',          require('./routes/license'));
+
+// Appliance license enforcement. No-op unless LICENSE_ENFORCE=true (set in the
+// shipped VM image, never in the hosted demo). Blocks the API with 402 when the
+// signed license is expired/tampered/wrong-machine/clock-rolled-back.
+app.use(require('./middleware/licenseGate').licenseGate);
+
 // Route groups with rate limiting
 app.use('/api/itsm',             [apiPostLimiter, apiPutLimiter], require('./routes/itsm'));
 app.use('/api/tools',            [apiGetLimiter, apiPostLimiter], require('./routes/tools'));
@@ -452,6 +462,8 @@ const server = app.listen(PORT, () => {
     environment: process.env.NODE_ENV || 'development',
     version: process.env.npm_package_version || '1.0.0'
   });
+  // Offline license posture (appliance builds) — logged once at boot.
+  try { require('./middleware/licenseGate').logStartupStatus(); } catch (e) { logger.debug('license status log failed', { error: e.message }); }
   // Opt-in periodic auto-refresh of connected security-tool integrations.
   try { require('./services/IntegrationScheduler').start(); } catch (e) { logger.debug('scheduler start failed', { error: e.message }); }
 });

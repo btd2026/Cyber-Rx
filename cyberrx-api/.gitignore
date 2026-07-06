@@ -32,3 +32,9 @@ tmp/
 .idea/
 *.swp
 .DS_Store
+
+# License (appliance) — vendor artifacts, never commit
+config/license_priv.pem
+config/license_pub.pem
+config/license.json
+config/.license_state.json
