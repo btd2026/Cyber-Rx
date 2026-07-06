@@ -963,7 +963,7 @@ function c5Owners(){
 function c5Objectives(){
   var stored=(typeof LIVE!=='undefined'&&LIVE&&Array.isArray(LIVE.objectives)&&LIVE.objectives.length)?LIVE.objectives:null;
   if(!stored){try{stored=JSON.parse(localStorage.getItem('cyberrx_objectives')||'null');}catch(_){}}
-  var base=(Array.isArray(stored)&&stored.length)?stored.map(function(x){return {name:(x.name||x),map:(x.map||'')};}):[
+  var base=(Array.isArray(stored)&&stored.length)?stored.map(function(x){var nm=x.name||x;return {name:(typeof sanStr==='function'?sanStr(nm):nm),map:(x.map||'')};}):[
     {name:'Grow the customer platform',map:'identity'},{name:'Expand into new markets',map:''},
     {name:'Launch the new product line',map:'product'},{name:'Improve margins',map:'cost'},
     {name:'M&A integration',map:'vendor'},{name:'Sustainability commitments',map:''},
