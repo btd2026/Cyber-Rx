@@ -164,5 +164,18 @@ try {
   obInline.forEach((code, i) => { try { vm.runInContext(code, obCtx, { filename: `onboarding#${i + 1}` }); } catch (e) { problems.push(`[onboarding load #${i + 1}] ${e.message}`); } });
 } catch (e) { problems.push(`[onboarding] ${e.message}`); }
 
+// ── Framework crosswalk integrity: every mapped id must be a real CSF control ──
+// Guard for the GV.IM-01 class of bug — a phantom CSF id silently scores 0 and
+// understates the criterion. Fails smoke if any CIS/SOC2/HIPAA mapping references a
+// control not defined in CSF_RAW.
+try {
+  const bad = vm.runInContext(`(function(){
+    var valid={};Object.keys(CSF_RAW).forEach(function(fn){var cats=CSF_RAW[fn];Object.keys(cats).forEach(function(c){cats[c].forEach(function(x){valid[x[0]]=1;});});});
+    var out=[];[['CIS',CIS_MAP],['SOC2',SOC2_MAP],['HIPAA',HIPAA_MAP]].forEach(function(m){(m[1]||[]).forEach(function(g){(g[2]||[]).forEach(function(it){(it[2]||[]).forEach(function(id){if(!valid[id])out.push(m[0]+' '+it[0]+' -> '+id);});});});});
+    return out;
+  })()`, ctx);
+  if (bad && bad.length) problems.push('[crosswalk] invalid CSF refs: ' + bad.join(', '));
+} catch (e) { problems.push(`[crosswalk] ${e.message}`); }
+
 if (problems.length) { console.log('SMOKE FAILURES (' + problems.length + '):'); problems.forEach((p) => console.log(' - ' + p)); process.exit(1); }
-else console.log('SMOKE OK — 6 cockpit seats + live renderers + evidence panels + onboarding load ran without throwing.');
+else console.log('SMOKE OK — 6 seats + live renderers + evidence + onboarding + framework-crosswalk integrity all pass.');
