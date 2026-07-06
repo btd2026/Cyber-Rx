@@ -120,16 +120,17 @@ var SEATS = {
   body:function(){return (
    sec('01','Regulatory exposure','Where we are exposed by jurisdiction — the binding notification obligation, the clock and the penalty ceiling for each region we operate in, plus whether any event is currently reportable. Computed from your regions, data classes and record count.',
      tiles([
-      {k:'Open notifications',v:'0',cls:'good',ev:'notifications',note:'<span id="lvCloNotif">no material incident open</span>'},
-      {k:'Materiality standing',v:'No reportable event',cls:'good',ev:'materiality',note:'SEC clock not running until an event clears the threshold'},
-      {k:'Regulatory ceiling',v:'<span id="lvCloLiability">$22M</span>',cls:'warn',ev:'liability',note:'<span id="lvCloLiabNote">the binding jurisdiction’s maximum penalty</span>'},
-      {k:'Fastest clock',v:'<span id="lvClock">72 hours</span>',ev:'clock',note:'the binding notification deadline today'}])
+      {k:'Open notifications',v:'<span id="lvCloNotifCount">—</span>',cls:'good',ev:'notifications',note:'<span id="lvCloNotif">reportable incidents currently open · from your SIEM</span>'},
+      {k:'Materiality standing',v:'<span id="lvCloMatStanding">Not yet determined</span>',cls:'',ev:'materiality',note:'set by the materiality workbench in §05; the SEC clock runs only once an event clears the threshold'},
+      {k:'Class-action / notification exposure',v:'<span id="lvCloLiability">—</span>',cls:'warn',ev:'liability',note:'<span id="lvCloLiabNote">modeled liability from a breach of your record count (records × cost/record)</span>'},
+      {k:'Fastest clock',v:'<span id="lvClock">72 hours</span>',ev:'clock',note:'the binding statutory notification deadline for your regions'}])
      +'<div id="cloJuris" style="margin-top:14px">'+jtable([
       {flag:'🇺🇸',c:'United States',ev:'juris-us',o:'SEC 8-K + 54 state breach laws',clock:'4 business days',cc:'warn',pen:'Disclosure + enforcement'},
       {flag:'🇪🇺',c:'European Union',ev:'juris-eu',o:'GDPR · NIS2 · DORA',clock:'72 hours',cc:'crit',pen:'Up to 4% of global revenue'},
-      {flag:'🇬🇧',c:'United Kingdom',o:'UK GDPR / ICO',clock:'72 hours',cc:'crit',pen:'£17.5M or 4%'},
-      {flag:'🇸🇬',c:'Singapore',o:'PDPA · MAS TRM',clock:'72h / 1h (MAS)',cc:'crit',pen:'Up to S$1M'},
-      {flag:'🇦🇺',c:'Australia',o:'Privacy Act · APRA CPS 234',clock:'72 hours',cc:'warn',pen:'Up to A$50M'}])+'</div>')
+      {flag:'🇬🇧',c:'United Kingdom',ev:'juris-uk',o:'UK GDPR / ICO',clock:'72 hours',cc:'crit',pen:'£17.5M or 4%'},
+      {flag:'🇸🇬',c:'Singapore',ev:'juris-sg',o:'PDPA · MAS TRM',clock:'72h / 1h (MAS)',cc:'crit',pen:'Up to S$1M'},
+      {flag:'🇦🇺',c:'Australia',ev:'juris-au',o:'Privacy Act · APRA CPS 234',clock:'72 hours',cc:'warn',pen:'Up to A$50M'}])+'</div>'
+     +'<div class="cn" style="margin-top:8px"><span class="pill mod" style="font-size:8px">statutory</span> Obligations, clocks and penalty ceilings are the published jurisdiction rulesets — not your data. The row that binds <b>you</b> is set by the regions you operate in (from onboarding); click any row for the trigger, the deadline and the source.</div>')
    +sec('02','Contractual risk','The contractual cyber obligations statutory clocks miss — customer DPAs with breach-notification clauses, and your tightest contractual deadline (frequently 24–72h, ahead of the SEC and GDPR clocks). The first thing customer counsel invokes after an incident.',
      '<div class="card"><div class="ck">Customer contract / DPA obligations</div><div class="cn" style="margin-top:6px">◐ Connect your contract-management system (<b>Ironclad · DocuSign CLM · Conga</b>) to auto-scan contracts for security-clause compliance and quantify how many customer contracts carry a breach-notification clause and your <b>tightest contractual deadline</b>. This is the contractual exposure the statutory clocks do not capture. <span class="pill mod" style="font-size:8px">planned</span></div></div>')
    +sec('03','Breach-notification readiness','If an incident is material, are we ready to notify in time? The materiality determination — recorded, timed and evidenced — the live SEC and binding-jurisdiction countdowns, and the decision on how we run disclosure.',
@@ -460,6 +461,21 @@ var EV = {
   inputs:[['Regime','GDPR · NIS2 · DORA','Jurisdiction ruleset'],['Applies because','EU data subjects','Onboarding'],['Max penalty','4% of global revenue','GDPR']],
   steps:[['1','Confirm personal-data breach','yes'],['2','Notify lead DPA','≤ 72 hours'],['3','Notify individuals','“without undue delay”'],['T','Max exposure','4% global revenue']],
   sources:['Jurisdiction ruleset','Onboarding regions + data classes'],conf:'DORA adds ICT-incident reporting for financial entities.'},
+ 'juris-uk':{claim:'United Kingdom — breach notification',result:'72 hours',cls:'crit',
+  formula:'trigger  =  personal-data breach\ndeadline  =  72 hours to notify the ICO (UK GDPR / DPA 2018)',
+  inputs:[['Regime','UK GDPR · DPA 2018 · ICO','Jurisdiction ruleset'],['Applies because','UK data subjects','Onboarding'],['Max penalty','£17.5M or 4% of global turnover','ICO']],
+  steps:[['1','Confirm personal-data breach','yes'],['2','Notify the ICO','≤ 72 hours'],['3','Notify individuals if high risk','“without undue delay”'],['T','Max exposure','£17.5M / 4%']],
+  sources:['Jurisdiction ruleset','Onboarding regions + data classes'],conf:'Statutory (UK GDPR / DPA 2018); the binding clock for you depends on the regions you operate in.'},
+ 'juris-sg':{claim:'Singapore — breach notification',result:'72h PDPC · 1h MAS',cls:'crit',
+  formula:'PDPA  =  ≤ 3 days to notify the PDPC of a notifiable breach\nMAS  =  ≤ 1 hour to notify MAS of a relevant incident (Notice 655 / TRM)',
+  inputs:[['Regime','PDPA · MAS TRM / Notice 655','Jurisdiction ruleset'],['Applies because','SG data subjects / MAS-regulated','Onboarding'],['Max penalty','S$1M or 10% of annual turnover (PDPA)','PDPC']],
+  steps:[['1','Assess notifiability (≥500 individuals or significant harm)','—'],['2','Notify the PDPC','≤ 3 days'],['3','Financial institutions: notify MAS','≤ 1 hour'],['T','Max exposure','S$1M / 10%']],
+  sources:['Jurisdiction ruleset','Onboarding regions + data classes'],conf:'Statutory (PDPA + MAS); the 1-hour MAS clock applies to regulated financial institutions.'},
+ 'juris-au':{claim:'Australia — breach notification',result:'72 hours (APRA)',cls:'warn',
+  formula:'NDB  =  notify the OAIC “as soon as practicable” for eligible data breaches\nAPRA CPS 234  =  ≤ 72 hours to notify APRA of a material information-security incident',
+  inputs:[['Regime','Privacy Act (NDB) · APRA CPS 234','Jurisdiction ruleset'],['Applies because','AU data subjects / APRA-regulated','Onboarding'],['Max penalty','Up to A$50M (Privacy Act, serious/repeated)','OAIC']],
+  steps:[['1','Assess eligible data breach (likely serious harm)','—'],['2','Notify the OAIC + individuals','as soon as practicable'],['3','APRA-regulated: notify APRA','≤ 72 hours'],['T','Max exposure','A$50M']],
+  sources:['Jurisdiction ruleset','Onboarding regions + data classes'],conf:'Statutory (Privacy Act 2022 amendment + APRA CPS 234).'},
  correlation:{claim:'Aggregation — correlated events that breach appetite',result:'$205M',cls:'crit',
   formula:'joint loss  =  L(payments outage)  +  L(top-vendor failure)   [correlated, not independent]',
   inputs:[['Payments outage','$140M scenario','Engine scenario'],['Top-vendor failure','$65M scenario','Dependency map'],['Appetite','$120M','Board input'],['Enterprise tail','$180M','ERM']],
