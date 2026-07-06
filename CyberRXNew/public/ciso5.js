@@ -1039,7 +1039,25 @@ var C5ICON={
   pulse:'<path d="M3 12h3.5l2-6 3.5 12 2.5-9 1.5 3H21"/>',
   checklist:'<path d="M10 6h10M10 12h10M10 18h7"/><path d="M3.5 6l1.2 1.2L7 5M3.5 12l1.2 1.2L7 11M3.5 18l1.2 1.2L7 17"/>',
   store:'<path d="M3.5 21h17"/><path d="M5 21V11M19 21V11"/><path d="M4 7l1.4-3.5h13.2L20 7"/><path d="M4 7a2.4 2.4 0 0 0 4.8 0 2.4 2.4 0 0 0 4.8 0 2.4 2.4 0 0 0 4.8 0"/><path d="M9.5 21v-5.5h5V21"/>',
-  trend:'<path d="M3 17l6-6 4 4 8-8"/><path d="M16 7h5v5"/>'
+  trend:'<path d="M3 17l6-6 4 4 8-8"/><path d="M16 7h5v5"/>',
+  lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  key:'<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9"/><path d="M16 7l2 2"/><path d="M18.5 4.5l2 2"/>',
+  target:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/>',
+  chart:'<path d="M4 20V4M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="5" width="3" height="12"/>',
+  coin:'<circle cx="12" cy="12" r="8.5"/><path d="M15 9.4a3 2 0 0 0-3-1.3c-1.7 0-3 .8-3 1.8s1.3 1.8 3 1.8 3 .8 3 1.8-1.3 1.8-3 1.8a3 2 0 0 1-3-1.3"/><path d="M12 6.4v11.2"/>',
+  alert:'<path d="M12 4l9.5 16.5H2.5z"/><path d="M12 10v4.5"/><path d="M12 17.5h.01"/>',
+  umbrella:'<path d="M12 3v2"/><path d="M3.5 12a8.5 8.5 0 0 1 17 0z"/><path d="M12 12v6a2 2 0 0 0 4 0"/>',
+  plug:'<path d="M9 3v5M15 3v5"/><path d="M7 8h10v3a5 5 0 0 1-10 0z"/><path d="M12 16v5"/>',
+  clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v4.5l3 2"/>',
+  refresh:'<path d="M4 12a8 8 0 0 1 13.5-5.8L20 8"/><path d="M20 4v4h-4"/><path d="M20 12a8 8 0 0 1-13.5 5.8L4 16"/><path d="M4 20v-4h4"/>',
+  database:'<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v12c0 1.7 3 3 7 3s7-1.3 7-3V6"/><path d="M5 12c0 1.7 3 3 7 3s7-1.3 7-3"/>',
+  file:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/>',
+  wand:'<path d="M6 21L16 11"/><path d="M17 3l.9 2.1L20 6l-2.1.9L17 9l-.9-2.1L14 6l2.1-.9z"/>',
+  check:'<circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.5l2.5 2.5 5-5"/>',
+  heart:'<path d="M12 20s-7-4.5-7-9.5A3.7 3.7 0 0 1 12 7a3.7 3.7 0 0 1 7 3.5C19 15.5 12 20 12 20z"/>',
+  bug:'<rect x="8" y="7" width="8" height="11" rx="4"/><path d="M8 11H4M8 15H4M16 11h4M16 15h4M9.5 6.5L8 5M14.5 6.5L16 5"/>',
+  gauge:'<path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-3.5"/>',
+  shieldcheck:'<path d="M12 3 5 6v5c0 4.2 3 7 7 8.5 4-1.5 7-4.3 7-8.5V6z"/><path d="M9 11.5l2 2 4-4"/>'
 };
 var C5SEAT={ciso:{ic:'shield',nm:'CISO'},cfo:{ic:'dollar',nm:'CFO'},ceo:{ic:'tower',nm:'CEO'},cro:{ic:'scale',nm:'CRO'},coo:{ic:'factory',nm:'COO'},clo:{ic:'gavel',nm:'CLO'},cio:{ic:'cpu',nm:'CTO'},cpo:{ic:'box',nm:'CPO'},audit:{ic:'clipboard',nm:'Internal Audit'},board:{ic:'bank',nm:'Board'}};
 function c5icon(k){return '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(C5ICON[k]||C5ICON.shield)+'</svg>';}
@@ -1053,9 +1071,21 @@ function c5shell(kick,verdict,verdictColor,intro){
   return '<div class="c5kick">'+kick+'</div><div class="c5verdict"'+(verdictColor?(' style="color:var(--'+verdictColor+')"'):'')+'>'+verdict+'</div><div class="c5intro">'+intro+'</div>';
 }
 function c5squares(arr){return '<div class="c5sqrow">'+arr.map(function(c){return '<span class="c5sq '+c+'" title="'+c+'"></span>';}).join('')+'</div>';}
+/* Per-metric tile icon (used as the default when a c5tile call doesn't pass one). */
+var C5TILE_ICON={
+  active_compromise:'pulse',capability_coverage:'checklist',thirdparty_risk:'store',direction:'trend',
+  exp_identity:'lock',exp_total:'chart',exp_conc:'target',
+  cf_tail:'alert',cf_bi:'plug',cf_ins_cov:'umbrella',cf_premium:'coin',eff_return:'trend',
+  ceo_biz_health:'heart',ceo_objectives:'target',ceo_cust_incidents:'alert',ceo_customer_data:'database',ceo_uptime:'pulse',ceo_disclosures:'file',ceo_trust_signal:'heart',
+  coo_bc:'refresh',coo_processes:'checklist',coo_rto:'clock',coo_rpo:'clock',coo_backups:'database',coo_identity_recovery:'key',
+  cl_dsar_sla:'clock',cl_ropa:'file',cl_litigation:'gavel',cl_access_pd:'lock',
+  ct_appsec:'shieldcheck',ct_critical_vulns:'bug',ct_techdebt:'cpu',ct_advisories:'alert',ct_ai_inventory:'database',ct_ai_governed:'check',ct_ai_dataaccess:'lock',
+  bd_material:'alert',bd_incidents_assessed:'check',bd_disclosure_controls:'file',bd_threshold_basis:'gauge',bd_spend_peers:'coin',bd_resilience_inv:'refresh',
+  cp_sbd_coverage:'shieldcheck',cp_open_risks:'alert',cp_mfa:'lock',cp_customer_data:'database',cp_pass_rate:'check',cp_cycle_time:'clock',cp_blocker:'alert'
+};
 function c5tile(mid,pillCls,pillTxt,subHtml,extraHtml,iconKey){var m=c5get(mid);
   var head=m.connected?m.displayValue:'Not connected';var pc=m.connected?pillCls:'n';var pt=m.connected?pillTxt:'—';
-  var ic=iconKey?('<span class="c5tile-ic">'+c5icon(iconKey)+'</span>'):'';
+  var ik=iconKey||C5TILE_ICON[mid];var ic=ik?('<span class="c5tile-ic">'+c5icon(ik)+'</span>'):'';
   return '<div class="c5tile'+(m.connected?'':' c5off')+'" data-c5m="'+mid+'"><div class="c5tile-top"><span class="c5tile-l">'+ic+m.name+'</span><span class="c5pill '+pc+'">'+pt+'</span></div>'+
     '<div class="c5tile-h'+(m.connected?'':' c5muted')+'">'+head+'</div>'+
     (subHtml?('<div class="c5tile-s">'+subHtml+'</div>'):'')+(extraHtml||'')+'</div>';
@@ -1091,16 +1121,12 @@ function c5Health(){
     '</div>';
   var blPara=ec.connected?('Your largest exposure is <b>'+ec.name.toLowerCase()+'</b> — '+ec.displayValue+' modeled, threatening '+ec.threatens+'. The fix is scoped and funded and waiting for your sign-off.'):'Connect your identity and control tools and Nerion surfaces your largest exposure here, with the scoped, funded fix ready for sign-off.';
   var blBtn=ec.connected?('Approve — removes '+ec.displayValue+' of risk'):'Approve the top fix';
-  var war='<div style="margin-top:18px"><div class="c5kick" style="color:var(--muted)">Live attack status · War Room</div><div id="cisoUnderAttack" style="margin-top:8px"></div><div id="cisoWarRoom" style="margin-top:14px"></div></div>';
   host.innerHTML=c5header()+
-    c5shell('Program health · are we secure right now?','You’re secure, and improving.',(oi!=null&&oi>0)?'warn':null,'No active compromise this morning, and your program is stronger than it was last month. Three live reads below, then live attack status and the War Room — tap any tile for the exact formula and the source behind the number.')+
+    c5shell('Program health · are we secure right now?','You’re secure, and improving.',(oi!=null&&oi>0)?'warn':null,'No active compromise this morning, and your program is stronger than it was last month. Three live reads below — tap any tile for the exact formula and the source behind the number.')+
     c5legend([{c:'good',t:'Healthy'},{c:'warn',t:'At risk'},{c:'blue',t:'Monitoring'},{c:'line',t:'Not connected'}])+
     tiles+
-    war+
     c5bl('Bottom line','Secure and improving — one decision on your desk.',null,blPara,{mid:'exp_identity',txt:blBtn})+
-    '<div class="c5foot">Every square and number traces to its source.</div>';
-  if(typeof renderUnderAttack==='function'){try{renderUnderAttack();}catch(_){}}
-  if(typeof renderCisoWarRoom==='function'){try{renderCisoWarRoom();}catch(_){}}
+    '<div class="c5foot">Every square and number traces to its source. Figures shown are illustrative.</div>';
 }
 
 /* ---------- Tab 02 — Top exposure ---------- */
