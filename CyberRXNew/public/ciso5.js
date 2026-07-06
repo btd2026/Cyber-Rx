@@ -549,8 +549,104 @@ function c5get(id){
         inputs:[{name:'CLM uptime warranties',value:'not connected',source:'CLM'}],
         sources:[{tool:'Contract-lifecycle system',connector:'clm',field:'uptime_warranties',lastRefresh:c5ago()}],
         note:'How many contracts an identity-driven platform outage could breach — needs your CLM connected. The identity gap is the common root.',connectTool:'your CLM'});}
+    /* ---- CTO metrics (engineering-estate lens; shared exposure/vendor objects reused) ---- */
+    case 'ct_platform_health':{var oi=sig('open_incidents');var caps=CAPS.filter(function(c){return capDeploy(c)!=null;}).length;var conn=(oi!=null||caps>0);var strong=(oi==null||oi===0);
+      return c5obj({id:id,name:'Platform health',connected:conn,displayValue:conn?(strong?'Strong':'Watch'):'—',label:'computed',color:conn?(strong?'good':'warn'):'muted',
+        formula:'platform health = strong when no active compromise is affecting a core platform',
+        inputs:[{name:'Active incidents',value:oi!=null?(oi>0?oi:'none'):'—',source:'SIEM · open_incidents'},{name:'Control tools connected',value:caps,source:'control estate'}],
+        sources:[{tool:'Nerion engine',connector:'nerion',field:'platform_health',lastRefresh:c5ago()}],
+        note:'The one-glance read on whether the technology estate is secure and running.',connectTool:'your SIEM + control tools'});}
+    case 'ct_critical_vulns':{var kev=sig('exploited_cves');var dep=sig('dependabot_critical');var v=(kev!=null?kev:null);var conn=(kev!=null||dep!=null);var val=(kev!=null?kev:dep);
+      return c5obj({id:id,name:'Critical vulns open',connected:conn,displayValue:conn?String(val):'—',label:'live',color:conn?(val>0?'warn':'good'):'muted',
+        formula:'critical vulns = actively-exploited CVEs (KEV) on your estate, else open critical dependency alerts',
+        inputs:[{name:'Exploited CVEs (KEV)',value:kev!=null?kev:'—',source:'VM scanner · exploited_cves'},{name:'Critical dependency alerts',value:dep!=null?dep:'—',source:'SCA · dependabot_critical'}],
+        sources:[c5capSrc('vuln'),{tool:'Dependabot / Snyk',connector:'sca',field:'dependabot_critical',lastRefresh:c5ago()}],
+        note:'The known-exploitable vulnerabilities on the estate right now — the ones attackers use first.',connectTool:'your VM scanner (Qualys · Tenable)'});}
+    case 'ct_modernization':{var rs=(typeof LIVE!=='undefined'&&LIVE&&LIVE.resilience)||{};var td=rs.tech_debt||{};var exp=td.exposure;var conn=(exp!=null);
+      return c5obj({id:id,name:'Modernization',connected:conn,displayValue:conn?(exp>0?'Managed':'On track'):'—',label:'computed',color:conn?'blue':'muted',
+        formula:'modernization = whether end-of-life / legacy technical debt is mapped and on a roadmap',
+        inputs:[{name:'Tech-debt exposure',value:exp!=null?usd(exp):'—',source:'resilience · tech_debt'}],
+        sources:[{tool:'Architecture records',connector:'arch',field:'tech_debt',lastRefresh:c5ago()}],
+        note:'Whether legacy systems are mapped and being retired on a plan, not accumulating unseen.',connectTool:'your systems inventory (EOL status)'});}
+    case 'ct_appsec':{var css=sig('code_scanning_open');var conn=css!=null;
+      return c5obj({id:id,name:'Application security',connected:conn,displayValue:conn?(css<=10?'Healthy':(css+' open')):'—',label:'live',color:conn?(css<=10?'good':'warn'):'muted',
+        formula:'application security = open static-analysis (SAST) findings on first-party code',
+        inputs:[{name:'Open SAST findings',value:conn?css:'—',source:'code scanning · code_scanning_open'}],
+        sources:[{tool:'GitHub Advanced Security / Snyk Code',connector:'sast',field:'code_scanning_open',lastRefresh:c5ago()}],
+        note:'Whether secure-by-design is holding for new builds — findings low and cleared before ship.',connectTool:'your application-security scanner'});}
+    case 'ct_techdebt':{var rs2=(typeof LIVE!=='undefined'&&LIVE&&LIVE.resilience)||{};var exp2=(rs2.tech_debt&&rs2.tech_debt.exposure);var conn=(exp2!=null);
+      return c5obj({id:id,name:'Technical debt',connected:conn,displayValue:conn?usd(exp2):'—',label:'modeled',color:conn?'blue':'muted',
+        formula:'technical debt = open risk carried by end-of-life / unsupported systems still on revenue paths',
+        inputs:[{name:'Tech-debt exposure',value:conn?usd(exp2):'—',source:'resilience · tech_debt.exposure'}],
+        sources:[{tool:'Architecture records',connector:'arch',field:'tech_debt.exposure',lastRefresh:c5ago()}],
+        note:'The exposure legacy tech carries — the number that justifies the modernization roadmap.',connectTool:'your systems inventory (EOL status)'});}
+    case 'ct_availability':{return c5obj({id:id,name:'Availability · 90 days',connected:false,displayValue:'—',label:'live',color:'muted',
+        formula:'availability = uptime of customer-facing services from your observability stack',
+        inputs:[{name:'Uptime %',value:'not connected',source:'observability (Datadog · Grafana · Pingdom)'}],
+        sources:[{tool:'Observability stack',connector:'observability',field:'availability',lastRefresh:c5ago()}],
+        note:'Service availability customers feel — connect your observability stack to make it live.',connectTool:'your observability / SLO stack'});}
+    case 'ct_services_slo':{return c5obj({id:id,name:'Services within SLO',connected:false,displayValue:'—',label:'live',color:'muted',
+        formula:'services within SLO = services meeting their reliability objective, from your SLO records',
+        inputs:[{name:'SLO status',value:'not connected',source:'observability / SLO records'}],
+        sources:[{tool:'Observability stack',connector:'observability',field:'slo',lastRefresh:c5ago()}],
+        note:'How many customer services are meeting their reliability target — needs your SLO stack.',connectTool:'your observability / SLO stack'});}
+    case 'ct_sec_incidents':{var oi3=sig('open_incidents');var conn=oi3!=null;
+      return c5obj({id:id,name:'Security incidents',connected:conn,displayValue:conn?String(oi3):'—',label:'live',color:conn?(oi3>0?'crit':'good'):'muted',
+        formula:'security incidents = open incidents affecting a service, from the SIEM',
+        inputs:[{name:'Open incidents',value:conn?oi3:'—',source:'SIEM · open_incidents'}],sources:[c5capSrc('siem')],
+        note:'Whether any service is under an active security incident right now.',connectTool:'your SIEM'});}
+    case 'ct_ai_inventory':{var g=(typeof LIVE!=='undefined'&&LIVE&&LIVE.aiRisk&&LIVE.aiRisk.governance)||{};var sys=Number(g.systems)||0;var conn=(g.systems!=null);
+      return c5obj({id:id,name:'AI systems inventoried',connected:conn,displayValue:conn?String(sys):'—',label:'self-reported',color:'ink',
+        formula:'AI systems inventoried = models/systems in production from your AI model registry',
+        inputs:[{name:'AI systems in production',value:conn?sys:'—',source:'AI governance intake'},{name:'Inventory status',value:g.inventory||'—',source:'AI governance'}],
+        sources:[{tool:'AI model registry',connector:'ai',field:'systems',lastRefresh:c5ago()}],
+        note:'How many AI systems are tracked — you can only govern what you inventory.',connectTool:'your AI model registry (onboarding)'});}
+    case 'ct_ai_governed':{var g2=(typeof LIVE!=='undefined'&&LIVE&&LIVE.aiRisk&&LIVE.aiRisk.governance)||{};var sys2=Number(g2.systems)||0;var gov=/nist|iso|rmf/i.test(g2.framework||'');var conn=(g2.framework!=null||g2.systems!=null);
+      return c5obj({id:id,name:'Governed',connected:conn,displayValue:conn?(gov?((sys2>0?(sys2):'all')+' governed'):'framework needed'):'—',label:'computed',color:conn?(gov?'good':'warn'):'muted',
+        formula:'governed = AI systems operating under a recognized governance framework (NIST AI RMF / ISO 42001)',
+        inputs:[{name:'Framework adopted',value:g2.framework||'—',source:'AI governance'},{name:'Acceptable-use policy',value:g2.policy||'—',source:'AI governance'}],
+        sources:[{tool:'AI governance',connector:'ai',field:'framework',lastRefresh:c5ago()}],
+        note:'Whether AI ships under governance — a framework and an acceptable-use policy in place.',connectTool:'your AI-governance answers (onboarding)'});}
+    case 'ct_ai_highrisk':{var g3=(typeof LIVE!=='undefined'&&LIVE&&LIVE.aiRisk&&LIVE.aiRisk.governance)||{};var hr=/high-risk|yes/i.test(g3.euAiAct||'');var conn=(g3.euAiAct!=null);
+      return c5obj({id:id,name:'High-risk uses',connected:conn,displayValue:conn?(hr?'1':'0'):'—',label:'computed',color:conn?(hr?'warn':'good'):'muted',
+        formula:'high-risk uses = AI systems classified high-risk (e.g. EU AI Act) that need heightened controls',
+        inputs:[{name:'EU AI Act classification',value:g3.euAiAct||'—',source:'AI governance'}],
+        sources:[{tool:'AI governance',connector:'ai',field:'euAiAct',lastRefresh:c5ago()}],
+        note:'AI uses that carry heightened obligations — the ones to watch closest.',connectTool:'your AI-governance answers (onboarding)'});}
+    case 'ct_ai_dataaccess':{var p=c5avgDeploy(['mfa','pam']);var conn=(p!=null);var watch=(p!=null&&p<90);
+      return c5obj({id:id,name:'Data access by AI',connected:conn,displayValue:conn?(watch?'Relies on identity':'Controlled'):'—',label:'computed',color:conn?(watch?'warn':'good'):'muted',
+        formula:'AI data access = whether AI features touching customer data depend on identity controls that carry the gap',
+        inputs:[{name:'Identity controls deployed',value:conn?(p+'%'):'—',source:'MFA + PAM telemetry'}],
+        sources:[c5capSrc('mfa'),c5capSrc('pam')],
+        note:'AI features that touch customer data rely on the same identity controls that carry the gap — securing access secures the AI.',connectTool:'your identity + PAM tools'});}
+    case 'ct_advisories':{var dep2=sig('dependabot_critical');var conn=dep2!=null;
+      return c5obj({id:id,name:'Open advisories',connected:conn,displayValue:conn?String(dep2):'—',label:'live',color:conn?(dep2>0?'warn':'good'):'muted',
+        formula:'open advisories = high/critical dependency advisories from your SCA scanner',
+        inputs:[{name:'Critical dependency advisories',value:conn?dep2:'—',source:'SCA · dependabot_critical'}],
+        sources:[{tool:'Dependabot / Snyk Open Source',connector:'sca',field:'dependabot_critical',lastRefresh:c5ago()}],
+        note:'Known-vulnerable dependencies the product ships on — the software-supply-chain path to customers.',connectTool:'your SCA / dependency scanner'});}
+    case 'ct_deps':{return c5obj({id:id,name:'Dependencies tracked',connected:false,displayValue:'—',label:'live',color:'muted',
+        formula:'dependencies tracked = components inventoried in your SBOM',
+        inputs:[{name:'SBOM component count',value:'not connected',source:'SBOM (Syft / GitHub / Snyk)'}],
+        sources:[{tool:'SBOM',connector:'sbom',field:'components',lastRefresh:c5ago()}],
+        note:'How much of your dependency tree is inventoried — connect your SBOM to quantify.',connectTool:'your SBOM / dependency scanner'});}
+    case 'ct_unsigned':{return c5obj({id:id,name:'Unsigned builds',connected:false,displayValue:'—',label:'live',color:'muted',
+        formula:'unsigned builds = releases shipped without a verified signature (supply-chain integrity)',
+        inputs:[{name:'Build signing',value:'not connected',source:'CI/CD signing (Sigstore / cosign)'}],
+        sources:[{tool:'CI/CD signing',connector:'cicd',field:'signed_builds',lastRefresh:c5ago()}],
+        note:'Whether every release is signed and verifiable — connect your CI/CD signing to confirm.',connectTool:'your CI/CD build-signing'});}
   }
   return c5obj({id:id,name:id,connected:false,displayValue:'—',color:'muted',note:'No metric definition.'});
+}
+/* Customer-facing services from the crown-jewel systems; the top one carries the
+   identity/access risk (the same shared exposure), the rest read secure. */
+function c5Services(){
+  var cj=(typeof LIVE!=='undefined'&&LIVE&&LIVE.crown_jewels)||[];var M=c5expModel();var idMat=M.drivers.some(function(d){return d.id==='exp_identity'&&d.usd>0;});
+  var list=cj.slice(0,6).map(function(c,i){var o={name:c.name,tier:c.tier};
+    if(i===0&&idMat){o.status='At risk';o.c='warn';o.sub='Identity / access path is the risk';}
+    else{o.status='Secure';o.c='good';o.sub='Secure · within posture';}
+    return o;});
+  return {list:list,total:list.length,atRisk:list.filter(function(x){return x.status==='At risk';}).length};
 }
 /* Critical processes from the operations model; at-risk status computed from whether
    a material exposure driver / flagged vendor maps to the process. */
@@ -1272,4 +1368,85 @@ function c5clDecisions(){
     q+
     c5bl('Bottom line','One action, three exposures reduced.',null,(ec.connected?('The identity fix reduces your most probable breach-notification trigger, protects the platform-tied warranties, and enforces least-privilege access to personal data ('+ec.displayValue+' removed). It’s the highest-leverage legal risk reducer on your desk.'):'The identity fix reduces your most probable breach-notification trigger, protects the platform-tied warranties, and enforces least-privilege access to personal data. It’s the highest-leverage legal risk reducer on your desk.'),{mid:'exp_identity',txt:'Support the identity fix'})+
     '<div class="c5foot">Each decision links to its obligation, contract, or record. Not legal advice.</div>';
+}
+
+/* ================= CTO seat — same engine, engineering-estate lens ================= */
+/* Tab 01 — Technology risk */
+function c5ctTech(){
+  var host=document.getElementById('ct-tech');if(!host)return;
+  var ec=c5get('exp_identity'),cv=c5get('ct_critical_vulns'),td=c5get('ct_techdebt');
+  host.innerHTML=c5header()+
+    c5shell('Technology risk · is our stack secure and modern?','Your stack is secure and modernizing — one platform carries the risk.',null,'Your technology estate is largely secure and on its modernization path. Most core platforms are healthy; the customer platform carries the identity gap, and legacy tech carries mapped technical debt. Tap any figure for its basis and source.')+
+    '<div class="c5cards">'+c5card('ct_platform_health')+c5card('ct_critical_vulns')+c5card('ct_modernization')+'</div>'+
+    '<div class="c5tiles">'+
+      c5tile('ct_appsec','g','Healthy','In the SDLC for new builds')+
+      c5tile('ct_critical_vulns','a','Watch',(cv.connected?'known-exploitable · being patched':'connect your VM scanner'))+
+      c5tile('exp_identity','a','Gap','The customer-platform exposure')+
+      c5tile('ct_techdebt','b','Managed',(td.connected?'legacy mapped · modernization roadmap in place':'map your EOL systems'))+
+    '</div>'+
+    c5bl('Bottom line','Fix the architecture gap in your top platform.',null,(ec.connected?('The identity architecture behind your customer platform is the biggest security gap in the stack ('+ec.displayValue+'). The fix is funded — it closes the exposure and simplifies the platform’s access model.'):'Connect your controls and the biggest architecture gap — the customer platform’s identity model — surfaces here with its funded fix.'),{mid:'exp_identity',txt:'Fund the identity fix — closes the gap'})+
+    '<div class="c5foot">Stack posture from your app/infra scans and architecture records.</div>';
+}
+/* Tab 02 — Digital-service reliability */
+function c5ctReliability(){
+  var host=document.getElementById('ct-reliability');if(!host)return;
+  var S=c5Services(),ec=c5get('exp_identity');
+  var body=S.total?('<div class="c5rank" style="padding:4px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Customer-facing services · posture and status</div>'+S.list.map(function(s){var pill=s.status==='At risk'?'a':'g';
+    return '<div class="c5prow" data-c5m="'+(s.status==='At risk'?'exp_identity':'ct_sec_incidents')+'"><span class="c5sq '+(s.c==='warn'?'a':'g')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+s.name+'</div><div class="c5row-s">'+s.sub+'</div></div><span class="c5pill '+pill+'">'+s.status+'</span></div>';
+  }).join('')+'</div>'):'<div class="c5note">◐ Map your crown-jewel / customer-facing services in onboarding to see reliability + security posture per service.</div>';
+  host.innerHTML=c5header()+
+    c5shell('Digital-service reliability · are our services safe and available?','Services are reliable and secure — the platform’s access path is the risk.',null,'Your customer-facing services: available, performant, secure. The one reliability risk is the identity/access path to the customer platform — both a security and an availability concern. Availability and SLOs light up when your observability stack connects. Tap any service for its posture.')+
+    '<div class="c5cards">'+c5card('ct_availability')+c5card('ct_services_slo')+c5card('ct_sec_incidents')+'</div>'+
+    body+
+    c5bl('Bottom line','Harden the access path to your top service.',null,(ec.connected?('The customer platform is your most-used service; its identity/access path is the one reliability-and-security risk. The identity fix hardens it — resilient access, fewer failure modes.'):'Connect your controls and the one reliability-and-security risk — the platform’s access path — surfaces here with its funded fix.'),{mid:'exp_identity',txt:'Fund the identity fix — hardens the platform'})+
+    '<div class="c5foot">Availability and SLOs from your observability stack; security posture traces to source.</div>';
+}
+/* Tab 03 — AI & innovation risk */
+function c5ctAi(){
+  var host=document.getElementById('ct-ai');if(!host)return;
+  var da=c5get('ct_ai_dataaccess'),ec=c5get('exp_identity');
+  host.innerHTML=c5header()+
+    c5shell('AI & innovation risk · are we shipping safely?','You’re shipping AI under governance — one access watch item.',null,'Your AI posture: models inventoried, guardrails in place, shipping under governance. One watch item — AI features that touch customer data rely on the same identity controls that carry the gap. Tap any figure for its source.')+
+    '<div class="c5cards">'+c5card('ct_ai_inventory')+c5card('ct_ai_governed')+c5card('ct_ai_highrisk')+'</div>'+
+    '<div class="c5tiles">'+
+      c5tile('ct_ai_inventory','g','Tracked','Systems in the model registry')+
+      c5tile('ct_ai_governed','g','Governed','Framework + acceptable-use policy')+
+      c5tile('ct_ai_dataaccess',(da.connected&&da.color==='warn')?'a':'g',(da.connected&&da.color==='warn')?'Watch':'Controlled','Relies on the same identity controls as the gap')+
+      c5tile('thirdparty_risk','b','Monitored','Vendor models · terms and data flows reviewed')+
+    '</div>'+
+    c5bl('Bottom line','Secure the access your AI relies on.',null,(ec.connected?('Your AI features that touch customer data depend on the same identity controls that carry the gap. Closing it ('+ec.displayValue+') secures AI’s access to data — safer innovation, cleaner governance.'):'Connect your controls and the AI-data-access watch item — the shared identity gap — surfaces here with its funded fix.'),{mid:'exp_identity',txt:'Secure AI access — fund the identity fix'})+
+    '<div class="c5foot">AI inventory and governance from your model registry and pipeline.</div>';
+}
+/* Tab 04 — Software supply chain · PRIMARY decision is the advisory patch, NOT identity */
+function c5ctSupply(){
+  var host=document.getElementById('ct-supply');if(!host)return;
+  var adv=c5get('ct_advisories'),ec=c5get('exp_identity');
+  var advCount=adv.connected?adv.displayValue:'—';
+  var rows='<div class="c5rank"><div class="c5rank-h">Dependencies · advisories and integrity</div>'+
+    '<div class="c5prow" data-c5m="ct_advisories"><span class="c5sq '+(adv.connected&&adv.color==='warn'?'a':'g')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Auth-library advisory <span class="c5tag rev">High</span></div><div class="c5row-s">'+(adv.connected?(advCount+' critical dependency advisor'+(advCount==='1'?'y':'ies')+' · used by the customer platform · patch available'):'connect your SCA scanner')+'</div></div><span class="c5pill '+(adv.connected&&adv.color==='warn'?'a':'g')+'">'+(adv.connected?(adv.color==='warn'?'Prioritize':'Clear'):'—')+'</span></div>'+
+    '<div class="c5prow" data-c5m="ct_appsec"><span class="c5sq b" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Code-scanning findings <span class="c5tag">SAST</span></div><div class="c5row-s">First-party code · scheduled remediation</div></div><span class="c5pill b">Scheduled</span></div>'+
+    '<div class="c5prow" data-c5m="ct_deps"><span class="c5sq n" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">SBOM coverage</div><div class="c5row-s">Connect your SBOM to inventory the dependency tree</div></div><span class="c5pill n">Connect SBOM</span></div>'+
+    '<div class="c5prow" data-c5m="ct_unsigned"><span class="c5sq n" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Build signing</div><div class="c5row-s">Connect your CI/CD signing to verify release integrity</div></div><span class="c5pill n">Connect CI/CD</span></div>'+
+    '</div>';
+  host.innerHTML=c5header()+
+    c5shell('Software supply chain · are our dependencies safe?','Your dependencies are triaged — one high-severity advisory to clear.',null,'Your software supply chain: advisories triaged from your SCA scanner. A high-severity advisory affects an auth library used by the customer platform — worth prioritizing. SBOM coverage and build signing light up when those tools connect. Tap any item for the advisory.')+
+    '<div class="c5cards">'+c5card('ct_deps')+c5card('ct_advisories')+c5card('ct_unsigned')+'</div>'+
+    rows+
+    c5bl('Bottom line','Clear the advisory in your critical path.',null,(adv.connected?('A high-severity advisory in an auth library used by the customer platform is your top supply-chain item — patch it now. It also intersects the identity gap, so closing that reduces the blast radius of auth-library issues.'):'Connect your SCA scanner and the high-severity advisories on your critical path surface here — patch first, with identity reducing the blast radius.'),{mid:'ct_advisories',txt:'Patch the auth-library advisory'},{mid:'exp_identity',txt:'Fund identity — reduces blast radius'})+
+    '<div class="c5foot">Dependencies and advisories from your SBOM and scanners.</div>';
+}
+/* Tab 05 — Decisions for the CTO */
+function c5ctDecisions(){
+  var host=document.getElementById('ct-decisions');if(!host)return;
+  var ec=c5get('exp_identity'),adv=c5get('ct_advisories');
+  var q='<div class="c5rank"><div class="c5rank-h">Decision queue · each tied to a component of the stack</div>'+
+    '<div class="c5row" data-c5m="exp_identity"><div class="c5row-main"><div class="c5row-t"><span class="c5pill b" style="margin-right:8px">Fund</span>Fund the identity fix</div><div class="c5row-s">Closes the biggest architecture gap — the customer platform’s access model</div></div><div class="c5row-v">'+(ec.connected?('−'+ec.displayValue):'—')+'</div><span class="c5pill g" style="align-self:center">Recommended</span></div>'+
+    '<div class="c5row" data-c5m="ct_advisories"><div class="c5row-main"><div class="c5row-t"><span class="c5pill a" style="margin-right:8px">Patch</span>Patch the auth-library advisory</div><div class="c5row-s">High-severity · used by the customer platform</div></div><div class="c5row-v">'+(adv.connected?(adv.displayValue+' open'):'—')+'</div><span class="c5pill a" style="align-self:center">Urgent</span></div>'+
+    '<div class="c5row" data-c5m="ct_modernization"><div class="c5row-main"><div class="c5row-t"><span class="c5pill n" style="margin-right:8px">Maintain</span>Modernization roadmap</div><div class="c5row-s">On track · maintain the cadence</div></div><div class="c5row-v">—</div><span class="c5pill n" style="align-self:center">On track</span></div>'+
+    '</div>';
+  host.innerHTML=c5header()+
+    c5shell('Decisions for the CTO · what needs your call?','Two technical calls — one to fund, one to patch.',null,'The technology decisions on your desk, each tied to the stack. Tap any for the full picture and source.')+
+    q+
+    c5bl('Bottom line','One call closes the biggest gap.',null,(ec.connected?('Funding the identity fix closes the largest architecture gap in your stack — the customer platform’s access model ('+ec.displayValue+') — and simplifies it. Patching the auth-library advisory is the urgent tactical fix alongside it.'):'Funding the identity fix closes the largest architecture gap in your stack. Patching the auth-library advisory is the urgent tactical fix alongside it.'),{mid:'exp_identity',txt:'Fund the identity fix — closes the gap'})+
+    '<div class="c5foot">Each decision links to its component and source.</div>';
 }
