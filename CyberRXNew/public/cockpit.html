@@ -632,7 +632,7 @@ function lists(a){return '<div class="card">'+a.map(function(r){return '<div cla
 function kvcard(title,rows){return '<div class="card"><div class="ck">'+title+'</div>'+rows.map(function(r){return '<div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:9px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted)">'+r.k+'</span><span style="font-weight:600;text-align:right'+(r.cls?';color:var(--'+r.cls+')':'')+'"'+(r.ev?' class="claim" data-ev="'+r.ev+'"':'')+'>'+r.v+(r.ev?' <span class="fx">ƒ</span>':'')+'</span></div>';}).join('')+'</div>';}
 function jtable(rows){return '<div class="card"><table class="tbl"><thead><tr><th>Jurisdiction</th><th>Obligation</th><th>Clock</th><th>Max penalty</th></tr></thead><tbody>'+rows.map(function(r){return '<tr><td'+(r.ev?' class="claim" data-ev="'+r.ev+'"':'')+'><span class="flag">'+r.flag+'</span>'+r.c+(r.ev?' <span class="fx">ƒ</span>':'')+'</td><td>'+r.o+'</td><td><span class="tag '+r.cc+'">'+r.clock+'</span></td><td style="font-weight:600">'+r.pen+'</td></tr>';}).join('')+'</tbody></table></div>';}
 function decisions(a){return a.map(function(d){return '<div class="decision" data-dec="'+d.n+'"><div class="dh"><span class="dn">Decision '+d.n+' ·</span>'+d.q+'</div><div class="dsit">'+d.sit+'</div><div class="opts">'+d.opts.map(function(o){return '<div class="opt'+(o.rec?' rec':'')+'">'+(o.rec?'<div class="orec">Recommended</div>':'')+'<div class="on">'+o.on+'</div><div class="osum">'+o.osum+'</div><div class="pc"><div class="lbl p">Pros</div><ul>'+o.pros.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul><div class="lbl c">Cons</div><ul>'+o.cons.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></div><button class="choose'+(o.rec?'':' gh')+'" data-dec="'+d.n+'" data-title="'+d.q.replace(/"/g,'')+'" data-opt="'+o.tag+'" data-osum="'+String(o.osum||'').replace(/"/g,'')+'">Choose &amp; record</button></div>';}).join('')+'</div>'+
-  '<div class="dnote">◈ <b>How this decision is built:</b> a <b>deterministic template</b> — <b>no AI/LLM</b>, so nothing is generated or invented at run-time. The option costs and returns are <span class="pill mod">modeled</span> from your exposure model (which traces to your risk register and the control-value ledger); the recommendation is the option with the highest modeled risk-reduction per dollar. Your security team refines the figures against the live exposure numbers, and <b>choosing one records it to your ticketing system</b> and tracks it to completion.</div>'+
+  '<div class="dnote">◈ <b>How this decision is built:</b> the dollars each option removes are <span class="pill mod">modeled</span> from your exposure model — your risk register × the control-value ledger — <b>not hardcoded</b>, and <b>no AI/LLM</b> at run-time. The recommendation is the option with the highest modeled risk-reduction per dollar. <b>Choosing one records it in Nerion and automatically opens a project in your connected ticketing system</b> (Jira / ServiceNow); its status is pulled back on the weekly refresh.</div>'+
   '<div class="dstatus" id="dstatus-'+d.n+'"></div></div>';}).join('');}
 function sec(no,q,desc,inner){return '<div class="section"><div class="rubric"><div class="no">'+no+'</div><div><div class="rt">'+q+'</div><div class="rd">'+desc+'</div></div></div>'+inner+'</div>';}
 
@@ -644,7 +644,7 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderCisoDecisions();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
@@ -793,7 +793,9 @@ function renderDecStatus(dec){
   if(d.ticket){var lnk=d.url?('<a href="'+d.url+'" target="_blank" rel="noopener" style="color:var(--blue)">'+d.ticket+'</a>'):('<b style="color:var(--ink)">'+d.ticket+'</b>');
     var stp=statusStep(d.status);proj='Project '+lnk+(d.system?(' in '+d.system):'')+(d.demoTicket?' <span class="tag warn" style="font-size:10px">demo</span>':'')+' · <span class="tag '+(stp.n>=4?'good':'')+'" style="font-size:10.5px">'+(d.status?stp.t:'Open')+'</span>';}
   else if(d.pushing)proj='<span style="color:var(--muted)">opening the project in your ticketing system…</span>';
-  else proj='<span style="color:var(--muted)">recorded here · not sent to your ticketing system yet</span> <button class="wr-btn" style="padding:5px 12px;font-size:11.5px;margin-left:6px" data-push="'+dec+'">▶ Send to ticketing → open project</button>';
+  else proj=(typeof itsmVendor==='function'&&itsmVendor())
+    ?'<span style="color:var(--muted)">recorded in Nerion · opening a project in '+itsmVendor()+'…</span> <button class="wr-btn" style="padding:5px 12px;font-size:11.5px;margin-left:6px" data-push="'+dec+'">▶ Retry</button>'
+    :'<span style="color:var(--muted)">recorded in Nerion · <b>connect a ticketing system (Jira / ServiceNow) in onboarding</b> to auto-open a project</span>';
   var stepN=d.ticket?statusStep(d.status).n:(committed?3:2);
   s.innerHTML='<div class="st-h">'+(committed?'🔒 Committed':'✓ Recorded')+'</div><div class="st-b" style="margin-top:4px">'+proj+'</div>'+
     '<div class="st-b">Decision by <b style="color:var(--ink)">'+d.by+'</b> ('+SEAT_LABEL[d.seat]+') · Option '+d.opt+' · '+fmtWhen(d.ts)+'</div>'+
@@ -820,6 +822,9 @@ function wireChoose(){
       var rec={opt:opt,title:title,by:by,seat:CUR,osum:osum,ts:(existing&&(Date.now()-existing.ts)<EDIT_WINDOW_MS)?existing.ts:Date.now(),
         ticket:existing&&existing.ticket||null,system:existing&&existing.system||null,url:existing&&existing.url||null,status:existing&&existing.status||null,demoTicket:existing&&existing.demoTicket||false};
       saveDec(dec,rec);renderDecStatus(dec);renderInitiatives();
+      // Auto-open the project in the connected ticketing system on selection (no
+      // duplicate if a ticket already exists). Status is pulled back on refresh.
+      if(!rec.ticket&&typeof itsmVendor==='function'&&itsmVendor())pushDecision(dec);
     };
   });
 }
@@ -1197,6 +1202,44 @@ function renderControls(){
     if(k==='eff')openDrill('Risk removed by controls',drillEffectiveness());
     else if(k==='traj')openDrill('Program trajectory',drillTrajectory());
     else if(k==='det')openDrill('Detection & response speed',drillDetection());};});
+}
+/* The next-dollar decision, generated from the org's REAL open control gaps ranked
+   by the dollars of expected loss each closes (control-value ledger = risk register ×
+   control weighting) — nothing hardcoded. Each option is a clear scenario: what it
+   removes ($) and what it leaves open ($). Choosing one records it AND auto-opens a
+   ticketing project (see wireChoose). Falls back to a labeled illustrative example
+   until tools are connected. */
+function renderCisoDecisions(){
+  var host=document.getElementById('cisoDecisions');if(!host)return;
+  var rr=capRiskRemoved();
+  var gaps=CAPS.map(function(c){return {c:c,p:capDeploy(c),usd:rr.byCap[c.k]||0};})
+    .filter(function(o){return CAP_FRAMEWORK[o.c.k]&&(o.p==null||o.p<90);})
+    .sort(function(a,b){return (b.usd||0)-(a.usd||0);});
+  var dec;
+  if(rr.anyLive&&gaps.length&&gaps[0].usd>0){
+    var pick=gaps.slice(0,3),totalGap=pick.reduce(function(s,o){return s+(o.usd||0);},0);
+    var opts=pick.map(function(o,i){
+      var c=o.c,p=o.p,fw=CAP_FRAMEWORK[c.k],name=c.name.replace(/ *\(.*\)/,''),removed=o.usd>0?usd(o.usd):null,pr=capProject(c);
+      var others=pick.filter(function(x,j){return j!==i;}).reduce(function(s,x){return s+(x.usd||0);},0);
+      var pros=[];
+      if(removed)pros.push('Removes <b>'+removed+'</b> of expected loss — from your control-value ledger (risk register × control weighting)');
+      pros.push('Raises '+name+' from <b>'+(p==null?'not deployed':p+'%')+'</b> toward the ≥90% maturity target');
+      if(fw&&(fw.csf[0]||fw.r53[0]))pros.push('Evidences '+[fw.csf[0],fw.r53[0]].filter(Boolean).join(' · ')+' — strengthens audit posture');
+      var cons=[];
+      cons.push(others>0?('Leaves <b>'+usd(others)+'</b> of other control gaps open this cycle'):'Closes one control — sequence the rest next cycle');
+      cons.push(pr?('An in-flight project already touches this ('+pr.name+') — confirm scope before double-funding'):'Capital and effort are scoped with your team — Nerion does not invent a cost');
+      var L=String.fromCharCode(65+i);
+      return {rec:i===0,tag:L+' · '+name,on:'Option '+L+' · '+name,osum:(removed?removed+' risk removed':'—')+(p!=null?(' · '+p+'% → ≥90%'):' · connect the tool'),pros:pros,cons:cons};
+    });
+    dec={n:1,q:'Which control gap do we close first?',sit:'Your open control gaps carry <b>'+usd(totalGap)+'</b> of removable expected loss, ranked below by the dollars each closes '+liveTag()+'. Where does the next dollar go?',opts:opts};
+  } else {
+    dec={n:1,q:'Which control gap do we close first?',sit:'<span class="pill mod" style="font-size:9px">illustrative</span> Connect your security tools and Nerion generates this from your <b>real</b> control gaps and the dollars each closes. Example scenarios below.',opts:[
+      {rec:true,tag:'A · Privileged access (PAM)',on:'Option A · PAM',osum:'closes the top privileged path',pros:['Removes the largest modeled driver once your identity + PAM tools are connected','Highest modeled risk-reduction per dollar','Improves board posture immediately'],cons:['Requires capital — scoped with your team','Illustrative until your tools are connected']},
+      {tag:'B · Prove recovery (DR test)',on:'Option B · DR',osum:'removes the recovery tail',pros:['Removes the recovery-tail exposure','Meets regulatory recovery expectations'],cons:['A larger program than PAM','Leaves the top driver open']},
+      {tag:'C · Cloud posture (CSPM)',on:'Option C · CSPM',osum:'closes cloud exposure',pros:['Baselines cloud misconfiguration and public exposure','Fast to stand up'],cons:['Does not touch the identity path','Preventive, not immediate risk removed']}]};
+  }
+  host.innerHTML=decisions([dec]);
+  wireChoose();
 }
 function controlGapsCard(){
   if(!SIGNALS)return '<div class="card" style="margin-top:14px"><div class="ck">Control gaps that carry risk — and the funded fix</div><div class="cn" style="margin-top:6px">◐ <b style="color:var(--warn)">Connect your security tools</b> (EDR, MFA, PAM, SIEM…) and this shows your live control coverage, the gaps that leave the most risk open, and the project closing each — every number from the tool, none hardcoded.</div></div>';
@@ -2198,12 +2241,12 @@ function renderSignals(){
     var pcts=['edr_pct','mfa_pct','pam_pct'].map(sig).filter(function(x){return x!=null;});
     if(pcts.length){var avg=Math.round(pcts.reduce(function(s,x){return s+x;},0)/pcts.length);setTxt('lvCovTile',avg+'%');var tn=document.getElementById('lvCovTileNote');if(tn)tn.innerHTML='<span class="pill good">live</span> from '+pcts.length+' connected tool'+(pcts.length>1?'s':'');}
   }
-  renderAiRisk();renderCisoOps();renderUnderAttack();renderThreatMap();renderControls();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCfoFraud();renderCroKri();renderCloOps();renderThreatIntel();renderDrReadiness();renderPeerBench();
+  renderAiRisk();renderCisoOps();renderUnderAttack();renderThreatMap();renderControls();renderCisoDecisions();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCfoFraud();renderCroKri();renderCloOps();renderThreatIntel();renderDrReadiness();renderPeerBench();
 }
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();if(typeof renderCisoOps==='function'){renderCisoOps();renderUnderAttack();}}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=d;badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderCisoDecisions();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderAuditRepeat();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----

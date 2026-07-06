@@ -259,12 +259,8 @@ var SEATS = {
        {key:'aisecure',label:'Is the AI we run secure?',on:true,html:'<div id="cisoAiSecure"></div><div id="cisoAiFrameworks" style="margin-top:14px"></div>'},
        {key:'aidefend',label:'Is AI helping us defend?',html:'<div id="cisoAiDefend"></div>'}
      ]))
-   +sec('06','Where does the next dollar go — and where are we heading?','Where the next security dollar goes and the projected return — a costed decision that records to your ticketing system, and the one-click board / regulator report that projects the trajectory.',
-     decisions([{n:1,q:'Which control gap do we close first?',sit:'The biggest dollar driver is the privileged path into payments. Where do we direct the next dollar?',opts:[
-       {rec:true,tag:'A · Privileged access (PAM)',on:'Option A · PAM',osum:'$1.4M · 37×',pros:['Closes the $52M driver','Highest return available','Improves board posture immediately'],cons:['Requires $1.4M of capital this year','~3 weeks of IAM engineering effort']},
-       {tag:'B · Prove recovery (DR test)',on:'Option B · DR',osum:'$3.2M · <6h recovery',pros:['Removes ~$40M of the recovery tail','Meets regulatory recovery expectations'],cons:['$3.2M — larger program than PAM','Leaves the #1 driver (the $52M privileged path) open']},
-       {tag:'C · AI-decisioning governance',on:'Option C · AI governance',osum:'standard + oversight',pros:['Addresses the fastest-rising risk (+$8M/qtr)','Gets ahead of the AI board decision'],cons:['Does not touch the $52M top driver yet','Benefit is preventive, not immediate risk removed']}]}])
-     +'<div class="card" style="margin-top:14px"><div class="ck">Board-ready report</div><div class="cn" style="margin-top:6px">The one-click board / regulator report — the financial statement of cyber risk, Item 106 governance, KRIs, decisions and trajectory — assembled from the same live model, every figure carrying its provenance.</div><div style="margin-top:12px"><button class="bp-btn primary" onclick="openBoardPack()">Open the board pack →</button></div></div>')
+   +sec('06','Where does the next dollar go — and where are we heading?','The next security dollar as a costed decision. Each option is a clear scenario — what it buys down and what it leaves open, in dollars from your exposure model. Choosing one records it in Nerion <b>and</b> opens a project in your connected ticketing system, then pulls the status back on a weekly refresh.',
+     '<div id="cisoDecisions"></div>')
    +sec('07','Are our security investments paying off?','The live portfolio of funded cyber initiatives — every dollar invested, the annual loss exposure it buys down, and the return per dollar. Each initiative maps to a business objective and carries its status live from your ticketing system.',
      '<div id="initiatives-panel"></div>')
   );}
