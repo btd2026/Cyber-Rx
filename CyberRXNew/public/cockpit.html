@@ -711,6 +711,8 @@ function liveResult(key){if(!LIVE)return null;var e=LIVE.economics||{},r=e.ratio
   if(key==='appetite')return ap.appetite?usd(ap.appetite):null;
   if(key==='materiality')return e.materiality&&e.materiality.value?usd(e.materiality.value):null;
   if(key==='insgap')return ins.gap!=null?usd(ins.gap):null;
+  if(key==='inslimit')return ins.limit?usd(ins.limit):null;
+  if(key==='inspremium')return ins.premium?(usd(ins.premium)+' / yr'):null;
   if(key==='transfer')return ins.transfer_efficiency!=null?(Math.round(ins.transfer_efficiency*100)+'%'):null;
   if(key==='liability')return (lg.liability&&lg.liability.class_action_exposure)?usd(lg.liability.class_action_exposure):null;
   if(key==='airisk'){var p=aiPremiumUsd();return p>0?('+'+usd(p)):null;}
