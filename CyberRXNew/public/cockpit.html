@@ -2815,13 +2815,59 @@ function renderBoardIncidents(){
 function renderBoardDecisions(){
   var host=document.getElementById('ceoBoardDecisions');if(!host)return;
   var list=allDecisions(),ec=(LIVE&&LIVE.economics)||{},ap=ec.appetite||{},items=[];
-  if(ap.appetite&&ap.tail_within===false)items.push({t:'Accept — or fund reduction of — the tail above appetite',d:'The worst-case tail sits above the board-approved limit. The board must record a risk-acceptance or approve funding to bring it within appetite.',c:'crit'});
-  if(!ap.appetite)items.push({t:'Set / reconfirm the board’s cyber-risk appetite',d:'No appetite is on record — the board sets the tolerance every other figure is measured against.',c:'warn'});
-  items.push({t:'Confirm the quarterly cyber-risk report cadence',d:'Item 106 oversight expects a recurring, documented board briefing — confirm the cadence and that it is minuted.',c:'good'});
-  list.slice(0,6).forEach(function(d){items.push({t:d.title,d:'Decided by '+(d.by||'a leader')+(d.opt||d.option?(' · '+(d.option||d.opt)):'')+(d.ticket?(' · '+((d.system||'ticket')+' '+d.ticket)):'')+' — on the oversight record.',c:'good'});});
+  if(ap.appetite&&ap.tail_within===false)items.push({t:'Accept — or fund reduction of — the tail above appetite',d:'The worst-case tail sits above the board-approved limit. The board must record a risk-acceptance or approve funding to bring it within appetite.',c:'crit',kind:'appetite'});
+  if(!ap.appetite)items.push({t:'Set / reconfirm the board’s cyber-risk appetite',d:'No appetite is on record — the board sets the tolerance every other figure is measured against.',c:'warn',kind:'appetite'});
+  items.push({t:'Confirm the quarterly cyber-risk report cadence',d:'Item 106 oversight expects a recurring, documented board briefing — confirm the cadence and that it is minuted.',c:'good',kind:'cadence'});
+  list.slice(0,6).forEach(function(d,i){items.push({t:d.title,d:'Decided by '+(d.by||'a leader')+(d.opt||d.option?(' · '+(d.option||d.opt)):'')+(d.ticket?(' · '+((d.system||'ticket')+' '+d.ticket)):'')+' — on the oversight record.',c:'good',kind:'recorded',idx:i});});
   host.innerHTML='<div class="card"><div class="ck">Decisions for the board '+liveTag()+'</div>'+
-    '<div style="margin-top:8px">'+items.map(function(i){return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+i.c+')"></span><b>'+i.t+'</b></div><div class="drow-need">'+i.d+'</div></div>';}).join('')+'</div>'+
-    '<div class="cn" style="margin-top:8px">These are the calls the board owns — risk-acceptances above appetite, appetite reviews and major funding — each recorded with the deciding leader, date and ticket as the D&amp;O / SEC-oversight defense.</div></div>';
+    '<div style="margin-top:8px">'+items.map(function(i){return '<div class="drow" data-bkind="'+i.kind+'"'+(i.idx!=null?(' data-bidx="'+i.idx+'"'):'')+' style="cursor:pointer"><div class="drow-h"><span class="cap-dot" style="background:var(--'+i.c+')"></span><b>'+i.t+'</b><span class="drow-tool"><span class="drill-cta">details ▸</span></span></div><div class="drow-need">'+i.d+'</div></div>';}).join('')+'</div>'+
+    '<div class="cn" style="margin-top:8px">These are the calls the board owns — risk-acceptances above appetite, appetite reviews and major funding — each recorded with the deciding leader, date and ticket as the D&amp;O / SEC-oversight defense. <b>Click any row</b> for the numbers behind it and the decision record.</div></div>';
+  host.querySelectorAll('.drow[data-bkind]').forEach(function(el){el.onclick=function(){var k=el.dataset.bkind;
+    if(k==='appetite')openDrill('Cyber-risk appetite — the board’s call',drillBoardAppetite());
+    else if(k==='cadence')openDrill('Board reporting cadence · SEC Item 106',drillBoardCadence());
+    else openDrill('Decision record',drillBoardRecorded(+el.dataset.bidx));};});
+}
+/* Real, sourced detail behind each board decision row — no fluff. */
+function drillBoardAppetite(){
+  var ec=(LIVE&&LIVE.economics)||{},ap=ec.appetite||{},ale=Number(ec.ale)||0,tail=Number(ec.tail)||0,mat=(ec.materiality&&Number(ec.materiality.value))||0,app=Number(ap.appetite)||0,over=(app>0&&tail>app);
+  return '<div class="drill-hero" style="color:var(--'+(!app?'warn':over?'crit':'good')+')">'+(app?usd(app)+' appetite':'No appetite set')+'</div>'+
+    '<div class="drill-p">Risk appetite is the maximum cyber loss the board is willing to tolerate — the line every other figure is measured against. '+(!app?'None is on record, so nothing can be judged “within tolerance” — setting it is the board’s to do.':(over?'Your worst-case tail is <b>above</b> it — the board must record a risk-acceptance or fund the exposure down.':'Cyber sits within the tolerance the board approved.'))+'</div>'+
+    '<div class="ev-sec">Where you stand</div>'+
+    gRow('Expected annual loss (ALE)',ale?usd(ale):'—')+
+    gRow('Worst-case tail (VaR 95%)',tail?usd(tail):'—')+
+    gRow('Board-approved appetite',app?usd(app):'not set')+
+    ((app&&tail)?gRow(over?'Tail over appetite by':'Headroom under appetite',usd(Math.abs(tail-app))):'')+
+    gRow('Materiality threshold',mat?usd(mat):'—')+
+    '<div class="ev-sec">The decision</div><div class="drill-p">'+(over?'Bring the tail within appetite by <b>reducing</b> (fund the control gaps), <b>transferring</b> (raise the insurance limit) or formally <b>accepting</b> the residual — the priced levers are on the Chief Risk seat. Whichever is chosen is minuted as a board risk-acceptance.':(app?'Reconfirm the appetite at the annual review, or adjust it as the business and threat landscape change.':'Set the appetite figure so ALE, the tail and every board metric can be judged against a real tolerance.'))+'</div>'+
+    '<div class="ev-sec">Where this comes from</div><div class="drill-p">ALE and the tail are computed from your risk register; appetite and the materiality threshold are your board inputs from onboarding. Nothing here is a fixed figure.</div>';
+}
+function drillBoardCadence(){
+  var g=(LIVE&&LIVE.governance)||{};
+  return '<div class="drill-hero" style="color:var(--'+(g.cadence?'good':'warn')+')">'+(g.cadence||'Cadence not set')+'</div>'+
+    '<div class="drill-p">SEC Item 106 oversight expects a recurring, documented board briefing on cyber risk — and that it is minuted, because the minutes are the board’s D&amp;O and disclosure defense. This confirms the cadence and the governance structure behind it.</div>'+
+    '<div class="ev-sec">Your governance structure</div>'+
+    gRow('Reporting cadence',g.cadence||'not set')+
+    gRow('Committee that owns cyber',g.committee||'not set')+
+    gRow('Board cyber expertise',g.boardExpertise||'not set')+
+    gRow('CISO reporting line',g.cisoReportsTo||'not set')+
+    gRow('Integrated into ERM',g.ermIntegrated||'not set')+
+    '<div class="ev-sec">The decision</div><div class="drill-p">Confirm the briefing happens on the stated cadence and is minuted. Quarterly is the emerging norm post-SEC-rule; annual-only is below the current oversight bar. The full Item 106 readiness scoring is in the Governance panel.</div>'+
+    '<div class="ev-sec">Where this comes from</div><div class="drill-p"><span class="srcpill self">○ self-reported</span> from your onboarding governance answers — connect a board portal / GRC to evidence the cadence with meeting records.</div>';
+}
+function drillBoardRecorded(idx){
+  var d=allDecisions()[idx];if(!d)return '<div class="drill-p">This decision record is no longer available.</div>';
+  var when=d.ts?fmtWhen(d.ts):'—',opt=d.option||d.opt||'—',st=d.ticket?statusStep(d.status).t:'recorded in Nerion';
+  return '<div class="drill-hero good">'+opt+'</div>'+
+    '<div class="drill-p"><b>'+d.title+'</b></div>'+
+    '<div class="ev-sec">The record</div>'+
+    gRow('Decided by',(d.by||'a leader')+(d.seat?(' · '+(SEAT_LABEL[d.seat]||d.seat)):''))+
+    gRow('Option chosen',opt)+
+    (d.osum?gRow('Economics',d.osum):'')+
+    gRow('Date',when)+
+    gRow('Ticket',d.ticket?((d.system||'ticket')+' '+d.ticket):'not pushed to ticketing')+
+    gRow('Status',st)+
+    '<div class="ev-sec">Why the board sees it</div><div class="drill-p">Every executive decision recorded in Nerion is timestamped and logged as the contemporaneous oversight record — the evidence a court, regulator or the D&amp;O carrier expects that the board’s delegated authority was exercised properly.</div>'+
+    (d.url?('<div class="ev-sec">Open the ticket</div><div class="drill-p"><a href="'+d.url+'" target="_blank" rel="noopener">'+(d.system||'ticket')+' '+(d.ticket||'')+' ↗</a></div>'):'');
 }
 function renderPeerBench(){
   var host=document.getElementById('ceoPeer');if(!host)return;
@@ -4347,11 +4393,37 @@ function renderAuditRepeat(){
     return;
   }
   var pct=(open!=null&&open>0&&rep!=null)?Math.round(rep/open*100):null;
-  var rows=iamGovRow('Open audit findings',open!=null?(open+' open'):'—',open!=null?(open<=10):null,open!=null?'The current control-gap backlog across the audit universe — the findings management has committed to remediate.':'')+
-    iamGovRow('Recurring (repeat) findings',rep!=null?(rep+(pct!=null?(' · '+pct+'% of open'):'')):'—',rep!=null?(rep===0):null,rep!=null?'Findings that reappeared in a later audit — the gap was reported closed but the underlying control did not hold. Each is a governance flag: escalate to the audit committee.':'');
+  function arow(kind,label,val,ok,sub){var c=ok===true?'good':ok===false?'crit':'muted',tc=ok===true?'good':ok===false?'crit':'ink-2';
+    return '<div class="drow" data-adrill="'+kind+'" style="cursor:pointer"><div class="drow-h"><span class="cap-dot" style="background:var(--'+c+')"></span><b>'+label+'</b><span class="drow-tool" style="color:var(--'+tc+')">'+val+' <span class="drill-cta">details ▸</span></span></div>'+(sub?'<div class="drow-need">'+sub+'</div>':'')+'</div>';}
+  var rows=arow('backlog','Open audit findings',open!=null?(open+' open'):'—',open!=null?(open<=10):null,open!=null?'The current control-gap backlog across the audit universe — the findings management has committed to remediate.':'')+
+    arow('recurring','Recurring (repeat) findings',rep!=null?(rep+(pct!=null?(' · '+pct+'% of open'):'')):'—',rep!=null?(rep===0):null,rep!=null?'Findings that reappeared in a later audit — the gap was reported closed but the underlying control did not hold. Each is a governance flag: escalate to the audit committee.':'');
   var verdict=(rep!=null&&rep===0)?'<b style="color:var(--good)">No repeat findings</b> — every closed finding stayed closed, evidence that remediation is durable, not cosmetic.'
     :(rep!=null?('<b style="color:var(--'+((pct==null||pct<=15)?'warn':'crit')+')">'+rep+' recurring finding'+(rep===1?'':'s')+'</b> — systemic gaps that were not truly closed. These are the ones to escalate to the audit committee.'):'');
-  host.innerHTML='<div class="card"><div class="ck">Recurring findings '+liveTag()+'</div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">'+verdict+' Evidenced live from your audit / GRC system — the systemic control gaps, not a self-reported closure rate.</div></div>';
+  host.innerHTML='<div class="card"><div class="ck">Recurring findings '+liveTag()+'</div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">'+verdict+' Evidenced live from your audit / GRC system — the systemic control gaps, not a self-reported closure rate. <b>Click either row</b> for the specific controls behind it.</div></div>';
+  host.querySelectorAll('.drow[data-adrill]').forEach(function(el){el.onclick=function(){var k=el.dataset.adrill;
+    if(k==='backlog')openDrill('Open audit findings — the control-gap backlog',drillAuditBacklog());
+    else openDrill('Recurring findings — the systemic gaps',drillAuditRecurring());};});
+}
+/* Real, sourced detail behind the audit-finding rows — the specific failing/
+   unevidenced controls, live from the control universe, not a summary sentence. */
+function drillAuditBacklog(){
+  var open=sig('audit_findings_open'),s=auditStats(),fail=s.fail.slice().sort(function(a,b){return a.score-b.score;});
+  var rows=fail.slice(0,14).map(function(f){var cls=cmmiColor(f.score);return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+cls+')"></span><b>'+f.id+'</b><span class="drow-tool" style="color:var(--'+cls+')">'+(f.score===0?'not evidenced':'CMMI '+f.score+' · failing')+'</span></div><div class="drow-need">'+f.name+' — evidence source: '+(f.src==='system'?'live tool telemetry':f.src==='document'?'document review':'none on file')+'</div></div>';}).join('');
+  return '<div class="drill-hero" style="color:var(--crit)">'+(open!=null?open+' open':fail.length+' open')+'</div>'+
+    '<div class="drill-p">The audit backlog is the set of control gaps management has committed to remediate. '+(open!=null?('Your GRC platform reports <b>'+open+'</b> open finding'+(open===1?'':'s')+'. '):'')+'Against the live control universe, <b>'+fail.length+'</b> control'+(fail.length===1?' is':'s are')+' currently failing or unevidenced (CMMI ≤ 1) — the concrete gaps behind those findings, listed worst-first.</div>'+
+    (fail.length?('<div class="ev-sec">The control gaps behind the backlog</div><div>'+rows+'</div>'+(fail.length>14?('<div class="cn" style="margin-top:6px">+ '+(fail.length-14)+' more in the full control-testing catalog on this seat.</div>'):'')):'<div class="drill-p" style="color:var(--good)">✓ No control is failing in the live universe — the open findings trace to items outside the automated control set (process, policy or documentation).</div>')+
+    '<div class="ev-sec">Where this comes from</div><div class="drill-p">Open-finding count is live from your audit / GRC platform (ServiceNow GRC · AuditBoard · OneTrust); each control gap is evidenced live from your connected tools against the NIST CSF 2.0 universe — not self-attested. Every control’s auditor workpaper (methodology, findings, recommendation, PDF) is on the <b>Control Assurance</b> tab.</div>';
+}
+function drillAuditRecurring(){
+  var rep=sig('audit_findings_repeat'),open=sig('audit_findings_open'),s=auditStats();
+  var unev=s.fail.filter(function(f){return f.score===0;});
+  var pct=(open!=null&&open>0&&rep!=null)?Math.round(rep/open*100):null;
+  var rows=unev.slice(0,14).map(function(f){return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--crit)"></span><b>'+f.id+'</b><span class="drow-tool" style="color:var(--crit)">no evidence on file</span></div><div class="drow-need">'+f.name+'</div></div>';}).join('');
+  return '<div class="drill-hero" style="color:var(--'+((rep||0)>0?'crit':'good')+')">'+(rep!=null?rep+' recurring':'—')+'</div>'+
+    '<div class="drill-p">A recurring finding is one that reappeared in a later audit — reported closed, but the underlying control did not actually hold. '+(pct!=null?('That is <b>'+pct+'%</b> of your open findings. '):'')+'The systemic signature is a control carrying <b>no evidence it ever held</b>: <b>'+unev.length+'</b> control'+(unev.length===1?' is':'s are')+' unevidenced in the universe right now — the ones most likely to keep recurring.</div>'+
+    (unev.length?('<div class="ev-sec">Unevidenced controls — the systemic-gap candidates</div><div>'+rows+'</div>'+(unev.length>14?('<div class="cn" style="margin-top:6px">+ '+(unev.length-14)+' more.</div>'):'')):'<div class="drill-p" style="color:var(--good)">✓ Every control in the universe carries evidence — no unevidenced control to recur.</div>')+
+    '<div class="ev-sec">What to do</div><div class="drill-p">Escalate recurring findings to the audit committee as governance flags. A closure rate that looks good on paper while the same gaps return is exactly what SEC Item 106 oversight is meant to catch — durable remediation means evidencing the control, not re-closing the ticket.</div>'+
+    '<div class="ev-sec">Where this comes from</div><div class="drill-p">Repeat-finding count is live from your audit / GRC platform; the unevidenced-control list is evidenced live from your connected tools against the NIST CSF 2.0 universe — not a self-reported closure rate.</div>';
 }
 /* CISO threat intelligence — actors targeting this sector, each mapped to the LIVE
    coverage of the controls that stop their techniques. Industry-modeled from FREE
