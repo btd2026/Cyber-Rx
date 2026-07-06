@@ -105,10 +105,7 @@ var SEATS = {
      +'<div class="card"><div class="ck">The false economy of a cut</div>'+lists([{c:'c',ic:'↓',t:'<span class="pill mod">modeled</span> Cut budget −20% → +$46M exposure, tail $214M, premium +18%',ev:'budgetcut',s:'Net of the premium re-rate, the cut costs more than it saves.'}])+'</div>'
      +'</div><div class="cn" style="margin-top:8px"><span class="pill mod">illustrative</span> Marginal return by program is an example ranking to show the shape; the live, per-control dollars of risk removed (summing to the org total) are on the CISO <b>Controls → Control value ledger</b>.</div>')
    +sec('06','Risk-acceptance decisions','The financial decisions that need the CFO — how much to fund this year and the residual to formally accept — each with the dollars removed, the ROI, and the disclosure threshold that makes an event reportable.',
-     decisions([{n:1,q:'How should we fund cyber-risk reduction this year?',sit:'<span class="pill mod">illustrative example</span> The figures below show the shape of the funding tradeoff; your live option economics compute from your risk register and the control-value ledger once tools are connected. How much do we commit this year?',opts:[
-       {rec:true,tag:'A · Fund both ($4.6M)',on:'Option A · Fund both',osum:'$4.6M · 20× blended',pros:['Removes ~$92M of exposure','Brings the tail within appetite','Stronger insurance renewal position'],cons:['Requires $4.6M of capital this year']},
-       {tag:'B · Highest-ROI only ($1.4M)',on:'Option B · Top driver only',osum:'$1.4M · 37×',pros:['37× return — closes the $52M payments driver','Only $1.4M of capital this year'],cons:['Leaves the $40M recovery tail over appetite','Insurance renewal position improves only partially']},
-       {tag:'C · Hold flat',on:'Option C · Hold',osum:'$0 new',pros:['No new spend this year'],cons:['Carries the full $92M as open exposure','Likely 15–18% premium increase at renewal','Two known drivers stay unfunded']}]}])
+     '<div id="cfoDecision"></div>'
      +'<div style="margin-top:14px">'+lists([{c:'w',ic:'§',t:'Materiality threshold <span id="lvCfoMateriality">$53M</span> — a crown-jewel event is reportable',ev:'materiality',s:'The 4-business-day SEC clock and a pre-staged 8-K keep the disclosure defensible.'}])+'</div>')
   );}
  },
@@ -137,10 +134,7 @@ var SEATS = {
    +sec('03','Breach-notification readiness','If an incident is material, are we ready to notify in time? The materiality determination — recorded, timed and evidenced — the live SEC and binding-jurisdiction countdowns, and the decision on how we run disclosure.',
      '<div class="cn" style="margin-bottom:12px">Reportable at <b class="claim" data-ev="materiality" style="cursor:pointer"><span id="lvCloMateriality">$53M</span> <span class="fx">ƒ</span></b> — a crown-jewel event above this threshold is material and starts the 4-business-day SEC clock. Record the determination below; it is timed, evidenced and logged for the D&amp;O defense.</div>'
      +'<div id="cloMateriality" style="margin-bottom:16px"></div>'
-     +decisions([{n:1,q:'How do we run the disclosure & notification process?',sit:'If an incident is material we face a 4-business-day SEC clock and a 72-hour GDPR clock. How do we prepare?',opts:[
-       {rec:true,tag:'A · Standing disclosure committee',on:'Option A · Pre-authorize',osum:'committee + pre-drafted filings',pros:['Meets the 4-business-day SEC and 72-hour GDPR clocks','Defensible, documented materiality determination','Protects directors under D&amp;O'],cons:['Requires setup effort this quarter (charter + templates)']},
-       {tag:'B · Ad-hoc at incident time',on:'Option B · Ad-hoc',osum:'no upfront work',pros:['No setup cost today'],cons:['High risk of missing the 4-day / 72-hour clock','Weaker legal defense on the materiality call','Filings drafted under time pressure']},
-       {tag:'C · External breach counsel on retainer',on:'Option C · Retainer',osum:'counsel on call',pros:['Specialist breach counsel on demand','Privilege established before an incident'],cons:['Annual retainer cost','Slower first hours vs. a standing internal committee']}]}]))
+     +'<div id="cloDecision"></div>')
    +sec('04','Litigation exposure','If an event becomes litigation — the class-action / notification exposure from the records we hold, the litigation hold that preserves evidence, and the forensic chain-of-custody that protects the case.',
      '<div id="cloOps"></div>')
    +sec('05','Privacy risk','The exposure from the sensitive data we hold and our ability to meet data-subject rights inside the statutory clock — the privacy obligations that run continuously, not just after an incident.',
@@ -166,10 +160,7 @@ var SEATS = {
      +'<div id="croPortfolio" style="margin-top:14px">'+bars([{l:'Credit / market',v:'$210M',pct:100},{l:'Operational',v:'$140M',pct:67},{l:'Cyber',v:'<span id="lvCroCyber">$68M</span>',pct:32,cls:'hot',ev:'ale'},{l:'Third-party',v:'$54M',pct:26},{l:'Compliance',v:'$30M',pct:14}])+'</div>'
      +'<div class="cn" style="margin:10px 0">Your <b>cyber</b> figure is live; the other principal-risk values are your ERM inputs — <span class="pill mod">illustrative</span> until entered.</div>')
    +sec('02','Risk acceptance','The residual risk the board must formally accept — or fund down. The correlated tail above appetite, the three levers (reduce / transfer / accept), and the decision recorded for the risk committee.',
-     decisions([{n:1,q:'How do we bring the correlated tail within appetite?',sit:'<span class="pill mod">illustrative example</span> A correlated payments + top-vendor event modeled above the enterprise tail limit; your live figures compute from your risk register and appetite once entered. Three levers:',opts:[
-       {rec:true,tag:'A · Reduce (fund PAM + DR)',on:'Option A · Reduce',osum:'$4.6M · removes $92M',pros:['Cuts likelihood and impact','De-correlates the payments path','Tail returns within appetite'],cons:['Requires $4.6M of capital']},
-       {tag:'B · Transfer (raise insurance limit)',on:'Option B · Transfer',osum:'+$1.1M premium',pros:['Caps the financial tail via a higher limit','Fast to execute at renewal'],cons:['~$1.1M higher annual premium','Does not reduce likelihood or de-correlate the path','Coverage still excludes some tail scenarios']},
-       {tag:'C · Accept the tail',on:'Option C · Accept',osum:'$0',pros:['No capital spend'],cons:['Correlated tail stays $205M — above the $180M enterprise limit','Requires a documented board risk-acceptance']}]}]))
+     '<div id="croDecision"></div>')
    +sec('03','Risk trends','Which Key Risk Indicators are breaching tolerance, the direction of travel over time, and the emerging risks rising fastest for your sector.',
      '<div id="croKri"></div>'
      +'<div id="ceoTrend" style="margin-top:14px"></div>'
@@ -202,10 +193,7 @@ var SEATS = {
      '<div id="cioModern"></div>')
    +sec('06','Service availability','Could the systems that carry the business keep running and recover fast enough? Immutable backups, recovery-point objective, last DR test, and where a single vendor failure leaves no failover.',
      '<div id="cioDr"></div>'
-     +decisions([{n:1,q:'How much recovery resilience do we fund?',sit:'<span class="pill mod">illustrative example</span> The slowest revenue system drives most of the worst-case tail; your live recovery times and tail figures compute from your resilience data and risk register. Three levels:',opts:[
-       {rec:true,tag:'A · Full modernization',on:'Option A · Full',osum:'$3.2M · <6h recovery',pros:['Cuts worst case by ~$40M','Meets regulatory recovery expectations','Removes the single-vendor risk (multi-region)'],cons:['Requires $3.2M of capital','One-quarter program']},
-       {tag:'B · Critical systems only',on:'Option B · Critical only',osum:'$1.6M',pros:['Protects payments &amp; settlement (the top $/hr systems)','Half the capital of full modernization'],cons:['Member-portal recovery stays at ~40 hrs','Removes only ~$24M of the $40M tail driver']},
-       {tag:'C · Defer',on:'Option C · Defer',osum:'$0 this year',pros:['Zero capital this year'],cons:['Worst-case recovery stays 3.1 days','Tail stays $180M — above the $120M appetite','Weakens the insurance renewal position']}]}]))
+     +'<div id="cioDecision" style="margin-top:14px"></div>')
   );}
  },
 
@@ -228,10 +216,7 @@ var SEATS = {
      '<div id="cioDr"></div>')
    +sec('06','Business continuity gaps','The specific gaps between where continuity is today and where board tolerance requires it — and the resilience decision that closes them.',
      '<div id="cooGaps"></div>'
-     +decisions([{n:1,q:'How do we keep operations running through a disruption?',sit:'<span class="pill mod">illustrative example</span> The slowest critical service recovers beyond tolerance and one vendor is a single point of failure; your live recovery times and vendor concentration come from your resilience data. Three ways to close the continuity gap:',opts:[
-       {rec:true,tag:'A · Fund resilience + remove the SPOF',on:'Option A · Resilience',osum:'$3.2M · within tolerance',pros:['Brings the slowest critical service inside recovery tolerance','Removes the single-vendor point of failure (multi-region)','Protects service-delivery SLAs and customer trust'],cons:['Requires $3.2M of capital','A one-quarter program']},
-       {tag:'B · Critical services only',on:'Option B · Critical only',osum:'$1.6M',pros:['Protects the top revenue-critical services','Half the capital'],cons:['Lower-tier services stay over tolerance','Vendor concentration remains']},
-       {tag:'C · Accept &amp; monitor',on:'Option C · Accept',osum:'$0 this year',pros:['No capital this year'],cons:['The slowest service stays over recovery tolerance','A vendor failure still degrades three services at once','Requires a documented operational risk-acceptance']}]}]))
+     +'<div id="cooDecision" style="margin-top:14px"></div>')
   );}
  },
 
@@ -306,10 +291,7 @@ var SEATS = {
      '<div id="cioAi"></div>')
    +sec('05','Secure-by-design adoption','How deeply secure-by-design is adopted across engineering — threat-modeling coverage, secure-SDLC practices, and security embedded in the pipeline rather than a gate beside it. Plus the product-security investment decision the Chief Product Officer owns.',
      '<div class="card"><div class="ck">Secure-by-design coverage</div><div class="cn" style="margin-top:6px">◐ Connect your SDLC tooling to show threat-modeling coverage, secure-coding checks and the share of teams with security embedded in the pipeline — so secure-by-design is measured, not aspired to. <span class="pill mod" style="font-size:8px">planned</span></div></div>'
-     +decisions([{n:1,q:'Where do we invest to ship secure-by-design?',sit:'<span class="pill mod">illustrative example</span> The tradeoff below is framed on product-security posture; your live figures compute from your pipeline (SAST / SCA findings, review backlog and delivery velocity) once connected. Three levers:',opts:[
-       {rec:true,tag:'A · AppSec in the pipeline',on:'Option A · AppSec tooling',osum:'shift-left coverage',pros:['Catches vulnerabilities before release, not after ship','SAST + SCA + secrets scanning on every change','Lowers the critical-finding backlog that reaches customers'],cons:['Tooling + integration cost — scoped with your team','Engineering time to triage and tune findings']},
-       {tag:'B · Release gating',on:'Option B · Gate releases',osum:'blocks known-critical ships',pros:['No release ships with an open critical finding','Fast to enforce in CI/CD'],cons:['Can slow delivery while the backlog is large','Needs a documented exception process']},
-       {tag:'C · Secure-by-design training + threat modeling',on:'Option C · Shift-left culture',osum:'fewer defects at the source',pros:['Reduces defects at design time','Builds durable engineering capability'],cons:['Slower to show measurable results','Preventive, not an immediate backlog reduction']}]}]))
+     +'<div id="cpoDecision" style="margin-top:14px"></div>')
    +sec('06','Software &amp; supplier dependency risk','What the product ships on — the third-party components and suppliers a compromise of which reaches your customers, and the concentration to watch.',
      '<div id="ceoThirdParty"></div>'
      +'<div class="card" style="margin-top:12px"><div class="cn">◐ Connect your SBOM / dependency scanner (<b>Snyk · GitHub</b>) and vendor monitoring to rank the software components and suppliers your product depends on by exposure — the supply-chain path that reaches customers. The single-provider blast radius above is computed live from your asset→vendor map.</div></div>')
