@@ -382,7 +382,7 @@ function c5get(id){
         formula:'premium = annual cost of your cyber policy',
         inputs:[{name:'Annual premium',value:conn?(usd(v)+' / yr'):'—',source:'policy record · premium'}],
         sources:[{tool:'Cyber-insurance policy',connector:'insurance',field:'premium',lastRefresh:c5ago()}],
-        note:'Priced on last year’s posture — a lever at renewal as your posture improves.',connectTool:'your policy record (onboarding)'});}
+        note:'The annual cost of your cyber policy. Evidence of a stronger posture is your lever at the next renewal — Nerion does not assume any change until your recorded posture shows one.',connectTool:'your policy record (onboarding)'});}
     case 'cf_savings':{
       return c5obj({id:id,name:'Redeployable savings',connected:false,displayValue:'—',label:'self-reported',color:'muted',
         formula:'redeployable savings = Σ(spend on retire/consolidate/right-size candidates at near-zero added risk)',
@@ -1180,6 +1180,10 @@ function c5esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g
 /* Short hover explanation for any metric box: its plain-language "why it matters"
    plus a nudge that the full trace is one tap away. Native title = works everywhere. */
 function c5tip(m){if(!m)return '';var n=(m.note||m.name||'').trim();return c5esc(n?(n+' — tap for the formula, inputs and source.'):'Tap for the formula, inputs and source.');}
+/* Honest posture-trend gate: only ever claim "improving" (or any change vs. the
+   past) when ≥2 real quarters are recorded (trajInfo). No recorded history → no
+   trend claim at all. Prevents assumed year-over-year language with no data. */
+function c5T(){var tr=(typeof trajInfo==='function')?trajInfo():null;var has=!!(tr&&tr.two);return {has:has,improving:has&&tr.down,worsening:has&&!tr.down};}
 function c5tile(mid,pillCls,pillTxt,subHtml,extraHtml,iconKey){var m=c5get(mid);
   var head=m.connected?m.displayValue:'Not connected';var pc=m.connected?pillCls:'n';var pt=m.connected?pillTxt:'—';
   var ik=iconKey||C5TILE_ICON[mid];var ic=ik?('<span class="c5tile-ic">'+c5icon(ik)+'</span>'):'';
@@ -1210,19 +1214,20 @@ function c5Health(){
   // Ascending mini bar-chart: taller = better (lower modeled loss). Height maps posture, not ALE.
   var bars='<div class="c5bars">'+(vals.length?vals.map(function(v,i){var h=Math.round(8+((maxV-v)/rng)*15);return '<i style="height:'+h+'px"></i>';}).join(''):[1,2,3,4,5,6].map(function(){return '<i class="n" style="height:8px"></i>';}).join(''))+'</div>';
   var inv=c5get('investigations'),am=c5get('assets_monitored'),tp=c5get('thirdparty_risk'),dir=c5get('direction'),ec=c5get('exp_identity');
+  var T=c5T();
   var tiles='<div class="c5tiles">'+
     c5tile('active_compromise',(oi!=null&&oi>0)?'r':'g',(oi==null)?'—':(oi>0?'Active':'Clear'),(inv.connected?inv.displayValue:'connect SIEM'),c5squares(sq1),'pulse')+
     c5tile('capability_coverage','a','Watch',(am.connected?am.displayValue:'connect SIEM for asset coverage'),c5squares(sq2),'checklist')+
     c5tile('thirdparty_risk','a','Watch',(tp.connected?(tp.note||''):'add your tier-1/2 vendors'),c5squares(sq3),'store')+
-    c5tile('direction','g','Improving',(dir.connected?dir.displayValue:'builds as quarters record'),bars,'trend')+
+    c5tile('direction',(T.improving?'g':T.worsening?'r':'n'),(T.improving?'Improving':T.worsening?'Worsening':'Baseline'),(dir.connected?dir.displayValue:'builds as quarters record'),bars,'trend')+
     '</div>';
   var blPara=ec.connected?('Your largest exposure is <b>'+ec.name.toLowerCase()+'</b> — '+ec.displayValue+' modeled, threatening '+ec.threatens+'. The fix is scoped and funded and waiting for your sign-off.'):'Connect your identity and control tools and Nerion surfaces your largest exposure here, with the scoped, funded fix ready for sign-off.';
   var blBtn=ec.connected?('Approve — removes '+ec.displayValue+' of risk'):'Approve the top fix';
   host.innerHTML=c5header()+
-    c5shell('Program health · are we secure right now?','You’re secure, and improving.',(oi!=null&&oi>0)?'warn':null,'No active compromise this morning, and your program is stronger than it was last month. Three live reads below — tap any tile for the exact formula and the source behind the number.')+
+    c5shell('Program health · are we secure right now?','You’re secure right now'+(T.improving?', and improving':'')+'.',(oi!=null&&oi>0)?'warn':null,'No active compromise this morning'+(T.improving?', and your recorded posture trend is improving':'')+'. Three live reads below — tap any tile for the exact formula and the source behind the number.')+
     c5legend([{c:'good',t:'Healthy'},{c:'warn',t:'At risk'},{c:'blue',t:'Monitoring'},{c:'line',t:'Not connected'}])+
     tiles+
-    c5bl('Bottom line','Secure and improving — one decision on your desk.',null,blPara,{mid:'exp_identity',txt:blBtn})+
+    c5bl('Bottom line','Secure'+(T.improving?' and improving':'')+' — one decision on your desk.',null,blPara,{mid:'exp_identity',txt:blBtn})+
     '<div class="c5foot">Every square and number traces to its source. Figures shown are illustrative.</div>';
 }
 
@@ -1379,16 +1384,16 @@ function c5covBar(){
 }
 function c5cfInsurance(){
   var host=document.getElementById('cf-insurance');if(!host)return;
-  var gap=c5get('cf_ins_gap'),ec=c5get('exp_identity');
+  var gap=c5get('cf_ins_gap'),ec=c5get('exp_identity');var hasGap=gap.connected&&gap.color==='warn'; // a real uninsured shortfall (tail > limit)
   host.innerHTML=c5header()+
-    c5shell('Insurance & risk transfer · are we covered efficiently?','Covered for the everyday — watch the tail.',null,'Your policy covers a limit against the modeled tail; any shortfall is retained on the balance sheet. Your premium is priced on last year’s posture, which has since improved. You can transfer more, or reduce the tail. Tap any figure for the model and your policy record.')+
+    c5shell('Insurance & risk transfer · are we covered efficiently?',(hasGap?'Covered for the everyday — watch the tail.':'The modeled tail is fully insured.'),null,'Your policy covers a limit against the modeled tail; any shortfall is retained on the balance sheet. You can transfer more (raise the limit) or reduce the tail. Tap any figure for the model and your policy record.')+
     '<div class="c5cards">'+c5card('cf_tail')+c5card('cf_ins_limit')+c5card('cf_ins_gap')+'</div>'+
     c5covBar()+
     '<div class="c5tiles" style="margin-top:16px">'+
-      c5tile('cf_premium','g','Renewal leverage','Priced on last year’s posture — now improved')+
+      c5tile('cf_premium','g','Renewal leverage','Annual policy cost · renewal is a lever')+
       c5tile('exp_identity','a','Tail driver','Largest single contributor to the tail')+
     '</div>'+
-    c5bl('Bottom line','Close the gap two ways — buy up, or reduce the tail.',null,(gap.connected?('Raise the limit by '+gap.displayValue+', or reduce the tail by closing the identity gap — its largest driver. Reducing the tail is cheaper than the extra premium, and it improves your renewal position.'):'Connect your policy record and risk model to size the gap; the cheapest close is usually reducing the tail by fixing its largest driver.'),{mid:'exp_identity',txt:'Reduce the tail — fund identity'},{mid:'cf_ins_gap',txt:'Model buying up cover'})+
+    c5bl('Bottom line',(hasGap?'Close the gap two ways — buy up, or reduce the tail.':'Fully covered — the efficient move is reducing the tail.'),null,(hasGap?('Raise the limit by '+gap.displayValue+', or reduce the tail by closing the identity gap — its largest driver. Reducing the tail is typically cheaper than the extra premium.'):(gap.connected?'Your limit already covers the modeled tail, so there is no uninsured shortfall. The efficient move is reducing the tail — closing the identity gap, its largest driver — which can lower the cover and premium you need at renewal.':'Connect your policy record and risk model to size cover against the tail.')),{mid:'exp_identity',txt:'Reduce the tail — fund identity'},{mid:'cf_ins_gap',txt:'Model buying up cover'})+
     '<div class="c5foot">Cover vs. modeled tail; premium and limits from your policy record.</div>';
 }
 /* Tab 04 — Cost optimization */
@@ -1428,9 +1433,9 @@ function c5ceHealth(){
   var host=document.getElementById('ce-health');if(!host)return;
   var O=c5Objectives(),ec=c5get('exp_identity');
   var atPill=O.atRisk>0?'a':'g';var atTxt=O.atRisk>0?(O.atRisk+' at risk'):'All protected';
-  var hr=c5get('cf_headroom');
+  var hr=c5get('cf_headroom');var T=c5T();
   host.innerHTML=c5header()+
-    c5shell('Enterprise cyber health · is cyber a tailwind or a risk?','Cyber is protecting growth, not slowing it.',null,'The enterprise is secure and improving. '+O.protected+' of your '+O.total+' strategic objectives are cyber-safe; the exception carries a single, funded exposure. Cyber isn’t a blocker this quarter. Tap any figure for its basis and source.')+
+    c5shell('Enterprise cyber health · is cyber a tailwind or a risk?','Cyber is protecting growth, not slowing it.',null,'The enterprise is secure'+(T.improving?' and improving':'')+'. '+O.protected+' of your '+O.total+' strategic objectives are cyber-safe; the exception carries a single, funded exposure. Cyber isn’t a blocker this quarter. Tap any figure for its basis and source.')+
     '<div class="c5cards">'+c5card('ceo_health')+c5card('ceo_objectives')+c5card('direction')+'</div>'+
     '<div class="c5tiles">'+
       c5tile('ceo_biz_health','g','Secure','No active compromise, program improving')+
@@ -1490,7 +1495,7 @@ function c5ceDecisions(){
   var ec=c5get('exp_identity');
   var q='<div class="c5rank"><div class="c5rank-h">Decision queue · the strategic cyber calls that need you</div>'+
     '<div class="c5row" data-c5m="exp_identity"><div class="c5row-main"><div class="c5row-t"><span class="c5pill b" style="margin-right:8px">Act now</span>Back the identity fix</div><div class="c5row-s">Protects the customer platform — your #1 growth objective — and the trust it runs on</div></div><div class="c5row-v">'+(ec.connected?('−'+ec.displayValue+' risk'):'—')+'</div><span class="c5pill g" style="align-self:center">Recommended</span></div>'+
-    '<div class="c5row" data-c5m="ceo_disclosures"><div class="c5row-main"><div class="c5row-t"><span class="c5pill n" style="margin-right:8px">For the board</span>Note: cyber isn’t material this quarter</div><div class="c5row-s">Ready for your board update — improving, nothing to disclose</div></div><div class="c5row-v">—</div><span class="c5pill n" style="align-self:center">Informational</span></div>'+
+    '<div class="c5row" data-c5m="ceo_disclosures"><div class="c5row-main"><div class="c5row-t"><span class="c5pill n" style="margin-right:8px">For the board</span>Note: cyber isn’t material this quarter</div><div class="c5row-s">Ready for your board update — nothing currently material to disclose</div></div><div class="c5row-v">—</div><span class="c5pill n" style="align-self:center">Informational</span></div>'+
     '<div class="c5row" data-c5m="ceo_objectives"><div class="c5row-main"><div class="c5row-t"><span class="c5pill n" style="margin-right:8px">Optional</span>Sponsor the security-culture push</div><div class="c5row-s">Reinforces the talent &amp; workforce objective · can wait</div></div><div class="c5row-v">—</div><span class="c5pill n" style="align-self:center">Nice to have</span></div>'+
     '</div>';
   host.innerHTML=c5header()+
@@ -1552,12 +1557,13 @@ function c5crTrend(){
   var rows=O.rows.map(function(r){var pill=r.c;var pt=r.status;
     return '<div class="c5prow" data-c5m="cr_owned"><span class="c5sq '+(r.c==='a'?'a':r.c==='b'?'b':r.c==='n'?'n':'g')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+r.risk+'</div><div class="c5row-s">Owner: '+r.owner+' · '+r.act+'</div></div><span class="c5pill '+pill+'">'+pt+'</span></div>';
   }).join('');
+  var T=c5T();
   host.innerHTML=c5header()+
-    c5shell('Trend & ownership · are we improving, and who owns what?','The direction is good — with clear owners.',null,'Direction and accountability. Cyber residual’s quarter-over-quarter trend is below, and every top risk has a named owner and an action; one — identity — needs your governance push. Tap any item for detail.')+
+    c5shell('Trend & ownership · are we improving, and who owns what?',(T.improving?'The direction is good — with clear owners.':T.worsening?'The direction is worsening — but every risk has an owner.':'Clear owners on every top risk — the trend builds as quarters record.'),null,'Direction and accountability. '+(T.has?'Cyber residual’s quarter-over-quarter trend is below':'Your residual trend builds quarter over quarter — no history is invented')+', and every top risk has a named owner and an action; one — identity — needs your governance push. Tap any item for detail.')+
     '<div class="c5cards">'+c5card('direction')+c5card('cr_consec')+c5card('cr_owned')+'</div>'+
-    '<div class="c5rank" style="padding:12px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:0 0 8px">Residual risk, last 6 quarters</div>'+bars+'</div>'+
+    '<div class="c5rank" style="padding:12px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:0 0 8px">'+(T.has?('Residual risk, last '+((tr.vals||[]).length)+' quarters'):'Residual risk — builds as you record quarters')+'</div>'+bars+'</div>'+
     '<div class="c5rank" style="padding:4px 15px;margin-top:14px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Top risks · owner and action</div>'+rows+'</div>'+
-    c5bl('Bottom line','The trend is good — keep the one action moving.',null,'Every top risk is owned and moving. The identity action is funded but needs your governance push to land this quarter — it’s the biggest single reduction available.',{mid:'exp_identity',txt:'Sponsor the identity action'})+
+    c5bl('Bottom line',(T.improving?'The trend is good — keep the one action moving.':'Keep the one action moving.'),null,'Every top risk is owned and moving. The identity action is funded but needs your governance push to land this quarter — it’s the biggest single reduction available.',{mid:'exp_identity',txt:'Sponsor the identity action'})+
     '<div class="c5foot">Trend from the residual-risk series; owners from your risk register.</div>';
 }
 /* Tab 05 — Decisions for the CRO */
@@ -1896,9 +1902,9 @@ function c5iaAttention(){
 /* Tab 01 — Cyber-business health */
 function c5bdHealth(){
   var host=document.getElementById('bd-health');if(!host)return;
-  var ec=c5get('exp_identity'),O=c5Objectives();
+  var ec=c5get('exp_identity'),O=c5Objectives();var T=c5T();
   host.innerHTML=c5header()+
-    c5shell('Cyber-business health · is the enterprise secure and resilient?','Cyber is a managed risk — improving, with nothing currently material.',null,'The enterprise is resilient this quarter, cyber risk is trending down, and no matter is currently material for disclosure. Management has funded the top exposure. Tap any figure for its basis and source.')+
+    c5shell('Cyber-business health · is the enterprise secure and resilient?','Cyber is a managed risk'+(T.improving?' — improving,':' —')+' with nothing currently material.',null,'The enterprise is resilient this quarter'+(T.improving?', and cyber risk is trending down':'')+', and no matter is currently material for disclosure. Management has funded the top exposure. Tap any figure for its basis and source.')+
     '<div class="c5cards">'+c5card('ceo_health')+c5card('bd_material')+c5card('direction')+'</div>'+
     '<div class="c5tiles">'+
       c5tile('ceo_objectives','g','Resilient',(O.protected+' of '+O.total+' objectives protected · one carries a funded action'))+
