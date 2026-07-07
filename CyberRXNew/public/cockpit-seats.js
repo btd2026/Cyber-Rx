@@ -28,6 +28,7 @@ var SEATS = {
    +sec('03','Financial exposure','','<div id="ce-financial"></div>')
    +sec('04','Brand & trust','','<div id="ce-trust"></div>')
    +sec('05','Decisions','','<div id="ce-decisions"></div>')
+   +sec('06','Strategic dashboard','','<div id="delta-ceo"></div>')
   );}
  },
 
@@ -42,6 +43,7 @@ var SEATS = {
    +sec('03','Insurance','','<div id="cf-insurance"></div>')
    +sec('04','Cost optimization','','<div id="cf-cost"></div>')
    +sec('05','Risk decisions','','<div id="cf-decisions"></div>')
+   +sec('06','Financial dashboard','','<div id="delta-cfo"></div>')
   );}
  },
 
@@ -86,6 +88,7 @@ var SEATS = {
    +sec('03','AI risk','','<div id="ct-ai"></div>')
    +sec('04','Supply chain','','<div id="ct-supply"></div>')
    +sec('05','Decisions','','<div id="ct-decisions"></div>')
+   +sec('06','Technology dashboard','','<div id="delta-cio"></div>')
   );}
  },
 
@@ -100,6 +103,7 @@ var SEATS = {
    +sec('03','Supply chain','','<div id="co-supply"></div>')
    +sec('04','Recovery','','<div id="co-recovery"></div>')
    +sec('05','Decisions','','<div id="co-decisions"></div>')
+   +sec('06','Operational dashboard','','<div id="delta-coo"></div>')
   );}
  },
 
@@ -115,6 +119,7 @@ var SEATS = {
    +sec('04','Threats','','<div id="c5-threats"></div>')
    +sec('05','Peers','','<div id="c5-peers"></div>')
    +sec('06','Frameworks','','<div id="c5-frameworks"></div>')
+   +sec('07','Assurance & operations','','<div id="delta-ciso"></div>')
   );}
  },
 
@@ -129,6 +134,7 @@ var SEATS = {
    +sec('03','Velocity','','<div id="cp-velocity"></div>')
    +sec('04','Backlog','','<div id="cp-backlog"></div>')
    +sec('05','Decisions','','<div id="cp-decisions"></div>')
+   +sec('06','Engineering & cloud','','<div id="delta-cto"></div>')
   );}
  },
 

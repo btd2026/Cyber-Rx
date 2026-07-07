@@ -20,8 +20,18 @@
     '.dlt-head{font-family:inherit}.dlt-grp{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#8a93a1);margin:16px 0 2px}'
   ].join('');var s=document.createElement('style');s.textContent=css;document.head.appendChild(s);}catch(_){}
 
-  // Board tiles group into the spec's three sub-tabs; clo/cro render flat.
-  var GROUPS={board:[['Risk oversight',['board_posture','board_toprisks','board_trend']],['Material exposure & disclosure',['board_material','board_regexposure','board_insurance']],['Assurance & accountability',['board_assurance','board_accountability','board_investment']]]};
+  // Sub-tab grouping per role (matches the spreadsheet's tab structure). Roles not
+  // listed render their tiles flat.
+  var GROUPS={
+    board:[['Risk oversight',['board_posture','board_toprisks','board_trend']],['Material exposure & disclosure',['board_material','board_regexposure','board_insurance']],['Assurance & accountability',['board_assurance','board_accountability','board_investment']]],
+    ceo:[['Strategic impact',['ceo_strategic']],['Business impact',['ceo_business']],['Executive decisions',['ceo_decisions']]],
+    cfo:[['Financial exposure',['cfo_exposure']],['Investment performance',['cfo_investment']],['Financial decisions',['cfo_decisions']]],
+    coo:[['Operational readiness',['coo_readiness']],['Recovery readiness',['coo_recovery']],['Operational decisions',['coo_decisions']]],
+    cio:[['Technology readiness',['cio_readiness']],['Digital services',['cio_digital']],['Technology decisions',['cio_decisions']]],
+    cto:[['Platform & architecture',['cto_platform']],['Engineering & dev security',['cto_engineering']],['Innovation & cloud',['cto_cloud']],['Technology decisions',['cto_decisions']]],
+    ciso:[['Assurance & operations',['protection_effectiveness','cyber_operations','executive_actions']]]
+  };
+  var ROLES=['board','clo','cro','ceo','cfo','coo','cio','cto','ciso'];
 
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c];});}
   function tileHtml(t){
@@ -52,7 +62,7 @@
 
   // Render whichever delta container is present (only the active seat's exists).
   window.renderDelta=function(){
-    ['board','clo','cro'].forEach(function(role){
+    ROLES.forEach(function(role){
       var host=document.getElementById('delta-'+role);if(!host)return;
       var b=base(),o=org();
       if(!b||!o){host.innerHTML='<div class="dlt-d">Connect your org to populate the '+role.toUpperCase()+' oversight tiles.</div>';return;}

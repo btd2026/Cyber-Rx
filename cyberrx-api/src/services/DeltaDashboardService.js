@@ -14,6 +14,8 @@
 
 const Catalog = require('./InputCatalogService');
 
+const has = (a) => Array.isArray(a) && a.length > 0;
+
 const usd = (n) => {
   const v = Number(n) || 0; const a = Math.abs(v);
   if (a >= 1e9) return '$' + (v / 1e9).toFixed(1) + 'B';
@@ -81,6 +83,56 @@ function buildFrom(role, ctx) {
       T('cro_trend', (w) => tile('cro_trend', w.label, true, [], (s.trend && s.trend.length ? s.trend.length + ' periods' : 'baseline'), 'muted', proxy, 'exposure vs tolerance')),
       T('cro_treatment', (w) => tile('cro_treatment', w.label, true, [], 'treat / accept / transfer', 'muted', !grcLive, 'grouped by decision')),
       T('cro_transfer', (w) => tile('cro_transfer', w.label, true, [], (tail || ale) > limit ? 'transfer opportunity' : 'adequately transferred', (tail || ale) > limit ? 'warn' : 'good', false, 'residual ' + usd(tail || ale) + ' vs coverage ' + usd(limit))),
+    ] };
+  }
+
+  // ---- CEO / CFO / COO / CIO / CTO + CISO assurance/ops ----
+  const procs = (s.process_exposure || s.processes || []);
+  const rs = s.resilience || {};
+  const cap = (s.capabilities || []);
+  if (role === 'ceo') {
+    return { role, tiles: [
+      T('ceo_strategic', (w) => tile('ceo_strategic', w.label, true, [], (has(s.strategicInitiatives) ? s.strategicInitiatives.length + ' initiatives tracked' : 'strategy mapped'), 'warn', !conn.has('jira') && !conn.has('servicenow'), 'initiatives with a cyber dependency (PMO × strategy × app map)')),
+      T('ceo_business', (w) => tile('ceo_business', w.label, true, [], 'customer-impact watch', 'muted', !conn.has('salesforce') && !conn.has('hubspot'), 'incidents joined to CRM / support impact')),
+      T('ceo_decisions', (w) => tile('ceo_decisions', w.label, true, [], 'decisions needing the CEO', 'muted', !grcLive, 'from the GRC decision workflow')),
+    ] };
+  }
+  if (role === 'cfo') {
+    return { role, tiles: [
+      T('cfo_exposure', (w) => tile('cfo_exposure', w.label, true, [], usd(ale) + ' value at risk', ale > 0 ? 'warn' : 'muted', false, 'FAIR ALE × BIA' + (has(s.assetValuation) ? ' × asset valuation' : ''))),
+      T('cfo_investment', (w) => tile('cfo_investment', w.label, true, [], (has(s.initiatives) ? s.initiatives.length + ' investments' : 'portfolio'), 'muted', !conn.has('jira') && !conn.has('servicenow'), 'ranked by risk reduced (PMO × GRC)')),
+      T('cfo_decisions', (w) => tile('cfo_decisions', w.label, true, [], 'funding requests', 'muted', !conn.has('jira') && !conn.has('servicenow'), 'from the PMO')),
+    ] };
+  }
+  if (role === 'coo') {
+    const atRisk = procs.filter((p) => Number(p.exposure_usd) > 0).length;
+    return { role, tiles: [
+      T('coo_readiness', (w) => tile('coo_readiness', w.label, true, [], (procs.length ? atRisk + ' of ' + procs.length + ' processes at risk' : 'processes mapped'), atRisk > 0 ? 'warn' : 'good', false, 'BIA × process inventory × CMDB')),
+      T('coo_recovery', (w) => tile('coo_recovery', w.label, true, [], (rs.assets ? 'recovery tested' : 'recovery posture'), 'muted', !conn.has('rubrik') && !conn.has('veeam'), 'DR test results × backup coverage')),
+      T('coo_decisions', (w) => tile('coo_decisions', w.label, true, [], 'resilience investments', 'muted', true, 'from the DR roadmap')),
+    ] };
+  }
+  if (role === 'cio') {
+    return { role, tiles: [
+      T('cio_readiness', (w) => tile('cio_readiness', w.label, true, [], 'critical apps needing attention', 'warn', !conn.has('datadog') && !conn.has('dynatrace') && !conn.has('newrelic'), 'APM health × CMDB criticality')),
+      T('cio_digital', (w) => tile('cio_digital', w.label, true, [], 'workforce productivity risk', 'muted', !conn.has('intune') && !conn.has('defender'), 'endpoint + collaboration posture')),
+      T('cio_decisions', (w) => tile('cio_decisions', w.label, true, [], 'modernization priorities', 'muted', !conn.has('leanix') && !conn.has('ardoq'), 'from the EA repository')),
+    ] };
+  }
+  if (role === 'cto') {
+    return { role, tiles: [
+      T('cto_platform', (w) => tile('cto_platform', w.label, true, [], 'platforms at risk', 'warn', !conn.has('leanix') && !conn.has('ardoq'), 'EA repository × CMDB × APM')),
+      T('cto_engineering', (w) => tile('cto_engineering', w.label, true, [], 'product vulns in development', 'warn', !conn.has('github') && !conn.has('snyk'), 'SAST / DAST / SCA in the pipeline')),
+      T('cto_cloud', (w) => tile('cto_cloud', w.label, true, [], 'cloud exposure', 'warn', !conn.has('wiz') && !conn.has('prisma'), 'CSPM / CWPP across cloud accounts')),
+      T('cto_decisions', (w) => tile('cto_decisions', w.label, true, [], 'architecture remediation', 'muted', !grcLive, 'EA repository × GRC')),
+    ] };
+  }
+  if (role === 'ciso') {
+    // Only the three assurance/ops widgets render here (Program Health owns the er_* tiles).
+    return { role, tiles: [
+      T('protection_effectiveness', (w) => tile('protection_effectiveness', w.label, true, [], 'control-family coverage', 'good', !grcLive, 'framework/control assessment scores by business area')),
+      T('cyber_operations', (w) => tile('cyber_operations', w.label, true, [], 'active business-impacting incidents', 'muted', !conn.has('splunk') && !conn.has('sentinel'), 'SIEM / SOAR / Incident Mgmt, business-impacting only')),
+      T('executive_actions', (w) => tile('executive_actions', w.label, true, [], 'highest-value remediation', 'muted', !grcLive, 'GRC open items by risk-reduced ÷ effort')),
     ] };
   }
 

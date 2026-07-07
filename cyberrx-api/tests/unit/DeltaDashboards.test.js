@@ -10,6 +10,31 @@ describe('InputCatalogService — DELTA roles', () => {
     expect(Catalog.WIDGETS.board).toHaveLength(9);
     expect(Catalog.WIDGETS.clo).toHaveLength(7);
     expect(Catalog.WIDGETS.cro).toHaveLength(7);
+    expect(Catalog.WIDGETS.ceo).toHaveLength(3);
+    expect(Catalog.WIDGETS.cfo).toHaveLength(3);
+    expect(Catalog.WIDGETS.coo).toHaveLength(3);
+    expect(Catalog.WIDGETS.cio).toHaveLength(3);
+    expect(Catalog.WIDGETS.cto).toHaveLength(4);
+    // CISO Program-Health er_* (4) + assurance/ops (3).
+    expect(Catalog.WIDGETS.ciso).toHaveLength(7);
+  });
+
+  test('every remaining view builds tiles matching its widget count', () => {
+    const c = ctx(['jira', 'salesforce', 'rubrik', 'wiz', 'github', 'splunk', 'sap', 'leanix', 'datadog', 'intune'],
+      { economics: { ale: 68e6, tail: 180e6, appetite: { appetite: 120e6 }, insurance: { limit: 150e6 }, budget: 9e6 }, strategicInitiatives: [{ name: 'x' }], initiatives: [{ name: 'i' }], bia: [{ name: 'p' }], resilience: { assets: {} } });
+    ['ceo', 'cfo', 'coo', 'cio', 'cto'].forEach((role) => {
+      const out = Delta.buildFrom(role, { readiness: Catalog.readinessFrom(role, c), setup: c.setup, connectors: c.connectors });
+      expect(out.tiles).toHaveLength(Catalog.WIDGETS[role].length);
+      expect(out.role).toBe(role);
+    });
+  });
+
+  test('cfo_exposure is real (FAIR ALE) and cio_readiness gates without APM', () => {
+    const c = ctx([], { economics: { ale: 68e6 }, bia: [{ name: 'p' }] });
+    const cfo = Delta.buildFrom('cfo', { readiness: Catalog.readinessFrom('cfo', c), setup: c.setup, connectors: c.connectors });
+    expect(cfo.tiles.find((t) => t.id === 'cfo_exposure').satisfied).toBe(true); // FAIR + BIA present
+    const cio = Delta.buildFrom('cio', { readiness: Catalog.readinessFrom('cio', c), setup: c.setup, connectors: c.connectors });
+    expect(cio.tiles.find((t) => t.id === 'cio_readiness').satisfied).toBe(false); // needs APM + CMDB
   });
   test('new connectors + registers + derived inputs are classified', () => {
     expect(Catalog.typeOf('ERM Platform')).toBe('connector');

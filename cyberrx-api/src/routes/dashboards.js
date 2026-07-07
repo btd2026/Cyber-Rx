@@ -13,7 +13,7 @@ const { optionalJWT, demoOrg } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const Delta = require('../services/DeltaDashboardService');
 
-const ROLES = new Set(['board', 'clo', 'cro']);
+const ROLES = new Set(['board', 'clo', 'cro', 'ceo', 'cfo', 'coo', 'cio', 'cto', 'ciso']);
 const orgOf = (req) => req.orgId || req.headers['x-org-id'] || req.query.org_id || req.query.orgId;
 
 router.get('/:role', optionalJWT, demoOrg, async (req, res) => {
