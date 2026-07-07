@@ -1094,8 +1094,11 @@ function c5InspectObj(m){
   var h='<div class="ev-claim">'+m.name+' '+chip+'</div>';
   h+='<div class="ev-result '+(m.color==='good'?'':m.color==='crit'?'crit':m.color==='warn'?'warn':'')+'">'+(m.connected?m.displayValue:'Not connected')+'</div>';
   if(!m.connected){
-    h+='<div class="ev-sec">Not connected yet</div><div class="drill-p">This value populates once its source is connected. Until then Nerion shows the honest not-connected state — never a placeholder number.</div>';
+    var src=m.connectTool?('<b>'+c5esc(m.connectTool)+'</b>'):'its data source';
+    h+='<div class="ev-sec">Not connected yet</div><div class="drill-p">This value populates once you connect '+src+'. Until then Nerion shows the honest not-connected state — never a placeholder number.</div>';
     if(m.formula)h+='<div class="ev-sec">What would populate it</div><div class="formula">'+m.formula+'</div>';
+    // Name the exact source(s) so it is never ambiguous WHAT to connect.
+    if(m.sources&&m.sources.length)h+='<div class="ev-sec">Where it will come from</div>'+m.sources.map(function(s){return '<div class="src-row"><span class="sd"></span><b>'+s.tool+'</b>'+(s.connector?(' · connector <code>'+s.connector+'</code>'):'')+(s.field?(' · field <code>'+s.field+'</code>'):'')+'</div>';}).join('');
     if(m.connectTool)h+='<div style="margin-top:12px"><button class="c5btn" onclick="c5Connect(\''+String(m.connectTool).replace(/'/g,'')+'\')">Connect '+m.connectTool+'</button></div>';
   } else {
     h+='<div class="ev-sec">How it’s computed</div><div class="formula">'+(m.formula||'—')+'</div>';
@@ -1234,6 +1237,39 @@ function c5card(mid){var m=c5get(mid);
    would populate it. Avoids rendering the same metric card multiple times. */
 function c5phCard(label,mid){
   return '<div class="c5card"'+(mid?(' data-c5m="'+mid+'"'):'')+'><div class="c5card-top"><span class="c5card-l">'+label+'</span></div><div class="c5card-v" style="color:var(--muted)">Not connected</div></div>';
+}
+/* Interactive decision for a c5 seat. Builds a decision object for the shared
+   decisions()/wireChoose() machinery (cockpit.html): the user CHOOSES an option
+   (recommended first, but always alternatives), the choice is stamped with the
+   seat leader's name + timestamp, editable for 24h then committed, and — where a
+   ticketing system was connected at onboarding — auto-opened as a Jira/ServiceNow
+   project whose status is pulled back on refresh. `pfx` namespaces the decision
+   id per seat so ids stay globally unique (all seats render into hidden panels).
+   `rec` is the recommended option; `alts` are the alternatives (defaults added). */
+function c5decDefaultAlts(){return [
+  {on:'Defer to the next planning cycle',osum:'No spend now · exposure persists',pros:['No capital committed this cycle.'],cons:['The exposure stays open until addressed.','The cost to fix rarely falls by waiting.']},
+  {on:'Accept the risk — record a rationale',osum:'No cost · exposure retained',pros:['No spend or project.'],cons:['The exposure is retained on the balance sheet.','A formal risk-acceptance should be recorded — and, if material, noted to the board.']}
+];}
+function c5dec(pfx,n,q,sit,rec,alts){
+  var opts=[{on:rec.on,osum:rec.osum||'',rec:true,tag:'A',pros:rec.pros||[],cons:rec.cons||[]}];
+  (alts||c5decDefaultAlts()).forEach(function(a,i){opts.push({on:a.on,osum:a.osum||'',rec:false,tag:String.fromCharCode(66+i),pros:a.pros||[],cons:a.cons||[]});});
+  return {n:pfx+'-'+n,q:q,sit:sit,opts:opts};
+}
+/* Render interactive decisions and wire them (choose · record · ticket · status). */
+function c5decisions(list){
+  var html=(typeof decisions==='function')?decisions(list):'';
+  setTimeout(function(){try{if(typeof wireChoose==='function')wireChoose();}catch(_){}},0);
+  return html;
+}
+/* From time to time, pull the live ticket status for every recorded decision from
+   the connected ticketing system — independent of navigation. Set up once.
+   renderDecStatus() calls pullStatus() when a decision has a ticket. */
+if(typeof window!=='undefined'&&typeof setInterval==='function'&&!window.__c5DecPoll){
+  window.__c5DecPoll=setInterval(function(){
+    try{if(typeof renderDecStatus!=='function')return;
+      document.querySelectorAll('.decision[data-dec]').forEach(function(b){renderDecStatus(b.getAttribute('data-dec'));});
+    }catch(_){}
+  },120000);
 }
 function c5bl(kick,head,headColor,para,btn,ghost){
   function b(x,cls){if(!x)return '';return '<button class="c5btn'+cls+'" '+(x.act?('onclick="'+x.act+'"'):('data-c5m="'+x.mid+'"'))+'>'+x.txt+'</button>';}
@@ -1457,15 +1493,21 @@ function c5dqRow(type,typeCls,name,mid,sub,rec,recCls){var m=c5get(mid);
 function c5cfDecisions(){
   var host=document.getElementById('cf-decisions');if(!host)return;
   var ec=c5get('exp_identity'),gap=c5get('cf_ins_gap'),em=c5get('exp_email');
+  var list=[
+    c5dec('cf',1,'Fund the identity fix?','Your single largest exposure driver'+(ec.connected?(' — '+ec.displayValue):'')+'. Funding it removes the exposure and keeps modeled loss within appetite.',
+      {on:'Approve & fund the identity fix',osum:(ec.connected?('Removes '+ec.displayValue+' · keeps you within appetite'):'Removes the top exposure driver'),pros:['Removes your single largest exposure driver.','Highest return per dollar of the choices here.','Keeps modeled loss within the board-approved appetite.'],cons:['Requires capital this cycle (scoped with your team).']}),
+    c5dec('cf',2,'Close the insurance gap — buy up, or reduce the tail?','Weigh transferring more risk to insurance against reducing the modeled tail at its source.',
+      {on:'Reduce the tail — fund the identity fix',osum:'Cheaper than extra premium in most cases',pros:['Lowers the severe-year tail at source.','Improves your renewal position.'],cons:['Takes a cycle to land vs. an immediate transfer.']},
+      [{on:'Buy up cover — raise the limit',osum:'Immediate transfer · higher premium',pros:['Caps the financial loss immediately.'],cons:['Adds recurring premium.','Transfers the loss; does not reduce it.']},
+       {on:'Defer to renewal',osum:'Revisit at the next policy renewal',pros:['No action now.'],cons:['The residual gap persists in the interim.']}]),
+    c5dec('cf',3,'Accept the residual phishing risk?','Modeled and within tolerance — a reasonable acceptance if the rationale is recorded.',
+      {on:'Accept — record the rationale',osum:'Within tolerance · monitored',pros:['Well within appetite on current modeling.','Avoids spend on a low-return control.'],cons:['Requires a recorded risk-acceptance rationale.','Revisit if the phishing signal rises.']},
+      [{on:'Fund additional awareness / email security',osum:'Extra spend · marginal reduction',pros:['Further lowers an already-small exposure.'],cons:['Low return per dollar vs. identity.']}])
+  ];
   host.innerHTML=c5header()+
-    c5shell('Risk decisions · what needs my sign-off?','Three decisions are waiting — one clear yes, one to weigh, one to accept.',null,'Nerion surfaces the cyber choices that need a financial call — each priced, each a clean invest, transfer, or accept. Here’s what’s on your desk. Tap any decision for the full economics and its source.')+
-    '<div class="c5rank"><div class="c5rank-h">Decision queue · priced from your risk model + spend records</div>'+
-      c5dqRow('Invest','b','Fund the identity fix','exp_identity',(ec.connected?('Removes '+ec.displayValue+' · keeps you within appetite'):'the CISO’s top ask, in dollars'),'Recommended','g')+
-      c5dqRow('Transfer','b','Buy up tail cover','cf_ins_gap',(gap.connected?('Closes the insurance gap · weigh vs reducing the tail'):'closes the insurance gap'),'Weigh','a')+
-      c5dqRow('Accept','n','Accept residual phishing risk','exp_email',(em.connected?('Modeled and falling · well within tolerance'):'well within tolerance'),'Reasonable','n')+
-    '</div>'+
-    c5bl('Bottom line','One clear yes today.',null,(ec.connected?('The identity fix is the highest-return decision on your desk — '+ec.displayValue+' removed, and it keeps you within appetite. The transfer and the acceptance can wait for the next review.'):'The identity fix is the highest-return decision on your desk once your controls connect. The transfer and the acceptance can wait for the next review.'),{mid:'exp_identity',txt:ec.connected?('Approve identity fix — removes '+ec.displayValue):'Approve identity fix'})+
-    '<div class="c5foot">Each decision is priced from its risk model and your spend records.</div>';
+    c5shell('Risk decisions · what needs my sign-off?','Three decisions are waiting — one clear yes, one to weigh, one to accept.',null,'Each decision below gives you the options — the recommended call is marked, but the choice is yours. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and (where you connected Jira / ServiceNow at onboarding) opens a tracked project whose status is pulled back on refresh.')+
+    c5decisions(list)+
+    '<div class="c5foot">Each decision is priced from your risk model and spend records. Tap any figure inside for its source.</div>';
 }
 
 /* ================= CEO seat — same engine, strategy & trust lens ================= */
@@ -1534,16 +1576,17 @@ function c5ceTrust(){
 function c5ceDecisions(){
   var host=document.getElementById('ce-decisions');if(!host)return;
   var ec=c5get('exp_identity');
-  var q='<div class="c5rank"><div class="c5rank-h">Decision queue · the strategic cyber calls that need you</div>'+
-    '<div class="c5row" data-c5m="exp_identity"><div class="c5row-main"><div class="c5row-t"><span class="c5pill b" style="margin-right:8px">Act now</span>Back the identity fix</div><div class="c5row-s">Protects the customer platform — your #1 growth objective — and the trust it runs on</div></div><div class="c5row-v">'+(ec.connected?('−'+ec.displayValue+' risk'):'—')+'</div><span class="c5pill g" style="align-self:center">Recommended</span></div>'+
-    '<div class="c5row" data-c5m="ceo_disclosures"><div class="c5row-main"><div class="c5row-t"><span class="c5pill n" style="margin-right:8px">For the board</span>Note: cyber isn’t material this quarter</div><div class="c5row-s">Ready for your board update — nothing currently material to disclose</div></div><div class="c5row-v">—</div><span class="c5pill n" style="align-self:center">Informational</span></div>'+
-    '<div class="c5row" data-c5m="ceo_objectives"><div class="c5row-main"><div class="c5row-t"><span class="c5pill n" style="margin-right:8px">Optional</span>Sponsor the security-culture push</div><div class="c5row-s">Reinforces the talent &amp; workforce objective · can wait</div></div><div class="c5row-v">—</div><span class="c5pill n" style="align-self:center">Nice to have</span></div>'+
-    '</div>';
+  var list=[
+    c5dec('ce',1,'Back the identity fix?','It protects the customer platform — your #1 growth objective — and the trust it runs on'+(ec.connected?(' ('+ec.displayValue+' of exposure)'):'')+'.',
+      {on:'Back it — sponsor the funded fix',osum:(ec.connected?('Protects your top objective · −'+ec.displayValue+' risk'):'Protects your top objective'),pros:['Protects your #1 growth objective and customer trust.','Removes the largest single exposure at a fraction of its cost.'],cons:['Requires executive sponsorship and capital this cycle.']}),
+    c5dec('ce',2,'Sponsor the security-culture push?','Reinforces the talent & workforce objective — worthwhile but not urgent.',
+      {on:'Sponsor it now',osum:'Reinforces the workforce objective',pros:['Strengthens the human layer over time.'],cons:['Lower, slower return than the identity fix.']},
+      [{on:'Defer to the next cycle',osum:'Revisit next planning cycle',pros:['No spend now.'],cons:['Culture gains compound slowly; delay costs time.']}])
+  ];
   host.innerHTML=c5header()+
-    c5shell('Decisions for the CEO · what needs your call?','One decision protects your top objective — the rest is on track.',null,'The strategic cyber calls that need you — no technical detail, just the business choice. Only one needs action now. Tap any item for the full picture.')+
-    q+
-    c5bl('Bottom line','One call, clearly worth making.',null,(ec.connected?('Backing the identity fix protects your #1 growth objective and your customer trust, at a fraction of the exposure it removes ('+ec.displayValue+'). Everything else is on track and can wait for the next review.'):'Backing the identity fix protects your #1 growth objective and your customer trust. Everything else is on track and can wait for the next review.'),{mid:'exp_identity',txt:'Back the identity fix'})+
-    '<div class="c5foot">Each decision links to its underlying model and source.</div>';
+    c5shell('Decisions for the CEO · what needs your call?','The strategic cyber calls that need you — the recommended call is marked, the choice is yours.',null,'No technical detail — just the business choice. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and opens a tracked project in the ticketing system you connected at onboarding.')+
+    c5decisions(list)+
+    '<div class="c5foot">Each decision links to its underlying model and source. Tap any figure inside for its basis.</div>';
 }
 
 /* ================= CRO seat — same engine, enterprise-risk lens ================= */
@@ -1610,16 +1653,20 @@ function c5crTrend(){
 /* Tab 05 — Decisions for the CRO */
 function c5crDecisions(){
   var host=document.getElementById('cr-decisions');if(!host)return;
-  var ec=c5get('exp_identity'),ev=c5get('exp_vendor'),em=c5get('exp_email');var V=c5vendors();var tvName=V.worst?V.worst.name:'top vendor';
-  var q='<div class="c5rank"><div class="c5rank-h">Decision queue · each with residual, appetite and a recommendation</div>'+
-    '<div class="c5row" data-c5m="exp_identity"><div class="c5row-main"><div class="c5row-t"><span class="c5pill b" style="margin-right:8px">Treat</span>Identity gap</div><div class="c5row-s">Over its category share of appetite · treating removes '+(ec.connected?ec.displayValue:'the residual')+'</div></div><div class="c5row-v">'+(ec.connected?('−'+ec.displayValue):'—')+'</div><span class="c5pill g" style="align-self:center">Recommended</span></div>'+
-    '<div class="c5row" data-c5m="exp_vendor"><div class="c5row-main"><div class="c5row-t"><span class="c5pill a" style="margin-right:8px">Monitor</span>Third-party concentration — '+tvName+'</div><div class="c5row-s">Within limit but rating to watch · keep monitoring</div></div><div class="c5row-v">'+(ev.connected?ev.displayValue:'—')+'</div><span class="c5pill n" style="align-self:center">Watch</span></div>'+
-    '<div class="c5row" data-c5m="exp_email"><div class="c5row-main"><div class="c5row-t"><span class="c5pill n" style="margin-right:8px">Accept</span>Residual phishing risk</div><div class="c5row-s">Modeled and falling · within tolerance</div></div><div class="c5row-v">'+(em.connected?em.displayValue:'—')+'</div><span class="c5pill n" style="align-self:center">Reasonable</span></div>'+
-    '</div>';
+  var ec=c5get('exp_identity'),ev=c5get('exp_vendor'),em=c5get('exp_email');var V=c5vendors();var tvName=V.worst?V.worst.name:'your top vendor';
+  var list=[
+    c5dec('cr',1,'Treat the identity gap?','The only principal-risk driver over its appetite share'+(ec.connected?(' — treating it removes '+ec.displayValue):'')+'.',
+      {on:'Treat it — fund the identity fix',osum:(ec.connected?('Biggest single reduction available · −'+ec.displayValue):'The biggest single reduction available'),pros:['Brings the identity category back within its appetite share.','Largest single residual-risk reduction available.'],cons:['Requires funding and a governance push this cycle.']}),
+    c5dec('cr',2,'Third-party concentration — '+tvName,'Within limit but the rating is one to watch.',
+      {on:'Monitor — keep the vendor under watch',osum:'Within limit · rating to watch',pros:['No spend; appropriate for a within-limit risk.'],cons:['A rating slide could push it over — reassess on refresh.']},
+      [{on:'Treat now — add a resilience option',osum:'Backup provider or contractual SLA',pros:['Reduces single-point-of-failure exposure.'],cons:['Cost and vendor-onboarding effort for a within-limit risk.']}]),
+    c5dec('cr',3,'Accept the residual phishing risk?','Modeled and within tolerance — reasonable to accept with a recorded rationale.',
+      {on:'Accept — record the rationale',osum:'Within tolerance · monitored',pros:['Within appetite on current modeling.'],cons:['Requires a recorded risk-acceptance.','Revisit if the phishing signal rises.']},
+      [{on:'Treat — fund awareness / email security',osum:'Extra spend · marginal reduction',pros:['Lowers an already-small residual.'],cons:['Low return per dollar vs. the identity gap.']}])
+  ];
   host.innerHTML=c5header()+
-    c5shell('Decisions for the CRO · what needs your call?','Three risk decisions — one to treat, one to monitor, one to accept.',null,'The risk decisions on your desk, each with its residual, appetite, and a recommendation. Only one needs treating now. Tap any for the full risk picture and source.')+
-    q+
-    c5bl('Bottom line','One risk needs treating today.',null,(ec.connected?('The identity gap is the only principal-risk driver over its appetite share, and treating it is the single biggest reduction available ('+ec.displayValue+'). The other two are appropriately monitored or accepted.'):'The identity gap is the driver over its appetite share, and treating it is the biggest reduction available. The other two are appropriately monitored or accepted.'),{mid:'exp_identity',txt:ec.connected?('Treat the identity risk — removes '+ec.displayValue):'Treat the identity risk'})+
+    c5shell('Decisions for the CRO · what needs your call?','Each risk decision below gives you the options — the recommended call is marked, the choice is yours.',null,'Each carries its residual, appetite and recommendation. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and opens a tracked project in the ticketing system connected at onboarding — whose status is pulled back on refresh.')+
+    c5decisions(list)+
     '<div class="c5foot">Each decision carries its residual, appetite, and source.</div>';
 }
 
@@ -1695,15 +1742,16 @@ function c5coRecovery(){
 function c5coDecisions(){
   var host=document.getElementById('co-decisions');if(!host)return;
   var ec=c5get('exp_identity'),tp=c5get('thirdparty_risk');
-  var q='<div class="c5rank"><div class="c5rank-h">Decision queue · each tied to a critical process</div>'+
-    '<div class="c5row" data-c5m="exp_identity"><div class="c5row-main"><div class="c5row-t"><span class="c5pill b" style="margin-right:8px">Fund</span>Fund the identity fix</div><div class="c5row-s">Protects customer-platform uptime and recovery — your most critical process</div></div><div class="c5row-v">'+(ec.connected?('−'+ec.displayValue):'—')+'</div><span class="c5pill g" style="align-self:center">Recommended</span></div>'+
-    '<div class="c5row" data-c5m="thirdparty_risk"><div class="c5row-main"><div class="c5row-t"><span class="c5pill a" style="margin-right:8px">Mitigate</span>Reduce the vendor single point of failure</div><div class="c5row-s">Falling rating on a critical-process vendor · add resilience</div></div><div class="c5row-v">'+(tp.connected?tp.displayValue:'—')+'</div><span class="c5pill n" style="align-self:center">Advised</span></div>'+
-    '<div class="c5row" data-c5m="coo_bc"><div class="c5row-main"><div class="c5row-t"><span class="c5pill n" style="margin-right:8px">Maintain</span>Continuity plans</div><div class="c5row-s">Tested and current · maintain the cadence</div></div><div class="c5row-v">—</div><span class="c5pill n" style="align-self:center">On track</span></div>'+
-    '</div>';
+  var list=[
+    c5dec('co',1,'Fund the identity fix?','It protects customer-platform uptime and recovery — your most critical process'+(ec.connected?(' ('+ec.displayValue+')'):'')+'.',
+      {on:'Fund it — protect uptime & recovery',osum:(ec.connected?('Protects your most critical process · −'+ec.displayValue):'Protects your most critical process'),pros:['Protects uptime and recovery of the customer platform.','Closes the slowest link in a platform recovery.'],cons:['Requires funding this cycle.']}),
+    c5dec('co',2,'Reduce the vendor single point of failure?','A falling-rated Tier-1 vendor underpins a critical process — add resilience.',
+      {on:'Mitigate — add a backup provider or SLA',osum:'Reduces single-point-of-failure exposure',pros:['Removes a concentration risk to a critical process.'],cons:['Cost and vendor-onboarding effort.']},
+      [{on:'Monitor for now',osum:'Keep the vendor under watch',pros:['No spend now.'],cons:['A rating slide could disrupt operations before you act.']}])
+  ];
   host.innerHTML=c5header()+
-    c5shell('Decisions for the COO · what needs your call?','Two operational calls — one to fund, one to shore up.',null,'The operational cyber decisions on your desk, each tied to a critical process. Tap any for the full picture and source.')+
-    q+
-    c5bl('Bottom line','One call protects what can’t go down.',null,(ec.connected?('Funding the identity fix protects your most critical process — the customer platform — for both uptime and recovery ('+ec.displayValue+' removed). Shoring up the vendor dependency is the next priority.'):'Funding the identity fix protects your most critical process for both uptime and recovery. Shoring up the vendor dependency is the next priority.'),{mid:'exp_identity',txt:'Fund the identity fix — protects uptime'})+
+    c5shell('Decisions for the COO · what needs your call?','Two operational calls — the recommended one is marked, the choice is yours.',null,'Each is tied to a critical process. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and opens a tracked project in the ticketing system connected at onboarding — status pulled back on refresh.')+
+    c5decisions(list)+
     '<div class="c5foot">Each decision links to its critical process and source.</div>';
 }
 
@@ -1778,15 +1826,16 @@ function c5clPrivacy(){
 function c5clDecisions(){
   var host=document.getElementById('cl-decisions');if(!host)return;
   var ec=c5get('exp_identity'),tp=c5get('thirdparty_risk');
-  var q='<div class="c5rank"><div class="c5rank-h">Decision queue · each linked to an obligation, contract or record</div>'+
-    '<div class="c5row" data-c5m="exp_identity"><div class="c5row-main"><div class="c5row-t"><span class="c5pill b" style="margin-right:8px">Support</span>Support the identity fix</div><div class="c5row-s">Reduces your top disclosure trigger, protects platform warranties, and tightens access to personal data</div></div><div class="c5row-v">'+(ec.connected?('−'+ec.displayValue):'—')+'</div><span class="c5pill g" style="align-self:center">Recommended</span></div>'+
-    '<div class="c5row" data-c5m="cl_binding_clock"><div class="c5row-main"><div class="c5row-t"><span class="c5pill n" style="margin-right:8px">Advise</span>Materiality view for the board</div><div class="c5row-s">Nothing currently flagged material · ready for disclosure counsel</div></div><div class="c5row-v">—</div><span class="c5pill n" style="align-self:center">Informational</span></div>'+
-    '<div class="c5row" data-c5m="thirdparty_risk"><div class="c5row-main"><div class="c5row-t"><span class="c5pill a" style="margin-right:8px">Review</span>Vendor indemnity</div><div class="c5row-s">Falling-rated vendor · review the indemnity and exit terms</div></div><div class="c5row-v">'+(tp.connected?tp.displayValue:'—')+'</div><span class="c5pill n" style="align-self:center">Advised</span></div>'+
-    '</div>';
+  var list=[
+    c5dec('cl',1,'Support the identity fix?','One action reduces your top disclosure trigger, protects platform warranties, and tightens access to personal data'+(ec.connected?(' ('+ec.displayValue+')'):'')+'.',
+      {on:'Support it — the highest-leverage legal reducer',osum:(ec.connected?('Reduces three legal exposures at once · −'+ec.displayValue):'Reduces three legal exposures at once'),pros:['Reduces your most probable breach-notification trigger.','Protects platform-tied contractual warranties.','Enforces least-privilege access to personal data.'],cons:['Depends on management funding the fix.']}),
+    c5dec('cl',2,'Review the vendor indemnity?','A falling-rated vendor — review the indemnity and exit terms.',
+      {on:'Review the indemnity & exit terms now',osum:'Contain contractual liability',pros:['Confirms you can recover / exit if the vendor fails.'],cons:['Counsel time; may require renegotiation.']},
+      [{on:'Defer to the contract renewal',osum:'Revisit at renewal',pros:['No action now.'],cons:['Exposure persists if the vendor deteriorates first.']}])
+  ];
   host.innerHTML=c5header()+
-    c5shell('Decisions for the CLO · what needs your call?','One legal call ties them together — plus a materiality view for the board.',null,'The legal and disclosure decisions on your desk. One action reduces your top disclosure, contractual, and privacy exposures at once. Tap any for the full picture and source.')+
-    q+
-    c5bl('Bottom line','One action, three exposures reduced.',null,(ec.connected?('The identity fix reduces your most probable breach-notification trigger, protects the platform-tied warranties, and enforces least-privilege access to personal data ('+ec.displayValue+' removed). It’s the highest-leverage legal risk reducer on your desk.'):'The identity fix reduces your most probable breach-notification trigger, protects the platform-tied warranties, and enforces least-privilege access to personal data. It’s the highest-leverage legal risk reducer on your desk.'),{mid:'exp_identity',txt:'Support the identity fix'})+
+    c5shell('Decisions for the CLO · what needs your call?','The legal calls on your desk — the recommended one is marked, the choice is yours.',null,'One action reduces your top disclosure, contractual and privacy exposures at once. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and opens a tracked matter in the ticketing system connected at onboarding. This surfaces obligations, not legal conclusions.')+
+    c5decisions(list)+
     '<div class="c5foot">Each decision links to its obligation, contract, or record. Not legal advice.</div>';
 }
 
@@ -1859,15 +1908,16 @@ function c5ctSupply(){
 function c5ctDecisions(){
   var host=document.getElementById('ct-decisions');if(!host)return;
   var ec=c5get('exp_identity'),adv=c5get('ct_advisories');
-  var q='<div class="c5rank"><div class="c5rank-h">Decision queue · each tied to a component of the stack</div>'+
-    '<div class="c5row" data-c5m="exp_identity"><div class="c5row-main"><div class="c5row-t"><span class="c5pill b" style="margin-right:8px">Fund</span>Fund the identity fix</div><div class="c5row-s">Closes the biggest architecture gap — the customer platform’s access model</div></div><div class="c5row-v">'+(ec.connected?('−'+ec.displayValue):'—')+'</div><span class="c5pill g" style="align-self:center">Recommended</span></div>'+
-    '<div class="c5row" data-c5m="ct_advisories"><div class="c5row-main"><div class="c5row-t"><span class="c5pill a" style="margin-right:8px">Patch</span>Patch the auth-library advisory</div><div class="c5row-s">High-severity · used by the customer platform</div></div><div class="c5row-v">'+(adv.connected?(adv.displayValue+' open'):'—')+'</div><span class="c5pill a" style="align-self:center">Urgent</span></div>'+
-    '<div class="c5row" data-c5m="ct_modernization"><div class="c5row-main"><div class="c5row-t"><span class="c5pill n" style="margin-right:8px">Maintain</span>Modernization roadmap</div><div class="c5row-s">On track · maintain the cadence</div></div><div class="c5row-v">—</div><span class="c5pill n" style="align-self:center">On track</span></div>'+
-    '</div>';
+  var list=[
+    c5dec('ct',1,'Patch the auth-library advisory?','High-severity advisory'+(adv.connected?(' ('+adv.displayValue+' open)'):'')+' — used by the customer platform. The urgent tactical fix.',
+      {on:'Patch it now — highest-severity, in the critical path',osum:'Closes a known-exploitable path to customers',pros:['Removes an actively-exploitable dependency shipping to customers.','Fast, low-cost tactical fix.'],cons:['Requires a release / regression pass.']},
+      [{on:'Schedule for the next release',osum:'Batch with the next deploy',pros:['Avoids an out-of-band release.'],cons:['Leaves a known-exploitable path open in the interim.']}]),
+    c5dec('ct',2,'Fund the identity fix?','Closes the biggest architecture gap in the stack — the customer platform’s access model'+(ec.connected?(' ('+ec.displayValue+')'):'')+'.',
+      {on:'Fund it — closes & simplifies the access model',osum:(ec.connected?('Largest architecture gap · −'+ec.displayValue):'Largest architecture gap'),pros:['Closes the largest architecture gap and simplifies the access model.','Reduces blast radius across the platform.'],cons:['Larger, multi-sprint effort and cost.']})
+  ];
   host.innerHTML=c5header()+
-    c5shell('Decisions for the CTO · what needs your call?','Two technical calls — one to fund, one to patch.',null,'The technology decisions on your desk, each tied to the stack. Tap any for the full picture and source.')+
-    q+
-    c5bl('Bottom line','One call closes the biggest gap.',null,(ec.connected?('Funding the identity fix closes the largest architecture gap in your stack — the customer platform’s access model ('+ec.displayValue+') — and simplifies it. Patching the auth-library advisory is the urgent tactical fix alongside it.'):'Funding the identity fix closes the largest architecture gap in your stack. Patching the auth-library advisory is the urgent tactical fix alongside it.'),{mid:'exp_identity',txt:'Fund the identity fix — closes the gap'})+
+    c5shell('Decisions for the CTO · what needs your call?','Two technical calls — the recommended one is marked, the choice is yours.',null,'Each is tied to the stack. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and opens a tracked ticket in the system connected at onboarding — status pulled back on refresh.')+
+    c5decisions(list)+
     '<div class="c5foot">Each decision links to its component and source.</div>';
 }
 
@@ -2095,15 +2145,16 @@ function c5cpBacklog(){
 function c5cpDecisions(){
   var host=document.getElementById('cp-decisions');if(!host)return;
   var ec=c5get('exp_identity'),adv=c5get('ct_advisories');
-  var q='<div class="c5rank"><div class="c5rank-h">Decision queue · each tied to a product area</div>'+
-    '<div class="c5row" data-c5m="exp_identity"><div class="c5row-main"><div class="c5row-t"><span class="c5pill b" style="margin-right:8px">Fund</span>Fund the identity/access fix</div><div class="c5row-s">Closes the product’s top security gap, smooths the access experience, and unblocks delivery</div></div><div class="c5row-v">'+(ec.connected?('−'+ec.displayValue):'—')+'</div><span class="c5pill g" style="align-self:center">Recommended</span></div>'+
-    '<div class="c5row" data-c5m="ct_advisories"><div class="c5row-main"><div class="c5row-t"><span class="c5pill a" style="margin-right:8px">Patch</span>Patch the auth-library dependency</div><div class="c5row-s">High-severity · used in the customer platform</div></div><div class="c5row-v">'+(adv.connected?(adv.displayValue+' open'):'—')+'</div><span class="c5pill a" style="align-self:center">Urgent</span></div>'+
-    '<div class="c5row" data-c5m="cp_sbd_coverage"><div class="c5row-main"><div class="c5row-t"><span class="c5pill n" style="margin-right:8px">Maintain</span>Secure-by-design cadence</div><div class="c5row-s">Working well · maintain the gates</div></div><div class="c5row-v">—</div><span class="c5pill n" style="align-self:center">On track</span></div>'+
-    '</div>';
+  var list=[
+    c5dec('cp',1,'Fund the identity / access fix?','Closes the product’s top security gap, smooths the access experience, and unblocks delivery'+(ec.connected?(' ('+ec.displayValue+')'):'')+'.',
+      {on:'Fund it — safer, smoother, faster',osum:(ec.connected?('Three product wins at once · −'+ec.displayValue):'Three product wins at once'),pros:['Closes the product’s top security gap.','Smooths the customer access experience.','Unblocks delivery velocity.'],cons:['Larger cross-team effort and cost.']}),
+    c5dec('cp',2,'Patch the auth-library dependency?','High-severity'+(adv.connected?(' ('+adv.displayValue+' open)'):'')+' — used in the customer platform. Urgent.',
+      {on:'Patch it now',osum:'Closes a known-exploitable dependency',pros:['Removes an actively-exploitable path shipping to customers.','Fast, low-cost fix.'],cons:['Requires a release / regression pass.']},
+      [{on:'Schedule for the next release',osum:'Batch with the next deploy',pros:['Avoids an out-of-band release.'],cons:['Leaves the path open in the interim.']}])
+  ];
   host.innerHTML=c5header()+
-    c5shell('Decisions for the CPO · what needs your call?','One product call does triple duty — safer, smoother, faster.',null,'The product decisions on your desk. One action improves security, customer trust, and delivery velocity at once. Tap any for the full picture and source.')+
-    q+
-    c5bl('Bottom line','One call, three product wins.',null,(ec.connected?('The identity/access fix is the rare decision that makes the product more secure, the experience smoother, and delivery faster — all at once ('+ec.displayValue+' removed). It’s the highest-leverage product-security call on your desk.'):'The identity/access fix is the rare decision that makes the product more secure, the experience smoother, and delivery faster — all at once. It’s the highest-leverage product-security call on your desk.'),{mid:'exp_identity',txt:'Fund the identity/access fix'})+
+    c5shell('Decisions for the CPO · what needs your call?','Product calls on your desk — the recommended one is marked, the choice is yours.',null,'One action improves security, customer trust and delivery velocity at once. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and opens a tracked ticket in the system connected at onboarding — status pulled back on refresh.')+
+    c5decisions(list)+
     '<div class="c5foot">Each decision links to its product area and source.</div>';
 }
 
