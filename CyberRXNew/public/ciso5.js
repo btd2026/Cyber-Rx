@@ -63,13 +63,17 @@
     '.c5tr.up{color:var(--crit);background:rgba(178,58,58,.08)}.c5tr.st{color:var(--ink-2);background:var(--surface-2)}.c5tr.dn{color:var(--good);background:rgba(46,139,107,.08)}',
     '.c5retbar{height:6px;border-radius:4px;background:var(--surface-2);overflow:hidden;margin-top:7px;width:150px}',
     '.c5retbar i{display:block;height:100%;background:var(--good)}.c5retbar i.a{background:var(--warn)}',
-    '.c5attgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}',
-    '.c5att{border:1px solid var(--line);border-radius:10px;padding:11px 12px;cursor:pointer;min-height:60px;display:flex;flex-direction:column;justify-content:space-between}',
-    '.c5att-n{font-size:12px;font-weight:500;line-height:1.25}',
-    '.c5att-c{font-size:11px;margin-top:6px;font-weight:500}',
-    '.c5att.g{background:rgba(46,139,107,.08);border-color:rgba(46,139,107,.3)}',
-    '.c5att.a{background:rgba(201,162,39,.1);border-color:rgba(201,162,39,.4)}',
-    '.c5att.n{background:var(--surface-2);border-color:var(--line)}',
+    '.c5attgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}',
+    '.c5att{position:relative;border:1px solid var(--line);border-radius:12px;padding:13px 14px;cursor:pointer;background:var(--surface);transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;overflow:hidden}',
+    '.c5att::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ac,var(--line));opacity:.9}',
+    '.c5att:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(16,24,40,.10);border-color:var(--ac,var(--line-2))}',
+    '.c5att-h{display:flex;align-items:center;gap:9px;margin-bottom:10px}',
+    '.c5att-ic{display:inline-flex;align-items:center;justify-content:center;width:27px;height:27px;border-radius:8px;flex:none;background:var(--surface-2);background:color-mix(in srgb,var(--ac,var(--muted)) 15%,var(--surface));color:var(--ink-2);color:var(--ac,var(--ink-2))}',
+    '.c5att-ic svg{width:15px;height:15px}',
+    '.c5att-n{font-size:12.5px;font-weight:600;line-height:1.2;color:var(--ink)}',
+    '.c5att-bar{height:6px;border-radius:4px;background:var(--surface-2);overflow:hidden;margin:0 0 8px}',
+    '.c5att-bar i{display:block;height:100%;background:var(--ac,var(--muted));border-radius:4px}',
+    '.c5att-c{font-size:11px;font-weight:600;color:var(--ink-2);color:var(--ac,var(--ink-2))}',
     '.c5band{display:flex;align-items:center;gap:12px;justify-content:space-between;border:1px solid rgba(46,139,107,.3);background:rgba(46,139,107,.06);border-radius:12px;padding:12px 16px;margin-top:14px;cursor:pointer}',
     '.c5band.r{border-color:rgba(178,58,58,.35);background:rgba(178,58,58,.06)}',
     '.c5gap{border:1px solid rgba(201,162,39,.4);background:rgba(201,162,39,.07);border-radius:12px;padding:14px 16px;margin-top:14px}',
@@ -1929,12 +1933,20 @@ function c5Effect(){
 }
 
 /* ---------- Tab 04 — Threats (MITRE ATT&CK) ---------- */
+/* A distinct glyph per MITRE ATT&CK tactic — makes the kill-chain grid scannable. */
+var TACTIC_ICON={'Reconnaissance':'target','Resource Development':'wand','Initial Access':'plug','Execution':'pulse','Persistence':'lock','Privilege Escalation':'trend','Defense Evasion':'bug','Credential Access':'key','Discovery':'database','Lateral Movement':'refresh','Collection':'box','Command & Control':'tower','Exfiltration':'file','Impact':'alert'};
 function c5Threats(){
   var host=document.getElementById('c5-threats');if(!host)return;
   var tactics=(typeof TACTIC_CAPS!=='undefined')?Object.keys(TACTIC_CAPS):[];
   var covered=0,partial=0,partials=[];
-  var cells=tactics.map(function(t){var m=c5get('tac_'+t);var cls=m.state==='covered'?'g':m.state==='partial'?'a':'n';if(m.state==='covered')covered++;if(m.state==='partial'){partial++;partials.push(t);}
-    return '<div class="c5att '+cls+'" data-c5m="tac_'+t+'"><div class="c5att-n">'+t+'</div><div class="c5att-c" style="color:var(--'+(m.color==='ink'?'ink-2':m.color)+')">'+(m.connected?m.displayValue:'not connected')+'</div></div>';
+  var cells=tactics.map(function(t){var m=c5get('tac_'+t);var col=m.state==='covered'?'good':m.state==='partial'?'warn':'muted';
+    if(m.state==='covered')covered++;if(m.state==='partial'){partial++;partials.push(t);}
+    var pct=null;if(m.connected){var mm=String(m.displayValue).match(/(\d+)/);pct=mm?Number(mm[1]):null;}
+    var ic=TACTIC_ICON[t]||'target';
+    return '<div class="c5att" data-c5m="tac_'+t+'" style="--ac:var(--'+col+')" title="'+c5esc(c5tip(m))+'">'+
+      '<div class="c5att-h"><span class="c5att-ic">'+c5icon(ic)+'</span><span class="c5att-n">'+t+'</span></div>'+
+      '<div class="c5att-bar">'+(pct!=null?('<i style="width:'+Math.max(4,Math.min(100,pct))+'%"></i>'):'')+'</div>'+
+      '<div class="c5att-c">'+(m.connected?m.displayValue:'not connected')+'</div></div>';
   }).join('');
   var ts=c5get('threat_status');var ta=sig('threat_actors_active');
   var band='<div class="c5band'+(ts.connected&&/campaign/.test(ts.displayValue)?' r':'')+'" data-c5m="threat_status"><div><b>'+(ts.connected?ts.displayValue:'Connect SIEM for live status')+'</b>'+(ta!=null?(' · '+ta+' sector actor'+(ta>1?'s':'')+' tracked'):'')+'</div><span class="c5chip c5-live">live</span></div>';
@@ -1942,7 +1954,6 @@ function c5Threats(){
   host.innerHTML=c5header()+
     c5shell('Threats · MITRE ATT&CK coverage','Covered across the kill chain — with soft spots where identity controls thin out.',null,'Mapped to MITRE ATT&CK, this heatmap shows your live control coverage per tactic. The partials are the identity techniques your tracked actors favour, and the open route to your customer platform. Each tactic traces to its techniques and your coverage.')+
     band+
-    c5legend([{c:'good',t:'Covered'},{c:'warn',t:'Partial'},{c:'line',t:'Limited / not connected'}])+
     '<div class="c5attgrid">'+cells+'</div>'+
     '<div class="c5foot" style="margin-top:10px">'+covered+' of '+tactics.length+' tactics fully covered'+(partial?(' · '+partial+' partial ('+partials.join(', ').toLowerCase()+')'):'')+'</div>'+
     gap+
