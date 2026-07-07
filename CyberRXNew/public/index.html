@@ -233,7 +233,7 @@
         <div class="nprov-ring">
           <svg width="150" height="150" viewBox="0 0 120 120">
             <circle cx="60" cy="60" r="54" fill="none" stroke="#183a54" stroke-width="7"/>
-            <circle id="np-prog" cx="60" cy="60" r="54" fill="none" stroke="#38BDF8" stroke-width="7" stroke-linecap="round" transform="rotate(-90 60 60)" stroke-dasharray="339.29" stroke-dashoffset="339.29" style="filter:drop-shadow(0 0 5px rgba(56,189,248,.7))"/>
+            <circle id="np-prog" cx="60" cy="60" r="54" fill="none" stroke="#38BDF8" stroke-width="7" stroke-linecap="round" transform="rotate(-90 60 60)" stroke-dasharray="339.29" stroke-dashoffset="339.29" style="filter:drop-shadow(0 0 5px rgba(56,189,248,.7));transition:stroke-dashoffset .55s ease"/>
             <circle id="np-head" cx="60" cy="6" r="4.5" fill="#eaf7ff" style="filter:drop-shadow(0 0 6px #38BDF8)"/>
           </svg>
           <div class="nprov-pct"><div><span class="nprov-num" id="np-num">0</span><span class="nprov-sign">%</span></div></div>
@@ -313,7 +313,11 @@
     function play(opts){opts=opts||{};doneFlag=false;minDone=false;readyFlag=!!opts.ready;pending=opts.onComplete;clearTimeout(t1);clearTimeout(t2);
       try{
         var reduce=reduceMotion(),first=!!opts.firstLaunch&&!reduce;
-        var min=first?4300:900,cap=opts.maxDurationMs||5500;
+        // Let the full reveal animation finish before handing off — the CSS timeline
+        // ends ~4.35s, so hold at least that long (every login, not just the first) so
+        // the effect is never cut short by the page transition. Reduced-motion has no
+        // animation, so a brief hold is enough.
+        var min=reduce?300:4500,cap=opts.maxDurationMs||6500;
         var o=overlay();o.classList.add("show");
         var st=document.getElementById("nbootStatus");if(st)st.textContent=opts.statusText||"Welcome";
         var scr=document.getElementById("nbootScreen");scr.classList.remove("run");void scr.offsetWidth;scr.classList.add("run");
@@ -336,7 +340,9 @@
       {at:85,active:"Running your first control assessment…",done:"Assessment complete"},
       {at:97,active:"Analyzing policies & mapping frameworks…",done:"Frameworks mapped"},
       {at:100,active:"Building your executive views…",done:"Cockpit ready"}];
-    var C=339.29,doneFlag=false,last=0,pending=null,es=null,poll=null,slow=null,muted=false,ctx=null;
+    var C=339.29,doneFlag=false,last=0,pending=null,es=null,poll=null,slow=null,muted=false,ctx=null,startedAt=0;
+    var MIN_ONSCREEN=2600; // let the ring visibly fill even if the backend is instantly done
+    function nowMs(){try{return performance.now();}catch(_){return 0;}}
     function $(id){return document.getElementById(id);}
     function overlay(){return document.getElementById("nprovOverlay");}
     function buildChecklist(){var c=$("np-checks");if(c)c.innerHTML=STAGES.map(function(s,i){return '<div class="nck" id="npck'+i+'"><span class="ic"></span><span>'+s.done+'</span></div>';}).join("");}
@@ -354,10 +360,16 @@
       if((isDone||pr>=100)&&!doneFlag)complete();
     }catch(e){/* swallow — never freeze the screen */}}
     function complete(){if(doneFlag)return;doneFlag=true;
-      try{var stage=$("np-stage");if(stage)stage.textContent="Your cockpit is ready.";var sp=$("np-spin");if(sp)sp.style.display="none";}catch(_){}
-      try{if(!muted)playReadyChime();}catch(_){}
+      // Ensure the ring/checklist have had time to visibly fill before handing off,
+      // even when provisioning is instant — hold to the minimum on-screen time, then
+      // show "ready" + the chime, then a short beat before routing to the cockpit.
+      var elapsed=nowMs()-startedAt, wait=Math.max(0,MIN_ONSCREEN-elapsed);
       cleanup();
-      setTimeout(function(){try{var o=overlay();if(o)o.classList.remove("show");}catch(_){}var cb=pending;pending=null;try{if(typeof cb==="function")cb();}catch(_){}},700);
+      setTimeout(function(){
+        try{var stage=$("np-stage");if(stage)stage.textContent="Your cockpit is ready.";var sp=$("np-spin");if(sp)sp.style.display="none";}catch(_){}
+        try{if(!muted)playReadyChime();}catch(_){}
+        setTimeout(function(){try{var o=overlay();if(o)o.classList.remove("show");}catch(_){}var cb=pending;pending=null;try{if(typeof cb==="function")cb();}catch(_){}},750);
+      },wait);
     }
     function apply(d){try{if(!d)return;if(d.error){showErr("Something went wrong while provisioning.");}render(d.pct,d.done);}catch(_){}}
     function showErr(msg){var n=$("np-note");if(n){n.textContent=msg;n.className="nprov-note err";}var r=$("np-retry");if(r)r.style.display="inline-block";}
@@ -370,7 +382,7 @@
       try{es=new EventSource(surl);es.onmessage=function(e){try{apply(JSON.parse(e.data));}catch(_){}};es.onerror=function(){try{es.close();}catch(_){}es=null;startPoll(purl);};}
       catch(e){startPoll(purl);}
     }
-    function start(opts){opts=opts||{};ctx=opts;pending=opts.onComplete;muted=!!opts.muted;doneFlag=false;last=0;
+    function start(opts){opts=opts||{};ctx=opts;pending=opts.onComplete;muted=!!opts.muted;doneFlag=false;last=0;startedAt=nowMs();
       try{
         var o=overlay();o.classList.add("show");
         var n=$("np-note");if(n){n.textContent="";n.className="nprov-note";}var r=$("np-retry");if(r)r.style.display="none";

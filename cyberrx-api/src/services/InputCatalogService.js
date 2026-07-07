@@ -41,15 +41,34 @@ const CONNECTOR_KEYS = {
   'Incident Mgmt': ['servicenow', 'jira', 'splunk', 'sentinel'],
   'Incident History': ['servicenow', 'splunk', 'sentinel'],
   'Vendor Risk platform': ['auditboard', 'onetrust', 'processunity', 'tprm', 'securityscorecard', 'bitsight'],
+  // --- CEO / CFO / COO / CIO / CTO connectors (map to existing tools where we have them) ---
+  'PMO / Portfolio Mgmt': ['jira', 'servicenow', 'clarity', 'planview'],
+  'CRM': ['salesforce', 'hubspot'],
+  'Customer Support': ['zendesk', 'servicenow', 'intercom'],
+  'APM': ['datadog', 'dynatrace', 'newrelic', 'appdynamics'],
+  'Endpoint Mgmt': ['intune', 'defender', 'jamf'],
+  'Collaboration Platforms': ['m365', 'google_workspace', 'slack'],
+  'Enterprise Architecture Repository': ['leanix', 'ardoq', 'servicenow'],
+  'AppSec Scanners': ['github', 'snyk', 'veracode', 'checkmarx'],
+  'DevSecOps Metrics': ['github'],
+  'CSPM / CWPP': ['wiz', 'prisma', 'aws', 'azure', 'gcp'],
+  'Cloud': ['wiz', 'aws', 'azure', 'gcp'],
+  'Backup Platform': ['rubrik', 'veeam', 'cohesity', 'commvault'],
 };
 
 // DELTA: inputs satisfied by data the platform already holds (not a new connector /
 // register). Predicates read the resolved context's setup_json.
+const has = (a) => Array.isArray(a) && a.length > 0;
 const DERIVED = {
   // Our economics engine is a FAIR-style ALE model — always available once ingested.
   'FAIR': (ctx) => !!(ctx.setup && ctx.setup.economics),
   'Cyber Insurance Policy': (ctx) => !!(ctx.setup && ctx.setup.economics && ctx.setup.economics.insurance && Number(ctx.setup.economics.insurance.limit) > 0),
   'Budget Planning': (ctx) => !!(ctx.setup && ctx.setup.economics && Number(ctx.setup.economics.budget) > 0),
+  // Proxies backed by data we already collect at onboarding.
+  'Corporate Strategy / Strategy Mapping': (ctx) => has(ctx.setup && ctx.setup.strategicInitiatives) || has(ctx.setup && ctx.setup.objectives),
+  'Initiative-to-Application Mapping': (ctx) => has(ctx.setup && ctx.setup.initiatives),
+  'Business Process Inventory': (ctx) => (ctx.connectors && ctx.connectors.has('bpi')) || has(ctx.setup && ctx.setup.bia),
+  'DR Test Results': (ctx) => !!(ctx.setup && ctx.setup.resilience && ctx.setup.resilience.assets),
 };
 
 // A required input that is a document/register → the setup_json field that holds it.
@@ -63,6 +82,9 @@ const DOCUMENT_FIELDS = {
   'Regulatory Register': 'regulatoryRegister',
   'Materiality Criteria': 'materialityCriteria',
   'Benchmark Data': 'benchmarkData',
+  // --- CFO / COO registers ---
+  'Asset Valuation': 'assetValuation',
+  'DR Roadmap': 'drRoadmap',
 };
 
 // Inputs that ship with the product (no customer action) → always satisfied.
@@ -112,7 +134,41 @@ const WIDGETS = {
     { id: 'cro_treatment', label: 'Risks needing treatment vs. acceptance', requires: ['GRC'] },
     { id: 'cro_transfer', label: 'Risk-transfer (insurance) recommendations', requires: ['Cyber Insurance Policy', 'FAIR'] },
   ],
+  // --- CEO ---
+  ceo: [
+    { id: 'ceo_strategic', label: 'Strategic initiatives at risk from cyber', requires: ['PMO / Portfolio Mgmt', 'Corporate Strategy / Strategy Mapping'], optional: ['Initiative-to-Application Mapping', 'CMDB'] },
+    { id: 'ceo_business', label: 'Customer impact from cyber incidents', requires: ['Incident Mgmt', 'CRM'], optional: ['Customer Support'] },
+    { id: 'ceo_decisions', label: 'Cyber decisions requiring CEO approval', requires: ['GRC'] },
+  ],
+  // --- CFO ---
+  cfo: [
+    { id: 'cfo_exposure', label: 'Business value at risk from cyber', requires: ['FAIR', 'BIA (Business Impact Analysis)'], optional: ['Asset Valuation'] },
+    { id: 'cfo_investment', label: 'Investments reducing the most risk', requires: ['PMO / Portfolio Mgmt', 'GRC'] },
+    { id: 'cfo_decisions', label: 'Cyber funding requests', requires: ['PMO / Portfolio Mgmt'] },
+  ],
+  // --- COO ---
+  coo: [
+    { id: 'coo_readiness', label: 'Critical processes at risk from cyber', requires: ['BIA (Business Impact Analysis)', 'Business Process Inventory'], optional: ['CMDB'] },
+    { id: 'coo_recovery', label: 'Ability to recover after a cyber incident', requires: ['DR Test Results', 'Backup Platform'] },
+    { id: 'coo_decisions', label: 'Resilience & recovery investments', requires: ['DR Roadmap'] },
+  ],
+  // --- CIO ---
+  cio: [
+    { id: 'cio_readiness', label: 'Critical apps needing cyber attention', requires: ['APM', 'CMDB'] },
+    { id: 'cio_digital', label: 'Workforce productivity risks from cyber', requires: ['Endpoint Mgmt', 'Collaboration Platforms'] },
+    { id: 'cio_decisions', label: 'Modernization priorities driven by cyber risk', requires: ['Enterprise Architecture Repository'] },
+  ],
+  // --- CTO (rendered on the CPO seat) ---
+  cto: [
+    { id: 'cto_platform', label: 'Core platforms at cyber risk', requires: ['Enterprise Architecture Repository', 'CMDB'], optional: ['APM'] },
+    { id: 'cto_engineering', label: 'Product / software vulns in development', requires: ['AppSec Scanners'], optional: ['DevSecOps Metrics'] },
+    { id: 'cto_cloud', label: 'Cloud workloads creating cyber exposure', requires: ['CSPM / CWPP'], optional: ['Cloud'] },
+    { id: 'cto_decisions', label: 'Architecture remediation priorities', requires: ['Enterprise Architecture Repository', 'GRC'] },
+  ],
 };
+// Note: the three CISO assurance/ops widgets (protection_effectiveness, cyber_operations,
+// executive_actions) already exist in WIDGETS.ciso from Milestone 1 — they are now
+// rendered on their own CISO "Assurance & operations" tab (Program Health owns er_*).
 
 /** All distinct inputs a role's widgets reference (required or optional). */
 function inputsForRole(role) {
@@ -200,11 +256,16 @@ async function contextFor(orgId) {
     const val = setup && setup.document_validation;
     if (val && typeof val === 'object') Object.keys(val).forEach((k) => { if (val[k] === 'invalid') invalid.add(k); });
   } catch (e) { logger.debug('readiness setup read failed', { error: e.message }); }
-  // CMDB is also satisfied by an onboarding inventory import (assets present).
+  // CMDB is satisfied by an onboarding inventory import (assets present); the Business
+  // Process Inventory by imported business processes.
   try {
     const r = await db.query('SELECT COUNT(*)::int AS n FROM assets WHERE organization_id=$1', [orgId]);
     if (r && r[0] && Number(r[0].n) > 0) connectors.add('cmdb');
   } catch (_) { /* no assets table access → leave as-is */ }
+  try {
+    const r = await db.query('SELECT COUNT(*)::int AS n FROM business_processes WHERE organization_id=$1', [orgId]);
+    if (r && r[0] && Number(r[0].n) > 0) connectors.add('bpi');
+  } catch (_) { /* no table access → leave as-is */ }
   return { connectors, setup, invalid };
 }
 
