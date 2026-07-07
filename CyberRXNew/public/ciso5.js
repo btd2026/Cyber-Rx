@@ -2663,9 +2663,12 @@ function c5fwExport(){
 function c5Frameworks(){
   var host=document.getElementById('c5-frameworks');if(!host)return;
   if(typeof seedDemoDocScores==='function'){try{seedDemoDocScores();}catch(_){}}
+  try{c5SetSnapshot();}catch(_){} // populate FW_SNAPSHOT for the community benchmark
   if(typeof FW_SEL==='undefined'){window.FW_SEL='csf';}
   var sel=FW_SEL,cov=(typeof fwDeployedIds==='function')?fwDeployedIds():{};
   var T=c5fwTree(sel,cov);
+  // Stash for the community-benchmark panel (compares THIS framework's maturity).
+  window.C5FW_OVERALL=T.overall;window.C5FW_GROUPS=T.groups;
   // default deep-link: identity path expanded, PR.AA-03 selected (CSF only)
   if(C5FW_EXP==null){if(sel==='csf'){C5FW_EXP={PR:1,'PR.AA':1};}else{C5FW_EXP={};if(T.groups[0])C5FW_EXP[T.groups[0].id]=1;}}
   if(C5FW_CTRL==null&&sel==='csf'){C5FW_CTRL='PR.AA-03';}
@@ -2703,9 +2706,11 @@ function c5Frameworks(){
     cards+
     xnote+
     '<div class="c5fw-wrap"><div class="c5fw-left" id="c5fw-detail">'+c5fwFinding(sel,selNode)+'</div><div class="c5fw-right">'+tree+'</div></div>'+
-    '<div class="c5foot">CMMI 0 None · 1 Initial · 2 Managed · 3 Defined · 4 Quant. Managed · 5 Optimizing. Meets target ≥ '+C5FW_TARGET.toFixed(1)+' (green) · Observation ≥ '+C5FW_FLOOR+' (amber) · Deficiency &lt; '+C5FW_FLOOR+' (red). Documented to AICPA rigor; continuous management self-assessment, not an independent audit opinion. CIS by number/title/mapping only; SOC 2 by criterion ID.</div>';
+    '<div class="c5foot">CMMI 0 None · 1 Initial · 2 Managed · 3 Defined · 4 Quant. Managed · 5 Optimizing. Meets target ≥ '+C5FW_TARGET.toFixed(1)+' (green) · Observation ≥ '+C5FW_FLOOR+' (amber) · Deficiency &lt; '+C5FW_FLOOR+' (red). Documented to AICPA rigor; continuous management self-assessment, not an independent audit opinion. CIS by number/title/mapping only; SOC 2 by criterion ID.</div>'+
+    '<div id="c5fwPeer" style="margin-top:24px"></div>';
   // record cadence snapshot
   if(typeof fwRecord==='function'){try{fwRecord(T.overall);}catch(_){}}
+  try{c5fwPeerRender();}catch(_){}
   // wiring
   host.querySelectorAll('[data-c5fwsel]').forEach(function(b){b.onclick=function(){window.FW_SEL=b.getAttribute('data-c5fwsel');C5FW_EXP=null;C5FW_CTRL=null;c5Frameworks();};});
   host.querySelectorAll('[data-c5fwcad]').forEach(function(b){b.onclick=function(){try{localStorage.setItem('cyberrx_audit_cadence',b.getAttribute('data-c5fwcad'));}catch(_){}c5Frameworks();};});
@@ -2750,6 +2755,112 @@ function c5fwInspect(card,T,sel,cad){
       note:(T.failing>0?(T.failing+' control'+(T.failing>1?'s':'')+' below CMMI '+C5FW_FLOOR+'. Tap a red control in the register for its finding, or Generate the auditor pack for the full deficiency list.'):'No controls below the deficiency floor.')});
   }
   c5InspectObj(m);
+}
+/* ===== DTNKShield community benchmark (inside the Frameworks tab) =====
+   Anonymous, opt-in, per-framework peer comparison — the only feature that
+   reaches the internet. Flow: preview exactly what would be shared → verify →
+   share; the org's own row is always labeled "My Organization" and its real
+   name never leaves the browser. Reuses the existing peer endpoints + helpers. */
+var C5PEER_CAT='industry',C5PEER_PREVIEW=false,C5FW_PEER=null,C5FW_PEER_BUSY=false;
+function c5peerCats(){return [{k:'industry',l:'My industry'},{k:'fortune100',l:'Fortune 100'},{k:'fortune500',l:'Fortune 500'},{k:'bcbs',l:'Banking · BCBS'},{k:'insurance',l:'Insurance'}];}
+/* Category → the BENCHMARK QUERY filter only. The submitted row always carries
+   the org's real tags (industry/size), so it is discoverable in its natural
+   cohorts; the category just changes which cohort we read back. Empty industry/
+   size means "don't filter on it" (backend omits the clause). */
+function c5peerCatQuery(cat){
+  var ind=(typeof indKey==='function')?indKey():'';
+  var size=(typeof peerSizeBand==='function')?peerSizeBand():'';
+  if(cat==='fortune100')return {industry:'',size:'mega',label:'Fortune 100 · $100B+ revenue'};
+  if(cat==='fortune500')return {industry:'',size:'large',label:'Fortune 500 · $10B+ revenue'};
+  if(cat==='bcbs')return {industry:'banking',size:'',label:'Banking · Basel (BCBS) institutions'};
+  if(cat==='insurance')return {industry:'insurance',size:'',label:'Insurance carriers'};
+  return {industry:ind,size:size,label:((typeof indLabel==='function')?indLabel():'your industry')+' peers'};
+}
+function c5peerShared(){
+  var sel=(typeof FW_SEL!=='undefined')?FW_SEL:'csf';
+  var fwName=(typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'framework';
+  var over=(window.C5FW_OVERALL!=null)?(Number(window.C5FW_OVERALL).toFixed(1)+' / 5'):'—';
+  var q=c5peerCatQuery(C5PEER_CAT);
+  var fns=(window.FW_SNAPSHOT&&window.FW_SNAPSHOT.functions)||{};
+  var fnStr=Object.keys(fns).length?Object.keys(fns).map(function(k){return k+' '+Number(fns[k]).toFixed(1);}).join(' · '):'—';
+  return [
+    {k:'Organization',v:'My Organization',note:'your real name never leaves your browser'},
+    {k:'Compared against',v:q.label},
+    {k:'Industry',v:(typeof indLabel==='function')?indLabel():'—'},
+    {k:'Region',v:(typeof peerRegion==='function')?peerRegion():'global'},
+    {k:'Revenue band',v:(typeof peerSizeLabel==='function')?peerSizeLabel():'—'},
+    {k:'Framework',v:fwName},
+    {k:'Overall maturity',v:over},
+    {k:'By function (CMMI)',v:fnStr}
+  ];
+}
+function c5fwPeerFetch(){
+  if(!(typeof peerOptin==='function'&&peerOptin()))return;
+  var over=(window.C5FW_OVERALL!=null)?window.C5FW_OVERALL:((window.FW_SNAPSHOT||{}).overall);
+  if(over==null)return;
+  var q=c5peerCatQuery(C5PEER_CAT),sel=(typeof FW_SEL!=='undefined')?FW_SEL:'csf';
+  var fns=(window.FW_SNAPSHOT&&window.FW_SNAPSHOT.functions)||{};
+  C5FW_PEER_BUSY=true;C5FW_PEER=null;c5fwPeerRender();
+  // Submit with the org's REAL identity tags (not the category filter).
+  var body={client_id:(typeof peerCid==='function')?peerCid():'anon',industry:(typeof indKey==='function')?indKey():'',region:(typeof peerRegion==='function')?peerRegion():'global',revenue:(typeof peerRevenue==='function')?peerRevenue():0,category:C5PEER_CAT,framework:sel,overall_cmmi:over,function_cmmi:fns};
+  var base=(typeof apiBase==='function')?apiBase():'';
+  fetch(base+'/api/peer/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+    .then(function(){return fetch(base+'/api/peer/benchmark?industry='+encodeURIComponent(q.industry)+'&size='+encodeURIComponent(q.size)+'&framework='+encodeURIComponent(sel)+'&category='+encodeURIComponent(C5PEER_CAT));})
+    .then(function(r){return r.json();})
+    .then(function(d){C5FW_PEER=d||{sufficient:false};C5FW_PEER_BUSY=false;c5fwPeerRender();})
+    .catch(function(){C5FW_PEER={error:true};C5FW_PEER_BUSY=false;c5fwPeerRender();});
+}
+function c5fwPeerRender(){
+  var host=document.getElementById('c5fwPeer');if(!host)return;
+  var sel=(typeof FW_SEL!=='undefined')?FW_SEL:'csf';
+  var fwName=(typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'this framework';
+  var over=(window.C5FW_OVERALL!=null)?Number(window.C5FW_OVERALL):null;
+  var optedIn=(typeof peerOptin==='function')&&peerOptin();
+  var minC=(typeof PEER_MIN!=='undefined')?PEER_MIN:5;
+  var head='<div class="peer-head"><div class="ck">Community benchmark · how do we compare?</div><span class="peer-badge">DTNKShield portal</span></div>';
+  var body='';
+  if(!optedIn&&!C5PEER_PREVIEW){
+    body='<div class="cn" style="margin-top:8px;line-height:1.55">See how your <b>'+fwName+'</b> maturity compares to the DTNKShield community — anonymously. This is the <b>only</b> feature that reaches the internet. If you share, only your <b>anonymized scores</b> and cohort tags (industry, region, revenue band) leave your browser — <b>no organization name, no inventory, no dollar figures</b>. The comparison unlocks once at least '+minC+' organizations have joined a cohort, so no single peer can be identified.</div>'+
+      '<div style="margin-top:12px"><button class="c5btn" id="c5peerPreview">Preview what would be shared →</button></div>';
+  } else if(!optedIn&&C5PEER_PREVIEW){
+    var rows=c5peerShared().map(function(f){return '<tr><td style="padding:6px 10px;color:var(--ink-2);white-space:nowrap">'+f.k+'</td><td style="padding:6px 10px;font-weight:600">'+f.v+(f.note?(' <span style="font-weight:400;color:var(--muted)">— '+f.note+'</span>'):'')+'</td></tr>';}).join('');
+    body='<div class="cn" style="margin-top:8px">This is <b>exactly</b> what would be shared — review it before anything leaves your browser:</div>'+
+      '<table class="itbl" style="margin-top:10px;width:100%"><tbody>'+rows+'</tbody></table>'+
+      '<div class="c5kanon" style="margin-top:12px">'+c5icon('lock')+'<div>Shared anonymously under a random ID. No organization name, inventory, IP addresses or dollar figures are included. You can opt out any time — opting out deletes your shared row.</div></div>'+
+      '<div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;align-items:center"><button class="c5btn" id="c5peerConfirm">Confirm &amp; share anonymously →</button><button class="peer-toggle" id="c5peerCancel">Cancel</button></div>';
+  } else {
+    var cats='<div class="c5fw-pills" style="margin-top:10px">'+c5peerCats().map(function(c){return '<button class="c5fw-pill'+(C5PEER_CAT===c.k?' on':'')+'" data-c5peercat="'+c.k+'">'+c.l+'</button>';}).join('')+'</div>';
+    var q=c5peerCatQuery(C5PEER_CAT);
+    var cmp;
+    if(C5FW_PEER_BUSY||!C5FW_PEER){cmp='<div class="cn" style="margin-top:14px;color:var(--muted)">⟳ Contacting the DTNKShield '+q.label+' cohort…</div>';if(!C5FW_PEER&&!C5FW_PEER_BUSY){c5fwPeerFetch();return;}}
+    else if(C5FW_PEER.error){cmp='<div class="cn" style="margin-top:14px;color:var(--warn)">Couldn’t reach the DTNKShield portal. Nothing beyond your anonymized scores was shared. <button class="peer-toggle" id="c5peerRetry">try again</button></div>';}
+    else if(!C5FW_PEER.sufficient){var got=C5FW_PEER.n||0,need=C5FW_PEER.minCohort||minC;
+      cmp='<div class="peer-hero"><div><div class="peer-hero-l">Building your cohort</div><div class="peer-hero-d" style="margin-top:6px">Your scores are shared. The '+q.label+' comparison unlocks once <b>'+need+'</b> organizations have joined — so no single one can be identified.</div></div><div class="peer-n"><b>'+got+' / '+need+'</b>joined</div></div>';}
+    else{
+      var pctile=(typeof peerPercentileOf==='function')?peerPercentileOf(over,C5FW_PEER.overall_values):null;
+      var ordCol=pctile==null?'ink':(pctile>=50?'good':(pctile>=25?'warn':'crit'));
+      var hero='<div class="peer-hero"><div><div class="peer-hero-l">My Organization · '+fwName+' vs '+q.label+'</div><div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:2px"><div class="peer-hero-v" style="color:var(--'+((typeof cmmiColor==='function')?cmmiColor(Math.round(over||0)):'ink')+')">'+(over!=null?Number(over).toFixed(1):'—')+'<span>/ 5</span></div>'+
+        (pctile!=null?'<div class="peer-hero-d">You rank in the <b style="color:var(--'+ordCol+')">'+((typeof peerOrdinal==='function')?peerOrdinal(pctile):pctile)+' percentile</b> — '+(pctile>=50?'ahead of':'behind')+' the cohort median of '+Number(C5FW_PEER.overall.p50).toFixed(1)+'.</div>':'')+'</div></div><div class="peer-n"><b>'+(C5FW_PEER.n||0)+'</b>in cohort</div></div>';
+      var bars='<div style="margin-top:12px">'+((typeof peerBar==='function')?peerBar('Overall',over,C5FW_PEER.overall):'');
+      var fns=C5FW_PEER.functions||{},snap=(window.FW_SNAPSHOT&&window.FW_SNAPSHOT.functions)||{},order=['Govern','Identify','Protect','Detect','Respond','Recover'];
+      order.forEach(function(fn){if(fns[fn]&&typeof peerBar==='function')bars+=peerBar(fn,snap[fn],fns[fn]);});
+      bars+='</div>';
+      var legend='<div class="peer-legend" style="margin-top:6px"><span><i style="background:var(--blue-soft);border:1px solid rgba(37,99,235,.35)"></i>cohort band (p25–p75)</span><span><i style="background:var(--blue);width:2px"></i>cohort median</span><span><i style="background:var(--good)"></i>My Organization ≥ median</span><span><i style="background:var(--crit)"></i>below 25th</span></div>';
+      cmp=hero+bars+legend;
+    }
+    body='<div class="cn" style="margin-top:6px">Comparing <b>My Organization</b>’s '+fwName+' maturity against the DTNKShield community. Pick a cohort:</div>'+cats+
+      '<div style="margin-top:6px">'+cmp+'</div>'+
+      '<div style="margin-top:12px;display:flex;gap:14px;flex-wrap:wrap;align-items:center"><button class="c5btn" id="c5peerPull">↻ Pull latest comparison</button><button class="peer-toggle" id="c5peerOptout">opt out &amp; delete my shared row</button></div>';
+  }
+  host.innerHTML='<div class="card">'+head+body+'</div>';
+  var g=function(id){return document.getElementById(id);},b;
+  if(b=g('c5peerPreview'))b.onclick=function(){C5PEER_PREVIEW=true;c5fwPeerRender();};
+  if(b=g('c5peerCancel'))b.onclick=function(){C5PEER_PREVIEW=false;c5fwPeerRender();};
+  if(b=g('c5peerConfirm'))b.onclick=function(){C5PEER_PREVIEW=false;if(typeof peerSetOptin==='function')peerSetOptin(true);c5fwPeerFetch();};
+  if(b=g('c5peerPull'))b.onclick=function(){c5fwPeerFetch();};
+  if(b=g('c5peerRetry'))b.onclick=function(){c5fwPeerFetch();};
+  if(b=g('c5peerOptout'))b.onclick=function(){if(typeof peerSetOptin==='function')peerSetOptin(false);C5FW_PEER=null;C5PEER_PREVIEW=false;c5fwPeerRender();};
+  host.querySelectorAll('[data-c5peercat]').forEach(function(x){x.onclick=function(){C5PEER_CAT=x.getAttribute('data-c5peercat');c5fwPeerFetch();};});
 }
 function c5fwCtlRow(c){var col=c5fwCol(c.score),selc=(C5FW_CTRL===c.id)?' sel':'';
   var mapped=(c.mapped&&c.mapped.length)?('<div class="c5fw-map">mapped ← '+c.mapped.slice(0,6).map(function(id){return id;}).join(' · ')+'</div>'):'';
