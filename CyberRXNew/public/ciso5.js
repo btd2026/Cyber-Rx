@@ -316,8 +316,8 @@ function c5get(id){
       //       criticality. exposure weighted by service_criticality. OUTPUT
       //       [vendor/component, rating/finding, service_criticality, exposure]; sort desc.
       var sbomVuln=sbom.reduce(function(s,c){return s+(Number(c.critical_vulns)||0);},0);
-      var rowsV=((Vtp.p&&Vtp.p.vendors)?Vtp.p.vendors.slice(0,5):[]).map(function(v){return {name:v.name,value:(v.score!=null?v.score+'/100':'—')+' · service-crit '+(v.service_criticality||'—'),color:(v.color||capColor(v.score)),source:(Vtp.vs?Vtp.vs.vendor:'monitoring service')+' × service criticality'};});
-      if(sbom.length)rowsV.push({name:'SBOM components',value:sbomVuln+' critical vuln'+(sbomVuln===1?'':'s')+' across '+sbom.length+' component'+(sbom.length===1?'':'s'),color:(sbomVuln>0?'warn':'good'),source:'SBOM · vulnerable_components'});
+      var rowsV=((Vtp.p&&Vtp.p.vendors)?Vtp.p.vendors.slice(0,5):[]).map(function(v){return {name:v.name,value:(v.score!=null?(v.score+'/100'):'—')+(v.service_criticality?(' · '+v.service_criticality+' service'):''),color:(v.color||capColor(v.score)),source:(Vtp.vs?Vtp.vs.vendor:'security rating')};});
+      if(sbom.length)rowsV.push({name:'Software components',value:sbomVuln+' critical vuln'+(sbomVuln===1?'':'s')+' across '+sbom.length+' component'+(sbom.length===1?'':'s'),color:(sbomVuln>0?'warn':'good'),source:'SBOM'});
       return c5obj({id:id,name:'Third-party / supply-chain cyber exposure',connected:conn,
         displayValue:conn?((ntp>0?(ntp+' vendor'+(ntp>1?'s':'')+' flagged'):'Vendors adequate')+(sbomVuln>0?(' · '+sbomVuln+' SBOM vuln'+(sbomVuln===1?'':'s')):'')):'—',
         label:(Vtp.p&&Vtp.p.any_live)?'live':'modeled',color:conn?((ntp>0||sbomVuln>0)?'warn':'good'):'muted',
@@ -1216,7 +1216,7 @@ function c5InspectObj(m){
     h+='<div class="ev-sec">Not connected yet</div><div class="drill-p">This value populates once you connect '+src+'. Until then Nerion shows the honest not-connected state — never a placeholder number.</div>';
     if(m.formula)h+='<div class="ev-sec">What would populate it</div><div class="formula">'+m.formula+'</div>';
     // Name the exact source(s) so it is never ambiguous WHAT to connect.
-    if(m.sources&&m.sources.length)h+='<div class="ev-sec">Where it will come from</div>'+m.sources.map(function(s){return '<div class="src-row"><span class="sd"></span><b>'+s.tool+'</b>'+(s.connector?(' · connector <code>'+s.connector+'</code>'):'')+(s.field?(' · field <code>'+s.field+'</code>'):'')+'</div>';}).join('');
+    if(m.sources&&m.sources.length)h+='<div class="ev-sec">Where it will come from</div>'+m.sources.map(function(s){return '<div class="src-row"><span class="sd"></span><b>'+s.tool+'</b></div>';}).join('');
     if(m.connectTool)h+='<div style="margin-top:12px"><button class="c5btn" onclick="c5Connect(\''+String(m.connectTool).replace(/'/g,'')+'\')">Connect '+m.connectTool+'</button></div>';
   } else {
     h+='<div class="ev-sec">How it’s computed</div><div class="formula">'+(m.formula||'—')+'</div>';
@@ -1228,7 +1228,7 @@ function c5InspectObj(m){
       var dot=i.color?('<span class="c5sq '+c5sqClass(i.color)+'" style="display:inline-block;width:9px;height:9px;margin-right:7px;vertical-align:middle"></span>'):'';
       return '<tr><td>'+dot+i.name+'</td><td class="v">'+i.value+'</td><td class="src">'+i.source+'</td></tr>';
     }).join('')+'</tbody></table>';
-    if(m.sources&&m.sources.length){h+='<div class="ev-sec">Sources</div>'+m.sources.map(function(s){return '<div class="src-row"><span class="sd"></span><b>'+s.tool+'</b> · connector <code>'+s.connector+'</code> · field <code>'+s.field+'</code> · refreshed '+s.lastRefresh+'</div>';}).join('');}
+    if(m.sources&&m.sources.length){h+='<div class="ev-sec">Sources</div>'+m.sources.map(function(s){return '<div class="src-row"><span class="sd"></span><b>'+s.tool+'</b>'+(s.lastRefresh?('<span style="color:var(--muted)"> · as of '+s.lastRefresh+'</span>'):'')+'</div>';}).join('');}
     h+='<div class="ev-sec">Why it matters</div><div class="conf">'+(m.note||'')+'</div>';
     h+='<div class="c5foot">as of '+c5ago()+' · label: '+m.label+'</div>';
   }

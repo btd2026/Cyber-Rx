@@ -321,7 +321,9 @@
         var o=overlay();o.classList.add("show");
         var st=document.getElementById("nbootStatus");if(st)st.textContent=opts.statusText||"Welcome";
         var scr=document.getElementById("nbootScreen");scr.classList.remove("run");void scr.offsetWidth;scr.classList.add("run");
-        if(!reduce&&first&&!opts.muted){try{playWelcomeChime();}catch(_){}}
+        // Play the chime whenever the full reveal plays (every login) — not only the
+        // first — so the intro always has sound unless muted / reduced-motion.
+        if(!reduce&&!opts.muted){try{playWelcomeChime();}catch(_){}}
         t1=setTimeout(function(){minDone=true;maybe();},min);
         t2=setTimeout(finish,cap);                       // hard watchdog — always fires
       }catch(e){finish();}
