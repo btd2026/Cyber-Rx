@@ -319,6 +319,8 @@ app.use('/api/provisioning',      require('./routes/provisioning'));
 // Input → widget readiness (C-Suite dashboards): per-role gating + "connecting X
 // unlocks N widgets". Low-sensitivity read; same optional-auth + demo-org posture.
 app.use('/api/readiness',         [apiGetLimiter], require('./routes/readiness'));
+// DELTA Board / CLO / CRO oversight tiles (additive; gated + adapter-backed).
+app.use('/api/dashboards',        [apiGetLimiter], require('./routes/dashboards'));
 app.use('/api/onboarding',        [apiGetLimiter, apiPostLimiter], require('./routes/onboarding'));
 app.use('/api/control-library',   [apiGetLimiter], require('./routes/control-library'));
 

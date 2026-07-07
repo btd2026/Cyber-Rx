@@ -31,6 +31,25 @@ const CONNECTOR_KEYS = {
   'Threat Intelligence': ['recordedfuture', 'otx', 'cisa', 'mandiant', 'anomali'],
   'Vendor Risk / TPRM': ['auditboard', 'onetrust', 'processunity', 'tprm'],
   'Vulnerability Management': ['qualys', 'tenable'],
+  // --- DELTA: Board / CLO / CRO connectors ---
+  'ERM Platform': ['erm', 'archer', 'servicenow_grc'],
+  'Legal Matter Mgmt': ['legal_matter'],
+  'Contract Lifecycle Mgmt': ['contract_lifecycle'],
+  'Privacy Platform': ['onetrust', 'trustarc'],
+  'Internal Audit Mgmt': ['internal_audit', 'servicenow_grc'],
+  'Data Classification': ['data_classification'],
+  'Incident Mgmt': ['servicenow', 'jira', 'splunk', 'sentinel'],
+  'Incident History': ['servicenow', 'splunk', 'sentinel'],
+  'Vendor Risk platform': ['auditboard', 'onetrust', 'processunity', 'tprm', 'securityscorecard', 'bitsight'],
+};
+
+// DELTA: inputs satisfied by data the platform already holds (not a new connector /
+// register). Predicates read the resolved context's setup_json.
+const DERIVED = {
+  // Our economics engine is a FAIR-style ALE model — always available once ingested.
+  'FAIR': (ctx) => !!(ctx.setup && ctx.setup.economics),
+  'Cyber Insurance Policy': (ctx) => !!(ctx.setup && ctx.setup.economics && ctx.setup.economics.insurance && Number(ctx.setup.economics.insurance.limit) > 0),
+  'Budget Planning': (ctx) => !!(ctx.setup && ctx.setup.economics && Number(ctx.setup.economics.budget) > 0),
 };
 
 // A required input that is a document/register → the setup_json field that holds it.
@@ -39,6 +58,11 @@ const DOCUMENT_FIELDS = {
   'BIA (Business Impact Analysis)': 'bia',
   'Business Capability Map': 'capabilities',
   'SBOM': 'sbom',
+  // --- DELTA registers ---
+  'Risk Appetite Statements': 'riskAppetite',
+  'Regulatory Register': 'regulatoryRegister',
+  'Materiality Criteria': 'materialityCriteria',
+  'Benchmark Data': 'benchmarkData',
 };
 
 // Inputs that ship with the product (no customer action) → always satisfied.
@@ -56,6 +80,38 @@ const WIDGETS = {
     { id: 'cyber_operations', label: 'Active business-impacting incidents', requires: ['SIEM', 'Incident Mgmt / ITSM'], optional: ['SOAR'] },
     { id: 'executive_actions', label: 'Highest-value remediation actions', requires: ['GRC'] },
   ],
+  // --- DELTA: Board of Directors / Risk Committee (oversight — aggregate only) ---
+  board: [
+    { id: 'board_posture', label: 'Cyber risk posture vs. board-approved appetite', requires: ['ERM Platform', 'GRC', 'Risk Appetite Statements'] },
+    { id: 'board_toprisks', label: 'Are the top cyber risks being managed effectively', requires: ['GRC'] },
+    { id: 'board_trend', label: 'Direction of enterprise cyber risk over time', requires: ['GRC'], optional: ['ERM Platform', 'Incident History'] },
+    { id: 'board_material', label: 'Material incidents requiring board awareness / disclosure', requires: ['Incident Mgmt', 'Materiality Criteria'], optional: ['Legal Matter Mgmt'] },
+    { id: 'board_regexposure', label: 'Regulatory & compliance exposure from cyber', requires: ['GRC', 'Regulatory Register'] },
+    { id: 'board_insurance', label: 'Cyber insurance coverage vs. estimated exposure', requires: ['FAIR', 'Cyber Insurance Policy'] },
+    { id: 'board_assurance', label: 'Independent assurance on cyber (audit results)', requires: ['Internal Audit Mgmt'], optional: ['GRC'] },
+    { id: 'board_accountability', label: 'Management accountability for remediation', requires: ['GRC'] },
+    { id: 'board_investment', label: 'Adequacy of cyber investment vs. benchmark', requires: ['Budget Planning', 'Benchmark Data'], optional: ['GRC'] },
+  ],
+  // --- DELTA: CLO — Chief Legal Officer ---
+  clo: [
+    { id: 'clo_breach', label: 'Potential breach-notification obligations', requires: ['Incident Mgmt', 'Data Classification', 'Legal Matter Mgmt'] },
+    { id: 'clo_regexposure', label: 'Regulatory exposure arising from cyber risk', requires: ['GRC', 'Regulatory Register'] },
+    { id: 'clo_contracts', label: 'Contractual & SLA cyber obligations at risk', requires: ['Contract Lifecycle Mgmt'], optional: ['Vendor Risk platform'] },
+    { id: 'clo_litigation', label: 'Cyber-related litigation & liability risk', requires: ['Legal Matter Mgmt'], optional: ['Incident History'] },
+    { id: 'clo_privacy', label: 'Data-privacy exposure from cyber gaps', requires: ['Privacy Platform'], optional: ['Data Classification'] },
+    { id: 'clo_disclosure', label: 'Disclosure decisions requiring legal review', requires: ['GRC', 'Incident Mgmt'] },
+    { id: 'clo_regresponse', label: 'Regulatory response priorities for cyber', requires: ['Regulatory Register', 'GRC'] },
+  ],
+  // --- DELTA: CRO — Chief Risk Officer ---
+  cro: [
+    { id: 'cro_appetite', label: 'Cyber risk vs. enterprise risk appetite', requires: ['ERM Platform', 'GRC', 'Risk Appetite Statements'] },
+    { id: 'cro_toprisks', label: 'Top cyber risks in the enterprise risk register', requires: ['ERM Platform', 'GRC'] },
+    { id: 'cro_concentration', label: 'Concentrations & correlations of cyber risk', requires: ['ERM Platform', 'FAIR'] },
+    { id: 'cro_quantified', label: 'Quantified cyber loss exposure (ALE)', requires: ['FAIR', 'Incident History', 'BIA (Business Impact Analysis)'] },
+    { id: 'cro_trend', label: 'Cyber risk trend vs. tolerance thresholds', requires: ['ERM Platform', 'FAIR'] },
+    { id: 'cro_treatment', label: 'Risks needing treatment vs. acceptance', requires: ['GRC'] },
+    { id: 'cro_transfer', label: 'Risk-transfer (insurance) recommendations', requires: ['Cyber Insurance Policy', 'FAIR'] },
+  ],
 };
 
 /** All distinct inputs a role's widgets reference (required or optional). */
@@ -71,6 +127,7 @@ function inputsForRole(role) {
 /** Classify an input by type. */
 function typeOf(input) {
   if (BUILTIN.has(input)) return 'builtin';
+  if (DERIVED[input]) return 'derived';
   if (DOCUMENT_FIELDS[input]) return 'document';
   if (CONNECTOR_KEYS[input]) return 'connector';
   return 'unknown';
@@ -85,6 +142,7 @@ function typeOf(input) {
 function statusOf(input, ctx) {
   const c = ctx || {};
   if (BUILTIN.has(input)) return 'connected';
+  if (DERIVED[input]) return DERIVED[input](c) ? 'connected' : 'missing';
   if (c.invalid && c.invalid.has(input)) return 'invalid';
   const doc = DOCUMENT_FIELDS[input];
   if (doc) {
@@ -157,6 +215,6 @@ async function readiness(orgId, role) {
 }
 
 module.exports = {
-  CONNECTOR_KEYS, DOCUMENT_FIELDS, BUILTIN, WIDGETS,
+  CONNECTOR_KEYS, DOCUMENT_FIELDS, DERIVED, BUILTIN, WIDGETS,
   inputsForRole, typeOf, statusOf, readinessFrom, contextFor, readiness,
 };

@@ -13,6 +13,7 @@ var SEATS = {
    +sec('03','Trend','','<div id="bd-trend"></div>')
    +sec('04','Investment','','<div id="bd-investment"></div>')
    +sec('05','Governance','','<div id="bd-governance"></div>')
+   +sec('06','Risk oversight','','<div id="delta-board"></div>')
   );}
  },
 
@@ -55,6 +56,7 @@ var SEATS = {
    +sec('03','Contracts','','<div id="cl-contracts"></div>')
    +sec('04','Privacy','','<div id="cl-privacy"></div>')
    +sec('05','Decisions','','<div id="cl-decisions"></div>')
+   +sec('06','Legal & regulatory exposure','','<div id="delta-clo"></div>')
   );}
  },
 
@@ -69,6 +71,7 @@ var SEATS = {
    +sec('03','Assurance','','<div id="cr-assurance"></div>')
    +sec('04','Trend & ownership','','<div id="cr-trend"></div>')
    +sec('05','Decisions','','<div id="cr-decisions"></div>')
+   +sec('06','Enterprise risk posture','','<div id="delta-cro"></div>')
   );}
  },
 
