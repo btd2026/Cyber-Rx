@@ -10,6 +10,7 @@ const db = require('../utils/db');
 const logger = require('../utils/logger');
 const Analysis = require('../services/crownjewels/AnalysisRunService');
 const CrownJewelEngine = require('../services/crownjewels/CrownJewelEngine');
+const CrownJewelRisk = require('../services/CrownJewelRiskService');
 const IngestMapper = require('../services/crownjewels/IngestMapper');
 const Asset = require('../models/Asset');
 const BusinessProcess = require('../models/BusinessProcess');
@@ -193,6 +194,34 @@ router.post('/ingest', optionalJWT, async (req, res) => {
           .map((c) => ({ name: String(c.name).slice(0, 140), exposure_usd: money(c.exposure_usd), grc_status: c.grc_status ? String(c.grc_status).slice(0, 20) : null }))
       : [];
 
+    // CISO registers (documents) — Crown Jewel Register, BIA, SBOM. Normalized to a
+    // defined internal schema; a `document_validation` map records provided/invalid so
+    // the readiness gate treats a malformed upload as not-satisfied.
+    const documentValidation = {};
+    const normReg = (arr, shape, key) => {
+      if (!Array.isArray(arr) || !arr.length) return [];
+      const rows = arr.filter((x) => x && (x.name || x.asset || x.component)).slice(0, 500).map(shape);
+      documentValidation[key] = rows.length ? 'provided' : 'invalid';
+      return rows;
+    };
+    const crownJewelRegister = normReg(b.crownJewelRegister, (c, i) => ({
+      asset_id: String(c.asset_id || c.id || ('cj_' + i)).slice(0, 80),
+      name: String(c.name || c.asset || ('Asset ' + (i + 1))).slice(0, 140),
+      criticality: String(c.criticality || 'High').slice(0, 20),
+    }), 'crownJewelRegister');
+    const bia = normReg(b.bia, (p, i) => ({
+      process_id: String(p.process_id || p.id || ('bp_' + i)).slice(0, 80),
+      name: String(p.name || p.process || ('Process ' + (i + 1))).slice(0, 140),
+      rto_hours: Number(p.rto_hours != null ? p.rto_hours : p.rto) || null,
+      impact_usd: money(p.impact_usd != null ? p.impact_usd : p.impact),
+      criticality: p.criticality ? String(p.criticality).slice(0, 20) : null,
+    }), 'bia');
+    const sbom = normReg(b.sbom, (c, i) => ({
+      component: String(c.component || c.name || ('component_' + i)).slice(0, 200),
+      version: c.version ? String(c.version).slice(0, 60) : null,
+      critical_vulns: Number(c.critical_vulns != null ? c.critical_vulns : c.criticals) || 0,
+    }), 'sbom');
+
     // Executive names by seat id — each seat's decisions are stamped with the leader's
     // name. Stored server-side so the cockpit shows them on any device.
     const seatNames = {};
@@ -211,7 +240,7 @@ router.post('/ingest', optionalJWT, async (req, res) => {
        VALUES ($1,$2,$3,$4::jsonb,NOW())
        ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name,
          setup_json = COALESCE(orgs.setup_json,'{}'::jsonb) || EXCLUDED.setup_json`,
-      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics, resilience, initiatives, governance, aiGovernance, growth, strategicInitiatives, objectives, capabilities, seatNames })]);
+      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics, resilience, initiatives, governance, aiGovernance, growth, strategicInitiatives, objectives, capabilities, crownJewelRegister, bia, sbom, document_validation: documentValidation, seatNames })]);
 
     // Idempotent replace: clear the org's prior inventory, then insert the mapped rows.
     step = 'clear_inventory';
@@ -268,6 +297,12 @@ router.get('/summary', optionalJWT, async (req, res) => {
     // Throttled to one point per ~day; capped to the last 12.
     if (!out.empty && out.summary && out.summary.economics) {
       out.summary.trend = await recordPostureSnapshot(orgId, out.summary);
+    }
+    // CISO "Crown jewels at greatest risk" — composite risk (register × VM × EDR)
+    // through the source-agnostic adapter. Guarded so it never blocks the summary.
+    if (!out.empty && out.summary) {
+      try { out.summary.crown_jewel_risk = await CrownJewelRisk.compute(orgId); }
+      catch (e) { logger.debug('crown_jewel_risk compute failed', { error: e.message }); }
     }
     res.json({ org_id: orgId, generated_at: out.generated_at, empty: !!out.empty, ...out.summary });
   } catch (e) { res.status(500).json({ error: e.message }); }

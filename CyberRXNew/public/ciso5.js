@@ -254,7 +254,21 @@ function c5get(id){
     /* ---- Enterprise-risk reads (CISO Program Health) — each maps to the data
        sources named at onboarding. Real data where connected; honest not-connected
        with the exact sources otherwise. ---- */
-    case 'er_crown':{var Scr=(typeof c5Services==='function')?c5Services():{list:[],total:0,atRisk:0};var conn=Scr.total>0;var topcj=(Scr.list&&Scr.list[0])||null;var atr=Scr.atRisk;
+    case 'er_crown':{
+      // Prefer the composite-risk compute (Crown Jewel Register × VM × EDR via the
+      // adapter, scored by config/scoring.js). Fall back to the crown-jewel services view.
+      var CJR=(typeof LIVE!=='undefined'&&LIVE&&LIVE.crown_jewel_risk)||null;
+      if(CJR&&CJR.items&&CJR.items.length){var it=CJR.items,esc=it.filter(function(x){return x.escalate;}).length,top=it[0];
+        return c5obj({id:id,name:'Crown jewels at greatest risk',connected:true,
+          displayValue:(esc>0?(esc+' above escalation'):(it.length+' scored'))+(top?(' · top '+top.risk):''),
+          label:'computed',color:(esc>0?'crit':(top&&top.risk>=15?'warn':'good')),
+          formula:'risk = norm(criticality) × exploitability(EPSS or max_cvss/10) × exposure(EDR; active-threat floor 0.7) × 100; escalate at residual ≥ 25',
+          method:'Crown Jewel Register joined to CMDB (asset_id) → Vulnerability Mgmt (findings ≥ CVSS 7) → EDR (detections). '+(CJR.mocked?'VM/EDR per-asset data is not yet wired for this org, so those two factors are illustrative (labelled) — the register and criticality are real.':'All factors from your connected tools.'),
+          inputs:it.slice(0,8).map(function(x){return {name:x.asset+' · '+x.criticality,value:'risk '+x.risk+(x.active_threat?' · active threat':'')+' · '+x.high_crit_vuln_count+' high/crit vulns',color:(x.escalate?'crit':x.risk>=15?'warn':'good'),source:'register × VM × EDR'};}).concat([{name:'= Above escalation (≥25)',value:esc+' of '+it.length,source:'composite risk'}]),
+          sources:[{tool:'Crown Jewel Register + CMDB',connector:'cmdb',field:'asset_id',lastRefresh:c5ago()},{tool:'Vulnerability mgmt (VM)',connector:'vuln',field:'max_cvss·epss'},{tool:'EDR',connector:'edr',field:'exposure·active_threat'}],
+          note:top?('Your highest-risk crown jewel is '+top.asset+' (risk '+top.risk+').'):'The crown-jewel systems carrying the most composite risk.',
+          connectTool:'your Crown Jewel Register · CMDB · EDR · VM'});}
+      var Scr=(typeof c5Services==='function')?c5Services():{list:[],total:0,atRisk:0};var conn=Scr.total>0;var topcj=(Scr.list&&Scr.list[0])||null;var atr=Scr.atRisk;
       return c5obj({id:id,name:'Crown jewels at greatest risk',connected:conn,
         displayValue:conn?(atr>0?(atr+' of '+Scr.total+' at risk'):(Scr.total+' crown jewels · all secure')):'—',
         label:'computed',color:conn?(atr>0?'warn':'good'):'muted',
@@ -1381,7 +1395,19 @@ function c5Health(){
   // no per-control square grids underneath any tile).
   var PILL={crit:{c:'r',t:'At risk'},warn:{c:'a',t:'Watch'},good:{c:'g',t:'Healthy'},blue:{c:'b',t:'Monitoring'},muted:{c:'n',t:'—'},ink:{c:'n',t:'—'}};
   function pillFor(mid){var m=c5get(mid);return PILL[m.color]||PILL.muted;}
-  function tileFor(mid,onSub,offSub,icon){var m=c5get(mid),p=pillFor(mid);return c5tile(mid,p.c,p.t,(m.connected?onSub:offSub),'',icon);}
+  // Readiness gating (Build Brief §4): a tile whose required inputs aren't satisfied
+  // shows a "Needs: <input>" state that deep-links back to onboarding, instead of a
+  // number. window.CISO_READY is the /api/readiness?role=ciso payload.
+  function widgetReady(mid){var R=(typeof window!=='undefined'&&window.CISO_READY)||null;if(!R||!R.widgets)return null;for(var i=0;i<R.widgets.length;i++){if(R.widgets[i].id===mid)return R.widgets[i];}return null;}
+  function tileFor(mid,onSub,offSub,icon){
+    var w=widgetReady(mid);
+    if(w&&!w.satisfied){
+      var needs=(w.missing||[]).join(', ');
+      var sub='<span class="c5needs" style="cursor:pointer;color:var(--blue)">Needs: '+c5esc(needs)+' · Set it up →</span>';
+      return c5tile(mid,'n','Needs data',sub,'',icon);
+    }
+    var m=c5get(mid),p=pillFor(mid);return c5tile(mid,p.c,p.t,(m.connected?onSub:offSub),'',icon);
+  }
   var anyRisk=['er_crown','er_capability','er_scenarios','er_thirdparty'].some(function(id){var m=c5get(id);return m.connected&&(m.color==='warn'||m.color==='crit');});
   var tiles='<div class="c5tiles">'+
     tileFor('er_crown','Crown Jewel Register · CMDB · EDR · VM','connect Crown Jewel Register · CMDB · EDR · VM','checklist')+

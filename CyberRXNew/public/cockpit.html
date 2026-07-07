@@ -757,6 +757,19 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeEv();})
 function apiBase(){try{return (window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'https://cyber-rx.onrender.com').replace(/\/+$/,'');}catch(_){return 'https://cyber-rx.onrender.com';}}
 function orgId(){try{return window.CYBERRX_ORG_ID||localStorage.getItem('cyberrx_org_id')||'';}catch(_){return '';}}
 function orgName(){try{return localStorage.getItem('cyberrx_org_name')||'';}catch(_){return '';}}
+/* Input→widget readiness (Build Brief §4): drives CISO tile gating. Fetches the
+   role's readiness, stores it on window.CISO_READY, and re-renders Program Health so
+   unmet tiles show "Needs: <input>". Guarded; degrades to no-gating if unavailable. */
+function fetchReadiness(){var base=apiBase(),o=orgId();if(!base||!o)return;
+  try{fetch(base+'/api/readiness?role=ciso&org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}})
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(d){if(d&&d.widgets){window.CISO_READY=d;if(typeof c5Health==='function')try{c5Health();}catch(_){}}})
+    .catch(function(){});}catch(_){}
+}
+/* A "Needs: …" tile deep-links back to onboarding — ask the shell to switch view. */
+document.addEventListener('click',function(e){var t=e.target&&e.target.closest?e.target.closest('.c5needs'):null;if(!t)return;
+  try{window.parent&&window.parent.postMessage({type:'cyberrx-goto-onboarding'},'*');}catch(_){}
+},false);
 /* Decisions: named leader, records a PROJECT in the ticketing system, editable
    for 24h then committed (locked). Persisted per org+seat+decision. */
 var EDIT_WINDOW_MS=24*60*60*1000;
@@ -4876,7 +4889,7 @@ function pushUiState(partial,immediate){try{if(!orgId())return;var send=function
 function fetchUiState(cb){try{if(!orgId()){cb&&cb(null);return;}fetch(_uiUrl(),{headers:{'X-Org-Id':orgId()}}).then(function(r){return r.ok?r.json():null;}).then(function(s){cb&&cb(s&&typeof s==='object'?s:null);}).catch(function(){cb&&cb(null);});}catch(_){cb&&cb(null);}}
 function selectSeat(seat){document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===seat);});saveLastSeat(seat);pushUiState({seat:seat});render(seat);if(!VOICE_MUTED)speakSeat(seat);}
 document.querySelectorAll('.seat').forEach(function(b){b.addEventListener('click',function(){selectSeat(b.dataset.seat);});});
-var _bootSeat=(typeof loadLastSeat==='function'&&loadLastSeat())||'ciso';document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===_bootSeat);});render(_bootSeat);loadLive();loadSignals();
+var _bootSeat=(typeof loadLastSeat==='function'&&loadLastSeat())||'ciso';document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===_bootSeat);});render(_bootSeat);loadLive();loadSignals();fetchReadiness();
 /* Auto-poll live signals so the "Are we under attack?" tile surfaces a new SIEM
    incident on its own (~every 60s) — no manual refresh needed. The War Room's own
    incidents flip it instantly via triggerIncident/containIncident. */
@@ -5040,8 +5053,8 @@ document.getElementById('wrMute').addEventListener('click',function(){alarmMuted
    open the seat the user signed in as, and (re)load live data when shown. */
 window.addEventListener('message',function(e){
   var d=e.data;
-  if(d&&d.type==='cyberrx-golive'){try{if(d.orgId)localStorage.setItem('cyberrx_org_id',d.orgId);if(d.org)localStorage.setItem('cyberrx_org_name',d.org);if(d.industry)localStorage.setItem('cyberrx_industry',d.industry);}catch(_){}loadLive();}
-  else if(d==='cyberrx-os-active'){loadLive();}
+  if(d&&d.type==='cyberrx-golive'){try{if(d.orgId)localStorage.setItem('cyberrx_org_id',d.orgId);if(d.org)localStorage.setItem('cyberrx_org_name',d.org);if(d.industry)localStorage.setItem('cyberrx_industry',d.industry);}catch(_){}loadLive();fetchReadiness();}
+  else if(d==='cyberrx-os-active'){loadLive();fetchReadiness();}
   else if(d&&d.type==='cyberrx-auth'){var map={ceo:'ceo',board:'ceo',cfo:'cfo',cio:'cio',clo:'clo',cro:'cro',ciso:'ciso'};var role=map[d.role]||'ceo';
     // Prefer the org's server-side position (any device); fall back to this
     // browser's local cache, then to the seat picked at sign-in.
