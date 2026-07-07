@@ -415,13 +415,10 @@
     </div>
   </div>
 
-  <!-- 6a3 · Crown Jewel Register (CISO Enterprise-Risk: crown jewels at greatest risk) -->
-  <div class="sec">
-    <div class="sh"><div class="sn">✦</div><div><div class="st">Crown Jewel Register <span style="color:var(--muted)">(for the CISO “crown jewels at greatest risk” tile)</span></div><div class="sd">Your highest-value assets and their criticality. Joined to CMDB · Vulnerability Mgmt · EDR to rank crown jewels by real risk. Provide it explicitly, or leave blank to use the register Nerion derives from your inventory.</div></div><div class="badge" id="bcjr">optional</div></div>
-    <div id="cjrRows"></div>
-    <button type="button" id="addCjr" class="conn-go" style="margin-top:4px">+ Add asset</button>
-  </div>
-
+  <!-- (Crown Jewel Register removed — crown jewels are inferred from your inventory in
+       the "Map applications → processes" step above (data-sensitivity × exposure ×
+       process-criticality) and are editable there via "Adjust the auto-mapping", so we
+       don't ask you to re-enter them.) -->
   <!-- (BIA removed — the Business processes step already captures per-process RTO,
        criticality and impact; the dashboards derive BIA from it, so we don't ask twice.) -->
 
@@ -664,10 +661,6 @@
     }).filter(Boolean);}
     return {add:add,collect:collect};
   }
-  var CJR=makeRowList('cjrRows','cjr-row',[
-    {cls:'cjr-name',key:'name',label:'Asset',ph:'e.g. ClaimsDB',w:'1.6fr'},
-    {cls:'cjr-id',key:'asset_id',label:'Asset ID',ph:'CI / asset id',w:'1fr'},
-    {cls:'cjr-crit',key:'criticality',label:'Criticality',type:'select',opts:['Critical','High','Medium','Low'],w:'1fr'}],'bcjr','asset');
   var SBOM=makeRowList('sbomRows','sbom-row',[
     {cls:'sbom-name',key:'component',label:'Component',ph:'e.g. openssl 3.0.1',w:'1.8fr'},
     {cls:'sbom-ver',key:'version',label:'Version',ph:'3.0.1',w:'0.9fr'},
@@ -691,7 +684,7 @@
     {cls:'ben-our',key:'our_value',label:'Our value',ph:'e.g. 9%',w:'1fr'},
     {cls:'ben-bmk',key:'benchmark',label:'Benchmark',ph:'e.g. 11%',w:'1fr'}],'bben','metric');
   (function(){
-    var m=[['addCjr',CJR],['addSbom',SBOM],['addRap',RAP],['addReg',REG],['addMat',MAT],['addBen',BEN]];
+    var m=[['addSbom',SBOM],['addRap',RAP],['addReg',REG],['addMat',MAT],['addBen',BEN]];
     m.forEach(function(x){var b=document.getElementById(x[0]);if(b)b.addEventListener('click',function(){x[1].add();});});
   })();
 
@@ -734,7 +727,6 @@
   }
   (function(){
     // (the Business capability map already offers manual entry + a GRC connect)
-    enableRegisterIO('cjr','addCjr',CJR,[{cls:'cjr-name',names:['name','asset','system']},{cls:'cjr-id',names:['asset_id','ci_id','id','ci']},{cls:'cjr-crit',names:['criticality','crit','tier','priority']}],['ServiceNow CMDB','Archer','Custom API'],'Crown-jewel source');
     enableRegisterIO('sbom','addSbom',SBOM,[{cls:'sbom-name',names:['component','name','package']},{cls:'sbom-ver',names:['version','ver']},{cls:'sbom-vulns',names:['critical_vulns','vulns','criticals']}],['Dependency-Track','Snyk','GitHub','Anchore'],'SBOM source');
     enableRegisterIO('rap','addRap',RAP,[{cls:'rap-cat',names:['category','risk_category','name']},{cls:'rap-app',names:['appetite','appetite_usd','threshold_usd'],money:true},{cls:'rap-thr',names:['threshold','level','tolerance']}],['ERM Platform','Archer','ServiceNow ERM'],'ERM source');
     enableRegisterIO('reg','addReg',REG,[{cls:'reg-name',names:['regulation','reg','name']},{cls:'reg-obl',names:['obligation','requirement','duty']},{cls:'reg-stat',names:['status','state','compliance']},{cls:'reg-exp',names:['exposure','fine','penalty','exposure_usd'],money:true}],['GRC','Archer','ServiceNow GRC'],'GRC / compliance source');
@@ -1084,7 +1076,6 @@
       strategicInitiatives:collectStrategic(),
       objectives:collectObjectives(),
       capabilities:collectCapabilities(),
-      crownJewelRegister:CJR.collect(),
       bia:PROC.map(function(p){return {name:p.name,rto_hours:p.rto,impact_usd:p.revenue};}),
       sbom:SBOM.collect(),
       riskAppetite:RAP.collect(),
