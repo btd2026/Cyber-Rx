@@ -32,6 +32,7 @@ function publicView(s) {
     graceDaysLeft: typeof s.graceDaysLeft === 'number' ? s.graceDaysLeft : undefined,
     reason: s.reason || null,
     features: s.features || {},
+    native: License.nativeStatus(),
   };
 }
 
