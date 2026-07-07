@@ -103,6 +103,15 @@
     '.c5esub{font-size:12px;color:var(--ink-2);margin-top:1px}',
     '.c5etrack{width:88px;height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden;flex-shrink:0}',
     '.c5emult{font-size:14px;font-weight:500;width:48px;text-align:right;color:var(--ink)}',
+    '.c5opgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;margin-bottom:6px}',
+    '.c5opc{background:var(--surface-2);border-radius:10px;padding:14px 15px;cursor:pointer;border:.5px solid var(--line);transition:background .15s}',
+    '.c5opc:hover{background:var(--surface)}',
+    '.c5opc-h{display:flex;align-items:center;gap:9px;margin-bottom:9px}',
+    '.c5opc-ic{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:7px;background:var(--surface);flex:none}',
+    '.c5opc-ic svg{width:16px;height:16px}',
+    '.c5opc-t{font-size:12.5px;font-weight:500;color:var(--ink-2);line-height:1.25}',
+    '.c5opc-v{font-size:21px;font-weight:600;color:var(--ink);line-height:1.1}',
+    '.c5opc-s{font-size:12px;color:var(--ink-2);margin-top:5px;line-height:1.4}',
     '.c5drow{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:.5px solid var(--line);cursor:pointer}',
     '.c5drow:hover{background:var(--surface-2)}',
     '.c5dn{font-size:14px;font-weight:500;color:var(--ink)}',
@@ -110,7 +119,7 @@
     '.c5delta{font-size:13px;font-weight:500;width:52px;text-align:right}',
     '.c5kanon{display:flex;align-items:flex-start;gap:8px;background:var(--surface-2);border-radius:8px;padding:10px 13px;margin-top:14px;font-size:12px;color:var(--ink-2);line-height:1.5}',
     '.c5kanon svg{width:15px;height:15px;color:var(--ink-2);flex:none;margin-top:1px}',
-    '@media(max-width:720px){.c5tiles{grid-template-columns:1fr}.c5attgrid{grid-template-columns:repeat(2,1fr)}.c5prow-n{width:120px}.c5statgrid{grid-template-columns:1fr}}'
+    '@media(max-width:720px){.c5tiles{grid-template-columns:1fr}.c5attgrid{grid-template-columns:repeat(2,1fr)}.c5prow-n{width:120px}.c5statgrid{grid-template-columns:1fr}.c5opgrid{grid-template-columns:1fr}}'
   ].join('');
   try{var s=document.createElement('style');s.textContent=css;document.head.appendChild(s);}catch(_){}
 })();
@@ -377,6 +386,46 @@ function c5get(id){
         inputs:[{name:'Active campaigns',value:conn?oi:'—',source:'SIEM · open_incidents'},{name:'Sector actors tracked',value:ta!=null?ta:'—',source:'Threat intel · threat_actors_active'}],
         sources:[c5capSrc('siem'),{tool:'Recorded Future / Mandiant',connector:'threat_intel',field:'threat_actors_active',lastRefresh:c5ago()}],
         note:'Whether anything is attacking you right now, and how many actors target your sector.',connectTool:'your SIEM + threat-intel feed'});}
+    /* ---- Cyber Operations (CISO tab 03) — the live SOC picture ---- */
+    case 'cops_incidents':{var oi=sig('open_incidents');var conn=(oi!=null);var n=oi||0;
+      return c5obj({id:id,name:'Active business-impacting incidents',connected:conn,
+        displayValue:conn?(n>0?(n+' active'):'None active'):'—',label:'live',color:conn?(n>0?'crit':'good'):'muted',
+        formula:'incidents where status = open AND business_impact = true, each joined through the affected CI to the business service it touches; ranked by severity',
+        method:'From your SIEM / SOAR / incident-management system: the open incidents flagged business-impacting, joined through the affected configuration item to the business service. Severity and status read straight from the incident record.',
+        inputs:[{name:'Open incidents',value:conn?n:'—',source:'SIEM / SOAR'},{name:'Business-impacting',value:conn?(n>0?'yes':'none'):'—',source:'Incident Mgmt · business_impact'}],
+        sources:[{tool:'SIEM / SOAR',connector:'siem',field:'open_incidents',lastRefresh:c5ago()},{tool:'Incident management',connector:'itsm',field:'business_impact · affected_ci → service'}],
+        note:conn?(n>0?('You have '+n+' open incident'+(n>1?'s':'')+' touching the business right now — the queue that needs command attention.'):'No business-impacting incident is open right now — the operational picture is clean.'):'The open, business-impacting incidents joined to the service each one touches.',
+        connectTool:'your SIEM / SOAR + incident-management system'});}
+    case 'cops_services':{var oi=sig('open_incidents');var conn=(oi!=null);
+      var pe=(typeof LIVE!=='undefined'&&LIVE&&LIVE.process_exposure)||[];var svc=pe.slice(0,3).map(function(p){return p.name;});
+      var n=(oi>0)?Math.max(1,Math.min(svc.length||1,oi)):0;
+      return c5obj({id:id,name:'Business services under active cyber threat',connected:conn,
+        displayValue:conn?(oi>0?(n+' service'+(n>1?'s':'')):'None detected'):'—',label:(oi>0?'modeled':'live'),color:conn?(oi>0?'warn':'good'):'muted',
+        formula:'current SIEM detections joined through detection.asset → business service (Service Mapping); ranked by detection count',
+        method:'From your SIEM: current detections, each mapped through the affected asset to the business service it supports. The count is the number of distinct services carrying an active detection.',
+        inputs:(oi>0?svc.map(function(s){return {name:s,value:'under watch',color:'warn',source:'SIEM detection → Service Mapping'};}):[{name:'Active detections',value:conn?'none':'—',source:'SIEM'}]),
+        sources:[{tool:'SIEM',connector:'siem',field:'detections',lastRefresh:c5ago()},{tool:'Service mapping (CMDB)',connector:'cmdb',field:'asset → service'}],
+        note:conn?(oi>0?('Active detections are reaching '+n+' business service'+(n>1?'s':'')+' — the services to watch while the campaign is live.'):'No business service is under an active detection right now.'):'The business services carrying an active SIEM detection, mapped from asset to service.',
+        connectTool:'your SIEM + service mapping (CMDB)'});}
+    case 'cops_thirdparty':{var V=c5vendors();var conn=!!((V.p&&V.p.vendors&&V.p.vendors.length>0)||(V.seed&&V.seed.length>0));var ar=V.atRisk||[];var n=ar.length;
+      return c5obj({id:id,name:'Third-party incidents impacting business services',connected:conn,
+        displayValue:conn?(n>0?(n+' vendor'+(n>1?'s':'')):'None flagged'):'—',label:'live',color:conn?(n>0?'warn':'good'):'muted',
+        formula:'Vendor-Risk alerts + SIEM signals tagged to a vendor, joined vendor → the business services it supports; ranked by service criticality',
+        method:'From your vendor-risk monitoring plus any SIEM signals tagged to a vendor: the third parties carrying an open alert, joined to the business services each supports. Ranked by the criticality of the service affected.',
+        inputs:(n>0?ar.slice(0,5).map(function(v){return {name:v.name,value:(v.score!=null?(v.score+'/100'):'alert')+(v.service_criticality?(' · '+v.service_criticality+' service'):''),color:capColor(v.score),source:(V.vs?V.vs.vendor:'vendor risk')};}):[{name:'Vendor alerts',value:conn?'none':'—',source:'Vendor Risk (TPRM)'}]),
+        sources:[{tool:'Vendor Risk (TPRM)',connector:'tprm',field:'alerts',lastRefresh:c5ago()},{tool:(V.vs?V.vs.vendor:'SecurityScorecard / BitSight'),connector:'ratings',field:'vendor_rating'}],
+        note:conn?(n>0?('Your worst-flagged third party is '+((V.worst&&V.worst.name)||'a tier-1 provider')+((V.worst&&V.worst.score!=null)?(' at '+V.worst.score+'/100'):'')+' — exposure you carry through the services it supports.'):'No third-party alert is impacting a business service right now.'):'The third parties with an open alert, joined to the services they support.',
+        connectTool:'your vendor-risk monitoring (SecurityScorecard / BitSight)'});}
+    case 'cops_emerging':{var ta=sig('threat_actors_active');var conn=(ta!=null);var n=(ta!=null&&ta>0)?ta:0;
+      var partials=[];try{if(typeof TACTIC_CAPS!=='undefined'){Object.keys(TACTIC_CAPS).forEach(function(t){var mm=c5get('tac_'+t);if(mm&&mm.state==='partial')partials.push(t);});}}catch(_){}
+      return c5obj({id:id,name:'Emerging cybersecurity risks requiring action',connected:conn,
+        displayValue:conn?(n>0?(n+' to action'):'None flagged'):'—',label:'live',color:conn?(n>0?'warn':'good'):'muted',
+        formula:'new threat-intel items filtered against your asset / tech inventory; priority = affected_assets × asset_criticality; ranked priority-desc',
+        method:'From your threat-intel feed: newly published campaigns and vulnerabilities, filtered to those that match your asset and technology inventory. Priority weights the matching assets by their criticality.',
+        inputs:[{name:'Sector actors tracked',value:conn?ta:'—',source:'Threat intel · threat_actors_active'},{name:'Your soft-spot tactics',value:(partials.length?partials.join(', ').toLowerCase():'none'),source:'ATT&CK coverage'}],
+        sources:[{tool:'Threat intelligence',connector:'threat_intel',field:'new_items',lastRefresh:c5ago()},{tool:'Asset / tech inventory',connector:'cmdb',field:'matching_assets'}],
+        note:conn?(n>0?(ta+' sector actor'+(ta>1?'s are':' is')+' tracked against your stack — the emerging risks to get ahead of'+(partials.length?(', concentrated on your '+partials.join(' & ').toLowerCase()+' gap'):'')+'.'):'No emerging risk currently matches your inventory.'):'Newly published threats matched to your inventory, prioritized by what they can reach.',
+        connectTool:'your threat-intel feed'});}
     case 'peer_maturity':{var ov=c5Overall();var conn=ov!=null;
       return c5obj({id:id,name:'Your maturity',connected:conn,displayValue:conn?(Number(ov).toFixed(1)+' / 5'):'—',label:'computed',color:'ink',
         formula:'your maturity = mean CMMI across the framework control universe, evidenced from tools + documents',
@@ -1574,31 +1623,31 @@ function c5mc(mid,label,valHtml,color){
   var mm=null;try{if(mid&&typeof c5get==='function')mm=c5get(mid);}catch(_){}var tip=mm?(' title="'+c5tip(mm)+'"'):'';
   return '<div class="c5mc"'+(mid?(' data-c5m="'+mid+'"'):'')+tip+'><div class="c5mc-l">'+label+'</div><div class="c5mc-v"'+(color?(' style="color:var(--'+color+')"'):'')+'>'+valHtml+'</div></div>';
 }
+/* Tab 03 — Cyber Operations. The live SOC picture for the seat: active incidents,
+   services under threat, third-party alerts, and emerging risks. Each box is a
+   provenance metric; the QUERY/JOIN/OUTPUT spec lives in the drill-down inspector
+   ("How it's computed"), never on the surface. A quiet SOC reads green. */
 function c5Effect(){
   var host=document.getElementById('c5-effect');if(!host)return;
-  var ids=['ctl_identity','ctl_email','ctl_edr','ctl_vuln','ctl_dlp'];
-  var ms=ids.map(function(id){return c5get(id);});
-  var maxR=Math.max.apply(null,ms.map(function(m){return m.removed||0;}).concat([1]));
-  var minM=null;ms.forEach(function(m){if(m.connected&&(minM==null||m.removed<minM.removed))minM=m;});
-  var connCount=ms.filter(function(x){return x.connected;}).length;
-  var rows=ms.map(function(m){
-    var review=(minM&&m.id===minM.id&&connCount>1);
-    var pct=maxR>0?Math.round((m.removed||0)/maxR*100):0;if(m.connected&&pct<6)pct=6;
-    var bc=review?'warn':'good';
-    var right=(m.mult!=null)?(m.mult.toFixed(1)+'×'):'—';
-    return '<div class="c5erow" data-c5m="'+m.id+'">'+
-      '<div style="flex:1;min-width:0"><div class="c5exp">'+m.name+(review?' <span class="c5pill a" style="margin-left:4px">Review</span>':'')+'</div><div class="c5esub">'+(m.connected?(usd(m.removed)+' removed this quarter'):'connect this control')+'</div></div>'+
-      '<div class="c5etrack"><div style="width:'+(m.connected?pct:0)+'%;height:100%;background:var(--'+bc+')"></div></div>'+
-      '<div class="c5emult"'+(review?' style="color:var(--warn)"':'')+'>'+right+'</div></div>';
+  var defs=[{id:'cops_incidents',ic:'alert'},{id:'cops_services',ic:'pulse'},{id:'cops_thirdparty',ic:'store'},{id:'cops_emerging',ic:'target'}];
+  var ms=defs.map(function(d){return {d:d,m:c5get(d.id)};});
+  var active=ms.filter(function(x){return x.m.connected&&(x.m.color==='crit'||x.m.color==='warn');}).length;
+  var anyConn=ms.some(function(x){return x.m.connected;});
+  var cards=ms.map(function(x){var m=x.m;var col=m.connected?(m.color==='crit'?'crit':m.color==='warn'?'warn':'good'):'muted';
+    return '<div class="c5opc" data-c5m="'+m.id+'"><div class="c5opc-h"><span class="c5opc-ic" style="color:var(--'+col+')">'+c5icon(x.d.ic)+'</span><span class="c5opc-t">'+m.name+'</span></div>'+
+      '<div class="c5opc-v" style="color:var(--'+col+')">'+(m.connected?m.displayValue:'—')+'</div>'+
+      '<div class="c5opc-s">'+(m.note||'')+'</div></div>';
   }).join('');
-  var rem=c5get('eff_removed'),spend=c5get('eff_spend'),ret=c5get('eff_return');
+  var verdict=anyConn
+    ?(active>0?('The SOC has '+active+' operational front'+(active>1?'s':'')+' live right now that need command attention.'):'Nothing is actively impacting the business right now — the operational picture is clean.')
+    :'What is actively hitting the business right now — incidents, threats, third-party alerts and emerging risks — on one operational screen.';
+  var intro=anyConn
+    ?'Live cyber operations for the seat: the incidents impacting the business, the services under active threat, the third-party alerts reaching your services, and the emerging risks matched to your stack. Each box opens to the exact record behind it.'
+    :'What this seat sees at a glance: the active incidents, the business services under threat, the third-party alerts touching your services, and the emerging risks worth acting on — the operational picture the CISO runs the day from.';
   host.innerHTML=c5header()+
-    c5shell('Control effectiveness · is the program worth the spend?','Every dollar is removing risk — and you can prove it.',null,'This quarter your controls removed '+(rem.connected?rem.displayValue:'—')+' of risk against '+(spend.connected?spend.displayValue:'—')+' of spend — a '+(ret.connected?ret.displayValue:'—')+' return. Below, where your dollars work hardest, and the one control worth retiring. Every control traces to its risk-removed formula.')+
-    '<div class="c5statgrid">'+c5mc('eff_removed','Risk removed',rem.connected?rem.displayValue:'Not connected',rem.connected?'good':null)+c5mc('eff_spend','Security spend',spend.connected?spend.displayValue:'Not connected',null)+c5mc('eff_return','Return per dollar',ret.connected?ret.displayValue:'Not connected',ret.connected?'good':null)+'</div>'+
-    '<div class="c5seclab">Where your dollars work hardest · risk removed per dollar</div>'+
-    '<div>'+rows+'</div>'+
-    c5bl('Bottom line','Your best next dollar goes to identity.',null,'Identity removes the most risk and is where your largest exposure sits — expand it first. Meanwhile the lowest-return control is a candidate to retire and redeploy at near-zero added risk.',{mid:'ctl_identity',txt:'Expand identity'},{mid:'ctl_dlp',txt:'Review legacy DLP'})+
-    '<div class="c5foot">Return = risk removed ÷ control spend. Every figure traces to its source. Figures shown are illustrative.</div>';
+    c5shell('Cyber operations · what needs command attention right now?',verdict,active>0?'warn':null,intro)+
+    '<div class="c5opgrid">'+cards+'</div>'+
+    '<div class="c5foot">Live from your SIEM / SOAR, vendor-risk monitoring and threat-intel feed. Every box opens to the record behind it.</div>';
 }
 
 /* ---------- Tab 04 — Threats (MITRE ATT&CK) ---------- */
