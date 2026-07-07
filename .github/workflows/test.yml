@@ -24,12 +24,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: CyberRXNew/package-lock.json
 
+      # Lock files are gitignored in this repo, so npm ci / setup-node cache can't be
+      # used — install fresh.
       - name: Install dependencies
         working-directory: ./CyberRXNew
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: Cockpit smoke test
         working-directory: ./CyberRXNew
@@ -89,12 +89,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: cyberrx-api/package-lock.json
 
+      # Lock files are gitignored in this repo, so npm ci / setup-node cache can't be
+      # used — install fresh.
       - name: Install dependencies
         working-directory: ./cyberrx-api
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: Core unit tests (gating)
         working-directory: ./cyberrx-api
