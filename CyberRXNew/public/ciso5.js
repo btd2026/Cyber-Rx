@@ -1047,14 +1047,19 @@ function c5driverMetric(id){
 }
 var C5_CTL={ctl_identity:{label:'Identity & MFA',caps:['mfa','pam']},ctl_email:{label:'Email security',caps:['aware']},ctl_edr:{label:'EDR / XDR',caps:['edr']},ctl_vuln:{label:'Vulnerability management',caps:['vuln']},ctl_dlp:{label:'Data loss prevention',caps:['dlp']}};
 function c5ctlMetric(id){
-  var def=C5_CTL[id]||{label:id,caps:[]};var rr=(typeof capRiskRemoved==='function')?capRiskRemoved():{byCap:{},anyLive:false};
+  var def=C5_CTL[id]||{label:id,caps:[]};var rr=(typeof capRiskRemoved==='function')?capRiskRemoved():{byCap:{},total:0,anyLive:false};
   var removed=def.caps.reduce(function(s,k){return s+(rr.byCap[k]||0);},0);var conn=rr.anyLive&&removed>0;
+  var sharePct=(rr.total>0)?Math.round(removed/rr.total*100):0;
+  var cinputs=def.caps.map(function(k){var c=CAP_BY_KEY[k];var p=capDeploy(c);var fw=(typeof CAP_FRAMEWORK!=='undefined')?CAP_FRAMEWORK[k]:null;
+    return {name:c.name.replace(/ *\(.*\)/,''),value:(p!=null?(p+'% deployed × wt '+(((fw&&fw.weight)||1).toFixed(1))):'not connected')+' → '+usd(rr.byCap[k]||0)+' removed',color:capColor(p),source:c.tool+' · '+((typeof CAP_SIGKEY!=='undefined'&&CAP_SIGKEY[k])||k)};});
+  cinputs.push({name:'This area total',value:conn?(usd(removed)+'  ('+sharePct+'% of all controls)'):'—',source:'Σ of the capabilities above'});
+  cinputs.push({name:'Total control-removed risk',value:rr.total>0?usd(rr.total):'—',source:'control-value ledger'});
   return c5obj({id:id,name:def.label,connected:conn,displayValue:conn?(usd(removed)+' removed'):'—',label:'modeled',color:'good',removed:removed,
-    formula:'risk removed = this control’s framework-weighted share of total control-removed risk × its deployment',
-    method:'Return per dollar (×) needs per-control spend attribution, which isn’t connected — shown as not connected until you attribute spend by control.',
-    inputs:def.caps.map(function(k){var c=CAP_BY_KEY[k];var p=capDeploy(c);return {name:c.name.replace(/ *\(.*\)/,''),value:(p!=null?p+'% deployed':'not connected')+' · '+usd(rr.byCap[k]||0)+' removed',color:capColor(p),source:c.tool+' · '+((typeof CAP_SIGKEY!=='undefined'&&CAP_SIGKEY[k])||k)};}),
+    formula:'risk removed = total control-removed risk × ( this area’s NIST weight × its deployment ) ÷ Σ across all controls',
+    method:'Nerion models the total dollars your controls buy down (the control-value ledger), then splits that total across areas in proportion to each one’s (framework weight × live deployment) — a heavily-weighted, well-deployed control claims a bigger share. Return-per-dollar (×) needs per-control spend, which isn’t connected; until then this shows dollars removed, not a multiple.',
+    inputs:cinputs,
     sources:def.caps.map(function(k){return c5capSrc(k);}),
-    note:'What this control removes in dollars. Attribute spend by control to light up the return multiple (×).',connectTool:'per-control security spend'});
+    note:'What this control area removes in dollars — its weighted share of the total. Attribute spend by control to light up the return multiple (×).',connectTool:'per-control security spend'});
 }
 function c5tacticMetric(t){
   var caps=(typeof TACTIC_CAPS!=='undefined'&&TACTIC_CAPS[t])||[];var cov=(typeof threatCoverage==='function')?threatCoverage(caps):null;var conn=cov!=null;
@@ -1324,9 +1329,12 @@ function c5ctlRankRows(){
   var ms=ids.map(function(id){return c5get(id);});
   var maxR=Math.max.apply(null,ms.map(function(m){return m.removed||0;}).concat([1]));
   var minM=null;ms.forEach(function(m){if(m.connected&&(minM==null||m.removed<minM.removed))minM=m;});
-  return ms.map(function(m){var review=(minM&&m.id===minM.id&&ms.filter(function(x){return x.connected;}).length>1);var pf=maxR>0?Math.round((m.removed||0)/maxR*100):0;
-    return '<div class="c5row" data-c5m="'+m.id+'"><div class="c5row-main"><div class="c5row-t">'+m.name+(review?'<span class="c5tag rev">Review</span>':'')+'</div><div class="c5row-s">'+(m.connected?(usd(m.removed)+' removed · return per dollar needs per-control spend'):'connect this control')+'</div><div class="c5retbar"><i class="'+(review?'a':'')+'" style="width:'+pf+'%"></i></div></div><div class="c5row-v">'+(m.connected?usd(m.removed):'—')+'</div></div>';
+  var rows=ms.map(function(m){var review=(minM&&m.id===minM.id&&ms.filter(function(x){return x.connected;}).length>1);var pf=maxR>0?Math.round((m.removed||0)/maxR*100):0;
+    var rtip=c5esc(m.name+' — '+(m.connected?(usd(m.removed)+' of modeled expected loss removed this quarter (this area’s weighted share of the total). Bar = size vs your largest area ('+pf+'%).'+(review?' Amber = your lowest-contributing area, flagged to review.':'')+' Tap for the full breakdown.'):'not connected — connect this control to measure it.'));
+    return '<div class="c5row" data-c5m="'+m.id+'" title="'+rtip+'"><div class="c5row-main"><div class="c5row-t">'+m.name+(review?'<span class="c5tag rev">Review</span>':'')+'</div><div class="c5row-s">'+(m.connected?(usd(m.removed)+' removed · return per dollar needs per-control spend'):'connect this control')+'</div><div class="c5retbar"><i class="'+(review?'a':'')+'" style="width:'+pf+'%"></i></div></div><div class="c5row-v">'+(m.connected?usd(m.removed):'—')+'</div></div>';
   }).join('');
+  // Legend so the bar length + colour are never a mystery.
+  return rows+'<div style="padding:10px 4px 2px;font-size:11px;line-height:1.5;color:var(--muted)">Bar length = risk removed vs. your largest area. <span style="color:var(--warn);font-weight:700">Amber</span> = the lowest-contributing area, flagged to review — everything else is green. Return-per-dollar (×) appears once you attribute security spend by control.</div>';
 }
 /* Tab 01 — Financial exposure */
 function c5cfExposure(){
