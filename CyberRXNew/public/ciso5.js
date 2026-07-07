@@ -1348,32 +1348,69 @@ function c5domainMetric(k){
 
 /* ---------- the inspector (right-side #ev panel) ---------- */
 function c5Inspect(id){var m=c5get(id);if(!m)return;c5InspectObj(m);}
+/* Durable "what it measures & why it matters" definitions, keyed by metric id or
+   id-prefix — the answer every drill must give, a real definition of the measure
+   and its significance, independent of today's result. A metric may also carry its
+   own m.why; failing both we fall back to m.note. */
+var C5_WHY={
+  cops_incidents:'Counts the incidents that are both still open AND confirmed to be hitting the business — not raw alert volume. It matters because these are the events that can escalate into a disclosable, material breach: this is the live command queue the CISO clears first.',
+  cops_services:'Turns raw security detections into business language — how many of your business services are under an active detection right now, mapped from the affected asset to the service it supports. It matters because it tells you which revenue- and customer-facing services are actually threatened, not just which sensors fired.',
+  cops_thirdparty:'Counts the third parties carrying an open security alert that reaches a business service you depend on. It matters because a supplier compromise is one of the most common ways an incident enters the enterprise without ever touching your own perimeter.',
+  cops_emerging:'The short list of newly published threats and vulnerabilities that match your specific asset and technology inventory — not the whole threat landscape. It matters because these are the emerging risks you can actually get ahead of before they are weaponized against you.',
+  er_crown:'Identifies which of your crown-jewel assets carries the most risk today, combining its business value with its live vulnerability and threat exposure. It matters because a single high-risk crown jewel is where a breach does the most damage — it is the first thing to harden.',
+  er_capability:'Ranks your business capabilities by the cyber exposure each carries, joining your capability map to GRC control gaps and open risk. It matters because it frames cyber risk in the language the board owns — business capabilities — rather than technical controls.',
+  er_scenarios:'Ranks the disruption scenarios most likely to hit the business, mapping who targets your sector to the MITRE techniques your stack is exposed to and the process each would disrupt. It matters because it prioritizes preparation by likelihood times business impact, not by fear.',
+  er_thirdparty:'Measures the third-party and software-supply-chain exposure you carry, weighting vendor ratings, TPRM findings and vulnerable software components by the criticality of the service each supports. It matters because supply-chain risk is exposure you own but do not directly control.',
+  ais_aiml:'Assesses the security posture of the AI/ML and LLM systems your business runs — prompt-injection exposure, data leakage, model access and guardrails. It matters because these systems now touch sensitive data and decisions and are a fast-moving new attack surface.',
+  ais_genai:'Measures the data-leakage risk from enterprise GenAI use — separating sanctioned tools from shadow AI, and whether DLP inspects what employees send to AI. It matters because sensitive data can leave the company through an unsanctioned chatbot with no control in the path.',
+  ais_aicode:'Measures the cybersecurity risk introduced by AI coding assistants in the SDLC — adoption, policy scope, and the vulnerability and secret rate in AI-influenced code. It matters because AI-generated code ships to production and can introduce vulnerabilities and leaked secrets at scale.',
+  ais_pipeline:'Measures the security and integrity of your CI/CD pipeline and software build supply chain — misconfigurations, unsigned artifacts, provenance gaps and exposed pipeline secrets. It matters because the build pipeline is a trusted, direct path to production that attackers increasingly target.',
+  ais_nhi:'Measures your exposure from non-human and machine identities — service accounts, tokens and keys that are stale, over-privileged or exposed. It matters because machine identities now vastly outnumber human ones and are the least-watched path into your systems.',
+  ais_pqc:'Measures your readiness for post-quantum cryptography — which systems still rely on quantum-vulnerable algorithms (RSA/ECC) to protect sensitive or long-lived data. It matters because "harvest-now, decrypt-later" means data stolen today can be decrypted once quantum computers mature.',
+  exp_total:'Your total modeled cyber expected loss — the single dollar figure that expresses enterprise cyber risk. It matters because it converts a technical posture into a number the board and CFO can weigh against appetite, insurance and spend.',
+  exp_conc:'How concentrated your exposure is in its top drivers. It matters because concentrated risk is good news operationally — a few targeted fixes remove a disproportionate share of the total.',
+  exp_:'The share of your total cyber exposure attributable to this specific control gap. It matters because it tells you exactly how much modeled loss a single, scoped fix would remove.',
+  eff_removed:'The dollars of expected loss your controls have already bought down. It matters because it is the evidence that security spend is working — risk removed, not activity performed.',
+  eff_spend:'The security spend measured against the risk it removes. It matters because it is the denominator of return-on-security-investment — the number the CFO holds you to.',
+  eff_return:'The risk removed per dollar of security spend. It matters because it is the single figure that says whether the program is worth what it costs.',
+  ctl_:'The dollars of expected loss this specific control removes. It matters because it shows where your security dollars work hardest and which control to expand first.',
+  threat_status:'Whether anything is actively attacking you right now, and how many actors target your sector. It matters because it is the difference between steady-state monitoring and an active-response posture.',
+  tac_:'Your live control coverage against this MITRE ATT&CK tactic. It matters because it shows, technique by technique, where an adversary still has an open path.',
+  dom_:'Your security maturity in this domain versus same-size industry peers. It matters because it shows, domain by domain, where you lead the field and where you trail it.',
+  peer_maturity:'Your overall evidenced framework maturity, scored from live tools and analyzed policies — not self-attestation. It matters because it is the defensible number you take to the board and to peers.',
+  peer_median:'The maturity of comparable organizations in your cohort. It matters because a number only means something against a peer baseline.',
+  peer_position:'Where your maturity sits in the peer distribution. It matters because it tells the board whether you are ahead of, at, or behind the field.'
+};
+function c5whyPre(id){if(!id)return '';if(id.indexOf('tac_')===0)return 'tac_';if(id.indexOf('exp_')===0&&id!=='exp_total'&&id!=='exp_conc')return 'exp_';if(id.indexOf('ctl_')===0)return 'ctl_';if(id.indexOf('dom_')===0)return 'dom_';return id;}
+function c5why(m){if(m&&m.why)return m.why;var id=m&&m.id;if(id){var w=C5_WHY[id]||C5_WHY[c5whyPre(id)];if(w)return w;}return (m&&m.note)||'';}
+function c5whyIcon(color){return color==='good'?'check':(color==='crit'||color==='warn')?'alert':color==='blue'?'gauge':'plug';}
 function c5InspectObj(m){
   if(!m)return;
   var chip='<span class="c5chip c5-'+String(m.label).replace(/[^a-z]/g,'')+'">'+m.label+'</span>';
+  var col=m.connected?(m.color==='ink'?'ink-2':(m.color||'ink')):'muted';
   var h='<div class="ev-claim">'+m.name+' '+chip+'</div>';
-  h+='<div class="ev-result '+(m.color==='good'?'':m.color==='crit'?'crit':m.color==='warn'?'warn':'')+'">'+(m.connected?m.displayValue:'Not connected')+'</div>';
+  // 1) What it measures & why it matters — ALWAYS, right after the title (durable
+  //    definition, not today's result).
+  h+='<div class="ev-sec" style="margin-top:12px">What it measures &amp; why it matters</div><div class="conf">'+c5why(m)+'</div>';
+  // 2) The result — a status-coloured hero with a glyph; no redundant heading.
+  h+='<div style="display:flex;align-items:center;gap:14px;margin:14px 0 2px;padding:14px 16px;border-radius:12px;border:1px solid var(--line);border-left:3px solid var(--'+col+');background:var(--surface-2)">'+
+    '<div style="width:42px;height:42px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;background:var(--surface);background:color-mix(in srgb,var(--'+col+') 16%,var(--surface));color:var(--'+col+')">'+c5icon(c5whyIcon(m.connected?m.color:'muted'))+'</div>'+
+    '<div style="min-width:0"><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Result</div><div style="font-size:24px;font-weight:700;line-height:1.1;color:var(--'+col+')">'+(m.connected?m.displayValue:'Not connected')+'</div></div>'+
+  '</div>';
   if(!m.connected){
     var src=m.connectTool?('<b>'+c5esc(m.connectTool)+'</b>'):'its data source';
-    h+='<div class="ev-sec">Not connected yet</div><div class="drill-p">This value populates once you connect '+src+'. Until then Nerion shows the honest not-connected state — never a placeholder number.</div>';
-    if(m.formula)h+='<div class="ev-sec">What would populate it</div><div class="formula">'+m.formula+'</div>';
-    // Name the exact source(s) so it is never ambiguous WHAT to connect.
+    h+='<div class="ev-sec">What would populate it</div><div class="drill-p">This reads live once you connect '+src+'. Until then Nerion shows the honest not-connected state — never a placeholder number.</div>';
+    if(m.formula)h+='<div class="formula" style="margin-top:8px">'+m.formula+'</div>';
     if(m.sources&&m.sources.length)h+='<div class="ev-sec">Where it will come from</div>'+m.sources.map(function(s){return '<div class="src-row"><span class="sd"></span><b>'+s.tool+'</b></div>';}).join('');
     if(m.connectTool)h+='<div style="margin-top:12px"><button class="c5btn" onclick="c5Connect(\''+String(m.connectTool).replace(/'/g,'')+'\')">Connect '+m.connectTool+'</button></div>';
   } else {
-    // Presented the way a partner would walk a CISO through it:
-    // 1) what this measures & why it matters, 2) the results, 3) how it's computed,
-    // 4) sources. Headline value is already shown above.
-    if(m.note)h+='<div class="ev-sec">What this measures &amp; why it matters</div><div class="conf">'+m.note+'</div>';
-    if(m.inputs&&m.inputs.length)h+='<div class="ev-sec">The results</div><table class="itbl"><thead><tr><th>Item</th><th>Value</th><th>Source</th></tr></thead><tbody>'+m.inputs.map(function(i){
-      // When a row carries a status color, show a square that matches the tile's
-      // small boxes exactly (same c5sqClass mapping, same source data + order) so the
-      // right-panel row and its box read as the same colour.
+    // 3) How it's computed · 4) the numbers behind it · 5) sources.
+    h+='<div class="ev-sec">How it’s computed</div><div class="formula">'+(m.formula||'—')+'</div>';
+    if(m.method)h+='<div class="drill-p" style="color:var(--muted)">'+m.method+'</div>';
+    if(m.inputs&&m.inputs.length)h+='<div class="ev-sec">The numbers behind it</div><table class="itbl"><thead><tr><th>Item</th><th>Value</th><th>Source</th></tr></thead><tbody>'+m.inputs.map(function(i){
       var dot=i.color?('<span class="c5sq '+c5sqClass(i.color)+'" style="display:inline-block;width:9px;height:9px;margin-right:7px;vertical-align:middle"></span>'):'';
       return '<tr><td>'+dot+i.name+'</td><td class="v">'+i.value+'</td><td class="src">'+i.source+'</td></tr>';
     }).join('')+'</tbody></table>';
-    h+='<div class="ev-sec">How it’s computed</div><div class="formula">'+(m.formula||'—')+'</div>';
-    if(m.method)h+='<div class="drill-p" style="color:var(--muted)">'+m.method+'</div>';
     if(m.sources&&m.sources.length){h+='<div class="ev-sec">Sources</div>'+m.sources.map(function(s){return '<div class="src-row"><span class="sd"></span><b>'+s.tool+'</b>'+(s.lastRefresh?('<span style="color:var(--muted)"> · as of '+s.lastRefresh+'</span>'):'')+'</div>';}).join('');}
     h+='<div class="c5foot">as of '+c5ago()+' · label: '+m.label+'</div>';
   }
@@ -1403,6 +1440,7 @@ function c5ctrlValueInspect(k){
   var src=(typeof capSource==='function')?capSource(c):null;
   var srcTool=(src&&src.vendor)||c.tool;
   var m=c5obj({name:nm+' · business value',connected:(p!=null),
+    why:'Measures the business value a single control returns — the share of your total modeled loss-reduction attributable to it, from its framework criticality weight multiplied by how fully it is deployed. It matters because it turns "we bought a tool" into "this control removes '+(usdv>0?usd(usdv):'$X')+' of risk," and tells you which control to expand first.',
     displayValue:usdv>0?usd(usdv):'—',label:'modeled',color:'good',
     formula:'business value = this control’s framework-weighted contribution (weight '+(weight!=null?weight:'—')+') × its live deployment ('+(p!=null?p+'%':'—')+'), scaled so every control’s share sums to the organization’s total risk removed ('+usd(total)+')',
     method:'Each control’s value is not a list price — it is the share of your total modeled expected-loss reduction attributable to that control. The share is its framework criticality weight (how much risk the NIST CSF 2.0 / 800-53 controls it satisfies carry) multiplied by how fully it is actually deployed on your estate, then normalized so the parts sum to the whole. Deployment % is read live from '+srcTool+'; the dollars are modeled until per-control spend is attributed.',
@@ -1423,21 +1461,21 @@ function c5protInspect(kind){
   var P=(typeof window!=='undefined'&&window.C5PROT)||{well:[],weak:[],ctrl:[],target:75};
   var m;
   if(kind==='well'){
-    m=c5obj({name:'Business areas well protected',displayValue:String((P.well||[]).length),label:'computed',color:(P.well&&P.well.length)?'good':'muted',
+    m=c5obj({name:'Business areas well protected',why:'Lists the business areas that are demonstrably well protected — clearing their control-coverage bar with no open gaps. It matters because it is the defensible base you present to the board: the parts of the business you can prove are covered.',displayValue:String((P.well||[]).length),label:'computed',color:(P.well&&P.well.length)?'good':'muted',
       formula:'business areas whose GRC control-coverage clears the '+P.target+'-point bar with no open control gaps',
       method:'From your Business Capability Map joined to GRC control-coverage. An area qualifies when its protection score is at or above the bar and it carries no open control gaps.',
       inputs:(P.well&&P.well.length)?P.well.map(function(a){return {name:a.name,value:a.score+(a.measured?'':' (illustrative)'),color:'good',source:(a.grc?('GRC '+a.grc):'Capability Map × GRC')};}):[{name:'No area yet clears the bar',value:'—',source:'connect your Capability Map + GRC'}],
       sources:[{tool:'Business Capability Map',connector:'capmap',field:'capabilities',lastRefresh:c5ago()},{tool:'GRC',connector:'grc',field:'control_coverage · gaps'}],
       note:'The defensible base you take to the board — the parts of the business that are demonstrably protected.'});
   } else if(kind==='weak'){
-    m=c5obj({name:'Business areas to strengthen',displayValue:String((P.weak||[]).length),label:'computed',color:(P.weak&&P.weak.length)?'warn':'good',
+    m=c5obj({name:'Business areas to strengthen',why:'Lists the business areas carrying the residual cyber exposure — below their protection bar or with open control gaps. It matters because this is exactly where the next dollar of protection should go.',displayValue:String((P.weak||[]).length),label:'computed',color:(P.weak&&P.weak.length)?'warn':'good',
       formula:'business areas below the '+P.target+'-point bar OR carrying one or more open control gaps; ranked weakest-first',
       method:'From your Business Capability Map joined to GRC. An area appears here when its protection score is below the bar or it has open control gaps — this is where the residual cyber exposure concentrates.',
       inputs:(P.weak&&P.weak.length)?P.weak.map(function(a){return {name:a.name,value:a.score+(a.gaps>0?(' · '+a.gaps+' gap'+(a.gaps>1?'s':'')):'')+(a.measured?'':' (illustrative)'),color:(a.score<50?'crit':'warn'),source:(a.exp>0?(usd(a.exp)+' exposure'):'Capability Map × GRC')};}):[{name:'No area below the bar',value:'—',source:'every mapped area is covered'}],
       sources:[{tool:'Business Capability Map',connector:'capmap',field:'capabilities',lastRefresh:c5ago()},{tool:'GRC',connector:'grc',field:'control_coverage · gaps · open_risk'}],
       note:'Where to concentrate next — the areas carrying the residual exposure, worst first.'});
   } else {
-    m=c5obj({name:'Controls returning the most business value',displayValue:String((P.ctrl||[]).length),label:'computed',color:(P.ctrl&&P.ctrl.length)?'good':'muted',
+    m=c5obj({name:'Controls returning the most business value',why:'Ranks your controls by the business value each returns — the modeled expected-loss each buys down. It matters because it shows where security spend works hardest and which control to extend first.',displayValue:String((P.ctrl||[]).length),label:'computed',color:(P.ctrl&&P.ctrl.length)?'good':'muted',
       formula:'business value per control = deployment × framework-weighted criticality of the assets it protects; ranked value-desc',
       method:'From the live control ledger — each connected control’s deployment scaled by how much framework-weighted risk it removes across the assets it protects.',
       inputs:(P.ctrl&&P.ctrl.length)?P.ctrl.map(function(o){return {name:o.c.name.replace(/ *\(.*\)/,''),value:usd(o.usd)+' · '+o.p+'% deployed',color:'good',source:o.c.tool};}):[{name:'No control connected',value:'—',source:'connect your security tools'}],
