@@ -279,34 +279,52 @@ function c5get(id){
         note:topcj?('Your most exposed crown jewel is '+topcj.name+' — '+String(topcj.sub||'').toLowerCase()+'.'):'The crown-jewel systems carrying the most risk right now.',
         connectTool:'your Crown Jewel Register · CMDB · EDR · VM'});}
     case 'er_capability':{var caps2=(typeof LIVE!=='undefined'&&LIVE&&LIVE.capabilities)||[];var conn=caps2.length>0;
-      var sortc=caps2.slice().sort(function(a,b){return (Number(b.exposure_usd)||0)-(Number(a.exposure_usd)||0);});var topc=sortc[0]||null;
+      // Spec: JOIN Capability Map → GRC control_coverage/gaps + open_risk.
+      //       exposure = (open_gaps + open_risk) × capability_tier_weight.
+      //       OUTPUT [capability, control_gaps, open_risk, exposure]; sort exposure desc.
+      var TW={critical:1.0,high:0.75,medium:0.5,low:0.25};
+      var rowsC=caps2.map(function(c){var exp=Number(c.exposure_usd)||0;var tw=TW[String(c.grc_status||c.tier||'').toLowerCase()]||1;
+        return {name:c.name,exposure:exp,gaps:(c.control_gaps!=null?Number(c.control_gaps):null),open_risk:(c.open_risk!=null?Number(c.open_risk):null),grc:c.grc_status,tw:tw};}).sort(function(a,b){return b.exposure-a.exposure;});
+      var topc=rowsC[0]||null;
       return c5obj({id:id,name:'Business capabilities with highest exposure',connected:conn,
-        displayValue:conn?(topc?(topc.name+(Number(topc.exposure_usd)>0?(' · '+usd(Number(topc.exposure_usd))):'')):(caps2.length+' capabilities mapped')):'—',
-        label:'self-reported',color:conn?((topc&&Number(topc.exposure_usd)>0)?'warn':'good'):'muted',
-        formula:'business capabilities ranked by the modeled cyber exposure mapped to each',
-        method:'Capabilities come from your Business Capability Map; exposure and control status are read from your GRC platform.',
-        inputs:sortc.slice(0,6).map(function(c){return {name:c.name,value:(Number(c.exposure_usd)>0?usd(Number(c.exposure_usd)):(c.grc_status||'mapped')),color:(Number(c.exposure_usd)>0?'warn':'good'),source:'Business Capability Map · GRC'};}),
-        sources:[{tool:'Business Capability Map',connector:'capmap',field:'capabilities',lastRefresh:c5ago()},{tool:'GRC',connector:'grc',field:'capability_exposure'}],
+        displayValue:conn?(topc?(topc.name+(topc.exposure>0?(' · '+usd(topc.exposure)):'')):(caps2.length+' capabilities mapped')):'—',
+        label:'computed',color:conn?((topc&&topc.exposure>0)?'warn':'good'):'muted',
+        formula:'exposure = (open control-gaps + open risk) × capability-tier weight; ranked exposure-desc',
+        method:'Capabilities come from your Business Capability Map, joined to GRC control-coverage / gaps and open-risk. Control-gap and open-risk counts read from GRC (illustrative until GRC is connected); the tier weight is Critical 1.0 · High 0.75 · Medium 0.5 · Low 0.25.',
+        inputs:rowsC.slice(0,6).map(function(c){return {name:c.name+(c.grc?(' · '+c.grc):''),value:(c.exposure>0?usd(c.exposure):'mapped')+'  ·  gaps '+(c.gaps!=null?c.gaps:'—')+' · open-risk '+(c.open_risk!=null?c.open_risk:'—'),color:(c.exposure>0?'warn':'good'),source:'Capability Map × GRC · (gaps+open_risk)×tier_weight'};}),
+        sources:[{tool:'Business Capability Map',connector:'capmap',field:'capabilities',lastRefresh:c5ago()},{tool:'GRC',connector:'grc',field:'control_coverage · gaps · open_risk'}],
         note:topc?('Your most exposed capability is '+topc.name+'.'):'Which business capabilities carry the most cyber exposure.',
         connectTool:'your Business Capability Map + GRC (added at onboarding)'});}
     case 'er_scenarios':{var stz=(typeof LIVE!=='undefined'&&LIVE&&LIVE.stress)||{};var conn=!!(stz&&stz.scenario);
+      // Spec: PULL Threat Intel → MAP to MITRE ATT&CK techniques matching your stack →
+      //       JOIN BIA target impact. priority = technique_likelihood × business_impact.
+      //       OUTPUT [scenario, techniques, likelihood, impact, priority]; sort priority desc.
+      var tech=(stz.techniques&&stz.techniques.length)?stz.techniques.join(', '):'mapped on connect';
+      var lk=(stz.likelihood!=null)?stz.likelihood:null;var imp=Number(stz.worst_case_usd)||0;
       return c5obj({id:id,name:'Most likely business disruption scenarios',connected:conn,
         displayValue:conn?(stz.scenario+(stz.target?(' → '+stz.target):'')):'—',
         label:'modeled',color:conn?'warn':'muted',
-        formula:'highest-likelihood disruption = sector threat-intel × MITRE ATT&CK technique × business-impact (BIA) of the process it hits',
-        method:'Scenarios are built from your threat-intel feed (who targets your sector), mapped to MITRE ATT&CK techniques, and weighted by the business-impact analysis (BIA) of the process each would disrupt.',
-        inputs:[{name:'Scenario',value:conn?stz.scenario:'—',source:'Threat Intel × MITRE'},{name:'Target',value:stz.target||'—',source:'BIA · crown-jewel process'},{name:'Worst-case impact',value:(Number(stz.worst_case_usd)>0?usd(Number(stz.worst_case_usd)):'—'),source:'BIA'},{name:'Recovery',value:(stz.recovery_hours!=null?(stz.recovery_hours+' hrs'):'—'),source:'BIA · RTO'}],
-        sources:[{tool:'Threat intelligence',connector:'threatintel',field:'sector_actors',lastRefresh:c5ago()},{tool:'MITRE ATT&CK',connector:'mitre',field:'techniques'},{tool:'BIA',connector:'bia',field:'process_impact'}],
+        formula:'priority = technique_likelihood × business_impact; scenarios ranked priority-desc',
+        method:'Scenarios come from your threat-intel feed (who targets your sector), mapped to the MITRE ATT&CK techniques matching your stack, joined to the business-impact (BIA) of the process each would disrupt. Likelihood is illustrative until threat-intel is connected.',
+        inputs:[{name:'Scenario',value:conn?stz.scenario:'—',source:'Threat Intel'},{name:'MITRE techniques',value:tech,source:'MITRE ATT&CK'},{name:'Technique likelihood',value:(lk!=null?lk:'—'),source:'Threat Intel'},{name:'Business impact',value:(imp>0?usd(imp):'—'),source:'BIA · target process'},{name:'= Priority',value:conn?'highest-ranked scenario shown':'—',source:'likelihood × impact'}],
+        sources:[{tool:'Threat intelligence',connector:'threatintel',field:'sector_actors · likelihood',lastRefresh:c5ago()},{tool:'MITRE ATT&CK',connector:'mitre',field:'techniques'},{tool:'BIA',connector:'bia',field:'business_impact'}],
         note:conn?('The most likely disruption is a '+stz.scenario+' affecting '+(stz.target||'a crown-jewel process')+'.'):'The disruption scenarios most likely to hit the business.',
         connectTool:'your threat-intel feed + BIA (onboarding)'});}
-    case 'er_thirdparty':{var Vtp=c5vendors();var conn=Vtp.seed.length>0;var ntp=Vtp.atRisk.length,worsttp=Vtp.worst;
+    case 'er_thirdparty':{var Vtp=c5vendors();var sbom=(typeof LIVE!=='undefined'&&LIVE&&LIVE.sbom)||[];var conn=Vtp.seed.length>0||sbom.length>0;var ntp=Vtp.atRisk.length,worsttp=Vtp.worst;
+      // Spec: PULL ratings (SecurityScorecard/BitSight) + Vendor Risk TPRM findings +
+      //       SBOM vulnerable_components. JOIN vendor/component → supported_service
+      //       criticality. exposure weighted by service_criticality. OUTPUT
+      //       [vendor/component, rating/finding, service_criticality, exposure]; sort desc.
+      var sbomVuln=sbom.reduce(function(s,c){return s+(Number(c.critical_vulns)||0);},0);
+      var rowsV=((Vtp.p&&Vtp.p.vendors)?Vtp.p.vendors.slice(0,5):[]).map(function(v){return {name:v.name,value:(v.score!=null?v.score+'/100':'—')+' · service-crit '+(v.service_criticality||'—'),color:(v.color||capColor(v.score)),source:(Vtp.vs?Vtp.vs.vendor:'monitoring service')+' × service criticality'};});
+      if(sbom.length)rowsV.push({name:'SBOM components',value:sbomVuln+' critical vuln'+(sbomVuln===1?'':'s')+' across '+sbom.length+' component'+(sbom.length===1?'':'s'),color:(sbomVuln>0?'warn':'good'),source:'SBOM · vulnerable_components'});
       return c5obj({id:id,name:'Third-party / supply-chain cyber exposure',connected:conn,
-        displayValue:conn?(ntp>0?(ntp+' vendor'+(ntp>1?'s':'')+' flagged'):'All vendors adequate'):'—',
-        label:(Vtp.p&&Vtp.p.any_live)?'live':'modeled',color:conn?(ntp>0?'warn':'good'):'muted',
-        formula:'flagged = count(monitored vendors with security rating < 75), worst-first; supply-chain adds SBOM component risk',
-        method:'Vendor ratings pulled from your third-party monitoring service (SecurityScorecard / BitSight); software supply-chain risk from your SBOM.',
-        inputs:((Vtp.p&&Vtp.p.vendors)?Vtp.p.vendors.slice(0,6):[]).map(function(v){return {name:v.name,value:(v.score!=null?v.score+'/100':'—'),color:(v.color||capColor(v.score)),source:(Vtp.vs?Vtp.vs.vendor:'monitoring service')+' · overall_score'};}),
-        sources:[{tool:Vtp.vs?Vtp.vs.vendor:'Vendor Risk (TPRM)',connector:'vendor_monitor',field:'overall_score',lastRefresh:c5ago()},{tool:'SecurityScorecard / BitSight',connector:'vendor_monitor',field:'rating'},{tool:'SBOM',connector:'sbom',field:'component_risk'}],
+        displayValue:conn?((ntp>0?(ntp+' vendor'+(ntp>1?'s':'')+' flagged'):'Vendors adequate')+(sbomVuln>0?(' · '+sbomVuln+' SBOM vuln'+(sbomVuln===1?'':'s')):'')):'—',
+        label:(Vtp.p&&Vtp.p.any_live)?'live':'modeled',color:conn?((ntp>0||sbomVuln>0)?'warn':'good'):'muted',
+        formula:'exposure = vendor rating / TPRM finding / SBOM vulnerable-component, each weighted by the criticality of the service it supports; ranked exposure-desc',
+        method:'Vendor ratings from your monitoring service (SecurityScorecard / BitSight), TPRM findings, and SBOM vulnerable-components — each joined to the crown-jewel service it supports and weighted by that service’s criticality.',
+        inputs:rowsV,
+        sources:[{tool:Vtp.vs?Vtp.vs.vendor:'Vendor Risk (TPRM)',connector:'vendor_monitor',field:'overall_score · findings',lastRefresh:c5ago()},{tool:'SecurityScorecard / BitSight',connector:'vendor_monitor',field:'rating'},{tool:'SBOM',connector:'sbom',field:'vulnerable_components'}],
         note:worsttp?('Your worst-rated vendor is '+worsttp.name+' at '+worsttp.score+'/100 — exposure you carry through someone else’s security.'):'Exposure you carry through your suppliers and software supply chain.',
         connectTool:'a TPRM platform + monitoring service + SBOM'});}
     case 'exp_total':{var M=c5expModel();var conn=M.total>0;var trw=M.drivers.reduce(function(s,x){return s+(x.raw||0);},0);
@@ -1399,30 +1417,43 @@ function c5Health(){
   // shows a "Needs: <input>" state that deep-links back to onboarding, instead of a
   // number. window.CISO_READY is the /api/readiness?role=ciso payload.
   function widgetReady(mid){var R=(typeof window!=='undefined'&&window.CISO_READY)||null;if(!R||!R.widgets)return null;for(var i=0;i<R.widgets.length;i++){if(R.widgets[i].id===mid)return R.widgets[i];}return null;}
+  // A tile always shows its metric's real verdict pill + value (illustrative until the
+  // sources are connected). When required inputs aren't connected yet, the subtext
+  // becomes a "Connect: <input> →" hint that deep-links to onboarding — without a
+  // contradictory "Needs data" state on top of a computed number.
   function tileFor(mid,onSub,offSub,icon){
-    var w=widgetReady(mid);
-    if(w&&!w.satisfied){
-      var needs=(w.missing||[]).join(', ');
-      var sub='<span class="c5needs" style="cursor:pointer;color:var(--blue)">Needs: '+c5esc(needs)+' · Set it up →</span>';
-      return c5tile(mid,'n','Needs data',sub,'',icon);
-    }
-    var m=c5get(mid),p=pillFor(mid);return c5tile(mid,p.c,p.t,(m.connected?onSub:offSub),'',icon);
+    var m=c5get(mid),p=pillFor(mid),w=widgetReady(mid);
+    var sub=(w&&!w.satisfied)
+      ? '<span class="c5needs" style="cursor:pointer;color:var(--blue)">Connect: '+c5esc((w.missing||[]).join(', '))+' →</span>'
+      : (m.connected?onSub:offSub);
+    return c5tile(mid,p.c,p.t,sub,'',icon);
   }
   var anyRisk=['er_crown','er_capability','er_scenarios','er_thirdparty'].some(function(id){var m=c5get(id);return m.connected&&(m.color==='warn'||m.color==='crit');});
   var tiles='<div class="c5tiles">'+
-    tileFor('er_crown','Crown Jewel Register · CMDB · EDR · VM','connect Crown Jewel Register · CMDB · EDR · VM','checklist')+
-    tileFor('er_capability','Business Capability Map · GRC','add your Business Capability Map + GRC','store')+
-    tileFor('er_scenarios','Threat Intel · MITRE · BIA','connect Threat Intel · MITRE · BIA','trend')+
-    tileFor('er_thirdparty','TPRM · SecurityScorecard / BitSight · SBOM','add your tier-1/2 vendors + SBOM','store')+
+    tileFor('er_crown','Register × CMDB × VM × EDR','connect Crown Jewel Register · CMDB · EDR · VM','checklist')+
+    tileFor('er_capability','Capability Map × GRC gaps','add your Business Capability Map + GRC','store')+
+    tileFor('er_scenarios','Threat Intel × MITRE × BIA','connect Threat Intel · MITRE · BIA','trend')+
+    tileFor('er_thirdparty','TPRM × ratings × SBOM','add your tier-1/2 vendors + SBOM','store')+
     '</div>';
-  var blPara=ec.connected?('Your largest exposure is <b>'+ec.name.toLowerCase()+'</b> — '+ec.displayValue+' modeled, threatening '+ec.threatens+'. The fix is scoped and funded and waiting for your sign-off.'):'Connect your identity and control tools and Nerion surfaces your largest exposure here, with the scoped, funded fix ready for sign-off.';
-  var blBtn=ec.connected?('Approve — removes '+ec.displayValue+' of risk'):'Approve the top fix';
+  // Bottom line — synthesized from the four reads, pointing to the single most
+  // exposed thing (the top-ranked crown jewel), so it stays consistent with tile 1.
+  var CJRk=(typeof LIVE!=='undefined'&&LIVE&&LIVE.crown_jewel_risk)||null;var topCj=(CJRk&&CJRk.items&&CJRk.items.length)?CJRk.items[0]:null;
+  var blHead,blPara,blMid,blBtn;
+  if(topCj){blMid='er_crown';blHead='Act on your highest-risk crown jewel first.';
+    blPara='Across the four reads, your highest-risk crown jewel is <b>'+c5esc(topCj.asset)+'</b> (risk '+topCj.risk+(topCj.active_threat?', active threat':'')+', '+topCj.high_crit_vuln_count+' high/critical vulns)'+(CJRk.mocked?' — VM/EDR figures illustrative until those tools are connected':'')+'. Harden it before it becomes an incident.';
+    blBtn='Prioritize '+c5esc(topCj.asset);}
+  else if(ec.connected){blMid='exp_identity';blHead='One decision reduces the top exposure.';
+    blPara='Your largest exposure driver is <b>'+ec.name.toLowerCase()+'</b> — '+ec.displayValue+' modeled, threatening '+ec.threatens+'. The fix is scoped and funded and waiting for your sign-off.';
+    blBtn='Approve — removes '+ec.displayValue+' of risk';}
+  else {blMid='exp_identity';blHead='Connect your tools to surface the top fix.';
+    blPara='Connect your identity, control and crown-jewel sources and Nerion surfaces your most exposed asset here, with the scoped fix ready for sign-off.';
+    blBtn='Approve the top fix';}
   host.innerHTML=c5header()+
-    c5shell('Program health · where is the business most exposed?','Your enterprise-risk read — crown jewels, capabilities, scenarios and third parties.',anyRisk?'warn':null,'Four live reads of where the business carries the most cyber risk: the crown jewels at greatest risk, the business capabilities with the highest exposure, the most likely business-disruption scenarios, and third-party / supply-chain exposure. Tap any tile for the exact sources behind it.')+
-    c5legend([{c:'good',t:'Healthy'},{c:'warn',t:'At risk'},{c:'blue',t:'Monitoring'},{c:'line',t:'Not connected'}])+
+    c5shell('Program health · where is the business most exposed?','Your enterprise-risk read — crown jewels, capabilities, scenarios and third parties.',anyRisk?'warn':null,'Four live reads of where the business carries the most cyber risk: the crown jewels at greatest risk, the business capabilities with the highest exposure, the most likely business-disruption scenarios, and third-party / supply-chain exposure. Tap any tile for the exact PULL → JOIN → COMPUTE → OUTPUT behind it.')+
+    c5legend([{c:'good',t:'Healthy'},{c:'warn',t:'At risk'},{c:'blue',t:'Watch / monitoring'},{c:'line',t:'Not connected'}])+
     tiles+
-    c5bl('Bottom line','One decision on your desk reduces the top exposure.',null,blPara,{mid:'exp_identity',txt:blBtn})+
-    '<div class="c5foot">Each tile traces to its data sources. Figures shown are illustrative until connected.</div>';
+    c5bl('Bottom line',blHead,null,blPara,{mid:blMid,txt:blBtn})+
+    '<div class="c5foot">Each tile traces to its exact sources. Figures shown are illustrative until the sources are connected.</div>';
 }
 
 /* ---------- Tab 02 — Top exposure ---------- */
