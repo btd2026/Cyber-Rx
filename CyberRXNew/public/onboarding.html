@@ -944,6 +944,26 @@
   function obTabOf(sec){var st=sec.querySelector('.st');var h=(st?st.textContent:'').toLowerCase();
     for(var i=0;i<OB_TABS.length;i++){for(var j=0;j<OB_TABS[i].m.length;j++){if(h.indexOf(OB_TABS[i].m[j])>=0)return OB_TABS[i].k;}}return null;}
   function obPresentTabs(){var present={};obSecs().forEach(function(sec){var k=obTabOf(sec);if(k)present[k]=1;});return OB_TABS.filter(function(t){return present[t.k];});}
+  // A tab counts as COMPLETE when the user has actually put data into it — i.e. any
+  // of its sections' badges has flipped to ".done" (badges go done on input/upload).
+  // The Organization tab is complete once its required name is filled.
+  function obTabDone(k){
+    if(k==='org'){var on=document.getElementById('orgName');if(on&&on.value.trim())return true;}
+    var secs=obSecs().filter(function(s){return obTabOf(s)===k;});
+    return secs.some(function(s){var b=s.querySelector('.badge');return b&&b.classList.contains('done');});
+  }
+  function obCompletion(){var tabs=obPresentTabs();var done=tabs.filter(function(t){return obTabDone(t.k);}).length;return {done:done,total:tabs.length};}
+  // Progress bar reflects real COMPLETION (sections with data), not just which tab is
+  // open — so "how far are you" answers the honest question. Runs on tab change and
+  // live as fields are filled. Marks each done tab with a ✓ in the tab strip too.
+  function obUpdateProgress(){
+    var c=obCompletion();var pct=c.total?Math.round(c.done/c.total*100):0;
+    var pf=document.getElementById('obProgFill'),pl=document.getElementById('obProgLbl'),pw=document.getElementById('obProg');
+    if(pf)pf.style.width=pct+'%';
+    if(pl)pl.textContent=c.done+' of '+c.total+' sections complete · '+pct+'%';
+    if(pw)pw.classList.toggle('done',pct>=100);
+    document.querySelectorAll('.obtab').forEach(function(b){b.classList.toggle('done',obTabDone(b.dataset.k));});
+  }
   function obShow(key){OB_ACTIVE=key;
     obSecs().forEach(function(sec){var tk=obTabOf(sec);var vis=(tk===key);
       if(sec.id==='mapSec')vis=vis&&PROC.length&&APP.length; // map only when built
@@ -953,9 +973,8 @@
     var tabs=obPresentTabs(),idx=-1;for(var i=0;i<tabs.length;i++){if(tabs[i].k===key)idx=i;}
     var nav=document.getElementById('obNav'),btn=document.getElementById('obNextBtn');
     if(nav&&btn){if(idx>=0&&idx<tabs.length-1){var nx=tabs[idx+1];btn.textContent='Continue to '+nx.l+' →';btn.onclick=function(){obShow(nx.k);};nav.style.display='';}else{nav.style.display='none';}}
-    // Progress bar — how far through the onboarding the user is (by tab position).
-    var pf=document.getElementById('obProgFill'),pl=document.getElementById('obProgLbl'),pw=document.getElementById('obProg');
-    if(pf&&pl&&idx>=0){var total=tabs.length,step=idx+1,pct=Math.round(step/total*100);pf.style.width=pct+'%';pl.textContent='Step '+step+' of '+total+' · '+pct+'%';if(pw)pw.classList.toggle('done',pct>=100);}
+    // Progress bar — how much the user has actually COMPLETED (not just position).
+    obUpdateProgress();
     try{window.scrollTo({top:0});}catch(_){}}
   (function buildObTabs(){
     var host=document.getElementById('obtabs');if(!host)return;
@@ -965,6 +984,9 @@
       return '<button type="button" class="obtab'+(i===0?' on':'')+'" data-k="'+t.k+'"><span class="obn">'+String(i+1).padStart(2,'0')+'</span>'+t.l+'</button>';
     }).join('');
     host.querySelectorAll('.obtab').forEach(function(b){b.addEventListener('click',function(){obShow(b.dataset.k);});});
+    // Keep the completion bar live as the user fills fields / uploads / picks options —
+    // badges flip on these same events, so we recompute right after they bubble up.
+    ['input','change','click'].forEach(function(ev){document.addEventListener(ev,function(){try{obUpdateProgress();}catch(_){}},false);});
     obShow('org');
   })();
 </script>

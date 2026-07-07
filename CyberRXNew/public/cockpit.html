@@ -1288,7 +1288,28 @@ function renderCisoDecisions(){
       {tag:'B · Prove recovery (DR test)',on:'Option B · DR',osum:'removes the recovery tail',pros:['Removes the recovery-tail exposure','Meets regulatory recovery expectations'],cons:['A larger program than PAM','Leaves the top driver open']},
       {tag:'C · Cloud posture (CSPM)',on:'Option C · CSPM',osum:'closes cloud exposure',pros:['Baselines cloud misconfiguration and public exposure','Fast to stand up'],cons:['Does not touch the identity path','Preventive, not immediate risk removed']}]};
   }
-  host.innerHTML=decisions([dec]);
+  // The CISO's own decisions queue — the same interactive engine (choose · record
+  // who/when · push to ticketing · pull status) as the other seats. Decision 1 is
+  // the data-driven "next control-gap dollar" above; 2 and 3 are the two calls that
+  // naturally follow it and anchor to metrics already shown on this seat, so nothing
+  // is invented. c5dec/c5get are globals from ciso5.js.
+  var queue=[dec];
+  if(typeof c5dec==='function'&&typeof c5get==='function'){
+    var idm=c5get('exp_identity'),dlp=c5get('ctl_dlp');
+    queue.push(c5dec('ciso',2,'How do we treat the largest exposure driver?',
+      'Identity / access is your single largest exposure driver'+(idm.connected?(' ('+idm.displayValue+')'):'')+'. Fund the fix, phase it, or transfer part via insurance. Recommended: fund it — reducing the tail is typically cheaper than the extra premium, and it strengthens audit and board posture.',
+      {on:'Fund the identity fix now',osum:(idm.connected?('Removes the top driver · '+idm.displayValue):'Removes the top exposure driver'),
+        pros:['Closes the largest single exposure driver.','Reduces the modeled tail — usually cheaper than buying up insurance.','Strengthens audit and board posture at once.'],
+        cons:['Requires capital this cycle — scoped with your team, not invented by Nerion.']},
+      [{on:'Phase it over two cycles',osum:'Half now · half next cycle',pros:['Spreads the capital over two budgets.'],cons:['Leaves part of the top driver open in the interim.','Total cost is usually higher than doing it once.']},
+       {on:'Transfer part via insurance',osum:'Buy up cover instead of fixing',pros:['No engineering effort this cycle.'],cons:['The premium usually exceeds the cost of the fix.','The operational exposure itself remains.']}]));
+    queue.push(c5dec('ciso',3,'Retire the lowest-return control and redeploy?',
+      'Your lowest risk-removed control'+(dlp.connected?(' — '+dlp.name+' at '+dlp.displayValue+' removed —'):'')+' is a retire / consolidate candidate. Redeploying its spend to identity, your highest-return control, can be self-funding.',
+      {on:'Review it for retire / consolidate',osum:'Free spend at near-zero added risk',
+        pros:['Frees budget from a low-return control.','Redeployed to identity it can part-fund the top exposure fix.','Simplifies the stack and reduces tool overlap.'],
+        cons:['Attribute its spend and confirm overlap before retiring — do not cut a control still doing work.']}));
+  }
+  host.innerHTML=decisions(queue);
   wireChoose();
 }
 /* ---- Live executive decisions for the operational seats — same engine as the

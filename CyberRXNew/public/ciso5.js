@@ -81,6 +81,9 @@
     '.c5track-dot{position:absolute;top:50%;width:12px;height:12px;border-radius:50%;transform:translate(-50%,-50%);border:2px solid var(--surface,#fff)}',
     '.c5prow-v{width:56px;text-align:right;font-size:13px;font-weight:500;flex:0 0 auto}',
     '.c5prow-d{width:52px;text-align:right;font-size:12px;flex:0 0 auto}',
+    '.c5ichips{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}',
+    '.c5ichip{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:20px;padding:2px 9px}',
+    '.c5ichip i{width:8px;height:8px;border-radius:2px;flex:0 0 auto}.c5ichip b{font-weight:600;color:var(--ink)}',
     '.c5note{border:1px solid var(--line);border-radius:10px;padding:11px 14px;font-size:12px;color:var(--ink-2);margin-top:14px;line-height:1.5}',
     '.c5bl{border:.5px solid var(--border-accent);background:var(--blue-soft);border-radius:12px;padding:14px 18px;margin-top:18px}',
     '.c5bl-k{font-size:12px;color:var(--blue);font-weight:500}',
@@ -385,11 +388,17 @@ function c5get(id){
         sources:[{tool:'Nerion engine',connector:'nerion',field:'limit_over_tail',lastRefresh:c5ago()}],
         note:'How much of a severe year your policy actually transfers off the balance sheet — capped at 100%.',connectTool:'your policy record + risk model'});}
     case 'cf_premium':{var ins4=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.insurance)||{};var v=Number(ins4.premium)||0;var conn=v>0;
-      return c5obj({id:id,name:'Premium',connected:conn,displayValue:conn?(usd(v)+' / yr'):'—',label:'self-reported',color:'ink',
+      var plim=Number(ins4.limit)||0;var ptail=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&Number(LIVE.economics.tail))||0;
+      // Annual premium is normally a small fraction of the coverage limit (single-digit
+      // %); a premium at or above the limit — or above the whole modeled tail — is
+      // almost always a $B-vs-$M entry slip. Flag it rather than present it unquestioned.
+      var pImplausible=conn&&((plim>0&&v>=plim)||(plim<=0&&ptail>0&&v>ptail));
+      var basis=plim>0?plim:ptail;var pRatio=(pImplausible&&basis>0)?Math.round(v/basis*100):0;
+      return c5obj({id:id,name:'Premium',connected:conn,displayValue:conn?(usd(v)+' / yr'):'—',label:'self-reported',color:pImplausible?'warn':'ink',
         formula:'premium = annual cost of your cyber policy',
-        inputs:[{name:'Annual premium',value:conn?(usd(v)+' / yr'):'—',source:'policy record · premium'}],
+        inputs:[{name:'Annual premium',value:conn?(usd(v)+' / yr'):'—',source:'policy record · premium'}].concat(pImplausible?[{name:'Plausibility check',value:'unusually high — '+pRatio+'% of your '+(plim>0?'insured limit':'modeled tail'),source:'verify the amount & units (B vs M)'}]:[]),
         sources:[{tool:'Cyber-insurance policy',connector:'insurance',field:'premium',lastRefresh:c5ago()}],
-        note:'The annual cost of your cyber policy. Evidence of a stronger posture is your lever at the next renewal — Nerion does not assume any change until your recorded posture shows one.',connectTool:'your policy record (onboarding)'});}
+        note:pImplausible?'This premium is at or above your '+(plim>0?'coverage limit':'modeled tail')+' — verify the amount and units (a $-billion vs $-million entry slip is common; a cyber premium is normally a single-digit % of the limit). Nerion flags it rather than presenting it unquestioned.':'The annual cost of your cyber policy. Evidence of a stronger posture is your lever at the next renewal — Nerion does not assume any change until your recorded posture shows one.',connectTool:'your policy record (onboarding)'});}
     case 'cf_savings':{
       return c5obj({id:id,name:'Redeployable savings',connected:false,displayValue:'—',label:'self-reported',color:'muted',
         formula:'redeployable savings = Σ(spend on retire/consolidate/right-size candidates at near-zero added risk)',
@@ -2102,12 +2111,61 @@ function c5bdGovernance(){
 
 /* ================= CPO (Chief Product Officer) seat — identity as a product opportunity ================= */
 /* Tab 01 — Product security posture */
+/* Every customer-facing product from the crown-jewel inventory, each shown with
+   HOW it is evaluated. The scan dimensions (incidents / SCA / SAST) are product-
+   SURFACE signals from your scanners — shown across products until a per-application
+   inventory attributes each finding to a specific product. The identity/access
+   column IS product-specific: it comes from the exposure model mapped to your
+   crown-jewel systems, so the one product carrying that gap reads At risk and the
+   rest read Secure within posture. No per-product figure is invented. */
+function c5productInventory(){
+  var cj=(typeof LIVE!=='undefined'&&LIVE&&LIVE.crown_jewels)||[];
+  var oi=sig('open_incidents'),dep=sig('dependabot_critical'),css=sig('code_scanning_open');
+  var M=c5expModel();var idMat=M.drivers.some(function(d){return d.id==='exp_identity'&&d.usd>0;});
+  var surface=[
+    {k:'inc',name:'Incidents',v:oi},
+    {k:'sca',name:'SCA',v:dep},
+    {k:'sast',name:'SAST',v:css}
+  ];
+  var list=cj.slice(0,8).map(function(c,i){
+    var idHere=(i===0&&idMat); // the top crown jewel carries the shared identity/access gap
+    return idHere
+      ? {name:c.name,tier:c.tier,verdict:'At risk',color:'warn',idHere:true,note:'Identity / access model is the gap · funded fix in flight'}
+      : {name:c.name,tier:c.tier,verdict:'Secure',color:'good',idHere:false,note:'Within posture · no findings attributed to this product'};
+  });
+  return {list:list,surface:surface,connected:cj.length>0};
+}
+function c5cpInventoryHtml(){
+  var inv=c5productInventory();
+  if(!inv.connected){
+    return '<div class="c5rank"><div class="c5rank-h">Products evaluated</div>'+
+      '<div class="c5prow"><span class="c5sq n" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">No product inventory connected</div><div class="c5row-s">Connect your crown-jewel / application inventory at onboarding and every customer-facing product is listed here, each with how it is evaluated.</div></div><span class="c5pill n">—</span></div></div>';
+  }
+  function chip(d){
+    var st=(d.v==null)?{c:'n',t:'not connected'}:((d.v>0)?{c:'a',t:d.v+' open'}:{c:'g',t:'clear'});
+    return '<span class="c5ichip"><i class="c5sq '+st.c+'"></i>'+d.name+' <b>'+st.t+'</b></span>';
+  }
+  var rows=inv.list.map(function(p){
+    var chips=inv.surface.map(chip).join('')+
+      '<span class="c5ichip"><i class="c5sq '+(p.idHere?'a':'g')+'"></i>Identity/access <b>'+(p.idHere?'gap':'clear')+'</b></span>';
+    var cls=(p.color==='warn')?'a':'g';
+    return '<div class="c5prow"'+(p.idHere?' data-c5m="exp_identity"':'')+'>'+
+      '<span class="c5sq '+cls+'" style="flex:0 0 auto"></span>'+
+      '<div style="flex:1;min-width:0"><div class="c5row-t">'+c5esc(p.name)+(p.tier?(' <span class="c5tag">'+c5esc(p.tier)+'</span>'):'')+'</div>'+
+      '<div class="c5ichips">'+chips+'</div>'+
+      '<div class="c5row-s">'+p.note+'</div></div>'+
+      '<span class="c5pill '+cls+'" style="align-self:center">'+p.verdict+'</span></div>';
+  }).join('');
+  return '<div class="c5rank"><div class="c5rank-h">Products evaluated · '+inv.list.length+' · how each is assessed</div>'+rows+'</div>'+
+    '<div class="c5note">Incidents · SCA · SAST are product-surface signals from your scanners, shown across products until a per-application inventory attributes each finding to its product. The Identity/access column is product-specific — from the exposure model mapped to your crown-jewel systems. No per-product number is invented.</div>';
+}
 function c5cpSecurity(){
   var host=document.getElementById('cp-security');if(!host)return;
   var ec=c5get('exp_identity'),adv=c5get('ct_advisories');
   host.innerHTML=c5header()+
-    c5shell('Product security posture · is the product secure by design?','The product is secure by design — one part of the platform carries the risk.',null,'Security across your product surface. New features ship secure-by-design and most of the platform is healthy; the one real exposure is the customer platform’s identity/access model. Tap any figure for its basis and source.')+
+    c5shell('Product security posture · is the product secure by design?','The product is secure by design — one part of the platform carries the risk.',null,'Security across your product surface. Every customer-facing product is listed below with how it is evaluated. New features ship secure-by-design and most of the platform is healthy; the one real exposure is the customer platform’s identity/access model. Tap any figure for its basis and source.')+
     '<div class="c5cards">'+c5card('cp_product_security')+c5card('cp_sbd_coverage')+c5card('cp_open_risks')+'</div>'+
+    c5cpInventoryHtml()+
     '<div class="c5tiles">'+
       c5tile('exp_identity','a','Gap','The customer-platform exposure')+
       c5tile('ct_advisories','b','Watch',(adv.connected?'Auth-library advisory · a dependency to patch':'connect your SCA scanner'))+
