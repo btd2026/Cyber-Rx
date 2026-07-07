@@ -260,7 +260,7 @@ function c5get(id){
     case 'exp_conc':{var M2=c5expModel();var conn=M2.total>0;var top2=M2.drivers.slice(0,2).reduce(function(s,x){return s+x.usd;},0);var pc=M2.total>0?Math.round(top2/M2.total*100):0;
       return c5obj({id:id,name:'Concentrated in top 2',connected:conn,displayValue:conn?pc+'%':'—',label:'computed',color:conn?(pc>=60?'warn':'good'):'muted',
         formula:'concentration = (exposure of the top 2 drivers) ÷ total exposure',
-        inputs:M2.drivers.slice(0,2).map(function(x){return {name:x.name,value:usd(x.usd),source:'driver exposure'};}).concat([{name:'Total exposure',value:usd(M2.total),source:'exp_total'}]),
+        inputs:M2.drivers.slice(0,2).map(function(x){return {name:x.name,value:usd(x.usd),source:'driver exposure'};}).concat([{name:'Top 2 combined',value:usd(top2),source:'sum of the two above'},{name:'Total exposure',value:usd(M2.total),source:'exp_total'},{name:'= Concentration',value:usd(top2)+' ÷ '+usd(M2.total)+' = '+pc+'%',source:'top-2 ÷ total'}]),
         sources:[{tool:'Nerion risk model',connector:'nerion',field:'ale_decomposition',lastRefresh:c5ago()}],
         note:'How concentrated your risk is — a few drivers you can act on, vs a diffuse problem.',connectTool:'your risk register + financials'});}
     case 'eff_removed':{var live=(typeof ROI_STATE!=='undefined'&&ROI_STATE&&ROI_STATE.riskRemoved>0);var rr=live?ROI_STATE.riskRemoved:((typeof controlsEffUsd==='function')?controlsEffUsd():0);
@@ -312,9 +312,14 @@ function c5get(id){
         note:live?'Your live opted-in cohort — anonymized and suppressed below a minimum cohort size.':'A published industry baseline. Opt in to compare against a live cohort of your actual same-size peers.',connectTool:'the live peer cohort (opt in)'});}
     case 'peer_position':{var ov2=c5Overall();var pd2=c5peer();var opt2=c5peerOptin();var live2=!!(opt2&&pd2&&pd2.sufficient&&pd2.overall_values&&ov2!=null);
       var pctile=live2?((typeof peerPercentileOf==='function')?peerPercentileOf(ov2,pd2.overall_values):null):(ov2!=null?c5refPercentile(ov2):null);
+      var zsc=(!live2&&ov2!=null)?((ov2-C5_REF_OVERALL)/C5_REF_SD):null;
+      var pinputs=live2
+        ?[{name:'Your CMMI',value:ov2!=null?Number(ov2).toFixed(1):'—',source:'peer_maturity'},{name:'Live cohort size',value:(pd2&&pd2.n)||0,source:'peer cohort'},{name:'= Position',value:pctile!=null?(pctile+'th percentile in cohort'):'—',source:'rank ÷ cohort size'}]
+        :[{name:'Your CMMI',value:ov2!=null?Number(ov2).toFixed(1):'—',source:'peer_maturity'},{name:'Baseline median (μ)',value:C5_REF_OVERALL.toFixed(2),source:'published enterprise benchmark'},{name:'Baseline spread (σ)',value:'±'+C5_REF_SD,source:'published enterprise benchmark'},{name:'z-score',value:zsc!=null?(zsc.toFixed(2)+'  ( ('+Number(ov2).toFixed(1)+' − '+C5_REF_OVERALL.toFixed(2)+') ÷ '+C5_REF_SD+' )'):'—',source:'computed'},{name:'= Percentile',value:pctile!=null?(pctile+'th (standard-normal CDF of z)'):'—',source:'normal distribution'}];
       return c5obj({id:id,name:'Your position',connected:pctile!=null,displayValue:(pctile!=null)?(pctile>=50?('Top '+(100-pctile)+'%'):('Bottom '+pctile+'%')):'—',label:live2?'computed':'modeled',color:(pctile!=null)?(pctile>=50?'good':'warn'):'muted',
-        formula:live2?'position = your percentile rank within your live cohort by overall CMMI':'position = your overall CMMI ranked against the published industry-baseline distribution',
-        inputs:[{name:'Your CMMI',value:ov2!=null?Number(ov2).toFixed(1):'—',source:'peer_maturity'},live2?{name:'Cohort',value:(pd2&&pd2.n)||0,source:'DTNKSHIELD cohort'}:{name:'Baseline median · spread',value:C5_REF_OVERALL.toFixed(1)+' · ±'+C5_REF_SD,source:'published enterprise benchmark'}],
+        formula:live2?'position = your percentile rank within your live cohort by overall CMMI':'position = the standard-normal percentile of your CMMI vs the published baseline (μ='+C5_REF_OVERALL.toFixed(2)+', σ='+C5_REF_SD+')',
+        method:live2?'Your rank within the opted-in cohort of same-size peers.':'z = (your CMMI − baseline median) ÷ baseline spread; the percentile is the standard-normal CDF of that z. "Top X%" = 100 − percentile. Follow the rows below to reconstruct it exactly.',
+        inputs:pinputs,
         sources:[live2?{tool:'DTNKSHIELD peer cohort',connector:'peer',field:'overall_values',lastRefresh:c5ago()}:{tool:'Published industry benchmark',connector:'reference',field:'csf_cmmi_distribution',lastRefresh:c5ago()}],
         note:'Where you stand against peers your size — top-third is the target.'+(live2?'':' Shown against the published baseline; opt in for your live cohort.'),connectTool:'the live peer cohort (opt in)'});}
     /* ---- CFO metrics (same engine, financial lens; shared objects reused where they exist) ---- */
