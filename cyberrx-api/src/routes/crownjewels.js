@@ -186,6 +186,13 @@ router.post('/ingest', optionalJWT, async (req, res) => {
           .map((o) => ({ name: String(o.name || o).slice(0, 140), map: o.map ? String(o.map).slice(0, 40) : '' }))
       : [];
 
+    // Business capability map (name + cyber exposure + GRC status) — powers the CISO
+    // Enterprise-Risk tile "business capabilities with highest exposure".
+    const capabilities = Array.isArray(b.capabilities)
+      ? b.capabilities.filter((c) => c && c.name).slice(0, 40)
+          .map((c) => ({ name: String(c.name).slice(0, 140), exposure_usd: money(c.exposure_usd), grc_status: c.grc_status ? String(c.grc_status).slice(0, 20) : null }))
+      : [];
+
     // Executive names by seat id — each seat's decisions are stamped with the leader's
     // name. Stored server-side so the cockpit shows them on any device.
     const seatNames = {};
@@ -204,7 +211,7 @@ router.post('/ingest', optionalJWT, async (req, res) => {
        VALUES ($1,$2,$3,$4::jsonb,NOW())
        ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name,
          setup_json = COALESCE(orgs.setup_json,'{}'::jsonb) || EXCLUDED.setup_json`,
-      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics, resilience, initiatives, governance, aiGovernance, growth, strategicInitiatives, objectives, seatNames })]);
+      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics, resilience, initiatives, governance, aiGovernance, growth, strategicInitiatives, objectives, capabilities, seatNames })]);
 
     // Idempotent replace: clear the org's prior inventory, then insert the mapped rows.
     step = 'clear_inventory';

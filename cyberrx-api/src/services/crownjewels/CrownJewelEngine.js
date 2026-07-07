@@ -48,8 +48,8 @@ async function loadOrgSetup(orgId) {
     const rows = await db.query('SELECT setup_json FROM orgs WHERE id=$1', [orgId]);
     const sj = rows[0] && rows[0].setup_json;
     const parsed = typeof sj === 'string' ? JSON.parse(sj) : (sj || {});
-    return { economics: (parsed && parsed.economics) || {}, resilience: (parsed && parsed.resilience) || {}, governance: (parsed && parsed.governance) || {}, aiGovernance: (parsed && parsed.aiGovernance) || {}, growth: (parsed && parsed.growth) || {}, strategicInitiatives: (parsed && parsed.strategicInitiatives) || [], objectives: (parsed && parsed.objectives) || [], initiatives: (parsed && parsed.initiatives) || [], seatNames: (parsed && parsed.seatNames) || {} };
-  } catch (_) { return { economics: {}, resilience: {}, governance: {}, aiGovernance: {}, growth: {}, strategicInitiatives: [], objectives: [], initiatives: [], seatNames: {} }; }
+    return { economics: (parsed && parsed.economics) || {}, resilience: (parsed && parsed.resilience) || {}, governance: (parsed && parsed.governance) || {}, aiGovernance: (parsed && parsed.aiGovernance) || {}, growth: (parsed && parsed.growth) || {}, strategicInitiatives: (parsed && parsed.strategicInitiatives) || [], objectives: (parsed && parsed.objectives) || [], capabilities: (parsed && parsed.capabilities) || [], initiatives: (parsed && parsed.initiatives) || [], seatNames: (parsed && parsed.seatNames) || {} };
+  } catch (_) { return { economics: {}, resilience: {}, governance: {}, aiGovernance: {}, growth: {}, strategicInitiatives: [], objectives: [], capabilities: [], initiatives: [], seatNames: {} }; }
 }
 
 // materialExposure() reads snake_case, but Risk._transformFromDb returns camelCase.
@@ -290,6 +290,7 @@ async function run(orgId) {
       governance,
       strategic_initiatives: strategicInitiatives,
       objectives: setup.objectives || [],
+      capabilities: setup.capabilities || [],
       initiatives: setup.initiatives || [],
       seatNames: setup.seatNames || {},
       growth,

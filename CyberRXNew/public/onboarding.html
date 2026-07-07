@@ -402,6 +402,19 @@
     <div class="result" id="resRisk"></div>
   </div>
 
+  <!-- 6a2 · Business capability map (CISO Enterprise-Risk: capabilities with highest exposure) -->
+  <div class="sec">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Business capability map <span style="color:var(--muted)">(for the CISO Enterprise-Risk read)</span></div><div class="sd">Your core business capabilities and the cyber exposure each carries. Powers the CISO Program-Health tile <b>“business capabilities with highest exposure.”</b> From your capability map + GRC — leave blank to keep that tile illustrative.</div></div><div class="badge" id="bcap">optional</div></div>
+    <div class="srcchoice"><div class="srcopt sel" data-choice="cap" data-mode="upload"><div class="so-h">✎ Add manually</div><div class="so-d">capability · exposure · GRC status</div></div><div class="srcopt" data-choice="cap" data-mode="connect"><div class="so-h">⚡ Pull from GRC</div><div class="so-d">Archer / ServiceNow GRC / LeanIX — live</div></div></div>
+    <div id="capUpload">
+      <div id="capRows"></div>
+      <button type="button" id="addCap" class="conn-go" style="margin-top:4px">+ Add capability</button>
+    </div>
+    <div id="capConnect" style="display:none">
+      <div class="conn-row"><div class="field" style="min-width:200px"><label>GRC / capability platform</label><select id="capSys"><option>Archer</option><option>ServiceNow GRC</option><option>LeanIX</option><option>Ardoq</option><option>SAP GRC</option></select></div><div class="field" style="flex:1;min-width:220px"><label>Instance URL / API token</label><input id="capCred" placeholder="https://yourorg.archer.com · token"></div><button class="conn-go" data-conn="cap" type="button">Connect &amp; save</button></div>
+    </div>
+  </div>
+
   <!-- 6b · Cyber projects & initiatives -->
   <div class="sec">
     <div class="sh"><div class="sn">✦</div><div><div class="st">Current cyber projects &amp; initiatives</div><div class="sd">Your in-flight cyber spend — each with its cost and expected return. The CISO and CFO manage these alongside new decisions in the cockpit. Upload a list, or pull them from your ticketing system.</div></div><div class="badge" id="binit">optional</div></div>
@@ -556,6 +569,29 @@
   }).filter(Boolean);}
   function updateObjBadge(){var n=collectObjectives().length,b=document.getElementById('bobj');if(b){if(n){b.textContent='✓ '+n+' objective'+(n>1?'s':'');b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}}
   (function(){var a=document.getElementById('addObj');if(a)a.addEventListener('click',function(){addObjRow();});})();
+
+  // ---- business capability map (CISO Enterprise-Risk: capabilities with highest exposure) ----
+  var CAP_GRC=['Adequate','Watch','Gap'];
+  function addCapRow(v){v=v||{};var wrap=document.getElementById('capRows');if(!wrap)return;
+    var row=document.createElement('div');row.className='cap-row';row.style.cssText='display:grid;grid-template-columns:1.8fr 1.2fr 1fr auto;gap:10px;margin-bottom:10px;align-items:end';
+    row.innerHTML='<div class="field"><label>Capability</label><input class="cap-name" placeholder="e.g. Claims processing · Member enrollment · Payments"></div>'+
+      '<div class="field"><label>Cyber exposure</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum cap-val" placeholder="40"><select class="munit cap-valu"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div></div>'+
+      '<div class="field"><label>GRC status</label><select class="cap-grc">'+CAP_GRC.map(function(g){return '<option>'+g+'</option>';}).join('')+'</select></div>'+
+      '<button class="cap-del" type="button" title="Remove" style="height:38px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;color:var(--muted)">✕</button>';
+    wrap.appendChild(row);
+    if(v.name)row.querySelector('.cap-name').value=v.name;
+    if(v.grc_status)row.querySelector('.cap-grc').value=v.grc_status;
+    row.querySelector('.cap-del').addEventListener('click',function(){row.remove();updateCapBadge();});
+    ['input','change'].forEach(function(ev){row.addEventListener(ev,updateCapBadge);});
+    updateCapBadge();
+  }
+  function collectCapabilities(){return Array.prototype.slice.call(document.querySelectorAll('#capRows .cap-row')).map(function(r){
+    var name=(r.querySelector('.cap-name').value||'').trim();if(!name)return null;
+    var val=parseFloat(r.querySelector('.cap-val').value||'')||null,unit=parseFloat(r.querySelector('.cap-valu').value)||1;
+    return {name:name,exposure_usd:val!=null?Math.round(val*unit):null,grc_status:r.querySelector('.cap-grc').value};
+  }).filter(Boolean);}
+  function updateCapBadge(){var n=collectCapabilities().length,b=document.getElementById('bcap');if(b){if(n){b.textContent='✓ '+n+' capabilit'+(n>1?'ies':'y');b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}}
+  (function(){var a=document.getElementById('addCap');if(a)a.addEventListener('click',function(){addCapRow();});})();
 
   // ---- policy & document evidence (framework CMMI via /api/documents/analyze) ----
   // Writes the same localStorage keys the cockpit Framework tab reads
@@ -893,6 +929,7 @@
       },
       strategicInitiatives:collectStrategic(),
       objectives:collectObjectives(),
+      capabilities:collectCapabilities(),
       seatNames:seatNames,
       growth:{
         pipelineUsd:mval('growthPipeline'),reviewBeforeWks:v('growthBefore'),reviewNowWks:v('growthNow'),
@@ -936,7 +973,7 @@
     {k:'gov',l:'Governance & AI',m:['board governance','ai risk','strategic initiatives','policy & document']},
     {k:'fin',l:'Financials',m:['financials','enterprise risk','growth engine','insurance']},
     {k:'inv',l:'Inventory',m:['business processes','systems','map applications']},
-    {k:'risk',l:'Risks & projects',m:['risk register','cyber projects','initiatives']},
+    {k:'risk',l:'Risks & projects',m:['risk register','business capability map','cyber projects','initiatives']},
     {k:'tools',l:'Connect tools',m:['connect your tools']}
   ];
   var OB_ACTIVE='org';
