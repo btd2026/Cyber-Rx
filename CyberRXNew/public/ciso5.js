@@ -1570,7 +1570,8 @@ function c5Exposure(){
     ?('Protection seen from the business, not the tool. '+(well.length?('You are strong across '+well.length+' area'+(well.length>1?'s':'')+' — the defensible base you take to the board. '):'')+(topWeak?('The exposure concentrates in '+topWeak.name+', where protection is thinnest'+((topWeak.gaps||0)>0?(' — '+topWeak.gaps+' open control gap'+(topWeak.gaps>1?'s':'')):'')+'. '):'')+(topCtrl?('Your best lever is '+nm(topCtrl.c)+', the control returning the most business value today.'):''))
     :'What this seat sees at a glance: the functions of the business that are well protected, the ones carrying the residual cyber exposure, and the controls delivering the most risk reduction — so the CISO can defend where the program is strong and direct the next dollar where it is not.';
   var tone=(haveAreas&&weak.length&&well.length<weak.length)?'warn':null;
-  var stat=function(lbl,val,col){return '<div class="c5mc"><div class="c5mc-l">'+lbl+'</div><div class="c5mc-v"'+(col?(' style="color:var(--'+col+')"'):'')+'>'+val+'</div></div>';};
+  // Summary as icon cards (matching the Cyber Operations tab) — icon · label · count · one-line read.
+  var scard=function(ic,lbl,val,sub,col){col=col||'muted';return '<div class="c5opc" style="cursor:default"><div class="c5opc-h"><span class="c5opc-ic" style="color:var(--'+col+')">'+c5icon(ic)+'</span><span class="c5opc-t">'+lbl+'</span></div><div class="c5opc-v" style="color:var(--'+(col==='muted'?'ink':col)+')">'+val+'</div><div class="c5opc-s">'+sub+'</div></div>';};
 
   // ── Widget rows ────────────────────────────────────────────────────────────
   var areaRow=function(a,mode){var cls=capColor(a.score);
@@ -1594,9 +1595,9 @@ function c5Exposure(){
   var body=c5header()+
     c5shell('Protection effectiveness · is the business protected where it counts?',verdict,tone,intro)+
     '<div class="c5statgrid">'+
-      stat('Areas well protected',haveAreas?String(well.length):'—',well.length?'good':null)+
-      stat('Areas to strengthen',haveAreas?String(weak.length):'—',weak.length?'warn':null)+
-      stat('Controls returning value',haveCtrls?String(ctrlConn.length):'—',haveCtrls?'good':null)+
+      scard('shieldcheck','Areas well protected',haveAreas?String(well.length):'—','Strong enough to defend to the board',well.length?'good':'muted')+
+      scard('target','Areas to strengthen',haveAreas?String(weak.length):'—','Carrying the residual exposure',weak.length?'warn':'muted')+
+      scard('coin','Controls returning value',haveCtrls?String(ctrlConn.length):'—','Buying down the most risk',haveCtrls?'good':'muted')+
     '</div>';
   if(haveAreas){
     body+='<div class="c5seclab">Where the business is well protected</div><div>'+w1+'</div>'+
@@ -1605,6 +1606,7 @@ function c5Exposure(){
   if(haveCtrls){
     body+='<div class="c5seclab" style="margin-top:18px">Controls delivering the most business value</div><div>'+w3+'</div>';
   }
+  // Conclusion — always present, like the other tabs.
   if(haveAreas&&topWeak&&topCtrl){
     body+=c5bl('Bottom line',
       'Extend '+nm(topCtrl.c)+' to '+topWeak.name+' — your best-value control against your least-protected area.',
@@ -1613,8 +1615,10 @@ function c5Exposure(){
       {mid:topCtrl.c.k==='mfa'?'exp_identity':'exp_total',txt:'Extend '+nm(topCtrl.c)+' — removes '+usd(topCtrl.usd)});
   } else if(haveAreas&&weak.length===0){
     body+=c5bl('Bottom line','The business is protected across every area.',null,'Every area clears its protection bar. Hold the posture and evidence it — this is the read the board wants to see sustained.',null);
+  } else {
+    body+=c5bl('Bottom line','Protection is where the next dollar of security gets decided.',null,'This view separates the parts of the business that are safe to defend to the board from the parts still carrying exposure — and names the control that closes the gap most efficiently. It is the CISO’s allocation call, on one screen.',null);
   }
-  if(haveAreas||haveCtrls)body+='<div class="c5foot">Every figure traces to its source'+(anyDerived?'; figures marked “illustrative” are not yet fully evidenced':'')+'.</div>';
+  body+='<div class="c5foot">Every figure traces to its source'+(anyDerived?'; figures marked “illustrative” are not yet fully evidenced':'')+'.</div>';
   host.innerHTML=body;
 }
 
