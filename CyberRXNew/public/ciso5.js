@@ -1456,19 +1456,103 @@ function c5Health(){
 }
 
 /* ---------- Tab 02 — Top exposure ---------- */
+/* Protection score for a business area. Prefer a real GRC control-coverage figure;
+   otherwise map the GRC status (Adequate / Watch / Gap) to a representative band —
+   marked illustrative wherever it is derived rather than measured. */
+function c5protScore(c){
+  if(c.control_coverage!=null)return Math.max(0,Math.min(100,Math.round(Number(c.control_coverage))));
+  var g=String(c.grc_status||'').toLowerCase();
+  if(/adequate|strong|good|covered/.test(g))return 88;
+  if(/watch|partial|moderate/.test(g))return 66;
+  if(/gap|weak|inadequate|deficient/.test(g))return 46;
+  return null;
+}
+function c5protGaps(c){
+  if(c.control_gaps!=null)return Number(c.control_gaps);
+  var g=String(c.grc_status||'').toLowerCase();
+  if(/adequate|strong|good|covered/.test(g))return 0;
+  if(/watch|partial|moderate/.test(g))return 2;
+  if(/gap|weak|inadequate|deficient/.test(g))return 4;
+  return null;
+}
+/* What each control actually guards — used to explain its business value in words,
+   not just dollars. */
+var CAP_PROTECTS={edr:'every endpoint & server',mfa:'all identities & access',pam:'privileged & admin accounts',vuln:'internet-facing & critical assets',aware:'the workforce — your phishing entry point',siem:'estate-wide detection & response',dlp:'sensitive & regulated data',seg:'crown-jewel network zones',backup:'recoverability of your crown jewels',cspm:'the cloud estate'};
+/* ---------- Tab 02 — Protection effectiveness ---------- */
+/* Three reads the CISO can act on: where the business is well protected, where to
+   concentrate next, and which controls return the most business value per point of
+   coverage. Business areas come from the Business Capability Map joined to GRC;
+   controls come from the live control ledger (deployment × framework-weighted
+   criticality of what they protect = risk removed). Nothing hardcoded — an
+   unconnected source reads as "connect" rather than inventing a number. */
 function c5Exposure(){
   var host=document.getElementById('c5-exposure');if(!host)return;
-  var M=c5expModel();
-  var rows='<div class="c5rank"><div class="c5rank-h">Ranked by business impact</div>'+M.drivers.map(function(d,i){var m=c5get(d.id);var tr=m.trend||{t:'Steady',c:'st'};
-    return '<div class="c5row" data-c5m="'+d.id+'"><div class="c5row-n">'+(i+1)+'</div><div class="c5row-main"><div class="c5row-t">'+d.name+(d.largest?'<span class="c5tag">Largest</span>':'')+'</div><div class="c5row-s">Threatens '+d.threatens+'</div></div><div class="c5row-v">'+(m.connected?m.displayValue:'not connected')+'</div><div class="c5tr '+tr.c+'">'+tr.t+'</div></div>';
-  }).join('')+'</div>';
-  var top=c5get('exp_identity');
+  var TARGET=75; // the platform's healthy-coverage bar, consistent with capability scoring
+  var caps=(typeof LIVE!=='undefined'&&LIVE&&LIVE.capabilities)||[];
+  var areas=caps.map(function(c){return {name:c.name,score:c5protScore(c),gaps:c5protGaps(c),grc:c.grc_status||null,exp:Number(c.exposure_usd)||0,measured:(c.control_coverage!=null)};}).filter(function(a){return a.name&&a.score!=null;});
+  var anyDerived=areas.some(function(a){return !a.measured;});
+  var well=areas.filter(function(a){return a.score>=TARGET&&(a.gaps||0)===0;}).sort(function(a,b){return b.score-a.score;});
+  var weak=areas.filter(function(a){return a.score<TARGET||(a.gaps||0)>0;}).sort(function(a,b){return a.score-b.score;});
+  // Controls, ranked by the business value each returns (dollars of expected loss removed).
+  var rr=(typeof capRiskRemoved==='function')?capRiskRemoved():{byCap:{},total:0,anyLive:false};
+  var ctrls=(typeof CAPS!=='undefined'?CAPS:[]).map(function(c){return {c:c,p:(typeof capDeploy==='function'?capDeploy(c):null),usd:(rr.byCap&&rr.byCap[c.k])||0};});
+  var ctrlConn=ctrls.filter(function(o){return o.p!=null;}).sort(function(a,b){return b.usd-a.usd;});
+  var ctrlOff=ctrls.filter(function(o){return o.p==null;}).length;
+  var maxV=Math.max.apply(null,ctrlConn.map(function(o){return o.usd;}).concat([1]));
+  var topCtrl=ctrlConn[0]||null,topWeak=weak[0]||null;
+
+  // ── Verdict + three-number summary ─────────────────────────────────────────
+  var haveAreas=areas.length>0,haveCtrls=ctrlConn.length>0;
+  var verdict=haveAreas
+    ?(weak.length===0
+        ?'Every mapped business area clears the protection bar — hold the line and prove it to the board.'
+        :(well.length>=weak.length
+            ?('Most of the business is well protected — '+weak.length+' area'+(weak.length>1?'s':'')+' carr'+(weak.length>1?'y':'ies')+' the residual exposure, and your highest-value controls are the ones to extend to them.')
+            :('More of the business needs strengthening than is fully covered — concentrate on the '+weak.length+' area'+(weak.length>1?'s':'')+' below, led by your highest-value controls.')))
+    :'Map your business capabilities to GRC and this becomes a live read of where the business is — and isn’t — protected.';
+  var intro=haveAreas
+    ?('This is protection seen from the business, not the tool. '+(well.length?('You are strong across '+well.length+' area'+(well.length>1?'s':'')+' — that is your defensible base. '):'')+(topWeak?('The exposure concentrates in '+topWeak.name+', where control coverage sits at '+topWeak.score+(topWeak.measured?'':' (illustrative)')+' against a '+TARGET+' bar'+((topWeak.gaps||0)>0?(' with '+topWeak.gaps+' open control gap'+(topWeak.gaps>1?'s':'')):'')+'. '):'')+(topCtrl?('The fastest way to close it is to extend '+topCtrl.c.name.replace(/ *\(.*\)/,'')+' — the control returning the most business value today ('+usd(topCtrl.usd)+' of loss removed).'):'Connect your controls to rank them by the business value each returns.'))
+    :'Add your Business Capability Map (or connect GRC) and each area is scored on how well it is protected, so the exposure surfaces by business function — not by control acronym.';
+  var stat=function(lbl,val,col){return '<div class="c5mc"><div class="c5mc-l">'+lbl+'</div><div class="c5mc-v"'+(col?(' style="color:var(--'+col+')"'):'')+'>'+val+'</div></div>';};
+
+  // ── Widget rows ────────────────────────────────────────────────────────────
+  var areaRow=function(a,mode){var cls=capColor(a.score);
+    var sub=(mode==='well')
+      ?((a.grc?('GRC '+a.grc+' · '):'')+'no open control gaps'+(a.measured?'':' · illustrative'))
+      :((a.gaps>0?(a.gaps+' open control gap'+(a.gaps>1?'s':'')):'below the '+TARGET+' bar')+(a.exp>0?(' · '+usd(a.exp)+' of exposure carried'):'')+(a.measured?'':' · illustrative'));
+    return '<div class="c5erow"><div style="flex:1;min-width:0"><div class="c5exp">'+a.name+' <span class="c5pill '+(mode==='well'?'g':a.score<50?'r':'a')+'" style="margin-left:4px">'+(mode==='well'?'Protected':(a.score<50?'Priority':'Strengthen'))+'</span></div><div class="c5esub">'+sub+'</div></div>'+
+      '<div class="c5etrack"><div style="width:'+a.score+'%;height:100%;background:var(--'+cls+')"></div></div>'+
+      '<div class="c5emult" style="color:var(--'+cls+')">'+a.score+'</div></div>';
+  };
+  var w1=well.length?well.map(function(a){return areaRow(a,'well');}).join(''):'<div class="c5foot" style="margin-top:0;padding:12px 4px">No business area currently clears the '+TARGET+'-point protection bar — every mapped area is in the strengthening list below.</div>';
+  var w2=weak.length?weak.map(function(a){return areaRow(a,'weak');}).join(''):'<div class="c5foot" style="margin-top:0;padding:12px 4px">No business area falls below the '+TARGET+'-point bar or carries an open control gap — the estate is fully covered.</div>';
+  var w3=haveCtrls?ctrlConn.map(function(o){var c=o.c,pct=maxV>0?Math.round(o.usd/maxV*100):0;if(pct<6&&o.usd>0)pct=6;
+      return '<div class="c5erow"><div style="flex:1;min-width:0"><div class="c5exp">'+c.name.replace(/ *\(.*\)/,'')+' <span class="c5pill b" style="margin-left:4px">'+(o.p+'% deployed')+'</span></div><div class="c5esub">Protects '+(CAP_PROTECTS[c.k]||c.name.toLowerCase())+'</div></div>'+
+        '<div class="c5etrack"><div style="width:'+pct+'%;height:100%;background:var(--good)"></div></div>'+
+        '<div class="c5emult" style="color:var(--good)">'+usd(o.usd)+'</div></div>';
+    }).join(''):'<div class="c5foot" style="margin-top:0;padding:12px 4px">Connect your security tools (EDR, identity, PAM, vulnerability, SIEM, backup, cloud) and each control is ranked by the business value it returns.</div>';
+
+  var connectMsg='<div class="c5foot" style="margin-top:0;padding:12px 4px">Add your Business Capability Map or connect GRC (Archer / ServiceNow GRC / LeanIX) and these two views populate with your own business areas, scored against the '+TARGET+'-point bar.</div>';
+
   host.innerHTML=c5header()+
-    c5shell('Top exposure · what’s our biggest risk?','One driver is a third of your risk — and it’s funded to fix.',null,'Your modeled exposure this morning is decomposed below, and it’s concentrated: the top two drivers dominate. The largest already has a scoped, funded fix. Each exposure traces to the business function it threatens and the number behind it.')+
-    '<div class="c5cards">'+c5card('exp_total')+c5card('exp_conc')+'</div>'+
-    rows+
-    c5bl('Bottom line','Your biggest lever is your most expensive exposure.',null,(top.connected?('Approving the identity fix removes '+top.displayValue+' — the single largest reduction available to you this quarter — and it’s already funded.'):'Connect your identity controls and the largest, funded reduction surfaces here.'),{mid:'exp_identity',txt:top.connected?('Approve identity fix — removes '+top.displayValue):'Approve the top fix'})+
-    '<div class="c5foot">Each exposure traces to its business function and formula.</div>';
+    c5shell('Protection effectiveness · is the business protected where it counts?',verdict,(haveAreas&&weak.length&&well.length<weak.length)?'warn':null,intro)+
+    '<div class="c5statgrid">'+
+      stat('Areas well protected',haveAreas?String(well.length):'—',well.length?'good':null)+
+      stat('Areas to strengthen',haveAreas?String(weak.length):'—',weak.length?'warn':null)+
+      stat('Controls returning value',haveCtrls?String(ctrlConn.length):'—',haveCtrls?'good':null)+
+    '</div>'+
+    '<div class="c5seclab">Where the business is well protected · GRC coverage at or above the '+TARGET+'-point bar, no open gaps</div>'+
+    '<div>'+(haveAreas?w1:connectMsg)+'</div>'+
+    '<div class="c5seclab" style="margin-top:18px">Where to concentrate next · areas below the bar or carrying open control gaps</div>'+
+    '<div>'+(haveAreas?w2:'')+'</div>'+
+    '<div class="c5seclab" style="margin-top:18px">Which controls return the most business value · risk removed = deployment × criticality of what it protects</div>'+
+    '<div>'+w3+'</div>'+
+    c5bl('Bottom line',
+      (topWeak&&topCtrl)?('Extend '+topCtrl.c.name.replace(/ *\(.*\)/,'')+' to '+topWeak.name+' — your best-value control against your least-protected area.'):(haveAreas?'The business is protected across every mapped area.':'Connect your capability map and controls to make this a live protection read.'),
+      (haveAreas&&weak.length&&well.length<weak.length)?'warn':null,
+      (topWeak&&topCtrl)?('Your exposure concentrates in '+topWeak.name+' ('+topWeak.score+(topWeak.measured?'':' illustrative')+' vs a '+TARGET+' bar). '+topCtrl.c.name.replace(/ *\(.*\)/,'')+' is the highest-value control you run — extending its coverage there removes the most business risk per point of deployment, and it is already funded.'):(haveAreas?'Every mapped business area clears the protection bar. Hold the posture and evidence it — this is the read the board wants to see sustained.':'Once your capability map and controls are connected, this view ranks where to concentrate and which control does it most efficiently.'),
+      (topWeak&&topCtrl)?{mid:topCtrl.c.k==='mfa'?'exp_identity':'exp_total',txt:'Extend '+topCtrl.c.name.replace(/ *\(.*\)/,'')+' — removes '+usd(topCtrl.usd)}:null)+
+    '<div class="c5foot">Business areas from your Capability Map × GRC; control value from the live control ledger. '+(anyDerived?'Scores marked “illustrative” are derived from GRC status until GRC coverage is connected. ':'')+'Every figure traces to its source.</div>';
 }
 
 /* ---------- Tab 03 — Control effectiveness ---------- */
