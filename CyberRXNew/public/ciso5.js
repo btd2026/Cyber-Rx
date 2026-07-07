@@ -264,9 +264,13 @@ function c5get(id){
         sources:[{tool:'Nerion risk model',connector:'nerion',field:'ale_decomposition',lastRefresh:c5ago()}],
         note:'How concentrated your risk is — a few drivers you can act on, vs a diffuse problem.',connectTool:'your risk register + financials'});}
     case 'eff_removed':{var live=(typeof ROI_STATE!=='undefined'&&ROI_STATE&&ROI_STATE.riskRemoved>0);var rr=live?ROI_STATE.riskRemoved:((typeof controlsEffUsd==='function')?controlsEffUsd():0);
+      var byCap=(typeof capRiskRemoved==='function')?(capRiskRemoved().byCap||{}):{};
+      var capRows=Object.keys(byCap).filter(function(k){return byCap[k]>0;}).sort(function(a,b){return byCap[b]-byCap[a];}).slice(0,6).map(function(k){var c=(typeof CAP_BY_KEY!=='undefined')?CAP_BY_KEY[k]:null;return {name:(c?c.name.replace(/ *\(.*\)/,''):k),value:usd(Math.round(byCap[k])),source:'control-value ledger · '+k};});
+      var einputs=live?[{name:'Risk removed (funded portfolio)',value:usd(rr),source:'initiatives portfolio (ticketing + decisions)'}]:capRows.concat([{name:'= Total risk removed',value:usd(rr),source:'Σ of the controls above'}]);
       return c5obj({id:id,name:'Risk removed',connected:rr>0,displayValue:rr>0?usd(rr):'—',label:live?'computed':'modeled',color:'good',
-        formula:'risk removed = Σ(inherent exposure − residual exposure) across your controls'+(live?' (funded portfolio)':''),
-        inputs:[{name:'Risk removed',value:usd(rr),source:live?'initiatives portfolio (ticketing + decisions)':'control-value ledger (modeled)'}],
+        formula:'risk removed = Σ over controls of ( inherent exposure − residual exposure )'+(live?' (your funded portfolio)':''),
+        method:'Each control’s contribution = its framework-weighted share of the modeled expected loss × how much of it you’ve deployed (the control-value ledger), summed across controls. '+(live?'Here it uses the realized benefit of your funded initiatives from ticketing / decisions.':'Tap any control-value row on the Effectiveness tab for that control’s own drill.'),
+        inputs:einputs,
         sources:[{tool:live?'Jira / ServiceNow':'Nerion engine',connector:live?'itsm':'nerion',field:live?'benefit':'controls_removed',lastRefresh:c5ago()}],
         note:'The dollars of expected loss your controls have bought down this year.',connectTool:'your control catalog / GRC'});}
     case 'eff_spend':{var inv=(typeof ROI_STATE!=='undefined'&&ROI_STATE)?ROI_STATE.invested:0;var conn=inv>0;
@@ -276,9 +280,16 @@ function c5get(id){
         sources:[{tool:'Jira / ServiceNow',connector:'itsm',field:'cost',lastRefresh:c5ago()}],
         note:'What you spent to remove that risk — the denominator of return.',connectTool:'your ticketing / finance (import funded initiatives)'});}
     case 'eff_return':{var st=(typeof ROI_STATE!=='undefined'&&ROI_STATE)?ROI_STATE:null;var conn=!!(st&&st.invested>0&&st.riskRemoved>0);var ret=conn?st.ret:0;
-      return c5obj({id:id,name:'Return per dollar',connected:conn,displayValue:conn?((typeof roiMult==='function'?roiMult(ret):Math.round(ret))+'×'):'—',label:'computed',color:'good',
+      var mx=conn?(typeof roiMult==='function'?roiMult(ret):Math.round(ret)):'—';
+      return c5obj({id:id,name:'Return per dollar',connected:conn,displayValue:conn?(mx+'×'):'—',label:'computed',color:'good',
         formula:'return = risk removed ÷ security spend',
-        inputs:[{name:'Risk removed',value:conn?usd(st.riskRemoved):'—',source:'eff_removed'},{name:'Security spend',value:conn?usd(st.invested):'—',source:'eff_spend'}],
+        method:'A straight ratio of two figures from your funded portfolio — no estimate. Risk removed is the expected loss your funded controls buy down (control-value ledger); security spend is what those initiatives cost (imported from your ticketing/finance). Both are itemized below.',
+        inputs:[
+          {name:'Risk removed (numerator)',value:conn?usd(st.riskRemoved):'—',source:'eff_removed · control-value ledger'},
+          {name:'Security spend (denominator)',value:conn?usd(st.invested):'—',source:'eff_spend · funded initiatives'},
+          {name:'Funded initiatives counted',value:conn?(st.n+' ('+(st.fromTicketing||0)+' from ticketing · '+(st.fromDecisions||0)+' from decisions)'):'—',source:'portfolio'},
+          {name:'= Return',value:conn?(mx+'×  ( '+usd(st.riskRemoved)+' ÷ '+usd(st.invested)+' )'):'—',source:'computed'}
+        ],
         sources:[{tool:'Nerion engine',connector:'nerion',field:'rosi',lastRefresh:c5ago()}],
         note:'Every dollar of security spend expressed as risk removed — the CFO’s language.',connectTool:'import your funded initiatives'});}
     case 'threat_status':{var oi=sig('open_incidents'),ta=sig('threat_actors_active');var conn=oi!=null;
@@ -319,16 +330,32 @@ function c5get(id){
         inputs:[{name:'Risk appetite',value:appV?usd(appV):'—',source:'cf_appetite'},{name:'Expected annual loss',value:ale?usd(ale):'—',source:'exp_total / ALE'}],
         sources:[{tool:'Nerion engine',connector:'nerion',field:'appetite_minus_ale',lastRefresh:c5ago()}],
         note:'How much room you have before cyber loss reaches the board’s limit.',connectTool:'your risk register + board appetite'});}
-    case 'cf_tail':{var t=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&Number(LIVE.economics.tail))||0;var conn=t>0;
+    case 'cf_tail':{var eco=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics)||{};var t=Number(eco.tail)||0;var conn=t>0;
+      var mc=eco.var||null;var aleV=Number(eco.ale)||0;var mult=(aleV>0&&t>0)?(t/aleV):null;
+      // Trace the Monte-Carlo: prefer the real simulation record (iterations, mean,
+      // 95th/99th percentiles) when the engine ran it; else show the honest tail↔ALE
+      // relationship. Never claim iteration detail we don't have.
+      var tinputs=[];
+      if(mc){
+        tinputs.push({name:'Simulated iterations',value:(mc.iterations?Number(mc.iterations).toLocaleString():'—')+' · seeded (reproducible)',source:'Monte-Carlo'});
+        tinputs.push({name:'Expected annual loss (mean)',value:usd(Math.round(mc.expected||aleV)),source:'simulation mean = ALE'});
+        tinputs.push({name:'Tail · 95th pct (≈1-in-20 yr)',value:usd(t),source:'simulation VaR₉₅'});
+        if(mc.var_extreme)tinputs.push({name:'Extreme · 99th pct (≈1-in-100 yr)',value:usd(Math.round(mc.var_extreme)),source:'simulation VaR₉₉'});
+      } else {
+        tinputs.push({name:'Expected annual loss (ALE)',value:aleV?usd(aleV):'—',source:'exp_total · economics.ale'});
+        tinputs.push({name:'Tail · 95th pct (≈1-in-20 yr)',value:conn?usd(t):'—',source:'risk model · economics.tail'});
+      }
+      if(mult)tinputs.push({name:'Severity multiple',value:mult.toFixed(1)+'× the average year',source:'computed (tail ÷ ALE)'});
       return c5obj({id:id,name:'Tail risk · 1-in-20 year',connected:conn,displayValue:conn?usd(t):'—',label:'modeled',color:conn?'warn':'muted',
-        formula:'tail = 95th-percentile annual loss (VaR₉₅) from the Monte-Carlo loss simulation',
-        inputs:[{name:'Worst-case tail (VaR 95%)',value:conn?usd(t):'—',source:'risk model · Monte-Carlo'}],
-        sources:[{tool:'Nerion risk model',connector:'nerion',field:'economics.tail',lastRefresh:c5ago()}],
+        formula:'tail = the 95th-percentile (≈1-in-20-year) annual loss from a seeded Monte-Carlo simulation of your risk register.',
+        method:'For every risk you entered, Nerion samples an annual frequency and a loss magnitude from a Beta-PERT distribution (min / most-likely / max), multiplies them and sums across risks — one simulated year. It repeats this for thousands of seeded iterations and sorts the outcomes: the mean is your expected annual loss (ALE), the 95th percentile is this tail (the bad year, ≈1-in-20), the 99th is the extreme (≈1-in-100). Seeded means same inputs → same number, every time — auditable and reproducible.'+((mc&&mc.basis)?(' Basis: '+mc.basis+'.'):''),
+        inputs:tinputs,sources:[{tool:'Nerion risk model',connector:'nerion',field:'economics.var (Monte-Carlo)',lastRefresh:c5ago()}],
         note:'The severe-but-plausible bad year — what insurance and retained capital have to cover.',connectTool:'your risk register + financials'});}
     case 'cf_bi':{var rs=(typeof LIVE!=='undefined'&&LIVE&&LIVE.resilience)||{};var ph=Number(rs.top_downtime_per_hr)||0;var conn=ph>0;var day=ph*24;
       return c5obj({id:id,name:'Business interruption',connected:conn,displayValue:conn?(usd(day)+' / day'):'—',label:'modeled',color:conn?'warn':'muted',
-        formula:'interruption = downtime cost per hour of the top revenue system × 24',
-        inputs:[{name:'Downtime cost / hr',value:conn?(usd(ph)+' / hr'):'—',source:'resilience · top_downtime_per_hr'}],
+        formula:'business interruption = downtime cost per hour of the top revenue system × 24 (one day of outage)',
+        method:'A single input × 24. The per-hour figure is your top revenue system’s downtime cost from the resilience model (revenue ÷ operating hours, adjusted for the process it runs). This sizes one day; multiply by expected outage duration for a specific scenario.',
+        inputs:[{name:'Downtime cost / hr (top revenue system)',value:conn?(usd(ph)+' / hr'):'—',source:'resilience · top_downtime_per_hr'},{name:'Hours',value:'× 24',source:'one full day of outage'},{name:'= Per day',value:conn?usd(day):'—',source:'computed'}],
         sources:[{tool:'Nerion engine',connector:'nerion',field:'resilience.top_downtime_per_hr',lastRefresh:c5ago()}],
         note:'What a day of outage on the customer platform costs — the number finance sizes recovery against.',connectTool:'your systems & revenue (BIA)'});}
     case 'cf_ins_limit':{var ins=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.insurance)||{};var v=Number(ins.limit)||0;var conn=v>0;
