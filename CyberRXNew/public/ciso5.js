@@ -1201,6 +1201,14 @@ function c5shell(kick,verdict,verdictColor,intro){
   return '<div class="c5kick">'+kick+'</div><div class="c5verdict"'+(verdictColor?(' style="color:var(--'+verdictColor+')"'):'')+'>'+verdict+'</div><div class="c5intro">'+intro+'</div>';
 }
 function c5squares(arr){return '<div class="c5sqrow">'+arr.map(function(c){return '<span class="c5sq '+c+'" title="'+c+'"></span>';}).join('')+'</div>';}
+/* A binary status face — for yes/no reads like active-compromise, where per-control
+   squares are not meaningful. 'good' = blue smile (all clear), 'bad' = red frown
+   (incident), else a muted neutral face (not connected). */
+function c5face(kind){
+  var col=kind==='bad'?'var(--crit)':kind==='good'?'var(--blue)':'var(--line)';
+  var mouth=kind==='good'?'M8.4 14c1 1.3 2.2 1.9 3.6 1.9s2.6-.6 3.6-1.9':(kind==='bad'?'M8.4 15.6c1-1.3 2.2-1.9 3.6-1.9s2.6 .6 3.6 1.9':'M8.6 14.6h6.8');
+  return '<span class="c5facewrap" style="display:inline-flex;margin-top:6px"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="'+col+'" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="9.9" r=".95" fill="'+col+'" stroke="none"/><circle cx="15" cy="9.9" r=".95" fill="'+col+'" stroke="none"/><path d="'+mouth+'"/></svg></span>';
+}
 /* Per-metric tile icon (used as the default when a c5tile call doesn't pass one). */
 var C5TILE_ICON={
   active_compromise:'pulse',capability_coverage:'checklist',thirdparty_risk:'store',direction:'trend',
@@ -1316,8 +1324,6 @@ function c5Health(){
   var host=document.getElementById('c5-health');if(!host)return;
   if(typeof vendorFetch==='function'){try{vendorFetch(false);}catch(_){}}
   var oi=sig('open_incidents');
-  var sqCaps=['edr','siem','mfa','pam','vuln','aware','seg','backup'];
-  var sq1=sqCaps.map(function(k){return c5sqClass(capColor(capDeploy(CAP_BY_KEY[k])));});
   var sq2=CAPS.map(function(c){return c5sqClass(capColor(capDeploy(c)));});
   var V=c5vendors();var sq3=(V.p&&V.p.vendors?V.p.vendors.slice(0,8):[]).map(function(v){return c5sqClass(v.color||capColor(v.score));});
   var tr=trajInfo();var vals=(tr.vals||[]).slice(-6);var maxV=Math.max.apply(null,vals.concat([1]));var minV=vals.length?Math.min.apply(null,vals):0;var rng=(maxV-minV)||1;
@@ -1326,7 +1332,7 @@ function c5Health(){
   var inv=c5get('investigations'),am=c5get('assets_monitored'),tp=c5get('thirdparty_risk'),dir=c5get('direction'),ec=c5get('exp_identity');
   var T=c5T();
   var tiles='<div class="c5tiles">'+
-    c5tile('active_compromise',(oi!=null&&oi>0)?'r':'g',(oi==null)?'—':(oi>0?'Active':'Clear'),(inv.connected?inv.displayValue:'connect SIEM'),c5squares(sq1),'pulse')+
+    c5tile('active_compromise',(oi!=null&&oi>0)?'r':'g',(oi==null)?'—':(oi>0?'Active':'Clear'),(inv.connected?inv.displayValue:'connect SIEM'),c5face(oi==null?'muted':(oi>0?'bad':'good')),'pulse')+
     c5tile('capability_coverage','a','Watch',(am.connected?am.displayValue:'connect SIEM for asset coverage'),c5squares(sq2),'checklist')+
     c5tile('thirdparty_risk','a','Watch',(tp.connected?(tp.note||''):'add your tier-1/2 vendors'),c5squares(sq3),'store')+
     c5tile('direction',(T.improving?'g':T.worsening?'r':'n'),(T.improving?'Improving':T.worsening?'Worsening':'Baseline'),(dir.connected?dir.displayValue:'builds as quarters record'),bars,'trend')+
