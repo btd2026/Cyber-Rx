@@ -55,6 +55,14 @@ const DEFAULT_LICENSE_PATH = process.env.LICENSE_FILE_PATH
 const DEFAULT_STATE_PATH = process.env.LICENSE_STATE_PATH
   || path.join(PKG_ROOT, 'config', '.license_state.json');
 
+// Native enforcement addon (Layer 2). Present on the shipped appliance; absent in
+// dev/CI/hosted. When LICENSE_REQUIRE_NATIVE=true the addon's absence is treated
+// as tamper (verify fails closed) — so enforcement can't be neutered by deleting
+// the compiled .node file.
+let NATIVE = { available: false };
+try { NATIVE = require('../../native/license_native'); } catch (_) { /* not built */ }
+const REQUIRE_NATIVE = process.env.LICENSE_REQUIRE_NATIVE === 'true';
+
 // Status enum returned by checkStatus().state
 const STATE = Object.freeze({
   ACTIVE: 'active',
@@ -118,8 +126,13 @@ function machineFingerprint() {
   macs.sort();
   for (const m of Array.from(new Set(macs))) parts.push('mac:' + m);
 
-  const digest = crypto.createHash('sha256').update(parts.join('|')).digest('hex');
-  return digest;
+  // Native SHA-256 when available (identical output to Node's crypto — verified
+  // by parity test — so a license issued under one backend matches the other).
+  const buf = Buffer.from(parts.join('|'), 'utf8');
+  if (NATIVE.available && NATIVE.sha256Hex) {
+    try { return NATIVE.sha256Hex(buf); } catch (_) { /* fall through */ }
+  }
+  return crypto.createHash('sha256').update(buf).digest('hex');
 }
 
 function readPublicKey(pubKeyPath) {
@@ -135,6 +148,25 @@ function readPublicKey(pubKeyPath) {
 function verifySignature(payload, sigB64, publicKey) {
   const data = Buffer.from(canonicalize(payload), 'utf8');
   const sig = Buffer.from(sigB64, 'base64');
+
+  // Appliance hard-mode: require the native addon. Its absence means someone
+  // stripped the compiled enforcement — fail closed rather than silently using
+  // the patchable JS path.
+  if (REQUIRE_NATIVE && !NATIVE.available) return false;
+
+  // Prefer the native verify (compiled, not editable in place) when present.
+  if (NATIVE.available && NATIVE.ed25519Verify) {
+    try {
+      const pem = typeof publicKey === 'string'
+        ? publicKey
+        : publicKey.export({ type: 'spki', format: 'pem' }).toString();
+      return NATIVE.ed25519Verify(pem, data, sig) === true;
+    } catch (_) {
+      if (REQUIRE_NATIVE) return false; // don't fall back in hard-mode
+      /* else fall through to JS */
+    }
+  }
+
   try {
     return crypto.verify(null, data, publicKey, sig);
   } catch (_) {
@@ -299,12 +331,18 @@ function buildPayload({ customer, customerId, plan, machineId, features, graceDa
   };
 }
 
+/** Diagnostics: is the native enforcement addon loaded, and is it required? */
+function nativeStatus() {
+  return { available: !!NATIVE.available, required: REQUIRE_NATIVE };
+}
+
 module.exports = {
   checkStatus,
   machineFingerprint,
   canonicalize,
   verifySignature,
   buildPayload,
+  nativeStatus,
   STATE,
   TRIAL_DAYS,
   PAID_DAYS,

@@ -136,23 +136,47 @@ replayed on another box or another seal event.
 
 ---
 
-## Layer 2 — Code protection (raise reverse-engineering cost)  ▢ recipe
+## Layer 2 — Code protection (compiled, no readable source)  ✅ implemented
 
-Ship compiled/obfuscated artifacts, not readable source:
+Ships the appliance as a **single executable + V8 bytecode + a native crypto
+addon** — no loose `.js` to read or patch — with the enforcement path additionally
+obfuscated and covered by the signed integrity manifest.
 
-1. **Bundle + minify + obfuscate** the Node backend (e.g. `esbuild` to a single
-   file, then `javascript-obfuscator` with string-array + control-flow flattening
-   for the license/enforcement modules specifically).
-2. **Compile to a binary** with the Node SEA (Single Executable Application) API
-   or `pkg`, so there is no loose `.js` to edit. Strip source maps.
-3. **Move the license check into a native addon** (small Rust/C `.node` module)
-   so the verify + fingerprint logic isn't trivially patchable in JS. Have the
-   addon hold the public key and refuse to run if the JS caller is missing.
-4. **Anti-debug / integrity self-check**: on boot, hash the critical binaries and
-   compare to a signed manifest; refuse to start on mismatch.
+### Components (all validated in-repo)
+| Piece | What it does | Proof |
+|------|------|------|
+| `native/license_native/` | C N-API addon doing Ed25519 verify + SHA-256 fingerprint via Node's bundled OpenSSL (no external libs). The enforcement crypto lives in compiled code, not editable JS. | `tests/unit/LicenseNative.test.js` (parity with Node crypto) |
+| LicenseService native wiring | Prefers the addon; `LICENSE_REQUIRE_NATIVE=true` makes its **absence a hard fail** (`tampered`), so you can't neuter enforcement by deleting the `.node`. | verified: hidden addon + require-native → `tampered` |
+| `tools/build/obfuscate.js` | Control-flow flattening + string-array on the enforcement modules only. Internal logic/strings gone; runtime behaviour preserved. | `--verify` re-checks a real signature after obfuscation |
+| `tools/build/bytecode.js` | Compiles the assembled app tree to `.jsc` V8 bytecode (via `bytenode`) — no readable source ships. | verified: `.jsc` loads, verifies, rejects tampers |
+| `tools/build/launcher.js` + `sea-config.json` | The single executable (Node SEA): runs the license + tamper gate FIRST, then hands off to the on-disk bytecode app via `createRequire`. | verified: a real SEA binary ran our license logic with **no source tree / no node_modules** |
+| `tools/build/build-appliance.sh` | Chains all of the above into `dist-appliance/`. | — |
 
-> These raise the effort bar; they don't make it impossible. Prioritize
-> obfuscating the *enforcement path* over the whole app.
+### Build (on the vendor build host)
+```bash
+npm ci                       # incl. dev tools: esbuild, javascript-obfuscator, bytenode
+npm run native:build         # compile the native addon
+npm run build:appliance      # → dist-appliance/{nerion-bin, license_native.node, app.jsc, config/}
+```
+Set on the shipped image: `LICENSE_ENFORCE=true TAMPER_SEAL_ENFORCE=true LICENSE_REQUIRE_NATIVE=true`.
+
+### Why a launcher, not a whole-app bundle (honest engineering note)
+Node's SEA embeds one script whose built-in `require()` resolves **core modules
+only**. Nerion is 100+ routes with native deps (`pg`, `bcrypt`) and dynamic
+directory-scanning requires, which a single esbuild bundle can't faithfully
+reproduce — forcing it risks a subtly-broken binary. So the single binary is a
+thin launcher; the app ships as bytecode loaded via `createRequire`. This is the
+robust, validated shape for a large app — not a shortcut.
+
+### Honest limits
+- V8 bytecode keeps **exported symbol names** and some string constants in its
+  pool (that's why we obfuscate the enforcement modules *before* compiling). It
+  stops casual source reading and editing; it is not encryption.
+- A root attacker on their own VM can still attach a debugger to the running
+  process. Layer 1b's integrity manifest makes patching the shipped artifacts a
+  HARD tamper (seal + shred), and Layer 3 (encrypted disk, no shell, measured
+  boot) is what raises the runtime-attack bar. No single layer is absolute; the
+  stack makes breaking it cost far more than a license.
 
 ---
 
