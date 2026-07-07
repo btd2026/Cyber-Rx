@@ -20,7 +20,7 @@ var SEATS = {
   eyebrow:'CEO · Executive cockpit',
   verdict:'Cyber in the language you <span class="em">run the business</span> by — no jargon, every figure traceable to source.',
   sub:'Tap any card, tile, objective or decision to open the inspector — its basis, inputs and source. The same engine as the CISO and CFO seats; the shared figures match exactly.',
-  brief:'Here is your read as CEO, in five tabs and plain business terms. Enterprise health: cyber is protecting growth, not slowing it — the company is secure and improving. Strategic risk: six of your seven objectives are cyber-safe; only the customer platform carries a funded exposure. Financial exposure: modeled cyber loss is within the board’s appetite, with the largest driver already funded. Brand & trust: customer trust is intact, with one exposure to watch. Decisions: one call worth making now. Every figure traces to our own data and matches the CISO and CFO seats exactly.',
+  brief:'Here is your read as CEO, in five tabs and plain business terms. Enterprise health: cyber is protecting growth, not slowing it — the company is secure this quarter. Strategic risk: six of your seven objectives are cyber-safe; only the customer platform carries a funded exposure. Financial exposure: modeled cyber loss is within the board’s appetite, with the largest driver already funded. Brand & trust: customer trust is intact, with one exposure to watch. Decisions: one call worth making now. Every figure traces to our own data and matches the CISO and CFO seats exactly.',
   body:function(){return (
    sec('01','Enterprise health','','<div id="ce-health"></div>')
    +sec('02','Strategic risk','','<div id="ce-strategic"></div>')
@@ -104,7 +104,7 @@ var SEATS = {
   eyebrow:'CISO · Executive cockpit',
   verdict:'The plain-language <span class="em">verdict</span> up top, the few things that matter in the middle, one <span class="em">funded decision</span> at the bottom — every number real and traceable to source.',
   sub:'Tap any tile, row, square, ATT&CK cell, control or peer marker to open the inspector — the exact formula, inputs, source tools and why it matters.',
-  brief:'Here is the CISO read in five tabs. Program health: no active compromise and the program is improving. Top exposure: one driver is a third of our risk, and it is funded to fix. Effectiveness: every dollar is removing risk and we can prove it. Threats: covered across the kill chain with a soft spot in identity. Peers: ahead overall, trailing on identity — the same gap driving our exposure. Every number is traceable to its source.',
+  brief:'Here is the CISO read in five tabs. Program health: no active compromise this morning. Top exposure: one driver is a third of our risk, and it is funded to fix. Effectiveness: every dollar is removing risk and we can prove it. Threats: covered across the kill chain with a soft spot in identity. Peers: ahead overall, trailing on identity — the same gap driving our exposure. Every number is traceable to its source.',
   body:function(){return (
    sec('01','Program health','','<div id="c5-health"></div>')
    +sec('02','Top exposure','','<div id="c5-exposure"></div>')
