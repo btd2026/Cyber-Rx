@@ -241,6 +241,7 @@
     document.getElementById("swIntake").classList.toggle("on",i);
     document.getElementById("swOS").classList.toggle("on",!i);
     osMsg(i?"cyberrx-os-inactive":"cyberrx-os-active");
+    osMsg({type:"cyberrx-view-changed",view:which}); // persist the view server-side (cross-device)
   }
   document.getElementById("swIntake").addEventListener("click",function(){show("intake");});
   document.getElementById("swOS").addEventListener("click",function(){show("os");});
@@ -281,6 +282,7 @@
     else if(e.data && e.data.type==="cyberrx-speak-cancel"){
       try{window.speechSynthesis.cancel();}catch(_){}
     }
+    else if(e.data && e.data.type==="cyberrx-restore-view"){ if(e.data.view) show(e.data.view); }
     else if(e.data==="cyberrx-signout"){
       document.getElementById("switcher").classList.remove("show");
       document.getElementById("fIntake").classList.remove("show");

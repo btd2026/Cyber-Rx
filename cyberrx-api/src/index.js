@@ -347,6 +347,9 @@ app.use('/api/decisions',         [apiGetLimiter, apiPostLimiter], require('./ro
 // Per-tenant overridable defaults (appetite, scoring weights, frameworks, taxonomy).
 app.use('/api/tenant-config',     [apiGetLimiter, apiPutLimiter], require('./routes/tenantConfig'));
 
+// Per-org cockpit "resume where you left off" state (cross-device seat/tab/view).
+app.use('/api/ui-state',          [apiGetLimiter, apiPutLimiter], require('./routes/uiState'));
+
 // Per-asset-class visibility confidence (how complete our own data is).
 app.use('/api/visibility',        [apiGetLimiter], require('./routes/visibility'));
 

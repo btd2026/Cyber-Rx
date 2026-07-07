@@ -696,7 +696,7 @@ function buildTabs(){
   var st=(typeof loadLastTab==='function'&&typeof CUR!=='undefined')?loadLastTab(CUR):0; if(st<0||st>=secs.length)st=0;
   secs.forEach(function(sc,i){sc.style.display=i===st?'':'none';});
   tabs.innerHTML=secs.map(function(sc,i){var rt=sc.querySelector('.rt'),no=sc.querySelector('.no');return '<button class="sectab'+(i===st?' on':'')+'" data-sec="'+i+'"><span class="stno">'+(no?no.textContent:(i+1))+'</span>'+tabLabel(rt?rt.textContent:('Section '+(i+1)))+'</button>';}).join('');
-  tabs.querySelectorAll('.sectab').forEach(function(b){b.onclick=function(){var idx=+b.dataset.sec;secs.forEach(function(sc,i){sc.style.display=i===idx?'':'none';});tabs.querySelectorAll('.sectab').forEach(function(x){x.classList.toggle('on',x===b);});if(typeof saveLastTab==='function'&&typeof CUR!=='undefined')saveLastTab(CUR,idx);window.scrollTo({top:0});};});
+  tabs.querySelectorAll('.sectab').forEach(function(b){b.onclick=function(){var idx=+b.dataset.sec;secs.forEach(function(sc,i){sc.style.display=i===idx?'':'none';});tabs.querySelectorAll('.sectab').forEach(function(x){x.classList.toggle('on',x===b);});if(typeof saveLastTab==='function'&&typeof CUR!=='undefined'){saveLastTab(CUR,idx);if(typeof pushUiState==='function'){var _t={};_t[CUR]=idx;pushUiState({tabs:_t});}}window.scrollTo({top:0});};});
 }
 </script>
 <script src="cockpit-seats.js"></script>
@@ -4847,7 +4847,13 @@ function saveLastSeat(seat){try{localStorage.setItem('cyberrx_last_seat_'+_posOr
 function loadLastSeat(){try{return localStorage.getItem('cyberrx_last_seat_'+_posOrg())||'';}catch(_){return '';}}
 function saveLastTab(seat,idx){try{localStorage.setItem('cyberrx_last_tab_'+_posOrg()+'_'+seat,String(idx));}catch(_){}}
 function loadLastTab(seat){try{var v=localStorage.getItem('cyberrx_last_tab_'+_posOrg()+'_'+seat);return v==null?0:(parseInt(v,10)||0);}catch(_){return 0;}}
-function selectSeat(seat){document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===seat);});saveLastSeat(seat);render(seat);if(!VOICE_MUTED)speakSeat(seat);}
+/* Cross-device sync: mirror the same position to the org's server-side UI state
+   so any device resumes it. localStorage stays as a fast local cache/offline fallback. */
+var _uiPush=null;
+function _uiUrl(){return apiBase()+'/api/ui-state?org_id='+encodeURIComponent(_posOrg());}
+function pushUiState(partial,immediate){try{if(!orgId())return;var send=function(){try{fetch(_uiUrl(),{method:'PUT',headers:{'Content-Type':'application/json','X-Org-Id':orgId()},body:JSON.stringify(partial)});}catch(_){}};if(immediate){send();}else{clearTimeout(_uiPush);_uiPush=setTimeout(send,800);}}catch(_){}}
+function fetchUiState(cb){try{if(!orgId()){cb&&cb(null);return;}fetch(_uiUrl(),{headers:{'X-Org-Id':orgId()}}).then(function(r){return r.ok?r.json():null;}).then(function(s){cb&&cb(s&&typeof s==='object'?s:null);}).catch(function(){cb&&cb(null);});}catch(_){cb&&cb(null);}}
+function selectSeat(seat){document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===seat);});saveLastSeat(seat);pushUiState({seat:seat});render(seat);if(!VOICE_MUTED)speakSeat(seat);}
 document.querySelectorAll('.seat').forEach(function(b){b.addEventListener('click',function(){selectSeat(b.dataset.seat);});});
 var _bootSeat=(typeof loadLastSeat==='function'&&loadLastSeat())||'ciso';document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===_bootSeat);});render(_bootSeat);loadLive();loadSignals();
 /* Auto-poll live signals so the "Are we under attack?" tile surfaces a new SIEM
@@ -5015,10 +5021,17 @@ window.addEventListener('message',function(e){
   var d=e.data;
   if(d&&d.type==='cyberrx-golive'){try{if(d.orgId)localStorage.setItem('cyberrx_org_id',d.orgId);if(d.org)localStorage.setItem('cyberrx_org_name',d.org);if(d.industry)localStorage.setItem('cyberrx_industry',d.industry);}catch(_){}loadLive();}
   else if(d==='cyberrx-os-active'){loadLive();}
-  else if(d&&d.type==='cyberrx-auth'){var map={ceo:'ceo',board:'ceo',cfo:'cfo',cio:'cio',clo:'clo',cro:'cro',ciso:'ciso'};
-    // Land where this org stopped last time; fall back to the seat picked at sign-in.
-    var last=(typeof loadLastSeat==='function')?loadLastSeat():'';selectSeat(last||map[d.role]||'ceo');}
-  else if(d&&d.type==='cyberrx-save-state'){try{if(typeof CUR!=='undefined'){saveLastSeat(CUR);var t=document.querySelector('#secTabs .sectab.on');if(t)saveLastTab(CUR,+t.dataset.sec);}}catch(_){}}
+  else if(d&&d.type==='cyberrx-auth'){var map={ceo:'ceo',board:'ceo',cfo:'cfo',cio:'cio',clo:'clo',cro:'cro',ciso:'ciso'};var role=map[d.role]||'ceo';
+    // Prefer the org's server-side position (any device); fall back to this
+    // browser's local cache, then to the seat picked at sign-in.
+    fetchUiState(function(s){
+      if(s){try{if(s.seat)saveLastSeat(s.seat);if(s.tabs)Object.keys(s.tabs).forEach(function(k){saveLastTab(k,s.tabs[k]);});}catch(_){}}
+      var seat=(s&&s.seat)||((typeof loadLastSeat==='function'&&loadLastSeat())||role);
+      selectSeat(seat);
+      if(s&&s.view){try{parent.postMessage({type:'cyberrx-restore-view',view:s.view},'*');}catch(_){}}
+    });}
+  else if(d&&d.type==='cyberrx-save-state'){try{if(typeof CUR!=='undefined'){saveLastSeat(CUR);var t=document.querySelector('#secTabs .sectab.on');var ti=t?+t.dataset.sec:0;if(t)saveLastTab(CUR,ti);var _p={seat:CUR,tabs:{}};_p.tabs[CUR]=ti;pushUiState(_p,true);}}catch(_){}}
+  else if(d&&d.type==='cyberrx-view-changed'){try{if(d.view)pushUiState({view:d.view});}catch(_){}}
 });
 </script>
 </body>
