@@ -1369,7 +1369,6 @@ function c5ceHealth(){
     '<div class="c5cards">'+c5card('ceo_health')+c5card('ceo_objectives')+c5card('direction')+'</div>'+
     '<div class="c5tiles">'+
       c5tile('ceo_biz_health','g','Secure','No active compromise, program improving')+
-      c5tile('ceo_objectives',atPill,atTxt,(O.atRisk>0?'One carries a funded action':'All objectives cyber-safe'))+
       c5tile('exp_total','g','Within appetite',(hr.connected?('Well inside your '+c5get('cf_appetite').displayValue+' tolerance'):'Your modeled cyber loss this year'))+
       c5tile('ceo_cust_incidents','g','Intact','Customer-impacting incidents this quarter')+
     '</div>'+
@@ -1396,10 +1395,12 @@ function c5ceFinancial(){
   host.innerHTML=c5header()+
     c5shell('Financial exposure · what could this cost us?','Cyber could cost real money — comfortably within tolerance.',null,'The headline: your modeled annual cyber loss against the board’s appetite, with the severe-year tail. The single largest driver already has a funded fix. Tap any figure for the model and its inputs.')+
     '<div class="c5cards">'+c5card('exp_total')+c5card('cf_appetite')+c5card('cf_tail')+'</div>'+
+    // Exposure drivers behind the total — distinct from the three summary cards
+    // above (no repeat of exp_total / cf_tail), so nothing is shown twice.
     '<div class="c5tiles">'+
-      c5tile('exp_total','g','Within appetite',(ap.connected?('Within your '+ap.displayValue+' appetite'):'Your modeled cyber loss this year'))+
-      c5tile('cf_tail','a','Tail','1-in-20-year loss')+
-      c5tile('exp_identity','b','Funded','Funded fix underway · biggest single driver')+
+      c5tile('exp_identity','b','Largest driver','The single biggest share of the total · funded fix')+
+      c5tile('cf_bi','a','If down','Cost if the customer platform is down')+
+      c5tile('cf_ins_cov','g','Insured','Share of the severe-year tail your policy covers')+
     '</div>'+
     c5bl('Bottom line','The one number that moves the headline down.',null,(ec.connected?('A single identity gap drives '+ec.displayValue+' of the total — the largest single share. Funding its fix lowers both the everyday cost and the severe-year tail, and it’s already scoped.'):'Connect your controls and the single largest loss driver — an identity gap — surfaces here with its funded fix.'),{mid:'exp_identity',txt:ec.connected?('Back the identity fix — cuts '+ec.displayValue):'Back the identity fix'})+
     '<div class="c5foot">Loss figures are modeled (ALE and tail); every input traces to its source.</div>';
@@ -1413,7 +1414,6 @@ function c5ceTrust(){
     '<div class="c5tiles">'+
       c5tile('ceo_customer_data','g','Protected','No customer data at risk this quarter')+
       c5tile('ceo_uptime','g','Healthy','Customer platform uptime · connect monitoring')+
-      c5tile('ceo_disclosures','g','None','To customers or regulators')+
       c5tile('exp_identity','a','Watch','The one exposure to the customer platform')+
     '</div>'+
     c5bl('Bottom line','Protect the moat before it’s tested.',null,'Trust is intact today, but the identity gap is the one thing that could put customer data or platform uptime — and the trust that depends on them — at risk. The fix is funded.',{mid:'exp_identity',txt:'Back the identity fix — protects trust'})+
