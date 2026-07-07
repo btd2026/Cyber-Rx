@@ -15,7 +15,8 @@ jobs:
   # ============================================
   # Deployment is handled by native Vercel (frontend) and Render (backend)
   # Git auto-deploy integrations, not by this workflow. This pipeline only
-  # validates that both apps install, lint, test, and build cleanly.
+  # validates that both apps install and build cleanly.
+  # Paths: frontend = CyberRXNew/, backend = cyberrx-api/.
   test:
     name: Test & Build
     runs-on: ubuntu-latest
@@ -38,37 +39,37 @@ jobs:
       - name: Run Backend Linter
         run: |
           cd cyberrx-api
-          npm run lint || true
+          npm run lint --if-present || true
 
-      - name: Run Backend Unit Tests
+      - name: Run Backend Unit Tests (non-blocking legacy suite)
         run: |
           cd cyberrx-api
-          npm test || true
+          npm run test:unit || true
 
       - name: Build Backend
         run: |
           cd cyberrx-api
           npm run build --if-present
 
-      # ---- Frontend ----
+      # ---- Frontend (CyberRXNew) ----
       - name: Install Frontend Dependencies
         run: |
-          cd frontend
+          cd CyberRXNew
           npm install --no-audit --no-fund
 
       - name: Run Frontend Linter
         run: |
-          cd frontend
-          npm run lint || true
+          cd CyberRXNew
+          npm run lint --if-present || true
 
-      - name: Run Frontend Unit Tests
+      - name: Run Frontend Smoke Test
         run: |
-          cd frontend
-          npm test || true
+          cd CyberRXNew
+          npm run smoke
 
       - name: Build Frontend
         run: |
-          cd frontend
+          cd CyberRXNew
           npm run build
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
