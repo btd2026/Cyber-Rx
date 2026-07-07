@@ -4850,7 +4850,12 @@ setInterval(function(){try{loadSignals();}catch(_){}},60000);
 var VOICE_MUTED=true;
 function strip(h){var d=document.createElement('div');d.innerHTML=String(h||'');return (d.textContent||'').replace(/\s+/g,' ').trim();}
 function speak(text){text=strip(text);if(!text)return;try{window.parent.postMessage({type:'cyberrx-speak',text:text,rate:1.0,voicePref:['Samantha','Google US English','Microsoft Aria','female']},'*');}catch(_){try{var u=new SpeechSynthesisUtterance(text);window.speechSynthesis.cancel();window.speechSynthesis.speak(u);}catch(e){}}}
-function speakSeat(seat){var s=SEATS[seat];if(!s)return;speak(localizeInd(s.brief||s.verdict));}
+function speakSeat(seat){var s=SEATS[seat];if(!s)return;
+  // Prefer the live, data-driven brief (composed from the same metrics the tiles
+  // show, so it can never contradict them); fall back to the static brief only
+  // when there is no live data.
+  var live=null;try{if(typeof c5Brief==='function')live=c5Brief(seat);}catch(_){}
+  speak(localizeInd(live||s.brief||s.verdict));}
 document.getElementById('voiceBtn').addEventListener('click',function(){
   VOICE_MUTED=!VOICE_MUTED;this.classList.toggle('on',!VOICE_MUTED);this.textContent=VOICE_MUTED?'🔊 Brief me':'🔈 Muted';
   if(!VOICE_MUTED)speakSeat(CUR); else{try{window.parent.postMessage({type:'cyberrx-speak-cancel'},'*');window.speechSynthesis.cancel();}catch(_){}}
