@@ -5,7 +5,7 @@ var SEATS = {
  board:{
   eyebrow:'Board · Executive cockpit',
   verdict:'Cyber as <span class="em">governance</span> — oversight, not operations. The board notes, confirms and endorses; management funds and fixes.',
-  sub:'Tap any figure to open the inspector — its basis and source. The same engine as the other seats; the shared figures match exactly. Governance-grade, plain language, traceable to Item 106.',
+  sub:'Every figure opens to its basis and source, reconciles across seats, and is traceable to SEC Item 106 — governance-grade, plain language.',
   brief:'Here is the board’s view, in five tabs and governance-grade plain language. Cyber health: a managed risk, with nothing currently material. Material risk: no matter crosses the disclosure threshold this quarter, and the process to decide is sound. Trend: cyber residual risk is tracked quarter over quarter — the direction builds as quarters record, with no history invented. Investment: the program pays for itself, and the one investment that sustains the trend is funded by management. Governance: oversight is functioning — the board’s role is to note management’s funded action and confirm the process, nothing to approve. Every number traces to source.',
   body:function(){return (
    sec('01','Cyber health','','<div id="bd-health"></div>')
@@ -20,7 +20,7 @@ var SEATS = {
  ceo:{
   eyebrow:'CEO · Executive cockpit',
   verdict:'Cyber in the language you <span class="em">run the business</span> by — no jargon, every figure traceable to source.',
-  sub:'Tap any card, tile, objective or decision to open the inspector — its basis, inputs and source. The same engine as the CISO and CFO seats; the shared figures match exactly.',
+  sub:'Every figure opens to its basis, inputs and source, and the shared numbers reconcile exactly across seats.',
   brief:'Here is your read as CEO, in five tabs and plain business terms. Enterprise health: cyber is protecting growth, not slowing it — the company is secure this quarter. Strategic risk: six of your seven objectives are cyber-safe; only the customer platform carries a funded exposure. Financial exposure: modeled cyber loss is within the board’s appetite, with the largest driver already funded. Brand & trust: customer trust is intact, with one exposure to watch. Decisions: one call worth making now. Every figure traces to our own data and matches the CISO and CFO seats exactly.',
   body:function(){return (
    sec('01','Enterprise health','','<div id="ce-health"></div>')
@@ -35,7 +35,7 @@ var SEATS = {
  cfo:{
   eyebrow:'CFO · Executive cockpit',
   verdict:'Cyber as <span class="em">money</span> — every figure priced against appetite, and traceable to its source.',
-  sub:'Tap any card, tile, row, bar or decision to open the inspector — the model, its inputs and their sources. The same engine as the CISO seat; shared figures are one source of truth.',
+  sub:'Every figure opens to its model, inputs and sources — one source of truth across seats.',
   brief:'From the finance seat, in five tabs. Financial exposure: cyber loss is within the board’s appetite, with headroom, and one identity fix protects it. Cyber ROI: the spend returns more than it costs, and identity returns the most per dollar. Insurance: covered for the everyday, with a tail gap to close by buying up or reducing the tail. Cost optimization: spend you can free and redeploy. Risk decisions: three priced calls on your desk — one clear yes. Every number traces to its source, and the shared figures match the CISO seat exactly.',
   body:function(){return (
    sec('01','Financial exposure','','<div id="cf-exposure"></div>')
@@ -50,7 +50,7 @@ var SEATS = {
  clo:{
   eyebrow:'CLO · Executive cockpit',
   verdict:'Cyber as <span class="em">legal exposure</span> — obligations and evidence surfaced, never a legal conclusion asserted.',
-  sub:'Tap any regime, clock, contract or record to open the inspector — its source system and evidence. The same engine as the other seats; the identity, vendor and platform figures match exactly. Not legal advice.',
+  sub:'Every figure opens to its source system and evidence, and the shared identity, vendor and platform numbers reconcile across seats. Not legal advice.',
   brief:'From the legal seat, in five tabs. Regulatory: your obligations by jurisdiction, each with its clock and penalty — surfaced, not judged. Notification: you can meet the clocks if the evidence is ready; identity is the thin forensic spot. Contracts: enterprise uptime warranties an identity-driven outage could breach — counts need your CLM. Privacy: DSARs on SLA, with access hygiene the soft spot. Decisions: one action reduces your disclosure, contractual and privacy exposures at once. The shared figures match the other seats exactly.',
   body:function(){return (
    sec('01','Regulatory','','<div id="cl-regulatory"></div>')
@@ -65,7 +65,7 @@ var SEATS = {
  cro:{
   eyebrow:'CRO · Executive cockpit',
   verdict:'Cyber inside the <span class="em">enterprise risk</span> portfolio — one scale against your other principal risks, every figure traceable to source.',
-  sub:'Tap any risk, category, control family or decision to open the inspector — its basis, inputs and source. The same engine as the CISO, CFO and CEO seats; the shared cyber figures match exactly.',
+  sub:'Every figure opens to its basis, inputs and source, and the shared cyber numbers reconcile exactly across seats.',
   brief:'From the risk seat, in five tabs. One scale: cyber sits among your principal risks on one normalized residual scale, with its direction the thing to watch. Appetite: cyber is within tolerance overall, but the identity category is over its share. Assurance: most control families are assured by evidence; identity and third-party carry a gap. Trend & ownership: residual risk is tracked quarter over quarter and every top risk has a named owner — identity needs your governance push. Decisions: one risk to treat, one to monitor, one to accept. Every cyber figure matches the other seats exactly.',
   body:function(){return (
    sec('01','One scale','','<div id="cr-scale"></div>')
@@ -80,7 +80,7 @@ var SEATS = {
  cio:{
   eyebrow:'CTO · Executive cockpit',
   verdict:'The <span class="em">technology estate</span> — stack risk, reliability, AI and the software supply chain, every figure traceable to its scanner, registry or record.',
-  sub:'Tap any tile, service, model or dependency to open the inspector — its basis, inputs and source. The same engine as the other seats; the shared identity, platform and vendor figures match exactly.',
+  sub:'Every figure opens to its basis, inputs and source, and the shared identity, platform and vendor numbers reconcile across seats.',
   brief:'From the technology seat, in five tabs. Tech risk: the stack is largely secure and modernizing, with the customer-platform identity architecture the biggest gap. Reliability: services are available and secure, with the platform’s access path the one risk. AI risk: models inventoried and shipping under governance, with AI data access relying on the identity controls that carry the gap. Supply chain: a high-severity auth-library advisory to patch on the critical path. Decisions: one to fund, one to patch. The shared figures match the other seats exactly.',
   body:function(){return (
    sec('01','Tech risk','','<div id="ct-tech"></div>')
@@ -95,7 +95,7 @@ var SEATS = {
  coo:{
   eyebrow:'COO · Executive cockpit',
   verdict:'Can the business keep <span class="em">running</span> through a cyber disruption? Resilience, recovery and the vendors that could stop us — every figure traceable to source.',
-  sub:'Tap any tile, process, vendor or decision to open the inspector — its basis, inputs and source. The same engine as the other seats; the shared cyber and vendor figures match exactly.',
+  sub:'Every figure opens to its basis, inputs and source, and the shared cyber and vendor numbers reconcile across seats.',
   brief:'From the operations seat, in five tabs. Resilience: operations are healthy and continuity-ready, with one critical process — the customer platform — carrying an identity exposure. Processes: most critical processes are cyber-safe; one is at risk and one on watch through a vendor. Supply chain: your worst-rated Tier-1 vendor is a single point of failure to reduce. Recovery: RTO/RPO against target from the last test, with identity restoration the weak link. Decisions: one to fund, one to shore up. The shared figures match the other seats exactly.',
   body:function(){return (
    sec('01','Resilience','','<div id="co-resilience"></div>')
@@ -110,7 +110,7 @@ var SEATS = {
  ciso:{
   eyebrow:'CISO · Executive cockpit',
   verdict:'The plain-language <span class="em">verdict</span> up top, the few things that matter in the middle, one <span class="em">funded decision</span> at the bottom — every number real and traceable to source.',
-  sub:'Tap any tile, row, square, ATT&CK cell, control or peer marker to open the inspector — the exact formula, inputs, source tools and why it matters.',
+  sub:'Every figure opens to its exact formula, inputs, source tools and why it matters.',
   brief:'Here is the CISO read in five tabs. Program health: no active compromise this morning. Top exposure: one driver is a third of our risk, and it is funded to fix. Effectiveness: every dollar is removing risk and we can prove it. Threats: covered across the kill chain with a soft spot in identity. Peers: ahead overall, trailing on identity — the same gap driving our exposure. Every number is traceable to its source.',
   body:function(){return (
    sec('01','Program health','','<div id="c5-health"></div>')
@@ -126,7 +126,7 @@ var SEATS = {
  cpo:{
   eyebrow:'CPO · Executive cockpit · Product',
   verdict:'Cyber through the <span class="em">product</span> lens — where the identity fix is a <span class="em">product opportunity</span>, not just a risk.',
-  sub:'Tap any tile, item or decision to open the inspector — its basis and source. The same engine as the other seats; the identity, auth-library and platform figures match exactly.',
+  sub:'Every figure opens to its basis and source, and the shared identity, auth-library and platform numbers reconcile across seats.',
   brief:'From the product seat, in five tabs. Product security: the product ships secure-by-design, with the customer-platform identity/access model the one real gap. Customer trust: users are safe and confident, with the access experience the one soft spot. Velocity: security clears the path more than it taxes it; the recurring blocker is identity. Backlog: healthy, with the identity/access remediation leading and funded. Decisions: one product call does triple duty — safer, smoother, faster. Identity is three faces of one issue — a security gap, access friction, and a release blocker — and the same funded fix closes all three.',
   body:function(){return (
    sec('01','Product security','','<div id="cp-security"></div>')
@@ -141,7 +141,7 @@ var SEATS = {
  audit:{
   eyebrow:'Internal Audit · Executive cockpit',
   verdict:'Independent <span class="em">assurance</span> — coverage, testing, findings and evidence readiness. Internal Audit assures; it does not fund or fix.',
-  sub:'Tap any area, control set, finding or evidence item to open the inspector — its source system and evidence. The same engine as the other seats; the shared cyber figures match exactly.',
+  sub:'Every figure opens to its source system and evidence, and the shared cyber numbers reconcile exactly across seats.',
   brief:'From the assurance seat, in five tabs. Coverage: the audit universe is well covered, with identity &amp; access the high-risk area out of step. Testing: on plan, with identity controls the outstanding set. Findings: closing on track, with one repeat identity finding to escalate. Evidence: most controls evidenced on demand, identity the thin spot. Attention: identity is your overdue review, outstanding test, repeat finding and evidence gap at once — the highest-leverage audit action, and the basis for independent board assurance. Audit assures; management funds.',
   body:function(){return (
    sec('01','Coverage','','<div id="ia-coverage"></div>')
