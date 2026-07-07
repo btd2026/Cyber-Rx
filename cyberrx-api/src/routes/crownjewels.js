@@ -140,8 +140,7 @@ router.post('/ingest', optionalJWT, async (req, res) => {
     // CEO/Board governance panel. All optional; stored verbatim on the org.
     const g = b.governance || {};
     const governance = {
-      committee: g.committee || null, cadence: g.cadence || null, cisoReportsTo: g.cisoReportsTo || null,
-      boardExpertise: g.boardExpertise || null, ermIntegrated: g.ermIntegrated || null,
+      committee: g.committee || null, cadence: g.cadence || null, ermIntegrated: g.ermIntegrated || null,
       ir: {
         tested: (g.ir && g.ir.tested) || null, lastTabletop: (g.ir && g.ir.lastTabletop) || null,
         retainer: (g.ir && g.ir.retainer) || null, ransomwarePolicy: (g.ir && g.ir.ransomwarePolicy) || null,
