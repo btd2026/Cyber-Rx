@@ -268,6 +268,41 @@
     </div>
   </div>
 
+  <!-- 1c2 · AI & Software Supply-Chain Security (CISO tab) -->
+  <div class="sec">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">AI &amp; Software Supply-Chain Security <span style="color:var(--muted)">(for the CISO)</span></div><div class="sd">The AI systems you run, the AI your people use, the code and pipeline that ship it, your machine identities and your post-quantum readiness. Powers the CISO <b>AI &amp; supply chain</b> tab — self-reported here, replaced by live tool data once connected. All optional.</div></div><div class="badge" id="bas">recommended</div></div>
+    <div class="row c3">
+      <div class="field"><label>AI/ML data sensitivity</label><select id="asDataSens"><option value="">Select…</option><option>High</option><option>Medium</option><option>Low</option></select></div>
+      <div class="field"><label>AI-SPM posture tool</label><select id="asAiSpm"><option value="">Select…</option><option>Connected</option><option>Not connected</option></select></div>
+      <div class="field"><label>Sanctioned GenAI apps</label><input type="number" step="1" min="0" id="asGenaiSanct" placeholder="0"></div>
+    </div>
+    <div class="row c3" style="margin-top:14px">
+      <div class="field"><label>Shadow-AI monitoring (CASB/SSE)</label><select id="asShadow"><option value="">Select…</option><option>Yes</option><option>Partially</option><option>No</option></select></div>
+      <div class="field"><label>DLP inspects data sent to AI?</label><select id="asDlpAi"><option value="">Select…</option><option>Yes</option><option>No</option></select></div>
+      <div class="field"><label>AI coding assistants in use</label><input id="asCodeTools" placeholder="e.g. Claude Code, GitHub Copilot"></div>
+    </div>
+    <div class="row c3" style="margin-top:14px">
+      <div class="field"><label>AI-coding policy scope</label><select id="asCodePolicy"><option value="">Select…</option><option>Enforced</option><option>Drafted</option><option>None</option></select></div>
+      <div class="field"><label>Code scanning (SAST/SCA/secrets)</label><select id="asCodeScan"><option value="">Select…</option><option>Yes</option><option>Partial</option><option>No</option></select></div>
+      <div class="field"><label>CI/CD pipeline security scanning</label><select id="asPipeScan"><option value="">Select…</option><option>Yes</option><option>No</option></select></div>
+    </div>
+    <div class="row c3" style="margin-top:14px">
+      <div class="field"><label>Artifact signing</label><select id="asArtSign"><option value="">Select…</option><option>Yes</option><option>No</option></select></div>
+      <div class="field"><label>Build provenance (SLSA level)</label><select id="asSlsa"><option value="">Select…</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+      <div class="field"><label>Machine identities (approx.)</label><input type="number" step="1" min="0" id="asMachineId" placeholder="0"></div>
+    </div>
+    <div class="row c3" style="margin-top:14px">
+      <div class="field"><label>Secrets management</label><select id="asSecrets"><option value="">Select…</option><option>Vaulted</option><option>Partial</option><option>None</option></select></div>
+      <div class="field"><label>Non-human identity / ITDR monitoring</label><select id="asNhi"><option value="">Select…</option><option>Yes</option><option>No</option></select></div>
+      <div class="field"><label>Cryptographic inventory (CBOM)</label><select id="asCbom"><option value="">Select…</option><option>Complete</option><option>Partial</option><option>None</option></select></div>
+    </div>
+    <div class="row c3" style="margin-top:14px">
+      <div class="field"><label>Quantum-vulnerable data (RSA/ECC on long-lived data)?</label><select id="asQuantum"><option value="">Select…</option><option>Yes</option><option>Unknown</option><option>No</option></select></div>
+      <div class="field"><label>Post-quantum migration plan?</label><select id="asPqc"><option value="">Select…</option><option>Yes</option><option>No</option></select></div>
+      <div class="field"></div>
+    </div>
+  </div>
+
   <!-- 1d · Strategic initiatives (CEO per-initiative safety check) -->
   <div class="sec">
     <div class="sh"><div class="sn">✦</div><div><div class="st">Strategic initiatives <span style="color:var(--muted)">(for the CEO / Board)</span></div><div class="sd">The major moves in front of the board — an acquisition, a new cloud platform, an AI product, a market or factory expansion. Nerion runs a <b>per-initiative go / no-go safety check</b> and a one-page decision brief for each, because every move carries different risk. Add the ones being weighed now.</div></div><div class="badge" id="bstrat">optional</div></div>
@@ -523,6 +558,7 @@
   ['govCommittee','govCadence','govErm','govIrTested','govRetainer','govRansom'].forEach(function(id){var e=document.getElementById(id);if(e)e.addEventListener('change',function(){var any=['govCommittee','govCadence','govErm','govIrTested'].some(function(k){var el=document.getElementById(k);return el&&el.value;});var b=document.getElementById('bgov');if(b&&any){b.textContent='✓ provided';b.classList.add('done');}});});
   // AI risk & governance section badge
   ['aiSystems','aiDecisioning','aiFramework','aiPolicy','aiEuAct','aiInventory'].forEach(function(id){var e=document.getElementById(id);if(e)e.addEventListener('change',function(){var b=document.getElementById('bai');if(b){b.textContent='✓ provided';b.classList.add('done');}});});
+  ['asDataSens','asAiSpm','asGenaiSanct','asShadow','asDlpAi','asCodeTools','asCodePolicy','asCodeScan','asPipeScan','asArtSign','asSlsa','asMachineId','asSecrets','asNhi','asCbom','asQuantum','asPqc'].forEach(function(id){var e=document.getElementById(id);if(e)['change','input'].forEach(function(ev){e.addEventListener(ev,function(){var b=document.getElementById('bas');if(b){b.textContent='✓ provided';b.classList.add('done');}});});});
 
   // ---- CSV/TSV parsing ----
   function parseDelim(text){
@@ -1080,6 +1116,14 @@
       aiGovernance:{
         systems:mval('aiSystems'),decisioning:v('aiDecisioning'),framework:v('aiFramework'),
         policy:v('aiPolicy'),euAiAct:v('aiEuAct'),inventory:v('aiInventory')
+      },
+      aiSupplyChain:{
+        aiDataSensitivity:v('asDataSens'),aiSpm:v('asAiSpm'),genaiSanctioned:v('asGenaiSanct'),
+        shadowAiMonitored:v('asShadow'),dlpToAi:v('asDlpAi'),aiCodingTools:v('asCodeTools'),
+        aiCodePolicy:v('asCodePolicy'),codeScanning:v('asCodeScan'),pipelineScanning:v('asPipeScan'),
+        artifactSigning:v('asArtSign'),slsaLevel:v('asSlsa'),machineIdentities:v('asMachineId'),
+        secretsMgmt:v('asSecrets'),nhiMonitored:v('asNhi'),cbomStatus:v('asCbom'),
+        quantumVulnerable:v('asQuantum'),pqcPlan:v('asPqc')
       },
       strategicInitiatives:collectStrategic(),
       objectives:collectObjectives(),
