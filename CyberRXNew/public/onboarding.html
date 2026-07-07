@@ -577,7 +577,14 @@
       '<div class="field"><label>Horizon</label><select class="s-horizon"><option>This quarter</option><option selected>This year</option><option>Next 12–24 months</option></select></div>'+
       '<button class="s-del" type="button" title="Remove" style="height:38px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;color:var(--muted)">✕</button>';
     wrap.appendChild(row);
+    function setSel(sel,val){if(!sel||!val)return;var t=String(val).trim().toLowerCase();for(var i=0;i<sel.options.length;i++){if(sel.options[i].text.trim().toLowerCase()===t){sel.selectedIndex=i;return;}}}
     if(v.name)row.querySelector('.s-name').value=v.name;
+    setSel(row.querySelector('.s-type'),v.type);
+    setSel(row.querySelector('.s-horizon'),v.horizon);
+    // value: prefer an explicit dollar amount (re-add); else a raw number from an
+    // upload/connect row (unit defaults to M, mirroring the other registers).
+    if(v.valueUsd!=null){row.querySelector('.s-val').value=v.valueUsd>=1e9?(v.valueUsd/1e9):(v.valueUsd>=1e6?(v.valueUsd/1e6):(v.valueUsd/1e3));row.querySelector('.s-valu').value=v.valueUsd>=1e9?'1000000000':(v.valueUsd>=1e6?'1000000':'1000');}
+    else if(v.value!=null&&String(v.value).trim()!=='')row.querySelector('.s-val').value=String(v.value).replace(/[^0-9.]/g,'');
     row.querySelector('.s-del').addEventListener('click',function(){row.remove();updateStratBadge();});
     ['input','change'].forEach(function(ev){row.addEventListener(ev,updateStratBadge);});
     updateStratBadge();
@@ -726,6 +733,10 @@
     });
   }
   (function(){
+    // Strategic initiatives — manual rows, or upload a portfolio export, or connect
+    // the system where they live (board portal / strategy / portfolio tool).
+    var STRAT_IO={add:function(v){addStratRow(v);}};
+    enableRegisterIO('strat','addStrat',STRAT_IO,[{cls:'name',names:['initiative','name','project','move']},{cls:'type',names:['type','category','kind']},{cls:'value',names:['value','value_usd','value at stake','amount','stake'],money:true},{cls:'horizon',names:['horizon','timeline','when','timeframe']}],['Board portal / Diligent','Confluence / SharePoint','Jira / Portfolio (PPM)','Anaplan','Workday Adaptive'],'Strategy / portfolio source');
     // (the Business capability map already offers manual entry + a GRC connect)
     enableRegisterIO('sbom','addSbom',SBOM,[{cls:'sbom-name',names:['component','name','package']},{cls:'sbom-ver',names:['version','ver']},{cls:'sbom-vulns',names:['critical_vulns','vulns','criticals']}],['Dependency-Track','Snyk','GitHub','Anchore'],'SBOM source');
     enableRegisterIO('rap','addRap',RAP,[{cls:'rap-cat',names:['category','risk_category','name']},{cls:'rap-app',names:['appetite','appetite_usd','threshold_usd'],money:true},{cls:'rap-thr',names:['threshold','level','tolerance']}],['ERM Platform','Archer','ServiceNow ERM'],'ERM source');
