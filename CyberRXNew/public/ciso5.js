@@ -359,11 +359,13 @@ function c5get(id){
         sources:[{tool:'Nerion engine',connector:'nerion',field:'resilience.top_downtime_per_hr',lastRefresh:c5ago()}],
         note:'What a day of outage on the customer platform costs — the number finance sizes recovery against.',connectTool:'your systems & revenue (BIA)'});}
     case 'cf_ins_limit':{var ins=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.insurance)||{};var v=Number(ins.limit)||0;var conn=v>0;
-      return c5obj({id:id,name:'Insured limit',connected:conn,displayValue:conn?usd(v):'—',label:'self-reported',color:'ink',
+      var tl=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&Number(LIVE.economics.tail))||0;
+      var implausible=conn&&tl>0&&v>tl*3; // a limit far above the modeled tail is almost always a $B-vs-$M entry slip
+      return c5obj({id:id,name:'Insured limit',connected:conn,displayValue:conn?usd(v):'—',label:'self-reported',color:implausible?'warn':'ink',
         formula:'insured limit = the coverage cap on your cyber policy',
-        inputs:[{name:'Policy limit',value:conn?usd(v):'—',source:'policy record · limit'}],
+        inputs:[{name:'Policy limit',value:conn?usd(v):'—',source:'policy record · limit'}].concat(implausible?[{name:'Plausibility check',value:'unusually high — '+Math.round(v/tl)+'× your modeled tail',source:'verify the amount & units (B vs M)'}]:[]),
         sources:[{tool:'Cyber-insurance policy',connector:'insurance',field:'limit',lastRefresh:c5ago()}],
-        note:'The most your policy pays on a covered loss.',connectTool:'your policy record (onboarding)'});}
+        note:implausible?'This limit is well above your modeled tail — verify the amount and units (a $-billion vs $-million entry slip is common; real cyber towers rarely exceed a few hundred million). Nerion flags it rather than presenting it unquestioned.':'The most your policy pays on a covered loss.',connectTool:'your policy record (onboarding)'});}
     case 'cf_ins_gap':{var ins2=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.insurance)||{};var lim=Number(ins2.limit)||0;var tail=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&Number(LIVE.economics.tail))||0;var gap=(ins2.gap!=null)?Number(ins2.gap):((tail>0&&lim>0)?Math.max(0,tail-lim):null);var conn=gap!=null&&tail>0;
       return c5obj({id:id,name:'Residual gap',connected:conn,displayValue:conn?usd(gap):'—',label:'computed',color:conn?(gap>0?'warn':'good'):'muted',
         formula:'residual gap = modeled tail − insured limit (the uninsured portion of the bad year)',
@@ -1184,6 +1186,36 @@ function c5tip(m){if(!m)return '';var n=(m.note||m.name||'').trim();return c5esc
    past) when ≥2 real quarters are recorded (trajInfo). No recorded history → no
    trend claim at all. Prevents assumed year-over-year language with no data. */
 function c5T(){var tr=(typeof trajInfo==='function')?trajInfo():null;var has=!!(tr&&tr.two);return {has:has,improving:has&&tr.down,worsening:has&&!tr.down};}
+/* Data-driven spoken brief: composed from the same live metrics the tiles show,
+   so it can never contradict them. Returns null when there is no live data, so
+   speakSeat falls back to the static brief. Every figure here is a c5get value. */
+function c5Brief(seat){
+  if(typeof LIVE==='undefined'||!LIVE)return null;
+  try{
+    var ec=c5get('exp_identity'),et=c5get('exp_total'),T=c5T();
+    var O=(typeof c5Objectives==='function')?c5Objectives():{protected:0,total:0,atRisk:0};
+    var oi=(typeof sig==='function')?sig('open_incidents'):null;
+    var driver=ec.connected?(ec.name.toLowerCase()+' at '+ec.displayValue):'your top control gap';
+    var total=et.connected?et.displayValue:'—';
+    var trend=T.improving?' The recorded posture trend is improving.':T.worsening?' The recorded posture trend is worsening.':'';
+    var objs=O.total?(O.protected+' of '+O.total+' strategic objectives are cyber-safe'):'your strategic objectives are mapped to their cyber dependencies';
+    var attack=(oi!=null)?(oi>0?('there '+(oi===1?'is 1 active incident':('are '+oi+' active incidents'))):'no active compromise this morning'):'connect your SIEM for a live attack read';
+    switch(seat){
+      case 'ciso': return 'CISO read. '+cap(attack)+'. Your largest exposure is '+driver+', of a '+total+' modeled total.'+trend+' Every figure traces to its source.';
+      case 'ceo': return 'CEO read. Cyber is a managed risk this quarter — '+objs+'; the exception is '+driver+'. Modeled exposure is '+total+', within the board’s appetite where you have set one.'+trend;
+      case 'cfo': var ap=c5get('cf_appetite'),hr=c5get('cf_headroom'); return 'CFO read. Modeled exposure is '+total+(ap.connected?(', against a '+ap.displayValue+' appetite'+(hr.connected?(' with '+hr.displayValue+' of headroom'):'')):'')+'. The largest single driver is '+driver+'.'+trend;
+      case 'cro': var rk=c5get('cr_rank'); return 'CRO read. '+(rk.connected?('Cyber ranks '+rk.displayValue+' among your principal risks'):'Cyber sits on one scale beside your other principal risks')+'; the driver to treat is '+driver+'.'+trend;
+      case 'cio': var av=c5get('ct_critical_vulns'); return 'CTO read. The stack’s biggest security gap is '+driver+'.'+(av.connected?(' '+av.displayValue+' known-exploitable critical vulnerabilities are open.'):'')+trend;
+      case 'clo': var b=c5get('cl_binding_clock'); return 'CLO read. '+(b.connected?('Your tightest notification clock is '+b.displayValue+'. '):'')+'The exposure most likely to trigger a filing is '+driver+'. This surfaces obligations, not legal conclusions.';
+      case 'coo': return 'COO read. Operations are resilient this quarter; the one critical process carrying cyber exposure is tied to '+driver+'.'+trend;
+      case 'cpo': var op=c5get('cp_open_risks'); return 'Product read. '+(op.connected?(op.displayValue+' open product risks; '):'')+'the largest is '+driver+'.'+trend;
+      case 'audit': return 'Internal Audit read. Control assurance here is evidence-based, not self-attested; the gap most needing a workpaper is '+driver+'.';
+      case 'board': var mt=c5get('bd_material'); return 'Board read. '+(mt.connected?('Nothing currently crosses the materiality threshold. '):'')+'Cyber is a managed risk; management has funded the top exposure, '+driver+'.'+trend;
+    }
+  }catch(_){ }
+  return null;
+}
+function cap(s){return s?(s.charAt(0).toUpperCase()+s.slice(1)):s;}
 function c5tile(mid,pillCls,pillTxt,subHtml,extraHtml,iconKey){var m=c5get(mid);
   var head=m.connected?m.displayValue:'Not connected';var pc=m.connected?pillCls:'n';var pt=m.connected?pillTxt:'—';
   var ik=iconKey||C5TILE_ICON[mid];var ic=ik?('<span class="c5tile-ic">'+c5icon(ik)+'</span>'):'';
@@ -1192,7 +1224,16 @@ function c5tile(mid,pillCls,pillTxt,subHtml,extraHtml,iconKey){var m=c5get(mid);
     (subHtml?('<div class="c5tile-s">'+subHtml+'</div>'):'')+(extraHtml||'')+'</div>';
 }
 function c5card(mid){var m=c5get(mid);
-  return '<div class="c5card" data-c5m="'+mid+'" title="'+c5tip(m)+'"><div class="c5card-top"><span class="c5card-l">'+m.name+'</span>'+c5chip(m.label)+'</div><div class="c5card-v" style="color:var(--'+(m.color==='ink'?'ink':m.color)+')">'+(m.connected?m.displayValue:'Not connected')+'</div></div>';
+  // A provenance chip (SELF-REPORTED / MODELED / …) only makes sense once there
+  // is a value. When not connected, suppress it — showing "SELF-REPORTED" next to
+  // "Not connected" is a contradiction.
+  return '<div class="c5card" data-c5m="'+mid+'" title="'+c5tip(m)+'"><div class="c5card-top"><span class="c5card-l">'+m.name+'</span>'+(m.connected?c5chip(m.label):'')+'</div><div class="c5card-v" style="color:var(--'+(m.connected?(m.color==='ink'?'ink':m.color):'muted')+')">'+(m.connected?m.displayValue:'Not connected')+'</div></div>';
+}
+/* Distinct not-connected placeholder card — a labelled slot (e.g. a savings lever)
+   shown honestly as "Not connected", tappable to the metric that explains what
+   would populate it. Avoids rendering the same metric card multiple times. */
+function c5phCard(label,mid){
+  return '<div class="c5card"'+(mid?(' data-c5m="'+mid+'"'):'')+'><div class="c5card-top"><span class="c5card-l">'+label+'</span></div><div class="c5card-v" style="color:var(--muted)">Not connected</div></div>';
 }
 function c5bl(kick,head,headColor,para,btn,ghost){
   function b(x,cls){if(!x)return '';return '<button class="c5btn'+cls+'" '+(x.act?('onclick="'+x.act+'"'):('data-c5m="'+x.mid+'"'))+'>'+x.txt+'</button>';}
@@ -1403,7 +1444,7 @@ function c5cfCost(){
   var candidate=dlp.connected?('<div class="c5rank"><div class="c5rank-h">What we can see today · from the control-value ledger</div><div class="c5row" data-c5m="ctl_dlp"><div class="c5row-main"><div class="c5row-t">'+dlp.name+'<span class="c5tag rev">Review</span></div><div class="c5row-s">Lowest risk removed of your controls — a retire / consolidate candidate. Attribute its spend to confirm it is underwater.</div></div><div class="c5row-v">'+dlp.displayValue+'</div></div></div>'):'';
   host.innerHTML=c5header()+
     c5shell('Cost optimization · where can we save?','Savings need your spend records — one candidate is already visible.',null,'Redeployable savings come from retiring underperforming or overlapping tools at near-zero added risk. Quantifying the dollars needs your tool inventory and spend records; until they connect, Nerion shows the honest not-connected state and surfaces the one candidate it can already see from the control-value ledger. Tap any item for the overlap and utilization model.')+
-    '<div class="c5cards">'+c5card('cf_savings')+c5card('cf_savings')+c5card('cf_savings')+'</div>'+
+    '<div class="c5cards">'+c5phCard('Retire — unused tools','cf_savings')+c5phCard('Consolidate — overlapping tools','cf_savings')+c5phCard('Right-size — over-licensed','cf_savings')+'</div>'+
     candidate+
     '<div class="c5note">Connect your <b>tool inventory & spend records</b> (finance / procurement + license management) and Nerion quantifies each retire / consolidate / right-size candidate, the dollars it frees, and the risk it adds — then lets you redeploy the savings to the highest-return control.</div>'+
     c5bl('Bottom line','Free spend and put it where it works.',null,'Retiring or consolidating underperforming and overlapping tools frees spend at near-zero risk. Redeployed to identity — the highest-return control — it can more than cover the top exposure fix, a self-funding move. Connect spend records to size it.',{mid:'ctl_identity',txt:'Redeploy savings to identity'})+
