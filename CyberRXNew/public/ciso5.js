@@ -1219,17 +1219,20 @@ function c5InspectObj(m){
     if(m.sources&&m.sources.length)h+='<div class="ev-sec">Where it will come from</div>'+m.sources.map(function(s){return '<div class="src-row"><span class="sd"></span><b>'+s.tool+'</b></div>';}).join('');
     if(m.connectTool)h+='<div style="margin-top:12px"><button class="c5btn" onclick="c5Connect(\''+String(m.connectTool).replace(/'/g,'')+'\')">Connect '+m.connectTool+'</button></div>';
   } else {
-    h+='<div class="ev-sec">How it’s computed</div><div class="formula">'+(m.formula||'—')+'</div>';
-    if(m.method)h+='<div class="drill-p" style="color:var(--muted)">'+m.method+'</div>';
-    if(m.inputs&&m.inputs.length)h+='<div class="ev-sec">Inputs</div><table class="itbl"><thead><tr><th>Input</th><th>Value</th><th>Source</th></tr></thead><tbody>'+m.inputs.map(function(i){
-      // When an input carries a status color, show a square that matches the tile's
+    // Presented the way a partner would walk a CISO through it:
+    // 1) what this measures & why it matters, 2) the results, 3) how it's computed,
+    // 4) sources. Headline value is already shown above.
+    if(m.note)h+='<div class="ev-sec">What this measures &amp; why it matters</div><div class="conf">'+m.note+'</div>';
+    if(m.inputs&&m.inputs.length)h+='<div class="ev-sec">The results</div><table class="itbl"><thead><tr><th>Item</th><th>Value</th><th>Source</th></tr></thead><tbody>'+m.inputs.map(function(i){
+      // When a row carries a status color, show a square that matches the tile's
       // small boxes exactly (same c5sqClass mapping, same source data + order) so the
       // right-panel row and its box read as the same colour.
       var dot=i.color?('<span class="c5sq '+c5sqClass(i.color)+'" style="display:inline-block;width:9px;height:9px;margin-right:7px;vertical-align:middle"></span>'):'';
       return '<tr><td>'+dot+i.name+'</td><td class="v">'+i.value+'</td><td class="src">'+i.source+'</td></tr>';
     }).join('')+'</tbody></table>';
+    h+='<div class="ev-sec">How it’s computed</div><div class="formula">'+(m.formula||'—')+'</div>';
+    if(m.method)h+='<div class="drill-p" style="color:var(--muted)">'+m.method+'</div>';
     if(m.sources&&m.sources.length){h+='<div class="ev-sec">Sources</div>'+m.sources.map(function(s){return '<div class="src-row"><span class="sd"></span><b>'+s.tool+'</b>'+(s.lastRefresh?('<span style="color:var(--muted)"> · as of '+s.lastRefresh+'</span>'):'')+'</div>';}).join('');}
-    h+='<div class="ev-sec">Why it matters</div><div class="conf">'+(m.note||'')+'</div>';
     h+='<div class="c5foot">as of '+c5ago()+' · label: '+m.label+'</div>';
   }
   if(typeof openDrill==='function')openDrill(m.name,h);
