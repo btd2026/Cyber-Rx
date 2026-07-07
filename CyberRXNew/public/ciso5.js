@@ -248,13 +248,15 @@ function c5get(id){
         inputs:[{name:'Quarters recorded',value:tr.t?tr.t.length:0,source:'Nerion posture history'},{name:'Risk removed by controls',value:usd(removed),source:'control-value ledger (modeled)'}],
         sources:[{tool:'Nerion engine',connector:'nerion',field:'posture_history',lastRefresh:c5ago()}],
         note:'Whether the program is getting stronger — the trend the board asks about.',connectTool:'more recorded quarters (builds automatically)'});}
-    case 'exp_total':{var M=c5expModel();var conn=M.total>0;
+    case 'exp_total':{var M=c5expModel();var conn=M.total>0;var trw=M.drivers.reduce(function(s,x){return s+(x.raw||0);},0);
+      var drv=M.drivers.map(function(x){var sp=trw>0?Math.round(x.raw/trw*100):0;return {name:x.name,value:usd(x.usd)+' · '+sp+'% of total',source:'tap to trace to its controls'};});
+      drv.push({name:'Total modeled loss (ALE)',value:conn?usd(M.ale):'—',source:'risk register · economics.ale (your onboarding financials)'});
       return c5obj({id:id,name:'Total modeled exposure',connected:conn,displayValue:conn?usd(M.total):'—',label:'modeled',color:'ink',
-        formula:'total exposure = Σ(driver exposures) — modeled expected loss (ALE) decomposed across the top control-gap drivers',
-        method:'Each driver’s share = its control-gap severity × framework weight, scaled to your modeled expected loss.',
-        inputs:M.drivers.map(function(x){return {name:x.name,value:usd(x.usd),source:'control-value ledger × risk register'};}),
+        formula:'total exposure = your modeled expected annual loss (ALE), decomposed across the top control-gap drivers (their shares sum to 100%).',
+        method:'Two inputs only. (1) The ALE — your modeled expected annual loss — from the risk register and financials you entered at onboarding. (2) The control-value ledger — a table where each control carries a risk-removal weight from its NIST CSF / 800-53 mapping, multiplied by its live deployment. Nerion splits the ALE across drivers in proportion to each driver’s (gap × weight). Tap any driver row to see its full arithmetic down to the source signal. Nothing here is AI-generated or a fixed number.',
+        inputs:drv,
         sources:[{tool:'Nerion risk model',connector:'nerion',field:'ale_decomposition',lastRefresh:c5ago()}],
-        note:'Your total cyber exposure this morning, priced in dollars and decomposed by driver.',connectTool:'your risk register + financials (onboarding)'});}
+        note:'Your total cyber exposure this morning, priced in dollars and decomposed by driver — each traceable to the controls behind it.',connectTool:'your risk register + financials (onboarding)'});}
     case 'exp_conc':{var M2=c5expModel();var conn=M2.total>0;var top2=M2.drivers.slice(0,2).reduce(function(s,x){return s+x.usd;},0);var pc=M2.total>0?Math.round(top2/M2.total*100):0;
       return c5obj({id:id,name:'Concentrated in top 2',connected:conn,displayValue:conn?pc+'%':'—',label:'computed',color:conn?(pc>=60?'warn':'good'):'muted',
         formula:'concentration = (exposure of the top 2 drivers) ÷ total exposure',
@@ -341,12 +343,13 @@ function c5get(id){
         inputs:[{name:'Modeled tail',value:tail?usd(tail):'—',source:'cf_tail'},{name:'Insured limit',value:lim?usd(lim):'—',source:'cf_ins_limit'}],
         sources:[{tool:'Nerion engine',connector:'nerion',field:'tail_minus_limit',lastRefresh:c5ago()}],
         note:'The part of a severe year your policy would not cover — retained on the balance sheet.',connectTool:'your policy record + risk model'});}
-    case 'cf_ins_cov':{var ins3=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.insurance)||{};var lim3=Number(ins3.limit)||0;var tail3=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&Number(LIVE.economics.tail))||0;var conn=lim3>0&&tail3>0;var covp=conn?Math.round(lim3/tail3*100):0;
-      return c5obj({id:id,name:'Insurance coverage',connected:conn,displayValue:conn?(covp+'%'):'—',label:'computed',color:conn?(covp>=90?'good':'warn'):'muted',
-        formula:'coverage = insured limit ÷ modeled tail',
-        inputs:[{name:'Insured limit',value:lim3?usd(lim3):'—',source:'cf_ins_limit'},{name:'Modeled tail',value:tail3?usd(tail3):'—',source:'cf_tail'}],
+    case 'cf_ins_cov':{var ins3=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.insurance)||{};var lim3=Number(ins3.limit)||0;var tail3=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&Number(LIVE.economics.tail))||0;var conn=lim3>0&&tail3>0;
+      var rawCov=conn?Math.round(lim3/tail3*100):0;var covp=Math.min(100,rawCov); // you can't transfer more than the whole tail — cap at 100%
+      return c5obj({id:id,name:'Insurance coverage',connected:conn,displayValue:conn?(covp>=100?'Fully covered':(covp+'%')):'—',label:'computed',color:conn?(covp>=90?'good':'warn'):'muted',
+        formula:'coverage = min( insured limit ÷ modeled tail , 100% )  — a limit above the tail fully covers it',
+        inputs:[{name:'Insured limit',value:lim3?usd(lim3):'—',source:'cf_ins_limit'},{name:'Modeled tail',value:tail3?usd(tail3):'—',source:'cf_tail'},{name:'Coverage',value:conn?(rawCov>=100?('100% (limit ≥ tail; raw ratio '+rawCov+'%)'):(rawCov+'%')):'—',source:'computed'}],
         sources:[{tool:'Nerion engine',connector:'nerion',field:'limit_over_tail',lastRefresh:c5ago()}],
-        note:'How much of a severe year your policy actually transfers off the balance sheet.',connectTool:'your policy record + risk model'});}
+        note:'How much of a severe year your policy actually transfers off the balance sheet — capped at 100%.',connectTool:'your policy record + risk model'});}
     case 'cf_premium':{var ins4=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.insurance)||{};var v=Number(ins4.premium)||0;var conn=v>0;
       return c5obj({id:id,name:'Premium',connected:conn,displayValue:conn?(usd(v)+' / yr'):'—',label:'self-reported',color:'ink',
         formula:'premium = annual cost of your cyber policy',
@@ -986,11 +989,31 @@ function c5driverMetric(id){
   var M=c5expModel();var d=null;M.drivers.forEach(function(x){if(x.id===id)d=x;});
   var conn=!!(d&&d.connected&&d.usd>0);var tr=c5trendPill(d);
   var caps=(d?d.caps:[]).filter(function(k){return k!=='__vendor';});
-  var inputs=caps.map(function(k){var c=CAP_BY_KEY[k];var p=capDeploy(c);return {name:c.name.replace(/ *\(.*\)/,''),value:p!=null?p+'% deployed':'not connected',color:capColor(p),source:c.tool+' · '+((typeof CAP_SIGKEY!=='undefined'&&CAP_SIGKEY[k])||k)};});
-  if(d&&d.caps[0]==='__vendor'){var V=c5vendors();inputs=[{name:'Worst-rated vendor',value:V.worst?(V.worst.name+' · '+V.worst.score+'/100'):'—',source:(V.vs?V.vs.vendor:'monitoring service')+' · overall_score'}];}
+  var totalRaw=M.drivers.reduce(function(s,x){return s+(x.raw||0);},0);
+  var sharePct=(d&&totalRaw>0)?Math.round(d.raw/totalRaw*100):0;
+  var ale=M.ale||0;
+  // Build a fully-auditable Inputs trace: every control's live deployment and gap,
+  // then the exact arithmetic that turns them into this driver's dollar figure.
+  var inputs=[];
+  if(d&&d.caps[0]==='__vendor'){
+    var V=c5vendors();var w=V.worst?V.worst.score:null;
+    inputs.push({name:'Worst-rated vendor',value:V.worst?(V.worst.name+' · '+V.worst.score+'/100'):'—',source:(V.vs?V.vs.vendor:'monitoring service')+' · overall_score'});
+    inputs.push({name:'Control-gap severity',value:(w!=null?((100-w)+'% (100 − '+w+' rating)'):'100% (not connected)'),source:'computed'});
+    inputs.push({name:'Control-value weight',value:'1.0 (single-factor vendor risk)',source:'control-value ledger'});
+  } else {
+    caps.forEach(function(k){var c=CAP_BY_KEY[k];var p=capDeploy(c);
+      inputs.push({name:c.name.replace(/ *\(.*\)/,'')+' deployment',value:(p!=null?(p+'% deployed → '+(100-p)+'% gap'):'not connected'),color:capColor(p),source:c.tool+' · '+((typeof CAP_SIGKEY!=='undefined'&&CAP_SIGKEY[k])||k)});});
+    var wstr=caps.map(function(k){var fw=(typeof CAP_FRAMEWORK!=='undefined')?CAP_FRAMEWORK[k]:null;return String(k).toUpperCase()+' '+(((fw&&fw.weight)||1).toFixed(1));}).join(' + ');
+    inputs.push({name:'Control-gap severity',value:(d?Math.round(d.gap*100):0)+'% (mean of the gaps above)',source:'computed'});
+    inputs.push({name:'Control-value weight (NIST CSF)',value:(d?d.weight.toFixed(1):'—')+' ( '+wstr+' )',source:'control-value ledger'});
+  }
+  inputs.push({name:'Weighted gap score',value:(d?d.raw.toFixed(2):'0')+'  ( '+(d?d.gap.toFixed(2):'0')+' × '+(d?d.weight.toFixed(1):'0')+' )',source:'computed'});
+  inputs.push({name:'Share of total exposure',value:sharePct+'%  ( '+(d?d.raw.toFixed(2):'0')+' ÷ '+totalRaw.toFixed(2)+' across all drivers )',source:'computed'});
+  inputs.push({name:'Total modeled loss (ALE)',value:ale>0?usd(ale):'—',source:'risk register · economics.ale'});
+  inputs.push({name:'= '+(d?d.name:'this driver'),value:(conn?usd(d.usd):'—')+(conn?('  ( '+sharePct+'% × '+usd(ale)+' )'):''),source:'—'});
   return c5obj({id:id,name:d?d.name:id,connected:conn,displayValue:conn?usd(d.usd):'—',label:'modeled',color:'ink',trend:tr,threatens:d?d.threatens:'',largest:!!(d&&d.largest),
-    formula:'driver exposure = (control-gap severity × framework weight) ÷ Σ, scaled to modeled expected loss (ALE)',
-    method:'Gap severity = 1 − deployment% of the controls that mitigate this driver.',
+    formula:(d?d.name:'this driver')+' = its share of your modeled annual loss (ALE), where share = (control-gap severity × control-value weight) ÷ the same product summed across all drivers.',
+    method:'Read it top-to-bottom in the Inputs below. Control-gap severity = 1 − the live deployment of the controls that reduce this risk. Control-value weight comes from the control-value ledger — each control carries a risk-removal weight from its NIST CSF / 800-53 mapping (e.g. MFA 1.6, PAM 1.5). Multiplying gives a weighted gap score; its share of the total, applied to your ALE (from the risk register you set at onboarding), is the dollar figure. No AI, no fixed numbers — every input above is a live signal or a value you entered.',
     inputs:inputs,sources:[{tool:'Nerion risk model',connector:'nerion',field:'ale_decomposition',lastRefresh:c5ago()}],
     note:'Threatens '+(d?d.threatens:'')+'. '+((d&&d.largest)?'Your single largest exposure — and it has a scoped, funded fix.':'One of your top exposure drivers.'),
     connectTool:'the controls that mitigate this driver'});
@@ -1120,15 +1143,20 @@ var C5TILE_ICON={
   bd_material:'alert',bd_incidents_assessed:'check',bd_disclosure_controls:'file',bd_threshold_basis:'gauge',bd_spend_peers:'coin',bd_resilience_inv:'refresh',
   cp_sbd_coverage:'shieldcheck',cp_open_risks:'alert',cp_mfa:'lock',cp_customer_data:'database',cp_pass_rate:'check',cp_cycle_time:'clock',cp_blocker:'alert'
 };
+/* Attribute-safe escape for hover tooltips (notes can contain " & < >). */
+function c5esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+/* Short hover explanation for any metric box: its plain-language "why it matters"
+   plus a nudge that the full trace is one tap away. Native title = works everywhere. */
+function c5tip(m){if(!m)return '';var n=(m.note||m.name||'').trim();return c5esc(n?(n+' — tap for the formula, inputs and source.'):'Tap for the formula, inputs and source.');}
 function c5tile(mid,pillCls,pillTxt,subHtml,extraHtml,iconKey){var m=c5get(mid);
   var head=m.connected?m.displayValue:'Not connected';var pc=m.connected?pillCls:'n';var pt=m.connected?pillTxt:'—';
   var ik=iconKey||C5TILE_ICON[mid];var ic=ik?('<span class="c5tile-ic">'+c5icon(ik)+'</span>'):'';
-  return '<div class="c5tile'+(m.connected?'':' c5off')+'" data-c5m="'+mid+'"><div class="c5tile-top"><span class="c5tile-l">'+ic+m.name+'</span><span class="c5pill '+pc+'">'+pt+'</span></div>'+
+  return '<div class="c5tile'+(m.connected?'':' c5off')+'" data-c5m="'+mid+'" title="'+c5tip(m)+'"><div class="c5tile-top"><span class="c5tile-l">'+ic+m.name+'</span><span class="c5pill '+pc+'">'+pt+'</span></div>'+
     '<div class="c5tile-h'+(m.connected?'':' c5muted')+'">'+head+'</div>'+
     (subHtml?('<div class="c5tile-s">'+subHtml+'</div>'):'')+(extraHtml||'')+'</div>';
 }
 function c5card(mid){var m=c5get(mid);
-  return '<div class="c5card" data-c5m="'+mid+'"><div class="c5card-top"><span class="c5card-l">'+m.name+'</span>'+c5chip(m.label)+'</div><div class="c5card-v" style="color:var(--'+(m.color==='ink'?'ink':m.color)+')">'+(m.connected?m.displayValue:'Not connected')+'</div></div>';
+  return '<div class="c5card" data-c5m="'+mid+'" title="'+c5tip(m)+'"><div class="c5card-top"><span class="c5card-l">'+m.name+'</span>'+c5chip(m.label)+'</div><div class="c5card-v" style="color:var(--'+(m.color==='ink'?'ink':m.color)+')">'+(m.connected?m.displayValue:'Not connected')+'</div></div>';
 }
 function c5bl(kick,head,headColor,para,btn,ghost){
   function b(x,cls){if(!x)return '';return '<button class="c5btn'+cls+'" '+(x.act?('onclick="'+x.act+'"'):('data-c5m="'+x.mid+'"'))+'>'+x.txt+'</button>';}
@@ -1184,7 +1212,8 @@ function c5Exposure(){
 
 /* ---------- Tab 03 — Control effectiveness ---------- */
 function c5mc(mid,label,valHtml,color){
-  return '<div class="c5mc"'+(mid?(' data-c5m="'+mid+'"'):'')+'><div class="c5mc-l">'+label+'</div><div class="c5mc-v"'+(color?(' style="color:var(--'+color+')"'):'')+'>'+valHtml+'</div></div>';
+  var mm=null;try{if(mid&&typeof c5get==='function')mm=c5get(mid);}catch(_){}var tip=mm?(' title="'+c5tip(mm)+'"'):'';
+  return '<div class="c5mc"'+(mid?(' data-c5m="'+mid+'"'):'')+tip+'><div class="c5mc-l">'+label+'</div><div class="c5mc-v"'+(color?(' style="color:var(--'+color+')"'):'')+'>'+valHtml+'</div></div>';
 }
 function c5Effect(){
   var host=document.getElementById('c5-effect');if(!host)return;
@@ -1282,12 +1311,13 @@ function c5cfExposure(){
   host.innerHTML=c5header()+
     c5shell('Financial exposure · are we within appetite?','Cyber exposure is within appetite — and one move keeps it there.',null,'Your modeled cyber exposure sits against the board-approved appetite, with the headroom shown below. The largest driver is a single identity gap; funding its fix protects the headroom and trims your tail. Tap any figure for the model, its inputs, and its source.')+
     '<div class="c5cards">'+c5card('exp_total')+c5card('cf_appetite')+c5card('cf_headroom')+'</div>'+
-    '<div class="c5tiles">'+
+    (function(){var hasGap=covGap.connected&&covGap.color==='warn'; // a residual gap only exists when tail > insured limit
+      return '<div class="c5tiles">'+
       c5tile('exp_identity','a','Largest',(ec.connected?'the single biggest driver — the CISO’s top ask':'the single biggest driver'))+
-      c5tile('cf_tail','a','Watch',(covGap.connected?('Exceeds your insured limit by '+covGap.displayValue):'the severe-but-plausible bad year'))+
+      c5tile('cf_tail','a','Watch',(covGap.connected?(hasGap?('Exceeds your insured limit by '+covGap.displayValue):'Within your insured limit'):'the severe-but-plausible bad year'))+
       c5tile('cf_bi','b','If down','If the customer platform is down')+
-      c5tile('cf_ins_cov','a','Gap',(covGap.connected?('of the tail covered · '+covGap.displayValue+' residual gap'):'of the modeled tail covered'))+
-    '</div>'+
+      c5tile('cf_ins_cov',(hasGap?'a':'g'),(hasGap?'Gap':'Covered'),(covGap.connected?(hasGap?('of the tail covered · '+covGap.displayValue+' residual gap'):'of the tail covered · no residual gap'):'of the modeled tail covered'))+
+    '</div>';})()+
     c5bl('Bottom line','One fix protects your headroom.',null,(ec.connected?('The identity gap drives '+ec.displayValue+' of your exposure — the CISO’s top ask, in your terms. Funding it keeps you comfortably within appetite and trims the tail.'):'Connect your identity controls and the top exposure driver — the CISO’s top ask — surfaces here in dollars.'),{mid:'exp_identity',txt:ec.connected?('Approve identity fix — removes '+ec.displayValue):'Approve identity fix'})+
     '<div class="c5foot">Exposure is modeled (ALE and tail); every input traces to its source.</div>';
 }
