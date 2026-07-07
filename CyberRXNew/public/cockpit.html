@@ -2322,7 +2322,7 @@ function peerSubmitAndFetch(){
   if(!peerOptin())return;
   var snap=window.FW_SNAPSHOT;if(!snap||snap.overall==null)return;
   PEER_BUSY=true;renderPeerCompare();
-  var ind=indKey(),size=peerSizeBand();
+  var ind=peerIndustry(),size=peerSizeBand();
   var body={client_id:peerCid(),industry:ind,region:peerRegion(),revenue:peerRevenue(),overall_cmmi:snap.overall,function_cmmi:snap.functions};
   fetch(apiBase()+'/api/peer/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
     .then(function(){return fetch(apiBase()+'/api/peer/benchmark?industry='+encodeURIComponent(ind)+'&size='+encodeURIComponent(size));})
@@ -2587,6 +2587,11 @@ function indKey(){var i=String(industry()||'').toLowerCase();
   if(/retail|commerce/.test(i))return 'retail';if(/gov|public/.test(i))return 'gov';if(/manufactur/.test(i))return 'mfg';if(/energy|utilit/.test(i))return 'energy';return 'tech';}
 function indProfile(){return IND_PROFILES[indKey()]||IND_PROFILES.tech;}
 function indLabel(){return {health:'healthcare',tech:'technology',fin:'financial services',retail:'retail',gov:'government',mfg:'manufacturing',energy:'energy & utilities',telecom:'telecommunications'}[indKey()]||'your sector';}
+/* Finer-grained industry for the DTNKShield peer cohort ONLY — splits banking and
+   insurance out of the general 'fin' bucket so they form distinct benchmark cohorts.
+   The rest of the cockpit (profiles, threats, labels) keeps using indKey(). */
+function peerIndustry(){var i=String(industry()||'').toLowerCase();if(/bank/.test(i))return 'banking';if(/insur/.test(i))return 'insurance';return indKey();}
+function peerIndustryLabel(){var k=peerIndustry();if(k==='banking')return 'banking';if(k==='insurance')return 'insurance';return indLabel();}
 /* Threat groups publicly reported (CISA / Mandiant / sector-ISAC advisories) to
    target each sector, with the Nerion capabilities that defend against their known
    techniques. Industry-modeled from public reporting until a threat-intel feed

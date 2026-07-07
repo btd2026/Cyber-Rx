@@ -2768,13 +2768,13 @@ function c5peerCats(){return [{k:'industry',l:'My industry'},{k:'fortune100',l:'
    cohorts; the category just changes which cohort we read back. Empty industry/
    size means "don't filter on it" (backend omits the clause). */
 function c5peerCatQuery(cat){
-  var ind=(typeof indKey==='function')?indKey():'';
+  var ind=(typeof peerIndustry==='function')?peerIndustry():((typeof indKey==='function')?indKey():'');
   var size=(typeof peerSizeBand==='function')?peerSizeBand():'';
   if(cat==='fortune100')return {industry:'',size:'mega',label:'Fortune 100 · $100B+ revenue'};
   if(cat==='fortune500')return {industry:'',size:'large',label:'Fortune 500 · $10B+ revenue'};
   if(cat==='bcbs')return {industry:'banking',size:'',label:'Banking · Basel (BCBS) institutions'};
   if(cat==='insurance')return {industry:'insurance',size:'',label:'Insurance carriers'};
-  return {industry:ind,size:size,label:((typeof indLabel==='function')?indLabel():'your industry')+' peers'};
+  return {industry:ind,size:size,label:((typeof peerIndustryLabel==='function')?peerIndustryLabel():'your industry')+' peers'};
 }
 function c5peerShared(){
   var sel=(typeof FW_SEL!=='undefined')?FW_SEL:'csf';
@@ -2786,7 +2786,7 @@ function c5peerShared(){
   return [
     {k:'Organization',v:'My Organization',note:'your real name never leaves your browser'},
     {k:'Compared against',v:q.label},
-    {k:'Industry',v:(typeof indLabel==='function')?indLabel():'—'},
+    {k:'Industry',v:(typeof peerIndustryLabel==='function')?peerIndustryLabel():((typeof indLabel==='function')?indLabel():'—')},
     {k:'Region',v:(typeof peerRegion==='function')?peerRegion():'global'},
     {k:'Revenue band',v:(typeof peerSizeLabel==='function')?peerSizeLabel():'—'},
     {k:'Framework',v:fwName},
@@ -2802,7 +2802,7 @@ function c5fwPeerFetch(){
   var fns=(window.FW_SNAPSHOT&&window.FW_SNAPSHOT.functions)||{};
   C5FW_PEER_BUSY=true;C5FW_PEER=null;c5fwPeerRender();
   // Submit with the org's REAL identity tags (not the category filter).
-  var body={client_id:(typeof peerCid==='function')?peerCid():'anon',industry:(typeof indKey==='function')?indKey():'',region:(typeof peerRegion==='function')?peerRegion():'global',revenue:(typeof peerRevenue==='function')?peerRevenue():0,category:C5PEER_CAT,framework:sel,overall_cmmi:over,function_cmmi:fns};
+  var body={client_id:(typeof peerCid==='function')?peerCid():'anon',industry:(typeof peerIndustry==='function')?peerIndustry():((typeof indKey==='function')?indKey():''),region:(typeof peerRegion==='function')?peerRegion():'global',revenue:(typeof peerRevenue==='function')?peerRevenue():0,category:C5PEER_CAT,framework:sel,overall_cmmi:over,function_cmmi:fns};
   var base=(typeof apiBase==='function')?apiBase():'';
   fetch(base+'/api/peer/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
     .then(function(){return fetch(base+'/api/peer/benchmark?industry='+encodeURIComponent(q.industry)+'&size='+encodeURIComponent(q.size)+'&framework='+encodeURIComponent(sel)+'&category='+encodeURIComponent(C5PEER_CAT));})
