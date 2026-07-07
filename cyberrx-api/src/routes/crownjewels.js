@@ -154,6 +154,19 @@ router.post('/ingest', optionalJWT, async (req, res) => {
       policy: ai.policy || null, euAiAct: ai.euAiAct || null, inventory: ai.inventory || null,
     };
 
+    // AI & Software Supply-Chain Security (CISO tab) — self-reported posture, all
+    // optional. Empty strings normalize to null so the cockpit gates honestly.
+    const asc = b.aiSupplyChain || {};
+    const nn = (v) => { const s = v == null ? '' : String(v).trim(); return s ? s.slice(0, 120) : null; };
+    const aiSupplyChain = {
+      aiDataSensitivity: nn(asc.aiDataSensitivity), aiSpm: nn(asc.aiSpm), genaiSanctioned: nn(asc.genaiSanctioned),
+      shadowAiMonitored: nn(asc.shadowAiMonitored), dlpToAi: nn(asc.dlpToAi), aiCodingTools: nn(asc.aiCodingTools),
+      aiCodePolicy: nn(asc.aiCodePolicy), codeScanning: nn(asc.codeScanning), pipelineScanning: nn(asc.pipelineScanning),
+      artifactSigning: nn(asc.artifactSigning), slsaLevel: nn(asc.slsaLevel), machineIdentities: nn(asc.machineIdentities),
+      secretsMgmt: nn(asc.secretsMgmt), nhiMonitored: nn(asc.nhiMonitored), cbomStatus: nn(asc.cbomStatus),
+      quantumVulnerable: nn(asc.quantumVulnerable), pqcPlan: nn(asc.pqcPlan),
+    };
+
     // Strategic initiatives (CEO per-initiative go/no-go safety check + decision brief).
     const strategicInitiatives = Array.isArray(b.strategicInitiatives)
       ? b.strategicInitiatives.filter((s) => s && s.name).slice(0, 20).map((s) => ({
@@ -261,7 +274,7 @@ router.post('/ingest', optionalJWT, async (req, res) => {
        VALUES ($1,$2,$3,$4::jsonb,NOW())
        ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name,
          setup_json = COALESCE(orgs.setup_json,'{}'::jsonb) || EXCLUDED.setup_json`,
-      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics, resilience, initiatives, governance, aiGovernance, growth, strategicInitiatives, objectives, capabilities, crownJewelRegister, bia, sbom, riskAppetite, regulatoryRegister, materialityCriteria, benchmarkData, document_validation: documentValidation, seatNames })]);
+      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics, resilience, initiatives, governance, aiGovernance, aiSupplyChain, growth, strategicInitiatives, objectives, capabilities, crownJewelRegister, bia, sbom, riskAppetite, regulatoryRegister, materialityCriteria, benchmarkData, document_validation: documentValidation, seatNames })]);
 
     // Idempotent replace: clear the org's prior inventory, then insert the mapped rows.
     step = 'clear_inventory';

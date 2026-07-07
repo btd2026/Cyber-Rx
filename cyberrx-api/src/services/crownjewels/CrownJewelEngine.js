@@ -297,6 +297,7 @@ async function run(orgId) {
       stress,
       portfolio,
       aiRisk,
+      aiSupplyChain: setup.aiSupplyChain || {},
       value_chain,
     },
     graph,

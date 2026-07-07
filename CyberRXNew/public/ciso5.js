@@ -438,6 +438,87 @@ function c5get(id){
         sources:[{tool:'Threat intelligence',connector:'threat_intel',field:'new_items',lastRefresh:c5ago()},{tool:'Asset / tech inventory',connector:'cmdb',field:'matching_assets'}],
         note:conn?(n>0?(ta+' sector actor'+(ta>1?'s are':' is')+' tracked against your stack — the emerging risks to get ahead of'+(partials.length?(', concentrated on your '+partials.join(' & ').toLowerCase()+' gap'):'')+'.'):'No emerging risk currently matches your inventory.'):'Newly published threats matched to your inventory, prioritized by what they can reach.',
         connectTool:'your threat-intel feed'});}
+    /* ---- AI & Software Supply-Chain Security (CISO tab) ----
+       Self-reported posture from onboarding until the named live tool connects;
+       gated + labelled illustrative, following the Program-Health pattern. */
+    case 'ais_aiml':{var AS=(typeof LIVE!=='undefined'&&LIVE&&LIVE.aiSupplyChain)||{};var G=(typeof LIVE!=='undefined'&&LIVE&&LIVE.aiRisk&&LIVE.aiRisk.governance)||{};
+      var sys=Number(G.systems)||Number(AS.aimlSystems)||0;var conn=(sys>0||AS.aiSpm!=null||G.inventory!=null);
+      var gaps=[];if(/^no/i.test(G.inventory||'')||/partial/i.test(G.inventory||''))gaps.push('inventory');if(/none|drafted/i.test(G.policy||''))gaps.push('policy');if(!/connected|yes/i.test(AS.aiSpm||''))gaps.push('AI-SPM posture');
+      var col=conn?(gaps.length>=2?'crit':gaps.length===1?'warn':'good'):'muted';
+      return c5obj({id:id,name:'AI/ML systems the business runs',connected:conn,
+        displayValue:conn?(sys>0?(sys+' AI/ML system'+(sys>1?'s':'')+(gaps.length?(' · '+gaps.length+' posture gap'+(gaps.length>1?'s':'')):' · governed')):(gaps.length?gaps.length+' posture gaps':'governed')):'—',
+        label:'self-reported',color:col,
+        formula:'ai_risk per system = posture_gaps (prompt-injection · data-leakage · model-access · guardrails) × data_sensitivity; from AI asset inventory / model registry joined to AI-SPM + adversarial-ML threat intel; ranked risk-desc',
+        method:'Deployed AI/ML systems and LLM apps come from your AI asset inventory / model registry, joined to AI-SPM for prompt-injection exposure, data leakage, model access and guardrail posture, and to threat intel for adversarial-ML activity. Posture is self-reported until AI-SPM is connected.',
+        inputs:[{name:'AI/ML systems in production',value:conn?sys:'—',source:'AI asset inventory'},{name:'Data sensitivity',value:AS.aiDataSensitivity||'—',source:'AI inventory'},{name:'Inventory & monitoring',value:G.inventory||'—',source:'AI governance'},{name:'AI-SPM posture',value:AS.aiSpm||'not connected',source:'AI-SPM'}],
+        sources:[{tool:'AI asset inventory / model registry',connector:'ai_inventory',field:'ai_systems',lastRefresh:c5ago()},{tool:'AI-SPM',connector:'aispm',field:'posture_gaps'},{tool:'Threat intelligence',connector:'threat_intel',field:'adversarial_ml'}],
+        note:conn?(gaps.length?('Your AI systems carry '+gaps.length+' open posture gap'+(gaps.length>1?'s':'')+' ('+gaps.join(', ')+') — the model, training-data and LLM-application risk to close.'):'Your AI/ML systems are inventoried and governed.'):'The security posture of the AI/ML and LLM systems the business runs.',
+        connectTool:'your AI asset inventory + AI-SPM'});}
+    case 'ais_genai':{var AS=(typeof LIVE!=='undefined'&&LIVE&&LIVE.aiSupplyChain)||{};
+      var conn=(AS.shadowAiMonitored!=null||AS.genaiSanctioned!=null||AS.dlpToAi!=null);
+      var unmon=/^no/i.test(AS.shadowAiMonitored||'');var part=/partial/i.test(AS.shadowAiMonitored||'');var noDlp=/^no/i.test(AS.dlpToAi||'');
+      var col=conn?((unmon&&noDlp)?'crit':(unmon||noDlp||part)?'warn':'good'):'muted';
+      return c5obj({id:id,name:'Enterprise GenAI & shadow-AI leakage',connected:conn,
+        displayValue:conn?(unmon?'Shadow AI unmonitored':(part?'Partially monitored':'Monitored')+(noDlp?' · no DLP to AI':'')):'—',
+        label:'self-reported',color:col,
+        formula:'exposure = sensitive-data submissions to AI weighted by shadow vs sanctioned use; GenAI usage from CASB/SSE + GenAI gateway joined to DLP; ranked exposure-desc',
+        method:'GenAI usage by app and user (sanctioned vs shadow) comes from your CASB/SSE and GenAI gateway, joined to DLP for sensitive-data submissions to AI. Exposure is self-reported until those tools are connected.',
+        inputs:[{name:'Sanctioned GenAI apps',value:(AS.genaiSanctioned!=null?AS.genaiSanctioned:'—'),source:'CASB / SSE'},{name:'Shadow-AI monitoring',value:AS.shadowAiMonitored||'—',source:'CASB / SSE'},{name:'DLP inspects AI submissions',value:AS.dlpToAi||'—',source:'DLP'}],
+        sources:[{tool:'CASB / SSE',connector:'casb',field:'genai_usage',lastRefresh:c5ago()},{tool:'GenAI gateway',connector:'genai_gw',field:'sanctioned_vs_shadow'},{tool:'DLP',connector:'dlp',field:'sensitive_to_ai'}],
+        note:conn?(unmon?'Shadow AI is unmonitored — sensitive data can leave through unsanctioned tools without a control in the path.':(noDlp?'GenAI use is monitored but DLP does not yet inspect what employees submit to AI.':'Sanctioned GenAI use is monitored with DLP in the path.')):'Enterprise GenAI usage and the data-leakage risk from shadow AI.',
+        connectTool:'your CASB/SSE + GenAI gateway + DLP'});}
+    case 'ais_aicode':{var AS=(typeof LIVE!=='undefined'&&LIVE&&LIVE.aiSupplyChain)||{};
+      var tools=AS.aiCodingTools||'';var used=!!(tools&&String(tools).trim());var conn=(used||AS.aiCodePolicy!=null||AS.codeScanning!=null);
+      var noPol=/none/i.test(AS.aiCodePolicy||'')||AS.aiCodePolicy==null;var noScan=/^no/i.test(AS.codeScanning||'');var partScan=/partial/i.test(AS.codeScanning||'');
+      var col=conn?((used&&noPol&&noScan)?'crit':((used&&(noPol||noScan||partScan))?'warn':'good')):'muted';
+      return c5obj({id:id,name:'AI-assisted coding risk (SDLC)',connected:conn,
+        displayValue:conn?(used?((AS.aiCodePolicy&&!noPol?'governed':'ungoverned')+(noScan?' · not scanned':'')):'no AI coding tools'):'—',
+        label:'self-reported',color:col,
+        formula:'ai_code_risk = vuln_rate + secrets_found in AI-influenced code × policy_gaps; AI coding-assistant adoption joined to SAST/SCA + Secrets scanning + code provenance; ranked risk-desc',
+        method:'Adoption and policy scope of AI coding assistants (Copilot, Claude Code) per repo/team come from their admin logs, joined to SAST/SCA and secrets scanning to measure the vulnerability and secret rate in AI-influenced code. Self-reported until those tools are connected.',
+        inputs:[{name:'AI coding assistants in use',value:used?String(tools):'—',source:'coding-assistant admin'},{name:'Policy scope',value:AS.aiCodePolicy||'—',source:'SDLC policy'},{name:'SAST/SCA + secrets scanning',value:AS.codeScanning||'—',source:'code scanning'}],
+        sources:[{tool:'AI coding-assistant admin',connector:'ai_code',field:'adoption · policy',lastRefresh:c5ago()},{tool:'SAST / SCA',connector:'sast',field:'vuln_rate'},{tool:'Secrets scanning',connector:'secrets',field:'secrets_found'}],
+        note:conn?(used?((noPol||noScan)?'AI coding assistants are in use without full policy or scanning coverage — the vulnerability and secret rate in AI-influenced code is unmeasured.':'AI coding assistants are governed and their output is scanned.'):'No AI coding assistants are reported in the SDLC.'):'Cybersecurity risk from AI-assisted coding in the software development lifecycle.',
+        connectTool:'your AI coding-assistant logs + SAST/SCA + secrets scanning'});}
+    case 'ais_pipeline':{var AS=(typeof LIVE!=='undefined'&&LIVE&&LIVE.aiSupplyChain)||{};var sbom=(typeof LIVE!=='undefined'&&LIVE&&LIVE.sbom)||[];
+      var conn=(AS.pipelineScanning!=null||AS.artifactSigning!=null||AS.slsaLevel!=null||sbom.length>0);
+      var noScan=/^no/i.test(AS.pipelineScanning||'');var noSign=/^no/i.test(AS.artifactSigning||'');var slsa=(AS.slsaLevel!=null?Number(AS.slsaLevel):null);var lowSlsa=(slsa!=null&&slsa<2);
+      var col=conn?((noSign&&noScan)?'crit':((noSign||noScan||lowSlsa)?'warn':'good')):'muted';
+      return c5obj({id:id,name:'CI/CD pipeline & build supply chain',connected:conn,
+        displayValue:conn?((noSign?'Unsigned artifacts':(slsa!=null?('SLSA '+slsa):'Signed'))+(noScan?' · unscanned':'')):'—',
+        label:'self-reported',color:col,
+        formula:'pipeline_risk = misconfigs + unsigned artifacts + provenance gaps + exposed pipeline secrets; CI/CD scanning joined to Secrets mgmt + SBOM + artifact signing (SLSA level); ranked risk-desc',
+        method:'CI/CD security scanning surfaces pipeline misconfigurations, unsigned artifacts and provenance gaps, joined to secrets management for exposed pipeline secrets and to SBOM + artifact signing for the SLSA level. Self-reported until CI/CD scanning is connected.',
+        inputs:[{name:'Pipeline security scanning',value:AS.pipelineScanning||'—',source:'CI/CD scanning'},{name:'Artifact signing',value:AS.artifactSigning||'—',source:'artifact signing'},{name:'SLSA level',value:(slsa!=null?slsa:'—'),source:'build provenance'},{name:'SBOM components',value:sbom.length||'—',source:'SBOM'}],
+        sources:[{tool:'CI/CD security scanning',connector:'cicd',field:'misconfigs · provenance',lastRefresh:c5ago()},{tool:'Secrets management',connector:'secrets',field:'pipeline_secrets'},{tool:'SBOM + artifact signing',connector:'sbom',field:'slsa_level'}],
+        note:conn?((noSign||noScan)?'Your build pipeline has unsigned artifacts or unscanned stages — the software supply chain an attacker uses to reach production.':'Your pipeline is scanned and artifacts are signed.'):'Security and integrity of the CI/CD pipeline and software build supply chain.',
+        connectTool:'your CI/CD scanning + secrets management + SBOM/signing'});}
+    case 'ais_nhi':{var AS=(typeof LIVE!=='undefined'&&LIVE&&LIVE.aiSupplyChain)||{};var priv=sig('priv_sessions_flagged'),dorm=sig('dormant_accounts');
+      var n=Number(AS.machineIdentities)||0;var conn=(n>0||AS.secretsMgmt!=null||AS.nhiMonitored!=null||priv!=null);
+      var noNhi=/^no/i.test(AS.nhiMonitored||'');var poorSec=/none/i.test(AS.secretsMgmt||'');var partSec=/partial/i.test(AS.secretsMgmt||'');
+      var col=conn?((noNhi&&poorSec)?'crit':((noNhi||poorSec||partSec||(priv!=null&&priv>0))?'warn':'good')):'muted';
+      return c5obj({id:id,name:'Non-human & machine-identity exposure',connected:conn,
+        displayValue:conn?((n>0?(n+' machine identit'+(n>1?'ies':'y')):'machine identities')+(noNhi?' · unmonitored':'')):'—',
+        label:'self-reported',color:col,
+        formula:'nhi_risk = stale + over-privileged + exposed machine identities; NHI/ITDR + Secrets management joined to PAM/Identity; ranked risk-desc',
+        method:'Machine identities, tokens and keys come from your non-human-identity / ITDR and secrets-management tooling, flagged stale, over-privileged or exposed, and joined to PAM/Identity. Self-reported until those tools are connected.',
+        inputs:[{name:'Machine identities',value:(n>0?n:'—'),source:'NHI / ITDR'},{name:'Secrets management',value:AS.secretsMgmt||'—',source:'secrets vault'},{name:'NHI / ITDR monitoring',value:AS.nhiMonitored||'—',source:'NHI / ITDR'},{name:'Flagged privileged sessions',value:(priv!=null?priv:'—'),source:'PAM'}],
+        sources:[{tool:'Non-human identity / ITDR',connector:'nhi',field:'machine_identities',lastRefresh:c5ago()},{tool:'Secrets management',connector:'secrets',field:'tokens · keys'},{tool:'PAM / Identity',connector:'pam',field:'privilege'}],
+        note:conn?((noNhi||poorSec)?'Your machine identities — service accounts, tokens and keys — are not fully monitored or vaulted, the fastest-growing and least-watched identity surface.':'Your machine identities are monitored and secrets are vaulted.'):'Non-human and machine-identity exposure — service accounts, tokens and secrets sprawl.',
+        connectTool:'your NHI/ITDR + secrets management + PAM'});}
+    case 'ais_pqc':{var AS=(typeof LIVE!=='undefined'&&LIVE&&LIVE.aiSupplyChain)||{};
+      var conn=(AS.cbomStatus!=null||AS.quantumVulnerable!=null||AS.pqcPlan!=null);
+      var vuln=/^yes/i.test(AS.quantumVulnerable||'');var noPlan=/^no/i.test(AS.pqcPlan||'')||AS.pqcPlan==null;var noCbom=/none/i.test(AS.cbomStatus||'');
+      var col=conn?((vuln&&noPlan)?'warn':(noCbom?'warn':(vuln?'warn':'good'))):'muted';
+      return c5obj({id:id,name:'Post-quantum cryptography readiness',connected:conn,
+        displayValue:conn?((noCbom?'No crypto inventory':(AS.cbomStatus+' CBOM'))+(vuln?' · quantum-vulnerable':'')):'—',
+        label:'self-reported',color:col,
+        formula:'pqc_priority = quantum-vulnerable algorithms (RSA/ECC) protecting sensitive or long-lived data × data_longevity; from cryptographic inventory (CBOM); ranked priority-desc',
+        method:'A cryptographic bill of materials (CBOM) inventories algorithms and key sizes across systems; quantum-vulnerable algorithms (RSA/ECC) protecting sensitive or long-lived data are flagged and prioritized for migration. Self-reported until a crypto-discovery tool is connected.',
+        inputs:[{name:'Cryptographic inventory (CBOM)',value:AS.cbomStatus||'—',source:'CBOM'},{name:'Quantum-vulnerable data',value:AS.quantumVulnerable||'—',source:'CBOM'},{name:'Migration plan',value:AS.pqcPlan||'—',source:'PQC roadmap'}],
+        sources:[{tool:'Cryptography inventory (CBOM)',connector:'cbom',field:'algorithms · key_sizes',lastRefresh:c5ago()}],
+        note:conn?((noCbom)?'You have no cryptographic inventory yet — the first step before "harvest-now, decrypt-later" exposure can even be measured.':(vuln?'Quantum-vulnerable algorithms protect long-lived data — the migration priority to plan now, ahead of the standards deadline.':'Your cryptography is inventoried and migration is planned.')):'Post-quantum cryptography readiness — cryptographic inventory and migration exposure.',
+        connectTool:'a cryptography-discovery tool (CBOM)'});}
     case 'peer_maturity':{var ov=c5Overall();var conn=ov!=null;
       return c5obj({id:id,name:'Your maturity',connected:conn,displayValue:conn?(Number(ov).toFixed(1)+' / 5'):'—',label:'computed',color:'ink',
         formula:'your maturity = mean CMMI across the framework control universe, evidenced from tools + documents',
@@ -1546,6 +1627,43 @@ function c5Health(){
     tiles+
     c5bl('Bottom line',blHead,null,blPara,{mid:blMid,txt:blBtn})+
     '<div class="c5foot">Each tile traces to its exact sources. Figures shown are illustrative until the sources are connected.</div>';
+}
+
+/* ---------- CISO tab — AI & Software Supply-Chain Security ---------- */
+/* Six enterprise-risk reads, Program-Health design (tile grid + bottom line).
+   Each tile is a provenance metric; posture is self-reported from onboarding
+   until the named live tool connects. */
+function c5AiSupply(){
+  var host=document.getElementById('c5-aisupply');if(!host)return;
+  var PILL={crit:{c:'r',t:'At risk'},warn:{c:'a',t:'Watch'},good:{c:'g',t:'Healthy'},blue:{c:'b',t:'Monitoring'},muted:{c:'n',t:'—'},ink:{c:'n',t:'—'}};
+  function tile(mid,onSub,offSub,icon){var m=c5get(mid),p=PILL[m.color]||PILL.muted;return c5tile(mid,p.c,p.t,m.connected?onSub:offSub,'',icon);}
+  var ids=['ais_aiml','ais_genai','ais_aicode','ais_pipeline','ais_nhi','ais_pqc'];
+  var ms=ids.map(function(id){return c5get(id);});
+  var anyRisk=ms.some(function(m){return m.connected&&(m.color==='warn'||m.color==='crit');});
+  var worst=null,worstR=0;ms.forEach(function(m){var r=(m.color==='crit'?2:m.color==='warn'?1:0);if(m.connected&&r>worstR){worst=m;worstR=r;}});
+  var tiles='<div class="c5tiles">'+
+    tile('ais_aiml','AI inventory × AI-SPM × Threat Intel','connect your AI asset inventory + AI-SPM','cpu')+
+    tile('ais_genai','CASB/SSE × GenAI gateway × DLP','connect CASB/SSE + GenAI gateway + DLP','store')+
+    tile('ais_aicode','Coding-assistant logs × SAST/SCA × Secrets','connect coding-assistant logs + code scanning','file')+
+    tile('ais_pipeline','CI/CD scanning × Secrets × SBOM/SLSA','connect CI/CD scanning + SBOM/signing','box')+
+    tile('ais_nhi','NHI/ITDR × Secrets × PAM','connect NHI/ITDR + secrets + PAM','key')+
+    tile('ais_pqc','Cryptographic inventory (CBOM)','connect a crypto-discovery tool (CBOM)','lock')+
+    '</div>';
+  var blHead,blPara,blMid,blBtn;
+  if(worst){blMid=worst.id;blHead='Close your highest AI & supply-chain exposure first.';
+    blPara='Across the six reads, your most exposed area is <b>'+c5esc(worst.name)+'</b> — '+worst.displayValue+'. '+(worst.note||'');
+    blBtn='Prioritize '+c5esc(worst.name.toLowerCase());}
+  else if(ms.some(function(m){return m.connected;})){blMid='ais_aiml';blHead='Your AI and software supply chain is in good shape.';
+    blPara='No open exposure across your AI systems, GenAI usage, AI-assisted coding, build pipeline, machine identities or post-quantum readiness. Hold the posture and keep the sources live.';
+    blBtn='Review AI/ML posture';}
+  else {blMid='ais_aiml';blHead='Connect your AI and supply-chain sources to light this up.';
+    blPara='Add your AI asset inventory, CASB/DLP, coding-assistant logs, CI/CD scanning, machine-identity tooling and a cryptographic inventory, and each read populates with your own posture.';
+    blBtn='Start with AI/ML posture';}
+  host.innerHTML=c5header()+
+    c5shell('AI &amp; software supply-chain security · where is the AI and build chain exposed?','The AI systems you run, the AI your people use, the code and pipeline that ship it, your machine identities and your post-quantum readiness.',anyRisk?'warn':null,'The six dimensions of AI and software-supply-chain risk the board now asks about — each traces to its source. Drill any tile to defend it.')+
+    tiles+
+    c5bl('Bottom line',blHead,null,blPara,{mid:blMid,txt:blBtn})+
+    '<div class="c5foot">Each tile traces to its exact sources. Posture is self-reported until the named tool connects — figures shown are illustrative.</div>';
 }
 
 /* ---------- Tab 02 — Top exposure ---------- */
