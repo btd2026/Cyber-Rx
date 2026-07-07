@@ -103,15 +103,27 @@
     '.c5esub{font-size:12px;color:var(--ink-2);margin-top:1px}',
     '.c5etrack{width:88px;height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden;flex-shrink:0}',
     '.c5emult{font-size:14px;font-weight:500;width:48px;text-align:right;color:var(--ink)}',
-    '.c5opgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;margin-bottom:6px}',
-    '.c5opc{background:var(--surface-2);border-radius:10px;padding:14px 15px;cursor:pointer;border:.5px solid var(--line);transition:background .15s}',
-    '.c5opc:hover{background:var(--surface)}',
-    '.c5opc-h{display:flex;align-items:center;gap:9px;margin-bottom:9px}',
-    '.c5opc-ic{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:7px;background:var(--surface);flex:none}',
-    '.c5opc-ic svg{width:16px;height:16px}',
-    '.c5opc-t{font-size:12.5px;font-weight:500;color:var(--ink-2);line-height:1.25}',
-    '.c5opc-v{font-size:21px;font-weight:600;color:var(--ink);line-height:1.1}',
-    '.c5opc-s{font-size:12px;color:var(--ink-2);margin-top:5px;line-height:1.4}',
+    '.c5opgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;margin-bottom:6px}',
+    '.c5opc{position:relative;background:var(--surface-2);background:linear-gradient(180deg,var(--surface),var(--surface-2));border-radius:14px;padding:16px 18px 15px;cursor:pointer;border:1px solid var(--line);box-shadow:0 1px 2px rgba(16,24,40,.05);transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;overflow:hidden}',
+    '.c5opc::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ac,var(--line));opacity:.95}',
+    '.c5opc:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(16,24,40,.11);border-color:var(--ac,var(--line-2))}',
+    '.c5opc-h{display:flex;align-items:center;gap:10px;margin-bottom:11px}',
+    '.c5opc-ic{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9px;background:var(--surface);background:color-mix(in srgb,var(--ac,var(--muted)) 15%,var(--surface));color:var(--ink-2);color:var(--ac,var(--ink-2));flex:none}',
+    '.c5opc-ic svg{width:17px;height:17px}',
+    '.c5opc-t{font-size:12.5px;font-weight:600;color:var(--ink-2);line-height:1.25;letter-spacing:.01em}',
+    '.c5opc-v{font-size:25px;font-weight:700;color:var(--ink);line-height:1.05;letter-spacing:-.01em}',
+    '.c5opc-s{font-size:12px;color:var(--ink-2);margin-top:6px;line-height:1.45}',
+    '.c5opc-go{position:absolute;right:15px;top:16px;font-size:11px;font-weight:600;color:var(--muted);opacity:0;transition:opacity .16s}',
+    '.c5opc:hover .c5opc-go{opacity:1}',
+    '.c5opc.alarm{animation:tileAlarm 1.15s ease-in-out infinite}',
+    '.c5opc.alarm::before{background:var(--crit);width:4px;opacity:1}',
+    '.c5warbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:18px;padding:15px 18px;border-radius:13px;border:1px solid var(--line);background:var(--surface-2)}',
+    '.c5warbar.active{border-color:rgba(178,58,58,.55);background:rgba(178,58,58,.08);animation:cjblink 1.4s ease-in-out infinite}',
+    '.c5warbar-l{display:flex;align-items:center;gap:11px;min-width:0}',
+    '.c5warbar-ic{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:10px;flex:none;font-size:17px;background:var(--surface)}',
+    '.c5warbar.active .c5warbar-ic{background:var(--crit);color:#fff}',
+    '.c5warbar-t{font-size:13.5px;font-weight:700;color:var(--ink)}',
+    '.c5warbar-s{font-size:12px;color:var(--ink-2);margin-top:1px}',
     '.c5drow{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:.5px solid var(--line);cursor:pointer}',
     '.c5drow:hover{background:var(--surface-2)}',
     '.c5dn{font-size:14px;font-weight:500;color:var(--ink)}',
@@ -1288,6 +1300,35 @@ function c5InspectObj(m){
 }
 function c5Connect(tool){if(typeof openDrill==='function')openDrill('Connect '+tool,'<div class="drill-p">Add <b>'+tool+'</b> in onboarding → Connect tools. Once connected, this metric switches from the gray not-connected state to a live, evidenced value — with its formula, inputs and source shown here.</div>');}
 document.addEventListener('click',function(e){var el=e.target.closest('[data-c5m]');if(el&&el.getAttribute('data-c5m'))c5Inspect(el.getAttribute('data-c5m'));});
+/* Protection summary-card detail inspector — opens the list behind each count. */
+document.addEventListener('click',function(e){var el=e.target.closest('[data-c5pc]');if(el&&el.getAttribute('data-c5pc'))c5protInspect(el.getAttribute('data-c5pc'));});
+function c5protInspect(kind){
+  var P=(typeof window!=='undefined'&&window.C5PROT)||{well:[],weak:[],ctrl:[],target:75};
+  var m;
+  if(kind==='well'){
+    m=c5obj({name:'Business areas well protected',displayValue:String((P.well||[]).length),label:'computed',color:(P.well&&P.well.length)?'good':'muted',
+      formula:'business areas whose GRC control-coverage clears the '+P.target+'-point bar with no open control gaps',
+      method:'From your Business Capability Map joined to GRC control-coverage. An area qualifies when its protection score is at or above the bar and it carries no open control gaps.',
+      inputs:(P.well&&P.well.length)?P.well.map(function(a){return {name:a.name,value:a.score+(a.measured?'':' (illustrative)'),color:'good',source:(a.grc?('GRC '+a.grc):'Capability Map × GRC')};}):[{name:'No area yet clears the bar',value:'—',source:'connect your Capability Map + GRC'}],
+      sources:[{tool:'Business Capability Map',connector:'capmap',field:'capabilities',lastRefresh:c5ago()},{tool:'GRC',connector:'grc',field:'control_coverage · gaps'}],
+      note:'The defensible base you take to the board — the parts of the business that are demonstrably protected.'});
+  } else if(kind==='weak'){
+    m=c5obj({name:'Business areas to strengthen',displayValue:String((P.weak||[]).length),label:'computed',color:(P.weak&&P.weak.length)?'warn':'good',
+      formula:'business areas below the '+P.target+'-point bar OR carrying one or more open control gaps; ranked weakest-first',
+      method:'From your Business Capability Map joined to GRC. An area appears here when its protection score is below the bar or it has open control gaps — this is where the residual cyber exposure concentrates.',
+      inputs:(P.weak&&P.weak.length)?P.weak.map(function(a){return {name:a.name,value:a.score+(a.gaps>0?(' · '+a.gaps+' gap'+(a.gaps>1?'s':'')):'')+(a.measured?'':' (illustrative)'),color:(a.score<50?'crit':'warn'),source:(a.exp>0?(usd(a.exp)+' exposure'):'Capability Map × GRC')};}):[{name:'No area below the bar',value:'—',source:'every mapped area is covered'}],
+      sources:[{tool:'Business Capability Map',connector:'capmap',field:'capabilities',lastRefresh:c5ago()},{tool:'GRC',connector:'grc',field:'control_coverage · gaps · open_risk'}],
+      note:'Where to concentrate next — the areas carrying the residual exposure, worst first.'});
+  } else {
+    m=c5obj({name:'Controls returning the most business value',displayValue:String((P.ctrl||[]).length),label:'computed',color:(P.ctrl&&P.ctrl.length)?'good':'muted',
+      formula:'business value per control = deployment × framework-weighted criticality of the assets it protects; ranked value-desc',
+      method:'From the live control ledger — each connected control’s deployment scaled by how much framework-weighted risk it removes across the assets it protects.',
+      inputs:(P.ctrl&&P.ctrl.length)?P.ctrl.map(function(o){return {name:o.c.name.replace(/ *\(.*\)/,''),value:usd(o.usd)+' · '+o.p+'% deployed',color:'good',source:o.c.tool};}):[{name:'No control connected',value:'—',source:'connect your security tools'}],
+      sources:[{tool:'Control ledger',connector:'nerion',field:'risk_removed_by_control',lastRefresh:c5ago()}],
+      note:'Where your controls earn their keep — the ones buying down the most business risk.'});
+  }
+  c5InspectObj(m);
+}
 
 /* ---------- shared render helpers ---------- */
 function c5chip(label){return '<span class="c5chip c5-'+String(label).replace(/[^a-z]/g,'')+'">'+label+'</span>';}
@@ -1570,8 +1611,8 @@ function c5Exposure(){
     ?('Protection seen from the business, not the tool. '+(well.length?('You are strong across '+well.length+' area'+(well.length>1?'s':'')+' — the defensible base you take to the board. '):'')+(topWeak?('The exposure concentrates in '+topWeak.name+', where protection is thinnest'+((topWeak.gaps||0)>0?(' — '+topWeak.gaps+' open control gap'+(topWeak.gaps>1?'s':'')):'')+'. '):'')+(topCtrl?('Your best lever is '+nm(topCtrl.c)+', the control returning the most business value today.'):''))
     :'The CISO’s read on where to hold the line, and where the next dollar of protection should go.';
   var tone=(haveAreas&&weak.length&&well.length<weak.length)?'warn':null;
-  // Summary as icon cards (matching the Cyber Operations tab) — icon · label · count · one-line read.
-  var scard=function(ic,lbl,val,sub,col){col=col||'muted';return '<div class="c5opc" style="cursor:default"><div class="c5opc-h"><span class="c5opc-ic" style="color:var(--'+col+')">'+c5icon(ic)+'</span><span class="c5opc-t">'+lbl+'</span></div><div class="c5opc-v" style="color:var(--'+(col==='muted'?'ink':col)+')">'+val+'</div><div class="c5opc-s">'+sub+'</div></div>';};
+  // Summary as premium icon cards — clickable to a detail inspector, with a hover tooltip.
+  var scard=function(ic,lbl,val,sub,col,pc,tip){col=col||'muted';return '<div class="c5opc" data-c5pc="'+pc+'" style="--ac:var(--'+col+')" title="'+c5esc(tip||'')+'"><span class="c5opc-go">details ›</span><div class="c5opc-h"><span class="c5opc-ic">'+c5icon(ic)+'</span><span class="c5opc-t">'+lbl+'</span></div><div class="c5opc-v" style="color:var(--'+(col==='muted'?'ink':col)+')">'+val+'</div><div class="c5opc-s">'+sub+'</div></div>';};
 
   // ── Widget rows ────────────────────────────────────────────────────────────
   var areaRow=function(a,mode){var cls=capColor(a.score);
@@ -1595,10 +1636,12 @@ function c5Exposure(){
   var body=c5header()+
     c5shell('Protection effectiveness · is the business protected where it counts?',verdict,tone,intro)+
     '<div class="c5statgrid">'+
-      scard('shieldcheck','Areas well protected',haveAreas?String(well.length):'—','Strong enough to defend to the board',well.length?'good':'muted')+
-      scard('target','Areas to strengthen',haveAreas?String(weak.length):'—','Carrying the residual exposure',weak.length?'warn':'muted')+
-      scard('coin','Controls returning value',haveCtrls?String(ctrlConn.length):'—','Buying down the most risk',haveCtrls?'good':'muted')+
+      scard('shieldcheck','Areas well protected',haveAreas?String(well.length):'—','Strong enough to defend to the board',well.length?'good':'muted','well','The business areas clearing their protection bar with no open control gaps. Click for the list.')+
+      scard('target','Areas to strengthen',haveAreas?String(weak.length):'—','Carrying the residual exposure',weak.length?'warn':'muted','weak','The business areas below the bar or carrying open control gaps — where the exposure concentrates. Click for the list.')+
+      scard('coin','Controls returning value',haveCtrls?String(ctrlConn.length):'—','Buying down the most risk',haveCtrls?'good':'muted','ctrl','The controls delivering the most business value — risk removed by deployment × criticality. Click for the ranking.')+
     '</div>';
+  // Stash for the summary-card detail inspector (opened on click).
+  try{window.C5PROT={well:well,weak:weak,ctrl:ctrlConn,target:TARGET,anyDerived:anyDerived};}catch(_){}
   if(haveAreas){
     body+='<div class="c5seclab">Where the business is well protected</div><div>'+w1+'</div>'+
           '<div class="c5seclab" style="margin-top:18px">Where to concentrate next</div><div>'+w2+'</div>';
@@ -1627,6 +1670,15 @@ function c5mc(mid,label,valHtml,color){
   var mm=null;try{if(mid&&typeof c5get==='function')mm=c5get(mid);}catch(_){}var tip=mm?(' title="'+c5tip(mm)+'"'):'';
   return '<div class="c5mc"'+(mid?(' data-c5m="'+mid+'"'):'')+tip+'><div class="c5mc-l">'+label+'</div><div class="c5mc-v"'+(color?(' style="color:var(--'+color+')"'):'')+'>'+valHtml+'</div></div>';
 }
+/* War Room alarm — a short double-beep sounded ONCE when an incident first appears
+   (armed flag prevents re-beeping on every render; cleared when the incident
+   clears). Reuses the cockpit's shared AudioContext. */
+function c5WarAlarm(){
+  try{if(window.C5_WAR_ARMED)return;window.C5_WAR_ARMED=true;}catch(_){}
+  try{if(typeof ensureAudio==='function')ensureAudio();}catch(_){}
+  var ctx=(typeof audioCtx!=='undefined'&&audioCtx)?audioCtx:null;if(!ctx)return;
+  try{var t=ctx.currentTime;[0,0.32].forEach(function(off){var o=ctx.createOscillator(),g=ctx.createGain();o.type='square';o.frequency.setValueAtTime(920,t+off);o.connect(g);g.connect(ctx.destination);g.gain.setValueAtTime(0.0001,t+off);g.gain.exponentialRampToValueAtTime(0.08,t+off+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+off+0.24);o.start(t+off);o.stop(t+off+0.26);});}catch(_){}
+}
 /* Tab 03 — Cyber Operations. The live SOC picture for the seat: active incidents,
    services under threat, third-party alerts, and emerging risks. Each box is a
    provenance metric; the QUERY/JOIN/OUTPUT spec lives in the drill-down inspector
@@ -1638,10 +1690,18 @@ function c5Effect(){
   var active=ms.filter(function(x){return x.m.connected&&(x.m.color==='crit'||x.m.color==='warn');}).length;
   var anyConn=ms.some(function(x){return x.m.connected;});
   var cards=ms.map(function(x){var m=x.m;var col=m.connected?(m.color==='crit'?'crit':m.color==='warn'?'warn':'good'):'muted';
-    return '<div class="c5opc" data-c5m="'+m.id+'"><div class="c5opc-h"><span class="c5opc-ic" style="color:var(--'+col+')">'+c5icon(x.d.ic)+'</span><span class="c5opc-t">'+m.name+'</span></div>'+
+    var alarm=(m.connected&&m.color==='crit')?' alarm':'';
+    return '<div class="c5opc'+alarm+'" data-c5m="'+m.id+'" style="--ac:var(--'+col+')" title="'+c5tip(m)+'"><span class="c5opc-go">details ›</span><div class="c5opc-h"><span class="c5opc-ic">'+c5icon(x.d.ic)+'</span><span class="c5opc-t">'+m.name+'</span></div>'+
       '<div class="c5opc-v" style="color:var(--'+col+')">'+(m.connected?m.displayValue:'—')+'</div>'+
       '<div class="c5opc-s">'+(m.note||'')+'</div></div>';
   }).join('');
+  // War Room — a live incident (a crit incident front) makes it blink + beep to
+  // draw the CISO to click in. wrOpen() is the existing War Room modal.
+  var incident=ms.filter(function(x){return x.m.connected&&x.m.color==='crit';}).length>0;
+  if(incident){try{c5WarAlarm();}catch(_){}}else{try{window.C5_WAR_ARMED=false;}catch(_){}}
+  var warbar=incident
+    ?'<div class="c5warbar active"><div class="c5warbar-l"><span class="c5warbar-ic">⚠</span><div><div class="c5warbar-t">Active incident — the War Room is live</div><div class="c5warbar-s">Command the response, run the regulatory clocks and brief every executive from one place.</div></div></div><button class="wr-btn" data-openwar="1" style="background:var(--crit);color:#fff;animation:warpulse 1.1s infinite">⚠ Enter the War Room</button></div>'
+    :'<div class="c5warbar"><div class="c5warbar-l"><span class="c5warbar-ic">🛡️</span><div><div class="c5warbar-t">War Room — standing by</div><div class="c5warbar-s">No active incident. The moment one crosses the line this turns red, sounds, and opens the response console.</div></div></div><button class="wr-btn gh" data-openwar="1">Open War Room</button></div>';
   var verdict=anyConn
     ?(active>0?('The SOC has '+active+' operational front'+(active>1?'s':'')+' live right now that need command attention.'):'Nothing is actively impacting the business right now — the operational picture is clean.')
     :'What is actively hitting the business right now — incidents, threats, third-party alerts and emerging risks — on one operational screen.';
@@ -1659,6 +1719,7 @@ function c5Effect(){
   };
   var body=c5header()+
     c5shell('Cyber operations · what needs command attention right now?',verdict,active>0?'warn':null,intro)+
+    warbar+
     '<div class="c5opgrid">'+cards+'</div>';
   if(top){
     body+=c5bl('Bottom line',
