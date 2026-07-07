@@ -17,6 +17,7 @@
 const express = require('express');
 const router = express.Router();
 const License = require('../services/LicenseService');
+const Tamper = require('../services/TamperResponseService');
 
 // Fields safe to expose to the browser (no signature, no raw machine id echo
 // beyond what the client already knows about its own box).
@@ -48,6 +49,29 @@ router.get('/fingerprint', (req, res) => {
     res.json({ fingerprint: License.machineFingerprint() });
   } catch (e) {
     res.status(500).json({ error: 'Unable to compute machine fingerprint.' });
+  }
+});
+
+// Tamper-seal status. When the appliance is sealed, returns the fingerprint +
+// nonce the vendor needs to mint a recovery (unseal) token.
+router.get('/seal', (req, res) => {
+  try {
+    res.json(Tamper.sealInfo());
+  } catch (e) {
+    res.json({ sealed: false });
+  }
+});
+
+// Apply a vendor-signed unseal token to recover a sealed appliance. Body is the
+// unseal.json produced by `tools/license/seal.js unseal-token`.
+router.post('/unseal', express.json({ limit: '16kb' }), (req, res) => {
+  try {
+    const result = Tamper.unseal(req.body);
+    // Drop the gate's cached license status so recovery takes effect immediately.
+    try { require('../middleware/licenseGate').invalidateCache(); } catch (_) {}
+    res.status(result.ok ? 200 : 400).json(result);
+  } catch (e) {
+    res.status(400).json({ ok: false, reason: 'Unable to process unseal token.' });
   }
 });
 

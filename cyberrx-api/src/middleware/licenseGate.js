@@ -20,6 +20,7 @@
  */
 
 const License = require('../services/LicenseService');
+const Tamper = require('../services/TamperResponseService');
 const logger = require('../utils/logger');
 
 const ENFORCE = process.env.LICENSE_ENFORCE === 'true';
@@ -48,6 +49,22 @@ function licenseGate(req, res, next) {
   if (!ENFORCE) return next();
   if (isOpenPath(req.path)) return next();
 
+  // Sealed appliance (tamper dead-man) — hard 423 until the vendor re-arms it.
+  // Checked before the license so a tampered box can't be used even with an
+  // otherwise-valid license.
+  try {
+    if (Tamper.isSealed()) {
+      const info = Tamper.sealInfo();
+      return res.status(423).json({
+        error: 'Appliance sealed after a tamper event.',
+        state: 'sealed',
+        reason: 'Protected material was shredded and the platform is locked. Vendor re-arm required.',
+        fingerprint: info.fingerprint || null,
+        nonce: info.nonce || null,
+      });
+    }
+  } catch (_) { /* never block the gate on a seal-read error */ }
+
   const status = currentStatus();
   if (status.ok) {
     // Advertise remaining days / grace on a response header for lightweight
@@ -69,6 +86,21 @@ function licenseGate(req, res, next) {
 
 /** Log the license posture once at boot so operators see it in the startup log. */
 function logStartupStatus() {
+  // Tamper dead-man: assess integrity at boot. When TAMPER_SEAL_ENFORCE=true and
+  // a HARD tamper is detected, this crypto-shreds the vault key and seals the box
+  // (no-op otherwise). Runs before the license log so a sealed state is surfaced.
+  try {
+    const v = Tamper.enforceAtStartup();
+    if (v.sealed) {
+      logger.error(`Tamper seal ACTIVE: ${v.reason || 'tampered'} — signals=${(v.signals || []).join(',')}`
+        + (v.acted ? ' (vault key shredded this boot)' : ''));
+    } else if (v.severity && v.severity !== Tamper.SEVERITY.NONE) {
+      logger.warn(`Tamper check: severity=${v.severity} signals=${(v.signals || []).join(',')} — ${v.reason || ''}`);
+    }
+  } catch (e) {
+    logger.warn('Tamper assessment failed at startup', { error: e.message });
+  }
+
   try {
     const s = License.checkStatus();
     const line = `License: state=${s.state} plan=${s.plan || 'n/a'} ` +

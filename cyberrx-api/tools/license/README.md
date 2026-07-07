@@ -71,6 +71,71 @@ Set `LICENSE_ENFORCE=true` **only in the shipped appliance image**.
 
 ---
 
+## Layer 1b — Tamper dead-man seal (self-destruct-on-tamper)  ✅ implemented
+
+If someone tampers with the appliance, it **crypto-shreds the vendor's protected
+material and seals itself** — locking the platform until you re-arm it.
+
+> **What "self-destruct" means here — read this.** It destroys the *vendor's*
+> secret (the vault key that decrypts your obfuscated code/asset bundle) and
+> bricks the *application*. It **never touches, wipes, or encrypts the customer's
+> data.** A trigger that destroyed customer data would turn any false positive (a
+> legitimate snapshot restore, an NTP correction, a host migration) into the
+> destruction of a paying customer's environment — a liability, not a feature.
+> Crypto-shredding vendor material achieves the anti-piracy goal without that
+> blast radius, and is the industry-standard approach (crypto-erase).
+
+### Severity model (false-positive-safe)
+| Signal | Severity | Response |
+|---|---|---|
+| License signature broken (file edited) | **HARD** | seal + crypto-shred vault key |
+| Protected file hash ≠ signed manifest (binary patched) | **HARD** | seal + crypto-shred vault key |
+| `wrong_machine` (VM cloned/migrated) | SOFT | block (402), **no shred** — re-issue license |
+| `clock_suspect` (clock rolled back) | SOFT | block (402), **no shred** — re-issue license |
+
+HARD signals are *cryptographically certain* and cannot arise from benign
+operations. SOFT signals have legitimate causes, so they never destroy anything.
+
+### Components
+| File | Role |
+|------|------|
+| `src/services/TamperResponseService.js` | `assess()` verdict, `enforceAtStartup()` (seal+shred on HARD), `unseal()` recovery, integrity-manifest verify, vault-key crypto-shred. |
+| `tools/license/seal.js` | **Vendor-only.** `manifest` (sign protected-file hashes at build time), `provision-vault` (create the shred-able key), `unseal-token` (mint a recovery token). |
+| `routes/license.js` | `GET /api/license/seal` (fingerprint + nonce for recovery) and `POST /api/license/unseal` (apply a recovery token). |
+| `middleware/licenseGate.js` | Returns **423 Locked** on every request when sealed; runs `enforceAtStartup()` at boot. |
+
+### Build-time (vendor)
+```bash
+node tools/license/seal.js provision-vault          # create the shred-able vault key
+# ...after the code bundle is final...
+node tools/license/seal.js manifest                 # sign hashes of the enforcement path
+#   → config/integrity.manifest  (embed in the image)
+# Enforcement is on when the image sets TAMPER_SEAL_ENFORCE=true
+```
+
+### Recovery (after an accidental HARD trip on a paying customer)
+```bash
+# 1. Operator reads the seal off the box:
+curl -s http://localhost:3001/api/license/seal      # → { fingerprint, nonce }
+# 2. You (vendor) mint a single-use, machine-bound token:
+node tools/license/seal.js unseal-token --fingerprint <fp> --nonce <nonce>
+# 3. Operator applies it:
+curl -X POST http://localhost:3001/api/license/unseal -H 'Content-Type: application/json' -d @unseal.json
+#   → seal cleared, vault key re-provisioned, platform live again
+```
+
+The unseal token is Ed25519-signed by your private key and bound to **that exact
+machine fingerprint + that exact seal nonce**, so it's single-use and can't be
+replayed on another box or another seal event.
+
+> **Honest limit.** A root attacker on their own VM can patch out the boot-time
+> check *before* it fires. That's why Layer 1b is paired with Layer 2 (compile
+> the check into a native binary/addon + boot integrity self-check) — the
+> manifest hash makes patching the enforcement path itself a HARD tamper, closing
+> the obvious bypass for anyone who doesn't first defeat Layer 2.
+
+---
+
 ## Layer 2 — Code protection (raise reverse-engineering cost)  ▢ recipe
 
 Ship compiled/obfuscated artifacts, not readable source:
@@ -125,4 +190,6 @@ Make abuse actionable, which is what actually deters commercial customers:
 
 ## Status
 - **Layer 1: implemented + tested** (`tests/unit/LicenseService.test.js`, 13 cases).
-- Layers 2–4: recipes above; build on request.
+- **Layer 1b (tamper seal): implemented + tested** (`tests/unit/TamperResponseService.test.js`, 18 cases).
+- Layers 2–4: recipes above; build on request. (Layer 2 is the natural next step —
+  it hardens Layer 1b's boot-time check against being patched out.)

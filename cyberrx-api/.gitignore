@@ -38,3 +38,8 @@ config/license_priv.pem
 config/license_pub.pem
 config/license.json
 config/.license_state.json
+# Tamper seal (appliance) — build/runtime artifacts, never commit
+config/integrity.manifest
+config/.sealed
+config/.vault_key
+config/unseal.json
