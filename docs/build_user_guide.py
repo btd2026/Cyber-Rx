@@ -1,650 +1,475 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Nerion User Guide — McKinsey-style Word document generator.
-Produces a polished, editable .docx: cover, auto TOC, numbered sections,
-exhibit tables, key-takeaway callouts, running header/footer with page numbers.
+Nerion User Guide — comprehensive edition.
+Builds a detailed McKinsey-style .docx from the platform's real structure
+(onboarding fields, all ten seats, connectors/signals, frameworks, decisions,
+provenance, administration). Regenerate with:  python3 docs/build_user_guide.py
 """
-import datetime
-from docx import Document
-from docx.shared import Pt, RGBColor, Inches, Emu
-from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_LINE_SPACING
-from docx.enum.section import WD_SECTION
-from docx.enum.table import WD_TABLE_ALIGNMENT
-from docx.oxml.ns import qn
-from docx.oxml import OxmlElement
+import os, sys, datetime
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from guide_kit import *
+from guide_kit import _field, psh, bdr
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 
-# ---------- Palette (deep navy consulting + Nerion blue) ----------
-NAVY   = RGBColor(0x08, 0x24, 0x3A)   # headings, cover
-BLUE   = RGBColor(0x1A, 0x5F, 0xA0)   # Nerion accent
-CYAN   = RGBColor(0x2F, 0xA3, 0xD6)   # bright accent / rules
-INK    = RGBColor(0x22, 0x2A, 0x30)   # body text
-MUTE   = RGBColor(0x5B, 0x6B, 0x76)   # captions
-WHITE  = RGBColor(0xFF, 0xFF, 0xFF)
-LIGHT  = "EEF2F5"                       # shaded fills (hex string)
-NAVYHX = "08243A"
-BLUEHX = "1A5FA0"
-BANDHX = "E7EEF3"
+K = Kit()
+run, p, h1, h2, h3, bullet, steps, callout, table, fields = (
+    K.run, K.p, K.h1, K.h2, K.h3, K.bullet, K.steps, K.callout, K.table, K.fields)
 
-HEAD_FONT = "Georgia"      # serif headings — authoritative report feel
-BODY_FONT = "Calibri"      # clean sans body
-
-doc = Document()
-
-# ---------- base styles ----------
-normal = doc.styles["Normal"]
-normal.font.name = BODY_FONT
-normal.font.size = Pt(10.5)
-normal.font.color.rgb = INK
-normal.paragraph_format.space_after = Pt(6)
-normal.paragraph_format.line_spacing = 1.12
-
-# default margins
-for s in doc.sections:
-    s.top_margin = Inches(0.9); s.bottom_margin = Inches(0.9)
-    s.left_margin = Inches(1.0); s.right_margin = Inches(1.0)
-
-# ---------- low-level helpers ----------
-def _shade(el, hex_fill):
-    shd = OxmlElement('w:shd')
-    shd.set(qn('w:val'), 'clear'); shd.set(qn('w:color'), 'auto'); shd.set(qn('w:fill'), hex_fill)
-    el.append(shd)
-
-def _p_shade(p, hex_fill):
-    _shade(p._p.get_or_add_pPr(), hex_fill)
-
-def _cell_shade(cell, hex_fill):
-    _shade(cell._tc.get_or_add_tcPr(), hex_fill)
-
-def _borders(p, edges, sz=6, color=BLUEHX):
-    pPr = p._p.get_or_add_pPr()
-    pbdr = OxmlElement('w:pBdr')
-    for edge in edges:
-        e = OxmlElement('w:'+edge)
-        e.set(qn('w:val'), 'single'); e.set(qn('w:sz'), str(sz))
-        e.set(qn('w:space'), '6'); e.set(qn('w:color'), color)
-        pbdr.append(e)
-    pPr.append(pbdr)
-
-def run(p, text, *, size=10.5, bold=False, italic=False, color=INK, font=BODY_FONT, caps=False, spacing=None):
-    r = p.add_run(text)
-    r.font.name = font; r.font.size = Pt(size); r.font.bold = bold; r.font.italic = italic
-    r.font.color.rgb = color
-    if caps: r.font.all_caps = True
-    if spacing is not None:
-        rPr = r._r.get_or_add_rPr(); sp = OxmlElement('w:spacing'); sp.set(qn('w:val'), str(spacing)); rPr.append(sp)
-    return r
-
-def para(text=None, *, before=0, after=6, align=None, **kw):
-    p = doc.add_paragraph()
-    p.paragraph_format.space_before = Pt(before); p.paragraph_format.space_after = Pt(after)
-    if align is not None: p.alignment = align
-    if text: run(p, text, **kw)
-    return p
-
-# ---------- section numbering ----------
-SEC = [0]
-def h1(title):
-    SEC[0]+= 1
-    doc.add_page_break()
-    p = doc.add_paragraph(); p.paragraph_format.space_before = Pt(2); p.paragraph_format.space_after = Pt(2)
-    run(p, f"{SEC[0]:02d}", size=30, bold=True, color=CYAN, font=HEAD_FONT)
-    p2 = doc.add_paragraph(); p2.paragraph_format.space_after = Pt(10)
-    run(p2, title, size=21, bold=True, color=NAVY, font=HEAD_FONT)
-    _borders(p2, ['bottom'], sz=10, color=NAVYHX)
-    p2.style = p2.style  # keep in TOC via outline level
-    _outline(p2, 1)
-    return p2
-
-SUB = [0]
-def h2(title):
-    SUB[0]+=1
-    p = doc.add_paragraph(); p.paragraph_format.space_before = Pt(12); p.paragraph_format.space_after = Pt(4)
-    run(p, title, size=14, bold=True, color=BLUE, font=HEAD_FONT)
-    _outline(p, 2)
-    return p
-
-def h3(title):
-    p = doc.add_paragraph(); p.paragraph_format.space_before = Pt(8); p.paragraph_format.space_after = Pt(3)
-    run(p, title, size=11.5, bold=True, color=NAVY, font=BODY_FONT)
-    _outline(p, 3)
-    return p
-
-def _outline(p, lvl):
-    pPr = p._p.get_or_add_pPr()
-    o = OxmlElement('w:outlineLvl'); o.set(qn('w:val'), str(lvl-1)); pPr.append(o)
-
-def bullet(text, *, bold_lead=None, level=0):
-    p = doc.add_paragraph(style='List Bullet')
-    p.paragraph_format.space_after = Pt(3)
-    p.paragraph_format.left_indent = Inches(0.3 + 0.25*level)
-    if bold_lead:
-        run(p, bold_lead, bold=True, color=NAVY); run(p, text)
-    else:
-        run(p, text)
-    return p
-
-def numbered(n, title, body):
-    p = doc.add_paragraph(); p.paragraph_format.space_before = Pt(6); p.paragraph_format.space_after = Pt(2)
-    run(p, f"{n}  ", size=12, bold=True, color=CYAN, font=HEAD_FONT)
-    run(p, title, size=12, bold=True, color=NAVY, font=BODY_FONT)
-    if body:
-        b = doc.add_paragraph(); b.paragraph_format.left_indent = Inches(0.32); b.paragraph_format.space_after = Pt(6)
-        run(b, body)
-    return p
-
-def callout(label, text):
-    p = doc.add_paragraph(); p.paragraph_format.space_before = Pt(8); p.paragraph_format.space_after = Pt(8)
-    p.paragraph_format.left_indent = Inches(0.08)
-    _p_shade(p, LIGHT); _borders(p, ['left'], sz=24, color=BLUEHX)
-    run(p, label.upper()+"   ", size=8.5, bold=True, color=BLUE, caps=True, spacing=30)
-    run(p, text, size=10, italic=False, color=INK)
-    # padding
-    p.paragraph_format.space_after = Pt(8)
-    return p
-
-def exhibit(caption, headers, rows, widths=None):
-    cap = doc.add_paragraph(); cap.paragraph_format.space_before = Pt(10); cap.paragraph_format.space_after = Pt(3)
-    run(cap, "EXHIBIT — ", size=8.5, bold=True, color=CYAN, caps=True, spacing=20)
-    run(cap, caption, size=8.5, bold=True, color=MUTE, caps=True, spacing=20)
-    t = doc.add_table(rows=1, cols=len(headers))
-    t.alignment = WD_TABLE_ALIGNMENT.CENTER
-    t.autofit = True
-    # header row
-    hdr = t.rows[0].cells
-    for i, htext in enumerate(headers):
-        _cell_shade(hdr[i], NAVYHX)
-        cp = hdr[i].paragraphs[0]; cp.paragraph_format.space_after = Pt(2); cp.paragraph_format.space_before = Pt(2)
-        run(cp, htext, size=9.5, bold=True, color=WHITE, font=BODY_FONT)
-    # body
-    for ri, r in enumerate(rows):
-        cells = t.add_row().cells
-        for ci, val in enumerate(r):
-            if ri % 2 == 1: _cell_shade(cells[ci], BANDHX)
-            cp = cells[ci].paragraphs[0]; cp.paragraph_format.space_after = Pt(2); cp.paragraph_format.space_before = Pt(2)
-            lead_bold = (ci == 0)
-            run(cp, str(val), size=9.5, bold=lead_bold, color=(NAVY if lead_bold else INK))
-    if widths:
-        for i, w in enumerate(widths):
-            for row in t.rows:
-                row.cells[i].width = Inches(w)
-    doc.add_paragraph().paragraph_format.space_after = Pt(2)
-    return t
-
-# ---------- header / footer with page numbers ----------
-def add_field(p, instr):
-    r = p.add_run()
-    fb = OxmlElement('w:fldChar'); fb.set(qn('w:fldCharType'), 'begin'); r._r.append(fb)
-    it = OxmlElement('w:instrText'); it.set(qn('xml:space'), 'preserve'); it.text = instr; r._r.append(it)
-    fs = OxmlElement('w:fldChar'); fs.set(qn('w:fldCharType'), 'separate'); r._r.append(fs)
-    fe = OxmlElement('w:fldChar'); fe.set(qn('w:fldCharType'), 'end'); r._r.append(fe)
-
-# ---------------------------------------------------------------------------
-# COVER PAGE
-# ---------------------------------------------------------------------------
-# top navy rule
-top = doc.add_paragraph(); top.paragraph_format.space_after = Pt(0)
-_p_shade(top, NAVYHX); run(top, " ", size=2)
-for _ in range(1): doc.add_paragraph()
-
-lbl = doc.add_paragraph(); lbl.paragraph_format.space_after = Pt(2)
-run(lbl, "NERION", size=13, bold=True, color=NAVY, font=HEAD_FONT, spacing=60)
-sub = doc.add_paragraph(); sub.paragraph_format.space_after = Pt(40)
-run(sub, "Cyber Business Operations Platform", size=11, color=BLUE, font=BODY_FONT, spacing=20)
-
-t1 = doc.add_paragraph(); t1.paragraph_format.space_after = Pt(2)
-run(t1, "User Guide", size=40, bold=True, color=NAVY, font=HEAD_FONT)
-t2 = doc.add_paragraph(); t2.paragraph_format.space_after = Pt(24)
-run(t2, "From onboarding to daily operation", size=16, italic=True, color=MUTE, font=HEAD_FONT)
-
-rule = doc.add_paragraph(); rule.paragraph_format.space_after = Pt(18)
-_borders(rule, ['bottom'], sz=18, color=BLUEHX)
-
-lede = doc.add_paragraph(); lede.paragraph_format.space_after = Pt(6)
-run(lede, "Give Nerion your business, and it returns your cyber position — in dollars. "
-          "This guide walks every executive seat from first login through onboarding, "
-          "the cockpit, decisions, and administration of the platform.",
-    size=11.5, color=INK)
-
-for _ in range(8): doc.add_paragraph()
-
-meta = doc.add_paragraph(); meta.paragraph_format.space_after = Pt(1)
-run(meta, "Prepared for platform users and administrators", size=9.5, color=MUTE)
-meta2 = doc.add_paragraph(); meta2.paragraph_format.space_after = Pt(1)
-run(meta2, "Version 1.0  ·  " + datetime.date.today().strftime("%B %Y"), size=9.5, color=MUTE)
-conf = doc.add_paragraph()
+# ============================ COVER ============================
+top = K.doc.add_paragraph(); top.paragraph_format.space_after = Pt(0); psh(top, NAVYHX); run(top, " ", size=2)
+K.doc.add_paragraph()
+lbl = K.doc.add_paragraph(); lbl.paragraph_format.space_after = Pt(2)
+run(lbl, "NERION", size=13, bold=True, color=NAVY, font=HEAD, spacing=60)
+sub = K.doc.add_paragraph(); sub.paragraph_format.space_after = Pt(40)
+run(sub, "Cyber Business Operations Platform", size=11, color=BLUE, spacing=20)
+t1 = K.doc.add_paragraph(); t1.paragraph_format.space_after = Pt(2)
+run(t1, "User Guide", size=40, bold=True, color=NAVY, font=HEAD)
+t2 = K.doc.add_paragraph(); t2.paragraph_format.space_after = Pt(22)
+run(t2, "The complete reference — onboarding, cockpit, decisions, administration", size=15, italic=True, color=MUTE, font=HEAD)
+rule = K.doc.add_paragraph(); rule.paragraph_format.space_after = Pt(18); bdr(rule, ['bottom'], sz=18, color=BLUEHX)
+lede = K.doc.add_paragraph()
+run(lede, "Give Nerion your business, and it returns your cyber position — in dollars, and only what is true. "
+          "This guide documents every screen, field, seat, metric, connector and workflow, with the honesty "
+          "principles that let a Fortune-100 buyer trust every number on the page.", size=11.5, color=INK)
+for _ in range(7): K.doc.add_paragraph()
+m1 = K.doc.add_paragraph(); m1.paragraph_format.space_after = Pt(1)
+run(m1, "Prepared for platform users, executives and administrators", size=9.5, color=MUTE)
+m2 = K.doc.add_paragraph(); m2.paragraph_format.space_after = Pt(1)
+run(m2, "Version 2.0  ·  " + datetime.date.today().strftime("%B %Y"), size=9.5, color=MUTE)
+conf = K.doc.add_paragraph()
 run(conf, "CONFIDENTIAL — Distribution limited to licensed users", size=8.5, bold=True, color=BLUE, caps=True, spacing=20)
+bot = K.doc.add_paragraph(); bot.paragraph_format.space_before = Pt(6); psh(bot, NAVYHX); run(bot, " ", size=2)
 
-# bottom navy rule
-bot = doc.add_paragraph(); bot.paragraph_format.space_before = Pt(6)
-_p_shade(bot, NAVYHX); run(bot, " ", size=2)
+# ============================ TOC ============================
+K.doc.add_page_break()
+toch = K.doc.add_paragraph(); toch.paragraph_format.space_after = Pt(8)
+run(toch, "Contents", size=20, bold=True, color=NAVY, font=HEAD); bdr(toch, ['bottom'], sz=10, color=NAVYHX)
+tp = K.doc.add_paragraph(); _field(tp, r'TOC \o "1-2" \h \z \u')
+hint = K.doc.add_paragraph()
+run(hint, "To populate: right-click the contents above and choose “Update Field” (or press F9).", size=8.5, italic=True, color=MUTE)
 
-# ---------------------------------------------------------------------------
-# TABLE OF CONTENTS
-# ---------------------------------------------------------------------------
-doc.add_page_break()
-toch = doc.add_paragraph(); toch.paragraph_format.space_after = Pt(8)
-run(toch, "Contents", size=20, bold=True, color=NAVY, font=HEAD_FONT)
-_borders(toch, ['bottom'], sz=10, color=NAVYHX)
-tp = doc.add_paragraph()
-add_field(tp, r'TOC \o "1-2" \h \z \u')
-hint = doc.add_paragraph();
-run(hint, "To populate: right-click anywhere in the contents above and choose "
-          "“Update Field” (or select it and press F9).", size=8.5, italic=True, color=MUTE)
-
-# set running footer on the main section (applies document-wide here)
-sec = doc.sections[0]
-footer = sec.footer
-fp = footer.paragraphs[0]; fp.alignment = WD_ALIGN_PARAGRAPH.CENTER
-run(fp, "Nerion User Guide   ·   Confidential      ", size=8, color=MUTE)
-add_field(fp, "PAGE")
-run(fp, " ", size=8, color=MUTE)
-# header
+sec = K.doc.sections[0]
+fp = sec.footer.paragraphs[0]; fp.alignment = WD_ALIGN_PARAGRAPH.CENTER
+run(fp, "Nerion User Guide   ·   Confidential      ", size=8, color=MUTE); _field(fp, "PAGE")
 hp = sec.header.paragraphs[0]; hp.alignment = WD_ALIGN_PARAGRAPH.RIGHT
 run(hp, "NERION", size=8, bold=True, color=BLUE, spacing=30)
 
-# ===========================================================================
-# 1 · INTRODUCTION
-# ===========================================================================
-h1("Introduction")
+# ============================ 1 · CONCEPTS ============================
+h1("The Nerion Model")
+p("Nerion turns what your business is — its revenue processes, the systems that run them, its crown-jewel data, "
+  "its vendors and its security tools — into your cyber position expressed the way the board and C-suite think: "
+  "in dollars of exposure, in decisions, and in defensible evidence. This chapter explains the ideas the rest of "
+  "the guide builds on.")
 
-h2("What Nerion is")
-para("Nerion is a Cyber Business Operations Platform. It takes what your business is — "
-     "your revenue processes, the systems that run them, your crown-jewel data, your vendors, "
-     "and your security tools — and returns your cyber position expressed the way the board "
-     "and the C-suite think: in dollars of exposure, in decisions, and in defensible evidence.")
-para("Unlike a dashboard that shows red and green tiles, every number in Nerion is traceable. "
-     "Each figure carries its provenance — the inputs, the calculation, and the source signal it "
-     "came from — so a metric is never a claim you have to take on faith. Where a figure is drawn "
-     "from live data it is marked as live; where it is a modelled placeholder it is marked as "
-     "illustrative.")
+h2("One platform, ten executive lenses")
+p("Nerion presents a single system through ten executive seats. Each seat is addressed to a named leader, speaks "
+  "in that leader’s language, and shows the same underlying figures — the shared numbers match exactly across seats.")
+table("The ten executive seats",
+      ["Seat", "Key", "The question it answers"],
+      [["CISO", "ciso", "Where is exposure, and are the controls actually working?"],
+       ["CEO", "ceo", "Is cyber a tailwind or a risk to the strategy?"],
+       ["CFO", "cfo", "What is the dollar exposure, the insurance gap, and the ROI?"],
+       ["COO", "coo", "Can the business keep running through a cyber disruption?"],
+       ["CTO", "cio", "Which systems carry the business, and how healthy is the stack?"],
+       ["CPO", "cpo", "Does the product ship secure by design?"],
+       ["CRO", "cro", "How does cyber sit beside our other principal risks?"],
+       ["CLO", "clo", "Materiality, notification clocks, contracts, privacy — obligations surfaced."],
+       ["Internal Audit", "audit", "Is control assurance evidence-based, not self-attested?"],
+       ["Board", "board", "Oversight, disclosure readiness, and how we compare to peers."]],
+      widths=[1.4, 0.9, 4.3])
+callout("key", "You describe the business once during onboarding. Nerion maps process → system → crown jewel → risk → "
+        "control, prices the exposure, and lights up all ten seats from that single description.")
 
-h2("Who it is for")
-para("Nerion presents one platform through ten executive lenses, called seats. Each seat is "
-     "addressed to a named leader, speaks in that leader’s language, and stamps that leader’s name "
-     "on every decision they make. The seats are summarized in Exhibit 1.")
+h2("The provenance engine — how to read any number")
+p("Every headline number in Nerion is backed by a provenance record. Tapping any tile, card or stat opens an "
+  "inspection panel that shows exactly how the number was produced. This is what makes the platform defensible in "
+  "front of an auditor or regulator — no figure is a black box.")
+table("What the inspection panel shows, top to bottom",
+      ["Section", "What it contains"],
+      [["Claim + label", "The metric name and its provenance chip (live / computed / modeled / self-reported)."],
+       ["Result", "The value, coloured by status; or an honest “Not connected”."],
+       ["How it’s computed", "The formula — the exact arithmetic or rule."],
+       ["Method", "A plain-language explanation, including thresholds and definitions."],
+       ["Inputs", "A table of every input, its value and its source — ending in a “= result” row so the "
+                  "number reconstructs from what you see."],
+       ["Sources", "The tool · connector · field · last-refresh behind each input."],
+       ["Why it matters", "One sentence of business context."]],
+      widths=[1.7, 4.8])
+callout("note", "Hover any box for a one-line explanation; tap it for the full trace above. Every computed number is "
+        "designed to “stand alone” — its inputs, shown in the panel, reconstruct the displayed value.")
 
-exhibit("The ten executive seats",
-    ["Seat", "Owner", "What the seat answers"],
-    [
-        ["CEO", "Chief Executive", "Is the business healthy, governed, and disclosable?"],
-        ["CISO", "Security", "Where is exposure, and are controls actually working?"],
-        ["CFO", "Finance", "What is the dollar exposure, insurance gap, and ROI?"],
-        ["CRO", "Chief Risk", "How does cyber sit beside our other principal risks?"],
-        ["CTO", "Technology", "Which systems carry the business, and their app-sec health?"],
-        ["CLO", "General Counsel", "Materiality, DSARs, litigation holds, obligations."],
-        ["COO", "Operations", "Resilience, recovery times, business continuity."],
-        ["CPO", "Product", "Secure-by-design coverage and product data risk."],
-        ["Internal Audit", "Chief Audit Exec", "Audit plan, workpapers, control assurance."],
-        ["Board", "Directors", "Oversight, disclosure readiness, peer posture."],
-    ],
-    widths=[1.1, 1.5, 3.9])
+h2("The four provenance labels")
+p("Every metric declares what kind of number it is. The label is the heart of the honesty system: a big precise "
+  "figure means nothing unless you know whether it is a measurement, a model, or an input you provided.")
+table("Provenance labels",
+      ["Label", "Meaning", "Trust it because…"],
+      [["LIVE", "A direct/continuous read from a connected tool", "it is your tool’s own number, refreshed on load."],
+       ["COMPUTED", "Arithmetic derived from connected data", "every input is shown and traceable."],
+       ["MODELED", "A simulation or estimate (e.g. ALE, tail VaR)", "it is a model, not a measurement; the panel shows how the model runs."],
+       ["SELF-REPORTED", "A value you entered at onboarding", "it is your own input (e.g. board appetite, policy limit)."]],
+      widths=[1.4, 3.0, 2.1])
+callout("warn", "Until you connect tools and complete onboarding, many figures are MODELED defaults marked illustrative. "
+        "They are labelled honestly rather than presented as your real position — connect your data to make them LIVE.")
 
-callout("The core idea",
-    "You describe the business once during onboarding. Nerion maps process → system → "
-    "crown jewel → risk → control, prices the exposure, and lights up all ten seats from that "
-    "single description. The more you provide, the more of the cockpit is live rather than illustrative.")
+h2("The status colours")
+table("Status colours",
+      ["Colour", "Tile label", "Capability scale (deployment %)"],
+      [["Green", "Healthy", "≥ 90% strong · and “healthy” = ≥ 75%"],
+       ["Blue", "Monitoring", "75–89%"],
+       ["Amber", "At risk", "50–74%"],
+       ["Red", "(critical)", "< 50%"],
+       ["Grey", "Not connected", "no signal connected"]],
+      widths=[1.2, 1.6, 3.7])
 
-h2("How to use this guide")
-para("Sections 2–3 take a new customer from first login through onboarding. Section 4 orients you "
-     "in the cockpit. Section 5 is a reference for each seat. Section 6 covers the day-to-day "
-     "workflows every user performs. Sections 7–8 cover administration, licensing, and support.")
-
-# ===========================================================================
-# 2 · GETTING STARTED
-# ===========================================================================
+# ============================ 2 · GETTING STARTED ============================
 h1("Getting Started")
-
 h2("How Nerion is delivered")
-para("Nerion is delivered as a self-contained virtual appliance that runs inside your own "
-     "environment. Your data never leaves your network — there is no phone-home and no external "
-     "dependency for the platform to operate. Your administrator receives the appliance image and "
-     "a license file; once the appliance is running, users reach Nerion through a browser.")
-
-exhibit("License types",
-    ["Plan", "Term", "Intended use"],
-    [
-        ["Trial", "14 days", "Evaluation with your own data, full functionality."],
-        ["Paid subscription", "365 days", "Production use; renews annually."],
-    ], widths=[1.6, 1.4, 3.5])
-
-para("The platform shows the remaining term in-app. As the expiry approaches, a banner prompts "
-     "renewal; a short grace period after expiry keeps the platform readable while your renewal is "
-     "processed. Administration of the license is covered in Section 7.")
-
+p("Nerion ships as a self-contained virtual appliance that runs inside your own environment. Your data never "
+  "leaves your network — there is no phone-home, and the platform (including its licence check and peer benchmark) "
+  "operates fully offline. Your administrator receives the appliance image and a licence file; users then reach "
+  "Nerion through a browser.")
+table("Licence types",
+      ["Plan", "Term", "Use"],
+      [["Trial", "14 days", "Evaluation with your own data, full functionality."],
+       ["Paid subscription", "365 days", "Production use; renews annually. A short grace period follows expiry."]],
+      widths=[1.7, 1.3, 3.5])
 h2("First login")
-numbered("1", "Open the platform", "Navigate to the address your administrator provides. "
-    "Nerion runs in any modern browser; no plug-in is required.")
-numbered("2", "Choose your seat", "Select the executive lens you own — for example CISO or CFO. "
-    "You can switch seats at any time from the sidebar; the platform is one system viewed ten ways.")
-numbered("3", "Start onboarding", "If your organization has not yet been described, you will be "
-    "taken into the onboarding wizard (Section 3). If setup is complete, you land directly in the cockpit.")
+steps([("Open the platform", "Navigate to the address your administrator provides — any modern browser, no plug-in.",
+        "The seat bar loads with CISO selected."),
+       ("Choose your seat", "Select your executive lens from the top bar. Hover any seat to see its full title "
+        "(e.g. CISO → Chief Information Security Officer).", "The cockpit re-addresses to that leader."),
+       ("Complete onboarding, or land in the cockpit", "If your organization is not yet described, you enter the "
+        "onboarding wizard (Chapter 3). If setup is complete, you land in your seat with live data.", None)])
+callout("note", "Onboarding fields are optional and reversible. Provide what you know now; refine any input later and "
+        "the cockpit recomputes. Nothing is locked.")
 
-callout("Everything can be edited later",
-    "Onboarding fields are optional and reversible. Provide what you know now; you can refine every "
-    "input afterward and the cockpit will recompute. Nothing you enter is locked.")
-
-# ===========================================================================
-# 3 · ONBOARDING
-# ===========================================================================
+# ============================ 3 · ONBOARDING ============================
 h1("Onboarding: Describing Your Business")
+p("Onboarding is a guided single-page wizard organized into six top tabs. Its purpose is one sentence: give Nerion "
+  "your business so it can return your cyber position in dollars. Each section you complete converts more of the "
+  "cockpit from illustrative to live. None is mandatory except an organization name and either processes or systems.")
+table("The onboarding tabs and their sections",
+      ["Tab", "Sections it contains"],
+      [["01 Organization", "Organization · Leadership · Operating regions"],
+       ["02 Governance & AI", "Board governance & incident readiness · AI risk & governance · Strategic "
+                              "initiatives · Strategic objectives · Policy & document evidence"],
+       ["03 Financials", "Financials & appetite · Enterprise risk portfolio · Security as a growth engine · Cyber insurance"],
+       ["04 Inventory", "Business processes · Systems & applications · Map applications → processes"],
+       ["05 Risks & projects", "Risk register · Current cyber projects · Third-party vendors"],
+       ["06 Connect tools", "Connect your tools"]],
+      widths=[1.7, 4.8])
 
-para("Onboarding is a guided, single-page wizard. Its purpose is one sentence: give Nerion your "
-     "business so it can return your cyber position in dollars. You move through the sections in "
-     "Exhibit 2; each feeds specific parts of the cockpit. None is mandatory, but each one you "
-     "complete converts more of the cockpit from illustrative to live.")
+h2("Organization")
+p("Sets the industry lens and the regulators/jurisdictions that apply.")
+fields("Organization fields",
+       [["Organization name", "text", "Your legal/brand name. Required to go live."],
+        ["Industry", "dropdown", "Financial services · Banking · Insurance · Healthcare · Technology/SaaS · "
+                                 "Manufacturing · Retail · Energy · Telecom · Transport · Government · Professional services · Other"],
+        ["Reporting currency", "dropdown", "USD · EUR · GBP · CAD · AUD · SGD · JPY · CHF · INR (relabels every money field)"],
+        ["Operating regions", "multi-select", "US · EU · UK · Canada · Singapore · Australia · APAC · Global — sets "
+                                             "breach-notification clocks and penalty regimes"]])
+p("Leadership — enter the named owner of each seat: CEO, CFO, CISO, COO, CTO, CPO, General Counsel (CLO), Chief Risk "
+  "Officer, Chief Audit Executive. Each seat is addressed to its owner, and every decision is stamped with that "
+  "leader’s name.")
+callout("note", "Region drives real deadlines — it is used to compute notification countdowns and maximum penalties. "
+        "Set every region in which you operate.")
 
-exhibit("The onboarding sections, in order",
-    ["#", "Section", "What it establishes"],
-    [
-        ["1", "Organization", "Industry lens, currency, regulators and jurisdictions."],
-        ["2", "Leadership", "The named owner of each seat and each decision."],
-        ["3", "Business processes", "Your revenue-bearing processes — the basis of crown jewels."],
-        ["4", "Systems & applications", "The systems that run those processes."],
-        ["5", "Third-party vendors", "Tier-1/2 vendors and concentration risk."],
-        ["6", "Connect your tools", "Live signal feeds from your security stack."],
-        ["7", "Board governance", "Oversight cadence and incident-readiness (SEC Item 106)."],
-        ["8", "AI risk & governance", "AI systems you run and AI you use to defend."],
-        ["9", "Strategic objectives", "Business goals cyber risk is measured against."],
-        ["10", "Other principal risks", "Credit, market, operational — for the CRO one-scale view."],
-        ["→", "Go live", "Submit; the cockpit builds from your description."],
-    ], widths=[0.4, 1.9, 4.2])
+h2("Governance, AI, strategy & policy evidence")
+bullet("committee, cadence, CISO reporting line, board cyber-expertise, ERM integration, IR-plan test status, last "
+       "tabletop, breach-counsel retainer, ransomware-payment policy, and compliance frameworks in scope. Powers the "
+       "CEO/Board governance panel and SEC Item 106 readiness.", lead="Board governance & incident readiness:  ")
+bullet("AI/LLM systems in production, customer-facing AI decisioning, governance framework (NIST AI RMF / ISO 42001), "
+       "acceptable-use policy, EU AI Act scope, inventory status. Powers the CEO & CISO AI-risk panels.",
+       lead="AI risk & governance:  ")
+bullet("major moves in front of the board (acquisition, cloud migration, AI product, expansion) with value at stake "
+       "and horizon — each gets a per-initiative go/no-go safety check.", lead="Strategic initiatives:  ")
+bullet("enduring goals, each tagged with the cyber capability it leans on. The CEO cockpit reports how many "
+       "objectives are cyber-safe.", lead="Strategic objectives:  ")
+bullet("upload security policies (PDF/DOCX/TXT). Nerion reads each against the NIST control catalog and scores every "
+       "control’s CMMI maturity from the policy language — the document-review evidence behind your framework scores.",
+       lead="Policy & document evidence:  ")
 
-h2("Step 1 — Organization")
-para("Set your organization name, industry, reporting currency, and operating regions. Industry "
-     "selects the peer lens and the regulatory frame. Operating regions set the notification clocks "
-     "and penalty regimes that apply — for example, choosing EU and UK activates GDPR and UK data-"
-     "protection timelines used later in the CLO and Board seats.")
-callout("Why region matters", "Region drives real deadlines. It is used to compute breach-"
-    "notification countdowns and maximum penalties, so set every region in which you operate.")
+h2("Financials, risk portfolio, growth & insurance")
+p("All money fields take a number, a unit (B/M/K) and show a formatted equivalent.")
+fields("Financials & appetite",
+       [["Annual revenue / Operating / Net income", "money", "Drive %-of-revenue, EPS-impact and materiality."],
+        ["Enterprise value / market cap", "money", "For %-of-enterprise-value framing."],
+        ["Board cyber-risk appetite", "money", "The maximum annual cyber loss the board has approved."],
+        ["Annual cyber budget", "money", "Program spend."],
+        ["Shares outstanding / Records held", "count", "For EPS-impact and legal-liability sizing."]])
+bullet("your other principal risks in dollars (credit/market, operational, third-party, compliance) so the CRO can "
+       "place cyber on one comparable scale.", lead="Enterprise risk portfolio:  ")
+bullet("pipeline in security review, review-cycle time, deals gated, trust reviews, certifications held. Powers the "
+       "CISO growth view.", lead="Security as a growth engine:  ")
+bullet("coverage limit, annual premium, renewal date. Powers the coverage-vs-tail gap and renewal position.",
+       lead="Cyber insurance:  ")
 
-h2("Step 2 — Leadership")
-para("Enter the name of each executive who owns a seat: CEO, CFO, CISO, COO, CTO, CPO, General "
-     "Counsel (CLO), Chief Risk Officer, and Chief Audit Executive. These names are not cosmetic — "
-     "each seat’s cockpit is addressed to its owner, and every decision recorded in Nerion is "
-     "stamped with the name of the executive who made it, forming an accountable record.")
+h2("Inventory — processes, systems, crown jewels")
+p("List your revenue-bearing processes (type, upload CSV, or connect a CMDB such as ServiceNow) and the systems/"
+  "applications that run them (with hosting/exposure, data class, EOL, recovery, and transaction value). Nerion "
+  "auto-maps applications to processes by shared data class and derives your crown jewels — the concentrations of "
+  "value an attacker would target. A three-column visual map (processes → applications → crown jewels) lets you "
+  "adjust the mapping.")
+callout("key", "This is the most valuable section — it anchors the process → system → crown-jewel → risk → control "
+        "chain that the entire platform is built on. Crown-jewel scoring uses data sensitivity × exposure × process "
+        "criticality; the authoritative scoring runs on the engine at go-live.")
 
-h2("Step 3 — Business processes")
-para("List your key revenue-bearing processes (for example, Payments, Claims, Trading, Order "
-     "Fulfilment). You can type them or upload from a CMDB export. Nerion groups processes by "
-     "business function and derives your crown jewels — the concentrations of value an attacker "
-     "would target — from them. This is the single most valuable section: it anchors the "
-     "process → system → crown-jewel → risk → control chain that the whole platform is built on.")
+h2("Risks, projects & vendors")
+bullet("upload open risks with dollar exposure — turns the crown-jewel map into a material-exposure figure and feeds "
+       "the Monte-Carlo tail model.", lead="Risk register:  ")
+bullet("upload in-flight cyber spend (cost, expected ROI, status) or pull from ticketing — managed alongside new "
+       "decisions in the cockpit.", lead="Current cyber projects:  ")
+bullet("capture tier-1/2 vendors (CSV or TPRM API). Your monitoring service then rates each live in the cockpit’s "
+       "third-party panel.", lead="Third-party vendors:  ")
 
-h2("Step 4 — Systems & applications")
-para("Map the systems and applications that run each process. For each system you can note its "
-     "exposure (for example internet-facing) and criticality. Exposure and criticality drive the "
-     "attack-surface and crown-jewel calculations, so they are worth setting accurately. Systems "
-     "can be entered manually or imported.")
+h2("Connect your tools")
+p("Most of your evidence is pulled live from here. Nerion ships native connectors across the security and operations "
+  "stack; connecting a tool turns modeled placeholders into live readings. An evidence-credibility meter shows how "
+  "much of the cockpit is grounded in your data.")
+callout("tip", "Demo mode connects all tools with simulated signals (clearly labelled “Demo”, never counted as real) so "
+        "you can explore before wiring live API keys.")
+p("Go live submits your description to the platform, which ingests it, runs the crown-jewel and economics engines, "
+  "and builds the cockpit.")
 
-h2("Step 5 — Third-party vendors")
-para("Capture your tier-1 and tier-2 vendors, by CSV upload or from a third-party risk API. Nerion "
-     "uses this to surface concentration risk (over-reliance on a single provider) and to populate "
-     "the Third-party risk views in the CEO, CISO, and CRO seats.")
-
-h2("Step 6 — Connect your tools")
-para("Connect your security and operations tools so the cockpit reads live signals instead of "
-     "modelled placeholders. Nerion ships native connectors across the stack; a representative set "
-     "is shown in Exhibit 3. Each connector maps to specific metrics in the seats.")
-
-exhibit("Representative native connectors",
-    ["Category", "Example tools", "Signals fed"],
-    [
-        ["Cloud posture", "Wiz / CSPM", "Cloud security posture score"],
-        ["Email security", "Proofpoint TAP", "BEC / phishing blocked"],
-        ["Privacy / DSAR", "OneTrust", "Open & overdue DSARs, legal holds"],
-        ["Threat intel", "Recorded Future", "Active threat actors"],
-        ["Backup / DR", "Rubrik", "Immutable backups, DR test age, RPO"],
-        ["SOX / GRC", "SAP GRC", "SoD conflicts, change control, payment anomalies"],
-        ["Identity", "SailPoint / CyberArk", "Dormant accounts, flagged privileged sessions"],
-    ], widths=[1.5, 2.0, 3.0])
-
-callout("Live vs illustrative", "Any metric with a connected source is labelled live and updates "
-    "on refresh. Metrics without a source remain illustrative so you are never misled about which "
-    "numbers are grounded in your data.")
-
-h2("Step 7 — Board governance & incident readiness")
-para("Record how the board oversees cyber: the committee that owns it, meeting cadence, and your "
-     "incident-response readiness. These inputs power the CEO governance panel and the Board seat’s "
-     "SEC Item 106 / 10-K disclosure-readiness view.")
-
-h2("Step 8 — AI risk & governance")
-para("Nerion treats AI in two halves: the AI you run (systems that could be attacked or misused) "
-     "and AI you use to defend. Register your AI/LLM systems, the governance framework you follow "
-     "(for example NIST AI RMF), and whether the EU AI Act is in scope. This powers the AI-risk "
-     "sections in the CEO and CISO seats and the continuous AI-framework audit.")
-
-h2("Step 9 — Strategic objectives")
-para("Enter the strategic objectives the business is pursuing. Nerion measures cyber risk against "
-     "them so the CEO seat can express security in terms of the goals leadership actually cares "
-     "about, rather than in isolation.")
-
-h2("Step 10 — Other principal risks")
-para("Provide rough magnitudes for your other principal risks — credit/market, operational, "
-     "compliance/legal, third-party. This lets the CRO seat place cyber on one comparable scale "
-     "beside the enterprise’s other risks, which is how risk committees actually weigh it.")
-
-h2("Go live")
-para("Select Go live to submit. Nerion ingests your description, runs the crown-jewel and economics "
-     "engines, and builds the cockpit. You are taken to your seat with the platform populated from "
-     "your data. Return to onboarding at any time to refine inputs.")
-
-# ===========================================================================
-# 4 · THE COCKPIT
-# ===========================================================================
-h1("The Cockpit: Orientation")
-
+# ============================ 4 · COCKPIT ============================
+h1("The Cockpit")
 h2("Layout")
-para("The cockpit has three constants. The seat sidebar (left) switches between the ten executive "
-     "lenses. The seat header (top) shows whose cockpit you are in and an ‘as of’ timestamp for the "
-     "data. The tab bar (below the header) organizes that seat’s content. Selecting a different seat "
-     "re-addresses the entire cockpit to that leader.")
+p("The cockpit has three constants: the seat bar (top) switches lenses; the seat header shows whose cockpit you are "
+  "in and an “as of” timestamp; and the tab bar organizes that seat’s content. Most seats have five tabs; the CISO "
+  "has six.")
+h2("Reading a metric")
+p("Hover any box for a short explanation. Tap it to open the inspection panel (Chapter 1) — formula, method, inputs "
+  "(ending in a “= result” row), sources and why-it-matters. A not-connected metric names the exact tool to connect "
+  "and shows where the data will come from, rather than a placeholder number.")
 
-h2("Reading a metric: provenance")
-para("Every headline number is backed by the provenance engine. Selecting a metric opens its "
-     "inspection: the inputs that fed it, the calculation applied, and the live signal or onboarding "
-     "value it derives from. This is what makes Nerion defensible in front of an auditor or a "
-     "regulator — no figure is a black box.")
+# ============================ 5 · DECISIONS ============================
+h1("Decisions")
+p("A decision is the unit of action in Nerion. Every executive seat surfaces the cyber calls that need that leader — "
+  "and each is a real, interactive decision, not a read-only note.")
+h2("The decision lifecycle")
+steps([("See the options", "Each decision presents its options with the recommended one marked. You always have "
+        "alternatives (e.g. defer, or accept the risk with a rationale) — the recommendation never removes the choice.",
+        "Pros and cons are shown per option, priced from your exposure model."),
+       ("Choose & record", "Selecting an option records it, stamped with the seat leader’s name and the timestamp.",
+        "The card shows “Decision by <name> (<SEAT>) · Option X · <time>”."),
+       ("Edit within 24 hours", "For 24 hours the decision stays editable — pick a different option, or undo. After "
+        "that it commits and locks.", "Header changes from “✓ Recorded” to “\U0001f512 Committed”."),
+       ("Track to done", "Where you connected Jira / ServiceNow at onboarding, choosing auto-opens a tracked project. "
+        "Its status is pulled back — on refresh and on a periodic poll — on a four-step track "
+        "(Open → In review → In progress → Done).",
+        "If no ticketing system is connected, it records in Nerion and prompts you to connect one.")])
+callout("note", "Decisions are framed on your exposure model — your risk register × the control-value ledger — with no "
+        "AI at run-time. Each committed decision also feeds the cyber-initiatives portfolio (cost, ROI, owner, status).")
 
-exhibit("The four things every metric tells you",
-    ["Element", "Meaning"],
-    [
-        ["Value", "The current figure, in your reporting currency where applicable."],
-        ["Direction", "Whether it is improving or deteriorating, and over what period."],
-        ["Provenance", "The inputs, calculation, and source signal behind the value."],
-        ["Live / illustrative", "Whether it is grounded in connected data or modelled."],
-    ], widths=[1.8, 4.7])
-
-h2("Decisions")
-para("A decision is the unit of action in Nerion. When a seat surfaces a choice — accept a risk, "
-     "fund an initiative, escalate a materiality question — you record the decision with its "
-     "rationale. It is stamped with your name and the time. Decisions remain editable for a short "
-     "window (24 hours) and then commit to the permanent record. Committed decisions can be pushed "
-     "to your ticketing system so execution is tracked where your teams already work (Section 6).")
-
-h2("Evidence")
-para("Where a seat makes a claim about control effectiveness or exposure treated, the underlying "
-     "evidence is one selection away. Evidence links the business claim back to the control, the "
-     "signal, and the calculation — closing the loop between what leadership is told and what is "
-     "actually true in the environment.")
-
-# ===========================================================================
-# 5 · SEAT-BY-SEAT
-# ===========================================================================
+# ============================ 6 · SEAT REFERENCE ============================
 h1("Seat-by-Seat Reference")
+p("Each seat draws from the same onboarding description and live signals; they differ in lens, not in underlying "
+  "data. Tap any metric in-app for its full trace.")
 
-para("Each seat below lists what it answers and the panels you will use most. All ten draw from the "
-     "same onboarding description and live signals; they differ in lens, not in underlying data.")
+def seat(title, subtitle, tabs_rows, note=None):
+    h2(title); p(subtitle, italic=True, color=MUTE)
+    table(title + " — tabs", ["Tab", "What it covers"], tabs_rows, widths=[1.7, 4.8], cap_kicker="TABS")
+    if note: callout("note", note)
 
-h2("CEO — Chief Executive")
-bullet("business health measured against your strategic objectives.", bold_lead="Business health:  ")
-bullet("governance cadence and SEC Item 106 / 10-K disclosure readiness.", bold_lead="Governance & oversight:  ")
-bullet("concentration and named stress scenarios across tier-1 vendors.", bold_lead="Third-party concentration:  ")
-bullet("recovery readiness and a named enterprise stress scenario.", bold_lead="Incident & recovery:  ")
-bullet("posture versus published peer medians for your industry.", bold_lead="Peer benchmark:  ")
+seat("CISO — Security",
+     "Where is exposure, and are the controls actually working? The deepest seat — six tabs.",
+     [["01 Program health", "Active-compromise status, capability & coverage (X of N defences ≥75% healthy), "
+                            "third-party risk, and direction (claims “improving” only with ≥2 recorded quarters)."],
+      ["02 Top exposure", "Modeled exposure decomposed into drivers (identity, patch, vendor, endpoint, email), each "
+                          "priced and traceable to its controls."],
+      ["03 Effectiveness", "Risk removed, security spend, return per dollar — with the per-control breakdown."],
+      ["04 Threats", "Live attack status and kill-chain coverage from SIEM/EDR + threat-intel."],
+      ["05 Peers", "Your maturity vs a published baseline (or live opted-in cohort), with your percentile."],
+      ["06 Frameworks", "Control assessment across NIST CSF, 800-53, SOC 2, HIPAA, CIS — CMMI, crosswalk, PDF export."]])
+seat("CEO — Chief Executive", "Is cyber a tailwind or a risk to the strategy?",
+     [["01 Enterprise health", "Business health vs strategic objectives; how many are cyber-safe."],
+      ["02 Strategic risk", "Cyber mapped to each objective."],
+      ["03 Financial exposure", "Modeled exposure vs board appetite; largest driver, interruption, insurance."],
+      ["04 Brand & trust", "Customer incidents, disclosures, trust signal."],
+      ["05 Decisions", "Strategic cyber calls — interactive."]])
+seat("CFO — Finance", "Dollar exposure, the insurance gap, and the ROI.",
+     [["01 Financial exposure", "Total exposure, appetite, headroom; drivers, interruption, coverage."],
+      ["02 Cyber ROI", "Risk removed ÷ spend, with return by budget area."],
+      ["03 Insurance", "Cover vs 1-in-20-year tail, residual gap, renewal leverage."],
+      ["04 Cost optimization", "Redeployable savings (retire / consolidate / right-size)."],
+      ["05 Risk decisions", "Invest / transfer / accept — interactive."]])
+seat("COO — Operations", "Can the business keep running through a disruption?",
+     [["01 Resilience", "Continuity, processes protected, recovery readiness."],
+      ["02 Processes", "Cyber status per critical process."],
+      ["03 Supply chain", "Tier-1 vendors, single points of failure."],
+      ["04 Recovery", "RTO/RPO vs target, backups, identity recovery."],
+      ["05 Decisions", "Operational calls — interactive."]])
+seat("CTO — Technology", "Which systems carry the business, and stack health.",
+     [["01 Tech risk", "Platform health, known-exploitable vulns, technical debt, app-sec."],
+      ["02 Reliability", "Availability/SLOs, service incidents."],
+      ["03 AI risk", "AI inventory, governed %, data-access exposure."],
+      ["04 Supply chain", "Dependency advisories, SBOM, build signing."],
+      ["05 Decisions", "Patch / fund — interactive."]])
+seat("CPO — Product", "Does the product ship secure by design?",
+     [["01 Product security", "Verdict across every dimension (incidents, SCA, SAST); secure-by-design coverage "
+                              "(evidenced ÷ 5 target practices); open product risks."],
+      ["02 Customer trust", "MFA/feature adoption, customer-data protection, trust signal."],
+      ["03 Velocity", "Security-gate pass rate, cycle time, recurring blocker."],
+      ["04 Backlog", "Product-security backlog."],
+      ["05 Decisions", "Product calls — interactive."]])
+seat("CRO — Chief Risk", "How cyber sits beside the other principal risks.",
+     [["01 One scale", "Cyber ranked on one residual scale beside credit/market, operational, third-party, compliance."],
+      ["02 Appetite", "Residual vs limit by category."],
+      ["03 Assurance", "Control families assured by evidence (X of N)."],
+      ["04 Trend & ownership", "Residual trend and named owners."],
+      ["05 Decisions", "Treat / monitor / accept — interactive."]])
+seat("CLO — General Counsel", "Obligations surfaced, never a legal conclusion. Not legal advice.",
+     [["01 Regulatory", "Obligations by jurisdiction with clocks and penalties; the tightest binding clock."],
+      ["02 Notification", "Breach-notification readiness; the forensic gap."],
+      ["03 Contracts", "Cyber warranties, platform-tied contracts, legal holds."],
+      ["04 Privacy", "DSARs within SLA, records of processing, access hygiene."],
+      ["05 Decisions", "One action reducing three legal exposures — interactive."]])
+seat("Internal Audit — Chief Audit Executive", "Evidence-based control assurance, not self-attested.",
+     [["Coverage / Testing / Findings / Evidence / Attention", "Audit plan, workpapers and assurance mapped to GRC, "
+                                                              "with repeat-finding and coverage views."]])
+seat("Board — Directors", "Oversight, disclosure readiness, and peer comparison.",
+     [["Health / Material / Trend / Investment / Governance", "Board-level cyber health, materiality (Item 106), "
+                                                            "residual trend, program ROI, oversight — printable Board Pack."]])
 
-h2("CISO — Security")
-para("The CISO seat is organized into six tabs, the deepest in the platform:")
-exhibit("CISO tabs",
-    ["Tab", "What it covers"],
-    [
-        ["Program Health", "Direction of the program, capability coverage, and active-compromise status."],
-        ["Threats", "Live threat status and coverage drawn from connected SIEM/EDR signals."],
-        ["My Decisions", "The CISO’s recorded decisions, editable within 24h then committed."],
-        ["AI Risk", "The AI you run and the AI you use to defend — with continuous framework audit."],
-        ["Third-party", "Top vendor exposures with live scores on one scale."],
-        ["Frameworks", "Control assessment across NIST CSF, 800-53, SOC 2, HIPAA, CIS — with drill-down."],
-    ], widths=[1.6, 4.9])
-para("The Frameworks tab presents a left-detail / right-tree layout: select any control group to "
-     "expand its items, see the assessed maturity (CMMI) derived from telemetry, and inspect the "
-     "crosswalk to the underlying CSF functions. It supports an auditor-style drill and PDF export.")
+# ============================ 7 · CONNECTORS & SIGNALS ============================
+h1("Connectors & Signals")
+p("Connecting a tool streams live signals that replace modeled placeholders. Nerion scores ten security "
+  "capabilities; a broader set of signals drives the executive panels.")
+h2("The ten scored capabilities")
+table("Capability → vendor tools → signal → what it drives",
+      ["Capability", "Example tools", "Signal", "Drives"],
+      [["Endpoint Detection & Response", "CrowdStrike / Defender", "edr_pct", "Controls coverage, risk-removed"],
+       ["Multi-Factor Authentication", "Okta / Entra ID", "mfa_pct", "Identity exposure, fraud"],
+       ["Privileged Access Management", "CyberArk / BeyondTrust", "pam_pct", "Identity exposure"],
+       ["Vulnerability & Patch Mgmt", "Qualys / Tenable", "patch_pct", "Attack surface"],
+       ["Security Awareness", "KnowBe4 / Proofpoint", "training_pct", "Phishing exposure"],
+       ["SIEM / Detection", "Splunk / Sentinel", "siem_coverage_pct", "Detection coverage"],
+       ["Data Loss Prevention", "Purview / Forcepoint", "(no live signal)", "Shown not-connected"],
+       ["Network Segmentation", "Illumio / firewall", "(no live signal)", "Shown not-connected"],
+       ["Backup & Recovery", "Rubrik / Veeam", "backup_immutable_pct", "DR readiness"],
+       ["Cloud Security Posture", "Wiz / Prisma", "cspm_pct", "Cloud posture, GRC"]],
+      widths=[2.0, 1.7, 1.4, 1.4])
+callout("note", "A capability’s deployment % feeds the control-value ledger: each control carries a risk-removal "
+        "weight from its NIST CSF/800-53 mapping × its live deployment. That ledger turns “60% PAM coverage” into a "
+        "dollar figure in the exposure model.")
+h2("The signal glossary (selected)")
+table("Representative live signals",
+      ["Signal", "Meaning", "From"],
+      [["open_incidents", "Active security incidents", "Sentinel / Splunk"],
+       ["mttd_hrs / mttr_hrs", "Mean time to detect / resolve", "SIEM"],
+       ["edr_pct / mfa_pct / pam_pct", "Endpoint / MFA / privileged coverage", "EDR · IdP · PAM"],
+       ["patch_pct / vuln_sla_pct", "Patched / remediated-within-SLA", "Tenable / Qualys"],
+       ["phishing_pct / training_pct / bec_blocked", "Click rate / training / BEC blocked", "KnowBe4 · Proofpoint"],
+       ["cspm_pct", "Cloud posture checks passing", "Wiz / Prisma / AWS / Azure / GCP"],
+       ["backup_immutable_pct / dr_test_days / rpo_minutes", "Backups / DR-test age / RPO", "Rubrik"],
+       ["sod_conflicts / change_pass_pct / payment_anomalies", "SoD / change control / anomalies", "SAP GRC"],
+       ["dsar_open / dsar_overdue / legal_holds", "Privacy requests / overdue / holds", "OneTrust / TrustArc"],
+       ["threat_actors_active / exploited_cves", "Sector actors / exploited CVEs", "Recorded Future · CISA KEV"],
+       ["code_scanning_open / dependabot_critical", "SAST / critical dependency alerts", "GitHub"],
+       ["audit_findings_open / _repeat", "Open / recurring audit findings", "ServiceNow GRC"]],
+      widths=[2.3, 2.6, 1.6])
+h2("Live vs demo vs not-connected")
+bullet("read from a real connected tool right now — a green “● live · <vendor>” pill.", lead="Live:  ")
+bullet("a demo-mode tool with no API key; values simulated, marked “◐ demo”. Never counted as real.", lead="Demo:  ")
+bullet("no matching tool — the metric shows the honest not-connected state with the exact tool to connect.",
+       lead="Not connected:  ")
 
-h2("CFO — Finance")
-bullet("total dollar exposure and its concentration.", bold_lead="Exposure:  ")
-bullet("modelled tail loss, business-interruption, and the insurance-coverage gap.", bold_lead="Financial posture:  ")
-bullet("blended return on security initiatives, derived from posture trend and decision cost/exposure.", bold_lead="ROI:  ")
-bullet("SOX ITGC and payment-anomaly signals where connected.", bold_lead="Fraud & controls:  ")
+# ============================ 8 · FRAMEWORKS & WORKFLOWS ============================
+h1("Frameworks & Key Workflows")
+h2("The Frameworks tab (CISO)")
+table("Supported frameworks",
+      ["Framework", "Structure", "Scale"],
+      [["NIST CSF 2.0", "6 functions · 22 categories · 106 controls", "CMMI 0–5 per control"],
+       ["NIST SP 800-53 Rev 5", "20 families · 322 controls", "CMMI 0–5"],
+       ["CIS Controls v8", "18 controls · safeguards", "crosswalked to CSF"],
+       ["SOC 2 (TSC)", "13 groups · 57 criteria", "crosswalk (readiness, not an opinion)"],
+       ["HIPAA Security Rule", "5 sections · 22 specs", "crosswalk via NIST SP 800-66r2"]],
+      widths=[1.9, 3.0, 1.6])
+p("Each control’s maturity (CMMI 0–5) is the higher of a document-review score (policies analyzed at onboarding) and "
+  "a live tool-coverage score (deployment % → CMMI). A provenance icon shows whether a control is evidenced by a "
+  "document, a connected tool, or not yet. Point-in-time audit is replaced by continuous monitoring; selecting a "
+  "control opens an auditor workpaper (methodology, findings, recommendation, evidence) exportable as a PDF.")
+h2("Peer benchmark")
+p("Compare your posture to published industry medians — no data sharing required. Your position (“Top X%”) is the "
+  "standard-normal percentile of your CMMI vs the baseline; opt in to a k-anonymity-sufficient live cohort to "
+  "supersede the published baseline.")
+h2("Board Pack export")
+p("The Board seat produces a printable board/regulator report — executive summary, the financial statement of cyber "
+  "risk (ALE, VaR, %-revenue, materiality, insurance), governance & disclosure readiness (SEC Item 106), KRIs, "
+  "decisions, trajectory and peer comparison — via the browser’s Save-as-PDF, with a live/demo/illustrative banner.")
 
-h2("CRO — Chief Risk")
-para("Places cyber on one comparable scale beside your other principal risks (credit/market, "
-     "operational, compliance, third-party), with a KRI board and mitigation tracking. This is the "
-     "view a risk committee uses to weigh cyber against everything else on the enterprise risk register.")
-
-h2("CTO — Technology")
-bullet("which systems carry the business, from your live crown-jewel data.", bold_lead="Critical systems:  ")
-bullet("application-security posture, critical vulnerabilities, and technical debt.", bold_lead="App-sec health:  ")
-bullet("AI inventory and how much of it is governed.", bold_lead="AI systems:  ")
-
-h2("CLO — General Counsel")
-bullet("a timed, evidenced determination workbench with a countdown.", bold_lead="Materiality:  ")
-bullet("open and overdue DSARs, records of processing, and access to personal data.", bold_lead="Privacy:  ")
-bullet("active litigation holds and IP exposure.", bold_lead="Litigation & IP:  ")
-bullet("regulatory obligations by jurisdiction, with notification clocks.", bold_lead="Obligations:  ")
-
-h2("COO — Operations")
-bullet("business-continuity coverage and process resilience.", bold_lead="Continuity:  ")
-bullet("recovery-time and recovery-point objectives (RTO/RPO) versus target.", bold_lead="Recovery:  ")
-bullet("backup immutability and identity-recovery readiness.", bold_lead="Backups:  ")
-
-h2("CPO — Product")
-bullet("secure-by-design coverage across the product estate.", bold_lead="Secure-by-design:  ")
-bullet("open product risks, customer-data handling, and MFA adoption.", bold_lead="Product risk:  ")
-
-h2("Internal Audit — Chief Audit Executive")
-para("Presents the audit plan, workpapers, and control assurance mapped to GRC, so audit can trace "
-     "any assertion in the platform back to its evidence and coverage.")
-
-h2("Board — Directors")
-para("A board-level view of oversight, disclosure readiness, resilience investment, and posture "
-     "versus peers — printable as a board/regulator pack (Section 6).")
-
-# ===========================================================================
-# 6 · CORE WORKFLOWS
-# ===========================================================================
-h1("Core Workflows")
-
-h2("Recording and committing a decision")
-numbered("1", "Open the decision", "From any seat, select a surfaced decision to see its concrete "
-    "pros, cons, cost, and the exposure it addresses.")
-numbered("2", "Record your choice", "Enter your rationale and confirm. The decision is stamped with "
-    "your name and timestamp.")
-numbered("3", "Edit within 24 hours", "For 24 hours the decision remains editable. After that it "
-    "commits to the permanent, accountable record.")
-numbered("4", "Push to ticketing", "Send a committed decision to Jira or ServiceNow so execution is "
-    "tracked in your existing workflow. Status is pulled back on refresh.")
-
-h2("Refreshing live signals")
-para("Selecting refresh re-reads your connected tools and updates every live metric, with the "
-     "‘as of’ timestamp advancing to match. Illustrative metrics are unaffected. Connected "
-     "integrations can also refresh automatically on a schedule set by your administrator.")
-
-h2("Running the peer benchmark")
-para("From the CEO or Board seat, the peer benchmark compares your posture to published medians for "
-     "your industry. It is drawn from published baselines and requires no data sharing — nothing "
-     "about your organization leaves the appliance to produce it.")
-
-h2("Drilling a framework control")
-para("In the CISO Frameworks tab, expand a control group, select a control, and inspect its assessed "
-     "maturity, the telemetry behind it, and its crosswalk to NIST CSF. Export the assessment as a "
-     "PDF for auditors. All mapped control identifiers are validated against the source frameworks.")
-
-h2("Exporting the board pack")
-para("The Board seat produces a printable board- and regulator-ready report of oversight, disclosure "
-     "readiness, and peer posture. Generate it ahead of a board meeting or a regulatory filing window.")
-
-# ===========================================================================
-# 7 · ADMINISTRATION
-# ===========================================================================
+# ============================ 9 · ADMINISTRATION ============================
 h1("Administration")
-
-h2("The appliance")
-para("Nerion runs as a hardened virtual appliance in your environment. Administrators are "
-     "responsible for deploying the image, installing the license file, and setting the small number "
-     "of environment controls that govern enforcement. Because the platform is fully offline, routine "
-     "operation requires no outbound connectivity.")
-
 h2("Licensing and renewal")
-numbered("1", "Read the machine fingerprint", "Each appliance has a unique hardware fingerprint, "
-    "visible to the administrator. A license can be bound to it so it cannot be copied to another VM.")
-numbered("2", "Install the license", "Place the license file provided by your vendor into the "
-    "appliance. The platform validates it cryptographically — it cannot be forged or edited.")
-numbered("3", "Watch the countdown", "The platform shows days remaining. A banner prompts renewal "
-    "as expiry approaches; a short grace period follows expiry before access is blocked.")
-numbered("4", "Renew", "Your vendor issues a fresh license for the new term; installing it extends "
-    "the clock with no reinstallation.")
+steps([("Read the machine fingerprint", "GET /api/license/fingerprint. A licence can be bound to it so it cannot be "
+        "copied to another VM.", None),
+       ("Install the licence", "Place the vendor-issued license.json into config. The platform validates it "
+        "cryptographically (Ed25519) — it cannot be forged or edited.", None),
+       ("Watch the countdown", "GET /api/license/status drives the banner; a renewal prompt appears as expiry nears, "
+        "with a short grace period after.", None),
+       ("Renew", "Install a fresh licence for the new term — extends the clock without reinstalling.", None)])
+table("Licence states",
+      ["State", "Meaning"],
+      [["active / grace", "Operating (grace = shortly past expiry, banner-warned)."],
+       ["expired", "Past expiry + grace — API gated."],
+       ["wrong_machine", "Licence bound to a different VM."],
+       ["clock_suspect", "System clock rolled back vs the anti-rollback high-water mark."],
+       ["tampered / missing", "Signature invalid / no licence file."]],
+      widths=[1.7, 4.8])
+h2("Tamper protection")
+callout("warn", "The appliance protects the vendor’s intellectual property, not your data. If the software itself is "
+        "tampered with, it seals and crypto-shreds its own protected components — it never touches, encrypts or "
+        "deletes your business data. An accidental lock is cleared by a vendor-signed recovery token in minutes "
+        "(GET /api/license/seal → vendor issues token → POST /api/license/unseal).")
+p("Enforcement is off by default and enabled only in the shipped image (LICENSE_ENFORCE, TAMPER_SEAL_ENFORCE, "
+  "LICENSE_REQUIRE_NATIVE). All customer data stays inside the appliance for the life of the subscription.")
 
-callout("Tamper protection",
-    "The appliance protects the vendor’s intellectual property, not your data. If the software "
-    "itself is tampered with, it seals and renders its own protected components inert — it never "
-    "touches, encrypts, or deletes your business data. An accidental lock is cleared by a vendor "
-    "recovery token in minutes.")
-
-h2("Data residency")
-para("All customer data remains inside the appliance in your environment for the life of the "
-     "subscription. Nerion does not transmit your business data externally to operate, benchmark, "
-     "or validate its license.")
-
-# ===========================================================================
-# 8 · SUPPORT & FAQ
-# ===========================================================================
-h1("Support & Frequently Asked Questions")
-
+# ============================ 10 · FAQ ============================
+h1("Troubleshooting & FAQ")
 def faq(q, a):
-    qp = doc.add_paragraph(); qp.paragraph_format.space_before = Pt(8); qp.paragraph_format.space_after = Pt(2)
-    run(qp, "Q  ", size=11, bold=True, color=CYAN, font=HEAD_FONT); run(qp, q, size=11, bold=True, color=NAVY)
-    ap = doc.add_paragraph(); ap.paragraph_format.left_indent = Inches(0.28); ap.paragraph_format.space_after = Pt(4)
+    qp = K.doc.add_paragraph(); qp.paragraph_format.space_before = Pt(8); qp.paragraph_format.space_after = Pt(2)
+    run(qp, "Q  ", size=11, bold=True, color=CYAN, font=HEAD); run(qp, q, size=11, bold=True, color=NAVY)
+    ap = K.doc.add_paragraph(); ap.paragraph_format.left_indent = Inches(0.28); ap.paragraph_format.space_after = Pt(4)
     run(ap, a)
-
-faq("A metric shows as “illustrative”. How do I make it live?",
-    "Connect the tool that feeds it in onboarding Step 6, or provide the underlying value in the "
-    "relevant onboarding section. The metric switches to live on the next refresh.")
-faq("Can I change onboarding answers after going live?",
-    "Yes. Every input is editable at any time; the cockpit recomputes from your changes. Nothing is locked.")
+faq("A number is labelled MODELED / illustrative. Can I trust it?",
+    "Treat it as a model estimate, not a measurement — that is exactly what the label tells you. Tap it to see how "
+    "the model runs. Connect the relevant tools (and complete onboarding) to turn modeled defaults into LIVE readings.")
+faq("A tile says “Not connected”. What do I connect?",
+    "Tap it — the panel names the exact source and lists the tool · connector · field under “Where it will come from”.")
+faq("Why does a computed number show a value I can’t reconstruct?",
+    "It shouldn’t. Every computed metric’s inputs end in a “= result” row that reproduces the value. If one doesn’t, "
+    "report it — that is a defect.")
 faq("Where do my decisions go?",
-    "They are recorded against your name, committed after 24 hours, and — if you choose — pushed to "
-    "Jira or ServiceNow, with status pulled back on refresh.")
+    "Recorded against the seat leader’s name, committed after 24 hours, and — if you connected Jira / ServiceNow — "
+    "opened as a tracked project whose status is pulled back on refresh.")
 faq("Does any of our data leave the environment?",
-    "No. The appliance is fully offline for operation, benchmarking, and licensing. Your data stays in your network.")
-faq("What happens when the license expires?",
-    "A renewal banner appears before expiry; a short grace period follows. Installing a renewed "
-    "license restores full access without reinstalling the platform.")
+    "No. The appliance is fully offline for operation, benchmarking and licensing.")
 faq("The platform is locked after a change to the VM. What now?",
-    "This is the tamper seal. Contact your vendor with the fingerprint and code shown; a signed "
-    "recovery token clears it in minutes. Your data is untouched.")
+    "That is the tamper seal. Send your vendor the fingerprint and nonce shown; a signed recovery token clears it in "
+    "minutes. Your data is untouched.")
 
-h2("Getting help")
-para("For platform questions, contact your Nerion administrator first — most seat and onboarding "
-     "questions are answered by reviewing the relevant section above. For licensing, appliance, or "
-     "recovery matters, your administrator will engage your Nerion vendor contact.")
+# ============================ GLOSSARY ============================
+h1("Glossary")
+gl = [
+    ("ALE", "Annualized Loss Expectancy — your modeled expected annual cyber loss (MODELED)."),
+    ("Control-value ledger", "Each control’s risk-removal weight (from its NIST CSF/800-53 mapping) × its live "
+                             "deployment; how coverage becomes dollars."),
+    ("Crown jewel", "A concentration of business value an attacker would target, derived from your processes and systems."),
+    ("CMMI", "Capability Maturity Model Integration — a 0–5 maturity score used for framework controls."),
+    ("Provenance", "The inputs, calculation and source behind a number, shown in its inspection panel."),
+    ("Tail / VaR₉₅", "The 95th-percentile (≈1-in-20-year) annual loss from the seeded Monte-Carlo simulation."),
+    ("Materiality threshold", "The loss large enough to require disclosure (e.g. a % of net income)."),
+    ("Machine fingerprint", "A one-way hash of the appliance’s hardware, used to bind a licence to one VM."),
+]
+table("", ["Term", "Definition"], [[a, b] for a, b in gl], widths=[1.7, 4.8], cap_kicker="")
 
-# closing rule
-end = doc.add_paragraph(); end.paragraph_format.space_before = Pt(18)
-_borders(end, ['bottom'], sz=10, color=NAVYHX)
-endp = doc.add_paragraph(); endp.alignment = WD_ALIGN_PARAGRAPH.CENTER
-run(endp, "NERION  ·  Cyber Business Operations Platform", size=9, bold=True, color=BLUE, spacing=30)
-endp2 = doc.add_paragraph(); endp2.alignment = WD_ALIGN_PARAGRAPH.CENTER
-run(endp2, "Confidential — Distribution limited to licensed users", size=8, italic=True, color=MUTE)
+end = K.doc.add_paragraph(); end.paragraph_format.space_before = Pt(16); bdr(end, ['bottom'], sz=10, color=NAVYHX)
+e1 = K.doc.add_paragraph(); e1.alignment = WD_ALIGN_PARAGRAPH.CENTER
+run(e1, "NERION  ·  Cyber Business Operations Platform", size=9, bold=True, color=BLUE, spacing=30)
+e2 = K.doc.add_paragraph(); e2.alignment = WD_ALIGN_PARAGRAPH.CENTER
+run(e2, "Confidential — Distribution limited to licensed users", size=8, italic=True, color=MUTE)
 
-OUT = "/home/user/Cyber-Rx/Nerion_User_Guide.docx"
-doc.save(OUT)
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Nerion_User_Guide.docx")
+K.save(OUT)
 print("saved", OUT)
