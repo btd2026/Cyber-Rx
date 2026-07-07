@@ -644,7 +644,7 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderCisoDecisions();c5Health();c5Exposure();c5Effect();c5Threats();c5Peers();c5Frameworks();c5cfExposure();c5cfRoi();c5cfInsurance();c5cfCost();c5cfDecisions();c5ceHealth();c5ceStrategic();c5ceFinancial();c5ceTrust();c5ceDecisions();c5crScale();c5crAppetite();c5crAssurance();c5crTrend();c5crDecisions();c5coResilience();c5coProcesses();c5coSupply();c5coRecovery();c5coDecisions();c5clRegulatory();c5clNotification();c5clContracts();c5clPrivacy();c5clDecisions();c5ctTech();c5ctReliability();c5ctAi();c5ctSupply();c5ctDecisions();c5iaCoverage();c5iaTesting();c5iaFindings();c5iaEvidence();c5iaAttention();c5bdHealth();c5bdMaterial();c5bdTrend();c5bdInvestment();c5bdGovernance();c5cpSecurity();c5cpTrust();c5cpVelocity();c5cpBacklog();c5cpDecisions();renderCfoDecision();renderCroDecision();renderCioDecision();renderCooDecision();renderCloDecision();renderCpoDecision();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderCioWorkforce();renderCpoLaunch();renderCpoSbd();renderCooSupply();renderCpoSupply();renderCloContract();renderAuditRepeat();renderAuditCoverage();renderAuditReadiness();renderAuditFailed();renderAuditDecisions();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoRiskScore();renderCeoTopThreats();renderCeoTopIssues();renderCeoStrategyRisks();renderCeoCustomerProtect();renderCeoBoardKpis();renderCeoExecDecisions();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderCisoDecisions();c5Health();c5Exposure();c5Effect();c5Threats();c5Peers();c5Frameworks();c5cfExposure();c5cfRoi();c5cfInsurance();c5cfCost();c5cfDecisions();c5ceHealth();c5ceStrategic();c5ceFinancial();c5ceTrust();c5ceDecisions();c5crScale();c5crAppetite();c5crAssurance();c5crTrend();c5crDecisions();c5coResilience();c5coProcesses();c5coSupply();c5coRecovery();c5coDecisions();c5clRegulatory();c5clNotification();c5clContracts();c5clPrivacy();c5clDecisions();c5ctTech();c5ctReliability();c5ctAi();c5ctSupply();c5ctDecisions();c5iaCoverage();c5iaTesting();c5iaFindings();c5iaEvidence();c5iaAttention();c5bdHealth();c5bdMaterial();c5bdTrend();c5bdInvestment();c5bdGovernance();c5cpSecurity();c5cpTrust();c5cpVelocity();c5cpBacklog();c5cpDecisions();renderCfoDecision();renderCroDecision();renderCioDecision();renderCooDecision();renderCloDecision();renderCpoDecision();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderCioWorkforce();renderCpoLaunch();renderCpoSbd();renderCooSupply();renderCpoSupply();renderCloContract();renderAuditRepeat();renderAuditCoverage();renderAuditReadiness();renderAuditFailed();renderAuditDecisions();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoRiskScore();renderCeoTopThreats();renderCeoTopIssues();renderCeoStrategyRisks();renderCeoCustomerProtect();renderCeoBoardKpis();renderCeoExecDecisions();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();try{if(typeof renderDelta==='function')renderDelta();}catch(_){}window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
@@ -701,6 +701,7 @@ function buildTabs(){
 </script>
 <script src="cockpit-seats.js"></script>
 <script src="ciso5.js"></script>
+<script src="csuite-delta.js"></script>
 <script>
 /* evidence + live + ticketing wiring */
 // When live data is present, the evidence headline shows the org's real figure
@@ -757,6 +758,19 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeEv();})
 function apiBase(){try{return (window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'https://cyber-rx.onrender.com').replace(/\/+$/,'');}catch(_){return 'https://cyber-rx.onrender.com';}}
 function orgId(){try{return window.CYBERRX_ORG_ID||localStorage.getItem('cyberrx_org_id')||'';}catch(_){return '';}}
 function orgName(){try{return localStorage.getItem('cyberrx_org_name')||'';}catch(_){return '';}}
+/* Input→widget readiness (Build Brief §4): drives CISO tile gating. Fetches the
+   role's readiness, stores it on window.CISO_READY, and re-renders Program Health so
+   unmet tiles show "Needs: <input>". Guarded; degrades to no-gating if unavailable. */
+function fetchReadiness(){var base=apiBase(),o=orgId();if(!base||!o)return;
+  try{fetch(base+'/api/readiness?role=ciso&org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}})
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(d){if(d&&d.widgets){window.CISO_READY=d;if(typeof c5Health==='function')try{c5Health();}catch(_){}}})
+    .catch(function(){});}catch(_){}
+}
+/* A "Needs: …" tile deep-links back to onboarding — ask the shell to switch view. */
+document.addEventListener('click',function(e){var t=e.target&&e.target.closest?e.target.closest('.c5needs'):null;if(!t)return;
+  try{window.parent&&window.parent.postMessage({type:'cyberrx-goto-onboarding'},'*');}catch(_){}
+},false);
 /* Decisions: named leader, records a PROJECT in the ticketing system, editable
    for 24h then committed (locked). Persisted per org+seat+decision. */
 var EDIT_WINDOW_MS=24*60*60*1000;
@@ -1288,7 +1302,28 @@ function renderCisoDecisions(){
       {tag:'B · Prove recovery (DR test)',on:'Option B · DR',osum:'removes the recovery tail',pros:['Removes the recovery-tail exposure','Meets regulatory recovery expectations'],cons:['A larger program than PAM','Leaves the top driver open']},
       {tag:'C · Cloud posture (CSPM)',on:'Option C · CSPM',osum:'closes cloud exposure',pros:['Baselines cloud misconfiguration and public exposure','Fast to stand up'],cons:['Does not touch the identity path','Preventive, not immediate risk removed']}]};
   }
-  host.innerHTML=decisions([dec]);
+  // The CISO's own decisions queue — the same interactive engine (choose · record
+  // who/when · push to ticketing · pull status) as the other seats. Decision 1 is
+  // the data-driven "next control-gap dollar" above; 2 and 3 are the two calls that
+  // naturally follow it and anchor to metrics already shown on this seat, so nothing
+  // is invented. c5dec/c5get are globals from ciso5.js.
+  var queue=[dec];
+  if(typeof c5dec==='function'&&typeof c5get==='function'){
+    var idm=c5get('exp_identity'),dlp=c5get('ctl_dlp');
+    queue.push(c5dec('ciso',2,'How do we treat the largest exposure driver?',
+      'Identity / access is your single largest exposure driver'+(idm.connected?(' ('+idm.displayValue+')'):'')+'. Fund the fix, phase it, or transfer part via insurance. Recommended: fund it — reducing the tail is typically cheaper than the extra premium, and it strengthens audit and board posture.',
+      {on:'Fund the identity fix now',osum:(idm.connected?('Removes the top driver · '+idm.displayValue):'Removes the top exposure driver'),
+        pros:['Closes the largest single exposure driver.','Reduces the modeled tail — usually cheaper than buying up insurance.','Strengthens audit and board posture at once.'],
+        cons:['Requires capital this cycle — scoped with your team, not invented by Nerion.']},
+      [{on:'Phase it over two cycles',osum:'Half now · half next cycle',pros:['Spreads the capital over two budgets.'],cons:['Leaves part of the top driver open in the interim.','Total cost is usually higher than doing it once.']},
+       {on:'Transfer part via insurance',osum:'Buy up cover instead of fixing',pros:['No engineering effort this cycle.'],cons:['The premium usually exceeds the cost of the fix.','The operational exposure itself remains.']}]));
+    queue.push(c5dec('ciso',3,'Retire the lowest-return control and redeploy?',
+      'Your lowest risk-removed control'+(dlp.connected?(' — '+dlp.name+' at '+dlp.displayValue+' removed —'):'')+' is a retire / consolidate candidate. Redeploying its spend to identity, your highest-return control, can be self-funding.',
+      {on:'Review it for retire / consolidate',osum:'Free spend at near-zero added risk',
+        pros:['Frees budget from a low-return control.','Redeployed to identity it can part-fund the top exposure fix.','Simplifies the stack and reduces tool overlap.'],
+        cons:['Attribute its spend and confirm overlap before retiring — do not cut a control still doing work.']}));
+  }
+  host.innerHTML=decisions(queue);
   wireChoose();
 }
 /* ---- Live executive decisions for the operational seats — same engine as the
@@ -4855,7 +4890,7 @@ function pushUiState(partial,immediate){try{if(!orgId())return;var send=function
 function fetchUiState(cb){try{if(!orgId()){cb&&cb(null);return;}fetch(_uiUrl(),{headers:{'X-Org-Id':orgId()}}).then(function(r){return r.ok?r.json():null;}).then(function(s){cb&&cb(s&&typeof s==='object'?s:null);}).catch(function(){cb&&cb(null);});}catch(_){cb&&cb(null);}}
 function selectSeat(seat){document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===seat);});saveLastSeat(seat);pushUiState({seat:seat});render(seat);if(!VOICE_MUTED)speakSeat(seat);}
 document.querySelectorAll('.seat').forEach(function(b){b.addEventListener('click',function(){selectSeat(b.dataset.seat);});});
-var _bootSeat=(typeof loadLastSeat==='function'&&loadLastSeat())||'ciso';document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===_bootSeat);});render(_bootSeat);loadLive();loadSignals();
+var _bootSeat=(typeof loadLastSeat==='function'&&loadLastSeat())||'ciso';document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===_bootSeat);});render(_bootSeat);loadLive();loadSignals();fetchReadiness();
 /* Auto-poll live signals so the "Are we under attack?" tile surfaces a new SIEM
    incident on its own (~every 60s) — no manual refresh needed. The War Room's own
    incidents flip it instantly via triggerIncident/containIncident. */
@@ -5019,8 +5054,8 @@ document.getElementById('wrMute').addEventListener('click',function(){alarmMuted
    open the seat the user signed in as, and (re)load live data when shown. */
 window.addEventListener('message',function(e){
   var d=e.data;
-  if(d&&d.type==='cyberrx-golive'){try{if(d.orgId)localStorage.setItem('cyberrx_org_id',d.orgId);if(d.org)localStorage.setItem('cyberrx_org_name',d.org);if(d.industry)localStorage.setItem('cyberrx_industry',d.industry);}catch(_){}loadLive();}
-  else if(d==='cyberrx-os-active'){loadLive();}
+  if(d&&d.type==='cyberrx-golive'){try{if(d.orgId)localStorage.setItem('cyberrx_org_id',d.orgId);if(d.org)localStorage.setItem('cyberrx_org_name',d.org);if(d.industry)localStorage.setItem('cyberrx_industry',d.industry);}catch(_){}loadLive();fetchReadiness();}
+  else if(d==='cyberrx-os-active'){loadLive();fetchReadiness();}
   else if(d&&d.type==='cyberrx-auth'){var map={ceo:'ceo',board:'ceo',cfo:'cfo',cio:'cio',clo:'clo',cro:'cro',ciso:'ciso'};var role=map[d.role]||'ceo';
     // Prefer the org's server-side position (any device); fall back to this
     // browser's local cache, then to the seat picked at sign-in.

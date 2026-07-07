@@ -44,6 +44,12 @@ const RAW_REGISTRY = {
   whistic: require('./whistic'),
   github: require('./github'),
   servicenow_grc: require('./servicenow_grc'),
+  // DELTA: Board / CLO / CRO connectors
+  erm: require('./erm'),
+  legal_matter: require('./legal_matter'),
+  contract_lifecycle: require('./contract_lifecycle'),
+  data_classification: require('./data_classification'),
+  internal_audit: require('./internal_audit'),
 };
 
 // Per-connector demo mode state. Defaults to false (live).

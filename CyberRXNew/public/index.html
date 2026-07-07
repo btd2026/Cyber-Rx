@@ -70,6 +70,70 @@
   .oskip{background:none;border:none;color:#8A93A1;font-family:inherit;font-size:13px;cursor:pointer}
   .oskip:hover{color:#E8EEF6}
   .ofoot{margin-top:24px;display:flex;align-items:center;gap:7px;font-family:"JetBrains Mono",monospace;font-size:10.5px;color:#7C8490}
+
+  /* ===== Transition overlays (welcome splash + go-live provisioning) ===== */
+  .ntrans{position:fixed;inset:0;z-index:100000;display:none}
+  .ntrans.show{display:block}
+  .ntrans .nskip{position:absolute;right:16px;bottom:16px;z-index:2;background:rgba(12,28,46,.6);border:1px solid #2b4a63;color:#9db0c6;font-family:Arial,sans-serif;font-size:12px;border-radius:99px;padding:6px 14px;cursor:pointer;opacity:.75}
+  .ntrans .nskip:hover{opacity:1;color:#fff}
+
+  /* --- A · NerionWelcomeSplash --- */
+  .nboot-screen{position:relative;height:100%;width:100%;background:radial-gradient(120% 90% at 50% 38%,#0e2c44 0%,#081a28 70%,#050f18 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;overflow:hidden}
+  .nboot-glow{position:absolute;inset:0;background:radial-gradient(46% 36% at 50% 42%,rgba(56,189,248,.22),transparent 70%);opacity:0;pointer-events:none}
+  .nboot-mark{width:134px;height:134px;overflow:visible}
+  .nboot-word{font-family:Arial,Helvetica,sans-serif;font-weight:700;letter-spacing:5px;margin-right:-5px;font-size:24px;color:#fff;text-align:center}
+  .nboot-tag{font-family:Arial,Helvetica,sans-serif;font-size:9.5px;letter-spacing:1.5px;margin-right:-1.5px;color:#7cc6f0;text-align:center}
+  .nboot-status{font-family:Arial,Helvetica,sans-serif;font-size:10px;letter-spacing:.5px;margin-right:-.5px;color:#4ade80;text-align:center;position:absolute;bottom:22px}
+  .nboot-mark .nletter{stroke-dasharray:152;stroke-dashoffset:152}
+  .nboot-mark .eyering{stroke-dasharray:54;stroke-dashoffset:54}
+  .nboot-mark .node,.nboot-mark .core{opacity:0;transform:scale(.3);transform-box:fill-box;transform-origin:center}
+  .nboot-mark .halo,.nboot-mark .scan{opacity:0}
+  .nboot-mark .halo{transform-box:fill-box;transform-origin:center}
+  .nboot-word,.nboot-tag,.nboot-status{opacity:0}
+  .nboot-tag,.nboot-status{transform:translateY(7px)}
+  @keyframes nb-draw{to{stroke-dashoffset:0}}
+  @keyframes nb-pop{0%{opacity:0;transform:scale(.3)}60%{opacity:1;transform:scale(1.18)}100%{opacity:1;transform:scale(1)}}
+  @keyframes nb-rise{to{opacity:1;transform:translateY(0)}}
+  @keyframes nb-glow{0%,100%{filter:drop-shadow(0 0 3px rgba(56,189,248,.5))}50%{filter:drop-shadow(0 0 13px rgba(56,189,248,.95))}}
+  @keyframes nb-scan{0%{opacity:0;transform:translateY(-42px)}18%{opacity:.95}100%{opacity:0;transform:translateY(42px)}}
+  @keyframes nb-gin{to{opacity:1}}
+  @keyframes nb-halo{0%{opacity:.55;transform:scale(.4)}100%{opacity:0;transform:scale(1.9)}}
+  @keyframes nb-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+  @keyframes nb-track{0%{opacity:0;letter-spacing:-2px;filter:blur(3px)}55%{opacity:1;filter:blur(0)}100%{opacity:1;letter-spacing:5px;filter:blur(0)}}
+  .nboot-screen.run .nboot-glow{animation:nb-gin 1s .3s forwards}
+  .nboot-screen.run .scan{animation:nb-scan 1.15s .2s ease-in-out}
+  .nboot-screen.run .nletter{animation:nb-draw 1.2s .55s forwards}
+  .nboot-screen.run .node{animation:nb-pop .5s var(--d) both}
+  .nboot-screen.run .halo{animation:nb-halo 1.1s 1.95s ease-out}
+  .nboot-screen.run .eyering{animation:nb-draw .6s 1.9s forwards}
+  .nboot-screen.run .core{animation:nb-pop .5s 2s both, nb-glow 2s 2.7s ease-in-out infinite}
+  .nboot-screen.run .nboot-mark{animation:nb-breathe .8s 2.2s ease-in-out}
+  .nboot-screen.run .nboot-word{animation:nb-track 1.1s 2.65s both}
+  .nboot-screen.run .nboot-tag{animation:nb-rise .7s 3.2s forwards}
+  .nboot-screen.run .nboot-status{animation:nb-rise .6s 3.75s forwards}
+  @media (prefers-reduced-motion: reduce){.nboot-screen.run *{animation-duration:.01ms!important;animation-delay:0s!important}}
+
+  /* --- B · NerionProvisioningScreen --- */
+  .nprov-screen{position:relative;height:100%;width:100%;background:radial-gradient(120% 90% at 50% 30%,#0e2c44 0%,#081a28 68%,#050f18 100%);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:calc(6vh + 12px) 22px 22px;overflow:auto}
+  .nprov-inner{width:100%;max-width:440px;display:flex;flex-direction:column;align-items:center}
+  .nprov-wm{font-family:Arial,sans-serif;font-weight:700;letter-spacing:3px;margin-right:-3px;font-size:14px;color:#fff}
+  .nprov-ring{position:relative;width:150px;height:150px;margin:20px 0 6px}
+  .nprov-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+  .nprov-num{font-family:Arial,sans-serif;font-weight:700;font-size:42px;color:#fff;line-height:1}
+  .nprov-sign{font-size:16px;color:#7cc6f0;font-weight:500}
+  .nprov-h{font-family:Arial,sans-serif;font-size:18px;font-weight:600;color:#fff;text-align:center;margin-top:6px}
+  .nprov-stage{font-family:Arial,sans-serif;font-size:12.5px;color:#7cc6f0;text-align:center;margin-top:6px;min-height:18px;display:flex;align-items:center;gap:7px;justify-content:center}
+  .nprov-spin{width:8px;height:8px;border-radius:50%;background:#38BDF8;box-shadow:0 0 8px #38BDF8;animation:np-pulse 1s ease-in-out infinite;flex:none}
+  @keyframes np-pulse{0%,100%{opacity:.4;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+  .nprov-note{font-family:Arial,sans-serif;font-size:11.5px;color:#7c93a8;text-align:center;margin-top:10px;min-height:15px}
+  .nprov-note.err{color:#f7a072}
+  .nprov-retry{margin-top:8px;background:#0a4dc4;border:none;color:#fff;font-family:Arial,sans-serif;font-size:12px;border-radius:8px;padding:7px 15px;cursor:pointer;display:none}
+  .nprov-checks{width:100%;margin-top:18px;display:flex;flex-direction:column;gap:9px}
+  .nck{display:flex;align-items:center;gap:10px;font-family:Arial,sans-serif;font-size:12.5px;color:#5b7186;transition:color .3s}
+  .nck .ic{width:16px;height:16px;border-radius:50%;border:1.5px solid #2b4a63;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+  .nck.active{color:#cfe4f5}.nck.active .ic{border-color:#38BDF8}
+  .nck.done{color:#a7c6dd}.nck.done .ic{background:#1e8e5a;border-color:#1e8e5a;color:#fff}
+  @media (prefers-reduced-motion: reduce){.nprov-spin{animation:none}}
 </style>
 </head>
 <body>
@@ -136,6 +200,52 @@
   </div>
   <iframe class="frame" id="fIntake"></iframe>
   <iframe class="frame" id="fOS" allow="autoplay; speaker-selection"></iframe>
+
+  <!-- A · WELCOME SPLASH (after authentication) -->
+  <div class="ntrans" id="nbootOverlay" role="status" aria-live="polite" aria-label="Welcome to Nerion">
+    <div class="nboot-screen" id="nbootScreen">
+      <div class="nboot-glow"></div>
+      <svg class="nboot-mark" viewBox="0 0 120 120" aria-hidden="true">
+        <circle class="halo" cx="60" cy="60" r="30" fill="none" stroke="#38BDF8" stroke-width="2"/>
+        <line class="scan" x1="30" y1="60" x2="90" y2="60" stroke="#7cc6f0" stroke-width="1.5" style="filter:drop-shadow(0 0 6px #38BDF8)"/>
+        <path class="nletter" d="M40,82 L40,38 L80,82 L80,38" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle class="node" cx="40" cy="82" r="5" fill="#38BDF8" style="--d:.7s"/>
+        <circle class="node" cx="40" cy="38" r="5" fill="#38BDF8" style="--d:1.1s"/>
+        <circle class="node" cx="80" cy="82" r="5" fill="#38BDF8" style="--d:1.55s"/>
+        <circle class="eyering" cx="80" cy="38" r="8" fill="none" stroke="#38BDF8" stroke-width="2.6"/>
+        <circle class="core" cx="80" cy="38" r="3.2" fill="#38BDF8"/>
+      </svg>
+      <div class="nboot-word">NERION</div>
+      <div class="nboot-tag">CYBER BUSINESS OPERATIONS PLATFORM</div>
+      <div class="nboot-status" id="nbootStatus">Welcome</div>
+    </div>
+    <button class="nskip" id="nbootSkip" aria-label="Skip">Skip</button>
+  </div>
+
+  <!-- B · GO-LIVE PROVISIONING (after Go live) -->
+  <div class="ntrans" id="nprovOverlay" role="status" aria-live="polite">
+    <div class="nprov-screen">
+      <div class="nprov-inner">
+        <div style="display:flex;align-items:center;gap:8px">
+          <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M8,17 L8,7 L16,17 L16,7" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="7" r="1.8" fill="#38BDF8"/></svg>
+          <span class="nprov-wm">NERION</span>
+        </div>
+        <div class="nprov-ring">
+          <svg width="150" height="150" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="54" fill="none" stroke="#183a54" stroke-width="7"/>
+            <circle id="np-prog" cx="60" cy="60" r="54" fill="none" stroke="#38BDF8" stroke-width="7" stroke-linecap="round" transform="rotate(-90 60 60)" stroke-dasharray="339.29" stroke-dashoffset="339.29" style="filter:drop-shadow(0 0 5px rgba(56,189,248,.7))"/>
+            <circle id="np-head" cx="60" cy="6" r="4.5" fill="#eaf7ff" style="filter:drop-shadow(0 0 6px #38BDF8)"/>
+          </svg>
+          <div class="nprov-pct"><div><span class="nprov-num" id="np-num">0</span><span class="nprov-sign">%</span></div></div>
+        </div>
+        <div class="nprov-h">Welcome to your cockpit</div>
+        <div class="nprov-stage"><span class="nprov-spin" id="np-spin"></span><span id="np-stage">Starting…</span></div>
+        <div class="nprov-note" id="np-note"></div>
+        <button class="nprov-retry" id="np-retry">Retry</button>
+        <div class="nprov-checks" id="np-checks"></div>
+      </div>
+    </div>
+  </div>
 <script>
   document.getElementById("fIntake").src="onboarding.html";
   // The Operating System view is the business-language executive cockpit.
@@ -167,6 +277,112 @@
     inp.addEventListener("input",function(){if(inp.value&&arr[i+1])arr[i+1].focus();});
   });
   function osMsg(m){var f=document.getElementById("fOS");if(f.contentWindow)f.contentWindow.postMessage(m,"*");}
+
+  // ── Shell helpers: API base + org id (mirror the app so the provisioning stream
+  //    talks to the same backend the cockpit does) ──────────────────────────────
+  function shellApiBase(){try{return (window.CYBERRX_API||localStorage.getItem("cyberrx_api_base")||"https://cyber-rx.onrender.com").replace(/\/+$/,"");}catch(_){return "https://cyber-rx.onrender.com";}}
+  function shellOrgId(){try{return localStorage.getItem("cyberrx_org_id")||"";}catch(_){return "";}}
+  function shellMuted(){try{return localStorage.getItem("cyberrx_muted")==="1";}catch(_){return false;}}
+  function reduceMotion(){try{return window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;}catch(_){return false;}}
+  function hasOnboarded(){try{return !!localStorage.getItem("cyberrx_org_id")||localStorage.getItem("cyberrx_last_view")==="os";}catch(_){return false;}}
+
+  // ── Audio: synthesized from the locked recipe, played only from the sign-in /
+  //    go-live gesture, and only when not muted / reduced-motion. Guarded so a
+  //    missing Web Audio API can never break the transition. ────────────────────
+  var _actx=null;
+  function audioCtx(){try{if(!_actx){var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;_actx=new AC();}if(_actx.state==="suspended"){try{_actx.resume();}catch(_){}}return _actx;}catch(_){return null;}}
+  function _reverb(ctx,secs){try{var rate=ctx.sampleRate,len=Math.max(1,Math.floor(secs*rate)),buf=ctx.createBuffer(2,len,rate);for(var ch=0;ch<2;ch++){var d=buf.getChannelData(ch);for(var i=0;i<len;i++){d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.4);}}var c=ctx.createConvolver();c.buffer=buf;return c;}catch(_){return null;}}
+  function _tone(ctx,dest,freq,start,dur,peak,type,attack){try{var o=ctx.createOscillator(),g=ctx.createGain();o.type=type||"sine";o.frequency.value=freq;var t0=ctx.currentTime+start,a=attack||0.01;g.gain.setValueAtTime(0.0001,t0);g.gain.exponentialRampToValueAtTime(Math.max(0.0002,peak),t0+a);g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);o.connect(g);g.connect(dest);o.start(t0);o.stop(t0+dur+0.06);}catch(_){}}
+  function _bus(ctx,masterGain,revSecs,wetAmt){var master=ctx.createGain();master.gain.value=masterGain;master.connect(ctx.destination);var rev=_reverb(ctx,revSecs),wet=ctx.createGain();wet.gain.value=wetAmt;var bus=ctx.createGain();bus.connect(master);if(rev){wet.connect(rev);rev.connect(master);bus.connect(wet);}return bus;}
+  function playWelcomeChime(){var ctx=audioCtx();if(!ctx)return;try{var bus=_bus(ctx,1,2.4,0.85);
+    [130.81,196.00,261.63].forEach(function(f){_tone(ctx,bus,f,0,2.6,0.045,"triangle",0.6);});                 // warm pad C3/G3/C4
+    var gains=[.15,.08,.05,.026];[1,2.0,2.76,5.2].forEach(function(m,i){_tone(ctx,bus,587.33*m,0.6,1.8,gains[i],"sine",0.01);}); // bell
+    [523.25,659.25,783.99,1046.5].forEach(function(f,i){_tone(ctx,bus,f,2.4+i*0.13,0.42,0.085,"sine",0.01);});   // ascending run
+    [1046.5,1318.51,1567.98].forEach(function(f){_tone(ctx,bus,f,3.0,1.4,0.04,"sine",0.04);});                    // final chord
+  }catch(_){}}
+  function playReadyChime(){var ctx=audioCtx();if(!ctx)return;try{var bus=_bus(ctx,0.9,1.4,0.6);
+    _tone(ctx,bus,783.99,0,0.5,0.06,"sine",0.02);_tone(ctx,bus,1046.5,0.16,0.9,0.05,"sine",0.03);               // soft two-note
+  }catch(_){}}
+
+  // ── A · NerionWelcomeSplash controller — guarded, never hangs ────────────────
+  var Boot=(function(){
+    var doneFlag=false,minDone=false,readyFlag=false,pending=null,t1=null,t2=null;
+    function overlay(){return document.getElementById("nbootOverlay");}
+    function finish(){if(doneFlag)return;doneFlag=true;clearTimeout(t1);clearTimeout(t2);try{var o=overlay();if(o)o.classList.remove("show");}catch(_){}var cb=pending;pending=null;try{if(typeof cb==="function")cb();}catch(_){}}
+    function maybe(){if(minDone&&readyFlag)finish();}
+    function play(opts){opts=opts||{};doneFlag=false;minDone=false;readyFlag=!!opts.ready;pending=opts.onComplete;clearTimeout(t1);clearTimeout(t2);
+      try{
+        var reduce=reduceMotion(),first=!!opts.firstLaunch&&!reduce;
+        var min=first?4300:900,cap=opts.maxDurationMs||5500;
+        var o=overlay();o.classList.add("show");
+        var st=document.getElementById("nbootStatus");if(st)st.textContent=opts.statusText||"Welcome";
+        var scr=document.getElementById("nbootScreen");scr.classList.remove("run");void scr.offsetWidth;scr.classList.add("run");
+        if(!reduce&&first&&!opts.muted){try{playWelcomeChime();}catch(_){}}
+        t1=setTimeout(function(){minDone=true;maybe();},min);
+        t2=setTimeout(finish,cap);                       // hard watchdog — always fires
+      }catch(e){finish();}
+    }
+    function setReady(v){readyFlag=!!v;maybe();}
+    return {play:play,setReady:setReady,skip:finish};
+  })();
+  (function(){var b=document.getElementById("nbootSkip");if(b)b.addEventListener("click",function(){Boot.skip();});})();
+
+  // ── B · NerionProvisioningScreen controller — real progress, guarded ─────────
+  var Prov=(function(){
+    var STAGES=[
+      {at:20,active:"Connecting your security stack…",done:"Security stack connected"},
+      {at:45,active:"Pulling identity, endpoint & cloud telemetry…",done:"Telemetry synced"},
+      {at:65,active:"Importing third-party vendor ratings…",done:"Vendors imported"},
+      {at:85,active:"Running your first control assessment…",done:"Assessment complete"},
+      {at:97,active:"Analyzing policies & mapping frameworks…",done:"Frameworks mapped"},
+      {at:100,active:"Building your executive views…",done:"Cockpit ready"}];
+    var C=339.29,doneFlag=false,last=0,pending=null,es=null,poll=null,slow=null,muted=false,ctx=null;
+    function $(id){return document.getElementById(id);}
+    function overlay(){return document.getElementById("nprovOverlay");}
+    function buildChecklist(){var c=$("np-checks");if(c)c.innerHTML=STAGES.map(function(s,i){return '<div class="nck" id="npck'+i+'"><span class="ic"></span><span>'+s.done+'</span></div>';}).join("");}
+    function render(pct,isDone){try{
+      pct=Math.max(last,Math.min(100,pct||0));last=pct;var pr=Math.round(pct);
+      var num=$("np-num");if(num)num.textContent=pr;
+      var prog=$("np-prog");if(prog)prog.setAttribute("stroke-dashoffset",(C*(1-pct/100)).toFixed(2));
+      var head=$("np-head");if(head){var a=(-90+360*pct/100)*Math.PI/180;head.setAttribute("cx",(60+54*Math.cos(a)).toFixed(2));head.setAttribute("cy",(60+54*Math.sin(a)).toFixed(2));}
+      var active=null;
+      for(var i=0;i<STAGES.length;i++){var ck=$("npck"+i);if(!ck)continue;
+        if(pr>=STAGES[i].at){ck.className="nck done";ck.firstChild.textContent="✓";}
+        else if(active===null){active=i;ck.className="nck active";ck.firstChild.textContent="";}
+        else {ck.className="nck";ck.firstChild.textContent="";}}
+      var stage=$("np-stage");if(stage&&active!==null)stage.textContent=STAGES[active].active;
+      if((isDone||pr>=100)&&!doneFlag)complete();
+    }catch(e){/* swallow — never freeze the screen */}}
+    function complete(){if(doneFlag)return;doneFlag=true;
+      try{var stage=$("np-stage");if(stage)stage.textContent="Your cockpit is ready.";var sp=$("np-spin");if(sp)sp.style.display="none";}catch(_){}
+      try{if(!muted)playReadyChime();}catch(_){}
+      cleanup();
+      setTimeout(function(){try{var o=overlay();if(o)o.classList.remove("show");}catch(_){}var cb=pending;pending=null;try{if(typeof cb==="function")cb();}catch(_){}},700);
+    }
+    function apply(d){try{if(!d)return;if(d.error){showErr("Something went wrong while provisioning.");}render(d.pct,d.done);}catch(_){}}
+    function showErr(msg){var n=$("np-note");if(n){n.textContent=msg;n.className="nprov-note err";}var r=$("np-retry");if(r)r.style.display="inline-block";}
+    function setNote(msg){var n=$("np-note");if(n&&!doneFlag){n.textContent=msg;n.className="nprov-note";}}
+    function cleanup(){try{es&&es.close();}catch(_){}es=null;if(poll){clearInterval(poll);poll=null;}if(slow){clearTimeout(slow);slow=null;}}
+    function startPoll(url){if(poll)return;poll=setInterval(function(){fetch(url,{headers:{"Accept":"application/json"}}).then(function(r){return r.ok?r.json():null;}).then(apply).catch(function(){});},800);}
+    function connect(){var base=shellApiBase(),org=ctx&&ctx.orgId?ctx.orgId:shellOrgId();
+      var q=org?("?org_id="+encodeURIComponent(org)):"";
+      var surl=base+"/api/provisioning/stream"+q,purl=base+"/api/provisioning/status"+q;
+      try{es=new EventSource(surl);es.onmessage=function(e){try{apply(JSON.parse(e.data));}catch(_){}};es.onerror=function(){try{es.close();}catch(_){}es=null;startPoll(purl);};}
+      catch(e){startPoll(purl);}
+    }
+    function start(opts){opts=opts||{};ctx=opts;pending=opts.onComplete;muted=!!opts.muted;doneFlag=false;last=0;
+      try{
+        var o=overlay();o.classList.add("show");
+        var n=$("np-note");if(n){n.textContent="";n.className="nprov-note";}var r=$("np-retry");if(r)r.style.display="none";
+        var sp=$("np-spin");if(sp)sp.style.display="";
+        buildChecklist();render(0,false);connect();
+        slow=setTimeout(function(){setNote("This is taking a little longer than usual — still working…");},60000);
+      }catch(e){/* even if the screen fails to build, fall through so we don't trap the user */ complete();}
+    }
+    (function(){var r=document.getElementById("np-retry");if(r)r.addEventListener("click",function(){r.style.display="none";var n=$("np-note");if(n){n.textContent="";n.className="nprov-note";}cleanup();connect();});})();
+    return {start:start};
+  })();
+
   function enterPlatform(){
     document.getElementById("login").classList.add("hide");
     document.getElementById("switcher").classList.add("show");
@@ -223,11 +439,38 @@
     document.getElementById("orient").classList.remove("show");
     enterPlatform();
   }
+  // A user-gesture-lightweight session bootstrap: resume where the org left off.
+  // Resolves quickly and, worst case, self-times-out well under the splash cap so
+  // the splash never waits on a hung request.
+  function bootstrapSession(){
+    return new Promise(function(resolve){
+      var settled=false, fin=function(){ if(settled)return; settled=true; resolve(); };
+      try{
+        var org=shellOrgId(), base=shellApiBase();
+        if(!org||!base){ fin(); return; }
+        fetch(base+"/api/ui-state?org_id="+encodeURIComponent(org),{headers:{"Accept":"application/json"}})
+          .then(function(r){return r.ok?r.json():null;}).then(fin).catch(fin);
+      }catch(_){ fin(); }
+      setTimeout(fin,4000);
+    });
+  }
   function afterSignIn(){
     document.getElementById("login").classList.add("hide");
-    var seen=false; try{seen=localStorage.getItem("cyberrx_orient_seen")==="1";}catch(_){}
-    if(seen){ enterPlatform(); }
-    else { showOrient(pickedRole); }
+    var firstBoot=true; try{firstBoot=localStorage.getItem("cyberrx_boot_seen")!=="1";}catch(_){}
+    var onboarded=hasOnboarded();
+    try{audioCtx();}catch(_){}   // resume Web Audio inside the sign-in gesture
+    // Welcome splash first, THEN the existing orient-or-enter handoff. Completion is
+    // gated on min-duration AND session-ready, hard-capped by the controller.
+    Boot.play({
+      firstLaunch:firstBoot, muted:shellMuted(), ready:false,
+      statusText:onboarded?"✓ Cockpit ready":"Welcome",
+      onComplete:function(){
+        try{localStorage.setItem("cyberrx_boot_seen","1");}catch(_){}
+        var seen=false; try{seen=localStorage.getItem("cyberrx_orient_seen")==="1";}catch(_){}
+        if(seen){ enterPlatform(); } else { showOrient(pickedRole); }
+      }
+    });
+    bootstrapSession().then(function(){ Boot.setReady(true); });
   }
   document.getElementById("oEnter").addEventListener("click",dismissOrient);
   document.getElementById("oSkip").addEventListener("click",dismissOrient);
@@ -247,8 +490,8 @@
   document.getElementById("swOS").addEventListener("click",function(){show("os");});
   document.getElementById("swLogoff").addEventListener("click",logOff);
   window.addEventListener("message",function(e){
-    if(e.data && e.data.type==="cyberrx-golive"){ try{if(e.data.orgId)localStorage.setItem("cyberrx_org_id",e.data.orgId);if(e.data.org)localStorage.setItem("cyberrx_org_name",e.data.org);if(e.data.industry)localStorage.setItem("cyberrx_industry",e.data.industry);}catch(_){} osMsg({type:"cyberrx-golive",names:e.data.names,industry:e.data.industry,org:e.data.org,orgId:e.data.orgId,benchShare:e.data.benchShare,currency:e.data.currency,profile:e.data.profile,docResults:e.data.docResults}); setTimeout(function(){show("os");},600); }
-    else if(e.data==="cyberrx-golive"){ setTimeout(function(){show("os");},600); }
+    if(e.data && e.data.type==="cyberrx-golive"){ try{if(e.data.orgId)localStorage.setItem("cyberrx_org_id",e.data.orgId);if(e.data.org)localStorage.setItem("cyberrx_org_name",e.data.org);if(e.data.industry)localStorage.setItem("cyberrx_industry",e.data.industry);}catch(_){} osMsg({type:"cyberrx-golive",names:e.data.names,industry:e.data.industry,org:e.data.org,orgId:e.data.orgId,benchShare:e.data.benchShare,currency:e.data.currency,profile:e.data.profile,docResults:e.data.docResults}); try{audioCtx();}catch(_){} Prov.start({orgId:e.data.orgId||shellOrgId(),muted:shellMuted(),onComplete:function(){show("os");}}); }
+    else if(e.data==="cyberrx-golive"){ try{audioCtx();}catch(_){} Prov.start({orgId:shellOrgId(),muted:shellMuted(),onComplete:function(){show("os");}}); }
     else if(e.data && e.data.type==="cyberrx-speak"){
       try{
         var _wasSpeaking=window.speechSynthesis.speaking||window.speechSynthesis.pending;
@@ -282,6 +525,7 @@
     else if(e.data && e.data.type==="cyberrx-speak-cancel"){
       try{window.speechSynthesis.cancel();}catch(_){}
     }
+    else if(e.data && e.data.type==="cyberrx-goto-onboarding"){ show("intake"); }
     else if(e.data && e.data.type==="cyberrx-restore-view"){ if(e.data.view) show(e.data.view); }
     else if(e.data==="cyberrx-signout"){
       document.getElementById("switcher").classList.remove("show");

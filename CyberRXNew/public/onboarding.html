@@ -402,6 +402,68 @@
     <div class="result" id="resRisk"></div>
   </div>
 
+  <!-- 6a2 · Business capability map (CISO Enterprise-Risk: capabilities with highest exposure) -->
+  <div class="sec">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Business capability map <span style="color:var(--muted)">(for the CISO Enterprise-Risk read)</span></div><div class="sd">Your core business capabilities and the cyber exposure each carries. Powers the CISO Program-Health tile <b>“business capabilities with highest exposure.”</b> From your capability map + GRC — leave blank to keep that tile illustrative.</div></div><div class="badge" id="bcap">optional</div></div>
+    <div class="srcchoice"><div class="srcopt sel" data-choice="cap" data-mode="upload"><div class="so-h">✎ Add manually</div><div class="so-d">capability · exposure · GRC status</div></div><div class="srcopt" data-choice="cap" data-mode="connect"><div class="so-h">⚡ Pull from GRC</div><div class="so-d">Archer / ServiceNow GRC / LeanIX — live</div></div></div>
+    <div id="capUpload">
+      <div id="capRows"></div>
+      <button type="button" id="addCap" class="conn-go" style="margin-top:4px">+ Add capability</button>
+    </div>
+    <div id="capConnect" style="display:none">
+      <div class="conn-row"><div class="field" style="min-width:200px"><label>GRC / capability platform</label><select id="capSys"><option>Archer</option><option>ServiceNow GRC</option><option>LeanIX</option><option>Ardoq</option><option>SAP GRC</option></select></div><div class="field" style="flex:1;min-width:220px"><label>Instance URL / API token</label><input id="capCred" placeholder="https://yourorg.archer.com · token"></div><button class="conn-go" data-conn="cap" type="button">Connect &amp; save</button></div>
+    </div>
+  </div>
+
+  <!-- 6a3 · Crown Jewel Register (CISO Enterprise-Risk: crown jewels at greatest risk) -->
+  <div class="sec">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Crown Jewel Register <span style="color:var(--muted)">(for the CISO “crown jewels at greatest risk” tile)</span></div><div class="sd">Your highest-value assets and their criticality. Joined to CMDB · Vulnerability Mgmt · EDR to rank crown jewels by real risk. Provide it explicitly, or leave blank to use the register Nerion derives from your inventory.</div></div><div class="badge" id="bcjr">optional</div></div>
+    <div id="cjrRows"></div>
+    <button type="button" id="addCjr" class="conn-go" style="margin-top:4px">+ Add asset</button>
+  </div>
+
+  <!-- 6a4 · BIA (CISO scenarios · impact) -->
+  <div class="sec">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Business Impact Analysis (BIA) <span style="color:var(--muted)">(for disruption scenarios &amp; recovery)</span></div><div class="sd">Per critical process: recovery-time objective and the business impact of an outage. Feeds the disruption-scenario and recovery reads. Leave blank to reuse your business-process inputs.</div></div><div class="badge" id="bbia">optional</div></div>
+    <div id="biaRows"></div>
+    <button type="button" id="addBia" class="conn-go" style="margin-top:4px">+ Add process</button>
+  </div>
+
+  <!-- 6a5 · SBOM (CISO third-party / supply-chain) -->
+  <div class="sec">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Software Bill of Materials (SBOM) <span style="color:var(--muted)">(for supply-chain exposure)</span></div><div class="sd">Key third-party software components and their known critical vulnerabilities. Feeds the third-party / supply-chain tile. Leave blank to keep that tile vendor-ratings-only.</div></div><div class="badge" id="bsbom">optional</div></div>
+    <div id="sbomRows"></div>
+    <button type="button" id="addSbom" class="conn-go" style="margin-top:4px">+ Add component</button>
+  </div>
+
+  <!-- 6a6 · Risk Appetite Statements (Board / CRO) -->
+  <div class="sec">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Risk Appetite Statements <span style="color:var(--muted)">(for the Board &amp; CRO)</span></div><div class="sd">Board-set cyber-risk appetite per category — the thresholds the Board and CRO measure posture against. From your ERM / risk appetite statement.</div></div><div class="badge" id="brap">optional</div></div>
+    <div id="rapRows"></div>
+    <button type="button" id="addRap" class="conn-go" style="margin-top:4px">+ Add category</button>
+  </div>
+
+  <!-- 6a7 · Regulatory Register (Board / CLO) -->
+  <div class="sec">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Regulatory Register <span style="color:var(--muted)">(for the Board &amp; CLO)</span></div><div class="sd">Cyber-relevant regulatory obligations and their compliance status. Powers the regulatory-exposure reads. From your GRC / compliance register.</div></div><div class="badge" id="breg">optional</div></div>
+    <div id="regRows"></div>
+    <button type="button" id="addReg" class="conn-go" style="margin-top:4px">+ Add obligation</button>
+  </div>
+
+  <!-- 6a8 · Materiality Criteria (Board) -->
+  <div class="sec">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Materiality Criteria <span style="color:var(--muted)">(for the Board)</span></div><div class="sd">Your thresholds for a “material” cyber incident (for board awareness &amp; SEC disclosure). From your disclosure-controls policy.</div></div><div class="badge" id="bmat">optional</div></div>
+    <div id="matRows"></div>
+    <button type="button" id="addMat" class="conn-go" style="margin-top:4px">+ Add criterion</button>
+  </div>
+
+  <!-- 6a9 · Benchmark Data (Board) -->
+  <div class="sec">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Benchmark Data <span style="color:var(--muted)">(for the Board)</span></div><div class="sd">Peer / industry benchmarks to judge cyber-investment adequacy — our value vs benchmark per metric.</div></div><div class="badge" id="bben">optional</div></div>
+    <div id="benRows"></div>
+    <button type="button" id="addBen" class="conn-go" style="margin-top:4px">+ Add metric</button>
+  </div>
+
   <!-- 6b · Cyber projects & initiatives -->
   <div class="sec">
     <div class="sh"><div class="sn">✦</div><div><div class="st">Current cyber projects &amp; initiatives</div><div class="sd">Your in-flight cyber spend — each with its cost and expected return. The CISO and CFO manage these alongside new decisions in the cockpit. Upload a list, or pull them from your ticketing system.</div></div><div class="badge" id="binit">optional</div></div>
@@ -556,6 +618,90 @@
   }).filter(Boolean);}
   function updateObjBadge(){var n=collectObjectives().length,b=document.getElementById('bobj');if(b){if(n){b.textContent='✓ '+n+' objective'+(n>1?'s':'');b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}}
   (function(){var a=document.getElementById('addObj');if(a)a.addEventListener('click',function(){addObjRow();});})();
+
+  // ---- business capability map (CISO Enterprise-Risk: capabilities with highest exposure) ----
+  var CAP_GRC=['Adequate','Watch','Gap'];
+  function addCapRow(v){v=v||{};var wrap=document.getElementById('capRows');if(!wrap)return;
+    var row=document.createElement('div');row.className='cap-row';row.style.cssText='display:grid;grid-template-columns:1.8fr 1.2fr 1fr auto;gap:10px;margin-bottom:10px;align-items:end';
+    row.innerHTML='<div class="field"><label>Capability</label><input class="cap-name" placeholder="e.g. Claims processing · Member enrollment · Payments"></div>'+
+      '<div class="field"><label>Cyber exposure</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum cap-val" placeholder="40"><select class="munit cap-valu"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div></div>'+
+      '<div class="field"><label>GRC status</label><select class="cap-grc">'+CAP_GRC.map(function(g){return '<option>'+g+'</option>';}).join('')+'</select></div>'+
+      '<button class="cap-del" type="button" title="Remove" style="height:38px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;color:var(--muted)">✕</button>';
+    wrap.appendChild(row);
+    if(v.name)row.querySelector('.cap-name').value=v.name;
+    if(v.grc_status)row.querySelector('.cap-grc').value=v.grc_status;
+    row.querySelector('.cap-del').addEventListener('click',function(){row.remove();updateCapBadge();});
+    ['input','change'].forEach(function(ev){row.addEventListener(ev,updateCapBadge);});
+    updateCapBadge();
+  }
+  function collectCapabilities(){return Array.prototype.slice.call(document.querySelectorAll('#capRows .cap-row')).map(function(r){
+    var name=(r.querySelector('.cap-name').value||'').trim();if(!name)return null;
+    var val=parseFloat(r.querySelector('.cap-val').value||'')||null,unit=parseFloat(r.querySelector('.cap-valu').value)||1;
+    return {name:name,exposure_usd:val!=null?Math.round(val*unit):null,grc_status:r.querySelector('.cap-grc').value};
+  }).filter(Boolean);}
+  function updateCapBadge(){var n=collectCapabilities().length,b=document.getElementById('bcap');if(b){if(n){b.textContent='✓ '+n+' capabilit'+(n>1?'ies':'y');b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}}
+  (function(){var a=document.getElementById('addCap');if(a)a.addEventListener('click',function(){addCapRow();});})();
+
+  // ---- CISO registers: Crown Jewel Register · BIA · SBOM (guided entry, validated) ----
+  // Small generic repeatable-row helper: fields = [{cls,label,type,ph,opts?}].
+  function makeRowList(wrapId, rowCls, fields, badgeId, singular){
+    function upd(){var n=collect().length,b=document.getElementById(badgeId);if(b){if(n){b.textContent='✓ '+n+' '+(n>1?singular+'s':singular);b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}}
+    function add(v){v=v||{};var wrap=document.getElementById(wrapId);if(!wrap)return;
+      var row=document.createElement('div');row.className=rowCls;row.style.cssText='display:grid;grid-template-columns:'+fields.map(function(f){return f.w||'1fr';}).join(' ')+' auto;gap:10px;margin-bottom:10px;align-items:end';
+      row.innerHTML=fields.map(function(f){
+        if(f.type==='select')return '<div class="field"><label>'+f.label+'</label><select class="'+f.cls+'">'+f.opts.map(function(o){return '<option>'+o+'</option>';}).join('')+'</select></div>';
+        if(f.type==='money')return '<div class="field"><label>'+f.label+'</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum '+f.cls+'" placeholder="'+(f.ph||'')+'"><select class="munit '+f.cls+'u"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div></div>';
+        return '<div class="field"><label>'+f.label+'</label><input type="'+(f.type||'text')+'"'+(f.type==='number'?' step="any"':'')+' class="'+f.cls+'" placeholder="'+(f.ph||'')+'"></div>';
+      }).join('')+'<button class="rl-del" type="button" title="Remove" style="height:38px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;color:var(--muted)">✕</button>';
+      wrap.appendChild(row);
+      fields.forEach(function(f){if(v[f.cls]!=null){var el=row.querySelector('.'+f.cls);if(el)el.value=v[f.cls];}});
+      row.querySelector('.rl-del').addEventListener('click',function(){row.remove();upd();});
+      ['input','change'].forEach(function(ev){row.addEventListener(ev,upd);});
+      upd();
+    }
+    function collect(){return Array.prototype.slice.call(document.querySelectorAll('#'+wrapId+' .'+rowCls)).map(function(r){
+      var first=r.querySelector('.'+fields[0].cls);if(!first||!(first.value||'').trim())return null;
+      var o={};fields.forEach(function(f){var el=r.querySelector('.'+f.cls);if(!el)return;
+        if(f.type==='money'){var val=parseFloat(el.value||'')||null,uu=r.querySelector('.'+f.cls+'u');o[f.key]=val!=null?Math.round(val*(uu?parseFloat(uu.value):1)):null;}
+        else o[f.key]=(f.type==='number')?(parseFloat(el.value||'')||null):(el.value||'').trim();});
+      return o;
+    }).filter(Boolean);}
+    return {add:add,collect:collect};
+  }
+  var CJR=makeRowList('cjrRows','cjr-row',[
+    {cls:'cjr-name',key:'name',label:'Asset',ph:'e.g. ClaimsDB',w:'1.6fr'},
+    {cls:'cjr-id',key:'asset_id',label:'Asset ID',ph:'CI / asset id',w:'1fr'},
+    {cls:'cjr-crit',key:'criticality',label:'Criticality',type:'select',opts:['Critical','High','Medium','Low'],w:'1fr'}],'bcjr','asset');
+  var BIA=makeRowList('biaRows','bia-row',[
+    {cls:'bia-name',key:'name',label:'Process',ph:'e.g. Claims processing',w:'1.6fr'},
+    {cls:'bia-rto',key:'rto_hours',label:'RTO (hrs)',type:'number',ph:'6',w:'0.9fr'},
+    {cls:'bia-impact',key:'impact_usd',label:'Outage impact',type:'money',ph:'40',w:'1.1fr'}],'bbia','process');
+  var SBOM=makeRowList('sbomRows','sbom-row',[
+    {cls:'sbom-name',key:'component',label:'Component',ph:'e.g. openssl 3.0.1',w:'1.8fr'},
+    {cls:'sbom-ver',key:'version',label:'Version',ph:'3.0.1',w:'0.9fr'},
+    {cls:'sbom-vulns',key:'critical_vulns',label:'Critical vulns',type:'number',ph:'0',w:'1fr'}],'bsbom','component');
+  // DELTA registers (Board / CLO / CRO)
+  var RAP=makeRowList('rapRows','rap-row',[
+    {cls:'rap-cat',key:'category',label:'Risk category',ph:'e.g. Identity & access',w:'1.6fr'},
+    {cls:'rap-app',key:'appetite_usd',label:'Appetite',type:'money',ph:'120',w:'1.1fr'},
+    {cls:'rap-thr',key:'threshold',label:'Threshold',ph:'e.g. High',w:'1fr'}],'brap','category');
+  var REG=makeRowList('regRows','reg-row',[
+    {cls:'reg-name',key:'regulation',label:'Regulation',ph:'e.g. GDPR · HIPAA',w:'1.3fr'},
+    {cls:'reg-obl',key:'obligation',label:'Obligation',ph:'e.g. 72-hr breach notice',w:'1.6fr'},
+    {cls:'reg-stat',key:'status',label:'Status',type:'select',opts:['Compliant','At-risk','Non-compliant'],w:'1fr'},
+    {cls:'reg-exp',key:'exposure_usd',label:'Exposure',type:'money',ph:'',w:'1fr'}],'breg','obligation');
+  var MAT=makeRowList('matRows','mat-row',[
+    {cls:'mat-met',key:'metric',label:'Criterion',ph:'e.g. Loss ≥ 5% net income',w:'1.8fr'},
+    {cls:'mat-thr',key:'threshold_usd',label:'Threshold',type:'money',ph:'',w:'1.1fr'},
+    {cls:'mat-bas',key:'basis',label:'Basis',ph:'e.g. SEC Item 1.05',w:'1.2fr'}],'bmat','criterion');
+  var BEN=makeRowList('benRows','ben-row',[
+    {cls:'ben-met',key:'metric',label:'Metric',ph:'e.g. Security spend % of IT',w:'1.8fr'},
+    {cls:'ben-our',key:'our_value',label:'Our value',ph:'e.g. 9%',w:'1fr'},
+    {cls:'ben-bmk',key:'benchmark',label:'Benchmark',ph:'e.g. 11%',w:'1fr'}],'bben','metric');
+  (function(){
+    var m=[['addCjr',CJR],['addBia',BIA],['addSbom',SBOM],['addRap',RAP],['addReg',REG],['addMat',MAT],['addBen',BEN]];
+    m.forEach(function(x){var b=document.getElementById(x[0]);if(b)b.addEventListener('click',function(){x[1].add();});});
+  })();
 
   // ---- policy & document evidence (framework CMMI via /api/documents/analyze) ----
   // Writes the same localStorage keys the cockpit Framework tab reads
@@ -810,7 +956,12 @@
     {key:'recordedfuture',ic:'🛰',cat:'Threat intelligence',w:8,sig:60,vendors:['AlienVault OTX (free)','CISA KEV (free)','Recorded Future','Mandiant Advantage','Anomali'],map:{'AlienVault OTX (free)':'otx','CISA KEV (free)':'cisa','Recorded Future':'recordedfuture','Mandiant Advantage':'mandiant','Anomali':'anomali'},pulls:'Threat actors targeting your sector, exploited CVEs, active ransomware campaigns.',ans:'CISO threat landscape · sector-targeted actor coverage · early warning. Free options (OTX · CISA KEV) or paid feeds (Recorded Future · Mandiant · Anomali).'},
     {key:'rubrik',ic:'💾',cat:'Backup & disaster recovery',w:10,sig:90,vendors:['Rubrik','Veeam','Cohesity','Commvault'],map:{'Veeam':'veeam','Cohesity':'cohesity','Commvault':'commvault'},pulls:'Immutable-backup coverage, last DR-test date, recovery-point objective.',ans:'CIO / COO DR readiness · ransomware recoverability · backup capability.'},
     {key:'github',ic:'🐙',cat:'Product security (DevSecOps)',w:8,sig:60,vendors:['GitHub Advanced Security','GitHub Enterprise'],pulls:'Open code-scanning (SAST) & critical Dependabot (SCA) alerts, plus delivery velocity — changes shipped / week and review backlog.',ans:'Chief Product product-quality risk · innovation velocity · software-dependency exposure.'},
-    {key:'servicenow_grc',ic:'📋',cat:'Audit & GRC (assurance)',w:8,sig:50,vendors:['ServiceNow GRC','ServiceNow Audit','AuditBoard'],pulls:'Open audit findings and findings that recur across audit cycles.',ans:'Internal Audit repeat-findings · control-gap backlog · audit-committee escalation.'}
+    {key:'servicenow_grc',ic:'📋',cat:'Audit & GRC (assurance)',w:8,sig:50,vendors:['ServiceNow GRC','ServiceNow Audit','AuditBoard'],pulls:'Open audit findings and findings that recur across audit cycles.',ans:'Internal Audit repeat-findings · control-gap backlog · audit-committee escalation.'},
+    {key:'erm',ic:'🎯',cat:'Enterprise risk management (ERM)',w:10,sig:60,vendors:['ServiceNow ERM','Archer','LogicGate','MetricStream','IBM OpenPages'],pulls:'Aggregate cyber-risk score, appetite breaches, enterprise exposure roll-up + history.',ans:'Board risk-posture vs appetite · CRO enterprise-scale roll-up & trend.'},
+    {key:'legal_matter',ic:'⚖',cat:'Legal matter management',w:6,sig:40,vendors:['Onit','SimpleLegal','Legal Tracker','HighQ'],pulls:'Open cyber/privacy matters, disclosure status, litigation exposure.',ans:'CLO litigation & liability · Board disclosure status.'},
+    {key:'contract_lifecycle',ic:'📝',cat:'Contract lifecycle (CLM)',w:6,sig:30,vendors:['Ironclad','DocuSign CLM','Icertis','Agiloft'],pulls:'Contracts with cyber/SLA clauses at risk of breach.',ans:'CLO contractual & SLA cyber obligations.'},
+    {key:'data_classification',ic:'🏷',cat:'Data classification',w:6,sig:40,vendors:['Microsoft Purview','BigID','Varonis','Collibra'],pulls:'Regulated data types (PHI/PII/PCI), classification coverage.',ans:'CLO breach-notification scoping by regulated data.'},
+    {key:'internal_audit',ic:'🔎',cat:'Internal audit management',w:6,sig:40,vendors:['AuditBoard','Workiva','TeamMate+','ServiceNow Audit'],pulls:'Open & overdue cyber-related audit findings and ratings.',ans:'Board independent assurance on cyber.'}
   ];
   var TOTAL_SIG=TOOLS.reduce(function(s,t){return s+t.sig;},0);
   var SELTOOLS={};
@@ -893,6 +1044,14 @@
       },
       strategicInitiatives:collectStrategic(),
       objectives:collectObjectives(),
+      capabilities:collectCapabilities(),
+      crownJewelRegister:CJR.collect(),
+      bia:BIA.collect(),
+      sbom:SBOM.collect(),
+      riskAppetite:RAP.collect(),
+      regulatoryRegister:REG.collect(),
+      materialityCriteria:MAT.collect(),
+      benchmarkData:BEN.collect(),
       seatNames:seatNames,
       growth:{
         pipelineUsd:mval('growthPipeline'),reviewBeforeWks:v('growthBefore'),reviewNowWks:v('growthNow'),
@@ -936,7 +1095,7 @@
     {k:'gov',l:'Governance & AI',m:['board governance','ai risk','strategic initiatives','policy & document']},
     {k:'fin',l:'Financials',m:['financials','enterprise risk','growth engine','insurance']},
     {k:'inv',l:'Inventory',m:['business processes','systems','map applications']},
-    {k:'risk',l:'Risks & projects',m:['risk register','cyber projects','initiatives']},
+    {k:'risk',l:'Risks & projects',m:['risk register','business capability map','crown jewel register','business impact analysis','software bill of materials','risk appetite statements','regulatory register','materiality criteria','benchmark data','cyber projects','initiatives']},
     {k:'tools',l:'Connect tools',m:['connect your tools']}
   ];
   var OB_ACTIVE='org';
@@ -944,6 +1103,26 @@
   function obTabOf(sec){var st=sec.querySelector('.st');var h=(st?st.textContent:'').toLowerCase();
     for(var i=0;i<OB_TABS.length;i++){for(var j=0;j<OB_TABS[i].m.length;j++){if(h.indexOf(OB_TABS[i].m[j])>=0)return OB_TABS[i].k;}}return null;}
   function obPresentTabs(){var present={};obSecs().forEach(function(sec){var k=obTabOf(sec);if(k)present[k]=1;});return OB_TABS.filter(function(t){return present[t.k];});}
+  // A tab counts as COMPLETE when the user has actually put data into it — i.e. any
+  // of its sections' badges has flipped to ".done" (badges go done on input/upload).
+  // The Organization tab is complete once its required name is filled.
+  function obTabDone(k){
+    if(k==='org'){var on=document.getElementById('orgName');if(on&&on.value.trim())return true;}
+    var secs=obSecs().filter(function(s){return obTabOf(s)===k;});
+    return secs.some(function(s){var b=s.querySelector('.badge');return b&&b.classList.contains('done');});
+  }
+  function obCompletion(){var tabs=obPresentTabs();var done=tabs.filter(function(t){return obTabDone(t.k);}).length;return {done:done,total:tabs.length};}
+  // Progress bar reflects real COMPLETION (sections with data), not just which tab is
+  // open — so "how far are you" answers the honest question. Runs on tab change and
+  // live as fields are filled. Marks each done tab with a ✓ in the tab strip too.
+  function obUpdateProgress(){
+    var c=obCompletion();var pct=c.total?Math.round(c.done/c.total*100):0;
+    var pf=document.getElementById('obProgFill'),pl=document.getElementById('obProgLbl'),pw=document.getElementById('obProg');
+    if(pf)pf.style.width=pct+'%';
+    if(pl)pl.textContent=c.done+' of '+c.total+' sections complete · '+pct+'%';
+    if(pw)pw.classList.toggle('done',pct>=100);
+    document.querySelectorAll('.obtab').forEach(function(b){b.classList.toggle('done',obTabDone(b.dataset.k));});
+  }
   function obShow(key){OB_ACTIVE=key;
     obSecs().forEach(function(sec){var tk=obTabOf(sec);var vis=(tk===key);
       if(sec.id==='mapSec')vis=vis&&PROC.length&&APP.length; // map only when built
@@ -953,9 +1132,8 @@
     var tabs=obPresentTabs(),idx=-1;for(var i=0;i<tabs.length;i++){if(tabs[i].k===key)idx=i;}
     var nav=document.getElementById('obNav'),btn=document.getElementById('obNextBtn');
     if(nav&&btn){if(idx>=0&&idx<tabs.length-1){var nx=tabs[idx+1];btn.textContent='Continue to '+nx.l+' →';btn.onclick=function(){obShow(nx.k);};nav.style.display='';}else{nav.style.display='none';}}
-    // Progress bar — how far through the onboarding the user is (by tab position).
-    var pf=document.getElementById('obProgFill'),pl=document.getElementById('obProgLbl'),pw=document.getElementById('obProg');
-    if(pf&&pl&&idx>=0){var total=tabs.length,step=idx+1,pct=Math.round(step/total*100);pf.style.width=pct+'%';pl.textContent='Step '+step+' of '+total+' · '+pct+'%';if(pw)pw.classList.toggle('done',pct>=100);}
+    // Progress bar — how much the user has actually COMPLETED (not just position).
+    obUpdateProgress();
     try{window.scrollTo({top:0});}catch(_){}}
   (function buildObTabs(){
     var host=document.getElementById('obtabs');if(!host)return;
@@ -965,6 +1143,9 @@
       return '<button type="button" class="obtab'+(i===0?' on':'')+'" data-k="'+t.k+'"><span class="obn">'+String(i+1).padStart(2,'0')+'</span>'+t.l+'</button>';
     }).join('');
     host.querySelectorAll('.obtab').forEach(function(b){b.addEventListener('click',function(){obShow(b.dataset.k);});});
+    // Keep the completion bar live as the user fills fields / uploads / picks options —
+    // badges flip on these same events, so we recompute right after they bubble up.
+    ['input','change','click'].forEach(function(ev){document.addEventListener(ev,function(){try{obUpdateProgress();}catch(_){}},false);});
     obShow('org');
   })();
 </script>

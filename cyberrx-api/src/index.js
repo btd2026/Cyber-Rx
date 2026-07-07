@@ -312,6 +312,15 @@ app.use('/api/csf',               [apiGetLimiter, apiPostLimiter], require('./ro
 // Organization Intake — document request checklist + upload/review pipeline
 app.use('/api/intake',            [apiGetLimiter, apiPostLimiter], require('./routes/intake'));
 app.use('/api/crown-jewels',      [apiGetLimiter, apiPostLimiter], require('./routes/crownjewels'));
+// Post-go-live provisioning readiness (real progress; SSE + poll) for the cockpit
+// provisioning screen. No aggressive limiter: the poll fallback ticks ~every 800ms
+// and self-terminates on done, and each read is guarded.
+app.use('/api/provisioning',      require('./routes/provisioning'));
+// Input → widget readiness (C-Suite dashboards): per-role gating + "connecting X
+// unlocks N widgets". Low-sensitivity read; same optional-auth + demo-org posture.
+app.use('/api/readiness',         [apiGetLimiter], require('./routes/readiness'));
+// DELTA Board / CLO / CRO oversight tiles (additive; gated + adapter-backed).
+app.use('/api/dashboards',        [apiGetLimiter], require('./routes/dashboards'));
 app.use('/api/onboarding',        [apiGetLimiter, apiPostLimiter], require('./routes/onboarding'));
 app.use('/api/control-library',   [apiGetLimiter], require('./routes/control-library'));
 
