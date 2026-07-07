@@ -692,9 +692,11 @@ function buildTabs(){
   var wrap=document.getElementById('secWrap'),tabs=document.getElementById('secTabs');if(!wrap||!tabs)return;
   var secs=[].slice.call(wrap.querySelectorAll('.section'));if(secs.length<2){tabs.style.display='none';return;}
   tabs.style.display='';
-  secs.forEach(function(sc,i){sc.style.display=i===0?'':'none';});
-  tabs.innerHTML=secs.map(function(sc,i){var rt=sc.querySelector('.rt'),no=sc.querySelector('.no');return '<button class="sectab'+(i===0?' on':'')+'" data-sec="'+i+'"><span class="stno">'+(no?no.textContent:(i+1))+'</span>'+tabLabel(rt?rt.textContent:('Section '+(i+1)))+'</button>';}).join('');
-  tabs.querySelectorAll('.sectab').forEach(function(b){b.onclick=function(){var idx=+b.dataset.sec;secs.forEach(function(sc,i){sc.style.display=i===idx?'':'none';});tabs.querySelectorAll('.sectab').forEach(function(x){x.classList.toggle('on',x===b);});window.scrollTo({top:0});};});
+  // Restore the tab this seat was left on (default to the first).
+  var st=(typeof loadLastTab==='function'&&typeof CUR!=='undefined')?loadLastTab(CUR):0; if(st<0||st>=secs.length)st=0;
+  secs.forEach(function(sc,i){sc.style.display=i===st?'':'none';});
+  tabs.innerHTML=secs.map(function(sc,i){var rt=sc.querySelector('.rt'),no=sc.querySelector('.no');return '<button class="sectab'+(i===st?' on':'')+'" data-sec="'+i+'"><span class="stno">'+(no?no.textContent:(i+1))+'</span>'+tabLabel(rt?rt.textContent:('Section '+(i+1)))+'</button>';}).join('');
+  tabs.querySelectorAll('.sectab').forEach(function(b){b.onclick=function(){var idx=+b.dataset.sec;secs.forEach(function(sc,i){sc.style.display=i===idx?'':'none';});tabs.querySelectorAll('.sectab').forEach(function(x){x.classList.toggle('on',x===b);});if(typeof saveLastTab==='function'&&typeof CUR!=='undefined')saveLastTab(CUR,idx);window.scrollTo({top:0});};});
 }
 </script>
 <script src="cockpit-seats.js"></script>
@@ -4838,9 +4840,16 @@ function renderChain(){
   host.innerHTML=note+proposed+'<div class="cjgridwrap">'+list.map(cjRow).join('')+'</div>';
 }
 
-function selectSeat(seat){document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===seat);});render(seat);if(!VOICE_MUTED)speakSeat(seat);}
+/* Remember where each org left off — last seat, and the last tab within each seat —
+   so a returning user lands exactly where they stopped. Keyed by org id. */
+function _posOrg(){try{return orgId()||'default';}catch(_){return 'default';}}
+function saveLastSeat(seat){try{localStorage.setItem('cyberrx_last_seat_'+_posOrg(),seat);}catch(_){}}
+function loadLastSeat(){try{return localStorage.getItem('cyberrx_last_seat_'+_posOrg())||'';}catch(_){return '';}}
+function saveLastTab(seat,idx){try{localStorage.setItem('cyberrx_last_tab_'+_posOrg()+'_'+seat,String(idx));}catch(_){}}
+function loadLastTab(seat){try{var v=localStorage.getItem('cyberrx_last_tab_'+_posOrg()+'_'+seat);return v==null?0:(parseInt(v,10)||0);}catch(_){return 0;}}
+function selectSeat(seat){document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===seat);});saveLastSeat(seat);render(seat);if(!VOICE_MUTED)speakSeat(seat);}
 document.querySelectorAll('.seat').forEach(function(b){b.addEventListener('click',function(){selectSeat(b.dataset.seat);});});
-render('ciso');loadLive();loadSignals();
+var _bootSeat=(typeof loadLastSeat==='function'&&loadLastSeat())||'ciso';document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===_bootSeat);});render(_bootSeat);loadLive();loadSignals();
 /* Auto-poll live signals so the "Are we under attack?" tile surfaces a new SIEM
    incident on its own (~every 60s) — no manual refresh needed. The War Room's own
    incidents flip it instantly via triggerIncident/containIncident. */
@@ -5006,7 +5015,10 @@ window.addEventListener('message',function(e){
   var d=e.data;
   if(d&&d.type==='cyberrx-golive'){try{if(d.orgId)localStorage.setItem('cyberrx_org_id',d.orgId);if(d.org)localStorage.setItem('cyberrx_org_name',d.org);if(d.industry)localStorage.setItem('cyberrx_industry',d.industry);}catch(_){}loadLive();}
   else if(d==='cyberrx-os-active'){loadLive();}
-  else if(d&&d.type==='cyberrx-auth'){var map={ceo:'ceo',board:'ceo',cfo:'cfo',cio:'cio',clo:'clo',cro:'cro',ciso:'ciso'};selectSeat(map[d.role]||'ceo');}
+  else if(d&&d.type==='cyberrx-auth'){var map={ceo:'ceo',board:'ceo',cfo:'cfo',cio:'cio',clo:'clo',cro:'cro',ciso:'ciso'};
+    // Land where this org stopped last time; fall back to the seat picked at sign-in.
+    var last=(typeof loadLastSeat==='function')?loadLastSeat():'';selectSeat(last||map[d.role]||'ceo');}
+  else if(d&&d.type==='cyberrx-save-state'){try{if(typeof CUR!=='undefined'){saveLastSeat(CUR);var t=document.querySelector('#secTabs .sectab.on');if(t)saveLastTab(CUR,+t.dataset.sec);}}catch(_){}}
 });
 </script>
 </body>

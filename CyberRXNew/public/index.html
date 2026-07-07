@@ -132,6 +132,7 @@
     <span class="swlbl">View</span>
     <button id="swIntake">Onboarding</button>
     <button id="swOS" class="on">Operating System</button>
+    <button id="swLogoff" title="Save your place and sign out" style="margin-left:14px">⎋ Log off</button>
   </div>
   <iframe class="frame" id="fIntake"></iframe>
   <iframe class="frame" id="fOS" allow="autoplay; speaker-selection"></iframe>
@@ -169,8 +170,21 @@
   function enterPlatform(){
     document.getElementById("login").classList.add("hide");
     document.getElementById("switcher").classList.add("show");
-    show("intake");
+    // Return to the view (Onboarding / Operating System) the user left off on.
+    var v="intake"; try{v=localStorage.getItem("cyberrx_last_view")||"intake";}catch(_){}
+    show(v);
     setTimeout(function(){osMsg({type:"cyberrx-auth",role:pickedRole,name:pickedName});},300);
+  }
+  function logOff(){
+    // Flush the cockpit's current seat+tab, then sign out. Org data and last
+    // position stay saved so the next sign-in lands exactly where they stopped.
+    try{osMsg({type:"cyberrx-save-state"});}catch(_){}
+    document.getElementById("switcher").classList.remove("show");
+    document.getElementById("fIntake").classList.remove("show");
+    document.getElementById("fOS").classList.remove("show");
+    document.getElementById("login").classList.remove("hide");
+    document.getElementById("step2").classList.remove("on");
+    document.getElementById("step1").classList.add("on");
   }
   // ===== One-time, role-aware orientation (manifesto, not a tutorial) =====
   var ORIENT={
@@ -220,6 +234,7 @@
   document.getElementById("verify").addEventListener("click",afterSignIn);
 
   function show(which){
+    try{localStorage.setItem("cyberrx_last_view",which);}catch(_){}
     var i=which==="intake";
     document.getElementById("fIntake").classList.toggle("show",i);
     document.getElementById("fOS").classList.toggle("show",!i);
@@ -229,6 +244,7 @@
   }
   document.getElementById("swIntake").addEventListener("click",function(){show("intake");});
   document.getElementById("swOS").addEventListener("click",function(){show("os");});
+  document.getElementById("swLogoff").addEventListener("click",logOff);
   window.addEventListener("message",function(e){
     if(e.data && e.data.type==="cyberrx-golive"){ try{if(e.data.orgId)localStorage.setItem("cyberrx_org_id",e.data.orgId);if(e.data.org)localStorage.setItem("cyberrx_org_name",e.data.org);if(e.data.industry)localStorage.setItem("cyberrx_industry",e.data.industry);}catch(_){} osMsg({type:"cyberrx-golive",names:e.data.names,industry:e.data.industry,org:e.data.org,orgId:e.data.orgId,benchShare:e.data.benchShare,currency:e.data.currency,profile:e.data.profile,docResults:e.data.docResults}); setTimeout(function(){show("os");},600); }
     else if(e.data==="cyberrx-golive"){ setTimeout(function(){show("os");},600); }
