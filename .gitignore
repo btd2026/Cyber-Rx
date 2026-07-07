@@ -132,3 +132,7 @@ Thumbs.db
 prometheus/data/
 grafana/data/
 *.prom
+
+# Python bytecode cache
+__pycache__/
+*.pyc
