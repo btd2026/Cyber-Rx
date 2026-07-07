@@ -1486,8 +1486,11 @@ var CAP_PROTECTS={edr:'every endpoint & server',mfa:'all identities & access',pa
    concentrate next, and which controls return the most business value per point of
    coverage. Business areas come from the Business Capability Map joined to GRC;
    controls come from the live control ledger (deployment × framework-weighted
-   criticality of what they protect = risk removed). Nothing hardcoded — an
-   unconnected source reads as "connect" rather than inventing a number. */
+   criticality of what they protect = risk removed). Nothing hardcoded. The
+   on-screen copy only introduces the tab and states results — no how-to text and
+   no method/formula on the surface (those live in the drill-down inspector). A
+   section renders only when it has real data; otherwise the tab just introduces
+   itself. */
 function c5Exposure(){
   var host=document.getElementById('c5-exposure');if(!host)return;
   var TARGET=75; // the platform's healthy-coverage bar, consistent with capability scoring
@@ -1506,56 +1509,64 @@ function c5Exposure(){
 
   // ── Verdict + three-number summary ─────────────────────────────────────────
   var haveAreas=areas.length>0,haveCtrls=ctrlConn.length>0;
+  var nm=function(c){return c.name.replace(/ *\(.*\)/,'');};
   var verdict=haveAreas
     ?(weak.length===0
-        ?'Every mapped business area clears the protection bar — hold the line and prove it to the board.'
+        ?'Every business area clears its protection bar — the program is strong across the board.'
         :(well.length>=weak.length
             ?('Most of the business is well protected — '+weak.length+' area'+(weak.length>1?'s':'')+' carr'+(weak.length>1?'y':'ies')+' the residual exposure, and your highest-value controls are the ones to extend to them.')
-            :('More of the business needs strengthening than is fully covered — concentrate on the '+weak.length+' area'+(weak.length>1?'s':'')+' below, led by your highest-value controls.')))
-    :'Map your business capabilities to GRC and this becomes a live read of where the business is — and isn’t — protected.';
+            :('More of the business needs strengthening than is fully covered — the exposure concentrates in a handful of areas, addressable with your highest-value controls.')))
+    :'Where the business is protected, where it isn’t, and which controls buy down the most risk.';
   var intro=haveAreas
-    ?('This is protection seen from the business, not the tool. '+(well.length?('You are strong across '+well.length+' area'+(well.length>1?'s':'')+' — that is your defensible base. '):'')+(topWeak?('The exposure concentrates in '+topWeak.name+', where control coverage sits at '+topWeak.score+(topWeak.measured?'':' (illustrative)')+' against a '+TARGET+' bar'+((topWeak.gaps||0)>0?(' with '+topWeak.gaps+' open control gap'+(topWeak.gaps>1?'s':'')):'')+'. '):'')+(topCtrl?('The fastest way to close it is to extend '+topCtrl.c.name.replace(/ *\(.*\)/,'')+' — the control returning the most business value today ('+usd(topCtrl.usd)+' of loss removed).'):'Connect your controls to rank them by the business value each returns.'))
-    :'Add your Business Capability Map (or connect GRC) and each area is scored on how well it is protected, so the exposure surfaces by business function — not by control acronym.';
+    ?('Protection seen from the business, not the tool. '+(well.length?('You are strong across '+well.length+' area'+(well.length>1?'s':'')+' — the defensible base you take to the board. '):'')+(topWeak?('The exposure concentrates in '+topWeak.name+', where protection is thinnest'+((topWeak.gaps||0)>0?(' — '+topWeak.gaps+' open control gap'+(topWeak.gaps>1?'s':'')):'')+'. '):'')+(topCtrl?('Your best lever is '+nm(topCtrl.c)+', the control returning the most business value today.'):''))
+    :'What this seat sees at a glance: the functions of the business that are well protected, the ones carrying the residual cyber exposure, and the controls delivering the most risk reduction — so the CISO can defend where the program is strong and direct the next dollar where it is not.';
+  var tone=(haveAreas&&weak.length&&well.length<weak.length)?'warn':null;
   var stat=function(lbl,val,col){return '<div class="c5mc"><div class="c5mc-l">'+lbl+'</div><div class="c5mc-v"'+(col?(' style="color:var(--'+col+')"'):'')+'>'+val+'</div></div>';};
 
   // ── Widget rows ────────────────────────────────────────────────────────────
   var areaRow=function(a,mode){var cls=capColor(a.score);
     var sub=(mode==='well')
       ?((a.grc?('GRC '+a.grc+' · '):'')+'no open control gaps'+(a.measured?'':' · illustrative'))
-      :((a.gaps>0?(a.gaps+' open control gap'+(a.gaps>1?'s':'')):'below the '+TARGET+' bar')+(a.exp>0?(' · '+usd(a.exp)+' of exposure carried'):'')+(a.measured?'':' · illustrative'));
+      :((a.gaps>0?(a.gaps+' open control gap'+(a.gaps>1?'s':'')):'below its protection target')+(a.exp>0?(' · '+usd(a.exp)+' of exposure carried'):'')+(a.measured?'':' · illustrative'));
     return '<div class="c5erow"><div style="flex:1;min-width:0"><div class="c5exp">'+a.name+' <span class="c5pill '+(mode==='well'?'g':a.score<50?'r':'a')+'" style="margin-left:4px">'+(mode==='well'?'Protected':(a.score<50?'Priority':'Strengthen'))+'</span></div><div class="c5esub">'+sub+'</div></div>'+
       '<div class="c5etrack"><div style="width:'+a.score+'%;height:100%;background:var(--'+cls+')"></div></div>'+
       '<div class="c5emult" style="color:var(--'+cls+')">'+a.score+'</div></div>';
   };
-  var w1=well.length?well.map(function(a){return areaRow(a,'well');}).join(''):'<div class="c5foot" style="margin-top:0;padding:12px 4px">No business area currently clears the '+TARGET+'-point protection bar — every mapped area is in the strengthening list below.</div>';
-  var w2=weak.length?weak.map(function(a){return areaRow(a,'weak');}).join(''):'<div class="c5foot" style="margin-top:0;padding:12px 4px">No business area falls below the '+TARGET+'-point bar or carries an open control gap — the estate is fully covered.</div>';
-  var w3=haveCtrls?ctrlConn.map(function(o){var c=o.c,pct=maxV>0?Math.round(o.usd/maxV*100):0;if(pct<6&&o.usd>0)pct=6;
-      return '<div class="c5erow"><div style="flex:1;min-width:0"><div class="c5exp">'+c.name.replace(/ *\(.*\)/,'')+' <span class="c5pill b" style="margin-left:4px">'+(o.p+'% deployed')+'</span></div><div class="c5esub">Protects '+(CAP_PROTECTS[c.k]||c.name.toLowerCase())+'</div></div>'+
+  var w1=well.length?well.map(function(a){return areaRow(a,'well');}).join(''):'<div class="c5foot" style="margin-top:0;padding:12px 4px">No area clears its protection target yet — every area is in the list below.</div>';
+  var w2=weak.length?weak.map(function(a){return areaRow(a,'weak');}).join(''):'<div class="c5foot" style="margin-top:0;padding:12px 4px">No area is below its protection target or carrying an open control gap.</div>';
+  var w3=ctrlConn.map(function(o){var c=o.c,pct=maxV>0?Math.round(o.usd/maxV*100):0;if(pct<6&&o.usd>0)pct=6;
+      return '<div class="c5erow"><div style="flex:1;min-width:0"><div class="c5exp">'+nm(c)+' <span class="c5pill b" style="margin-left:4px">'+(o.p+'% deployed')+'</span></div><div class="c5esub">Protects '+(CAP_PROTECTS[c.k]||c.name.toLowerCase())+'</div></div>'+
         '<div class="c5etrack"><div style="width:'+pct+'%;height:100%;background:var(--good)"></div></div>'+
         '<div class="c5emult" style="color:var(--good)">'+usd(o.usd)+'</div></div>';
-    }).join(''):'<div class="c5foot" style="margin-top:0;padding:12px 4px">Connect your security tools (EDR, identity, PAM, vulnerability, SIEM, backup, cloud) and each control is ranked by the business value it returns.</div>';
+    }).join('');
 
-  var connectMsg='<div class="c5foot" style="margin-top:0;padding:12px 4px">Add your Business Capability Map or connect GRC (Archer / ServiceNow GRC / LeanIX) and these two views populate with your own business areas, scored against the '+TARGET+'-point bar.</div>';
-
-  host.innerHTML=c5header()+
-    c5shell('Protection effectiveness · is the business protected where it counts?',verdict,(haveAreas&&weak.length&&well.length<weak.length)?'warn':null,intro)+
+  // Build the surface: intro + three-number summary, then only the sections that
+  // have real data — no how-to text, no method/formula on screen.
+  var body=c5header()+
+    c5shell('Protection effectiveness · is the business protected where it counts?',verdict,tone,intro)+
     '<div class="c5statgrid">'+
       stat('Areas well protected',haveAreas?String(well.length):'—',well.length?'good':null)+
       stat('Areas to strengthen',haveAreas?String(weak.length):'—',weak.length?'warn':null)+
       stat('Controls returning value',haveCtrls?String(ctrlConn.length):'—',haveCtrls?'good':null)+
-    '</div>'+
-    '<div class="c5seclab">Where the business is well protected · GRC coverage at or above the '+TARGET+'-point bar, no open gaps</div>'+
-    '<div>'+(haveAreas?w1:connectMsg)+'</div>'+
-    '<div class="c5seclab" style="margin-top:18px">Where to concentrate next · areas below the bar or carrying open control gaps</div>'+
-    '<div>'+(haveAreas?w2:'')+'</div>'+
-    '<div class="c5seclab" style="margin-top:18px">Which controls return the most business value · risk removed = deployment × criticality of what it protects</div>'+
-    '<div>'+w3+'</div>'+
-    c5bl('Bottom line',
-      (topWeak&&topCtrl)?('Extend '+topCtrl.c.name.replace(/ *\(.*\)/,'')+' to '+topWeak.name+' — your best-value control against your least-protected area.'):(haveAreas?'The business is protected across every mapped area.':'Connect your capability map and controls to make this a live protection read.'),
-      (haveAreas&&weak.length&&well.length<weak.length)?'warn':null,
-      (topWeak&&topCtrl)?('Your exposure concentrates in '+topWeak.name+' ('+topWeak.score+(topWeak.measured?'':' illustrative')+' vs a '+TARGET+' bar). '+topCtrl.c.name.replace(/ *\(.*\)/,'')+' is the highest-value control you run — extending its coverage there removes the most business risk per point of deployment, and it is already funded.'):(haveAreas?'Every mapped business area clears the protection bar. Hold the posture and evidence it — this is the read the board wants to see sustained.':'Once your capability map and controls are connected, this view ranks where to concentrate and which control does it most efficiently.'),
-      (topWeak&&topCtrl)?{mid:topCtrl.c.k==='mfa'?'exp_identity':'exp_total',txt:'Extend '+topCtrl.c.name.replace(/ *\(.*\)/,'')+' — removes '+usd(topCtrl.usd)}:null)+
-    '<div class="c5foot">Business areas from your Capability Map × GRC; control value from the live control ledger. '+(anyDerived?'Scores marked “illustrative” are derived from GRC status until GRC coverage is connected. ':'')+'Every figure traces to its source.</div>';
+    '</div>';
+  if(haveAreas){
+    body+='<div class="c5seclab">Where the business is well protected</div><div>'+w1+'</div>'+
+          '<div class="c5seclab" style="margin-top:18px">Where to concentrate next</div><div>'+w2+'</div>';
+  }
+  if(haveCtrls){
+    body+='<div class="c5seclab" style="margin-top:18px">Controls delivering the most business value</div><div>'+w3+'</div>';
+  }
+  if(haveAreas&&topWeak&&topCtrl){
+    body+=c5bl('Bottom line',
+      'Extend '+nm(topCtrl.c)+' to '+topWeak.name+' — your best-value control against your least-protected area.',
+      tone,
+      'The exposure concentrates in '+topWeak.name+', where protection is thinnest, and '+nm(topCtrl.c)+' is the highest-value control you run. Extending it there removes the most business risk for the least incremental spend — and it is already funded.',
+      {mid:topCtrl.c.k==='mfa'?'exp_identity':'exp_total',txt:'Extend '+nm(topCtrl.c)+' — removes '+usd(topCtrl.usd)});
+  } else if(haveAreas&&weak.length===0){
+    body+=c5bl('Bottom line','The business is protected across every area.',null,'Every area clears its protection bar. Hold the posture and evidence it — this is the read the board wants to see sustained.',null);
+  }
+  if(haveAreas||haveCtrls)body+='<div class="c5foot">Every figure traces to its source'+(anyDerived?'; figures marked “illustrative” are not yet fully evidenced':'')+'.</div>';
+  host.innerHTML=body;
 }
 
 /* ---------- Tab 03 — Control effectiveness ---------- */
