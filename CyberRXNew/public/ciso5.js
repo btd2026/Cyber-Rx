@@ -222,7 +222,7 @@ function c5get(id){
         label:'computed',color:conn?(healthy>=9?'good':healthy>=7?'warn':'crit'):'muted',
         formula:'healthy defenses = count(capabilities with deployment ≥ 75%) ÷ '+total+' capabilities',
         method:'Deployment % per capability comes straight from each connected control tool.',
-        inputs:caps.map(function(o){return {name:o.c.name.replace(/ *\(.*\)/,''),value:o.p!=null?o.p+'%':'not connected',source:o.c.tool+' · '+((typeof CAP_SIGKEY!=='undefined'&&CAP_SIGKEY[o.c.k])||o.c.k)};}),
+        inputs:caps.map(function(o){return {name:o.c.name.replace(/ *\(.*\)/,''),value:o.p!=null?o.p+'%':'not connected',color:capColor(o.p),source:o.c.tool+' · '+((typeof CAP_SIGKEY!=='undefined'&&CAP_SIGKEY[o.c.k])||o.c.k)};}),
         sources:known.map(function(o){return c5capSrc(o.c.k);}),
         note:'How much of your defensive stack is actually healthy and covering the estate — not how many tools you own.',
         connectTool:'your control tools (EDR · identity · SIEM · CNAPP)'});}
@@ -236,7 +236,7 @@ function c5get(id){
         label:(V.p&&V.p.any_live)?'live':'modeled',color:conn?(n>0?'warn':'good'):'muted',
         formula:'flagged = count(monitored vendors with security rating < 75), worst-first',
         method:'Ratings pulled from your third-party monitoring service — the same score on their portal.',
-        inputs:((V.p&&V.p.vendors)?V.p.vendors.slice(0,6):[]).map(function(v){return {name:v.name,value:(v.score!=null?v.score+'/100':'—'),source:(V.vs?V.vs.vendor:'monitoring service')+' · overall_score'};}),
+        inputs:((V.p&&V.p.vendors)?V.p.vendors.slice(0,6):[]).map(function(v){return {name:v.name,value:(v.score!=null?v.score+'/100':'—'),color:(v.color||capColor(v.score)),source:(V.vs?V.vs.vendor:'monitoring service')+' · overall_score'};}),
         sources:[{tool:V.vs?V.vs.vendor:'SecurityScorecard / BitSight',connector:'vendor_monitor',field:'overall_score',lastRefresh:c5ago()}],
         note:worst?('Your worst-rated vendor is '+worst.name+' at '+worst.score+'/100 — exposure you carry through someone else’s security.'):'Exposure you carry through your suppliers’ security.',
         connectTool:'a monitoring service (SecurityScorecard · BitSight · UpGuard)'});}
@@ -986,7 +986,7 @@ function c5driverMetric(id){
   var M=c5expModel();var d=null;M.drivers.forEach(function(x){if(x.id===id)d=x;});
   var conn=!!(d&&d.connected&&d.usd>0);var tr=c5trendPill(d);
   var caps=(d?d.caps:[]).filter(function(k){return k!=='__vendor';});
-  var inputs=caps.map(function(k){var c=CAP_BY_KEY[k];var p=capDeploy(c);return {name:c.name.replace(/ *\(.*\)/,''),value:p!=null?p+'% deployed':'not connected',source:c.tool+' · '+((typeof CAP_SIGKEY!=='undefined'&&CAP_SIGKEY[k])||k)};});
+  var inputs=caps.map(function(k){var c=CAP_BY_KEY[k];var p=capDeploy(c);return {name:c.name.replace(/ *\(.*\)/,''),value:p!=null?p+'% deployed':'not connected',color:capColor(p),source:c.tool+' · '+((typeof CAP_SIGKEY!=='undefined'&&CAP_SIGKEY[k])||k)};});
   if(d&&d.caps[0]==='__vendor'){var V=c5vendors();inputs=[{name:'Worst-rated vendor',value:V.worst?(V.worst.name+' · '+V.worst.score+'/100'):'—',source:(V.vs?V.vs.vendor:'monitoring service')+' · overall_score'}];}
   return c5obj({id:id,name:d?d.name:id,connected:conn,displayValue:conn?usd(d.usd):'—',label:'modeled',color:'ink',trend:tr,threatens:d?d.threatens:'',largest:!!(d&&d.largest),
     formula:'driver exposure = (control-gap severity × framework weight) ÷ Σ, scaled to modeled expected loss (ALE)',
@@ -1002,7 +1002,7 @@ function c5ctlMetric(id){
   return c5obj({id:id,name:def.label,connected:conn,displayValue:conn?(usd(removed)+' removed'):'—',label:'modeled',color:'good',removed:removed,
     formula:'risk removed = this control’s framework-weighted share of total control-removed risk × its deployment',
     method:'Return per dollar (×) needs per-control spend attribution, which isn’t connected — shown as not connected until you attribute spend by control.',
-    inputs:def.caps.map(function(k){var c=CAP_BY_KEY[k];var p=capDeploy(c);return {name:c.name.replace(/ *\(.*\)/,''),value:(p!=null?p+'% deployed':'not connected')+' · '+usd(rr.byCap[k]||0)+' removed',source:c.tool+' · '+((typeof CAP_SIGKEY!=='undefined'&&CAP_SIGKEY[k])||k)};}),
+    inputs:def.caps.map(function(k){var c=CAP_BY_KEY[k];var p=capDeploy(c);return {name:c.name.replace(/ *\(.*\)/,''),value:(p!=null?p+'% deployed':'not connected')+' · '+usd(rr.byCap[k]||0)+' removed',color:capColor(p),source:c.tool+' · '+((typeof CAP_SIGKEY!=='undefined'&&CAP_SIGKEY[k])||k)};}),
     sources:def.caps.map(function(k){return c5capSrc(k);}),
     note:'What this control removes in dollars. Attribute spend by control to light up the return multiple (×).',connectTool:'per-control security spend'});
 }
@@ -1011,7 +1011,7 @@ function c5tacticMetric(t){
   var state=cov==null?'limited':cov>=80?'covered':cov>=50?'partial':'limited';var color=cov==null?'muted':cov>=80?'good':cov>=50?'warn':'crit';
   return c5obj({id:'tac_'+t,name:t,connected:conn,displayValue:conn?(cov+'% defended'):'not connected',label:'computed',color:color,state:state,
     formula:'tactic coverage = mean deployment of the controls mapped to this MITRE ATT&CK tactic',
-    inputs:caps.map(function(k){var c=CAP_BY_KEY[k];var p=capDeploy(c);return {name:c?c.name.replace(/ *\(.*\)/,''):k,value:p!=null?p+'%':'not connected',source:c?c.tool:k};}),
+    inputs:caps.map(function(k){var c=CAP_BY_KEY[k];var p=capDeploy(c);return {name:c?c.name.replace(/ *\(.*\)/,''):k,value:p!=null?p+'%':'not connected',color:capColor(p),source:c?c.tool:k};}),
     sources:caps.map(function(k){return c5capSrc(k);}),
     note:'Your detection & prevention coverage for the '+t+' tactic, mapped from MITRE ATT&CK to your controls.',connectTool:'the controls for this tactic'});
 }
@@ -1043,7 +1043,13 @@ function c5InspectObj(m){
   } else {
     h+='<div class="ev-sec">How it’s computed</div><div class="formula">'+(m.formula||'—')+'</div>';
     if(m.method)h+='<div class="drill-p" style="color:var(--muted)">'+m.method+'</div>';
-    if(m.inputs&&m.inputs.length)h+='<div class="ev-sec">Inputs</div><table class="itbl"><thead><tr><th>Input</th><th>Value</th><th>Source</th></tr></thead><tbody>'+m.inputs.map(function(i){return '<tr><td>'+i.name+'</td><td class="v">'+i.value+'</td><td class="src">'+i.source+'</td></tr>';}).join('')+'</tbody></table>';
+    if(m.inputs&&m.inputs.length)h+='<div class="ev-sec">Inputs</div><table class="itbl"><thead><tr><th>Input</th><th>Value</th><th>Source</th></tr></thead><tbody>'+m.inputs.map(function(i){
+      // When an input carries a status color, show a square that matches the tile's
+      // small boxes exactly (same c5sqClass mapping, same source data + order) so the
+      // right-panel row and its box read as the same colour.
+      var dot=i.color?('<span class="c5sq '+c5sqClass(i.color)+'" style="display:inline-block;width:9px;height:9px;margin-right:7px;vertical-align:middle"></span>'):'';
+      return '<tr><td>'+dot+i.name+'</td><td class="v">'+i.value+'</td><td class="src">'+i.source+'</td></tr>';
+    }).join('')+'</tbody></table>';
     if(m.sources&&m.sources.length){h+='<div class="ev-sec">Sources</div>'+m.sources.map(function(s){return '<div class="src-row"><span class="sd"></span><b>'+s.tool+'</b> · connector <code>'+s.connector+'</code> · field <code>'+s.field+'</code> · refreshed '+s.lastRefresh+'</div>';}).join('');}
     h+='<div class="ev-sec">Why it matters</div><div class="conf">'+(m.note||'')+'</div>';
     h+='<div class="c5foot">as of '+c5ago()+' · label: '+m.label+'</div>';
