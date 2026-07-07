@@ -1568,7 +1568,7 @@ function c5Exposure(){
     :'Where the business is protected, where it isn’t, and which controls buy down the most risk.';
   var intro=haveAreas
     ?('Protection seen from the business, not the tool. '+(well.length?('You are strong across '+well.length+' area'+(well.length>1?'s':'')+' — the defensible base you take to the board. '):'')+(topWeak?('The exposure concentrates in '+topWeak.name+', where protection is thinnest'+((topWeak.gaps||0)>0?(' — '+topWeak.gaps+' open control gap'+(topWeak.gaps>1?'s':'')):'')+'. '):'')+(topCtrl?('Your best lever is '+nm(topCtrl.c)+', the control returning the most business value today.'):''))
-    :'What this seat sees at a glance: the functions of the business that are well protected, the ones carrying the residual cyber exposure, and the controls delivering the most risk reduction — so the CISO can defend where the program is strong and direct the next dollar where it is not.';
+    :'The CISO’s read on where to hold the line, and where the next dollar of protection should go.';
   var tone=(haveAreas&&weak.length&&well.length<weak.length)?'warn':null;
   // Summary as icon cards (matching the Cyber Operations tab) — icon · label · count · one-line read.
   var scard=function(ic,lbl,val,sub,col){col=col||'muted';return '<div class="c5opc" style="cursor:default"><div class="c5opc-h"><span class="c5opc-ic" style="color:var(--'+col+')">'+c5icon(ic)+'</span><span class="c5opc-t">'+lbl+'</span></div><div class="c5opc-v" style="color:var(--'+(col==='muted'?'ink':col)+')">'+val+'</div><div class="c5opc-s">'+sub+'</div></div>';};
