@@ -822,12 +822,28 @@ function c5get(id){
         sources:[{tool:'BC/DR records',connector:'bcdr',field:'recovery',lastRefresh:c5ago()}],
         note:'That recovery is tested and within targets — resilience the board can rely on.',connectTool:'your BC/DR + backup platform'});}
     /* ---- CPO (Chief Product Officer) metrics; identity framed as a product opportunity ---- */
-    case 'cp_product_security':{var oi=sig('open_incidents');var dep=sig('dependabot_critical');var css=sig('code_scanning_open');var conn=(oi!=null||dep!=null||css!=null);var strong=(oi==null||oi===0);
-      return c5obj({id:id,name:'Product security',connected:conn,displayValue:conn?(strong?'Strong':'Watch'):'—',label:'computed',color:conn?(strong?'good':'warn'):'muted',
-        formula:'product security = secure across the product surface with no active incident on a shipped feature',
-        inputs:[{name:'Active incidents',value:oi!=null?(oi>0?oi:'none'):'—',source:'SIEM · open_incidents'},{name:'Open critical findings',value:dep!=null?dep:'—',source:'SCA · dependabot_critical'}],
+    case 'cp_product_security':{var oi=sig('open_incidents'),dep=sig('dependabot_critical'),css=sig('code_scanning_open');
+      // Evaluate the product surface across every dimension it lists — not just
+      // incidents. A dimension "flags" when it has open items; the verdict is the
+      // worst dimension, so a clean-incident product with open critical findings
+      // is Watch, never Strong.
+      var dims=[
+        {name:'Active incidents on a shipped feature',v:oi,ok:(oi==null||oi<=0),val:(oi!=null?(oi>0?(oi+' active'):'none'):'not connected'),source:'SIEM · open_incidents'},
+        {name:'Critical dependency findings (SCA)',v:dep,ok:(dep==null||dep<=0),val:(dep!=null?(dep>0?(dep+' open'):'none'):'not connected'),source:'Dependabot / Snyk · dependabot_critical'},
+        {name:'Open code-scanning findings (SAST)',v:css,ok:(css==null||css<=0),val:(css!=null?(css>0?(css+' open'):'none'):'not connected'),source:'code scanning · code_scanning_open'}
+      ];
+      var evaluated=dims.filter(function(d){return d.v!=null;});var conn=evaluated.length>0;
+      var incidentActive=(oi!=null&&oi>0);var failing=evaluated.filter(function(d){return !d.ok;}).length;
+      var verdict=incidentActive?'At risk':(failing===0?'Strong':(failing>=2?'Weak':'Watch'));
+      var vcolor=incidentActive?'crit':(failing===0?'good':(failing>=2?'crit':'warn'));
+      var pinputs=dims.map(function(d){return {name:d.name,value:d.val,color:(d.v==null?'muted':d.ok?'good':'warn'),source:d.source};});
+      pinputs.push({name:'= Verdict',value:verdict+'  ('+(evaluated.length-failing)+' of '+evaluated.length+' dimensions clean'+(incidentActive?' · incident active':'')+')',source:'worst evaluated dimension'});
+      return c5obj({id:id,name:'Product security',connected:conn,displayValue:conn?verdict:'—',label:'computed',color:conn?vcolor:'muted',
+        formula:'product security = the worst of the evaluated dimensions — active incidents, critical dependency findings (SCA), and open code-scanning findings (SAST) across the product surface',
+        method:'Each dimension is evaluated below. Strong = every evaluated dimension is clean; Watch = one has open findings; Weak = two or more; At risk = an incident is active on a shipped feature. This is the whole product surface — connect a per-application inventory to break it down product by product.',
+        inputs:pinputs,
         sources:[{tool:'SDLC gates + product scans',connector:'appsec',field:'product_security',lastRefresh:c5ago()}],
-        note:'The one-glance read on whether the product ships secure — across features and dependencies.',connectTool:'your SDLC gates + product scanners'});}
+        note:'The one-glance read on whether the product ships secure — across features, dependencies and code.',connectTool:'your SDLC gates + product scanners (+ a per-app inventory to split by product)'});}
     case 'cp_sbd_coverage':{var css2=sig('code_scanning_open'),dep2=sig('dependabot_critical'),mg=sig('changes_merged_wk');
       // The full target set of 5 secure-SDLC practices. Each counts only when its
       // telemetry is present; the two without a live signal yet are shown too, so
@@ -1698,7 +1714,6 @@ function c5coResilience(){
     '<div class="c5cards">'+c5card('coo_resilience')+c5card('coo_processes')+c5card('coo_recovery_ready')+'</div>'+
     '<div class="c5tiles">'+
       c5tile('coo_bc','g','Ready','Recovery plans tested this quarter')+
-      c5tile('coo_processes',atPill,(P.atRisk>0?(P.atRisk+' at risk'):'All protected'),(P.atRisk>0?'One carries a cyber exposure':'All processes continuity-safe'))+
       c5tile('thirdparty_risk','a','Flagged',(tp.connected?('Rating to watch · touches operations'):'add your tier-1/2 vendors'))+
       c5tile('coo_rto','g','Recovery','Time to recover the slowest critical service')+
     '</div>'+
@@ -1748,8 +1763,6 @@ function c5coRecovery(){
     '<div class="c5cards">'+c5card('coo_rto')+c5card('coo_rpo')+c5card('coo_last_test')+'</div>'+
     '<div class="c5tiles">'+
       c5tile('coo_backups','g','Verified','Restore-tested this quarter')+
-      c5tile('coo_rto','g','Recovery time','Slowest critical service, vs target')+
-      c5tile('coo_rpo','g','Data-loss window','Backup cadence, vs target')+
       c5tile('coo_identity_recovery',(ir.connected&&ir.color==='warn')?'a':'g',(ir.connected&&ir.color==='warn')?'Gap':'Ready','Access recovery — often the weak link')+
     '</div>'+
     c5bl('Bottom line','Close the recovery gap in your critical path.',null,(ec.connected?('Recovery meets targets where measured, but slow identity restoration could delay a customer-platform recovery. The identity fix improves recovery too — resilient access means a faster restore.'):'Connect your identity tools and the recovery weak link — access restoration — surfaces here, tied to the funded identity fix.'),{mid:'exp_identity',txt:'Fund the identity fix — faster recovery'})+
@@ -1831,10 +1844,7 @@ function c5clPrivacy(){
     c5shell('Privacy & DSAR · are we handling requests on time?','Privacy operations are running — access hygiene is the soft spot.',null,'Your privacy posture: data-subject requests against SLA, records of processing, consent. The one soft spot is access hygiene — over-permissioned or stale identities near personal data, part of the identity gap. Tap any figure for its source.')+
     '<div class="c5cards">'+c5card('cl_dsar_sla')+c5card('cl_ropa')+c5card('cl_access_pd')+'</div>'+
     '<div class="c5tiles">'+
-      c5tile('cl_dsar_sla','g','On SLA','Data-subject requests handled within the statutory clock')+
-      c5tile('cl_ropa','n','Connect','Records of processing — connect your RoPA system')+
       c5tile('cl_litigation','g','Holds','Active cyber-related litigation holds')+
-      c5tile('cl_access_pd',(ap.connected&&ap.color==='warn')?'a':'g',(ap.connected&&ap.color==='warn')?'Watch':'Clean','The identity gap touches access to personal data')+
     '</div>'+
     c5bl('Bottom line','Tighten access to personal data.',null,(ec.connected?('Over-permissioned or stale identities near personal data are a privacy risk and part of the identity gap. Closing it ('+ec.displayValue+') enforces least-privilege access — lower privacy exposure and cleaner audits.'):'Connect your identity tools and the access-hygiene soft spot near personal data surfaces here, tied to the funded identity fix.'),{mid:'exp_identity',txt:'Enforce least-privilege — fund the fix'})+
     '<div class="c5foot">Privacy operations from your DSAR and records-of-processing systems.</div>';
@@ -1866,7 +1876,6 @@ function c5ctTech(){
     '<div class="c5cards">'+c5card('ct_platform_health')+c5card('ct_critical_vulns')+c5card('ct_modernization')+'</div>'+
     '<div class="c5tiles">'+
       c5tile('ct_appsec','g','Healthy','In the SDLC for new builds')+
-      c5tile('ct_critical_vulns','a','Watch',(cv.connected?'known-exploitable · being patched':'connect your VM scanner'))+
       c5tile('exp_identity','a','Gap','The customer-platform exposure')+
       c5tile('ct_techdebt','b','Managed',(td.connected?'legacy mapped · modernization roadmap in place':'map your EOL systems'))+
     '</div>'+
@@ -1895,8 +1904,6 @@ function c5ctAi(){
     c5shell('AI & innovation risk · are we shipping safely?','You’re shipping AI under governance — one access watch item.',null,'Your AI posture: models inventoried, guardrails in place, shipping under governance. One watch item — AI features that touch customer data rely on the same identity controls that carry the gap. Tap any figure for its source.')+
     '<div class="c5cards">'+c5card('ct_ai_inventory')+c5card('ct_ai_governed')+c5card('ct_ai_highrisk')+'</div>'+
     '<div class="c5tiles">'+
-      c5tile('ct_ai_inventory','g','Tracked','Systems in the model registry')+
-      c5tile('ct_ai_governed','g','Governed','Framework + acceptable-use policy')+
       c5tile('ct_ai_dataaccess',(da.connected&&da.color==='warn')?'a':'g',(da.connected&&da.color==='warn')?'Watch':'Controlled','Relies on the same identity controls as the gap')+
       c5tile('thirdparty_risk','b','Monitored','Vendor models · terms and data flows reviewed')+
     '</div>'+
@@ -2016,8 +2023,6 @@ function c5bdHealth(){
     '<div class="c5cards">'+c5card('ceo_health')+c5card('bd_material')+c5card('direction')+'</div>'+
     '<div class="c5tiles">'+
       c5tile('ceo_objectives','g','Resilient',(O.protected+' of '+O.total+' objectives protected · one carries a funded action'))+
-      c5tile('bd_material','g','Assessed','Materiality reviewed this quarter (Item 106)')+
-      c5tile('direction','g','Improving','Cyber residual risk quarter over quarter')+
       c5tile('exp_identity','a','Action underway',(ec.connected?('Identity gap · '+ec.displayValue+' · management action underway'):'top exposure · management action underway'))+
     '</div>'+
     c5bl('For the board','Note and support management’s top action.',null,(ec.connected?('The largest exposure — an identity gap, '+ec.displayValue+' — has a funded fix underway. It is not currently material, and closing it improves resilience. Nothing requires board action beyond awareness.'):'The largest exposure has a funded action underway. It is not currently material. Nothing requires board action beyond awareness.'),{act:'openBoardPack()',txt:'Open the board pack'})+
@@ -2067,8 +2072,6 @@ function c5bdInvestment(){
     c5shell('Investment & resilience · are we investing wisely?','The program pays for itself — one funded investment sustains it.',null,'Whether cyber investment is proportionate and effective. The program returns risk removed per dollar, spend is benchmarked against peers, and one funded investment — identity — sustains the improvement. Tap any figure for the basis.')+
     '<div class="c5cards">'+c5card('eff_return')+c5card('bd_spend_peers')+c5card('bd_funded')+'</div>'+
     '<div class="c5tiles">'+
-      c5tile('eff_return','g','Strong','Risk removed per dollar of cyber spend')+
-      c5tile('bd_spend_peers','n','Benchmark','Peer-benchmarked · connect the peer spend benchmark')+
       c5tile('bd_resilience_inv','g','On track','Recovery tested · within RTO/RPO targets')+
       c5tile('exp_identity','b','Funded',(ec.connected?('Identity fix · sustains the trend · '+ec.displayValue+' removed'):'the funded investment that sustains the trend'))+
     '</div>'+
@@ -2100,8 +2103,6 @@ function c5cpSecurity(){
     c5shell('Product security posture · is the product secure by design?','The product is secure by design — one part of the platform carries the risk.',null,'Security across your product surface. New features ship secure-by-design and most of the platform is healthy; the one real exposure is the customer platform’s identity/access model. Tap any figure for its basis and source.')+
     '<div class="c5cards">'+c5card('cp_product_security')+c5card('cp_sbd_coverage')+c5card('cp_open_risks')+'</div>'+
     '<div class="c5tiles">'+
-      c5tile('cp_sbd_coverage','g','Embedded','Security gates on new features')+
-      c5tile('cp_open_risks','g','Low','In shipped features · none critical open')+
       c5tile('exp_identity','a','Gap','The customer-platform exposure')+
       c5tile('ct_advisories','b','Watch',(adv.connected?'Auth-library advisory · a dependency to patch':'connect your SCA scanner'))+
     '</div>'+
@@ -2116,10 +2117,8 @@ function c5cpTrust(){
     c5shell('Customer trust in the product · are users safe and confident?','Users trust the product — the access experience is the one soft spot.',null,'How secure and confident your users are. No customer-impacting incidents, strong security-feature adoption, trust signals steady. The one soft spot is the identity/access experience — friction and risk in the same place. Tap any figure for its source.')+
     '<div class="c5cards">'+c5card('ceo_cust_incidents')+c5card('cp_mfa')+c5card('ceo_trust_signal')+'</div>'+
     '<div class="c5tiles">'+
-      c5tile('cp_mfa','g','Adopted','Strong security-feature uptake')+
       c5tile('ceo_customer_data','g','Protected','No customer data at risk this quarter')+
       c5tile('exp_identity','a','Watch','The identity gap shows up here — friction + risk')+
-      c5tile('ceo_trust_signal','g','Steady','No security-driven churn signals')+
     '</div>'+
     c5bl('Bottom line','Turn the access pain point into a trust win.',null,(ec.connected?('The identity gap is both a security risk and a source of user friction. Fixing it ('+ec.displayValue+') removes the exposure and smooths the access experience — safer and better for customers at once.'):'Connect your controls and the access pain point — both risk and friction — surfaces here, with the fix that improves both.'),{mid:'exp_identity',txt:'Fund the identity fix — improves trust'})+
     '<div class="c5foot">Trust and adoption from your product analytics and incident records.</div>';
@@ -2132,9 +2131,6 @@ function c5cpVelocity(){
     c5shell('Ship velocity vs. security · is security a tax or an enabler?','Security isn’t slowing you down — it’s clearing your path.',null,'Whether security helps or hinders delivery. The one recurring blocker is — again — the identity/access model; tech debt is roadmapped. Gate pass-rate and cycle-time light up when your CI/CD security-gate records connect. Tap any figure for its basis.')+
     '<div class="c5cards">'+c5card('cp_pass_rate')+c5card('cp_cycle_time')+c5card('cp_blocker')+'</div>'+
     '<div class="c5tiles">'+
-      c5tile('cp_pass_rate','n','Connect CI','Security-gate first-time pass rate')+
-      c5tile('cp_cycle_time','n','Connect CI','Cycle time added by security gates')+
-      c5tile('cp_blocker','a','Watch','The one thing that keeps coming back')+
       c5tile('ct_techdebt','b','Managed','Legacy access debt mapped · roadmapped')+
     '</div>'+
     c5bl('Bottom line','Remove the one blocker that keeps recurring.',null,(ec.connected?('The identity/access model is the recurring blocker in your release pipeline. Fixing it once ('+ec.displayValue+') removes friction from future features — security stops being a repeat tax on velocity.'):'Connect your controls and the recurring release blocker — the identity/access model — surfaces here, fixable once.'),{mid:'exp_identity',txt:'Fund the identity fix — unblocks delivery'})+
