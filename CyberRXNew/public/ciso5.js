@@ -222,7 +222,7 @@ function c5get(id){
         label:'computed',color:conn?(healthy>=9?'good':healthy>=7?'warn':'crit'):'muted',
         formula:'healthy defenses = count(capabilities with deployment ≥ 75%) ÷ '+total+' capabilities',
         method:'Deployment % per capability comes straight from each connected control tool.',
-        inputs:caps.map(function(o){return {name:o.c.name.replace(/ *\(.*\)/,''),value:o.p!=null?o.p+'%':'not connected',color:capColor(o.p),source:o.c.tool+' · '+((typeof CAP_SIGKEY!=='undefined'&&CAP_SIGKEY[o.c.k])||o.c.k)};}),
+        inputs:caps.map(function(o){return {name:o.c.name.replace(/ *\(.*\)/,''),value:(o.p!=null?(o.p+'% '+(o.p>=75?'✓ healthy':'· below 75%')):'not connected'),color:capColor(o.p),source:o.c.tool+' · '+((typeof CAP_SIGKEY!=='undefined'&&CAP_SIGKEY[o.c.k])||o.c.k)};}).concat([{name:'= Healthy defenses',value:healthy+' of '+total+' at ≥ 75% deployment',source:'count(≥75%) ÷ '+total}]),
         sources:known.map(function(o){return c5capSrc(o.c.k);}),
         note:'How much of your defensive stack is actually healthy and covering the estate — not how many tools you own.',
         connectTool:'your control tools (EDR · identity · SIEM · CNAPP)'});}
@@ -260,7 +260,7 @@ function c5get(id){
     case 'exp_conc':{var M2=c5expModel();var conn=M2.total>0;var top2=M2.drivers.slice(0,2).reduce(function(s,x){return s+x.usd;},0);var pc=M2.total>0?Math.round(top2/M2.total*100):0;
       return c5obj({id:id,name:'Concentrated in top 2',connected:conn,displayValue:conn?pc+'%':'—',label:'computed',color:conn?(pc>=60?'warn':'good'):'muted',
         formula:'concentration = (exposure of the top 2 drivers) ÷ total exposure',
-        inputs:M2.drivers.slice(0,2).map(function(x){return {name:x.name,value:usd(x.usd),source:'driver exposure'};}).concat([{name:'Total exposure',value:usd(M2.total),source:'exp_total'}]),
+        inputs:M2.drivers.slice(0,2).map(function(x){return {name:x.name,value:usd(x.usd),source:'driver exposure'};}).concat([{name:'Top 2 combined',value:usd(top2),source:'sum of the two above'},{name:'Total exposure',value:usd(M2.total),source:'exp_total'},{name:'= Concentration',value:usd(top2)+' ÷ '+usd(M2.total)+' = '+pc+'%',source:'top-2 ÷ total'}]),
         sources:[{tool:'Nerion risk model',connector:'nerion',field:'ale_decomposition',lastRefresh:c5ago()}],
         note:'How concentrated your risk is — a few drivers you can act on, vs a diffuse problem.',connectTool:'your risk register + financials'});}
     case 'eff_removed':{var live=(typeof ROI_STATE!=='undefined'&&ROI_STATE&&ROI_STATE.riskRemoved>0);var rr=live?ROI_STATE.riskRemoved:((typeof controlsEffUsd==='function')?controlsEffUsd():0);
@@ -312,9 +312,14 @@ function c5get(id){
         note:live?'Your live opted-in cohort — anonymized and suppressed below a minimum cohort size.':'A published industry baseline. Opt in to compare against a live cohort of your actual same-size peers.',connectTool:'the live peer cohort (opt in)'});}
     case 'peer_position':{var ov2=c5Overall();var pd2=c5peer();var opt2=c5peerOptin();var live2=!!(opt2&&pd2&&pd2.sufficient&&pd2.overall_values&&ov2!=null);
       var pctile=live2?((typeof peerPercentileOf==='function')?peerPercentileOf(ov2,pd2.overall_values):null):(ov2!=null?c5refPercentile(ov2):null);
+      var zsc=(!live2&&ov2!=null)?((ov2-C5_REF_OVERALL)/C5_REF_SD):null;
+      var pinputs=live2
+        ?[{name:'Your CMMI',value:ov2!=null?Number(ov2).toFixed(1):'—',source:'peer_maturity'},{name:'Live cohort size',value:(pd2&&pd2.n)||0,source:'peer cohort'},{name:'= Position',value:pctile!=null?(pctile+'th percentile in cohort'):'—',source:'rank ÷ cohort size'}]
+        :[{name:'Your CMMI',value:ov2!=null?Number(ov2).toFixed(1):'—',source:'peer_maturity'},{name:'Baseline median (μ)',value:C5_REF_OVERALL.toFixed(2),source:'published enterprise benchmark'},{name:'Baseline spread (σ)',value:'±'+C5_REF_SD,source:'published enterprise benchmark'},{name:'z-score',value:zsc!=null?(zsc.toFixed(2)+'  ( ('+Number(ov2).toFixed(1)+' − '+C5_REF_OVERALL.toFixed(2)+') ÷ '+C5_REF_SD+' )'):'—',source:'computed'},{name:'= Percentile',value:pctile!=null?(pctile+'th (standard-normal CDF of z)'):'—',source:'normal distribution'}];
       return c5obj({id:id,name:'Your position',connected:pctile!=null,displayValue:(pctile!=null)?(pctile>=50?('Top '+(100-pctile)+'%'):('Bottom '+pctile+'%')):'—',label:live2?'computed':'modeled',color:(pctile!=null)?(pctile>=50?'good':'warn'):'muted',
-        formula:live2?'position = your percentile rank within your live cohort by overall CMMI':'position = your overall CMMI ranked against the published industry-baseline distribution',
-        inputs:[{name:'Your CMMI',value:ov2!=null?Number(ov2).toFixed(1):'—',source:'peer_maturity'},live2?{name:'Cohort',value:(pd2&&pd2.n)||0,source:'DTNKSHIELD cohort'}:{name:'Baseline median · spread',value:C5_REF_OVERALL.toFixed(1)+' · ±'+C5_REF_SD,source:'published enterprise benchmark'}],
+        formula:live2?'position = your percentile rank within your live cohort by overall CMMI':'position = the standard-normal percentile of your CMMI vs the published baseline (μ='+C5_REF_OVERALL.toFixed(2)+', σ='+C5_REF_SD+')',
+        method:live2?'Your rank within the opted-in cohort of same-size peers.':'z = (your CMMI − baseline median) ÷ baseline spread; the percentile is the standard-normal CDF of that z. "Top X%" = 100 − percentile. Follow the rows below to reconstruct it exactly.',
+        inputs:pinputs,
         sources:[live2?{tool:'DTNKSHIELD peer cohort',connector:'peer',field:'overall_values',lastRefresh:c5ago()}:{tool:'Published industry benchmark',connector:'reference',field:'csf_cmmi_distribution',lastRefresh:c5ago()}],
         note:'Where you stand against peers your size — top-third is the target.'+(live2?'':' Shown against the published baseline; opt in for your live cohort.'),connectTool:'the live peer cohort (opt in)'});}
     /* ---- CFO metrics (same engine, financial lens; shared objects reused where they exist) ---- */
@@ -408,7 +413,7 @@ function c5get(id){
       return c5obj({id:id,name:'Objectives protected',connected:true,displayValue:O.protected+' of '+O.total,label:'computed',color:O.atRisk>0?'warn':'good',
         formula:'objectives protected = total strategic objectives − those carrying a material cyber exposure',
         method:'An objective is flagged at-risk when a material exposure driver maps to it (e.g. the identity gap → the customer platform).',
-        inputs:O.objs.map(function(o){return {name:o.name,value:o.status,source:o.map?('exposure driver: '+o.map):'no material driver'};}),
+        inputs:O.objs.map(function(o){return {name:o.name,value:o.status,color:(o.status==='At risk'?'warn':o.status==='Watch'?'blue':'good'),source:o.map?('exposure driver: '+o.map):'no material driver'};}).concat([{name:'= Protected',value:O.protected+' of '+O.total+' cyber-safe ('+O.atRisk+' at risk)',source:'total − at-risk'}]),
         sources:[{tool:O.fromInput?'Onboarding · strategy':'Sector default (labeled)',connector:'strategy',field:'objectives',lastRefresh:c5ago()}],
         note:'Cyber mapped to the strategy — how many objectives are cyber-safe, and which one needs attention.',connectTool:'your strategic objectives (onboarding)'});}
     case 'ceo_cust_incidents':{var oi3=sig('open_incidents');var conn=oi3!=null;
@@ -457,7 +462,7 @@ function c5get(id){
       return c5obj({id:id,name:'Families assured',connected:conn,displayValue:conn?(A.assured+' of '+A.fams.length):'—',label:'computed',color:conn?(A.gaps>0?'warn':'good'):'muted',
         formula:'families assured = control families evidenced at or above the assurance threshold by tests + telemetry',
         method:'Assurance is evidence-based — deployment telemetry and last-test signals, never a self-attested flag.',
-        inputs:A.fams.map(function(f){return {name:f.l,value:f.status+(f.deploy!=null?(' · '+f.deploy+'% deployed'):''),source:f.evidence};}),
+        inputs:A.fams.map(function(f){return {name:f.l,value:f.status+(f.deploy!=null?(' · '+f.deploy+'% deployed'):''),color:(f.status==='Assured'?'good':f.status==='Gap'?'crit':f.connected?'warn':'muted'),source:f.evidence};}).concat([{name:'= Assured',value:A.assured+' of '+A.fams.length+' at/above the assurance threshold ('+A.gaps+' with gaps)',source:'count(assured) ÷ total'}]),
         sources:[{tool:'Control tools + GRC',connector:'assurance',field:'test_evidence',lastRefresh:c5ago()}],
         note:'How many control families are actually assured by evidence — not how many are claimed.',connectTool:'your control tools + GRC test evidence'});}
     case 'cr_gaps':{var A2=c5Assurance();var conn=A2.fams.some(function(f){return f.connected;});
@@ -469,7 +474,7 @@ function c5get(id){
     case 'cr_evidence':{var s=(typeof auditStats==='function')?auditStats():{pct:null};var conn=s.pct!=null;
       return c5obj({id:id,name:'Evidence coverage',connected:conn,displayValue:conn?(s.pct+'%'):'—',label:'computed',color:conn?(s.pct>=75?'good':s.pct>=50?'warn':'crit'):'muted',
         formula:'evidence coverage = controls evidenced (tools + documents) ÷ total control universe',
-        inputs:[{name:'Evidenced controls',value:conn?(s.evid+' of '+s.total):'—',source:'framework posture'}],
+        inputs:[{name:'Evidenced controls',value:conn?(s.evid+' evidenced'):'—',source:'connected tools + analyzed policies'},{name:'Control universe',value:conn?(s.total+' total'):'—',source:'framework catalog'},{name:'= Coverage',value:conn?(s.evid+' ÷ '+s.total+' = '+s.pct+'%'):'—',source:'computed'}],
         sources:[{tool:'Nerion engine',connector:'nerion',field:'evidence_coverage',lastRefresh:c5ago()}],
         note:'How much of the control universe is backed by evidence rather than self-attestation.',connectTool:'your control tools + policies'});}
     case 'cr_consec':{var tr2=trajInfo();var vals=(tr2.vals||[]);var run=0;for(var i=vals.length-1;i>0;i--){if(vals[i]<=vals[i-1])run++;else break;}var conn=vals.length>=2;
@@ -495,7 +500,7 @@ function c5get(id){
       return c5obj({id:id,name:'Processes protected',connected:conn,displayValue:conn?(P.protected+' of '+P.total):'—',label:'computed',color:conn?(P.atRisk>0?'warn':'good'):'muted',
         formula:'processes protected = critical processes − those carrying a material cyber exposure',
         method:'A process is flagged at-risk when a material exposure driver maps to it (identity → the customer platform).',
-        inputs:P.list.map(function(p){return {name:p.name,value:p.status,source:'operations model · process_exposure'};}),
+        inputs:P.list.map(function(p){return {name:p.name,value:p.status,color:(p.status==='At risk'?'warn':p.status==='Watch'?'blue':'good'),source:'operations model · process_exposure'};}).concat([{name:'= Protected',value:P.protected+' of '+P.total+' continuity-safe ('+P.atRisk+' at risk)',source:'total − at-risk'}]),
         sources:[{tool:'Operations model',connector:'ops',field:'process_exposure',lastRefresh:c5ago()}],
         note:'Cyber mapped to your critical processes — how many are continuity-safe, and which needs attention.',connectTool:'your critical processes (onboarding)'});}
     case 'coo_bc':{var d=sig('dr_test_days');var conn=d!=null;var ok=(d!=null&&d<=90);
@@ -824,11 +829,23 @@ function c5get(id){
         sources:[{tool:'SDLC gates + product scans',connector:'appsec',field:'product_security',lastRefresh:c5ago()}],
         note:'The one-glance read on whether the product ships secure — across features and dependencies.',connectTool:'your SDLC gates + product scanners'});}
     case 'cp_sbd_coverage':{var css2=sig('code_scanning_open'),dep2=sig('dependabot_critical'),mg=sig('changes_merged_wk');
-      var practices=[css2!=null,dep2!=null,mg!=null,false,false];var inPlace=practices.filter(Boolean).length;var conn=inPlace>0;var pct=Math.round(inPlace/practices.length*100);
+      // The full target set of 5 secure-SDLC practices. Each counts only when its
+      // telemetry is present; the two without a live signal yet are shown too, so
+      // the denominator (and therefore the %) is fully visible.
+      var pr=[
+        {name:'Static analysis (SAST)',on:css2!=null,source:'code scanning · code_scanning_open'},
+        {name:'Dependency scanning (SCA)',on:dep2!=null,source:'Dependabot / Snyk · dependabot_critical'},
+        {name:'Change review in CI/CD',on:mg!=null,source:'CI/CD · changes_merged_wk'},
+        {name:'Secrets scanning',on:false,source:'no secrets-scanning signal connected yet'},
+        {name:'Threat modeling',on:false,source:'no threat-modeling signal connected yet'}
+      ];
+      var inPlace=pr.filter(function(x){return x.on;}).length;var total=pr.length;var conn=inPlace>0;var pct=Math.round(inPlace/total*100);
+      var sbInputs=pr.map(function(x){return {name:x.name,value:x.on?'evidenced':'not connected',color:x.on?'good':'muted',source:x.source};});
+      sbInputs.push({name:'= Coverage',value:inPlace+' of '+total+' target practices = '+pct+'%',source:'evidenced ÷ target'});
       return c5obj({id:id,name:'Secure-by-design coverage',connected:conn,displayValue:conn?(pct+'%'):'—',label:'computed',color:conn?(pct>=80?'good':pct>=50?'warn':'crit'):'muted',
-        formula:'secure-by-design coverage = secure-SDLC practices evidenced in the pipeline ÷ target practices',
-        method:'A practice counts only when its telemetry is present (SAST, SCA, review, secrets, threat-modeling).',
-        inputs:[{name:'Static analysis (SAST)',value:css2!=null?'evidenced':'not connected',source:'code scanning'},{name:'Dependency (SCA)',value:dep2!=null?'evidenced':'not connected',source:'Dependabot / Snyk'},{name:'Change review',value:mg!=null?'evidenced':'not connected',source:'CI/CD'}],
+        formula:'secure-by-design coverage = secure-SDLC practices evidenced in the pipeline ÷ '+total+' target practices',
+        method:'Five target practices (SAST, SCA, change review, secrets scanning, threat modeling). Each counts only when its telemetry is present — all five are listed below so the count and the denominator are visible. '+inPlace+' of '+total+' are evidenced → '+pct+'%.',
+        inputs:sbInputs,
         sources:[{tool:'SDLC tooling',connector:'sdlc',field:'secure_by_design',lastRefresh:c5ago()}],
         note:'How deeply secure-by-design is running in the pipeline for new features — measured, not asserted.',connectTool:'your SDLC / application-security tooling'});}
     case 'cp_open_risks':{var dep3=sig('dependabot_critical');var conn=dep3!=null;
