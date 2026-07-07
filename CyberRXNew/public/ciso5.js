@@ -1383,6 +1383,42 @@ function c5Connect(tool){if(typeof openDrill==='function')openDrill('Connect '+t
 document.addEventListener('click',function(e){var el=e.target.closest('[data-c5m]');if(el&&el.getAttribute('data-c5m'))c5Inspect(el.getAttribute('data-c5m'));});
 /* Protection summary-card detail inspector — opens the list behind each count. */
 document.addEventListener('click',function(e){var el=e.target.closest('[data-c5pc]');if(el&&el.getAttribute('data-c5pc'))c5protInspect(el.getAttribute('data-c5pc'));});
+/* Per-control business-value inspector — professionally backs each "$X" claim
+   in the "Controls delivering the most business value" list. */
+document.addEventListener('click',function(e){var el=e.target.closest('[data-c5cv]');if(el&&el.getAttribute('data-c5cv'))c5ctrlValueInspect(el.getAttribute('data-c5cv'));});
+function c5ctrlValueInspect(k){
+  var c=(typeof CAP_BY_KEY!=='undefined'&&CAP_BY_KEY[k])||null;if(!c)return;
+  var nm=c.name.replace(/ *\(.*\)/,'');
+  var rr=(typeof capRiskRemoved==='function')?capRiskRemoved():{byCap:{},total:0};
+  var usdv=(rr.byCap&&rr.byCap[k])||0,total=rr.total||0;
+  var p=(typeof capDeploy==='function')?capDeploy(c):null;
+  var fw=(typeof CAP_FRAMEWORK!=='undefined')?CAP_FRAMEWORK[k]:null;
+  var prot=(typeof CAP_PROTECTS!=='undefined'&&CAP_PROTECTS[k])||c.name.toLowerCase();
+  // Rank among connected controls by value (same ordering as the list).
+  var ranked=(typeof CAPS!=='undefined'?CAPS:[]).map(function(x){return {k:x.k,usd:(rr.byCap&&rr.byCap[x.k])||0,p:(typeof capDeploy==='function'?capDeploy(x):null)};}).filter(function(o){return o.p!=null;}).sort(function(a,b){return b.usd-a.usd;});
+  var rank=null;ranked.forEach(function(o,i){if(o.k===k)rank=i+1;});
+  var sharePct=total>0?Math.round(usdv/total*100):0;
+  var weight=(fw&&fw.weight)||null;
+  var fwIds=fw?(fw.csf||[]).concat(fw.r53||[]).join(' · '):'—';
+  var src=(typeof capSource==='function')?capSource(c):null;
+  var srcTool=(src&&src.vendor)||c.tool;
+  var m=c5obj({name:nm+' · business value',connected:(p!=null),
+    displayValue:usdv>0?usd(usdv):'—',label:'modeled',color:'good',
+    formula:'business value = this control’s framework-weighted contribution (weight '+(weight!=null?weight:'—')+') × its live deployment ('+(p!=null?p+'%':'—')+'), scaled so every control’s share sums to the organization’s total risk removed ('+usd(total)+')',
+    method:'Each control’s value is not a list price — it is the share of your total modeled expected-loss reduction attributable to that control. The share is its framework criticality weight (how much risk the NIST CSF 2.0 / 800-53 controls it satisfies carry) multiplied by how fully it is actually deployed on your estate, then normalized so the parts sum to the whole. Deployment % is read live from '+srcTool+'; the dollars are modeled until per-control spend is attributed.',
+    inputs:[
+      {name:'Live deployment',value:(p!=null?p+'%':'—'),source:srcTool+(src&&src.demo?' · demo':'')},
+      {name:'Framework criticality weight',value:(weight!=null?weight:'—'),source:'NIST CSF 2.0 · 800-53 weighting'},
+      {name:'Frameworks satisfied',value:fwIds,source:'control → framework mapping'},
+      {name:'What it protects',value:prot,source:'control scope'},
+      {name:'Risk removed (this control)',value:usdv>0?usd(usdv):'—',color:'good',source:'weight × deployment, scaled to total'},
+      {name:'Share of total control value',value:(total>0?sharePct+'%':'—')+(rank?(' · ranked #'+rank+' of '+ranked.length):''),source:'this control ÷ Σ all controls'}
+    ],
+    sources:[{tool:srcTool,connector:c.k,field:'deployment_pct',lastRefresh:c5ago()},{tool:'NIST CSF 2.0 / 800-53 mapping',connector:'framework',field:'control_weight'}],
+    note:nm+(rank===1?' is your single highest-value control':(rank?(' ranks #'+rank+' of your controls by business value'):' returns business value'))+'. Its '+(p!=null?p+'% deployment':'deployment')+' across '+prot+', weighted by the framework-critical controls it satisfies ('+fwIds+'), removes '+usd(usdv)+' of modeled expected loss — '+sharePct+'% of the total your controls buy down. That is why it sits where it does in the ranking.',
+    connectTool:'per-control security spend (to convert value into return-on-dollar)'});
+  c5InspectObj(m);
+}
 function c5protInspect(kind){
   var P=(typeof window!=='undefined'&&window.C5PROT)||{well:[],weak:[],ctrl:[],target:75};
   var m;
@@ -1744,7 +1780,7 @@ function c5Exposure(){
   var w1=well.length?well.map(function(a){return areaRow(a,'well');}).join(''):'<div class="c5foot" style="margin-top:0;padding:12px 4px">No area clears its protection target yet — every area is in the list below.</div>';
   var w2=weak.length?weak.map(function(a){return areaRow(a,'weak');}).join(''):'<div class="c5foot" style="margin-top:0;padding:12px 4px">No area is below its protection target or carrying an open control gap.</div>';
   var w3=ctrlConn.map(function(o){var c=o.c,pct=maxV>0?Math.round(o.usd/maxV*100):0;if(pct<6&&o.usd>0)pct=6;
-      return '<div class="c5erow"><div style="flex:1;min-width:0"><div class="c5exp">'+nm(c)+' <span class="c5pill b" style="margin-left:4px">'+(o.p+'% deployed')+'</span></div><div class="c5esub">Protects '+(CAP_PROTECTS[c.k]||c.name.toLowerCase())+'</div></div>'+
+      return '<div class="c5erow" data-c5cv="'+c.k+'" title="'+c5esc(nm(c)+' — how its '+usd(o.usd)+' of business value is computed. Click for the full breakdown.')+'"><div style="flex:1;min-width:0"><div class="c5exp">'+nm(c)+' <span class="c5pill b" style="margin-left:4px">'+o.p+'% deployed</span></div><div class="c5esub">Protects '+(CAP_PROTECTS[c.k]||c.name.toLowerCase())+'</div></div>'+
         '<div class="c5etrack"><div style="width:'+pct+'%;height:100%;background:var(--good)"></div></div>'+
         '<div class="c5emult" style="color:var(--good)">'+usd(o.usd)+'</div></div>';
     }).join('');
