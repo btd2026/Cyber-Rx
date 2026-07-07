@@ -1449,7 +1449,7 @@ function c5Health(){
     blPara='Connect your identity, control and crown-jewel sources and Nerion surfaces your most exposed asset here, with the scoped fix ready for sign-off.';
     blBtn='Approve the top fix';}
   host.innerHTML=c5header()+
-    c5shell('Program health · where is the business most exposed?','Your enterprise-risk read — crown jewels, capabilities, scenarios and third parties.',anyRisk?'warn':null,'Four live reads of where the business carries the most cyber risk: the crown jewels at greatest risk, the business capabilities with the highest exposure, the most likely business-disruption scenarios, and third-party / supply-chain exposure. Tap any tile for the exact PULL → JOIN → COMPUTE → OUTPUT behind it.')+
+    c5shell('Program health · where is the business most exposed?','Where cyber exposure concentrates — and what to act on first.',anyRisk?'warn':null,'The enterprise’s material cyber exposure, ranked across the four dimensions that move it. Every figure traces to its source — drill any tile to defend it to the board.')+
     c5legend([{c:'good',t:'Healthy'},{c:'warn',t:'At risk'},{c:'blue',t:'Watch / monitoring'},{c:'line',t:'Not connected'}])+
     tiles+
     c5bl('Bottom line',blHead,null,blPara,{mid:blMid,txt:blBtn})+
