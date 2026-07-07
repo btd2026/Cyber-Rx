@@ -1648,10 +1648,31 @@ function c5Effect(){
   var intro=anyConn
     ?'Live cyber operations for the seat: the incidents impacting the business, the services under active threat, the third-party alerts reaching your services, and the emerging risks matched to your stack. Each box opens to the exact record behind it.'
     :'What this seat sees at a glance: the active incidents, the business services under threat, the third-party alerts touching your services, and the emerging risks worth acting on — the operational picture the CISO runs the day from.';
-  host.innerHTML=c5header()+
+  // The single operational front that needs command attention now (crit before warn).
+  var sev={crit:2,warn:1},top=null;
+  ms.forEach(function(x){if(x.m.connected&&(x.m.color==='crit'||x.m.color==='warn')){if(!top||sev[x.m.color]>sev[top.m.color])top=x;}});
+  var acts={
+    cops_incidents:'Run it to ground — contain, confirm business impact, and start the disclosure clock the moment it crosses materiality.',
+    cops_services:'Concentrate detection and containment on the services under active detection before the threat can pivot to a crown jewel.',
+    cops_thirdparty:'Press your worst-flagged third party for remediation evidence and confirm the business services it supports are covered.',
+    cops_emerging:'Action the emerging risks that match your stack before they are weaponized — patch or compensate the matching assets.'
+  };
+  var body=c5header()+
     c5shell('Cyber operations · what needs command attention right now?',verdict,active>0?'warn':null,intro)+
-    '<div class="c5opgrid">'+cards+'</div>'+
-    '<div class="c5foot">Live from your SIEM / SOAR, vendor-risk monitoring and threat-intel feed. Every box opens to the record behind it.</div>';
+    '<div class="c5opgrid">'+cards+'</div>';
+  if(top){
+    body+=c5bl('Bottom line',
+      top.m.name+' is your live front — '+top.m.displayValue+'.',
+      top.m.color,
+      top.m.note+' '+(acts[top.d.id]||''),
+      {mid:top.m.id,txt:'Open '+top.m.name.toLowerCase()});
+  } else if(anyConn){
+    body+=c5bl('Bottom line','Nothing needs command attention right now.',null,'No incident, active threat, third-party alert or emerging risk is currently hitting the business — hold watch and keep the feeds live.',null);
+  } else {
+    body+=c5bl('Bottom line','This is the screen the CISO runs the day from.',null,'Once your SIEM / SOAR, vendor-risk monitoring and threat-intel feed are live, this names the single operational front that needs command attention — an incident, an active threat, a third-party alert or an emerging risk.',null);
+  }
+  body+='<div class="c5foot">Live from your SIEM / SOAR, vendor-risk monitoring and threat-intel feed. Every box opens to the record behind it.</div>';
+  host.innerHTML=body;
 }
 
 /* ---------- Tab 04 — Threats (MITRE ATT&CK) ---------- */
