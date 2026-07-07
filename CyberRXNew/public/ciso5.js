@@ -1450,7 +1450,6 @@ function c5Health(){
     blBtn='Approve the top fix';}
   host.innerHTML=c5header()+
     c5shell('Program health · where is the business most exposed?','Where cyber exposure concentrates — and what to act on first.',anyRisk?'warn':null,'The enterprise’s material cyber exposure, ranked across the four dimensions that move it. Every figure traces to its source — drill any tile to defend it to the board.')+
-    c5legend([{c:'good',t:'Healthy'},{c:'warn',t:'At risk'},{c:'blue',t:'Watch / monitoring'},{c:'line',t:'Not connected'}])+
     tiles+
     c5bl('Bottom line',blHead,null,blPara,{mid:blMid,txt:blBtn})+
     '<div class="c5foot">Each tile traces to its exact sources. Figures shown are illustrative until the sources are connected.</div>';
