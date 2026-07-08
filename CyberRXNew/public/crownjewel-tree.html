@@ -35,7 +35,7 @@
   .risklegend{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px 16px;margin-top:16px}
   .risklegend h3{margin:0 0 10px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
   .rlgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:8px 20px}
-  .rlitem{display:flex;gap:9px;align-items:flex-start;font-size:13px}
+  .rlitem{display:flex;gap:9px;align-items:flex-start;font-size:13px;color:var(--text)}
   .rid{flex:0 0 auto;background:var(--ink);color:#fff;font-family:Georgia,serif;font-weight:700;font-size:12px;border-radius:6px;padding:2px 7px}
 
   .bar-legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;padding:14px 0 2px;color:var(--muted);font-size:12.5px}
@@ -316,9 +316,7 @@ const tip=document.getElementById("tip");
 function showTip(html,e){tip.innerHTML=html;tip.classList.add("on");tip.style.left=Math.min(e.clientX+14,innerWidth-346)+"px";tip.style.top=Math.min(e.clientY+16,innerHeight-140)+"px";}
 function wire(){
   document.querySelectorAll(".haschild>.node").forEach(n=>{n.onclick=e=>{if(e.target.closest(".ct"))return;
-    const li=n.closest("li"); const expanding=li.classList.contains("collapsed");
-    if(expanding){[...li.parentNode.children].forEach(s=>{if(s!==li&&s.querySelector&&s.querySelector(":scope > .node")&&s.querySelector(":scope > ul"))setCol(s,true);});}
-    setCol(li,!expanding);};});
+    const li=n.closest("li"); setCol(li,!li.classList.contains("collapsed"));};});
   document.querySelectorAll(".node.risk").forEach(el=>{el.addEventListener("mousemove",e=>{
      if(e.target.closest('.rrisk')){const live=+el.dataset.live,pot=+el.dataset.pot,n=+el.dataset.n,nx=+el.dataset.nx;
        showTip(`<b>${el.dataset.risk} — how this $ is computed</b><br>${n} controls guard this risk (${$B(pot/n)} slice each).<br><br><b style="color:#fff">${nx} below maturity 3</b> → ${$B(live)} live at risk.<br>${n-nx} at 3+ → <s style="color:#7fe0a0">${$B(pot-live)} mitigated</s>.`,e);return;}
@@ -358,6 +356,7 @@ function applyView(act){
 }
 document.querySelectorAll('.treebar button').forEach(b=>b.onclick=()=>applyView(b.dataset.act));
 wire();
+applyView('collapse');  // default: fully collapsed — expand from the top icons or any node's +
 reportHeight();
 try{new ResizeObserver(reportHeight).observe(document.body);}catch(_){}
 }
