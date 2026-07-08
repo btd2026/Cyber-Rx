@@ -1809,7 +1809,7 @@ function c5Health(){
     blPara='Connect your identity, control and crown-jewel sources and Nerion surfaces your most exposed asset here, with the scoped fix ready for sign-off.';
     blBtn='Approve the top fix';}
   host.innerHTML=c5header()+
-    c5shell('Program health · where is the business most exposed?','Where cyber exposure concentrates — and what to act on first.',anyRisk?'warn':null,'The enterprise’s material cyber exposure, ranked across the four dimensions that move it. Every figure traces to its source — drill any tile to defend it to the board.')+
+    c5shell('Cyber exposure · where is the business most exposed?','Where cyber exposure concentrates — and what to act on first.',anyRisk?'warn':null,'The enterprise’s material cyber exposure, ranked across the four dimensions that move it. Every figure traces to its source — drill any tile to defend it to the board.')+
     tiles+
     c5bl('Bottom line',blHead,null,blPara,{mid:blMid,txt:blBtn})+
     '<div class="c5foot">Each tile traces to its exact sources. Figures shown are illustrative until the sources are connected.</div>';
@@ -3131,7 +3131,7 @@ function c5Frameworks(){
       '<div style="font-size:12px;color:var(--ink-2);margin-top:1px">See how your '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'framework')+' maturity compares to the DTNKShield community — anonymously.</div></div>'+
     '</div><span class="peer-badge">DTNKShield ›</span></div>';
   host.innerHTML=c5header()+
-    c5shell('Frameworks &amp; compliance · continuous, auditor-grade assessment','Assessed against every framework you care about — refreshed on your cadence.',null,'Every control scored on the CMMI 0–5 scale from your live telemetry and analyzed policies, rolled up to category, function and family — with auditor-grade findings you can hand to an assessor. Public standards quote control text; CIS and SOC 2 are referenced by number/criterion and mapping only.')+
+    c5shell('Program health · how is the security program performing?','Assessed against the framework your program is built on — refreshed on your cadence.',null,'If you built your security program around a framework — NIST CSF 2.0, 800-53, CIS, SOC 2 or HIPAA — this is where you see how that program is actually performing, so it makes sense to check it often. Every control is scored on the CMMI 0–5 scale from your live telemetry and analyzed policies, rolled up to category, function and family, with auditor-grade findings you can hand to an assessor. Public standards quote control text; CIS and SOC 2 are referenced by number/criterion and mapping only.')+
     cadCtrl+
     '<div class="c5fw-refresh">Refreshed <b>'+cad+'</b> · last assessed <b>'+fmt(now)+'</b> · next refresh <b>'+fmt(nextD)+'</b></div>'+
     pills+
