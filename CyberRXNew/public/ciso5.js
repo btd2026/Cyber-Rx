@@ -2958,9 +2958,11 @@ function c5cpDecisions(){
   '.c5fw-pill.on{background:var(--ink);color:#fff;border-color:var(--ink)}',
   '.c5fw-refresh{font-size:11px;color:var(--muted);margin-top:10px}',
   '.c5fw-wrap{display:flex;gap:16px;margin-top:14px;align-items:flex-start}',
-  '.c5fw-left{flex:0 0 400px;max-width:420px}',
-  '.c5fw-right{flex:1;min-width:0}',
-  '@media(max-width:900px){.c5fw-wrap{flex-direction:column}.c5fw-left{flex:1 1 auto;max-width:none}}',
+  // The control tree (.c5fw-right) scrolls on its own; the finding panel (.c5fw-left)
+  // is pinned so it stays in view while you scroll the long list of controls.
+  '.c5fw-left{flex:0 0 400px;max-width:420px;position:sticky;top:14px;max-height:calc(100vh - 170px);overflow:auto}',
+  '.c5fw-right{flex:1;min-width:0;max-height:calc(100vh - 170px);overflow:auto}',
+  '@media(max-width:900px){.c5fw-wrap{flex-direction:column}.c5fw-left{flex:1 1 auto;max-width:none;position:static;max-height:none;overflow:visible}.c5fw-right{max-height:none;overflow:visible}}',
   '.c5fw-detail{border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:var(--surface)}',
   '.c5fw-dtop{display:flex;justify-content:space-between;align-items:center;gap:8px}',
   '.c5fw-tree{border:1px solid var(--line);border-radius:12px;overflow:hidden}',
