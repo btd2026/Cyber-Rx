@@ -165,6 +165,9 @@ try {
   if (boardAsks.indexOf('materiality') < 0) problems.push('[asks] Board attestation missing');
   const rt = vm.runInContext("c5AskSave('t_x',{status:'Approve acceptance',ts:1}); (c5AskStore()['t_x']||{}).status", ctx);
   if (rt !== 'Approve acceptance') problems.push('[asks] save/store roundtrip failed');
+  // No live exposure → a clearly-labelled sample ask must still appear.
+  const sample = vm.runInContext("var _s=(typeof LIVE==='object'&&LIVE)?LIVE.crown_jewel_risk:null; if(LIVE)LIVE.crown_jewel_risk={items:[]}; var _a=c5AskModel('cio'); if(LIVE)LIVE.crown_jewel_risk=_s; JSON.stringify(_a.filter(function(x){return x.sample;}))", ctx);
+  if (!/sample.:true/.test(sample) || sample.indexOf('Identity infrastructure') < 0) problems.push('[asks] sample ask missing when no live exposure');
   vm.runInContext("['board','ceo','cfo','clo','cro','cio','coo','cpo','audit'].forEach(function(s){c5Asks(s);}); c5SeatViews();", ctx);
 } catch (e) { problems.push(`[asks] ${e.message}`); }
 // Exercise the Documents-reviewed panel: empty state, seeded multi-doc state, and

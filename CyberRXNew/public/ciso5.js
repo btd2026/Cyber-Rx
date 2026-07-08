@@ -61,6 +61,7 @@
     '.c5ask-btn:hover{border-color:var(--blue)}',
     '.c5ask-btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}',
     '.c5ask-done{font-size:13px;font-weight:600;color:var(--good)}.c5ask-done .c5ask-when{font-weight:400;color:var(--muted);font-size:11.5px}',
+    '.c5ask-sampletag{font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);background:var(--surface-2);border:1px solid var(--line);border-radius:20px;padding:1px 7px;margin-left:6px}',
     '.c5phwrap{margin-top:2px}',
     '.c5cjt-note{font-size:12px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 13px;margin:10px 0}',
     '.c5cjt-frame{border-radius:12px;overflow:hidden;box-shadow:0 1px 2px rgba(16,24,40,.05)}',
@@ -3164,6 +3165,9 @@ function c5SeatExposures(seat){
   var m=CJ.filter(function(it){var n=' '+String(it.asset||'').toLowerCase()+' ';return kw.some(function(k){return n.indexOf(k)>=0;});});
   return (m.length?m:CJ.slice(0,1)).slice(0,2);
 }
+/* Domain-flavoured placeholder asset for the clearly-labelled SAMPLE ask shown
+   before any live crown-jewel exposure exists — so the pattern is visible pre-connect. */
+var C5_SEAT_SAMPLE={cfo:'Billing & payments system',coo:'Payment disbursement system',cio:'Identity infrastructure',cpo:'Customer portal',clo:'Customer data platform',cro:'your top crown jewel',ceo:'your top crown jewel',board:'your top crown jewel',audit:'Identity & access'};
 function c5AskMoney(v){if(v==null)return '';var n=Number(v);if(!isFinite(n)||n<=0)return '';if(n>=1e9)return '$'+(n/1e9).toFixed(1)+'B';if(n>=1e6)return '$'+(n/1e6).toFixed(0)+'M';if(n>=1e3)return '$'+(n/1e3).toFixed(0)+'K';return '$'+n.toFixed(0);}
 /* The activities the CISO asks of each seat — grounded in live exposure where it
    can be, plus the governance attestations each role owns. */
@@ -3171,14 +3175,25 @@ function c5AskModel(seat){
   var asks=[];
   // Risk acceptances — one per exposed crown jewel in this seat's domain.
   var enterprise=(seat==='cro'||seat==='board'||seat==='ceo');
-  c5SeatExposures(seat).forEach(function(t){
-    var usd=Number(t.exposure_usd)||null,name=t.asset||'a crown jewel';
-    asks.push({id:seat+'_accept_'+String(name).replace(/[^a-z0-9]+/gi,'_').toLowerCase().slice(0,40),kind:'accept',
-      title:'Risk acceptance — '+name,
-      why:(enterprise?'One of your most exposed crown jewels':'The exposed crown jewel in your area is <b>'+name+'</b>')+(usd?(' ('+c5AskMoney(usd)+' modeled exposure)'):'')+'. Remediation is scoped but not yet funded.',
+  var exps=c5SeatExposures(seat);
+  if(exps.length){
+    exps.forEach(function(t){
+      var usd=Number(t.exposure_usd)||null,name=t.asset||'a crown jewel';
+      asks.push({id:seat+'_accept_'+String(name).replace(/[^a-z0-9]+/gi,'_').toLowerCase().slice(0,40),kind:'accept',
+        title:'Risk acceptance — '+name,
+        why:(enterprise?('One of your most exposed crown jewels is '+name):('The exposed crown jewel in your area is '+name))+(usd?(' ('+c5AskMoney(usd)+' modeled exposure)'):'')+'. Remediation is scoped but not yet funded.',
+        ask:'Approve accepting the residual risk until the fix is funded next cycle, or decline and fund it now.',
+        opts:['Approve acceptance','Decline — fund now','Defer']});
+    });
+  }else{
+    // No live exposure yet — one clearly-labelled sample so the pattern shows pre-connect.
+    var sn=C5_SEAT_SAMPLE[seat]||'your top crown jewel';
+    asks.push({id:seat+'_accept_sample',kind:'accept',sample:true,
+      title:'Risk acceptance — '+sn,
+      why:'This populates from your live crown-jewel exposures once your Crown-Jewel Register and GRC are connected — '+(enterprise?'your most exposed assets appear here.':'the exposed assets in your area appear here.'),
       ask:'Approve accepting the residual risk until the fix is funded next cycle, or decline and fund it now.',
       opts:['Approve acceptance','Decline — fund now','Defer']});
-  });
+  }
   if(seat==='cfo')
     asks.push({id:'cfo_fund_best',kind:'fund',title:'Fund the highest-return control',
       why:'Your best dollar closes the identity gap — the most risk removed per dollar, and it trims the insurance tail where you are thin.',
@@ -3215,7 +3230,7 @@ function c5Asks(seat){
     var st=store[a.id],acts;
     if(st&&st.status){acts='<div class="c5ask-done">✓ '+c5esc(st.status)+'<span class="c5ask-when"> · recorded'+(c5AskEditable(st)?' · change within 24h':'')+'</span>'+(c5AskEditable(st)?' <button class="c5ask-btn" data-askreset="'+a.id+'" style="margin-left:8px;padding:4px 10px;font-size:11.5px">Change</button>':'')+'</div>';}
     else{acts=a.opts.map(function(o,i){return '<button class="c5ask-btn'+(i===0?' primary':'')+'" data-ask="'+a.id+'" data-askval="'+c5esc(o)+'">'+c5esc(o)+'</button>';}).join('');}
-    return '<div class="c5ask-card" data-kind="'+a.kind+'"><div class="c5ask-k">'+(KIND[a.kind]||'Action')+'</div>'+
+    return '<div class="c5ask-card" data-kind="'+a.kind+'"><div class="c5ask-k">'+(KIND[a.kind]||'Action')+(a.sample?' <span class="c5ask-sampletag">sample</span>':'')+'</div>'+
       '<div class="c5ask-t">'+c5esc(a.title)+'</div>'+
       '<div class="c5ask-why">'+c5esc(a.why)+'</div>'+
       '<div class="c5ask-ask"><b>The ask:</b> '+c5esc(a.ask)+'</div>'+
