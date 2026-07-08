@@ -44,6 +44,23 @@ function client() {
 
 const textOf = (resp) => ((resp && resp.content) || []).filter((b) => b.type === 'text').map((b) => b.text).join('');
 
+// Per-model list price, USD per 1M tokens [input, output]. Cache reads bill at
+// ~0.1x input, cache writes at ~1.25x input. Keep in sync with Anthropic pricing.
+const PRICING = {
+  'claude-opus-4-8': [5, 25], 'claude-opus-4-7': [5, 25], 'claude-opus-4-6': [5, 25],
+  'claude-sonnet-5': [3, 15], 'claude-sonnet-4-6': [3, 15], 'claude-haiku-4-5': [1, 5],
+  'claude-haiku-4-5-20251001': [1, 5], 'claude-fable-5': [10, 50],
+};
+function estimateCostUsd(model, usage) {
+  const rate = PRICING[model] || PRICING[Object.keys(PRICING).find((k) => model.indexOf(k) === 0)] || [5, 25];
+  const inTok = Number(usage.input_tokens) || 0;
+  const outTok = Number(usage.output_tokens) || 0;
+  const cacheRead = Number(usage.cache_read_input_tokens) || 0;
+  const cacheWrite = Number(usage.cache_creation_input_tokens) || 0;
+  const cost = (inTok * rate[0] + outTok * rate[1] + cacheRead * rate[0] * 0.1 + cacheWrite * rate[0] * 1.25) / 1e6;
+  return Math.round(cost * 1e4) / 1e4; // 4dp (fractions of a cent)
+}
+
 function scoreCMMI(matched, total) {
   if (total === 0) return 1;
   const pct = matched / total;
@@ -120,7 +137,7 @@ async function reviewDocument(text, mapping, deps = {}) {
   const clipped = String(text || '').slice(0, MAX_CHARS);
   if (clipped.trim().length < 20) return null;
 
-  let parsed = null;
+  let parsed = null; let usage = {}; let costUsd = 0;
   try {
     const resp = await anthropic.messages.create({
       model: MODEL,
@@ -128,6 +145,16 @@ async function reviewDocument(text, mapping, deps = {}) {
       thinking: { type: 'adaptive' },
       system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: buildUserPrompt(clipped, mapping) }],
+    });
+    usage = (resp && resp.usage) || {};
+    costUsd = estimateCostUsd(MODEL, usage);
+    // Per-document spend, so actual token cost is visible in the API logs.
+    logger.info('document review · llm spend', {
+      label: deps.label || '', model: MODEL,
+      input_tokens: Number(usage.input_tokens) || 0,
+      output_tokens: Number(usage.output_tokens) || 0,
+      cache_read_tokens: Number(usage.cache_read_input_tokens) || 0,
+      cost_usd: costUsd,
     });
     parsed = parseJson(textOf(resp));
   } catch (e) {
@@ -208,6 +235,12 @@ async function reviewDocument(text, mapping, deps = {}) {
     controls, families, recommendations,
     framework: mapping.framework, engine: 'llm', model: MODEL,
     words: clipped.split(/\s+/).filter(Boolean).length,
+    usage: {
+      input_tokens: Number(usage.input_tokens) || 0,
+      output_tokens: Number(usage.output_tokens) || 0,
+      cache_read_tokens: Number(usage.cache_read_input_tokens) || 0,
+    },
+    cost_usd: costUsd,
   };
 }
 
