@@ -64,6 +64,8 @@
     '.c5ask-sampletag{font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);background:var(--surface-2);border:1px solid var(--line);border-radius:20px;padding:1px 7px;margin-left:6px}',
     '.c5phwrap{margin-top:2px}',
     '.c5cjt-note{font-size:12px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 13px;margin:10px 0}',
+    '.c5cjt-prov{font-size:12px;color:var(--ink-2);line-height:1.55;background:color-mix(in srgb,var(--blue) 5%,var(--surface));border:1px solid color-mix(in srgb,var(--blue) 20%,var(--line));border-radius:10px;padding:11px 14px;margin:10px 0}',
+    '.c5cjt-prov b{color:var(--ink)}',
     '.c5cjt-frame{border-radius:12px;overflow:hidden;box-shadow:0 1px 2px rgba(16,24,40,.05)}',
     '.c5aic-alarm{border-color:var(--crit);animation:c5aicpulse 1.1s infinite}',
     '@keyframes c5aicpulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--crit) 42%,transparent)}50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--crit) 0%,transparent)}}',
@@ -3560,7 +3562,10 @@ function c5MountCrownTree(container){
   C5_CJT_INPUT=(typeof c5CrownTreeInput==='function')?c5CrownTreeInput():null;
   if(!C5_CJT_WIRED){try{window.addEventListener('message',c5CjtMsg);}catch(_){}C5_CJT_WIRED=true;}
   var note=C5_CJT_INPUT?'':'<div class="c5cjt-note">Illustrative sample data — the crown-jewel value tree reads live once your Crown-Jewel Register, Business Capability Map and control-maturity sources are connected.</div>';
-  container.innerHTML=note+'<iframe id="c5cjt-frame" class="c5cjt-frame" title="Crown-jewel value tree" scrolling="no" style="width:100%;border:0;height:640px;display:block;background:#EEF1F6" src="'+c5CjtSrc()+'"></iframe>';
+  // Provenance strip (live only): states where every dollar comes from, so the tree
+  // is self-evidencing instead of a black box.
+  var prov=C5_CJT_INPUT?'<div class="c5cjt-prov"><b>How to read this — every figure traces to your inputs.</b> <b>Business value</b> = the annual revenue of the processes each crown jewel runs (your Business-Processes upload). <b>At risk (live)</b> = that value still sitting behind controls scoring below CMMI 3; <b>already mitigated</b> = the portion your ≥3 controls cover. Crown jewels are chosen by the same criticality rule as onboarding. Hover any figure for its exact math.</div>':'';
+  container.innerHTML=note+prov+'<iframe id="c5cjt-frame" class="c5cjt-frame" title="Crown-jewel value tree" scrolling="no" style="width:100%;border:0;height:640px;display:block;background:#EEF1F6" src="'+c5CjtSrc()+'"></iframe>';
 }
 /* Bundled NIST CSF 2.0 reference metadata for the control codes the value chain
    can map a risk to (via CAP_FRAMEWORK). Framework-static — not tenant data. */
@@ -3628,7 +3633,9 @@ function c5CrownTreeInput(){
       if(procs.length)DATA.push({name:f.name||'Function',crit:f.criticality||f.crit||'Critical',procs:procs});
     });
     if(!DATA.length)return null;
-    var org=(LIVE&&(LIVE.org_name||LIVE.client_name||LIVE.name))||'Your organization';
+    // Name the tree after the client — the org name is captured at onboarding
+    // (localStorage, via orgName()); LIVE fields are a secondary source.
+    var org=(typeof orgName==='function'&&orgName())||(LIVE&&(LIVE.org_name||LIVE.client_name||LIVE.name))||'Your organization';
     return {org:org,RISKS:RISKS,C:C,DATA:DATA,CATALOG:106};
   }catch(e){try{console.warn('crown-tree adapter',e&&e.message);}catch(_){}return null;}
 }
