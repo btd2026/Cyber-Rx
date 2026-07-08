@@ -77,9 +77,9 @@
   .node .nlab{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:block}
   .minibar{height:6px;border-radius:4px;background:#e9edf3;margin-top:8px;overflow:hidden}
   .minibar i{display:block;height:100%;border-radius:4px}
-  .haschild>.node{cursor:pointer}
+  .node.haschild{cursor:pointer}
   .expander{position:absolute;bottom:-11px;left:50%;transform:translateX(-50%);width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid var(--conn);color:var(--muted);font-size:12px;display:grid;place-items:center;z-index:2;font-weight:700}
-  .haschild>.node:hover{border-color:var(--accent)}
+  .node.haschild:hover{border-color:var(--accent)}
 
   .node.org{width:320px}.node.org .accent{background:var(--accent)}.node.org .big{font-family:Georgia,serif;font-size:22px}
   .node.fn{width:190px}
@@ -315,7 +315,7 @@ document.getElementById("scope").innerHTML=`<div class="big">${inScope}<small>of
 const tip=document.getElementById("tip");
 function showTip(html,e){tip.innerHTML=html;tip.classList.add("on");tip.style.left=Math.min(e.clientX+14,innerWidth-346)+"px";tip.style.top=Math.min(e.clientY+16,innerHeight-140)+"px";}
 function wire(){
-  document.querySelectorAll(".haschild>.node").forEach(n=>{n.onclick=e=>{if(e.target.closest(".ct"))return;
+  document.querySelectorAll(".node.haschild").forEach(n=>{n.onclick=e=>{if(e.target.closest(".ct"))return;
     const li=n.closest("li"); setCol(li,!li.classList.contains("collapsed"));};});
   document.querySelectorAll(".node.risk").forEach(el=>{el.addEventListener("mousemove",e=>{
      if(e.target.closest('.rrisk')){const live=+el.dataset.live,pot=+el.dataset.pot,n=+el.dataset.n,nx=+el.dataset.nx;
