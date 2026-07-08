@@ -845,9 +845,9 @@
     var oid=localStorage.getItem('cyberrx_org_id')||'';
     fetch(apiBase()+'/api/documents/analyze',{method:'POST',headers:oid?{'X-Org-Id':oid}:{},body:fd})
       .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||('HTTP '+r.status));return j;});})
-      .then(function(res){(res.controls||[]).forEach(function(c){obSaveDocScore(c.id,{cmmi:c.cmmi,doc:file.name,matched:c.matched,total:c.total,attrs:c.attrs||[]});});
+      .then(function(res){(res.controls||[]).forEach(function(c){obSaveDocScore(c.id,{cmmi:c.cmmi,doc:file.name,matched:c.matched,total:c.total,attrs:c.attrs||[],narrative:c.narrative||'',gap:c.gap||''});});
         var docs=obDocDocs(),lbl=(OB_DOC_TYPES.filter(function(d){return d.k===dt;})[0]||{}).l||dt;
-        docs.unshift({name:file.name,type:lbl,cmmi:res.cmmi,matched:res.matched||0,total:res.total||0});obSaveDocs(docs);
+        docs.unshift({name:file.name,type:lbl,cmmi:res.cmmi,matched:res.matched||0,total:res.total||0,engine:res.engine||'keyword'});obSaveDocs(docs);
         if(msg){msg.textContent='✓ '+file.name+' — CMMI '+res.cmmi+' ('+(CMMI_LBL[res.cmmi]||'')+')';msg.style.color='var(--good)';}
         updateDocBadge();obRenderDocList();})
       .catch(function(e){if(msg){msg.textContent='✗ '+e.message;msg.style.color='var(--warn)';}});}

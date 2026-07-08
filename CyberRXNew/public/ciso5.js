@@ -3259,11 +3259,20 @@ function c5DocsReviewHtml(){
         var c=Number(r.s.cmmi)||0,col=stColor(c),nm=c5CtrlName(r.id);
         var attrs=Array.isArray(r.s.attrs)?r.s.attrs:[];
         var present=attrs.filter(function(a){return a.found;}),missing=attrs.filter(function(a){return !a.found;});
+        function chip(a,ok){var rn=(a.reasoning?(' title="'+c5esc(a.reasoning)+'"'):'');var cc=ok?'good':'crit';
+          return '<span'+rn+' style="font-size:10.5px;padding:2px 8px;border-radius:20px;background:color-mix(in srgb,var(--'+cc+') '+(ok?'14':'10')+'%,var(--surface));color:var(--'+cc+');border:1px solid color-mix(in srgb,var(--'+cc+') '+(ok?'30':'26')+'%,transparent)">'+(ok?'✓ ':'✗ ')+c5esc(a.label)+'</span>';}
         var attrHtml=attrs.length?('<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">'+
-          present.map(function(a){return '<span style="font-size:10.5px;padding:2px 8px;border-radius:20px;background:color-mix(in srgb,var(--good) 14%,var(--surface));color:var(--good);border:1px solid color-mix(in srgb,var(--good) 30%,transparent)">✓ '+c5esc(a.label)+'</span>';}).join('')+
-          missing.map(function(a){return '<span style="font-size:10.5px;padding:2px 8px;border-radius:20px;background:color-mix(in srgb,var(--crit) 10%,var(--surface));color:var(--crit);border:1px solid color-mix(in srgb,var(--crit) 26%,transparent)">✗ '+c5esc(a.label)+'</span>';}).join('')+'</div>'):'';
-        var narr=(attrs.length?('The policy addresses this control with <b>'+present.length+' of '+attrs.length+'</b> expected attribute'+(attrs.length>1?'s':'')+' present'+(missing.length?(' — missing '+missing.map(function(a){return a.label.toLowerCase();}).join(', ')):', all reviewed attributes present')+'. '):'')+
-          'Assessed at <b>CMMI '+c+' — '+(CMMI_LBL[c]||'')+'</b>'+(c<3?', below the target of 3.5; strengthen the policy language above to raise maturity.':c<4?', meeting baseline; tighten the remaining attributes to reach optimized.':', a mature, well-evidenced control.');
+          present.map(function(a){return chip(a,true);}).join('')+missing.map(function(a){return chip(a,false);}).join('')+'</div>'):'';
+        // Verbatim evidence quotes — the auditor workpaper proof (LLM review only).
+        var evRows=present.filter(function(a){return a.evidence;});
+        var evHtml=evRows.length?('<div style="margin-top:8px;display:flex;flex-direction:column;gap:5px">'+evRows.map(function(a){
+          return '<div style="border-left:2px solid color-mix(in srgb,var(--good) 55%,var(--line));padding:2px 0 2px 9px"><div style="font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--good)">'+c5esc(a.label)+'</div><div style="font-size:11.5px;color:var(--ink-2);font-style:italic;line-height:1.5">“'+c5esc(String(a.evidence).slice(0,260))+'”</div></div>';
+        }).join('')+'</div>'):'';
+        // Prefer the assessor's own narrative (LLM); otherwise compute one from coverage.
+        var narr=(r.s.narrative&&String(r.s.narrative).trim())?c5esc(r.s.narrative):
+          ((attrs.length?('The policy addresses this control with <b>'+present.length+' of '+attrs.length+'</b> expected attribute'+(attrs.length>1?'s':'')+' present'+(missing.length?(' — missing '+missing.map(function(a){return a.label.toLowerCase();}).join(', ')):', all reviewed attributes present')+'. '):'')+
+          'Assessed at <b>CMMI '+c+' — '+(CMMI_LBL[c]||'')+'</b>'+(c<3?', below the target of 3.5; strengthen the policy language above to raise maturity.':c<4?', meeting baseline; tighten the remaining attributes to reach optimized.':', a mature, well-evidenced control.'));
+        var gapHtml=(r.s.gap&&String(r.s.gap).trim())?('<div style="font-size:11.5px;color:var(--crit);margin-top:6px"><b>To raise maturity:</b> '+c5esc(r.s.gap)+'</div>'):'';
         var x=c5DocXwalk(r.id);
         return '<div style="padding:12px 0;border-top:1px solid var(--line)">'+
           '<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">'+
@@ -3272,14 +3281,15 @@ function c5DocsReviewHtml(){
             (nm?('<span style="color:var(--ink-2);font-size:12.5px">'+c5esc(nm)+'</span>'):'')+
           '</div>'+
           '<div style="font-size:12.5px;color:var(--ink-2);line-height:1.55;margin-top:6px">'+narr+'</div>'+
-          attrHtml+c5DocChips(x)+
+          attrHtml+evHtml+gapHtml+c5DocChips(x)+
         '</div>';
       }).join('');
       return '<div style="margin-top:14px"><div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--blue)">'+label+'</div>'+items+'</div>';
     }).join('');
     html+='<section style="margin:0 0 26px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface)">'+
       '<div style="padding:16px 20px;background:var(--surface-2);border-bottom:1px solid var(--line)">'+
-        '<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-size:18px">📄</span><b style="font-family:var(--serif);font-size:17px;color:var(--ink)">'+c5esc(dn)+'</b>'+(meta.type?('<span style="font-size:12px;color:var(--ink-2)">'+c5esc(meta.type)+'</span>'):'')+'</div>'+
+        '<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-size:18px">📄</span><b style="font-family:var(--serif);font-size:17px;color:var(--ink)">'+c5esc(dn)+'</b>'+(meta.type?('<span style="font-size:12px;color:var(--ink-2)">'+c5esc(meta.type)+'</span>'):'')+
+          ((meta.engine==='llm'||rows.some(function(r){return r.s&&(r.s.narrative||(Array.isArray(r.s.attrs)&&r.s.attrs.some(function(a){return a.evidence;})));}))?'<span style="font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--blue);background:color-mix(in srgb,var(--blue) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--blue) 30%,transparent);border-radius:20px;padding:2px 9px">✦ AI-reviewed</span>':'')+'</div>'+
         '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:10px">'+
           '<div><span style="font-size:22px;font-weight:700;font-family:var(--serif);color:var(--'+stColor(mean)+')">'+mean.toFixed(1)+'</span><span style="font-size:12px;color:var(--muted)"> / 5 mean CMMI</span></div>'+
           '<div style="font-size:12px;color:var(--ink-2)"><b style="color:var(--ink)">'+rows.length+'</b> control'+(rows.length!==1?'s':'')+' evidenced · <b style="color:var(--ink)">'+matched+'</b> of '+total+' attributes present</div>'+
@@ -3290,9 +3300,9 @@ function c5DocsReviewHtml(){
     '</section>';
   });
   return '<div>'+
-    '<p style="color:var(--ink-2);font-size:13px;line-height:1.55;max-width:760px;margin:0 0 20px">Every policy you uploaded, read control-by-control against <b>NIST CSF 2.0</b> and <b>NIST SP 800-53 Rev 5</b>, with each finding carried across <b>CIS Controls v8</b>, <b>SOC 2</b> and the <b>HIPAA Security Rule</b> through the public crosswalk. Maturity, attributes present and missing, and the mapped control in each standard — the evidence behind the scores in this tab.</p>'+
+    '<p style="color:var(--ink-2);font-size:13px;line-height:1.55;max-width:760px;margin:0 0 20px">Every policy you uploaded, read control-by-control against <b>NIST CSF 2.0</b> and <b>NIST SP 800-53 Rev 5</b> — each expected attribute judged on whether the language satisfies the control’s intent, with the <b>verbatim evidence quoted</b> and the gap named where it doesn’t. Every finding is carried across <b>CIS Controls v8</b>, <b>SOC 2</b> and the <b>HIPAA Security Rule</b> through the public crosswalk. This is the evidence behind the scores in this tab.</p>'+
     html+
-    '<div style="font-size:11px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:12px">Attribute analysis and CMMI are produced by Nerion’s document engine against the public NIST catalogs. CIS · SOC 2 · HIPAA are mapped by public crosswalk (NIST CSF 2.0 informative references · SP 800-66) — a readiness indicator, not an independent audit opinion; CIS/SOC 2 shown by number/criterion only.</div>'+
+    '<div style="font-size:11px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:12px">Documents marked <b>✦ AI-reviewed</b> are read by Nerion’s analyst-grade document engine — semantic control-intent matching with quoted evidence, to a standard at or above human review; others use deterministic keyword analysis. CIS · SOC 2 · HIPAA are mapped by public crosswalk (NIST CSF 2.0 informative references · SP 800-66) — a readiness indicator, not an independent audit opinion; CIS/SOC 2 shown by number/criterion only.</div>'+
   '</div>';
 }
 function c5OpenDocsReview(){

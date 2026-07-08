@@ -433,7 +433,18 @@ router.post('/analyze', upload.single('file'), async (req, res) => {
       return res.status(422).json({ error: 'Could not extract readable text from this file.' });
     }
 
-    const result = analyzeDeep(text, docType);
+    // Analyst-grade LLM review (semantic control-intent matching + evidence quotes
+    // + gap reasoning) when a model is configured; deterministic keyword analysis
+    // is the always-available fallback and the shape both paths return is identical.
+    let result = null;
+    const mapping = CONTROL_MAP[docType];
+    if (mapping) {
+      try {
+        const LlmReview = require('../services/LlmDocumentReviewService');
+        result = await LlmReview.reviewDocument(text, mapping);
+      } catch (e) { logger.warn('LLM doc review error, using keyword fallback', { error: e.message }); result = null; }
+    }
+    if (!result) { result = analyzeDeep(text, docType); result.engine = 'keyword'; }
     result.filename = req.file.originalname;
     result.size = req.file.size;
     result.docType = docType;
