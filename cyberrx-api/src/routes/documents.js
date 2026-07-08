@@ -441,7 +441,7 @@ router.post('/analyze', upload.single('file'), async (req, res) => {
     if (mapping) {
       try {
         const LlmReview = require('../services/LlmDocumentReviewService');
-        result = await LlmReview.reviewDocument(text, mapping, { label: req.file.originalname });
+        result = await LlmReview.review(text, mapping, { label: req.file.originalname });
       } catch (e) { logger.warn('LLM doc review error, using keyword fallback', { error: e.message }); result = null; }
     }
     if (!result) { result = analyzeDeep(text, docType); result.engine = 'keyword'; }
@@ -467,12 +467,13 @@ router.post('/analyze', upload.single('file'), async (req, res) => {
       controls: result.controls.length,
       cost_usd: result.cost_usd || 0,
     });
-    // Ledger the LLM spend so the cumulative cost is queryable (best-effort).
-    if (result.engine === 'llm') {
+    // Ledger the review so volume + cost are queryable (best-effort). Local runs
+    // cost $0 but are still counted so you can see review throughput per engine.
+    if (result.engine === 'llm' || result.engine === 'local') {
       try {
         require('../services/DocumentSpendService').record({
           orgId: req.headers['x-org-id'] || req.body.org_id || null,
-          model: result.model, engine: 'llm', docType,
+          model: result.model, engine: result.engine, docType,
           label: req.file.originalname, usage: result.usage, costUsd: result.cost_usd,
         });
       } catch (_) { /* non-fatal */ }
