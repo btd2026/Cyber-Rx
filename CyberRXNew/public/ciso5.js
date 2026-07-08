@@ -1518,8 +1518,18 @@ function c5ctrlValueInspect(k){
   var fwIds=fw?(fw.csf||[]).concat(fw.r53||[]).join(' · '):'—';
   var src=(typeof capSource==='function')?capSource(c):null;
   var srcTool=(src&&src.vendor)||c.tool;
+  // Ground the dollars in the business the control protects: the top revenue
+  // process/system and the value it carries per day.
+  var pe=(typeof LIVE!=='undefined'&&LIVE&&LIVE.process_exposure)||[];
+  var rs=(typeof LIVE!=='undefined'&&LIVE&&LIVE.resilience)||{};
+  var perHr=Number(rs.top_downtime_per_hr)||((rs.systems&&rs.systems[0]&&Number(rs.systems[0].per_hr))||0);
+  var perDay=perHr>0?perHr*24:0;
+  var procName=(pe[0]&&pe[0].name)||((rs.systems&&rs.systems[0]&&rs.systems[0].name))||'your crown-jewel processes';
+  var plain=(p!=null)
+    ?(nm+' protects '+prot+(perDay>0?(' — the path into revenue processes like '+procName+', which carries about '+usd(perDay)+'/day of business value'):'')+'. Because '+nm+' is '+p+'% deployed across that surface'+(fw?(' and satisfies framework-critical controls ('+fwIds+')'):'')+', Nerion credits it '+usd(usdv)+' of the '+usd(total)+' of modeled loss your controls remove'+(perDay>0?' — keeping those processes running and their data protected is worth more than the control costs':'')+'.')
+    :('Connect '+srcTool+' to measure how much of '+prot+' this control covers, and the business value it returns.');
   var m=c5obj({name:nm+' · business value',connected:(p!=null),
-    why:'Measures the business value a single control returns — the share of your total modeled loss-reduction attributable to it, from its framework criticality weight multiplied by how fully it is deployed. It matters because it turns "we bought a tool" into "this control removes '+(usdv>0?usd(usdv):'$X')+' of risk," and tells you which control to expand first.',
+    why:plain,
     displayValue:usdv>0?usd(usdv):'—',label:'modeled',color:'good',
     formula:'business value = this control’s framework-weighted contribution (weight '+(weight!=null?weight:'—')+') × its live deployment ('+(p!=null?p+'%':'—')+'), scaled so every control’s share sums to the organization’s total risk removed ('+usd(total)+')',
     method:'Each control’s value is not a list price — it is the share of your total modeled expected-loss reduction attributable to that control. The share is its framework criticality weight (how much risk the NIST CSF 2.0 / 800-53 controls it satisfies carry) multiplied by how fully it is actually deployed on your estate, then normalized so the parts sum to the whole. Deployment % is read live from '+srcTool+'; the dollars are modeled until per-control spend is attributed.',
@@ -1907,13 +1917,24 @@ function c5Exposure(){
 
   // Build the surface: intro + three-number summary, then only the sections that
   // have real data — no how-to text, no method/formula on screen.
+  // Stat card: a static (non-clickable) value card in the c5opc style.
+  var statc=function(ic,lbl,val,sub,col,vfs){col=col||'muted';return '<div class="c5opc" style="cursor:default;--ac:var(--'+col+')"><div class="c5opc-h"><span class="c5opc-ic">'+c5icon(ic)+'</span><span class="c5opc-t">'+lbl+'</span></div><div class="c5opc-v" style="color:var(--'+(col==='muted'?'ink':col)+')'+(vfs?(';font-size:'+vfs):'')+'">'+val+'</div><div class="c5opc-s">'+sub+'</div></div>';};
+  // Summary: lead with the real money (total risk removed — not duplicated below),
+  // then the two area reads when the capability map is connected, or a highest-value
+  // control + a connect prompt when it isn't. No empty "—" boxes, no box that just
+  // repeats the controls list.
+  var summary='<div class="c5statgrid">'+statc('coin','Risk removed by controls',haveCtrls?usd(rr.total):'—','Modeled expected loss your controls buy down','good');
+  if(haveAreas){
+    summary+=scard('shieldcheck','Areas well protected',String(well.length),'Strong enough to defend to the board',well.length?'good':'muted','well','The business areas clearing their protection bar with no open control gaps. Click for the list.')+
+      scard('target','Areas to strengthen',String(weak.length),'Carrying the residual exposure',weak.length?'warn':'muted','weak','The business areas below the bar or carrying open control gaps. Click for the list.');
+  } else {
+    summary+=statc('cpu','Highest-value control',topCtrl?nm(topCtrl.c):'—',topCtrl?('removes '+usd(topCtrl.usd)+' · '+topCtrl.p+'% deployed'):'connect your security tools','good','17px')+
+      '<div class="c5opc" data-c5onb="business capability map" style="--ac:var(--blue)"><span class="c5opc-go">connect ›</span><div class="c5opc-h"><span class="c5opc-ic">'+c5icon('store')+'</span><span class="c5opc-t">Protection by business area</span></div><div class="c5opc-v" style="color:var(--blue);font-size:15px">Connect capability map →</div><div class="c5opc-s">Rank protection by business function once your Business Capability Map is added.</div></div>';
+  }
+  summary+='</div>';
   var body=c5header()+
     c5shell('Protection effectiveness · is the business protected where it counts?',verdict,tone,intro)+
-    '<div class="c5statgrid">'+
-      scard('shieldcheck','Areas well protected',haveAreas?String(well.length):'—','Strong enough to defend to the board',well.length?'good':'muted','well','The business areas clearing their protection bar with no open control gaps. Click for the list.')+
-      scard('target','Areas to strengthen',haveAreas?String(weak.length):'—','Carrying the residual exposure',weak.length?'warn':'muted','weak','The business areas below the bar or carrying open control gaps — where the exposure concentrates. Click for the list.')+
-      scard('coin','Controls returning value',haveCtrls?String(ctrlConn.length):'—','Buying down the most risk',haveCtrls?'good':'muted','ctrl','The controls delivering the most business value — risk removed by deployment × criticality. Click for the ranking.')+
-    '</div>';
+    summary;
   // Stash for the summary-card detail inspector (opened on click).
   try{window.C5PROT={well:well,weak:weak,ctrl:ctrlConn,target:TARGET,anyDerived:anyDerived};}catch(_){}
   if(haveAreas){
@@ -1921,7 +1942,7 @@ function c5Exposure(){
           '<div class="c5seclab" style="margin-top:18px">Where to concentrate next</div><div>'+w2+'</div>';
   }
   if(haveCtrls){
-    body+='<div class="c5seclab" style="margin-top:18px">Controls delivering the most business value</div><div>'+w3+'</div>';
+    body+='<div class="c5seclab" style="margin-top:18px">Controls delivering the most business value · '+ctrlConn.length+' control'+(ctrlConn.length>1?'s':'')+' · '+usd(rr.total)+' removed</div><div>'+w3+'</div>';
   }
   // Conclusion — always present, like the other tabs.
   if(haveAreas&&topWeak&&topCtrl){
