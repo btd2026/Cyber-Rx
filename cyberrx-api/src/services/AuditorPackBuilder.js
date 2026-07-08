@@ -82,7 +82,7 @@ async function buildPptxBuffer(payload) {
     s.addShape('rect', { x: 0.6, y: 0.55, w: 0.32, h: 0.4, fill: { color: ACCENT } });
     s.addText('NERION', { x: 1.02, y: 0.54, fontSize: 15, bold: true, color: WHITE, charSpacing: 2, fontFace: HEAD });
     s.addText('CYBER BUSINESS OPERATIONS PLATFORM', { x: 1.02, y: 0.86, fontSize: 8, color: '8FA3BD', charSpacing: 2, fontFace: HEAD });
-    s.addText(`${std}`, { x: 0.6, y: 2.4, w: 12, fontSize: 34, bold: true, color: WHITE, fontFace: HEAD });
+    s.addText(`${std}${payload.version ? '  ' + payload.version : ''}`, { x: 0.6, y: 2.4, w: 12, fontSize: 34, bold: true, color: WHITE, fontFace: HEAD });
     s.addText('Maturity assessment · auditor pack', { x: 0.6, y: 3.25, w: 12, fontSize: 18, color: ACCENT, fontFace: HEAD });
     // overall maturity chip
     s.addShape('roundRect', { x: 0.6, y: 4.2, w: 3.3, h: 1.2, rectRadius: 0.08, fill: { color: '16263B' } });
@@ -115,7 +115,7 @@ async function buildPptxBuffer(payload) {
   // 3 · Executive summary -----------------------------------------------------
   {
     const s = S_(); title(s, 'Section 2', 'Executive summary');
-    s.addText(S(payload.verdict, `${std} is assessed at CMMI ${overall} of 5 against a ${target} target. ${deficiencies.length} deficienc${deficiencies.length === 1 ? 'y' : 'ies'} and ${observations.length} observation${observations.length === 1 ? '' : 's'} were identified; the roadmap below returns them to target.`), { x: 0.6, y: 1.3, w: 12.1, h: 0.9, fontSize: 13, color: INK, valign: 'top', fontFace: BODY });
+    s.addText(S(payload.execNarrative, S(payload.verdict, `${std} is assessed at CMMI ${overall} of 5 against a ${target} target. ${deficiencies.length} deficienc${deficiencies.length === 1 ? 'y' : 'ies'} and ${observations.length} observation${observations.length === 1 ? '' : 's'} were identified; the roadmap below returns them to target.`)), { x: 0.6, y: 1.25, w: 12.1, h: 2.35, fontSize: 12, color: INK, valign: 'top', fontFace: BODY, lineSpacingMultiple: 1.08 });
     const stats = [
       ['Overall maturity', `${overall} / 5`, clsColor(Number(overall) >= Number(target) ? 'meets' : Number(overall) >= 2.5 ? 'observation' : 'deficiency')],
       ['Deficiencies', String(deficiencies.length), deficiencies.length ? RED : GREEN],
@@ -124,26 +124,43 @@ async function buildPptxBuffer(payload) {
     ];
     stats.forEach((st, i) => {
       const x = 0.6 + i * 3.05;
-      s.addShape('roundRect', { x, y: 2.5, w: 2.85, h: 1.5, rectRadius: 0.06, fill: { color: PANEL }, line: { color: LINE, width: 0.75 } });
-      s.addText(st[0], { x: x + 0.18, y: 2.62, w: 2.5, h: 0.5, fontSize: 10, color: MUTE, fontFace: HEAD });
-      s.addText(st[1], { x: x + 0.18, y: 3.05, w: 2.5, h: 0.8, fontSize: 30, bold: true, color: st[2], fontFace: HEAD, valign: 'middle' });
+      s.addShape('roundRect', { x, y: 3.75, w: 2.85, h: 1.3, rectRadius: 0.06, fill: { color: PANEL }, line: { color: LINE, width: 0.75 } });
+      s.addText(st[0], { x: x + 0.18, y: 3.85, w: 2.5, h: 0.5, fontSize: 10, color: MUTE, fontFace: HEAD });
+      s.addText(st[1], { x: x + 0.18, y: 4.22, w: 2.5, h: 0.7, fontSize: 26, bold: true, color: st[2], fontFace: HEAD, valign: 'middle' });
     });
-    s.addText([{ text: 'Headline recommendation\n', options: { bold: true, color: NAVY, fontSize: 12 } }, { text: S(payload.headlineRec, 'Prioritize the highest-criticality deficiencies; each is scoped with a target uplift and timeframe in the remediation roadmap.'), options: { color: INK, fontSize: 12 } }], { x: 0.6, y: 4.4, w: 12.1, h: 1.5, valign: 'top', fontFace: BODY });
+    s.addText([{ text: 'Priority recommendation  ', options: { bold: true, color: NAVY, fontSize: 12 } }, { text: S(payload.headlineRec, 'Prioritise the highest-criticality deficiencies; each is scoped with a target uplift and timeframe in the remediation roadmap.'), options: { color: INK, fontSize: 12 } }], { x: 0.6, y: 5.3, w: 12.1, h: 1.4, valign: 'top', fontFace: BODY });
+    footer(s, pg, client);
+  }
+
+  // 3b · Scope & objectives ---------------------------------------------------
+  if (payload.scopeProse) {
+    const s = S_(); title(s, 'Section 3', 'Scope & objectives');
+    s.addText(String(payload.scopeProse), { x: 0.6, y: 1.3, w: 12.1, h: 3.2, fontSize: 12.5, color: INK, valign: 'top', fontFace: BODY, lineSpacingMultiple: 1.12 });
+    const rows = [
+      ['Framework', std + (payload.version ? ' ' + payload.version : '')],
+      ['Assessment backbone', S(payload.backbone)],
+      ['Controls in scope', `${payload.total != null ? payload.total : register.length}  (${payload.evidenced != null ? payload.evidenced : '—'} evidenced)`],
+      ['Assessment cadence', cadence],
+    ];
+    s.addTable(rows.map((r) => [
+      { text: r[0], options: { bold: true, color: NAVY, fill: { color: PANEL }, fontSize: 10.5, fontFace: HEAD, valign: 'top' } },
+      { text: r[1], options: { color: INK, fontSize: 10.5, fontFace: BODY, valign: 'top' } },
+    ]), { x: 0.6, y: 4.7, w: 12.1, colW: [2.6, 9.5], border: { type: 'solid', color: LINE, pt: 0.5 } });
     footer(s, pg, client);
   }
 
   // 4 · Approach & CMMI scale -------------------------------------------------
   {
-    const s = S_(); title(s, 'Section 3', 'Approach & CMMI scale');
-    s.addText('Continuous · evidence-based · rolled up (subcategory → category → function/family) · mapped frameworks derive from the source assessment via the public crosswalk.', { x: 0.6, y: 1.3, w: 12.1, h: 0.6, fontSize: 12, color: INK, fontFace: BODY });
+    const s = S_(); title(s, 'Section 4', 'Methodology & rating scale');
+    s.addText(S(payload.methodologyProse, 'Continuous, evidence-based assessment: each control scored 0–5 from live tool telemetry and analysed policies, rolled up subcategory → category → function/family; mapped frameworks derive from the source assessment via the public crosswalk.'), { x: 0.6, y: 1.3, w: 12.1, h: 1.9, fontSize: 11.5, color: INK, valign: 'top', fontFace: BODY, lineSpacingMultiple: 1.08 });
     const lvl = [['Level', 'Name', 'Meaning'], ['0', 'None', 'No evidence on file'], ['1', 'Initial', 'Ad-hoc / reactive'], ['2', 'Managed', 'Repeatable but not standardized'], ['3', 'Defined', 'Documented & standardized'], ['4', 'Quant. Managed', 'Measured & controlled'], ['5', 'Optimizing', 'Continuously improving']];
-    s.addTable(lvl.map((r, i) => r.map((c) => ({ text: c, options: { bold: i === 0, color: i === 0 ? WHITE : INK, fill: { color: i === 0 ? NAVY : (i % 2 ? PANEL : WHITE) }, fontSize: 10.5, fontFace: i === 0 ? HEAD : BODY } }))), { x: 0.6, y: 2.05, w: 7.2, colW: [1.0, 2.2, 4.0], border: { type: 'solid', color: LINE, pt: 0.5 } });
+    s.addTable(lvl.map((r, i) => r.map((c) => ({ text: c, options: { bold: i === 0, color: i === 0 ? WHITE : INK, fill: { color: i === 0 ? NAVY : (i % 2 ? PANEL : WHITE) }, fontSize: 10.5, fontFace: i === 0 ? HEAD : BODY } }))), { x: 0.6, y: 3.35, w: 7.2, colW: [1.0, 2.2, 4.0], border: { type: 'solid', color: LINE, pt: 0.5 } });
     s.addText([{ text: 'Severity thresholds\n', options: { bold: true, color: NAVY, fontSize: 12 } },
       { text: `Meets target  ≥ ${target}\n`, options: { color: GREEN, fontSize: 12, bold: true } },
       { text: 'Observation  ≥ 2.5\n', options: { color: AMBER, fontSize: 12, bold: true } },
       { text: 'Deficiency  < 2.5\n', options: { color: RED, fontSize: 12, bold: true } },
       { text: 'Severity may be escalated by control criticality (e.g. a Required HIPAA specification) even near the floor.', options: { color: MUTE, fontSize: 10 } }],
-      { x: 8.2, y: 2.05, w: 4.5, h: 3, valign: 'top', fontFace: BODY });
+      { x: 8.2, y: 3.35, w: 4.5, h: 3, valign: 'top', fontFace: BODY });
     footer(s, pg, client);
   }
 
@@ -171,6 +188,22 @@ async function buildPptxBuffer(payload) {
     footer(s, pg, client);
   }
 
+  // 5b · Gap analysis (current vs target, per domain) -------------------------
+  if (arr(payload.gap).length) {
+    const s = S_(); title(s, 'Section 6', 'Gap analysis · current vs target');
+    s.addText(`Each ${S(payload.groupNoun, 'domain').toLowerCase()} is measured against the ${target} target. The gap column quantifies the maturity uplift required, and the priority reflects distance from the deficiency floor — the domains carrying the widest gaps are where the remediation roadmap concentrates first.`, { x: 0.6, y: 1.3, w: 12.1, h: 0.8, fontSize: 11.5, color: INK, valign: 'top', fontFace: BODY });
+    const head = [S(payload.groupNoun, 'Domain'), 'Current', 'Target', 'Gap', 'Priority'];
+    const rows = [head.map((h) => ({ text: h, options: { bold: true, color: WHITE, fill: { color: NAVY }, fontSize: 9.5, fontFace: HEAD } }))];
+    arr(payload.gap).slice(0, 24).forEach((gp, i) => {
+      const pc = /high/i.test(gp.priority) ? RED : /medium/i.test(gp.priority) ? AMBER : GREEN;
+      rows.push([gp.domain, String(gp.current), String(gp.target), String(gp.gap), gp.priority].map((c, j) => ({
+        text: String(c), options: { color: j === 4 ? pc : INK, bold: j === 4, fill: { color: i % 2 ? PANEL : WHITE }, fontSize: 9.5, fontFace: BODY, valign: 'top' },
+      })));
+    });
+    s.addTable(rows, { x: 0.5, y: 2.25, w: 12.33, colW: [6.13, 1.4, 1.4, 1.4, 2.0], border: { type: 'solid', color: LINE, pt: 0.5 }, autoPage: true, autoPageRepeatHeader: true, newSlideStartY: 1.3 });
+    footer(s, pg, client);
+  }
+
   // 6 · Findings register (table) ---------------------------------------------
   {
     const s = S_(); title(s, 'Section 5', 'Findings register');
@@ -184,6 +217,29 @@ async function buildPptxBuffer(payload) {
     });
     s.addTable(rows, { x: 0.5, y: 1.3, w: 12.33, colW: [1.4, 4.6, 2.4, 1.3, 1.2, 1.43], border: { type: 'solid', color: LINE, pt: 0.5 }, autoPage: true, autoPageRepeatHeader: true, newSlideStartY: 1.3 });
     if (register.length > 26) s.addText(`Showing 26 of ${register.length} controls — the full register is in the assessment tab and Appendix.`, { x: 0.5, y: 6.7, w: 12, fontSize: 8.5, color: MUTE, fontFace: BODY });
+    footer(s, pg, client);
+  }
+
+  // 6b · Risk register (findings as rated risks) ------------------------------
+  if (arr(payload.riskRegister).length) {
+    const s = S_(); title(s, 'Section 8', 'Risk register · findings as rated risks');
+    s.addText('The findings above are restated here as risks, each rated on likelihood and impact to derive a severity. Severity is what drives the sequencing of the remediation roadmap: the high-severity risks are addressed first, and the treatment column states the control action that reduces each.', { x: 0.6, y: 1.3, w: 12.1, h: 0.8, fontSize: 11.5, color: INK, valign: 'top', fontFace: BODY });
+    const head = ['Ref', 'Risk', 'Likelihood', 'Impact', 'Severity', 'Treatment'];
+    const rows = [head.map((h) => ({ text: h, options: { bold: true, color: WHITE, fill: { color: NAVY }, fontSize: 9.5, fontFace: HEAD } }))];
+    arr(payload.riskRegister).slice(0, 24).forEach((rk, i) => {
+      const sc = /high/i.test(rk.severity) ? RED : /medium/i.test(rk.severity) ? AMBER : GREEN;
+      rows.push([rk.ref, rk.risk, rk.likelihood, rk.impact, rk.severity, rk.treatment].map((c, j) => ({
+        text: S(c), options: { color: j === 4 ? sc : INK, bold: j === 4, fill: { color: i % 2 ? PANEL : WHITE }, fontSize: 9, fontFace: BODY, valign: 'top' },
+      })));
+    });
+    s.addTable(rows, { x: 0.5, y: 2.25, w: 12.33, colW: [1.2, 4.4, 1.3, 1.1, 1.2, 3.13], border: { type: 'solid', color: LINE, pt: 0.5 }, autoPage: true, autoPageRepeatHeader: true, newSlideStartY: 1.3 });
+    footer(s, pg, client);
+  }
+
+  // 6c · Detailed findings — framework backbone intro -------------------------
+  if (payload.detailedIntro && deficiencies.length) {
+    const s = S_(); title(s, 'Section 9', 'Detailed findings by domain');
+    s.addText(String(payload.detailedIntro), { x: 0.6, y: 1.3, w: 12.1, h: 4.5, fontSize: 12.5, color: INK, valign: 'top', fontFace: BODY, lineSpacingMultiple: 1.14 });
     footer(s, pg, client);
   }
 
@@ -220,14 +276,20 @@ async function buildPptxBuffer(payload) {
     footer(s, pg, client);
   }
 
-  // Remediation roadmap -------------------------------------------------------
+  // Prioritized recommendations & phased roadmap (0–3–6–12) -------------------
   {
-    const s = S_(); title(s, 'Plan', 'Remediation roadmap');
-    if (roadmap.length) {
-      const head = ['Priority', 'Action', 'Owner', 'Effort', 'Target uplift', 'Timeframe'];
+    const s = S_(); title(s, 'Section 10', 'Prioritized recommendations & remediation roadmap');
+    const rmap = arr(payload.roadmapPhased).length ? arr(payload.roadmapPhased) : roadmap;
+    if (rmap.length) {
+      s.addText('Recommendations are sequenced worst-first and phased across a 0–3, 3–6 and 6–12 month plan. The near-term phase captures the quick wins that most raise maturity for least effort; the later phases carry the strategic, higher-effort uplifts. Each item carries an owner, an effort estimate and the target maturity uplift on completion.', { x: 0.6, y: 1.3, w: 12.1, h: 0.9, fontSize: 11, color: INK, valign: 'top', fontFace: BODY });
+      const head = ['#', 'Action', 'Owner', 'Effort', 'Target uplift', 'Phase'];
       const rows = [head.map((h) => ({ text: h, options: { bold: true, color: WHITE, fill: { color: NAVY }, fontSize: 9.5, fontFace: HEAD } }))];
-      roadmap.slice(0, 12).forEach((r, i) => rows.push([String(i + 1), r.action, r.owner, r.effort, r.uplift, r.timeframe].map((c) => ({ text: S(c), options: { color: INK, fill: { color: i % 2 ? PANEL : WHITE }, fontSize: 9.5, fontFace: BODY, valign: 'top' } }))));
-      s.addTable(rows, { x: 0.5, y: 1.3, w: 12.33, colW: [1.0, 4.83, 2.0, 1.3, 1.9, 1.3], border: { type: 'solid', color: LINE, pt: 0.5 } });
+      rmap.slice(0, 14).forEach((r, i) => {
+        const ph = S(r.phase, r.timeframe);
+        const pc = /0.?3/.test(ph) ? RED : /3.?6/.test(ph) ? AMBER : NAVY;
+        rows.push([String(i + 1), r.action, r.owner, r.effort, r.uplift, ph].map((c, j) => ({ text: S(c), options: { color: j === 5 ? pc : INK, bold: j === 5, fill: { color: i % 2 ? PANEL : WHITE }, fontSize: 9.5, fontFace: BODY, valign: 'top' } })));
+      });
+      s.addTable(rows, { x: 0.5, y: 2.3, w: 12.33, colW: [0.7, 4.93, 2.0, 1.3, 1.8, 1.6], border: { type: 'solid', color: LINE, pt: 0.5 }, autoPage: true, autoPageRepeatHeader: true, newSlideStartY: 1.3 });
     } else {
       s.addText('No open remediation items — all controls meet target.', { x: 0.6, y: 1.4, w: 12, fontSize: 12, color: GREEN, fontFace: BODY });
     }
