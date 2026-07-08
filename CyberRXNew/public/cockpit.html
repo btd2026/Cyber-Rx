@@ -457,9 +457,9 @@
   .conf{font-size:12.5px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:8px}
   .foot{color:var(--muted);font-size:12px;text-align:center;padding:30px 0;border-top:1px solid var(--line);margin-top:40px}.foot b{color:var(--ink-2)}
   /* ===== Board Pack — printable board report ===== */
-  #bpScrim{position:fixed;inset:0;background:rgba(20,33,72,.55);opacity:0;pointer-events:none;transition:opacity .18s;z-index:60}#bpScrim.open{opacity:1;pointer-events:auto}
-  #bpModal{position:fixed;top:3vh;left:50%;transform:translateX(-50%);width:min(920px,94vw);max-height:94vh;overflow:auto;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:0 24px 60px rgba(20,33,72,.35);z-index:61;opacity:0;pointer-events:none;transition:opacity .18s}
-  #bpModal.open{opacity:1;pointer-events:auto}
+  #bpScrim,#docScrim{position:fixed;inset:0;background:rgba(20,33,72,.55);opacity:0;pointer-events:none;transition:opacity .18s;z-index:60}#bpScrim.open,#docScrim.open{opacity:1;pointer-events:auto}
+  #bpModal,#docModal{position:fixed;top:3vh;left:50%;transform:translateX(-50%);width:min(920px,94vw);max-height:94vh;overflow:auto;background:var(--surface,#fff);color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:0 24px 60px rgba(20,33,72,.35);z-index:61;opacity:0;pointer-events:none;transition:opacity .18s}
+  #bpModal.open,#docModal.open{opacity:1;pointer-events:auto}
   .bp-bar{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 22px;background:var(--ink);color:#fff;border-radius:10px 10px 0 0;z-index:2}
   .bp-bar b{font-size:14px;letter-spacing:.02em}
   .bp-actions{display:flex;gap:8px}
@@ -592,7 +592,7 @@
   <div class="top-r">
     <button class="tbtn war" id="warBtn">⚠ War Room</button>
     <button class="tbtn" id="boardBtn" title="Board-ready report">📋 Board Pack</button>
-    <button class="tbtn" id="voiceBtn" title="Advisor voice">🔊 Brief me</button>
+    <button class="tbtn" id="docsBtn" title="Document reviews mapped to your framework controls">📄 Documents reviewed</button>
     <span class="mocktag" id="dataBadge">Illustrative</span>
     <span id="orgLive"><span class="dot" style="background:var(--muted)"></span>Sample workspace</span>
   </div>
@@ -621,6 +621,13 @@
 <div id="bpModal" role="dialog" aria-label="Board report">
   <div class="bp-bar"><b>📋 Board Pack — Cyber Risk Report</b><div class="bp-actions"><button class="bp-btn primary" id="bpPrint">⬇ Export / Print</button><button class="bp-btn" id="bpClose">Close</button></div></div>
   <div class="bp-doc" id="bpDoc"></div>
+</div>
+
+<!-- Documents reviewed — control-by-control document analysis, mapped to all five frameworks -->
+<div id="docScrim"></div>
+<div id="docModal" role="dialog" aria-label="Documents reviewed">
+  <div class="bp-bar"><b>📄 Documents reviewed — control-by-control analysis</b><div class="bp-actions"><button class="bp-btn" id="docClose">Close</button></div></div>
+  <div class="bp-doc" id="docDoc"></div>
 </div>
 
 <script>
@@ -4891,7 +4898,7 @@ var _uiPush=null;
 function _uiUrl(){return apiBase()+'/api/ui-state?org_id='+encodeURIComponent(_posOrg());}
 function pushUiState(partial,immediate){try{if(!orgId())return;var send=function(){try{fetch(_uiUrl(),{method:'PUT',headers:{'Content-Type':'application/json','X-Org-Id':orgId()},body:JSON.stringify(partial)});}catch(_){}};if(immediate){send();}else{clearTimeout(_uiPush);_uiPush=setTimeout(send,800);}}catch(_){}}
 function fetchUiState(cb){try{if(!orgId()){cb&&cb(null);return;}fetch(_uiUrl(),{headers:{'X-Org-Id':orgId()}}).then(function(r){return r.ok?r.json():null;}).then(function(s){cb&&cb(s&&typeof s==='object'?s:null);}).catch(function(){cb&&cb(null);});}catch(_){cb&&cb(null);}}
-function selectSeat(seat){document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===seat);});saveLastSeat(seat);pushUiState({seat:seat});render(seat);if(!VOICE_MUTED)speakSeat(seat);}
+function selectSeat(seat){document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===seat);});saveLastSeat(seat);pushUiState({seat:seat});render(seat);}
 document.querySelectorAll('.seat').forEach(function(b){b.addEventListener('click',function(){selectSeat(b.dataset.seat);});});
 var _bootSeat=(typeof loadLastSeat==='function'&&loadLastSeat())||'ciso';document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===_bootSeat);});render(_bootSeat);loadLive();loadSignals();fetchReadiness();
 /* Auto-poll live signals so the "Are we under attack?" tile surfaces a new SIEM
@@ -4909,10 +4916,12 @@ function speakSeat(seat){var s=SEATS[seat];if(!s)return;
   // when there is no live data.
   var live=null;try{if(typeof c5Brief==='function')live=c5Brief(seat);}catch(_){}
   speak(localizeInd(live||s.brief||s.verdict));}
-document.getElementById('voiceBtn').addEventListener('click',function(){
-  VOICE_MUTED=!VOICE_MUTED;this.classList.toggle('on',!VOICE_MUTED);this.textContent=VOICE_MUTED?'🔊 Brief me':'🔈 Muted';
-  if(!VOICE_MUTED)speakSeat(CUR); else{try{window.parent.postMessage({type:'cyberrx-speak-cancel'},'*');window.speechSynthesis.cancel();}catch(_){}}
-});
+/* Documents reviewed — opens the control-by-control document analysis (rendered by
+   ciso5's c5OpenDocsReview), the evidence behind the Program Health scores. */
+(function(){var db=document.getElementById('docsBtn');if(db)db.addEventListener('click',function(){try{c5OpenDocsReview();}catch(_){}});
+  var dc=document.getElementById('docClose');if(dc)dc.addEventListener('click',function(){try{c5CloseDocsReview();}catch(_){}});
+  var ds=document.getElementById('docScrim');if(ds)ds.addEventListener('click',function(){try{c5CloseDocsReview();}catch(_){}});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'){try{c5CloseDocsReview();}catch(_){}}});})();
 
 /* ================= War Room — full incident command center (ported) ================= */
 var SEAT_NAMES=(function(){try{return JSON.parse(localStorage.getItem('cyberrx_seat_names')||'{}');}catch(_){return{};}})();
