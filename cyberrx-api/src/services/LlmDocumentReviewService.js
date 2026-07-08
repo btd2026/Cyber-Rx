@@ -162,10 +162,19 @@ async function reviewDocument(text, mapping, deps = {}) {
     return null;
   }
   if (!parsed || !Array.isArray(parsed.controls)) return null;
+  return reconcile(parsed, mapping, clipped, { engine: 'llm', model: MODEL, usage, costUsd });
+}
 
-  // Reconcile the model's verdict against the authoritative catalog — the
-  // control/attribute set and coverage math stay ours; the semantic judgment,
-  // evidence and narrative come from the model.
+/**
+ * Reconcile a model's JSON verdict against the authoritative control catalog.
+ * The control/attribute set and coverage math stay ours; the semantic judgment,
+ * verbatim evidence and narrative come from the model. Returns null when the
+ * model grounded no evidence at all (→ caller falls back). Shared by the cloud
+ * and local engines so both apply the identical grounding guardrail — which is
+ * exactly what keeps a smaller local model from inventing quotes.
+ */
+function reconcile(parsed, mapping, clipped, meta) {
+  meta = meta || {};
   const byId = {}; parsed.controls.forEach((c) => { if (c && c.id) byId[String(c.id)] = c; });
   const controls = []; const familyScores = {};
   let totalAttrs = 0; let totalMatched = 0; let grounded = 0;
@@ -230,18 +239,87 @@ async function reviewDocument(text, mapping, deps = {}) {
   }
   recommendations.sort((a, b) => ({ high: 0, medium: 1, low: 2 }[a.priority] - { high: 0, medium: 1, low: 2 }[b.priority]));
 
+  const usage = meta.usage || {};
   return {
     cmmi: overall, cmmiLabel: CMMI_LABEL[overall], coverage, matched: totalMatched, total: totalAttrs,
     controls, families, recommendations,
-    framework: mapping.framework, engine: 'llm', model: MODEL,
+    framework: mapping.framework, engine: meta.engine || 'llm', model: meta.model || null,
     words: clipped.split(/\s+/).filter(Boolean).length,
     usage: {
       input_tokens: Number(usage.input_tokens) || 0,
       output_tokens: Number(usage.output_tokens) || 0,
       cache_read_tokens: Number(usage.cache_read_input_tokens) || 0,
     },
-    cost_usd: costUsd,
+    cost_usd: meta.costUsd || 0,
   };
 }
 
-module.exports = { reviewDocument };
+// Local, in-VM engine config (OpenAI-compatible: Ollama / llama.cpp / vLLM).
+const LOCAL_DEFAULT_URL = 'http://localhost:11434/v1/chat/completions';
+const LOCAL_MODEL = (process.env.LOCAL_LLM_MODEL || 'llama3.1:8b').trim();
+
+/**
+ * Local engine: the same prompt + grounding guardrail, run against an
+ * OpenAI-compatible model server inside the VM. No data leaves the host and
+ * there is no per-token cost — engine 'local', cost_usd 0. Configure
+ * LOCAL_LLM_URL (+ LOCAL_LLM_MODEL). Returns null (→ keyword fallback) if the
+ * server isn't configured / reachable or the output can't be trusted.
+ */
+async function reviewLocal(text, mapping, deps = {}) {
+  const url = deps.localUrl || process.env.LOCAL_LLM_URL || (deps.forceLocal ? LOCAL_DEFAULT_URL : null);
+  if (!url || !mapping || !Array.isArray(mapping.controls) || !mapping.controls.length) return null;
+  const clipped = String(text || '').slice(0, MAX_CHARS);
+  if (clipped.trim().length < 20) return null;
+  const doFetch = deps.fetch || (typeof fetch === 'function' ? fetch : null);
+  if (!doFetch) return null;
+
+  let parsed = null;
+  try {
+    const ac = (typeof AbortController === 'function') ? new AbortController() : null;
+    const to = ac ? setTimeout(() => ac.abort(), TIMEOUT_MS) : null;
+    let resp;
+    try {
+      resp = await doFetch(url, {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        signal: ac ? ac.signal : undefined,
+        body: JSON.stringify({
+          model: LOCAL_MODEL, temperature: 0.1, stream: false, max_tokens: MAX_TOKENS,
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'user', content: buildUserPrompt(clipped, mapping) + '\n\nReturn ONLY the JSON object — no markdown, no code fences, no commentary.' },
+          ],
+        }),
+      });
+    } finally { if (to) clearTimeout(to); }
+    if (!resp || !resp.ok) { logger.warn(`local doc review HTTP ${resp && resp.status} (${LOCAL_MODEL})`); return null; }
+    const j = await resp.json();
+    const out = j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+    parsed = parseJson(out);
+    logger.info('document review · local (no per-token cost)', { label: deps.label || '', model: LOCAL_MODEL });
+  } catch (e) { logger.warn(`local doc review failed (${LOCAL_MODEL}): ${e.message}`); return null; }
+  if (!parsed || !Array.isArray(parsed.controls)) return null;
+  return reconcile(parsed, mapping, clipped, { engine: 'local', model: LOCAL_MODEL });
+}
+
+/**
+ * Engine dispatcher used by the route.
+ * DOC_REVIEW_ENGINE = cloud | local | keyword | auto (default).
+ *   auto → cloud (if ANTHROPIC_API_KEY) then local (if LOCAL_LLM_URL), else null.
+ * Any engine that returns null lets the route fall back to the keyword analyzer.
+ */
+async function review(text, mapping, deps = {}) {
+  const mode = (process.env.DOC_REVIEW_ENGINE || 'auto').toLowerCase();
+  if (mode === 'keyword') return null;
+  if (mode === 'local') return reviewLocal(text, mapping, { ...deps, forceLocal: true });
+  if (mode === 'cloud') return reviewDocument(text, mapping, deps);
+  // auto — prefer cloud quality, fall back to the local model, then keyword.
+  if (process.env.ANTHROPIC_API_KEY || deps.anthropic) {
+    const r = await reviewDocument(text, mapping, deps); if (r) return r;
+  }
+  if (process.env.LOCAL_LLM_URL || deps.localUrl) {
+    const r = await reviewLocal(text, mapping, deps); if (r) return r;
+  }
+  return null;
+}
+
+module.exports = { reviewDocument, reviewLocal, review, reconcile };
